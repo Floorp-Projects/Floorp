@@ -30,7 +30,7 @@ protected:
     ~StatusItem();
 
   private:
-    RefPtr<nsStandaloneNativeMenu> mMenu;
+    nsRefPtr<nsStandaloneNativeMenu> mMenu;
     NSStatusItem* mStatusItem;
   };
 

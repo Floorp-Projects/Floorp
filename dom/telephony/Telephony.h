@@ -50,14 +50,14 @@ class Telephony final : public DOMEventTargetHelper,
   // The audio agent is needed to communicate with the audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioAgent;
   nsCOMPtr<nsITelephonyService> mService;
-  RefPtr<Listener> mListener;
+  nsRefPtr<Listener> mListener;
 
-  nsTArray<RefPtr<TelephonyCall> > mCalls;
-  RefPtr<CallsList> mCallsList;
+  nsTArray<nsRefPtr<TelephonyCall> > mCalls;
+  nsRefPtr<CallsList> mCallsList;
 
-  RefPtr<TelephonyCallGroup> mGroup;
+  nsRefPtr<TelephonyCallGroup> mGroup;
 
-  RefPtr<Promise> mReadyPromise;
+  nsRefPtr<Promise> mReadyPromise;
 
   uint32_t mAudioAgentNotify;
   bool mIsAudioStartPlaying;
@@ -168,7 +168,7 @@ public:
     return mService;
   }
 
-  const nsTArray<RefPtr<TelephonyCall> >&
+  const nsTArray<nsRefPtr<TelephonyCall> >&
   CallsArray() const
   {
     return mCalls;

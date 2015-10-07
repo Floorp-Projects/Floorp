@@ -56,7 +56,7 @@ RtspHandler::NewURI(const nsACString & aSpec,
   nsresult rv = GetDefaultPort(&port);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsStandardURL> url = new nsStandardURL();
+  nsRefPtr<nsStandardURL> url = new nsStandardURL();
   rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, port, aSpec,
                  aOriginCharset, aBaseURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -71,7 +71,7 @@ RtspHandler::NewChannel2(nsIURI* aURI,
                          nsIChannel** aResult)
 {
   bool isRtsp = false;
-  RefPtr<nsBaseChannel> rtspChannel;
+  nsRefPtr<nsBaseChannel> rtspChannel;
 
   nsresult rv = aURI->SchemeIs("rtsp", &isRtsp);
   NS_ENSURE_SUCCESS(rv, rv);

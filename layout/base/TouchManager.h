@@ -36,7 +36,7 @@ public:
 private:
   void EvictTouches();
 
-  RefPtr<PresShell>   mPresShell;
+  nsRefPtr<PresShell>   mPresShell;
   nsCOMPtr<nsIDocument> mDocument;
 };
 

@@ -529,7 +529,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
     LossyAppendUTF16toASCII(temp, typeToUse);
   }
 
-  RefPtr<nsMIMEInfoWin> mimeInfo = new nsMIMEInfoWin(typeToUse);
+  nsRefPtr<nsMIMEInfoWin> mimeInfo = new nsMIMEInfoWin(typeToUse);
 
   // don't append the '.'
   mimeInfo->AppendExtension(NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1)));
@@ -615,7 +615,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     }
   }
   // If we found an extension for the type, do the lookup
-  RefPtr<nsMIMEInfoWin> mi;
+  nsRefPtr<nsMIMEInfoWin> mi;
   if (!fileExtension.IsEmpty())
     mi = GetByExtension(fileExtension, flatType.get());
   LOG(("Extension lookup on '%s' found: 0x%p\n", fileExtension.get(), mi.get()));
@@ -638,7 +638,7 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
     }
   }
   if (!mi || !hasDefault) {
-    RefPtr<nsMIMEInfoWin> miByExt =
+    nsRefPtr<nsMIMEInfoWin> miByExt =
       GetByExtension(NS_ConvertUTF8toUTF16(aFileExt), flatType.get());
     LOG(("Ext. lookup for '%s' found 0x%p\n", flatExt.get(), miByExt.get()));
     if (!miByExt && mi)

@@ -291,7 +291,7 @@ public:
   bool IsPopup();
   virtual bool ShouldUseOffMainThreadCompositing();
 
-  bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT);
+  bool CaptureWidgetOnScreen(nsRefPtr<mozilla::gfx::DrawTarget> aDT);
 
 protected:
   virtual ~nsWindow();
@@ -573,7 +573,7 @@ protected:
   // Transparency
 #ifdef MOZ_XUL
   // Use layered windows to support full 256 level alpha translucency
-  RefPtr<gfxASurface> mTransparentSurface;
+  nsRefPtr<gfxASurface> mTransparentSurface;
   HDC                   mMemoryDC;
   nsTransparencyMode    mTransparencyMode;
   nsIntRegion           mPossiblyTransparentRegion;

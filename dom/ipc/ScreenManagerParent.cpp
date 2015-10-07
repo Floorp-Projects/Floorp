@@ -133,7 +133,7 @@ ScreenManagerParent::RecvScreenForBrowser(const TabId& aTabId,
   // the nsIScreen it's on.
   ContentParent* cp = static_cast<ContentParent*>(this->Manager());
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
-  RefPtr<TabParent> tabParent =
+  nsRefPtr<TabParent> tabParent =
     cpm->GetTopLevelTabParentByProcessAndTabId(cp->ChildID(), aTabId);
   if(!tabParent){
     return false;

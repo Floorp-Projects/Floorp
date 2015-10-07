@@ -159,7 +159,7 @@ private:
   // of clearing our pointer to them when they die.
   FallibleTArray<dom::SVGTransform*> mItems;
 
-  RefPtr<dom::SVGAnimatedTransformList> mAList;
+  nsRefPtr<dom::SVGAnimatedTransformList> mAList;
 };
 
 } // namespace mozilla

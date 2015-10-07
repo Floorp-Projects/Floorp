@@ -228,7 +228,7 @@ public:
                                                         ErrorResult& aRv);
 
   void GetDeviceStorages(const nsAString& aType,
-                         nsTArray<RefPtr<nsDOMDeviceStorage> >& aStores,
+                         nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores,
                          ErrorResult& aRv);
 
   already_AddRefed<nsDOMDeviceStorage>
@@ -261,7 +261,7 @@ public:
   MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
 #endif // MOZ_B2G_RIL
 #ifdef MOZ_GAMEPAD
-  void GetGamepads(nsTArray<RefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
+  void GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
 #endif // MOZ_GAMEPAD
   already_AddRefed<Promise> GetVRDevices(ErrorResult& aRv);
 #ifdef MOZ_B2G_FM
@@ -354,7 +354,7 @@ public:
                               const Optional<Sequence<MediaKeySystemOptions>>& aOptions,
                               ErrorResult& aRv);
 private:
-  RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
+  nsRefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
 #endif
 
 private:
@@ -366,43 +366,43 @@ private:
   already_AddRefed<nsDOMDeviceStorage> FindDeviceStorage(const nsAString& aName,
                                                          const nsAString& aType);
 
-  RefPtr<nsMimeTypeArray> mMimeTypes;
-  RefPtr<nsPluginArray> mPlugins;
-  RefPtr<Permissions> mPermissions;
-  RefPtr<Geolocation> mGeolocation;
-  RefPtr<DesktopNotificationCenter> mNotification;
-  RefPtr<battery::BatteryManager> mBatteryManager;
-  RefPtr<Promise> mBatteryPromise;
+  nsRefPtr<nsMimeTypeArray> mMimeTypes;
+  nsRefPtr<nsPluginArray> mPlugins;
+  nsRefPtr<Permissions> mPermissions;
+  nsRefPtr<Geolocation> mGeolocation;
+  nsRefPtr<DesktopNotificationCenter> mNotification;
+  nsRefPtr<battery::BatteryManager> mBatteryManager;
+  nsRefPtr<Promise> mBatteryPromise;
 #ifdef MOZ_B2G_FM
-  RefPtr<FMRadio> mFMRadio;
+  nsRefPtr<FMRadio> mFMRadio;
 #endif
-  RefPtr<PowerManager> mPowerManager;
-  RefPtr<CellBroadcast> mCellBroadcast;
-  RefPtr<IccManager> mIccManager;
-  RefPtr<MobileMessageManager> mMobileMessageManager;
-  RefPtr<Telephony> mTelephony;
-  RefPtr<Voicemail> mVoicemail;
-  RefPtr<TVManager> mTVManager;
-  RefPtr<InputPortManager> mInputPortManager;
-  RefPtr<network::Connection> mConnection;
+  nsRefPtr<PowerManager> mPowerManager;
+  nsRefPtr<CellBroadcast> mCellBroadcast;
+  nsRefPtr<IccManager> mIccManager;
+  nsRefPtr<MobileMessageManager> mMobileMessageManager;
+  nsRefPtr<Telephony> mTelephony;
+  nsRefPtr<Voicemail> mVoicemail;
+  nsRefPtr<TVManager> mTVManager;
+  nsRefPtr<InputPortManager> mInputPortManager;
+  nsRefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL
-  RefPtr<MobileConnectionArray> mMobileConnections;
+  nsRefPtr<MobileConnectionArray> mMobileConnections;
 #endif
 #ifdef MOZ_B2G_BT
-  RefPtr<bluetooth::BluetoothManager> mBluetooth;
+  nsRefPtr<bluetooth::BluetoothManager> mBluetooth;
 #endif
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
-  RefPtr<system::AudioChannelManager> mAudioChannelManager;
+  nsRefPtr<system::AudioChannelManager> mAudioChannelManager;
 #endif
-  RefPtr<nsDOMCameraManager> mCameraManager;
-  RefPtr<MediaDevices> mMediaDevices;
+  nsRefPtr<nsDOMCameraManager> mCameraManager;
+  nsRefPtr<MediaDevices> mMediaDevices;
   nsCOMPtr<nsIDOMNavigatorSystemMessages> mMessagesManager;
   nsTArray<nsWeakPtr> mDeviceStorageStores;
-  RefPtr<time::TimeManager> mTimeManager;
-  RefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
+  nsRefPtr<time::TimeManager> mTimeManager;
+  nsRefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  RefPtr<DeviceStorageAreaListener> mDeviceStorageAreaListener;
-  RefPtr<Presentation> mPresentation;
+  nsRefPtr<DeviceStorageAreaListener> mDeviceStorageAreaListener;
+  nsRefPtr<Presentation> mPresentation;
 
   // Hashtable for saving cached objects DoResolve created, so we don't create
   // the object twice if asked for it twice, whether due to use of "delete" or

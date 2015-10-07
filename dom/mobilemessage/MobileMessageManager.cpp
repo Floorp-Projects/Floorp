@@ -134,7 +134,7 @@ MobileMessageManager::GetSegmentInfoForText(const nsAString& aText,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback =
     new MobileMessageCallback(request);
   nsresult rv = smsService->GetSegmentInfoForText(aText, msgCallback);
@@ -159,7 +159,7 @@ MobileMessageManager::Send(nsISmsService* aSmsService,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback =
     new MobileMessageCallback(request);
 
@@ -205,7 +205,7 @@ void
 MobileMessageManager::Send(const Sequence<nsString>& aNumbers,
                            const nsAString& aText,
                            const SmsSendParameters& aSendParams,
-                           nsTArray<RefPtr<DOMRequest>>& aReturn,
+                           nsTArray<nsRefPtr<DOMRequest>>& aReturn,
                            ErrorResult& aRv)
 {
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
@@ -228,7 +228,7 @@ MobileMessageManager::Send(const Sequence<nsString>& aNumbers,
 
   const uint32_t size = aNumbers.Length();
   for (uint32_t i = 0; i < size; ++i) {
-    RefPtr<DOMRequest> request = Send(smsService, serviceId, aNumbers[i], aText, aRv);
+    nsRefPtr<DOMRequest> request = Send(smsService, serviceId, aNumbers[i], aText, aRv);
     if (aRv.Failed()) {
       return;
     }
@@ -279,7 +279,7 @@ MobileMessageManager::SendMMS(const MmsParameters& aParams,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
   rv = mmsService->Send(serviceId, val, msgCallback);
   if (NS_FAILED(rv)) {
@@ -307,7 +307,7 @@ MobileMessageManager::GetMessage(int32_t aId,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
   nsresult rv = dbService->GetMessageMoz(aId, msgCallback);
   if (NS_FAILED(rv)) {
@@ -336,7 +336,7 @@ MobileMessageManager::Delete(int32_t* aIdArray,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback =
     new MobileMessageCallback(request);
 
@@ -469,7 +469,7 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
     threadId = aFilter.mThreadId.Value();
   }
 
-  RefPtr<MobileMessageCursorCallback> cursorCallback =
+  nsRefPtr<MobileMessageCursorCallback> cursorCallback =
     new MobileMessageCursorCallback();
   nsCOMPtr<nsICursorContinueCallback> continueCallback;
   nsresult rv = dbService->CreateMessageCursor(hasStartDate, startDate,
@@ -494,7 +494,7 @@ MobileMessageManager::GetMessages(const MobileMessageFilter& aFilter,
   cursorCallback->mDOMCursor =
     new MobileMessageCursor(window, continueCallback);
 
-  RefPtr<DOMCursor> cursor(cursorCallback->mDOMCursor);
+  nsRefPtr<DOMCursor> cursor(cursorCallback->mDOMCursor);
   return cursor.forget();
 }
 
@@ -517,7 +517,7 @@ MobileMessageManager::MarkMessageRead(int32_t aId,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
   nsresult rv = dbService->MarkMessageRead(aId, aValue, aSendReadReport,
                                            msgCallback);
@@ -539,7 +539,7 @@ MobileMessageManager::GetThreads(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<MobileMessageCursorCallback> cursorCallback =
+  nsRefPtr<MobileMessageCursorCallback> cursorCallback =
     new MobileMessageCursorCallback();
 
   nsCOMPtr<nsICursorContinueCallback> continueCallback;
@@ -559,7 +559,7 @@ MobileMessageManager::GetThreads(ErrorResult& aRv)
   cursorCallback->mDOMCursor =
     new MobileMessageCursor(window, continueCallback);
 
-  RefPtr<DOMCursor> cursor(cursorCallback->mDOMCursor);
+  nsRefPtr<DOMCursor> cursor(cursorCallback->mDOMCursor);
   return cursor.forget();
 }
 
@@ -579,7 +579,7 @@ MobileMessageManager::RetrieveMMS(int32_t aId,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(window);
+  nsRefPtr<DOMRequest> request = new DOMRequest(window);
   nsCOMPtr<nsIMobileMessageCallback> msgCallback = new MobileMessageCallback(request);
 
   nsresult rv = mmsService->Retrieve(aId, msgCallback);
@@ -615,7 +615,7 @@ MobileMessageManager::DispatchTrustedSmsEventToSelf(const char* aTopic,
     init.mCancelable = false;
     init.mMessage = sms;
 
-    RefPtr<MozSmsEvent> event =
+    nsRefPtr<MozSmsEvent> event =
       MozSmsEvent::Constructor(this, aEventName, init);
     return DispatchTrustedEvent(event);
   }
@@ -627,7 +627,7 @@ MobileMessageManager::DispatchTrustedSmsEventToSelf(const char* aTopic,
     init.mCancelable = false;
     init.mMessage = mms;
 
-    RefPtr<MozMmsEvent> event =
+    nsRefPtr<MozMmsEvent> event =
       MozMmsEvent::Constructor(this, aEventName, init);
     return DispatchTrustedEvent(event);
   }
@@ -669,7 +669,7 @@ MobileMessageManager::DispatchTrustedDeletedEventToSelf(nsISupports* aDeletedInf
       }
     }
 
-    RefPtr<MozMessageDeletedEvent> event =
+    nsRefPtr<MozMessageDeletedEvent> event =
       MozMessageDeletedEvent::Constructor(this, DELETED_EVENT_NAME, init);
     return DispatchTrustedEvent(event);
   }
@@ -761,7 +761,7 @@ MobileMessageManager::GetSmscAddress(const Optional<uint32_t>& aServiceId,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -814,7 +814,7 @@ MobileMessageManager::SetSmscAddress(const SmscAddress& aSmscAddress,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

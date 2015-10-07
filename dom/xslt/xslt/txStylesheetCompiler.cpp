@@ -772,7 +772,7 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
     
     txACompileObserver* observer = static_cast<txStylesheetCompiler*>(this);
 
-    RefPtr<txStylesheetCompiler> compiler =
+    nsRefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(aURI, mStylesheet, &mToplevelIterator,
                                  mReferrerPolicy, observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
@@ -809,7 +809,7 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
 
     txACompileObserver* observer = static_cast<txStylesheetCompiler*>(this);
 
-    RefPtr<txStylesheetCompiler> compiler =
+    nsRefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(aURI, mStylesheet, &iter, mReferrerPolicy,
                                  observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
@@ -1083,7 +1083,7 @@ findFunction(nsIAtom* aName, int32_t aNamespaceID,
 extern bool
 TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID)
 {
-    RefPtr<txStylesheetCompiler> compiler =
+    nsRefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(EmptyString(),
                                  mozilla::net::RP_Default, nullptr);
     NS_ENSURE_TRUE(compiler, false);

@@ -9,7 +9,7 @@
 
 #include "CopyOnWrite.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsDataHashtable.h"
 #include "nsCOMPtr.h"
@@ -119,7 +119,7 @@ public:
   already_AddRefed<Image> GetImage() const
   {
     MutexAutoLock lock(mImageMutex);
-    RefPtr<Image> image = mImage;
+    nsRefPtr<Image> image = mImage;
     return image.forget();
   }
 

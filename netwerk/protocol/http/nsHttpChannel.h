@@ -406,8 +406,8 @@ private:
 private:
     nsCOMPtr<nsICancelable>           mProxyRequest;
 
-    RefPtr<nsInputStreamPump>       mTransactionPump;
-    RefPtr<nsHttpTransaction>       mTransaction;
+    nsRefPtr<nsInputStreamPump>       mTransactionPump;
+    nsRefPtr<nsHttpTransaction>       mTransaction;
 
     uint64_t                          mLogicalOffset;
 
@@ -415,7 +415,7 @@ private:
     nsCOMPtr<nsICacheEntry>           mCacheEntry;
     // We must close mCacheInputStream explicitly to avoid leaks.
     AutoClose<nsIInputStream>         mCacheInputStream;
-    RefPtr<nsInputStreamPump>       mCachePump;
+    nsRefPtr<nsInputStreamPump>       mCachePump;
     nsAutoPtr<nsHttpResponseHead>     mCachedResponseHead;
     nsCOMPtr<nsISupports>             mCachedSecurityInfo;
     uint32_t                          mPostID;
@@ -504,7 +504,7 @@ private:
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     // Needed for accurate DNS timing
-    RefPtr<nsDNSPrefetch>           mDNSPrefetch;
+    nsRefPtr<nsDNSPrefetch>           mDNSPrefetch;
 
     Http2PushedStream                 *mPushedStream;
     // True if the channel's principal was found on a phishing, malware, or

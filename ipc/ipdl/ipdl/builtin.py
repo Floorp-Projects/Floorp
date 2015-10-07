@@ -46,7 +46,7 @@ HeaderIncludes = (
     'prtime.h',
     'IPCMessageStart.h',
     'ipc/IPCMessageUtils.h',
-    'mozilla/RefPtr.h',
+    'mozilla/nsRefPtr.h',
     'nsStringGlue.h',
     'nsTArray.h',
     'mozilla/ipc/ProtocolUtils.h',

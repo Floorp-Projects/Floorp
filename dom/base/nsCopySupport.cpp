@@ -307,7 +307,7 @@ nsCopySupport::GetTransferableForNode(nsINode* aNode,
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-  RefPtr<nsRange> range = new nsRange(aNode);
+  nsRefPtr<nsRange> range = new nsRange(aNode);
   rv = range->SelectNode(node);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = selection->AddRange(range);
@@ -685,7 +685,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
   // next, fire the cut, copy or paste event
   bool doDefault = true;
-  RefPtr<DataTransfer> clipboardData;
+  nsRefPtr<DataTransfer> clipboardData;
   if (chromeShell || Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
     clipboardData =
       new DataTransfer(piWindow, aEventMessage, aEventMessage == ePaste,

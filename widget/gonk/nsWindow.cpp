@@ -69,7 +69,7 @@ nsWindow::nsWindow()
 {
     mFramebuffer = nullptr;
 
-    RefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
+    nsRefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
     screenManager->Initialize();
 
     // This is a hack to force initialization of the compositor
@@ -99,7 +99,7 @@ nsWindow::DoDraw(void)
         return;
     }
 
-    RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+    nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
     const nsTArray<nsWindow*>& windows = screen->GetTopWindows();
 
     if (windows.IsEmpty()) {
@@ -342,7 +342,7 @@ nsWindow::Create(nsIWidget *aParent,
     uint32_t screenId = aParent ? ((nsWindow*)aParent)->mScreen->GetId() :
                                   aInitData->mScreenId;
 
-    RefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
+    nsRefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
     screenManager->ScreenForId(screenId, getter_AddRefs(screen));
 
     mScreen = static_cast<nsScreenGonk*>(screen.get());
@@ -680,7 +680,7 @@ nsWindow::StartRemoteDrawing()
         mBackBuffer = mFramebufferTarget->CreateSimilarDrawTarget(
             mFramebufferTarget->GetSize(), mFramebufferTarget->GetFormat());
     }
-    RefPtr<DrawTarget> buffer(mBackBuffer);
+    nsRefPtr<DrawTarget> buffer(mBackBuffer);
     return buffer.forget();
 }
 
@@ -690,7 +690,7 @@ nsWindow::EndRemoteDrawing()
     if (mFramebufferTarget) {
         IntSize size = mFramebufferTarget->GetSize();
         Rect rect(0, 0, size.width, size.height);
-        RefPtr<SourceSurface> source = mBackBuffer->Snapshot();
+        nsRefPtr<SourceSurface> source = mBackBuffer->Snapshot();
         mFramebufferTarget->DrawSurface(source, rect, rect);
         gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
     }

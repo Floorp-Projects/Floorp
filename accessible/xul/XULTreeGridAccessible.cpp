@@ -128,7 +128,7 @@ XULTreeGridAccessible::CellAt(uint32_t aRowIndex, uint32_t aColumnIndex)
   if (!column)
     return nullptr;
 
-  RefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(row);
+  nsRefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(row);
   if (!rowAcc)
     return nullptr;
 
@@ -228,7 +228,7 @@ XULTreeGridAccessible::NativeRole()
 already_AddRefed<Accessible>
 XULTreeGridAccessible::CreateTreeItemAccessible(int32_t aRow) const
 {
-  RefPtr<Accessible> accessible =
+  nsRefPtr<Accessible> accessible =
     new XULTreeGridRowAccessible(mContent, mDoc,
                                  const_cast<XULTreeGridAccessible*>(this),
                                  mTree, mTreeView, aRow);
@@ -376,7 +376,7 @@ XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn) const
   if (cachedCell)
     return cachedCell;
 
-  RefPtr<XULTreeGridCellAccessible> cell =
+  nsRefPtr<XULTreeGridCellAccessible> cell =
     new XULTreeGridCellAccessibleWrap(mContent, mDoc,
                                       const_cast<XULTreeGridRowAccessible*>(this),
                                       mTree, mTreeView, mRow, aColumn);
@@ -737,7 +737,7 @@ XULTreeGridCellAccessible::CellInvalidated()
     mTreeView->GetCellValue(mRow, mColumn, textEquiv);
     if (mCachedTextEquiv != textEquiv) {
       bool isEnabled = textEquiv.EqualsLiteral("true");
-      RefPtr<AccEvent> accEvent =
+      nsRefPtr<AccEvent> accEvent =
         new AccStateChangeEvent(this, states::CHECKED, isEnabled);
       nsEventShell::FireEvent(accEvent);
 
@@ -784,7 +784,7 @@ XULTreeGridCellAccessible::GetSiblingAtOffset(int32_t aOffset,
   if (!columnAtOffset)
     return nullptr;
 
-  RefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(Parent());
+  nsRefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(Parent());
   return rowAcc->GetCellAccessible(columnAtOffset);
 }
 

@@ -475,7 +475,7 @@ ParseSpacingAttribute(nsMathMLmtableFrame* aFrame, nsIAtom* aAttribute)
   nscoord value2;
   // Set defaults
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
                                         fontSizeInflation);
   if (nsGkAtoms::rowspacing_ == aAttribute) {
@@ -854,7 +854,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
     case eAlign_axis:
     default: {
       // XXX should instead use style data from the row of reference here ?
-      RefPtr<nsFontMetrics> fm;
+      nsRefPtr<nsFontMetrics> fm;
       nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                             nsLayoutUtils::
                                             FontSizeInflationFor(this));

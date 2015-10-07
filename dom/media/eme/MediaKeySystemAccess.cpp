@@ -84,7 +84,7 @@ MediaKeySystemAccess::GetKeySystem(nsString& aOutKeySystem) const
 already_AddRefed<Promise>
 MediaKeySystemAccess::CreateMediaKeys(ErrorResult& aRv)
 {
-  RefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem, mCDMVersion));
+  nsRefPtr<MediaKeys> keys(new MediaKeys(mParent, mKeySystem, mCDMVersion));
   return keys->Init(aRv);
 }
 

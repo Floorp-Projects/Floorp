@@ -29,7 +29,7 @@ private:
   static GamepadServiceTest* sSingleton;
   // Hold a reference to the gamepad service so we don't have to worry about
   // execution order in tests.
-  RefPtr<GamepadService> mService;
+  nsRefPtr<GamepadService> mService;
   virtual ~GamepadServiceTest();
 };
 

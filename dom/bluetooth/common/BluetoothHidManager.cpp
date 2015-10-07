@@ -183,7 +183,7 @@ BluetoothHidManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 }
 
@@ -198,7 +198,7 @@ BluetoothHidManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 }
 

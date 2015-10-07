@@ -437,12 +437,12 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAt
     if (!principal) {
       return nsNullPrincipal::Create();
     }
-    RefPtr<BasePrincipal> concrete = Cast(principal);
+    nsRefPtr<BasePrincipal> concrete = Cast(principal);
     return concrete.forget();
   }
 
   // Mint a codebase principal.
-  RefPtr<nsPrincipal> codebase = new nsPrincipal();
+  nsRefPtr<nsPrincipal> codebase = new nsPrincipal();
   rv = codebase->Init(aURI, aAttrs);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return codebase.forget();

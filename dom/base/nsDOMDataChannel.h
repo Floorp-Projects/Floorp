@@ -114,7 +114,7 @@ private:
             uint32_t aMsgLength, bool aIsBinary, mozilla::ErrorResult& aRv);
 
   // Owning reference
-  RefPtr<mozilla::DataChannel> mDataChannel;
+  nsRefPtr<mozilla::DataChannel> mDataChannel;
   nsString  mOrigin;
   enum DataChannelBinaryType {
     DC_BINARY_TYPE_ARRAYBUFFER,

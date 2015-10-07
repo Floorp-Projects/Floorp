@@ -353,7 +353,7 @@ public:
 protected:
   // Typedefs
   typedef nsTArray<nsAutoPtr<nsSMILTimeValueSpec> > TimeValueSpecList;
-  typedef nsTArray<RefPtr<nsSMILInstanceTime> >   InstanceTimeList;
+  typedef nsTArray<nsRefPtr<nsSMILInstanceTime> >   InstanceTimeList;
   typedef nsTArray<nsAutoPtr<nsSMILInterval> >      IntervalList;
   typedef nsPtrHashKey<nsSMILTimeValueSpec> TimeValueSpecPtrKey;
   typedef nsTHashtable<TimeValueSpecPtrKey> TimeValueSpecHashSet;

@@ -119,7 +119,7 @@ public:
   }
 
 private:
-  RefPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
   nsCString mCharSet;
 };
 
@@ -162,7 +162,7 @@ nsPresContext::IsDOMPaintEventPending()
 void
 nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
-  RefPtr<nsPresContext>  presContext =
+  nsRefPtr<nsPresContext>  presContext =
     static_cast<nsPresContext*>(instance_data);
 
   NS_ASSERTION(nullptr != presContext, "bad instance data");
@@ -873,7 +873,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       // Re-fetch the view manager's window dimensions in case there's a deferred
       // resize which hasn't affected our mVisibleArea yet
       nscoord oldWidthAppUnits, oldHeightAppUnits;
-      RefPtr<nsViewManager> vm = shell->GetViewManager();
+      nsRefPtr<nsViewManager> vm = shell->GetViewManager();
       if (!vm) {
         return;
       }
@@ -1242,7 +1242,7 @@ nsPresContext::Observe(nsISupports* aSubject,
                         const char16_t* aData)
 {
   if (!nsCRT::strcmp(aTopic, "charset")) {
-    RefPtr<CharSetChangingRunnable> runnable =
+    nsRefPtr<CharSetChangingRunnable> runnable =
       new CharSetChangingRunnable(this, NS_LossyConvertUTF16toASCII(aData));
     return NS_DispatchToCurrentThread(runnable);
   }
@@ -1617,7 +1617,7 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
 
   // Check the style on the document root element
   nsStyleSet *styleSet = aPresContext->StyleSet();
-  RefPtr<nsStyleContext> rootStyle;
+  nsRefPtr<nsStyleContext> rootStyle;
   rootStyle = styleSet->ResolveStyleFor(docElement, nullptr);
   if (CheckOverflow(rootStyle->StyleDisplay(), aStyles)) {
     // tell caller we stole the overflow style from the root element
@@ -1645,7 +1645,7 @@ GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
     return nullptr;
   }
 
-  RefPtr<nsStyleContext> bodyStyle;
+  nsRefPtr<nsStyleContext> bodyStyle;
   bodyStyle = styleSet->ResolveStyleFor(bodyElement->AsElement(), rootStyle);
 
   if (CheckOverflow(bodyStyle->StyleDisplay(), aStyles)) {
@@ -1985,7 +1985,7 @@ NotifyChildrenUIResolutionChanged(nsIDOMWindow* aWindow)
     return;
   }
   nsCOMPtr<nsIDocument> doc = piWin->GetExtantDoc();
-  RefPtr<nsPIWindowRoot> topLevelWin = nsContentUtils::GetWindowRoot(doc);
+  nsRefPtr<nsPIWindowRoot> topLevelWin = nsContentUtils::GetWindowRoot(doc);
   if (!topLevelWin) {
     return;
   }
@@ -2188,7 +2188,7 @@ nsPresContext::EnsureVisible()
     docShell->GetContentViewer(getter_AddRefs(cv));
     // Make sure this is the content viewer we belong with
     if (cv) {
-      RefPtr<nsPresContext> currentPresContext;
+      nsRefPtr<nsPresContext> currentPresContext;
       cv->GetPresContext(getter_AddRefs(currentPresContext));
       if (currentPresContext == this) {
         // OK, this is us.  We want to call Show() on the content viewer.
@@ -2365,7 +2365,7 @@ nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList)
   // This will empty our list in case dispatching the event causes more damage
   // (hopefully it won't, or we're likely to get an infinite loop! At least
   // it won't be blocking app execution though).
-  RefPtr<NotifyPaintEvent> event =
+  nsRefPtr<NotifyPaintEvent> event =
     NS_NewDOMNotifyPaintEvent(eventTarget, this, nullptr, eAfterPaint, aList);
 
   // Even if we're not telling the window about the event (so eventTarget is
@@ -2593,7 +2593,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
   nsInvalidateRequestList mList;
 };
 

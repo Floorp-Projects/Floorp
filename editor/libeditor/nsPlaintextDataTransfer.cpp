@@ -77,7 +77,7 @@ nsresult nsPlaintextEditor::InsertTextAt(const nsAString &aStringToInsert,
   if (aDestinationNode)
   {
     nsresult res;
-    RefPtr<Selection> selection = GetSelection();
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_STATE(selection);
 
     nsCOMPtr<nsIDOMNode> targetNode = aDestinationNode;
@@ -219,7 +219,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   rv = uiEvent->GetRangeOffset(&newSelectionOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   bool isCollapsed = selection->Collapsed();
@@ -256,7 +256,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
     for (int32_t j = 0; j < rangeCount; j++)
     {
-      RefPtr<nsRange> range = selection->GetRangeAt(j);
+      nsRefPtr<nsRange> range = selection->GetRangeAt(j);
       if (!range) {
         // don't bail yet, iterate through them all
         continue;

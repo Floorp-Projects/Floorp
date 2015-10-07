@@ -182,7 +182,7 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
     switch (aBrowser.type()) {
       case PBrowserOrId::TPBrowserParent:
       {
-        RefPtr<TabParent> tabParent =
+        nsRefPtr<TabParent> tabParent =
           TabParent::GetFrom(aBrowser.get_PBrowserParent());
         dom::Element* topFrameElement = nullptr;
         if (tabParent) {
@@ -331,7 +331,7 @@ NeckoParent::AllocPWebSocketParent(const PBrowserOrId& browser,
     return nullptr;
   }
 
-  RefPtr<TabParent> tabParent = TabParent::GetFrom(browser.get_PBrowserParent());
+  nsRefPtr<TabParent> tabParent = TabParent::GetFrom(browser.get_PBrowserParent());
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
   WebSocketChannelParent* p = new WebSocketChannelParent(tabParent, loadContext,
                                                          overrideStatus);
@@ -350,14 +350,14 @@ NeckoParent::DeallocPWebSocketParent(PWebSocketParent* actor)
 PDataChannelParent*
 NeckoParent::AllocPDataChannelParent(const uint32_t &channelId)
 {
-  RefPtr<DataChannelParent> p = new DataChannelParent();
+  nsRefPtr<DataChannelParent> p = new DataChannelParent();
   return p.forget().take();
 }
 
 bool
 NeckoParent::DeallocPDataChannelParent(PDataChannelParent* actor)
 {
-  RefPtr<DataChannelParent> p = dont_AddRef(static_cast<DataChannelParent*>(actor));
+  nsRefPtr<DataChannelParent> p = dont_AddRef(static_cast<DataChannelParent*>(actor));
   return true;
 }
 
@@ -480,7 +480,7 @@ PUDPSocketParent*
 NeckoParent::AllocPUDPSocketParent(const Principal& /* unused */,
                                    const nsCString& /* unused */)
 {
-  RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
+  nsRefPtr<UDPSocketParent> p = new UDPSocketParent(this);
 
   return p.forget().take();
 }
@@ -836,7 +836,7 @@ NeckoParent::RecvOnAuthAvailable(const uint64_t& aCallbackId,
   }
   CallbackMap().erase(aCallbackId);
 
-  RefPtr<nsAuthInformationHolder> holder =
+  nsRefPtr<nsAuthInformationHolder> holder =
     new nsAuthInformationHolder(0, EmptyString(), EmptyCString());
   holder->SetUsername(aUser);
   holder->SetPassword(aPassword);

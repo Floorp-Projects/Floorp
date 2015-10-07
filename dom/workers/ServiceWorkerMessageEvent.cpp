@@ -139,7 +139,7 @@ ServiceWorkerMessageEvent::Constructor(EventTarget* aEventTarget,
                                        const ServiceWorkerMessageEventInit& aParam,
                                        ErrorResult& aRv)
 {
-  RefPtr<ServiceWorkerMessageEvent> event =
+  nsRefPtr<ServiceWorkerMessageEvent> event =
     new ServiceWorkerMessageEvent(aEventTarget, nullptr, nullptr);
 
   aRv = event->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
@@ -172,7 +172,7 @@ ServiceWorkerMessageEvent::Constructor(EventTarget* aEventTarget,
   }
 
   if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
-    nsTArray<RefPtr<MessagePort>> ports;
+    nsTArray<nsRefPtr<MessagePort>> ports;
     for (uint32_t i = 0, len = aParam.mPorts.Value().Value().Length(); i < len; ++i) {
       ports.AppendElement(aParam.mPorts.Value().Value()[i].get());
     }

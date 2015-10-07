@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_PresentationSessionTransport_h
 #define mozilla_dom_PresentationSessionTransport_h
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIPresentationSessionTransport.h"

@@ -8,7 +8,7 @@
 
 #include "FrameAnimator.h"
 #include "RasterImage.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "DecodePool.h"
 #include "DecoderFlags.h"
 #include "Downscaler.h"
@@ -399,7 +399,7 @@ protected:
   uint32_t mColormapSize;
 
 private:
-  RefPtr<RasterImage> mImage;
+  nsRefPtr<RasterImage> mImage;
   Maybe<SourceBufferIterator> mIterator;
   RawAccessFrameRef mCurrentFrame;
   ImageMetadata mImageMetadata;

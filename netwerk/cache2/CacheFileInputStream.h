@@ -53,8 +53,8 @@ private:
   void NotifyListener();
   void MaybeNotifyListener();
 
-  RefPtr<CacheFile>      mFile;
-  RefPtr<CacheFileChunk> mChunk;
+  nsRefPtr<CacheFile>      mFile;
+  nsRefPtr<CacheFileChunk> mChunk;
   int64_t                  mPos;
   bool                     mClosed;
   nsresult                 mStatus;

@@ -33,7 +33,7 @@ BlobSerial(ImageURL* aURI)
   nsAutoCString spec;
   aURI->GetSpec(spec);
 
-  RefPtr<BlobImpl> blob;
+  nsRefPtr<BlobImpl> blob;
   if (NS_SUCCEEDED(NS_GetBlobForBlobURISpec(spec, getter_AddRefs(blob))) &&
       blob) {
     return Some(blob->GetSerialNumber());

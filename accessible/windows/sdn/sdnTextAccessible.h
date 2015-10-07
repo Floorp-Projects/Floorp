@@ -62,7 +62,7 @@ private:
                                int32_t aOffset, bool aPreferNext,
                                nsPoint& aOutPoint);
 
-  RefPtr<AccessibleWrap> mAccessible;
+  nsRefPtr<AccessibleWrap> mAccessible;
 };
 
 } // namespace a11y

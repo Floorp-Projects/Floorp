@@ -140,7 +140,7 @@ PromiseDebugging::GetFullfillmentStack(GlobalObject&, Promise& aPromise,
 
 /* static */ void
 PromiseDebugging::GetDependentPromises(GlobalObject&, Promise& aPromise,
-                                       nsTArray<RefPtr<Promise>>& aPromises)
+                                       nsTArray<nsRefPtr<Promise>>& aPromises)
 {
   aPromise.GetDependentPromises(aPromises);
 }
@@ -247,7 +247,7 @@ PromiseDebugging::FlushUncaughtRejectionsInternal()
     // to report it.
     for (size_t j = 0; j < observers.Length(); ++j) {
       ErrorResult err;
-      RefPtr<UncaughtRejectionObserver> obs =
+      nsRefPtr<UncaughtRejectionObserver> obs =
         static_cast<UncaughtRejectionObserver*>(observers[j].get());
 
       obs->OnLeftUncaught(*promise, err); // Ignore errors
@@ -269,7 +269,7 @@ PromiseDebugging::FlushUncaughtRejectionsInternal()
     MOZ_ASSERT(!promise->IsLastInChain());
     for (size_t j = 0; j < observers.Length(); ++j) {
       ErrorResult err;
-      RefPtr<UncaughtRejectionObserver> obs =
+      nsRefPtr<UncaughtRejectionObserver> obs =
         static_cast<UncaughtRejectionObserver*>(observers[j].get());
 
       obs->OnConsumed(*promise, err); // Ignore errors

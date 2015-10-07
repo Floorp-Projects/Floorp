@@ -70,9 +70,9 @@ txXPathOptimizer::optimize(Expr* aInExpr, Expr** aOutExpr)
     Expr::ExprType exprType = aInExpr->getType();
     if (exprType != Expr::LITERAL_EXPR &&
         !aInExpr->isSensitiveTo(Expr::ANY_CONTEXT)) {
-        RefPtr<txResultRecycler> recycler = new txResultRecycler;
+        nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
         txEarlyEvalContext context(recycler);
-        RefPtr<txAExprResult> exprRes;
+        nsRefPtr<txAExprResult> exprRes;
 
         // Don't throw if this fails since it could be that the expression
         // is or contains an error-expression.

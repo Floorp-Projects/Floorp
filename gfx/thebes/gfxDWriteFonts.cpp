@@ -143,7 +143,7 @@ gfxDWriteFont::GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics)
         return false;
     }
 
-    RefPtr<gfxFont> font = fe->FindOrMakeFont(&style, needsBold);
+    nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&style, needsBold);
     gfxDWriteFont *dwFont = static_cast<gfxDWriteFont*>(font.get());
     dwFont->mFontFace->GetMetrics(aFontMetrics);
 
@@ -674,7 +674,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
   bool wantCairo = aTarget->GetBackendType() == BackendType::CAIRO;
   if (mAzureScaledFont && mAzureScaledFontIsCairo == wantCairo) {
-    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+    nsRefPtr<ScaledFont> scaledFont(mAzureScaledFont);
     return scaledFont.forget();
   }
 
@@ -693,6 +693,6 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 
   mAzureScaledFontIsCairo = wantCairo;
 
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+  nsRefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
 }

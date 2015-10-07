@@ -49,7 +49,7 @@ private:
   PermissionName mName;
   PermissionState mState;
 
-  RefPtr<PermissionObserver> mObserver;
+  nsRefPtr<PermissionObserver> mObserver;
 };
 
 } // namespace dom

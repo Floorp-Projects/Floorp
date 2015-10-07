@@ -77,9 +77,9 @@ private:
 
   // This only changes when a worker hijacks everything in its scope by calling
   // claim.
-  RefPtr<workers::ServiceWorker> mControllerWorker;
+  nsRefPtr<workers::ServiceWorker> mControllerWorker;
 
-  RefPtr<Promise> mReadyPromise;
+  nsRefPtr<Promise> mReadyPromise;
 };
 
 } // namespace dom

@@ -42,12 +42,12 @@ public:
 
   already_AddRefed<SpeechRecognitionAlternative> IndexedGetter(uint32_t aIndex, bool& aPresent);
 
-  nsTArray<RefPtr<SpeechRecognitionAlternative>> mItems;
+  nsTArray<nsRefPtr<SpeechRecognitionAlternative>> mItems;
 
 private:
   ~SpeechRecognitionResult();
 
-  RefPtr<SpeechRecognition> mParent;
+  nsRefPtr<SpeechRecognition> mParent;
 };
 
 } // namespace dom

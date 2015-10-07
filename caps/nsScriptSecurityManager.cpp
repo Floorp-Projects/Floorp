@@ -326,7 +326,7 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
     aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
     if (loadInfo) {
         if (loadInfo->GetLoadingSandboxed()) {
-            RefPtr<nsNullPrincipal> prin =
+            nsRefPtr<nsNullPrincipal> prin =
               nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
             NS_ENSURE_TRUE(prin, NS_ERROR_FAILURE);
             prin.forget(aPrincipal);
@@ -1320,7 +1320,7 @@ nsresult nsScriptSecurityManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create our system principal singleton
-    RefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
+    nsRefPtr<nsSystemPrincipal> system = new nsSystemPrincipal();
 
     mSystemPrincipal = system;
 
@@ -1379,7 +1379,7 @@ nsScriptSecurityManager::GetScriptSecurityManager()
 /* static */ void
 nsScriptSecurityManager::InitStatics()
 {
-    RefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
+    nsRefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
     nsresult rv = ssManager->Init();
     if (NS_FAILED(rv)) {
         MOZ_CRASH();

@@ -43,8 +43,8 @@ private:
   bool RegisterVoices();
 
   nsRefPtrHashtable<nsStringHashKey, ISpObjectToken> mVoices;
-  nsTArray<RefPtr<SapiCallback>> mCallbacks;
-  RefPtr<ISpVoice> mSapiClient;
+  nsTArray<nsRefPtr<SapiCallback>> mCallbacks;
+  nsRefPtr<ISpVoice> mSapiClient;
 
   bool mInitialized;
 

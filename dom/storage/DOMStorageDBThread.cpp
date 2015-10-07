@@ -728,7 +728,7 @@ DOMStorageDBThread::NotifyFlushCompletion()
 {
 #ifdef DOM_STORAGE_TESTS
   if (!NS_IsMainThread()) {
-    RefPtr<nsRunnableMethod<DOMStorageDBThread, void, false> > event =
+    nsRefPtr<nsRunnableMethod<DOMStorageDBThread, void, false> > event =
       NS_NewNonOwningRunnableMethod(this, &DOMStorageDBThread::NotifyFlushCompletion);
     NS_DispatchToMainThread(event);
     return;

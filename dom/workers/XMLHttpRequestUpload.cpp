@@ -40,6 +40,6 @@ XMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 already_AddRefed<XMLHttpRequestUpload>
 XMLHttpRequestUpload::Create(XMLHttpRequest* aXHR)
 {
-  RefPtr<XMLHttpRequestUpload> upload = new XMLHttpRequestUpload(aXHR);
+  nsRefPtr<XMLHttpRequestUpload> upload = new XMLHttpRequestUpload(aXHR);
   return upload.forget();
 }

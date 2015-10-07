@@ -393,7 +393,7 @@ nsHttpHandler::MakeNewRequestTokenBucket()
     if (!mConnMgr)
         return;
 
-    RefPtr<EventTokenBucket> tokenBucket =
+    nsRefPtr<EventTokenBucket> tokenBucket =
         new EventTokenBucket(RequestTokenBucketHz(), RequestTokenBucketBurst());
     mConnMgr->UpdateRequestTokenBucket(tokenBucket);
 }
@@ -594,7 +594,7 @@ nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan, nsIChannel* newChan,
                                  uint32_t flags)
 {
     // TODO E10S This helper has to be initialized on the other process
-    RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
+    nsRefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
         new nsAsyncRedirectVerifyHelper();
 
     return redirectCallbackHelper->Init(oldChan, newChan, flags);
@@ -1616,7 +1616,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 void
 nsHttpHandler::TimerCallback(nsITimer * aTimer, void * aClosure)
 {
-    RefPtr<nsHttpHandler> thisObject = static_cast<nsHttpHandler*>(aClosure);
+    nsRefPtr<nsHttpHandler> thisObject = static_cast<nsHttpHandler*>(aClosure);
     if (!thisObject->mPipeliningEnabled)
         thisObject->mCapabilities &= ~NS_HTTP_ALLOW_PIPELINING;
 }
@@ -1890,7 +1890,7 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri,
                                   nsILoadInfo* aLoadInfo,
                                   nsIChannel** result)
 {
-    RefPtr<HttpBaseChannel> httpChannel;
+    nsRefPtr<HttpBaseChannel> httpChannel;
 
     LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n",
         givenProxyInfo));

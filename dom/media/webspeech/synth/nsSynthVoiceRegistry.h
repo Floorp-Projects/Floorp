@@ -87,9 +87,9 @@ private:
                  const float& aRate,
                  const float& aPitch);
 
-  nsTArray<RefPtr<VoiceData>> mVoices;
+  nsTArray<nsRefPtr<VoiceData>> mVoices;
 
-  nsTArray<RefPtr<VoiceData>> mDefaultVoices;
+  nsTArray<nsRefPtr<VoiceData>> mDefaultVoices;
 
   nsRefPtrHashtable<nsStringHashKey, VoiceData> mUriVoiceMap;
 
@@ -97,7 +97,7 @@ private:
 
   bool mUseGlobalQueue;
 
-  nsTArray<RefPtr<GlobalQueueItem>> mGlobalQueue;
+  nsTArray<nsRefPtr<GlobalQueueItem>> mGlobalQueue;
 
   bool mIsSpeaking;
 };

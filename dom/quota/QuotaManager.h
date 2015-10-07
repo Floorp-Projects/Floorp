@@ -244,7 +244,7 @@ public:
   // Collect inactive and the least recently used origins.
   uint64_t
   CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
-                            nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
+                            nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
 
   nsresult
   EnsureOriginIsInitialized(PersistenceType aPersistenceType,
@@ -402,7 +402,7 @@ private:
   uint64_t
   LockedCollectOriginsForEviction(
                                  uint64_t aMinSizeToBeFreed,
-                                 nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
+                                 nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
 
   void
   LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
@@ -440,7 +440,7 @@ private:
                        const nsACString& aOrigin);
 
   void
-  FinalizeOriginEviction(nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
+  FinalizeOriginEviction(nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
 
   void
   ReleaseIOThreadObjects()
@@ -481,7 +481,7 @@ private:
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
 
   // Maintains a list of directory locks that are queued.
-  nsTArray<RefPtr<DirectoryLockImpl>> mPendingDirectoryLocks;
+  nsTArray<nsRefPtr<DirectoryLockImpl>> mPendingDirectoryLocks;
 
   // Maintains a list of directory locks that are acquired or queued.
   nsTArray<DirectoryLockImpl*> mDirectoryLocks;
@@ -500,7 +500,7 @@ private:
   // by any mutex but it is only ever touched on the IO thread.
   nsTArray<nsCString> mInitializedOrigins;
 
-  nsAutoTArray<RefPtr<Client>, Client::TYPE_MAX> mClients;
+  nsAutoTArray<nsRefPtr<Client>, Client::TYPE_MAX> mClients;
 
   nsString mIndexedDBPath;
   nsString mStoragePath;

@@ -989,7 +989,7 @@ nsGonkCameraControl::SetThumbnailSize(const Size& aSize)
     }
 
   protected:
-    RefPtr<nsGonkCameraControl> mCameraControl;
+    nsRefPtr<nsGonkCameraControl> mCameraControl;
     Size mSize;
   };
 
@@ -1107,7 +1107,7 @@ nsGonkCameraControl::SetPictureSize(const Size& aSize)
     }
 
   protected:
-    RefPtr<nsGonkCameraControl> mCameraControl;
+    nsRefPtr<nsGonkCameraControl> mCameraControl;
     Size mSize;
   };
 
@@ -1247,7 +1247,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
   // close the file descriptor when we leave this function. Also note, that
   // since we're already off the main thread, we don't need to dispatch this.
   // We just let the CloseFileRunnable destructor do the work.
-  RefPtr<CloseFileRunnable> closer;
+  nsRefPtr<CloseFileRunnable> closer;
   if (aFileDescriptor->mFileDescriptor.IsValid()) {
     closer = new CloseFileRunnable(aFileDescriptor->mFileDescriptor);
   }
@@ -1307,7 +1307,7 @@ nsGonkCameraControl::StopRecordingImpl()
     }
 
   private:
-    RefPtr<DeviceStorageFile> mFile;
+    nsRefPtr<DeviceStorageFile> mFile;
   };
 
   ReentrantMonitorAutoEnter mon(mRecorderMonitor);
@@ -1424,7 +1424,7 @@ protected:
   virtual ~AutoFocusMovingTimerCallback()
   { }
 
-  RefPtr<nsGonkCameraControl> mCameraControl;
+  nsRefPtr<nsGonkCameraControl> mCameraControl;
 };
 
 NS_IMPL_ISUPPORTS(AutoFocusMovingTimerCallback, nsITimerCallback);
@@ -1448,7 +1448,7 @@ nsGonkCameraControl::OnAutoFocusMoving(bool aIsMoving)
         mAutoFocusCompleteTimer->Cancel();
 
         if (!mAutoFocusPending) {
-          RefPtr<nsITimerCallback> timerCb = new AutoFocusMovingTimerCallback(this);
+          nsRefPtr<nsITimerCallback> timerCb = new AutoFocusMovingTimerCallback(this);
           nsresult rv = mAutoFocusCompleteTimer->InitWithCallback(timerCb,
                                                                   kAutoFocusCompleteTimeoutMs,
                                                                   nsITimer::TYPE_ONE_SHOT);
@@ -1488,7 +1488,7 @@ nsGonkCameraControl::OnAutoFocusComplete(bool aSuccess, bool aExpired)
     }
 
   protected:
-    RefPtr<nsGonkCameraControl> mCameraControl;
+    nsRefPtr<nsGonkCameraControl> mCameraControl;
     bool mSuccess;
     bool mExpired;
   };
@@ -1915,7 +1915,7 @@ public:
 
 protected:
   ~GonkRecorderListener() { }
-  RefPtr<nsGonkCameraControl> mCameraControl;
+  nsRefPtr<nsGonkCameraControl> mCameraControl;
 };
 
 void
@@ -2152,7 +2152,7 @@ nsresult
 nsGonkCameraControl::LoadRecorderProfiles()
 {
   if (mRecorderProfiles.Count() == 0) {
-    nsTArray<RefPtr<RecorderProfile>> profiles;
+    nsTArray<nsRefPtr<RecorderProfile>> profiles;
     nsresult rv = GonkRecorderProfile::GetAll(mCameraId, profiles);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -2341,8 +2341,8 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
     }
 
   private:
-    RefPtr<nsGonkCameraControl> mTarget;
-    RefPtr<Image> mImage;
+    nsRefPtr<nsGonkCameraControl> mTarget;
+    nsRefPtr<Image> mImage;
     int32_t mWidth;
     int32_t mHeight;
     int32_t mRotation;
@@ -2365,7 +2365,7 @@ nsGonkCameraControl::CreatePoster(Image* aImage, uint32_t aWidth, uint32_t aHeig
 void
 nsGonkCameraControl::OnPoster(void* aData, uint32_t aLength)
 {
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
   if (aData) {
     blobImpl = new BlobImplMemory(aData, aLength, NS_LITERAL_STRING("image/jpeg"));
   }
@@ -2376,7 +2376,7 @@ void
 nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 {
 #ifdef MOZ_WIDGET_GONK
-  RefPtr<Image> frame = mImageContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
+  nsRefPtr<Image> frame = mImageContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
 
   GrallocImage* videoImage = static_cast<GrallocImage*>(frame.get());
 

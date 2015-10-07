@@ -110,7 +110,7 @@ protected:
   template<class DeviceType>
   static bool
   AreUnfitSettings(const dom::MediaTrackConstraints &aConstraints,
-                   nsTArray<RefPtr<DeviceType>>& aSources)
+                   nsTArray<nsRefPtr<DeviceType>>& aSources)
   {
     nsTArray<const dom::MediaTrackConstraintSet*> aggregateConstraints;
     aggregateConstraints.AppendElement(&aConstraints);
@@ -129,7 +129,7 @@ public:
   template<class DeviceType>
   static const char*
   SelectSettings(const dom::MediaTrackConstraints &aConstraints,
-                 nsTArray<RefPtr<DeviceType>>& aSources)
+                 nsTArray<nsRefPtr<DeviceType>>& aSources)
   {
     auto& c = aConstraints;
 
@@ -138,11 +138,11 @@ public:
     // Stack constraintSets that pass, starting with the required one, because the
     // whole stack must be re-satisfied each time a capability-set is ruled out
     // (this avoids storing state or pushing algorithm into the lower-level code).
-    nsTArray<RefPtr<DeviceType>> unsatisfactory;
+    nsTArray<nsRefPtr<DeviceType>> unsatisfactory;
     nsTArray<const dom::MediaTrackConstraintSet*> aggregateConstraints;
     aggregateConstraints.AppendElement(&c);
 
-    std::multimap<uint32_t, RefPtr<DeviceType>> ordered;
+    std::multimap<uint32_t, nsRefPtr<DeviceType>> ordered;
 
     for (uint32_t i = 0; i < aSources.Length();) {
       uint32_t distance = aSources[i]->GetBestFitnessDistance(aggregateConstraints);
@@ -150,7 +150,7 @@ public:
         unsatisfactory.AppendElement(aSources[i]);
         aSources.RemoveElementAt(i);
       } else {
-        ordered.insert(std::pair<uint32_t, RefPtr<DeviceType>>(distance,
+        ordered.insert(std::pair<uint32_t, nsRefPtr<DeviceType>>(distance,
                                                                  aSources[i]));
         ++i;
       }
@@ -211,7 +211,7 @@ public:
 
       for (int i = 0; i < int(array.Length()); i++) {
         aggregateConstraints.AppendElement(&array[i]);
-        nsTArray<RefPtr<DeviceType>> rejects;
+        nsTArray<nsRefPtr<DeviceType>> rejects;
         for (uint32_t j = 0; j < aSources.Length();) {
           if (aSources[j]->GetBestFitnessDistance(aggregateConstraints) == UINT32_MAX) {
             rejects.AppendElement(aSources[j]);

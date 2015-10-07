@@ -89,7 +89,7 @@ TEST(ServiceWorkerRegistrar, TestNoFile)
     ASSERT_EQ(NS_OK, rv) << "nsIFile::Remove cannot fail";
   }
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   rv = swr->TestReadData();
   ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
@@ -102,7 +102,7 @@ TEST(ServiceWorkerRegistrar, TestEmptyFile)
 {
   ASSERT_TRUE(CreateFile(EmptyCString())) << "CreateFile should not fail";
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   nsresult rv = swr->TestReadData();
   ASSERT_NE(NS_OK, rv) << "ReadData() should fail if the file is empty";
@@ -115,7 +115,7 @@ TEST(ServiceWorkerRegistrar, TestRightVersionFile)
 {
   ASSERT_TRUE(CreateFile(nsAutoCString(SERVICEWORKERREGISTRAR_VERSION "\n"))) << "CreateFile should not fail";
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   nsresult rv = swr->TestReadData();
   ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail when the version is correct";
@@ -128,7 +128,7 @@ TEST(ServiceWorkerRegistrar, TestWrongVersionFile)
 {
   ASSERT_TRUE(CreateFile(nsAutoCString(SERVICEWORKERREGISTRAR_VERSION "bla\n"))) << "CreateFile should not fail";
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   nsresult rv = swr->TestReadData();
   ASSERT_NE(NS_OK, rv) << "ReadData() should fail when the version is not correct";
@@ -151,7 +151,7 @@ TEST(ServiceWorkerRegistrar, TestReadData)
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   nsresult rv = swr->TestReadData();
   ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";
@@ -194,7 +194,7 @@ TEST(ServiceWorkerRegistrar, TestDeleteData)
 {
   ASSERT_TRUE(CreateFile(nsAutoCString("Foobar"))) << "CreateFile should not fail";
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   swr->TestDeleteData();
 
@@ -210,7 +210,7 @@ TEST(ServiceWorkerRegistrar, TestDeleteData)
 TEST(ServiceWorkerRegistrar, TestWriteData)
 {
   {
-    RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+    nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
     nsTArray<ServiceWorkerRegistrationData>& data = swr->TestGetData();
 
@@ -231,7 +231,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     ASSERT_EQ(NS_OK, rv) << "WriteData() should not fail";
   }
 
-  RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
+  nsRefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
   nsresult rv = swr->TestReadData();
   ASSERT_EQ(NS_OK, rv) << "ReadData() should not fail";

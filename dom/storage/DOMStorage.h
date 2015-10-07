@@ -141,8 +141,8 @@ private:
   friend class DOMStorageCache;
 
   nsCOMPtr<nsIDOMWindow> mWindow;
-  RefPtr<DOMStorageManager> mManager;
-  RefPtr<DOMStorageCache> mCache;
+  nsRefPtr<DOMStorageManager> mManager;
+  nsRefPtr<DOMStorageCache> mCache;
   nsString mDocumentURI;
 
   // Principal this DOMStorage (i.e. localStorage or sessionStorage) has

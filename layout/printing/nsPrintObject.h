@@ -44,9 +44,9 @@ public:
   nsCOMPtr<nsIDocShellTreeOwner> mTreeOwner;
   nsCOMPtr<nsIDocument>    mDocument;
 
-  RefPtr<nsPresContext>  mPresContext;
+  nsRefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
-  RefPtr<nsViewManager> mViewManager;
+  nsRefPtr<nsViewManager> mViewManager;
 
   nsCOMPtr<nsIContent>     mContent;
   PrintObjectType  mFrameType;

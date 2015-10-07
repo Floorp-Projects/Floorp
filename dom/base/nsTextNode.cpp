@@ -59,7 +59,7 @@ public:
                                               bool aCloneText) const override
   {
     already_AddRefed<mozilla::dom::NodeInfo> ni =
-      RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+      nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
     nsAttributeTextNode *it = new nsAttributeTextNode(ni,
                                                       mNameSpaceID,
                                                       mAttrName);
@@ -115,7 +115,7 @@ nsTextNode::IsNodeOfType(uint32_t aFlags) const
 nsGenericDOMDataNode*
 nsTextNode::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   nsTextNode *it = new nsTextNode(ni);
   if (aCloneText) {
     it->mText = mText;

@@ -51,7 +51,7 @@ private:
   nsTObserverArray<nsCOMPtr<nsIPresentationAvailabilityListener> > mAvailabilityListeners;
   nsRefPtrHashtable<nsStringHashKey, nsIPresentationSessionListener> mSessionListeners;
   nsRefPtrHashtable<nsUint64HashKey, nsIPresentationRespondingListener> mRespondingListeners;
-  RefPtr<PresentationResponderLoadingCallback> mCallback;
+  nsRefPtr<PresentationResponderLoadingCallback> mCallback;
 
   // Store the mapping between the window ID of the OOP page (in this process)
   // and the ID of the responding session. It's used for an OOP receiver page

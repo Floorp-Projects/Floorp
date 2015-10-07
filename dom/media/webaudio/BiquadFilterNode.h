@@ -69,10 +69,10 @@ protected:
 
 private:
   BiquadFilterType mType;
-  RefPtr<AudioParam> mFrequency;
-  RefPtr<AudioParam> mDetune;
-  RefPtr<AudioParam> mQ;
-  RefPtr<AudioParam> mGain;
+  nsRefPtr<AudioParam> mFrequency;
+  nsRefPtr<AudioParam> mDetune;
+  nsRefPtr<AudioParam> mQ;
+  nsRefPtr<AudioParam> mGain;
 };
 
 } // namespace dom

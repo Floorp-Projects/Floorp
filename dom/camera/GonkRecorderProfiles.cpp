@@ -272,8 +272,8 @@ GonkRecorderProfile::Enumerate(const nsAString& aProfileName,
                                GonkRecorderProfile* aProfile,
                                void* aUserArg)
 {
-  nsTArray<RefPtr<ICameraControl::RecorderProfile>>* profiles =
-    static_cast<nsTArray<RefPtr<ICameraControl::RecorderProfile>>*>(aUserArg);
+  nsTArray<nsRefPtr<ICameraControl::RecorderProfile>>* profiles =
+    static_cast<nsTArray<nsRefPtr<ICameraControl::RecorderProfile>>*>(aUserArg);
   MOZ_ASSERT(profiles);
   profiles->AppendElement(aProfile);
   return PL_DHASH_NEXT;
@@ -288,7 +288,7 @@ GonkRecorderProfile::CreateProfile(uint32_t aCameraId, int aQuality)
     return nullptr;
   }
 
-  RefPtr<GonkRecorderProfile> profile = new GonkRecorderProfile(aCameraId, aQuality);
+  nsRefPtr<GonkRecorderProfile> profile = new GonkRecorderProfile(aCameraId, aQuality);
   if (!profile->IsValid()) {
     DOM_CAMERA_LOGE("Profile %d is not valid\n", aQuality);
     return nullptr;
@@ -315,7 +315,7 @@ GonkRecorderProfile::GetProfileHashtable(uint32_t aCameraId)
         highestKnownQuality = p.quality;
       }
 
-      RefPtr<GonkRecorderProfile> profile = CreateProfile(aCameraId, p.quality);
+      nsRefPtr<GonkRecorderProfile> profile = CreateProfile(aCameraId, p.quality);
       if (!profile) {
         continue;
       }
@@ -339,7 +339,7 @@ GonkRecorderProfile::GetProfileHashtable(uint32_t aCameraId)
        situation there is a collision, it will merely select the last
        detected profile. */
     for (int q = highestKnownQuality + 1; q <= CAMCORDER_QUALITY_LIST_END; ++q) {
-      RefPtr<GonkRecorderProfile> profile = CreateProfile(aCameraId, q);
+      nsRefPtr<GonkRecorderProfile> profile = CreateProfile(aCameraId, q);
       if (!profile) {
         continue;
       }
@@ -367,7 +367,7 @@ GonkRecorderProfile::GetProfileHashtable(uint32_t aCameraId)
 
 /* static */ nsresult
 GonkRecorderProfile::GetAll(uint32_t aCameraId,
-                            nsTArray<RefPtr<ICameraControl::RecorderProfile>>& aProfiles)
+                            nsTArray<nsRefPtr<ICameraControl::RecorderProfile>>& aProfiles)
 {
   ProfileHashtable* profiles = GetProfileHashtable(aCameraId);
   if (!profiles) {

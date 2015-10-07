@@ -206,7 +206,7 @@ NodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 void
 NodeInfo::DeleteCycleCollectable()
 {
-  RefPtr<nsNodeInfoManager> kungFuDeathGrip = mOwnerManager;
+  nsRefPtr<nsNodeInfoManager> kungFuDeathGrip = mOwnerManager;
   delete this;
 }
 

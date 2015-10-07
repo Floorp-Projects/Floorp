@@ -35,7 +35,7 @@ SVGAnimatedTransformList::BaseVal()
   if (!mBaseVal) {
     mBaseVal = new DOMSVGTransformList(this, InternalAList().GetBaseValue());
   }
-  RefPtr<DOMSVGTransformList> baseVal = mBaseVal;
+  nsRefPtr<DOMSVGTransformList> baseVal = mBaseVal;
   return baseVal.forget();
 }
 
@@ -45,7 +45,7 @@ SVGAnimatedTransformList::AnimVal()
   if (!mAnimVal) {
     mAnimVal = new DOMSVGTransformList(this, InternalAList().GetAnimValue());
   }
-  RefPtr<DOMSVGTransformList> animVal = mAnimVal;
+  nsRefPtr<DOMSVGTransformList> animVal = mAnimVal;
   return animVal.forget();
 }
 
@@ -53,7 +53,7 @@ SVGAnimatedTransformList::AnimVal()
 SVGAnimatedTransformList::GetDOMWrapper(nsSVGAnimatedTransformList *aList,
                                         nsSVGElement *aElement)
 {
-  RefPtr<SVGAnimatedTransformList> wrapper =
+  nsRefPtr<SVGAnimatedTransformList> wrapper =
     sSVGAnimatedTransformListTearoffTable.GetTearoff(aList);
   if (!wrapper) {
     wrapper = new SVGAnimatedTransformList(aElement);
@@ -87,7 +87,7 @@ SVGAnimatedTransformList::InternalBaseValListWillChangeLengthTo(
   // able to access "items" at indexes that are out of bounds (read/write to
   // bad memory)!!
 
-  RefPtr<SVGAnimatedTransformList> kungFuDeathGrip;
+  nsRefPtr<SVGAnimatedTransformList> kungFuDeathGrip;
   if (mBaseVal) {
     if (aNewLength < mBaseVal->LengthNoFlush()) {
       // InternalListLengthWillChange might clear last reference to |this|.

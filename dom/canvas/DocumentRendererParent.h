@@ -33,7 +33,7 @@ public:
 
 private:
     nsCOMPtr<nsICanvasRenderingContextInternal> mCanvas;
-    RefPtr<gfxContext> mCanvasContext;
+    nsRefPtr<gfxContext> mCanvasContext;
 
     DISALLOW_EVIL_CONSTRUCTORS(DocumentRendererParent);
 };

@@ -104,7 +104,7 @@ private:
 
   bool mIPCOpen;
   bool mSentAppData;
-  RefPtr<ChannelEventQueue> mEventQ;
+  nsRefPtr<ChannelEventQueue> mEventQ;
 
   friend class WyciwygStartRequestEvent;
   friend class WyciwygDataAvailableEvent;

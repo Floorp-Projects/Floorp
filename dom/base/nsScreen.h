@@ -141,7 +141,7 @@ private:
 
   bool ShouldResistFingerprinting() const;
 
-  RefPtr<mozilla::dom::ScreenOrientation> mScreenOrientation;
+  nsRefPtr<mozilla::dom::ScreenOrientation> mScreenOrientation;
 };
 
 #endif /* nsScreen_h___ */

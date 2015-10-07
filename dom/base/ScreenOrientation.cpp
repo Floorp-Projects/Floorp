@@ -122,8 +122,8 @@ public:
 protected:
   bool OrientationLockContains(OrientationType aOrientationType);
 
-  RefPtr<ScreenOrientation> mScreenOrientation;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<ScreenOrientation> mScreenOrientation;
+  nsRefPtr<Promise> mPromise;
   ScreenOrientationInternal mOrientationLock;
   nsCOMPtr<nsIDocument> mDocument;
   bool mIsFullScreen;
@@ -302,7 +302,7 @@ ScreenOrientation::LockInternal(ScreenOrientationInternal aOrientation, ErrorRes
 
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(owner);
   MOZ_ASSERT(go);
-  RefPtr<Promise> p = Promise::Create(go, aRv);
+  nsRefPtr<Promise> p = Promise::Create(go, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -376,7 +376,7 @@ ScreenOrientation::LockDeviceOrientation(ScreenOrientationInternal aOrientation,
 void
 ScreenOrientation::Unlock(ErrorResult& aRv)
 {
-  RefPtr<Promise> p = LockInternal(eScreenOrientation_None, aRv);
+  nsRefPtr<Promise> p = LockInternal(eScreenOrientation_None, aRv);
 }
 
 void

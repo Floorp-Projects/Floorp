@@ -37,7 +37,7 @@ GenerateRequest(IDBIndex* aIndex)
 
   IDBTransaction* transaction = aIndex->ObjectStore()->Transaction();
 
-  RefPtr<IDBRequest> request =
+  nsRefPtr<IDBRequest> request =
     IDBRequest::Create(aIndex, transaction->Database(), transaction);
   MOZ_ASSERT(request);
 
@@ -75,7 +75,7 @@ IDBIndex::Create(IDBObjectStore* aObjectStore,
   MOZ_ASSERT(aObjectStore);
   aObjectStore->AssertIsOnOwningThread();
 
-  RefPtr<IDBIndex> index = new IDBIndex(aObjectStore, &aMetadata);
+  nsRefPtr<IDBIndex> index = new IDBIndex(aObjectStore, &aMetadata);
 
   return index.forget();
 }
@@ -274,7 +274,7 @@ IDBIndex::GetInternal(bool aKeyOnly,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -300,7 +300,7 @@ IDBIndex::GetInternal(bool aKeyOnly,
     params = IndexGetParams(objectStoreId, indexId, serializedKeyRange);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (aKeyOnly) {
@@ -356,7 +356,7 @@ IDBIndex::GetAllInternal(bool aKeysOnly,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -384,7 +384,7 @@ IDBIndex::GetAllInternal(bool aKeysOnly,
     params = IndexGetAllParams(objectStoreId, indexId, optionalKeyRange, limit);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -442,7 +442,7 @@ IDBIndex::OpenCursorInternal(bool aKeysOnly,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aRange, getter_AddRefs(keyRange));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -483,7 +483,7 @@ IDBIndex::OpenCursorInternal(bool aKeysOnly,
     params = Move(openParams);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -543,7 +543,7 @@ IDBIndex::Count(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (aRv.Failed()) {
     return nullptr;
@@ -561,7 +561,7 @@ IDBIndex::Count(JSContext* aCx,
     params.optionalKeyRange() = void_t();
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "

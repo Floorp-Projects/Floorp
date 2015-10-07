@@ -53,7 +53,7 @@ public:
   void SetVorbisMetadata(int aChannels, int aSampleRate) {
     WebMVorbisTrackEncoder vorbisEncoder;
     EXPECT_TRUE(vorbisEncoder.TestVorbisCreation(aChannels, aSampleRate));
-    RefPtr<TrackMetadataBase> vorbisMeta = vorbisEncoder.GetMetadata();
+    nsRefPtr<TrackMetadataBase> vorbisMeta = vorbisEncoder.GetMetadata();
     SetMetadata(vorbisMeta);
   }
   void SetVP8Metadata(int32_t aWidth, int32_t aHeight, int32_t aDisplayWidth,
@@ -61,7 +61,7 @@ public:
     WebMVP8TrackEncoder vp8Encoder;
     EXPECT_TRUE(vp8Encoder.TestVP8Creation(aWidth, aHeight, aDisplayWidth,
                                            aDisplayHeight, aTrackRate));
-    RefPtr<TrackMetadataBase> vp8Meta = vp8Encoder.GetMetadata();
+    nsRefPtr<TrackMetadataBase> vp8Meta = vp8Encoder.GetMetadata();
     SetMetadata(vp8Meta);
   }
 
@@ -73,7 +73,7 @@ public:
                         uint64_t aDuration) {
     EncodedFrameContainer encodedVideoData;
     nsTArray<uint8_t> frameData;
-    RefPtr<EncodedFrame> videoData = new EncodedFrame();
+    nsRefPtr<EncodedFrame> videoData = new EncodedFrame();
     // Create dummy frame data.
     frameData.SetLength(FIXED_FRAMESIZE);
     videoData->SetFrameType(aFrameType);

@@ -44,7 +44,7 @@ public:
 private:
   virtual ~MediaStreamList();
 
-  RefPtr<PeerConnectionImpl> mPeerConnection;
+  nsRefPtr<PeerConnectionImpl> mPeerConnection;
   StreamType mType;
 };
 

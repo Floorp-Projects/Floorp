@@ -156,9 +156,9 @@ protected:
   // The maximum length of a text run
   int32_t mMaxTextRun;
 
-  RefPtr<nsGenericHTMLElement> mRoot;
-  RefPtr<nsGenericHTMLElement> mBody;
-  RefPtr<nsGenericHTMLElement> mHead;
+  nsRefPtr<nsGenericHTMLElement> mRoot;
+  nsRefPtr<nsGenericHTMLElement> mBody;
+  nsRefPtr<nsGenericHTMLElement> mHead;
 
   nsAutoTArray<SinkContext*, 8> mContextStack;
   SinkContext* mCurrentContext;
@@ -242,7 +242,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
 {
   *aResult = nullptr;
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
 
   nsIParserService* parserService = nsContentUtils::GetParserService();
   if (!parserService)
@@ -289,7 +289,7 @@ CreateHTMLElement(uint32_t aNodeType,
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
 
-  RefPtr<nsGenericHTMLElement> result = cb(Move(aNodeInfo), aFromParser);
+  nsRefPtr<nsGenericHTMLElement> result = cb(Move(aNodeInfo), aFromParser);
 
   return result.forget();
 }
@@ -394,14 +394,14 @@ SinkContext::OpenBody()
     }
   }
 
-    RefPtr<mozilla::dom::NodeInfo> nodeInfo =
+    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo =
       mSink->mNodeInfoManager->GetNodeInfo(nsGkAtoms::body, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_UNEXPECTED);
 
   // Make the content object
-  RefPtr<nsGenericHTMLElement> body =
+  nsRefPtr<nsGenericHTMLElement> body =
     NS_NewHTMLBodyElement(nodeInfo.forget(), FROM_PARSER_NETWORK);
   if (!body) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -623,7 +623,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  RefPtr<HTMLContentSink> it = new HTMLContentSink();
+  nsRefPtr<HTMLContentSink> it = new HTMLContentSink();
 
   nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
 
@@ -736,7 +736,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // large pages.  See bugzilla bug 77540.
   mMaxTextRun = Preferences::GetInt("content.maxtextrun", 8191);
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);

@@ -83,7 +83,7 @@ private:
   int32_t                         mSelEndIndex;
   int32_t                         mSelEndOffset;
 
-  RefPtr<nsRange>               mExtent;
+  nsRefPtr<nsRange>               mExtent;
 
   nsCOMPtr<nsITextServicesFilter> mTxtSvcFilter;
 

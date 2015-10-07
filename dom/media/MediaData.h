@@ -12,7 +12,7 @@
 #include "AudioSampleFormat.h"
 #include "nsIMemoryReporter.h"
 #include "SharedBuffer.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -152,7 +152,7 @@ public:
   const uint32_t mRate;
   // At least one of mAudioBuffer/mAudioData must be non-null.
   // mChannels channels, each with mFrames frames
-  RefPtr<SharedBuffer> mAudioBuffer;
+  nsRefPtr<SharedBuffer> mAudioBuffer;
   // mFrames frames, each with mChannels values
   nsAutoArrayPtr<AudioDataValue> mAudioData;
 
@@ -252,7 +252,7 @@ public:
                                                      int64_t aOffset,
                                                      int64_t aTime,
                                                      int64_t aDuration,
-                                                     const RefPtr<Image>& aImage,
+                                                     const nsRefPtr<Image>& aImage,
                                                      bool aKeyframe,
                                                      int64_t aTimecode,
                                                      const IntRect& aPicture);
@@ -296,7 +296,7 @@ public:
   const IntSize mDisplay;
 
   // This frame's image.
-  RefPtr<Image> mImage;
+  nsRefPtr<Image> mImage;
 
   int32_t mFrameID;
 
@@ -400,9 +400,9 @@ public:
   }
 
   const CryptoSample& mCrypto;
-  RefPtr<MediaByteBuffer> mExtraData;
+  nsRefPtr<MediaByteBuffer> mExtraData;
 
-  RefPtr<SharedTrackInfo> mTrackInfo;
+  nsRefPtr<SharedTrackInfo> mTrackInfo;
 
   // Return a deep copy or nullptr if out of memory.
   virtual already_AddRefed<MediaRawData> Clone() const;

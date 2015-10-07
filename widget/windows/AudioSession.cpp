@@ -81,7 +81,7 @@ public:
     AUDIO_SESSION_DISCONNECTED // Audio session disconnected
   };
 protected:
-  RefPtr<IAudioSessionControl> mAudioSessionControl;
+  nsRefPtr<IAudioSessionControl> mAudioSessionControl;
   nsString mDisplayName;
   nsString mIconPath;
   nsID mSessionGroupingParameter;
@@ -141,7 +141,7 @@ AudioSession*
 AudioSession::GetSingleton()
 {
   if (!(AudioSession::sService)) {
-    RefPtr<AudioSession> service = new AudioSession();
+    nsRefPtr<AudioSession> service = new AudioSession();
     service.forget(&AudioSession::sService);
   }
 
@@ -228,7 +228,7 @@ AudioSession::Start()
   MOZ_ASSERT(!mDisplayName.IsEmpty() || !mIconPath.IsEmpty(),
              "Should never happen ...");
 
-  RefPtr<IMMDeviceEnumerator> enumerator;
+  nsRefPtr<IMMDeviceEnumerator> enumerator;
   hr = ::CoCreateInstance(CLSID_MMDeviceEnumerator,
                           nullptr,
                           CLSCTX_ALL,
@@ -237,7 +237,7 @@ AudioSession::Start()
   if (FAILED(hr))
     return NS_ERROR_NOT_AVAILABLE;
 
-  RefPtr<IMMDevice> device;
+  nsRefPtr<IMMDevice> device;
   hr = enumerator->GetDefaultAudioEndpoint(EDataFlow::eRender,
                                            ERole::eMultimedia,
                                            getter_AddRefs(device));
@@ -247,7 +247,7 @@ AudioSession::Start()
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<IAudioSessionManager> manager;
+  nsRefPtr<IAudioSessionManager> manager;
   hr = device->Activate(IID_IAudioSessionManager,
                         CLSCTX_ALL,
                         nullptr,
@@ -312,7 +312,7 @@ AudioSession::Stop()
              "State invariants violated");
   mState = STOPPED;
 
-  RefPtr<AudioSession> kungFuDeathGrip;
+  nsRefPtr<AudioSession> kungFuDeathGrip;
   kungFuDeathGrip.swap(sService);
 
   if (!XRE_IsContentProcess())

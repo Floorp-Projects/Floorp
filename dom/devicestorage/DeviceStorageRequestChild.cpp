@@ -74,7 +74,7 @@ DeviceStorageRequestChild::
       DS_LOG_INFO("blob %u", mRequest->GetId());
       BlobResponse r = aValue;
       BlobChild* actor = static_cast<BlobChild*>(r.blobChild());
-      RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
       mRequest->Resolve(blobImpl.get());
       break;
     }
@@ -143,7 +143,7 @@ DeviceStorageRequestChild::
       uint32_t count = r.paths().Length();
       request->AddFiles(count);
       for (uint32_t i = 0; i < count; i++) {
-        RefPtr<DeviceStorageFile> dsf
+        nsRefPtr<DeviceStorageFile> dsf
           = new DeviceStorageFile(r.type(), r.paths()[i].storageName(),
                                   r.rootdir(), r.paths()[i].name());
         request->AddFile(dsf.forget());

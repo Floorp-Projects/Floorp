@@ -66,7 +66,7 @@ private:
   bool mIPCOpen;
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsIUDPSocketFilter> mFilter;
-  RefPtr<mozilla::net::OfflineObserver> mObserver;
+  nsRefPtr<mozilla::net::OfflineObserver> mObserver;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 

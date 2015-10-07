@@ -9,7 +9,7 @@
 #include <map>
 #include <set>
 
-#include <mozilla/RefPtr.h>
+#include <mozilla/nsRefPtr.h>
 #include <mozilla/UniquePtr.h>
 #include <mozilla/Maybe.h>
 #include "nsISupportsImpl.h"
@@ -146,7 +146,7 @@ public:
   virtual void Negotiate(const SdpMediaSection& answer,
                          const SdpMediaSection& remote);
   static void SetUniquePayloadTypes(
-      const std::vector<RefPtr<JsepTrack>>& tracks);
+      const std::vector<nsRefPtr<JsepTrack>>& tracks);
   virtual void GetNegotiatedPayloadTypes(std::vector<uint16_t>* payloadTypes);
 
   // This will be set when negotiation is carried out.
@@ -218,10 +218,10 @@ struct JsepTrackPair {
   // Is this track pair sharing a transport with another?
   Maybe<size_t> mBundleLevel;
   uint32_t mRecvonlySsrc;
-  RefPtr<JsepTrack> mSending;
-  RefPtr<JsepTrack> mReceiving;
-  RefPtr<JsepTransport> mRtpTransport;
-  RefPtr<JsepTransport> mRtcpTransport;
+  nsRefPtr<JsepTrack> mSending;
+  nsRefPtr<JsepTrack> mReceiving;
+  nsRefPtr<JsepTransport> mRtpTransport;
+  nsRefPtr<JsepTransport> mRtcpTransport;
 };
 
 } // namespace mozilla

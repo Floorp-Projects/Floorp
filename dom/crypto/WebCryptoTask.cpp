@@ -1320,7 +1320,7 @@ public:
 
 protected:
   nsString mFormat;
-  RefPtr<CryptoKey> mKey;
+  nsRefPtr<CryptoKey> mKey;
   CryptoBuffer mKeyData;
   bool mDataIsSet;
   bool mDataIsJwk;
@@ -2145,7 +2145,7 @@ public:
   }
 
 private:
-  RefPtr<CryptoKey> mKey;
+  nsRefPtr<CryptoKey> mKey;
   size_t mLength;
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mKeyData;
@@ -2570,7 +2570,7 @@ public:
   }
 
 protected:
-  RefPtr<ImportSymmetricKeyTask> mTask;
+  nsRefPtr<ImportSymmetricKeyTask> mTask;
   bool mResolved;
 
 private:
@@ -2814,7 +2814,7 @@ public:
   }
 
 private:
-  RefPtr<KeyEncryptTask> mTask;
+  nsRefPtr<KeyEncryptTask> mTask;
   bool mResolved;
 
   virtual nsresult AfterCrypto() override {
@@ -2865,7 +2865,7 @@ public:
   {}
 
 private:
-  RefPtr<ImportKeyTask> mTask;
+  nsRefPtr<ImportKeyTask> mTask;
   bool mResolved;
 
   virtual void Resolve() override
@@ -3281,7 +3281,7 @@ WebCryptoTask::CreateUnwrapKeyTask(JSContext* aCx,
   }
 
   CryptoOperationData dummy;
-  RefPtr<ImportKeyTask> importTask;
+  nsRefPtr<ImportKeyTask> importTask;
   if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CBC) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_CTR) ||
       keyAlgName.EqualsASCII(WEBCRYPTO_ALG_AES_GCM) ||

@@ -11,7 +11,7 @@
 #include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
@@ -46,7 +46,7 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
                                CompositableForwarder* aForwarder,
                                TextureFlags aFlags)
 {
-  RefPtr<ImageClient> result = nullptr;
+  nsRefPtr<ImageClient> result = nullptr;
   switch (aCompositableHostType) {
   case CompositableType::IMAGE:
     result = new ImageClientSingle(aForwarder, aFlags, CompositableType::IMAGE);
@@ -90,7 +90,7 @@ ImageClient::RemoveTextureWithWaiter(TextureClient* aTexture,
       && aTexture->GetRecycleAllocator()
 #endif
      ) {
-    RefPtr<AsyncTransactionTracker> request =
+    nsRefPtr<AsyncTransactionTracker> request =
       new RemoveTextureFromCompositableTracker(aAsyncTransactionWaiter);
     // Hold TextureClient until the transaction complete to postpone
     // the TextureClient recycle/delete.
@@ -156,7 +156,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 
   for (auto& img : images) {
     Image* image = img.mImage;
-    RefPtr<TextureClient> texture = image->GetTextureClient(this);
+    nsRefPtr<TextureClient> texture = image->GetTextureClient(this);
 
     for (int32_t i = mBuffers.Length() - 1; i >= 0; --i) {
       if (mBuffers[i].mImageSerial == image->GetSerial()) {
@@ -218,7 +218,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
           MOZ_ASSERT(false, "Bad ImageFormat.");
         }
       } else {
-        RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
+        nsRefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
         MOZ_ASSERT(surface);
         texture = CreateTextureClientForDrawing(surface->GetFormat(), image->GetSize(),
                                                 BackendSelector::Content, mTextureFlags);
@@ -320,7 +320,7 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 already_AddRefed<Image>
 ImageClientSingle::CreateImage(ImageFormat aFormat)
 {
-  RefPtr<Image> img;
+  nsRefPtr<Image> img;
   switch (aFormat) {
     case ImageFormat::PLANAR_YCBCR:
       img = new SharedPlanarYCbCrImage(this);
@@ -376,7 +376,7 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
 already_AddRefed<Image>
 ImageClientOverlay::CreateImage(ImageFormat aFormat)
 {
-  RefPtr<Image> img;
+  nsRefPtr<Image> img;
   switch (aFormat) {
     case ImageFormat::OVERLAY_IMAGE:
       img = new OverlayImage();

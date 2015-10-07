@@ -7,7 +7,7 @@
 #if !defined(GonkAudioDecoderManager_h_)
 #define GonkAudioDecoderManager_h_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "GonkMediaDataDecoder.h"
 
 using namespace android;
@@ -26,12 +26,12 @@ public:
 
   virtual ~GonkAudioDecoderManager() override;
 
-  RefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
+  nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
 
   nsresult Input(MediaRawData* aSample) override;
 
   nsresult Output(int64_t aStreamOffset,
-                          RefPtr<MediaData>& aOutput) override;
+                          nsRefPtr<MediaData>& aOutput) override;
 
   nsresult Flush() override;
 
@@ -61,7 +61,7 @@ private:
   // An queue with the MP4 samples which are waiting to be sent into OMX.
   // If an element is an empty MP4Sample, that menas EOS. There should not
   // any sample be queued after EOS.
-  nsTArray<RefPtr<MediaRawData>> mQueueSample;
+  nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
 };
 
 } // namespace mozilla

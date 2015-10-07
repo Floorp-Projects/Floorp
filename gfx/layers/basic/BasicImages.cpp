@@ -81,7 +81,7 @@ public:
                                               const gfx::IntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin)
   {
-    RefPtr<Image> image;
+    nsRefPtr<Image> image;
     if (aFormat == ImageFormat::PLANAR_YCBCR) {
       image = new BasicPlanarYCbCrImage(aScaleHint, gfxPlatform::GetPlatform()->GetOffscreenFormat(), aRecycleBin);
       return image.forget();
@@ -136,7 +136,7 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
   NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
 
   if (mSourceSurface) {
-    RefPtr<gfx::SourceSurface> surface(mSourceSurface);
+    nsRefPtr<gfx::SourceSurface> surface(mSourceSurface);
     return surface.forget();
   }
 
@@ -146,12 +146,12 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
 
   gfxImageFormat format = GetOffscreenFormat();
 
-  RefPtr<gfx::SourceSurface> surface;
+  nsRefPtr<gfx::SourceSurface> surface;
   {
     // Create a DrawTarget so that we can own the data inside mDecodeBuffer.
     // We create the target out of mDecodedBuffer, and get a snapshot from it.
     // The draw target is destroyed on scope exit and the surface owns the data.
-    RefPtr<gfx::DrawTarget> drawTarget
+    nsRefPtr<gfx::DrawTarget> drawTarget
       = gfxPlatform::GetPlatform()->CreateDrawTargetForData(mDecodedBuffer,
                                                             mSize,
                                                             mStride,

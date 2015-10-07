@@ -158,16 +158,16 @@ private:
   }
 
   /* Device manager instance for this compositor */
-  RefPtr<DeviceManagerD3D9> mDeviceManager;
+  nsRefPtr<DeviceManagerD3D9> mDeviceManager;
 
   /* Swap chain associated with this compositor */
-  RefPtr<SwapChainD3D9> mSwapChain;
+  nsRefPtr<SwapChainD3D9> mSwapChain;
 
   /* Widget associated with this layer manager */
   nsIWidget *mWidget;
 
-  RefPtr<CompositingRenderTargetD3D9> mDefaultRT;
-  RefPtr<CompositingRenderTargetD3D9> mCurrentRT;
+  nsRefPtr<CompositingRenderTargetD3D9> mDefaultRT;
+  nsRefPtr<CompositingRenderTargetD3D9> mCurrentRT;
 
   gfx::IntSize mSize;
 

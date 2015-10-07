@@ -167,7 +167,7 @@ txCheckParam::execute(txExecutionState& aEs)
 {
     nsresult rv = NS_OK;
     if (aEs.mTemplateParams) {
-        RefPtr<txAExprResult> exprRes;
+        nsRefPtr<txAExprResult> exprRes;
         aEs.mTemplateParams->getVariable(mName, getter_AddRefs(exprRes));
         if (exprRes) {
             rv = aEs.bindVariable(mName, exprRes);
@@ -373,7 +373,7 @@ txCopyOf::txCopyOf(nsAutoPtr<Expr>&& aSelect)
 nsresult
 txCopyOf::execute(txExecutionState& aEs)
 {
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     nsresult rv = mSelect->evaluate(aEs.getEvalContext(),
                                     getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -500,7 +500,7 @@ txLREAttribute::txLREAttribute(int32_t aNamespaceID, nsIAtom* aLocalName,
 nsresult
 txLREAttribute::execute(txExecutionState& aEs)
 {
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     nsresult rv = mValue->evaluate(aEs.getEvalContext(),
                                    getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -615,7 +615,7 @@ txPushNewContext::~txPushNewContext()
 nsresult
 txPushNewContext::execute(txExecutionState& aEs)
 {
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     nsresult rv = mSelect->evaluate(aEs.getEvalContext(),
                                     getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -645,7 +645,7 @@ txPushNewContext::execute(txExecutionState& aEs)
                                    aEs.getEvalContext());
         NS_ENSURE_SUCCESS(rv, rv);
     }
-    RefPtr<txNodeSet> sortedNodes;
+    nsRefPtr<txNodeSet> sortedNodes;
     rv = sorter.sortNodeSet(nodes, &aEs, getter_AddRefs(sortedNodes));
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -766,7 +766,7 @@ txSetParam::execute(txExecutionState& aEs)
         NS_ENSURE_TRUE(aEs.mTemplateParams, NS_ERROR_OUT_OF_MEMORY);
     }
 
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     if (mValue) {
         rv = mValue->evaluate(aEs.getEvalContext(),
                               getter_AddRefs(exprRes));
@@ -795,7 +795,7 @@ nsresult
 txSetVariable::execute(txExecutionState& aEs)
 {
     nsresult rv = NS_OK;
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     if (mValue) {
         rv = mValue->evaluate(aEs.getEvalContext(), getter_AddRefs(exprRes));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -929,7 +929,7 @@ txValueOf::txValueOf(nsAutoPtr<Expr>&& aExpr, bool aDOE)
 nsresult
 txValueOf::execute(txExecutionState& aEs)
 {
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     nsresult rv = mExpr->evaluate(aEs.getEvalContext(),
                                   getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);

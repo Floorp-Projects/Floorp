@@ -33,7 +33,7 @@ public:
 private:
   ~BluetoothMapFolder();
   nsString mName;
-  RefPtr<BluetoothMapFolder> mParent;
+  nsRefPtr<BluetoothMapFolder> mParent;
   nsRefPtrHashtable<nsStringHashKey, BluetoothMapFolder> mSubFolders;
 };
 

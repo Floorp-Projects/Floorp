@@ -7,7 +7,7 @@
 #ifndef MediaSink_h_
 #define MediaSink_h_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/MozPromise.h"
 #include "nsISupportsImpl.h"
 #include "MediaInfo.h"
@@ -57,7 +57,7 @@ public:
   // Return a promise which is resolved when the track finishes
   // or null if no such track.
   // Must be called after playback starts.
-  virtual RefPtr<GenericPromise> OnEnded(TrackType aType) = 0;
+  virtual nsRefPtr<GenericPromise> OnEnded(TrackType aType) = 0;
 
   // Return the end time of the audio/video data that has been consumed
   // or -1 if no such track.

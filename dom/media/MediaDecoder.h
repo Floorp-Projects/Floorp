@@ -550,7 +550,7 @@ public:
   // Used to estimate rates of data passing through the decoder's channel.
   // Records activity stopping on the channel.
   void DispatchPlaybackStarted() {
-    RefPtr<MediaDecoder> self = this;
+    nsRefPtr<MediaDecoder> self = this;
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableFunction([self] () { self->mPlaybackStatistics->Start(); });
     AbstractThread::MainThread()->Dispatch(r.forget());
@@ -559,7 +559,7 @@ public:
   // Used to estimate rates of data passing through the decoder's channel.
   // Records activity stopping on the channel.
   void DispatchPlaybackStopped() {
-    RefPtr<MediaDecoder> self = this;
+    nsRefPtr<MediaDecoder> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () {
       self->mPlaybackStatistics->Stop();
       self->ComputePlaybackRate();
@@ -658,11 +658,11 @@ public:
   MediaDecoderOwner* GetOwner() override;
 
 #ifdef MOZ_EME
-  typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */, /* IsExclusive = */ true> CDMProxyPromise;
+  typedef MozPromise<nsRefPtr<CDMProxy>, bool /* aIgnored */, /* IsExclusive = */ true> CDMProxyPromise;
 
   // Resolved when a CDMProxy is available and the capabilities are known or
   // rejected when this decoder is about to shut down.
-  RefPtr<CDMProxyPromise> RequestCDMProxy() const;
+  nsRefPtr<CDMProxyPromise> RequestCDMProxy() const;
 
   void SetCDMProxy(CDMProxy* aProxy);
 #endif
@@ -796,7 +796,7 @@ protected:
    ******/
 
   // Media data resource.
-  RefPtr<MediaResource> mResource;
+  nsRefPtr<MediaResource> mResource;
 
 private:
   // The state machine object for handling the decoding. It is safe to
@@ -806,7 +806,7 @@ private:
   // is safe to access it during this period.
   //
   // Explicitly prievate to force access via accessors.
-  RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
+  nsRefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
   // |ReentrantMonitor| for detecting when the video play state changes. A call
   // to |Wait| on this monitor will block the thread until the next state
@@ -815,7 +815,7 @@ private:
 
 #ifdef MOZ_EME
   MozPromiseHolder<CDMProxyPromise> mCDMProxyPromiseHolder;
-  RefPtr<CDMProxyPromise> mCDMProxyPromise;
+  nsRefPtr<CDMProxyPromise> mCDMProxyPromise;
 #endif
 
 protected:
@@ -853,12 +853,12 @@ protected:
   // Counters related to decode and presentation of frames.
   FrameStatistics mFrameStats;
 
-  RefPtr<VideoFrameContainer> mVideoFrameContainer;
+  nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
 
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
-  RefPtr<MediaChannelStatistics> mPlaybackStatistics;
+  nsRefPtr<MediaChannelStatistics> mPlaybackStatistics;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.

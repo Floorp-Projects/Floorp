@@ -54,7 +54,7 @@ public:
       return NS_OK;
     }
 private:
-      RefPtr<nsAsyncStreamCopier> mCopier;
+      nsRefPtr<nsAsyncStreamCopier> mCopier;
       nsCOMPtr<nsIEventTarget> mTarget;
 };
 

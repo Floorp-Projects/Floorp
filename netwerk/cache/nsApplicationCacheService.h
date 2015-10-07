@@ -22,7 +22,7 @@ public:
 
 private:
     ~nsApplicationCacheService();
-    RefPtr<nsCacheService> mCacheService;
+    nsRefPtr<nsCacheService> mCacheService;
 };
 
 #endif // _nsApplicationCacheService_h_

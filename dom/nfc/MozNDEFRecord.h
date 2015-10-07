@@ -101,7 +101,7 @@ protected:
 
 private:
   MozNDEFRecord() = delete;
-  RefPtr<nsISupports> mParent;
+  nsRefPtr<nsISupports> mParent;
   void HoldData();
   void DropData();
   void InitType(JSContext* aCx, const Optional<Nullable<Uint8Array>>& aType);

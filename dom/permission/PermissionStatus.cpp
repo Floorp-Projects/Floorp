@@ -20,7 +20,7 @@ PermissionStatus::Create(nsPIDOMWindow* aWindow,
                          PermissionName aName,
                          ErrorResult& aRv)
 {
-  RefPtr<PermissionStatus> status = new PermissionStatus(aWindow, aName);
+  nsRefPtr<PermissionStatus> status = new PermissionStatus(aWindow, aName);
   aRv = status->Init();
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -115,7 +115,7 @@ PermissionStatus::PermissionChanged()
   auto oldState = mState;
   UpdateState();
   if (mState != oldState) {
-    RefPtr<AsyncEventDispatcher> eventDispatcher =
+    nsRefPtr<AsyncEventDispatcher> eventDispatcher =
       new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), false);
     eventDispatcher->PostDOMEvent();
   }

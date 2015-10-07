@@ -52,7 +52,7 @@ private:
   {
   }
 
-  RefPtr<ServiceWorkerGlobalScope> mWorkerScope;
+  nsRefPtr<ServiceWorkerGlobalScope> mWorkerScope;
 };
 
 } // namespace workers

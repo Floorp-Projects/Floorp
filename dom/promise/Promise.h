@@ -131,7 +131,7 @@ public:
     MaybeSomething(aArg, &Promise::MaybeReject);
   }
 
-  void MaybeReject(const RefPtr<MediaStreamError>& aArg);
+  void MaybeReject(const nsRefPtr<MediaStreamError>& aArg);
 
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
   // rejected with Error instances.
@@ -192,7 +192,7 @@ public:
 
   static already_AddRefed<Promise>
   All(const GlobalObject& aGlobal,
-      const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
+      const nsTArray<nsRefPtr<Promise>>& aPromiseList, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   Race(const GlobalObject& aGlobal,
@@ -233,7 +233,7 @@ protected:
     return mResolvePending;
   }
 
-  void GetDependentPromises(nsTArray<RefPtr<Promise>>& aPromises);
+  void GetDependentPromises(nsTArray<nsRefPtr<Promise>>& aPromises);
 
   bool IsLastInChain() const
   {
@@ -350,10 +350,10 @@ private:
   // returned, an exception is presumably pending on aCx.
   bool CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget);
 
-  RefPtr<nsIGlobalObject> mGlobal;
+  nsRefPtr<nsIGlobalObject> mGlobal;
 
-  nsTArray<RefPtr<PromiseCallback> > mResolveCallbacks;
-  nsTArray<RefPtr<PromiseCallback> > mRejectCallbacks;
+  nsTArray<nsRefPtr<PromiseCallback> > mResolveCallbacks;
+  nsTArray<nsRefPtr<PromiseCallback> > mRejectCallbacks;
 
   JS::Heap<JS::Value> mResult;
   // A stack that shows where this promise was allocated, if there was

@@ -95,7 +95,7 @@ public:
       domEventToFire.AssignLiteral("DOMMenuItemInactive");
     }
 
-    RefPtr<Event> event = NS_NewDOMEvent(mMenu, mPresContext, nullptr);
+    nsRefPtr<Event> event = NS_NewDOMEvent(mMenu, mPresContext, nullptr);
     event->InitEvent(domEventToFire, true, true);
 
     event->SetTrusted(true);
@@ -108,7 +108,7 @@ public:
 
 private:
   nsCOMPtr<nsIContent> mMenu;
-  RefPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
   bool mIsActivate;
 };
 

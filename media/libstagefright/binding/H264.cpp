@@ -93,7 +93,7 @@ H264::DecodeNALUnit(const mozilla::MediaByteBuffer* aNAL)
     return nullptr;
   }
 
-  RefPtr<mozilla::MediaByteBuffer> rbsp = new mozilla::MediaByteBuffer;
+  nsRefPtr<mozilla::MediaByteBuffer> rbsp = new mozilla::MediaByteBuffer;
   ByteReader reader(aNAL);
   uint8_t nal_unit_type = reader.ReadU8() & 0x1f;
   uint32_t nalUnitHeaderBytes = 1;
@@ -496,10 +496,10 @@ H264::DecodeSPSFromExtraData(const mozilla::MediaByteBuffer* aExtraData, SPSData
 
   reader.DiscardRemaining();
 
-  RefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
+  nsRefPtr<mozilla::MediaByteBuffer> rawNAL = new mozilla::MediaByteBuffer;
   rawNAL->AppendElements(ptr, length);
 
-  RefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
+  nsRefPtr<mozilla::MediaByteBuffer> sps = DecodeNALUnit(rawNAL);
 
   if (!sps) {
     return false;

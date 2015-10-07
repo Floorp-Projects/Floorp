@@ -257,7 +257,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreatePaintedLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreatePaintedLayer"));
 
-      RefPtr<PaintedLayerComposite> layer =
+      nsRefPtr<PaintedLayerComposite> layer =
         layer_manager()->CreatePaintedLayerComposite();
       AsLayerComposite(edit.get_OpCreatePaintedLayer())->Bind(layer);
       break;
@@ -265,14 +265,14 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateContainerLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateContainerLayer"));
 
-      RefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayerComposite();
+      nsRefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayerComposite();
       AsLayerComposite(edit.get_OpCreateContainerLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateImageLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateImageLayer"));
 
-      RefPtr<ImageLayerComposite> layer =
+      nsRefPtr<ImageLayerComposite> layer =
         layer_manager()->CreateImageLayerComposite();
       AsLayerComposite(edit.get_OpCreateImageLayer())->Bind(layer);
       break;
@@ -280,14 +280,14 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateColorLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateColorLayer"));
 
-      RefPtr<ColorLayerComposite> layer = layer_manager()->CreateColorLayerComposite();
+      nsRefPtr<ColorLayerComposite> layer = layer_manager()->CreateColorLayerComposite();
       AsLayerComposite(edit.get_OpCreateColorLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
-      RefPtr<CanvasLayerComposite> layer =
+      nsRefPtr<CanvasLayerComposite> layer =
         layer_manager()->CreateCanvasLayerComposite();
       AsLayerComposite(edit.get_OpCreateCanvasLayer())->Bind(layer);
       break;
@@ -295,7 +295,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpCreateRefLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateRefLayer"));
 
-      RefPtr<RefLayerComposite> layer =
+      nsRefPtr<RefLayerComposite> layer =
         layer_manager()->CreateRefLayerComposite();
       AsLayerComposite(edit.get_OpCreateRefLayer())->Bind(layer);
       break;
@@ -348,7 +348,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetFrameMetrics(common.metrics());
       layer->SetDisplayListLog(common.displayListLog().get());
 
-      nsTArray<RefPtr<Layer>> maskLayers;
+      nsTArray<nsRefPtr<Layer>> maskLayers;
       for (size_t i = 0; i < common.ancestorMaskLayersParent().Length(); i++) {
         Layer* maskLayer = cast(common.ancestorMaskLayersParent().ElementAt(i))->AsLayer();
         maskLayers.AppendElement(maskLayer);
@@ -943,7 +943,7 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
       case AsyncChildMessageData::TOpRemoveTextureAsync: {
         const OpRemoveTextureAsync& op = message.get_OpRemoveTextureAsync();
         CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
-        RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+        nsRefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
         MOZ_ASSERT(tex.get());
         compositable->RemoveTextureHost(tex);
@@ -989,7 +989,7 @@ void
 LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
                                                  CompositableHost* aCompositableHost)
 {
-  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  nsRefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
     return;
   }

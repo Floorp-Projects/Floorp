@@ -116,7 +116,7 @@ MobileMessageCursorCallback::NotifyCursorError(int32_t aError)
 {
   MOZ_ASSERT(mDOMCursor);
 
-  RefPtr<DOMCursor> cursor = mDOMCursor.forget();
+  nsRefPtr<DOMCursor> cursor = mDOMCursor.forget();
 
   switch (aError) {
     case nsIMobileMessageCallback::NO_SIGNAL_ERROR:
@@ -170,7 +170,7 @@ MobileMessageCursorCallback::NotifyCursorDone()
 {
   MOZ_ASSERT(mDOMCursor);
 
-  RefPtr<DOMCursor> cursor = mDOMCursor.forget();
+  nsRefPtr<DOMCursor> cursor = mDOMCursor.forget();
   cursor->FireDone();
 
   return NS_OK;

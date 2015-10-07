@@ -91,7 +91,7 @@ MozMtpStorage::StorageAvailable()
   MTP_LOG("Adding Volume %s mStorageID 0x%08x mountPoint %s to MozMtpDatabase",
           mVolume->NameStr(), mStorageID, mountPoint.get());
 
-  RefPtr<MozMtpDatabase> db = mMozMtpServer->GetMozMtpDatabase();
+  nsRefPtr<MozMtpDatabase> db = mMozMtpServer->GetMozMtpDatabase();
   db->AddStorage(mStorageID, mountPoint.get(), mVolume->NameStr());
 
   MOZ_ASSERT(!mMtpStorage);
@@ -104,7 +104,7 @@ MozMtpStorage::StorageAvailable()
                                    1024uLL * 1024uLL,                    // reserveSpace
                                    mVolume->IsHotSwappable(),            // removable
                                    2uLL * 1024uLL * 1024uLL * 1024uLL)); // maxFileSize
-  RefPtr<RefCountedMtpServer> server = mMozMtpServer->GetMtpServer();
+  nsRefPtr<RefCountedMtpServer> server = mMozMtpServer->GetMtpServer();
 
   MTP_LOG("Adding Volume %s mStorageID 0x%08x mountPoint %s to MtpServer",
           mVolume->NameStr(), mStorageID, mountPoint.get());
@@ -119,12 +119,12 @@ MozMtpStorage::StorageUnavailable()
 
   MTP_LOG("Removing mStorageID 0x%08x from MtpServer", mStorageID);
 
-  RefPtr<RefCountedMtpServer> server = mMozMtpServer->GetMtpServer();
+  nsRefPtr<RefCountedMtpServer> server = mMozMtpServer->GetMtpServer();
   server->removeStorage(mMtpStorage.get());
 
   MTP_LOG("Removing mStorageID 0x%08x from MozMtpDatabse", mStorageID);
 
-  RefPtr<MozMtpDatabase> db = mMozMtpServer->GetMozMtpDatabase();
+  nsRefPtr<MozMtpDatabase> db = mMozMtpServer->GetMozMtpDatabase();
   db->RemoveStorage(mStorageID);
 
   mMtpStorage = nullptr;

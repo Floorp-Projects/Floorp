@@ -177,7 +177,7 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
     mBoundingMetrics += childSize.mBoundingMetrics;
   }
 
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         nsLayoutUtils::
                                         FontSizeInflationFor(this));

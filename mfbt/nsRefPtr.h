@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_RefPtr_h
-#define mozilla_RefPtr_h
+#ifndef mozilla_nsRefPtr_h
+#define mozilla_nsRefPtr_h
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
@@ -13,7 +13,7 @@
 
 /*****************************************************************************/
 
-// template <class T> class RefPtrGetterAddRefs;
+// template <class T> class nsRefPtrGetterAddRefs;
 
 class nsCOMPtr_helper;
 
@@ -22,7 +22,7 @@ template<class T> class OwningNonNull;
 } // namespace mozilla
 
 template <class T>
-class RefPtr
+class nsRefPtr
 {
 private:
   void
@@ -50,7 +50,7 @@ private:
 public:
   typedef T element_type;
 
-  ~RefPtr()
+  ~nsRefPtr()
   {
     if (mRawPtr) {
       AddRefTraits<T>::Release(mRawPtr);
@@ -59,13 +59,13 @@ public:
 
   // Constructors
 
-  RefPtr()
+  nsRefPtr()
     : mRawPtr(0)
     // default constructor
   {
   }
 
-  RefPtr(const RefPtr<T>& aSmartPtr)
+  nsRefPtr(const nsRefPtr<T>& aSmartPtr)
     : mRawPtr(aSmartPtr.mRawPtr)
     // copy-constructor
   {
@@ -74,7 +74,7 @@ public:
     }
   }
 
-  RefPtr(RefPtr<T>&& aRefPtr)
+  nsRefPtr(nsRefPtr<T>&& aRefPtr)
     : mRawPtr(aRefPtr.mRawPtr)
   {
     aRefPtr.mRawPtr = nullptr;
@@ -82,7 +82,7 @@ public:
 
   // construct from a raw pointer (of the right type)
 
-  MOZ_IMPLICIT RefPtr(T* aRawPtr)
+  MOZ_IMPLICIT nsRefPtr(T* aRawPtr)
     : mRawPtr(aRawPtr)
   {
     if (mRawPtr) {
@@ -91,21 +91,21 @@ public:
   }
 
   template <typename I>
-  MOZ_IMPLICIT RefPtr(already_AddRefed<I>& aSmartPtr)
+  MOZ_IMPLICIT nsRefPtr(already_AddRefed<I>& aSmartPtr)
     : mRawPtr(aSmartPtr.take())
     // construct from |already_AddRefed|
   {
   }
 
   template <typename I>
-  MOZ_IMPLICIT RefPtr(already_AddRefed<I>&& aSmartPtr)
+  MOZ_IMPLICIT nsRefPtr(already_AddRefed<I>&& aSmartPtr)
     : mRawPtr(aSmartPtr.take())
     // construct from |otherRefPtr.forget()|
   {
   }
 
   template <typename I>
-  MOZ_IMPLICIT RefPtr(const RefPtr<I>& aSmartPtr)
+  MOZ_IMPLICIT nsRefPtr(const nsRefPtr<I>& aSmartPtr)
     : mRawPtr(aSmartPtr.get())
     // copy-construct from a smart pointer with a related pointer type
   {
@@ -115,22 +115,22 @@ public:
   }
 
   template <typename I>
-  MOZ_IMPLICIT RefPtr(RefPtr<I>&& aSmartPtr)
+  MOZ_IMPLICIT nsRefPtr(nsRefPtr<I>&& aSmartPtr)
     : mRawPtr(aSmartPtr.forget().take())
-    // construct from |Move(RefPtr<SomeSubclassOfT>)|.
+    // construct from |Move(nsRefPtr<SomeSubclassOfT>)|.
   {
   }
 
-  MOZ_IMPLICIT RefPtr(const nsCOMPtr_helper& aHelper);
+  MOZ_IMPLICIT nsRefPtr(const nsCOMPtr_helper& aHelper);
 
   // Defined in OwningNonNull.h
   template<class U>
-  MOZ_IMPLICIT RefPtr(const mozilla::OwningNonNull<U>& aOther);
+  MOZ_IMPLICIT nsRefPtr(const mozilla::OwningNonNull<U>& aOther);
 
   // Assignment operators
 
-  RefPtr<T>&
-  operator=(const RefPtr<T>& aRhs)
+  nsRefPtr<T>&
+  operator=(const nsRefPtr<T>& aRhs)
   // copy assignment operator
   {
     assign_with_AddRef(aRhs.mRawPtr);
@@ -138,15 +138,15 @@ public:
   }
 
   template <typename I>
-  RefPtr<T>&
-  operator=(const RefPtr<I>& aRhs)
-  // assign from an RefPtr of a related pointer type
+  nsRefPtr<T>&
+  operator=(const nsRefPtr<I>& aRhs)
+  // assign from an nsRefPtr of a related pointer type
   {
     assign_with_AddRef(aRhs.get());
     return *this;
   }
 
-  RefPtr<T>&
+  nsRefPtr<T>&
   operator=(T* aRhs)
   // assign from a raw pointer (of the right type)
   {
@@ -155,7 +155,7 @@ public:
   }
 
   template <typename I>
-  RefPtr<T>&
+  nsRefPtr<T>&
   operator=(already_AddRefed<I>& aRhs)
   // assign from |already_AddRefed|
   {
@@ -164,7 +164,7 @@ public:
   }
 
   template <typename I>
-  RefPtr<T>&
+  nsRefPtr<T>&
   operator=(already_AddRefed<I> && aRhs)
   // assign from |otherRefPtr.forget()|
   {
@@ -172,10 +172,10 @@ public:
     return *this;
   }
 
-  RefPtr<T>& operator=(const nsCOMPtr_helper& aHelper);
+  nsRefPtr<T>& operator=(const nsCOMPtr_helper& aHelper);
 
-  RefPtr<T>&
-  operator=(RefPtr<T> && aRefPtr)
+  nsRefPtr<T>&
+  operator=(nsRefPtr<T> && aRefPtr)
   {
     assign_assuming_AddRef(aRefPtr.mRawPtr);
     aRefPtr.mRawPtr = nullptr;
@@ -184,13 +184,13 @@ public:
 
   // Defined in OwningNonNull.h
   template<class U>
-  RefPtr<T>&
+  nsRefPtr<T>&
   operator=(const mozilla::OwningNonNull<U>& aOther);
 
   // Other pointer operators
 
   void
-  swap(RefPtr<T>& aRhs)
+  swap(nsRefPtr<T>& aRhs)
   // ...exchange ownership with |aRhs|; can save a pair of refcount operations
   {
     T* temp = aRhs.mRawPtr;
@@ -245,9 +245,9 @@ public:
   &
 #endif
   /*
-    ...makes an |RefPtr| act like its underlying raw pointer type whenever it
+    ...makes an |nsRefPtr| act like its underlying raw pointer type whenever it
     is used in a context where a raw pointer is expected.  It is this operator
-    that makes an |RefPtr| substitutable for a raw pointer.
+    that makes an |nsRefPtr| substitutable for a raw pointer.
 
     Prefer the implicit use of this operator to calling |get()|, except where
     necessary to resolve ambiguity.
@@ -257,7 +257,7 @@ public:
   }
 
 #ifdef MOZ_HAVE_REF_QUALIFIERS
-  // Don't allow implicit conversion of temporary RefPtr to raw pointer,
+  // Don't allow implicit conversion of temporary nsRefPtr to raw pointer,
   // because the refcount might be one and the pointer will immediately become
   // invalid.
   operator T*() const && = delete;
@@ -273,7 +273,7 @@ public:
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
   {
     MOZ_ASSERT(mRawPtr != 0,
-               "You can't dereference a NULL RefPtr with operator->().");
+               "You can't dereference a NULL nsRefPtr with operator->().");
     return get();
   }
 
@@ -300,11 +300,11 @@ public:
   Proxy<R, Args...> operator->*(R (T::*aFptr)(Args...)) const
   {
     MOZ_ASSERT(mRawPtr != 0,
-               "You can't dereference a NULL RefPtr with operator->*().");
+               "You can't dereference a NULL nsRefPtr with operator->*().");
     return Proxy<R, Args...>(get(), aFptr);
   }
 
-  RefPtr<T>*
+  nsRefPtr<T>*
   get_address()
   // This is not intended to be used by clients.  See |address_of|
   // below.
@@ -312,7 +312,7 @@ public:
     return this;
   }
 
-  const RefPtr<T>*
+  const nsRefPtr<T>*
   get_address() const
   // This is not intended to be used by clients.  See |address_of|
   // below.
@@ -325,7 +325,7 @@ public:
   operator*() const
   {
     MOZ_ASSERT(mRawPtr != 0,
-               "You can't dereference a NULL RefPtr with operator*().");
+               "You can't dereference a NULL nsRefPtr with operator*().");
     return *get();
   }
 
@@ -336,14 +336,14 @@ public:
     return reinterpret_cast<T**>(&mRawPtr);
   }
 private:
-  // This helper class makes |RefPtr<const T>| possible by casting away
+  // This helper class makes |nsRefPtr<const T>| possible by casting away
   // the constness from the pointer when calling AddRef() and Release().
   //
   // This is necessary because AddRef() and Release() implementations can't
   // generally expected to be const themselves (without heavy use of |mutable|
   // and |const_cast| in their own implementations).
   //
-  // This should be sound because while |RefPtr<const T>| provides a
+  // This should be sound because while |nsRefPtr<const T>| provides a
   // const view of an object, the object itself should not be const (it
   // would have to be allocated as |new const T| or similar to be const).
 
@@ -392,7 +392,7 @@ CycleCollectionNoteChild(nsCycleCollectionTraversalCallback& aCallback,
 
 template <typename T>
 inline void
-ImplCycleCollectionUnlink(RefPtr<T>& aField)
+ImplCycleCollectionUnlink(nsRefPtr<T>& aField)
 {
   aField = nullptr;
 }
@@ -400,7 +400,7 @@ ImplCycleCollectionUnlink(RefPtr<T>& aField)
 template <typename T>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            RefPtr<T>& aField,
+                            nsRefPtr<T>& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
@@ -408,42 +408,42 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 template <class T>
-inline RefPtr<T>*
-address_of(RefPtr<T>& aPtr)
+inline nsRefPtr<T>*
+address_of(nsRefPtr<T>& aPtr)
 {
   return aPtr.get_address();
 }
 
 template <class T>
-inline const RefPtr<T>*
-address_of(const RefPtr<T>& aPtr)
+inline const nsRefPtr<T>*
+address_of(const nsRefPtr<T>& aPtr)
 {
   return aPtr.get_address();
 }
 
 template <class T>
-class RefPtrGetterAddRefs
+class nsRefPtrGetterAddRefs
 /*
   ...
 
   This class is designed to be used for anonymous temporary objects in the
   argument list of calls that return COM interface pointers, e.g.,
 
-    RefPtr<IFoo> fooP;
+    nsRefPtr<IFoo> fooP;
     ...->GetAddRefedPointer(getter_AddRefs(fooP))
 
   DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| instead.
 
-  When initialized with a |RefPtr|, as in the example above, it returns
+  When initialized with a |nsRefPtr|, as in the example above, it returns
   a |void**|, a |T**|, or an |nsISupports**| as needed, that the
   outer call (|GetAddRefedPointer| in this case) can fill in.
 
-  This type should be a nested class inside |RefPtr<T>|.
+  This type should be a nested class inside |nsRefPtr<T>|.
 */
 {
 public:
   explicit
-  RefPtrGetterAddRefs(RefPtr<T>& aSmartPtr)
+  nsRefPtrGetterAddRefs(nsRefPtr<T>& aSmartPtr)
     : mTargetSmartPtr(aSmartPtr)
   {
     // nothing else to do
@@ -466,26 +466,26 @@ public:
   }
 
 private:
-  RefPtr<T>& mTargetSmartPtr;
+  nsRefPtr<T>& mTargetSmartPtr;
 };
 
 template <class T>
-inline RefPtrGetterAddRefs<T>
-getter_AddRefs(RefPtr<T>& aSmartPtr)
+inline nsRefPtrGetterAddRefs<T>
+getter_AddRefs(nsRefPtr<T>& aSmartPtr)
 /*
-  Used around a |RefPtr| when
-  ...makes the class |RefPtrGetterAddRefs<T>| invisible.
+  Used around a |nsRefPtr| when
+  ...makes the class |nsRefPtrGetterAddRefs<T>| invisible.
 */
 {
-  return RefPtrGetterAddRefs<T>(aSmartPtr);
+  return nsRefPtrGetterAddRefs<T>(aSmartPtr);
 }
 
 
-// Comparing two |RefPtr|s
+// Comparing two |nsRefPtr|s
 
 template <class T, class U>
 inline bool
-operator==(const RefPtr<T>& aLhs, const RefPtr<U>& aRhs)
+operator==(const nsRefPtr<T>& aLhs, const nsRefPtr<U>& aRhs)
 {
   return static_cast<const T*>(aLhs.get()) == static_cast<const U*>(aRhs.get());
 }
@@ -493,96 +493,96 @@ operator==(const RefPtr<T>& aLhs, const RefPtr<U>& aRhs)
 
 template <class T, class U>
 inline bool
-operator!=(const RefPtr<T>& aLhs, const RefPtr<U>& aRhs)
+operator!=(const nsRefPtr<T>& aLhs, const nsRefPtr<U>& aRhs)
 {
   return static_cast<const T*>(aLhs.get()) != static_cast<const U*>(aRhs.get());
 }
 
 
-// Comparing an |RefPtr| to a raw pointer
+// Comparing an |nsRefPtr| to a raw pointer
 
 template <class T, class U>
 inline bool
-operator==(const RefPtr<T>& aLhs, const U* aRhs)
+operator==(const nsRefPtr<T>& aLhs, const U* aRhs)
 {
   return static_cast<const T*>(aLhs.get()) == static_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
 inline bool
-operator==(const U* aLhs, const RefPtr<T>& aRhs)
+operator==(const U* aLhs, const nsRefPtr<T>& aRhs)
 {
   return static_cast<const U*>(aLhs) == static_cast<const T*>(aRhs.get());
 }
 
 template <class T, class U>
 inline bool
-operator!=(const RefPtr<T>& aLhs, const U* aRhs)
+operator!=(const nsRefPtr<T>& aLhs, const U* aRhs)
 {
   return static_cast<const T*>(aLhs.get()) != static_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
 inline bool
-operator!=(const U* aLhs, const RefPtr<T>& aRhs)
+operator!=(const U* aLhs, const nsRefPtr<T>& aRhs)
 {
   return static_cast<const U*>(aLhs) != static_cast<const T*>(aRhs.get());
 }
 
 template <class T, class U>
 inline bool
-operator==(const RefPtr<T>& aLhs, U* aRhs)
+operator==(const nsRefPtr<T>& aLhs, U* aRhs)
 {
   return static_cast<const T*>(aLhs.get()) == const_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
 inline bool
-operator==(U* aLhs, const RefPtr<T>& aRhs)
+operator==(U* aLhs, const nsRefPtr<T>& aRhs)
 {
   return const_cast<const U*>(aLhs) == static_cast<const T*>(aRhs.get());
 }
 
 template <class T, class U>
 inline bool
-operator!=(const RefPtr<T>& aLhs, U* aRhs)
+operator!=(const nsRefPtr<T>& aLhs, U* aRhs)
 {
   return static_cast<const T*>(aLhs.get()) != const_cast<const U*>(aRhs);
 }
 
 template <class T, class U>
 inline bool
-operator!=(U* aLhs, const RefPtr<T>& aRhs)
+operator!=(U* aLhs, const nsRefPtr<T>& aRhs)
 {
   return const_cast<const U*>(aLhs) != static_cast<const T*>(aRhs.get());
 }
 
-// Comparing an |RefPtr| to |nullptr|
+// Comparing an |nsRefPtr| to |nullptr|
 
 template <class T>
 inline bool
-operator==(const RefPtr<T>& aLhs, decltype(nullptr))
+operator==(const nsRefPtr<T>& aLhs, decltype(nullptr))
 {
   return aLhs.get() == nullptr;
 }
 
 template <class T>
 inline bool
-operator==(decltype(nullptr), const RefPtr<T>& aRhs)
+operator==(decltype(nullptr), const nsRefPtr<T>& aRhs)
 {
   return nullptr == aRhs.get();
 }
 
 template <class T>
 inline bool
-operator!=(const RefPtr<T>& aLhs, decltype(nullptr))
+operator!=(const nsRefPtr<T>& aLhs, decltype(nullptr))
 {
   return aLhs.get() != nullptr;
 }
 
 template <class T>
 inline bool
-operator!=(decltype(nullptr), const RefPtr<T>& aRhs)
+operator!=(decltype(nullptr), const nsRefPtr<T>& aRhs)
 {
   return nullptr != aRhs.get();
 }
@@ -593,7 +593,7 @@ template <class T>
 inline already_AddRefed<T>
 do_AddRef(T*&& aObj)
 {
-  RefPtr<T> ref(aObj);
+  nsRefPtr<T> ref(aObj);
   return ref.forget();
 }
 
@@ -612,10 +612,10 @@ template<typename T, typename... Args>
 already_AddRefed<T>
 MakeAndAddRef(Args&&... aArgs)
 {
-  RefPtr<T> p(new T(Forward<Args>(aArgs)...));
+  nsRefPtr<T> p(new T(Forward<Args>(aArgs)...));
   return p.forget();
 }
 
 } // namespace mozilla
 
-#endif /* mozilla_RefPtr_h */
+#endif /* mozilla_nsRefPtr_h */

@@ -44,7 +44,7 @@ QTMLocationProvider::positionUpdated(const QGeoPositionInfo &geoPosition)
     bool providesSpeed = geoPosition.hasAttribute(QGeoPositionInfo::GroundSpeed);
     double speed = geoPosition.attribute(QGeoPositionInfo::GroundSpeed);
 
-    RefPtr<nsGeoPosition> p =
+    nsRefPtr<nsGeoPosition> p =
         new nsGeoPosition(latitude, longitude,
                           altitude, accuracy,
                           altitudeAccuracy, heading,

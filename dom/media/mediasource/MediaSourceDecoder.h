@@ -82,7 +82,7 @@ private:
   // calls Attach/DetachMediaSource on this decoder to set and clear
   // mMediaSource.
   dom::MediaSource* mMediaSource;
-  RefPtr<MediaSourceDemuxer> mDemuxer;
+  nsRefPtr<MediaSourceDemuxer> mDemuxer;
 
   Atomic<bool> mEnded;
 };

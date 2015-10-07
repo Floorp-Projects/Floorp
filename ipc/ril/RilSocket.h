@@ -99,7 +99,7 @@ protected:
 
 private:
   RilSocketIO* mIO;
-  RefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
+  nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
   RilSocketConsumer* mConsumer;
   int mIndex;
 };

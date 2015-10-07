@@ -255,12 +255,12 @@ private:
   void AppendDataCompletedWithSuccess(bool aHasActiveTracks);
   void AppendDataErrored(nsresult aError);
 
-  RefPtr<MediaSource> mMediaSource;
+  nsRefPtr<MediaSource> mMediaSource;
 
   uint32_t mEvictionThreshold;
 
-  RefPtr<SourceBufferContentManager> mContentManager;
-  RefPtr<SourceBufferAttributes> mAttributes;
+  nsRefPtr<SourceBufferContentManager> mContentManager;
+  nsRefPtr<SourceBufferAttributes> mAttributes;
 
   bool mUpdating;
 

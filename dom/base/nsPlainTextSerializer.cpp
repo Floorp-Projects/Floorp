@@ -58,7 +58,7 @@ static const uint32_t OLStackSize = 100;
 nsresult
 NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
 {
-  RefPtr<nsPlainTextSerializer> it = new nsPlainTextSerializer();
+  nsRefPtr<nsPlainTextSerializer> it = new nsPlainTextSerializer();
   it.forget(aSerializer);
   return NS_OK;
 }
@@ -1821,7 +1821,7 @@ nsPlainTextSerializer::IsInPre()
 bool
 nsPlainTextSerializer::IsElementPreformatted(Element* aElement)
 {
-  RefPtr<nsStyleContext> styleContext =
+  nsRefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
                                                          nullptr);
   if (styleContext) {
@@ -1835,7 +1835,7 @@ nsPlainTextSerializer::IsElementPreformatted(Element* aElement)
 bool
 nsPlainTextSerializer::IsElementBlock(Element* aElement)
 {
-  RefPtr<nsStyleContext> styleContext =
+  nsRefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement, nullptr,
                                                          nullptr);
   if (styleContext) {

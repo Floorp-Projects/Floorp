@@ -109,8 +109,8 @@ protected:
   }
 
 private:
-  RefPtr<Promise> mPromise;
-  RefPtr<PromiseCallback> mCallback;
+  nsRefPtr<Promise> mPromise;
+  nsRefPtr<PromiseCallback> mCallback;
   JS::PersistentRooted<JS::Value> mValue;
   NS_DECL_OWNINGTHREAD;
 };
@@ -273,9 +273,9 @@ protected:
   }
 
 private:
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   JS::PersistentRooted<JSObject*> mThenable;
-  RefPtr<PromiseInit> mThen;
+  nsRefPtr<PromiseInit> mThen;
   NS_DECL_OWNINGTHREAD;
 };
 
@@ -316,9 +316,9 @@ protected:
   }
 
 private:
-  RefPtr<PromiseCallback> mResolveCallback;
-  RefPtr<PromiseCallback> mRejectCallback;
-  RefPtr<Promise> mNextPromise;
+  nsRefPtr<PromiseCallback> mResolveCallback;
+  nsRefPtr<PromiseCallback> mRejectCallback;
+  nsRefPtr<Promise> mNextPromise;
 };
 
 // Promise
@@ -428,7 +428,7 @@ already_AddRefed<Promise>
 Promise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv,
                 JS::Handle<JSObject*> aDesiredProto)
 {
-  RefPtr<Promise> p = new Promise(aGlobal);
+  nsRefPtr<Promise> p = new Promise(aGlobal);
   p->CreateWrapper(aDesiredProto, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -481,7 +481,7 @@ Promise::MaybeReject(JSContext* aCx,
 }
 
 void
-Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
+Promise::MaybeReject(const nsRefPtr<MediaStreamError>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 
@@ -658,7 +658,7 @@ Promise::Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Create(global, aRv, aDesiredProto);
+  nsRefPtr<Promise> promise = Create(global, aRv, aDesiredProto);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -729,7 +729,7 @@ Promise::Resolve(const GlobalObject& aGlobal,
     nsresult rv = UNWRAP_OBJECT(Promise, valueObj, nextPromise);
 
     if (NS_SUCCEEDED(rv)) {
-      RefPtr<Promise> addRefed = nextPromise;
+      nsRefPtr<Promise> addRefed = nextPromise;
       return addRefed.forget();
     }
   }
@@ -741,7 +741,7 @@ Promise::Resolve(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<Promise> p = Resolve(global, aGlobal.Context(), aValue, aRv);
+  nsRefPtr<Promise> p = Resolve(global, aGlobal.Context(), aValue, aRv);
   if (p) {
     p->mFullfillmentStack = p->mAllocationStack;
   }
@@ -752,7 +752,7 @@ Promise::Resolve(const GlobalObject& aGlobal,
 Promise::Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
                  JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = Create(aGlobal, aRv);
+  nsRefPtr<Promise> promise = Create(aGlobal, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -772,7 +772,7 @@ Promise::Reject(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<Promise> p = Reject(global, aGlobal.Context(), aValue, aRv);
+  nsRefPtr<Promise> p = Reject(global, aGlobal.Context(), aValue, aRv);
   if (p) {
     p->mRejectionStack = p->mAllocationStack;
   }
@@ -783,7 +783,7 @@ Promise::Reject(const GlobalObject& aGlobal,
 Promise::Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = Create(aGlobal, aRv);
+  nsRefPtr<Promise> promise = Create(aGlobal, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -796,18 +796,18 @@ already_AddRefed<Promise>
 Promise::Then(JSContext* aCx, AnyCallback* aResolveCallback,
               AnyCallback* aRejectCallback, ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = Create(GetParentObject(), aRv);
+  nsRefPtr<Promise> promise = Create(GetParentObject(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  RefPtr<PromiseCallback> resolveCb =
+  nsRefPtr<PromiseCallback> resolveCb =
     PromiseCallback::Factory(promise, global, aResolveCallback,
                              PromiseCallback::Resolve);
 
-  RefPtr<PromiseCallback> rejectCb =
+  nsRefPtr<PromiseCallback> rejectCb =
     PromiseCallback::Factory(promise, global, aRejectCallback,
                              PromiseCallback::Reject);
 
@@ -819,7 +819,7 @@ Promise::Then(JSContext* aCx, AnyCallback* aResolveCallback,
 already_AddRefed<Promise>
 Promise::Catch(JSContext* aCx, AnyCallback* aRejectCallback, ErrorResult& aRv)
 {
-  RefPtr<AnyCallback> resolveCb;
+  nsRefPtr<AnyCallback> resolveCb;
   return Then(aCx, resolveCb, aRejectCallback, aRv);
 }
 
@@ -886,7 +886,7 @@ public:
   }
 
 private:
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   uint32_t mCountdown;
   JS::Heap<JSObject*> mValues;
 };
@@ -949,7 +949,7 @@ private:
   {
   }
 
-  RefPtr<CountdownHolder> mCountdownHolder;
+  nsRefPtr<CountdownHolder> mCountdownHolder;
   uint32_t mIndex;
 };
 
@@ -968,11 +968,11 @@ Promise::All(const GlobalObject& aGlobal,
 {
   JSContext* cx = aGlobal.Context();
 
-  nsTArray<RefPtr<Promise>> promiseList;
+  nsTArray<nsRefPtr<Promise>> promiseList;
 
   for (uint32_t i = 0; i < aIterable.Length(); ++i) {
     JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
-    RefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
+    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
 
     MOZ_ASSERT(!aRv.Failed());
 
@@ -984,7 +984,7 @@ Promise::All(const GlobalObject& aGlobal,
 
 /* static */ already_AddRefed<Promise>
 Promise::All(const GlobalObject& aGlobal,
-             const nsTArray<RefPtr<Promise>>& aPromiseList, ErrorResult& aRv)
+             const nsTArray<nsRefPtr<Promise>>& aPromiseList, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global =
     do_QueryInterface(aGlobal.GetAsSupports());
@@ -1007,11 +1007,11 @@ Promise::All(const GlobalObject& aGlobal,
     return Promise::Resolve(global, cx, value, aRv);
   }
 
-  RefPtr<Promise> promise = Create(global, aRv);
+  nsRefPtr<Promise> promise = Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<CountdownHolder> holder =
+  nsRefPtr<CountdownHolder> holder =
     new CountdownHolder(aGlobal, promise, aPromiseList.Length());
 
   JS::Rooted<JSObject*> obj(cx, JS::CurrentGlobalOrNull(cx));
@@ -1020,13 +1020,13 @@ Promise::All(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
+  nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
 
   for (uint32_t i = 0; i < aPromiseList.Length(); ++i) {
-    RefPtr<PromiseNativeHandler> resolveHandler =
+    nsRefPtr<PromiseNativeHandler> resolveHandler =
       new AllResolveElementFunction(holder, i);
 
-    RefPtr<PromiseCallback> resolveCb =
+    nsRefPtr<PromiseCallback> resolveCb =
       new NativePromiseCallback(resolveHandler, Resolved);
 
     // Every promise gets its own resolve callback, which will set the right
@@ -1056,19 +1056,19 @@ Promise::Race(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Create(global, aRv);
+  nsRefPtr<Promise> promise = Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<PromiseCallback> resolveCb =
+  nsRefPtr<PromiseCallback> resolveCb =
     new ResolvePromiseCallback(promise, obj);
 
-  RefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
+  nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
 
   for (uint32_t i = 0; i < aIterable.Length(); ++i) {
     JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
-    RefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
+    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
     // According to spec, Resolve can throw, but our implementation never does.
     // Well it does when window isn't passed on the main thread, but that is an
     // implementation detail which should never be reached since we are checking
@@ -1083,10 +1083,10 @@ Promise::Race(const GlobalObject& aGlobal,
 void
 Promise::AppendNativeHandler(PromiseNativeHandler* aRunnable)
 {
-  RefPtr<PromiseCallback> resolveCb =
+  nsRefPtr<PromiseCallback> resolveCb =
     new NativePromiseCallback(aRunnable, Resolved);
 
-  RefPtr<PromiseCallback> rejectCb =
+  nsRefPtr<PromiseCallback> rejectCb =
     new NativePromiseCallback(aRunnable, Rejected);
 
   AppendCallbacks(resolveCb, rejectCb);
@@ -1214,7 +1214,7 @@ Promise::MaybeReportRejected()
     return;
   }
 
-  RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   bool isMainThread = MOZ_LIKELY(NS_IsMainThread());
   bool isChrome = isMainThread ? nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj))
                                : GetCurrentThreadWorkerPrivate()->IsChromeWorker();
@@ -1222,7 +1222,7 @@ Promise::MaybeReportRejected()
   xpcReport->Init(report.report(), report.message(), isChrome, win ? win->WindowID() : 0);
 
   // Now post an event to do the real reporting async
-  // Since Promises preserve their wrapper, it is essential to RefPtr<> the
+  // Since Promises preserve their wrapper, it is essential to nsRefPtr<> the
   // AsyncErrorReporter, otherwise if the call to DispatchToMainThread fails, it
   // will leak. See Bug 958684.  So... don't use DispatchToMainThread()
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
@@ -1231,7 +1231,7 @@ Promise::MaybeReportRejected()
     NS_WARNING("!!! Trying to report rejected Promise after MainThread shutdown");
   }
   if (mainThread) {
-    RefPtr<AsyncErrorReporter> r =
+    nsRefPtr<AsyncErrorReporter> r =
       new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
     mainThread->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   }
@@ -1313,17 +1313,17 @@ Promise::ResolveInternal(JSContext* aCx,
         // this->GetGlobalJSObject(), so use that as the global for
         // ResolvePromiseCallback/RejectPromiseCallback.
         JS::Rooted<JSObject*> glob(aCx, GlobalJSObject());
-        RefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this, glob);
-        RefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(this, glob);
-        RefPtr<FastPromiseResolveThenableJob> task =
+        nsRefPtr<PromiseCallback> resolveCb = new ResolvePromiseCallback(this, glob);
+        nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(this, glob);
+        nsRefPtr<FastPromiseResolveThenableJob> task =
           new FastPromiseResolveThenableJob(resolveCb, rejectCb, nextPromise);
         DispatchToMicroTask(task);
         return;
       }
 
-      RefPtr<PromiseInit> thenCallback =
+      nsRefPtr<PromiseInit> thenCallback =
         new PromiseInit(nullptr, thenObj, mozilla::dom::GetIncumbentGlobal());
-      RefPtr<PromiseResolveThenableJob> task =
+      nsRefPtr<PromiseResolveThenableJob> task =
         new PromiseResolveThenableJob(this, valueObj, thenCallback);
       DispatchToMicroTask(task);
       return;
@@ -1435,14 +1435,14 @@ Promise::MaybeSettle(JS::Handle<JS::Value> aValue,
 void
 Promise::TriggerPromiseReactions()
 {
-  nsTArray<RefPtr<PromiseCallback>> callbacks;
+  nsTArray<nsRefPtr<PromiseCallback>> callbacks;
   callbacks.SwapElements(mState == Resolved ? mResolveCallbacks
                                             : mRejectCallbacks);
   mResolveCallbacks.Clear();
   mRejectCallbacks.Clear();
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
-    RefPtr<PromiseReactionJob> task =
+    nsRefPtr<PromiseReactionJob> task =
       new PromiseReactionJob(this, callbacks[i], mResult);
     DispatchToMicroTask(task);
   }
@@ -1482,7 +1482,7 @@ Promise::CaptureStack(JSContext* aCx, JS::Heap<JSObject*>& aTarget)
 }
 
 void
-Promise::GetDependentPromises(nsTArray<RefPtr<Promise>>& aPromises)
+Promise::GetDependentPromises(nsTArray<nsRefPtr<Promise>>& aPromises)
 {
   // We want to return promises that correspond to then() calls, Promise.all()
   // calls, and Promise.race() calls.
@@ -1531,7 +1531,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
 
     MOZ_ASSERT(mPromiseWorkerProxy);
-    RefPtr<Promise> workerPromise = mPromiseWorkerProxy->WorkerPromise();
+    nsRefPtr<Promise> workerPromise = mPromiseWorkerProxy->WorkerPromise();
 
     // Here we convert the buffer to a JS::Value.
     JS::Rooted<JS::Value> value(aCx);
@@ -1551,7 +1551,7 @@ protected:
   ~PromiseWorkerProxyRunnable() {}
 
 private:
-  RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
 
   // Function pointer for calling Promise::{ResolveInternal,RejectInternal}.
   PromiseWorkerProxy::RunCallbackFunc mFunc;
@@ -1568,7 +1568,7 @@ PromiseWorkerProxy::Create(workers::WorkerPrivate* aWorkerPrivate,
   MOZ_ASSERT(aWorkerPromise);
   MOZ_ASSERT_IF(aCb, !!aCb->Write && !!aCb->Read);
 
-  RefPtr<PromiseWorkerProxy> proxy =
+  nsRefPtr<PromiseWorkerProxy> proxy =
     new PromiseWorkerProxy(aWorkerPrivate, aWorkerPromise, aCb);
 
   // We do this to make sure the worker thread won't shut down before the
@@ -1698,7 +1698,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
     MOZ_ASSERT(false, "cannot serialize the value with the StructuredCloneAlgorithm!");
   }
 
-  RefPtr<PromiseWorkerProxyRunnable> runnable =
+  nsRefPtr<PromiseWorkerProxyRunnable> runnable =
     new PromiseWorkerProxyRunnable(this, aFunc);
 
   runnable->Dispatch(aCx);
@@ -1783,11 +1783,11 @@ PromiseWorkerProxy::CustomWriteHandler(JSContext* aCx,
 
 // Specializations of MaybeRejectBrokenly we actually support.
 template<>
-void Promise::MaybeRejectBrokenly(const RefPtr<DOMError>& aArg) {
+void Promise::MaybeRejectBrokenly(const nsRefPtr<DOMError>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 template<>
-void Promise::MaybeRejectBrokenly(const RefPtr<DOMException>& aArg) {
+void Promise::MaybeRejectBrokenly(const nsRefPtr<DOMException>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 template<>

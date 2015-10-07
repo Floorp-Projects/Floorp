@@ -11,7 +11,7 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, RefCounted, etc
+#include "mozilla/nsRefPtr.h"             // for RefPtr, RefCounted, etc
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/gfx/Types.h"          // for Filter
@@ -186,7 +186,7 @@ public:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 
   struct TimedTexture {
-    RefPtr<TextureHost> mTexture;
+    nsRefPtr<TextureHost> mTexture;
     TimeStamp mTimeStamp;
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
@@ -236,7 +236,7 @@ protected:
   TextureInfo mTextureInfo;
   uint64_t mAsyncID;
   uint64_t mCompositorID;
-  RefPtr<Compositor> mCompositor;
+  nsRefPtr<Compositor> mCompositor;
   Layer* mLayer;
   uint32_t mFlashCounter; // used when the pref "layers.flash-borders" is true.
   bool mAttached;
@@ -262,7 +262,7 @@ public:
   bool Failed() const { return !mSucceeded; }
 
 private:
-  RefPtr<CompositableHost> mHost;
+  nsRefPtr<CompositableHost> mHost;
   bool mSucceeded;
 };
 

@@ -68,9 +68,9 @@ private:
   // The server socket associated with this object.
   nsCOMPtr<nsIServerSocket> mServerSocket;
   // The IPC actor in the content process.
-  RefPtr<TCPServerSocketChild> mServerBridgeChild;
+  nsRefPtr<TCPServerSocketChild> mServerBridgeChild;
   // The IPC actor in the parent process.
-  RefPtr<TCPServerSocketParent> mServerBridgeParent;
+  nsRefPtr<TCPServerSocketParent> mServerBridgeParent;
   int32_t mPort;
   uint16_t mBacklog;
   // True if any accepted sockets should use array buffers for received messages.

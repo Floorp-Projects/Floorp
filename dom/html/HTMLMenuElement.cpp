@@ -87,7 +87,7 @@ HTMLMenuElement::SendShowEvent()
     return NS_ERROR_FAILURE;
   }
  
-  RefPtr<nsPresContext> presContext = shell->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = shell->GetPresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
   EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                             &event, nullptr, &status);

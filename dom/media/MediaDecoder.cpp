@@ -1394,7 +1394,7 @@ MediaDecoder::CanPlayThrough()
 }
 
 #ifdef MOZ_EME
-RefPtr<MediaDecoder::CDMProxyPromise>
+nsRefPtr<MediaDecoder::CDMProxyPromise>
 MediaDecoder::RequestCDMProxy() const
 {
   return mCDMProxyPromise;
@@ -1405,11 +1405,11 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CDMProxy> proxy = aProxy;
+  nsRefPtr<CDMProxy> proxy = aProxy;
   {
     CDMCaps::AutoLock caps(aProxy->Capabilites());
     if (!caps.AreCapsKnown()) {
-      RefPtr<MediaDecoder> self = this;
+      nsRefPtr<MediaDecoder> self = this;
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
         self->mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
       });
@@ -1579,7 +1579,7 @@ MediaDecoder::ConstructMediaTracks()
   AudioTrackList* audioList = element->AudioTracks();
   if (audioList && mInfo->HasAudio()) {
     const TrackInfo& info = mInfo->mAudio;
-    RefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
+    nsRefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
     info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
 
     audioList->AddTrack(track);
@@ -1588,7 +1588,7 @@ MediaDecoder::ConstructMediaTracks()
   VideoTrackList* videoList = element->VideoTracks();
   if (videoList && mInfo->HasVideo()) {
     const TrackInfo& info = mInfo->mVideo;
-    RefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
+    nsRefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
     info.mId, info.mKind, info.mLabel, info.mLanguage);
 
     videoList->AddTrack(track);

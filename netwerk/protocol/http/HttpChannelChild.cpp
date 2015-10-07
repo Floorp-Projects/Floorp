@@ -67,7 +67,7 @@ static_assert(FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE == 250,
 class InterceptStreamListener : public nsIStreamListener
                               , public nsIProgressEventSink
 {
-  RefPtr<HttpChannelChild> mOwner;
+  nsRefPtr<HttpChannelChild> mOwner;
   nsCOMPtr<nsISupports> mContext;
   virtual ~InterceptStreamListener() {}
  public:
@@ -1572,7 +1572,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
     mInterceptListener = new InterceptStreamListener(this, mListenerContext);
 
-    RefPtr<InterceptedChannelContent> intercepted =
+    nsRefPtr<InterceptedChannelContent> intercepted =
         new InterceptedChannelContent(this, controller, mInterceptListener);
     intercepted->NotifyController();
     return NS_OK;

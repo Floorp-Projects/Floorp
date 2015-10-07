@@ -606,7 +606,7 @@ bool
 UndoMutationObserver::IsManagerForMutation(nsIContent* aContent)
 {
   nsCOMPtr<nsINode> currentNode = aContent;
-  RefPtr<UndoManager> undoManager;
+  nsRefPtr<UndoManager> undoManager;
 
   // Get the UndoManager of nearest ancestor with an UndoManager.
   while (currentNode && !undoManager) {
@@ -649,7 +649,7 @@ UndoMutationObserver::AttributeWillChange(nsIDocument* aDocument,
     return;
   }
 
-  RefPtr<UndoAttrChanged> undoTxn = new UndoAttrChanged(aElement,
+  nsRefPtr<UndoAttrChanged> undoTxn = new UndoAttrChanged(aElement,
                                                           aNameSpaceID,
                                                           aAttribute,
                                                           aModType);
@@ -667,7 +667,7 @@ UndoMutationObserver::CharacterDataWillChange(nsIDocument* aDocument,
     return;
   }
 
-  RefPtr<UndoTextChanged> undoTxn = new UndoTextChanged(aContent, aInfo);
+  nsRefPtr<UndoTextChanged> undoTxn = new UndoTextChanged(aContent, aInfo);
   mTxnManager->DoTransaction(undoTxn);
 }
 
@@ -681,7 +681,7 @@ UndoMutationObserver::ContentAppended(nsIDocument* aDocument,
     return;
   }
 
-  RefPtr<UndoContentAppend> txn = new UndoContentAppend(aContainer);
+  nsRefPtr<UndoContentAppend> txn = new UndoContentAppend(aContainer);
   if (NS_SUCCEEDED(txn->Init(aNewIndexInContainer))) {
     mTxnManager->DoTransaction(txn);
   }
@@ -697,7 +697,7 @@ UndoMutationObserver::ContentInserted(nsIDocument* aDocument,
     return;
   }
 
-  RefPtr<UndoContentInsert> txn = new UndoContentInsert(aContainer, aChild,
+  nsRefPtr<UndoContentInsert> txn = new UndoContentInsert(aContainer, aChild,
                                                           aIndexInContainer);
   mTxnManager->DoTransaction(txn);
 }
@@ -713,7 +713,7 @@ UndoMutationObserver::ContentRemoved(nsIDocument *aDocument,
     return;
   }
 
-  RefPtr<UndoContentRemove> txn = new UndoContentRemove(aContainer, aChild,
+  nsRefPtr<UndoContentRemove> txn = new UndoContentRemove(aContainer, aChild,
                                                           aIndexInContainer);
   mTxnManager->DoTransaction(txn);
 }
@@ -743,7 +743,7 @@ protected:
    * Call a function member on the transaction object with the
    * specified function name.
    */
-  RefPtr<DOMTransaction> mTransaction;
+  nsRefPtr<DOMTransaction> mTransaction;
   uint32_t mFlags;
 };
 
@@ -769,7 +769,7 @@ FunctionCallTxn::RedoTransaction()
   }
 
   ErrorResult rv;
-  RefPtr<DOMTransactionCallback> redo = mTransaction->GetRedo(rv);
+  nsRefPtr<DOMTransactionCallback> redo = mTransaction->GetRedo(rv);
   if (!rv.Failed() && redo) {
     redo->Call(mTransaction.get(), rv);
   }
@@ -787,7 +787,7 @@ FunctionCallTxn::UndoTransaction()
   }
 
   ErrorResult rv;
-  RefPtr<DOMTransactionCallback> undo = mTransaction->GetUndo(rv);
+  nsRefPtr<DOMTransactionCallback> undo = mTransaction->GetUndo(rv);
   if (!rv.Failed() && undo) {
     undo->Call(mTransaction.get(), rv);
   }
@@ -856,7 +856,7 @@ UndoManager::Transact(JSContext* aCx, DOMTransaction& aTransaction,
 
   // First try executing an automatic transaction.
 
-  RefPtr<DOMTransactionCallback> executeAutomatic =
+  nsRefPtr<DOMTransactionCallback> executeAutomatic =
     aTransaction.GetExecuteAutomatic(aRv);
   if (aRv.Failed()) {
     return;
@@ -897,12 +897,12 @@ UndoManager::AutomaticTransact(DOMTransaction* aTransaction,
 
   // Transaction to call the "undo" method after the automatic transaction
   // has been undone.
-  RefPtr<FunctionCallTxn> undoTxn = new FunctionCallTxn(aTransaction,
+  nsRefPtr<FunctionCallTxn> undoTxn = new FunctionCallTxn(aTransaction,
       FunctionCallTxn::CALL_ON_UNDO);
 
   // Transaction to call the "redo" method after the automatic transaction
   // has been redone.
-  RefPtr<FunctionCallTxn> redoTxn = new FunctionCallTxn(aTransaction,
+  nsRefPtr<FunctionCallTxn> redoTxn = new FunctionCallTxn(aTransaction,
       FunctionCallTxn::CALL_ON_REDO);
 
   mTxnManager->BeginBatch(aTransaction);
@@ -924,10 +924,10 @@ void
 UndoManager::ManualTransact(DOMTransaction* aTransaction,
                             ErrorResult& aRv)
 {
-  RefPtr<FunctionCallTxn> txn = new FunctionCallTxn(aTransaction,
+  nsRefPtr<FunctionCallTxn> txn = new FunctionCallTxn(aTransaction,
       FunctionCallTxn::CALL_ON_REDO | FunctionCallTxn::CALL_ON_UNDO);
 
-  RefPtr<DOMTransactionCallback> execute = aTransaction->GetExecute(aRv);
+  nsRefPtr<DOMTransactionCallback> execute = aTransaction->GetExecute(aRv);
   if (!aRv.Failed() && execute) {
     execute->Call(aTransaction, aRv);
   }
@@ -1030,7 +1030,7 @@ UndoManager::ItemInternal(uint32_t aIndex,
 
 void
 UndoManager::Item(uint32_t aIndex,
-                  Nullable<nsTArray<RefPtr<DOMTransaction> > >& aItems,
+                  Nullable<nsTArray<nsRefPtr<DOMTransaction> > >& aItems,
                   ErrorResult& aRv)
 {
   int32_t numRedo;
@@ -1061,7 +1061,7 @@ UndoManager::Item(uint32_t aIndex,
     return;
   }
 
-  nsTArray<RefPtr<DOMTransaction> >& items = aItems.SetValue();
+  nsTArray<nsRefPtr<DOMTransaction> >& items = aItems.SetValue();
   for (uint32_t i = 0; i < transactions.Length(); i++) {
     items.AppendElement(transactions[i]);
   }
@@ -1157,7 +1157,7 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
   init.mCancelable = false;
   init.mTransactions = array;
 
-  RefPtr<DOMTransactionEvent> event =
+  nsRefPtr<DOMTransactionEvent> event =
     DOMTransactionEvent::Constructor(mHostNode, aType, init);
 
   event->SetTrusted(true);

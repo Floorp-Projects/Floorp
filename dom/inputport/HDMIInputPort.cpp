@@ -25,7 +25,7 @@ HDMIInputPort::Create(nsPIDOMWindow* aWindow,
                       nsIInputPortData* aData,
                       ErrorResult& aRv)
 {
-  RefPtr<HDMIInputPort> inputport = new HDMIInputPort(aWindow);
+  nsRefPtr<HDMIInputPort> inputport = new HDMIInputPort(aWindow);
   inputport->Init(aData, aListener, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

@@ -11,7 +11,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
@@ -29,7 +29,7 @@ MediaTimer::MediaTimer()
 
   // Use the SharedThreadPool to create an nsIThreadPool with a maximum of one
   // thread, which is equivalent to an nsIThread for our purposes.
-  RefPtr<SharedThreadPool> threadPool(
+  nsRefPtr<SharedThreadPool> threadPool(
     SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaTimer"), 1));
   mThread = threadPool.get();
   mTimer->SetTarget(mThread);
@@ -76,13 +76,13 @@ MediaTimer::OnMediaTimerThread()
   return rv;
 }
 
-RefPtr<MediaTimerPromise>
+nsRefPtr<MediaTimerPromise>
 MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
 {
   MonitorAutoLock mon(mMonitor);
   TIMER_LOG("MediaTimer::WaitUntil %lld", RelativeMicroseconds(aTimeStamp));
   Entry e(aTimeStamp, aCallSite);
-  RefPtr<MediaTimerPromise> p = e.mPromise.get();
+  nsRefPtr<MediaTimerPromise> p = e.mPromise.get();
   mEntries.push(e);
   ScheduleUpdate();
   return p;

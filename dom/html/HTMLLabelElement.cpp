@@ -118,7 +118,7 @@ HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
   }
 
   // Strong ref because event dispatch is going to happen.
-  RefPtr<Element> content = GetLabeledElement();
+  nsRefPtr<Element> content = GetLabeledElement();
 
   if (content) {
     mHandlingEvent = true;
@@ -223,7 +223,7 @@ HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
                                    bool aIsTrustedEvent)
 {
   if (!aKeyCausesActivation) {
-    RefPtr<Element> element = GetLabeledElement();
+    nsRefPtr<Element> element = GetLabeledElement();
     if (element) {
       return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }

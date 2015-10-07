@@ -190,7 +190,7 @@ nsIContentParent::GetOrCreateActorForBlob(Blob* aBlob)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
 
-  RefPtr<BlobImpl> blobImpl = aBlob->Impl();
+  nsRefPtr<BlobImpl> blobImpl = aBlob->Impl();
   MOZ_ASSERT(blobImpl);
 
   return GetOrCreateActorForBlobImpl(blobImpl);
@@ -225,7 +225,7 @@ nsIContentParent::RecvSyncMessage(const nsString& aMsg,
     }
   }
 
-  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
@@ -254,7 +254,7 @@ nsIContentParent::RecvRpcMessage(const nsString& aMsg,
     }
   }
 
-  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);
@@ -282,7 +282,7 @@ nsIContentParent::RecvAsyncMessage(const nsString& aMsg,
     }
   }
 
-  RefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
   if (ppm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForParent(aData, data);

@@ -221,7 +221,7 @@ private:
   bool          mBuiltSynthetics;
 
   // file handle
-  RefPtr<nsZipHandle> mFd;
+  nsRefPtr<nsZipHandle> mFd;
 
   // file URI, for logging
   nsCString mURI;
@@ -250,7 +250,7 @@ public:
   nsresult      FindNext(const char** aResult, uint16_t* aNameLen);
 
 private:
-  RefPtr<nsZipArchive> mArchive;
+  nsRefPtr<nsZipArchive> mArchive;
   char*         mPattern;
   nsZipItem*    mItem;
   uint16_t      mSlot;
@@ -334,7 +334,7 @@ public:
   }
 
 protected:
-  RefPtr<nsZipHandle> mZipHandle;
+  nsRefPtr<nsZipHandle> mZipHandle;
   nsAutoArrayPtr<uint8_t> mAutoBuf;
   uint8_t *mReturnBuf;
   uint32_t mReadlen;

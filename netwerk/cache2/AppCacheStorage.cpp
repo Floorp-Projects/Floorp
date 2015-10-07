@@ -75,7 +75,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncOpenURI(nsIURI *aURI,
   rv = noRefURI->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<_OldCacheLoad> appCacheLoad =
+  nsRefPtr<_OldCacheLoad> appCacheLoad =
     new _OldCacheLoad(scheme, cacheKey, aCallback, appCache,
                       LoadInfo(), WriteToDisk(), aFlags);
   rv = appCacheLoad->Start();
@@ -107,7 +107,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aId
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<_OldStorage> old = new _OldStorage(
+  nsRefPtr<_OldStorage> old = new _OldStorage(
     LoadInfo(), WriteToDisk(), LookupAppCache(), true, mAppCache);
   return old->AsyncDoomURI(aURI, aIdExtension, aCallback);
 }
@@ -144,7 +144,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCal
   }
   else {
     // Discard the group
-    RefPtr<_OldStorage> old = new _OldStorage(
+    nsRefPtr<_OldStorage> old = new _OldStorage(
       LoadInfo(), WriteToDisk(), LookupAppCache(), true, mAppCache);
     rv = old->AsyncEvictStorage(aCallback);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -172,7 +172,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisito
     do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
+  nsRefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
     "offline", aVisitor, aVisitEntries, LoadInfo());
   rv = nsCacheService::GlobalInstance()->VisitEntriesInternal(cb);
   NS_ENSURE_SUCCESS(rv, rv);

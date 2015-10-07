@@ -154,7 +154,7 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI)
     if (NS_FAILED(rv))
         return nullptr;
 
-    RefPtr<nsXULPrototypeDocument> newProto;
+    nsRefPtr<nsXULPrototypeDocument> newProto;
     rv = NS_NewXULPrototypeDocument(getter_AddRefs(newProto));
     if (NS_FAILED(rv))
         return nullptr;
@@ -230,7 +230,7 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 {
     nsIURI* uri = aDocumentInfo->DocumentURI();
 
-    RefPtr<nsXBLDocumentInfo> info;
+    nsRefPtr<nsXBLDocumentInfo> info;
     mXBLDocTable.Get(uri, getter_AddRefs(info));
     if (!info) {
         mXBLDocTable.Put(uri, aDocumentInfo);
@@ -239,7 +239,7 @@ nsXULPrototypeCache::PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo)
 }
 
 static PLDHashOperator
-FlushSkinXBL(nsIURI* aKey, RefPtr<nsXBLDocumentInfo>& aDocInfo, void* aClosure)
+FlushSkinXBL(nsIURI* aKey, nsRefPtr<nsXBLDocumentInfo>& aDocInfo, void* aClosure)
 {
   nsAutoCString str;
   aKey->GetPath(str);
@@ -254,7 +254,7 @@ FlushSkinXBL(nsIURI* aKey, RefPtr<nsXBLDocumentInfo>& aDocInfo, void* aClosure)
 }
 
 static PLDHashOperator
-FlushSkinSheets(nsIURI* aKey, RefPtr<CSSStyleSheet>& aSheet, void* aClosure)
+FlushSkinSheets(nsIURI* aKey, nsRefPtr<CSSStyleSheet>& aSheet, void* aClosure)
 {
   nsAutoCString str;
   aSheet->GetSheetURI()->GetPath(str);
@@ -269,7 +269,7 @@ FlushSkinSheets(nsIURI* aKey, RefPtr<CSSStyleSheet>& aSheet, void* aClosure)
 }
 
 static PLDHashOperator
-FlushScopedSkinStylesheets(nsIURI* aKey, RefPtr<nsXBLDocumentInfo> &aDocInfo, void* aClosure)
+FlushScopedSkinStylesheets(nsIURI* aKey, nsRefPtr<nsXBLDocumentInfo> &aDocInfo, void* aClosure)
 {
   aDocInfo->FlushSkinStylesheets();
   return PL_DHASH_NEXT;
@@ -602,7 +602,7 @@ nsXULPrototypeCache::BeginCaching(nsIURI* aURI)
 }
 
 static PLDHashOperator
-MarkXBLInCCGeneration(nsIURI* aKey, RefPtr<nsXBLDocumentInfo> &aDocInfo,
+MarkXBLInCCGeneration(nsIURI* aKey, nsRefPtr<nsXBLDocumentInfo> &aDocInfo,
                       void* aClosure)
 {
     uint32_t* gen = static_cast<uint32_t*>(aClosure);
@@ -611,7 +611,7 @@ MarkXBLInCCGeneration(nsIURI* aKey, RefPtr<nsXBLDocumentInfo> &aDocInfo,
 }
 
 static PLDHashOperator
-MarkXULInCCGeneration(nsIURI* aKey, RefPtr<nsXULPrototypeDocument> &aDoc,
+MarkXULInCCGeneration(nsIURI* aKey, nsRefPtr<nsXULPrototypeDocument> &aDoc,
                       void* aClosure)
 {
     uint32_t* gen = static_cast<uint32_t*>(aClosure);

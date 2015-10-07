@@ -111,7 +111,7 @@ private:
 
   struct DocumentEntry {
     nsDocumentRuleResultCacheKey mCacheKey;
-    RefPtr<nsCSSRuleProcessor> mRuleProcessor;
+    nsRefPtr<nsCSSRuleProcessor> mRuleProcessor;
   };
 
   struct Entry {

@@ -462,7 +462,7 @@ NS_IMETHODIMP CacheEntry::OnFileReady(nsresult aResult, bool aIsNew)
 NS_IMETHODIMP CacheEntry::OnFileDoomed(nsresult aResult)
 {
   if (mDoomCallback) {
-    RefPtr<DoomCallbackRunnable> event =
+    nsRefPtr<DoomCallbackRunnable> event =
       new DoomCallbackRunnable(this, aResult);
     NS_DispatchToMainThread(event);
   }
@@ -480,8 +480,8 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
   // Hold callbacks invocation, AddStorageEntry would invoke from doom prematurly
   mPreventCallbacks = true;
 
-  RefPtr<CacheEntryHandle> handle;
-  RefPtr<CacheEntry> newEntry;
+  nsRefPtr<CacheEntryHandle> handle;
+  nsRefPtr<CacheEntry> newEntry;
   {
     mozilla::MutexAutoUnlock unlock(mLock);
 
@@ -517,7 +517,7 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
   // reference counter and doesn't revert entry state back when write
   // fails and also doesn't update the entry frecency.  Not updating
   // frecency causes entries to not be purged from our memory pools.
-  RefPtr<CacheEntryHandle> writeHandle =
+  nsRefPtr<CacheEntryHandle> writeHandle =
     newEntry->NewWriteHandle();
   return writeHandle.forget();
 }
@@ -600,7 +600,7 @@ bool CacheEntry::InvokeCallbacks(bool aReadOnly)
 
     if (NS_SUCCEEDED(rv) && !onCheckThread) {
       // Redispatch to the target thread
-      RefPtr<nsRunnableMethod<CacheEntry> > event =
+      nsRefPtr<nsRunnableMethod<CacheEntry> > event =
         NS_NewRunnableMethod(this, &CacheEntry::InvokeCallbacksLock);
 
       rv = mCallbacks[i].mTargetThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -767,7 +767,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
 
   if (!onAvailThread) {
     // Dispatch to the right thread
-    RefPtr<AvailableCallbackRunnable> event =
+    nsRefPtr<AvailableCallbackRunnable> event =
       new AvailableCallbackRunnable(this, aCallback);
 
     rv = aCallback.mTargetThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
@@ -796,7 +796,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
       BackgroundOp(Ops::FRECENCYUPDATE);
     }
 
-    RefPtr<CacheEntryHandle> handle = NewHandle();
+    nsRefPtr<CacheEntryHandle> handle = NewHandle();
     aCallback.mCallback->OnCacheEntryAvailable(
       handle, false, nullptr, NS_OK);
     return;
@@ -817,7 +817,7 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
 
   // Consumer will be responsible to fill or validate the entry metadata and data.
 
-  RefPtr<CacheEntryHandle> handle = NewWriteHandle();
+  nsRefPtr<CacheEntryHandle> handle = NewWriteHandle();
   rv = aCallback.mCallback->OnCacheEntryAvailable(
     handle, state == WRITING, nullptr, NS_OK);
 
@@ -1116,7 +1116,7 @@ nsresult CacheEntry::OpenOutputStreamInternal(int64_t offset, nsIOutputStream * 
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  RefPtr<CacheOutputCloseListener> listener =
+  nsRefPtr<CacheOutputCloseListener> listener =
     new CacheOutputCloseListener(this);
 
   nsCOMPtr<nsIOutputStream> stream;
@@ -1330,7 +1330,7 @@ NS_IMETHODIMP CacheEntry::Recreate(bool aMemoryOnly,
 
   mozilla::MutexAutoLock lock(mLock);
 
-  RefPtr<CacheEntryHandle> handle = ReopenTruncated(aMemoryOnly, nullptr);
+  nsRefPtr<CacheEntryHandle> handle = ReopenTruncated(aMemoryOnly, nullptr);
   if (handle) {
     handle.forget(_retval);
     return NS_OK;
@@ -1603,7 +1603,7 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
 
       // Because CacheFile::Set*() are not thread-safe to use (uses WeakReference that
       // is not thread-safe) we must post to the main thread...
-      RefPtr<nsRunnableMethod<CacheEntry> > event =
+      nsRefPtr<nsRunnableMethod<CacheEntry> > event =
         NS_NewRunnableMethodWithArg<double>(this, &CacheEntry::StoreFrecency, mFrecency);
       NS_DispatchToMainThread(event);
     }

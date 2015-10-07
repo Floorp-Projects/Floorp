@@ -195,7 +195,7 @@ public:
     bool     RemoveDescriptor( nsCacheEntryDescriptor * descriptor,
                                bool                   * doomEntry);
 
-    void     GetDescriptors(nsTArray<RefPtr<nsCacheEntryDescriptor> > &outDescriptors);
+    void     GetDescriptors(nsTArray<nsRefPtr<nsCacheEntryDescriptor> > &outDescriptors);
 
 private:
     friend class nsCacheEntryHashTable;

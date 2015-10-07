@@ -89,7 +89,7 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
 gfxContext::ContextForDrawTarget(DrawTarget* aTarget)
 {
   Matrix transform = aTarget->GetTransform();
-  RefPtr<gfxContext> result = new gfxContext(aTarget);
+  nsRefPtr<gfxContext> result = new gfxContext(aTarget);
   result->SetMatrix(ThebesMatrix(transform));
   return result.forget();
 }
@@ -203,7 +203,7 @@ gfxContext::ClosePath()
 already_AddRefed<Path> gfxContext::GetPath()
 {
   EnsurePath();
-  RefPtr<Path> path(mPath);
+  nsRefPtr<Path> path(mPath);
   return path.forget();
 }
 
@@ -763,7 +763,7 @@ gfxContext::SetPattern(gfxPattern *pattern)
 already_AddRefed<gfxPattern>
 gfxContext::GetPattern()
 {
-  RefPtr<gfxPattern> pat;
+  nsRefPtr<gfxPattern> pat;
 
   AzureState &state = CurrentState();
   if (state.pattern) {
@@ -808,7 +808,7 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
     js::ProfileEntry::Category::GRAPHICS);
 
   // Lifetime needs to be limited here as we may simply wrap surface's data.
-  RefPtr<SourceSurface> sourceSurf =
+  nsRefPtr<SourceSurface> sourceSurf =
   gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
 
   if (!sourceSurf) {
@@ -903,7 +903,7 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
        mDT->GetOpaqueRect().Contains(clipExtents)) &&
       !mDT->GetUserData(&sDontUseAsSourceKey)) {
     DrawTarget *oldDT = mDT;
-    RefPtr<SourceSurface> source = mDT->Snapshot();
+    nsRefPtr<SourceSurface> source = mDT->Snapshot();
     Point oldDeviceOffset = CurrentState().deviceOffset;
 
     PushNewDT(gfxContentType::COLOR);
@@ -953,7 +953,7 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
 already_AddRefed<gfxPattern>
 gfxContext::PopGroup()
 {
-  RefPtr<SourceSurface> src = mDT->Snapshot();
+  nsRefPtr<SourceSurface> src = mDT->Snapshot();
   Point deviceOffset = CurrentState().deviceOffset;
 
   Restore();
@@ -962,7 +962,7 @@ gfxContext::PopGroup()
   mat.Invert();
   mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
-  RefPtr<gfxPattern> pat = new gfxPattern(src, mat);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat);
 
   return pat.forget();
 }
@@ -970,7 +970,7 @@ gfxContext::PopGroup()
 already_AddRefed<SourceSurface>
 gfxContext::PopGroupToSurface(Matrix* aTransform)
 {
-  RefPtr<SourceSurface> src = mDT->Snapshot();
+  nsRefPtr<SourceSurface> src = mDT->Snapshot();
   Point deviceOffset = CurrentState().deviceOffset;
 
   Restore();
@@ -988,7 +988,7 @@ gfxContext::PopGroupToSurface(Matrix* aTransform)
 void
 gfxContext::PopGroupToSource()
 {
-  RefPtr<SourceSurface> src = mDT->Snapshot();
+  nsRefPtr<SourceSurface> src = mDT->Snapshot();
   Point deviceOffset = CurrentState().deviceOffset;
   Restore();
   CurrentState().sourceSurfCairo = nullptr;
@@ -1105,7 +1105,7 @@ gfxContext::EnsurePathBuilder()
     invTransform.Invert();
     Matrix toNewUS = mPathTransform * invTransform;
 
-    RefPtr<Path> path = mPathBuilder->Finish();
+    nsRefPtr<Path> path = mPathBuilder->Finish();
     mPathBuilder = path->TransformedCopyToBuilder(toNewUS, CurrentState().fillRule);
   }
 
@@ -1311,7 +1311,7 @@ gfxContext::PushNewDT(gfxContentType content)
 
   SurfaceFormat format = gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content);
 
-  RefPtr<DrawTarget> newDT =
+  nsRefPtr<DrawTarget> newDT =
     mDT->CreateSimilarDrawTarget(IntSize(int32_t(clipBounds.width), int32_t(clipBounds.height)),
                                  format);
 

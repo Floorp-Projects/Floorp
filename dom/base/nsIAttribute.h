@@ -46,7 +46,7 @@ protected:
 #endif //MOZILLA_INTERNAL_API
   virtual ~nsIAttribute();
 
-  RefPtr<nsDOMAttributeMap> mAttrMap;
+  nsRefPtr<nsDOMAttributeMap> mAttrMap;
   bool mNsAware;
 };
 

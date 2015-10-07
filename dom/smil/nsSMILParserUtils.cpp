@@ -416,7 +416,7 @@ ParseElementBaseTimeValueSpec(const nsAString& aSpec,
   bool requiresUnescaping;
   MoveToNextToken(tokenEnd, end, true, requiresUnescaping);
 
-  RefPtr<nsIAtom> atom =
+  nsRefPtr<nsIAtom> atom =
     ConvertTokenToAtom(Substring(start.get(), tokenEnd.get()),
                        requiresUnescaping);
   if (atom == nullptr) {

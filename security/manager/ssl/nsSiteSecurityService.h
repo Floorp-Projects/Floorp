@@ -148,7 +148,7 @@ private:
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
   bool mProcessPKPHeadersFromNonBuiltInRoots;
-  RefPtr<mozilla::DataStorage> mSiteStateStorage;
+  nsRefPtr<mozilla::DataStorage> mSiteStateStorage;
 };
 
 #endif // __nsSiteSecurityService_h__

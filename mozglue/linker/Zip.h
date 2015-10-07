@@ -11,7 +11,7 @@
 #include <zlib.h>
 #include "Utils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 /**
  * Helper class wrapping z_stream to avoid malloc() calls during

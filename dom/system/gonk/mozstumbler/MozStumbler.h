@@ -36,9 +36,9 @@ private:
   void DumpStumblerInfo();
   nsresult LocationInfoToString(nsACString& aLocDesc);
   void CellNetworkInfoToString(nsACString& aCellDesc);
-  nsTArray<RefPtr<nsICellInfo>> mCellInfo;
+  nsTArray<nsRefPtr<nsICellInfo>> mCellInfo;
   nsCString mWifiDesc;
-  RefPtr<nsGeoPosition> mPosition;
+  nsRefPtr<nsGeoPosition> mPosition;
   int mCellInfoResponsesExpected;
   int mCellInfoResponsesReceived;
   bool mIsWifiInfoResponseReceived;

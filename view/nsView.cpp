@@ -293,7 +293,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // Stash a copy of these and use them so we can handle this being deleted (say
   // from sync painting/flushing from Show/Move/Resize on the widget).
   nsIntRect newBounds;
-  RefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
+  nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
   nsWindowType type = widget->WindowType();
 
@@ -1003,7 +1003,7 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
   // window creation
   SetForcedRepaint(true);
   if (this == mViewManager->GetRootView()) {
-    RefPtr<nsDeviceContext> devContext = mViewManager->GetDeviceContext();
+    nsRefPtr<nsDeviceContext> devContext = mViewManager->GetDeviceContext();
     // ensure DPI is up-to-date, in case of window being opened and sized
     // on a non-default-dpi display (bug 829963)
     devContext->CheckDPIChange();
@@ -1050,7 +1050,7 @@ nsView::RequestWindowClose(nsIWidget* aWidget)
 void
 nsView::WillPaintWindow(nsIWidget* aWidget)
 {
-  RefPtr<nsViewManager> vm = mViewManager;
+  nsRefPtr<nsViewManager> vm = mViewManager;
   vm->WillPaintWindow(aWidget);
 }
 
@@ -1059,7 +1059,7 @@ nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion)
 {
   NS_ASSERTION(this == nsView::GetViewFor(aWidget), "wrong view for widget?");
 
-  RefPtr<nsViewManager> vm = mViewManager;
+  nsRefPtr<nsViewManager> vm = mViewManager;
   bool result = vm->PaintWindow(aWidget, aRegion);
   return result;
 }
@@ -1067,7 +1067,7 @@ nsView::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion)
 void
 nsView::DidPaintWindow()
 {
-  RefPtr<nsViewManager> vm = mViewManager;
+  nsRefPtr<nsViewManager> vm = mViewManager;
   vm->DidPaintWindow();
 }
 
@@ -1123,7 +1123,7 @@ nsView::HandleEvent(WidgetGUIEvent* aEvent,
   }
 
   if (view) {
-    RefPtr<nsViewManager> vm = view->GetViewManager();
+    nsRefPtr<nsViewManager> vm = view->GetViewManager();
     vm->DispatchEvent(aEvent, view, &result);
   }
 

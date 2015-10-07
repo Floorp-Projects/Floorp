@@ -90,7 +90,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
   // area first to minimize the size of the temporary surface.
   bool didCompleteClip = ClipToContain(aContext, aRegion.GetBounds());
 
-  RefPtr<gfxContext> result;
+  nsRefPtr<gfxContext> result;
   if (aLayer->CanUseOpaqueSurface() &&
       ((didCompleteClip && aRegion.GetNumRects() == 1) ||
        !aContext->CurrentMatrix().HasNonIntegerTranslation())) {
@@ -629,7 +629,7 @@ BasicLayerManager_Matrix3DToSkia(const Matrix4x4& aMatrix)
 
 static void
 Transform(const gfxImageSurface* aDest,
-          RefPtr<DataSourceSurface> aSrc,
+          nsRefPtr<DataSourceSurface> aSrc,
           const Matrix4x4& aTransform,
           gfxPoint aDestOffset)
 {
@@ -691,7 +691,7 @@ BasicLayerManager_Matrix3DToPixman(const Matrix4x4& aMatrix)
 
 static void
 Transform(const gfxImageSurface* aDest,
-          RefPtr<DataSourceSurface> aSrc,
+          nsRefPtr<DataSourceSurface> aSrc,
           const Matrix4x4& aTransform,
           gfxPoint aDestOffset)
 {
@@ -754,7 +754,7 @@ Transform(const gfxImageSurface* aDest,
  * @return              Transformed surface
  */
 static already_AddRefed<gfxASurface>
-Transform3D(RefPtr<SourceSurface> aSource,
+Transform3D(nsRefPtr<SourceSurface> aSource,
             gfxContext* aDest,
             const gfxRect& aBounds,
             const Matrix4x4& aTransform,
@@ -769,8 +769,8 @@ Transform3D(RefPtr<SourceSurface> aSource,
   aDestRect.RoundOut();
 
   // Create a surface the size of the transformed object.
-  RefPtr<gfxASurface> dest = aDest->CurrentSurface();
-  RefPtr<gfxImageSurface> destImage = new gfxImageSurface(IntSize(aDestRect.width,
+  nsRefPtr<gfxASurface> dest = aDest->CurrentSurface();
+  nsRefPtr<gfxImageSurface> destImage = new gfxImageSurface(IntSize(aDestRect.width,
                                                                     aDestRect.height),
                                                             gfxImageFormat::ARGB32);
   gfxPoint offset = aDestRect.TopLeft();
@@ -969,7 +969,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
   if (is2D) {
     if (needsGroup) {
-      RefPtr<gfxContext> groupTarget = PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion(),
+      nsRefPtr<gfxContext> groupTarget = PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion(),
                                       &needsClipToVisibleRegion);
       PaintSelfOrChildren(paintLayerContext, groupTarget);
       aTarget->PopGroupToSource();
@@ -984,14 +984,14 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     }
 
     const IntRect& bounds = visibleRegion.GetBounds();
-    RefPtr<DrawTarget> untransformedDT =
+    nsRefPtr<DrawTarget> untransformedDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(bounds.width, bounds.height),
                                                                    SurfaceFormat::B8G8R8A8);
     if (!untransformedDT) {
       return;
     }
 
-    RefPtr<gfxContext> groupTarget = new gfxContext(untransformedDT,
+    nsRefPtr<gfxContext> groupTarget = new gfxContext(untransformedDT,
                                                       Point(bounds.x, bounds.y));
 
     PaintSelfOrChildren(paintLayerContext, groupTarget);
@@ -1007,13 +1007,13 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                   (aLayer->GetDebugColorIndex() & 2) ? 1.f : 0.f,
                   (aLayer->GetDebugColorIndex() & 4) ? 1.f : 0.f);
 
-      RefPtr<gfxContext> temp = new gfxContext(untransformedDT, Point(bounds.x, bounds.y));
+      nsRefPtr<gfxContext> temp = new gfxContext(untransformedDT, Point(bounds.x, bounds.y));
       temp->SetColor(color);
       temp->Paint();
     }
 #endif
     Matrix4x4 effectiveTransform = aLayer->GetEffectiveTransform();
-    RefPtr<gfxASurface> result =
+    nsRefPtr<gfxASurface> result =
       Transform3D(untransformedDT->Snapshot(), aTarget, bounds,
                   effectiveTransform, destRect);
 
@@ -1054,7 +1054,7 @@ already_AddRefed<ReadbackLayer>
 BasicLayerManager::CreateReadbackLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  RefPtr<ReadbackLayer> layer = new BasicReadbackLayer(this);
+  nsRefPtr<ReadbackLayer> layer = new BasicReadbackLayer(this);
   return layer.forget();
 }
 

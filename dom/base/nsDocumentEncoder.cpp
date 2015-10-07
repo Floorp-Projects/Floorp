@@ -145,7 +145,7 @@ protected:
 
   nsCOMPtr<nsIDocument>          mDocument;
   nsCOMPtr<nsISelection>         mSelection;
-  RefPtr<nsRange>              mRange;
+  nsRefPtr<nsRange>              mRange;
   nsCOMPtr<nsINode>              mNode;
   nsCOMPtr<nsIOutputStream>      mStream;
   nsCOMPtr<nsIContentSerializer> mSerializer;

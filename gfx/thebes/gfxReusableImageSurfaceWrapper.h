@@ -32,7 +32,7 @@ public:
   }
 
 private:
-  RefPtr<gfxImageSurface>         mSurface;
+  nsRefPtr<gfxImageSurface>         mSurface;
 };
 
 #endif // GFXMEMCOWSURFACEWRAPPER

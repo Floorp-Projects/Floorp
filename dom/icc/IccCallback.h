@@ -52,8 +52,8 @@ private:
   NotifyGetCardLockEnabled(bool aResult);
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  RefPtr<DOMRequest> mRequest;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<DOMRequest> mRequest;
+  nsRefPtr<Promise> mPromise;
   // TODO: Bug 1125018 - Simplify The Result of GetCardLock and
   // getCardLockRetryCount in MozIcc.webidl without a wrapper object.
   bool mIsCardLockEnabled;

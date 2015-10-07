@@ -111,7 +111,7 @@ public:
     {}
 
     nsSVGViewBox* mVal; // kept alive because it belongs to content
-    RefPtr<nsSVGElement> mSVGElement;
+    nsRefPtr<nsSVGElement> mSVGElement;
 
     float X() const override final
     {
@@ -159,7 +159,7 @@ public:
     {}
 
     nsSVGViewBox* mVal; // kept alive because it belongs to content
-    RefPtr<nsSVGElement> mSVGElement;
+    nsRefPtr<nsSVGElement> mSVGElement;
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.

@@ -59,7 +59,7 @@ ImageData::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
-  RefPtr<ImageData> imageData = new ImageData(aWidth, aHeight, *data);
+  nsRefPtr<ImageData> imageData = new ImageData(aWidth, aHeight, *data);
   return imageData.forget();
 }
 
@@ -89,7 +89,7 @@ ImageData::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
-  RefPtr<ImageData> imageData = new ImageData(aWidth, height, *aData.Obj());
+  nsRefPtr<ImageData> imageData = new ImageData(aWidth, height, *aData.Obj());
   return imageData.forget();
 }
 

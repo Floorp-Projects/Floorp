@@ -193,7 +193,7 @@ private:
 
   void OnCopyComplete();
 
-  RefPtr<nsFileCopyEvent> mCopyEvent;
+  nsRefPtr<nsFileCopyEvent> mCopyEvent;
   nsCOMPtr<nsITransportEventSink> mSink;
 };
 
@@ -375,7 +375,7 @@ nsFileChannel::OpenContentStream(bool async, nsIInputStream **result,
     if (NS_FAILED(rv))
       return rv;
 
-    RefPtr<nsFileUploadContentStream> uploadStream =
+    nsRefPtr<nsFileUploadContentStream> uploadStream =
         new nsFileUploadContentStream(async, fileStream, mUploadStream,
                                       mUploadLength, this);
     if (!uploadStream || !uploadStream->IsInitialized()) {

@@ -89,12 +89,12 @@ nsSVGPathGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
   // looking at the global variable that the pref's stored in.
   if (cacheable && mCachedPath) {
     if (aDrawTarget.GetBackendType() == mCachedPath->GetBackendType()) {
-      RefPtr<Path> path(mCachedPath);
+      nsRefPtr<Path> path(mCachedPath);
       return path.forget();
     }
   }
-  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder(aFillRule);
-  RefPtr<Path> path = BuildPath(builder);
+  nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder(aFillRule);
+  nsRefPtr<Path> path = BuildPath(builder);
   if (cacheable && NS_SVGPathCachingEnabled()) {
     mCachedPath = path;
   }
@@ -112,7 +112,7 @@ nsSVGPathGeometryElement::GetFillRule()
 {
   FillRule fillRule = FillRule::FILL_WINDING; // Equivalent to NS_STYLE_FILL_RULE_NONZERO
 
-  RefPtr<nsStyleContext> styleContext =
+  nsRefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr,
                                                          nullptr);
   

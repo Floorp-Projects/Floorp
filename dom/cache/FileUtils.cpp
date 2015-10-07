@@ -164,7 +164,7 @@ BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
                              aQuotaInfo.mOrigin, tmpFile);
   if (NS_WARN_IF(!fileStream)) { return NS_ERROR_UNEXPECTED; }
 
-  RefPtr<SnappyCompressOutputStream> compressed =
+  nsRefPtr<SnappyCompressOutputStream> compressed =
     new SnappyCompressOutputStream(fileStream);
 
   nsCOMPtr<nsIEventTarget> target =

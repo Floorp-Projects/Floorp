@@ -181,7 +181,7 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(mConnection, "no connection");
 
-    RefPtr<nsHttpConnectionInfo> ci;
+    nsRefPtr<nsHttpConnectionInfo> ci;
     GetConnectionInfo(getter_AddRefs(ci));
     MOZ_ASSERT(ci);
 
@@ -373,7 +373,7 @@ nsHttpPipeline::Http1xTransactionCount()
 
 nsresult
 nsHttpPipeline::TakeSubTransactions(
-    nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+    nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
     LOG(("nsHttpPipeline::TakeSubTransactions [this=%p]\n", this));
 
@@ -703,7 +703,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
 
             // ask the connection manager to add additional transactions
             // to our pipeline.
-            RefPtr<nsHttpConnectionInfo> ci;
+            nsRefPtr<nsHttpConnectionInfo> ci;
             GetConnectionInfo(getter_AddRefs(ci));
             if (ci)
                 gHttpHandler->ConnMgr()->ProcessPendingQForEntry(ci);
@@ -796,7 +796,7 @@ nsHttpPipeline::Close(nsresult reason)
     mStatus = reason;
     mClosed = true;
 
-    RefPtr<nsHttpConnectionInfo> ci;
+    nsRefPtr<nsHttpConnectionInfo> ci;
     GetConnectionInfo(getter_AddRefs(ci));
     uint32_t numRescheduled = CancelPipeline(reason);
 

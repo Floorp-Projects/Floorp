@@ -245,7 +245,7 @@ void
 nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
                              const nsAString& browserDumpID)
 {
-  RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+  nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   host->PluginCrashed(this, pluginDumpID, browserDumpID);
 }
 
@@ -288,7 +288,7 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
 
   CheckClassInitialized();
 
-  RefPtr<nsNPAPIPlugin> plugin = new nsNPAPIPlugin();
+  nsRefPtr<nsNPAPIPlugin> plugin = new nsNPAPIPlugin();
 
   PluginLibrary* pluginLib = GetNewPluginLibrary(aPluginTag);
   if (!pluginLib) {
@@ -421,7 +421,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
     return NPERR_GENERIC_ERROR;
   }
 
-  RefPtr<nsNPAPIPluginStreamListener> listener;
+  nsRefPtr<nsNPAPIPluginStreamListener> listener;
   // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
   // the listener's destructor will do the notification while we are about to
   // return a failure code.
@@ -512,7 +512,7 @@ GetDocumentFromNPP(NPP npp)
 
   PluginDestructionGuard guard(inst);
 
-  RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
   NS_ENSURE_TRUE(owner, nullptr);
 
   nsCOMPtr<nsIDocument> doc;
@@ -746,7 +746,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
 
 
     const char *name = nullptr;
-    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     host->GetPluginName(inst, &name);
 
     if (name && strstr(name, "Adobe") && strstr(name, "Acrobat")) {
@@ -1457,7 +1457,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   nsNPAPIPlugin* plugin = inst->GetPlugin();
   if (!plugin)
     return false;
-  RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+  nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
   nsPluginTag* pluginTag = host->TagForPlugin(plugin);
   if (!pluginTag->mIsJavaPlugin)
     return true;
@@ -1806,7 +1806,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
 
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
-    RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+    nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
     NS_ENSURE_TRUE(owner, NPERR_NO_ERROR);
 
     if (NS_SUCCEEDED(owner->GetNetscapeWindow(result))) {
@@ -2472,7 +2472,7 @@ _pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
   } else {
     NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY,("NPN_pluginthreadasynccall called from a non main thread\n"));
   }
-  RefPtr<nsPluginThreadRunnable> evt =
+  nsRefPtr<nsPluginThreadRunnable> evt =
     new nsPluginThreadRunnable(instance, func, userData);
 
   if (evt && evt->IsValid()) {

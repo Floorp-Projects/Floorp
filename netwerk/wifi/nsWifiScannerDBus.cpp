@@ -194,7 +194,7 @@ nsWifiScannerDBus::IdentifyAPProperties(DBusMessage* aMsg)
   nsresult rv = GetDBusIterator(aMsg, &arr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsWifiAccessPoint> ap = new nsWifiAccessPoint();
+  nsRefPtr<nsWifiAccessPoint> ap = new nsWifiAccessPoint();
   do {
     DBusMessageIter dict;
     dbus_message_iter_recurse(&arr, &dict);

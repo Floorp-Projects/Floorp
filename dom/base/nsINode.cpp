@@ -340,7 +340,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     }
   }
 
-  RefPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
+  nsRefPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
   nsIContent* content = fs->GetLimiter();
   if (!content) {
     content = fs->GetAncestorLimiter();
@@ -1237,7 +1237,7 @@ nsINode::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
 void
 nsINode::GetBoxQuads(const BoxQuadOptions& aOptions,
-                     nsTArray<RefPtr<DOMQuad> >& aResult,
+                     nsTArray<nsRefPtr<DOMQuad> >& aResult,
                      mozilla::ErrorResult& aRv)
 {
   mozilla::GetBoxQuads(this, aOptions, aResult, aRv);
@@ -1285,7 +1285,7 @@ nsINode::DispatchEvent(nsIDOMEvent *aEvent, bool* aRetVal)
 
   // Obtain a presentation shell
   nsIPresShell *shell = document->GetShell();
-  RefPtr<nsPresContext> context;
+  nsRefPtr<nsPresContext> context;
   if (shell) {
     context = shell->GetPresContext();
   }
@@ -2344,7 +2344,7 @@ nsINode::UnbindObject(nsISupports* aObject)
 }
 
 void
-nsINode::GetBoundMutationObservers(nsTArray<RefPtr<nsDOMMutationObserver> >& aResult)
+nsINode::GetBoundMutationObservers(nsTArray<nsRefPtr<nsDOMMutationObserver> >& aResult)
 {
   nsCOMArray<nsISupports>* objects =
     static_cast<nsCOMArray<nsISupports>*>(GetProperty(nsGkAtoms::keepobjectsalive));
@@ -2672,7 +2672,7 @@ nsINode::QuerySelector(const nsAString& aSelector, ErrorResult& aResult)
 already_AddRefed<nsINodeList>
 nsINode::QuerySelectorAll(const nsAString& aSelector, ErrorResult& aResult)
 {
-  RefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
+  nsRefPtr<nsSimpleContentList> contentList = new nsSimpleContentList(this);
 
   nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aResult);
   if (selectorList) {

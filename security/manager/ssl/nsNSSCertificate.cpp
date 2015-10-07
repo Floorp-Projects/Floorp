@@ -823,7 +823,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   mozilla::pkix::Time now(mozilla::pkix::Now());
 
   ScopedCERTCertList nssChain;
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   // We want to test all usages, but we start with server because most of the
@@ -1261,7 +1261,7 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(aValidity);
-  RefPtr<nsX509CertValidity> validity = new nsX509CertValidity(mCert.get());
+  nsRefPtr<nsX509CertValidity> validity = new nsX509CertValidity(mCert.get());
 
   validity.forget(aValidity);
   return NS_OK;
@@ -1384,7 +1384,7 @@ nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
 
   EnsureIdentityInfoLoaded();
 
-  RefPtr<mozilla::psm::SharedCertVerifier>
+  nsRefPtr<mozilla::psm::SharedCertVerifier>
     certVerifier(mozilla::psm::GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 

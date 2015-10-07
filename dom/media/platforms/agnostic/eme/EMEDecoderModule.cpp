@@ -36,7 +36,7 @@ public:
   {
   }
 
-  RefPtr<InitPromise> Init() override {
+  nsRefPtr<InitPromise> Init() override {
     MOZ_ASSERT(!mIsShutdown);
     return mDecoder->Init();
   }
@@ -138,12 +138,12 @@ public:
 
 private:
 
-  RefPtr<MediaDataDecoder> mDecoder;
+  nsRefPtr<MediaDataDecoder> mDecoder;
   MediaDataDecoderCallback* mCallback;
-  RefPtr<TaskQueue> mTaskQueue;
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<CDMProxy> mProxy;
   nsClassHashtable<nsRefPtrHashKey<MediaRawData>, DecryptPromiseRequestHolder> mDecrypts;
-  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+  nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
   bool mIsShutdown;
 };
 
@@ -160,8 +160,8 @@ public:
   nsresult Shutdown() override;
 
 private:
-  RefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+  nsRefPtr<CDMProxy> mProxy;
 };
 
 nsresult
@@ -219,7 +219,7 @@ CreateDecoderWrapper(MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, Flus
     return nullptr;
   }
 
-  RefPtr<MediaDataDecoderProxy> decoder(new EMEMediaDataDecoderProxy(thread, aCallback, aProxy, aTaskQueue));
+  nsRefPtr<MediaDataDecoderProxy> decoder(new EMEMediaDataDecoderProxy(thread, aCallback, aProxy, aTaskQueue));
   return decoder.forget();
 }
 
@@ -231,7 +231,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesVideo && aConfig.mCrypto.mValid) {
-    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aVideoTaskQueue);
+    nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aVideoTaskQueue);
     wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy,
                                                 aConfig,
                                                 aLayersBackend,
@@ -242,7 +242,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   }
 
   MOZ_ASSERT(mPDM);
-  RefPtr<MediaDataDecoder> decoder(
+  nsRefPtr<MediaDataDecoder> decoder(
     mPDM->CreateDecoder(aConfig,
                         aVideoTaskQueue,
                         aCallback,
@@ -256,7 +256,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
     return decoder.forget();
   }
 
-  RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
+  nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
                                                          mProxy,
                                                          AbstractThread::GetCurrent()->AsTaskQueue()));
@@ -269,7 +269,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                      MediaDataDecoderCallback* aCallback)
 {
   if (mCDMDecodesAudio && aConfig.mCrypto.mValid) {
-    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aAudioTaskQueue);
+    nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aAudioTaskQueue);
     wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy,
                                                 aConfig,
                                                 aAudioTaskQueue,
@@ -278,7 +278,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
   }
 
   MOZ_ASSERT(mPDM);
-  RefPtr<MediaDataDecoder> decoder(
+  nsRefPtr<MediaDataDecoder> decoder(
     mPDM->CreateDecoder(aConfig, aAudioTaskQueue, aCallback));
   if (!decoder) {
     return nullptr;
@@ -288,7 +288,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
     return decoder.forget();
   }
 
-  RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
+  nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
                                                          mProxy,
                                                          AbstractThread::GetCurrent()->AsTaskQueue()));

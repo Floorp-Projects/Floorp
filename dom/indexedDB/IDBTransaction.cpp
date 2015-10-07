@@ -182,7 +182,7 @@ IDBTransaction::CreateVersionChange(
 
   nsTArray<nsString> emptyObjectStoreNames;
 
-  RefPtr<IDBTransaction> transaction =
+  nsRefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase,
                        emptyObjectStoreNames,
                        VERSION_CHANGE);
@@ -218,7 +218,7 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
              aMode == READ_WRITE ||
              aMode == READ_WRITE_FLUSH);
 
-  RefPtr<IDBTransaction> transaction =
+  nsRefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
   IDBRequest::CaptureCaller(transaction->mFilename, &transaction->mLineNo,
                             &transaction->mColumn);
@@ -530,7 +530,7 @@ IDBTransaction::CreateObjectStore(const ObjectStoreSpec& aSpec)
   MOZ_ALWAYS_TRUE(mBackgroundActor.mVersionChangeBackgroundActor->
                     SendCreateObjectStore(aSpec.metadata()));
 
-  RefPtr<IDBObjectStore> objectStore = IDBObjectStore::Create(this, aSpec);
+  nsRefPtr<IDBObjectStore> objectStore = IDBObjectStore::Create(this, aSpec);
   MOZ_ASSERT(objectStore);
 
   mObjectStores.AppendElement(objectStore);
@@ -553,12 +553,12 @@ IDBTransaction::DeleteObjectStore(int64_t aObjectStoreId)
   for (uint32_t count = mObjectStores.Length(), index = 0;
        index < count;
        index++) {
-    RefPtr<IDBObjectStore>& objectStore = mObjectStores[index];
+    nsRefPtr<IDBObjectStore>& objectStore = mObjectStores[index];
 
     if (objectStore->Id() == aObjectStoreId) {
       objectStore->NoteDeletion();
 
-      RefPtr<IDBObjectStore>* deletedObjectStore =
+      nsRefPtr<IDBObjectStore>* deletedObjectStore =
         mDeletedObjectStores.AppendElement();
       deletedObjectStore->swap(mObjectStores[index]);
 
@@ -606,7 +606,7 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
   MOZ_ASSERT(NS_FAILED(aAbortCode));
   MOZ_ASSERT(!IsCommittingOrDone());
 
-  RefPtr<DOMError> error = aError;
+  nsRefPtr<DOMError> error = aError;
 
   const bool isVersionChange = mMode == VERSION_CHANGE;
   const bool isInvalidated = mDatabase->IsInvalidated();
@@ -673,7 +673,7 @@ IDBTransaction::AbortInternal(nsresult aAbortCode,
           MOZ_ASSERT(objectStoreId);
 
           if (validIds.Contains(uint64_t(objectStoreId))) {
-            RefPtr<IDBObjectStore>* objectStore =
+            nsRefPtr<IDBObjectStore>* objectStore =
               mObjectStores.AppendElement();
             objectStore->swap(mDeletedObjectStores[objIndex]);
           }
@@ -707,7 +707,7 @@ IDBTransaction::Abort(IDBRequest* aRequest)
   }
 
   ErrorResult rv;
-  RefPtr<DOMError> error = aRequest->GetError(rv);
+  nsRefPtr<DOMError> error = aRequest->GetError(rv);
 
   AbortInternal(aRequest->GetErrorCode(), error.forget());
 }
@@ -723,7 +723,7 @@ IDBTransaction::Abort(nsresult aErrorCode)
     return;
   }
 
-  RefPtr<DOMError> error = new DOMError(GetOwner(), aErrorCode);
+  nsRefPtr<DOMError> error = new DOMError(GetOwner(), aErrorCode);
   AbortInternal(aErrorCode, error.forget());
 }
 
@@ -867,7 +867,7 @@ IDBTransaction::ObjectStoreNames() const
     return mDatabase->ObjectStoreNames();
   }
 
-  RefPtr<DOMStringList> list = new DOMStringList();
+  nsRefPtr<DOMStringList> list = new DOMStringList();
   list->StringArray() = mObjectStoreNames;
   return list.forget();
 }
@@ -907,12 +907,12 @@ IDBTransaction::ObjectStore(const nsAString& aName, ErrorResult& aRv)
 
   const int64_t desiredId = spec->metadata().id();
 
-  RefPtr<IDBObjectStore> objectStore;
+  nsRefPtr<IDBObjectStore> objectStore;
 
   for (uint32_t count = mObjectStores.Length(), index = 0;
        index < count;
        index++) {
-    RefPtr<IDBObjectStore>& existingObjectStore = mObjectStores[index];
+    nsRefPtr<IDBObjectStore>& existingObjectStore = mObjectStores[index];
 
     if (existingObjectStore->Id() == desiredId) {
       objectStore = existingObjectStore;
@@ -1001,7 +1001,7 @@ WorkerFeature::Notify(JSContext* aCx, Status aStatus)
   if (mTransaction && aStatus > Terminating) {
     mTransaction->AssertIsOnOwningThread();
 
-    RefPtr<IDBTransaction> transaction = Move(mTransaction);
+    nsRefPtr<IDBTransaction> transaction = Move(mTransaction);
 
     if (!transaction->IsCommittingOrDone()) {
       IDB_REPORT_INTERNAL_ERR();

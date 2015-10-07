@@ -112,7 +112,7 @@ private:
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
     nsTArray<nsIntPoint> mPoints;
     int mTabId;
-    RefPtr<RefCountedJavaObject> mBuffer;
+    nsRefPtr<RefCountedJavaObject> mBuffer;
 };
 
 class WakeLockListener final : public nsIDOMMozWakeLockListener {
@@ -511,7 +511,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         int32_t tabId = curEvent->MetaState();
         const nsTArray<nsIntPoint>& points = curEvent->Points();
         RefCountedJavaObject* buffer = curEvent->ByteBuffer();
-        RefPtr<ThumbnailRunnable> sr = new ThumbnailRunnable(nsAppShell::gAppShell->mBrowserApp, tabId, points, buffer);
+        nsRefPtr<ThumbnailRunnable> sr = new ThumbnailRunnable(nsAppShell::gAppShell->mBrowserApp, tabId, points, buffer);
         MessageLoop::current()->PostIdleTask(FROM_HERE, NewRunnableMethod(sr.get(), &ThumbnailRunnable::Run));
         break;
     }
@@ -522,7 +522,7 @@ nsAppShell::LegacyGeckoEvent::Run()
         int32_t tabId = curEvent->MetaState();
         const nsTArray<nsIntPoint>& points = curEvent->Points();
         float scaleFactor = (float) curEvent->X();
-        RefPtr<RefCountedJavaObject> javaBuffer = curEvent->ByteBuffer();
+        nsRefPtr<RefCountedJavaObject> javaBuffer = curEvent->ByteBuffer();
         const auto& mBuffer = jni::Object::Ref::From(javaBuffer->GetObject());
 
         nsCOMPtr<nsIDOMWindow> domWindow;

@@ -17,7 +17,7 @@ ThreadSharedFloatArrayBufferList::Create(uint32_t aChannelCount,
                                          size_t aLength,
                                          const mozilla::fallible_t&)
 {
-  RefPtr<ThreadSharedFloatArrayBufferList> buffer =
+  nsRefPtr<ThreadSharedFloatArrayBufferList> buffer =
     new ThreadSharedFloatArrayBufferList(aChannelCount);
 
   for (uint32_t i = 0; i < aChannelCount; ++i) {

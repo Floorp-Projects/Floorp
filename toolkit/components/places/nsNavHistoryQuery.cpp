@@ -301,7 +301,7 @@ nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
   aQueries->Clear();
   *aOptions = nullptr;
 
-  RefPtr<nsNavHistoryQueryOptions> options(new nsNavHistoryQueryOptions());
+  nsRefPtr<nsNavHistoryQueryOptions> options(new nsNavHistoryQueryOptions());
   if (! options)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1334,7 +1334,7 @@ NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 {
   *_retval = nullptr;
 
-  RefPtr<nsNavHistoryQuery> clone = new nsNavHistoryQuery(*this);
+  nsRefPtr<nsNavHistoryQuery> clone = new nsNavHistoryQuery(*this);
   NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
 
   clone.forget(_retval);
@@ -1529,7 +1529,7 @@ nsNavHistoryQueryOptions::Clone(nsNavHistoryQueryOptions **aResult)
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  RefPtr<nsNavHistoryQueryOptions> resultHolder(result);
+  nsRefPtr<nsNavHistoryQueryOptions> resultHolder(result);
   result->mSort = mSort;
   result->mResultType = mResultType;
   result->mExcludeItems = mExcludeItems;

@@ -65,7 +65,7 @@ public:
 private:
   ~nsGeoPosition();
   long long mTimestamp;
-  RefPtr<nsIDOMGeoPositionCoords> mCoords;
+  nsRefPtr<nsIDOMGeoPositionCoords> mCoords;
 };
 
 ////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ public:
   nsIDOMGeoPosition* GetWrappedGeoPosition() { return mGeoPosition; }
 
 private:
-  RefPtr<Coordinates> mCoordinates;
+  nsRefPtr<Coordinates> mCoordinates;
   nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIDOMGeoPosition> mGeoPosition;
 };
@@ -135,7 +135,7 @@ public:
 
   Nullable<double> GetSpeed() const;
 private:
-  RefPtr<Position> mPosition;
+  nsRefPtr<Position> mPosition;
   nsCOMPtr<nsIDOMGeoPositionCoords> mCoords;
 };
 

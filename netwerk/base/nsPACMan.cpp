@@ -83,7 +83,7 @@ public:
   }
 
 private:
-  RefPtr<nsPACManCallback> mCallback;
+  nsRefPtr<nsPACManCallback> mCallback;
   nsresult                   mStatus;
   nsCString                  mPACString;
   nsCString                  mPACURL;
@@ -135,7 +135,7 @@ public:
   }
 
 private:
-  RefPtr<nsPACMan> mPACMan;
+  nsRefPtr<nsPACMan> mPACMan;
 };
 
 //-----------------------------------------------------------------------------
@@ -161,7 +161,7 @@ public:
   }
 
 private:
-    RefPtr<nsPACMan> mPACMan;
+    nsRefPtr<nsPACMan> mPACMan;
 };
 
 //-----------------------------------------------------------------------------
@@ -208,7 +208,7 @@ public:
       mPACMan->mPAC.Init(mSetupPACURI,
                          mSetupPACData);
 
-      RefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
+      nsRefPtr<PACLoadComplete> runnable = new PACLoadComplete(mPACMan);
       NS_DispatchToMainThread(runnable);
       return NS_OK;
     }
@@ -218,7 +218,7 @@ public:
   }
 
 private:
-  RefPtr<nsPACMan> mPACMan;
+  nsRefPtr<nsPACMan> mPACMan;
 
   bool      mCancel;
   nsresult  mCancelStatus;
@@ -263,7 +263,7 @@ PendingPACQuery::Complete(nsresult status, const nsCString &pacString)
 {
   if (!mCallback)
     return;
-  RefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, status);
+  nsRefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, status);
   runnable->SetPACString(pacString);
   if (mOnMainThreadOnly)
     NS_DispatchToMainThread(runnable);
@@ -277,7 +277,7 @@ PendingPACQuery::UseAlternatePACFile(const nsCString &pacURL)
   if (!mCallback)
     return;
 
-  RefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, NS_OK);
+  nsRefPtr<ExecuteCallback> runnable = new ExecuteCallback(mCallback, NS_OK);
   runnable->SetPACURL(pacURL);
   if (mOnMainThreadOnly)
     NS_DispatchToMainThread(runnable);
@@ -319,7 +319,7 @@ nsPACMan::~nsPACMan()
       mPACThread->Shutdown();
     }
     else {
-      RefPtr<ShutdownThread> runnable = new ShutdownThread(mPACThread);
+      nsRefPtr<ShutdownThread> runnable = new ShutdownThread(mPACThread);
       NS_DispatchToMainThread(runnable);
     }
   }
@@ -339,7 +339,7 @@ nsPACMan::Shutdown()
   CancelExistingLoad();
   PostCancelPendingQ(NS_ERROR_ABORT);
 
-  RefPtr<WaitForThreadShutdown> runnable = new WaitForThreadShutdown(this);
+  nsRefPtr<WaitForThreadShutdown> runnable = new WaitForThreadShutdown(this);
   NS_DispatchToMainThread(runnable);
 }
 
@@ -357,7 +357,7 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri, uint32_t appId,
       TimeStamp::Now() > mScheduledReload)
     LoadPACFromURI(EmptyCString());
 
-  RefPtr<PendingPACQuery> query =
+  nsRefPtr<PendingPACQuery> query =
     new PendingPACQuery(this, uri, appId, isInBrowser, callback,
                         mainThreadResponse);
 
@@ -381,7 +381,7 @@ nsPACMan::PostQuery(PendingPACQuery *query)
   }
 
   // add a reference to the query while it is in the pending list
-  RefPtr<PendingPACQuery> addref(query);
+  nsRefPtr<PendingPACQuery> addref(query);
   mPendingQ.insertBack(addref.forget().take());
   ProcessPendingQ();
   return NS_OK;
@@ -520,7 +520,7 @@ void
 nsPACMan::PostProcessPendingQ()
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
-  RefPtr<ExecutePACThreadAction> pending =
+  nsRefPtr<ExecutePACThreadAction> pending =
     new ExecutePACThreadAction(this);
   if (mPACThread)
     mPACThread->Dispatch(pending, nsIEventTarget::DISPATCH_NORMAL);
@@ -530,7 +530,7 @@ void
 nsPACMan::PostCancelPendingQ(nsresult status)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
-  RefPtr<ExecutePACThreadAction> pending =
+  nsRefPtr<ExecutePACThreadAction> pending =
     new ExecutePACThreadAction(this);
   pending->CancelQueue(status);
   if (mPACThread)
@@ -541,7 +541,7 @@ void
 nsPACMan::CancelPendingQ(nsresult status)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
-  RefPtr<PendingPACQuery> query;
+  nsRefPtr<PendingPACQuery> query;
 
   while (!mPendingQ.isEmpty()) {
     query = dont_AddRef(mPendingQ.popLast());
@@ -578,7 +578,7 @@ nsPACMan::ProcessPending()
   if (mInProgress || (IsLoading() && !mLoadFailureCount))
     return false;
 
-  RefPtr<PendingPACQuery> query(dont_AddRef(mPendingQ.popFirst()));
+  nsRefPtr<PendingPACQuery> query(dont_AddRef(mPendingQ.popFirst()));
 
   if (mShutdown || IsLoading()) {
     query->Complete(NS_ERROR_NOT_AVAILABLE, EmptyCString());
@@ -668,7 +668,7 @@ nsPACMan::OnStreamComplete(nsIStreamLoader *loader,
     // the PAC evaluator (NS_PROXYAUTOCONFIG_CONTRACTID) on the pac thread, because
     // that is where it will be used.
 
-    RefPtr<ExecutePACThreadAction> pending =
+    nsRefPtr<ExecutePACThreadAction> pending =
       new ExecutePACThreadAction(this);
     pending->SetupPAC(text, dataLen, pacURI);
     if (mPACThread)

@@ -696,7 +696,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
 
   mozilla::pkix::Time now(mozilla::pkix::Now());
   ScopedCERTCertList certList;
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
   if (certVerifier->VerifySSLServerCert(nssCert, nullptr, // stapled ocsp
                                         now, nullptr, // pinarg
@@ -931,7 +931,7 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
   }
 
   if (aType == nsISiteSecurityService::HEADER_HPKP) {
-    RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+    nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
     if (!certVerifier) {
       return NS_ERROR_FAILURE;
     }

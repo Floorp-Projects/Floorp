@@ -67,8 +67,8 @@ public:
 protected:
   nsPresContext* mPresContext;
   nsCOMPtr<nsIPresShell> mPresShell;
-  RefPtr<Selection> mSelection;
-  RefPtr<nsRange> mFirstSelectedRange;
+  nsRefPtr<Selection> mSelection;
+  nsRefPtr<nsRange> mFirstSelectedRange;
   nsCOMPtr<nsIContent> mRootContent;
 
   nsresult Init(WidgetQueryContentEvent* aEvent);

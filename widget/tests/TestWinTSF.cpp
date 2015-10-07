@@ -133,7 +133,7 @@ protected:
 
   bool mFailed;
   nsString mTestString;
-  RefPtr<TSFMgrImpl> mMgr;
+  nsRefPtr<TSFMgrImpl> mMgr;
   nsCOMPtr<nsIAppShell> mAppShell;
   nsCOMPtr<nsIXULWindow> mWindow;
   nsCOMPtr<nsIDOMNode> mCurrentNode;
@@ -183,7 +183,7 @@ static HRESULT
 GetRegularExtent(ITfRange *aRange, LONG &aStart, LONG &aEnd)
 {
   NS_ENSURE_TRUE(aRange, E_INVALIDARG);
-  RefPtr<ITfRangeACP> rangeACP;
+  nsRefPtr<ITfRangeACP> rangeACP;
   HRESULT hr = aRange->QueryInterface(IID_ITfRangeACP,
                                       getter_AddRefs(rangeACP));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && rangeACP, E_FAIL);
@@ -431,7 +431,7 @@ private:
   uint32_t mCurrentIndex;
 
 public:
-  nsTArray<RefPtr<TSFRangeImpl> > mRanges;
+  nsTArray<nsRefPtr<TSFRangeImpl> > mRanges;
 
   TSFEnumRangeImpl() :
       mRefCnt(0), mCurrentIndex(0)
@@ -602,7 +602,7 @@ private:
   ULONG mRefCnt;
 
 public:
-  nsTArray<RefPtr<TSFRangeImpl> > mRanges;
+  nsTArray<nsRefPtr<TSFRangeImpl> > mRanges;
 
   TSFAttrPropImpl() :
       mRefCnt(0)
@@ -688,7 +688,7 @@ public: // ITfReadOnlyProperty
       HRESULT hr = GetRegularExtent(pTargetRange, targetStart, targetEnd);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     }
-    RefPtr<TSFEnumRangeImpl> er = new TSFEnumRangeImpl();
+    nsRefPtr<TSFEnumRangeImpl> er = new TSFEnumRangeImpl();
     NS_ENSURE_TRUE(er, E_OUTOFMEMORY);
     for (uint32_t i = 0; i < mRanges.Length(); i++) {
       LONG start, end;
@@ -703,7 +703,7 @@ public: // ITfReadOnlyProperty
         start = std::max(targetStart, start);
         end = std::min(targetEnd, end);
       }
-      RefPtr<TSFRangeImpl> range = new TSFRangeImpl(start, end - start);
+      nsRefPtr<TSFRangeImpl> range = new TSFRangeImpl(start, end - start);
       NS_ENSURE_TRUE(range, E_OUTOFMEMORY);
       er->mRanges.AppendElement(range);
     }
@@ -751,8 +751,8 @@ private:
   ULONG mRefCnt;
 
 public:
-  RefPtr<TSFAttrPropImpl> mAttrProp;
-  RefPtr<TSFDocumentMgrImpl> mDocMgr;
+  nsRefPtr<TSFAttrPropImpl> mAttrProp;
+  nsRefPtr<TSFDocumentMgrImpl> mDocMgr;
   bool mTextChanged;
   bool mSelChanged;
   TS_TEXTCHANGE mTextChangeData;
@@ -923,7 +923,7 @@ public: // ITfCompositionView
       start = std::min(start, tmpStart);
       end = std::max(end, tmpEnd);
     }
-    RefPtr<TSFRangeImpl> range = new TSFRangeImpl();
+    nsRefPtr<TSFRangeImpl> range = new TSFRangeImpl();
     NS_ENSURE_TRUE(range, E_OUTOFMEMORY);
     HRESULT hr = range->SetExtent(start, end - start);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -986,10 +986,10 @@ private:
   ULONG mRefCnt;
 
 public:
-  RefPtr<TSFMgrImpl> mMgr;
-  RefPtr<ITextStoreACP> mStore;
-  RefPtr<TSFContextImpl> mContextBase;
-  RefPtr<TSFContextImpl> mContextTop; // XXX currently, we don't support this.
+  nsRefPtr<TSFMgrImpl> mMgr;
+  nsRefPtr<ITextStoreACP> mStore;
+  nsRefPtr<TSFContextImpl> mContextBase;
+  nsRefPtr<TSFContextImpl> mContextTop; // XXX currently, we don't support this.
 
 public:
   TSFDocumentMgrImpl(TSFMgrImpl* aMgr) :
@@ -1026,7 +1026,7 @@ public: // ITfDocumentMgr
                              IUnknown *punk, ITfContext **ppic,
                              TfEditCookie *pecTextStore)
   {
-    RefPtr<TSFContextImpl> context = new TSFContextImpl(this);
+    nsRefPtr<TSFContextImpl> context = new TSFContextImpl(this);
     punk->QueryInterface(IID_ITextStoreACP, getter_AddRefs(mStore));
     NS_ENSURE_TRUE(mStore, E_FAIL);
     HRESULT hr =
@@ -1117,7 +1117,7 @@ private:
   ULONG mRefCnt;
 
 public:
-  RefPtr<TestApp> mTestApp;
+  nsRefPtr<TestApp> mTestApp;
   TestApp::test_type mTest;
   bool mDeactivated;
   TSFDocumentMgrImpl* mFocusedDocument; // Must be raw pointer, but strong.
@@ -1176,7 +1176,7 @@ public: // ITfThreadMgr
 
   STDMETHODIMP CreateDocumentMgr(ITfDocumentMgr **ppdim)
   {
-    RefPtr<TSFDocumentMgrImpl> docMgr = new TSFDocumentMgrImpl(this);
+    nsRefPtr<TSFDocumentMgrImpl> docMgr = new TSFDocumentMgrImpl(this);
     if (!docMgr) {
       NS_NOTREACHED("TSFMgrImpl::CreateDocumentMgr (OOM)");
       return E_OUTOFMEMORY;
@@ -2361,7 +2361,7 @@ TestApp::TestComposition(void)
     return false;
   }
 
-  RefPtr<ITfContextOwnerCompositionSink> sink;
+  nsRefPtr<ITfContextOwnerCompositionSink> sink;
   HRESULT hr =
     mMgr->GetFocusedStore()->QueryInterface(IID_ITfContextOwnerCompositionSink,
                                             getter_AddRefs(sink));
@@ -2411,7 +2411,7 @@ TestApp::TestComposition(void)
     return false;
   }
   mMgr->GetFocusedAttrProp()->mRanges.Clear();
-  RefPtr<TSFRangeImpl> range =
+  nsRefPtr<TSFRangeImpl> range =
     new TSFRangeImpl(textChange.acpStart,
                      textChange.acpNewEnd - textChange.acpOldEnd);
   if (!mMgr->GetFocusedAttrProp()) {
@@ -3147,7 +3147,7 @@ TestApp::GetWidget(nsIWidget** aWidget)
     return false;
   }
 
-  RefPtr<nsViewManager> viewManager = presShell->GetViewManager();
+  nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
   if (!viewManager) {
     return false;
   }
@@ -3184,7 +3184,7 @@ int main(int argc, char** argv)
   if (xpcom.failed())
     return 1;
 
-  RefPtr<TestApp> tests = new TestApp();
+  nsRefPtr<TestApp> tests = new TestApp();
   if (!tests)
     return 1;
 

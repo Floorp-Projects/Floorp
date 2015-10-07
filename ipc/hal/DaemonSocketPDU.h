@@ -81,7 +81,7 @@ private:
   void OnError(const char* aFunction, int aErrno);
 
   DaemonSocketIOConsumer* mConsumer;
-  RefPtr<DaemonSocketResultHandler> mRes;
+  nsRefPtr<DaemonSocketResultHandler> mRes;
   ScopedClose mReceivedFd;
 };
 

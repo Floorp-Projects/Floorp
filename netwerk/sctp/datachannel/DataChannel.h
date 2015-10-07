@@ -257,13 +257,13 @@ private:
 #endif
 
   // Exists solely for proxying release of the TransportFlow to the STS thread
-  static void ReleaseTransportFlow(RefPtr<TransportFlow> aFlow) {}
+  static void ReleaseTransportFlow(nsRefPtr<TransportFlow> aFlow) {}
 
   // Data:
   // NOTE: while this array will auto-expand, increases in the number of
   // channels available from the stack must be negotiated!
   bool mAllocateEven;
-  nsAutoTArray<RefPtr<DataChannel>,16> mStreams;
+  nsAutoTArray<nsRefPtr<DataChannel>,16> mStreams;
   nsDeque mPending; // Holds addref'ed DataChannel's -- careful!
   // holds data that's come in before a channel is open
   nsTArray<nsAutoPtr<QueuedDataMessage> > mQueuedData;
@@ -276,7 +276,7 @@ private:
   uint16_t mState; // Protected with mLock
 
 #ifdef SCTP_DTLS_SUPPORTED
-  RefPtr<TransportFlow> mTransportFlow;
+  nsRefPtr<TransportFlow> mTransportFlow;
   nsCOMPtr<nsIEventTarget> mSTS;
 #endif
   uint16_t mLocalPort; // Accessed from connect thread
@@ -423,7 +423,7 @@ private:
 
   nsresult AddDataToBinaryMsg(const char *data, uint32_t size);
 
-  RefPtr<DataChannelConnection> mConnection;
+  nsRefPtr<DataChannelConnection> mConnection;
   nsCString mLabel;
   nsCString mProtocol;
   uint16_t mState;
@@ -556,8 +556,8 @@ private:
 
   int32_t                           mType;
   // XXX should use union
-  RefPtr<DataChannel>             mChannel;
-  RefPtr<DataChannelConnection>   mConnection;
+  nsRefPtr<DataChannel>             mChannel;
+  nsRefPtr<DataChannelConnection>   mConnection;
   nsCString                         mData;
   int32_t                           mLen;
 };

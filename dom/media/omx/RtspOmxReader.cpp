@@ -32,7 +32,7 @@ nsresult RtspOmxReader::InitOmxDecoder()
   return NS_OK;
 }
 
-RefPtr<MediaDecoderReader::SeekPromise>
+nsRefPtr<MediaDecoderReader::SeekPromise>
 RtspOmxReader::Seek(int64_t aTime, int64_t aEndTime)
 {
   // The seek function of Rtsp is time-based, we call the SeekTime function in
@@ -86,14 +86,14 @@ void RtspOmxReader::EnsureActive() {
   MediaOmxReader::EnsureActive();
 }
 
-RefPtr<MediaDecoderReader::MetadataPromise>
+nsRefPtr<MediaDecoderReader::MetadataPromise>
 RtspOmxReader::AsyncReadMetadata()
 {
   // Send a PLAY command to the RTSP server before reading metadata.
   // Because we might need some decoded samples to ensure we have configuration.
   mRtspResource->DisablePlayoutDelay();
 
-  RefPtr<MediaDecoderReader::MetadataPromise> p =
+  nsRefPtr<MediaDecoderReader::MetadataPromise> p =
     MediaOmxReader::AsyncReadMetadata();
 
   // Send a PAUSE to the RTSP server because the underlying media resource is

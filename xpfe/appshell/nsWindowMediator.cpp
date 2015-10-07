@@ -195,7 +195,7 @@ nsWindowMediator::GetEnumerator(const char16_t* inType, nsISimpleEnumerator** ou
   NS_ENSURE_ARG_POINTER(outEnumerator);
   NS_ENSURE_STATE(mReady);
 
-  RefPtr<nsAppShellWindowEnumerator> enumerator = new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator = new nsASDOMWindowEarlyToLateEnumerator(inType, *this);
   enumerator.forget(outEnumerator);
   return NS_OK;
 }
@@ -207,7 +207,7 @@ nsWindowMediator::GetXULWindowEnumerator(const char16_t* inType, nsISimpleEnumer
   NS_ENSURE_ARG_POINTER(outEnumerator);
   NS_ENSURE_STATE(mReady);
 
-  RefPtr<nsAppShellWindowEnumerator> enumerator = new nsASXULWindowEarlyToLateEnumerator(inType, *this);
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator = new nsASXULWindowEarlyToLateEnumerator(inType, *this);
   enumerator.forget(outEnumerator);
   return NS_OK;
 }
@@ -221,7 +221,7 @@ nsWindowMediator::GetZOrderDOMWindowEnumerator(
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_STATE(mReady);
 
-  RefPtr<nsAppShellWindowEnumerator> enumerator;
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator;
   if (aFrontToBack)
     enumerator = new nsASDOMWindowFrontToBackEnumerator(aWindowType, *this);
   else
@@ -240,7 +240,7 @@ nsWindowMediator::GetZOrderXULWindowEnumerator(
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_STATE(mReady);
 
-  RefPtr<nsAppShellWindowEnumerator> enumerator;
+  nsRefPtr<nsAppShellWindowEnumerator> enumerator;
   if (aFrontToBack)
     enumerator = new nsASXULWindowFrontToBackEnumerator(aWindowType, *this);
   else

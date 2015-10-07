@@ -31,7 +31,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
-  RefPtr<ADivertableParentChannel> mDivertableChannelParent;
+  nsRefPtr<ADivertableParentChannel> mDivertableChannelParent;
 };
 
 } // namespace net

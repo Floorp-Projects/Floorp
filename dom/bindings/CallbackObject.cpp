@@ -326,7 +326,7 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
   JS::Rooted<JSObject*> callback(cx, aCallback->Callback());
 
   JSAutoCompartment ac(cx, callback);
-  RefPtr<nsXPCWrappedJS> wrappedJS;
+  nsRefPtr<nsXPCWrappedJS> wrappedJS;
   nsresult rv =
     nsXPCWrappedJS::GetNewOrUsed(callback, aIID, getter_AddRefs(wrappedJS));
   if (NS_FAILED(rv) || !wrappedJS) {

@@ -29,7 +29,7 @@ class IDBFileHandle;
 class IDBFileRequest final : public DOMRequest,
                              public FileRequestBase
 {
-  RefPtr<IDBFileHandle> mFileHandle;
+  nsRefPtr<IDBFileHandle> mFileHandle;
 
   bool mWrapAsDOMRequest;
 

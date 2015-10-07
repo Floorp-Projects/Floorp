@@ -27,7 +27,7 @@ private:
   // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionIPCService();
 
-  nsTArray<RefPtr<MobileConnectionChild>> mItems;
+  nsTArray<nsRefPtr<MobileConnectionChild>> mItems;
 };
 
 } // namespace mobileconnection

@@ -8,7 +8,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
@@ -224,7 +224,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         fontSizeInflation);
 
@@ -622,7 +622,7 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
  
   // draw the slash as a parallelogram 
   Point delta = Point(presContext->AppUnitsToGfxUnits(mThickness), 0);
-  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   if (mRTL) {
     builder->MoveTo(rect.TopLeft());
     builder->LineTo(rect.TopLeft() + delta);
@@ -634,7 +634,7 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
     builder->LineTo(rect.TopRight());
     builder->LineTo(rect.TopRight() - delta);
   }
-  RefPtr<Path> path = builder->Finish();
+  nsRefPtr<Path> path = builder->Finish();
   aDrawTarget.Fill(path, color);
 }
 

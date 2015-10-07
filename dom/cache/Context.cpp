@@ -225,12 +225,12 @@ private:
     mInitAction = nullptr;
   }
 
-  RefPtr<Context> mContext;
-  RefPtr<ThreadsafeHandle> mThreadsafeHandle;
-  RefPtr<Manager> mManager;
-  RefPtr<Data> mData;
+  nsRefPtr<Context> mContext;
+  nsRefPtr<ThreadsafeHandle> mThreadsafeHandle;
+  nsRefPtr<Manager> mManager;
+  nsRefPtr<Data> mData;
   nsCOMPtr<nsIThread> mTarget;
-  RefPtr<Action> mInitAction;
+  nsRefPtr<Action> mInitAction;
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsresult mResult;
   QuotaInfo mQuotaInfo;
@@ -326,7 +326,7 @@ Context::QuotaInitRunnable::Run()
   // May run on different threads depending on the state.  See individual
   // state cases for thread assertions.
 
-  RefPtr<SyncResolver> resolver = new SyncResolver();
+  nsRefPtr<SyncResolver> resolver = new SyncResolver();
 
   switch(mState) {
     // -----------------------------------
@@ -345,7 +345,7 @@ Context::QuotaInitRunnable::Run()
         break;
       }
 
-      RefPtr<ManagerId> managerId = mManager->GetManagerId();
+      nsRefPtr<ManagerId> managerId = mManager->GetManagerId();
       nsCOMPtr<nsIPrincipal> principal = managerId->Principal();
       nsresult rv = qm->GetInfoFromPrincipal(principal,
                                              &mQuotaInfo.mGroup,
@@ -558,10 +558,10 @@ private:
     STATE_COMPLETE
   };
 
-  RefPtr<Context> mContext;
-  RefPtr<Data> mData;
+  nsRefPtr<Context> mContext;
+  nsRefPtr<Data> mData;
   nsCOMPtr<nsIEventTarget> mTarget;
-  RefPtr<Action> mAction;
+  nsRefPtr<Action> mAction;
   const QuotaInfo mQuotaInfo;
   nsCOMPtr<nsIThread> mInitiatingThread;
   State mState;
@@ -786,7 +786,7 @@ already_AddRefed<Context>
 Context::Create(Manager* aManager, nsIThread* aTarget,
                 Action* aInitAction, Context* aOldContext)
 {
-  RefPtr<Context> context = new Context(aManager, aTarget, aInitAction);
+  nsRefPtr<Context> context = new Context(aManager, aTarget, aInitAction);
   context->Init(aOldContext);
   return context.forget();
 }
@@ -969,7 +969,7 @@ Context::DispatchAction(Action* aAction, bool aDoomData)
 {
   NS_ASSERT_OWNINGTHREAD(Context);
 
-  RefPtr<ActionRunnable> runnable =
+  nsRefPtr<ActionRunnable> runnable =
     new ActionRunnable(this, mData, mTarget, aAction, mQuotaInfo);
 
   if (aDoomData) {
@@ -1053,7 +1053,7 @@ Context::CreateThreadsafeHandle()
   if (!mThreadsafeHandle) {
     mThreadsafeHandle = new ThreadsafeHandle(this);
   }
-  RefPtr<ThreadsafeHandle> ref = mThreadsafeHandle;
+  nsRefPtr<ThreadsafeHandle> ref = mThreadsafeHandle;
   return ref.forget();
 }
 
@@ -1080,7 +1080,7 @@ Context::DoomTargetData()
   // roundtrip to the target thread and back to the owning thread.  The
   // ref to the Data object is cleared on the owning thread after creating
   // the ActionRunnable, but before dispatching it.
-  RefPtr<Action> action = new NullAction();
+  nsRefPtr<Action> action = new NullAction();
   DispatchAction(action, true /* doomed data */);
 
   MOZ_ASSERT(!mData);

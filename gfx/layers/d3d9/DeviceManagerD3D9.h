@@ -11,7 +11,7 @@
 #include "d3d9.h"
 #include "nsTArray.h"
 #include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
@@ -119,8 +119,8 @@ private:
    */
   void Reset();
 
-  RefPtr<IDirect3DSwapChain9> mSwapChain;
-  RefPtr<DeviceManagerD3D9> mDeviceManager;
+  nsRefPtr<IDirect3DSwapChain9> mSwapChain;
+  nsRefPtr<DeviceManagerD3D9> mDeviceManager;
   HWND mWnd;
 };
 
@@ -238,54 +238,54 @@ private:
   nsTArray<SwapChainD3D9*> mSwapChains;
 
   /* The D3D device we use */
-  RefPtr<IDirect3DDevice9> mDevice;
+  nsRefPtr<IDirect3DDevice9> mDevice;
 
   /* The D3D9Ex device - only valid on Vista+ with WDDM */
-  RefPtr<IDirect3DDevice9Ex> mDeviceEx;
+  nsRefPtr<IDirect3DDevice9Ex> mDeviceEx;
 
   /* An instance of the D3D9 object */
-  RefPtr<IDirect3D9> mD3D9;
+  nsRefPtr<IDirect3D9> mD3D9;
 
   /* An instance of the D3D9Ex object - only valid on Vista+ with WDDM */
-  RefPtr<IDirect3D9Ex> mD3D9Ex;
+  nsRefPtr<IDirect3D9Ex> mD3D9Ex;
 
   /* Vertex shader used for layer quads */
-  RefPtr<IDirect3DVertexShader9> mLayerVS;
+  nsRefPtr<IDirect3DVertexShader9> mLayerVS;
 
   /* Pixel shader used for RGB textures */
-  RefPtr<IDirect3DPixelShader9> mRGBPS;
+  nsRefPtr<IDirect3DPixelShader9> mRGBPS;
 
   /* Pixel shader used for RGBA textures */
-  RefPtr<IDirect3DPixelShader9> mRGBAPS;
+  nsRefPtr<IDirect3DPixelShader9> mRGBAPS;
 
   /* Pixel shader used for component alpha textures (pass 1) */
-  RefPtr<IDirect3DPixelShader9> mComponentPass1PS;
+  nsRefPtr<IDirect3DPixelShader9> mComponentPass1PS;
 
   /* Pixel shader used for component alpha textures (pass 2) */
-  RefPtr<IDirect3DPixelShader9> mComponentPass2PS;
+  nsRefPtr<IDirect3DPixelShader9> mComponentPass2PS;
 
   /* Pixel shader used for RGB textures */
-  RefPtr<IDirect3DPixelShader9> mYCbCrPS;
+  nsRefPtr<IDirect3DPixelShader9> mYCbCrPS;
 
   /* Pixel shader used for solid colors */
-  RefPtr<IDirect3DPixelShader9> mSolidColorPS;
+  nsRefPtr<IDirect3DPixelShader9> mSolidColorPS;
 
   /* As above, but using a mask layer */
-  RefPtr<IDirect3DVertexShader9> mLayerVSMask;
-  RefPtr<IDirect3DVertexShader9> mLayerVSMask3D;
-  RefPtr<IDirect3DPixelShader9> mRGBPSMask;
-  RefPtr<IDirect3DPixelShader9> mRGBAPSMask;
-  RefPtr<IDirect3DPixelShader9> mRGBAPSMask3D;
-  RefPtr<IDirect3DPixelShader9> mComponentPass1PSMask;
-  RefPtr<IDirect3DPixelShader9> mComponentPass2PSMask;
-  RefPtr<IDirect3DPixelShader9> mYCbCrPSMask;
-  RefPtr<IDirect3DPixelShader9> mSolidColorPSMask;
+  nsRefPtr<IDirect3DVertexShader9> mLayerVSMask;
+  nsRefPtr<IDirect3DVertexShader9> mLayerVSMask3D;
+  nsRefPtr<IDirect3DPixelShader9> mRGBPSMask;
+  nsRefPtr<IDirect3DPixelShader9> mRGBAPSMask;
+  nsRefPtr<IDirect3DPixelShader9> mRGBAPSMask3D;
+  nsRefPtr<IDirect3DPixelShader9> mComponentPass1PSMask;
+  nsRefPtr<IDirect3DPixelShader9> mComponentPass2PSMask;
+  nsRefPtr<IDirect3DPixelShader9> mYCbCrPSMask;
+  nsRefPtr<IDirect3DPixelShader9> mSolidColorPSMask;
 
   /* Vertex buffer containing our basic vertex structure */
-  RefPtr<IDirect3DVertexBuffer9> mVB;
+  nsRefPtr<IDirect3DVertexBuffer9> mVB;
 
   /* Our vertex declaration */
-  RefPtr<IDirect3DVertexDeclaration9> mVD;
+  nsRefPtr<IDirect3DVertexDeclaration9> mVD;
 
   /* We maintain a doubly linked list of all d3d9 texture hosts which host
    * d3d9 textures created by this device manager.

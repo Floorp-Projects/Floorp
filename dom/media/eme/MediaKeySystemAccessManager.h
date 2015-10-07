@@ -44,7 +44,7 @@ public:
     void CancelTimer();
     void RejectPromise(const nsCString& aReason);
 
-    RefPtr<DetailedPromise> mPromise;
+    nsRefPtr<DetailedPromise> mPromise;
     const nsString mKeySystem;
     const Sequence<MediaKeySystemOptions> mOptions;
     nsCOMPtr<nsITimer> mTimer;
@@ -77,7 +77,7 @@ private:
   nsCOMPtr<nsPIDOMWindow> mWindow;
   bool mAddedObservers;
 
-  RefPtr<GMPVideoDecoderTrialCreator> mTrialCreator;
+  nsRefPtr<GMPVideoDecoderTrialCreator> mTrialCreator;
 };
 
 } // namespace dom

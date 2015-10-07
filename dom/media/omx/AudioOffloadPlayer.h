@@ -98,7 +98,7 @@ public:
   // data is available
   virtual MediaDecoderOwner::NextFrameStatus GetNextFrameStatus() override;
 
-  virtual RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget) override;
+  virtual nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget) override;
 
   void TimeUpdate();
 
@@ -190,7 +190,7 @@ private:
 
   // To avoid device suspend when mResetTimer is going to be triggered.
   // Used only from main thread so no lock is needed.
-  RefPtr<mozilla::dom::WakeLock> mWakeLock;
+  nsRefPtr<mozilla::dom::WakeLock> mWakeLock;
 
   // Provide the playback position in microseconds from total number of
   // frames played by audio track

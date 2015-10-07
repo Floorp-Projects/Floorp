@@ -106,7 +106,7 @@ private:
       , mListener(aListener)
     {}
     CencKeyId mKeyId;
-    RefPtr<SamplesWaitingForKey> mListener;
+    nsRefPtr<SamplesWaitingForKey> mListener;
   };
 
   Monitor mMonitor;

@@ -133,15 +133,15 @@ private:
   // Mark SourceBuffer as active and rebuild ActiveSourceBuffers.
   void SourceBufferIsActive(SourceBuffer* aSourceBuffer);
 
-  RefPtr<SourceBufferList> mSourceBuffers;
-  RefPtr<SourceBufferList> mActiveSourceBuffers;
+  nsRefPtr<SourceBufferList> mSourceBuffers;
+  nsRefPtr<SourceBufferList> mActiveSourceBuffers;
 
-  RefPtr<MediaSourceDecoder> mDecoder;
+  nsRefPtr<MediaSourceDecoder> mDecoder;
   // Ensures the media element remains alive to dispatch progress and
   // durationchanged events.
-  RefPtr<HTMLMediaElement> mMediaElement;
+  nsRefPtr<HTMLMediaElement> mMediaElement;
 
-  RefPtr<nsIPrincipal> mPrincipal;
+  nsRefPtr<nsIPrincipal> mPrincipal;
 
   MediaSourceReadyState mReadyState;
 };

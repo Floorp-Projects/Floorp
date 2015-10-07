@@ -49,8 +49,8 @@ protected:
   virtual ~MozMtpServer() {}
 
 private:
-  RefPtr<RefCountedMtpServer> mMtpServer;
-  RefPtr<MozMtpDatabase> mMozMtpDatabase;
+  nsRefPtr<RefCountedMtpServer> mMtpServer;
+  nsRefPtr<MozMtpDatabase> mMozMtpDatabase;
   nsCOMPtr<nsIThread> mServerThread;
   ScopedClose mMtpUsbFd;
 };

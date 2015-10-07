@@ -1243,7 +1243,7 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
   rv = state->BindInt32ByName(NS_LITERAL_CSTRING("entry_id"), entryId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  RefPtr<InternalHeaders> cachedHeaders =
+  nsRefPtr<InternalHeaders> cachedHeaders =
     new InternalHeaders(HeadersGuardEnum::None);
 
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
@@ -1261,7 +1261,7 @@ MatchByVaryHeader(mozIStorageConnection* aConn,
   }
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  RefPtr<InternalHeaders> queryHeaders =
+  nsRefPtr<InternalHeaders> queryHeaders =
     TypeUtils::ToInternalHeaders(aRequest.headers());
 
   // Assume the vary headers match until we find a conflict

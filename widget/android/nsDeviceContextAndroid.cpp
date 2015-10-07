@@ -28,7 +28,7 @@ nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)
   rv = stream->Init(mTempFile, -1, -1, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<gfxASurface> surface;
+  nsRefPtr<gfxASurface> surface;
 
   // XXX: what should we do here for size? screen size?
   gfxSize surfaceSize(480, 800);

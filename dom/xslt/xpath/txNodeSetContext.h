@@ -38,7 +38,7 @@ public:
     TX_DECL_EVAL_CONTEXT;
 
 protected:
-    RefPtr<txNodeSet> mContextSet;
+    nsRefPtr<txNodeSet> mContextSet;
     uint32_t mPosition;
     txIMatchContext* mInner;
 };

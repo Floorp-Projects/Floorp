@@ -390,10 +390,10 @@ public:
   float mFinalFrequency;
   float mPhaseIncrement;
   bool mRecomputeParameters;
-  RefPtr<ThreadSharedFloatArrayBufferList> mCustom;
-  RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
+  nsRefPtr<ThreadSharedFloatArrayBufferList> mCustom;
+  nsRefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   uint32_t mCustomLength;
-  RefPtr<WebCore::PeriodicWave> mPeriodicWave;
+  nsRefPtr<WebCore::PeriodicWave> mPeriodicWave;
 };
 
 OscillatorNode::OscillatorNode(AudioContext* aContext)
@@ -474,7 +474,7 @@ void OscillatorNode::SendPeriodicWaveToStream()
   MOZ_ASSERT(mPeriodicWave, "Send called without PeriodicWave object.");
   SendInt32ParameterToStream(OscillatorNodeEngine::PERIODICWAVE,
                              mPeriodicWave->DataLength());
-  RefPtr<ThreadSharedFloatArrayBufferList> data =
+  nsRefPtr<ThreadSharedFloatArrayBufferList> data =
     mPeriodicWave->GetThreadSharedBuffer();
   mStream->SetBuffer(data.forget());
 }
@@ -552,7 +552,7 @@ OscillatorNode::NotifyMainThreadStreamFinished()
       return NS_OK;
     }
   private:
-    RefPtr<OscillatorNode> mNode;
+    nsRefPtr<OscillatorNode> mNode;
   };
 
   NS_DispatchToMainThread(new EndedEventDispatcher(this));

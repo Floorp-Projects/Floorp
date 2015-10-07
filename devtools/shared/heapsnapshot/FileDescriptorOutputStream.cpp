@@ -19,7 +19,7 @@ FileDescriptorOutputStream::Create(const ipc::FileDescriptor& fileDescriptor)
   if (NS_WARN_IF(!prfd))
     return nullptr;
 
-  RefPtr<FileDescriptorOutputStream> stream = new FileDescriptorOutputStream(prfd);
+  nsRefPtr<FileDescriptorOutputStream> stream = new FileDescriptorOutputStream(prfd);
   return stream.forget();
 }
 

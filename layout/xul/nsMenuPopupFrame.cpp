@@ -370,7 +370,7 @@ NS_IMETHODIMP nsXULPopupShownEvent::HandleEvent(nsIDOMEvent* aEvent)
   if (popup) {
     // ResetPopupShownDispatcher will delete the reference to this, so keep
     // another one until Run is finished.
-    RefPtr<nsXULPopupShownEvent> event = this;
+    nsRefPtr<nsXULPopupShownEvent> event = this;
     // Only call Run if it the dispatcher was assigned. This avoids calling the
     // Run method if the transitionend event fires multiple times.
     if (popup->ClearPopupShownDispatcher()) {

@@ -48,7 +48,7 @@ MobileConnectionIPCService::GetItemByServiceId(uint32_t aServiceId,
   NS_ENSURE_TRUE(aServiceId < mItems.Length(), NS_ERROR_INVALID_ARG);
 
   if (!mItems[aServiceId]) {
-    RefPtr<MobileConnectionChild> child = new MobileConnectionChild(aServiceId);
+    nsRefPtr<MobileConnectionChild> child = new MobileConnectionChild(aServiceId);
 
     // |SendPMobileConnectionConstructor| adds another reference to the child
     // actor and removes in |DeallocPMobileConnectionChild|.
@@ -59,7 +59,7 @@ MobileConnectionIPCService::GetItemByServiceId(uint32_t aServiceId,
     mItems[aServiceId] = child;
   }
 
-  RefPtr<nsIMobileConnection> item(mItems[aServiceId]);
+  nsRefPtr<nsIMobileConnection> item(mItems[aServiceId]);
   item.forget(aItem);
 
   return NS_OK;

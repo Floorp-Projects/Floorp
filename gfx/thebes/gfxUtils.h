@@ -10,7 +10,7 @@
 #include "GraphicsFilter.h"
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsColor.h"
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/Rect.h"

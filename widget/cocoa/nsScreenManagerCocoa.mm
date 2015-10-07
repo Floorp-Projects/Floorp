@@ -30,7 +30,7 @@ nsScreenManagerCocoa::ScreenForCocoaScreen(NSScreen *screen)
     }
 
     // didn't find it; create and insert
-    RefPtr<nsScreenCocoa> sc = new nsScreenCocoa(screen);
+    nsRefPtr<nsScreenCocoa> sc = new nsScreenCocoa(screen);
     mScreenList.AppendElement(sc);
     return sc.get();
 }

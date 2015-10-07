@@ -233,7 +233,7 @@ private:
   uint32_t mPreemphasis;
 
   nsCOMPtr<nsIThread> mTuneThread;
-  RefPtr<FMRadioReplyRunnable> mPendingRequest;
+  nsRefPtr<FMRadioReplyRunnable> mPendingRequest;
 
   FMRadioEventObserverList mObserverList;
 

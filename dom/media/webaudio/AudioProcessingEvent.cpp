@@ -51,7 +51,7 @@ AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
   }
   JSContext* cx = jsapi.cx();
 
-  RefPtr<AudioBuffer> buffer =
+  nsRefPtr<AudioBuffer> buffer =
     AudioBuffer::Create(mNode->Context(), aNumberOfChannels,
                         mNode->BufferSize(),
                         mNode->Context()->SampleRate(), cx, aRv);

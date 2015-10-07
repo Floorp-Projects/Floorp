@@ -1061,7 +1061,7 @@ nsGIOProtocolHandler::NewChannel2(nsIURI* aURI,
   if (NS_FAILED(rv))
     return rv;
 
-  RefPtr<nsGIOInputStream> stream = new nsGIOInputStream(spec);
+  nsRefPtr<nsGIOInputStream> stream = new nsGIOInputStream(spec);
   if (!stream) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

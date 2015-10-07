@@ -30,7 +30,7 @@ PredicateList::evaluatePredicates(txNodeSet* nodes,
         int32_t index = 0;
         while (predContext.hasNext()) {
             predContext.next();
-            RefPtr<txAExprResult> exprResult;
+            nsRefPtr<txAExprResult> exprResult;
             rv = mPredicates[i]->evaluate(&predContext,
                                           getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);

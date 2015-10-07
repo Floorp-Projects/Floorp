@@ -182,7 +182,7 @@ AsyncStatement::getParams()
 
   // If there isn't already any rows added, we'll have to add one to use.
   if (mParamsArray->length() == 0) {
-    RefPtr<AsyncBindingParams> params(new AsyncBindingParams(mParamsArray));
+    nsRefPtr<AsyncBindingParams> params(new AsyncBindingParams(mParamsArray));
     NS_ENSURE_TRUE(params, nullptr);
 
     rv = mParamsArray->AddParams(params);

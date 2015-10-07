@@ -113,7 +113,7 @@ public:
 static already_AddRefed<Shmem::SharedMemory>
 CreateSegment(size_t aNBytes, SharedMemorySysV::Handle aHandle)
 {
-  RefPtr<SharedMemory> segment;
+  nsRefPtr<SharedMemory> segment;
 
   if (SharedMemorySysV::IsHandleValid(aHandle)) {
     segment = new SharedMemorySysV(aHandle);
@@ -134,7 +134,7 @@ CreateSegment(size_t aNBytes, SharedMemorySysV::Handle aHandle)
 static already_AddRefed<Shmem::SharedMemory>
 CreateSegment(size_t aNBytes, SharedMemoryBasic::Handle aHandle)
 {
-  RefPtr<SharedMemory> segment;
+  nsRefPtr<SharedMemory> segment;
 
   if (SharedMemoryBasic::IsHandleValid(aHandle)) {
     segment = new SharedMemoryBasic(aHandle);
@@ -357,7 +357,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   MOZ_ASSERT(!aProtect || !aUnsafe, "protect => !unsafe");
 
   size_t pageSize = SharedMemory::SystemPageSize();
-  RefPtr<SharedMemory> segment;
+  nsRefPtr<SharedMemory> segment;
   // |2*pageSize| is for the front and back sentinel
   size_t segmentSize = SharedMemory::PageAlignedSize(aNBytes + 2*pageSize);
 
@@ -416,7 +416,7 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   if (!ShmemCreated::ReadInfo(&aDescriptor, &iter, aId, &size, &type))
     return nullptr;
 
-  RefPtr<SharedMemory> segment;
+  nsRefPtr<SharedMemory> segment;
   size_t pageSize = SharedMemory::SystemPageSize();
   // |2*pageSize| is for the front and back sentinels
   size_t segmentSize = SharedMemory::PageAlignedSize(size + 2*pageSize);
@@ -502,7 +502,7 @@ Shmem::Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
              bool /*unused*/,
              bool /*unused*/)
 {
-  RefPtr<SharedMemory> segment;
+  nsRefPtr<SharedMemory> segment;
 
   if (aType == SharedMemory::TYPE_BASIC)
     segment = CreateSegment(SharedMemory::PageAlignedSize(aNBytes + sizeof(uint32_t)),
@@ -541,7 +541,7 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   if (!ShmemCreated::ReadInfo(&aDescriptor, &iter, aId, &size, &type))
     return nullptr;
 
-  RefPtr<SharedMemory> segment;
+  nsRefPtr<SharedMemory> segment;
   size_t segmentSize = SharedMemory::PageAlignedSize(size + sizeof(uint32_t));
 
   if (SharedMemory::TYPE_BASIC == type) {

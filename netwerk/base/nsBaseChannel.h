@@ -260,12 +260,12 @@ private:
     }
 
   private:
-    RefPtr<nsBaseChannel> mChannel;
+    nsRefPtr<nsBaseChannel> mChannel;
     nsCOMPtr<nsIChannel> mNewChannel;
   };
   friend class RedirectRunnable;
 
-  RefPtr<nsInputStreamPump>         mPump;
+  nsRefPtr<nsInputStreamPump>         mPump;
   nsCOMPtr<nsIProgressEventSink>      mProgressSink;
   nsCOMPtr<nsIURI>                    mOriginalURI;
   nsCOMPtr<nsISupports>               mOwner;

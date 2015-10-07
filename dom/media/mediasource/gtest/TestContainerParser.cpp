@@ -32,7 +32,7 @@ TEST(ContainerParser, MIMETypes) {
 already_AddRefed<MediaByteBuffer> make_adts_header()
 {
   const uint8_t test[] = { 0xff, 0xf1, 0x50, 0x80, 0x03, 0x1f, 0xfc };
-  RefPtr<MediaByteBuffer> buffer(new MediaByteBuffer);
+  nsRefPtr<MediaByteBuffer> buffer(new MediaByteBuffer);
   buffer->AppendElements(test, ArrayLength(test));
   return buffer.forget();
 }
@@ -46,7 +46,7 @@ TEST(ContainerParser, ADTSHeader) {
   EXPECT_EQ(parser->GetRoundingError(), 0);
 
   // Test a valid header.
-  RefPtr<MediaByteBuffer> header = make_adts_header();
+  nsRefPtr<MediaByteBuffer> header = make_adts_header();
   EXPECT_TRUE(parser->IsInitSegmentPresent(header));
 
   // Test variations.

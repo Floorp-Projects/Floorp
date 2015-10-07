@@ -50,7 +50,7 @@ check_transaction(mozIStorageConnection *aDB,
   int commit = 0;
   static_cast<Connection *>(aDB)->setCommitHook(commit_hook, &commit);
 
-  RefPtr<AsyncStatementSpinner> asyncSpin(new AsyncStatementSpinner());
+  nsRefPtr<AsyncStatementSpinner> asyncSpin(new AsyncStatementSpinner());
   nsCOMPtr<mozIStoragePendingStatement> asyncPend;
   do_check_success(aDB->ExecuteAsync(aStmts, aStmtsLen, asyncSpin,
                                      getter_AddRefs(asyncPend)));

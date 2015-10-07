@@ -187,7 +187,7 @@ MobileMessageCallback::NotifySendMessageFailed(int32_t aError, nsISupports *aMes
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<DOMMobileMessageError> domMobileMessageError;
+  nsRefPtr<DOMMobileMessageError> domMobileMessageError;
   if (aMessage) {
     nsAutoString errorStr = ConvertErrorCodeToErrorString(aError);
     nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aMessage);

@@ -43,7 +43,7 @@ InputPortManager::~InputPortManager()
 /* static */ already_AddRefed<InputPortManager>
 InputPortManager::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
 {
-  RefPtr<InputPortManager> manager = new InputPortManager(aWindow);
+  nsRefPtr<InputPortManager> manager = new InputPortManager(aWindow);
   manager->Init(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -90,7 +90,7 @@ InputPortManager::RejectPendingGetInputPortsPromises(nsresult aRv)
 }
 
 nsresult
-InputPortManager::SetInputPorts(const nsTArray<RefPtr<InputPort>>& aPorts)
+InputPortManager::SetInputPorts(const nsTArray<nsRefPtr<InputPort>>& aPorts)
 {
   MOZ_ASSERT(!mIsReady);
   // Should be called only when InputPortManager hasn't been ready yet.
@@ -116,7 +116,7 @@ InputPortManager::GetInputPorts(ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
   MOZ_ASSERT(global);
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -154,7 +154,7 @@ InputPortManager::NotifySuccess(nsIArray* aDataList)
   }
 
   ErrorResult erv;
-  nsTArray<RefPtr<InputPort>> ports(length);
+  nsTArray<nsRefPtr<InputPort>> ports(length);
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsIInputPortData> portData = do_QueryElementAt(aDataList, i);
     if (NS_WARN_IF(!portData)) {
@@ -162,7 +162,7 @@ InputPortManager::NotifySuccess(nsIArray* aDataList)
     }
 
     InputPortData* data = static_cast<InputPortData*>(portData.get());
-    RefPtr<InputPort> port;
+    nsRefPtr<InputPort> port;
     switch (data->GetType()) {
     case InputPortType::Av:
       port = AVInputPort::Create(GetParentObject(), portListener,

@@ -87,7 +87,7 @@ protected:
   virtual nsresult DispatchMarkImpl(const nsAString& aName,
                                     float aElapsedTime, uint32_t aCharIndex);
 
-  RefPtr<SpeechSynthesisUtterance> mUtterance;
+  nsRefPtr<SpeechSynthesisUtterance> mUtterance;
 
   float mVolume;
 
@@ -102,7 +102,7 @@ protected:
 private:
   void End();
 
-  void SendAudioImpl(RefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen);
+  void SendAudioImpl(nsRefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen);
 
   nsresult DispatchStartInner();
 
@@ -112,9 +112,9 @@ private:
 
   void DestroyAudioChannelAgent();
 
-  RefPtr<SourceMediaStream> mStream;
+  nsRefPtr<SourceMediaStream> mStream;
 
-  RefPtr<MediaInputPort> mPort;
+  nsRefPtr<MediaInputPort> mPort;
 
   nsCOMPtr<nsISpeechTaskCallback> mCallback;
 
@@ -122,7 +122,7 @@ private:
 
   uint32_t mChannels;
 
-  RefPtr<SpeechSynthesis> mSpeechSynthesis;
+  nsRefPtr<SpeechSynthesis> mSpeechSynthesis;
 
   bool mIndirectAudio;
 

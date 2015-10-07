@@ -41,7 +41,7 @@ public:
   void Undo(JSContext* aCx, ErrorResult& aRv);
   void Redo(JSContext* acx, ErrorResult& aRv);
   void Item(uint32_t aIndex,
-            Nullable<nsTArray<RefPtr<DOMTransaction> > >& aItems,
+            Nullable<nsTArray<nsRefPtr<DOMTransaction> > >& aItems,
             ErrorResult& aRv);
   uint32_t GetLength(ErrorResult& aRv);
   uint32_t GetPosition(ErrorResult& aRv);

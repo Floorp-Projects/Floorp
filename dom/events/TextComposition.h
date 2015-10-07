@@ -160,7 +160,7 @@ public:
     }
 
   private:
-    RefPtr<TextComposition> mComposition;
+    nsRefPtr<TextComposition> mComposition;
     CompositionChangeEventHandlingMarker();
     CompositionChangeEventHandlingMarker(
       const CompositionChangeEventHandlingMarker& aOther);
@@ -183,11 +183,11 @@ private:
   // this instance.
   nsPresContext* mPresContext;
   nsCOMPtr<nsINode> mNode;
-  RefPtr<TabParent> mTabParent;
+  nsRefPtr<TabParent> mTabParent;
 
   // This is the clause and caret range information which is managed by
   // the focused editor.  This may be null if there is no clauses or caret.
-  RefPtr<TextRangeArray> mRanges;
+  nsRefPtr<TextRangeArray> mRanges;
 
   // mNativeContext stores a opaque pointer.  This works as the "ID" for this
   // composition.  Don't access the instance, it may not be available.
@@ -359,7 +359,7 @@ private:
     NS_IMETHOD Run() override;
 
   private:
-    RefPtr<TextComposition> mTextComposition;
+    nsRefPtr<TextComposition> mTextComposition;
     nsCOMPtr<nsINode> mEventTarget;
     nsString mData;
     EventMessage mEventMessage;
@@ -397,7 +397,7 @@ private:
  */
 
 class TextCompositionArray final :
-  public nsAutoTArray<RefPtr<TextComposition>, 2>
+  public nsAutoTArray<nsRefPtr<TextComposition>, 2>
 {
 public:
   index_type IndexOf(nsIWidget* aWidget);

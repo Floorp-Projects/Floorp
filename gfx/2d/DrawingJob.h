@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/JobScheduler.h"
@@ -79,7 +79,7 @@ public:
   bool HasCommands() const { return !!mCommands; }
 
 protected:
-  RefPtr<CommandBuffer> mCommands;
+  nsRefPtr<CommandBuffer> mCommands;
 };
 
 /// Stores multiple commands to be executed sequencially.
@@ -100,10 +100,10 @@ protected:
   void Clear();
 
   std::vector<ptrdiff_t> mCommandOffsets;
-  RefPtr<CommandBuffer> mCommandBuffer;
+  nsRefPtr<CommandBuffer> mCommandBuffer;
   uint32_t mCursor;
 
-  RefPtr<DrawTarget> mDrawTarget;
+  nsRefPtr<DrawTarget> mDrawTarget;
   IntPoint mOffset;
 
   friend class DrawingJobBuilder;
@@ -147,9 +147,9 @@ public:
 
 protected:
   std::vector<ptrdiff_t> mCommandOffsets;
-  RefPtr<DrawTarget> mDrawTarget;
+  nsRefPtr<DrawTarget> mDrawTarget;
   IntPoint mOffset;
-  RefPtr<SyncObject> mStart;
+  nsRefPtr<SyncObject> mStart;
 };
 
 } // namespace

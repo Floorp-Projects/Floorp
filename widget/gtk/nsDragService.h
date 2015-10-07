@@ -149,7 +149,7 @@ private:
     // mPendingTime, carry information from the GTK signal that will be used
     // when the scheduled task is run.  mPendingWindow and mPendingDragContext
     // will be nullptr if the scheduled task is eDragTaskLeave.
-    RefPtr<nsWindow> mPendingWindow;
+    nsRefPtr<nsWindow> mPendingWindow;
     nsIntPoint mPendingWindowPoint;
     nsCountedRef<GdkDragContext> mPendingDragContext;
     guint mPendingTime;
@@ -157,7 +157,7 @@ private:
     // mTargetWindow and mTargetWindowPoint record the position of the last
     // eDragTaskMotion or eDragTaskDrop task that was run or is still running.
     // mTargetWindow is cleared once the drag has completed or left.
-    RefPtr<nsWindow> mTargetWindow;
+    nsRefPtr<nsWindow> mTargetWindow;
     nsIntPoint mTargetWindowPoint;
     // mTargetWidget and mTargetDragContext are set only while dispatching
     // motion or drop events.  mTime records the corresponding timestamp.

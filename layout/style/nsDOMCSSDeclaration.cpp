@@ -293,7 +293,7 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
                                                      CSSParsingEnvironment& aCSSParseEnv)
 {
   nsIStyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
-  RefPtr<CSSStyleSheet> cssSheet(do_QueryObject(sheet));
+  nsRefPtr<CSSStyleSheet> cssSheet(do_QueryObject(sheet));
   if (!cssSheet) {
     aCSSParseEnv.mPrincipal = nullptr;
     return;

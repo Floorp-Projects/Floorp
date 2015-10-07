@@ -178,12 +178,12 @@ private:
   // instead of acquiring a new worker instance from the ServiceWorkerManager
   // for every access. A null value is considered a cache miss.
   // These three may change to a new worker at any time.
-  RefPtr<workers::ServiceWorker> mInstallingWorker;
-  RefPtr<workers::ServiceWorker> mWaitingWorker;
-  RefPtr<workers::ServiceWorker> mActiveWorker;
+  nsRefPtr<workers::ServiceWorker> mInstallingWorker;
+  nsRefPtr<workers::ServiceWorker> mWaitingWorker;
+  nsRefPtr<workers::ServiceWorker> mActiveWorker;
 
 #ifndef MOZ_SIMPLEPUSH
-  RefPtr<PushManager> mPushManager;
+  nsRefPtr<PushManager> mPushManager;
 #endif
 };
 
@@ -254,10 +254,10 @@ private:
   ReleaseListener(Reason aReason);
 
   workers::WorkerPrivate* mWorkerPrivate;
-  RefPtr<WorkerListener> mListener;
+  nsRefPtr<WorkerListener> mListener;
 
 #ifndef MOZ_SIMPLEPUSH
-  RefPtr<WorkerPushManager> mPushManager;
+  nsRefPtr<WorkerPushManager> mPushManager;
 #endif
 };
 

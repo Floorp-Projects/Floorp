@@ -26,9 +26,9 @@ class SerializedStructuredCloneReadInfo;
 
 struct StructuredCloneFile
 {
-  RefPtr<Blob> mBlob;
-  RefPtr<IDBMutableFile> mMutableFile;
-  RefPtr<FileInfo> mFileInfo;
+  nsRefPtr<Blob> mBlob;
+  nsRefPtr<IDBMutableFile> mMutableFile;
+  nsRefPtr<FileInfo> mFileInfo;
   bool mMutable;
 
   // In IndexedDatabaseInlines.h

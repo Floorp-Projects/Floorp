@@ -41,7 +41,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
                             ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<AnimationEvent> e = new AnimationEvent(t, nullptr, nullptr);
+  nsRefPtr<AnimationEvent> e = new AnimationEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
@@ -93,7 +93,7 @@ NS_NewDOMAnimationEvent(EventTarget* aOwner,
                         nsPresContext* aPresContext,
                         InternalAnimationEvent* aEvent)
 {
-  RefPtr<AnimationEvent> it =
+  nsRefPtr<AnimationEvent> it =
     new AnimationEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

@@ -168,7 +168,7 @@ private:
 
     nsCOMPtr<nsISupports> mOwner;
 
-    RefPtr<txStylesheet> mStylesheet;
+    nsRefPtr<txStylesheet> mStylesheet;
     nsIDocument* mStylesheetDocument; // weak
     nsCOMPtr<nsIContent> mEmbeddedStylesheetRoot;
 
@@ -179,7 +179,7 @@ private:
     nsCOMPtr<nsITransformObserver> mObserver;
     txOwningExpandedNameMap<txIGlobalParameter> mVariables;
     txNamespaceMap mParamNamespaceMap;
-    RefPtr<txResultRecycler> mRecycler;
+    nsRefPtr<txResultRecycler> mRecycler;
 
     uint32_t mFlags;
 };

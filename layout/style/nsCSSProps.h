@@ -287,7 +287,7 @@ enum nsStyleAnimType {
   // nsStyleSVGPaint values
   eStyleAnimType_PaintServer,
 
-  // RefPtr<nsCSSShadowArray> values
+  // nsRefPtr<nsCSSShadowArray> values
   eStyleAnimType_Shadow,
 
   // property not animatable

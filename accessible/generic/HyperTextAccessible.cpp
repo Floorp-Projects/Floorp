@@ -1430,7 +1430,7 @@ HyperTextAccessible::CaretLineNumber()
 {
   // Provide the line number for the caret, relative to the
   // currently focused node. Use a 1-based index
-  RefPtr<nsFrameSelection> frameSelection = FrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
   if (!frameSelection)
     return -1;
 
@@ -1499,7 +1499,7 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
 {
   *aWidget = nullptr;
 
-  RefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
+  nsRefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
   NS_ENSURE_TRUE(caret, nsIntRect());
 
   bool isVisible = caret->IsVisible();
@@ -1541,7 +1541,7 @@ HyperTextAccessible::GetSelectionDOMRanges(int16_t aType,
                                            nsTArray<nsRange*>* aRanges)
 {
   // Ignore selection if it is not visible.
-  RefPtr<nsFrameSelection> frameSelection = FrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
   if (!frameSelection ||
       frameSelection->GetDisplaySelection() <= nsISelectionController::SELECTION_HIDDEN)
     return;
@@ -1649,7 +1649,7 @@ HyperTextAccessible::SetSelectionBoundsAt(int32_t aSelectionNum,
   if (!domSel)
     return false;
 
-  RefPtr<nsRange> range;
+  nsRefPtr<nsRange> range;
   uint32_t rangeCount = domSel->RangeCount();
   if (aSelectionNum == static_cast<int32_t>(rangeCount))
     range = new nsRange(mContent);
@@ -1689,7 +1689,7 @@ void
 HyperTextAccessible::ScrollSubstringTo(int32_t aStartOffset, int32_t aEndOffset,
                                        uint32_t aScrollType)
 {
-  RefPtr<nsRange> range = new nsRange(mContent);
+  nsRefPtr<nsRange> range = new nsRange(mContent);
   if (OffsetsToDOMRange(aStartOffset, aEndOffset, range))
     nsCoreUtils::ScrollSubstringTo(GetFrame(), range, aScrollType);
 }
@@ -1707,7 +1707,7 @@ HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   nsIntPoint coords = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
                                                         this);
 
-  RefPtr<nsRange> range = new nsRange(mContent);
+  nsRefPtr<nsRange> range = new nsRange(mContent);
   if (!OffsetsToDOMRange(aStartOffset, aEndOffset, range))
     return;
 
@@ -2153,7 +2153,7 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
                                       uint32_t* aEndOffset,
                                       nsIPersistentProperties* aAttributes)
 {
-  RefPtr<nsFrameSelection> fs = FrameSelection();
+  nsRefPtr<nsFrameSelection> fs = FrameSelection();
   if (!fs)
     return;
 

@@ -182,11 +182,11 @@ protected:
   // buffers.
   nsIWidget* mWidget;
   // The default context for BeginTransaction.
-  RefPtr<gfxContext> mDefaultTarget;
+  nsRefPtr<gfxContext> mDefaultTarget;
   // The context to draw into.
-  RefPtr<gfxContext> mTarget;
+  nsRefPtr<gfxContext> mTarget;
   // Image factory we use.
-  RefPtr<ImageFactory> mFactory;
+  nsRefPtr<ImageFactory> mFactory;
 
   BufferMode mDoubleBuffering;
   BasicLayerManagerType mType;

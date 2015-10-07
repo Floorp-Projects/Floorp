@@ -40,7 +40,7 @@ BluetoothPbapRequestHandle::Create(nsPIDOMWindow* aOwner)
 {
   MOZ_ASSERT(aOwner);
 
-  RefPtr<BluetoothPbapRequestHandle> handle =
+  nsRefPtr<BluetoothPbapRequestHandle> handle =
     new BluetoothPbapRequestHandle(aOwner);
 
   return handle.forget();
@@ -56,8 +56,8 @@ BluetoothPbapRequestHandle::ReplyTovCardPulling(Blob& aBlob,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(win);
-  RefPtr<BluetoothVoidReplyRunnable> result =
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
     new BluetoothVoidReplyRunnable(request);
 
   BluetoothService* bs = BluetoothService::Get();
@@ -99,8 +99,8 @@ BluetoothPbapRequestHandle::ReplyToPhonebookPulling(Blob& aBlob,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(win);
-  RefPtr<BluetoothVoidReplyRunnable> result =
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
     new BluetoothVoidReplyRunnable(request);
 
   BluetoothService* bs = BluetoothService::Get();
@@ -142,8 +142,8 @@ BluetoothPbapRequestHandle::ReplyTovCardListing(Blob& aBlob,
     return nullptr;
   }
 
-  RefPtr<DOMRequest> request = new DOMRequest(win);
-  RefPtr<BluetoothVoidReplyRunnable> result =
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> result =
     new BluetoothVoidReplyRunnable(request);
 
   BluetoothService* bs = BluetoothService::Get();

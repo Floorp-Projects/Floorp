@@ -100,7 +100,7 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
 {
   nsCSSPseudoElements::Type pseudoType =
     nsCSSPseudoElements::ePseudo_mozMathAnonymous; // savings
-  RefPtr<nsStyleContext> newStyleContext;
+  nsRefPtr<nsStyleContext> newStyleContext;
   newStyleContext = aPresContext->StyleSet()->
     ResolvePseudoElementStyle(aContent->AsElement(), pseudoType,
                               aParentStyleContext, nullptr);
@@ -232,7 +232,7 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   }
   else if (eCSSUnit_XHeight == unit) {
     aPresContext->SetUsesExChUnits(true);
-    RefPtr<nsFontMetrics> fm;
+    nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
                                                  getter_AddRefs(fm),
                                                  aFontSizeInflation);

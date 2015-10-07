@@ -37,7 +37,7 @@ class CallChannelOnPush final : public nsRunnable {
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<nsHttpChannel> channel;
+    nsRefPtr<nsHttpChannel> channel;
     CallQueryInterface(mAssociatedChannel, channel.StartAssignment());
     MOZ_ASSERT(channel);
     if (channel && NS_SUCCEEDED(channel->OnPush(mPushedURI, mPushedStream))) {
@@ -384,7 +384,7 @@ Http2PushTransactionBuffer::RequestHead()
 
 nsresult
 Http2PushTransactionBuffer::TakeSubTransactions(
-  nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+  nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -290,7 +290,7 @@ nsresult InitOSFileConstants()
     if (NS_FAILED(rv)) {
       return rv;
     }
-    RefPtr<DelayedPathSetter> pathSetter = new DelayedPathSetter();
+    nsRefPtr<DelayedPathSetter> pathSetter = new DelayedPathSetter();
     rv = obsService->AddObserver(pathSetter, "profile-do-change", false);
     if (NS_FAILED(rv)) {
       return rv;

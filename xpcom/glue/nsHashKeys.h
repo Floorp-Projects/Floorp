@@ -345,7 +345,7 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
 private:
-  RefPtr<T> mKey;
+  nsRefPtr<T> mKey;
 };
 
 template<class T>

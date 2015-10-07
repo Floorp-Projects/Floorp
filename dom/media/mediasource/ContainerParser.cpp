@@ -494,7 +494,7 @@ public:
   }
 
 private:
-  RefPtr<MP4Stream> mStream;
+  nsRefPtr<MP4Stream> mStream;
   nsAutoPtr<mp4_demuxer::MoofParser> mParser;
   Monitor mMonitor;
 };

@@ -213,7 +213,7 @@ nsSVGAngle::NewValueSpecifiedUnits(uint16_t unitType,
 already_AddRefed<SVGAngle>
 nsSVGAngle::ToDOMBaseVal(nsSVGElement *aSVGElement)
 {
-  RefPtr<SVGAngle> domBaseVal =
+  nsRefPtr<SVGAngle> domBaseVal =
     sBaseSVGAngleTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
     domBaseVal = new SVGAngle(this, aSVGElement, SVGAngle::BaseValue);
@@ -226,7 +226,7 @@ nsSVGAngle::ToDOMBaseVal(nsSVGElement *aSVGElement)
 already_AddRefed<SVGAngle>
 nsSVGAngle::ToDOMAnimVal(nsSVGElement *aSVGElement)
 {
-  RefPtr<SVGAngle> domAnimVal =
+  nsRefPtr<SVGAngle> domAnimVal =
     sAnimSVGAngleTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
     domAnimVal = new SVGAngle(this, aSVGElement, SVGAngle::AnimValue);
@@ -335,7 +335,7 @@ nsSVGAngle::SetAnimValue(float aValue, uint8_t aUnit, nsSVGElement *aSVGElement)
 already_AddRefed<SVGAnimatedAngle>
 nsSVGAngle::ToDOMAnimatedAngle(nsSVGElement *aSVGElement)
 {
-  RefPtr<SVGAnimatedAngle> domAnimatedAngle =
+  nsRefPtr<SVGAnimatedAngle> domAnimatedAngle =
     sSVGAnimatedAngleTearoffTable.GetTearoff(this);
   if (!domAnimatedAngle) {
     domAnimatedAngle = new SVGAnimatedAngle(this, aSVGElement);

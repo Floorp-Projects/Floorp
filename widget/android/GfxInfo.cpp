@@ -74,7 +74,7 @@ public:
       return;
     }
 
-    RefPtr<gl::GLContext> gl;
+    nsRefPtr<gl::GLContext> gl;
     gl = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE);
 
     if (!gl) {

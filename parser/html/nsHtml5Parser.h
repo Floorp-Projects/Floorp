@@ -301,7 +301,7 @@ class nsHtml5Parser final : public nsIParser,
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    RefPtr<nsHtml5OwningUTF16Buffer>  mFirstBuffer;
+    nsRefPtr<nsHtml5OwningUTF16Buffer>  mFirstBuffer;
 
     /**
      * The last buffer in the pending UTF-16 buffer queue. Always points
@@ -312,7 +312,7 @@ class nsHtml5Parser final : public nsIParser,
     /**
      * The tree operation executor
      */
-    RefPtr<nsHtml5TreeOpExecutor>     mExecutor;
+    nsRefPtr<nsHtml5TreeOpExecutor>     mExecutor;
 
     /**
      * The HTML5 tree builder
@@ -337,7 +337,7 @@ class nsHtml5Parser final : public nsIParser,
     /**
      * The stream listener holding the stream parser.
      */
-    RefPtr<nsHtml5StreamListener>     mStreamListener;
+    nsRefPtr<nsHtml5StreamListener>     mStreamListener;
 
     /**
      *

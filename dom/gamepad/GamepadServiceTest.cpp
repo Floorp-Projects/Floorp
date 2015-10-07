@@ -26,7 +26,7 @@ GamepadServiceTest::CreateService()
   if (sSingleton == nullptr) {
     sSingleton = new GamepadServiceTest();
   }
-  RefPtr<GamepadServiceTest> service = sSingleton;
+  nsRefPtr<GamepadServiceTest> service = sSingleton;
   return service.forget();
 }
 

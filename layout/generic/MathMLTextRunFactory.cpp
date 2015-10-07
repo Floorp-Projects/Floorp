@@ -537,7 +537,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoString convertedString;
   nsAutoTArray<bool,50> charsToMergeArray;
   nsAutoTArray<bool,50> deletedCharsArray;
-  nsAutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
+  nsAutoTArray<nsRefPtr<nsTransformedCharStyle>,50> styleArray;
   nsAutoTArray<uint8_t,50> canBreakBeforeArray;
   bool mergeNeeded = false;
 
@@ -546,7 +546,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
   uint32_t length = aTextRun->GetLength();
   const char16_t* str = aTextRun->mString.BeginReading();
-  const nsTArray<RefPtr<nsTransformedCharStyle>>& styles = aTextRun->mStyles;
+  const nsTArray<nsRefPtr<nsTransformedCharStyle>>& styles = aTextRun->mStyles;
   nsFont font;
   if (length) {
     font = styles[0]->mFont;
@@ -668,7 +668,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         // Alphanumeric Symbols. Hence we check whether the transformed
         // character is actually available.
         uint8_t matchType;
-        RefPtr<gfxFont> mathFont = fontGroup->
+        nsRefPtr<gfxFont> mathFont = fontGroup->
           FindFontForChar(ch2, 0, 0, HB_SCRIPT_COMMON, nullptr, &matchType);
         if (mathFont) {
           // Don't apply the CSS style if there is a math font for at least one
@@ -741,7 +741,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   if (length) {
     font.size = NSToCoordRound(font.size * mFontInflation);
     nsPresContext* pc = styles[0]->mPresContext;
-    RefPtr<nsFontMetrics> metrics;
+    nsRefPtr<nsFontMetrics> metrics;
     pc->DeviceContext()->GetMetricsFor(font,
                                        styles[0]->mLanguage,
                                        styles[0]->mExplicitLanguage,

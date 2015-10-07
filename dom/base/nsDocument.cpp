@@ -378,7 +378,7 @@ CustomDefinitionsTraverse(CustomElementHashKey* aKey,
 
 static PLDHashOperator
 CandidatesTraverse(CustomElementHashKey* aKey,
-                   nsTArray<RefPtr<Element>>* aData,
+                   nsTArray<nsRefPtr<Element>>* aData,
                    void* aArg)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -722,7 +722,7 @@ struct nsRadioGroupStruct
   /**
    * A strong pointer to the currently selected radio button.
    */
-  RefPtr<HTMLInputElement> mSelectedRadioButton;
+  nsRefPtr<HTMLInputElement> mSelectedRadioButton;
   nsCOMArray<nsIFormControl> mRadioButtons;
   uint32_t mRequiredRadioCount;
   bool mGroupSuffersFromValueMissing;
@@ -923,7 +923,7 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
     return resource->mDocument;
   }
 
-  RefPtr<PendingLoad> load;
+  nsRefPtr<PendingLoad> load;
   mPendingLoads.Get(clone, getter_AddRefs(load));
   if (load) {
     load.forget(aPendingLoad);
@@ -1089,7 +1089,7 @@ nsExternalResourceMap::AddExternalResource(nsIURI* aURI,
   NS_PRECONDITION((aViewer && aLoadGroup) || (!aViewer && !aLoadGroup),
                   "Must have both or neither");
 
-  RefPtr<PendingLoad> load;
+  nsRefPtr<PendingLoad> load;
   mPendingLoads.Get(aURI, getter_AddRefs(load));
   mPendingLoads.Remove(aURI);
 
@@ -1486,7 +1486,7 @@ struct nsIDocument::FrameRequest
 
   // Conversion operator so that we can append these to a
   // FrameRequestCallbackList
-  operator const RefPtr<FrameRequestCallback>& () const {
+  operator const nsRefPtr<FrameRequestCallback>& () const {
     return mCallback;
   }
 
@@ -1499,7 +1499,7 @@ struct nsIDocument::FrameRequest
     return mHandle < aHandle;
   }
 
-  RefPtr<FrameRequestCallback> mCallback;
+  nsRefPtr<FrameRequestCallback> mCallback;
   int32_t mHandle;
 };
 
@@ -3223,7 +3223,7 @@ nsDocument::GetUndoManager()
     mUndoManager = new UndoManager(rootElement);
   }
 
-  RefPtr<UndoManager> undoManager = mUndoManager;
+  nsRefPtr<UndoManager> undoManager = mUndoManager;
   return undoManager.forget();
 }
 
@@ -3347,7 +3347,7 @@ nsIDocument::GetActiveElement()
   }
 
   // No focused element anywhere in this document.  Try to get the BODY.
-  RefPtr<nsHTMLDocument> htmlDoc = AsHTMLDocument();
+  nsRefPtr<nsHTMLDocument> htmlDoc = AsHTMLDocument();
   if (htmlDoc) {
     // Because of IE compatibility, return null when html document doesn't have
     // a body.
@@ -3792,7 +3792,7 @@ nsDocument::doCreateShell(nsPresContext* aContext,
 
   FillStyleSet(aStyleSet);
 
-  RefPtr<PresShell> shell = new PresShell;
+  nsRefPtr<PresShell> shell = new PresShell;
   shell->Init(this, aContext, aViewManager, aStyleSet, aCompatMode);
 
   // Note: we don't hold a ref to the shell (it holds a ref to us)
@@ -4176,7 +4176,7 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 
 #define DO_STYLESHEET_NOTIFICATION(className, type, memberName, argName)      \
   do {                                                                        \
-    RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);                \
+    nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);                \
     if (!cssSheet) {                                                          \
       return;                                                                 \
     }                                                                         \
@@ -4187,11 +4187,11 @@ nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
     init.mStylesheet = cssSheet;                                              \
     init.memberName = argName;                                                \
                                                                               \
-    RefPtr<className> event =                                               \
+    nsRefPtr<className> event =                                               \
       className::Constructor(this, NS_LITERAL_STRING(type), init);            \
     event->SetTrusted(true);                                                  \
     event->SetTarget(this);                                                   \
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =                          \
+    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =                          \
       new AsyncEventDispatcher(this, event);                                  \
     asyncDispatcher->mOnlyChromeDispatch = true;                              \
     asyncDispatcher->PostDOMEvent();                                          \
@@ -4412,9 +4412,9 @@ nsDocument::LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetUR
     return NS_ERROR_INVALID_ARG;
 
   // Loading the sheet sync.
-  RefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
+  nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
 
-  RefPtr<CSSStyleSheet> sheet;
+  nsRefPtr<CSSStyleSheet> sheet;
   nsresult rv = loader->LoadSheetSync(aSheetURI, aType == eAgentSheet,
     true, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4538,7 +4538,7 @@ CheckIfContainsMSEContent(nsISupports* aSupports, void* aContainsMSE)
     MOZ_ASSERT(content, "aSupports is not a content");
     HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
     bool* contains = static_cast<bool*>(aContainsMSE);
-    RefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
+    nsRefPtr<MediaSource> ms = mediaElem->GetMozMediaSourceObject();
     if (ms) {
       *contains = true;
     }
@@ -5137,7 +5137,7 @@ nsDocument::DispatchContentLoadedEvents()
 
           nsIPresShell *shell = parent->GetShell();
           if (shell) {
-            RefPtr<nsPresContext> context = shell->GetPresContext();
+            nsRefPtr<nsPresContext> context = shell->GetPresContext();
 
             if (context) {
               EventDispatcher::Dispatch(parent, context, innerEvent, event,
@@ -5299,7 +5299,7 @@ nsIDocument::InsertAnonymousContent(Element& aElement, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<AnonymousContent> anonymousContent =
+  nsRefPtr<AnonymousContent> anonymousContent =
     new AnonymousContent(clonedElement->AsElement());
   mAnonymousContents.AppendElement(anonymousContent);
 
@@ -5513,7 +5513,7 @@ nsDocument::CreateElement(const nsAString& aTagName,
                           const nsAString& aTypeExtension,
                           ErrorResult& rv)
 {
-  RefPtr<Element> elem = nsIDocument::CreateElement(aTagName, rv);
+  nsRefPtr<Element> elem = nsIDocument::CreateElement(aTagName, rv);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -5544,7 +5544,7 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
                              const nsAString& aQualifiedName,
                              ErrorResult& rv)
 {
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                             aQualifiedName,
                                             mNodeInfoManager,
@@ -5569,7 +5569,7 @@ nsDocument::CreateElementNS(const nsAString& aNamespaceURI,
                             const nsAString& aTypeExtension,
                             ErrorResult& rv)
 {
-  RefPtr<Element> elem = nsIDocument::CreateElementNS(aNamespaceURI,
+  nsRefPtr<Element> elem = nsIDocument::CreateElementNS(aNamespaceURI,
                                                         aQualifiedName,
                                                         rv);
   if (rv.Failed()) {
@@ -5603,7 +5603,7 @@ nsDocument::CreateTextNode(const nsAString& aData, nsIDOMText** aReturn)
 already_AddRefed<nsTextNode>
 nsIDocument::CreateTextNode(const nsAString& aData) const
 {
-  RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
+  nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
   // Don't notify; this node is still being created.
   text->SetText(aData, false);
   return text.forget();
@@ -5619,7 +5619,7 @@ nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 already_AddRefed<DocumentFragment>
 nsIDocument::CreateDocumentFragment() const
 {
-  RefPtr<DocumentFragment> frag = new DocumentFragment(mNodeInfoManager);
+  nsRefPtr<DocumentFragment> frag = new DocumentFragment(mNodeInfoManager);
   return frag.forget();
 }
 
@@ -5634,7 +5634,7 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
 already_AddRefed<dom::Comment>
 nsIDocument::CreateComment(const nsAString& aData) const
 {
-  RefPtr<dom::Comment> comment = new dom::Comment(mNodeInfoManager);
+  nsRefPtr<dom::Comment> comment = new dom::Comment(mNodeInfoManager);
 
   // Don't notify; this node is still being created.
   comment->SetText(aData, false);
@@ -5665,7 +5665,7 @@ nsIDocument::CreateCDATASection(const nsAString& aData,
     return nullptr;
   }
 
-  RefPtr<CDATASection> cdata = new CDATASection(mNodeInfoManager);
+  nsRefPtr<CDATASection> cdata = new CDATASection(mNodeInfoManager);
 
   // Don't notify; this node is still being created.
   cdata->SetText(aData, false);
@@ -5700,7 +5700,7 @@ nsIDocument::CreateProcessingInstruction(const nsAString& aTarget,
     return nullptr;
   }
 
-  RefPtr<ProcessingInstruction> pi =
+  nsRefPtr<ProcessingInstruction> pi =
     NS_NewXMLProcessingInstruction(mNodeInfoManager, aTarget, aData);
 
   return pi.forget();
@@ -5738,7 +5738,7 @@ nsIDocument::CreateAttribute(const nsAString& aName, ErrorResult& rv)
     name = aName;
   }
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   res = mNodeInfoManager->GetNodeInfo(name, nullptr, kNameSpaceID_None,
                                       nsIDOMNode::ATTRIBUTE_NODE,
                                       getter_AddRefs(nodeInfo));
@@ -5747,7 +5747,7 @@ nsIDocument::CreateAttribute(const nsAString& aName, ErrorResult& rv)
     return nullptr;
   }
 
-  RefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(),
+  nsRefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(),
                                       EmptyString(), false);
   return attribute.forget();
 }
@@ -5770,7 +5770,7 @@ nsIDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
 {
   WarnOnceAbout(eCreateAttributeNS);
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                             aQualifiedName,
                                             mNodeInfoManager,
@@ -5780,7 +5780,7 @@ nsIDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
     return nullptr;
   }
 
-  RefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(),
+  nsRefPtr<Attr> attribute = new Attr(nullptr, nodeInfo.forget(),
                                       EmptyString(), true);
   return attribute.forget();
 }
@@ -5886,15 +5886,15 @@ nsDocument::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
     return NS_OK;
   }
 
-  nsTArray<RefPtr<Element>>* unresolved;
+  nsTArray<nsRefPtr<Element>>* unresolved;
   mRegistry->mCandidatesMap.Get(&key, &unresolved);
   if (!unresolved) {
-    unresolved = new nsTArray<RefPtr<Element>>();
+    unresolved = new nsTArray<nsRefPtr<Element>>();
     // Ownership of unresolved is taken by mCandidatesMap.
     mRegistry->mCandidatesMap.Put(&key, unresolved);
   }
 
-  RefPtr<Element>* elem = unresolved->AppendElement();
+  nsRefPtr<Element>* elem = unresolved->AppendElement();
   *elem = aElement;
   aElement->AddStates(NS_EVENT_STATE_UNRESOLVED);
 
@@ -6038,7 +6038,7 @@ nsDocument::ProcessTopElementQueue()
 {
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
 
-  nsTArray<RefPtr<CustomElementData>>& stack = *sProcessingStack;
+  nsTArray<nsRefPtr<CustomElementData>>& stack = *sProcessingStack;
   uint32_t firstQueue = stack.LastIndexOf((CustomElementData*) nullptr);
 
   for (uint32_t i = firstQueue + 1; i < stack.Length(); ++i) {
@@ -6070,7 +6070,7 @@ nsDocument::RegisterEnabled()
 }
 
 // static
-Maybe<nsTArray<RefPtr<mozilla::dom::CustomElementData>>>
+Maybe<nsTArray<nsRefPtr<mozilla::dom::CustomElementData>>>
 nsDocument::sProcessingStack;
 
 void
@@ -6279,7 +6279,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   definitions.Put(&key, definition);
 
   // Do element upgrade.
-  nsAutoPtr<nsTArray<RefPtr<Element>>> candidates;
+  nsAutoPtr<nsTArray<nsRefPtr<Element>>> candidates;
   mRegistry->mCandidatesMap.RemoveAndForget(&key, candidates);
   if (candidates) {
     for (size_t i = 0; i < candidates->Length(); ++i) {
@@ -6361,7 +6361,7 @@ NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
 {
-  RefPtr<nsContentList> list = GetElementsByTagName(aTagname);
+  nsRefPtr<nsContentList> list = GetElementsByTagName(aTagname);
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn
@@ -6378,7 +6378,7 @@ nsDocument::BlockedTrackingNodeCount() const
 already_AddRefed<nsSimpleContentList>
 nsDocument::BlockedTrackingNodes() const
 {
-  RefPtr<nsSimpleContentList> list = new nsSimpleContentList(nullptr);
+  nsRefPtr<nsSimpleContentList> list = new nsSimpleContentList(nullptr);
 
   nsTArray<nsWeakPtr> blockedTrackingNodes;
   blockedTrackingNodes = mBlockedTrackingNodes;
@@ -6424,7 +6424,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                    nsIDOMNodeList** aReturn)
 {
   ErrorResult rv;
-  RefPtr<nsContentList> list =
+  nsRefPtr<nsContentList> list =
     nsIDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
@@ -6855,7 +6855,7 @@ nsDocument::CreateRange(nsIDOMRange** aReturn)
 already_AddRefed<nsRange>
 nsIDocument::CreateRange(ErrorResult& rv)
 {
-  RefPtr<nsRange> range = new nsRange(this);
+  nsRefPtr<nsRange> range = new nsRange(this);
   nsresult res = range->Set(this, 0, this, 0);
   if (NS_FAILED(res)) {
     rv.Throw(res);
@@ -6907,7 +6907,7 @@ nsIDocument::CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,
                                 ErrorResult& rv) const
 {
   nsINode* root = &aRoot;
-  RefPtr<NodeIterator> iterator = new NodeIterator(root, aWhatToShow,
+  nsRefPtr<NodeIterator> iterator = new NodeIterator(root, aWhatToShow,
                                                      aFilter);
   return iterator.forget();
 }
@@ -6950,7 +6950,7 @@ nsIDocument::CreateTreeWalker(nsINode& aRoot, uint32_t aWhatToShow,
                               ErrorResult& rv) const
 {
   nsINode* root = &aRoot;
-  RefPtr<TreeWalker> walker = new TreeWalker(root, aWhatToShow, aFilter);
+  nsRefPtr<TreeWalker> walker = new TreeWalker(root, aWhatToShow, aFilter);
   return walker.forget();
 }
 
@@ -7023,7 +7023,7 @@ nsDocument::GetTitleContent(uint32_t aNamespace)
   if (!mMayHaveTitleElement)
     return nullptr;
 
-  RefPtr<nsContentList> list =
+  nsRefPtr<nsContentList> list =
     NS_GetContentList(this, aNamespace, NS_LITERAL_STRING("title"));
 
   return list->Item(0, false);
@@ -7106,7 +7106,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       return NS_OK;
 
     {
-      RefPtr<mozilla::dom::NodeInfo> titleInfo;
+      nsRefPtr<mozilla::dom::NodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
                                                 kNameSpaceID_XHTML,
                                                 nsIDOMNode::ELEMENT_NODE);
@@ -7142,7 +7142,7 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
   if (mPendingTitleChangeEvent.IsPending())
     return;
 
-  RefPtr<nsRunnableMethod<nsDocument, void, false> > event =
+  nsRefPtr<nsRunnableMethod<nsDocument, void, false> > event =
     NS_NewNonOwningRunnableMethod(this,
       &nsDocument::DoNotifyPossibleTitleChange);
   nsresult rv = NS_DispatchToCurrentThread(event);
@@ -7264,7 +7264,7 @@ nsDocument::ClearBoxObjectFor(nsIContent* aContent)
 already_AddRefed<MediaQueryList>
 nsIDocument::MatchMedia(const nsAString& aMediaQueryList)
 {
-  RefPtr<MediaQueryList> result = new MediaQueryList(this, aMediaQueryList);
+  nsRefPtr<MediaQueryList> result = new MediaQueryList(this, aMediaQueryList);
 
   // Insert the new item at the end of the linked list.
   PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);
@@ -7345,7 +7345,7 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
   // loading a frame may cause some other frameloader to be removed from the
   // array. But be careful to keep the loader alive when starting the load!
   while (mInitializableFrameLoaders.Length()) {
-    RefPtr<nsFrameLoader> loader = mInitializableFrameLoaders[0];
+    nsRefPtr<nsFrameLoader> loader = mInitializableFrameLoaders[0];
     mInitializableFrameLoaders.RemoveElementAt(0);
     NS_ASSERTION(loader, "null frameloader in the array?");
     loader->ReallyStartLoading();
@@ -7669,7 +7669,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
     case nsIDOMNode::ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
-      RefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
+      nsRefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
 
       nsCOMPtr<Element> ownerElement = adoptedAttr->GetOwnerElement(rv);
       if (rv.Failed()) {
@@ -7677,7 +7677,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       }
 
       if (ownerElement) {
-        RefPtr<Attr> newAttr =
+        nsRefPtr<Attr> newAttr =
           ownerElement->RemoveAttributeNode(*adoptedAttr, rv);
         if (rv.Failed()) {
           return nullptr;
@@ -8122,7 +8122,7 @@ nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
   }
 
   // Create event even without presContext.
-  RefPtr<Event> ev =
+  nsRefPtr<Event> ev =
     EventDispatcher::CreateEvent(const_cast<nsIDocument*>(this), presContext,
                                  nullptr, aEventType);
   if (!ev) {
@@ -8393,7 +8393,7 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
 
   // Return the radio button relative to the focused radio button.
   // If no radio is focused, get the radio relative to the selected one.
-  RefPtr<HTMLInputElement> currentRadio;
+  nsRefPtr<HTMLInputElement> currentRadio;
   if (aFocusedRadio) {
     currentRadio = aFocusedRadio;
   }
@@ -8409,7 +8409,7 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
   }
 
   int32_t numRadios = radioGroup->mRadioButtons.Count();
-  RefPtr<HTMLInputElement> radio;
+  nsRefPtr<HTMLInputElement> radio;
   do {
     if (aPrevious) {
       if (--index < 0) {
@@ -8608,7 +8608,7 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix,
                "check caller.");
 #endif
 
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                 nsIDOMNode::ELEMENT_NODE,
                                 getter_AddRefs(nodeInfo));
@@ -8642,7 +8642,7 @@ nsDocument::Sanitize()
   // First locate all input elements, regardless of whether they are
   // in a form, and reset the password and autocomplete=off elements.
 
-  RefPtr<nsContentList> nodes = GetElementsByTagName(NS_LITERAL_STRING("input"));
+  nsRefPtr<nsContentList> nodes = GetElementsByTagName(NS_LITERAL_STRING("input"));
 
   nsCOMPtr<nsIContent> item;
   nsAutoString value;
@@ -8651,7 +8651,7 @@ nsDocument::Sanitize()
   for (uint32_t i = 0; i < length; ++i) {
     NS_ASSERTION(nodes->Item(i), "null item in node list!");
 
-    RefPtr<HTMLInputElement> input = HTMLInputElement::FromContentOrNull(nodes->Item(i));
+    nsRefPtr<HTMLInputElement> input = HTMLInputElement::FromContentOrNull(nodes->Item(i));
     if (!input)
       continue;
 
@@ -9003,7 +9003,7 @@ nsDocument::UnblockOnload(bool aFireSync)
       // event to indicate that the SVG should be considered fully loaded.
       // Because scripting is disabled on SVG-as-image documents, this event
       // is not accessible to content authors. (See bug 837315.)
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+      nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this,
                                  NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"),
                                  false,
@@ -9021,7 +9021,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<nsDocument> mDoc;
+  nsRefPtr<nsDocument> mDoc;
 };
 
 void
@@ -9104,7 +9104,7 @@ nsDocument::DispatchPageTransition(EventTarget* aDispatchTarget,
   init.mCancelable = true;
   init.mPersisted = aPersisted;
 
-  RefPtr<PageTransitionEvent> event =
+  nsRefPtr<PageTransitionEvent> event =
     PageTransitionEvent::Constructor(this, aType, init);
 
   event->SetTrusted(true);
@@ -9133,7 +9133,7 @@ nsDocument::OnPageShow(bool aPersisted,
   Element* root = GetRootElement();
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
-    RefPtr<nsContentList> links = NS_GetContentList(root,
+    nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       kNameSpaceID_XHTML,
                                                       NS_LITERAL_STRING("link"));
 
@@ -9193,7 +9193,7 @@ static void
 DispatchCustomEventWithFlush(nsINode* aTarget, const nsAString& aEventType,
                              bool aBubbles, bool aOnlyChromeDispatch)
 {
-  RefPtr<Event> event = NS_NewDOMEvent(aTarget, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(aTarget, nullptr, nullptr);
   nsresult rv = event->InitEvent(aEventType, aBubbles, false);
   if (NS_FAILED(rv)) {
     return;
@@ -9226,7 +9226,7 @@ nsDocument::OnPageHide(bool aPersisted,
   // but only if this is not a full unload.
   Element* root = GetRootElement();
   if (aPersisted && root) {
-    RefPtr<nsContentList> links = NS_GetContentList(root,
+    nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       kNameSpaceID_XHTML,
                                                       NS_LITERAL_STRING("link"));
 
@@ -9542,7 +9542,7 @@ nsDocument::SetReadyStateInternal(ReadyState rs)
     mLoadingTimeStamp = mozilla::TimeStamp::Now();
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, NS_LITERAL_STRING("readystatechange"),
                              false, false);
   asyncDispatcher->RunDOMEventWhenSafe();
@@ -9747,7 +9747,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
   }
 
   // Image not in cache - trigger preload
-  RefPtr<imgRequestProxy> request;
+  nsRefPtr<imgRequestProxy> request;
   nsresult rv =
     nsContentUtils::LoadImage(uri,
                               this,
@@ -10190,13 +10190,13 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
   mCreatingStaticClone = true;
 
   // Make document use different container during cloning.
-  RefPtr<nsDocShell> originalShell = mDocumentContainer.get();
+  nsRefPtr<nsDocShell> originalShell = mDocumentContainer.get();
   SetContainer(static_cast<nsDocShell*>(aCloneContainer));
   nsCOMPtr<nsIDOMNode> clonedNode;
   nsresult rv = thisAsDoc->CloneNode(true, 1, getter_AddRefs(clonedNode));
   SetContainer(originalShell);
 
-  RefPtr<nsDocument> clonedDoc;
+  nsRefPtr<nsDocument> clonedDoc;
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDocument> tmp = do_QueryInterface(clonedNode);
     if (tmp) {
@@ -10211,10 +10211,10 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
 
       int32_t sheetsCount = GetNumberOfStyleSheets();
       for (int32_t i = 0; i < sheetsCount; ++i) {
-        RefPtr<CSSStyleSheet> sheet = do_QueryObject(GetStyleSheetAt(i));
+        nsRefPtr<CSSStyleSheet> sheet = do_QueryObject(GetStyleSheetAt(i));
         if (sheet) {
           if (sheet->IsApplicable()) {
-            RefPtr<CSSStyleSheet> clonedSheet =
+            nsRefPtr<CSSStyleSheet> clonedSheet =
               sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {
@@ -10227,11 +10227,11 @@ nsIDocument::CreateStaticClone(nsIDocShell* aCloneContainer)
       sheetsCount = thisAsDoc->mOnDemandBuiltInUASheets.Count();
       // Iterate backwards to maintain order
       for (int32_t i = sheetsCount - 1; i >= 0; --i) {
-        RefPtr<CSSStyleSheet> sheet =
+        nsRefPtr<CSSStyleSheet> sheet =
           do_QueryObject(thisAsDoc->mOnDemandBuiltInUASheets[i]);
         if (sheet) {
           if (sheet->IsApplicable()) {
-            RefPtr<CSSStyleSheet> clonedSheet =
+            nsRefPtr<CSSStyleSheet> clonedSheet =
               sheet->Clone(nullptr, nullptr, clonedDoc, nullptr);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {
@@ -10688,7 +10688,7 @@ nsIDocument::CreateTouch(nsIDOMWindow* aView,
                          float aRotationAngle,
                          float aForce)
 {
-  RefPtr<Touch> touch = new Touch(aTarget,
+  nsRefPtr<Touch> touch = new Touch(aTarget,
                                     aIdentifier,
                                     aPageX, aPageY,
                                     aScreenX, aScreenY,
@@ -10702,7 +10702,7 @@ nsIDocument::CreateTouch(nsIDOMWindow* aView,
 already_AddRefed<TouchList>
 nsIDocument::CreateTouchList()
 {
-  RefPtr<TouchList> retval = new TouchList(ToSupports(this));
+  nsRefPtr<TouchList> retval = new TouchList(ToSupports(this));
   return retval.forget();
 }
 
@@ -10710,7 +10710,7 @@ already_AddRefed<TouchList>
 nsIDocument::CreateTouchList(Touch& aTouch,
                              const Sequence<OwningNonNull<Touch> >& aTouches)
 {
-  RefPtr<TouchList> retval = new TouchList(ToSupports(this));
+  nsRefPtr<TouchList> retval = new TouchList(ToSupports(this));
   retval->Append(&aTouch);
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
     retval->Append(aTouches[i].get());
@@ -10721,7 +10721,7 @@ nsIDocument::CreateTouchList(Touch& aTouch,
 already_AddRefed<TouchList>
 nsIDocument::CreateTouchList(const Sequence<OwningNonNull<Touch> >& aTouches)
 {
-  RefPtr<TouchList> retval = new TouchList(ToSupports(this));
+  nsRefPtr<TouchList> retval = new TouchList(ToSupports(this));
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
     retval->Append(aTouches[i].get());
   }
@@ -10795,7 +10795,7 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
     }
   }
 
-  RefPtr<nsDOMCaretPosition> aCaretPos = new nsDOMCaretPosition(node, offset);
+  nsRefPtr<nsDOMCaretPosition> aCaretPos = new nsDOMCaretPosition(node, offset);
   if (nodeIsAnonymous) {
     aCaretPos->SetAnonymousContentNode(anonNode);
   }
@@ -11328,7 +11328,7 @@ LogFullScreenDenied(bool aLogFailure, const char* aMessage, nsIDocument* aDoc)
   if (!aLogFailure) {
     return;
   }
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(aDoc,
                              NS_LITERAL_STRING("mozfullscreenerror"),
                              true,
@@ -11825,7 +11825,7 @@ nsDocument::ApplyFullscreen(const FullscreenRequest& aRequest)
 
   // Process options -- in this case, just HMD
   if (aRequest.mVRHMDDevice) {
-    RefPtr<gfx::VRHMDInfo> hmdRef = aRequest.mVRHMDDevice;
+    nsRefPtr<gfx::VRHMDInfo> hmdRef = aRequest.mVRHMDDevice;
     elem->SetProperty(nsGkAtoms::vr_state, hmdRef.forget().take(),
                       ReleaseHMDInfoRef, true);
   }
@@ -12043,7 +12043,7 @@ DispatchPointerLockChange(nsIDocument* aTarget)
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(aTarget,
                              NS_LITERAL_STRING("mozpointerlockchange"),
                              true,
@@ -12058,7 +12058,7 @@ DispatchPointerLockError(nsIDocument* aTarget)
     return;
   }
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(aTarget,
                              NS_LITERAL_STRING("mozpointerlockerror"),
                              true,
@@ -12314,7 +12314,7 @@ nsDocument::OnAppThemeChanged()
   }
 
   for (int32_t i = 0; i < GetNumberOfStyleSheets(); i++) {
-    RefPtr<CSSStyleSheet> sheet =  do_QueryObject(GetStyleSheetAt(i));
+    nsRefPtr<CSSStyleSheet> sheet =  do_QueryObject(GetStyleSheetAt(i));
     if (!sheet) {
       continue;
     }
@@ -12450,7 +12450,7 @@ nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
     return false;
   }
 
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   docShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     NS_WARNING("SetPointerLock(): Unable to get presContext in \
@@ -12483,7 +12483,7 @@ nsDocument::SetPointerLock(Element* aElement, int aCursorStyle)
   }
 
   // Hide the cursor and set pointer lock for future mouse events
-  RefPtr<EventStateManager> esm = presContext->EventStateManager();
+  nsRefPtr<EventStateManager> esm = presContext->EventStateManager();
   esm->SetCursor(aCursorStyle, nullptr, false,
                  0.0f, 0.0f, widget, true);
   esm->SetPointerLock(widget, aElement);
@@ -13144,7 +13144,7 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
 already_AddRefed<Element>
 nsIDocument::CreateHTMLElement(nsIAtom* aTag)
 {
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");

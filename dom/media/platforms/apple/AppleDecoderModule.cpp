@@ -75,7 +75,7 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                        FlushableTaskQueue* aVideoTaskQueue,
                                        MediaDataDecoderCallback* aCallback)
 {
-  RefPtr<MediaDataDecoder> decoder;
+  nsRefPtr<MediaDataDecoder> decoder;
 
   if (sIsVDAAvailable && (!sIsVTHWAvailable || sForceVDA)) {
     decoder =
@@ -101,7 +101,7 @@ AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                        FlushableTaskQueue* aAudioTaskQueue,
                                        MediaDataDecoderCallback* aCallback)
 {
-  RefPtr<MediaDataDecoder> decoder =
+  nsRefPtr<MediaDataDecoder> decoder =
     new AppleATDecoder(aConfig, aAudioTaskQueue, aCallback);
   return decoder.forget();
 }

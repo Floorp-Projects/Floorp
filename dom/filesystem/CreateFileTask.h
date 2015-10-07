@@ -64,11 +64,11 @@ private:
   GetOutputBufferSize() const;
 
   static uint32_t sOutputBufferSize;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   nsString mTargetRealPath;
 
   // Not thread-safe and should be released on main thread.
-  RefPtr<Blob> mBlobData;
+  nsRefPtr<Blob> mBlobData;
 
   nsCOMPtr<nsIInputStream> mBlobStream;
   InfallibleTArray<uint8_t> mArrayData;
@@ -76,7 +76,7 @@ private:
 
   // This cannot be a File because this object is created on a different
   // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
+  nsRefPtr<BlobImpl> mTargetBlobImpl;
 };
 
 } // namespace dom

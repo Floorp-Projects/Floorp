@@ -40,7 +40,7 @@ protected:
   }
   virtual ~SVGAnimatedInteger() {};
 
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
 };
 
 } // namespace dom

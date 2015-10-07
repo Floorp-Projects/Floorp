@@ -74,7 +74,7 @@ class BlobParent final
   // destructor will cancel any stream events that are currently in flight.
   nsTArray<nsRevocableEventPtr<OpenStreamRunnable>> mOpenStreamRunnables;
 
-  RefPtr<IDTableEntry> mIDTableEntry;
+  nsRefPtr<IDTableEntry> mIDTableEntry;
 
   bool mOwnsBlobImpl;
 

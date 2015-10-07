@@ -11,7 +11,7 @@
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsRefPtrHashtable.h"
@@ -132,9 +132,9 @@ private:
 
   // Owning ref to proxy. The proxy has a weak reference back to the MediaKeys,
   // and the MediaKeys destructor clears the proxy's reference to the MediaKeys.
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
 
-  RefPtr<HTMLMediaElement> mElement;
+  nsRefPtr<HTMLMediaElement> mElement;
 
   nsCOMPtr<nsPIDOMWindow> mParent;
   const nsString mKeySystem;
@@ -145,8 +145,8 @@ private:
   PendingKeySessionsHashMap mPendingSessions;
   PromiseId mCreatePromiseId;
 
-  RefPtr<nsIPrincipal> mPrincipal;
-  RefPtr<nsIPrincipal> mTopLevelPrincipal;
+  nsRefPtr<nsIPrincipal> mPrincipal;
+  nsRefPtr<nsIPrincipal> mTopLevelPrincipal;
 
 };
 

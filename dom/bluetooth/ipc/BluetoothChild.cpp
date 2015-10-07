@@ -160,7 +160,7 @@ BluetoothRequestChild::Recv__delete__(const BluetoothReply& aReply)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mReplyRunnable);
 
-  RefPtr<BluetoothReplyRunnable> replyRunnable;
+  nsRefPtr<BluetoothReplyRunnable> replyRunnable;
   mReplyRunnable.swap(replyRunnable);
 
   if (replyRunnable) {

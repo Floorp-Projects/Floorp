@@ -10,7 +10,7 @@
 #include "base/process.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIPresentationControlChannel.h"
 #include "nsIPresentationDevice.h"
@@ -203,10 +203,10 @@ private:
 
   nsresult UntrackFromService() override;
 
-  RefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
+  nsRefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIPresentationChannelDescription> mRequesterDescription;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
 
   // The content parent communicating with the content process which the OOP
   // receiver page belongs to.

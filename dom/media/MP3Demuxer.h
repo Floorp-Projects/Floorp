@@ -19,7 +19,7 @@ class MP3Demuxer : public MediaDataDemuxer {
 public:
   // MediaDataDemuxer interface.
   explicit MP3Demuxer(MediaResource* aSource);
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   bool HasTrackType(TrackInfo::TrackType aType) const override;
   uint32_t GetNumberTracks(TrackInfo::TrackType aType) const override;
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
@@ -37,8 +37,8 @@ private:
   // Synchronous initialization.
   bool InitInternal();
 
-  RefPtr<MediaResource> mSource;
-  RefPtr<MP3TrackDemuxer> mTrackDemuxer;
+  nsRefPtr<MediaResource> mSource;
+  nsRefPtr<MP3TrackDemuxer> mTrackDemuxer;
 };
 
 // ID3 header parser state machine used by FrameParser.
@@ -347,7 +347,7 @@ public:
 
 #ifdef ENABLE_TESTS
   const FrameParser::Frame& LastFrame() const;
-  RefPtr<MediaRawData> DemuxSample();
+  nsRefPtr<MediaRawData> DemuxSample();
   media::TimeUnit SeekPosition() const;
 #endif
 
@@ -356,10 +356,10 @@ public:
 
   // MediaTrackDemuxer interface.
   UniquePtr<TrackInfo> GetInfo() const override;
-  RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
-  RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+  nsRefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
   void Reset() override;
-  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
+  nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(
     media::TimeUnit aTimeThreshold) override;
   int64_t GetResourceOffset() const override;
   media::TimeIntervals GetBuffered() override;

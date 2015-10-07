@@ -45,8 +45,8 @@ protected:
                                nsWebShellWindow **aResult);
   uint32_t CalculateWindowZLevel(nsIXULWindow *aParent, uint32_t aChromeMask);
 
-  RefPtr<nsWebShellWindow>  mHiddenWindow;
-  RefPtr<nsWebShellWindow>  mHiddenPrivateWindow;
+  nsRefPtr<nsWebShellWindow>  mHiddenWindow;
+  nsRefPtr<nsWebShellWindow>  mHiddenPrivateWindow;
   bool                        mXPCOMWillShutDown;
   bool                        mXPCOMShuttingDown;
   uint16_t                    mModalWindowCount;

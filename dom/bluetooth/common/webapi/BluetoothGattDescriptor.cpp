@@ -217,7 +217,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothGattDescriptor> mDescriptor;
+  nsRefPtr<BluetoothGattDescriptor> mDescriptor;
 };
 
 already_AddRefed<Promise>
@@ -229,7 +229,7 @@ BluetoothGattDescriptor::ReadValue(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   if (mAttRole == ATT_SERVER_ROLE) {
@@ -260,7 +260,7 @@ BluetoothGattDescriptor::WriteValue(
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   aValue.ComputeLengthAndData();

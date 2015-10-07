@@ -53,7 +53,7 @@ private:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  RefPtr<MessagePortService> mService;
+  nsRefPtr<MessagePortService> mService;
   const nsID mUUID;
   bool mEntangled;
   bool mCanSendData;

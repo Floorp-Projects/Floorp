@@ -120,7 +120,7 @@ public:
 #if !defined(MOZILLA_XPCOMRT_API)
     nsZipItem* mItem;
 #endif // !defined(MOZILLA_XPCOMRT_API)
-    RefPtr<nsZipArchive> mZip;
+    nsRefPtr<nsZipArchive> mZip;
     mozilla::AutoFDClose mFd;
   };
 
@@ -132,7 +132,7 @@ public:
 private:
   nsCOMPtr<nsIFile> mBaseFile;
 #if !defined(MOZILLA_XPCOMRT_API)
-  RefPtr<nsZipArchive> mBaseZip;
+  nsRefPtr<nsZipArchive> mBaseZip;
 #endif // !defined(MOZILLA_XPCOMRT_API)
   nsCString mPath;
 }; /* class FileLocation */

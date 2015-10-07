@@ -26,7 +26,7 @@ public:
 private:
     txIMatchContext* mInner;
     const txXPathNode& mContextNode;
-    RefPtr<txNodeSet> mContextSet;
+    nsRefPtr<txNodeSet> mContextSet;
 };
 
 #endif // __TX_XPATH_CONTEXT

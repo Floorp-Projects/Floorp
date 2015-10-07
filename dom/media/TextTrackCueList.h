@@ -52,7 +52,7 @@ public:
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void RemoveCueAt(uint32_t aIndex);
   void RemoveAll();
-  void GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues);
+  void GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
 private:
   ~TextTrackCueList();
@@ -61,7 +61,7 @@ private:
 
   // A sorted list of TextTrackCues sorted by earliest start time. If the start
   // times are equal then it will be sorted by end time, earliest first.
-  nsTArray< RefPtr<TextTrackCue> > mList;
+  nsTArray< nsRefPtr<TextTrackCue> > mList;
 };
 
 } // namespace dom

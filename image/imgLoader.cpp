@@ -82,7 +82,7 @@ public:
            !iter.Done();
            iter.Next()) {
         nsPtrHashKey<imgRequest>* entry = iter.Get();
-        RefPtr<imgRequest> req = entry->GetKey();
+        nsRefPtr<imgRequest> req = entry->GetKey();
         RecordCounterForRequest(req, &uncached, req->HasConsumers());
       }
     }
@@ -409,7 +409,7 @@ private:
                                          imgCacheEntry* aEntry,
                                          void* aUserArg)
   {
-    RefPtr<imgRequest> req = aEntry->GetRequest();
+    nsRefPtr<imgRequest> req = aEntry->GetRequest();
     RecordCounterForRequest(req,
                            static_cast<nsTArray<ImageMemoryCounter>*>(aUserArg),
                            !aEntry->HasNoProxies());
@@ -420,7 +420,7 @@ private:
                                       nsTArray<ImageMemoryCounter>* aArray,
                                       bool aIsUsed)
   {
-    RefPtr<Image> image = aRequest->GetImage();
+    nsRefPtr<Image> image = aRequest->GetImage();
     if (!image) {
       return;
     }
@@ -438,8 +438,8 @@ private:
       return PL_DHASH_NEXT;
     }
 
-    RefPtr<imgRequest> req = aEntry->GetRequest();
-    RefPtr<Image> image = req->GetImage();
+    nsRefPtr<imgRequest> req = aEntry->GetRequest();
+    nsRefPtr<Image> image = req->GetImage();
     if (!image) {
       return PL_DHASH_NEXT;
     }
@@ -554,8 +554,8 @@ NewRequestAndEntry(bool aForcePrincipalCheckForCacheEntry, imgLoader* aLoader,
                    const ImageCacheKey& aKey,
                    imgRequest** aRequest, imgCacheEntry** aEntry)
 {
-  RefPtr<imgRequest> request = new imgRequest(aLoader, aKey);
-  RefPtr<imgCacheEntry> entry =
+  nsRefPtr<imgRequest> request = new imgRequest(aLoader, aKey);
+  nsRefPtr<imgCacheEntry> entry =
     new imgCacheEntry(aLoader, request, aForcePrincipalCheckForCacheEntry);
   aLoader->AddToUncachedImages(request);
   request.forget(aRequest);
@@ -950,7 +950,7 @@ imgCacheQueue::Push(imgCacheEntry* entry)
 {
   mSize += entry->GetDataSize();
 
-  RefPtr<imgCacheEntry> refptr(entry);
+  nsRefPtr<imgCacheEntry> refptr(entry);
   mQueue.push_back(refptr);
   MarkDirty();
 }
@@ -965,7 +965,7 @@ imgCacheQueue::Pop()
     Refresh();
   }
 
-  RefPtr<imgCacheEntry> entry = mQueue[0];
+  nsRefPtr<imgCacheEntry> entry = mQueue[0];
   std::pop_heap(mQueue.begin(), mQueue.end(), imgLoader::CompareCacheEntries);
   mQueue.pop_back();
 
@@ -1037,14 +1037,14 @@ imgLoader::CreateNewProxyForRequest(imgRequest* aRequest,
      proxy calls to |aObserver|.
    */
 
-  RefPtr<imgRequestProxy> proxyRequest = new imgRequestProxy();
+  nsRefPtr<imgRequestProxy> proxyRequest = new imgRequestProxy();
 
   /* It is important to call |SetLoadFlags()| before calling |Init()| because
      |Init()| adds the request to the loadgroup.
    */
   proxyRequest->SetLoadFlags(aLoadFlags);
 
-  RefPtr<ImageURL> uri;
+  nsRefPtr<ImageURL> uri;
   aRequest->GetURI(getter_AddRefs(uri));
 
   // init adds itself to imgRequest's list of observers
@@ -1078,10 +1078,10 @@ imgCacheExpirationTracker::NotifyExpired(imgCacheEntry* entry)
 {
   // Hold on to a reference to this entry, because the expiration tracker
   // mechanism doesn't.
-  RefPtr<imgCacheEntry> kungFuDeathGrip(entry);
+  nsRefPtr<imgCacheEntry> kungFuDeathGrip(entry);
 
   if (MOZ_LOG_TEST(GetImgLog(), LogLevel::Debug)) {
-    RefPtr<imgRequest> req = entry->GetRequest();
+    nsRefPtr<imgRequest> req = entry->GetRequest();
     if (req) {
       LOG_FUNC_WITH_PARAM(GetImgLog(),
                          "imgCacheExpirationTracker::NotifyExpired",
@@ -1142,7 +1142,7 @@ imgLoader::imgLoader()
 already_AddRefed<imgLoader>
 imgLoader::GetInstance()
 {
-  static RefPtr<imgLoader> singleton;
+  static nsRefPtr<imgLoader> singleton;
   if (!singleton) {
     singleton = imgLoader::Create();
     if (!singleton) {
@@ -1150,7 +1150,7 @@ imgLoader::GetInstance()
     }
     ClearOnShutdown(&singleton);
   }
-  RefPtr<imgLoader> loader = singleton.get();
+  nsRefPtr<imgLoader> loader = singleton.get();
   return loader.forget();
 }
 
@@ -1164,7 +1164,7 @@ imgLoader::~imgLoader()
     MutexAutoLock lock(mUncachedImagesMutex);
     for (auto iter = mUncachedImages.Iter(); !iter.Done(); iter.Next()) {
       nsPtrHashKey<imgRequest>* entry = iter.Get();
-      RefPtr<imgRequest> req = entry->GetKey();
+      nsRefPtr<imgRequest> req = entry->GetKey();
       req->ClearLoader();
     }
   }
@@ -1346,13 +1346,13 @@ imgLoader::FindEntryProperties(nsIURI* uri, nsIProperties** _retval)
   ImageCacheKey key(uri);
   imgCacheTable& cache = GetCache(key);
 
-  RefPtr<imgCacheEntry> entry;
+  nsRefPtr<imgCacheEntry> entry;
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
     if (mCacheTracker && entry->HasNoProxies()) {
       mCacheTracker->MarkUsed(entry);
     }
 
-    RefPtr<imgRequest> request = entry->GetRequest();
+    nsRefPtr<imgRequest> request = entry->GetRequest();
     if (request) {
       nsCOMPtr<nsIProperties> properties = request->Properties();
       properties.forget(_retval);
@@ -1398,12 +1398,12 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
 
   // Check to see if this request already exists in the cache. If so, we'll
   // replace the old version.
-  RefPtr<imgCacheEntry> tmpCacheEntry;
+  nsRefPtr<imgCacheEntry> tmpCacheEntry;
   if (cache.Get(aKey, getter_AddRefs(tmpCacheEntry)) && tmpCacheEntry) {
     MOZ_LOG(GetImgLog(), LogLevel::Debug,
            ("[this=%p] imgLoader::PutIntoCache -- Element already in the cache",
             nullptr));
-    RefPtr<imgRequest> tmpRequest = tmpCacheEntry->GetRequest();
+    nsRefPtr<imgRequest> tmpRequest = tmpCacheEntry->GetRequest();
 
     // If it already exists, and we're putting the same key into the cache, we
     // should remove the old version.
@@ -1440,7 +1440,7 @@ imgLoader::PutIntoCache(const ImageCacheKey& aKey, imgCacheEntry* entry)
     }
   }
 
-  RefPtr<imgRequest> request = entry->GetRequest();
+  nsRefPtr<imgRequest> request = entry->GetRequest();
   request->SetIsInCache(true);
   RemoveFromUncachedImages(request);
 
@@ -1489,10 +1489,10 @@ imgLoader::SetHasProxies(imgRequest* aRequest)
   LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
                              "imgLoader::SetHasProxies", "uri", key.Spec());
 
-  RefPtr<imgCacheEntry> entry;
+  nsRefPtr<imgCacheEntry> entry;
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
     // Make sure the cache entry is for the right request
-    RefPtr<imgRequest> entryRequest = entry->GetRequest();
+    nsRefPtr<imgRequest> entryRequest = entry->GetRequest();
     if (entryRequest == aRequest && entry->HasNoProxies()) {
       imgCacheQueue& queue = GetCacheQueue(key);
       queue.Remove(entry);
@@ -1529,12 +1529,12 @@ imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue)
   // Remove entries from the cache until we're back at our desired max size.
   while (queue.GetSize() > sCacheMaxSize) {
     // Remove the first entry in the queue.
-    RefPtr<imgCacheEntry> entry(queue.Pop());
+    nsRefPtr<imgCacheEntry> entry(queue.Pop());
 
     NS_ASSERTION(entry, "imgLoader::CheckCacheLimits -- NULL entry pointer");
 
     if (MOZ_LOG_TEST(GetImgLog(), LogLevel::Debug)) {
-      RefPtr<imgRequest> req = entry->GetRequest();
+      nsRefPtr<imgRequest> req = entry->GetRequest();
       if (req) {
         LOG_STATIC_FUNC_WITH_PARAM(GetImgLog(),
                                    "imgLoader::CheckCacheLimits",
@@ -1615,7 +1615,7 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
       return false;
     }
 
-    RefPtr<imgRequestProxy> req;
+    nsRefPtr<imgRequestProxy> req;
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   aLoadFlags, getter_AddRefs(req));
     if (NS_FAILED(rv)) {
@@ -1623,13 +1623,13 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
     }
 
     // Make sure that OnStatus/OnProgress calls have the right request set...
-    RefPtr<nsProgressNotificationProxy> progressproxy =
+    nsRefPtr<nsProgressNotificationProxy> progressproxy =
         new nsProgressNotificationProxy(newChannel, req);
     if (!progressproxy) {
       return false;
     }
 
-    RefPtr<imgCacheValidator> hvc =
+    nsRefPtr<imgCacheValidator> hvc =
       new imgCacheValidator(progressproxy, this, request, aCX,
                             forcePrincipalCheck);
 
@@ -1645,7 +1645,7 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
 
     if (aCORSMode != imgIRequest::CORS_NONE) {
       bool withCredentials = aCORSMode == imgIRequest::CORS_USE_CREDENTIALS;
-      RefPtr<nsCORSListenerProxy> corsproxy =
+      nsRefPtr<nsCORSListenerProxy> corsproxy =
         new nsCORSListenerProxy(listener, aLoadingPrincipal, withCredentials);
       rv = corsproxy->Init(newChannel, DataURIHandling::Allow);
       if (NS_FAILED(rv)) {
@@ -1725,7 +1725,7 @@ imgLoader::ValidateEntry(imgCacheEntry* aEntry,
     }
   }
 
-  RefPtr<imgRequest> request(aEntry->GetRequest());
+  nsRefPtr<imgRequest> request(aEntry->GetRequest());
 
   if (!request) {
     return false;
@@ -1822,7 +1822,7 @@ imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
   imgCacheTable& cache = GetCache(aKey);
   imgCacheQueue& queue = GetCacheQueue(aKey);
 
-  RefPtr<imgCacheEntry> entry;
+  nsRefPtr<imgCacheEntry> entry;
   if (cache.Get(aKey, getter_AddRefs(entry)) && entry) {
     cache.Remove(aKey);
 
@@ -1838,7 +1838,7 @@ imgLoader::RemoveFromCache(const ImageCacheKey& aKey)
 
     entry->SetEvicted(true);
 
-    RefPtr<imgRequest> request = entry->GetRequest();
+    nsRefPtr<imgRequest> request = entry->GetRequest();
     request->SetIsInCache(false);
     AddToUncachedImages(request);
 
@@ -1854,7 +1854,7 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
 {
   LOG_STATIC_FUNC(GetImgLog(), "imgLoader::RemoveFromCache entry");
 
-  RefPtr<imgRequest> request = entry->GetRequest();
+  nsRefPtr<imgRequest> request = entry->GetRequest();
   if (request) {
     const ImageCacheKey& key = request->CacheKey();
     imgCacheTable& cache = GetCache(key);
@@ -1887,11 +1887,11 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
 
 static PLDHashOperator
 EnumEvictEntries(const ImageCacheKey&,
-                 RefPtr<imgCacheEntry>& aData,
+                 nsRefPtr<imgCacheEntry>& aData,
                  void* data)
 {
-  nsTArray<RefPtr<imgCacheEntry> >* entries =
-    reinterpret_cast<nsTArray<RefPtr<imgCacheEntry> > *>(data);
+  nsTArray<nsRefPtr<imgCacheEntry> >* entries =
+    reinterpret_cast<nsTArray<nsRefPtr<imgCacheEntry> > *>(data);
 
   entries->AppendElement(aData);
 
@@ -1905,7 +1905,7 @@ imgLoader::EvictEntries(imgCacheTable& aCacheToClear)
 
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
-  nsTArray<RefPtr<imgCacheEntry> > entries;
+  nsTArray<nsRefPtr<imgCacheEntry> > entries;
   aCacheToClear.Enumerate(EnumEvictEntries, &entries);
 
   for (uint32_t i = 0; i < entries.Length(); ++i) {
@@ -1926,7 +1926,7 @@ imgLoader::EvictEntries(imgCacheQueue& aQueueToClear)
 
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
-  nsTArray<RefPtr<imgCacheEntry> > entries(aQueueToClear.GetNumElements());
+  nsTArray<nsRefPtr<imgCacheEntry> > entries(aQueueToClear.GetNumElements());
   for (imgCacheQueue::const_iterator i = aQueueToClear.begin();
        i != aQueueToClear.end(); ++i) {
     entries.AppendElement(*i);
@@ -2040,7 +2040,7 @@ imgLoader::LoadImage(nsIURI* aURI,
 
   *_retval = nullptr;
 
-  RefPtr<imgRequest> request;
+  nsRefPtr<imgRequest> request;
 
   nsresult rv;
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
@@ -2092,7 +2092,7 @@ imgLoader::LoadImage(nsIURI* aURI,
     corsmode = imgIRequest::CORS_USE_CREDENTIALS;
   }
 
-  RefPtr<imgCacheEntry> entry;
+  nsRefPtr<imgCacheEntry> entry;
 
   // Look in the cache for our URI, and then validate it.
   // XXX For now ignore aCacheKey. We will need it in the future
@@ -2193,7 +2193,7 @@ imgLoader::LoadImage(nsIURI* aURI,
               this));
       bool withCredentials = corsmode == imgIRequest::CORS_USE_CREDENTIALS;
 
-      RefPtr<nsCORSListenerProxy> corsproxy =
+      nsRefPtr<nsCORSListenerProxy> corsproxy =
         new nsCORSListenerProxy(pl, aLoadingPrincipal, withCredentials);
       rv = corsproxy->Init(newChannel, DataURIHandling::Allow);
       if (NS_FAILED(rv)) {
@@ -2323,7 +2323,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
 
   MOZ_ASSERT(NS_UsePrivateBrowsing(channel) == mRespectPrivacy);
 
-  RefPtr<imgRequest> request;
+  nsRefPtr<imgRequest> request;
 
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
@@ -2332,7 +2332,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
   channel->GetLoadFlags(&requestFlags);
 
-  RefPtr<imgCacheEntry> entry;
+  nsRefPtr<imgCacheEntry> entry;
 
   if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
     RemoveFromCache(key);
@@ -2443,7 +2443,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
                   channel, channel, entry, aCX, nullptr,
                   imgIRequest::CORS_NONE, RP_Default);
 
-    RefPtr<ProxyListener> pl =
+    nsRefPtr<ProxyListener> pl =
       new ProxyListener(static_cast<nsIStreamListener*>(request.get()));
     pl.forget(listener);
 
@@ -2794,7 +2794,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // data that's coming in off the channel.
   nsCOMPtr<nsIURI> uri;
   {
-    RefPtr<ImageURL> imageURL;
+    nsRefPtr<ImageURL> imageURL;
     mRequest->GetURI(getter_AddRefs(imageURL));
     uri = imageURL->ToIURI();
   }

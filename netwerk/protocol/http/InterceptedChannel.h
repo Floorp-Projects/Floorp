@@ -8,7 +8,7 @@
 #define InterceptedChannel_h
 
 #include "nsINetworkInterceptController.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Maybe.h"
 
 class nsICacheEntry;
@@ -61,7 +61,7 @@ public:
 class InterceptedChannelChrome : public InterceptedChannelBase
 {
   // The actual channel being intercepted.
-  RefPtr<nsHttpChannel> mChannel;
+  nsRefPtr<nsHttpChannel> mChannel;
 
   // Writeable cache entry for use when synthesizing a response in a parent process
   nsCOMPtr<nsICacheEntry> mSynthesizedCacheEntry;
@@ -91,7 +91,7 @@ public:
 class InterceptedChannelContent : public InterceptedChannelBase
 {
   // The actual channel being intercepted.
-  RefPtr<HttpChannelChild> mChannel;
+  nsRefPtr<HttpChannelChild> mChannel;
 
   // Reader-side of the response body when synthesizing in a child proces
   nsCOMPtr<nsIInputStream> mSynthesizedInput;

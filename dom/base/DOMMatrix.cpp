@@ -34,7 +34,7 @@ DOMMatrixReadOnly::Translate(double aTx,
                              double aTy,
                              double aTz) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->TranslateSelf(aTx, aTy, aTz);
 
   return retval.forget();
@@ -45,7 +45,7 @@ DOMMatrixReadOnly::Scale(double aScale,
                          double aOriginX,
                          double aOriginY) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->ScaleSelf(aScale, aOriginX, aOriginY);
 
   return retval.forget();
@@ -57,7 +57,7 @@ DOMMatrixReadOnly::Scale3d(double aScale,
                            double aOriginY,
                            double aOriginZ) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->Scale3dSelf(aScale, aOriginX, aOriginY, aOriginZ);
 
   return retval.forget();
@@ -71,7 +71,7 @@ DOMMatrixReadOnly::ScaleNonUniform(double aScaleX,
                                    double aOriginY,
                                    double aOriginZ) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->ScaleNonUniformSelf(aScaleX, aScaleY, aScaleZ, aOriginX, aOriginY, aOriginZ);
 
   return retval.forget();
@@ -82,7 +82,7 @@ DOMMatrixReadOnly::Rotate(double aAngle,
                           double aOriginX ,
                           double aOriginY) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->RotateSelf(aAngle, aOriginX, aOriginY);
 
   return retval.forget();
@@ -92,7 +92,7 @@ already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::RotateFromVector(double x,
                                     double y) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->RotateFromVectorSelf(x, y);
 
   return retval.forget();
@@ -104,7 +104,7 @@ DOMMatrixReadOnly::RotateAxisAngle(double aX,
                                    double aZ,
                                    double aAngle) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->RotateAxisAngleSelf(aX, aY, aZ, aAngle);
 
   return retval.forget();
@@ -113,7 +113,7 @@ DOMMatrixReadOnly::RotateAxisAngle(double aX,
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::SkewX(double aSx) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->SkewXSelf(aSx);
 
   return retval.forget();
@@ -122,7 +122,7 @@ DOMMatrixReadOnly::SkewX(double aSx) const
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::SkewY(double aSy) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->SkewYSelf(aSy);
 
   return retval.forget();
@@ -131,7 +131,7 @@ DOMMatrixReadOnly::SkewY(double aSy) const
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::Multiply(const DOMMatrix& other) const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->MultiplySelf(other);
 
   return retval.forget();
@@ -140,7 +140,7 @@ DOMMatrixReadOnly::Multiply(const DOMMatrix& other) const
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::FlipX() const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   if (mMatrix3D) {
     gfx::Matrix4x4 m;
     m._11 = -1;
@@ -157,7 +157,7 @@ DOMMatrixReadOnly::FlipX() const
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::FlipY() const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   if (mMatrix3D) {
     gfx::Matrix4x4 m;
     m._22 = -1;
@@ -174,7 +174,7 @@ DOMMatrixReadOnly::FlipY() const
 already_AddRefed<DOMMatrix>
 DOMMatrixReadOnly::Inverse() const
 {
-  RefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
+  nsRefPtr<DOMMatrix> retval = new DOMMatrix(mParent, *this);
   retval->InvertSelf();
 
   return retval.forget();
@@ -199,7 +199,7 @@ DOMMatrixReadOnly::Identity() const
 already_AddRefed<DOMPoint>
 DOMMatrixReadOnly::TransformPoint(const DOMPointInit& point) const
 {
-  RefPtr<DOMPoint> retval = new DOMPoint(mParent);
+  nsRefPtr<DOMPoint> retval = new DOMPoint(mParent);
 
   if (mMatrix3D) {
     gfx::Point4D transformedPoint;
@@ -312,14 +312,14 @@ DOMMatrixReadOnly::Stringify(nsAString& aResult)
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  nsRefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   return obj.forget();
 }
 
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const nsAString& aTransformList, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  nsRefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
 
   obj = obj->SetMatrixValue(aTransformList, aRv);
   return obj.forget();
@@ -328,7 +328,7 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const nsAString& aTransformL
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const DOMMatrixReadOnly& aOther, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), aOther);
+  nsRefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports(), aOther);
   return obj.forget();
 }
 
@@ -366,7 +366,7 @@ template <typename T> void SetDataInMatrix(DOMMatrix* aMatrix, const T* aData, i
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float32Array& aArray32, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  nsRefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   aArray32.ComputeLengthAndData();
   SetDataInMatrix(obj, aArray32.Data(), aArray32.Length(), aRv);
 
@@ -376,7 +376,7 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float32Array& aArray32
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float64Array& aArray64, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  nsRefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   aArray64.ComputeLengthAndData();
   SetDataInMatrix(obj, aArray64.Data(), aArray64.Length(), aRv);
 
@@ -386,7 +386,7 @@ DOMMatrix::Constructor(const GlobalObject& aGlobal, const Float64Array& aArray64
 already_AddRefed<DOMMatrix>
 DOMMatrix::Constructor(const GlobalObject& aGlobal, const Sequence<double>& aNumberSequence, ErrorResult& aRv)
 {
-  RefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
+  nsRefPtr<DOMMatrix> obj = new DOMMatrix(aGlobal.GetAsSupports());
   SetDataInMatrix(obj, aNumberSequence.Elements(), aNumberSequence.Length(), aRv);
 
   return obj.forget();

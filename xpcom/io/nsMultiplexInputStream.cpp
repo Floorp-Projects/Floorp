@@ -696,7 +696,7 @@ nsMultiplexInputStreamConstructor(nsISupports* aOuter,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  RefPtr<nsMultiplexInputStream> inst = new nsMultiplexInputStream();
+  nsRefPtr<nsMultiplexInputStream> inst = new nsMultiplexInputStream();
 
   return inst->QueryInterface(aIID, aResult);
 }
@@ -803,7 +803,7 @@ nsMultiplexInputStream::Clone(nsIInputStream** aClone)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsMultiplexInputStream> clone = new nsMultiplexInputStream();
+  nsRefPtr<nsMultiplexInputStream> clone = new nsMultiplexInputStream();
 
   nsresult rv;
   uint32_t len = mStreams.Length();

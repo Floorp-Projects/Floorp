@@ -128,7 +128,7 @@ class GamepadService : public nsIObserver
   nsRefPtrHashtable<nsUint32HashKey, Gamepad> mGamepads;
   // Inner windows that are listening for gamepad events.
   // has been sent to that window.
-  nsTArray<RefPtr<nsGlobalWindow> > mListeners;
+  nsTArray<nsRefPtr<nsGlobalWindow> > mListeners;
   nsCOMPtr<nsITimer> mTimer;
 };
 

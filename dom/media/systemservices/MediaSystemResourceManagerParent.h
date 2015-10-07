@@ -46,7 +46,7 @@ private:
 
   bool mDestroyed;
 
-  RefPtr<MediaSystemResourceService> mMediaSystemResourceService;
+  nsRefPtr<MediaSystemResourceService> mMediaSystemResourceService;
 
   nsClassHashtable<nsUint32HashKey, MediaSystemResourceRequest> mResourceRequests;
 };

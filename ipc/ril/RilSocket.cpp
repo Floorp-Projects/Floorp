@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "RilSocketConsumer.h"
@@ -70,14 +70,14 @@ private:
   /**
    * Cross-thread dispatcher for the RIL worker
    */
-  RefPtr<WorkerCrossThreadDispatcher> mDispatcher;
+  nsRefPtr<WorkerCrossThreadDispatcher> mDispatcher;
 
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  RefPtr<RilSocket> mRilSocket;
+  nsRefPtr<RilSocket> mRilSocket;
 
   /**
    * If true, do not requeue whatever task we're running
@@ -218,7 +218,7 @@ private:
 void
 RilSocketIO::ConsumeBuffer()
 {
-  RefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.forget());
+  nsRefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.forget());
   NS_WARN_IF(!mDispatcher->PostTask(task));
 }
 

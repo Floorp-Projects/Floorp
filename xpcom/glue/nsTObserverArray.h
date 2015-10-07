@@ -472,7 +472,7 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 #define NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(array_, obstype_, func_, params_) \
   PR_BEGIN_MACRO                                                             \
     nsTObserverArray<obstype_ *>::ForwardIterator iter_(array_);             \
-    RefPtr<obstype_> obs_;                                                 \
+    nsRefPtr<obstype_> obs_;                                                 \
     while (iter_.HasMore()) {                                                 \
       obs_ = iter_.GetNext();                                                \
       obs_ -> func_ params_ ;                                                \

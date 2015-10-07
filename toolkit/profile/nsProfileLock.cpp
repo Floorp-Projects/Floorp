@@ -607,7 +607,7 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
                                   nullptr);
     if (mLockFileHandle == INVALID_HANDLE_VALUE) {
         if (aUnlocker) {
-          RefPtr<mozilla::ProfileUnlockerWin> unlocker(
+          nsRefPtr<mozilla::ProfileUnlockerWin> unlocker(
                                      new mozilla::ProfileUnlockerWin(filePath));
           if (NS_SUCCEEDED(unlocker->Init())) {
             nsCOMPtr<nsIProfileUnlocker> unlockerInterface(

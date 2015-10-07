@@ -45,10 +45,10 @@ public:
   static already_AddRefed<DataSourceSurface> ApplyColorMatrix(DataSourceSurface* aInput, const Matrix5x4 &aMatrix);
   static void ApplyComposition(DataSourceSurface* aSource, DataSourceSurface* aDest, CompositeOperator aOperator);
   static void SeparateColorChannels(DataSourceSurface* aSource,
-                                    RefPtr<DataSourceSurface>& aChannel0,
-                                    RefPtr<DataSourceSurface>& aChannel1,
-                                    RefPtr<DataSourceSurface>& aChannel2,
-                                    RefPtr<DataSourceSurface>& aChannel3);
+                                    nsRefPtr<DataSourceSurface>& aChannel0,
+                                    nsRefPtr<DataSourceSurface>& aChannel1,
+                                    nsRefPtr<DataSourceSurface>& aChannel2,
+                                    nsRefPtr<DataSourceSurface>& aChannel3);
   static already_AddRefed<DataSourceSurface>
     CombineColorChannels(DataSourceSurface* aChannel0, DataSourceSurface* aChannel1,
                          DataSourceSurface* aChannel2, DataSourceSurface* aChannel3);

@@ -143,7 +143,7 @@ BluetoothDaemonA2dpModule::HandleRsp(
     return;
   }
 
-  RefPtr<BluetoothA2dpResultHandler> res =
+  nsRefPtr<BluetoothA2dpResultHandler> res =
     static_cast<BluetoothA2dpResultHandler*>(aRes);
 
   if (!res) {
@@ -260,7 +260,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothA2dpResultHandler> mRes;
+  nsRefPtr<BluetoothA2dpResultHandler> mRes;
 };
 
 void
@@ -325,7 +325,7 @@ public:
 
 private:
   BluetoothDaemonA2dpModule* mModule;
-  RefPtr<BluetoothA2dpResultHandler> mRes;
+  nsRefPtr<BluetoothA2dpResultHandler> mRes;
 };
 
 void

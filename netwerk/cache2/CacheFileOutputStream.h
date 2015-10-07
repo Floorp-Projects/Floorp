@@ -50,9 +50,9 @@ private:
   void FillHole();
   void NotifyListener();
 
-  RefPtr<CacheFile>      mFile;
-  RefPtr<CacheFileChunk> mChunk;
-  RefPtr<CacheOutputCloseListener> mCloseListener;
+  nsRefPtr<CacheFile>      mFile;
+  nsRefPtr<CacheFileChunk> mChunk;
+  nsRefPtr<CacheOutputCloseListener> mCloseListener;
   int64_t                  mPos;
   bool                     mClosed;
   nsresult                 mStatus;

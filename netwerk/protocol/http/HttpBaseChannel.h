@@ -338,7 +338,7 @@ protected:
   nsCOMPtr<nsIInputStream>          mUploadStream;
   nsCOMPtr<nsIRunnable>             mUploadCloneableCallback;
   nsAutoPtr<nsHttpResponseHead>     mResponseHead;
-  RefPtr<nsHttpConnectionInfo>    mConnectionInfo;
+  nsRefPtr<nsHttpConnectionInfo>    mConnectionInfo;
   nsCOMPtr<nsIProxyInfo>            mProxyInfo;
   nsCOMPtr<nsISupports>             mSecurityInfo;
 
@@ -414,7 +414,7 @@ protected:
   uint32_t                          mContentDispositionHint;
   nsAutoPtr<nsString>               mContentDispositionFilename;
 
-  RefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
+  nsRefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
 
   uint32_t                          mReferrerPolicy;
 
@@ -539,7 +539,7 @@ nsresult HttpAsyncAborter<T>::AsyncCall(void (T::*funcPtr)(),
 {
   nsresult rv;
 
-  RefPtr<nsRunnableMethod<T> > event = NS_NewRunnableMethod(mThis, funcPtr);
+  nsRefPtr<nsRunnableMethod<T> > event = NS_NewRunnableMethod(mThis, funcPtr);
   rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv) && retval) {
     *retval = event;

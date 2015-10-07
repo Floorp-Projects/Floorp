@@ -52,7 +52,7 @@ private:
 
     void LoadHasChanged(webrtc::CPULoadState aNewState);
 
-    RefPtr<LoadMonitor> mLoadMonitor;
+    nsRefPtr<LoadMonitor> mLoadMonitor;
 
     // This protects access to the mObservers list, the current state, and
     // pretty much all the other members (below).

@@ -28,7 +28,7 @@ public:
 
   ~VPXDecoder();
 
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -48,8 +48,8 @@ private:
   void DoDrain ();
   void OutputDelayedFrames ();
 
-  RefPtr<ImageContainer> mImageContainer;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  nsRefPtr<ImageContainer> mImageContainer;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // VPx decoder state

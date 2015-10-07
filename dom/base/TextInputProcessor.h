@@ -105,7 +105,7 @@ private:
     ~AutoPendingCompositionResetter();
 
   private:
-    RefPtr<TextInputProcessor> mTIP;
+    nsRefPtr<TextInputProcessor> mTIP;
   };
 
   /**
@@ -177,7 +177,7 @@ private:
 
   TextEventDispatcher* mDispatcher; // [Weak]
   nsCOMPtr<nsITextInputProcessorCallback> mCallback;
-  RefPtr<ModifierKeyDataArray> mModifierKeyDataArray;
+  nsRefPtr<ModifierKeyDataArray> mModifierKeyDataArray;
 
   bool mForTests;
 };

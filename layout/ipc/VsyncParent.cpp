@@ -23,8 +23,8 @@ namespace layout {
 VsyncParent::Create()
 {
   AssertIsOnBackgroundThread();
-  RefPtr<gfx::VsyncSource> vsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
-  RefPtr<VsyncParent> vsyncParent = new VsyncParent();
+  nsRefPtr<gfx::VsyncSource> vsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
+  nsRefPtr<VsyncParent> vsyncParent = new VsyncParent();
   vsyncParent->mVsyncDispatcher = vsyncSource->GetRefreshTimerVsyncDispatcher();
   return vsyncParent.forget();
 }

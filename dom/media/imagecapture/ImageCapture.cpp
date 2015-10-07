@@ -64,7 +64,7 @@ ImageCapture::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<ImageCapture> object = new ImageCapture(&aTrack, win);
+  nsRefPtr<ImageCapture> object = new ImageCapture(&aTrack, win);
 
   return object.forget();
 }
@@ -100,7 +100,7 @@ ImageCapture::TakePhotoByMediaEngine()
 
     nsresult PhotoComplete(already_AddRefed<Blob> aBlob) override
     {
-      RefPtr<Blob> blob = aBlob;
+      nsRefPtr<Blob> blob = aBlob;
 
       if (mPrincipalChanged) {
         return PhotoError(NS_ERROR_DOM_SECURITY_ERR);
@@ -120,17 +120,17 @@ ImageCapture::TakePhotoByMediaEngine()
       mStream->RemovePrincipalChangeObserver(this);
     }
 
-    RefPtr<DOMMediaStream> mStream;
-    RefPtr<ImageCapture> mImageCapture;
+    nsRefPtr<DOMMediaStream> mStream;
+    nsRefPtr<ImageCapture> mImageCapture;
     bool mPrincipalChanged;
   };
 
-  RefPtr<DOMMediaStream> domStream = mVideoStreamTrack->GetStream();
+  nsRefPtr<DOMMediaStream> domStream = mVideoStreamTrack->GetStream();
   DOMLocalMediaStream* domLocalStream = domStream->AsDOMLocalMediaStream();
   if (domLocalStream) {
-    RefPtr<MediaEngineSource> mediaEngine =
+    nsRefPtr<MediaEngineSource> mediaEngine =
       domLocalStream->GetMediaEngine(mVideoStreamTrack->GetTrackID());
-    RefPtr<MediaEngineSource::PhotoCallback> callback =
+    nsRefPtr<MediaEngineSource::PhotoCallback> callback =
       new TakePhotoCallback(domStream, this);
     return mediaEngine->TakePhoto(callback);
   }
@@ -158,7 +158,7 @@ ImageCapture::TakePhoto(ErrorResult& aResult)
   // support TakePhoto().
   if (rv == NS_ERROR_NOT_IMPLEMENTED) {
     IC_LOG("MediaEngine doesn't support TakePhoto(), it falls back to MediaStreamGraph.");
-    RefPtr<CaptureTask> task =
+    nsRefPtr<CaptureTask> task =
       new CaptureTask(this, mVideoStreamTrack->GetTrackID());
 
     // It adds itself into MediaStreamGraph, so ImageCapture doesn't need to hold
@@ -181,7 +181,7 @@ ImageCapture::PostBlobEvent(Blob* aBlob)
   init.mCancelable = false;
   init.mData = aBlob;
 
-  RefPtr<BlobEvent> blob_event =
+  nsRefPtr<BlobEvent> blob_event =
     BlobEvent::Constructor(this, NS_LITERAL_STRING("photo"), init);
 
   return DispatchTrustedEvent(blob_event);
@@ -203,7 +203,7 @@ ImageCapture::PostErrorEvent(uint16_t aErrorCode, nsresult aReason)
     }
   }
 
-  RefPtr<ImageCaptureError> error =
+  nsRefPtr<ImageCaptureError> error =
     new ImageCaptureError(this, aErrorCode, errorMsg);
 
   ImageCaptureErrorEventInit init;
@@ -222,7 +222,7 @@ ImageCapture::CheckPrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<DOMMediaStream> ms = mVideoStreamTrack->GetStream();
+  nsRefPtr<DOMMediaStream> ms = mVideoStreamTrack->GetStream();
   if (!ms) {
     return false;
   }

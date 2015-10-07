@@ -112,7 +112,7 @@ nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
     sActiveWindows = new ::WindowTable();
   }
 
-  RefPtr<nsDOMCameraManager> cameraManager =
+  nsRefPtr<nsDOMCameraManager> cameraManager =
     new nsDOMCameraManager(aWindow);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -142,10 +142,10 @@ public:
 
   CameraPermissionRequest(nsIPrincipal* aPrincipal,
                           nsPIDOMWindow* aWindow,
-                          RefPtr<nsDOMCameraManager> aManager,
+                          nsRefPtr<nsDOMCameraManager> aManager,
                           uint32_t aCameraId,
                           const CameraConfiguration& aInitialConfig,
-                          RefPtr<Promise> aPromise)
+                          nsRefPtr<Promise> aPromise)
     : mPrincipal(aPrincipal)
     , mWindow(aWindow)
     , mCameraManager(aManager)
@@ -163,10 +163,10 @@ protected:
   void CallCancel();
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  RefPtr<nsDOMCameraManager> mCameraManager;
+  nsRefPtr<nsDOMCameraManager> mCameraManager;
   uint32_t mCameraId;
   CameraConfiguration mInitialConfig;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
 };
 
@@ -291,7 +291,7 @@ nsDOMCameraManager::GetCamera(const nsAString& aCamera,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -338,7 +338,7 @@ nsDOMCameraManager::PermissionAllowed(uint32_t aCameraId,
 
   // Creating this object will trigger the aOnSuccess callback
   //  (or the aOnError one, if it fails).
-  RefPtr<nsDOMCameraControl> cameraControl =
+  nsRefPtr<nsDOMCameraControl> cameraControl =
     new nsDOMCameraControl(aCameraId, aInitialConfig, aPromise, mWindow);
 
   Register(cameraControl);
@@ -369,7 +369,7 @@ nsDOMCameraManager::Register(nsDOMCameraControl* aDOMCameraControl)
   uint32_t i = controls->Length();
   while (i > 0) {
     --i;
-    RefPtr<nsDOMCameraControl> cameraControl =
+    nsRefPtr<nsDOMCameraControl> cameraControl =
       do_QueryObject(controls->ElementAt(i));
     if (!cameraControl) {
       controls->RemoveElementAt(i);
@@ -396,7 +396,7 @@ nsDOMCameraManager::Shutdown(uint64_t aWindowId)
   uint32_t i = controls->Length();
   while (i > 0) {
     --i;
-    RefPtr<nsDOMCameraControl> cameraControl =
+    nsRefPtr<nsDOMCameraControl> cameraControl =
       do_QueryObject(controls->ElementAt(i));
     if (cameraControl) {
       cameraControl->Shutdown();

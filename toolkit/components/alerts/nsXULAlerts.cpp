@@ -129,7 +129,7 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
   // mNamedWindows when it is closed.
   nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  RefPtr<nsXULAlertObserver> alertObserver = new nsXULAlertObserver(this, aAlertName, aAlertListener);
+  nsRefPtr<nsXULAlertObserver> alertObserver = new nsXULAlertObserver(this, aAlertName, aAlertListener);
   nsCOMPtr<nsISupports> iSupports(do_QueryInterface(alertObserver));
   ifptr->SetData(iSupports);
   ifptr->SetDataIID(&NS_GET_IID(nsIObserver));

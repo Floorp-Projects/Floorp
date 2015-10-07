@@ -702,7 +702,7 @@ nsXULTooltipListener::KillTooltipTimer()
 void
 nsXULTooltipListener::sTooltipCallback(nsITimer *aTimer, void *aListener)
 {
-  RefPtr<nsXULTooltipListener> instance = mInstance;
+  nsRefPtr<nsXULTooltipListener> instance = mInstance;
   if (instance)
     instance->ShowTooltip();
 }

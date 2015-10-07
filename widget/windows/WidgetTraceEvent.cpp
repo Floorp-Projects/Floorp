@@ -80,7 +80,7 @@ HWND GetHiddenWindowHWND()
 {
   // Need to dispatch this to the main thread because plenty of
   // the things it wants to access are main-thread-only.
-  RefPtr<HWNDGetter> getter = new HWNDGetter();
+  nsRefPtr<HWNDGetter> getter = new HWNDGetter();
   NS_DispatchToMainThread(getter, NS_DISPATCH_SYNC);
   return getter->hidden_window_hwnd;
 }

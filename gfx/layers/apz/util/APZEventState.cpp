@@ -191,7 +191,7 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 
   APZES_LOG("Active element uses style, scheduling timer for click event\n");
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  RefPtr<DelayedFireSingleTapEvent> callback =
+  nsRefPtr<DelayedFireSingleTapEvent> callback =
     new DelayedFireSingleTapEvent(mWidget, currentPoint, aModifiers, timer);
   nsresult rv = timer->InitWithCallback(callback,
                                         sActiveDurationMs,

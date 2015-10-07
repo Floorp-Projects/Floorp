@@ -9,7 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "nsTArray.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 
@@ -42,7 +42,7 @@ public:
   static void GetFullfillmentStack(GlobalObject&, Promise& aPromise,
                                    JS::MutableHandle<JSObject*> aStack);
   static void GetDependentPromises(GlobalObject&, Promise& aPromise,
-                                   nsTArray<RefPtr<Promise>>& aPromises);
+                                   nsTArray<nsRefPtr<Promise>>& aPromises);
   static double GetPromiseLifetime(GlobalObject&, Promise& aPromise);
   static double GetTimeToSettle(GlobalObject&, Promise& aPromise,
                                 ErrorResult& aRv);

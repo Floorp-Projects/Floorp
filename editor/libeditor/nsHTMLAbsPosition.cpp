@@ -65,7 +65,7 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
 
   // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(aEnabled ? EditAction::setAbsolutePosition :
@@ -174,7 +174,7 @@ nsHTMLEditor::RelativeChangeZIndex(int32_t aChange)
 
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo(aChange < 0 ? EditAction::decreaseZIndex :
                                          EditAction::increaseZIndex);
@@ -421,7 +421,7 @@ nsHTMLEditor::EndMoving()
 
   mGrabberClicked = false;
   mIsMoving = false;
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   if (!selection) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -534,7 +534,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
     nsCOMPtr<dom::Element> element = do_QueryInterface(aElement);
     if (element && element->IsHTMLElement(nsGkAtoms::div) &&
         !HasStyleOrIdOrClass(element)) {
-      RefPtr<nsHTMLEditRules> htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
+      nsRefPtr<nsHTMLEditRules> htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
       NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
       nsresult res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
       NS_ENSURE_SUCCESS(res, res);
@@ -633,13 +633,13 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
                                          bgColorStr);
     NS_ENSURE_SUCCESS(res, res);
     if (bgColorStr.EqualsLiteral("transparent")) {
-      RefPtr<nsComputedDOMStyle> cssDecl =
+      nsRefPtr<nsComputedDOMStyle> cssDecl =
         mHTMLCSSUtils->GetComputedStyle(element);
       NS_ENSURE_STATE(cssDecl);
 
       // from these declarations, get the one we want and that one only
       ErrorResult error;
-      RefPtr<dom::CSSValue> cssVal = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
+      nsRefPtr<dom::CSSValue> cssVal = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), error);
       NS_ENSURE_TRUE(!error.Failed(), error.StealNSResult());
 
       nsROCSSPrimitiveValue* val = cssVal->AsPrimitiveValue();

@@ -57,7 +57,7 @@ nsAutoWindowStateHelper::DispatchEventToChrome(const char* aEventName)
   }
 
   ErrorResult rv;
-  RefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("Events"), rv);
+  nsRefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("Events"), rv);
   if (rv.Failed()) {
     return false;
   }

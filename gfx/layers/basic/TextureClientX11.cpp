@@ -38,7 +38,7 @@ already_AddRefed<TextureClient>
 TextureClientX11::CreateSimilar(TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
-  RefPtr<TextureClient> tex = new TextureClientX11(mAllocator, mFormat, mFlags);
+  nsRefPtr<TextureClient> tex = new TextureClientX11(mAllocator, mFormat, mFlags);
 
   // mSize is guaranteed to be non-negative
   MOZ_ASSERT(mSize.width >= 0 && mSize.height >= 0);
@@ -119,7 +119,7 @@ TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aText
     return false;
   }
   gfxImageFormat imageFormat = SurfaceFormatToImageFormat(mFormat);
-  RefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, imageFormat);
+  nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, imageFormat);
   if (!surface || surface->GetType() != gfxSurfaceType::Xlib) {
     NS_ERROR("creating Xlib surface failed!");
     return false;

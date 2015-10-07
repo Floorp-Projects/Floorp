@@ -81,7 +81,7 @@ namespace
   class AsyncTimeEventRunner : public nsRunnable
   {
   protected:
-    RefPtr<nsIContent> mTarget;
+    nsRefPtr<nsIContent> mTarget;
     EventMessage         mMsg;
     int32_t              mDetail;
 
@@ -180,7 +180,7 @@ private:
 // Templated helper functions
 
 // Selectively remove elements from an array of type
-// nsTArray<RefPtr<nsSMILInstanceTime> > with O(n) performance.
+// nsTArray<nsRefPtr<nsSMILInstanceTime> > with O(n) performance.
 template <class TestFunctor>
 void
 nsSMILTimedElement::RemoveInstanceTimes(InstanceTimeList& aArray,
@@ -405,7 +405,7 @@ nsSMILTimedElement::AddInstanceTime(nsSMILInstanceTime* aInstanceTime,
 
   aInstanceTime->SetSerial(++mInstanceSerialIndex);
   InstanceTimeList& instanceList = aIsBegin ? mBeginInstances : mEndInstances;
-  RefPtr<nsSMILInstanceTime>* inserted =
+  nsRefPtr<nsSMILInstanceTime>* inserted =
     instanceList.InsertElementSorted(aInstanceTime, InstanceTimeComparator());
   if (!inserted) {
     NS_WARNING("Insufficient memory to insert instance time");
@@ -1403,7 +1403,7 @@ nsSMILTimedElement::ApplyEarlyEnd(const nsSMILTimeValue& aSampleTime)
         // Generate a new instance time for the early end since the
         // existing instance time is part of some dependency chain that we
         // don't want to participate in.
-        RefPtr<nsSMILInstanceTime> newEarlyEnd =
+        nsRefPtr<nsSMILInstanceTime> newEarlyEnd =
           new nsSMILInstanceTime(earlyEnd->Time());
         mCurrentInterval->SetEnd(*newEarlyEnd);
       } else {
@@ -1719,8 +1719,8 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
     beginAfter.SetMillis(INT64_MIN);
   }
 
-  RefPtr<nsSMILInstanceTime> tempBegin;
-  RefPtr<nsSMILInstanceTime> tempEnd;
+  nsRefPtr<nsSMILInstanceTime> tempBegin;
+  nsRefPtr<nsSMILInstanceTime> tempEnd;
 
   while (true) {
     // Calculate begin time
@@ -2211,7 +2211,7 @@ nsSMILTimedElement::AddInstanceTimeFromCurrentTime(nsSMILTime aCurrentTime,
 
   nsSMILTimeValue timeVal(aCurrentTime + int64_t(NS_round(offset)));
 
-  RefPtr<nsSMILInstanceTime> instanceTime =
+  nsRefPtr<nsSMILInstanceTime> instanceTime =
     new nsSMILInstanceTime(timeVal, nsSMILInstanceTime::SOURCE_DOM);
 
   AddInstanceTime(instanceTime, aIsBegin);

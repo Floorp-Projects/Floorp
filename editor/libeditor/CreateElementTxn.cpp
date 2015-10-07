@@ -91,7 +91,7 @@ CreateElementTxn::DoTransaction()
     return NS_OK;
   }
 
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   rv = selection->CollapseNative(mParent, mParent->IndexOf(mNewNode) + 1);

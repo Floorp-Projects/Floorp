@@ -240,7 +240,7 @@ public:
   // Event retargeting must happen whenever mNewTarget is non-null.
   nsCOMPtr<EventTarget>             mNewTarget;
   // Cache mTarget's event listener manager.
-  RefPtr<EventListenerManager>    mManager;
+  nsRefPtr<EventListenerManager>    mManager;
 };
 
 EventTargetChainItem::EventTargetChainItem(EventTarget* aTarget)
@@ -520,7 +520,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
 
   // If we have a PresContext, make sure it doesn't die before
   // event dispatching is finished.
-  RefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
+  nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
 
   ELMCreationDetector cd;
   nsTArray<EventTargetChainItem> chain;

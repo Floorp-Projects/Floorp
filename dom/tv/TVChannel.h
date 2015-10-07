@@ -70,7 +70,7 @@ private:
   bool Init(nsITVChannelData* aData);
 
   nsCOMPtr<nsITVService> mTVService;
-  RefPtr<TVSource> mSource;
+  nsRefPtr<TVSource> mSource;
   nsString mNetworkId;
   nsString mTransportStreamId;
   nsString mServiceId;

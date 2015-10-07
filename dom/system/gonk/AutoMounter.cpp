@@ -211,7 +211,7 @@ class AutoMounter
 public:
   NS_INLINE_DECL_REFCOUNTING(AutoMounter)
 
-  typedef nsTArray<RefPtr<Volume>> VolumeArray;
+  typedef nsTArray<nsRefPtr<Volume>> VolumeArray;
 
   AutoMounter()
     : mState(STATE_IDLE),
@@ -245,7 +245,7 @@ public:
     VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
     VolumeManager::VolumeArray::index_type i;
     for (i = 0; i < numVolumes; i++) {
-      RefPtr<Volume> vol = VolumeManager::GetVolume(i);
+      nsRefPtr<Volume> vol = VolumeManager::GetVolume(i);
       if (vol) {
         // We need to pick up the intial value of the
         // ums.volume.NAME.enabled setting.
@@ -323,7 +323,7 @@ public:
 
   void SetSharingMode(const nsACString& aVolumeName, bool aAllowSharing)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -340,7 +340,7 @@ public:
 
   void FormatVolume(const nsACString& aVolumeName)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -357,7 +357,7 @@ public:
 
   void MountVolume(const nsACString& aVolumeName)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -373,7 +373,7 @@ public:
 
   void UnmountVolume(const nsACString& aVolumeName)
   {
-    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
     if (!vol) {
       return;
     }
@@ -455,7 +455,7 @@ private:
 
   AutoVolumeEventObserver         mVolumeEventObserver;
   AutoVolumeManagerStateObserver  mVolumeManagerStateObserver;
-  RefPtr<VolumeResponseCallback>  mResponseCallback;
+  nsRefPtr<VolumeResponseCallback>  mResponseCallback;
   int32_t                         mMode;
   MozMtpStorage::Array            mMozMtpStorage;
 };
@@ -657,8 +657,8 @@ AutoMounter::StartMtpServer()
   VolumeArray::index_type volIndex;
   VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
-    RefPtr<MozMtpStorage> storage = new MozMtpStorage(vol, sMozMtpServer);
+    nsRefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<MozMtpStorage> storage = new MozMtpStorage(vol, sMozMtpServer);
     mMozMtpStorage.AppendElement(storage);
   }
 
@@ -910,7 +910,7 @@ AutoMounter::UpdateState()
   VolumeArray::index_type volIndex;
   VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
     Volume::STATE   volState = vol->State();
 
     if (vol->State() == nsIVolume::STATE_MOUNTED) {
@@ -1247,7 +1247,7 @@ nsresult AutoMounter::Dump(nsACString& desc)
   VolumeArray::index_type volIndex;
   VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
 
     desc += "|";
     desc += vol->NameStr();

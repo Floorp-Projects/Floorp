@@ -18,7 +18,7 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsAString.h"
-#include "mozilla/RefPtr.h"                   // for nsRefPtr
+#include "mozilla/nsRefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "mozilla/layers/PTextureParent.h"
 #include "mozilla/unused.h"
@@ -89,8 +89,8 @@ public:
   void ClearTextureHost();
 
   CompositableParentManager* mCompositableManager;
-  RefPtr<TextureHost> mWaitForClientRecycle;
-  RefPtr<TextureHost> mTextureHost;
+  nsRefPtr<TextureHost> mWaitForClientRecycle;
+  nsRefPtr<TextureHost> mTextureHost;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +176,7 @@ TextureHost::SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
 FenceHandle
 TextureHost::GetAndResetAcquireFenceHandle()
 {
-  RefPtr<FenceHandle::FdObj> fdObj = mAcquireFenceHandle.GetAndResetFdObj();
+  nsRefPtr<FenceHandle::FdObj> fdObj = mAcquireFenceHandle.GetAndResetFdObj();
   return FenceHandle(fdObj);
 }
 
@@ -254,7 +254,7 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
                                     TextureFlags aFlags)
 {
-  RefPtr<TextureHost> result;
+  nsRefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem: {
       const SurfaceDescriptorShmem& descriptor = aDesc.get_SurfaceDescriptorShmem();
@@ -346,7 +346,7 @@ TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     pfx += "  ";
 
     aStream << "\n" << pfx.get() << "Surface: ";
-    RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
+    nsRefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
     if (dSurf) {
       aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
     }
@@ -432,7 +432,7 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
   if (mCompositor == aCompositor) {
     return;
   }
-  RefPtr<TextureSource> it = mFirstSource;
+  nsRefPtr<TextureSource> it = mFirstSource;
   while (it) {
     it->SetCompositor(aCompositor);
     it = it->GetNextSibling();
@@ -444,7 +444,7 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
 void
 BufferTextureHost::DeallocateDeviceData()
 {
-  RefPtr<TextureSource> it = mFirstSource;
+  nsRefPtr<TextureSource> it = mFirstSource;
   while (it) {
     it->DeallocateDeviceData();
     it = it->GetNextSibling();
@@ -535,7 +535,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     MOZ_ASSERT(yuvDeserializer.IsValid());
 
     if (!mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
-      RefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
+      nsRefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
       if (NS_WARN_IF(!surf)) {
         return false;
       }
@@ -546,9 +546,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       return true;
     }
 
-    RefPtr<DataTextureSource> srcY;
-    RefPtr<DataTextureSource> srcU;
-    RefPtr<DataTextureSource> srcV;
+    nsRefPtr<DataTextureSource> srcY;
+    nsRefPtr<DataTextureSource> srcU;
+    nsRefPtr<DataTextureSource> srcV;
     if (!mFirstSource) {
       // We don't support BigImages for YCbCr compositing.
       srcY = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
@@ -570,17 +570,17 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     }
 
 
-    RefPtr<gfx::DataSourceSurface> tempY =
+    nsRefPtr<gfx::DataSourceSurface> tempY =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetYData(),
                                                     yuvDeserializer.GetYStride(),
                                                     yuvDeserializer.GetYSize(),
                                                     gfx::SurfaceFormat::A8);
-    RefPtr<gfx::DataSourceSurface> tempCb =
+    nsRefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCbData(),
                                                     yuvDeserializer.GetCbCrStride(),
                                                     yuvDeserializer.GetCbCrSize(),
                                                     gfx::SurfaceFormat::A8);
-    RefPtr<gfx::DataSourceSurface> tempCr =
+    nsRefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCrData(),
                                                     yuvDeserializer.GetCbCrStride(),
                                                     yuvDeserializer.GetCbCrSize(),
@@ -607,7 +607,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       return false;
     }
 
-    RefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
+    nsRefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
     if (!surf) {
       return false;
     }
@@ -624,7 +624,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
 already_AddRefed<gfx::DataSourceSurface>
 BufferTextureHost::GetAsSurface()
 {
-  RefPtr<gfx::DataSourceSurface> result;
+  nsRefPtr<gfx::DataSourceSurface> result;
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;

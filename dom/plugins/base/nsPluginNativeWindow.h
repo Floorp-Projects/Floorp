@@ -39,7 +39,7 @@ public:
    */
 
 public:
-  nsresult GetPluginInstance(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) { 
+  nsresult GetPluginInstance(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance) { 
     aPluginInstance = mPluginInstance;
     return NS_OK;
   }
@@ -59,7 +59,7 @@ public:
   }
 
 public:
-  virtual nsresult CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
+  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
     // null aPluginInstance means that we want to call SetWindow(null)
     if (aPluginInstance)
       aPluginInstance->SetWindow(this);
@@ -71,7 +71,7 @@ public:
   }
 
 protected:
-  RefPtr<nsNPAPIPluginInstance> mPluginInstance;
+  nsRefPtr<nsNPAPIPluginInstance> mPluginInstance;
   nsCOMPtr<nsIWidget> mWidget;
 };
 

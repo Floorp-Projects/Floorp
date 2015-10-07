@@ -114,7 +114,7 @@ Gamepad::SyncState(Gamepad* aOther)
 already_AddRefed<Gamepad>
 Gamepad::Clone(nsISupports* aParent)
 {
-  RefPtr<Gamepad> out =
+  nsRefPtr<Gamepad> out =
     new Gamepad(aParent, mID, mIndex, mMapping,
                 mButtons.Length(), mAxes.Length());
   out->SyncState(this);

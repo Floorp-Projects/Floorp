@@ -86,7 +86,7 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
                                 NS_LITERAL_STRING("RECOGNITIONSERVICE_ERROR test event"));
 
   } else if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_FINAL_RESULT")) {
-    RefPtr<SpeechEvent> event =
+    nsRefPtr<SpeechEvent> event =
       new SpeechEvent(mRecognition,
                       SpeechRecognition::EVENT_RECOGNITIONSERVICE_FINAL_RESULT);
 

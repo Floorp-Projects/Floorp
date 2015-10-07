@@ -101,7 +101,7 @@ private:
 #if defined(OS_WIN)
   HANDLE mMutex;
 #elif defined(OS_LINUX) || defined(OS_MACOSX)
-  RefPtr<mozilla::ipc::SharedMemoryBasic> mSharedBuffer;
+  nsRefPtr<mozilla::ipc::SharedMemoryBasic> mSharedBuffer;
   pthread_mutex_t* mMutex;
   mozilla::Atomic<int32_t>* mCount;
 #endif

@@ -60,7 +60,7 @@ AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
                                                   int64_t aDuration)
 {
   NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<AudioData> v = new AudioData(aOther->mOffset,
+  nsRefPtr<AudioData> v = new AudioData(aOther->mOffset,
                                         aTimestamp,
                                         aDuration,
                                         aOther->mFrames,
@@ -150,7 +150,7 @@ already_AddRefed<VideoData>
 VideoData::ShallowCopyUpdateDuration(const VideoData* aOther,
                                      int64_t aDuration)
 {
-  RefPtr<VideoData> v = new VideoData(aOther->mOffset,
+  nsRefPtr<VideoData> v = new VideoData(aOther->mOffset,
                                         aOther->mTime,
                                         aDuration,
                                         aOther->mKeyframe,
@@ -168,7 +168,7 @@ VideoData::ShallowCopyUpdateTimestamp(const VideoData* aOther,
                                       int64_t aTimestamp)
 {
   NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<VideoData> v = new VideoData(aOther->mOffset,
+  nsRefPtr<VideoData> v = new VideoData(aOther->mOffset,
                                         aTimestamp,
                                         aOther->GetEndTime() - aTimestamp,
                                         aOther->mKeyframe,
@@ -187,7 +187,7 @@ VideoData::ShallowCopyUpdateTimestampAndDuration(const VideoData* aOther,
                                                  int64_t aDuration)
 {
   NS_ENSURE_TRUE(aOther, nullptr);
-  RefPtr<VideoData> v = new VideoData(aOther->mOffset,
+  nsRefPtr<VideoData> v = new VideoData(aOther->mOffset,
                                         aTimestamp,
                                         aDuration,
                                         aOther->mKeyframe,
@@ -253,7 +253,7 @@ VideoData::Create(const VideoInfo& aInfo,
   if (!aImage && !aContainer) {
     // Create a dummy VideoData with no image. This gives us something to
     // send to media streams if necessary.
-    RefPtr<VideoData> v(new VideoData(aOffset,
+    nsRefPtr<VideoData> v(new VideoData(aOffset,
                                         aTime,
                                         aDuration,
                                         aKeyframe,
@@ -296,7 +296,7 @@ VideoData::Create(const VideoInfo& aInfo,
     return nullptr;
   }
 
-  RefPtr<VideoData> v(new VideoData(aOffset,
+  nsRefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
                                       aDuration,
                                       aKeyframe,
@@ -394,12 +394,12 @@ VideoData::CreateFromImage(const VideoInfo& aInfo,
                            int64_t aOffset,
                            int64_t aTime,
                            int64_t aDuration,
-                           const RefPtr<Image>& aImage,
+                           const nsRefPtr<Image>& aImage,
                            bool aKeyframe,
                            int64_t aTimecode,
                            const IntRect& aPicture)
 {
-  RefPtr<VideoData> v(new VideoData(aOffset,
+  nsRefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
                                       aDuration,
                                       aKeyframe,
@@ -426,7 +426,7 @@ VideoData::Create(const VideoInfo& aInfo,
   if (!aContainer) {
     // Create a dummy VideoData with no image. This gives us something to
     // send to media streams if necessary.
-    RefPtr<VideoData> v(new VideoData(aOffset,
+    nsRefPtr<VideoData> v(new VideoData(aOffset,
                                         aTime,
                                         aDuration,
                                         aKeyframe,
@@ -454,7 +454,7 @@ VideoData::Create(const VideoInfo& aInfo,
     return nullptr;
   }
 
-  RefPtr<VideoData> v(new VideoData(aOffset,
+  nsRefPtr<VideoData> v(new VideoData(aOffset,
                                       aTime,
                                       aDuration,
                                       aKeyframe,
@@ -515,7 +515,7 @@ MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
 already_AddRefed<MediaRawData>
 MediaRawData::Clone() const
 {
-  RefPtr<MediaRawData> s = new MediaRawData;
+  nsRefPtr<MediaRawData> s = new MediaRawData;
   s->mTimecode = mTimecode;
   s->mTime = mTime;
   s->mDuration = mDuration;

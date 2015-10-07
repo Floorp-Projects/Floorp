@@ -79,7 +79,7 @@ public:
 private:
   Mutex mMutex;
   // Members below are protected by mMutex.
-  RefPtr<MediaStream> mStream;
+  nsRefPtr<MediaStream> mStream;
   int64_t mLastOutputTime; // microseconds
   bool mStreamFinishedOnMainThread;
   // Main thread only.
@@ -135,7 +135,7 @@ public:
   int64_t mNextAudioTime; // microseconds
   // The last video image sent to the stream. Useful if we need to replicate
   // the image.
-  RefPtr<layers::Image> mLastVideoImage;
+  nsRefPtr<layers::Image> mLastVideoImage;
   gfx::IntSize mLastVideoImageDisplaySize;
   // This is set to true when the stream is initialized (audio and
   // video tracks added).
@@ -145,8 +145,8 @@ public:
   bool mHaveSentFinishVideo;
 
   // The decoder is responsible for calling Destroy() on this stream.
-  const RefPtr<SourceMediaStream> mStream;
-  RefPtr<DecodedStreamGraphListener> mListener;
+  const nsRefPtr<SourceMediaStream> mStream;
+  nsRefPtr<DecodedStreamGraphListener> mListener;
   bool mPlaying;
   // True if we need to send a compensation video frame to ensure the
   // StreamTime going forward.
@@ -341,7 +341,7 @@ DecodedStream::SetPlaybackParams(const PlaybackParams& aParams)
   mParams = aParams;
 }
 
-RefPtr<GenericPromise>
+nsRefPtr<GenericPromise>
 DecodedStream::OnEnded(TrackType aType)
 {
   AssertOwnerThread();
@@ -390,7 +390,7 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
       return NS_OK;
     }
   private:
-    RefPtr<DecodedStream> mThis;
+    nsRefPtr<DecodedStream> mThis;
     Method mMethod;
     Promise mPromise;
   };
@@ -440,7 +440,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   }
 
   DecodedStreamData* data = aData.release();
-  RefPtr<DecodedStream> self = this;
+  nsRefPtr<DecodedStream> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
     self->mOutputStreamManager.Disconnect();
     delete data;
@@ -477,7 +477,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
       return NS_OK;
     }
   private:
-    RefPtr<DecodedStream> mThis;
+    nsRefPtr<DecodedStream> mThis;
     Method mMethod;
     UniquePtr<DecodedStreamData> mData;
   };
@@ -636,7 +636,7 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
   // Always write the whole sample without truncation to be consistent with
   // DecodedAudioDataSink::PlayFromAudioQueue()
   audio->EnsureAudioBuffer();
-  RefPtr<SharedBuffer> buffer = audio->mAudioBuffer;
+  nsRefPtr<SharedBuffer> buffer = audio->mAudioBuffer;
   AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
   nsAutoTArray<const AudioDataValue*, 2> channels;
   for (uint32_t i = 0; i < audio->mChannels; ++i) {
@@ -660,7 +660,7 @@ DecodedStream::SendAudio(double aVolume, bool aIsSameOrigin)
 
   AudioSegment output;
   uint32_t rate = mInfo.mAudio.mRate;
-  nsAutoTArray<RefPtr<MediaData>,10> audio;
+  nsAutoTArray<nsRefPtr<MediaData>,10> audio;
   TrackID audioTrackId = mInfo.mAudio.mTrackId;
   SourceMediaStream* sourceStream = mData->mStream;
 
@@ -696,7 +696,7 @@ WriteVideoToMediaStream(MediaStream* aStream,
                         const mozilla::gfx::IntSize& aIntrinsicSize,
                         VideoSegment* aOutput)
 {
-  RefPtr<layers::Image> image = aImage;
+  nsRefPtr<layers::Image> image = aImage;
   StreamTime duration =
       aStream->MicrosecondsToStreamTimeRoundDown(aEndMicroseconds) -
       aStream->MicrosecondsToStreamTimeRoundDown(aStartMicroseconds);
@@ -725,7 +725,7 @@ DecodedStream::SendVideo(bool aIsSameOrigin)
 
   VideoSegment output;
   TrackID videoTrackId = mInfo.mVideo.mTrackId;
-  nsAutoTArray<RefPtr<MediaData>, 10> video;
+  nsAutoTArray<nsRefPtr<MediaData>, 10> video;
   SourceMediaStream* sourceStream = mData->mStream;
 
   // It's OK to hold references to the VideoData because VideoData

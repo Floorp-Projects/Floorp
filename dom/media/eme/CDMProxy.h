@@ -32,7 +32,7 @@ struct DecryptResult {
     , mSample(aSample)
   {}
   GMPErr mStatus;
-  RefPtr<MediaRawData> mSample;
+  nsRefPtr<MediaRawData> mSample;
 };
 
 // Proxies calls GMP/CDM, and proxies calls back.
@@ -147,7 +147,7 @@ public:
                        nsresult aDOMException,
                        const nsCString& aMsg);
 
-  RefPtr<DecryptPromise> Decrypt(MediaRawData* aSample);
+  nsRefPtr<DecryptPromise> Decrypt(MediaRawData* aSample);
 
   // Reject promise with DOMException corresponding to aExceptionCode.
   // Can be called from any thread.
@@ -253,18 +253,18 @@ private:
     void PostResult(GMPErr aResult, const nsTArray<uint8_t>& aDecryptedData);
     void PostResult(GMPErr aResult);
 
-    RefPtr<DecryptPromise> Ensure() {
+    nsRefPtr<DecryptPromise> Ensure() {
       return mPromise.Ensure(__func__);
     }
 
     uint32_t mId;
-    RefPtr<MediaRawData> mSample;
+    nsRefPtr<MediaRawData> mSample;
   private:
     ~DecryptJob() {}
     MozPromiseHolder<DecryptPromise> mPromise;
   };
   // GMP thread only.
-  void gmp_Decrypt(RefPtr<DecryptJob> aJob);
+  void gmp_Decrypt(nsRefPtr<DecryptJob> aJob);
 
   class RejectPromiseTask : public nsRunnable {
   public:
@@ -283,7 +283,7 @@ private:
       return NS_OK;
     }
   private:
-    RefPtr<CDMProxy> mProxy;
+    nsRefPtr<CDMProxy> mProxy;
     PromiseId mId;
     nsresult mCode;
     nsCString mReason;
@@ -328,7 +328,7 @@ private:
 
   // Gecko Media Plugin thread. All interactions with the out-of-process
   // EME plugin must come from this thread.
-  RefPtr<nsIThread> mGMPThread;
+  nsRefPtr<nsIThread> mGMPThread;
 
   nsCString mNodeId;
 
@@ -338,7 +338,7 @@ private:
 
   // Decryption jobs sent to CDM, awaiting result.
   // GMP thread only.
-  nsTArray<RefPtr<DecryptJob>> mDecryptionJobs;
+  nsTArray<nsRefPtr<DecryptJob>> mDecryptionJobs;
 
   // Number of buffers we've decrypted. Used to uniquely identify
   // decryption jobs sent to CDM. Note we can't just use the length of

@@ -405,7 +405,7 @@ class BlobInputStreamTether final
   , public nsIIPCSerializableInputStream
 {
   nsCOMPtr<nsIInputStream> mStream;
-  RefPtr<BlobImpl> mBlobImpl;
+  nsRefPtr<BlobImpl> mBlobImpl;
 
   nsIMultiplexInputStream* mWeakMultiplexStream;
   nsISeekableStream* mWeakSeekableStream;
@@ -476,7 +476,7 @@ class RemoteInputStream final
   Monitor mMonitor;
   BlobChild* mActor;
   nsCOMPtr<nsIInputStream> mStream;
-  RefPtr<BlobImpl> mBlobImpl;
+  nsRefPtr<BlobImpl> mBlobImpl;
   nsCOMPtr<nsIEventTarget> mEventTarget;
   nsISeekableStream* mWeakSeekableStream;
   uint64_t mStart;
@@ -538,7 +538,7 @@ private:
 class InputStreamChild final
   : public PBlobStreamChild
 {
-  RefPtr<RemoteInputStream> mRemoteStream;
+  nsRefPtr<RemoteInputStream> mRemoteStream;
 
 public:
   explicit
@@ -685,7 +685,7 @@ private:
   {
     MOZ_ASSERT(!aLength);
 
-    RefPtr<BlobImpl> sliceImpl = new EmptyBlobImpl(aContentType);
+    nsRefPtr<BlobImpl> sliceImpl = new EmptyBlobImpl(aContentType);
 
     DebugOnly<bool> isMutable;
     MOZ_ASSERT(NS_SUCCEEDED(sliceImpl->GetMutable(&isMutable)));
@@ -751,7 +751,7 @@ CreateBlobImpl(const nsID& aKnownBlobIDData,
   MOZ_ASSERT(gProcessType == GeckoProcessType_Default);
   MOZ_ASSERT(aMetadata.mHasRecursed);
 
-  RefPtr<BlobImpl> blobImpl = BlobParent::GetBlobImplForID(aKnownBlobIDData);
+  nsRefPtr<BlobImpl> blobImpl = BlobParent::GetBlobImplForID(aKnownBlobIDData);
   if (NS_WARN_IF(!blobImpl)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
@@ -775,7 +775,7 @@ CreateBlobImpl(const nsTArray<uint8_t>& aMemoryData,
 
   MOZ_ASSERT(gProcessType == GeckoProcessType_Default);
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
 
   if (auto length = static_cast<size_t>(aMemoryData.Length())) {
     static MOZ_CONSTEXPR_VAR size_t elementSizeMultiplier =
@@ -829,7 +829,7 @@ CreateBlobImplFromBlobData(const BlobData& aBlobData,
 {
   MOZ_ASSERT(gProcessType == GeckoProcessType_Default);
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
 
   switch (aBlobData.type()) {
     case BlobData::TnsID: {
@@ -864,7 +864,7 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
   if (aBlobDatas.Length() == 1) {
     const BlobData& blobData = aBlobDatas[0];
 
-    RefPtr<BlobImpl> blobImpl =
+    nsRefPtr<BlobImpl> blobImpl =
       CreateBlobImplFromBlobData(blobData, aMetadata);
     if (NS_WARN_IF(!blobImpl)) {
       return nullptr;
@@ -877,12 +877,12 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
     return blobImpl.forget();
   }
 
-  FallibleTArray<RefPtr<BlobImpl>> fallibleBlobImpls;
+  FallibleTArray<nsRefPtr<BlobImpl>> fallibleBlobImpls;
   if (NS_WARN_IF(!fallibleBlobImpls.SetLength(aBlobDatas.Length(), fallible))) {
     return nullptr;
   }
 
-  nsTArray<RefPtr<BlobImpl>> blobImpls;
+  nsTArray<nsRefPtr<BlobImpl>> blobImpls;
   fallibleBlobImpls.SwapElements(blobImpls);
 
   const bool hasRecursed = aMetadata.mHasRecursed;
@@ -892,7 +892,7 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
        index < count;
        index++) {
     const BlobData& blobData = aBlobDatas[index];
-    RefPtr<BlobImpl>& blobImpl = blobImpls[index];
+    nsRefPtr<BlobImpl>& blobImpl = blobImpls[index];
 
     blobImpl = CreateBlobImplFromBlobData(blobData, aMetadata);
     if (NS_WARN_IF(!blobImpl)) {
@@ -904,7 +904,7 @@ CreateBlobImpl(const nsTArray<BlobData>& aBlobDatas,
     MOZ_ASSERT(!isMutable);
   }
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
   if (!hasRecursed && aMetadata.IsFile()) {
     blobImpl =
       new MultipartBlobImpl(blobImpls, aMetadata.mName, aMetadata.mContentType);
@@ -964,7 +964,7 @@ CreateBlobImpl(const ParentBlobConstructorParams& aParams,
     metadata.mDirState = BlobDirState(params.dirState());
   }
 
-  RefPtr<BlobImpl> blobImpl =
+  nsRefPtr<BlobImpl> blobImpl =
     CreateBlobImplFromBlobData(aBlobData, metadata);
   return blobImpl.forget();
 }
@@ -975,7 +975,7 @@ BlobDataFromBlobImpl(BlobImpl* aBlobImpl, BlobData& aBlobData)
   MOZ_ASSERT(gProcessType != GeckoProcessType_Default);
   MOZ_ASSERT(aBlobImpl);
 
-  const nsTArray<RefPtr<BlobImpl>>* subBlobs = aBlobImpl->GetSubBlobImpls();
+  const nsTArray<nsRefPtr<BlobImpl>>* subBlobs = aBlobImpl->GetSubBlobImpls();
 
   if (subBlobs) {
     MOZ_ASSERT(subBlobs->Length());
@@ -1200,7 +1200,7 @@ RemoteInputStream::Close()
   nsresult rv = BlockAndWaitForStream();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
   mBlobImpl.swap(blobImpl);
 
   rv = mStream->Close();
@@ -1405,7 +1405,7 @@ class BlobParent::IDTableEntry final
 {
   const nsID mID;
   const intptr_t mProcessID;
-  const RefPtr<BlobImpl> mBlobImpl;
+  const nsRefPtr<BlobImpl> mBlobImpl;
 
 public:
   static already_AddRefed<IDTableEntry>
@@ -1753,7 +1753,7 @@ protected:
   BlobChild* mActor;
   nsCOMPtr<nsIEventTarget> mActorTarget;
 
-  RefPtr<BlobImpl> mSameProcessBlobImpl;
+  nsRefPtr<BlobImpl> mSameProcessBlobImpl;
 
   const bool mIsSlice;
 
@@ -1878,8 +1878,8 @@ class BlobChild::RemoteBlobImpl::CreateStreamHelper final
   : public nsRunnable
 {
   Monitor mMonitor;
-  RefPtr<RemoteBlobImpl> mRemoteBlobImpl;
-  RefPtr<RemoteInputStream> mInputStream;
+  nsRefPtr<RemoteBlobImpl> mRemoteBlobImpl;
+  nsRefPtr<RemoteInputStream> mInputStream;
   const uint64_t mStart;
   const uint64_t mLength;
   bool mDone;
@@ -1908,7 +1908,7 @@ private:
 class BlobChild::RemoteBlobSliceImpl final
   : public RemoteBlobImpl
 {
-  RefPtr<RemoteBlobImpl> mParent;
+  nsRefPtr<RemoteBlobImpl> mParent;
   bool mActorWasCreated;
 
 public:
@@ -1965,7 +1965,7 @@ class BlobParent::RemoteBlobImpl final
 {
   BlobParent* mActor;
   nsCOMPtr<nsIEventTarget> mActorTarget;
-  RefPtr<BlobImpl> mBlobImpl;
+  nsRefPtr<BlobImpl> mBlobImpl;
 
 public:
   RemoteBlobImpl(BlobParent* aActor, BlobImpl* aBlobImpl);
@@ -2008,7 +2008,7 @@ public:
               const nsAString& aContentType,
               ErrorResult& aRv) override;
 
-  virtual const nsTArray<RefPtr<BlobImpl>>*
+  virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const override;
 
   virtual void
@@ -2282,7 +2282,7 @@ RemoteBlobImpl::CreateSlice(uint64_t aStart,
                                              aRv);
   }
 
-  RefPtr<RemoteBlobSliceImpl> slice =
+  nsRefPtr<RemoteBlobSliceImpl> slice =
     new RemoteBlobSliceImpl(this, aStart, aLength, aContentType);
   return slice.forget();
 }
@@ -2301,13 +2301,13 @@ RemoteBlobImpl::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
       return;
     }
 
-    RefPtr<BlobInputStreamTether> tether =
+    nsRefPtr<BlobInputStreamTether> tether =
       new BlobInputStreamTether(realStream, mSameProcessBlobImpl);
     tether.forget(aStream);
     return;
   }
 
-  RefPtr<CreateStreamHelper> helper = new CreateStreamHelper(this);
+  nsRefPtr<CreateStreamHelper> helper = new CreateStreamHelper(this);
   aRv = helper->GetStream(aStream);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -2418,7 +2418,7 @@ CreateStreamHelper::GetStream(nsIInputStream** aInputStream)
   MOZ_ASSERT(!mInputStream);
   MOZ_ASSERT(!mDone);
 
-  RefPtr<RemoteBlobImpl> baseRemoteBlobImpl =
+  nsRefPtr<RemoteBlobImpl> baseRemoteBlobImpl =
     mRemoteBlobImpl->BaseRemoteBlobImpl();
   MOZ_ASSERT(baseRemoteBlobImpl);
 
@@ -2479,7 +2479,7 @@ CreateStreamHelper::RunInternal(RemoteBlobImpl* aBaseRemoteBlobImpl,
   MOZ_ASSERT(!mDone);
 
   if (BlobChild* actor = aBaseRemoteBlobImpl->GetActor()) {
-    RefPtr<RemoteInputStream> stream;
+    nsRefPtr<RemoteInputStream> stream;
 
     if (!NS_IsMainThread() && GetCurrentThreadWorkerPrivate()) {
       stream =
@@ -2515,7 +2515,7 @@ CreateStreamHelper::Run()
   MOZ_ASSERT(mRemoteBlobImpl);
   MOZ_ASSERT(mRemoteBlobImpl->ActorEventTargetIsOnCurrentThread());
 
-  RefPtr<RemoteBlobImpl> baseRemoteBlobImpl =
+  nsRefPtr<RemoteBlobImpl> baseRemoteBlobImpl =
     mRemoteBlobImpl->BaseRemoteBlobImpl();
   MOZ_ASSERT(baseRemoteBlobImpl);
 
@@ -2736,7 +2736,7 @@ RemoteBlobImpl::CreateSlice(uint64_t aStart,
   return mBlobImpl->CreateSlice(aStart, aLength, aContentType, aRv);
 }
 
-const nsTArray<RefPtr<BlobImpl>>*
+const nsTArray<nsRefPtr<BlobImpl>>*
 BlobParent::
 RemoteBlobImpl::GetSubBlobImpls() const
 {
@@ -3018,7 +3018,7 @@ BlobChild::CommonInit(BlobChild* aOther, BlobImpl* aBlobImpl)
   MOZ_ASSERT_IF(mContentManager, !aBlobImpl);
   MOZ_ASSERT_IF(mBackgroundManager, aBlobImpl);
 
-  RefPtr<BlobImpl> otherImpl;
+  nsRefPtr<BlobImpl> otherImpl;
   if (mBackgroundManager && aOther->GetBackgroundManager()) {
     otherImpl = aBlobImpl;
   } else {
@@ -3033,7 +3033,7 @@ BlobChild::CommonInit(BlobChild* aOther, BlobImpl* aBlobImpl)
   uint64_t length = otherImpl->GetSize(rv);
   MOZ_ASSERT(!rv.Failed());
 
-  RefPtr<RemoteBlobImpl> remoteBlob;
+  nsRefPtr<RemoteBlobImpl> remoteBlob;
   if (otherImpl->IsFile()) {
     nsString name;
     otherImpl->GetName(name);
@@ -3066,7 +3066,7 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
              paramsType !=
                AnyBlobConstructorParams::TKnownBlobConstructorParams);
 
-  RefPtr<RemoteBlobImpl> remoteBlob;
+  nsRefPtr<RemoteBlobImpl> remoteBlob;
 
   switch (paramsType) {
     case AnyBlobConstructorParams::TNormalBlobConstructorParams: {
@@ -3096,7 +3096,7 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
         blobParams.get_SameProcessBlobConstructorParams();
       MOZ_ASSERT(params.addRefedBlobImpl());
 
-      RefPtr<BlobImpl> blobImpl =
+      nsRefPtr<BlobImpl> blobImpl =
         dont_AddRef(reinterpret_cast<BlobImpl*>(params.addRefedBlobImpl()));
 
       ErrorResult rv;
@@ -3163,7 +3163,7 @@ BlobChild::CommonInit(const nsID& aParentID, RemoteBlobImpl* aRemoteBlobImpl)
 
   MOZ_COUNT_CTOR(BlobChild);
 
-  RefPtr<RemoteBlobImpl> remoteBlob = aRemoteBlobImpl;
+  nsRefPtr<RemoteBlobImpl> remoteBlob = aRemoteBlobImpl;
 
   mRemoteBlobImpl = remoteBlob;
 
@@ -3275,7 +3275,7 @@ BlobChild::GetOrCreateFromImpl(ChildManagerType* aManager,
   AnyBlobConstructorParams blobParams;
 
   if (gProcessType == GeckoProcessType_Default) {
-    RefPtr<BlobImpl> sameProcessImpl = aBlobImpl;
+    nsRefPtr<BlobImpl> sameProcessImpl = aBlobImpl;
     auto addRefedBlobImpl =
       reinterpret_cast<intptr_t>(sameProcessImpl.forget().take());
 
@@ -3452,7 +3452,7 @@ BlobChild::GetBlobImpl()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mBlobImpl);
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
 
   // Remote blobs are held alive until the first call to GetBlobImpl. Thereafter
   // we only hold a weak reference. Normal blobs are held alive until the actor
@@ -3682,7 +3682,7 @@ BlobParent::CommonInit(BlobImpl* aBlobImpl, IDTableEntry* aIDTableEntry)
   MOZ_ASSERT(NS_SUCCEEDED(aBlobImpl->GetMutable(&isMutable)));
   MOZ_ASSERT(!isMutable);
 
-  RefPtr<RemoteBlobImpl> remoteBlobImpl = new RemoteBlobImpl(this, aBlobImpl);
+  nsRefPtr<RemoteBlobImpl> remoteBlobImpl = new RemoteBlobImpl(this, aBlobImpl);
 
   MOZ_ASSERT(NS_SUCCEEDED(remoteBlobImpl->GetMutable(&isMutable)));
   MOZ_ASSERT(!isMutable);
@@ -3770,12 +3770,12 @@ BlobParent::GetBlobImplForID(const nsID& aID)
     return nullptr;
   }
 
-  RefPtr<IDTableEntry> idTableEntry = IDTableEntry::Get(aID);
+  nsRefPtr<IDTableEntry> idTableEntry = IDTableEntry::Get(aID);
   if (NS_WARN_IF(!idTableEntry)) {
     return nullptr;
   }
 
-  RefPtr<BlobImpl> blobImpl = idTableEntry->GetBlobImpl();
+  nsRefPtr<BlobImpl> blobImpl = idTableEntry->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 
   return blobImpl.forget();
@@ -3810,7 +3810,7 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
   AnyBlobConstructorParams blobParams;
 
   if (ActorManagerIsSameProcess(aManager)) {
-    RefPtr<BlobImpl> sameProcessImpl = aBlobImpl;
+    nsRefPtr<BlobImpl> sameProcessImpl = aBlobImpl;
     auto addRefedBlobImpl =
       reinterpret_cast<intptr_t>(sameProcessImpl.forget().take());
 
@@ -3848,7 +3848,7 @@ BlobParent::GetOrCreateFromImpl(ParentManagerType* aManager,
   nsID id;
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
 
-  RefPtr<IDTableEntry> idTableEntry =
+  nsRefPtr<IDTableEntry> idTableEntry =
     IDTableEntry::GetOrCreate(id, ActorManagerProcessID(aManager), aBlobImpl);
   MOZ_ASSERT(idTableEntry);
 
@@ -3892,7 +3892,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
         return nullptr;
       }
 
-      RefPtr<BlobImpl> blobImpl =
+      nsRefPtr<BlobImpl> blobImpl =
         CreateBlobImpl(aParams,
                        optionalBlobData.get_BlobData(),
                        ActorManagerIsSameProcess(aManager));
@@ -3904,7 +3904,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
       nsID id;
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
 
-      RefPtr<IDTableEntry> idTableEntry =
+      nsRefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Create(id, ActorManagerProcessID(aManager), blobImpl);
       if (NS_WARN_IF(!idTableEntry)) {
         ASSERT_UNLESS_FUZZING();
@@ -3928,11 +3928,11 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
           static_cast<const BlobParent*>(params.sourceParent()));
       MOZ_ASSERT(actor);
 
-      RefPtr<BlobImpl> source = actor->GetBlobImpl();
+      nsRefPtr<BlobImpl> source = actor->GetBlobImpl();
       MOZ_ASSERT(source);
 
       ErrorResult rv;
-      RefPtr<BlobImpl> slice =
+      nsRefPtr<BlobImpl> slice =
         source->CreateSlice(params.begin(),
                             params.end() - params.begin(),
                             params.contentType(),
@@ -3944,7 +3944,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
 
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(slice->SetMutable(false)));
 
-      RefPtr<IDTableEntry> idTableEntry =
+      nsRefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Create(params.id(),
                              ActorManagerProcessID(aManager),
                              slice);
@@ -3960,7 +3960,7 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
       const KnownBlobConstructorParams& params =
         blobParams.get_KnownBlobConstructorParams();
 
-      RefPtr<IDTableEntry> idTableEntry =
+      nsRefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Get(params.id(), ActorManagerProcessID(aManager));
       if (NS_WARN_IF(!idTableEntry)) {
         ASSERT_UNLESS_FUZZING();
@@ -3979,14 +3979,14 @@ BlobParent::CreateFromParams(ParentManagerType* aManager,
       const SameProcessBlobConstructorParams& params =
         blobParams.get_SameProcessBlobConstructorParams();
 
-      RefPtr<BlobImpl> blobImpl =
+      nsRefPtr<BlobImpl> blobImpl =
         dont_AddRef(reinterpret_cast<BlobImpl*>(params.addRefedBlobImpl()));
       MOZ_ASSERT(blobImpl);
 
       nsID id;
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(gUUIDGenerator->GenerateUUIDInPlace(&id)));
 
-      RefPtr<IDTableEntry> idTableEntry =
+      nsRefPtr<IDTableEntry> idTableEntry =
         IDTableEntry::Create(id, ActorManagerProcessID(aManager), blobImpl);
       MOZ_ASSERT(idTableEntry);
 
@@ -4061,7 +4061,7 @@ BlobParent::GetBlobImpl()
   AssertIsOnOwningThread();
   MOZ_ASSERT(mBlobImpl);
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
 
   // Remote blobs are held alive until the first call to GetBlobImpl. Thereafter
   // we only hold a weak reference. Normal blobs are held alive until the actor
@@ -4203,7 +4203,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
     return false;
   }
 
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
 
   if (!aStart && aLength == blobLength) {
     blobImpl = mBlobImpl;
@@ -4269,7 +4269,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
     return false;
   }
 
-  RefPtr<OpenStreamRunnable> runnable =
+  nsRefPtr<OpenStreamRunnable> runnable =
     new OpenStreamRunnable(this, actor, stream, serializableStream, target);
 
   errorResult = runnable->Dispatch();
@@ -4513,7 +4513,7 @@ IDTableEntry::GetOrCreateInternal(const nsID& aID,
   MOZ_ASSERT(sIDTableMutex);
   sIDTableMutex->AssertNotCurrentThreadOwns();
 
-  RefPtr<IDTableEntry> entry;
+  nsRefPtr<IDTableEntry> entry;
 
   {
     MutexAutoLock lock(*sIDTableMutex);

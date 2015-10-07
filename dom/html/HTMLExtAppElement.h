@@ -37,8 +37,8 @@ protected:
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  RefPtr<nsCustomEventDispatch> mCustomEventDispatch;
-  RefPtr<nsCustomPropertyBag> mCustomPropertyBag;
+  nsRefPtr<nsCustomEventDispatch> mCustomEventDispatch;
+  nsRefPtr<nsCustomPropertyBag> mCustomPropertyBag;
   nsCOMPtr<nsIExternalApplication> mApp;
 };
 

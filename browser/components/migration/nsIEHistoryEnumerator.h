@@ -28,8 +28,8 @@ private:
    */
   void EnsureInitialized();
 
-  RefPtr<IUrlHistoryStg2> mIEHistory;
-  RefPtr<IEnumSTATURL> mURLEnumerator;
+  nsRefPtr<IUrlHistoryStg2> mIEHistory;
+  nsRefPtr<IEnumSTATURL> mURLEnumerator;
 
   nsCOMPtr<nsIWritablePropertyBag2> mCachedNextEntry;
 };

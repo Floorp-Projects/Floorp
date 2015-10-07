@@ -102,10 +102,10 @@ private:
   already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv,
                                                 const nsACString& aName);
 
-  RefPtr<DetailedPromise> mClosed;
+  nsRefPtr<DetailedPromise> mClosed;
 
-  RefPtr<MediaKeyError> mMediaKeyError;
-  RefPtr<MediaKeys> mKeys;
+  nsRefPtr<MediaKeyError> mMediaKeyError;
+  nsRefPtr<MediaKeys> mKeys;
   const nsString mKeySystem;
   const nsString mCDMVersion;
   nsString mSessionId;
@@ -113,7 +113,7 @@ private:
   const uint32_t mToken;
   bool mIsClosed;
   bool mUninitialized;
-  RefPtr<MediaKeyStatusMap> mKeyStatusMap;
+  nsRefPtr<MediaKeyStatusMap> mKeyStatusMap;
 };
 
 } // namespace dom

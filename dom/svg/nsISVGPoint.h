@@ -154,7 +154,7 @@ protected:
   bool IndexIsValid();
 #endif
 
-  RefPtr<DOMSVGPointList> mList;
+  nsRefPtr<DOMSVGPointList> mList;
 
   // Bounds for the following are checked in the ctor, so be sure to update
   // that if you change the capacity of any of the following.

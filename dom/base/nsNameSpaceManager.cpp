@@ -141,7 +141,7 @@ NS_NewElement(Element** aResult,
               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
               FromParser aFromParser)
 {
-  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, ni.forget(), aFromParser);

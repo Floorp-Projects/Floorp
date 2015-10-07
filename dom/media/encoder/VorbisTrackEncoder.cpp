@@ -104,7 +104,7 @@ VorbisTrackEncoder::GetMetadata()
 
   // Vorbis codec specific data
   // http://matroska.org/technical/specs/codecid/index.html
-  RefPtr<VorbisMetadata> meta = new VorbisMetadata();
+  nsRefPtr<VorbisMetadata> meta = new VorbisMetadata();
   meta->mBitDepth = 32; // float for desktop
   meta->mChannels = mChannels;
   meta->mSamplingFrequency = mSamplingRate;

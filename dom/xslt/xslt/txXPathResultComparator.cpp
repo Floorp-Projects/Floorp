@@ -197,7 +197,7 @@ txResultNumberComparator::createSortableValue(Expr *aExpr,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -705,7 +705,7 @@ nsSocketTransportService::CreateRoutedTransport(const char **types,
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(port >= 0 && port <= 0xFFFF, NS_ERROR_ILLEGAL_VALUE);
 
-    RefPtr<nsSocketTransport> trans = new nsSocketTransport();
+    nsRefPtr<nsSocketTransport> trans = new nsSocketTransport();
     nsresult rv = trans->Init(types, typeCount, host, port, hostRoute, portRoute, proxyInfo);
     if (NS_FAILED(rv)) {
         return rv;
@@ -733,7 +733,7 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
     if (NS_FAILED(rv))
         return rv;
 
-    RefPtr<nsSocketTransport> trans = new nsSocketTransport();
+    nsRefPtr<nsSocketTransport> trans = new nsSocketTransport();
 
     rv = trans->InitWithFilename(path.get());
     if (NS_FAILED(rv))

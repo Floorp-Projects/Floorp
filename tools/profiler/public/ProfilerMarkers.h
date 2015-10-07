@@ -98,7 +98,7 @@ public:
                              UniqueStacks& aUniqueStacks) override;
 
 private:
-  RefPtr<gfxASurface> mImg;
+  nsRefPtr<gfxASurface> mImg;
 };
 
 class IOMarkerPayload : public ProfilerMarkerPayload

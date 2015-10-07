@@ -33,7 +33,7 @@ public:
   virtual void SetBaseVal(const nsAString& aValue) = 0;
   virtual void GetAnimVal(nsAString& aResult) = 0;
 
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
 };
 
 } // namespace dom

@@ -118,19 +118,19 @@ protected:
 
   mozilla::ReentrantMonitor mCallbackMonitor; // Monitor for camera callback handling
   // This is only modified on MainThread (AllocImpl and DeallocImpl)
-  RefPtr<ICameraControl> mCameraControl;
-  RefPtr<dom::File> mLastCapture;
+  nsRefPtr<ICameraControl> mCameraControl;
+  nsRefPtr<dom::File> mLastCapture;
 
   android::sp<android::GonkCameraSource> mCameraSource;
 
   // These are protected by mMonitor in parent class
-  nsTArray<RefPtr<PhotoCallback>> mPhotoCallbacks;
+  nsTArray<nsRefPtr<PhotoCallback>> mPhotoCallbacks;
   int mRotation;
   int mCameraAngle; // See dom/base/ScreenOrientation.h
   bool mBackCamera;
   bool mOrientationChanged; // True when screen rotates.
 
-  RefPtr<layers::TextureClientRecycleAllocator> mTextureClientAllocator;
+  nsRefPtr<layers::TextureClientRecycleAllocator> mTextureClientAllocator;
 };
 
 } // namespace mozilla

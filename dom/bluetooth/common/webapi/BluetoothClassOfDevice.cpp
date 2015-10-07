@@ -90,7 +90,7 @@ BluetoothClassOfDevice::Create(nsPIDOMWindow* aOwner)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aOwner);
 
-  RefPtr<BluetoothClassOfDevice> cod = new BluetoothClassOfDevice(aOwner);
+  nsRefPtr<BluetoothClassOfDevice> cod = new BluetoothClassOfDevice(aOwner);
   return cod.forget();
 }
 

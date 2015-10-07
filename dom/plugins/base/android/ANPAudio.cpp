@@ -318,7 +318,7 @@ anp_audio_start(ANPAudioTrack* s)
   s->keepGoing = true;
 
   // AudioRunnable now owns the ANPAudioTrack
-  RefPtr<AudioRunnable> runnable = new AudioRunnable(s);
+  nsRefPtr<AudioRunnable> runnable = new AudioRunnable(s);
 
   nsCOMPtr<nsIThread> thread;
   NS_NewThread(getter_AddRefs(thread), runnable);

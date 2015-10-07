@@ -72,9 +72,9 @@ private:
 
 private:
   double mPlaybackTime;
-  RefPtr<AudioBuffer> mInputBuffer;
-  RefPtr<AudioBuffer> mOutputBuffer;
-  RefPtr<ScriptProcessorNode> mNode;
+  nsRefPtr<AudioBuffer> mInputBuffer;
+  nsRefPtr<AudioBuffer> mOutputBuffer;
+  nsRefPtr<ScriptProcessorNode> mNode;
   uint32_t mNumberOfInputChannels;
 };
 

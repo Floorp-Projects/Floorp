@@ -413,7 +413,7 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
     jsData.setString(jsString);
   }
 
-  RefPtr<MessageEvent> event = NS_NewDOMMessageEvent(this, nullptr, nullptr);
+  nsRefPtr<MessageEvent> event = NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
   rv = event->InitMessageEvent(NS_LITERAL_STRING("message"), false, false,
                                jsData, mOrigin, EmptyString(), nullptr);
@@ -454,7 +454,7 @@ nsDOMDataChannel::OnSimpleEvent(nsISupports* aContext, const nsAString& aName)
     return NS_OK;
   }
 
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   rv = event->InitEvent(aName, false, false);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -500,7 +500,7 @@ NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& aDataChannel,
                      nsPIDOMWindow* aWindow,
                      nsIDOMDataChannel** aDomDataChannel)
 {
-  RefPtr<nsDOMDataChannel> domdc =
+  nsRefPtr<nsDOMDataChannel> domdc =
     new nsDOMDataChannel(aDataChannel, aWindow);
 
   nsresult rv = domdc->Init(aWindow);

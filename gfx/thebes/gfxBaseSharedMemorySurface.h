@@ -81,7 +81,7 @@ public:
         gfxImageFormat format = (gfxImageFormat)shmInfo->format;
         long stride = gfxImageSurface::ComputeStride(size, format);
 
-        RefPtr<Sub> s =
+        nsRefPtr<Sub> s =
             new Sub(size,
                     stride,
                     format,
@@ -179,7 +179,7 @@ private:
                 return nullptr;
         }
 
-        RefPtr<Sub> s =
+        nsRefPtr<Sub> s =
             new Sub(aSize, stride, aFormat, shmem);
         if (s->CairoStatus() != 0) {
             aAllocator->DeallocShmem(shmem);

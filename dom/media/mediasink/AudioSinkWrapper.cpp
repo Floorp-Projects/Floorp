@@ -41,7 +41,7 @@ AudioSinkWrapper::SetPlaybackParams(const PlaybackParams& aParams)
   mParams = aParams;
 }
 
-RefPtr<GenericPromise>
+nsRefPtr<GenericPromise>
 AudioSinkWrapper::OnEnded(TrackType aType)
 {
   AssertOwnerThread();

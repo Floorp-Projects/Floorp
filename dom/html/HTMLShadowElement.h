@@ -75,7 +75,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // The ShadowRoot that will be rendered in place of this shadow insertion point.
-  RefPtr<ShadowRoot> mProjectedShadow;
+  nsRefPtr<ShadowRoot> mProjectedShadow;
 
   bool mIsInsertionPoint;
 };

@@ -61,10 +61,10 @@ public:
 private:
     virtual ~DomainPolicy();
 
-    RefPtr<DomainSet> mBlacklist;
-    RefPtr<DomainSet> mSuperBlacklist;
-    RefPtr<DomainSet> mWhitelist;
-    RefPtr<DomainSet> mSuperWhitelist;
+    nsRefPtr<DomainSet> mBlacklist;
+    nsRefPtr<DomainSet> mSuperBlacklist;
+    nsRefPtr<DomainSet> mWhitelist;
+    nsRefPtr<DomainSet> mSuperWhitelist;
 };
 
 } /* namespace mozilla */

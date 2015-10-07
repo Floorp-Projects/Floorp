@@ -606,7 +606,7 @@ nsPluginTag::SetEnabledState(uint32_t aEnabledState) {
   GetEnabledState(&oldState);
   if (oldState != aEnabledState) {
     Preferences::SetInt(GetStatePrefNameForPlugin(this).get(), aEnabledState);
-    if (RefPtr<nsPluginHost> host = nsPluginHost::GetInst()) {
+    if (nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst()) {
       host->UpdatePluginInfo(this);
     }
   }
@@ -808,7 +808,7 @@ nsFakePluginTag::Create(const FakePluginTagInit& aInitDictionary,
 {
   NS_ENSURE_TRUE(!aInitDictionary.mMimeEntries.IsEmpty(), NS_ERROR_INVALID_ARG);
 
-  RefPtr<nsFakePluginTag> tag = new nsFakePluginTag();
+  nsRefPtr<nsFakePluginTag> tag = new nsFakePluginTag();
   nsresult rv = NS_NewURI(getter_AddRefs(tag->mHandlerURI),
                           aInitDictionary.mHandlerURI);
   NS_ENSURE_SUCCESS(rv, rv);

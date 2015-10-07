@@ -99,7 +99,7 @@ xpcAccessibleTextRange::Compare(nsIAccessibleTextRange* aOtherRange,
                                 bool* aResult)
 {
 
-  RefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
+  nsRefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
   if (!xpcRange || !aResult)
     return NS_ERROR_INVALID_ARG;
 
@@ -113,7 +113,7 @@ xpcAccessibleTextRange::CompareEndPoints(uint32_t aEndPoint,
                                          uint32_t aOtherRangeEndPoint,
                                          int32_t* aResult)
 {
-  RefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
+  nsRefPtr<xpcAccessibleTextRange> xpcRange(do_QueryObject(aOtherRange));
   if (!xpcRange || !aResult)
     return NS_ERROR_INVALID_ARG;
 

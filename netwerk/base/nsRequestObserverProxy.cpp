@@ -34,7 +34,7 @@ nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request)
 
 class nsOnStartRequestEvent : public nsARequestObserverEvent
 {
-    RefPtr<nsRequestObserverProxy> mProxy;
+    nsRefPtr<nsRequestObserverProxy> mProxy;
 public:
     nsOnStartRequestEvent(nsRequestObserverProxy *proxy,
                           nsIRequest *request)
@@ -73,7 +73,7 @@ public:
 
 class nsOnStopRequestEvent : public nsARequestObserverEvent
 {
-    RefPtr<nsRequestObserverProxy> mProxy;
+    nsRefPtr<nsRequestObserverProxy> mProxy;
 public:
     nsOnStopRequestEvent(nsRequestObserverProxy *proxy,
                          nsIRequest *request)

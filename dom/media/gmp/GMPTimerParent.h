@@ -43,7 +43,7 @@ private:
       MOZ_COUNT_DTOR(Context);
     }
     nsCOMPtr<nsITimer> mTimer;
-    RefPtr<GMPTimerParent> mParent; // Note: live timers keep the GMPTimerParent alive.
+    nsRefPtr<GMPTimerParent> mParent; // Note: live timers keep the GMPTimerParent alive.
     uint32_t mId;
   };
 

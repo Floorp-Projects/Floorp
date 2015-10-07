@@ -50,7 +50,7 @@ GonkMediaDataDecoder::~GonkMediaDataDecoder()
   MOZ_COUNT_DTOR(GonkMediaDataDecoder);
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 GonkMediaDataDecoder::Init()
 {
   mDrainComplete = false;
@@ -74,10 +74,10 @@ nsresult
 GonkMediaDataDecoder::Input(MediaRawData* aSample)
 {
   nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this,
       &GonkMediaDataDecoder::ProcessDecode,
-      RefPtr<MediaRawData>(aSample)));
+      nsRefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
@@ -101,7 +101,7 @@ GonkMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 void
 GonkMediaDataDecoder::ProcessOutput()
 {
-  RefPtr<MediaData> output;
+  nsRefPtr<MediaData> output;
   nsresult rv = NS_ERROR_ABORT;
 
   while (!mDrainComplete) {

@@ -213,7 +213,7 @@ public:
     void Revoke();
 
   private:
-    RefPtr<RtspMediaResource> mResource;
+    nsRefPtr<RtspMediaResource> mResource;
   };
   friend class Listener;
 
@@ -226,7 +226,7 @@ protected:
   nsresult OnConnected(uint8_t aIndex, nsIStreamingProtocolMetaData* aMeta);
   nsresult OnDisconnected(uint8_t aIndex, nsresult aReason);
 
-  RefPtr<Listener> mListener;
+  nsRefPtr<Listener> mListener;
 
 private:
   // Notify mDecoder the rtsp stream is suspend. Main thread only.

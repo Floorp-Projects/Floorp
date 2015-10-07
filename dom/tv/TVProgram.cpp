@@ -77,7 +77,7 @@ TVProgram::GetEventId(nsAString& aEventId) const
 already_AddRefed<TVChannel>
 TVProgram::Channel() const
 {
-  RefPtr<TVChannel> channel = mChannel;
+  nsRefPtr<TVChannel> channel = mChannel;
   return channel.forget();
 }
 

@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsCOMPtr.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 
@@ -39,9 +39,9 @@ public:
 private:
   ~PostMessageEvent();
 
-  RefPtr<nsGlobalWindow> mSource;
+  nsRefPtr<nsGlobalWindow> mSource;
   nsString mCallerOrigin;
-  RefPtr<nsGlobalWindow> mTargetWindow;
+  nsRefPtr<nsGlobalWindow> mTargetWindow;
   nsCOMPtr<nsIPrincipal> mProvidedPrincipal;
   bool mTrustedCaller;
 };

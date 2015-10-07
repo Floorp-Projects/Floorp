@@ -96,7 +96,7 @@ HTMLScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) c
 {
   *aResult = nullptr;
 
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   HTMLScriptElement* it = new HTMLScriptElement(ni, NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;

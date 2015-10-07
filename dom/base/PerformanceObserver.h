@@ -9,7 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
@@ -66,11 +66,11 @@ private:
   ~PerformanceObserver();
 
   nsCOMPtr<nsISupports> mOwner;
-  RefPtr<PerformanceObserverCallback> mCallback;
-  RefPtr<PerformanceBase> mPerformance;
+  nsRefPtr<PerformanceObserverCallback> mCallback;
+  nsRefPtr<PerformanceBase> mPerformance;
   nsTArray<nsString> mEntryTypes;
   bool mConnected;
-  nsTArray<RefPtr<PerformanceEntry>> mQueuedEntries;
+  nsTArray<nsRefPtr<PerformanceEntry>> mQueuedEntries;
 };
 
 } // namespace dom

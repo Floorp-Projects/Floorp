@@ -55,7 +55,7 @@ StorageEvent::Constructor(EventTarget* aOwner,
                           const nsAString& aType,
                           const StorageEventInit& aEventInitDict)
 {
-  RefPtr<StorageEvent> e = new StorageEvent(aOwner);
+  nsRefPtr<StorageEvent> e = new StorageEvent(aOwner);
 
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
@@ -109,7 +109,7 @@ using namespace mozilla::dom;
 already_AddRefed<StorageEvent>
 NS_NewDOMStorageEvent(EventTarget* aOwner)
 {
-  RefPtr<StorageEvent> e = new StorageEvent(aOwner);
+  nsRefPtr<StorageEvent> e = new StorageEvent(aOwner);
 
   e->SetTrusted(e->Init(aOwner));
   return e.forget();

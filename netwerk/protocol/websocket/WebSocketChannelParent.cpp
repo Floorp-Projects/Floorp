@@ -205,7 +205,7 @@ WebSocketChannelParent::OnStart(nsISupports *aContext)
     mChannel->GetProtocol(protocol);
     mChannel->GetExtensions(extensions);
 
-    RefPtr<WebSocketChannel> channel;
+    nsRefPtr<WebSocketChannel> channel;
     channel = static_cast<WebSocketChannel*>(mChannel.get());
     MOZ_ASSERT(channel);
 

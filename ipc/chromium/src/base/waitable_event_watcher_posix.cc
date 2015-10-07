@@ -90,7 +90,7 @@ class AsyncWaiter final : public WaitableEvent::Waiter {
  private:
   MessageLoop *const message_loop_;
   Task *const cb_task_;
-  RefPtr<Flag> flag_;
+  nsRefPtr<Flag> flag_;
 };
 
 // -----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ class AsyncCallbackTask : public Task {
   }
 
  private:
-  RefPtr<Flag> flag_;
+  nsRefPtr<Flag> flag_;
   WaitableEventWatcher::Delegate *const delegate_;
   WaitableEvent *const event_;
 };

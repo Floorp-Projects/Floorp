@@ -74,9 +74,9 @@ private:
   JS::Heap<JS::Value> mData;
   nsString mOrigin;
   nsString mLastEventId;
-  RefPtr<workers::ServiceWorker> mServiceWorker;
-  RefPtr<MessagePort> mMessagePort;
-  RefPtr<MessagePortList> mPorts;
+  nsRefPtr<workers::ServiceWorker> mServiceWorker;
+  nsRefPtr<MessagePort> mMessagePort;
+  nsRefPtr<MessagePortList> mPorts;
 };
 
 } // namespace dom

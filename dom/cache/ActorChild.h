@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_cache_ActioChild_h
 #define mozilla_dom_cache_ActioChild_h
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -38,7 +38,7 @@ protected:
   ~ActorChild();
 
 private:
-  RefPtr<Feature> mFeature;
+  nsRefPtr<Feature> mFeature;
 };
 
 } // namespace cache

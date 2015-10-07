@@ -8,7 +8,7 @@
 
 #include "mozilla/UniquePtr.h"
 #include "nsRect.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSize.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -219,8 +219,8 @@ public:
 
   // Visible area of the decoded video's image.
   nsIntRect mImage;
-  RefPtr<MediaByteBuffer> mCodecSpecificConfig;
-  RefPtr<MediaByteBuffer> mExtraData;
+  nsRefPtr<MediaByteBuffer> mCodecSpecificConfig;
+  nsRefPtr<MediaByteBuffer> mExtraData;
 };
 
 class AudioInfo : public TrackInfo {
@@ -285,8 +285,8 @@ public:
   // Extended codec profile.
   int8_t mExtendedProfile;
 
-  RefPtr<MediaByteBuffer> mCodecSpecificConfig;
-  RefPtr<MediaByteBuffer> mExtraData;
+  nsRefPtr<MediaByteBuffer> mCodecSpecificConfig;
+  nsRefPtr<MediaByteBuffer> mExtraData;
 
 };
 

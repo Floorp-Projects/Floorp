@@ -90,7 +90,7 @@ class Cache::FetchHandler final : public PromiseNativeHandler
 {
 public:
   FetchHandler(Feature* aFeature, Cache* aCache,
-               nsTArray<RefPtr<Request>>&& aRequestList, Promise* aPromise)
+               nsTArray<nsRefPtr<Request>>&& aRequestList, Promise* aPromise)
     : mFeature(aFeature)
     , mCache(aCache)
     , mRequestList(Move(aRequestList))
@@ -107,14 +107,14 @@ public:
     NS_ASSERT_OWNINGTHREAD(FetchHandler);
 
     // Stop holding the worker alive when we leave this method.
-    RefPtr<Feature> feature;
+    nsRefPtr<Feature> feature;
     feature.swap(mFeature);
 
     // Promise::All() passed an array of fetch() Promises should give us
     // an Array of Response objects.  The following code unwraps these
-    // JS values back to an nsTArray<RefPtr<Response>>.
+    // JS values back to an nsTArray<nsRefPtr<Response>>.
 
-    nsAutoTArray<RefPtr<Response>, 256> responseList;
+    nsAutoTArray<nsRefPtr<Response>, 256> responseList;
     responseList.SetCapacity(mRequestList.Length());
 
     bool isArray;
@@ -146,7 +146,7 @@ public:
 
       JS::Rooted<JSObject*> responseObj(aCx, &value.toObject());
 
-      RefPtr<Response> response;
+      nsRefPtr<Response> response;
       nsresult rv = UNWRAP_OBJECT(Response, responseObj, response);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         Fail();
@@ -165,7 +165,7 @@ public:
 
     // Now store the unwrapped Response list in the Cache.
     ErrorResult result;
-    RefPtr<Promise> put = mCache->PutAll(mRequestList, responseList, result);
+    nsRefPtr<Promise> put = mCache->PutAll(mRequestList, responseList, result);
     if (NS_WARN_IF(result.Failed())) {
       // TODO: abort the fetch requests we have running (bug 1157434)
       mPromise->MaybeReject(result);
@@ -197,10 +197,10 @@ private:
     mPromise->MaybeReject(rv);
   }
 
-  RefPtr<Feature> mFeature;
-  RefPtr<Cache> mCache;
-  nsTArray<RefPtr<Request>> mRequestList;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Feature> mFeature;
+  nsRefPtr<Cache> mCache;
+  nsTArray<nsRefPtr<Request>> mRequestList;
+  nsRefPtr<Promise> mPromise;
 
   NS_DECL_ISUPPORTS
 };
@@ -234,7 +234,7 @@ Cache::Match(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  RefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
+  nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -267,7 +267,7 @@ Cache::MatchAll(const Optional<RequestOrUSVString>& aRequest,
   AutoChildOpArgs args(this, CacheMatchAllArgs(void_t(), params));
 
   if (aRequest.WasPassed()) {
-    RefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
+    nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
                                                      IgnoreBody, aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -298,8 +298,8 @@ Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_ASSERT(!global.Failed());
 
-  nsTArray<RefPtr<Request>> requestList(1);
-  RefPtr<Request> request = Request::Constructor(global, aRequest,
+  nsTArray<nsRefPtr<Request>> requestList(1);
+  nsRefPtr<Request> request = Request::Constructor(global, aRequest,
                                                    RequestInit(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -328,7 +328,7 @@ Cache::AddAll(JSContext* aContext,
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_ASSERT(!global.Failed());
 
-  nsTArray<RefPtr<Request>> requestList(aRequestList.Length());
+  nsTArray<nsRefPtr<Request>> requestList(aRequestList.Length());
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
     RequestOrUSVString requestOrString;
 
@@ -344,7 +344,7 @@ Cache::AddAll(JSContext* aContext,
         aRequestList[i].GetAsUSVString().Length());
     }
 
-    RefPtr<Request> request = Request::Constructor(global, requestOrString,
+    nsRefPtr<Request> request = Request::Constructor(global, requestOrString,
                                                      RequestInit(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -375,7 +375,7 @@ Cache::Put(const RequestOrUSVString& aRequest, Response& aResponse,
     return nullptr;
   }
 
-  RefPtr<InternalRequest> ir = ToInternalRequest(aRequest, ReadBody, aRv);
+  nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, ReadBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -400,7 +400,7 @@ Cache::Delete(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
-  RefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
+  nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -433,7 +433,7 @@ Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
   AutoChildOpArgs args(this, CacheKeysArgs(void_t(), params));
 
   if (aRequest.WasPassed()) {
-    RefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
+    nsRefPtr<InternalRequest> ir = ToInternalRequest(aRequest.Value(),
                                                      IgnoreBody, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -529,7 +529,7 @@ Cache::~Cache()
 already_AddRefed<Promise>
 Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(!promise)) {
     return nullptr;
   }
@@ -540,13 +540,13 @@ Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
 
 already_AddRefed<Promise>
 Cache::AddAll(const GlobalObject& aGlobal,
-              nsTArray<RefPtr<Request>>&& aRequestList, ErrorResult& aRv)
+              nsTArray<nsRefPtr<Request>>&& aRequestList, ErrorResult& aRv)
 {
   MOZ_ASSERT(mActor);
 
   // If there is no work to do, then resolve immediately
   if (aRequestList.IsEmpty()) {
-    RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
+    nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
     if (NS_WARN_IF(!promise)) {
       return nullptr;
     }
@@ -555,7 +555,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
     return promise.forget();
   }
 
-  nsAutoTArray<RefPtr<Promise>, 256> fetchList;
+  nsAutoTArray<nsRefPtr<Promise>, 256> fetchList;
   fetchList.SetCapacity(aRequestList.Length());
 
   // Begin fetching each request in parallel.  For now, if an error occurs just
@@ -565,7 +565,7 @@ Cache::AddAll(const GlobalObject& aGlobal,
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
     RequestOrUSVString requestOrString;
     requestOrString.SetAsRequest() = aRequestList[i];
-    RefPtr<Promise> fetch = FetchRequest(mGlobal, requestOrString,
+    nsRefPtr<Promise> fetch = FetchRequest(mGlobal, requestOrString,
                                            RequestInit(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -574,15 +574,15 @@ Cache::AddAll(const GlobalObject& aGlobal,
     fetchList.AppendElement(Move(fetch));
   }
 
-  RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<FetchHandler> handler = new FetchHandler(mActor->GetFeature(), this,
+  nsRefPtr<FetchHandler> handler = new FetchHandler(mActor->GetFeature(), this,
                                                     Move(aRequestList), promise);
 
-  RefPtr<Promise> fetchPromise = Promise::All(aGlobal, fetchList, aRv);
+  nsRefPtr<Promise> fetchPromise = Promise::All(aGlobal, fetchList, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -592,8 +592,8 @@ Cache::AddAll(const GlobalObject& aGlobal,
 }
 
 already_AddRefed<Promise>
-Cache::PutAll(const nsTArray<RefPtr<Request>>& aRequestList,
-              const nsTArray<RefPtr<Response>>& aResponseList,
+Cache::PutAll(const nsTArray<nsRefPtr<Request>>& aRequestList,
+              const nsTArray<nsRefPtr<Response>>& aResponseList,
               ErrorResult& aRv)
 {
   MOZ_ASSERT(aRequestList.Length() == aResponseList.Length());
@@ -606,7 +606,7 @@ Cache::PutAll(const nsTArray<RefPtr<Request>>& aRequestList,
   AutoChildOpArgs args(this, CachePutAllArgs());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
-    RefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
+    nsRefPtr<InternalRequest> ir = aRequestList[i]->GetInternalRequest();
     args.Add(ir, ReadBody, TypeErrorOnInvalidScheme, *aResponseList[i], aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;

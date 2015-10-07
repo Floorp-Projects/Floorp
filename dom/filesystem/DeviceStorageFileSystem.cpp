@@ -132,7 +132,7 @@ DeviceStorageFileSystem::IsSafeDirectory(Directory* aDir) const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aDir);
-  RefPtr<FileSystemBase> fs = aDir->GetFileSystem();
+  nsRefPtr<FileSystemBase> fs = aDir->GetFileSystem();
   MOZ_ASSERT(fs);
   // Check if the given directory is from this storage.
   return fs->ToString() == mString;

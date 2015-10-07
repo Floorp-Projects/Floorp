@@ -42,7 +42,7 @@ class Headers final : public nsISupports
 
 private:
   nsCOMPtr<nsISupports> mOwner;
-  RefPtr<InternalHeaders> mInternalHeaders;
+  nsRefPtr<InternalHeaders> mInternalHeaders;
 
 public:
   explicit Headers(nsISupports* aOwner, InternalHeaders* aInternalHeaders)

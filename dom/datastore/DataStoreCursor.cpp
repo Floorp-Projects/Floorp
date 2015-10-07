@@ -27,7 +27,7 @@ NS_IMPL_CYCLE_COLLECTION(DataStoreCursor, mCursor)
 already_AddRefed<DataStoreCursor>
 DataStoreCursor::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<DataStoreCursor> cursor = new DataStoreCursor();
+  nsRefPtr<DataStoreCursor> cursor = new DataStoreCursor();
   return cursor.forget();
 }
 

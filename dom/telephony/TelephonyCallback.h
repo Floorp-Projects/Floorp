@@ -30,7 +30,7 @@ protected:
   virtual ~TelephonyCallback() {}
 
 protected:
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
 };
 
 } // namespace telephony

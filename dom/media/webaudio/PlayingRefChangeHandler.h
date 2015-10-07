@@ -25,7 +25,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    RefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
+    nsRefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
     if (node) {
       if (mChange == ADDREF) {
         node->MarkActive();
@@ -37,7 +37,7 @@ public:
   }
 
 private:
-  RefPtr<AudioNodeStream> mStream;
+  nsRefPtr<AudioNodeStream> mStream;
   ChangeType mChange;
 };
 

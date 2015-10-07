@@ -78,7 +78,7 @@ Voicemail::Create(nsPIDOMWindow* aWindow,
     aWindow :
     aWindow->GetCurrentInnerWindow();
 
-  RefPtr<Voicemail> voicemail = new Voicemail(innerWindow, service);
+  nsRefPtr<Voicemail> voicemail = new Voicemail(innerWindow, service);
   return voicemail.forget();
 }
 
@@ -155,7 +155,7 @@ Voicemail::GetOrCreateStatus(uint32_t aServiceId,
   MOZ_ASSERT(aServiceId < mStatuses.Length());
   MOZ_ASSERT(aProvider);
 
-  RefPtr<VoicemailStatus> res = mStatuses[aServiceId];
+  nsRefPtr<VoicemailStatus> res = mStatuses[aServiceId];
   if (!res) {
     mStatuses[aServiceId] = res = new VoicemailStatus(GetOwner(), aProvider);
   }
@@ -240,7 +240,7 @@ Voicemail::NotifyStatusChanged(nsIVoicemailProvider* aProvider)
   init.mCancelable = false;
   init.mStatus = GetOrCreateStatus(serviceId, aProvider);
 
-  RefPtr<MozVoicemailEvent> event =
+  nsRefPtr<MozVoicemailEvent> event =
     MozVoicemailEvent::Constructor(this, NS_LITERAL_STRING("statuschanged"), init);
   return DispatchTrustedEvent(event);
 }

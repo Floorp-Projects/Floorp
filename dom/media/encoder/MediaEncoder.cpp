@@ -88,7 +88,7 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint32_t aAudioBitrate,
   nsAutoPtr<ContainerWriter> writer;
   nsAutoPtr<AudioTrackEncoder> audioEncoder;
   nsAutoPtr<VideoTrackEncoder> videoEncoder;
-  RefPtr<MediaEncoder> encoder;
+  nsRefPtr<MediaEncoder> encoder;
   nsString mimeType;
   if (!aTrackTypes) {
     LOG(LogLevel::Error, ("NO TrackTypes!!!"));
@@ -315,7 +315,7 @@ MediaEncoder::CopyMetadataToMuxer(TrackEncoder *aTrackEncoder)
   PROFILER_LABEL("MediaEncoder", "CopyMetadataToMuxer",
     js::ProfileEntry::Category::OTHER);
 
-  RefPtr<TrackMetadataBase> meta = aTrackEncoder->GetMetadata();
+  nsRefPtr<TrackMetadataBase> meta = aTrackEncoder->GetMetadata();
   if (meta == nullptr) {
     LOG(LogLevel::Error, ("Error! metadata = null"));
     mState = ENCODE_ERROR;

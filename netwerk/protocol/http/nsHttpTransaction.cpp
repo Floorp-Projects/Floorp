@@ -420,7 +420,7 @@ already_AddRefed<nsAHttpConnection>
 nsHttpTransaction::GetConnectionReference()
 {
     MutexAutoLock lock(mLock);
-    RefPtr<nsAHttpConnection> connection(mConnection);
+    nsRefPtr<nsAHttpConnection> connection(mConnection);
     return connection.forget();
 }
 
@@ -475,7 +475,7 @@ nsHttpTransaction::Http1xTransactionCount()
 
 nsresult
 nsHttpTransaction::TakeSubTransactions(
-    nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+    nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -510,7 +510,7 @@ nsHttpTransaction::SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks)
     }
 
     if (gSocketTransportService) {
-        RefPtr<UpdateSecurityCallbacks> event = new UpdateSecurityCallbacks(this, aCallbacks);
+        nsRefPtr<UpdateSecurityCallbacks> event = new UpdateSecurityCallbacks(this, aCallbacks);
         gSocketTransportService->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
     }
 }
@@ -871,7 +871,7 @@ nsHttpTransaction::SaveNetworkStats(bool enforce)
 
     // Create the event to save the network statistics.
     // the event is then dispathed to the main thread.
-    RefPtr<nsRunnable> event =
+    nsRefPtr<nsRunnable> event =
         new SaveNetworkStatsEvent(mAppId, mIsInBrowser, mActiveNetworkInfo,
                                   mCountRecv, mCountSent, false);
     NS_DispatchToMainThread(event);
@@ -1266,7 +1266,7 @@ nsHttpTransaction::Restart()
 
     if (!mConnInfo->GetRoutedHost().IsEmpty()) {
         MutexAutoLock lock(*nsHttp::GetLock());
-        RefPtr<nsHttpConnectionInfo> ci;
+        nsRefPtr<nsHttpConnectionInfo> ci;
          mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
          mConnInfo = ci;
         if (mRequestHead) {

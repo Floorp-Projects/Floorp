@@ -19,7 +19,7 @@ namespace layers {
 
 static uint64_t sBlockCounter = InputBlockState::NO_BLOCK_ID + 1;
 
-InputBlockState::InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+InputBlockState::InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                  bool aTargetConfirmed)
   : mTargetApzc(aTargetApzc)
   , mTargetConfirmed(aTargetConfirmed)
@@ -32,7 +32,7 @@ InputBlockState::InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetAp
 }
 
 bool
-InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+InputBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
 {
   if (mTargetConfirmed) {
     return false;
@@ -53,7 +53,7 @@ InputBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aT
 }
 
 void
-InputBlockState::UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+InputBlockState::UpdateTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
 {
   // note that aTargetApzc MAY be null here.
   mTargetApzc = aTargetApzc;
@@ -61,13 +61,13 @@ InputBlockState::UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetA
   mOverscrollHandoffChain = (mTargetApzc ? mTargetApzc->BuildOverscrollHandoffChain() : nullptr);
 }
 
-const RefPtr<AsyncPanZoomController>&
+const nsRefPtr<AsyncPanZoomController>&
 InputBlockState::GetTargetApzc() const
 {
   return mTargetApzc;
 }
 
-const RefPtr<const OverscrollHandoffChain>&
+const nsRefPtr<const OverscrollHandoffChain>&
 InputBlockState::GetOverscrollHandoffChain() const
 {
   return mOverscrollHandoffChain;
@@ -85,7 +85,7 @@ InputBlockState::IsTargetConfirmed() const
   return mTargetConfirmed;
 }
 
-CancelableBlockState::CancelableBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+CancelableBlockState::CancelableBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                            bool aTargetConfirmed)
   : InputBlockState(aTargetApzc, aTargetConfirmed)
   , mPreventDefault(false)
@@ -163,7 +163,7 @@ CancelableBlockState::DispatchEvent(const InputData& aEvent) const
 // This is used to track the current wheel transaction.
 static uint64_t sLastWheelBlockId = InputBlockState::NO_BLOCK_ID;
 
-WheelBlockState::WheelBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+WheelBlockState::WheelBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                  bool aTargetConfirmed,
                                  const ScrollWheelInput& aInitialEvent)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
@@ -176,7 +176,7 @@ WheelBlockState::WheelBlockState(const RefPtr<AsyncPanZoomController>& aTargetAp
     // If we get a content confirmation later that the apzc is different, then
     // content should have found a scrollable apzc, so we don't need to handle
     // that case.
-    RefPtr<AsyncPanZoomController> apzc =
+    nsRefPtr<AsyncPanZoomController> apzc =
       mOverscrollHandoffChain->FindFirstScrollable(aInitialEvent);
 
     // If nothing is scrollable, we don't consider this block as starting a
@@ -202,12 +202,12 @@ WheelBlockState::SetContentResponse(bool aPreventDefault)
 }
 
 bool
-WheelBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+WheelBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
 {
   // The APZC that we find via APZCCallbackHelpers may not be the same APZC
   // ESM or OverscrollHandoff would have computed. Make sure we get the right
   // one by looking for the first apzc the next pending event can scroll.
-  RefPtr<AsyncPanZoomController> apzc = aTargetApzc;
+  nsRefPtr<AsyncPanZoomController> apzc = aTargetApzc;
   if (apzc && mEvents.Length() > 0) {
     const ScrollWheelInput& event = mEvents.ElementAt(0);
     apzc = apzc->BuildOverscrollHandoffChain()->FindFirstScrollable(event);
@@ -232,7 +232,7 @@ WheelBlockState::Update(const ScrollWheelInput& aEvent)
   //
   // We skip this check if the target is not yet confirmed, so that when it is
   // confirmed, we don't timeout the transaction.
-  RefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
   if (IsTargetConfirmed() && !apzc->CanScroll(aEvent)) {
     return;
   }
@@ -303,7 +303,7 @@ WheelBlockState::ShouldAcceptNewEvent() const
     return false;
   }
 
-  RefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
   if (apzc->IsDestroyed()) {
     return false;
   }
@@ -348,7 +348,7 @@ WheelBlockState::MaybeTimeout(const TimeStamp& aTimeStamp)
   TBS_LOG("%p wheel transaction timed out\n", this);
 
   if (gfxPrefs::MouseScrollTestingEnabled()) {
-    RefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
+    nsRefPtr<AsyncPanZoomController> apzc = GetTargetApzc();
     apzc->NotifyMozMouseScrollEvent(NS_LITERAL_STRING("MozMouseScrollTransactionTimeout"));
   }
 
@@ -379,7 +379,7 @@ WheelBlockState::OnMouseMove(const ScreenIntPoint& aPoint)
 }
 
 void
-WheelBlockState::UpdateTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+WheelBlockState::UpdateTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
 {
   InputBlockState::UpdateTargetApzc(aTargetApzc);
 
@@ -421,7 +421,7 @@ WheelBlockState::EndTransaction()
   mTransactionEnded = true;
 }
 
-PanGestureBlockState::PanGestureBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+PanGestureBlockState::PanGestureBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                            bool aTargetConfirmed,
                                            const PanGestureInput& aInitialEvent)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
@@ -433,7 +433,7 @@ PanGestureBlockState::PanGestureBlockState(const RefPtr<AsyncPanZoomController>&
     // If we get a content confirmation later that the apzc is different, then
     // content should have found a scrollable apzc, so we don't need to handle
     // that case.
-    RefPtr<AsyncPanZoomController> apzc =
+    nsRefPtr<AsyncPanZoomController> apzc =
       mOverscrollHandoffChain->FindFirstScrollable(aInitialEvent);
 
     if (apzc && apzc != GetTargetApzc()) {
@@ -443,15 +443,15 @@ PanGestureBlockState::PanGestureBlockState(const RefPtr<AsyncPanZoomController>&
 }
 
 bool
-PanGestureBlockState::SetConfirmedTargetApzc(const RefPtr<AsyncPanZoomController>& aTargetApzc)
+PanGestureBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
 {
   // The APZC that we find via APZCCallbackHelpers may not be the same APZC
   // ESM or OverscrollHandoff would have computed. Make sure we get the right
   // one by looking for the first apzc the next pending event can scroll.
-  RefPtr<AsyncPanZoomController> apzc = aTargetApzc;
+  nsRefPtr<AsyncPanZoomController> apzc = aTargetApzc;
   if (apzc && mEvents.Length() > 0) {
     const PanGestureInput& event = mEvents.ElementAt(0);
-    RefPtr<AsyncPanZoomController> scrollableApzc =
+    nsRefPtr<AsyncPanZoomController> scrollableApzc =
       apzc->BuildOverscrollHandoffChain()->FindFirstScrollable(event);
     if (scrollableApzc) {
       apzc = scrollableApzc;
@@ -540,7 +540,7 @@ PanGestureBlockState::SetNeedsToWaitForContentResponse(bool aWaitForContentRespo
   mWaitingForContentResponse = aWaitForContentResponse;
 }
 
-TouchBlockState::TouchBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
                                  bool aTargetConfirmed, TouchCounter& aCounter)
   : CancelableBlockState(aTargetApzc, aTargetConfirmed)
   , mAllowedTouchBehaviorSet(false)

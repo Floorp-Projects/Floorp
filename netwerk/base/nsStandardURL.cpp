@@ -1778,7 +1778,7 @@ nsStandardURL::EqualsInternal(nsIURI *unknownOther,
     NS_ENSURE_ARG_POINTER(unknownOther);
     NS_PRECONDITION(result, "null pointer");
 
-    RefPtr<nsStandardURL> other;
+    nsRefPtr<nsStandardURL> other;
     nsresult rv = unknownOther->QueryInterface(kThisImplCID,
                                                getter_AddRefs(other));
     if (NS_FAILED(rv)) {
@@ -1895,7 +1895,7 @@ nsStandardURL::CloneInternal(nsStandardURL::RefHandlingEnum refHandlingMode,
                              nsIURI **result)
 
 {
-    RefPtr<nsStandardURL> clone = StartClone();
+    nsRefPtr<nsStandardURL> clone = StartClone();
     if (!clone)
         return NS_ERROR_OUT_OF_MEMORY;
 

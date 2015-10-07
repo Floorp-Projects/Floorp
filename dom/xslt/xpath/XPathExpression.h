@@ -63,7 +63,7 @@ public:
 
 private:
     nsAutoPtr<Expr> mExpression;
-    RefPtr<txResultRecycler> mRecycler;
+    nsRefPtr<txResultRecycler> mRecycler;
     nsWeakPtr mDocument;
     bool mCheckDocument;
 };

@@ -146,7 +146,7 @@ protected:
    * Drag and drop mouse listener.
    * This makes sure we don't get used after destruction.
    */
-  RefPtr<DnDListener> mMouseListener;
+  nsRefPtr<DnDListener> mMouseListener;
 
 protected:
   /**

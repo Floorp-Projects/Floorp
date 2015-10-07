@@ -362,7 +362,7 @@ nsMathMLmoFrame::ProcessOperatorData()
       // Cache the default values of lspace and rspace.
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
-      RefPtr<nsFontMetrics> fm;
+      nsRefPtr<nsFontMetrics> fm;
       nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                             fontSizeInflation);
       GetEmHeight(fm, em);
@@ -619,7 +619,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
 
   // get the axis height;
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         fontSizeInflation);
   nscoord axisHeight, height;

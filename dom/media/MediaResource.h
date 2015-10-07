@@ -293,7 +293,7 @@ public:
   // encountered. There is no need to call it again to get more data.
   virtual already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount)
   {
-    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+    nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
     bool ok = bytes->SetLength(aCount, fallible);
     NS_ENSURE_TRUE(ok, nullptr);
     char* curr = reinterpret_cast<char*>(bytes->Elements());
@@ -711,7 +711,7 @@ public:
     void Revoke() { mResource = nullptr; }
 
   private:
-    RefPtr<ChannelMediaResource> mResource;
+    nsRefPtr<ChannelMediaResource> mResource;
   };
   friend class Listener;
 
@@ -754,7 +754,7 @@ protected:
 
   // Main thread access only
   int64_t            mOffset;
-  RefPtr<Listener> mListener;
+  nsRefPtr<Listener> mListener;
   // A data received event for the decoder that has been dispatched but has
   // not yet been processed.
   nsRevocableEventPtr<nsRunnableMethod<ChannelMediaResource, void, false> > mDataReceivedEvent;
@@ -770,7 +770,7 @@ protected:
 
   // This lock protects mChannelStatistics
   Mutex               mLock;
-  RefPtr<MediaChannelStatistics> mChannelStatistics;
+  nsRefPtr<MediaChannelStatistics> mChannelStatistics;
 
   // True if we couldn't suspend the stream and we therefore don't want
   // to resume later. This is usually due to the channel not being in the
@@ -903,7 +903,7 @@ public:
   int64_t GetLength() const { return mResource->GetLength(); }
 
 private:
-  RefPtr<MediaResource> mResource;
+  nsRefPtr<MediaResource> mResource;
   int64_t mOffset;
 };
 

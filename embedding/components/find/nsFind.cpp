@@ -1253,7 +1253,7 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
 already_AddRefed<nsIDOMRange>
 nsFind::CreateRange(nsINode* aNode)
 {
-  RefPtr<nsRange> range = new nsRange(aNode);
+  nsRefPtr<nsRange> range = new nsRange(aNode);
   range->SetMaySpanAnonymousSubtrees(true);
   return range.forget();
 }

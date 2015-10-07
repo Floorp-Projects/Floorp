@@ -85,7 +85,7 @@ public:
 struct TempBitmap
 {
   SkBitmap mBitmap;
-  RefPtr<SourceSurface> mTmpSurface;
+  nsRefPtr<SourceSurface> mTmpSurface;
 };
 
 static TempBitmap
@@ -98,7 +98,7 @@ GetBitmapForSurface(SourceSurface* aSurface)
     return result;
   }
 
-  RefPtr<DataSourceSurface> surf = aSurface->GetDataSurface();
+  nsRefPtr<DataSourceSurface> surf = aSurface->GetDataSurface();
   if (!surf) {
     MOZ_CRASH("Non-skia SourceSurfaces need to be DataSourceSurfaces");
   }
@@ -133,7 +133,7 @@ DrawTargetSkia::~DrawTargetSkia()
 already_AddRefed<SourceSurface>
 DrawTargetSkia::Snapshot()
 {
-  RefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
+  nsRefPtr<SourceSurfaceSkia> snapshot = mSnapshot;
   if (!snapshot) {
     snapshot = new SourceSurfaceSkia();
     mSnapshot = snapshot;
@@ -354,7 +354,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
-  RefPtr<SourceSurface> dataSurface;
+  nsRefPtr<SourceSurface> dataSurface;
 
   if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA)) {
     dataSurface = aSurface->GetDataSurface();
@@ -682,7 +682,7 @@ DrawTargetSkia::CreateSourceSurfaceFromData(unsigned char *aData,
                                             int32_t aStride,
                                             SurfaceFormat aFormat) const
 {
-  RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
+  nsRefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
 
   if (!newSurf->InitFromData(aData, aSize, aStride, aFormat)) {
     gfxDebug() << *this << ": Failure to create source surface from data. Size: " << aSize;
@@ -695,7 +695,7 @@ DrawTargetSkia::CreateSourceSurfaceFromData(unsigned char *aData,
 already_AddRefed<DrawTarget>
 DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  RefPtr<DrawTargetSkia> target = new DrawTargetSkia();
+  nsRefPtr<DrawTargetSkia> target = new DrawTargetSkia();
   if (!target->Init(aSize, aFormat)) {
     return nullptr;
   }
@@ -716,7 +716,7 @@ already_AddRefed<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
   if (aSurface->GetType() == SurfaceType::SKIA) {
-    RefPtr<SourceSurface> surface(aSurface);
+    nsRefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
   }
 
@@ -730,13 +730,13 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 
   // If we are using skia-gl then we want to copy into a surface that
   // will cache the uploaded gl texture.
-  RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
+  nsRefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
   DataSourceSurface::MappedSurface map;
   if (!dataSurf->Map(DataSourceSurface::READ, &map)) {
     return nullptr;
   }
 
-  RefPtr<SourceSurface> result = CreateSourceSurfaceFromData(map.mData,
+  nsRefPtr<SourceSurface> result = CreateSourceSurfaceFromData(map.mData,
                                                              dataSurf->GetSize(),
                                                              map.mStride,
                                                              dataSurf->GetFormat());
@@ -757,7 +757,7 @@ DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurfa
     return MakeAndAddRef<SourceSurfaceCairo>(surf, aSurface.mSize, aSurface.mFormat);
 #if USE_SKIA_GPU
   } else if (aSurface.mType == NativeSurfaceType::OPENGL_TEXTURE && UsingSkiaGPU()) {
-    RefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
+    nsRefPtr<SourceSurfaceSkia> newSurf = new SourceSurfaceSkia();
     unsigned int texture = (unsigned int)((uintptr_t)aSurface.mSurface);
     if (newSurf->InitFromTexture((DrawTargetSkia*)this, texture, aSurface.mSize, aSurface.mFormat)) {
       return newSurf.forget();

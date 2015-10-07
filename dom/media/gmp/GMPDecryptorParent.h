@@ -7,7 +7,7 @@
 #define GMPDecryptorParent_h_
 
 #include "mozilla/gmp/PGMPDecryptorParent.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "gmp-decryption.h"
 #include "GMPDecryptorProxy.h"
 
@@ -112,7 +112,7 @@ private:
   bool mIsOpen;
   bool mShuttingDown;
   bool mActorDestroyed;
-  RefPtr<GMPContentParent> mPlugin;
+  nsRefPtr<GMPContentParent> mPlugin;
   uint32_t mPluginId;
   GMPDecryptorProxyCallback* mCallback;
 #ifdef DEBUG

@@ -63,7 +63,7 @@ HTMLAudioElement::Audio(const GlobalObject& aGlobal,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);
 
-  RefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo);
+  nsRefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo);
   audio->SetHTMLAttr(nsGkAtoms::preload, NS_LITERAL_STRING("auto"), aRv);
   if (aRv.Failed()) {
     return nullptr;

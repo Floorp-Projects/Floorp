@@ -71,7 +71,7 @@ public:
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags) override;
-  virtual RefPtr<SeekPromise>
+  virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
   virtual media::TimeIntervals GetBuffered() override;
 

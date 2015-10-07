@@ -194,7 +194,7 @@ protected:
     }
   }
 
-  RefPtr<CacheStorageService> mService;
+  nsRefPtr<CacheStorageService> mService;
   nsCOMPtr<nsICacheStorageVisitor> mCallback;
 
   uint64_t mSize;
@@ -264,7 +264,7 @@ private:
         }
 
         // Grab the next entry
-        RefPtr<CacheEntry> entry = mEntryArray[0];
+        nsRefPtr<CacheEntry> entry = mEntryArray[0];
         mEntryArray.RemoveElementAt(0);
 
         // Invokes this->OnEntryInfo, that calls the callback with all
@@ -323,7 +323,7 @@ private:
 
 private:
   nsCString mContextKey;
-  nsTArray<RefPtr<CacheEntry> > mEntryArray;
+  nsTArray<nsRefPtr<CacheEntry> > mEntryArray;
 };
 
 // WalkDiskCacheRunnable
@@ -350,7 +350,7 @@ public:
     // information gets to the index list before we grab the index iterator
     // for the first time.  This tries to avoid miss of entries that has
     // been created right before the visit is required.
-    RefPtr<CacheIOThread> thread = CacheFileIOManager::IOThread();
+    nsRefPtr<CacheIOThread> thread = CacheFileIOManager::IOThread();
     NS_ENSURE_TRUE(thread, NS_ERROR_NOT_INITIALIZED);
 
     return thread->Dispatch(this, CacheIOThread::INDEX);
@@ -382,7 +382,7 @@ private:
       return NS_OK;
     }
 
-    RefPtr<WalkDiskCacheRunnable> mWalker;
+    nsRefPtr<WalkDiskCacheRunnable> mWalker;
 
     nsCString mURISpec;
     nsCString mIdEnhance;
@@ -474,7 +474,7 @@ private:
     // Called directly from CacheFileIOManager::GetEntryInfo.
 
     // Invoke onCacheEntryInfo on the main thread for this entry.
-    RefPtr<OnCacheEntryInfoRunnable> info = new OnCacheEntryInfoRunnable(this);
+    nsRefPtr<OnCacheEntryInfoRunnable> info = new OnCacheEntryInfoRunnable(this);
     info->mURISpec = aURISpec;
     info->mIdEnhance = aIdEnhance;
     info->mDataSize = aDataSize;
@@ -485,7 +485,7 @@ private:
     NS_DispatchToMainThread(info);
   }
 
-  RefPtr<nsILoadContextInfo> mLoadInfo;
+  nsRefPtr<nsILoadContextInfo> mLoadInfo;
   enum {
     // First, we collect stats for the load context.
     COLLECT_STATS,
@@ -496,7 +496,7 @@ private:
     ITERATE_METADATA,
   } mPass;
 
-  RefPtr<CacheIndexIterator> mIter;
+  nsRefPtr<CacheIndexIterator> mIter;
   uint32_t mCount;
 };
 
@@ -581,7 +581,7 @@ bool CleaupCacheDirectoriesRunnable::Post(uint32_t aVersion, uint32_t aActive)
   if (!thread)
     return false;
 
-  RefPtr<CleaupCacheDirectoriesRunnable> r =
+  nsRefPtr<CleaupCacheDirectoriesRunnable> r =
     new CleaupCacheDirectoriesRunnable(aVersion, aActive);
   thread->Dispatch(r, NS_DISPATCH_NORMAL);
   return true;
@@ -644,7 +644,7 @@ void CacheStorageService::CleaupCacheDirectories(uint32_t aVersion, uint32_t aAc
 // static
 bool CacheStorageService::IsOnManagementThread()
 {
-  RefPtr<CacheStorageService> service = Self();
+  nsRefPtr<CacheStorageService> service = Self();
   if (!service)
     return false;
 
@@ -664,7 +664,7 @@ already_AddRefed<nsIEventTarget> CacheStorageService::Thread() const
 
 nsresult CacheStorageService::Dispatch(nsIRunnable* aEvent)
 {
-  RefPtr<CacheIOThread> cacheIOThread = CacheFileIOManager::IOThread();
+  nsRefPtr<CacheIOThread> cacheIOThread = CacheFileIOManager::IOThread();
   if (!cacheIOThread)
     return NS_ERROR_NOT_AVAILABLE;
 
@@ -928,7 +928,7 @@ AddExactEntry(CacheEntryTable* aEntries,
               CacheEntry* aEntry,
               bool aOverwrite)
 {
-  RefPtr<CacheEntry> existingEntry;
+  nsRefPtr<CacheEntry> existingEntry;
   if (!aOverwrite && aEntries->Get(aKey, getter_AddRefs(existingEntry))) {
     bool equals = existingEntry == aEntry;
     LOG(("AddExactEntry [entry=%p equals=%d]", aEntry, equals));
@@ -946,7 +946,7 @@ RemoveExactEntry(CacheEntryTable* aEntries,
                  CacheEntry* aEntry,
                  bool aOverwrite)
 {
-  RefPtr<CacheEntry> existingEntry;
+  nsRefPtr<CacheEntry> existingEntry;
   if (!aEntries->Get(aKey, getter_AddRefs(existingEntry))) {
     LOG(("RemoveExactEntry [entry=%p already gone]", aEntry));
     return false; // Already removed...
@@ -1155,7 +1155,7 @@ CacheStorageService::OnMemoryConsumptionChange(CacheMemoryConsumer* aConsumer,
 
   // We don't know if this is called under the service lock or not,
   // hence rather dispatch.
-  RefPtr<nsIEventTarget> cacheIOTarget = Thread();
+  nsRefPtr<nsIEventTarget> cacheIOTarget = Thread();
   if (!cacheIOTarget)
     return;
 
@@ -1273,7 +1273,7 @@ CacheStorageService::MemoryPool::PurgeExpired()
     if (CacheIOThread::YieldAndRerun())
       return;
 
-    RefPtr<CacheEntry> entry = mExpirationArray[i];
+    nsRefPtr<CacheEntry> entry = mExpirationArray[i];
 
     uint32_t expirationTime = entry->GetExpirationTime();
     if (expirationTime > 0 && expirationTime <= now &&
@@ -1304,7 +1304,7 @@ CacheStorageService::MemoryPool::PurgeByFrecency(bool &aFrecencyNeedsSort, uint3
     if (CacheIOThread::YieldAndRerun())
       return;
 
-    RefPtr<CacheEntry> entry = mFrecencyArray[i];
+    nsRefPtr<CacheEntry> entry = mFrecencyArray[i];
 
     if (entry->Purge(aWhat)) {
       LOG(("  abandoned (%d), entry=%p, frecency=%1.10f",
@@ -1327,7 +1327,7 @@ CacheStorageService::MemoryPool::PurgeAll(uint32_t aWhat)
     if (CacheIOThread::YieldAndRerun())
       return;
 
-    RefPtr<CacheEntry> entry = mFrecencyArray[i];
+    nsRefPtr<CacheEntry> entry = mFrecencyArray[i];
 
     if (entry->Purge(aWhat)) {
       LOG(("  abandoned entry=%p", entry.get()));
@@ -1383,8 +1383,8 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
   LOG(("CacheStorageService::AddStorageEntry [entryKey=%s, contextKey=%s]",
     entryKey.get(), aContextKey.BeginReading()));
 
-  RefPtr<CacheEntry> entry;
-  RefPtr<CacheEntryHandle> handle;
+  nsRefPtr<CacheEntry> entry;
+  nsRefPtr<CacheEntryHandle> handle;
 
   {
     mozilla::MutexAutoLock lock(mLock);
@@ -1583,7 +1583,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   nsresult rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<CacheEntry> entry;
+  nsRefPtr<CacheEntry> entry;
   {
     mozilla::MutexAutoLock lock(mLock);
 
@@ -1625,7 +1625,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
 
     LOG(("  dooming file only for %s", entryKey.get()));
 
-    RefPtr<CacheEntryDoomByKeyCallback> callback(
+    nsRefPtr<CacheEntryDoomByKeyCallback> callback(
       new CacheEntryDoomByKeyCallback(aCallback));
     rv = CacheFileIOManager::DoomFileByKey(entryKey, callback);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1646,7 +1646,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   };
 
   if (aCallback) {
-    RefPtr<nsRunnable> callback = new Callback(aCallback);
+    nsRefPtr<nsRunnable> callback = new Callback(aCallback);
     return NS_DispatchToMainThread(callback);
   }
 
@@ -1743,7 +1743,7 @@ CacheStorageService::DoomStorageEntries(nsCSubstring const& aContextKey,
   };
 
   if (aCallback) {
-    RefPtr<nsRunnable> callback = new Callback(aCallback);
+    nsRefPtr<nsRunnable> callback = new Callback(aCallback);
     return NS_DispatchToMainThread(callback);
   }
 
@@ -1761,12 +1761,12 @@ CacheStorageService::WalkStorageEntries(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   if (aStorage->WriteToDisk()) {
-    RefPtr<WalkDiskCacheRunnable> event =
+    nsRefPtr<WalkDiskCacheRunnable> event =
       new WalkDiskCacheRunnable(aStorage->LoadInfo(), aVisitEntries, aVisitor);
     return event->Walk();
   }
 
-  RefPtr<WalkMemoryCacheRunnable> event =
+  nsRefPtr<WalkMemoryCacheRunnable> event =
     new WalkMemoryCacheRunnable(aStorage->LoadInfo(), aVisitEntries, aVisitor);
   return event->Walk();
 }
@@ -1791,7 +1791,7 @@ CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
   if (!sGlobalEntryTables->Get(contextKey, &entries))
     return;
 
-  RefPtr<CacheEntry> entry;
+  nsRefPtr<CacheEntry> entry;
   if (!entries->Get(entryKey, getter_AddRefs(entry)))
     return;
 
@@ -1819,7 +1819,7 @@ CacheStorageService::GetCacheEntryInfo(nsILoadContextInfo* aLoadContextInfo,
   nsAutoCString entryKey;
   CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
 
-  RefPtr<CacheEntry> entry;
+  nsRefPtr<CacheEntry> entry;
   {
     mozilla::MutexAutoLock lock(mLock);
 
@@ -2033,7 +2033,7 @@ PLDHashOperator ReportStorageMemory(const nsACString& aKey,
     // Bypass memory-only entries, those will be reported when iterating
     // the memory only table. Memory-only entries are stored in both ALL_ENTRIES
     // and MEMORY_ONLY hashtables.
-    RefPtr<mozilla::net::CacheEntry> const& entry = iter.Data();
+    nsRefPtr<mozilla::net::CacheEntry> const& entry = iter.Data();
     if (aTable->Type() == CacheEntryTable::MEMORY_ONLY ||
         entry->IsUsingDisk()) {
       size += entry->SizeOfIncludingThis(mallocSizeOf);

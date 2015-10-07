@@ -63,7 +63,7 @@ public:
   virtual status_t reconnectAtOffset(off64_t offset) { return NO_ERROR; }
 
 private:
-  RefPtr<Stream> mSource;
+  nsRefPtr<Stream> mSource;
 };
 
 static inline bool

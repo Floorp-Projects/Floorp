@@ -116,8 +116,8 @@ protected:
 
 
 private:
-  RefPtr<nsMediaList> mMediaList;
-  RefPtr<MediaSource> mSrcMediaSource;
+  nsRefPtr<nsMediaList> mMediaList;
+  nsRefPtr<MediaSource> mSrcMediaSource;
 };
 
 } // namespace dom

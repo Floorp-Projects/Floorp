@@ -70,7 +70,7 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
   }
 
   MOZ_ASSERT(win->IsInnerWindow());
-  RefPtr<SpeechSynthesisUtterance> object =
+  nsRefPtr<SpeechSynthesisUtterance> object =
     new SpeechSynthesisUtterance(win, aText);
   return object.forget();
 }
@@ -167,7 +167,7 @@ SpeechSynthesisUtterance::DispatchSpeechSynthesisEvent(const nsAString& aEventTy
   init.mElapsedTime = aElapsedTime;
   init.mName = aName;
 
-  RefPtr<SpeechSynthesisEvent> event =
+  nsRefPtr<SpeechSynthesisEvent> event =
     SpeechSynthesisEvent::Constructor(this, aEventType, init);
   DispatchTrustedEvent(event);
 }

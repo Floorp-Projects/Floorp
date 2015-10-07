@@ -1234,7 +1234,7 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, true);
 
-  RefPtr<css::StyleRule> oldRule = mRule;
+  nsRefPtr<css::StyleRule> oldRule = mRule;
   mRule = oldRule->DeclarationChanged(aDecl, true).take();
   if (!mRule)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1492,7 +1492,7 @@ StyleRule::GetType() const
 /* virtual */ already_AddRefed<Rule>
 StyleRule::Clone() const
 {
-  RefPtr<Rule> clone = new StyleRule(*this);
+  nsRefPtr<Rule> clone = new StyleRule(*this);
   return clone.forget();
 }
 
@@ -1521,7 +1521,7 @@ StyleRule::GetExistingDOMRule()
 StyleRule::DeclarationChanged(Declaration* aDecl,
                               bool aHandleContainer)
 {
-  RefPtr<StyleRule> clone = new StyleRule(*this, aDecl);
+  nsRefPtr<StyleRule> clone = new StyleRule(*this, aDecl);
 
   if (aHandleContainer) {
     CSSStyleSheet* sheet = GetStyleSheet();

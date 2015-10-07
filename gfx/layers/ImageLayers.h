@@ -94,7 +94,7 @@ protected:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
-  RefPtr<ImageContainer> mContainer;
+  nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;

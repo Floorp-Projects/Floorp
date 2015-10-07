@@ -412,7 +412,7 @@ NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstanceFromString(const nsAString& aString,
                                                        nsIUnicharInputStream** aResult)
 {
-  RefPtr<StringUnicharInputStream> it = new StringUnicharInputStream(aString);
+  nsRefPtr<StringUnicharInputStream> it = new StringUnicharInputStream(aString);
 
   it.forget(aResult);
   return NS_OK;
@@ -426,7 +426,7 @@ nsSimpleUnicharStreamFactory::CreateInstanceFromUTF8Stream(
   *aResult = nullptr;
 
   // Create converter input stream
-  RefPtr<UTF8InputStream> it = new UTF8InputStream();
+  nsRefPtr<UTF8InputStream> it = new UTF8InputStream();
   nsresult rv = it->Init(aStreamToWrap);
   if (NS_FAILED(rv)) {
     return rv;

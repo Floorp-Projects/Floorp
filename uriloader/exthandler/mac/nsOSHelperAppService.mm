@@ -312,7 +312,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                               flatType.get(), flatExt.get()));
 
   // Create a Mac-specific MIME info so we can use Mac-specific members.
-  RefPtr<nsMIMEInfoMac> mimeInfoMac = new nsMIMEInfoMac(aMIMEType);
+  nsRefPtr<nsMIMEInfoMac> mimeInfoMac = new nsMIMEInfoMac(aMIMEType);
 
   NSAutoreleasePool *localPool = [[NSAutoreleasePool alloc] init];
 

@@ -277,9 +277,9 @@ private:
     nsCOMPtr<nsIWidget>            mWidget;
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
-    RefPtr<gfxASurface>          mPrintingSurface;
+    nsRefPtr<gfxASurface>          mPrintingSurface;
 #ifdef XP_MACOSX
-    RefPtr<gfxASurface>          mCachedPrintingSurface;
+    nsRefPtr<gfxASurface>          mCachedPrintingSurface;
 #endif
 };
 

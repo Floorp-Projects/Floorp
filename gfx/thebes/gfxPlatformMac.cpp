@@ -119,7 +119,7 @@ already_AddRefed<gfxASurface>
 gfxPlatformMac::CreateOffscreenSurface(const IntSize& aSize,
                                        gfxImageFormat aFormat)
 {
-    RefPtr<gfxASurface> newSurface =
+    nsRefPtr<gfxASurface> newSurface =
       new gfxQuartzSurface(aSize, aFormat);
     return newSurface.forget();
 }
@@ -563,7 +563,7 @@ public:
   private:
     // Manages the display link render thread
     CVDisplayLinkRef   mDisplayLink;
-    RefPtr<nsITimer> mTimer;
+    nsRefPtr<nsITimer> mTimer;
   }; // OSXDisplay
 
 private:
@@ -611,7 +611,7 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatformMac::CreateHardwareVsyncSource()
 {
-  RefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
+  nsRefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
   VsyncSource::Display& primaryDisplay = osxVsyncSource->GetGlobalDisplay();
   primaryDisplay.EnableVsync();
   if (!primaryDisplay.IsVsyncEnabled()) {

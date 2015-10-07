@@ -171,7 +171,7 @@ ClientLayerManager::Mutated(Layer* aLayer)
 already_AddRefed<ReadbackLayer>
 ClientLayerManager::CreateReadbackLayer()
 {
-  RefPtr<ReadbackLayer> layer = new ClientReadbackLayer(this);
+  nsRefPtr<ReadbackLayer> layer = new ClientReadbackLayer(this);
   return layer.forget();
 }
 
@@ -190,7 +190,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   mPhase = PHASE_CONSTRUCTION;
 
   MOZ_ASSERT(mKeepAlive.IsEmpty(), "uncommitted txn?");
-  RefPtr<gfxContext> targetContext = aTarget;
+  nsRefPtr<gfxContext> targetContext = aTarget;
 
   // If the last transaction was incomplete (a failed DoEmptyTransaction),
   // don't signal a new transaction to ShadowLayerForwarder. Carry on adding
@@ -505,7 +505,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
                                              gfxContentType::COLOR_ALPHA,
                                              &inSnapshot) &&
           remoteRenderer->SendMakeSnapshot(inSnapshot, bounds)) {
-        RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(inSnapshot);
+        nsRefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(inSnapshot);
         DrawTarget* dt = mShadowTarget->GetDrawTarget();
 
         Rect dstRect(bounds.x, bounds.y, bounds.width, bounds.height);

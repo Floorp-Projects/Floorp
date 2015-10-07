@@ -65,7 +65,7 @@ nsXULTemplateResultSetRDF::GetNext(nsISupports **aResult)
     if (!mCurrent || !mCheckedNext)
         return NS_ERROR_FAILURE;
 
-    RefPtr<nsXULTemplateResultRDF> nextresult =
+    nsRefPtr<nsXULTemplateResultRDF> nextresult =
         new nsXULTemplateResultRDF(mQuery, mCurrent->mInstantiation, mResource);
     if (!nextresult)
         return NS_ERROR_OUT_OF_MEMORY;

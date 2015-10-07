@@ -109,7 +109,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
-    RefPtr<Selection> selection = mEditor->GetSelection();
+    nsRefPtr<Selection> selection = mEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node
@@ -130,7 +130,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
       NS_ENSURE_SUCCESS(rv, rv);
 
       for (int32_t i = 0; i < rangeCount; i++) {
-        RefPtr<nsRange> range = selection->GetRangeAt(i);
+        nsRefPtr<nsRange> range = selection->GetRangeAt(i);
         if (!range) {
           // Don't bail yet, iterate through them all
           continue;

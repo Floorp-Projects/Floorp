@@ -336,7 +336,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 
     // Put our doc info in the doc table.
     nsBindingManager *xblDocBindingManager = bindingDocument->BindingManager();
-    RefPtr<nsXBLDocumentInfo> info =
+    nsRefPtr<nsXBLDocumentInfo> info =
       xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
@@ -449,7 +449,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   }
 
   bool ready;
-  RefPtr<nsXBLBinding> newBinding;
+  nsRefPtr<nsXBLBinding> newBinding;
   if (NS_FAILED(rv = GetBinding(aContent, aURL, false, aOriginPrincipal,
                                 &ready, getter_AddRefs(newBinding)))) {
     return rv;
@@ -553,7 +553,7 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(contentNode));
 
   // Create the key handler
-  RefPtr<nsXBLWindowKeyHandler> handler =
+  nsRefPtr<nsXBLWindowKeyHandler> handler =
     NS_NewXBLWindowKeyHandler(elt, piTarget);
 
   // listen to these events
@@ -721,7 +721,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   nsCOMPtr<nsIDocument> boundDocument = aBoundElement->OwnerDoc();
 
-  RefPtr<nsXBLDocumentInfo> docInfo;
+  nsRefPtr<nsXBLDocumentInfo> docInfo;
   nsresult rv = LoadBindingDocumentInfo(aBoundElement, boundDocument, aURI,
                                         aOriginPrincipal,
                                         false, getter_AddRefs(docInfo));
@@ -813,7 +813,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
     }
   }
 
-  RefPtr<nsXBLBinding> baseBinding;
+  nsRefPtr<nsXBLBinding> baseBinding;
   if (baseBindingURI) {
     nsCOMPtr<nsIContent> child = protoBinding->GetBindingElement();
     rv = GetBinding(aBoundElement, baseBindingURI, aPeekOnly,
@@ -861,7 +861,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                    NS_ERROR_XBL_BLOCKED);
   }
 
-  RefPtr<nsXBLDocumentInfo> info;
+  nsRefPtr<nsXBLDocumentInfo> info;
 
   nsCOMPtr<nsIURI> documentURI;
   nsresult rv = aBindingURI->CloneIgnoringRef(getter_AddRefs(documentURI));

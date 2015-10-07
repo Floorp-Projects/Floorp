@@ -163,7 +163,7 @@ static void
 AttachToContainerAsEGLImage(ImageContainer* container,
                             nsNPAPIPluginInstance* instance,
                             const LayoutDeviceRect& rect,
-                            RefPtr<Image>* out_image)
+                            nsRefPtr<Image>* out_image)
 {
   MOZ_ASSERT(out_image);
   MOZ_ASSERT(!*out_image);
@@ -173,7 +173,7 @@ AttachToContainerAsEGLImage(ImageContainer* container,
     return;
   }
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::EGLIMAGE);
+  nsRefPtr<Image> img = container->CreateImage(ImageFormat::EGLIMAGE);
 
   EGLImageImage::Data data;
   data.mImage = image;
@@ -190,7 +190,7 @@ static void
 AttachToContainerAsSurfaceTexture(ImageContainer* container,
                                   nsNPAPIPluginInstance* instance,
                                   const LayoutDeviceRect& rect,
-                                  RefPtr<Image>* out_image)
+                                  nsRefPtr<Image>* out_image)
 {
   MOZ_ASSERT(out_image);
   MOZ_ASSERT(!*out_image);
@@ -200,7 +200,7 @@ AttachToContainerAsSurfaceTexture(ImageContainer* container,
     return;
   }
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
+  nsRefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
 
   SurfaceTextureImage::Data data;
   data.mSurfTex = surfTex;
@@ -220,7 +220,7 @@ nsPluginInstanceOwner::GetImageContainer()
   if (!mInstance)
     return nullptr;
 
-  RefPtr<ImageContainer> container;
+  nsRefPtr<ImageContainer> container;
 
 #if MOZ_WIDGET_ANDROID
   // Right now we only draw with Gecko layers on Honeycomb and higher. See Paint()
@@ -239,7 +239,7 @@ nsPluginInstanceOwner::GetImageContainer()
   container = LayerManager::CreateImageContainer();
 
   // Try to get it as an EGLImage first.
-  RefPtr<Image> img;
+  nsRefPtr<Image> img;
   AttachToContainerAsEGLImage(container, mInstance, r, &img);
   if (!img) {
     AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
@@ -266,7 +266,7 @@ already_AddRefed<gfxContext>
 nsPluginInstanceOwner::BeginUpdateBackground(const nsIntRect& aRect)
 {
   nsIntRect rect = aRect;
-  RefPtr<gfxContext> ctx;
+  nsRefPtr<gfxContext> ctx;
   if (mInstance &&
       NS_SUCCEEDED(mInstance->BeginUpdateBackground(&rect, getter_AddRefs(ctx)))) {
     return ctx.forget();
@@ -600,7 +600,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // Each time an asynchronously-drawing plugin sends a new surface to display,
   // the image in the ImageContainer is updated and InvalidateRect is called.
   // There are different side effects for (sync) Android plugins.
-  RefPtr<ImageContainer> container;
+  nsRefPtr<ImageContainer> container;
   mInstance->GetImageContainer(getter_AddRefs(container));
 #endif
 
@@ -1227,7 +1227,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     // If the renderer is backed by an IOSurface, resize it as required.
     mIOSurface = MacIOSurface::CreateIOSurface(aWidth, aHeight, scaleFactor);
     if (mIOSurface) {
-      RefPtr<MacIOSurface> attachSurface = MacIOSurface::LookupSurface(
+      nsRefPtr<MacIOSurface> attachSurface = MacIOSurface::LookupSurface(
                                               mIOSurface->GetIOSurfaceID(),
                                               scaleFactor);
       if (attachSurface) {
@@ -1431,9 +1431,9 @@ nsPluginInstanceOwner::GetVideos(nsTArray<nsNPAPIPluginInstance::VideoInfo*>& aV
 already_AddRefed<ImageContainer>
 nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInfo* aVideoInfo)
 {
-  RefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
+  nsRefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
+  nsRefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
 
   SurfaceTextureImage::Data data;
   data.mSurfTex = aVideoInfo->mSurfaceTexture;
@@ -2581,7 +2581,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
     return;
 
 #ifdef ANP_BITMAP_DRAWING_MODEL
-  static RefPtr<gfxImageSurface> pluginSurface;
+  static nsRefPtr<gfxImageSurface> pluginSurface;
 
   if (pluginSurface == nullptr ||
       aFrameRect.width  != pluginSurface->Width() ||

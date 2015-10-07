@@ -482,7 +482,7 @@ CacheFileContextEvictor::StartEvicting()
   nsCOMPtr<nsIRunnable> ev;
   ev = NS_NewRunnableMethod(this, &CacheFileContextEvictor::EvictEntries);
 
-  RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
+  nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
 
   nsresult rv = ioThread->Dispatch(ev, CacheIOThread::EVICT);
   if (NS_FAILED(rv)) {
@@ -546,7 +546,7 @@ CacheFileContextEvictor::EvictEntries()
          "[hash=%08x%08x%08x%08x%08x, iterator=%p, info=%p]", LOGSHA1(&hash),
          mEntries[0]->mIterator.get(), mEntries[0]->mInfo.get()));
 
-    RefPtr<CacheFileHandle> handle;
+    nsRefPtr<CacheFileHandle> handle;
     CacheFileIOManager::gInstance->mHandles.GetHandle(&hash,
                                                       getter_AddRefs(handle));
     if (handle) {

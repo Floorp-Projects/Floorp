@@ -100,7 +100,7 @@ FindUnassignedTrackByType(std::vector<T>& tracks,
 }
 
 nsresult
-JsepSessionImpl::AddTrack(const RefPtr<JsepTrack>& track)
+JsepSessionImpl::AddTrack(const nsRefPtr<JsepTrack>& track)
 {
   mLastError.clear();
   MOZ_ASSERT(track->GetDirection() == sdp::kSend);
@@ -227,10 +227,10 @@ JsepSessionImpl::AddVideoRtpExtension(const std::string& extensionName)
 }
 
 template<class T>
-std::vector<RefPtr<JsepTrack>>
+std::vector<nsRefPtr<JsepTrack>>
 GetTracks(const std::vector<T>& wrappedTracks)
 {
-  std::vector<RefPtr<JsepTrack>> result;
+  std::vector<nsRefPtr<JsepTrack>> result;
   for (auto i = wrappedTracks.begin(); i != wrappedTracks.end(); ++i) {
     result.push_back(i->mTrack);
   }
@@ -264,25 +264,25 @@ JsepSessionImpl::ReplaceTrack(const std::string& oldStreamId,
   return NS_OK;
 }
 
-std::vector<RefPtr<JsepTrack>>
+std::vector<nsRefPtr<JsepTrack>>
 JsepSessionImpl::GetLocalTracks() const
 {
   return GetTracks(mLocalTracks);
 }
 
-std::vector<RefPtr<JsepTrack>>
+std::vector<nsRefPtr<JsepTrack>>
 JsepSessionImpl::GetRemoteTracks() const
 {
   return GetTracks(mRemoteTracks);
 }
 
-std::vector<RefPtr<JsepTrack>>
+std::vector<nsRefPtr<JsepTrack>>
 JsepSessionImpl::GetRemoteTracksAdded() const
 {
   return GetTracks(mRemoteTracksAdded);
 }
 
-std::vector<RefPtr<JsepTrack>>
+std::vector<nsRefPtr<JsepTrack>>
 JsepSessionImpl::GetRemoteTracksRemoved() const
 {
   return GetTracks(mRemoteTracksRemoved);
@@ -459,7 +459,7 @@ void
 JsepSessionImpl::SetupOfferToReceiveMsection(SdpMediaSection* offer)
 {
   // Create a dummy recv track, and have it add codecs, set direction, etc.
-  RefPtr<JsepTrack> dummy = new JsepTrack(offer->GetMediaType(),
+  nsRefPtr<JsepTrack> dummy = new JsepTrack(offer->GetMediaType(),
                                           "",
                                           "",
                                           sdp::kRecv);
@@ -934,7 +934,7 @@ JsepSessionImpl::BindMatchingLocalTrackToAnswer(SdpMediaSection* msection)
       return NS_ERROR_FAILURE;
     }
 
-    AddTrack(RefPtr<JsepTrack>(
+    AddTrack(nsRefPtr<JsepTrack>(
           new JsepTrack(SdpMediaSection::kApplication, streamId, trackId)));
     track = FindUnassignedTrackByType(mLocalTracks, msection->GetMediaType());
     MOZ_ASSERT(track != mLocalTracks.end());
@@ -1068,7 +1068,7 @@ JsepSessionImpl::SetLocalDescription(JsepSdpType type, const std::string& sdp)
   mOldTransports = mTransports; // Save in case we need to rollback
   for (size_t t = 0; t < parsed->GetMediaSectionCount(); ++t) {
     if (t >= mTransports.size()) {
-      mTransports.push_back(RefPtr<JsepTransport>(new JsepTransport));
+      mTransports.push_back(nsRefPtr<JsepTransport>(new JsepTransport));
     }
 
     UpdateTransport(parsed->GetMediaSection(t), mTransports[t].get());
@@ -1265,7 +1265,7 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
       }
     }
 
-    RefPtr<JsepTransport> transport = mTransports[transportLevel];
+    nsRefPtr<JsepTransport> transport = mTransports[transportLevel];
 
     rv = FinalizeTransport(
         remote->GetMediaSection(transportLevel).GetAttributeList(),
@@ -1307,7 +1307,7 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
 nsresult
 JsepSessionImpl::MakeNegotiatedTrackPair(const SdpMediaSection& remote,
                                          const SdpMediaSection& local,
-                                         const RefPtr<JsepTransport>& transport,
+                                         const nsRefPtr<JsepTransport>& transport,
                                          bool usingBundle,
                                          size_t transportLevel,
                                          JsepTrackPair* trackPairOut)
@@ -1418,7 +1418,7 @@ JsepSessionImpl::UpdateTransport(const SdpMediaSection& msection,
 nsresult
 JsepSessionImpl::FinalizeTransport(const SdpAttributeList& remote,
                                    const SdpAttributeList& answer,
-                                   const RefPtr<JsepTransport>& transport)
+                                   const nsRefPtr<JsepTransport>& transport)
 {
   UniquePtr<JsepIceTransport> ice = MakeUnique<JsepIceTransport>();
 
@@ -1703,7 +1703,7 @@ JsepSessionImpl::SetRemoteTracksFromDescription(const Sdp* remoteDescription)
       }
 
       if (track == mRemoteTracks.end()) {
-        RefPtr<JsepTrack> track;
+        nsRefPtr<JsepTrack> track;
         rv = CreateReceivingTrack(i, *remoteDescription, msection, &track);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1891,7 +1891,7 @@ nsresult
 JsepSessionImpl::CreateReceivingTrack(size_t mline,
                                       const Sdp& sdp,
                                       const SdpMediaSection& msection,
-                                      RefPtr<JsepTrack>* track)
+                                      nsRefPtr<JsepTrack>* track)
 {
   std::string streamId;
   std::string trackId;

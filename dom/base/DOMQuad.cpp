@@ -52,7 +52,7 @@ DOMQuad::Constructor(const GlobalObject& aGlobal,
                      const DOMPointInit& aP4,
                      ErrorResult& aRV)
 {
-  RefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports());
+  nsRefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports());
   obj->mPoints[0] = DOMPoint::Constructor(aGlobal, aP1, aRV);
   obj->mPoints[1] = DOMPoint::Constructor(aGlobal, aP2, aRV);
   obj->mPoints[2] = DOMPoint::Constructor(aGlobal, aP3, aRV);
@@ -70,7 +70,7 @@ DOMQuad::Constructor(const GlobalObject& aGlobal, const DOMRectReadOnly& aRect,
   points[1] = CSSPoint(x + w, y);
   points[2] = CSSPoint(x + w, y + h);
   points[3] = CSSPoint(x, y + h);
-  RefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports(), points);
+  nsRefPtr<DOMQuad> obj = new DOMQuad(aGlobal.GetAsSupports(), points);
   return obj.forget();
 }
 
@@ -139,7 +139,7 @@ public:
 protected:
   virtual ~QuadBounds() {}
 
-  RefPtr<DOMQuad> mQuad;
+  nsRefPtr<DOMQuad> mQuad;
 };
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMQuad::QuadBounds, DOMRectReadOnly, mQuad)

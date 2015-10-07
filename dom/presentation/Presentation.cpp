@@ -27,7 +27,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 /* static */ already_AddRefed<Presentation>
 Presentation::Create(nsPIDOMWindow* aWindow)
 {
-  RefPtr<Presentation> presentation = new Presentation(aWindow);
+  nsRefPtr<Presentation> presentation = new Presentation(aWindow);
   return NS_WARN_IF(!presentation->Init()) ? nullptr : presentation.forget();
 }
 
@@ -87,13 +87,13 @@ Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 already_AddRefed<PresentationRequest>
 Presentation::GetDefaultRequest() const
 {
-  RefPtr<PresentationRequest> request = mDefaultRequest;
+  nsRefPtr<PresentationRequest> request = mDefaultRequest;
   return request.forget();
 }
 
 already_AddRefed<PresentationReceiver>
 Presentation::GetReceiver() const
 {
-  RefPtr<PresentationReceiver> receiver = mReceiver;
+  nsRefPtr<PresentationReceiver> receiver = mReceiver;
   return receiver.forget();
 }

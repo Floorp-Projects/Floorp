@@ -66,7 +66,7 @@ protected:
   nsCOMPtr<nsIAtom> mMapAtom;
 
   nsCOMPtr<nsITextServicesFilter> mFilter;
-  RefPtr<nsRange>               mRange;
+  nsRefPtr<nsRange>               mRange;
   bool                            mDidSkip;
   bool                            mIsOutOfRange;
   eDirectionType                  mDirection;

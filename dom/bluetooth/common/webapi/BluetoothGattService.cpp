@@ -99,7 +99,7 @@ BluetoothGattService::AssignDescriptors(
   size_t index = mCharacteristics.IndexOf(aCharacteristicId);
   NS_ENSURE_TRUE_VOID(index != mCharacteristics.NoIndex);
 
-  RefPtr<BluetoothGattCharacteristic> characteristic =
+  nsRefPtr<BluetoothGattCharacteristic> characteristic =
     mCharacteristics.ElementAt(index);
   characteristic->AssignDescriptors(aDescriptorIds);
 }
@@ -180,7 +180,7 @@ BluetoothGattService::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<BluetoothGattService> service = new BluetoothGattService(window,
+  nsRefPtr<BluetoothGattService> service = new BluetoothGattService(window,
                                                                     aInit);
 
   return service.forget();
@@ -200,7 +200,7 @@ BluetoothGattService::AddCharacteristic(
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mAttRole == ATT_SERVER_ROLE,
@@ -211,7 +211,7 @@ BluetoothGattService::AddCharacteristic(
    * Otherwise, characteristics cannot be added into the service. */
   BT_ENSURE_TRUE_REJECT(!mActive, promise, NS_ERROR_UNEXPECTED);
 
-  RefPtr<BluetoothGattCharacteristic> characteristic =
+  nsRefPtr<BluetoothGattCharacteristic> characteristic =
     new BluetoothGattCharacteristic(GetParentObject(),
                                     this,
                                     aCharacteristicUuid,
@@ -235,7 +235,7 @@ BluetoothGattService::AddIncludedService(BluetoothGattService& aIncludedService,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mAttRole == ATT_SERVER_ROLE,

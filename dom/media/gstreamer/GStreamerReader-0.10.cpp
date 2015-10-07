@@ -29,7 +29,7 @@ GstFlowReturn GStreamerReader::AllocateVideoBuffer(GstPad* aPad,
                                                    GstCaps* aCaps,
                                                    GstBuffer** aBuf)
 {
-  RefPtr<PlanarYCbCrImage> image;
+  nsRefPtr<PlanarYCbCrImage> image;
   return AllocateVideoBufferFull(aPad, aOffset, aSize, aCaps, aBuf, image);
 }
 
@@ -38,14 +38,14 @@ GstFlowReturn GStreamerReader::AllocateVideoBufferFull(GstPad* aPad,
                                                        guint aSize,
                                                        GstCaps* aCaps,
                                                        GstBuffer** aBuf,
-                                                       RefPtr<PlanarYCbCrImage>& aImage)
+                                                       nsRefPtr<PlanarYCbCrImage>& aImage)
 {
   /* allocate an image using the container */
   ImageContainer* container = mDecoder->GetImageContainer();
   if (container == nullptr) {
     return GST_FLOW_ERROR;
   }
-  RefPtr<PlanarYCbCrImage> image =
+  nsRefPtr<PlanarYCbCrImage> image =
     container->CreateImage(ImageFormat::PLANAR_YCBCR).downcast<PlanarYCbCrImage>();
 
   /* prepare a GstBuffer pointing to the underlying PlanarYCbCrImage buffer */
@@ -112,12 +112,12 @@ gboolean GStreamerReader::EventProbeCb(GstPad* aPad,
   return reader->EventProbe(aPad, aEvent);
 }
 
-RefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffer)
+nsRefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffer)
 {
   if (!GST_IS_MOZ_VIDEO_BUFFER (aBuffer))
     return nullptr;
 
-  RefPtr<PlanarYCbCrImage> image;
+  nsRefPtr<PlanarYCbCrImage> image;
   GstMozVideoBufferData* bufferdata = reinterpret_cast<GstMozVideoBufferData*>(gst_moz_video_buffer_get_data(GST_MOZ_VIDEO_BUFFER(aBuffer)));
   image = bufferdata->mImage;
 
@@ -148,7 +148,7 @@ RefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffer)
 
 void GStreamerReader::CopyIntoImageBuffer(GstBuffer* aBuffer,
                                           GstBuffer** aOutBuffer,
-                                          RefPtr<PlanarYCbCrImage> &aImage)
+                                          nsRefPtr<PlanarYCbCrImage> &aImage)
 {
   AllocateVideoBufferFull(nullptr, GST_BUFFER_OFFSET(aBuffer),
       GST_BUFFER_SIZE(aBuffer), nullptr, aOutBuffer, aImage);

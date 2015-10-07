@@ -40,9 +40,9 @@ TextTrackList::~TextTrackList()
 }
 
 void
-TextTrackList::UpdateAndGetShowingCues(nsTArray<RefPtr<TextTrackCue> >& aCues)
+TextTrackList::UpdateAndGetShowingCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 {
-  nsTArray< RefPtr<TextTrackCue> > cues;
+  nsTArray< nsRefPtr<TextTrackCue> > cues;
   for (uint32_t i = 0; i < Length(); i++) {
     TextTrackMode mode = mTextTracks[i]->Mode();
     // If the mode is hidden then we just need to update the active cue list,
@@ -90,7 +90,7 @@ TextTrackList::AddTextTrack(TextTrackKind aKind,
                             TextTrackSource aTextTrackSource,
                             const CompareTextTracks& aCompareTT)
 {
-  RefPtr<TextTrack> track = new TextTrack(GetOwner(), this, aKind, aLabel,
+  nsRefPtr<TextTrack> track = new TextTrack(GetOwner(), this, aKind, aLabel,
                                             aLanguage, aMode, aReadyState,
                                             aTextTrackSource);
   AddTextTrack(track, aCompareTT);
@@ -150,8 +150,8 @@ public:
   }
 
 private:
-  RefPtr<TextTrackList> mList;
-  RefPtr<nsIDOMEvent> mEvent;
+  nsRefPtr<TextTrackList> mList;
+  nsRefPtr<nsIDOMEvent> mEvent;
 };
 
 nsresult
@@ -163,7 +163,7 @@ TextTrackList::DispatchTrackEvent(nsIDOMEvent* aEvent)
 void
 TextTrackList::CreateAndDispatchChangeEvent()
 {
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   nsresult rv = event->InitEvent(NS_LITERAL_STRING("change"), false, false);
   if (NS_FAILED(rv)) {
@@ -190,7 +190,7 @@ TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
 
   TrackEventInit eventInit;
   eventInit.mTrack.SetValue().SetAsTextTrack() = aTrack;
-  RefPtr<TrackEvent> event =
+  nsRefPtr<TrackEvent> event =
     TrackEvent::Constructor(this, aEventName, eventInit);
 
   // Dispatch the TrackEvent asynchronously.

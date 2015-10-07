@@ -54,7 +54,7 @@ protected:
 
   already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();
 
-  RefPtr<nsGlobalWindow> mDOMWindow;
+  nsRefPtr<nsGlobalWindow> mDOMWindow;
 };
 
 // Script "menubar" object

@@ -55,7 +55,7 @@ class nsHtml5Speculation final : public nsAHtml5TreeOpSink
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    RefPtr<nsHtml5OwningUTF16Buffer>  mBuffer;
+    nsRefPtr<nsHtml5OwningUTF16Buffer>  mBuffer;
     
     /**
      * The start index of this speculation in the first buffer

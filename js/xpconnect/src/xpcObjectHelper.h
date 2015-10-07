@@ -132,7 +132,7 @@ private:
                                 "(see bug 565742)") mObject;
     nsWrapperCache*          mCache;
     nsCOMPtr<nsIClassInfo>   mClassInfo;
-    RefPtr<nsXPCClassInfo> mXPCClassInfo;
+    nsRefPtr<nsXPCClassInfo> mXPCClassInfo;
 };
 
 #endif

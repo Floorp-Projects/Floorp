@@ -202,10 +202,10 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
   return NS_OK;
 }
 
-static RefPtr<mozilla::SharedBuffer>
+static nsRefPtr<mozilla::SharedBuffer>
 makeSamples(int16_t* aData, uint32_t aDataLen)
 {
-  RefPtr<mozilla::SharedBuffer> samples =
+  nsRefPtr<mozilla::SharedBuffer> samples =
     SharedBuffer::Create(aDataLen * sizeof(int16_t));
   int16_t* frames = static_cast<int16_t*>(samples->Data());
 
@@ -263,7 +263,7 @@ nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLand
   }
 
   uint32_t dataLen = JS_GetTypedArrayLength(tsrc);
-  RefPtr<mozilla::SharedBuffer> samples;
+  nsRefPtr<mozilla::SharedBuffer> samples;
   {
     JS::AutoCheckCannotGC nogc;
     samples = makeSamples(JS_GetInt16ArrayData(tsrc, nogc), dataLen);
@@ -293,14 +293,14 @@ nsSpeechTask::SendAudioNative(int16_t* aData, uint32_t aDataLen)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<mozilla::SharedBuffer> samples = makeSamples(aData, aDataLen);
+  nsRefPtr<mozilla::SharedBuffer> samples = makeSamples(aData, aDataLen);
   SendAudioImpl(samples, aDataLen);
 
   return NS_OK;
 }
 
 void
-nsSpeechTask::SendAudioImpl(RefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen)
+nsSpeechTask::SendAudioImpl(nsRefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen)
 {
   if (aDataLen == 0) {
     mStream->EndAllTrackAndFinish();
@@ -397,7 +397,7 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
     mStream->Destroy();
   }
 
-  RefPtr<SpeechSynthesisUtterance> utterance = mUtterance;
+  nsRefPtr<SpeechSynthesisUtterance> utterance = mUtterance;
 
   if (mSpeechSynthesis) {
     mSpeechSynthesis->OnEnd(this);

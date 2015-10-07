@@ -14,8 +14,8 @@ USING_WORKERS_NAMESPACE
 
 class RegisterDebuggerRunnable final : public nsRunnable
 {
-  RefPtr<WorkerDebuggerManager> mManager;
-  RefPtr<WorkerDebugger> mDebugger;
+  nsRefPtr<WorkerDebuggerManager> mManager;
+  nsRefPtr<WorkerDebugger> mDebugger;
   bool mHasListeners;
 
 public:
@@ -101,7 +101,7 @@ WorkerDebuggerManager::GetWorkerDebuggerEnumerator(
 
   MutexAutoLock lock(mMutex);
 
-  RefPtr<WorkerDebuggerEnumerator> enumerator =
+  nsRefPtr<WorkerDebuggerEnumerator> enumerator =
     new WorkerDebuggerEnumerator(mDebuggers);
   enumerator.forget(aResult);
   return NS_OK;
@@ -184,7 +184,7 @@ WorkerDebuggerManager::UnregisterDebugger(WorkerDebugger* aDebugger)
     UnregisterDebuggerOnMainThread(aDebugger);
   } else {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethodWithArg<RefPtr<WorkerDebugger>>(this,
+      NS_NewRunnableMethodWithArg<nsRefPtr<WorkerDebugger>>(this,
         &WorkerDebuggerManager::UnregisterDebuggerOnMainThread, aDebugger);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL)));

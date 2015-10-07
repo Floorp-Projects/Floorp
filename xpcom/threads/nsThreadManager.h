@@ -67,7 +67,7 @@ private:
 
   nsRefPtrHashtable<nsPtrHashKey<PRThread>, nsThread> mThreadsByPRThread;
   unsigned            mCurThreadIndex;  // thread-local-storage index
-  RefPtr<nsThread>  mMainThread;
+  nsRefPtr<nsThread>  mMainThread;
   PRThread*           mMainPRThread;
   mozilla::OffTheBooksMutex mLock;  // protects tables
   mozilla::Atomic<bool> mInitialized;

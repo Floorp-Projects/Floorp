@@ -232,7 +232,7 @@ class ImageResource : public Image
 public:
   already_AddRefed<ProgressTracker> GetProgressTracker() override
   {
-    RefPtr<ProgressTracker> progressTracker = mProgressTracker;
+    nsRefPtr<ProgressTracker> progressTracker = mProgressTracker;
     MOZ_ASSERT(progressTracker);
     return progressTracker.forget();
   }
@@ -309,8 +309,8 @@ protected:
   virtual nsresult StopAnimation() = 0;
 
   // Member data shared by all implementations of this abstract class
-  RefPtr<ProgressTracker>     mProgressTracker;
-  RefPtr<ImageURL>            mURI;
+  nsRefPtr<ProgressTracker>     mProgressTracker;
+  nsRefPtr<ImageURL>            mURI;
   TimeStamp                     mLastRefreshTime;
   uint64_t                      mInnerWindowId;
   uint32_t                      mAnimationConsumers;

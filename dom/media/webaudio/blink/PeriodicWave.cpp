@@ -50,7 +50,7 @@ PeriodicWave::create(float sampleRate,
          numberOfComponents <= PeriodicWaveSize;
     MOZ_ASSERT(isGood);
     if (isGood) {
-        RefPtr<PeriodicWave> periodicWave =
+        nsRefPtr<PeriodicWave> periodicWave =
             new PeriodicWave(sampleRate);
         periodicWave->createBandLimitedTables(real, imag, numberOfComponents);
         return periodicWave.forget();
@@ -61,7 +61,7 @@ PeriodicWave::create(float sampleRate,
 already_AddRefed<PeriodicWave>
 PeriodicWave::createSine(float sampleRate)
 {
-    RefPtr<PeriodicWave> periodicWave =
+    nsRefPtr<PeriodicWave> periodicWave =
         new PeriodicWave(sampleRate);
     periodicWave->generateBasicWaveform(OscillatorType::Sine);
     return periodicWave.forget();
@@ -70,7 +70,7 @@ PeriodicWave::createSine(float sampleRate)
 already_AddRefed<PeriodicWave>
 PeriodicWave::createSquare(float sampleRate)
 {
-    RefPtr<PeriodicWave> periodicWave =
+    nsRefPtr<PeriodicWave> periodicWave =
         new PeriodicWave(sampleRate);
     periodicWave->generateBasicWaveform(OscillatorType::Square);
     return periodicWave.forget();
@@ -79,7 +79,7 @@ PeriodicWave::createSquare(float sampleRate)
 already_AddRefed<PeriodicWave>
 PeriodicWave::createSawtooth(float sampleRate)
 {
-    RefPtr<PeriodicWave> periodicWave =
+    nsRefPtr<PeriodicWave> periodicWave =
         new PeriodicWave(sampleRate);
     periodicWave->generateBasicWaveform(OscillatorType::Sawtooth);
     return periodicWave.forget();
@@ -88,7 +88,7 @@ PeriodicWave::createSawtooth(float sampleRate)
 already_AddRefed<PeriodicWave>
 PeriodicWave::createTriangle(float sampleRate)
 {
-    RefPtr<PeriodicWave> periodicWave =
+    nsRefPtr<PeriodicWave> periodicWave =
         new PeriodicWave(sampleRate);
     periodicWave->generateBasicWaveform(OscillatorType::Triangle);
     return periodicWave.forget();

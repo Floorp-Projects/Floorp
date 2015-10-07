@@ -195,7 +195,7 @@ private:
   // mBlockChanges[offset/BLOCK_SIZE] != nullptr, then either there's a block
   // cached in memory waiting to be written, or this block is the target of a
   // block move.
-  nsTArray< RefPtr<BlockChange> > mBlockChanges;
+  nsTArray< nsRefPtr<BlockChange> > mBlockChanges;
   // Thread upon which block writes and block moves are performed. This is
   // created upon open, and shutdown (asynchronously) upon close (on the
   // main thread).

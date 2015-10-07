@@ -481,7 +481,7 @@ nsPerformance::Timing()
 void
 nsPerformance::DispatchBufferFullEvent()
 {
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   // it bubbles, and it isn't cancelable
   nsresult rv = event->InitEvent(NS_LITERAL_STRING("resourcetimingbufferfull"),
                                  true, false);
@@ -557,13 +557,13 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
     // The last argument is the "zero time" (offset). Since we don't want
     // any offset for the resource timing, this will be set to "0" - the
     // resource timing returns a relative timing (no offset).
-    RefPtr<nsPerformanceTiming> performanceTiming =
+    nsRefPtr<nsPerformanceTiming> performanceTiming =
         new nsPerformanceTiming(this, timedChannel, channel,
             0);
 
     // The PerformanceResourceTiming object will use the nsPerformanceTiming
     // object to get all the required timings.
-    RefPtr<PerformanceResourceTiming> performanceEntry =
+    nsRefPtr<PerformanceResourceTiming> performanceEntry =
       new PerformanceResourceTiming(performanceTiming, this, entryName);
 
     // If the initiator type had no valid value, then set it to the default
@@ -732,7 +732,7 @@ nsPerformance::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<PrefEnabledRunnable> runnable =
+  nsRefPtr<PrefEnabledRunnable> runnable =
     new PrefEnabledRunnable(workerPrivate,
                             NS_LITERAL_CSTRING("dom.enable_user_timing"));
   runnable->Dispatch(workerPrivate->GetJSContext());
@@ -751,7 +751,7 @@ nsPerformance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<PrefEnabledRunnable> runnable =
+  nsRefPtr<PrefEnabledRunnable> runnable =
     new PrefEnabledRunnable(workerPrivate,
                             NS_LITERAL_CSTRING("dom.enable_performance_observer"));
   runnable->Dispatch(workerPrivate->GetJSContext());
@@ -830,7 +830,7 @@ PerformanceBase::~PerformanceBase()
 {}
 
 void
-PerformanceBase::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+PerformanceBase::GetEntries(nsTArray<nsRefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval = mResourceEntries;
   aRetval.AppendElements(mUserEntries);
@@ -839,7 +839,7 @@ PerformanceBase::GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 
 void
 PerformanceBase::GetEntriesByType(const nsAString& aEntryType,
-                                  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+                                  nsTArray<nsRefPtr<PerformanceEntry>>& aRetval)
 {
   if (aEntryType.EqualsLiteral("resource")) {
     aRetval = mResourceEntries;
@@ -861,7 +861,7 @@ PerformanceBase::GetEntriesByType(const nsAString& aEntryType,
 void
 PerformanceBase::GetEntriesByName(const nsAString& aName,
                                   const Optional<nsAString>& aEntryType,
-                                  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+                                  nsTArray<nsRefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval.Clear();
 
@@ -920,7 +920,7 @@ PerformanceBase::Mark(const nsAString& aName, ErrorResult& aRv)
     return;
   }
 
-  RefPtr<PerformanceMark> performanceMark =
+  nsRefPtr<PerformanceMark> performanceMark =
     new PerformanceMark(GetAsISupports(), aName, Now());
   InsertUserEntry(performanceMark);
 
@@ -939,7 +939,7 @@ DOMHighResTimeStamp
 PerformanceBase::ResolveTimestampFromName(const nsAString& aName,
                                           ErrorResult& aRv)
 {
-  nsAutoTArray<RefPtr<PerformanceEntry>, 1> arr;
+  nsAutoTArray<nsRefPtr<PerformanceEntry>, 1> arr;
   DOMHighResTimeStamp ts;
   Optional<nsAString> typeParam;
   nsAutoString str;
@@ -1005,7 +1005,7 @@ PerformanceBase::Measure(const nsAString& aName,
     endTime = Now();
   }
 
-  RefPtr<PerformanceMeasure> performanceMeasure =
+  nsRefPtr<PerformanceMeasure> performanceMeasure =
     new PerformanceMeasure(GetAsISupports(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 }
@@ -1041,7 +1041,7 @@ PerformanceBase::TimingNotification(PerformanceEntry* aEntry, const nsACString& 
   init.mEpoch = aEpoch;
   init.mOrigin = NS_ConvertUTF8toUTF16(aOwner.BeginReading());
 
-  RefPtr<PerformanceEntryEvent> perfEntryEvent =
+  nsRefPtr<PerformanceEntryEvent> perfEntryEvent =
     PerformanceEntryEvent::Constructor(this, NS_LITERAL_STRING("performanceentry"), init);
 
   nsCOMPtr<EventTarget> et = do_QueryInterface(GetOwner());
@@ -1139,7 +1139,7 @@ private:
   {
   }
 
-  RefPtr<PerformanceBase> mPerformance;
+  nsRefPtr<PerformanceBase> mPerformance;
 };
 
 void

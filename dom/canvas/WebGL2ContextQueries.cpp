@@ -100,7 +100,7 @@ WebGL2Context::CreateQuery()
          */
     }
 
-    RefPtr<WebGLQuery> globj = new WebGLQuery(this);
+    nsRefPtr<WebGLQuery> globj = new WebGLQuery(this);
 
     return globj.forget();
 }
@@ -276,7 +276,7 @@ WebGL2Context::GetQuery(GLenum target, GLenum pname)
 
     WebGLRefPtr<WebGLQuery>& targetSlot = GetQuerySlotByTarget(target);
 
-    RefPtr<WebGLQuery> tmp = targetSlot.get();
+    nsRefPtr<WebGLQuery> tmp = targetSlot.get();
     return tmp.forget();
 }
 

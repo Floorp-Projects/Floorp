@@ -126,7 +126,7 @@ ICameraControl::Create(uint32_t aCameraId)
 {
   nsCString test;
   CameraPreferences::GetPref("camera.control.test.enabled", test);
-  RefPtr<nsGonkCameraControl> control;
+  nsRefPtr<nsGonkCameraControl> control;
   if (test.EqualsASCII("control")) {
     NS_WARNING("Using test CameraControl layer");
     control = new TestGonkCameraControl(aCameraId);

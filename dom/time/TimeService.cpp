@@ -25,7 +25,7 @@ TimeService::GetInstance()
     sSingleton = new TimeService();
     ClearOnShutdown(&sSingleton);
   }
-  RefPtr<TimeService> service = sSingleton.get();
+  nsRefPtr<TimeService> service = sSingleton.get();
   return service.forget();
 }
 

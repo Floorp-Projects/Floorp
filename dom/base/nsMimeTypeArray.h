@@ -49,7 +49,7 @@ protected:
 
   // mMimeTypes contains MIME types handled by plugins or by an OS
   // PreferredApplicationHandler.
-  nsTArray<RefPtr<nsMimeType> > mMimeTypes;
+  nsTArray<nsRefPtr<nsMimeType> > mMimeTypes;
 };
 
 class nsMimeType final : public nsWrapperCache
@@ -87,7 +87,7 @@ protected:
   // creates an explicit reference cycle through the plugin element's
   // mimetype array. We rely on the cycle collector to break this
   // cycle.
-  RefPtr<nsPluginElement> mPluginElement;
+  nsRefPtr<nsPluginElement> mPluginElement;
   nsString mType;
   nsString mDescription;
   nsString mExtension;

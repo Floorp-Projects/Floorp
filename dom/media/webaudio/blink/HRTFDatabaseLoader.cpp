@@ -46,7 +46,7 @@ already_AddRefed<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchrono
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    RefPtr<HRTFDatabaseLoader> loader;
+    nsRefPtr<HRTFDatabaseLoader> loader;
     
     if (!s_loaderMap) {
         s_loaderMap = new nsTHashtable<LoaderByRateEntry>();
@@ -123,7 +123,7 @@ void HRTFDatabaseLoader::ProxyRelease()
 {
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     if (MOZ_LIKELY(mainThread)) {
-        RefPtr<ProxyReleaseEvent> event = new ProxyReleaseEvent(this);
+        nsRefPtr<ProxyReleaseEvent> event = new ProxyReleaseEvent(this);
         DebugOnly<nsresult> rv =
             mainThread->Dispatch(event, NS_DISPATCH_NORMAL);
         MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to dispatch release event");

@@ -7,7 +7,7 @@
 #define MOZILLA_SVGTEXTFRAME_H
 
 #include "mozilla/Attributes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
@@ -618,7 +618,7 @@ private:
   /**
    * The MutationObserver we have registered for the <text> element subtree.
    */
-  RefPtr<MutationObserver> mMutationObserver;
+  nsRefPtr<MutationObserver> mMutationObserver;
 
   /**
    * Cached canvasTM value.

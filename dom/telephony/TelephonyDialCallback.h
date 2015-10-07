@@ -45,10 +45,10 @@ private:
 
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  RefPtr<Telephony> mTelephony;
+  nsRefPtr<Telephony> mTelephony;
 
   nsString mServiceCode;
-  RefPtr<MMICall> mMMICall;
+  nsRefPtr<MMICall> mMMICall;
 };
 
 } // namespace telephony

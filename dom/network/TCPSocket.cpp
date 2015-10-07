@@ -356,7 +356,7 @@ TCPSocket::UpgradeToSecure(mozilla::ErrorResult& aRv)
 namespace {
 class CopierCallbacks final : public nsIRequestObserver
 {
-  RefPtr<TCPSocket> mOwner;
+  nsRefPtr<TCPSocket> mOwner;
 public:
   explicit CopierCallbacks(TCPSocket* aSocket) : mOwner(aSocket) {}
 
@@ -390,7 +390,7 @@ TCPSocket::EnsureCopying()
   }
 
   mAsyncCopierActive = true;
-  RefPtr<CopierCallbacks> callbacks = new CopierCallbacks(this);
+  nsRefPtr<CopierCallbacks> callbacks = new CopierCallbacks(this);
   return mMultiplexStreamCopier->AsyncCopy(callbacks, nullptr);
 }
 
@@ -475,7 +475,7 @@ TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
   init.mName = aName;
   init.mMessage = aType;
 
-  RefPtr<TCPSocketErrorEvent> event =
+  nsRefPtr<TCPSocketErrorEvent> event =
     TCPSocketErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
   MOZ_ASSERT(event);
   event->SetTrusted(true);
@@ -546,7 +546,7 @@ TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::
   init.mCancelable = false;
   init.mData = aData;
 
-  RefPtr<TCPSocketEvent> event =
+  nsRefPtr<TCPSocketEvent> event =
     TCPSocketEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
   bool dummy;
@@ -918,7 +918,7 @@ TCPSocket::CreateAcceptedSocket(nsIGlobalObject* aGlobal,
                                 nsISocketTransport* aTransport,
                                 bool aUseArrayBuffers)
 {
-  RefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
+  nsRefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
   nsresult rv = socket->InitWithTransport(aTransport);
   NS_ENSURE_SUCCESS(rv, nullptr);
   return socket.forget();
@@ -929,7 +929,7 @@ TCPSocket::CreateAcceptedSocket(nsIGlobalObject* aGlobal,
                                 TCPSocketChild* aBridge,
                                 bool aUseArrayBuffers)
 {
-  RefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
+  nsRefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
   socket->InitWithSocketChild(aBridge);
   return socket.forget();
 }
@@ -942,7 +942,7 @@ TCPSocket::Constructor(const GlobalObject& aGlobal,
                        mozilla::ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<TCPSocket> socket =
+  nsRefPtr<TCPSocket> socket =
     new TCPSocket(global, aHost, aPort, aOptions.mUseSecureTransport,
                   aOptions.mBinaryType == TCPSocketBinaryType::Arraybuffer);
   nsresult rv = socket->Init();

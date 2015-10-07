@@ -292,7 +292,7 @@ InternalHeaders::HasOnlySimpleHeaders() const
 already_AddRefed<InternalHeaders>
 InternalHeaders::BasicHeaders(InternalHeaders* aHeaders)
 {
-  RefPtr<InternalHeaders> basic = new InternalHeaders(*aHeaders);
+  nsRefPtr<InternalHeaders> basic = new InternalHeaders(*aHeaders);
   ErrorResult result;
   // The Set-Cookie headers cannot be invalid mutable headers, so the Delete
   // must succeed.
@@ -307,7 +307,7 @@ InternalHeaders::BasicHeaders(InternalHeaders* aHeaders)
 already_AddRefed<InternalHeaders>
 InternalHeaders::CORSHeaders(InternalHeaders* aHeaders)
 {
-  RefPtr<InternalHeaders> cors = new InternalHeaders(aHeaders->mGuard);
+  nsRefPtr<InternalHeaders> cors = new InternalHeaders(aHeaders->mGuard);
   ErrorResult result;
 
   nsAutoCString acExposedNames;

@@ -52,7 +52,7 @@ public:
                                    // thread!
 
     // Declare javascript result events
-    RefPtr<SpeechEvent> event = new SpeechEvent(
+    nsRefPtr<SpeechEvent> event = new SpeechEvent(
       mRecognition, SpeechRecognition::EVENT_RECOGNITIONSERVICE_FINAL_RESULT);
     SpeechRecognitionResultList* resultList =
       new SpeechRecognitionResultList(mRecognition);
@@ -323,7 +323,7 @@ PocketSphinxSpeechRecognitionService::Observe(nsISupports* aSubject,
       NS_LITERAL_STRING("RECOGNITIONSERVICE_ERROR test event"));
 
   } else if (eventName.EqualsLiteral("EVENT_RECOGNITIONSERVICE_FINAL_RESULT")) {
-    RefPtr<SpeechEvent> event = new SpeechEvent(
+    nsRefPtr<SpeechEvent> event = new SpeechEvent(
       mRecognition, SpeechRecognition::EVENT_RECOGNITIONSERVICE_FINAL_RESULT);
 
     event->mRecognitionResultList = BuildMockResultList();

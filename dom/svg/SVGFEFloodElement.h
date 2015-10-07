@@ -35,7 +35,7 @@ public:
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
                             const nsTArray<bool>& aInputsAreTainted,
-                            nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
+                            nsTArray<nsRefPtr<SourceSurface>>& aInputImages) override;
   virtual nsSVGString& GetResultImageName() override { return mStringAttributes[RESULT]; }
 
   // nsIContent interface

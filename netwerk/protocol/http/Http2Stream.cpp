@@ -332,7 +332,7 @@ Http2Stream::WriteSegments(nsAHttpSegmentWriter *writer,
 }
 
 nsresult
-Http2Stream::MakeOriginURL(const nsACString &origin, RefPtr<nsStandardURL> &url)
+Http2Stream::MakeOriginURL(const nsACString &origin, nsRefPtr<nsStandardURL> &url)
 {
   nsAutoCString scheme;
   nsresult rv = net_ExtractURLScheme(origin, nullptr, nullptr, &scheme);
@@ -342,7 +342,7 @@ Http2Stream::MakeOriginURL(const nsACString &origin, RefPtr<nsStandardURL> &url)
 
 nsresult
 Http2Stream::MakeOriginURL(const nsACString &scheme, const nsACString &origin,
-                           RefPtr<nsStandardURL> &url)
+                           nsRefPtr<nsStandardURL> &url)
 {
   url = new nsStandardURL();
   nsresult rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY,
@@ -365,7 +365,7 @@ Http2Stream::CreatePushHashKey(const nsCString &scheme,
   fullOrigin.AppendLiteral("://");
   fullOrigin.Append(hostHeader);
 
-  RefPtr<nsStandardURL> origin;
+  nsRefPtr<nsStandardURL> origin;
   nsresult rv = Http2Stream::MakeOriginURL(scheme, fullOrigin, origin);
 
   if (NS_SUCCEEDED(rv)) {
@@ -1448,7 +1448,7 @@ Http2Stream::ClearTransactionsBlockedOnTunnel()
 void
 Http2Stream::MapStreamToPlainText()
 {
-  RefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
+  nsRefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
   MOZ_ASSERT(qiTrans);
   mPlainTextTunnel = true;
   qiTrans->ForcePlainText();
@@ -1457,7 +1457,7 @@ Http2Stream::MapStreamToPlainText()
 void
 Http2Stream::MapStreamToHttpConnection()
 {
-  RefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
+  nsRefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
   MOZ_ASSERT(qiTrans);
   qiTrans->MapStreamToHttpConnection(mSocketTransport,
                                      mTransaction->ConnectionInfo());

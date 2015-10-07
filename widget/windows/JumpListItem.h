@@ -64,7 +64,7 @@ public:
   NS_IMETHOD GetType(int16_t *aType) { return JumpListItem::GetType(aType); }
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) { return JumpListItem::Equals(item, _retval); }
 
-  static nsresult GetSeparator(RefPtr<IShellLinkW>& aShellLink);
+  static nsresult GetSeparator(nsRefPtr<IShellLinkW>& aShellLink);
 };
 
 class JumpListLink : public JumpListItem, public nsIJumpListLink
@@ -81,7 +81,7 @@ public:
   NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval);
   NS_DECL_NSIJUMPLISTLINK
 
-  static nsresult GetShellItem(nsCOMPtr<nsIJumpListItem>& item, RefPtr<IShellItem2>& aShellItem);
+  static nsresult GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IShellItem2>& aShellItem);
   static nsresult GetJumpListLink(IShellItem *pItem, nsCOMPtr<nsIJumpListLink>& aLink);
 
 protected:
@@ -106,7 +106,7 @@ public:
   NS_DECL_NSIJUMPLISTSHORTCUT
 
   static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 
-                               RefPtr<IShellLinkW>& aShellLink, 
+                               nsRefPtr<IShellLinkW>& aShellLink, 
                                nsCOMPtr<nsIThread> &aIOThread);
   static nsresult GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJumpListShortcut>& aShortcut);
   static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI, 

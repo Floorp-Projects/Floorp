@@ -8,7 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 
@@ -65,8 +65,8 @@ public:
   // WebIDL
   void SetTransform(SVGMatrix& matrix);
 
-  RefPtr<CanvasRenderingContext2D> mContext;
-  RefPtr<gfx::SourceSurface> mSurface;
+  nsRefPtr<CanvasRenderingContext2D> mContext;
+  nsRefPtr<gfx::SourceSurface> mSurface;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   mozilla::gfx::Matrix mTransform;
   const bool mForceWriteOnly;

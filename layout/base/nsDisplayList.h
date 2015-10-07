@@ -2363,7 +2363,7 @@ public:
   void SetNeedsCustomScrollClip() { mNeedsCustomScrollClip = true; }
 
 protected:
-  RefPtr<nsCaret> mCaret;
+  nsRefPtr<nsCaret> mCaret;
   nsRect mBounds;
   bool mNeedsCustomScrollClip;
 };
@@ -2582,7 +2582,7 @@ protected:
   // mIsThemed is true or if FindBackground returned false.
   const nsStyleBackground* mBackgroundStyle;
   nsCOMPtr<imgIContainer> mImage;
-  RefPtr<ImageContainer> mImageContainer;
+  nsRefPtr<ImageContainer> mImageContainer;
   LayoutDeviceRect mDestRect;
   /* Bounds of this display item */
   nsRect mBounds;
@@ -3789,7 +3789,7 @@ public:
     }
 
     const nsIFrame* mFrame;
-    RefPtr<nsCSSValueSharedList> mTransformList;
+    nsRefPtr<nsCSSValueSharedList> mTransformList;
     const Point3D mToTransformOrigin;
     nscoord mChildPerspective;
 
@@ -3984,7 +3984,7 @@ public:
                                              const ContainerLayerParameters& aContainerParameters) override;
 
 protected:
-  RefPtr<mozilla::gfx::VRHMDInfo> mHMD;
+  nsRefPtr<mozilla::gfx::VRHMDInfo> mHMD;
 };
 
 #endif /*NSDISPLAYLIST_H_*/

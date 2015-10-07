@@ -143,11 +143,11 @@ public:
   Http2Session *Session() { return mSession; }
 
   static nsresult MakeOriginURL(const nsACString &origin,
-                                RefPtr<nsStandardURL> &url);
+                                nsRefPtr<nsStandardURL> &url);
 
   static nsresult MakeOriginURL(const nsACString &scheme,
                                 const nsACString &origin,
-                                RefPtr<nsStandardURL> &url);
+                                nsRefPtr<nsStandardURL> &url);
 
 protected:
   static void CreatePushHashKey(const nsCString &scheme,
@@ -216,7 +216,7 @@ private:
   // in the Http2Session mStreamTransactionHash so it is important to
   // keep a reference to it as long as this stream is a member of that hash.
   // (i.e. don't change it or release it after it is set in the ctor).
-  RefPtr<nsAHttpTransaction> mTransaction;
+  nsRefPtr<nsAHttpTransaction> mTransaction;
 
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport         *mSocketTransport;

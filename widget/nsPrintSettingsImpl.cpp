@@ -6,7 +6,7 @@
 #include "nsPrintSettingsImpl.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSession.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/gfx/Logging.h"
 
 #define DEFAULT_MARGIN_WIDTH 0.5
@@ -975,7 +975,7 @@ nsPrintSettings::GetPageRanges(nsTArray<int32_t> &aPages)
 nsresult 
 nsPrintSettings::_Clone(nsIPrintSettings **_retval)
 {
-  RefPtr<nsPrintSettings> printSettings = new nsPrintSettings(*this);
+  nsRefPtr<nsPrintSettings> printSettings = new nsPrintSettings(*this);
   printSettings.forget(_retval);
   return NS_OK;
 }

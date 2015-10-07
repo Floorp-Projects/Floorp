@@ -70,10 +70,10 @@ protected:
 
 TEST(stagefright_MP4Metadata, EmptyStream)
 {
-  RefPtr<Stream> stream = new TestStream(nullptr, 0);
+  nsRefPtr<Stream> stream = new TestStream(nullptr, 0);
 
   EXPECT_FALSE(MP4Metadata::HasCompleteMetadata(stream));
-  RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+  nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
   EXPECT_FALSE(metadataBuffer);
 
   MP4Metadata metadata(stream);
@@ -94,7 +94,7 @@ TEST(stagefright_MP4Metadata, EmptyStream)
 
 TEST(stagefright_MoofParser, EmptyStream)
 {
-  RefPtr<Stream> stream = new TestStream(nullptr, 0);
+  nsRefPtr<Stream> stream = new TestStream(nullptr, 0);
 
   Monitor monitor("MP4Metadata::gtest");
   MonitorAutoLock mon(monitor);
@@ -111,7 +111,7 @@ TEST(stagefright_MoofParser, EmptyStream)
   EXPECT_EQ(0u, parser.mOffset);
   EXPECT_TRUE(parser.ReachedEnd());
   EXPECT_FALSE(parser.HasMetadata());
-  RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+  nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
   EXPECT_FALSE(metadataBuffer);
   EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
   EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
@@ -175,10 +175,10 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
-    RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
+    nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
     EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
-    RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+    nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
     EXPECT_TRUE(metadataBuffer);
 
     MP4Metadata metadata(stream);
@@ -229,11 +229,11 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
     for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
       size_t size = buffer.Length() - offset;
       while (size > 0) {
-        RefPtr<TestStream> stream =
+        nsRefPtr<TestStream> stream =
           new TestStream(buffer.Elements() + offset, size);
 
         MP4Metadata::HasCompleteMetadata(stream);
-        RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+        nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
         MP4Metadata metadata(stream);
 
         if (stream->mHighestSuccessfulEndOffset <= 0) {
@@ -257,7 +257,7 @@ TEST(stagefright_MoofParser, test_case_mp4)
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
-    RefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
+    nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
     Monitor monitor("MP4Metadata::HasCompleteMetadata");
     MonitorAutoLock mon(monitor);
@@ -274,7 +274,7 @@ TEST(stagefright_MoofParser, test_case_mp4)
     EXPECT_EQ(0u, parser.mOffset);
     EXPECT_FALSE(parser.ReachedEnd());
     EXPECT_TRUE(parser.HasMetadata());
-    RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+    nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
     EXPECT_TRUE(metadataBuffer);
     EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
     EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
@@ -296,7 +296,7 @@ TEST(stagefright_MoofParser, test_case_mp4_subsets)
     for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
       size_t size = buffer.Length() - offset;
       while (size > 0) {
-        RefPtr<TestStream> stream =
+        nsRefPtr<TestStream> stream =
           new TestStream(buffer.Elements() + offset, size);
 
         MoofParser parser(stream, 0, false, &monitor);
@@ -305,7 +305,7 @@ TEST(stagefright_MoofParser, test_case_mp4_subsets)
         EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
         parser.GetCompositionRange(byteRanges);
         parser.HasMetadata();
-        RefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+        nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
         parser.FirstCompleteMediaSegment();
         parser.FirstCompleteMediaHeader();
 
@@ -395,12 +395,12 @@ const uint32_t media_libstagefright_gtest_video_init_mp4_len = 745;
 
 TEST(stagefright_MP4Metadata, EmptyCTTS)
 {
-  RefPtr<MediaByteBuffer> buffer = new MediaByteBuffer(media_libstagefright_gtest_video_init_mp4_len);
+  nsRefPtr<MediaByteBuffer> buffer = new MediaByteBuffer(media_libstagefright_gtest_video_init_mp4_len);
   buffer->AppendElements(media_libstagefright_gtest_video_init_mp4, media_libstagefright_gtest_video_init_mp4_len);
-  RefPtr<BufferStream> stream = new BufferStream(buffer);
+  nsRefPtr<BufferStream> stream = new BufferStream(buffer);
 
   EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
-  RefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+  nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
   EXPECT_TRUE(metadataBuffer);
 
   MP4Metadata metadata(stream);

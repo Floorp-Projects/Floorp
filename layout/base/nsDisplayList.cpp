@@ -818,7 +818,7 @@ nsDisplayListBuilder::SubtractFromVisibleRegion(nsRegion* aVisibleRegion,
 
 nsCaret *
 nsDisplayListBuilder::GetCaret() {
-  RefPtr<nsCaret> caret = CurrentPresShellState()->mPresShell->GetCaret();
+  nsRefPtr<nsCaret> caret = CurrentPresShellState()->mPresShell->GetCaret();
   return caret;
 }
 
@@ -859,7 +859,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   if (!buildCaret)
     return;
 
-  RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
+  nsRefPtr<nsCaret> caret = state->mPresShell->GetCaret();
   state->mCaretFrame = caret->GetPaintGeometry(&state->mCaretRect);
   if (state->mCaretFrame) {
     mFramesMarkedForDisplay.AppendElement(state->mCaretFrame);
@@ -1495,7 +1495,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   PROFILER_LABEL("nsDisplayList", "PaintRoot",
     js::ProfileEntry::Category::GRAPHICS);
 
-  RefPtr<LayerManager> layerManager;
+  nsRefPtr<LayerManager> layerManager;
   bool widgetTransaction = false;
   bool allowRetaining = false;
   bool doBeginTransaction = true;
@@ -1561,7 +1561,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
 
   ContainerLayerParameters containerParameters
     (presShell->GetResolution(), presShell->GetResolution());
-  RefPtr<ContainerLayer> root = layerBuilder->
+  nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
                            containerParameters, nullptr);
 
@@ -2378,7 +2378,7 @@ bool
 nsDisplayBackgroundImage::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
 {
   // APZ needs background-attachment:fixed images layerized for correctness.
-  RefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
+  nsRefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
   if (!nsLayoutUtils::UsesAsyncScrolling(mFrame) &&
       layerManager && layerManager->ShouldAvoidComponentAlphaLayers()) {
     return false;
@@ -2455,7 +2455,7 @@ nsDisplayBackgroundImage::GetContainer(LayerManager* aManager,
     mImageContainer = mImage->GetImageContainer(aManager, flags);
   }
 
-  RefPtr<ImageContainer> container = mImageContainer;
+  nsRefPtr<ImageContainer> container = mImageContainer;
   return container.forget();
 }
 
@@ -2525,14 +2525,14 @@ nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
-  RefPtr<ImageLayer> layer = static_cast<ImageLayer*>
+  nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
     layer = aManager->CreateImageLayer();
     if (!layer)
       return nullptr;
   }
-  RefPtr<ImageContainer> imageContainer = GetContainer(aManager, aBuilder);
+  nsRefPtr<ImageContainer> imageContainer = GetContainer(aManager, aBuilder);
   layer->SetContainer(imageContainer);
   ConfigureLayer(layer, aParameters);
   return layer.forget();
@@ -3091,7 +3091,7 @@ nsDisplayClearBackground::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters)
 {
-  RefPtr<ColorLayer> layer = static_cast<ColorLayer*>
+  nsRefPtr<ColorLayer> layer = static_cast<ColorLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
     layer = aManager->CreateColorLayer();
@@ -3846,7 +3846,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aContainerParameters) {
-  RefPtr<Layer> container = aManager->GetLayerBuilder()->
+  nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
@@ -4035,7 +4035,7 @@ nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters newContainerParameters = aContainerParameters;
   newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
 
-  RefPtr<Layer> container = aManager->GetLayerBuilder()->
+  nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
   BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                          newContainerParameters, nullptr);
   if (!container) {
@@ -4108,7 +4108,7 @@ nsDisplayBlendContainer::BuildLayer(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters newContainerParameters = aContainerParameters;
   newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
 
-  RefPtr<Layer> container = aManager->GetLayerBuilder()->
+  nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
   BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                          newContainerParameters, nullptr);
   if (!container) {
@@ -4157,7 +4157,7 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aContainerParameters)
 {
-  RefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
+  nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            aContainerParameters, nullptr,
                            FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR);
@@ -4208,7 +4208,7 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
     params.mInLowPrecisionDisplayPort = true; 
   }
 
-  RefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, params);
+  nsRefPtr<Layer> layer = nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, params);
   layer->AsContainerLayer()->SetEventRegionsOverride(mForceDispatchToContentRegion
     ? EventRegionsOverride::ForceDispatchToContent
     : EventRegionsOverride::NoOverride);
@@ -4354,7 +4354,7 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
     presShell->GetResolution(), presShell->GetResolution(), nsIntPoint(),
     aContainerParameters);
 
-  RefPtr<Layer> layer = nsDisplaySubDocument::BuildLayer(
+  nsRefPtr<Layer> layer = nsDisplaySubDocument::BuildLayer(
     aBuilder, aManager, containerParameters);
   layer->SetPostScale(1.0f / presShell->GetResolution(),
                       1.0f / presShell->GetResolution());
@@ -4381,7 +4381,7 @@ already_AddRefed<Layer>
 nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
                                     const ContainerLayerParameters& aContainerParameters) {
-  RefPtr<Layer> layer =
+  nsRefPtr<Layer> layer =
     nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
 
   StickyScrollContainer* stickyScrollContainer = StickyScrollContainer::
@@ -5320,7 +5320,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   uint32_t flags = ShouldPrerender(aBuilder) ?
     FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
   flags |= FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
-  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
+  nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
                            aContainerParameters, &newTransformMatrix, flags);
 
@@ -5849,7 +5849,7 @@ nsDisplayVR::BuildLayer(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters newContainerParameters = aContainerParameters;
   uint32_t flags = FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS |
                    FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
-  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
+  nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            newContainerParameters, nullptr, flags);
 
@@ -5935,7 +5935,7 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
   }
 
-  RefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
+  nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, &mList,
                            newContainerParameters, nullptr);
 

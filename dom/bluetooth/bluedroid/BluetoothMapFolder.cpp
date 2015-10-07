@@ -21,7 +21,7 @@ BluetoothMapFolder::BluetoothMapFolder(const nsAString& aFolderName,
 BluetoothMapFolder*
 BluetoothMapFolder::AddSubFolder(const nsAString& aFolderName)
 {
-  RefPtr<BluetoothMapFolder> folder = new BluetoothMapFolder(aFolderName,
+  nsRefPtr<BluetoothMapFolder> folder = new BluetoothMapFolder(aFolderName,
                                                                this);
   mSubFolders.Put(nsString(aFolderName), folder);
 

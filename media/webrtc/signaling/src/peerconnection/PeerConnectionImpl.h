@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include "prlock.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsWeakPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIWeakReferenceUtils.h" // for the definition of nsWeakPtr
@@ -222,8 +222,8 @@ class RTCStatsQuery {
     friend class PeerConnectionImpl;
     std::string pcName;
     bool internalStats;
-    nsTArray<RefPtr<mozilla::MediaPipeline>> pipelines;
-    RefPtr<NrIceCtx> iceCtx;
+    nsTArray<nsRefPtr<mozilla::MediaPipeline>> pipelines;
+    nsRefPtr<NrIceCtx> iceCtx;
     bool grabAllLevels;
     DOMHighResTimeStamp now;
 };
@@ -279,7 +279,7 @@ public:
   static PeerConnectionImpl* CreatePeerConnection();
   already_AddRefed<DOMMediaStream> MakeMediaStream();
 
-  nsresult CreateRemoteSourceStreamInfo(RefPtr<RemoteSourceStreamInfo>* aInfo,
+  nsresult CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo>* aInfo,
                                         const std::string& aId);
 
   // DataConnection observers
@@ -292,7 +292,7 @@ public:
     ;
 
   // Get the media object
-  const RefPtr<PeerConnectionMedia>& media() const {
+  const nsRefPtr<PeerConnectionMedia>& media() const {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mMedia;
   }
@@ -362,10 +362,10 @@ public:
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   void SetCertificate(mozilla::dom::RTCCertificate& aCertificate);
-  const RefPtr<mozilla::dom::RTCCertificate>& Certificate() const;
+  const nsRefPtr<mozilla::dom::RTCCertificate>& Certificate() const;
 #endif
   // This is a hack to support external linkage.
-  RefPtr<DtlsIdentity> Identity() const;
+  nsRefPtr<DtlsIdentity> Identity() const;
 
   NS_IMETHODIMP_TO_ERRORRESULT(CreateOffer, ErrorResult &rv,
                                const RTCOfferOptions& aOptions)
@@ -566,13 +566,13 @@ public:
                                       uint16_t aStream);
 
   NS_IMETHODIMP_TO_ERRORRESULT(GetLocalStreams, ErrorResult &rv,
-                               nsTArray<RefPtr<DOMMediaStream > >& result)
+                               nsTArray<nsRefPtr<DOMMediaStream > >& result)
   {
     rv = GetLocalStreams(result);
   }
 
   NS_IMETHODIMP_TO_ERRORRESULT(GetRemoteStreams, ErrorResult &rv,
-                               nsTArray<RefPtr<DOMMediaStream > >& result)
+                               nsTArray<nsRefPtr<DOMMediaStream > >& result)
   {
     rv = GetRemoteStreams(result);
   }
@@ -740,9 +740,9 @@ private:
   // void if they are not yet identified, and no identity setting has been set
   nsAutoPtr<PeerIdentity> mPeerIdentity;
   // The certificate we are using.
-  RefPtr<mozilla::dom::RTCCertificate> mCertificate;
+  nsRefPtr<mozilla::dom::RTCCertificate> mCertificate;
 #else
-  RefPtr<DtlsIdentity> mIdentity;
+  nsRefPtr<DtlsIdentity> mIdentity;
 #endif
   // Whether an app should be prevented from accessing media produced by the PC
   // If this is true, then media will not be sent until mPeerIdentity matches
@@ -764,12 +764,12 @@ private:
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // DataConnection that's used to get all the DataChannels
-  RefPtr<mozilla::DataChannelConnection> mDataConnection;
+  nsRefPtr<mozilla::DataChannelConnection> mDataConnection;
 #endif
 
   bool mAllowIceLoopback;
   bool mAllowIceLinkLocal;
-  RefPtr<PeerConnectionMedia> mMedia;
+  nsRefPtr<PeerConnectionMedia> mMedia;
 
   // The JSEP negotiation session.
   mozilla::UniquePtr<PCUuidGenerator> mUuidGen;
@@ -818,7 +818,7 @@ class PeerConnectionWrapper
   PeerConnectionImpl *impl() { return impl_; }
 
  private:
-  RefPtr<PeerConnectionImpl> impl_;
+  nsRefPtr<PeerConnectionImpl> impl_;
 };
 
 }  // end mozilla namespace

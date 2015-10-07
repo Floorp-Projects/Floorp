@@ -6,7 +6,7 @@
 #ifndef GMPVideoEncoderParent_h_
 #define GMPVideoEncoderParent_h_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "gmp-video-encode.h"
 #include "mozilla/gmp/PGMPVideoEncoderParent.h"
 #include "GMPMessageUtils.h"
@@ -78,7 +78,7 @@ private:
   bool mIsOpen;
   bool mShuttingDown;
   bool mActorDestroyed;
-  RefPtr<GMPContentParent> mPlugin;
+  nsRefPtr<GMPContentParent> mPlugin;
   GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
   nsCOMPtr<nsIThread> mEncodedThread;

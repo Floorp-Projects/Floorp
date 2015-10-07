@@ -196,7 +196,7 @@ nsListBoxBodyFrame::Init(nsIContent*       aContent,
       scrollbarFrame->SetScrollbarMediatorContent(GetContent());
     }
   }
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   mRowHeight = fm->MaxHeight();
 }
@@ -699,7 +699,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
   nsCOMPtr<nsIContent> firstRowContent(do_QueryInterface(firstRowEl));
 
   if (firstRowContent) {
-    RefPtr<nsStyleContext> styleContext;
+    nsRefPtr<nsStyleContext> styleContext;
     nsPresContext *presContext = aBoxLayoutState.PresContext();
     styleContext = presContext->StyleSet()->
       ResolveStyleFor(firstRowContent->AsElement(), nullptr);
@@ -727,7 +727,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
             }
           }
 
-          RefPtr<nsFontMetrics> fm;
+          nsRefPtr<nsFontMetrics> fm;
           nsLayoutUtils::GetFontMetricsForStyleContext(styleContext,
                                                        getter_AddRefs(fm));
 
@@ -828,7 +828,7 @@ nsListBoxBodyFrame::InternalPositionChangedCallback()
 nsresult
 nsListBoxBodyFrame::InternalPositionChanged(bool aUp, int32_t aDelta)
 {
-  RefPtr<nsPositionChangedEvent> ev =
+  nsRefPtr<nsPositionChangedEvent> ev =
     new nsPositionChangedEvent(this, aUp, aDelta);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_SUCCEEDED(rv)) {
@@ -846,7 +846,7 @@ nsListBoxBodyFrame::DoInternalPositionChangedSync(bool aUp, int32_t aDelta)
   nsWeakFrame weak(this);
   
   // Process all the pending position changes first
-  nsTArray< RefPtr<nsPositionChangedEvent> > temp;
+  nsTArray< nsRefPtr<nsPositionChangedEvent> > temp;
   temp.SwapElements(mPendingPositionChangeEvents);
   for (uint32_t i = 0; i < temp.Length(); ++i) {
     if (weak.IsAlive()) {
@@ -868,7 +868,7 @@ nsListBoxBodyFrame::DoInternalPositionChanged(bool aUp, int32_t aDelta)
   if (aDelta == 0)
     return NS_OK;
 
-  RefPtr<nsPresContext> presContext(PresContext());
+  nsRefPtr<nsPresContext> presContext(PresContext());
   nsBoxLayoutState state(presContext);
 
   // begin timing how long it takes to scroll a row

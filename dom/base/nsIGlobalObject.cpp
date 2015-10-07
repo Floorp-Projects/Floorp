@@ -84,7 +84,7 @@ nsIGlobalObject::UnlinkHostObjectURIs()
 
   // nsHostObjectProtocolHandler is main-thread only.
 
-  RefPtr<UnlinkHostObjectURIsRunnable> runnable =
+  nsRefPtr<UnlinkHostObjectURIsRunnable> runnable =
     new UnlinkHostObjectURIsRunnable(mHostObjectURIs);
   MOZ_ASSERT(mHostObjectURIs.IsEmpty());
 

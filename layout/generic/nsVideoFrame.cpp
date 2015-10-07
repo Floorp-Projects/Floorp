@@ -59,7 +59,7 @@ nsresult
 nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsNodeInfoManager *nodeInfoManager = GetContent()->GetComposedDoc()->NodeInfoManager();
-  RefPtr<NodeInfo> nodeInfo;
+  nsRefPtr<NodeInfo> nodeInfo;
   Element *element;
 
   if (HasVideoElement()) {
@@ -168,7 +168,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  RefPtr<ImageContainer> container = element->GetImageContainer();
+  nsRefPtr<ImageContainer> container = element->GetImageContainer();
   if (!container)
     return nullptr;
   
@@ -203,7 +203,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                     static_cast<int32_t>(destGFXRect.Height()));
   container->SetScaleHint(scaleHint);
 
-  RefPtr<ImageLayer> layer = static_cast<ImageLayer*>
+  nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
   if (!layer) {
     layer = aManager->CreateImageLayer();
@@ -218,7 +218,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   Matrix transform = Matrix::Translation(p.x, p.y);
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   layer->SetScaleToSize(scaleHint, ScaleMode::STRETCH);
-  RefPtr<Layer> result = layer.forget();
+  nsRefPtr<Layer> result = layer.forget();
   return result.forget();
 }
 
@@ -304,7 +304,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                                        aReflowState.ComputedWidth(),
                                        aReflowState.ComputedHeight()));
       if (child->GetSize() != size) {
-        RefPtr<nsRunnable> event = new DispatchResizeToControls(child->GetContent());
+        nsRefPtr<nsRunnable> event = new DispatchResizeToControls(child->GetContent());
         nsContentUtils::AddScriptRunner(event);
       }
     } else if (child->GetContent() == mCaptionDiv) {

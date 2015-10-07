@@ -207,7 +207,7 @@ VoicemailIPCService::GetItemByServiceId(uint32_t aServiceId,
   NS_ENSURE_ARG_POINTER(aProvider);
 
   if (!mProviders[aServiceId]) {
-    RefPtr<VoicemailIPCProvider> provider =
+    nsRefPtr<VoicemailIPCProvider> provider =
       new VoicemailIPCProvider(aServiceId);
     if (!SendGetAttributes(aServiceId,
                            &(provider->mNumber),
@@ -222,7 +222,7 @@ VoicemailIPCService::GetItemByServiceId(uint32_t aServiceId,
     mProviders[aServiceId] = provider;
   }
 
-  RefPtr<nsIVoicemailProvider> provider(mProviders[aServiceId]);
+  nsRefPtr<nsIVoicemailProvider> provider(mProviders[aServiceId]);
   provider.forget(aProvider);
 
   return NS_OK;

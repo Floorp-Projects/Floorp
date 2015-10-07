@@ -160,7 +160,7 @@ class nsBindingValues
 protected:
 
     // the binding set
-    RefPtr<RDFBindingSet> mBindings;
+    nsRefPtr<RDFBindingSet> mBindings;
 
     /*
      * A set of values for variable bindings. To look up a binding value,

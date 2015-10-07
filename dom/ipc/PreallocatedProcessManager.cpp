@@ -72,7 +72,7 @@ private:
 
   // The array containing the preallocated processes. 4 as the inline storage size
   // should be enough so we don't need to grow the nsAutoTArray.
-  nsAutoTArray<RefPtr<ContentParent>, 4> mSpareProcesses;
+  nsAutoTArray<nsRefPtr<ContentParent>, 4> mSpareProcesses;
 
   // Nuwa process is ready for creating new process.
   bool mIsNuwaReady;
@@ -95,7 +95,7 @@ private:
 
   bool mEnabled;
   bool mShutdown;
-  RefPtr<ContentParent> mPreallocatedAppProcess;
+  nsRefPtr<ContentParent> mPreallocatedAppProcess;
 };
 
 /* static */ StaticRefPtr<PreallocatedProcessManagerImpl>
@@ -287,7 +287,7 @@ PreallocatedProcessManagerImpl::GetSpareProcess()
     mPreallocatedAppProcess->ForkNewProcess(true);
   }
 
-  RefPtr<ContentParent> process = mSpareProcesses.LastElement();
+  nsRefPtr<ContentParent> process = mSpareProcesses.LastElement();
   mSpareProcesses.RemoveElementAt(mSpareProcesses.Length() - 1);
 
   if (mSpareProcesses.IsEmpty() && mIsNuwaReady) {
@@ -332,7 +332,7 @@ PreallocatedProcessManagerImpl::MaybeForgetSpare(ContentParent* aContent)
     mPreallocatedAppProcess = nullptr;
     mIsNuwaReady = false;
     while (mSpareProcesses.Length() > 0) {
-      RefPtr<ContentParent> process = mSpareProcesses[mSpareProcesses.Length() - 1];
+      nsRefPtr<ContentParent> process = mSpareProcesses[mSpareProcesses.Length() - 1];
       process->Close();
       mSpareProcesses.RemoveElementAt(mSpareProcesses.Length() - 1);
     }
@@ -398,7 +398,7 @@ PreallocatedProcessManagerImpl::Disable()
   if (mPreallocatedAppProcess) {
 #ifdef MOZ_NUWA_PROCESS
     while (mSpareProcesses.Length() > 0){
-      RefPtr<ContentParent> process = mSpareProcesses[0];
+      nsRefPtr<ContentParent> process = mSpareProcesses[0];
       process->Close();
       mSpareProcesses.RemoveElementAt(0);
     }

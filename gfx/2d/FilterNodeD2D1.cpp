@@ -544,7 +544,7 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
     return MakeAndAddRef<FilterNodeConvolveD2D1>(aDC);
   }
 
-  RefPtr<ID2D1Effect> effect;
+  nsRefPtr<ID2D1Effect> effect;
   HRESULT hr;
 
   hr = aDC->CreateEffect(GetCLDIDForFilterType(aType), getter_AddRefs(effect));
@@ -554,7 +554,7 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
     return nullptr;
   }
 
-  RefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
+  nsRefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
 
   if (IsTransferFilterType(aType) || aType == FilterType::COLOR_MATRIX) {
     // These filters can produce non-transparent output from transparent
@@ -664,13 +664,13 @@ FilterNodeD2D1::WillDraw(DrawTarget *aDT)
   for (size_t inputIndex = 0; inputIndex < mInputSurfaces.size(); inputIndex++) {
     if (mInputSurfaces[inputIndex]) {
       ID2D1Effect* effect = InputEffect();
-      RefPtr<ID2D1Image> image = GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
+      nsRefPtr<ID2D1Image> image = GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
       effect->SetInput(inputIndex, image);
     }
   }
 
   // Call WillDraw() on our input filters.
-  for (std::vector<RefPtr<FilterNodeD2D1>>::iterator it = mInputFilters.begin();
+  for (std::vector<nsRefPtr<FilterNodeD2D1>>::iterator it = mInputFilters.begin();
        it != mInputFilters.end(); it++) {
     if (*it) {
       (*it)->WillDraw(aDT);
@@ -929,7 +929,7 @@ FilterNodeConvolveD2D1::UpdateChain()
     mEffect->SetInputEffect(0, mBorderEffect.get());
   }
 
-  RefPtr<ID2D1Effect> inputEffect;
+  nsRefPtr<ID2D1Effect> inputEffect;
   if (mInputFilters.size() > 0 && mInputFilters[0]) {
     inputEffect = mInputFilters[0]->OutputEffect();
   }

@@ -37,7 +37,7 @@ already_AddRefed<DOMSVGPointList>
 nsSVGPolyElement::Points()
 {
   void *key = mPoints.GetBaseValKey();
-  RefPtr<DOMSVGPointList> points = DOMSVGPointList::GetDOMWrapper(key, this, false);
+  nsRefPtr<DOMSVGPointList> points = DOMSVGPointList::GetDOMWrapper(key, this, false);
   return points.forget();
 }
 
@@ -45,7 +45,7 @@ already_AddRefed<DOMSVGPointList>
 nsSVGPolyElement::AnimatedPoints()
 {
   void *key = mPoints.GetAnimValKey();
-  RefPtr<DOMSVGPointList> points = DOMSVGPointList::GetDOMWrapper(key, this, true);
+  nsRefPtr<DOMSVGPointList> points = DOMSVGPointList::GetDOMWrapper(key, this, true);
   return points.forget();
 }
 

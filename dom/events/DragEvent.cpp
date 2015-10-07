@@ -141,7 +141,7 @@ DragEvent::Constructor(const GlobalObject& aGlobal,
                        ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<DragEvent> e = new DragEvent(t, nullptr, nullptr);
+  nsRefPtr<DragEvent> e = new DragEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitDragEvent(aType, aParam.mBubbles, aParam.mCancelable,
                          aParam.mView, aParam.mDetail, aParam.mScreenX,
@@ -165,7 +165,7 @@ NS_NewDOMDragEvent(EventTarget* aOwner,
                    nsPresContext* aPresContext,
                    WidgetDragEvent* aEvent) 
 {
-  RefPtr<DragEvent> event =
+  nsRefPtr<DragEvent> event =
     new DragEvent(aOwner, aPresContext, aEvent);
   return event.forget();
 }

@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsTArray.h"
@@ -89,7 +89,7 @@ protected:
                     nsIScriptableRegion* aRegion,
                     int32_t aScreenX, int32_t aScreenY,
                     nsIntRect* aScreenDragRect,
-                    RefPtr<SourceSurface>* aSurface,
+                    nsRefPtr<SourceSurface>* aSurface,
                     nsPresContext **aPresContext);
 
   /**
@@ -101,7 +101,7 @@ protected:
                             mozilla::dom::HTMLCanvasElement* aCanvas,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
-                            RefPtr<SourceSurface>* aSurface);
+                            nsRefPtr<SourceSurface>* aSurface);
 
   /**
    * Convert aScreenX and aScreenY from CSS pixels into unscaled device pixels.
@@ -169,7 +169,7 @@ protected:
   // The input source of the drag event. Possible values are from nsIDOMMouseEvent.
   uint16_t mInputSource;
 
-  nsTArray<RefPtr<mozilla::dom::ContentParent>> mChildProcesses;
+  nsTArray<nsRefPtr<mozilla::dom::ContentParent>> mChildProcesses;
 };
 
 #endif // nsBaseDragService_h__

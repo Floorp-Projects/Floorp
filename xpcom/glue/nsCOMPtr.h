@@ -28,7 +28,7 @@
 
 #include "nsDebug.h" // for |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "nsCycleCollectionNoteChild.h"
 
@@ -388,7 +388,7 @@ private:
   void assert_validity()
   {
     static_assert(1 < sizeof(TestForIID<T>(nullptr)), "nsCOMPtr only works "
-                  "for types with IIDs.  Either use RefPtr; add an IID to "
+                  "for types with IIDs.  Either use nsRefPtr; add an IID to "
                   "your type with NS_DECLARE_STATIC_IID_ACCESSOR/"
                   "NS_DEFINE_STATIC_IID_ACCESSOR; or make the nsCOMPtr point "
                   "to a base class with an IID.");
@@ -1400,7 +1400,7 @@ CallQueryInterface(nsCOMPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
 }
 
 template <class T>
-RefPtr<T>::RefPtr(const nsCOMPtr_helper& aHelper)
+nsRefPtr<T>::nsRefPtr(const nsCOMPtr_helper& aHelper)
 {
   void* newRawPtr;
   if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
@@ -1410,8 +1410,8 @@ RefPtr<T>::RefPtr(const nsCOMPtr_helper& aHelper)
 }
 
 template <class T>
-RefPtr<T>&
-RefPtr<T>::operator=(const nsCOMPtr_helper& aHelper)
+nsRefPtr<T>&
+nsRefPtr<T>::operator=(const nsCOMPtr_helper& aHelper)
 {
   void* newRawPtr;
   if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {

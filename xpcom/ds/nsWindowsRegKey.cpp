@@ -559,7 +559,7 @@ nsWindowsRegKey::IsWatching(bool* aResult)
 nsresult
 NS_NewWindowsRegKey(nsIWindowsRegKey** aResult)
 {
-  RefPtr<nsWindowsRegKey> key = new nsWindowsRegKey();
+  nsRefPtr<nsWindowsRegKey> key = new nsWindowsRegKey();
   key.forget(aResult);
   return NS_OK;
 }

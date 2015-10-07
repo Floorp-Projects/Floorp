@@ -454,7 +454,7 @@ GetGlobalObject(NPP npp)
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)npp->ndata;
   NS_ENSURE_TRUE(inst, nullptr);
 
-  RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
   NS_ENSURE_TRUE(owner, nullptr);
 
   nsCOMPtr<nsIDocument> doc;

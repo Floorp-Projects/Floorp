@@ -243,7 +243,7 @@ DataStoreDB::UpgradeSchema(nsIDOMEvent* aEvent)
   {
     IDBObjectStoreParameters params;
     params.Init(NS_LITERAL_STRING("{ \"autoIncrement\": true }"));
-    RefPtr<IDBObjectStore> store =
+    nsRefPtr<IDBObjectStore> store =
       database->CreateObjectStore(NS_LITERAL_STRING(DATASTOREDB_NAME),
                                   params, error);
     if (NS_WARN_IF(error.Failed())) {
@@ -251,7 +251,7 @@ DataStoreDB::UpgradeSchema(nsIDOMEvent* aEvent)
     }
   }
 
-  RefPtr<IDBObjectStore> store;
+  nsRefPtr<IDBObjectStore> store;
 
   {
     IDBObjectStoreParameters params;
@@ -268,7 +268,7 @@ DataStoreDB::UpgradeSchema(nsIDOMEvent* aEvent)
   {
     IDBIndexParameters params;
     params.Init(NS_LITERAL_STRING("{ \"unique\": true }"));
-    RefPtr<IDBIndex> index =
+    nsRefPtr<IDBIndex> index =
       store->CreateIndex(NS_LITERAL_STRING(DATASTOREDB_REVISION_INDEX),
                          NS_LITERAL_STRING("revisionId"), params, error);
     if (NS_WARN_IF(error.Failed())) {
@@ -301,7 +301,7 @@ DataStoreDB::DatabaseOpened()
     return rv;
   }
 
-  RefPtr<VersionChangeListener> listener =
+  nsRefPtr<VersionChangeListener> listener =
     new VersionChangeListener(mDatabase);
   rv = mDatabase->EventTarget::AddEventListener(
     NS_LITERAL_STRING("versionchange"), listener, false);
@@ -315,7 +315,7 @@ DataStoreDB::DatabaseOpened()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  RefPtr<IDBTransaction> txn;
+  nsRefPtr<IDBTransaction> txn;
   error = mDatabase->Transaction(objectStores,
                                  mTransactionMode,
                                  getter_AddRefs(txn));
@@ -345,7 +345,7 @@ DataStoreDB::Delete()
   }
 
   ErrorResult error;
-  RefPtr<IDBOpenDBRequest> request =
+  nsRefPtr<IDBOpenDBRequest> request =
     mFactory->DeleteDatabase(mDatabaseName, IDBOpenDBOptions(), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();

@@ -41,7 +41,7 @@ nsDOMAttributeMap::nsDOMAttributeMap(Element* aContent)
  * Clear map pointer for attributes.
  */
 PLDHashOperator
-RemoveMapRef(nsAttrHashKey::KeyType aKey, RefPtr<Attr>& aData,
+RemoveMapRef(nsAttrHashKey::KeyType aKey, nsRefPtr<Attr>& aData,
              void* aUserArg)
 {
   aData->SetMap(nullptr);
@@ -71,7 +71,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 PLDHashOperator
-TraverseMapEntry(nsAttrHashKey::KeyType aKey, RefPtr<Attr>& aData,
+TraverseMapEntry(nsAttrHashKey::KeyType aKey, nsRefPtr<Attr>& aData,
                  void* aUserArg)
 {
   nsCycleCollectionTraversalCallback *cb = 
@@ -126,7 +126,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMAttributeMap)
 
 PLDHashOperator
 SetOwnerDocumentFunc(nsAttrHashKey::KeyType aKey,
-                     RefPtr<Attr>& aData,
+                     nsRefPtr<Attr>& aData,
                      void* aUserArg)
 {
   nsresult rv = aData->SetOwnerDocument(static_cast<nsIDocument*>(aUserArg));
@@ -164,13 +164,13 @@ nsDOMAttributeMap::RemoveAttribute(mozilla::dom::NodeInfo* aNodeInfo)
 
   nsAttrKey attr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom());
 
-  RefPtr<Attr> node;
+  nsRefPtr<Attr> node;
   if (!mAttributeCache.Get(attr, getter_AddRefs(node))) {
     nsAutoString value;
     // As we are removing the attribute we need to set the current value in
     // the attribute node.
     mContent->GetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), value);
-    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     node = new Attr(nullptr, ni.forget(), value, true);
   }
   else {
@@ -193,8 +193,8 @@ nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo, bool aNsAware
 
   Attr* node = mAttributeCache.GetWeak(attr);
   if (!node) {
-    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    RefPtr<Attr> newAttr =
+    nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    nsRefPtr<Attr> newAttr =
       new Attr(this, ni.forget(), EmptyString(), aNsAware);
     mAttributeCache.Put(attr, newAttr);
     node = newAttr;
@@ -209,7 +209,7 @@ nsDOMAttributeMap::NamedGetter(const nsAString& aAttrName, bool& aFound)
   aFound = false;
   NS_ENSURE_TRUE(mContent, nullptr);
 
-  RefPtr<mozilla::dom::NodeInfo> ni = mContent->GetExistingAttrNameFromQName(aAttrName);
+  nsRefPtr<mozilla::dom::NodeInfo> ni = mContent->GetExistingAttrNameFromQName(aAttrName);
   if (!ni) {
     return nullptr;
   }
@@ -284,7 +284,7 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
 
     // setting a preexisting attribute is a no-op, just return the same
     // node.
-    RefPtr<Attr> attribute = &aAttr;
+    nsRefPtr<Attr> attribute = &aAttr;
     return attribute.forget();
   }
 
@@ -300,7 +300,7 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
   }
 
   // Get nodeinfo and preexisting attribute (if it exists)
-  RefPtr<NodeInfo> oldNi;
+  nsRefPtr<NodeInfo> oldNi;
 
   if (!aWithNS) {
     nsAutoString name;
@@ -323,10 +323,10 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
     }
   }
 
-  RefPtr<Attr> attr;
+  nsRefPtr<Attr> attr;
 
   if (oldNi) {
-    RefPtr<Attr> oldAttr = GetAttribute(oldNi, true);
+    nsRefPtr<Attr> oldAttr = GetAttribute(oldNi, true);
 
     if (oldAttr == &aAttr) {
       return oldAttr.forget();
@@ -361,7 +361,7 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
   nsAutoString value;
   aAttr.GetValue(value);
 
-  RefPtr<NodeInfo> ni = aAttr.NodeInfo();
+  nsRefPtr<NodeInfo> ni = aAttr.NodeInfo();
 
   // Add the new attribute to the attribute map before updating
   // its value in the element. @see bug 364413.
@@ -382,7 +382,7 @@ nsDOMAttributeMap::SetNamedItemInternal(Attr& aAttr,
 already_AddRefed<Attr>
 nsDOMAttributeMap::RemoveNamedItem(NodeInfo* aNodeInfo, ErrorResult& aError)
 {
-  RefPtr<Attr> attribute = GetAttribute(aNodeInfo, true);
+  nsRefPtr<Attr> attribute = GetAttribute(aNodeInfo, true);
   // This removes the attribute node from the attribute map.
   aError = mContent->UnsetAttr(aNodeInfo->NamespaceID(), aNodeInfo->NameAtom(), true);
   return attribute.forget();
@@ -407,7 +407,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName, ErrorResult& aError)
     return nullptr;
   }
 
-  RefPtr<mozilla::dom::NodeInfo> ni = mContent->GetExistingAttrNameFromQName(aName);
+  nsRefPtr<mozilla::dom::NodeInfo> ni = mContent->GetExistingAttrNameFromQName(aName);
   if (!ni) {
     aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
     return nullptr;
@@ -429,7 +429,7 @@ nsDOMAttributeMap::IndexedGetter(uint32_t aIndex, bool& aFound)
   aFound = true;
   // Don't use the nodeinfo even if one exists since it can have the wrong
   // owner document.
-  RefPtr<mozilla::dom::NodeInfo> ni = mContent->NodeInfo()->NodeInfoManager()->
+  nsRefPtr<mozilla::dom::NodeInfo> ni = mContent->NodeInfo()->NodeInfoManager()->
     GetNodeInfo(name->LocalName(), name->GetPrefix(), name->NamespaceID(),
                 nsIDOMNode::ATTRIBUTE_NODE);
   return GetAttribute(ni, true);
@@ -478,7 +478,7 @@ Attr*
 nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
                                   const nsAString& aLocalName)
 {
-  RefPtr<mozilla::dom::NodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName);
+  nsRefPtr<mozilla::dom::NodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName);
   if (!ni) {
     return nullptr;
   }
@@ -514,7 +514,7 @@ nsDOMAttributeMap::GetAttrNodeInfo(const nsAString& aNamespaceURI,
     // we're purposefully ignoring the prefix.
     if (nameSpaceID == attrNS &&
         nameAtom->Equals(aLocalName)) {
-      RefPtr<mozilla::dom::NodeInfo> ni;
+      nsRefPtr<mozilla::dom::NodeInfo> ni;
       ni = mContent->NodeInfo()->NodeInfoManager()->
         GetNodeInfo(nameAtom, name->GetPrefix(), nameSpaceID,
                     nsIDOMNode::ATTRIBUTE_NODE);
@@ -542,7 +542,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
                                      ErrorResult& aError)
 {
-  RefPtr<mozilla::dom::NodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName);
+  nsRefPtr<mozilla::dom::NodeInfo> ni = GetAttrNodeInfo(aNamespaceURI, aLocalName);
   if (!ni) {
     aError.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
     return nullptr;

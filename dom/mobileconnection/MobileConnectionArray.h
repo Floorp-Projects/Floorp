@@ -45,7 +45,7 @@ private:
   bool mLengthInitialized;
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  nsTArray<RefPtr<MobileConnection>> mMobileConnections;
+  nsTArray<nsRefPtr<MobileConnection>> mMobileConnections;
 };
 
 } // namespace dom
