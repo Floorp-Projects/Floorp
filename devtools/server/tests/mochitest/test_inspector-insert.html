@@ -39,36 +39,63 @@ addTest(function setup() {
   });
 });
 
-addTest(function testRearrange() {
-  let longlist = null;
-  let nodeA = null;
-  let nextNode = null;
+addAsyncTest(function* testRearrange() {
+  let longlist = yield gWalker.querySelector(gWalker.rootNode, "#longlist");
+  let children = yield gWalker.children(longlist);
+  let nodeA = children.nodes[0];
+  is(nodeA.id, "a", "Got the expected node.");
 
-  promiseDone(gWalker.querySelector(gWalker.rootNode, "#longlist").then(listFront => {
-    longlist = listFront;
-  }).then(() => {
-    return gWalker.children(longlist);
-  }).then(response => {
-    nodeA = response.nodes[0];
-    is(nodeA.id, "a", "Got the expected node.");
-    // Move nodeA to the end of the list.
-    return gWalker.insertBefore(nodeA, longlist, null);
-  }).then(() => {
-    ok(!gInspectee.querySelector("#a").nextSibling, "a should now be at the end of the list.");
-    return gWalker.children(longlist);
-  }).then(response => {
-    is(nodeA, response.nodes[response.nodes.length - 1], "a should now be the last returned child.");
-    // Now move it to the middle of the list.
-    nextNode = response.nodes[13];
-    return gWalker.insertBefore(nodeA, longlist, nextNode);
-  }).then(response => {
-    let sibling = new inspector._documentWalker(gInspectee.querySelector("#a"), window).nextSibling();
-    is(sibling, nextNode.rawNode(), "Node should match the expected next node.");
-    return gWalker.children(longlist);
-  }).then(response => {
-    is(nodeA, response.nodes[13], "a should be where we expect it.");
-    is(nextNode, response.nodes[14], "next node should be where we expect it.");
-  }).then(runNextTest));
+  // Move nodeA to the end of the list.
+  yield gWalker.insertBefore(nodeA, longlist, null);
+  ok(!gInspectee.querySelector("#a").nextSibling, "a should now be at the end of the list.");
+  children = yield gWalker.children(longlist);
+  is(nodeA, children.nodes[children.nodes.length - 1], "a should now be the last returned child.");
+
+  // Now move it to the middle of the list.
+  let nextNode = children.nodes[13];
+  yield gWalker.insertBefore(nodeA, longlist, nextNode);
+  let sibling =
+    new inspector._documentWalker(gInspectee.querySelector("#a"), window).nextSibling();
+  is(sibling, nextNode.rawNode(), "Node should match the expected next node.");
+  children = yield gWalker.children(longlist);
+  is(nodeA, children.nodes[13], "a should be where we expect it.");
+  is(nextNode, children.nodes[14], "next node should be where we expect it.");
+
+  runNextTest();
+});
+
+addAsyncTest(function* testInsertInvalidInput() {
+  let longlist = yield gWalker.querySelector(gWalker.rootNode, "#longlist");
+  let children = yield gWalker.children(longlist);
+  let nodeA = children.nodes[0];
+  let nextSibling = children.nodes[1];
+
+  // Now move it to the original location and make sure no mutation happens.
+  let hasMutated = false;
+  let observer = new gInspectee.defaultView.MutationObserver(() => {
+    hasMutated = true;
+  });
+  observer.observe(longlist.rawNode(), {
+    childList: true,
+  });
+
+  yield gWalker.insertBefore(nodeA, longlist, nodeA);
+  ok(!hasMutated, "hasn't mutated");
+  hasMutated = false;
+
+  yield gWalker.insertBefore(nodeA, longlist, nextSibling);
+  ok(!hasMutated, "still hasn't mutated after inserting before nextSibling");
+  hasMutated = false;
+
+  yield gWalker.insertBefore(nodeA, longlist);
+  ok(hasMutated, "has mutated after inserting with null sibling");
+  hasMutated = false;
+
+  yield gWalker.insertBefore(nodeA, longlist);
+  ok(!hasMutated, "hasn't mutated after inserting with null sibling again");
+
+  observer.disconnect();
+  runNextTest();
 });
 
 addTest(function cleanup() {
@@ -76,7 +103,6 @@ addTest(function cleanup() {
   delete gClient;
   runNextTest();
 });
-
 
   </script>
 </head>
