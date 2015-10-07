@@ -157,6 +157,10 @@ for (var prop in gCSSProperties) {
                                      });
   if (expectedDOMProp == "float") {
     expectedDOMProp = "cssFloat";
+  } else if (prop.startsWith("-webkit")) {
+    // Our DOM accessors for webkit-prefixed properties start with lowercase w,
+    // not uppercase like standard DOM accessors.
+    expectedDOMProp = expectedDOMProp.replace(/^W/, "w");
   }
   is(entry.domProp, expectedDOMProp, "DOM property for " + prop);
 }

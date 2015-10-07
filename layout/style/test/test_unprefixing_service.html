@@ -76,7 +76,12 @@ function begin()
   // Turn on prefs & start the first test!
   SpecialPowers.pushPrefEnv(
     { set: [[PREF_UNPREFIXING_SERVICE, true],
-            [PREF_INCLUDE_TEST_DOMAINS, true]]},
+            [PREF_INCLUDE_TEST_DOMAINS, true],
+            // Make sure *native* -webkit prefix support is turned off. It's
+            // not whitelist-restricted, so if we left it enabled, it'd prevent
+            // us from being able to detect CSSUnprefixingService's domain
+            // whitelisting in this test.
+            ["layout.css.prefixes.webkit", false]]},
     startNextTest);
 }
 
