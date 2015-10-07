@@ -657,3 +657,39 @@ class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestC
             self.carets_tested_pref: True,
         }
         self.marionette.set_prefs(self.prefs)
+
+    def test_long_press_to_select_when_partial_visible_word_is_selected(self):
+        self.open_test_html()
+        el = self._input
+        sel = SelectionManager(el)
+
+        # To successfully select the second word while the first word is being
+        # selected, use sufficient spaces between 'a' and 'b' to avoid the
+        # second caret covers on the second word.
+        original_content = 'aaaaaaaa          bbbbbbbb'
+        el.clear()
+        el.send_keys(original_content)
+        words = original_content.split()
+
+        # We cannot use self.long_press_on_word() directly since it has will
+        # change the cursor position which affects this test. We have to store
+        # the position of word 0 and word 1 before long-pressing to select the
+        # word.
+        word0_x, word0_y = self.word_location(el, 0)
+        word1_x, word1_y = self.word_location(el, 1)
+
+        self.long_press_on_location(el, word0_x, word0_y)
+        self.assertEqual(words[0], sel.selected_content)
+
+        self.long_press_on_location(el, word1_x, word1_y)
+        self.assertEqual(words[1], sel.selected_content)
+
+        self.long_press_on_location(el, word0_x, word0_y)
+        self.assertEqual(words[0], sel.selected_content)
+
+        # If the second carets is visible, it can be dragged to the position of
+        # the first caret. After that, selection will contain only the first
+        # character.
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
+        self.assertEqual(words[0][0], sel.selected_content)
