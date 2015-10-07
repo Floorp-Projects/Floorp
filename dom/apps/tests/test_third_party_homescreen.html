@@ -164,11 +164,11 @@ function runTest() {
   ok(app, "App is non-null");
   is(app.manifestURL, gManifestURL, "App manifest url is correct.");
 
-  var context = {"manifestURL": app.manifestURL, "isInBrowserElement": false};
+  var context = {manifestURL: app.manifestURL};
 
-  SpecialPowers.pushPermissions([{"type": "homescreen-webapps-manage",
-                                  "allow": 1,
-                                  "context": context}], continueTest);
+  SpecialPowers.pushPermissions([{type: "homescreen-webapps-manage",
+                                  allow: 1,
+                                  context: context}], continueTest);
   yield undefined;
 
   // Launch the app.
