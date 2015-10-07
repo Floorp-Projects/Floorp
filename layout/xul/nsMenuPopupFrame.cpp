@@ -1845,8 +1845,7 @@ nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
           // Fire a command event as the new item, but we don't want to close
           // the menu, blink it, or update any other state of the menuitem. The
           // command event will cause the item to be selected.
-          nsContentUtils::DispatchXULCommand(aMenuItem->GetContent(),
-                                             nsContentUtils::IsCallerChrome(),
+          nsContentUtils::DispatchXULCommand(aMenuItem->GetContent(), /* aTrusted = */ true,
                                              nullptr, PresContext()->PresShell(),
                                              false, false, false, false);
         }
