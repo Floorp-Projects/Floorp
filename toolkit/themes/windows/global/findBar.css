@@ -24,6 +24,11 @@ findbar[hidden] {
   transition-delay: 0s, 0s, 150ms;
 }
 
+findbar[noanim] {
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
 .findbar-container {
   -moz-padding-start: 8px;
   padding-top: 4px;
