@@ -25,7 +25,7 @@ FunctionCall::evaluateToNumber(Expr* aExpr, txIEvalContext* aContext,
                                double* aResult)
 {
     NS_ASSERTION(aExpr, "missing expression");
-    nsRefPtr<txAExprResult> exprResult;
+    RefPtr<txAExprResult> exprResult;
     nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -45,7 +45,7 @@ FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
     NS_ASSERTION(aExpr, "Missing expression to evaluate");
     *aResult = nullptr;
 
-    nsRefPtr<txAExprResult> exprRes;
+    RefPtr<txAExprResult> exprRes;
     nsresult rv = aExpr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 

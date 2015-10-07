@@ -165,7 +165,7 @@ already_AddRefed<nsXBLEventHandler>
 NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
                       nsIAtom* aEventType)
 {
-  nsRefPtr<nsXBLEventHandler> handler;
+  RefPtr<nsXBLEventHandler> handler;
 
   switch (nsContentUtils::GetEventClassID(nsDependentAtomString(aEventType))) {
     case eDragEventClass:

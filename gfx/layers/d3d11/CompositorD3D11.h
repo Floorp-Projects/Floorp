@@ -176,11 +176,11 @@ private:
 
   virtual gfx::IntSize GetWidgetSize() const override { return mSize; }
 
-  nsRefPtr<ID3D11DeviceContext> mContext;
-  nsRefPtr<ID3D11Device> mDevice;
-  nsRefPtr<IDXGISwapChain> mSwapChain;
-  nsRefPtr<CompositingRenderTargetD3D11> mDefaultRT;
-  nsRefPtr<CompositingRenderTargetD3D11> mCurrentRT;
+  RefPtr<ID3D11DeviceContext> mContext;
+  RefPtr<ID3D11Device> mDevice;
+  RefPtr<IDXGISwapChain> mSwapChain;
+  RefPtr<CompositingRenderTargetD3D11> mDefaultRT;
+  RefPtr<CompositingRenderTargetD3D11> mCurrentRT;
 
   DeviceAttachmentsD3D11* mAttachments;
 

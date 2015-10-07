@@ -115,7 +115,7 @@ DisplayItemClip::ApplyRoundedRectClipsTo(gfxContext* aContext,
   aEnd = std::min<uint32_t>(aEnd, mRoundedClipRects.Length());
 
   for (uint32_t i = aBegin; i < aEnd; ++i) {
-    nsRefPtr<Path> roundedRect =
+    RefPtr<Path> roundedRect =
       MakeRoundedRectPath(aDrawTarget, A2D, mRoundedClipRects[i]);
     aContext->Clip(roundedRect);
   }
@@ -140,7 +140,7 @@ DisplayItemClip::FillIntersectionOfRoundedRectClips(gfxContext* aContext,
   ApplyRoundedRectClipsTo(aContext, aAppUnitsPerDevPixel, aBegin, aEnd - 1);
 
   // Now fill the rect at |aEnd - 1|:
-  nsRefPtr<Path> roundedRect = MakeRoundedRectPath(aDrawTarget,
+  RefPtr<Path> roundedRect = MakeRoundedRectPath(aDrawTarget,
                                                  aAppUnitsPerDevPixel,
                                                  mRoundedClipRects[aEnd - 1]);
   ColorPattern color(ToDeviceColor(aColor));

@@ -37,7 +37,7 @@ protected:
   nsString mOldValue;
   nsString mNewValue;
   nsString mUrl;
-  nsRefPtr<DOMStorage> mStorageArea;
+  RefPtr<DOMStorage> mStorageArea;
 
 public:
   virtual StorageEvent* AsStorageEvent();

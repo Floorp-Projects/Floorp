@@ -6,7 +6,7 @@
 
 #include "DirectShowReader.h"
 #include "MediaDecoderReader.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "DirectShowUtils.h"
 #include "AudioSinkFilter.h"
 #include "SourceFilter.h"
@@ -147,7 +147,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   // The MPEG demuxer.
-  nsRefPtr<IBaseFilter> demuxer;
+  RefPtr<IBaseFilter> demuxer;
   hr = CreateAndAddFilter(mGraph,
                           CLSID_MPEG1Splitter,
                           L"MPEG1Splitter",
@@ -155,7 +155,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   // Platform MP3 decoder.
-  nsRefPtr<IBaseFilter> decoder;
+  RefPtr<IBaseFilter> decoder;
   // Firstly try to create the MP3 decoder filter that ships with WinXP
   // directly. This filter doesn't normally exist on later versions of
   // Windows.
@@ -244,7 +244,7 @@ DirectShowReader::Finish(HRESULT aStatus)
 
   LOG("DirectShowReader::Finish(0x%x)", aStatus);
   // Notify the filter graph of end of stream.
-  nsRefPtr<IMediaEventSink> eventSink;
+  RefPtr<IMediaEventSink> eventSink;
   HRESULT hr = mGraph->QueryInterface(static_cast<IMediaEventSink**>(getter_AddRefs(eventSink)));
   if (SUCCEEDED(hr) && eventSink) {
     eventSink->Notify(EC_COMPLETE, aStatus, 0);
@@ -308,7 +308,7 @@ DirectShowReader::DecodeAudioData()
 
   // Get the next chunk of audio samples. This blocks until the sample
   // arrives, or an error occurs (like the stream is shutdown).
-  nsRefPtr<IMediaSample> sample;
+  RefPtr<IMediaSample> sample;
   hr = sink->Extract(sample);
   if (FAILED(hr) || hr == S_FALSE) {
     return Finish(hr);
@@ -362,7 +362,7 @@ DirectShowReader::HasVideo()
   return false;
 }
 
-nsRefPtr<MediaDecoderReader::SeekPromise>
+RefPtr<MediaDecoderReader::SeekPromise>
 DirectShowReader::Seek(int64_t aTargetUs, int64_t aEndTime)
 {
   nsresult res = SeekInternal(aTargetUs);
@@ -410,7 +410,7 @@ DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 
   IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
   for (const auto& interval : intervals) {
-    nsRefPtr<MediaByteBuffer> bytes =
+    RefPtr<MediaByteBuffer> bytes =
       mDecoder->GetResource()->MediaReadAt(interval.mStart, interval.Length());
     NS_ENSURE_TRUE_VOID(bytes);
     mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);

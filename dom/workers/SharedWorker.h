@@ -35,8 +35,8 @@ class SharedWorker final : public DOMEventTargetHelper
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
 
-  nsRefPtr<WorkerPrivate> mWorkerPrivate;
-  nsRefPtr<MessagePort> mMessagePort;
+  RefPtr<WorkerPrivate> mWorkerPrivate;
+  RefPtr<MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mFrozenEvents;
   bool mFrozen;
 

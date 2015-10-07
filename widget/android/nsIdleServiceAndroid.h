@@ -19,7 +19,7 @@ public:
 
     static already_AddRefed<nsIdleServiceAndroid> GetInstance() 
     {
-        nsRefPtr<nsIdleService> idleService = nsIdleService::GetInstance();
+        RefPtr<nsIdleService> idleService = nsIdleService::GetInstance();
         if (!idleService) {
             idleService = new nsIdleServiceAndroid();
         }

@@ -151,7 +151,7 @@ public:
    * @param aURL the url to match
    * @param aResult [out] the style sheet which can be reused
    */
-  bool FindReusableStyleSheet(nsIURI* aURL, nsRefPtr<CSSStyleSheet>& aResult);
+  bool FindReusableStyleSheet(nsIURI* aURL, RefPtr<CSSStyleSheet>& aResult);
 
   /**
    * Indicate that a certain style sheet is available for reuse if its
@@ -169,7 +169,7 @@ private:
   LoaderReusableStyleSheets& operator=(const LoaderReusableStyleSheets&) = delete;
 
   // The sheets that can be reused.
-  nsTArray<nsRefPtr<CSSStyleSheet>> mReusableSheets;
+  nsTArray<RefPtr<CSSStyleSheet>> mReusableSheets;
 };
 
 /***********************************************************************
@@ -431,7 +431,7 @@ public:
   // is selected and aHasAlternateRel is false.
   bool IsAlternate(const nsAString& aTitle, bool aHasAlternateRel);
 
-  typedef nsTArray<nsRefPtr<SheetLoadData> > LoadDataArray;
+  typedef nsTArray<RefPtr<SheetLoadData> > LoadDataArray;
 
   // Measure our size.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -445,7 +445,7 @@ private:
 
   static PLDHashOperator
   RemoveEntriesWithURI(URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey,
-                       nsRefPtr<CSSStyleSheet>& aSheet,
+                       RefPtr<CSSStyleSheet>& aSheet,
                        void* aUserData);
 
   // Note: null aSourcePrincipal indicates that the content policy and

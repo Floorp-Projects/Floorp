@@ -146,7 +146,7 @@ private:
   }
 
   const SHA1Sum::Hash *mHash;
-  nsRefPtr<CacheIndex> mIndex;
+  RefPtr<CacheIndex> mIndex;
   CacheIndexRecord    *mOldRecord;
   bool                 mDoNotSearchInIndex;
   bool                 mDoNotSearchInUpdates;
@@ -194,7 +194,7 @@ private:
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsRefPtr<CacheIndex> mIndex;
+  RefPtr<CacheIndex> mIndex;
   bool                 mCanceled;
 };
 
@@ -295,7 +295,7 @@ CacheIndex::Init(nsIFile *aCacheDirectory)
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  nsRefPtr<CacheIndex> idx = new CacheIndex();
+  RefPtr<CacheIndex> idx = new CacheIndex();
 
   CacheIndexAutoLock lock(idx);
 
@@ -330,7 +330,7 @@ CacheIndex::PreShutdown()
   MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -424,7 +424,7 @@ CacheIndex::Shutdown()
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<CacheIndex> index;
+  RefPtr<CacheIndex> index;
   index.swap(gInstance);
 
   if (!index) {
@@ -486,7 +486,7 @@ CacheIndex::AddEntry(const SHA1Sum::Hash *aHash)
 {
   LOG(("CacheIndex::AddEntry() [hash=%08x%08x%08x%08x%08x]", LOGSHA1(aHash)));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -601,7 +601,7 @@ CacheIndex::EnsureEntryExists(const SHA1Sum::Hash *aHash)
   LOG(("CacheIndex::EnsureEntryExists() [hash=%08x%08x%08x%08x%08x]",
        LOGSHA1(aHash)));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -711,7 +711,7 @@ CacheIndex::InitEntry(const SHA1Sum::Hash *aHash,
        "anonymous=%d, inBrowser=%d]", LOGSHA1(aHash), aAppId, aAnonymous,
        aInBrowser));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -820,7 +820,7 @@ CacheIndex::RemoveEntry(const SHA1Sum::Hash *aHash)
   LOG(("CacheIndex::RemoveEntry() [hash=%08x%08x%08x%08x%08x]",
        LOGSHA1(aHash)));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -921,7 +921,7 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
        aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : "",
        aSize ? nsPrintfCString("%u", *aSize).get() : ""));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1018,7 +1018,7 @@ CacheIndex::RemoveAll()
 {
   LOG(("CacheIndex::RemoveAll()"));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1112,7 +1112,7 @@ CacheIndex::HasEntry(const nsACString &aKey, EntryStatus *_retval)
 {
   LOG(("CacheIndex::HasEntry() [key=%s]", PromiseFlatCString(aKey).get()));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1176,7 +1176,7 @@ CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, 
 {
   LOG(("CacheIndex::GetEntryForEviction()"));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1229,7 +1229,7 @@ CacheIndex::GetEntryForEviction(bool aIgnoreEmptyEntries, SHA1Sum::Hash *aHash, 
 // static
 bool CacheIndex::IsForcedValidEntry(const SHA1Sum::Hash *aHash)
 {
-  nsRefPtr<CacheFileHandle> handle;
+  RefPtr<CacheFileHandle> handle;
 
   CacheFileIOManager::gInstance->mHandles.GetHandle(
     aHash, getter_AddRefs(handle));
@@ -1248,7 +1248,7 @@ CacheIndex::GetCacheSize(uint32_t *_retval)
 {
   LOG(("CacheIndex::GetCacheSize()"));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index)
     return NS_ERROR_NOT_INITIALIZED;
@@ -1270,7 +1270,7 @@ CacheIndex::GetEntryFileCount(uint32_t *_retval)
 {
   LOG(("CacheIndex::GetEntryFileCount()"));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1293,7 +1293,7 @@ CacheIndex::GetCacheStats(nsILoadContextInfo *aInfo, uint32_t *aSize, uint32_t *
 {
   LOG(("CacheIndex::GetCacheStats() [info=%p]", aInfo));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1330,7 +1330,7 @@ CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserve
 {
   LOG(("CacheIndex::AsyncGetDiskConsumption()"));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1342,7 +1342,7 @@ CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserve
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<DiskConsumptionObserver> observer =
+  RefPtr<DiskConsumptionObserver> observer =
     DiskConsumptionObserver::Init(aObserver);
 
   NS_ENSURE_ARG(observer);
@@ -1369,7 +1369,7 @@ CacheIndex::GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
 {
   LOG(("CacheIndex::GetIterator() [info=%p, addNew=%d]", aInfo, aAddNew));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1381,7 +1381,7 @@ CacheIndex::GetIterator(nsILoadContextInfo *aInfo, bool aAddNew,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<CacheIndexIterator> iter;
+  RefPtr<CacheIndexIterator> iter;
   if (aInfo) {
     iter = new CacheIndexContextIterator(index, aAddNew, aInfo);
   } else {
@@ -1402,7 +1402,7 @@ CacheIndex::IsUpToDate(bool *_retval)
 {
   LOG(("CacheIndex::IsUpToDate()"));
 
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -1841,7 +1841,7 @@ private:
   char               *mBuf;
   uint32_t            mBufSize;
   int32_t             mBufPos;
-  nsRefPtr<CacheHash> mHash;
+  RefPtr<CacheHash> mHash;
 };
 
 nsresult
@@ -2460,7 +2460,7 @@ CacheIndex::DelayedUpdate(nsITimer *aTimer, void *aClosure)
   LOG(("CacheIndex::DelayedUpdate()"));
 
   nsresult rv;
-  nsRefPtr<CacheIndex> index = gInstance;
+  RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return;
@@ -2487,7 +2487,7 @@ CacheIndex::DelayedUpdate(nsITimer *aTimer, void *aClosure)
   }
 
   // We need to redispatch to run with lower priority
-  nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
+  RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
   MOZ_ASSERT(ioThread);
 
   index->mUpdateEventPending = true;
@@ -2677,7 +2677,7 @@ CacheIndex::BuildIndex()
     }
 
 #ifdef DEBUG
-    nsRefPtr<CacheFileHandle> handle;
+    RefPtr<CacheFileHandle> handle;
     CacheFileIOManager::gInstance->mHandles.GetHandle(&hash,
                                                       getter_AddRefs(handle));
 #endif
@@ -2695,7 +2695,7 @@ CacheIndex::BuildIndex()
 
     MOZ_ASSERT(!handle);
 
-    nsRefPtr<CacheFileMetadata> meta = new CacheFileMetadata();
+    RefPtr<CacheFileMetadata> meta = new CacheFileMetadata();
     int64_t size = 0;
 
     {
@@ -2795,7 +2795,7 @@ CacheIndex::StartUpdatingIndex(bool aRebuild)
          "starting update now.", elapsed));
   }
 
-  nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
+  RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
   MOZ_ASSERT(ioThread);
 
   // We need to dispatch an event even if we are on IO thread since we need to
@@ -2890,7 +2890,7 @@ CacheIndex::UpdateIndex()
     }
 
 #ifdef DEBUG
-    nsRefPtr<CacheFileHandle> handle;
+    RefPtr<CacheFileHandle> handle;
     CacheFileIOManager::gInstance->mHandles.GetHandle(&hash,
                                                       getter_AddRefs(handle));
 #endif
@@ -2935,7 +2935,7 @@ CacheIndex::UpdateIndex()
       }
     }
 
-    nsRefPtr<CacheFileMetadata> meta = new CacheFileMetadata();
+    RefPtr<CacheFileMetadata> meta = new CacheFileMetadata();
     int64_t size = 0;
 
     {

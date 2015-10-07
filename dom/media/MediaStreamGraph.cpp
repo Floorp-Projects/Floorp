@@ -749,7 +749,7 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<VideoFrameContainer> mVideoFrameContainer;
+  RefPtr<VideoFrameContainer> mVideoFrameContainer;
 };
 
 void
@@ -764,7 +764,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 
   // Collect any new frames produced in this iteration.
   nsAutoTArray<ImageContainer::NonOwningImage,4> newImages;
-  nsRefPtr<Image> blackImage;
+  RefPtr<Image> blackImage;
 
   MOZ_ASSERT(mProcessedTime >= aStream->mBufferStartTime, "frame position before buffer?");
   // We only look at the non-blocking interval
@@ -1299,7 +1299,7 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<MediaStreamGraphImpl> mGraph;
+  RefPtr<MediaStreamGraphImpl> mGraph;
 };
 
 class MediaStreamGraphStableStateRunnable : public nsRunnable {
@@ -1318,7 +1318,7 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<MediaStreamGraphImpl> mGraph;
+  RefPtr<MediaStreamGraphImpl> mGraph;
   bool mSourceIsMSG;
 };
 
@@ -1435,7 +1435,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
           LIFECYCLE_LOG("Reviving a graph (%p) ! %s\n",
               this, CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
                                                                "SystemDriver");
-          nsRefPtr<GraphDriver> driver = CurrentDriver();
+          RefPtr<GraphDriver> driver = CurrentDriver();
           MonitorAutoUnlock unlock(mMonitor);
           driver->Revive();
         }
@@ -1457,7 +1457,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
                       this,
                       CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
                                                                  "SystemDriver");
-        nsRefPtr<GraphDriver> driver = CurrentDriver();
+        RefPtr<GraphDriver> driver = CurrentDriver();
         MonitorAutoUnlock unlock(mMonitor);
         driver->Start();
       }
@@ -1718,7 +1718,7 @@ void
 MediaStream::RemoveAllListenersImpl()
 {
   for (int32_t i = mListeners.Length() - 1; i >= 0; --i) {
-    nsRefPtr<MediaStreamListener> listener = mListeners[i].forget();
+    RefPtr<MediaStreamListener> listener = mListeners[i].forget();
     listener->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_REMOVED);
   }
   mListeners.Clear();
@@ -1737,7 +1737,7 @@ void
 MediaStream::Destroy()
 {
   // Keep this stream alive until we leave this method
-  nsRefPtr<MediaStream> kungFuDeathGrip = this;
+  RefPtr<MediaStream> kungFuDeathGrip = this;
 
   class Message : public ControlMessage {
   public:
@@ -1843,7 +1843,7 @@ MediaStream::AddVideoOutput(VideoFrameContainer* aContainer)
     {
       mStream->AddVideoOutputImpl(mContainer.forget());
     }
-    nsRefPtr<VideoFrameContainer> mContainer;
+    RefPtr<VideoFrameContainer> mContainer;
   };
   GraphImpl()->AppendMessage(new Message(this, aContainer));
 }
@@ -1859,7 +1859,7 @@ MediaStream::RemoveVideoOutput(VideoFrameContainer* aContainer)
     {
       mStream->RemoveVideoOutputImpl(mContainer);
     }
-    nsRefPtr<VideoFrameContainer> mContainer;
+    RefPtr<VideoFrameContainer> mContainer;
   };
   GraphImpl()->AppendMessage(new Message(this, aContainer));
 }
@@ -1931,7 +1931,7 @@ MediaStream::AddListener(MediaStreamListener* aListener)
     {
       mStream->AddListenerImpl(mListener.forget());
     }
-    nsRefPtr<MediaStreamListener> mListener;
+    RefPtr<MediaStreamListener> mListener;
   };
   GraphImpl()->AppendMessage(new Message(this, aListener));
 }
@@ -1940,7 +1940,7 @@ void
 MediaStream::RemoveListenerImpl(MediaStreamListener* aListener)
 {
   // wouldn't need this if we could do it in the opposite order
-  nsRefPtr<MediaStreamListener> listener(aListener);
+  RefPtr<MediaStreamListener> listener(aListener);
   mListeners.RemoveElement(aListener);
   listener->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_REMOVED);
 }
@@ -1956,7 +1956,7 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
     {
       mStream->RemoveListenerImpl(mListener);
     }
-    nsRefPtr<MediaStreamListener> mListener;
+    RefPtr<MediaStreamListener> mListener;
   };
   // If the stream is destroyed the Listeners have or will be
   // removed.
@@ -2076,10 +2076,10 @@ MediaStream::AddMainThreadListener(MainThreadMediaStreamListener* aListener)
   private:
     ~NotifyRunnable() {}
 
-    nsRefPtr<MediaStream> mStream;
+    RefPtr<MediaStream> mStream;
   };
 
-  nsRefPtr<nsRunnable> runnable = new NotifyRunnable(this);
+  RefPtr<nsRunnable> runnable = new NotifyRunnable(this);
   NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable.forget())));
 }
 
@@ -2451,7 +2451,7 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
     {
       Run();
     }
-    nsRefPtr<MediaInputPort> mPort;
+    RefPtr<MediaInputPort> mPort;
     TrackID mTrackId;
   };
 
@@ -2482,12 +2482,12 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
     {
       Run();
     }
-    nsRefPtr<MediaInputPort> mPort;
+    RefPtr<MediaInputPort> mPort;
   };
 
   MOZ_ASSERT(aTrackID != TRACK_NONE && aTrackID != TRACK_INVALID,
              "Only TRACK_ANY and explicit ID are allowed");
-  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, aTrackID, this,
+  RefPtr<MediaInputPort> port = new MediaInputPort(aStream, aTrackID, this,
                                                      aInputNumber, aOutputNumber);
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(new Message(port));
@@ -2822,7 +2822,7 @@ public:
   }
 
 private:
-  nsRefPtr<AudioNodeStream> mStream;
+  RefPtr<AudioNodeStream> mStream;
   MediaStreamGraph* mGraph;
 };
 

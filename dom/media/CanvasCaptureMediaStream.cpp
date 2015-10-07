@@ -38,7 +38,7 @@ public:
     mEnded = true;
   }
 
-  void SetImage(const nsRefPtr<layers::Image>& aImage)
+  void SetImage(const RefPtr<layers::Image>& aImage)
   {
     MutexAutoLock lock(mMutex);
     mImage = aImage;
@@ -52,7 +52,7 @@ public:
       MutexAutoLock lock(mMutex);
       MOZ_ASSERT(mSourceStream);
 
-      nsRefPtr<Image> image = mImage;
+      RefPtr<Image> image = mImage;
       IntSize size = image ? image->GetSize() : IntSize(0, 0);
       VideoSegment segment;
       segment.AppendFrame(image.forget(), delta, size);
@@ -70,12 +70,12 @@ protected:
 
 private:
   Atomic<bool> mEnded;
-  const nsRefPtr<SourceMediaStream> mSourceStream;
+  const RefPtr<SourceMediaStream> mSourceStream;
   const TrackID mTrackId;
 
   Mutex mMutex;
   // The below members are protected by mMutex.
-  nsRefPtr<layers::Image> mImage;
+  RefPtr<layers::Image> mImage;
 };
 
 OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
@@ -106,7 +106,7 @@ OutputStreamDriver::~OutputStreamDriver()
 }
 
 void
-OutputStreamDriver::SetImage(const nsRefPtr<layers::Image>& aImage)
+OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage)
 {
   if (mStreamListener) {
     mStreamListener->SetImage(aImage);
@@ -146,7 +146,7 @@ public:
 
   void NewFrame(already_AddRefed<Image> aImage) override
   {
-    nsRefPtr<Image> image = aImage;
+    RefPtr<Image> image = aImage;
 
     if (!mFrameCaptureRequested) {
       return;
@@ -188,7 +188,7 @@ public:
     // This also means we should accept every frame as NewFrame is called only
     // after something changed.
 
-    nsRefPtr<Image> image = aImage;
+    RefPtr<Image> image = aImage;
     SetImage(image.forget());
   }
 
@@ -257,7 +257,7 @@ already_AddRefed<CanvasCaptureMediaStream>
 CanvasCaptureMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
                                              HTMLCanvasElement* aCanvas)
 {
-  nsRefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aCanvas);
+  RefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aCanvas);
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
                                   AudioChannel::Normal);

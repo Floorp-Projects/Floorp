@@ -12,7 +12,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Move.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Pair.h"
 #include "mozilla/Tuple.h"
 
@@ -65,7 +65,7 @@ public:
 
   already_AddRefed<SourceSurface> Surface() const
   {
-    nsRefPtr<SourceSurface> surf(mSurface);
+    RefPtr<SourceSurface> surf(mSurface);
     return surf.forget();
   }
 
@@ -81,7 +81,7 @@ public:
   }
 
 private:
-  nsRefPtr<SourceSurface>  mSurface;
+  RefPtr<SourceSurface>  mSurface;
   const nsIntSize        mSize;
   Maybe<SVGImageContext> mSVGContext;
   const float            mFrame;
@@ -128,7 +128,7 @@ public:
   DrawResult GetDrawResult() { return mDrawResult; }
 
 private:
-  nsRefPtr<ClippedImage>        mImage;
+  RefPtr<ClippedImage>        mImage;
   const nsIntSize               mSize;
   const Maybe<SVGImageContext>& mSVGContext;
   const uint32_t                mWhichFrame;
@@ -156,7 +156,7 @@ ClippedImage::ShouldClip()
   // aren't available yet, in which case we'll try again later.
   if (mShouldClip.isNothing()) {
     int32_t width, height;
-    nsRefPtr<ProgressTracker> progressTracker =
+    RefPtr<ProgressTracker> progressTracker =
       InnerImage()->GetProgressTracker();
     if (InnerImage()->HasError()) {
       // If there's a problem with the inner image we'll let it handle
@@ -239,7 +239,7 @@ ClippedImage::GetFrame(uint32_t aWhichFrame,
                        uint32_t aFlags)
 {
   DrawResult result;
-  nsRefPtr<SourceSurface> surface;
+  RefPtr<SourceSurface> surface;
   Tie(result, surface) = GetFrameInternal(mClip.Size(), Nothing(), aWhichFrame, aFlags);
   return surface.forget();
 }
@@ -254,14 +254,14 @@ ClippedImage::GetFrameAtSize(const IntSize& aSize,
   return GetFrame(aWhichFrame, aFlags);
 }
 
-Pair<DrawResult, nsRefPtr<SourceSurface>>
+Pair<DrawResult, RefPtr<SourceSurface>>
 ClippedImage::GetFrameInternal(const nsIntSize& aSize,
                                const Maybe<SVGImageContext>& aSVGContext,
                                uint32_t aWhichFrame,
                                uint32_t aFlags)
 {
   if (!ShouldClip()) {
-    nsRefPtr<SourceSurface> surface = InnerImage()->GetFrame(aWhichFrame, aFlags);
+    RefPtr<SourceSurface> surface = InnerImage()->GetFrame(aWhichFrame, aFlags);
     return MakePair(surface ? DrawResult::SUCCESS : DrawResult::NOT_READY,
                     Move(surface));
   }
@@ -271,20 +271,20 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
       !mCachedSurface->Matches(aSize, aSVGContext, frameToDraw, aFlags) ||
       mCachedSurface->NeedsRedraw()) {
     // Create a surface to draw into.
-    nsRefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(aSize.width, aSize.height),
                                        SurfaceFormat::B8G8R8A8);
     if (!target) {
       NS_ERROR("Could not create a DrawTarget");
-      return MakePair(DrawResult::TEMPORARY_ERROR, nsRefPtr<SourceSurface>());
+      return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
     }
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(target);
+    RefPtr<gfxContext> ctx = new gfxContext(target);
 
     // Create our callback.
-    nsRefPtr<DrawSingleTileCallback> drawTileCallback =
+    RefPtr<DrawSingleTileCallback> drawTileCallback =
       new DrawSingleTileCallback(this, aSize, aSVGContext, aWhichFrame, aFlags);
-    nsRefPtr<gfxDrawable> drawable =
+    RefPtr<gfxDrawable> drawable =
       new gfxCallbackDrawable(drawTileCallback, aSize);
 
     // Actually draw. The callback will end up invoking DrawSingleTile.
@@ -302,7 +302,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
   }
 
   MOZ_ASSERT(mCachedSurface, "Should have a cached surface now");
-  nsRefPtr<SourceSurface> surface = mCachedSurface->Surface();
+  RefPtr<SourceSurface> surface = mCachedSurface->Surface();
   return MakePair(mCachedSurface->GetDrawResult(), Move(surface));
 }
 
@@ -365,7 +365,7 @@ ClippedImage::Draw(gfxContext* aContext,
     // Create a temporary surface containing a single tile of this image.
     // GetFrame will call DrawSingleTile internally.
     DrawResult result;
-    nsRefPtr<SourceSurface> surface;
+    RefPtr<SourceSurface> surface;
     Tie(result, surface) =
       GetFrameInternal(aSize, aSVGContext, aWhichFrame, aFlags);
     if (!surface) {
@@ -374,7 +374,7 @@ ClippedImage::Draw(gfxContext* aContext,
     }
 
     // Create a drawable from that surface.
-    nsRefPtr<gfxSurfaceDrawable> drawable =
+    RefPtr<gfxSurfaceDrawable> drawable =
       new gfxSurfaceDrawable(surface, aSize);
 
     // Draw.

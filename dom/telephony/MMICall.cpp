@@ -29,7 +29,7 @@ MMICall::MMICall(nsPIDOMWindow* aWindow, const nsAString& aServiceCode)
   }
 
   ErrorResult rv;
-  nsRefPtr<Promise> promise = Promise::Create(global, rv);
+  RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return;
   }
@@ -73,6 +73,6 @@ MMICall::GetResult(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = mPromise;
+  RefPtr<Promise> promise = mPromise;
   return promise.forget();
 }

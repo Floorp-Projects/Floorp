@@ -213,7 +213,7 @@ RemoteOpenFileChild::AsyncRemoteFileOpen(int32_t aFlags,
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   // Windows/OSX desktop builds skip remoting, and just open file in child
   // process when asked for NSPR handle
-  nsRefPtr<CallsListenerInNewEvent> runnable =
+  RefPtr<CallsListenerInNewEvent> runnable =
     new CallsListenerInNewEvent(aListener, NS_OK);
   runnable->Dispatch();
 
@@ -293,7 +293,7 @@ RemoteOpenFileChild::HandleFileDescriptorAndNotifyListener(
     // descriptor callback or through the normal messaging mechanism). Close the
     // file descriptor if it is valid.
     if (aFD.IsValid()) {
-      nsRefPtr<CloseFileRunnable> runnable = new CloseFileRunnable(aFD);
+      RefPtr<CloseFileRunnable> runnable = new CloseFileRunnable(aFD);
       runnable->Dispatch();
     }
     return;
@@ -301,7 +301,7 @@ RemoteOpenFileChild::HandleFileDescriptorAndNotifyListener(
 
   MOZ_ASSERT(!mNSPRFileDesc);
 
-  nsRefPtr<TabChild> tabChild;
+  RefPtr<TabChild> tabChild;
   mTabChild.swap(tabChild);
 
   // If RemoteOpenFile reply (Recv__delete__) for app's application.zip comes
@@ -335,7 +335,7 @@ RemoteOpenFileChild::NotifyListener(nsresult aResult)
   mListener->OnRemoteFileOpenComplete(aResult);
   mListener = nullptr;     // release ref to listener
 
-  nsRefPtr<nsJARProtocolHandler> handler(gJarHandler);
+  RefPtr<nsJARProtocolHandler> handler(gJarHandler);
   NS_WARN_IF_FALSE(handler, "nsJARProtocolHandler is already gone!");
 
   if (handler) {

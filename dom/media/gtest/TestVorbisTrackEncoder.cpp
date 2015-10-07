@@ -156,8 +156,8 @@ TEST(VorbisTrackEncoder, Metadata)
   int rate = 44100;
   encoder.TestVorbisCreation(channels, rate);
 
-  nsRefPtr<TrackMetadataBase> meta = encoder.GetMetadata();
-  nsRefPtr<VorbisMetadata> vorbisMetadata(static_cast<VorbisMetadata*>(meta.get()));
+  RefPtr<TrackMetadataBase> meta = encoder.GetMetadata();
+  RefPtr<VorbisMetadata> vorbisMetadata(static_cast<VorbisMetadata*>(meta.get()));
 
   // According to initialization parameters, verify the correctness
   // of vorbisMetadata.
@@ -177,7 +177,7 @@ TEST(VorbisTrackEncoder, EncodedFrame)
 
   // Generate 1 second samples.
   // Reference PeerConnectionMedia.h::Fake_AudioGenerator
-  nsRefPtr<mozilla::SharedBuffer> samples =
+  RefPtr<mozilla::SharedBuffer> samples =
     mozilla::SharedBuffer::Create(rate * sizeof(AudioDataValue));
   AudioDataValue* data = static_cast<AudioDataValue*>(samples->Data());
   for (int i = 0; i < rate; i++) {

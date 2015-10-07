@@ -239,7 +239,7 @@ NS_NewXULDocument(nsIXULDocument** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    nsRefPtr<XULDocument> doc = new XULDocument();
+    RefPtr<XULDocument> doc = new XULDocument();
 
     nsresult rv;
     if (NS_FAILED(rv = doc->Init())) {
@@ -886,7 +886,7 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
 
         nsCOMPtr<nsIPresShell> shell = GetShell();
         if (shell) {
-            nsRefPtr<nsPresContext> aPresContext = shell->GetPresContext();
+            RefPtr<nsPresContext> aPresContext = shell->GetPresContext();
 
             // Handle the DOM event
             nsEventStatus status = nsEventStatus_eIgnore;
@@ -1189,7 +1189,7 @@ XULDocument::GetElementsByAttribute(const nsAString& aAttribute,
 {
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     void* attrValue = new nsString(aValue);
-    nsRefPtr<nsContentList> list = new nsContentList(this,
+    RefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
                                             attrValue,
@@ -1232,7 +1232,7 @@ XULDocument::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
       }
     }
 
-    nsRefPtr<nsContentList> list = new nsContentList(this,
+    RefPtr<nsContentList> list = new nsContentList(this,
                                             MatchAttribute,
                                             nsContentUtils::DestroyMatchString,
                                             attrValue,
@@ -1258,7 +1258,7 @@ XULDocument::Persist(const nsAString& aID,
     nsCOMPtr<nsIAtom> tag;
     int32_t nameSpaceID;
 
-    nsRefPtr<mozilla::dom::NodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
+    RefPtr<mozilla::dom::NodeInfo> ni = element->GetExistingAttrNameFromQName(aAttr);
     nsresult rv;
     if (ni) {
         tag = ni->NameAtom();
@@ -2003,7 +2003,7 @@ XULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
 
     // Create a XUL content sink, a parser, and kick off a load for
     // the overlay.
-    nsRefPtr<XULContentSinkImpl> sink = new XULContentSinkImpl();
+    RefPtr<XULContentSinkImpl> sink = new XULContentSinkImpl();
 
     rv = sink->Init(this, mCurrentPrototype);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to initialize datasource sink");
@@ -2288,7 +2288,7 @@ XULDocument::PrepareToWalk()
         piInsertionPoint = indexOfRoot;
     }
 
-    const nsTArray<nsRefPtr<nsXULPrototypePI> >& processingInstructions =
+    const nsTArray<RefPtr<nsXULPrototypePI> >& processingInstructions =
         mCurrentPrototype->GetProcessingInstructions();
 
     uint32_t total = processingInstructions.Length();
@@ -2304,7 +2304,7 @@ XULDocument::PrepareToWalk()
 
     // Do one-time initialization if we're preparing to walk the
     // master document's prototype.
-    nsRefPtr<Element> root;
+    RefPtr<Element> root;
 
     if (mState == eState_Master) {
         // Add the root element
@@ -2346,7 +2346,7 @@ XULDocument::CreateAndInsertPI(const nsXULPrototypePI* aProtoPI,
     NS_PRECONDITION(aProtoPI, "null ptr");
     NS_PRECONDITION(aParent, "null ptr");
 
-    nsRefPtr<ProcessingInstruction> node =
+    RefPtr<ProcessingInstruction> node =
         NS_NewXMLProcessingInstruction(mNodeInfoManager, aProtoPI->mTarget,
                                        aProtoPI->mData);
 
@@ -2630,7 +2630,7 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
         // Add an observer to the parser; this'll get called when
         // Necko fires its On[Start|Stop]Request() notifications,
         // and will let us recover from a missing overlay.
-        nsRefPtr<ParserObserver> parserObserver =
+        RefPtr<ParserObserver> parserObserver =
             new ParserObserver(this, mCurrentPrototype);
         parser->Parse(aURI, parserObserver);
         parserObserver = nullptr;
@@ -2790,7 +2790,7 @@ XULDocument::ResumeWalk()
                 nsXULPrototypeElement* protoele =
                     static_cast<nsXULPrototypeElement*>(childproto);
 
-                nsRefPtr<Element> child;
+                RefPtr<Element> child;
 
                 if (!processingOverlayHookupNodes) {
                     rv = CreateElementFromPrototype(protoele,
@@ -2878,7 +2878,7 @@ XULDocument::ResumeWalk()
                     // This does mean that text nodes that are direct children
                     // of <overlay> get ignored.
 
-                    nsRefPtr<nsTextNode> text =
+                    RefPtr<nsTextNode> text =
                         new nsTextNode(mNodeInfoManager);
 
                     nsXULPrototypeText* textproto =
@@ -3564,7 +3564,7 @@ XULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                 NS_ConvertUTF16toUTF8(aPrototype->mNodeInfo->QualifiedName()).get()));
     }
 
-    nsRefPtr<Element> result;
+    RefPtr<Element> result;
 
     if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         // If it's a XUL element, it'll be lightweight until somebody
@@ -3577,13 +3577,13 @@ XULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
         // what. So we need to copy everything out of the prototype
         // into the element.  Get a nodeinfo from our nodeinfo manager
         // for this node.
-        nsRefPtr<mozilla::dom::NodeInfo> newNodeInfo;
+        RefPtr<mozilla::dom::NodeInfo> newNodeInfo;
         newNodeInfo = mNodeInfoManager->GetNodeInfo(aPrototype->mNodeInfo->NameAtom(),
                                                     aPrototype->mNodeInfo->GetPrefixAtom(),
                                                     aPrototype->mNodeInfo->NamespaceID(),
                                                     nsIDOMNode::ELEMENT_NODE);
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
-        nsRefPtr<mozilla::dom::NodeInfo> xtfNi = newNodeInfo;
+        RefPtr<mozilla::dom::NodeInfo> xtfNi = newNodeInfo;
         rv = NS_NewElement(getter_AddRefs(result), newNodeInfo.forget(),
                            NOT_FROM_PARSER);
         if (NS_FAILED(rv))
@@ -3604,7 +3604,7 @@ XULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
 {
     nsresult rv;
 
-    nsRefPtr<Element> element;
+    RefPtr<Element> element;
     rv = CreateElementFromPrototype(aPrototype, getter_AddRefs(element), false);
     if (NS_FAILED(rv)) return rv;
 
@@ -3749,7 +3749,7 @@ XULDocument::AddPrototypeSheets()
     for (int32_t i = 0; i < sheets.Count(); i++) {
         nsCOMPtr<nsIURI> uri = sheets[i];
 
-        nsRefPtr<CSSStyleSheet> incompleteSheet;
+        RefPtr<CSSStyleSheet> incompleteSheet;
         rv = CSSLoader()->LoadSheet(uri,
                                     mCurrentPrototype->DocumentPrincipal(),
                                     EmptyCString(), this,

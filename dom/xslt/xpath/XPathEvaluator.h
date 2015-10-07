@@ -75,7 +75,7 @@ private:
                          ErrorResult& aRv);
 
     nsWeakPtr mDocument;
-    nsRefPtr<txResultRecycler> mRecycler;
+    RefPtr<txResultRecycler> mRecycler;
 };
 
 inline nsISupports*

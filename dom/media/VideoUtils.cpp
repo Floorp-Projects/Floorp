@@ -362,7 +362,7 @@ GenerateRandomPathName(nsCString& aOutSalt, uint32_t aLength)
 already_AddRefed<TaskQueue>
 CreateMediaDecodeTaskQueue()
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   return queue.forget();
 }
@@ -370,7 +370,7 @@ CreateMediaDecodeTaskQueue()
 already_AddRefed<FlushableTaskQueue>
 CreateFlushableMediaDecodeTaskQueue()
 {
-  nsRefPtr<FlushableTaskQueue> queue = new FlushableTaskQueue(
+  RefPtr<FlushableTaskQueue> queue = new FlushableTaskQueue(
     GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
   return queue.forget();
 }
@@ -392,7 +392,7 @@ SimpleTimer::Cancel() {
 
 NS_IMETHODIMP
 SimpleTimer::Notify(nsITimer *timer) {
-  nsRefPtr<SimpleTimer> deathGrip(this);
+  RefPtr<SimpleTimer> deathGrip(this);
   if (mTask) {
     mTask->Run();
     mTask = nullptr;
@@ -442,7 +442,7 @@ NS_IMPL_ISUPPORTS(SimpleTimer, nsITimerCallback)
 already_AddRefed<SimpleTimer>
 SimpleTimer::Create(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
 {
-  nsRefPtr<SimpleTimer> t(new SimpleTimer());
+  RefPtr<SimpleTimer> t(new SimpleTimer());
   if (NS_FAILED(t->Init(aTask, aTimeoutMs, aTarget))) {
     return nullptr;
   }

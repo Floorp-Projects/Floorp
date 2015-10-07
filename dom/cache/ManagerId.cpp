@@ -7,7 +7,7 @@
 #include "mozilla/dom/cache/ManagerId.h"
 #include "nsIPrincipal.h"
 #include "nsProxyRelease.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -30,7 +30,7 @@ ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
                                                    nullptr);  // is app
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  nsRefPtr<ManagerId> ref = new ManagerId(aPrincipal, quotaOrigin);
+  RefPtr<ManagerId> ref = new ManagerId(aPrincipal, quotaOrigin);
   ref.forget(aManagerIdOut);
 
   return NS_OK;

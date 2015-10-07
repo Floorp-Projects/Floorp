@@ -115,7 +115,7 @@ private:
 
   // The AndroidMediaResourceServer that owns the MediaResource instances
   // served. This is used to lookup the MediaResource from the URL.
-  nsRefPtr<AndroidMediaResourceServer> mServer;
+  RefPtr<AndroidMediaResourceServer> mServer;
 
   // Write 'aBufferLength' bytes from 'aBuffer' to 'mOutput'. This
   // method ensures all the data is written by checking the number
@@ -179,7 +179,7 @@ ServeResourceEvent::GetMediaResource(nsCString const& aHTTPRequest)
   // we don't need to do any sanity checking on ".." paths and similar
   // exploits.
   nsCString relative(url_start, url_end - url_start);
-  nsRefPtr<MediaResource> resource =
+  RefPtr<MediaResource> resource =
     mServer->GetResource(mServer->GetURLPrefix() + relative);
   return resource.forget();
 }
@@ -194,7 +194,7 @@ ServeResourceEvent::Run() {
 
   // First line contains the HTTP GET request. Extract the URL and obtain
   // the MediaResource for it.
-  nsRefPtr<MediaResource> resource = GetMediaResource(line);
+  RefPtr<MediaResource> resource = GetMediaResource(line);
   if (!resource) {
     const char* response_404 = "HTTP/1.1 404 Not Found\r\n"
                                "Content-Length: 0\r\n\r\n";
@@ -346,7 +346,7 @@ class ResourceSocketListener : public nsIServerSocketListener
 public:
   // The AndroidMediaResourceServer used to look up the MediaResource
   // on requests.
-  nsRefPtr<AndroidMediaResourceServer> mServer;
+  RefPtr<AndroidMediaResourceServer> mServer;
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISERVERSOCKETLISTENER
@@ -422,7 +422,7 @@ already_AddRefed<AndroidMediaResourceServer>
 AndroidMediaResourceServer::Start()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsRefPtr<AndroidMediaResourceServer> server = new AndroidMediaResourceServer();
+  RefPtr<AndroidMediaResourceServer> server = new AndroidMediaResourceServer();
   server->Run();
   return server.forget();
 }
@@ -500,6 +500,6 @@ AndroidMediaResourceServer::GetResource(nsCString const& aUrl)
   ResourceMap::const_iterator it = mResources.find(aUrl);
   if (it == mResources.end()) return nullptr;
 
-  nsRefPtr<MediaResource> resource = it->second;
+  RefPtr<MediaResource> resource = it->second;
   return resource.forget();
 }

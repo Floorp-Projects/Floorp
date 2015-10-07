@@ -64,7 +64,7 @@ private:
 
   nsCOMPtr<nsIWorkerHolder> mWifiWorker;
 
-  nsRefPtr<mozilla::ipc::KeyStore> mKeyStore;
+  RefPtr<mozilla::ipc::KeyStore> mKeyStore;
 
   bool mShutdown;
 };

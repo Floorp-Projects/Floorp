@@ -169,7 +169,7 @@ private:
   void PageScroll(nscoord aChange);
  
   nsPoint mDestinationPoint;
-  nsRefPtr<nsSliderMediator> mMediator;
+  RefPtr<nsSliderMediator> mMediator;
 
   float mRatio;
 

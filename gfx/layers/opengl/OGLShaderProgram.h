@@ -9,7 +9,7 @@
 #include "GLContext.h"                  // for fast inlines of glUniform*
 #include "gfxTypes.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/nsRefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/gfx/Types.h"
@@ -476,7 +476,7 @@ public:
   }
 
 protected:
-  nsRefPtr<GLContext> mGL;
+  RefPtr<GLContext> mGL;
   // the OpenGL id of the program
   GLuint mProgram;
   ProgramProfileOGL mProfile;

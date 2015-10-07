@@ -10,7 +10,7 @@
 #include "mozilla/dom/SVGFEImageElementBinding.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
@@ -198,7 +198,7 @@ FilterPrimitiveDescription
 SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const IntRect& aFilterSubregion,
                                            const nsTArray<bool>& aInputsAreTainted,
-                                           nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
@@ -214,7 +214,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
     currentRequest->GetImage(getter_AddRefs(imageContainer));
   }
 
-  nsRefPtr<SourceSurface> image;
+  RefPtr<SourceSurface> image;
   if (imageContainer) {
     image = imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
                                      imgIContainer::FLAG_SYNC_DECODE);

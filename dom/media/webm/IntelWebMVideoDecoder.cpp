@@ -106,7 +106,7 @@ IntelWebMVideoDecoder::IsSupportedVideoMimeType(const nsACString& aMimeType)
          mPlatform->SupportsMimeType(aMimeType);
 }
 
-nsRefPtr<InitPromise>
+RefPtr<InitPromise>
 IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
 {
   mPlatform = PlatformDecoderModule::Create();
@@ -148,9 +148,9 @@ IntelWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
 }
 
 bool
-IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
+IntelWebMVideoDecoder::Demux(RefPtr<VP8Sample>& aSample, bool* aEOS)
 {
-  nsRefPtr<NesteggPacketHolder> holder(mReader->NextPacket(WebMReader::VIDEO));
+  RefPtr<NesteggPacketHolder> holder(mReader->NextPacket(WebMReader::VIDEO));
   if (!holder) {
     return false;
   }
@@ -180,7 +180,7 @@ IntelWebMVideoDecoder::Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS)
   // end of the resource, use the file's duration as the end time of this
   // video frame.
   int64_t next_tstamp = 0;
-  nsRefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
+  RefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
   if (next_holder) {
     next_tstamp = holder->Timestamp();
     mReader->PushVideoPacket(next_holder);
@@ -241,7 +241,7 @@ IntelWebMVideoDecoder::Decode()
            !mEOS) {
       mMonitor.AssertCurrentThreadOwns();
       mMonitor.Unlock();
-      nsRefPtr<VP8Sample> compressed(PopSample());
+      RefPtr<VP8Sample> compressed(PopSample());
       if (!compressed) {
         // EOS, or error. Let the state machine know there are no more
         // frames coming.
@@ -297,7 +297,7 @@ IntelWebMVideoDecoder::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint
 
   // Loop until we reach the next keyframe after the threshold.
   while (true) {
-    nsRefPtr<VP8Sample> compressed(PopSample());
+    RefPtr<VP8Sample> compressed(PopSample());
     if (!compressed) {
       // EOS, or error. Let the state machine know.
       return false;
@@ -353,7 +353,7 @@ IntelWebMVideoDecoder::PopSample()
   if (mQueuedVideoSample) {
     return mQueuedVideoSample.forget();
   }
-  nsRefPtr<VP8Sample> sample;
+  RefPtr<VP8Sample> sample;
   while (mSampleQueue.empty()) {
     bool eos = false;
     bool ok = Demux(sample, &eos);

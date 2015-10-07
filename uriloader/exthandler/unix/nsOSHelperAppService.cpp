@@ -1256,7 +1256,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
 
 #ifdef MOZ_WIDGET_GTK
     LOG(("Looking in GNOME registry\n"));
-    nsRefPtr<nsMIMEInfoBase> gnomeInfo =
+    RefPtr<nsMIMEInfoBase> gnomeInfo =
       nsGNOMERegistry::GetFromExtension(aFileExt);
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry\n"));
@@ -1288,7 +1288,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
   }
 
   nsAutoCString mimeType(asciiMajorType + NS_LITERAL_CSTRING("/") + asciiMinorType);
-  nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(mimeType);
+  RefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(mimeType);
 
   mimeInfo->AppendExtension(aFileExt);
   rv = LookUpHandlerAndDescription(majorType, minorType,
@@ -1378,7 +1378,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
 
 #ifdef MOZ_WIDGET_GTK
   if (handler.IsEmpty()) {
-    nsRefPtr<nsMIMEInfoBase> gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType);
+    RefPtr<nsMIMEInfoBase> gnomeInfo = nsGNOMERegistry::GetFromType(aMIMEType);
     if (gnomeInfo) {
       LOG(("Got MIMEInfo from GNOME registry without extensions; setting them "
            "to %s\n", NS_LossyConvertUTF16toASCII(extensions).get()));
@@ -1431,7 +1431,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
     return nullptr;
   }
 
-  nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
+  RefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
 
   mimeInfo->SetFileExtensions(NS_ConvertUTF16toUTF8(extensions));
   if (! mime_types_description.IsEmpty()) {
@@ -1463,12 +1463,12 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
                                         const nsACString& aFileExt,
                                         bool       *aFound) {
   *aFound = true;
-  nsRefPtr<nsMIMEInfoBase> retval = GetFromType(PromiseFlatCString(aType));
+  RefPtr<nsMIMEInfoBase> retval = GetFromType(PromiseFlatCString(aType));
   bool hasDefault = false;
   if (retval)
     retval->GetHasDefaultHandler(&hasDefault);
   if (!retval || !hasDefault) {
-    nsRefPtr<nsMIMEInfoBase> miByExt = GetFromExtension(PromiseFlatCString(aFileExt));
+    RefPtr<nsMIMEInfoBase> miByExt = GetFromExtension(PromiseFlatCString(aFileExt));
     // If we had no extension match, but a type match, use that
     if (!miByExt && retval)
       return retval.forget();

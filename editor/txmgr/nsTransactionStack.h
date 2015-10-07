@@ -32,7 +32,7 @@ public:
   void DoTraverse(nsCycleCollectionTraversalCallback &cb);
 
 private:
-  std::deque<nsRefPtr<nsTransactionItem> > mDeque;
+  std::deque<RefPtr<nsTransactionItem> > mDeque;
   const Type mType;
 };
 

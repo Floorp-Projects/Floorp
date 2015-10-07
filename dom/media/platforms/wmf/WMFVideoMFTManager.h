@@ -11,7 +11,7 @@
 #include "MFTDecoder.h"
 #include "nsRect.h"
 #include "WMFMediaDataDecoder.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 
@@ -29,7 +29,7 @@ public:
 
   HRESULT Input(MediaRawData* aSample) override;
 
-  HRESULT Output(int64_t aStreamOffset, nsRefPtr<MediaData>& aOutput) override;
+  HRESULT Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutput) override;
 
   void Shutdown() override;
 
@@ -66,10 +66,10 @@ private:
   uint32_t mVideoHeight;
   nsIntRect mPictureRegion;
 
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
-  nsRefPtr<IMFSample> mLastInput;
+  RefPtr<IMFSample> mLastInput;
   float mLastDuration;
 
   bool mDXVAEnabled;

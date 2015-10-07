@@ -16,8 +16,8 @@ inline already_AddRefed<DataSourceSurface>
 ConvertToB8G8R8A8_SIMD(SourceSurface* aSurface)
 {
   IntSize size = aSurface->GetSize();
-  nsRefPtr<DataSourceSurface> input = aSurface->GetDataSurface();
-  nsRefPtr<DataSourceSurface> output =
+  RefPtr<DataSourceSurface> input = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> output =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   uint8_t *inputData = input->GetData();
   uint8_t *outputData = output->GetData();
@@ -288,7 +288,7 @@ inline already_AddRefed<DataSourceSurface>
 ApplyBlending_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
 {
   IntSize size = aInput1->GetSize();
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;
@@ -513,7 +513,7 @@ static already_AddRefed<DataSourceSurface>
 ApplyColorMatrix_SIMD(DataSourceSurface* aInput, const Matrix5x4 &aMatrix)
 {
   IntSize size = aInput->GetSize();
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;
@@ -1018,7 +1018,7 @@ ApplyArithmeticCombine_SIMD(DataSourceSurface* aInput1, DataSourceSurface* aInpu
                             Float aK1, Float aK2, Float aK3, Float aK4)
 {
   IntSize size = aInput1->GetSize();
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
   Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;

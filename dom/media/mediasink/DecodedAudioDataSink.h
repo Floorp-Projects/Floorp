@@ -9,7 +9,7 @@
 #include "AudioSink.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 
 #include "mozilla/dom/AudioChannelBinding.h"
@@ -34,7 +34,7 @@ public:
 
   // Return a promise which will be resolved when DecodedAudioDataSink
   // finishes playing, or rejected if any error.
-  nsRefPtr<GenericPromise> Init() override;
+  RefPtr<GenericPromise> Init() override;
 
   /*
    * All public functions below are thread-safe.
@@ -146,7 +146,7 @@ private:
   // This is created and destroyed on the audio thread, while holding the
   // decoder monitor, so if this is used off the audio thread, you must
   // first acquire the decoder monitor and check that it is non-null.
-  nsRefPtr<AudioStream> mAudioStream;
+  RefPtr<AudioStream> mAudioStream;
 
   // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine

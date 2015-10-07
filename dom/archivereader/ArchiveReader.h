@@ -69,7 +69,7 @@ public: // For events:
     return mBlobImpl;
   }
 
-  void Ready(nsTArray<nsRefPtr<File>>& aFileList, nsresult aStatus);
+  void Ready(nsTArray<RefPtr<File>>& aFileList, nsresult aStatus);
 
 private:
   ~ArchiveReader();
@@ -82,7 +82,7 @@ private:
 
 protected:
   // The archive blob/file
-  nsRefPtr<BlobImpl> mBlobImpl;
+  RefPtr<BlobImpl> mBlobImpl;
 
   // The window is needed by the requests
   nsCOMPtr<nsPIDOMWindow> mWindow;
@@ -103,11 +103,11 @@ protected:
   } mReadStatus;
 
   // List of requests to be processed
-  nsTArray<nsRefPtr<ArchiveRequest> > mRequests;
+  nsTArray<RefPtr<ArchiveRequest> > mRequests;
 
   // Everything related to the blobs and the status:
   struct {
-    nsTArray<nsRefPtr<File>> fileList;
+    nsTArray<RefPtr<File>> fileList;
     nsresult status;
   } mData;
 

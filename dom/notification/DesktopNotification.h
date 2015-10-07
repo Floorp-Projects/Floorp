@@ -133,7 +133,7 @@ protected:
   nsString mDescription;
   nsString mIconURL;
 
-  nsRefPtr<AlertServiceObserver> mObserver;
+  RefPtr<AlertServiceObserver> mObserver;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   bool mAllow;
   bool mShowHasBeenCalled;

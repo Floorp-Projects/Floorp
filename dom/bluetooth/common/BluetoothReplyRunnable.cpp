@@ -225,7 +225,7 @@ BluetoothReplyTaskQueue::AppendTask(already_AddRefed<SubTask> aTask)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<SubTask> task(aTask);
+  RefPtr<SubTask> task(aTask);
 
   if (task) {
     mTasks.AppendElement(task.forget());
@@ -238,7 +238,7 @@ BluetoothReplyTaskQueue::Run()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mTasks.IsEmpty()) {
-    nsRefPtr<SubTask> task = mTasks[0];
+    RefPtr<SubTask> task = mTasks[0];
     mTasks.RemoveElementAt(0);
 
     MOZ_ASSERT(task);

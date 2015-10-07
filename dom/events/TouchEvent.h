@@ -124,9 +124,9 @@ public:
 protected:
   ~TouchEvent() {}
 
-  nsRefPtr<TouchList> mTouches;
-  nsRefPtr<TouchList> mTargetTouches;
-  nsRefPtr<TouchList> mChangedTouches;
+  RefPtr<TouchList> mTouches;
+  RefPtr<TouchList> mTargetTouches;
+  RefPtr<TouchList> mChangedTouches;
 };
 
 } // namespace dom

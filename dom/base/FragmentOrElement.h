@@ -277,7 +277,7 @@ public:
      * The .undoManager property.
      * @see nsGenericHTMLElement::GetUndoManager
      */
-    nsRefPtr<UndoManager> mUndoManager;
+    RefPtr<UndoManager> mUndoManager;
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
@@ -288,13 +288,13 @@ public:
     /**
      * Holds any SMIL override style rules for this element.
      */
-    nsRefPtr<mozilla::css::StyleRule> mSMILOverrideStyleRule;
+    RefPtr<mozilla::css::StyleRule> mSMILOverrideStyleRule;
 
     /**
      * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)
      * @see FragmentOrElement::GetAttributes
      */
-    nsRefPtr<nsDOMAttributeMap> mAttributeMap;
+    RefPtr<nsDOMAttributeMap> mAttributeMap;
 
     union {
       /**
@@ -312,22 +312,22 @@ public:
     /**
      * An object implementing the .children property for this element.
      */
-    nsRefPtr<nsContentList> mChildrenList;
+    RefPtr<nsContentList> mChildrenList;
 
     /**
      * An object implementing the .classList property for this element.
      */
-    nsRefPtr<nsDOMTokenList> mClassList;
+    RefPtr<nsDOMTokenList> mClassList;
 
     /**
      * ShadowRoot bound to the element.
      */
-    nsRefPtr<ShadowRoot> mShadowRoot;
+    RefPtr<ShadowRoot> mShadowRoot;
 
     /**
      * The root ShadowRoot of this element if it is in a shadow tree.
      */
-    nsRefPtr<ShadowRoot> mContainingShadow;
+    RefPtr<ShadowRoot> mContainingShadow;
 
     /**
      * An array of web component insertion points to which this element
@@ -338,7 +338,7 @@ public:
     /**
      * XBL binding installed on the element.
      */
-    nsRefPtr<nsXBLBinding> mXBLBinding;
+    RefPtr<nsXBLBinding> mXBLBinding;
 
     /**
      * XBL binding installed on the lement.
@@ -348,7 +348,7 @@ public:
     /**
      * Web components custom element data.
      */
-    nsRefPtr<CustomElementData> mCustomElementData;
+    RefPtr<CustomElementData> mCustomElementData;
   };
 
 protected:

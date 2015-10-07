@@ -308,12 +308,12 @@ protected:
   void CallPrintCallback();
 
   CanvasContextType mCurrentContextType;
-  nsRefPtr<HTMLCanvasElement> mOriginalCanvas;
-  nsRefPtr<PrintCallback> mPrintCallback;
+  RefPtr<HTMLCanvasElement> mOriginalCanvas;
+  RefPtr<PrintCallback> mPrintCallback;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
-  nsRefPtr<HTMLCanvasPrintState> mPrintState;
+  RefPtr<HTMLCanvasPrintState> mPrintState;
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
-  nsRefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
+  RefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
 
 public:
   // Record whether this canvas should be write-only or not.
@@ -367,7 +367,7 @@ private:
   bool mPendingNotify;
 
 protected:
-  nsRefPtr<HTMLCanvasElement> mCanvas;
+  RefPtr<HTMLCanvasElement> mCanvas;
   nsCOMPtr<nsICanvasRenderingContextInternal> mContext;
   nsCOMPtr<nsITimerCallback> mCallback;
 };

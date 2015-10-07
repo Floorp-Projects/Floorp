@@ -96,7 +96,7 @@ protected:
 
 private:
   nsMainThreadPtrHandle<DataStore> mBackingStore;
-  nsRefPtr<DataStoreChangeEventProxy> mEventProxy;
+  RefPtr<DataStoreChangeEventProxy> mEventProxy;
 };
 
 class DataStoreChangeEventProxy final : public nsIDOMEventListener
@@ -123,7 +123,7 @@ private:
 
   WorkerPrivate* mWorkerPrivate;
 
-  nsRefPtr<WorkerDataStore> mWorkerStore;
+  RefPtr<WorkerDataStore> mWorkerStore;
 
   bool mCleanedUp; // To specify if the worker has been cancelled.
 

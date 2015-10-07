@@ -986,7 +986,7 @@ OMXCodecWrapper::GetNextEncodedFrame(nsTArray<uint8_t>* aOutputBuf,
       }
     } else if ((mCodecType == AMR_NB_ENC) && !mAMRCSDProvided){
       // OMX AMR codec won't provide csd data, need to generate a fake one.
-      nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
+      RefPtr<EncodedFrame> audiodata = new EncodedFrame();
       // Decoder config descriptor
       const uint8_t decConfig[] = {
         0x0, 0x0, 0x0, 0x0, // vendor: 4 bytes

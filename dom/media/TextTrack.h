@@ -95,7 +95,7 @@ public:
 
   TextTrackCueList* GetActiveCues();
   void UpdateActiveCueList();
-  void GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
+  void GetActiveCueArray(nsTArray<RefPtr<TextTrackCue> >& aCues);
 
   TextTrackReadyState ReadyState() const;
   void SetReadyState(TextTrackReadyState aState);
@@ -121,7 +121,7 @@ public:
 private:
   ~TextTrack();
 
-  nsRefPtr<TextTrackList> mTextTrackList;
+  RefPtr<TextTrackList> mTextTrackList;
 
   TextTrackKind mKind;
   nsString mLabel;
@@ -129,9 +129,9 @@ private:
   nsString mType;
   TextTrackMode mMode;
 
-  nsRefPtr<TextTrackCueList> mCueList;
-  nsRefPtr<TextTrackCueList> mActiveCueList;
-  nsRefPtr<HTMLTrackElement> mTrackElement;
+  RefPtr<TextTrackCueList> mCueList;
+  RefPtr<TextTrackCueList> mActiveCueList;
+  RefPtr<HTMLTrackElement> mTrackElement;
 
   uint32_t mCuePos;
   TextTrackReadyState mReadyState;

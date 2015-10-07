@@ -239,7 +239,7 @@ struct ScriptLoadInfo
   // it's not in the cache yet. The promise is resolved when the full body is
   // stored into the cache.  mCachePromise will be set to nullptr after
   // resolution.
-  nsRefPtr<Promise> mCachePromise;
+  RefPtr<Promise> mCachePromise;
 
   nsCOMPtr<nsIChannel> mChannel;
   char16_t* mScriptTextBuf;
@@ -382,10 +382,10 @@ private:
   void
   FailLoaders(nsresult aRv);
 
-  nsRefPtr<Cache> mCache;
-  nsRefPtr<CacheStorage> mCacheStorage;
+  RefPtr<Cache> mCache;
+  RefPtr<CacheStorage> mCacheStorage;
   nsCOMPtr<nsIGlobalObject> mSandboxGlobalObject;
-  nsTArray<nsRefPtr<CacheScriptLoader>> mLoaders;
+  nsTArray<RefPtr<CacheScriptLoader>> mLoaders;
 
   nsString mCacheName;
   bool mPrivateBrowsing;
@@ -434,7 +434,7 @@ private:
 
   ScriptLoadInfo& mLoadInfo;
   uint32_t mIndex;
-  nsRefPtr<ScriptLoaderRunnable> mRunnable;
+  RefPtr<ScriptLoaderRunnable> mRunnable;
   bool mIsWorkerScript;
   bool mFailed;
   nsCOMPtr<nsIInputStreamPump> mPump;
@@ -473,7 +473,7 @@ private:
     AssertIsOnMainThread();
   }
 
-  nsRefPtr<ScriptLoaderRunnable> mRunnable;
+  RefPtr<ScriptLoaderRunnable> mRunnable;
   ScriptLoadInfo& mLoadInfo;
   uint32_t mIndex;
 };
@@ -492,7 +492,7 @@ class ScriptLoaderRunnable final : public WorkerFeature,
   WorkerPrivate* mWorkerPrivate;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
   nsTArray<ScriptLoadInfo> mLoadInfos;
-  nsRefPtr<CacheCreator> mCacheCreator;
+  RefPtr<CacheCreator> mCacheCreator;
   nsCOMPtr<nsIInputStream> mReader;
   bool mIsMainScript;
   WorkerScriptType mWorkerScriptType;
@@ -607,7 +607,7 @@ private:
     MOZ_ASSERT(channel == loadInfo.mChannel);
 
     // We synthesize the result code, but its never exposed to content.
-    nsRefPtr<mozilla::dom::InternalResponse> ir =
+    RefPtr<mozilla::dom::InternalResponse> ir =
       new mozilla::dom::InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(mReader);
 
@@ -636,7 +636,7 @@ private:
 
     ir->SetPrincipalInfo(Move(principalInfo));
 
-    nsRefPtr<mozilla::dom::Response> response =
+    RefPtr<mozilla::dom::Response> response =
       new mozilla::dom::Response(mCacheCreator->Global(), ir);
 
     mozilla::dom::RequestOrUSVString request;
@@ -646,7 +646,7 @@ private:
                                     loadInfo.mFullURL.Length());
 
     ErrorResult error;
-    nsRefPtr<Promise> cachePromise =
+    RefPtr<Promise> cachePromise =
       mCacheCreator->Cache_()->Put(request, *response, error);
     if (NS_WARN_IF(error.Failed())) {
       nsresult rv = error.StealNSResult();
@@ -654,7 +654,7 @@ private:
       return rv;
     }
 
-    nsRefPtr<CachePromiseHandler> promiseHandler =
+    RefPtr<CachePromiseHandler> promiseHandler =
       new CachePromiseHandler(this, loadInfo, index);
     cachePromise->AppendNativeHandler(promiseHandler);
 
@@ -785,7 +785,7 @@ private:
     mCacheCreator = new CacheCreator(mWorkerPrivate);
 
     for (uint32_t index = 0, len = mLoadInfos.Length(); index < len; ++index) {
-      nsRefPtr<CacheScriptLoader> loader =
+      RefPtr<CacheScriptLoader> loader =
         new CacheScriptLoader(mWorkerPrivate, mLoadInfos[index], index,
                               IsMainWorkerScript(), this);
       mCacheCreator->AddLoader(loader);
@@ -1221,7 +1221,7 @@ private:
     }
 
     if (firstIndex != UINT32_MAX && lastIndex != UINT32_MAX) {
-      nsRefPtr<ScriptExecutorRunnable> runnable =
+      RefPtr<ScriptExecutorRunnable> runnable =
         new ScriptExecutorRunnable(*this, mSyncLoopTarget, IsMainWorkerScript(),
                                    firstIndex, lastIndex);
       if (!runnable->Dispatch(nullptr)) {
@@ -1330,7 +1330,7 @@ CacheCreator::Load(nsIPrincipal* aPrincipal)
 
   ErrorResult error;
   MOZ_ASSERT(!mCacheName.IsEmpty());
-  nsRefPtr<Promise> promise = mCacheStorage->Open(mCacheName, error);
+  RefPtr<Promise> promise = mCacheStorage->Open(mCacheName, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -1346,7 +1346,7 @@ CacheCreator::FailLoaders(nsresult aRv)
 
   // Fail() can call LoadingFinished() which may call ExecuteFinishedScripts()
   // which sets mCacheCreator to null, so hold a ref.
-  nsRefPtr<CacheCreator> kungfuDeathGrip = this;
+  RefPtr<CacheCreator> kungfuDeathGrip = this;
 
   for (uint32_t i = 0, len = mLoaders.Length(); i < len; ++i) {
     mLoaders[i]->Fail(aRv);
@@ -1392,7 +1392,7 @@ CacheCreator::DeleteCache()
 
   // It's safe to do this while Cache::Match() and Cache::Put() calls are
   // running.
-  nsRefPtr<Promise> promise = mCacheStorage->Delete(mCacheName, rv);
+  RefPtr<Promise> promise = mCacheStorage->Delete(mCacheName, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return;
   }
@@ -1465,7 +1465,7 @@ CacheScriptLoader::Load(Cache* aCache)
   mozilla::dom::CacheQueryOptions params;
 
   ErrorResult error;
-  nsRefPtr<Promise> promise = aCache->Match(request, params, error);
+  RefPtr<Promise> promise = aCache->Match(request, params, error);
   if (NS_WARN_IF(error.Failed())) {
     Fail(error.StealNSResult());
     return;
@@ -1634,7 +1634,7 @@ public:
       channel.forget(mChannel);
     }
 
-    nsRefPtr<MainThreadStopSyncLoopRunnable> runnable =
+    RefPtr<MainThreadStopSyncLoopRunnable> runnable =
       new MainThreadStopSyncLoopRunnable(mParentWorker,
                                          mSyncLoopTarget.forget(), true);
     if (!runnable->Dispatch(nullptr)) {
@@ -1814,7 +1814,7 @@ LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
   AutoSyncLoopHolder syncLoop(aWorkerPrivate);
 
-  nsRefPtr<ScriptLoaderRunnable> loader =
+  RefPtr<ScriptLoaderRunnable> loader =
     new ScriptLoaderRunnable(aWorkerPrivate, syncLoop.EventTarget(),
                              aLoadInfos, aIsMainScript, aWorkerScriptType);
 
@@ -1871,7 +1871,7 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
 
   AutoSyncLoopHolder syncLoop(aParent);
 
-  nsRefPtr<ChannelGetterRunnable> getter =
+  RefPtr<ChannelGetterRunnable> getter =
     new ChannelGetterRunnable(aParent, syncLoop.EventTarget(), aScriptURL,
                               aChannel);
 

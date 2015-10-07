@@ -41,7 +41,7 @@ MemoryDownloader::OnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(!mData == NS_FAILED(mStatus));
   Data data;
   data.swap(mData);
-  nsRefPtr<IObserver> observer;
+  RefPtr<IObserver> observer;
   observer.swap(mObserver);
   observer->OnDownloadComplete(this, aRequest, aCtxt, aStatus,
                                mozilla::Move(data));

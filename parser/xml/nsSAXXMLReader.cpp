@@ -87,7 +87,7 @@ nsSAXXMLReader::HandleStartElement(const char16_t *aName,
   if (!mContentHandler)
     return NS_OK;
 
-  nsRefPtr<nsSAXAttributes> atts = new nsSAXAttributes();
+  RefPtr<nsSAXAttributes> atts = new nsSAXAttributes();
   if (!atts)
     return NS_ERROR_OUT_OF_MEMORY;
   nsAutoString uri, localName, qName;

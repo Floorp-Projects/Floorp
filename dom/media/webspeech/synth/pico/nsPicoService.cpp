@@ -258,7 +258,7 @@ private:
 
   // By holding a strong reference to the service we guarantee that it won't be
   // destroyed before this runnable.
-  nsRefPtr<nsPicoService> mService;
+  RefPtr<nsPicoService> mService;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED(PicoCallbackRunnable, nsRunnable, nsISpeechTaskCallback)
@@ -288,7 +288,7 @@ PicoCallbackRunnable::Run()
 
   const char* text = markedUpText.get();
   size_t buffer_size = 512, buffer_offset = 0;
-  nsRefPtr<SharedBuffer> buffer = SharedBuffer::Create(buffer_size);
+  RefPtr<SharedBuffer> buffer = SharedBuffer::Create(buffer_size);
   int16_t text_offset = 0, bytes_recv = 0, bytes_sent = 0, out_data_type = 0;
   int16_t text_remaining = markedUpText.Length() + 1;
 
@@ -373,13 +373,13 @@ PicoCallbackRunnable::DispatchSynthDataRunnable(
     }
 
   private:
-    nsRefPtr<SharedBuffer> mBuffer;
+    RefPtr<SharedBuffer> mBuffer;
 
     size_t mBufferSize;
 
     bool mFirstData;
 
-    nsRefPtr<PicoCallbackRunnable> mCallback;
+    RefPtr<PicoCallbackRunnable> mCallback;
   };
 
   nsCOMPtr<nsIRunnable> sendEvent =
@@ -490,7 +490,7 @@ nsPicoService::Speak(const nsAString& aText, const nsAString& aUri,
   }
 
   mCurrentTask = aTask;
-  nsRefPtr<PicoCallbackRunnable> cb = new PicoCallbackRunnable(aText, voice, aRate, aPitch, aTask, this);
+  RefPtr<PicoCallbackRunnable> cb = new PicoCallbackRunnable(aText, voice, aRate, aPitch, aTask, this);
   return mThread->Dispatch(cb, NS_DISPATCH_NORMAL);
 }
 
@@ -589,7 +589,7 @@ nsPicoService::RegisterVoices()
 
   for (auto iter = mVoices.Iter(); !iter.Done(); iter.Next()) {
     const nsAString& uri = iter.Key();
-    nsRefPtr<PicoVoice>& voice = iter.Data();
+    RefPtr<PicoVoice>& voice = iter.Data();
 
     // If we are missing either a language or a voice resource, it is invalid.
     if (voice->mTaFile.IsEmpty() || voice->mSgFile.IsEmpty()) {
@@ -740,7 +740,7 @@ nsPicoService::GetInstance()
 already_AddRefed<nsPicoService>
 nsPicoService::GetInstanceForService()
 {
-  nsRefPtr<nsPicoService> picoService = GetInstance();
+  RefPtr<nsPicoService> picoService = GetInstance();
   return picoService.forget();
 }
 

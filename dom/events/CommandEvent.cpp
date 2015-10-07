@@ -69,7 +69,7 @@ NS_NewDOMCommandEvent(EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       WidgetCommandEvent* aEvent)
 {
-  nsRefPtr<CommandEvent> it =
+  RefPtr<CommandEvent> it =
     new CommandEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

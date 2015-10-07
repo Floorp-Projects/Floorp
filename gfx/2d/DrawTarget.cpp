@@ -14,7 +14,7 @@ namespace gfx {
 already_AddRefed<DrawTargetCapture>
 DrawTarget::CreateCaptureDT(const IntSize& aSize)
 {
-  nsRefPtr<DrawTargetCaptureImpl> dt = new DrawTargetCaptureImpl();
+  RefPtr<DrawTargetCaptureImpl> dt = new DrawTargetCaptureImpl();
 
   if (!dt->Init(aSize, this)) {
     gfxWarning() << "Failed to initialize Capture DrawTarget!";

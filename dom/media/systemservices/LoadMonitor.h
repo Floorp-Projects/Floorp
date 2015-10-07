@@ -8,7 +8,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Atomics.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -32,7 +32,7 @@ public:
 
     explicit LoadMonitor(int aLoadUpdateInterval);
 
-    nsresult Init(nsRefPtr<LoadMonitor> &self);
+    nsresult Init(RefPtr<LoadMonitor> &self);
     void SetLoadChangeCallback(LoadNotificationCallback* aCallback);
     void Shutdown();
     float GetSystemLoad();

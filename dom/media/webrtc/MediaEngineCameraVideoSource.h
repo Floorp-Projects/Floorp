@@ -106,9 +106,9 @@ static void LogCapability(const char* aHeader,
 
   // All the mMonitor accesses are from the child classes.
   Monitor mMonitor; // Monitor for processing Camera frames.
-  nsTArray<nsRefPtr<SourceMediaStream>> mSources; // When this goes empty, we shut down HW
-  nsRefPtr<layers::Image> mImage;
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  nsTArray<RefPtr<SourceMediaStream>> mSources; // When this goes empty, we shut down HW
+  RefPtr<layers::Image> mImage;
+  RefPtr<layers::ImageContainer> mImageContainer;
   int mWidth, mHeight; // protected with mMonitor on Gonk due to different threading
   // end of data protected by mMonitor
 

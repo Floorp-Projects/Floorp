@@ -129,7 +129,7 @@ public:
   static already_AddRefed<BluetoothService>
   FactoryCreate()
   {
-    nsRefPtr<BluetoothService> service = Get();
+    RefPtr<BluetoothService> service = Get();
     return service.forget();
   }
 

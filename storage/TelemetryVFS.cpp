@@ -138,7 +138,7 @@ struct telemetry_file {
   Histograms *histograms;
 
   // quota object for this file
-  nsRefPtr<QuotaObject> quotaObject;
+  RefPtr<QuotaObject> quotaObject;
 
   // The chunk size for this file. See the documentation for
   // sqlite3_file_control() and FCNTL_CHUNK_SIZE.
@@ -706,7 +706,7 @@ xDelete(sqlite3_vfs* vfs, const char *zName, int syncDir)
 {
   sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
   int rc;
-  nsRefPtr<QuotaObject> quotaObject;
+  RefPtr<QuotaObject> quotaObject;
 
   if (StringEndsWith(nsDependentCString(zName), NS_LITERAL_CSTRING("-wal"))) {
     const char *zURIParameterKey = DatabasePathFromWALPath(zName);

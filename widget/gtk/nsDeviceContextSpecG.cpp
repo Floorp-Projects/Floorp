@@ -148,7 +148,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   int16_t format;
   mPrintSettings->GetOutputFormat(&format);
 
-  nsRefPtr<gfxASurface> surface;
+  RefPtr<gfxASurface> surface;
   gfxSize surfaceSize(width, height);
 
   // Determine the real format with some GTK magic

@@ -39,7 +39,7 @@ private:
   void Margin(Side aSide, nsAString& aValue);
 
   dom::Element* mElement;
-  nsRefPtr<nsStyleContext> mStyleContext;
+  RefPtr<nsStyleContext> mStyleContext;
 };
 
 } // namespace a11y

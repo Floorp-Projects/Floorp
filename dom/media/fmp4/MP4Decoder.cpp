@@ -150,7 +150,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
 
   // Verify that we have a PDM that supports the whitelisted types.
   PlatformDecoderModule::Init();
-  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  RefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
   if (!platform) {
     return false;
   }
@@ -185,7 +185,7 @@ IsFFmpegAvailable()
   return false;
 #else
   PlatformDecoderModule::Init();
-  nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
+  RefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
   return !!m;
 #endif
 }
@@ -276,12 +276,12 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 
   PlatformDecoderModule::Init();
 
-  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  RefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
   if (!platform || !platform->SupportsMimeType(NS_LITERAL_CSTRING("video/mp4"))) {
     return nullptr;
   }
 
-  nsRefPtr<MediaDataDecoder> decoder(
+  RefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr, aBackend, nullptr));
   if (!decoder) {
     return nullptr;
@@ -294,7 +294,7 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFailureReason)
 {
   VideoInfo config;
-  nsRefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
+  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
   if (!decoder) {
     aFailureReason.AssignLiteral("Failed to create H264 decoder");
     return false;
@@ -313,7 +313,7 @@ MP4Decoder::CanCreateH264Decoder()
     return result;
   }
   VideoInfo config;
-  nsRefPtr<MediaDataDecoder> decoder(
+  RefPtr<MediaDataDecoder> decoder(
     CreateTestH264Decoder(layers::LayersBackend::LAYERS_BASIC, config));
   if (decoder) {
     decoder->Shutdown();
@@ -332,12 +332,12 @@ CreateTestAACDecoder(AudioInfo& aConfig)
 {
   PlatformDecoderModule::Init();
 
-  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  RefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
   if (!platform || !platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"))) {
     return nullptr;
   }
 
-  nsRefPtr<MediaDataDecoder> decoder(
+  RefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr));
   if (!decoder) {
     return nullptr;
@@ -378,7 +378,7 @@ MP4Decoder::CanCreateAACDecoder()
                                               MOZ_ARRAY_LENGTH(sTestAACConfig));
   config.mExtraData->AppendElements(sTestAACExtraData,
                                     MOZ_ARRAY_LENGTH(sTestAACExtraData));
-  nsRefPtr<MediaDataDecoder> decoder(CreateTestAACDecoder(config));
+  RefPtr<MediaDataDecoder> decoder(CreateTestAACDecoder(config));
   if (decoder) {
     result = true;
   }

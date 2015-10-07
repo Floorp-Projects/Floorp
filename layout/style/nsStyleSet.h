@@ -494,7 +494,7 @@ class nsStyleSet final
   // Rule processors for HTML5 scoped style sheets, one per scope.
   nsTArray<nsCOMPtr<nsIStyleRuleProcessor> > mScopedDocSheetRuleProcessors;
 
-  nsRefPtr<nsBindingManager> mBindingManager;
+  RefPtr<nsBindingManager> mBindingManager;
 
   nsRuleNode* mRuleTree; // This is the root of our rule tree.  It is a
                          // lexicographic tree of matched rules that style
@@ -514,15 +514,15 @@ class nsStyleSet final
 
   // Empty style rules to force things that restrict which properties
   // apply into different branches of the rule tree.
-  nsRefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule, mPlaceholderRule;
+  RefPtr<nsEmptyStyleRule> mFirstLineRule, mFirstLetterRule, mPlaceholderRule;
 
   // Style rule which sets all properties to their initial values for
   // determining when context-sensitive values are in use.
-  nsRefPtr<nsInitialStyleRule> mInitialStyleRule;
+  RefPtr<nsInitialStyleRule> mInitialStyleRule;
 
   // Style rule that sets the internal -x-text-zoom property on
   // <svg:text> elements to disable the effect of text zooming.
-  nsRefPtr<nsDisableTextZoomStyleRule> mDisableTextZoomStyleRule;
+  RefPtr<nsDisableTextZoomStyleRule> mDisableTextZoomStyleRule;
 
   // Old rule trees, which should only be non-empty between
   // BeginReconstruct and EndReconstruct, but in case of bugs that cause
@@ -530,7 +530,7 @@ class nsStyleSet final
   nsTArray<nsRuleNode*> mOldRuleTrees;
 
   // whether font feature values lookup object needs initialization
-  nsRefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
+  RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 };
 
 #ifdef MOZILLA_INTERNAL_API

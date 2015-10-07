@@ -395,7 +395,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           nsAutoString value;
           aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
           if (!value.IsEmpty()) {
-            nsRefPtr<nsTextNode> textContent =
+            RefPtr<nsTextNode> textContent =
               new nsTextNode(realElement->NodeInfo()->NodeInfoManager());
 
             textContent->SetText(value, true);
@@ -549,7 +549,7 @@ SetAttrs(nsISupports* aKey, nsXBLAttributeEntry* aEntry, void* aClosure)
                                              kNameSpaceID_XUL) &&
              dst == nsGkAtoms::value && !value.IsEmpty())) {
 
-          nsRefPtr<nsTextNode> textContent =
+          RefPtr<nsTextNode> textContent =
             new nsTextNode(realElement->NodeInfo()->NodeInfoManager());
 
           textContent->SetText(value, false);
@@ -804,7 +804,7 @@ nsXBLPrototypeBinding::CreateKeyHandlers()
       }
 
       if (i == count) {
-        nsRefPtr<nsXBLKeyEventHandler> newHandler =
+        RefPtr<nsXBLKeyEventHandler> newHandler =
           new nsXBLKeyEventHandler(eventAtom, phase, type);
         mKeyHandlers.AppendObject(newHandler);
         handler = newHandler;
@@ -1246,7 +1246,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAtom> tagAtom = do_GetAtom(tag);
-  nsRefPtr<NodeInfo> nodeInfo =
+  RefPtr<NodeInfo> nodeInfo =
     aNim->GetNodeInfo(tagAtom, prefixAtom, namespaceID, nsIDOMNode::ELEMENT_NODE);
 
   uint32_t attrCount;
@@ -1259,7 +1259,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   if (namespaceID == kNameSpaceID_XUL) {
     nsIURI* documentURI = aDocument->GetDocumentURI();
 
-    nsRefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
+    RefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
 
     prototype->mNodeInfo = nodeInfo;
 
@@ -1292,7 +1292,7 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
         if (!prefix.IsEmpty())
           prefixAtom = do_GetAtom(prefix);
 
-        nsRefPtr<NodeInfo> ni =
+        RefPtr<NodeInfo> ni =
           aNim->GetNodeInfo(nameAtom, prefixAtom,
                             namespaceID, nsIDOMNode::ATTRIBUTE_NODE);
         attrs[i].mName.SetTo(ni);

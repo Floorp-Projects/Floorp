@@ -60,13 +60,13 @@ public:
 
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.
-  nsRefPtr<nsXBLResourceLoader> mLoader;
+  RefPtr<nsXBLResourceLoader> mLoader;
 
   // A list of loaded stylesheets for this binding.
-  nsTArray<nsRefPtr<mozilla::CSSStyleSheet>> mStyleSheetList;
+  nsTArray<RefPtr<mozilla::CSSStyleSheet>> mStyleSheetList;
 
   // The list of stylesheets converted to a rule processor.
-  nsRefPtr<nsCSSRuleProcessor> mRuleProcessor;
+  RefPtr<nsCSSRuleProcessor> mRuleProcessor;
 };
 
 #endif

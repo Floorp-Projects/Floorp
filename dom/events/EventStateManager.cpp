@@ -128,7 +128,7 @@ PrintDocTree(nsIDocShellTreeItem* aParentItem, int aLevel)
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentItem));
   int32_t type = aParentItem->ItemType();
   nsCOMPtr<nsIPresShell> presShell = parentAsDocShell->GetPresShell();
-  nsRefPtr<nsPresContext> presContext;
+  RefPtr<nsPresContext> presContext;
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsCOMPtr<nsIContentViewer> cv;
   parentAsDocShell->GetContentViewer(getter_AddRefs(cv));
@@ -728,7 +728,7 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       //       TextComposition::IsComposing() is false even before
       //       compositionend if there is no composing string.
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-      nsRefPtr<TextComposition> composition =
+      RefPtr<TextComposition> composition =
         IMEStateManager::GetTextCompositionFor(keyEvent);
       keyEvent->mIsComposing = !!composition;
     }
@@ -1307,7 +1307,7 @@ EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
       continue;
     }
 
-    nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+    RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
     if (!frameLoader) {
       continue;
     }
@@ -1394,7 +1394,7 @@ EventStateManager::KillClickHoldTimer()
 void
 EventStateManager::sClickHoldCallback(nsITimer* aTimer, void* aESM)
 {
-  nsRefPtr<EventStateManager> self = static_cast<EventStateManager*>(aESM);
+  RefPtr<EventStateManager> self = static_cast<EventStateManager*>(aESM);
   if (self) {
     self->FireContextClick();
   }
@@ -1495,7 +1495,7 @@ EventStateManager::FireContextClick()
       // stop selection tracking, we're in control now
       if (mCurrentTarget)
       {
-        nsRefPtr<nsFrameSelection> frameSel =
+        RefPtr<nsFrameSelection> frameSel =
           mCurrentTarget->GetFrameSelection();
         
         if (frameSel && frameSel->GetDragState()) {
@@ -1628,7 +1628,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     // don't interfere!
     if (mCurrentTarget)
     {
-      nsRefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
+      RefPtr<nsFrameSelection> frameSel = mCurrentTarget->GetFrameSelection();
       if (frameSel && frameSel->GetDragState()) {
         StopTrackingDragGesture();
         return;
@@ -1671,7 +1671,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       if (!window)
         return;
 
-      nsRefPtr<DataTransfer> dataTransfer =
+      RefPtr<DataTransfer> dataTransfer =
         new DataTransfer(window, eDragStart, false, -1);
 
       nsCOMPtr<nsISelection> selection;
@@ -1921,7 +1921,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // XXXndeakin don't really want to create a new drag DOM event
   // here, but we need something to pass to the InvokeDragSession
   // methods.
-  nsRefPtr<DragEvent> event =
+  RefPtr<DragEvent> event =
     NS_NewDOMDragEvent(dragTarget, aPresContext, aDragEvent);
 
   // Use InvokeDragSessionWithSelection if a selection is being dragged,
@@ -2448,7 +2448,7 @@ EventStateManager::GetScrollAmount(nsPresContext* aPresContext,
   if (!rootFrame) {
     return nsSize(0, 0);
   }
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(rootFrame, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(rootFrame));
   NS_ENSURE_TRUE(fm, nsSize(0, 0));
@@ -2836,7 +2836,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   }
 
   //Keep the prescontext alive, we might need it after event dispatch
-  nsRefPtr<nsPresContext> presContext = aPresContext;
+  RefPtr<nsPresContext> presContext = aPresContext;
   nsresult ret = NS_OK;
 
   switch (aEvent->mMessage) {
@@ -3067,7 +3067,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
       nsIPresShell *shell = presContext->GetPresShell();
       if (shell) {
-        nsRefPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
+        RefPtr<nsFrameSelection> frameSelection = shell->FrameSelection();
         frameSelection->SetDragState(false);
       }
     }
@@ -3934,7 +3934,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
       nsCOMPtr<nsIDocShell> docshell;
       subdocFrame->GetDocShell(getter_AddRefs(docshell));
       if (docshell) {
-        nsRefPtr<nsPresContext> presContext;
+        RefPtr<nsPresContext> presContext;
         docshell->GetPresContext(getter_AddRefs(presContext));
 
         if (presContext) {
@@ -3966,7 +3966,7 @@ EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
 
   // In case we go out from capturing element (retargetedByPointerCapture is true)
   // we should dispatch ePointerLeave event and only for capturing element.
-  nsRefPtr<nsIContent> movingInto = aMouseEvent->retargetedByPointerCapture
+  RefPtr<nsIContent> movingInto = aMouseEvent->retargetedByPointerCapture
                                     ? wrapper->mLastOverElement->GetParent()
                                     : aMovingInto;
 
@@ -4247,7 +4247,7 @@ EventStateManager::GetWrapperByEventID(WidgetMouseEvent* aEvent)
     }
     return mMouseEnterLeaveHelper;
   }
-  nsRefPtr<OverOutElementsWrapper> helper;
+  RefPtr<OverOutElementsWrapper> helper;
   if (!mPointersEnterLeaveHelper.Get(pointer->pointerId, getter_AddRefs(helper))) {
     helper = new OverOutElementsWrapper();
     mPointersEnterLeaveHelper.Put(pointer->pointerId, helper);
@@ -4364,7 +4364,7 @@ EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
         sLastDragOverFrame->GetContentForEvent(aDragEvent,
                                                getter_AddRefs(lastContent));
 
-        nsRefPtr<nsPresContext> lastDragOverFramePresContext = sLastDragOverFrame->PresContext();
+        RefPtr<nsPresContext> lastDragOverFramePresContext = sLastDragOverFrame->PresContext();
         FireDragEnterOrExit(lastDragOverFramePresContext,
                             aDragEvent, eDragExit,
                             nullptr, lastContent, sLastDragOverFrame);
@@ -4937,7 +4937,7 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
 PLDHashOperator
 EventStateManager::ResetLastOverForContent(
                      const uint32_t& aIdx,
-                     nsRefPtr<OverOutElementsWrapper>& aElemWrapper,
+                     RefPtr<OverOutElementsWrapper>& aElemWrapper,
                      void* aClosure)
 {
   nsIContent* content = static_cast<nsIContent*>(aClosure);

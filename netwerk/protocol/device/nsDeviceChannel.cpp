@@ -85,7 +85,7 @@ nsDeviceChannel::OpenContentStream(bool aAsync,
 
   nsAutoCString type;
 
-  nsRefPtr<nsDeviceCaptureProvider> capture;
+  RefPtr<nsDeviceCaptureProvider> capture;
   nsCaptureParams captureParams;
   captureParams.camera = 0;
   if (kNotFound != spec.Find(NS_LITERAL_CSTRING("type=image/png"),

@@ -38,7 +38,7 @@ WorkerNavigator::Create(bool aOnLine)
   const RuntimeService::NavigatorProperties& properties =
     rts->GetNavigatorProperties();
 
-  nsRefPtr<WorkerNavigator> navigator =
+  RefPtr<WorkerNavigator> navigator =
     new WorkerNavigator(properties, aOnLine);
 
   return navigator.forget();
@@ -121,16 +121,16 @@ GetDataStoresProxyCloneCallbacksRead(JSContext* aCx,
   // Protect workerStoreObj from moving GC during ~nsRefPtr.
   JS::Rooted<JSObject*> workerStoreObj(aCx, nullptr);
   {
-    nsRefPtr<WorkerDataStore> workerStore =
+    RefPtr<WorkerDataStore> workerStore =
       new WorkerDataStore(workerPrivate->GlobalScope());
     nsMainThreadPtrHandle<DataStore> backingStore(dataStoreholder);
 
     // When we're on the worker thread, prepare a DataStoreChangeEventProxy.
-    nsRefPtr<DataStoreChangeEventProxy> eventProxy =
+    RefPtr<DataStoreChangeEventProxy> eventProxy =
       new DataStoreChangeEventProxy(workerPrivate, workerStore);
 
     // Add the DataStoreChangeEventProxy as an event listener on the main thread.
-    nsRefPtr<DataStoreAddEventListenerRunnable> runnable =
+    RefPtr<DataStoreAddEventListenerRunnable> runnable =
       new DataStoreAddEventListenerRunnable(workerPrivate,
                                             backingStore,
                                             eventProxy);
@@ -202,7 +202,7 @@ kGetDataStoresCloneCallbacks= {
 // main thread.
 class NavigatorGetDataStoresRunnable final : public WorkerMainThreadRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
   const nsString mName;
   const nsString mOwner;
   ErrorResult& mRv;
@@ -261,7 +261,7 @@ protected:
       return false;
     }
 
-    nsRefPtr<Promise> promise =
+    RefPtr<Promise> promise =
       Navigator::GetDataStores(window, mName, mOwner, mRv);
     promise->AppendNativeHandler(mPromiseWorkerProxy);
     return true;
@@ -278,12 +278,12 @@ WorkerNavigator::GetDataStores(JSContext* aCx,
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  RefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  nsRefPtr<NavigatorGetDataStoresRunnable> runnable =
+  RefPtr<NavigatorGetDataStoresRunnable> runnable =
     new NavigatorGetDataStoresRunnable(workerPrivate, promise, aName, aOwner, aRv);
   runnable->Dispatch(aCx);
 
@@ -386,7 +386,7 @@ WorkerNavigator::GetUserAgent(nsString& aUserAgent) const
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  nsRefPtr<GetUserAgentRunnable> runnable =
+  RefPtr<GetUserAgentRunnable> runnable =
     new GetUserAgentRunnable(workerPrivate, aUserAgent);
 
   if (!runnable->Dispatch(workerPrivate->GetJSContext())) {

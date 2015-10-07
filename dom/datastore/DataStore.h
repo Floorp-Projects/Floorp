@@ -87,7 +87,7 @@ public:
 private:
   ~DataStore();
 
-  nsRefPtr<DataStoreImpl> mStore;
+  RefPtr<DataStoreImpl> mStore;
 };
 
 } //namespace dom

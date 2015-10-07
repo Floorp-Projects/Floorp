@@ -9,7 +9,7 @@
 #include "nsTArray.h"
 #include "nsIScreen.h"
 #include "nsCOMPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
@@ -84,9 +84,9 @@ public:
   virtual bool PlatformInit() override;
   virtual bool Init() override;
   virtual void Destroy() override;
-  virtual void GetHMDs(nsTArray<nsRefPtr<VRHMDInfo> >& aHMDResult) override;
+  virtual void GetHMDs(nsTArray<RefPtr<VRHMDInfo> >& aHMDResult) override;
 protected:
-  nsTArray<nsRefPtr<impl::HMDInfoOculus>> mOculusHMDs;
+  nsTArray<RefPtr<impl::HMDInfoOculus>> mOculusHMDs;
   bool mOculusInitialized;
   bool mOculusPlatformInitialized;
 };

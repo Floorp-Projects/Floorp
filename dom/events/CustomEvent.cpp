@@ -46,7 +46,7 @@ CustomEvent::Constructor(const GlobalObject& aGlobal,
                          ErrorResult& aRv)
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<CustomEvent> e = new CustomEvent(t, nullptr, nullptr);
+  RefPtr<CustomEvent> e = new CustomEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   JS::Rooted<JS::Value> detail(aGlobal.Context(), aParam.mDetail);
   e->InitCustomEvent(aGlobal.Context(), aType, aParam.mBubbles, aParam.mCancelable, detail, aRv);
@@ -116,7 +116,7 @@ NS_NewDOMCustomEvent(EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      mozilla::WidgetEvent* aEvent)
 {
-  nsRefPtr<CustomEvent> it =
+  RefPtr<CustomEvent> it =
     new CustomEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

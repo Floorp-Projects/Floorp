@@ -81,14 +81,14 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
       strLen1 > kMaxStrLen || strLen2 > kMaxStrLen) {
     if (strLen1 > 0) {
       // Fire text change event for removal.
-      nsRefPtr<AccEvent> textRemoveEvent =
+      RefPtr<AccEvent> textRemoveEvent =
         new AccTextChangeEvent(mHyperText, mTextOffset, str1, false);
       mDocument->FireDelayedEvent(textRemoveEvent);
     }
 
     if (strLen2 > 0) {
       // Fire text change event for insertion.
-      nsRefPtr<AccEvent> textInsertEvent =
+      RefPtr<AccEvent> textInsertEvent =
         new AccTextChangeEvent(mHyperText, mTextOffset, str2, true);
       mDocument->FireDelayedEvent(textInsertEvent);
     }
@@ -129,7 +129,7 @@ TextUpdater::DoUpdate(const nsAString& aNewText, const nsAString& aOldText,
   }
 
   // Compute events based on the difference.
-  nsTArray<nsRefPtr<AccEvent> > events;
+  nsTArray<RefPtr<AccEvent> > events;
   ComputeTextChangeEvents(str1, str2, entries, events);
 
   delete [] entries;
@@ -148,7 +148,7 @@ void
 TextUpdater::ComputeTextChangeEvents(const nsAString& aStr1,
                                      const nsAString& aStr2,
                                      uint32_t* aEntries,
-                                     nsTArray<nsRefPtr<AccEvent> >& aEvents)
+                                     nsTArray<RefPtr<AccEvent> >& aEvents)
 {
   int32_t colIdx = aStr1.Length(), rowIdx = aStr2.Length();
 

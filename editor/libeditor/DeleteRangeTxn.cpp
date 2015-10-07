@@ -97,7 +97,7 @@ DeleteRangeTxn::DoTransaction()
   bool bAdjustSelection;
   mEditor->ShouldTxnSetSelection(&bAdjustSelection);
   if (bAdjustSelection) {
-    nsRefPtr<Selection> selection = mEditor->GetSelection();
+    RefPtr<Selection> selection = mEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     res = selection->Collapse(startParent, startOffset);
     NS_ENSURE_SUCCESS(res, res);
@@ -145,10 +145,10 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
       numToDel = aEndOffset - aStartOffset;
     }
 
-    nsRefPtr<nsGenericDOMDataNode> charDataNode =
+    RefPtr<nsGenericDOMDataNode> charDataNode =
       static_cast<nsGenericDOMDataNode*>(aNode);
 
-    nsRefPtr<DeleteTextTxn> txn =
+    RefPtr<DeleteTextTxn> txn =
       new DeleteTextTxn(*mEditor, *charDataNode, aStartOffset, numToDel,
                         mRangeUpdater);
 
@@ -164,7 +164,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
 
   nsresult res = NS_OK;
   for (int32_t i = aStartOffset; i < aEndOffset; ++i) {
-    nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
+    RefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
     res = txn->Init(mEditor, child, mRangeUpdater);
     if (NS_SUCCEEDED(res)) {
       AppendChild(txn);
@@ -195,9 +195,9 @@ DeleteRangeTxn::CreateTxnsToDeleteContent(nsINode* aNode,
     }
 
     if (numToDelete) {
-      nsRefPtr<nsGenericDOMDataNode> dataNode =
+      RefPtr<nsGenericDOMDataNode> dataNode =
         static_cast<nsGenericDOMDataNode*>(aNode);
-      nsRefPtr<DeleteTextTxn> txn = new DeleteTextTxn(*mEditor, *dataNode,
+      RefPtr<DeleteTextTxn> txn = new DeleteTextTxn(*mEditor, *dataNode,
           start, numToDelete, mRangeUpdater);
 
       nsresult res = txn->Init();
@@ -222,7 +222,7 @@ DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
     nsCOMPtr<nsINode> node = iter->GetCurrentNode();
     NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
-    nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
+    RefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
 
     res = txn->Init(mEditor, node, mRangeUpdater);
     NS_ENSURE_SUCCESS(res, res);

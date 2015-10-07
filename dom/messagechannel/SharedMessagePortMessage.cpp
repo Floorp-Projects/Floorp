@@ -83,7 +83,7 @@ SharedMessagePortMessage::~SharedMessagePortMessage()
 /* static */ void
 SharedMessagePortMessage::FromSharedToMessagesChild(
                       MessagePortChild* aActor,
-                      const nsTArray<nsRefPtr<SharedMessagePortMessage>>& aData,
+                      const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
                       nsTArray<MessagePortMessage>& aArray)
 {
   MOZ_ASSERT(aActor);
@@ -97,7 +97,7 @@ SharedMessagePortMessage::FromSharedToMessagesChild(
     MessagePortMessage* message = aArray.AppendElement();
     message->data().SwapElements(data->mData);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
+    const nsTArray<RefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
     if (!blobImpls.IsEmpty()) {
       message->blobsChild().SetCapacity(blobImpls.Length());
 
@@ -116,7 +116,7 @@ SharedMessagePortMessage::FromSharedToMessagesChild(
 /* static */ bool
 SharedMessagePortMessage::FromMessagesToSharedChild(
                       nsTArray<MessagePortMessage>& aArray,
-                      FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aData)
+                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData)
 {
   MOZ_ASSERT(aData.IsEmpty());
 
@@ -125,7 +125,7 @@ SharedMessagePortMessage::FromMessagesToSharedChild(
   }
 
   for (auto& message : aArray) {
-    nsRefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
+    RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
     data->mData.SwapElements(message.data());
 
@@ -134,7 +134,7 @@ SharedMessagePortMessage::FromMessagesToSharedChild(
       data->BlobImpls().SetCapacity(blobs.Length());
 
       for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
-        nsRefPtr<BlobImpl> impl =
+        RefPtr<BlobImpl> impl =
           static_cast<BlobChild*>(blobs[i])->GetBlobImpl();
         data->BlobImpls().AppendElement(impl);
       }
@@ -153,7 +153,7 @@ SharedMessagePortMessage::FromMessagesToSharedChild(
 /* static */ bool
 SharedMessagePortMessage::FromSharedToMessagesParent(
                       MessagePortParent* aActor,
-                      const nsTArray<nsRefPtr<SharedMessagePortMessage>>& aData,
+                      const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
                       FallibleTArray<MessagePortMessage>& aArray)
 {
   MOZ_ASSERT(aArray.IsEmpty());
@@ -169,7 +169,7 @@ SharedMessagePortMessage::FromSharedToMessagesParent(
     MessagePortMessage* message = aArray.AppendElement(mozilla::fallible);
     message->data().SwapElements(data->mData);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
+    const nsTArray<RefPtr<BlobImpl>>& blobImpls = data->BlobImpls();
     if (!blobImpls.IsEmpty()) {
       message->blobsParent().SetCapacity(blobImpls.Length());
 
@@ -190,7 +190,7 @@ SharedMessagePortMessage::FromSharedToMessagesParent(
 /* static */ bool
 SharedMessagePortMessage::FromMessagesToSharedParent(
                       nsTArray<MessagePortMessage>& aArray,
-                      FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aData)
+                      FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData)
 {
   MOZ_ASSERT(aData.IsEmpty());
 
@@ -199,7 +199,7 @@ SharedMessagePortMessage::FromMessagesToSharedParent(
   }
 
   for (auto& message : aArray) {
-    nsRefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
+    RefPtr<SharedMessagePortMessage> data = new SharedMessagePortMessage();
 
     data->mData.SwapElements(message.data());
 
@@ -208,7 +208,7 @@ SharedMessagePortMessage::FromMessagesToSharedParent(
       data->BlobImpls().SetCapacity(blobs.Length());
 
       for (uint32_t i = 0, len = blobs.Length(); i < len; ++i) {
-        nsRefPtr<BlobImpl> impl =
+        RefPtr<BlobImpl> impl =
           static_cast<BlobParent*>(blobs[i])->GetBlobImpl();
         data->BlobImpls().AppendElement(impl);
       }

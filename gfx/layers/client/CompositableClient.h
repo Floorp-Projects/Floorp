@@ -10,7 +10,7 @@
 #include <vector>                       // for vector
 #include <map>                          // for map
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
-#include "mozilla/nsRefPtr.h"             // for already_AddRefed, RefCounted
+#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositorTypes.h"
@@ -76,7 +76,7 @@ protected:
   void ReleaseTextureClient();
 
 private:
-  nsRefPtr<TextureClient> mTextureClient;
+  RefPtr<TextureClient> mTextureClient;
 };
 
 /**
@@ -239,7 +239,7 @@ protected:
   // (like disallowing tiling)
   TextureFlags mTextureFlags;
   bool mDestroyed;
-  nsRefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
+  RefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
 
   friend class CompositableChild;
 };
@@ -257,7 +257,7 @@ struct AutoRemoveTexture
 
   ~AutoRemoveTexture();
 
-  nsRefPtr<TextureClient> mTexture;
+  RefPtr<TextureClient> mTexture;
 private:
   CompositableClient* mCompositable;
 };

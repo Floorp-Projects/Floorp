@@ -335,7 +335,7 @@ nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
     bool isICSGatewayAdapter = false;
 
     HRESULT hr;
-    nsRefPtr<INetSharingManager> netSharingManager;
+    RefPtr<INetSharingManager> netSharingManager;
     hr = CoCreateInstance(
                 CLSID_NetSharingManager,
                 nullptr,
@@ -343,16 +343,16 @@ nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
                 IID_INetSharingManager,
                 getter_AddRefs(netSharingManager));
 
-    nsRefPtr<INetSharingPrivateConnectionCollection> privateCollection;
+    RefPtr<INetSharingPrivateConnectionCollection> privateCollection;
     if (SUCCEEDED(hr)) {
         hr = netSharingManager->get_EnumPrivateConnections(
                     ICSSC_DEFAULT,
                     getter_AddRefs(privateCollection));
     }
 
-    nsRefPtr<IEnumNetSharingPrivateConnection> privateEnum;
+    RefPtr<IEnumNetSharingPrivateConnection> privateEnum;
     if (SUCCEEDED(hr)) {
-        nsRefPtr<IUnknown> privateEnumUnknown;
+        RefPtr<IUnknown> privateEnumUnknown;
         hr = privateCollection->get__NewEnum(getter_AddRefs(privateEnumUnknown));
         if (SUCCEEDED(hr)) {
             hr = privateEnumUnknown->QueryInterface(
@@ -378,7 +378,7 @@ nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
                 continue;
             }
 
-            nsRefPtr<INetConnection> connection;
+            RefPtr<INetConnection> connection;
             if (SUCCEEDED(connectionVariant.punkVal->QueryInterface(
                               IID_INetConnection,
                               getter_AddRefs(connection)))) {

@@ -39,7 +39,7 @@ public:
               ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-    nsRefPtr<TextTrackCue> ttcue = new TextTrackCue(window, aStartTime,
+    RefPtr<TextTrackCue> ttcue = new TextTrackCue(window, aStartTime,
                                                     aEndTime, aText, aRv);
     return ttcue.forget();
   }
@@ -338,20 +338,20 @@ private:
   void SetDefaultCueSettings();
   nsresult StashDocument();
 
-  nsRefPtr<nsIDocument> mDocument;
+  RefPtr<nsIDocument> mDocument;
   nsString mText;
   double mStartTime;
   double mEndTime;
 
-  nsRefPtr<TextTrack> mTrack;
-  nsRefPtr<HTMLTrackElement> mTrackElement;
+  RefPtr<TextTrack> mTrack;
+  RefPtr<HTMLTrackElement> mTrackElement;
   nsString mId;
   int32_t mPosition;
   AlignSetting mPositionAlign;
   int32_t mSize;
   bool mPauseOnExit;
   bool mSnapToLines;
-  nsRefPtr<TextTrackRegion> mRegion;
+  RefPtr<TextTrackRegion> mRegion;
   DirectionSetting mVertical;
   bool mLineIsAutoKeyword;
   long mLineLong;
@@ -360,7 +360,7 @@ private:
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state
-  nsRefPtr<nsGenericHTMLElement> mDisplayState;
+  RefPtr<nsGenericHTMLElement> mDisplayState;
   // Tells whether or not we need to recompute mDisplayState. This is set
   // anytime a property that relates to the display of the TextTrackCue is
   // changed.

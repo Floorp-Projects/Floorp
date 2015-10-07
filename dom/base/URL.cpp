@@ -98,7 +98,7 @@ URL::Constructor(nsISupports* aParent, const nsAString& aUrl, nsIURI* aBase,
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(aParent, uri.forget());
+  RefPtr<URL> url = new URL(aParent, uri.forget());
   return url.forget();
 }
 

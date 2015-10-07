@@ -13,7 +13,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Endian.h"
 #include "mozilla/ModuleUtils.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "cert.h"
@@ -303,7 +303,7 @@ private:
     return NS_OK;
   }
 
-  nsRefPtr<Blob> mBlob;
+  RefPtr<Blob> mBlob;
   nsString mPassword;
   WifiCertServiceResultOptions mResult;
 };
@@ -455,7 +455,7 @@ WifiCertService::FactoryCreate()
     ClearOnShutdown(&gWifiCertService);
   }
 
-  nsRefPtr<WifiCertService> service = gWifiCertService.get();
+  RefPtr<WifiCertService> service = gWifiCertService.get();
   return service.forget();
 }
 
@@ -464,8 +464,8 @@ WifiCertService::ImportCert(int32_t aId, nsIDOMBlob* aCertBlob,
                             const nsAString& aCertPassword,
                             const nsAString& aCertNickname)
 {
-  nsRefPtr<Blob> blob = static_cast<Blob*>(aCertBlob);
-  nsRefPtr<CryptoTask> task = new ImportCertTask(aId, blob, aCertPassword,
+  RefPtr<Blob> blob = static_cast<Blob*>(aCertBlob);
+  RefPtr<CryptoTask> task = new ImportCertTask(aId, blob, aCertPassword,
                                                aCertNickname);
   return task->Dispatch("WifiImportCert");
 }
@@ -473,7 +473,7 @@ WifiCertService::ImportCert(int32_t aId, nsIDOMBlob* aCertBlob,
 NS_IMETHODIMP
 WifiCertService::DeleteCert(int32_t aId, const nsAString& aCertNickname)
 {
-  nsRefPtr<CryptoTask> task = new DeleteCertTask(aId, aCertNickname);
+  RefPtr<CryptoTask> task = new DeleteCertTask(aId, aCertNickname);
   return task->Dispatch("WifiDeleteCert");
 }
 

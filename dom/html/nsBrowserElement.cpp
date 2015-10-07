@@ -498,7 +498,7 @@ nsBrowserElement::SetInputMethodActive(bool aIsActive,
 
 void
 nsBrowserElement::GetAllowedAudioChannels(
-                 nsTArray<nsRefPtr<BrowserElementAudioChannel>>& aAudioChannels,
+                 nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,
                  ErrorResult& aRv)
 {
   aAudioChannels.Clear();
@@ -580,7 +580,7 @@ nsBrowserElement::GenerateAllowedAudioChannels(
                  nsIFrameLoader* aFrameLoader,
                  nsIBrowserElementAPI* aAPI,
                  const nsAString& aManifestURL,
-                 nsTArray<nsRefPtr<BrowserElementAudioChannel>>& aAudioChannels,
+                 nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,
                  ErrorResult& aRv)
 {
   MOZ_ASSERT(aAudioChannels.IsEmpty());
@@ -599,9 +599,9 @@ nsBrowserElement::GenerateAllowedAudioChannels(
   }
 
   // Normal is always allowed.
-  nsTArray<nsRefPtr<BrowserElementAudioChannel>> channels;
+  nsTArray<RefPtr<BrowserElementAudioChannel>> channels;
 
-  nsRefPtr<BrowserElementAudioChannel> ac =
+  RefPtr<BrowserElementAudioChannel> ac =
     BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
                                        AudioChannel::Normal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -627,7 +627,7 @@ nsBrowserElement::GenerateAllowedAudioChannels(
       }
 
       if (allowed) {
-        nsRefPtr<BrowserElementAudioChannel> ac =
+        RefPtr<BrowserElementAudioChannel> ac =
           BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
                                              (AudioChannel)audioChannelTable[i].value,
                                              aRv);

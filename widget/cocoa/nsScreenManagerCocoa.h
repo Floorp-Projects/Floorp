@@ -27,7 +27,7 @@ protected:
 private:
 
     nsScreenCocoa *ScreenForCocoaScreen(NSScreen *screen);
-    nsTArray< nsRefPtr<nsScreenCocoa> > mScreenList;
+    nsTArray< RefPtr<nsScreenCocoa> > mScreenList;
 };
 
 #endif // nsScreenManagerCocoa_h_

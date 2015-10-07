@@ -1734,7 +1734,7 @@ nsWebBrowser::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion)
   NS_ASSERTION(layerManager, "Must be in paint event");
 
   layerManager->BeginTransaction();
-  nsRefPtr<PaintedLayer> root = layerManager->CreatePaintedLayer();
+  RefPtr<PaintedLayer> root = layerManager->CreatePaintedLayer();
   if (root) {
     nsIntRect dirtyRect = aRegion.GetBounds();
     root->SetVisibleRegion(dirtyRect);

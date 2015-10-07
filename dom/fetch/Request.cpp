@@ -67,7 +67,7 @@ Request::RequestContextEnabled(JSContext* aCx, JSObject* aObj)
 already_AddRefed<InternalRequest>
 Request::GetInternalRequest()
 {
-  nsRefPtr<InternalRequest> r = mRequest;
+  RefPtr<InternalRequest> r = mRequest;
   return r.forget();
 }
 
@@ -161,7 +161,7 @@ GetRequestURLFromWorker(const GlobalObject& aGlobal, const nsAString& aInput,
   worker->AssertIsOnWorkerThread();
 
   NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-  nsRefPtr<workers::URL> url =
+  RefPtr<workers::URL> url =
     workers::URL::Constructor(aGlobal, aInput, baseURL, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.ThrowTypeError<MSG_INVALID_URL>(&aInput);
@@ -204,12 +204,12 @@ Request::Constructor(const GlobalObject& aGlobal,
                      const RequestInit& aInit, ErrorResult& aRv)
 {
   nsCOMPtr<nsIInputStream> temporaryBody;
-  nsRefPtr<InternalRequest> request;
+  RefPtr<InternalRequest> request;
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   if (aInput.IsRequest()) {
-    nsRefPtr<Request> inputReq = &aInput.GetAsRequest();
+    RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
@@ -316,11 +316,11 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetMethod(outMethod);
   }
 
-  nsRefPtr<InternalHeaders> requestHeaders = request->Headers();
+  RefPtr<InternalHeaders> requestHeaders = request->Headers();
 
-  nsRefPtr<InternalHeaders> headers;
+  RefPtr<InternalHeaders> headers;
   if (aInit.mHeaders.WasPassed()) {
-    nsRefPtr<Headers> h = Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
+    RefPtr<Headers> h = Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
@@ -393,11 +393,11 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetBody(temporaryBody);
   }
 
-  nsRefPtr<Request> domRequest = new Request(global, request);
+  RefPtr<Request> domRequest = new Request(global, request);
   domRequest->SetMimeType();
 
   if (aInput.IsRequest()) {
-    nsRefPtr<Request> inputReq = &aInput.GetAsRequest();
+    RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
@@ -416,13 +416,13 @@ Request::Clone(ErrorResult& aRv) const
     return nullptr;
   }
 
-  nsRefPtr<InternalRequest> ir = mRequest->Clone();
+  RefPtr<InternalRequest> ir = mRequest->Clone();
   if (!ir) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-  nsRefPtr<Request> request = new Request(mOwner, ir);
+  RefPtr<Request> request = new Request(mOwner, ir);
   return request.forget();
 }
 

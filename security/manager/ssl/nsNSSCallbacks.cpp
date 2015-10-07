@@ -54,7 +54,7 @@ public:
 
   nsNSSHttpRequestSession *mRequestSession;
   
-  nsRefPtr<nsHTTPListener> mListener;
+  RefPtr<nsHTTPListener> mListener;
   bool mResponsibleForDoneSignal;
   TimeStamp mStartTime;
 };
@@ -176,7 +176,7 @@ nsHTTPDownloadEvent::Run()
 }
 
 struct nsCancelHTTPDownloadEvent : nsRunnable {
-  nsRefPtr<nsHTTPListener> mListener;
+  RefPtr<nsHTTPListener> mListener;
 
   NS_IMETHOD Run() {
     mListener->FreeLoadGroup(true);
@@ -395,7 +395,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
   volatile bool &waitFlag = mListener->mWaitFlag;
   waitFlag = true;
 
-  nsRefPtr<nsHTTPDownloadEvent> event(new nsHTTPDownloadEvent);
+  RefPtr<nsHTTPDownloadEvent> event(new nsHTTPDownloadEvent);
   if (!event)
     return SECFailure;
 
@@ -466,7 +466,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
         {
           request_canceled = true;
 
-          nsRefPtr<nsCancelHTTPDownloadEvent> cancelevent(
+          RefPtr<nsCancelHTTPDownloadEvent> cancelevent(
             new nsCancelHTTPDownloadEvent);
           cancelevent->mListener = mListener;
           rv = NS_DispatchToMainThread(cancelevent);
@@ -860,7 +860,7 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
 char*
 PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg)
 {
-  nsRefPtr<PK11PasswordPromptRunnable> runnable(
+  RefPtr<PK11PasswordPromptRunnable> runnable(
     new PK11PasswordPromptRunnable(slot,
                                    static_cast<nsIInterfaceRequestor*>(arg)));
   runnable->DispatchToMainThreadAndWait();
@@ -888,7 +888,7 @@ PreliminaryHandshakeDone(PRFileDesc* fd)
     if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
                                sizeof cipherInfo) == SECSuccess) {
       /* Set the SSL Status information */
-      nsRefPtr<nsSSLStatus> status(infoObject->SSLStatus());
+      RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
       if (!status) {
         status = new nsSSLStatus();
         infoObject->SetSSLStatus(status);
@@ -1261,7 +1261,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   }
 
   /* Set the SSL Status information */
-  nsRefPtr<nsSSLStatus> status(infoObject->SSLStatus());
+  RefPtr<nsSSLStatus> status(infoObject->SSLStatus());
   if (!status) {
     status = new nsSSLStatus();
     infoObject->SetSSLStatus(status);
@@ -1275,7 +1275,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
            ("HandshakeCallback KEEPING existing cert\n"));
   } else {
     ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
-    nsRefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
+    RefPtr<nsNSSCertificate> nssc(nsNSSCertificate::Create(serverCert.get()));
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
            ("HandshakeCallback using NEW cert %p\n", nssc.get()));
     status->SetServerCert(nssc, nsNSSCertificate::ev_status_unknown);

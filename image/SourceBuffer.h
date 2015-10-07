@@ -16,10 +16,10 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
 class nsIInputStream;
@@ -172,7 +172,7 @@ private:
     return mState = COMPLETE;
   }
 
-  nsRefPtr<SourceBuffer> mOwner;
+  RefPtr<SourceBuffer> mOwner;
 
   State mState;
 
@@ -367,7 +367,7 @@ private:
   FallibleTArray<Chunk> mChunks;
 
   /// Consumers which are waiting to be notified when new data is available.
-  nsTArray<nsRefPtr<IResumable>> mWaitingConsumers;
+  nsTArray<RefPtr<IResumable>> mWaitingConsumers;
 
   /// If present, marks this SourceBuffer complete with the given final status.
   Maybe<nsresult> mStatus;

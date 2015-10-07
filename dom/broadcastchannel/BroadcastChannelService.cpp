@@ -50,7 +50,7 @@ BroadcastChannelService::GetOrCreate()
 {
   AssertIsOnBackgroundThread();
 
-  nsRefPtr<BroadcastChannelService> instance = sInstance;
+  RefPtr<BroadcastChannelService> instance = sInstance;
   if (!instance) {
     instance = new BroadcastChannelService();
   }
@@ -89,12 +89,12 @@ BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
   MOZ_ASSERT(mAgents.Contains(aParent));
 
   // We need to keep the array alive for the life-time of this operation.
-  nsTArray<nsRefPtr<BlobImpl>> blobs;
+  nsTArray<RefPtr<BlobImpl>> blobs;
   if (!aData.blobsParent().IsEmpty()) {
     blobs.SetCapacity(aData.blobsParent().Length());
 
     for (uint32_t i = 0, len = aData.blobsParent().Length(); i < len; ++i) {
-      nsRefPtr<BlobImpl> impl =
+      RefPtr<BlobImpl> impl =
         static_cast<BlobParent*>(aData.blobsParent()[i])->GetBlobImpl();
      MOZ_ASSERT(impl);
      blobs.AppendElement(impl);

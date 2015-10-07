@@ -51,7 +51,7 @@ class BluetoothParent : public PBluetoothParent
     Dead
   };
 
-  nsRefPtr<BluetoothService> mService;
+  RefPtr<BluetoothService> mService;
   ShutdownState mShutdownState;
   bool mReceivedStopNotifying;
   bool mSentBeginShutdown;
@@ -108,7 +108,7 @@ class BluetoothRequestParent : public PBluetoothRequestParent
 
   friend class ReplyRunnable;
 
-  nsRefPtr<BluetoothService> mService;
+  RefPtr<BluetoothService> mService;
   nsRevocableEventPtr<ReplyRunnable> mReplyRunnable;
 
 #ifdef DEBUG

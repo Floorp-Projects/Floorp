@@ -551,7 +551,7 @@ private:
     mozilla::Mutex mQueueLock;
     std::queue<UserInputData> mEventQueue;
     sp<EventHub> mEventHub;
-    nsRefPtr<GeckoTouchDispatcher> mTouchDispatcher;
+    RefPtr<GeckoTouchDispatcher> mTouchDispatcher;
 
     int mKeyDownCount;
     bool mKeyEventsFiltered;
@@ -575,7 +575,7 @@ GeckoInputReaderPolicy::setDisplayInfo()
                   static_cast<int>(DISPLAY_ORIENTATION_270),
                   "Orientation enums not matched!");
 
-    nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+    RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
 
     uint32_t rotation = nsIScreen::ROTATION_0_DEG;
     DebugOnly<nsresult> rv = screen->GetRotation(&rotation);
@@ -1087,6 +1087,6 @@ nsAppShell::NotifyScreenRotation()
     gAppShell->mReaderPolicy->setDisplayInfo();
     gAppShell->mReader->requestRefreshConfiguration(InputReaderConfiguration::CHANGE_DISPLAY_INFO);
 
-    nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+    RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
     hal::NotifyScreenConfigurationChange(screen->GetConfiguration());
 }

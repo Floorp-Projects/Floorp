@@ -341,7 +341,7 @@ private:
     DeferredFinalizerTable;
   DeferredFinalizerTable mDeferredFinalizerTable;
 
-  nsRefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
+  RefPtr<IncrementalFinalizeRunnable> mFinalizeRunnable;
 
   nsCOMPtr<nsIException> mPendingException;
   nsThread* mOwningThread; // Manual refcounting to avoid include hell.

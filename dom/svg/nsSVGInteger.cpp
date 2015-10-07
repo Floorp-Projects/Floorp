@@ -83,7 +83,7 @@ nsSVGInteger::SetAnimValue(int aValue, nsSVGElement *aSVGElement)
 already_AddRefed<SVGAnimatedInteger>
 nsSVGInteger::ToDOMAnimatedInteger(nsSVGElement *aSVGElement)
 {
-  nsRefPtr<DOMAnimatedInteger> domAnimatedInteger =
+  RefPtr<DOMAnimatedInteger> domAnimatedInteger =
     sSVGAnimatedIntegerTearoffTable.GetTearoff(this);
   if (!domAnimatedInteger) {
     domAnimatedInteger = new DOMAnimatedInteger(this, aSVGElement);

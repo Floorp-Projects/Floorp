@@ -129,7 +129,7 @@ protected:
    */
   MaybeMagicGrallocBufferHandle mGrallocHandle;
 
-  nsRefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
+  RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
 
@@ -139,7 +139,7 @@ protected:
    */
   uint8_t* mMappedBuffer;
 
-  nsRefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
 
   android::MediaBuffer* mMediaBuffer;
 

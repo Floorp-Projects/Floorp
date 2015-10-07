@@ -132,9 +132,9 @@ private:
   ~Request();
 
   nsCOMPtr<nsIGlobalObject> mOwner;
-  nsRefPtr<InternalRequest> mRequest;
+  RefPtr<InternalRequest> mRequest;
   // Lazily created.
-  nsRefPtr<Headers> mHeaders;
+  RefPtr<Headers> mHeaders;
 };
 
 } // namespace dom

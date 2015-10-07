@@ -36,7 +36,7 @@ nsINIParserFactory::CreateINIParser(nsIFile* aINIFile,
 {
   *aResult = nullptr;
 
-  nsRefPtr<nsINIParserImpl> p(new nsINIParserImpl());
+  RefPtr<nsINIParserImpl> p(new nsINIParserImpl());
   if (!p) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

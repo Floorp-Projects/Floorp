@@ -45,7 +45,7 @@ NS_IMPL_RELEASE_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 class nsHtml5ExecutorReflusher : public nsRunnable
 {
   private:
-    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
+    RefPtr<nsHtml5TreeOpExecutor> mExecutor;
   public:
     explicit nsHtml5ExecutorReflusher(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
@@ -242,7 +242,7 @@ nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason)
 void
 FlushTimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsRefPtr<nsHtml5TreeOpExecutor> ex = gBackgroundFlushList->popFirst();
+  RefPtr<nsHtml5TreeOpExecutor> ex = gBackgroundFlushList->popFirst();
   if (ex) {
     ex->RunFlushLoop();
   }
@@ -303,7 +303,7 @@ nsHtml5TreeOpExecutor::FlushSpeculativeLoads()
 class nsHtml5FlushLoopGuard
 {
   private:
-    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
+    RefPtr<nsHtml5TreeOpExecutor> mExecutor;
     #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
     uint32_t mStartTime;
     #endif
@@ -411,7 +411,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       }
       // Not sure if this grip is still needed, but previously, the code
       // gripped before calling ParseUntilBlocked();
-      nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip = 
+      RefPtr<nsHtml5StreamParser> streamKungFuDeathGrip = 
         GetParser()->GetStreamParser();
       // Now parse content left in the document.write() buffer queue if any.
       // This may generate tree ops on its own or dequeue a speculation.
@@ -525,8 +525,8 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
   mFlushState = eInFlush;
 
   // avoid crashing near EOF
-  nsRefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
-  nsRefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
+  RefPtr<nsHtml5TreeOpExecutor> kungFuDeathGrip(this);
+  RefPtr<nsParserBase> parserKungFuDeathGrip(mParser);
 
   NS_ASSERTION(!mReadingFromStage,
     "Got doc write flush when reading from stage");

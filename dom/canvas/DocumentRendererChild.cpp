@@ -9,7 +9,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPattern.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -49,7 +49,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     if (flushLayout)
         nsContentUtils::FlushLayoutForTree(window);
 
-    nsRefPtr<nsPresContext> presContext;
+    RefPtr<nsPresContext> presContext;
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
     if (win) {
         nsIDocShell* docshell = win->GetDocShell();
@@ -74,7 +74,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     // Draw directly into the output array.
     data.SetLength(renderSize.width * renderSize.height * 4);
 
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
         Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                          reinterpret_cast<uint8_t*>(data.BeginWriting()),
                                          IntSize(renderSize.width, renderSize.height),
@@ -84,7 +84,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
         gfxWarning() << "DocumentRendererChild::RenderDocument failed to Factory::CreateDrawTargetForData";
         return false;
     }
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     ctx->SetMatrix(mozilla::gfx::ThebesMatrix(transform));
 
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();

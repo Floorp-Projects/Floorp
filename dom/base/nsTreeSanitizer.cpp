@@ -1092,7 +1092,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // -moz-binding is blacklisted.
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
-  nsRefPtr<CSSStyleSheet> sheet = new CSSStyleSheet(CORS_NONE, aDocument->GetReferrerPolicy());
+  RefPtr<CSSStyleSheet> sheet = new CSSStyleSheet(CORS_NONE, aDocument->GetReferrerPolicy());
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
   // Create the CSS parser, and parse the CSS text.
@@ -1131,7 +1131,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
       case mozilla::css::Rule::STYLE_RULE: {
         // For style rules, we will just look for and remove the
         // -moz-binding properties.
-        nsRefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(rule);
+        RefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(rule);
         NS_ASSERTION(styleRule, "Must be a style rule");
         nsAutoString decl;
         bool sanitized = SanitizeStyleRule(styleRule, decl);
@@ -1171,7 +1171,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         // Pass the CSS Loader object to the parser, to allow parser error
         // reports to include the outer window ID.
         nsCSSParser parser(document->CSSLoader());
-        nsRefPtr<mozilla::css::StyleRule> rule;
+        RefPtr<mozilla::css::StyleRule> rule;
         nsAutoString value;
         aElement->GetAttr(attrNs, attrLocal, value);
         rv = parser.ParseStyleAttribute(value,
@@ -1354,7 +1354,7 @@ nsTreeSanitizer::Sanitize(nsIDocument* aDocument)
   // in tree.
 #ifdef DEBUG
   NS_PRECONDITION(!aDocument->GetContainer(), "The document is in a shell.");
-  nsRefPtr<mozilla::dom::Element> root = aDocument->GetRootElement();
+  RefPtr<mozilla::dom::Element> root = aDocument->GetRootElement();
   NS_PRECONDITION(root->IsHTMLElement(nsGkAtoms::html), "Not HTML root.");
 #endif
 

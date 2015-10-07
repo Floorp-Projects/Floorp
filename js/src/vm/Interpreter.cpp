@@ -425,16 +425,16 @@ class MOZ_RAII AutoStopwatch final
     // The performance group shared by this compartment and possibly
     // others, or `nullptr` if another AutoStopwatch is already in
     // charge of monitoring that group.
-    nsRefPtr<js::PerformanceGroup> sharedGroup_;
+    RefPtr<js::PerformanceGroup> sharedGroup_;
 
     // The toplevel group, representing the entire process, or `nullptr`
     // if another AutoStopwatch is already in charge of monitoring that group.
-    nsRefPtr<js::PerformanceGroup> topGroup_;
+    RefPtr<js::PerformanceGroup> topGroup_;
 
     // The performance group specific to this compartment, or
     // `nullptr` if another AutoStopwatch is already in charge of
     // monitoring that group.
-    nsRefPtr<js::PerformanceGroup> ownGroup_;
+    RefPtr<js::PerformanceGroup> ownGroup_;
 
  public:
     // If the stopwatch is active, constructing an instance of

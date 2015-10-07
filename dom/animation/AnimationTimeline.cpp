@@ -59,7 +59,7 @@ AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
   }
 
   // Sort animations by priority
-  aAnimations.Sort(AnimationPtrComparator<nsRefPtr<Animation>>());
+  aAnimations.Sort(AnimationPtrComparator<RefPtr<Animation>>());
 }
 
 void

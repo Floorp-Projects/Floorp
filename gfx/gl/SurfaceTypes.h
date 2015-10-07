@@ -6,7 +6,7 @@
 #ifndef SURFACE_TYPES_H_
 #define SURFACE_TYPES_H_
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Attributes.h"
 #include <stdint.h>
 
@@ -29,7 +29,7 @@ struct SurfaceCaps final
 
     // The surface allocator that we want to create this
     // for.  May be null.
-    nsRefPtr<layers::ISurfaceAllocator> surfaceAllocator;
+    RefPtr<layers::ISurfaceAllocator> surfaceAllocator;
 
     SurfaceCaps();
     SurfaceCaps(const SurfaceCaps& other);

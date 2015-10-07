@@ -184,8 +184,8 @@ DrawTargetDual::Mask(const Pattern &aSource, const Pattern &aMask, const DrawOpt
 already_AddRefed<DrawTarget>
 DrawTargetDual::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  nsRefPtr<DrawTarget> dtA = mA->CreateSimilarDrawTarget(aSize, aFormat);
-  nsRefPtr<DrawTarget> dtB = mB->CreateSimilarDrawTarget(aSize, aFormat);
+  RefPtr<DrawTarget> dtA = mA->CreateSimilarDrawTarget(aSize, aFormat);
+  RefPtr<DrawTarget> dtB = mB->CreateSimilarDrawTarget(aSize, aFormat);
 
   if (!dtA || !dtB) {
     gfxWarning() << "Failure to allocate a similar DrawTargetDual. Size: " << aSize;

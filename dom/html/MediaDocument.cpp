@@ -213,12 +213,12 @@ MediaDocument::CreateSyntheticDocument()
   // Synthesize an empty html document
   nsresult rv;
 
-  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::html, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
 
-  nsRefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo.forget());
   NS_ENSURE_TRUE(root, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ASSERTION(GetChildCount() == 0, "Shouldn't have any kids");
@@ -230,14 +230,14 @@ MediaDocument::CreateSyntheticDocument()
                                            nsIDOMNode::ELEMENT_NODE);
 
   // Create a <head> so our title has somewhere to live
-  nsRefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> head = NS_NewHTMLHeadElement(nodeInfo.forget());
   NS_ENSURE_TRUE(head, NS_ERROR_OUT_OF_MEMORY);
 
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::meta, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
 
-  nsRefPtr<nsGenericHTMLElement> metaContent = NS_NewHTMLMetaElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> metaContent = NS_NewHTMLMetaElement(nodeInfo.forget());
   NS_ENSURE_TRUE(metaContent, NS_ERROR_OUT_OF_MEMORY);
   metaContent->SetAttr(kNameSpaceID_None, nsGkAtoms::name,
                        NS_LITERAL_STRING("viewport"),
@@ -254,7 +254,7 @@ MediaDocument::CreateSyntheticDocument()
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
 
-  nsRefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo.forget());
   NS_ENSURE_TRUE(body, NS_ERROR_OUT_OF_MEMORY);
 
   root->AppendChildTo(body, false);
@@ -327,12 +327,12 @@ MediaDocument::GetFileName(nsAString& aResult, nsIChannel* aChannel)
 nsresult
 MediaDocument::LinkStylesheet(const nsAString& aStylesheet)
 {
-  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::link, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
 
-  nsRefPtr<nsGenericHTMLElement> link = NS_NewHTMLLinkElement(nodeInfo.forget());
+  RefPtr<nsGenericHTMLElement> link = NS_NewHTMLLinkElement(nodeInfo.forget());
   NS_ENSURE_TRUE(link, NS_ERROR_OUT_OF_MEMORY);
 
   link->SetAttr(kNameSpaceID_None, nsGkAtoms::rel, 

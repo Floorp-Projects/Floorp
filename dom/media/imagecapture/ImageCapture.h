@@ -84,7 +84,7 @@ protected:
   // should return NS_ERROR_NOT_IMPLEMENTED.
   nsresult TakePhotoByMediaEngine();
 
-  nsRefPtr<VideoStreamTrack> mVideoStreamTrack;
+  RefPtr<VideoStreamTrack> mVideoStreamTrack;
 };
 
 } // namespace dom

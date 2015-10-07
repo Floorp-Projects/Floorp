@@ -303,8 +303,8 @@ private:
     explicit MemoryPool(EType aType);
     ~MemoryPool();
 
-    nsTArray<nsRefPtr<CacheEntry> > mFrecencyArray;
-    nsTArray<nsRefPtr<CacheEntry> > mExpirationArray;
+    nsTArray<RefPtr<CacheEntry> > mFrecencyArray;
+    nsTArray<RefPtr<CacheEntry> > mExpirationArray;
     mozilla::Atomic<uint32_t> mMemorySize;
 
     bool OnMemoryConsumptionChange(uint32_t aSavedMemorySize,
@@ -352,7 +352,7 @@ private:
       return NS_OK;
     }
 
-    nsRefPtr<CacheStorageService> mService;
+    RefPtr<CacheStorageService> mService;
     uint32_t mWhat;
   };
 

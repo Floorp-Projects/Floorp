@@ -661,7 +661,7 @@ DocAccessible::Observe(nsISupports* aSubject, const char* aTopic,
     // Normally we only fire delayed events created from the node, not an
     // accessible object. See the AccStateChangeEvent constructor for details
     // about this exceptional case.
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(this, states::EDITABLE, true);
     FireDelayedEvent(event);
   }
@@ -679,7 +679,7 @@ DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
                               PivotMoveReason aReason,
                               bool aIsFromUserInput)
 {
-  nsRefPtr<AccEvent> event =
+  RefPtr<AccEvent> event =
     new AccVCChangeEvent(
       this, (aOldAccessible ? aOldAccessible->ToInternalAccessible() : nullptr),
       aOldStart, aOldEnd, aReason,
@@ -823,11 +823,11 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     if (aAccessible->Unavailable() == mStateBitWasOn)
       return;
 
-    nsRefPtr<AccEvent> enabledChangeEvent =
+    RefPtr<AccEvent> enabledChangeEvent =
       new AccStateChangeEvent(aAccessible, states::ENABLED, mStateBitWasOn);
     FireDelayedEvent(enabledChangeEvent);
 
-    nsRefPtr<AccEvent> sensitiveChangeEvent =
+    RefPtr<AccEvent> sensitiveChangeEvent =
       new AccStateChangeEvent(aAccessible, states::SENSITIVE, mStateBitWasOn);
     FireDelayedEvent(sensitiveChangeEvent);
     return;
@@ -886,7 +886,7 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   if (aAttribute == nsGkAtoms::aria_busy) {
     bool isOn = elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true,
                                  eCaseMatters);
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(aAccessible, states::BUSY, isOn);
     FireDelayedEvent(event);
     return;
@@ -903,7 +903,7 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
         elm->AttrValueIs(aNameSpaceID, aAttribute, nsGkAtoms::_true, eCaseMatters) ?
           AccSelChangeEvent::eSelectionAdd : AccSelChangeEvent::eSelectionRemove;
 
-      nsRefPtr<AccEvent> event =
+      RefPtr<AccEvent> event =
         new AccSelChangeEvent(widget, aAccessible, selChangeType);
       FireDelayedEvent(event);
     }
@@ -912,7 +912,7 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
   }
 
   if (aAttribute == nsGkAtoms::contenteditable) {
-    nsRefPtr<AccEvent> editableChangeEvent =
+    RefPtr<AccEvent> editableChangeEvent =
       new AccStateChangeEvent(aAccessible, states::EDITABLE);
     FireDelayedEvent(editableChangeEvent);
     return;
@@ -932,14 +932,14 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
   // there is an ARIA role present or not.
 
   if (aAttribute == nsGkAtoms::aria_required) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(aAccessible, states::REQUIRED);
     FireDelayedEvent(event);
     return;
   }
 
   if (aAttribute == nsGkAtoms::aria_invalid) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(aAccessible, states::INVALID);
     FireDelayedEvent(event);
     return;
@@ -957,7 +957,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
 
   // We treat aria-expanded as a global ARIA state for historical reasons
   if (aAttribute == nsGkAtoms::aria_expanded) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(aAccessible, states::EXPANDED);
     FireDelayedEvent(event);
     return;
@@ -967,7 +967,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
   // change event; at least until native API comes up with a more meaningful event.
   uint8_t attrFlags = aria::AttrCharacteristicsFor(aAttribute);
   if (!(attrFlags & ATTR_BYPASSOBJ)) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccObjectAttrChangedEvent(aAccessible, aAttribute);
     FireDelayedEvent(event);
   }
@@ -983,7 +983,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
         !aAccessible->Parent()->IsARIAHidden()) {
       aAccessible->SetARIAHidden(isDefined);
 
-      nsRefPtr<AccEvent> event =
+      RefPtr<AccEvent> event =
         new AccObjectAttrChangedEvent(aAccessible, aAttribute);
       FireDelayedEvent(event);
     }
@@ -995,14 +995,14 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
        aAttribute == nsGkAtoms::aria_pressed)) {
     const uint64_t kState = (aAttribute == nsGkAtoms::aria_checked) ?
                             states::CHECKED : states::PRESSED;
-    nsRefPtr<AccEvent> event = new AccStateChangeEvent(aAccessible, kState);
+    RefPtr<AccEvent> event = new AccStateChangeEvent(aAccessible, kState);
     FireDelayedEvent(event);
 
     bool wasMixed = (mARIAAttrOldValue == nsGkAtoms::mixed);
     bool isMixed = elm->AttrValueIs(kNameSpaceID_None, aAttribute,
                                     nsGkAtoms::mixed, eCaseMatters);
     if (isMixed != wasMixed) {
-      nsRefPtr<AccEvent> event =
+      RefPtr<AccEvent> event =
         new AccStateChangeEvent(aAccessible, states::MIXED, isMixed);
       FireDelayedEvent(event);
     }
@@ -1010,7 +1010,7 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
   }
 
   if (aAttribute == nsGkAtoms::aria_readonly) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(aAccessible, states::READONLY);
     FireDelayedEvent(event);
     return;
@@ -1074,26 +1074,26 @@ DocAccessible::ContentStateChanged(nsIDocument* aDocument,
       AccSelChangeEvent::SelChangeType selChangeType =
         aContent->AsElement()->State().HasState(NS_EVENT_STATE_CHECKED) ?
           AccSelChangeEvent::eSelectionAdd : AccSelChangeEvent::eSelectionRemove;
-      nsRefPtr<AccEvent> event =
+      RefPtr<AccEvent> event =
         new AccSelChangeEvent(widget, accessible, selChangeType);
       FireDelayedEvent(event);
       return;
     }
 
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(accessible, states::CHECKED,
                               aContent->AsElement()->State().HasState(NS_EVENT_STATE_CHECKED));
     FireDelayedEvent(event);
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_INVALID)) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(accessible, states::INVALID, true);
     FireDelayedEvent(event);
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(accessible, states::TRAVERSED, true);
     FireDelayedEvent(event);
   }
@@ -1372,8 +1372,8 @@ DocAccessible::ProcessInvalidationList()
     // XXX: update context flags
     {
       Accessible* oldParent = child->Parent();
-      nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(oldParent);
-      nsRefPtr<AccMutationEvent> hideEvent =
+      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(oldParent);
+      RefPtr<AccMutationEvent> hideEvent =
         new AccHideEvent(child, child->GetContent(), false);
       FireDelayedEvent(hideEvent);
       reorderEvent->AddSubMutationEvent(hideEvent);
@@ -1389,8 +1389,8 @@ DocAccessible::ProcessInvalidationList()
       AutoTreeMutation mut(owner);
       owner->AppendChild(child);
 
-      nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
-      nsRefPtr<AccMutationEvent> showEvent =
+      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
+      RefPtr<AccMutationEvent> showEvent =
         new AccShowEvent(child, child->GetContent());
       FireDelayedEvent(showEvent);
       reorderEvent->AddSubMutationEvent(showEvent);
@@ -1476,14 +1476,14 @@ DocAccessible::NotifyOfLoading(bool aIsReloading)
     // Fire reload and state busy events on existing document accessible while
     // event from user input flag can be calculated properly and accessible
     // is alive. When new document gets loaded then this one is destroyed.
-    nsRefPtr<AccEvent> reloadEvent =
+    RefPtr<AccEvent> reloadEvent =
       new AccEvent(nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD, this);
     nsEventShell::FireEvent(reloadEvent);
   }
 
   // Fire state busy change event. Use delayed event since we don't care
   // actually if event isn't delivered when the document goes away like a shot.
-  nsRefPtr<AccEvent> stateEvent =
+  RefPtr<AccEvent> stateEvent =
     new AccStateChangeEvent(this, states::BUSY, true);
   FireDelayedEvent(stateEvent);
 }
@@ -1515,14 +1515,14 @@ DocAccessible::DoInitialUpdate()
   // this document may be fired prior to this reorder event. If this is
   // a problem then consider to keep event processing per tab document.
   if (!IsRoot()) {
-    nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(Parent());
+    RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(Parent());
     ParentDocument()->FireDelayedEvent(reorderEvent);
   }
 
   uint32_t childCount = ChildCount();
   for (uint32_t i = 0; i < childCount; i++) {
     Accessible* child = GetChildAt(i);
-    nsRefPtr<AccShowEvent> event = new AccShowEvent(child, child->GetContent());
+    RefPtr<AccShowEvent> event = new AccShowEvent(child, child->GetContent());
   FireDelayedEvent(event);
   }
 }
@@ -1548,14 +1548,14 @@ DocAccessible::ProcessLoad()
 
   // Fire complete/load stopped if the load event type is given.
   if (mLoadEventType) {
-    nsRefPtr<AccEvent> loadEvent = new AccEvent(mLoadEventType, this);
+    RefPtr<AccEvent> loadEvent = new AccEvent(mLoadEventType, this);
     FireDelayedEvent(loadEvent);
 
     mLoadEventType = 0;
   }
 
   // Fire busy state change event.
-  nsRefPtr<AccEvent> stateEvent =
+  RefPtr<AccEvent> stateEvent =
     new AccStateChangeEvent(this, states::BUSY, false);
   FireDelayedEvent(stateEvent);
 }
@@ -1693,7 +1693,7 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
         nsTArray<Accessible*> containers;
 
         // Remove ARIA owned elements from where they belonged.
-        nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aRelProvider);
+        RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aRelProvider);
         {
           AutoTreeMutation mut(aRelProvider);
           for (uint32_t idx = 0; idx < children->Length(); idx++) {
@@ -1701,7 +1701,7 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
             Accessible* child = GetAccessible(childEl);
             if (child && child->IsRepositioned()) {
               {
-                nsRefPtr<AccMutationEvent> hideEvent =
+                RefPtr<AccMutationEvent> hideEvent =
                   new AccHideEvent(child, childEl, false);
                 FireDelayedEvent(hideEvent);
                 reorderEvent->AddSubMutationEvent(hideEvent);
@@ -1891,7 +1891,7 @@ DocAccessible::UpdateTreeOnInsertion(Accessible* aContainer)
   aContainer->InvalidateChildren();
   aContainer->EnsureChildren();
 
-  nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
 
   uint32_t updateFlags = eNoAccessible;
   for (uint32_t idx = 0; idx < aContainer->ContentChildCount(); idx++) {
@@ -1963,7 +1963,7 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
 #endif
 
   uint32_t updateFlags = eNoAccessible;
-  nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aContainer);
   AutoTreeMutation mut(aContainer);
 
   if (child) {
@@ -2045,7 +2045,7 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
   }
 
   // Fire show/hide event.
-  nsRefPtr<AccMutationEvent> event;
+  RefPtr<AccMutationEvent> event;
   if (aIsInsert)
     event = new AccShowEvent(aChild, node);
   else

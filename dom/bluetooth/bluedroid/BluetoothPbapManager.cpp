@@ -16,7 +16,7 @@
 #include "mozilla/dom/BluetoothPbapParametersBinding.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ipc/BlobParent.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
@@ -747,8 +747,8 @@ bool
 BluetoothPbapManager::ReplyToPullPhonebook(BlobParent* aActor,
                                            uint16_t aPhonebookSize)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToPullPhonebook(blob.get(), aPhonebookSize);
 }
@@ -778,8 +778,8 @@ bool
 BluetoothPbapManager::ReplyToPullvCardListing(BlobParent* aActor,
                                               uint16_t aPhonebookSize)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToPullvCardListing(blob.get(), aPhonebookSize);
 }
@@ -808,8 +808,8 @@ BluetoothPbapManager::ReplyToPullvCardListing(Blob* aBlob,
 bool
 BluetoothPbapManager::ReplyToPullvCardEntry(BlobParent* aActor)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToPullvCardEntry(blob.get());
 }

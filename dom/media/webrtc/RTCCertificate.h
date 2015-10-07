@@ -17,7 +17,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mtransport/dtlsidentity.h"
@@ -61,7 +61,7 @@ public:
   }
 
   // Accessors for use by PeerConnectionImpl.
-  nsRefPtr<DtlsIdentity> CreateDtlsIdentity() const;
+  RefPtr<DtlsIdentity> CreateDtlsIdentity() const;
   CERTCertificate* Certificate() const { return mCertificate; }
 
   // For nsNSSShutDownObject
@@ -86,7 +86,7 @@ private:
   bool WritePrivateKey(JSStructuredCloneWriter* aWriter,
                        const nsNSSShutDownPreventionLock& aLockProof) const;
 
-  nsRefPtr<nsIGlobalObject> mGlobal;
+  RefPtr<nsIGlobalObject> mGlobal;
   ScopedSECKEYPrivateKey mPrivateKey;
   ScopedCERTCertificate mCertificate;
   SSLKEAType mAuthType;

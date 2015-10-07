@@ -49,13 +49,13 @@ public:
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
 
-    nsRefPtr<dom::ServiceWorkerRegistrar> service =
+    RefPtr<dom::ServiceWorkerRegistrar> service =
       dom::ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(service);
 
     service->RegisterServiceWorker(mData);
 
-    nsRefPtr<ServiceWorkerManagerService> managerService =
+    RefPtr<ServiceWorkerManagerService> managerService =
       ServiceWorkerManagerService::Get();
     if (managerService) {
       managerService->PropagateRegistration(mParentID, mData);
@@ -87,7 +87,7 @@ public:
     AssertIsInMainProcess();
     AssertIsOnBackgroundThread();
 
-    nsRefPtr<dom::ServiceWorkerRegistrar> service =
+    RefPtr<dom::ServiceWorkerRegistrar> service =
       dom::ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(service);
 
@@ -139,9 +139,9 @@ public:
   }
 
 private:
-  nsRefPtr<ContentParent> mContentParent;
+  RefPtr<ContentParent> mContentParent;
   PrincipalInfo mPrincipalInfo;
-  nsRefPtr<nsRunnable> mCallback;
+  RefPtr<nsRunnable> mCallback;
   nsCOMPtr<nsIThread> mBackgroundThread;
 };
 
@@ -175,10 +175,10 @@ ServiceWorkerManagerParent::RecvRegister(
     return false;
   }
 
-  nsRefPtr<RegisterServiceWorkerCallback> callback =
+  RefPtr<RegisterServiceWorkerCallback> callback =
     new RegisterServiceWorkerCallback(aData, mID);
 
-  nsRefPtr<ContentParent> parent =
+  RefPtr<ContentParent> parent =
     BackgroundParent::GetContentParent(Manager());
 
   // If the ContentParent is null we are dealing with a same-process actor.
@@ -187,7 +187,7 @@ ServiceWorkerManagerParent::RecvRegister(
     return true;
   }
 
-  nsRefPtr<CheckPrincipalWithCallbackRunnable> runnable =
+  RefPtr<CheckPrincipalWithCallbackRunnable> runnable =
     new CheckPrincipalWithCallbackRunnable(parent.forget(), aData.principal(),
                                            callback);
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -210,10 +210,10 @@ ServiceWorkerManagerParent::RecvUnregister(const PrincipalInfo& aPrincipalInfo,
     return false;
   }
 
-  nsRefPtr<UnregisterServiceWorkerCallback> callback =
+  RefPtr<UnregisterServiceWorkerCallback> callback =
     new UnregisterServiceWorkerCallback(aPrincipalInfo, aScope);
 
-  nsRefPtr<ContentParent> parent =
+  RefPtr<ContentParent> parent =
     BackgroundParent::GetContentParent(Manager());
 
   // If the ContentParent is null we are dealing with a same-process actor.
@@ -222,7 +222,7 @@ ServiceWorkerManagerParent::RecvUnregister(const PrincipalInfo& aPrincipalInfo,
     return true;
   }
 
-  nsRefPtr<CheckPrincipalWithCallbackRunnable> runnable =
+  RefPtr<CheckPrincipalWithCallbackRunnable> runnable =
     new CheckPrincipalWithCallbackRunnable(parent.forget(), aPrincipalInfo,
                                            callback);
   nsresult rv = NS_DispatchToMainThread(runnable);

@@ -394,7 +394,7 @@ ARIAOwnsIterator::Next()
 Accessible*
 SingleAccIterator::Next()
 {
-  nsRefPtr<Accessible> nextAcc;
+  RefPtr<Accessible> nextAcc;
   mAcc.swap(nextAcc);
   if (!nextAcc || nextAcc->IsDefunct()) {
     return nullptr;

@@ -11,7 +11,7 @@
 #include "imgINotificationObserver.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 @class mozNotificationCenterDelegate;
 
@@ -46,8 +46,8 @@ protected:
 
 private:
   mozNotificationCenterDelegate *mDelegate;
-  nsTArray<nsRefPtr<OSXNotificationInfo> > mActiveAlerts;
-  nsTArray<nsRefPtr<OSXNotificationInfo> > mPendingAlerts;
+  nsTArray<RefPtr<OSXNotificationInfo> > mActiveAlerts;
+  nsTArray<RefPtr<OSXNotificationInfo> > mPendingAlerts;
 };
 
 } // namespace mozilla

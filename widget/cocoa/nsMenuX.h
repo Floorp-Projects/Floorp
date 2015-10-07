@@ -88,7 +88,7 @@ protected:
   nsMenuObjectX*            mParent; // [weak]
   nsMenuGroupOwnerX*        mMenuGroupOwner; // [weak]
   // The icon object should never outlive its creating nsMenuX object.
-  nsRefPtr<nsMenuItemIconX> mIcon;
+  RefPtr<nsMenuItemIconX> mIcon;
   GeckoNSMenu*              mNativeMenu; // [strong]
   MenuDelegate*             mMenuDelegate; // [strong]
   // nsMenuX objects should always have a valid native menu item.

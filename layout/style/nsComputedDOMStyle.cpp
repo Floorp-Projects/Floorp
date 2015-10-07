@@ -66,7 +66,7 @@ NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
                        nsIPresShell* aPresShell,
                        nsComputedDOMStyle::StyleType aStyleType)
 {
-  nsRefPtr<nsComputedDOMStyle> computedStyle;
+  RefPtr<nsComputedDOMStyle> computedStyle;
   computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell,
                                          aStyleType);
   return computedStyle.forget();
@@ -379,7 +379,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
   aReturn.Truncate();
 
   ErrorResult error;
-  nsRefPtr<CSSValue> val = GetPropertyCSSValue(aPropertyName, error);
+  RefPtr<CSSValue> val = GetPropertyCSSValue(aPropertyName, error);
   if (error.Failed()) {
     return error.StealNSResult();
   }
@@ -461,7 +461,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
       // for this element.
       if (!result->HasPseudoElementData()) {
         // this function returns an addrefed style context
-        nsRefPtr<nsStyleContext> ret = result;
+        RefPtr<nsStyleContext> ret = result;
         return ret.forget();
       }
     }
@@ -469,7 +469,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   // No frame has been created, or we have a pseudo, or we're looking
   // for the default style, so resolve the style ourselves.
-  nsRefPtr<nsStyleContext> parentContext;
+  RefPtr<nsStyleContext> parentContext;
   nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
   // Don't resolve parent context for document fragments.
   if (parent && parent->IsElement())
@@ -483,7 +483,7 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
 
   nsStyleSet *styleSet = presShell->StyleSet();
 
-  nsRefPtr<nsStyleContext> sc;
+  RefPtr<nsStyleContext> sc;
   if (aPseudo) {
     nsCSSPseudoElements::Type type = nsCSSPseudoElements::GetPseudoType(aPseudo);
     if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
@@ -598,7 +598,7 @@ nsComputedDOMStyle::ClearStyleContext()
 }
 
 void
-nsComputedDOMStyle::SetResolvedStyleContext(nsRefPtr<nsStyleContext>&& aContext)
+nsComputedDOMStyle::SetResolvedStyleContext(RefPtr<nsStyleContext>&& aContext)
 {
   if (!mResolvedStyleContext) {
     mResolvedStyleContext = true;
@@ -701,7 +701,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     }
 #endif
     // Need to resolve a style context
-    nsRefPtr<nsStyleContext> resolvedStyleContext =
+    RefPtr<nsStyleContext> resolvedStyleContext =
       nsComputedDOMStyle::GetStyleContextForElement(mContent->AsElement(),
                                                     mPseudo,
                                                     mPresShell,
@@ -799,7 +799,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
     return nullptr;
   }
 
-  nsRefPtr<CSSValue> val;
+  RefPtr<CSSValue> val;
   if (prop == eCSSPropertyExtra_variable) {
     val = DoGetCustomProperty(aPropertyName);
   } else {
@@ -1835,7 +1835,7 @@ nsComputedDOMStyle::DoGetBackgroundColor()
 static void
 SetValueToCalc(const nsStyleCoord::CalcValue *aCalc, nsROCSSPrimitiveValue *aValue)
 {
-  nsRefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
+  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString tmp, result;
 
   result.AppendLiteral("calc(");
@@ -1929,7 +1929,7 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
 
   bool needSep = false;
   nsAutoString tokenString;
-  nsRefPtr<nsROCSSPrimitiveValue> tmpVal = new nsROCSSPrimitiveValue;
+  RefPtr<nsROCSSPrimitiveValue> tmpVal = new nsROCSSPrimitiveValue;
 
   if (isRadial && !aGradient->mLegacySyntax) {
     if (aGradient->mSize != NS_STYLE_GRADIENT_SIZE_EXPLICIT_SIZE) {
@@ -2044,7 +2044,7 @@ nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
                                        const nsStyleSides& aCropRect,
                                        nsString& aString)
 {
-  nsRefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
+  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
 
   // <uri>
   nsROCSSPrimitiveValue *valURI = new nsROCSSPrimitiveValue;
@@ -5534,7 +5534,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
                    "wrong number of radii");
         for (size_t i = 0; i < radii.Length(); ++i) {
           nsAutoString radius;
-          nsRefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
+          RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
           bool clampNegativeCalc = true;
           SetValueToCoord(value, radii[i], clampNegativeCalc, nullptr,
                           nsCSSProps::kShapeRadiusKTable);
@@ -5544,7 +5544,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
         }
         shapeFunctionString.AppendLiteral("at ");
 
-        nsRefPtr<nsDOMCSSValueList> position = GetROCSSValueList(false);
+        RefPtr<nsDOMCSSValueList> position = GetROCSSValueList(false);
         nsAutoString positionString;
         SetValueToPosition(aStyleBasicShape->GetPosition(), position);
         position->GetCssText(positionString);
@@ -5617,7 +5617,7 @@ void
 nsComputedDOMStyle::SetCssTextToCoord(nsAString& aCssText,
                                       const nsStyleCoord& aCoord)
 {
-  nsRefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
+  RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
   bool clampNegativeCalc = true;
   SetValueToCoord(value, aCoord, clampNegativeCalc);
   value->GetCssText(aCssText);
@@ -5645,7 +5645,7 @@ nsComputedDOMStyle::CreatePrimitiveValueForStyleFilter(
   nsAutoString argumentString;
   if (aStyleFilter.GetType() == NS_STYLE_FILTER_DROP_SHADOW) {
     // Handle drop-shadow()
-    nsRefPtr<CSSValue> shadowValue =
+    RefPtr<CSSValue> shadowValue =
       GetCSSShadowArray(aStyleFilter.GetDropShadow(),
                         StyleColor()->mColor,
                         false);

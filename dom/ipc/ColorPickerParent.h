@@ -48,7 +48,7 @@ class ColorPickerParent : public PColorPickerParent
 
   bool CreateColorPicker();
 
-  nsRefPtr<ColorPickerShownCallback> mCallback;
+  RefPtr<ColorPickerShownCallback> mCallback;
   nsCOMPtr<nsIColorPicker> mPicker;
 
   nsString mTitle;

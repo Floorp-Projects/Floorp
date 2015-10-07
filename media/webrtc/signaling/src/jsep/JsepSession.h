@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 #include "mozilla/Maybe.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsError.h"
 
@@ -103,7 +103,7 @@ public:
   virtual std::vector<JsepCodecDescription*>& Codecs() = 0;
 
   // Manage tracks. We take shared ownership of any track.
-  virtual nsresult AddTrack(const nsRefPtr<JsepTrack>& track) = 0;
+  virtual nsresult AddTrack(const RefPtr<JsepTrack>& track) = 0;
   virtual nsresult RemoveTrack(const std::string& streamId,
                                const std::string& trackId) = 0;
   virtual nsresult ReplaceTrack(const std::string& oldStreamId,
@@ -111,19 +111,19 @@ public:
                                 const std::string& newStreamId,
                                 const std::string& newTrackId) = 0;
 
-  virtual std::vector<nsRefPtr<JsepTrack>> GetLocalTracks() const = 0;
+  virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const = 0;
 
-  virtual std::vector<nsRefPtr<JsepTrack>> GetRemoteTracks() const = 0;
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracks() const = 0;
 
-  virtual std::vector<nsRefPtr<JsepTrack>> GetRemoteTracksAdded() const = 0;
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracksAdded() const = 0;
 
-  virtual std::vector<nsRefPtr<JsepTrack>> GetRemoteTracksRemoved() const = 0;
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracksRemoved() const = 0;
 
   // Access the negotiated track pairs.
   virtual std::vector<JsepTrackPair> GetNegotiatedTrackPairs() const = 0;
 
   // Access transports.
-  virtual std::vector<nsRefPtr<JsepTransport>> GetTransports() const = 0;
+  virtual std::vector<RefPtr<JsepTransport>> GetTransports() const = 0;
 
   // Basic JSEP operations.
   virtual nsresult CreateOffer(const JsepOfferOptions& options,

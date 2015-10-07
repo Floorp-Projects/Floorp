@@ -1155,7 +1155,7 @@ void
 XPCWrappedNativeXrayTraits::preserveWrapper(JSObject* target)
 {
     XPCWrappedNative* wn = XPCWrappedNative::Get(target);
-    nsRefPtr<nsXPCClassInfo> ci;
+    RefPtr<nsXPCClassInfo> ci;
     CallQueryInterface(wn->Native(), getter_AddRefs(ci));
     if (ci)
         ci->PreserveWrapper(wn->Native());

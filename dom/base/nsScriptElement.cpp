@@ -55,7 +55,7 @@ nsScriptElement::ScriptEvaluated(nsresult aResult,
     nsCOMPtr<nsIContent> cont =
       do_QueryInterface((nsIScriptElement*) this);
 
-    nsRefPtr<nsPresContext> presContext =
+    RefPtr<nsPresContext> presContext =
       nsContentUtils::GetContextForContent(cont);
 
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -138,6 +138,6 @@ nsScriptElement::MaybeProcessScript()
     }
   }
 
-  nsRefPtr<nsScriptLoader> loader = ownerDoc->ScriptLoader();
+  RefPtr<nsScriptLoader> loader = ownerDoc->ScriptLoader();
   return loader->ProcessScriptElement(this);
 }

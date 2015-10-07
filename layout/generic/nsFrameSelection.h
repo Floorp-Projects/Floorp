@@ -681,7 +681,7 @@ private:
   // so remember to use nsCOMPtr when needed.
   nsresult     NotifySelectionListeners(SelectionType aType);     // add parameters to say collapsed etc?
 
-  nsRefPtr<mozilla::dom::Selection> mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
+  RefPtr<mozilla::dom::Selection> mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
 
   // Table selection support.
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;
@@ -719,7 +719,7 @@ private:
   int32_t  mSelectedCellIndex;
 
   // maintain selection
-  nsRefPtr<nsRange> mMaintainRange;
+  RefPtr<nsRange> mMaintainRange;
   nsSelectionAmount mMaintainedAmount;
 
   //batching

@@ -49,7 +49,7 @@ MediaOmxCommonDecoder::SetPlatformCanOffloadAudio(bool aCanOffloadAudio)
   GetStateMachine()->DispatchAudioOffloading(true);
 
   // Modify mCanOffloadAudio in the main thread.
-  nsRefPtr<MediaOmxCommonDecoder> self = this;
+  RefPtr<MediaOmxCommonDecoder> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
     self->mCanOffloadAudio = true;
   });

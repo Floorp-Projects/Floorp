@@ -50,7 +50,7 @@ public:
   // MuxerOperation methods
   nsresult Write() override;
   nsresult Find(const nsACString& aType,
-                nsTArray<nsRefPtr<MuxerOperation>>& aOperations) override;
+                nsTArray<RefPtr<MuxerOperation>>& aOperations) override;
 
   // This helper class will compare the written size in Write() and the size in
   // Generate(). If their are not equal, it will assert.
@@ -69,8 +69,8 @@ protected:
   Box(const nsACString& aType, ISOControl* aControl);
 
   ISOControl* mControl;
-  nsRefPtr<AudioTrackMetadata> mAudioMeta;
-  nsRefPtr<VideoTrackMetadata> mVideoMeta;
+  RefPtr<AudioTrackMetadata> mAudioMeta;
+  RefPtr<VideoTrackMetadata> mVideoMeta;
 };
 
 /**
@@ -112,14 +112,14 @@ public:
   nsresult Generate(uint32_t* aBoxSize) override;
   nsresult Write() override;
   nsresult Find(const nsACString& aType,
-                nsTArray<nsRefPtr<MuxerOperation>>& aOperations) override;
+                nsTArray<RefPtr<MuxerOperation>>& aOperations) override;
 
 protected:
   // DefaultContainerImpl methods
   DefaultContainerImpl(const nsACString& aType, ISOControl* aControl);
   DefaultContainerImpl() = delete;
 
-  nsTArray<nsRefPtr<MuxerOperation>> boxes;
+  nsTArray<RefPtr<MuxerOperation>> boxes;
 };
 
 // 14496-12 4.3 'File Type Box'
@@ -510,7 +510,7 @@ class SampleDescriptionBox : public FullBox {
 public:
   // ISO BMFF members
   uint32_t entry_count;
-  nsRefPtr<SampleEntryBox> sample_entry_box;
+  RefPtr<SampleEntryBox> sample_entry_box;
 
   // MuxerOperation methods
   nsresult Generate(uint32_t* aBoxSize) override;
@@ -521,8 +521,8 @@ public:
   ~SampleDescriptionBox();
 
 protected:
-  nsresult CreateAudioSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry);
-  nsresult CreateVideoSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry);
+  nsresult CreateAudioSampleEntry(RefPtr<SampleEntryBox>& aSampleEntry);
+  nsresult CreateVideoSampleEntry(RefPtr<SampleEntryBox>& aSampleEntry);
 
   uint32_t mTrackType;
 };

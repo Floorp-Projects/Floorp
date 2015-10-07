@@ -39,7 +39,7 @@ class WebMReader;
 class WebMVideoDecoder
 {
 public:
-  virtual nsRefPtr<InitPromise> Init(unsigned int aWidth = 0, unsigned int aHeight = 0) = 0;
+  virtual RefPtr<InitPromise> Init(unsigned int aWidth = 0, unsigned int aHeight = 0) = 0;
   virtual nsresult Flush() { return NS_OK; }
   virtual void Shutdown() = 0;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
@@ -52,7 +52,7 @@ public:
 class WebMAudioDecoder
 {
 public:
-  virtual nsRefPtr<InitPromise> Init() = 0;
+  virtual RefPtr<InitPromise> Init() = 0;
   virtual void Shutdown() = 0;
   virtual nsresult ResetDecode() = 0;
   virtual nsresult DecodeHeader(const unsigned char* aData, size_t aLength) = 0;
@@ -72,7 +72,7 @@ protected:
   ~WebMReader();
 
 public:
-  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
+  virtual RefPtr<ShutdownPromise> Shutdown() override;
   virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
   virtual nsresult ResetDecode() override;
   virtual bool DecodeAudioData() override;
@@ -92,9 +92,9 @@ public:
     return mHasVideo;
   }
 
-  virtual nsRefPtr<MetadataPromise> AsyncReadMetadata() override;
+  virtual RefPtr<MetadataPromise> AsyncReadMetadata() override;
 
-  virtual nsRefPtr<SeekPromise>
+  virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
   virtual media::TimeIntervals GetBuffered() override;
@@ -111,7 +111,7 @@ public:
   // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass VIDEO or AUDIO to indicate the
   // type of the packet we want to read.
-  nsRefPtr<NesteggPacketHolder> NextPacket(TrackType aTrackType);
+  RefPtr<NesteggPacketHolder> NextPacket(TrackType aTrackType);
 
   // Pushes a packet to the front of the video packet queue.
   virtual void PushVideoPacket(NesteggPacketHolder* aItem);
@@ -158,7 +158,7 @@ private:
 
   // Internal method that demuxes the next packet from the stream. The caller
   // is responsible for making sure it doesn't get lost.
-  nsRefPtr<NesteggPacketHolder> DemuxPacket();
+  RefPtr<NesteggPacketHolder> DemuxPacket();
 
   // libnestegg context for webm container. Access on state machine thread
   // or decoder thread only.
@@ -167,7 +167,7 @@ private:
   nsAutoPtr<WebMAudioDecoder> mAudioDecoder;
   nsAutoPtr<WebMVideoDecoder> mVideoDecoder;
 
-  nsTArray<nsRefPtr<InitPromise>> mInitPromises;
+  nsTArray<RefPtr<InitPromise>> mInitPromises;
 
   // Queue of video and audio packets that have been read but not decoded. These
   // must only be accessed from the decode thread.
@@ -196,7 +196,7 @@ private:
 
   // Parser state and computed offset-time mappings.  Shared by multiple
   // readers when decoder has been cloned.  Main thread only.
-  nsRefPtr<WebMBufferedState> mBufferedState;
+  RefPtr<WebMBufferedState> mBufferedState;
 
   // Size of the frame initially present in the stream. The picture region
   // is defined as a ratio relative to this.
@@ -213,7 +213,7 @@ private:
   layers::LayersBackend mLayersBackendType;
 
   // For hardware video decoding.
-  nsRefPtr<FlushableTaskQueue> mVideoTaskQueue;
+  RefPtr<FlushableTaskQueue> mVideoTaskQueue;
 
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;

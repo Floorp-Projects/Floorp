@@ -12,7 +12,7 @@
 #include "nsID.h"
 #include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
@@ -95,7 +95,7 @@ private:
   // ReadStream guarantees it will call Close() on the inner stream.
   // This is essential for the inner stream to avoid dealing with the
   // implicit close that can happen when a stream is destroyed.
-  nsRefPtr<Inner> mInner;
+  RefPtr<Inner> mInner;
 
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_CACHE_READSTREAM_IID);

@@ -127,7 +127,7 @@ private:
     }
   }
 
-  nsTArray<nsRefPtr<AbstractWatcher>> mWatchers;
+  nsTArray<RefPtr<AbstractWatcher>> mWatchers;
 
 protected:
   const char* mName;
@@ -272,13 +272,13 @@ private:
     {
       MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
       MOZ_ASSERT(mStrongRef);
-      nsRefPtr<OwnerType> ref = mStrongRef.forget();
+      RefPtr<OwnerType> ref = mStrongRef.forget();
       ((*ref).*mCallbackMethod)();
     }
 
     OwnerType* mOwner; // Never null.
-    nsRefPtr<OwnerType> mStrongRef; // Only non-null when notifying.
-    nsRefPtr<AbstractThread> mOwnerThread;
+    RefPtr<OwnerType> mStrongRef; // Only non-null when notifying.
+    RefPtr<AbstractThread> mOwnerThread;
     CallbackMethod mCallbackMethod;
   };
 
@@ -304,9 +304,9 @@ private:
     return *watcher;
   }
 
-  nsTArray<nsRefPtr<PerCallbackWatcher>> mWatchers;
+  nsTArray<RefPtr<PerCallbackWatcher>> mWatchers;
   OwnerType* mOwner;
-  nsRefPtr<AbstractThread> mOwnerThread;
+  RefPtr<AbstractThread> mOwnerThread;
 };
 
 #undef WATCH_LOG

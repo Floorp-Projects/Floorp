@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS(nsRadioVisitor, nsIRadioVisitor)
 bool
 nsRadioSetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
 {
-  nsRefPtr<HTMLInputElement> radio =
+  RefPtr<HTMLInputElement> radio =
     static_cast<HTMLInputElement*>(aRadio);
   NS_ASSERTION(radio, "Visit() passed a null button!");
 
@@ -31,7 +31,7 @@ nsRadioGetCheckedChangedVisitor::Visit(nsIFormControl* aRadio)
     return true;
   }
 
-  nsRefPtr<HTMLInputElement> radio =
+  RefPtr<HTMLInputElement> radio =
     static_cast<HTMLInputElement*>(aRadio);
   NS_ASSERTION(radio, "Visit() passed a null button!");
 

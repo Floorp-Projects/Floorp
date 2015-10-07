@@ -47,10 +47,10 @@ private:
 
   void RejectPendingGetInputPortsPromises(nsresult aRv);
 
-  nsresult SetInputPorts(const nsTArray<nsRefPtr<InputPort>>& aPorts);
+  nsresult SetInputPorts(const nsTArray<RefPtr<InputPort>>& aPorts);
 
-  nsTArray<nsRefPtr<Promise>> mPendingGetInputPortsPromises;
-  nsTArray<nsRefPtr<InputPort>> mInputPorts;
+  nsTArray<RefPtr<Promise>> mPendingGetInputPortsPromises;
+  nsTArray<RefPtr<InputPort>> mInputPorts;
   nsCOMPtr<nsPIDOMWindow> mParent;
   nsCOMPtr<nsIInputPortService> mInputPortService;
   bool mIsReady;

@@ -114,7 +114,7 @@ nsSVGEnum::SetAnimValue(uint16_t aValue, nsSVGElement *aSVGElement)
 already_AddRefed<SVGAnimatedEnumeration>
 nsSVGEnum::ToDOMAnimatedEnum(nsSVGElement* aSVGElement)
 {
-  nsRefPtr<DOMAnimatedEnum> domAnimatedEnum =
+  RefPtr<DOMAnimatedEnum> domAnimatedEnum =
     sSVGAnimatedEnumTearoffTable.GetTearoff(this);
   if (!domAnimatedEnum) {
     domAnimatedEnum = new DOMAnimatedEnum(this, aSVGElement);

@@ -123,7 +123,7 @@ protected:
 
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
   // if and only if the mJSChannels are neutered.
-  nsRefPtr<ThreadSharedFloatArrayBufferList> mSharedChannels;
+  RefPtr<ThreadSharedFloatArrayBufferList> mSharedChannels;
 
   uint32_t mLength;
   float mSampleRate;

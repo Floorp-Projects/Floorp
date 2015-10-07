@@ -89,7 +89,7 @@ nsLineBreaker::FlushCurrentWord()
     }
   }
   if (autoHyphenate) {
-    nsRefPtr<nsHyphenator> hyphenator =
+    RefPtr<nsHyphenator> hyphenator =
       nsHyphenationManager::Instance()->GetHyphenator(mCurrentWordLanguage);
     if (hyphenator) {
       FindHyphenationPoints(hyphenator,
@@ -221,7 +221,7 @@ nsLineBreaker::AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, 
   uint32_t wordStart = offset;
   bool wordHasComplexChar = false;
 
-  nsRefPtr<nsHyphenator> hyphenator;
+  RefPtr<nsHyphenator> hyphenator;
   if ((aFlags & BREAK_USE_AUTO_HYPHENATION) &&
       !(aFlags & BREAK_SUPPRESS_INSIDE) &&
       aHyphenationLanguage) {

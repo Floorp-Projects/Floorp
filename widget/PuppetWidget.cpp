@@ -875,14 +875,14 @@ PuppetWidget::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
-  nsRefPtr<mozilla::gfx::SourceSurface> surface =
+  RefPtr<mozilla::gfx::SourceSurface> surface =
     aCursor->GetFrame(imgIContainer::FRAME_CURRENT,
                       imgIContainer::FLAG_SYNC_DECODE);
   if (!surface) {
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+  RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
     surface->GetDataSurface();
   size_t length;
   int32_t stride;
@@ -941,7 +941,7 @@ PuppetWidget::Paint()
         mTabChild->NotifyPainted();
       }
     } else {
-      nsRefPtr<gfxContext> ctx = new gfxContext(mDrawTarget);
+      RefPtr<gfxContext> ctx = new gfxContext(mDrawTarget);
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,

@@ -264,7 +264,7 @@ private:
   /**
    * This is an handle to the Places database.
    */
-  nsRefPtr<mozilla::places::Database> mDB;
+  RefPtr<mozilla::places::Database> mDB;
 
   int32_t mItemCount;
 

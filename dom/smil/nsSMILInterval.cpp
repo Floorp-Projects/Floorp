@@ -130,7 +130,7 @@ nsSMILInterval::FixEnd()
 void
 nsSMILInterval::AddDependentTime(nsSMILInstanceTime& aTime)
 {
-  nsRefPtr<nsSMILInstanceTime>* inserted =
+  RefPtr<nsSMILInstanceTime>* inserted =
     mDependentTimes.InsertElementSorted(&aTime);
   if (!inserted) {
     NS_WARNING("Insufficient memory to insert instance time.");

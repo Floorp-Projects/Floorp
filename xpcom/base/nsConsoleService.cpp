@@ -145,7 +145,7 @@ public:
   }
 
 private:
-  nsRefPtr<nsConsoleService> mConsole;
+  RefPtr<nsConsoleService> mConsole;
 };
 
 nsresult
@@ -170,7 +170,7 @@ public:
 
 private:
   nsCOMPtr<nsIConsoleMessage> mMessage;
-  nsRefPtr<nsConsoleService> mService;
+  RefPtr<nsConsoleService> mService;
 };
 
 NS_IMETHODIMP
@@ -225,7 +225,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<LogMessageRunnable> r;
+  RefPtr<LogMessageRunnable> r;
   nsCOMPtr<nsIConsoleMessage> retiredMessage;
 
   /*
@@ -346,7 +346,7 @@ nsConsoleService::LogStringMessage(const char16_t* aMessage)
     return NS_OK;
   }
 
-  nsRefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage));
+  RefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage));
   return this->LogMessage(msg);
 }
 

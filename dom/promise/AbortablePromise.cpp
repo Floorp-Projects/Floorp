@@ -49,7 +49,7 @@ AbortablePromise::Create(nsIGlobalObject* aGlobal,
                          PromiseNativeAbortCallback& aAbortCallback,
                          ErrorResult& aRv)
 {
-  nsRefPtr<AbortablePromise> p = new AbortablePromise(aGlobal, aAbortCallback);
+  RefPtr<AbortablePromise> p = new AbortablePromise(aGlobal, aAbortCallback);
   p->CreateWrapper(nullptr, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -75,7 +75,7 @@ AbortablePromise::Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,
     return nullptr;
   }
 
-  nsRefPtr<AbortablePromise> promise = new AbortablePromise(global);
+  RefPtr<AbortablePromise> promise = new AbortablePromise(global);
   promise->CreateWrapper(aDesiredProto, aRv);
   if (aRv.Failed()) {
     return nullptr;

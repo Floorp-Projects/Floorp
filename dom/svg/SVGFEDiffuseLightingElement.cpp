@@ -65,7 +65,7 @@ FilterPrimitiveDescription
 SVGFEDiffuseLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                      const IntRect& aFilterSubregion,
                                                      const nsTArray<bool>& aInputsAreTainted,
-                                                     nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                                     nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   float diffuseConstant = mNumberAttributes[DIFFUSE_CONSTANT].GetAnimValue();
 

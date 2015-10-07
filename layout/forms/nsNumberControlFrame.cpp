@@ -328,7 +328,7 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
 {
   // Get the NodeInfoManager and tag necessary to create the anonymous divs.
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
-  nsRefPtr<Element> resultElement = doc->CreateHTMLElement(aTagName);
+  RefPtr<Element> resultElement = doc->CreateHTMLElement(aTagName);
 
   // If we legitimately fail this assertion and need to allow
   // non-pseudo-element anonymous children, then we'll need to add a branch
@@ -337,7 +337,7 @@ nsNumberControlFrame::MakeAnonymousElement(Element** aResult,
   NS_ASSERTION(aPseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement,
                "Expecting anonymous children to all be pseudo-elements");
   // Associate the pseudo-element with the anonymous child
-  nsRefPtr<nsStyleContext> newStyleContext =
+  RefPtr<nsStyleContext> newStyleContext =
     PresContext()->StyleSet()->ResolvePseudoElementStyle(mContent->AsElement(),
                                                          aPseudoType,
                                                          aParentContext,
@@ -424,7 +424,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   if (mContent->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
     // We don't want to focus the frame but the text field.
-    nsRefPtr<FocusTextField> focusJob = new FocusTextField(mContent, mTextField);
+    RefPtr<FocusTextField> focusJob = new FocusTextField(mContent, mTextField);
     nsContentUtils::AddScriptRunner(focusJob);
   }
 

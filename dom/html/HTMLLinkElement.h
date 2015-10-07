@@ -148,7 +148,7 @@ public:
   already_AddRefed<nsIDocument> GetImport();
   already_AddRefed<ImportLoader> GetImportLoader()
   {
-    return nsRefPtr<ImportLoader>(mImportLoader).forget();
+    return RefPtr<ImportLoader>(mImportLoader).forget();
   }
 
 protected:
@@ -166,9 +166,9 @@ protected:
   // nsGenericHTMLElement
   virtual void GetItemValueText(DOMString& text) override;
   virtual void SetItemValueText(const nsAString& text) override;
-  nsRefPtr<nsDOMTokenList > mRelList;
+  RefPtr<nsDOMTokenList > mRelList;
 private:
-  nsRefPtr<ImportLoader> mImportLoader;
+  RefPtr<ImportLoader> mImportLoader;
 };
 
 } // namespace dom

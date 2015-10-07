@@ -59,7 +59,7 @@ SplitNodeTxn::DoTransaction()
   // Insert the new node
   rv = mEditor.SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
   if (mEditor.GetShouldTxnSetSelection()) {
-    nsRefPtr<Selection> selection = mEditor.GetSelection();
+    RefPtr<Selection> selection = mEditor.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     rv = selection->Collapse(mNewLeftNode, mOffset);
   }

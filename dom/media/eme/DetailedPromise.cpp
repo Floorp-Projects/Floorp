@@ -47,7 +47,7 @@ DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
 
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
-  nsRefPtr<DOMException> exception =
+  RefPtr<DOMException> exception =
     DOMException::Create(aArg, aReason);
   Promise::MaybeRejectBrokenly(exception);
 }
@@ -63,7 +63,7 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal,
                         ErrorResult& aRv,
                         const nsACString& aName)
 {
-  nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName);
+  RefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName);
   promise->CreateWrapper(nullptr, aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }
@@ -75,7 +75,7 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal,
                         Telemetry::ID aSuccessLatencyProbe,
                         Telemetry::ID aFailureLatencyProbe)
 {
-  nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName, aSuccessLatencyProbe, aFailureLatencyProbe);
+  RefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName, aSuccessLatencyProbe, aFailureLatencyProbe);
   promise->CreateWrapper(nullptr, aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }

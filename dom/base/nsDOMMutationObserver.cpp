@@ -22,7 +22,7 @@
 using mozilla::dom::TreeOrderComparator;
 using mozilla::dom::Animation;
 
-nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>*
+nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>*
   nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
 
 nsDOMMutationObserver* nsDOMMutationObserver::sCurrentObserver = nullptr;
@@ -30,7 +30,7 @@ nsDOMMutationObserver* nsDOMMutationObserver::sCurrentObserver = nullptr;
 uint32_t nsDOMMutationObserver::sMutationLevel = 0;
 uint64_t nsDOMMutationObserver::sCount = 0;
 
-nsAutoTArray<nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>, 4>*
+nsAutoTArray<nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>*
 nsDOMMutationObserver::sCurrentlyHandlingObservers = nullptr;
 
 nsINodeList*
@@ -585,7 +585,7 @@ void
 nsDOMMutationObserver::RescheduleForRun()
 {
   if (!sScheduledMutationObservers) {
-    sScheduledMutationObservers = new nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>;
+    sScheduledMutationObservers = new nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>;
   }
 
   bool didInsert = false;
@@ -718,14 +718,14 @@ nsDOMMutationObserver::Disconnect()
 
 void
 nsDOMMutationObserver::TakeRecords(
-                         nsTArray<nsRefPtr<nsDOMMutationRecord> >& aRetVal)
+                         nsTArray<RefPtr<nsDOMMutationRecord> >& aRetVal)
 {
   aRetVal.Clear();
   aRetVal.SetCapacity(mPendingMutationCount);
-  nsRefPtr<nsDOMMutationRecord> current;
+  RefPtr<nsDOMMutationRecord> current;
   current.swap(mFirstPendingMutation);
   for (uint32_t i = 0; i < mPendingMutationCount; ++i) {
-    nsRefPtr<nsDOMMutationRecord> next;
+    RefPtr<nsDOMMutationRecord> next;
     current->mNext.swap(next);
     if (!mMergeAttributeRecords ||
         !MergeableAttributeRecord(aRetVal.SafeLastElement(nullptr),
@@ -784,7 +784,7 @@ nsDOMMutationObserver::Constructor(const mozilla::dom::GlobalObject& aGlobal,
   }
   MOZ_ASSERT(window->IsInnerWindow());
   bool isChrome = nsContentUtils::IsChromeDoc(window->GetExtantDoc());
-  nsRefPtr<nsDOMMutationObserver> observer =
+  RefPtr<nsDOMMutationObserver> observer =
     new nsDOMMutationObserver(window.forget(), aCb, isChrome);
   return observer.forget();
 }
@@ -830,10 +830,10 @@ nsDOMMutationObserver::HandleMutation()
   if (mutations.SetCapacity(mPendingMutationCount, mozilla::fallible)) {
     // We can't use TakeRecords easily here, because it deals with a
     // different type of array, and we want to optimize out any extra copying.
-    nsRefPtr<nsDOMMutationRecord> current;
+    RefPtr<nsDOMMutationRecord> current;
     current.swap(mFirstPendingMutation);
     for (uint32_t i = 0; i < mPendingMutationCount; ++i) {
-      nsRefPtr<nsDOMMutationRecord> next;
+      RefPtr<nsDOMMutationRecord> next;
       current->mNext.swap(next);
       if (!mMergeAttributeRecords ||
           !MergeableAttributeRecord(mutations.Length() ?
@@ -867,7 +867,7 @@ nsDOMMutationObserver::HandleMutationsInternal()
     nsContentUtils::AddScriptRunner(new AsyncMutationHandler());
     return;
   }
-  static nsRefPtr<nsDOMMutationObserver> sCurrentObserver;
+  static RefPtr<nsDOMMutationObserver> sCurrentObserver;
   if (sCurrentObserver && !sCurrentObserver->Suppressed()) {
     // In normal cases sScheduledMutationObservers will be handled
     // after previous mutations are handled. But in case some
@@ -878,10 +878,10 @@ nsDOMMutationObserver::HandleMutationsInternal()
     return;
   }
 
-  nsTArray<nsRefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
+  nsTArray<RefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
 
   while (sScheduledMutationObservers) {
-    nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>* observers =
+    nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>* observers =
       sScheduledMutationObservers;
     sScheduledMutationObservers = nullptr;
     for (uint32_t i = 0; i < observers->Length(); ++i) {
@@ -890,7 +890,7 @@ nsDOMMutationObserver::HandleMutationsInternal()
         sCurrentObserver->HandleMutation();
       } else {
         if (!suppressedObservers) {
-          suppressedObservers = new nsTArray<nsRefPtr<nsDOMMutationObserver> >;
+          suppressedObservers = new nsTArray<RefPtr<nsDOMMutationObserver> >;
         }
         if (!suppressedObservers->Contains(sCurrentObserver)) {
           suppressedObservers->AppendElement(sCurrentObserver);
@@ -922,7 +922,7 @@ nsDOMMutationObserver::CurrentRecord(nsIAtom* aType)
 
   uint32_t last = sMutationLevel - 1;
   if (!mCurrentMutations[last]) {
-    nsRefPtr<nsDOMMutationRecord> r = new nsDOMMutationRecord(aType, GetParentObject());
+    RefPtr<nsDOMMutationRecord> r = new nsDOMMutationRecord(aType, GetParentObject());
     mCurrentMutations[last] = r;
     AppendMutationRecord(r.forget());
     ScheduleForRun();
@@ -956,7 +956,7 @@ nsDOMMutationObserver::LeaveMutationHandling()
 {
   if (sCurrentlyHandlingObservers &&
       sCurrentlyHandlingObservers->Length() == sMutationLevel) {
-    nsTArray<nsRefPtr<nsDOMMutationObserver> >& obs =
+    nsTArray<RefPtr<nsDOMMutationObserver> >& obs =
       sCurrentlyHandlingObservers->ElementAt(sMutationLevel - 1);
     for (uint32_t i = 0; i < obs.Length(); ++i) {
       nsDOMMutationObserver* o =
@@ -978,7 +978,7 @@ nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObse
 
   if (!sCurrentlyHandlingObservers) {
     sCurrentlyHandlingObservers =
-      new nsAutoTArray<nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>, 4>;
+      new nsAutoTArray<nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>;
   }
 
   while (sCurrentlyHandlingObservers->Length() < sMutationLevel) {
@@ -1023,7 +1023,7 @@ nsAutoMutationBatch::Done()
     nsDOMMutationObserver* ob = mObservers[i].mObserver;
     bool wantsChildList = mObservers[i].mWantsChildList;
 
-    nsRefPtr<nsSimpleContentList> removedList;
+    RefPtr<nsSimpleContentList> removedList;
     if (wantsChildList) {
       removedList = new nsSimpleContentList(mBatchTarget);
     }
@@ -1064,12 +1064,12 @@ nsAutoMutationBatch::Done()
       }
     }
     if (wantsChildList && (mRemovedNodes.Length() || mAddedNodes.Length())) {
-      nsRefPtr<nsSimpleContentList> addedList =
+      RefPtr<nsSimpleContentList> addedList =
         new nsSimpleContentList(mBatchTarget);
       for (uint32_t i = 0; i < mAddedNodes.Length(); ++i) {
         addedList->AppendElement(mAddedNodes[i]);
       }
-      nsRefPtr<nsDOMMutationRecord> m =
+      RefPtr<nsDOMMutationRecord> m =
         new nsDOMMutationRecord(nsGkAtoms::childList,
                                 ob->GetParentObject());
       m->mTarget = mBatchTarget;
@@ -1113,7 +1113,7 @@ nsAutoAnimationMutationBatch::Done()
       MOZ_ASSERT(entries,
         "Targets in entry table and targets list should match");
 
-      nsRefPtr<nsDOMMutationRecord> m =
+      RefPtr<nsDOMMutationRecord> m =
         new nsDOMMutationRecord(nsGkAtoms::animations, ob->GetParentObject());
       m->mTarget = target;
 

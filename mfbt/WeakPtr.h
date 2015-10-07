@@ -71,7 +71,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/RefCounted.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TypeTraits.h"
 
 #include <string.h>
@@ -200,9 +200,9 @@ public:
 private:
   friend class SupportsWeakPtr<T>;
 
-  explicit WeakPtr(const nsRefPtr<WeakReference>& aOther) : mRef(aOther) {}
+  explicit WeakPtr(const RefPtr<WeakReference>& aOther) : mRef(aOther) {}
 
-  nsRefPtr<WeakReference> mRef;
+  RefPtr<WeakReference> mRef;
 };
 
 } // namespace mozilla

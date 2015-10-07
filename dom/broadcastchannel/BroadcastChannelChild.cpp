@@ -42,12 +42,12 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
 {
   // Make sure to retrieve all blobs from the message before returning to avoid
   // leaking their actors.
-  nsTArray<nsRefPtr<BlobImpl>> blobs;
+  nsTArray<RefPtr<BlobImpl>> blobs;
   if (!aData.blobsChild().IsEmpty()) {
     blobs.SetCapacity(aData.blobsChild().Length());
 
     for (uint32_t i = 0, len = aData.blobsChild().Length(); i < len; ++i) {
-      nsRefPtr<BlobImpl> impl =
+      RefPtr<BlobImpl> impl =
         static_cast<BlobChild*>(aData.blobsChild()[i])->GetBlobImpl();
 
       blobs.AppendElement(impl);
@@ -108,7 +108,7 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
   init.mData = value;
 
   ErrorResult rv;
-  nsRefPtr<MessageEvent> event =
+  RefPtr<MessageEvent> event =
     MessageEvent::Constructor(mBC, NS_LITERAL_STRING("message"), init, rv);
   if (rv.Failed()) {
     NS_WARNING("Failed to create a MessageEvent object.");

@@ -182,7 +182,7 @@ private:
     AssertIsOnMainThread();
   }
 
-  nsRefPtr<CompareManager> mManager;
+  RefPtr<CompareManager> mManager;
   nsCOMPtr<nsIChannel> mChannel;
   nsString mBuffer;
 };
@@ -275,7 +275,7 @@ private:
   void
   ManageValueResult(JSContext* aCx, JS::Handle<JS::Value> aValue);
 
-  nsRefPtr<CompareManager> mManager;
+  RefPtr<CompareManager> mManager;
   nsCOMPtr<nsIInputStreamPump> mPump;
 
   nsString mURL;
@@ -444,7 +444,7 @@ public:
       }
 
       // Just to be safe.
-      nsRefPtr<Cache> kungfuDeathGrip = cache;
+      RefPtr<Cache> kungfuDeathGrip = cache;
       WriteToCache(cache);
       return;
     }
@@ -567,7 +567,7 @@ private:
       return;
     }
 
-    nsRefPtr<Promise> cacheOpenPromise = mCacheStorage->Open(mNewCacheName, result);
+    RefPtr<Promise> cacheOpenPromise = mCacheStorage->Open(mNewCacheName, result);
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
       Fail(result.StealNSResult());
@@ -593,7 +593,7 @@ private:
       return;
     }
 
-    nsRefPtr<InternalResponse> ir =
+    RefPtr<InternalResponse> ir =
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(body);
 
@@ -602,7 +602,7 @@ private:
       ir->SetPrincipalInfo(Move(mPrincipalInfo));
     }
 
-    nsRefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
+    RefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
 
     RequestOrUSVString request;
     request.SetAsUSVString().Rebind(URL().Data(), URL().Length());
@@ -610,7 +610,7 @@ private:
     // For now we have to wait until the Put Promise is fulfilled before we can
     // continue since Cache does not yet support starting a read that is being
     // written to.
-    nsRefPtr<Promise> cachePromise = aCache->Put(request, *response, result);
+    RefPtr<Promise> cachePromise = aCache->Put(request, *response, result);
     if (NS_WARN_IF(result.Failed())) {
       MOZ_ASSERT(!result.IsErrorWithMessage());
       Fail(result.StealNSResult());
@@ -621,12 +621,12 @@ private:
     cachePromise->AppendNativeHandler(this);
   }
 
-  nsRefPtr<CompareCallback> mCallback;
+  RefPtr<CompareCallback> mCallback;
   JS::PersistentRooted<JSObject*> mSandbox;
-  nsRefPtr<CacheStorage> mCacheStorage;
+  RefPtr<CacheStorage> mCacheStorage;
 
-  nsRefPtr<CompareNetwork> mCN;
-  nsRefPtr<CompareCache> mCC;
+  RefPtr<CompareNetwork> mCN;
+  RefPtr<CompareCache> mCC;
 
   nsString mURL;
   // Only used if the network script has changed and needs to be cached.
@@ -804,7 +804,7 @@ CompareCache::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL,
 
   ErrorResult rv;
 
-  nsRefPtr<Promise> promise = mManager->CacheStorage_()->Open(aCacheName, rv);
+  RefPtr<Promise> promise = mManager->CacheStorage_()->Open(aCacheName, rv);
   if (NS_WARN_IF(rv.Failed())) {
     MOZ_ASSERT(!rv.IsErrorWithMessage());
     return rv.StealNSResult();
@@ -886,7 +886,7 @@ CompareCache::ManageCacheResult(JSContext* aCx, JS::Handle<JS::Value> aValue)
   request.SetAsUSVString().Rebind(mURL.Data(), mURL.Length());
   ErrorResult error;
   CacheQueryOptions params;
-  nsRefPtr<Promise> promise = cache->Match(request, params, error);
+  RefPtr<Promise> promise = cache->Match(request, params, error);
   if (NS_WARN_IF(error.Failed())) {
     mManager->CacheFinished(error.StealNSResult(), false);
     return;
@@ -978,13 +978,13 @@ PurgeCache(nsIPrincipal* aPrincipal, const nsAString& aCacheName)
   jsapi.Init();
   ErrorResult rv;
   JS::Rooted<JSObject*> sandboxObject(jsapi.cx());
-  nsRefPtr<CacheStorage> cacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, rv, &sandboxObject);
+  RefPtr<CacheStorage> cacheStorage = CreateCacheStorage(jsapi.cx(), aPrincipal, rv, &sandboxObject);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
   // We use the ServiceWorker scope as key for the cacheStorage.
-  nsRefPtr<Promise> promise =
+  RefPtr<Promise> promise =
     cacheStorage->Delete(aCacheName, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
@@ -1027,7 +1027,7 @@ Compare(nsIPrincipal* aPrincipal, const nsAString& aCacheName,
   MOZ_ASSERT(!aURL.IsEmpty());
   MOZ_ASSERT(aCallback);
 
-  nsRefPtr<CompareManager> cm = new CompareManager(aCallback);
+  RefPtr<CompareManager> cm = new CompareManager(aCallback);
 
   nsresult rv = cm->Initialize(aPrincipal, aURL, aCacheName, aLoadGroup);
   if (NS_WARN_IF(NS_FAILED(rv))) {

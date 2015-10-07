@@ -116,7 +116,7 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
   }
 
   JSContext* context = aGlobal.Context();
-  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(parent, aOptions.mTnf);
+  RefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(parent, aOptions.mTnf);
   ndefRecord->InitType(context, aOptions.mType);
   ndefRecord->InitId(context, aOptions.mId);
   ndefRecord->InitPayload(context, aOptions.mPayload);
@@ -140,7 +140,7 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(parent, TNF::Well_known);
+  RefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(parent, TNF::Well_known);
   ndefRecord->InitType(aGlobal.Context(), RTD::U);
   ndefRecord->InitPayload(aGlobal.Context(), aUri);
   return ndefRecord.forget();

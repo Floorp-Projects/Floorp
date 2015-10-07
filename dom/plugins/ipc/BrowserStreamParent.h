@@ -60,7 +60,7 @@ private:
   PluginInstanceParent* mNPP;
   NPStream* mStream;
   nsCOMPtr<nsISupports> mStreamPeer;
-  nsRefPtr<nsNPAPIPluginStreamListener> mStreamListener;
+  RefPtr<nsNPAPIPluginStreamListener> mStreamListener;
   NPReason mDeferredDestroyReason;
 
   enum {

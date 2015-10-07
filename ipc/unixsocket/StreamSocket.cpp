@@ -6,7 +6,7 @@
 
 #include "StreamSocket.h"
 #include <fcntl.h>
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "StreamSocketConsumer.h"

@@ -146,7 +146,7 @@ protected:
     }
 
     nsChainedEventQueue* mNext;
-    nsRefPtr<nsNestedEventTarget> mEventTarget;
+    RefPtr<nsNestedEventTarget> mEventTarget;
 
   private:
     nsEventQueue mQueue;
@@ -164,7 +164,7 @@ protected:
     {
     }
 
-    nsRefPtr<nsThread> mThread;
+    RefPtr<nsThread> mThread;
 
     // This is protected by mThread->mLock.
     nsChainedEventQueue* mQueue;

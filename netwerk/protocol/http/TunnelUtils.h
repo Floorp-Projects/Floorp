@@ -151,10 +151,10 @@ private:
   static PRStatus FilterClose(PRFileDesc *fd);
 
 private:
-  nsRefPtr<nsAHttpTransaction> mTransaction;
+  RefPtr<nsAHttpTransaction> mTransaction;
   nsCOMPtr<nsISupports> mSecInfo;
   nsCOMPtr<nsITimer> mTimer;
-  nsRefPtr<NudgeTunnelCallback> mNudgeCallback;
+  RefPtr<NudgeTunnelCallback> mNudgeCallback;
 
   // buffered network output, after encryption
   nsAutoArrayPtr<char> mEncryptedText;
@@ -226,17 +226,17 @@ private:
 
   bool                           mForcePlainText;
   TimeStamp                      mTimestampSyn;
-  nsRefPtr<nsHttpConnectionInfo> mConnInfo;
+  RefPtr<nsHttpConnectionInfo> mConnInfo;
 
   // mTunneledConn, mTunnelTransport, mTunnelStreamIn, mTunnelStreamOut
   // are the connectors to the "real" http connection. They are created
   // together when the tunnel setup is complete and a static reference is held
   // for the lifetime of the tunnel.
-  nsRefPtr<nsHttpConnection>     mTunneledConn;
-  nsRefPtr<SocketTransportShim>  mTunnelTransport;
-  nsRefPtr<InputStreamShim>      mTunnelStreamIn;
-  nsRefPtr<OutputStreamShim>     mTunnelStreamOut;
-  nsRefPtr<nsHttpTransaction>    mDrivingTransaction;
+  RefPtr<nsHttpConnection>     mTunneledConn;
+  RefPtr<SocketTransportShim>  mTunnelTransport;
+  RefPtr<InputStreamShim>      mTunnelStreamIn;
+  RefPtr<OutputStreamShim>     mTunnelStreamOut;
+  RefPtr<nsHttpTransaction>    mDrivingTransaction;
 };
 
 } // namespace net

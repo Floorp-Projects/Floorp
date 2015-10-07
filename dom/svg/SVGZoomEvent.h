@@ -64,8 +64,8 @@ private:
 
   float mPreviousScale;
   float mNewScale;
-  nsRefPtr<DOMSVGPoint> mPreviousTranslate;
-  nsRefPtr<DOMSVGPoint> mNewTranslate;
+  RefPtr<DOMSVGPoint> mPreviousTranslate;
+  RefPtr<DOMSVGPoint> mNewTranslate;
 };
 
 } // namespace dom

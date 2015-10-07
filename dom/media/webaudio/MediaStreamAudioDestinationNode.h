@@ -46,8 +46,8 @@ protected:
   virtual ~MediaStreamAudioDestinationNode();
 
 private:
-  nsRefPtr<DOMMediaStream> mDOMStream;
-  nsRefPtr<MediaInputPort> mPort;
+  RefPtr<DOMMediaStream> mDOMStream;
+  RefPtr<MediaInputPort> mPort;
 };
 
 } // namespace dom

@@ -160,7 +160,7 @@ public:
   // mDurationUs and video/audio metadata.
   bool EnsureMetadata();
 
-  nsRefPtr<MediaResourcePromise> AllocateMediaResources();
+  RefPtr<MediaResourcePromise> AllocateMediaResources();
   void ReleaseMediaResources();
   bool SetVideoFormat();
   bool SetAudioFormat();

@@ -461,7 +461,7 @@ void
 WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aRep)
 {
   MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
-  nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   nsPIDOMWindow* win = xpc::CurrentWindowOrNull(aCx);
   xpcReport->Init(aRep, aMessage, nsContentUtils::IsCallerChrome(),
                   win ? win->WindowID() : 0);
@@ -502,7 +502,7 @@ AutoJSAPI::ReportException()
   JS::Rooted<JS::Value> exn(cx());
   js::ErrorReport jsReport(cx());
   if (StealException(&exn) && jsReport.init(cx(), exn)) {
-    nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+    RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
     xpcReport->Init(jsReport.report(), jsReport.message(),
                     nsContentUtils::IsCallerChrome(),
                     win ? win->WindowID() : 0);

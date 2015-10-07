@@ -33,8 +33,8 @@ nsDOMCaretPosition::GetClientRect() const
     return nullptr;
   }
 
-  nsRefPtr<DOMRect> rect;
-  nsRefPtr<nsRange> domRange;
+  RefPtr<DOMRect> rect;
+  RefPtr<nsRange> domRange;
   nsCOMPtr<nsINode> node;
 
   if (mAnonymousContentNode) {

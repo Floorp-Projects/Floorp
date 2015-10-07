@@ -136,7 +136,7 @@ HTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
   if (!aDoc)
     return;
 
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, aEventName, true, true);
   asyncDispatcher->RunDOMEventWhenSafe();
 }

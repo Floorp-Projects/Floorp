@@ -74,7 +74,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     txExecutionState* es =
         static_cast<txExecutionState*>(aContext->getPrivateContext());
 
-    nsRefPtr<txNodeSet> nodeSet;
+    RefPtr<txNodeSet> nodeSet;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodeSet));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -83,7 +83,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    nsRefPtr<txAExprResult> exprResult1;
+    RefPtr<txAExprResult> exprResult1;
     rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult1));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -93,7 +93,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     if (mParams.Length() == 2) {
         // We have 2 arguments, get baseURI from the first node
         // in the resulting nodeset
-        nsRefPtr<txNodeSet> nodeSet2;
+        RefPtr<txNodeSet> nodeSet2;
         rv = evaluateToNodeSet(mParams[1],
                                aContext, getter_AddRefs(nodeSet2));
         NS_ENSURE_SUCCESS(rv, rv);

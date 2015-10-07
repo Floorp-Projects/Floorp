@@ -7,7 +7,7 @@
 #include "MediaDecoderReader.h"
 #include "PlatformDecoderModule.h"
 #include "nsRect.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
@@ -34,7 +34,7 @@ public:
   {
   }
 
-  nsRefPtr<InitPromise> Init() override {
+  RefPtr<InitPromise> Init() override {
     return InitPromise::CreateAndResolve(mType, __func__);
   }
 
@@ -54,7 +54,7 @@ public:
     }
     NS_IMETHOD Run() override
     {
-      nsRefPtr<MediaData> data =
+      RefPtr<MediaData> data =
         mCreator->Create(media::TimeUnit::FromMicroseconds(mSample->mTime),
                          media::TimeUnit::FromMicroseconds(mSample->mDuration),
                          mSample->mOffset);
@@ -62,7 +62,7 @@ public:
       return NS_OK;
     }
   private:
-    nsRefPtr<MediaRawData> mSample;
+    RefPtr<MediaRawData> mSample;
     BlankMediaDataCreator* mCreator;
     MediaDataDecoderCallback* mCallback;
   };
@@ -72,7 +72,7 @@ public:
     // The MediaDataDecoder must delete the sample when we're finished
     // with it, so the OutputEvent stores it in an nsAutoPtr and deletes
     // it once it's run.
-    nsRefPtr<nsIRunnable> r(new OutputEvent(aSample, mCallback, mCreator));
+    RefPtr<nsIRunnable> r(new OutputEvent(aSample, mCallback, mCreator));
     mTaskQueue->Dispatch(r.forget());
     return NS_OK;
   }
@@ -89,7 +89,7 @@ public:
 
 private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   TrackInfo::TrackType mType;
 };
@@ -158,7 +158,7 @@ private:
   gfx::IntRect mPicture;
   uint32_t mFrameWidth;
   uint32_t mFrameHeight;
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
 };
 
 
@@ -221,7 +221,7 @@ public:
                      MediaDataDecoderCallback* aCallback) override {
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
       aConfig.mDisplay.width, aConfig.mDisplay.height, aImageContainer);
-    nsRefPtr<MediaDataDecoder> decoder =
+    RefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankVideoDataCreator>(creator,
                                                        aVideoTaskQueue,
                                                        aCallback,
@@ -237,7 +237,7 @@ public:
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
       aConfig.mChannels, aConfig.mRate);
 
-    nsRefPtr<MediaDataDecoder> decoder =
+    RefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankAudioDataCreator>(creator,
                                                        aAudioTaskQueue,
                                                        aCallback,
@@ -277,13 +277,13 @@ public:
 
 already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule()
 {
-  nsRefPtr<PlatformDecoderModule> pdm = new BlankDecoderModule();
+  RefPtr<PlatformDecoderModule> pdm = new BlankDecoderModule();
   return pdm.forget();
 }
 
 already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule()
 {
-  nsRefPtr<PlatformDecoderModule> adm = new AgnosticDecoderModule();
+  RefPtr<PlatformDecoderModule> adm = new AgnosticDecoderModule();
   return adm.forget();
 }
 

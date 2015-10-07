@@ -278,7 +278,7 @@ nsSVGFilterChainObserver::nsSVGFilterChainObserver(const nsTArray<nsStyleFilter>
     if (aFilters[i].GetType() != NS_STYLE_FILTER_URL)
       continue;
 
-    nsRefPtr<nsSVGFilterReference> reference =
+    RefPtr<nsSVGFilterReference> reference =
       new nsSVGFilterReference(aFilters[i].GetURL(), aFilteredElement, this);
     mReferences.AppendElement(reference);
   }

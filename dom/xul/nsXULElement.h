@@ -44,7 +44,7 @@ class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsIOffThreadScriptReceiver;
 class nsXULPrototypeNode;
-typedef nsTArray<nsRefPtr<nsXULPrototypeNode> > nsPrototypeArray;
+typedef nsTArray<RefPtr<nsXULPrototypeNode> > nsPrototypeArray;
 
 namespace mozilla {
 class EventChainPreVisitor;
@@ -118,11 +118,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsXULPrototypeDocument* aProtoDoc,
-                               const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) = 0;
+                               const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) = 0;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsXULPrototypeDocument* aProtoDoc,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) = 0;
+                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) = 0;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     virtual const char* ClassName() = 0;
@@ -183,11 +183,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsXULPrototypeDocument* aProtoDoc,
-                               const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                               const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsXULPrototypeDocument* aProtoDoc,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
 
     nsresult SetAttrAt(uint32_t aPos, const nsAString& aValue, nsIURI* aDocumentURI);
 
@@ -198,7 +198,7 @@ public:
 
     nsPrototypeArray         mChildren;
 
-    nsRefPtr<mozilla::dom::NodeInfo> mNodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> mNodeInfo;
 
     uint32_t                 mNumAttributes:29;
     uint32_t                 mHasIdAttribute:1;
@@ -226,13 +226,13 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsXULPrototypeDocument* aProtoDoc,
-                               const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                               const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
     nsresult SerializeOutOfLine(nsIObjectOutputStream* aStream,
                                 nsXULPrototypeDocument* aProtoDoc);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsXULPrototypeDocument* aProtoDoc,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                   nsXULPrototypeDocument* aProtoDoc);
 
@@ -305,11 +305,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsXULPrototypeDocument* aProtoDoc,
-                               const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                               const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsXULPrototypeDocument* aProtoDoc,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
 
     nsString                 mValue;
 };
@@ -333,11 +333,11 @@ public:
 
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsXULPrototypeDocument* aProtoDoc,
-                               const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                               const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsXULPrototypeDocument* aProtoDoc,
                                  nsIURI* aDocumentURI,
-                                 const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
+                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) override;
 
     nsString                 mTarget;
     nsString                 mData;
@@ -638,7 +638,7 @@ protected:
 
         void Traverse(nsCycleCollectionTraversalCallback &cb);
 
-        nsRefPtr<nsFrameLoader> mFrameLoader;
+        RefPtr<nsFrameLoader> mFrameLoader;
     };
 
     virtual nsINode::nsSlots* CreateSlots() override;

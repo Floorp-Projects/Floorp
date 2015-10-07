@@ -78,7 +78,7 @@ class MOZ_RAII nsAutoSelectionReset
 {
   private:
     /** ref-counted reference to the selection that we are supposed to restore */
-    nsRefPtr<mozilla::dom::Selection> mSel;
+    RefPtr<mozilla::dom::Selection> mSel;
     nsEditor *mEd;  // non-owning ref to nsEditor
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 

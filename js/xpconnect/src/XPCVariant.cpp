@@ -98,7 +98,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 already_AddRefed<XPCVariant>
 XPCVariant::newVariant(JSContext* cx, Value aJSVal)
 {
-    nsRefPtr<XPCVariant> variant;
+    RefPtr<XPCVariant> variant;
 
     if (!aJSVal.isMarkable())
         variant = new XPCVariant(cx, aJSVal);

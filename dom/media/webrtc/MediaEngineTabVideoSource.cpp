@@ -6,7 +6,7 @@
 #include "MediaEngineTabVideoSource.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDocShell.h"
@@ -172,7 +172,7 @@ MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
   MonitorAutoLock mon(mMonitor);
 
   // Note: we're not giving up mImage here
-  nsRefPtr<layers::CairoImage> image = mImage;
+  RefPtr<layers::CairoImage> image = mImage;
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
   if (delta > 0) {
     // nullptr images are allowed
@@ -230,7 +230,7 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  nsRefPtr<nsPresContext> presContext;
+  RefPtr<nsPresContext> presContext;
   nsIDocShell* docshell = win->GetDocShell();
   if (docshell) {
     docshell->GetPresContext(getter_AddRefs(presContext));
@@ -248,8 +248,8 @@ MediaEngineTabVideoSource::Draw() {
   nsRect r(0, 0, nsPresContext::CSSPixelsToAppUnits((float)innerWidth),
            nsPresContext::CSSPixelsToAppUnits((float)innerHeight));
 
-  nsRefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      mData.rwget(),
                                      size,
@@ -258,13 +258,13 @@ MediaEngineTabVideoSource::Draw() {
   if (!dt) {
     return;
   }
-  nsRefPtr<gfxContext> context = new gfxContext(dt);
+  RefPtr<gfxContext> context = new gfxContext(dt);
   context->SetMatrix(context->CurrentMatrix().Scale((((float) size.width)/innerWidth),
                                                     (((float) size.height)/innerHeight)));
 
   NS_ENSURE_SUCCESS_VOID(presShell->RenderDocument(r, renderDocFlags, bgColor, context));
 
-  nsRefPtr<SourceSurface> surface = dt->Snapshot();
+  RefPtr<SourceSurface> surface = dt->Snapshot();
   if (!surface) {
     return;
   }
@@ -273,7 +273,7 @@ MediaEngineTabVideoSource::Draw() {
   cairoData.mSize = size;
   cairoData.mSourceSurface = surface;
 
-  nsRefPtr<layers::CairoImage> image = new layers::CairoImage();
+  RefPtr<layers::CairoImage> image = new layers::CairoImage();
 
   image->SetData(cairoData);
 

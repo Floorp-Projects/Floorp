@@ -737,7 +737,7 @@ nsHostResolver::ResolveHost(const char            *host,
 
     // if result is set inside the lock, then we need to issue the
     // callback before returning.
-    nsRefPtr<nsHostRecord> result;
+    RefPtr<nsHostRecord> result;
     nsresult status = NS_OK, rv = NS_OK;
     {
         MutexAutoLock lock(mLock);
@@ -971,7 +971,7 @@ nsHostResolver::DetachCallback(const char            *host,
                                nsResolveHostCallback *callback,
                                nsresult               status)
 {
-    nsRefPtr<nsHostRecord> rec;
+    RefPtr<nsHostRecord> rec;
     {
         MutexAutoLock lock(mLock);
 

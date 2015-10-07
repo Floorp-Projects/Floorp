@@ -67,7 +67,7 @@ nsMeterFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Associate ::-moz-meter-bar pseudo-element to the anonymous child.
   nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozMeterBar;
-  nsRefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
+  RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mBarDiv->AsElement());
 
@@ -221,7 +221,7 @@ nsMeterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                               const LogicalSize& aPadding,
                               bool aShrinkWrap)
 {
-  nsRefPtr<nsFontMetrics> fontMet;
+  RefPtr<nsFontMetrics> fontMet;
   NS_ENSURE_SUCCESS(nsLayoutUtils::GetFontMetricsForFrame(this,
                                                           getter_AddRefs(fontMet)),
                     LogicalSize(aWM));
@@ -242,7 +242,7 @@ nsMeterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 nscoord
 nsMeterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
-  nsRefPtr<nsFontMetrics> fontMet;
+  RefPtr<nsFontMetrics> fontMet;
   NS_ENSURE_SUCCESS(
       nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet)), 0);
 

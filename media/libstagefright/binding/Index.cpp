@@ -8,7 +8,7 @@
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/SinfParser.h"
 #include "nsAutoPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include <algorithm>
 #include <limits>
@@ -98,7 +98,7 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
     return nullptr;
   }
 
-  nsRefPtr<MediaRawData> sample = new MediaRawData();
+  RefPtr<MediaRawData> sample = new MediaRawData();
   sample->mTimecode= s->mDecodeTime;
   sample->mTime = s->mCompositionRange.start;
   sample->mDuration = s->mCompositionRange.Length();

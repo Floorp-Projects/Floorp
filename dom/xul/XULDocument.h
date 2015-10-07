@@ -343,7 +343,7 @@ protected:
      * An array of style sheets, that will be added (preserving order) to the
      * document after all of them are loaded (in DoneWalking).
      */
-    nsTArray<nsRefPtr<CSSStyleSheet>> mOverlaySheets;
+    nsTArray<RefPtr<CSSStyleSheet>> mOverlaySheets;
 
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
@@ -517,7 +517,7 @@ protected:
     {
     protected:
         XULDocument* mDocument;              // [WEAK]
-        nsRefPtr<Element> mObservesElement; // [OWNER]
+        RefPtr<Element> mObservesElement; // [OWNER]
         bool mResolved;
 
     public:
@@ -610,19 +610,19 @@ protected:
      * The current prototype that we are walking to construct the
      * content model.
      */
-    nsRefPtr<nsXULPrototypeDocument> mCurrentPrototype;
+    RefPtr<nsXULPrototypeDocument> mCurrentPrototype;
 
     /**
      * The master document (outermost, .xul) prototype, from which
      * all subdocuments get their security principals.
      */
-    nsRefPtr<nsXULPrototypeDocument> mMasterPrototype;
+    RefPtr<nsXULPrototypeDocument> mMasterPrototype;
 
     /**
      * Owning references to all of the prototype documents that were
      * used to construct this document.
      */
-    nsTArray< nsRefPtr<nsXULPrototypeDocument> > mPrototypes;
+    nsTArray< RefPtr<nsXULPrototypeDocument> > mPrototypes;
 
     /**
      * Prepare to walk the current prototype.
@@ -689,7 +689,7 @@ protected:
 
     class CachedChromeStreamListener : public nsIStreamListener {
     protected:
-        nsRefPtr<XULDocument> mDocument;
+        RefPtr<XULDocument> mDocument;
         bool mProtoLoaded;
 
         virtual ~CachedChromeStreamListener();
@@ -708,8 +708,8 @@ protected:
 
     class ParserObserver : public nsIRequestObserver {
     protected:
-        nsRefPtr<XULDocument> mDocument;
-        nsRefPtr<nsXULPrototypeDocument> mPrototype;
+        RefPtr<XULDocument> mDocument;
+        RefPtr<nsXULPrototypeDocument> mPrototype;
         virtual ~ParserObserver();
 
     public:

@@ -7,7 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/gfx/2D.h"
@@ -68,9 +68,9 @@ protected:
   {
   }
 
-  nsRefPtr<CanvasRenderingContext2D> mContext;
+  RefPtr<CanvasRenderingContext2D> mContext;
   nsTArray<mozilla::gfx::GradientStop> mRawStops;
-  nsRefPtr<mozilla::gfx::GradientStops> mStops;
+  RefPtr<mozilla::gfx::GradientStops> mStops;
   Type mType;
   virtual ~CanvasGradient() {}
 };

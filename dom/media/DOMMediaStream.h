@@ -195,14 +195,14 @@ public:
      * JS (addTrack()) or the source creating one.
      */
     virtual void
-    NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack) {};
+    NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack) {};
 
     /**
      * Called when the DOMMediaStream removes a track, either by
      * JS (removeTrack()) or the source ending it.
      */
     virtual void
-    NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack) {};
+    NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) {};
 
   protected:
     virtual ~TrackListener() {}
@@ -227,9 +227,9 @@ public:
 
   void GetId(nsAString& aID) const;
 
-  void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
-  void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
-  void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
+  void GetAudioTracks(nsTArray<RefPtr<AudioStreamTrack> >& aTracks);
+  void GetVideoTracks(nsTArray<RefPtr<VideoStreamTrack> >& aTracks);
+  void GetTracks(nsTArray<RefPtr<MediaStreamTrack> >& aTracks);
   void AddTrack(MediaStreamTrack& aTrack);
   void RemoveTrack(MediaStreamTrack& aTrack);
 
@@ -433,10 +433,10 @@ protected:
   void NotifyTracksCreated();
 
   // Dispatches NotifyTrackAdded() to all registered track listeners.
-  void NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack);
+  void NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack);
 
   // Dispatches NotifyTrackRemoved() to all registered track listeners.
-  void NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack);
+  void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
 
   class OwnedStreamListener;
   friend class OwnedStreamListener;
@@ -470,20 +470,20 @@ protected:
   ProcessedMediaStream* mPlaybackStream;
 
   // This port connects mInputStream to mOwnedStream. All tracks forwarded.
-  nsRefPtr<MediaInputPort> mOwnedPort;
+  RefPtr<MediaInputPort> mOwnedPort;
 
   // This port connects mOwnedStream to mPlaybackStream. All tracks not
   // explicitly blocked due to removal are forwarded.
-  nsRefPtr<MediaInputPort> mPlaybackPort;
+  RefPtr<MediaInputPort> mPlaybackPort;
 
   // MediaStreamTracks corresponding to tracks in our mOwnedStream.
-  nsAutoTArray<nsRefPtr<TrackPort>, 2> mOwnedTracks;
+  nsAutoTArray<RefPtr<TrackPort>, 2> mOwnedTracks;
 
   // MediaStreamTracks corresponding to tracks in our mPlaybackStream.
-  nsAutoTArray<nsRefPtr<TrackPort>, 2> mTracks;
+  nsAutoTArray<RefPtr<TrackPort>, 2> mTracks;
 
-  nsRefPtr<OwnedStreamListener> mOwnedListener;
-  nsRefPtr<PlaybackStreamListener> mPlaybackListener;
+  RefPtr<OwnedStreamListener> mOwnedListener;
+  RefPtr<PlaybackStreamListener> mPlaybackListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
 
@@ -498,7 +498,7 @@ protected:
   bool mNotifiedOfMediaStreamGraphShutdown;
 
   // The track listeners subscribe to changes in this stream's track set.
-  nsTArray<nsRefPtr<TrackListener>> mTrackListeners;
+  nsTArray<RefPtr<TrackListener>> mTrackListeners;
 
 private:
   void NotifyPrincipalChanged();
@@ -586,7 +586,7 @@ protected:
 private:
   // If this object wraps a stream owned by an AudioNode, we need to ensure that
   // the node isn't cycle-collected too early.
-  nsRefPtr<AudioNode> mStreamNode;
+  RefPtr<AudioNode> mStreamNode;
 };
 
 class DOMHwMediaStream : public DOMLocalMediaStream
@@ -614,11 +614,11 @@ private:
   void Init(MediaStream* aStream);
 
 #ifdef MOZ_WIDGET_GONK
-  nsRefPtr<ImageContainer> mImageContainer;
+  RefPtr<ImageContainer> mImageContainer;
   const int DEFAULT_IMAGE_ID = 0x01;
   const int DEFAULT_IMAGE_WIDTH = 400;
   const int DEFAULT_IMAGE_HEIGHT = 300;
-  nsRefPtr<OverlayImage> mOverlayImage;
+  RefPtr<OverlayImage> mOverlayImage;
   Data mImageData;
 #endif
 };

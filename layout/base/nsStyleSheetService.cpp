@@ -185,9 +185,9 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                 aSheetType == AUTHOR_SHEET);
   NS_ENSURE_ARG_POINTER(aSheetURI);
 
-  nsRefPtr<css::Loader> loader = new css::Loader();
+  RefPtr<css::Loader> loader = new css::Loader();
 
-  nsRefPtr<CSSStyleSheet> sheet;
+  RefPtr<CSSStyleSheet> sheet;
   // Allow UA sheets, but not user sheets, to use unsafe rules
   nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
                                       true, getter_AddRefs(sheet));
@@ -225,10 +225,10 @@ nsStyleSheetService::PreloadSheet(nsIURI *aSheetURI, uint32_t aSheetType,
   NS_ENSURE_ARG_POINTER(aSheetURI);
   NS_PRECONDITION(aSheet, "Null out param");
 
-  nsRefPtr<css::Loader> loader = new css::Loader();
+  RefPtr<css::Loader> loader = new css::Loader();
 
   // Allow UA sheets, but not user sheets, to use unsafe rules
-  nsRefPtr<CSSStyleSheet> sheet;
+  RefPtr<CSSStyleSheet> sheet;
   nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
                                       true, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);

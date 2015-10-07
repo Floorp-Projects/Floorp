@@ -55,7 +55,7 @@ gfxReusableSharedImageSurfaceWrapper::GetWritable(gfxImageSurface** aSurface)
   }
 
   // Something else is reading the surface, copy it
-  nsRefPtr<gfxSharedImageSurface> copySurface =
+  RefPtr<gfxSharedImageSurface> copySurface =
     gfxSharedImageSurface::CreateUnsafe(mAllocator.get(), mSurface->GetSize(), mSurface->Format());
   copySurface->CopyFrom(mSurface);
   *aSurface = copySurface;
@@ -91,8 +91,8 @@ gfxReusableSharedImageSurfaceWrapper::GetShmem()
 /* static */ already_AddRefed<gfxReusableSharedImageSurfaceWrapper>
 gfxReusableSharedImageSurfaceWrapper::Open(ISurfaceAllocator* aAllocator, const Shmem& aShmem)
 {
-  nsRefPtr<gfxSharedImageSurface> sharedImage = gfxSharedImageSurface::Open(aShmem);
-  nsRefPtr<gfxReusableSharedImageSurfaceWrapper> wrapper = new gfxReusableSharedImageSurfaceWrapper(aAllocator, sharedImage);
+  RefPtr<gfxSharedImageSurface> sharedImage = gfxSharedImageSurface::Open(aShmem);
+  RefPtr<gfxReusableSharedImageSurfaceWrapper> wrapper = new gfxReusableSharedImageSurfaceWrapper(aAllocator, sharedImage);
   wrapper->ReadUnlock();
   return wrapper.forget();
 }

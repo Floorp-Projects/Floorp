@@ -156,7 +156,7 @@ public:
   NSString *mName;
   nsCOMPtr<nsIObserver> mObserver;
   nsString mCookie;
-  nsRefPtr<imgRequestProxy> mIconRequest;
+  RefPtr<imgRequestProxy> mIconRequest;
   id<FakeNSUserNotification> mPendingNotifiction;
   nsCOMPtr<nsITimer> mIconTimeoutTimer;
 };
@@ -303,7 +303,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   } else {
     mPendingAlerts.AppendElement(osxni);
     osxni->mPendingNotifiction = notification;
-    nsRefPtr<imgLoader> il = imgLoader::GetInstance();
+    RefPtr<imgLoader> il = imgLoader::GetInstance();
     if (il) {
       nsCOMPtr<nsIURI> imageUri;
       NS_NewURI(getter_AddRefs(imageUri), aImageUrl);

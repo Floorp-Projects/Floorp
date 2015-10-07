@@ -186,7 +186,7 @@ protected:
   /**
    * A no-op touch-listener used for APZ purposes.
    */
-  nsRefPtr<DummyTouchListener> mDummyTouchListener;
+  RefPtr<DummyTouchListener> mDummyTouchListener;
 };
 
 /**

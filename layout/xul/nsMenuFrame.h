@@ -273,13 +273,13 @@ protected:
   nsMenuType mType;
 
   // Reference to the mediator which wraps this frame.
-  nsRefPtr<nsMenuTimerMediator> mTimerMediator;
+  RefPtr<nsMenuTimerMediator> mTimerMediator;
 
   nsCOMPtr<nsITimer> mOpenTimer;
   nsCOMPtr<nsITimer> mBlinkTimer;
 
   uint8_t mBlinkState; // 0: not blinking, 1: off, 2: on
-  nsRefPtr<nsXULMenuCommandEvent> mDelayedMenuCommandEvent;
+  RefPtr<nsXULMenuCommandEvent> mDelayedMenuCommandEvent;
 
   nsString mGroupName;
 

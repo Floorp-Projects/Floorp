@@ -13,7 +13,7 @@
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
@@ -1019,7 +1019,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   aHeader.GetBody(&bodyPtr, &mBodySegmentLength);
   mBodySegment = bodyPtr;
 
-  nsRefPtr<BluetoothMapBMessage> bmsg =
+  RefPtr<BluetoothMapBMessage> bmsg =
     new BluetoothMapBMessage(bodyPtr, mBodySegmentLength);
 
   /* If FolderName is outbox:
@@ -1034,7 +1034,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   // It's possible that subject is empty, send it anyway
   AppendNamedValue(data, "subject", subject);
 
-  nsTArray<nsRefPtr<VCard>> recipients;
+  nsTArray<RefPtr<VCard>> recipients;
   bmsg->GetRecipients(recipients);
 
   // Get the topmost level, only one recipient for SMS case

@@ -54,14 +54,14 @@ protected:
   HandlerCallback() override;
 
 private:
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
   nsString mTargetRealPath;
   // Whether we get a directory.
   bool mIsDirectory;
 
   // This cannot be a File bacause this object is created on a different
   // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  nsRefPtr<BlobImpl> mTargetBlobImpl;
+  RefPtr<BlobImpl> mTargetBlobImpl;
 };
 
 } // namespace dom

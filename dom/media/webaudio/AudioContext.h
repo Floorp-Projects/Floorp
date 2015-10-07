@@ -82,9 +82,9 @@ public:
   WebCore::PeriodicWave* GetBasicWaveForm(OscillatorType aType);
 private:
   ~BasicWaveFormCache();
-  nsRefPtr<WebCore::PeriodicWave> mSawtooth;
-  nsRefPtr<WebCore::PeriodicWave> mSquare;
-  nsRefPtr<WebCore::PeriodicWave> mTriangle;
+  RefPtr<WebCore::PeriodicWave> mSawtooth;
+  RefPtr<WebCore::PeriodicWave> mSquare;
+  RefPtr<WebCore::PeriodicWave> mTriangle;
   uint32_t mSampleRate;
 };
 
@@ -105,9 +105,9 @@ public:
   NS_IMETHOD Run() override;
 
 private:
-  nsRefPtr<AudioContext> mAudioContext;
+  RefPtr<AudioContext> mAudioContext;
   void* mPromise;
-  nsRefPtr<AudioNodeStream> mAudioNodeStream;
+  RefPtr<AudioNodeStream> mAudioNodeStream;
   AudioContextState mNewState;
 };
 
@@ -334,12 +334,12 @@ private:
   // mDestination, as mDestination's constructor needs to access it!
   const float mSampleRate;
   AudioContextState mAudioContextState;
-  nsRefPtr<AudioDestinationNode> mDestination;
-  nsRefPtr<AudioListener> mListener;
-  nsTArray<nsRefPtr<WebAudioDecodeJob> > mDecodeJobs;
+  RefPtr<AudioDestinationNode> mDestination;
+  RefPtr<AudioListener> mListener;
+  nsTArray<RefPtr<WebAudioDecodeJob> > mDecodeJobs;
   // This array is used to keep the suspend/resume/close promises alive until
   // they are resolved, so we can safely pass them accross threads.
-  nsTArray<nsRefPtr<Promise>> mPromiseGripArray;
+  nsTArray<RefPtr<Promise>> mPromiseGripArray;
   // See RegisterActiveNode.  These will keep the AudioContext alive while it
   // is rendering and the window remains alive.
   nsTHashtable<nsRefPtrHashKey<AudioNode> > mActiveNodes;
@@ -349,7 +349,7 @@ private:
   // These are weak pointers.
   nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
   // Cache to avoid recomputing basic waveforms all the time.
-  nsRefPtr<BasicWaveFormCache> mBasicWaveFormCache;
+  RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
   bool mIsOffline;

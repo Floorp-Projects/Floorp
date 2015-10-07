@@ -9,7 +9,7 @@
 
 #include "OTMTMarkerReceiver.h"
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 class nsDocShell;
 
@@ -28,7 +28,7 @@ class ObservedDocShell : public LinkedListElement<ObservedDocShell>,
                          public OTMTMarkerReceiver
 {
 private:
-  nsRefPtr<nsDocShell> mDocShell;
+  RefPtr<nsDocShell> mDocShell;
   nsTArray<UniquePtr<AbstractTimelineMarker>> mTimelineMarkers;
 
 public:

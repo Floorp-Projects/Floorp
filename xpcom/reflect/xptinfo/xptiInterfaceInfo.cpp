@@ -398,7 +398,7 @@ xptiInterfaceEntry::GetShimForParam(uint16_t methodIndex,
     }
 
     const char* shimName = mTypelib->GetEntryNameAt(interfaceIndex - 1);
-    nsRefPtr<ShimInterfaceInfo> shim =
+    RefPtr<ShimInterfaceInfo> shim =
         ShimInterfaceInfo::MaybeConstruct(shimName, nullptr);
     return shim.forget();
 }
@@ -411,7 +411,7 @@ xptiInterfaceEntry::GetInfoForParam(uint16_t methodIndex,
     xptiInterfaceEntry* entry;
     nsresult rv = GetEntryForParam(methodIndex, param, &entry);
     if (NS_FAILED(rv)) {
-        nsRefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
+        RefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
         if (!shim) {
             return rv;
         }
@@ -432,7 +432,7 @@ xptiInterfaceEntry::GetIIDForParam(uint16_t methodIndex,
     xptiInterfaceEntry* entry;
     nsresult rv = GetEntryForParam(methodIndex, param, &entry);
     if (NS_FAILED(rv)) {
-        nsRefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
+        RefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
         if (!shim) {
             return rv;
         }
@@ -450,7 +450,7 @@ xptiInterfaceEntry::GetIIDForParamNoAlloc(uint16_t methodIndex,
     xptiInterfaceEntry* entry;
     nsresult rv = GetEntryForParam(methodIndex, param, &entry);
     if (NS_FAILED(rv)) {
-        nsRefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
+        RefPtr<ShimInterfaceInfo> shim = GetShimForParam(methodIndex, param);
         if (!shim) {
             return rv;
         }
@@ -664,7 +664,7 @@ xptiInterfaceEntry::InterfaceInfo()
         mInfo = new xptiInterfaceInfo(this);
     }
     
-    nsRefPtr<xptiInterfaceInfo> info = mInfo;
+    RefPtr<xptiInterfaceInfo> info = mInfo;
     return info.forget();
 }
     

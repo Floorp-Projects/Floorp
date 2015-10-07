@@ -1030,16 +1030,16 @@ JSRuntime::Stopwatch::commit()
     if (systemTimeStop > systemTimeStart_)
         systemTimeDelta = systemTimeStop - systemTimeStart_;
 
-    nsRefPtr<js::PerformanceGroup> group = performance.getOwnGroup();
+    RefPtr<js::PerformanceGroup> group = performance.getOwnGroup();
     const uint64_t totalRecentCycles = group->recentCycles;
 
-    mozilla::Vector<nsRefPtr<js::PerformanceGroup>> recentGroups;
+    mozilla::Vector<RefPtr<js::PerformanceGroup>> recentGroups;
     touchedGroups.swap(recentGroups);
     MOZ_ASSERT(recentGroups.length() > 0);
 
     // We should only reach this stage if `group` has had some activity.
     MOZ_ASSERT(group->recentTicks > 0);
-    for (nsRefPtr<js::PerformanceGroup>* iter = recentGroups.begin(); iter != recentGroups.end(); ++iter) {
+    for (RefPtr<js::PerformanceGroup>* iter = recentGroups.begin(); iter != recentGroups.end(); ++iter) {
         transferDeltas(userTimeDelta, systemTimeDelta, totalRecentCycles, *iter);
     }
 

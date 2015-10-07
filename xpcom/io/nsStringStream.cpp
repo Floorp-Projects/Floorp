@@ -368,7 +368,7 @@ nsStringInputStream::GetCloneable(bool* aCloneableOut)
 NS_IMETHODIMP
 nsStringInputStream::Clone(nsIInputStream** aCloneOut)
 {
-  nsRefPtr<nsIInputStream> ref = new nsStringInputStream(*this);
+  RefPtr<nsIInputStream> ref = new nsStringInputStream(*this);
   ref.forget(aCloneOut);
   return NS_OK;
 }
@@ -380,7 +380,7 @@ NS_NewByteInputStream(nsIInputStream** aStreamResult,
 {
   NS_PRECONDITION(aStreamResult, "null out ptr");
 
-  nsRefPtr<nsStringInputStream> stream = new nsStringInputStream();
+  RefPtr<nsStringInputStream> stream = new nsStringInputStream();
 
   nsresult rv;
   switch (aAssignment) {
@@ -420,7 +420,7 @@ NS_NewCStringInputStream(nsIInputStream** aStreamResult,
 {
   NS_PRECONDITION(aStreamResult, "null out ptr");
 
-  nsRefPtr<nsStringInputStream> stream = new nsStringInputStream();
+  RefPtr<nsStringInputStream> stream = new nsStringInputStream();
 
   stream->SetData(aStringToRead);
 
@@ -439,6 +439,6 @@ nsStringInputStreamConstructor(nsISupports* aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsRefPtr<nsStringInputStream> inst = new nsStringInputStream();
+  RefPtr<nsStringInputStream> inst = new nsStringInputStream();
   return inst->QueryInterface(aIID, aResult);
 }

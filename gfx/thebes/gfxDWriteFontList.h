@@ -59,7 +59,7 @@ public:
 
 protected:
     /** This font family's directwrite fontfamily object */
-    nsRefPtr<IDWriteFontFamily> mDWFamily;
+    RefPtr<IDWriteFontFamily> mDWFamily;
     bool mForceGDIClassic;
 };
 
@@ -180,12 +180,12 @@ protected:
      * A fontentry only needs to have either of these. If it has both only
      * the IDWriteFont will be used.
      */
-    nsRefPtr<IDWriteFont> mFont;
-    nsRefPtr<IDWriteFontFile> mFontFile;
+    RefPtr<IDWriteFont> mFont;
+    RefPtr<IDWriteFontFile> mFontFile;
 
     // font face corresponding to the mFont/mFontFile *without* any DWrite
     // style simulations applied
-    nsRefPtr<IDWriteFontFace> mFontFace;
+    RefPtr<IDWriteFontFace> mFontFace;
 
     DWRITE_FONT_FACE_TYPE mFaceType;
 
@@ -327,7 +327,7 @@ public:
 
 protected:
     long mRefCount;
-    nsRefPtr<IDWriteFontCollection> mSystemFonts;
+    RefPtr<IDWriteFontCollection> mSystemFonts;
     nsString mFamilyName;
 };
 
@@ -416,14 +416,14 @@ private:
 
     // whether to use GDI font table access routines
     bool mGDIFontTableAccess;
-    nsRefPtr<IDWriteGdiInterop> mGDIInterop;
+    RefPtr<IDWriteGdiInterop> mGDIInterop;
 
-    nsRefPtr<FontFallbackRenderer> mFallbackRenderer;
-    nsRefPtr<IDWriteTextFormat>    mFallbackFormat;
+    RefPtr<FontFallbackRenderer> mFallbackRenderer;
+    RefPtr<IDWriteTextFormat>    mFallbackFormat;
 
-    nsRefPtr<IDWriteFontCollection> mSystemFonts;
+    RefPtr<IDWriteFontCollection> mSystemFonts;
 #ifdef MOZ_BUNDLED_FONTS
-    nsRefPtr<IDWriteFontCollection> mBundledFonts;
+    RefPtr<IDWriteFontCollection> mBundledFonts;
 #endif
 };
 
