@@ -7050,7 +7050,7 @@ void nsWindow::ClearTranslucentWindow()
 {
   if (mTransparentSurface) {
     IntSize size = mTransparentSurface->GetSize();
-    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(mTransparentSurface, size);
     drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
     UpdateTranslucentWindow();
@@ -7721,7 +7721,7 @@ void nsWindow::PickerClosed()
   }
 }
 
-bool nsWindow::CaptureWidgetOnScreen(nsRefPtr<DrawTarget> aDT)
+bool nsWindow::CaptureWidgetOnScreen(RefPtr<DrawTarget> aDT)
 {
   BOOL dwmEnabled = false;
   if (WinUtils::dwmIsCompositionEnabledPtr &&
@@ -7744,12 +7744,12 @@ bool nsWindow::CaptureWidgetOnScreen(nsRefPtr<DrawTarget> aDT)
     return false;
   }
 
-  nsRefPtr<DrawTarget> source = Factory::CreateDrawTargetForCairoSurface(surf->CairoSurface(), size);
+  RefPtr<DrawTarget> source = Factory::CreateDrawTargetForCairoSurface(surf->CairoSurface(), size);
   if (!source) {
     ::ReleaseDC(mWnd, dc);
     return false;
   }
-  nsRefPtr<SourceSurface> snapshot = source->Snapshot();
+  RefPtr<SourceSurface> snapshot = source->Snapshot();
   if (!snapshot) {
     ::ReleaseDC(mWnd, dc);
     return false;

@@ -13,7 +13,7 @@
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"

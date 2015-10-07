@@ -57,9 +57,9 @@ protected:
       mTextureSource->Updated();
   }
 
-  nsRefPtr<Compositor> mCompositor;
-  nsRefPtr<X11TextureSource> mTextureSource;
-  nsRefPtr<gfxXlibSurface> mSurface;
+  RefPtr<Compositor> mCompositor;
+  RefPtr<X11TextureSource> mTextureSource;
+  RefPtr<gfxXlibSurface> mSurface;
 };
 
 } // namespace layers

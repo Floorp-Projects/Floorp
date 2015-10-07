@@ -9,7 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsDeviceContext.h"
 #include "nsLayoutUtils.h"
 
@@ -163,7 +163,7 @@ DrawHexChar(uint32_t aDigit, const Point& aPt, DrawTarget& aDrawTarget,
     // To avoid the potential for seams showing between rects when we're under
     // a transform we concat all the rects into a PathBuilder and fill the
     // resulting Path (rather than using DrawTarget::FillRect).
-    nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+    RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
     uint32_t glyphBits = glyphMicroFont[aDigit];
     for (int y = 0; y < MINIFONT_HEIGHT; ++y) {
         for (int x = 0; x < MINIFONT_WIDTH; ++x) {
@@ -179,7 +179,7 @@ DrawHexChar(uint32_t aDigit, const Point& aPt, DrawTarget& aDrawTarget,
             glyphBits >>= 1;
         }
     }
-    nsRefPtr<Path> path = builder->Finish();
+    RefPtr<Path> path = builder->Finish();
     aDrawTarget.Fill(path, aPattern);
 }
 #endif // MOZ_GFX_OPTIMIZE_MOBILE

@@ -559,7 +559,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
   aContext.PopGroupToSource();
 
   Matrix maskTransform;
-  nsRefPtr<SourceSurface> maskSurface =
+  RefPtr<SourceSurface> maskSurface =
     maskFrame ? maskFrame->GetMaskForMaskedFrame(&aContext,
                                                  aFrame, cssPxToDevPxMatrix,
                                                  opacity, &maskTransform)
@@ -570,7 +570,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
 
     nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, cssPxToDevPxMatrix);
     Matrix clippedMaskTransform;
-    nsRefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
+    RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface

@@ -418,7 +418,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
   IntRect intersectInDestSpace = intersect - aDestRect.TopLeft();
   SurfaceFormat format = aSurface ? aSurface->GetFormat() : SurfaceFormat(SurfaceFormat::B8G8R8A8);
 
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aDestRect.Size(), format, true);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
@@ -428,7 +428,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
     return target.forget();
   }
 
-  nsRefPtr<DataSourceSurface> dataSource = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSource = aSurface->GetDataSurface();
   MOZ_ASSERT(dataSource);
 
   if (aEdgeMode == EDGE_MODE_WRAP) {
@@ -449,7 +449,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
 /* static */ already_AddRefed<FilterNode>
 FilterNodeSoftware::Create(FilterType aType)
 {
-  nsRefPtr<FilterNodeSoftware> filter;
+  RefPtr<FilterNodeSoftware> filter;
   switch (aType) {
     case FilterType::BLEND:
       filter = new FilterNodeBlendSoftware();
@@ -563,7 +563,7 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
     return;
   }
 
-  nsRefPtr<DataSourceSurface> result;
+  RefPtr<DataSourceSurface> result;
   if (!outputRect.IsEmpty()) {
     result = GetOutput(outputRect);
   }
@@ -653,7 +653,7 @@ FilterNodeSoftware::RequestInputRect(uint32_t aInputEnumIndex, const IntRect &aR
   if (mInputSurfaces[inputIndex]) {
     return;
   }
-  nsRefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
+  RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
   MOZ_ASSERT(filter, "missing input");
   filter->RequestRect(filter->GetOutputRectInRect(aRect));
 }
@@ -693,7 +693,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
     return nullptr;
   }
 
-  nsRefPtr<SourceSurface> surface;
+  RefPtr<SourceSurface> surface;
   IntRect surfaceRect;
 
   if (mInputSurfaces[inputIndex]) {
@@ -708,7 +708,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
 #ifdef DEBUG_DUMP_SURFACES
     printf("getting input from input filter %s...\n", mInputFilters[inputIndex]->GetName());
 #endif
-    nsRefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
+    RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
     MOZ_ASSERT(filter, "missing input");
     IntRect inputFilterOutput = filter->GetOutputRectInRect(aRect);
     if (!inputFilterOutput.IsEmpty()) {
@@ -741,7 +741,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
     surfaceRect = srcRect;
   }
 
-  nsRefPtr<DataSourceSurface> result =
+  RefPtr<DataSourceSurface> result =
     GetDataSurfaceInRect(surface, surfaceRect, aRect, aEdgeMode);
 
   if (result) {
@@ -803,7 +803,7 @@ FilterNodeSoftware::GetInputRectInRect(uint32_t aInputEnumIndex,
     return aInRect.Intersect(IntRect(IntPoint(0, 0),
                                      mInputSurfaces[inputIndex]->GetSize()));
   }
-  nsRefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
+  RefPtr<FilterNodeSoftware> filter = mInputFilters[inputIndex];
   MOZ_ASSERT(filter, "missing input");
   return filter->GetOutputRectInRect(aInRect);
 }
@@ -852,7 +852,7 @@ FilterNodeSoftware::~FilterNodeSoftware()
   MOZ_ASSERT(!mInvalidationListeners.size(),
              "All invalidation listeners should have unsubscribed themselves by now!");
 
-  for (std::vector<nsRefPtr<FilterNodeSoftware> >::iterator it = mInputFilters.begin();
+  for (std::vector<RefPtr<FilterNodeSoftware> >::iterator it = mInputFilters.begin();
        it != mInputFilters.end(); it++) {
     if (*it) {
       (*it)->RemoveInvalidationListener(this);
@@ -970,9 +970,9 @@ static CompositionOp ToBlendOp(BlendMode aOp)
 already_AddRefed<DataSourceSurface>
 FilterNodeBlendSoftware::Render(const IntRect& aRect)
 {
-  nsRefPtr<DataSourceSurface> input1 =
+  RefPtr<DataSourceSurface> input1 =
     GetInputDataSourceSurface(IN_BLEND_IN, aRect, NEED_COLOR_CHANNELS);
-  nsRefPtr<DataSourceSurface> input2 =
+  RefPtr<DataSourceSurface> input2 =
     GetInputDataSourceSurface(IN_BLEND_IN2, aRect, NEED_COLOR_CHANNELS);
 
   // Null inputs need to be treated as transparent.
@@ -990,7 +990,7 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
 
   // Third case: both are non-transparent.
   // Apply normal filtering.
-  nsRefPtr<DataSourceSurface> target = FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  RefPtr<DataSourceSurface> target = FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
   if (target != nullptr) {
     return target.forget();
   }
@@ -1010,7 +1010,7 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      targetMap.GetData(),
                                      target->GetSize(),
@@ -1097,7 +1097,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
 {
   IntRect srcRect = SourceRectForOutputRect(aRect);
 
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_TRANSFORM_IN, srcRect);
 
   if (!input) {
@@ -1110,7 +1110,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
     return input.forget();
   }
 
-  nsRefPtr<DataSourceSurface> surf =
+  RefPtr<DataSourceSurface> surf =
     Factory::CreateDataSourceSurface(aRect.Size(), input->GetFormat(), true);
 
   if (!surf) {
@@ -1123,7 +1123,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      mapping.mData,
                                      surf->GetSize(),
@@ -1212,7 +1212,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
              margin.bottom >= ry && margin.left >= rx, "insufficient margin");
 #endif
 
-  nsRefPtr<DataSourceSurface> tmp;
+  RefPtr<DataSourceSurface> tmp;
   if (rx == 0) {
     tmp = aInput;
   } else {
@@ -1235,7 +1235,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
       sourceData, sourceMap.GetStride(), tmpData, tmpMap.GetStride(), tmpRect, rx, aOperator);
   }
 
-  nsRefPtr<DataSourceSurface> dest;
+  RefPtr<DataSourceSurface> dest;
   if (ry == 0) {
     dest = tmp;
   } else {
@@ -1268,7 +1268,7 @@ FilterNodeMorphologySoftware::Render(const IntRect& aRect)
   IntRect srcRect = aRect;
   srcRect.Inflate(mRadii);
 
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_MORPHOLOGY_IN, srcRect, NEED_COLOR_CHANNELS);
   if (!input) {
     return nullptr;
@@ -1337,12 +1337,12 @@ static already_AddRefed<DataSourceSurface>
 Premultiply(DataSourceSurface* aSurface)
 {
   if (aSurface->GetFormat() == SurfaceFormat::A8) {
-    nsRefPtr<DataSourceSurface> surface(aSurface);
+    RefPtr<DataSourceSurface> surface(aSurface);
     return surface.forget();
   }
 
   IntSize size = aSurface->GetSize();
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
@@ -1369,12 +1369,12 @@ static already_AddRefed<DataSourceSurface>
 Unpremultiply(DataSourceSurface* aSurface)
 {
   if (aSurface->GetFormat() == SurfaceFormat::A8) {
-    nsRefPtr<DataSourceSurface> surface(aSurface);
+    RefPtr<DataSourceSurface> surface(aSurface);
     return surface.forget();
   }
 
   IntSize size = aSurface->GetSize();
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
@@ -1400,7 +1400,7 @@ Unpremultiply(DataSourceSurface* aSurface)
 already_AddRefed<DataSourceSurface>
 FilterNodeColorMatrixSoftware::Render(const IntRect& aRect)
 {
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_COLOR_MATRIX_IN, aRect, NEED_COLOR_CHANNELS);
   if (!input) {
     return nullptr;
@@ -1410,7 +1410,7 @@ FilterNodeColorMatrixSoftware::Render(const IntRect& aRect)
     input = Unpremultiply(input);
   }
 
-  nsRefPtr<DataSourceSurface> result =
+  RefPtr<DataSourceSurface> result =
     FilterProcessing::ApplyColorMatrix(input, mMatrix);
 
   if (mAlphaMode == ALPHA_MODE_PREMULTIPLIED) {
@@ -1470,7 +1470,7 @@ already_AddRefed<DataSourceSurface>
 FilterNodeFloodSoftware::Render(const IntRect& aRect)
 {
   SurfaceFormat format = FormatForColor(mColor);
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), format);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
@@ -1574,9 +1574,9 @@ FilterNodeTileSoftware::Render(const IntRect& aRect)
     return GetInputDataSourceSurface(IN_TILE_IN, aRect);
   }
 
-  nsRefPtr<DataSourceSurface> target;
+  RefPtr<DataSourceSurface> target;
 
-  typedef std::map<IntRect, nsRefPtr<DataSourceSurface>, CompareIntRects> InputMap;
+  typedef std::map<IntRect, RefPtr<DataSourceSurface>, CompareIntRects> InputMap;
   InputMap inputs;
 
   IntPoint startIndex = TileIndex(mSourceRect, aRect.TopLeft());
@@ -1591,7 +1591,7 @@ FilterNodeTileSoftware::Render(const IntRect& aRect)
         continue;
       }
 
-      nsRefPtr<DataSourceSurface> input;
+      RefPtr<DataSourceSurface> input;
       InputMap::iterator it = inputs.find(srcRect);
       if (it == inputs.end()) {
         input = GetInputDataSourceSurface(IN_TILE_IN, srcRect);
@@ -1755,7 +1755,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
 
   FormatHint pref = needColorChannels ? NEED_COLOR_CHANNELS : CAN_HANDLE_A8;
 
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_TRANSFER_IN, aRect, pref);
   if (!input) {
     return nullptr;
@@ -1777,7 +1777,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
     return input.forget();
   }
 
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), format);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
@@ -2434,7 +2434,7 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
   // ColorComponentAtPoint may want to access the margins.
   srcRect.Inflate(1);
 
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_CONVOLVE_MATRIX_IN, srcRect, NEED_COLOR_CHANNELS, mEdgeMode, &mSourceRect);
 
   if (!input) {
@@ -2443,7 +2443,7 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
 
   DebugOnlyAutoColorSamplingAccessControl accessControl(input);
 
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, true);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
@@ -2591,11 +2591,11 @@ already_AddRefed<DataSourceSurface>
 FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
 {
   IntRect srcRect = InflatedSourceOrDestRect(aRect);
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_DISPLACEMENT_MAP_IN, srcRect, NEED_COLOR_CHANNELS);
-  nsRefPtr<DataSourceSurface> map =
+  RefPtr<DataSourceSurface> map =
     GetInputDataSourceSurface(IN_DISPLACEMENT_MAP_IN2, aRect, NEED_COLOR_CHANNELS);
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
   if (MOZ2D_WARN_IF(!(input && map && target))) {
     return nullptr;
@@ -2784,9 +2784,9 @@ FilterNodeArithmeticCombineSoftware::SetAttribute(uint32_t aIndex,
 already_AddRefed<DataSourceSurface>
 FilterNodeArithmeticCombineSoftware::Render(const IntRect& aRect)
 {
-  nsRefPtr<DataSourceSurface> input1 =
+  RefPtr<DataSourceSurface> input1 =
     GetInputDataSourceSurface(IN_ARITHMETIC_COMBINE_IN, aRect, NEED_COLOR_CHANNELS);
-  nsRefPtr<DataSourceSurface> input2 =
+  RefPtr<DataSourceSurface> input2 =
     GetInputDataSourceSurface(IN_ARITHMETIC_COMBINE_IN2, aRect, NEED_COLOR_CHANNELS);
   if (!input1 && !input2) {
     return nullptr;
@@ -2858,9 +2858,9 @@ FilterNodeCompositeSoftware::SetAttribute(uint32_t aIndex, uint32_t aCompositeOp
 already_AddRefed<DataSourceSurface>
 FilterNodeCompositeSoftware::Render(const IntRect& aRect)
 {
-  nsRefPtr<DataSourceSurface> start =
+  RefPtr<DataSourceSurface> start =
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
-  nsRefPtr<DataSourceSurface> dest =
+  RefPtr<DataSourceSurface> dest =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, true);
   if (MOZ2D_WARN_IF(!dest)) {
     return nullptr;
@@ -2871,7 +2871,7 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
   }
 
   for (size_t inputIndex = 1; inputIndex < NumberOfSetInputs(); inputIndex++) {
-    nsRefPtr<DataSourceSurface> input =
+    RefPtr<DataSourceSurface> input =
       GetInputDataSourceSurface(IN_COMPOSITE_IN_START + inputIndex, aRect, NEED_COLOR_CHANNELS);
     if (input) {
       FilterProcessing::ApplyComposition(input, dest, mOperator);
@@ -2942,13 +2942,13 @@ FilterNodeBlurXYSoftware::Render(const IntRect& aRect)
   }
 
   IntRect srcRect = InflatedSourceOrDestRect(aRect);
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_GAUSSIAN_BLUR_IN, srcRect);
   if (!input) {
     return nullptr;
   }
 
-  nsRefPtr<DataSourceSurface> target;
+  RefPtr<DataSourceSurface> target;
   Rect r(0, 0, srcRect.width, srcRect.height);
 
   if (input->GetFormat() == SurfaceFormat::A8) {
@@ -2965,7 +2965,7 @@ FilterNodeBlurXYSoftware::Render(const IntRect& aRect)
     AlphaBoxBlur blur(r, targetMap.GetStride(), sigmaXY.width, sigmaXY.height);
     blur.Blur(targetMap.GetData());
   } else {
-    nsRefPtr<DataSourceSurface> channel0, channel1, channel2, channel3;
+    RefPtr<DataSourceSurface> channel0, channel1, channel2, channel3;
     FilterProcessing::SeparateColorChannels(input, channel0, channel1, channel2, channel3);
     if (MOZ2D_WARN_IF(!(channel0 && channel1 && channel2 && channel3))) {
       return nullptr;
@@ -3139,7 +3139,7 @@ FilterNodePremultiplySoftware::InputIndex(uint32_t aInputEnumIndex)
 already_AddRefed<DataSourceSurface>
 FilterNodePremultiplySoftware::Render(const IntRect& aRect)
 {
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_PREMULTIPLY_IN, aRect);
   return input ? Premultiply(input) : nullptr;
 }
@@ -3168,7 +3168,7 @@ FilterNodeUnpremultiplySoftware::InputIndex(uint32_t aInputEnumIndex)
 already_AddRefed<DataSourceSurface>
 FilterNodeUnpremultiplySoftware::Render(const IntRect& aRect)
 {
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_UNPREMULTIPLY_IN, aRect);
   return input ? Unpremultiply(input) : nullptr;
 }
@@ -3480,7 +3480,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
   // ColorComponentAtPoint may want to access the margins.
   srcRect.Inflate(1);
 
-  nsRefPtr<DataSourceSurface> input =
+  RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_LIGHTING_IN, srcRect, CAN_HANDLE_A8,
                               EDGE_MODE_DUPLICATE);
 
@@ -3494,7 +3494,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
 
   DebugOnlyAutoColorSamplingAccessControl accessControl(input);
 
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;

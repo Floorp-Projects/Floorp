@@ -11,7 +11,7 @@
 #include "gfxTypes.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsIMemoryReporter.h"          // for nsIMemoryReporter
 #include "mozilla/Atomics.h"            // for Atomic
 #include "mozilla/layers/LayersMessages.h" // for ShmemSection

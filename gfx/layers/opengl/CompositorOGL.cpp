@@ -246,7 +246,7 @@ CompositorOGL::Initialize()
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   // initialise a common shader to check that we can actually compile a shader
-  nsRefPtr<EffectSolidColor> effect = new EffectSolidColor(Color(0, 0, 0, 0));
+  RefPtr<EffectSolidColor> effect = new EffectSolidColor(Color(0, 0, 0, 0));
   ShaderConfigOGL config = GetShaderConfigFor(effect);
   if (!GetShaderProgramFor(config)) {
     return false;
@@ -506,7 +506,7 @@ CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
   GLuint tex = 0;
   GLuint fbo = 0;
   CreateFBOWithTexture(aRect, false, 0, &fbo, &tex);
-  nsRefPtr<CompositingRenderTargetOGL> surface
+  RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(), mFBOTextureTarget, aInit);
   return surface.forget();
@@ -536,7 +536,7 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
                          &fbo, &tex);
   }
 
-  nsRefPtr<CompositingRenderTargetOGL> surface
+  RefPtr<CompositingRenderTargetOGL> surface
     = new CompositingRenderTargetOGL(this, aRect.TopLeft(), tex, fbo);
   surface->Initialize(aRect.Size(),
                       mFBOTextureTarget,
@@ -675,7 +675,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
     mGLContext->fScissor(0, 0, viewportSize.width, viewportSize.height);
   }
 
-  nsRefPtr<CompositingRenderTargetOGL> rt =
+  RefPtr<CompositingRenderTargetOGL> rt =
     CompositingRenderTargetOGL::RenderTargetForWindow(this, viewportSize);
   SetRenderTarget(rt);
 
@@ -1302,7 +1302,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   case EffectTypes::RENDER_TARGET: {
       EffectRenderTarget* effectRenderTarget =
         static_cast<EffectRenderTarget*>(aEffectChain.mPrimaryEffect.get());
-      nsRefPtr<CompositingRenderTargetOGL> surface
+      RefPtr<CompositingRenderTargetOGL> surface
         = static_cast<CompositingRenderTargetOGL*>(effectRenderTarget->mRenderTarget.get());
 
       surface->BindTexture(LOCAL_GL_TEXTURE0, mFBOTextureTarget);
@@ -1423,7 +1423,7 @@ CompositorOGL::EndFrame()
     } else {
       mWidget->GetBounds(rect);
     }
-    nsRefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(rect.width, rect.height), SurfaceFormat::B8G8R8A8);
+    RefPtr<DrawTarget> target = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(rect.width, rect.height), SurfaceFormat::B8G8R8A8);
     if (target) {
       CopyToTarget(target, nsIntPoint(), Matrix());
       WriteSnapshotToDumpFile(this, target);
@@ -1494,7 +1494,7 @@ CompositorOGL::SetDispAcquireFence(Layer* aLayer, nsIWidget* aWidget)
     return;
   }
   nsWindow* window = static_cast<nsWindow*>(aWidget);
-  nsRefPtr<FenceHandle::FdObj> fence = new FenceHandle::FdObj(
+  RefPtr<FenceHandle::FdObj> fence = new FenceHandle::FdObj(
       window->GetScreen()->GetPrevDispAcquireFd());
   mReleaseFenceHandle.Merge(FenceHandle(fence));
 }
@@ -1570,7 +1570,7 @@ CompositorOGL::CopyToTarget(DrawTarget* aTarget, const nsIntPoint& aTopLeft, con
     mGLContext->fReadBuffer(LOCAL_GL_BACK);
   }
 
-  nsRefPtr<DataSourceSurface> source =
+  RefPtr<DataSourceSurface> source =
         Factory::CreateDataSourceSurface(rect.Size(), gfx::SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!source)) {
     return;

@@ -631,7 +631,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       unreadable = 0;
     }
 
-    nsRefPtr<mozilla::layers::TextureClient> textureClient;
+    RefPtr<mozilla::layers::TextureClient> textureClient;
     if ((mVideoBuffer->graphicBuffer().get())) {
       textureClient = mNativeWindow->getTextureClientFromBuffer(mVideoBuffer->graphicBuffer().get());
     }

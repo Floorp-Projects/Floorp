@@ -65,9 +65,9 @@ public:
   }
 
   static already_AddRefed<DataSourceSurface>
-  CopySurface(const nsRefPtr<SourceSurface>& aSurface)
+  CopySurface(const RefPtr<SourceSurface>& aSurface)
   {
-    nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
     if (!data) {
       return nullptr;
     }
@@ -77,7 +77,7 @@ public:
       return nullptr;
     }
 
-    nsRefPtr<DataSourceSurface> copy =
+    RefPtr<DataSourceSurface> copy =
       Factory::CreateDataSourceSurfaceWithStride(data->GetSize(),
                                                  data->GetFormat(),
                                                  read.GetStride());
@@ -120,12 +120,12 @@ public:
       return;
     }
 
-    nsRefPtr<SourceSurface> snapshot = mOwningElement->GetSurfaceSnapshot(nullptr);
+    RefPtr<SourceSurface> snapshot = mOwningElement->GetSurfaceSnapshot(nullptr);
     if (!snapshot) {
       return;
     }
 
-    nsRefPtr<DataSourceSurface> copy = CopySurface(snapshot);
+    RefPtr<DataSourceSurface> copy = CopySurface(snapshot);
 
     mOwningElement->SetFrameCapture(copy.forget());
     mOwningElement->MarkContextCleanForFrameCapture();
@@ -175,7 +175,7 @@ private:
 
   bool mRegistered;
   HTMLCanvasElement* const mOwningElement;
-  nsRefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<nsRefreshDriver> mRefreshDriver;
 };
 
 // ---------------------------------------------------------------------------
@@ -1201,7 +1201,7 @@ HTMLCanvasElement::IsFrameCaptureRequested() const
 void
 HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
 {
-  nsRefPtr<SourceSurface> surface = aSurface;
+  RefPtr<SourceSurface> surface = aSurface;
 
   CairoImage::Data imageData;
   imageData.mSize = surface->GetSize();

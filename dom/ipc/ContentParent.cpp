@@ -2734,7 +2734,7 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
           }
 
           nsCString text = item.data().get_nsCString();
-          nsRefPtr<gfx::DataSourceSurface> image =
+          mozilla::RefPtr<gfx::DataSourceSurface> image =
             new mozilla::gfx::SourceSurfaceRawData();
           mozilla::gfx::SourceSurfaceRawData* raw =
             static_cast<mozilla::gfx::SourceSurfaceRawData*>(image.get());

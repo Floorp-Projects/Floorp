@@ -136,7 +136,7 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
   NS_ASSERTION(NS_IsMainThread(), "Must be main thread");
 
   if (mSourceSurface) {
-    nsRefPtr<gfx::SourceSurface> surface(mSourceSurface);
+    RefPtr<gfx::SourceSurface> surface(mSourceSurface);
     return surface.forget();
   }
 
@@ -146,12 +146,12 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
 
   gfxImageFormat format = GetOffscreenFormat();
 
-  nsRefPtr<gfx::SourceSurface> surface;
+  RefPtr<gfx::SourceSurface> surface;
   {
     // Create a DrawTarget so that we can own the data inside mDecodeBuffer.
     // We create the target out of mDecodedBuffer, and get a snapshot from it.
     // The draw target is destroyed on scope exit and the surface owns the data.
-    nsRefPtr<gfx::DrawTarget> drawTarget
+    RefPtr<gfx::DrawTarget> drawTarget
       = gfxPlatform::GetPlatform()->CreateDrawTargetForData(mDecodedBuffer,
                                                             mSize,
                                                             mStride,

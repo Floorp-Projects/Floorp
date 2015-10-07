@@ -208,7 +208,7 @@ protected:
 
   layers::ImageContainer* mImageContainer;
   const VideoInfo& mConfig;
-  nsRefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
   nsRefPtr<GLContext> mGLContext;
 };
 

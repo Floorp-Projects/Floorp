@@ -1865,7 +1865,7 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
 
     MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
                "Need BackendType::CAIRO support");
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
         Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                          data,
                                          IntSize(bufW, bufH),

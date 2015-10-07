@@ -357,7 +357,7 @@ private:
 
   nsRefPtr<gfxContext> targetContext;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::COREGRAPHICS)) {
-    nsRefPtr<gfx::DrawTarget> dt =
+    RefPtr<gfx::DrawTarget> dt =
       gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
                                                       gfx::IntSize(backingSize.width,
                                                                    backingSize.height));
@@ -368,7 +368,7 @@ private:
     // debugging.
     targetSurface = new gfxQuartzSurface(aContext, backingSize);
     targetSurface->SetAllowUseAsSource(false);
-    nsRefPtr<gfx::DrawTarget> dt =
+    RefPtr<gfx::DrawTarget> dt =
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
                                                              gfx::IntSize(backingSize.width,
                                                                           backingSize.height));

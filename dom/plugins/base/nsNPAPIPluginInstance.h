@@ -221,7 +221,7 @@ public:
       mSurfaceTexture = nullptr;
     }
 
-    nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
+    mozilla::RefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
     gfxRect mDimensions;
   };
 
@@ -345,8 +345,8 @@ protected:
   bool mFullScreen;
   mozilla::gl::OriginPos mOriginPos;
 
-  nsRefPtr<SharedPluginTexture> mContentTexture;
-  nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
+  mozilla::RefPtr<SharedPluginTexture> mContentTexture;
+  mozilla::RefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
 #endif
 
   enum {

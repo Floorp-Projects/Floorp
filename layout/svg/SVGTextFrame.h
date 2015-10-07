@@ -7,7 +7,7 @@
 #define MOZILLA_SVGTEXTFRAME_H
 
 #include "mozilla/Attributes.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"

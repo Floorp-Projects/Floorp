@@ -67,7 +67,7 @@ protected:
 
     gfx::IntRect mUpdateRect;
     gfx::SurfaceFormat mUpdateFormat;
-    nsRefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+    RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     EGLImage mEGLImage;
     GLuint mTexture;
     EGLSurface mSurface;

@@ -1861,14 +1861,14 @@ WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum
 
 nsresult
 WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                                     nsRefPtr<DataSourceSurface>& imageOut,
+                                                     RefPtr<DataSourceSurface>& imageOut,
                                                      WebGLTexelFormat* format)
 {
    *format = WebGLTexelFormat::None;
 
     if (!res.mSourceSurface)
         return NS_OK;
-    nsRefPtr<DataSourceSurface> data = res.mSourceSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> data = res.mSourceSurface->GetDataSurface();
     if (!data) {
         // SurfaceFromElement lied!
         return NS_OK;

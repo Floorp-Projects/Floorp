@@ -8,7 +8,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
@@ -1075,7 +1075,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsresult rv;
 
-  nsRefPtr<SourceSurface> surface =
+  RefPtr<SourceSurface> surface =
     aImage->GetFrame(imgIContainer::FRAME_FIRST,
                      imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
@@ -1087,7 +1087,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
   MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
              surface->GetFormat() == SurfaceFormat::B8G8R8X8);
 
-  nsRefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
 
   int32_t width = dataSurface->GetSize().width;

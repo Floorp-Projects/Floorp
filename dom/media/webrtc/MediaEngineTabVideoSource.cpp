@@ -6,7 +6,7 @@
 #include "MediaEngineTabVideoSource.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsGlobalWindow.h"
 #include "nsIDOMClientRect.h"
 #include "nsIDocShell.h"
@@ -249,7 +249,7 @@ MediaEngineTabVideoSource::Draw() {
            nsPresContext::CSSPixelsToAppUnits((float)innerHeight));
 
   nsRefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      mData.rwget(),
                                      size,
@@ -264,7 +264,7 @@ MediaEngineTabVideoSource::Draw() {
 
   NS_ENSURE_SUCCESS_VOID(presShell->RenderDocument(r, renderDocFlags, bgColor, context));
 
-  nsRefPtr<SourceSurface> surface = dt->Snapshot();
+  RefPtr<SourceSurface> surface = dt->Snapshot();
   if (!surface) {
     return;
   }

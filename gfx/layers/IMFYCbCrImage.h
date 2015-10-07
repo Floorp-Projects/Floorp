@@ -6,7 +6,7 @@
 #ifndef GFX_IMFYCBCRIMAGE_H
 #define GFX_IMFYCBCRIMAGE_H
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "ImageContainer.h"
 #include "mfidl.h"
 
@@ -32,9 +32,9 @@ protected:
 
   ~IMFYCbCrImage();
 
-  nsRefPtr<IMFMediaBuffer> mBuffer;
-  nsRefPtr<IMF2DBuffer> m2DBuffer;
-  nsRefPtr<TextureClient> mTextureClient;
+  RefPtr<IMFMediaBuffer> mBuffer;
+  RefPtr<IMF2DBuffer> m2DBuffer;
+  RefPtr<TextureClient> mTextureClient;
 };
 
 } // namepace layers

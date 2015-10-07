@@ -46,7 +46,7 @@ already_AddRefed<HRTFDatabaseLoader> HRTFDatabaseLoader::createAndLoadAsynchrono
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsRefPtr<HRTFDatabaseLoader> loader;
+    RefPtr<HRTFDatabaseLoader> loader;
     
     if (!s_loaderMap) {
         s_loaderMap = new nsTHashtable<LoaderByRateEntry>();

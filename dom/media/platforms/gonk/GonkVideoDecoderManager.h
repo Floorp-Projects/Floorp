@@ -10,7 +10,7 @@
 #include <set>
 #include "nsRect.h"
 #include "GonkMediaDataDecoder.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "I420ColorConverterHelper.h"
 #include "MediaCodecProxy.h"
 #include <stagefright/foundation/AHandler.h>

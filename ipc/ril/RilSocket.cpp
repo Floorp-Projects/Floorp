@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ipc/UnixSocketConnector.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "RilSocketConsumer.h"
@@ -77,7 +77,7 @@ private:
    * directly from consumer thread. All non-consumer-thread accesses should
    * happen with mIO as container.
    */
-  nsRefPtr<RilSocket> mRilSocket;
+  RefPtr<RilSocket> mRilSocket;
 
   /**
    * If true, do not requeue whatever task we're running

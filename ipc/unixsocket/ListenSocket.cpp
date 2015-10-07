@@ -9,7 +9,7 @@
 #include "ConnectionOrientedSocket.h"
 #include "DataSocket.h"
 #include "ListenSocketConsumer.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 #include "UnixSocketConnector.h"

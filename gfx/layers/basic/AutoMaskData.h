@@ -48,7 +48,7 @@ private:
   }
 
   gfx::Matrix mTransform;
-  nsRefPtr<gfx::SourceSurface> mSurface;
+  RefPtr<gfx::SourceSurface> mSurface;
 
   AutoMoz2DMaskData(const AutoMoz2DMaskData&) = delete;
   AutoMoz2DMaskData& operator=(const AutoMoz2DMaskData&) = delete;

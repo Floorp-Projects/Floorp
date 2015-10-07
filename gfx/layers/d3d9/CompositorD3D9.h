@@ -166,8 +166,8 @@ private:
   /* Widget associated with this layer manager */
   nsIWidget *mWidget;
 
-  nsRefPtr<CompositingRenderTargetD3D9> mDefaultRT;
-  nsRefPtr<CompositingRenderTargetD3D9> mCurrentRT;
+  RefPtr<CompositingRenderTargetD3D9> mDefaultRT;
+  RefPtr<CompositingRenderTargetD3D9> mCurrentRT;
 
   gfx::IntSize mSize;
 

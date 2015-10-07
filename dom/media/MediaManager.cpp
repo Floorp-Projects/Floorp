@@ -2566,7 +2566,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
         }
       }
       nsRefPtr<nsRunnable> mReply;
-      nsRefPtr<MediaEngine> mBackend;
+      RefPtr<MediaEngine> mBackend;
     };
 
     // Post ShutdownTask to execute on mMediaThread and pass in a lambda
@@ -2579,7 +2579,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     // note that this == sSingleton
     nsRefPtr<MediaManager> that(sSingleton);
     // Release the backend (and call Shutdown()) from within the MediaManager thread
-    nsRefPtr<MediaEngine> temp;
+    RefPtr<MediaEngine> temp;
     {
       MutexAutoLock lock(mMutex);
       temp = mBackend.forget();

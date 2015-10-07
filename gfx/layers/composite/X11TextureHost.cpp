@@ -92,13 +92,13 @@ X11TextureHost::GetAsSurface()
   if (!mTextureSource || !mTextureSource->AsSourceBasic()) {
     return nullptr;
   }
-  nsRefPtr<DrawTarget> tempDT =
+  RefPtr<DrawTarget> tempDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
       GetSize(), GetFormat());
   if (!tempDT) {
     return nullptr;
   }
-  nsRefPtr<SourceSurface> surf = mTextureSource->AsSourceBasic()->GetSurface(tempDT);
+  RefPtr<SourceSurface> surf = mTextureSource->AsSourceBasic()->GetSurface(tempDT);
   if (!surf) {
     return nullptr;
   }

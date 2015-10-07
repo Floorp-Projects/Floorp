@@ -281,7 +281,7 @@ CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
 already_AddRefed<DataSourceSurface>
 CreateDataSourceSurfaceByCloning(DataSourceSurface* aSource)
 {
-  nsRefPtr<DataSourceSurface> copy =
+  RefPtr<DataSourceSurface> copy =
     Factory::CreateDataSourceSurface(aSource->GetSize(), aSource->GetFormat(), true);
   if (copy) {
     CopyRect(aSource, copy, IntRect(IntPoint(), aSource->GetSize()), IntPoint());

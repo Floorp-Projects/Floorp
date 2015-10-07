@@ -158,8 +158,8 @@ BasicTextureImage::EndUpdate()
 
     // FIXME: this is the slow boat.  Make me fast (with GLXPixmap?).
 
-    nsRefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
-    nsRefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
+    RefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
+    RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
 
     bool relative = FinishedSurfaceUpdate();
 
@@ -463,7 +463,7 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
             // adjust for tile offset
             aRegion.MoveBy(-xPos, -yPos);
             // forward the actual call
-            nsRefPtr<gfx::DrawTarget> drawTarget = mImages[i]->BeginUpdate(aRegion);
+            RefPtr<gfx::DrawTarget> drawTarget = mImages[i]->BeginUpdate(aRegion);
             // caller expects container space
             aRegion.MoveBy(xPos, yPos);
             // we don't have a temp surface
@@ -503,8 +503,8 @@ TiledTextureImage::EndUpdate()
         return;
     }
 
-    nsRefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
-    nsRefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
+    RefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
+    RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
 
     // upload tiles from temp surface
     for (unsigned i = 0; i < mImages.Length(); i++) {

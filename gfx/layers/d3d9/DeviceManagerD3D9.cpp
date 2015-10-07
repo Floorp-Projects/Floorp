@@ -830,10 +830,10 @@ DeviceManagerD3D9::CreateTexture(const IntSize &aSize,
   if (mDeviceWasRemoved) {
     return nullptr;
   }
-  nsRefPtr<IDirect3DTexture9> result;
+  RefPtr<IDirect3DTexture9> result;
   if (FAILED(device()->CreateTexture(aSize.width, aSize.height,
                                      1, 0, aFormat, aPool,
-                                     getter_AddRefs(result), nullptr))) {
+                                     byRef(result), nullptr))) {
     return nullptr;
   }
 

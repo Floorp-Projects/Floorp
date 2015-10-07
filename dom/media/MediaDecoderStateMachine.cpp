@@ -2225,7 +2225,7 @@ MediaDecoderStateMachine::FinishShutdown()
   // dispatch an event to the main thread to release the decoder and
   // state machine.
   DECODER_LOG("Shutting down state machine task queue");
-  nsRefPtr<DecoderDisposer> disposer = new DecoderDisposer(mDecoder, this);
+  RefPtr<DecoderDisposer> disposer = new DecoderDisposer(mDecoder, this);
   OwnerThread()->BeginShutdown()->Then(AbstractThread::MainThread(), __func__,
                                        disposer.get(),
                                        &DecoderDisposer::OnTaskQueueShutdown,

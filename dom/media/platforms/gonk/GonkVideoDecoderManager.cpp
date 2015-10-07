@@ -228,7 +228,7 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
     picture.height = (mFrameInfo.mHeight * mPicture.height) / mInitialFrame.height;
   }
 
-  nsRefPtr<mozilla::layers::TextureClient> textureClient;
+  RefPtr<mozilla::layers::TextureClient> textureClient;
 
   if ((mVideoBuffer->graphicBuffer().get())) {
     textureClient = mNativeWindow->getTextureClientFromBuffer(mVideoBuffer->graphicBuffer().get());

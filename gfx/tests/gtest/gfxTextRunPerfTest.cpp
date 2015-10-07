@@ -7,7 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -40,7 +40,7 @@ MakeContext ()
 {
     const int size = 200;
 
-    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(IntSize(size, size),
                                          SurfaceFormat::B8G8R8X8);
     nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);

@@ -159,7 +159,7 @@ protected:
    * buffer.
    */
   nsRefPtr<layers::Image> mData;
-  nsRefPtr<gfx::SourceSurface> mSurface;
+  RefPtr<gfx::SourceSurface> mSurface;
 
   /*
    * The mPictureRect is the size of the source image in default, however, if

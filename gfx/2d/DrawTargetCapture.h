@@ -150,7 +150,7 @@ private:
     *(uint32_t*)(nextDrawLocation) = sizeof(T) + sizeof(uint32_t);
     return reinterpret_cast<T*>(nextDrawLocation + sizeof(uint32_t));
   }
-  nsRefPtr<DrawTarget> mRefDT;
+  RefPtr<DrawTarget> mRefDT;
 
   IntSize mSize;
 

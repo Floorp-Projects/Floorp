@@ -313,7 +313,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     snprintf(name, sizeof(name), "%s:stream%d", name_.c_str(),
              (int)streams_.size());
 
-    nsRefPtr<NrIceMediaStream> stream =
+    mozilla::RefPtr<NrIceMediaStream> stream =
         ice_ctx_->CreateStream(static_cast<char *>(name), components);
     ice_ctx_->SetStream(streams_.size(), stream);
 
@@ -815,7 +815,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     // If we are connected, then try to trickle to the
     // other side.
     if (remote_ && remote_->remote_ && (trickle_mode_ != TRICKLE_SIMULATE)) {
-      std::vector<nsRefPtr<NrIceMediaStream> >::iterator it =
+      std::vector<mozilla::RefPtr<NrIceMediaStream> >::iterator it =
           std::find(streams_.begin(), streams_.end(), stream);
       ASSERT_NE(streams_.end(), it);
       size_t index = it - streams_.begin();
@@ -1097,7 +1097,7 @@ class IceTestPeer : public sigslot::has_slots<> {
  private:
   std::string name_;
   nsRefPtr<NrIceCtx> ice_ctx_;
-  std::vector<nsRefPtr<NrIceMediaStream> > streams_;
+  std::vector<mozilla::RefPtr<NrIceMediaStream> > streams_;
   std::map<std::string, std::vector<std::string> > candidates_;
   // Maps from stream id to list of remote trickle candidates
   std::map<size_t, std::vector<SchedulableTrickleCandidate*> >
@@ -1661,7 +1661,7 @@ class PacketFilterTest : public ::testing::Test {
   }
 
   nsCOMPtr<nsIUDPSocketFilter> filter_;
-  nsRefPtr<NrIceCtx> ice_ctx_;
+  RefPtr<NrIceCtx> ice_ctx_;
 };
 }  // end namespace
 

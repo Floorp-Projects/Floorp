@@ -7,7 +7,7 @@
 #define GFX_IMAGESURFACE_H
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "gfxASurface.h"
 #include "nsAutoPtr.h"
 #include "nsSize.h"

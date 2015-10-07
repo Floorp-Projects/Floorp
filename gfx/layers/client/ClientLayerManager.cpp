@@ -505,7 +505,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
                                              gfxContentType::COLOR_ALPHA,
                                              &inSnapshot) &&
           remoteRenderer->SendMakeSnapshot(inSnapshot, bounds)) {
-        nsRefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(inSnapshot);
+        RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(inSnapshot);
         DrawTarget* dt = mShadowTarget->GetDrawTarget();
 
         Rect dstRect(bounds.x, bounds.y, bounds.width, bounds.height);

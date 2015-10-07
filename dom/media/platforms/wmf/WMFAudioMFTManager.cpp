@@ -118,15 +118,15 @@ WMFAudioMFTManager::Init()
 {
   NS_ENSURE_TRUE(mStreamType != Unknown, false);
 
-  nsRefPtr<MFTDecoder> decoder(new MFTDecoder());
+  RefPtr<MFTDecoder> decoder(new MFTDecoder());
 
   HRESULT hr = decoder->Create(GetMFTGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   // Setup input/output media types
-  nsRefPtr<IMFMediaType> inputType;
+  RefPtr<IMFMediaType> inputType;
 
-  hr = wmf::MFCreateMediaType(getter_AddRefs(inputType));
+  hr = wmf::MFCreateMediaType(byRef(inputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
@@ -151,8 +151,8 @@ WMFAudioMFTManager::Init()
     NS_ENSURE_TRUE(SUCCEEDED(hr), false);
   }
 
-  nsRefPtr<IMFMediaType> outputType;
-  hr = wmf::MFCreateMediaType(getter_AddRefs(outputType));
+  RefPtr<IMFMediaType> outputType;
+  hr = wmf::MFCreateMediaType(byRef(outputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
@@ -185,7 +185,7 @@ WMFAudioMFTManager::UpdateOutputType()
 {
   HRESULT hr;
 
-  nsRefPtr<IMFMediaType> type;
+  RefPtr<IMFMediaType> type;
   hr = mDecoder->GetOutputMediaType(type);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -203,7 +203,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
                            nsRefPtr<MediaData>& aOutData)
 {
   aOutData = nullptr;
-  nsRefPtr<IMFSample> sample;
+  RefPtr<IMFSample> sample;
   HRESULT hr;
   int typeChangeCount = 0;
   while (true) {
@@ -226,8 +226,8 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
 
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  nsRefPtr<IMFMediaBuffer> buffer;
-  hr = sample->ConvertToContiguousBuffer(getter_AddRefs(buffer));
+  RefPtr<IMFMediaBuffer> buffer;
+  hr = sample->ConvertToContiguousBuffer(byRef(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   BYTE* data = nullptr; // Note: *data will be owned by the IMFMediaBuffer, we don't need to free it.

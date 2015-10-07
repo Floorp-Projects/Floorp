@@ -399,7 +399,7 @@ MediaKeySession::DispatchKeyError(uint32_t aSystemCode)
   EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyError() systemCode=%u.",
           this, NS_ConvertUTF16toUTF8(mSessionId).get(), aSystemCode);
 
-  nsRefPtr<MediaKeyError> event(new MediaKeyError(this, aSystemCode));
+  RefPtr<MediaKeyError> event(new MediaKeyError(this, aSystemCode));
   nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();

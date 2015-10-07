@@ -63,7 +63,7 @@ private:
     // and azimuthBlend which is an interpolation value from 0 -> 1.
     int calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azimuthBlend);
 
-    nsRefPtr<HRTFDatabaseLoader> m_databaseLoader;
+    mozilla::RefPtr<HRTFDatabaseLoader> m_databaseLoader;
 
     float m_sampleRate;
 

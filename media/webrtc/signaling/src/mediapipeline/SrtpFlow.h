@@ -9,7 +9,7 @@
 
 #include "ssl.h"
 #include "sslproto.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 
 typedef struct srtp_policy_t srtp_policy_t;
@@ -32,7 +32,7 @@ class SrtpFlow {
  public:
 
 
-  static nsRefPtr<SrtpFlow> Create(int cipher_suite,
+  static mozilla::RefPtr<SrtpFlow> Create(int cipher_suite,
                                           bool inbound,
                                           const void *key,
                                           size_t key_len);

@@ -20,7 +20,7 @@
 
 #include "qcms.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "GfxInfoCollector.h"
 
 #include "mozilla/layers/CompositorTypes.h"
@@ -717,7 +717,7 @@ protected:
     // Hardware vsync source. Only valid on parent process
     nsRefPtr<mozilla::gfx::VsyncSource> mVsyncSource;
 
-    nsRefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
+    mozilla::RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
 
 private:
     /**
@@ -765,8 +765,8 @@ private:
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     mozilla::widget::GfxInfoCollector<gfxPlatform> mApzSupportCollector;
 
-    nsRefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
-    nsRefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
+    mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
+    mozilla::RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
 
     // Backend that we are compositing with. NONE, if no compositor has been
     // created yet.

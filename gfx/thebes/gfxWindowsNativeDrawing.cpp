@@ -269,7 +269,7 @@ gfxWindowsNativeDrawing::PaintToContext()
             NS_ERROR("Alpha recovery failure");
             return;
         }
-        nsRefPtr<DataSourceSurface> source =
+        RefPtr<DataSourceSurface> source =
             Factory::CreateWrappingDataSourceSurface(black->Data(),
                                                      black->Stride(),
                                                      black->GetSize(),

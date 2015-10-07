@@ -99,7 +99,7 @@ public:
    * new images from feImage filter primitive elements to the aInputImages list.
    */
   nsresult BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
-                           nsTArray<nsRefPtr<SourceSurface>>& aInputImages);
+                           nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages);
 
   /**
    * Returns the user specified "filter region", in the filtered element's user

@@ -3634,7 +3634,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   nsIntRect itemVisibleRect =
     aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
 
-  nsRefPtr<DrawTarget> tempDT;
+  RefPtr<DrawTarget> tempDT;
   if (gfxUtils::sDumpPainting) {
     tempDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
                                       itemVisibleRect.Size(),
@@ -3666,7 +3666,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting && tempDT) {
-    nsRefPtr<SourceSurface> surface = tempDT->Snapshot();
+    RefPtr<SourceSurface> surface = tempDT->Snapshot();
     DumpPaintedImage(aItem, surface);
 
     DrawTarget* drawTarget = aContext->GetDrawTarget();
@@ -5532,7 +5532,7 @@ static void DebugPaintItem(DrawTarget& aDrawTarget,
   Rect bounds = NSRectToRect(aItem->GetBounds(aBuilder, &snap),
                              aPresContext->AppUnitsPerDevPixel());
 
-  nsRefPtr<DrawTarget> tempDT =
+  RefPtr<DrawTarget> tempDT =
     aDrawTarget.CreateSimilarDrawTarget(IntSize(bounds.width, bounds.height),
                                         SurfaceFormat::B8G8R8A8);
   nsRefPtr<gfxContext> context = new gfxContext(tempDT);
@@ -5540,7 +5540,7 @@ static void DebugPaintItem(DrawTarget& aDrawTarget,
   nsRenderingContext ctx(context);
 
   aItem->Paint(aBuilder, &ctx);
-  nsRefPtr<SourceSurface> surface = tempDT->Snapshot();
+  RefPtr<SourceSurface> surface = tempDT->Snapshot();
   DumpPaintedImage(aItem, surface);
 
   aDrawTarget.DrawSurface(surface, bounds, Rect(Point(0,0), bounds.Size()));
@@ -6059,7 +6059,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     IntSize surfaceSizeInt(NSToIntCeil(surfaceSize.width),
                            NSToIntCeil(surfaceSize.height));
     // no existing mask image, so build a new one
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
       aLayer->Manager()->CreateOptimalMaskDrawTarget(surfaceSizeInt);
 
     // fail if we can't get the right surface
@@ -6078,7 +6078,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
                                              0,
                                              aRoundedRectClipCount);
 
-    nsRefPtr<SourceSurface> surface = dt->Snapshot();
+    RefPtr<SourceSurface> surface = dt->Snapshot();
 
     // build the image and container
     container = aLayer->Manager()->CreateImageContainer();

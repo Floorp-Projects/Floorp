@@ -547,7 +547,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     else if (newSurface.type() == SurfaceDescriptor::TIOSurfaceDescriptor) {
         IOSurfaceDescriptor iodesc = newSurface.get_IOSurfaceDescriptor();
 
-        nsRefPtr<MacIOSurface> newIOSurface =
+        RefPtr<MacIOSurface> newIOSurface =
           MacIOSurface::LookupSurface(iodesc.surfaceId(),
                                       iodesc.contentsScaleFactor());
 
@@ -800,7 +800,7 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
                "Update outside of background area");
 #endif
 
-    nsRefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
+    RefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(mBackground, gfx::IntSize(sz.width, sz.height));
     nsRefPtr<gfxContext> ctx = new gfxContext(dt);
     ctx.forget(aCtx);

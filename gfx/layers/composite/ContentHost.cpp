@@ -62,7 +62,7 @@ ContentHostTexture::Composite(LayerComposite* aLayer,
     return;
   }
 
-  nsRefPtr<TexturedEffect> effect = CreateTexturedEffect(mTextureSource.get(),
+  RefPtr<TexturedEffect> effect = CreateTexturedEffect(mTextureSource.get(),
                                                        mTextureSourceOnWhite.get(),
                                                        aFilter, true,
                                                        GetRenderState());

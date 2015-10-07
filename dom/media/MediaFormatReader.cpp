@@ -850,7 +850,7 @@ MediaFormatReader::ScheduleUpdate(TrackType aTrack)
   }
   LOGV("SchedulingUpdate(%s)", TrackTypeToStr(aTrack));
   decoder.mUpdateScheduled = true;
-  nsRefPtr<nsIRunnable> task(
+  RefPtr<nsIRunnable> task(
     NS_NewRunnableMethodWithArg<TrackType>(this, &MediaFormatReader::Update, aTrack));
   OwnerThread()->Dispatch(task.forget());
 }
@@ -1284,7 +1284,7 @@ MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
     return;
   }
 
-  nsRefPtr<nsIRunnable> task =
+  RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArgs<TrackType, MediaData*>(
       this, &MediaFormatReader::NotifyNewOutput, aTrack, aSample);
   OwnerThread()->Dispatch(task.forget());
@@ -1293,7 +1293,7 @@ MediaFormatReader::Output(TrackType aTrack, MediaData* aSample)
 void
 MediaFormatReader::DrainComplete(TrackType aTrack)
 {
-  nsRefPtr<nsIRunnable> task =
+  RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyDrainComplete, aTrack);
   OwnerThread()->Dispatch(task.forget());
@@ -1302,7 +1302,7 @@ MediaFormatReader::DrainComplete(TrackType aTrack)
 void
 MediaFormatReader::InputExhausted(TrackType aTrack)
 {
-  nsRefPtr<nsIRunnable> task =
+  RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyInputExhausted, aTrack);
   OwnerThread()->Dispatch(task.forget());
@@ -1311,7 +1311,7 @@ MediaFormatReader::InputExhausted(TrackType aTrack)
 void
 MediaFormatReader::Error(TrackType aTrack)
 {
-  nsRefPtr<nsIRunnable> task =
+  RefPtr<nsIRunnable> task =
     NS_NewRunnableMethodWithArg<TrackType>(
       this, &MediaFormatReader::NotifyError, aTrack);
   OwnerThread()->Dispatch(task.forget());
@@ -1425,7 +1425,7 @@ MediaFormatReader::Seek(int64_t aTime, int64_t aUnused)
 
   nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
-  nsRefPtr<nsIRunnable> task(
+  RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaFormatReader::AttemptSeek));
   OwnerThread()->Dispatch(task.forget());
 

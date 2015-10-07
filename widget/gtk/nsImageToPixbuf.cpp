@@ -9,11 +9,12 @@
 
 #include "imgIContainer.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
 
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SurfaceFormat;
+using mozilla::RefPtr;
 
 NS_IMPL_ISUPPORTS(nsImageToPixbuf, nsIImageToPixbuf)
 
@@ -36,7 +37,7 @@ nsImageToPixbuf::ConvertImageToPixbuf(imgIContainer* aImage)
 GdkPixbuf*
 nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
 {
-    nsRefPtr<SourceSurface> surface =
+    RefPtr<SourceSurface> surface =
       aImage->GetFrame(imgIContainer::FRAME_CURRENT,
                        imgIContainer::FLAG_SYNC_DECODE);
 
@@ -72,7 +73,7 @@ nsImageToPixbuf::SourceSurfaceToPixbuf(SourceSurface* aSurface,
     uint32_t destStride = gdk_pixbuf_get_rowstride (pixbuf);
     guchar* destPixels = gdk_pixbuf_get_pixels (pixbuf);
 
-    nsRefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
     DataSourceSurface::MappedSurface map;
     if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map))
         return nullptr;
