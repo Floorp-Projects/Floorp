@@ -4,7 +4,7 @@
 
 package org.mozilla.search;
 
-import android.app.Activity;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -63,13 +63,13 @@ public class PreSearchFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
-        if (activity instanceof AcceptsSearchQuery) {
-            searchListener = (AcceptsSearchQuery) activity;
+        if (context instanceof AcceptsSearchQuery) {
+            searchListener = (AcceptsSearchQuery) context;
         } else {
-            throw new ClassCastException(activity.toString() + " must implement AcceptsSearchQuery.");
+            throw new ClassCastException(context.toString() + " must implement AcceptsSearchQuery.");
         }
     }
 
