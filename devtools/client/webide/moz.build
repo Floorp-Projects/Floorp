@@ -12,12 +12,10 @@ DIRS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/browser.ini',
-    'test/sidebars/browser.ini'
+    'test/browser.ini'
 ]
 MOCHITEST_CHROME_MANIFESTS += [
-    'test/chrome.ini',
-    'test/sidebars/chrome.ini'
+    'test/chrome.ini'
 ]
 
 JS_PREFERENCE_FILES += [

@@ -98,7 +98,7 @@ function* testAddProperty(view) {
   info("Entering a value and bluring the field to expect a rule change");
   editor.input.value = "center";
   let onBlur = once(editor.input, "blur");
-  onRuleViewChanged = view.once("ruleview-changed");
+  onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
   editor.input.blur();
   yield onBlur;
   yield onRuleViewChanged;

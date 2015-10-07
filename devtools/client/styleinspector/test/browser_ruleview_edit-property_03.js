@@ -33,8 +33,10 @@ add_task(function*() {
   yield focusEditableField(view, propEditor.valueSpan);
 
   info("Deleting all the text out of a value field");
+  let waitForUpdates = view.once("ruleview-changed");
   yield sendCharsAndWaitForFocus(view, ruleEditor.element,
     ["VK_DELETE", "VK_RETURN"]);
+  yield waitForUpdates;
 
   info("Pressing enter a couple times to cycle through editors");
   yield sendCharsAndWaitForFocus(view, ruleEditor.element, ["VK_RETURN"]);
@@ -48,9 +50,7 @@ add_task(function*() {
 function* sendCharsAndWaitForFocus(view, element, chars) {
   let onFocus = once(element, "focus", true);
   for (let ch of chars) {
-    let onRuleViewChanged = view.once("ruleview-changed");
     EventUtils.sendChar(ch, element.ownerDocument.defaultView);
-    yield onRuleViewChanged;
   }
   yield onFocus;
 }

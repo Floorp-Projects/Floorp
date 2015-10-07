@@ -133,65 +133,15 @@
       </hbox>
 
       <hbox id="panel-buttons-container">
-        <toolbarbutton id="project-panel-button" class="panel-button no-project" command="cmd_showProjectPanel">
-          <image class="panel-button-image"/>
-          <label class="panel-button-label" value="&projectButton_label;" crop="end"/>
-          <image class="panel-button-anchor"/>
-        </toolbarbutton>
         <spacer flex="1"/>
-        <toolbarbutton id="runtime-panel-button" class="panel-button" command="cmd_showRuntimePanel">
+        <toolbarbutton id="runtime-panel-button" class="panel-button">
           <image class="panel-button-image"/>
           <label class="panel-button-label" value="&runtimeButton_label;"/>
-          <image class="panel-button-anchor"/>
         </toolbarbutton>
       </hbox>
 
     </vbox>
   </toolbar>
-
-  <popupset>
-
-    <!-- App panel -->
-    <panel id="project-panel" type="arrow" position="bottomcenter topleft" consumeoutsideclicks="true" animate="false">
-      <vbox flex="1" id="project-panel-box">
-        <toolbarbutton class="panel-item project-panel-item-newapp" command="cmd_newApp"/>
-        <toolbarbutton class="panel-item project-panel-item-openpackaged" command="cmd_importPackagedApp"/>
-        <toolbarbutton class="panel-item project-panel-item-openhosted" command="cmd_importHostedApp"/>
-        <label class="panel-header">&projectPanel_myProjects;</label>
-        <vbox id="project-panel-projects"></vbox>
-        <label class="panel-header" id="panel-header-runtimeapps" hidden="true">&projectPanel_runtimeApps;</label>
-        <vbox flex="1" id="project-panel-runtimeapps"/>
-        <label class="panel-header" id="panel-header-tabs" hidden="true">&projectPanel_tabs;</label>
-        <vbox flex="1" id="project-panel-tabs"/>
-      </vbox>
-    </panel>
-
-    <!-- Runtime panel -->
-    <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true" animate="false">
-      <vbox flex="1" id="runtime-panel-box">
-        <label class="panel-header">&runtimePanel_usb;</label>
-        <toolbarbutton class="panel-item" label="&runtimePanel_nousbdevice;" id="runtime-panel-nousbdevice" command="cmd_showTroubleShooting"/>
-        <toolbarbutton class="panel-item" label="&runtimePanel_noadbhelper;" id="runtime-panel-noadbhelper" command="cmd_showAddons"/>
-        <vbox id="runtime-panel-usb"></vbox>
-        <label class="panel-header" id="runtime-header-wifi">&runtimePanel_wifi;</label>
-        <vbox id="runtime-panel-wifi"></vbox>
-        <label class="panel-header">&runtimePanel_simulator;</label>
-        <vbox id="runtime-panel-simulator"></vbox>
-        <toolbarbutton class="panel-item" label="&runtimePanel_installsimulator;" id="runtime-panel-installsimulator" command="cmd_showAddons"/>
-        <label class="panel-header">&runtimePanel_other;</label>
-        <vbox id="runtime-panel-other"></vbox>
-        <vbox flex="1" id="runtime-actions">
-          <toolbarbutton class="panel-item" id="runtime-details" command="cmd_showRuntimeDetails"/>
-          <toolbarbutton class="panel-item" id="runtime-permissions" command="cmd_showPermissionsTable"/>
-          <toolbarbutton class="panel-item" id="runtime-preferences" command="cmd_showDevicePrefs"/>
-          <toolbarbutton class="panel-item" id="runtime-settings" command="cmd_showSettings"/>
-          <toolbarbutton class="panel-item" id="runtime-screenshot"  command="cmd_takeScreenshot"/>
-          <toolbarbutton class="panel-item" id="runtime-disconnect"  command="cmd_disconnectRuntime"/>
-        </vbox>
-      </vbox>
-    </panel>
-
-  </popupset>
 
   <notificationbox flex="1" id="notificationbox">
     <div flex="1" id="deck-panels">

@@ -855,7 +855,7 @@ pref("devtools.debugger.forbid-certified-apps", true);
 pref("devtools.apps.forbidden-permissions", "embed-apps,engineering-mode,embed-widgets");
 
 // DevTools default color unit
-pref("devtools.defaultColorUnit", "hex");
+pref("devtools.defaultColorUnit", "authored");
 
 // Used for devtools debugging
 pref("devtools.dump.emit", false);

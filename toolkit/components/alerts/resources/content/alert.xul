@@ -32,6 +32,8 @@
       <vbox id="alertTextBox" class="alertTextBox">
         <label id="alertTitleLabel" class="alertTitle plain"/>
         <label id="alertTextLabel" class="alertText plain"/>
+        <spacer flex="1"/>
+        <label id="alertSourceLabel" class="alertSource plain"/>
       </vbox>
     </box>
 

@@ -52,13 +52,13 @@ addTest(function modifyProperties() {
     let changes = elementStyle.startModifyingProperties();
 
     // Change an existing property...
-    changes.setProperty("color", "black");
+    changes.setProperty(-1, "color", "black");
     // Create a new property
-    changes.setProperty("background-color", "green");
+    changes.setProperty(-1, "background-color", "green");
 
     // Create a new property and then change it immediately.
-    changes.setProperty("border", "1px solid black");
-    changes.setProperty("border", "2px solid black");
+    changes.setProperty(-1, "border", "1px solid black");
+    changes.setProperty(-1, "border", "2px solid black");
 
     return changes.apply();
   }).then(() => {
@@ -67,9 +67,9 @@ addTest(function modifyProperties() {
 
     // Remove all the properties
     let changes = elementStyle.startModifyingProperties();
-    changes.removeProperty("color");
-    changes.removeProperty("background-color");
-    changes.removeProperty("border");
+    changes.removeProperty(-1, "color");
+    changes.removeProperty(-1, "background-color");
+    changes.removeProperty(-1, "border");
 
     return changes.apply();
   }).then(() => {

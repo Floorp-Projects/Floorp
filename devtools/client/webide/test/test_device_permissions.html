@@ -20,7 +20,6 @@
 
         Task.spawn(function* () {
           const { DebuggerServer } = require("devtools/server/main");
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
@@ -30,16 +29,18 @@
           let win = yield openWebIDE();
 
           let permIframe = win.document.querySelector("#deck-panel-permissionstable");
+          let docRuntime = getRuntimeDocument(win);
+          let winRuntime = getRuntimeWindow(win);
 
           yield connectToLocalRuntime(win);
 
-          let perm = win.document.querySelector("#cmd_showPermissionsTable");
+          let perm = docRuntime.querySelector("#runtime-permissions");
 
           ok(!perm.hasAttribute("disabled"), "perm cmd enabled");
 
           let deck = win.document.querySelector("#deck");
 
-          win.Cmds.showPermissionsTable();
+          winRuntime.runtimeList.showPermissionsTable();
           is(deck.selectedPanel, permIframe, "permission iframe selected");
 
           yield nextTick();

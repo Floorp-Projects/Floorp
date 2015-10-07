@@ -42,17 +42,16 @@
         }
 
         Task.spawn(function* () {
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
-
           let win = yield openWebIDE(false);
 
           yield Simulators._load();
 
-          let find = win.document.querySelector.bind(win.document);
-          let findAll = win.document.querySelectorAll.bind(win.document);
+          let docRuntime = getRuntimeDocument(win);
+          let find = win.document.querySelector.bind(docRuntime);
+          let findAll = win.document.querySelectorAll.bind(docRuntime);
 
           let simulatorList = find("#runtime-panel-simulator");
-          let simulatorPanel = find("#deck-panel-simulator");
+          let simulatorPanel = win.document.querySelector("#deck-panel-simulator");
 
           // Hack SimulatorProcesses to spy on simulation parameters.
 
@@ -119,8 +118,7 @@
           // Configure the fake 1.0 simulator.
 
           simulatorList.querySelectorAll(".configure-button")[0].click();
-
-          is(find("#deck").selectedPanel, simulatorPanel, "Simulator deck panel is selected");
+          is(win.document.querySelector("#deck").selectedPanel, simulatorPanel, "Simulator deck panel is selected");
 
           yield lazyIframeIsLoaded(simulatorPanel);
 
@@ -140,12 +138,12 @@
 
           // Test `name`.
 
-          is(form.name.value, find(".runtime-panel-item-simulator").label, "Original simulator name");
+          is(form.name.value, find(".runtime-panel-item-simulator").textContent, "Original simulator name");
 
           let customName = "CustomFox ";
           yield set(form.name, customName + "1.0");
 
-          is(find(".runtime-panel-item-simulator").label, form.name.value, "Updated simulator name");
+          is(find(".runtime-panel-item-simulator").textContent, form.name.value, "Updated simulator name");
 
           // Test `version`.
 
@@ -261,17 +259,17 @@
 
           // Test `name`.
 
-          is(form.name.value, findAll(".runtime-panel-item-simulator")[1].label, "Original simulator name");
+          is(form.name.value, findAll(".runtime-panel-item-simulator")[1].textContent, "Original simulator name");
 
           yield set(form.name, customName + "2.0");
 
-          is(findAll(".runtime-panel-item-simulator")[1].label, form.name.value, "Updated simulator name");
+          is(findAll(".runtime-panel-item-simulator")[1].textContent, form.name.value, "Updated simulator name");
 
           yield set(form.version, sim10.addonID);
 
           ok(form.name.value !== customName + "1.0", "Conflicting simulator name was deduplicated");
 
-          is(form.name.value, findAll(".runtime-panel-item-simulator")[1].label, "Deduplicated simulator name stayed consistent");
+          is(form.name.value, findAll(".runtime-panel-item-simulator")[1].textContent, "Deduplicated simulator name stayed consistent");
 
           yield set(form.version, sim20.addonID);
 
@@ -342,7 +340,7 @@
 
           doc.querySelector("#close").click();
 
-          ok(!find("#deck").selectedPanel, "No panel selected");
+          ok(!win.document.querySelector("#deck").selectedPanel, "No panel selected");
 
           yield closeWebIDE(win);
 

@@ -609,6 +609,7 @@
 
           this._updateFindUI();
           if (this.hidden) {
+            this.removeAttribute("noanim");
             this.hidden = false;
 
             this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
@@ -627,10 +628,13 @@
         - Closes the findbar.
         -->
       <method name="close">
+        <parameter name="aNoAnim"/>
         <body><![CDATA[
           if (this.hidden)
             return;
 
+          if (aNoAnim)
+            this.setAttribute("noanim", true);
           this.hidden = true;
 
           this.browser.finder.focusContent();

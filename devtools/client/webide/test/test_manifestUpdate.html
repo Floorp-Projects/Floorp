@@ -21,8 +21,8 @@
         let {TextDecoder, OS}  = Cu.import("resource://gre/modules/osfile.jsm", {});
 
         Task.spawn(function* () {
-            Services.prefs.setBoolPref("devtools.webide.sidebars", false);
             let win = yield openWebIDE();
+            let winProject = getProjectWindow(win);
             let AppManager = win.AppManager;
 
             function isProjectMarkedAsValid() {
@@ -32,7 +32,7 @@
 
             let packagedAppLocation = getTestFilePath("app");
 
-            yield win.projectList.importPackagedApp(packagedAppLocation);
+            yield winProject.projectList.importPackagedApp(packagedAppLocation);
             yield waitForUpdate(win, "details");
 
             let project = win.AppManager.selectedProject;
@@ -90,8 +90,6 @@
             SimpleTest.finish();
         });
       }
-
-
     </script>
   </body>
 </html>

@@ -38,8 +38,12 @@ function* simpleInherit(inspector, view) {
   is(inheritRule.selectorText, "#test2",
     "Inherited rule should be the one that includes inheritable properties.");
   ok(!!inheritRule.inherited, "Rule should consider itself inherited.");
-  is(inheritRule.textProps.length, 1,
-    "Should only display one inherited style");
-  let inheritProp = inheritRule.textProps[0];
+  is(inheritRule.textProps.length, 2,
+    "Rule should have two styles");
+  let bgcProp = inheritRule.textProps[0];
+  is(bgcProp.name, "background-color",
+     "background-color property should exist");
+  ok(bgcProp.invisible, "background-color property should be invisible");
+  let inheritProp = inheritRule.textProps[1];
   is(inheritProp.name, "color", "color should have been inherited.");
 }
