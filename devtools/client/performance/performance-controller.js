@@ -24,7 +24,7 @@ loader.lazyRequireGetter(this, "EventEmitter",
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "system",
-  "devtools/shared/shared/system");
+  "devtools/shared/system");
 
 // Logic modules
 

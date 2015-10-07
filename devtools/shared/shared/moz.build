@@ -13,7 +13,6 @@ DevToolsModules(
   'indentation.js',
   'memory.js',
   'profiler.js',
-  'system.js',
   'timeline.js',
   'worker-helper.js',
   'worker.js'

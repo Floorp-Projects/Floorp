@@ -32,7 +32,7 @@ loader.lazyRequireGetter(this, "mapRecordingOptions",
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/shared/shared/system", true);
+  "devtools/shared/system", true);
 
 const PROFILER_EVENTS = [
   "console-api-profiler",

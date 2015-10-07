@@ -9,7 +9,7 @@ var appConstants;
 // available in xpcshell tests. This is ok, we can easily polyfill the
 // values that we need.
 try {
-  const system = devtools.require("devtools/shared/shared/system");
+  const system = devtools.require("devtools/shared/system");
   appConstants = system.constants;
 }
 catch(e) {
