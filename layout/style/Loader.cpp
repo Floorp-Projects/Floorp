@@ -941,7 +941,7 @@ SheetLoadData::OnStreamComplete(nsIUnicharStreamLoader* aLoader,
 
   SRIMetadata sriMetadata = mSheet->GetIntegrity();
   if (!sriMetadata.IsEmpty() &&
-      NS_FAILED(SRICheck::VerifyIntegrity(sriMetadata, httpChannel,
+      NS_FAILED(SRICheck::VerifyIntegrity(sriMetadata, aLoader,
                                           mSheet->GetCORSMode(), aBuffer,
                                           mLoader->mDocument))) {
     LOG(("  Load was blocked by SRI"));

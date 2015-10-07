@@ -8,11 +8,17 @@
   <script type="application/javascript">
     function check_styles() {
       var redText = document.getElementById('red-text');
-      var blackText = document.getElementById('black-text');
+      var blueText = document.getElementById('blue-text-element');
+      var blackText1 = document.getElementById('black-text');
+      var blackText2 = document.getElementById('black-text-2');
       var redTextColor = window.getComputedStyle(redText, null).getPropertyValue('color');
-      var blackTextColor = window.getComputedStyle(blackText, null).getPropertyValue('color');
+      var blueTextColor = window.getComputedStyle(blueText, null).getPropertyValue('color');
+      var blackTextColor1 = window.getComputedStyle(blackText1, null).getPropertyValue('color');
+      var blackTextColor2 = window.getComputedStyle(blackText2, null).getPropertyValue('color');
       ok(redTextColor == 'rgb(255, 0, 0)', "The first part should be red.");
-      ok(blackTextColor == 'rgb(0, 0, 0)', "The second part should still be black.");
+      ok(blueTextColor == 'rgb(0, 0, 255)', "The second part should be blue.");
+      ok(blackTextColor1 == 'rgb(0, 0, 0)', "The second last part should still be black.");
+      ok(blackTextColor2 == 'rgb(0, 0, 0)', "The last part should still be black.");
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -42,6 +48,19 @@
     function bad_incorrectHashLoaded() {
       ok(false, "We should not load stylesheets with hashes that do not match the content!");
     }
+
+    function good_validBlobLoaded() {
+      ok(true, "A stylesheet was loaded successfully from a blob: URL with the right hash.");
+    }
+    function bad_validBlobBlocked() {
+      ok(false, "We should load stylesheets using blob: URLs with the right hash!");
+    }
+    function good_invalidBlobBlocked() {
+      ok(true, "A stylesheet was blocked successfully from a blob: URL with an invalid hash.");
+    }
+    function bad_invalidBlobLoaded() {
+      ok(false, "We should not load stylesheets using blob: URLs when they have the wrong hash!");
+    }
   </script>
 
   <!-- valid sha256 hash. should trigger onload -->
@@ -63,8 +82,39 @@
         onload="bad_incorrectHashLoaded()">
 </head>
 <body>
+
+<!-- valid sha256 for a blob: URL -->
+<script>
+   var blob = new Blob(['.blue-text{color:blue}'],
+                       {type: 'text/css'});
+   var link = document.createElement('link');
+   link.rel = 'stylesheet';
+   link.href = window.URL.createObjectURL(blob);
+   link.setAttribute('integrity', 'sha256-/F+EMVnTWYJOAzN5n7/21idiydu6nRi33LZOISZtwOM=');
+   link.onerror = bad_validBlobBlocked;
+   link.onload = good_validBlobLoaded;
+   document.body.appendChild(link);
+</script>
+
+<!-- invalid sha256 for a blob: URL -->
+<script>
+   var blob = new Blob(['.black-text{color:blue}'],
+                       {type: 'text/css'});
+   var link = document.createElement('link');
+   link.rel = 'stylesheet';
+   link.href = window.URL.createObjectURL(blob);
+   link.setAttribute('integrity', 'sha256-/F+EMVnTWYJOAzN5n7/21idiydu6nRi33LZOISZtwOM=');
+   link.onerror = good_invalidBlobBlocked;
+   link.onload = bad_invalidBlobLoaded;
+   document.body.appendChild(link);
+</script>
+
 <p><span id="red-text">This should be red </span> and
-  <span id="black-text">this should stay black.</p>
+  <span class="blue-text" id="blue-text-element">this should be blue.</span>
+  However, <span id="black-text">this should stay black</span> and
+  <span class="black-text" id="black-text-2">this should also stay black.</span>
+</p>
+
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
