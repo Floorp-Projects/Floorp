@@ -23,8 +23,7 @@ function runTest() {
   document.body.appendChild(iframe);
 
   var context = { 'url': 'http://example.org',
-                  'appId': SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-                  'isInBrowserElement': true };
+                  'originAttributes': {'inBrowser': true} };
   SpecialPowers.pushPermissions([
     {'type': 'browser', 'allow': 1, 'context': context},
     {'type': 'embed-apps', 'allow': 1, 'context': context}

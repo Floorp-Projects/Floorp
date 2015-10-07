@@ -344,8 +344,9 @@ function testCut2(e) {
 // Give our origin permission to open browsers, and remove it when the test is complete.
 var principal = SpecialPowers.wrap(document).nodePrincipal;
 var context = { 'url': SpecialPowers.wrap(principal.URI).spec,
-                'appId': principal.appId,
-                'isInBrowserElement': true };
+                'originAttributes': {
+                   'appId': principal.appId,
+                   'inBrowser': true }};
 
 addEventListener('testready', function() {
   SpecialPowers.pushPermissions([

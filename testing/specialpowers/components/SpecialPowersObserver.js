@@ -234,7 +234,10 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
           // We need to ensure that it looks the same as a real permission,
           // so we fake these properties.
           msg.permission = {
-            principal: { appId: permission.principal.appId },
+            principal: {
+              appId: permission.principal.appId,
+              originAttributes: {appId: permission.principal.appId}
+            },
             type: permission.type
           };
         default:
