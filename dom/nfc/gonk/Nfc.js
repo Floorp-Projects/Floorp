@@ -79,7 +79,7 @@ const NFC_IPC_MSG_ENTRIES = [
                "NFC:NotifyUserAcceptedP2P",
                "NFC:NotifySendFileStatus",
                "NFC:ChangeRFState",
-               "NFC:SetFocusApp"] }
+               "NFC:SetFocusTab"] }
 ];
 
 // Should be consistent with NfcRequestType defined in NfcOptions.webidl.
@@ -148,7 +148,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     eventListeners: {},
 
-    focusApp: NFC.SYSTEM_APP_ID,
+    focusId: NFC.SYSTEM_APP_ID,
 
     init: function init(nfc) {
       this.nfc = nfc;
@@ -214,7 +214,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       });
     },
 
-    notifyFocusApp: function notifyFocusApp(options) {
+    notifyFocusTab: function notifyFocusTab(options) {
       let tabId = this.getFocusTabId();
       options.tabId = tabId;
 
@@ -231,29 +231,29 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     },
 
     getFocusTabId: function getFocusTabId() {
-      return this.eventListeners[this.focusApp] ? this.focusApp
-                                                : NFC.SYSTEM_APP_ID;
+      return this.eventListeners[this.focusId] ? this.focusId
+                                               : NFC.SYSTEM_APP_ID;
     },
 
-    setFocusApp: function setFocusApp(id, isFocus) {
+    setFocusTab: function setFocusTab(id, isFocus) {
       // if calling setNFCFocus(true) on the browser-element which is already
       // focused, or calling setNFCFocus(false) on the browser-element which has
       // lost focus already, ignore.
-      if (isFocus == (id == this.focusApp)) {
+      if (isFocus == (id == this.focusId)) {
         return;
       }
 
-      if (this.focusApp != NFC.SYSTEM_APP_ID) {
-        this.onFocusChanged(this.focusApp, false);
+      if (this.focusId != NFC.SYSTEM_APP_ID) {
+        this.onFocusChanged(this.focusId, false);
       }
 
       if (isFocus) {
         // Now we only support one focus app.
-        this.focusApp = id;
-        this.onFocusChanged(this.focusApp, true);
-      } else if (this.focusApp == id){
-        // Set focusApp to SystemApp means currently there is no foreground app.
-        this.focusApp = NFC.SYSTEM_APP_ID;
+        this.focusId = id;
+        this.onFocusChanged(this.focusId, true);
+      } else if (this.focusId == id){
+        // Set focusId to SystemApp means currently there is no foreground app.
+        this.focusId = NFC.SYSTEM_APP_ID;
       }
     },
 
@@ -325,17 +325,17 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     onTagFound: function onTagFound(message) {
       message.event = NFC.TAG_EVENT_FOUND;
-      this.notifyFocusApp(message);
+      this.notifyFocusTab(message);
       delete message.event;
     },
 
     onTagLost: function onTagLost(sessionToken) {
-      this.notifyFocusApp({ event: NFC.TAG_EVENT_LOST,
+      this.notifyFocusTab({ event: NFC.TAG_EVENT_LOST,
                             sessionToken: sessionToken });
     },
 
     onPeerEvent: function onPeerEvent(eventType, sessionToken) {
-      this.notifyFocusApp({ event: eventType,
+      this.notifyFocusTab({ event: eventType,
                             sessionToken: sessionToken });
     },
 
@@ -348,13 +348,13 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
     },
 
-    onFocusChanged: function onFocusChanged(focusApp, focus) {
-      let target = this.eventListeners[focusApp];
+    onFocusChanged: function onFocusChanged(focusId, focus) {
+      let target = this.eventListeners[focusId];
       if (!target) {
         return;
       }
 
-      this.notifyDOMEvent(target, { tabId: this.focusApp,
+      this.notifyDOMEvent(target, { tabId: this.focusId,
                                     event: NFC.FOCUS_CHANGED,
                                     focus: focus });
     },
@@ -386,8 +386,8 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
 
       switch (message.name) {
-        case "NFC:SetFocusApp":
-          this.setFocusApp(message.data.tabId, message.data.isFocus);
+        case "NFC:SetFocusTab":
+          this.setFocusTab(message.data.tabId, message.data.isFocus);
           return null;
         case "NFC:AddEventListener":
           this.addEventListener(message.target, message.data.tabId);
