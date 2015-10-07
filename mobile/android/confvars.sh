@@ -123,3 +123,6 @@ fi
 if ! test "$NIGHTLY_BUILD"; then
 MOZ_ANDROID_NATIVE_ACCOUNT_UI=1
 fi
+
+# Disable GeckoView by default.
+export MOZ_DISABLE_GECKOVIEW=1
