@@ -22,7 +22,6 @@ DIRS += [
     'sourcemap',
     'shims',
     'styleinspector',
-    'tern',
     'touch',
     'transport',
     'webconsole',
