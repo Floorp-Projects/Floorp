@@ -247,7 +247,7 @@
                 readonly="true"
                 onget="return this._findMode;"/>
 
-      <property name="canClear" readonly="true">
+      <property name="hasTransactions" readonly="true">
         <getter><![CDATA[
           if (this._findField.value)
             return true;
