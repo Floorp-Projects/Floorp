@@ -3647,21 +3647,7 @@ public:
     static auto New(mozilla::jni::String::Param) -> SQLiteBridgeException::LocalRef;
 
 public:
-    struct SerialVersionUID_t {
-        typedef SQLiteBridgeException Owner;
-        typedef int64_t ReturnType;
-        typedef int64_t SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "serialVersionUID";
-        static constexpr char signature[] =
-                "J";
-        static const bool isStatic = true;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto SerialVersionUID() -> int64_t;
+    static const int64_t SerialVersionUID = 1;
 
 };
 
