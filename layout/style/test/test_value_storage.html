@@ -91,6 +91,22 @@ var gComputedStyle = window.getComputedStyle(gElement, "");
 var gPrereqDeclaration =
   document.getElementById("prereqsheet").sheet.cssRules[0].style;
 
+// Returns true if propA and propB are equivalent, considering aliasing.
+// (i.e. if one is an alias of the other, or if they're both aliases of
+// the same 3rd property)
+function are_properties_aliased(propA, propB)
+{
+  // If either property is an alias, replace it with the property it aliases.
+  if ("alias_for" in gCSSProperties[propA]) {
+    propA = gCSSProperties[propA].alias_for;
+  }
+  if ("alias_for" in gCSSProperties[propB]) {
+    propB = gCSSProperties[propB].alias_for;
+  }
+
+  return propA == propB;
+}
+
 function test_property(property)
 {
   var info = gCSSProperties[property];
@@ -112,7 +128,9 @@ function test_property(property)
     var shorthands = gPropertyShorthands[subprop];
     for (idx in shorthands) {
       var sh = shorthands[idx];
-      if (sh.replace("-moz-","") == property.replace("-moz-","")) continue;
+      if (are_properties_aliased(sh, property)) {
+        continue;
+      }
       is(gDeclaration.getPropertyValue(sh), "",
          "setting '" + value + "' on '" + property + "' (for shorthand '" + sh + "')");
     }

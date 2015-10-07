@@ -7,7 +7,6 @@
 #define GFX_LAYERSLOGGING_H
 
 #include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "mozilla/gfx/Point.h"          // for IntSize, etc
 #include "mozilla/gfx/Types.h"          // for Filter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
@@ -28,10 +27,6 @@ namespace layers {
 
 void
 AppendToString(std::stringstream& aStream, const void* p,
-               const char* pfx="", const char* sfx="");
-
-void
-AppendToString(std::stringstream& aStream, const GraphicsFilter& f,
                const char* pfx="", const char* sfx="");
 
 void

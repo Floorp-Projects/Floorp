@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = [
   "UserAPI10Client",
 ];
 
-const {utils: Cu} = Components;
+var {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");

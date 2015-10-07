@@ -54,9 +54,13 @@ stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
 		$(MOZ_PKG_MANIFEST) $(DIST) $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH)) \
 		$(if $(filter omni,$(MOZ_PACKAGER_FORMAT)),$(if $(NON_OMNIJAR_FILES),--non-resource $(NON_OMNIJAR_FILES)))
 	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/find-dupes.py $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)
+	# Package mozharness
+	$(call py_action,test_archive, \
+		mozharness \
+		$(abspath $(DIST))/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
 ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
-# Package JavaScript Shell
+	# Package JavaScript Shell
 	@echo 'Packaging JavaScript Shell...'
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)

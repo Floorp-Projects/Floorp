@@ -696,6 +696,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     _(GetElem_NativePrototypeCallScriptedSymbol) \
     _(GetProp_CallScripted)                     \
     _(GetProp_CallNative)                       \
+    _(GetProp_CallNativeGlobal)                 \
     _(GetProp_CallDOMProxyNative)               \
     _(GetProp_CallDOMProxyWithGenerationNative) \
     _(GetProp_DOMProxyShadowed)                 \
@@ -708,7 +709,8 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     _(GetElem_Dense)                            \
     _(GetElem_Arguments)                        \
     _(GetProp_NativePrototype)                  \
-    _(GetProp_Native)
+    _(GetProp_Native)                           \
+    _(GetName_Global)
 #endif
 
 static bool

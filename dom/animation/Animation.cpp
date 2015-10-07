@@ -51,15 +51,17 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
 {
+  nsRefPtr<Animation> kungFuDeathGrip(this);
+
   if (mEffect == aEffect) {
     return;
   }
   if (mEffect) {
-    mEffect->SetParentTime(Nullable<TimeDuration>());
+    mEffect->SetAnimation(nullptr);
   }
   mEffect = aEffect;
   if (mEffect) {
-    mEffect->SetParentTime(GetCurrentTime());
+    mEffect->SetAnimation(this);
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -86,6 +88,7 @@ Animation::SetTimeline(AnimationTimeline* aTimeline)
   // (but *not* when this method gets called from style).
 }
 
+// https://w3c.github.io/web-animations/#set-the-animation-start-time
 void
 Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 {
@@ -121,7 +124,7 @@ Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
   PostUpdate();
 }
 
-// http://w3c.github.io/web-animations/#current-time
+// https://w3c.github.io/web-animations/#current-time
 Nullable<TimeDuration>
 Animation::GetCurrentTime() const
 {
@@ -141,7 +144,7 @@ Animation::GetCurrentTime() const
   return result;
 }
 
-// Implements http://w3c.github.io/web-animations/#set-the-current-time
+// https://w3c.github.io/web-animations/#set-the-current-time
 void
 Animation::SetCurrentTime(const TimeDuration& aSeekTime)
 {
@@ -162,6 +165,7 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
   PostUpdate();
 }
 
+// https://w3c.github.io/web-animations/#set-the-animation-playback-rate
 void
 Animation::SetPlaybackRate(double aPlaybackRate)
 {
@@ -172,6 +176,7 @@ Animation::SetPlaybackRate(double aPlaybackRate)
   }
 }
 
+// https://w3c.github.io/web-animations/#play-state
 AnimationPlayState
 Animation::PlayState() const
 {
@@ -295,6 +300,7 @@ Animation::Pause(ErrorResult& aRv)
   PostUpdate();
 }
 
+// https://w3c.github.io/web-animations/#reverse-an-animation
 void
 Animation::Reverse(ErrorResult& aRv)
 {
@@ -354,15 +360,18 @@ Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 void
 Animation::Tick()
 {
-  // Since we are not guaranteed to get only one call per refresh driver tick,
-  // it's possible that mPendingReadyTime is set to a time in the future.
-  // In that case, we should wait until the next refresh driver tick before
-  // resuming.
+  // Finish pending if we have a pending ready time, but only if we also
+  // have an active timeline.
   if (mPendingState != PendingState::NotPending &&
       !mPendingReadyTime.IsNull() &&
       mTimeline &&
-      !mTimeline->GetCurrentTime().IsNull() &&
-      mPendingReadyTime.Value() <= mTimeline->GetCurrentTime().Value()) {
+      !mTimeline->GetCurrentTime().IsNull()) {
+    // Even though mPendingReadyTime is initialized using TimeStamp::Now()
+    // during the *previous* tick of the refresh driver, it can still be
+    // ahead of the *current* timeline time when we are using the
+    // vsync timer so we need to clamp it to the timeline time.
+    mPendingReadyTime.SetValue(std::min(mTimeline->GetCurrentTime().Value(),
+                                        mPendingReadyTime.Value()));
     FinishPendingAt(mPendingReadyTime.Value());
     mPendingReadyTime.SetNull();
   }
@@ -446,7 +455,7 @@ Animation::GetCurrentOrPendingStartTime() const
   return result;
 }
 
-// http://w3c.github.io/web-animations/#silently-set-the-current-time
+// https://w3c.github.io/web-animations/#silently-set-the-current-time
 void
 Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
 {
@@ -477,6 +486,7 @@ Animation::SilentlySetPlaybackRate(double aPlaybackRate)
   }
 }
 
+// https://w3c.github.io/web-animations/#cancel-an-animation
 void
 Animation::DoCancel()
 {
@@ -566,7 +576,7 @@ Animation::CanThrottle() const
 void
 Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                         nsCSSPropertySet& aSetProperties,
-                        bool& aNeedsRefreshes)
+                        bool& aStyleChanging)
 {
   if (!mEffect) {
     return;
@@ -574,9 +584,8 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
 
   AnimationPlayState playState = PlayState();
   if (playState == AnimationPlayState::Running ||
-      playState == AnimationPlayState::Pending ||
-      HasEndEventToQueue()) {
-    aNeedsRefreshes = true;
+      playState == AnimationPlayState::Pending) {
+    aStyleChanging = true;
   }
 
   if (!IsInEffect()) {
@@ -662,7 +671,7 @@ Animation::NotifyEffectTimingUpdated()
                Animation::SyncNotifyFlag::Async);
 }
 
-// http://w3c.github.io/web-animations/#play-an-animation
+// https://w3c.github.io/web-animations/#play-an-animation
 void
 Animation::DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 {
@@ -737,7 +746,7 @@ Animation::DoPlay(ErrorResult& aRv, LimitBehavior aLimitBehavior)
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
-// http://w3c.github.io/web-animations/#pause-an-animation
+// https://w3c.github.io/web-animations/#pause-an-animation
 void
 Animation::DoPause(ErrorResult& aRv)
 {
@@ -848,6 +857,7 @@ Animation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
   }
 }
 
+// https://w3c.github.io/web-animations/#update-an-animations-finished-state
 void
 Animation::UpdateFinishedState(SeekFlag aSeekFlag,
                                SyncNotifyFlag aSyncNotifyFlag)
@@ -902,7 +912,6 @@ void
 Animation::UpdateEffect()
 {
   if (mEffect) {
-    mEffect->SetParentTime(GetCurrentTime());
     UpdateRelevance();
   }
 }

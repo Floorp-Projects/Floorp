@@ -1186,16 +1186,10 @@ bool LayersPacket_Layer_Filter_IsValid(int value) {
 }
 
 #ifndef _MSC_VER
-const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_FAST;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_GOOD;
-const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_BEST;
-const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_NEAREST;
-const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_BILINEAR;
-const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_GAUSSIAN;
+const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_LINEAR;
+const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_POINT;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_SENTINEL;
-const LayersPacket_Layer_Filter LayersPacket_Layer::Filter_MIN;
-const LayersPacket_Layer_Filter LayersPacket_Layer::Filter_MAX;
-const int LayersPacket_Layer::Filter_ARRAYSIZE;
 #endif  // _MSC_VER
 #ifndef _MSC_VER
 const int LayersPacket_Layer_Size::kWFieldNumber;

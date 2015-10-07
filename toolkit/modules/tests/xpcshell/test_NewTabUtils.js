@@ -3,7 +3,7 @@
 
 // See also browser/base/content/test/newtab/.
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");

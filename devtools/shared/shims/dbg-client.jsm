@@ -31,7 +31,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "EnvironmentClient",
                          "ObjectClient"];
 
-let client = require("devtools/shared/client/main");
+var client = require("devtools/shared/client/main");
 
 this.DebuggerClient = client.DebuggerClient;
 this.RootClient = client.RootClient;

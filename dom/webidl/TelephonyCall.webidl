@@ -15,7 +15,7 @@ interface TelephonyCall : EventTarget {
   // call. We need an additional attribute for the CDMA waiting call.
   readonly attribute TelephonyCallId? secondId;
 
-  readonly attribute DOMString state;
+  readonly attribute TelephonyCallState state;
 
   // The property "emergency" indicates whether the call number is an emergency
   // number. Only the outgoing call could have a value with true and it is
@@ -54,6 +54,15 @@ interface TelephonyCall : EventTarget {
 
   // Fired whenever the group attribute changes.
   attribute EventHandler ongroupchange;
+};
+
+enum TelephonyCallState {
+  "dialing",
+  "alerting",
+  "connected",
+  "held",
+  "disconnected",
+  "incoming",
 };
 
 enum TelephonyCallDisconnectedReason {

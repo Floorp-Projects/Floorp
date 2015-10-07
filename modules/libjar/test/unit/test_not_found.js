@@ -1,8 +1,8 @@
 // Should report file not found on non-existent files
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 const path = "data/test_bug333423.zip";

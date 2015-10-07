@@ -29,10 +29,10 @@
  * SpecialPowersObserverAPI.js and search on SPLoadChromeScript.
  */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const CC = Components.Constructor;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var CC = Components.Constructor;
 
 Cu.import('resource://gre/modules/Webapps.jsm'); // for DOMApplicationRegistry
 Cu.import('resource://gre/modules/AppsUtils.jsm'); // for AppUtils

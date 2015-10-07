@@ -1422,13 +1422,15 @@ AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint, CSSPoint* a
     
     // NOTE: This isn't *quite* LayoutDevicePoint, we just don't have a name
     // for this coordinate space and it maps the closest to LayoutDevicePoint.
-    MOZ_ASSERT(transformScreenToGecko.Is2D());
-    LayoutDevicePoint layoutPoint = TransformTo<LayoutDevicePixel>(
+    Maybe<LayoutDeviceIntPoint> layoutPoint = UntransformTo<LayoutDevicePixel>(
         transformScreenToGecko, aPoint);
+    if (!layoutPoint) {
+      return false;
+    }
 
     { // scoped lock to access mFrameMetrics
       ReentrantMonitorAutoEnter lock(mMonitor);
-      *aOut = layoutPoint / mFrameMetrics.GetDevPixelsPerCSSPixel();
+      *aOut = LayoutDevicePoint(*layoutPoint) / mFrameMetrics.GetDevPixelsPerCSSPixel();
     }
     return true;
   }

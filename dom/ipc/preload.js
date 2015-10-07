@@ -7,9 +7,9 @@
 // This script is run when the preallocated process starts.  It is injected as
 // a frame script.
 
-const BrowserElementIsPreloaded = true;
+var BrowserElementIsPreloaded = true;
 
-const DoPreloadPostfork = function(aCallback) {
+var DoPreloadPostfork = function(aCallback) {
   Services.obs.addObserver({
     _callback: aCallback,
 

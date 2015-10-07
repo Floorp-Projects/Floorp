@@ -2552,7 +2552,7 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue, MaybeReadFallback&
     // the global on their scope chain.
     MOZ_ASSERT(!script()->isForEval());
     MOZ_ASSERT(!script()->hasNonSyntacticScope());
-    return &script()->global();
+    return &script()->global().lexicalScope();
 }
 
 bool

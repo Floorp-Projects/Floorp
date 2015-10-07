@@ -369,6 +369,15 @@ Classifier::MarkSpoiled(nsTArray<nsCString>& aTables)
 }
 
 void
+Classifier::SetLastUpdateTime(const nsACString &aTable,
+                              uint64_t updateTime)
+{
+  LOG(("Marking table %s as last updated on %u",
+       PromiseFlatCString(aTable).get(), updateTime));
+  mTableFreshness.Put(aTable, updateTime / PR_MSEC_PER_SEC);
+}
+
+void
 Classifier::DropStores()
 {
   for (uint32_t i = 0; i < mHashStores.Length(); i++) {

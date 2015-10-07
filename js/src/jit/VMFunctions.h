@@ -588,8 +588,9 @@ bool CheckOverRecursed(JSContext* cx);
 bool CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
                                 uint32_t extra, uint32_t earlyCheck);
 
-bool DefVarOrConst(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
-bool SetConst(JSContext* cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
+bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
+bool DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
+bool DefGlobalLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs);
 bool MutatePrototype(JSContext* cx, HandlePlainObject obj, HandleValue value);
 bool InitProp(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValue value,
               jsbytecode* pc);
@@ -657,7 +658,8 @@ bool DebugAfterYield(JSContext* cx, BaselineFrame* frame);
 bool GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObject*> genObj,
                            HandleValue arg, uint32_t resumeKind);
 
-bool InitStrictEvalScopeObjects(JSContext* cx, BaselineFrame* frame);
+bool GlobalNameConflictsCheckFromIon(JSContext* cx, HandleScript script);
+bool InitGlobalOrEvalScopeObjects(JSContext* cx, BaselineFrame* frame);
 bool InitFunctionScopeObjects(JSContext* cx, BaselineFrame* frame);
 
 bool NewArgumentsObject(JSContext* cx, BaselineFrame* frame, MutableHandleValue res);

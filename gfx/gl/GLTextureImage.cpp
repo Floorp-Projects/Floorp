@@ -270,7 +270,7 @@ TextureImage::TextureImage(const gfx::IntSize& aSize,
     : mSize(aSize)
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
-    , mFilter(GraphicsFilter::FILTER_GOOD)
+    , mFilter(Filter::GOOD)
     , mFlags(aFlags)
 {}
 

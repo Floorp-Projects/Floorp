@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
 var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
