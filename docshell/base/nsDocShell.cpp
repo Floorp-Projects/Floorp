@@ -13940,8 +13940,7 @@ nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
 }
 
 NS_IMETHODIMP
-nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
-                                      nsContentPolicyType aLoadContentType,
+nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceRequest,
                                       bool* aShouldIntercept)
 {
   *aShouldIntercept = false;
@@ -13994,7 +13993,7 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
     }
   }
 
-  if (aIsNavigate || nsContentUtils::IsWorkerLoad(aLoadContentType)) {
+  if (aIsNonSubresourceRequest) {
     OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
     *aShouldIntercept = swm->IsAvailable(attrs, aURI);
     return NS_OK;
