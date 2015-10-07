@@ -2043,6 +2043,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     if (aBuilder->IsBuildingLayerEventRegions()) {
       nsDisplayLayerEventRegions* eventRegions =
         new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+      eventRegions->AddFrame(aBuilder, this);
       aBuilder->SetLayerEventRegions(eventRegions);
       set.BorderBackground()->AppendNewToTop(eventRegions);
     }
@@ -2505,6 +2506,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         if (animatedGeometryRoot != buildingForChild.GetPrevAnimatedGeometryRoot()) {
           nsDisplayLayerEventRegions* eventRegions =
             new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
+          eventRegions->AddFrame(aBuilder, child);
           aBuilder->SetLayerEventRegions(eventRegions);
           aLists.BorderBackground()->AppendNewToTop(eventRegions);
         }
@@ -2531,6 +2533,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     if (aBuilder->IsBuildingLayerEventRegions()) {
       nsDisplayLayerEventRegions* eventRegions =
         new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
+      eventRegions->AddFrame(aBuilder, child);
       aBuilder->SetLayerEventRegions(eventRegions);
       pseudoStack.BorderBackground()->AppendNewToTop(eventRegions);
     }
