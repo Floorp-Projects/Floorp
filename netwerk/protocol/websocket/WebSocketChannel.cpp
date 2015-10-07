@@ -3072,16 +3072,14 @@ WebSocketChannel::Notify(nsITimer *timer)
     }
 
     if (!mPingOutstanding) {
-      // Allow for the case where a PING was force-sent even though ping
-      // interval isn't enabled. Only issue a new PING if it truly is enabled.
-      if (mPingInterval || mPingForced) {
-        LOG(("nsWebSocketChannel:: Generating Ping\n"));
-        mPingOutstanding = 1;
-        mPingForced = 0;
-        GeneratePing();
-        mPingTimer->InitWithCallback(this, mPingResponseTimeout,
-                                     nsITimer::TYPE_ONE_SHOT);
-      }
+      // Ping interval must be non-null or PING was forced by OnNetworkChanged()
+      MOZ_ASSERT(mPingInterval || mPingForced);
+      LOG(("nsWebSocketChannel:: Generating Ping\n"));
+      mPingOutstanding = 1;
+      mPingForced = 0;
+      GeneratePing();
+      mPingTimer->InitWithCallback(this, mPingResponseTimeout,
+                                   nsITimer::TYPE_ONE_SHOT);
     } else {
       LOG(("nsWebSocketChannel:: Timed out Ping\n"));
       mPingTimer = nullptr;
