@@ -42,28 +42,7 @@ Sanitizer.prototype = {
   // warning to the caller: this one may raise an exception (e.g. bug #265028)
   clearItem: function (aItemName)
   {
-    if (this.items[aItemName].canClear)
-      this.items[aItemName].clear();
-  },
-
-  promiseCanClearItem: function (aItemName, aArg) {
-    return new Promise(resolve => {
-      return this.canClearItem(aItemName,
-                              (_, canClear) => resolve(canClear),
-                              aArg)
-    });
-  },
-
-  canClearItem: function (aItemName, aCallback, aArg)
-  {
-    let canClear = this.items[aItemName].canClear;
-    if (typeof canClear == "function") {
-      canClear(aCallback, aArg);
-      return false;
-    }
-
-    aCallback(aItemName, canClear, aArg);
-    return canClear;
+    this.items[aItemName].clear();
   },
 
   prefDomain: "",
@@ -164,11 +143,6 @@ Sanitizer.prototype = {
         continue;
       }
       item.range = range;
-      let canClear = yield this.promiseCanClearItem(itemName);
-      if (!canClear) {
-        progress[itemName] = "cannot clear item";
-        continue;
-      }
       // Some of these clear() may raise exceptions (see bug #265028)
       // to sanitize as much as possible, we catch and store them,
       // rather than fail fast.
@@ -226,11 +200,6 @@ Sanitizer.prototype = {
         } catch(er) {}
 
         TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
-      },
-
-      get canClear()
-      {
-        return true;
       }
     },
 
@@ -307,12 +276,7 @@ Sanitizer.prototype = {
             }
           }
         }
-      }),
-
-      get canClear()
-      {
-        return true;
-      }
+      })
     },
 
     offlineApps: {
@@ -323,11 +287,6 @@ Sanitizer.prototype = {
         Components.utils.import("resource:///modules/offlineAppCache.jsm");
         OfflineAppCacheHelper.clear();
         TelemetryStopwatch.finish("FX_SANITIZE_OFFLINEAPPS", refObj);
-      },
-
-      get canClear()
-      {
-        return true;
       }
     },
 
@@ -362,14 +321,7 @@ Sanitizer.prototype = {
         } finally {
           TelemetryStopwatch.finish("FX_SANITIZE_HISTORY", refObj);
         }
-      }),
-
-      get canClear()
-      {
-        // bug 347231: Always allow clearing history due to dependencies on
-        // the browser:purge-session-history notification. (like error console)
-        return true;
-      }
+      })
     },
 
     formdata: {
@@ -411,53 +363,6 @@ Sanitizer.prototype = {
         FormHistory.update(change);
 
         TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
-      },
-
-      canClear : function(aCallback, aArg)
-      {
-        var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1']
-                                      .getService(Components.interfaces.nsIWindowMediator);
-        var windows = windowManager.getEnumerator("navigator:browser");
-        while (windows.hasMoreElements()) {
-          let currentWindow = windows.getNext();
-          let currentDocument = currentWindow.document;
-          let searchBar = currentDocument.getElementById("searchbar");
-          if (searchBar) {
-            let transactionMgr = searchBar.textbox.editor.transactionManager;
-            if (searchBar.value ||
-                transactionMgr.numberOfUndoItems ||
-                transactionMgr.numberOfRedoItems) {
-              aCallback("formdata", true, aArg);
-              return false;
-            }
-          }
-          let tabBrowser = currentWindow.gBrowser;
-          if (!tabBrowser) {
-            // No tab browser? This means that it's too early during startup (typically,
-            // Session Restore hasn't completed yet). Since we don't have find
-            // bars at that stage and since Session Restore will not restore
-            // find bars further down during startup, we have nothing to clear.
-            continue;
-          }
-          let findBarCanClear = Array.some(tabBrowser.tabs, function (aTab) {
-            return tabBrowser.isFindBarInitialized(aTab) &&
-                   tabBrowser.getFindBar(aTab).canClear;
-          });
-          if (findBarCanClear) {
-            aCallback("formdata", true, aArg);
-            return false;
-          }
-        }
-
-        let count = 0;
-        let countDone = {
-          handleResult : aResult => count = aResult,
-          handleError : aError => Components.utils.reportError(aError),
-          handleCompletion :
-            function(aReason) { aCallback("formdata", aReason == 0 && count > 0, aArg); }
-        };
-        FormHistory.count({}, countDone);
-        return false;
       }
     },
 
@@ -484,12 +389,6 @@ Sanitizer.prototype = {
           TelemetryStopwatch.finish("FX_SANITIZE_DOWNLOADS", refObj);
           Components.utils.reportError(error);
         });
-      },
-
-      canClear : function(aCallback, aArg)
-      {
-        aCallback("downloads", true, aArg);
-        return false;
       }
     },
 
@@ -510,11 +409,6 @@ Sanitizer.prototype = {
         os.notifyObservers(null, "net:clear-active-logins", null);
 
         TelemetryStopwatch.finish("FX_SANITIZE_SESSIONS", refObj);
-      },
-
-      get canClear()
-      {
-        return true;
       }
     },
 
@@ -573,13 +467,9 @@ Sanitizer.prototype = {
         }
 
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
-      },
-
-      get canClear()
-      {
-        return true;
       }
     },
+
     openWindows: {
       privateStateForNewWindow: "non-private",
       _canCloseWindow: function(aWindow) {
@@ -702,17 +592,10 @@ Sanitizer.prototype = {
         }
         newWindow.focus();
         yield promiseReady;
-      }),
-
-      get canClear()
-      {
-        return true;
-      }
+      })
     },
   }
 };
-
-
 
 // "Static" members
 Sanitizer.PREF_DOMAIN = "privacy.sanitize.";
