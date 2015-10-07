@@ -744,11 +744,12 @@ protected:
                                            bool aMustCallValueAppended,
                                            bool* aChanged,
                                            nsCSSContextType aContext);
-  // When we detect a webkit-prefixed gradient expression, this function can
-  // be used to parse its body into outparam |aValue|. Only call if
-  // ShouldUseUnprefixingService() returns true.
-  bool ParseWebkitPrefixedGradient(nsAString& aPrefixedFuncName,
-                                   nsCSSValue& aValue);
+  // When we detect a webkit-prefixed gradient expression, this function can be
+  // used to parse its body into outparam |aValue|, with the help of the
+  // CSSUnprefixingService.
+  // Only call if ShouldUseUnprefixingService() returns true.
+  bool ParseWebkitPrefixedGradientWithService(nsAString& aPrefixedFuncName,
+                                              nsCSSValue& aValue);
 
   bool ParseProperty(nsCSSProperty aPropID);
   bool ParsePropertyByFunction(nsCSSProperty aPropID);
@@ -6757,8 +6758,9 @@ CSSParserImpl::ParsePropertyWithUnprefixingService(
 }
 
 bool
-CSSParserImpl::ParseWebkitPrefixedGradient(nsAString& aPrefixedFuncName,
-                                           nsCSSValue& aValue)
+CSSParserImpl::ParseWebkitPrefixedGradientWithService(
+  nsAString& aPrefixedFuncName,
+  nsCSSValue& aValue)
 {
   MOZ_ASSERT(ShouldUseUnprefixingService(),
              "Should only call if we're allowed to use unprefixing service");
@@ -7470,7 +7472,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       // Copy 'tmp' into a string on the stack, since as soon as we
       // start parsing, its backing store (in "tk") will be overwritten
       nsAutoString prefixedFuncName(tmp);
-      return ParseWebkitPrefixedGradient(prefixedFuncName, aValue);
+      return ParseWebkitPrefixedGradientWithService(prefixedFuncName, aValue);
     }
   }
   if ((aVariantMask & VARIANT_IMAGE_RECT) != 0 &&
