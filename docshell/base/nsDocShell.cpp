@@ -5004,6 +5004,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       case NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION:
       case NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION:
       case NS_ERROR_INTERCEPTION_CANCELED:
+      case NS_ERROR_REJECTED_RESPONSE_INTERCEPTION:
         // ServiceWorker intercepted request, but something went wrong.
         nsContentUtils::MaybeReportInterceptionErrorToConsole(GetDocument(),
                                                               aError);
@@ -7669,6 +7670,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                aStatus == NS_ERROR_INTERCEPTED_USED_RESPONSE ||
                aStatus == NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION ||
                aStatus == NS_ERROR_INTERCEPTION_CANCELED ||
+               aStatus == NS_ERROR_REJECTED_RESPONSE_INTERCEPTION ||
                NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       // Errors to be shown for any frame
       DisplayLoadError(aStatus, url, nullptr, aChannel);
