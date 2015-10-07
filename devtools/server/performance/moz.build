@@ -5,5 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'framerate.js',
+    'memory.js',
+    'profiler.js',
     'recorder.js',
+    'timeline.js',
 )
