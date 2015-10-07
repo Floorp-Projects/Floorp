@@ -66,37 +66,15 @@ public class CodeGenerator {
         return (includeScope ? clsName + "::" : "") + uniqueName + "_t";
     }
 
-    /**
-     * Return the C++ type name for this class or any class within the chain
-     * of declaring classes, if the target class matches the given type.
-     *
-     * Return null if the given type does not match any class searched.
-     */
-    private String getMatchingClassType(final Class<?> type) {
-        Class<?> cls = this.cls;
-        String clsName = this.clsName;
-
-        while (cls != null) {
-            if (type == cls) {
-                return clsName;
-            }
-            cls = cls.getDeclaringClass();
-            clsName = clsName.substring(0, Math.max(0, clsName.lastIndexOf("::")));
-        }
-        return null;
-    }
-
     private String getNativeParameterType(Class<?> type, AnnotationInfo info) {
-        final String clsName = getMatchingClassType(type);
-        if (clsName != null) {
+        if (type == cls) {
             return Utils.getUnqualifiedName(clsName) + "::Param";
         }
         return Utils.getNativeParameterType(type, info);
     }
 
     private String getNativeReturnType(Class<?> type, AnnotationInfo info) {
-        final String clsName = getMatchingClassType(type);
-        if (clsName != null) {
+        if (type == cls) {
             return Utils.getUnqualifiedName(clsName) + "::LocalRef";
         }
         return Utils.getNativeReturnType(type, info);
@@ -392,7 +370,6 @@ public class CodeGenerator {
         if (isStatic && isFinal && (type.isPrimitive() || type == String.class)) {
             Object val = null;
             try {
-                field.setAccessible(true);
                 val = field.get(null);
             } catch (final IllegalAccessException e) {
             }

@@ -16,7 +16,7 @@ import java.util.concurrent.Semaphore;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -348,12 +348,7 @@ final class GeckoEditable
         }
     }
 
-    @WrapForJNI
     GeckoEditable() {
-        if (DEBUG) {
-            // Called by nsWindow.
-            ThreadUtils.assertOnGeckoThread();
-        }
         mActionQueue = new ActionQueue();
         mSavedSelectionStart = -1;
         mUpdateGecko = true;
@@ -366,39 +361,10 @@ final class GeckoEditable
                 Editable.class.getClassLoader(),
                 PROXY_INTERFACES, this);
 
+        LayerView v = GeckoAppShell.getLayerView();
+        mListener = GeckoInputConnection.create(v, this);
+
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
-    }
-
-    @WrapForJNI
-    /* package */ void onViewChange(final GeckoView v) {
-        if (DEBUG) {
-            // Called by nsWindow.
-            ThreadUtils.assertOnGeckoThread();
-            Log.d(LOGTAG, "onViewChange(" + v + ")");
-        }
-
-        final GeckoEditableListener newListener = GeckoInputConnection.create(v, this);
-        geckoPostToIc(new Runnable() {
-            @Override
-            public void run() {
-                if (DEBUG) {
-                    Log.d(LOGTAG, "onViewChange (set listener)");
-                }
-                // Make sure there are no other things going on
-                mActionQueue.syncWithGecko();
-                mListener = newListener;
-            }
-        });
-
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (DEBUG) {
-                    Log.d(LOGTAG, "onViewChange (set IC)");
-                }
-                v.setInputConnectionListener((InputConnectionListener) newListener);
-            }
-        });
     }
 
     private boolean onIcThread() {
@@ -803,7 +769,7 @@ final class GeckoEditable
         }
     }
 
-    @WrapForJNI @Override
+    @Override
     public void notifyIME(final int type) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
@@ -879,12 +845,12 @@ final class GeckoEditable
         }
     }
 
-    @WrapForJNI @Override
+    @Override
     public void notifyIMEContext(final int state, final String typeHint,
-                                 final String modeHint, final String actionHint) {
+                          final String modeHint, final String actionHint) {
+        // Because we want to be able to bind GeckoEditable to the newest LayerView instance,
+        // this can be called from the Java IC thread in addition to the Gecko thread.
         if (DEBUG) {
-            // GeckoEditableListener methods should all be called from the Gecko thread
-            ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "notifyIMEContext(" +
                           getConstantName(GeckoEditableListener.class, "IME_STATE_", state) +
                           ", \"" + typeHint + "\", \"" + modeHint + "\", \"" + actionHint + "\")");
@@ -892,12 +858,22 @@ final class GeckoEditable
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
+                // Make sure there are no other things going on
+                mActionQueue.syncWithGecko();
+                // Set InputConnectionHandler in notifyIMEContext because
+                // GeckoInputConnection.notifyIMEContext calls restartInput() which will invoke
+                // InputConnectionHandler.onCreateInputConnection
+                LayerView v = GeckoAppShell.getLayerView();
+                if (v != null) {
+                    mListener = GeckoInputConnection.create(v, GeckoEditable.this);
+                    v.setInputConnectionHandler((InputConnectionHandler)mListener);
+                    mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
+                }
             }
         });
     }
 
-    @WrapForJNI @Override
+    @Override
     public void onSelectionChange(final int start, final int end) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
@@ -953,9 +929,9 @@ final class GeckoEditable
                TextUtils.regionMatches(mText, start, newText, 0, oldEnd - start);
     }
 
-    @WrapForJNI @Override
+    @Override
     public void onTextChange(final CharSequence text, final int start,
-                             final int unboundedOldEnd, final int unboundedNewEnd) {
+                      final int unboundedOldEnd, final int unboundedNewEnd) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
