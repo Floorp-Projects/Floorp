@@ -2283,7 +2283,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       MOZ_ASSERT(agent);
 
       if (isMuted) {
-        rv = agent->NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY);
+        rv = agent->NotifyStoppedPlaying();
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NPERR_NO_ERROR;
         }
