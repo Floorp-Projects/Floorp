@@ -176,11 +176,6 @@ public class FxAccountStatusActivity extends LocaleAwareFragmentActivity {
       return true;
     }
 
-    if (itemId == R.id.remove_account) {
-      maybeDeleteAndroidAccount(this, FirefoxAccounts.getFirefoxAccount(this), null);
-      return true;
-    }
-
     if (itemId == R.id.enable_debug_mode) {
       FxAccountUtils.LOG_PERSONAL_INFORMATION = !FxAccountUtils.LOG_PERSONAL_INFORMATION;
       Toast.makeText(this, (FxAccountUtils.LOG_PERSONAL_INFORMATION ? "Enabled" : "Disabled") +
