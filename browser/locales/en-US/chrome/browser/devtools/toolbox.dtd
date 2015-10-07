@@ -69,6 +69,10 @@ values from browser.dtd.  -->
   -  inspector. This is visible in the options panel. -->
 <!ENTITY options.defaultColorUnit.accesskey "U">
 
+<!-- LOCALIZATION NOTE (options.defaultColorUnit.authored): This is used in the
+  -  'Default color unit' dropdown list and is visible in the options panel. -->
+<!ENTITY options.defaultColorUnit.authored "As Authored">
+
 <!-- LOCALIZATION NOTE (options.defaultColorUnit.hex): This is used in the
   -  'Default color unit' dropdown list and is visible in the options panel. -->
 <!ENTITY options.defaultColorUnit.hex "Hex">

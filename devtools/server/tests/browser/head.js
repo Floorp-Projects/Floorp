@@ -45,6 +45,22 @@ var addTab = Task.async(function* (url) {
   return tab.linkedBrowser.contentWindow.document;
 });
 
+function* initAnimationsFrontForUrl(url) {
+  const {AnimationsFront} = require("devtools/server/actors/animation");
+  const {InspectorFront} = require("devtools/server/actors/inspector");
+
+  yield addTab(url);
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  let form = yield connectDebuggerClient(client);
+  let inspector = InspectorFront(client, form);
+  let walker = yield inspector.getWalker();
+  let animations = AnimationsFront(client, form);
+
+  return {inspector, walker, animations, client};
+}
+
 function initDebuggerServer() {
   try {
     // Sometimes debugger server does not get destroyed correctly by previous

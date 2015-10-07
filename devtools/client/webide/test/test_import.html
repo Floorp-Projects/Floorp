@@ -13,14 +13,14 @@
   </head>
 
   <body>
-
     <script type="application/javascript;version=1.8">
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function*() {
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
           let win = yield openWebIDE();
+          let docProject = getProjectDocument(win);
+          let winProject = getProjectWindow(win);
           let packagedAppLocation = getTestFilePath("app");
 
           yield win.AppProjects.load();
@@ -29,7 +29,7 @@
           info("to call importPackagedApp(" + packagedAppLocation + ")");
           ok(!win.UI._busyPromise, "UI is not busy");
 
-          yield win.projectList.importPackagedApp(packagedAppLocation);
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
 
           let project = win.AppManager.selectedProject;
@@ -41,7 +41,7 @@
           yield nextTick();
 
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
-          yield win.projectList.importHostedApp(hostedAppManifest);
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
           yield waitForUpdate(win, "project-validated");
 
           project = win.AppManager.selectedProject;
@@ -51,22 +51,18 @@
           yield nextTick();
 
           hostedAppManifest = TEST_BASE + "/app";
-          yield win.projectList.importHostedApp(hostedAppManifest);
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
           yield waitForUpdate(win, "project-validated");
 
           project = win.AppManager.selectedProject;
           ok(project.location.endsWith('manifest.webapp'), "The manifest was found and the project was updated");
 
-          info("opening panel");
-          yield win.Cmds.showProjectPanel();
-          info("panel open");
-
-          let panelNode = win.document.querySelector("#project-panel");
+          let panelNode = docProject.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
-          // 3 controls, + 2 projects
-          is(items.length, 6, "6 projects in panel");
-          is(items[3].getAttribute("label"), "A name (in app directory)", "Panel label is correct");
-          is(items[4].getAttribute("label"), "hosted manifest name property", "Panel label is correct");
+          // 4 controls, + 2 projects
+          is(items.length, 7, "7 projects in panel");
+          is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");
+          is(items[4].querySelector("span").textContent, "hosted manifest name property", "Panel text is correct");
 
           yield closeWebIDE(win);
 
@@ -78,8 +74,6 @@
           SimpleTest.finish();
         });
       }
-
-
     </script>
   </body>
 </html>

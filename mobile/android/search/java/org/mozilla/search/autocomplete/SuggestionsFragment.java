@@ -16,7 +16,6 @@ import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.providers.SearchEngine;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -68,17 +67,17 @@ public class SuggestionsFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
-        if (activity instanceof AcceptsSearchQuery) {
-            searchListener = (AcceptsSearchQuery) activity;
+        if (context instanceof AcceptsSearchQuery) {
+            searchListener = (AcceptsSearchQuery) context;
         } else {
-            throw new ClassCastException(activity.toString() + " must implement AcceptsSearchQuery.");
+            throw new ClassCastException(context.toString() + " must implement AcceptsSearchQuery.");
         }
 
         suggestionLoaderCallbacks = new SuggestionLoaderCallbacks();
-        autoCompleteAdapter = new AutoCompleteAdapter(activity);
+        autoCompleteAdapter = new AutoCompleteAdapter(context);
     }
 
     @Override

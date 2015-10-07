@@ -119,14 +119,15 @@
 
       function addTestApp(win) {
         return Task.spawn(function*() {
-          let packagedAppLocation = getTestFilePath("app");
-          yield win.Cmds.importPackagedApp(packagedAppLocation);
+          let packagedAppLocation = getTestFilePath("../app");
+          let winProject = getProjectWindow(win);
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
         });
       }
 
-      function startConnection(win, type, index) {
-        let panelNode = win.document.querySelector("#runtime-panel");
+      function startConnection(win, docRuntime, type, index) {
+        let panelNode = docRuntime.querySelector("#runtime-panel");
         let items = panelNode.querySelectorAll(".runtime-panel-item-" + type);
         if (index === undefined) {
           is(items.length, 1, "Found one runtime button");
@@ -154,9 +155,9 @@
         });
       }
 
-      function connectToRuntime(win, type, index) {
+      function connectToRuntime(win, docRuntime, type, index) {
         return Task.spawn(function*() {
-          startConnection(win, type, index);
+          startConnection(win, docRuntime, type, index);
           yield waitUntilConnected(win);
         });
       }
@@ -286,8 +287,6 @@
         });
 
         Task.spawn(function*() {
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
-
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
             DebuggerServer.addBrowserActors();
@@ -299,6 +298,8 @@
           yield cycleWebIDE();
 
           win = yield openWebIDE();
+          let docRuntime = getRuntimeDocument(win);
+
           // Wait a bit, so we're open for a non-zero time
           yield waitForTime(TOOL_DELAY);
           addFakeRuntimes(win);
@@ -306,12 +307,12 @@
 
           // Each one should log a connection result and non-zero connection
           // time
-          yield connectToRuntime(win, "usb");
-          yield connectToRuntime(win, "wifi");
-          yield connectToRuntime(win, "simulator");
-          yield connectToRuntime(win, "other", 0 /* remote */);
-          yield connectToRuntime(win, "other", 1 /* local */);
-          yield connectToRuntime(win, "other", 2 /* other */);
+          yield connectToRuntime(win, docRuntime, "usb");
+          yield connectToRuntime(win, docRuntime, "wifi");
+          yield connectToRuntime(win, docRuntime, "simulator");
+          yield connectToRuntime(win, docRuntime, "other", 0 /* remote */);
+          yield connectToRuntime(win, docRuntime, "other", 1 /* local */);
+          yield connectToRuntime(win, docRuntime, "other", 2 /* other */);
           yield closeWebIDE(win);
           win = null;
 

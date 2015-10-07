@@ -13,7 +13,7 @@ Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 
 BootstrapMonitor.init();
 
-const featureDir = FileUtils.getDir("ProfD", ["features"]);
+const featureDir = FileUtils.getDir("ProfD", ["features"], false);
 
 function getCurrentFeatureDir() {
   let dir = featureDir.clone();
@@ -22,29 +22,42 @@ function getCurrentFeatureDir() {
   return dir;
 }
 
-// Build the test sets
-var dir = FileUtils.getDir("ProfD", ["features", "prefilled"], true);
-do_get_file("data/system_addons/system2_2.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
-do_get_file("data/system_addons/system3_2.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
+function clearFeatureDir() {
+  // Delete any existing directories
+  if (featureDir.exists())
+    featureDir.remove(true);
 
-// Mark these in the past so the startup file scan notices when files have changed properly
-FileUtils.getFile("ProfD", ["features", "prefilled", "system2@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
-FileUtils.getFile("ProfD", ["features", "prefilled", "system3@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
+  Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
+}
 
-const prefilledSet = {
-  schema: 1,
-  directory: dir.leafName,
-  addons: {
-    "system2@tests.mozilla.org": {
-      version: "2.0"
-    },
-    "system3@tests.mozilla.org": {
-      version: "2.0"
-    },
-  }
-};
+function buildPrefilledFeatureDir() {
+  clearFeatureDir();
 
-dir = FileUtils.getDir("ProfD", ["sysfeatures", "hidden"], true);
+  // Build the test set
+  let dir = FileUtils.getDir("ProfD", ["features", "prefilled"], true);
+
+  do_get_file("data/system_addons/system2_2.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
+  do_get_file("data/system_addons/system3_2.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
+
+  // Mark these in the past so the startup file scan notices when files have changed properly
+  FileUtils.getFile("ProfD", ["features", "prefilled", "system2@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
+  FileUtils.getFile("ProfD", ["features", "prefilled", "system3@tests.mozilla.org.xpi"]).lastModifiedTime -= 10000;
+
+  Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify({
+    schema: 1,
+    directory: dir.leafName,
+    addons: {
+      "system2@tests.mozilla.org": {
+        version: "2.0"
+      },
+      "system3@tests.mozilla.org": {
+        version: "2.0"
+      },
+    }
+  }));
+}
+
+let dir = FileUtils.getDir("ProfD", ["sysfeatures", "hidden"], true);
 do_get_file("data/system_addons/system1_1.xpi").copyTo(dir, "system1@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system2_1.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
 
@@ -202,7 +215,7 @@ const TEST_CONDITIONS = {
   // Runs tests with no updated or default system add-ons initially installed
   blank: {
     setup: function*() {
-      Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
+      clearFeatureDir();
       distroDir.leafName = "empty";
     },
     initialState: [false, null, null, null, null, null],
@@ -211,7 +224,7 @@ const TEST_CONDITIONS = {
   // Runs tests with default system add-ons installed
   withAppSet: {
     setup: function*() {
-      Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
+      clearFeatureDir();
       distroDir.leafName = "prefilled";
     },
     initialState: [false, null, "2.0", "2.0", null, null],
@@ -220,7 +233,7 @@ const TEST_CONDITIONS = {
   // Runs tests with updated system add-ons installed
   withProfileSet: {
     setup: function*() {
-      Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(prefilledSet));
+      buildPrefilledFeatureDir();
       distroDir.leafName = "empty";
     },
     initialState: [true, null, "2.0", "2.0", null, null],
@@ -229,7 +242,7 @@ const TEST_CONDITIONS = {
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
     setup: function*() {
-      Services.prefs.setCharPref(PREF_SYSTEM_ADDON_SET, JSON.stringify(prefilledSet));
+      buildPrefilledFeatureDir();
       distroDir.leafName = "hidden";
     },
     initialState: [true, null, "2.0", "2.0", null, null],
@@ -347,6 +360,22 @@ add_task(function* setup() {
   yield promiseShutdownManager();
 })
 
+function* get_directories() {
+  let subdirs = [];
+
+  if (yield OS.File.exists(featureDir.path)) {
+    let iterator = new OS.File.DirectoryIterator(featureDir.path);
+    yield iterator.forEach(entry => {
+      if (entry.isDir) {
+        subdirs.push(entry);
+      }
+    });
+    iterator.close();
+  }
+
+  return subdirs;
+}
+
 function* setup_conditions(setup) {
   do_print("Clearing existing database.");
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
@@ -364,8 +393,27 @@ function* setup_conditions(setup) {
   yield check_installed(...setup.initialState);
 }
 
-function* verify_state(finalState) {
+function* verify_state(initialState, finalState = undefined) {
+  let expectedDirs = 0;
+
+  // If the initial state was using the profile set then that directory will
+  // still exist.
+  if (initialState[0])
+    expectedDirs++;
+
+  if (finalState == undefined) {
+    finalState = initialState;
+  }
+  else {
+    // If the new state is using the profile then that directory will exist.
+    if (finalState[0])
+      expectedDirs++;
+  }
+
   do_print("Checking final state.");
+
+  let dirs = yield get_directories();
+  do_check_eq(dirs.length, expectedDirs);
 
   // Bug 1204156: Currently switching to the new state requires a restart
   // yield check_installed(...finalState);
@@ -396,7 +444,7 @@ function* exec_test(setup, test) {
     }
   }
 
-  yield verify_state(test.finalState ? test.finalState : setup.initialState);
+  yield verify_state(setup.initialState, test.finalState);
 
   yield promiseShutdownManager();
 }
@@ -423,7 +471,8 @@ add_task(function* test_addon_update() {
     { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
   ]));
 
-  yield verify_state([true, null, "2.0", "2.0", null, null]);
+  yield verify_state(TEST_CONDITIONS.blank.initialState,
+                     [true, null, "2.0", "2.0", null, null]);
 
   yield promiseShutdownManager();
 });
@@ -490,7 +539,8 @@ add_task(function* test_match_default_revert() {
 
   // This should revert to the default set instead of installing new versions
   // into an updated set.
-  yield verify_state([false, "1.0", "1.0", null, null, null]);
+  yield verify_state(TEST_CONDITIONS.withBothSets.initialState,
+                     [false, "1.0", "1.0", null, null, null]);
 
   yield promiseShutdownManager();
 });
@@ -523,7 +573,49 @@ add_task(function* test_no_download() {
     { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
   ]));
 
-  yield verify_state([true, null, "2.0", null, "1.0", null]);
+  yield verify_state(TEST_CONDITIONS.withBothSets.initialState,
+                     [true, null, "2.0", null, "1.0", null]);
 
   yield promiseShutdownManager();
 });
+
+// Tests that a second update before a restart works
+add_task(function* test_double_update() {
+  yield setup_conditions(TEST_CONDITIONS.withAppSet);
+
+  yield install_system_addons(yield build_xml([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
+    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+  ]));
+
+  yield install_system_addons(yield build_xml([
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" },
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
+  ]));
+
+  yield verify_state(TEST_CONDITIONS.withAppSet.initialState,
+                     [true, null, null, "2.0", "1.0", null]);
+
+  yield promiseShutdownManager();
+});
+
+// A second update after a restart will delete the original unused set
+add_task(function* test_update_purges() {
+  yield setup_conditions(TEST_CONDITIONS.withBothSets);
+
+  yield install_system_addons(yield build_xml([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
+    { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+  ]));
+
+  yield verify_state(TEST_CONDITIONS.withBothSets.initialState,
+                     [true, null, "2.0", "1.0", null, null]);
+
+  yield install_system_addons(yield build_xml(null));
+
+  let dirs = yield get_directories();
+  do_check_eq(dirs.length, 1);
+
+  yield promiseShutdownManager();
+});
+

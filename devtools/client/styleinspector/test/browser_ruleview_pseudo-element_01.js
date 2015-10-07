@@ -166,7 +166,7 @@ function* testParagraph(inspector, view) {
 
   let elementFirstLineRule = rules.firstLineRules[0];
   is(convertTextPropsToString(elementFirstLineRule.textProps),
-     "background: blue none repeat scroll 0% 0%",
+     "background: blue",
      "Paragraph first-line properties are correct");
 
   let elementFirstLetterRule = rules.firstLetterRules[0];
@@ -176,7 +176,7 @@ function* testParagraph(inspector, view) {
 
   let elementSelectionRule = rules.selectionRules[0];
   is(convertTextPropsToString(elementSelectionRule.textProps),
-     "color: white; background: black none repeat scroll 0% 0%",
+     "color: white; background: black",
      "Paragraph first-letter properties are correct");
 }
 

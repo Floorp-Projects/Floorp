@@ -22,7 +22,8 @@
 var observer = {
   alertShow: false,
   observe: function (aSubject, aTopic, aData) {
-    if (aTopic == "alertclickcallback") { 
+    is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
+    if (aTopic == "alertclickcallback") {
       todo(false, "Did someone click the notification while running mochitests? (Please don't.)");
     } else if (aTopic == "alertshow") {
       ok(!this.alertShow, "Alert should not be shown more than once");
@@ -31,7 +32,6 @@ var observer = {
       is(aTopic, "alertfinished", "Checking the topic for a finished notification");
       SimpleTest.finish();
     }
-    is(aData, "foobarcookie", "Checking whether the alert cookie was passed correctly");
   }
 };
 
@@ -62,9 +62,10 @@ function runTest() {
     SimpleTest.waitForExplicitFinish();
     notifier.showAlertNotification(null, "Notification test",
                                    "Surprise! I'm here to test notifications!",
-                                   false, "foobarcookie", observer, alertname);
+                                   false, "foobarcookie", observer, alertName);
     ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
-    if (MAC) {
+
+    if (SpecialPowers.Services.appinfo.OS == "Darwin") {
       // Notifications are native on OS X 10.8 and later, and when they are they
       // persist in the Notification Center. We need to close explicitly to avoid a hang.
       // This also works for XUL notifications when running this test on OS X < 10.8.

@@ -24,7 +24,6 @@ add_task(function*() {
   is(elementStyle.rules.length, 3, "Should have 3 rules.");
   is(elementStyle.rules[0].title, inline, "check rule 0 title");
   is(elementStyle.rules[1].title, inline +
-    ":15 @media screen and (min-width: 1px)", "check rule 1 title");
-  is(elementStyle.rules[2].title, inline + ":8", "check rule 2 title");
+    ":9 @media screen and (min-width: 1px)", "check rule 1 title");
+  is(elementStyle.rules[2].title, inline + ":2", "check rule 2 title");
 });
-

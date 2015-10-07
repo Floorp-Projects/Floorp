@@ -4,7 +4,7 @@
 "use strict";
 
 function debug(aMsg) {
-   //dump("[TVSimulatorService] " + aMsg + "\n");
+  //dump("[TVSimulatorService] " + aMsg + "\n");
 }
 
 const Cc = Components.classes;
@@ -13,6 +13,18 @@ const Ci = Components.interfaces;
 const Cr = Components.returnCode;
 const TV_SIMULATOR_DUMMY_DIRECTORY = "dummy";
 const TV_SIMULATOR_DUMMY_FILE      = "settings.json";
+
+// See http://seanyhlin.github.io/TV-Manager-API/#idl-def-TVSourceType
+const TV_SOURCE_TYPES = ["dvb-t","dvb-t2","dvb-c","dvb-c2","dvb-s",
+                         "dvb-s2","dvb-h","dvb-sh","atsc","atsc-m/h",
+                         "isdb-t","isdb-tb","isdb-s","isdb-c","1seg",
+                         "dtmb","cmmb","t-dmb","s-dmb"];
+function containInvalidSourceType(aElement, aIndex, aArray) {
+  return !TV_SOURCE_TYPES.includes(aElement);
+}
+
+// See http://seanyhlin.github.io/TV-Manager-API/#idl-def-TVChannelType
+const TV_CHANNEL_TYPES = ["tv","radio","data"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -66,7 +78,7 @@ TVSimulatorService.prototype = {
       cstream.close();
     }
 
-    let settingObj;
+    let settingsObj;
     try {
       /*
        *
@@ -109,9 +121,15 @@ TVSimulatorService.prototype = {
        *     },]
        *   }
        */
-      settingObj = JSON.parse(settingStr);
+      settingsObj = JSON.parse(settingStr);
     } catch(e) {
       debug("File load error: " + e);
+      return;
+    }
+
+    // validation
+    if (!this._validateSettings(settingsObj)) {
+      debug("Failed to validate settings.");
       return;
     }
 
@@ -120,7 +138,7 @@ TVSimulatorService.prototype = {
     this._internalTuners = new Map();
 
     // TVTunerData
-    for each (let tunerData in settingObj.tuners) {
+    for each (let tunerData in settingsObj.tuners) {
       let tuner = Cc["@mozilla.org/tv/tvtunerdata;1"]
                     .createInstance(Ci.nsITVTunerData);
       tuner.id = tunerData.id;
@@ -403,7 +421,7 @@ TVSimulatorService.prototype = {
     }
 
     let wrapChannelData = wrapTunerData.channels.get(aChannelNumber);
-    if (!wrapChannelData) {
+    if (!wrapChannelData || !wrapChannelData.videoFilePath) {
       return "";
     }
 
@@ -432,6 +450,84 @@ TVSimulatorService.prototype = {
     dsFile.append(fileName);
 
     return dsFile.path;
+  },
+
+  _validateSettings: function TVSimValidateSettings(aSettingsObject) {
+    return this._validateTuners(aSettingsObject.tuners);
+  },
+
+  _validateTuners: function TVSimValidateTuners(aTunersObject) {
+    let tunerIds = new Array();
+    for each (let tuner in aTunersObject) {
+      if (!tuner.id ||
+          !tuner.supportedType ||
+          !tuner.supportedType.length ||
+          tuner.supportedType.some(containInvalidSourceType) ||
+          tunerIds.includes(tuner.id)) {
+        debug("invalid tuner data.");
+        return false;
+      }
+      tunerIds.push(tuner.id);
+
+      if (!this._validateSources(tuner.sources)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  _validateSources: function TVSimValidateSources(aSourcesObject) {
+    for each (let source in aSourcesObject) {
+      if (!source.type ||
+          !TV_SOURCE_TYPES.includes(source.type)) {
+        debug("invalid source data.");
+        return false;
+      }
+
+      if (!this._validateChannels(source.channels)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  _validateChannels: function TVSimValidateChannels(aChannelsObject) {
+    let channelNumbers = new Array();
+    for each (let channel in aChannelsObject) {
+      if (!channel.networkId ||
+          !channel.transportStreamId ||
+          !channel.serviceId ||
+          !channel.type ||
+          !TV_CHANNEL_TYPES.includes(channel.type) ||
+          !channel.number ||
+          channelNumbers.includes(channel.number) ||
+          !channel.name) {
+        debug("invalid channel data.");
+        return false;
+      }
+      channelNumbers.push(channel.number);
+
+      if (!this._validatePrograms(channel.programs)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  _validatePrograms: function TVSimValidatePrograms(aProgramsObject) {
+    let eventIds = new Array();
+    for each (let program in aProgramsObject) {
+      if (!program.eventId ||
+          eventIds.includes(program.eventId) ||
+          !program.title ||
+          !program.startTime ||
+          !program.duration) {
+        debug("invalid program data.");
+        return false;
+      }
+      eventIds.push(program.eventId);
+    }
+    return true;
   },
 };
 

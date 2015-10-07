@@ -18,8 +18,6 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Services.prefs.setBoolPref("devtools.webide.sidebars", false);
-
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
@@ -32,8 +30,7 @@
           });
         });
 
-        Task.spawn(function* () {
-
+        Task.spawn(function*() {
           function isPlayActive() {
             return !win.document.querySelector("#cmd_play").hasAttribute("disabled");
           }
@@ -50,6 +47,9 @@
           }
 
           win = yield openWebIDE();
+          let docRuntime = getRuntimeDocument(win);
+          let docProject = getProjectDocument(win);
+          let winProject = getProjectWindow(win);
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
@@ -92,10 +92,10 @@
 
           let packagedAppLocation = getTestFilePath("app");
 
-          yield win.projectList.importPackagedApp(packagedAppLocation);
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
 
-          let panelNode = win.document.querySelector("#runtime-panel");
+          let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
           is(items.length, 3, "Found 3 runtime buttons");
 
@@ -138,7 +138,7 @@
           ok(!isPlayActive(), "play button is disabled 4");
           ok(!isStopActive(), "stop button is disabled 4");
 
-          win.document.querySelectorAll(".runtime-panel-item-other")[1].click();
+          docRuntime.querySelectorAll(".runtime-panel-item-other")[1].click();
 
           yield waitForUpdate(win, "runtime-targets");
 
@@ -147,10 +147,8 @@
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
 
           // Select main process
-          yield win.Cmds.showProjectPanel();
-          yield waitForUpdate(win, "runtime-targets");
           SimpleTest.executeSoon(() => {
-            win.document.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
+            docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
           yield waitForUpdate(win, "project");
@@ -197,11 +195,8 @@
           yield noErrorDeferred.promise;
 
           SimpleTest.finish();
-
         });
       }
-
-
     </script>
   </body>
 </html>

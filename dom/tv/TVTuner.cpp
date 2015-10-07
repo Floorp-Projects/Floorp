@@ -285,7 +285,7 @@ TVTuner::CreateSimulatedMediaStream()
                                                      currentChannelNumber,
                                                      domWin,
                                                      currentVideoBlobUrl);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_WARN_IF(NS_FAILED(rv) || currentVideoBlobUrl.IsEmpty())) {
     return nullptr;
   }
 

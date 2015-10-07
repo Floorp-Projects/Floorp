@@ -55,6 +55,7 @@
               <menulist id="defaultColorUnitMenuList"
                         data-pref="devtools.defaultColorUnit">
                 <menupopup>
+                  <menuitem label="&options.defaultColorUnit.authored;" value="authored"/>
                   <menuitem label="&options.defaultColorUnit.hex;" value="hex"/>
                   <menuitem label="&options.defaultColorUnit.hsl;" value="hsl"/>
                   <menuitem label="&options.defaultColorUnit.rgb;" value="rgb"/>

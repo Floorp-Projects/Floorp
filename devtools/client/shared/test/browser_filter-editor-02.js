@@ -37,7 +37,7 @@ add_task(function*() {
         },
         {
           label: "drop-shadow",
-          value: "rgb(0, 0, 0) 5px 5px 0px",
+          value: "5px 5px black",
           unit: null
         }
       ]
@@ -47,7 +47,7 @@ add_task(function*() {
       expected: [
         {
           label: "url",
-          value: "chrome://devtools/content/shared/widgets/example.svg",
+          value: "example.svg",
           unit: null
         }
       ]

@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1202933</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Services = SpecialPowers.Services;
+
+const notifier = Cc["@mozilla.org/alerts-service;1"]
+                   .getService(Ci.nsIAlertsService);
+
+function notify(alertName, principal) {
+  return new Promise((resolve, reject) => {
+    var source;
+    function observe(subject, topic, data) {
+      if (topic == "alertclickcallback") {
+        reject(new Error("Alerts should not be clicked during test"));
+      } else if (topic == "alertshow") {
+        var alertWindows = Services.wm.getEnumerator("alert:alert");
+        ok(alertWindows.hasMoreElements(), "Should show alert");
+        var alertWindow = alertWindows.getNext();
+        source = alertWindow.document.getElementById("alertSourceLabel").getAttribute("value");
+      } else {
+        is(topic, "alertfinished", "Should hide alert");
+        resolve(source);
+      }
+    }
+    notifier.showAlertNotification(null, "Notification test",
+                                   "Surprise! I'm here to test notifications!",
+                                   false, alertName, observe, alertName,
+                                   null, null, null, principal);
+    if (SpecialPowers.Services.appinfo.OS == "Darwin") {
+      notifier.closeAlert(alertName);
+    }
+  });
+}
+
+function* testNoPrincipal() {
+  var source = yield notify("noPrincipal", null);
+  ok(!source, "Should omit source without principal");
+}
+
+function* testSystemPrincipal() {
+  var principal = Services.scriptSecurityManager.getSystemPrincipal();
+  var source = yield notify("systemPrincipal", principal);
+  ok(!source, "Should omit source for system principal");
+}
+
+function* testExpandedPrincipal() {
+  var principal = Services.scriptSecurityManager.createExpandedPrincipal([], 0);
+  var source = yield notify("expandedPrincipal", principal);
+  ok(!source, "Should omit source for expanded principal");
+}
+
+function* testNullPrincipal() {
+  var principal = Services.scriptSecurityManager.createNullPrincipal({});
+  var source = yield notify("nullPrincipal", principal);
+  ok(!source, "Should omit source for null principal");
+}
+
+function* testNodePrincipal() {
+  var principal = SpecialPowers.wrap(document).nodePrincipal;
+  var source = yield notify("nodePrincipal", principal);
+
+  var stringBundle = Services.strings.createBundle(
+    "chrome://alerts/locale/alert.properties"
+  );
+  var localizedSource = stringBundle.formatStringFromName(
+    "source.label", [principal.URI.hostPort], 1);
+  is(source, localizedSource, "Should include source for node principal");
+}
+
+function runTest() {
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application");
+    return;
+  }
+
+  if ("@mozilla.org/system-alerts-service;1" in Cc) {
+    todo(false, "Native alerts service exists in this application");
+    return;
+  }
+
+  ok(true, "Alerts service exists in this application");
+
+  ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(),
+     "Alerts should not be present at the start of the test.");
+
+  add_task(testNoPrincipal);
+  add_task(testSystemPrincipal);
+  add_task(testExpandedPrincipal);
+  add_task(testNullPrincipal);
+  add_task(testNodePrincipal);
+}
+
+runTest();
+</script>
+</pre>
+</body>
+</html>

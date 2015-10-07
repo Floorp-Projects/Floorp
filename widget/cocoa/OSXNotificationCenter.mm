@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIContentPolicy.h"
+#include "nsAlertsUtils.h"
 #include "imgRequestProxy.h"
 
 using namespace mozilla;
@@ -240,16 +241,20 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
 
   Class unClass = NSClassFromString(@"NSUserNotification");
   id<FakeNSUserNotification> notification = [[unClass alloc] init];
-  notification.title = [NSString stringWithCharacters:(const unichar *)aAlertTitle.BeginReading()
-                                               length:aAlertTitle.Length()];
-  notification.informativeText = [NSString stringWithCharacters:(const unichar *)aAlertText.BeginReading()
-                                                         length:aAlertText.Length()];
+  notification.title = nsCocoaUtils::ToNSString(aAlertTitle);
+
+  nsAutoString hostPort;
+  nsAlertsUtils::GetSourceHostPort(aPrincipal, hostPort);
+  if (!hostPort.IsEmpty()) {
+    notification.subtitle = nsCocoaUtils::ToNSString(hostPort);
+  }
+
+  notification.informativeText = nsCocoaUtils::ToNSString(aAlertText);
   notification.soundName = NSUserNotificationDefaultSoundName;
   notification.hasActionButton = NO;
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
-  if (aPrincipal && !nsContentUtils::IsSystemOrExpandedPrincipal(aPrincipal)
-      && !aPrincipal->GetIsNullPrincipal()) {
+  if (nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
     nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     nsCOMPtr<nsIStringBundle> bundle;
     nsresult rv = sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
@@ -276,7 +281,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                forKey:@"_alternateActionButtonTitles"];
     }
   }
-  NSString *alertName = [NSString stringWithCharacters:(const unichar *)aAlertName.BeginReading() length:aAlertName.Length()];
+  NSString *alertName = nsCocoaUtils::ToNSString(aAlertName);
   if (!alertName) {
     return NS_ERROR_FAILURE;
   }
@@ -336,7 +341,7 @@ OSXNotificationCenter::CloseAlert(const nsAString& aAlertName,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  NSString *alertName = [NSString stringWithCharacters:(const unichar *)aAlertName.BeginReading() length:aAlertName.Length()];
+  NSString *alertName = nsCocoaUtils::ToNSString(aAlertName);
   CloseAlertCocoaString(alertName);
   return NS_OK;
 

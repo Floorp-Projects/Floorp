@@ -39,7 +39,7 @@ function testColorParsing(view) {
   ok(colorEls, "The color elements were found");
   is(colorEls.length, 3, "There are 3 color values");
 
-  let colors = ["#F06", "#333", "#000"];
+  let colors = ["#f06", "#333", "#000"];
   for (let i = 0; i < colors.length; i++) {
     is(colorEls[i].textContent, colors[i], "The right color value was found");
   }

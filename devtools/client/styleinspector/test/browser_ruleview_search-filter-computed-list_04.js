@@ -43,7 +43,7 @@ function* testModifyPropertyValueFilter(inspector, view) {
     "top text property is correctly highlighted.");
 
   let onBlur = once(editor.input, "blur");
-  let onModification = rule._applyingModifications;
+  let onModification = view.once("ruleview-changed");
   EventUtils.sendString("4px 0px", view.styleWindow);
   EventUtils.synthesizeKey("VK_RETURN", {});
   yield onBlur;
