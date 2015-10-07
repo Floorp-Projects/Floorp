@@ -527,7 +527,7 @@ exports.expectState = expectState;
  * place, usable by other modules/actors on the server, but a separate
  * module defining the actor/RDP definition.
  *
- * @see Framerate implementation: devtools/shared/shared/framerate.js
+ * @see Framerate implementation: devtools/server/performance/framerate.js
  * @see Framerate actor definition: devtools/server/actors/framerate.js
  */
 function actorBridge (methodName, definition={}) {
