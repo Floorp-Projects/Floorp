@@ -277,7 +277,8 @@ speechd_cb(size_t msg_id, size_t client_id, SPDNotificationType state)
 
 NS_INTERFACE_MAP_BEGIN(SpeechDispatcherService)
   NS_INTERFACE_MAP_ENTRY(nsISpeechService)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISpeechService)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(SpeechDispatcherService)
@@ -439,6 +440,17 @@ SpeechDispatcherService::RegisterVoices()
 
   mInitialized = true;
 }
+
+// nsIObserver
+
+NS_IMETHODIMP
+SpeechDispatcherService::Observe(nsISupports* aSubject, const char* aTopic,
+                                 const char16_t* aData)
+{
+  return NS_OK;
+}
+
+// nsISpeechService
 
 // TODO: Support SSML
 NS_IMETHODIMP
