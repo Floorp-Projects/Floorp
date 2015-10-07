@@ -331,7 +331,7 @@ private:
   {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
-  RefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 
   media::TimeInterval mAppendWindow;
   media::TimeUnit mTimestampOffset;

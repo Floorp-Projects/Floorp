@@ -243,7 +243,7 @@ VerifyCertificate(CERTCertificate* cert, void* voidContext, void* pinArg)
 
   context->signingCert = xpcomCert;
 
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   return MapSECStatus(certVerifier->VerifyCert(cert,

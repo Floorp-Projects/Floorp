@@ -73,7 +73,7 @@ GrallocImage::SetData(const Data& aData)
     return;
   }
 
-  RefPtr<GrallocTextureClientOGL> textureClient =
+  nsRefPtr<GrallocTextureClientOGL> textureClient =
        new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
                                    gfx::SurfaceFormat::UNKNOWN,
                                    gfx::BackendType::NONE);
@@ -407,7 +407,7 @@ GrallocImage::GetAsSourceSurface()
   android::sp<GraphicBuffer> graphicBuffer =
     mTextureClient->GetGraphicBuffer();
 
-  RefPtr<gfx::DataSourceSurface> surface =
+  nsRefPtr<gfx::DataSourceSurface> surface =
     gfx::Factory::CreateDataSourceSurface(GetSize(), gfx::SurfaceFormat::R5G6B5);
   if (NS_WARN_IF(!surface)) {
     return nullptr;

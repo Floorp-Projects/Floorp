@@ -287,7 +287,7 @@ public:
                       const nsIntRegion& aDirtyRegion,
                       void (^aCallback)(gfx::DrawTarget*, const nsIntRegion&))
   {
-    RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
+    nsRefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
     if (drawTarget) {
       aCallback(drawTarget, GetUpdateRegion());
       EndUpdate();
@@ -311,7 +311,7 @@ public:
 
 protected:
 
-  RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+  nsRefPtr<gfx::DrawTarget> mUpdateDrawTarget;
   GLContext* mGLContext;
   nsIntRegion mUpdateRegion;
   nsIntSize mUsedSize;
@@ -2343,9 +2343,9 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
   nsIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
   mCornerMaskImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
     ClearRegion(drawTarget, updateRegion);
-    RefPtr<gfx::PathBuilder> builder = drawTarget->CreatePathBuilder();
+    nsRefPtr<gfx::PathBuilder> builder = drawTarget->CreatePathBuilder();
     builder->Arc(gfx::Point(mDevPixelCornerRadius, mDevPixelCornerRadius), mDevPixelCornerRadius, 0, 2.0f * M_PI);
-    RefPtr<gfx::Path> path = builder->Finish();
+    nsRefPtr<gfx::Path> path = builder->Finish();
     drawTarget->Fill(path,
                      gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)),
                      gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
@@ -2656,7 +2656,7 @@ nsChildView::StartRemoteDrawing()
     mBasicCompositorImage = new RectTextureImage(mGLPresenter->gl());
   }
 
-  RefPtr<gfx::DrawTarget> drawTarget =
+  nsRefPtr<gfx::DrawTarget> drawTarget =
     mBasicCompositorImage->BeginUpdate(renderSize, dirtyRegion);
 
   if (!drawTarget) {
@@ -2925,7 +2925,7 @@ RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
 
   mInUpdate = true;
 
-  RefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
+  nsRefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
   return drawTarget.forget();
 }
 
@@ -2953,8 +2953,8 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
     updateRegion = gfx::IntRect(gfx::IntPoint(0, 0), mTextureSize);
   }
 
-  RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
-  RefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
+  nsRefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
+  nsRefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
 
   UploadSurfaceToTexture(mGLContext,
                          dataSnapshot,
@@ -2981,11 +2981,11 @@ RectTextureImage::UpdateFromCGContext(const nsIntSize& aNewSize,
   gfx::IntSize size = gfx::IntSize(CGBitmapContextGetWidth(aCGContext),
                                    CGBitmapContextGetHeight(aCGContext));
   mBufferSize.SizeTo(size.width, size.height);
-  RefPtr<gfx::DrawTarget> dt = BeginUpdate(aNewSize, aDirtyRegion);
+  nsRefPtr<gfx::DrawTarget> dt = BeginUpdate(aNewSize, aDirtyRegion);
   if (dt) {
     gfx::Rect rect(0, 0, size.width, size.height);
     gfxUtils::ClipToRegion(dt, GetUpdateRegion());
-    RefPtr<gfx::SourceSurface> sourceSurface =
+    nsRefPtr<gfx::SourceSurface> sourceSurface =
       dt->CreateSourceSurfaceFromData(static_cast<uint8_t *>(CGBitmapContextGetData(aCGContext)),
                                       size,
                                       CGBitmapContextGetBytesPerRow(aCGContext),
@@ -3720,7 +3720,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create Cairo objects.
   nsRefPtr<gfxQuartzSurface> targetSurface;
 
-  RefPtr<gfx::DrawTarget> dt =
+  nsRefPtr<gfx::DrawTarget> dt =
     gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
                                                     gfx::IntSize(backingSize.width,
                                                                  backingSize.height));

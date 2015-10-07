@@ -56,7 +56,7 @@ PackagedAppVerifier::~PackagedAppVerifier()
   while (auto i = mPendingResourceCacheInfoList.popFirst()) {
     // This seems to be the only way that we can manually delete a
     // nsISupports instance with no warning.
-    RefPtr<ResourceCacheInfo> deleter(i);
+    nsRefPtr<ResourceCacheInfo> deleter(i);
   }
 }
 
@@ -368,7 +368,7 @@ PackagedAppVerifier::OnManifestVerified(bool aSuccess)
     }
   }
 
-  RefPtr<ResourceCacheInfo> info(mPendingResourceCacheInfoList.popFirst());
+  nsRefPtr<ResourceCacheInfo> info(mPendingResourceCacheInfoList.popFirst());
   MOZ_ASSERT(info);
 
   mListener->OnVerified(true, // aIsManifest.
@@ -396,7 +396,7 @@ PackagedAppVerifier::OnResourceVerified(bool aSuccess)
     return;
   }
 
-  RefPtr<ResourceCacheInfo> info(mPendingResourceCacheInfoList.popFirst());
+  nsRefPtr<ResourceCacheInfo> info(mPendingResourceCacheInfoList.popFirst());
   MOZ_ASSERT(info);
 
   mListener->OnVerified(false, // aIsManifest.

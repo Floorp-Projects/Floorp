@@ -1115,7 +1115,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString &host,
   }
 
   nsAutoPtr<DataBuffer> buf(new DataBuffer(data, data_length));
-  RefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
+  nsRefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
 
   RUN_ON_THREAD(sts_thread_,
                 mozilla::WrapRunnable(nsRefPtr<NrUdpSocketIpc>(this),
@@ -1288,7 +1288,7 @@ void NrUdpSocketIpc::close() {
                 NS_DISPATCH_NORMAL);
 
   //remove all enqueued messages
-  std::queue<RefPtr<nr_udp_message> > empty;
+  std::queue<nsRefPtr<nr_udp_message> > empty;
   std::swap(received_msgs_, empty);
 }
 
@@ -1312,7 +1312,7 @@ int NrUdpSocketIpc::recvfrom(void *buf, size_t maxlen, size_t *len, int flags,
   }
 
   {
-    RefPtr<nr_udp_message> msg(received_msgs_.front());
+    nsRefPtr<nr_udp_message> msg(received_msgs_.front());
 
     received_msgs_.pop();
 
@@ -1463,7 +1463,7 @@ void NrUdpSocketIpc::release_use_s() {
 }
 #endif
 
-void NrUdpSocketIpc::recv_callback_s(RefPtr<nr_udp_message> msg) {
+void NrUdpSocketIpc::recv_callback_s(nsRefPtr<nr_udp_message> msg) {
   ASSERT_ON_THREAD(sts_thread_);
 
   {
@@ -1684,7 +1684,7 @@ void NrTcpSocketIpc::close() {
                 NS_DISPATCH_NORMAL);
 
   //remove all enqueued messages
-  std::queue<RefPtr<nr_tcp_message>> empty;
+  std::queue<nsRefPtr<nr_tcp_message>> empty;
   std::swap(msg_queue_, empty);
 }
 
@@ -1962,7 +1962,7 @@ static nr_socket_vtbl nr_socket_local_vtbl={
 };
 
 int nr_socket_local_create(void *obj, nr_transport_addr *addr, nr_socket **sockp) {
-  RefPtr<NrSocketBase> sock;
+  nsRefPtr<NrSocketBase> sock;
   int r, _status;
 
   // create IPC bridge for content process

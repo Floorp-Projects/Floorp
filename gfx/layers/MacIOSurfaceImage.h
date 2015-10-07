@@ -31,8 +31,8 @@ public:
   MacIOSurfaceImage() : Image(nullptr, ImageFormat::MAC_IOSURFACE) {}
 
 private:
-  RefPtr<MacIOSurface> mSurface;
-  RefPtr<TextureClient> mTextureClient;
+  nsRefPtr<MacIOSurface> mSurface;
+  nsRefPtr<TextureClient> mTextureClient;
 };
 
 } // namespace layers

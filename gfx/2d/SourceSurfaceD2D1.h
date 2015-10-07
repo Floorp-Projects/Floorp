@@ -50,13 +50,13 @@ private:
   // this may happen on destruction or copying.
   void MarkIndependent();
 
-  RefPtr<ID2D1Image> mImage;
+  nsRefPtr<ID2D1Image> mImage;
   // This may be null if we were created for a non-bitmap image and have not
   // had a reason yet to realize ourselves.
-  RefPtr<ID2D1Bitmap1> mRealizedBitmap;
-  RefPtr<ID2D1DeviceContext> mDC;
+  nsRefPtr<ID2D1Bitmap1> mRealizedBitmap;
+  nsRefPtr<ID2D1DeviceContext> mDC;
   // Keep this around to verify whether out image is still valid in the future.
-  RefPtr<ID2D1Device> mDevice;
+  nsRefPtr<ID2D1Device> mDevice;
 
   SurfaceFormat mFormat;
   IntSize mSize;
@@ -83,7 +83,7 @@ private:
   friend class SourceSurfaceD2DTarget;
   void EnsureMapped();
 
-  mutable RefPtr<ID2D1Bitmap1> mBitmap;
+  mutable nsRefPtr<ID2D1Bitmap1> mBitmap;
   SurfaceFormat mFormat;
   D2D1_MAPPED_RECT mMap;
   bool mMapped;

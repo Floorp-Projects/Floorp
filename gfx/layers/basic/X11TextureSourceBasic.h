@@ -41,9 +41,9 @@ public:
   static gfx::SurfaceFormat ContentTypeToSurfaceFormat(gfxContentType aType);
 
 protected:
-  RefPtr<BasicCompositor> mCompositor;
-  RefPtr<gfxXlibSurface> mSurface;
-  RefPtr<gfx::SourceSurface> mSourceSurface;
+  nsRefPtr<BasicCompositor> mCompositor;
+  nsRefPtr<gfxXlibSurface> mSurface;
+  nsRefPtr<gfx::SourceSurface> mSourceSurface;
 };
 
 } // namespace layers

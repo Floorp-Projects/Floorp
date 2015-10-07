@@ -16,7 +16,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/nsRefPtr.h"

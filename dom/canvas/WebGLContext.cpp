@@ -637,7 +637,7 @@ static already_AddRefed<gl::GLContext>
 CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
                 WebGLContext* webgl)
 {
-    RefPtr<GLContext> gl;
+    nsRefPtr<GLContext> gl;
 #ifndef XP_MACOSX // Mac doesn't have GLContextProviderEGL.
     gfx::IntSize dummySize(16, 16);
     gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
@@ -657,7 +657,7 @@ static already_AddRefed<GLContext>
 CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
                   WebGLContext* webgl)
 {
-    RefPtr<GLContext> gl;
+    nsRefPtr<GLContext> gl;
 
 #ifdef XP_WIN
     gfx::IntSize dummySize(16, 16);
@@ -689,7 +689,7 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     gfx::IntSize dummySize(16, 16);
-    RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps, flags);
+    nsRefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps, flags);
     if (!gl) {
         webgl->GenerateWarning("Error during native OpenGL init.");
         return nullptr;
@@ -1130,14 +1130,14 @@ WebGLContext::GetImageBuffer(uint8_t** out_imageBuffer, int32_t* out_format)
 
     // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
     bool premult;
-    RefPtr<SourceSurface> snapshot =
+    nsRefPtr<SourceSurface> snapshot =
       GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
     if (!snapshot)
         return;
 
     MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
-    RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
+    nsRefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
 
     DataSourceSurface::MappedSurface map;
     if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map))
@@ -1810,7 +1810,7 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
     bool hasAlpha = mOptions.alpha;
     SurfaceFormat surfFormat = hasAlpha ? SurfaceFormat::B8G8R8A8
                                         : SurfaceFormat::B8G8R8X8;
-    RefPtr<DataSourceSurface> surf;
+    nsRefPtr<DataSourceSurface> surf;
     surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
                                                       surfFormat,
                                                       mWidth * 4);
@@ -1838,7 +1838,7 @@ WebGLContext::GetSurfaceSnapshot(bool* out_premultAlpha)
         }
     }
 
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
         Factory::CreateDrawTarget(BackendType::CAIRO,
                                   IntSize(mWidth, mHeight),
                                   SurfaceFormat::B8G8R8A8);

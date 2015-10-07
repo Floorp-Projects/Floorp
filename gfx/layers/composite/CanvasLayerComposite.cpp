@@ -90,7 +90,7 @@ CanvasLayerComposite::RenderLayer(const IntRect& aClipRect)
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpCompositorTextures) {
-    RefPtr<gfx::DataSourceSurface> surf = mCompositableHost->GetAsSurface();
+    nsRefPtr<gfx::DataSourceSurface> surf = mCompositableHost->GetAsSurface();
     WriteSnapshotToDumpFile(this, surf);
   }
 #endif

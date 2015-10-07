@@ -680,7 +680,7 @@ nsWindow::StartRemoteDrawing()
         mBackBuffer = mFramebufferTarget->CreateSimilarDrawTarget(
             mFramebufferTarget->GetSize(), mFramebufferTarget->GetFormat());
     }
-    RefPtr<DrawTarget> buffer(mBackBuffer);
+    nsRefPtr<DrawTarget> buffer(mBackBuffer);
     return buffer.forget();
 }
 
@@ -690,7 +690,7 @@ nsWindow::EndRemoteDrawing()
     if (mFramebufferTarget) {
         IntSize size = mFramebufferTarget->GetSize();
         Rect rect(0, 0, size.width, size.height);
-        RefPtr<SourceSurface> source = mBackBuffer->Snapshot();
+        nsRefPtr<SourceSurface> source = mBackBuffer->Snapshot();
         mFramebufferTarget->DrawSurface(source, rect, rect);
         gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
     }

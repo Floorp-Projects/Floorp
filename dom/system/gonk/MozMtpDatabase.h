@@ -10,7 +10,7 @@
 #include "MozMtpCommon.h"
 
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIThread.h"
@@ -210,8 +210,8 @@ private:
   private:
     mozilla::Mutex& mMutex;
   };
-  typedef nsTArray<mozilla::RefPtr<DbEntry> > UnprotectedDbArray;
-  typedef ProtectedTArray<mozilla::RefPtr<DbEntry> > ProtectedDbArray;
+  typedef nsTArray<nsRefPtr<DbEntry> > UnprotectedDbArray;
+  typedef ProtectedTArray<nsRefPtr<DbEntry> > ProtectedDbArray;
 
   struct StorageEntry final
   {
@@ -224,7 +224,7 @@ private:
   protected:
     ~StorageEntry() {}
   };
-  typedef ProtectedTArray<mozilla::RefPtr<StorageEntry> > StorageArray;
+  typedef ProtectedTArray<nsRefPtr<StorageEntry> > StorageArray;
 
   enum MatchType
   {

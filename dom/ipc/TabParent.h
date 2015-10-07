@@ -15,7 +15,7 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -438,7 +438,7 @@ public:
 
     void AddInitialDnDDataTo(DataTransfer* aDataTransfer);
 
-    void TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
+    void TakeDragVisualization(nsRefPtr<mozilla::gfx::SourceSurface>& aSurface,
                                int32_t& aDragAreaX, int32_t& aDragAreaY);
     layout::RenderFrameParent* GetRenderFrame();
 
@@ -554,7 +554,7 @@ private:
     };
     nsTArray<nsTArray<DataTransferItem>> mInitialDataTransferItems;
 
-    mozilla::RefPtr<gfx::DataSourceSurface> mDnDVisualization;
+    nsRefPtr<gfx::DataSourceSurface> mDnDVisualization;
     int32_t mDragAreaX;
     int32_t mDragAreaY;
 

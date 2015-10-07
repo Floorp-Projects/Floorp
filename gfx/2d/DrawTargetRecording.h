@@ -277,8 +277,8 @@ private:
   Path *GetPathForPathRecording(const Path *aPath) const;
   void EnsureStored(const Path *aPath);
 
-  RefPtr<DrawEventRecorderPrivate> mRecorder;
-  RefPtr<DrawTarget> mFinalDT;
+  nsRefPtr<DrawEventRecorderPrivate> mRecorder;
+  nsRefPtr<DrawTarget> mFinalDT;
 };
 
 } // namespace gfx

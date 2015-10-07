@@ -284,7 +284,7 @@ cairo_d2d_create_device()
 	return NULL;
     }
 
-    RefPtr<ID3D10Device1> d3ddevice;
+    nsRefPtr<ID3D10Device1> d3ddevice;
 
     /**
      * On usage of D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS:
@@ -383,7 +383,7 @@ cairo_d2d_finish_device(cairo_device_t *device)
     D3D10_QUERY_DESC queryDesc;
     queryDesc.MiscFlags = 0;
     queryDesc.Query = D3D10_QUERY_EVENT;
-    RefPtr<ID3D10Query> query;
+    nsRefPtr<ID3D10Query> query;
 
     d2d_device->mD3D10Device->CreateQuery(&queryDesc, &query);
 
@@ -786,7 +786,7 @@ static ID3D10Texture2D*
 _cairo_d2d_get_buffer_texture(cairo_d2d_surface_t *surface) 
 {
     if (!surface->bufferTexture) {
-	RefPtr<IDXGISurface> surf;
+	nsRefPtr<IDXGISurface> surf;
 	DXGI_SURFACE_DESC surfDesc;
 	surface->surface->QueryInterface(&surf);
 	surf->GetDesc(&surfDesc);
@@ -855,7 +855,7 @@ struct d2d_clip_t
     d2d_clip_t(d2d_clip_t *prev, clip_type type) : prev(prev), type(type) { }
 };
 
-static RefPtr<ID2D1PathGeometry>
+static nsRefPtr<ID2D1PathGeometry>
 _cairo_d2d_create_path_geometry_for_path(cairo_path_fixed_t *path,
 					 cairo_fill_rule_t fill_rule,
 					 D2D1_FIGURE_BEGIN type);
@@ -895,10 +895,10 @@ push_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_path_t *clip_path)
 	d2dsurf->d2d_clip = new d2d_clip_t (d2dsurf->d2d_clip, d2d_clip_t::AXIS_ALIGNED_CLIP);
     } else {
 	HRESULT hr;
-	RefPtr<ID2D1PathGeometry> geom = _cairo_d2d_create_path_geometry_for_path (&clip_path->path,
+	nsRefPtr<ID2D1PathGeometry> geom = _cairo_d2d_create_path_geometry_for_path (&clip_path->path,
 							clip_path->fill_rule,
 							D2D1_FIGURE_BEGIN_FILLED);
-	RefPtr<ID2D1Layer> layer;
+	nsRefPtr<ID2D1Layer> layer;
 
 	hr = d2dsurf->rt->CreateLayer (&layer);
 
@@ -911,7 +911,7 @@ push_clip (cairo_d2d_surface_t *d2dsurf, cairo_clip_path_t *clip_path)
 	    options1 = D2D1_LAYER_OPTIONS1_INITIALIZE_FROM_BACKGROUND;
 	}
 
-	RefPtr<ID2D1DeviceContext> dc;
+	nsRefPtr<ID2D1DeviceContext> dc;
 	hr = d2dsurf->rt->QueryInterface(IID_ID2D1DeviceContext, (void**)&dc);
 
 	if (FAILED(hr)) {
@@ -1155,7 +1155,7 @@ _cairo_d2d_invert_matrix(const D2D1::Matrix3x2F &mat)
  * \param style Cairo stroke style object
  * \return D2D StrokeStyle interface
  */
-static RefPtr<ID2D1StrokeStyle>
+static nsRefPtr<ID2D1StrokeStyle>
 _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style)
 {
     D2D1_CAP_STYLE line_cap = D2D1_CAP_STYLE_FLAT;
@@ -1201,7 +1201,7 @@ _cairo_d2d_create_strokestyle_for_stroke_style(const cairo_stroke_style_t *style
 	dashStyle = D2D1_DASH_STYLE_CUSTOM;
     }
 
-    RefPtr<ID2D1StrokeStyle> strokeStyle;
+    nsRefPtr<ID2D1StrokeStyle> strokeStyle;
     sD2DFactory->CreateStrokeStyle(D2D1::StrokeStyleProperties(line_cap, 
 							       line_cap,
 							       line_cap, 
@@ -1244,7 +1244,7 @@ struct cached_bitmap {
      * device cache, see bug 607408 */
     cairo_d2d_device_t *device;
     /** The cached bitmap */
-    RefPtr<ID2D1Bitmap> bitmap;
+    nsRefPtr<ID2D1Bitmap> bitmap;
     /** The cached bitmap is dirty and needs its data refreshed */
     bool dirty;
     /** Order of snapshot detach/release bitmap called not guaranteed, single threaded refcount for now */
@@ -1305,7 +1305,7 @@ _cairo_d2d_calculate_visible_rect(cairo_d2d_surface_t *d2dsurf, cairo_image_surf
 	cairo_matrix_invert(&invMat);
     }
 
-    RefPtr<IDXGISurface> surf;
+    nsRefPtr<IDXGISurface> surf;
     d2dsurf->surface->QueryInterface(&surf);
     DXGI_SURFACE_DESC desc;
     surf->GetDesc(&desc);
@@ -1379,7 +1379,7 @@ _cairo_d2d_dot_product(const cairo_point_double_t &p1, const cairo_point_double_
     return p1.x * p2.x + p1.y * p2.y;
 }
 
-static RefPtr<ID2D1Brush>
+static nsRefPtr<ID2D1Brush>
 _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 					cairo_radial_pattern_t *source_pattern)
 {
@@ -1419,7 +1419,7 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	bool reflected = false;
 	bool reflect = source_pattern->base.base.extend == CAIRO_EXTEND_REFLECT;
 
-	RefPtr<IDXGISurface> surf;
+	nsRefPtr<IDXGISurface> surf;
 	d2dsurf->surface->QueryInterface(&surf);
 	DXGI_SURFACE_DESC desc;
 	surf->GetDesc(&desc);
@@ -1541,9 +1541,9 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	return NULL;
     }
 
-    RefPtr<ID2D1GradientStopCollection> stopCollection;
+    nsRefPtr<ID2D1GradientStopCollection> stopCollection;
     d2dsurf->rt->CreateGradientStopCollection(stops, num_stops, &stopCollection);
-    RefPtr<ID2D1RadialGradientBrush> brush;
+    nsRefPtr<ID2D1RadialGradientBrush> brush;
 
     d2dsurf->rt->CreateRadialGradientBrush(D2D1::RadialGradientBrushProperties(center,
 									       origin,
@@ -1556,7 +1556,7 @@ _cairo_d2d_create_radial_gradient_brush(cairo_d2d_surface_t *d2dsurf,
     return brush;
 }
 
-static RefPtr<ID2D1Brush>
+static nsRefPtr<ID2D1Brush>
 _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 					cairo_path_fixed_t *fill_path,
 					cairo_linear_pattern_t *source_pattern)
@@ -1564,7 +1564,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
     if (source_pattern->p1.x == source_pattern->p2.x &&
 	source_pattern->p1.y == source_pattern->p2.y) {
 	// Cairo behavior in this situation is to draw a solid color the size of the last stop.
-	RefPtr<ID2D1SolidColorBrush> brush;
+	nsRefPtr<ID2D1SolidColorBrush> brush;
 	d2dsurf->rt->CreateSolidColorBrush(
 	    _cairo_d2d_color_from_cairo_color_stop(source_pattern->base.stops[source_pattern->base.n_stops - 1].color),
 	    &brush);
@@ -1606,7 +1606,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	    top_right.x = bottom_right.x = _cairo_fixed_to_double (fill_extents.p2.x);
 	    bottom_right.y = bottom_left.y = _cairo_fixed_to_double (fill_extents.p2.y);
         } else {
-            RefPtr<IDXGISurface> surf;
+            nsRefPtr<IDXGISurface> surf;
             d2dsurf->surface->QueryInterface(&surf);
             DXGI_SURFACE_DESC desc;
             surf->GetDesc(&desc);
@@ -1718,9 +1718,9 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
 	stops[source_pattern->base.n_stops + 1].position = 1.0f;
 	stops[source_pattern->base.n_stops + 1].color = D2D1::ColorF(0, 0);
     }
-    RefPtr<ID2D1GradientStopCollection> stopCollection;
+    nsRefPtr<ID2D1GradientStopCollection> stopCollection;
     d2dsurf->rt->CreateGradientStopCollection(stops, num_stops, &stopCollection);
-    RefPtr<ID2D1LinearGradientBrush> brush;
+    nsRefPtr<ID2D1LinearGradientBrush> brush;
     d2dsurf->rt->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2D1::Point2F((FLOAT)p1.x, (FLOAT)p1.y),
 									       D2D1::Point2F((FLOAT)p2.x, (FLOAT)p2.y)),
 					   brushProps,
@@ -1742,7 +1742,7 @@ _cairo_d2d_create_linear_gradient_brush(cairo_d2d_surface_t *d2dsurf,
  * this will make the function return a seperate brush.
  * \return A brush object
  */
-static RefPtr<ID2D1Brush>
+static nsRefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 				    cairo_path_fixed_t *fill_path,
 				    const cairo_pattern_t *pattern,
@@ -1755,7 +1755,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    (cairo_solid_pattern_t*)pattern;
 	D2D1_COLOR_F color = _cairo_d2d_color_from_cairo_color(sourcePattern->color);
 	if (unique) {
-	    RefPtr<ID2D1SolidColorBrush> brush;
+	    nsRefPtr<ID2D1SolidColorBrush> brush;
 	    d2dsurf->rt->CreateSolidColorBrush(color,
 					       &brush);
 	    return brush;
@@ -1803,7 +1803,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    extendMode = D2D1_EXTEND_MODE_CLAMP;
 	}
 
-	RefPtr<ID2D1Bitmap> sourceBitmap;
+	nsRefPtr<ID2D1Bitmap> sourceBitmap;
 	bool partial = false;
 	int xoffset = 0;
 	int yoffset = 0;
@@ -1918,7 +1918,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		     * this by 45 degrees and scale it to a size of 5x5 pixels and composite it to the destination,
 		     * the composition will require all 10 original columns to do the best possible sampling.
 		     */
-		    RefPtr<IDXGISurface> surf;
+		    nsRefPtr<IDXGISurface> surf;
 		    d2dsurf->surface->QueryInterface(&surf);
 		    DXGI_SURFACE_DESC desc;
 		    surf->GetDesc(&desc);
@@ -2097,7 +2097,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 						   D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
 	}
 	if (unique) {
-	    RefPtr<ID2D1BitmapBrush> bitBrush;
+	    nsRefPtr<ID2D1BitmapBrush> bitBrush;
 	    D2D1_BRUSH_PROPERTIES brushProps =
 		D2D1::BrushProperties(1.0, _cairo_d2d_matrix_from_matrix(&mat));
 	    d2dsurf->rt->CreateBitmapBrush(sourceBitmap, 
@@ -2241,14 +2241,14 @@ _cairo_d2d_path_close(void *closure)
  * \param type Figure begin type to use
  * \return A D2D geometry
  */
-static RefPtr<ID2D1PathGeometry>
+static nsRefPtr<ID2D1PathGeometry>
 _cairo_d2d_create_path_geometry_for_path(cairo_path_fixed_t *path, 
 					 cairo_fill_rule_t fill_rule,
 					 D2D1_FIGURE_BEGIN type)
 {
-    RefPtr<ID2D1PathGeometry> d2dpath;
+    nsRefPtr<ID2D1PathGeometry> d2dpath;
     sD2DFactory->CreatePathGeometry(&d2dpath);
-    RefPtr<ID2D1GeometrySink> sink;
+    nsRefPtr<ID2D1GeometrySink> sink;
     d2dpath->Open(&sink);
     D2D1_FILL_MODE fillMode = D2D1_FILL_MODE_WINDING;
     if (fill_rule == CAIRO_FILL_RULE_WINDING) {
@@ -2455,7 +2455,7 @@ _cairo_d2d_create_similar(void			*surface,
     if (sizePixels.height < 1) {
 	sizePixels.height = 1;
     }
-    RefPtr<IDXGISurface> oldDxgiSurface;
+    nsRefPtr<IDXGISurface> oldDxgiSurface;
     d2dsurf->surface->QueryInterface(&oldDxgiSurface);
     DXGI_SURFACE_DESC origDesc;
 
@@ -2477,8 +2477,8 @@ _cairo_d2d_create_similar(void			*surface,
     if (desc.Format != DXGI_FORMAT_A8_UNORM)
 	desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
 
-    RefPtr<ID3D10Texture2D> texture;
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<ID3D10Texture2D> texture;
+    nsRefPtr<IDXGISurface> dxgiSurface;
 
     D2D1_RENDER_TARGET_USAGE usage = (desc.MiscFlags & D3D10_RESOURCE_MISC_GDI_COMPATIBLE) ?
 					  D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE
@@ -2586,9 +2586,9 @@ _cairo_d2d_acquire_source_image(void                    *abstract_surface,
     HRESULT hr;
     D2D1_SIZE_U size = d2dsurf->rt->GetPixelSize();
 
-    RefPtr<ID3D10Texture2D> softTexture;
+    nsRefPtr<ID3D10Texture2D> softTexture;
 
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     d2dsurf->surface->QueryInterface(&dxgiSurface);
     DXGI_SURFACE_DESC desc;
 
@@ -2680,10 +2680,10 @@ _cairo_d2d_acquire_dest_image(void                    *abstract_surface,
     HRESULT hr;
     D2D1_SIZE_U size = d2dsurf->rt->GetPixelSize();
 
-    RefPtr<ID3D10Texture2D> softTexture;
+    nsRefPtr<ID3D10Texture2D> softTexture;
 
 
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     d2dsurf->surface->QueryInterface(&dxgiSurface);
     DXGI_SURFACE_DESC desc;
 
@@ -2768,9 +2768,9 @@ _cairo_d2d_copy_surface(cairo_d2d_surface_t *dst,
 			cairo_point_int_t *translation,
 			cairo_region_t *region)
 {
-    RefPtr<IDXGISurface> dstSurface;
+    nsRefPtr<IDXGISurface> dstSurface;
     dst->surface->QueryInterface(&dstSurface);
-    RefPtr<IDXGISurface> srcSurface;
+    nsRefPtr<IDXGISurface> srcSurface;
     src->surface->QueryInterface(&srcSurface);
     DXGI_SURFACE_DESC srcDesc, dstDesc;
 
@@ -3031,12 +3031,12 @@ _cairo_d2d_try_fastblit(cairo_d2d_surface_t *dst,
     return rv;
 }
 
-static RefPtr<ID2D1RenderTarget>
+static nsRefPtr<ID2D1RenderTarget>
 _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
 {
-    RefPtr<ID3D10Texture2D> texture = _cairo_d2d_get_buffer_texture(surf);
-    RefPtr<ID2D1RenderTarget> new_rt;
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<ID3D10Texture2D> texture = _cairo_d2d_get_buffer_texture(surf);
+    nsRefPtr<ID2D1RenderTarget> new_rt;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     texture->QueryInterface(&dxgiSurface);
     HRESULT hr;
 
@@ -3081,10 +3081,10 @@ _cairo_d2d_get_temp_rt(cairo_d2d_surface_t *surf, cairo_clip_t *clip)
 					    aaMode);
 	    } else {
 		HRESULT hr;
-		RefPtr<ID2D1PathGeometry> geom = _cairo_d2d_create_path_geometry_for_path (&path->path,
+		nsRefPtr<ID2D1PathGeometry> geom = _cairo_d2d_create_path_geometry_for_path (&path->path,
 											   path->fill_rule,
 											   D2D1_FIGURE_BEGIN_FILLED);
-		RefPtr<ID2D1Layer> layer;
+		nsRefPtr<ID2D1Layer> layer;
 
 		hr = new_rt->CreateLayer (&layer);
 
@@ -3140,8 +3140,8 @@ _cairo_d2d_blend_temp_surface(cairo_d2d_surface_t *surf, cairo_operator_t op, ID
     rt->EndDraw();
     HRESULT hr;
 
-    RefPtr<ID3D10Texture2D> srcTexture = _cairo_d2d_get_buffer_texture(surf);
-    RefPtr<ID3D10Texture2D> dstTexture;
+    nsRefPtr<ID3D10Texture2D> srcTexture = _cairo_d2d_get_buffer_texture(surf);
+    nsRefPtr<ID3D10Texture2D> dstTexture;
 
     surf->surface->QueryInterface(&dstTexture);
     ID3D10Device *device = surf->device->mD3D10Device;
@@ -3256,7 +3256,7 @@ _cairo_d2d_paint(void			*surface,
 	    return status;
 	}
     }
-    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+    nsRefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
 #endif
@@ -3276,7 +3276,7 @@ _cairo_d2d_paint(void			*surface,
 
     target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL,
+    nsRefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL,
 								   source);
     
     if (!brush) {
@@ -3397,12 +3397,12 @@ _cairo_d2d_mask(void			*surface,
 	}
     }
 
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL, source);
+    nsRefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL, source);
     if (!brush) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+    nsRefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
 #endif
@@ -3437,7 +3437,7 @@ _cairo_d2d_mask(void			*surface,
 	return CAIRO_INT_STATUS_SUCCESS;
     }
 
-    RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL, mask, true);
+    nsRefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL, mask, true);
     if (!opacityBrush) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -3485,7 +3485,7 @@ _cairo_d2d_stroke(void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+    nsRefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
 #endif
@@ -3508,12 +3508,12 @@ _cairo_d2d_stroke(void			*surface,
     } else {
 	target_rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
-    RefPtr<ID2D1StrokeStyle> strokeStyle = _cairo_d2d_create_strokestyle_for_stroke_style(style);
+    nsRefPtr<ID2D1StrokeStyle> strokeStyle = _cairo_d2d_create_strokestyle_for_stroke_style(style);
 
     if (!strokeStyle) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, 
+    nsRefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, 
 		    							     CAIRO_FILL_RULE_WINDING, 
 									     D2D1_FIGURE_BEGIN_FILLED);
     
@@ -3523,7 +3523,7 @@ _cairo_d2d_stroke(void			*surface,
       transformed = false;
     }
 
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL,
+    nsRefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, NULL,
 								   source);
     if (!brush) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3537,7 +3537,7 @@ _cairo_d2d_stroke(void			*surface,
       mat = _cairo_d2d_matrix_from_matrix(ctm);
       D2D1::Matrix3x2F inverse_mat = _cairo_d2d_invert_matrix(mat);
     
-      RefPtr<ID2D1TransformedGeometry> trans_geom;
+      nsRefPtr<ID2D1TransformedGeometry> trans_geom;
       sD2DFactory->CreateTransformedGeometry(d2dpath, &inverse_mat, &trans_geom);
 
       // If we are setting a transform on the render target, we've multiplied
@@ -3619,7 +3619,7 @@ _cairo_d2d_fill(void			*surface,
 	}
     }
 
-    RefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
+    nsRefPtr<ID2D1RenderTarget> target_rt = d2dsurf->rt;
     
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
@@ -3649,7 +3649,7 @@ _cairo_d2d_fill(void			*surface,
 	float y1 = _cairo_fixed_to_float(box.p1.y);    
 	float x2 = _cairo_fixed_to_float(box.p2.x);    
 	float y2 = _cairo_fixed_to_float(box.p2.y);
-	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+	nsRefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
 	    path, source);
 	if (!brush) {
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3661,9 +3661,9 @@ _cairo_d2d_fill(void			*surface,
 					     y2),
 				 brush);
     } else {
-	RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, fill_rule, D2D1_FIGURE_BEGIN_FILLED);
+	nsRefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, fill_rule, D2D1_FIGURE_BEGIN_FILLED);
 
-	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+	nsRefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
             path, source);
 	if (!brush) {
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -3730,10 +3730,10 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
     AutoDWriteGlyphRun run;
     _cairo_dwrite_glyph_run_from_glyphs(glyphs, num_glyphs, scaled_font, &run, &transform);
 
-    RefPtr<IDWriteGlyphRunAnalysis> analysis;
+    nsRefPtr<IDWriteGlyphRunAnalysis> analysis;
     DWRITE_MATRIX dwmat = _cairo_dwrite_matrix_from_matrix(&scaled_font->mat);
 
-    RefPtr<IDWriteRenderingParams> params;
+    nsRefPtr<IDWriteRenderingParams> params;
     dst->rt->GetTextRenderingParams(&params);
 
     DWRITE_RENDERING_MODE renderMode = DWRITE_RENDERING_MODE_DEFAULT;
@@ -3834,7 +3834,7 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    RefPtr<ID3D10ShaderResourceView> srView;
+    nsRefPtr<ID3D10ShaderResourceView> srView;
     ID3D10Device1 *device = dst->device->mD3D10Device;
 
     int textureWidth, textureHeight;
@@ -3843,7 +3843,7 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	cairo_bounds.height < TEXT_TEXTURE_HEIGHT)
     {
 	// Use our cached TextTexture when it is big enough.
-	RefPtr<ID3D10Texture2D> tmpTexture;
+	nsRefPtr<ID3D10Texture2D> tmpTexture;
 	CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
 				   cairo_bounds.width, cairo_bounds.height,
 				   1, 1, 0);
@@ -3921,7 +3921,7 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
 	data.SysMemPitch = cairo_bounds.width * 4;
 	data.pSysMem = alignedTextureData;
 
-	RefPtr<ID3D10Texture2D> tex;
+	nsRefPtr<ID3D10Texture2D> tex;
 	hr = device->CreateTexture2D(&desc, &data, &tex);
 	
 	delete [] alignedTextureData;
@@ -3942,7 +3942,7 @@ _cairo_dwrite_manual_show_glyphs_on_d2d_surface(void			    *surface,
     }
 
     // Prepare destination surface for rendering.
-    RefPtr<ID3D10Texture2D> dstTexture;
+    nsRefPtr<ID3D10Texture2D> dstTexture;
 
     dst->surface->QueryInterface(&dstTexture);
 
@@ -4070,7 +4070,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	}
     }
 
-    RefPtr<ID2D1RenderTarget> target_rt = dst->rt;
+    nsRefPtr<ID2D1RenderTarget> target_rt = dst->rt;
     cairo_rectangle_int_t fontArea;
 #ifndef ALWAYS_MANUAL_COMPOSITE
     if (op != CAIRO_OPERATOR_OVER) {
@@ -4097,7 +4097,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	cleartype_quality = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
     }
 
-    RefPtr<IDWriteRenderingParams> params;
+    nsRefPtr<IDWriteRenderingParams> params;
     target_rt->GetTextRenderingParams(&params);
 
     DWRITE_RENDERING_MODE renderMode = DWRITE_RENDERING_MODE_DEFAULT;
@@ -4165,7 +4165,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     }
 
     if (dst->rt.get() != target_rt.get()) {
-	RefPtr<IDWriteGlyphRunAnalysis> analysis;
+	nsRefPtr<IDWriteGlyphRunAnalysis> analysis;
 	DWRITE_MATRIX dwmat = _cairo_dwrite_matrix_from_matrix(&dwritesf->mat);
 	DWriteFactory::Instance()->CreateGlyphRunAnalysis(&run,
 							  1.0f,
@@ -4186,7 +4186,7 @@ _cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	fontArea.height = bounds.bottom - bounds.top;
     }
 
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst, NULL,
+    nsRefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst, NULL,
 								   source);
 
     if (!brush) {
@@ -4238,7 +4238,7 @@ _cairo_d2d_show_glyphs (void			*surface,
     cairo_d2d_surface_t::TextRenderingState textRenderingState =
         reinterpret_cast<cairo_dwrite_scaled_font_t*>(scaled_font)->rendering_mode;
     if (d2dsurf->textRenderingState != textRenderingState) {
-	RefPtr<IDWriteRenderingParams> params =
+	nsRefPtr<IDWriteRenderingParams> params =
 	    DWriteFactory::RenderingParams(textRenderingState);
 	d2dsurf->rt->SetTextRenderingParams(params);
 	d2dsurf->textRenderingState = textRenderingState;
@@ -4304,9 +4304,9 @@ cairo_d2d_surface_create_for_hwnd(cairo_device_t *cairo_device,
 	sizePixels.height = 1;
     }
     ID3D10Device1 *device = d2d_device->mD3D10Device;
-    RefPtr<IDXGIDevice> dxgiDevice;
-    RefPtr<IDXGIAdapter> dxgiAdapter;
-    RefPtr<IDXGIFactory> dxgiFactory;
+    nsRefPtr<IDXGIDevice> dxgiDevice;
+    nsRefPtr<IDXGIAdapter> dxgiAdapter;
+    nsRefPtr<IDXGIFactory> dxgiFactory;
     D2D1_RENDER_TARGET_PROPERTIES props;    
     D2D1_BITMAP_PROPERTIES bitProps;
 
@@ -4439,8 +4439,8 @@ cairo_d2d_surface_create(cairo_device_t *device,
     if (desc.Format != DXGI_FORMAT_A8_UNORM)
 	desc.MiscFlags = D3D10_RESOURCE_MISC_GDI_COMPATIBLE;
 
-    RefPtr<ID3D10Texture2D> texture;
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<ID3D10Texture2D> texture;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     D2D1_BITMAP_PROPERTIES bitProps;
     D2D1_RENDER_TARGET_PROPERTIES props;
 
@@ -4516,8 +4516,8 @@ cairo_d2d_surface_create_for_handle(cairo_device_t *device, HANDLE handle, cairo
 
     cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
     HRESULT hr;
-    RefPtr<ID3D10Texture2D> texture;
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<ID3D10Texture2D> texture;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     D2D1_BITMAP_PROPERTIES bitProps;
     D2D1_RENDER_TARGET_PROPERTIES props;
     DXGI_FORMAT format;
@@ -4623,7 +4623,7 @@ cairo_d2d_surface_create_for_texture(cairo_device_t *device,
     HRESULT hr;
 
     D3D10_TEXTURE2D_DESC desc;
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     D2D1_BITMAP_PROPERTIES bitProps;
     D2D1_RENDER_TARGET_PROPERTIES props;
 
@@ -4692,7 +4692,7 @@ cairo_d2d_surface_get_texture(cairo_surface_t *surface)
 
     cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
 
-    RefPtr<ID3D10Texture2D> texture;
+    nsRefPtr<ID3D10Texture2D> texture;
     d2dsurf->surface->QueryInterface(&texture);
 
     return texture;
@@ -4711,7 +4711,7 @@ void cairo_d2d_scroll(cairo_surface_t *surface, int x, int y, cairo_rectangle_t 
     rect.front = 0;
     rect.back = 1;
 
-    RefPtr<IDXGISurface> dxgiSurface;
+    nsRefPtr<IDXGISurface> dxgiSurface;
     d2dsurf->surface->QueryInterface(&dxgiSurface);
     DXGI_SURFACE_DESC desc;
 
@@ -4781,7 +4781,7 @@ cairo_d2d_get_dc(cairo_surface_t *surface, cairo_bool_t retain_contents)
       d2dsurf->isDrawing = true;
     }
 
-    RefPtr<ID2D1GdiInteropRenderTarget> interopRT;
+    nsRefPtr<ID2D1GdiInteropRenderTarget> interopRT;
 
     /* This QueryInterface call will always succeed even if the
      * the render target doesn't support the ID2D1GdiInteropRenderTarget
@@ -4809,7 +4809,7 @@ cairo_d2d_release_dc(cairo_surface_t *surface, const cairo_rectangle_int_t *upda
     }
     cairo_d2d_surface_t *d2dsurf = reinterpret_cast<cairo_d2d_surface_t*>(surface);
 
-    RefPtr<ID2D1GdiInteropRenderTarget> interopRT;
+    nsRefPtr<ID2D1GdiInteropRenderTarget> interopRT;
 
     d2dsurf->rt->QueryInterface(&interopRT);
 

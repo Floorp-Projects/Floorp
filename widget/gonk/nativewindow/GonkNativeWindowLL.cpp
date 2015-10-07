@@ -131,7 +131,7 @@ GonkNativeWindow::getCurrentBuffer() {
         return NULL;
     }
 
-    RefPtr<TextureClient> textureClient =
+    nsRefPtr<TextureClient> textureClient =
         mConsumer->getTextureClientFromBuffer(item.mGraphicBuffer.get());
     if (!textureClient) {
         return NULL;

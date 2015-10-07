@@ -37,8 +37,8 @@ private:
   friend class DualSurface;
   friend class DualPattern;
 
-  RefPtr<SourceSurface> mA;
-  RefPtr<SourceSurface> mB;
+  nsRefPtr<SourceSurface> mA;
+  nsRefPtr<SourceSurface> mB;
 };
 
 } // namespace gfx

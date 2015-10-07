@@ -1136,7 +1136,7 @@ class SignalingAgent {
 
     ASSERT_TRUE(info) << "No such local stream id: " << streamId;
 
-    RefPtr<MediaPipeline> pipeline;
+    nsRefPtr<MediaPipeline> pipeline;
 
     mozilla::SyncRunnable::DispatchToThread(
         gMainThread,
@@ -1183,7 +1183,7 @@ class SignalingAgent {
 
     ASSERT_TRUE(info) << "No such remote stream id: " << streamId;
 
-    RefPtr<MediaPipeline> pipeline;
+    nsRefPtr<MediaPipeline> pipeline;
 
     mozilla::SyncRunnable::DispatchToThread(
         gMainThread,
@@ -1506,7 +1506,7 @@ class SignalingAgent {
   // the SDP. For now, we just specify audio/video, since a given DOMMediaStream
   // can have only one of each anyway. Once this is fixed, we will need to
   // pass a real track id if we want to test that case.
-  mozilla::RefPtr<mozilla::MediaPipeline> GetMediaPipeline(
+  nsRefPtr<mozilla::MediaPipeline> GetMediaPipeline(
     bool local, size_t stream, bool video) {
     SourceStreamInfo* streamInfo;
     if (local) {
@@ -4051,7 +4051,7 @@ TEST_P(SignalingTest, MaxFsFrCalleeCodec)
 
   // Checking callee's video sending configuration does respect max-fs and
   // max-fr in SDP offer.
-  mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
+  nsRefPtr<mozilla::MediaPipeline> pipeline =
     a2_->GetMediaPipeline(1, 0, 1);
   ASSERT_TRUE(pipeline);
   mozilla::MediaSessionConduit *conduit = pipeline->Conduit();
@@ -4096,7 +4096,7 @@ TEST_P(SignalingTest, MaxFsFrCallerCodec)
 
   // Checking caller's video sending configuration does respect max-fs and
   // max-fr in SDP answer.
-  mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
+  nsRefPtr<mozilla::MediaPipeline> pipeline =
     a1_->GetMediaPipeline(1, 0, 1);
   ASSERT_TRUE(pipeline);
   mozilla::MediaSessionConduit *conduit = pipeline->Conduit();

@@ -98,7 +98,7 @@ private:
   nsRefPtr<IDirect3D9Ex> mD3D9;
   nsRefPtr<IDirect3DDevice9Ex> mDevice;
   nsRefPtr<IDirect3DDeviceManager9> mDeviceManager;
-  RefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
+  nsRefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
   nsRefPtr<IDirectXVideoDecoderService> mDecoderService;
   GUID mDecoderGUID;
   UINT32 mResetToken;
@@ -490,14 +490,14 @@ public:
 private:
   HRESULT CreateFormatConverter();
 
-  HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
+  HRESULT CreateOutputSample(nsRefPtr<IMFSample>& aSample,
                              ID3D11Texture2D* aTexture);
 
-  RefPtr<ID3D11Device> mDevice;
-  RefPtr<ID3D11DeviceContext> mContext;
-  RefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
-  RefPtr<MFTDecoder> mTransform;
-  RefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
+  nsRefPtr<ID3D11Device> mDevice;
+  nsRefPtr<ID3D11DeviceContext> mContext;
+  nsRefPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
+  nsRefPtr<MFTDecoder> mTransform;
+  nsRefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
   GUID mDecoderGUID;
   uint32_t mWidth;
   uint32_t mHeight;
@@ -508,8 +508,8 @@ private:
 bool
 D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 {
-  RefPtr<ID3D11VideoDevice> videoDevice;
-  HRESULT hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(byRef(videoDevice)));
+  nsRefPtr<ID3D11VideoDevice> videoDevice;
+  HRESULT hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
   D3D11_VIDEO_DECODER_DESC desc;
@@ -581,13 +581,13 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
     return E_FAIL;
   }
 
-  mDevice->GetImmediateContext(byRef(mContext));
+  mDevice->GetImmediateContext(getter_AddRefs(mContext));
   if (!mContext) {
     aFailureReason.AssignLiteral("Failed to get immediate context for d3d11 device");
     return E_FAIL;
   }
 
-  hr = wmf::MFCreateDXGIDeviceManager(&mDeviceManagerToken, byRef(mDXGIDeviceManager));
+  hr = wmf::MFCreateDXGIDeviceManager(&mDeviceManagerToken, getter_AddRefs(mDXGIDeviceManager));
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString("MFCreateDXGIDeviceManager failed with code %X", hr);
     return hr;
@@ -612,8 +612,8 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
     return hr;
   }
 
-  RefPtr<ID3D11VideoDevice> videoDevice;
-  hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(byRef(videoDevice)));
+  nsRefPtr<ID3D11VideoDevice> videoDevice;
+  hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString("QI to ID3D11VideoDevice failed with code %X", hr);
     return hr;
@@ -646,8 +646,8 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
     return E_FAIL;
   }
 
-  RefPtr<IDXGIDevice> dxgiDevice;
-  hr = mDevice->QueryInterface(static_cast<IDXGIDevice**>(byRef(dxgiDevice)));
+  nsRefPtr<IDXGIDevice> dxgiDevice;
+  hr = mDevice->QueryInterface(static_cast<IDXGIDevice**>(getter_AddRefs(dxgiDevice)));
   if (!SUCCEEDED(hr)) {
     aFailureReason = nsPrintfCString("QI to IDXGIDevice failed with code %X", hr);
     return hr;
@@ -684,14 +684,14 @@ D3D11DXVA2Manager::Init(nsACString& aFailureReason)
 }
 
 HRESULT
-D3D11DXVA2Manager::CreateOutputSample(RefPtr<IMFSample>& aSample, ID3D11Texture2D* aTexture)
+D3D11DXVA2Manager::CreateOutputSample(nsRefPtr<IMFSample>& aSample, ID3D11Texture2D* aTexture)
 {
-  RefPtr<IMFSample> sample;
-  HRESULT hr = wmf::MFCreateSample(byRef(sample));
+  nsRefPtr<IMFSample> sample;
+  HRESULT hr = wmf::MFCreateSample(getter_AddRefs(sample));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFMediaBuffer> buffer;
-  hr = wmf::MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), aTexture, 0, FALSE, byRef(buffer));
+  nsRefPtr<IMFMediaBuffer> buffer;
+  hr = wmf::MFCreateDXGISurfaceBuffer(__uuidof(ID3D11Texture2D), aTexture, 0, FALSE, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   sample->AddBuffer(buffer);
@@ -729,13 +729,13 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   hr = mTransform->Input(aVideoSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFSample> sample;
-  RefPtr<ID3D11Texture2D> texture = videoImage->GetTexture();
+  nsRefPtr<IMFSample> sample;
+  nsRefPtr<ID3D11Texture2D> texture = videoImage->GetTexture();
   hr = CreateOutputSample(sample, texture);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IDXGIKeyedMutex> keyedMutex;
-  hr = texture->QueryInterface(static_cast<IDXGIKeyedMutex**>(byRef(keyedMutex)));
+  nsRefPtr<IDXGIKeyedMutex> keyedMutex;
+  hr = texture->QueryInterface(static_cast<IDXGIKeyedMutex**>(getter_AddRefs(keyedMutex)));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && keyedMutex, hr);
 
   hr = keyedMutex->AcquireSync(0, INFINITE);
@@ -772,8 +772,8 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   mWidth = aWidth;
   mHeight = aHeight;
 
-  RefPtr<IMFMediaType> inputType;
-  HRESULT hr = wmf::MFCreateMediaType(byRef(inputType));
+  nsRefPtr<IMFMediaType> inputType;
+  HRESULT hr = wmf::MFCreateMediaType(getter_AddRefs(inputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
@@ -788,7 +788,7 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   hr = inputType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFAttributes> attr = mTransform->GetAttributes();
+  nsRefPtr<IMFAttributes> attr = mTransform->GetAttributes();
 
   hr = attr->SetUINT32(MF_XVP_PLAYBACK_MODE, TRUE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -799,8 +799,8 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   hr = MFSetAttributeSize(inputType, MF_MT_FRAME_SIZE, aWidth, aHeight);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFMediaType> outputType;
-  hr = wmf::MFCreateMediaType(byRef(outputType));
+  nsRefPtr<IMFMediaType> outputType;
+  hr = wmf::MFCreateMediaType(getter_AddRefs(outputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);

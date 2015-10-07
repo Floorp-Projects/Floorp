@@ -9,7 +9,7 @@
 #include "dmoreg.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsPrintfCString.h"
 
 #define WARN(...) NS_WARNING(nsPrintfCString(__VA_ARGS__).get())
@@ -312,8 +312,8 @@ MatchUnconnectedPin(IPin* aPin,
   NS_ENSURE_TRUE(aOutMatches, E_POINTER);
 
   // Ensure the pin is unconnected.
-  RefPtr<IPin> peer;
-  HRESULT hr = aPin->ConnectedTo(byRef(peer));
+  nsRefPtr<IPin> peer;
+  HRESULT hr = aPin->ConnectedTo(getter_AddRefs(peer));
   if (hr != VFW_E_NOT_CONNECTED) {
     *aOutMatches = false;
     return hr;
@@ -332,14 +332,14 @@ MatchUnconnectedPin(IPin* aPin,
 already_AddRefed<IPin>
 GetUnconnectedPin(IBaseFilter* aFilter, PIN_DIRECTION aPinDir)
 {
-  RefPtr<IEnumPins> enumPins;
+  nsRefPtr<IEnumPins> enumPins;
 
-  HRESULT hr = aFilter->EnumPins(byRef(enumPins));
+  HRESULT hr = aFilter->EnumPins(getter_AddRefs(enumPins));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   // Test each pin to see if it matches the direction we're looking for.
-  RefPtr<IPin> pin;
-  while (S_OK == enumPins->Next(1, byRef(pin), nullptr)) {
+  nsRefPtr<IPin> pin;
+  while (S_OK == enumPins->Next(1, getter_AddRefs(pin), nullptr)) {
     bool matches = FALSE;
     if (SUCCEEDED(MatchUnconnectedPin(pin, aPinDir, &matches)) &&
         matches) {
@@ -355,10 +355,10 @@ ConnectFilters(IGraphBuilder* aGraph,
                IBaseFilter* aOutputFilter,
                IBaseFilter* aInputFilter)
 {
-  RefPtr<IPin> output = GetUnconnectedPin(aOutputFilter, PINDIR_OUTPUT);
+  nsRefPtr<IPin> output = GetUnconnectedPin(aOutputFilter, PINDIR_OUTPUT);
   NS_ENSURE_TRUE(output, E_FAIL);
 
-  RefPtr<IPin> input = GetUnconnectedPin(aInputFilter, PINDIR_INPUT);
+  nsRefPtr<IPin> input = GetUnconnectedPin(aInputFilter, PINDIR_INPUT);
   NS_ENSURE_TRUE(output, E_FAIL);
 
   return aGraph->Connect(output, input);

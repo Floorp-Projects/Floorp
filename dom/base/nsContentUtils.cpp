@@ -7492,11 +7492,11 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
           // Images to be placed on the clipboard are imgIContainers.
           nsCOMPtr<imgIContainer> image(do_QueryInterface(data));
           if (image) {
-            RefPtr<mozilla::gfx::SourceSurface> surface =
+            nsRefPtr<mozilla::gfx::SourceSurface> surface =
               image->GetFrame(imgIContainer::FRAME_CURRENT,
                               imgIContainer::FLAG_SYNC_DECODE);
             if (surface) {
-              mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+              nsRefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
                 surface->GetDataSurface();
               size_t length;
               int32_t stride;

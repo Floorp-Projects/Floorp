@@ -11,7 +11,7 @@
 #include "d3d9.h"
 #include "nsTArray.h"
 #include "mozilla/layers/CompositorTypes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/gfx/Rect.h"
 
 namespace mozilla {

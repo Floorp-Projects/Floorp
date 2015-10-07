@@ -321,10 +321,10 @@ private: // data
 
   mutable Monitor mMonitor;
 
-  RefPtr<DataSourceSurface> mImageSurface;
-  RefPtr<SourceSurface> mOptSurface;
+  nsRefPtr<DataSourceSurface> mImageSurface;
+  nsRefPtr<SourceSurface> mOptSurface;
 
-  RefPtr<VolatileBuffer> mVBuf;
+  nsRefPtr<VolatileBuffer> mVBuf;
   VolatileBufferPtr<uint8_t> mVBufPtr;
 
   nsIntRect mDecoded;

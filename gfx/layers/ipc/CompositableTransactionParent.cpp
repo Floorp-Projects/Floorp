@@ -12,7 +12,7 @@
 #include "Layers.h"                     // for Layer
 #include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ContentHost.h"  // for ContentHostBase
 #include "mozilla/layers/ImageBridgeParent.h" // for ImageBridgeParent
@@ -128,7 +128,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpRemoveTexture: {
       const OpRemoveTexture& op = aEdit.get_OpRemoveTexture();
       CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+      nsRefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
@@ -139,7 +139,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpRemoveTextureAsync: {
       const OpRemoveTextureAsync& op = aEdit.get_OpRemoveTextureAsync();
       CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+      nsRefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
@@ -202,8 +202,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpUseComponentAlphaTextures: {
       const OpUseComponentAlphaTextures& op = aEdit.get_OpUseComponentAlphaTextures();
       CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> texOnBlack = TextureHost::AsTextureHost(op.textureOnBlackParent());
-      RefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
+      nsRefPtr<TextureHost> texOnBlack = TextureHost::AsTextureHost(op.textureOnBlackParent());
+      nsRefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
 
       MOZ_ASSERT(texOnBlack && texOnWhite);
       compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);

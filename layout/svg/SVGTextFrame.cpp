@@ -2940,7 +2940,7 @@ void
 SVGTextDrawPathCallbacks::HandleTextGeometry()
 {
   if (IsClipPathChild()) {
-    RefPtr<Path> path = gfx->GetPath();
+    nsRefPtr<Path> path = gfx->GetPath();
     ColorPattern white(Color(1.f, 1.f, 1.f, 1.f)); // for masking, so no ToDeviceColor
     gfx->GetDrawTarget()->Fill(path, white);
   } else {
@@ -3009,12 +3009,12 @@ SVGTextDrawPathCallbacks::FillGeometry()
   GeneralPattern fillPattern;
   MakeFillPattern(&fillPattern);
   if (fillPattern.GetPattern()) {
-    RefPtr<Path> path = gfx->GetPath();
+    nsRefPtr<Path> path = gfx->GetPath();
     FillRule fillRule = nsSVGUtils::ToFillRule(IsClipPathChild() ?
                           mFrame->StyleSVG()->mClipRule :
                           mFrame->StyleSVG()->mFillRule);
     if (fillRule != path->GetFillRule()) {
-      RefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
+      nsRefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
       path = builder->Finish();
     }
     gfx->GetDrawTarget()->Fill(path, fillPattern);
@@ -3046,7 +3046,7 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
           gfx->Multiply(outerSVGToUser);
         }
 
-        RefPtr<Path> path = gfx->GetPath();
+        nsRefPtr<Path> path = gfx->GetPath();
         SVGContentUtils::AutoStrokeOptions strokeOptions;
         SVGContentUtils::GetStrokeOptions(&strokeOptions, svgOwner,
                                           mFrame->StyleContext(),
@@ -4954,14 +4954,14 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
     return nullptr;
   }
 
-  RefPtr<Path> path = element->GetOrBuildPathForMeasuring();
+  nsRefPtr<Path> path = element->GetOrBuildPathForMeasuring();
   if (!path) {
     return nullptr;
   }
 
   gfxMatrix matrix = element->PrependLocalTransformsTo(gfxMatrix());
   if (!matrix.IsIdentity()) {
-    RefPtr<PathBuilder> builder =
+    nsRefPtr<PathBuilder> builder =
       path->TransformedCopyToBuilder(ToMatrix(matrix));
     path = builder->Finish();
   }
@@ -4988,7 +4988,7 @@ SVGTextFrame::GetStartOffset(nsIFrame* aTextPathFrame)
     &tp->mLengthAttributes[dom::SVGTextPathElement::STARTOFFSET];
 
   if (length->IsPercentage()) {
-    RefPtr<Path> data = GetTextPath(aTextPathFrame);
+    nsRefPtr<Path> data = GetTextPath(aTextPathFrame);
     return data ?
       length->GetAnimValInSpecifiedUnits() * data->ComputeLength() / 100.0 :
       0.0;
@@ -5011,7 +5011,7 @@ SVGTextFrame::DoTextPathLayout()
     }
 
     // Get the path itself.
-    RefPtr<Path> path = GetTextPath(textPathFrame);
+    nsRefPtr<Path> path = GetTextPath(textPathFrame);
     if (!path) {
       it.AdvancePastCurrentTextPathFrame();
       continue;

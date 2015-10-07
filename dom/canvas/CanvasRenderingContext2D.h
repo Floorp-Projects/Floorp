@@ -9,7 +9,7 @@
 #include <vector>
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsColor.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
@@ -729,9 +729,9 @@ protected:
   // This is created lazily so it is necessary to call EnsureTarget before
   // accessing it. In the event of an error it will be equal to
   // sErrorTarget.
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
+  nsRefPtr<mozilla::gfx::DrawTarget> mTarget;
 
-  mozilla::RefPtr<mozilla::layers::PersistentBufferProvider> mBufferProvider;
+  nsRefPtr<mozilla::layers::PersistentBufferProvider> mBufferProvider;
 
   uint32_t SkiaGLTex() const;
 
@@ -788,9 +788,9 @@ protected:
     *
     * mPath is always in user-space.
     */
-  mozilla::RefPtr<mozilla::gfx::Path> mPath;
-  mozilla::RefPtr<mozilla::gfx::PathBuilder> mDSPathBuilder;
-  mozilla::RefPtr<mozilla::gfx::PathBuilder> mPathBuilder;
+  nsRefPtr<mozilla::gfx::Path> mPath;
+  nsRefPtr<mozilla::gfx::PathBuilder> mDSPathBuilder;
+  nsRefPtr<mozilla::gfx::PathBuilder> mPathBuilder;
   bool mPathTransformWillUpdate;
   mozilla::gfx::Matrix mPathToDS;
 
@@ -809,7 +809,7 @@ protected:
     // fallback element for a11y
     nsRefPtr<Element> mElement;
     // Path of the hit region in the 2d context coordinate space (not user space)
-    RefPtr<gfx::Path> mPath;
+    nsRefPtr<gfx::Path> mPath;
   };
 
   nsTArray<RegionInfo> mHitRegionsOptions;
@@ -984,7 +984,7 @@ protected:
       return std::min(SIGMA_MAX, shadowBlur / 2.0f);
     }
 
-    std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
+    std::vector<nsRefPtr<mozilla::gfx::Path> > clipsPushed;
 
     nsRefPtr<gfxFontGroup> fontGroup;
     nsCOMPtr<nsIAtom> fontLanguage;
@@ -1018,7 +1018,7 @@ protected:
     nsTArray<nsStyleFilter> filterChain;
     nsRefPtr<nsSVGFilterChainObserver> filterChainObserver;
     mozilla::gfx::FilterDescription filter;
-    nsTArray<mozilla::RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
+    nsTArray<nsRefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
 
     bool imageSmoothingEnabled;
     bool fontExplicitLanguage;

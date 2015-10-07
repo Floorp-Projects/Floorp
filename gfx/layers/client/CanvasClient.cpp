@@ -87,7 +87,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   bool updated = false;
   {
     // Restrict drawTarget to a scope so that terminates before Unlock.
-    RefPtr<DrawTarget> target =
+    nsRefPtr<DrawTarget> target =
       mBuffer->BorrowDrawTarget();
     if (target) {
       aLayer->UpdateTarget(target);
@@ -195,7 +195,7 @@ public:
   }
 
   already_AddRefed<BufferTextureClient> CreateR8G8B8AX8() {
-    RefPtr<BufferTextureClient> ret;
+    nsRefPtr<BufferTextureClient> ret;
 
     bool areRGBAFormatsBroken = mLayersBackend == LayersBackend::LAYERS_BASIC;
     if (!areRGBAFormatsBroken) {
@@ -223,7 +223,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
   TexClientFactory factory(allocator, src->mHasAlpha, src->mSize, backendType,
                            baseFlags, layersBackend);
 
-  RefPtr<BufferTextureClient> texClient;
+  nsRefPtr<BufferTextureClient> texClient;
 
   {
     gl::ScopedReadbackFB autoReadback(src);
@@ -309,7 +309,7 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
 static already_AddRefed<SharedSurfaceTextureClient>
 CloneSurface(gl::SharedSurface* src, gl::SurfaceFactory* factory)
 {
-    RefPtr<SharedSurfaceTextureClient> dest = factory->NewTexClient(src->mSize);
+    nsRefPtr<SharedSurfaceTextureClient> dest = factory->NewTexClient(src->mSize);
     if (!dest) {
       return nullptr;
     }
@@ -324,7 +324,7 @@ CanvasClientSharedSurface::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   auto gl = aLayer->mGLContext;
   gl->MakeCurrent();
 
-  RefPtr<TextureClient> newFront;
+  nsRefPtr<TextureClient> newFront;
 
   if (aLayer->mGLFrontbuffer) {
     mShSurfClient = CloneSurface(aLayer->mGLFrontbuffer.get(), aLayer->mFactory.get());

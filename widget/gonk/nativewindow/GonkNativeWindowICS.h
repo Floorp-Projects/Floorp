@@ -177,7 +177,7 @@ private:
         sp<GraphicBuffer> mGraphicBuffer;
 
         // mTextureClient is a thin abstraction over remotely allocated GraphicBuffer.
-        mozilla::RefPtr<TextureClient> mTextureClient;
+        nsRefPtr<TextureClient> mTextureClient;
 
         // BufferState represents the different states in which a buffer slot
         // can be.

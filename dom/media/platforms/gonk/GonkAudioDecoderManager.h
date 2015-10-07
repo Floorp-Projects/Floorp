@@ -7,7 +7,7 @@
 #if !defined(GonkAudioDecoderManager_h_)
 #define GonkAudioDecoderManager_h_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "GonkMediaDataDecoder.h"
 
 using namespace android;

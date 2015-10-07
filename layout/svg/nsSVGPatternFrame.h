@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSVGPaintServerFrame.h"
 
 class nsIFrame;
