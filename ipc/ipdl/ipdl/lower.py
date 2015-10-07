@@ -3447,8 +3447,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '// Recursively shutting down %s kids\n'% (managed.name()),
                     indent=1),
                 StmtDecl(
-                    Decl(p.managedVarType(managed, self.side), kidsvar.name),
-                    initargs=[ p.managedVar(managed, self.side) ]),
+                    Decl(_cxxArrayType(p.managedCxxType(managed, self.side)), kidsvar.name),
+                    initargs=[ ExprCall(ExprSelect(managedVar, '.', 'Count')) ]),
+                Whitespace(
+                    '// Accumulate kids into a stable structure to iterate over\n',
+                    indent=1),
+                StmtExpr(ExprCall(p.managedMethod(managed, self.side),
+                                  args=[ kidsvar ])),
                 foreachdestroy,
             ])
             destroysubtree.addstmt(block)
