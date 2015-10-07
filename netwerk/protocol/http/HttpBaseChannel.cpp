@@ -2228,7 +2228,7 @@ HttpBaseChannel::ShouldIntercept()
   bool shouldIntercept = false;
   if (controller && !BypassServiceWorker() && mLoadInfo) {
     nsresult rv = controller->ShouldPrepareForIntercept(mURI,
-                                                        IsNavigation(),
+                                                        nsContentUtils::IsNonSubresourceRequest(this),
                                                         &shouldIntercept);
     if (NS_FAILED(rv)) {
       return false;
