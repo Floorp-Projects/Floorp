@@ -298,7 +298,7 @@ if test -n "$MOZ_NATIVE_DEVICES" ; then
     MOZ_ANDROID_AAR(play-services-base, 8.1.0, google, com/google/android/gms)
     MOZ_ANDROID_AAR(play-services-basement, 8.1.0, google, com/google/android/gms)
     MOZ_ANDROID_AAR(play-services-cast, 8.1.0, google, com/google/android/gms)
-    MOZ_ANDROID_AAR(mediarouter-v7, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(mediarouter-v7, 23.0.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 fi
 
 ])
@@ -398,11 +398,11 @@ case "$target" in
     AC_SUBST(ANDROID_SDK)
     AC_SUBST(ANDROID_TOOLS)
 
-    MOZ_ANDROID_AAR(appcompat-v7, 22.2.1, android, com/android/support)
-    MOZ_ANDROID_AAR(recyclerview-v7, 22.2.1, android, com/android/support)
-    MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(appcompat-v7, 23.0.1, android, com/android/support)
+    MOZ_ANDROID_AAR(recyclerview-v7, 23.0.1, android, com/android/support)
+    MOZ_ANDROID_AAR(support-v4, 23.0.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 
-    ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/22.2.1/support-annotations-22.2.1.jar"
+    ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/23.0.1/support-annotations-23.0.1.jar"
     AC_MSG_CHECKING([for support-annotations JAR])
     if ! test -e $ANDROID_SUPPORT_ANNOTATIONS_JAR ; then
         AC_MSG_ERROR([You must download the support-annotations lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_SUPPORT_ANNOTATIONS_JAR)])
