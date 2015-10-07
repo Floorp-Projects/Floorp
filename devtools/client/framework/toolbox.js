@@ -59,7 +59,7 @@ loader.lazyRequireGetter(this, "showDoorhanger",
 loader.lazyRequireGetter(this, "createPerformanceFront",
   "devtools/server/actors/performance", true);
 loader.lazyRequireGetter(this, "system",
-  "devtools/shared/shared/system");
+  "devtools/shared/system");
 loader.lazyGetter(this, "osString", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
