@@ -1369,6 +1369,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
 
   RequestHeaderTuples emptyHeaders;
   RequestHeaderTuples* headerTuples = &emptyHeaders;
+  nsLoadFlags loadFlags = 0;
 
   nsCOMPtr<nsIHttpChannelChild> newHttpChannelChild =
       do_QueryInterface(mRedirectChannelChild);
@@ -1401,10 +1402,15 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
         SerializeURI(apiRedirectURI, redirectURI);
       }
     }
+
+    nsCOMPtr<nsIRequest> request = do_QueryInterface(mRedirectChannelChild);
+    if (request) {
+      request->GetLoadFlags(&loadFlags);
+    }
   }
 
   if (mIPCOpen)
-    SendRedirect2Verify(result, *headerTuples, redirectURI);
+    SendRedirect2Verify(result, *headerTuples, loadFlags, redirectURI);
 
   return NS_OK;
 }
