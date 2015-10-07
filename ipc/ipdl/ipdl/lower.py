@@ -352,21 +352,21 @@ def _callCxxSwapArrayElements(arr1, arr2, sel='.'):
     return ExprCall(ExprSelect(arr1, sel, 'SwapElements'),
                     args=[ arr2 ])
 
-def _callCxxArrayInsertSorted(arr, elt):
-    return ExprCall(ExprSelect(arr, '.', 'InsertElementSorted'),
-                    args=[ elt ])
+def _callInsertManagedActor(managees, actor):
+    return ExprCall(ExprSelect(managees, '.', 'InsertElementSorted'),
+                    args=[ actor ])
 
-def _callCxxArrayRemoveSorted(arr, elt):
-    return ExprCall(ExprSelect(arr, '.', 'RemoveElementSorted'),
-                    args=[ elt ])
+def _callRemoveManagedActor(managees, actor):
+    return ExprCall(ExprSelect(managees, '.', 'RemoveElementSorted'),
+                    args=[ actor ])
 
-def _callCxxArrayClear(arr):
-    return ExprCall(ExprSelect(arr, '.', 'Clear'))
+def _callClearManagedActors(managees):
+    return ExprCall(ExprSelect(managees, '.', 'Clear'))
 
-def _cxxArrayHasElementSorted(arr, elt):
+def _callHasManagedActor(managees, actor):
     return ExprBinary(
-        ExprSelect(arr, '.', 'NoIndex'), '!=',
-        ExprCall(ExprSelect(arr, '.', 'BinaryIndexOf'), args=[ elt ]))
+        ExprSelect(managees, '.', 'NoIndex'), '!=',
+        ExprCall(ExprSelect(managees, '.', 'BinaryIndexOf'), args=[ actor ]))
 
 def _otherSide(side):
     if side == 'child':  return 'parent'
@@ -3497,7 +3497,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 # stragglers, no outside C++ is being invoked (except
                 # Dealloc(subactor))
                 foreachdealloc,
-                StmtExpr(_callCxxArrayClear(p.managedVar(managed, self.side))),
+                StmtExpr(_callClearManagedActors(p.managedVar(managed, self.side))),
 
             ])
             deallocsubtree.addstmt(block)
@@ -3958,7 +3958,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     _actorChannel(actorvar),
                     p.channelForSubactor())),
                 StmtExpr(ExprAssn(_actorState(actorvar), _actorState(ithkid))),
-                StmtExpr(_callCxxArrayInsertSorted(manageearray, actorvar)),
+                StmtExpr(_callInsertManagedActor(manageearray, actorvar)),
                 registerstmt,
                 StmtExpr(ExprCall(
                     ExprSelect(actorvar,
@@ -4002,10 +4002,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     StmtDecl(Decl(manageecxxtype, actorvar.name),
                              ExprCast(listenervar, manageecxxtype, static=1)),
                     _abortIfFalse(
-                        _cxxArrayHasElementSorted(manageearray, actorvar),
+                        _callHasManagedActor(manageearray, actorvar),
                         "actor not managed by this!"),
                     Whitespace.NL,
-                    StmtExpr(_callCxxArrayRemoveSorted(manageearray, actorvar)),
+                    StmtExpr(_callRemoveManagedActor(manageearray, actorvar)),
                     StmtExpr(ExprCall(_deallocMethod(manageeipdltype, self.side),
                                       args=[ actorvar ])),
                     StmtReturn()
@@ -4945,7 +4945,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtExpr(ExprAssn(_actorManager(actorvar), ExprVar.THIS)),
             StmtExpr(ExprAssn(_actorChannel(actorvar),
                               self.protocol.channelForSubactor())),
-            StmtExpr(_callCxxArrayInsertSorted(
+            StmtExpr(_callInsertManagedActor(
                 self.protocol.managedVar(md.decl.type.constructedType(),
                                          self.side),
                 actorvar)),
