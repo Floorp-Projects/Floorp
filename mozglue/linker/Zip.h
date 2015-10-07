@@ -11,7 +11,6 @@
 #include <zlib.h>
 #include "Utils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 
 /**

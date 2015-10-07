@@ -8,7 +8,6 @@
 #include <vector>
 #include <dlfcn.h>
 #include <signal.h>
-#include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "Zip.h"
