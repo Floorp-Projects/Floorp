@@ -324,8 +324,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       // variable, or an assignment of a PNK_GENERATOR node to the '.generator'
       // local, for a synthesized, prepended initial yield.  Yum!
       case PNK_YIELD_STAR:
-      case PNK_YIELD:
-      case PNK_AWAIT: {
+      case PNK_YIELD: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         MOZ_ASSERT(pn->pn_right);
         MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME) ||
@@ -700,8 +699,7 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode* opn)
         RootedFunction fun(context, opn->pn_funbox->function());
         NULLCHECK(pn->pn_funbox = newFunctionBox(pn, fun, pc,
                                                  Directives(/* strict = */ opn->pn_funbox->strict()),
-                                                 opn->pn_funbox->generatorKind(),
-                                                 opn->pn_funbox->asyncKind()));
+                                                 opn->pn_funbox->generatorKind()));
         NULLCHECK(pn->pn_body = cloneParseTree(opn->pn_body));
         pn->pn_scopecoord = opn->pn_scopecoord;
         pn->pn_dflags = opn->pn_dflags;

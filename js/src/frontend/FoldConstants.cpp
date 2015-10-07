@@ -329,7 +329,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_CONDITIONAL:
       case PNK_TYPEOFNAME:
       case PNK_TYPEOFEXPR:
-      case PNK_AWAIT:
       case PNK_VOID:
       case PNK_NOT:
       case PNK_BITNOT:
@@ -1849,7 +1848,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return Fold(cx, &pn->pn_left, parser, inGenexpLambda);
 
       case PNK_YIELD:
-      case PNK_AWAIT:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         MOZ_ASSERT((pn->pn_right->isKind(PNK_NAME) && !pn->pn_right->isAssigned()) ||
                    (pn->pn_right->isKind(PNK_ASSIGN) &&

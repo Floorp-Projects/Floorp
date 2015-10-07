@@ -872,17 +872,6 @@ function assertThrowsInstanceOf(f, ctor, msg) {
   throw new Error(fullmsg);
 };
 
-function classesEnabled(testCode = "class Foo { constructor() {} }") {
-    try {
-        new Function(testCode);
-        return true;
-    } catch (e) {
-        if (!(e instanceof SyntaxError))
-            throw e;
-        return false;
-    }
-}
-
 /*
  * Some tests need to know if we are in Rhino as opposed to SpiderMonkey
  */

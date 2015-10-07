@@ -23,7 +23,6 @@
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
-#include "builtin/Promise.h"
 #include "builtin/Reflect.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/SIMD.h"
@@ -437,54 +436,6 @@ intrinsic_GetIteratorPrototype(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setObject(*obj);
-    return true;
-}
-
-static bool
-intrinsic_NewPromise(JSContext* cx, unsigned argc, Value* vp)
-{
-    return js::PromiseConstructor(cx, argc, vp);
-}
-
-static bool
-intrinsic_IsPromise(JSContext* cx, unsigned argc, Value* vp) {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-    bool isPromise = args[0].toObject().getClass() == &ShellPromiseObject::class_;
-
-    args.rval().setBoolean(isPromise);
-    return true;
-}
-
-static bool
-intrinsic_SetFunName(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
-    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<JSFunction>());
-    MOZ_ASSERT(args[1].isString());
-    JSAtom* atom = AtomizeString(cx, args[1].toString());
-    if (atom == nullptr)
-        return false;
-    RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    fun->setFlags(fun->flags() & ~JSFunction::HAS_GUESSED_ATOM);
-    fun->initAtom(atom);
-
-    return true;
-}
-
-static bool
-intrinsic_GetFunName(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<JSFunction>());
-    PropertyName* name = args[0].toObject().as<JSFunction>().name();
-    if (!name)
-        args.rval().setUndefined();
-    else
-        args.rval().setString(name);
     return true;
 }
 
@@ -1241,20 +1192,6 @@ intrinsic_IsWeakSet(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-bool
-intrinsic_SetFunctionExtendedSlot(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 3);
-    MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[0].toObject().is<JSFunction>());
-    MOZ_ASSERT(args[1].isInt32());
-
-    args[0].toObject().as<JSFunction>().setExtendedSlot(args[1].toPrivateUint32(), args[2]);
-    args.rval().setUndefined();
-    return true;
-}
-
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -1494,7 +1431,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
-    JS_FN("SetFunctionExtendedSlot", intrinsic_SetFunctionExtendedSlot, 3,0),
     JS_FN("LocalTZA",                intrinsic_LocalTZA,                0,0),
 
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
@@ -1582,11 +1518,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
           CallNonGenericSelfhostedMethod<Is<StarGeneratorObject>>, 2, 0),
 
     JS_FN("IsWeakSet",               intrinsic_IsWeakSet,               1,0),
-    JS_FN("NewPromise",              intrinsic_NewPromise,              1,0),
-    JS_FN("IsPromise",               intrinsic_IsPromise,               1,0),
 
-    JS_FN("SetFunName",              intrinsic_SetFunName,              2,0),
-    JS_FN("GetFunName",              intrinsic_GetFunName,              1,0),
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
     JS_FN("NewOpaqueTypedObject",           js::NewOpaqueTypedObject, 1, 0),
     JS_FN("NewDerivedTypedObject",          js::NewDerivedTypedObject, 3, 0),
