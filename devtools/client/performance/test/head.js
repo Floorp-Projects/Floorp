@@ -16,7 +16,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { DebuggerServer } = require("devtools/server/main");
 var { merge } = require("sdk/util/object");
 var { createPerformanceFront } = require("devtools/server/actors/performance");
-var RecordingUtils = require("devtools/shared/performance/utils");
+var RecordingUtils = require("devtools/shared/performance/recording-utils");
 var {
   PMM_loadFrameScripts, PMM_isProfilerActive, PMM_stopProfiler,
   sendProfilerCommand, consoleMethod
