@@ -49,6 +49,19 @@ const services = {
 const EventListenersView = require('./content/views/event-listeners-view');
 const actions = require('./content/actions/event-listeners');
 
+Object.defineProperties(this, {
+  "store": {
+    value: store,
+    enumerable: true,
+    writable: false
+  },
+  "services": {
+    value: services,
+    enumerable: true,
+    writable: false
+  }
+});
+
 /**
  * Object defining the debugger view components.
  */

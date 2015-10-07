@@ -14,7 +14,11 @@ async_test(function(t) {
   var div = addDiv(t, { style: 'animation: anim 100s infinite' });
   var animation = div.getAnimations()[0];
 
-  animation.ready.then(t.step_func_done(function() {
+  // Wait a frame because if currentTime is still 0 when we call
+  // reverse(), it will throw (per spec).
+  animation.ready.then(waitForFrame).then(t.step_func_done(function() {
+    assert_greater_than(animation.currentTime, 0,
+      'currentTime expected to be greater than 0, one frame after starting');
     var previousPlaybackRate = animation.playbackRate;
     animation.reverse();
     assert_equals(animation.playbackRate, -previousPlaybackRate,

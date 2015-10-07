@@ -1,4 +1,4 @@
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const devtools = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {}).devtools;

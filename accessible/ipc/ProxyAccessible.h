@@ -297,6 +297,8 @@ public:
   void TableUnselectColumn(uint32_t aCol);
   void TableUnselectRow(uint32_t aRow);
   bool TableIsProbablyForLayout();
+  ProxyAccessible* AtkTableColumnHeader(int32_t aCol);
+  ProxyAccessible* AtkTableRowHeader(int32_t aRow);
 
   void SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems);
   uint32_t SelectedItemCount();
@@ -313,6 +315,7 @@ public:
   void ActionNameAt(uint8_t aIndex, nsString& aName);
   KeyBinding AccessKey();
   KeyBinding KeyboardShortcut();
+  void AtkKeyBinding(nsString& aBinding);
 
   double CurValue();
   bool SetCurValue(double aValue);

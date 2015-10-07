@@ -823,7 +823,7 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
     if (StmtInfoBCE* stmt = innermostScopeStmt()) {
         Rooted<NestedScopeObject*> outer(cx, stmt->staticScope);
         for (; outer; outer = outer->enclosingNestedScope()) {
-            if (outer->is<StaticBlockObject>()) {
+            if (outer->is<StaticBlockObject>() && !IsStaticGlobalLexicalScope(outer)) {
                 StaticBlockObject& outerBlock = outer->as<StaticBlockObject>();
                 localOffset = outerBlock.localOffset() + outerBlock.numVariables();
                 break;
@@ -908,6 +908,12 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
             if (!emitInternedObjectOp(scopeObjectIndex, JSOP_PUSHBLOCKSCOPE))
                 return false;
         }
+
+        // Non-global block scopes are non-extensible. At this point the
+        // Parser has added all bindings to the StaticBlockObject, so we make
+        // it non-extensible.
+        if (!blockObj->makeNonExtensible(cx))
+            return false;
         break;
       }
       case StmtType::WITH:
@@ -1348,15 +1354,15 @@ BytecodeEmitter::emitVarIncDec(ParseNode* pn)
 bool
 BytecodeEmitter::atBodyLevel() const
 {
-    // 'eval' scripts are always under an invisible lexical scope, but
-    // since it is not syntactic, it should still be considered at body
-    // level.
-    if (sc->staticScope() && sc->staticScope()->is<StaticEvalObject>()) {
+    // 'eval' and non-syntactic scripts are always under an invisible lexical
+    // scope, but since it is not syntactic, it should still be considered at
+    // body level.
+    if (sc->staticScope()->is<StaticEvalObject>()) {
         bool bl = !innermostStmt()->enclosing;
         MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
         MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
                                          ->as<StaticBlockObject>()
-                                         .maybeEnclosingEval() == sc->staticScope());
+                                         .enclosingStaticScope() == sc->staticScope());
         return bl;
     }
     return !innermostStmt() || sc->isModuleBox();
@@ -1398,7 +1404,7 @@ BytecodeEmitter::isAliasedName(BytecodeEmitter* bceOfDef, ParseNode* pn)
     Definition* dn = pn->resolve();
     switch (dn->kind()) {
       case Definition::LET:
-      case Definition::CONST:
+      case Definition::CONSTANT:
         /*
          * There are two ways to alias a let variable: nested functions and
          * dynamic scope operations. (This is overly conservative since the
@@ -1423,7 +1429,6 @@ BytecodeEmitter::isAliasedName(BytecodeEmitter* bceOfDef, ParseNode* pn)
          */
         return script->formalIsAliased(pn->pn_scopecoord.slot());
       case Definition::VAR:
-      case Definition::GLOBALCONST:
         MOZ_ASSERT_IF(sc->allLocalsAliased(), script->localIsAliased(pn->pn_scopecoord.slot()));
         return script->localIsAliased(pn->pn_scopecoord.slot());
       case Definition::PLACEHOLDER:
@@ -1532,9 +1537,14 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
         FunctionBox* funbox = sc->asFunctionBox();
         PropertyName* name = pn->pn_atom->asPropertyName();
         for (StaticScopeIter<NoGC> ssi(funbox->staticScope()); !ssi.done(); ssi++) {
-            // Don't optimize names through eval.
-            if (ssi.type() == StaticScopeIter<NoGC>::Eval)
-                return false;
+            // Don't optimize names through non-global eval. For global eval
+            // we can use GNAME ops.
+            if (ssi.type() == StaticScopeIter<NoGC>::Eval) {
+                if (ssi.eval().isNonGlobal())
+                    return false;
+                MOZ_ASSERT(!slot.isSome());
+                break;
+            }
 
             if (!ssi.hasSyntacticDynamicScopeObject())
                 continue;
@@ -1637,14 +1647,13 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
 
     JSOp op;
     switch (pn->getOp()) {
-      case JSOP_GETNAME:  op = JSOP_GETGNAME; break;
-      case JSOP_SETNAME:  op = strictifySetNameOp(JSOP_SETGNAME); break;
-      case JSOP_SETCONST:
-        // Not supported.
-        return false;
+      case JSOP_GETNAME: op = JSOP_GETGNAME; break;
+      case JSOP_SETNAME: op = strictifySetNameOp(JSOP_SETGNAME); break;
       default: MOZ_CRASH("gname");
     }
     pn->setOp(op);
+    MOZ_ASSERT_IF(op == JSOP_INITGLEXICAL,
+                  IsStaticGlobalLexicalScope(blockScopeOfDef(pn->resolve())));
     return true;
 }
 
@@ -1698,7 +1707,6 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
     // Throw an error on attempts to mutate const-declared bindings.
     switch (op) {
       case JSOP_GETNAME:
-      case JSOP_SETCONST:
         break;
       default:
         if (pn->isConst()) {
@@ -1783,16 +1791,13 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
         break;
 
       case Definition::VAR:
-      case Definition::GLOBALCONST:
-      case Definition::CONST:
+      case Definition::CONSTANT:
       case Definition::LET:
         switch (op) {
           case JSOP_GETNAME:
             op = JSOP_GETLOCAL; break;
           case JSOP_SETNAME:
           case JSOP_STRICTSETNAME:
-            op = JSOP_SETLOCAL; break;
-          case JSOP_SETCONST:
             op = JSOP_SETLOCAL; break;
           default: MOZ_CRASH("local");
         }
@@ -2157,7 +2162,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_VAR:
       case PNK_CONST:
       case PNK_LET:
-      case PNK_GLOBALCONST:
         MOZ_ASSERT(pn->isArity(PN_LIST));
         *answer = true;
         return true;
@@ -2995,8 +2999,7 @@ BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp 
 {
     // This is so terrible. The eval body-level lexical scope needs to be
     // emitted in the prologue so DEFFUN can pick up the right scope chain.
-    bool isEvalBodyLexicalScope = sc->staticScope() &&
-                                  sc->staticScope()->is<StaticEvalObject>() &&
+    bool isEvalBodyLexicalScope = sc->staticScope()->is<StaticEvalObject>() &&
                                   !innermostStmt();
     if (isEvalBodyLexicalScope) {
         MOZ_ASSERT(code().length() == 0);
@@ -3698,7 +3701,7 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, VarEmitOption emitOptio
               case JSOP_STRICTSETNAME:
               case JSOP_SETGNAME:
               case JSOP_STRICTSETGNAME:
-              case JSOP_SETCONST: {
+              case JSOP_INITGLEXICAL: {
                 // This is like ordinary assignment, but with one difference.
                 //
                 // In `a = b`, we first determine a binding for `a` (using
@@ -3713,7 +3716,9 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, VarEmitOption emitOptio
                 if (!makeAtomIndex(target->pn_atom, &atomIndex))
                     return false;
 
-                if (!target->isOp(JSOP_SETCONST)) {
+                // INITGLEXICAL always initializes a binding on the global
+                // lexical scope and does not need a BINDGNAME.
+                if (!target->isOp(JSOP_INITGLEXICAL)) {
                     bool global = target->isOp(JSOP_SETGNAME) || target->isOp(JSOP_STRICTSETGNAME);
                     JSOp bindOp = global ? JSOP_BINDGNAME : JSOP_BINDNAME;
                     if (!emitIndex32(bindOp, atomIndex))
@@ -4335,7 +4340,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
             if (!emitTree(pn3))
                 return false;
             emittingForInit = oldEmittingForInit;
-        } else if (op == JSOP_INITLEXICAL || isLetExpr) {
+        } else if (op == JSOP_INITLEXICAL || op == JSOP_INITGLEXICAL || isLetExpr) {
             // 'let' bindings cannot be used before they are
             // initialized. JSOP_INITLEXICAL distinguishes the binding site.
             MOZ_ASSERT(emitOption != DefineVars);
@@ -7376,13 +7381,6 @@ BytecodeEmitter::emitDefaultsAndDestructuring(ParseNode* pn)
 bool
 BytecodeEmitter::emitLexicalInitialization(ParseNode* pn, JSOp globalDefOp)
 {
-    /*
-     * This function is significantly more complicated than it needs to be.
-     * In fact, it shouldn't exist at all. This should all be a
-     * JSOP_INITLEXIAL. Unfortunately, toplevel lexicals are broken, and
-     * are emitted as vars :(. As such, we have to do these ministrations to
-     * to make sure that all works properly.
-     */
     MOZ_ASSERT(pn->isKind(PNK_NAME));
 
     if (!bindNameToSlot(pn))
@@ -7391,14 +7389,6 @@ BytecodeEmitter::emitLexicalInitialization(ParseNode* pn, JSOp globalDefOp)
     jsatomid atomIndex;
     if (!maybeEmitVarDecl(globalDefOp, pn, &atomIndex))
         return false;
-
-    if (pn->getOp() != JSOP_INITLEXICAL) {
-        bool global = IsGlobalOp(pn->getOp());
-        if (!emitIndex32(global ? JSOP_BINDGNAME : JSOP_BINDNAME, atomIndex))
-            return false;
-        if (!emit1(JSOP_SWAP))
-            return false;
-    }
 
     if (!pn->pn_scopecoord.isFree()) {
         if (!emitVarOp(pn, pn->getOp()))
@@ -7503,7 +7493,7 @@ BytecodeEmitter::emitClass(ParseNode* pn)
 
         ParseNode* outerName = names->outerBinding();
         if (outerName) {
-            if (!emitLexicalInitialization(outerName, JSOP_DEFVAR))
+            if (!emitLexicalInitialization(outerName, JSOP_DEFLET))
                 return false;
             // Only class statements make outer bindings, and they do not leave
             // themselves on the stack.
@@ -7669,7 +7659,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         break;
 
       case PNK_VAR:
-      case PNK_GLOBALCONST:
         if (!emitVariables(pn, InitializeVars))
             return false;
         break;

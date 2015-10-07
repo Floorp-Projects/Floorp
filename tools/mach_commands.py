@@ -397,7 +397,8 @@ def mozregression_create_parser():
         # mozregression is not here at all, install it
         cmd.virtualenv_manager.install_pip_package('mozregression')
         print("mozregression was installed. please re-run your"
-              " command.")
+              " command. If you keep getting this message please "
+              " manually run: 'pip install -U mozregression'.")
     else:
         # check if there is a new release available
         release = mozregression.new_release_on_pypi()

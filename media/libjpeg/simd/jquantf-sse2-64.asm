@@ -50,7 +50,7 @@ EXTN(jsimd_convsamp_float_sse2):
         packsswb xmm7,xmm7              ; xmm7 = PB_CENTERJSAMPLE (0x808080..)
 
         mov rsi, r10
-        mov     rax, r11
+        mov     eax, r11d
         mov rdi, r12
         mov     rcx, DCTSIZE/2
 .convloop:

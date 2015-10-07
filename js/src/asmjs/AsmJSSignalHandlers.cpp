@@ -26,8 +26,6 @@
 #include "jit/Disassembler.h"
 #include "vm/Runtime.h"
 
-#include "jit/AtomicOperations-inl.h"
-
 using namespace js;
 using namespace js::jit;
 

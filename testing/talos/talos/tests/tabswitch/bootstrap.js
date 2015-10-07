@@ -1,7 +1,7 @@
 
 // -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource:///modules/NewTabURL.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");

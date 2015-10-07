@@ -179,3 +179,138 @@ CSS_PROP_ALIAS(-moz-hyphens,
                hyphens,
                MozHyphens,
                "")
+
+#define WEBKIT_PREFIX_PREF "layout.css.prefixes.webkit"
+
+// -webkit- prefixes
+CSS_PROP_ALIAS(-webkit-animation,
+               animation,
+               WebkitAnimation,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-delay,
+               animation_delay,
+               WebkitAnimationDelay,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-direction,
+               animation_direction,
+               WebkitAnimationDirection,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-duration,
+               animation_duration,
+               WebkitAnimationDuration,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-fill-mode,
+               animation_fill_mode,
+               WebkitAnimationFillMode,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-iteration-count,
+               animation_iteration_count,
+               WebkitAnimationIterationCount,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-name,
+               animation_name,
+               WebkitAnimationName,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-play-state,
+               animation_play_state,
+               WebkitAnimationPlayState,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-animation-timing-function,
+               animation_timing_function,
+               WebkitAnimationTimingFunction,
+               WEBKIT_PREFIX_PREF)
+
+CSS_PROP_ALIAS(-webkit-text-size-adjust,
+               text_size_adjust,
+               WebkitTextSizeAdjust,
+               WEBKIT_PREFIX_PREF)
+
+CSS_PROP_ALIAS(-webkit-transform,
+               transform,
+               WebkitTransform,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-transform-origin,
+               transform_origin,
+               WebkitTransformOrigin,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-transform-style,
+               transform_style,
+               WebkitTransformStyle,
+               WEBKIT_PREFIX_PREF)
+
+CSS_PROP_ALIAS(-webkit-transition,
+               transition,
+               WebkitTransition,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-transition-delay,
+               transition_delay,
+               WebkitTransitionDelay,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-transition-duration,
+               transition_duration,
+               WebkitTransitionDuration,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-transition-property,
+               transition_property,
+               WebkitTransitionProperty,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-transition-timing-function,
+               transition_timing_function,
+               WebkitTransitionTimingFunction,
+               WEBKIT_PREFIX_PREF)
+
+CSS_PROP_ALIAS(-webkit-border-radius,
+               border_radius,
+               WebkitBorderRadius,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-border-top-left-radius,
+               border_top_left_radius,
+               WebkitBorderTopLeftRadius, // really no dom property
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-border-top-right-radius,
+               border_top_right_radius,
+               WebkitBorderTopRightRadius, // really no dom property
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-border-bottom-left-radius,
+               border_bottom_left_radius,
+               WebkitBorderBottomLeftRadius, // really no dom property
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-border-bottom-right-radius,
+               border_bottom_right_radius,
+               WebkitBorderBottomRightRadius, // really no dom property
+               WEBKIT_PREFIX_PREF)
+
+CSS_PROP_ALIAS(-webkit-appearance,
+               appearance,
+               WebkitAppearance,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-background-clip,
+               background_clip,
+               WebkitBackgroundClip,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-background-origin,
+               background_origin,
+               WebkitBackgroundOrigin,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-background-size,
+               background_size,
+               WebkitBackgroundSize,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-border-image,
+               border_image,
+               WebkitBorderImage,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-shadow,
+               box_shadow,
+               WebkitBoxShadow,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-sizing,
+               box_sizing,
+               WebkitBoxSizing,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-user-select,
+               user_select,
+               WebkitUserSelect,
+               WEBKIT_PREFIX_PREF)
+
+#undef WEBKIT_PREFIX_PREF

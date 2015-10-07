@@ -1,5 +1,5 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 const NS_ERROR_ILLEGAL_VALUE = Components.results.NS_ERROR_ILLEGAL_VALUE;
 

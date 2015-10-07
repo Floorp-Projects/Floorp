@@ -334,3 +334,22 @@ class AccessibleCaretCursorModeTestCase(CommonCaretTestCase, MarionetteTestCase)
             self.caret_timeout_ms_pref: 0,
         }
         self.marionette.set_prefs(self.prefs)
+
+    def test_caret_does_not_jump_when_dragging_to_editable_content_boundary(self):
+        self.open_test_html()
+        el = self._input
+        sel = SelectionManager(el)
+        content_to_add = '!'
+        non_target_content = sel.content + content_to_add
+
+        # Goal: the cursor position does not being changed after dragging the
+        # caret down on the Y-axis.
+        el.tap()
+        sel.move_caret_to_front()
+        el.tap(*sel.caret_location())
+        x, y = sel.touch_caret_location()
+
+        # Drag the caret down by 50px, and insert '!'.
+        self.actions.flick(el, x, y, x, y + 50).perform()
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
+        self.assertNotEqual(non_target_content, sel.content)

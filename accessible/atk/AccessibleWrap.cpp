@@ -14,6 +14,8 @@
 #include "OuterDocAccessible.h"
 #include "ProxyAccessible.h"
 #include "RootAccessible.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
 #include "nsString.h"
@@ -1569,4 +1571,119 @@ AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
     g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, nullptr);
 
     return NS_OK;
+}
+
+// static
+void
+AccessibleWrap::GetKeyBinding(Accessible* aAccessible, nsAString& aResult)
+{
+  // Return all key bindings including access key and keyboard shortcut.
+
+  // Get access key.
+  nsAutoString keyBindingsStr;
+  KeyBinding keyBinding = aAccessible->AccessKey();
+  if (!keyBinding.IsEmpty()) {
+    keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
+
+    Accessible* parent = aAccessible->Parent();
+    roles::Role role = parent ? parent->Role() : roles::NOTHING;
+    if (role == roles::PARENT_MENUITEM || role == roles::MENUITEM ||
+        role == roles::RADIO_MENU_ITEM || role == roles::CHECK_MENU_ITEM) {
+      // It is submenu, expose keyboard shortcuts from menu hierarchy like
+      // "s;<Alt>f:s"
+      nsAutoString keysInHierarchyStr = keyBindingsStr;
+      do {
+        KeyBinding parentKeyBinding = parent->AccessKey();
+        if (!parentKeyBinding.IsEmpty()) {
+          nsAutoString str;
+          parentKeyBinding.ToString(str, KeyBinding::eAtkFormat);
+          str.Append(':');
+
+          keysInHierarchyStr.Insert(str, 0);
+        }
+      } while ((parent = parent->Parent()) && parent->Role() != roles::MENUBAR);
+
+      keyBindingsStr.Append(';');
+      keyBindingsStr.Append(keysInHierarchyStr);
+    }
+  } else {
+    // No access key, add ';' to point this.
+    keyBindingsStr.Append(';');
+  }
+
+  // Get keyboard shortcut.
+  keyBindingsStr.Append(';');
+  keyBinding = aAccessible->KeyboardShortcut();
+  if (!keyBinding.IsEmpty()) {
+    keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
+  }
+  aResult = keyBindingsStr;
+}
+
+// static
+Accessible*
+AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible, int32_t aColIdx)
+{
+  if (!aAccessible) {
+    return nullptr;
+  }
+
+  Accessible* cell = aAccessible->CellAt(0, aColIdx);
+  if (!cell) {
+    return nullptr;
+  }
+
+  // If the cell at the first row is column header then assume it is column
+  // header for all rows,
+  if (cell->Role() == roles::COLUMNHEADER) {
+    return cell;
+  }
+
+  // otherwise get column header for the data cell at the first row.
+  TableCellAccessible* tableCell = cell->AsTableCell();
+  if (!tableCell) {
+    return nullptr;
+  }
+
+  nsAutoTArray<Accessible*, 10> headerCells;
+  tableCell->ColHeaderCells(&headerCells);
+  if (headerCells.IsEmpty()) {
+    return nullptr;
+  }
+
+  return headerCells[0];
+}
+
+// static
+Accessible*
+AccessibleWrap::GetRowHeader(TableAccessible* aAccessible, int32_t aRowIdx)
+{
+  if (!aAccessible) {
+    return nullptr;
+  }
+
+  Accessible* cell = aAccessible->CellAt(aRowIdx, 0);
+  if (!cell) {
+    return nullptr;
+  }
+
+  // If the cell at the first column is row header then assume it is row
+  // header for all columns,
+  if (cell->Role() == roles::ROWHEADER) {
+    return cell;
+  }
+
+  // otherwise get row header for the data cell at the first column.
+  TableCellAccessible* tableCell = cell->AsTableCell();
+  if (!tableCell) {
+    return nullptr;
+  }
+
+  nsAutoTArray<Accessible*, 10> headerCells;
+  tableCell->RowHeaderCells(&headerCells);
+  if (headerCells.IsEmpty()) {
+    return nullptr;
+  }
+
+  return headerCells[0];
 }

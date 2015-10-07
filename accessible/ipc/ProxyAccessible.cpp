@@ -820,6 +820,24 @@ ProxyAccessible::TableIsProbablyForLayout()
   return forLayout;
 }
 
+ProxyAccessible*
+ProxyAccessible::AtkTableColumnHeader(int32_t aCol)
+{
+  uint64_t headerID = 0;
+  bool ok = false;
+  unused << mDoc->SendAtkTableColumnHeader(mID, aCol, &headerID, &ok);
+  return ok ? mDoc->GetAccessible(headerID) : nullptr;
+}
+
+ProxyAccessible*
+ProxyAccessible::AtkTableRowHeader(int32_t aRow)
+{
+  uint64_t headerID = 0;
+  bool ok = false;
+  unused << mDoc->SendAtkTableRowHeader(mID, aRow, &headerID, &ok);
+  return ok ? mDoc->GetAccessible(headerID) : nullptr;
+}
+
 void
 ProxyAccessible::SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems)
 {
@@ -932,6 +950,12 @@ ProxyAccessible::KeyboardShortcut()
   uint32_t modifierMask = 0;
   unused << mDoc->SendKeyboardShortcut(mID, &key, &modifierMask);
   return KeyBinding(key, modifierMask);
+}
+
+void
+ProxyAccessible::AtkKeyBinding(nsString& aBinding)
+{
+  unused << mDoc->SendAtkKeyBinding(mID, &aBinding);
 }
 
 double

@@ -7196,7 +7196,7 @@ nsContentUtils::IsAllowedNonCorsContentType(const nsACString& aHeaderValue)
   nsAutoCString contentType;
   nsAutoCString unused;
 
-  nsresult rv = NS_ParseContentType(aHeaderValue, contentType, unused);
+  nsresult rv = NS_ParseRequestContentType(aHeaderValue, contentType, unused);
   if (NS_FAILED(rv)) {
     return false;
   }

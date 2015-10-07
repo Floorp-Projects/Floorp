@@ -618,9 +618,9 @@ public:
    , mFlags (aFlags)
   {}
   virtual bool operator()(gfxContext* aContext,
-                            const gfxRect& aFillRect,
-                            const GraphicsFilter& aFilter,
-                            const gfxMatrix& aTransform) override;
+                          const gfxRect& aFillRect,
+                          const Filter& aFilter,
+                          const gfxMatrix& aTransform) override;
 private:
   nsIFrame* mFrame;
   nsSize mPaintServerSize;
@@ -631,7 +631,7 @@ private:
 bool
 PaintFrameCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
-                               const GraphicsFilter& aFilter,
+                               const Filter& aFilter,
                                const gfxMatrix& aTransform)
 {
   if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)

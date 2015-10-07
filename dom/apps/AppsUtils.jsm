@@ -507,7 +507,7 @@ this.AppsUtils = {
     let hadCharset = { };
     let charset = { };
     let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
-    let contentType = netutil.parseContentType(aContentType, charset, hadCharset);
+    let contentType = netutil.parseResponseContentType(aContentType, charset, hadCharset);
     if (aInstallOrigin != aWebappOrigin &&
         !(contentType == "application/x-web-app-manifest+json" ||
           contentType == "application/manifest+json")) {

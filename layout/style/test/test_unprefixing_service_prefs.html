@@ -120,8 +120,12 @@ function begin()
   testHost(WHITELISTED_TEST_HOST, false);
 }
 
-begin();
-
+// Before we start, make sure *native* -webkit prefix support is turned off.
+// It's not whitelist-restricted (and behaves slightly differently), so if we
+// left it enabled, it'd prevent us from being able to detect
+// CSSUnprefixingService's domain whitelisting in this test.
+SpecialPowers.pushPrefEnv({ set: [["layout.css.prefixes.webkit", false]]},
+                          begin);
 </script>
 </pre>
 </body>

@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = ["OnRefTestLoad"];
 #endif
 
 
-const CC = Components.classes;
+var CC = Components.classes;
 const CI = Components.interfaces;
 const CR = Components.results;
 const CU = Components.utils;

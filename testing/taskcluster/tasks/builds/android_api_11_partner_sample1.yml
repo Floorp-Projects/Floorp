@@ -52,12 +52,6 @@ task:
       PARTNER_HEAD_REV: 756f0378d4cac87e5e6c405249ede5effe082da2
       PARTNER_DEST_DIR: '/home/worker/workspace/build/partner'
 
-      # image paths
-      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
-
-      # authentication
-      RELENGAPI_TOKEN: 'TODO' # 1164612: encrypt this secret
-
     maxRunTime: 36000
 
     command: ["/bin/bash", "bin/build.sh"]

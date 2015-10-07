@@ -48,7 +48,6 @@
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/AtomicOperations-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -279,14 +278,14 @@ GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHan
      * before the global object.
      */
     if (IsGlobalOp(JSOp(*pc)) && !fp->script()->hasNonSyntacticScope())
-        obj = &obj->global();
+        obj = &obj->global().lexicalScope();
 
     Shape* shape = nullptr;
     JSObject* scope = nullptr;
     JSObject* pobj = nullptr;
     if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
-            return CheckUninitializedLexical(cx, name, vp);
+            return true;
     }
 
     RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
@@ -947,7 +946,8 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg, c
                   Value* result)
 {
     MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, !IsSyntacticScope(&scopeChainArg));
+    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, IsGlobalLexicalScope(&scopeChainArg) ||
+                                          !IsSyntacticScope(&scopeChainArg));
 #ifdef DEBUG
     if (thisv.isObject()) {
         RootedObject thisObj(cx, &thisv.toObject());
@@ -994,7 +994,7 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     RootedObject scopeChain(cx, &scopeChainArg);
     MOZ_ASSERT(scopeChain == GetInnerObject(scopeChain));
 
-    MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || script->hasNonSyntacticScope(),
+    MOZ_RELEASE_ASSERT(IsGlobalLexicalScope(scopeChain) || script->hasNonSyntacticScope(),
                        "Only scripts with non-syntactic scopes can be executed with "
                        "interesting scopechains");
 
@@ -1596,7 +1596,7 @@ ComputeImplicitThis(JSContext* cx, HandleObject obj, MutableHandleValue vp)
 {
     vp.setUndefined();
 
-    if (obj->is<GlobalObject>())
+    if (IsGlobalLexicalScope(obj))
         return true;
 
     if (IsCacheableNonGlobalScope(obj))
@@ -2051,9 +2051,8 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
+CASE(JSOP_UNUSED14)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED161)
-CASE(JSOP_UNUSED162)
 CASE(JSOP_UNUSED163)
 CASE(JSOP_UNUSED164)
 CASE(JSOP_UNUSED165)
@@ -2394,17 +2393,6 @@ CASE(JSOP_PICK)
 }
 END_CASE(JSOP_PICK)
 
-CASE(JSOP_SETCONST)
-{
-    ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
-    ReservedRooted<Value> rval(&rootValue0, REGS.sp[-1]);
-    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.fp()->varObj());
-
-    if (!SetConstOperation(cx, obj, name, rval))
-        goto error;
-}
-END_CASE(JSOP_SETCONST)
-
 CASE(JSOP_BINDINTRINSIC)
 {
     NativeObject* holder = GlobalObject::getIntrinsicsHolder(cx, cx->global());
@@ -2419,19 +2407,19 @@ CASE(JSOP_BINDGNAME)
 CASE(JSOP_BINDNAME)
 {
     JSOp op = JSOp(*REGS.pc);
-    if (op == JSOP_BINDNAME || script->hasNonSyntacticScope()) {
-        ReservedRooted<JSObject*> scopeChain(&rootObject0, REGS.fp()->scopeChain());
-        ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+    ReservedRooted<JSObject*> scopeChain(&rootObject0);
+    if (op == JSOP_BINDNAME || script->hasNonSyntacticScope())
+        scopeChain.set(REGS.fp()->scopeChain());
+    else
+        scopeChain.set(&REGS.fp()->global().lexicalScope());
+    ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-        /* Assigning to an undeclared name adds a property to the global object. */
-        ReservedRooted<JSObject*> scope(&rootObject1);
-        if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
-            goto error;
+    /* Assigning to an undeclared name adds a property to the global object. */
+    ReservedRooted<JSObject*> scope(&rootObject1);
+    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
+        goto error;
 
-        PUSH_OBJECT(*scope);
-    } else {
-        PUSH_OBJECT(REGS.fp()->global());
-    }
+    PUSH_OBJECT(*scope);
 
     static_assert(JSOP_BINDNAME_LENGTH == JSOP_BINDGNAME_LENGTH,
                   "We're sharing the END_CASE so the lengths better match");
@@ -3439,6 +3427,18 @@ CASE(JSOP_INITALIASEDLEXICAL)
 }
 END_CASE(JSOP_INITALIASEDLEXICAL)
 
+CASE(JSOP_INITGLEXICAL)
+{
+    ClonedBlockObject* lexicalScope;
+    if (script->hasNonSyntacticScope())
+        lexicalScope = &REGS.fp()->extensibleLexicalScope();
+    else
+        lexicalScope = &cx->global()->lexicalScope();
+    HandleValue value = REGS.stackHandleAt(-1);
+    InitGlobalLexicalOperation(cx, lexicalScope, script, REGS.pc, value);
+}
+END_CASE(JSOP_INITGLEXICAL)
+
 CASE(JSOP_UNINITIALIZED)
     PUSH_UNINITIALIZED();
 END_CASE(JSOP_UNINITIALIZED)
@@ -3488,24 +3488,38 @@ CASE(JSOP_SETLOCAL)
 }
 END_CASE(JSOP_SETLOCAL)
 
-CASE(JSOP_DEFCONST)
 CASE(JSOP_DEFVAR)
 {
     /* ES5 10.5 step 8 (with subsequent errata). */
     unsigned attrs = JSPROP_ENUMERATE;
-    if (*REGS.pc == JSOP_DEFCONST)
-        attrs |= JSPROP_READONLY;
-    else if (!REGS.fp()->isEvalFrame())
+    if (!REGS.fp()->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
 
     /* Step 8b. */
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.fp()->varObj());
     ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-    if (!DefVarOrConstOperation(cx, obj, name, attrs))
+    if (!DefVarOperation(cx, obj, name, attrs))
         goto error;
 }
 END_CASE(JSOP_DEFVAR)
+
+CASE(JSOP_DEFCONST)
+CASE(JSOP_DEFLET)
+{
+    ClonedBlockObject* lexicalScope;
+    JSObject* varObj;
+    if (script->hasNonSyntacticScope()) {
+        lexicalScope = &REGS.fp()->extensibleLexicalScope();
+        varObj = &REGS.fp()->varObj();
+    } else {
+        lexicalScope = &cx->global()->lexicalScope();
+        varObj = cx->global();
+    }
+    if (!DefLexicalOperation(cx, lexicalScope, varObj, script, REGS.pc))
+        goto error;
+}
+END_CASE(JSOP_DEFLET)
 
 CASE(JSOP_DEFFUN)
 {
@@ -4947,4 +4961,22 @@ js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* p
     }
 
     ReportUninitializedLexical(cx, name);
+}
+
+void
+js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
+                               frontend::Definition::Kind declKind)
+{
+    JSAutoByteString printable;
+    if (AtomToPrintableString(cx, name, &printable)) {
+        // We cannot distinguish 'var' declarations from manually defined,
+        // non-configurable global properties.
+        const char* kindStr;
+        if (declKind == frontend::Definition::VAR)
+            kindStr = "non-configurable global property";
+        else
+            kindStr = frontend::Definition::kindString(declKind);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
+                             kindStr, printable.ptr());
+    }
 }

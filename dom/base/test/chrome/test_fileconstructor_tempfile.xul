@@ -32,9 +32,9 @@ the underlying file is removed when the DOMFile is gc'ed.
 <![CDATA[
 
 /** Test for Bug 982874 **/
-let Cc = Components.classes;
-let Ci = Components.interfaces;
-let Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 SimpleTest.waitForExplicitFinish();
 

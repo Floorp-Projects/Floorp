@@ -305,6 +305,8 @@ MOZ_TOOL_VARIABLES
 
 MOZ_CHECK_COMPILER_WRAPPER
 
+AC_PROG_CPP
+AC_PROG_CXXCPP
 MOZ_RUST_SUPPORT
 
 dnl Special win32 checks
@@ -436,8 +438,6 @@ case "$target" in
 
         CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
         CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
-
-        MOZ_FIND_WINSDK_VERSION
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -473,10 +473,9 @@ case "$target" in
         then
             AC_MSG_ERROR([windres version $WINDRES_VERSION or higher is required to build.])
         fi
-
-        MOZ_WINSDK_MAXVER=0x06030000
     fi # !GNU_CC
 
+    MOZ_FIND_WINSDK_VERSION
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 6.0 SP2 (XP SP2)
@@ -495,9 +494,6 @@ case "$target" in
     AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     ;;
 esac
-
-AC_PROG_CPP
-AC_PROG_CXXCPP
 
 if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
@@ -707,6 +703,9 @@ dnl ==============================================================
 MOZILLA_VERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir`
 MOZILLA_UAVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --uaversion`
 MOZILLA_SYMBOLVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --symbolversion`
+if test -z "$MOZILLA_VERSION"; then
+  AC_MSG_ERROR([failed to read version info from milestone file])
+fi
 
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)

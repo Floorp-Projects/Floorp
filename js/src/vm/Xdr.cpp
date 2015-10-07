@@ -12,6 +12,7 @@
 #include "jsscript.h"
 
 #include "vm/Debugger.h"
+#include "vm/ScopeObject.h"
 
 using namespace js;
 
@@ -117,7 +118,8 @@ XDRState<mode>::codeFunction(MutableHandleFunction objp)
     if (!VersionCheck(this))
         return false;
 
-    return XDRInterpretedFunction(this, nullptr, nullptr, objp);
+    RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
+    return XDRInterpretedFunction(this, staticLexical, nullptr, objp);
 }
 
 template<XDRMode mode>
@@ -130,7 +132,8 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     if (!VersionCheck(this))
         return false;
 
-    if (!XDRScript(this, nullptr, nullptr, nullptr, scriptp))
+    RootedObject staticLexical(cx(), &cx()->global()->lexicalScope().staticBlock());
+    if (!XDRScript(this, staticLexical, nullptr, nullptr, scriptp))
         return false;
 
     return true;

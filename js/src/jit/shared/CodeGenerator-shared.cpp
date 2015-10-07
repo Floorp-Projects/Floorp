@@ -208,6 +208,11 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site)
     if (!isProfilerInstrumentationEnabled())
         return true;
 
+    // Fails early if the last added instruction caused the macro assembler to
+    // run out of memory as continuity assumption below do not hold.
+    if (masm.oom())
+        return false;
+
     MOZ_ASSERT(site);
     MOZ_ASSERT(site->tree());
     MOZ_ASSERT(site->pc());
