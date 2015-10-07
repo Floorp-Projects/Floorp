@@ -41,6 +41,7 @@
             <description when-mixedcontent="active-loaded">&identity.activeLoaded;</description>
             <description class="identity-popup-warning-yellow"
                          when-ciphers="weak">&identity.weakEncryption;</description>
+            <description when-loginforms="insecure">&identity.insecureLoginForms;</description>
           </vbox>
         </vbox>
         <button id="identity-popup-security-expander"
@@ -116,7 +117,11 @@
                      when-connection="secure secure-ev"/>
 
         <!-- Connection is Not Secure -->
-        <description when-connection="not-secure">&identity.description.insecure;</description>
+        <description when-connection="not-secure"
+                     and-when-loginforms="secure">&identity.description.insecure;</description>
+
+        <!-- Insecure login forms -->
+        <description when-loginforms="insecure">&identity.description.insecureLoginForms;</description>
 
         <!-- Weak Cipher -->
         <description when-ciphers="weak">&identity.description.weakCipher;</description>
@@ -138,8 +143,14 @@
                      class="identity-popup-warning-yellow">&identity.description.passiveLoaded3; <label observes="identity-popup-mcb-learn-more"/></description>
 
         <!-- Active Mixed Content Blocking Disabled -->
-        <description when-mixedcontent="active-loaded">&identity.description.activeLoaded;</description>
-        <description when-mixedcontent="active-loaded">&identity.description.activeLoaded2; <label observes="identity-popup-mcb-learn-more"/></description>
+        <description when-mixedcontent="active-loaded"
+                     and-when-loginforms="secure">&identity.description.activeLoaded;</description>
+        <description when-mixedcontent="active-loaded"
+                     and-when-loginforms="secure">&identity.description.activeLoaded2; <label observes="identity-popup-mcb-learn-more"/></description>
+        <!-- Show only the first message when there are insecure login forms,
+             and make sure the Learn More link is included. -->
+        <description when-mixedcontent="active-loaded"
+                     and-when-loginforms="insecure">&identity.description.activeLoaded; <label observes="identity-popup-mcb-learn-more"/></description>
 
         <!-- Buttons to enable/disable mixed content blocking. -->
         <button when-mixedcontent="active-blocked"
