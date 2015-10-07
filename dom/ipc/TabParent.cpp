@@ -563,9 +563,11 @@ TabParent::DestroyInternal()
   // Let all PluginWidgets know we are tearing down. Prevents
   // these objects from sending async events after the child side
   // is shut down.
-  const nsTArray<PPluginWidgetParent*>& kids = ManagedPPluginWidgetParent();
-  for (uint32_t idx = 0; idx < kids.Length(); ++idx) {
-      static_cast<mozilla::plugins::PluginWidgetParent*>(kids[idx])->ParentDestroy();
+  const ManagedContainer<PPluginWidgetParent>& kids =
+    ManagedPPluginWidgetParent();
+  for (auto iter = kids.ConstIter(); !iter.Done(); iter.Next()) {
+    static_cast<mozilla::plugins::PluginWidgetParent*>(
+       iter.Get()->GetKey())->ParentDestroy();
   }
 }
 
@@ -1446,17 +1448,16 @@ TabParent::GetTopLevelDocAccessible() const
 #ifdef ACCESSIBILITY
   // XXX Consider managing non top level PDocAccessibles with their parent
   // document accessible.
-  const nsTArray<PDocAccessibleParent*>& docs = ManagedPDocAccessibleParent();
-  size_t docCount = docs.Length();
-  for (size_t i = 0; i < docCount; i++) {
-    auto doc = static_cast<a11y::DocAccessibleParent*>(docs[i]);
+  const ManagedContainer<PDocAccessibleParent>& docs = ManagedPDocAccessibleParent();
+  for (auto iter = docs.ConstIter(); !iter.Done(); iter.Next()) {
+    auto doc = static_cast<a11y::DocAccessibleParent*>(iter.Get()->GetKey());
     if (!doc->ParentDoc()) {
       return doc;
     }
   }
 
-  MOZ_ASSERT(docCount == 0, "If there isn't a top level accessible doc "
-                             "there shouldn't be an accessible doc at all!");
+  MOZ_ASSERT(docs.Count() == 0, "If there isn't a top level accessible doc "
+                                "there shouldn't be an accessible doc at all!");
 #endif
   return nullptr;
 }
