@@ -63,6 +63,7 @@
 #include "nsIXULWindow.h"
 #include "nsIRemoteBrowser.h"
 #include "nsViewManager.h"
+#include "nsVariant.h"
 #include "nsIWidget.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
@@ -3541,7 +3542,7 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
   }
   mDragAreaX = aDragAreaX;
   mDragAreaY = aDragAreaY;
-  
+
   esm->BeginTrackingRemoteDragGesture(mFrameElement);
 
   return true;
@@ -3554,11 +3555,7 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
     nsTArray<DataTransferItem>& itemArray = mInitialDataTransferItems[i];
     for (uint32_t j = 0; j < itemArray.Length(); ++j) {
       DataTransferItem& item = itemArray[j];
-      nsCOMPtr<nsIWritableVariant> variant =
-        do_CreateInstance(NS_VARIANT_CONTRACTID);
-      if (!variant) {
-        break;
-      }
+      nsRefPtr<nsVariant> variant = new nsVariant();
       // Special case kFilePromiseMime so that we get the right
       // nsIFlavorDataProvider for it.
       if (item.mFlavor.EqualsLiteral(kFilePromiseMime)) {

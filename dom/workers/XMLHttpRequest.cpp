@@ -9,7 +9,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIRunnable.h"
-#include "nsIVariant.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsIXPConnect.h"
 
@@ -24,6 +23,7 @@
 #include "nsFormData.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
+#include "nsVariant.h"
 
 #include "RuntimeService.h"
 #include "WorkerPrivate.h"
@@ -1527,9 +1527,7 @@ SendRunnable::MainThreadRun()
     }
   }
   else {
-    nsCOMPtr<nsIWritableVariant> wvariant =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
-    NS_ENSURE_TRUE(wvariant, NS_ERROR_UNEXPECTED);
+    nsRefPtr<nsVariant> wvariant = new nsVariant();
 
     if (NS_FAILED(wvariant->SetAsAString(mStringBody))) {
       MOZ_ASSERT(false, "This should never fail!");
