@@ -26,7 +26,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(1062c96a-d73c-4ad5-beb7-6e803e414973)]
+[scriptable, uuid(6be00c37-2e85-42ee-b53c-e6508ce4cef0)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -70,11 +70,6 @@ interface nsIInterceptedChannel : nsISupports
      * The underlying channel object that was intercepted.
      */
     readonly attribute nsIChannel channel;
-
-    /**
-     * True if the underlying request was caused by a navigation attempt.
-     */
-    readonly attribute bool isNavigation;
 
     /**
      * This method allows to override the channel info for the channel.
