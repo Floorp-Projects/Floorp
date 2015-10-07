@@ -810,6 +810,7 @@ marquee[direction="up"], marquee[direction="down"] {
   rtc, rt {
     white-space: nowrap;
     font-size: 50%;
+    -moz-min-font-size-ratio: 50%;
     line-height: 1;
 %ifndef XP_WIN
     /* The widely-used Windows font Meiryo doesn't work fine with this
@@ -828,6 +829,7 @@ marquee[direction="up"], marquee[direction="down"] {
   }
   rtc:lang(zh-TW), rt:lang(zh-TW) {
     font-size: 30%; /* bopomofo */
+    -moz-min-font-size-ratio: 30%;
   }
   rtc > rt {
     font-size: inherit;
