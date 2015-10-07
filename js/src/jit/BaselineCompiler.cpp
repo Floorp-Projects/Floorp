@@ -428,14 +428,14 @@ BaselineCompiler::emitPrologue()
     // the scope chain is initialized.
     prologueOffset_ = CodeOffsetLabel(masm.currentOffset());
 
+    // When compiling with Debugger instrumentation, set the debuggeeness of
+    // the frame before any operation that can call into the VM.
+    emitIsDebuggeeCheck();
+
     // Initialize the scope chain before any operation that may
     // call into the VM and trigger a GC.
     if (!initScopeChain())
         return false;
-
-    // When compiling with Debugger instrumentation, set the debuggeeness of
-    // the frame before any operation that can call into the VM.
-    emitIsDebuggeeCheck();
 
     if (!emitStackCheck())
         return false;
@@ -639,9 +639,9 @@ BaselineCompiler::emitDebugPrologue()
     return true;
 }
 
-typedef bool (*InitStrictEvalScopeObjectsFn)(JSContext*, BaselineFrame*);
-static const VMFunction InitStrictEvalScopeObjectsInfo =
-    FunctionInfo<InitStrictEvalScopeObjectsFn>(jit::InitStrictEvalScopeObjects);
+typedef bool (*InitGlobalOrEvalScopeObjectsFn)(JSContext*, BaselineFrame*);
+static const VMFunction InitGlobalOrEvalScopeObjectsInfo =
+    FunctionInfo<InitGlobalOrEvalScopeObjectsFn>(jit::InitGlobalOrEvalScopeObjects);
 
 typedef bool (*InitFunctionScopeObjectsFn)(JSContext*, BaselineFrame*);
 static const VMFunction InitFunctionScopeObjectsInfo =
@@ -682,18 +682,17 @@ BaselineCompiler::initScopeChain()
         masm.storePtr(scope, frame.addressOfScopeChain());
     } else {
         // ScopeChain pointer in BaselineFrame has already been initialized
-        // in prologue.
+        // in prologue, but we need to do two more things:
+        //
+        // 1. Check for redeclaration errors
+        // 2. Possibly create a new call object for strict eval.
 
-        if (script->isForEval() && script->strict()) {
-            // Strict eval needs its own call object.
-            prepareVMCall();
+        prepareVMCall();
+        masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+        pushArg(R0.scratchReg());
 
-            masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-            pushArg(R0.scratchReg());
-
-            if (!callVMNonOp(InitStrictEvalScopeObjectsInfo, phase))
-                return false;
-        }
+        if (!callVMNonOp(InitGlobalOrEvalScopeObjectsInfo, phase))
+            return false;
     }
 
     return true;
@@ -2115,6 +2114,7 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 
     RootedPropertyName name(cx, script->getName(pc));
 
+    // These names are non-configurable on the global and cannot be shadowed.
     if (name == cx->names().undefined) {
         frame.push(UndefinedValue());
         return true;
@@ -2130,7 +2130,7 @@ BaselineCompiler::emit_JSOP_GETGNAME()
 
     frame.syncStack(0);
 
-    masm.movePtr(ImmGCPtr(&script->global()), R0.scratchReg());
+    masm.movePtr(ImmGCPtr(&script->global().lexicalScope()), R0.scratchReg());
 
     // Call IC.
     ICGetName_Fallback::Compiler stubCompiler(cx);
@@ -2146,8 +2146,27 @@ bool
 BaselineCompiler::emit_JSOP_BINDGNAME()
 {
     if (!script->hasNonSyntacticScope()) {
-        frame.push(ObjectValue(script->global()));
-        return true;
+        // We can bind name to the global lexical scope if the binding already
+        // exists and is initialized at compile time.
+        RootedPropertyName name(cx, script->getName(pc));
+        Rooted<ClonedBlockObject*> globalLexical(cx, &script->global().lexicalScope());
+        if (Shape* shape = globalLexical->lookup(cx, name)) {
+            if (!globalLexical->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+                frame.push(ObjectValue(*globalLexical));
+                return true;
+            }
+        }
+
+        // We can bind name to the global object if the property exists on the
+        // global and is non-configurable, as then it cannot be shadowed.
+        if (Shape* shape = script->global().lookup(cx, name)) {
+            if (!shape->configurable()) {
+                frame.push(ObjectValue(script->global()));
+                return true;
+            }
+        }
+
+        // Otherwise we have to use the dynamic scope chain.
     }
 
     return emit_JSOP_BINDNAME();
@@ -2437,8 +2456,8 @@ BaselineCompiler::emit_JSOP_GETINTRINSIC()
     return true;
 }
 
-typedef bool (*DefVarOrConstFn)(JSContext*, HandlePropertyName, unsigned, HandleObject);
-static const VMFunction DefVarOrConstInfo = FunctionInfo<DefVarOrConstFn>(DefVarOrConst);
+typedef bool (*DefVarFn)(JSContext*, HandlePropertyName, unsigned, HandleObject);
+static const VMFunction DefVarInfo = FunctionInfo<DefVarFn>(DefVar);
 
 bool
 BaselineCompiler::emit_JSOP_DEFVAR()
@@ -2446,9 +2465,7 @@ BaselineCompiler::emit_JSOP_DEFVAR()
     frame.syncStack(0);
 
     unsigned attrs = JSPROP_ENUMERATE;
-    if (JSOp(*pc) == JSOP_DEFCONST)
-        attrs |= JSPROP_READONLY;
-    else if (!script->isForEval())
+    if (!script->isForEval())
         attrs |= JSPROP_PERMANENT;
     MOZ_ASSERT(attrs <= UINT32_MAX);
 
@@ -2460,34 +2477,37 @@ BaselineCompiler::emit_JSOP_DEFVAR()
     pushArg(Imm32(attrs));
     pushArg(ImmGCPtr(script->getName(pc)));
 
-    return callVM(DefVarOrConstInfo);
+    return callVM(DefVarInfo);
 }
+
+typedef bool (*DefLexicalFn)(JSContext*, HandlePropertyName, unsigned, HandleObject);
+static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefLexical);
 
 bool
 BaselineCompiler::emit_JSOP_DEFCONST()
 {
-    return emit_JSOP_DEFVAR();
+    return emit_JSOP_DEFLET();
 }
 
-typedef bool (*SetConstFn)(JSContext*, HandlePropertyName, HandleObject, HandleValue);
-static const VMFunction SetConstInfo = FunctionInfo<SetConstFn>(SetConst);
-
 bool
-BaselineCompiler::emit_JSOP_SETCONST()
+BaselineCompiler::emit_JSOP_DEFLET()
 {
-    frame.popRegsAndSync(1);
-    frame.push(R0);
     frame.syncStack(0);
 
-    masm.loadPtr(frame.addressOfScopeChain(), R1.scratchReg());
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+    if (*pc == JSOP_DEFCONST)
+        attrs |= JSPROP_READONLY;
+    MOZ_ASSERT(attrs <= UINT32_MAX);
+
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
 
     prepareVMCall();
 
-    pushArg(R0);
-    pushArg(R1.scratchReg());
+    pushArg(R0.scratchReg());
+    pushArg(Imm32(attrs));
     pushArg(ImmGCPtr(script->getName(pc)));
 
-    return callVM(SetConstInfo);
+    return callVM(DefLexicalInfo);
 }
 
 typedef bool (*DefFunOperationFn)(JSContext*, HandleScript, HandleObject, HandleFunction);
@@ -2816,6 +2836,15 @@ bool
 BaselineCompiler::emit_JSOP_INITLEXICAL()
 {
     return emit_JSOP_SETLOCAL();
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITGLEXICAL()
+{
+    frame.popRegsAndSync(1);
+    frame.push(ObjectValue(script->global().lexicalScope()));
+    frame.push(R0);
+    return emit_JSOP_SETPROP();
 }
 
 bool

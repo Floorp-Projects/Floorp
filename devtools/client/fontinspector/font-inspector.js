@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { utils: Cu } = Components;
+var { utils: Cu } = Components;
 const DEFAULT_PREVIEW_TEXT = "Abc";
 const PREVIEW_UPDATE_DELAY = 150;
 

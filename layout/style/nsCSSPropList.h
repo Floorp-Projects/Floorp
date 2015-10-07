@@ -3414,7 +3414,21 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mOffset),
     eStyleAnimType_Sides_Top)
- CSS_PROP_DISPLAY(
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_DISPLAY(
+    -moz-top-layer,
+    _moz_top_layer,
+    CSS_PROP_DOMPROP_PREFIXED(TopLayer),
+    CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
+    "",
+    VARIANT_HK,
+    kTopLayerKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+#endif // CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_DISPLAY(
     touch-action,
     touch_action,
     TouchAction,

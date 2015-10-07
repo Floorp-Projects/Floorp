@@ -497,7 +497,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_CALLSITEOBJ:
       case PNK_VAR:
       case PNK_CONST:
-      case PNK_GLOBALCONST:
       case PNK_LET:
       case PNK_CATCHLIST:
       case PNK_STATEMENTLIST:
@@ -656,7 +655,6 @@ Definition::kindString(Kind kind)
         "",
         js_var_str,
         js_const_str,
-        js_const_str,
         js_let_str,
         "argument",
         js_function_str,
@@ -664,7 +662,7 @@ Definition::kindString(Kind kind)
         js_import_str
     };
 
-    MOZ_ASSERT(kind < ArrayLength(table));
+    MOZ_ASSERT(size_t(kind) < ArrayLength(table));
     return table[kind];
 }
 

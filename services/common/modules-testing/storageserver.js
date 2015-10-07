@@ -8,7 +8,7 @@
  * The server should not be used for any production purposes.
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = [
   "ServerBSO",

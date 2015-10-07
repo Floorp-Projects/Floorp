@@ -109,7 +109,7 @@ public:
 
   virtual bool operator()(gfxContext* aContext,
                           const gfxRect& aFillRect,
-                          const GraphicsFilter& aFilter,
+                          const Filter& aFilter,
                           const gfxMatrix& aTransform)
   {
     MOZ_ASSERT(aTransform.IsIdentity(),
@@ -291,7 +291,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
     gfxUtils::DrawPixelSnapped(ctx, drawable, aSize,
                                ImageRegion::Create(aSize),
                                SurfaceFormat::B8G8R8A8,
-                               GraphicsFilter::FILTER_FAST,
+                               Filter::LINEAR,
                                imgIContainer::FLAG_CLAMP);
 
     // Cache the resulting surface.
@@ -350,7 +350,7 @@ ClippedImage::Draw(gfxContext* aContext,
                    const nsIntSize& aSize,
                    const ImageRegion& aRegion,
                    uint32_t aWhichFrame,
-                   GraphicsFilter aFilter,
+                   Filter aFilter,
                    const Maybe<SVGImageContext>& aSVGContext,
                    uint32_t aFlags)
 {
@@ -411,7 +411,7 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
                              const nsIntSize& aSize,
                              const ImageRegion& aRegion,
                              uint32_t aWhichFrame,
-                             GraphicsFilter aFilter,
+                             Filter aFilter,
                              const Maybe<SVGImageContext>& aSVGContext,
                              uint32_t aFlags)
 {
@@ -470,7 +470,7 @@ ClippedImage::GetOrientation()
 nsIntSize
 ClippedImage::OptimalImageSizeForDest(const gfxSize& aDest,
                                       uint32_t aWhichFrame,
-                                      GraphicsFilter aFilter, uint32_t aFlags)
+                                      Filter aFilter, uint32_t aFlags)
 {
   if (!ShouldClip()) {
     return InnerImage()->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter,

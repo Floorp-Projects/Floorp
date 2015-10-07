@@ -49,6 +49,10 @@ using mozilla::UniquePtr;
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
 static bool fuzzingSafe = false;
 
+// If disableOOMFunctions is set, disable functionality that causes artificial
+// OOM conditions.
+static bool disableOOMFunctions = false;
+
 static bool
 GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -350,6 +354,11 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportError(cx, "Attempt to change read-only parameter %s",
                        paramMap[paramIndex].name);
         return false;
+    }
+
+    if (disableOOMFunctions && (param == JSGC_MAX_BYTES || param == JSGC_MAX_MALLOC_BYTES)) {
+        args.rval().setUndefined();
+        return true;
     }
 
     uint32_t value;
@@ -985,25 +994,30 @@ DisableTrackAllocations(JSContext* cx, unsigned argc, Value* vp)
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
-OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
+OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setInt32(js::oom::THREAD_TYPE_MAX);
+    return true;
+}
+
+static bool
+SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (disableOOMFunctions) {
+        args.rval().setUndefined();
+        return true;
+    }
+
     if (args.length() < 1) {
-        JS_ReportError(cx, "count argument required");
+        JS_ReportError(cx, "Count argument required");
         return false;
     }
 
     if (args.length() > 2) {
-        JS_ReportError(cx, "too many arguments");
-        return false;
-    }
-
-    uint32_t targetThread = 0;
-    if (!ToUint32(cx, args.get(1), &targetThread))
-        return false;
-
-    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
-        JS_ReportError(cx, "invalid thread type specified");
+        JS_ReportError(cx, "Too many arguments");
         return false;
     }
 
@@ -1011,43 +1025,32 @@ OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
     if (!JS::ToUint32(cx, args.get(0), &count))
         return false;
 
+    uint32_t targetThread = js::oom::THREAD_TYPE_MAIN;
+    if (args.length() > 1 && !ToUint32(cx, args[1], &targetThread))
+        return false;
+
+    if (targetThread == js::oom::THREAD_TYPE_NONE || targetThread >= js::oom::THREAD_TYPE_MAX) {
+        JS_ReportError(cx, "Invalid thread type specified");
+        return false;
+    }
+
+    HelperThreadState().waitForAllThreads();
     js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
-    OOM_failAlways = true;
+    OOM_failAlways = failAlways;
     return true;
+}
+
+static bool
+OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
+{
+    return SetupOOMFailure(cx, true, argc, vp);
 }
 
 static bool
 OOMAtAllocation(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1) {
-        JS_ReportError(cx, "count argument required");
-        return false;
-    }
-
-    if (args.length() > 2) {
-        JS_ReportError(cx, "too many arguments");
-        return false;
-    }
-
-    uint32_t targetThread = 0;
-    if (!ToUint32(cx, args.get(1), &targetThread))
-        return false;
-
-    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
-        JS_ReportError(cx, "invalid thread type specified");
-        return false;
-    }
-
-    uint32_t count;
-    if (!JS::ToUint32(cx, args.get(0), &count))
-        return false;
-
-    js::oom::targetThread = targetThread;
-    OOM_maxAllocations = OOM_counter + count;
-    OOM_failAlways = false;
-    return true;
+    return SetupOOMFailure(cx, false, argc, vp);
 }
 
 static bool
@@ -1055,6 +1058,7 @@ ResetOOMFailure(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(OOM_counter >= OOM_maxAllocations);
+    js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
     OOM_maxAllocations = UINT32_MAX;
     return true;
 }
@@ -2355,7 +2359,8 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
         global = JS::CurrentGlobalOrNull(cx);
     }
 
-    RootedObject scope(cx);
+    RootedObject varObj(cx);
+    RootedObject lexicalScope(cx);
 
     {
         // If we're switching globals here, ExecuteInGlobalAndReturnScope will
@@ -2363,14 +2368,29 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
         // executing it.
         AutoCompartment ac(cx, global);
 
-        if (!js::ExecuteInGlobalAndReturnScope(cx, global, script, &scope))
+        if (!js::ExecuteInGlobalAndReturnScope(cx, global, script, &lexicalScope))
             return false;
+
+        varObj = lexicalScope->enclosingScope();
     }
 
-    if (!cx->compartment()->wrap(cx, &scope))
+    RootedObject rv(cx, JS_NewPlainObject(cx));
+    if (!rv)
         return false;
 
-    args.rval().setObject(*scope);
+    RootedValue varObjVal(cx, ObjectValue(*varObj));
+    if (!cx->compartment()->wrap(cx, &varObjVal))
+        return false;
+    if (!JS_SetProperty(cx, rv, "vars", varObjVal))
+        return false;
+
+    RootedValue lexicalScopeVal(cx, ObjectValue(*lexicalScope));
+    if (!cx->compartment()->wrap(cx, &lexicalScopeVal))
+        return false;
+    if (!JS_SetProperty(cx, rv, "lexicals", lexicalScopeVal))
+        return false;
+
+    args.rval().setObject(*rv);
     return true;
 }
 
@@ -2928,6 +2948,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Stop capturing the JS stack at every allocation."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
+"oomThreadTypes()",
+"  Get the number of thread types that can be used as an argument for\n"
+"oomAfterAllocations() and oomAtAllocation()."),
+
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 2, 0,
 "oomAfterAllocations(count [,threadType])",
 "  After 'count' js_malloc memory allocations, fail every following allocation\n"
@@ -3334,11 +3359,14 @@ static const JSPropertySpec TestingProperties[] = {
 };
 
 bool
-js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_)
+js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
+                           bool disableOOMFunctions_)
 {
     fuzzingSafe = fuzzingSafe_;
     if (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0')
         fuzzingSafe = true;
+
+    disableOOMFunctions = disableOOMFunctions_;
 
     if (!JS_DefineProperties(cx, obj, TestingProperties))
         return false;

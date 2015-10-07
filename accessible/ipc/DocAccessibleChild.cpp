@@ -17,6 +17,9 @@
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 #include "nsAccUtils.h"
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "AccessibleWrap.h"
+#endif
 
 namespace mozilla {
 namespace a11y {
@@ -1450,6 +1453,52 @@ DocAccessibleChild::RecvTableIsProbablyForLayout(const uint64_t& aID,
 }
 
 bool
+DocAccessibleChild::RecvAtkTableColumnHeader(const uint64_t& aID,
+                                             const int32_t& aCol,
+                                             uint64_t* aHeader,
+                                             bool* aOk)
+{
+  *aHeader = 0;
+  *aOk = false;
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    Accessible* header = AccessibleWrap::GetColumnHeader(acc, aCol);
+    if (header) {
+      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
+      *aOk = true;
+    }
+  }
+#endif
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAtkTableRowHeader(const uint64_t& aID,
+                                          const int32_t& aRow,
+                                          uint64_t* aHeader,
+                                          bool* aOk)
+{
+  *aHeader = 0;
+  *aOk = false;
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    Accessible* header = AccessibleWrap::GetRowHeader(acc, aRow);
+    if (header) {
+      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
+      *aOk = true;
+    }
+  }
+#endif
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvSelectedItems(const uint64_t& aID,
                                       nsTArray<uint64_t>* aSelectedItemIDs)
 {
@@ -1652,6 +1701,19 @@ DocAccessibleChild::RecvKeyboardShortcut(const uint64_t& aID,
     *aModifierMask = kb.ModifierMask();
   }
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAtkKeyBinding(const uint64_t& aID,
+                                      nsString* aResult)
+{
+#ifdef MOZ_ACCESSIBILITY_ATK
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    AccessibleWrap::GetKeyBinding(acc, *aResult);
+  }
+#endif
   return true;
 }
 

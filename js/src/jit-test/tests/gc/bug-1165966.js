@@ -1,4 +1,4 @@
-// |jit-test| --no-threads; --no-ion
+// |jit-test| --no-ion
 load(libdir + 'oomTest.js');
 var g = newGlobal();
 oomTest(function() {

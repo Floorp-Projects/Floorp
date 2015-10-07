@@ -70,10 +70,10 @@ registerDirectory("XREAppFeat", distroDir);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
 
-let testserver = new HttpServer();
+var testserver = new HttpServer();
 testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
 testserver.start();
-let root = testserver.identity.primaryScheme + "://" +
+var root = testserver.identity.primaryScheme + "://" +
            testserver.identity.primaryHost + ":" +
            testserver.identity.primaryPort + "/data/"
 Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");

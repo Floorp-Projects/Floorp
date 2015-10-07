@@ -43,17 +43,18 @@ function testVariablesAndPropertiesFiltering() {
   let localScope = gVariables.getScopeAtIndex(0);
   let withScope = gVariables.getScopeAtIndex(1);
   let functionScope = gVariables.getScopeAtIndex(2);
-  let globalScope = gVariables.getScopeAtIndex(3);
+  let globalLexicalScope = gVariables.getScopeAtIndex(3);
+  let globalScope = gVariables.getScopeAtIndex(4);
   let step = 0;
 
   let tests = [
     function() {
-      assertScopeExpansion([true, false, false, false]);
+      assertScopeExpansion([true, false, false, false, false]);
       typeText(gSearchBox, "*arguments");
     },
     function() {
-      assertScopeExpansion([true, true, true, true]);
-      assertVariablesCountAtLeast([0, 0, 1, 0]);
+      assertScopeExpansion([true, true, true, true, true]);
+      assertVariablesCountAtLeast([0, 0, 1, 0, 0]);
 
       is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "arguments", "The arguments pseudoarray should be visible.");
@@ -63,8 +64,8 @@ function testVariablesAndPropertiesFiltering() {
       backspaceText(gSearchBox, 6);
     },
     function() {
-      assertScopeExpansion([true, true, true, true]);
-      assertVariablesCountAtLeast([0, 0, 1, 1]);
+      assertScopeExpansion([true, true, true, true, true]);
+      assertVariablesCountAtLeast([0, 0, 1, 0, 1]);
 
       is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "arguments", "The arguments pseudoarray should be visible.");
@@ -79,8 +80,8 @@ function testVariablesAndPropertiesFiltering() {
       backspaceText(gSearchBox, 2);
     },
     function() {
-      assertScopeExpansion([true, true, true, true]);
-      assertVariablesCountAtLeast([0, 1, 3, 1]);
+      assertScopeExpansion([true, true, true, true, true]);
+      assertVariablesCountAtLeast([0, 1, 3, 0, 1]);
 
       is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "aNumber", "The aNumber param should be visible.");
@@ -100,8 +101,8 @@ function testVariablesAndPropertiesFiltering() {
       backspaceText(gSearchBox, 1);
     },
     function() {
-      assertScopeExpansion([true, true, true, true]);
-      assertVariablesCountAtLeast([4, 1, 3, 1]);
+      assertScopeExpansion([true, true, true, true, true]);
+      assertVariablesCountAtLeast([4, 1, 3, 0, 1]);
 
       is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
         "this", "The this reference should be visible.");
@@ -153,8 +154,12 @@ function testVariablesAndPropertiesFiltering() {
       "The functionScope should " + (aFlags[2] ? "" : "not ") +
        "be expanded at this point (" + step + ").");
 
-    is(globalScope.expanded, aFlags[3],
-      "The globalScope should " + (aFlags[3] ? "" : "not ") +
+    is(globalLexicalScope.expanded, aFlags[3],
+      "The globalLexicalScope should " + (aFlags[3] ? "" : "not ") +
+       "be expanded at this point (" + step + ").");
+
+    is(globalScope.expanded, aFlags[4],
+      "The globalScope should " + (aFlags[4] ? "" : "not ") +
        "be expanded at this point (" + step + ").");
   }
 
@@ -171,8 +176,12 @@ function testVariablesAndPropertiesFiltering() {
       "There should be " + aCounts[2] +
       " variable displayed in the function scope (" + step + ").");
 
-    ok(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[3],
+    ok(globalLexicalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[3],
       "There should be " + aCounts[3] +
+       " variable displayed in the global scope (" + step + ").");
+
+    ok(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length >= aCounts[4],
+      "There should be " + aCounts[4] +
       " variable displayed in the global scope (" + step + ").");
 
     step++;
@@ -187,7 +196,8 @@ function prepareVariablesAndProperties() {
   let localScope = gVariables.getScopeAtIndex(0);
   let withScope = gVariables.getScopeAtIndex(1);
   let functionScope = gVariables.getScopeAtIndex(2);
-  let globalScope = gVariables.getScopeAtIndex(3);
+  let globalLexicalScope = gVariables.getScopeAtIndex(3);
+  let globalScope = gVariables.getScopeAtIndex(4);
 
   is(localScope.expanded, true,
     "The localScope should be expanded.");
@@ -195,6 +205,8 @@ function prepareVariablesAndProperties() {
     "The withScope should not be expanded yet.");
   is(functionScope.expanded, false,
     "The functionScope should not be expanded yet.");
+  is(globalLexicalScope.expanded, false,
+    "The globalScope should not be expanded yet.");
   is(globalScope.expanded, false,
     "The globalScope should not be expanded yet.");
 
@@ -207,11 +219,14 @@ function prepareVariablesAndProperties() {
       "The withScope should now be expanded.");
     is(functionScope.expanded, true,
       "The functionScope should now be expanded.");
+    is(globalLexicalScope.expanded, true,
+      "The globalScope should now be expanded.");
     is(globalScope.expanded, true,
       "The globalScope should now be expanded.");
 
     withScope.collapse();
     functionScope.collapse();
+    globalLexicalScope.collapse();
     globalScope.collapse();
 
     deferred.resolve();
@@ -219,6 +234,7 @@ function prepareVariablesAndProperties() {
 
   withScope.expand();
   functionScope.expand();
+  globalLexicalScope.expand();
   globalScope.expand();
 
   return deferred.promise;

@@ -156,6 +156,10 @@ protected:
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
 
+  // Get the bounding rectangle for aFrame where the caret under cursor mode can
+  // be positioned. The rectangle is relative to the root frame.
+  nsRect GetContentBoundaryForFrame(nsIFrame* aFrame) const;
+
   // If we're dragging the first caret, we do not want to drag it over the
   // previous character of the second caret. Same as the second caret. So we
   // check if content offset exceeds the previous/next character of second/first
@@ -222,6 +226,12 @@ protected:
   CaretMode mLastUpdateCaretMode = CaretMode::None;
 
   static const int32_t kAutoScrollTimerDelay = 30;
+
+  // Clicking on the boundary of input or textarea will move the caret to the
+  // front or end of the content. To avoid this, we need to deflate the content
+  // boundary by 61 app units, which is 1 pixel + 1 app unit as defined in
+  // AppUnit.h.
+  static const int32_t kBoundaryAppUnits = 61;
 };
 
 std::ostream& operator<<(std::ostream& aStream,

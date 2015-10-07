@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**

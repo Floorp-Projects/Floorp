@@ -6,7 +6,6 @@
 #include "CanvasLayerComposite.h"
 #include "composite/CompositableHost.h"  // for CompositableHost
 #include "gfx2DGlue.h"                  // for ToFilter
-#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
@@ -129,7 +128,7 @@ CanvasLayerComposite::CleanupResources()
 gfx::Filter
 CanvasLayerComposite::GetEffectFilter()
 {
-  GraphicsFilter filter = mFilter;
+  gfx::Filter filter = mFilter;
 #ifdef ANDROID
   // Bug 691354
   // Using the LINEAR filter we get unexplained artifacts.
@@ -137,10 +136,10 @@ CanvasLayerComposite::GetEffectFilter()
   Matrix matrix;
   bool is2D = GetEffectiveTransform().Is2D(&matrix);
   if (is2D && !ThebesMatrix(matrix).HasNonTranslationOrFlip()) {
-    filter = GraphicsFilter::FILTER_NEAREST;
+    filter = Filter::POINT;
   }
 #endif
-  return gfx::ToFilter(filter);
+  return filter;
 }
 
 void

@@ -366,7 +366,10 @@ ICStub::trace(JSTracer* trc)
       }
       case ICStub::GetName_Global: {
         ICGetName_Global* globalStub = toGetName_Global();
-        TraceEdge(trc, &globalStub->shape(), "baseline-global-stub-shape");
+        globalStub->receiverGuard().trace(trc);
+        TraceEdge(trc, &globalStub->holder(), "baseline-global-stub-holder");
+        TraceEdge(trc, &globalStub->holderShape(), "baseline-global-stub-holdershape");
+        TraceEdge(trc, &globalStub->globalShape(), "baseline-global-stub-globalshape");
         break;
       }
       case ICStub::GetName_Scope0:
@@ -477,6 +480,15 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &callStub->holder(), "baseline-getpropcallnative-stub-holder");
         TraceEdge(trc, &callStub->holderShape(), "baseline-getpropcallnative-stub-holdershape");
         TraceEdge(trc, &callStub->getter(), "baseline-getpropcallnative-stub-getter");
+        break;
+      }
+      case ICStub::GetProp_CallNativeGlobal: {
+        ICGetProp_CallNativeGlobal* callStub = toGetProp_CallNativeGlobal();
+        callStub->receiverGuard().trace(trc);
+        TraceEdge(trc, &callStub->holder(), "baseline-getpropcallnativeglobal-stub-holder");
+        TraceEdge(trc, &callStub->holderShape(), "baseline-getpropcallnativeglobal-stub-holdershape");
+        TraceEdge(trc, &callStub->globalShape(), "baseline-getpropcallnativeglobal-stub-globalshape");
+        TraceEdge(trc, &callStub->getter(), "baseline-getpropcallnativeglobal-stub-getter");
         break;
       }
       case ICStub::SetProp_Native: {
@@ -719,10 +731,6 @@ ICStubCompiler::getStubCode()
     if (!newStubCode)
         return nullptr;
 
-    // After generating code, run postGenerateStubCode()
-    if (!postGenerateStubCode(masm, newStubCode))
-        return nullptr;
-
     // All barriers are emitted off-by-default, enable them if needed.
     if (cx->zone()->needsIncrementalBarrier())
         newStubCode->togglePreBarriers(true);
@@ -730,6 +738,10 @@ ICStubCompiler::getStubCode()
     // Cache newly compiled stubcode.
     if (!comp->putStubCode(cx, stubKey, newStubCode))
         return nullptr;
+
+    // After generating code, run postGenerateStubCode().  We must not fail
+    // after this point.
+    postGenerateStubCode(masm, newStubCode);
 
     MOZ_ASSERT(entersStubFrame_ == ICStub::CanMakeCalls(kind));
     MOZ_ASSERT(!inStubFrame_);

@@ -744,6 +744,11 @@ public:
   nsAbsoluteItems           mFixedItems;
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
+  // Items in the top layer are always fixed positioned children of the
+  // viewport frame. It differs from mFixedItems that the items here
+  // should not be caught by any other fixed-pos containing block like
+  // frames with transform or filter.
+  nsAbsoluteItems           mTopLayerItems;
 
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   // These bits will be added to the state bits of any frame we construct
@@ -777,11 +782,12 @@ public:
 
   // Constructor
   // Use the passed-in history state.
-  nsFrameConstructorState(nsIPresShell*          aPresShell,
-                          nsContainerFrame*      aFixedContainingBlock,
-                          nsContainerFrame*      aAbsoluteContainingBlock,
-                          nsContainerFrame*      aFloatContainingBlock,
-                          nsILayoutHistoryState* aHistoryState);
+  nsFrameConstructorState(
+    nsIPresShell* aPresShell,
+    nsContainerFrame* aFixedContainingBlock,
+    nsContainerFrame* aAbsoluteContainingBlock,
+    nsContainerFrame* aFloatContainingBlock,
+    already_AddRefed<nsILayoutHistoryState> aHistoryState);
   // Get the history state from the pres context's pres shell.
   nsFrameConstructorState(nsIPresShell*          aPresShell,
                           nsContainerFrame*      aFixedContainingBlock,
@@ -914,6 +920,20 @@ protected:
   void ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                               ChildListID aChildListID);
 
+  /**
+   * GetOutOfFlowFrameItems selects the out-of-flow frame list the new
+   * frame should be added to. If the frame shouldn't be added to any
+   * out-of-flow list, it returns nullptr. The corresponding type of
+   * placeholder is also returned via the aPlaceholderType parameter
+   * if this method doesn't return nullptr. The caller should check
+   * whether the returned list really has a containing block.
+   */
+  nsAbsoluteItems* GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
+                                          bool aCanBePositioned,
+                                          bool aCanBeFloated,
+                                          bool aIsOutOfFlowPopup,
+                                          nsFrameState* aPlaceholderType);
+
   // Our list of all pending bindings.  When we're done, we need to call
   // AddToAttachedQueue on all of them, in order.
   LinkedList<PendingBinding> mPendingBindings;
@@ -921,11 +941,12 @@ protected:
   PendingBinding* mCurrentPendingBindingInsertionPoint;
 };
 
-nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShell,
-                                                 nsContainerFrame*      aFixedContainingBlock,
-                                                 nsContainerFrame*      aAbsoluteContainingBlock,
-                                                 nsContainerFrame*      aFloatContainingBlock,
-                                                 nsILayoutHistoryState* aHistoryState)
+nsFrameConstructorState::nsFrameConstructorState(
+  nsIPresShell* aPresShell,
+  nsContainerFrame* aFixedContainingBlock,
+  nsContainerFrame* aAbsoluteContainingBlock,
+  nsContainerFrame* aFloatContainingBlock,
+  already_AddRefed<nsILayoutHistoryState> aHistoryState)
   : mPresContext(aPresShell->GetPresContext()),
     mPresShell(aPresShell),
     mFrameManager(aPresShell->FrameManager()),
@@ -935,6 +956,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
+    mTopLayerItems(do_QueryFrame(mFrameManager->GetRootFrame())),
     // See PushAbsoluteContaningBlock below
     mFrameState(aHistoryState),
     mAdditionalStateBits(nsFrameState(0)),
@@ -961,40 +983,18 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
                                                  nsContainerFrame* aFixedContainingBlock,
                                                  nsContainerFrame* aAbsoluteContainingBlock,
                                                  nsContainerFrame* aFloatContainingBlock)
-  : mPresContext(aPresShell->GetPresContext()),
-    mPresShell(aPresShell),
-    mFrameManager(aPresShell->FrameManager()),
-#ifdef MOZ_XUL
-    mPopupItems(nullptr),
-#endif
-    mFixedItems(aFixedContainingBlock),
-    mAbsoluteItems(aAbsoluteContainingBlock),
-    mFloatedItems(aFloatContainingBlock),
-    // See PushAbsoluteContaningBlock below
-    mAdditionalStateBits(nsFrameState(0)),
-    // If the fixed-pos containing block is equal to the abs-pos containing
-    // block, use the abs-pos containing block's abs-pos list for fixed-pos
-    // frames.
-    mFixedPosIsAbsPos(aFixedContainingBlock == aAbsoluteContainingBlock),
-    mHavePendingPopupgroup(false),
-    mCreatingExtraFrames(false),
-    mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
-                      aPresShell->GetDocument()),
-    mCurrentPendingBindingInsertionPoint(nullptr)
+  : nsFrameConstructorState(aPresShell, aFixedContainingBlock,
+                            aAbsoluteContainingBlock,
+                            aFloatContainingBlock,
+                            aPresShell->GetDocument()->GetLayoutHistoryState())
 {
-#ifdef MOZ_XUL
-  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
-  if (rootBox) {
-    mPopupItems.containingBlock = rootBox->GetPopupSetFrame();
-  }
-#endif
-  MOZ_COUNT_CTOR(nsFrameConstructorState);
-  mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
 
 nsFrameConstructorState::~nsFrameConstructorState()
 {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
+  // Items in the top layer are fixed positioned children of the viewport frame.
+  ProcessFrameInsertions(mTopLayerItems, nsIFrame::kFixedList);
   ProcessFrameInsertions(mFloatedItems, nsIFrame::kFloatList);
   ProcessFrameInsertions(mAbsoluteItems, nsIFrame::kAbsoluteList);
   ProcessFrameInsertions(mFixedItems, nsIFrame::kFixedList);
@@ -1110,6 +1110,15 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
     return mFloatedItems.containingBlock;
   }
 
+  if (aStyleDisplay->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+    MOZ_ASSERT(aStyleDisplay->mTopLayer == NS_STYLE_TOP_LAYER_TOP,
+               "-moz-top-layer should be either none or top");
+    MOZ_ASSERT(mTopLayerItems.containingBlock, "No root frame?");
+    MOZ_ASSERT(aStyleDisplay->IsAbsolutelyPositionedStyle(),
+               "Top layer items should always be absolutely positioned");
+    return mTopLayerItems.containingBlock;
+  }
+
   if (aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
       mAbsoluteItems.containingBlock) {
     return mAbsoluteItems.containingBlock;
@@ -1121,6 +1130,43 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
   }
 
   return aContentParentFrame;
+}
+
+nsAbsoluteItems*
+nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
+                                                bool aCanBePositioned,
+                                                bool aCanBeFloated,
+                                                bool aIsOutOfFlowPopup,
+                                                nsFrameState* aPlaceholderType)
+{
+#ifdef MOZ_XUL
+  if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
+    MOZ_ASSERT(mPopupItems.containingBlock, "Must have a popup set frame!");
+    *aPlaceholderType = PLACEHOLDER_FOR_POPUP;
+    return &mPopupItems;
+  }
+#endif // MOZ_XUL
+  if (aCanBeFloated && aNewFrame->IsFloating()) {
+    *aPlaceholderType = PLACEHOLDER_FOR_FLOAT;
+    return &mFloatedItems;
+  }
+
+  if (aCanBePositioned) {
+    const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
+    if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+      *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
+      return &mTopLayerItems;
+    }
+    if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
+      *aPlaceholderType = PLACEHOLDER_FOR_ABSPOS;
+      return &mAbsoluteItems;
+    }
+    if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
+      *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
+      return &GetFixedItems();
+    }
+  }
+  return nullptr;
 }
 
 void
@@ -1137,53 +1183,25 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
 {
   NS_PRECONDITION(!aNewFrame->GetNextSibling(), "Shouldn't happen");
 
-  const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
+  nsFrameState placeholderType;
+  nsAbsoluteItems* outOfFlowFrameItems =
+    GetOutOfFlowFrameItems(aNewFrame, aCanBePositioned, aCanBeFloated,
+                           aIsOutOfFlowPopup, &placeholderType);
 
   // The comments in GetGeometricParent regarding root table frames
-  // all apply here, unfortunately.
-
-  bool needPlaceholder = false;
-  nsFrameState placeholderType;
-  nsFrameItems* frameItems = &aFrameItems;
-#ifdef MOZ_XUL
-  if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
-      NS_ASSERTION(aNewFrame->GetParent() == mPopupItems.containingBlock,
-                   "Popup whose parent is not the popup containing block?");
-      NS_ASSERTION(mPopupItems.containingBlock, "Must have a popup set frame!");
-      needPlaceholder = true;
-      frameItems = &mPopupItems;
-      placeholderType = PLACEHOLDER_FOR_POPUP;
-  }
-  else
-#endif // MOZ_XUL
-  if (aCanBeFloated && aNewFrame->IsFloating() &&
-      mFloatedItems.containingBlock) {
-    NS_ASSERTION(aNewFrame->GetParent() == mFloatedItems.containingBlock,
-                 "Float whose parent is not the float containing block?");
-    needPlaceholder = true;
-    frameItems = &mFloatedItems;
-    placeholderType = PLACEHOLDER_FOR_FLOAT;
-  }
-  else if (aCanBePositioned) {
-    if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
-        mAbsoluteItems.containingBlock) {
-      NS_ASSERTION(aNewFrame->GetParent() == mAbsoluteItems.containingBlock,
-                   "Abs pos whose parent is not the abs pos containing block?");
-      needPlaceholder = true;
-      frameItems = &mAbsoluteItems;
-      placeholderType = PLACEHOLDER_FOR_ABSPOS;
-    }
-    if (disp->mPosition == NS_STYLE_POSITION_FIXED &&
-        GetFixedItems().containingBlock) {
-      NS_ASSERTION(aNewFrame->GetParent() == GetFixedItems().containingBlock,
-                   "Fixed pos whose parent is not the fixed pos containing block?");
-      needPlaceholder = true;
-      frameItems = &GetFixedItems();
-      placeholderType = PLACEHOLDER_FOR_FIXEDPOS;
-    }
+  // all apply here, unfortunately. Thus, we need to check whether
+  // the returned frame items really has containing block.
+  nsFrameItems* frameItems;
+  if (outOfFlowFrameItems && outOfFlowFrameItems->containingBlock) {
+    MOZ_ASSERT(aNewFrame->GetParent() == outOfFlowFrameItems->containingBlock,
+               "Parent of the frame is not the containing block?");
+    frameItems = outOfFlowFrameItems;
+  } else {
+    frameItems = &aFrameItems;
+    placeholderType = nsFrameState(0);
   }
 
-  if (needPlaceholder) {
+  if (placeholderType) {
     NS_ASSERTION(frameItems != &aFrameItems,
                  "Putting frame in-flow _and_ want a placeholder?");
     nsIFrame* placeholderFrame =
@@ -1221,7 +1239,8 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                              aChildListID == nsIFrame::kFloatList)    ||  \
                             (&aFrameItems == &mAbsoluteItems &&           \
                              aChildListID == nsIFrame::kAbsoluteList) ||  \
-                            (&aFrameItems == &mFixedItems &&              \
+                            ((&aFrameItems == &mFixedItems ||             \
+                              &aFrameItems == &mTopLayerItems) &&         \
                              aChildListID == nsIFrame::kFixedList)
 #ifdef MOZ_XUL
   NS_PRECONDITION(NS_NONXUL_LIST_TEST ||
@@ -2322,7 +2341,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   nsFrameConstructorState state(mPresShell,
                                 GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
                                 nullptr,
-                                nullptr, aFrameState);
+                                nullptr, do_AddRef(Move(aFrameState)));
   // Initialize the ancestor filter with null for now; we'll push
   // aDocElement once we finish resolving style for it.
   state.mTreeMatchContext.InitAncestors(nullptr);
@@ -7548,7 +7567,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
                                 GetFloatContainingBlock(insertion.mParentFrame),
-                                aFrameState);
+                                do_AddRef(Move(aFrameState)));
   state.mTreeMatchContext.InitAncestors(aContainer ?
                                           aContainer->AsElement() :
                                           nullptr);
@@ -11264,7 +11283,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext*         aPresContext,
     nsFrameConstructorState state(mPresShell, GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
                                   GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
                                   GetFloatContainingBlock(aParentFrame),
-                                  mTempFrameTreeState);
+                                  do_AddRef(mTempFrameTreeState.get()));
 
     // If we ever initialize the ancestor filter on |state|, make sure
     // to push the right parent!

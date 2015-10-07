@@ -109,10 +109,10 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 }
 
 bool
-InterpreterFrame::isDirectEvalFrame() const
+InterpreterFrame::isNonGlobalEvalFrame() const
 {
     return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalObject>().isDirect();
+           script()->enclosingStaticScope()->as<StaticEvalObject>().isNonGlobal();
 }
 
 bool
@@ -140,10 +140,15 @@ static inline void
 AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* scope)
 {
 #ifdef DEBUG
+    RootedObject originalScope(cx, scope);
     RootedObject enclosingScope(cx, script->enclosingStaticScope());
     for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::NonSyntactic) {
-            while (scope->is<DynamicWithObject>() || scope->is<NonSyntacticVariablesObject>()) {
+            while (scope->is<DynamicWithObject>() ||
+                   scope->is<NonSyntacticVariablesObject>() ||
+                   (scope->is<ClonedBlockObject>() &&
+                    !scope->as<ClonedBlockObject>().isSyntactic()))
+            {
                 MOZ_ASSERT(!IsSyntacticScope(scope));
                 scope = &scope->as<ScopeObject>().enclosingScope();
             }
@@ -178,7 +183,14 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
         }
     }
 
-    MOZ_ASSERT(scope->is<GlobalObject>() || scope->is<DebugScopeObject>());
+    // In the case of a non-syntactic scope chain, the immediate parent of the
+    // outermost non-syntactic scope may be the global lexical scope, or, if
+    // called from Debugger, a DebugScopeObject.
+    //
+    // In the case of a syntactic scope chain, the outermost scope is always a
+    // GlobalObject.
+    MOZ_ASSERT(scope->is<GlobalObject>() || IsGlobalLexicalScope(scope) ||
+               scope->is<DebugScopeObject>());
 #endif
 }
 
@@ -208,12 +220,30 @@ InterpreterFrame::prologue(JSContext* cx)
                 return false;
             pushOnScopeChain(*callobj);
             flags_ |= HAS_CALL_OBJ;
+        } else {
+            // Non-strict eval may introduce var bindings that conflict with
+            // lexical bindings in an enclosing lexical scope.
+            RootedObject varObjRoot(cx, &varObj());
+            if (!CheckEvalDeclarationConflicts(cx, script, scopeChain(), varObjRoot))
+                return false;
         }
         return probes::EnterScript(cx, script, nullptr, this);
     }
 
-    if (isGlobalFrame())
+    if (isGlobalFrame()) {
+        Rooted<ClonedBlockObject*> lexicalScope(cx);
+        RootedObject varObjRoot(cx);
+        if (script->hasNonSyntacticScope()) {
+            lexicalScope = &extensibleLexicalScope();
+            varObjRoot = &varObj();
+        } else {
+            lexicalScope = &cx->global()->lexicalScope();
+            varObjRoot = cx->global();
+        }
+        if (!CheckGlobalDeclarationConflicts(cx, script, lexicalScope, varObjRoot))
+            return false;
         return probes::EnterScript(cx, script, nullptr, this);
+    }
 
     AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
@@ -251,14 +281,19 @@ InterpreterFrame::epilogue(JSContext* cx)
             MOZ_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
             if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
                 DebugScopes::onPopStrictEvalScope(this);
-        } else if (isDirectEvalFrame()) {
+        } else if (isNonGlobalEvalFrame()) {
             MOZ_ASSERT_IF(isDebuggerEvalFrame(), !IsSyntacticScope(scopeChain()));
         }
         return;
     }
 
     if (isGlobalFrame()) {
-        MOZ_ASSERT(!IsSyntacticScope(scopeChain()));
+        // Confusingly, global frames may run in non-global scopes (that is,
+        // not directly under the GlobalObject and its lexical scope).
+        //
+        // Gecko often runs global scripts under custom scopes. See users of
+        // CreateNonSyntacticScopeChain.
+        MOZ_ASSERT(IsGlobalLexicalScope(scopeChain()) || !IsSyntacticScope(scopeChain()));
         return;
     }
 

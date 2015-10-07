@@ -181,6 +181,7 @@ start_pass (j_decompress_ptr cinfo)
         break;
       }
       break;
+#ifdef IDCT_SCALING_SUPPORTED
     case 9:
       method_ptr = jpeg_idct_9x9;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
@@ -218,6 +219,7 @@ start_pass (j_decompress_ptr cinfo)
       method_ptr = jpeg_idct_16x16;
       method = JDCT_ISLOW;      /* jidctint uses islow-style table */
       break;
+#endif
     default:
       ERREXIT1(cinfo, JERR_BAD_DCTSIZE, compptr->_DCT_scaled_size);
       break;

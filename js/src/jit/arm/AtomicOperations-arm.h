@@ -10,7 +10,6 @@
 #define jit_arm_AtomicOperations_arm_h
 
 #include "jit/arm/Architecture-arm.h"
-#include "jit/AtomicOperations.h"
 
 #if defined(__clang__) || defined(__GNUC__)
 
