@@ -10,7 +10,7 @@
 #include "MediaFormatReader.h"
 #include "MP3Demuxer.h"
 #include "mozilla/Preferences.h"
-#include "PDMFactory.h"
+#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
@@ -29,12 +29,50 @@ MP3Decoder::CreateStateMachine() {
   return new MediaDecoderStateMachine(this, reader);
 }
 
+static already_AddRefed<MediaDataDecoder>
+CreateTestMP3Decoder(AudioInfo& aConfig)
+{
+  PlatformDecoderModule::Init();
+
+  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform || !platform->SupportsMimeType(aConfig.mMimeType)) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoder> decoder(
+    platform->CreateDecoder(aConfig, nullptr, nullptr));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
+static bool
+CanCreateMP3Decoder()
+{
+  static bool haveCachedResult = false;
+  static bool result = false;
+  if (haveCachedResult) {
+    return result;
+  }
+  AudioInfo config;
+  config.mMimeType = "audio/mpeg";
+  config.mRate = 48000;
+  config.mChannels = 2;
+  config.mBitDepth = 16;
+  nsRefPtr<MediaDataDecoder> decoder(CreateTestMP3Decoder(config));
+  if (decoder) {
+    result = true;
+  }
+  haveCachedResult = true;
+  return result;
+}
+
 /* static */
 bool
 MP3Decoder::IsEnabled() {
-  PDMFactory::Init();
-  nsRefPtr<PDMFactory> platform = new PDMFactory();
-  return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mpeg"));
+  return CanCreateMP3Decoder();
 }
 
 /* static */
@@ -42,7 +80,7 @@ bool MP3Decoder::CanHandleMediaType(const nsACString& aType,
                                     const nsAString& aCodecs)
 {
   if (aType.EqualsASCII("audio/mp3") || aType.EqualsASCII("audio/mpeg")) {
-    return IsEnabled() &&
+    return CanCreateMP3Decoder() &&
       (aCodecs.IsEmpty() || aCodecs.EqualsASCII("mp3"));
   }
   return false;

@@ -36,8 +36,6 @@ public:
   nsresult Drain() override;
   nsresult Shutdown() override;
 
-  static AVCodec* FindAVCodec(AVCodecID aCodec);
-
 protected:
   // Flush and Drain operation, always run
   virtual void ProcessFlush();

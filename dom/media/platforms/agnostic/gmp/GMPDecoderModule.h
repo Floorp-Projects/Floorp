@@ -33,14 +33,6 @@ public:
 
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
-
-  bool
-  SupportsMimeType(const nsACString& aMimeType) override
-  {
-    // TODO properly.
-    return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-      aMimeType.EqualsLiteral("video/avc");
-  }
 };
 
 } // namespace mozilla
