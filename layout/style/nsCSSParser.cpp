@@ -737,7 +737,7 @@ protected:
   nsCSSKeyword LookupKeywordPrefixAware(nsAString& aKeywordStr,
                                         const KTableValue aKeywordTable[]);
 
-  bool ShouldUseUnprefixingService();
+  bool ShouldUseUnprefixingService() const;
   bool ParsePropertyWithUnprefixingService(const nsAString& aPropertyName,
                                            css::Declaration* aDeclaration,
                                            uint32_t aFlags,
@@ -805,6 +805,7 @@ protected:
         mPosition(aPosition), mSize(aSize) {};
   };
 
+  bool IsFunctionTokenValidForBackgroundImage(const nsCSSToken& aToken) const;
   bool ParseBackgroundItem(BackgroundParseState& aState);
 
   bool ParseValueList(nsCSSProperty aPropID); // a single value prop-id
@@ -6683,7 +6684,7 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
 }
 
 bool
-CSSParserImpl::ShouldUseUnprefixingService()
+CSSParserImpl::ShouldUseUnprefixingService() const
 {
   if (!sUnprefixingServiceEnabled) {
     // Unprefixing is globally disabled.
@@ -10633,6 +10634,33 @@ CSSParserImpl::ParseBackground()
   return true;
 }
 
+// Helper for ParseBackgroundItem. Returns true if the passed-in nsCSSToken is
+// a function which is accepted for background-image.
+bool
+CSSParserImpl::IsFunctionTokenValidForBackgroundImage(
+  const nsCSSToken& aToken) const
+{
+  MOZ_ASSERT(aToken.mType == eCSSToken_Function,
+             "Should only be called for function-typed tokens");
+
+  const nsAString& funcName = aToken.mIdent;
+
+  return funcName.LowerCaseEqualsLiteral("linear-gradient") ||
+    funcName.LowerCaseEqualsLiteral("radial-gradient") ||
+    funcName.LowerCaseEqualsLiteral("repeating-linear-gradient") ||
+    funcName.LowerCaseEqualsLiteral("repeating-radial-gradient") ||
+    funcName.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
+    funcName.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
+    funcName.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
+    funcName.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
+    funcName.LowerCaseEqualsLiteral("-moz-image-rect") ||
+    funcName.LowerCaseEqualsLiteral("-moz-element") ||
+    (ShouldUseUnprefixingService() &&
+     (funcName.LowerCaseEqualsLiteral("-webkit-gradient") ||
+      funcName.LowerCaseEqualsLiteral("-webkit-linear-gradient") ||
+      funcName.LowerCaseEqualsLiteral("-webkit-radial-gradient")));
+}
+
 // Parse one item of the background shorthand property.
 bool
 CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
@@ -10775,20 +10803,7 @@ CSSParserImpl::ParseBackgroundItem(CSSParserImpl::BackgroundParseState& aState)
       }
     } else if (tt == eCSSToken_URL ||
                (tt == eCSSToken_Function &&
-                (mToken.mIdent.LowerCaseEqualsLiteral("linear-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("radial-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("repeating-linear-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("repeating-radial-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-linear-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-radial-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-linear-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-image-rect") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-element") ||
-                 (ShouldUseUnprefixingService() &&
-                  (mToken.mIdent.LowerCaseEqualsLiteral("-webkit-gradient") ||
-                   mToken.mIdent.LowerCaseEqualsLiteral("-webkit-linear-gradient") ||
-                   mToken.mIdent.LowerCaseEqualsLiteral("-webkit-radial-gradient")))))) {
+                IsFunctionTokenValidForBackgroundImage(mToken))) {
       if (haveImage)
         return false;
       haveImage = true;
