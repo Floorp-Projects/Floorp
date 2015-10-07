@@ -9,7 +9,6 @@
 
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIObserver.h"
 #include "nsISpeechService.h"
 #include "nsIThread.h"
 #include "nsRefPtrHashtable.h"
@@ -23,13 +22,11 @@ namespace dom {
 class SpeechDispatcherCallback;
 class SpeechDispatcherVoice;
 
-class SpeechDispatcherService final : public nsIObserver,
-                                      public nsISpeechService
+class SpeechDispatcherService final : public nsISpeechService
 {
   friend class SpeechDispatcherCallback;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSISPEECHSERVICE
 
   SpeechDispatcherService();
