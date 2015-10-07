@@ -18,6 +18,7 @@ SimpleTest.waitForExplicitFinish();
 let gState;
 let tests;
 
+let {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 let {WebConsoleCommands} = require("devtools/shared/webconsole/utils");
 
 function evaluateJS(input) {

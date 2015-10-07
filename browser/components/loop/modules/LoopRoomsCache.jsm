@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm
 this.EXPORTED_SYMBOLS = ["LoopRoomsCache"];
 
 const LOOP_ROOMS_CACHE_FILENAME = "loopRoomsCache.json";
-XPCOMUtils.defineConstant(this, "LOOP_ROOMS_CACHE_FILENAME", LOOP_ROOMS_CACHE_FILENAME);
 
 /**
  * RoomsCache is a cache for saving simple rooms data to the disk in case we

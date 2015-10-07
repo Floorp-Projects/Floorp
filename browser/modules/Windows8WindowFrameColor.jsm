@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var Registry = Cu.import("resource://gre/modules/WindowsRegistry.jsm").WindowsRegistry;
 
-var Windows8WindowFrameColor = {
+const Windows8WindowFrameColor = {
   _windowFrameColor: null,
 
   get: function() {

@@ -577,8 +577,3 @@ const DownloadsIndicatorView = {
   },
 };
 
-Object.defineProperty(this, "DownloadsIndicatorView", {
-  value: DownloadsIndicatorView,
-  enumerable: true,
-  writable: false
-});
