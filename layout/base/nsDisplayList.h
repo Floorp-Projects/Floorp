@@ -864,6 +864,13 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(OutOfFlowDisplayDataProperty,
                             DeleteValue<OutOfFlowDisplayData>)
+
+  static OutOfFlowDisplayData* GetOutOfFlowData(nsIFrame* aFrame)
+  {
+    return static_cast<OutOfFlowDisplayData*>(
+      aFrame->Properties().Get(OutOfFlowDisplayDataProperty()));
+  }
+
   NS_DECLARE_FRAME_PROPERTY(Preserve3DDirtyRectProperty, DeleteValue<nsRect>)
 
   nsPresContext* CurrentPresContext() {
