@@ -53,6 +53,12 @@ default: $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini
 # Targets from the recursive make backend to be built for a default build
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+# Mac builds require to copy things in dist/bin/*.app
+default:
+	$(MAKE) -C $(TOPOBJDIR)/$(MOZ_BUILD_APP)/app repackage
+endif
+
 .PHONY: FORCE
 
 # Extra define to trigger some workarounds. We should strive to limit the

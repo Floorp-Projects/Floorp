@@ -188,6 +188,8 @@ class FasterMakeBackend(CommonBackend):
             'PYTHON',
             'ACDEFINES',
             'MOZ_CHROME_FILE_FORMAT',
+            'MOZ_BUILD_APP',
+            'MOZ_WIDGET_TOOLKIT',
         ):
             mk.add_statement('%s = %s' % (var, self.environment.substs[var]))
 
