@@ -21,14 +21,12 @@
 #include "MediaData.h"
 #include "MediaInfo.h"
 
-#define CODECCONFIG_TIMEOUT_US 10000LL
-#define READ_OUTPUT_BUFFER_TIMEOUT_US  0LL
-
 #include <android/log.h>
 #define GADM_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkAudioDecoderManager", __VA_ARGS__)
 
 extern PRLogModuleInfo* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define READ_OUTPUT_BUFFER_TIMEOUT_US  3000
 
 using namespace android;
 typedef android::MediaCodecProxy MediaCodecProxy;
@@ -94,8 +92,7 @@ GonkAudioDecoderManager::InitMediaCodecProxy()
 
   if (mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     rv = mDecoder->Input(mCodecSpecificData->Elements(), mCodecSpecificData->Length(), 0,
-                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG,
-                         CODECCONFIG_TIMEOUT_US);
+                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
   }
 
   if (rv == OK) {
