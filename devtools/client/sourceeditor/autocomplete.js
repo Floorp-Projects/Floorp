@@ -31,12 +31,12 @@ function initializeAutoCompletion(ctx, options = {}) {
                         Editor.keyFor("autocompletion", { noaccel: true });
   if (ed.config.mode == Editor.modes.js) {
     let defs = [
-      "tern/browser",
-      "tern/ecma5",
+      "./tern/browser",
+      "./tern/ecma5",
     ].map(require);
 
     CM_TERN_SCRIPTS.forEach(ed.loadScript, ed);
-    win.tern = require("tern/tern");
+    win.tern = require("./tern/tern");
     cm.tern = new CodeMirror.TernServer({
       defs: defs,
       typeTip: function(data) {
