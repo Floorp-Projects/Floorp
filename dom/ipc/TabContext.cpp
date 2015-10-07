@@ -22,16 +22,15 @@ namespace dom {
 
 TabContext::TabContext()
   : mInitialized(false)
-  , mOwnAppId(NO_APP_ID)
   , mContainingAppId(NO_APP_ID)
-  , mIsBrowser(false)
+  , mOriginAttributes()
 {
 }
 
 bool
 TabContext::IsBrowserElement() const
 {
-  return mIsBrowser;
+  return mOriginAttributes.mInBrowser;
 }
 
 bool
@@ -43,7 +42,7 @@ TabContext::IsBrowserOrApp() const
 uint32_t
 TabContext::OwnAppId() const
 {
-  return mOwnAppId;
+  return mOriginAttributes.mAppId;
 }
 
 already_AddRefed<mozIApplication>
@@ -116,7 +115,7 @@ uint32_t
 TabContext::OwnOrContainingAppId() const
 {
   if (HasOwnApp()) {
-    return mOwnAppId;
+    return mOriginAttributes.mAppId;
   }
 
   return mContainingAppId;
@@ -153,9 +152,17 @@ TabContext::SetTabContext(const TabContext& aContext)
   return true;
 }
 
+const OriginAttributes&
+TabContext::OriginAttributesRef() const
+{
+  return mOriginAttributes;
+}
+
+
 bool
-TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp,
-                                     mozIApplication* aAppFrameOwnerApp)
+TabContext::SetTabContext(mozIApplication* aOwnApp,
+                          mozIApplication* aAppFrameOwnerApp,
+                          const OriginAttributes& aOriginAttributes)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
@@ -175,52 +182,25 @@ TabContext::SetTabContextForAppFrame(mozIApplication* aOwnApp,
     NS_ENSURE_TRUE(containingAppId != NO_APP_ID, false);
   }
 
+  // Veryify that app id matches mAppId passed in originAttributes
+  MOZ_RELEASE_ASSERT((aOwnApp && aOriginAttributes.mAppId == ownAppId) ||
+                     (aAppFrameOwnerApp && aOriginAttributes.mAppId == containingAppId) ||
+                     aOriginAttributes.mAppId == NO_APP_ID);
+
   mInitialized = true;
-  mIsBrowser = false;
-  mOwnAppId = ownAppId;
+  mOriginAttributes = aOriginAttributes;
   mContainingAppId = containingAppId;
   mOwnApp = aOwnApp;
   mContainingApp = aAppFrameOwnerApp;
   return true;
 }
 
-bool
-TabContext::SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp)
-{
-  NS_ENSURE_FALSE(mInitialized, false);
-
-  uint32_t containingAppId = NO_APP_ID;
-  if (aBrowserFrameOwnerApp) {
-    nsresult rv = aBrowserFrameOwnerApp->GetLocalId(&containingAppId);
-    NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(containingAppId != NO_APP_ID, false);
-  }
-
-  mInitialized = true;
-  mIsBrowser = true;
-  mOwnAppId = NO_APP_ID;
-  mContainingAppId = containingAppId;
-  mContainingApp = aBrowserFrameOwnerApp;
-  return true;
-}
-
-bool
-TabContext::SetTabContextForNormalFrame()
-{
-  NS_ENSURE_FALSE(mInitialized, false);
-
-  mInitialized = true;
-  return true;
-}
-
 IPCTabContext
 TabContext::AsIPCTabContext() const
 {
-  if (mIsBrowser) {
-    return IPCTabContext(BrowserFrameIPCTabContext(mContainingAppId));
-  }
-
-  return IPCTabContext(AppFrameIPCTabContext(mOwnAppId, mContainingAppId));
+  nsAutoCString originSuffix;
+  mOriginAttributes.CreateSuffix(originSuffix);
+  return IPCTabContext(FrameIPCTabContext(originSuffix, mContainingAppId));
 }
 
 static already_AddRefed<mozIApplication>
@@ -238,14 +218,14 @@ GetAppForId(uint32_t aAppId)
 MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   : mInvalidReason(nullptr)
 {
-  bool isBrowser = false;
-  uint32_t ownAppId = NO_APP_ID;
   uint32_t containingAppId = NO_APP_ID;
+  OriginAttributes originAttributes = OriginAttributes();
+  nsAutoCString originSuffix;
 
-  const IPCTabAppBrowserContext& appBrowser = aParams.appBrowserContext();
-  switch(appBrowser.type()) {
-    case IPCTabAppBrowserContext::TPopupIPCTabContext: {
-      const PopupIPCTabContext &ipcContext = appBrowser.get_PopupIPCTabContext();
+  const IPCTabContextUnion& contextUnion = aParams.contextUnion();
+  switch(contextUnion.type()) {
+    case IPCTabContextUnion::TPopupIPCTabContext: {
+      const PopupIPCTabContext &ipcContext = contextUnion.get_PopupIPCTabContext();
 
       TabContext *context;
       if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
@@ -280,39 +260,24 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       //
       // Otherwise, we're a new app window and we inherit from our
       // opener app.
+
+      // FIXME bug 1212250 - use InheritFromDocToChildDocshell instead
+      // of copying attributes directly.
+      originAttributes = context->mOriginAttributes;
       if (ipcContext.isBrowserElement()) {
-        isBrowser = true;
-        ownAppId = NO_APP_ID;
         containingAppId = context->OwnOrContainingAppId();
       } else {
-        isBrowser = false;
-        ownAppId = context->mOwnAppId;
         containingAppId = context->mContainingAppId;
       }
       break;
     }
-    case IPCTabAppBrowserContext::TAppFrameIPCTabContext: {
-      const AppFrameIPCTabContext &ipcContext =
-        appBrowser.get_AppFrameIPCTabContext();
+    case IPCTabContextUnion::TFrameIPCTabContext: {
+      const FrameIPCTabContext &ipcContext =
+        contextUnion.get_FrameIPCTabContext();
 
-      isBrowser = false;
-      ownAppId = ipcContext.ownAppId();
-      containingAppId = ipcContext.appFrameOwnerAppId();
-      break;
-    }
-    case IPCTabAppBrowserContext::TBrowserFrameIPCTabContext: {
-      const BrowserFrameIPCTabContext &ipcContext =
-        appBrowser.get_BrowserFrameIPCTabContext();
-
-      isBrowser = true;
-      ownAppId = NO_APP_ID;
-      containingAppId = ipcContext.browserFrameOwnerAppId();
-      break;
-    }
-    case IPCTabAppBrowserContext::TVanillaFrameIPCTabContext: {
-      isBrowser = false;
-      ownAppId = NO_APP_ID;
-      containingAppId = NO_APP_ID;
+      containingAppId = ipcContext.frameOwnerAppId();
+      originSuffix = ipcContext.originSuffix();
+      originAttributes.PopulateFromSuffix(originSuffix);
       break;
     }
     default: {
@@ -320,8 +285,8 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     }
   }
 
-  nsCOMPtr<mozIApplication> ownApp = GetAppForId(ownAppId);
-  if ((ownApp == nullptr) != (ownAppId == NO_APP_ID)) {
+  nsCOMPtr<mozIApplication> ownApp = GetAppForId(originAttributes.mAppId);
+  if ((ownApp == nullptr) != (originAttributes.mAppId == NO_APP_ID)) {
     mInvalidReason = "Got an ownAppId that didn't correspond to an app.";
     return;
   }
@@ -333,13 +298,9 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   }
 
   bool rv;
-  if (isBrowser) {
-    rv = mTabContext.SetTabContextForBrowserFrame(containingApp);
-  } else {
-    rv = mTabContext.SetTabContextForAppFrame(ownApp,
-                                              containingApp);
-  }
-
+  rv = mTabContext.SetTabContext(ownApp,
+                                 containingApp,
+                                 originAttributes);
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";
   }
