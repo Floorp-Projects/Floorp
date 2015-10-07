@@ -34,15 +34,18 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 namespace mozilla {
 
 GonkAudioDecoderManager::GonkAudioDecoderManager(const AudioInfo& aConfig)
-  : mAudioChannels(aConfig.mChannels)
+  : mLastDecodedTime(0)
+  , mAudioChannels(aConfig.mChannels)
   , mAudioRate(aConfig.mRate)
   , mAudioProfile(aConfig.mProfile)
   , mAudioBuffer(nullptr)
+  , mMonitor("GonkAudioDecoderManager")
 {
   MOZ_COUNT_CTOR(GonkAudioDecoderManager);
   MOZ_ASSERT(mAudioChannels);
   mCodecSpecificData = aConfig.mCodecSpecificConfig;
   mMimeType = aConfig.mMimeType;
+
 }
 
 GonkAudioDecoderManager::~GonkAudioDecoderManager()
@@ -51,9 +54,9 @@ GonkAudioDecoderManager::~GonkAudioDecoderManager()
 }
 
 nsRefPtr<MediaDataDecoder::InitPromise>
-GonkAudioDecoderManager::Init()
+GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
 {
-  if (InitMediaCodecProxy()) {
+  if (InitMediaCodecProxy(aCallback)) {
     return InitPromise::CreateAndResolve(TrackType::kAudioTrack, __func__);
   } else {
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
@@ -61,14 +64,18 @@ GonkAudioDecoderManager::Init()
 }
 
 bool
-GonkAudioDecoderManager::InitMediaCodecProxy()
+GonkAudioDecoderManager::InitMediaCodecProxy(MediaDataDecoderCallback* aCallback)
 {
   status_t rv = OK;
-  if (!InitLoopers(MediaData::AUDIO_DATA)) {
+  if (mLooper != nullptr) {
     return false;
   }
+  // Create ALooper
+  mLooper = new ALooper;
+  mLooper->setName("GonkAudioDecoderManager");
+  mLooper->start();
 
-  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false, nullptr);
+  mDecoder = MediaCodecProxy::CreateByType(mLooper, mMimeType.get(), false, nullptr);
   if (!mDecoder.get()) {
     return false;
   }
@@ -103,6 +110,52 @@ GonkAudioDecoderManager::InitMediaCodecProxy()
   }
 }
 
+bool
+GonkAudioDecoderManager::HasQueuedSample()
+{
+    MonitorAutoLock mon(mMonitor);
+    return mQueueSample.Length();
+}
+
+nsresult
+GonkAudioDecoderManager::Input(MediaRawData* aSample)
+{
+  MonitorAutoLock mon(mMonitor);
+  nsRefPtr<MediaRawData> sample;
+
+  if (aSample) {
+    sample = aSample;
+  } else {
+    // It means EOS with empty sample.
+    sample = new MediaRawData();
+  }
+
+  mQueueSample.AppendElement(sample);
+
+  status_t rv;
+  while (mQueueSample.Length()) {
+    nsRefPtr<MediaRawData> data = mQueueSample.ElementAt(0);
+    {
+      MonitorAutoUnlock mon_exit(mMonitor);
+      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->Data()),
+                           data->Size(),
+                           data->mTime,
+                           0);
+    }
+    if (rv == OK) {
+      mQueueSample.RemoveElementAt(0);
+    } else if (rv == -EAGAIN || rv == -ETIMEDOUT) {
+      // In most cases, EAGAIN or ETIMEOUT are safe because OMX can't fill
+      // buffer on time.
+      return NS_OK;
+    } else {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult
 GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
   if (!(mAudioBuffer != nullptr && mAudioBuffer->data() != nullptr)) {
@@ -122,13 +175,13 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mLastTime > timeUs) {
+  if (mLastDecodedTime > timeUs) {
     ReleaseAudioBuffer();
     GADM_LOG("Output decoded sample time is revert. time=%lld", timeUs);
     MOZ_ASSERT(false);
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mLastTime = timeUs;
+  mLastDecodedTime = timeUs;
 
   const uint8_t *data = static_cast<const uint8_t*>(mAudioBuffer->data());
   size_t dataOffset = mAudioBuffer->range_offset();
@@ -151,6 +204,23 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
                                                 mAudioRate);
   ReleaseAudioBuffer();
   audioData.forget(v);
+  return NS_OK;
+}
+
+nsresult
+GonkAudioDecoderManager::Flush()
+{
+  {
+    MonitorAutoLock mon(mMonitor);
+    mQueueSample.Clear();
+  }
+
+  mLastDecodedTime = 0;
+
+  if (mDecoder->flush() != OK) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
