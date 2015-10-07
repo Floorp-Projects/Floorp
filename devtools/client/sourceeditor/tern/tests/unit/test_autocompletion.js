@@ -5,8 +5,8 @@
  * Test that tern autocompletions work.
  */
 
-const tern = require("tern/tern");
-const ecma5 = require("tern/ecma5");
+const tern = require("devtools/client/sourceeditor/tern/tern");
+const ecma5 = require("devtools/client/sourceeditor/tern/ecma5");
 
 function run_test() {
   do_test_pending();

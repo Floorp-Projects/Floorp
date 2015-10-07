@@ -6,9 +6,9 @@
  */
 
 function run_test() {
-  const tern = require("tern/tern");
-  const ecma5 = require("tern/ecma5");
-  const browser = require("tern/browser");
+  const tern = require("devtools/client/sourceeditor/tern/tern");
+  const ecma5 = require("devtools/client/sourceeditor/tern/ecma5");
+  const browser = require("devtools/client/sourceeditor/tern/browser");
   do_check_true(!!tern);
   do_check_true(!!ecma5);
   do_check_true(!!browser);

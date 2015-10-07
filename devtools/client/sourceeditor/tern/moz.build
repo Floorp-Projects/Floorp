@@ -6,7 +6,7 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools.tern += [
+DevToolsModules(
     'browser.js',
     'comment.js',
     'condense.js',
@@ -15,4 +15,4 @@ EXTRA_JS_MODULES.devtools.tern += [
     'infer.js',
     'signal.js',
     'tern.js',
-]
+)
