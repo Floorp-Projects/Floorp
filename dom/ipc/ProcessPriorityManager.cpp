@@ -1041,11 +1041,11 @@ ParticularProcessPriorityManager::Notify(nsITimer* aTimer)
 bool
 ParticularProcessPriorityManager::HasAppType(const char* aAppType)
 {
-  const InfallibleTArray<PBrowserParent*>& browsers =
+  const ManagedContainer<PBrowserParent>& browsers =
     mContentParent->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); i++) {
+  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
     nsAutoString appType;
-    TabParent::GetFrom(browsers[i])->GetAppType(appType);
+    TabParent::GetFrom(iter.Get()->GetKey())->GetAppType(appType);
     if (appType.EqualsASCII(aAppType)) {
       return true;
     }
@@ -1057,10 +1057,10 @@ ParticularProcessPriorityManager::HasAppType(const char* aAppType)
 bool
 ParticularProcessPriorityManager::IsExpectingSystemMessage()
 {
-  const InfallibleTArray<PBrowserParent*>& browsers =
+  const ManagedContainer<PBrowserParent>& browsers =
     mContentParent->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); i++) {
-    TabParent* tp = TabParent::GetFrom(browsers[i]);
+  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
+    TabParent* tp = TabParent::GetFrom(iter.Get()->GetKey());
     nsCOMPtr<nsIMozBrowserFrame> bf = do_QueryInterface(tp->GetOwnerElement());
     if (!bf) {
       continue;
@@ -1089,10 +1089,10 @@ ParticularProcessPriorityManager::ComputePriority()
   }
 
   bool isVisible = false;
-  const InfallibleTArray<PBrowserParent*>& browsers =
+  const ManagedContainer<PBrowserParent>& browsers =
     mContentParent->ManagedPBrowserParent();
-  for (uint32_t i = 0; i < browsers.Length(); i++) {
-    if (TabParent::GetFrom(browsers[i])->IsVisible()) {
+  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
+    if (TabParent::GetFrom(iter.Get()->GetKey())->IsVisible()) {
       isVisible = true;
       break;
     }

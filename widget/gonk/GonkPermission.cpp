@@ -90,9 +90,11 @@ GonkPermissionChecker::Run()
   }
 
   // Now iterate its apps...
-  for (uint32_t i = 0; i < contentParent->ManagedPBrowserParent().Length(); i++) {
+  const ManagedContainer<PBrowserParent>& browsers =
+    contentParent->ManagedPBrowserParent();
+  for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
     dom::TabParent *tabParent =
-      static_cast<dom::TabParent*>(contentParent->ManagedPBrowserParent()[i]);
+      static_cast<dom::TabParent*>(iter.Get()->GetKey());
     nsCOMPtr<mozIApplication> mozApp = tabParent->GetOwnOrContainingApp();
     if (!mozApp) {
       continue;
