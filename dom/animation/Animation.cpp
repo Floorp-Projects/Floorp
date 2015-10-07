@@ -360,15 +360,18 @@ Animation::SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
 void
 Animation::Tick()
 {
-  // Since we are not guaranteed to get only one call per refresh driver tick,
-  // it's possible that mPendingReadyTime is set to a time in the future.
-  // In that case, we should wait until the next refresh driver tick before
-  // resuming.
+  // Finish pending if we have a pending ready time, but only if we also
+  // have an active timeline.
   if (mPendingState != PendingState::NotPending &&
       !mPendingReadyTime.IsNull() &&
       mTimeline &&
-      !mTimeline->GetCurrentTime().IsNull() &&
-      mPendingReadyTime.Value() <= mTimeline->GetCurrentTime().Value()) {
+      !mTimeline->GetCurrentTime().IsNull()) {
+    // Even though mPendingReadyTime is initialized using TimeStamp::Now()
+    // during the *previous* tick of the refresh driver, it can still be
+    // ahead of the *current* timeline time when we are using the
+    // vsync timer so we need to clamp it to the timeline time.
+    mPendingReadyTime.SetValue(std::min(mTimeline->GetCurrentTime().Value(),
+                                        mPendingReadyTime.Value()));
     FinishPendingAt(mPendingReadyTime.Value());
     mPendingReadyTime.SetNull();
   }
