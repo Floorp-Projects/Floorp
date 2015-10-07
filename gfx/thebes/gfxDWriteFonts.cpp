@@ -674,7 +674,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 {
   bool wantCairo = aTarget->GetBackendType() == BackendType::CAIRO;
   if (mAzureScaledFont && mAzureScaledFontIsCairo == wantCairo) {
-    nsRefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+    RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
     return scaledFont.forget();
   }
 
@@ -693,6 +693,6 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
 
   mAzureScaledFontIsCairo = wantCairo;
 
-  nsRefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
 }

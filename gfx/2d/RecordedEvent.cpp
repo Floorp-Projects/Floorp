@@ -365,7 +365,7 @@ RecordedDrawingEvent::GetObjectRef() const
 void
 RecordedDrawTargetCreation::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<DrawTarget> newDT =
+  RefPtr<DrawTarget> newDT =
     aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(mSize, mFormat);
   aTranslator->AddDrawTarget(mRefPtr, newDT);
 
@@ -387,7 +387,7 @@ RecordedDrawTargetCreation::RecordToStream(ostream &aStream) const
   if (mHasExistingData) {
     MOZ_ASSERT(mExistingData);
     MOZ_ASSERT(mExistingData->GetSize() == mSize);
-    nsRefPtr<DataSourceSurface> dataSurf = mExistingData->GetDataSurface();
+    RefPtr<DataSourceSurface> dataSurf = mExistingData->GetDataSurface();
     for (int y = 0; y < mSize.height; y++) {
       aStream.write((const char*)dataSurf->GetData() + y * dataSurf->Stride(),
                     BytesPerPixel(mFormat) * mSize.width);
@@ -406,7 +406,7 @@ RecordedDrawTargetCreation::RecordedDrawTargetCreation(istream &aStream)
   ReadElement(aStream, mHasExistingData);
 
   if (mHasExistingData) {
-    nsRefPtr<DataSourceSurface> dataSurf = Factory::CreateDataSourceSurface(mSize, mFormat);
+    RefPtr<DataSourceSurface> dataSurf = Factory::CreateDataSourceSurface(mSize, mFormat);
     if (!dataSurf) {
       gfxWarning() << "RecordedDrawTargetCreation had to reset mHasExistingData";
       mHasExistingData = false;
@@ -1024,7 +1024,7 @@ RecordedPathCreation::~RecordedPathCreation()
 void
 RecordedPathCreation::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<PathBuilder> builder = 
+  RefPtr<PathBuilder> builder = 
     aTranslator->GetReferenceDrawTarget()->CreatePathBuilder(mFillRule);
 
   for (size_t i = 0; i < mPathOps.size(); i++) {
@@ -1048,7 +1048,7 @@ RecordedPathCreation::PlayEvent(Translator *aTranslator) const
     }
   }
 
-  nsRefPtr<Path> path = builder->Finish();
+  RefPtr<Path> path = builder->Finish();
   aTranslator->AddPath(mRefPtr, path);
 }
 
@@ -1140,7 +1140,7 @@ RecordedSourceSurfaceCreation::~RecordedSourceSurfaceCreation()
 void
 RecordedSourceSurfaceCreation::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<SourceSurface> src = aTranslator->GetReferenceDrawTarget()->
+  RefPtr<SourceSurface> src = aTranslator->GetReferenceDrawTarget()->
     CreateSourceSurfaceFromData(mData, mSize, mSize.width * BytesPerPixel(mFormat), mFormat);
   aTranslator->AddSourceSurface(mRefPtr, src);
 }
@@ -1203,7 +1203,7 @@ RecordedFilterNodeCreation::~RecordedFilterNodeCreation()
 void
 RecordedFilterNodeCreation::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<FilterNode> node = aTranslator->GetReferenceDrawTarget()->
+  RefPtr<FilterNode> node = aTranslator->GetReferenceDrawTarget()->
     CreateFilter(mType);
   aTranslator->AddFilterNode(mRefPtr, node);
 }
@@ -1262,7 +1262,7 @@ RecordedGradientStopsCreation::~RecordedGradientStopsCreation()
 void
 RecordedGradientStopsCreation::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<GradientStops> src = aTranslator->GetReferenceDrawTarget()->
+  RefPtr<GradientStops> src = aTranslator->GetReferenceDrawTarget()->
     CreateGradientStops(mStops, mNumStops, mExtendMode);
   aTranslator->AddGradientStops(mRefPtr, src);
 }
@@ -1320,7 +1320,7 @@ RecordedGradientStopsDestruction::OutputSimpleEventInfo(stringstream &aStringStr
 void
 RecordedSnapshot::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<SourceSurface> src = aTranslator->LookupDrawTarget(mDT)->Snapshot();
+  RefPtr<SourceSurface> src = aTranslator->LookupDrawTarget(mDT)->Snapshot();
   aTranslator->AddSourceSurface(mRefPtr, src);
 }
 
@@ -1352,7 +1352,7 @@ RecordedScaledFontCreation::~RecordedScaledFontCreation()
 void
 RecordedScaledFontCreation::PlayEvent(Translator *aTranslator) const
 {
-  nsRefPtr<ScaledFont> scaledFont =
+  RefPtr<ScaledFont> scaledFont =
     Factory::CreateScaledFontForTrueTypeData(mData, mSize, mIndex, mGlyphSize,
                                              aTranslator->GetDesiredFontType());
   aTranslator->AddScaledFont(mRefPtr, scaledFont);

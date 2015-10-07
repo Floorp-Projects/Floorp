@@ -52,8 +52,8 @@ private:
 
   void EnsureActive(const Point &aPoint);
 
-  nsRefPtr<ID2D1GeometrySink> mSink;
-  nsRefPtr<ID2D1PathGeometry> mGeometry;
+  RefPtr<ID2D1GeometrySink> mSink;
+  RefPtr<ID2D1PathGeometry> mGeometry;
 
   bool mFigureActive;
   Point mCurrentPoint;
@@ -102,7 +102,7 @@ private:
   friend class DrawTargetD2D;
   friend class DrawTargetD2D1;
 
-  mutable nsRefPtr<ID2D1PathGeometry> mGeometry;
+  mutable RefPtr<ID2D1PathGeometry> mGeometry;
   bool mEndedActive;
   Point mEndPoint;
   FillRule mFillRule;

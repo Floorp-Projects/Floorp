@@ -167,7 +167,7 @@ already_AddRefed<PersistentBufferProvider>
 LayerManager::CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
                                              mozilla::gfx::SurfaceFormat aFormat)
 {
-  nsRefPtr<PersistentBufferProviderBasic> bufferProvider =
+  RefPtr<PersistentBufferProviderBasic> bufferProvider =
     new PersistentBufferProviderBasic(aSize, aFormat,
                                       gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
 
@@ -1657,8 +1657,8 @@ void WriteSnapshotToDumpFile(LayerManager* aManager, DataSourceSurface* aSurf)
 
 void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)
 {
-  nsRefPtr<SourceSurface> surf = aTarget->Snapshot();
-  nsRefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
+  RefPtr<SourceSurface> surf = aTarget->Snapshot();
+  RefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
   WriteSnapshotToDumpFile_internal(aCompositor, dSurf);
 }
 #endif

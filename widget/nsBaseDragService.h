@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "nsPoint.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsTArray.h"
@@ -89,7 +89,7 @@ protected:
                     nsIScriptableRegion* aRegion,
                     int32_t aScreenX, int32_t aScreenY,
                     nsIntRect* aScreenDragRect,
-                    nsRefPtr<SourceSurface>* aSurface,
+                    mozilla::RefPtr<SourceSurface>* aSurface,
                     nsPresContext **aPresContext);
 
   /**
@@ -101,7 +101,7 @@ protected:
                             mozilla::dom::HTMLCanvasElement* aCanvas,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
-                            nsRefPtr<SourceSurface>* aSurface);
+                            mozilla::RefPtr<SourceSurface>* aSurface);
 
   /**
    * Convert aScreenX and aScreenY from CSS pixels into unscaled device pixels.

@@ -9,7 +9,7 @@
 
 #include "windows.h" // HRESULT, DWORD
 #include "MediaDecoderReader.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "MP3FrameParser.h"
 
 struct IGraphBuilder;
@@ -76,16 +76,16 @@ private:
 
   // DirectShow filter graph, and associated playback and seeking
   // control interfaces.
-  nsRefPtr<IGraphBuilder> mGraph;
-  nsRefPtr<IMediaControl> mControl;
-  nsRefPtr<IMediaSeeking> mMediaSeeking;
+  RefPtr<IGraphBuilder> mGraph;
+  RefPtr<IMediaControl> mControl;
+  RefPtr<IMediaSeeking> mMediaSeeking;
 
   // Wraps the MediaResource, and feeds undecoded data into the filter graph.
-  nsRefPtr<SourceFilter> mSourceFilter;
+  RefPtr<SourceFilter> mSourceFilter;
 
   // Sits at the end of the graph, removing decoded samples from the graph.
   // The graph will block while this is blocked, i.e. it will pause decoding.
-  nsRefPtr<AudioSinkFilter> mAudioSinkFilter;
+  RefPtr<AudioSinkFilter> mAudioSinkFilter;
 
   // Some MP3s are variable bitrate, so DirectShow's duration estimation
   // can make its duration estimation based on the wrong bitrate. So we parse

@@ -257,7 +257,7 @@ FormatsAreCompatible(gfxImageFormat a1, gfxImageFormat a2)
 bool
 gfxImageSurface::CopyFrom (SourceSurface *aSurface)
 {
-    nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    mozilla::RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
     if (!data) {
         return false;
@@ -297,7 +297,7 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
 
 bool
 gfxImageSurface::CopyTo(SourceSurface *aSurface) {
-    nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    mozilla::RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
     if (!data) {
         return false;
@@ -321,7 +321,7 @@ gfxImageSurface::CopyTo(SourceSurface *aSurface) {
 already_AddRefed<DataSourceSurface>
 gfxImageSurface::CopyToB8G8R8A8DataSourceSurface()
 {
-  nsRefPtr<DataSourceSurface> dataSurface =
+  RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(GetSize().width, GetSize().height),
                                      SurfaceFormat::B8G8R8A8);
   if (dataSurface) {

@@ -193,7 +193,7 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     InfallibleTArray<PTextureChild*> textures;
     sImageBridgeChildSingleton->ManagedPTextureChild(textures);
     for (int i = textures.Length() - 1; i >= 0; --i) {
-      nsRefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
+      RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
       if (client) {
         client->ForceRemove();
       }
@@ -223,7 +223,7 @@ static void ImageBridgeShutdownStep2(ReentrantMonitor *aBarrier, bool *aDone)
 }
 
 // dispatched function
-static void CreateImageClientSync(nsRefPtr<ImageClient>* result,
+static void CreateImageClientSync(RefPtr<ImageClient>* result,
                                   ReentrantMonitor* barrier,
                                   CompositableType aType,
                                   ImageContainer* aImageContainer,
@@ -490,7 +490,7 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
     return;
   }
 
-  nsRefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+  RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
   // This increment is balanced by the decrement in FlushAllImagesSync
   waiter->IncrementWaitCount();
 
@@ -702,7 +702,7 @@ ImageBridgeChild::CreateImageClient(CompositableType aType,
   ReentrantMonitorAutoEnter autoMon(barrier);
   bool done = false;
 
-  nsRefPtr<ImageClient> result = nullptr;
+  RefPtr<ImageClient> result = nullptr;
   GetMessageLoop()->PostTask(FROM_HERE,
       NewRunnableFunction(&CreateImageClientSync, &result, &barrier, aType,
                           aImageContainer, &done));
@@ -722,7 +722,7 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType,
   if (aImageContainer) {
     SendPImageContainerConstructor(aImageContainer->GetPImageContainerChild());
   }
-  nsRefPtr<ImageClient> client
+  RefPtr<ImageClient> client
     = ImageClient::CreateImageClient(aType, this, TextureFlags::NO_FLAGS);
   MOZ_ASSERT(client, "failed to create ImageClient");
   if (client) {
@@ -760,7 +760,7 @@ ImageBridgeChild::AllocShmem(size_t aSize,
 // NewRunnableFunction accepts a limited number of parameters so we need a
 // struct here
 struct AllocShmemParams {
-  nsRefPtr<ISurfaceAllocator> mAllocator;
+  RefPtr<ISurfaceAllocator> mAllocator;
   size_t mSize;
   ipc::SharedMemory::SharedMemoryType mType;
   ipc::Shmem* mShmem;
@@ -911,7 +911,7 @@ ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageDat
         FenceHandle fence = op.fence();
         PTextureChild* child = op.textureChild();
 
-        nsRefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
+        RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
         if (texture) {
           texture->SetReleaseFenceHandle(fence);
         }

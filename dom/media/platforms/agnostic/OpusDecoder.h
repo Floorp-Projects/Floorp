@@ -38,7 +38,7 @@ private:
   void DoDrain ();
 
   const AudioInfo& mInfo;
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // Opus decoder state

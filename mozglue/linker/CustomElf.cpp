@@ -97,7 +97,7 @@ private:
     mappable->munmap(buf, length);
   }
 
-  nsRefPtr<Mappable> mappable;
+  mozilla::RefPtr<Mappable> mappable;
 };
 
 
@@ -109,7 +109,7 @@ CustomElf::Load(Mappable *mappable, const char *path, int flags)
     return nullptr;
   /* Keeping a RefPtr of the CustomElf is going to free the appropriate
    * resources when returning nullptr */
-  nsRefPtr<CustomElf> elf = new CustomElf(mappable, path);
+  RefPtr<CustomElf> elf = new CustomElf(mappable, path);
   /* Map the first page of the Elf object to access Elf and program headers */
   Mappable1stPagePtr ehdr_raw(mappable);
   if (ehdr_raw == MAP_FAILED)
@@ -341,7 +341,7 @@ CustomElf::GetSymbolPtrInDeps(const char *symbol) const
    * directly, not in their own dependent libraries. Building libraries with
    * --no-allow-shlib-undefined ensures such indirect symbol dependency don't
    * happen. */
-  for (std::vector<nsRefPtr<LibHandle> >::const_iterator it = dependencies.begin();
+  for (std::vector<RefPtr<LibHandle> >::const_iterator it = dependencies.begin();
        it < dependencies.end(); ++it) {
     /* Skip if it's the library containing this code, since we've already
      * looked at it above. */
@@ -626,7 +626,7 @@ CustomElf::InitDyn(const Phdr *pt_dyn)
   /* Load dependent libraries */
   for (size_t i = 0; i < dt_needed.size(); i++) {
     const char *name = strtab.GetStringAt(dt_needed[i]);
-    nsRefPtr<LibHandle> handle =
+    RefPtr<LibHandle> handle =
       ElfLoader::Singleton.Load(name, RTLD_GLOBAL | RTLD_LAZY, this);
     if (!handle)
       return false;

@@ -227,7 +227,7 @@ CompositorOGL::DrawVRDistortion(const gfx::Rect& aRect,
   if (vrEffect->mRenderTarget)
     textureTarget = mFBOTextureTarget;
 
-  nsRefPtr<CompositingRenderTargetOGL> surface =
+  RefPtr<CompositingRenderTargetOGL> surface =
     static_cast<CompositingRenderTargetOGL*>(vrEffect->mRenderTarget.get());
 
   VRHMDInfo* hmdInfo = vrEffect->mHMD;

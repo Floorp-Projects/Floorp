@@ -28,7 +28,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include <windows.h>
 #include <objbase.h>
@@ -253,7 +253,7 @@ public:
     // Create a D3D11 device to be used for DXVA decoding.
     already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
     bool CreateD3D11DecoderDeviceHelper(
-      IDXGIAdapter1* aAdapter, nsRefPtr<ID3D11Device>& aDevice,
+      IDXGIAdapter1* aAdapter, mozilla::RefPtr<ID3D11Device>& aDevice,
       HRESULT& aResOut);
 
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
@@ -352,13 +352,13 @@ private:
     nsRefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 #endif
-    nsRefPtr<IDXGIAdapter1> mAdapter;
+    mozilla::RefPtr<IDXGIAdapter1> mAdapter;
     nsRefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
-    nsRefPtr<ID3D10Device1> mD3D10Device;
-    nsRefPtr<ID3D11Device> mD3D11Device;
-    nsRefPtr<ID3D11Device> mD3D11ContentDevice;
-    nsRefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
-    nsRefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
+    mozilla::RefPtr<ID3D10Device1> mD3D10Device;
+    mozilla::RefPtr<ID3D11Device> mD3D11Device;
+    mozilla::RefPtr<ID3D11Device> mD3D11ContentDevice;
+    mozilla::RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
+    mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;

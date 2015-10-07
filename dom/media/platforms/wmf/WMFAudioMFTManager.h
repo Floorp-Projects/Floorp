@@ -9,7 +9,7 @@
 
 #include "WMF.h"
 #include "MFTDecoder.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "WMFMediaDataDecoder.h"
 
 extern const GUID CLSID_WebmMfVp8Dec;

@@ -506,7 +506,7 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::css::Side aSide)
       end[0] = Point(mOuterRect.CWCorner(aSide).x, mInnerRect.CWCorner(aSide).y);
   }
 
-  nsRefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+  RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
   builder->MoveTo(start[0]);
   builder->LineTo(end[0]);
   builder->LineTo(end[1]);
@@ -529,7 +529,7 @@ nsCSSBorderRenderer::FillSolidBorder(const Rect& aOuterRect,
   // If we have a border radius, do full rounded rectangles
   // and fill, regardless of what sides we're asked to draw.
   if (!AllCornersZeroSize(aBorderRadii)) {
-    nsRefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
 
     RectCornerRadii innerRadii;
     ComputeInnerRadii(aBorderRadii, aBorderSizes, &innerRadii);
@@ -540,7 +540,7 @@ nsCSSBorderRenderer::FillSolidBorder(const Rect& aOuterRect,
     // then do the inner border CCW
     AppendRoundedRectToPath(builder, aInnerRect, innerRadii, false);
 
-    nsRefPtr<Path> path = builder->Finish();
+    RefPtr<Path> path = builder->Finish();
 
     mDrawTarget->Fill(path, aColor);
     return;
@@ -1213,8 +1213,8 @@ DrawBorderRadius(DrawTarget* aDrawTarget,
   // Inner radius center
   Point innerCenter = aInnerCorner + (aCornerMultPrev + aCornerMultNext) * aInnerRadius;
 
-  nsRefPtr<PathBuilder> builder;
-  nsRefPtr<Path> path;
+  RefPtr<PathBuilder> builder;
+  RefPtr<Path> path;
 
   if (aFirstColor.a > 0) {
     builder = aDrawTarget->CreatePathBuilder();
@@ -1312,8 +1312,8 @@ DrawCorner(DrawTarget* aDrawTarget,
   // Corner box end point
   Point cornerEnd = aOuterCorner + aCornerMultNext * aCornerDims;
 
-  nsRefPtr<PathBuilder> builder;
-  nsRefPtr<Path> path;
+  RefPtr<PathBuilder> builder;
+  RefPtr<Path> path;
 
   if (aFirstColor.a > 0) {
     builder = aDrawTarget->CreatePathBuilder();
@@ -1648,10 +1648,10 @@ nsCSSBorderRenderer::DrawBorders()
     // doesn't need to compute an offset curve to stroke the path. We know that
     // the rounded parts are elipses we can offset exactly and can just compute
     // a new cubic approximation.
-    nsRefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
     AppendRoundedRectToPath(builder, mOuterRect, mBorderRadii, true);
     AppendRoundedRectToPath(builder, ToRect(borderInnerRect.rect), borderInnerRect.corners, false);
-    nsRefPtr<Path> path = builder->Finish();
+    RefPtr<Path> path = builder->Finish();
     mDrawTarget->Fill(path, color);
     return;
   }
@@ -1815,7 +1815,7 @@ nsCSSBorderRenderer::DrawBorders()
 
           PrintAsFormatString("corner: %d cornerSide: %d side: %d style: %d\n", corner, cornerSide, side, style);
 
-          nsRefPtr<Path> path = GetSideClipSubPath(side);
+          RefPtr<Path> path = GetSideClipSubPath(side);
           mDrawTarget->PushClip(path);
 
           DrawBorderSides(1 << side);

@@ -130,7 +130,7 @@ CanCreateMFTDecoder(const GUID& aGuid)
   if (FAILED(wmf::MFStartup())) {
     return false;
   }
-  nsRefPtr<MFTDecoder> decoder(new MFTDecoder());
+  RefPtr<MFTDecoder> decoder(new MFTDecoder());
   bool hasH264 = SUCCEEDED(decoder->Create(aGuid));
   wmf::MFShutdown();
   return hasH264;

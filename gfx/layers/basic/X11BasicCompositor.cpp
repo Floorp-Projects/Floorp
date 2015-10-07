@@ -102,7 +102,7 @@ X11DataTextureSourceBasic::GetFormat() const
 SourceSurface*
 X11DataTextureSourceBasic::GetSurface(DrawTarget* aTarget)
 {
-  nsRefPtr<gfx::SourceSurface> surface;
+  RefPtr<gfx::SourceSurface> surface;
   if (mBufferDrawTarget) {
     surface = mBufferDrawTarget->Snapshot();
     return surface.get();
@@ -120,7 +120,7 @@ X11DataTextureSourceBasic::DeallocateDeviceData()
 already_AddRefed<DataTextureSource>
 X11BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 {
-  nsRefPtr<DataTextureSource> result =
+  RefPtr<DataTextureSource> result =
     new X11DataTextureSourceBasic();
   return result.forget();
 }

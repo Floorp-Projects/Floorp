@@ -7,7 +7,7 @@
 #define __FilterSupport_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/2D.h"
@@ -431,7 +431,7 @@ public:
                           const IntRect& aFillPaintRect,
                           SourceSurface* aStrokePaint,
                           const IntRect& aStrokePaintRect,
-                          nsTArray<nsRefPtr<SourceSurface>>& aAdditionalImages,
+                          nsTArray<RefPtr<SourceSurface>>& aAdditionalImages,
                           const Point& aDestPoint,
                           const DrawOptions& aOptions = DrawOptions());
 

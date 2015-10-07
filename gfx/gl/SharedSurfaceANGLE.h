@@ -39,9 +39,9 @@ protected:
 public:
     const HANDLE mShareHandle;
 protected:
-    nsRefPtr<IDXGIKeyedMutex> mKeyedMutex;
-    nsRefPtr<IDXGIKeyedMutex> mConsumerKeyedMutex;
-    nsRefPtr<ID3D11Texture2D> mConsumerTexture;
+    RefPtr<IDXGIKeyedMutex> mKeyedMutex;
+    RefPtr<IDXGIKeyedMutex> mConsumerKeyedMutex;
+    RefPtr<ID3D11Texture2D> mConsumerTexture;
 
     const GLuint mFence;
 
@@ -51,7 +51,7 @@ protected:
                                    bool hasAlpha,
                                    EGLSurface pbuffer,
                                    HANDLE shareHandle,
-                                   const nsRefPtr<IDXGIKeyedMutex>& keyedMutex,
+                                   const RefPtr<IDXGIKeyedMutex>& keyedMutex,
                                    GLuint fence);
 
     EGLDisplay Display();
@@ -76,7 +76,7 @@ public:
     virtual bool WaitSync_ContentThread_Impl() override;
     virtual bool PollSync_ContentThread_Impl() override;
 
-    const nsRefPtr<ID3D11Texture2D>& GetConsumerTexture() const {
+    const RefPtr<ID3D11Texture2D>& GetConsumerTexture() const {
         return mConsumerTexture;
     }
 
@@ -96,12 +96,12 @@ protected:
 public:
     static UniquePtr<SurfaceFactory_ANGLEShareHandle> Create(GLContext* gl,
                                                              const SurfaceCaps& caps,
-                                                             const nsRefPtr<layers::ISurfaceAllocator>& allocator,
+                                                             const RefPtr<layers::ISurfaceAllocator>& allocator,
                                                              const layers::TextureFlags& flags);
 
 protected:
     SurfaceFactory_ANGLEShareHandle(GLContext* gl, const SurfaceCaps& caps,
-                                    const nsRefPtr<layers::ISurfaceAllocator>& allocator,
+                                    const RefPtr<layers::ISurfaceAllocator>& allocator,
                                     const layers::TextureFlags& flags, GLLibraryEGL* egl,
                                     EGLConfig config);
 

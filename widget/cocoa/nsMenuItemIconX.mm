@@ -43,6 +43,7 @@
 #include "nsIContentPolicy.h"
 
 using mozilla::gfx::SourceSurface;
+using mozilla::RefPtr;
 
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
@@ -401,7 +402,7 @@ nsMenuItemIconX::OnFrameComplete(imgIRequest* aRequest)
     mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
   }
 
-  nsRefPtr<SourceSurface> surface =
+  RefPtr<SourceSurface> surface =
     imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
                              imgIContainer::FLAG_SYNC_DECODE);
   if (!surface) {

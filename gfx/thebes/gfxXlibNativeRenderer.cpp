@@ -574,7 +574,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
             native.mType = NativeSurfaceType::CAIRO_SURFACE;
             native.mSurface = tempXlibSurface;
             native.mSize = size;
-            nsRefPtr<SourceSurface> sourceSurface =
+            RefPtr<SourceSurface> sourceSurface =
                 drawTarget->CreateSourceSurfaceFromNativeSurface(native);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,
@@ -616,7 +616,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
             native.mType = NativeSurfaceType::CAIRO_SURFACE;
             native.mSurface = paintSurface->CairoSurface();
             native.mSize = size;
-            nsRefPtr<SourceSurface> sourceSurface =
+            RefPtr<SourceSurface> sourceSurface =
                 drawTarget->CreateSourceSurfaceFromNativeSurface(native);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,

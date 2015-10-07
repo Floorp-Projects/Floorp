@@ -460,7 +460,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
-                            nsRefPtr<SourceSurface>* aSurface,
+                            RefPtr<SourceSurface>* aSurface,
                             nsPresContext** aPresContext)
 {
   *aSurface = nullptr;
@@ -622,7 +622,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     HTMLCanvasElement* aCanvas,
                                     int32_t aScreenX, int32_t aScreenY,
                                     nsIntRect* aScreenDragRect,
-                                    nsRefPtr<SourceSurface>* aSurface)
+                                    RefPtr<SourceSurface>* aSurface)
 {
   nsCOMPtr<imgIContainer> imgContainer;
   if (aImageLoader) {
@@ -657,7 +657,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
   nsresult result = NS_OK;
   if (aImageLoader) {
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
       gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(destSize,
                                          SurfaceFormat::B8G8R8A8);

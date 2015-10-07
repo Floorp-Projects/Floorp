@@ -5,7 +5,7 @@
 
 #include "ImageWrapper.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "Orientation.h"
 
 #include "mozilla/MemoryReporting.h"

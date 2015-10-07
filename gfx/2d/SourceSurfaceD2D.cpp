@@ -43,7 +43,7 @@ SourceSurfaceD2D::IsValid() const
 already_AddRefed<DataSourceSurface>
 SourceSurfaceD2D::GetDataSurface()
 {
-  nsRefPtr<DataSourceSurfaceD2D> result = new DataSourceSurfaceD2D(this);
+  RefPtr<DataSourceSurfaceD2D> result = new DataSourceSurfaceD2D(this);
   if (result->IsValid()) {
     return result.forget();
   }
@@ -69,7 +69,7 @@ SourceSurfaceD2D::InitFromData(unsigned char *aData,
   }
 
   D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2DPixelFormat(aFormat));
-  hr = aRT->CreateBitmap(D2DIntSize(aSize), props, getter_AddRefs(mBitmap));
+  hr = aRT->CreateBitmap(D2DIntSize(aSize), props, byRef(mBitmap));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create D2D Bitmap for data. Code: " << hexa(hr);
@@ -96,7 +96,7 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
 {
   HRESULT hr;
 
-  nsRefPtr<IDXGISurface> surf;
+  RefPtr<IDXGISurface> surf;
 
   hr = aTexture->QueryInterface((IDXGISurface**)&surf);
 
@@ -112,14 +112,14 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
   mFormat = aFormat;
 
   D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2DPixelFormat(aFormat));
-  hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, getter_AddRefs(mBitmap));
+  hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, byRef(mBitmap));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create SharedBitmap. Code: " << hexa(hr);
     return false;
   }
 
-  aTexture->GetDevice(getter_AddRefs(mDevice));
+  aTexture->GetDevice(byRef(mDevice));
   DrawTargetD2D::mVRAMUsageSS += GetByteSize();
 
   return true;
@@ -146,16 +146,16 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
   desc.MipLevels = 1;
   desc.Usage = D3D10_USAGE_DEFAULT;
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-  nsRefPtr<ID3D10Texture2D> sourceTexture;
+  RefPtr<ID3D10Texture2D> sourceTexture;
   HRESULT hr = aSourceSurface->mDevice->CreateTexture2D(&desc, nullptr,
-                                                        getter_AddRefs(sourceTexture));
+                                                        byRef(sourceTexture));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create texture. Code: " << hexa(hr);
     return;
   }
 
-  nsRefPtr<IDXGISurface> dxgiSurface;
-  hr = sourceTexture->QueryInterface((IDXGISurface**)getter_AddRefs(dxgiSurface));
+  RefPtr<IDXGISurface> dxgiSurface;
+  hr = sourceTexture->QueryInterface((IDXGISurface**)byRef(dxgiSurface));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create DXGI surface. Code: " << hexa(hr);
     return;
@@ -165,10 +165,10 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
             D2D1_RENDER_TARGET_TYPE_DEFAULT,
             D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED));
 
-  nsRefPtr<ID2D1RenderTarget> renderTarget;
+  RefPtr<ID2D1RenderTarget> renderTarget;
   hr = DrawTargetD2D::factory()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
                                                                &rtProps,
-                                                               getter_AddRefs(renderTarget));
+                                                               byRef(renderTarget));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create render target. Code: " << hexa(hr);
     return;
@@ -182,8 +182,8 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
                              Float(mSize.width),
                              Float(mSize.height)));
   } else {
-    nsRefPtr<ID2D1SolidColorBrush> brush;
-    renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), getter_AddRefs(brush));
+    RefPtr<ID2D1SolidColorBrush> brush;
+    renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
     renderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
     renderTarget->FillOpacityMask(aSourceSurface->mBitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS);
   }
@@ -196,7 +196,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
   desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ | D3D10_CPU_ACCESS_WRITE;
   desc.Usage = D3D10_USAGE_STAGING;
   desc.BindFlags = 0;
-  hr = aSourceSurface->mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTexture));
+  hr = aSourceSurface->mDevice->CreateTexture2D(&desc, nullptr, byRef(mTexture));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create staging texture. Code: " << hexa(hr);
     mTexture = nullptr;

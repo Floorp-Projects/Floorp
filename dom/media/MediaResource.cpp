@@ -1679,7 +1679,7 @@ public:
     return NS_OK;
   }
 
-  nsRefPtr<MediaDecoder> mDecoder;
+  RefPtr<MediaDecoder> mDecoder;
   int64_t mNumBytes;
   int64_t mOffset;
 };
@@ -1689,7 +1689,7 @@ void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset
   if (aNumBytes <= 0) {
     return;
   }
-  nsRefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
+  RefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
   NS_DispatchToMainThread(event);
 }
 

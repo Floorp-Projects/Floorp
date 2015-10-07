@@ -12,7 +12,7 @@
 #include <cmath>
 
 #include "prlock.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsWeakPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIWeakReferenceUtils.h" // for the definition of nsWeakPtr
@@ -222,8 +222,8 @@ class RTCStatsQuery {
     friend class PeerConnectionImpl;
     std::string pcName;
     bool internalStats;
-    nsTArray<nsRefPtr<mozilla::MediaPipeline>> pipelines;
-    nsRefPtr<NrIceCtx> iceCtx;
+    nsTArray<mozilla::RefPtr<mozilla::MediaPipeline>> pipelines;
+    mozilla::RefPtr<NrIceCtx> iceCtx;
     bool grabAllLevels;
     DOMHighResTimeStamp now;
 };
@@ -365,7 +365,7 @@ public:
   const nsRefPtr<mozilla::dom::RTCCertificate>& Certificate() const;
 #endif
   // This is a hack to support external linkage.
-  nsRefPtr<DtlsIdentity> Identity() const;
+  mozilla::RefPtr<DtlsIdentity> Identity() const;
 
   NS_IMETHODIMP_TO_ERRORRESULT(CreateOffer, ErrorResult &rv,
                                const RTCOfferOptions& aOptions)
@@ -742,7 +742,7 @@ private:
   // The certificate we are using.
   nsRefPtr<mozilla::dom::RTCCertificate> mCertificate;
 #else
-  nsRefPtr<DtlsIdentity> mIdentity;
+  mozilla::RefPtr<DtlsIdentity> mIdentity;
 #endif
   // Whether an app should be prevented from accessing media produced by the PC
   // If this is true, then media will not be sent until mPeerIdentity matches

@@ -96,7 +96,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   }
 
   // Create a surface to draw into.
-  nsRefPtr<DrawTarget> target =
+  RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(size, surfaceFormat);
   if (!target) {
@@ -106,7 +106,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
 
 
   // Create our drawable.
-  nsRefPtr<SourceSurface> innerSurface =
+  RefPtr<SourceSurface> innerSurface =
     InnerImage()->GetFrame(aWhichFrame, aFlags);
   NS_ENSURE_TRUE(innerSurface, nullptr);
   nsRefPtr<gfxDrawable> drawable =

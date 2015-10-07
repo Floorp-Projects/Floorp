@@ -13,7 +13,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -5567,7 +5567,7 @@ struct PerformanceGroup {
         recentCPOW = 0;
     }
 
-    // Refcounting. For use with nsRefPtr.
+    // Refcounting. For use with mozilla::RefPtr.
     void AddRef();
     void Release();
 
@@ -5651,8 +5651,8 @@ struct PerformanceGroupHolder {
     // The PerformanceGroups held by this object.
     // Initially set to `nullptr` until the first call to `getGroup`.
     // May be reset to `nullptr` by a call to `unlink`.
-    nsRefPtr<js::PerformanceGroup> sharedGroup_;
-    nsRefPtr<js::PerformanceGroup> ownGroup_;
+    mozilla::RefPtr<js::PerformanceGroup> sharedGroup_;
+    mozilla::RefPtr<js::PerformanceGroup> ownGroup_;
 };
 
 /**

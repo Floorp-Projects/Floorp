@@ -1604,7 +1604,7 @@ private:
 
     void FlushStroke(gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
     {
-        nsRefPtr<Path> path =
+        RefPtr<Path> path =
             mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
         if (mFontParams.contextPaint) {
             nsRefPtr<gfxPattern> strokePattern =
@@ -2060,7 +2060,7 @@ gfxFont::RenderColorGlyph(gfxContext* aContext,
         return false;
     }
 
-    nsRefPtr<DrawTarget> dt = aContext->GetDrawTarget();
+    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
          layerIndex++) {
         Glyph glyph;

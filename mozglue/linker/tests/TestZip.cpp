@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include "Zip.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 extern "C" void report_mapping() { }
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
   }
   chdir(argv[1]);
   Zip::Stream s;
-  nsRefPtr<Zip> z = ZipCollection::GetZip("test.zip");
+  mozilla::RefPtr<Zip> z = ZipCollection::GetZip("test.zip");
   for (size_t i = 0; i < sizeof(test_entries) / sizeof(*test_entries); i++) {
     if (!z->GetStream(test_entries[i], &s)) {
       fprintf(stderr, "TEST-UNEXPECTED-FAIL | TestZip | test.zip: Couldn't get entry \"%s\"\n", test_entries[i]);

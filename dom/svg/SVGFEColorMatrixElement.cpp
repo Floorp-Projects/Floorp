@@ -89,7 +89,7 @@ FilterPrimitiveDescription
 SVGFEColorMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                  const IntRect& aFilterSubregion,
                                                  const nsTArray<bool>& aInputsAreTainted,
-                                                 nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                                 nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
   const SVGNumberList &values = mNumberListAttributes[VALUES].GetAnimValue();

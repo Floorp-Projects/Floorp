@@ -10,7 +10,7 @@
 #include <stddef.h>                     // for size_t
 #include <map>                          // for std::map
 #include "GLDefs.h"                     // for GLuint
-#include "mozilla/nsRefPtr.h"             // for already_AddRefed, RefCounted
+#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray_Impl, etc
 #include "prio.h"                       // for NSPR file i/o
@@ -105,7 +105,7 @@ struct FPSState {
   FPSCounter mTransactionFps;
 
 private:
-  nsRefPtr<DataTextureSource> mFPSTextureSource;
+  RefPtr<DataTextureSource> mFPSTextureSource;
 };
 
 } // namespace layers

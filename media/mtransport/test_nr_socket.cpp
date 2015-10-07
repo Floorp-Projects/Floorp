@@ -90,7 +90,7 @@ extern "C" {
 #include "transport_addr.h"
 }
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "test_nr_socket.h"
 #include "runnable_utils.h"
 
@@ -99,7 +99,7 @@ namespace mozilla {
 static int test_nat_socket_create(void *obj,
                                   nr_transport_addr *addr,
                                   nr_socket **sockp) {
-  nsRefPtr<NrSocketBase> sock = new TestNrSocket(static_cast<TestNat*>(obj));
+  RefPtr<NrSocketBase> sock = new TestNrSocket(static_cast<TestNat*>(obj));
 
   int r, _status;
 

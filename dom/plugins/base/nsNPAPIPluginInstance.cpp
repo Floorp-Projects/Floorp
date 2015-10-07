@@ -965,7 +965,7 @@ already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceText
   if (!texture)
     return nullptr;
 
-  nsRefPtr<AndroidSurfaceTexture> surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
+  RefPtr<AndroidSurfaceTexture> surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
                                                                         texture);
   if (!surface) {
     return nullptr;
@@ -1014,7 +1014,7 @@ nsNPAPIPluginInstance::AsSurfaceTexture()
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
-  nsRefPtr<AndroidSurfaceTexture> surface = CreateSurfaceTexture();
+  RefPtr<AndroidSurfaceTexture> surface = CreateSurfaceTexture();
   if (!surface) {
     return nullptr;
   }

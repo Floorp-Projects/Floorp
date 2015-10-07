@@ -52,7 +52,7 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
 
   if (IsTrivial(&singleClipPathChild)) {
     gfxContextMatrixAutoSaveRestore autoRestore(&aContext);
-    nsRefPtr<Path> clipPath;
+    RefPtr<Path> clipPath;
     if (singleClipPathChild) {
       nsSVGPathGeometryFrame* pathFrame = do_QueryFrame(singleClipPathChild);
       if (pathFrame) {
@@ -144,7 +144,7 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
 
           clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
           Matrix maskTransform;
-          nsRefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&maskTransform);
+          RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&maskTransform);
 
           if (clipMaskSurface) {
             aContext.Mask(clipMaskSurface, maskTransform);
@@ -163,7 +163,7 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
 
       clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
       Matrix maskTransform;
-      nsRefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&maskTransform);
+      RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&maskTransform);
 
       if (clipMaskSurface) {
         aContext.Mask(clipMaskSurface, maskTransform);

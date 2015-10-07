@@ -69,7 +69,7 @@ public:
     }
   }
 
-  nsRefPtr<CompositableHost> mHost;
+  RefPtr<CompositableHost> mHost;
 };
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
@@ -151,7 +151,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
                                 bool aIs3D)
 {
   CompositableTextureSourceRef source;
-  nsRefPtr<TextureHost> host = GetAsTextureHost();
+  RefPtr<TextureHost> host = GetAsTextureHost();
 
   if (!host) {
     NS_WARNING("Using compositable with no valid TextureHost as mask");
@@ -170,7 +170,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
   }
   MOZ_ASSERT(source);
 
-  nsRefPtr<EffectMask> effect = new EffectMask(source,
+  RefPtr<EffectMask> effect = new EffectMask(source,
                                              source->GetSize(),
                                              aTransform);
   effect->mIs3D = aIs3D;
@@ -181,7 +181,7 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
 void
 CompositableHost::RemoveMaskEffect()
 {
-  nsRefPtr<TextureHost> host = GetAsTextureHost();
+  RefPtr<TextureHost> host = GetAsTextureHost();
   if (host) {
     host->Unlock();
   }
@@ -190,7 +190,7 @@ CompositableHost::RemoveMaskEffect()
 /* static */ already_AddRefed<CompositableHost>
 CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
-  nsRefPtr<CompositableHost> result;
+  RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
   case CompositableType::IMAGE_BRIDGE:
     NS_ERROR("Cannot create an image bridge compositable this way");
@@ -224,7 +224,7 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
   if (!aTexture) {
     return;
   }
-  nsRefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
   if (!dSurf) {
     return;
   }

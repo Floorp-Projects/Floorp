@@ -37,7 +37,7 @@ private:
 
   nsRefPtr<MozMtpServer>  mMozMtpServer;
   UniquePtr<MtpStorage>   mMtpStorage;
-  nsRefPtr<Volume>          mVolume;
+  RefPtr<Volume>          mVolume;
   MtpStorageID            mStorageID;
 };
 

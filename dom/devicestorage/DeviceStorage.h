@@ -10,7 +10,7 @@
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "nsWeakReference.h"

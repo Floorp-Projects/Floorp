@@ -943,7 +943,7 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
       case AsyncChildMessageData::TOpRemoveTextureAsync: {
         const OpRemoveTextureAsync& op = message.get_OpRemoveTextureAsync();
         CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
-        nsRefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+        RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
         MOZ_ASSERT(tex.get());
         compositable->RemoveTextureHost(tex);
@@ -989,7 +989,7 @@ void
 LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
                                                  CompositableHost* aCompositableHost)
 {
-  nsRefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
     return;
   }

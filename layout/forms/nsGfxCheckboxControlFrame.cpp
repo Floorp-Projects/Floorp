@@ -40,7 +40,7 @@ PaintCheckMark(nsIFrame* aFrame,
                       rect.y + rect.height / 2);
 
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+  RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
   nsPoint p = paintCenter + nsPoint(checkPolygonX[0] * paintScale,
                                     checkPolygonY[0] * paintScale);
 
@@ -51,7 +51,7 @@ PaintCheckMark(nsIFrame* aFrame,
                               checkPolygonY[polyIndex] * paintScale);
     builder->LineTo(NSPointToPoint(p, appUnitsPerDevPixel));
   }
-  nsRefPtr<Path> path = builder->Finish();
+  RefPtr<Path> path = builder->Finish();
   drawTarget->Fill(path,
                    ColorPattern(ToDeviceColor(aFrame->StyleColor()->mColor)));
 }

@@ -528,7 +528,7 @@ private:
 
   Mutex mMutex;
   // protected with mMutex:
-  nsRefPtr<MediaEngine> mBackend;
+  RefPtr<MediaEngine> mBackend;
 
   static StaticRefPtr<MediaManager> sSingleton;
 

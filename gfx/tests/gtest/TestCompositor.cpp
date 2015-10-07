@@ -8,7 +8,7 @@
 #include "gtest/gtest.h"
 #include "TestLayers.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
@@ -87,8 +87,8 @@ private:
 NS_IMPL_ISUPPORTS_INHERITED0(MockWidget, nsBaseWidget)
 
 struct LayerManagerData {
-  nsRefPtr<MockWidget> mWidget;
-  nsRefPtr<Compositor> mCompositor;
+  RefPtr<MockWidget> mWidget;
+  RefPtr<Compositor> mCompositor;
   nsRefPtr<LayerManagerComposite> mLayerManager;
 
   LayerManagerData(Compositor* compositor, MockWidget* widget, LayerManagerComposite* layerManager)
@@ -102,7 +102,7 @@ static already_AddRefed<Compositor> CreateTestCompositor(LayersBackend backend, 
 {
   gfxPrefs::GetSingleton();
 
-  nsRefPtr<Compositor> compositor;
+  RefPtr<Compositor> compositor;
 
   if (backend == LayersBackend::LAYERS_OPENGL) {
     compositor = new CompositorOGL(widget,
@@ -140,8 +140,8 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
   for (size_t i = 0; i < aBackends.size(); i++) {
     auto backend = aBackends[i];
 
-    nsRefPtr<MockWidget> widget = new MockWidget();
-    nsRefPtr<Compositor> compositor = CreateTestCompositor(backend, widget);
+    RefPtr<MockWidget> widget = new MockWidget();
+    RefPtr<Compositor> compositor = CreateTestCompositor(backend, widget);
 
     nsRefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
 
@@ -180,17 +180,17 @@ static already_AddRefed<DrawTarget> CreateDT()
 
 static bool CompositeAndCompare(nsRefPtr<LayerManagerComposite> layerManager, DrawTarget* refDT)
 {
-  nsRefPtr<DrawTarget> drawTarget = CreateDT();
+  RefPtr<DrawTarget> drawTarget = CreateDT();
 
   layerManager->BeginTransactionWithDrawTarget(drawTarget, IntRect(0, 0, gCompWidth, gCompHeight));
   layerManager->EndTransaction(TimeStamp::Now());
 
-  nsRefPtr<SourceSurface> ss = drawTarget->Snapshot();
-  nsRefPtr<DataSourceSurface> dss = ss->GetDataSurface();
+  RefPtr<SourceSurface> ss = drawTarget->Snapshot();
+  RefPtr<DataSourceSurface> dss = ss->GetDataSurface();
   uint8_t* bitmap = dss->GetData();
 
-  nsRefPtr<SourceSurface> ssRef = refDT->Snapshot();
-  nsRefPtr<DataSourceSurface> dssRef = ssRef->GetDataSurface();
+  RefPtr<SourceSurface> ssRef = refDT->Snapshot();
+  RefPtr<DataSourceSurface> dssRef = ssRef->GetDataSurface();
   uint8_t* bitmapRef = dssRef->GetData();
 
   for (int y = 0; y < gCompHeight; y++) {
@@ -256,7 +256,7 @@ TEST(Gfx, CompositorSimpleTree)
       colorLayer->SetBounds(colorLayer->GetVisibleRegion().GetBounds());
     }
 
-    nsRefPtr<DrawTarget> refDT = CreateDT();
+    RefPtr<DrawTarget> refDT = CreateDT();
     refDT->FillRect(Rect(0, 0, gCompWidth, gCompHeight), ColorPattern(Color(1.f, 0.f, 1.f, 1.f)));
     refDT->FillRect(Rect(0, 0, 100, 100), ColorPattern(Color(1.f, 0.f, 0.f, 1.f)));
     refDT->FillRect(Rect(0, 50, 100, 100), ColorPattern(Color(0.f, 0.f, 1.f, 1.f)));

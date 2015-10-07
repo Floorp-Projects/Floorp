@@ -53,7 +53,7 @@ SourceSurfaceD2DTarget::GetFormat() const
 already_AddRefed<DataSourceSurface>
 SourceSurfaceD2DTarget::GetDataSurface()
 {
-  nsRefPtr<DataSourceSurfaceD2DTarget> dataSurf =
+  RefPtr<DataSourceSurfaceD2DTarget> dataSurf =
     new DataSourceSurfaceD2DTarget(mFormat);
 
   D3D10_TEXTURE2D_DESC desc;
@@ -64,7 +64,7 @@ SourceSurfaceD2DTarget::GetDataSurface()
   desc.BindFlags = 0;
   desc.MiscFlags = 0;
 
-  HRESULT hr = Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(dataSurf->mTexture));
+  HRESULT hr = Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(dataSurf->mTexture));
 
   if (FAILED(hr)) {
     gfxDebug() << "Failed to create staging texture for SourceSurface. Code: " << hexa(hr);
@@ -91,7 +91,7 @@ SourceSurfaceD2DTarget::GetSRView()
     return mSRView;
   }
 
-  HRESULT hr = Factory::GetDirect3D10Device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
+  HRESULT hr = Factory::GetDirect3D10Device()->CreateShaderResourceView(mTexture, nullptr, byRef(mSRView));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create ShaderResourceView. Code: " << hexa(hr);
@@ -103,7 +103,7 @@ SourceSurfaceD2DTarget::GetSRView()
 void
 SourceSurfaceD2DTarget::DrawTargetWillChange()
 {
-  nsRefPtr<ID3D10Texture2D> oldTexture = mTexture;
+  RefPtr<ID3D10Texture2D> oldTexture = mTexture;
 
   D3D10_TEXTURE2D_DESC desc;
   mTexture->GetDesc(&desc);
@@ -114,7 +114,7 @@ SourceSurfaceD2DTarget::DrawTargetWillChange()
   desc.MiscFlags = 0;
 
   // Get a copy of the surface data so the content at snapshot time was saved.
-  Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, getter_AddRefs(mTexture));
+  Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(mTexture));
   Factory::GetDirect3D10Device()->CopyResource(mTexture, oldTexture);
 
   mBitmap = nullptr;
@@ -139,8 +139,8 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
   IntSize size(desc.Width, desc.Height);
   
-  nsRefPtr<IDXGISurface> surf;
-  hr = mTexture->QueryInterface((IDXGISurface**)getter_AddRefs(surf));
+  RefPtr<IDXGISurface> surf;
+  hr = mTexture->QueryInterface((IDXGISurface**)byRef(surf));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to query interface texture to DXGISurface. Code: " << hexa(hr);
@@ -148,20 +148,20 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
   }
 
   D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2DPixelFormat(mFormat));
-  hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, getter_AddRefs(mBitmap));
+  hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, byRef(mBitmap));
 
   if (FAILED(hr)) {
     // This seems to happen for SurfaceFormat::A8 sometimes...
     hr = aRT->CreateBitmap(D2D1::SizeU(desc.Width, desc.Height),
                            D2D1::BitmapProperties(D2DPixelFormat(mFormat)),
-                           getter_AddRefs(mBitmap));
+                           byRef(mBitmap));
 
     if (FAILED(hr)) {
       gfxWarning() << "Failed in CreateBitmap. Code: " << hexa(hr);
       return nullptr;
     }
 
-    nsRefPtr<ID2D1RenderTarget> rt;
+    RefPtr<ID2D1RenderTarget> rt;
 
     if (mDrawTarget) {
       rt = mDrawTarget->mRT;
@@ -171,9 +171,9 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
       // Okay, we already separated from our drawtarget. And we're an A8
       // surface the only way we can get to a bitmap is by creating a
       // a rendertarget and from there copying to a bitmap! Terrible!
-      nsRefPtr<IDXGISurface> surface;
+      RefPtr<IDXGISurface> surface;
 
-      hr = mTexture->QueryInterface((IDXGISurface**)getter_AddRefs(surface));
+      hr = mTexture->QueryInterface((IDXGISurface**)byRef(surface));
 
       if (FAILED(hr)) {
         gfxWarning() << "Failed to QI texture to surface.";
@@ -182,7 +182,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
       D2D1_RENDER_TARGET_PROPERTIES props =
         D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT, D2DPixelFormat(mFormat));
-      hr = DrawTargetD2D::factory()->CreateDxgiSurfaceRenderTarget(surface, props, getter_AddRefs(rt));
+      hr = DrawTargetD2D::factory()->CreateDxgiSurfaceRenderTarget(surface, props, byRef(rt));
 
       if (FAILED(hr)) {
         gfxWarning() << "Failed to create D2D render target for texture.";

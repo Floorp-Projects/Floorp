@@ -450,11 +450,11 @@ gfxWindowsPlatform::InitDWriteSupport()
 
   // I need a direct pointer to be able to cast to IUnknown**, I also need to
   // remember to release this because the nsRefPtr will AddRef it.
-  nsRefPtr<IDWriteFactory> factory;
+  RefPtr<IDWriteFactory> factory;
   HRESULT hr = createDWriteFactory(
       DWRITE_FACTORY_TYPE_SHARED,
       __uuidof(IDWriteFactory),
-      (IUnknown **)((IDWriteFactory **)getter_AddRefs(factory)));
+      (IUnknown **)((IDWriteFactory **)byRef(factory)));
   if (FAILED(hr) || !factory) {
     return false;
   }
@@ -1633,7 +1633,7 @@ gfxWindowsPlatform::GetDXGIAdapter()
       return nullptr;
     }
 
-    hr = factory1->EnumAdapters1(0, getter_AddRefs(mAdapter));
+    hr = factory1->EnumAdapters1(0, byRef(mAdapter));
     if (FAILED(hr)) {
       // We should return and not accelerate if we can't obtain
       // an adapter.
@@ -1859,7 +1859,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
     }
   }
 
-  nsRefPtr<ID3D11Texture2D> texture;
+  RefPtr<ID3D11Texture2D> texture;
   D3D11_TEXTURE2D_DESC desc;
   desc.Width = 32;
   desc.Height = 32;
@@ -1872,7 +1872,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   desc.CPUAccessFlags = 0;
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
   desc.BindFlags = bindflags;
-  if (FAILED(device->CreateTexture2D(&desc, NULL, getter_AddRefs(texture)))) {
+  if (FAILED(device->CreateTexture2D(&desc, NULL, byRef(texture)))) {
     return false;
   }
 
@@ -1903,10 +1903,10 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
     return false;
   }
 
-  nsRefPtr<ID3D11ShaderResourceView> sharedView;
+  RefPtr<ID3D11ShaderResourceView> sharedView;
 
   // This if(FAILED()) is the one that actually fails on systems affected by bug 1083071.
-  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, getter_AddRefs(sharedView)))) {
+  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, byRef(sharedView)))) {
     gfxCriticalError(CriticalLog::DefaultOptions(false)) << "CreateShaderResourceView failed for format" << format;
     return false;
   }
@@ -2003,7 +2003,7 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreationHelper(
         // to prevent bug 1092260. IE 11 also uses this flag.
         D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(mD3D11Device), nullptr, nullptr);
+        D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
   }
@@ -2013,7 +2013,7 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreationHelper(
 FeatureStatus
 gfxWindowsPlatform::AttemptD3D11DeviceCreation()
 {
-  nsRefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
+  RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
   if (!adapter) {
     return FeatureStatus::Unavailable;
   }
@@ -2062,7 +2062,7 @@ gfxWindowsPlatform::AttemptWARPDeviceCreationHelper(
         // to prevent bug 1092260. IE 11 also uses this flag.
         D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(mD3D11Device), nullptr, nullptr);
+        D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
 
     aReporterWARP.SetSuccessful();
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
@@ -2131,7 +2131,7 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
         aAdapter, mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN,
         nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(mD3D11ContentDevice), nullptr, nullptr);
+        D3D11_SDK_VERSION, byRef(mD3D11ContentDevice), nullptr, nullptr);
 
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
@@ -2142,7 +2142,7 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
 FeatureStatus
 gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
 {
-  nsRefPtr<IDXGIAdapter1> adapter;
+  RefPtr<IDXGIAdapter1> adapter;
   if (!mIsWARP) {
     adapter = GetDXGIAdapter();
     if (!adapter) {
@@ -2193,7 +2193,7 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
       sD3D11CreateDeviceFn(GetDXGIAdapter(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                            mFeatureLevels.Elements(), mFeatureLevels.Length(),
-                           D3D11_SDK_VERSION, getter_AddRefs(mD3D11ImageBridgeDevice), nullptr, nullptr);
+                           D3D11_SDK_VERSION, byRef(mD3D11ImageBridgeDevice), nullptr, nullptr);
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     return FeatureStatus::Crashed;
   }
@@ -2523,7 +2523,7 @@ gfxWindowsPlatform::InitializeD2D1()
 
 bool
 gfxWindowsPlatform::CreateD3D11DecoderDeviceHelper(
-  IDXGIAdapter1* aAdapter, nsRefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
+  IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice, HRESULT& aResOut)
 {
   MOZ_SEH_TRY{
     aResOut =
@@ -2531,7 +2531,7 @@ gfxWindowsPlatform::CreateD3D11DecoderDeviceHelper(
         aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
         D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, getter_AddRefs(aDevice), nullptr, nullptr);
+        D3D11_SDK_VERSION, byRef(aDevice), nullptr, nullptr);
 
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     return false;
@@ -2547,13 +2547,13 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
     return nullptr;
   }
 
-  nsRefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
+  RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
 
   if (!adapter) {
     return nullptr;
   }
 
-  nsRefPtr<ID3D11Device> device;
+  RefPtr<ID3D11Device> device;
 
   HRESULT hr;
   if (!CreateD3D11DecoderDeviceHelper(adapter, device, hr)) {

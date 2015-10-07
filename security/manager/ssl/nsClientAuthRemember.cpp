@@ -7,7 +7,7 @@
 #include "nsClientAuthRemember.h"
 
 #include "nsIX509Cert.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include "nsNSSCertHelper.h"
 #include "nsIObserverService.h"
@@ -82,7 +82,7 @@ void nsClientAuthRememberService::ClearRememberedDecisions()
 
 void nsClientAuthRememberService::ClearAllRememberedDecisions()
 {
-  nsRefPtr<nsClientAuthRememberService> svc =
+  RefPtr<nsClientAuthRememberService> svc =
     PublicSSLState()->GetClientAuthRememberService();
   svc->ClearRememberedDecisions();
 
@@ -113,7 +113,7 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
   {
     ReentrantMonitorAutoEnter lock(monitor);
     if (aClientCert) {
-      nsRefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(aClientCert));
+      RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(aClientCert));
       char *dbkey = nullptr;
       rv = pipCert->GetDbKey(&dbkey);
       if (NS_SUCCEEDED(rv) && dbkey) {

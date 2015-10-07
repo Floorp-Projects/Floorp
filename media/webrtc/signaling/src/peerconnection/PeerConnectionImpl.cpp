@@ -881,7 +881,7 @@ PeerConnectionImpl::Certificate() const
 }
 #endif
 
-nsRefPtr<DtlsIdentity>
+mozilla::RefPtr<DtlsIdentity>
 PeerConnectionImpl::Identity() const
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
@@ -889,7 +889,7 @@ PeerConnectionImpl::Identity() const
   MOZ_ASSERT(mCertificate);
   return mCertificate->CreateDtlsIdentity();
 #else
-  nsRefPtr<DtlsIdentity> id = mIdentity;
+  mozilla::RefPtr<DtlsIdentity> id = mIdentity;
   return id;
 #endif
 }
@@ -1367,7 +1367,7 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
       return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<JsepTrack> track(new JsepTrack(
+    RefPtr<JsepTrack> track(new JsepTrack(
           mozilla::SdpMediaSection::kApplication,
           streamId,
           trackId,
@@ -1763,13 +1763,13 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
                 __FUNCTION__, mHandle.c_str(), errorString.c_str());
     pco->OnSetRemoteDescriptionError(error, ObString(errorString.c_str()), jrv);
   } else {
-    std::vector<nsRefPtr<JsepTrack>> newTracks =
+    std::vector<RefPtr<JsepTrack>> newTracks =
       mJsepSession->GetRemoteTracksAdded();
 
     // Group new tracks by stream id
-    std::map<std::string, std::vector<nsRefPtr<JsepTrack>>> tracksByStreamId;
+    std::map<std::string, std::vector<RefPtr<JsepTrack>>> tracksByStreamId;
     for (auto i = newTracks.begin(); i != newTracks.end(); ++i) {
-      nsRefPtr<JsepTrack> track = *i;
+      RefPtr<JsepTrack> track = *i;
 
       if (track->GetMediaType() == mozilla::SdpMediaSection::kApplication) {
         // Ignore datachannel
@@ -1781,7 +1781,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
 
     for (auto i = tracksByStreamId.begin(); i != tracksByStreamId.end(); ++i) {
       std::string streamId = i->first;
-      std::vector<nsRefPtr<JsepTrack>>& tracks = i->second;
+      std::vector<RefPtr<JsepTrack>>& tracks = i->second;
 
       nsRefPtr<RemoteSourceStreamInfo> info =
         mMedia->GetRemoteStreamById(streamId);
@@ -1817,7 +1817,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
       size_t numPreexistingTrackIds = 0;
 
       for (auto j = tracks.begin(); j != tracks.end(); ++j) {
-        nsRefPtr<JsepTrack> track = *j;
+        RefPtr<JsepTrack> track = *j;
         if (!info->HasTrack(track->GetTrackId())) {
           if (track->GetMediaType() == SdpMediaSection::kAudio) {
             ++numNewAudioTracks;
@@ -1850,7 +1850,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
 #endif
     }
 
-    std::vector<nsRefPtr<JsepTrack>> removedTracks =
+    std::vector<RefPtr<JsepTrack>> removedTracks =
       mJsepSession->GetRemoteTracksRemoved();
 
     for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
