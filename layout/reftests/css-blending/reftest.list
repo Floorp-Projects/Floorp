@@ -47,6 +47,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-
 
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-dest-alpha-1135271.html mix-blend-mode-dest-alpha-1135271-ref.html
 
 # Test plan 5.3.1 Blending between the background layers and the background color for an element with background-blend-mode
 # Test 9
