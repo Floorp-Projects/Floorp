@@ -14,7 +14,7 @@ loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
 loader.lazyImporter(this, "DevToolsWorker",
-  "resource://gre/modules/devtools/shared/shared/worker.js");
+  "resource://gre/modules/devtools/shared/worker/worker.js");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";

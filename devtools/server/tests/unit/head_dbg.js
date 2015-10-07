@@ -9,7 +9,7 @@ var Cr = Components.results;
 var CC = Components.Constructor;
 
 const { require, loader } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
-const { worker } = Cu.import("resource://gre/modules/devtools/shared/worker-loader.js", {})
+const { worker } = Cu.import("resource://gre/modules/devtools/shared/worker/loader.js", {})
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { promiseInvoke } = require("devtools/shared/async-utils");

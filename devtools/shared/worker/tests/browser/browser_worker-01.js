@@ -21,8 +21,8 @@ const DURATION = 1000;
 add_task(function*() {
   // Test both CJS and JSM versions
 
-  yield testWorker("JSM", () => Cu.import("resource://gre/modules/devtools/shared/shared/worker.js", {}));
-  yield testWorker("CommonJS", () => require("devtools/shared/shared/worker"));
+  yield testWorker("JSM", () => Cu.import("resource://gre/modules/devtools/shared/worker/worker.js", {}));
+  yield testWorker("CommonJS", () => require("devtools/shared/worker/worker"));
 });
 
 function *testWorker (context, workerFactory) {

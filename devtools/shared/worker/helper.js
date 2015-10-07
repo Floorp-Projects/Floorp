@@ -17,7 +17,7 @@
   /**
    * This file is to only be included by ChromeWorkers. This exposes
    * a `createTask` function to workers to register tasks for communication
-   * back to `devtools/toolkit/shared/worker`.
+   * back to `devtools/shared/worker`.
    *
    * Tasks can be send their responses via a return value, either a primitive
    * or a promise.
