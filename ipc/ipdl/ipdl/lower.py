@@ -3969,10 +3969,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             block.addstmts([
                 StmtDecl(Decl(_cxxArrayType(manageecxxtype, ref=0),
                               kidsvar.name)),
-                StmtExpr(ExprAssn(kidsvar,
-                                  ExprSelect(othervar,
-                                             '->',
-                                             manageearray.name))),
+                StmtExpr(ExprCall(ExprSelect(othervar, '->',
+                                             p.managedMethod(manageeipdltype, self.side).name),
+                                  args=[ kidsvar ])),
                 StmtDecl(Decl(manageecxxtype, actorvar.name)),
                 forstmt])
             clonemanagees.addstmt(block)
