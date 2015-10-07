@@ -16,7 +16,7 @@ function PackagedAppUtils() {
 
 }
 
-var DEBUG = 0
+let DEBUG = 0
 function debug(s) {
   if (DEBUG) {
     dump("-*- PackagedAppUtils: " + s + "\n");

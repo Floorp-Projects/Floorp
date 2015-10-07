@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { interfaces: Ci, utils: Cu, classes: Cc } = Components;
+const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
 const nsIDM = Ci.nsIDownloadManager;
 

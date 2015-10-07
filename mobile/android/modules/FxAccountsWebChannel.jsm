@@ -365,7 +365,7 @@ this.FxAccountsWebChannel.prototype = {
   }
 };
 
-var singleton;
+let singleton;
 // The entry-point for this module, which ensures only one of our channels is
 // ever created - we require this because the WebChannel is global in scope and
 // allowing multiple channels would cause such notifications to be sent multiple

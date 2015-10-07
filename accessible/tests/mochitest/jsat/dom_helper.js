@@ -4,8 +4,8 @@
    SimpleTest, getBoundsForDOMElm, Point, Utils */
 /* exported loadJSON, eventMap */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');

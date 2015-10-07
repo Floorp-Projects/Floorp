@@ -1,5 +1,5 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
 
 const CWD = do_get_cwd();
 function checkOS(os) {

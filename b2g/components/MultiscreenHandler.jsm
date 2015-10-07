@@ -15,11 +15,11 @@ function debug(aStr) {
   // dump("MultiscreenHandler: " + aStr + "\n");
 }
 
-var window = Services.wm.getMostRecentWindow("navigator:browser");
+let window = Services.wm.getMostRecentWindow("navigator:browser");
 
 // Multi-screen support on b2g. The following implementation will open a new
 // top-level window once we receive a display connected event.
-var MultiscreenHandler = {
+let MultiscreenHandler = {
 
   topLevelWindows: new Map(),
 

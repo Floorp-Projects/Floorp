@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var Cu = Components.utils;
+const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 
 // Values taken from using zipinfo to list the test.zip contents

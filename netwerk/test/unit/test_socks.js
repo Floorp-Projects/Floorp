@@ -1,4 +1,4 @@
-var CC = Components.Constructor;
+const CC = Components.Constructor;
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",

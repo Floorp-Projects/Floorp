@@ -19,8 +19,8 @@ const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
 
 const CSS_TEXT = "* { color: blue }";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 var tempScope = {};
 Components.utils.import("resource://gre/modules/FileUtils.jsm", tempScope);

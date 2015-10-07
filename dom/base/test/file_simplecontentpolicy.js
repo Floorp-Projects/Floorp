@@ -1,6 +1,6 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");

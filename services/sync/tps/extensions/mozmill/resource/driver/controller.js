@@ -5,9 +5,9 @@
 var EXPORTED_SYMBOLS = ["MozMillController", "globalEventRegistry",
                         "sleep", "windowMap"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 var EventUtils = {}; Cu.import('resource://mozmill/stdlib/EventUtils.js', EventUtils);
 

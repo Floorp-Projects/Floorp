@@ -79,7 +79,7 @@ exports.register = register;
 /**
  * The HighlighterActor class
  */
-var HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
+let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   typeName: "highlighter",
 
   initialize: function(inspector, autohide) {
@@ -408,7 +408,7 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   })
 });
 
-var HighlighterFront = protocol.FrontClass(HighlighterActor, {
+let HighlighterFront = protocol.FrontClass(HighlighterActor, {
   // Update the object given a form representation off the wire.
   form: function(json) {
     this.actorID = json.actor;
@@ -421,7 +421,7 @@ var HighlighterFront = protocol.FrontClass(HighlighterActor, {
  * A generic highlighter actor class that instantiate a highlighter given its
  * type name and allows to show/hide it.
  */
-var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass({
+let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass({
   typeName: "customhighlighter",
 
   /**
@@ -527,7 +527,7 @@ var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   })
 });
 
-var CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
+let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
 
 /**
  * The HighlighterEnvironment is an object that holds all the required data for

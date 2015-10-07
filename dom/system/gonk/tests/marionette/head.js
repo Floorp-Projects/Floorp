@@ -40,7 +40,7 @@ ok(ril, "ril.constructor is " + ril.constructor);
 var radioInterface = ril.getRadioInterface(0);
 ok(radioInterface, "radioInterface.constructor is " + radioInterface.constrctor);
 
-var _pendingEmulatorShellCmdCount = 0;
+let _pendingEmulatorShellCmdCount = 0;
 
 /**
  * Send emulator shell command with safe guard.

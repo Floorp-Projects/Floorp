@@ -1,6 +1,6 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
 
 var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);

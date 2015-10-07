@@ -9,7 +9,7 @@
 
 Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
-var Cm = Components.manager;
+const Cm = Components.manager;
 
 var promptService = {
   _buttonChoice: 0,

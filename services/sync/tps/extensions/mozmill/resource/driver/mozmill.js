@@ -13,9 +13,9 @@ var EXPORTED_SYMBOLS = ["controller", "utils", "elementslib", "os",
                         "firePythonCallback", "getAddons"
                        ];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 
 Cu.import("resource://gre/modules/AddonManager.jsm");

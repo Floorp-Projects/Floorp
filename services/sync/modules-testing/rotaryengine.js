@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
   "RotaryTracker",
 ];
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");

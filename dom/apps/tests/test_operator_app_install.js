@@ -1,8 +1,8 @@
 "use strict";
 
-var Cu = Components.utils;
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/OperatorApps.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");

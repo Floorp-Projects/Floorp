@@ -1,6 +1,6 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/StoreTrustAnchor.jsm");
 

@@ -4,10 +4,10 @@
 
 this.EXPORTED_SYMBOLS = ['HistoryEngine', 'HistoryRec'];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+const Cr = Components.results;
 
 const HISTORY_TTL = 5184000; // 60 days
 

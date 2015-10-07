@@ -5,9 +5,9 @@
 var EXPORTED_SYMBOLS = ['Collector','Runner','events', 'runTestFile', 'log',
                         'timers', 'persisted', 'shutdownApplication'];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 const TIMEOUT_SHUTDOWN_HTTPD = 15000;
 

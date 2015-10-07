@@ -4,7 +4,7 @@
 
 this.EXPORTED_SYMBOLS = ["JPAKEClient", "SendCredentialsController"];
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");

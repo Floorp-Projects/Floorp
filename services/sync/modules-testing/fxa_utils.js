@@ -4,7 +4,7 @@ this.EXPORTED_SYMBOLS = [
   "initializeIdentityWithTokenServerResponse",
 ];
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/main.js");

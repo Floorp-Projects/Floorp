@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
+const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 function promiseContentResponse(browser, name, message) {
   let mm = browser.messageManager;

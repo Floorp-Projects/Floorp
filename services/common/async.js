@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["Async"];
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 #endif
 
