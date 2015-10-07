@@ -45,7 +45,6 @@ typedef OSType (*IOSurfacePixelFormatFunc)(IOSurfacePtr io_surface);
 #import <OpenGL/OpenGL.h>
 #include "2D.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/RefCounted.h"
 
 struct _CGLContextObject;
 
