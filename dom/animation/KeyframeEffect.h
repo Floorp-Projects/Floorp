@@ -202,6 +202,8 @@ struct ElementPropertyTransition;
 
 namespace dom {
 
+class Animation;
+
 class KeyframeEffectReadOnly : public AnimationEffectReadOnly
 {
 public:
@@ -253,10 +255,7 @@ public:
   AnimationTiming& Timing() {
     return mTiming;
   }
-
-  // FIXME: Drop |aOwningAnimation| once we make AnimationEffects track their
-  // owning animation.
-  void SetTiming(const AnimationTiming& aTiming, Animation& aOwningAnimtion);
+  void SetTiming(const AnimationTiming& aTiming);
 
   Nullable<TimeDuration> GetLocalTime() const {
     // Since the *animation* start time is currently always zero, the local
@@ -289,9 +288,11 @@ public:
   static StickyTimeDuration
   ActiveDuration(const AnimationTiming& aTiming);
 
-  bool IsInPlay(const Animation& aAnimation) const;
-  bool IsCurrent(const Animation& aAnimation) const;
+  bool IsInPlay() const;
+  bool IsCurrent() const;
   bool IsInEffect() const;
+
+  void SetAnimation(Animation* aAnimation);
 
   const AnimationProperty*
   GetAnimationOfProperty(nsCSSProperty aProperty) const;
@@ -308,8 +309,8 @@ public:
   }
 
   // Updates |aStyleRule| with the animation values produced by this
-  // Animation for the current time except any properties already contained
-  // in |aSetProperties|.
+  // AnimationEffect for the current time except any properties already
+  // contained in |aSetProperties|.
   // Any updated properties are added to |aSetProperties|.
   void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
@@ -317,10 +318,11 @@ public:
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
 
 protected:
-  virtual ~KeyframeEffectReadOnly() { }
+  virtual ~KeyframeEffectReadOnly();
   void ResetIsRunningOnCompositor();
 
   nsCOMPtr<Element> mTarget;
+  nsRefPtr<Animation> mAnimation;
   Nullable<TimeDuration> mParentTime;
 
   AnimationTiming mTiming;
