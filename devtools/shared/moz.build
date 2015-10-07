@@ -44,5 +44,6 @@ DevToolsModules(
     'Loader.jsm',
     'output-parser.js',
     'path.js',
+    'system.js',
     'worker-loader.js',
 )

@@ -24,7 +24,7 @@ loader.lazyRequireGetter(this, "DevToolsUtils",
 loader.lazyRequireGetter(this, "getDeviceFront",
   "devtools/server/actors/device", true);
 loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/shared/shared/system", true);
+  "devtools/shared/system", true);
 loader.lazyRequireGetter(this, "events",
   "sdk/event/core");
 loader.lazyRequireGetter(this, "EventTarget",

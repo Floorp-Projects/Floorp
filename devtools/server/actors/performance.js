@@ -23,7 +23,7 @@ loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
 loader.lazyRequireGetter(this, "LegacyPerformanceFront",
   "devtools/shared/performance/legacy/front", true);
 loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/shared/shared/system", true);
+  "devtools/shared/system", true);
 
 const PIPE_TO_FRONT_EVENTS = new Set([
   "recording-started", "recording-stopping", "recording-stopped",
