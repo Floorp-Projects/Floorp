@@ -16,7 +16,7 @@ add_task(function*() {
   let {inspector, view} = yield openRuleView();
   yield selectNode("#one", inspector);
 
-  is(getRuleViewPropertyValue(view, "element", "color"), "#F00",
+  is(getRuleViewPropertyValue(view, "element", "color"), "red",
     "The rule-view shows the properties for test node one");
 
   let cView = inspector.sidebar.getWindowForTab("computedview")
@@ -38,6 +38,6 @@ add_task(function*() {
   ok(getComputedViewPropertyValue(cView, "color"), "#00F",
     "The computed-view shows the properties for test node two");
 
-  is(getRuleViewPropertyValue(view, "element", "color"), "#F00",
+  is(getRuleViewPropertyValue(view, "element", "color"), "red",
     "The rule-view doesn't the properties for test node two");
 });

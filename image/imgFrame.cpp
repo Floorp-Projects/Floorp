@@ -237,7 +237,7 @@ nsresult
 imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
                            const nsIntSize& aSize,
                            const SurfaceFormat aFormat,
-                           GraphicsFilter aFilter,
+                           Filter aFilter,
                            uint32_t aImageFlags)
 {
   // Assert for properties that should be verified by decoders,
@@ -545,7 +545,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
 }
 
 bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
-                    GraphicsFilter aFilter, uint32_t aImageFlags)
+                    Filter aFilter, uint32_t aImageFlags)
 {
   PROFILER_LABEL("imgFrame", "Draw",
     js::ProfileEntry::Category::GRAPHICS);

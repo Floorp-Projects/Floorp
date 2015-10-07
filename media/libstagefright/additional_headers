@@ -13,7 +13,6 @@ frameworks/av/include/media/stagefright/MediaSource.h
 frameworks/av/include/media/stagefright/MetaData.h
 frameworks/av/include/media/stagefright/MetaData.h
 frameworks/av/media/libstagefright/include/ESDS.h
-frameworks/av/media/libstagefright/include/ID3.h
 frameworks/av/media/libstagefright/include/MPEG4Extractor.h
 frameworks/av/media/libstagefright/include/SampleTable.h
 frameworks/av/media/libstagefright/include/SampleTable.h

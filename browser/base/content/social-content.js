@@ -6,7 +6,7 @@
 /* This content script should work in any browser or iframe and should not
  * depend on the frame being contained in tabbrowser. */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -85,6 +85,19 @@ SocialErrorListener = {
     // Calling cancel() will raise some OnStateChange notifications by itself,
     // so avoid doing that more than once
     if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
+      // if tp is enabled and we get a failure, ignore failures (ie. STATE_STOP)
+      // on child resources since they *may* have been blocked. We don't have an
+      // easy way to know if a particular url is blocked by TP, only that
+      // something was.
+      if (docShell.hasTrackingContentBlocked) {
+        let frame = docShell.chromeEventHandler;
+        let src = frame.getAttribute("src");
+        if (aRequest && aRequest.name != src) {
+          Cu.reportError("SocialErrorListener ignoring blocked content error for " + aRequest.name);
+          return;
+        }
+      }
+
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
       this.setErrorPage();
     }

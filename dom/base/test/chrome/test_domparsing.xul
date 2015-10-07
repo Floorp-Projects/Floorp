@@ -16,8 +16,8 @@
 "use strict";
 /** Test for Bug 816410 **/
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function throws(a, type, message) {
   for (let fn of Array.isArray(a) ? a : [a]) {

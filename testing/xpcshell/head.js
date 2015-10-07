@@ -333,7 +333,7 @@ function _register_protocol_handlers() {
 }
 
 function _register_modules_protocol_handler() {
-  if (!this._TESTING_MODULES_DIR) {
+  if (!_TESTING_MODULES_DIR) {
     throw new Error("Please define a path where the testing modules can be " +
                     "found in a variable called '_TESTING_MODULES_DIR' before " +
                     "head.js is included.");
@@ -1227,7 +1227,7 @@ function do_load_child_test_harness()
       + "const _JSDEBUGGER_PORT=0; "
       + "const _XPCSHELL_PROCESS='child';";
 
-  if (this._TESTING_MODULES_DIR) {
+  if (_TESTING_MODULES_DIR) {
     command += " const _TESTING_MODULES_DIR=" + uneval(_TESTING_MODULES_DIR) + ";";
   }
 

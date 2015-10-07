@@ -5,7 +5,7 @@
  * Tests that disables the frontend when in private browsing mode.
  */
 
-let gPanelWinTuples = [];
+var gPanelWinTuples = [];
 
 function* spawnTest() {
   yield testNormalWindow();

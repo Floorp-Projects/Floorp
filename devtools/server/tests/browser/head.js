@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 const {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
@@ -44,6 +44,22 @@ var addTab = Task.async(function* (url) {
 
   return tab.linkedBrowser.contentWindow.document;
 });
+
+function* initAnimationsFrontForUrl(url) {
+  const {AnimationsFront} = require("devtools/server/actors/animation");
+  const {InspectorFront} = require("devtools/server/actors/inspector");
+
+  yield addTab(url);
+
+  initDebuggerServer();
+  let client = new DebuggerClient(DebuggerServer.connectPipe());
+  let form = yield connectDebuggerClient(client);
+  let inspector = InspectorFront(client, form);
+  let walker = yield inspector.getWalker();
+  let animations = AnimationsFront(client, form);
+
+  return {inspector, walker, animations, client};
+}
 
 function initDebuggerServer() {
   try {

@@ -17,7 +17,7 @@ var browserActionMap = new WeakMap();
 // WeakMap[Extension -> docshell]
 // This map is a cache of the windowless browser that's used to render ImageData
 // for the browser_action icon.
-let imageRendererMap = new WeakMap();
+var imageRendererMap = new WeakMap();
 
 function browserActionOf(extension)
 {

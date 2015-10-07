@@ -78,6 +78,31 @@ class CommonCaretsTestCase(object):
 
         self._iframe = self.marionette.find_element(By.ID, 'frame')
 
+    def word_offset(self, text, ordinal):
+        'Get the character offset of the ordinal-th word in text.'
+        tokens = re.split(r'(\S+)', text)         # both words and spaces
+        spaces = tokens[0::2]                     # collect spaces at odd indices
+        words = tokens[1::2]                      # collect word at even indices
+
+        if ordinal >= len(words):
+            raise IndexError('Only %d words in text, but got ordinal %d' %
+                             (len(words), ordinal))
+
+        # Cursor position of the targeting word is behind the the first
+        # character in the word. For example, offset to 'def' in 'abc def' is
+        # between 'd' and 'e'.
+        offset = len(spaces[0]) + 1
+        offset += sum(len(words[i]) + len(spaces[i + 1]) for i in range(ordinal))
+        return offset
+
+    def test_word_offset(self):
+        text = ' ' * 3 + 'abc' + ' ' * 3 + 'def'
+
+        self.assertTrue(self.word_offset(text, 0), 4)
+        self.assertTrue(self.word_offset(text, 1), 10)
+        with self.assertRaises(IndexError):
+            self.word_offset(text, 2)
+
     def word_location(self, el, ordinal):
         '''Get the location (x, y) of the ordinal-th word in el.
 
@@ -88,16 +113,7 @@ class CommonCaretsTestCase(object):
 
         '''
         sel = SelectionManager(el)
-        tokens = re.split(r'(\S+)', sel.content)  # both words and spaces
-        words = tokens[0::2]                      # collect words at even indices
-        spaces = tokens[1::2]                     # collect spaces at odd indices
-        self.assertTrue(ordinal < len(words),
-                        'Expect at least %d words in the content.' % ordinal)
-
-        # Cursor position of the targeting word is behind the the first
-        # character in the word. For example, offset to 'def' in 'abc def' is
-        # between 'd' and 'e'.
-        offset = sum(len(words[i]) + len(spaces[i]) for i in range(ordinal)) + 1
+        offset = self.word_offset(sel.content, ordinal)
 
         # Move caret to the word.
         el.tap()
@@ -165,7 +181,7 @@ class CommonCaretsTestCase(object):
         self.long_press_on_word(el, 0)
 
         # Ignore extra spaces selected after the word.
-        assertFunc(target_content, sel.selected_content.rstrip())
+        assertFunc(target_content, sel.selected_content)
 
     def _test_move_selection_carets(self, el, assertFunc):
         sel = SelectionManager(el)
@@ -191,8 +207,7 @@ class CommonCaretsTestCase(object):
         # Move the left caret to the previous position of the right caret.
         self.actions.flick(el, caret1_x, caret1_y, caret2_x, caret2_y).perform()
 
-        # Ignore extra spaces at the beginning of the content in comparison.
-        assertFunc(target_content.lstrip(), sel.selected_content.lstrip())
+        assertFunc(target_content, sel.selected_content)
 
     def _test_minimum_select_one_character(self, el, assertFunc,
                                            x=None, y=None):
@@ -358,7 +373,7 @@ class CommonCaretsTestCase(object):
         # Drag end caret back to the target word
         self.actions.flick(self._body, start_caret_x, start_caret_y, caret2_x, caret2_y).perform()
 
-        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()), 'select')
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content), 'select')
 
     @skip_if_not_rotatable
     def test_caret_position_after_changing_orientation_of_device(self):
@@ -382,7 +397,7 @@ class CommonCaretsTestCase(object):
         # other tests
         self.marionette.set_orientation('portrait')
 
-        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()), 'o')
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content), 'o')
 
     def test_select_word_inside_an_iframe(self):
         '''Bug 1088552
@@ -404,7 +419,7 @@ class CommonCaretsTestCase(object):
         self._bottomtext = self.marionette.find_element(By.ID, 'bottomtext')
         self.long_press_on_location(self._bottomtext)
 
-        self.assertNotEqual(self.to_unix_line_ending(sel.selected_content.strip()), '')
+        self.assertNotEqual(self.to_unix_line_ending(sel.selected_content), '')
 
     ########################################################################
     # <input> test cases with selection carets enabled
@@ -623,9 +638,9 @@ class SelectionCaretsTestCase(CommonCaretsTestCase, MarionetteTestCase):
     def setUp(self):
         super(SelectionCaretsTestCase, self).setUp()
         self.carets_tested_pref = 'selectioncaret.enabled'
-
         self.prefs = {
             'layout.accessiblecaret.enabled': False,
+            'layout.word_select.eat_space_to_next_word': False,
             self.carets_tested_pref: True,
         }
         self.marionette.set_prefs(self.prefs)
@@ -635,10 +650,69 @@ class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestC
     def setUp(self):
         super(AccessibleCaretSelectionModeTestCase, self).setUp()
         self.carets_tested_pref = 'layout.accessiblecaret.enabled'
-
         self.prefs = {
             'selectioncaret.enabled': False,
+            'layout.word_select.eat_space_to_next_word': False,
             'layout.accessiblecaret.use_long_tap_injector': False,
             self.carets_tested_pref: True,
         }
         self.marionette.set_prefs(self.prefs)
+
+    def test_long_press_to_select_when_partial_visible_word_is_selected(self):
+        self.open_test_html()
+        el = self._input
+        sel = SelectionManager(el)
+
+        # To successfully select the second word while the first word is being
+        # selected, use sufficient spaces between 'a' and 'b' to avoid the
+        # second caret covers on the second word.
+        original_content = 'aaaaaaaa          bbbbbbbb'
+        el.clear()
+        el.send_keys(original_content)
+        words = original_content.split()
+
+        # We cannot use self.long_press_on_word() directly since it has will
+        # change the cursor position which affects this test. We have to store
+        # the position of word 0 and word 1 before long-pressing to select the
+        # word.
+        word0_x, word0_y = self.word_location(el, 0)
+        word1_x, word1_y = self.word_location(el, 1)
+
+        self.long_press_on_location(el, word0_x, word0_y)
+        self.assertEqual(words[0], sel.selected_content)
+
+        self.long_press_on_location(el, word1_x, word1_y)
+        self.assertEqual(words[1], sel.selected_content)
+
+        self.long_press_on_location(el, word0_x, word0_y)
+        self.assertEqual(words[0], sel.selected_content)
+
+        # If the second carets is visible, it can be dragged to the position of
+        # the first caret. After that, selection will contain only the first
+        # character.
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+        self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
+        self.assertEqual(words[0][0], sel.selected_content)
+
+    def test_carets_do_not_jump_when_dragging_to_editable_content_boundary(self):
+        self.open_test_html()
+        el = self._input
+        sel = SelectionManager(el)
+        original_content = sel.content
+        words = original_content.split()
+        self.assertTrue(len(words) >= 3, 'Expect at least three words in the content.')
+
+        # Goal: the selection does not being changed after dragging the caret
+        # on the Y-axis only.
+        target_content = words[1]
+
+        self.long_press_on_word(el, 1)
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+
+        # Drag the first caret up by 50px.
+        self.actions.flick(el, caret1_x, caret1_y, caret1_x, caret1_y - 50).perform()
+        self.assertEqual(target_content, sel.selected_content)
+
+        # Drag the first caret down by 50px.
+        self.actions.flick(el, caret2_x, caret2_y, caret2_x, caret2_y + 50).perform()
+        self.assertEqual(target_content, sel.selected_content)

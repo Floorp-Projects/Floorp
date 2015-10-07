@@ -3,8 +3,8 @@
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "10.0");
 

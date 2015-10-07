@@ -15,7 +15,7 @@
 // Test the asynchronous live-updating of bookmarks query results
 SimpleTest.waitForExplicitFinish();
 
-const {utils: Cu, interfaces: Ci} = Components;
+var {utils: Cu, interfaces: Ci} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Task.jsm");

@@ -5,7 +5,7 @@
 
 var EXPORTED_SYMBOLS = ["Startup"];
 
-const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
+var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { defer } = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 

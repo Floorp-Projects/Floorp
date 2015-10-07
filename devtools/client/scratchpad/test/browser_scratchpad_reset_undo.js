@@ -3,12 +3,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 684546 */
 
-var tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
-var NetUtil = tempScope.NetUtil;
-var FileUtils = tempScope.FileUtils;
-
 // Reference to the Scratchpad chrome window object.
 var gScratchpadWindow;
 

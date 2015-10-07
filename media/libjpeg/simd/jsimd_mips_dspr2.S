@@ -916,7 +916,8 @@ LEAF_MIPS_DSPR2(jsimd_h2v2_fancy_upsample_mips_dspr2)
     srl            t1, t1, 4
     sb             t0, 0(s3)
     sb             t1, 1(s3)
-    addiu          s3, 2
+    beq            t8, s0, 22f     // skip to final iteration if width == 3
+     addiu          s3, 2
 2:
     lh             t0, 0(s0)       // t0 = A3|A2
     lh             t2, 0(s1)       // t2 = B3|B2
@@ -949,6 +950,7 @@ LEAF_MIPS_DSPR2(jsimd_h2v2_fancy_upsample_mips_dspr2)
     sb             t2, 3(s3)
     bne            t8, s0, 2b
      addiu         s3, 4
+22:
     beqz           s5, 4f
      addu          t8, s0, s5
 3:
@@ -1809,12 +1811,11 @@ LEAF_MIPS_DSPR2(jsimd_h2v2_upsample_mips_dspr2)
     bgtz    t4, 2b
      addiu  t5, 2
 3:
-    ulw     t6, 0(t7)       // t6 = outptr
-    ulw     t5, 4(t7)       // t5 = outptr[1]
+    lw      t6, 0(t7)       // t6 = outptr[0]
+    lw      t5, 4(t7)       // t5 = outptr[1]
     addu    t4, t6, a1      // t4 = new end address
-    subu    t8, t4, t9
-    beqz    t8, 5f
-     nop
+    beq     a1, t9, 5f
+     subu   t8, t4, t9
 4:
     ulw     t0, 0(t6)
     ulw     t1, 4(t6)

@@ -12,7 +12,7 @@ Services.prefs.setBoolPref("extensions.showMismatchUI", true);
 
 Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 const extDir = gProfD.clone();
 extDir.append("extensions");
 

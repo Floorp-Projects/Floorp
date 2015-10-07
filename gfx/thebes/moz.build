@@ -49,7 +49,6 @@ EXPORTS += [
     'gfxTypes.h',
     'gfxUserFontSet.h',
     'gfxUtils.h',
-    'GraphicsFilter.h',
     'RoundedRect.h',
     'SoftwareVsyncSource.h',
     'VsyncSource.h',

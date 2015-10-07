@@ -10,7 +10,6 @@
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
-#include "GraphicsFilter.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
@@ -94,7 +93,7 @@ native DrawResult(mozilla::image::DrawResult);
 [ref] native gfxMatrix(gfxMatrix);
 [ref] native gfxRect(gfxRect);
 [ref] native gfxSize(gfxSize);
-native gfxGraphicsFilter(GraphicsFilter);
+native Filter(mozilla::gfx::Filter);
 [ref] native nsIntRect(nsIntRect);
 native nsIntRectByVal(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
@@ -119,7 +118,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(4e5a0547-6c54-4051-8b52-1f2fdd667696)]
+[scriptable, builtinclass, uuid(7c795421-a79c-43ac-9e20-6d4e8a9dfb76)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -165,7 +164,7 @@ interface imgIContainer : nsISupports
    */
   [notxpcom, nostdcall] nsIntSizeByVal
   optimalImageSizeForDest([const] in gfxSize aDest, in uint32_t aWhichFrame,
-                          in gfxGraphicsFilter aFilter, in uint32_t aFlags);
+                          in Filter aFilter, in uint32_t aFlags);
 
   /**
     * Enumerated values for the 'type' attribute (below).
@@ -421,7 +420,7 @@ interface imgIContainer : nsISupports
        [const] in nsIntSize aSize,
        [const] in ImageRegion aRegion,
        in uint32_t aWhichFrame,
-       in gfxGraphicsFilter aFilter,
+       in Filter aFilter,
        [const] in MaybeSVGImageContext aSVGContext,
        in uint32_t aFlags);
 
