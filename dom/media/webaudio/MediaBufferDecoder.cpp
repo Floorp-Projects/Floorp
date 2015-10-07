@@ -480,7 +480,7 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
     return;
   }
 
-  nsRefPtr<MediaDecodeTask> task =
+  RefPtr<MediaDecodeTask> task =
     new MediaDecodeTask(aContentType, aBuffer, aLength, aDecodeJob);
   if (!task->CreateReader()) {
     nsCOMPtr<nsIRunnable> event =

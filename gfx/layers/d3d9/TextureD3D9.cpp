@@ -51,7 +51,7 @@ CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
                       ISurfaceAllocator* aDeallocator,
                       TextureFlags aFlags)
 {
-  nsRefPtr<TextureHost> result;
+  RefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem:
     case SurfaceDescriptor::TSurfaceDescriptorMemory: {
@@ -169,13 +169,13 @@ already_AddRefed<IDirect3DTexture9>
 TextureSourceD3D9::InitTextures(DeviceManagerD3D9* aDeviceManager,
                                 const IntSize &aSize,
                                 _D3DFORMAT aFormat,
-                                nsRefPtr<IDirect3DSurface9>& aSurface,
+                                RefPtr<IDirect3DSurface9>& aSurface,
                                 D3DLOCKED_RECT& aLockedRect)
 {
   if (!aDeviceManager) {
     return nullptr;
   }
-  nsRefPtr<IDirect3DTexture9> result;
+  RefPtr<IDirect3DTexture9> result;
   // D3D9Ex doesn't support managed textures and we don't want the hassle even
   // if we don't have Ex. We could use dynamic textures
   // here but since Images are immutable that probably isn't such a great
@@ -185,13 +185,13 @@ TextureSourceD3D9::InitTextures(DeviceManagerD3D9* aDeviceManager,
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> tmpTexture =
+  RefPtr<IDirect3DTexture9> tmpTexture =
     aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_SYSTEMMEM, this);
   if (!tmpTexture) {
     return nullptr;
   }
 
-  tmpTexture->GetSurfaceLevel(0, getter_AddRefs(aSurface));
+  tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
   
   HRESULT hr = aSurface->LockRect(&aLockedRect, nullptr, 0);
   if (FAILED(hr) || !aLockedRect.pBits) {
@@ -229,9 +229,9 @@ TextureSourceD3D9::DataToTexture(DeviceManagerD3D9* aDeviceManager,
                                  _D3DFORMAT aFormat,
                                  uint32_t aBPP)
 {
-  nsRefPtr<IDirect3DSurface9> surface;
+  RefPtr<IDirect3DSurface9> surface;
   D3DLOCKED_RECT lockedRect;
-  nsRefPtr<IDirect3DTexture9> texture = InitTextures(aDeviceManager, aSize, aFormat,
+  RefPtr<IDirect3DTexture9> texture = InitTextures(aDeviceManager, aSize, aFormat,
                                                    surface, lockedRect);
   if (!texture) {
     return nullptr;
@@ -260,7 +260,7 @@ TextureSourceD3D9::TextureToTexture(DeviceManagerD3D9* aDeviceManager,
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> texture =
+  RefPtr<IDirect3DTexture9> texture =
     aDeviceManager->CreateTexture(aSize, aFormat, D3DPOOL_DEFAULT, this);
   if (!texture) {
     return nullptr;
@@ -463,7 +463,7 @@ TextureClientD3D9::~TextureClientD3D9()
 already_AddRefed<TextureClient>
 TextureClientD3D9::CreateSimilar(TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
 {
-  nsRefPtr<TextureClient> tex = new TextureClientD3D9(mAllocator, mFormat,
+  RefPtr<TextureClient> tex = new TextureClientD3D9(mAllocator, mFormat,
                                                     mFlags | aFlags);
 
   if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
@@ -599,7 +599,7 @@ TextureClientD3D9::UpdateFromSurface(gfx::SourceSurface* aSurface)
     return;
   }
 
-  nsRefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
     gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
@@ -685,7 +685,7 @@ SharedTextureClientD3D9::Create(ISurfaceAllocator* aAllocator,
 {
   MOZ_ASSERT(aFormat == gfx::SurfaceFormat::B8G8R8X8);
 
-  nsRefPtr<IDirect3DTexture9> texture;
+  RefPtr<IDirect3DTexture9> texture;
   HANDLE shareHandle = nullptr;
   HRESULT hr = aDevice->CreateTexture(aSize.width,
                                       aSize.height,
@@ -693,11 +693,11 @@ SharedTextureClientD3D9::Create(ISurfaceAllocator* aAllocator,
                                       D3DUSAGE_RENDERTARGET,
                                       D3DFMT_X8R8G8B8,
                                       D3DPOOL_DEFAULT,
-                                      getter_AddRefs(texture),
+                                      byRef(texture),
                                       &shareHandle);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && shareHandle, nullptr);
 
-  nsRefPtr<SharedTextureClientD3D9> client =
+  RefPtr<SharedTextureClientD3D9> client =
     new SharedTextureClientD3D9(aAllocator,
                                 aFormat,
                                 aFlags);
@@ -714,8 +714,8 @@ SharedTextureClientD3D9::Create(ISurfaceAllocator* aAllocator,
 already_AddRefed<IDirect3DSurface9>
 SharedTextureClientD3D9::GetD3D9Surface() const
 {
-  nsRefPtr<IDirect3DSurface9> textureSurface;
-  HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(textureSurface));
+  RefPtr<IDirect3DSurface9> textureSurface;
+  HRESULT hr = mTexture->GetSurfaceLevel(0, byRef(textureSurface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return textureSurface.forget();
@@ -802,14 +802,14 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
     }
   }
 
-  nsRefPtr<IDirect3DSurface9> srcSurface;
-  nsRefPtr<IDirect3DSurface9> dstSurface;
+  RefPtr<IDirect3DSurface9> srcSurface;
+  RefPtr<IDirect3DSurface9> dstSurface;
 
-  hr = aTexture->GetSurfaceLevel(0, getter_AddRefs(srcSurface));
+  hr = aTexture->GetSurfaceLevel(0, byRef(srcSurface));
   if (FAILED(hr)) {
     return false;
   }
-  hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
+  hr = mTexture->GetSurfaceLevel(0, byRef(dstSurface));
   if (FAILED(hr)) {
     return false;
   }
@@ -1039,19 +1039,19 @@ DXGIYCbCrTextureHostD3D9::Lock()
 
     if (FAILED(GetDevice()->CreateTexture(mSizeY.width, mSizeY.height,
                                           1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
-                                          getter_AddRefs(mTextures[0]), &mHandles[0]))) {
+                                          byRef(mTextures[0]), &mHandles[0]))) {
       return false;
     }
 
     if (FAILED(GetDevice()->CreateTexture(mSizeCbCr.width, mSizeCbCr.height,
                                           1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
-                                          getter_AddRefs(mTextures[1]), &mHandles[1]))) {
+                                          byRef(mTextures[1]), &mHandles[1]))) {
       return false;
     }
 
     if (FAILED(GetDevice()->CreateTexture(mSizeCbCr.width, mSizeCbCr.height,
                                           1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
-                                          getter_AddRefs(mTextures[2]), &mHandles[2]))) {
+                                          byRef(mTextures[2]), &mHandles[2]))) {
       return false;
     }
 

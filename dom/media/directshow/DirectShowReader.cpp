@@ -6,7 +6,7 @@
 
 #include "DirectShowReader.h"
 #include "MediaDecoderReader.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "DirectShowUtils.h"
 #include "AudioSinkFilter.h"
 #include "SourceFilter.h"
@@ -110,7 +110,7 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
                         nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IGraphBuilder,
-                        reinterpret_cast<void**>(static_cast<IGraphBuilder**>(getter_AddRefs(mGraph))));
+                        reinterpret_cast<void**>(static_cast<IGraphBuilder**>(byRef(mGraph))));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && mGraph, NS_ERROR_FAILURE);
 
   rv = ParseMP3Headers(&mMP3FrameParser, mDecoder->GetResource());
@@ -126,10 +126,10 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   #endif
 
   // Extract the interface pointers we'll need from the filter graph.
-  hr = mGraph->QueryInterface(static_cast<IMediaControl**>(getter_AddRefs(mControl)));
+  hr = mGraph->QueryInterface(static_cast<IMediaControl**>(byRef(mControl)));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && mControl, NS_ERROR_FAILURE);
 
-  hr = mGraph->QueryInterface(static_cast<IMediaSeeking**>(getter_AddRefs(mMediaSeeking)));
+  hr = mGraph->QueryInterface(static_cast<IMediaSeeking**>(byRef(mMediaSeeking)));
   NS_ENSURE_TRUE(SUCCEEDED(hr) && mMediaSeeking, NS_ERROR_FAILURE);
 
   // Build the graph. Create the filters we need, and connect them. We
@@ -147,26 +147,26 @@ DirectShowReader::ReadMetadata(MediaInfo* aInfo,
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   // The MPEG demuxer.
-  nsRefPtr<IBaseFilter> demuxer;
+  RefPtr<IBaseFilter> demuxer;
   hr = CreateAndAddFilter(mGraph,
                           CLSID_MPEG1Splitter,
                           L"MPEG1Splitter",
-                          getter_AddRefs(demuxer));
+                          byRef(demuxer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
   // Platform MP3 decoder.
-  nsRefPtr<IBaseFilter> decoder;
+  RefPtr<IBaseFilter> decoder;
   // Firstly try to create the MP3 decoder filter that ships with WinXP
   // directly. This filter doesn't normally exist on later versions of
   // Windows.
   hr = CreateAndAddFilter(mGraph,
                           CLSID_MPEG_LAYER_3_DECODER_FILTER,
                           L"MPEG Layer 3 Decoder",
-                          getter_AddRefs(decoder));
+                          byRef(decoder));
   if (FAILED(hr)) {
     // Failed to create MP3 decoder filter. Try to instantiate
     // the MP3 decoder DMO.
-    hr = AddMP3DMOWrapperFilter(mGraph, getter_AddRefs(decoder));
+    hr = AddMP3DMOWrapperFilter(mGraph, byRef(decoder));
     NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
   }
 
@@ -244,8 +244,8 @@ DirectShowReader::Finish(HRESULT aStatus)
 
   LOG("DirectShowReader::Finish(0x%x)", aStatus);
   // Notify the filter graph of end of stream.
-  nsRefPtr<IMediaEventSink> eventSink;
-  HRESULT hr = mGraph->QueryInterface(static_cast<IMediaEventSink**>(getter_AddRefs(eventSink)));
+  RefPtr<IMediaEventSink> eventSink;
+  HRESULT hr = mGraph->QueryInterface(static_cast<IMediaEventSink**>(byRef(eventSink)));
   if (SUCCEEDED(hr) && eventSink) {
     eventSink->Notify(EC_COMPLETE, aStatus, 0);
   }
@@ -308,7 +308,7 @@ DirectShowReader::DecodeAudioData()
 
   // Get the next chunk of audio samples. This blocks until the sample
   // arrives, or an error occurs (like the stream is shutdown).
-  nsRefPtr<IMediaSample> sample;
+  RefPtr<IMediaSample> sample;
   hr = sink->Extract(sample);
   if (FAILED(hr) || hr == S_FALSE) {
     return Finish(hr);

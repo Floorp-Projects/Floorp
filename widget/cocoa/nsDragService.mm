@@ -179,7 +179,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(gLastDragView);
 
-  nsRefPtr<SourceSurface> surface;
+  RefPtr<SourceSurface> surface;
   nsPresContext* pc;
   nsresult rv = DrawDrag(aDOMNode, aRegion,
                          NSToIntRound(screenPoint.x),
@@ -201,7 +201,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 
 
 
-  nsRefPtr<DataSourceSurface> dataSurface =
+  RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(width, height),
                                      SurfaceFormat::B8G8R8A8);
   DataSourceSurface::MappedSurface map;
@@ -209,7 +209,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
     return nil;
   }
 
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      map.mData,
                                      dataSurface->GetSize(),

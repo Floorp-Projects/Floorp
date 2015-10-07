@@ -2064,7 +2064,7 @@ protected:
     // ranges supported by font
     nsRefPtr<gfxCharacterMap> mUnicodeRangeMap;
 
-    nsRefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
+    mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
     // For vertical metrics, created on demand.
     nsAutoPtr<const Metrics> mVerticalMetrics;
@@ -2119,7 +2119,7 @@ protected:
 // are dependent on the specific font, so they are set per GlyphRun.
 
 struct TextRunDrawParams {
-    nsRefPtr<mozilla::gfx::DrawTarget> dt;
+    mozilla::RefPtr<mozilla::gfx::DrawTarget> dt;
     gfxContext              *context;
     gfxFont::Spacing        *spacing;
     gfxTextRunDrawCallbacks *callbacks;
@@ -2134,8 +2134,8 @@ struct TextRunDrawParams {
 };
 
 struct FontDrawParams {
-    nsRefPtr<mozilla::gfx::ScaledFont>            scaledFont;
-    nsRefPtr<mozilla::gfx::GlyphRenderingOptions> renderingOptions;
+    mozilla::RefPtr<mozilla::gfx::ScaledFont>            scaledFont;
+    mozilla::RefPtr<mozilla::gfx::GlyphRenderingOptions> renderingOptions;
     gfxTextContextPaint      *contextPaint;
     mozilla::gfx::Matrix     *passedInvMatrix;
     mozilla::gfx::Matrix      matInv;

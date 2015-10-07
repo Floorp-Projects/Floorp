@@ -56,7 +56,7 @@ FilterPrimitiveDescription
 SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                        const IntRect& aFilterSubregion,
                                                        const nsTArray<bool>& aInputsAreTainted,
-                                                       nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                                       nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   nsRefPtr<SVGComponentTransferFunctionElement> childForChannel[4];
 

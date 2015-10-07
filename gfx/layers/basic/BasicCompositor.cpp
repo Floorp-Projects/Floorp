@@ -64,7 +64,7 @@ public:
   }
 
 public:
-  nsRefPtr<gfx::DataSourceSurface> mSurface;
+  RefPtr<gfx::DataSourceSurface> mSurface;
 };
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
@@ -131,13 +131,13 @@ BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
 
   if (!target) {
     return nullptr;
   }
 
-  nsRefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
+  RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
 
   return rt.forget();
 }
@@ -154,7 +154,7 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
 already_AddRefed<DataTextureSource>
 BasicCompositor::CreateDataTextureSource(TextureFlags aFlags)
 {
-  nsRefPtr<DataTextureSource> result = new DataTextureSourceBasic();
+  RefPtr<DataTextureSource> result = new DataTextureSourceBasic();
   return result.forget();
 }
 
@@ -345,11 +345,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                           const gfx::Matrix4x4& aTransform,
                           const gfx::Rect& aVisibleRect)
 {
-  nsRefPtr<DrawTarget> buffer = mRenderTarget->mDrawTarget;
+  RefPtr<DrawTarget> buffer = mRenderTarget->mDrawTarget;
 
   // For 2D drawing, |dest| and |buffer| are the same surface. For 3D drawing,
   // |dest| is a temporary surface.
-  nsRefPtr<DrawTarget> dest = buffer;
+  RefPtr<DrawTarget> dest = buffer;
 
   buffer->PushClipRect(aClipRect);
   AutoRestoreTransform autoRestoreTransform(dest);
@@ -385,7 +385,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   newTransform.PostTranslate(-offset.x, -offset.y);
   buffer->SetTransform(newTransform);
 
-  nsRefPtr<SourceSurface> sourceMask;
+  RefPtr<SourceSurface> sourceMask;
   Matrix maskTransform;
   if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
     EffectMask *effectMask = static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
@@ -423,11 +423,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
       } else {
-          nsRefPtr<DataSourceSurface> srcData = source->GetSurface(dest)->GetDataSurface();
+          RefPtr<DataSourceSurface> srcData = source->GetSurface(dest)->GetDataSurface();
 
           // Yes, we re-create the premultiplied data every time.
           // This might be better with a cache, eventually.
-          nsRefPtr<DataSourceSurface> premultData = gfxUtils::CreatePremultipliedDataSurface(srcData);
+          RefPtr<DataSourceSurface> premultData = gfxUtils::CreatePremultipliedDataSurface(srcData);
 
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        premultData,
@@ -445,9 +445,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     case EffectTypes::RENDER_TARGET: {
       EffectRenderTarget* effectRenderTarget =
         static_cast<EffectRenderTarget*>(aEffectChain.mPrimaryEffect.get());
-      nsRefPtr<BasicCompositingRenderTarget> surface
+      RefPtr<BasicCompositingRenderTarget> surface
         = static_cast<BasicCompositingRenderTarget*>(effectRenderTarget->mRenderTarget.get());
-      nsRefPtr<SourceSurface> sourceSurf = surface->mDrawTarget->Snapshot();
+      RefPtr<SourceSurface> sourceSurf = surface->mDrawTarget->Snapshot();
 
       DrawSurfaceWithTextureCoords(dest, aRect,
                                    sourceSurf,
@@ -470,9 +470,9 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
   if (!aTransform.Is2D()) {
     dest->Flush();
 
-    nsRefPtr<SourceSurface> snapshot = dest->Snapshot();
-    nsRefPtr<DataSourceSurface> source = snapshot->GetDataSurface();
-    nsRefPtr<DataSourceSurface> temp =
+    RefPtr<SourceSurface> snapshot = dest->Snapshot();
+    RefPtr<DataSourceSurface> source = snapshot->GetDataSurface();
+    RefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), SurfaceFormat::B8G8R8A8
 #ifdef MOZ_ENABLE_SKIA
         , true
@@ -538,7 +538,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // Setup an intermediate render target to buffer all compositing. We will
   // copy this into mDrawTarget (the widget), and/or mTarget in EndFrame()
-  nsRefPtr<CompositingRenderTarget> target = CreateRenderTarget(mInvalidRect, INIT_MODE_CLEAR);
+  RefPtr<CompositingRenderTarget> target = CreateRenderTarget(mInvalidRect, INIT_MODE_CLEAR);
   if (!target) {
     if (!mTarget) {
       mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
@@ -588,8 +588,8 @@ BasicCompositor::EndFrame()
 
   // Note: Most platforms require us to buffer drawing to the widget surface.
   // That's why we don't draw to mDrawTarget directly.
-  nsRefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
-  nsRefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
+  RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
+  RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
 
   nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
 

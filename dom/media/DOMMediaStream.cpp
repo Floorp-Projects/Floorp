@@ -470,7 +470,7 @@ DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks)
 void
 DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
 {
-  nsRefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
+  RefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
   MOZ_ASSERT(dest);
   if (!dest) {
     return;
@@ -484,10 +484,10 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
     return;
   }
 
-  nsRefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
+  RefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
   MOZ_RELEASE_ASSERT(addedDOMStream);
 
-  nsRefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
+  RefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
   MOZ_RELEASE_ASSERT(owningStream);
 
   CombineWithPrincipal(addedDOMStream->mPrincipal);

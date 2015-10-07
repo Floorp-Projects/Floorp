@@ -6,7 +6,7 @@
 
 #include "SourceFilter.h"
 #include "MediaResource.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "DirectShowUtils.h"
 #include "MP3FrameParser.h"
 #include "mozilla/Logging.h"
@@ -56,7 +56,7 @@ public:
     MOZ_COUNT_DTOR(ReadRequest);
   }
 
-  nsRefPtr<IMediaSample> mSample;
+  RefPtr<IMediaSample> mSample;
   DWORD_PTR mDwUser;
   uint32_t mOffset;
   uint32_t mCount;

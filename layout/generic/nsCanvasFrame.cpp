@@ -363,7 +363,7 @@ nsDisplayCanvasBackgroundColor::WriteDebugInfo(std::stringstream& aStream)
 
 static void BlitSurface(DrawTarget* aDest, const gfxRect& aRect, DrawTarget* aSource)
 {
-  nsRefPtr<SourceSurface> source = aSource->Snapshot();
+  RefPtr<SourceSurface> source = aSource->Snapshot();
   aDest->DrawSurface(source,
                      Rect(aRect.x, aRect.y, aRect.width, aRect.height),
                      Rect(0, 0, aRect.width, aRect.height));
@@ -379,7 +379,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
 
   nsRenderingContext context;
   nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
-  nsRefPtr<DrawTarget> dt;
+  RefPtr<DrawTarget> dt;
   gfxRect destRect;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
   if (IsSingleFixedPositionImage(aBuilder, bgClipRect, &destRect) &&

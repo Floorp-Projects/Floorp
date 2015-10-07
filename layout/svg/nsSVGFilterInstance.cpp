@@ -361,7 +361,7 @@ nsSVGFilterInstance::GetSourceIndices(nsSVGFE* aPrimitiveElement,
 
 nsresult
 nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
-                                     nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                     nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages)
 {
   mSourceGraphicIndex = GetLastResultIndex(aPrimitiveDescrs);
 

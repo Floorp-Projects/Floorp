@@ -114,10 +114,10 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> texture;
+  RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
                                        D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-                                       D3DPOOL_DEFAULT, getter_AddRefs(texture),
+                                       D3DPOOL_DEFAULT, byRef(texture),
                                        nullptr);
   if (FAILED(hr)) {
     ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTarget: Failed to create texture"),
@@ -143,10 +143,10 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> texture;
+  RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
                                        D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-                                       D3DPOOL_DEFAULT, getter_AddRefs(texture),
+                                       D3DPOOL_DEFAULT, byRef(texture),
                                        nullptr);
   if (FAILED(hr)) {
     ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTargetFromSource: Failed to create texture"),
@@ -198,7 +198,7 @@ void
 CompositorD3D9::SetRenderTarget(CompositingRenderTarget *aRenderTarget)
 {
   MOZ_ASSERT(aRenderTarget && mDeviceManager);
-  nsRefPtr<CompositingRenderTargetD3D9> oldRT = mCurrentRT;
+  RefPtr<CompositingRenderTargetD3D9> oldRT = mCurrentRT;
   mCurrentRT = static_cast<CompositingRenderTargetD3D9*>(aRenderTarget);
   mCurrentRT->BindRenderTarget(device());
   PrepareViewport(mCurrentRT->GetSize());
@@ -753,7 +753,7 @@ CompositorD3D9::PaintToTarget()
     gfxCriticalError() << "Failed to lock rect in paint to target D3D9 " << hexa(hr);
     return;
   }
-  nsRefPtr<DataSourceSurface> sourceSurface =
+  RefPtr<DataSourceSurface> sourceSurface =
     Factory::CreateWrappingDataSourceSurface((uint8_t*)rect.pBits,
                                              rect.Pitch,
                                              IntSize(desc.Width, desc.Height),

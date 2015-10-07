@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ColorLayerComposite.h"
-#include "mozilla/nsRefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/gfx/Rect.h"           // for Rect

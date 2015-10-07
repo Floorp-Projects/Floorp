@@ -330,7 +330,7 @@ template<TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t, t
 already_AddRefed<DataSourceSurface>
 SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::Render(const IntSize &aSize, const Point &aOffset) const
 {
-  nsRefPtr<DataSourceSurface> target =
+  RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aSize, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;

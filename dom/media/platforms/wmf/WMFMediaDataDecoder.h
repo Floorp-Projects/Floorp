@@ -10,7 +10,7 @@
 
 #include "WMF.h"
 #include "MFTDecoder.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
@@ -54,7 +54,7 @@ public:
 
 protected:
   // IMFTransform wrapper that performs the decoding.
-  nsRefPtr<MFTDecoder> mDecoder;
+  RefPtr<MFTDecoder> mDecoder;
 };
 
 // Decodes audio and video using Windows Media Foundation. Samples are decoded
@@ -101,7 +101,7 @@ private:
 
   void ProcessShutdown();
 
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   nsAutoPtr<MFTManager> mMFTManager;

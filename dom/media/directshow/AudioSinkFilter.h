@@ -10,7 +10,7 @@
 #include "BaseFilter.h"
 #include "DirectShowUtils.h"
 #include "nsAutoPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 

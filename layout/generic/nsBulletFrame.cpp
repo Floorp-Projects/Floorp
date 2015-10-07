@@ -323,9 +323,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                   mRect.width - (padding.left + padding.right),
                   mRect.height - (padding.top + padding.bottom));
       Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel);
-      nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
-      nsRefPtr<Path> ellipse = builder->Finish();
+      RefPtr<Path> ellipse = builder->Finish();
       if (listStyleType->GetStyle() == NS_STYLE_LIST_STYLE_DISC) {
         drawTarget->Fill(ellipse, color);
       } else {
@@ -379,7 +379,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
       rect.x = pc->RoundAppUnitsToNearestDevPixels(rect.x);
       rect.y = pc->RoundAppUnitsToNearestDevPixels(rect.y);
 
-      nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       if (isDown) {
         // to bottom
         builder->MoveTo(NSPointToPoint(rect.TopLeft(), appUnitsPerDevPixel));
@@ -402,7 +402,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                                          appUnitsPerDevPixel));
         }
       }
-      nsRefPtr<Path> path = builder->Finish();
+      RefPtr<Path> path = builder->Finish();
       drawTarget->Fill(path, color);
     }
     break;

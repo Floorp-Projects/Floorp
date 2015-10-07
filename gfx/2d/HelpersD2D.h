@@ -425,7 +425,7 @@ DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, Au
 static inline already_AddRefed<ID2D1Geometry>
 ConvertRectToGeometry(const D2D1_RECT_F& aRect)
 {
-  nsRefPtr<ID2D1RectangleGeometry> rectGeom;
+  RefPtr<ID2D1RectangleGeometry> rectGeom;
   D2DFactory()->CreateRectangleGeometry(&aRect, byRef(rectGeom));
   return rectGeom.forget();
 }
@@ -433,9 +433,9 @@ ConvertRectToGeometry(const D2D1_RECT_F& aRect)
 static inline already_AddRefed<ID2D1Geometry>
 GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform)
 {
-  nsRefPtr<ID2D1PathGeometry> tmpGeometry;
+  RefPtr<ID2D1PathGeometry> tmpGeometry;
   D2DFactory()->CreatePathGeometry(byRef(tmpGeometry));
-  nsRefPtr<ID2D1GeometrySink> currentSink;
+  RefPtr<ID2D1GeometrySink> currentSink;
   tmpGeometry->Open(byRef(currentSink));
   aGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
                       aTransform, currentSink);
@@ -446,9 +446,9 @@ GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTrans
 static inline already_AddRefed<ID2D1Geometry>
 IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
 {
-  nsRefPtr<ID2D1PathGeometry> pathGeom;
+  RefPtr<ID2D1PathGeometry> pathGeom;
   D2DFactory()->CreatePathGeometry(byRef(pathGeom));
-  nsRefPtr<ID2D1GeometrySink> sink;
+  RefPtr<ID2D1GeometrySink> sink;
   pathGeom->Open(byRef(sink));
   aGeometryA->CombineWithGeometry(aGeometryB, D2D1_COMBINE_MODE_INTERSECT, nullptr, sink);
   sink->Close();
@@ -459,7 +459,7 @@ IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
 static inline already_AddRefed<ID2D1StrokeStyle>
 CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
 {
-  nsRefPtr<ID2D1StrokeStyle> style;
+  RefPtr<ID2D1StrokeStyle> style;
 
   D2D1_CAP_STYLE capStyle;
   D2D1_LINE_JOIN joinStyle;
@@ -542,7 +542,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
                               Matrix &aSourceTransform, ID2D1RenderTarget *aRT,
                               const IntRect* aSourceRect = nullptr)
 {
-  nsRefPtr<ID2D1Bitmap> bitmap;
+  RefPtr<ID2D1Bitmap> bitmap;
 
   // This is where things get complicated. The source surface was
   // created for a surface that was too large to fit in a texture.

@@ -192,7 +192,7 @@ public:
   FillRule GetFillRule();
 
 protected:
-  mutable nsRefPtr<Path> mCachedPath;
+  mutable mozilla::RefPtr<Path> mCachedPath;
 };
 
 #endif

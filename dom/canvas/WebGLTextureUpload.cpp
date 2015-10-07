@@ -696,7 +696,7 @@ WebGLTexture::TexImage2D(TexImageTarget texImageTarget, GLint level,
         return;
     }
 
-    nsRefPtr<gfx::DataSourceSurface> data;
+    RefPtr<gfx::DataSourceSurface> data;
     WebGLTexelFormat srcFormat;
     nsLayoutUtils::SurfaceFromElementResult res = mContext->SurfaceFromElement(elem);
     *out_rv = mContext->SurfaceFromElementResultToImageSurface(res, data, &srcFormat);
@@ -1011,7 +1011,7 @@ WebGLTexture::TexSubImage2D(TexImageTarget texImageTarget, GLint level, GLint xO
         return;
     }
 
-    nsRefPtr<gfx::DataSourceSurface> data;
+    RefPtr<gfx::DataSourceSurface> data;
     WebGLTexelFormat srcFormat;
     nsLayoutUtils::SurfaceFromElementResult res = mContext->SurfaceFromElement(elem);
     *out_rv = mContext->SurfaceFromElementResultToImageSurface(res, data, &srcFormat);

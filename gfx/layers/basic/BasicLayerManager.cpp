@@ -629,7 +629,7 @@ BasicLayerManager_Matrix3DToSkia(const Matrix4x4& aMatrix)
 
 static void
 Transform(const gfxImageSurface* aDest,
-          nsRefPtr<DataSourceSurface> aSrc,
+          RefPtr<DataSourceSurface> aSrc,
           const Matrix4x4& aTransform,
           gfxPoint aDestOffset)
 {
@@ -691,7 +691,7 @@ BasicLayerManager_Matrix3DToPixman(const Matrix4x4& aMatrix)
 
 static void
 Transform(const gfxImageSurface* aDest,
-          nsRefPtr<DataSourceSurface> aSrc,
+          RefPtr<DataSourceSurface> aSrc,
           const Matrix4x4& aTransform,
           gfxPoint aDestOffset)
 {
@@ -754,7 +754,7 @@ Transform(const gfxImageSurface* aDest,
  * @return              Transformed surface
  */
 static already_AddRefed<gfxASurface>
-Transform3D(nsRefPtr<SourceSurface> aSource,
+Transform3D(RefPtr<SourceSurface> aSource,
             gfxContext* aDest,
             const gfxRect& aBounds,
             const Matrix4x4& aTransform,
@@ -984,7 +984,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     }
 
     const IntRect& bounds = visibleRegion.GetBounds();
-    nsRefPtr<DrawTarget> untransformedDT =
+    RefPtr<DrawTarget> untransformedDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(bounds.width, bounds.height),
                                                                    SurfaceFormat::B8G8R8A8);
     if (!untransformedDT) {

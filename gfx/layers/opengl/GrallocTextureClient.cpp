@@ -52,7 +52,7 @@ already_AddRefed<TextureClient>
 GrallocTextureClientOGL::CreateSimilar(TextureFlags aFlags,
                                        TextureAllocationFlags aAllocFlags) const
 {
-  nsRefPtr<TextureClient> tex = new GrallocTextureClientOGL(
+  RefPtr<TextureClient> tex = new GrallocTextureClientOGL(
     mAllocator, mFormat, mBackend, mFlags | aFlags
   );
 
@@ -224,7 +224,7 @@ GrallocTextureClientOGL::UpdateFromSurface(gfx::SourceSurface* aSurface)
     return;
   }
 
-  nsRefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
     gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
@@ -401,7 +401,7 @@ GrallocTextureClientOGL::FromSharedSurface(gl::SharedSurface* abstractSurf,
 {
   auto surf = gl::SharedSurface_Gralloc::Cast(abstractSurf);
 
-  nsRefPtr<TextureClient> ret = surf->GetTextureClient();
+  RefPtr<TextureClient> ret = surf->GetTextureClient();
 
   TextureFlags mask = TextureFlags::ORIGIN_BOTTOM_LEFT |
                       TextureFlags::RB_SWAPPED |

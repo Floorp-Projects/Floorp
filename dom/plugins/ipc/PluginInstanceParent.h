@@ -388,8 +388,8 @@ private:
     uint16_t               mShWidth;
     uint16_t               mShHeight;
     CGColorSpaceRef        mShColorSpace;
-    nsRefPtr<MacIOSurface> mIOSurface;
-    nsRefPtr<MacIOSurface> mFrontIOSurface;
+    RefPtr<MacIOSurface> mIOSurface;
+    RefPtr<MacIOSurface> mFrontIOSurface;
 #endif // definied(MOZ_WIDGET_COCOA)
 
     // ObjectFrame layer wrapper

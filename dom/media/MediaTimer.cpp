@@ -11,7 +11,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/SharedThreadPool.h"
 
 namespace mozilla {
@@ -29,7 +29,7 @@ MediaTimer::MediaTimer()
 
   // Use the SharedThreadPool to create an nsIThreadPool with a maximum of one
   // thread, which is equivalent to an nsIThread for our purposes.
-  nsRefPtr<SharedThreadPool> threadPool(
+  RefPtr<SharedThreadPool> threadPool(
     SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaTimer"), 1));
   mThread = threadPool.get();
   mTimer->SetTarget(mThread);

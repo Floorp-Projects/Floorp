@@ -34,7 +34,7 @@ struct AutoLockTexture
 {
   AutoLockTexture(ID3D11Texture2D* aTexture)
   {
-    aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
+    aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mMutex));
     HRESULT hr = mMutex->AcquireSync(0, 10000);
     if (hr == WAIT_TIMEOUT) {
       MOZ_CRASH();
@@ -53,14 +53,14 @@ struct AutoLockTexture
     }
   }
 
-  nsRefPtr<IDXGIKeyedMutex> mMutex;
+  RefPtr<IDXGIKeyedMutex> mMutex;
 };
 
 static already_AddRefed<IDirect3DTexture9>
 InitTextures(IDirect3DDevice9* aDevice,
              const IntSize &aSize,
             _D3DFORMAT aFormat,
-            nsRefPtr<IDirect3DSurface9>& aSurface,
+            RefPtr<IDirect3DSurface9>& aSurface,
             HANDLE& aHandle,
             D3DLOCKED_RECT& aLockedRect)
 {
@@ -68,27 +68,27 @@ InitTextures(IDirect3DDevice9* aDevice,
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> result;
+  RefPtr<IDirect3DTexture9> result;
   if (FAILED(aDevice->CreateTexture(aSize.width, aSize.height,
                                     1, 0, aFormat, D3DPOOL_DEFAULT,
-                                    getter_AddRefs(result), &aHandle))) {
+                                    byRef(result), &aHandle))) {
     return nullptr;
   }
   if (!result) {
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> tmpTexture;
+  RefPtr<IDirect3DTexture9> tmpTexture;
   if (FAILED(aDevice->CreateTexture(aSize.width, aSize.height,
                                     1, 0, aFormat, D3DPOOL_SYSTEMMEM,
-                                    getter_AddRefs(tmpTexture), nullptr))) {
+                                    byRef(tmpTexture), nullptr))) {
     return nullptr;
   }
   if (!tmpTexture) {
     return nullptr;
   }
 
-  tmpTexture->GetSurfaceLevel(0, getter_AddRefs(aSurface));
+  tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
   if (FAILED(aSurface->LockRect(&aLockedRect, nullptr, 0)) ||
       !aLockedRect.pBits) {
     NS_WARNING("Could not lock surface");
@@ -126,13 +126,13 @@ FinishTextures(IDirect3DDevice9* aDevice,
 }
 
 static bool UploadData(IDirect3DDevice9* aDevice,
-                       nsRefPtr<IDirect3DTexture9>& aTexture,
+                       RefPtr<IDirect3DTexture9>& aTexture,
                        HANDLE& aHandle,
                        uint8_t* aSrc,
                        const gfx::IntSize& aSrcSize,
                        int32_t aSrcStride)
 {
-  nsRefPtr<IDirect3DSurface9> surf;
+  RefPtr<IDirect3DSurface9> surf;
   D3DLOCKED_RECT rect;
   aTexture = InitTextures(aDevice, aSrcSize, D3DFMT_A8, surf, aHandle, rect);
   if (!aTexture) {
@@ -160,29 +160,29 @@ IMFYCbCrImage::GetD3D9TextureClient(CompositableClient* aClient)
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> textureY;
+  RefPtr<IDirect3DTexture9> textureY;
   HANDLE shareHandleY = 0;
   if (!UploadData(device, textureY, shareHandleY,
                   mData.mYChannel, mData.mYSize, mData.mYStride)) {
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> textureCb;
+  RefPtr<IDirect3DTexture9> textureCb;
   HANDLE shareHandleCb = 0;
   if (!UploadData(device, textureCb, shareHandleCb,
                   mData.mCbChannel, mData.mCbCrSize, mData.mCbCrStride)) {
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DTexture9> textureCr;
+  RefPtr<IDirect3DTexture9> textureCr;
   HANDLE shareHandleCr = 0;
   if (!UploadData(device, textureCr, shareHandleCr,
                   mData.mCrChannel, mData.mCbCrSize, mData.mCbCrStride)) {
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DQuery9> query;
-  HRESULT hr = device->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
+  RefPtr<IDirect3DQuery9> query;
+  HRESULT hr = device->CreateQuery(D3DQUERYTYPE_EVENT, byRef(query));
   hr = query->Issue(D3DISSUE_END);
 
   int iterations = 0;
@@ -237,27 +237,27 @@ IMFYCbCrImage::GetTextureClient(CompositableClient* aClient)
     return mTextureClient;
   }
 
-  nsRefPtr<ID3D11DeviceContext> ctx;
-  device->GetImmediateContext(getter_AddRefs(ctx));
+  RefPtr<ID3D11DeviceContext> ctx;
+  device->GetImmediateContext(byRef(ctx));
 
   CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_R8_UNORM,
                                 mData.mYSize.width, mData.mYSize.height, 1, 1);
 
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-  nsRefPtr<ID3D11Texture2D> textureY;
-  HRESULT hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureY));
+  RefPtr<ID3D11Texture2D> textureY;
+  HRESULT hr = device->CreateTexture2D(&newDesc, nullptr, byRef(textureY));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   newDesc.Width = mData.mCbCrSize.width;
   newDesc.Height = mData.mCbCrSize.height;
 
-  nsRefPtr<ID3D11Texture2D> textureCb;
-  hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCb));
+  RefPtr<ID3D11Texture2D> textureCb;
+  hr = device->CreateTexture2D(&newDesc, nullptr, byRef(textureCb));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  nsRefPtr<ID3D11Texture2D> textureCr;
-  hr = device->CreateTexture2D(&newDesc, nullptr, getter_AddRefs(textureCr));
+  RefPtr<ID3D11Texture2D> textureCr;
+  hr = device->CreateTexture2D(&newDesc, nullptr, byRef(textureCr));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   {

@@ -25,6 +25,7 @@
 - (void)setContentsScale:(double)scale;
 @end
 
+using mozilla::RefPtr;
 
 CGColorSpaceRef CreateSystemColorSpace() {
   CGColorSpaceRef cspace = ::CGDisplayCopyColorSpace(::CGMainDisplayID());
@@ -420,7 +421,7 @@ nsresult nsCARenderer::Render(int aWidth, int aHeight,
     // mIOSurface is set by AttachIOSurface(), not by SetupRenderer().  So
     // since it may have been set by a prior call to AttachIOSurface(), we
     // need to preserve it across the call to Destroy().
-    nsRefPtr<MacIOSurface> ioSurface = mIOSurface;
+    mozilla::RefPtr<MacIOSurface> ioSurface = mIOSurface;
     Destroy();
     mIOSurface = ioSurface;
     if (SetupRenderer(caLayer, aWidth, aHeight, aContentsScaleFactor,

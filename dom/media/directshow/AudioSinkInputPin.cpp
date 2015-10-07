@@ -134,11 +134,11 @@ AudioSinkInputPin::Receive(IMediaSample* aSample )
 already_AddRefed<IMediaSeeking>
 AudioSinkInputPin::GetConnectedPinSeeking()
 {
-  nsRefPtr<IPin> peer = GetConnected();
+  RefPtr<IPin> peer = GetConnected();
   if (!peer)
     return nullptr;
-  nsRefPtr<IMediaSeeking> seeking;
-  peer->QueryInterface(static_cast<IMediaSeeking**>(getter_AddRefs(seeking)));
+  RefPtr<IMediaSeeking> seeking;
+  peer->QueryInterface(static_cast<IMediaSeeking**>(byRef(seeking)));
   return seeking.forget();
 }
 

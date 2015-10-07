@@ -12,7 +12,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "nsIThread.h"
 #include "nsSize.h"

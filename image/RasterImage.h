@@ -259,7 +259,7 @@ private:
   already_AddRefed<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
                                              uint32_t aFlags);
 
-  Pair<DrawResult, nsRefPtr<gfx::SourceSurface>>
+  Pair<DrawResult, RefPtr<gfx::SourceSurface>>
     GetFrameInternal(const gfx::IntSize& aSize,
                      uint32_t aWhichFrame,
                      uint32_t aFlags);

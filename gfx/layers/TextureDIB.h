@@ -46,7 +46,7 @@ protected:
   { }
 
   nsRefPtr<gfxWindowsSurface> mSurface;
-  nsRefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
@@ -146,8 +146,8 @@ public:
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
 protected:
-  nsRefPtr<DataTextureSource> mTextureSource;
-  nsRefPtr<Compositor> mCompositor;
+  RefPtr<DataTextureSource> mTextureSource;
+  RefPtr<Compositor> mCompositor;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
   bool mIsLocked;

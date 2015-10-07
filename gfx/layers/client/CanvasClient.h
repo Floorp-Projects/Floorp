@@ -8,7 +8,7 @@
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -100,7 +100,7 @@ private:
                                  TextureFlags aFlags,
                                  ClientCanvasLayer* aLayer);
 
-  nsRefPtr<TextureClient> mBuffer;
+  RefPtr<TextureClient> mBuffer;
 };
 
 // Used for GL canvases where we don't need to do any readback, i.e., with a
@@ -108,9 +108,9 @@ private:
 class CanvasClientSharedSurface : public CanvasClient
 {
 private:
-  nsRefPtr<SharedSurfaceTextureClient> mShSurfClient;
-  nsRefPtr<TextureClient> mReadbackClient;
-  nsRefPtr<TextureClient> mFront;
+  RefPtr<SharedSurfaceTextureClient> mShSurfClient;
+  RefPtr<TextureClient> mReadbackClient;
+  RefPtr<TextureClient> mFront;
 
   void ClearSurfaces();
 

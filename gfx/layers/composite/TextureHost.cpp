@@ -89,8 +89,8 @@ public:
   void ClearTextureHost();
 
   CompositableParentManager* mCompositableManager;
-  nsRefPtr<TextureHost> mWaitForClientRecycle;
-  nsRefPtr<TextureHost> mTextureHost;
+  RefPtr<TextureHost> mWaitForClientRecycle;
+  RefPtr<TextureHost> mTextureHost;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +254,7 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
                                     TextureFlags aFlags)
 {
-  nsRefPtr<TextureHost> result;
+  RefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem: {
       const SurfaceDescriptorShmem& descriptor = aDesc.get_SurfaceDescriptorShmem();
@@ -346,7 +346,7 @@ TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     pfx += "  ";
 
     aStream << "\n" << pfx.get() << "Surface: ";
-    nsRefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
+    RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
     if (dSurf) {
       aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
     }
@@ -432,7 +432,7 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
   if (mCompositor == aCompositor) {
     return;
   }
-  nsRefPtr<TextureSource> it = mFirstSource;
+  RefPtr<TextureSource> it = mFirstSource;
   while (it) {
     it->SetCompositor(aCompositor);
     it = it->GetNextSibling();
@@ -444,7 +444,7 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
 void
 BufferTextureHost::DeallocateDeviceData()
 {
-  nsRefPtr<TextureSource> it = mFirstSource;
+  RefPtr<TextureSource> it = mFirstSource;
   while (it) {
     it->DeallocateDeviceData();
     it = it->GetNextSibling();
@@ -535,7 +535,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     MOZ_ASSERT(yuvDeserializer.IsValid());
 
     if (!mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
-      nsRefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
+      RefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
       if (NS_WARN_IF(!surf)) {
         return false;
       }
@@ -546,9 +546,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       return true;
     }
 
-    nsRefPtr<DataTextureSource> srcY;
-    nsRefPtr<DataTextureSource> srcU;
-    nsRefPtr<DataTextureSource> srcV;
+    RefPtr<DataTextureSource> srcY;
+    RefPtr<DataTextureSource> srcU;
+    RefPtr<DataTextureSource> srcV;
     if (!mFirstSource) {
       // We don't support BigImages for YCbCr compositing.
       srcY = mCompositor->CreateDataTextureSource(mFlags|TextureFlags::DISALLOW_BIGIMAGE);
@@ -570,17 +570,17 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     }
 
 
-    nsRefPtr<gfx::DataSourceSurface> tempY =
+    RefPtr<gfx::DataSourceSurface> tempY =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetYData(),
                                                     yuvDeserializer.GetYStride(),
                                                     yuvDeserializer.GetYSize(),
                                                     gfx::SurfaceFormat::A8);
-    nsRefPtr<gfx::DataSourceSurface> tempCb =
+    RefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCbData(),
                                                     yuvDeserializer.GetCbCrStride(),
                                                     yuvDeserializer.GetCbCrSize(),
                                                     gfx::SurfaceFormat::A8);
-    nsRefPtr<gfx::DataSourceSurface> tempCr =
+    RefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCrData(),
                                                     yuvDeserializer.GetCbCrStride(),
                                                     yuvDeserializer.GetCbCrSize(),
@@ -607,7 +607,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       return false;
     }
 
-    nsRefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
+    RefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
     if (!surf) {
       return false;
     }
@@ -624,7 +624,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
 already_AddRefed<gfx::DataSourceSurface>
 BufferTextureHost::GetAsSurface()
 {
-  nsRefPtr<gfx::DataSourceSurface> result;
+  RefPtr<gfx::DataSourceSurface> result;
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;

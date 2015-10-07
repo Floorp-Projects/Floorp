@@ -6,7 +6,7 @@
 #define GFXSHMCOWSURFACEWRAPPER
 
 #include "gfxReusableSurfaceWrapper.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 class gfxSharedImageSurface;
 
@@ -56,7 +56,7 @@ public:
   Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem);
 
 private:
-  nsRefPtr<mozilla::layers::ISurfaceAllocator> mAllocator;
+  mozilla::RefPtr<mozilla::layers::ISurfaceAllocator> mAllocator;
   nsRefPtr<gfxSharedImageSurface>         mSurface;
 };
 

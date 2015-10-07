@@ -79,7 +79,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
   // Prepare the drag image
   nsIntRect dragRect;
-  nsRefPtr<SourceSurface> surface;
+  RefPtr<SourceSurface> surface;
   nsPresContext* pc;
   DrawDrag(aDOMNode, aRegion,
            mScreenX, mScreenY,
@@ -94,7 +94,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
   psdi->crColorKey = CLR_NONE;
 
-  nsRefPtr<DataSourceSurface> dataSurface =
+  RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(bmWidth, bmHeight),
                                      SurfaceFormat::B8G8R8A8);
   NS_ENSURE_TRUE(dataSurface, false);
@@ -104,7 +104,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     return false;
   }
 
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      map.mData,
                                      dataSurface->GetSize(),

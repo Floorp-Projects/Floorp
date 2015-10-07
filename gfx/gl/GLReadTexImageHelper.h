@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "nsSize.h"
 #include "nsAutoPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Types.h"
 
 namespace mozilla {

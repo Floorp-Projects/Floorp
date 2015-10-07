@@ -33,6 +33,6 @@ protected:
 
   uint32_t RGBAPixelFromColor(const mozilla::gfx::Color &aColor);
 
-  nsRefPtr<mozilla::gfx::DrawTarget> mDT;
-  nsRefPtr<mozilla::gfx::DataSourceSurface> mDataSnapshot;
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> mDT;
+  mozilla::RefPtr<mozilla::gfx::DataSourceSurface> mDataSnapshot;
 };

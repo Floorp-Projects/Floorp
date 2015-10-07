@@ -90,7 +90,7 @@ protected:
                       gfxFloat aOpacity,
                       const gfxMatrix& aTransform = gfxMatrix());
 
-    nsRefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
+    mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     const gfxMatrix mTransform;
 };
 

@@ -14,7 +14,7 @@
 #include "gfxPlatform.h"                // for gfxImageFormat
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Preferences.h"        // for Preferences
-#include "mozilla/nsRefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -50,17 +50,17 @@ public:
 protected:
   void UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr);
 
-  nsRefPtr<gfx::SourceSurface> mSurface;
+  RefPtr<gfx::SourceSurface> mSurface;
   nsRefPtr<gl::GLContext> mGLContext;
   GLuint mCanvasFrontbufferTexID;
-  nsRefPtr<PersistentBufferProvider> mBufferProvider;
+  RefPtr<PersistentBufferProvider> mBufferProvider;
 
   UniquePtr<gl::SharedSurface> mGLFrontbuffer;
 
   bool mIsAlphaPremultiplied;
   gl::OriginPos mOriginPos;
 
-  nsRefPtr<gfx::DataSourceSurface> mCachedTempSurface;
+  RefPtr<gfx::DataSourceSurface> mCachedTempSurface;
 
   gfx::DataSourceSurface* GetTempSurface(const gfx::IntSize& aSize,
                                          const gfx::SurfaceFormat aFormat);

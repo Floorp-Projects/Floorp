@@ -457,7 +457,7 @@ private:
 #endif
     CGColorSpaceRef               mShColorSpace;
     CGContextRef                  mShContext;
-    nsRefPtr<nsCARenderer> mCARenderer;
+    mozilla::RefPtr<nsCARenderer> mCARenderer;
     void                         *mCGLayer;
 
     // Core Animation drawing model requires a refresh timer.

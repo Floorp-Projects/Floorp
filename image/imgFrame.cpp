@@ -58,7 +58,7 @@ CreateLockedSurface(VolatileBuffer* vbuf,
   MOZ_ASSERT(!vbufptr->WasBufferPurged(), "Expected image data!");
 
   int32_t stride = VolatileSurfaceStride(size, format);
-  nsRefPtr<DataSourceSurface> surf =
+  RefPtr<DataSourceSurface> surf =
     Factory::CreateWrappingDataSourceSurface(*vbufptr, stride, size, format);
   if (!surf) {
     delete vbufptr;
@@ -73,7 +73,7 @@ static already_AddRefed<VolatileBuffer>
 AllocateBufferForImage(const IntSize& size, SurfaceFormat format)
 {
   int32_t stride = VolatileSurfaceStride(size, format);
-  nsRefPtr<VolatileBuffer> buf = new VolatileBuffer();
+  RefPtr<VolatileBuffer> buf = new VolatileBuffer();
   if (buf->Init(stride * size.height,
                 1 << gfxAlphaRecovery::GoodAlignmentLog2())) {
     return buf.forget();
@@ -255,7 +255,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
   mFormat = aFormat;
   mPaletteDepth = 0;
 
-  nsRefPtr<DrawTarget> target;
+  RefPtr<DrawTarget> target;
 
   bool canUseDataSurface =
     gfxPlatform::GetPlatform()->CanRenderContentToDataSurface();
@@ -397,13 +397,13 @@ imgFrame::Optimize()
 
   if (mFormat != SurfaceFormat::B8G8R8A8 &&
       optFormat == SurfaceFormat::R5G6B5) {
-    nsRefPtr<VolatileBuffer> buf =
+    RefPtr<VolatileBuffer> buf =
       AllocateBufferForImage(mSize, optFormat);
     if (!buf) {
       return NS_OK;
     }
 
-    nsRefPtr<DataSourceSurface> surf =
+    RefPtr<DataSourceSurface> surf =
       CreateLockedSurface(buf, mSize, optFormat);
     if (!surf) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -415,7 +415,7 @@ imgFrame::Optimize()
       return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<DrawTarget> target =
+    RefPtr<DrawTarget> target =
       Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                        mapping.mData,
                                        mSize,
@@ -508,7 +508,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
     // Create a temporary surface.
     // Give this surface an alpha channel because there are
     // transparent pixels in the padding or undecoded area
-    nsRefPtr<DrawTarget> target =
+    RefPtr<DrawTarget> target =
       gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(size, SurfaceFormat::B8G8R8A8);
     if (!target) {
@@ -527,7 +527,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
       target->FillRect(ToRect(aRegion.Intersect(available).Rect()), pattern);
     }
 
-    nsRefPtr<SourceSurface> newsurf = target->Snapshot();
+    RefPtr<SourceSurface> newsurf = target->Snapshot();
     return SurfaceWithFormat(new gfxSurfaceDrawable(newsurf, size),
                              target->GetFormat());
   }
@@ -571,14 +571,14 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     if (mSinglePixelColor.a == 0.0) {
       return true;
     }
-    nsRefPtr<DrawTarget> dt = aContext->GetDrawTarget();
+    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     dt->FillRect(ToRect(aRegion.Rect()),
                  ColorPattern(mSinglePixelColor),
                  DrawOptions(1.0f, aContext->CurrentOp()));
     return true;
   }
 
-  nsRefPtr<SourceSurface> surf = GetSurfaceInternal();
+  RefPtr<SourceSurface> surf = GetSurfaceInternal();
   if (!surf && !mSinglePixel) {
     return false;
   }
@@ -904,7 +904,7 @@ imgFrame::GetSurfaceInternal()
 
   if (mOptSurface) {
     if (mOptSurface->IsValid()) {
-      nsRefPtr<SourceSurface> surf(mOptSurface);
+      RefPtr<SourceSurface> surf(mOptSurface);
       return surf.forget();
     } else {
       mOptSurface = nullptr;
@@ -912,7 +912,7 @@ imgFrame::GetSurfaceInternal()
   }
 
   if (mImageSurface) {
-    nsRefPtr<SourceSurface> surf(mImageSurface);
+    RefPtr<SourceSurface> surf(mImageSurface);
     return surf.forget();
   }
 

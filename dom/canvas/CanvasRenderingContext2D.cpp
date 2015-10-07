@@ -350,7 +350,7 @@ public:
       return nullptr;
     }
 
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
       mFinalTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
     if (!dt) {
       aRect.SetEmpty();
@@ -376,11 +376,11 @@ public:
       return;
     }
 
-    nsRefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
 
-    nsRefPtr<SourceSurface> fillPaint =
+    RefPtr<SourceSurface> fillPaint =
       DoSourcePaint(mFillPaintRect, CanvasRenderingContext2D::Style::FILL);
-    nsRefPtr<SourceSurface> strokePaint =
+    RefPtr<SourceSurface> strokePaint =
       DoSourcePaint(mStrokePaintRect, CanvasRenderingContext2D::Style::STROKE);
 
     AutoRestoreTransform autoRestoreTransform(mFinalTarget);
@@ -403,8 +403,8 @@ public:
   }
 
 private:
-  nsRefPtr<DrawTarget> mTarget;
-  nsRefPtr<DrawTarget> mFinalTarget;
+  RefPtr<DrawTarget> mTarget;
+  RefPtr<DrawTarget> mFinalTarget;
   CanvasRenderingContext2D *mCtx;
   gfx::IntRect mSourceGraphicRect;
   gfx::IntRect mFillPaintRect;
@@ -471,7 +471,7 @@ public:
       return;
     }
 
-    nsRefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
 
     mFinalTarget->DrawSurfaceWithShadow(snapshot, mTempRect.TopLeft(),
                                         Color::FromABGR(mCtx->CurrentState().shadowColor),
@@ -490,8 +490,8 @@ public:
   }
 
 private:
-  nsRefPtr<DrawTarget> mTarget;
-  nsRefPtr<DrawTarget> mFinalTarget;
+  RefPtr<DrawTarget> mTarget;
+  RefPtr<DrawTarget> mFinalTarget;
   CanvasRenderingContext2D *mCtx;
   Float mSigma;
   gfx::IntRect mTempRect;
@@ -645,7 +645,7 @@ private:
     return gfx::Rect(extents.GetBounds());
   }
 
-  nsRefPtr<DrawTarget> mTarget;
+  RefPtr<DrawTarget> mTarget;
   UniquePtr<AdjustedTargetForShadow> mShadowTarget;
   UniquePtr<AdjustedTargetForFilter> mFilterTarget;
 };
@@ -1205,7 +1205,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   }
 #endif
 
-  nsRefPtr<SourceSurface> snapshot;
+  RefPtr<SourceSurface> snapshot;
   Matrix transform;
 
   if (mTarget) {
@@ -1644,12 +1644,12 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
   *aFormat = 0;
 
   EnsureTarget();
-  nsRefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+  RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   if (!snapshot) {
     return;
   }
 
-  nsRefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+  RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
   if (!data || data->GetSize() != IntSize(mWidth, mHeight)) {
     return;
   }
@@ -2057,7 +2057,7 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& source,
     nsICanvasRenderingContextInternal *srcCanvas = canvas->GetContextAtIndex(0);
     if (srcCanvas) {
       // This might not be an Azure canvas!
-      nsRefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
+      RefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
 
       nsRefPtr<CanvasPattern> pat =
         new CanvasPattern(this, srcSurf, repeatMode, htmlElement->NodePrincipal(), canvas->IsWriteOnly(), false);
@@ -2078,7 +2078,7 @@ CanvasRenderingContext2D::CreatePattern(const CanvasImageSource& source,
     // Special case for ImageBitmap
     ImageBitmap& imgBitmap = source.GetAsImageBitmap();
     EnsureTarget();
-    nsRefPtr<SourceSurface> srcSurf = imgBitmap.PrepareForDrawTarget(mTarget);
+    RefPtr<SourceSurface> srcSurf = imgBitmap.PrepareForDrawTarget(mTarget);
 
     // An ImageBitmap never taints others so we set principalForSecurityCheck to
     // nullptr and set CORSUsed to true for passing the security check in
@@ -2700,7 +2700,7 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingR
 {
   EnsureTarget();
 
-  nsRefPtr<gfx::Path> gfxpath = path.GetPath(winding, mTarget);
+  RefPtr<gfx::Path> gfxpath = path.GetPath(winding, mTarget);
 
   if (!gfxpath) {
     return;
@@ -2753,7 +2753,7 @@ CanvasRenderingContext2D::Stroke(const CanvasPath& path)
 {
   EnsureTarget();
 
-  nsRefPtr<gfx::Path> gfxpath = path.GetPath(CanvasWindingRule::Nonzero, mTarget);
+  RefPtr<gfx::Path> gfxpath = path.GetPath(CanvasWindingRule::Nonzero, mTarget);
 
   if (!gfxpath) {
     return;
@@ -2872,7 +2872,7 @@ CanvasRenderingContext2D::Clip(const CanvasPath& path, const CanvasWindingRule& 
 {
   EnsureTarget();
 
-  nsRefPtr<gfx::Path> gfxpath = path.GetPath(winding, mTarget);
+  RefPtr<gfx::Path> gfxpath = path.GetPath(winding, mTarget);
 
   if (!gfxpath) {
     return;
@@ -3058,7 +3058,7 @@ CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
   }
 
   if (mDSPathBuilder) {
-    nsRefPtr<Path> dsPath;
+    RefPtr<Path> dsPath;
     dsPath = mDSPathBuilder->Finish();
     mDSPathBuilder = nullptr;
 
@@ -3314,7 +3314,7 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
 void
 CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorResult& error)
 {
-  nsRefPtr<gfx::Path> path;
+  RefPtr<gfx::Path> path;
   if (options.mPath) {
     EnsureTarget();
     path = options.mPath->GetPath(CanvasWindingRule::Nonzero, mTarget);
@@ -3361,7 +3361,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
   RegionInfo info;
   info.mId = options.mId;
   info.mElement = options.mControl;
-  nsRefPtr<PathBuilder> pathBuilder = path->TransformedCopyToBuilder(mTarget->GetTransform());
+  RefPtr<PathBuilder> pathBuilder = path->TransformedCopyToBuilder(mTarget->GetTransform());
   info.mPath = pathBuilder->Finish();
 
   mHitRegionsOptions.InsertElementAt(0, info);
@@ -3530,7 +3530,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 
       const gfxTextRun::CompressedGlyph *glyphs = mTextRun->GetCharacterGlyphs();
 
-      nsRefPtr<ScaledFont> scaledFont =
+      RefPtr<ScaledFont> scaledFont =
         gfxPlatform::GetPlatform()->GetScaledFontForFont(mCtx->mTarget, font);
 
       if (!scaledFont) {
@@ -3565,7 +3565,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
         mCtx->mTarget->SetTransform(mat);
       }
 
-      nsRefPtr<GlyphRenderingOptions> renderingOptions = font->GetGlyphRenderingOptions();
+      RefPtr<GlyphRenderingOptions> renderingOptions = font->GetGlyphRenderingOptions();
 
       GlyphBuffer buffer;
 
@@ -3678,7 +3678,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
         const DrawOptions drawOpts(state.globalAlpha, mCtx->UsedOperation());
 
         for (unsigned i = glyphBuf.size(); i > 0; --i) {
-          nsRefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
+          RefPtr<Path> path = scaledFont->GetPathForGlyphs(buffer, mCtx->mTarget);
           target->Stroke(path, patForStyle, strokeOpts, drawOpts);
           buffer.mGlyphs++;
         }
@@ -4189,7 +4189,7 @@ bool CanvasRenderingContext2D::IsPointInPath(const CanvasPath& mPath, double x, 
   }
 
   EnsureTarget();
-  nsRefPtr<gfx::Path> tempPath = mPath.GetPath(mWinding, mTarget);
+  RefPtr<gfx::Path> tempPath = mPath.GetPath(mWinding, mTarget);
 
   return tempPath->ContainsPoint(Point(x, y), mTarget->GetTransform());
 }
@@ -4229,7 +4229,7 @@ bool CanvasRenderingContext2D::IsPointInStroke(const CanvasPath& mPath, double x
   }
 
   EnsureTarget();
-  nsRefPtr<gfx::Path> tempPath = mPath.GetPath(CanvasWindingRule::Nonzero, mTarget);
+  RefPtr<gfx::Path> tempPath = mPath.GetPath(CanvasWindingRule::Nonzero, mTarget);
 
   const ContextState &state = CurrentState();
 
@@ -4254,15 +4254,15 @@ ExtractSubrect(SourceSurface* aSurface, gfx::Rect* aSourceRect, DrawTarget* aTar
   roundedOutSourceRect.RoundOut();
   gfx::IntRect roundedOutSourceRectInt;
   if (!roundedOutSourceRect.ToIntRect(&roundedOutSourceRectInt)) {
-    nsRefPtr<SourceSurface> surface(aSurface);
+    RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
   }
 
-  nsRefPtr<DrawTarget> subrectDT =
+  RefPtr<DrawTarget> subrectDT =
     aTargetDT->CreateSimilarDrawTarget(roundedOutSourceRectInt.Size(), SurfaceFormat::B8G8R8A8);
 
   if (!subrectDT) {
-    nsRefPtr<SourceSurface> surface(aSurface);
+    RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
   }
 
@@ -4376,7 +4376,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
     NormalizeRect(dx, dy, dw, dh);
   }
 
-  nsRefPtr<SourceSurface> srcSurf;
+  RefPtr<SourceSurface> srcSurf;
   gfx::IntSize imgSize;
 
   Element* element = nullptr;
@@ -4858,7 +4858,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   }
 
   nsRefPtr<gfxContext> thebes;
-  nsRefPtr<DrawTarget> drawDT;
+  RefPtr<DrawTarget> drawDT;
   // Rendering directly is faster and can be done if mTarget supports Azure
   // and does not need alpha blending.
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget) &&
@@ -4883,15 +4883,15 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
   if (drawDT) {
-    nsRefPtr<SourceSurface> snapshot = drawDT->Snapshot();
-    nsRefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+    RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
+    RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
 
     DataSourceSurface::MappedSurface rawData;
     if (NS_WARN_IF(!data->Map(DataSourceSurface::READ, &rawData))) {
         error.Throw(NS_ERROR_FAILURE);
         return;
     }
-    nsRefPtr<SourceSurface> source =
+    RefPtr<SourceSurface> source =
       mTarget->CreateSourceSurfaceFromData(rawData.mData,
                                            data->GetSize(),
                                            rawData.mStride,
@@ -5038,7 +5038,7 @@ CanvasRenderingContext2D::DrawWidgetAsOnScreen(nsGlobalWindow& aWindow,
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
-  nsRefPtr<SourceSurface> snapshot = widget->SnapshotWidgetOnScreen();
+  RefPtr<SourceSurface> snapshot = widget->SnapshotWidgetOnScreen();
   if (!snapshot) {
     error.Throw(NS_ERROR_FAILURE);
     return;
@@ -5180,10 +5180,10 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   IntRect srcRect(0, 0, mWidth, mHeight);
   IntRect destRect(aX, aY, aWidth, aHeight);
   IntRect srcReadRect = srcRect.Intersect(destRect);
-  nsRefPtr<DataSourceSurface> readback;
+  RefPtr<DataSourceSurface> readback;
   DataSourceSurface::MappedSurface rawData;
   if (!srcReadRect.IsEmpty()) {
-    nsRefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
     if (snapshot) {
       readback = snapshot->GetDataSurface();
     }
@@ -5275,7 +5275,7 @@ CanvasRenderingContext2D::EnsureErrorTarget()
     return;
   }
 
-  nsRefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1, 1), SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1, 1), SurfaceFormat::B8G8R8A8);
   MOZ_ASSERT(errorTarget, "Failed to allocate the error target!");
 
   sErrorTarget = errorTarget;
@@ -5445,7 +5445,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<SourceSurface> sourceSurface =
+  RefPtr<SourceSurface> sourceSurface =
     mTarget->CreateSourceSurfaceFromData(imgsurf->Data(), IntSize(copyWidth, copyHeight), imgsurf->Stride(), SurfaceFormat::B8G8R8A8);
 
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
@@ -5722,7 +5722,7 @@ CanvasPath::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 already_AddRefed<CanvasPath>
 CanvasPath::Constructor(const GlobalObject& aGlobal, CanvasPath& aCanvasPath, ErrorResult& aRv)
 {
-  nsRefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
+  RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
                                                    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
 
   nsRefPtr<CanvasPath> path = new CanvasPath(aGlobal.GetAsSupports(), tempPath->CopyToBuilder());
@@ -5732,7 +5732,7 @@ CanvasPath::Constructor(const GlobalObject& aGlobal, CanvasPath& aCanvasPath, Er
 already_AddRefed<CanvasPath>
 CanvasPath::Constructor(const GlobalObject& aGlobal, const nsAString& aPathString, ErrorResult& aRv)
 {
-  nsRefPtr<gfx::Path> tempPath = SVGContentUtils::GetPath(aPathString);
+  RefPtr<gfx::Path> tempPath = SVGContentUtils::GetPath(aPathString);
   if (!tempPath) {
     return Constructor(aGlobal, aRv);
   }
@@ -5896,7 +5896,7 @@ CanvasPath::BezierTo(const gfx::Point& aCP1,
 void
 CanvasPath::AddPath(CanvasPath& aCanvasPath, const Optional<NonNull<SVGMatrix>>& aMatrix)
 {
-  nsRefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
+  RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
                                                    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
 
   if (aMatrix.WasPassed()) {
@@ -5904,7 +5904,7 @@ CanvasPath::AddPath(CanvasPath& aCanvasPath, const Optional<NonNull<SVGMatrix>>&
     Matrix transform(m.A(), m.B(), m.C(), m.D(), m.E(), m.F());
 
     if (!transform.IsIdentity()) {
-      nsRefPtr<PathBuilder> tempBuilder = tempPath->TransformedCopyToBuilder(transform, FillRule::FILL_WINDING);
+      RefPtr<PathBuilder> tempBuilder = tempPath->TransformedCopyToBuilder(transform, FillRule::FILL_WINDING);
       tempPath = tempBuilder->Finish();
     }
   }
@@ -5924,7 +5924,7 @@ CanvasPath::GetPath(const CanvasWindingRule& winding, const DrawTarget* aTarget)
   if (mPath &&
       (mPath->GetBackendType() == aTarget->GetBackendType()) &&
       (mPath->GetFillRule() == fillRule)) {
-    nsRefPtr<gfx::Path> path(mPath);
+    RefPtr<gfx::Path> path(mPath);
     return path.forget();
   }
 
@@ -5933,7 +5933,7 @@ CanvasPath::GetPath(const CanvasWindingRule& winding, const DrawTarget* aTarget)
     MOZ_ASSERT(mPathBuilder);
     mPath = mPathBuilder->Finish();
     if (!mPath) {
-      nsRefPtr<gfx::Path> path(mPath);
+      RefPtr<gfx::Path> path(mPath);
       return path.forget();
     }
 
@@ -5942,15 +5942,15 @@ CanvasPath::GetPath(const CanvasWindingRule& winding, const DrawTarget* aTarget)
 
   // retarget our backend if we're used with a different backend
   if (mPath->GetBackendType() != aTarget->GetBackendType()) {
-    nsRefPtr<PathBuilder> tmpPathBuilder = aTarget->CreatePathBuilder(fillRule);
+    RefPtr<PathBuilder> tmpPathBuilder = aTarget->CreatePathBuilder(fillRule);
     mPath->StreamToSink(tmpPathBuilder);
     mPath = tmpPathBuilder->Finish();
   } else if (mPath->GetFillRule() != fillRule) {
-    nsRefPtr<PathBuilder> tmpPathBuilder = mPath->CopyToBuilder(fillRule);
+    RefPtr<PathBuilder> tmpPathBuilder = mPath->CopyToBuilder(fillRule);
     mPath = tmpPathBuilder->Finish();
   }
 
-  nsRefPtr<gfx::Path> path(mPath);
+  RefPtr<gfx::Path> path(mPath);
   return path.forget();
 }
 

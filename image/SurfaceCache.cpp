@@ -17,7 +17,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Pair.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Tuple.h"
 #include "nsIMemoryReporter.h"

@@ -61,7 +61,7 @@ public:
   }
 
 protected:
-  nsRefPtr<EGLImageImage> mImage;
+  RefPtr<EGLImageImage> mImage;
   const gfx::IntSize mSize;
   bool mIsLocked;
 };
@@ -112,7 +112,7 @@ public:
   }
 
 protected:
-  const nsRefPtr<gl::AndroidSurfaceTexture> mSurfTex;
+  const RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::IntSize mSize;
   bool mIsLocked;
 };

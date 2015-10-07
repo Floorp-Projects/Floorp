@@ -8,7 +8,7 @@
 #include "mozilla/dom/SVGEllipseElementBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Ellipse)
 

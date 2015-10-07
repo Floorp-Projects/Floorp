@@ -278,12 +278,12 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> retVal;
+  RefPtr<DrawTarget> retVal;
   switch (aBackend) {
 #ifdef WIN32
   case BackendType::DIRECT2D:
     {
-      nsRefPtr<DrawTargetD2D> newTarget;
+      RefPtr<DrawTargetD2D> newTarget;
       newTarget = new DrawTargetD2D();
       if (newTarget->Init(aSize, aFormat)) {
         retVal = newTarget;
@@ -292,7 +292,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
     }
   case BackendType::DIRECT2D1_1:
     {
-      nsRefPtr<DrawTargetD2D1> newTarget;
+      RefPtr<DrawTargetD2D1> newTarget;
       newTarget = new DrawTargetD2D1();
       if (newTarget->Init(aSize, aFormat)) {
         retVal = newTarget;
@@ -303,7 +303,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   case BackendType::COREGRAPHICS:
   case BackendType::COREGRAPHICS_ACCELERATED:
     {
-      nsRefPtr<DrawTargetCG> newTarget;
+      RefPtr<DrawTargetCG> newTarget;
       newTarget = new DrawTargetCG();
       if (newTarget->Init(aBackend, aSize, aFormat)) {
         retVal = newTarget;
@@ -314,7 +314,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
 #ifdef USE_SKIA
   case BackendType::SKIA:
     {
-      nsRefPtr<DrawTargetSkia> newTarget;
+      RefPtr<DrawTargetSkia> newTarget;
       newTarget = new DrawTargetSkia();
       if (newTarget->Init(aSize, aFormat)) {
         retVal = newTarget;
@@ -325,7 +325,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
 #ifdef USE_CAIRO
   case BackendType::CAIRO:
     {
-      nsRefPtr<DrawTargetCairo> newTarget;
+      RefPtr<DrawTargetCairo> newTarget;
       newTarget = new DrawTargetCairo();
       if (newTarget->Init(aSize, aFormat)) {
         retVal = newTarget;
@@ -369,13 +369,13 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> retVal;
+  RefPtr<DrawTarget> retVal;
 
   switch (aBackend) {
 #ifdef USE_SKIA
   case BackendType::SKIA:
     {
-      nsRefPtr<DrawTargetSkia> newTarget;
+      RefPtr<DrawTargetSkia> newTarget;
       newTarget = new DrawTargetSkia();
       newTarget->Init(aData, aSize, aStride, aFormat);
       retVal = newTarget;
@@ -385,7 +385,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
 #ifdef XP_MACOSX
   case BackendType::COREGRAPHICS:
     {
-      nsRefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
+      RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
       if (newTarget->Init(aBackend, aData, aSize, aStride, aFormat))
         return newTarget.forget();
       break;
@@ -394,7 +394,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
 #ifdef USE_CAIRO
   case BackendType::CAIRO:
     {
-      nsRefPtr<DrawTargetCairo> newTarget;
+      RefPtr<DrawTargetCairo> newTarget;
       newTarget = new DrawTargetCairo();
       if (newTarget->Init(aData, aSize, aStride, aFormat)) {
         retVal = newTarget.forget();
@@ -421,7 +421,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
 already_AddRefed<DrawTarget>
 Factory::CreateTiledDrawTarget(const TileSet& aTileSet)
 {
-  nsRefPtr<DrawTargetTiled> dt = new DrawTargetTiled();
+  RefPtr<DrawTargetTiled> dt = new DrawTargetTiled();
 
   if (!dt->Init(aTileSet)) {
     return nullptr;
@@ -533,7 +533,7 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, c
   // but that would require a lot of code that would be otherwise repeated in
   // various backends.
   // Therefore, we just reuse CreateScaledFontForNativeFont's implementation.
-  nsRefPtr<ScaledFont> font = CreateScaledFontForNativeFont(aNativeFont, aSize);
+  RefPtr<ScaledFont> font = CreateScaledFontForNativeFont(aNativeFont, aSize);
   static_cast<ScaledFontBase*>(font.get())->SetCairoScaledFont(aScaledFont);
   return font.forget();
 #else
@@ -546,10 +546,10 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
 {
   MOZ_ASSERT(targetA && targetB);
 
-  nsRefPtr<DrawTarget> newTarget =
+  RefPtr<DrawTarget> newTarget =
     new DrawTargetDual(targetA, targetB);
 
-  nsRefPtr<DrawTarget> retVal = newTarget;
+  RefPtr<DrawTarget> retVal = newTarget;
 
   if (mRecorder) {
     retVal = new DrawTargetRecording(mRecorder, retVal);
@@ -565,11 +565,11 @@ Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceForma
 {
   MOZ_ASSERT(aTexture);
 
-  nsRefPtr<DrawTargetD2D> newTarget;
+  RefPtr<DrawTargetD2D> newTarget;
 
   newTarget = new DrawTargetD2D();
   if (newTarget->Init(aTexture, aFormat)) {
-    nsRefPtr<DrawTarget> retVal = newTarget;
+    RefPtr<DrawTarget> retVal = newTarget;
 
     if (mRecorder) {
       retVal = new DrawTargetRecording(mRecorder, retVal, true);
@@ -590,8 +590,8 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
                                               SurfaceFormat aFormat)
 {
   MOZ_ASSERT(aTextureA && aTextureB);
-  nsRefPtr<DrawTargetD2D> newTargetA;
-  nsRefPtr<DrawTargetD2D> newTargetB;
+  RefPtr<DrawTargetD2D> newTargetA;
+  RefPtr<DrawTargetD2D> newTargetB;
 
   newTargetA = new DrawTargetD2D();
   if (!newTargetA->Init(aTextureA, aFormat)) {
@@ -605,10 +605,10 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> newTarget =
+  RefPtr<DrawTarget> newTarget =
     new DrawTargetDual(newTargetA, newTargetB);
 
-  nsRefPtr<DrawTarget> retVal = newTarget;
+  RefPtr<DrawTarget> retVal = newTarget;
 
   if (mRecorder) {
     retVal = new DrawTargetRecording(mRecorder, retVal);
@@ -646,11 +646,11 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
 {
   MOZ_ASSERT(aTexture);
 
-  nsRefPtr<DrawTargetD2D1> newTarget;
+  RefPtr<DrawTargetD2D1> newTarget;
 
   newTarget = new DrawTargetD2D1();
   if (newTarget->Init(aTexture, aFormat)) {
-    nsRefPtr<DrawTarget> retVal = newTarget;
+    RefPtr<DrawTarget> retVal = newTarget;
 
     if (mRecorder) {
       retVal = new DrawTargetRecording(mRecorder, retVal, true);
@@ -679,10 +679,10 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
     return;
   }
 
-  nsRefPtr<ID2D1Factory1> factory = D2DFactory1();
+  RefPtr<ID2D1Factory1> factory = D2DFactory1();
 
-  nsRefPtr<IDXGIDevice> device;
-  aDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(device));
+  RefPtr<IDXGIDevice> device;
+  aDevice->QueryInterface((IDXGIDevice**)byRef(device));
   HRESULT hr = factory->CreateDevice(device, &mD2D1Device);
   if (FAILED(hr)) {
     gfxCriticalError() << "[D2D1] Failed to create gfx factory's D2D1 device, code: " << hexa(hr);
@@ -744,7 +744,7 @@ Factory::CreateDrawTargetSkiaWithGrContext(GrContext* aGrContext,
                                            const IntSize &aSize,
                                            SurfaceFormat aFormat)
 {
-  nsRefPtr<DrawTarget> newTarget = new DrawTargetSkia();
+  RefPtr<DrawTarget> newTarget = new DrawTargetSkia();
   if (!newTarget->InitWithGrContext(aGrContext, aSize, aFormat)) {
     return nullptr;
   }
@@ -762,7 +762,7 @@ Factory::PurgeAllCaches()
 already_AddRefed<GlyphRenderingOptions>
 Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHinting, AntialiasMode aAntialiasMode)
 {
-  nsRefPtr<GlyphRenderingOptionsCairo> options =
+  RefPtr<GlyphRenderingOptionsCairo> options =
     new GlyphRenderingOptionsCairo();
 
   options->SetHinting(aHinting);
@@ -775,10 +775,10 @@ Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHintin
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat)
 {
-  nsRefPtr<DrawTarget> retVal;
+  RefPtr<DrawTarget> retVal;
 
 #ifdef USE_CAIRO
-  nsRefPtr<DrawTargetCairo> newTarget = new DrawTargetCairo();
+  RefPtr<DrawTargetCairo> newTarget = new DrawTargetCairo();
 
   if (newTarget->Init(aSurface, aSize, aFormat)) {
     retVal = newTarget;
@@ -795,9 +795,9 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize)
 {
-  nsRefPtr<DrawTarget> retVal;
+  RefPtr<DrawTarget> retVal;
 
-  nsRefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
+  RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
 
   if (newTarget->Init(cg, aSize)) {
     retVal = newTarget;
@@ -826,7 +826,7 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
     return nullptr;
   }
 
-  nsRefPtr<SourceSurfaceRawData> newSurf = new SourceSurfaceRawData();
+  RefPtr<SourceSurfaceRawData> newSurf = new SourceSurfaceRawData();
 
   if (newSurf->InitWrappingData(aData, aSize, aStride, aFormat, false)) {
     return newSurf.forget();
@@ -845,7 +845,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
     return nullptr;
   }
 
-  nsRefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
+  RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
   if (newSurf->Init(aSize, aFormat, aZero)) {
     return newSurf.forget();
   }
@@ -865,7 +865,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
     return nullptr;
   }
 
-  nsRefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
+  RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
   if (newSurf->InitWithStride(aSize, aFormat, aStride, aZero)) {
     return newSurf.forget();
   }

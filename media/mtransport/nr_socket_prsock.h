@@ -65,7 +65,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "databuffer.h"
 #include "m_cpp_utils.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ClearOnShutdown.h"
 
@@ -276,13 +276,13 @@ private:
   static void release_use_s();
 #endif
   // STS thread executor
-  void recv_callback_s(nsRefPtr<nr_udp_message> msg);
+  void recv_callback_s(RefPtr<nr_udp_message> msg);
 
   ReentrantMonitor monitor_; // protects err_and state_
   bool err_;
   NrSocketIpcState state_;
 
-  std::queue<nsRefPtr<nr_udp_message>> received_msgs_;
+  std::queue<RefPtr<nr_udp_message>> received_msgs_;
 
   nsRefPtr<nsIUDPSocketChild> socket_child_; // only accessed from the io_thread
 };
@@ -380,7 +380,7 @@ private:
 
   // variables that can only be accessed on STS.
   NrSocketIpcState state_;
-  std::queue<nsRefPtr<nr_tcp_message>> msg_queue_;
+  std::queue<RefPtr<nr_tcp_message>> msg_queue_;
   uint32_t buffered_bytes_;
   uint32_t tracking_number_;
   std::deque<size_t> writes_in_flight_;

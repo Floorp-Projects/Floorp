@@ -5,7 +5,7 @@
 
 #include "MediaEngineRemoteVideoSource.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "VideoUtils.h"
 #include "nsIPrefService.h"
 #include "MediaTrackConstraints.h"

@@ -95,7 +95,7 @@ CompositorChild::Destroy()
   // start from the end of the array because Destroy() can cause the
   // LayerTransactionChild to be removed from the array.
   for (int i = ManagedPLayerTransactionChild().Length() - 1; i >= 0; --i) {
-    nsRefPtr<LayerTransactionChild> layers =
+    RefPtr<LayerTransactionChild> layers =
       static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[i]);
     layers->Destroy();
   }

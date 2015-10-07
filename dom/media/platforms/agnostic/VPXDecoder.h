@@ -49,7 +49,7 @@ private:
   void OutputDelayedFrames ();
 
   nsRefPtr<ImageContainer> mImageContainer;
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // VPx decoder state

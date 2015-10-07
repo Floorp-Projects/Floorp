@@ -199,7 +199,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool connected() const { return connected_; }
 
   static TransportResult SendPacket_s(const unsigned char* data, size_t len,
-                                      const nsRefPtr<TransportFlow>& flow) {
+                                      const mozilla::RefPtr<TransportFlow>& flow) {
     TransportResult res = flow->SendPacket(data, len);
     delete data; // we always allocate
     return res;
@@ -288,7 +288,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
   bool connected_;
   size_t sent_;
   size_t received_;
-  nsRefPtr<TransportFlow> flow_;
+  mozilla::RefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
 
   struct sockaddr_conn local_addr_;

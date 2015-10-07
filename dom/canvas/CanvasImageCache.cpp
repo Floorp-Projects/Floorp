@@ -52,7 +52,7 @@ struct ImageCacheEntryData {
   nsRefPtr<HTMLCanvasElement> mCanvas;
   // Value
   nsCOMPtr<imgIRequest> mRequest;
-  nsRefPtr<SourceSurface> mSourceSurface;
+  RefPtr<SourceSurface> mSourceSurface;
   IntSize mSize;
   nsExpirationState mState;
 };
@@ -110,7 +110,7 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
   nsCOMPtr<imgIRequest> mRequest;
-  nsRefPtr<SourceSurface> mSourceSurface;
+  RefPtr<SourceSurface> mSourceSurface;
 };
 
 static bool sPrefsInitialized = false;

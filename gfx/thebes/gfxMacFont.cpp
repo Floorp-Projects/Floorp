@@ -437,7 +437,7 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
     mAzureScaledFont = mozilla::gfx::Factory::CreateScaledFontWithCairo(nativeFont, GetAdjustedSize(), mScaledFont);
   }
 
-  nsRefPtr<ScaledFont> scaledFont(mAzureScaledFont);
+  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
   return scaledFont.forget();
 }
 

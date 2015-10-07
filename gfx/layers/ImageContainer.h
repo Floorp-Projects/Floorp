@@ -741,7 +741,7 @@ class CairoImage final : public Image {
 public:
   struct Data {
     gfx::IntSize mSize;
-    nsRefPtr<gfx::SourceSurface> mSourceSurface;
+    RefPtr<gfx::SourceSurface> mSourceSurface;
   };
 
   /**
@@ -757,7 +757,7 @@ public:
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
   {
-    nsRefPtr<gfx::SourceSurface> surface(mSourceSurface);
+    RefPtr<gfx::SourceSurface> surface(mSourceSurface);
     return surface.forget();
   }
 
@@ -771,7 +771,7 @@ public:
   gfx::IntSize mSize;
 
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
-  nsDataHashtable<nsUint32HashKey, nsRefPtr<TextureClient> >  mTextureClients;
+  nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
 };
 
 #ifdef MOZ_WIDGET_GONK

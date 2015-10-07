@@ -295,7 +295,7 @@ public:
     const SharedSurfaceType mType;
     GLContext* const mGL;
     const SurfaceCaps mCaps;
-    const nsRefPtr<layers::ISurfaceAllocator> mAllocator;
+    const RefPtr<layers::ISurfaceAllocator> mAllocator;
     const layers::TextureFlags mFlags;
     const GLFormats mFormats;
 protected:
@@ -305,7 +305,7 @@ protected:
     RefSet<layers::SharedSurfaceTextureClient> mRecycleTotalPool;
 
     SurfaceFactory(SharedSurfaceType type, GLContext* gl, const SurfaceCaps& caps,
-                   const nsRefPtr<layers::ISurfaceAllocator>& allocator,
+                   const RefPtr<layers::ISurfaceAllocator>& allocator,
                    const layers::TextureFlags& flags);
 
 public:

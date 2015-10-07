@@ -952,8 +952,8 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
 
   returnedMessage.AppendLiteral("\n\n");
 
-  nsRefPtr<nsIX509Cert> ix509;
-  rv = sslStatus.GetServerCert(getter_AddRefs(ix509));
+  RefPtr<nsIX509Cert> ix509;
+  rv = sslStatus.GetServerCert(byRef(ix509));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool isUntrusted;

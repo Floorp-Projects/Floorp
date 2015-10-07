@@ -1416,9 +1416,9 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                     size/2 - twoPX, size/2 - twoPX);
       devPxRect =
         ToRect(nsLayoutUtils::RectToGfxRect(rect, PresContext()->AppUnitsPerDevPixel()));
-      nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
-      nsRefPtr<Path> ellipse = builder->Finish();
+      RefPtr<Path> ellipse = builder->Finish();
       drawTarget->Fill(ellipse, color);
     }
 
