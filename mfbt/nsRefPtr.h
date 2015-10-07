@@ -346,24 +346,40 @@ private:
   // This should be sound because while |nsRefPtr<const T>| provides a
   // const view of an object, the object itself should not be const (it
   // would have to be allocated as |new const T| or similar to be const).
+
+  // Because some classes make their AddRef/Release implementations private
+  // and then friend RefPtr to make them visible, we redirect AddRefTraits's
+  // calls to static helper functions in RefPtr so we don't have to figure
+  // out how to make AddRefTraits visible to *those* classes.
+  static MOZ_ALWAYS_INLINE void
+  AddRefTraitsAddRefHelper(typename mozilla::RemoveConst<T>::Type* aPtr)
+  {
+    aPtr->AddRef();
+  }
+  static MOZ_ALWAYS_INLINE void
+  AddRefTraitsReleaseHelper(typename mozilla::RemoveConst<T>::Type* aPtr)
+  {
+    aPtr->Release();
+  }
+
   template<class U>
   struct AddRefTraits
   {
     static void AddRef(U* aPtr) {
-      aPtr->AddRef();
+      RefPtr<T>::AddRefTraitsAddRefHelper(aPtr);
     }
     static void Release(U* aPtr) {
-      aPtr->Release();
+      RefPtr<T>::AddRefTraitsReleaseHelper(aPtr);
     }
   };
   template<class U>
   struct AddRefTraits<const U>
   {
     static void AddRef(const U* aPtr) {
-      const_cast<U*>(aPtr)->AddRef();
+      RefPtr<T>::AddRefTraitsAddRefHelper(const_cast<U*>(aPtr));
     }
     static void Release(const U* aPtr) {
-      const_cast<U*>(aPtr)->Release();
+      RefPtr<T>::AddRefTraitsReleaseHelper(const_cast<U*>(aPtr));
     }
   };
 };
