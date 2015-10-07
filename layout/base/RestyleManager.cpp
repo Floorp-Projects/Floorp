@@ -4346,20 +4346,16 @@ ElementRestyler::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                          aSwappedStructOwners)
 {
   nsIContent* content = aFrame->GetContent();
-  nsAutoCString idStr;
+  nsAutoCString localDescriptor;
   if (profiler_is_active() && content) {
-    nsIAtom* id = content->GetID();
-    if (id) {
-      id->ToUTF8String(idStr);
-    } else {
-      idStr.AssignLiteral("?");
-    }
+    std::string elemDesc = ToString(*content);
+    localDescriptor.Assign(elemDesc.c_str());
   }
 
   PROFILER_LABEL_PRINTF("ElementRestyler", "ComputeStyleChangeFor",
                         js::ProfileEntry::Category::CSS,
                         content ? "Element: %s" : "%s",
-                        content ? idStr.get() : "");
+                        content ? localDescriptor.get() : "");
   if (aMinChange) {
     aChangeList->AppendChange(aFrame, content, aMinChange);
   }
