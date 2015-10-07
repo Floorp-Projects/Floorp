@@ -186,7 +186,6 @@ public:
     // Create and attach a window.
     static void Open(const jni::ClassObject::LocalRef& cls,
                      GeckoView::Window::Param gvWindow,
-                     GeckoView::Param view,
                      int32_t width, int32_t height);
 
     // Set the active layer client object
@@ -201,7 +200,6 @@ public:
 void
 nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
                         GeckoView::Window::Param gvWindow,
-                        GeckoView::Param view,
                         int32_t width, int32_t height)
 {
     MOZ_ASSERT(NS_IsMainThread());
@@ -212,10 +210,6 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
     if (gGeckoViewWindow) {
         // Should have been created the first time.
         MOZ_ASSERT(gGeckoViewWindow->mNatives);
-
-        // Associate our previous GeckoEditable with the new GeckoView.
-        gGeckoViewWindow->mEditable->OnViewChange(view);
-
         AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
                      gGeckoViewWindow->mNatives.get());
         return;
@@ -255,11 +249,6 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
 
     gGeckoViewWindow = static_cast<nsWindow*>(widget.get());
     gGeckoViewWindow->mNatives = mozilla::MakeUnique<Natives>(gGeckoViewWindow);
-
-    // Create GeckoEditable for the new nsWindow/GeckoView pair.
-    gGeckoViewWindow->mEditable = GeckoEditable::New();
-    gGeckoViewWindow->mEditable->OnViewChange(view);
-
     AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
                  gGeckoViewWindow->mNatives.get());
 }
@@ -1022,8 +1011,8 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
 
         case AndroidGeckoEvent::IME_EVENT:
-            gGeckoViewWindow->UserActivity();
-            gGeckoViewWindow->OnIMEEvent(ae);
+            win->UserActivity();
+            win->OnIMEEvent(ae);
             break;
 
         case AndroidGeckoEvent::IME_KEY_EVENT:
@@ -1819,7 +1808,7 @@ public:
 nsRefPtr<mozilla::TextComposition>
 nsWindow::GetIMEComposition()
 {
-    MOZ_ASSERT(this == FindTopLevel());
+    MOZ_ASSERT(this == TopWindow());
     return mozilla::IMEStateManager::GetTextCompositionFor(this);
 }
 
@@ -1895,14 +1884,14 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             NotifyIMEOfTextChange(notification);
             FlushIMEChanges();
         }
-        mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_REPLY_EVENT);
+        GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         return;
 
     } else if (ae->Action() == AndroidGeckoEvent::IME_UPDATE_CONTEXT) {
-        mEditable->NotifyIMEContext(mInputContext.mIMEState.mEnabled,
-                                    mInputContext.mHTMLInputType,
-                                    mInputContext.mHTMLInputInputmode,
-                                    mInputContext.mActionHint);
+        GeckoAppShell::NotifyIMEContext(mInputContext.mIMEState.mEnabled,
+                                        mInputContext.mHTMLInputType,
+                                        mInputContext.mHTMLInputInputmode,
+                                        mInputContext.mActionHint);
         mIMEUpdatingContext = false;
         return;
     }
@@ -1912,7 +1901,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         if (ae->Action() == AndroidGeckoEvent::IME_SYNCHRONIZE ||
             ae->Action() == AndroidGeckoEvent::IME_COMPOSE_TEXT ||
             ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
-            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_REPLY_EVENT);
+            GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         return;
     }
@@ -1927,7 +1916,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     case AndroidGeckoEvent::IME_SYNCHRONIZE:
         {
             FlushIMEChanges();
-            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_REPLY_EVENT);
+            GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         break;
 
@@ -1972,8 +1961,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                     }
                     mIMEKeyEvents.Clear();
                     FlushIMEChanges();
-                    mEditable->NotifyIME(
-                            GeckoEditableListener::NOTIFY_IME_REPLY_EVENT);
+                    GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
                     // Break out of the switch block
                     break;
                 }
@@ -2024,7 +2012,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             }
 
             FlushIMEChanges();
-            mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_REPLY_EVENT);
+            GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         break;
 
@@ -2188,13 +2176,13 @@ nsWindow::UserActivity()
 nsresult
 nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
-    MOZ_ASSERT(this == FindTopLevel());
+    MOZ_ASSERT(this == TopWindow());
 
     switch (aIMENotification.mMessage) {
         case REQUEST_TO_COMMIT_COMPOSITION:
             //ALOGIME("IME: REQUEST_TO_COMMIT_COMPOSITION: s=%d", aState);
             RemoveIMEComposition();
-            mEditable->NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
+            GeckoAppShell::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
             return NS_OK;
 
         case REQUEST_TO_CANCEL_COMPOSITION:
@@ -2212,12 +2200,12 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
                 DispatchEvent(&compositionCommitEvent);
             }
 
-            mEditable->NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
+            GeckoAppShell::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
             return NS_OK;
 
         case NOTIFY_IME_OF_FOCUS:
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
-            mEditable->NotifyIME(NOTIFY_IME_OF_FOCUS);
+            GeckoAppShell::NotifyIME(NOTIFY_IME_OF_FOCUS);
             return NS_OK;
 
         case NOTIFY_IME_OF_BLUR:
@@ -2228,7 +2216,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
             // event back to Gecko. That is where we unmask event handling
             mIMEMaskEventsCount++;
 
-            mEditable->NotifyIME(NOTIFY_IME_OF_BLUR);
+            GeckoAppShell::NotifyIME(NOTIFY_IME_OF_BLUR);
             return NS_OK;
 
         case NOTIFY_IME_OF_SELECTION_CHANGE:
@@ -2258,7 +2246,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     // Disable the Android keyboard on b2gdroid.
     return;
 #endif
-    nsWindow *top = FindTopLevel();
+    nsWindow *top = TopWindow();
     if (top && this != top) {
         // We are using an IME event later to notify Java, and the IME event
         // will be processed by the top window. Therefore, to ensure the
@@ -2296,7 +2284,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
 
     if (enabled == IMEState::ENABLED && aAction.UserMightRequestOpenVKB()) {
         // Don't reset keyboard when we should simply open the vkb
-        mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OPEN_VKB);
+        GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_OPEN_VKB);
         return;
     }
 
@@ -2312,7 +2300,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
 NS_IMETHODIMP_(InputContext)
 nsWindow::GetInputContext()
 {
-    nsWindow *top = FindTopLevel();
+    nsWindow *top = TopWindow();
     if (top && this != top) {
         // We let the top window process SetInputContext,
         // so we should let it process GetInputContext as well.
@@ -2372,8 +2360,8 @@ nsWindow::FlushIMEChanges()
             NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
         }
 
-        mEditable->OnTextChange(event.mReply.mString, change.mStart,
-                                change.mOldEnd, change.mNewEnd);
+        GeckoAppShell::NotifyIMEChange(event.mReply.mString, change.mStart,
+                                       change.mOldEnd, change.mNewEnd);
     }
     mIMETextChanges.Clear();
 
@@ -2385,8 +2373,9 @@ nsWindow::FlushIMEChanges()
         NS_ENSURE_TRUE_VOID(event.mSucceeded);
         NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
 
-        mEditable->OnSelectionChange(int32_t(event.GetSelectionStart()),
-                                     int32_t(event.GetSelectionEnd()));
+        GeckoAppShell::NotifyIMEChange(EmptyString(),
+                                       int32_t(event.GetSelectionStart()),
+                                       int32_t(event.GetSelectionEnd()), -1);
         mIMESelectionChanged = false;
     }
 }
@@ -2394,8 +2383,6 @@ nsWindow::FlushIMEChanges()
 nsresult
 nsWindow::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
 {
-    MOZ_ASSERT(this == FindTopLevel());
-
     MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE,
                "NotifyIMEOfTextChange() is called with invaild notification");
 

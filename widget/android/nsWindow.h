@@ -49,9 +49,6 @@ public:
     // Object that implements native GeckoView calls;
     // nullptr for nsWindows that were not opened from GeckoView.
     mozilla::UniquePtr<Natives> mNatives;
-    // GeckoEditable instance used by this nsWindow;
-    // nullptr for nsWindows that are not GeckoViews.
-    mozilla::widget::GeckoEditable::GlobalRef mEditable;
 
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static mozilla::gfx::IntSize GetAndroidScreenBounds();

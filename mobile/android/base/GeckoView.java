@@ -30,14 +30,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 
 public class GeckoView extends LayerView
     implements ContextGetter {
@@ -47,8 +43,6 @@ public class GeckoView extends LayerView
 
     private ChromeDelegate mChromeDelegate;
     private ContentDelegate mContentDelegate;
-
-    private InputConnectionListener mInputConnectionListener;
 
     private final GeckoEventListener mGeckoEventListener = new GeckoEventListener() {
         @Override
@@ -115,7 +109,7 @@ public class GeckoView extends LayerView
 
     @WrapForJNI
     private static final class Window extends JNIObject {
-        static native void open(Window instance, GeckoView view, int width, int height);
+        static native void open(Window instance, int width, int height);
         static native void setLayerClient(Object client);
         @Override protected native void disposeNative();
     }
@@ -225,11 +219,10 @@ public class GeckoView extends LayerView
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, this, metrics.widthPixels, metrics.heightPixels);
+            Window.open(window, metrics.widthPixels, metrics.heightPixels);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
-                    "open", window, GeckoView.class, this,
-                    metrics.widthPixels, metrics.heightPixels);
+                    "open", window, metrics.widthPixels, metrics.heightPixels);
         }
     }
 
@@ -238,76 +231,6 @@ public class GeckoView extends LayerView
     {
         super.onDetachedFromWindow();
         window.disposeNative();
-    }
-
-    /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
-        mInputConnectionListener = icl;
-    }
-
-    @Override
-    public Handler getHandler() {
-        if (mInputConnectionListener != null) {
-            return mInputConnectionListener.getHandler(super.getHandler());
-        }
-        return super.getHandler();
-    }
-
-    @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if (mInputConnectionListener != null) {
-            return mInputConnectionListener.onCreateInputConnection(outAttrs);
-        }
-        return null;
-    }
-
-    @Override
-    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        if (super.onKeyPreIme(keyCode, event)) {
-            return true;
-        }
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.onKeyPreIme(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (super.onKeyUp(keyCode, event)) {
-            return true;
-        }
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.onKeyUp(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (super.onKeyDown(keyCode, event)) {
-            return true;
-        }
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        if (super.onKeyLongPress(keyCode, event)) {
-            return true;
-        }
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.onKeyLongPress(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        if (super.onKeyMultiple(keyCode, repeatCount, event)) {
-            return true;
-        }
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.onKeyMultiple(keyCode, repeatCount, event);
-    }
-
-    /* package */ boolean isIMEEnabled() {
-        return mInputConnectionListener != null &&
-                mInputConnectionListener.isIMEEnabled();
     }
 
     /**

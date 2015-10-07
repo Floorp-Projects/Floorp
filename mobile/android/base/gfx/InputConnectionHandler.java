@@ -2,17 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.gfx;
 
 import android.os.Handler;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
-/**
- * Interface for interacting with GeckoInputConnection from GeckoView.
- */
-interface InputConnectionListener
+public interface InputConnectionHandler
 {
     Handler getHandler(Handler defHandler);
     InputConnection onCreateInputConnection(EditorInfo outAttrs);
