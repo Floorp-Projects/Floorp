@@ -908,19 +908,57 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
   return NS_OK;
 }
 
+nsRect
+AccessibleCaretManager::GetContentBoundaryForFrame(nsIFrame* aFrame) const
+{
+  nsRect resultRect;
+  nsIFrame* rootFrame = mPresShell->GetRootFrame();
+
+  for (; aFrame; aFrame = aFrame->GetNextContinuation()) {
+    nsRect rect = aFrame->GetContentRectRelativeToSelf();
+    nsLayoutUtils::TransformRect(aFrame, rootFrame, rect);
+    resultRect = resultRect.Union(rect);
+
+    nsIFrame::ChildListIterator lists(aFrame);
+    for (; !lists.IsDone(); lists.Next()) {
+      // Loop over all children to take the overflow rect into consideration.
+      for (nsIFrame* child : lists.CurrentList()) {
+        nsRect overflowRect = child->GetScrollableOverflowRect();
+        nsLayoutUtils::TransformRect(child, rootFrame, overflowRect);
+        resultRect = resultRect.Union(overflowRect);
+      }
+    }
+  }
+
+  // Shrink rect to make sure we never hit the boundary.
+  resultRect.Deflate(kBoundaryAppUnits);
+  return resultRect;
+}
+
 nsPoint
 AccessibleCaretManager::AdjustDragBoundary(const nsPoint& aPoint) const
 {
-  // Bug 1068474: Adjust the Y-coordinate so that the carets won't be in tilt
-  // mode when a caret is being dragged surpass the other caret.
-  //
-  // For example, when dragging the second caret, the horizontal boundary (lower
-  // bound) of its Y-coordinate is the logical position of the first caret.
-  // Likewise, when dragging the first caret, the horizontal boundary (upper
-  // bound) of its Y-coordinate is the logical position of the second caret.
   nsPoint adjustedPoint = aPoint;
 
+  int32_t focusOffset = 0;
+  nsIFrame* focusFrame =
+    nsCaret::GetFrameAndOffset(GetSelection(), nullptr, 0, &focusOffset);
+  Element* editingHost = GetEditingHostForFrame(focusFrame);
+
+  if (editingHost) {
+    nsRect boundary =
+      GetContentBoundaryForFrame(editingHost->GetPrimaryFrame());
+    adjustedPoint = boundary.ClampPoint(adjustedPoint);
+  }
+
   if (GetCaretMode() == CaretMode::Selection) {
+    // Bug 1068474: Adjust the Y-coordinate so that the carets won't be in tilt
+    // mode when a caret is being dragged surpass the other caret.
+    //
+    // For example, when dragging the second caret, the horizontal boundary (lower
+    // bound) of its Y-coordinate is the logical position of the first caret.
+    // Likewise, when dragging the first caret, the horizontal boundary (upper
+    // bound) of its Y-coordinate is the logical position of the second caret.
     if (mActiveCaret == mFirstCaret.get()) {
       nscoord dragDownBoundaryY = mSecondCaret->LogicalPosition().y;
       if (dragDownBoundaryY > 0 && adjustedPoint.y > dragDownBoundaryY) {
