@@ -238,11 +238,11 @@ public:
 
   bool HasInPlayEffect() const
   {
-    return GetEffect() && GetEffect()->IsInPlay(*this);
+    return GetEffect() && GetEffect()->IsInPlay();
   }
   bool HasCurrentEffect() const
   {
-    return GetEffect() && GetEffect()->IsCurrent(*this);
+    return GetEffect() && GetEffect()->IsCurrent();
   }
   bool IsInEffect() const
   {

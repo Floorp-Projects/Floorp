@@ -915,7 +915,7 @@ AnimationCollection::HasCurrentAnimationsForProperties(
     const Animation& anim = *mAnimations[animIdx];
     const KeyframeEffectReadOnly* effect = anim.GetEffect();
     if (effect &&
-        effect->IsCurrent(anim) &&
+        effect->IsCurrent() &&
         effect->HasAnimationOfProperties(aProperties, aPropertyCount)) {
       return true;
     }
