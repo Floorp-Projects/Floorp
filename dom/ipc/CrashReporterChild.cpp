@@ -17,7 +17,7 @@ namespace dom {
 PCrashReporterChild*
 CrashReporterChild::GetCrashReporter()
 {
-  const InfallibleTArray<PCrashReporterChild*>* reporters = nullptr;
+  const ManagedContainer<PCrashReporterChild>* reporters = nullptr;
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Content: {
       ContentChild* child = ContentChild::GetSingleton();

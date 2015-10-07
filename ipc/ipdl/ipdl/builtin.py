@@ -50,6 +50,7 @@ HeaderIncludes = (
     'nsStringGlue.h',
     'nsTArray.h',
     'mozilla/ipc/ProtocolUtils.h',
+    'nsTHashtable.h',
 )
 
 CppIncludes = (

@@ -1797,11 +1797,11 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
         }
     }
 
-    const InfallibleTArray<POfflineCacheUpdateParent*>& ocuParents =
+    const ManagedContainer<POfflineCacheUpdateParent>& ocuParents =
         ManagedPOfflineCacheUpdateParent();
-    for (uint32_t i = 0; i < ocuParents.Length(); ++i) {
+    for (auto iter = ocuParents.ConstIter(); !iter.Done(); iter.Next()) {
         nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> ocuParent =
-            static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(ocuParents[i]);
+            static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(iter.Get()->GetKey());
         ocuParent->StopSendingMessagesToChild();
     }
 
@@ -3418,7 +3418,7 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
 mozilla::jsipc::PJavaScriptParent *
 ContentParent::AllocPJavaScriptParent()
 {
-    MOZ_ASSERT(!ManagedPJavaScriptParent().Length());
+    MOZ_ASSERT(ManagedPJavaScriptParent().IsEmpty());
     return nsIContentParent::AllocPJavaScriptParent();
 }
 

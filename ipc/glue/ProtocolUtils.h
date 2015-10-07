@@ -28,6 +28,9 @@
 #include <android/log.h>
 #endif
 
+template<typename T> class nsTHashtable;
+template<typename T> class nsPtrHashKey;
+
 // WARNING: this takes into account the private, special-message-type
 // enum in ipc_channel.h.  They need to be kept in sync.
 namespace {
@@ -329,13 +332,17 @@ DuplicateHandle(HANDLE aSourceHandle,
 } // namespace ipc
 
 template<typename Protocol>
+using ManagedContainer = nsTHashtable<nsPtrHashKey<Protocol>>;
+
+template<typename Protocol>
 Protocol*
-LoneManagedOrNull(const nsTArray<Protocol*>& aManagees)
+LoneManagedOrNull(const ManagedContainer<Protocol>& aManagees)
 {
-    if (aManagees.Length() == 0) {
+    if (aManagees.IsEmpty()) {
         return nullptr;
     }
-    return aManagees[0];
+    MOZ_ASSERT(aManagees.Count() == 1);
+    return aManagees.ConstIter().Get()->GetKey();
 }
 
 } // namespace mozilla

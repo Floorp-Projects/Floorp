@@ -1279,7 +1279,7 @@ static void FirstIdle(void)
 mozilla::jsipc::PJavaScriptChild *
 ContentChild::AllocPJavaScriptChild()
 {
-    MOZ_ASSERT(!ManagedPJavaScriptChild().Length());
+    MOZ_ASSERT(ManagedPJavaScriptChild().IsEmpty());
 
     return nsIContentChild::AllocPJavaScriptChild();
 }

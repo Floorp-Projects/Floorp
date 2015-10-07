@@ -166,7 +166,7 @@ ContentBridgeParent::DeallocPBrowserParent(PBrowserParent* aParent)
 void
 ContentBridgeParent::NotifyTabDestroyed()
 {
-  int32_t numLiveTabs = ManagedPBrowserParent().Length();
+  int32_t numLiveTabs = ManagedPBrowserParent().Count();
   if (numLiveTabs == 1) {
     MessageLoop::current()->PostTask(
       FROM_HERE,

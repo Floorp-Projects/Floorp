@@ -335,6 +335,10 @@ def _refptrTake(expr):
 def _cxxArrayType(basetype, const=0, ref=0):
     return Type('nsTArray', T=basetype, const=const, ref=ref, hasimplicitcopyctor=False)
 
+def _cxxManagedContainerType(basetype, const=0, ref=0):
+    return Type('ManagedContainer', T=basetype,
+                const=const, ref=ref, hasimplicitcopyctor=False)
+
 def _cxxFallibleArrayType(basetype, const=0, ref=0):
     return Type('FallibleTArray', T=basetype, const=const, ref=ref)
 
@@ -353,20 +357,18 @@ def _callCxxSwapArrayElements(arr1, arr2, sel='.'):
                     args=[ arr2 ])
 
 def _callInsertManagedActor(managees, actor):
-    return ExprCall(ExprSelect(managees, '.', 'InsertElementSorted'),
+    return ExprCall(ExprSelect(managees, '.', 'PutEntry'),
                     args=[ actor ])
 
 def _callRemoveManagedActor(managees, actor):
-    return ExprCall(ExprSelect(managees, '.', 'RemoveElementSorted'),
+    return ExprCall(ExprSelect(managees, '.', 'RemoveEntry'),
                     args=[ actor ])
 
 def _callClearManagedActors(managees):
     return ExprCall(ExprSelect(managees, '.', 'Clear'))
 
 def _callHasManagedActor(managees, actor):
-    return ExprBinary(
-        ExprSelect(managees, '.', 'NoIndex'), '!=',
-        ExprCall(ExprSelect(managees, '.', 'BinaryIndexOf'), args=[ actor ]))
+    return ExprCall(ExprSelect(managees, '.', 'Contains'), args=[ actor ])
 
 def _otherSide(side):
     if side == 'child':  return 'parent'
@@ -1266,8 +1268,8 @@ class Protocol(ipdl.ast.Protocol):
 
     def managedVarType(self, actortype, side, const=0, ref=0):
         assert self.decl.type.isManagerOf(actortype)
-        return _cxxArrayType(self.managedCxxType(actortype, side),
-                             const=const, ref=ref)
+        return _cxxManagedContainerType(Type(_actorName(actortype.name(), side)),
+                                        const=const, ref=ref)
 
     def managerArrayExpr(self, thisvar, side):
         """The member var my manager keeps of actors of my type."""
@@ -3054,17 +3056,41 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 self.cls.addstmts([ managermeth, Whitespace.NL ])
 
+        def actorFromIter(itervar):
+            return ExprCall(ExprSelect(ExprCall(ExprSelect(itervar, '.', 'Get')),
+                                       '->', 'GetKey'))
+        def forLoopOverHashtable(hashtable, itervar, const=False):
+            return StmtFor(
+                init=Param(Type.AUTO, itervar.name,
+                           ExprCall(ExprSelect(hashtable, '.', 'ConstIter' if const else 'Iter'))),
+                cond=ExprNot(ExprCall(ExprSelect(itervar, '.', 'Done'))),
+                update=ExprCall(ExprSelect(itervar, '.', 'Next')))
+
         ## Managed[T](Array& inout) const
         ## const Array<T>& Managed() const
         for managed in ptype.manages:
             arrvar = ExprVar('aArr')
             meth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
-                params=[ Decl(p.managedVarType(managed, self.side, ref=1),
+                params=[ Decl(_cxxArrayType(p.managedCxxType(managed, self.side), ref=1),
                               arrvar.name) ],
                 const=1))
-            meth.addstmt(StmtExpr(ExprAssn(
-                arrvar, p.managedVar(managed, self.side))))
+            ivar = ExprVar('i')
+            elementsvar = ExprVar('elements')
+            itervar = ExprVar('iter')
+            meth.addstmt(StmtDecl(Decl(Type.UINT32, ivar.name),
+                                  init=ExprLiteral.ZERO))
+            meth.addstmt(StmtDecl(Decl(Type(_actorName(managed.name(), self.side), ptrptr=1), elementsvar.name),
+                                  init=ExprCall(ExprSelect(arrvar, '.', 'AppendElements'),
+                                                args=[ ExprCall(ExprSelect(p.managedVar(managed, self.side),
+                                                                           '.', 'Count')) ])))
+            foreachaccumulate = forLoopOverHashtable(p.managedVar(managed, self.side),
+                                                     itervar, const=True)
+            foreachaccumulate.addstmt(StmtExpr(
+                ExprAssn(ExprIndex(elementsvar, ivar),
+                         actorFromIter(itervar))))
+            foreachaccumulate.addstmt(StmtExpr(ExprPrefixUnop(ivar, '++')))
+            meth.addstmt(foreachaccumulate)
 
             refmeth = MethodDefn(MethodDecl(
                 p.managedMethod(managed, self.side).name,
@@ -3404,6 +3430,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         subtreewhyvar = ExprVar('subtreewhy')
         kidsvar = ExprVar('kids')
         ivar = ExprVar('i')
+        itervar = ExprVar('iter')
         ithkid = ExprIndex(kidsvar, ivar)
 
         destroysubtree = MethodDefn(MethodDecl(
@@ -3433,6 +3460,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
 
         for managed in ptype.manages:
+            managedVar = p.managedVar(managed, self.side)
+
             foreachdestroy = StmtFor(
                 init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
                 cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
@@ -3471,20 +3500,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ## DeallocSubtree()
         deallocsubtree = MethodDefn(MethodDecl(deallocsubtreevar.name))
         for managed in ptype.manages:
-            foreachrecurse = StmtFor(
-                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
-                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
-                update=ExprPrefixUnop(ivar, '++'))
-            foreachrecurse.addstmt(StmtExpr(ExprCall(
-                ExprSelect(ithkid, '->', deallocsubtreevar.name))))
+            managedVar = p.managedVar(managed, self.side)
 
-            foreachdealloc = StmtFor(
-                init=Param(Type.UINT32, ivar.name, ExprLiteral.ZERO),
-                cond=ExprBinary(ivar, '<', _callCxxArrayLength(kidsvar)),
-                update=ExprPrefixUnop(ivar, '++'))
+            foreachrecurse = forLoopOverHashtable(managedVar, itervar)
+            foreachrecurse.addstmt(StmtExpr(ExprCall(
+                ExprSelect(actorFromIter(itervar), '->', deallocsubtreevar.name))))
+
+            foreachdealloc = forLoopOverHashtable(managedVar, itervar)
             foreachdealloc.addstmts([
                 StmtExpr(ExprCall(_deallocMethod(managed, self.side),
-                                  args=[ ithkid ]))
+                                  args=[ actorFromIter(itervar) ]))
             ])
 
             block = StmtBlock()
@@ -3492,17 +3517,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 Whitespace(
                     '// Recursively deleting %s kids\n'% (managed.name()),
                     indent=1),
-                StmtDecl(
-                    Decl(p.managedVarType(managed, self.side, ref=1),
-                         kidsvar.name),
-                    init=p.managedVar(managed, self.side)),
                 foreachrecurse,
                 Whitespace.NL,
-                # no need to copy |kids| here; we're the ones deleting
-                # stragglers, no outside C++ is being invoked (except
-                # Dealloc(subactor))
                 foreachdealloc,
-                StmtExpr(_callClearManagedActors(p.managedVar(managed, self.side))),
+                StmtExpr(_callClearManagedActors(managedVar)),
 
             ])
             deallocsubtree.addstmt(block)
@@ -3561,7 +3579,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         for managed in ptype.manages:
             self.cls.addstmts([
-                Whitespace('// Sorted by pointer value\n', indent=1),
                 StmtDecl(Decl(
                     p.managedVarType(managed, self.side),
                     p.managedVar(managed, self.side).name)) ])
