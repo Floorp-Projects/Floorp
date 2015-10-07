@@ -52,14 +52,14 @@ EXTN(jsimd_h2v1_merged_upsample_sse2):
         collect_args
         push    rbx
 
-        mov     rcx, r10        ; col
+        mov     ecx, r10d        ; col
         test    rcx,rcx
         jz      near .return
 
         push    rcx
 
         mov     rdi, r11
-        mov     rcx, r12
+        mov     ecx, r12d
         mov     rsi, JSAMPARRAY [rdi+0*SIZEOF_JSAMPARRAY]
         mov     rbx, JSAMPARRAY [rdi+1*SIZEOF_JSAMPARRAY]
         mov     rdx, JSAMPARRAY [rdi+2*SIZEOF_JSAMPARRAY]
@@ -455,10 +455,10 @@ EXTN(jsimd_h2v2_merged_upsample_sse2):
         collect_args
         push    rbx
 
-        mov     rax, r10
+        mov     eax, r10d
 
         mov     rdi, r11
-        mov     rcx, r12
+        mov     ecx, r12d
         mov     rsi, JSAMPARRAY [rdi+0*SIZEOF_JSAMPARRAY]
         mov     rbx, JSAMPARRAY [rdi+1*SIZEOF_JSAMPARRAY]
         mov     rdx, JSAMPARRAY [rdi+2*SIZEOF_JSAMPARRAY]

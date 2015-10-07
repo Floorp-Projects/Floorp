@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const CC = Components.Constructor;
+var Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var CC = Components.Constructor;
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 // SimpleTest.registerCleanupFunction(() => {

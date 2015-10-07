@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -74,6 +74,7 @@ const EVENTS = {
   // Called when the inspector splitter is moved and resized.
   UI_INSPECTOR_RESIZE: "WebAudioEditor:UIInspectorResize"
 };
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 /**
  * The current target and the Web Audio Editor front, set by this tool's host.

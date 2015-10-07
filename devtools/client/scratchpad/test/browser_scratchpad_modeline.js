@@ -3,13 +3,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* Bug 644413 */
 
-var tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-Cu.import("resource://gre/modules/FileUtils.jsm", tempScope);
-var NetUtil = tempScope.NetUtil;
-var FileUtils = tempScope.FileUtils;
-
-
 var gScratchpad; // Reference to the Scratchpad object.
 var gFile; // Reference to the temporary nsIFile we will work with.
 var DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";

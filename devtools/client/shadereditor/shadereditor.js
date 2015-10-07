@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -38,6 +38,7 @@ const EVENTS = {
   // When the editor's error markers are all removed
   EDITOR_ERROR_MARKERS_REMOVED: "ShaderEditor:EditorCleaned"
 };
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 const STRINGS_URI = "chrome://browser/locale/devtools/shadereditor.properties"
 const HIGHLIGHT_TINT = [1, 0, 0.25, 1]; // rgba

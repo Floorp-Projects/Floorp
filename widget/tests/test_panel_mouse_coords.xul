@@ -28,8 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835044
   <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-let Cc = Components.classes;
-let Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
           getInterface(Ci.nsIDOMWindowUtils);
 let panel = document.getElementById('thepanel');

@@ -2592,7 +2592,7 @@ def run_test_harness(options):
     if runner.getTestFlavor(options) == 'browser-chrome':
         options.runByDir = True
 
-    if runner.getTestFlavor(options) == 'chrome' and (not mozinfo.info['debug']):
+    if runner.getTestFlavor(options) == 'chrome':
         options.runByDir = True
 
     if mozinfo.info.get('buildapp') == 'mulet':

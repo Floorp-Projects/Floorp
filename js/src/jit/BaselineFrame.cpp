@@ -88,10 +88,10 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
 }
 
 bool
-BaselineFrame::isDirectEvalFrame() const
+BaselineFrame::isNonGlobalEvalFrame() const
 {
     return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalObject>().isDirect();
+           script()->enclosingStaticScope()->as<StaticEvalObject>().isNonGlobal();
 }
 
 bool

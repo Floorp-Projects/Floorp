@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_WebCryptoTask_h
 #define mozilla_dom_WebCryptoTask_h
 
-#include "CryptoTask.h"
-
+#include "nsNSSShutDown.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/DOMException.h"
@@ -58,30 +57,15 @@ if (NS_FAILED(rv)) { \
   return; \
 }
 
-class WebCryptoTask : public CryptoTask
+class WebCryptoTask : public nsCancelableRunnable,
+                      public nsNSSShutDownObject
 {
 public:
-  virtual void DispatchWithPromise(Promise* aResultPromise)
+  virtual void DispatchWithPromise(Promise* aResultPromise);
+
+  void Skip()
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    mResultPromise = aResultPromise;
-
-    // Fail if an error was set during the constructor
-    MAYBE_EARLY_FAIL(mEarlyRv)
-
-    // Perform pre-NSS operations, and fail if they fail
-    mEarlyRv = BeforeCrypto();
-    MAYBE_EARLY_FAIL(mEarlyRv)
-
-    // Skip NSS if we're already done, or launch a CryptoTask
-    if (mEarlyComplete) {
-      CallCallback(mEarlyRv);
-      Skip();
-      return;
-    }
-
-     mEarlyRv = Dispatch("SubtleCrypto");
-     MAYBE_EARLY_FAIL(mEarlyRv)
+    virtualDestroyNSSReference();
   }
 
 protected:
@@ -184,7 +168,24 @@ protected:
   WebCryptoTask()
     : mEarlyRv(NS_OK)
     , mEarlyComplete(false)
+    , mOriginalThread(nullptr)
+    , mReleasedNSSResources(false)
+    , mRv(NS_ERROR_NOT_INITIALIZED)
   {}
+
+  virtual ~WebCryptoTask()
+  {
+    MOZ_ASSERT(mReleasedNSSResources);
+
+    nsNSSShutDownPreventionLock lock;
+    if (!isAlreadyShutDown()) {
+      shutdown(calledFromObject);
+    }
+  }
+
+  bool IsOnOriginalThread() {
+    return !mOriginalThread || NS_GetCurrentThread() == mOriginalThread;
+  }
 
   // For things that need to happen on the main thread
   // either before or after CalculateResult
@@ -198,11 +199,29 @@ protected:
 
   // Subclasses should override this method if they keep references to
   // any NSS objects, e.g., SECKEYPrivateKey or PK11SymKey.
-  virtual void ReleaseNSSResources() override {}
+  virtual void ReleaseNSSResources() {}
 
-  virtual nsresult CalculateResult() override final;
+  virtual nsresult CalculateResult() final;
 
-  virtual void CallCallback(nsresult rv) override final;
+  virtual void CallCallback(nsresult rv) final;
+
+private:
+  NS_IMETHOD Run() override final;
+
+  virtual void
+  virtualDestroyNSSReference() override final
+  {
+    MOZ_ASSERT(IsOnOriginalThread());
+
+    if (!mReleasedNSSResources) {
+      mReleasedNSSResources = true;
+      ReleaseNSSResources();
+    }
+  }
+
+  nsCOMPtr<nsIThread> mOriginalThread;
+  bool mReleasedNSSResources;
+  nsresult mRv;
 };
 
 // XXX This class is declared here (unlike others) to enable reuse by WebRTC.
@@ -214,7 +233,7 @@ public:
                             const Sequence<nsString>& aKeyUsages);
 protected:
   ScopedPLArenaPool mArena;
-  CryptoKeyPair mKeyPair;
+  UniquePtr<CryptoKeyPair> mKeyPair;
   nsString mAlgName;
   CK_MECHANISM_TYPE mMechanism;
   PK11RSAGenParams mRsaParams;
@@ -224,6 +243,7 @@ protected:
   virtual void ReleaseNSSResources() override;
   virtual nsresult DoCrypto() override;
   virtual void Resolve() override;
+  virtual void Cleanup() override;
 
 private:
   ScopedSECKEYPublicKey mPublicKey;

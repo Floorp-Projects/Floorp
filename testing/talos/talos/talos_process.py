@@ -53,7 +53,8 @@ class Reader(object):
             self.output.append(line)
 
 
-def run_browser(command, timeout=None, on_started=None, **kwargs):
+def run_browser(command, minidump_dir, timeout=None, on_started=None,
+                **kwargs):
     """
     Run the browser using the given `command`.
 
@@ -64,6 +65,9 @@ def run_browser(command, timeout=None, on_started=None, **kwargs):
     the end. If this is not possible, an exception will be raised.
 
     :param command: the commad (as a string list) to run the browser
+    :param minidump_dir: a path where to extract minidumps in case the
+                         browser hang. This have to be the same value
+                         used in `mozcrash.check_for_crashes`.
     :param timeout: if specified, timeout to wait for the browser before
                     we raise a :class:`TalosError`
     :param on_started: a callback that can be used to do things just after
@@ -92,7 +96,7 @@ def run_browser(command, timeout=None, on_started=None, **kwargs):
         # or the browser just terminated - or we have a timeout
         if not event.wait(timeout):
             # try to extract the minidump stack if the browser hangs
-            mozcrash.kill_and_get_minidump(proc.pid)
+            mozcrash.kill_and_get_minidump(proc.pid, minidump_dir)
             raise TalosError("timeout")
         if reader.got_end_timestamp:
             for i in range(1, wait_for_quit_timeout):

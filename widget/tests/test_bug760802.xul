@@ -22,8 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760802
   <script type="application/javascript"><![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function getBaseWindowInterface(win) {
   return win.QueryInterface(Ci.nsIInterfaceRequestor)

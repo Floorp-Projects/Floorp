@@ -45,7 +45,6 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 
-#include "jit/AtomicOperations-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;

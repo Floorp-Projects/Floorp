@@ -288,9 +288,14 @@ struct Zone : public JS::shadow::Zone,
     typedef js::Vector<JSCompartment*, 1, js::SystemAllocPolicy> CompartmentVector;
     CompartmentVector compartments;
 
-    // This compartment's gray roots.
+    // This zone's gray roots.
     typedef js::Vector<js::gc::Cell*, 0, js::SystemAllocPolicy> GrayRootVector;
     GrayRootVector gcGrayRoots;
+
+    // This zone's weak edges found via graph traversal during marking,
+    // preserved for re-scanning during sweeping.
+    using WeakEdges = js::Vector<js::gc::TenuredCell**, 0, js::SystemAllocPolicy>;
+    WeakEdges gcWeakRefs;
 
     // A set of edges from this zone to other zones.
     //

@@ -4,8 +4,8 @@
 // Tests getAdjustedQuads works properly in a variety of use cases including
 // iframes, scroll and zoom
 
-const {utils: Cu} = Components;
-let {getAdjustedQuads} = require("devtools/shared/layout/utils");
+var {utils: Cu} = Components;
+var {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
 

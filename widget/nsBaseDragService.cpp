@@ -670,7 +670,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
     imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
                        imgIContainer::FRAME_CURRENT,
-                       GraphicsFilter::FILTER_GOOD, Nothing(),
+                       Filter::GOOD, Nothing(),
                        imgIContainer::FLAG_SYNC_DECODE);
     *aSurface = dt->Snapshot();
   } else {

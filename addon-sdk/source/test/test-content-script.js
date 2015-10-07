@@ -727,7 +727,7 @@ exports["test requestAnimationFrame"] = createProxyTest("", function (helper) {
 exports["testGlobalScope"] = createProxyTest("", function (helper) {
 
   helper.createWorker(
-    'let toplevelScope = true;' +
+    'var toplevelScope = true;' +
     'assert(window.toplevelScope, "variables in toplevel scope are set to `window` object");' +
     'assert(this.toplevelScope, "variables in toplevel scope are set to `this` object");' +
     'done();'

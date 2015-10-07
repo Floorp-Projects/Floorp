@@ -2,10 +2,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-var NetUtil = tempScope.NetUtil;
-
 // Reference to the Scratchpad object.
 var gScratchpad;
 

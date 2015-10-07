@@ -68,9 +68,14 @@ template<Op OP>
 static void
 WalkTheTree(Layer* aLayer,
             bool& aReady,
-            const TargetConfig& aTargetConfig)
+            const TargetConfig& aTargetConfig,
+            CompositorParent* aCompositor,
+            bool& aHasRemote,
+            bool aWillResolvePlugins,
+            bool& aDidResolvePlugins)
 {
   if (RefLayer* ref = aLayer->AsRefLayer()) {
+    aHasRemote = true;
     if (const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(ref->GetReferentId())) {
       if (Layer* referent = state->mRoot) {
         if (!ref->GetVisibleRegion().IsEmpty()) {
@@ -84,16 +89,26 @@ WalkTheTree(Layer* aLayer,
 
         if (OP == Resolve) {
           ref->ConnectReferentLayer(referent);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+          if (aCompositor && aWillResolvePlugins) {
+            aDidResolvePlugins |=
+              aCompositor->UpdatePluginWindowState(ref->GetReferentId());
+          }
+#endif
         } else {
           ref->DetachReferentLayer(referent);
-          WalkTheTree<OP>(referent, aReady, aTargetConfig);
+          WalkTheTree<OP>(referent, aReady, aTargetConfig,
+                          aCompositor, aHasRemote, aWillResolvePlugins,
+                          aDidResolvePlugins);
         }
       }
     }
   }
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    WalkTheTree<OP>(child, aReady, aTargetConfig);
+    WalkTheTree<OP>(child, aReady, aTargetConfig,
+                    aCompositor, aHasRemote, aWillResolvePlugins,
+                    aDidResolvePlugins);
   }
 }
 
@@ -111,16 +126,35 @@ AsyncCompositionManager::~AsyncCompositionManager()
 }
 
 void
-AsyncCompositionManager::ResolveRefLayers()
+AsyncCompositionManager::ResolveRefLayers(CompositorParent* aCompositor,
+                                          bool* aHasRemoteContent,
+                                          bool* aResolvePlugins)
 {
+  if (aHasRemoteContent) {
+    *aHasRemoteContent = false;
+  }
+
   if (!mLayerManager->GetRoot()) {
     return;
   }
 
   mReadyForCompose = true;
+  bool hasRemoteContent = false;
+  bool willResolvePlugins = (aResolvePlugins && *aResolvePlugins);
+  bool didResolvePlugins = false;
   WalkTheTree<Resolve>(mLayerManager->GetRoot(),
                        mReadyForCompose,
-                       mTargetConfig);
+                       mTargetConfig,
+                       aCompositor,
+                       hasRemoteContent,
+                       willResolvePlugins,
+                       didResolvePlugins);
+  if (aHasRemoteContent) {
+    *aHasRemoteContent = hasRemoteContent;
+  }
+  if (aResolvePlugins) {
+    *aResolvePlugins = didResolvePlugins;
+  }
 }
 
 void
@@ -129,9 +163,13 @@ AsyncCompositionManager::DetachRefLayers()
   if (!mLayerManager->GetRoot()) {
     return;
   }
+  CompositorParent* dummy = nullptr;
+  bool ignored = false;
   WalkTheTree<Detach>(mLayerManager->GetRoot(),
                       mReadyForCompose,
-                      mTargetConfig);
+                      mTargetConfig,
+                      dummy,
+                      ignored, ignored, ignored);
 }
 
 void
