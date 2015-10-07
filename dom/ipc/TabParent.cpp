@@ -2085,7 +2085,7 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
     if (mTabSetsCursor) {
       const gfx::IntSize size(aWidth, aHeight);
 
-      mozilla::RefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
+      nsRefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
       mozilla::gfx::SourceSurfaceRawData* raw = static_cast<mozilla::gfx::SourceSurfaceRawData*>(customCursor.get());
       raw->InitWrappingData(
         reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aCursorData).BeginWriting()),
@@ -3581,7 +3581,7 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
 }
 
 void
-TabParent::TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
+TabParent::TakeDragVisualization(nsRefPtr<mozilla::gfx::SourceSurface>& aSurface,
                                  int32_t& aDragAreaX, int32_t& aDragAreaY)
 {
   aSurface = mDnDVisualization.forget();

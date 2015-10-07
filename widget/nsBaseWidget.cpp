@@ -1940,8 +1940,8 @@ nsIWidget::SnapshotWidgetOnScreen()
     return nullptr;
   }
 
-  RefPtr<gfx::DataSourceSurface> snapshot = GetSurfaceForDescriptor(surface);
-  RefPtr<gfx::DrawTarget> dt =
+  nsRefPtr<gfx::DataSourceSurface> snapshot = GetSurfaceForDescriptor(surface);
+  nsRefPtr<gfx::DrawTarget> dt =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(size, gfx::SurfaceFormat::B8G8R8A8);
   if (!snapshot || !dt) {
     forwarder->DestroySharedSurface(&surface);

@@ -35,7 +35,7 @@ MFTDecoder::Create(const GUID& aMFTClsID)
                         nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IMFTransform,
-                        reinterpret_cast<void**>(static_cast<IMFTransform**>(byRef(mDecoder))));
+                        reinterpret_cast<void**>(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   return S_OK;
@@ -71,8 +71,8 @@ MFTDecoder::SetMediaTypes(IMFMediaType* aInputType,
 already_AddRefed<IMFAttributes>
 MFTDecoder::GetAttributes()
 {
-  RefPtr<IMFAttributes> attr;
-  HRESULT hr = mDecoder->GetAttributes(byRef(attr));
+  nsRefPtr<IMFAttributes> attr;
+  HRESULT hr = mDecoder->GetAttributes(getter_AddRefs(attr));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
   return attr.forget();
 }
@@ -85,9 +85,9 @@ MFTDecoder::SetDecoderOutputType(ConfigureOutputCallback aCallback, void* aData)
   // Iterate the enumerate the output types, until we find one compatible
   // with what we need.
   HRESULT hr;
-  RefPtr<IMFMediaType> outputType;
+  nsRefPtr<IMFMediaType> outputType;
   UINT32 typeIndex = 0;
-  while (SUCCEEDED(mDecoder->GetOutputAvailableType(0, typeIndex++, byRef(outputType)))) {
+  while (SUCCEEDED(mDecoder->GetOutputAvailableType(0, typeIndex++, getter_AddRefs(outputType)))) {
     BOOL resultMatch;
     hr = mOutputType->Compare(outputType, MF_ATTRIBUTES_MATCH_OUR_ITEMS, &resultMatch);
     if (SUCCEEDED(hr) && resultMatch == TRUE) {
@@ -123,19 +123,19 @@ HRESULT
 MFTDecoder::CreateInputSample(const uint8_t* aData,
                               uint32_t aDataSize,
                               int64_t aTimestamp,
-                              RefPtr<IMFSample>* aOutSample)
+                              nsRefPtr<IMFSample>* aOutSample)
 {
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
 
   HRESULT hr;
-  RefPtr<IMFSample> sample;
-  hr = wmf::MFCreateSample(byRef(sample));
+  nsRefPtr<IMFSample> sample;
+  hr = wmf::MFCreateSample(getter_AddRefs(sample));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFMediaBuffer> buffer;
+  nsRefPtr<IMFMediaBuffer> buffer;
   int32_t bufferSize = std::max<uint32_t>(uint32_t(mInputStreamInfo.cbSize), aDataSize);
   UINT32 alignment = (mInputStreamInfo.cbAlignment > 1) ? mInputStreamInfo.cbAlignment - 1 : 0;
-  hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, byRef(buffer));
+  hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   DWORD maxLength = 0;
@@ -165,19 +165,19 @@ MFTDecoder::CreateInputSample(const uint8_t* aData,
 }
 
 HRESULT
-MFTDecoder::CreateOutputSample(RefPtr<IMFSample>* aOutSample)
+MFTDecoder::CreateOutputSample(nsRefPtr<IMFSample>* aOutSample)
 {
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
 
   HRESULT hr;
-  RefPtr<IMFSample> sample;
-  hr = wmf::MFCreateSample(byRef(sample));
+  nsRefPtr<IMFSample> sample;
+  hr = wmf::MFCreateSample(getter_AddRefs(sample));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFMediaBuffer> buffer;
+  nsRefPtr<IMFMediaBuffer> buffer;
   int32_t bufferSize = mOutputStreamInfo.cbSize;
   UINT32 alignment = (mOutputStreamInfo.cbAlignment > 1) ? mOutputStreamInfo.cbAlignment - 1 : 0;
-  hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, byRef(buffer));
+  hr = wmf::MFCreateAlignedMemoryBuffer(bufferSize, alignment, getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = sample->AddBuffer(buffer);
@@ -189,7 +189,7 @@ MFTDecoder::CreateOutputSample(RefPtr<IMFSample>* aOutSample)
 }
 
 HRESULT
-MFTDecoder::Output(RefPtr<IMFSample>* aOutput)
+MFTDecoder::Output(nsRefPtr<IMFSample>* aOutput)
 {
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
 
@@ -198,7 +198,7 @@ MFTDecoder::Output(RefPtr<IMFSample>* aOutput)
   MFT_OUTPUT_DATA_BUFFER output = {0};
 
   bool providedSample = false;
-  RefPtr<IMFSample> sample;
+  nsRefPtr<IMFSample> sample;
   if (*aOutput) {
     output.pSample = *aOutput;
     providedSample = true;
@@ -263,7 +263,7 @@ MFTDecoder::Input(const uint8_t* aData,
 {
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
 
-  RefPtr<IMFSample> input;
+  nsRefPtr<IMFSample> input;
   HRESULT hr = CreateInputSample(aData, aDataSize, aTimestamp, &input);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && input != nullptr, hr);
 
@@ -295,10 +295,10 @@ MFTDecoder::Flush()
 }
 
 HRESULT
-MFTDecoder::GetOutputMediaType(RefPtr<IMFMediaType>& aMediaType)
+MFTDecoder::GetOutputMediaType(nsRefPtr<IMFMediaType>& aMediaType)
 {
   NS_ENSURE_TRUE(mDecoder, E_POINTER);
-  return mDecoder->GetOutputCurrentType(0, byRef(aMediaType));
+  return mDecoder->GetOutputCurrentType(0, getter_AddRefs(aMediaType));
 }
 
 } // namespace mozilla

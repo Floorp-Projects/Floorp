@@ -478,7 +478,7 @@ void ShutdownTileCache()
 }
 
 void
-TileClient::PrivateProtector::Set(TileClient * const aContainer, RefPtr<TextureClient> aNewValue)
+TileClient::PrivateProtector::Set(TileClient * const aContainer, nsRefPtr<TextureClient> aNewValue)
 {
   if (mBuffer) {
     TileExpiry::RemoveTile(aContainer);
@@ -492,7 +492,7 @@ TileClient::PrivateProtector::Set(TileClient * const aContainer, RefPtr<TextureC
 void
 TileClient::PrivateProtector::Set(TileClient * const aContainer, TextureClient* aNewValue)
 {
-  Set(aContainer, RefPtr<TextureClient>(aNewValue));
+  Set(aContainer, nsRefPtr<TextureClient>(aNewValue));
 }
 
 // Placeholder
@@ -570,8 +570,8 @@ TileClient::Flip()
   if (mFrontBuffer && mFrontBuffer->GetIPDLActor() &&
       mCompositableClient && mCompositableClient->GetIPDLActor()) {
     // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
+    nsRefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+    nsRefPtr<AsyncTransactionTracker> tracker =
         new RemoveTextureFromCompositableTracker(waiter);
     // Hold TextureClient until transaction complete.
     tracker->SetTextureClient(mFrontBuffer);
@@ -582,13 +582,13 @@ TileClient::Flip()
                                                                       mFrontBuffer);
   }
 #endif
-  RefPtr<TextureClient> frontBuffer = mFrontBuffer;
-  RefPtr<TextureClient> frontBufferOnWhite = mFrontBufferOnWhite;
+  nsRefPtr<TextureClient> frontBuffer = mFrontBuffer;
+  nsRefPtr<TextureClient> frontBufferOnWhite = mFrontBufferOnWhite;
   mFrontBuffer = mBackBuffer;
   mFrontBufferOnWhite = mBackBufferOnWhite;
   mBackBuffer.Set(this, frontBuffer);
   mBackBufferOnWhite = frontBufferOnWhite;
-  RefPtr<gfxSharedReadLock> frontLock = mFrontLock;
+  nsRefPtr<gfxSharedReadLock> frontLock = mFrontLock;
   mFrontLock = mBackLock;
   mBackLock = frontLock;
   nsIntRegion invalidFront = mInvalidFront;
@@ -670,8 +670,8 @@ TileClient::DiscardFrontBuffer()
     if (mFrontBuffer->GetIPDLActor() &&
         mCompositableClient && mCompositableClient->GetIPDLActor()) {
       // remove old buffer from CompositableHost
-      RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-      RefPtr<AsyncTransactionTracker> tracker =
+      nsRefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+      nsRefPtr<AsyncTransactionTracker> tracker =
           new RemoveTextureFromCompositableTracker(waiter);
       // Hold TextureClient until transaction complete.
       tracker->SetTextureClient(mFrontBuffer);
@@ -736,7 +736,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
                           gfxContentType aContent,
                           SurfaceMode aMode,
                           nsIntRegion& aAddPaintedRegion,
-                          RefPtr<TextureClient>* aBackBufferOnWhite)
+                          nsRefPtr<TextureClient>* aBackBufferOnWhite)
 {
   // Try to re-use the front-buffer if possible
   bool createdTextureClient = false;
@@ -1002,7 +1002,7 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mSinglePaintDrawTarget = nullptr;
 }
 
-void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &region)
+void PadDrawTargetOutFromRegion(nsRefPtr<DrawTarget> drawTarget, nsIntRegion &region)
 {
   struct LockedBits {
     uint8_t *data;
@@ -1164,10 +1164,10 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
     }
     tileset.mTiles = &mMoz2DTiles[0];
     tileset.mTileCount = mMoz2DTiles.size();
-    RefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
+    nsRefPtr<DrawTarget> drawTarget = gfx::Factory::CreateTiledDrawTarget(tileset);
     drawTarget->SetTransform(Matrix());
 
-    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);
     ctx->SetMatrix(
       ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));
 
@@ -1208,7 +1208,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
         tileValidRegion = tileValidRegion.Intersect(tileRect);
         // translate the region into tile space and pad
         tileValidRegion.MoveBy(-IntPoint(tileOffset.x, tileOffset.y));
-        RefPtr<DrawTarget> drawTarget = tile.mFrontBuffer->BorrowDrawTarget();
+        nsRefPtr<DrawTarget> drawTarget = tile.mFrontBuffer->BorrowDrawTarget();
         PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
       }
     }
@@ -1251,8 +1251,8 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   MOZ_ASSERT(usingTiledDrawTarget || !!mSinglePaintDrawTarget);
 
   nsIntRegion extraPainted;
-  RefPtr<TextureClient> backBufferOnWhite;
-  RefPtr<TextureClient> backBuffer =
+  nsRefPtr<TextureClient> backBufferOnWhite;
+  nsRefPtr<TextureClient> backBuffer =
     aTile.GetBackBuffer(offsetScaledDirtyRegion,
                         content, mode,
                         extraPainted,
@@ -1270,8 +1270,8 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   if (usingTiledDrawTarget) {
     gfx::Tile moz2DTile;
-    RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
-    RefPtr<DrawTarget> dtOnWhite;
+    nsRefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
+    nsRefPtr<DrawTarget> dtOnWhite;
     if (backBufferOnWhite) {
       dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
       moz2DTile.mDrawTarget = Factory::CreateDualDrawTarget(dt, dtOnWhite);
@@ -1324,13 +1324,13 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   // We must not keep a reference to the DrawTarget after it has been unlocked,
   // make sure these are null'd before unlocking as destruction of the context
   // may cause the target to be flushed.
-  RefPtr<DrawTarget> drawTarget = backBuffer->BorrowDrawTarget();
+  nsRefPtr<DrawTarget> drawTarget = backBuffer->BorrowDrawTarget();
   drawTarget->SetTransform(Matrix());
 
-  RefPtr<gfxContext> ctxt = new gfxContext(drawTarget);
+  nsRefPtr<gfxContext> ctxt = new gfxContext(drawTarget);
 
   // XXX Perhaps we should just copy the bounding rectangle here?
-  RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
+  nsRefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
   nsIntRegionRectIterator it(aDirtyRegion);
   for (const IntRect* dirtyRect = it.Next(); dirtyRect != nullptr; dirtyRect = it.Next()) {
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS

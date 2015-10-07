@@ -6,7 +6,7 @@
 #ifndef GMPAudioDecoderParent_h_
 #define GMPAudioDecoderParent_h_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "gmp-audio-decode.h"
 #include "gmp-audio-codec.h"
 #include "mozilla/gmp/PGMPAudioDecoderParent.h"

@@ -370,13 +370,13 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   } else {
     // Not YCbCr at all. Try to get access to the raw data and convert.
 
-    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+    nsRefPtr<SourceSurface> surf = img->GetAsSourceSurface();
     if (!surf) {
       VP8LOG("Getting surface from %s image failed\n", Stringify(format).c_str());
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
+    nsRefPtr<DataSourceSurface> data = surf->GetDataSurface();
     if (!data) {
       VP8LOG("Getting data surface from %s image with %s (%s) surface failed\n",
              Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),

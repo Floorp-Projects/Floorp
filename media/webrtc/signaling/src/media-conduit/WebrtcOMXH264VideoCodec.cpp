@@ -100,7 +100,7 @@ public:
   }
 
 private:
-  RefPtr<layers::Image> mImage;
+  nsRefPtr<layers::Image> mImage;
 };
 
 struct EncodedFrame
@@ -518,7 +518,7 @@ public:
   // buffers back to native window for rendering.
   void OnNewFrame() override
   {
-    RefPtr<layers::TextureClient> buffer = mNativeWindow->getCurrentBuffer();
+    nsRefPtr<layers::TextureClient> buffer = mNativeWindow->getCurrentBuffer();
     if (!buffer) {
       CODEC_LOGE("Decoder NewFrame: Get null buffer");
       return;
@@ -645,7 +645,7 @@ private:
 
   sp<GonkNativeWindow> mNativeWindow;
 
-  RefPtr<OutputDrain> mOutputDrain;
+  nsRefPtr<OutputDrain> mOutputDrain;
   webrtc::DecodedImageCallback* mCallback;
 
   Mutex mDecodedFrameLock; // To protect mDecodedFrames and mEnding
@@ -1197,7 +1197,7 @@ WebrtcOMXH264VideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
                  this, aInputImage._buffer[sizeof(kNALStartCode)] & 0x1f, aInputImage._length);
       return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
     }
-    RefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,
+    nsRefPtr<WebrtcOMXDecoder> omx = new WebrtcOMXDecoder(MEDIA_MIMETYPE_VIDEO_AVC,
                                                         mCallback);
     result = omx->ConfigureWithPicDimensions(width, height);
     if (NS_WARN_IF(result != OK)) {

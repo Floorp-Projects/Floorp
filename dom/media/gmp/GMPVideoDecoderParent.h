@@ -6,7 +6,7 @@
 #ifndef GMPVideoDecoderParent_h_
 #define GMPVideoDecoderParent_h_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "gmp-video-decode.h"
 #include "mozilla/gmp/PGMPVideoDecoderParent.h"
 #include "GMPMessageUtils.h"

@@ -69,9 +69,9 @@ private:
     ~gfxPattern() {}
 
     mozilla::gfx::GeneralPattern mGfxPattern;
-    mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
+    nsRefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     mozilla::gfx::Matrix mPatternToUserSpace;
-    mozilla::RefPtr<mozilla::gfx::GradientStops> mStops;
+    nsRefPtr<mozilla::gfx::GradientStops> mStops;
     nsTArray<mozilla::gfx::GradientStop> mStopsList;
     mozilla::gfx::ExtendMode mExtend;
 };

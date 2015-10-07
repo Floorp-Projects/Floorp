@@ -5,7 +5,7 @@
 #ifndef MEDIAENGINE_H_
 #define MEDIAENGINE_H_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "DOMMediaStream.h"
 #include "MediaStreamGraph.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"

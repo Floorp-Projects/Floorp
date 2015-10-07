@@ -1227,7 +1227,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     // If the renderer is backed by an IOSurface, resize it as required.
     mIOSurface = MacIOSurface::CreateIOSurface(aWidth, aHeight, scaleFactor);
     if (mIOSurface) {
-      RefPtr<MacIOSurface> attachSurface = MacIOSurface::LookupSurface(
+      nsRefPtr<MacIOSurface> attachSurface = MacIOSurface::LookupSurface(
                                               mIOSurface->GetIOSurfaceID(),
                                               scaleFactor);
       if (attachSurface) {

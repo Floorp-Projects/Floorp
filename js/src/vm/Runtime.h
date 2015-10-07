@@ -1782,7 +1782,7 @@ struct JSRuntime : public JS::shadow::Runtime,
          *
          * They are cleared by `commit()` and `reset()`.
          */
-        mozilla::Vector<mozilla::RefPtr<js::PerformanceGroup>> touchedGroups;
+        mozilla::Vector<nsRefPtr<js::PerformanceGroup>> touchedGroups;
     };
     Stopwatch stopwatch;
 };

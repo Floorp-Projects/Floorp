@@ -51,12 +51,12 @@ nsDragServiceProxy::InvokeDragSession(nsIDOMNode* aDOMNode,
   if (mHasImage || mSelection) {
     nsIntRect dragRect;
     nsPresContext* pc;
-    mozilla::RefPtr<mozilla::gfx::SourceSurface> surface;
+    nsRefPtr<mozilla::gfx::SourceSurface> surface;
     DrawDrag(mSourceNode, aRegion, mScreenX, mScreenY,
              &dragRect, &surface, &pc);
 
     if (surface) {
-      mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+      nsRefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
         surface->GetDataSurface();
       mozilla::gfx::IntSize size = dataSurface->GetSize();
 

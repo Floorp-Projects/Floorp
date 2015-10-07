@@ -15,5 +15,5 @@ public:
   TestDrawTargetD2D();
 
 private:
-  mozilla::RefPtr<ID3D10Device1> mDevice;
+  nsRefPtr<ID3D10Device1> mDevice;
 };

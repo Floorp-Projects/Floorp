@@ -6832,7 +6832,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     // (that would result in terrible performance), so we convert once here
     // upfront if aTarget is specified.
     if (aTarget) {
-      RefPtr<SourceSurface> optSurface =
+      nsRefPtr<SourceSurface> optSurface =
         aTarget->OptimizeSourceSurface(result.mSourceSurface);
       if (optSurface) {
         result.mSourceSurface = optSurface;
@@ -6886,13 +6886,13 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
      // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
      // draw nothing, so return an empty surface.
      DrawTarget *ref = aTarget ? aTarget : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-     RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
+     nsRefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
                                                           SurfaceFormat::B8G8R8A8);
      if (dt) {
        result.mSourceSurface = dt->Snapshot();
      }
   } else if (aTarget) {
-    RefPtr<SourceSurface> opt = aTarget->OptimizeSourceSurface(result.mSourceSurface);
+    nsRefPtr<SourceSurface> opt = aTarget->OptimizeSourceSurface(result.mSourceSurface);
     if (opt) {
       result.mSourceSurface = opt;
     }
@@ -6952,7 +6952,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
     return result;
 
   if (aTarget) {
-    RefPtr<SourceSurface> opt = aTarget->OptimizeSourceSurface(result.mSourceSurface);
+    nsRefPtr<SourceSurface> opt = aTarget->OptimizeSourceSurface(result.mSourceSurface);
     if (opt) {
       result.mSourceSurface = opt;
     }

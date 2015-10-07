@@ -57,7 +57,7 @@ VolumeServiceIOThread::UpdateAllVolumes()
   VolumeManager::VolumeArray::index_type volIndex;
 
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<Volume>  vol = VolumeManager::GetVolume(volIndex);
     mVolumeService->UpdateVolumeIOThread(vol);
   }
 }

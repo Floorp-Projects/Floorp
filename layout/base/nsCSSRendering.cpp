@@ -1377,7 +1377,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       {
         // Clip out the interior of the frame's border edge so that the shadow
         // is only painted outside that area.
-        RefPtr<PathBuilder> builder =
+        nsRefPtr<PathBuilder> builder =
           aDrawTarget.CreatePathBuilder(FillRule::FILL_EVEN_ODD);
         AppendRectToPath(builder, shadowGfxRectPlusBlur);
         if (hasBorderRadius) {
@@ -1385,7 +1385,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
         } else {
           AppendRectToPath(builder, frameGfxRect);
         }
-        RefPtr<Path> path = builder->Finish();
+        nsRefPtr<Path> path = builder->Finish();
         renderContext->Clip(path);
       }
 
@@ -1597,7 +1597,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     // This clips the outside border radius.
     // clipRectRadii is the border radius inside the inset shadow.
     if (hasBorderRadius) {
-      RefPtr<Path> roundedRect =
+      nsRefPtr<Path> roundedRect =
         MakePathForRoundedRect(*drawTarget, shadowGfxRect, innerRadii);
       renderContext->Clip(roundedRect);
     } else {
@@ -1882,7 +1882,7 @@ SetupBackgroundClip(nsCSSRendering::BackgroundClipState& aClipState,
 
     aAutoSR->EnsureSaved(aCtx);
 
-    RefPtr<Path> roundedRect =
+    nsRefPtr<Path> roundedRect =
       MakePathForRoundedRect(*drawTarget, bgAreaGfx, aClipState.mClippedRadii);
     aCtx->Clip(roundedRect);
   }
@@ -1938,7 +1938,7 @@ DrawBackgroundColor(nsCSSRendering::BackgroundClipState& aClipState,
     aCtx->Clip();
   }
 
-  RefPtr<Path> roundedRect =
+  nsRefPtr<Path> roundedRect =
     MakePathForRoundedRect(*drawTarget, bgAreaGfx, aClipState.mClippedRadii);
   aCtx->SetPath(roundedRect);
   aCtx->Fill();
@@ -2733,7 +2733,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     rawStops[i].color = stops[i].mColor;
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
-  mozilla::RefPtr<mozilla::gfx::GradientStops> gs =
+  nsRefPtr<mozilla::gfx::GradientStops> gs =
     gfxGradientCache::GetOrCreateGradientStops(ctx->GetDrawTarget(),
                                                rawStops,
                                                isRepeat ? gfx::ExtendMode::REPEAT : gfx::ExtendMode::CLAMP);
@@ -3787,13 +3787,13 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
       poly[3].y -= endBevelOffset;
     }
 
-    RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+    nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
     builder->MoveTo(poly[0]);
     builder->LineTo(poly[1]);
     builder->LineTo(poly[2]);
     builder->LineTo(poly[3]);
     builder->Close();
-    RefPtr<Path> path = builder->Finish();
+    nsRefPtr<Path> path = builder->Finish();
     drawTarget->Fill(path, color, drawOptions);
   }
 }
@@ -4349,8 +4349,8 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
         iCoordLimit -= skipCycles * cycleLength;
       }
 
-      RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-      RefPtr<Path> path;
+      nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+      nsRefPtr<Path> path;
 
       ptICoord -= lineThickness;
       builder->MoveTo(pt); // 1
@@ -5418,7 +5418,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   if (aBlurRadius <= 0) {
     ColorPattern color(ToDeviceColor(aShadowColor));
     if (aCornerRadii) {
-      RefPtr<Path> roundedRect = MakePathForRoundedRect(aDestDrawTarget,
+      nsRefPtr<Path> roundedRect = MakePathForRoundedRect(aDestDrawTarget,
                                                         shadowGfxRect,
                                                         *aCornerRadii);
       aDestDrawTarget.Fill(roundedRect, color);

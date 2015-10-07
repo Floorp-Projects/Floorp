@@ -146,8 +146,8 @@ TextureImageEGL::EndUpdate()
     // a fast mapping between our cairo target surface and the GL
     // texture, so we have to upload data.
 
-    RefPtr<gfx::SourceSurface> updateSurface = nullptr;
-    RefPtr<gfx::DataSourceSurface> uploadImage = nullptr;
+    nsRefPtr<gfx::SourceSurface> updateSurface = nullptr;
+    nsRefPtr<gfx::DataSourceSurface> uploadImage = nullptr;
     gfx::IntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
     NS_ASSERTION(mUpdateDrawTarget->GetSize() == updateSize,

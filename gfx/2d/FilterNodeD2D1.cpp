@@ -544,17 +544,17 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
     return MakeAndAddRef<FilterNodeConvolveD2D1>(aDC);
   }
 
-  RefPtr<ID2D1Effect> effect;
+  nsRefPtr<ID2D1Effect> effect;
   HRESULT hr;
 
-  hr = aDC->CreateEffect(GetCLDIDForFilterType(aType), byRef(effect));
+  hr = aDC->CreateEffect(GetCLDIDForFilterType(aType), getter_AddRefs(effect));
 
   if (FAILED(hr) || !effect) {
     gfxCriticalErrorOnce() << "Failed to create effect for FilterType: " << hexa(hr);
     return nullptr;
   }
 
-  RefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
+  nsRefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
 
   if (IsTransferFilterType(aType) || aType == FilterType::COLOR_MATRIX) {
     // These filters can produce non-transparent output from transparent
@@ -664,13 +664,13 @@ FilterNodeD2D1::WillDraw(DrawTarget *aDT)
   for (size_t inputIndex = 0; inputIndex < mInputSurfaces.size(); inputIndex++) {
     if (mInputSurfaces[inputIndex]) {
       ID2D1Effect* effect = InputEffect();
-      RefPtr<ID2D1Image> image = GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
+      nsRefPtr<ID2D1Image> image = GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
       effect->SetInput(inputIndex, image);
     }
   }
 
   // Call WillDraw() on our input filters.
-  for (std::vector<RefPtr<FilterNodeD2D1>>::iterator it = mInputFilters.begin();
+  for (std::vector<nsRefPtr<FilterNodeD2D1>>::iterator it = mInputFilters.begin();
        it != mInputFilters.end(); it++) {
     if (*it) {
       (*it)->WillDraw(aDT);
@@ -857,7 +857,7 @@ FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
 
   HRESULT hr;
   
-  hr = aDC->CreateEffect(CLSID_D2D1ConvolveMatrix, byRef(mEffect));
+  hr = aDC->CreateEffect(CLSID_D2D1ConvolveMatrix, getter_AddRefs(mEffect));
 
   if (FAILED(hr) || !mEffect) {
     gfxWarning() << "Failed to create ConvolveMatrix filter!";
@@ -866,14 +866,14 @@ FilterNodeConvolveD2D1::FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC)
 
   mEffect->SetValue(D2D1_CONVOLVEMATRIX_PROP_BORDER_MODE, D2D1_BORDER_MODE_SOFT);
 
-  hr = aDC->CreateEffect(CLSID_ExtendInputEffect, byRef(mExtendInputEffect));
+  hr = aDC->CreateEffect(CLSID_ExtendInputEffect, getter_AddRefs(mExtendInputEffect));
 
   if (FAILED(hr) || !mExtendInputEffect) {
     gfxWarning() << "Failed to create ConvolveMatrix filter!";
     return;
   }
 
-  hr = aDC->CreateEffect(CLSID_D2D1Border, byRef(mBorderEffect));
+  hr = aDC->CreateEffect(CLSID_D2D1Border, getter_AddRefs(mBorderEffect));
 
   if (FAILED(hr) || !mBorderEffect) {
     gfxWarning() << "Failed to create ConvolveMatrix filter!";
@@ -929,7 +929,7 @@ FilterNodeConvolveD2D1::UpdateChain()
     mEffect->SetInputEffect(0, mBorderEffect.get());
   }
 
-  RefPtr<ID2D1Effect> inputEffect;
+  nsRefPtr<ID2D1Effect> inputEffect;
   if (mInputFilters.size() > 0 && mInputFilters[0]) {
     inputEffect = mInputFilters[0]->OutputEffect();
   }
@@ -1016,7 +1016,7 @@ FilterNodeExtendInputAdapterD2D1::FilterNodeExtendInputAdapterD2D1(ID2D1DeviceCo
 
   HRESULT hr;
 
-  hr = aDC->CreateEffect(CLSID_ExtendInputEffect, byRef(mExtendInputEffect));
+  hr = aDC->CreateEffect(CLSID_ExtendInputEffect, getter_AddRefs(mExtendInputEffect));
 
   if (FAILED(hr) || !mExtendInputEffect) {
     gfxWarning() << "Failed to create extend input effect for filter: " << hexa(hr);
@@ -1060,14 +1060,14 @@ FilterNodePremultiplyAdapterD2D1::FilterNodePremultiplyAdapterD2D1(ID2D1DeviceCo
   // filters is part of the FilterNode API.
   HRESULT hr;
 
-  hr = aDC->CreateEffect(CLSID_D2D1Premultiply, byRef(mPrePremultiplyEffect));
+  hr = aDC->CreateEffect(CLSID_D2D1Premultiply, getter_AddRefs(mPrePremultiplyEffect));
 
   if (FAILED(hr) || !mPrePremultiplyEffect) {
     gfxWarning() << "Failed to create ComponentTransfer filter!";
     return;
   }
 
-  hr = aDC->CreateEffect(CLSID_D2D1UnPremultiply, byRef(mPostUnpremultiplyEffect));
+  hr = aDC->CreateEffect(CLSID_D2D1UnPremultiply, getter_AddRefs(mPostUnpremultiplyEffect));
 
   if (FAILED(hr) || !mPostUnpremultiplyEffect) {
     gfxWarning() << "Failed to create ComponentTransfer filter!";

@@ -69,7 +69,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     }
     memset(mData, 0, blurDataSize);
 
-    mozilla::RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
         gfxPlatform::GetPlatform()->CreateDrawTargetForData(mData, size,
                                                             mBlur->GetStride(),
                                                             SurfaceFormat::A8);
@@ -144,7 +144,7 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
     Rect* dirtyRect = mBlur->GetDirtyRect();
 
     IntPoint topLeft;
-    RefPtr<SourceSurface> mask = DoBlur(dest, &topLeft);
+    nsRefPtr<SourceSurface> mask = DoBlur(dest, &topLeft);
     if (!mask) {
       NS_ERROR("Failed to create mask!");
       return;
@@ -294,7 +294,7 @@ struct BlurCacheData {
   }
 
   nsExpirationState mExpirationState;
-  RefPtr<SourceSurface> mBlur;
+  nsRefPtr<SourceSurface> mBlur;
   IntMargin mExtendDest;
   BlurCacheKey mKey;
 };
@@ -473,7 +473,7 @@ CreateBlurMask(const IntSize& aRectSize,
   ColorPattern black(Color(0.f, 0.f, 0.f, 1.f));
 
   if (aCornerRadii) {
-    RefPtr<Path> roundedRect =
+    nsRefPtr<Path> roundedRect =
       MakePathForRoundedRect(*blurDT, Rect(minRect), *aCornerRadii);
     blurDT->Fill(roundedRect, black);
   } else {
@@ -481,7 +481,7 @@ CreateBlurMask(const IntSize& aRectSize,
   }
 
   IntPoint topLeft;
-  RefPtr<SourceSurface> result = blur.DoBlur(&aDestDrawTarget, &topLeft);
+  nsRefPtr<SourceSurface> result = blur.DoBlur(&aDestDrawTarget, &topLeft);
   if (!result) {
     return nullptr;
   }
@@ -501,7 +501,7 @@ CreateBoxShadow(SourceSurface* aBlurMask, const Color& aShadowColor)
 {
   IntSize blurredSize = aBlurMask->GetSize();
   gfxPlatform* platform = gfxPlatform::GetPlatform();
-  RefPtr<DrawTarget> boxShadowDT =
+  nsRefPtr<DrawTarget> boxShadowDT =
     platform->CreateOffscreenContentDrawTarget(blurredSize, SurfaceFormat::B8G8R8A8);
 
   if (!boxShadowDT) {
@@ -539,14 +539,14 @@ GetBlur(DrawTarget& aDT,
     return cached->mBlur;
   }
 
-  RefPtr<SourceSurface> blurMask =
+  nsRefPtr<SourceSurface> blurMask =
     CreateBlurMask(aRectSize, aCornerRadii, aBlurRadius, aExtendDestBy, aSlice, aDT);
 
   if (!blurMask) {
     return nullptr;
   }
 
-  RefPtr<SourceSurface> boxShadow = CreateBoxShadow(blurMask, aShadowColor);
+  nsRefPtr<SourceSurface> boxShadow = CreateBoxShadow(blurMask, aShadowColor);
   if (!boxShadow) {
     return nullptr;
   }
@@ -697,7 +697,7 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   IntMargin extendDestBy;
   IntMargin slice;
 
-  RefPtr<SourceSurface> boxShadow = GetBlur(destDrawTarget,
+  nsRefPtr<SourceSurface> boxShadow = GetBlur(destDrawTarget,
                                             rect.Size(), blurRadius,
                                             aCornerRadii, aShadowColor,
                                             extendDestBy, slice);
@@ -776,7 +776,7 @@ GetBoxShadowInsetPath(DrawTarget* aDrawTarget,
    * The outer rect and the inside rect. The path
    * creates a frame around the content where we draw the inset shadow.
    */
-  RefPtr<PathBuilder> builder =
+  nsRefPtr<PathBuilder> builder =
     aDrawTarget->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
   AppendRectToPath(builder, aOuterRect, true);
 
@@ -852,7 +852,7 @@ FillDestinationPath(gfxContext* aDestinationCtx,
   // surface.
   aDestinationCtx->SetColor(aShadowColor);
   DrawTarget* destDrawTarget = aDestinationCtx->GetDrawTarget();
-  RefPtr<Path> shadowPath = GetBoxShadowInsetPath(destDrawTarget, aDestinationRect,
+  nsRefPtr<Path> shadowPath = GetBoxShadowInsetPath(destDrawTarget, aDestinationRect,
                                                   aShadowClipRect, aHasBorderRadius,
                                                   aInnerClipRadii);
 
@@ -912,7 +912,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
     aOutTopLeft.x = extends.left;
     aOutTopLeft.y = extends.top;
     // So we don't forget the actual cached blur
-    RefPtr<SourceSurface> cachedBlur = cached->mBlur;
+    nsRefPtr<SourceSurface> cachedBlur = cached->mBlur;
     return cachedBlur.forget();
   }
 
@@ -926,7 +926,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
   }
 
   DrawTarget* minDrawTarget = minGfxContext->GetDrawTarget();
-  RefPtr<Path> maskPath = GetBoxShadowInsetPath(minDrawTarget, aOuterRect,
+  nsRefPtr<Path> maskPath = GetBoxShadowInsetPath(minDrawTarget, aOuterRect,
                                                 aInnerRect, aHasBorderRadius,
                                                 aInnerClipRadii);
 
@@ -934,12 +934,12 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
   minGfxContext->SetPath(maskPath);
   minGfxContext->Fill();
 
-  RefPtr<SourceSurface> minMask = DoBlur(minDrawTarget, &aOutTopLeft);
+  nsRefPtr<SourceSurface> minMask = DoBlur(minDrawTarget, &aOutTopLeft);
   if (!minMask) {
     return nullptr;
   }
 
-  RefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(minMask, aShadowColor);
+  nsRefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(minMask, aShadowColor);
   if (!minInsetBlur) {
     return nullptr;
   }
@@ -992,7 +992,7 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
                                 aInnerClipRadii);
 
   IntPoint topLeft;
-  RefPtr<SourceSurface> minInsetBlur = GetInsetBlur(outerRect, innerRect,
+  nsRefPtr<SourceSurface> minInsetBlur = GetInsetBlur(outerRect, innerRect,
                                                     aBlurRadius, aSpreadRadius,
                                                     aInnerClipRadii, aShadowColor,
                                                     aHasBorderRadius,

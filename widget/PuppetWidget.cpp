@@ -875,14 +875,14 @@ PuppetWidget::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
-  RefPtr<mozilla::gfx::SourceSurface> surface =
+  nsRefPtr<mozilla::gfx::SourceSurface> surface =
     aCursor->GetFrame(imgIContainer::FRAME_CURRENT,
                       imgIContainer::FLAG_SYNC_DECODE);
   if (!surface) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+  nsRefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
     surface->GetDataSurface();
   size_t length;
   int32_t stride;

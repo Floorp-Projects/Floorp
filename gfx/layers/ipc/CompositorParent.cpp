@@ -703,7 +703,7 @@ bool
 CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                    const gfx::IntRect& aRect)
 {
-  RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
+  nsRefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
   ForceComposeToTarget(target, &aRect);
   return true;
 }
@@ -715,7 +715,7 @@ CompositorParent::RecvMakeWidgetSnapshot(const SurfaceDescriptor& aInSnapshot)
     return false;
   }
 
-  RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
+  nsRefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
   mCompositor->GetWidget()->CaptureWidgetOnScreen(target);
   return true;
 }
@@ -1346,7 +1346,7 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
   NS_ASSERTION(!mCompositor,   "Already initialised mCompositor");
 
   for (size_t i = 0; i < aBackendHints.Length(); ++i) {
-    RefPtr<Compositor> compositor;
+    nsRefPtr<Compositor> compositor;
     if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
       compositor = new CompositorOGL(mWidget,
                                      mEGLSurfaceSize.width,
@@ -1376,7 +1376,7 @@ CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackend
     }
 
     compositor->SetCompositorID(mCompositorID);
-    RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
+    nsRefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);
 
     if (layerManager->Initialize()) {
       mLayerManager = layerManager;

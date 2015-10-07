@@ -174,7 +174,7 @@ public:
 
   virtual already_AddRefed<DataSourceSurface> GetDataSurface()
   {
-    RefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurface(GetSize(), GetFormat());
+    nsRefPtr<DataSourceSurface> surf = Factory::CreateDataSourceSurface(GetSize(), GetFormat());
 
     DataSourceSurface::MappedSurface mappedSurf;
     if (!surf->Map(DataSourceSurface::MapType::WRITE, &mappedSurf)) {
@@ -183,7 +183,7 @@ public:
     }
 
     {
-      RefPtr<DrawTarget> dt =
+      nsRefPtr<DrawTarget> dt =
         Factory::CreateDrawTargetForData(BackendType::CAIRO, mappedSurf.mData,
         GetSize(), mappedSurf.mStride, GetFormat());
 
@@ -193,7 +193,7 @@ public:
         return nullptr;
       }
       for (size_t i = 0; i < mSnapshots.size(); i++) {
-        RefPtr<DataSourceSurface> dataSurf = mSnapshots[i]->GetDataSurface();
+        nsRefPtr<DataSourceSurface> dataSurf = mSnapshots[i]->GetDataSurface();
         dt->CopySurface(dataSurf, IntRect(IntPoint(0, 0), mSnapshots[i]->GetSize()), mOrigins[i]);
       }
     }
@@ -202,7 +202,7 @@ public:
     return surf.forget();
   }
 
-  std::vector<RefPtr<SourceSurface>> mSnapshots;
+  std::vector<nsRefPtr<SourceSurface>> mSnapshots;
   std::vector<IntPoint> mOrigins;
   IntRect mRect;
 };

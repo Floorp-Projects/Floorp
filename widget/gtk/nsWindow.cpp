@@ -2166,7 +2166,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
 
-    RefPtr<DrawTarget> dt = GetDrawTarget(region);
+    nsRefPtr<DrawTarget> dt = GetDrawTarget(region);
     if(!dt) {
         return FALSE;
     }
@@ -2282,7 +2282,7 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
                                          aBoundsRect.width);
     int32_t bufferSize = stride * aBoundsRect.height;
     nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[bufferSize]);
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateDrawTargetForData(imageBuffer, aBoundsRect.Size(),
                                 stride, SurfaceFormat::A8);
 
@@ -6325,7 +6325,7 @@ nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
     return nullptr;
   }
 
-  RefPtr<DrawTarget> dt;
+  nsRefPtr<DrawTarget> dt;
 
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
@@ -6336,7 +6336,7 @@ nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
   }
 #  endif  // MOZ_HAVE_SHMIMAGE
   if (!dt) {
-    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size);
+    nsRefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size);
     if (!surf->CairoStatus()) {
       dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
     }

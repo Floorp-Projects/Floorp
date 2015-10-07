@@ -9,7 +9,7 @@
 #include "ImageWrapper.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 namespace image {
@@ -68,7 +68,7 @@ protected:
   virtual ~ClippedImage();
 
 private:
-  Pair<DrawResult, RefPtr<SourceSurface>>
+  Pair<DrawResult, nsRefPtr<SourceSurface>>
     GetFrameInternal(const nsIntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,

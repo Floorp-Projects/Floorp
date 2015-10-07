@@ -55,9 +55,9 @@ MacIOSurfaceTextureHostOGL::Lock()
   if (!mTextureSource) {
     mTextureSource = CreateTextureSourceForPlane(0);
 
-    RefPtr<TextureSource> prev = mTextureSource;
+    nsRefPtr<TextureSource> prev = mTextureSource;
     for (size_t i = 1; i < mSurface->GetPlaneCount(); i++) {
-      RefPtr<TextureSource> next = CreateTextureSourceForPlane(i);
+      nsRefPtr<TextureSource> next = CreateTextureSourceForPlane(i);
       prev->SetNextSibling(next);
       prev = next;
     }

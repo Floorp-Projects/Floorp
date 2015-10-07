@@ -6,7 +6,7 @@
 #ifndef GFX_D311_SHARE_HANDLE_IMAGE_H
 #define GFX_D311_SHARE_HANDLE_IMAGE_H
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "ImageContainer.h"
 #include "nsAutoPtr.h"
 #include "d3d11.h"
@@ -38,7 +38,7 @@ protected:
            TextureFlags aTextureFlags,
            TextureAllocationFlags aAllocFlags) override;
 
-  RefPtr<ID3D11Device> mDevice;
+  nsRefPtr<ID3D11Device> mDevice;
 };
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image
@@ -55,7 +55,7 @@ public:
       : mAllocator(aAllocator)
       , mSize(aSize)
       , mRegion(aRegion) {}
-    RefPtr<D3D11RecycleAllocator> mAllocator;
+    nsRefPtr<D3D11RecycleAllocator> mAllocator;
     gfx::IntSize mSize;
     gfx::IntRect mRegion;
   };
@@ -81,7 +81,7 @@ private:
 
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  RefPtr<TextureClientD3D11> mTextureClient;
+  nsRefPtr<TextureClientD3D11> mTextureClient;
 };
 
 } // namepace layers

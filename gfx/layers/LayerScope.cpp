@@ -1052,7 +1052,7 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
 
     // By sending 0 to ReadTextureImage rely upon aSource->BindTexture binding
     // texture correctly. texID is used for tracking in DebugGLTextureData.
-    RefPtr<DataSourceSurface> img =
+    nsRefPtr<DataSourceSurface> img =
         aGLContext->ReadTexImageHelper()->ReadTexImage(0, textureTarget,
                                                          size,
                                                          shaderConfig, aFlipY);

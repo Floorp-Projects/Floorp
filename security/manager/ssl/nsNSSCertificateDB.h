@@ -7,7 +7,7 @@
 
 #include "nsIX509CertDB.h"
 #include "nsNSSShutDown.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Mutex.h"
 #include "certt.h"
 

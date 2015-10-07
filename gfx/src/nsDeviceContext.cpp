@@ -409,7 +409,7 @@ nsDeviceContext::CreateRenderingContext()
     }
 #endif
 
-    RefPtr<gfx::DrawTarget> dt =
+    nsRefPtr<gfx::DrawTarget> dt =
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(printingSurface,
                                                              gfx::IntSize(mWidth, mHeight));
 
