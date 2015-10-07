@@ -968,9 +968,8 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
                                     NS_GET_IID(nsINetworkInterceptController),
                                     getter_AddRefs(controller));
 
-      bool isNavigation = mLoadFlags & LOAD_DOCUMENT_URI;
       nsRefPtr<InterceptedJARChannel> intercepted =
-        new InterceptedJARChannel(this, controller, isNavigation);
+        new InterceptedJARChannel(this, controller);
       intercepted->NotifyController();
 
       // We get the JAREntry so we can infer the content type later in case

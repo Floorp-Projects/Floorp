@@ -13,11 +13,9 @@ using namespace mozilla::net;
 NS_IMPL_ISUPPORTS(InterceptedJARChannel, nsIInterceptedChannel)
 
 InterceptedJARChannel::InterceptedJARChannel(nsJARChannel* aChannel,
-                                             nsINetworkInterceptController* aController,
-                                             bool aIsNavigation)
+                                             nsINetworkInterceptController* aController)
 : mController(aController)
 , mChannel(aChannel)
-, mIsNavigation(aIsNavigation)
 {
 }
 
@@ -29,9 +27,14 @@ InterceptedJARChannel::GetResponseBody(nsIOutputStream** aStream)
 }
 
 NS_IMETHODIMP
-InterceptedJARChannel::GetIsNavigation(bool* aIsNavigation)
+InterceptedJARChannel::GetInternalContentPolicyType(nsContentPolicyType* aPolicyType)
 {
-  *aIsNavigation = mIsNavigation;
+  NS_ENSURE_ARG(aPolicyType);
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aPolicyType = loadInfo->InternalContentPolicyType();
   return NS_OK;
 }
 
