@@ -12,7 +12,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "nsIThread.h"
 #include "nsSize.h"
@@ -278,15 +278,15 @@ CreateFlushableMediaDecodeTaskQueue();
 // Iteratively invokes aWork until aCondition returns true, or aWork returns false.
 // Use this rather than a while loop to avoid bogarting the task queue.
 template<class Work, class Condition>
-RefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
-  RefPtr<GenericPromise::Private> p = new GenericPromise::Private(__func__);
+nsRefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
+  nsRefPtr<GenericPromise::Private> p = new GenericPromise::Private(__func__);
 
   if (aCondition()) {
     p->Resolve(true, __func__);
   }
 
   struct Helper {
-    static void Iteration(RefPtr<GenericPromise::Private> aPromise, Work aLocalWork, Condition aLocalCondition) {
+    static void Iteration(nsRefPtr<GenericPromise::Private> aPromise, Work aLocalWork, Condition aLocalCondition) {
       if (!aLocalWork()) {
         aPromise->Reject(NS_ERROR_FAILURE, __func__);
       } else if (aLocalCondition()) {
@@ -322,7 +322,7 @@ private:
   virtual ~SimpleTimer() {}
   nsresult Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget);
 
-  RefPtr<nsIRunnable> mTask;
+  nsRefPtr<nsIRunnable> mTask;
   nsCOMPtr<nsITimer> mTimer;
 };
 

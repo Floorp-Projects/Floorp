@@ -88,7 +88,7 @@ public:
     return mIndex;
   }
 
-  void GetButtons(nsTArray<RefPtr<GamepadButton>>& aButtons) const
+  void GetButtons(nsTArray<nsRefPtr<GamepadButton>>& aButtons) const
   {
     aButtons = mButtons;
   }
@@ -114,7 +114,7 @@ protected:
   bool mConnected;
 
   // Current state of buttons, axes.
-  nsTArray<RefPtr<GamepadButton>> mButtons;
+  nsTArray<nsRefPtr<GamepadButton>> mButtons;
   nsTArray<double> mAxes;
   DOMHighResTimeStamp mTimestamp;
 };

@@ -45,7 +45,7 @@ private:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  RefPtr<BroadcastChannelService> mService;
+  nsRefPtr<BroadcastChannelService> mService;
   nsCString mOrigin;
   nsString mChannel;
   bool mPrivateBrowsing;

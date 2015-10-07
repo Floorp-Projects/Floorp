@@ -170,13 +170,13 @@ class ReadAirplaneModeSettingTask final : public nsISettingsServiceCallback
 public:
   NS_DECL_ISUPPORTS
 
-  ReadAirplaneModeSettingTask(RefPtr<FMRadioReplyRunnable> aPendingRequest)
+  ReadAirplaneModeSettingTask(nsRefPtr<FMRadioReplyRunnable> aPendingRequest)
     : mPendingRequest(aPendingRequest) { }
 
   NS_IMETHOD
   Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
-    RefPtr<FMRadioService> fmRadioService = FMRadioService::Singleton();
+    nsRefPtr<FMRadioService> fmRadioService = FMRadioService::Singleton();
     MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
     
     fmRadioService->mHasReadAirplaneModeSetting = true;
@@ -220,7 +220,7 @@ protected:
   ~ReadAirplaneModeSettingTask() {}
 
 private:
-  RefPtr<FMRadioReplyRunnable> mPendingRequest;
+  nsRefPtr<FMRadioReplyRunnable> mPendingRequest;
 };
 
 NS_IMPL_ISUPPORTS(ReadAirplaneModeSettingTask, nsISettingsServiceCallback)
@@ -241,7 +241,7 @@ FMRadioService::DisableFMRadio()
 void
 FMRadioService::DispatchFMRadioEventToMainThread(enum FMRadioEventType aType)
 {
-  RefPtr<FMRadioService> self = this;
+  nsRefPtr<FMRadioService> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
     [self, aType] () -> void {
       self->NotifyFMRadioEvent(aType);
@@ -498,7 +498,7 @@ FMRadioService::Enable(double aFrequencyInMHz,
       return;
     }
 
-    RefPtr<ReadAirplaneModeSettingTask> callback =
+    nsRefPtr<ReadAirplaneModeSettingTask> callback =
       new ReadAirplaneModeSettingTask(mPendingRequest);
 
     rv = settingsLock->Get(SETTING_KEY_AIRPLANEMODE_ENABLED, callback);
@@ -510,7 +510,7 @@ FMRadioService::Enable(double aFrequencyInMHz,
     return;
   }
 
-  RefPtr<FMRadioService> self = this;
+  nsRefPtr<FMRadioService> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
     [self] () -> void {
       self->EnableFMRadio();
@@ -547,7 +547,7 @@ FMRadioService::Disable(FMRadioReplyRunnable* aReplyRunnable)
       break;
   }
 
-  RefPtr<FMRadioReplyRunnable> enablingRequest = mPendingRequest;
+  nsRefPtr<FMRadioReplyRunnable> enablingRequest = mPendingRequest;
 
   // If the FM Radio is currently seeking, no fail-to-seek or similar
   // event will be fired, execute the seek callback manually.
@@ -595,7 +595,7 @@ FMRadioService::DoDisable()
   //    };
   // we need to call hal::DisableFMRadio() asynchronously. Same reason for
   // EnableFMRadio and hal::SetFMRadioFrequency.
-  RefPtr<FMRadioService> self = this;
+  nsRefPtr<FMRadioService> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
     [self] () -> void {
       self->DisableFMRadio();

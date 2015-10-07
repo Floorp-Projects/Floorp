@@ -103,7 +103,7 @@ class GetAdaptersTask : public BluetoothReplyRunnable
   }
 
 private:
-  RefPtr<BluetoothManager> mManager;
+  nsRefPtr<BluetoothManager> mManager;
 };
 
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
@@ -118,7 +118,7 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
-  RefPtr<BluetoothReplyRunnable> result = new GetAdaptersTask(this);
+  nsRefPtr<BluetoothReplyRunnable> result = new GetAdaptersTask(this);
   NS_ENSURE_SUCCESS_VOID(bs->GetAdaptersInternal(result));
 }
 
@@ -151,7 +151,7 @@ BluetoothManager::AppendAdapter(const BluetoothValue& aValue)
   // Create a new BluetoothAdapter and append it to adapters array
   const InfallibleTArray<BluetoothNamedValue>& values =
     aValue.get_ArrayOfBluetoothNamedValue();
-  RefPtr<BluetoothAdapter> adapter =
+  nsRefPtr<BluetoothAdapter> adapter =
     BluetoothAdapter::Create(GetOwner(), values);
 
   mAdapters.AppendElement(adapter);
@@ -164,7 +164,7 @@ BluetoothManager::AppendAdapter(const BluetoothValue& aValue)
 }
 
 void
-BluetoothManager::GetAdapters(nsTArray<RefPtr<BluetoothAdapter> >& aAdapters)
+BluetoothManager::GetAdapters(nsTArray<nsRefPtr<BluetoothAdapter> >& aAdapters)
 {
   aAdapters = mAdapters;
 }
@@ -176,7 +176,7 @@ BluetoothManager::Create(nsPIDOMWindow* aWindow)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  RefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
+  nsRefPtr<BluetoothManager> manager = new BluetoothManager(aWindow);
   return manager.forget();
 }
 
@@ -237,7 +237,7 @@ void
 BluetoothManager::DispatchAdapterEvent(const nsAString& aType,
                                        const BluetoothAdapterEventInit& aInit)
 {
-  RefPtr<BluetoothAdapterEvent> event =
+  nsRefPtr<BluetoothAdapterEvent> event =
     BluetoothAdapterEvent::Constructor(this, aType, aInit);
   DispatchTrustedEvent(event);
 }
@@ -255,7 +255,7 @@ BluetoothManager::DispatchAttributeEvent()
   // Notify application of default adapter change
   BluetoothAttributeEventInit init;
   init.mAttrs = types;
-  RefPtr<BluetoothAttributeEvent> event =
+  nsRefPtr<BluetoothAttributeEvent> event =
     BluetoothAttributeEvent::Constructor(
       this, NS_LITERAL_STRING(ATTRIBUTE_CHANGED_ID), init);
 

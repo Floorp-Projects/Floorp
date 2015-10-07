@@ -43,7 +43,7 @@ public:
     static already_AddRefed<mozilla::gfx::DrawTarget>
         EnsureShmImage(const mozilla::gfx::IntSize& aSize,
                        Display* aDisplay, Visual* aVisual, unsigned int aDepth,
-                       RefPtr<nsShmImage>& aImage);
+                       nsRefPtr<nsShmImage>& aImage);
 
 private:
     ~nsShmImage() {
@@ -75,7 +75,7 @@ private:
         , mXAttached(false)
     { mInfo.shmid = SharedMemorySysV::NULLHandle(); }
 
-    RefPtr<SharedMemorySysV>   mSegment;
+    nsRefPtr<SharedMemorySysV>   mSegment;
     XImage*                      mImage;
     Display*                     mDisplay;
     XShmSegmentInfo              mInfo;

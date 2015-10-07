@@ -141,7 +141,7 @@ SchedulingContextService::Create(nsISupports *aOuter, const nsIID& aIID, void **
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  RefPtr<SchedulingContextService> svc = new SchedulingContextService();
+  nsRefPtr<SchedulingContextService> svc = new SchedulingContextService();
   nsresult rv = svc->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 

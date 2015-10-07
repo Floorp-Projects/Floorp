@@ -152,7 +152,7 @@ gfxWindowsSurface::CreateSimilarSurface(gfxContentType aContent,
         return nullptr;
     }
 
-    RefPtr<gfxASurface> result = Wrap(surface, aSize);
+    nsRefPtr<gfxASurface> result = Wrap(surface, aSize);
     cairo_surface_destroy(surface);
     return result.forget();
 }
@@ -197,7 +197,7 @@ gfxWindowsSurface::GetAsImageSurface()
     if (!isurf)
         return nullptr;
 
-    RefPtr<gfxImageSurface> result = gfxASurface::Wrap(isurf).downcast<gfxImageSurface>();
+    nsRefPtr<gfxImageSurface> result = gfxASurface::Wrap(isurf).downcast<gfxImageSurface>();
     result->SetOpaqueRect(GetOpaqueRect());
 
     return result.forget();

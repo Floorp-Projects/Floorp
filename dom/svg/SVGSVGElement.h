@@ -66,7 +66,7 @@ public:
 
   virtual nsISupports* GetParentObject() override;
 
-  RefPtr<SVGSVGElement> mElement;
+  nsRefPtr<SVGSVGElement> mElement;
 
 private:
   ~DOMSVGTranslatePoint() {}
@@ -443,7 +443,7 @@ public:
 private:
   const bool mHaveOverrides;
   float mOriginalTime;
-  const RefPtr<dom::SVGSVGElement> mRootElem;
+  const nsRefPtr<dom::SVGSVGElement> mRootElem;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

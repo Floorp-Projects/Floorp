@@ -102,7 +102,7 @@ nsCoreUtils::DispatchClickEvent(nsITreeBoxObject *aTreeBoxObj,
   nsIWidget *rootWidget =
     rootFrame->GetViewExternal()->GetNearestWidget(&offset);
 
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
   int32_t cnvdX = presContext->CSSPixelsToDevPixels(tcX + x + 1) +
     presContext->AppUnitsToDevPixels(offset.x);
@@ -149,7 +149,7 @@ nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX, int32_t aY,
   event.time = PR_IntervalNow();
 
   // XXX: Touch has an identifier of -1 to hint that it is synthesized.
-  RefPtr<dom::Touch> t = new dom::Touch(-1, LayoutDeviceIntPoint(aX, aY),
+  nsRefPtr<dom::Touch> t = new dom::Touch(-1, LayoutDeviceIntPoint(aX, aY),
                                           nsIntPoint(1, 1), 0.0f, 1.0f);
   t->SetTarget(aContent);
   event.touches.AppendElement(t);

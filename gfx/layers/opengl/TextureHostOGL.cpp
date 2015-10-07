@@ -50,7 +50,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                      ISurfaceAllocator* aDeallocator,
                      TextureFlags aFlags)
 {
-  RefPtr<TextureHost> result;
+  nsRefPtr<TextureHost> result;
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem:
     case SurfaceDescriptor::TSurfaceDescriptorMemory: {

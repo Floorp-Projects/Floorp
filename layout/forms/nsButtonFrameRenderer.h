@@ -77,8 +77,8 @@ protected:
 private:
 
   // cached styles for focus and outline.
-  RefPtr<nsStyleContext> mInnerFocusStyle;
-  RefPtr<nsStyleContext> mOuterFocusStyle;
+  nsRefPtr<nsStyleContext> mInnerFocusStyle;
+  nsRefPtr<nsStyleContext> mOuterFocusStyle;
 
   nsFrame* mFrame;
 };

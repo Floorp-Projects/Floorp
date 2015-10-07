@@ -248,7 +248,7 @@ private:
                           char *** values);
 
   nsCOMPtr<mozIStorageConnection>          mDB;
-  RefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
+  nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
 
   nsCOMPtr<mozIStorageStatement>  mStatement_CacheSize;
   nsCOMPtr<mozIStorageStatement>  mStatement_ApplicationCacheSize;

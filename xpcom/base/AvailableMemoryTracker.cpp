@@ -514,7 +514,7 @@ Activate()
 #endif
 
   // This object is held alive by the observer service.
-  RefPtr<nsMemoryPressureWatcher> watcher = new nsMemoryPressureWatcher();
+  nsRefPtr<nsMemoryPressureWatcher> watcher = new nsMemoryPressureWatcher();
   watcher->Init();
 }
 

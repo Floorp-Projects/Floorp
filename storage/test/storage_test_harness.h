@@ -212,7 +212,7 @@ void AsyncStatementSpinner::SpinUntilCompleted()
 void
 blocking_async_execute(mozIStorageBaseStatement *stmt)
 {
-  RefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
+  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
 
   nsCOMPtr<mozIStoragePendingStatement> pendy;
   (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pendy));
@@ -226,7 +226,7 @@ blocking_async_execute(mozIStorageBaseStatement *stmt)
 void
 blocking_async_close(mozIStorageConnection *db)
 {
-  RefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
+  nsRefPtr<AsyncStatementSpinner> spinner(new AsyncStatementSpinner());
 
   db->AsyncClose(spinner);
   spinner->SpinUntilCompleted();

@@ -59,12 +59,12 @@ struct WebAudioDecodeJob final
 
   nsCString mContentType;
   uint32_t mWriteIndex;
-  RefPtr<dom::AudioContext> mContext;
-  RefPtr<dom::Promise> mPromise;
-  RefPtr<dom::DecodeSuccessCallback> mSuccessCallback;
-  RefPtr<dom::DecodeErrorCallback> mFailureCallback; // can be null
-  RefPtr<dom::AudioBuffer> mOutput;
-  RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
+  nsRefPtr<dom::AudioContext> mContext;
+  nsRefPtr<dom::Promise> mPromise;
+  nsRefPtr<dom::DecodeSuccessCallback> mSuccessCallback;
+  nsRefPtr<dom::DecodeErrorCallback> mFailureCallback; // can be null
+  nsRefPtr<dom::AudioBuffer> mOutput;
+  nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
 
 private:
   ~WebAudioDecodeJob();

@@ -151,7 +151,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothProfileResultHandler> mRes;
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
 class BluetoothAvrcpManager::OnErrorProfileResultHandlerRunnable final
@@ -173,7 +173,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothProfileResultHandler> mRes;
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
   nsresult mRv;
 };
 
@@ -188,7 +188,7 @@ BluetoothAvrcpManager::InitAvrcpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!btInf)) {
     // If there's no HFP interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    nsRefPtr<nsRunnable> r =
       new OnErrorProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
@@ -200,7 +200,7 @@ BluetoothAvrcpManager::InitAvrcpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!sBtAvrcpInterface)) {
     // If there's no AVRCP interface, we dispatch a runnable
     // that calls the profile result handler.
-    RefPtr<nsRunnable> r =
+    nsRefPtr<nsRunnable> r =
       new OnErrorProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
@@ -282,7 +282,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothProfileResultHandler> mRes;
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
 class BluetoothAvrcpManager::CleanupResultHandlerRunnable final
@@ -303,7 +303,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothProfileResultHandler> mRes;
+  nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
 // static
@@ -317,7 +317,7 @@ BluetoothAvrcpManager::DeinitAvrcpInterface(BluetoothProfileResultHandler* aRes)
   } else if (aRes) {
     // We dispatch a runnable here to make the profile resource handler
     // behave as if AVRCP was initialized.
-    RefPtr<nsRunnable> r = new CleanupResultHandlerRunnable(aRes);
+    nsRefPtr<nsRunnable> r = new CleanupResultHandlerRunnable(aRes);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch cleanup-result-handler runnable");
     }
@@ -407,7 +407,7 @@ BluetoothAvrcpManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 }
 
@@ -422,7 +422,7 @@ BluetoothAvrcpManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 
   Reset();

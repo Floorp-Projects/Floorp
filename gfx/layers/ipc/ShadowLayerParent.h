@@ -50,7 +50,7 @@ private:
 
   void Disconnect();
 
-  RefPtr<Layer> mLayer;
+  nsRefPtr<Layer> mLayer;
 };
 
 } // namespace layers

@@ -16,7 +16,7 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
@@ -83,7 +83,7 @@ public:
   }
 
   nsString mDeviceAddress;
-  nsTArray<RefPtr<Blob>> mBlobs;
+  nsTArray<nsRefPtr<Blob>> mBlobs;
 };
 
 NS_IMETHODIMP
@@ -160,7 +160,7 @@ public:
     if (numRead > 0) {
       sBluetoothOppManager->CheckPutFinal(numRead);
 
-      RefPtr<SendSocketDataTask> task =
+      nsRefPtr<SendSocketDataTask> task =
         new SendSocketDataTask((uint8_t*)buf.forget(), numRead);
       if (NS_FAILED(NS_DispatchToMainThread(task))) {
         BT_WARNING("Failed to dispatch to main thread!");
@@ -191,7 +191,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothSocket> mSocket;
+  nsRefPtr<BluetoothSocket> mSocket;
 };
 
 BluetoothOppManager::BluetoothOppManager() : mConnected(false)
@@ -419,8 +419,8 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return SendFile(aDeviceAddress, blob.get());
 }
@@ -798,7 +798,7 @@ BluetoothOppManager::RetrieveSentFileName()
 {
   mFileName.Truncate();
 
-  RefPtr<File> file = static_cast<Blob*>(mBlob.get())->ToFile();
+  nsRefPtr<File> file = static_cast<Blob*>(mBlob.get())->ToFile();
   if (file) {
     file->GetName(mFileName);
   }
@@ -1162,7 +1162,7 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
       }
     }
 
-    RefPtr<ReadFileTask> task = new ReadFileTask(mInputStream,
+    nsRefPtr<ReadFileTask> task = new ReadFileTask(mInputStream,
                                                    mRemoteMaxPacketLength);
     rv = mReadFileThread->Dispatch(task, NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(rv.Failed())) {

@@ -292,7 +292,7 @@ private: // methods
   }
 
   struct SurfaceWithFormat {
-    RefPtr<gfxDrawable> mDrawable;
+    nsRefPtr<gfxDrawable> mDrawable;
     SurfaceFormat mFormat;
     SurfaceWithFormat() { }
     SurfaceWithFormat(gfxDrawable* aDrawable, SurfaceFormat aFormat)
@@ -321,10 +321,10 @@ private: // data
 
   mutable Monitor mMonitor;
 
-  RefPtr<DataSourceSurface> mImageSurface;
-  RefPtr<SourceSurface> mOptSurface;
+  nsRefPtr<DataSourceSurface> mImageSurface;
+  nsRefPtr<SourceSurface> mOptSurface;
 
-  RefPtr<VolatileBuffer> mVBuf;
+  nsRefPtr<VolatileBuffer> mVBuf;
   VolatileBufferPtr<uint8_t> mVBufPtr;
 
   nsIntRect mDecoded;
@@ -432,7 +432,7 @@ public:
 private:
   DrawableFrameRef(const DrawableFrameRef& aOther) = delete;
 
-  RefPtr<imgFrame> mFrame;
+  nsRefPtr<imgFrame> mFrame;
   VolatileBufferPtr<uint8_t> mRef;
 };
 
@@ -519,7 +519,7 @@ public:
 private:
   RawAccessFrameRef(const RawAccessFrameRef& aOther) = delete;
 
-  RefPtr<imgFrame> mFrame;
+  nsRefPtr<imgFrame> mFrame;
 };
 
 } // namespace image

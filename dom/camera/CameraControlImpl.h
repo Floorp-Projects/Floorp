@@ -90,7 +90,7 @@ protected:
   // Manage camera event listeners.
   void AddListenerImpl(already_AddRefed<CameraControlListener> aListener);
   void RemoveListenerImpl(CameraControlListener* aListener);
-  nsTArray<RefPtr<CameraControlListener> > mListeners;
+  nsTArray<nsRefPtr<CameraControlListener> > mListeners;
   mutable Mutex mListenerLock;
 
   class ControlMessage;

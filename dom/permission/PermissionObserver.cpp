@@ -40,7 +40,7 @@ PermissionObserver::~PermissionObserver()
 /* static */ already_AddRefed<PermissionObserver>
 PermissionObserver::GetInstance()
 {
-  RefPtr<PermissionObserver> instance = gInstance;
+  nsRefPtr<PermissionObserver> instance = gInstance;
   if (!instance) {
     instance = new PermissionObserver();
 

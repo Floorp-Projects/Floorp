@@ -94,7 +94,7 @@ nsDataDocumentContentPolicy::ShouldLoad(uint32_t aContentType,
       // Report error, if we can.
       if (node) {
         nsIPrincipal* requestingPrincipal = node->NodePrincipal();
-        RefPtr<nsIURI> principalURI;
+        nsRefPtr<nsIURI> principalURI;
         nsresult rv =
           requestingPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv) && principalURI) {

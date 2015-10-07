@@ -22,7 +22,7 @@ public:
   nsPluginNativeWindowGtk();
   virtual ~nsPluginNativeWindowGtk();
 
-  virtual nsresult CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance);
+  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance);
   nsresult CreateXEmbedWindow(bool aEnableXtFocus);
   void SetAllocation();
 

@@ -21,16 +21,16 @@
  */
 template<class KeyClass, class PtrType>
 class nsRefPtrHashtable
-  : public nsBaseHashtable<KeyClass, RefPtr<PtrType>, PtrType*>
+  : public nsBaseHashtable<KeyClass, nsRefPtr<PtrType>, PtrType*>
 {
 public:
   typedef typename KeyClass::KeyType KeyType;
   typedef PtrType* UserDataType;
-  typedef nsBaseHashtable<KeyClass, RefPtr<PtrType>, PtrType*> base_type;
+  typedef nsBaseHashtable<KeyClass, nsRefPtr<PtrType>, PtrType*> base_type;
 
   nsRefPtrHashtable() {}
   explicit nsRefPtrHashtable(uint32_t aInitLength)
-    : nsBaseHashtable<KeyClass, RefPtr<PtrType>, PtrType*>(aInitLength)
+    : nsBaseHashtable<KeyClass, nsRefPtr<PtrType>, PtrType*>(aInitLength)
   {
   }
 

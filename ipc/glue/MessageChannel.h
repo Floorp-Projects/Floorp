@@ -479,13 +479,13 @@ class MessageChannel : HasResultCodes
         void Run() override { mTask->Run(); }
 
       private:
-        RefPtr<RefCountedTask> mTask;
+        nsRefPtr<RefCountedTask> mTask;
     };
 
   private:
     mozilla::WeakPtr<MessageListener> mListener;
     ChannelState mChannelState;
-    RefPtr<RefCountedMonitor> mMonitor;
+    nsRefPtr<RefCountedMonitor> mMonitor;
     Side mSide;
     MessageLink* mLink;
     MessageLoop* mWorkerLoop;           // thread where work is done
@@ -496,7 +496,7 @@ class MessageChannel : HasResultCodes
     int mWorkerLoopID;
 
     // A task encapsulating dequeuing one pending message.
-    RefPtr<RefCountedTask> mDequeueOneTask;
+    nsRefPtr<RefCountedTask> mDequeueOneTask;
 
     // Timeout periods are broken up in two to prevent system suspension from
     // triggering an abort. This method (called by WaitForEvent with a 'did
@@ -735,7 +735,7 @@ class MessageChannel : HasResultCodes
     // Task and state used to asynchronously notify channel has been connected
     // safely.  This is necessary to be able to cancel notification if we are
     // closed at the same time.
-    RefPtr<RefCountedTask> mOnChannelConnectedTask;
+    nsRefPtr<RefCountedTask> mOnChannelConnectedTask;
     DebugOnly<bool> mPeerPidSet;
     int32_t mPeerPid;
 };

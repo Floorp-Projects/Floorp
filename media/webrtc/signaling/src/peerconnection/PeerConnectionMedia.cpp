@@ -61,7 +61,7 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
                                   const std::string& aNewStreamId,
                                   const std::string& aNewTrackId)
 {
-  RefPtr<LocalSourceStreamInfo> oldInfo(GetLocalStreamById(aOldStreamId));
+  nsRefPtr<LocalSourceStreamInfo> oldInfo(GetLocalStreamById(aOldStreamId));
 
   if (!oldInfo) {
     CSFLogError(logTag, "Failed to find stream id %s", aOldStreamId.c_str());
@@ -71,7 +71,7 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
   nsresult rv = AddTrack(aNewStream, aNewStreamId, aNewTrackId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<LocalSourceStreamInfo> newInfo(GetLocalStreamById(aNewStreamId));
+  nsRefPtr<LocalSourceStreamInfo> newInfo(GetLocalStreamById(aNewStreamId));
 
   if (!newInfo) {
     CSFLogError(logTag, "Failed to add track id %s", aNewTrackId.c_str());
@@ -86,11 +86,11 @@ PeerConnectionMedia::ReplaceTrack(const std::string& aOldStreamId,
 }
 
 static void
-PipelineReleaseRef_m(RefPtr<MediaPipeline> pipeline)
+PipelineReleaseRef_m(nsRefPtr<MediaPipeline> pipeline)
 {}
 
 static void
-PipelineDetachTransport_s(RefPtr<MediaPipeline> pipeline,
+PipelineDetachTransport_s(nsRefPtr<MediaPipeline> pipeline,
                           nsCOMPtr<nsIThread> mainThread)
 {
   pipeline->ShutdownTransport_s();
@@ -105,7 +105,7 @@ void
 SourceStreamInfo::RemoveTrack(const std::string& trackId)
 {
   mTracks.erase(trackId);
-  RefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackId);
+  nsRefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackId);
   if (pipeline) {
     mPipelines.erase(trackId);
     pipeline->ShutdownMedia_m();
@@ -142,7 +142,7 @@ void SourceStreamInfo::DetachMedia_m()
 already_AddRefed<PeerConnectionImpl>
 PeerConnectionImpl::Constructor(const dom::GlobalObject& aGlobal, ErrorResult& rv)
 {
-  RefPtr<PeerConnectionImpl> pc = new PeerConnectionImpl(&aGlobal);
+  nsRefPtr<PeerConnectionImpl> pc = new PeerConnectionImpl(&aGlobal);
 
   CSFLogDebug(logTag, "Created PeerConnection: %p", pc.get());
 
@@ -297,7 +297,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<ProtocolProxyQueryHandler> handler = new ProtocolProxyQueryHandler(this);
+  nsRefPtr<ProtocolProxyQueryHandler> handler = new ProtocolProxyQueryHandler(this);
   rv = pps->AsyncResolve(channel,
                          nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
                          nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
@@ -377,10 +377,10 @@ PeerConnectionMedia::EnsureTransports(const JsepSession& aSession)
 {
   auto transports = aSession.GetTransports();
   for (size_t i = 0; i < transports.size(); ++i) {
-    RefPtr<JsepTransport> transport = transports[i];
+    nsRefPtr<JsepTransport> transport = transports[i];
     RUN_ON_THREAD(
         GetSTSThread(),
-        WrapRunnable(RefPtr<PeerConnectionMedia>(this),
+        WrapRunnable(nsRefPtr<PeerConnectionMedia>(this),
                      &PeerConnectionMedia::EnsureTransport_s,
                      i,
                      transport->mComponents),
@@ -393,7 +393,7 @@ PeerConnectionMedia::EnsureTransports(const JsepSession& aSession)
 void
 PeerConnectionMedia::EnsureTransport_s(size_t aLevel, size_t aComponentCount)
 {
-  RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aLevel));
+  nsRefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aLevel));
   if (!stream) {
     CSFLogDebug(logTag, "%s: Creating ICE media stream=%u components=%u",
                 mParentHandle.c_str(),
@@ -402,7 +402,7 @@ PeerConnectionMedia::EnsureTransport_s(size_t aLevel, size_t aComponentCount)
 
     std::ostringstream os;
     os << mParentName << " aLevel=" << aLevel;
-    RefPtr<NrIceMediaStream> stream = mIceCtx->CreateStream(os.str().c_str(),
+    nsRefPtr<NrIceMediaStream> stream = mIceCtx->CreateStream(os.str().c_str(),
                                                             aComponentCount);
 
     if (!stream) {
@@ -423,7 +423,7 @@ PeerConnectionMedia::ActivateOrRemoveTransports(const JsepSession& aSession)
 {
   auto transports = aSession.GetTransports();
   for (size_t i = 0; i < transports.size(); ++i) {
-    RefPtr<JsepTransport> transport = transports[i];
+    nsRefPtr<JsepTransport> transport = transports[i];
 
     std::string ufrag;
     std::string pwd;
@@ -444,7 +444,7 @@ PeerConnectionMedia::ActivateOrRemoveTransports(const JsepSession& aSession)
 
     RUN_ON_THREAD(
         GetSTSThread(),
-        WrapRunnable(RefPtr<PeerConnectionMedia>(this),
+        WrapRunnable(nsRefPtr<PeerConnectionMedia>(this),
                      &PeerConnectionMedia::ActivateOrRemoveTransport_s,
                      i,
                      transport->mComponents,
@@ -457,7 +457,7 @@ PeerConnectionMedia::ActivateOrRemoveTransports(const JsepSession& aSession)
   // We can have more streams than m-lines due to rollback.
   RUN_ON_THREAD(
       GetSTSThread(),
-      WrapRunnable(RefPtr<PeerConnectionMedia>(this),
+      WrapRunnable(nsRefPtr<PeerConnectionMedia>(this),
                    &PeerConnectionMedia::RemoveTransportsAtOrAfter_s,
                    transports.size()),
       NS_DISPATCH_NORMAL);
@@ -479,7 +479,7 @@ PeerConnectionMedia::ActivateOrRemoveTransport_s(
     return;
   }
 
-  RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aMLine));
+  nsRefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aMLine));
   if (!stream) {
     MOZ_ASSERT(false);
     return;
@@ -555,7 +555,7 @@ PeerConnectionMedia::StartIceChecks(const JsepSession& aSession)
 {
   nsCOMPtr<nsIRunnable> runnable(
       WrapRunnable(
-        RefPtr<PeerConnectionMedia>(this),
+        nsRefPtr<PeerConnectionMedia>(this),
         &PeerConnectionMedia::StartIceChecks_s,
         aSession.IsIceControlling(),
         aSession.RemoteIsIceLite(),
@@ -603,7 +603,7 @@ PeerConnectionMedia::AddIceCandidate(const std::string& candidate,
                                      uint32_t aMLine) {
   RUN_ON_THREAD(GetSTSThread(),
                 WrapRunnable(
-                    RefPtr<PeerConnectionMedia>(this),
+                    nsRefPtr<PeerConnectionMedia>(this),
                     &PeerConnectionMedia::AddIceCandidate_s,
                     std::string(candidate), // Make copies.
                     std::string(mid),
@@ -614,7 +614,7 @@ void
 PeerConnectionMedia::AddIceCandidate_s(const std::string& aCandidate,
                                        const std::string& aMid,
                                        uint32_t aMLine) {
-  RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aMLine));
+  nsRefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aMLine));
   if (!stream) {
     CSFLogError(logTag, "No ICE stream for candidate at level %u: %s",
                         static_cast<unsigned>(aMLine), aCandidate.c_str());
@@ -661,7 +661,7 @@ PeerConnectionMedia::GatherIfReady() {
   ASSERT_ON_THREAD(mMainThread);
 
   nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
-        RefPtr<PeerConnectionMedia>(this),
+        nsRefPtr<PeerConnectionMedia>(this),
         &PeerConnectionMedia::EnsureIceGathering_s));
 
   PerformOrEnqueueIceCtxOperation(runnable);
@@ -701,7 +701,7 @@ PeerConnectionMedia::AddTrack(DOMMediaStream* aMediaStream,
 
   CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, aMediaStream);
 
-  RefPtr<LocalSourceStreamInfo> localSourceStream =
+  nsRefPtr<LocalSourceStreamInfo> localSourceStream =
     GetLocalStreamById(streamId);
 
   if (!localSourceStream) {
@@ -722,7 +722,7 @@ PeerConnectionMedia::RemoveLocalTrack(const std::string& streamId,
   CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
-  RefPtr<LocalSourceStreamInfo> localSourceStream =
+  nsRefPtr<LocalSourceStreamInfo> localSourceStream =
     GetLocalStreamById(streamId);
   if (!localSourceStream) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -744,7 +744,7 @@ PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
   CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
-  RefPtr<RemoteSourceStreamInfo> remoteSourceStream =
+  nsRefPtr<RemoteSourceStreamInfo> remoteSourceStream =
     GetRemoteStreamById(streamId);
   if (!remoteSourceStream) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -891,7 +891,7 @@ PeerConnectionMedia::GetRemoteStreamById(const std::string& id)
 }
 
 nsresult
-PeerConnectionMedia::AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo)
+PeerConnectionMedia::AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo)
 {
   ASSERT_ON_THREAD(mMainThread);
 
@@ -909,7 +909,7 @@ PeerConnectionMedia::IceGatheringStateChange_s(NrIceCtx* ctx,
   if (state == NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
     // Fire off EndOfLocalCandidates for each stream
     for (size_t i = 0; ; ++i) {
-      RefPtr<NrIceMediaStream> stream(ctx->GetStream(i));
+      nsRefPtr<NrIceMediaStream> stream(ctx->GetStream(i));
       if (!stream) {
         break;
       }
@@ -1076,7 +1076,7 @@ PeerConnectionMedia::DtlsConnected_m(const std::string& aParentHandle,
 
 void
 PeerConnectionMedia::AddTransportFlow(int aIndex, bool aRtcp,
-                                      const RefPtr<TransportFlow> &aFlow)
+                                      const nsRefPtr<TransportFlow> &aFlow)
 {
   int index_inner = GetTransportFlowIndex(aIndex, aRtcp);
 
@@ -1099,7 +1099,7 @@ PeerConnectionMedia::RemoveTransportFlow(int aIndex, bool aRtcp)
 }
 
 void
-PeerConnectionMedia::ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow)
+PeerConnectionMedia::ConnectDtlsListener_s(const nsRefPtr<TransportFlow>& aFlow)
 {
   TransportLayer* dtls = aFlow->GetLayer(TransportLayerDtls::ID());
   if (dtls) {
@@ -1108,7 +1108,7 @@ PeerConnectionMedia::ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow)
 }
 
 nsresult
-LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
+LocalSourceStreamInfo::TakePipelineFrom(nsRefPtr<LocalSourceStreamInfo>& info,
                                         const std::string& oldTrackId,
                                         const std::string& newTrackId)
 {
@@ -1118,7 +1118,7 @@ LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<MediaPipeline> pipeline(info->ForgetPipelineByTrackId_m(oldTrackId));
+  nsRefPtr<MediaPipeline> pipeline(info->ForgetPipelineByTrackId_m(oldTrackId));
 
   if (!pipeline) {
     // Replacetrack can potentially happen in the middle of offer/answer, before
@@ -1233,10 +1233,10 @@ SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-RefPtr<mozilla::dom::VideoStreamTrack>
+nsRefPtr<mozilla::dom::VideoStreamTrack>
 SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
 {
-  nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
+  nsTArray<nsRefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
 
   mMediaStream->GetVideoTracks(videoTracks);
 
@@ -1255,7 +1255,7 @@ SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
 nsresult
 SourceStreamInfo::StorePipeline(
     const std::string& trackId,
-    const RefPtr<mozilla::MediaPipeline>& aPipeline)
+    const nsRefPtr<mozilla::MediaPipeline>& aPipeline)
 {
   MOZ_ASSERT(mPipelines.find(trackId) == mPipelines.end());
   if (mPipelines.find(trackId) != mPipelines.end()) {
@@ -1269,7 +1269,7 @@ SourceStreamInfo::StorePipeline(
 
 void
 RemoteSourceStreamInfo::SyncPipeline(
-  RefPtr<MediaPipelineReceive> aPipeline)
+  nsRefPtr<MediaPipelineReceive> aPipeline)
 {
   // See if we have both audio and video here, and if so cross the streams and
   // sync them
@@ -1316,14 +1316,14 @@ RemoteSourceStreamInfo::StartReceiving()
   CSFLogDebug(logTag, "Finished adding tracks to MediaStream %p", source);
 }
 
-RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(
+nsRefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByTrackId_m(
     const std::string& trackId) {
   ASSERT_ON_THREAD(mParent->GetMainThread());
 
   // Refuse to hand out references if we're tearing down.
   // (Since teardown involves a dispatch to and from STS before MediaPipelines
   // are released, it is safe to start other dispatches to and from STS with a
-  // RefPtr<MediaPipeline>, since that reference won't be the last one
+  // nsRefPtr<MediaPipeline>, since that reference won't be the last one
   // standing)
   if (mMediaStream) {
     if (mPipelines.count(trackId)) {
@@ -1342,11 +1342,11 @@ LocalSourceStreamInfo::ForgetPipelineByTrackId_m(const std::string& trackId)
   // Refuse to hand out references if we're tearing down.
   // (Since teardown involves a dispatch to and from STS before MediaPipelines
   // are released, it is safe to start other dispatches to and from STS with a
-  // RefPtr<MediaPipeline>, since that reference won't be the last one
+  // nsRefPtr<MediaPipeline>, since that reference won't be the last one
   // standing)
   if (mMediaStream) {
     if (mPipelines.count(trackId)) {
-      RefPtr<MediaPipeline> pipeline(mPipelines[trackId]);
+      nsRefPtr<MediaPipeline> pipeline(mPipelines[trackId]);
       mPipelines.erase(trackId);
       return pipeline.forget();
     }

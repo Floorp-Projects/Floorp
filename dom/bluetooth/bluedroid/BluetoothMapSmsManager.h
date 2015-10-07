@@ -125,7 +125,7 @@ private:
    * Current virtual folder path
    */
   BluetoothMapFolder* mCurrentFolder;
-  RefPtr<BluetoothMapFolder> mRootFolder;
+  nsRefPtr<BluetoothMapFolder> mRootFolder;
 
   /*
    * Record the last command
@@ -142,15 +142,15 @@ private:
   // If a connection has been established, mMasSocket will be the socket
   // communicating with the remote socket. We maintain the invariant that if
   // mMasSocket is non-null, mServerSocket must be null (and vice versa).
-  RefPtr<BluetoothSocket> mMasSocket;
+  nsRefPtr<BluetoothSocket> mMasSocket;
 
   // Server socket. Once an inbound connection is established, it will hand
   // over the ownership to mMasSocket, and get a new server socket while Listen()
   // is called.
-  RefPtr<BluetoothSocket> mMasServerSocket;
+  nsRefPtr<BluetoothSocket> mMasServerSocket;
 
   // Message notification service client socket
-  RefPtr<BluetoothSocket> mMnsSocket;
+  nsRefPtr<BluetoothSocket> mMnsSocket;
 
   int mBodySegmentLength;
   nsAutoArrayPtr<uint8_t> mBodySegment;

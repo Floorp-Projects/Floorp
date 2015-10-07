@@ -136,8 +136,8 @@ protected:
   const nsString mContainerFormat;
   const nsString mMimeType;
 
-  RefPtr<CameraRecorderVideoProfile> mVideo;
-  RefPtr<CameraRecorderAudioProfile> mAudio;
+  nsRefPtr<CameraRecorderVideoProfile> mVideo;
+  nsRefPtr<CameraRecorderAudioProfile> mAudio;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(CameraRecorderProfile);
@@ -170,9 +170,9 @@ protected:
   virtual ~CameraRecorderProfiles();
 
   nsCOMPtr<nsISupports> mParent;
-  RefPtr<ICameraControl> mCameraControl;
+  nsRefPtr<ICameraControl> mCameraControl;
   nsRefPtrHashtable<nsStringHashKey, CameraRecorderProfile> mProfiles;
-  RefPtr<CameraClosedListenerProxy<CameraRecorderProfiles>> mListener;
+  nsRefPtr<CameraClosedListenerProxy<CameraRecorderProfiles>> mListener;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(CameraRecorderProfiles);
@@ -231,9 +231,9 @@ protected:
 
   nsresult TranslateToDictionary(uint32_t aKey, nsTArray<CameraSize>& aSizes);
 
-  RefPtr<nsPIDOMWindow> mWindow;
-  RefPtr<ICameraControl> mCameraControl;
-  RefPtr<CameraClosedListenerProxy<CameraCapabilities>> mListener;
+  nsRefPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<ICameraControl> mCameraControl;
+  nsRefPtr<CameraClosedListenerProxy<CameraCapabilities>> mListener;
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(CameraCapabilities);

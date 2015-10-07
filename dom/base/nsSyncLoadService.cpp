@@ -187,7 +187,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
     }
 
     if (aLoaderPrincipal) {
-        RefPtr<nsCORSListenerProxy> corsListener =
+        nsRefPtr<nsCORSListenerProxy> corsListener =
           new nsCORSListenerProxy(listener, aLoaderPrincipal, false);
         rv = corsListener->Init(mChannel, DataURIHandling::Disallow);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -333,7 +333,7 @@ nsSyncLoadService::LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
                     (NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)) &&
                      isResource);
 
-    RefPtr<nsSyncLoader> loader = new nsSyncLoader();
+    nsRefPtr<nsSyncLoader> loader = new nsSyncLoader();
     return loader->LoadDocument(channel, aLoaderPrincipal, isSync,
                                 aForceToXML, aReferrerPolicy, aResult);
 

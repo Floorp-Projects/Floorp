@@ -57,7 +57,7 @@ protected:
     DeviceManagerD3D9* aDeviceManager,
     const gfx::IntSize &aSize,
     _D3DFORMAT aFormat,
-    RefPtr<IDirect3DSurface9>& aSurface,
+    nsRefPtr<IDirect3DSurface9>& aSurface,
     D3DLOCKED_RECT& aLockedRect);
 
   already_AddRefed<IDirect3DTexture9> DataToTexture(
@@ -85,7 +85,7 @@ protected:
   DeviceManagerD3D9* mCreatingDeviceManager;
 
   StereoMode mStereoMode;
-  RefPtr<IDirect3DTexture9> mTexture;
+  nsRefPtr<IDirect3DTexture9> mTexture;
 };
 
 /**
@@ -161,8 +161,8 @@ protected:
 
   void Reset();
 
-  std::vector< RefPtr<IDirect3DTexture9> > mTileTextures;
-  RefPtr<CompositorD3D9> mCompositor;
+  std::vector< nsRefPtr<IDirect3DTexture9> > mTileTextures;
+  nsRefPtr<CompositorD3D9> mCompositor;
   gfx::SurfaceFormat mFormat;
   uint32_t mCurrentTile;
   TextureFlags mFlags;
@@ -214,9 +214,9 @@ public:
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
 private:
-  RefPtr<IDirect3DTexture9> mTexture;
-  RefPtr<IDirect3DSurface9> mD3D9Surface;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
+  nsRefPtr<IDirect3DTexture9> mTexture;
+  nsRefPtr<IDirect3DSurface9> mD3D9Surface;
+  nsRefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
@@ -287,8 +287,8 @@ public:
 private:
   virtual void FinalizeOnIPDLThread() override;
 
-  RefPtr<IDirect3DDevice9> mDevice;
-  RefPtr<IDirect3DTexture9> mTexture;
+  nsRefPtr<IDirect3DDevice9> mDevice;
+  nsRefPtr<IDirect3DTexture9> mTexture;
   gfx::SurfaceFormat mFormat;
   HANDLE mHandle;
   D3DSURFACE_DESC mDesc;
@@ -328,9 +328,9 @@ protected:
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion) override;
 
-  RefPtr<DataTextureSourceD3D9> mTextureSource;
-  RefPtr<IDirect3DTexture9> mTexture;
-  RefPtr<CompositorD3D9> mCompositor;
+  nsRefPtr<DataTextureSourceD3D9> mTextureSource;
+  nsRefPtr<IDirect3DTexture9> mTexture;
+  nsRefPtr<CompositorD3D9> mCompositor;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
@@ -365,8 +365,8 @@ protected:
   void OpenSharedHandle();
   IDirect3DDevice9* GetDevice();
 
-  RefPtr<DataTextureSourceD3D9> mTextureSource;
-  RefPtr<CompositorD3D9> mCompositor;
+  nsRefPtr<DataTextureSourceD3D9> mTextureSource;
+  nsRefPtr<CompositorD3D9> mCompositor;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
@@ -400,10 +400,10 @@ public:
   IDirect3DDevice9* GetDevice();
 
   HANDLE mHandles[3];
-  RefPtr<IDirect3DTexture9> mTextures[3];
-  RefPtr<DataTextureSourceD3D9> mTextureSources[3];
+  nsRefPtr<IDirect3DTexture9> mTextures[3];
+  nsRefPtr<DataTextureSourceD3D9> mTextureSources[3];
 
-  RefPtr<CompositorD3D9> mCompositor;
+  nsRefPtr<CompositorD3D9> mCompositor;
   gfx::IntSize mSize;
   gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
@@ -439,7 +439,7 @@ public:
 private:
   friend class CompositorD3D9;
 
-  RefPtr<IDirect3DSurface9> mSurface;
+  nsRefPtr<IDirect3DSurface9> mSurface;
   SurfaceInitMode mInitMode;
   bool mInitialized;
 };

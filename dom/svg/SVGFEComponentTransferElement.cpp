@@ -56,15 +56,15 @@ FilterPrimitiveDescription
 SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                        const IntRect& aFilterSubregion,
                                                        const nsTArray<bool>& aInputsAreTainted,
-                                                       nsTArray<RefPtr<SourceSurface>>& aInputImages)
+                                                       nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
 {
-  RefPtr<SVGComponentTransferFunctionElement> childForChannel[4];
+  nsRefPtr<SVGComponentTransferFunctionElement> childForChannel[4];
 
   for (nsIContent* childContent = nsINode::GetFirstChild();
        childContent;
        childContent = childContent->GetNextSibling()) {
 
-    RefPtr<SVGComponentTransferFunctionElement> child;
+    nsRefPtr<SVGComponentTransferFunctionElement> child;
     CallQueryInterface(childContent,
             (SVGComponentTransferFunctionElement**)getter_AddRefs(child));
     if (child) {

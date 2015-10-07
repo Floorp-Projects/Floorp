@@ -6,7 +6,7 @@
 #ifndef MOZILLA_GFX_TASKSCHEDULER_H_
 #define MOZILLA_GFX_TASKSCHEDULER_H_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/RefCounted.h"
 
@@ -115,8 +115,8 @@ protected:
   // should be null. This is only accessed from the thread that owns the task.
   Job* mNextWaitingJob;
 
-  RefPtr<SyncObject> mStartSync;
-  RefPtr<SyncObject> mCompletionSync;
+  nsRefPtr<SyncObject> mStartSync;
+  nsRefPtr<SyncObject> mCompletionSync;
   WorkerThread* mPinToThread;
 
   friend class SyncObject;
@@ -142,7 +142,7 @@ public:
   EventObject* GetEvent() { return mEvent; }
 
 protected:
-  RefPtr<EventObject> mEvent;
+  nsRefPtr<EventObject> mEvent;
 };
 
 /// A synchronization object that can be used to express dependencies and ordering between

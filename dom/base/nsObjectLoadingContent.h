@@ -535,7 +535,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     private:
       // We store an nsIObjectLoadingContent because we can
       // unambiguously refcount that.
-      RefPtr<nsIObjectLoadingContent> mContent;
+      nsRefPtr<nsIObjectLoadingContent> mContent;
     };
 
     // Utility getter for getting our nsNPAPIPluginInstance in a safe way.
@@ -553,7 +553,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsCOMPtr<nsIStreamListener> mFinalListener;
 
     // Frame loader, for content documents we load.
-    RefPtr<nsFrameLoader>     mFrameLoader;
+    nsRefPtr<nsFrameLoader>     mFrameLoader;
 
     // Track if we have a pending AsyncInstantiateEvent
     nsCOMPtr<nsIRunnable>       mPendingInstantiateEvent;
@@ -629,7 +629,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
     nsWeakFrame                 mPrintFrame;
 
-    RefPtr<nsPluginInstanceOwner> mInstanceOwner;
+    nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
     nsTArray<mozilla::dom::MozPluginParameter> mCachedAttributes;
     nsTArray<mozilla::dom::MozPluginParameter> mCachedParameters;
 };

@@ -79,11 +79,11 @@ HTMLTableSectionElement::InsertRow(int32_t aIndex, ErrorResult& aError)
   bool doInsert = (aIndex < int32_t(rowCount)) && (aIndex != -1);
 
   // create the row
-  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                               getter_AddRefs(nodeInfo));
 
-  RefPtr<nsGenericHTMLElement> rowContent =
+  nsRefPtr<nsGenericHTMLElement> rowContent =
     NS_NewHTMLTableRowElement(nodeInfo.forget());
   if (!rowContent) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);

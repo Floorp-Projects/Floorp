@@ -101,7 +101,7 @@ NotificationController::ScheduleContentInsertion(Accessible* aContainer,
                                                  nsIContent* aStartChildNode,
                                                  nsIContent* aEndChildNode)
 {
-  RefPtr<ContentInsertion> insertion = new ContentInsertion(mDocument,
+  nsRefPtr<ContentInsertion> insertion = new ContentInsertion(mDocument,
                                                               aContainer);
   if (insertion && insertion->InitChildList(aStartChildNode, aEndChildNode) &&
       mContentInsertions.AppendElement(insertion)) {
@@ -193,7 +193,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // document accessible.
 
   // Process only currently queued content inserted notifications.
-  nsTArray<RefPtr<ContentInsertion> > contentInsertions;
+  nsTArray<nsRefPtr<ContentInsertion> > contentInsertions;
   contentInsertions.SwapElements(mContentInsertions);
 
   uint32_t insertionCount = contentInsertions.Length();
@@ -291,7 +291,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
   // Bind hanging child documents.
   uint32_t hangingDocCnt = mHangingChildDocuments.Length();
-  nsTArray<RefPtr<DocAccessible>> newChildDocs;
+  nsTArray<nsRefPtr<DocAccessible>> newChildDocs;
   for (uint32_t idx = 0; idx < hangingDocCnt; idx++) {
     DocAccessible* childDoc = mHangingChildDocuments[idx];
     if (childDoc->IsDefunct())
@@ -337,7 +337,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   }
 
   // Process only currently queued generic notifications.
-  nsTArray < RefPtr<Notification> > notifications;
+  nsTArray < nsRefPtr<Notification> > notifications;
   notifications.SwapElements(mNotifications);
 
   uint32_t notificationCount = notifications.Length();

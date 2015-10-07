@@ -25,7 +25,7 @@ private:
 
   nsWeakPtr                   mTxnMgr;
   nsTransactionStack         *mTxnStack;
-  RefPtr<nsTransactionItem> mTxnItem;
+  nsRefPtr<nsTransactionItem> mTxnItem;
 
 protected:
   virtual ~nsTransactionList();

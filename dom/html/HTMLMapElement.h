@@ -47,7 +47,7 @@ public:
 protected:
   ~HTMLMapElement() {}
 
-  RefPtr<nsContentList> mAreas;
+  nsRefPtr<nsContentList> mAreas;
 };
 
 } // namespace dom

@@ -78,7 +78,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
  protected:
   nsCOMPtr<nsIURI>                mOriginalURI;
   nsCOMPtr<nsIURI>                mURI;
-  RefPtr<ListenerAndContextContainer> mListenerMT;
+  nsRefPtr<ListenerAndContextContainer> mListenerMT;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsILoadGroup>          mLoadGroup;
   nsCOMPtr<nsILoadInfo>           mLoadInfo;

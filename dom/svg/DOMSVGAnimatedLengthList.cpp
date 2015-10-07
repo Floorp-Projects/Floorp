@@ -42,7 +42,7 @@ DOMSVGAnimatedLengthList::BaseVal()
   if (!mBaseVal) {
     mBaseVal = new DOMSVGLengthList(this, InternalAList().GetBaseValue());
   }
-  RefPtr<DOMSVGLengthList> baseVal = mBaseVal;
+  nsRefPtr<DOMSVGLengthList> baseVal = mBaseVal;
   return baseVal.forget();
 }
 
@@ -52,7 +52,7 @@ DOMSVGAnimatedLengthList::AnimVal()
   if (!mAnimVal) {
     mAnimVal = new DOMSVGLengthList(this, InternalAList().GetAnimValue());
   }
-  RefPtr<DOMSVGLengthList> animVal = mAnimVal;
+  nsRefPtr<DOMSVGLengthList> animVal = mAnimVal;
   return animVal.forget();
 }
 
@@ -62,7 +62,7 @@ DOMSVGAnimatedLengthList::GetDOMWrapper(SVGAnimatedLengthList *aList,
                                         uint8_t aAttrEnum,
                                         uint8_t aAxis)
 {
-  RefPtr<DOMSVGAnimatedLengthList> wrapper =
+  nsRefPtr<DOMSVGAnimatedLengthList> wrapper =
     SVGAnimatedLengthListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGAnimatedLengthList(aElement, aAttrEnum, aAxis);
@@ -94,7 +94,7 @@ DOMSVGAnimatedLengthList::InternalBaseValListWillChangeTo(const SVGLengthList& a
   // able to access "items" at indexes that are out of bounds (read/write to
   // bad memory)!!
 
-  RefPtr<DOMSVGAnimatedLengthList> kungFuDeathGrip;
+  nsRefPtr<DOMSVGAnimatedLengthList> kungFuDeathGrip;
   if (mBaseVal) {
     if (aNewValue.Length() < mBaseVal->LengthNoFlush()) {
       // InternalListLengthWillChange might clear last reference to |this|.

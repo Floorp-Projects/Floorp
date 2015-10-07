@@ -39,7 +39,7 @@ protected:
   ~SVGAnimatedAngle();
 
   nsSVGAngle* mVal; // kept alive because it belongs to content
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
 };
 
 } //namespace dom

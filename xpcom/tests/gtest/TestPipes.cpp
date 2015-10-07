@@ -97,7 +97,7 @@ NS_IMPL_ISUPPORTS(nsReceiver, nsIRunnable)
 nsresult
 TestPipe(nsIInputStream* in, nsIOutputStream* out)
 {
-    RefPtr<nsReceiver> receiver = new nsReceiver(in);
+    nsRefPtr<nsReceiver> receiver = new nsReceiver(in);
     if (!receiver)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -215,7 +215,7 @@ NS_IMPL_ISUPPORTS(nsShortReader, nsIRunnable)
 nsresult
 TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
 {
-    RefPtr<nsShortReader> receiver = new nsShortReader(in);
+    nsRefPtr<nsShortReader> receiver = new nsShortReader(in);
     if (!receiver)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -323,14 +323,14 @@ TEST(Pipes, ChainedPipes)
     rv = NS_NewPipe(getter_AddRefs(in2), getter_AddRefs(out2), 200, 401);
     if (NS_FAILED(rv)) return;
 
-    RefPtr<nsPump> pump = new nsPump(in1, out2);
+    nsRefPtr<nsPump> pump = new nsPump(in1, out2);
     if (pump == nullptr) return;
 
     nsCOMPtr<nsIThread> thread;
     rv = NS_NewThread(getter_AddRefs(thread), pump);
     if (NS_FAILED(rv)) return;
 
-    RefPtr<nsReceiver> receiver = new nsReceiver(in2);
+    nsRefPtr<nsReceiver> receiver = new nsReceiver(in2);
     if (receiver == nullptr) return;
 
     nsCOMPtr<nsIThread> receiverThread;
@@ -685,7 +685,7 @@ TEST(Pipes, Write_AsyncWait)
   rv = writer->Write(inputData.Elements(), inputData.Length(), &numWritten);
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
-  RefPtr<testing::OutputStreamCallback> cb =
+  nsRefPtr<testing::OutputStreamCallback> cb =
     new testing::OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, nullptr);
@@ -725,7 +725,7 @@ TEST(Pipes, Write_AsyncWait_Clone)
   rv = writer->Write(inputData.Elements(), inputData.Length(), &numWritten);
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
-  RefPtr<testing::OutputStreamCallback> cb =
+  nsRefPtr<testing::OutputStreamCallback> cb =
     new testing::OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, nullptr);
@@ -769,7 +769,7 @@ TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal)
   rv = writer->Write(inputData.Elements(), inputData.Length(), &numWritten);
   ASSERT_EQ(NS_BASE_STREAM_WOULD_BLOCK, rv);
 
-  RefPtr<testing::OutputStreamCallback> cb =
+  nsRefPtr<testing::OutputStreamCallback> cb =
     new testing::OutputStreamCallback();
 
   rv = writer->AsyncWait(cb, 0, 0, nullptr);
@@ -802,7 +802,7 @@ TEST(Pipes, Read_AsyncWait)
   nsTArray<char> inputData;
   testing::CreateData(segmentSize, inputData);
 
-  RefPtr<testing::InputStreamCallback> cb =
+  nsRefPtr<testing::InputStreamCallback> cb =
     new testing::InputStreamCallback();
 
   rv = reader->AsyncWait(cb, 0, 0, nullptr);
@@ -842,10 +842,10 @@ TEST(Pipes, Read_AsyncWait_Clone)
   nsTArray<char> inputData;
   testing::CreateData(segmentSize, inputData);
 
-  RefPtr<testing::InputStreamCallback> cb =
+  nsRefPtr<testing::InputStreamCallback> cb =
     new testing::InputStreamCallback();
 
-  RefPtr<testing::InputStreamCallback> cb2 =
+  nsRefPtr<testing::InputStreamCallback> cb2 =
     new testing::InputStreamCallback();
 
   rv = reader->AsyncWait(cb, 0, 0, nullptr);

@@ -59,7 +59,7 @@ public:
 
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) { return false; }
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() {
-    RefPtr<ContainerLayer> layer = new TestContainerLayer(this);
+    nsRefPtr<ContainerLayer> layer = new TestContainerLayer(this);
     return layer.forget();
   }
   virtual void GetBackendName(nsAString& aName) {}
@@ -70,7 +70,7 @@ public:
     return nullptr;
   }
   virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() {
-    RefPtr<PaintedLayer> layer = new TestPaintedLayer(this);
+    nsRefPtr<PaintedLayer> layer = new TestPaintedLayer(this);
     return layer.forget();
   }
   virtual already_AddRefed<ColorLayer> CreateColorLayer() {
@@ -168,7 +168,7 @@ TEST(Layers, UserData) {
 
 static
 already_AddRefed<Layer> CreateLayer(char aLayerType, LayerManager* aManager) {
-  RefPtr<Layer> layer = nullptr;
+  nsRefPtr<Layer> layer = nullptr;
   if (aLayerType == 'c') {
     layer = aManager->CreateContainerLayer();
   } else if (aLayerType == 't') {
@@ -183,8 +183,8 @@ already_AddRefed<Layer> CreateLayerTree(
     const char* aLayerTreeDescription,
     nsIntRegion* aVisibleRegions,
     const Matrix4x4* aTransforms,
-    RefPtr<LayerManager>& manager,
-    nsTArray<RefPtr<Layer> >& aLayersOut) {
+    nsRefPtr<LayerManager>& manager,
+    nsTArray<nsRefPtr<Layer> >& aLayersOut) {
 
   aLayersOut.Clear();
 
@@ -192,9 +192,9 @@ already_AddRefed<Layer> CreateLayerTree(
     manager = new TestLayerManager();
   }
 
-  RefPtr<Layer> rootLayer = nullptr;
-  RefPtr<ContainerLayer> parentContainerLayer = nullptr;
-  RefPtr<Layer> lastLayer = nullptr;
+  nsRefPtr<Layer> rootLayer = nullptr;
+  nsRefPtr<ContainerLayer> parentContainerLayer = nullptr;
+  nsRefPtr<Layer> lastLayer = nullptr;
   int layerNumber = 0;
   for (size_t i = 0; i < strlen(aLayerTreeDescription); i++) {
     if (aLayerTreeDescription[i] == '(') {
@@ -211,7 +211,7 @@ already_AddRefed<Layer> CreateLayerTree(
       parentContainerLayer = parentContainerLayer->GetParent();
       lastLayer = nullptr;
     } else {
-      RefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
+      nsRefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
       if (aVisibleRegions) {
         layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
         layer->SetEventRegions(EventRegions(aVisibleRegions[layerNumber]));
@@ -259,10 +259,10 @@ TEST(Layers, LayerTree) {
     Matrix4x4(),
     Matrix4x4(),
   };
-  nsTArray<RefPtr<Layer> > layers;
+  nsTArray<nsRefPtr<Layer> > layers;
 
-  RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
 
   // B2G g++ doesn't like ASSERT_NE with nullptr directly. It thinks it's
   // an int.
@@ -292,7 +292,7 @@ static void ValidateTreePointers(Layer* aLayer) {
   }
 }
 
-static void ValidateTreePointers(nsTArray<RefPtr<Layer> >& aLayers) {
+static void ValidateTreePointers(nsTArray<nsRefPtr<Layer> >& aLayers) {
   for (uint32_t i = 0; i < aLayers.Length(); i++) {
     ValidateTreePointers(aLayers[i]);
   }
@@ -301,9 +301,9 @@ static void ValidateTreePointers(nsTArray<RefPtr<Layer> >& aLayers) {
 TEST(Layers, RepositionChild) {
   const char* layerTreeSyntax = "c(ttt)";
 
-  nsTArray<RefPtr<Layer> > layers;
-  RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
   ContainerLayer* parent = root->AsContainerLayer();
   ValidateTreePointers(layers);
 
@@ -352,9 +352,9 @@ TEST(Layers, RepositionChild) {
 }
 
 TEST(LayerMetricsWrapper, SimpleTree) {
-  nsTArray<RefPtr<Layer> > layers;
-  RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
   LayerMetricsWrapper wrapper(root);
 
   ASSERT_EQ(root.get(), wrapper.GetLayer());
@@ -396,9 +396,9 @@ MakeMetrics(FrameMetrics::ViewID aId) {
 }
 
 TEST(LayerMetricsWrapper, MultiFramemetricsTree) {
-  nsTArray<RefPtr<Layer> > layers;
-  RefPtr<LayerManager> lm;
-  RefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree("c(c(c(tt)c(t)))", nullptr, nullptr, lm, layers);
 
   nsTArray<FrameMetrics> metrics;
   metrics.InsertElementAt(0, MakeMetrics(FrameMetrics::START_SCROLL_ID + 0)); // topmost of root layer

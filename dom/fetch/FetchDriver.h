@@ -13,7 +13,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/net/ReferrerPolicy.h"
@@ -80,10 +80,10 @@ public:
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
-  RefPtr<InternalRequest> mRequest;
-  RefPtr<InternalResponse> mResponse;
+  nsRefPtr<InternalRequest> mRequest;
+  nsRefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
-  RefPtr<FetchDriverObserver> mObserver;
+  nsRefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mOldRedirectChannel;

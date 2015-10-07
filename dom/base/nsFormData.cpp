@@ -39,7 +39,7 @@ CreateNewFileInstance(Blob& aBlob, const Optional<nsAString>& aFilename)
   } else {
     // If value is already a File and filename is not passed, the spec says not
     // to create a new instance.
-    RefPtr<File> file = aBlob.ToFile();
+    nsRefPtr<File> file = aBlob.ToFile();
     if (file) {
       return file.forget();
     }
@@ -110,7 +110,7 @@ void
 nsFormData::Append(const nsAString& aName, Blob& aBlob,
                    const Optional<nsAString>& aFilename)
 {
-  RefPtr<File> file = CreateNewFileInstance(aBlob, aFilename);
+  nsRefPtr<File> file = CreateNewFileInstance(aBlob, aFilename);
   AddNameFilePair(aName, file);
 }
 
@@ -211,7 +211,7 @@ nsFormData::Set(const nsAString& aName, Blob& aBlob,
 {
   FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
   if (tuple) {
-    RefPtr<File> file = CreateNewFileInstance(aBlob, aFilename);
+    nsRefPtr<File> file = CreateNewFileInstance(aBlob, aFilename);
     SetNameFilePair(tuple, aName, file);
   } else {
     Append(aName, aBlob, aFilename);
@@ -249,7 +249,7 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
     free(iid);
 
     nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports);
-    RefPtr<Blob> blob = static_cast<Blob*>(domBlob.get());
+    nsRefPtr<Blob> blob = static_cast<Blob*>(domBlob.get());
     if (domBlob) {
       Optional<nsAString> temp;
       Append(aName, *blob, temp);
@@ -280,7 +280,7 @@ nsFormData::Constructor(const GlobalObject& aGlobal,
                         const Optional<NonNull<HTMLFormElement> >& aFormElement,
                         ErrorResult& aRv)
 {
-  RefPtr<nsFormData> formData = new nsFormData(aGlobal.GetAsSupports());
+  nsRefPtr<nsFormData> formData = new nsFormData(aGlobal.GetAsSupports());
   if (aFormElement.WasPassed()) {
     aRv = aFormElement.Value().WalkFormElements(formData);
   }

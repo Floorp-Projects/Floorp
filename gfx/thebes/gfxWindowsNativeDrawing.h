@@ -87,7 +87,7 @@ public:
 
 private:
 
-    RefPtr<gfxContext> mContext;
+    nsRefPtr<gfxContext> mContext;
     gfxRect mNativeRect;
     uint32_t mNativeDrawFlags;
 
@@ -95,7 +95,7 @@ private:
     uint8_t mRenderState;
 
     gfxPoint mDeviceOffset;
-    RefPtr<gfxPattern> mBlackPattern, mWhitePattern;
+    nsRefPtr<gfxPattern> mBlackPattern, mWhitePattern;
 
     enum TransformType {
         TRANSLATION_ONLY,
@@ -109,7 +109,7 @@ private:
     XFORM mWorldTransform;
 
     // saved state
-    RefPtr<gfxWindowsSurface> mWinSurface, mBlackSurface, mWhiteSurface;
+    nsRefPtr<gfxWindowsSurface> mWinSurface, mBlackSurface, mWhiteSurface;
     HDC mDC;
     XFORM mOldWorldTransform;
     POINT mOrigViewportOrigin;

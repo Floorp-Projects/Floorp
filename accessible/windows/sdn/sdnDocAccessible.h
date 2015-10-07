@@ -44,7 +44,7 @@ public:
     /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes);
 
 protected:
-  RefPtr<DocAccessibleWrap> mAccessible;
+  nsRefPtr<DocAccessibleWrap> mAccessible;
 };
 
 } // namespace a11y

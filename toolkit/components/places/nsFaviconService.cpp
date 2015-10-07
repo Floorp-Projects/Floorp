@@ -136,7 +136,7 @@ nsFaviconService::ExpireAllFavicons()
   , removeIconsStmt.get()
   };
   nsCOMPtr<mozIStoragePendingStatement> ps;
-  RefPtr<ExpireFaviconsStatementCallbackNotifier> callback =
+  nsRefPtr<ExpireFaviconsStatementCallbackNotifier> callback =
     new ExpireFaviconsStatementCallbackNotifier();
   nsresult rv = mDB->MainConn()->ExecuteAsync(
     stmts, ArrayLength(stmts), callback, getter_AddRefs(ps)

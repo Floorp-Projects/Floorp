@@ -24,7 +24,7 @@ public:
                 MediaDataDecoderCallback* aCallback);
   ~VorbisDataDecoder();
 
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -41,7 +41,7 @@ private:
   void DoDrain ();
 
   const AudioInfo& mInfo;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // Vorbis decoder state

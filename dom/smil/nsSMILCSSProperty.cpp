@@ -44,7 +44,7 @@ GetCSSComputedValue(Element* aElem,
     return false;
   }
 
-  RefPtr<nsComputedDOMStyle> computedStyle =
+  nsRefPtr<nsComputedDOMStyle> computedStyle =
     NS_NewComputedDOMStyle(aElem, EmptyString(), shell);
 
   computedStyle->GetPropertyValue(aPropID, aResult);

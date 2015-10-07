@@ -56,8 +56,8 @@ TelephonyDialCallback::NotifyDialCallSuccess(uint32_t aClientId,
                                              uint32_t aCallIndex,
                                              const nsAString& aNumber)
 {
-  RefPtr<TelephonyCallId> id = mTelephony->CreateCallId(aNumber);
-  RefPtr<TelephonyCall> call =
+  nsRefPtr<TelephonyCallId> id = mTelephony->CreateCallId(aNumber);
+  nsRefPtr<TelephonyCall> call =
       mTelephony->CreateCall(id, aClientId, aCallIndex,
                              nsITelephonyService::CALL_STATE_DIALING);
 

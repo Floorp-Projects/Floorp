@@ -117,7 +117,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
   ForceCompositionEnd();
 
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (selection->Collapsed()) {
@@ -141,7 +141,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
     // Loop through the ranges in the selection
     uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; rangeIdx++) {
-      RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
+      nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
       // Adjust range to include any ancestors whose children are entirely
       // selected
@@ -335,7 +335,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode(Text& aText,
 
   // Do we need to split the text node?
   ErrorResult rv;
-  RefPtr<Text> text = &aText;
+  nsRefPtr<Text> text = &aText;
   if (uint32_t(aEndOffset) != aText.Length()) {
     // We need to split off back of text node
     text = SplitNode(aText, aEndOffset, rv)->GetAsText();
@@ -739,7 +739,7 @@ nsHTMLEditor::RemoveStyleInside(nsIContent& aNode,
   }
 
   // first process the children
-  RefPtr<nsIContent> child = aNode.GetFirstChild();
+  nsRefPtr<nsIContent> child = aNode.GetFirstChild();
   while (child) {
     // cache next sibling since we might remove child
     nsCOMPtr<nsIContent> next = child->GetNextSibling();
@@ -1055,11 +1055,11 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
   *aFirst = false;
   bool first = true;
 
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   bool isCollapsed = selection->Collapsed();
-  RefPtr<nsRange> range = selection->GetRangeAt(0);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
   // XXX: Should be a while loop, to get each separate range
   // XXX: ERROR_HANDLING can currentItem be null?
   if (range) {
@@ -1275,7 +1275,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
   ForceCompositionEnd();
 
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (selection->Collapsed()) {
@@ -1311,7 +1311,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
     // Loop through the ranges in the selection
     uint32_t rangeCount = selection->RangeCount();
     for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-      RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
+      nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
       if (aProperty == nsGkAtoms::name) {
         // Promote range if it starts or end in a named anchor and we want to
         // remove named anchors
@@ -1418,7 +1418,7 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
   ForceCompositionEnd();
 
   // Get the selection
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
   // If selection is collapsed, set typing state
   if (selection->Collapsed()) {
@@ -1454,7 +1454,7 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
   // Loop through the ranges in the selection
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
-    RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
+    nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
 
     // Adjust range to include any ancestors with entirely selected children
     nsresult res = PromoteInlineRange(range);

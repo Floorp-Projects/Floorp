@@ -38,7 +38,7 @@ NS_SetMainThread()
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-typedef nsTArray<RefPtr<nsThread>> nsThreadArray;
+typedef nsTArray<nsRefPtr<nsThread>> nsThreadArray;
 
 //-----------------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ nsThreadManager::Shutdown()
   {
     OffTheBooksMutexAutoLock lock(mLock);
     for (auto iter = mThreadsByPRThread.Iter(); !iter.Done(); iter.Next()) {
-      RefPtr<nsThread>& thread = iter.Data();
+      nsRefPtr<nsThread>& thread = iter.Data();
       threads.AppendElement(thread);
       iter.Remove();
     }
@@ -225,7 +225,7 @@ nsThreadManager::GetCurrentThread()
   }
 
   // OK, that's fine.  We'll dynamically create one :-)
-  RefPtr<nsThread> thread = new nsThread(nsThread::NOT_MAIN_THREAD, 0);
+  nsRefPtr<nsThread> thread = new nsThread(nsThread::NOT_MAIN_THREAD, 0);
   if (!thread || NS_FAILED(thread->InitCurrentThread())) {
     return nullptr;
   }
@@ -245,7 +245,7 @@ nsThreadManager::NewThread(uint32_t aCreationFlags,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr<nsThread> thr = new nsThread(nsThread::NOT_MAIN_THREAD, aStackSize);
+  nsRefPtr<nsThread> thr = new nsThread(nsThread::NOT_MAIN_THREAD, aStackSize);
   nsresult rv = thr->Init();  // Note: blocks until the new thread has been set up
   if (NS_FAILED(rv)) {
     return rv;
@@ -278,7 +278,7 @@ nsThreadManager::GetThreadFromPRThread(PRThread* aThread, nsIThread** aResult)
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<nsThread> temp;
+  nsRefPtr<nsThread> temp;
   {
     OffTheBooksMutexAutoLock lock(mLock);
     mThreadsByPRThread.Get(aThread, getter_AddRefs(temp));

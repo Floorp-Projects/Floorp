@@ -137,7 +137,7 @@ SelectionCarets::~SelectionCarets()
 void
 SelectionCarets::Terminate()
 {
-  RefPtr<nsDocShell> docShell(mDocShell.get());
+  nsRefPtr<nsDocShell> docShell(mDocShell.get());
   if (docShell) {
     docShell->RemoveWeakReflowObserver(this);
     docShell->RemoveWeakScrollObserver(this);
@@ -420,7 +420,7 @@ FindFirstNodeWithFrame(nsIDocument* aDocument,
   }
 
   ErrorResult err;
-  RefPtr<dom::TreeWalker> walker =
+  nsRefPtr<dom::TreeWalker> walker =
     aDocument->CreateTreeWalker(*startNode,
                                 nsIDOMNodeFilter::SHOW_ALL,
                                 nullptr,
@@ -455,7 +455,7 @@ SelectionCarets::UpdateSelectionCarets()
     return;
   }
 
-  RefPtr<dom::Selection> selection = GetSelection();
+  nsRefPtr<dom::Selection> selection = GetSelection();
   if (!selection) {
     SELECTIONCARETS_LOG("Cannot get selection!");
     SetVisibility(false);
@@ -469,8 +469,8 @@ SelectionCarets::UpdateSelectionCarets()
   }
 
   int32_t rangeCount = selection->RangeCount();
-  RefPtr<nsRange> firstRange = selection->GetRangeAt(0);
-  RefPtr<nsRange> lastRange = selection->GetRangeAt(rangeCount - 1);
+  nsRefPtr<nsRange> firstRange = selection->GetRangeAt(0);
+  nsRefPtr<nsRange> lastRange = selection->GetRangeAt(rangeCount - 1);
 
   mPresShell->FlushPendingNotifications(Flush_Layout);
 
@@ -482,7 +482,7 @@ SelectionCarets::UpdateSelectionCarets()
   }
 
   // Check start and end frame is rtl or ltr text
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     SetVisibility(false);
     return;
@@ -655,7 +655,7 @@ SelectionCarets::SelectWord()
   SetSelectionDragState(false);
 
   // Clear maintain selection otherwise we cannot select less than a word
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (fs) {
     fs->MaintainSelection();
   }
@@ -748,7 +748,7 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -775,7 +775,7 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
     return nsEventStatus_eConsumeNoDefault;
   }
 
-  RefPtr<dom::Selection> selection = GetSelection();
+  nsRefPtr<dom::Selection> selection = GetSelection();
   if (!selection) {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -787,7 +787,7 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
 
   // Limit the drag behavior not to cross the end of last selection range
   // when drag the start frame and vice versa
-  RefPtr<nsRange> range = mDragMode == START_FRAME ?
+  nsRefPtr<nsRange> range = mDragMode == START_FRAME ?
     selection->GetRangeAt(rangeCount - 1) : selection->GetRangeAt(0);
   if (!CompareRangeWithContentOffset(range, fs, offsets, mDragMode)) {
     return nsEventStatus_eConsumeNoDefault;
@@ -834,7 +834,7 @@ SelectionCarets::GetCaretYCenterPosition()
     return 0;
   }
 
-  RefPtr<dom::Selection> selection = GetSelection();
+  nsRefPtr<dom::Selection> selection = GetSelection();
   if (!selection) {
     return 0;
   }
@@ -844,7 +844,7 @@ SelectionCarets::GetCaretYCenterPosition()
     return 0;
   }
 
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     return 0;
   }
@@ -853,11 +853,11 @@ SelectionCarets::GetCaretYCenterPosition()
   nsCOMPtr<nsIContent> node;
   uint32_t nodeOffset;
   if (mDragMode == START_FRAME) {
-    RefPtr<nsRange> range = selection->GetRangeAt(0);
+    nsRefPtr<nsRange> range = selection->GetRangeAt(0);
     node = do_QueryInterface(range->GetStartParent());
     nodeOffset = range->StartOffset();
   } else {
-    RefPtr<nsRange> range = selection->GetRangeAt(rangeCount - 1);
+    nsRefPtr<nsRange> range = selection->GetRangeAt(rangeCount - 1);
     node = do_QueryInterface(range->GetEndParent());
     nodeOffset = range->EndOffset();
   }
@@ -879,7 +879,7 @@ SelectionCarets::GetCaretYCenterPosition()
 void
 SelectionCarets::SetSelectionDragState(bool aState)
 {
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (fs) {
     fs->SetDragState(aState);
   }
@@ -888,7 +888,7 @@ SelectionCarets::SetSelectionDragState(bool aState)
 void
 SelectionCarets::SetSelectionDirection(nsDirection aDir)
 {
-  RefPtr<dom::Selection> selection = GetSelection();
+  nsRefPtr<dom::Selection> selection = GetSelection();
   if (selection) {
     selection->AdjustAnchorFocusForMultiRange(aDir);
   }
@@ -996,7 +996,7 @@ SelectionCarets::GetFocusedContent()
 Selection*
 SelectionCarets::GetSelection()
 {
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (fs) {
     return fs->GetSelection(nsISelectionController::SELECTION_NORMAL);
   }
@@ -1015,7 +1015,7 @@ SelectionCarets::GetFrameSelection()
 
     // Prevent us from touching the nsFrameSelection associated to other
     // PresShell.
-    RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
+    nsRefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
     if (!fs || fs->GetShell() != mPresShell) {
       return nullptr;
     }
@@ -1093,7 +1093,7 @@ SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
     // XXX: Do we need to flush layout?
     mPresShell->FlushPendingNotifications(Flush_Layout);
     nsRect rect = nsContentUtils::GetSelectionBoundingRect(aSelection);
-    RefPtr<DOMRect>domRect = new DOMRect(ToSupports(doc));
+    nsRefPtr<DOMRect>domRect = new DOMRect(ToSupports(doc));
 
     domRect->SetLayoutRect(rect);
     init.mBoundingClientRect = domRect;
@@ -1103,7 +1103,7 @@ SelectionCarets::DispatchSelectionStateChangedEvent(Selection* aSelection,
   }
   init.mStates = aStates;
 
-  RefPtr<SelectionStateChangedEvent> event =
+  nsRefPtr<SelectionStateChangedEvent> event =
     SelectionStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozselectionstatechanged"), init);
 
   event->SetTrusted(true);
@@ -1194,7 +1194,7 @@ DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState a
     detail.mBubbles = true;
     detail.mCancelable = false;
     detail.mState = aState;
-    RefPtr<ScrollViewChangeEvent> event =
+    nsRefPtr<ScrollViewChangeEvent> event =
       ScrollViewChangeEvent::Constructor(doc, NS_LITERAL_STRING("scrollviewchange"), detail);
 
     event->SetTrusted(true);
@@ -1216,7 +1216,7 @@ SelectionCarets::AsyncPanZoomStarted()
     SELECTIONCARETS_LOG("Dispatch scroll started");
     DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started);
   } else {
-    RefPtr<dom::Selection> selection = GetSelection();
+    nsRefPtr<dom::Selection> selection = GetSelection();
     if (selection && selection->RangeCount() && selection->IsCollapsed()) {
       mInAsyncPanZoomGesture = true;
       DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started);
@@ -1268,7 +1268,7 @@ SelectionCarets::ScrollPositionChanged()
       }
     }
   } else {
-    RefPtr<dom::Selection> selection = GetSelection();
+    nsRefPtr<dom::Selection> selection = GetSelection();
     if (selection && selection->RangeCount() && selection->IsCollapsed()) {
       DispatchSelectionStateChangedEvent(selection,
                                          SelectionState::Updateposition);
@@ -1316,7 +1316,7 @@ SelectionCarets::CancelLongTapDetector()
 /* static */void
 SelectionCarets::FireLongTap(nsITimer* aTimer, void* aSelectionCarets)
 {
-  RefPtr<SelectionCarets> self = static_cast<SelectionCarets*>(aSelectionCarets);
+  nsRefPtr<SelectionCarets> self = static_cast<SelectionCarets*>(aSelectionCarets);
   NS_PRECONDITION(aTimer == self->mLongTapDetectorTimer,
                   "Unexpected timer");
 
@@ -1360,7 +1360,7 @@ SelectionCarets::CancelScrollEndDetector()
 /* static */void
 SelectionCarets::FireScrollEnd(nsITimer* aTimer, void* aSelectionCarets)
 {
-  RefPtr<SelectionCarets> self = static_cast<SelectionCarets*>(aSelectionCarets);
+  nsRefPtr<SelectionCarets> self = static_cast<SelectionCarets*>(aSelectionCarets);
   NS_PRECONDITION(aTimer == self->mScrollEndDetectorTimer,
                   "Unexpected timer");
 
@@ -1384,7 +1384,7 @@ SelectionCarets::Reflow(DOMHighResTimeStamp aStart, DOMHighResTimeStamp aEnd)
                                          SelectionState::Updateposition);
     }
   } else {
-    RefPtr<dom::Selection> selection = GetSelection();
+    nsRefPtr<dom::Selection> selection = GetSelection();
     if (selection && selection->RangeCount() && selection->IsCollapsed()) {
       DispatchSelectionStateChangedEvent(selection,
                                          SelectionState::Updateposition);

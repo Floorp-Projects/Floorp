@@ -16,7 +16,7 @@
 #include "mozilla/GfxMessageUtils.h"    // for gfxContentType
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, IntPoint
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
@@ -211,8 +211,8 @@ public:
   }
 
 protected:
-  RefPtr<gl::TextureImage> mTexImage;
-  RefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<gl::TextureImage> mTexImage;
+  nsRefPtr<CompositorOGL> mCompositor;
   TextureFlags mFlags;
   bool mIterating;
 };
@@ -269,7 +269,7 @@ public:
 protected:
   void DeleteTextureHandle();
 
-  RefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<CompositorOGL> mCompositor;
   GLuint mTextureHandle;
   GLenum mTextureTarget;
   gfx::IntSize mSize;
@@ -319,7 +319,7 @@ public:
   gl::GLContext* gl() const;
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<CompositorOGL> mCompositor;
   mozilla::gl::AndroidSurfaceTexture* const mSurfTex;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
@@ -367,8 +367,8 @@ public:
 protected:
   mozilla::gl::AndroidSurfaceTexture* const mSurfTex;
   const gfx::IntSize mSize;
-  RefPtr<CompositorOGL> mCompositor;
-  RefPtr<SurfaceTextureSource> mTextureSource;
+  nsRefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<SurfaceTextureSource> mTextureSource;
 };
 
 #endif // MOZ_WIDGET_ANDROID
@@ -411,7 +411,7 @@ public:
   gl::GLContext* gl() const;
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<CompositorOGL> mCompositor;
   const EGLImage mImage;
   const gfx::SurfaceFormat mFormat;
   const GLenum mTextureTarget;
@@ -463,8 +463,8 @@ protected:
   const EGLSync mSync;
   const gfx::IntSize mSize;
   const bool mHasAlpha;
-  RefPtr<CompositorOGL> mCompositor;
-  RefPtr<EGLImageTextureSource> mTextureSource;
+  nsRefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<EGLImageTextureSource> mTextureSource;
 };
 
 } // namespace layers

@@ -151,7 +151,7 @@ protected:
       }
 
     private:
-      RefPtr<imgRequestProxy> mOwner;
+      nsRefPtr<imgRequestProxy> mOwner;
       nsresult mStatus;
   };
 
@@ -198,7 +198,7 @@ private:
   friend imgRequestProxy* NewStaticProxy(imgRequestProxy* aThis);
 
   // The URI of our request.
-  RefPtr<ImageURL> mURI;
+  nsRefPtr<ImageURL> mURI;
 
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our

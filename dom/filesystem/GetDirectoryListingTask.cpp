@@ -59,7 +59,7 @@ already_AddRefed<Promise>
 GetDirectoryListingTask::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return RefPtr<Promise>(mPromise).forget();
+  return nsRefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
@@ -197,7 +197,7 @@ GetDirectoryListingTask::HandlerCallback()
   }
 
   if (HasError()) {
-    RefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
+    nsRefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
       mErrorValue);
     mPromise->MaybeRejectBrokenly(domError);
     mPromise = nullptr;

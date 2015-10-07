@@ -70,7 +70,7 @@ public:
      * @note GetProcessingInstructions retains the ownership (the PI
      *       protos only get deleted when the proto document is deleted)
      */
-    const nsTArray<RefPtr<nsXULPrototypePI> >& GetProcessingInstructions() const;
+    const nsTArray<nsRefPtr<nsXULPrototypePI> >& GetProcessingInstructions() const;
 
     /**
      * Access the array of style overlays for this document.
@@ -119,14 +119,14 @@ public:
 
 protected:
     nsCOMPtr<nsIURI> mURI;
-    RefPtr<nsXULPrototypeElement> mRoot;
-    nsTArray<RefPtr<nsXULPrototypePI> > mProcessingInstructions;
+    nsRefPtr<nsXULPrototypeElement> mRoot;
+    nsTArray<nsRefPtr<nsXULPrototypePI> > mProcessingInstructions;
     nsCOMArray<nsIURI> mStyleSheetReferences;
 
     bool mLoaded;
-    nsTArray< RefPtr<mozilla::dom::XULDocument> > mPrototypeWaiters;
+    nsTArray< nsRefPtr<mozilla::dom::XULDocument> > mPrototypeWaiters;
 
-    RefPtr<nsNodeInfoManager> mNodeInfoManager;
+    nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
 
     uint32_t mCCGeneration;
     uint32_t mGCNumber;

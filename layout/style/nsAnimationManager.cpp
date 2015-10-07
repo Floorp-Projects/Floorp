@@ -472,7 +472,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
         // the new list of animations with a given name than in the old
         // list, it will be the animations towards the of the beginning of
         // the list that do not match and are treated as new animations.
-        RefPtr<CSSAnimation> oldAnim;
+        nsRefPtr<CSSAnimation> oldAnim;
         size_t oldIdx = collection->mAnimations.Length();
         while (oldIdx-- != 0) {
           CSSAnimation* a = collection->mAnimations[oldIdx]->AsCSSAnimation();
@@ -642,7 +642,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   if (!result) {
     nsCOMArray<nsIStyleRule> rules;
     rules.AppendObject(aKeyframe);
-    RefPtr<nsStyleContext> resultStrong = aPresContext->StyleSet()->
+    nsRefPtr<nsStyleContext> resultStrong = aPresContext->StyleSet()->
       ResolveStyleByAddingRules(aParentStyleContext, rules);
     mCache.Put(aKeyframe, resultStrong);
     result = resultStrong;
@@ -662,7 +662,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
 
-  RefPtr<nsStyleContext> styleWithoutAnimation;
+  nsRefPtr<nsStyleContext> styleWithoutAnimation;
 
   for (size_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
@@ -681,7 +681,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    RefPtr<CSSAnimation> dest =
+    nsRefPtr<CSSAnimation> dest =
       new CSSAnimation(mPresContext->Document()->GetScopeObject(),
                        src.GetName());
     dest->SetOwningElement(
@@ -698,7 +698,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mDirection = src.GetDirection();
     timing.mFillMode = src.GetFillMode();
 
-    RefPtr<KeyframeEffectReadOnly> destEffect =
+    nsRefPtr<KeyframeEffectReadOnly> destEffect =
       new KeyframeEffectReadOnly(mPresContext->Document(), aTarget,
                                  aStyleContext->GetPseudoType(), timing);
     dest->SetEffect(destEffect);
@@ -799,14 +799,14 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       propData.mWinsInCascade = true;
 
       KeyframeData *fromKeyframe = nullptr;
-      RefPtr<nsStyleContext> fromContext;
+      nsRefPtr<nsStyleContext> fromContext;
       bool interpolated = true;
       for (uint32_t wpIdx = 0, wpEnd = keyframesWithProperty.Length();
            wpIdx != wpEnd; ++wpIdx) {
         uint32_t kfIdx = keyframesWithProperty[wpIdx];
         KeyframeData &toKeyframe = sortedKeyframes[kfIdx];
 
-        RefPtr<nsStyleContext> toContext =
+        nsRefPtr<nsStyleContext> toContext =
           resolvedStyles.Get(mPresContext, aStyleContext, toKeyframe.mRule);
 
         if (fromKeyframe) {

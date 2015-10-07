@@ -29,7 +29,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsresult SetTuners(const nsTArray<RefPtr<TVTuner>>& aTuners);
+  nsresult SetTuners(const nsTArray<nsRefPtr<TVTuner>>& aTuners);
 
   void RejectPendingGetTunersPromises(nsresult aRv);
 
@@ -47,9 +47,9 @@ private:
   bool Init();
 
   nsCOMPtr<nsITVService> mTVService;
-  nsTArray<RefPtr<TVTuner>> mTuners;
+  nsTArray<nsRefPtr<TVTuner>> mTuners;
   bool mIsReady;
-  nsTArray<RefPtr<Promise>> mPendingGetTunersPromises;
+  nsTArray<nsRefPtr<Promise>> mPendingGetTunersPromises;
 };
 
 } // namespace dom

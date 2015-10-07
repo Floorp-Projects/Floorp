@@ -137,7 +137,7 @@ protected:
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  RefPtr<BodyRule> mContentStyleRule;
+  nsRefPtr<BodyRule> mContentStyleRule;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

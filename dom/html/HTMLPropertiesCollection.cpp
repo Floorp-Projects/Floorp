@@ -142,7 +142,7 @@ HTMLPropertiesCollection::NamedItem(const nsAString& aName)
 
   PropertyNodeList* propertyList = mNamedItemEntries.GetWeak(aName);
   if (!propertyList) {
-    RefPtr<PropertyNodeList> newPropertyList =
+    nsRefPtr<PropertyNodeList> newPropertyList =
       new PropertyNodeList(this, mRoot, aName);
     mNamedItemEntries.Put(aName, newPropertyList);
     propertyList = newPropertyList;

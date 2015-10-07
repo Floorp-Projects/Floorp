@@ -154,7 +154,7 @@ private:
     uint32_t                          mTriedHostAuth            : 1;
     uint32_t                          mSuppressDefensiveAuth    : 1;
 
-    RefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
+    nsRefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
 
     // A variable holding the preference settings to whether to open HTTP
     // authentication credentials dialogs for sub-resources and cross-origin

@@ -129,7 +129,7 @@ nsSubDocumentFrame::Init(nsIContent*       aContent,
   // it into the view tree. This happens when we've been reframed, and
   // ensures the presentation persists across reframes. If the frame element
   // has changed documents however, we blow away the presentation.
-  RefPtr<nsFrameLoader> frameloader = FrameLoader();
+  nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
   if (frameloader) {
     nsCOMPtr<nsIDocument> oldContainerDoc;
     nsView* detachedViews =
@@ -162,7 +162,7 @@ nsSubDocumentFrame::ShowViewer()
     // create the inner view for it to use.
     (void) EnsureInnerView();
   } else {
-    RefPtr<nsFrameLoader> frameloader = FrameLoader();
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
       CSSIntSize margin = GetMarginAttributes();
       nsWeakFrame weakThis(this);
@@ -251,7 +251,7 @@ ScreenIntSize
 nsSubDocumentFrame::GetSubdocumentSize()
 {
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    RefPtr<nsFrameLoader> frameloader = FrameLoader();
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
       nsCOMPtr<nsIDocument> oldContainerDoc;
       nsView* detachedViews =
@@ -899,12 +899,12 @@ nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
     CSSIntSize margins = GetMarginAttributes();
 
     // Notify the frameloader
-    RefPtr<nsFrameLoader> frameloader = FrameLoader();
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader)
       frameloader->MarginsChanged(margins.width, margins.height);
   }
   else if (aAttribute == nsGkAtoms::mozpasspointerevents) {
-    RefPtr<nsFrameLoader> frameloader = FrameLoader();
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
       if (aModType == nsIDOMMutationEvent::ADDITION) {
         frameloader->ActivateUpdateHitRegion();
@@ -962,7 +962,7 @@ public:
   }
 private:
   nsCOMPtr<nsIContent> mFrameElement;
-  RefPtr<nsFrameLoader> mFrameLoader;
+  nsRefPtr<nsFrameLoader> mFrameLoader;
   nsCOMPtr<nsIPresShell> mPresShell;
   bool mHideViewerIfFrameless;
 };
@@ -1153,7 +1153,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
     nsCOMPtr<nsIContentViewer> cv;
     ds->GetContentViewer(getter_AddRefs(cv));
     while (cv) {
-      RefPtr<nsPresContext> pc;
+      nsRefPtr<nsPresContext> pc;
       cv->GetPresContext(getter_AddRefs(pc));
       if (pc && pc->GetPresShell()) {
         pc->GetPresShell()->SetNeverPainting(ds->IsInvisible());

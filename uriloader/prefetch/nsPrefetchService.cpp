@@ -80,8 +80,8 @@ private:
 
     void Increment();
 
-    RefPtr<nsPrefetchService> mService;
-    RefPtr<nsPrefetchNode> mCurrent;
+    nsRefPtr<nsPrefetchService> mService;
+    nsRefPtr<nsPrefetchNode> mCurrent;
     bool mStarted;
 };
 
@@ -454,7 +454,7 @@ nsPrefetchService::ProcessNextURI()
         //
         // if opening the channel fails, then just skip to the next uri
         //
-        RefPtr<nsPrefetchNode> node = mCurrentNode;
+        nsRefPtr<nsPrefetchNode> node = mCurrentNode;
         rv = node->OpenChannel();
     }
     while (NS_FAILED(rv));
@@ -562,7 +562,7 @@ void
 nsPrefetchService::EmptyQueue()
 {
     do {
-        RefPtr<nsPrefetchNode> node;
+        nsRefPtr<nsPrefetchNode> node;
         DequeueNode(getter_AddRefs(node));
     } while (mQueueHead);
 }
@@ -710,7 +710,7 @@ nsPrefetchService::Prefetch(nsIURI *aURI,
         }
     }
 
-    RefPtr<nsPrefetchNode> enqueuedNode;
+    nsRefPtr<nsPrefetchNode> enqueuedNode;
     rv = EnqueueURI(aURI, aReferrerURI, aSource,
                     getter_AddRefs(enqueuedNode));
     NS_ENSURE_SUCCESS(rv, rv);

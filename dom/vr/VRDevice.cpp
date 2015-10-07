@@ -32,7 +32,7 @@ already_AddRefed<VRFieldOfView>
 VRFieldOfView::Constructor(const GlobalObject& aGlobal, const VRFieldOfViewInit& aParams,
                            ErrorResult& aRV)
 {
-  RefPtr<VRFieldOfView> fov =
+  nsRefPtr<VRFieldOfView> fov =
     new VRFieldOfView(aGlobal.GetAsSupports(),
                       aParams.mUpDegrees, aParams.mRightDegrees,
                       aParams.mDownDegrees, aParams.mLeftDegrees);
@@ -45,7 +45,7 @@ VRFieldOfView::Constructor(const GlobalObject& aGlobal,
                            double aDownDegrees, double aLeftDegrees,
                            ErrorResult& aRV)
 {
-  RefPtr<VRFieldOfView> fov =
+  nsRefPtr<VRFieldOfView> fov =
     new VRFieldOfView(aGlobal.GetAsSupports(),
                       aUpDegrees, aRightDegrees, aDownDegrees,
                       aLeftDegrees);
@@ -256,7 +256,7 @@ public:
   {
     gfx::IntSize sz(mHMD->SuggestedEyeResolution());
     gfx::VRHMDInfo::Eye eye = aEye == VREye::Left ? gfx::VRHMDInfo::Eye_Left : gfx::VRHMDInfo::Eye_Right;
-    RefPtr<VREyeParameters> params =
+    nsRefPtr<VREyeParameters> params =
       new VREyeParameters(mParent,
                           gfx::VRFieldOfView(15, 15, 15, 15), // XXX min?
                           mHMD->GetMaximumEyeFOV(eye),
@@ -310,7 +310,7 @@ public:
     }
 
     gfx::VRHMDSensorState state = mHMD->GetSensorState();
-    RefPtr<VRPositionState> obj = new VRPositionState(mParent, state);
+    nsRefPtr<VRPositionState> obj = new VRPositionState(mParent, state);
 
     return obj.forget();
   }
@@ -323,7 +323,7 @@ public:
     }
 
     gfx::VRHMDSensorState state = mHMD->GetSensorState();
-    RefPtr<VRPositionState> obj = new VRPositionState(mParent, state);
+    nsRefPtr<VRPositionState> obj = new VRPositionState(mParent, state);
 
     return obj.forget();
   }
@@ -334,16 +334,16 @@ public:
   }
 
 protected:
-  RefPtr<gfx::VRHMDInfo> mHMD;
+  nsRefPtr<gfx::VRHMDInfo> mHMD;
   bool mTracking;
 };
 
 } // namespace
 
 bool
-VRDevice::CreateAllKnownVRDevices(nsISupports *aParent, nsTArray<RefPtr<VRDevice>>& aDevices)
+VRDevice::CreateAllKnownVRDevices(nsISupports *aParent, nsTArray<nsRefPtr<VRDevice>>& aDevices)
 {
-  nsTArray<RefPtr<gfx::VRHMDInfo>> hmds;
+  nsTArray<nsRefPtr<gfx::VRHMDInfo>> hmds;
   gfx::VRHMDManager::GetAllHMDs(hmds);
 
   for (size_t i = 0; i < hmds.Length(); ++i) {

@@ -125,7 +125,7 @@ protected:
   virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) override;
 
 protected:
-  RefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
+  nsRefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIInterfaceRequestor> mDocShellAsReq;
   nsCOMPtr<nsIBaseWindow> mDocShellAsWin;
@@ -156,7 +156,7 @@ protected:
   uint32_t mPersistFlags;
 
   // stream
-  RefPtr<nsEmbedStream> mStream;
+  nsRefPtr<nsEmbedStream> mStream;
 
   // Weak Reference interfaces...
   nsIWidget* mParentWidget;

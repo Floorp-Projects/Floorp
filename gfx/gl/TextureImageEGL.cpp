@@ -146,8 +146,8 @@ TextureImageEGL::EndUpdate()
     // a fast mapping between our cairo target surface and the GL
     // texture, so we have to upload data.
 
-    RefPtr<gfx::SourceSurface> updateSurface = nullptr;
-    RefPtr<gfx::DataSourceSurface> uploadImage = nullptr;
+    nsRefPtr<gfx::SourceSurface> updateSurface = nullptr;
+    nsRefPtr<gfx::DataSourceSurface> uploadImage = nullptr;
     gfx::IntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
     NS_ASSERTION(mUpdateDrawTarget->GetSize() == updateSize,
@@ -311,7 +311,7 @@ CreateTextureImageEGL(GLContext *gl,
                       TextureImage::Flags aFlags,
                       TextureImage::ImageFormat aImageFormat)
 {
-    RefPtr<TextureImage> t = new gl::TiledTextureImage(gl, aSize, aContentType, aFlags, aImageFormat);
+    nsRefPtr<TextureImage> t = new gl::TiledTextureImage(gl, aSize, aContentType, aFlags, aImageFormat);
     return t.forget();
 }
 
@@ -327,7 +327,7 @@ TileGenFuncEGL(GLContext *gl,
   GLuint texture;
   gl->fGenTextures(1, &texture);
 
-  RefPtr<TextureImageEGL> teximage =
+  nsRefPtr<TextureImageEGL> teximage =
       new TextureImageEGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType,
                           gl, aFlags, TextureImage::Created, aImageFormat);
 

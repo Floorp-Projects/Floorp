@@ -41,7 +41,7 @@ protected:
   }
   virtual ~SVGAnimatedNumber() {};
 
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
 };
 
 } // namespace dom

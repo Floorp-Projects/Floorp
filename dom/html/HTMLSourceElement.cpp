@@ -76,7 +76,7 @@ HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
   nsPresContext* pctx = presShell ? presShell->GetPresContext() : nullptr;
 
   nsCSSParser cssParser;
-  RefPtr<nsMediaList> mediaList = new nsMediaList();
+  nsRefPtr<nsMediaList> mediaList = new nsMediaList();
   cssParser.ParseMediaList(aMedia, nullptr, 0, mediaList, false);
 
   return pctx && mediaList->Matches(pctx, nullptr);

@@ -99,7 +99,7 @@ uint32_t gRestartMode = 0;
 
 class nsAppExitEvent : public nsRunnable {
 private:
-  RefPtr<nsAppStartup> mService;
+  nsRefPtr<nsAppStartup> mService;
 
 public:
   explicit nsAppExitEvent(nsAppStartup *service) : mService(service) {}

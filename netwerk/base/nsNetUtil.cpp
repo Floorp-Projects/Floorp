@@ -508,7 +508,7 @@ NS_NewLoadGroup(nsILoadGroup **aResult, nsIPrincipal *aPrincipal)
         do_CreateInstance(NS_LOADGROUP_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RefPtr<LoadContext> loadContext = new LoadContext(aPrincipal);
+    nsRefPtr<LoadContext> loadContext = new LoadContext(aPrincipal);
     rv = group->SetNotificationCallbacks(loadContext);
     NS_ENSURE_SUCCESS(rv, rv);
 

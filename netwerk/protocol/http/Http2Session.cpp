@@ -1671,7 +1671,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
   }
 
   // Create the buffering transaction and push stream
-  RefPtr<Http2PushTransactionBuffer> transactionBuffer =
+  nsRefPtr<Http2PushTransactionBuffer> transactionBuffer =
     new Http2PushTransactionBuffer();
   transactionBuffer->SetConnection(self);
   Http2PushedStream *pushedStream =
@@ -1720,7 +1720,7 @@ Http2Session::RecvPushPromise(Http2Session *self)
     return NS_OK;
   }
 
-  RefPtr<nsStandardURL> associatedURL, pushedURL;
+  nsRefPtr<nsStandardURL> associatedURL, pushedURL;
   rv = Http2Stream::MakeOriginURL(associatedStream->Origin(), associatedURL);
   if (NS_SUCCEEDED(rv)) {
     rv = Http2Stream::MakeOriginURL(pushedStream->Origin(), pushedURL);
@@ -2055,7 +2055,7 @@ UpdateAltSvcEvent(const nsCString &header,
 private:
   nsCString mHeader;
   nsCString mOrigin;
-  RefPtr<nsHttpConnectionInfo> mCI;
+  nsRefPtr<nsHttpConnectionInfo> mCI;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 };
 
@@ -2150,7 +2150,7 @@ Http2Session::RecvAltSvc(Http2Session *self)
     return NS_OK;
   }
 
-  RefPtr<nsHttpConnectionInfo> ci(self->ConnectionInfo());
+  nsRefPtr<nsHttpConnectionInfo> ci(self->ConnectionInfo());
   if (!self->mConnection || !ci) {
     LOG3(("Http2Session::RecvAltSvc %p no connection or conninfo for %d", self,
           self->mInputFrameID));
@@ -2202,7 +2202,7 @@ Http2Session::RecvAltSvc(Http2Session *self)
   self->mConnection->GetSecurityInfo(getter_AddRefs(callbacks));
   nsCOMPtr<nsIInterfaceRequestor> irCallbacks = do_QueryInterface(callbacks);
 
-  RefPtr<UpdateAltSvcEvent> event =
+  nsRefPtr<UpdateAltSvcEvent> event =
     new UpdateAltSvcEvent(altSvcFieldValue, origin, ci, irCallbacks);
   NS_DispatchToMainThread(event);
   self->ResetDownstreamState();
@@ -3037,7 +3037,7 @@ Http2Session::Close(nsresult aReason)
 nsHttpConnectionInfo *
 Http2Session::ConnectionInfo()
 {
-  RefPtr<nsHttpConnectionInfo> ci;
+  nsRefPtr<nsHttpConnectionInfo> ci;
   GetConnectionInfo(getter_AddRefs(ci));
   return ci.get();
 }
@@ -3337,7 +3337,7 @@ Http2Session::CreateTunnel(nsHttpTransaction *trans,
   // transaction so that an auth created by the connect can be mappped
   // to the correct security callbacks
 
-  RefPtr<SpdyConnectTransaction> connectTrans =
+  nsRefPtr<SpdyConnectTransaction> connectTrans =
     new SpdyConnectTransaction(ci, aCallbacks, trans->Caps(), trans, this);
   AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false, nullptr);
   Http2Stream *tunnel = mStreamTransactionHash.Get(connectTrans);
@@ -3693,8 +3693,8 @@ static PLDHashOperator
              nsAutoPtr<Http2Stream> &stream,
              void *closure)
 {
-  nsTArray<RefPtr<nsAHttpTransaction> > *list =
-    static_cast<nsTArray<RefPtr<nsAHttpTransaction> > *>(closure);
+  nsTArray<nsRefPtr<nsAHttpTransaction> > *list =
+    static_cast<nsTArray<nsRefPtr<nsAHttpTransaction> > *>(closure);
 
   list->AppendElement(key);
 
@@ -3705,7 +3705,7 @@ static PLDHashOperator
 
 nsresult
 Http2Session::TakeSubTransactions(
-  nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+  nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
   // Generally this cannot be done with http/2 as transactions are
   // started right away.

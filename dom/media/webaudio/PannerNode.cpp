@@ -153,7 +153,7 @@ public:
           aStream->CheckForInactive();
           mHRTFPanner->reset();
 
-          RefPtr<PlayingRefChangeHandler> refchanged =
+          nsRefPtr<PlayingRefChangeHandler> refchanged =
             new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::RELEASE);
           aStream->Graph()->
             DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
@@ -163,7 +163,7 @@ public:
       }
     } else if (mPanningModelFunction == &PannerNodeEngine::HRTFPanningFunction) {
       if (mLeftOverData == INT_MIN) {
-        RefPtr<PlayingRefChangeHandler> refchanged =
+        nsRefPtr<PlayingRefChangeHandler> refchanged =
           new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::ADDREF);
         aStream->Graph()->
           DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());

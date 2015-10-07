@@ -161,11 +161,11 @@ private:
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   nsTArray<nsCString> mPendingWrites;
-  RefPtr<nsZipArchive> mArchive;
+  nsRefPtr<nsZipArchive> mArchive;
   nsCOMPtr<nsIFile> mFile;
 
   nsCOMPtr<nsIObserverService> mObserverService;
-  RefPtr<StartupCacheListener> mListener;
+  nsRefPtr<StartupCacheListener> mListener;
   nsCOMPtr<nsITimer> mTimer;
 
   bool mStartupWriteInitiated;

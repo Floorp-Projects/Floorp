@@ -1729,7 +1729,7 @@ AndroidBridge::CaptureZoomedView(nsIDOMWindow *window, nsIntRect zoomedViewRect,
     if (!win) {
         return NS_ERROR_FAILURE;
     }
-    RefPtr<nsPresContext> presContext;
+    nsRefPtr <nsPresContext> presContext;
 
     nsIDocShell* docshell = win->GetDocShell();
 
@@ -1770,7 +1770,7 @@ AndroidBridge::CaptureZoomedView(nsIDOMWindow *window, nsIntRect zoomedViewRect,
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-    RefPtr<gfxContext> context = new gfxContext(dt);
+    nsRefPtr <gfxContext> context = new gfxContext(dt);
     context->SetMatrix(context->CurrentMatrix().Scale(zoomFactor, zoomFactor));
 
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
@@ -1834,7 +1834,7 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
     if (!win)
         return NS_ERROR_FAILURE;
-    RefPtr<nsPresContext> presContext;
+    nsRefPtr<nsPresContext> presContext;
 
     nsIDocShell* docshell = win->GetDocShell();
 
@@ -1865,7 +1865,7 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
 
     MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
                "Need BackendType::CAIRO support");
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
         Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                          data,
                                          IntSize(bufW, bufH),
@@ -1876,7 +1876,7 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-    RefPtr<gfxContext> context = new gfxContext(dt);
+    nsRefPtr<gfxContext> context = new gfxContext(dt);
     context->SetMatrix(
       context->CurrentMatrix().Scale(scale * bufW / srcW,
                                      scale * bufH / srcH));

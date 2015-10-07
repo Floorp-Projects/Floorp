@@ -43,7 +43,7 @@ TVSourceListener::NotifyChannelScanned(const nsAString& aTunerId,
                                        const nsAString& aSourceType,
                                        nsITVChannelData* aChannelData)
 {
-  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
   source->NotifyChannelScanned(aChannelData);
   return NS_OK;
 }
@@ -52,7 +52,7 @@ TVSourceListener::NotifyChannelScanned(const nsAString& aTunerId,
 TVSourceListener::NotifyChannelScanComplete(const nsAString& aTunerId,
                                             const nsAString& aSourceType)
 {
-  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
   source->NotifyChannelScanComplete();
   return NS_OK;
 }
@@ -61,7 +61,7 @@ TVSourceListener::NotifyChannelScanComplete(const nsAString& aTunerId,
 TVSourceListener::NotifyChannelScanStopped(const nsAString& aTunerId,
                                            const nsAString& aSourceType)
 {
-  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
   source->NotifyChannelScanStopped();
   return NS_OK;
 }
@@ -73,7 +73,7 @@ TVSourceListener::NotifyEITBroadcasted(const nsAString& aTunerId,
                                        nsITVProgramData** aProgramDataList,
                                        const uint32_t aCount)
 {
-  RefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
+  nsRefPtr<TVSource> source = GetSource(aTunerId, aSourceType);
   source->NotifyEITBroadcasted(aChannelData, aProgramDataList, aCount);
   return NS_OK;
 }
@@ -84,13 +84,13 @@ TVSourceListener::GetSource(const nsAString& aTunerId,
 {
   for (uint32_t i = 0; i < mSources.Length(); i++) {
     nsString tunerId;
-    RefPtr<TVTuner> tuner = mSources[i]->Tuner();
+    nsRefPtr<TVTuner> tuner = mSources[i]->Tuner();
     tuner->GetId(tunerId);
 
     nsString sourceType = ToTVSourceTypeStr(mSources[i]->Type());
 
     if (aTunerId.Equals(tunerId) && aSourceType.Equals(sourceType)) {
-      RefPtr<TVSource> source = mSources[i];
+      nsRefPtr<TVSource> source = mSources[i];
       return source.forget();
     }
   }

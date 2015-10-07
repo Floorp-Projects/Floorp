@@ -17,7 +17,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -112,7 +112,7 @@ private:
     nsCOMPtr<nsINetworkPredictorVerifier> mVerifier;
     TimeStamp mStartTime;
     uint8_t mStackCount;
-    RefPtr<Predictor> mPredictor;
+    nsRefPtr<Predictor> mPredictor;
   };
 
   class Resetter : public nsICacheEntryOpenCallback,
@@ -134,7 +134,7 @@ private:
 
     uint32_t mEntriesToVisit;
     nsTArray<nsCString> mKeysToDelete;
-    RefPtr<Predictor> mPredictor;
+    nsRefPtr<Predictor> mPredictor;
     nsTArray<nsCOMPtr<nsIURI>> mURIsToVisit;
   };
 
@@ -157,7 +157,7 @@ private:
     uint32_t mLRUStamp;
     const char *mLRUKeyToDelete;
     nsTArray<nsCString> mLongKeysToDelete;
-    RefPtr<Predictor> mPredictor;
+    nsRefPtr<Predictor> mPredictor;
   };
 
   // Observer-related stuff
@@ -359,7 +359,7 @@ private:
 
   nsCOMPtr<nsIDNSService> mDnsService;
 
-  RefPtr<DNSListener> mDNSListener;
+  nsRefPtr<DNSListener> mDNSListener;
 
   nsTArray<nsCOMPtr<nsIURI>> mPreconnects;
   nsTArray<nsCOMPtr<nsIURI>> mPreresolves;

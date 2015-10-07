@@ -148,7 +148,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
       auto actor = static_cast<CacheChild*>(
         aResult.get_StorageOpenResult().actorChild());
       actor->SetFeature(GetFeature());
-      RefPtr<Cache> cache = new Cache(mGlobal, actor);
+      nsRefPtr<Cache> cache = new Cache(mGlobal, actor);
       mPromise->MaybeResolve(cache);
       break;
     }
@@ -211,7 +211,7 @@ CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
   const CacheResponse& cacheResponse = aResponseOrVoid.get_CacheResponse();
 
   AddFeatureToStreamChild(cacheResponse, GetFeature());
-  RefPtr<Response> response = ToResponse(cacheResponse);
+  nsRefPtr<Response> response = ToResponse(cacheResponse);
 
   mPromise->MaybeResolve(response);
 }
@@ -219,7 +219,7 @@ CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
 void
 CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
 {
-  nsAutoTArray<RefPtr<Response>, 256> responses;
+  nsAutoTArray<nsRefPtr<Response>, 256> responses;
   responses.SetCapacity(aResponseList.Length());
 
   for (uint32_t i = 0; i < aResponseList.Length(); ++i) {
@@ -233,7 +233,7 @@ CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
 void
 CacheOpChild::HandleRequestList(const nsTArray<CacheRequest>& aRequestList)
 {
-  nsAutoTArray<RefPtr<Request>, 256> requests;
+  nsAutoTArray<nsRefPtr<Request>, 256> requests;
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {

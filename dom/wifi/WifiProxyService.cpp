@@ -164,7 +164,7 @@ WifiProxyService::FactoryCreate()
     ClearOnShutdown(&gWpaSupplicant);
   }
 
-  RefPtr<WifiProxyService> service = gWifiProxyService.get();
+  nsRefPtr<WifiProxyService> service = gWifiProxyService.get();
   return service.forget();
 }
 

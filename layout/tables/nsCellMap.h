@@ -583,7 +583,7 @@ protected:
   bool mIsBC;
 
   // Prescontext to deallocate and allocate celldata
-  RefPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
 };
 
 /**

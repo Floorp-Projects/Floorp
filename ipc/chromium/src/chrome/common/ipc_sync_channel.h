@@ -124,7 +124,7 @@ class SyncChannel : public ChannelProxy,
     PendingSyncMessageQueue deserializers_;
     Lock deserializers_lock_;
 
-    RefPtr<ReceivedSyncMsgQueue> received_sync_msgs_;
+    nsRefPtr<ReceivedSyncMsgQueue> received_sync_msgs_;
 
     base::WaitableEvent* shutdown_event_;
     base::WaitableEventWatcher shutdown_watcher_;

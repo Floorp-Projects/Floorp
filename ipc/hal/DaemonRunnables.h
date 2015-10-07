@@ -39,7 +39,7 @@ public:
   static already_AddRefed<SelfType>
   Create(Obj* aObj, Res (Obj::*aMethod)(), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -53,7 +53,7 @@ public:
     if (!aObj) {
       return; // silently return if no result runnable has been given
     }
-    RefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -81,7 +81,7 @@ private:
     return aInitOp();
   }
 
-  RefPtr<Obj> mObj;
+  nsRefPtr<Obj> mObj;
   void (Obj::*mMethod)();
 };
 
@@ -95,7 +95,7 @@ public:
   static already_AddRefed<SelfType>
   Create(Obj* aObj, Res (Obj::*aMethod)(Arg1), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -109,7 +109,7 @@ public:
     if (!aObj) {
       return; // silently return if no result runnable has been given
     }
-    RefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -137,7 +137,7 @@ private:
     return aInitOp(mArg1);
   }
 
-  RefPtr<Obj> mObj;
+  nsRefPtr<Obj> mObj;
   Res (Obj::*mMethod)(Arg1);
   Tin1 mArg1;
 };
@@ -157,7 +157,7 @@ public:
   Create(Obj* aObj, Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
          const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -172,7 +172,7 @@ public:
     if (!aObj) {
       return; // silently return if no result runnable has been given
     }
-    RefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -201,7 +201,7 @@ private:
     return aInitOp(mArg1, mArg2, mArg3);
   }
 
-  RefPtr<Obj> mObj;
+  nsRefPtr<Obj> mObj;
   Res (Obj::*mMethod)(Arg1, Arg2, Arg3);
   Tin1 mArg1;
   Tin2 mArg2;
@@ -236,7 +236,7 @@ public:
   static already_AddRefed<SelfType>
   Create(Res (ObjectType::*aMethod)(), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -247,7 +247,7 @@ public:
   static void
   Dispatch(Res (ObjectType::*aMethod)(), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -296,7 +296,7 @@ public:
   static already_AddRefed<SelfType>
   Create(Res (ObjectType::*aMethod)(Arg1), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -307,7 +307,7 @@ public:
   static void
   Dispatch(Res (ObjectType::*aMethod)(Arg1), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -363,7 +363,7 @@ public:
   static already_AddRefed<SelfType>
   Create(Res (ObjectType::*aMethod)(Arg1, Arg2), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -374,7 +374,7 @@ public:
   static void
   Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -432,7 +432,7 @@ public:
   static already_AddRefed<SelfType>
   Create(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3), const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -444,7 +444,7 @@ public:
   Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3),
            const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -504,7 +504,7 @@ public:
     Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4),
     const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -516,7 +516,7 @@ public:
   Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4),
            const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -578,7 +578,7 @@ public:
     Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5),
     const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -590,7 +590,7 @@ public:
   Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5),
            const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -654,7 +654,7 @@ public:
     Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6),
     const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -666,7 +666,7 @@ public:
   Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5, Arg6),
            const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }
@@ -734,7 +734,7 @@ public:
       Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9),
     const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable(new SelfType(aMethod));
+    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
     if (NS_FAILED(runnable->Init(aInitOp))) {
       return nullptr;
     }
@@ -748,7 +748,7 @@ public:
       Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9),
     const InitOp& aInitOp)
   {
-    RefPtr<SelfType> runnable = Create(aMethod, aInitOp);
+    nsRefPtr<SelfType> runnable = Create(aMethod, aInitOp);
     if (!runnable) {
       return;
     }

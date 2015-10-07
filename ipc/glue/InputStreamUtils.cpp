@@ -112,7 +112,7 @@ DeserializeInputStream(const InputStreamParams& aParams,
 
       const nsID& id = aParams.get_RemoteInputStreamParams().id();
 
-      RefPtr<BlobImpl> blobImpl = BlobParent::GetBlobImplForID(id);
+      nsRefPtr<BlobImpl> blobImpl = BlobParent::GetBlobImplForID(id);
 
       MOZ_ASSERT(blobImpl, "Invalid blob contents");
 

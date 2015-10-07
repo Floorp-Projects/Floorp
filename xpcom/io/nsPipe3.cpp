@@ -11,7 +11,7 @@
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
@@ -210,7 +210,7 @@ public:
 private:
   virtual ~nsPipeInputStream();
 
-  RefPtr<nsPipe>               mPipe;
+  nsRefPtr<nsPipe>               mPipe;
 
   int64_t                        mLogicalOffset;
   // Individual input streams can be closed without effecting the rest of the
@@ -356,7 +356,7 @@ private:
   // compatibility we need to be able to consistently return this same
   // object from GetInputStream().  Note, mOriginalInput is also stored
   // in mInputList as a weak ref.
-  RefPtr<nsPipeInputStream> mOriginalInput;
+  nsRefPtr<nsPipeInputStream> mOriginalInput;
 
   ReentrantMonitor    mReentrantMonitor;
   nsSegmentedBuffer   mBuffer;
@@ -572,7 +572,7 @@ nsPipe::Init(bool aNonBlockingIn,
 NS_IMETHODIMP
 nsPipe::GetInputStream(nsIAsyncInputStream** aInputStream)
 {
-  RefPtr<nsPipeInputStream> ref = mOriginalInput;
+  nsRefPtr<nsPipeInputStream> ref = mOriginalInput;
   ref.forget(aInputStream);
   return NS_OK;
 }
@@ -978,7 +978,7 @@ nsPipe::CloneInputStream(nsPipeInputStream* aOriginal,
                          nsIInputStream** aCloneOut)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  RefPtr<nsPipeInputStream> ref = new nsPipeInputStream(*aOriginal);
+  nsRefPtr<nsPipeInputStream> ref = new nsPipeInputStream(*aOriginal);
   mInputList.AppendElement(ref);
   ref.forget(aCloneOut);
   return NS_OK;

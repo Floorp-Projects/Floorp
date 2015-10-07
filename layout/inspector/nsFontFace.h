@@ -30,8 +30,8 @@ public:
 protected:
   virtual ~nsFontFace();
 
-  RefPtr<gfxFontEntry> mFontEntry;
-  RefPtr<gfxFontGroup> mFontGroup;
+  nsRefPtr<gfxFontEntry> mFontEntry;
+  nsRefPtr<gfxFontGroup> mFontGroup;
   uint8_t mMatchType;
 };
 

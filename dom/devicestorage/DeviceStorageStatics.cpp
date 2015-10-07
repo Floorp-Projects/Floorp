@@ -413,7 +413,7 @@ DeviceStorageStatics::AddListener(nsDOMDeviceStorage* aListener)
       NS_NewRunnableMethod(sInstance.get(), &DeviceStorageStatics::Register));
   }
 
-  RefPtr<ListenerWrapper> wrapper =
+  nsRefPtr<ListenerWrapper> wrapper =
     new ListenerWrapper(aListener);
   sInstance->mListeners.AppendElement(wrapper.forget());
 }
@@ -659,7 +659,7 @@ DeviceStorageStatics::Observe(nsISupports* aSubject,
      broadcast events from one child to another child in B2G.  (f.e., if one
      child decides to add a file, we want to be able to able to send a onchange
      notifications to every other child watching that device storage object).*/
-  RefPtr<DeviceStorageFile> dsf;
+  nsRefPtr<DeviceStorageFile> dsf;
   if (!strcmp(aTopic, kDownloadWatcherNotify)) {
     // aSubject will be an nsISupportsString with the native path to the file
     // in question.
@@ -741,7 +741,7 @@ DeviceStorageStatics::Observe(nsISupports* aSubject,
     };
 
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(kMediaTypes); i++) {
-      RefPtr<DeviceStorageFile> dsf2;
+      nsRefPtr<DeviceStorageFile> dsf2;
       if (typeChecker->Check(kMediaTypes[i], dsf->mPath)) {
         if (dsf->mStorageType.Equals(kMediaTypes[i])) {
           dsf2 = dsf;
@@ -777,7 +777,7 @@ DeviceStorageStatics::ListenerWrapper::Equals(nsDOMDeviceStorage* aListener)
   mOwningThread->IsOnCurrentThread(&current);
   if (current) {
     // It is only safe to acquire the reference on the owning thread
-    RefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(mListener);
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(mListener);
     return listener.get() == aListener;
   }
   return false;
@@ -787,11 +787,11 @@ void
 DeviceStorageStatics::ListenerWrapper::OnFileWatcherUpdate(const nsCString& aData,
                                                                  DeviceStorageFile* aFile)
 {
-  RefPtr<ListenerWrapper> self = this;
+  nsRefPtr<ListenerWrapper> self = this;
   nsCString data = aData;
-  RefPtr<DeviceStorageFile> file = aFile;
+  nsRefPtr<DeviceStorageFile> file = aFile;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, data, file] () -> void {
-    RefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
     if (listener) {
       listener->OnFileWatcherUpdate(data, file);
     }
@@ -802,9 +802,9 @@ DeviceStorageStatics::ListenerWrapper::OnFileWatcherUpdate(const nsCString& aDat
 void
 DeviceStorageStatics::ListenerWrapper::OnDiskSpaceWatcher(bool aLowDiskSpace)
 {
-  RefPtr<ListenerWrapper> self = this;
+  nsRefPtr<ListenerWrapper> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aLowDiskSpace] () -> void {
-    RefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
     if (listener) {
       listener->OnDiskSpaceWatcher(aLowDiskSpace);
     }
@@ -815,9 +815,9 @@ DeviceStorageStatics::ListenerWrapper::OnDiskSpaceWatcher(bool aLowDiskSpace)
 void
 DeviceStorageStatics::ListenerWrapper::OnWritableNameChanged()
 {
-  RefPtr<ListenerWrapper> self = this;
+  nsRefPtr<ListenerWrapper> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void {
-    RefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
     if (listener) {
       listener->OnWritableNameChanged();
     }
@@ -829,10 +829,10 @@ DeviceStorageStatics::ListenerWrapper::OnWritableNameChanged()
 void
 DeviceStorageStatics::ListenerWrapper::OnVolumeStateChanged(nsIVolume* aVolume)
 {
-  RefPtr<ListenerWrapper> self = this;
+  nsRefPtr<ListenerWrapper> self = this;
   nsCOMPtr<nsIVolume> volume = aVolume;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, volume] () -> void {
-    RefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
+    nsRefPtr<nsDOMDeviceStorage> listener = do_QueryReferent(self->mListener);
     if (listener) {
       listener->OnVolumeStateChanged(volume);
     }

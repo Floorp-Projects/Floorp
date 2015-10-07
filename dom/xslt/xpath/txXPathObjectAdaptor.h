@@ -39,7 +39,7 @@ protected:
 
     virtual ~txXPathObjectAdaptor() {}
 
-    RefPtr<txAExprResult> mValue;
+    nsRefPtr<txAExprResult> mValue;
 };
 
 #endif // txXPathObjectAdaptor_h__

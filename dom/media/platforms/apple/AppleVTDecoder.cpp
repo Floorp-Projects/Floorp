@@ -51,7 +51,7 @@ AppleVTDecoder::~AppleVTDecoder()
   MOZ_COUNT_DTOR(AppleVTDecoder);
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 AppleVTDecoder::Init()
 {
   nsresult rv = InitializeSession();
@@ -106,7 +106,7 @@ AppleVTDecoder::Input(MediaRawData* aSample)
   mInputIncoming++;
 
   nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+      NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
           this, &AppleVTDecoder::SubmitFrame, aSample);
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;

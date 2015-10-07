@@ -494,7 +494,7 @@ PresentationControllingInfo::NotifyOpened()
     return rv;
   }
 
-  RefPtr<PresentationChannelDescription> description =
+  nsRefPtr<PresentationChannelDescription> description =
     new PresentationChannelDescription(address, static_cast<uint16_t>(port));
   return mControlChannel->SendOffer(description);
 }
@@ -839,7 +839,7 @@ PresentationPresentingInfo::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  RefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
+  nsRefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
   if (tabParent) {
     // OOP frame
     // Notify the content process that a receiver page has launched, so it can

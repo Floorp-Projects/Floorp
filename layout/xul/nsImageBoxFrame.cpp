@@ -81,7 +81,7 @@ nsImageBoxFrameEvent::Run()
     return NS_OK;
   }
 
-  RefPtr<nsPresContext> pres_context = pres_shell->GetPresContext();
+  nsRefPtr<nsPresContext> pres_context = pres_shell->GetPresContext();
   if (!pres_context) {
     return NS_OK;
   }
@@ -192,7 +192,7 @@ nsImageBoxFrame::Init(nsIContent*       aContent,
                       nsIFrame*         aPrevInFlow)
 {
   if (!mListener) {
-    RefPtr<nsImageBoxListener> listener = new nsImageBoxListener();
+    nsRefPtr<nsImageBoxListener> listener = new nsImageBoxListener();
     listener->SetFrame(this);
     mListener = listener.forget();
   }

@@ -28,7 +28,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
   nsIDocument* doc = aTargetContent->OwnerDoc();
   if (doc) {
     ErrorResult rv;
-    RefPtr<dom::Event> event =
+    nsRefPtr<dom::Event> event =
       doc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"), rv);
     nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryObject(event);
 

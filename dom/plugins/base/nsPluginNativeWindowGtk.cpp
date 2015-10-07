@@ -68,7 +68,7 @@ nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindo
   return NS_OK;
 }
 
-nsresult nsPluginNativeWindowGtk::CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance)
+nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance)
 {
   if (aPluginInstance) {
     if (type == NPWindowTypeWindow &&

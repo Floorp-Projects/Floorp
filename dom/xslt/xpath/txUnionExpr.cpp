@@ -26,13 +26,13 @@ nsresult
 UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nullptr;
-    RefPtr<txNodeSet> nodes;
+    nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t i, len = mExpressions.Length();
     for (i = 0; i < len; ++i) {
-        RefPtr<txAExprResult> exprResult;
+        nsRefPtr<txAExprResult> exprResult;
         rv = mExpressions[i]->evaluate(aContext, getter_AddRefs(exprResult));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -41,7 +41,7 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             return NS_ERROR_XSLT_NODESET_EXPECTED;
         }
 
-        RefPtr<txNodeSet> resultSet, ownedSet;
+        nsRefPtr<txNodeSet> resultSet, ownedSet;
         resultSet = static_cast<txNodeSet*>
                                (static_cast<txAExprResult*>(exprResult));
         exprResult = nullptr;

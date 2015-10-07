@@ -124,8 +124,8 @@ private:
   nsIDocument* FocusedDOMDocument() const;
 
 private:
-  RefPtr<Accessible> mActiveItem;
-  RefPtr<Accessible> mActiveARIAMenubar;
+  nsRefPtr<Accessible> mActiveItem;
+  nsRefPtr<Accessible> mActiveARIAMenubar;
 };
 
 } // namespace a11y

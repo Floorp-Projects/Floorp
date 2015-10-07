@@ -835,7 +835,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
       return NS_ERROR_UNEXPECTED;
     }
 
-    RefPtr<nsObserverService> observerService;
+    nsRefPtr<nsObserverService> observerService;
     CallGetService("@mozilla.org/observer-service;1",
                    (nsObserverService**)getter_AddRefs(observerService));
 

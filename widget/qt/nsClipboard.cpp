@@ -178,13 +178,13 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                 if (!image)  // Not getting an image for an image mime type!?
                    continue;
 
-                RefPtr<SourceSurface> surface =
+                nsRefPtr<SourceSurface> surface =
                   image->GetFrame(imgIContainer::FRAME_CURRENT,
                                   imgIContainer::FLAG_SYNC_DECODE);
                 if (!surface)
                   continue;
 
-                RefPtr<DataSourceSurface> dataSurface =
+                nsRefPtr<DataSourceSurface> dataSurface =
                   surface->GetDataSurface();
                 if (!dataSurface)
                   continue;

@@ -7,7 +7,7 @@
 
 #include "Volume.h"
 #include "VolumeManager.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 namespace system {
@@ -34,7 +34,7 @@ private:
   virtual void Notify(const VolumeManager::StateChangedEvent& aEvent);
   virtual void Notify(Volume* const & aVolume);
 
-  RefPtr<nsVolumeService>   mVolumeService;
+  nsRefPtr<nsVolumeService>   mVolumeService;
 };
 
 void InitVolumeServiceIOThread(nsVolumeService* const & aVolumeService);

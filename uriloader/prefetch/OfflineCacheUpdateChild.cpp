@@ -516,7 +516,7 @@ OfflineCacheUpdateChild::RecvFinish(const bool &succeeded,
 {
     LOG(("OfflineCacheUpdateChild::RecvFinish [%p]", this));
 
-    RefPtr<OfflineCacheUpdateChild> kungFuDeathGrip(this);
+    nsRefPtr<OfflineCacheUpdateChild> kungFuDeathGrip(this);
 
     mState = STATE_FINISHED;
     mSucceeded = succeeded;

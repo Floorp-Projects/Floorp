@@ -29,13 +29,13 @@ public:
 
   bool DisentanglePort(
                  MessagePortParent* aParent,
-                 FallibleTArray<RefPtr<SharedMessagePortMessage>>& aMessages);
+                 FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aMessages);
 
   bool ClosePort(MessagePortParent* aParent);
 
   bool PostMessages(
                  MessagePortParent* aParent,
-                 FallibleTArray<RefPtr<SharedMessagePortMessage>>& aMessages);
+                 FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aMessages);
 
   void ParentDestroy(MessagePortParent* aParent);
 

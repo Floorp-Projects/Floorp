@@ -28,7 +28,7 @@ class ErrorResult;
 struct ResourceItem {
   explicit ResourceItem(MediaByteBuffer* aData);
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
-  RefPtr<MediaByteBuffer> mData;
+  nsRefPtr<MediaByteBuffer> mData;
 };
 
 class ResourceQueue : private nsDeque {

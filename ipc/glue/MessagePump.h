@@ -63,7 +63,7 @@ protected:
 
 private:
   // Only accessed by this class.
-  RefPtr<DoWorkRunnable> mDoWorkEvent;
+  nsRefPtr<DoWorkRunnable> mDoWorkEvent;
 };
 
 class MessagePumpForChildProcess final: public MessagePump

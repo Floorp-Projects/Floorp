@@ -364,7 +364,7 @@ IMEContentObserver::NotifyIMEOfBlur()
   // mWidget must have been non-nullptr if IME has focus.
   MOZ_RELEASE_ASSERT(widget);
 
-  RefPtr<IMEContentObserver> kungFuDeathGrip(this);
+  nsRefPtr<IMEContentObserver> kungFuDeathGrip(this);
 
   MOZ_LOG(sIMECOLog, LogLevel::Info,
     ("IMECO: 0x%p IMEContentObserver::NotifyIMEOfBlur(), "
@@ -502,7 +502,7 @@ IMEContentObserver::IsEditorHandlingEventForComposition() const
   if (!mWidget) {
     return false;
   }
-  RefPtr<TextComposition> composition =
+  nsRefPtr<TextComposition> composition =
     IMEStateManager::GetTextCompositionFor(mWidget);
   if (!composition) {
     return false;
@@ -623,7 +623,7 @@ IMEContentObserver::OnMouseButtonEvent(nsPresContext* aPresContext,
     return false;
   }
 
-  RefPtr<IMEContentObserver> kungFuDeathGrip(this);
+  nsRefPtr<IMEContentObserver> kungFuDeathGrip(this);
 
   WidgetQueryContentEvent charAtPt(true, eQueryCharacterAtPoint,
                                    aMouseEvent->widget);
@@ -1354,7 +1354,7 @@ IMEContentObserver::IMENotificationSender::Run()
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
        "posting AsyncMergeableNotificationsFlusher to current thread", this));
-    RefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
+    nsRefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
       new AsyncMergeableNotificationsFlusher(mIMEContentObserver);
     NS_DispatchToCurrentThread(asyncFlusher);
   }

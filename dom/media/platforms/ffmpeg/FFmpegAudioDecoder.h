@@ -25,7 +25,7 @@ public:
                      const AudioInfo& aConfig);
   virtual ~FFmpegAudioDecoder();
 
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   void ProcessDrain() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);

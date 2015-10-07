@@ -121,7 +121,7 @@ DOMSVGNumber::Constructor(const dom::GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<DOMSVGNumber> number = new DOMSVGNumber(window);
+  nsRefPtr<DOMSVGNumber> number = new DOMSVGNumber(window);
   return number.forget();
 }
 
@@ -135,7 +135,7 @@ DOMSVGNumber::Constructor(const dom::GlobalObject& aGlobal, float aValue,
     return nullptr;
   }
 
-  RefPtr<DOMSVGNumber> number = new DOMSVGNumber(window);
+  nsRefPtr<DOMSVGNumber> number = new DOMSVGNumber(window);
   number->SetValue(aValue, aRv);
   return number.forget();
 }

@@ -269,7 +269,7 @@ NS_IMETHODIMP JumpListShortcut::Equals(nsIJumpListItem *aItem, bool *aResult)
 /* internal helpers */
 
 // (static) Creates a ShellLink that encapsulate a separator.
-nsresult JumpListSeparator::GetSeparator(RefPtr<IShellLinkW>& aShellLink)
+nsresult JumpListSeparator::GetSeparator(nsRefPtr<IShellLinkW>& aShellLink)
 {
   HRESULT hr;
   IShellLinkW* psl;
@@ -301,7 +301,7 @@ nsresult JumpListSeparator::GetSeparator(RefPtr<IShellLinkW>& aShellLink)
 
 // (static) Creates a ShellLink that encapsulate a shortcut to local apps.
 nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 
-                                        RefPtr<IShellLinkW>& aShellLink,
+                                        nsRefPtr<IShellLinkW>& aShellLink,
                                         nsCOMPtr<nsIThread> &aIOThread)
 {
   HRESULT hr;
@@ -527,7 +527,7 @@ nsresult JumpListShortcut::GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJ
 
 // (static) ShellItems are used to encapsulate links to things. We currently only support URI links,
 // but more support could be added, such as local file and directory links.
-nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item, RefPtr<IShellItem2>& aShellItem)
+nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IShellItem2>& aShellItem)
 {
   IShellItem2 *psi = nullptr;
   nsresult rv;

@@ -7,7 +7,7 @@
 #define MOZILLA_LAYERS_EFFECTS_H
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed, etc
+#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed, etc
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"           // for Rect
@@ -119,8 +119,8 @@ struct EffectVRDistortion : public Effect
   virtual const char* Name() { return "EffectVRDistortion"; }
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-  RefPtr<gfx::VRHMDInfo> mHMD;
-  RefPtr<CompositingRenderTarget> mRenderTarget;
+  nsRefPtr<gfx::VRHMDInfo> mHMD;
+  nsRefPtr<CompositingRenderTarget> mRenderTarget;
   TextureSource* mTexture;
 
   // The viewport for each eye in the source and
@@ -152,7 +152,7 @@ struct EffectRenderTarget : public TexturedEffect
   virtual const char* Name() { return "EffectRenderTarget"; }
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-  RefPtr<CompositingRenderTarget> mRenderTarget;
+  nsRefPtr<CompositingRenderTarget> mRenderTarget;
 
 protected:
   EffectRenderTarget(EffectTypes aType, CompositingRenderTarget *aRenderTarget)
@@ -239,8 +239,8 @@ struct EffectChain
   EffectChain() : mLayerRef(nullptr) {}
   explicit EffectChain(void* aLayerRef) : mLayerRef(aLayerRef) {}
 
-  RefPtr<Effect> mPrimaryEffect;
-  EnumeratedArray<EffectTypes, EffectTypes::MAX_SECONDARY, RefPtr<Effect>>
+  nsRefPtr<Effect> mPrimaryEffect;
+  EnumeratedArray<EffectTypes, EffectTypes::MAX_SECONDARY, nsRefPtr<Effect>>
     mSecondaryEffects;
   void* mLayerRef; //!< For LayerScope logging
 };
@@ -262,7 +262,7 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
                      const LayerRenderState &state = LayerRenderState())
 {
   MOZ_ASSERT(aSource);
-  RefPtr<TexturedEffect> result;
+  nsRefPtr<TexturedEffect> result;
   switch (aFormat) {
   case gfx::SurfaceFormat::B8G8R8A8:
   case gfx::SurfaceFormat::B8G8R8X8:

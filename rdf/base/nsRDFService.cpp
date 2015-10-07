@@ -777,7 +777,7 @@ RDFServiceImpl::CreateSingleton(nsISupports* aOuter,
         return gRDFService->QueryInterface(aIID, aResult);
     }
 
-    RefPtr<RDFServiceImpl> serv = new RDFServiceImpl();
+    nsRefPtr<RDFServiceImpl> serv = new RDFServiceImpl();
     nsresult rv = serv->Init();
     if (NS_FAILED(rv))
         return rv;

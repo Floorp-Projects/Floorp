@@ -249,7 +249,7 @@ nsCacheEntry::DetachDescriptors()
 
 void
 nsCacheEntry::GetDescriptors(
-    nsTArray<RefPtr<nsCacheEntryDescriptor> > &outDescriptors)
+    nsTArray<nsRefPtr<nsCacheEntryDescriptor> > &outDescriptors)
 {
     nsCacheEntryDescriptor * descriptor =
         (nsCacheEntryDescriptor *)PR_LIST_HEAD(&mDescriptorQ);

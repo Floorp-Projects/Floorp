@@ -225,7 +225,7 @@ GMPParent::EnsureAsyncShutdownTimeoutSet()
   }
 
   int32_t timeout = GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT;
-  RefPtr<GeckoMediaPluginServiceParent> service =
+  nsRefPtr<GeckoMediaPluginServiceParent> service =
     GeckoMediaPluginServiceParent::GetSingleton();
   if (service) {
     timeout = service->AsyncShutdownTimeoutMs();
@@ -337,7 +337,7 @@ GMPParent::AbortAsyncShutdown()
     return;
   }
 
-  RefPtr<GMPParent> kungFuDeathGrip(this);
+  nsRefPtr<GMPParent> kungFuDeathGrip(this);
   mService->AsyncShutdownComplete(this);
   mAsyncShutdownRequired = false;
   mAsyncShutdownInProgress = false;
@@ -431,7 +431,7 @@ GMPParent::Shutdown()
     return;
   }
 
-  RefPtr<GMPParent> self(this);
+  nsRefPtr<GMPParent> self(this);
   DeleteProcess();
 
   // XXX Get rid of mDeleteProcessOnlyOnUnload and this code when
@@ -464,7 +464,7 @@ public:
 void
 GMPParent::ChildTerminated()
 {
-  RefPtr<GMPParent> self(this);
+  nsRefPtr<GMPParent> self(this);
   nsIThread* gmpThread = GMPThread();
 
   if (!gmpThread) {
@@ -474,7 +474,7 @@ GMPParent::ChildTerminated()
     // removed so there is no harm in not trying to remove it again.
     LOGD("%s::%s: GMPThread() returned nullptr.", __CLASS__, __FUNCTION__);
   } else {
-    gmpThread->Dispatch(NS_NewRunnableMethodWithArg<RefPtr<GMPParent>>(
+    gmpThread->Dispatch(NS_NewRunnableMethodWithArg<nsRefPtr<GMPParent>>(
                          mService,
                          &GeckoMediaPluginServiceParent::PluginTerminated,
                          self),
@@ -619,7 +619,7 @@ GMPNotifyObservers(const uint32_t aPluginID, const nsACString& aPluginName, cons
     obs->NotifyObservers(propbag, "gmp-plugin-crash", nullptr);
   }
 
-  RefPtr<gmp::GeckoMediaPluginService> service =
+  nsRefPtr<gmp::GeckoMediaPluginService> service =
     gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
   if (service) {
     service->RunPluginCrashCallbacks(aPluginID, aPluginName);
@@ -650,7 +650,7 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
 
   // Normal Shutdown() will delete the process on unwind.
   if (AbnormalShutdown == aWhy) {
-    RefPtr<GMPParent> self(this);
+    nsRefPtr<GMPParent> self(this);
     if (mAsyncShutdownRequired) {
 #if defined(MOZ_CRASHREPORTER)
       if (mService) {
@@ -992,7 +992,7 @@ public:
   }
 
 private:
-  RefPtr<GMPContentParent> mGMPContentParent;
+  nsRefPtr<GMPContentParent> mGMPContentParent;
   nsTArray<UniquePtr<GetGMPContentParentCallback>> mCallbacks;
 };
 
@@ -1006,7 +1006,7 @@ GMPParent::AllocPGMPContentParent(Transport* aTransport, ProcessId aOtherPid)
   mGMPContentParent->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(),
                           ipc::ParentSide);
 
-  RefPtr<RunCreateContentParentCallbacks> runCallbacks =
+  nsRefPtr<RunCreateContentParentCallbacks> runCallbacks =
     new RunCreateContentParentCallbacks(mGMPContentParent);
   runCallbacks->TakeCallbacks(mCallbacks);
   NS_DispatchToCurrentThread(runCallbacks);

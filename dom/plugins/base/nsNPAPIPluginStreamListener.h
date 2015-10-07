@@ -125,7 +125,7 @@ protected:
 
   char* mStreamBuffer;
   char* mNotifyURL;
-  RefPtr<nsNPAPIPluginInstance> mInst;
+  nsRefPtr<nsNPAPIPluginInstance> mInst;
   nsNPAPIStreamWrapper *mNPStreamWrapper;
   uint32_t mStreamBufferSize;
   int32_t mStreamBufferByteCount;
@@ -144,7 +144,7 @@ protected:
   nsresult mPendingStopBindingStatus;
 
 public:
-  RefPtr<nsPluginStreamListenerPeer> mStreamListenerPeer;
+  nsRefPtr<nsPluginStreamListenerPeer> mStreamListenerPeer;
 };
 
 #endif // nsNPAPIPluginStreamListener_h_

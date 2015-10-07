@@ -58,7 +58,7 @@ void DBusReplyHandler::Callback(DBusMessage* aReply, void* aData)
 {
   MOZ_ASSERT(aData);
 
-  RefPtr<DBusReplyHandler> handler =
+  nsRefPtr<DBusReplyHandler> handler =
     already_AddRefed<DBusReplyHandler>(static_cast<DBusReplyHandler*>(aData));
 
   handler->Handle(aReply);

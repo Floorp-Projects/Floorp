@@ -106,7 +106,7 @@ public:
    */
   bool IsDirectory() const;
 
-  const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const;
+  const nsTArray<nsRefPtr<BlobImpl>>* GetSubBlobImpls() const;
 
   // This method returns null if this Blob is not a File; it returns
   // the same object in case this Blob already implements the File interface;
@@ -173,7 +173,7 @@ protected:
   // It's thread-safe and not CC-able and it's the only element that is moved
   // between threads.
   // Note: we should not store any other state in this class!
-  RefPtr<BlobImpl> mImpl;
+  nsRefPtr<BlobImpl> mImpl;
 
 private:
   nsCOMPtr<nsISupports> mParent;
@@ -311,7 +311,7 @@ public:
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType, ErrorResult& aRv) = 0;
 
-  virtual const nsTArray<RefPtr<BlobImpl>>*
+  virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const = 0;
 
   virtual void GetInternalStream(nsIInputStream** aStream,
@@ -472,7 +472,7 @@ public:
     return nullptr;
   }
 
-  virtual const nsTArray<RefPtr<BlobImpl>>*
+  virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const override
   {
     return nullptr;
@@ -680,7 +680,7 @@ private:
   ~BlobImplMemory() {}
 
   // Used when backed by a memory store
-  RefPtr<DataOwner> mDataOwner;
+  nsRefPtr<DataOwner> mDataOwner;
 };
 
 class BlobImplTemporaryBlob final : public BlobImplBase
@@ -715,7 +715,7 @@ private:
   ~BlobImplTemporaryBlob() {}
 
   uint64_t mStartPos;
-  RefPtr<nsTemporaryFileInputStream::FileDescOwner> mFileDescOwner;
+  nsRefPtr<nsTemporaryFileInputStream::FileDescOwner> mFileDescOwner;
 };
 
 class BlobImplFile : public BlobImplBase

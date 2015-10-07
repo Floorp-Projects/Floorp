@@ -31,7 +31,7 @@ public:
 
   TaskQueue* Queue() { return mTaskQueue; }
 private:
-  RefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 };
 
 class DelayedResolveOrReject : public nsRunnable
@@ -73,8 +73,8 @@ protected:
   ~DelayedResolveOrReject() {}
 
 private:
-  RefPtr<TaskQueue> mTaskQueue;
-  RefPtr<TestPromise::Private> mPromise;
+  nsRefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<TestPromise::Private> mPromise;
   TestPromise::ResolveOrRejectValue mValue;
   int mIterations;
 };
@@ -93,7 +93,7 @@ RunOnTaskQueue(TaskQueue* aQueue, FunctionType aFun)
 TEST(MozPromise, BasicResolve)
 {
   AutoTaskQueue atq;
-  RefPtr<TaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
     TestPromise::CreateAndResolve(42, __func__)->Then(queue, __func__,
       [queue] (int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); queue->BeginShutdown(); },
@@ -104,7 +104,7 @@ TEST(MozPromise, BasicResolve)
 TEST(MozPromise, BasicReject)
 {
   AutoTaskQueue atq;
-  RefPtr<TaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
     TestPromise::CreateAndReject(42.0, __func__)->Then(queue, __func__,
       DO_FAIL,
@@ -115,14 +115,14 @@ TEST(MozPromise, BasicReject)
 TEST(MozPromise, AsyncResolve)
 {
   AutoTaskQueue atq;
-  RefPtr<TaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
-    RefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
+    nsRefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
 
     // Kick off three racing tasks, and make sure we get the one that finishes earliest.
-    RefPtr<DelayedResolveOrReject> a = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(32), 10);
-    RefPtr<DelayedResolveOrReject> b = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(42), 5);
-    RefPtr<DelayedResolveOrReject> c = new DelayedResolveOrReject(queue, p, RRValue::MakeReject(32.0), 7);
+    nsRefPtr<DelayedResolveOrReject> a = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(32), 10);
+    nsRefPtr<DelayedResolveOrReject> b = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(42), 5);
+    nsRefPtr<DelayedResolveOrReject> c = new DelayedResolveOrReject(queue, p, RRValue::MakeReject(32.0), 7);
 
     nsCOMPtr<nsIRunnable> ref = a.get();
     queue->Dispatch(ref.forget());
@@ -145,26 +145,26 @@ TEST(MozPromise, CompletionPromises)
 {
   bool invokedPass = false;
   AutoTaskQueue atq;
-  RefPtr<TaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue, &invokedPass] () -> void {
     TestPromise::CreateAndResolve(40, __func__)
     ->Then(queue, __func__,
-      [] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndResolve(aVal + 10, __func__); },
+      [] (int aVal) -> nsRefPtr<TestPromise> { return TestPromise::CreateAndResolve(aVal + 10, __func__); },
       DO_FAIL)
     ->CompletionPromise()
     ->Then(queue, __func__, [&invokedPass] () -> void { invokedPass = true; }, DO_FAIL)
     ->CompletionPromise()
     ->Then(queue, __func__,
-      [queue] (int aVal) -> RefPtr<TestPromise> {
-        RefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
+      [queue] (int aVal) -> nsRefPtr<TestPromise> {
+        nsRefPtr<TestPromise::Private> p = new TestPromise::Private(__func__);
         nsCOMPtr<nsIRunnable> resolver = new DelayedResolveOrReject(queue, p, RRValue::MakeResolve(aVal - 8), 10);
         queue->Dispatch(resolver.forget());
-        return RefPtr<TestPromise>(p);
+        return nsRefPtr<TestPromise>(p);
       },
       DO_FAIL)
     ->CompletionPromise()
     ->Then(queue, __func__,
-      [queue] (int aVal) -> RefPtr<TestPromise> { return TestPromise::CreateAndReject(double(aVal - 42) + 42.0, __func__); },
+      [queue] (int aVal) -> nsRefPtr<TestPromise> { return TestPromise::CreateAndReject(double(aVal - 42) + 42.0, __func__); },
       DO_FAIL)
     ->CompletionPromise()
     ->Then(queue, __func__,
@@ -176,10 +176,10 @@ TEST(MozPromise, CompletionPromises)
 TEST(MozPromise, PromiseAllResolve)
 {
   AutoTaskQueue atq;
-  RefPtr<TaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
 
-    nsTArray<RefPtr<TestPromise>> promises;
+    nsTArray<nsRefPtr<TestPromise>> promises;
     promises.AppendElement(TestPromise::CreateAndResolve(22, __func__));
     promises.AppendElement(TestPromise::CreateAndResolve(32, __func__));
     promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));
@@ -200,10 +200,10 @@ TEST(MozPromise, PromiseAllResolve)
 TEST(MozPromise, PromiseAllReject)
 {
   AutoTaskQueue atq;
-  RefPtr<TaskQueue> queue = atq.Queue();
+  nsRefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue] () -> void {
 
-    nsTArray<RefPtr<TestPromise>> promises;
+    nsTArray<nsRefPtr<TestPromise>> promises;
     promises.AppendElement(TestPromise::CreateAndResolve(22, __func__));
     promises.AppendElement(TestPromise::CreateAndReject(32.0, __func__));
     promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));

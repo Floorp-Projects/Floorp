@@ -81,7 +81,7 @@ public:
     }
 
 private:
-    RefPtr<FTUserFontData> mUserFontData;
+    nsRefPtr<FTUserFontData> mUserFontData;
 };
 
 // The names for the font entry and font classes should really
@@ -148,7 +148,7 @@ protected:
     nsCountedRef<FcPattern> mFontPattern;
 
     // user font data, when needed
-    RefPtr<FTUserFontData> mUserFontData;
+    nsRefPtr<FTUserFontData> mUserFontData;
 
     // FTFace - initialized when needed
     FT_Face   mFTFace;

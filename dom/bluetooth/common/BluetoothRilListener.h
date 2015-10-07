@@ -129,10 +129,10 @@ private:
    *
    * The length equals to number of total clients.
    */
-  nsTArray<RefPtr<MobileConnectionListener> > mMobileConnListeners;
+  nsTArray<nsRefPtr<MobileConnectionListener> > mMobileConnListeners;
 
-  RefPtr<IccListener> mIccListener;
-  RefPtr<TelephonyListener> mTelephonyListener;
+  nsRefPtr<IccListener> mIccListener;
+  nsRefPtr<TelephonyListener> mTelephonyListener;
 };
 
 END_BLUETOOTH_NAMESPACE

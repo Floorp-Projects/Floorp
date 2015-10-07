@@ -33,7 +33,7 @@ WMFMediaDataDecoder::~WMFMediaDataDecoder()
 {
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 WMFMediaDataDecoder::Init()
 {
   MOZ_ASSERT(!mIsShutDown);
@@ -109,10 +109,10 @@ WMFMediaDataDecoder::Input(MediaRawData* aSample)
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this,
       &WMFMediaDataDecoder::ProcessDecode,
-      RefPtr<MediaRawData>(aSample));
+      nsRefPtr<MediaRawData>(aSample));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
@@ -147,7 +147,7 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 void
 WMFMediaDataDecoder::ProcessOutput()
 {
-  RefPtr<MediaData> output;
+  nsRefPtr<MediaData> output;
   HRESULT hr = S_OK;
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output)) &&
          output) {

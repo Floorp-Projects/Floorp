@@ -96,7 +96,7 @@ void Fake_AudioStreamSource::Periodic() {
     return;
   }
   //Generate Signed 16 Bit Audio samples
-  RefPtr<mozilla::SharedBuffer> samples =
+  nsRefPtr<mozilla::SharedBuffer> samples =
     mozilla::SharedBuffer::Create(AUDIO_BUFFER_SIZE * NUM_CHANNELS * sizeof(int16_t));
   int16_t* data = reinterpret_cast<int16_t *>(samples->Data());
   for(int i=0; i<(1600*2); i++) {
@@ -148,7 +148,7 @@ Fake_VideoStreamSource::Notify(nsITimer* aTimer)
 #if 0
   mozilla::layers::BufferRecycleBin bin;
 
-  RefPtr<mozilla::layers::PlanarYCbCrImage> image = new
+  nsRefPtr<mozilla::layers::PlanarYCbCrImage> image = new
     mozilla::layers::PlanarYCbCrImage(&bin);
 
   const uint8_t lumaBpp = 8;

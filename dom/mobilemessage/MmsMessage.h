@@ -34,7 +34,7 @@ public:
   // If this is changed, change the WebIDL dictionary as well.
   struct Attachment final
   {
-    RefPtr<Blob> content;
+    nsRefPtr<Blob> content;
     nsString id;
     nsString location;
 

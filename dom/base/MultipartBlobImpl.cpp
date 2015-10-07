@@ -63,7 +63,7 @@ MultipartBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
                                ErrorResult& aRv)
 {
   // If we clamped to nothing we create an empty blob
-  nsTArray<RefPtr<BlobImpl>> blobImpls;
+  nsTArray<nsRefPtr<BlobImpl>> blobImpls;
 
   uint64_t length = aLength;
   uint64_t skipStart = aStart;
@@ -81,7 +81,7 @@ MultipartBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
     if (skipStart < l) {
       uint64_t upperBound = std::min<uint64_t>(l - skipStart, length);
 
-      RefPtr<BlobImpl> firstBlobImpl =
+      nsRefPtr<BlobImpl> firstBlobImpl =
         blobImpl->CreateSlice(skipStart, upperBound,
                               aContentType, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
@@ -111,7 +111,7 @@ MultipartBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
     }
 
     if (length < l) {
-      RefPtr<BlobImpl> lastBlobImpl =
+      nsRefPtr<BlobImpl> lastBlobImpl =
         blobImpl->CreateSlice(0, length, aContentType, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
@@ -125,7 +125,7 @@ MultipartBlobImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   }
 
   // we can create our blob now
-  RefPtr<BlobImpl> impl =
+  nsRefPtr<BlobImpl> impl =
     new MultipartBlobImpl(blobImpls, aContentType);
   return impl.forget();
 }
@@ -151,7 +151,7 @@ MultipartBlobImpl::InitializeBlob(
     const OwningArrayBufferOrArrayBufferViewOrBlobOrString& data = aData[i];
 
     if (data.IsBlob()) {
-      RefPtr<Blob> blob = data.GetAsBlob().get();
+      nsRefPtr<Blob> blob = data.GetAsBlob().get();
       blobSet.AppendBlobImpl(blob->Impl());
     }
 
@@ -201,7 +201,7 @@ MultipartBlobImpl::SetLengthAndModifiedDate()
   bool lastModifiedSet = false;
 
   for (uint32_t index = 0, count = mBlobImpls.Length(); index < count; index++) {
-    RefPtr<BlobImpl>& blob = mBlobImpls[index];
+    nsRefPtr<BlobImpl>& blob = mBlobImpls[index];
 
 #ifdef DEBUG
     MOZ_ASSERT(!blob->IsSizeUnknown());
@@ -362,7 +362,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindow* aWindow,
     aFile->GetLeafName(mName);
   }
 
-  RefPtr<File> blob = File::CreateFromFile(aWindow, aFile, aBag.mTemporary);
+  nsRefPtr<File> blob = File::CreateFromFile(aWindow, aFile, aBag.mTemporary);
 
   // Pre-cache size.
   blob->GetSize(aRv);

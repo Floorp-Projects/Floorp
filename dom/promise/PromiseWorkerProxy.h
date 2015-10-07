@@ -33,7 +33,7 @@ class WorkerPrivate;
 //   1. Create a Promise on the worker thread and return it to the content
 //      script:
 //
-//        RefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+//        nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
 //        if (aRv.Failed()) {
 //          return nullptr;
 //        }
@@ -42,7 +42,7 @@ class WorkerPrivate;
 //      worker is shutting down and you should fail the original call. This is
 //      only likely to happen in (Gecko-specific) worker onclose handlers.
 //
-//        RefPtr<PromiseWorkerProxy> proxy =
+//        nsRefPtr<PromiseWorkerProxy> proxy =
 //          PromiseWorkerProxy::Create(workerPrivate, promise);
 //        if (!proxy) {
 //          // You may also reject the Promise with an AbortError or similar.
@@ -82,7 +82,7 @@ class WorkerPrivate;
 //   2. Dispatch a runnable to the worker. Use GetWorkerPrivate() to acquire the
 //      worker.
 //
-//        RefPtr<FinishTaskWorkerRunnable> runnable =
+//        nsRefPtr<FinishTaskWorkerRunnable> runnable =
 //          new FinishTaskWorkerRunnable(proxy->GetWorkerPrivate(), proxy, result);
 //        AutoJSAPI jsapi;
 //        jsapi.Init();
@@ -101,7 +101,7 @@ class WorkerPrivate;
 //        WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
 //        {
 //          aWorkerPrivate->AssertIsOnWorkerThread();
-//          RefPtr<Promise> promise = mProxy->WorkerPromise();
+//          nsRefPtr<Promise> promise = mProxy->WorkerPromise();
 //          promise->MaybeResolve(mResult);
 //          mProxy->CleanUp(aCx);
 //        }
@@ -213,7 +213,7 @@ private:
   workers::WorkerPrivate* mWorkerPrivate;
 
   // Worker thread only.
-  RefPtr<Promise> mWorkerPromise;
+  nsRefPtr<Promise> mWorkerPromise;
 
   // Modified on the worker thread.
   // It is ok to *read* this without a lock on the worker.

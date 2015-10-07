@@ -164,7 +164,7 @@ nsDirectoryIndexStream::~nsDirectoryIndexStream()
 nsresult
 nsDirectoryIndexStream::Create(nsIFile* aDir, nsIInputStream** aResult)
 {
-    RefPtr<nsDirectoryIndexStream> result = new nsDirectoryIndexStream();
+    nsRefPtr<nsDirectoryIndexStream> result = new nsDirectoryIndexStream();
     if (! result)
         return NS_ERROR_OUT_OF_MEMORY;
 

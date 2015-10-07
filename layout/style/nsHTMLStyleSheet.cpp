@@ -179,7 +179,7 @@ static const PLDHashTableOps MappedAttrTable_Ops = {
 // -----------------------------------------------------------
 
 struct LangRuleTableEntry : public PLDHashEntryHdr {
-  RefPtr<nsHTMLStyleSheet::LangRule> mRule;
+  nsRefPtr<nsHTMLStyleSheet::LangRule> mRule;
 };
 
 static PLDHashNumber
@@ -426,7 +426,7 @@ nsHTMLStyleSheet::Reset()
 }
 
 nsresult
-nsHTMLStyleSheet::ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aColor)
+nsHTMLStyleSheet::ImplLinkColorSetter(nsRefPtr<HTMLColorRule>& aRule, nscolor aColor)
 {
   if (aRule && aRule->mColor == aColor) {
     return NS_OK;
@@ -479,7 +479,7 @@ nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
     // We added a new entry to the hashtable, so we have a new unique set.
     entry->mAttributes = aMapped;
   }
-  RefPtr<nsMappedAttributes> ret = entry->mAttributes;
+  nsRefPtr<nsMappedAttributes> ret = entry->mAttributes;
   return ret.forget();
 }
 

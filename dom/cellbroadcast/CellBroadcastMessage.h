@@ -89,7 +89,7 @@ private:
   Nullable<CellBroadcastMessageClass> mMessageClass;
   uint64_t mTimestamp;
   Nullable<uint16_t> mCdmaServiceCategory;
-  RefPtr<CellBroadcastEtwsInfo> mEtwsInfo;
+  nsRefPtr<CellBroadcastEtwsInfo> mEtwsInfo;
 };
 
 class CellBroadcastEtwsInfo final : public nsISupports

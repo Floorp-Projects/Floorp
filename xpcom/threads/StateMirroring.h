@@ -70,7 +70,7 @@ public:
   AbstractThread* OwnerThread() const { return mOwnerThread; }
 protected:
   virtual ~AbstractCanonical() {}
-  RefPtr<AbstractThread> mOwnerThread;
+  nsRefPtr<AbstractThread> mOwnerThread;
 };
 
 /*
@@ -91,7 +91,7 @@ public:
   AbstractThread* OwnerThread() const { return mOwnerThread; }
 protected:
   virtual ~AbstractMirror() {}
-  RefPtr<AbstractThread> mOwnerThread;
+  nsRefPtr<AbstractThread> mOwnerThread;
 };
 
 /*
@@ -230,7 +230,7 @@ private:
 
     T mValue;
     Maybe<T> mInitialValue;
-    nsTArray<RefPtr<AbstractMirror<T>>> mMirrors;
+    nsTArray<nsRefPtr<AbstractMirror<T>>> mMirrors;
   };
 public:
 
@@ -252,7 +252,7 @@ public:
   Canonical(const Canonical& aOther) = delete;
 
 private:
-  RefPtr<Impl> mImpl;
+  nsRefPtr<Impl> mImpl;
 };
 
 /*
@@ -354,7 +354,7 @@ private:
 
   private:
     T mValue;
-    RefPtr<AbstractCanonical<T>> mCanonical;
+    nsRefPtr<AbstractCanonical<T>> mCanonical;
   };
 public:
 
@@ -371,7 +371,7 @@ public:
   operator const T&() const { return Ref(); }
 
 private:
-  RefPtr<Impl> mImpl;
+  nsRefPtr<Impl> mImpl;
 };
 
 #undef MIRROR_LOG

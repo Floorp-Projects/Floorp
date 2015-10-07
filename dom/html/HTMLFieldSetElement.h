@@ -127,7 +127,7 @@ private:
                                     nsIAtom* aAtom, void* aData);
 
   // listed form controls elements.
-  RefPtr<nsContentList> mElements;
+  nsRefPtr<nsContentList> mElements;
 
   // List of elements which have this fieldset as first fieldset ancestor.
   nsTArray<nsGenericHTMLFormElement*> mDependentElements;

@@ -26,7 +26,7 @@ WebBrowserPersistDocumentChild::~WebBrowserPersistDocumentChild()
 void
 WebBrowserPersistDocumentChild::Start(nsIDocument* aDocument)
 {
-    RefPtr<WebBrowserPersistLocalDocument> doc;
+    nsRefPtr<WebBrowserPersistLocalDocument> doc;
     if (aDocument) {
         doc = new WebBrowserPersistLocalDocument(aDocument);
     }
@@ -90,7 +90,7 @@ WebBrowserPersistDocumentChild::AllocPWebBrowserPersistResourcesChild()
 bool
 WebBrowserPersistDocumentChild::RecvPWebBrowserPersistResourcesConstructor(PWebBrowserPersistResourcesChild* aActor)
 {
-    RefPtr<WebBrowserPersistResourcesChild> visitor =
+    nsRefPtr<WebBrowserPersistResourcesChild> visitor =
         static_cast<WebBrowserPersistResourcesChild*>(aActor);
     nsresult rv = mDocument->ReadResources(visitor);
     if (NS_FAILED(rv)) {

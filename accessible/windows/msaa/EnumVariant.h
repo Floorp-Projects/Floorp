@@ -49,7 +49,7 @@ private:
   virtual ~ChildrenEnumVariant() { }
 
 protected:
-  RefPtr<AccessibleWrap> mAnchorAcc;
+  nsRefPtr<AccessibleWrap> mAnchorAcc;
   Accessible* mCurAcc;
   uint32_t mCurIndex;
 };

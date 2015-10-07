@@ -39,7 +39,7 @@ VideoCallbackAdapter::Decoded(GMPVideoi420Frame* aDecodedFrame)
   }
 
   gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(), decodedFrame->Height());
-  RefPtr<VideoData> v = VideoData::Create(mVideoInfo,
+  nsRefPtr<VideoData> v = VideoData::Create(mVideoInfo,
                                             mImageContainer,
                                             mLastStreamOffset,
                                             decodedFrame->Timestamp(),
@@ -211,7 +211,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   }
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 GMPVideoDecoder::Init()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -221,7 +221,7 @@ GMPVideoDecoder::Init()
 
   nsCOMPtr<nsIThread> gmpThread = NS_GetCurrentThread();
 
-  RefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
+  nsRefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
   gmpThread->Dispatch(
     NS_NewRunnableMethodWithArg<GMPInitDoneRunnable*>(this,
                                                       &GMPVideoDecoder::GetGMPAPI,
@@ -241,7 +241,7 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  RefPtr<MediaRawData> sample(aSample);
+  nsRefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error();
     return NS_ERROR_FAILURE;

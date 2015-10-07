@@ -31,7 +31,7 @@ public:
     /**
      * Returns the list of underlying surfaces.
      */
-    void GetSurfaces(nsTArray<RefPtr<gfxASurface> > *aSurfaces);
+    void GetSurfaces(nsTArray<nsRefPtr<gfxASurface> > *aSurfaces);
 };
 
 #endif /* GFX_TEESURFACE_H */

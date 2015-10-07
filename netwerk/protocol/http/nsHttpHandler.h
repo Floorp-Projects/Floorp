@@ -556,7 +556,7 @@ private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on
     // socket thread.
     void MakeNewRequestTokenBucket();
-    RefPtr<EventTokenBucket> mRequestTokenBucket;
+    nsRefPtr<EventTokenBucket> mRequestTokenBucket;
 
 public:
     // Socket thread only
@@ -575,7 +575,7 @@ public:
     }
 
 private:
-    RefPtr<Tickler> mWifiTickler;
+    nsRefPtr<Tickler> mWifiTickler;
     void TickleWifi(nsIInterfaceRequestor *cb);
 
 private:

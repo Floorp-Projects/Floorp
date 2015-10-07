@@ -96,7 +96,7 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   MOZ_ASSERT(!aBackgroundActor->GetIndex());
   MOZ_ASSERT(!aKey.IsUnset());
 
-  RefPtr<IDBCursor> cursor =
+  nsRefPtr<IDBCursor> cursor =
     new IDBCursor(Type_ObjectStore, aBackgroundActor, aKey);
 
   cursor->mCloneInfo = Move(aCloneInfo);
@@ -115,7 +115,7 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   MOZ_ASSERT(!aBackgroundActor->GetIndex());
   MOZ_ASSERT(!aKey.IsUnset());
 
-  RefPtr<IDBCursor> cursor =
+  nsRefPtr<IDBCursor> cursor =
     new IDBCursor(Type_ObjectStoreKey, aBackgroundActor, aKey);
 
   return cursor.forget();
@@ -136,7 +136,7 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   MOZ_ASSERT(!aKey.IsUnset());
   MOZ_ASSERT(!aPrimaryKey.IsUnset());
 
-  RefPtr<IDBCursor> cursor =
+  nsRefPtr<IDBCursor> cursor =
     new IDBCursor(Type_Index, aBackgroundActor, aKey);
 
   cursor->mSortKey = Move(aSortKey);
@@ -160,7 +160,7 @@ IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
   MOZ_ASSERT(!aKey.IsUnset());
   MOZ_ASSERT(!aPrimaryKey.IsUnset());
 
-  RefPtr<IDBCursor> cursor =
+  nsRefPtr<IDBCursor> cursor =
     new IDBCursor(Type_IndexKey, aBackgroundActor, aKey);
 
   cursor->mSortKey = Move(aSortKey);
@@ -613,7 +613,7 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
 
   const Key& primaryKey = (mType == Type_ObjectStore) ? mKey : mPrimaryKey;
 
-  RefPtr<IDBRequest> request;
+  nsRefPtr<IDBRequest> request;
 
   if (objectStore->HasValidKeyPath()) {
     // Make sure the object given has the correct keyPath value set on it.
@@ -738,7 +738,7 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<IDBRequest> request =
+  nsRefPtr<IDBRequest> request =
     objectStore->DeleteInternal(aCx, key, /* aFromCursor */ true, aRv);
   if (aRv.Failed()) {
     return nullptr;

@@ -102,7 +102,7 @@ protected:
   nsCOMPtr<CacheFileChunkListener> mCallback;
   nsresult                         mRV;
   uint32_t                         mChunkIdx;
-  RefPtr<CacheFileChunk>         mChunk;
+  nsRefPtr<CacheFileChunk>         mChunk;
 };
 
 
@@ -293,7 +293,7 @@ CacheFile::Init(const nsACString &aKey,
         mReady = true;
         mDataSize = mMetadata->Offset();
 
-        RefPtr<NotifyCacheFileListenerEvent> ev;
+        nsRefPtr<NotifyCacheFileListenerEvent> ev;
         ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
         rv = NS_DispatchToCurrentThread(ev);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -339,7 +339,7 @@ CacheFile::OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk)
   // the chunk to the disk again. When the chunk is unused and is dirty simply
   // addref and release (outside the lock) the chunk which ensures that
   // CacheFile::DeactivateChunk() will be called again.
-  RefPtr<CacheFileChunk> deactivateChunkAgain;
+  nsRefPtr<CacheFileChunk> deactivateChunkAgain;
 
   CacheFileAutoLock lock(this);
 
@@ -1006,7 +1006,7 @@ CacheFile::Unlock()
 {
   // move the elements out of mObjsToRelease
   // so that they can be released after we unlock
-  nsTArray<RefPtr<nsISupports>> objs;
+  nsTArray<nsRefPtr<nsISupports>> objs;
   objs.SwapElements(mObjsToRelease);
 
   mLock.Unlock();
@@ -1020,7 +1020,7 @@ CacheFile::AssertOwnsLock() const
 }
 
 void
-CacheFile::ReleaseOutsideLock(RefPtr<nsISupports> aObject)
+CacheFile::ReleaseOutsideLock(nsRefPtr<nsISupports> aObject)
 {
   AssertOwnsLock();
 
@@ -1057,7 +1057,7 @@ CacheFile::GetChunkLocked(uint32_t aIndex, ECallerType aCaller,
 
   nsresult rv;
 
-  RefPtr<CacheFileChunk> chunk;
+  nsRefPtr<CacheFileChunk> chunk;
   if (mChunks.Get(aIndex, getter_AddRefs(chunk))) {
     LOG(("CacheFile::GetChunkLocked() - Found chunk %p in mChunks [this=%p]",
          chunk.get(), this));
@@ -1269,7 +1269,7 @@ CacheFile::PreloadChunks(uint32_t aIndex)
     LOG(("CacheFile::PreloadChunks() - Preloading chunk [this=%p, idx=%u]",
          this, i));
 
-    RefPtr<CacheFileChunk> chunk;
+    nsRefPtr<CacheFileChunk> chunk;
     GetChunkLocked(i, PRELOADER, nullptr, getter_AddRefs(chunk));
     // We've checked that we don't have this chunk, so no chunk must be
     // returned.
@@ -1350,7 +1350,7 @@ CacheFile::DeactivateChunk(CacheFileChunk *aChunk)
   nsresult rv;
 
   // Avoid lock reentrancy by increasing the RefCnt
-  RefPtr<CacheFileChunk> chunk = aChunk;
+  nsRefPtr<CacheFileChunk> chunk = aChunk;
 
   {
     CacheFileAutoLock lock(this);
@@ -1374,7 +1374,7 @@ CacheFile::DeactivateChunk(CacheFileChunk *aChunk)
 #ifdef DEBUG
     {
       // We can be here iff the chunk is in the hash table
-      RefPtr<CacheFileChunk> chunkCheck;
+      nsRefPtr<CacheFileChunk> chunkCheck;
       mChunks.Get(chunk->Index(), getter_AddRefs(chunkCheck));
       MOZ_ASSERT(chunkCheck == chunk);
 
@@ -1443,7 +1443,7 @@ CacheFile::RemoveChunkInternal(CacheFileChunk *aChunk, bool aCacheChunk)
   AssertOwnsLock();
 
   aChunk->mActiveChunk = false;
-  ReleaseOutsideLock(RefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
+  ReleaseOutsideLock(nsRefPtr<CacheFileChunkListener>(aChunk->mFile.forget()).forget());
 
   if (aCacheChunk) {
     mCachedChunks.Put(aChunk->Index(), aChunk);
@@ -1611,7 +1611,7 @@ CacheFile::NotifyChunkListener(CacheFileChunkListener *aCallback,
        aChunkIdx, aChunk));
 
   nsresult rv;
-  RefPtr<NotifyChunkListenerEvent> ev;
+  nsRefPtr<NotifyChunkListenerEvent> ev;
   ev = new NotifyChunkListenerEvent(aCallback, aResult, aChunkIdx, aChunk);
   if (aTarget)
     rv = aTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
@@ -1825,7 +1825,7 @@ CacheFile::PostWriteTimer()
 
 PLDHashOperator
 CacheFile::WriteAllCachedChunks(const uint32_t& aIdx,
-                                RefPtr<CacheFileChunk>& aChunk,
+                                nsRefPtr<CacheFileChunk>& aChunk,
                                 void* aClosure)
 {
   CacheFile *file = static_cast<CacheFile*>(aClosure);
@@ -1840,8 +1840,8 @@ CacheFile::WriteAllCachedChunks(const uint32_t& aIdx,
   MOZ_ASSERT(aChunk->IsReady());
 
   // this would be cleaner if we had an nsRefPtr constructor
-  // that took a RefPtr<Derived>
-  file->ReleaseOutsideLock(RefPtr<nsISupports>(aChunk));
+  // that took a nsRefPtr<Derived>
+  file->ReleaseOutsideLock(nsRefPtr<nsISupports>(aChunk));
 
   return PL_DHASH_REMOVE;
 }
@@ -1857,7 +1857,7 @@ CacheFile::FailListenersIfNonExistentChunk(
   LOG(("CacheFile::FailListenersIfNonExistentChunk() [this=%p, idx=%u]",
        file, aIdx));
 
-  RefPtr<CacheFileChunk> chunk;
+  nsRefPtr<CacheFileChunk> chunk;
   file->mChunks.Get(aIdx, getter_AddRefs(chunk));
   if (chunk) {
     MOZ_ASSERT(!chunk->IsReady());
@@ -1877,7 +1877,7 @@ CacheFile::FailListenersIfNonExistentChunk(
 PLDHashOperator
 CacheFile::FailUpdateListeners(
   const uint32_t& aIdx,
-  RefPtr<CacheFileChunk>& aChunk,
+  nsRefPtr<CacheFileChunk>& aChunk,
   void* aClosure)
 {
   CacheFile *file = static_cast<CacheFile*>(aClosure);
@@ -1893,7 +1893,7 @@ CacheFile::FailUpdateListeners(
 
 PLDHashOperator
 CacheFile::CleanUpCachedChunks(const uint32_t& aIdx,
-                               RefPtr<CacheFileChunk>& aChunk,
+                               nsRefPtr<CacheFileChunk>& aChunk,
                                void* aClosure)
 {
   CacheFile *file = static_cast<CacheFile*>(aClosure);
@@ -1920,7 +1920,7 @@ CacheFile::PadChunkWithZeroes(uint32_t aChunkIdx)
   MOZ_ASSERT(mDataSize / kChunkSize == aChunkIdx);
 
   nsresult rv;
-  RefPtr<CacheFileChunk> chunk;
+  nsRefPtr<CacheFileChunk> chunk;
   rv = GetChunkLocked(aChunkIdx, WRITER, nullptr, getter_AddRefs(chunk));
   NS_ENSURE_SUCCESS(rv, rv);
 

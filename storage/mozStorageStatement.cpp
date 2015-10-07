@@ -207,7 +207,7 @@ Statement::getParams()
 
   // If there isn't already any rows added, we'll have to add one to use.
   if (mParamsArray->length() == 0) {
-    RefPtr<BindingParams> params(new BindingParams(mParamsArray, this));
+    nsRefPtr<BindingParams> params(new BindingParams(mParamsArray, this));
     NS_ENSURE_TRUE(params, nullptr);
 
     rv = mParamsArray->AddParams(params);
@@ -317,7 +317,7 @@ MIXIN_IMPL_STORAGEBASESTATEMENTINTERNAL(Statement, (void)0;)
 NS_IMETHODIMP
 Statement::Clone(mozIStorageStatement **_statement)
 {
-  RefPtr<Statement> statement(new Statement());
+  nsRefPtr<Statement> statement(new Statement());
   NS_ENSURE_TRUE(statement, NS_ERROR_OUT_OF_MEMORY);
 
   nsAutoCString sql(::sqlite3_sql(mDBStatement));

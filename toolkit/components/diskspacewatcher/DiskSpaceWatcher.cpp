@@ -52,7 +52,7 @@ DiskSpaceWatcher::FactoryCreate()
     ClearOnShutdown(&gDiskSpaceWatcher);
   }
 
-  RefPtr<DiskSpaceWatcher> service = gDiskSpaceWatcher.get();
+  nsRefPtr<DiskSpaceWatcher> service = gDiskSpaceWatcher.get();
   return service.forget();
 }
 

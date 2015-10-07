@@ -45,7 +45,7 @@ public:
 
   void AddTrack(MediaTrack* aTrack);
 
-  void RemoveTrack(const RefPtr<MediaTrack>& aTrack);
+  void RemoveTrack(const nsRefPtr<MediaTrack>& aTrack);
 
   void RemoveTracks();
 
@@ -100,8 +100,8 @@ protected:
 
   HTMLMediaElement* GetMediaElement() { return mMediaElement; }
 
-  nsTArray<RefPtr<MediaTrack>> mTracks;
-  RefPtr<HTMLMediaElement> mMediaElement;
+  nsTArray<nsRefPtr<MediaTrack>> mTracks;
+  nsRefPtr<HTMLMediaElement> mMediaElement;
 };
 
 } // namespace dom

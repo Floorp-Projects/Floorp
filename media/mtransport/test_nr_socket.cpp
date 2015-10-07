@@ -90,7 +90,7 @@ extern "C" {
 #include "transport_addr.h"
 }
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "test_nr_socket.h"
 #include "runnable_utils.h"
 
@@ -99,7 +99,7 @@ namespace mozilla {
 static int test_nat_socket_create(void *obj,
                                   nr_transport_addr *addr,
                                   nr_socket **sockp) {
-  RefPtr<NrSocketBase> sock = new TestNrSocket(static_cast<TestNat*>(obj));
+  nsRefPtr<NrSocketBase> sock = new TestNrSocket(static_cast<TestNat*>(obj));
 
   int r, _status;
 
@@ -192,7 +192,7 @@ TestNrSocket::~TestNrSocket() {
   nat_->erase_socket(this);
 }
 
-RefPtr<NrSocket> TestNrSocket::create_external_socket(
+nsRefPtr<NrSocket> TestNrSocket::create_external_socket(
     const nr_transport_addr &dest_addr) const {
   MOZ_ASSERT(nat_->enabled_);
   MOZ_ASSERT(!nat_->is_an_internal_tuple(dest_addr));
@@ -215,7 +215,7 @@ RefPtr<NrSocket> TestNrSocket::create_external_socket(
     return nullptr;
   }
 
-  RefPtr<NrSocket> external_socket = new NrSocket;
+  nsRefPtr<NrSocket> external_socket = new NrSocket;
 
   if ((r = external_socket->create(&nat_external_addr))) {
     r_log(LOG_GENERIC,LOG_CRIT, "%s: Failure in NrSocket::create: %d",
@@ -251,7 +251,7 @@ int TestNrSocket::sendto(const void *msg, size_t len,
     // See if we have already made the external socket we need to use.
     PortMapping *similar_port_mapping =
       get_port_mapping(*to, nat_->mapping_type_);
-    RefPtr<NrSocket> external_socket;
+    nsRefPtr<NrSocket> external_socket;
 
     if (similar_port_mapping) {
       external_socket = similar_port_mapping->external_socket_;
@@ -389,7 +389,7 @@ int TestNrSocket::connect(nr_transport_addr *addr) {
     return NrSocket::connect(addr);
   }
 
-  RefPtr<NrSocket> external_socket(create_external_socket(*addr));
+  nsRefPtr<NrSocket> external_socket(create_external_socket(*addr));
   if (!external_socket) {
     return R_INTERNAL;
   }
@@ -665,7 +665,7 @@ TestNrSocket::PortMapping* TestNrSocket::get_port_mapping(
 
 TestNrSocket::PortMapping* TestNrSocket::create_port_mapping(
     const nr_transport_addr &remote_address,
-    const RefPtr<NrSocket> &external_socket) const {
+    const nsRefPtr<NrSocket> &external_socket) const {
   r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s creating port mapping %s -> %s",
         my_addr_.as_string,
         external_socket->my_addr().as_string,
@@ -676,7 +676,7 @@ TestNrSocket::PortMapping* TestNrSocket::create_port_mapping(
 
 TestNrSocket::PortMapping::PortMapping(
     const nr_transport_addr &remote_address,
-    const RefPtr<NrSocket> &external_socket) :
+    const nsRefPtr<NrSocket> &external_socket) :
   external_socket_(external_socket) {
   // TODO(bug 1170299): Remove const_cast when no longer necessary
   nr_transport_addr_copy(&remote_address_,
@@ -734,7 +734,7 @@ int TestNrSocket::PortMapping::sendto(const void *msg,
 
   if (r == R_WOULDBLOCK) {
     r_log(LOG_GENERIC, LOG_INFO, "Enqueueing UDP packet to %s", to.as_string);
-    send_queue_.push_back(RefPtr<UdpPacket>(new UdpPacket(msg, len, to)));
+    send_queue_.push_back(nsRefPtr<UdpPacket>(new UdpPacket(msg, len, to)));
     return 0;
   } else if (r) {
     r_log(LOG_GENERIC,LOG_ERR, "Error: %d", r);

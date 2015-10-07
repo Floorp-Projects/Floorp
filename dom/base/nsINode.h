@@ -1050,7 +1050,7 @@ public:
      * @see nsIDOMNodeList
      * @see nsGenericHTMLElement::GetChildNodes
      */
-    RefPtr<nsChildContentList> mChildNodes;
+    nsRefPtr<nsChildContentList> mChildNodes;
 
     /**
      * Weak reference to this node.  This is cleared by the destructor of
@@ -1694,7 +1694,7 @@ public:
   // aObject alive anymore.
   void UnbindObject(nsISupports* aObject);
 
-  void GetBoundMutationObservers(nsTArray<RefPtr<nsDOMMutationObserver> >& aResult);
+  void GetBoundMutationObservers(nsTArray<nsRefPtr<nsDOMMutationObserver> >& aResult);
 
   /**
    * Returns the length of this node, as specified at
@@ -1806,7 +1806,7 @@ public:
   mozilla::dom::Element* GetLastElementChild() const;
 
   void GetBoxQuads(const BoxQuadOptions& aOptions,
-                   nsTArray<RefPtr<DOMQuad> >& aResult,
+                   nsTArray<nsRefPtr<DOMQuad> >& aResult,
                    mozilla::ErrorResult& aRv);
 
   already_AddRefed<DOMQuad> ConvertQuadFromNode(DOMQuad& aQuad,
@@ -1960,7 +1960,7 @@ protected:
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);
 
-  RefPtr<mozilla::dom::NodeInfo> mNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> mNodeInfo;
 
   // mParent is an owning ref most of the time, except for the case of document
   // nodes, so it cannot be represented by nsCOMPtr, so mark is as

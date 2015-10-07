@@ -104,8 +104,8 @@ private:
 
 protected:
   friend class GMPParent;
-  void ReAddOnGMPThread(const RefPtr<GMPParent>& aOld);
-  void PluginTerminated(const RefPtr<GMPParent>& aOld);
+  void ReAddOnGMPThread(const nsRefPtr<GMPParent>& aOld);
+  void PluginTerminated(const nsRefPtr<GMPParent>& aOld);
   virtual void InitializePlugins() override;
   virtual bool GetContentParentFrom(const nsACString& aNodeId,
                                     const nsCString& aAPI,
@@ -137,16 +137,16 @@ private:
     NS_DECL_NSIRUNNABLE
 
   private:
-    RefPtr<GeckoMediaPluginServiceParent> mService;
+    nsRefPtr<GeckoMediaPluginServiceParent> mService;
     nsString mPath;
     EOperation mOperation;
     bool mDefer;
   };
 
   // Protected by mMutex from the base class.
-  nsTArray<RefPtr<GMPParent>> mPlugins;
+  nsTArray<nsRefPtr<GMPParent>> mPlugins;
   bool mShuttingDown;
-  nsTArray<RefPtr<GMPParent>> mAsyncShutdownPlugins;
+  nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins;
 
 #ifdef MOZ_CRASHREPORTER
   Mutex mAsyncShutdownPluginStatesMutex; // Protects mAsyncShutdownPluginStates.
@@ -234,7 +234,7 @@ public:
   static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);
 
 private:
-  RefPtr<GeckoMediaPluginServiceParent> mService;
+  nsRefPtr<GeckoMediaPluginServiceParent> mService;
 };
 
 } // namespace gmp

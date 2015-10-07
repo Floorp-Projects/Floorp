@@ -97,7 +97,7 @@ LoadMonitor::Observe(nsISupports* /* aSubject */,
 class LoadMonitorAddObserver : public nsRunnable
 {
 public:
-  explicit LoadMonitorAddObserver(RefPtr<LoadMonitor> loadMonitor)
+  explicit LoadMonitorAddObserver(nsRefPtr<LoadMonitor> loadMonitor)
   {
     mLoadMonitor = loadMonitor;
   }
@@ -116,13 +116,13 @@ public:
   }
 
 private:
-  RefPtr<LoadMonitor> mLoadMonitor;
+  nsRefPtr<LoadMonitor> mLoadMonitor;
 };
 
 class LoadMonitorRemoveObserver : public nsRunnable
 {
 public:
-  explicit LoadMonitorRemoveObserver(RefPtr<LoadMonitor> loadMonitor)
+  explicit LoadMonitorRemoveObserver(nsRefPtr<LoadMonitor> loadMonitor)
   {
     mLoadMonitor = loadMonitor;
   }
@@ -140,7 +140,7 @@ public:
   }
 
 private:
-  RefPtr<LoadMonitor> mLoadMonitor;
+  nsRefPtr<LoadMonitor> mLoadMonitor;
 };
 
 void LoadMonitor::Shutdown()
@@ -158,7 +158,7 @@ void LoadMonitor::Shutdown()
     // collection.  Argh.
     mLoadInfoThread = nullptr;
 
-    RefPtr<LoadMonitorRemoveObserver> remObsRunner = new LoadMonitorRemoveObserver(this);
+    nsRefPtr<LoadMonitorRemoveObserver> remObsRunner = new LoadMonitorRemoveObserver(this);
     if (!NS_IsMainThread()) {
       NS_DispatchToMainThread(remObsRunner);
     } else {
@@ -535,8 +535,8 @@ nsresult RTCLoadInfo::UpdateProcessLoad() {
 class LoadInfoCollectRunner : public nsRunnable
 {
 public:
-  LoadInfoCollectRunner(RefPtr<LoadMonitor> loadMonitor,
-                        RefPtr<RTCLoadInfo> loadInfo,
+  LoadInfoCollectRunner(nsRefPtr<LoadMonitor> loadMonitor,
+                        nsRefPtr<RTCLoadInfo> loadInfo,
                         nsIThread *loadInfoThread)
     : mThread(loadInfoThread),
       mLoadUpdateInterval(loadMonitor->mLoadUpdateInterval),
@@ -585,8 +585,8 @@ public:
 
 private:
   nsCOMPtr<nsIThread> mThread;
-  RefPtr<RTCLoadInfo> mLoadInfo;
-  RefPtr<LoadMonitor> mLoadMonitor;
+  nsRefPtr<RTCLoadInfo> mLoadInfo;
+  nsRefPtr<LoadMonitor> mLoadMonitor;
   int mLoadUpdateInterval;
   int mLoadNoiseCounter;
 };
@@ -625,11 +625,11 @@ LoadMonitor::GetSystemLoad() {
 }
 
 nsresult
-LoadMonitor::Init(RefPtr<LoadMonitor> &self)
+LoadMonitor::Init(nsRefPtr<LoadMonitor> &self)
 {
   LOG(("Initializing LoadMonitor"));
 
-  RefPtr<RTCLoadInfo> load_info = new RTCLoadInfo();
+  nsRefPtr<RTCLoadInfo> load_info = new RTCLoadInfo();
   nsresult rv = load_info->Init(mLoadUpdateInterval);
 
   if (NS_FAILED(rv)) {
@@ -637,12 +637,12 @@ LoadMonitor::Init(RefPtr<LoadMonitor> &self)
     return rv;
   }
 
-  RefPtr<LoadMonitorAddObserver> addObsRunner = new LoadMonitorAddObserver(self);
+  nsRefPtr<LoadMonitorAddObserver> addObsRunner = new LoadMonitorAddObserver(self);
   NS_DispatchToMainThread(addObsRunner);
 
   NS_NewNamedThread("Sys Load Info", getter_AddRefs(mLoadInfoThread));
 
-  RefPtr<LoadInfoCollectRunner> runner =
+  nsRefPtr<LoadInfoCollectRunner> runner =
     new LoadInfoCollectRunner(self, load_info, mLoadInfoThread);
   mLoadInfoThread->Dispatch(runner, NS_DISPATCH_NORMAL);
 

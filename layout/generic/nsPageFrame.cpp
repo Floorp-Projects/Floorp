@@ -629,7 +629,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   gfxContextAutoDisableSubpixelAntialiasing disable(aRenderingContext.ThebesContext(), aDisableSubpixelAA);
 
   // Get the FontMetrics to determine width.height of strings
-  RefPtr<nsFontMetrics> fontMet;
+  nsRefPtr<nsFontMetrics> fontMet;
   pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, nullptr, false,
                                      gfxFont::eHorizontal,
                                      pc->GetUserFontSet(),

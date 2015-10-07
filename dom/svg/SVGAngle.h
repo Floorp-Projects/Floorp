@@ -50,7 +50,7 @@ protected:
   ~SVGAngle();
 
   nsSVGAngle* mVal; // if mType is CreatedValue, we own the angle.  Otherwise, the element does.
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
   AngleType mType;
 };
 

@@ -322,7 +322,7 @@ protected:
     mQuotaObject = nullptr;
   }
 
-  RefPtr<QuotaObject> mQuotaObject;
+  nsRefPtr<QuotaObject> mQuotaObject;
   int64_t mFileSize;
   PRFileDesc* mFileDesc;
   PRFileMap* mFileMap;
@@ -332,7 +332,7 @@ protected:
 class UnlockDirectoryRunnable final
   : public nsRunnable
 {
-  RefPtr<DirectoryLock> mDirectoryLock;
+  nsRefPtr<DirectoryLock> mDirectoryLock;
 
 public:
   explicit
@@ -618,7 +618,7 @@ private:
   quota::PersistenceType mPersistence;
   nsCString mGroup;
   nsCString mOrigin;
-  RefPtr<DirectoryLock> mDirectoryLock;
+  nsRefPtr<DirectoryLock> mDirectoryLock;
 
   // State initialized during eReadyToReadMetadata
   nsCOMPtr<nsIFile> mDirectory;
@@ -904,7 +904,7 @@ ParentRunnable::FinishOnOwningThread()
   FileDescriptorHolder::Finish();
 
   if (mDirectoryLock) {
-    RefPtr<UnlockDirectoryRunnable> runnable =
+    nsRefPtr<UnlockDirectoryRunnable> runnable =
       new UnlockDirectoryRunnable(mDirectoryLock.forget());
 
     NS_DispatchToMainThread(runnable);
@@ -1144,7 +1144,7 @@ AllocEntryParent(OpenMode aOpenMode,
     return nullptr;
   }
 
-  RefPtr<ParentRunnable> runnable =
+  nsRefPtr<ParentRunnable> runnable =
     new ParentRunnable(aPrincipalInfo, aOpenMode, aWriteParams);
 
   nsresult rv = NS_DispatchToMainThread(runnable);
@@ -1158,7 +1158,7 @@ void
 DeallocEntryParent(PAsmJSCacheEntryParent* aActor)
 {
   // Transfer ownership back from IPDL.
-  RefPtr<ParentRunnable> op =
+  nsRefPtr<ParentRunnable> op =
     dont_AddRef(static_cast<ParentRunnable*>(aActor));
 }
 
@@ -1544,7 +1544,7 @@ OpenFile(nsIPrincipal* aPrincipal,
   // We need to synchronously call into the parent to open the file and
   // interact with the QuotaManager. The child can then map the file into its
   // address space to perform I/O.
-  RefPtr<ChildRunnable> childRunnable =
+  nsRefPtr<ChildRunnable> childRunnable =
     new ChildRunnable(aPrincipal, aOpenMode, aWriteParams, aReadParams);
 
   JS::AsmJSCacheResult openResult =

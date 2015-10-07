@@ -454,7 +454,7 @@ TLSFilterTransaction::StartTimerCallback()
 
   if (mNudgeCallback) {
     // This class can be called re-entrantly, so cleanup m* before ->on()
-    RefPtr<NudgeTunnelCallback> cb(mNudgeCallback);
+    nsRefPtr<NudgeTunnelCallback> cb(mNudgeCallback);
     mNudgeCallback = nullptr;
     cb->OnTunnelNudged(this);
   }
@@ -657,7 +657,7 @@ TLSFilterTransaction::Http1xTransactionCount()
 
 nsresult
 TLSFilterTransaction::TakeSubTransactions(
-  nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+  nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
   LOG(("TLSFilterTransaction::TakeSubTransactions [this=%p] mTransaction %p\n",
        this, mTransaction.get()));
@@ -812,7 +812,7 @@ private:
   virtual ~SocketInWrapper() {};
 
   nsCOMPtr<nsIAsyncInputStream> mStream;
-  RefPtr<TLSFilterTransaction> mTLSFilter;
+  nsRefPtr<TLSFilterTransaction> mTLSFilter;
 };
 
 nsresult
@@ -884,7 +884,7 @@ private:
   virtual ~SocketOutWrapper() {};
 
   nsCOMPtr<nsIAsyncOutputStream> mStream;
-  RefPtr<TLSFilterTransaction> mTLSFilter;
+  nsRefPtr<TLSFilterTransaction> mTLSFilter;
 };
 
 nsresult
@@ -1080,7 +1080,7 @@ SpdyConnectTransaction::MapStreamToHttpConnection(nsISocketTransport *aTransport
   }
 
   // make the originating transaction stick to the tunneled conn
-  RefPtr<nsAHttpConnection> wrappedConn =
+  nsRefPtr<nsAHttpConnection> wrappedConn =
     gHttpHandler->ConnMgr()->MakeConnectionHandle(mTunneledConn);
   mDrivingTransaction->SetConnection(wrappedConn);
   mDrivingTransaction->MakeSticky();
@@ -1297,7 +1297,7 @@ OutputStreamShim::AsyncWait(nsIOutputStreamCallback *callback,
   LOG(("OutputStreamShim::AsyncWait %p callback %p\n", this, callback));
   mCallback = callback;
 
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1315,7 +1315,7 @@ OutputStreamShim::AsyncWait(nsIOutputStreamCallback *callback,
 NS_IMETHODIMP
 OutputStreamShim::CloseWithStatus(nsresult reason)
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1338,7 +1338,7 @@ OutputStreamShim::Close()
 NS_IMETHODIMP
 OutputStreamShim::Flush()
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1369,7 +1369,7 @@ OutputStreamShim::Write(const char * aBuf, uint32_t aCount, uint32_t *_retval)
     return mStatus;
   }
 
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1437,7 +1437,7 @@ InputStreamShim::AsyncWait(nsIInputStreamCallback *callback,
 NS_IMETHODIMP
 InputStreamShim::CloseWithStatus(nsresult reason)
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1460,7 +1460,7 @@ InputStreamShim::Close()
 NS_IMETHODIMP
 InputStreamShim::Available(uint64_t *_retval)
 {
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }
@@ -1483,7 +1483,7 @@ InputStreamShim::Read(char *aBuf, uint32_t aCount, uint32_t *_retval)
     return mStatus;
   }
 
-  RefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
+  nsRefPtr<NullHttpTransaction> baseTrans(do_QueryReferent(mWeakTrans));
   if (!baseTrans) {
     return NS_ERROR_FAILURE;
   }

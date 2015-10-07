@@ -41,7 +41,7 @@ class nsXULTemplateQueryProcessorRDF final : public nsIXULTemplateQueryProcessor
                                              public nsIRDFObserver
 {
 public:
-    typedef nsTArray<RefPtr<nsXULTemplateResultRDF> > ResultArray;
+    typedef nsTArray<nsRefPtr<nsXULTemplateResultRDF> > ResultArray;
 
     nsXULTemplateQueryProcessorRDF();
 

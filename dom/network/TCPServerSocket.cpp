@@ -93,7 +93,7 @@ TCPServerSocket::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
   bool useArrayBuffers = aOptions.mBinaryType == TCPSocketBinaryType::Arraybuffer;
-  RefPtr<TCPServerSocket> socket = new TCPServerSocket(global, aPort, useArrayBuffers, aBacklog);
+  nsRefPtr<TCPServerSocket> socket = new TCPServerSocket(global, aPort, useArrayBuffers, aBacklog);
   nsresult rv = socket->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv = NS_ERROR_FAILURE;
@@ -130,7 +130,7 @@ TCPServerSocket::FireEvent(const nsAString& aType, TCPSocket* aSocket)
   init.mCancelable = false;
   init.mSocket = aSocket;
 
-  RefPtr<TCPServerSocketEvent> event =
+  nsRefPtr<TCPServerSocketEvent> event =
       TCPServerSocketEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
   bool dummy;
@@ -145,7 +145,7 @@ NS_IMETHODIMP
 TCPServerSocket::OnSocketAccepted(nsIServerSocket* aServer, nsISocketTransport* aTransport)
 {
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
-  RefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aTransport, mUseArrayBuffers);
+  nsRefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aTransport, mUseArrayBuffers);
   if (mServerBridgeParent) {
     socket->SetAppIdAndBrowser(mServerBridgeParent->GetAppId(),
                                mServerBridgeParent->GetInBrowser());
@@ -158,7 +158,7 @@ NS_IMETHODIMP
 TCPServerSocket::OnStopListening(nsIServerSocket* aServer, nsresult aStatus)
 {
   if (aStatus != NS_BINDING_ABORTED) {
-    RefPtr<Event> event = new Event(GetOwner());
+    nsRefPtr<Event> event = new Event(GetOwner());
     nsresult rv = event->InitEvent(NS_LITERAL_STRING("error"), false, false);
     NS_ENSURE_SUCCESS(rv, rv);
     event->SetTrusted(true);
@@ -177,7 +177,7 @@ TCPServerSocket::AcceptChildSocket(TCPSocketChild* aSocketChild)
 {
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-  RefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aSocketChild, mUseArrayBuffers);
+  nsRefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aSocketChild, mUseArrayBuffers);
   NS_ENSURE_TRUE(socket, NS_ERROR_FAILURE);
   FireEvent(NS_LITERAL_STRING("connect"), socket);
   return NS_OK;

@@ -53,9 +53,9 @@ public:
   };
 
 private:
-  RefPtr<XMLHttpRequestUpload> mUpload;
+  nsRefPtr<XMLHttpRequestUpload> mUpload;
   WorkerPrivate* mWorkerPrivate;
-  RefPtr<Proxy> mProxy;
+  nsRefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
   StateData mStateData;
 

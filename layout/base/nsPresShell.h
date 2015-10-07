@@ -647,7 +647,7 @@ protected:
     }
     virtual void WillRefresh(mozilla::TimeStamp aTime) override {
       if (mPresShell) {
-        RefPtr<PresShell> shell = mPresShell;
+        nsRefPtr<PresShell> shell = mPresShell;
         shell->ProcessSynthMouseMoveEvent(mFromScroll);
       }
     }
@@ -790,7 +790,7 @@ protected:
   nsPoint                   mMouseLocation;
 
   // mStyleSet owns it but we maintain a ref, may be null
-  RefPtr<mozilla::CSSStyleSheet> mPrefStyleSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mPrefStyleSheet;
 
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
@@ -810,21 +810,21 @@ private:
 protected:
   nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
   nsCOMPtr<nsIContent>      mLastAnchorScrolledTo;
-  RefPtr<nsCaret>         mCaret;
-  RefPtr<nsCaret>         mOriginalCaret;
+  nsRefPtr<nsCaret>         mCaret;
+  nsRefPtr<nsCaret>         mOriginalCaret;
   nsCallbackEventRequest*   mFirstCallbackEventRequest;
   nsCallbackEventRequest*   mLastCallbackEventRequest;
 
   // TouchManager
   TouchManager              mTouchManager;
 
-  RefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
-  RefPtr<MobileViewportManager> mMobileViewportManager;
+  nsRefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
+  nsRefPtr<MobileViewportManager> mMobileViewportManager;
 
   // TouchCaret
-  RefPtr<mozilla::TouchCaret> mTouchCaret;
-  RefPtr<mozilla::SelectionCarets> mSelectionCarets;
-  RefPtr<mozilla::AccessibleCaretEventHub> mAccessibleCaretEventHub;
+  nsRefPtr<mozilla::TouchCaret> mTouchCaret;
+  nsRefPtr<mozilla::SelectionCarets> mSelectionCarets;
+  nsRefPtr<mozilla::AccessibleCaretEventHub> mAccessibleCaretEventHub;
 
   // This timer controls painting suppression.  Until it fires
   // or all frames are constructed, we won't paint anything but

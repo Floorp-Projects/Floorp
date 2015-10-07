@@ -208,8 +208,8 @@ protected:
 
   nsresult mErrorValue;
 
-  RefPtr<FileSystemBase> mFileSystem;
-  RefPtr<FileSystemRequestParent> mRequestParent;
+  nsRefPtr<FileSystemBase> mFileSystem;
+  nsRefPtr<FileSystemRequestParent> mRequestParent;
 private:
   /*
    * After finishing the task operation, handle the task result.

@@ -377,7 +377,7 @@ ArchiveZipBlobImpl::GetInternalStream(nsIInputStream** aStream,
     return;
   }
 
-  RefPtr<ArchiveInputStream> stream = new ArchiveInputStream(size,
+  nsRefPtr<ArchiveInputStream> stream = new ArchiveInputStream(size,
                                                                inputStream,
                                                                mFilename,
                                                                mStart,
@@ -393,7 +393,7 @@ ArchiveZipBlobImpl::CreateSlice(uint64_t aStart,
                                 const nsAString& aContentType,
                                 mozilla::ErrorResult& aRv)
 {
-  RefPtr<BlobImpl> impl =
+  nsRefPtr<BlobImpl> impl =
     new ArchiveZipBlobImpl(mFilename, mContentType, aStart, mLength, mCentral,
                            mBlobImpl);
   return impl.forget();

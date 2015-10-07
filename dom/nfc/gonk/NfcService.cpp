@@ -80,10 +80,10 @@ private:
 
   bool IsNfcServiceThread() const;
 
-  RefPtr<NfcService> mNfcService;
+  nsRefPtr<NfcService> mNfcService;
   nsCOMPtr<nsIThread> mThread;
-  RefPtr<mozilla::ipc::ListenSocket> mListenSocket;
-  RefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
+  nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
+  nsRefPtr<mozilla::ipc::StreamSocket> mStreamSocket;
   nsAutoPtr<NfcMessageHandler> mHandler;
   nsCString mListenSocketName;
 };
@@ -320,7 +320,7 @@ public:
   }
 
 private:
-  RefPtr<NfcService> mNfcService;
+  nsRefPtr<NfcService> mNfcService;
   EventOptions mEvent;
 };
 
@@ -410,7 +410,7 @@ public:
   }
 
 private:
-  RefPtr<NfcService> mNfcService;
+  nsRefPtr<NfcService> mNfcService;
 };
 
 void
@@ -456,7 +456,7 @@ NfcService::FactoryCreate()
     ClearOnShutdown(&gNfcService);
   }
 
-  RefPtr<NfcService> service(gNfcService);
+  nsRefPtr<NfcService> service(gNfcService);
   return service.forget();
 }
 

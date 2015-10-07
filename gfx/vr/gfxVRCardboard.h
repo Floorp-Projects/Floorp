@@ -85,9 +85,9 @@ public:
   virtual bool PlatformInit() override;
   virtual bool Init() override;
   virtual void Destroy() override;
-  virtual void GetHMDs(nsTArray<RefPtr<VRHMDInfo> >& aHMDResult) override;
+  virtual void GetHMDs(nsTArray<nsRefPtr<VRHMDInfo> >& aHMDResult) override;
 protected:
-  nsTArray<RefPtr<impl::HMDInfoCardboard>> mCardboardHMDs;
+  nsTArray<nsRefPtr<impl::HMDInfoCardboard>> mCardboardHMDs;
   bool mCardboardInitialized;
 };
 

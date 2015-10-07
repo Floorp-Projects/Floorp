@@ -69,7 +69,7 @@ private:
     virtual nsresult CancelableRun() = 0;
 
   protected:
-    RefPtr<DeviceStorageRequestParent> mParent;
+    nsRefPtr<DeviceStorageRequestParent> mParent;
   private:
     bool mCanceled;
   };
@@ -101,7 +101,7 @@ private:
     private:
       uint32_t mLength;
       uint64_t mLastModificationDate;
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
       nsCString mMimeType;
   };
 
@@ -127,7 +127,7 @@ private:
       virtual ~CreateFdEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
   };
 
   class WriteFileEvent : public CancelableRunnable
@@ -138,7 +138,7 @@ private:
       virtual ~WriteFileEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
       nsCOMPtr<nsIInputStream> mInputStream;
       int32_t mRequestType;
   };
@@ -150,7 +150,7 @@ private:
       virtual ~DeleteFileEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
   };
 
   class FreeSpaceFileEvent : public CancelableRunnable
@@ -160,7 +160,7 @@ private:
       virtual ~FreeSpaceFileEvent();
       virtual nsresult CancelableRun();
      private:
-       RefPtr<DeviceStorageFile> mFile;
+       nsRefPtr<DeviceStorageFile> mFile;
   };
 
   class UsedSpaceFileEvent : public CancelableRunnable
@@ -170,7 +170,7 @@ private:
       virtual ~UsedSpaceFileEvent();
       virtual nsresult CancelableRun();
      private:
-       RefPtr<DeviceStorageFile> mFile;
+       nsRefPtr<DeviceStorageFile> mFile;
   };
 
   class ReadFileEvent : public CancelableRunnable
@@ -180,7 +180,7 @@ private:
       virtual ~ReadFileEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
       nsCString mMimeType;
   };
 
@@ -191,7 +191,7 @@ private:
       virtual ~EnumerateFileEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
       uint64_t mSince;
   };
 
@@ -202,7 +202,7 @@ private:
       virtual ~PostPathResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
       nsString mPath;
   };
 
@@ -214,7 +214,7 @@ private:
       virtual ~PostFileDescriptorResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
       FileDescriptor mFileDescriptor;
   };
 
@@ -249,7 +249,7 @@ private:
       virtual ~PostAvailableResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
  };
 
  class PostStatusResultEvent : public CancelableRunnable
@@ -259,7 +259,7 @@ private:
       virtual ~PostStatusResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
  };
 
  class PostFormatResultEvent : public CancelableRunnable
@@ -269,7 +269,7 @@ private:
       virtual ~PostFormatResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
  };
 
  class PostMountResultEvent : public CancelableRunnable
@@ -279,7 +279,7 @@ private:
       virtual ~PostMountResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
  };
 
  class PostUnmountResultEvent : public CancelableRunnable
@@ -289,7 +289,7 @@ private:
       virtual ~PostUnmountResultEvent();
       virtual nsresult CancelableRun();
     private:
-      RefPtr<DeviceStorageFile> mFile;
+      nsRefPtr<DeviceStorageFile> mFile;
  };
 
 protected:
@@ -309,7 +309,7 @@ protected:
 
   Mutex mMutex;
   bool mActorDestroyed;
-  nsTArray<RefPtr<CancelableRunnable> > mRunnables;
+  nsTArray<nsRefPtr<CancelableRunnable> > mRunnables;
 };
 
 } // namespace devicestorage

@@ -76,7 +76,7 @@ already_AddRefed<ColorLayer>
 BasicLayerManager::CreateColorLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  RefPtr<ColorLayer> layer = new BasicColorLayer(this);
+  nsRefPtr<ColorLayer> layer = new BasicColorLayer(this);
   return layer.forget();
 }
 

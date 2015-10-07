@@ -111,7 +111,7 @@ CellBroadcastMessage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 already_AddRefed<CellBroadcastEtwsInfo>
 CellBroadcastMessage::GetEtws() const
 {
-  RefPtr<CellBroadcastEtwsInfo> etwsInfo = mEtwsInfo;
+  nsRefPtr<CellBroadcastEtwsInfo> etwsInfo = mEtwsInfo;
   return etwsInfo.forget();
 }
 

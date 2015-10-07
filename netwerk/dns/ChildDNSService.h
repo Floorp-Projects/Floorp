@@ -49,7 +49,7 @@ private:
   bool mDisablePrefetch;
 
   // We need to remember pending dns requests to be able to cancel them.
-  nsClassHashtable<nsCStringHashKey, nsTArray<RefPtr<DNSRequestChild>>> mPendingRequests;
+  nsClassHashtable<nsCStringHashKey, nsTArray<nsRefPtr<DNSRequestChild>>> mPendingRequests;
   Mutex mPendingRequestsLock;
 };
 

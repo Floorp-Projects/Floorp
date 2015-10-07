@@ -329,13 +329,13 @@ BluetoothMapBMessage::ParseBMsg(const nsAutoCString& aCurrLine)
 }
 
 void
-BluetoothMapBMessage::GetRecipients(nsTArray<RefPtr<VCard>>& aRecipients)
+BluetoothMapBMessage::GetRecipients(nsTArray<nsRefPtr<VCard>>& aRecipients)
 {
   aRecipients = mRecipients;
 }
 
 void
-BluetoothMapBMessage::GetOriginators(nsTArray<RefPtr<VCard>>& aOriginators)
+BluetoothMapBMessage::GetOriginators(nsTArray<nsRefPtr<VCard>>& aOriginators)
 {
   aOriginators = mOriginators;
 }

@@ -59,7 +59,7 @@ xpcAccessibleHyperLink::GetURI(int32_t aIndex, nsIURI** aURI)
   if (aIndex < 0 || aIndex >= static_cast<int32_t>(Intl()->AnchorCount()))
     return NS_ERROR_INVALID_ARG;
 
-  RefPtr<nsIURI>(Intl()->AnchorURIAt(aIndex)).forget(aURI);
+  nsRefPtr<nsIURI>(Intl()->AnchorURIAt(aIndex)).forget(aURI);
   return NS_OK;
 }
 

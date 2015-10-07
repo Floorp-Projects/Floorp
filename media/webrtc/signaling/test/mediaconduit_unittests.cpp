@@ -83,7 +83,7 @@ public:
   void SetRate(int r) {
     rate = r;
   }
-  void Init(RefPtr<mozilla::VideoSessionConduit> aSession)
+  void Init(nsRefPtr<mozilla::VideoSessionConduit> aSession)
   {
         mSession = aSession;
         mLen = ((width * height) * 3 / 2);
@@ -109,7 +109,7 @@ public:
   }
 
 private:
-RefPtr<mozilla::VideoSessionConduit> mSession;
+nsRefPtr<mozilla::VideoSessionConduit> mSession;
 mozilla::ScopedDeletePtr<uint8_t> mFrame;
 int mLen;
 int width, height;
@@ -141,8 +141,8 @@ public:
   {
   }
 
- void Init(RefPtr<mozilla::AudioSessionConduit> aSession,
-           RefPtr<mozilla::AudioSessionConduit> aOtherSession,
+ void Init(nsRefPtr<mozilla::AudioSessionConduit> aSession,
+           nsRefPtr<mozilla::AudioSessionConduit> aOtherSession,
            std::string fileIn, std::string fileOut)
   {
 
@@ -157,8 +157,8 @@ public:
 
 private:
 
-  RefPtr<mozilla::AudioSessionConduit> mSession;
-  RefPtr<mozilla::AudioSessionConduit> mOtherSession;
+  nsRefPtr<mozilla::AudioSessionConduit> mSession;
+  nsRefPtr<mozilla::AudioSessionConduit> mOtherSession;
   std::string iFile;
   std::string oFile;
 
@@ -465,8 +465,8 @@ public:
   }
 
   //Treat this object as Audio Transport
-  void SetAudioSession(RefPtr<mozilla::AudioSessionConduit> aSession,
-                        RefPtr<mozilla::AudioSessionConduit>
+  void SetAudioSession(nsRefPtr<mozilla::AudioSessionConduit> aSession,
+                        nsRefPtr<mozilla::AudioSessionConduit>
                         aOtherSession)
   {
     mAudioSession = aSession;
@@ -475,8 +475,8 @@ public:
   }
 
   // Treat this object as Video Transport
-  void SetVideoSession(RefPtr<mozilla::VideoSessionConduit> aSession,
-                       RefPtr<mozilla::VideoSessionConduit>
+  void SetVideoSession(nsRefPtr<mozilla::VideoSessionConduit> aSession,
+                       nsRefPtr<mozilla::VideoSessionConduit>
                        aOtherSession)
   {
     mVideoSession = aSession;
@@ -485,10 +485,10 @@ public:
   }
 
 private:
-  RefPtr<mozilla::AudioSessionConduit> mAudioSession;
-  RefPtr<mozilla::VideoSessionConduit> mVideoSession;
-  RefPtr<mozilla::VideoSessionConduit> mOtherVideoSession;
-  RefPtr<mozilla::AudioSessionConduit> mOtherAudioSession;
+  nsRefPtr<mozilla::AudioSessionConduit> mAudioSession;
+  nsRefPtr<mozilla::VideoSessionConduit> mVideoSession;
+  nsRefPtr<mozilla::VideoSessionConduit> mOtherVideoSession;
+  nsRefPtr<mozilla::AudioSessionConduit> mOtherAudioSession;
   int numPkts;
   bool mAudio, mVideo;
 };
@@ -687,7 +687,7 @@ class TransportConduitTest : public ::testing::Test
  void TestVideoConduitCodecAPI()
   {
     int err = 0;
-    RefPtr<mozilla::VideoSessionConduit> videoSession;
+    nsRefPtr<mozilla::VideoSessionConduit> videoSession;
     //get pointer to VideoSessionConduit
     mozilla::SyncRunnable::DispatchToThread(gMainThread,
                                             WrapRunnableNMRet(&videoSession,
@@ -948,16 +948,16 @@ class TransportConduitTest : public ::testing::Test
 
  private:
   //Audio Conduit Test Objects
-  RefPtr<mozilla::AudioSessionConduit> mAudioSession;
-  RefPtr<mozilla::AudioSessionConduit> mAudioSession2;
-  RefPtr<mozilla::TransportInterface> mAudioTransport;
+  nsRefPtr<mozilla::AudioSessionConduit> mAudioSession;
+  nsRefPtr<mozilla::AudioSessionConduit> mAudioSession2;
+  nsRefPtr<mozilla::TransportInterface> mAudioTransport;
   AudioSendAndReceive audioTester;
 
   //Video Conduit Test Objects
-  RefPtr<mozilla::VideoSessionConduit> mVideoSession;
-  RefPtr<mozilla::VideoSessionConduit> mVideoSession2;
-  RefPtr<mozilla::VideoRenderer> mVideoRenderer;
-  RefPtr<mozilla::TransportInterface> mVideoTransport;
+  nsRefPtr<mozilla::VideoSessionConduit> mVideoSession;
+  nsRefPtr<mozilla::VideoSessionConduit> mVideoSession2;
+  nsRefPtr<mozilla::VideoRenderer> mVideoRenderer;
+  nsRefPtr<mozilla::TransportInterface> mVideoTransport;
   VideoSendAndReceive videoTester;
 
   mozilla::VideoEncoder* mExternalEncoder;

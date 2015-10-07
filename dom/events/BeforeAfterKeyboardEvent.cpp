@@ -37,7 +37,7 @@ BeforeAfterKeyboardEvent::Constructor(
                             const nsAString& aType,
                             const BeforeAfterKeyboardEventInit& aParam)
 {
-  RefPtr<BeforeAfterKeyboardEvent> event =
+  nsRefPtr<BeforeAfterKeyboardEvent> event =
     new BeforeAfterKeyboardEvent(aOwner, nullptr, nullptr);
   ErrorResult rv;
   event->InitWithKeyboardEventInit(aOwner, aType, aParam, rv);
@@ -84,7 +84,7 @@ NS_NewDOMBeforeAfterKeyboardEvent(EventTarget* aOwner,
                                   nsPresContext* aPresContext,
                                   InternalBeforeAfterKeyboardEvent* aEvent)
 {
-  RefPtr<BeforeAfterKeyboardEvent> it =
+  nsRefPtr<BeforeAfterKeyboardEvent> it =
     new BeforeAfterKeyboardEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

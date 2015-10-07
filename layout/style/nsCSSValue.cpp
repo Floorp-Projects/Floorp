@@ -739,7 +739,7 @@ bool nsCSSValue::IsNonTransparentColor() const
 nsCSSValue::Array*
 nsCSSValue::InitFunction(nsCSSKeyword aFunctionId, uint32_t aNumArgs)
 {
-  RefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
+  nsRefPtr<nsCSSValue::Array> func = Array::Create(aNumArgs + 1);
   func->Item(0).SetIntValue(aFunctionId, eCSSUnit_Enumerated);
   SetArrayValue(func, eCSSUnit_Function);
   return func;
@@ -765,7 +765,7 @@ nsCSSValue::EqualsFunction(nsCSSKeyword aFunctionId) const
 already_AddRefed<nsStringBuffer>
 nsCSSValue::BufferFromString(const nsString& aValue)
 {
-  RefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aValue);
+  nsRefPtr<nsStringBuffer> buffer = nsStringBuffer::FromString(aValue);
   if (buffer) {
     return buffer.forget();
   }
@@ -2442,7 +2442,7 @@ css::ImageValue::ImageValue(nsIURI* aURI, nsStringBuffer* aString,
 }
 
 static PLDHashOperator
-ClearRequestHashtable(nsISupports* aKey, RefPtr<imgRequestProxy>& aValue,
+ClearRequestHashtable(nsISupports* aKey, nsRefPtr<imgRequestProxy>& aValue,
                       void* aClosure)
 {
   mozilla::css::ImageValue* image =

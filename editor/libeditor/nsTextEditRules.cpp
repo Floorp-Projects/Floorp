@@ -116,7 +116,7 @@ nsTextEditRules::Init(nsPlaintextEditor *aEditor)
   InitFields();
 
   mEditor = aEditor;  // we hold a non-refcounted reference back to our editor
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_WARN_IF_FALSE(selection, "editor cannot get selection");
 
   // Put in a magic br if needed. This method handles null selection,
@@ -183,7 +183,7 @@ nsTextEditRules::BeforeEdit(EditAction action,
 
   // get the selection and cache the position before editing
   NS_ENSURE_STATE(mEditor);
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
   selection->GetAnchorNode(getter_AddRefs(mCachedSelectionNode));
@@ -206,7 +206,7 @@ nsTextEditRules::AfterEdit(EditAction action,
   if (!--mActionNesting)
   {
     NS_ENSURE_STATE(mEditor);
-    RefPtr<Selection> selection = mEditor->GetSelection();
+    nsRefPtr<Selection> selection = mEditor->GetSelection();
     NS_ENSURE_STATE(selection);
 
     NS_ENSURE_STATE(mEditor);
@@ -488,7 +488,7 @@ GetTextNode(Selection* selection, nsEditor* editor) {
     NS_ENSURE_TRUE(node, nullptr);
     // This should be the root node, walk the tree looking for text nodes
     NodeFilterHolder filter;
-    RefPtr<NodeIterator> iter = new NodeIterator(node, nsIDOMNodeFilter::SHOW_TEXT, filter);
+    nsRefPtr<NodeIterator> iter = new NodeIterator(node, nsIDOMNodeFilter::SHOW_TEXT, filter);
     while (!editor->IsTextNode(selNode)) {
       if (NS_FAILED(res = iter->NextNode(getter_AddRefs(selNode))) || !selNode) {
         return nullptr;
@@ -1084,7 +1084,7 @@ nsTextEditRules::RemoveRedundantTrailingBR()
     return NS_OK;
 
   NS_ENSURE_STATE(mEditor);
-  RefPtr<dom::Element> body = mEditor->GetRoot();
+  nsRefPtr<dom::Element> body = mEditor->GetRoot();
   if (!body)
     return NS_ERROR_NULL_POINTER;
 
@@ -1094,7 +1094,7 @@ nsTextEditRules::RemoveRedundantTrailingBR()
     return NS_OK;
   }
 
-  RefPtr<nsIContent> child = body->GetFirstChild();
+  nsRefPtr<nsIContent> child = body->GetFirstChild();
   if (!child || !child->IsElement()) {
     return NS_OK;
   }
@@ -1341,7 +1341,7 @@ nsresult nsTextEditRules::HideLastPWInput() {
   FillBufWithPWChars(&hiddenText, mLastLength);
 
   NS_ENSURE_STATE(mEditor);
-  RefPtr<Selection> selection = mEditor->GetSelection();
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   int32_t start, end;
   nsContentUtils::GetSelectionInTextControl(selection, mEditor->GetRoot(),

@@ -83,14 +83,14 @@ class nsXMLBindingValues
 protected:
 
   // the binding set
-  RefPtr<nsXMLBindingSet> mBindings;
+  nsRefPtr<nsXMLBindingSet> mBindings;
 
   /**
    * A set of values for variable bindings. To look up a binding value,
    * scan through the binding set in mBindings for the right target atom.
    * Its index will correspond to the index in this array.
    */
-  nsTArray<RefPtr<mozilla::dom::XPathResult> > mValues;
+  nsTArray<nsRefPtr<mozilla::dom::XPathResult> > mValues;
 
 public:
 

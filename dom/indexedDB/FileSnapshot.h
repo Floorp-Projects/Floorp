@@ -37,7 +37,7 @@ class BlobImplSnapshot final
   : public BlobImpl
   , public PIBlobImplSnapshot
 {
-  RefPtr<BlobImpl> mBlobImpl;
+  nsRefPtr<BlobImpl> mBlobImpl;
   nsWeakPtr mFileHandle;
 
 public:
@@ -113,7 +113,7 @@ private:
               const nsAString& aContentType,
               ErrorResult& aRv) override;
 
-  virtual const nsTArray<RefPtr<BlobImpl>>*
+  virtual const nsTArray<nsRefPtr<BlobImpl>>*
   GetSubBlobImpls() const override
   {
     return mBlobImpl->GetSubBlobImpls();

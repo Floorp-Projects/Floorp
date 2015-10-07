@@ -612,11 +612,11 @@ protected:
     float mVolume;
   };
   nsTArray<AudioOutput> mAudioOutputs;
-  nsTArray<RefPtr<VideoFrameContainer> > mVideoOutputs;
+  nsTArray<nsRefPtr<VideoFrameContainer> > mVideoOutputs;
   // We record the last played video frame to avoid playing the frame again
   // with a different frame id.
   VideoFrame mLastPlayedVideoFrame;
-  nsTArray<RefPtr<MediaStreamListener> > mListeners;
+  nsTArray<nsRefPtr<MediaStreamListener> > mListeners;
   nsTArray<MainThreadMediaStreamListener*> mMainThreadListeners;
   nsTArray<TrackID> mDisabledTrackIDs;
 
@@ -842,7 +842,7 @@ protected:
       mRunnable = aRunnable;
     }
 
-    RefPtr<TaskQueue> mTarget;
+    nsRefPtr<TaskQueue> mTarget;
     nsCOMPtr<nsIRunnable> mRunnable;
   };
   enum TrackCommands {
@@ -906,7 +906,7 @@ protected:
   StreamTime mUpdateKnownTracksTime;
   nsTArray<TrackData> mUpdateTracks;
   nsTArray<TrackData> mPendingTracks;
-  nsTArray<RefPtr<MediaStreamDirectListener> > mDirectListeners;
+  nsTArray<nsRefPtr<MediaStreamDirectListener> > mDirectListeners;
   bool mPullEnabled;
   bool mUpdateFinished;
   bool mNeedsMixing;

@@ -54,7 +54,7 @@ class BufferedStunSocketTest : public ::testing::Test {
   }
 
   void SetUp() {
-    RefPtr<DummySocket> dummy(new DummySocket());
+    nsRefPtr<DummySocket> dummy(new DummySocket());
 
     int r = nr_socket_buffered_stun_create(
         dummy->get_nr_socket(),
@@ -76,7 +76,7 @@ class BufferedStunSocketTest : public ::testing::Test {
   nr_socket *socket() { return test_socket_; }
 
  protected:
-  RefPtr<DummySocket> dummy_;
+  nsRefPtr<DummySocket> dummy_;
   nr_socket *test_socket_;
   nr_transport_addr remote_addr_;
 };

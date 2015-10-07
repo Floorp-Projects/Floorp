@@ -58,7 +58,7 @@ struct UndisplayedNode {
   }
 
   nsCOMPtr<nsIContent>      mContent;
-  RefPtr<nsStyleContext>  mStyle;
+  nsRefPtr<nsStyleContext>  mStyle;
   UndisplayedNode*          mNext;
 };
 

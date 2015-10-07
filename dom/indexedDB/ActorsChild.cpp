@@ -540,7 +540,7 @@ class PermissionRequestMainProcessHelper final
   : public PermissionRequestBase
 {
   BackgroundFactoryRequestChild* mActor;
-  RefPtr<IDBFactory> mFactory;
+  nsRefPtr<IDBFactory> mFactory;
 
 public:
   PermissionRequestMainProcessHelper(BackgroundFactoryRequestChild* aActor,
@@ -569,7 +569,7 @@ class PermissionRequestChildProcessActor final
   : public PIndexedDBPermissionRequestChild
 {
   BackgroundFactoryRequestChild* mActor;
-  RefPtr<IDBFactory> mFactory;
+  nsRefPtr<IDBFactory> mFactory;
 
 public:
   PermissionRequestChildProcessActor(BackgroundFactoryRequestChild* aActor,
@@ -611,10 +611,10 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
           auto* actor =
             static_cast<BlobChild*>(blobOrMutableFile.get_PBlobChild());
 
-          RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+          nsRefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
           MOZ_ASSERT(blobImpl);
 
-          RefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
+          nsRefPtr<Blob> blob = Blob::Create(aDatabase->GetOwner(), blobImpl);
 
           aDatabase->NoteReceivedBlob(blob);
 
@@ -693,8 +693,8 @@ DispatchErrorEvent(IDBRequest* aRequest,
                  "DispatchErrorEvent",
                  js::ProfileEntry::Category::STORAGE);
 
-  RefPtr<IDBRequest> request = aRequest;
-  RefPtr<IDBTransaction> transaction = aTransaction;
+  nsRefPtr<IDBRequest> request = aRequest;
+  nsRefPtr<IDBTransaction> transaction = aTransaction;
 
   request->SetError(aErrorCode);
 
@@ -764,11 +764,11 @@ DispatchSuccessEvent(ResultHelper* aResultHelper,
                  "DispatchSuccessEvent",
                  js::ProfileEntry::Category::STORAGE);
 
-  RefPtr<IDBRequest> request = aResultHelper->Request();
+  nsRefPtr<IDBRequest> request = aResultHelper->Request();
   MOZ_ASSERT(request);
   request->AssertIsOnOwningThread();
 
-  RefPtr<IDBTransaction> transaction = aResultHelper->Transaction();
+  nsRefPtr<IDBTransaction> transaction = aResultHelper->Transaction();
 
   if (transaction && transaction->IsAborted()) {
     DispatchErrorEvent(request, transaction->AbortCode(), transaction);
@@ -832,7 +832,7 @@ class WorkerPermissionChallenge;
 // worker thread.
 class WorkerPermissionOperationCompleted final : public WorkerControlRunnable
 {
-  RefPtr<WorkerPermissionChallenge> mChallenge;
+  nsRefPtr<WorkerPermissionChallenge> mChallenge;
 
 public:
   WorkerPermissionOperationCompleted(WorkerPrivate* aWorkerPrivate,
@@ -850,7 +850,7 @@ public:
 // This class used to do prompting in the main thread and main process.
 class WorkerPermissionRequest final : public PermissionRequestBase
 {
-  RefPtr<WorkerPermissionChallenge> mChallenge;
+  nsRefPtr<WorkerPermissionChallenge> mChallenge;
 
 public:
   WorkerPermissionRequest(Element* aElement,
@@ -878,7 +878,7 @@ private:
 class WorkerPermissionRequestChildProcessActor final
   : public PIndexedDBPermissionRequestChild
 {
-  RefPtr<WorkerPermissionChallenge> mChallenge;
+  nsRefPtr<WorkerPermissionChallenge> mChallenge;
 
 public:
   explicit WorkerPermissionRequestChildProcessActor(
@@ -940,7 +940,7 @@ public:
   OperationCompleted()
   {
     if (NS_IsMainThread()) {
-      RefPtr<WorkerPermissionOperationCompleted> runnable =
+      nsRefPtr<WorkerPermissionOperationCompleted> runnable =
         new WorkerPermissionOperationCompleted(mWorkerPrivate, this);
 
       MOZ_ALWAYS_TRUE(runnable->Dispatch(nullptr));
@@ -952,7 +952,7 @@ public:
 
     MaybeCollectGarbageOnIPCMessage();
 
-    RefPtr<IDBFactory> factory;
+    nsRefPtr<IDBFactory> factory;
     mFactory.swap(factory);
 
     mActor->SendPermissionRetry();
@@ -994,7 +994,7 @@ private:
         return true;
       }
 
-      RefPtr<WorkerPermissionRequest> helper =
+      nsRefPtr<WorkerPermissionRequest> helper =
         new WorkerPermissionRequest(ownerElement, principal, this);
 
       PermissionRequestBase::PermissionValue permission;
@@ -1022,7 +1022,7 @@ private:
 private:
   WorkerPrivate* mWorkerPrivate;
   BackgroundFactoryRequestChild* mActor;
-  RefPtr<IDBFactory> mFactory;
+  nsRefPtr<IDBFactory> mFactory;
   PrincipalInfo mPrincipalInfo;
 };
 
@@ -1082,7 +1082,7 @@ PermissionRequestChildProcessActor::Recv__delete__(
 
   MaybeCollectGarbageOnIPCMessage();
 
-  RefPtr<IDBFactory> factory;
+  nsRefPtr<IDBFactory> factory;
   mFactory.swap(factory);
 
   mActor->SendPermissionRetry();
@@ -1421,7 +1421,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     MOZ_ASSERT(workerPrivate);
     workerPrivate->AssertIsOnWorkerThread();
 
-    RefPtr<WorkerPermissionChallenge> challenge =
+    nsRefPtr<WorkerPermissionChallenge> challenge =
       new WorkerPermissionChallenge(workerPrivate, this, mFactory,
                                     aPrincipalInfo);
 
@@ -1455,7 +1455,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
       return SendPermissionRetry();
     }
 
-    RefPtr<PermissionRequestMainProcessHelper> helper =
+    nsRefPtr<PermissionRequestMainProcessHelper> helper =
       new PermissionRequestMainProcessHelper(this, mFactory, ownerElement, principal);
 
     PermissionRequestBase::PermissionValue permission;
@@ -1473,7 +1473,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return true;
   }
 
-  RefPtr<TabChild> tabChild = mFactory->GetTabChild();
+  nsRefPtr<TabChild> tabChild = mFactory->GetTabChild();
   MOZ_ASSERT(tabChild);
 
   IPC::Principal ipcPrincipal(principal);
@@ -1509,7 +1509,7 @@ BackgroundFactoryRequestChild::RecvBlocked(const uint64_t& aCurrentVersion)
     MOZ_ASSERT(blockedEvent);
   }
 
-  RefPtr<IDBRequest> kungFuDeathGrip = mRequest;
+  nsRefPtr<IDBRequest> kungFuDeathGrip = mRequest;
 
   IDB_LOG_MARK("IndexedDB %s: Child  Request[%llu]: Firing \"blocked\" event",
                "IndexedDB %s: C R[%llu]: \"blocked\"",
@@ -1711,10 +1711,10 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
 
   auto* actor = static_cast<BackgroundVersionChangeTransactionChild*>(aActor);
 
-  RefPtr<IDBOpenDBRequest> request = mOpenRequestActor->GetOpenDBRequest();
+  nsRefPtr<IDBOpenDBRequest> request = mOpenRequestActor->GetOpenDBRequest();
   MOZ_ASSERT(request);
 
-  RefPtr<IDBTransaction> transaction =
+  nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::CreateVersionChange(mDatabase,
                                         actor,
                                         request,
@@ -1804,7 +1804,7 @@ BackgroundDatabaseChild::RecvVersionChange(const uint64_t& aOldVersion,
     return true;
   }
 
-  RefPtr<IDBDatabase> kungFuDeathGrip = mDatabase;
+  nsRefPtr<IDBDatabase> kungFuDeathGrip = mDatabase;
 
   // Handle bfcache'd windows.
   if (nsPIDOMWindow* owner = mDatabase->GetOwner()) {
@@ -2301,7 +2301,7 @@ BackgroundMutableFileChild::CreateMutableFile()
     static_cast<BackgroundDatabaseChild*>(Manager())->GetDOMObject();
   MOZ_ASSERT(database);
 
-  RefPtr<IDBMutableFile> mutableFile =
+  nsRefPtr<IDBMutableFile> mutableFile =
     new IDBMutableFile(database, this, mName, mType);
 
   return mutableFile.forget();
@@ -2555,7 +2555,7 @@ class BackgroundCursorChild::DelayedActionRunnable final
   using ActionFunc = void (BackgroundCursorChild::*)();
 
   BackgroundCursorChild* mActor;
-  RefPtr<IDBRequest> mRequest;
+  nsRefPtr<IDBRequest> mRequest;
   ActionFunc mActionFunc;
 
 public:
@@ -2711,7 +2711,7 @@ BackgroundCursorChild::SendDelayedContinueInternal()
   MOZ_ASSERT(mStrongCursor);
   MOZ_ASSERT(!mCachedResponses.IsEmpty());
 
-  RefPtr<IDBCursor> cursor;
+  nsRefPtr<IDBCursor> cursor;
   mStrongCursor.swap(cursor);
 
   auto& item = mCachedResponses[0];
@@ -2814,7 +2814,7 @@ BackgroundCursorChild::HandleResponse(
                          response.cloneInfo(),
                          cloneReadInfo.mFiles);
 
-    RefPtr<IDBCursor> newCursor;
+    nsRefPtr<IDBCursor> newCursor;
 
     if (mCursor) {
       if (mCursor->IsContinueCalled()) {
@@ -2851,7 +2851,7 @@ BackgroundCursorChild::HandleResponse(
   // XXX Fix this somehow...
   auto& response = const_cast<ObjectStoreKeyCursorResponse&>(aResponse);
 
-  RefPtr<IDBCursor> newCursor;
+  nsRefPtr<IDBCursor> newCursor;
 
   if (mCursor) {
     mCursor->Reset(Move(response.key()));
@@ -2884,7 +2884,7 @@ BackgroundCursorChild::HandleResponse(const IndexCursorResponse& aResponse)
                        aResponse.cloneInfo(),
                        cloneReadInfo.mFiles);
 
-  RefPtr<IDBCursor> newCursor;
+  nsRefPtr<IDBCursor> newCursor;
 
   if (mCursor) {
     mCursor->Reset(Move(response.key()),
@@ -2917,7 +2917,7 @@ BackgroundCursorChild::HandleResponse(const IndexKeyCursorResponse& aResponse)
   // XXX Fix this somehow...
   auto& response = const_cast<IndexKeyCursorResponse&>(aResponse);
 
-  RefPtr<IDBCursor> newCursor;
+  nsRefPtr<IDBCursor> newCursor;
 
   if (mCursor) {
     mCursor->Reset(Move(response.key()),
@@ -2976,10 +2976,10 @@ BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
 
   MaybeCollectGarbageOnIPCMessage();
 
-  RefPtr<IDBRequest> request;
+  nsRefPtr<IDBRequest> request;
   mStrongRequest.swap(request);
 
-  RefPtr<IDBCursor> cursor;
+  nsRefPtr<IDBCursor> cursor;
   mStrongCursor.swap(cursor);
 
   switch (aResponse.type()) {

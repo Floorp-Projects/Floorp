@@ -144,7 +144,7 @@ FakeDirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
 
     NS_IMETHOD Run() override
     {
-      RefPtr<FakeSynthCallback> cb = new FakeSynthCallback(nullptr);
+      nsRefPtr<FakeSynthCallback> cb = new FakeSynthCallback(nullptr);
       mTask->Setup(cb, CHANNELS, SAMPLERATE, 2);
 
       // Just an arbitrary multiplier. Pretend that each character is
@@ -243,7 +243,7 @@ FakeIndirectAudioSynth::Speak(const nsAString& aText, const nsAString& aUri,
     }
   }
 
-  RefPtr<FakeSynthCallback> cb = new FakeSynthCallback(
+  nsRefPtr<FakeSynthCallback> cb = new FakeSynthCallback(
     (flags & eSuppressEvents) ? nullptr : aTask);
 
   aTask->Setup(cb, 0, 0, 0);
@@ -350,7 +350,7 @@ nsFakeSynthServices::GetInstance()
 already_AddRefed<nsFakeSynthServices>
 nsFakeSynthServices::GetInstanceForService()
 {
-  RefPtr<nsFakeSynthServices> picoService = GetInstance();
+  nsRefPtr<nsFakeSynthServices> picoService = GetInstance();
   return picoService.forget();
 }
 

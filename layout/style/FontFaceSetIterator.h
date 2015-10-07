@@ -32,7 +32,7 @@ public:
 private:
   ~FontFaceSetIterator();
 
-  RefPtr<FontFaceSet> mFontFaceSet;
+  nsRefPtr<FontFaceSet> mFontFaceSet;
   uint32_t mNextIndex;
   bool mIsKeyAndValue;
 };

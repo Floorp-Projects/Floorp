@@ -38,7 +38,7 @@ public:
     bool mPreserveWhitespace;
     bool mForwardsCompatibleParsing;
     nsString mBaseURI;
-    RefPtr<txNamespaceMap> mMappings;
+    nsRefPtr<txNamespaceMap> mMappings;
     nsTArray<int32_t> mInstructionNamespaces;
     int32_t mDepth;
 };
@@ -156,7 +156,7 @@ public:
     static void shutdown();
 
 
-    RefPtr<txStylesheet> mStylesheet;
+    nsRefPtr<txStylesheet> mStylesheet;
     txHandlerTable* mHandlerTable;
     nsAutoPtr<txElementContext> mElementContext;
     txPushNewContext* mSorter;
@@ -166,7 +166,7 @@ public:
     uint16_t mDisAllowed;
 
 protected:
-    RefPtr<txACompileObserver> mObserver;
+    nsRefPtr<txACompileObserver> mObserver;
     nsTArray<txInScopeVariable*> mInScopeVariables;
     nsTArray<txStylesheetCompiler*> mChildCompilerList;
     // embed info, target information is the ID

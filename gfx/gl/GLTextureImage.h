@@ -13,7 +13,7 @@
 #include "GLContextTypes.h"
 #include "GraphicsFilter.h"
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class gfxASurface;
 
@@ -278,8 +278,8 @@ public:
 protected:
     GLuint mTexture;
     TextureState mTextureState;
-    RefPtr<GLContext> mGLContext;
-    RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+    nsRefPtr<GLContext> mGLContext;
+    nsRefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     nsIntRegion mUpdateRegion;
 
     // The offset into the update surface at which the update rect is located.
@@ -325,13 +325,13 @@ protected:
     unsigned int mCurrentImage;
     BigImageIterationCallback mIterationCallback;
     void* mIterationCallbackData;
-    nsTArray< RefPtr<TextureImage> > mImages;
+    nsTArray< nsRefPtr<TextureImage> > mImages;
     bool mInUpdate;
     unsigned int mTileSize;
     unsigned int mRows, mColumns;
     GLContext* mGL;
     // A temporary draw target to faciliate cross-tile updates.
-    RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+    nsRefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     // The region of update requested
     nsIntRegion mUpdateRegion;
     TextureState mTextureState;

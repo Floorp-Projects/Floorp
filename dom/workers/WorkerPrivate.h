@@ -97,7 +97,7 @@ class SharedMutex
     { }
   };
 
-  RefPtr<RefCountedMutex> mMutex;
+  nsRefPtr<RefCountedMutex> mMutex;
 
 public:
   explicit SharedMutex(const char* aName)
@@ -156,8 +156,8 @@ protected:
   mozilla::CondVar mMemoryReportCondVar;
 
   // Protected by mMutex.
-  RefPtr<EventTarget> mEventTarget;
-  nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
+  nsRefPtr<EventTarget> mEventTarget;
+  nsTArray<nsRefPtr<WorkerRunnable>> mPreStartRunnables;
 
 private:
   WorkerPrivate* mParent;
@@ -180,7 +180,7 @@ private:
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
-  nsTArray<RefPtr<SharedWorker>> mSharedWorkers;
+  nsTArray<nsRefPtr<SharedWorker>> mSharedWorkers;
 
   uint64_t mBusyCount;
   Status mParentStatus;
@@ -197,7 +197,7 @@ protected:
   // The worker is owned by its thread, which is represented here.  This is set
   // in Construct() and emptied by WorkerFinishedRunnable, and conditionally
   // traversed by the cycle collector if the busy count is zero.
-  RefPtr<WorkerPrivate> mSelfRef;
+  nsRefPtr<WorkerPrivate> mSelfRef;
 
   WorkerPrivateParent(JSContext* aCx, WorkerPrivate* aParent,
                       const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -762,7 +762,7 @@ public:
   }
 
   void
-  GetAllSharedWorkers(nsTArray<RefPtr<SharedWorker>>& aSharedWorkers);
+  GetAllSharedWorkers(nsTArray<nsRefPtr<SharedWorker>>& aSharedWorkers);
 
   void
   CloseSharedWorkersForWindow(nsPIDOMWindow* aWindow);
@@ -887,21 +887,21 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
     NoTimer
   };
 
-  RefPtr<WorkerDebugger> mDebugger;
+  nsRefPtr<WorkerDebugger> mDebugger;
 
   Queue<WorkerControlRunnable*, 4> mControlQueue;
   Queue<WorkerRunnable*, 4> mDebuggerQueue;
 
   // Touched on multiple threads, protected with mMutex.
   JSContext* mJSContext;
-  RefPtr<WorkerCrossThreadDispatcher> mCrossThreadDispatcher;
+  nsRefPtr<WorkerCrossThreadDispatcher> mCrossThreadDispatcher;
   nsTArray<nsCOMPtr<nsIRunnable>> mUndispatchedRunnablesForSyncLoop;
-  RefPtr<WorkerThread> mThread;
+  nsRefPtr<WorkerThread> mThread;
   PRThread* mPRThread;
 
   // Things touched on worker thread only.
-  RefPtr<WorkerGlobalScope> mScope;
-  RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
+  nsRefPtr<WorkerGlobalScope> mScope;
+  nsRefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
   nsTArray<ParentType*> mChildWorkers;
   nsTObserverArray<WorkerFeature*> mFeatures;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
@@ -911,7 +911,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   {
     explicit SyncLoopInfo(EventTarget* aEventTarget);
 
-    RefPtr<EventTarget> mEventTarget;
+    nsRefPtr<EventTarget> mEventTarget;
     bool mCompleted;
     bool mResult;
 #ifdef DEBUG
@@ -930,7 +930,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsCOMPtr<nsIEventTarget> mPeriodicGCTimerTarget;
   nsCOMPtr<nsIEventTarget> mIdleGCTimerTarget;
 
-  RefPtr<MemoryReporter> mMemoryReporter;
+  nsRefPtr<MemoryReporter> mMemoryReporter;
 
   // fired on the main thread if the worker script fails to load
   nsCOMPtr<nsIRunnable> mLoadFailedRunnable;
@@ -1530,7 +1530,7 @@ class TimerThreadEventTarget final : public nsIEventTarget
   ~TimerThreadEventTarget();
 
   WorkerPrivate* mWorkerPrivate;
-  RefPtr<WorkerRunnable> mWorkerRunnable;
+  nsRefPtr<WorkerRunnable> mWorkerRunnable;
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 

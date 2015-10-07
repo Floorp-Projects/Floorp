@@ -267,15 +267,15 @@ private:
 
     // mTransaction only points to the HTTP Transaction callbacks if the
     // transaction is open, otherwise it is null.
-    RefPtr<nsAHttpTransaction>    mTransaction;
-    RefPtr<TLSFilterTransaction>  mTLSFilter;
+    nsRefPtr<nsAHttpTransaction>    mTransaction;
+    nsRefPtr<TLSFilterTransaction>  mTLSFilter;
 
-    RefPtr<nsHttpHandler>         mHttpHandler; // keep gHttpHandler alive
+    nsRefPtr<nsHttpHandler>         mHttpHandler; // keep gHttpHandler alive
 
     Mutex                           mCallbacksLock;
     nsMainThreadPtrHandle<nsIInterfaceRequestor> mCallbacks;
 
-    RefPtr<nsHttpConnectionInfo> mConnInfo;
+    nsRefPtr<nsHttpConnectionInfo> mConnInfo;
 
     PRIntervalTime                  mLastReadTime;
     PRIntervalTime                  mLastWriteTime;
@@ -289,7 +289,7 @@ private:
     int64_t                         mTotalBytesWritten;  // does not include CONNECT tunnel
     int64_t                         mContentBytesWritten;  // does not include CONNECT tunnel or TLS
 
-    RefPtr<nsIAsyncInputStream>   mInputOverflow;
+    nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
     PRIntervalTime                  mRtt;
 
@@ -329,7 +329,7 @@ private:
     // version level in use, 0 if unused
     uint8_t                         mUsingSpdyVersion;
 
-    RefPtr<ASpdySession>          mSpdySession;
+    nsRefPtr<ASpdySession>          mSpdySession;
     int32_t                         mPriority;
     bool                            mReportedSpdy;
 

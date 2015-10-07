@@ -49,7 +49,7 @@ private:
     uint32_t mContextPosition;
     uint32_t mContextSize;
     nsresult mLastError;
-    RefPtr<txResultRecycler> mRecycler;
+    nsRefPtr<txResultRecycler> mRecycler;
 };
 
 XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
@@ -154,7 +154,7 @@ XPathExpression::EvaluateWithContext(nsINode& aContextNode,
 
     EvalContextImpl eContext(*contextNode, aContextPosition, aContextSize,
                              mRecycler);
-    RefPtr<txAExprResult> exprResult;
+    nsRefPtr<txAExprResult> exprResult;
     aRv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
     if (aRv.Failed()) {
         return nullptr;
@@ -182,7 +182,7 @@ XPathExpression::EvaluateWithContext(nsINode& aContextNode,
         }
     }
 
-    RefPtr<XPathResult> xpathResult = aInResult;
+    nsRefPtr<XPathResult> xpathResult = aInResult;
     if (!xpathResult) {
         xpathResult = new XPathResult(&aContextNode);
     }

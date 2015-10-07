@@ -350,7 +350,7 @@ DragDataProducer::GetNodeString(nsIContent* inNode,
   // use a range to get the text-equivalent of the node
   nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
   mozilla::ErrorResult rv;
-  RefPtr<nsRange> range = doc->CreateRange(rv);
+  nsRefPtr<nsRange> range = doc->CreateRange(rv);
   if (range) {
     range->SelectNode(*node, rv);
     range->ToString(outNodeString);
@@ -420,7 +420,7 @@ DragDataProducer::Produce(DataTransfer* aDataTransfer,
   if (isChromeShell && !editingElement) {
     nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mTarget);
     if (flo) {
-      RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+      nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
       if (fl) {
         TabParent* tp = static_cast<TabParent*>(fl->GetRemoteBrowser());
         if (tp) {

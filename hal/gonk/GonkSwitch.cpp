@@ -22,7 +22,7 @@
 #include "Hal.h"
 #include "HalLog.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Monitor.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
@@ -210,7 +210,7 @@ protected:
 };
 
 
-typedef nsTArray<RefPtr<SwitchHandler> > SwitchHandlerArray;
+typedef nsTArray<nsRefPtr<SwitchHandler> > SwitchHandlerArray;
 
 class SwitchEventRunnable : public nsRunnable
 {
@@ -336,7 +336,7 @@ private:
   // (from IsHeadphoneEventFromInputDev)
   void Init()
   {
-    RefPtr<SwitchHandlerHeadphone> switchHeadPhone =
+    nsRefPtr<SwitchHandlerHeadphone> switchHeadPhone =
       new SwitchHandlerHeadphone(SWITCH_HEADSET_DEVPATH);
 
     // If the initial state is unknown, it means the headphone event is from input dev
@@ -383,7 +383,7 @@ private:
   }
 };
 
-static RefPtr<SwitchEventObserver> sSwitchObserver;
+static nsRefPtr<SwitchEventObserver> sSwitchObserver;
 
 static void
 InitializeResourceIfNeed()
@@ -473,7 +473,7 @@ bool IsHeadphoneEventFromInputDev()
 {
   // Instead of calling InitializeResourceIfNeed, create new SwitchEventObserver
   // to prevent calling RegisterUeventListener in main thread.
-  RefPtr<SwitchEventObserver> switchObserver = new SwitchEventObserver();
+  nsRefPtr<SwitchEventObserver> switchObserver = new SwitchEventObserver();
   return switchObserver->GetHeadphonesFromInputDev();
 }
 

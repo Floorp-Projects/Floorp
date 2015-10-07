@@ -89,7 +89,7 @@ SpeakerManager::DispatchSimpleEvent(const nsAString& aStr)
     return;
   }
 
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   rv = event->InitEvent(aStr, false, false);
 
   if (NS_FAILED(rv)) {
@@ -159,7 +159,7 @@ SpeakerManager::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<SpeakerManager> object = new SpeakerManager();
+  nsRefPtr<SpeakerManager> object = new SpeakerManager();
   object->Init(ownerWindow);
   return object.forget();
 }
@@ -199,7 +199,7 @@ SpeakerManager::HandleEvent(nsIDOMEvent* aEvent)
   // currently playing in the app itself, if application switch to
   // the background, we switch 'speakerforced' to false.
   if (!mVisible && mForcespeaker) {
-    RefPtr<AudioChannelService> audioChannelService =
+    nsRefPtr<AudioChannelService> audioChannelService =
       AudioChannelService::GetOrCreate();
     if (audioChannelService && !audioChannelService->AnyAudioChannelIsActive()) {
       service->ForceSpeaker(false, mVisible);

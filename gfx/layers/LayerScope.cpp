@@ -115,7 +115,7 @@ private:
 
         MutexAutoLock lock(mHandlerMutex);
 
-        RefPtr<SocketHandler> temp = new SocketHandler();
+        nsRefPtr<SocketHandler> temp = new SocketHandler();
         temp->OpenStream(aTransport);
         mHandlers.AppendElement(temp.get());
     }
@@ -199,9 +199,9 @@ private:
         bool                          mConnected;
     };
 
-    nsTArray<RefPtr<SocketHandler> > mHandlers;
+    nsTArray<nsRefPtr<SocketHandler> > mHandlers;
     nsCOMPtr<nsIThread>                   mDebugSenderThread;
-    RefPtr<DebugDataSender>             mCurrentSender;
+    nsRefPtr<DebugDataSender>             mCurrentSender;
     nsCOMPtr<nsIServerSocket>             mServerSocket;
 
     // Keep mHandlers accessing thread safe.
@@ -773,7 +773,7 @@ public:
         // Keep a strong reference to DebugDataSender to prevent this object
         // accessing mHost on mThread, when it's been destroyed on the main
         // thread.
-        RefPtr<DebugDataSender> mHost;
+        nsRefPtr<DebugDataSender> mHost;
     };
 
     // Clear all DebugData in mList on mThead.
@@ -793,7 +793,7 @@ public:
     private:
         virtual ~ClearTask() { }
 
-        RefPtr<DebugDataSender> mHost;
+        nsRefPtr<DebugDataSender> mHost;
     };
 
     // Send all DebugData in mList via websocket, and then, clean up
@@ -825,7 +825,7 @@ public:
     private:
         virtual ~SendTask() { }
 
-        RefPtr<DebugDataSender> mHost;
+        nsRefPtr<DebugDataSender> mHost;
     };
 
     explicit DebugDataSender(nsIThread *thread)
@@ -1052,7 +1052,7 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
 
     // By sending 0 to ReadTextureImage rely upon aSource->BindTexture binding
     // texture correctly. texID is used for tracking in DebugGLTextureData.
-    RefPtr<DataSourceSurface> img =
+    nsRefPtr<DataSourceSurface> img =
         aGLContext->ReadTexImageHelper()->ReadTexImage(0, textureTarget,
                                                          size,
                                                          shaderConfig, aFlipY);

@@ -63,7 +63,7 @@ protected:
 protected:
 
   /** p1 in the range */
-  RefPtr<nsRange> mRange;
+  nsRefPtr<nsRange> mRange;
 
   /** the editor for this transaction */
   nsEditor* mEditor;

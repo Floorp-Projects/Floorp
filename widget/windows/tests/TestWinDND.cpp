@@ -227,7 +227,7 @@ nsresult GetTransferableURI(nsCOMPtr<nsITransferable>& pTransferable)
 }
 
 nsresult MakeDataObject(nsISupportsArray* transferableArray,
-                        RefPtr<IDataObject>& itemToDrag)
+                        nsRefPtr<IDataObject>& itemToDrag)
 {
   nsresult rv;
   uint32_t itemCount = 0;
@@ -251,7 +251,7 @@ nsresult MakeDataObject(nsISupportsArray* transferableArray,
       transferableArray->GetElementAt(i, getter_AddRefs(supports));
       nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
       if (trans) {
-        RefPtr<IDataObject> dataObj;
+        nsRefPtr<IDataObject> dataObj;
         rv = nsClipboard::CreateNativeDataObject(trans,
                                                  getter_AddRefs(dataObj), uri);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -283,7 +283,7 @@ nsresult Do_CheckOneFile()
   nsCOMPtr<nsITransferable> transferable;
   nsCOMPtr<nsISupportsArray> transferableArray;
   nsCOMPtr<nsISupports> genericWrapper;
-  RefPtr<IDataObject> dataObj;
+  nsRefPtr<IDataObject> dataObj;
   rv = NS_NewISupportsArray(getter_AddRefs(transferableArray));
   if (NS_FAILED(rv)) {
     fail("Could not create the necessary nsISupportsArray");
@@ -339,7 +339,7 @@ nsresult Do_CheckTwoFiles()
   nsCOMPtr<nsITransferable> transferable;
   nsCOMPtr<nsISupportsArray> transferableArray;
   nsCOMPtr<nsISupports> genericWrapper;
-  RefPtr<IDataObject> dataObj;
+  nsRefPtr<IDataObject> dataObj;
   rv = NS_NewISupportsArray(getter_AddRefs(transferableArray));
   if (NS_FAILED(rv)) {
     fail("Could not create the necessary nsISupportsArray");
@@ -407,7 +407,7 @@ nsresult Do_CheckOneString()
   nsCOMPtr<nsITransferable> transferable;
   nsCOMPtr<nsISupportsArray> transferableArray;
   nsCOMPtr<nsISupports> genericWrapper;
-  RefPtr<IDataObject> dataObj;
+  nsRefPtr<IDataObject> dataObj;
   rv = NS_NewISupportsArray(getter_AddRefs(transferableArray));
   if (NS_FAILED(rv)) {
     fail("Could not create the necessary nsISupportsArray");
@@ -480,7 +480,7 @@ nsresult Do_CheckTwoStrings()
   nsCOMPtr<nsITransferable> transferable;
   nsCOMPtr<nsISupportsArray> transferableArray;
   nsCOMPtr<nsISupports> genericWrapper;
-  RefPtr<IDataObject> dataObj;
+  nsRefPtr<IDataObject> dataObj;
   rv = NS_NewISupportsArray(getter_AddRefs(transferableArray));
   if (NS_FAILED(rv)) {
     fail("Could not create the necessary nsISupportsArray");
@@ -565,7 +565,7 @@ nsresult Do_CheckSetArbitraryData(bool aMultiple)
   nsCOMPtr<nsITransferable> transferable;
   nsCOMPtr<nsISupportsArray> transferableArray;
   nsCOMPtr<nsISupports> genericWrapper;
-  RefPtr<IDataObject> dataObj;
+  nsRefPtr<IDataObject> dataObj;
   rv = NS_NewISupportsArray(getter_AddRefs(transferableArray));
   if (NS_FAILED(rv)) {
     fail("Could not create the necessary nsISupportsArray");

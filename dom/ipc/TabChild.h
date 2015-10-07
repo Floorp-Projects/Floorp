@@ -145,7 +145,7 @@ public:
   }
 
   nsCOMPtr<nsIContentFrameMessageManager> mMessageManager;
-  RefPtr<TabChildBase> mTabChild;
+  nsRefPtr<TabChildBase> mTabChild;
 
 protected:
   ~TabChildGlobal();
@@ -210,7 +210,7 @@ protected:
     bool UpdateFrameHandler(const mozilla::layers::FrameMetrics& aFrameMetrics);
 
 protected:
-    RefPtr<TabChildGlobal> mTabChildGlobal;
+    nsRefPtr<TabChildGlobal> mTabChildGlobal;
     nsCOMPtr<nsIWebBrowserChrome3> mWebBrowserChrome;
 };
 
@@ -604,10 +604,10 @@ private:
 
     TextureFactoryIdentifier mTextureFactoryIdentifier;
     nsCOMPtr<nsIWebNavigation> mWebNav;
-    RefPtr<PuppetWidget> mPuppetWidget;
+    nsRefPtr<PuppetWidget> mPuppetWidget;
     nsCOMPtr<nsIURI> mLastURI;
     RenderFrameChild* mRemoteFrame;
-    RefPtr<nsIContentChild> mManager;
+    nsRefPtr<nsIContentChild> mManager;
     uint32_t mChromeFlags;
     int32_t mActiveSuppressDisplayport;
     uint64_t mLayersId;
@@ -634,7 +634,7 @@ private:
     bool mUpdateHitRegion;
 
     bool mIgnoreKeyPressEvent;
-    RefPtr<APZEventState> mAPZEventState;
+    nsRefPtr<APZEventState> mAPZEventState;
     SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
     bool mHasValidInnerSize;
     bool mDestroyed;

@@ -74,7 +74,7 @@ IccContactToMozContact(JSContext* aCx, GlobalObject& aGlobal,
   }
 
   ErrorResult er;
-  RefPtr<mozContact> contact
+  nsRefPtr<mozContact> contact
     = mozContact::Constructor(aGlobal, aCx, properties, er);
   rv = er.StealNSResult();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -95,11 +95,11 @@ IccContactToMozContact(JSContext* aCx, GlobalObject& aGlobal,
 static NS_IMETHODIMP
 IccContactListToMozContactList(JSContext* aCx, GlobalObject& aGlobal,
                                nsIIccContact** aContacts, uint32_t aCount,
-                               nsTArray<RefPtr<mozContact>>& aContactList)
+                               nsTArray<nsRefPtr<mozContact>>& aContactList)
 {
   aContactList.SetCapacity(aCount);
   for (uint32_t i = 0; i < aCount ; i++) {
-    RefPtr<mozContact> contact;
+    nsRefPtr<mozContact> contact;
     nsresult rv =
       IccContactToMozContact(aCx, aGlobal, aContacts[i], getter_AddRefs(contact));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -220,7 +220,7 @@ NS_IMETHODIMP
 IccCallback::NotifyCardLockError(const nsAString & aErrorMsg,
                                  int32_t aRetryCount)
 {
-  RefPtr<IccCardLockError> error =
+  nsRefPtr<IccCardLockError> error =
     new IccCardLockError(mWindow, aErrorMsg, aRetryCount);
   mRequest->FireDetailedError(error);
 
@@ -242,7 +242,7 @@ IccCallback::NotifyRetrievedIccContacts(nsIIccContact** aContacts,
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   GlobalObject global(cx, go->GetGlobalJSObject());
 
-  nsTArray<RefPtr<mozContact>> contactList;
+  nsTArray<nsRefPtr<mozContact>> contactList;
 
   nsresult rv =
     IccContactListToMozContactList(cx, global, aContacts, aCount, contactList);
@@ -271,7 +271,7 @@ IccCallback::NotifyUpdatedIccContact(nsIIccContact* aContact)
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   GlobalObject global(cx, go->GetGlobalJSObject());
 
-  RefPtr<mozContact> mozContact;
+  nsRefPtr<mozContact> mozContact;
   nsresult rv =
     IccContactToMozContact(cx, global, aContact, getter_AddRefs(mozContact));
   NS_ENSURE_SUCCESS(rv, rv);

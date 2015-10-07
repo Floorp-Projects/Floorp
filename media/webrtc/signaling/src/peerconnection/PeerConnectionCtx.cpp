@@ -75,7 +75,7 @@ public:
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
 
       // Make sure we're not deleted while still inside ::Observe()
-      RefPtr<PeerConnectionCtxShutdown> kungFuDeathGrip(this);
+      nsRefPtr<PeerConnectionCtxShutdown> kungFuDeathGrip(this);
       PeerConnectionCtx::gPeerConnectionCtxShutdown = nullptr;
     }
     return NS_OK;

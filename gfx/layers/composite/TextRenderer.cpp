@@ -83,7 +83,7 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
   }
 
   // Create a surface to draw our glyphs to.
-  RefPtr<DataSourceSurface> textSurf =
+  nsRefPtr<DataSourceSurface> textSurf =
     Factory::CreateDataSourceSurface(IntSize(maxWidth, numLines * sCellHeight), sTextureFormat);
   if (NS_WARN_IF(!textSurf)) {
     return;
@@ -124,14 +124,14 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
 
   textSurf->Unmap();
 
-  RefPtr<DataTextureSource> src = mCompositor->CreateDataTextureSource();
+  nsRefPtr<DataTextureSource> src = mCompositor->CreateDataTextureSource();
 
   if (!src->Update(textSurf)) {
     // Upload failed.
     return;
   }
 
-  RefPtr<EffectRGB> effect = new EffectRGB(src, true, Filter::LINEAR);
+  nsRefPtr<EffectRGB> effect = new EffectRGB(src, true, Filter::LINEAR);
   EffectChain chain;
   chain.mPrimaryEffect = effect;
 

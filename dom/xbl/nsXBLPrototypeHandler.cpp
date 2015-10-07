@@ -305,7 +305,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   MOZ_ASSERT(!js::IsCrossCompartmentWrapper(genericHandler));
 
   // Build a scope chain in the XBL scope.
-  RefPtr<Element> targetElement = do_QueryObject(scriptTarget);
+  nsRefPtr<Element> targetElement = do_QueryObject(scriptTarget);
   JS::AutoObjectVector scopeChain(cx);
   ok = nsJSUtils::GetScopeChainForElement(cx, targetElement, scopeChain);
   NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
@@ -315,7 +315,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
                                                           scopeChain));
   NS_ENSURE_TRUE(bound, NS_ERROR_FAILURE);
 
-  RefPtr<EventHandlerNonNull> handlerCallback =
+  nsRefPtr<EventHandlerNonNull> handlerCallback =
     new EventHandlerNonNull(nullptr, bound, /* aIncumbentGlobal = */ nullptr);
 
   TypedEventHandler typedHandler(handlerCallback);

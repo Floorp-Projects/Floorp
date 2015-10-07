@@ -76,7 +76,7 @@ private:
   // The expression to evaluate or function to call. If mFunction is non-null
   // it should be used, else use mExpr.
   nsString mExpr;
-  RefPtr<Function> mFunction;
+  nsRefPtr<Function> mFunction;
 };
 
 
@@ -277,7 +277,7 @@ NS_CreateJSTimeoutHandler(JSContext *aCx, nsGlobalWindow *aWindow,
     return nullptr;
   }
 
-  RefPtr<nsJSScriptTimeoutHandler> handler =
+  nsRefPtr<nsJSScriptTimeoutHandler> handler =
     new nsJSScriptTimeoutHandler(aCx, aWindow, aFunction, args, aError);
   return aError.Failed() ? nullptr : handler.forget();
 }
@@ -288,7 +288,7 @@ NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
 {
   ErrorResult rv;
   bool allowEval = false;
-  RefPtr<nsJSScriptTimeoutHandler> handler =
+  nsRefPtr<nsJSScriptTimeoutHandler> handler =
     new nsJSScriptTimeoutHandler(aCx, aWindow, aExpression, &allowEval, rv);
   if (rv.Failed() || !allowEval) {
     return nullptr;

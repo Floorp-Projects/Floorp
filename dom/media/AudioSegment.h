@@ -225,7 +225,7 @@ struct AudioChunk {
   }
 
   StreamTime mDuration; // in frames within the buffer
-  RefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes
+  nsRefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes
   nsTArray<const void*> mChannelData; // one pointer per channel; empty if and only if mBuffer is null
   float mVolume; // volume multiplier to apply (1.0f if mBuffer is nonnull)
   SampleFormat mBufferFormat; // format of frames in mBuffer (only meaningful if mBuffer is nonnull)

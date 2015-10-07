@@ -175,7 +175,7 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     // several requests. If so, we need to unpack that and
     // pack them all into a new spdy session.
 
-    nsTArray<RefPtr<nsAHttpTransaction> > list;
+    nsTArray<nsRefPtr<nsAHttpTransaction> > list;
     nsresult rv = mTransaction->TakeSubTransactions(list);
 
     if (rv == NS_ERROR_ALREADY_OPENED) {
@@ -212,7 +212,7 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     mSpdySession = ASpdySession::NewSpdySession(spdyVersion, mSocketTransport);
     bool spdyProxy = mConnInfo->UsingHttpsProxy() && !mTLSFilter;
     if (spdyProxy) {
-        RefPtr<nsHttpConnectionInfo> wildCardProxyCi;
+        nsRefPtr<nsHttpConnectionInfo> wildCardProxyCi;
         mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
         gHttpHandler->ConnMgr()->MoveToWildCardConnEntry(mConnInfo,
                                                          wildCardProxyCi, this);
@@ -1362,7 +1362,7 @@ public:
         return mConn->OnOutputStreamReady(mConn->mSocketOut);
     }
 private:
-    RefPtr<nsHttpConnection> mConn;
+    nsRefPtr<nsHttpConnection> mConn;
     bool mDoRecv;
 };
 

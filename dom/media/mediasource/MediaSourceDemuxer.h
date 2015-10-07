@@ -27,7 +27,7 @@ class MediaSourceDemuxer : public MediaDataDemuxer
 public:
   explicit MediaSourceDemuxer();
 
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
 
   bool HasTrackType(TrackInfo::TrackType aType) const override;
 
@@ -58,7 +58,7 @@ private:
   friend class MediaSourceTrackDemuxer;
   // Scan source buffers and update information.
   bool ScanSourceBuffersForContent();
-  RefPtr<InitPromise> AttemptInit();
+  nsRefPtr<InitPromise> AttemptInit();
   TrackBuffersManager* GetManager(TrackInfo::TrackType aType);
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
   void DoAttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
@@ -68,17 +68,17 @@ private:
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
 
-  RefPtr<TaskQueue> mTaskQueue;
-  nsTArray<RefPtr<MediaSourceTrackDemuxer>> mDemuxers;
+  nsRefPtr<TaskQueue> mTaskQueue;
+  nsTArray<nsRefPtr<MediaSourceTrackDemuxer>> mDemuxers;
 
-  nsTArray<RefPtr<TrackBuffersManager>> mSourceBuffers;
+  nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;
 
   MozPromiseHolder<InitPromise> mInitPromise;
 
   // Monitor to protect members below across multiple threads.
   mutable Monitor mMonitor;
-  RefPtr<TrackBuffersManager> mAudioTrack;
-  RefPtr<TrackBuffersManager> mVideoTrack;
+  nsRefPtr<TrackBuffersManager> mAudioTrack;
+  nsRefPtr<TrackBuffersManager> mVideoTrack;
   MediaInfo mInfo;
 };
 
@@ -91,15 +91,15 @@ public:
 
   UniquePtr<TrackInfo> GetInfo() const override;
 
-  RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  nsRefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
 
-  RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+  nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
   void Reset() override;
 
   nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
-  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
+  nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
 
   media::TimeIntervals GetBuffered() override;
 
@@ -111,15 +111,15 @@ public:
   }
 
 private:
-  RefPtr<SeekPromise> DoSeek(media::TimeUnit aTime);
-  RefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
-  RefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold);
+  nsRefPtr<SeekPromise> DoSeek(media::TimeUnit aTime);
+  nsRefPtr<SamplesPromise> DoGetSamples(int32_t aNumSamples);
+  nsRefPtr<SkipAccessPointPromise> DoSkipToNextRandomAccessPoint(media::TimeUnit aTimeThreadshold);
   already_AddRefed<MediaRawData> GetSample(DemuxerFailureReason& aFailure);
   // Return the timestamp of the next keyframe after mLastSampleIndex.
   media::TimeUnit GetNextRandomAccessPoint();
 
-  RefPtr<MediaSourceDemuxer> mParent;
-  RefPtr<TrackBuffersManager> mManager;
+  nsRefPtr<MediaSourceDemuxer> mParent;
+  nsRefPtr<TrackBuffersManager> mManager;
   TrackInfo::TrackType mType;
   // Monitor protecting members below accessed from multiple threads.
   Monitor mMonitor;

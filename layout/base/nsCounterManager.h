@@ -80,10 +80,10 @@ struct nsCounterUseNode : public nsCounterNode {
     // The same structure passed through the style system:  an array
     // containing the values in the counter() or counters() in the order
     // given in the CSS spec.
-    RefPtr<nsCSSValue::Array> mCounterFunction;
+    nsRefPtr<nsCSSValue::Array> mCounterFunction;
 
     nsPresContext* mPresContext;
-    RefPtr<mozilla::CounterStyle> mCounterStyle;
+    nsRefPtr<mozilla::CounterStyle> mCounterStyle;
 
     // false for counter(), true for counters()
     bool mAllCounters;

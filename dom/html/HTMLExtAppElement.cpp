@@ -21,7 +21,7 @@ NS_NewHTMLExtAppElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
   // Return HTMLUnknownElement if the document doesn't have the 'external-app' permission.
   nsCOMPtr<nsIPermissionManager> permissionManager =
     mozilla::services::GetPermissionManager();
-  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   nsIPrincipal* principal = ni->GetDocument()->NodePrincipal();
 
   already_AddRefed<mozilla::dom::NodeInfo> aarni = ni.forget();
@@ -175,7 +175,7 @@ nsCustomEventDispatch::DispatchExternalEvent(const nsAString& value)
   mozilla::dom::ExternalAppEventInit init;
   init.mData = value;
 
-  RefPtr<mozilla::dom::ExternalAppEvent> event =
+  nsRefPtr<mozilla::dom::ExternalAppEvent> event =
     mozilla::dom::ExternalAppEvent::Constructor(mEventTarget,
                                                 NS_LITERAL_STRING("externalappevent"),
                                                 init);

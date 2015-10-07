@@ -38,7 +38,7 @@ FileSystemRequestParent::Dispatch(ContentParent* aParent,
                                   const FileSystemParams& aParams)
 {
   MOZ_ASSERT(aParent, "aParent should not be null.");
-  RefPtr<FileSystemTaskBase> task;
+  nsRefPtr<FileSystemTaskBase> task;
   switch (aParams.type()) {
 
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(CreateDirectory)

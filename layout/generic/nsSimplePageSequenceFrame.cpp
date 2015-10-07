@@ -501,7 +501,7 @@ nsSimplePageSequenceFrame::StartPrint(nsPresContext*    aPresContext,
 }
 
 void
-GetPrintCanvasElementsInFrame(nsIFrame* aFrame, nsTArray<RefPtr<HTMLCanvasElement> >* aArr)
+GetPrintCanvasElementsInFrame(nsIFrame* aFrame, nsTArray<nsRefPtr<HTMLCanvasElement> >* aArr)
 {
   if (!aFrame) {
     return;
@@ -644,10 +644,10 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
 
       mCalledBeginPage = true;
       
-      RefPtr<gfxContext> renderingContext = dc->CreateRenderingContext();
+      nsRefPtr<gfxContext> renderingContext = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
-      RefPtr<gfxASurface> renderingSurface =
+      nsRefPtr<gfxASurface> renderingSurface =
           renderingContext->CurrentSurface();
       NS_ENSURE_TRUE(renderingSurface, NS_ERROR_OUT_OF_MEMORY);
 
@@ -655,7 +655,7 @@ nsSimplePageSequenceFrame::PrePrintNextPage(nsITimerCallback* aCallback, bool* a
         HTMLCanvasElement* canvas = mCurrentCanvasList[i];
         nsIntSize size = canvas->GetSize();
 
-        RefPtr<gfxASurface> printSurface = renderingSurface->
+        nsRefPtr<gfxASurface> printSurface = renderingSurface->
            CreateSimilarSurface(
              gfxContentType::COLOR_ALPHA,
              size
@@ -775,7 +775,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
       PR_PL(("SeqFr::PrintNextPage -> %p PageNo: %d", pf, mPageNum));
 
       // CreateRenderingContext can fail
-      RefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
+      nsRefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
 
       nsRenderingContext renderingContext(gCtx);

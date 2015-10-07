@@ -104,7 +104,7 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         whitelist.AppendElement(wlPrincipal);
       }
 
-      RefPtr<nsExpandedPrincipal> expandedPrincipal = new nsExpandedPrincipal(whitelist);
+      nsRefPtr<nsExpandedPrincipal> expandedPrincipal = new nsExpandedPrincipal(whitelist);
       if (!expandedPrincipal) {
         NS_WARNING("could not instantiate expanded principal");
         return nullptr;

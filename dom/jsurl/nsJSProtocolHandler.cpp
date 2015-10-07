@@ -363,7 +363,7 @@ protected:
     nsLoadFlags             mLoadFlags;
     nsLoadFlags             mActualLoadFlags; // See AsyncOpen
 
-    RefPtr<nsJSThunk>     mIOThunk;
+    nsRefPtr<nsJSThunk>     mIOThunk;
     PopupControlState       mPopupState;
     uint32_t                mExecutionPolicy;
     bool                    mIsAsync;
@@ -403,7 +403,7 @@ nsresult nsJSChannel::StopAll()
 
 nsresult nsJSChannel::Init(nsIURI *aURI)
 {
-    RefPtr<nsJSURI> jsURI;
+    nsRefPtr<nsJSURI> jsURI;
     nsresult rv = aURI->QueryInterface(kJSURICID,
                                        getter_AddRefs(jsURI));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1231,7 +1231,7 @@ nsJSProtocolHandler::NewChannel2(nsIURI* uri,
 
     NS_ENSURE_ARG_POINTER(uri);
 
-    RefPtr<nsJSChannel> channel = new nsJSChannel();
+    nsRefPtr<nsJSChannel> channel = new nsJSChannel();
     if (!channel) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1390,7 +1390,7 @@ nsJSURI::EqualsInternal(nsIURI* aOther,
     NS_ENSURE_ARG_POINTER(aOther);
     NS_PRECONDITION(aResult, "null pointer for outparam");
 
-    RefPtr<nsJSURI> otherJSURI;
+    nsRefPtr<nsJSURI> otherJSURI;
     nsresult rv = aOther->QueryInterface(kJSURICID,
                                          getter_AddRefs(otherJSURI));
     if (NS_FAILED(rv)) {

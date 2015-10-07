@@ -465,7 +465,7 @@ nsAttrAndChildArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue)
       return NS_OK;
     }
 
-    RefPtr<nsMappedAttributes> mapped =
+    nsRefPtr<nsMappedAttributes> mapped =
       GetModifiableMapped(nullptr, nullptr, false);
 
     mapped->RemoveAttrAt(aPos, aValue);
@@ -582,7 +582,7 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
     willAdd = !mImpl->mMappedAttrs->GetAttr(aLocalName);
   }
 
-  RefPtr<nsMappedAttributes> mapped =
+  nsRefPtr<nsMappedAttributes> mapped =
     GetModifiableMapped(aContent, aSheet, willAdd);
 
   mapped->SetAndTakeAttr(aLocalName, aValue);
@@ -599,7 +599,7 @@ nsAttrAndChildArray::DoSetMappedAttrStyleSheet(nsHTMLStyleSheet* aSheet)
     return NS_OK;
   }
 
-  RefPtr<nsMappedAttributes> mapped =
+  nsRefPtr<nsMappedAttributes> mapped =
     GetModifiableMapped(nullptr, nullptr, false);
 
   mapped->SetStyleSheet(aSheet);
@@ -738,13 +738,13 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
   if (!aAttributes->GetStyleSheet()) {
     // This doesn't currently happen, but it could if we do loading right
 
-    RefPtr<nsMappedAttributes> mapped(aAttributes);
+    nsRefPtr<nsMappedAttributes> mapped(aAttributes);
     mapped.swap(mImpl->mMappedAttrs);
 
     return NS_OK;
   }
 
-  RefPtr<nsMappedAttributes> mapped =
+  nsRefPtr<nsMappedAttributes> mapped =
     aAttributes->GetStyleSheet()->UniqueMappedAttributes(aAttributes);
   NS_ENSURE_TRUE(mapped, NS_ERROR_OUT_OF_MEMORY);
 

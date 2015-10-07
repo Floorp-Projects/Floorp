@@ -338,7 +338,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   CanvasLayer* oldLayer = static_cast<CanvasLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
-  RefPtr<CanvasLayer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
+  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
   if (!layer)
     return nullptr;
 

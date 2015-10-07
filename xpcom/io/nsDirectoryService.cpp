@@ -85,7 +85,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsIFile** aFile)
     }
   }
 
-  RefPtr<nsLocalFile> localFile = new nsLocalFile;
+  nsRefPtr<nsLocalFile> localFile = new nsLocalFile;
 
 #ifdef XP_WIN
   wchar_t buf[MAX_PATH + 1];
@@ -243,7 +243,7 @@ nsDirectoryService::RealInit()
   NS_ASSERTION(!gService,
                "nsDirectoryService::RealInit Mustn't initialize twice!");
 
-  RefPtr<nsDirectoryService> self = new nsDirectoryService();
+  nsRefPtr<nsDirectoryService> self = new nsDirectoryService();
 
   NS_RegisterStaticAtoms(directory_atoms);
 

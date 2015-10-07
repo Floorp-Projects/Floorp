@@ -66,10 +66,10 @@ private:
   //Interaction with OS-provided profiling probes
   typedef mozilla::probes::ProbeManager ProbeManager;
   typedef mozilla::probes::Probe        Probe;
-  RefPtr<ProbeManager> mProbesManager;
-  RefPtr<Probe> mPlacesInitCompleteProbe;
-  RefPtr<Probe> mSessionWindowRestoredProbe;
-  RefPtr<Probe> mXPCOMShutdownProbe;
+  nsRefPtr<ProbeManager> mProbesManager;
+  nsRefPtr<Probe> mPlacesInitCompleteProbe;
+  nsRefPtr<Probe> mSessionWindowRestoredProbe;
+  nsRefPtr<Probe> mXPCOMShutdownProbe;
 #endif
 };
 

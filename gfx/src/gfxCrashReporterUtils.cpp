@@ -78,7 +78,7 @@ public:
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (!observerService)
       return NS_OK;
-    RefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
+    nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
     observerService->AddObserver(observer, "xpcom-shutdown", false);
     return NS_OK;
   }

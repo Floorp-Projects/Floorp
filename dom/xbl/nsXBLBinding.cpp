@@ -759,7 +759,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             continue;
           }
 
-          RefPtr<nsXBLDocumentInfo> docInfo =
+          nsRefPtr<nsXBLDocumentInfo> docInfo =
             static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(proto));
           if (!docInfo) {
             // Not the proto we seek

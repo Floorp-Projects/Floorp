@@ -760,7 +760,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<FTPChannelParent> mChannelParent;
+  nsRefPtr<FTPChannelParent> mChannelParent;
   nsresult mErrorCode;
   bool mSkipResume;
 };

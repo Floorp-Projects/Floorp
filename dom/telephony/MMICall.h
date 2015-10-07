@@ -51,7 +51,7 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsString mServiceCode;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
 };
 
 } // namespace dom

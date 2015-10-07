@@ -46,7 +46,7 @@ class RevocableStore {
   private:
     // We hold a reference to the store through this ref pointer.  We release
     // this reference on destruction.
-    RefPtr<StoreRef> store_reference_;
+    nsRefPtr<StoreRef> store_reference_;
 
     DISALLOW_EVIL_CONSTRUCTORS(Revocable);
   };
@@ -68,7 +68,7 @@ class RevocableStore {
   void Add(Revocable* item);
 
   // This is the reference the unrevoked items in the store hold.
-  RefPtr<StoreRef> owning_reference_;
+  nsRefPtr<StoreRef> owning_reference_;
 
   // The number of unrevoked items in the store.
   int count_;

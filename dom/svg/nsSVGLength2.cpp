@@ -350,7 +350,7 @@ nsSVGLength2::NewValueSpecifiedUnits(uint16_t unitType,
 nsresult
 nsSVGLength2::ToDOMBaseVal(DOMSVGLength **aResult, nsSVGElement *aSVGElement)
 {
-  RefPtr<DOMSVGLength> domBaseVal =
+  nsRefPtr<DOMSVGLength> domBaseVal =
     DOMSVGLength::GetTearOff(this, aSVGElement, false);
 
   domBaseVal.forget(aResult);
@@ -360,7 +360,7 @@ nsSVGLength2::ToDOMBaseVal(DOMSVGLength **aResult, nsSVGElement *aSVGElement)
 nsresult
 nsSVGLength2::ToDOMAnimVal(DOMSVGLength **aResult, nsSVGElement *aSVGElement)
 {
-  RefPtr<DOMSVGLength> domAnimVal =
+  nsRefPtr<DOMSVGLength> domAnimVal =
     DOMSVGLength::GetTearOff(this, aSVGElement, true);
 
   domAnimVal.forget(aResult);
@@ -450,7 +450,7 @@ nsSVGLength2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
 already_AddRefed<SVGAnimatedLength>
 nsSVGLength2::ToDOMAnimatedLength(nsSVGElement* aSVGElement)
 {
-  RefPtr<SVGAnimatedLength> svgAnimatedLength =
+  nsRefPtr<SVGAnimatedLength> svgAnimatedLength =
     sSVGAnimatedLengthTearoffTable.GetTearoff(this);
   if (!svgAnimatedLength) {
     svgAnimatedLength = new SVGAnimatedLength(this, aSVGElement);

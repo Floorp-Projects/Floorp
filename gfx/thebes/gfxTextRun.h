@@ -413,7 +413,7 @@ public:
 
     // The text is divided into GlyphRuns as necessary
     struct GlyphRun {
-        RefPtr<gfxFont> mFont;   // never null
+        nsRefPtr<gfxFont> mFont;   // never null
         uint32_t          mCharacterOffset; // into original UTF16 string
         uint8_t           mMatchType;
         uint16_t          mOrientation; // gfxTextRunFactory::TEXT_ORIENT_* value
@@ -1004,7 +1004,7 @@ protected:
         bool EqualsUserFont(const gfxUserFontEntry* aUserFont) const;
 
     private:
-        RefPtr<gfxFontFamily> mFamily;
+        nsRefPtr<gfxFontFamily> mFamily;
         // either a font or a font entry exists
         union {
             gfxFont*            mFont;
@@ -1025,13 +1025,13 @@ protected:
     // Code should be careful about addressing this array directly.
     nsTArray<FamilyFace> mFonts;
 
-    RefPtr<gfxFont> mDefaultFont;
+    nsRefPtr<gfxFont> mDefaultFont;
     gfxFontStyle mStyle;
 
     gfxFloat mUnderlineOffset;
     gfxFloat mHyphenWidth;
 
-    RefPtr<gfxUserFontSet> mUserFontSet;
+    nsRefPtr<gfxUserFontSet> mUserFontSet;
     uint64_t mCurrGeneration;  // track the current user font set generation, rebuild font list if needed
 
     gfxTextPerfMetrics *mTextPerf;
@@ -1041,8 +1041,8 @@ protected:
     nsAutoPtr<gfxTextRun>   mCachedEllipsisTextRun;
 
     // cache the most recent pref font to avoid general pref font lookup
-    RefPtr<gfxFontFamily> mLastPrefFamily;
-    RefPtr<gfxFont>       mLastPrefFont;
+    nsRefPtr<gfxFontFamily> mLastPrefFamily;
+    nsRefPtr<gfxFont>       mLastPrefFont;
     eFontPrefLang           mLastPrefLang;       // lang group for last pref font
     eFontPrefLang           mPageLang;
     bool                    mLastPrefFirstFont;  // is this the first font in the list of pref fonts for this lang group?

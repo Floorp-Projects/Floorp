@@ -221,7 +221,7 @@ public:
       mSurfaceTexture = nullptr;
     }
 
-    RefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
+    nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
     gfxRect mDimensions;
   };
 
@@ -336,7 +336,7 @@ protected:
 
   friend class PluginEventRunnable;
 
-  nsTArray<RefPtr<PluginEventRunnable>> mPostedEvents;
+  nsTArray<nsRefPtr<PluginEventRunnable>> mPostedEvents;
   void PopPostedEvent(PluginEventRunnable* r);
   void OnSurfaceTextureFrameAvailable();
 
@@ -345,8 +345,8 @@ protected:
   bool mFullScreen;
   mozilla::gl::OriginPos mOriginPos;
 
-  RefPtr<SharedPluginTexture> mContentTexture;
-  RefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
+  nsRefPtr<SharedPluginTexture> mContentTexture;
+  nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
 #endif
 
   enum {

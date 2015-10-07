@@ -126,7 +126,7 @@ EventTokenBucket::~EventTokenBucket()
 
   // Complete any queued events to prevent hangs
   while (mEvents.GetSize()) {
-    RefPtr<TokenBucketCancelable> cancelable = 
+    nsRefPtr<TokenBucketCancelable> cancelable = 
       dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     cancelable->Fire();
   }
@@ -220,7 +220,7 @@ EventTokenBucket::SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelab
 
   UpdateCredits();
 
-  RefPtr<TokenBucketCancelable> cancelEvent = new TokenBucketCancelable(event);
+  nsRefPtr<TokenBucketCancelable> cancelEvent = new TokenBucketCancelable(event);
   // When this function exits the cancelEvent needs 2 references, one for the
   // mEvents queue and one for the caller of SubmitEvent()
 
@@ -259,7 +259,7 @@ EventTokenBucket::DispatchEvents()
     return;
 
   while (mEvents.GetSize() && mUnitCost <= mCredit) {
-    RefPtr<TokenBucketCancelable> cancelable = 
+    nsRefPtr<TokenBucketCancelable> cancelable = 
       dont_AddRef(static_cast<TokenBucketCancelable *>(mEvents.PopFront()));
     if (cancelable->mEvent) {
       SOCKET_LOG(("EventTokenBucket::DispachEvents [%p] "

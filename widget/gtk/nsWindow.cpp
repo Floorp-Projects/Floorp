@@ -1382,7 +1382,7 @@ nsWindow::SetFocus(bool aRaise)
         }
     }
 
-    RefPtr<nsWindow> owningWindow = get_window_for_gtk_widget(owningWidget);
+    nsRefPtr<nsWindow> owningWindow = get_window_for_gtk_widget(owningWidget);
     if (!owningWindow)
         return NS_ERROR_FAILURE;
 
@@ -2166,11 +2166,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return TRUE;
     }
 
-    RefPtr<DrawTarget> dt = GetDrawTarget(region);
+    nsRefPtr<DrawTarget> dt = GetDrawTarget(region);
     if(!dt) {
         return FALSE;
     }
-    RefPtr<gfxContext> ctx = new gfxContext(dt);
+    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
 
 #ifdef MOZ_X11
     nsIntRect boundsRect; // for shaped only
@@ -2233,7 +2233,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (shaped) {
         if (MOZ_LIKELY(!mIsDestroyed)) {
             if (painted) {
-                RefPtr<gfxPattern> pattern = ctx->PopGroup();
+                nsRefPtr<gfxPattern> pattern = ctx->PopGroup();
 
                 UpdateAlpha(pattern, boundsRect);
 
@@ -2282,7 +2282,7 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
                                          aBoundsRect.width);
     int32_t bufferSize = stride * aBoundsRect.height;
     nsAutoArrayPtr<uint8_t> imageBuffer(new (std::nothrow) uint8_t[bufferSize]);
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateDrawTargetForData(imageBuffer, aBoundsRect.Size(),
                                 stride, SurfaceFormat::A8);
 
@@ -2521,7 +2521,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
 #if (MOZ_WIDGET_GTK == 2)
         // if plugins still keeps the focus, get it back
         if (gPluginFocusWindow && gPluginFocusWindow != this) {
-            RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
+            nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
             gPluginFocusWindow->LoseNonXEmbedPluginFocus();
         }
 #endif /* MOZ_WIDGET_GTK2 */
@@ -2865,13 +2865,13 @@ nsWindow::OnContainerFocusOutEvent(GdkEventFocus *aEvent)
 #if (MOZ_WIDGET_GTK == 2) && defined(MOZ_X11)
     // plugin lose focus
     if (gPluginFocusWindow) {
-        RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
+        nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
 #endif /* MOZ_X11 && MOZ_WIDGET_GTK2 */
 
     if (gFocusWindow) {
-        RefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
+        nsRefPtr<nsWindow> kungFuDeathGrip = gFocusWindow;
         if (gFocusWindow->mIMContext) {
             gFocusWindow->mIMContext->OnBlurWindow(gFocusWindow);
         }
@@ -3300,7 +3300,7 @@ nsWindow::ThemeChanged()
                                                       "nsWindow");
 
         if (win && win != this) { // guard against infinite recursion
-            RefPtr<nsWindow> kungFuDeathGrip = win;
+            nsRefPtr<nsWindow> kungFuDeathGrip = win;
             win->ThemeChanged();
         }
 
@@ -4612,7 +4612,7 @@ nsWindow::SetNonXEmbedPluginFocus()
     }
 
     if (gPluginFocusWindow) {
-        RefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
+        nsRefPtr<nsWindow> kungFuDeathGrip = gPluginFocusWindow;
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
 
@@ -4804,7 +4804,7 @@ private:
     nsIWidget::FullscreenTransitionStage mStage;
     uint16_t mStep, mTotalSteps;
     nsCOMPtr<nsIRunnable> mCallback;
-    RefPtr<FullscreenTransitionWindow> mWindow;
+    nsRefPtr<FullscreenTransitionWindow> mWindow;
 };
 
 /* static */ gboolean
@@ -5295,7 +5295,7 @@ get_gtk_cursor(nsCursor aCursor)
 static gboolean
 expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
     if (!window)
         return FALSE;
 
@@ -5307,7 +5307,7 @@ void
 draw_window_of_widget(GtkWidget *widget, GdkWindow *aWindow, cairo_t *cr)
 {
     if (gtk_cairo_should_draw_window(cr, aWindow)) {
-        RefPtr<nsWindow> window = get_window_for_gdk_window(aWindow);
+        nsRefPtr<nsWindow> window = get_window_for_gdk_window(aWindow);
         if (!window) {
             NS_WARNING("Cannot get nsWindow from GtkWidget");
         }
@@ -5348,7 +5348,7 @@ static gboolean
 configure_event_cb(GtkWidget *widget,
                    GdkEventConfigure *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return FALSE;
 
@@ -5358,7 +5358,7 @@ configure_event_cb(GtkWidget *widget,
 static void
 container_unrealize_cb (GtkWidget *widget)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return;
 
@@ -5368,7 +5368,7 @@ container_unrealize_cb (GtkWidget *widget)
 static void
 size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return;
 
@@ -5378,7 +5378,7 @@ size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
 static gboolean
 delete_event_cb(GtkWidget *widget, GdkEventAny *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return FALSE;
 
@@ -5391,7 +5391,7 @@ static gboolean
 enter_notify_event_cb(GtkWidget *widget,
                       GdkEventCrossing *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
     if (!window)
         return TRUE;
 
@@ -5418,7 +5418,7 @@ leave_notify_event_cb(GtkWidget *widget,
         return TRUE;
     }
 
-    RefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
     if (!window)
         return TRUE;
 
@@ -5489,7 +5489,7 @@ button_release_event_cb(GtkWidget *widget, GdkEventButton *event)
 static gboolean
 focus_in_event_cb(GtkWidget *widget, GdkEventFocus *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return FALSE;
 
@@ -5501,7 +5501,7 @@ focus_in_event_cb(GtkWidget *widget, GdkEventFocus *event)
 static gboolean
 focus_out_event_cb(GtkWidget *widget, GdkEventFocus *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return FALSE;
 
@@ -5580,7 +5580,7 @@ plugin_window_filter_func(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
     XEvent     *xevent;
     Window      xeventWindow;
 
-    RefPtr<nsWindow> nswindow = (nsWindow*)data;
+    nsRefPtr<nsWindow> nswindow = (nsWindow*)data;
     GdkFilterReturn return_val;
 
     xevent = (XEvent *)gdk_xevent;
@@ -5690,7 +5690,7 @@ key_press_event_cb(GtkWidget *widget, GdkEventKey *event)
     if (!window)
         return FALSE;
 
-    RefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
+    nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
 #ifdef MOZ_X11
     // Keyboard repeat can cause key press events to queue up when there are
@@ -5735,7 +5735,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
     if (!window)
         return FALSE;
 
-    RefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
+    nsRefPtr<nsWindow> focusWindow = gFocusWindow ? gFocusWindow : window;
 
     return focusWindow->OnKeyReleaseEvent(event);
 }
@@ -5743,7 +5743,7 @@ key_release_event_cb(GtkWidget *widget, GdkEventKey *event)
 static gboolean
 property_notify_event_cb(GtkWidget* aWidget, GdkEventProperty* aEvent)
 {
-    RefPtr<nsWindow> window = get_window_for_gdk_window(aEvent->window);
+    nsRefPtr<nsWindow> window = get_window_for_gdk_window(aEvent->window);
     if (!window)
         return FALSE;
 
@@ -5766,7 +5766,7 @@ scroll_event_cb(GtkWidget *widget, GdkEventScroll *event)
 static gboolean
 visibility_notify_event_cb (GtkWidget *widget, GdkEventVisibility *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
+    nsRefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
     if (!window)
         return FALSE;
 
@@ -5818,7 +5818,7 @@ hierarchy_changed_cb (GtkWidget *widget,
 static gboolean
 window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
     if (!window)
         return FALSE;
 
@@ -5830,7 +5830,7 @@ window_state_event_cb (GtkWidget *widget, GdkEventWindowState *event)
 static void
 theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 {
-    RefPtr<nsWindow> window = data;
+    nsRefPtr<nsWindow> window = data;
     window->ThemeChanged();
 }
 
@@ -5853,7 +5853,7 @@ drag_motion_event_cb(GtkWidget *aWidget,
                      guint aTime,
                      gpointer aData)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return FALSE;
 
@@ -5864,7 +5864,7 @@ drag_motion_event_cb(GtkWidget *aWidget,
     GdkWindow *innerWindow =
         get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
                              &retx, &rety);
-    RefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
+    nsRefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
 
     if (!innerMostWindow) {
         innerMostWindow = window;
@@ -5883,7 +5883,7 @@ drag_leave_event_cb(GtkWidget *aWidget,
                     guint aTime,
                     gpointer aData)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return;
 
@@ -5923,7 +5923,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
                    guint aTime,
                    gpointer aData)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return FALSE;
 
@@ -5934,7 +5934,7 @@ drag_drop_event_cb(GtkWidget *aWidget,
     GdkWindow *innerWindow =
         get_inner_gdk_window(gtk_widget_get_window(aWidget), aX, aY,
                              &retx, &rety);
-    RefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
+    nsRefPtr<nsWindow> innerMostWindow = get_window_for_gdk_window(innerWindow);
 
     if (!innerMostWindow) {
         innerMostWindow = window;
@@ -5957,7 +5957,7 @@ drag_data_received_event_cb(GtkWidget *aWidget,
                             guint aTime,
                             gpointer aData)
 {
-    RefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
+    nsRefPtr<nsWindow> window = get_window_for_gtk_widget(aWidget);
     if (!window)
         return;
 
@@ -6281,7 +6281,7 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
     Display* xDisplay = DisplayOfScreen(xScreen);
     Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
 
-    RefPtr<gfxASurface> result;
+    nsRefPtr<gfxASurface> result;
 
     if (visual) {
         Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
@@ -6325,7 +6325,7 @@ nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
     return nullptr;
   }
 
-  RefPtr<DrawTarget> dt;
+  nsRefPtr<DrawTarget> dt;
 
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
@@ -6336,7 +6336,7 @@ nsWindow::GetDrawTarget(const nsIntRegion& aRegion)
   }
 #  endif  // MOZ_HAVE_SHMIMAGE
   if (!dt) {
-    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size);
+    nsRefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size);
     if (!surf->CairoStatus()) {
       dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
     }

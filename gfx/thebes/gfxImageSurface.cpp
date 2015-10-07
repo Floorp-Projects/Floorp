@@ -257,7 +257,7 @@ FormatsAreCompatible(gfxImageFormat a1, gfxImageFormat a2)
 bool
 gfxImageSurface::CopyFrom (SourceSurface *aSurface)
 {
-    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
     if (!data) {
         return false;
@@ -297,7 +297,7 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
 
 bool
 gfxImageSurface::CopyTo(SourceSurface *aSurface) {
-    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
     if (!data) {
         return false;
@@ -321,7 +321,7 @@ gfxImageSurface::CopyTo(SourceSurface *aSurface) {
 already_AddRefed<DataSourceSurface>
 gfxImageSurface::CopyToB8G8R8A8DataSourceSurface()
 {
-  RefPtr<DataSourceSurface> dataSurface =
+  nsRefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(GetSize().width, GetSize().height),
                                      SurfaceFormat::B8G8R8A8);
   if (dataSurface) {
@@ -348,7 +348,7 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
         format = gfxImageFormat::RGB24;
     }
 
-    RefPtr<gfxSubimageSurface> image =
+    nsRefPtr<gfxSubimageSurface> image =
         new gfxSubimageSurface(this, subData,
                                IntSize((int)r.Width(), (int)r.Height()),
                                format);
@@ -368,6 +368,6 @@ gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
 already_AddRefed<gfxImageSurface>
 gfxImageSurface::GetAsImageSurface()
 {
-  RefPtr<gfxImageSurface> surface = this;
+  nsRefPtr<gfxImageSurface> surface = this;
   return surface.forget();
 }

@@ -79,7 +79,7 @@ protected:
    * Pending events array. Don't make this an nsAutoTArray; we use
    * SwapElements() on it.
    */
-  nsTArray<RefPtr<AccEvent> > mEvents;
+  nsTArray<nsRefPtr<AccEvent> > mEvents;
 };
 
 } // namespace a11y

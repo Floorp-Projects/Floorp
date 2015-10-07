@@ -142,7 +142,7 @@ private:
 
   nsCOMPtr<nsIURI> mURL;
   nsCString mURLSpec; // Have to keep this member because GetURL hands out char*
-  RefPtr<nsNPAPIPluginStreamListener> mPStreamListener;
+  nsRefPtr<nsNPAPIPluginStreamListener> mPStreamListener;
 
   // Set to true if we request failed (like with a HTTP response of 404)
   bool                    mRequestFailed;
@@ -161,7 +161,7 @@ private:
 
   // local cached file, we save the content into local cache if browser cache is not available,
   // or plugin asks stream as file and it expects file extension until bug 90558 got fixed
-  RefPtr<CachedFileHolder> mLocalCachedFileHolder;
+  nsRefPtr<CachedFileHolder> mLocalCachedFileHolder;
   nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
   nsDataHashtable<nsUint32HashKey, uint32_t>* mDataForwardToRequest;
 
@@ -170,7 +170,7 @@ private:
   nsCOMPtr<nsIRequest> mRequest;
   bool mSeekable;
   uint32_t mModified;
-  RefPtr<nsNPAPIPluginInstance> mPluginInstance;
+  nsRefPtr<nsNPAPIPluginInstance> mPluginInstance;
   int32_t mStreamOffset;
   bool mStreamComplete;
 

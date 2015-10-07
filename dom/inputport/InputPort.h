@@ -48,8 +48,8 @@ protected:
   void Shutdown();
 
   nsString mId;
-  RefPtr<DOMMediaStream> mStream;
-  RefPtr<InputPortListener> mInputPortListener;
+  nsRefPtr<DOMMediaStream> mStream;
+  nsRefPtr<InputPortListener> mInputPortListener;
   bool mIsConnected;
 };
 

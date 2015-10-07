@@ -69,7 +69,7 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
     return;
   }
 
-  RefPtr<AudioData> audio(new AudioData(mLastStreamOffset,
+  nsRefPtr<AudioData> audio(new AudioData(mLastStreamOffset,
                                           timestamp.value(),
                                           duration.value(),
                                           numFrames,
@@ -166,7 +166,7 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
   }
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 GMPAudioDecoder::Init()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -176,7 +176,7 @@ GMPAudioDecoder::Init()
 
   nsCOMPtr<nsIThread> gmpThread = NS_GetCurrentThread();
 
-  RefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
+  nsRefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
   gmpThread->Dispatch(
     NS_NewRunnableMethodWithArg<GMPInitDoneRunnable*>(this,
                                                       &GMPAudioDecoder::GetGMPAPI,
@@ -196,7 +196,7 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  RefPtr<MediaRawData> sample(aSample);
+  nsRefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error();
     return NS_ERROR_FAILURE;

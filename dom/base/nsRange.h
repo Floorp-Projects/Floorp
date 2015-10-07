@@ -266,7 +266,7 @@ public:
    * will be empty.
    * @param aOutRanges the resulting set of ranges
    */
-  void ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges);
+  void ExcludeNonSelectableNodes(nsTArray<nsRefPtr<nsRange>>* aOutRanges);
 
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:
@@ -307,7 +307,7 @@ protected:
     }
     ~AutoInvalidateSelection();
     nsRange* mRange;
-    RefPtr<nsINode> mCommonAncestor;
+    nsRefPtr<nsINode> mCommonAncestor;
 #ifdef DEBUG
     bool mWasInSelection;
 #endif
@@ -318,7 +318,7 @@ protected:
   nsCOMPtr<nsINode> mRoot;
   nsCOMPtr<nsINode> mStartParent;
   nsCOMPtr<nsINode> mEndParent;
-  RefPtr<mozilla::dom::Selection> mSelection;
+  nsRefPtr<mozilla::dom::Selection> mSelection;
   int32_t mStartOffset;
   int32_t mEndOffset;
 

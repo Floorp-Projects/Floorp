@@ -42,8 +42,8 @@ public:
 private:
   ~WindowsLocationProvider();
 
-  RefPtr<ILocation> mLocation;
-  RefPtr<MLSFallback> mMLSProvider;
+  nsRefPtr<ILocation> mLocation;
+  nsRefPtr<MLSFallback> mMLSProvider;
 };
 
 } // namespace dom

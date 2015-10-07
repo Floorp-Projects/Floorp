@@ -297,7 +297,7 @@ HTMLFormElement::RequestAutocomplete()
     init.mCancelable = false;
     init.mReason = AutoCompleteErrorReason::Disabled;
 
-    RefPtr<AutocompleteErrorEvent> event =
+    nsRefPtr<AutocompleteErrorEvent> event =
       AutocompleteErrorEvent::Constructor(this, NS_LITERAL_STRING("autocompleteerror"), init);
 
     (new AsyncEventDispatcher(this, event))->PostDOMEvent();
@@ -1322,7 +1322,7 @@ HTMLFormElement::AddElement(nsGenericHTMLFormElement* aChild,
   // This has to be done _after_ UpdateValidity() call to prevent the element
   // being count twice.
   if (type == NS_FORM_INPUT_RADIO) {
-    RefPtr<HTMLInputElement> radio =
+    nsRefPtr<HTMLInputElement> radio =
       static_cast<HTMLInputElement*>(aChild);
     radio->AddedToRadioGroup();
   }
@@ -1347,7 +1347,7 @@ HTMLFormElement::RemoveElement(nsGenericHTMLFormElement* aChild,
   //
   nsresult rv = NS_OK;
   if (aChild->GetType() == NS_FORM_INPUT_RADIO) {
-    RefPtr<HTMLInputElement> radio =
+    nsRefPtr<HTMLInputElement> radio =
       static_cast<HTMLInputElement*>(aChild);
     radio->WillRemoveFromRadioGroup();
   }
@@ -2180,7 +2180,7 @@ HTMLFormElement::GetNextRadioButton(const nsAString& aName,
   // If no radio is focused, get the radio relative to the selected one.
   *aRadioOut = nullptr;
 
-  RefPtr<HTMLInputElement> currentRadio;
+  nsRefPtr<HTMLInputElement> currentRadio;
   if (aFocusedRadio) {
     currentRadio = aFocusedRadio;
   }
@@ -2202,7 +2202,7 @@ HTMLFormElement::GetNextRadioButton(const nsAString& aName,
 
   uint32_t numRadios;
   radioGroup->GetLength(&numRadios);
-  RefPtr<HTMLInputElement> radio;
+  nsRefPtr<HTMLInputElement> radio;
 
   bool isRadio = false;
   do {

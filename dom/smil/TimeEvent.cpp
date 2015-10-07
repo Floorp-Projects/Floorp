@@ -85,6 +85,6 @@ NS_NewDOMTimeEvent(EventTarget* aOwner,
                    nsPresContext* aPresContext,
                    InternalSMILTimeEvent* aEvent)
 {
-  RefPtr<TimeEvent> it = new TimeEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<TimeEvent> it = new TimeEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

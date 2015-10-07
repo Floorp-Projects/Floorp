@@ -167,7 +167,7 @@ nsXMLFragmentContentSink::WillBuildModel(nsDTDMode aDTDMode)
 NS_IMETHODIMP 
 nsXMLFragmentContentSink::DidBuildModel(bool aTerminated)
 {
-  RefPtr<nsParserBase> kungFuDeathGrip(mParser);
+  nsRefPtr<nsParserBase> kungFuDeathGrip(mParser);
 
   // Drop our reference to the parser to get rid of a circular
   // reference.
@@ -266,7 +266,7 @@ nsXMLFragmentContentSink::HandleProcessingInstruction(const char16_t *aTarget,
   const nsDependentString target(aTarget);
   const nsDependentString data(aData);
 
-  RefPtr<ProcessingInstruction> node =
+  nsRefPtr<ProcessingInstruction> node =
     NS_NewXMLProcessingInstruction(mNodeInfoManager, target, data);
 
   // no special processing here.  that should happen when the fragment moves into the document

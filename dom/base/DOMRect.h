@@ -206,7 +206,7 @@ public:
   }
 
 protected:
-  nsTArray<RefPtr<DOMRect> > mArray;
+  nsTArray<nsRefPtr<DOMRect> > mArray;
   nsCOMPtr<nsISupports> mParent;
 };
 

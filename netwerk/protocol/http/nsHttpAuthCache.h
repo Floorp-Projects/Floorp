@@ -252,7 +252,7 @@ private:
 
 private:
     PLHashTable *mDB; // "host:port" --> nsHttpAuthNode
-    RefPtr<AppDataClearObserver> mObserver;
+    nsRefPtr<AppDataClearObserver> mObserver;
 };
 
 } // namespace net

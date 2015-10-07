@@ -67,7 +67,7 @@ private:
   nsCOMPtr<nsIUDPSocketListener>       mListener;
   nsCOMPtr<nsIEventTarget>             mListenerTarget;
   bool                                 mAttached;
-  RefPtr<nsSocketTransportService>   mSts;
+  nsRefPtr<nsSocketTransportService>   mSts;
 
   uint64_t   mByteReadCount;
   uint64_t   mByteWriteCount;
@@ -114,7 +114,7 @@ public:
 private:
   virtual ~nsUDPOutputStream();
 
-  RefPtr<nsUDPSocket>       mSocket;
+  nsRefPtr<nsUDPSocket>       mSocket;
   PRFileDesc                  *mFD;
   PRNetAddr                   mPrClientAddr;
   bool                        mIsClosed;

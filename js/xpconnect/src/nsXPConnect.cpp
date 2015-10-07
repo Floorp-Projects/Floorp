@@ -452,7 +452,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     // prototype.
     xpcObjectHelper helper(aCOMObj);
     MOZ_ASSERT(helper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
-    RefPtr<XPCWrappedNative> wrappedGlobal;
+    nsRefPtr<XPCWrappedNative> wrappedGlobal;
     nsresult rv =
         XPCWrappedNative::WrapNewGlobal(helper, aPrincipal,
                                         aFlags & nsIXPConnect::INIT_JS_STANDARD_CLASSES,
@@ -584,7 +584,7 @@ nsXPConnect::JSValToVariant(JSContext* cx,
 {
     NS_PRECONDITION(aResult, "bad param");
 
-    RefPtr<XPCVariant> variant = XPCVariant::newVariant(cx, aJSVal);
+    nsRefPtr<XPCVariant> variant = XPCVariant::newVariant(cx, aJSVal);
     variant.forget(aResult);
     NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
@@ -629,7 +629,7 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext * aJSContext,
         return NS_ERROR_FAILURE;
     }
 
-    RefPtr<XPCWrappedNative> temp = XPCWrappedNative::Get(aJSObj);
+    nsRefPtr<XPCWrappedNative> temp = XPCWrappedNative::Get(aJSObj);
     temp.forget(_retval);
     return NS_OK;
 }
@@ -914,7 +914,7 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
     NS_PRECONDITION(ctx, "bad param");
     NS_PRECONDITION(_retval, "bad param");
 
-    RefPtr<XPCVariant> variant = XPCVariant::newVariant(ctx, value);
+    nsRefPtr<XPCVariant> variant = XPCVariant::newVariant(ctx, value);
     variant.forget(_retval);
     if (!(*_retval))
         return NS_ERROR_FAILURE;

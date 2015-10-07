@@ -46,7 +46,7 @@ public:
     TX_DECL_FUNCTION
 
 private:
-    RefPtr<txNamespaceMap> mMappings;
+    nsRefPtr<txNamespaceMap> mMappings;
 };
 
 /**
@@ -77,7 +77,7 @@ private:
     };
     
     txStylesheet* mStylesheet;
-    RefPtr<txNamespaceMap> mMappings;
+    nsRefPtr<txNamespaceMap> mMappings;
 };
 
 /**
@@ -155,7 +155,7 @@ public:
 
 private:
     eType mType;
-    RefPtr<txNamespaceMap> mMappings; // Used to resolve prefixes
+    nsRefPtr<txNamespaceMap> mMappings; // Used to resolve prefixes
 };
 
 #endif

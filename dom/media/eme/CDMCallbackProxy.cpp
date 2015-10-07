@@ -39,7 +39,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
   uint32_t mToken;
   nsString mSid;
 };
@@ -72,7 +72,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
   dom::PromiseId mPid;
   bool mSuccess;
 };
@@ -115,7 +115,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
   dom::PromiseId mPid;
   nsresult mException;
   nsCString mMsg;
@@ -155,7 +155,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
   dom::PromiseId mPid;
   nsString mSid;
   GMPSessionMessageType mMsgType;
@@ -192,7 +192,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
   nsString mSid;
   GMPTimestamp mTimestamp;
 };
@@ -241,7 +241,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
   dom::PromiseId mPid;
   nsString mSid;
   nsresult mException;

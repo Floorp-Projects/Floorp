@@ -60,7 +60,7 @@ private:
   ~UnsubscribeResultCallback()
   {}
 
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
 };
 
 NS_IMPL_ISUPPORTS(UnsubscribeResultCallback, nsIUnsubscribeResultCallback)
@@ -77,12 +77,12 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> p = Promise::Create(mGlobal, aRv);
+  nsRefPtr<Promise> p = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<UnsubscribeResultCallback> callback =
+  nsRefPtr<UnsubscribeResultCallback> callback =
     new UnsubscribeResultCallback(p);
   client->Unsubscribe(mScope, mPrincipal, callback);
   return p.forget();
@@ -150,7 +150,7 @@ PushSubscription::Constructor(GlobalObject& aGlobal,
     rawKey.SetLength(key.Length());
     rawKey.ReplaceElementsAt(0, key.Length(), key.Data(), key.Length());
   }
-  RefPtr<PushSubscription> sub = new PushSubscription(global,
+  nsRefPtr<PushSubscription> sub = new PushSubscription(global,
                                                         aEndpoint,
                                                         aScope,
                                                         rawKey);
@@ -261,7 +261,7 @@ WorkerPushSubscription::Constructor(GlobalObject& aGlobal,
     rawKey.SetLength(key.Length());
     rawKey.ReplaceElementsAt(0, key.Length(), key.Data(), key.Length());
   }
-  RefPtr<WorkerPushSubscription> sub = new WorkerPushSubscription(aEndpoint,
+  nsRefPtr<WorkerPushSubscription> sub = new WorkerPushSubscription(aEndpoint,
                                                                     aScope,
                                                                     rawKey);
 
@@ -303,7 +303,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    RefPtr<Promise> promise = mProxy->WorkerPromise();
+    nsRefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       promise->MaybeResolve(mSuccess);
     } else {
@@ -317,7 +317,7 @@ private:
   ~UnsubscribeResultRunnable()
   {}
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
   bool mSuccess;
 };
@@ -339,7 +339,7 @@ public:
     AssertIsOnMainThread();
     MOZ_ASSERT(mProxy, "OnUnsubscribe() called twice?");
 
-    RefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
+    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
 
     MutexAutoLock lock(proxy->Lock());
     if (proxy->CleanedUp()) {
@@ -349,7 +349,7 @@ public:
     AutoJSAPI jsapi;
     jsapi.Init();
 
-    RefPtr<UnsubscribeResultRunnable> r =
+    nsRefPtr<UnsubscribeResultRunnable> r =
       new UnsubscribeResultRunnable(proxy, aStatus, aSuccess);
     r->Dispatch(jsapi.cx());
     return NS_OK;
@@ -360,7 +360,7 @@ private:
   {
   }
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
 };
 
 NS_IMPL_ISUPPORTS(WorkerUnsubscribeResultCallback, nsIUnsubscribeResultCallback)
@@ -386,7 +386,7 @@ public:
       return NS_OK;
     }
 
-    RefPtr<WorkerUnsubscribeResultCallback> callback =
+    nsRefPtr<WorkerUnsubscribeResultCallback> callback =
       new WorkerUnsubscribeResultCallback(mProxy);
 
     nsCOMPtr<nsIPushClient> client =
@@ -407,7 +407,7 @@ private:
   ~UnsubscribeRunnable()
   {}
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
 };
 
@@ -419,18 +419,18 @@ WorkerPushSubscription::Unsubscribe(ErrorResult &aRv)
   worker->AssertIsOnWorkerThread();
 
   nsCOMPtr<nsIGlobalObject> global = worker->GlobalScope();
-  RefPtr<Promise> p = Promise::Create(global, aRv);
+  nsRefPtr<Promise> p = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
+  nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
   if (!proxy) {
     p->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
     return p.forget();
   }
 
-  RefPtr<UnsubscribeRunnable> r =
+  nsRefPtr<UnsubscribeRunnable> r =
     new UnsubscribeRunnable(proxy, mScope);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 
@@ -478,12 +478,12 @@ public:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    RefPtr<Promise> promise = mProxy->WorkerPromise();
+    nsRefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       if (mEndpoint.IsEmpty()) {
         promise->MaybeResolve(JS::NullHandleValue);
       } else {
-        RefPtr<WorkerPushSubscription> sub =
+        nsRefPtr<WorkerPushSubscription> sub =
           new WorkerPushSubscription(mEndpoint, mScope, mRawP256dhKey);
         promise->MaybeResolve(sub);
       }
@@ -498,7 +498,7 @@ private:
   ~GetSubscriptionResultRunnable()
   {}
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
   nsString mEndpoint;
   nsString mScope;
@@ -525,7 +525,7 @@ public:
     AssertIsOnMainThread();
     MOZ_ASSERT(mProxy, "OnPushEndpoint() called twice?");
 
-    RefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
+    nsRefPtr<PromiseWorkerProxy> proxy = mProxy.forget();
 
     MutexAutoLock lock(proxy->Lock());
     if (proxy->CleanedUp()) {
@@ -538,7 +538,7 @@ public:
     nsTArray<uint8_t> rawP256dhKey(aKeyLen);
     rawP256dhKey.ReplaceElementsAt(0, aKeyLen, aKey, aKeyLen);
 
-    RefPtr<GetSubscriptionResultRunnable> r =
+    nsRefPtr<GetSubscriptionResultRunnable> r =
       new GetSubscriptionResultRunnable(proxy,
                                         aStatus,
                                         aEndpoint,
@@ -553,7 +553,7 @@ protected:
   {}
 
 private:
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
 };
 
@@ -578,7 +578,7 @@ public:
       return NS_OK;
     }
 
-    RefPtr<GetSubscriptionCallback> callback = new GetSubscriptionCallback(mProxy, mScope);
+    nsRefPtr<GetSubscriptionCallback> callback = new GetSubscriptionCallback(mProxy, mScope);
 
     nsCOMPtr<nsIPermissionManager> permManager =
       mozilla::services::GetPermissionManager();
@@ -626,7 +626,7 @@ private:
   ~GetSubscriptionRunnable()
   {}
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
   WorkerPushManager::SubscriptionAction mAction;
 };
@@ -639,18 +639,18 @@ WorkerPushManager::PerformSubscriptionAction(SubscriptionAction aAction, ErrorRe
   worker->AssertIsOnWorkerThread();
 
   nsCOMPtr<nsIGlobalObject> global = worker->GlobalScope();
-  RefPtr<Promise> p = Promise::Create(global, aRv);
+  nsRefPtr<Promise> p = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
+  nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
   if (!proxy) {
     p->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return p.forget();
   }
 
-  RefPtr<GetSubscriptionRunnable> r =
+  nsRefPtr<GetSubscriptionRunnable> r =
     new GetSubscriptionRunnable(proxy, mScope, aAction);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 
@@ -689,7 +689,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    RefPtr<Promise> promise = mProxy->WorkerPromise();
+    nsRefPtr<Promise> promise = mProxy->WorkerPromise();
     if (NS_SUCCEEDED(mStatus)) {
       MOZ_ASSERT(uint32_t(mState) < ArrayLength(PushPermissionStateValues::strings));
       nsAutoCString stringState(PushPermissionStateValues::strings[uint32_t(mState)].value,
@@ -707,7 +707,7 @@ private:
   ~PermissionResultRunnable()
   {}
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
   PushPermissionState mState;
 };
@@ -752,7 +752,7 @@ public:
 
     AutoJSAPI jsapi;
     jsapi.Init();
-    RefPtr<PermissionResultRunnable> r =
+    nsRefPtr<PermissionResultRunnable> r =
       new PermissionResultRunnable(mProxy, rv, state);
     r->Dispatch(jsapi.cx());
     return NS_OK;
@@ -762,7 +762,7 @@ private:
   ~PermissionStateRunnable()
   {}
 
-  RefPtr<PromiseWorkerProxy> mProxy;
+  nsRefPtr<PromiseWorkerProxy> mProxy;
 };
 
 already_AddRefed<Promise>
@@ -773,18 +773,18 @@ WorkerPushManager::PermissionState(ErrorResult& aRv)
   worker->AssertIsOnWorkerThread();
 
   nsCOMPtr<nsIGlobalObject> global = worker->GlobalScope();
-  RefPtr<Promise> p = Promise::Create(global, aRv);
+  nsRefPtr<Promise> p = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
+  nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
   if (!proxy) {
     p->MaybeReject(worker->GetJSContext(), JS::UndefinedHandleValue);
     return p.forget();
   }
 
-  RefPtr<PermissionStateRunnable> r =
+  nsRefPtr<PermissionStateRunnable> r =
     new PermissionStateRunnable(proxy);
   NS_DispatchToMainThread(r);
 

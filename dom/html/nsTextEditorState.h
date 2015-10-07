@@ -286,15 +286,15 @@ private:
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime.
   nsITextControlElement* const MOZ_NON_OWNING_REF mTextCtrlElement;
-  RefPtr<nsTextInputSelectionImpl> mSelCon;
-  RefPtr<RestoreSelectionState> mRestoringSelection;
+  nsRefPtr<nsTextInputSelectionImpl> mSelCon;
+  nsRefPtr<RestoreSelectionState> mRestoringSelection;
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<mozilla::dom::Element> mRootNode;
   nsCOMPtr<mozilla::dom::Element> mPlaceholderDiv;
   nsTextControlFrame* mBoundFrame;
-  RefPtr<nsTextInputListener> mTextListener;
+  nsRefPtr<nsTextInputListener> mTextListener;
   nsAutoPtr<nsCString> mValue;
-  RefPtr<nsAnonDivObserver> mMutationObserver;
+  nsRefPtr<nsAnonDivObserver> mMutationObserver;
   mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
   // mValueBeingSet is available only while SetValue() is requesting to commit
   // composition.  I.e., this is valid only while mIsCommittingComposition is

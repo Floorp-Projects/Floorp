@@ -404,11 +404,11 @@ private:
 
 #ifdef MOZ_HAVE_SHMIMAGE
     // If we're using xshm rendering
-    RefPtr<nsShmImage>  mShmImage;
+    nsRefPtr<nsShmImage>  mShmImage;
 #endif
 
 #ifdef ACCESSIBILITY
-    RefPtr<mozilla::a11y::Accessible> mRootAccessible;
+    nsRefPtr<mozilla::a11y::Accessible> mRootAccessible;
 
     /**
      * Request to create the accessible for this window if it is top level.
@@ -505,7 +505,7 @@ private:
      * level window is released, the children still have a valid pointer,
      * however, IME doesn't work at that time.
      */
-    RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
+    nsRefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
     nsAutoPtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
 

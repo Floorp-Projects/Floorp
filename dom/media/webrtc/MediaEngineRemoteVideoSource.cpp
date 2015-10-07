@@ -5,7 +5,7 @@
 
 #include "MediaEngineRemoteVideoSource.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "VideoUtils.h"
 #include "nsIPrefService.h"
 #include "MediaTrackConstraints.h"
@@ -283,7 +283,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
   }
 
   // Create a video frame and append it to the track.
-  RefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
 
   uint8_t* frame = static_cast<uint8_t*> (buffer);

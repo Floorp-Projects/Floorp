@@ -50,9 +50,9 @@ public:
   static gfx::SurfaceFormat ContentTypeToSurfaceFormat(gfxContentType aType);
 
 protected:
-  RefPtr<CompositorOGL> mCompositor;
-  RefPtr<gfxXlibSurface> mSurface;
-  RefPtr<gfx::SourceSurface> mSourceSurface;
+  nsRefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<gfxXlibSurface> mSurface;
+  nsRefPtr<gfx::SourceSurface> mSourceSurface;
   GLuint mTexture;
   bool mUpdated;
 };

@@ -34,7 +34,7 @@ public:
     /**
      * The next buffer in a queue.
      */
-    RefPtr<nsHtml5OwningUTF16Buffer> next;
+    nsRefPtr<nsHtml5OwningUTF16Buffer> next;
 
     /**
      * A parser key.

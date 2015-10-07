@@ -34,8 +34,8 @@ private:
 
     nsCOMPtr<nsIStreamListener> mOutput;
     nsCOMPtr<nsIOutputStream> mStream;
-    RefPtr<nsZipWriter> mWriter;
-    RefPtr<nsZipHeader> mHeader;
+    nsRefPtr<nsZipWriter> mWriter;
+    nsRefPtr<nsZipHeader> mHeader;
 
     nsresult CompleteEntry();
     nsresult ProcessData(nsIRequest *aRequest, nsISupports *aContext,

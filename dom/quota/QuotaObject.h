@@ -52,7 +52,7 @@ private:
 
     ++mRefCnt;
 
-    RefPtr<QuotaObject> result = dont_AddRef(this);
+    nsRefPtr<QuotaObject> result = dont_AddRef(this);
     return result.forget();
   }
 

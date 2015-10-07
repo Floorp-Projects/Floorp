@@ -164,7 +164,7 @@ GetBoxRectForFrame(nsIFrame** aFrame, CSSBoxType aType)
 class AccumulateQuadCallback : public nsLayoutUtils::BoxCallback {
 public:
   AccumulateQuadCallback(nsISupports* aParentObject,
-                         nsTArray<RefPtr<DOMQuad> >& aResult,
+                         nsTArray<nsRefPtr<DOMQuad> >& aResult,
                          nsIFrame* aRelativeToFrame,
                          const nsPoint& aRelativeToBoxTopLeft,
                          CSSBoxType aBoxType)
@@ -202,7 +202,7 @@ public:
   }
 
   nsISupports* mParentObject;
-  nsTArray<RefPtr<DOMQuad> >& mResult;
+  nsTArray<nsRefPtr<DOMQuad> >& mResult;
   nsIFrame* mRelativeToFrame;
   nsPoint mRelativeToBoxTopLeft;
   CSSBoxType mBoxType;
@@ -241,7 +241,7 @@ CheckFramesInSameTopLevelBrowsingContext(nsIFrame* aFrame1, nsIFrame* aFrame2)
 
 void GetBoxQuads(nsINode* aNode,
                  const dom::BoxQuadOptions& aOptions,
-                 nsTArray<RefPtr<DOMQuad> >& aResult,
+                 nsTArray<nsRefPtr<DOMQuad> >& aResult,
                  ErrorResult& aRv)
 {
   nsIFrame* frame = GetFrameForNode(aNode);
@@ -341,7 +341,7 @@ ConvertQuadFromNode(nsINode* aTo, dom::DOMQuad& aQuad,
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject().mObject, points);
+  nsRefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject().mObject, points);
   return result.forget();
 }
 
@@ -361,7 +361,7 @@ ConvertRectFromNode(nsINode* aTo, dom::DOMRectReadOnly& aRect,
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject().mObject, points);
+  nsRefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject().mObject, points);
   return result.forget();
 }
 
@@ -380,7 +380,7 @@ ConvertPointFromNode(nsINode* aTo, const dom::DOMPointInit& aPoint,
   if (aRv.Failed()) {
     return nullptr;
   }
-  RefPtr<DOMPoint> result = new DOMPoint(aTo->GetParentObject().mObject, point.x, point.y);
+  nsRefPtr<DOMPoint> result = new DOMPoint(aTo->GetParentObject().mObject, point.x, point.y);
   return result.forget();
 }
 

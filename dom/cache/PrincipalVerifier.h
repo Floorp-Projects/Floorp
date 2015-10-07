@@ -61,12 +61,12 @@ private:
 
   // set in originating thread at construction, but must be accessed and
   // released on main thread
-  RefPtr<ContentParent> mActor;
+  nsRefPtr<ContentParent> mActor;
 
   const mozilla::ipc::PrincipalInfo mPrincipalInfo;
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsresult mResult;
-  RefPtr<ManagerId> mManagerId;
+  nsRefPtr<ManagerId> mManagerId;
 
 public:
   NS_DECL_NSIRUNNABLE

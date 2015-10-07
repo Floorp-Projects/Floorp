@@ -35,7 +35,7 @@ public:
 private:
   Sample* Get();
   void Next();
-  RefPtr<Index> mIndex;
+  nsRefPtr<Index> mIndex;
   size_t mCurrentMoof;
   size_t mCurrentSample;
 };

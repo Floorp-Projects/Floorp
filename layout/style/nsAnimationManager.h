@@ -26,8 +26,8 @@ class Promise;
 } /* namespace dom */
 
 struct AnimationEventInfo {
-  RefPtr<dom::Element> mElement;
-  RefPtr<dom::Animation> mAnimation;
+  nsRefPtr<dom::Element> mElement;
+  nsRefPtr<dom::Animation> mAnimation;
   InternalAnimationEvent mEvent;
   TimeStamp mTimeStamp;
 

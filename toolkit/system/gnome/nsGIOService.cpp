@@ -123,7 +123,7 @@ nsGIOMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes)
 {
   *aSchemes = nullptr;
 
-  RefPtr<GIOUTF8StringEnumerator> array = new GIOUTF8StringEnumerator();
+  nsRefPtr<GIOUTF8StringEnumerator> array = new GIOUTF8StringEnumerator();
   NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
   GVfs *gvfs = g_vfs_get_default();

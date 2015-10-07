@@ -236,7 +236,7 @@ TaskbarWindowPreview::UpdateOverlayIcon() {
 
 LRESULT
 TaskbarWindowPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
-  RefPtr<TaskbarWindowPreview> kungFuDeathGrip(this);
+  nsRefPtr<TaskbarWindowPreview> kungFuDeathGrip(this);
   switch (nMsg) {
     case WM_COMMAND:
       {

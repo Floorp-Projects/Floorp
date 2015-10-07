@@ -207,7 +207,7 @@ private:
             return NS_OK;
         }
       private:
-        RefPtr<nsHttpTransaction> mTrans;
+        nsRefPtr<nsHttpTransaction> mTrans;
         nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     };
 
@@ -228,8 +228,8 @@ private:
     nsCOMPtr<nsIInputStream>        mRequestStream;
     int64_t                         mRequestSize;
 
-    RefPtr<nsAHttpConnection>     mConnection;
-    RefPtr<nsHttpConnectionInfo>  mConnInfo;
+    nsRefPtr<nsAHttpConnection>     mConnection;
+    nsRefPtr<nsHttpConnectionInfo>  mConnInfo;
     nsHttpRequestHead              *mRequestHead;     // weak ref
     nsHttpResponseHead             *mResponseHead;    // owning pointer
 
@@ -444,7 +444,7 @@ public:
     nsIInterfaceRequestor *SecurityCallbacks() { return mCallbacks; }
 
 private:
-    RefPtr<ASpdySession> mTunnelProvider;
+    nsRefPtr<ASpdySession> mTunnelProvider;
 
 public:
     void GetNetworkAddresses(NetAddr &self, NetAddr &peer);

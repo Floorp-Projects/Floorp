@@ -179,7 +179,7 @@ FakeInputPortService::GetInputPorts(nsIInputPortServiceCallback* aCallback)
   bool isConnected = false;
   mPortDatas[0]->GetConnected(&isConnected);
   //simulate the connection change event.
-  RefPtr<PortConnectionChangedCallback> connectionChangedCb =
+  nsRefPtr<PortConnectionChangedCallback> connectionChangedCb =
     new PortConnectionChangedCallback(mPortDatas[0], mInputPortListener, !isConnected);
   nsresult rv = mPortConnectionChangedTimer->InitWithCallback(
     connectionChangedCb, 100, nsITimer::TYPE_ONE_SHOT);

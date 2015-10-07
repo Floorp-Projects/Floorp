@@ -104,12 +104,12 @@ Permissions::Query(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<PermissionStatus> status =
+  nsRefPtr<PermissionStatus> status =
     CreatePermissionStatus(aCx, aPermission, mWindow, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     MOZ_ASSERT(!status);

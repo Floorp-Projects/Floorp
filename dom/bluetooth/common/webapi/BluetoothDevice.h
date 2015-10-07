@@ -173,7 +173,7 @@ private:
   /**
    * Class of device (CoD) that describes this device's capabilities.
    */
-  RefPtr<BluetoothClassOfDevice> mCod;
+  nsRefPtr<BluetoothClassOfDevice> mCod;
 
   /**
    * Human-readable name of this device.
@@ -198,7 +198,7 @@ private:
   /**
    * GATT client object to interact with the remote device.
    */
-  RefPtr<BluetoothGatt> mGatt;
+  nsRefPtr<BluetoothGatt> mGatt;
 };
 
 END_BLUETOOTH_NAMESPACE
@@ -208,16 +208,16 @@ END_BLUETOOTH_NAMESPACE
  *
  * Allows customizing the template code for a given set of template arguments.
  * With this function template, nsTArray can handle comparison of
- * 'RefPtr<BluetoothDevice>' properly, including IndexOf() and Contains();
+ * 'nsRefPtr<BluetoothDevice>' properly, including IndexOf() and Contains();
  */
 template <>
-class nsDefaultComparator <RefPtr<mozilla::dom::bluetooth::BluetoothDevice>,
-                           RefPtr<mozilla::dom::bluetooth::BluetoothDevice>> {
+class nsDefaultComparator <nsRefPtr<mozilla::dom::bluetooth::BluetoothDevice>,
+                           nsRefPtr<mozilla::dom::bluetooth::BluetoothDevice>> {
   public:
 
     bool Equals(
-      const RefPtr<mozilla::dom::bluetooth::BluetoothDevice>& aDeviceA,
-      const RefPtr<mozilla::dom::bluetooth::BluetoothDevice>& aDeviceB) const
+      const nsRefPtr<mozilla::dom::bluetooth::BluetoothDevice>& aDeviceA,
+      const nsRefPtr<mozilla::dom::bluetooth::BluetoothDevice>& aDeviceB) const
     {
       nsString addressA, addressB;
       aDeviceA->GetAddress(addressA);
@@ -232,15 +232,15 @@ class nsDefaultComparator <RefPtr<mozilla::dom::bluetooth::BluetoothDevice>,
  *
  * Allows customizing the template code for a given set of template arguments.
  * With this function template, nsTArray can handle comparison between
- * 'RefPtr<BluetoothDevice>' and nsString properly, including IndexOf() and
+ * 'nsRefPtr<BluetoothDevice>' and nsString properly, including IndexOf() and
  * Contains();
  */
 template <>
-class nsDefaultComparator <RefPtr<mozilla::dom::bluetooth::BluetoothDevice>,
+class nsDefaultComparator <nsRefPtr<mozilla::dom::bluetooth::BluetoothDevice>,
                            nsString> {
 public:
   bool Equals(
-    const RefPtr<mozilla::dom::bluetooth::BluetoothDevice>& aDevice,
+    const nsRefPtr<mozilla::dom::bluetooth::BluetoothDevice>& aDevice,
     const nsString& aAddress) const
   {
     nsString deviceAddress;

@@ -44,7 +44,7 @@ private:
   NotifySuccessWithString(const nsAString& aResult);
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  RefPtr<DOMRequest> mRequest;
+  nsRefPtr<DOMRequest> mRequest;
 };
 
 } // namespace mobileconnection

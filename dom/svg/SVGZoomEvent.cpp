@@ -98,6 +98,6 @@ NS_NewDOMSVGZoomEvent(EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       mozilla::InternalSVGZoomEvent* aEvent)
 {
-  RefPtr<SVGZoomEvent> it = new SVGZoomEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<SVGZoomEvent> it = new SVGZoomEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

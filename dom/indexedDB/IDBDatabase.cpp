@@ -121,7 +121,7 @@ private:
     mDatabase->AssertIsOnOwningThread();
 
     if (aWhy != Deletion) {
-      RefPtr<IDBDatabase> database = mDatabase;
+      nsRefPtr<IDBDatabase> database = mDatabase;
       database->NoteFinishedFileActor(this);
     }
 
@@ -250,7 +250,7 @@ IDBDatabase::Create(IDBOpenDBRequest* aRequest,
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aSpec);
 
-  RefPtr<IDBDatabase> db =
+  nsRefPtr<IDBDatabase> db =
     new IDBDatabase(aRequest, aFactory, aActor, aSpec);
 
   db->SetScriptOwner(aRequest->GetScriptOwner());
@@ -261,7 +261,7 @@ IDBDatabase::Create(IDBOpenDBRequest* aRequest,
 
       uint64_t windowId = window->WindowID();
 
-      RefPtr<Observer> observer = new Observer(db, windowId);
+      nsRefPtr<Observer> observer = new Observer(db, windowId);
 
       nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
       MOZ_ASSERT(obsSvc);
@@ -397,7 +397,7 @@ IDBDatabase::RefreshSpec(bool aMayDelete)
   AssertIsOnOwningThread();
 
   for (auto iter = mTransactions.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<IDBTransaction> transaction = iter.Get()->GetKey();
+    nsRefPtr<IDBTransaction> transaction = iter.Get()->GetKey();
     MOZ_ASSERT(transaction);
     transaction->AssertIsOnOwningThread();
     transaction->RefreshSpec(aMayDelete);
@@ -436,7 +436,7 @@ IDBDatabase::ObjectStoreNames() const
 
   const nsTArray<ObjectStoreSpec>& objectStores = mSpec->objectStores();
 
-  RefPtr<DOMStringList> list = new DOMStringList();
+  nsRefPtr<DOMStringList> list = new DOMStringList();
 
   if (!objectStores.IsEmpty()) {
     nsTArray<nsString>& listNames = list->StringArray();
@@ -519,7 +519,7 @@ IDBDatabase::CreateObjectStore(
     RefreshSpec(/* aMayDelete */ false);
   }
 
-  RefPtr<IDBObjectStore> objectStore =
+  nsRefPtr<IDBObjectStore> objectStore =
     transaction->CreateObjectStore(*newSpec);
   MOZ_ASSERT(objectStore);
 
@@ -638,7 +638,7 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
     return nullptr;
   }
 
-  RefPtr<IDBTransaction> transaction;
+  nsRefPtr<IDBTransaction> transaction;
   aRv = Transaction(aStoreNames, aMode, getter_AddRefs(transaction));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -739,7 +739,7 @@ IDBDatabase::Transaction(const StringOrStringSequence& aStoreNames,
       MOZ_CRASH("Unknown mode!");
   }
 
-  RefPtr<IDBTransaction> transaction =
+  nsRefPtr<IDBTransaction> transaction =
     IDBTransaction::Create(this, sortedStoreNames, mode);
   if (NS_WARN_IF(!transaction)) {
     IDB_REPORT_INTERNAL_ERR();
@@ -802,7 +802,7 @@ IDBDatabase::CreateMutableFile(const nsAString& aName,
 
   CreateFileParams params(nsString(aName), type);
 
-  RefPtr<IDBRequest> request = IDBRequest::Create(this, nullptr);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(this, nullptr);
   MOZ_ASSERT(request);
 
   BackgroundDatabaseRequestChild* actor =
@@ -850,7 +850,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
 
   class MOZ_STACK_CLASS Helper final
   {
-    typedef nsAutoTArray<RefPtr<IDBTransaction>, 20> StrongTransactionArray;
+    typedef nsAutoTArray<nsRefPtr<IDBTransaction>, 20> StrongTransactionArray;
     typedef nsAutoTArray<IDBTransaction*, 20> WeakTransactionArray;
 
   public:
@@ -896,7 +896,7 @@ IDBDatabase::AbortTransactions(bool aShouldWarn)
       // additional strong references here.
       WeakTransactionArray transactionsThatNeedWarning;
 
-      for (RefPtr<IDBTransaction>& transaction : transactionsToAbort) {
+      for (nsRefPtr<IDBTransaction>& transaction : transactionsToAbort) {
         MOZ_ASSERT(transaction);
         MOZ_ASSERT(!transaction->IsDone());
 
@@ -1057,7 +1057,7 @@ IDBDatabase::NoteReceivedBlob(Blob* aBlob)
 
 #ifdef DEBUG
   {
-    RefPtr<BlobImpl> blobImpl = aBlob->Impl();
+    nsRefPtr<BlobImpl> blobImpl = aBlob->Impl();
     MOZ_ASSERT(blobImpl);
 
     nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryObject(blobImpl);
@@ -1296,7 +1296,7 @@ IDBDatabase::LogWarning(const char* aMessageName,
                                    mFactory->IsChrome(),
                                    mFactory->InnerWindowID());
   } else {
-    RefPtr<LogWarningRunnable> runnable =
+    nsRefPtr<LogWarningRunnable> runnable =
       new LogWarningRunnable(aMessageName,
                              aFilename,
                              aLineNumber,
@@ -1486,7 +1486,7 @@ Observer::Observe(nsISupports* aSubject,
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(supportsInt->GetData(&windowId)));
 
       if (windowId == mWindowId) {
-        RefPtr<IDBDatabase> database = mWeakDatabase;
+        nsRefPtr<IDBDatabase> database = mWeakDatabase;
         mWeakDatabase = nullptr;
 
         database->InvalidateInternal();
@@ -1499,7 +1499,7 @@ Observer::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, kCycleCollectionObserverTopic) ||
       !strcmp(aTopic, kMemoryPressureObserverTopic)) {
     if (mWeakDatabase) {
-      RefPtr<IDBDatabase> database = mWeakDatabase;
+      nsRefPtr<IDBDatabase> database = mWeakDatabase;
 
       database->ExpireFileActors(/* aExpireAll */ false);
     }

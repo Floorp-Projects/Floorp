@@ -40,7 +40,7 @@ private:
 
   void ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs);
   // Store the Medatata from track encoder
-  RefPtr<OpusMetadata> mMetadata;
+  nsRefPtr<OpusMetadata> mMetadata;
 
   ogg_stream_state mOggStreamState;
   ogg_page mOggPage;

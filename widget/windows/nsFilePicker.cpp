@@ -61,7 +61,7 @@ private:
       mWindow->SuppressBlurEvents(aFlag);
     }
   }
-  RefPtr<nsWindow> mWindow;
+  nsRefPtr<nsWindow> mWindow;
 };
 
 // Manages the current working path.
@@ -130,7 +130,7 @@ private:
         mWindow->PickerClosed();
     }
   }
-  RefPtr<nsWindow> mWindow;
+  nsRefPtr<nsWindow> mWindow;
 };
 
 // Manages a simple callback timer
@@ -439,7 +439,7 @@ HRESULT
 nsFilePicker::OnTypeChange(IFileDialog *pfd)
 {
   // Failures here result in errors due to security concerns.
-  RefPtr<IOleWindow> win;
+  nsRefPtr<IOleWindow> win;
   pfd->QueryInterface(IID_IOleWindow, getter_AddRefs(win));
   if (!win) {
     NS_ERROR("Could not retrieve the IOleWindow interface for IFileDialog.");
@@ -573,7 +573,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 bool
 nsFilePicker::ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError)
 {
-  RefPtr<IFileOpenDialog> dialog;
+  nsRefPtr<IFileOpenDialog> dialog;
   if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC,
                               IID_IFileOpenDialog,
                               getter_AddRefs(dialog)))) {
@@ -592,7 +592,7 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError)
   // initial strings
   dialog->SetTitle(mTitle.get());
   if (!aInitialDir.IsEmpty()) {
-    RefPtr<IShellItem> folder;
+    nsRefPtr<IShellItem> folder;
     if (SUCCEEDED(
           WinUtils::SHCreateItemFromParsingName(aInitialDir.get(), nullptr,
                                                 IID_IShellItem,
@@ -605,7 +605,7 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError)
     mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : nullptr));
  
   // display
-  RefPtr<IShellItem> item;
+  nsRefPtr<IShellItem> item;
   if (FAILED(dialog->Show(adtw.get())) ||
       FAILED(dialog->GetResult(getter_AddRefs(item))) ||
       !item) {
@@ -618,8 +618,8 @@ nsFilePicker::ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError)
 
   // If the user chose a Win7 Library, resolve to the library's
   // default save folder.
-  RefPtr<IShellItem> folderPath;
-  RefPtr<IShellLibrary> shellLib;
+  nsRefPtr<IShellItem> folderPath;
+  nsRefPtr<IShellLibrary> shellLib;
   CoCreateInstance(CLSID_ShellLibrary, nullptr, CLSCTX_INPROC,
                    IID_IShellLibrary, getter_AddRefs(shellLib));
   if (shellLib &&
@@ -865,7 +865,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
 bool
 nsFilePicker::ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError)
 {
-  RefPtr<IFileDialog> dialog;
+  nsRefPtr<IFileDialog> dialog;
   if (mMode != modeSave) {
     if (FAILED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC,
                                 IID_IFileOpenDialog,
@@ -943,7 +943,7 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError)
 
   // initial location
   if (!aInitialDir.IsEmpty()) {
-    RefPtr<IShellItem> folder;
+    nsRefPtr<IShellItem> folder;
     if (SUCCEEDED(
           WinUtils::SHCreateItemFromParsingName(aInitialDir.get(), nullptr,
                                                 IID_IShellItem,
@@ -983,21 +983,21 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError)
 
   // single selection
   if (mMode != modeOpenMultiple) {
-    RefPtr<IShellItem> item;
+    nsRefPtr<IShellItem> item;
     if (FAILED(dialog->GetResult(getter_AddRefs(item))) || !item)
       return false;
     return WinUtils::GetShellItemPath(item, mUnicodeFile);
   }
 
   // multiple selection
-  RefPtr<IFileOpenDialog> openDlg;
+  nsRefPtr<IFileOpenDialog> openDlg;
   dialog->QueryInterface(IID_IFileOpenDialog, getter_AddRefs(openDlg));
   if (!openDlg) {
     // should not happen
     return false;
   }
 
-  RefPtr<IShellItemArray> items;
+  nsRefPtr<IShellItemArray> items;
   if (FAILED(openDlg->GetResults(getter_AddRefs(items))) || !items) {
     return false;
   }
@@ -1005,7 +1005,7 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError)
   DWORD count = 0;
   items->GetCount(&count);
   for (unsigned int idx = 0; idx < count; idx++) {
-    RefPtr<IShellItem> item;
+    nsRefPtr<IShellItem> item;
     nsAutoString str;
     if (SUCCEEDED(items->GetItemAt(idx, getter_AddRefs(item)))) {
       if (!WinUtils::GetShellItemPath(item, str))

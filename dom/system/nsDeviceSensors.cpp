@@ -245,7 +245,7 @@ nsDeviceSensors::FireDOMLightEvent(mozilla::dom::EventTarget* aTarget,
   init.mBubbles = true;
   init.mCancelable = false;
   init.mValue = aValue;
-  RefPtr<DeviceLightEvent> event =
+  nsRefPtr<DeviceLightEvent> event =
     DeviceLightEvent::Constructor(aTarget, NS_LITERAL_STRING("devicelight"), init);
 
   event->SetTrusted(true);
@@ -266,7 +266,7 @@ nsDeviceSensors::FireDOMProximityEvent(mozilla::dom::EventTarget* aTarget,
   init.mValue = aValue;
   init.mMin = aMin;
   init.mMax = aMax;
-  RefPtr<DeviceProximityEvent> event =
+  nsRefPtr<DeviceProximityEvent> event =
     DeviceProximityEvent::Constructor(aTarget,
                                       NS_LITERAL_STRING("deviceproximity"),
                                       init);
@@ -295,7 +295,7 @@ nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
   init.mBubbles = true;
   init.mCancelable = false;
   init.mNear = aNear;
-  RefPtr<UserProximityEvent> event =
+  nsRefPtr<UserProximityEvent> event =
     UserProximityEvent::Constructor(aTarget,
                                     NS_LITERAL_STRING("userproximity"),
                                     init);
@@ -320,7 +320,7 @@ nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
   init.mGamma.SetValue(aGamma);
   init.mAbsolute = true;
 
-  RefPtr<DeviceOrientationEvent> event =
+  nsRefPtr<DeviceOrientationEvent> event =
     DeviceOrientationEvent::Constructor(aTarget,
                                         NS_LITERAL_STRING("deviceorientation"),
                                         init);

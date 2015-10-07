@@ -23,7 +23,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/Monitor.h"            // for Monitor
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -162,8 +162,8 @@ private:
   bool mNeedsComposite;
   bool mIsObservingVsync;
   int32_t mVsyncNotificationsSkipped;
-  RefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
-  RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
+  nsRefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
+  nsRefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
 
@@ -357,8 +357,8 @@ public:
   struct LayerTreeState {
     LayerTreeState();
     ~LayerTreeState();
-    RefPtr<Layer> mRoot;
-    RefPtr<GeckoContentController> mController;
+    nsRefPtr<Layer> mRoot;
+    nsRefPtr<GeckoContentController> mController;
     CompositorParent* mParent;
     LayerManagerComposite* mLayerManager;
     // Pointer to the CrossProcessCompositorParent. Used by APZCs to share
@@ -370,8 +370,8 @@ public:
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
     bool mUpdatedPluginDataAvailable;
-    RefPtr<CompositorUpdateObserver> mLayerTreeReadyObserver;
-    RefPtr<CompositorUpdateObserver> mLayerTreeClearedObserver;
+    nsRefPtr<CompositorUpdateObserver> mLayerTreeReadyObserver;
+    nsRefPtr<CompositorUpdateObserver> mLayerTreeClearedObserver;
   };
 
   /**
@@ -442,9 +442,9 @@ protected:
 
   void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
-  RefPtr<LayerManagerComposite> mLayerManager;
-  RefPtr<Compositor> mCompositor;
-  RefPtr<AsyncCompositionManager> mCompositionManager;
+  nsRefPtr<LayerManagerComposite> mLayerManager;
+  nsRefPtr<Compositor> mCompositor;
+  nsRefPtr<AsyncCompositionManager> mCompositionManager;
   nsIWidget* mWidget;
   TimeStamp mTestTime;
   bool mIsTesting;
@@ -465,10 +465,10 @@ protected:
   bool mOverrideComposeReadiness;
   CancelableTask* mForceCompositionTask;
 
-  RefPtr<APZCTreeManager> mApzcTreeManager;
+  nsRefPtr<APZCTreeManager> mApzcTreeManager;
 
-  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-  RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
+  nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
+  nsRefPtr<CompositorVsyncScheduler> mCompositorScheduler;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

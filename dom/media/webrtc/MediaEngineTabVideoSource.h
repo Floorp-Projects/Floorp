@@ -55,21 +55,21 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     public:
       explicit StartRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
       NS_IMETHOD Run();
-      RefPtr<MediaEngineTabVideoSource> mVideoSource;
+      nsRefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
     class StopRunnable : public nsRunnable {
     public:
       explicit StopRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
       NS_IMETHOD Run();
-      RefPtr<MediaEngineTabVideoSource> mVideoSource;
+      nsRefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
     class InitRunnable : public nsRunnable {
     public:
       explicit InitRunnable(MediaEngineTabVideoSource *videoSource) : mVideoSource(videoSource) {}
       NS_IMETHOD Run();
-      RefPtr<MediaEngineTabVideoSource> mVideoSource;
+      nsRefPtr<MediaEngineTabVideoSource> mVideoSource;
     };
 
 protected:
@@ -84,7 +84,7 @@ private:
     ScopedFreePtr<unsigned char> mData;
     size_t mDataSize;
     nsCOMPtr<nsIDOMWindow> mWindow;
-    RefPtr<layers::CairoImage> mImage;
+    nsRefPtr<layers::CairoImage> mImage;
     nsCOMPtr<nsITimer> mTimer;
     Monitor mMonitor;
     nsCOMPtr<nsITabSource> mTabSource;

@@ -228,7 +228,7 @@ OpusTrackEncoder::GetMetadata()
     return nullptr;
   }
 
-  RefPtr<OpusMetadata> meta = new OpusMetadata();
+  nsRefPtr<OpusMetadata> meta = new OpusMetadata();
 
   mLookahead = 0;
   int error = opus_encoder_ctl(mEncoder, OPUS_GET_LOOKAHEAD(&mLookahead));
@@ -340,7 +340,7 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     iter.Next();
   }
 
-  RefPtr<EncodedFrame> audiodata = new EncodedFrame();
+  nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
   audiodata->SetFrameType(EncodedFrame::OPUS_AUDIO_FRAME);
   int framesInPCM = frameCopied;
   if (mResampler) {

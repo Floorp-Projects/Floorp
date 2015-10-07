@@ -88,7 +88,7 @@ GMPVideoEncoderParent::Close()
   // Let Shutdown mark us as dead so it knows if we had been alive
 
   // In case this is the last reference
-  RefPtr<GMPVideoEncoderParent> kungfudeathgrip(this);
+  nsRefPtr<GMPVideoEncoderParent> kungfudeathgrip(this);
   Release();
   Shutdown();
 }

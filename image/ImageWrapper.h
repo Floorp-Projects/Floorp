@@ -76,7 +76,7 @@ protected:
   }
 
 private:
-  RefPtr<Image> mInnerImage;
+  nsRefPtr<Image> mInnerImage;
 };
 
 } // namespace image

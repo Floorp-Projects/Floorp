@@ -75,7 +75,7 @@ protected: // data
 
   nsCOMPtr<nsIMIMEService> mMimeService;
 
-  nsTArray<RefPtr<ArchiveItem> > mFileList; // this must be populated
+  nsTArray<nsRefPtr<ArchiveItem> > mFileList; // this must be populated
   nsresult mStatus;
 };
 

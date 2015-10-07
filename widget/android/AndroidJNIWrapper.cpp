@@ -67,7 +67,7 @@ extern "C" {
     jclass foundClass;
     nsCOMPtr<nsIRunnable> runnable_ref(new GetGlobalClassRefRunnable(className,
                                                                      &foundClass));
-    RefPtr<mozilla::SyncRunnable> sr = new mozilla::SyncRunnable(runnable_ref);
+    nsRefPtr<mozilla::SyncRunnable> sr = new mozilla::SyncRunnable(runnable_ref);
     sr->DispatchToThread(mainThread);
     if (!foundClass)
       return nullptr;

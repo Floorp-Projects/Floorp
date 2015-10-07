@@ -136,7 +136,7 @@ protected:
   static const size_t MAX_PLUGIN_CRASHES = 100;
   nsTArray<PluginCrash> mPluginCrashes;
 
-  nsTArray<RefPtr<GMPCrashCallback>> mPluginCrashCallbacks;
+  nsTArray<nsRefPtr<GMPCrashCallback>> mPluginCrashCallbacks;
 };
 
 } // namespace gmp

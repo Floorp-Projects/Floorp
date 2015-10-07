@@ -28,7 +28,7 @@ public:
 
   void ClearTextureClient() { mTextureClient = nullptr; }
 protected:
-  RefPtr<TextureClient> mTextureClient;
+  nsRefPtr<TextureClient> mTextureClient;
 };
 
 TextureClientRecycleAllocator::TextureClientRecycleAllocator(CompositableForwarder* aAllocator)
@@ -67,7 +67,7 @@ public:
   }
 
 private:
-  RefPtr<TextureClient> mTextureClient;
+  nsRefPtr<TextureClient> mTextureClient;
   TextureFlags mFlags;
 };
 
@@ -85,7 +85,7 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
   MOZ_ASSERT(!(aTextureFlags & TextureFlags::RECYCLE));
   aTextureFlags = aTextureFlags | TextureFlags::RECYCLE; // Set recycle flag
 
-  RefPtr<TextureClientHolder> textureHolder;
+  nsRefPtr<TextureClientHolder> textureHolder;
 
   {
     MutexAutoLock lock(mLock);
@@ -109,7 +109,7 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
 
   if (!textureHolder) {
     // Allocate new TextureClient
-    RefPtr<TextureClient> texture = Allocate(aFormat, aSize, aSelector, aTextureFlags, aAllocFlags);
+    nsRefPtr<TextureClient> texture = Allocate(aFormat, aSize, aSelector, aTextureFlags, aAllocFlags);
     if (!texture) {
       return nullptr;
     }
@@ -122,7 +122,7 @@ TextureClientRecycleAllocator::CreateOrRecycle(gfx::SurfaceFormat aFormat,
     // Register TextureClient
     mInUseClients[textureHolder->GetTextureClient()] = textureHolder;
   }
-  RefPtr<TextureClient> client(textureHolder->GetTextureClient());
+  nsRefPtr<TextureClient> client(textureHolder->GetTextureClient());
 
   // Make sure the texture holds a reference to us, and ask it to call RecycleTextureClient when its
   // ref count drops to 1.
@@ -146,10 +146,10 @@ TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
 {
   // Clearing the recycle allocator drops a reference, so make sure we stay alive
   // for the duration of this function.
-  RefPtr<TextureClientRecycleAllocator> kungFuDeathGrip(this);
+  nsRefPtr<TextureClientRecycleAllocator> kungFuDeathGrip(this);
   aClient->SetRecycleAllocator(nullptr);
 
-  RefPtr<TextureClientHolder> textureHolder;
+  nsRefPtr<TextureClientHolder> textureHolder;
   {
     MutexAutoLock lock(mLock);
     if (mInUseClients.find(aClient) != mInUseClients.end()) {

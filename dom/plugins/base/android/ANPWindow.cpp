@@ -59,7 +59,7 @@ anp_window_requestFullScreen(NPP instance)
 {
   nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
-  RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
   if (!owner) {
     return;
   }
@@ -72,7 +72,7 @@ anp_window_exitFullScreen(NPP instance)
 {
   nsNPAPIPluginInstance* inst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
 
-  RefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = inst->GetOwner();
   if (!owner) {
     return;
   }

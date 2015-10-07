@@ -41,8 +41,8 @@ private:
   MozIsoDepTech(nsPIDOMWindow* aWindow, MozNFCTag& aNFCTag);
   virtual ~MozIsoDepTech();
 
-  RefPtr<nsPIDOMWindow> mWindow;
-  RefPtr<MozNFCTag> mTag;
+  nsRefPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<MozNFCTag> mTag;
 
   static const NFCTechType mTechnology;
 };

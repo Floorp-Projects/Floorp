@@ -35,7 +35,7 @@ void
 txResultRecycler::recycle(txAExprResult* aResult)
 {
     NS_ASSERTION(aResult->mRefCnt == 0, "In-use txAExprResult recycled");
-    RefPtr<txResultRecycler> kungFuDeathGrip;
+    nsRefPtr<txResultRecycler> kungFuDeathGrip;
     aResult->mRecycler.swap(kungFuDeathGrip);
 
     nsresult rv = NS_OK;

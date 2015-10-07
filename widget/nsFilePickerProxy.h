@@ -65,7 +65,7 @@ private:
     ~nsFilePickerProxy();
     void InitNative(nsIWidget*, const nsAString&) override;
 
-    nsTArray<RefPtr<mozilla::dom::File>> mDomfiles;
+    nsTArray<nsRefPtr<mozilla::dom::File>> mDomfiles;
     nsCOMPtr<nsIFilePickerShownCallback> mCallback;
 
     int16_t   mSelectedType;

@@ -1893,7 +1893,7 @@ IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
     return;
   }
 
-  RefPtr<nsWindow> kungFuDeathGrip(aWindow);
+  nsRefPtr<nsWindow> kungFuDeathGrip(aWindow);
 
   nsIntPoint point(0, 0);
 
@@ -1922,7 +1922,7 @@ IMMHandler::CreateTextRangeArray()
     "CreateTextRangeArray is called when we don't need to fire "
     "compositionchange event");
 
-  RefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
+  nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
   TextRange range;
   if (mCompositionString.IsEmpty()) {

@@ -32,7 +32,7 @@ public:
 private:
     virtual void ActorDestroy(ActorDestroyReason why) override;
 
-    RefPtr<gfxASurface> mDyingBackground;
+    nsRefPtr<gfxASurface> mDyingBackground;
 };
 
 /**

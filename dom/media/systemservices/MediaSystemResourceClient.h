@@ -12,7 +12,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/media/MediaSystemResourceTypes.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 
@@ -72,7 +72,7 @@ public:
 private:
   ~MediaSystemResourceClient();
 
-  RefPtr<MediaSystemResourceManager> mManager;
+  nsRefPtr<MediaSystemResourceManager> mManager;
   const MediaSystemResourceType mResourceType;
   const uint32_t mId;
 

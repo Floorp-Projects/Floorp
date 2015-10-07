@@ -22,7 +22,7 @@ ImageMemoryCounter::ImageMemoryCounter(Image* aImage,
   MOZ_ASSERT(aImage);
 
   // Extract metadata about the image.
-  RefPtr<ImageURL> imageURL(aImage->GetURI());
+  nsRefPtr<ImageURL> imageURL(aImage->GetURI());
   if (imageURL) {
     imageURL->GetSpec(mURI);
   }

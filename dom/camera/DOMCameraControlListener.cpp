@@ -53,7 +53,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    RefPtr<nsDOMCameraControl> camera = do_QueryObject(mDOMCameraControl.get());
+    nsRefPtr<nsDOMCameraControl> camera = do_QueryObject(mDOMCameraControl.get());
     if (!camera) {
       DOM_CAMERA_LOGE("do_QueryObject failed to get an nsDOMCameraControl\n");
       return NS_ERROR_INVALID_ARG;
@@ -195,7 +195,7 @@ DOMCameraControlListener::OnConfigurationChange(const CameraListenerConfiguratio
     void
     RunCallback(nsDOMCameraControl* aDOMCameraControl) override
     {
-      RefPtr<nsDOMCameraControl::DOMCameraConfiguration> config =
+      nsRefPtr<nsDOMCameraControl::DOMCameraConfiguration> config =
         new nsDOMCameraControl::DOMCameraConfiguration();
 
       switch (mConfiguration.mMode) {
@@ -429,7 +429,7 @@ DOMCameraControlListener::OnPoster(BlobImpl* aBlobImpl)
     }
 
   protected:
-    RefPtr<BlobImpl> mBlobImpl;
+    nsRefPtr<BlobImpl> mBlobImpl;
   };
 
   NS_DispatchToMainThread(new Callback(mDOMCameraControl, aBlobImpl));

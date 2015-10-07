@@ -97,7 +97,7 @@ nsScreenManagerProxy::ScreenForRect(int32_t inLeft,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<ScreenProxy> screen = new ScreenProxy(this, details);
+  nsRefPtr<ScreenProxy> screen = new ScreenProxy(this, details);
   NS_ADDREF(*outScreen = screen);
 
   return NS_OK;
@@ -132,7 +132,7 @@ nsScreenManagerProxy::ScreenForNativeWidget(void* aWidget,
   }
 
   ScreenCacheEntry newEntry;
-  RefPtr<ScreenProxy> screen = new ScreenProxy(this, details);
+  nsRefPtr<ScreenProxy> screen = new ScreenProxy(this, details);
 
   newEntry.mScreenProxy = screen;
   newEntry.mTabChild = tabChild;

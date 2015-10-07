@@ -89,7 +89,7 @@ protected:
 
   nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
 
-  RefPtr<DOMError> mError;
+  nsRefPtr<DOMError> mError;
 
   uint16_t mReadyState;
 

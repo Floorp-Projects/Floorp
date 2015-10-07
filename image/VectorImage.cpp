@@ -15,7 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsIDOMEvent.h"
 #include "nsIPresShell.h"
 #include "nsIStreamListener.h"
@@ -112,7 +112,7 @@ protected:
   }
 
   // Private data
-  const RefPtr<SVGDocumentWrapper> mDocWrapper;
+  const nsRefPtr<SVGDocumentWrapper> mDocWrapper;
   VectorImage* const mVectorImage;   // Raw pointer because it owns me.
   bool mHonoringInvalidations;
 };
@@ -152,7 +152,7 @@ public:
 
     // OnSVGDocumentParsed will release our owner's reference to us, so ensure
     // we stick around long enough to complete our work.
-    RefPtr<SVGParseCompleteListener> kungFuDeathGroup(this);
+    nsRefPtr<SVGParseCompleteListener> kungFuDeathGroup(this);
 
     mImage->OnSVGDocumentParsed();
   }
@@ -211,7 +211,7 @@ public:
 
     // OnSVGDocumentLoaded/OnSVGDocumentError will release our owner's reference
     // to us, so ensure we stick around long enough to complete our work.
-    RefPtr<SVGLoadEventListener> kungFuDeathGroup(this);
+    nsRefPtr<SVGLoadEventListener> kungFuDeathGroup(this);
 
     nsAutoString eventType;
     aEvent->GetType(eventType);
@@ -266,7 +266,7 @@ public:
                           const GraphicsFilter& aFilter,
                           const gfxMatrix& aTransform);
 private:
-  RefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
+  nsRefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
   const IntRect              mViewport;
   const IntSize                mSize;
   uint32_t                     mImageFlags;
@@ -726,14 +726,14 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
 
   // Make our surface the size of what will ultimately be drawn to it.
   // (either the full image size, or the restricted region)
-  RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+  nsRefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
     CreateOffscreenContentDrawTarget(aSize, SurfaceFormat::B8G8R8A8);
   if (!dt) {
     NS_ERROR("Could not create a DrawTarget");
     return nullptr;
   }
 
-  RefPtr<gfxContext> context = new gfxContext(dt);
+  nsRefPtr<gfxContext> context = new gfxContext(dt);
 
   auto result = Draw(context, aSize,
                      ImageRegion::Create(aSize),
@@ -862,9 +862,9 @@ VectorImage::Draw(gfxContext* aContext,
 
   // Draw.
   if (result) {
-    RefPtr<SourceSurface> surface = result.DrawableRef()->GetSurface();
+    nsRefPtr<SourceSurface> surface = result.DrawableRef()->GetSurface();
     if (surface) {
-      RefPtr<gfxDrawable> svgDrawable =
+      nsRefPtr<gfxDrawable> svgDrawable =
         new gfxSurfaceDrawable(surface, result.DrawableRef()->GetSize());
       Show(svgDrawable, params);
       return DrawResult::SUCCESS;
@@ -885,13 +885,13 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-  RefPtr<gfxDrawingCallback> cb =
+  nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
                            IntRect(IntPoint(0, 0), aParams.viewportSize),
                            aParams.size,
                            aParams.flags);
 
-  RefPtr<gfxDrawable> svgDrawable =
+  nsRefPtr<gfxDrawable> svgDrawable =
     new gfxCallbackDrawable(cb, aParams.size);
 
   bool bypassCache = bool(aParams.flags & FLAG_BYPASS_SURFACE_CACHE) ||
@@ -914,7 +914,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
 
   // Try to create an imgFrame, initializing the surface it contains by drawing
   // our gfxDrawable into it. (We use FILTER_NEAREST since we never scale here.)
-  RefPtr<imgFrame> frame = new imgFrame;
+  nsRefPtr<imgFrame> frame = new imgFrame;
   nsresult rv =
     frame->InitWithDrawable(svgDrawable, aParams.size,
                             SurfaceFormat::B8G8R8A8,
@@ -929,7 +929,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
 
   // Take a strong reference to the frame's surface and make sure it hasn't
   // already been purged by the operating system.
-  RefPtr<SourceSurface> surface = frame->GetSurface();
+  nsRefPtr<SourceSurface> surface = frame->GetSurface();
   if (!surface) {
     return Show(svgDrawable, aParams);
   }
@@ -941,7 +941,7 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
                                         aParams.animationTime));
 
   // Draw.
-  RefPtr<gfxDrawable> drawable =
+  nsRefPtr<gfxDrawable> drawable =
     new gfxSurfaceDrawable(surface, aParams.size);
   Show(drawable, aParams);
 

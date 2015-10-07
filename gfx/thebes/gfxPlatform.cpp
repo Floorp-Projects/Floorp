@@ -733,7 +733,7 @@ already_AddRefed<DrawTarget>
 gfxPlatform::CreateDrawTargetForSurface(gfxASurface *aSurface, const IntSize& aSize)
 {
   SurfaceFormat format = aSurface->GetSurfaceFormat();
-  RefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize, &format);
+  nsRefPtr<DrawTarget> drawTarget = Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(), aSize, &format);
   if (!drawTarget) {
     gfxWarning() << "gfxPlatform::CreateDrawTargetForSurface failed in CreateDrawTargetForCairoSurface";
     return nullptr;
@@ -771,7 +771,7 @@ cairo_user_data_key_t kSourceSurface;
  */
 struct SourceSurfaceUserData
 {
-  RefPtr<SourceSurface> mSrcSurface;
+  nsRefPtr<SourceSurface> mSrcSurface;
   BackendType mBackendType;
 };
 
@@ -784,7 +784,7 @@ UserDataKey kThebesSurface;
 
 struct DependentSourceSurfaceUserData
 {
-  RefPtr<gfxASurface> mSurface;
+  nsRefPtr<gfxASurface> mSurface;
 };
 
 void SourceSurfaceDestroyed(void *aData)
@@ -818,7 +818,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     SourceSurfaceUserData *surf = static_cast<SourceSurfaceUserData*>(userData);
 
     if (surf->mSrcSurface->IsValid() && surf->mBackendType == aTarget->GetBackendType()) {
-      RefPtr<SourceSurface> srcSurface(surf->mSrcSurface);
+      nsRefPtr<SourceSurface> srcSurface(surf->mSrcSurface);
       return srcSurface.forget();
     }
     // We can just continue here as when setting new user data the destroy
@@ -854,14 +854,14 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     return aTarget->CreateSourceSurfaceFromNativeSurface(surf);
   }
 
-  RefPtr<SourceSurface> srcBuffer;
+  nsRefPtr<SourceSurface> srcBuffer;
 
   // Currently no other DrawTarget types implement CreateSourceSurfaceFromNativeSurface
 
   if (!srcBuffer) {
     // If aSurface wraps data, we can create a SourceSurfaceRawData that wraps
     // the same data, then optimize it for aTarget:
-    RefPtr<DataSourceSurface> surf = GetWrappedDataSourceSurface(aSurface);
+    nsRefPtr<DataSourceSurface> surf = GetWrappedDataSourceSurface(aSurface);
     if (surf) {
       srcBuffer = aTarget->OptimizeSourceSurface(surf);
       if (srcBuffer == surf) {
@@ -897,7 +897,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     surf.mType = NativeSurfaceType::CAIRO_SURFACE;
     surf.mSurface = aSurface->CairoSurface();
     surf.mSize = aSurface->GetSize();
-    RefPtr<DrawTarget> drawTarget =
+    nsRefPtr<DrawTarget> drawTarget =
       Factory::CreateDrawTarget(BackendType::CAIRO, IntSize(1, 1), format);
     if (!drawTarget) {
       gfxWarning() << "gfxPlatform::GetSourceSurfaceForSurface failed in CreateDrawTarget";
@@ -935,11 +935,11 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 already_AddRefed<DataSourceSurface>
 gfxPlatform::GetWrappedDataSourceSurface(gfxASurface* aSurface)
 {
-  RefPtr<gfxImageSurface> image = aSurface->GetAsImageSurface();
+  nsRefPtr<gfxImageSurface> image = aSurface->GetAsImageSurface();
   if (!image) {
     return nullptr;
   }
-  RefPtr<DataSourceSurface> result =
+  nsRefPtr<DataSourceSurface> result =
     Factory::CreateWrappingDataSourceSurface(image->Data(),
                                              image->Stride(),
                                              image->GetSize(),
@@ -1112,7 +1112,7 @@ gfxPlatform::GetSkiaGLGlue()
      * FIXME: This should be stored in TLS or something, since there needs to be one for each thread using it. As it
      * stands, this only works on the main thread.
      */
-    RefPtr<GLContext> glContext;
+    nsRefPtr<GLContext> glContext;
     glContext = GLContextProvider::CreateHeadless(CreateContextFlags::REQUIRE_COMPAT_PROFILE |
                                                   CreateContextFlags::ALLOW_OFFLINE_RENDERER);
     if (!glContext) {
@@ -1165,7 +1165,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
   // backends).
   if (aBackend == BackendType::CAIRO) {
-    RefPtr<gfxASurface> surf = CreateOffscreenSurface(aSize, SurfaceFormatToImageFormat(aFormat));
+    nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(aSize, SurfaceFormatToImageFormat(aFormat));
     if (!surf || surf->CairoStatus()) {
       return nullptr;
     }
@@ -1180,7 +1180,7 @@ already_AddRefed<DrawTarget>
 gfxPlatform::CreateOffscreenCanvasDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
   NS_ASSERTION(mPreferredCanvasBackend != BackendType::NONE, "No backend.");
-  RefPtr<DrawTarget> target = CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
+  nsRefPtr<DrawTarget> target = CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
   if (target ||
       mFallbackCanvasBackend == BackendType::NONE) {
     return target.forget();
@@ -1212,7 +1212,7 @@ gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize,
     backendType = BackendType::CAIRO;
   }
 
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(backendType,
+  nsRefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(backendType,
                                                            aData, aSize,
                                                            aStride, aFormat);
 
@@ -2039,7 +2039,7 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatform::CreateHardwareVsyncSource()
 {
   NS_WARNING("Hardware Vsync support not yet implemented. Falling back to software timers");
-  RefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
+  nsRefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
   return softwareVsync.forget();
 }
 

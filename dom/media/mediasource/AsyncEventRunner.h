@@ -27,7 +27,7 @@ public:
   }
 
 private:
-  RefPtr<T> mTarget;
+  nsRefPtr<T> mTarget;
   const char* mName;
 };
 

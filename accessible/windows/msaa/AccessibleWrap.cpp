@@ -833,7 +833,7 @@ AccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
     SelectedItems(&selectedItems);
 
     // 1) Create and initialize the enumeration
-    RefPtr<AccessibleEnumerator> pEnum = new AccessibleEnumerator(selectedItems);
+    nsRefPtr<AccessibleEnumerator> pEnum = new AccessibleEnumerator(selectedItems);
     pvarChildren->vt = VT_UNKNOWN;    // this must be VT_UNKNOWN for an IEnumVARIANT
     NS_ADDREF(pvarChildren->punkVal = pEnum);
   }

@@ -618,7 +618,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 rv = SubstituteText(aChild, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
 
-                RefPtr<nsTextNode> content =
+                nsRefPtr<nsTextNode> content =
                   new nsTextNode(mRoot->NodeInfo()->NodeInfoManager());
 
                 content->SetText(value, false);
@@ -819,7 +819,7 @@ nsXULContentBuilder::AddPersistentAttributes(Element* aTemplateNode,
         nsCOMPtr<nsIAtom> tag;
         int32_t nameSpaceID;
 
-        RefPtr<mozilla::dom::NodeInfo> ni =
+        nsRefPtr<mozilla::dom::NodeInfo> ni =
             aTemplateNode->GetExistingAttrNameFromQName(attribute);
         if (ni) {
             tag = ni->NameAtom();
@@ -1354,7 +1354,7 @@ nsXULContentBuilder::CreateElement(int32_t aNameSpaceID,
     if (! doc)
         return NS_ERROR_NOT_INITIALIZED;
 
-    RefPtr<mozilla::dom::NodeInfo> nodeInfo =
+    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo =
         doc->NodeInfoManager()->GetNodeInfo(aTag, nullptr, aNameSpaceID,
                                             nsIDOMNode::ELEMENT_NODE);
 

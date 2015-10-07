@@ -313,7 +313,7 @@ SpdyPush31TransactionBuffer::RequestHead()
 
 nsresult
 SpdyPush31TransactionBuffer::TakeSubTransactions(
-  nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+  nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

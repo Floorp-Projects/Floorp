@@ -483,7 +483,7 @@ protected:
    */
   nsCOMPtr<nsIRequest> mRequest;
 
-  RefPtr<nsExternalHelperAppService> mExtProtSvc;
+  nsRefPtr<nsExternalHelperAppService> mExtProtSvc;
 };
 
 #endif // nsExternalHelperAppService_h__

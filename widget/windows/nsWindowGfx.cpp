@@ -31,7 +31,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Tools.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
 #include "prmem.h"
@@ -312,7 +312,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     switch (GetLayerManager()->GetBackendType()) {
       case LayersBackend::LAYERS_BASIC:
         {
-          RefPtr<gfxASurface> targetSurface;
+          nsRefPtr<gfxASurface> targetSurface;
 
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
@@ -325,7 +325,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
 #endif
 
-          RefPtr<gfxWindowsSurface> targetSurfaceWin;
+          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
                IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)))
@@ -336,7 +336,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             targetSurface = targetSurfaceWin;
           }
 
-          RefPtr<gfxImageSurface> targetSurfaceImage;
+          nsRefPtr<gfxImageSurface> targetSurfaceImage;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
                IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
@@ -369,7 +369,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
           RECT paintRect;
           ::GetClientRect(mWnd, &paintRect);
-          RefPtr<DrawTarget> dt =
+          nsRefPtr<DrawTarget> dt =
             gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
                                                                    IntSize(paintRect.right - paintRect.left,
                                                                    paintRect.bottom - paintRect.top));
@@ -402,7 +402,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #endif
           }
 
-          RefPtr<gfxContext> thebesContext = new gfxContext(dt);
+          nsRefPtr<gfxContext> thebesContext = new gfxContext(dt);
 
           {
             AutoLayerManagerSetup
@@ -582,7 +582,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
              (aScaledSize.width == 0 && aScaledSize.height == 0));
 
   // Get the image data
-  RefPtr<SourceSurface> surface =
+  nsRefPtr<SourceSurface> surface =
     aContainer->GetFrame(imgIContainer::FRAME_CURRENT,
                          imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_NOT_AVAILABLE);
@@ -597,7 +597,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
     iconSize = frameSize;
   }
 
-  RefPtr<DataSourceSurface> dataSurface;
+  nsRefPtr<DataSourceSurface> dataSurface;
   bool mappedOK;
   DataSourceSurface::MappedSurface map;
 
@@ -609,7 +609,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
     mappedOK = dataSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map);
     NS_ENSURE_TRUE(mappedOK, NS_ERROR_FAILURE);
 
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
       Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                        map.mData,
                                        dataSurface->GetSize(),

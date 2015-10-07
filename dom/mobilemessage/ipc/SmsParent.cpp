@@ -53,9 +53,9 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     return nullptr;
   }
 
-  RefPtr<BlobImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
+  nsRefPtr<BlobImpl> blobImpl = static_cast<BlobParent*>(aAttachment.contentParent())->GetBlobImpl();
 
-  // RefPtr<File> needs to go out of scope before toObjectOrNull() is
+  // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
   // called because the static analysis thinks dereferencing XPCOM objects
   // can GC (because in some cases it can!), and a return statement with a
   // JSObject* type means that JSObject* is on the stack as a raw pointer
@@ -65,7 +65,7 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
     nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aContext));
     MOZ_ASSERT(global);
 
-    RefPtr<Blob> blob = Blob::Create(global, blobImpl);
+    nsRefPtr<Blob> blob = Blob::Create(global, blobImpl);
     if (!ToJSValue(aContext, blob, &content)) {
       return nullptr;
     }

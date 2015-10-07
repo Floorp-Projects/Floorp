@@ -135,7 +135,7 @@ RtspControllerChild::RecvOnMediaDataAvailable(
                        const uint32_t& offset,
                        InfallibleTArray<RtspMetadataParam>&& metaArray)
 {
-  RefPtr<RtspMetaData> meta = new RtspMetaData();
+  nsRefPtr<RtspMetaData> meta = new RtspMetaData();
   nsresult rv = meta->DeserializeRtspMetaData(metaArray);
   NS_ENSURE_SUCCESS(rv, true);
 
@@ -164,7 +164,7 @@ RtspControllerChild::RecvOnConnected(
                        InfallibleTArray<RtspMetadataParam>&& metaArray)
 {
   // Deserialize meta data.
-  RefPtr<RtspMetaData> meta = new RtspMetaData();
+  nsRefPtr<RtspMetaData> meta = new RtspMetaData();
   nsresult rv = meta->DeserializeRtspMetaData(metaArray);
   NS_ENSURE_SUCCESS(rv, true);
   meta->GetTotalTracks(&mTotalTracks);
@@ -304,7 +304,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<RtspControllerChild> mController;
+  nsRefPtr<RtspControllerChild> mController;
   IPCEvent mEvent;
   uint64_t mSeekTime;
 };

@@ -42,7 +42,7 @@ TouchManager::Destroy()
 }
 
 static void
-EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
+EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch,
                 nsIDocument* aLimitToDocument = nullptr)
 {
   nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->mTarget));
@@ -75,7 +75,7 @@ EvictTouchPoint(RefPtr<dom::Touch>& aTouch,
 }
 
 static PLDHashOperator
-AppendToTouchList(const uint32_t& aKey, RefPtr<dom::Touch>& aData, void *aTouchList)
+AppendToTouchList(const uint32_t& aKey, nsRefPtr<dom::Touch>& aData, void *aTouchList)
 {
   WidgetTouchEvent::TouchArray* touches =
     static_cast<WidgetTouchEvent::TouchArray*>(aTouchList);
@@ -142,7 +142,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         int32_t id = touch->Identifier();
         touch->mMessage = aEvent->mMessage;
 
-        RefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
+        nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
         if (!oldTouch) {
           touches.RemoveElementAt(i);
           continue;
@@ -207,7 +207,7 @@ TouchManager::PreHandleEvent(WidgetEvent* aEvent,
         touch->mChanged = true;
 
         int32_t id = touch->Identifier();
-        RefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
+        nsRefPtr<dom::Touch> oldTouch = gCaptureTouchList->GetWeak(id);
         if (!oldTouch) {
           continue;
         }

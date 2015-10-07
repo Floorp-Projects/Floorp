@@ -418,7 +418,7 @@ void WebMBufferedState::UpdateIndex(const nsTArray<MediaByteRange>& aRanges, Med
     while (length > 0) {
       static const uint32_t BLOCK_SIZE = 1048576;
       uint32_t block = std::min(length, BLOCK_SIZE);
-      RefPtr<MediaByteBuffer> bytes = aResource->MediaReadAt(offset, block);
+      nsRefPtr<MediaByteBuffer> bytes = aResource->MediaReadAt(offset, block);
       if (!bytes) {
         break;
       }

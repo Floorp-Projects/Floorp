@@ -151,7 +151,7 @@ private:
 
     ~PerThreadTaskGroup() { MOZ_COUNT_DTOR(PerThreadTaskGroup); }
 
-    RefPtr<AbstractThread> mThread;
+    nsRefPtr<AbstractThread> mThread;
     nsTArray<nsCOMPtr<nsIRunnable>> mStateChangeTasks;
     nsTArray<nsCOMPtr<nsIRunnable>> mRegularTasks;
     AbstractThread::DispatchFailureHandling mFailureHandling;
@@ -223,7 +223,7 @@ private:
 
   void DispatchTaskGroup(UniquePtr<PerThreadTaskGroup> aGroup)
   {
-    RefPtr<AbstractThread> thread = aGroup->mThread;
+    nsRefPtr<AbstractThread> thread = aGroup->mThread;
 
     AbstractThread::DispatchFailureHandling failureHandling = aGroup->mFailureHandling;
     AbstractThread::DispatchReason reason = mIsTailDispatcher ? AbstractThread::TailDispatch

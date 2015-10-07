@@ -61,7 +61,7 @@ NotifyPaintEvent::GetBoundingClientRect(nsIDOMClientRect** aResult)
 already_AddRefed<DOMRect>
 NotifyPaintEvent::BoundingClientRect()
 {
-  RefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
+  nsRefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
 
   if (mPresContext) {
     rect->SetLayoutRect(GetRegion().GetBounds());
@@ -81,12 +81,12 @@ already_AddRefed<DOMRectList>
 NotifyPaintEvent::ClientRects()
 {
   nsISupports* parent = ToSupports(this);
-  RefPtr<DOMRectList> rectList = new DOMRectList(parent);
+  nsRefPtr<DOMRectList> rectList = new DOMRectList(parent);
 
   nsRegion r = GetRegion();
   nsRegionRectIterator iter(r);
   for (const nsRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
-    RefPtr<DOMRect> rect = new DOMRect(parent);
+    nsRefPtr<DOMRect> rect = new DOMRect(parent);
     
     rect->SetLayoutRect(*rgnRect);
     rectList->Append(rect);
@@ -98,7 +98,7 @@ NotifyPaintEvent::ClientRects()
 NS_IMETHODIMP
 NotifyPaintEvent::GetPaintRequests(nsISupports** aResult)
 {
-  RefPtr<PaintRequestList> requests = PaintRequests();
+  nsRefPtr<PaintRequestList> requests = PaintRequests();
   requests.forget(aResult);
   return NS_OK;
 }
@@ -107,11 +107,11 @@ already_AddRefed<PaintRequestList>
 NotifyPaintEvent::PaintRequests()
 {
   Event* parent = this;
-  RefPtr<PaintRequestList> requests = new PaintRequestList(parent);
+  nsRefPtr<PaintRequestList> requests = new PaintRequestList(parent);
 
   if (nsContentUtils::IsCallerChrome()) {
     for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
-      RefPtr<PaintRequest> r = new PaintRequest(parent);
+      nsRefPtr<PaintRequest> r = new PaintRequest(parent);
       r->SetRequest(mInvalidateRequests[i]);
       requests->Append(r);
     }
@@ -169,7 +169,7 @@ NS_NewDOMNotifyPaintEvent(EventTarget* aOwner,
                           EventMessage aEventMessage,
                           nsInvalidateRequestList* aInvalidateRequests) 
 {
-  RefPtr<NotifyPaintEvent> it =
+  nsRefPtr<NotifyPaintEvent> it =
     new NotifyPaintEvent(aOwner, aPresContext, aEvent, aEventMessage,
                          aInvalidateRequests);
   return it.forget();

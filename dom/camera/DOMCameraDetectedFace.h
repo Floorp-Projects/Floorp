@@ -66,11 +66,11 @@ protected:
   uint32_t mId;
   uint32_t mScore;
 
-  RefPtr<dom::DOMRect> mBounds;
+  nsRefPtr<dom::DOMRect> mBounds;
 
-  RefPtr<dom::DOMPoint> mLeftEye;
-  RefPtr<dom::DOMPoint> mRightEye;
-  RefPtr<dom::DOMPoint> mMouth;
+  nsRefPtr<dom::DOMPoint> mLeftEye;
+  nsRefPtr<dom::DOMPoint> mRightEye;
+  nsRefPtr<dom::DOMPoint> mMouth;
 };
 
 } // namespace dom

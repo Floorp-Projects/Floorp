@@ -85,7 +85,7 @@ already_AddRefed<TextureClient>
 TextureClientPool::GetTextureClient()
 {
   // Try to fetch a client from the pool
-  RefPtr<TextureClient> textureClient;
+  nsRefPtr<TextureClient> textureClient;
   if (mTextureClients.size()) {
     mOutstandingClients++;
     textureClient = mTextureClients.top();

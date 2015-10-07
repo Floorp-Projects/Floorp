@@ -85,7 +85,7 @@ WriteStumbleOnThread::WriteJSON(Partition aPart)
     return;
   }
 
-  RefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter(nsGZFileWriter::Append);
+  nsRefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter(nsGZFileWriter::Append);
   rv = gzWriter->Init(tmpFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     STUMBLER_ERR("gzWriter init failed");
@@ -299,6 +299,6 @@ WriteStumbleOnThread::Upload()
     return;
   }
 
-  RefPtr<nsIRunnable> uploader = new UploadStumbleRunnable(inStream);
+  nsRefPtr<nsIRunnable> uploader = new UploadStumbleRunnable(inStream);
   NS_DispatchToMainThread(uploader);
 }

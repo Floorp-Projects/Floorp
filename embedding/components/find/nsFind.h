@@ -71,7 +71,7 @@ protected:
   // The iterator we use to move through the document:
   nsresult InitIterator(nsIDOMNode* aStartNode, int32_t aStartOffset,
                         nsIDOMNode* aEndNode, int32_t aEndOffset);
-  RefPtr<nsFindContentIterator> mIterator;
+  nsRefPtr<nsFindContentIterator> mIterator;
 };
 
 #endif // nsFind_h__

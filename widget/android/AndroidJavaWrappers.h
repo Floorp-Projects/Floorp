@@ -606,13 +606,13 @@ protected:
     double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
-    RefPtr<nsGeoPosition> mGeoPosition;
+    nsRefPtr<nsGeoPosition> mGeoPosition;
     int mConnectionType;
     bool mIsWifi;
     int mDHCPGateway;
     short mScreenOrientation;
     short mScreenAngle;
-    RefPtr<RefCountedJavaObject> mByteBuffer;
+    nsRefPtr<RefCountedJavaObject> mByteBuffer;
     int mWidth, mHeight;
     int mID;
     int mGamepadButton;

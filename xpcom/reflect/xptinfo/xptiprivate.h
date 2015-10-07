@@ -383,7 +383,7 @@ private:
 
 private:
     xptiInterfaceEntry* mEntry;
-    RefPtr<xptiInterfaceInfo> mParent;
+    nsRefPtr<xptiInterfaceInfo> mParent;
 };
 
 /***************************************************************************/

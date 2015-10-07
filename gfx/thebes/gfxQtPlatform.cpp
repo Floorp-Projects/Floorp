@@ -92,7 +92,7 @@ already_AddRefed<gfxASurface>
 gfxQtPlatform::CreateOffscreenSurface(const IntSize& aSize,
                                       gfxImageFormat aFormat)
 {
-    RefPtr<gfxASurface> newSurface =
+    nsRefPtr<gfxASurface> newSurface =
         new gfxImageSurface(aSize, aFormat);
 
     return newSurface.forget();

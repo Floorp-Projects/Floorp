@@ -68,7 +68,7 @@ DeleteTextTxn::DoTransaction()
 
   // Only set selection to deletion point if editor gives permission
   if (mEditor.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditor.GetSelection();
+    nsRefPtr<Selection> selection = mEditor.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     res = selection->Collapse(mCharData, mOffset);
     NS_ASSERTION(NS_SUCCEEDED(res),

@@ -178,7 +178,7 @@ nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-RefPtr<ShutdownPromise>
+nsRefPtr<ShutdownPromise>
 GStreamerReader::Shutdown()
 {
   ResetDecode();
@@ -820,7 +820,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   }
 #endif
 
-  RefPtr<PlanarYCbCrImage> image = GetImageFromBuffer(buffer);
+  nsRefPtr<PlanarYCbCrImage> image = GetImageFromBuffer(buffer);
   if (!image) {
     /* Ugh, upstream is not calling gst_pad_alloc_buffer(). Fallback to
      * allocating a PlanarYCbCrImage backed GstBuffer here and memcpy.
@@ -832,7 +832,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   }
 
   int64_t offset = mResource.Tell(); // Estimate location in media.
-  RefPtr<VideoData> video = VideoData::CreateFromImage(mInfo.mVideo,
+  nsRefPtr<VideoData> video = VideoData::CreateFromImage(mInfo.mVideo,
                                                          mDecoder->GetImageContainer(),
                                                          offset, timestamp, duration,
                                                          static_cast<Image*>(image.get()),
@@ -844,7 +844,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   return true;
 }
 
-RefPtr<MediaDecoderReader::SeekPromise>
+nsRefPtr<MediaDecoderReader::SeekPromise>
 GStreamerReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -1288,7 +1288,7 @@ void GStreamerReader::NotifyDataArrivedInternal(uint32_t aLength,
 
   IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
   for (const auto& interval : intervals) {
-    RefPtr<MediaByteBuffer> bytes =
+    nsRefPtr<MediaByteBuffer> bytes =
       mResource.MediaReadAt(interval.mStart, interval.Length());
     NS_ENSURE_TRUE_VOID(bytes);
     mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);
@@ -1458,9 +1458,9 @@ void GStreamerReader::ImageDataFromVideoFrame(GstVideoFrame *aFrame,
   aData->mCrSkip = GST_VIDEO_FRAME_COMP_PSTRIDE(aFrame, 2) - 1;
 }
 
-RefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffer)
+nsRefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffer)
 {
-  RefPtr<PlanarYCbCrImage> image = nullptr;
+  nsRefPtr<PlanarYCbCrImage> image = nullptr;
 
   if (gst_buffer_n_memory(aBuffer) == 1) {
     GstMemory* mem = gst_buffer_peek_memory(aBuffer, 0);
@@ -1481,7 +1481,7 @@ RefPtr<PlanarYCbCrImage> GStreamerReader::GetImageFromBuffer(GstBuffer* aBuffer)
 
 void GStreamerReader::CopyIntoImageBuffer(GstBuffer* aBuffer,
                                           GstBuffer** aOutBuffer,
-                                          RefPtr<PlanarYCbCrImage> &image)
+                                          nsRefPtr<PlanarYCbCrImage> &image)
 {
   *aOutBuffer = gst_buffer_new_allocate(mAllocator, gst_buffer_get_size(aBuffer), nullptr);
   GstMemory *mem = gst_buffer_peek_memory(*aOutBuffer, 0);

@@ -140,7 +140,7 @@ protected:
   ~DOMSVGPreserveAspectRatio();
 
   SVGAnimatedPreserveAspectRatio* mVal; // kept alive because it belongs to mSVGElement
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
   const bool mIsBaseValue;
 };
 

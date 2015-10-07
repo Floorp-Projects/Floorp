@@ -383,7 +383,7 @@ protected:
     bool                         mSOCKSProxyRemoteDNS;
     bool                         mProxyOverTLS;
 
-    RefPtr<nsPACMan>           mPACMan;  // non-null if we are using PAC
+    nsRefPtr<nsPACMan>           mPACMan;  // non-null if we are using PAC
     nsCOMPtr<nsISystemProxySettings> mSystemProxySettings;
 
     PRTime                       mSessionStart;

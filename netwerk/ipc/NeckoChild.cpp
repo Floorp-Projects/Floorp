@@ -314,7 +314,7 @@ NeckoChild::RecvAsyncAuthPromptForNestedFrame(const TabId& aNestedFrameId,
                                               const nsString& aRealm,
                                               const uint64_t& aCallbackId)
 {
-  RefPtr<dom::TabChild> tabChild = dom::TabChild::FindTabChild(aNestedFrameId);
+  nsRefPtr<dom::TabChild> tabChild = dom::TabChild::FindTabChild(aNestedFrameId);
   if (!tabChild) {
     MOZ_CRASH();
     return false;

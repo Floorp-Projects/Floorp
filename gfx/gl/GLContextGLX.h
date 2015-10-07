@@ -80,7 +80,7 @@ private:
 
     GLXLibrary* mGLX;
 
-    RefPtr<gfxXlibSurface> mPixmap;
+    nsRefPtr<gfxXlibSurface> mPixmap;
     bool mOwnsContext;
 };
 

@@ -216,7 +216,7 @@ class BackgroundDatabaseChild;
 class BackgroundRequestChildBase
 {
 protected:
-  RefPtr<IDBRequest> mRequest;
+  nsRefPtr<IDBRequest> mRequest;
 
 private:
   bool mActorDestroyed;
@@ -266,7 +266,7 @@ class BackgroundFactoryRequestChild final
   friend class PermissionRequestChild;
   friend class PermissionRequestParent;
 
-  RefPtr<IDBFactory> mFactory;
+  nsRefPtr<IDBFactory> mFactory;
   const uint64_t mRequestedVersion;
   const bool mIsDeleteOp;
 
@@ -315,7 +315,7 @@ class BackgroundDatabaseChild final
   friend class IDBDatabase;
 
   nsAutoPtr<DatabaseSpec> mSpec;
-  RefPtr<IDBDatabase> mTemporaryStrongDatabase;
+  nsRefPtr<IDBDatabase> mTemporaryStrongDatabase;
   BackgroundFactoryRequestChild* mOpenRequestActor;
   IDBDatabase* mDatabase;
 
@@ -446,7 +446,7 @@ class BackgroundDatabaseRequestChild final
   friend class BackgroundDatabaseChild;
   friend class IDBDatabase;
 
-  RefPtr<IDBDatabase> mDatabase;
+  nsRefPtr<IDBDatabase> mDatabase;
 
 private:
   // Only created by IDBDatabase.
@@ -476,7 +476,7 @@ class BackgroundTransactionBase
   // mTemporaryStrongTransaction is strong and is only valid until the end of
   // NoteComplete() member function or until the NoteActorDestroyed() member
   // function is called.
-  RefPtr<IDBTransaction> mTemporaryStrongTransaction;
+  nsRefPtr<IDBTransaction> mTemporaryStrongTransaction;
 
 protected:
   // mTransaction is weak and is valid until the NoteActorDestroyed() member
@@ -653,7 +653,7 @@ class BackgroundRequestChild final
   friend class BackgroundVersionChangeTransactionChild;
   friend class IDBTransaction;
 
-  RefPtr<IDBTransaction> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
 
 private:
   // Only created by IDBTransaction.
@@ -719,8 +719,8 @@ class BackgroundCursorChild final
   IDBCursor* mCursor;
 
   // These are only set while a request is in progress.
-  RefPtr<IDBRequest> mStrongRequest;
-  RefPtr<IDBCursor> mStrongCursor;
+  nsRefPtr<IDBRequest> mStrongRequest;
+  nsRefPtr<IDBCursor> mStrongCursor;
 
   Direction mDirection;
 

@@ -856,7 +856,7 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
     b.mPlanes[i].mOffset = b.mPlanes[i].mSkip = 0;
   }
 
-  RefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
+  nsRefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
                                             mDecoder->GetImageContainer(),
                                             mResource.Tell(),
                                             time,
@@ -1394,7 +1394,7 @@ nsresult OggReader::SeekInUnbuffered(int64_t aTarget,
   return SeekBisection(seekTarget, k, SEEK_FUZZ_USECS);
 }
 
-RefPtr<MediaDecoderReader::SeekPromise>
+nsRefPtr<MediaDecoderReader::SeekPromise>
 OggReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   nsresult res = SeekInternal(aTarget, aEndTime);
@@ -1470,7 +1470,7 @@ nsresult OggReader::SeekInternal(int64_t aTarget, int64_t aEndTime)
     // keyframe.
     VideoData* v;
     while ((v = mVideoQueue.PeekFront()) && !v->mKeyframe) {
-      RefPtr<VideoData> releaseMe = mVideoQueue.PopFront();
+      nsRefPtr<VideoData> releaseMe = mVideoQueue.PopFront();
     }
     if (mVideoQueue.GetSize() == 0) {
       // We didn't find a keyframe in the frames already here, so decode

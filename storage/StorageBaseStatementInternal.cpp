@@ -52,8 +52,8 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<StorageBaseStatementInternal> mStatement;
-  RefPtr<Connection> mConnection;
+  nsRefPtr<StorageBaseStatementInternal> mStatement;
+  nsRefPtr<Connection> mConnection;
 };
 
 /**
@@ -78,7 +78,7 @@ public:
    *        responsibility for the instance and all other references to it
    *        should be forgotten.
    */
-  LastDitchSqliteStatementFinalizer(RefPtr<Connection> &aConnection,
+  LastDitchSqliteStatementFinalizer(nsRefPtr<Connection> &aConnection,
                                     sqlite3_stmt *aStatement)
   : mConnection(aConnection)
   , mAsyncStatement(aStatement)
@@ -101,7 +101,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<Connection> mConnection;
+  nsRefPtr<Connection> mConnection;
   sqlite3_stmt *mAsyncStatement;
 };
 

@@ -248,7 +248,7 @@ nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocI
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
   NS_ASSERTION(doc, "Must have a document!");
-  RefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(doc);
+  nsRefPtr<nsXBLDocumentInfo> docInfo = new nsXBLDocumentInfo(doc);
 
   while (1) {
     uint8_t flags;

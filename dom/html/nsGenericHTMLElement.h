@@ -337,7 +337,7 @@ public:
    * Pass a reference to the image request, since the method may change the
    * value and we want to use the updated value.
    */
-  nsSize GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest);
+  nsSize GetWidthHeightForImage(nsRefPtr<imgRequestProxy>& aImageRequest);
 
   // XPIDL methods
   NS_FORWARD_NSIDOMNODE_TO_NSINODE

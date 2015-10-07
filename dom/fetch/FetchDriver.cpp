@@ -235,7 +235,7 @@ FetchDriver::BasicFetch()
 
   if (scheme.LowerCaseEqualsLiteral("about")) {
     if (url.EqualsLiteral("about:blank")) {
-      RefPtr<InternalResponse> response =
+      nsRefPtr<InternalResponse> response =
         new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
       ErrorResult result;
       response->Headers()->Append(NS_LITERAL_CSTRING("content-type"),
@@ -257,7 +257,7 @@ FetchDriver::BasicFetch()
   }
 
   if (scheme.LowerCaseEqualsLiteral("blob")) {
-    RefPtr<BlobImpl> blobImpl;
+    nsRefPtr<BlobImpl> blobImpl;
     rv = NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl));
     BlobImpl* blob = static_cast<BlobImpl*>(blobImpl.get());
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -265,7 +265,7 @@ FetchDriver::BasicFetch()
       return rv;
     }
 
-    RefPtr<InternalResponse> response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+    nsRefPtr<InternalResponse> response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ErrorResult result;
     uint64_t size = blob->GetSize(result);
     if (NS_WARN_IF(result.Failed())) {
@@ -338,7 +338,7 @@ FetchDriver::BasicFetch()
         NS_WARNING("Could not get content type from data channel");
       }
 
-      RefPtr<InternalResponse> response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+      nsRefPtr<InternalResponse> response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
       ErrorResult result;
       response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), contentType, result);
       if (NS_WARN_IF(result.Failed())) {
@@ -601,7 +601,7 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
     // If the request is allowed, it will start our original request
     // and our observer will be notified. On failure, our observer is notified
     // directly.
-    RefPtr<nsCORSListenerProxy> corsListener =
+    nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(this, mPrincipal, useCredentials);
     rv = corsListener->Init(chan, DataURIHandling::Allow);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -664,7 +664,7 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
 
   // FIXME(nsm): Handle mixed content check, step 7 of fetch.
 
-  RefPtr<InternalResponse> filteredResponse;
+  nsRefPtr<InternalResponse> filteredResponse;
   switch (mRequest->GetResponseTainting()) {
     case InternalRequest::RESPONSETAINT_BASIC:
       filteredResponse = aResponse->BasicResponse();
@@ -692,7 +692,7 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
 void
 FetchDriver::BeginResponse(InternalResponse* aResponse)
 {
-  RefPtr<InternalResponse> r = BeginAndGetFilteredResponse(aResponse, nullptr);
+  nsRefPtr<InternalResponse> r = BeginAndGetFilteredResponse(aResponse, nullptr);
   // Release the ref.
 }
 
@@ -711,7 +711,7 @@ nsresult
 FetchDriver::FailWithNetworkError()
 {
   workers::AssertIsOnMainThread();
-  RefPtr<InternalResponse> error = InternalResponse::NetworkError();
+  nsRefPtr<InternalResponse> error = InternalResponse::NetworkError();
   if (mObserver) {
     mObserver->OnResponseAvailable(error);
     mResponseAvailableCalled = true;
@@ -774,7 +774,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   MOZ_ASSERT(!mPipeOutputStream);
   MOZ_ASSERT(mObserver);
 
-  RefPtr<InternalResponse> response;
+  nsRefPtr<InternalResponse> response;
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   if (httpChannel) {
     uint32_t responseStatus;
@@ -785,7 +785,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
 
     response = new InternalResponse(responseStatus, statusText);
 
-    RefPtr<FillResponseHeaders> visitor = new FillResponseHeaders(response);
+    nsRefPtr<FillResponseHeaders> visitor = new FillResponseHeaders(response);
     rv = httpChannel->VisitResponseHeaders(visitor);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       NS_WARNING("Failed to visit all headers.");

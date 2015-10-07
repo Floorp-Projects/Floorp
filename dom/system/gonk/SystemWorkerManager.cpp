@@ -145,7 +145,7 @@ SystemWorkerManager::FactoryCreate()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  RefPtr<SystemWorkerManager> instance(gInstance);
+  nsRefPtr<SystemWorkerManager> instance(gInstance);
 
   if (!instance) {
     instance = new SystemWorkerManager();

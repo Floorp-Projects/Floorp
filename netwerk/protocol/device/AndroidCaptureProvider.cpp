@@ -275,7 +275,7 @@ nsresult AndroidCaptureProvider::Init(nsACString& aContentType,
   NS_ASSERTION(aParams->frameLimit == 0 || aParams->timeLimit == 0,
     "Cannot set both a frame limit and a time limit!");
 
-  RefPtr<AndroidCameraInputStream> stream;
+  nsRefPtr<AndroidCameraInputStream> stream;
 
   if (aContentType.EqualsLiteral("video/x-raw-yuv")) {
     stream = new AndroidCameraInputStream();
@@ -297,6 +297,6 @@ already_AddRefed<AndroidCaptureProvider> GetAndroidCaptureProvider() {
   if (!AndroidCaptureProvider::sInstance) {
     AndroidCaptureProvider::sInstance = new AndroidCaptureProvider();
   }
-  RefPtr<AndroidCaptureProvider> ret = AndroidCaptureProvider::sInstance;
+  nsRefPtr<AndroidCaptureProvider> ret = AndroidCaptureProvider::sInstance;
   return ret.forget();
 }

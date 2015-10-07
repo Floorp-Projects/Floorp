@@ -175,7 +175,7 @@ protected:
     mLastFireTime = now;
 
     LOG("[%p] ticking drivers...", this);
-    nsTArray<RefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
+    nsTArray<nsRefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
     // RD is short for RefreshDriver
     profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
     for (nsRefreshDriver* driver : drivers) {
@@ -200,7 +200,7 @@ protected:
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
 
-  nsTArray<RefPtr<nsRefreshDriver> > mRefreshDrivers;
+  nsTArray<nsRefPtr<nsRefreshDriver> > mRefreshDrivers;
 
   // useful callback for nsITimer-based derived classes, here
   // bacause of c++ protected shenanigans
@@ -269,7 +269,7 @@ protected:
 
   double mRateMilliseconds;
   TimeDuration mRateDuration;
-  RefPtr<nsITimer> mTimer;
+  nsRefPtr<nsITimer> mTimer;
 };
 
 /*
@@ -286,7 +286,7 @@ public:
     MOZ_ASSERT(XRE_IsParentProcess());
     MOZ_ASSERT(NS_IsMainThread());
     mVsyncObserver = new RefreshDriverVsyncObserver(this);
-    RefPtr<mozilla::gfx::VsyncSource> vsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
+    nsRefPtr<mozilla::gfx::VsyncSource> vsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
     MOZ_ALWAYS_TRUE(mVsyncDispatcher = vsyncSource->GetRefreshTimerVsyncDispatcher());
     mVsyncDispatcher->SetParentRefreshTimer(mVsyncObserver);
   }
@@ -439,13 +439,13 @@ private:
     Tick(vsyncJsNow, aTimeStamp);
   }
 
-  RefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
+  nsRefPtr<RefreshDriverVsyncObserver> mVsyncObserver;
   // Used for parent process.
-  RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
+  nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
   // Used for child process.
   // The mVsyncChild will be always available before VsncChild::ActorDestroy().
   // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
-  RefPtr<VsyncChild> mVsyncChild;
+  nsRefPtr<VsyncChild> mVsyncChild;
 }; // VsyncRefreshDriverTimer
 
 /**
@@ -581,7 +581,7 @@ protected:
     mLastFireEpoch = jsnow;
     mLastFireTime = now;
 
-    nsTArray<RefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
+    nsTArray<nsRefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
     if (mNextDriverIndex < drivers.Length() &&
         !drivers[mNextDriverIndex]->IsTestControllingRefreshesEnabled())
     {
@@ -675,7 +675,7 @@ CreateContentVsyncRefreshTimer(void*)
     return;
   }
   // Setup VsyncChildCreateCallback callback
-  RefPtr<nsIIPCBackgroundChildCreateCallback> callback = new VsyncChildCreateCallback();
+  nsRefPtr<nsIIPCBackgroundChildCreateCallback> callback = new VsyncChildCreateCallback();
   if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(callback))) {
     MOZ_CRASH("PVsync actor create failed!");
   }
@@ -1522,7 +1522,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
     ObserverArray::EndLimitedIterator etor(mObservers[i]);
     while (etor.HasMore()) {
-      RefPtr<nsARefreshObserver> obs = etor.GetNext();
+      nsRefPtr<nsARefreshObserver> obs = etor.GetNext();
       obs->WillRefresh(aNowTime);
 
       if (!mPresContext || !mPresContext->GetPresShell()) {
@@ -1692,7 +1692,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 #endif
 
     mViewManagerFlushIsPending = false;
-    RefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
+    nsRefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
     vm->ProcessPendingUpdates();
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {

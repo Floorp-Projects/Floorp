@@ -70,9 +70,9 @@ private:
   bool mClaimed;
 
 protected:
-  RefPtr<nsAHttpConnection> mConnection;
+  nsRefPtr<nsAHttpConnection> mConnection;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-  RefPtr<nsHttpConnectionInfo> mConnectionInfo;
+  nsRefPtr<nsHttpConnectionInfo> mConnectionInfo;
   nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
 };
 

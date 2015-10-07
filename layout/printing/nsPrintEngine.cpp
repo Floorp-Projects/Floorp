@@ -203,7 +203,7 @@ public:
 
   void Disconnect() { mPrintEngine = nullptr; }
 protected:
-  RefPtr<nsPrintEngine> mPrintEngine;
+  nsRefPtr<nsPrintEngine> mPrintEngine;
   bool                    mSuppressed;
 };
 
@@ -404,7 +404,7 @@ nsPrintEngine::CommonPrint(bool                    aIsPrintPreview,
                            nsIPrintSettings*       aPrintSettings,
                            nsIWebProgressListener* aWebProgressListener,
                            nsIDOMDocument* aDoc) {
-  RefPtr<nsPrintEngine> kungfuDeathGrip = this;
+  nsRefPtr<nsPrintEngine> kungfuDeathGrip = this;
   nsresult rv = DoCommonPrint(aIsPrintPreview, aPrintSettings,
                               aWebProgressListener, aDoc);
   if (NS_FAILED(rv)) {
@@ -1537,7 +1537,7 @@ nsPrintEngine::FirePrintingErrorEvent(nsresult aPrintError)
                          resultVariant);
   event->SetTrusted(true);
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(doc, event);
   asyncDispatcher->mOnlyChromeDispatch = true;
   asyncDispatcher->RunDOMEventWhenSafe();
@@ -1930,7 +1930,7 @@ nsPrintEngine::UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
 {
   nsCOMPtr<nsIPresShell> displayShell = aPO->mDocShell->GetPresShell();
   // Transfer Selection Ranges to the new Print PresShell
-  RefPtr<Selection> selection, selectionPS;
+  nsRefPtr<Selection> selection, selectionPS;
   // It's okay if there is no display shell, just skip copying the selection
   if (displayShell) {
     selection = displayShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
@@ -2193,7 +2193,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
         fprintf(fd, "Title: %s\n", docStr.get());
         fprintf(fd, "URL:   %s\n", urlStr.get());
         fprintf(fd, "--------------- Frames ----------------\n");
-        //RefPtr<gfxContext> renderingContext =
+        //nsRefPtr<gfxContext> renderingContext =
         //  mPrt->mPrintDocDC->CreateRenderingContext();
         RootFrameList(aPO->mPresContext, fd, 0);
         //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
@@ -2336,7 +2336,7 @@ CloneRangeToSelection(nsRange* aRange, nsIDocument* aDoc,
   nsCOMPtr<nsINode> newStartNode = do_QueryInterface(newStart);
   NS_ENSURE_TRUE_VOID(newStartNode);
 
-  RefPtr<nsRange> range = new nsRange(newStartNode);
+  nsRefPtr<nsRange> range = new nsRange(newStartNode);
   nsresult rv = range->SetStart(newStartNode, startOffset);
   NS_ENSURE_SUCCESS_VOID(rv);
   rv = range->SetEnd(newEnd, endOffset);
@@ -2351,9 +2351,9 @@ static nsresult CloneSelection(nsIDocument* aOrigDoc, nsIDocument* aDoc)
   nsIPresShell* shell = aDoc->GetShell();
   NS_ENSURE_STATE(origShell && shell);
 
-  RefPtr<Selection> origSelection =
+  nsRefPtr<Selection> origSelection =
     origShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
-  RefPtr<Selection> selection =
+  nsRefPtr<Selection> selection =
     shell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_STATE(origSelection && selection);
 
@@ -2436,7 +2436,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
         // mPrintDC must have positive width and height for this call
 
         // CreateRenderingContext can fail for large dimensions
-        RefPtr<gfxContext> gCtx = mPrt->mPrintDC->CreateRenderingContext();
+        nsRefPtr<gfxContext> gCtx = mPrt->mPrintDC->CreateRenderingContext();
         NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
 
         nsRenderingContext rc(gCtx);
@@ -2450,7 +2450,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
         nsRect    startRect;
         nsRect    endRect;
 
-        RefPtr<Selection> selectionPS =
+        nsRefPtr<Selection> selectionPS =
           poPresShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
 
         rv = GetPageRangeForSelection(poPresShell, poPresContext, rc, selectionPS, pageSequence,
@@ -2576,7 +2576,7 @@ DocHasPrintCallbackCanvas(nsIDocument* aDoc, void* aData)
   if (!root) {
     return true;
   }
-  RefPtr<nsContentList> canvases = NS_GetContentList(root,
+  nsRefPtr<nsContentList> canvases = NS_GetContentList(root,
                                                        kNameSpaceID_XHTML,
                                                        NS_LITERAL_STRING("canvas"));
   uint32_t canvasCount = canvases->Length(true);
@@ -3503,7 +3503,7 @@ nsPrintEngine::StartPagePrintTimer(nsPrintObject* aPO)
     int32_t printPageDelay = 50;
     mPrt->mPrintSettings->GetPrintPageDelay(&printPageDelay);
 
-    RefPtr<nsPagePrintTimer> timer =
+    nsRefPtr<nsPagePrintTimer> timer =
       new nsPagePrintTimer(this, mDocViewerPrint, printPageDelay);
     timer.forget(&mPagePrintTimer);
   }
@@ -3744,7 +3744,7 @@ void DumpLayoutData(char*              aTitleStr,
     fprintf(fd, "URL:   %s\n", aURLStr?aURLStr:"");
     fprintf(fd, "--------------- Frames ----------------\n");
     fprintf(fd, "--------------- Frames ----------------\n");
-    //RefPtr<gfxContext> renderingContext =
+    //nsRefPtr<gfxContext> renderingContext =
     //  aDC->CreateRenderingContext();
     RootFrameList(aPresContext, fd, 0);
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);

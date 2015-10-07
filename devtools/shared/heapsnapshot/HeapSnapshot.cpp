@@ -88,7 +88,7 @@ HeapSnapshot::Create(JSContext* cx,
                      uint32_t size,
                      ErrorResult& rv)
 {
-  RefPtr<HeapSnapshot> snapshot = new HeapSnapshot(cx, global.GetAsSupports());
+  nsRefPtr<HeapSnapshot> snapshot = new HeapSnapshot(cx, global.GetAsSupports());
   if (!snapshot->init(buffer, size)) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -1369,7 +1369,7 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
   if (rv.Failed())
     return nullptr;
 
-  RefPtr<HeapSnapshot> snapshot = HeapSnapshot::Create(
+  nsRefPtr<HeapSnapshot> snapshot = HeapSnapshot::Create(
       cx, global, reinterpret_cast<const uint8_t*>(mm.address()), mm.size(), rv);
 
   if (!rv.Failed())

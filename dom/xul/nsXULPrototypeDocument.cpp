@@ -89,7 +89,7 @@ NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
 {
     *aResult = nullptr;
-    RefPtr<nsXULPrototypeDocument> doc =
+    nsRefPtr<nsXULPrototypeDocument> doc =
       new nsXULPrototypeDocument();
 
     nsresult rv = doc->Init();
@@ -149,7 +149,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     mRoot = new nsXULPrototypeElement();
 
     // mozilla::dom::NodeInfo table
-    nsTArray<RefPtr<mozilla::dom::NodeInfo>> nodeInfos;
+    nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> nodeInfos;
 
     tmp = aStream->Read32(&count);
     if (NS_FAILED(tmp)) {
@@ -181,7 +181,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
           rv = tmp;
         }
 
-        RefPtr<mozilla::dom::NodeInfo> nodeInfo;
+        nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
         // Using UINT16_MAX here as we don't know which nodeinfos will be
         // used for attributes and which for elements. And that doesn't really
         // matter.
@@ -203,7 +203,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
         }
 
         if ((nsXULPrototypeNode::Type)type == nsXULPrototypeNode::eType_PI) {
-            RefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
+            nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
 
             tmp = pi->Deserialize(aStream, this, mURI, &nodeInfos);
             if (NS_FAILED(tmp)) {
@@ -235,7 +235,7 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
 static nsresult
 GetNodeInfos(nsXULPrototypeElement* aPrototype,
-             nsTArray<RefPtr<mozilla::dom::NodeInfo>>& aArray)
+             nsTArray<nsRefPtr<mozilla::dom::NodeInfo>>& aArray)
 {
     if (aArray.IndexOf(aPrototype->mNodeInfo) == aArray.NoIndex) {
         aArray.AppendElement(aPrototype->mNodeInfo);
@@ -244,7 +244,7 @@ GetNodeInfos(nsXULPrototypeElement* aPrototype,
     // Search attributes
     uint32_t i;
     for (i = 0; i < aPrototype->mNumAttributes; ++i) {
-        RefPtr<mozilla::dom::NodeInfo> ni;
+        nsRefPtr<mozilla::dom::NodeInfo> ni;
         nsAttrName* name = &aPrototype->mAttributes[i].mName;
         if (name->IsAtom()) {
             ni = aPrototype->mNodeInfo->NodeInfoManager()->
@@ -312,7 +312,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 #endif
 
     // mozilla::dom::NodeInfo table
-    nsTArray<RefPtr<mozilla::dom::NodeInfo>> nodeInfos;
+    nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> nodeInfos;
     if (mRoot) {
       tmp = GetNodeInfos(mRoot, nodeInfos);
       if (NS_FAILED(tmp)) {
@@ -424,7 +424,7 @@ nsXULPrototypeDocument::AddProcessingInstruction(nsXULPrototypePI* aPI)
     return NS_OK;
 }
 
-const nsTArray<RefPtr<nsXULPrototypePI> >&
+const nsTArray<nsRefPtr<nsXULPrototypePI> >&
 nsXULPrototypeDocument::GetProcessingInstructions() const
 {
     return mProcessingInstructions;

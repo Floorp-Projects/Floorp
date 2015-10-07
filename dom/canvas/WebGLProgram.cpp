@@ -9,7 +9,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
@@ -71,10 +71,10 @@ ParseName(const nsCString& name, nsCString* const out_baseName,
 static void
 AddActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArray,
               const nsACString& baseUserName, const nsACString& baseMappedName,
-              std::vector<RefPtr<WebGLActiveInfo>>* activeInfoList,
+              std::vector<nsRefPtr<WebGLActiveInfo>>* activeInfoList,
               std::map<nsCString, const WebGLActiveInfo*>* infoLocMap)
 {
-    RefPtr<WebGLActiveInfo> info = new WebGLActiveInfo(webgl, elemCount, elemType,
+    nsRefPtr<WebGLActiveInfo> info = new WebGLActiveInfo(webgl, elemCount, elemType,
                                                        isArray, baseUserName,
                                                        baseMappedName);
     activeInfoList->push_back(info);
@@ -85,9 +85,9 @@ AddActiveInfo(WebGLContext* webgl, GLint elemCount, GLenum elemType, bool isArra
 static void
 AddActiveBlockInfo(const nsACString& baseUserName,
                    const nsACString& baseMappedName,
-                   std::vector<RefPtr<webgl::UniformBlockInfo>>* activeInfoList)
+                   std::vector<nsRefPtr<webgl::UniformBlockInfo>>* activeInfoList)
 {
-    RefPtr<webgl::UniformBlockInfo> info = new webgl::UniformBlockInfo(baseUserName, baseMappedName);
+    nsRefPtr<webgl::UniformBlockInfo> info = new webgl::UniformBlockInfo(baseUserName, baseMappedName);
 
     activeInfoList->push_back(info);
 }
@@ -97,7 +97,7 @@ AddActiveBlockInfo(const nsACString& baseUserName,
 static already_AddRefed<const webgl::LinkedProgramInfo>
 QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 {
-    RefPtr<webgl::LinkedProgramInfo> info(new webgl::LinkedProgramInfo(prog));
+    nsRefPtr<webgl::LinkedProgramInfo> info(new webgl::LinkedProgramInfo(prog));
 
     GLuint maxAttribLenWithNull = 0;
     gl->fGetProgramiv(prog->mGLName, LOCAL_GL_ACTIVE_ATTRIBUTE_MAX_LENGTH,
@@ -425,7 +425,7 @@ already_AddRefed<WebGLActiveInfo>
 WebGLProgram::GetActiveAttrib(GLuint index) const
 {
     if (!mMostRecentLinkInfo) {
-        RefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
+        nsRefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
         return ret.forget();
     }
 
@@ -437,7 +437,7 @@ WebGLProgram::GetActiveAttrib(GLuint index) const
         return nullptr;
     }
 
-    RefPtr<WebGLActiveInfo> ret = activeList[index];
+    nsRefPtr<WebGLActiveInfo> ret = activeList[index];
     return ret.forget();
 }
 
@@ -446,7 +446,7 @@ WebGLProgram::GetActiveUniform(GLuint index) const
 {
     if (!mMostRecentLinkInfo) {
         // According to the spec, this can return null.
-        RefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
+        nsRefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
         return ret.forget();
     }
 
@@ -458,12 +458,12 @@ WebGLProgram::GetActiveUniform(GLuint index) const
         return nullptr;
     }
 
-    RefPtr<WebGLActiveInfo> ret = activeList[index];
+    nsRefPtr<WebGLActiveInfo> ret = activeList[index];
     return ret.forget();
 }
 
 void
-WebGLProgram::GetAttachedShaders(nsTArray<RefPtr<WebGLShader>>* const out) const
+WebGLProgram::GetAttachedShaders(nsTArray<nsRefPtr<WebGLShader>>* const out) const
 {
     out->TruncateLength(0);
 
@@ -598,7 +598,7 @@ WebGLProgram::GetUniformBlockIndex(const nsAString& userName_wide) const
     if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
         return LOCAL_GL_INVALID_INDEX;
 
-    RefPtr<const webgl::UniformBlockInfo> info;
+    nsRefPtr<const webgl::UniformBlockInfo> info;
     if (!LinkInfo()->FindUniformBlock(baseUserName, &info)) {
         return LOCAL_GL_INVALID_INDEX;
     }
@@ -753,7 +753,7 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
     if (loc == -1)
         return nullptr;
 
-    RefPtr<WebGLUniformLocation> locObj = new WebGLUniformLocation(mContext, LinkInfo(),
+    nsRefPtr<WebGLUniformLocation> locObj = new WebGLUniformLocation(mContext, LinkInfo(),
                                                                      loc, activeInfo);
     return locObj.forget();
 }
@@ -1025,7 +1025,7 @@ WebGLProgram::GetTransformFeedbackVarying(GLuint index)
     LinkInfo()->FindAttrib(varyingUserName, (const WebGLActiveInfo**) &info);
     MOZ_ASSERT(info);
 
-    RefPtr<WebGLActiveInfo> ret(info);
+    nsRefPtr<WebGLActiveInfo> ret(info);
     return ret.forget();
 }
 

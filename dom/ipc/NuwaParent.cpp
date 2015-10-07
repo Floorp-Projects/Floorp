@@ -20,7 +20,7 @@ namespace dom {
 
 /*static*/ NuwaParent*
 NuwaParent::Alloc() {
-  RefPtr<NuwaParent> actor = new NuwaParent();
+  nsRefPtr<NuwaParent> actor = new NuwaParent();
   return actor.forget().take();
 }
 
@@ -36,7 +36,7 @@ NuwaParent::ActorConstructed(mozilla::dom::PNuwaParent *aActor)
 /*static*/ bool
 NuwaParent::Dealloc(mozilla::dom::PNuwaParent *aActor)
 {
-  RefPtr<NuwaParent> actor = dont_AddRef(static_cast<NuwaParent*>(aActor));
+  nsRefPtr<NuwaParent> actor = dont_AddRef(static_cast<NuwaParent*>(aActor));
   return true;
 }
 
@@ -87,7 +87,7 @@ NuwaParent::CloneProtocol(Channel* aChannel,
                           ProtocolCloneContext* aCtx)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<NuwaParent> self = this;
+  nsRefPtr<NuwaParent> self = this;
 
   MonitorAutoLock lock(mMonitor);
 
@@ -107,7 +107,7 @@ NuwaParent::CloneProtocol(Channel* aChannel,
   while (!mClonedActor) {
     lock.Wait();
   }
-  RefPtr<NuwaParent> actor = mClonedActor;
+  nsRefPtr<NuwaParent> actor = mClonedActor;
   mClonedActor = nullptr;
 
   // mManager of the cloned actor is assigned after returning from this method.
@@ -143,12 +143,12 @@ NuwaParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnWorkerThread();
 
-  RefPtr<NuwaParent> self = this;
+  nsRefPtr<NuwaParent> self = this;
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([self] () -> void
   {
     // These extra nsRefPtr serve as kungFuDeathGrip to keep both objects from
     // deletion in breaking the ref cycle.
-    RefPtr<ContentParent> contentParent = self->mContentParent;
+    nsRefPtr<ContentParent> contentParent = self->mContentParent;
 
     contentParent->SetNuwaParent(nullptr);
     // Need to clear the ref to ContentParent on the main thread.
@@ -229,7 +229,7 @@ NuwaParent::ForkNewProcess(uint32_t& aPid,
 
   mNewProcessFds = Move(aFds);
 
-  RefPtr<NuwaParent> self = this;
+  nsRefPtr<NuwaParent> self = this;
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([self] () -> void
   {
     mozilla::unused << self->SendFork();

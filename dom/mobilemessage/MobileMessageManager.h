@@ -64,7 +64,7 @@ public:
   Send(const Sequence<nsString>& aNumbers,
        const nsAString& aText,
        const SmsSendParameters& aSendParams,
-       nsTArray<RefPtr<DOMRequest>>& aReturn,
+       nsTArray<nsRefPtr<DOMRequest>>& aReturn,
        ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>

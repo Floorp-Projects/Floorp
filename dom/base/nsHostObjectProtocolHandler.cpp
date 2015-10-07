@@ -208,7 +208,7 @@ class BlobURLsReporter final : public nsIMemoryReporter
   {
     EnumArg* envp = static_cast<EnumArg*>(aUserArg);
     nsCOMPtr<nsIDOMBlob> tmp = do_QueryInterface(aInfo->mObject);
-    RefPtr<mozilla::dom::Blob> blob = static_cast<mozilla::dom::Blob*>(tmp.get());
+    nsRefPtr<mozilla::dom::Blob> blob = static_cast<mozilla::dom::Blob*>(tmp.get());
 
     if (blob) {
       NS_NAMED_LITERAL_CSTRING
@@ -512,7 +512,7 @@ nsHostObjectProtocolHandler::NewURI(const nsACString& aSpec,
 
   DataInfo* info = GetDataInfo(aSpec);
 
-  RefPtr<nsHostObjectURI> uri =
+  nsRefPtr<nsHostObjectURI> uri =
     new nsHostObjectURI(info ? info->mPrincipal.get() : nullptr);
 
   rv = uri->SetSpec(aSpec);
@@ -671,7 +671,7 @@ NS_GetBlobForBlobURISpec(const nsACString& aSpec, BlobImpl** aBlob)
 nsresult
 NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 {
-  RefPtr<BlobImpl> blobImpl;
+  nsRefPtr<BlobImpl> blobImpl;
   ErrorResult rv;
   rv = NS_GetBlobForBlobURI(aURI, getter_AddRefs(blobImpl));
   if (NS_WARN_IF(rv.Failed())) {
@@ -706,7 +706,7 @@ nsFontTableProtocolHandler::NewURI(const nsACString& aSpec,
                                    nsIURI *aBaseURI,
                                    nsIURI **aResult)
 {
-  RefPtr<nsIURI> uri;
+  nsRefPtr<nsIURI> uri;
 
   // Either you got here via a ref or a fonttable: uri
   if (aSpec.Length() && aSpec.CharAt(0) == '#') {

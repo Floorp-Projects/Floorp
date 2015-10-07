@@ -28,7 +28,7 @@ protected:
     storage->Init(dataWillPersist);
   }
 
-  RefPtr<DataStorage> storage;
+  nsRefPtr<DataStorage> storage;
   bool dataWillPersist;
 };
 

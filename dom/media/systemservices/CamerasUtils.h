@@ -51,7 +51,7 @@ public:
 
 private:
   ~RunnableTask() {}
-  RefPtr<nsRunnable> mRunnable;
+  nsRefPtr<nsRunnable> mRunnable;
 };
 
 }

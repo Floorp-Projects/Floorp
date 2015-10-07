@@ -38,7 +38,7 @@ protected:
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  RefPtr<DocumentFragment> mContent;
+  nsRefPtr<DocumentFragment> mContent;
 };
 
 } // namespace dom

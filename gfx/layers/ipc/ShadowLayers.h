@@ -360,7 +360,7 @@ protected:
 
   bool InWorkerThread();
 
-  RefPtr<LayerTransactionChild> mShadowManager;
+  nsRefPtr<LayerTransactionChild> mShadowManager;
 
 private:
 

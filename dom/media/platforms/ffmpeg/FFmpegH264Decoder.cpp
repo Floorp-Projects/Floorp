@@ -41,7 +41,7 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   mExtraData->AppendElements(*aConfig.mExtraData);
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 FFmpegH264Decoder<LIBAV_VER>::Init()
 {
   if (NS_FAILED(InitDecoder())) {
@@ -186,7 +186,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
     b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
 
-    RefPtr<VideoData> v = VideoData::Create(info,
+    nsRefPtr<VideoData> v = VideoData::Create(info,
                                               mImageContainer,
                                               aSample->mOffset,
                                               pts,
@@ -289,7 +289,7 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
 
   size_t allocSize = pitch * decodeHeight + (chroma_pitch * chroma_height) * 2;
 
-  RefPtr<Image> image =
+  nsRefPtr<Image> image =
     mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
   PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image.get());
   uint8_t* buffer = ycbcr->AllocateAndGetNewBuffer(allocSize + 64);
@@ -333,9 +333,9 @@ nsresult
 FFmpegH264Decoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
   nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this, &FFmpegH264Decoder<LIBAV_VER>::DecodeFrame,
-      RefPtr<MediaRawData>(aSample)));
+      nsRefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
@@ -345,7 +345,7 @@ void
 FFmpegH264Decoder<LIBAV_VER>::ProcessDrain()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  RefPtr<MediaRawData> empty(new MediaRawData());
+  nsRefPtr<MediaRawData> empty(new MediaRawData());
   while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();

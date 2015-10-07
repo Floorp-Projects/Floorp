@@ -57,7 +57,7 @@ NS_INTERFACE_MAP_END
 already_AddRefed<SVGAnimatedString>
 nsSVGClass::ToDOMAnimatedString(nsSVGElement* aSVGElement)
 {
-  RefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
+  nsRefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
   return result.forget();
 }
 

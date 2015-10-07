@@ -70,7 +70,7 @@ protected:
   uint32_t mDiscardedFrames;
   bool mRateLimit;
   bool mTrackCreated;
-  RefPtr<FakeMediaStreamGraph> mFakeMediaStreamGraph;
+  nsRefPtr<FakeMediaStreamGraph> mFakeMediaStreamGraph;
 };
 
 } // namespace mozilla

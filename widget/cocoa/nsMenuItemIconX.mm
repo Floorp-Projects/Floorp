@@ -281,7 +281,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
   if (!loadGroup) return NS_ERROR_FAILURE;
 
-  RefPtr<imgLoader> loader = nsContentUtils::GetImgLoaderForDocument(document);
+  nsRefPtr<imgLoader> loader = nsContentUtils::GetImgLoaderForDocument(document);
   if (!loader) return NS_ERROR_FAILURE;
 
   if (!mSetIcon) {
@@ -401,7 +401,7 @@ nsMenuItemIconX::OnFrameComplete(imgIRequest* aRequest)
     mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
   }
 
-  RefPtr<SourceSurface> surface =
+  nsRefPtr<SourceSurface> surface =
     imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
                              imgIContainer::FLAG_SYNC_DECODE);
   if (!surface) {

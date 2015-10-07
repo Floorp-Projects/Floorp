@@ -31,7 +31,7 @@ VsyncSource::RemoveCompositorVsyncDispatcher(CompositorVsyncDispatcher* aComposi
   GetGlobalDisplay().RemoveCompositorVsyncDispatcher(aCompositorVsyncDispatcher);
 }
 
-RefPtr<RefreshTimerVsyncDispatcher>
+nsRefPtr<RefreshTimerVsyncDispatcher>
 VsyncSource::GetRefreshTimerVsyncDispatcher()
 {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -130,7 +130,7 @@ VsyncSource::Display::UpdateVsyncStatus()
   }
 }
 
-RefPtr<RefreshTimerVsyncDispatcher>
+nsRefPtr<RefreshTimerVsyncDispatcher>
 VsyncSource::Display::GetRefreshTimerVsyncDispatcher()
 {
   return mRefreshTimerVsyncDispatcher;

@@ -114,7 +114,7 @@ nsDOMFileReader::Init()
 /* static */ already_AddRefed<nsDOMFileReader>
 nsDOMFileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  RefPtr<nsDOMFileReader> fileReader = new nsDOMFileReader();
+  nsRefPtr<nsDOMFileReader> fileReader = new nsDOMFileReader();
 
   nsCOMPtr<nsPIDOMWindow> owner = do_QueryInterface(aGlobal.GetAsSupports());
   if (!owner) {
@@ -187,7 +187,7 @@ nsDOMFileReader::ReadAsArrayBuffer(nsIDOMBlob* aBlob, JSContext* aCx)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
+  nsRefPtr<Blob> blob = static_cast<Blob*>(aBlob);
   ReadAsArrayBuffer(aCx, *blob, rv);
   return rv.StealNSResult();
 }
@@ -197,7 +197,7 @@ nsDOMFileReader::ReadAsBinaryString(nsIDOMBlob* aBlob)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
+  nsRefPtr<Blob> blob = static_cast<Blob*>(aBlob);
   ReadAsBinaryString(*blob, rv);
   return rv.StealNSResult();
 }
@@ -208,7 +208,7 @@ nsDOMFileReader::ReadAsText(nsIDOMBlob* aBlob,
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
+  nsRefPtr<Blob> blob = static_cast<Blob*>(aBlob);
   ReadAsText(*blob, aCharset, rv);
   return rv.StealNSResult();
 }
@@ -218,7 +218,7 @@ nsDOMFileReader::ReadAsDataURL(nsIDOMBlob* aBlob)
 {
   NS_ENSURE_TRUE(aBlob, NS_ERROR_NULL_POINTER);
   ErrorResult rv;
-  RefPtr<Blob> blob = static_cast<Blob*>(aBlob);
+  nsRefPtr<Blob> blob = static_cast<Blob*>(aBlob);
   ReadAsDataURL(*blob, rv);
   return rv.StealNSResult();
 }
@@ -280,7 +280,7 @@ nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
   nsCOMPtr<nsIAsyncInputStream> stream;
   mAsyncStream.swap(stream);
 
-  RefPtr<Blob> blob;
+  nsRefPtr<Blob> blob;
   mBlob.swap(blob);
 
   aSuccessEvent = NS_LITERAL_STRING(LOAD_STR);

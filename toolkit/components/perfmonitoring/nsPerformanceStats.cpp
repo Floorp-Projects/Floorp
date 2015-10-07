@@ -529,7 +529,7 @@ nsresult nsPerformanceStatsService::UpdateTelemetry()
 
 NS_IMETHODIMP nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
-  RefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();
+  nsRefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();
   nsresult rv = snapshot->Init(cx, mProcessId);
   if (NS_FAILED(rv)) {
     return rv;

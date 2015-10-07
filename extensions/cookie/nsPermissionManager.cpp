@@ -284,7 +284,7 @@ public:
   }
 
 private:
-  RefPtr<nsPermissionManager> mPm;
+  nsRefPtr<nsPermissionManager> mPm;
   nsPermissionManager::DBOperationType mOperation;
   int64_t mID;
 };
@@ -625,7 +625,7 @@ public:
                         bool aRebuildOnSuccess);
 
 protected:
-  RefPtr<nsPermissionManager> mManager;
+  nsRefPtr<nsPermissionManager> mManager;
   bool mRebuildOnSuccess;
 };
 
@@ -642,7 +642,7 @@ NS_IMETHODIMP
 CloseDatabaseListener::Complete(nsresult, nsISupports*)
 {
   // Help breaking cycles
-  RefPtr<nsPermissionManager> manager = mManager.forget();
+  nsRefPtr<nsPermissionManager> manager = mManager.forget();
   if (mRebuildOnSuccess && !manager->mIsShuttingDown) {
     return manager->InitDB(true);
   }
@@ -674,7 +674,7 @@ public:
   explicit DeleteFromMozHostListener(nsPermissionManager* aManager);
 
 protected:
-  RefPtr<nsPermissionManager> mManager;
+  nsRefPtr<nsPermissionManager> mManager;
 };
 
 NS_IMPL_ISUPPORTS(DeleteFromMozHostListener, mozIStorageStatementCallback)
@@ -699,7 +699,7 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleError(mozIStorageError *)
 NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
 {
   // Help breaking cycles
-  RefPtr<nsPermissionManager> manager = mManager.forget();
+  nsRefPtr<nsPermissionManager> manager = mManager.forget();
 
   if (aReason == REASON_ERROR) {
     manager->CloseDB(true);
@@ -1576,7 +1576,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
 
   // When an entry already exists, PutEntry will return that, instead
   // of adding a new one
-  RefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
+  nsRefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
   PermissionHashKey* entry = mPermissionTable.PutEntry(key);
   if (!entry) return NS_ERROR_FAILURE;
   if (!entry->GetKey()) {
@@ -2131,7 +2131,7 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
 {
   PermissionHashKey* entry = nullptr;
 
-  RefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
+  nsRefPtr<PermissionKey> key = new PermissionKey(aPrincipal);
   entry = mPermissionTable.GetEntry(key);
 
   if (entry) {

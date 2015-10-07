@@ -694,7 +694,7 @@ nsComboboxControlFrame::NotifyGeometryChange()
       !mDelayedShowDropDown) {
     // Async because we're likely in a middle of a scroll here so
     // frame/view positions are in flux.
-    RefPtr<nsResizeDropdownAtFinalPosition> resize =
+    nsRefPtr<nsResizeDropdownAtFinalPosition> resize =
       new nsResizeDropdownAtFinalPosition(this);
     NS_DispatchToCurrentThread(resize);
   }
@@ -837,7 +837,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // First reflow our dropdown so that we know how tall we should be.
   ReflowDropdown(aPresContext, aReflowState);
-  RefPtr<nsResizeDropdownAtFinalPosition> resize =
+  nsRefPtr<nsResizeDropdownAtFinalPosition> resize =
     new nsResizeDropdownAtFinalPosition(this);
   if (NS_SUCCEEDED(aPresContext->PresShell()->PostReflowCallback(resize))) {
     // The reflow callback queue doesn't AddRef so we keep it alive until
@@ -992,7 +992,7 @@ nsComboboxControlFrame::RedisplayText(int32_t aIndex)
                  "If we happen to run our redisplay event now, we might kill "
                  "ourselves!");
 
-    RefPtr<RedisplayTextEvent> event = new RedisplayTextEvent(this);
+    nsRefPtr<RedisplayTextEvent> event = new RedisplayTextEvent(this);
     mRedisplayTextEvent = event;
     if (!nsContentUtils::AddScriptRunner(event))
       mRedisplayTextEvent.Forget();
@@ -1347,13 +1347,13 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   nsStyleSet *styleSet = shell->StyleSet();
 
   // create the style contexts for the anonymous block frame and text frame
-  RefPtr<nsStyleContext> styleContext;
+  nsRefPtr<nsStyleContext> styleContext;
   styleContext = styleSet->
     ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                              mStyleContext,
                              nsStyleSet::eSkipParentDisplayBasedStyleFixup);
 
-  RefPtr<nsStyleContext> textStyleContext;
+  nsRefPtr<nsStyleContext> textStyleContext;
   textStyleContext = styleSet->ResolveStyleForNonElement(mStyleContext);
 
   // Start by creating our anonymous block frame

@@ -69,7 +69,7 @@ public:
   {
   }
 
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -132,8 +132,8 @@ private:
     }
 
   private:
-    RefPtr<GMPAudioDecoder> mDecoder;
-    RefPtr<GMPInitDoneRunnable> mGMPInitDone;
+    nsRefPtr<GMPAudioDecoder> mDecoder;
+    nsRefPtr<GMPInitDoneRunnable> mGMPInitDone;
   };
   void GMPInitDone(GMPAudioDecoderProxy* aGMP);
 

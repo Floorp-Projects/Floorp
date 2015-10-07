@@ -74,7 +74,7 @@ private:
     , mSurfaceFlags(aSurfaceFlags)
   { }
 
-  RefPtr<RasterImage> mImage;
+  nsRefPtr<RasterImage> mImage;
   const Progress mProgress;
   const nsIntRect mInvalidRect;
   const SurfaceFlags mSurfaceFlags;
@@ -107,7 +107,7 @@ private:
     : mDecoder(aDecoder)
   { }
 
-  RefPtr<Decoder> mDecoder;
+  nsRefPtr<Decoder> mDecoder;
 };
 
 #ifdef MOZ_NUWA_PROCESS
@@ -141,7 +141,7 @@ struct Work
     SHUTDOWN
   } mType;
 
-  RefPtr<Decoder> mDecoder;
+  nsRefPtr<Decoder> mDecoder;
 };
 
 class DecodePoolImpl
@@ -195,7 +195,7 @@ public:
   void PushWork(Decoder* aDecoder)
   {
     MOZ_ASSERT(aDecoder);
-    RefPtr<Decoder> decoder(aDecoder);
+    nsRefPtr<Decoder> decoder(aDecoder);
 
     MonitorAutoLock lock(mMonitor);
 
@@ -242,7 +242,7 @@ public:
 private:
   ~DecodePoolImpl() { }
 
-  Work PopWorkFromQueue(nsTArray<RefPtr<Decoder>>& aQueue)
+  Work PopWorkFromQueue(nsTArray<nsRefPtr<Decoder>>& aQueue)
   {
     Work work;
     work.mType = Work::Type::DECODE;
@@ -256,8 +256,8 @@ private:
 
   // mMonitor guards the queues and mShuttingDown.
   Monitor mMonitor;
-  nsTArray<RefPtr<Decoder>> mMetadataDecodeQueue;
-  nsTArray<RefPtr<Decoder>> mFullDecodeQueue;
+  nsTArray<nsRefPtr<Decoder>> mMetadataDecodeQueue;
+  nsTArray<nsRefPtr<Decoder>> mFullDecodeQueue;
   bool mShuttingDown;
 };
 
@@ -296,7 +296,7 @@ public:
   }
 
 private:
-  RefPtr<DecodePoolImpl> mImpl;
+  nsRefPtr<DecodePoolImpl> mImpl;
 };
 
 /* static */ void

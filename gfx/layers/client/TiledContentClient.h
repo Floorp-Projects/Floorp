@@ -15,7 +15,7 @@
 #include "Units.h"                      // for CSSPoint
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
@@ -118,7 +118,7 @@ public:
   static already_AddRefed<gfxShmSharedReadLock>
   Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::layers::ShmemSection& aShmemSection)
   {
-    RefPtr<gfxShmSharedReadLock> readLock = new gfxShmSharedReadLock(aAllocator, aShmemSection);
+    nsRefPtr<gfxShmSharedReadLock> readLock = new gfxShmSharedReadLock(aAllocator, aShmemSection);
     return readLock.forget();
   }
 
@@ -137,7 +137,7 @@ private:
       (mShmemSection.shmem().get<char>() + mShmemSection.offset());
   }
 
-  RefPtr<ISurfaceAllocator> mAllocator;
+  nsRefPtr<ISurfaceAllocator> mAllocator;
   mozilla::layers::ShmemSection mShmemSection;
   bool mAllocSuccess;
 };
@@ -246,7 +246,7 @@ struct TileClient
   TextureClient* GetBackBuffer(const nsIntRegion& aDirtyRegion,
                                gfxContentType aContent, SurfaceMode aMode,
                                nsIntRegion& aAddPaintedRegion,
-                               RefPtr<TextureClient>* aTextureClientOnWhite);
+                               nsRefPtr<TextureClient>* aTextureClientOnWhite);
 
   void DiscardFrontBuffer();
 
@@ -257,23 +257,23 @@ struct TileClient
    * the expiry tracker for expiring the back buffers */
   class PrivateProtector {
     public:
-      void Set(TileClient * container, RefPtr<TextureClient>);
+      void Set(TileClient * container, nsRefPtr<TextureClient>);
       void Set(TileClient * container, TextureClient*);
       // Implicitly convert to TextureClient* because we can't chain
-      // implicit conversion that would happen on RefPtr<TextureClient>
+      // implicit conversion that would happen on nsRefPtr<TextureClient>
       operator TextureClient*() const { return mBuffer; }
-      RefPtr<TextureClient> operator ->() { return mBuffer; }
+      nsRefPtr<TextureClient> operator ->() { return mBuffer; }
     private:
       PrivateProtector& operator=(const PrivateProtector &);
-      RefPtr<TextureClient> mBuffer;
+      nsRefPtr<TextureClient> mBuffer;
   } mBackBuffer;
-  RefPtr<TextureClient> mBackBufferOnWhite;
-  RefPtr<TextureClient> mFrontBuffer;
-  RefPtr<TextureClient> mFrontBufferOnWhite;
-  RefPtr<gfxSharedReadLock> mBackLock;
-  RefPtr<gfxSharedReadLock> mFrontLock;
-  RefPtr<ClientLayerManager> mManager;
-  RefPtr<TextureClientAllocator> mAllocator;
+  nsRefPtr<TextureClient> mBackBufferOnWhite;
+  nsRefPtr<TextureClient> mFrontBuffer;
+  nsRefPtr<TextureClient> mFrontBufferOnWhite;
+  nsRefPtr<gfxSharedReadLock> mBackLock;
+  nsRefPtr<gfxSharedReadLock> mFrontLock;
+  nsRefPtr<ClientLayerManager> mManager;
+  nsRefPtr<TextureClientAllocator> mAllocator;
   gfx::IntRect mUpdateRect;
   CompositableClient* mCompositableClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
@@ -552,7 +552,7 @@ private:
   nsIntRegion mNewValidRegion;
 
   // The DrawTarget we use when UseSinglePaintBuffer() above is true.
-  RefPtr<gfx::DrawTarget>       mSinglePaintDrawTarget;
+  nsRefPtr<gfx::DrawTarget>       mSinglePaintDrawTarget;
   nsIntPoint                    mSinglePaintBufferOffset;
   SharedFrameMetricsHelper*  mSharedFrameMetricsHelper;
   // When using Moz2D's CreateTiledDrawTarget we maintain a list of gfx::Tiles

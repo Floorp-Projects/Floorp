@@ -66,7 +66,7 @@ protected:
     MOZ_COUNT_DTOR(TestGonkCameraHardwareListener);
   }
 
-  RefPtr<nsGonkCameraControl> mTarget;
+  nsRefPtr<nsGonkCameraControl> mTarget;
   nsCOMPtr<nsIThread> mCameraThread;
 };
 
@@ -168,7 +168,7 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
             }
 
           protected:
-            RefPtr<nsGonkCameraControl> mTarget;
+            nsRefPtr<nsGonkCameraControl> mTarget;
           };
 
           mCameraThread->Dispatch(new DeferredSystemFailure(mTarget), NS_DISPATCH_NORMAL);
@@ -182,7 +182,7 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
     CameraFacesDetectedEvent* event = aEvent->InternalDOMEvent()->AsCameraFacesDetectedEvent();
 
     if (!NS_WARN_IF(!event)) {
-      Nullable<nsTArray<RefPtr<DOMCameraDetectedFace>>> faces;
+      Nullable<nsTArray<nsRefPtr<DOMCameraDetectedFace>>> faces;
       event->GetFaces(faces);
 
       camera_frame_metadata_t metadata;
@@ -191,7 +191,7 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
       if (faces.IsNull()) {
         OnFacesDetected(mTarget, &metadata);
       } else {
-        const nsTArray<RefPtr<DOMCameraDetectedFace>>& facesData = faces.Value();
+        const nsTArray<nsRefPtr<DOMCameraDetectedFace>>& facesData = faces.Value();
         uint32_t i = facesData.Length();
 
         metadata.number_of_faces = i;
@@ -200,7 +200,7 @@ TestGonkCameraHardwareListener::HandleEvent(nsIDOMEvent* aEvent)
 
         while (i > 0) {
           --i;
-          const RefPtr<DOMCameraDetectedFace>& face = facesData[i];
+          const nsRefPtr<DOMCameraDetectedFace>& face = facesData[i];
           camera_face_t& f = metadata.faces[i];
           const DOMRect& bounds = *face->Bounds();
           f.rect[0] = static_cast<int32_t>(bounds.Left());
@@ -326,7 +326,7 @@ TestGonkCameraHardware::~TestGonkCameraHardware()
 }
 
 nsresult
-TestGonkCameraHardware::WaitWhileRunningOnMainThread(RefPtr<ControlMessage> aRunnable)
+TestGonkCameraHardware::WaitWhileRunningOnMainThread(nsRefPtr<ControlMessage> aRunnable)
 {
   MutexAutoLock lock(mMutex);
 

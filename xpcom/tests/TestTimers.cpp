@@ -194,7 +194,7 @@ class FuzzTestThreadState final : public nsITimerCallback {
         }
 
       private:
-        RefPtr<FuzzTestThreadState> mThreadState;
+        nsRefPtr<FuzzTestThreadState> mThreadState;
     };
 
     void Start()
@@ -442,7 +442,7 @@ FuzzTestTimers()
 {
   static const size_t kNumThreads(10);
   AutoTestThread threads[kNumThreads];
-  RefPtr<FuzzTestThreadState> threadStates[kNumThreads];
+  nsRefPtr<FuzzTestThreadState> threadStates[kNumThreads];
 
   for (size_t i = 0; i < kNumThreads; ++i) {
     threadStates[i] = new FuzzTestThreadState(&*threads[i]);

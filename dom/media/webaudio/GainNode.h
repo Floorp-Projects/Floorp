@@ -42,7 +42,7 @@ protected:
   virtual ~GainNode();
 
 private:
-  RefPtr<AudioParam> mGain;
+  nsRefPtr<AudioParam> mGain;
 };
 
 } // namespace dom

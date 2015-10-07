@@ -43,7 +43,7 @@ public:
 
   already_AddRefed<Event> GetSourceEvent()
   {
-    RefPtr<Event> e =
+    nsRefPtr<Event> e =
       mSourceEvent ? mSourceEvent->InternalDOMEvent() : nullptr;
     return e.forget();
   }

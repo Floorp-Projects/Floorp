@@ -27,7 +27,7 @@ class PerformanceObserverEntryList final : public nsISupports,
 
 public:
   PerformanceObserverEntryList(nsISupports* aOwner,
-                               nsTArray<RefPtr<PerformanceEntry>>&
+                               nsTArray<nsRefPtr<PerformanceEntry>>&
                                aEntries)
     : mOwner(aOwner)
     , mEntries(aEntries)
@@ -46,16 +46,16 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceObserverEntryList)
 
   void GetEntries(const PerformanceEntryFilterOptions& aFilter,
-                  nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+                  nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
   void GetEntriesByType(const nsAString& aEntryType,
-                        nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+                        nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
   void GetEntriesByName(const nsAString& aName,
                         const Optional<nsAString>& aEntryType,
-                        nsTArray<RefPtr<PerformanceEntry>>& aRetval);
+                        nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
 
 private:
   nsCOMPtr<nsISupports> mOwner;
-  nsTArray<RefPtr<PerformanceEntry>> mEntries;
+  nsTArray<nsRefPtr<PerformanceEntry>> mEntries;
 };
 
 } // namespace dom

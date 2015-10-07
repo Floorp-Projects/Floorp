@@ -1273,7 +1273,7 @@ private:
   ccPhase mIncrementalPhase;
   CCGraph mGraph;
   nsAutoPtr<CCGraphBuilder> mBuilder;
-  RefPtr<nsCycleCollectorLogger> mLogger;
+  nsRefPtr<nsCycleCollectorLogger> mLogger;
 
   DebugOnly<void*> mThread;
 
@@ -1289,7 +1289,7 @@ private:
   uint32_t mUnmergedNeeded;
   uint32_t mMergedInARow;
 
-  RefPtr<JSPurpleBuffer> mJSPurpleBuffer;
+  nsRefPtr<JSPurpleBuffer> mJSPurpleBuffer;
 
 private:
   virtual ~nsCycleCollector();
@@ -1405,7 +1405,7 @@ public:
 
 struct CollectorData
 {
-  RefPtr<nsCycleCollector> mCollector;
+  nsRefPtr<nsCycleCollector> mCollector;
   CycleCollectedJSRuntime* mRuntime;
 };
 
@@ -1977,7 +1977,7 @@ public:
   }
   NS_IMETHOD AsLogger(nsCycleCollectorLogger** aRetVal) override
   {
-    RefPtr<nsCycleCollectorLogger> rval = this;
+    nsRefPtr<nsCycleCollectorLogger> rval = this;
     rval.forget(aRetVal);
     return NS_OK;
   }
@@ -2045,7 +2045,7 @@ private:
   nsCycleCollectionParticipant* mJSParticipant;
   nsCycleCollectionParticipant* mJSZoneParticipant;
   nsCString mNextEdgeName;
-  RefPtr<nsCycleCollectorLogger> mLogger;
+  nsRefPtr<nsCycleCollectorLogger> mLogger;
   bool mMergeZones;
   nsAutoPtr<NodePool::Enumerator> mCurrNode;
 
@@ -2564,7 +2564,7 @@ class JSPurpleBuffer
   }
 
 public:
-  explicit JSPurpleBuffer(RefPtr<JSPurpleBuffer>& aReferenceToThis)
+  explicit JSPurpleBuffer(nsRefPtr<JSPurpleBuffer>& aReferenceToThis)
     : mReferenceToThis(aReferenceToThis)
     , mValues(kSegmentSize)
     , mObjects(kSegmentSize)
@@ -2584,7 +2584,7 @@ public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(JSPurpleBuffer)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(JSPurpleBuffer)
 
-  RefPtr<JSPurpleBuffer>& mReferenceToThis;
+  nsRefPtr<JSPurpleBuffer>& mReferenceToThis;
 
   // These are raw pointers instead of Heap<T> because we only need Heap<T> for
   // pointers which may point into the nursery. The purple buffer never contains
@@ -2726,7 +2726,7 @@ public:
   }
 
 private:
-  RefPtr<nsCycleCollector> mCollector;
+  nsRefPtr<nsCycleCollector> mCollector;
   ObjectsVector mObjects;
 };
 
@@ -2995,7 +2995,7 @@ public:
 
 private:
   CCGraph& mGraph;
-  RefPtr<nsCycleCollectorLogger> mLogger;
+  nsRefPtr<nsCycleCollectorLogger> mLogger;
   uint32_t& mCount;
   bool& mFailed;
 };
@@ -3882,7 +3882,7 @@ nsCycleCollector::GetJSPurpleBuffer()
     // JSPurpleBuffer keeps itself alive, but we need to create it in such way
     // that it ends up in the normal purple buffer. That happens when
     // nsRefPtr goes out of the scope and calls Release.
-    RefPtr<JSPurpleBuffer> pb = new JSPurpleBuffer(mJSPurpleBuffer);
+    nsRefPtr<JSPurpleBuffer> pb = new JSPurpleBuffer(mJSPurpleBuffer);
   }
   return mJSPurpleBuffer;
 }

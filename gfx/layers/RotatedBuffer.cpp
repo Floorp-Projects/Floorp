@@ -97,7 +97,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   gfx::Point quadrantTranslation(quadrantRect.x, quadrantRect.y);
 
   MOZ_ASSERT(aSource != BUFFER_BOTH);
-  RefPtr<SourceSurface> snapshot = GetSourceSurface(aSource);
+  nsRefPtr<SourceSurface> snapshot = GetSourceSurface(aSource);
 
   // direct2d is much slower when using OP_SOURCE so use OP_OVER and
   // (maybe) a clear instead. Normally we need to draw in a single operation
@@ -180,7 +180,7 @@ RotatedBuffer::DrawBufferWithRotation(gfx::DrawTarget *aTarget, ContextSource aS
 already_AddRefed<SourceSurface>
 SourceRotatedBuffer::GetSourceSurface(ContextSource aSource) const
 {
-  RefPtr<SourceSurface> surf;
+  nsRefPtr<SourceSurface> surf;
   if (aSource == BUFFER_BLACK) {
     surf = mSource;
   } else {
@@ -554,8 +554,8 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
   }
 
   IntRect drawBounds = result.mRegionToDraw.GetBounds();
-  RefPtr<DrawTarget> destDTBuffer;
-  RefPtr<DrawTarget> destDTBufferOnWhite;
+  nsRefPtr<DrawTarget> destDTBuffer;
+  nsRefPtr<DrawTarget> destDTBufferOnWhite;
   uint32_t bufferFlags = 0;
   if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     bufferFlags |= BUFFER_COMPONENT_ALPHA;

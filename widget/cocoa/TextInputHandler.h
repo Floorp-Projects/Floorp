@@ -564,7 +564,7 @@ protected:
       mHandler->RemoveCurrentKeyEvent();
     }
   private:
-    RefPtr<TextInputHandlerBase> mHandler;
+    nsRefPtr<TextInputHandlerBase> mHandler;
   };
 
   /**

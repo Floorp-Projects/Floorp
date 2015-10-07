@@ -30,7 +30,7 @@ protected:
 private:
   MediaPermissionManager();
   nsresult Deinit();
-  nsresult HandleRequest(RefPtr<dom::GetUserMediaRequest> &req);
+  nsresult HandleRequest(nsRefPtr<dom::GetUserMediaRequest> &req);
 };
 
 } // namespace mozilla

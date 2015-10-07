@@ -43,7 +43,7 @@ namespace CSSVariableImageTable {
 
 namespace detail {
 
-typedef nsTArray<RefPtr<css::ImageValue>> ImageValueArray;
+typedef nsTArray<nsRefPtr<css::ImageValue>> ImageValueArray;
 typedef nsClassHashtable<nsGenericHashKey<nsCSSProperty>, ImageValueArray>
         PerPropertyImageHashtable;
 typedef nsClassHashtable<nsPtrHashKey<nsStyleContext>, PerPropertyImageHashtable>

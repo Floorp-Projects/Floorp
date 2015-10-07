@@ -98,7 +98,7 @@ public:
         // have created the font entry. The only legitimate runtime failure
         // here would be memory allocation, in which case mFace remains null.
         if (aFontEntry->mFilename[0] != '/') {
-            RefPtr<nsZipArchive> reader =
+            nsRefPtr<nsZipArchive> reader =
                 Omnijar::GetReader(Omnijar::Type::GRE);
             nsZipItem *item = reader->GetItem(aFontEntry->mFilename.get());
             NS_ASSERTION(item, "failed to find zip entry");
@@ -460,7 +460,7 @@ FT2FontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         return NS_OK;
     }
 
-    RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+    nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
 
     AutoFallibleTArray<uint8_t,16384> buffer;
     nsresult rv = CopyFontTable(TTAG_cmap, buffer);
@@ -978,7 +978,7 @@ gfxFT2FontList::FindFontsInOmnijar(FontNameCache *aCache)
     static const char* sJarSearchPaths[] = {
         "res/fonts/*.ttf$",
     };
-    RefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
+    nsRefPtr<nsZipArchive> reader = Omnijar::GetReader(Omnijar::Type::GRE);
     for (unsigned i = 0; i < ArrayLength(sJarSearchPaths); i++) {
         nsZipFind* find;
         if (NS_SUCCEEDED(reader->FindInit(sJarSearchPaths[i], &find))) {
@@ -1117,7 +1117,7 @@ gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
 // if aUserArg is non-null (i.e. we're using it as a boolean flag)
 static void
 FinalizeFamilyMemberList(nsStringHashKey::KeyType aKey,
-                         RefPtr<gfxFontFamily>& aFamily,
+                         nsRefPtr<gfxFontFamily>& aFamily,
                          bool aSortFaces)
 {
     gfxFontFamily *family = aFamily.get();
@@ -1156,12 +1156,12 @@ gfxFT2FontList::FindFonts()
         // so we just maintain the existing order)
         for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
             nsStringHashKey::KeyType key = iter.Key();
-            RefPtr<gfxFontFamily>& family = iter.Data();
+            nsRefPtr<gfxFontFamily>& family = iter.Data();
             FinalizeFamilyMemberList(key, family, /* aSortFaces */ false);
         }
         for (auto iter = mHiddenFontFamilies.Iter(); !iter.Done(); iter.Next()) {
             nsStringHashKey::KeyType key = iter.Key();
-            RefPtr<gfxFontFamily>& family = iter.Data();
+            nsRefPtr<gfxFontFamily>& family = iter.Data();
             FinalizeFamilyMemberList(key, family, /* aSortFaces */ false );
         }
 
@@ -1245,12 +1245,12 @@ gfxFT2FontList::FindFonts()
     // Passing non-null userData here says that we want faces to be sorted.
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         nsStringHashKey::KeyType key = iter.Key();
-        RefPtr<gfxFontFamily>& family = iter.Data();
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
         FinalizeFamilyMemberList(key, family, /* aSortFaces */ true);
     }
     for (auto iter = mHiddenFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         nsStringHashKey::KeyType key = iter.Key();
-        RefPtr<gfxFontFamily>& family = iter.Data();
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
         FinalizeFamilyMemberList(key, family, /* aSortFaces */ true);
     }
 }
@@ -1371,7 +1371,7 @@ LoadSkipSpaceLookupCheck(nsTHashtable<nsStringHashKey>& aSkipSpaceLookupCheck)
 
 void
 PreloadAsUserFontFaces(nsStringHashKey::KeyType aKey,
-                       RefPtr<gfxFontFamily>& aFamily)
+                       nsRefPtr<gfxFontFamily>& aFamily)
 {
     gfxFontFamily *family = aFamily.get();
 
@@ -1439,7 +1439,7 @@ gfxFT2FontList::InitFontList()
 
     for (auto iter = mHiddenFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         nsStringHashKey::KeyType key = iter.Key();
-        RefPtr<gfxFontFamily>& family = iter.Data();
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
         PreloadAsUserFontFaces(key, family);
     }
     return NS_OK;
@@ -1463,7 +1463,7 @@ gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
         // Check family name, based on the assumption that the
         // first part of the full name is the family name
-        RefPtr<gfxFontFamily>& fontFamily = iter.Data();
+        nsRefPtr<gfxFontFamily>& fontFamily = iter.Data();
 
         // does the family name match up to the length of the family name?
         const nsString& family = fontFamily->Name();
@@ -1473,7 +1473,7 @@ gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
 
         // if so, iterate over faces in this family to see if there is a match
         if (family.Equals(fullNameFamily, nsCaseInsensitiveStringComparator())) {
-            nsTArray<RefPtr<gfxFontEntry> >& fontList = fontFamily->GetFontList();
+            nsTArray<nsRefPtr<gfxFontEntry> >& fontList = fontFamily->GetFontList();
             int index, len = fontList.Length();
             for (index = 0; index < len; index++) {
                 gfxFontEntry* fe = fontList[index];
@@ -1550,14 +1550,14 @@ gfxFT2FontList::MakePlatformFont(const nsAString& aFontName,
 }
 
 void
-gfxFT2FontList::GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray)
+gfxFT2FontList::GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray)
 {
     for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<gfxFontFamily>& family = iter.Data();
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
         aFamilyArray.AppendElement(family);
     }
     for (auto iter = mHiddenFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-        RefPtr<gfxFontFamily>& family = iter.Data();
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
         aFamilyArray.AppendElement(family);
     }
 }

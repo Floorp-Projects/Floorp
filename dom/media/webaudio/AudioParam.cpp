@@ -71,11 +71,11 @@ AudioParam::DisconnectFromGraphAndDestroyStream()
 {
   // Addref this temporarily so the refcount bumping below doesn't destroy us
   // prematurely
-  RefPtr<AudioParam> kungFuDeathGrip = this;
+  nsRefPtr<AudioParam> kungFuDeathGrip = this;
 
   while (!mInputNodes.IsEmpty()) {
     uint32_t i = mInputNodes.Length() - 1;
-    RefPtr<AudioNode> input = mInputNodes[i].mInputNode;
+    nsRefPtr<AudioNode> input = mInputNodes[i].mInputNode;
     mInputNodes.RemoveElementAt(i);
     input->RemoveOutputParam(this);
   }
@@ -99,7 +99,7 @@ AudioParam::Stream()
   }
 
   AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
-  RefPtr<AudioNodeStream> stream =
+  nsRefPtr<AudioNodeStream> stream =
     AudioNodeStream::Create(mNode->Context(), engine,
                             AudioNodeStream::NO_STREAM_FLAGS);
 

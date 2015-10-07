@@ -71,7 +71,7 @@ public:
   // non-virtual signatures like nsITreeBodyFrame
   already_AddRefed<nsTreeColumns> Columns() const
   {
-    RefPtr<nsTreeColumns> cols = mColumns;
+    nsRefPtr<nsTreeColumns> cols = mColumns;
     return cols.forget();
   }
   already_AddRefed<nsITreeView> GetExistingView() const
@@ -558,13 +558,13 @@ protected: // Data Members
 
   nsRevocableEventPtr<ScrollEvent> mScrollEvent;
 
-  RefPtr<ScrollbarActivity> mScrollbarActivity;
+  nsRefPtr<ScrollbarActivity> mScrollbarActivity;
 
   // The cached box object parent.
   nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
 
   // Cached column information.
-  RefPtr<nsTreeColumns> mColumns;
+  nsRefPtr<nsTreeColumns> mColumns;
 
   // The current view for this tree widget.  We get all of our row and cell data
   // from the view.

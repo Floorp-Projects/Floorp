@@ -63,7 +63,7 @@ GetDirectWriteFontName(IDWriteFont *aFont, nsAString& aFontName)
 {
     HRESULT hr;
 
-    RefPtr<IDWriteLocalizedStrings> names;
+    nsRefPtr<IDWriteLocalizedStrings> names;
     hr = aFont->GetFaceNames(getter_AddRefs(names));
     if (FAILED(hr)) {
         return hr;
@@ -108,7 +108,7 @@ GetDirectWriteFaceName(IDWriteFont *aFont,
     HRESULT hr;
 
     BOOL exists;
-    RefPtr<IDWriteLocalizedStrings> infostrings;
+    nsRefPtr<IDWriteLocalizedStrings> infostrings;
     hr = aFont->GetInformationalStrings(aWhichName, getter_AddRefs(infostrings), &exists);
     if (FAILED(hr) || !exists) {
         return E_FAIL;
@@ -158,7 +158,7 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
                                        aFontInfoData;
 
     for (UINT32 i = 0; i < mDWFamily->GetFontCount(); i++) {
-        RefPtr<IDWriteFont> font;
+        nsRefPtr<IDWriteFont> font;
         hr = mDWFamily->GetFont(i, getter_AddRefs(font));
         if (FAILED(hr)) {
             // This should never happen.
@@ -278,7 +278,7 @@ gfxDWriteFontFamily::LocalizedName(nsAString &aLocalizedName)
         localeName.AssignLiteral("en-us");
     }
 
-    RefPtr<IDWriteLocalizedStrings> names;
+    nsRefPtr<IDWriteLocalizedStrings> names;
 
     hr = mDWFamily->GetFamilyNames(getter_AddRefs(names));
     if (FAILED(hr)) {
@@ -415,7 +415,7 @@ gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
         return NS_ERROR_FAILURE;
     }
 
-    RefPtr<IDWriteFontFace> fontFace;
+    nsRefPtr<IDWriteFontFace> fontFace;
     nsresult rv = CreateFontFace(getter_AddRefs(fontFace));
     if (NS_FAILED(rv)) {
         return rv;
@@ -465,7 +465,7 @@ public:
     }
 
 private:
-    RefPtr<IDWriteFontFace> mFontFace;
+    nsRefPtr<IDWriteFontFace> mFontFace;
     void            *mContext;
 };
 
@@ -510,7 +510,7 @@ gfxDWriteFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         return NS_OK;
     }
 
-    RefPtr<gfxCharacterMap> charmap;
+    nsRefPtr<gfxCharacterMap> charmap;
     nsresult rv;
     bool symbolFont;
 
@@ -788,7 +788,7 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
         return nullptr;
     }
     
-    RefPtr<IDWriteFontFile> fontFile;
+    nsRefPtr<IDWriteFontFile> fontFile;
     HRESULT hr;
 
     /**
@@ -887,7 +887,7 @@ gfxDWriteFontList::InitFontList()
 
     QueryPerformanceCounter(&t2); // base-class/interop initialization
 
-    RefPtr<IDWriteFactory> factory =
+    nsRefPtr<IDWriteFactory> factory =
         gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
 
     hr = factory->GetSystemFontCollection(getter_AddRefs(mSystemFonts));
@@ -946,7 +946,7 @@ gfxDWriteFontList::InitFontList()
 
     if (gillSansFamily && gillSansMTFamily) {
         gillSansFamily->FindStyleVariations();
-        nsTArray<RefPtr<gfxFontEntry> >& faces = gillSansFamily->GetFontList();
+        nsTArray<nsRefPtr<gfxFontEntry> >& faces = gillSansFamily->GetFontList();
         uint32_t i;
 
         bool allUltraBold = true;
@@ -1044,10 +1044,10 @@ void
 gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
 {
     for (UINT32 i = 0; i < aCollection->GetFontFamilyCount(); i++) {
-        RefPtr<IDWriteFontFamily> family;
+        nsRefPtr<IDWriteFontFamily> family;
         aCollection->GetFontFamily(i, getter_AddRefs(family));
 
-        RefPtr<IDWriteLocalizedStrings> names;
+        nsRefPtr<IDWriteLocalizedStrings> names;
         HRESULT hr = family->GetFamilyNames(getter_AddRefs(names));
         if (FAILED(hr)) {
             continue;
@@ -1086,7 +1086,7 @@ gfxDWriteFontList::GetFontsFromCollection(IDWriteFontCollection* aCollection)
         nsAutoString name(enName.Elements());
         BuildKeyNameFromFontName(name);
 
-        RefPtr<gfxFontFamily> fam;
+        nsRefPtr<gfxFontFamily> fam;
 
         if (mFontFamilies.GetWeak(name)) {
             continue;
@@ -1302,7 +1302,7 @@ gfxDWriteFontList::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
 {
     HRESULT hr;
-    RefPtr<IDWriteFontFamily> family;
+    nsRefPtr<IDWriteFontFamily> family;
 
     // clean out previous value
     aFamilyName.Truncate();
@@ -1312,7 +1312,7 @@ static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
         return hr;
     }
 
-    RefPtr<IDWriteLocalizedStrings> familyNames;
+    nsRefPtr<IDWriteLocalizedStrings> familyNames;
 
     hr = family->GetFamilyNames(getter_AddRefs(familyNames));
     if (FAILED(hr)) {
@@ -1372,7 +1372,7 @@ IFACEMETHODIMP FontFallbackRenderer::DrawGlyphRun(
 
     HRESULT hr = S_OK;
 
-    RefPtr<IDWriteFont> font;
+    nsRefPtr<IDWriteFont> font;
     hr = mSystemFonts->GetFontFromFontFace(glyphRun->fontFace,
                                            getter_AddRefs(font));
     if (FAILED(hr)) {
@@ -1413,7 +1413,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
 
     HRESULT hr;
 
-    RefPtr<IDWriteFactory> dwFactory =
+    nsRefPtr<IDWriteFactory> dwFactory =
         gfxWindowsPlatform::GetPlatform()->GetDWriteFactory();
     if (!dwFactory) {
         return nullptr;
@@ -1453,7 +1453,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
     }
 
     // set up layout
-    RefPtr<IDWriteTextLayout> fallbackLayout;
+    nsRefPtr<IDWriteTextLayout> fallbackLayout;
 
     hr = dwFactory->CreateTextLayout(str, strLen, mFallbackFormat,
                                      200.0f, 200.0f,
@@ -1508,9 +1508,9 @@ public:
     virtual void LoadFontFamilyData(const nsAString& aFamilyName);
 
 private:
-    RefPtr<IDWriteFontCollection> mSystemFonts;
+    nsRefPtr<IDWriteFontCollection> mSystemFonts;
 #ifdef MOZ_BUNDLED_FONTS
-    RefPtr<IDWriteFontCollection> mBundledFonts;
+    nsRefPtr<IDWriteFontCollection> mBundledFonts;
 #endif
 };
 
@@ -1531,7 +1531,7 @@ DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
     BOOL exists = false;
 
     uint32_t index;
-    RefPtr<IDWriteFontFamily> family;
+    nsRefPtr<IDWriteFontFamily> family;
     hr = mSystemFonts->FindFamilyName(famName.Elements(), &index, &exists);
     if (SUCCEEDED(hr) && exists) {
         mSystemFonts->GetFontFamily(index, getter_AddRefs(family));
@@ -1558,7 +1558,7 @@ DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 
     for (uint32_t i = 0; i < family->GetFontCount(); i++) {
         // get the font
-        RefPtr<IDWriteFont> dwFont;
+        nsRefPtr<IDWriteFont> dwFont;
         hr = family->GetFont(i, getter_AddRefs(dwFont));
         if (FAILED(hr)) {
             // This should never happen.
@@ -1586,7 +1586,7 @@ DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 
         FontFaceData fontData;
         bool haveData = true;
-        RefPtr<IDWriteFontFace> dwFontFace;
+        nsRefPtr<IDWriteFontFace> dwFontFace;
 
         if (mLoadFaceNames) {
             // try to load using DirectWrite first
@@ -1657,7 +1657,7 @@ DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
             if (SUCCEEDED(hr)) {
                 bool cmapLoaded = false;
                 bool unicodeFont = false, symbolFont = false;
-                RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+                nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
                 uint32_t offset;
 
                 if (cmapData &&
@@ -1689,7 +1689,7 @@ gfxDWriteFontList::CreateFontInfoData()
     bool loadCmaps = !UsesSystemFallback() ||
         gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
 
-    RefPtr<DirectWriteFontInfo> fi =
+    nsRefPtr<DirectWriteFontInfo> fi =
         new DirectWriteFontInfo(false, NeedFullnamePostscriptNames(), loadCmaps,
                                 mSystemFonts
 #ifdef MOZ_BUNDLED_FONTS
@@ -1740,7 +1740,7 @@ private:
     BundledFontFileEnumerator& operator=(const BundledFontFileEnumerator&) = delete;
     virtual ~BundledFontFileEnumerator() {}
 
-    RefPtr<IDWriteFactory>      mFactory;
+    nsRefPtr<IDWriteFactory>      mFactory;
 
     nsCOMPtr<nsIFile>             mFontDir;
     nsCOMPtr<nsISimpleEnumerator> mEntries;
@@ -1837,13 +1837,13 @@ gfxDWriteFontList::CreateBundledFontsCollection(IDWriteFactory* aFactory)
         return nullptr;
     }
 
-    RefPtr<BundledFontLoader> loader = new BundledFontLoader();
+    nsRefPtr<BundledFontLoader> loader = new BundledFontLoader();
     if (FAILED(aFactory->RegisterFontCollectionLoader(loader))) {
         return nullptr;
     }
 
     const void *key = localDir.get();
-    RefPtr<IDWriteFontCollection> collection;
+    nsRefPtr<IDWriteFontCollection> collection;
     HRESULT hr =
         aFactory->CreateCustomFontCollection(loader, &key, sizeof(key),
                                              getter_AddRefs(collection));

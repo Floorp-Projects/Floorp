@@ -79,7 +79,7 @@ ESDBox::~ESDBox()
 
 nsresult
 ES_Descriptor::Find(const nsACString& aType,
-                    nsTArray<RefPtr<MuxerOperation>>& aOperations)
+                    nsTArray<nsRefPtr<MuxerOperation>>& aOperations)
 {
   // ES_Descriptor is not a real ISOMediaBox, so we return nothing here.
   return NS_OK;

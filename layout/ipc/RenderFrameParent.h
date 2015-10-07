@@ -117,13 +117,13 @@ private:
   // context.
   uint64_t mLayersId;
 
-  RefPtr<nsFrameLoader> mFrameLoader;
-  RefPtr<ContainerLayer> mContainer;
+  nsRefPtr<nsFrameLoader> mFrameLoader;
+  nsRefPtr<ContainerLayer> mContainer;
   // When our scrolling behavior is ASYNC_PAN_ZOOM, we have a nonnull
   // APZCTreeManager. It's used to manipulate the shadow layer tree
   // on the compositor thread.
-  RefPtr<layers::APZCTreeManager> mApzcTreeManager;
-  RefPtr<RemoteContentController> mContentController;
+  nsRefPtr<layers::APZCTreeManager> mApzcTreeManager;
+  nsRefPtr<RemoteContentController> mContentController;
 
   layers::APZCTreeManager* GetApzcTreeManager();
 

@@ -35,7 +35,7 @@ CreateDecoderWrapper(MediaDataDecoderCallback* aCallback)
     return nullptr;
   }
 
-  RefPtr<MediaDataDecoderProxy> decoder(new MediaDataDecoderProxy(thread, aCallback));
+  nsRefPtr<MediaDataDecoderProxy> decoder(new MediaDataDecoderProxy(thread, aCallback));
   return decoder.forget();
 }
 
@@ -50,7 +50,7 @@ GMPDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
     return nullptr;
   }
 
-  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
+  nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
   wrapper->SetProxyTarget(new GMPVideoDecoder(aConfig,
                                               aLayersBackend,
                                               aImageContainer,
@@ -68,7 +68,7 @@ GMPDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
     return nullptr;
   }
 
-  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
+  nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
   wrapper->SetProxyTarget(new GMPAudioDecoder(aConfig,
                                               aAudioTaskQueue,
                                               wrapper->Callback()));

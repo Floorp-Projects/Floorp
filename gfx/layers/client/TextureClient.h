@@ -12,7 +12,7 @@
 #include "ImageTypes.h"                 // for StereoMode
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
+#include "mozilla/nsRefPtr.h"             // for RefPtr, RefCounted
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
@@ -294,8 +294,8 @@ public:
    */
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() {
     Lock(OpenMode::OPEN_READ);
-    RefPtr<gfx::SourceSurface> surf = BorrowDrawTarget()->Snapshot();
-    RefPtr<gfx::DataSourceSurface> data = surf->GetDataSurface();
+    nsRefPtr<gfx::SourceSurface> surf = BorrowDrawTarget()->Snapshot();
+    nsRefPtr<gfx::DataSourceSurface> data = surf->GetDataSurface();
     Unlock();
     return data.forget();
   }
@@ -539,9 +539,9 @@ protected:
    */
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
 
-  RefPtr<TextureChild> mActor;
-  RefPtr<ISurfaceAllocator> mAllocator;
-  RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
+  nsRefPtr<TextureChild> mActor;
+  nsRefPtr<ISurfaceAllocator> mAllocator;
+  nsRefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
   TextureFlags mFlags;
   FenceHandle mReleaseFenceHandle;
   FenceHandle mAcquireFenceHandle;
@@ -550,7 +550,7 @@ protected:
   bool mValid;
   bool mAddedToCompositableClient;
 
-  RefPtr<TextureReadbackSink> mReadbackSink;
+  nsRefPtr<TextureReadbackSink> mReadbackSink;
 
   friend class TextureChild;
   friend class RemoveTextureFromCompositableTracker;
@@ -580,7 +580,7 @@ public:
     }
 
 private:
-    RefPtr<TextureClient> mTextureClient;
+    nsRefPtr<TextureClient> mTextureClient;
 };
 
 /**
@@ -647,7 +647,7 @@ public:
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
 protected:
-  RefPtr<gfx::DrawTarget> mDrawTarget;
+  nsRefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
   gfx::BackendType mBackend;
@@ -745,7 +745,7 @@ class TKeepAlive : public KeepAlive
 public:
   explicit TKeepAlive(T* aData) : mData(aData) {}
 protected:
-  RefPtr<T> mData;
+  nsRefPtr<T> mData;
 };
 
 } // namespace layers

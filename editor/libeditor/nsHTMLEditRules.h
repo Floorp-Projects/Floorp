@@ -264,11 +264,11 @@ protected:
                         int32_t aOffset, EditAction actionID,
                         nsCOMPtr<nsIDOMNode>* outNode, int32_t* outOffset);
   void GetPromotedRanges(mozilla::dom::Selection& aSelection,
-                         nsTArray<RefPtr<nsRange>>& outArrayOfRanges,
+                         nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
                          EditAction inOperationType);
   void PromoteRange(nsRange& aRange, EditAction inOperationType);
   enum class TouchContent { no, yes };
-  nsresult GetNodesForOperation(nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
+  nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& aArrayOfRanges,
                                 nsTArray<mozilla::OwningNonNull<nsINode>>& aOutArrayOfNodes,
                                 EditAction aOperationType,
                                 TouchContent aTouchContent = TouchContent::yes);
@@ -346,16 +346,16 @@ protected:
 // data members
 protected:
   nsHTMLEditor           *mHTMLEditor;
-  RefPtr<nsRange>       mDocChangeRange;
+  nsRefPtr<nsRange>       mDocChangeRange;
   bool                    mListenerEnabled;
   bool                    mReturnInEmptyLIKillsList;
   bool                    mDidDeleteSelection;
   bool                    mDidRangedDelete;
   bool                    mRestoreContentEditableCount;
-  RefPtr<nsRange>       mUtilRange;
+  nsRefPtr<nsRange>       mUtilRange;
   uint32_t                mJoinOffset;  // need to remember an int across willJoin/didJoin...
   nsCOMPtr<nsIDOMNode>    mNewBlock;
-  RefPtr<nsRangeStore>  mRangeItem;
+  nsRefPtr<nsRangeStore>  mRangeItem;
   StyleCache              mCachedStyles[SIZE_STYLE_TABLE];
 };
 

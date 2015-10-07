@@ -67,7 +67,7 @@ public:
 private:
     ~OfflineCacheUpdateGlue();
 
-    RefPtr<nsOfflineCacheUpdate> mUpdate;
+    nsRefPtr<nsOfflineCacheUpdate> mUpdate;
     bool mCoalesced;
 
     /* Document that requested this update */

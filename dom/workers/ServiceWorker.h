@@ -79,7 +79,7 @@ private:
   ~ServiceWorker();
 
   ServiceWorkerState mState;
-  const RefPtr<ServiceWorkerInfo> mInfo;
+  const nsRefPtr<ServiceWorkerInfo> mInfo;
 };
 
 } // namespace workers

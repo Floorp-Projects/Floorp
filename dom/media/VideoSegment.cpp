@@ -43,8 +43,8 @@ VideoFrame::TakeFrom(VideoFrame* aFrame)
 /* static */ already_AddRefed<Image>
 VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
 {
-  RefPtr<ImageContainer> container;
-  RefPtr<Image> image;
+  nsRefPtr<ImageContainer> container;
+  nsRefPtr<Image> image;
   container = LayerManager::CreateImageContainer();
   image = container->CreateImage(ImageFormat::PLANAR_YCBCR);
   if (!image) {

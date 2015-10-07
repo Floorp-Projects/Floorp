@@ -239,7 +239,7 @@ HTMLVideoElement::GetVideoPlaybackQuality()
     }
   }
 
-  RefPtr<VideoPlaybackQuality> playbackQuality =
+  nsRefPtr<VideoPlaybackQuality> playbackQuality =
     new VideoPlaybackQuality(this, creationTime, totalFrames, droppedFrames,
                              corruptedFrames);
   return playbackQuality.forget();
@@ -273,7 +273,7 @@ HTMLVideoElement::UpdateScreenWakeLock()
 
   if (!mScreenWakeLock && !mPaused && !hidden &&
       mUseScreenWakeLock && HasVideo()) {
-    RefPtr<power::PowerManagerService> pmService =
+    nsRefPtr<power::PowerManagerService> pmService =
       power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
 

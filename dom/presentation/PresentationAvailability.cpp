@@ -33,7 +33,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 /* static */ already_AddRefed<PresentationAvailability>
 PresentationAvailability::Create(nsPIDOMWindow* aWindow)
 {
-  RefPtr<PresentationAvailability> availability = new PresentationAvailability(aWindow);
+  nsRefPtr<PresentationAvailability> availability = new PresentationAvailability(aWindow);
   return NS_WARN_IF(!availability->Init()) ? nullptr : availability.forget();
 }
 

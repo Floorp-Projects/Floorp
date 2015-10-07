@@ -52,7 +52,7 @@ private:
     void InvalidateCache();
 
     double mContentsScaleFactor;
-    RefPtr<nsScreenManagerProxy> mScreenManager;
+    nsRefPtr<nsScreenManagerProxy> mScreenManager;
     uint32_t mId;
     int32_t mPixelDepth;
     int32_t mColorDepth;

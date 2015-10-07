@@ -101,8 +101,8 @@ private:
   // Build a comma-separated list of tables to check
   void BuildTables(bool trackingProtectionEnabled, nsCString& tables);
 
-  RefPtr<nsUrlClassifierDBServiceWorker> mWorker;
-  RefPtr<UrlClassifierDBServiceWorkerProxy> mWorkerProxy;
+  nsRefPtr<nsUrlClassifierDBServiceWorker> mWorker;
+  nsRefPtr<UrlClassifierDBServiceWorkerProxy> mWorkerProxy;
 
   nsInterfaceHashtable<nsCStringHashKey, nsIUrlClassifierHashCompleter> mCompleters;
 

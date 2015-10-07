@@ -81,7 +81,7 @@ MediaDataBox::Write()
   for (uint32_t l = 0; l < types.Length(); l++) {
     if (mTrackType & types[l]) {
       FragmentBuffer* frag = mControl->GetFragment(types[l]);
-      nsTArray<RefPtr<EncodedFrame>> frames;
+      nsTArray<nsRefPtr<EncodedFrame>> frames;
 
       // Here is the last time we get fragment frames, flush it!
       rv = frag->GetFirstFragment(frames, true);
@@ -118,7 +118,7 @@ TrackRunBox::fillSampleTable()
 {
   uint32_t table_size = 0;
   nsresult rv;
-  nsTArray<RefPtr<EncodedFrame>> frames;
+  nsTArray<nsRefPtr<EncodedFrame>> frames;
   FragmentBuffer* frag = mControl->GetFragment(mTrackType);
 
   rv = frag->GetFirstFragment(frames);
@@ -418,7 +418,7 @@ MovieFragmentBox::Generate(uint32_t* aBoxSize)
   // Correct data_offset if there are both audio and video track in
   // this fragment. This offset means the offset in the MediaDataBox.
   if (mTrackType & (Audio_Track | Video_Track)) {
-    nsTArray<RefPtr<MuxerOperation>> truns;
+    nsTArray<nsRefPtr<MuxerOperation>> truns;
     rv = Find(NS_LITERAL_CSTRING("trun"), truns);
     NS_ENSURE_SUCCESS(rv, rv);
     uint32_t len = truns.Length();
@@ -660,7 +660,7 @@ SampleDescriptionBox::SampleDescriptionBox(uint32_t aType, ISOControl* aControl)
 }
 
 nsresult
-SampleDescriptionBox::CreateAudioSampleEntry(RefPtr<SampleEntryBox>& aSampleEntry)
+SampleDescriptionBox::CreateAudioSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry)
 {
   if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_AMR) {
     aSampleEntry = new AMRSampleEntry(mControl);
@@ -673,7 +673,7 @@ SampleDescriptionBox::CreateAudioSampleEntry(RefPtr<SampleEntryBox>& aSampleEntr
 }
 
 nsresult
-SampleDescriptionBox::CreateVideoSampleEntry(RefPtr<SampleEntryBox>& aSampleEntry)
+SampleDescriptionBox::CreateVideoSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry)
 {
   if (mVideoMeta->GetKind() == TrackMetadataBase::METADATA_AVC) {
     aSampleEntry = new AVCSampleEntry(mControl);
@@ -1322,7 +1322,7 @@ DefaultContainerImpl::Generate(uint32_t* aBoxSize)
 
 nsresult
 DefaultContainerImpl::Find(const nsACString& aType,
-                           nsTArray<RefPtr<MuxerOperation>>& aOperations)
+                           nsTArray<nsRefPtr<MuxerOperation>>& aOperations)
 {
   nsresult rv = Box::Find(aType, aOperations);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1366,7 +1366,7 @@ Box::Write()
 }
 
 nsresult
-Box::Find(const nsACString& aType, nsTArray<RefPtr<MuxerOperation>>& aOperations)
+Box::Find(const nsACString& aType, nsTArray<nsRefPtr<MuxerOperation>>& aOperations)
 {
   if (boxType == aType) {
     aOperations.AppendElement(this);

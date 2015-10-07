@@ -67,7 +67,7 @@ BluetoothLeDeviceEvent::Constructor(
   const int16_t aRssi,
   const nsTArray<uint8_t>& aScanRecord)
 {
-  RefPtr<BluetoothLeDeviceEvent> e = new BluetoothLeDeviceEvent(aOwner);
+  nsRefPtr<BluetoothLeDeviceEvent> e = new BluetoothLeDeviceEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, false, false);
   e->mDevice = aDevice;
@@ -88,7 +88,7 @@ BluetoothLeDeviceEvent::Constructor(
   nsCOMPtr<mozilla::dom::EventTarget> owner =
     do_QueryInterface(aGlobal.GetAsSupports());
 
-  RefPtr<BluetoothLeDeviceEvent> e = new BluetoothLeDeviceEvent(owner);
+  nsRefPtr<BluetoothLeDeviceEvent> e = new BluetoothLeDeviceEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   e->mDevice = aEventInitDict.mDevice;

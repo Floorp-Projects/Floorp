@@ -78,9 +78,9 @@ private:
 
   void FinishTransition();
 
-  RefPtr<ProgressTracker> mTracker;
-  RefPtr<NextPartObserver> mNextPartObserver;
-  RefPtr<Image> mNextPart;
+  nsRefPtr<ProgressTracker> mTracker;
+  nsRefPtr<NextPartObserver> mNextPartObserver;
+  nsRefPtr<Image> mNextPart;
   bool mDeferNotifications : 1;
 };
 

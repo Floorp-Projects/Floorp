@@ -134,7 +134,7 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
                           const MessageEventInit& aParam,
                           ErrorResult& aRv)
 {
-  RefPtr<MessageEvent> event = new MessageEvent(aEventTarget, nullptr, nullptr);
+  nsRefPtr<MessageEvent> event = new MessageEvent(aEventTarget, nullptr, nullptr);
 
   aRv = event->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   if (aRv.Failed()) {
@@ -167,7 +167,7 @@ MessageEvent::Constructor(EventTarget* aEventTarget,
   }
 
   if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
-    nsTArray<RefPtr<MessagePort>> ports;
+    nsTArray<nsRefPtr<MessagePort>> ports;
     for (uint32_t i = 0, len = aParam.mPorts.Value().Value().Length(); i < len; ++i) {
       ports.AppendElement(aParam.mPorts.Value().Value()[i].get());
     }
@@ -229,6 +229,6 @@ NS_NewDOMMessageEvent(EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       WidgetEvent* aEvent) 
 {
-  RefPtr<MessageEvent> it = new MessageEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<MessageEvent> it = new MessageEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

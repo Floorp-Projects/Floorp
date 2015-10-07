@@ -161,7 +161,7 @@ private:
 
   nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIURI> mURI;
-  RefPtr<URLSearchParams> mSearchParams;
+  nsRefPtr<URLSearchParams> mSearchParams;
 
   friend class mozilla::dom::workers::URLProxy;
 };

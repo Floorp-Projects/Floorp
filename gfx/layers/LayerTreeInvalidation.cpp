@@ -222,7 +222,7 @@ struct LayerPropertiesBase : public LayerProperties
     return IntRect();
   }
 
-  RefPtr<Layer> mLayer;
+  nsRefPtr<Layer> mLayer;
   UniquePtr<LayerPropertiesBase> mMaskLayer;
   nsTArray<UniquePtr<LayerPropertiesBase>> mAncestorMaskLayers;
   nsIntRegion mVisibleRegion;
@@ -455,8 +455,8 @@ struct ImageLayerProperties : public LayerPropertiesBase
     return IntRect();
   }
 
-  RefPtr<ImageContainer> mContainer;
-  RefPtr<ImageHost> mImageHost;
+  nsRefPtr<ImageContainer> mContainer;
+  nsRefPtr<ImageHost> mImageHost;
   GraphicsFilter mFilter;
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;

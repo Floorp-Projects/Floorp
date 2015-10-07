@@ -34,7 +34,7 @@ ServiceWorkerPeriodicUpdater::GetSingleton()
     sInstance = new ServiceWorkerPeriodicUpdater();
     ClearOnShutdown(&sInstance);
   }
-  RefPtr<ServiceWorkerPeriodicUpdater> copy(sInstance.get());
+  nsRefPtr<ServiceWorkerPeriodicUpdater> copy(sInstance.get());
   return copy.forget();
 }
 

@@ -46,7 +46,7 @@ private:
   int64_t mLastStreamOffset;
 
   VideoInfo mVideoInfo;
-  RefPtr<layers::ImageContainer> mImageContainer;
+  nsRefPtr<layers::ImageContainer> mImageContainer;
 };
 
 class GMPVideoDecoder : public MediaDataDecoder {
@@ -84,7 +84,7 @@ public:
   {
   }
 
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -148,8 +148,8 @@ private:
     }
 
   private:
-    RefPtr<GMPVideoDecoder> mDecoder;
-    RefPtr<GMPInitDoneRunnable> mGMPInitDone;
+    nsRefPtr<GMPVideoDecoder> mDecoder;
+    nsRefPtr<GMPInitDoneRunnable> mGMPInitDone;
   };
   void GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost);
 

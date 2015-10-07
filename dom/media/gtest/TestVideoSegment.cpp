@@ -15,7 +15,7 @@ namespace mozilla {
 
 TEST(VideoSegment, TestAppendFrameForceBlack)
 {
-  RefPtr<layers::Image> testImage = nullptr;
+  nsRefPtr<layers::Image> testImage = nullptr;
 
   VideoSegment segment;
   segment.AppendFrame(testImage.forget(),
@@ -33,7 +33,7 @@ TEST(VideoSegment, TestAppendFrameForceBlack)
 
 TEST(VideoSegment, TestAppendFrameNotForceBlack)
 {
-  RefPtr<layers::Image> testImage = nullptr;
+  nsRefPtr<layers::Image> testImage = nullptr;
 
   VideoSegment segment;
   segment.AppendFrame(testImage.forget(),

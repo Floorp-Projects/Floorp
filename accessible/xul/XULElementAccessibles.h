@@ -36,7 +36,7 @@ protected:
   virtual void CacheChildren() override;
 
 private:
-  RefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
+  nsRefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
 };
 
 inline XULLabelAccessible*

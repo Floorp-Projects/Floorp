@@ -45,7 +45,7 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<PresentationRequest> request = new PresentationRequest(window, aUrl);
+  nsRefPtr<PresentationRequest> request = new PresentationRequest(window, aUrl);
   return NS_WARN_IF(!request->Init()) ? nullptr : request.forget();
 }
 
@@ -95,7 +95,7 @@ PresentationRequest::Start(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -141,7 +141,7 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -156,7 +156,7 @@ PresentationRequest::DispatchSessionConnectEvent(PresentationSession* aSession)
   PresentationSessionConnectEventInit init;
   init.mSession = aSession;
 
-  RefPtr<PresentationSessionConnectEvent> event =
+  nsRefPtr<PresentationSessionConnectEvent> event =
     PresentationSessionConnectEvent::Constructor(this,
                                                  NS_LITERAL_STRING("sessionconnect"),
                                                  init);
@@ -165,7 +165,7 @@ PresentationRequest::DispatchSessionConnectEvent(PresentationSession* aSession)
   }
   event->SetTrusted(true);
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   return asyncDispatcher->PostDOMEvent();
 }

@@ -98,7 +98,7 @@ protected:
   /**
    * A pointer to the ValidityState object.
    */
-  RefPtr<mozilla::dom::ValidityState>  mValidity;
+  nsRefPtr<mozilla::dom::ValidityState>  mValidity;
 
 private:
 

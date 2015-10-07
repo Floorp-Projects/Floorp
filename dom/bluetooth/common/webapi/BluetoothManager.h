@@ -50,7 +50,7 @@ public:
    *
    * @param aAdapters [out] Adapters array to return
    */
-  void GetAdapters(nsTArray<RefPtr<BluetoothAdapter> >& aAdapters);
+  void GetAdapters(nsTArray<nsRefPtr<BluetoothAdapter> >& aAdapters);
 
   /****************************************************************************
    * Others
@@ -135,7 +135,7 @@ private:
   /**
    * The adapters array.
    */
-  nsTArray<RefPtr<BluetoothAdapter> > mAdapters;
+  nsTArray<nsRefPtr<BluetoothAdapter> > mAdapters;
 };
 
 END_BLUETOOTH_NAMESPACE

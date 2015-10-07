@@ -179,7 +179,7 @@ nsNavHistoryResultNode::GetTags(nsAString& aTags) {
   }
 
   // Fetch the tags
-  RefPtr<Database> DB = Database::GetDatabase();
+  nsRefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   nsCOMPtr<mozIStorageStatement> stmt = DB->GetStatement(
     "/* do not warn (bug 487594) */ "
@@ -1407,7 +1407,7 @@ nsNavHistoryContainerResultNode::EnsureItemPosition(uint32_t aIndex) {
   if (!DoesChildNeedResorting(aIndex, comparator, sortAnno.get()))
     return false;
 
-  RefPtr<nsNavHistoryResultNode> node(mChildren[aIndex]);
+  nsRefPtr<nsNavHistoryResultNode> node(mChildren[aIndex]);
   mChildren.RemoveObjectAt(aIndex);
 
   uint32_t newIndex = FindInsertionPoint(
@@ -1435,7 +1435,7 @@ nsNavHistoryContainerResultNode::RemoveChildAt(int32_t aIndex)
   NS_ASSERTION(aIndex >= 0 && aIndex < mChildren.Count(), "Invalid index");
 
   // Hold an owning reference to keep from expiring while we work with it.
-  RefPtr<nsNavHistoryResultNode> oldNode = mChildren[aIndex];
+  nsRefPtr<nsNavHistoryResultNode> oldNode = mChildren[aIndex];
 
   // Update stats.
   // XXX This assertion does not reliably pass -- investigate!! (bug 1049797)
@@ -2399,7 +2399,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       // before doing the overhead of creating a new result node.
       MOZ_ASSERT(mQueries.Count() == 1,
                  "Host updated queries can have only one object");
-      RefPtr<nsNavHistoryQuery> query = do_QueryObject(mQueries[0]);
+      nsRefPtr<nsNavHistoryQuery> query = do_QueryObject(mQueries[0]);
 
       bool hasDomain;
       query->GetHasDomain(&hasDomain);
@@ -2422,7 +2422,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
       // before doing the overhead of creating a new result node.
       MOZ_ASSERT(mQueries.Count() == 1,
                  "Time updated queries can have only one object");
-      RefPtr<nsNavHistoryQuery> query = do_QueryObject(mQueries[0]);
+      nsRefPtr<nsNavHistoryQuery> query = do_QueryObject(mQueries[0]);
 
       bool hasIt;
       query->GetHasBeginTime(&hasIt);
@@ -2451,7 +2451,7 @@ nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
 
       // The history service can tell us whether the new item should appear
       // in the result.  We first have to construct a node for it to check.
-      RefPtr<nsNavHistoryResultNode> addition;
+      nsRefPtr<nsNavHistoryResultNode> addition;
       nsresult rv = history->VisitIdToResultNode(aVisitId, mOptions,
                                                  getter_AddRefs(addition));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -2554,7 +2554,7 @@ nsNavHistoryQueryResultNode::OnTitleChanged(nsIURI* aURI,
     if (matches.Count() == 0) {
       // This could be a new node matching the query, thus we could need
       // to add it to the result.
-      RefPtr<nsNavHistoryResultNode> node;
+      nsRefPtr<nsNavHistoryResultNode> node;
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
       rv = history->URIToResultNode(aURI, mOptions, getter_AddRefs(node));
@@ -2761,7 +2761,7 @@ nsNavHistoryQueryResultNode::NotifyIfTagsChanged(nsIURI* aURI)
                          );
 
   // Find matching URI nodes.
-  RefPtr<nsNavHistoryResultNode> node;
+  nsRefPtr<nsNavHistoryResultNode> node;
   nsNavHistory* history = nsNavHistory::GetHistoryService();
 
   nsCOMArray<nsNavHistoryResultNode> matches;
@@ -3567,7 +3567,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
   // adjust indices to account for insertion
   ReindexRange(aIndex, INT32_MAX, 1);
 
-  RefPtr<nsNavHistoryResultNode> node;
+  nsRefPtr<nsNavHistoryResultNode> node;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK) {
     nsNavHistory* history = nsNavHistory::GetHistoryService();
     NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
@@ -3817,7 +3817,7 @@ nsNavHistoryFolderResultNode::OnItemVisited(int64_t aItemId,
   // frecency value in the notification.
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_OK);
-  RefPtr<nsNavHistoryResultNode> visitNode;
+  nsRefPtr<nsNavHistoryResultNode> visitNode;
   rv = history->VisitIdToResultNode(aVisitId, mOptions,
                                     getter_AddRefs(visitNode));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4315,7 +4315,7 @@ nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
     *aRoot = nullptr;
     return NS_ERROR_FAILURE;
   }
-  RefPtr<nsNavHistoryContainerResultNode> node(mRootNode);
+  nsRefPtr<nsNavHistoryContainerResultNode> node(mRootNode);
   node.forget(aRoot);
   return NS_OK;
 }
@@ -4482,10 +4482,10 @@ nsNavHistoryResult::OnItemChanged(int64_t aItemId,
     return NS_OK;
 
   for (uint32_t i = 0; i < list->Length(); ++i) {
-    RefPtr<nsNavHistoryFolderResultNode> folder = list->ElementAt(i);
+    nsRefPtr<nsNavHistoryFolderResultNode> folder = list->ElementAt(i);
     if (folder) {
       uint32_t nodeIndex;
-      RefPtr<nsNavHistoryResultNode> node =
+      nsRefPtr<nsNavHistoryResultNode> node =
         folder->FindChildById(aItemId, &nodeIndex);
       // if ExcludeItems is true we don't update non visible items
       bool excludeItems = (mRootNode->mOptions->ExcludeItems()) ||

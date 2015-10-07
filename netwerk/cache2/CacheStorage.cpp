@@ -87,7 +87,7 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
     rv = noRefURI->GetScheme(scheme);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RefPtr<_OldCacheLoad> appCacheLoad =
+    nsRefPtr<_OldCacheLoad> appCacheLoad =
       new _OldCacheLoad(scheme, cacheKey, aCallback, appCache,
                         LoadInfo(), WriteToDisk(), aFlags);
     rv = appCacheLoad->Start();
@@ -97,7 +97,7 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
     return NS_OK;
   }
 
-  RefPtr<CacheEntryHandle> entry;
+  nsRefPtr<CacheEntryHandle> entry;
   rv = CacheStorageService::Self()->AddStorageEntry(
     this, noRefURI, aIdExtension,
     true, // create always
@@ -124,7 +124,7 @@ NS_IMETHODIMP CacheStorage::OpenTruncate(nsIURI *aURI, const nsACString & aIdExt
   rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<CacheEntryHandle> entry;
+  nsRefPtr<CacheEntryHandle> entry;
   rv = CacheStorageService::Self()->AddStorageEntry(
     this, noRefURI, aIdExtension,
     true, // create always

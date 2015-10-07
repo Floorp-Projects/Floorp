@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -188,10 +188,10 @@ MakeContext ()
 {
     const int size = 200;
 
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(IntSize(size, size),
                                          SurfaceFormat::B8G8R8X8);
-    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);
 
     return ctx.forget();
 }
@@ -247,7 +247,7 @@ void SetupTests(nsTArray<TestEntry>& testList);
 
 static bool
 RunTest (TestEntry *test, gfxContext *ctx) {
-    RefPtr<gfxFontGroup> fontGroup;
+    nsRefPtr<gfxFontGroup> fontGroup;
 
     fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nullptr, nullptr);
 
@@ -295,7 +295,7 @@ TEST(Gfx, FontSelection) {
     nsTArray<TestEntry> testList;
     SetupTests(testList);
 
-    RefPtr<gfxContext> context = MakeContext();
+    nsRefPtr<gfxContext> context = MakeContext();
 
     for (uint32_t test = 0;
          test < testList.Length();

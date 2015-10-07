@@ -296,7 +296,7 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
 
   // First, if there is a composition in the aContent, clean up it.
   if (sTextCompositions) {
-    RefPtr<TextComposition> compositionInContent =
+    nsRefPtr<TextComposition> compositionInContent =
       sTextCompositions->GetCompositionInContent(aPresContext, aContent);
 
     if (compositionInContent) {
@@ -367,7 +367,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
                                        nsIContent* aContent,
                                        InputContextAction aAction)
 {
-  RefPtr<TabParent> newTabParent = TabParent::GetFrom(aContent);
+  nsRefPtr<TabParent> newTabParent = TabParent::GetFrom(aContent);
 
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::OnChangeFocusInternal(aPresContext=0x%p, "
@@ -1104,7 +1104,7 @@ IMEStateManager::DispatchCompositionEvent(
                    EventDispatchingCallback* aCallBack,
                    bool aIsSynthesized)
 {
-  RefPtr<TabParent> tabParent =
+  nsRefPtr<TabParent> tabParent =
     aEventTargetNode->IsContent() ?
       TabParent::GetFrom(aEventTargetNode->AsContent()) : nullptr;
 
@@ -1129,7 +1129,7 @@ IMEStateManager::DispatchCompositionEvent(
 
   EnsureTextCompositionArray();
 
-  RefPtr<TextComposition> composition =
+  nsRefPtr<TextComposition> composition =
     sTextCompositions->GetCompositionFor(aCompositionEvent->widget);
   if (!composition) {
     // If synthesized event comes after delayed native composition events
@@ -1204,7 +1204,7 @@ IMEStateManager::HandleSelectionEvent(nsPresContext* aPresContext,
   nsIContent* eventTargetContent =
     aEventTargetContent ? aEventTargetContent :
                           GetRootContent(aPresContext);
-  RefPtr<TabParent> tabParent =
+  nsRefPtr<TabParent> tabParent =
     eventTargetContent ? TabParent::GetFrom(eventTargetContent) : nullptr;
 
   MOZ_LOG(sISMLog, LogLevel::Info,
@@ -1220,7 +1220,7 @@ IMEStateManager::HandleSelectionEvent(nsPresContext* aPresContext,
     return;
   }
 
-  RefPtr<TextComposition> composition = sTextCompositions ?
+  nsRefPtr<TextComposition> composition = sTextCompositions ?
     sTextCompositions->GetCompositionFor(aSelectionEvent->widget) : nullptr;
   if (composition) {
     // When there is a composition, TextComposition should guarantee that the
@@ -1258,7 +1258,7 @@ IMEStateManager::OnCompositionEventDiscarded(
     return;
   }
 
-  RefPtr<TextComposition> composition =
+  nsRefPtr<TextComposition> composition =
     sTextCompositions->GetCompositionFor(aCompositionEvent->widget);
   if (!composition) {
     // If the PresShell has been being destroyed during composition,
@@ -1397,7 +1397,7 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
       break;
   }
 
-  RefPtr<TextComposition> composition;
+  nsRefPtr<TextComposition> composition;
   if (sTextCompositions) {
     composition = sTextCompositions->GetCompositionFor(aWidget);
   }
@@ -1536,7 +1536,7 @@ IMEStateManager::DestroyIMEContentObserver()
   MOZ_LOG(sISMLog, LogLevel::Debug,
     ("ISM:   IMEStateManager::DestroyIMEContentObserver(), destroying "
      "the active IMEContentObserver..."));
-  RefPtr<IMEContentObserver> tsm = sActiveIMEContentObserver.get();
+  nsRefPtr<IMEContentObserver> tsm = sActiveIMEContentObserver.get();
   sActiveIMEContentObserver = nullptr;
   tsm->Destroy();
 }
@@ -1585,7 +1585,7 @@ IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
   // IMEContentObserver::Init() might create another IMEContentObserver
   // instance.  So, sActiveIMEContentObserver would be replaced with new one.
   // We should hold the current instance here.
-  RefPtr<IMEContentObserver> kungFuDeathGrip(sActiveIMEContentObserver);
+  nsRefPtr<IMEContentObserver> kungFuDeathGrip(sActiveIMEContentObserver);
   sActiveIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
 }
 
@@ -1608,7 +1608,7 @@ IMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
   if (!sTextCompositions) {
     return nullptr;
   }
-  RefPtr<TextComposition> textComposition =
+  nsRefPtr<TextComposition> textComposition =
     sTextCompositions->GetCompositionFor(aWidget);
   return textComposition.forget();
 }

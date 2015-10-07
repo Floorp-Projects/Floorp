@@ -151,7 +151,7 @@ static bool ConvertToMidasInternalCommand(const nsAString & inCommandID,
 nsresult
 NS_NewHTMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
 {
-  RefPtr<nsHTMLDocument> doc = new nsHTMLDocument();
+  nsRefPtr<nsHTMLDocument> doc = new nsHTMLDocument();
 
   nsresult rv = doc->Init();
 
@@ -1385,7 +1385,7 @@ nsHTMLDocument::Open(JSContext* /* unused */,
     rv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  RefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window.get());
+  nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window.get());
   nsCOMPtr<nsIDOMWindow> newWindow;
   // XXXbz We ignore aReplace for now.
   rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newWindow));
@@ -2534,7 +2534,7 @@ public:
   }
 
 private:
-  RefPtr<nsHTMLDocument> mDoc;
+  nsRefPtr<nsHTMLDocument> mDoc;
   nsCOMPtr<nsIContent> mElement;
 };
 
@@ -2582,7 +2582,7 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
       nsCOMPtr<nsIEditor> editor;
       docshell->GetEditor(getter_AddRefs(editor));
       if (editor) {
-        RefPtr<nsRange> range = new nsRange(aElement);
+        nsRefPtr<nsRange> range = new nsRange(aElement);
         rv = range->SelectNode(node);
         if (NS_FAILED(rv)) {
           // The node might be detached from the document at this point,
@@ -3650,7 +3650,7 @@ nsHTMLDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) cons
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  RefPtr<nsHTMLDocument> clone = new nsHTMLDocument();
+  nsRefPtr<nsHTMLDocument> clone = new nsHTMLDocument();
   nsresult rv = CloneDocHelper(clone.get());
   NS_ENSURE_SUCCESS(rv, rv);
 

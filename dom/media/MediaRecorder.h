@@ -130,21 +130,21 @@ protected:
   MediaStream* GetSourceMediaStream();
   nsIPrincipal* GetSourcePrincipal();
   // DOM wrapper for source media stream. Will be null when input is audio node.
-  RefPtr<DOMMediaStream> mDOMStream;
+  nsRefPtr<DOMMediaStream> mDOMStream;
   // Source audio node. Will be null when input is a media stream.
-  RefPtr<AudioNode> mAudioNode;
+  nsRefPtr<AudioNode> mAudioNode;
   // Pipe stream connecting non-destination source node and session track union
   // stream of recorder. Will be null when input is media stream or destination
   // node.
-  RefPtr<AudioNodeStream> mPipeStream;
+  nsRefPtr<AudioNodeStream> mPipeStream;
   // Connect source node to the pipe stream.
-  RefPtr<MediaInputPort> mInputPort;
+  nsRefPtr<MediaInputPort> mInputPort;
 
   // The current state of the MediaRecorder object.
   RecordingState mState;
   // Hold the sessions reference and clean it when the DestroyRunnable for a
   // session is running.
-  nsTArray<RefPtr<Session> > mSessions;
+  nsTArray<nsRefPtr<Session> > mSessions;
   // It specifies the container format as well as the audio and video capture formats.
   nsString mMimeType;
 

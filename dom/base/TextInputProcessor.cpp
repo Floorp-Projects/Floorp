@@ -73,7 +73,7 @@ TextInputProcessor::~TextInputProcessor()
     // the rights of TextEventDispatcher from this instance.  Therefore, this
     // needs to cancel the composition here.
     if (NS_SUCCEEDED(IsValidStateForComposition())) {
-      RefPtr<TextEventDispatcher> kungFuDeathGrip(mDispatcher);
+      nsRefPtr<TextEventDispatcher> kungFuDeathGrip(mDispatcher);
       nsEventStatus status = nsEventStatus_eIgnore;
       mDispatcher->CommitComposition(status, &EmptyString());
     }
@@ -143,7 +143,7 @@ TextInputProcessor::BeginInputTransactionInternal(
   if (NS_WARN_IF(!docShell)) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   nsresult rv = docShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -156,7 +156,7 @@ TextInputProcessor::BeginInputTransactionInternal(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<TextEventDispatcher> dispatcher = widget->GetTextEventDispatcher();
+  nsRefPtr<TextEventDispatcher> dispatcher = widget->GetTextEventDispatcher();
   MOZ_RELEASE_ASSERT(dispatcher, "TextEventDispatcher must not be null");
 
   // If the instance was initialized and is being initialized for same
@@ -222,7 +222,7 @@ TextInputProcessor::UnlinkFromTextEventDispatcher()
     nsCOMPtr<nsITextInputProcessorCallback> callback(mCallback);
     mCallback = nullptr;
 
-    RefPtr<TextInputProcessorNotification> notification =
+    nsRefPtr<TextInputProcessorNotification> notification =
       new TextInputProcessorNotification("notify-end-input-transaction");
     bool result = false;
     callback->OnNotify(this, notification, &result);
@@ -370,7 +370,7 @@ TextInputProcessor::StartComposition(nsIDOMKeyEvent* aDOMKeyEvent,
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   *aSucceeded = false;
 
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
 
   WidgetKeyboardEvent* keyboardEvent;
   nsresult rv =
@@ -406,7 +406,7 @@ NS_IMETHODIMP
 TextInputProcessor::SetPendingCompositionString(const nsAString& aString)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   nsresult rv = IsValidStateForComposition();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -419,7 +419,7 @@ TextInputProcessor::AppendClauseToPendingComposition(uint32_t aLength,
                                                      uint32_t aAttribute)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   switch (aAttribute) {
     case ATTR_RAW_CLAUSE:
     case ATTR_SELECTED_RAW_CLAUSE:
@@ -440,7 +440,7 @@ NS_IMETHODIMP
 TextInputProcessor::SetCaretInPendingComposition(uint32_t aOffset)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   nsresult rv = IsValidStateForComposition();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -462,7 +462,7 @@ TextInputProcessor::FlushPendingComposition(nsIDOMKeyEvent* aDOMKeyEvent,
   AutoPendingCompositionResetter resetter(this);
 
   *aSucceeded = false;
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   bool wasComposing = IsComposing();
 
   WidgetKeyboardEvent* keyboardEvent;
@@ -550,7 +550,7 @@ TextInputProcessor::CommitCompositionInternal(
   if (aSucceeded) {
     *aSucceeded = false;
   }
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   bool wasComposing = IsComposing();
 
   EventDispatcherResult dispatcherResult =
@@ -606,7 +606,7 @@ TextInputProcessor::CancelCompositionInternal(
                       const WidgetKeyboardEvent* aKeyboardEvent,
                       uint32_t aKeyFlags)
 {
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
 
   EventDispatcherResult dispatcherResult =
     MaybeDispatchKeydownForComposition(aKeyboardEvent, aKeyFlags);
@@ -639,7 +639,7 @@ TextInputProcessor::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
   NS_ASSERTION(mForTests || mCallback,
                "mCallback can be null only when IME is initialized for tests");
   if (mCallback) {
-    RefPtr<TextInputProcessorNotification> notification;
+    nsRefPtr<TextInputProcessorNotification> notification;
     switch (aNotification.mMessage) {
       case REQUEST_TO_COMMIT_COMPOSITION: {
         NS_ASSERTION(aTextEventDispatcher->IsComposing(),
@@ -830,7 +830,7 @@ TextInputProcessor::KeydownInternal(const WidgetKeyboardEvent& aKeyboardEvent,
   }
   keyEvent.modifiers = GetActiveModifiers();
 
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   rv = IsValidStateForComposition();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -912,7 +912,7 @@ TextInputProcessor::KeyupInternal(const WidgetKeyboardEvent& aKeyboardEvent,
   }
   keyEvent.modifiers = GetActiveModifiers();
 
-  RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  nsRefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
   rv = IsValidStateForComposition();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

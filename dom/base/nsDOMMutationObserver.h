@@ -36,7 +36,7 @@ class nsDOMMutationRecord final : public nsISupports,
   virtual ~nsDOMMutationRecord() {}
 
 public:
-  typedef nsTArray<RefPtr<mozilla::dom::Animation>> AnimationArray;
+  typedef nsTArray<nsRefPtr<mozilla::dom::Animation>> AnimationArray;
 
   nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
   : mType(aType), mAttrNamespace(NullString()), mPrevValue(NullString()), mOwner(aOwner)
@@ -115,15 +115,15 @@ public:
   nsCOMPtr<nsIAtom>             mAttrName;
   nsString                      mAttrNamespace;
   nsString                      mPrevValue;
-  RefPtr<nsSimpleContentList> mAddedNodes;
-  RefPtr<nsSimpleContentList> mRemovedNodes;
+  nsRefPtr<nsSimpleContentList> mAddedNodes;
+  nsRefPtr<nsSimpleContentList> mRemovedNodes;
   nsCOMPtr<nsINode>             mPreviousSibling;
   nsCOMPtr<nsINode>             mNextSibling;
   AnimationArray                mAddedAnimations;
   AnimationArray                mRemovedAnimations;
   AnimationArray                mChangedAnimations;
 
-  RefPtr<nsDOMMutationRecord> mNext;
+  nsRefPtr<nsDOMMutationRecord> mNext;
   nsCOMPtr<nsISupports>         mOwner;
 };
  
@@ -294,7 +294,7 @@ protected:
   // The target for the MutationObserver.observe() method.
   nsINode*                           mTarget;
   nsDOMMutationObserver*             mObserver;
-  RefPtr<nsMutationReceiverBase>   mParent; // Cleared after microtask.
+  nsRefPtr<nsMutationReceiverBase>   mParent; // Cleared after microtask.
   // The node to which Gecko-internal nsIMutationObserver was registered to.
   // This is different than mTarget when dealing with transient observers.
   nsINode*                           mRegisterTarget;
@@ -503,7 +503,7 @@ public:
 
   void Disconnect();
 
-  void TakeRecords(nsTArray<RefPtr<nsDOMMutationRecord> >& aRetVal);
+  void TakeRecords(nsTArray<nsRefPtr<nsDOMMutationRecord> >& aRetVal);
 
   void HandleMutation();
 
@@ -530,7 +530,7 @@ public:
 
   void AppendMutationRecord(already_AddRefed<nsDOMMutationRecord> aRecord)
   {
-    RefPtr<nsDOMMutationRecord> record = aRecord;
+    nsRefPtr<nsDOMMutationRecord> record = aRecord;
     MOZ_ASSERT(record);
     if (!mLastPendingMutation) {
       MOZ_ASSERT(!mFirstPendingMutation);
@@ -607,11 +607,11 @@ protected:
   nsAutoTArray<nsDOMMutationRecord*, 4>              mCurrentMutations;
   // MutationRecords which will be handed to the callback at the end of
   // the microtask.
-  RefPtr<nsDOMMutationRecord>                      mFirstPendingMutation;
+  nsRefPtr<nsDOMMutationRecord>                      mFirstPendingMutation;
   nsDOMMutationRecord*                               mLastPendingMutation;
   uint32_t                                           mPendingMutationCount;
 
-  RefPtr<mozilla::dom::MutationCallback>           mCallback;
+  nsRefPtr<mozilla::dom::MutationCallback>           mCallback;
 
   bool                                               mWaitingForRun;
   bool                                               mIsChrome;
@@ -620,11 +620,11 @@ protected:
   uint64_t                                           mId;
 
   static uint64_t                                    sCount;
-  static nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>* sScheduledMutationObservers;
+  static nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>* sScheduledMutationObservers;
   static nsDOMMutationObserver*                      sCurrentObserver;
 
   static uint32_t                                    sMutationLevel;
-  static nsAutoTArray<nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>*
+  static nsAutoTArray<nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>, 4>*
                                                      sCurrentlyHandlingObservers;
 };
 
@@ -900,7 +900,7 @@ private:
 
   struct Entry
   {
-    RefPtr<mozilla::dom::Animation> mAnimation;
+    nsRefPtr<mozilla::dom::Animation> mAnimation;
     State mState;
     bool mChanged;
   };

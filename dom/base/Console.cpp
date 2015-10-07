@@ -69,7 +69,7 @@ struct
 ConsoleStructuredCloneData
 {
   nsCOMPtr<nsISupports> mParent;
-  nsTArray<RefPtr<BlobImpl>> mBlobs;
+  nsTArray<nsRefPtr<BlobImpl>> mBlobs;
 };
 
 /**
@@ -268,7 +268,7 @@ private:
   {
     class ConsoleReleaseRunnable final : public MainThreadWorkerControlRunnable
     {
-      RefPtr<ConsoleRunnable> mRunnable;
+      nsRefPtr<ConsoleRunnable> mRunnable;
 
     public:
       ConsoleReleaseRunnable(WorkerPrivate* aWorkerPrivate,
@@ -295,7 +295,7 @@ private:
       {}
     };
 
-    RefPtr<WorkerControlRunnable> runnable =
+    nsRefPtr<WorkerControlRunnable> runnable =
       new ConsoleReleaseRunnable(mWorkerPrivate, this);
     runnable->Dispatch(nullptr);
   }
@@ -306,7 +306,7 @@ private:
     AutoJSAPI jsapi;
     MOZ_ASSERT(aWindow);
 
-    RefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(aWindow);
+    nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(aWindow);
     if (NS_WARN_IF(!jsapi.Init(win))) {
       return;
     }
@@ -364,7 +364,7 @@ protected:
 
       JS::Rooted<JS::Value> val(aCx);
       {
-        RefPtr<Blob> blob =
+        nsRefPtr<Blob> blob =
           Blob::Create(mClonedData.mParent, mClonedData.mBlobs.ElementAt(aIndex));
         if (!ToJSValue(aCx, blob, &val)) {
           return nullptr;
@@ -382,7 +382,7 @@ protected:
                                   JSStructuredCloneWriter* aWriter,
                                   JS::Handle<JSObject*> aObj) override
   {
-    RefPtr<Blob> blob;
+    nsRefPtr<Blob> blob;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob)) &&
         blob->Impl()->MayBeClonedToOtherThreads()) {
       if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG_BLOB,
@@ -410,7 +410,7 @@ protected:
   WorkerPrivate* mWorkerPrivate;
 
   // This must be released on the worker thread.
-  RefPtr<Console> mConsole;
+  nsRefPtr<Console> mConsole;
 
   ConsoleStructuredCloneData mClonedData;
 };
@@ -432,7 +432,7 @@ private:
     class ReleaseCallData final : public nsRunnable
     {
     public:
-      explicit ReleaseCallData(RefPtr<ConsoleCallData>& aCallData)
+      explicit ReleaseCallData(nsRefPtr<ConsoleCallData>& aCallData)
       {
         mCallData.swap(aCallData);
       }
@@ -444,10 +444,10 @@ private:
       }
 
     private:
-      RefPtr<ConsoleCallData> mCallData;
+      nsRefPtr<ConsoleCallData> mCallData;
     };
 
-    RefPtr<ReleaseCallData> runnable = new ReleaseCallData(mCallData);
+    nsRefPtr<ReleaseCallData> runnable = new ReleaseCallData(mCallData);
     if(NS_FAILED(NS_DispatchToMainThread(runnable))) {
       NS_WARNING("Failed to dispatch a ReleaseCallData runnable. Leaking.");
     }
@@ -558,7 +558,7 @@ private:
     mConsole->ProcessCallData(mCallData);
   }
 
-  RefPtr<ConsoleCallData> mCallData;
+  nsRefPtr<ConsoleCallData> mCallData;
 };
 
 // This runnable calls ProfileMethod() on the console on the main-thread.
@@ -865,7 +865,7 @@ Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
 {
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
-    RefPtr<ConsoleProfileRunnable> runnable =
+    nsRefPtr<ConsoleProfileRunnable> runnable =
       new ConsoleProfileRunnable(this, aAction, aData);
     runnable->Dispatch();
     return;
@@ -993,7 +993,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
                 const nsAString& aMethodString,
                 const Sequence<JS::Value>& aData)
 {
-  RefPtr<ConsoleCallData> callData(new ConsoleCallData());
+  nsRefPtr<ConsoleCallData> callData(new ConsoleCallData());
 
   ClearException ce(aCx);
 
@@ -1068,7 +1068,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
       nsGlobalWindow *win = static_cast<nsGlobalWindow*>(mWindow.get());
       MOZ_ASSERT(win);
 
-      RefPtr<nsPerformance> performance = win->GetPerformance();
+      nsRefPtr<nsPerformance> performance = win->GetPerformance();
       if (!performance) {
         return;
       }
@@ -1128,7 +1128,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
-  RefPtr<ConsoleCallDataRunnable> runnable =
+  nsRefPtr<ConsoleCallDataRunnable> runnable =
     new ConsoleCallDataRunnable(this, callData);
   runnable->Dispatch();
 }

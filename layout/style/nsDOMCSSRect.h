@@ -44,10 +44,10 @@ protected:
   virtual ~nsDOMCSSRect(void);
 
 private:
-  RefPtr<nsROCSSPrimitiveValue> mTop;
-  RefPtr<nsROCSSPrimitiveValue> mRight;
-  RefPtr<nsROCSSPrimitiveValue> mBottom;
-  RefPtr<nsROCSSPrimitiveValue> mLeft;
+  nsRefPtr<nsROCSSPrimitiveValue> mTop;
+  nsRefPtr<nsROCSSPrimitiveValue> mRight;
+  nsRefPtr<nsROCSSPrimitiveValue> mBottom;
+  nsRefPtr<nsROCSSPrimitiveValue> mLeft;
 };
 
 #endif /* nsDOMCSSRect_h_ */

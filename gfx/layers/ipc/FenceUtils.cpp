@@ -26,7 +26,7 @@ ParamTraits<FenceHandle>::Write(Message* aMsg,
   MOZ_ASSERT(handle.IsValid());
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  RefPtr<FenceHandle::FdObj> fence = handle.GetAndResetFdObj();
+  nsRefPtr<FenceHandle::FdObj> fence = handle.GetAndResetFdObj();
   aMsg->WriteFileDescriptor(base::FileDescriptor(fence->GetAndResetFd(), true));
 #endif
 }
@@ -90,7 +90,7 @@ FenceHandle::TransferToAnotherFenceHandle(FenceHandle& aFenceHandle)
 already_AddRefed<FenceHandle::FdObj>
 FenceHandle::GetAndResetFdObj()
 {
-  RefPtr<FdObj> fence = mFence;
+  nsRefPtr<FdObj> fence = mFence;
   mFence = new FdObj();
   return fence.forget();
 }
@@ -98,7 +98,7 @@ FenceHandle::GetAndResetFdObj()
 already_AddRefed<FenceHandle::FdObj>
 FenceHandle::GetDupFdObj()
 {
-  RefPtr<FdObj> fdObj;
+  nsRefPtr<FdObj> fdObj;
   if (IsValid()) {
     fdObj = new FenceHandle::FdObj(dup(mFence->mFd));
   } else {

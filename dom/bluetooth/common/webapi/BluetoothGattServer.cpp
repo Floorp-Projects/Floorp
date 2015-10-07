@@ -95,7 +95,7 @@ void BluetoothGattServer::HandleConnectionStateChanged(
   init.mStatus = arr[0].value().get_bool();
   init.mAddress = arr[1].value().get_nsString();
 
-  RefPtr<BluetoothStatusChangedEvent> event =
+  nsRefPtr<BluetoothStatusChangedEvent> event =
     BluetoothStatusChangedEvent::Constructor(
       this, NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID), init);
 
@@ -203,11 +203,11 @@ BluetoothGattServer::HandleReadWriteRequest(const BluetoothValue& aValue,
   value = arr[4].value().get_ArrayOfuint8_t();
 
   // Find the target characteristic or descriptor from the given handle
-  RefPtr<BluetoothGattCharacteristic> characteristic = nullptr;
-  RefPtr<BluetoothGattDescriptor> descriptor = nullptr;
+  nsRefPtr<BluetoothGattCharacteristic> characteristic = nullptr;
+  nsRefPtr<BluetoothGattDescriptor> descriptor = nullptr;
   for (uint32_t i = 0; i < mServices.Length(); i++) {
     for (uint32_t j = 0; j < mServices[i]->mCharacteristics.Length(); j++) {
-      RefPtr<BluetoothGattCharacteristic> currentChar =
+      nsRefPtr<BluetoothGattCharacteristic> currentChar =
         mServices[i]->mCharacteristics[j];
 
       if (handle == currentChar->GetCharacteristicHandle()) {
@@ -234,7 +234,7 @@ BluetoothGattServer::HandleReadWriteRequest(const BluetoothValue& aValue,
                    descriptor);
   mRequestMap.Put(requestId, &data);
 
-  RefPtr<BluetoothGattAttributeEvent> event =
+  nsRefPtr<BluetoothGattAttributeEvent> event =
     BluetoothGattAttributeEvent::Constructor(
       this, aEventName, address, requestId, characteristic, descriptor,
       &value, needResponse, false /* Bubble */, false /* Cancelable*/);
@@ -316,7 +316,7 @@ BluetoothGattServer::Connect(const nsAString& aAddress, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
@@ -338,7 +338,7 @@ BluetoothGattServer::Disconnect(const nsAString& aAddress, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
@@ -382,9 +382,9 @@ public:
   }
 
 private:
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
-  RefPtr<BluetoothGattService> mIncludedService;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
+  nsRefPtr<BluetoothGattService> mIncludedService;
 };
 
 class BluetoothGattServer::AddCharacteristicTask final
@@ -422,9 +422,9 @@ public:
   }
 
 private:
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
-  RefPtr<BluetoothGattCharacteristic> mCharacteristic;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
+  nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
 };
 
 class BluetoothGattServer::AddDescriptorTask final
@@ -464,10 +464,10 @@ public:
   }
 
 private:
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
-  RefPtr<BluetoothGattCharacteristic> mCharacteristic;
-  RefPtr<BluetoothGattDescriptor> mDescriptor;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
+  nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
+  nsRefPtr<BluetoothGattDescriptor> mDescriptor;
 };
 
 class BluetoothGattServer::StartServiceTask final
@@ -498,8 +498,8 @@ public:
   }
 
 private:
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
 };
 
 /*
@@ -545,9 +545,9 @@ private:
     mPromise->MaybeReject(NS_ERROR_FAILURE);
   }
 
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
+  nsRefPtr<Promise> mPromise;
 };
 
 class BluetoothGattServer::AddServiceTaskQueue final
@@ -563,27 +563,27 @@ public:
     , mPromise(aPromise)
   {
     /* add included services */
-    nsTArray<RefPtr<BluetoothGattService>> includedServices;
+    nsTArray<nsRefPtr<BluetoothGattService>> includedServices;
     mService->GetIncludedServices(includedServices);
     for (size_t i = 0; i < includedServices.Length(); ++i) {
-      RefPtr<SubTask> includedServiceTask =
+      nsRefPtr<SubTask> includedServiceTask =
         new AddIncludedServiceTask(this, mServer, mService, includedServices[i]);
       AppendTask(includedServiceTask.forget());
     }
 
     /* add characteristics */
-    nsTArray<RefPtr<BluetoothGattCharacteristic>> characteristics;
+    nsTArray<nsRefPtr<BluetoothGattCharacteristic>> characteristics;
     mService->GetCharacteristics(characteristics);
     for (size_t i = 0; i < characteristics.Length(); ++i) {
-      RefPtr<SubTask> characteristicTask =
+      nsRefPtr<SubTask> characteristicTask =
         new AddCharacteristicTask(this, mServer, mService, characteristics[i]);
       AppendTask(characteristicTask.forget());
 
       /* add descriptors */
-      nsTArray<RefPtr<BluetoothGattDescriptor>> descriptors;
+      nsTArray<nsRefPtr<BluetoothGattDescriptor>> descriptors;
       characteristics[i]->GetDescriptors(descriptors);
       for (size_t j = 0; j < descriptors.Length(); ++j) {
-        RefPtr<SubTask> descriptorTask =
+        nsRefPtr<SubTask> descriptorTask =
           new AddDescriptorTask(this,
                                 mServer,
                                 mService,
@@ -595,7 +595,7 @@ public:
     }
 
     /* start service */
-    RefPtr<SubTask> startTask = new StartServiceTask(this, mServer, mService);
+    nsRefPtr<SubTask> startTask = new StartServiceTask(this, mServer, mService);
     AppendTask(startTask.forget());
   }
 
@@ -622,9 +622,9 @@ private:
       new CancelAddServiceTask(mServer, mService, mPromise));
   }
 
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
+  nsRefPtr<Promise> mPromise;
 };
 
 class BluetoothGattServer::AddServiceTask final
@@ -659,7 +659,7 @@ private:
   {
     mService->AssignAppUuid(mServer->mAppUuid);
 
-    RefPtr<nsRunnable> runnable = new AddServiceTaskQueue(mServer,
+    nsRefPtr<nsRunnable> runnable = new AddServiceTaskQueue(mServer,
                                                             mService,
                                                             mPromise);
     nsresult rv = NS_DispatchToMainThread(runnable.forget());
@@ -676,9 +676,9 @@ private:
     mPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
   }
 
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
+  nsRefPtr<Promise> mPromise;
 };
 
 already_AddRefed<Promise>
@@ -691,7 +691,7 @@ BluetoothGattServer::AddService(BluetoothGattService& aService,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
@@ -747,8 +747,8 @@ protected:
   }
 
 private:
-  RefPtr<BluetoothGattServer> mServer;
-  RefPtr<BluetoothGattService> mService;
+  nsRefPtr<BluetoothGattServer> mServer;
+  nsRefPtr<BluetoothGattService> mService;
 };
 
 already_AddRefed<Promise>
@@ -761,7 +761,7 @@ BluetoothGattServer::RemoveService(BluetoothGattService& aService,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
@@ -793,7 +793,7 @@ BluetoothGattServer::NotifyCharacteristicChanged(
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
@@ -801,7 +801,7 @@ BluetoothGattServer::NotifyCharacteristicChanged(
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
-  RefPtr<BluetoothGattService> service = aCharacteristic.Service();
+  nsRefPtr<BluetoothGattService> service = aCharacteristic.Service();
   BT_ENSURE_TRUE_REJECT(service, promise, NS_ERROR_NOT_AVAILABLE);
   BT_ENSURE_TRUE_REJECT(mServices.Contains(service),
                         promise,
@@ -827,7 +827,7 @@ BluetoothGattServer::SendResponse(const nsAString& aAddress,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);

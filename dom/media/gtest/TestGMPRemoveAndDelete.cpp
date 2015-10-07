@@ -108,7 +108,7 @@ private:
  */
 TEST(GeckoMediaPlugins, RemoveAndDeleteForcedSimple)
 {
-  RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
+  nsRefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
   test->DeletePluginDirectory(false /* force immediate */);
@@ -120,7 +120,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedSimple)
  */
 TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredSimple)
 {
-  RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
+  nsRefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
   test->DeletePluginDirectory(true /* can defer */);
@@ -133,7 +133,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredSimple)
  */
 TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
 {
-  RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
+  nsRefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
   EXPECT_TRUE(test->CreateVideoDecoder(NS_LITERAL_CSTRING("thisOrigin")));
@@ -158,7 +158,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
  */
 TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredInUse)
 {
-  RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
+  nsRefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
   EXPECT_TRUE(test->CreateVideoDecoder(NS_LITERAL_CSTRING("thisOrigin")));
@@ -187,7 +187,7 @@ static GeckoMediaPluginService*
 GetService()
 {
   if (!gService) {
-    RefPtr<GeckoMediaPluginService> service =
+    nsRefPtr<GeckoMediaPluginService> service =
       GeckoMediaPluginService::GetGeckoMediaPluginService();
     gService = service;
   }
@@ -199,7 +199,7 @@ static GeckoMediaPluginServiceParent*
 GetServiceParent()
 {
   if (!gServiceParent) {
-    RefPtr<GeckoMediaPluginServiceParent> parent =
+    nsRefPtr<GeckoMediaPluginServiceParent> parent =
       GeckoMediaPluginServiceParent::GetSingleton();
     gServiceParent = parent;
   }

@@ -47,7 +47,7 @@ MP3Demuxer::InitInternal() {
   return mTrackDemuxer->Init();
 }
 
-RefPtr<MP3Demuxer::InitPromise>
+nsRefPtr<MP3Demuxer::InitPromise>
 MP3Demuxer::Init() {
   if (!InitInternal()) {
     MP3DEMUXER_LOG("MP3Demuxer::Init() failure: waiting for data");
@@ -75,7 +75,7 @@ MP3Demuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber) {
   if (!mTrackDemuxer) {
     return nullptr;
   }
-  return RefPtr<MP3TrackDemuxer>(mTrackDemuxer).forget();
+  return nsRefPtr<MP3TrackDemuxer>(mTrackDemuxer).forget();
 }
 
 bool
@@ -118,7 +118,7 @@ MP3TrackDemuxer::Init() {
   Reset();
   FastSeek(TimeUnit());
   // Read the first frame to fetch sample rate and other meta data.
-  RefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
+  nsRefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
 
   MP3DEMUXER_LOG("Init StreamLength()=%" PRId64 " first-frame-found=%d",
                  StreamLength(), !!frame);
@@ -153,7 +153,7 @@ MP3TrackDemuxer::LastFrame() const {
   return mParser.PrevFrame();
 }
 
-RefPtr<MediaRawData>
+nsRefPtr<MediaRawData>
 MP3TrackDemuxer::DemuxSample() {
   return GetNextFrame(FindNextFrame());
 }
@@ -179,7 +179,7 @@ MP3TrackDemuxer::GetInfo() const {
   return mInfo->Clone();
 }
 
-RefPtr<MP3TrackDemuxer::SeekPromise>
+nsRefPtr<MP3TrackDemuxer::SeekPromise>
 MP3TrackDemuxer::Seek(TimeUnit aTime) {
   const TimeUnit seekTime = ScanUntil(aTime);
 
@@ -251,7 +251,7 @@ MP3TrackDemuxer::ScanUntil(TimeUnit aTime) {
   return Duration(mFrameIndex);
 }
 
-RefPtr<MP3TrackDemuxer::SamplesPromise>
+nsRefPtr<MP3TrackDemuxer::SamplesPromise>
 MP3TrackDemuxer::GetSamples(int32_t aNumSamples) {
   MP3DEMUXER_LOGV("GetSamples(%d) Begin mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
                   " mFrameIndex=%" PRId64 " mTotalFrameLen=%" PRIu64 " mSamplesPerFrame=%d "
@@ -264,10 +264,10 @@ MP3TrackDemuxer::GetSamples(int32_t aNumSamples) {
         DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 
-  RefPtr<SamplesHolder> frames = new SamplesHolder();
+  nsRefPtr<SamplesHolder> frames = new SamplesHolder();
 
   while (aNumSamples--) {
-    RefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
+    nsRefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
     if (!frame) {
       break;
     }
@@ -305,7 +305,7 @@ MP3TrackDemuxer::Reset() {
   mParser.Reset();
 }
 
-RefPtr<MP3TrackDemuxer::SkipAccessPointPromise>
+nsRefPtr<MP3TrackDemuxer::SkipAccessPointPromise>
 MP3TrackDemuxer::SkipToNextRandomAccessPoint(TimeUnit aTimeThreshold) {
   // Will not be called for audio-only resources.
   return SkipAccessPointPromise::CreateAndReject(
@@ -425,7 +425,7 @@ bool
 MP3TrackDemuxer::SkipNextFrame(const MediaByteRange& aRange) {
   if (!mNumParsedFrames || !aRange.Length()) {
     // We can't skip the first frame, since it could contain VBR headers.
-    RefPtr<MediaRawData> frame(GetNextFrame(aRange));
+    nsRefPtr<MediaRawData> frame(GetNextFrame(aRange));
     return frame;
   }
 
@@ -447,7 +447,7 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange) {
     return nullptr;
   }
 
-  RefPtr<MediaRawData> frame = new MediaRawData();
+  nsRefPtr<MediaRawData> frame = new MediaRawData();
   frame->mOffset = aRange.mStart;
 
   nsAutoPtr<MediaRawDataWriter> frameWriter(frame->CreateWriter());

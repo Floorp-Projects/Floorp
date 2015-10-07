@@ -456,7 +456,7 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
     return NS_OK;
   }
 
-  RefPtr<TextComposition> kungFuDeathGrip(this);
+  nsRefPtr<TextComposition> kungFuDeathGrip(this);
   const nsAutoString lastData(mLastData);
 
   {
@@ -608,7 +608,7 @@ TextComposition::CompositionEventDispatcher::Run()
     return NS_OK; // cannot dispatch any events anymore
   }
 
-  RefPtr<nsPresContext> presContext = mTextComposition->mPresContext;
+  nsRefPtr<nsPresContext> presContext = mTextComposition->mPresContext;
   nsEventStatus status = nsEventStatus_eIgnore;
   switch (mEventMessage) {
     case eCompositionStart: {

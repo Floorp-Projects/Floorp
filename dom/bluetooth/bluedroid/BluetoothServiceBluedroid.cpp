@@ -68,7 +68,7 @@ using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
 
 static BluetoothInterface* sBtInterface;
-static nsTArray<RefPtr<BluetoothProfileController> > sControllerArray;
+static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 
 /*
  *  Static methods
@@ -165,7 +165,7 @@ public:
     // Register all the bluedroid callbacks before enable() gets called. This is
     // required to register a2dp callbacks before a2dp media task starts up.
     // If any interface cannot be initialized, turn on bluetooth core anyway.
-    RefPtr<ProfileInitResultHandler> res =
+    nsRefPtr<ProfileInitResultHandler> res =
       new ProfileInitResultHandler(MOZ_ARRAY_LENGTH(sInitManager));
 
     for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sInitManager); ++i) {
@@ -839,7 +839,7 @@ public:
 
   int mDeviceCount;
   InfallibleTArray<BluetoothNamedValue> mDevicesPack;
-  RefPtr<BluetoothReplyRunnable> mRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
 class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler
@@ -961,7 +961,7 @@ class BluetoothServiceBluedroid::DispatchReplyErrorResultHandler final
 {
 public:
   DispatchReplyErrorResultHandler(
-    nsTArray<RefPtr<BluetoothReplyRunnable>>& aRunnableArray,
+    nsTArray<nsRefPtr<BluetoothReplyRunnable>>& aRunnableArray,
     BluetoothReplyRunnable* aRunnable)
     : mRunnableArray(aRunnableArray)
     , mRunnable(aRunnable)
@@ -978,7 +978,7 @@ public:
   }
 
 private:
-  nsTArray<RefPtr<BluetoothReplyRunnable>>& mRunnableArray;
+  nsTArray<nsRefPtr<BluetoothReplyRunnable>>& mRunnableArray;
   BluetoothReplyRunnable* mRunnable;
 };
 
@@ -1155,7 +1155,7 @@ BluetoothServiceBluedroid::GetServiceChannel(
   mGetRemoteServiceRecordArray.AppendElement(
     GetRemoteServiceRecordRequest(address, uuid, aManager));
 
-  RefPtr<BluetoothResultHandler> res =
+  nsRefPtr<BluetoothResultHandler> res =
     new GetRemoteServiceRecordResultHandler(mGetRemoteServiceRecordArray,
                                             address, uuid);
 
@@ -1256,7 +1256,7 @@ BluetoothServiceBluedroid::UpdateSdpRecords(
   mGetRemoteServicesArray.AppendElement(
     GetRemoteServicesRequest(address, aManager));
 
-  RefPtr<BluetoothResultHandler> res =
+  nsRefPtr<BluetoothResultHandler> res =
     new GetRemoteServicesResultHandler(mGetRemoteServicesArray,
                                        address, aManager);
 
@@ -1926,7 +1926,7 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
 
     // Cleanup Bluetooth interfaces after state becomes BT_STATE_OFF. This
     // will also stop the Bluetooth daemon and disable the adapter.
-    RefPtr<ProfileDeinitResultHandler> res =
+    nsRefPtr<ProfileDeinitResultHandler> res =
       new ProfileDeinitResultHandler(MOZ_ARRAY_LENGTH(sDeinitManager),
                                      mIsRestart);
 

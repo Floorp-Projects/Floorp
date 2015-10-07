@@ -477,7 +477,7 @@ BluetoothHfpManager::Init()
   nsresult rv = settings->CreateLock(nullptr, getter_AddRefs(settingsLock));
   NS_ENSURE_SUCCESS(rv, false);
 
-  RefPtr<GetVolumeTask> callback = new GetVolumeTask();
+  nsRefPtr<GetVolumeTask> callback = new GetVolumeTask();
   rv = settingsLock->Get(AUDIO_VOLUME_BT_SCO_ID, callback);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -1503,7 +1503,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
   }
   mCurrentCallArray[aCallIndex].mNumber = aNumber;
 
-  RefPtr<nsRunnable> sendRingTask;
+  nsRefPtr<nsRunnable> sendRingTask;
   nsString address;
 
   switch (aCallState) {
@@ -2091,7 +2091,7 @@ BluetoothHfpManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 }
 
@@ -2110,7 +2110,7 @@ BluetoothHfpManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 }
 

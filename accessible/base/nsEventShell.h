@@ -41,7 +41,7 @@ public:
   static void FireEvent(mozilla::a11y::Accessible* aTarget, uint64_t aState,
                         bool aIsEnabled, bool aIsFromUserInput)
   {
-    RefPtr<mozilla::a11y::AccStateChangeEvent> stateChangeEvent =
+    nsRefPtr<mozilla::a11y::AccStateChangeEvent> stateChangeEvent =
       new mozilla::a11y::AccStateChangeEvent(aTarget, aState, aIsEnabled,
                                              (aIsFromUserInput ?
                                                mozilla::a11y::eFromUserInput :

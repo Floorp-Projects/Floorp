@@ -47,7 +47,7 @@ public:
   // It can only look child boxes including itself and the box in the boxes
   // list if exists. It can't look parent boxes.
   virtual nsresult Find(const nsACString& aType,
-                        nsTArray<RefPtr<MuxerOperation>>& aOperations) = 0;
+                        nsTArray<nsRefPtr<MuxerOperation>>& aOperations) = 0;
 
 protected:
   virtual ~MuxerOperation() {}

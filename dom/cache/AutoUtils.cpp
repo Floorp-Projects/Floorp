@@ -283,7 +283,7 @@ MatchInPutList(InternalRequest* aRequest,
              method.LowerCaseEqualsLiteral("head"));
 #endif
 
-  RefPtr<InternalHeaders> requestHeaders = aRequest->Headers();
+  nsRefPtr<InternalHeaders> requestHeaders = aRequest->Headers();
 
   for (uint32_t i = 0; i < aPutList.Length(); ++i) {
     const CacheRequest& cachedRequest = aPutList[i].request();
@@ -300,10 +300,10 @@ MatchInPutList(InternalRequest* aRequest,
       continue;
     }
 
-    RefPtr<InternalHeaders> cachedRequestHeaders =
+    nsRefPtr<InternalHeaders> cachedRequestHeaders =
       TypeUtils::ToInternalHeaders(cachedRequest.headers());
 
-    RefPtr<InternalHeaders> cachedResponseHeaders =
+    nsRefPtr<InternalHeaders> cachedResponseHeaders =
       TypeUtils::ToInternalHeaders(cachedResponse.headers());
 
     nsAutoTArray<nsCString, 16> varyHeaders;
@@ -619,7 +619,7 @@ AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList
 
   aStreamList->SetStreamControl(mStreamControl);
 
-  RefPtr<ReadStream> readStream = ReadStream::Create(mStreamControl,
+  nsRefPtr<ReadStream> readStream = ReadStream::Create(mStreamControl,
                                                        aId, stream);
   readStream->Serialize(aReadStreamOut);
 }

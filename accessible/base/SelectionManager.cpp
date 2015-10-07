@@ -29,7 +29,7 @@ struct mozilla::a11y::SelData final
   SelData(Selection* aSel, int32_t aReason) :
     mSel(aSel), mReason(aReason) {}
 
-  RefPtr<Selection> mSel;
+  nsRefPtr<Selection> mSel;
   int16_t mReason;
 
   NS_INLINE_DECL_REFCOUNTING(SelData)
@@ -164,7 +164,7 @@ SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
                                              selection->FocusOffset());
   mAccWithCaret = caretCntr;
   if (mCaretOffset != -1) {
-    RefPtr<AccCaretMoveEvent> caretMoveEvent =
+    nsRefPtr<AccCaretMoveEvent> caretMoveEvent =
       new AccCaretMoveEvent(caretCntr, mCaretOffset, aEvent->FromUserInput());
     nsEventShell::FireEvent(caretMoveEvent);
   }
@@ -189,7 +189,7 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
     // Selection manager has longer lifetime than any document accessible,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
-    RefPtr<SelData> selData =
+    nsRefPtr<SelData> selData =
       new SelData(static_cast<Selection*>(aSelection), aReason);
     document->HandleNotification<SelectionManager, SelData>
       (this, &SelectionManager::ProcessSelectionChanged, selData);
@@ -226,7 +226,7 @@ SelectionManager::ProcessSelectionChanged(SelData* aSelData)
   }
 
   if (selection->GetType() == nsISelectionController::SELECTION_NORMAL) {
-    RefPtr<AccEvent> event =
+    nsRefPtr<AccEvent> event =
       new AccTextSelChangeEvent(text, selection, aSelData->mReason);
     text->Document()->FireDelayedEvent(event);
 

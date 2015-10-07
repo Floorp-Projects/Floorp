@@ -7,7 +7,7 @@
 #define SHARED_SURFACE_GLX_H_
 
 #include "SharedSurface.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class gfxXlibSurface;
 
@@ -36,9 +36,9 @@ private:
     SharedSurface_GLXDrawable(GLContext* gl,
                               const gfx::IntSize& size,
                               bool inSameProcess,
-                              const RefPtr<gfxXlibSurface>& xlibSurface);
+                              const nsRefPtr<gfxXlibSurface>& xlibSurface);
 
-    RefPtr<gfxXlibSurface> mXlibSurface;
+    nsRefPtr<gfxXlibSurface> mXlibSurface;
     bool mInSameProcess;
 };
 
@@ -48,14 +48,14 @@ class SurfaceFactory_GLXDrawable
 public:
     static UniquePtr<SurfaceFactory_GLXDrawable> Create(GLContext* prodGL,
                                                         const SurfaceCaps& caps,
-                                                        const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                        const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                                         const layers::TextureFlags& flags);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override;
 
 private:
     SurfaceFactory_GLXDrawable(GLContext* prodGL, const SurfaceCaps& caps,
-                               const RefPtr<layers::ISurfaceAllocator>& allocator,
+                               const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                const layers::TextureFlags& flags)
         : SurfaceFactory(SharedSurfaceType::GLXDrawable, prodGL, caps, allocator, flags)
     { }

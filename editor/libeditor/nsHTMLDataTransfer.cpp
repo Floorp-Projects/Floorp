@@ -113,7 +113,7 @@ nsHTMLEditor::LoadHTML(const nsAString & aInputString)
   nsAutoRules beginRulesSniffing(this, EditAction::loadHTML, nsIEditor::eNext);
 
   // Get selection
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
   nsTextRulesInfo ruleInfo(EditAction::loadHTML);
@@ -135,7 +135,7 @@ nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     }
 
     // Get the first range in the selection, for context:
-    RefPtr<nsRange> range = selection->GetRangeAt(0);
+    nsRefPtr<nsRange> range = selection->GetRangeAt(0);
     NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
     // create fragment for pasted html
@@ -214,7 +214,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   nsAutoRules beginRulesSniffing(this, EditAction::htmlPaste, nsIEditor::eNext);
 
   // Get selection
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
   // create a dom document fragment that represents the structure to paste
@@ -1222,7 +1222,7 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
                                               bool aDoDeleteSelection)
 {
   ErrorResult rv;
-  RefPtr<DOMStringList> types = aDataTransfer->MozTypesAt(aIndex, rv);
+  nsRefPtr<DOMStringList> types = aDataTransfer->MozTypesAt(aIndex, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
@@ -1561,7 +1561,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
   nsAutoRules beginRulesSniffing(this, EditAction::insertQuotation, nsIEditor::eNext);
 
   // get selection
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
@@ -1752,7 +1752,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
     return nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
 
   // get selection
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
@@ -1842,7 +1842,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   }
 
   // get selection
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
@@ -2013,7 +2013,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   // if we have context info, create a fragment for that
   nsresult rv = NS_OK;
   nsCOMPtr<nsIDOMNode> contextLeaf;
-  RefPtr<DocumentFragment> contextAsNode;
+  nsRefPtr<DocumentFragment> contextAsNode;
   if (!aContextStr.IsEmpty()) {
     rv = ParseFragment(aContextStr, nullptr, doc, getter_AddRefs(contextAsNode),
                        aTrustedInput);
@@ -2044,7 +2044,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   } else {
     contextAtom = nsGkAtoms::body;
   }
-  RefPtr<DocumentFragment> fragment;
+  nsRefPtr<DocumentFragment> fragment;
   rv = ParseFragment(aInputString,
                      contextAtom,
                      doc,
@@ -2115,7 +2115,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
 {
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
-  RefPtr<DocumentFragment> fragment =
+  nsRefPtr<DocumentFragment> fragment =
     new DocumentFragment(aTargetDocument->NodeInfoManager());
   nsresult rv = nsContentUtils::ParseFragmentHTML(aFragStr,
                                                   fragment,
@@ -2151,7 +2151,7 @@ nsHTMLEditor::CreateListOfNodesToPaste(DocumentFragment& aFragment,
     aEndOffset = aFragment.Length();
   }
 
-  RefPtr<nsRange> docFragRange;
+  nsRefPtr<nsRange> docFragRange;
   nsresult rv = nsRange::CreateRange(aStartNode, aStartOffset,
                                      aEndNode, aEndOffset,
                                      getter_AddRefs(docFragRange));

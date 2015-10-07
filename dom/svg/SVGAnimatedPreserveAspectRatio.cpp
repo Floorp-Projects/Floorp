@@ -100,7 +100,7 @@ GetMeetOrSliceString(nsAString& aMeetOrSliceString, uint16_t aMeetOrSlice)
 already_AddRefed<DOMSVGPreserveAspectRatio>
 DOMSVGAnimatedPreserveAspectRatio::BaseVal()
 {
-  RefPtr<DOMSVGPreserveAspectRatio> domBaseVal =
+  nsRefPtr<DOMSVGPreserveAspectRatio> domBaseVal =
     sBaseSVGPAspectRatioTearoffTable.GetTearoff(mVal);
   if (!domBaseVal) {
     domBaseVal = new DOMSVGPreserveAspectRatio(mVal, mSVGElement, true);
@@ -122,7 +122,7 @@ DOMSVGPreserveAspectRatio::~DOMSVGPreserveAspectRatio()
 already_AddRefed<DOMSVGPreserveAspectRatio>
 DOMSVGAnimatedPreserveAspectRatio::AnimVal()
 {
-  RefPtr<DOMSVGPreserveAspectRatio> domAnimVal =
+  nsRefPtr<DOMSVGPreserveAspectRatio> domAnimVal =
     sAnimSVGPAspectRatioTearoffTable.GetTearoff(mVal);
   if (!domAnimVal) {
     domAnimVal = new DOMSVGPreserveAspectRatio(mVal, mSVGElement, false);
@@ -282,7 +282,7 @@ already_AddRefed<DOMSVGAnimatedPreserveAspectRatio>
 SVGAnimatedPreserveAspectRatio::ToDOMAnimatedPreserveAspectRatio(
   nsSVGElement *aSVGElement)
 {
-  RefPtr<DOMSVGAnimatedPreserveAspectRatio> domAnimatedPAspectRatio =
+  nsRefPtr<DOMSVGAnimatedPreserveAspectRatio> domAnimatedPAspectRatio =
     sSVGAnimatedPAspectRatioTearoffTable.GetTearoff(this);
   if (!domAnimatedPAspectRatio) {
     domAnimatedPAspectRatio = new DOMSVGAnimatedPreserveAspectRatio(this, aSVGElement);

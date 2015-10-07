@@ -303,7 +303,7 @@ nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget)
     MOZ_ASSERT(NS_SUCCEEDED(mDocShell->IsBeingDestroyed(&dying)) && dying,
                "No presShell, but window is not being destroyed");
   } else if (eventTarget) {
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+    nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetMouseEvent event(true, eWindowClose, nullptr,
@@ -488,7 +488,7 @@ public:
 private:
   ~WebShellWindowTimerCallback() {}
 
-  RefPtr<nsWebShellWindow> mWindow;
+  nsRefPtr<nsWebShellWindow> mWindow;
 };
 
 NS_IMPL_ISUPPORTS(WebShellWindowTimerCallback, nsITimerCallback)
@@ -507,7 +507,7 @@ nsWebShellWindow::SetPersistenceTimer(uint32_t aDirtyFlags)
     }
   }
 
-  RefPtr<WebShellWindowTimerCallback> callback =
+  nsRefPtr<WebShellWindowTimerCallback> callback =
     new WebShellWindowTimerCallback(this);
   mSPTimer->InitWithCallback(callback, SIZE_PERSISTENCE_TIMEOUT,
                              nsITimer::TYPE_ONE_SHOT);
@@ -713,7 +713,7 @@ bool nsWebShellWindow::ExecuteCloseHandler()
     nsCOMPtr<nsIContentViewer> contentViewer;
     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
     if (contentViewer) {
-      RefPtr<nsPresContext> presContext;
+      nsRefPtr<nsPresContext> presContext;
       contentViewer->GetPresContext(getter_AddRefs(presContext));
 
       nsEventStatus status = nsEventStatus_eIgnore;

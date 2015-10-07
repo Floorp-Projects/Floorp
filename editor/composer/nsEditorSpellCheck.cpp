@@ -151,7 +151,7 @@ public:
 private:
   ~DictionaryFetcher() {}
 
-  RefPtr<nsEditorSpellCheck> mSpellCheck;
+  nsRefPtr<nsEditorSpellCheck> mSpellCheck;
 };
 NS_IMPL_ISUPPORTS(DictionaryFetcher, nsIContentPrefCallback2)
 
@@ -348,7 +348,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
 
     nsCOMPtr<nsISelection> domSelection;
     aEditor->GetSelection(getter_AddRefs(domSelection));
-    RefPtr<Selection> selection = static_cast<Selection*>(domSelection.get());
+    nsRefPtr<Selection> selection = static_cast<Selection*>(domSelection.get());
     NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
     int32_t count = 0;
@@ -357,7 +357,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (count > 0) {
-      RefPtr<nsRange> range = selection->GetRangeAt(0);
+      nsRefPtr<nsRange> range = selection->GetRangeAt(0);
       NS_ENSURE_STATE(range);
 
       bool collapsed = false;
@@ -368,7 +368,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
         // We don't want to touch the range in the selection,
         // so create a new copy of it.
 
-        RefPtr<nsRange> rangeBounds = range->CloneRange();
+        nsRefPtr<nsRange> rangeBounds = range->CloneRange();
 
         // Make sure the new range spans complete words.
 
@@ -399,7 +399,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
     // However, if it does fail, we still need to call the callback since we
     // discard the failure.  Do it asynchronously so that the caller is always
     // guaranteed async behavior.
-    RefPtr<CallbackCaller> caller = new CallbackCaller(aCallback);
+    nsRefPtr<CallbackCaller> caller = new CallbackCaller(aCallback);
     NS_ENSURE_STATE(caller);
     rv = NS_DispatchToMainThread(caller);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -586,7 +586,7 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);
 
-  RefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
 
   // The purpose of mUpdateDictionaryRunning is to avoid doing all of this if
   // UpdateCurrentDictionary's helper method DictionaryFetched, which calls us,
@@ -670,7 +670,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallba
 {
   nsresult rv;
 
-  RefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
 
   // Get language with html5 algorithm
   nsCOMPtr<nsIContent> rootContent;
@@ -700,7 +700,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallba
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<DictionaryFetcher> fetcher =
+  nsRefPtr<DictionaryFetcher> fetcher =
     new DictionaryFetcher(this, aCallback, mDictionaryFetcherGroup);
   rootContent->GetLang(fetcher->mRootContentLang);
   nsCOMPtr<nsIDocument> doc = rootContent->GetCurrentDoc();
@@ -755,7 +755,7 @@ nsresult
 nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 {
   MOZ_ASSERT(aFetcher);
-  RefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
+  nsRefPtr<nsEditorSpellCheck> kungFuDeathGrip = this;
 
   // Important: declare the holder after the callback caller so that the former
   // is destructed first so that it's not active when the callback is called.

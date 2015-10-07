@@ -61,8 +61,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothMapBMessage)
   // Parse OBEX body and return bMessage object.
   BluetoothMapBMessage(uint8_t* aObexBody, int aLength);
-  void GetRecipients(nsTArray<RefPtr<VCard>>& aRecipients);
-  void GetOriginators(nsTArray<RefPtr<VCard>>& aRecipients);
+  void GetRecipients(nsTArray<nsRefPtr<VCard>>& aRecipients);
+  void GetOriginators(nsTArray<nsRefPtr<VCard>>& aRecipients);
   void GetBody(nsACString& aBody);
   void Dump();
 
@@ -127,8 +127,8 @@ private:
    * |mOriginators| represents the original sender of the messages, and
    * |mRecipients| represents the recipient of the message.
    */
-  nsTArray<RefPtr<VCard>> mOriginators;
-  nsTArray<RefPtr<VCard>> mRecipients;
+  nsTArray<nsRefPtr<VCard>> mOriginators;
+  nsTArray<nsRefPtr<VCard>> mRecipients;
 };
 
 END_BLUETOOTH_NAMESPACE

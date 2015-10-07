@@ -629,7 +629,7 @@ void RTSPSource::onConnected(bool isSeekable)
             info.mSource = source;
         }
 
-        RefPtr<nsIStreamingProtocolMetaData> meta;
+        nsRefPtr<nsIStreamingProtocolMetaData> meta;
         int32_t int32Value;
         int64_t int64Value;
 
@@ -743,7 +743,7 @@ void RTSPSource::onTrackDataAvailable(size_t trackIndex)
     if (err == -EWOULDBLOCK || err == ERROR_END_OF_STREAM) {
         return;
     } else if (err == INFO_DISCONTINUITY) {
-        RefPtr<nsIStreamingProtocolMetaData> meta;
+        nsRefPtr<nsIStreamingProtocolMetaData> meta;
 
         meta = new mozilla::net::RtspMetaData();
         meta->SetFrameType(MEDIASTREAM_FRAMETYPE_DISCONTINUITY);
@@ -756,7 +756,7 @@ void RTSPSource::onTrackDataAvailable(size_t trackIndex)
         return;
     }
 
-    RefPtr<nsIStreamingProtocolMetaData> meta;
+    nsRefPtr<nsIStreamingProtocolMetaData> meta;
     int64_t int64Value;
 
     meta = new mozilla::net::RtspMetaData();
@@ -782,7 +782,7 @@ void RTSPSource::onTrackEndOfStream(size_t trackIndex)
         return;
     }
 
-    RefPtr<nsIStreamingProtocolMetaData> meta;
+    nsRefPtr<nsIStreamingProtocolMetaData> meta;
     meta = new mozilla::net::RtspMetaData();
     meta->SetFrameType(MEDIASTREAM_FRAMETYPE_END_OF_STREAM);
 

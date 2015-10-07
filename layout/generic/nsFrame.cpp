@@ -2594,7 +2594,7 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   nsIContent* target = aContent ? aContent : mContent;
 
   if (target) {
-    RefPtr<AsyncEventDispatcher> asyncDispatcher =
+    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(target, aDOMEventName, true, false);
     DebugOnly<nsresult> rv = asyncDispatcher->PostDOMEvent();
     NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncEventDispatcher failed to dispatch");
@@ -2938,7 +2938,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   bool control = mouseEvent->IsControl();
 #endif
 
-  RefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
+  nsRefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
   if (mouseEvent->clickCount > 1) {
     // These methods aren't const but can't actually delete anything,
     // so no need for nsWeakFrame.
@@ -3220,7 +3220,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
     return rv;
 
   // Keep frameSelection alive.
-  RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
   rv = frameSelection->HandleClick(startpos.mResultContent,
                                    startpos.mContentOffset, startpos.mContentOffset,
@@ -3260,7 +3260,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   }
   nsIPresShell *presShell = aPresContext->PresShell();
 
-  RefPtr<nsFrameSelection> frameselection = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> frameselection = GetFrameSelection();
   bool mouseDown = frameselection->GetDragState();
   if (!mouseDown)
     return NS_OK;
@@ -3395,7 +3395,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   bool selectionOff =
     (DisplaySelection(aPresContext) == nsISelectionController::SELECTION_OFF);
 
-  RefPtr<nsFrameSelection> frameselection;
+  nsRefPtr<nsFrameSelection> frameselection;
   ContentOffsets offsets;
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffsetForTableSel = 0;
@@ -3426,7 +3426,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
   // We might be capturing in some other document and the event just happened to
   // trickle down here. Make sure that document's frame selection is notified.
   // Note, this may cause the current nsFrame object to be deleted, bug 336592.
-  RefPtr<nsFrameSelection> frameSelection;
+  nsRefPtr<nsFrameSelection> frameSelection;
   if (activeFrame != this &&
       static_cast<nsFrame*>(activeFrame)->DisplaySelection(activeFrame->PresContext())
         != nsISelectionController::SELECTION_OFF) {
@@ -6029,7 +6029,7 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
 already_AddRefed<nsFrameSelection>
 nsIFrame::GetFrameSelection()
 {
-  RefPtr<nsFrameSelection> fs =
+  nsRefPtr<nsFrameSelection> fs =
     const_cast<nsFrameSelection*>(GetConstFrameSelection());
   return fs.forget();
 }

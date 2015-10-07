@@ -261,7 +261,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
       NS_ENSURE_ARG_POINTER(items);
 
       HRESULT hr;
-      RefPtr<IObjectCollection> collection;
+      nsRefPtr<IObjectCollection> collection;
       hr = CoCreateInstance(CLSID_EnumerableObjectCollection, nullptr,
                             CLSCTX_INPROC_SERVER, IID_IObjectCollection,
                             getter_AddRefs(collection));
@@ -277,7 +277,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
           continue;
         // Check for separators 
         if (IsSeparator(item)) {
-          RefPtr<IShellLinkW> link;
+          nsRefPtr<IShellLinkW> link;
           rv = JumpListSeparator::GetSeparator(link);
           if (NS_FAILED(rv))
             return rv;
@@ -285,7 +285,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
           continue;
         }
         // These should all be ShellLinks
-        RefPtr<IShellLinkW> link;
+        nsRefPtr<IShellLinkW> link;
         rv = JumpListShortcut::GetShellLink(item, link, mIOThread);
         if (NS_FAILED(rv))
           return rv;
@@ -293,7 +293,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
       }
 
       // We need IObjectArray to submit
-      RefPtr<IObjectArray> pArray;
+      nsRefPtr<IObjectArray> pArray;
       hr = collection->QueryInterface(IID_IObjectArray, getter_AddRefs(pArray));
       if (FAILED(hr))
         return NS_ERROR_UNEXPECTED;
@@ -327,7 +327,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
         return NS_ERROR_INVALID_ARG;
 
       HRESULT hr;
-      RefPtr<IObjectCollection> collection;
+      nsRefPtr<IObjectCollection> collection;
       hr = CoCreateInstance(CLSID_EnumerableObjectCollection, nullptr,
                             CLSCTX_INPROC_SERVER, IID_IObjectCollection,
                             getter_AddRefs(collection));
@@ -346,7 +346,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
         switch(type) {
           case nsIJumpListItem::JUMPLIST_ITEM_SEPARATOR:
           {
-            RefPtr<IShellLinkW> shellItem;
+            nsRefPtr<IShellLinkW> shellItem;
             rv = JumpListSeparator::GetSeparator(shellItem);
             if (NS_FAILED(rv))
               return rv;
@@ -355,7 +355,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
           break;
           case nsIJumpListItem::JUMPLIST_ITEM_LINK:
           {
-            RefPtr<IShellItem2> shellItem;
+            nsRefPtr<IShellItem2> shellItem;
             rv = JumpListLink::GetShellItem(item, shellItem);
             if (NS_FAILED(rv))
               return rv;
@@ -364,7 +364,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
           break;
           case nsIJumpListItem::JUMPLIST_ITEM_SHORTCUT:
           {
-            RefPtr<IShellLinkW> shellItem;
+            nsRefPtr<IShellLinkW> shellItem;
             rv = JumpListShortcut::GetShellLink(item, shellItem, mIOThread);
             if (NS_FAILED(rv))
               return rv;
@@ -375,7 +375,7 @@ NS_IMETHODIMP JumpListBuilder::AddListToBuild(int16_t aCatType, nsIArray *items,
       }
 
       // We need IObjectArray to submit
-      RefPtr<IObjectArray> pArray;
+      nsRefPtr<IObjectArray> pArray;
       hr = collection->QueryInterface(IID_IObjectArray, (LPVOID*)&pArray);
       if (FAILED(hr))
         return NS_ERROR_UNEXPECTED;

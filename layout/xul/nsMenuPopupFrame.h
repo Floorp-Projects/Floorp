@@ -149,7 +149,7 @@ protected:
 
 private:
   nsCOMPtr<nsIContent> mPopup;
-  RefPtr<nsPresContext> mPresContext;
+  nsRefPtr<nsPresContext> mPresContext;
 };
 
 class nsMenuPopupFrame final : public nsBoxFrame, public nsMenuParent,
@@ -503,7 +503,7 @@ protected:
 
   nsMenuFrame* mCurrentMenu; // The current menu that is active.
 
-  RefPtr<nsXULPopupShownEvent> mPopupShownDispatcher;
+  nsRefPtr<nsXULPopupShownEvent> mPopupShownDispatcher;
 
   // A popup's preferred size may be different than its actual size stored in
   // mRect in the case where the popup was resized because it was too large

@@ -64,8 +64,8 @@ struct IDBObjectStore::StructuredCloneWriteInfo
 {
   struct BlobOrMutableFile
   {
-    RefPtr<Blob> mBlob;
-    RefPtr<IDBMutableFile> mMutableFile;
+    nsRefPtr<Blob> mBlob;
+    nsRefPtr<IDBMutableFile> mMutableFile;
 
     bool
     operator==(const BlobOrMutableFile& aOther) const
@@ -205,7 +205,7 @@ GenerateRequest(IDBObjectStore* aObjectStore)
 
   IDBTransaction* transaction = aObjectStore->Transaction();
 
-  RefPtr<IDBRequest> request =
+  nsRefPtr<IDBRequest> request =
     IDBRequest::Create(aObjectStore, transaction->Database(), transaction);
   MOZ_ASSERT(request);
 
@@ -336,7 +336,7 @@ StructuredCloneWriteCallback(JSContext* aCx,
         return false;
       }
 
-      RefPtr<File> file = blob->ToFile();
+      nsRefPtr<File> file = blob->ToFile();
       if (file) {
         ErrorResult rv;
         int64_t lastModifiedDate = file->GetLastModified(rv);
@@ -666,7 +666,7 @@ public:
     }
 
     MOZ_ASSERT(aFile.mBlob->IsFile());
-    RefPtr<File> file = aFile.mBlob->ToFile();
+    nsRefPtr<File> file = aFile.mBlob->ToFile();
     MOZ_ASSERT(file);
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
@@ -944,7 +944,7 @@ IDBObjectStore::Create(IDBTransaction* aTransaction,
   MOZ_ASSERT(aTransaction);
   aTransaction->AssertIsOnOwningThread();
 
-  RefPtr<IDBObjectStore> objectStore =
+  nsRefPtr<IDBObjectStore> objectStore =
     new IDBObjectStore(aTransaction, &aSpec);
 
   return objectStore.forget();
@@ -1398,7 +1398,7 @@ IDBObjectStore::AddOrPut(JSContext* aCx,
     params = ObjectStoreAddParams(commonParams);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (!aFromCursor) {
@@ -1451,7 +1451,7 @@ IDBObjectStore::GetAllInternal(bool aKeysOnly,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1477,7 +1477,7 @@ IDBObjectStore::GetAllInternal(bool aKeysOnly,
     params = ObjectStoreGetAllParams(id, optionalKeyRange, limit);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {
@@ -1536,7 +1536,7 @@ IDBObjectStore::Clear(ErrorResult& aRv)
   ObjectStoreClearParams params;
   params.objectStoreId() = Id();
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
@@ -1585,12 +1585,12 @@ IDBObjectStore::Index(const nsAString& aName, ErrorResult &aRv)
 
   const int64_t desiredId = metadata->id();
 
-  RefPtr<IDBIndex> index;
+  nsRefPtr<IDBIndex> index;
 
   for (uint32_t idxCount = mIndexes.Length(), idxIndex = 0;
        idxIndex < idxCount;
        idxIndex++) {
-    RefPtr<IDBIndex>& existingIndex = mIndexes[idxIndex];
+    nsRefPtr<IDBIndex>& existingIndex = mIndexes[idxIndex];
 
     if (existingIndex->Id() == desiredId) {
       index = existingIndex;
@@ -1688,7 +1688,7 @@ IDBObjectStore::IndexNames()
 
   const nsTArray<IndexMetadata>& indexes = mSpec->indexes();
 
-  RefPtr<DOMStringList> list = new DOMStringList();
+  nsRefPtr<DOMStringList> list = new DOMStringList();
 
   if (!indexes.IsEmpty()) {
     nsTArray<nsString>& listNames = list->StringArray();
@@ -1719,7 +1719,7 @@ IDBObjectStore::Get(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (aRv.Failed()) {
     return nullptr;
@@ -1735,7 +1735,7 @@ IDBObjectStore::Get(JSContext* aCx,
   params.objectStoreId() = Id();
   keyRange->ToSerialized(params.keyRange());
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
@@ -1777,7 +1777,7 @@ IDBObjectStore::DeleteInternal(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (NS_WARN_IF((aRv.Failed()))) {
     return nullptr;
@@ -1793,7 +1793,7 @@ IDBObjectStore::DeleteInternal(JSContext* aCx,
   params.objectStoreId() = Id();
   keyRange->ToSerialized(params.keyRange());
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (!aFromCursor) {
@@ -1929,7 +1929,7 @@ IDBObjectStore::CreateIndexInternal(
 
   transaction->CreateIndex(this, *metadata);
 
-  RefPtr<IDBIndex> index = IDBIndex::Create(this, *metadata);
+  nsRefPtr<IDBIndex> index = IDBIndex::Create(this, *metadata);
   MOZ_ASSERT(index);
 
   mIndexes.AppendElement(index);
@@ -1988,7 +1988,7 @@ IDBObjectStore::DeleteIndex(const nsAString& aName, ErrorResult& aRv)
       for (uint32_t indexCount = mIndexes.Length(), indexIndex = 0;
            indexIndex < indexCount;
            indexIndex++) {
-        RefPtr<IDBIndex>& index = mIndexes[indexIndex];
+        nsRefPtr<IDBIndex>& index = mIndexes[indexIndex];
 
         if (index->Id() == foundId) {
           index->NoteDeletion();
@@ -2045,7 +2045,7 @@ IDBObjectStore::Count(JSContext* aCx,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aKey, getter_AddRefs(keyRange));
   if (aRv.Failed()) {
     return nullptr;
@@ -2062,7 +2062,7 @@ IDBObjectStore::Count(JSContext* aCx,
     params.optionalKeyRange() = void_t();
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   IDB_LOG_MARK("IndexedDB %s: Child  Transaction[%lld] Request[%llu]: "
@@ -2100,7 +2100,7 @@ IDBObjectStore::OpenCursorInternal(bool aKeysOnly,
     return nullptr;
   }
 
-  RefPtr<IDBKeyRange> keyRange;
+  nsRefPtr<IDBKeyRange> keyRange;
   aRv = IDBKeyRange::FromJSVal(aCx, aRange, getter_AddRefs(keyRange));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -2138,7 +2138,7 @@ IDBObjectStore::OpenCursorInternal(bool aKeysOnly,
     params = Move(openParams);
   }
 
-  RefPtr<IDBRequest> request = GenerateRequest(this);
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
   MOZ_ASSERT(request);
 
   if (aKeysOnly) {

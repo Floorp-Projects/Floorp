@@ -136,7 +136,7 @@ WorkerRunnable::Dispatch(JSContext* aCx)
 bool
 WorkerRunnable::DispatchInternal()
 {
-  RefPtr<WorkerRunnable> runnable(this);
+  nsRefPtr<WorkerRunnable> runnable(this);
 
   if (mBehavior == WorkerThreadModifyBusyCount ||
       mBehavior == WorkerThreadUnchangedBusyCount) {
@@ -306,7 +306,7 @@ WorkerRunnable::Run()
   nsCOMPtr<nsIGlobalObject> globalObject;
   bool isMainThread = !targetIsWorkerThread && !mWorkerPrivate->GetParent();
   MOZ_ASSERT(isMainThread == NS_IsMainThread());
-  RefPtr<WorkerPrivate> kungFuDeathGrip;
+  nsRefPtr<WorkerPrivate> kungFuDeathGrip;
   if (targetIsWorkerThread) {
     JSContext* cx = GetCurrentThreadJSContext();
     if (NS_WARN_IF(!cx)) {
@@ -424,7 +424,7 @@ bool
 WorkerSyncRunnable::DispatchInternal()
 {
   if (mSyncLoopTarget) {
-    RefPtr<WorkerSyncRunnable> runnable(this);
+    nsRefPtr<WorkerSyncRunnable> runnable(this);
     return NS_SUCCEEDED(mSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
   }
 
@@ -485,7 +485,7 @@ StopSyncLoopRunnable::DispatchInternal()
 {
   MOZ_ASSERT(mSyncLoopTarget);
 
-  RefPtr<StopSyncLoopRunnable> runnable(this);
+  nsRefPtr<StopSyncLoopRunnable> runnable(this);
   return NS_SUCCEEDED(mSyncLoopTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
 }
 
@@ -522,7 +522,7 @@ WorkerControlRunnable::Cancel()
 bool
 WorkerControlRunnable::DispatchInternal()
 {
-  RefPtr<WorkerControlRunnable> runnable(this);
+  nsRefPtr<WorkerControlRunnable> runnable(this);
 
   if (mBehavior == WorkerThreadUnchangedBusyCount) {
     return NS_SUCCEEDED(mWorkerPrivate->DispatchControlRunnable(runnable.forget()));
@@ -566,7 +566,7 @@ WorkerMainThreadRunnable::Dispatch(JSContext* aCx)
   AutoSyncLoopHolder syncLoop(mWorkerPrivate);
 
   mSyncLoopTarget = syncLoop.EventTarget();
-  RefPtr<WorkerMainThreadRunnable> runnable(this);
+  nsRefPtr<WorkerMainThreadRunnable> runnable(this);
 
   if (NS_FAILED(NS_DispatchToMainThread(runnable.forget(), NS_DISPATCH_NORMAL))) {
     JS_ReportError(aCx, "Failed to dispatch to main thread!");
@@ -583,7 +583,7 @@ WorkerMainThreadRunnable::Run()
 
   bool runResult = MainThreadRun();
 
-  RefPtr<MainThreadStopSyncLoopRunnable> response =
+  nsRefPtr<MainThreadStopSyncLoopRunnable> response =
     new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
                                        mSyncLoopTarget.forget(),
                                        runResult);

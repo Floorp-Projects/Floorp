@@ -60,7 +60,7 @@ PostMessageEvent::Run()
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.
 
-  RefPtr<nsGlobalWindow> targetWindow;
+  nsRefPtr<nsGlobalWindow> targetWindow;
   if (mTargetWindow->IsClosedOrClosing() ||
       !(targetWindow = mTargetWindow->GetCurrentInnerWindowInternal()) ||
       targetWindow->IsClosedOrClosing())
@@ -108,14 +108,14 @@ PostMessageEvent::Run()
   // Create the event
   nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
     do_QueryInterface(static_cast<nsPIDOMWindow*>(targetWindow.get()));
-  RefPtr<MessageEvent> event =
+  nsRefPtr<MessageEvent> event =
     new MessageEvent(eventTarget, nullptr, nullptr);
 
   event->InitMessageEvent(NS_LITERAL_STRING("message"), false /*non-bubbling */,
                           false /*cancelable */, messageData, mCallerOrigin,
                           EmptyString(), mSource);
 
-  nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
+  nsTArray<nsRefPtr<MessagePort>> ports = TakeTransferredPorts();
 
   event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
                                       ports));
@@ -126,7 +126,7 @@ PostMessageEvent::Run()
   // window if it can get a reference to it.
 
   nsIPresShell *shell = targetWindow->GetExtantDoc()->GetShell();
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   if (shell)
     presContext = shell->GetPresContext();
 

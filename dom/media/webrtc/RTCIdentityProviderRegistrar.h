@@ -6,7 +6,7 @@
 #ifndef RTCIDENTITYPROVIDER_H_
 #define RTCIDENTITYPROVIDER_H_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsIGlobalObject.h"
@@ -48,7 +48,7 @@ private:
   ~RTCIdentityProviderRegistrar();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<RTCIdentityProvider> mIdp;
+  nsRefPtr<RTCIdentityProvider> mIdp;
 };
 
 } // namespace dom

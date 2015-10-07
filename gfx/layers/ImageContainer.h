@@ -397,7 +397,7 @@ public:
 
   struct OwningImage {
     OwningImage() : mFrameID(0), mProducerID(0), mComposited(false) {}
-    RefPtr<Image> mImage;
+    nsRefPtr<Image> mImage;
     TimeStamp mTimeStamp;
     FrameID mFrameID;
     ProducerID mProducerID;
@@ -528,11 +528,11 @@ private:
   // This is the image factory used by this container, layer managers using
   // this container can set an alternative image factory that will be used to
   // create images for this container.
-  RefPtr<ImageFactory> mImageFactory;
+  nsRefPtr<ImageFactory> mImageFactory;
 
   gfx::IntSize mScaleHint;
 
-  RefPtr<BufferRecycleBin> mRecycleBin;
+  nsRefPtr<BufferRecycleBin> mRecycleBin;
 
   // This member points to an ImageClient if this ImageContainer was
   // sucessfully created with ENABLE_ASYNC, or points to null otherwise.
@@ -729,7 +729,7 @@ protected:
   gfx::IntSize mSize;
   gfxImageFormat mOffscreenFormat;
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
-  RefPtr<BufferRecycleBin> mRecycleBin;
+  nsRefPtr<BufferRecycleBin> mRecycleBin;
 };
 
 /**
@@ -741,7 +741,7 @@ class CairoImage final : public Image {
 public:
   struct Data {
     gfx::IntSize mSize;
-    RefPtr<gfx::SourceSurface> mSourceSurface;
+    nsRefPtr<gfx::SourceSurface> mSourceSurface;
   };
 
   /**
@@ -757,7 +757,7 @@ public:
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
   {
-    RefPtr<gfx::SourceSurface> surface(mSourceSurface);
+    nsRefPtr<gfx::SourceSurface> surface(mSourceSurface);
     return surface.forget();
   }
 
@@ -771,7 +771,7 @@ public:
   gfx::IntSize mSize;
 
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
-  nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
+  nsDataHashtable<nsUint32HashKey, nsRefPtr<TextureClient> >  mTextureClients;
 };
 
 #ifdef MOZ_WIDGET_GONK

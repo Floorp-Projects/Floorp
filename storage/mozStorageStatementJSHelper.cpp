@@ -109,7 +109,7 @@ StatementJSHelper::getRow(Statement *aStatement,
       getter_AddRefs(holder)
     );
     NS_ENSURE_SUCCESS(rv, rv);
-    RefPtr<StatementRowHolder> rowHolder = new StatementRowHolder(holder);
+    nsRefPtr<StatementRowHolder> rowHolder = new StatementRowHolder(holder);
     aStatement->mStatementRowHolder =
       new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(rowHolder);
   }
@@ -154,7 +154,7 @@ StatementJSHelper::getParams(Statement *aStatement,
       getter_AddRefs(holder)
     );
     NS_ENSURE_SUCCESS(rv, rv);
-    RefPtr<StatementParamsHolder> paramsHolder =
+    nsRefPtr<StatementParamsHolder> paramsHolder =
       new StatementParamsHolder(holder);
     aStatement->mStatementParamsHolder =
       new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(paramsHolder);

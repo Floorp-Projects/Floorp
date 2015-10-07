@@ -218,7 +218,7 @@ nsresult FileBlockCache::Run()
     // overwrites the mBlockChanges entry for this block while we drop
     // mDataMonitor to take mFileMonitor.
     int32_t blockIndex = mChangeIndexList.PopFront();
-    RefPtr<BlockChange> change = mBlockChanges[blockIndex];
+    nsRefPtr<BlockChange> change = mBlockChanges[blockIndex];
     MOZ_ASSERT(change,
                "Change index list should only contain entries for blocks "
                "with changes");
@@ -265,7 +265,7 @@ nsresult FileBlockCache::Read(int64_t aOffset,
     // If the block is not yet written to file, we can just read from
     // the memory buffer, otherwise we need to read from file.
     int32_t bytesRead = 0;
-    RefPtr<BlockChange> change = mBlockChanges[blockIndex];
+    nsRefPtr<BlockChange> change = mBlockChanges[blockIndex];
     if (change && change->IsWrite()) {
       // Block isn't yet written to file. Read from memory buffer.
       const uint8_t* blockData = change->mData.get();

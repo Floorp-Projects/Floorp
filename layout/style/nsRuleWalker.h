@@ -34,7 +34,7 @@ protected:
 
 public:
   void Forward(nsIStyleRule* aRule) {
-    NS_PRECONDITION(!RefPtr<mozilla::css::StyleRule>(do_QueryObject(aRule)),
+    NS_PRECONDITION(!nsRefPtr<mozilla::css::StyleRule>(do_QueryObject(aRule)),
                     "Calling the wrong Forward() overload");
     DoForward(aRule);
   }

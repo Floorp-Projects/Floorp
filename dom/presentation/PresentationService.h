@@ -35,7 +35,7 @@ public:
   already_AddRefed<PresentationSessionInfo>
   GetSessionInfo(const nsAString& aSessionId)
   {
-    RefPtr<PresentationSessionInfo> info;
+    nsRefPtr<PresentationSessionInfo> info;
     return mSessionInfo.Get(aSessionId, getter_AddRefs(info)) ?
            info.forget() : nullptr;
   }

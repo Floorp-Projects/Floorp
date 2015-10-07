@@ -8,7 +8,7 @@
 #define GFX_SOFTWARE_VSYNC_SOURCE_H
 
 #include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "base/thread.h"
 #include "nsISupportsImpl.h"
@@ -57,7 +57,7 @@ public:
   }
 
 private:
-  RefPtr<SoftwareDisplay> mGlobalDisplay;
+  nsRefPtr<SoftwareDisplay> mGlobalDisplay;
 };
 
 #endif /* GFX_SOFTWARE_VSYNC_SOURCE_H */

@@ -73,7 +73,7 @@ private:
     // weak ref only since cache references its manager.
     DOMStorageCache* mCache;
     // hard ref when this is sessionStorage to keep it alive forever.
-    RefPtr<DOMStorageCache> mCacheRef;
+    nsRefPtr<DOMStorageCache> mCacheRef;
   };
 
   // Ensures cache for a scope, when it doesn't exist it is created and initalized,
@@ -103,7 +103,7 @@ private:
 
 protected:
   // Keeps usage cache objects for eTLD+1 scopes we have touched.
-  nsDataHashtable<nsCStringHashKey, RefPtr<DOMStorageUsage> > mUsages;
+  nsDataHashtable<nsCStringHashKey, nsRefPtr<DOMStorageUsage> > mUsages;
 
   friend class DOMStorageCache;
   // Releases cache since it is no longer referrered by any DOMStorage object.

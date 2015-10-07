@@ -435,7 +435,7 @@ private:
    */
   already_AddRefed<nsIContent> CreateGenConTextNode(nsFrameConstructorState& aState,
                                                     const nsString& aString,
-                                                    RefPtr<nsTextNode>* aText,
+                                                    nsRefPtr<nsTextNode>* aText,
                                                     nsGenConInitializer* aInitializer);
 
   /**
@@ -995,7 +995,7 @@ private:
       {}
 
       nsIContent * const mContent;
-      RefPtr<nsStyleContext> mStyleContext;
+      nsRefPtr<nsStyleContext> mStyleContext;
     };
 
     // Adjust our various counts for aItem being added or removed.  aDelta
@@ -1121,7 +1121,7 @@ private:
     // insertion point before doing so and pop it afterward.
     PendingBinding* mPendingBinding;
     // The style context to use for creating the new frame.
-    RefPtr<nsStyleContext> mStyleContext;
+    nsRefPtr<nsStyleContext> mStyleContext;
     // The XBL-resolved namespace to use for frame construction.
     int32_t mNameSpaceID;
     // Whether optimizations to skip constructing textframes around

@@ -143,7 +143,7 @@ TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
 {
   MOZ_ASSERT(!aEvent.AsInputEvent(), "Use DispatchInputEvent()");
 
-  RefPtr<TextEventDispatcher> kungFuDeathGrip(this);
+  nsRefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
   mDispatchingEvent++;
   nsresult rv = widget->DispatchEvent(&aEvent, aStatus);
@@ -157,7 +157,7 @@ TextEventDispatcher::DispatchInputEvent(nsIWidget* aWidget,
                                         nsEventStatus& aStatus,
                                         DispatchTo aDispatchTo)
 {
-  RefPtr<TextEventDispatcher> kungFuDeathGrip(this);
+  nsRefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
   mDispatchingEvent++;
 
@@ -539,7 +539,7 @@ TextEventDispatcher::PendingComposition::Flush(TextEventDispatcher* aDispatcher,
     mClauses->AppendElement(mCaret);
   }
 
-  RefPtr<TextEventDispatcher> kungFuDeathGrip(aDispatcher);
+  nsRefPtr<TextEventDispatcher> kungFuDeathGrip(aDispatcher);
   nsCOMPtr<nsIWidget> widget(aDispatcher->mWidget);
   WidgetCompositionEvent compChangeEvent(true, eCompositionChange, widget);
   aDispatcher->InitEvent(compChangeEvent);

@@ -127,7 +127,7 @@ protected:
   bool mIsFromUserInput;
   uint32_t mEventType;
   EEventRule mEventRule;
-  RefPtr<Accessible> mAccessible;
+  nsRefPtr<Accessible> mAccessible;
 
   friend class EventQueue;
   friend class AccReorderEvent;
@@ -237,8 +237,8 @@ public:
 
 protected:
   nsCOMPtr<nsINode> mNode;
-  RefPtr<Accessible> mParent;
-  RefPtr<AccTextChangeEvent> mTextChangeEvent;
+  nsRefPtr<Accessible> mParent;
+  nsRefPtr<AccTextChangeEvent> mTextChangeEvent;
 
   friend class EventQueue;
 };
@@ -268,8 +268,8 @@ public:
 
 protected:
   bool mNeedsShutdown;
-  RefPtr<Accessible> mNextSibling;
-  RefPtr<Accessible> mPrevSibling;
+  nsRefPtr<Accessible> mNextSibling;
+  nsRefPtr<Accessible> mPrevSibling;
 
   friend class EventQueue;
 };
@@ -397,7 +397,7 @@ public:
   bool IsCaretMoveOnly() const;
 
 private:
-  RefPtr<dom::Selection> mSel;
+  nsRefPtr<dom::Selection> mSel;
   int32_t mReason;
 
   friend class EventQueue;
@@ -432,8 +432,8 @@ public:
   Accessible* Widget() const { return mWidget; }
 
 private:
-  RefPtr<Accessible> mWidget;
-  RefPtr<Accessible> mItem;
+  nsRefPtr<Accessible> mWidget;
+  nsRefPtr<Accessible> mItem;
   SelChangeType mSelChangeType;
   uint32_t mPreceedingCount;
   AccSelChangeEvent* mPackedEvent;
@@ -495,7 +495,7 @@ public:
   int32_t Reason() const { return mReason; }
 
 private:
-  RefPtr<Accessible> mOldAccessible;
+  nsRefPtr<Accessible> mOldAccessible;
   int32_t mOldStart;
   int32_t mOldEnd;
   int16_t mReason;

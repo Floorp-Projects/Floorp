@@ -131,7 +131,7 @@ public:
   virtual bool SupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager) const override;
 
 private:
-  RefPtr<ClientSingleTiledLayerBuffer> mTiledBuffer;
+  nsRefPtr<ClientSingleTiledLayerBuffer> mTiledBuffer;
 };
 
 }

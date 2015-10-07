@@ -361,7 +361,7 @@ nsSVGFilterInstance::GetSourceIndices(nsSVGFE* aPrimitiveElement,
 
 nsresult
 nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
-                                     nsTArray<RefPtr<SourceSurface>>& aInputImages)
+                                     nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
 {
   mSourceGraphicIndex = GetLastResultIndex(aPrimitiveDescrs);
 
@@ -372,11 +372,11 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
   }
 
   // Get the filter primitive elements.
-  nsTArray<RefPtr<nsSVGFE> > primitives;
+  nsTArray<nsRefPtr<nsSVGFE> > primitives;
   for (nsIContent* child = mFilterElement->nsINode::GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    RefPtr<nsSVGFE> primitive;
+    nsRefPtr<nsSVGFE> primitive;
     CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
     if (primitive) {
       primitives.AppendElement(primitive);

@@ -219,7 +219,7 @@ nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI)
         return;
     }
 
-    RefPtr<nsHttpConnectionInfo> clone =
+    nsRefPtr<nsHttpConnectionInfo> clone =
         new nsHttpConnectionInfo(mOrigin, mOriginPort,
                                  EmptyCString(), mUsername, mProxyInfo, mEndToEndSSL);
     // Make sure the anonymous, insecure-scheme, and private flags are transferred
@@ -244,7 +244,7 @@ nsHttpConnectionInfo::CreateWildCard(nsHttpConnectionInfo **outParam)
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    RefPtr<nsHttpConnectionInfo> clone;
+    nsRefPtr<nsHttpConnectionInfo> clone;
     clone = new nsHttpConnectionInfo(NS_LITERAL_CSTRING("*"), 0,
                                      mNPNToken, mUsername, mProxyInfo, true);
     // Make sure the anonymous and private flags are transferred!

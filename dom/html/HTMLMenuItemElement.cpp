@@ -181,8 +181,8 @@ nsresult
 HTMLMenuItemElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nullptr;
-  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  RefPtr<HTMLMenuItemElement> it =
+  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+  nsRefPtr<HTMLMenuItemElement> it =
     new HTMLMenuItemElement(ni, NOT_FROM_PARSER);
   nsresult rv = const_cast<HTMLMenuItemElement*>(this)->CopyInnerTo(it);
   if (NS_SUCCEEDED(rv)) {

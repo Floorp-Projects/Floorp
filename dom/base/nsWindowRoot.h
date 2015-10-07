@@ -84,7 +84,7 @@ protected:
   // Members
   nsCOMPtr<nsPIDOMWindow> mWindow;
   // We own the manager, which owns event listeners attached to us.
-  RefPtr<mozilla::EventListenerManager> mListenerManager; // [Strong]
+  nsRefPtr<mozilla::EventListenerManager> mListenerManager; // [Strong]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
   nsCOMPtr<mozilla::dom::EventTarget> mParent;

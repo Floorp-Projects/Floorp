@@ -242,7 +242,7 @@ private:
     GetMetrics(const gfxFont::Orientation aFontOrientation) const;
 
     nsFont mFont;
-    RefPtr<gfxFontGroup> mFontGroup;
+    nsRefPtr<gfxFontGroup> mFontGroup;
     nsCOMPtr<nsIAtom> mLanguage;
     nsDeviceContext *mDeviceContext;
     int32_t mP2A;

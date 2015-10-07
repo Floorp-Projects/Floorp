@@ -24,7 +24,7 @@ WebGL2Context::CreateTransformFeedback()
     MakeContextCurrent();
     gl->fGenTransformFeedbacks(1, &tf);
 
-    RefPtr<WebGLTransformFeedback> globj = new WebGLTransformFeedback(this, tf);
+    nsRefPtr<WebGLTransformFeedback> globj = new WebGLTransformFeedback(this, tf);
     return globj.forget();
 }
 

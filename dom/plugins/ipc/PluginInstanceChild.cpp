@@ -101,11 +101,11 @@ struct RunnableMethodTraits<PluginInstanceChild>
  * allowed from processes other than the main process. So we have our own
  * version here.
  */
-static RefPtr<DrawTarget>
+static nsRefPtr<DrawTarget>
 CreateDrawTargetForSurface(gfxASurface *aSurface)
 {
   SurfaceFormat format = aSurface->GetSurfaceFormat();
-  RefPtr<DrawTarget> drawTarget =
+  nsRefPtr<DrawTarget> drawTarget =
     Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(),
                                              aSurface->GetSize(),
                                              &format);
@@ -995,7 +995,7 @@ PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
 
     NPCocoaEvent evcopy = event.event;
     mContentsScaleFactor = event.contentsScaleFactor;
-    RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(surfaceid,
+    nsRefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(surfaceid,
                                                             mContentsScaleFactor);
     if (!surf) {
         NS_ERROR("Invalid IOSurface.");
@@ -2841,7 +2841,7 @@ PluginInstanceChild::CreateOptSurface(void)
                "Need a valid surface type here");
     NS_ASSERTION(!mCurrentSurface, "mCurrentSurfaceActor can get out of sync.");
 
-    RefPtr<gfxASurface> retsurf;
+    nsRefPtr<gfxASurface> retsurf;
     // Use an opaque surface unless we're transparent and *don't* have
     // a background to source from.
     gfxImageFormat format =
@@ -3069,7 +3069,7 @@ PluginInstanceChild::EnsureCurrentBuffer(void)
 void
 PluginInstanceChild::UpdateWindowAttributes(bool aForceSetWindow)
 {
-    RefPtr<gfxASurface> curSurface = mHelperSurface ? mHelperSurface : mCurrentSurface;
+    nsRefPtr<gfxASurface> curSurface = mHelperSurface ? mHelperSurface : mCurrentSurface;
     bool needWindowUpdate = aForceSetWindow;
 #ifdef MOZ_X11
     Visual* visual = nullptr;
@@ -3220,7 +3220,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
 {
     // Render using temporary X surface, with copy to image surface
     nsIntRect plPaintRect(aRect);
-    RefPtr<gfxASurface> renderSurface = aSurface;
+    nsRefPtr<gfxASurface> renderSurface = aSurface;
 #ifdef MOZ_X11
     if (mIsTransparent && (GetQuirks() & QUIRK_FLASH_EXPOSE_COORD_TRANSLATION)) {
         // Work around a bug in Flash up to 10.1 d51 at least, where expose event
@@ -3236,7 +3236,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
 #endif
 
     if (mIsTransparent && !CanPaintOnBackground()) {
-        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(renderSurface);
+        nsRefPtr<DrawTarget> dt = CreateDrawTargetForSurface(renderSurface);
         gfx::Rect rect(plPaintRect.x, plPaintRect.y,
                        plPaintRect.width, plPaintRect.height);
         // Moz2D treats OP_SOURCE operations as unbounded, so we need to
@@ -3251,7 +3251,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
     PaintRectToPlatformSurface(plPaintRect, renderSurface);
 
     if (renderSurface != aSurface) {
-      RefPtr<DrawTarget> dt;
+      nsRefPtr<DrawTarget> dt;
       if (aSurface == mCurrentSurface &&
           aSurface->GetType() == gfxSurfaceType::Image &&
           aSurface->GetSurfaceFormat() == SurfaceFormat::B8G8R8X8) {
@@ -3270,7 +3270,7 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
         // Copy helper surface content to target
         dt = CreateDrawTargetForSurface(aSurface);
       }
-      RefPtr<SourceSurface> surface =
+      nsRefPtr<SourceSurface> surface =
         gfxPlatform::GetSourceSurfaceForSurface(dt, renderSurface);
       dt->CopySurface(surface, aRect, aRect.TopLeft());
     }
@@ -3304,8 +3304,8 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
         }
     }
 
-    RefPtr<gfxImageSurface> whiteImage;
-    RefPtr<gfxImageSurface> blackImage;
+    nsRefPtr<gfxImageSurface> whiteImage;
+    nsRefPtr<gfxImageSurface> blackImage;
     gfxRect targetRect(rect.x, rect.y, rect.width, rect.height);
     IntSize targetSize(rect.width, rect.height);
     gfxPoint deviceOffset = -targetRect.TopLeft();
@@ -3327,8 +3327,8 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     // background and copy the result
     PaintRectToSurface(rect, aSurface, Color(1.f, 1.f, 1.f));
     {
-        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(whiteImage);
-        RefPtr<SourceSurface> surface =
+        nsRefPtr<DrawTarget> dt = CreateDrawTargetForSurface(whiteImage);
+        nsRefPtr<SourceSurface> surface =
             gfxPlatform::GetSourceSurfaceForSurface(dt, aSurface);
         dt->CopySurface(surface, rect, IntPoint());
     }
@@ -3371,8 +3371,8 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     // If we had to use a temporary black surface, copy the pixels
     // with alpha back to the target
     if (!useSurfaceSubimageForBlack) {
-        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(aSurface);
-        RefPtr<SourceSurface> surface =
+        nsRefPtr<DrawTarget> dt = CreateDrawTargetForSurface(aSurface);
+        nsRefPtr<SourceSurface> surface =
             gfxPlatform::GetSourceSurfaceForSurface(dt, blackImage);
         dt->CopySurface(surface,
                         IntRect(0, 0, rect.width, rect.height),
@@ -3508,10 +3508,10 @@ PluginInstanceChild::ShowPluginFrame()
         PLUGIN_LOG_DEBUG(("  (on background)"));
         // Source the background pixels ...
         {
-            RefPtr<gfxASurface> surface =
+            nsRefPtr<gfxASurface> surface =
                 mHelperSurface ? mHelperSurface : mCurrentSurface;
-            RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(surface);
-            RefPtr<SourceSurface> backgroundSurface =
+            nsRefPtr<DrawTarget> dt = CreateDrawTargetForSurface(surface);
+            nsRefPtr<SourceSurface> backgroundSurface =
                 gfxPlatform::GetSourceSurfaceForSurface(dt, mBackground);
             dt->CopySurface(backgroundSurface, rect, rect.TopLeft());
         }
@@ -3530,7 +3530,7 @@ PluginInstanceChild::ShowPluginFrame()
         // plugins, and we're forcing a throwaway paint of a
         // wmode=transparent plugin, then make sure to use the helper
         // surface here.
-        RefPtr<gfxASurface> target =
+        nsRefPtr<gfxASurface> target =
             (temporarilyMakeVisible && mHelperSurface) ?
             mHelperSurface : mCurrentSurface;
 
@@ -3636,8 +3636,8 @@ PluginInstanceChild::ReadbackDifferenceRect(const nsIntRect& rect)
          mSurfaceDifferenceRect.width, mSurfaceDifferenceRect.height));
 
     // Read back previous content
-    RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(mCurrentSurface);
-    RefPtr<SourceSurface> source =
+    nsRefPtr<DrawTarget> dt = CreateDrawTargetForSurface(mCurrentSurface);
+    nsRefPtr<SourceSurface> source =
         gfxPlatform::GetSourceSurfaceForSurface(dt, mBackSurface);
     // Subtract from mSurfaceDifferenceRect area which is overlapping with rect
     nsIntRegion result;
@@ -3848,7 +3848,7 @@ PluginInstanceChild::PostChildAsyncCall(ChildAsyncCall* aTask)
 void
 PluginInstanceChild::SwapSurfaces()
 {
-    RefPtr<gfxASurface> tmpsurf = mCurrentSurface;
+    nsRefPtr<gfxASurface> tmpsurf = mCurrentSurface;
 #ifdef XP_WIN
     PPluginSurfaceChild* tmpactor = mCurrentSurfaceActor;
 #endif

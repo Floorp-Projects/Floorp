@@ -139,10 +139,10 @@ protected:
   friend class TextTrackCue;
   friend class WebVTTListener;
 
-  RefPtr<TextTrack> mTrack;
+  nsRefPtr<TextTrack> mTrack;
   nsCOMPtr<nsIChannel> mChannel;
-  RefPtr<HTMLMediaElement> mMediaParent;
-  RefPtr<WebVTTListener> mListener;
+  nsRefPtr<HTMLMediaElement> mMediaParent;
+  nsRefPtr<WebVTTListener> mListener;
 
   void CreateTextTrack();
 };

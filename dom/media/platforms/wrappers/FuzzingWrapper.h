@@ -78,15 +78,15 @@ private:
   // First member is the frame to be delayed.
   // Second member is true if an 'InputExhausted' arrived after that frame; in
   // which case an InputExhausted will be sent after finally outputting the frame.
-  typedef Pair<RefPtr<MediaData>, bool> MediaDataAndInputExhausted;
+  typedef Pair<nsRefPtr<MediaData>, bool> MediaDataAndInputExhausted;
   std::deque<MediaDataAndInputExhausted> mDelayedOutput;
-  RefPtr<MediaTimer> mDelayedOutputTimer;
+  nsRefPtr<MediaTimer> mDelayedOutputTimer;
   // If draining, a 'DrainComplete' will be sent after all delayed frames have
   // been output.
   bool mDraining;
   // All callbacks are redirected through this task queue, both to avoid locking
   // and to have a consistent sequencing of callbacks.
-  RefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
   void ScheduleOutputDelayedFrame();
   void OutputDelayedFrame();
 public: // public for the benefit of DecoderFuzzingWrapper.
@@ -103,7 +103,7 @@ public:
 
 private:
   // MediaDataDecoder implementation.
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -111,8 +111,8 @@ private:
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   nsresult ConfigurationChanged(const TrackInfo& aConfig) override;
 
-  RefPtr<MediaDataDecoder> mDecoder;
-  RefPtr<DecoderCallbackFuzzingWrapper> mCallbackWrapper;
+  nsRefPtr<MediaDataDecoder> mDecoder;
+  nsRefPtr<DecoderCallbackFuzzingWrapper> mCallbackWrapper;
 };
 
 } // namespace mozilla

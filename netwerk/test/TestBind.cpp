@@ -138,7 +138,7 @@ main(int32_t argc, char *argv[])
   }
 
   // Listening.
-  RefPtr<ServerListener> serverListener = new ServerListener();
+  nsRefPtr<ServerListener> serverListener = new ServerListener();
   rv = server->AsyncListen(serverListener);
   if (NS_FAILED(rv)) {
     fail("Server fail to start listening.");
@@ -178,7 +178,7 @@ main(int32_t argc, char *argv[])
     }
 
     // Open IO streams, to make client SocketTransport connect to server.
-    RefPtr<ClientInputCallback> clientCallback = new ClientInputCallback();
+    nsRefPtr<ClientInputCallback> clientCallback = new ClientInputCallback();
     nsCOMPtr<nsIInputStream> inputStream;
     rv = client->OpenInputStream(nsITransport::OPEN_UNBUFFERED,
                                  0, 0, getter_AddRefs(inputStream));

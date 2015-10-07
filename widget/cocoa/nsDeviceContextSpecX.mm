@@ -44,7 +44,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  RefPtr<nsPrintSettingsX> settings(do_QueryObject(aPS));
+  nsRefPtr<nsPrintSettingsX> settings(do_QueryObject(aPS));
   if (!settings)
     return NS_ERROR_NO_INTERFACE;
 
@@ -148,7 +148,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     CGContextRef context;
     ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
 
-    RefPtr<gfxASurface> newSurface;
+    nsRefPtr<gfxASurface> newSurface;
 
     if (context) {
         // Initially, origin is at bottom-left corner of the paper.

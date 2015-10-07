@@ -34,8 +34,8 @@ public:
 private:
   ~TVServiceSourceSetterCallback();
 
-  RefPtr<TVTuner> mTuner;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<TVTuner> mTuner;
+  nsRefPtr<Promise> mPromise;
   TVSourceType mSourceType;
 };
 
@@ -53,8 +53,8 @@ public:
 private:
   ~TVServiceChannelScanCallback();
 
-  RefPtr<TVSource> mSource;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<TVSource> mSource;
+  nsRefPtr<Promise> mPromise;
   bool mIsScanning;
 };
 
@@ -72,8 +72,8 @@ public:
 private:
   ~TVServiceChannelSetterCallback();
 
-  RefPtr<TVSource> mSource;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<TVSource> mSource;
+  nsRefPtr<Promise> mPromise;
   nsString mChannelNumber;
 };
 
@@ -89,7 +89,7 @@ public:
 private:
   ~TVServiceTunerGetterCallback();
 
-  RefPtr<TVManager> mManager;
+  nsRefPtr<TVManager> mManager;
 };
 
 class TVServiceChannelGetterCallback final : public nsITVServiceCallback
@@ -105,8 +105,8 @@ public:
 private:
   ~TVServiceChannelGetterCallback();
 
-  RefPtr<TVSource> mSource;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<TVSource> mSource;
+  nsRefPtr<Promise> mPromise;
 };
 
 class TVServiceProgramGetterCallback final : public nsITVServiceCallback
@@ -126,8 +126,8 @@ public:
 private:
   ~TVServiceProgramGetterCallback();
 
-  RefPtr<TVChannel> mChannel;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<TVChannel> mChannel;
+  nsRefPtr<Promise> mPromise;
   bool mIsSingular;
 };
 

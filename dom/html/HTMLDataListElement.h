@@ -48,7 +48,7 @@ protected:
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // <option>'s list inside the datalist element.
-  RefPtr<nsContentList> mOptions;
+  nsRefPtr<nsContentList> mOptions;
 };
 
 } // namespace dom

@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_presentation_provider_MulticastDNSDeviceProvider_h
 #define mozilla_dom_presentation_provider_MulticastDNSDeviceProvider_h
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsICancelable.h"
 #include "nsIDNSServiceDiscovery.h"
@@ -101,7 +101,7 @@ private:
   nsWeakPtr mDeviceListener;
   nsCOMPtr<nsITCPPresentationServer> mPresentationServer;
   nsCOMPtr<nsIDNSServiceDiscovery> mMulticastDNS;
-  RefPtr<DNSServiceWrappedListener> mWrappedListener;
+  nsRefPtr<DNSServiceWrappedListener> mWrappedListener;
 
   nsCOMPtr<nsICancelable> mDiscoveryRequest;
   nsCOMPtr<nsICancelable> mRegisterRequest;

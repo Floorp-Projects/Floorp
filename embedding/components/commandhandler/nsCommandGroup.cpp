@@ -286,7 +286,7 @@ nsControllerCommandGroup::IsCommandInGroup(const char* aCommand,
 NS_IMETHODIMP
 nsControllerCommandGroup::GetGroupsEnumerator(nsISimpleEnumerator** aResult)
 {
-  RefPtr<nsGroupsEnumerator> groupsEnum = new nsGroupsEnumerator(mGroupsHash);
+  nsRefPtr<nsGroupsEnumerator> groupsEnum = new nsGroupsEnumerator(mGroupsHash);
 
   groupsEnum.forget(aResult);
   return NS_OK;
@@ -299,7 +299,7 @@ nsControllerCommandGroup::GetEnumeratorForGroup(const char* aGroup,
   nsDependentCString groupKey(aGroup);
   nsTArray<nsCString>* commandList = mGroupsHash.Get(groupKey); // may be null
 
-  RefPtr<nsNamedGroupEnumerator> theGroupEnum =
+  nsRefPtr<nsNamedGroupEnumerator> theGroupEnum =
     new nsNamedGroupEnumerator(commandList);
 
   theGroupEnum.forget(aResult);

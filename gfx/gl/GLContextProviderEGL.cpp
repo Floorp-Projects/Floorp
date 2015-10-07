@@ -529,7 +529,7 @@ GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
         return nullptr;
     }
 
-    RefPtr<GLContextEGL> glContext = new GLContextEGL(caps,
+    nsRefPtr<GLContextEGL> glContext = new GLContextEGL(caps,
                                                         shareContext,
                                                         isOffscreen,
                                                         config,
@@ -744,7 +744,7 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
     if (aContext && aSurface) {
         SurfaceCaps caps = SurfaceCaps::Any();
         EGLConfig config = EGL_NO_CONFIG;
-        RefPtr<GLContextEGL> glContext =
+        nsRefPtr<GLContextEGL> glContext =
             new GLContextEGL(caps,
                              nullptr, false,
                              config, (EGLSurface)aSurface, (EGLContext)aContext);
@@ -781,7 +781,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     }
 
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> glContext =
+    nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(caps,
                                       nullptr, false,
                                       config, surface);
@@ -953,7 +953,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size
     }
 
 
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(configCaps, nullptr, true,
+    nsRefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(configCaps, nullptr, true,
                                                             config, surface);
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
@@ -989,7 +989,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
     MOZ_ASSERT(surface);
 
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> glContext =
+    nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(dummyCaps,
                                       nullptr, true,
                                       config, surface);
@@ -1039,7 +1039,7 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
         canOffscreenUseHeadless = false;
     }
 
-    RefPtr<GLContext> gl;
+    nsRefPtr<GLContext> gl;
     SurfaceCaps minOffscreenCaps = minCaps;
 
     if (canOffscreenUseHeadless) {

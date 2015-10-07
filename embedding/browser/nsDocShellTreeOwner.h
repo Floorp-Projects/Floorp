@@ -125,8 +125,8 @@ protected:
   // the objects that listen for chrome events like context menus and tooltips.
   // They are separate objects to avoid circular references between |this|
   // and the DOM.
-  RefPtr<ChromeTooltipListener> mChromeTooltipListener;
-  RefPtr<ChromeContextMenuListener> mChromeContextMenuListener;
+  nsRefPtr<ChromeTooltipListener> mChromeTooltipListener;
+  nsRefPtr<ChromeContextMenuListener> mChromeContextMenuListener;
 
   nsCOMPtr<nsIPrompt> mPrompter;
   nsCOMPtr<nsIAuthPrompt> mAuthPrompter;

@@ -206,10 +206,10 @@ protected:
   // This is non-null only when this driver has recently switched from an other
   // driver, and has not cleaned it up yet (for example because the audio stream
   // is currently calling the callback during initialization).
-  RefPtr<GraphDriver> mPreviousDriver;
+  nsRefPtr<GraphDriver> mPreviousDriver;
   // This is non-null only when this driver is going to switch to an other
   // driver at the end of this iteration.
-  RefPtr<GraphDriver> mNextDriver;
+  nsRefPtr<GraphDriver> mNextDriver;
   virtual ~GraphDriver()
   { }
 };
@@ -295,7 +295,7 @@ struct StreamAndPromiseForOperation
   StreamAndPromiseForOperation(MediaStream* aStream,
                                void* aPromise,
                                dom::AudioContextOperation aOperation);
-  RefPtr<MediaStream> mStream;
+  nsRefPtr<MediaStream> mStream;
   void* mPromise;
   dom::AudioContextOperation mOperation;
 };
@@ -508,9 +508,9 @@ protected:
 private:
   NS_IMETHOD Run() override final;
   nsCOMPtr<nsIThread> mThread;
-  RefPtr<AudioCallbackDriver> mDriver;
+  nsRefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
-  RefPtr<MediaStreamGraphImpl> mShutdownGrip;
+  nsRefPtr<MediaStreamGraphImpl> mShutdownGrip;
 };
 
 } // namespace mozilla

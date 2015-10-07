@@ -18,7 +18,7 @@ namespace dom {
 /* static */ already_AddRefed<FakeTVService>
 TVServiceFactory::CreateFakeTVService()
 {
-  RefPtr<FakeTVService> service = new FakeTVService();
+  nsRefPtr<FakeTVService> service = new FakeTVService();
   return service.forget();
 }
 

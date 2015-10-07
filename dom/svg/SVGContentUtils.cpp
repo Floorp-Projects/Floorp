@@ -15,7 +15,7 @@
 #include "gfxSVGGlyphs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -173,7 +173,7 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                   gfxTextContextPaint *aContextPaint,
                                   StrokeOptionFlags aFlags)
 {
-  RefPtr<nsStyleContext> styleContext;
+  nsRefPtr<nsStyleContext> styleContext;
   if (aStyleContext) {
     styleContext = aStyleContext;
   } else {
@@ -243,7 +243,7 @@ SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
                                 nsStyleContext* aStyleContext,
                                 gfxTextContextPaint *aContextPaint)
 {
-  RefPtr<nsStyleContext> styleContext;
+  nsRefPtr<nsStyleContext> styleContext;
   if (aStyleContext) {
     styleContext = aStyleContext;
   } else {
@@ -271,7 +271,7 @@ SVGContentUtils::GetFontSize(Element *aElement)
   if (!aElement)
     return 1.0f;
 
-  RefPtr<nsStyleContext> styleContext = 
+  nsRefPtr<nsStyleContext> styleContext = 
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
                                                          nullptr, nullptr);
   if (!styleContext) {
@@ -309,7 +309,7 @@ SVGContentUtils::GetFontXHeight(Element *aElement)
   if (!aElement)
     return 1.0f;
 
-  RefPtr<nsStyleContext> styleContext = 
+  nsRefPtr<nsStyleContext> styleContext = 
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(aElement,
                                                          nullptr, nullptr);
   if (!styleContext) {
@@ -336,7 +336,7 @@ SVGContentUtils::GetFontXHeight(nsStyleContext *aStyleContext)
   nsPresContext *presContext = aStyleContext->PresContext();
   MOZ_ASSERT(presContext, "NULL pres context in GetFontXHeight");
 
-  RefPtr<nsFontMetrics> fontMetrics;
+  nsRefPtr<nsFontMetrics> fontMetrics;
   nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
                                                getter_AddRefs(fontMetrics));
 
@@ -845,9 +845,9 @@ SVGContentUtils::GetPath(const nsAString& aPathString)
     return NULL;
   }
 
-  RefPtr<DrawTarget> drawTarget =
+  nsRefPtr<DrawTarget> drawTarget =
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<PathBuilder> builder =
+  nsRefPtr<PathBuilder> builder =
     drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
 
   return pathData.BuildPath(builder, NS_STYLE_STROKE_LINECAP_BUTT, 1);

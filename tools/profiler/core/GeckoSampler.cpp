@@ -540,7 +540,7 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
         SubprocessClosure closure(&aWriter);
         nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
         if (os) {
-          RefPtr<ProfileSaveEvent> pse = new ProfileSaveEvent(SubProcessCallback, &closure);
+          nsRefPtr<ProfileSaveEvent> pse = new ProfileSaveEvent(SubProcessCallback, &closure);
           os->NotifyObservers(pse, "profiler-subprocess", nullptr);
         }
       }

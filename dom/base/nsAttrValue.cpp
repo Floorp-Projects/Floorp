@@ -1690,7 +1690,7 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   css::Loader* cssLoader = ownerDoc->CSSLoader();
   nsCSSParser cssParser(cssLoader);
 
-  RefPtr<css::StyleRule> rule;
+  nsRefPtr<css::StyleRule> rule;
   cssParser.ParseStyleAttribute(aString, docURI, baseURI,
                                 aElement->NodePrincipal(),
                                 getter_AddRefs(rule));
@@ -1876,7 +1876,7 @@ nsAttrValue::GetStringBuffer(const nsAString& aValue) const
     return nullptr;
   }
 
-  RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aValue);
+  nsRefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aValue);
   if (buf && (buf->StorageSize()/sizeof(char16_t) - 1) == len) {
     return buf.forget();
   }

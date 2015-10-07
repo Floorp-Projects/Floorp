@@ -90,7 +90,7 @@ nsMimeTypeArray::IndexedGetter(uint32_t aIndex, bool &aFound)
 }
 
 static nsMimeType*
-FindMimeType(const nsTArray<RefPtr<nsMimeType> >& aMimeTypes,
+FindMimeType(const nsTArray<nsRefPtr<nsMimeType> >& aMimeTypes,
              const nsAString& aType)
 {
   for (uint32_t i = 0; i < aMimeTypes.Length(); ++i) {

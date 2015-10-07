@@ -310,15 +310,15 @@ protected:
   void     MaybeDestroyNativeCaret();
 
   // Holds the pointer to our current win32 widget
-  RefPtr<nsWindowBase>       mWidget;
+  nsRefPtr<nsWindowBase>       mWidget;
   // Document manager for the currently focused editor
-  RefPtr<ITfDocumentMgr>     mDocumentMgr;
+  nsRefPtr<ITfDocumentMgr>     mDocumentMgr;
   // Edit cookie associated with the current editing context
   DWORD                        mEditCookie;
   // Editing context at the bottom of mDocumentMgr's context stack
-  RefPtr<ITfContext>         mContext;
+  nsRefPtr<ITfContext>         mContext;
   // Currently installed notification sink
-  RefPtr<ITextStoreACPSink>  mSink;
+  nsRefPtr<ITextStoreACPSink>  mSink;
   // TS_AS_* mask of what events to notify
   DWORD                        mSinkMask;
   // 0 if not locked, otherwise TS_LF_* indicating the current lock
@@ -330,7 +330,7 @@ protected:
   {
   public:
     // nullptr if no composition is active, otherwise the current composition
-    RefPtr<ITfCompositionView> mView;
+    nsRefPtr<ITfCompositionView> mView;
 
     // Current copy of the active composition string. Only mString is
     // changed during a InsertTextAtSelection call if we have a composition.
@@ -520,7 +520,7 @@ protected:
     // For compositionupdate and compositionend
     nsString mData;
     // For compositionupdate
-    RefPtr<TextRangeArray> mRanges;
+    nsRefPtr<TextRangeArray> mRanges;
     // For selectionset
     bool mSelectionReversed;
     // For compositionupdate
@@ -620,7 +620,7 @@ protected:
   private:
     AutoPendingActionAndContentFlusher() {}
 
-    RefPtr<TSFTextStore> mTextStore;
+    nsRefPtr<TSFTextStore> mTextStore;
   };
 
   class Content final
@@ -782,7 +782,7 @@ protected:
     LONG RangeStart() const { return mStart; }
   
   private:
-    RefPtr<ITfMouseSink> mSink;
+    nsRefPtr<ITfMouseSink> mSink;
     LONG mStart;
     LONG mLength;
     DWORD mCookie;

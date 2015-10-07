@@ -48,9 +48,9 @@ private:
                                    ManagerId* aManagerId) override;
 
   const Namespace mNamespace;
-  RefPtr<PrincipalVerifier> mVerifier;
+  nsRefPtr<PrincipalVerifier> mVerifier;
   nsresult mVerifiedStatus;
-  RefPtr<ManagerId> mManagerId;
+  nsRefPtr<ManagerId> mManagerId;
 };
 
 } // namespace cache

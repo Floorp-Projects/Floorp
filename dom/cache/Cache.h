@@ -97,12 +97,12 @@ private:
   ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  AddAll(const GlobalObject& aGlobal, nsTArray<RefPtr<Request>>&& aRequestList,
+  AddAll(const GlobalObject& aGlobal, nsTArray<nsRefPtr<Request>>&& aRequestList,
          ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  PutAll(const nsTArray<RefPtr<Request>>& aRequestList,
-         const nsTArray<RefPtr<Response>>& aResponseList,
+  PutAll(const nsTArray<nsRefPtr<Request>>& aRequestList,
+         const nsTArray<nsRefPtr<Response>>& aResponseList,
          ErrorResult& aRv);
 
   nsCOMPtr<nsIGlobalObject> mGlobal;

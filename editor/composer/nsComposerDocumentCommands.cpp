@@ -87,7 +87,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   NS_ENSURE_TRUE(editor, NS_ERROR_INVALID_ARG);
 
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   nsresult rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
@@ -134,7 +134,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get pres context
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);

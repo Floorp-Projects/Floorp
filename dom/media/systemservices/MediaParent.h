@@ -59,7 +59,7 @@ public:
   virtual ~Parent();
 private:
 
-  RefPtr<OriginKeyStore> mOriginKeyStore;
+  nsRefPtr<OriginKeyStore> mOriginKeyStore;
   bool mDestroyed;
   bool mSameProcess;
 

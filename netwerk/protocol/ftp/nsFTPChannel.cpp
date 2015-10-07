@@ -171,7 +171,7 @@ NS_IMPL_ISUPPORTS(FTPEventSinkProxy, nsIFTPEventSink)
 NS_IMETHODIMP
 FTPEventSinkProxy::OnFTPControlLog(bool aServer, const char* aMsg)
 {
-    RefPtr<OnFTPControlLogRunnable> r =
+    nsRefPtr<OnFTPControlLogRunnable> r =
         new OnFTPControlLogRunnable(mTarget, aServer, aMsg);
     return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }

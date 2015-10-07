@@ -143,7 +143,7 @@ BluetoothGattCharacteristic::StartNotifications(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mAttRole == ATT_CLIENT_ROLE,
@@ -170,7 +170,7 @@ BluetoothGattCharacteristic::StopNotifications(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mAttRole == ATT_CLIENT_ROLE,
@@ -335,7 +335,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothGattCharacteristic> mCharacteristic;
+  nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
 };
 
 already_AddRefed<Promise>
@@ -347,7 +347,7 @@ BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   if (mAttRole == ATT_SERVER_ROLE) {
@@ -379,7 +379,7 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   aValue.ComputeLengthAndData();
@@ -425,7 +425,7 @@ BluetoothGattCharacteristic::AddDescriptor(const nsAString& aDescriptorUuid,
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mAttRole == ATT_SERVER_ROLE,
@@ -436,7 +436,7 @@ BluetoothGattCharacteristic::AddDescriptor(const nsAString& aDescriptorUuid,
    * backend. Otherwise, descriptors cannot be added into the characteristic. */
   BT_ENSURE_TRUE_REJECT(!mActive, promise, NS_ERROR_UNEXPECTED);
 
-  RefPtr<BluetoothGattDescriptor> descriptor =
+  nsRefPtr<BluetoothGattDescriptor> descriptor =
     new BluetoothGattDescriptor(GetParentObject(),
                                 this,
                                 aDescriptorUuid,

@@ -9,7 +9,7 @@
 #ifdef USE_SKIA_GPU
 
 #include "mozilla/gfx/RefPtrSkia.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 struct GrGLInterface;
 class GrContext;
@@ -31,7 +31,7 @@ protected:
   virtual ~SkiaGLGlue();
 
 private:
-  RefPtr<GLContext> mGLContext;
+  nsRefPtr<GLContext> mGLContext;
   gfx::RefPtrSkia<GrGLInterface> mGrGLInterface;
   gfx::RefPtrSkia<GrContext> mGrContext;
 };

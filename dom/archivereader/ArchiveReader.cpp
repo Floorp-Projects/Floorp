@@ -41,7 +41,7 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<ArchiveReader> reader =
+  nsRefPtr<ArchiveReader> reader =
     new ArchiveReader(aBlob, window, encoding);
   return reader.forget();
 }
@@ -124,7 +124,7 @@ ArchiveReader::OpenArchive()
   NS_ASSERTION(target, "Must have stream transport service");
 
   // Here a Event to make everything async:
-  RefPtr<ArchiveReaderEvent> event;
+  nsRefPtr<ArchiveReaderEvent> event;
 
   /* FIXME: If we want to support more than 1 format we should check the content type here: */
   event = new ArchiveReaderZipEvent(this, mEncoding);
@@ -140,7 +140,7 @@ ArchiveReader::OpenArchive()
 
 // Data received from the dispatched event:
 void
-ArchiveReader::Ready(nsTArray<RefPtr<File>>& aFileList,
+ArchiveReader::Ready(nsTArray<nsRefPtr<File>>& aFileList,
                      nsresult aStatus)
 {
   mStatus = READY;
@@ -151,7 +151,7 @@ ArchiveReader::Ready(nsTArray<RefPtr<File>>& aFileList,
 
   // Propagate the results:
   for (uint32_t index = 0; index < mRequests.Length(); ++index) {
-    RefPtr<ArchiveRequest> request = mRequests[index];
+    nsRefPtr<ArchiveRequest> request = mRequests[index];
     RequestReady(request);
   }
 
@@ -171,7 +171,7 @@ ArchiveReader::RequestReady(ArchiveRequest* aRequest)
 already_AddRefed<ArchiveRequest>
 ArchiveReader::GetFilenames()
 {
-  RefPtr<ArchiveRequest> request = GenerateArchiveRequest();
+  nsRefPtr<ArchiveRequest> request = GenerateArchiveRequest();
   request->OpGetFilenames();
 
   return request.forget();
@@ -180,7 +180,7 @@ ArchiveReader::GetFilenames()
 already_AddRefed<ArchiveRequest>
 ArchiveReader::GetFile(const nsAString& filename)
 {
-  RefPtr<ArchiveRequest> request = GenerateArchiveRequest();
+  nsRefPtr<ArchiveRequest> request = GenerateArchiveRequest();
   request->OpGetFile(filename);
 
   return request.forget();
@@ -189,7 +189,7 @@ ArchiveReader::GetFile(const nsAString& filename)
 already_AddRefed<ArchiveRequest>
 ArchiveReader::GetFiles()
 {
-  RefPtr<ArchiveRequest> request = GenerateArchiveRequest();
+  nsRefPtr<ArchiveRequest> request = GenerateArchiveRequest();
   request->OpGetFiles();
 
   return request.forget();

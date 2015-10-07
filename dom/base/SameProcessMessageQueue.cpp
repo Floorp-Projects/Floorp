@@ -35,7 +35,7 @@ SameProcessMessageQueue::Push(Runnable* aRunnable)
 void
 SameProcessMessageQueue::Flush()
 {
-  nsTArray<RefPtr<Runnable>> queue;
+  nsTArray<nsRefPtr<Runnable>> queue;
   mQueue.SwapElements(queue);
   for (size_t i = 0; i < queue.Length(); i++) {
     queue[i]->Run();

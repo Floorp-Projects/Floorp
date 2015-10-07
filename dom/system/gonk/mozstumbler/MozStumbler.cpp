@@ -71,7 +71,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<StumblerInfo> mRequestCallback;
+  nsRefPtr<StumblerInfo> mRequestCallback;
 };
 
 void
@@ -115,8 +115,8 @@ MozStumble(nsGeoPosition* position)
     lastTime_ms = (PR_Now() / PR_USEC_PER_MSEC);
     sLastLat = latitude;
     sLastLon = longitude;
-    RefPtr<StumblerInfo> requestCallback = new StumblerInfo(position);
-    RefPtr<RequestCellInfoEvent> runnable = new RequestCellInfoEvent(requestCallback);
+    nsRefPtr<StumblerInfo> requestCallback = new StumblerInfo(position);
+    nsRefPtr<RequestCellInfoEvent> runnable = new RequestCellInfoEvent(requestCallback);
     NS_DispatchToMainThread(runnable);
   } else {
     STUMBLER_DBG("Stumbler-GPS locations less than 30 meters and 3 seconds. Ignore!\n");

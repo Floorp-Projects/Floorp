@@ -38,7 +38,7 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
 already_AddRefed<SourceSurface>
 DrawTargetCaptureImpl::Snapshot()
 {
-  RefPtr<DrawTarget> dt = mRefDT->CreateSimilarDrawTarget(mSize, mRefDT->GetFormat());
+  nsRefPtr<DrawTarget> dt = mRefDT->CreateSimilarDrawTarget(mSize, mRefDT->GetFormat());
 
   ReplayToDrawTarget(dt, Matrix());
 

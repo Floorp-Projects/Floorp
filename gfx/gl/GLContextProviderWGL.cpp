@@ -451,7 +451,7 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
     }
 
     SurfaceCaps caps = SurfaceCaps::ForRGBA();
-    RefPtr<GLContextWGL> glContext = new GLContextWGL(caps,
+    nsRefPtr<GLContextWGL> glContext = new GLContextWGL(caps,
                                                         shareContext,
                                                         false,
                                                         dc,
@@ -546,7 +546,7 @@ CreatePBufferOffscreenContext(const IntSize& aSize,
     }
 
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    RefPtr<GLContextWGL> glContext = new GLContextWGL(dummyCaps,
+    nsRefPtr<GLContextWGL> glContext = new GLContextWGL(dummyCaps,
                                                         aShareContext,
                                                         true,
                                                         pbuffer,
@@ -599,7 +599,7 @@ CreateWindowOffscreenContext()
     }
 
     SurfaceCaps caps = SurfaceCaps::ForRGBA();
-    RefPtr<GLContextWGL> glContext = new GLContextWGL(caps,
+    nsRefPtr<GLContextWGL> glContext = new GLContextWGL(caps,
                                                         shareContext, true,
                                                         dc, context, win);
 
@@ -613,7 +613,7 @@ GLContextProviderWGL::CreateHeadless(CreateContextFlags)
         return nullptr;
     }
 
-    RefPtr<GLContextWGL> glContext;
+    nsRefPtr<GLContextWGL> glContext;
 
     // Always try to create a pbuffer context first, because we
     // want the context isolation.
@@ -635,7 +635,7 @@ GLContextProviderWGL::CreateHeadless(CreateContextFlags)
         return nullptr;
     }
 
-    RefPtr<GLContext> retGL = glContext.get();
+    nsRefPtr<GLContext> retGL = glContext.get();
     return retGL.forget();
 }
 
@@ -644,7 +644,7 @@ GLContextProviderWGL::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags)
 {
-    RefPtr<GLContext> gl = CreateHeadless(flags);
+    nsRefPtr<GLContext> gl = CreateHeadless(flags);
     if (!gl)
         return nullptr;
 
@@ -654,7 +654,7 @@ GLContextProviderWGL::CreateOffscreen(const IntSize& size,
     return gl.forget();
 }
 
-static RefPtr<GLContextWGL> gGlobalContext;
+static nsRefPtr<GLContextWGL> gGlobalContext;
 
 /*static*/ GLContext*
 GLContextProviderWGL::GetGlobalContext()
