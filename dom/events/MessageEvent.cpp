@@ -200,6 +200,49 @@ MessageEvent::InitMessageEvent(const nsAString& aType,
 }
 
 void
+MessageEvent::InitMessageEvent(JSContext* aCx, const nsAString& aType,
+                               bool aCanBubble, bool aCancelable,
+                               JS::Handle<JS::Value> aData,
+                               const nsAString& aOrigin,
+                               const nsAString& aLastEventId,
+                               const Nullable<WindowProxyOrMessagePort>& aSource,
+                               const Nullable<Sequence<OwningNonNull<MessagePort>>>& aPorts,
+                               ErrorResult& aRv)
+{
+  aRv = Event::InitEvent(aType, aCanBubble, aCancelable);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  mData = aData;
+  mozilla::HoldJSObjects(this);
+  mOrigin = aOrigin;
+  mLastEventId = aLastEventId;
+
+  mWindowSource = nullptr;
+  mPortSource = nullptr;
+
+  if (!aSource.IsNull()) {
+    if (aSource.Value().IsWindowProxy()) {
+      mWindowSource = aSource.Value().GetAsWindowProxy();
+    } else {
+      mPortSource = &aSource.Value().GetAsMessagePort();
+    }
+  }
+
+  mPorts = nullptr;
+
+  if (!aPorts.IsNull()) {
+    nsTArray<nsRefPtr<MessagePort>> ports;
+    for (uint32_t i = 0, len = aPorts.Value().Length(); i < len; ++i) {
+      ports.AppendElement(aPorts.Value()[i]);
+    }
+
+    mPorts = new MessagePortList(static_cast<Event*>(this), ports);
+  }
+}
+
+void
 MessageEvent::SetPorts(MessagePortList* aPorts)
 {
   MOZ_ASSERT(!mPorts && aPorts);
@@ -227,7 +270,7 @@ using namespace mozilla::dom;
 already_AddRefed<MessageEvent>
 NS_NewDOMMessageEvent(EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      WidgetEvent* aEvent) 
+                      WidgetEvent* aEvent)
 {
   nsRefPtr<MessageEvent> it = new MessageEvent(aOwner, aPresContext, aEvent);
   return it.forget();
