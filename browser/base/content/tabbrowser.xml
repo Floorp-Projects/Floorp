@@ -2077,13 +2077,12 @@
 
       <method name="removeTabsToTheEndFrom">
         <parameter name="aTab"/>
-        <parameter name="aParams"/>
         <body>
           <![CDATA[
             if (this.warnAboutClosingTabs(this.closingTabsEnum.TO_END, aTab)) {
               let tabs = this.getTabsToTheEndFrom(aTab);
               for (let i = tabs.length - 1; i >= 0; --i) {
-                this.removeTab(tabs[i], aParams);
+                this.removeTab(tabs[i], {animate: true});
               }
             }
           ]]>
