@@ -14,6 +14,7 @@
 
 #include <android/log.h>
 #define MCP_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "MediaCodecProxy", __VA_ARGS__)
+#define TIMEOUT_DEQUEUE_INPUTBUFFER_MS 1000000ll
 
 namespace android {
 
@@ -570,8 +571,7 @@ bool MediaCodecProxy::UpdateOutputBuffers()
 }
 
 status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
-                                int64_t aTimestampUsecs, uint64_t aflags,
-                                int64_t aTimeoutUs)
+                                int64_t aTimestampUsecs, uint64_t aflags)
 {
   // Read Lock for mCodec
   {
@@ -583,11 +583,9 @@ status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
   }
 
   size_t index;
-  status_t err = dequeueInputBuffer(&index, aTimeoutUs);
+  status_t err = dequeueInputBuffer(&index, TIMEOUT_DEQUEUE_INPUTBUFFER_MS);
   if (err != OK) {
-    if (err != -EAGAIN) {
-      MCP_LOG("dequeueInputBuffer returned %d", err);
-    }
+    MCP_LOG("dequeueInputBuffer returned %d", err);
     return err;
   }
 
