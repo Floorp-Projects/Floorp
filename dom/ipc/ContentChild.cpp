@@ -648,6 +648,10 @@ ContentChild::Init(MessageLoop* aIOLoop,
     }
     sSingleton = this;
 
+    // Make sure there's an nsAutoScriptBlocker on the stack when dispatching
+    // urgent messages.
+    GetIPCChannel()->BlockScripts();
+
     // If communications with the parent have broken down, take the process
     // down so it's not hanging around.
     bool abortOnError = true;
