@@ -6338,6 +6338,226 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
+  gCSSProperties["-webkit-animation"] = {
+    domProp: "webkitAnimation",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "animation",
+    subproperties: [ "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-direction", "animation-fill-mode", "animation-iteration-count", "animation-play-state" ],
+  };
+  gCSSProperties["-webkit-animation-delay"] = {
+    domProp: "webkitAnimationDelay",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-delay",
+    subproperties: [ "animation-delay" ],
+  };
+  gCSSProperties["-webkit-animation-direction"] = {
+    domProp: "webkitAnimationDirection",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-direction",
+    subproperties: [ "animation-direction" ],
+  };
+  gCSSProperties["-webkit-animation-duration"] = {
+    domProp: "webkitAnimationDuration",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-duration",
+    subproperties: [ "animation-duration" ],
+  };
+  gCSSProperties["-webkit-animation-fill-mode"] = {
+    domProp: "webkitAnimationFillMode",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-fill-mode",
+    subproperties: [ "animation-fill-mode" ],
+  };
+  gCSSProperties["-webkit-animation-iteration-count"] = {
+    domProp: "webkitAnimationIterationCount",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-iteration-count",
+    subproperties: [ "animation-iteration-count" ],
+  };
+  gCSSProperties["-webkit-animation-name"] = {
+    domProp: "webkitAnimationName",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-name",
+    subproperties: [ "animation-name" ],
+  };
+  gCSSProperties["-webkit-animation-play-state"] = {
+    domProp: "webkitAnimationPlayState",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-play-state",
+    subproperties: [ "animation-play-state" ],
+  };
+  gCSSProperties["-webkit-animation-timing-function"] = {
+    domProp: "webkitAnimationTimingFunction",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "animation-timing-function",
+    subproperties: [ "animation-timing-function" ],
+  };
+  gCSSProperties["-webkit-text-size-adjust"] = {
+    domProp: "webkitTextSizeAdjust",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-text-size-adjust",
+    subproperties: [ "-moz-text-size-adjust" ],
+  };
+  gCSSProperties["-webkit-transform"] = {
+    domProp: "webkitTransform",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transform",
+    subproperties: [ "transform" ],
+  };
+  gCSSProperties["-webkit-transform-origin"] = {
+    domProp: "webkitTransformOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transform-origin",
+    subproperties: [ "transform-origin" ],
+  };
+  gCSSProperties["-webkit-transform-style"] = {
+    domProp: "webkitTransformStyle",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transform-style",
+    subproperties: [ "transform-style" ],
+  };
+  gCSSProperties["-webkit-transition"] = {
+    domProp: "webkitTransition",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "transition",
+    subproperties: [ "transition-property", "transition-duration", "transition-timing-function", "transition-delay" ],
+  };
+  gCSSProperties["-webkit-transition-delay"] = {
+    domProp: "webkitTransitionDelay",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-delay",
+    subproperties: [ "transition-delay" ],
+  };
+  gCSSProperties["-webkit-transition-duration"] = {
+    domProp: "webkitTransitionDuration",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-duration",
+    subproperties: [ "transition-duration" ],
+  };
+  gCSSProperties["-webkit-transition-property"] = {
+    domProp: "webkitTransitionProperty",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-property",
+    subproperties: [ "transition-property" ],
+  };
+  gCSSProperties["-webkit-transition-timing-function"] = {
+    domProp: "webkitTransitionTimingFunction",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "transition-timing-function",
+    subproperties: [ "transition-timing-function" ],
+  };
+  gCSSProperties["-webkit-border-radius"] = {
+    domProp: "webkitBorderRadius",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "border-radius",
+    subproperties: [ "border-bottom-left-radius", "border-bottom-right-radius", "border-top-left-radius", "border-top-right-radius" ],
+  };
+  gCSSProperties["-webkit-border-top-left-radius"] = {
+    domProp: "webkitBorderTopLeftRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-top-left-radius",
+    subproperties: [ "border-top-left-radius" ],
+  };
+  gCSSProperties["-webkit-border-top-right-radius"] = {
+    domProp: "webkitBorderTopRightRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-top-right-radius",
+    subproperties: [ "border-top-right-radius" ],
+  };
+  gCSSProperties["-webkit-border-bottom-left-radius"] = {
+    domProp: "webkitBorderBottomLeftRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-bottom-left-radius",
+    subproperties: [ "border-bottom-left-radius" ],
+  };
+  gCSSProperties["-webkit-border-bottom-right-radius"] = {
+    domProp: "webkitBorderBottomRightRadius",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-bottom-right-radius",
+    subproperties: [ "border-bottom-right-radius" ],
+  };
+  gCSSProperties["-webkit-appearance"] = {
+    domProp: "webkitAppearance",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-appearance",
+    subproperties: [ "-moz-appearance" ],
+  };
+  gCSSProperties["-webkit-background-clip"] = {
+    domProp: "webkitBackgroundClip",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "background-clip",
+    subproperties: [ "background-clip" ],
+  };
+  gCSSProperties["-webkit-background-origin"] = {
+    domProp: "webkitBackgroundOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "background-origin",
+    subproperties: [ "background-origin" ],
+  };
+  gCSSProperties["-webkit-background-size"] = {
+    domProp: "webkitBackgroundSize",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "background-size",
+    subproperties: [ "background-size" ],
+  };
+  gCSSProperties["-webkit-border-image"] = {
+    domProp: "webkitBorderImage",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    alias_for: "border-image",
+    subproperties: [ "border-image-source", "border-image-slice", "border-image-width",  "border-image-outset", "border-image-repeat" ],
+  };
+  gCSSProperties["-webkit-box-shadow"] = {
+    domProp: "webkitBoxShadow",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "box-shadow",
+    subproperties: [ "box-shadow" ],
+  };
+  gCSSProperties["-webkit-box-sizing"] = {
+    domProp: "webkitBoxSizing",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "box-sizing",
+    subproperties: [ "box-sizing" ],
+  };
+  gCSSProperties["-webkit-user-select"] = {
+    domProp: "webkitUserSelect",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "-moz-user-select",
+    subproperties: [ "-moz-user-select" ],
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
   gCSSProperties["animation"].invalid_values.push("2s unset");
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset", "unset, normal");

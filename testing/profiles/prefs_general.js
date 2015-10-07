@@ -161,6 +161,9 @@ user_pref("layout.css.ruby.enabled", true);
 // Enable unicode-range for testing
 user_pref("layout.css.unicode-range.enabled", true);
 
+// Enable webkit prefixed CSS features for testing
+user_pref("layout.css.prefixes.webkit", true);
+
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
 
