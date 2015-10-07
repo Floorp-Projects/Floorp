@@ -2241,6 +2241,8 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
 void
 HttpChannelChild::ResetInterception()
 {
+  NS_ENSURE_TRUE_VOID(gNeckoChild != nullptr);
+
   if (mInterceptListener) {
     mInterceptListener->Cleanup();
   }
