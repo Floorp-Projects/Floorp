@@ -21,6 +21,22 @@ function handleRequest(request, response)
   var body = decodeURIComponent(
     escape(String.fromCharCode.apply(null, bodyBytes)));
 
+  if (query.hop) {
+    query.hop = parseInt(query.hop, 10);
+    hops = eval(query.hops);
+    var curHop = hops[query.hop - 1];
+    query.allowOrigin = curHop.allowOrigin;
+    query.allowHeaders = curHop.allowHeaders;
+    query.allowCred = curHop.allowCred;
+    if (curHop.setCookie) {
+      query.setCookie = unescape(curHop.setCookie);
+    }
+    if (curHop.cookie) {
+      query.cookie = unescape(curHop.cookie);
+    }
+    query.noCookie = curHop.noCookie;
+  }
+
   // Check that request was correct
 
   if (!isPreflight && query.body && body != query.body) {
@@ -86,20 +102,13 @@ function handleRequest(request, response)
     });
   }
 
-  if ("noCookie" in query && request.hasHeader("Cookie")) {
+  if (query.noCookie && request.hasHeader("Cookie")) {
     sendHttp500(response,
       "Got cookies when didn't expect to: " + request.getHeader("Cookie"));
     return;
   }
 
   // Send response
-
-  if (query.hop) {
-     query.hop = parseInt(query.hop, 10);
-     hops = eval(query.hops);
-     query.allowOrigin = hops[query.hop-1].allowOrigin;
-     query.allowHeaders = hops[query.hop-1].allowHeaders;
-  }
 
   if (!isPreflight && query.status) {
     response.setStatusLine(null, query.status, query.statusMessage);
@@ -139,7 +148,7 @@ function handleRequest(request, response)
   if (query.hop && query.hop < hops.length) {
     newURL = hops[query.hop].server +
              "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?" +
-             "hop=" + (query.hop + 1) + "&hops=" + query.hops;
+             "hop=" + (query.hop + 1) + "&hops=" + escape(query.hops);
     response.setStatusLine(null, 307, "redirect");
     response.setHeader("Location", newURL);
 
