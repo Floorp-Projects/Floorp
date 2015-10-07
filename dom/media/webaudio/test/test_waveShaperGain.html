@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+  <title>Test that WaveShaperNode doesn't corrupt its inputs when the gain is !=
+    1.0 (bug 1203616)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var ac = new AudioContext();
+
+var osc = ac.createOscillator();
+var gain = ac.createGain();
+var ws = ac.createWaveShaper();
+var sp = ac.createScriptProcessor();
+
+// No-op waveshaper curve.
+var curve = new Float32Array(2);
+curve[0] = -1.0;
+curve[1] = 1.0;
+ws.curve = curve;
+
+osc.connect(gain);
+gain.connect(ws);
+gain.connect(sp);
+
+gain.gain.value = 0.5;
+
+sp.onaudioprocess = function(e) {
+  var inputBuffer = e.inputBuffer.getChannelData(0);
+  // Check the max amplitude. With a gain of 0.5, it should be peaking at
+  // roughtly 0.5.
+  var max = -Infinity;
+  for (var i = 0; i < inputBuffer.length; i++) {
+    max = Math.max(inputBuffer[i], max);
+  }
+  if (max > 0.49) {
+    ok(true, "Volume was handled properly.");
+    sp.onaudioprocess = null;
+    SimpleTest.finish();
+  }
+}
+
+osc.start();
+</script>
+<pre>
+</pre>
+</body>
+

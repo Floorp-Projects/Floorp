@@ -45,6 +45,14 @@ function expectRejectedPromise(that, func, exceptionName) {
   });
 }
 
+// For a given frequency and AnalyserNode, return the index of the bin that
+// measures this frequency.
+function binIndexForFrequency(frequency, analyser) {
+  return 1 + Math.round(frequency *
+                        analyser.fftSize /
+                        analyser.context.sampleRate);
+}
+
 function fuzzyCompare(a, b) {
   return Math.abs(a - b) < 9e-3;
 }
