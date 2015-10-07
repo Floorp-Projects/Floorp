@@ -20,7 +20,6 @@ DIRS += [
     'qrcode',
     'security',
     'sourcemap',
-    'shared',
     'shims',
     'styleinspector',
     'tern',

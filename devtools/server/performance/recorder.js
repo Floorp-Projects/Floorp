@@ -18,11 +18,11 @@ loader.lazyRequireGetter(this, "events",
   "sdk/event/core");
 
 loader.lazyRequireGetter(this, "Memory",
-  "devtools/shared/shared/memory", true);
+  "devtools/server/performance/memory", true);
 loader.lazyRequireGetter(this, "Timeline",
-  "devtools/shared/shared/timeline", true);
+  "devtools/server/performance/timeline", true);
 loader.lazyRequireGetter(this, "Profiler",
-  "devtools/shared/shared/profiler", true);
+  "devtools/server/performance/profiler", true);
 loader.lazyRequireGetter(this, "PerformanceRecordingActor",
   "devtools/server/actors/performance-recording", true);
 loader.lazyRequireGetter(this, "PerformanceRecordingFront",
