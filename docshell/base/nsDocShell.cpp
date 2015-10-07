@@ -13928,13 +13928,14 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
     return NS_OK;
   }
 
-  bool isNavigation = false;
-  nsresult rv = aChannel->GetIsNavigation(&isNavigation);
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc;
 
-  if (!isNavigation) {
+  bool isSubresourceLoad = !nsContentUtils::IsNonSubresourceRequest(channel);
+  if (isSubresourceLoad) {
     doc = GetDocument();
     if (!doc) {
       return NS_ERROR_NOT_AVAILABLE;
