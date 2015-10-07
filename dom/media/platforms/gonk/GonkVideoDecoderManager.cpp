@@ -24,8 +24,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include <cutils/properties.h>
 
-#define CODECCONFIG_TIMEOUT_US 10000LL
-#define READ_OUTPUT_BUFFER_TIMEOUT_US  0LL
+#define READ_OUTPUT_BUFFER_TIMEOUT_US  3000
 
 #include <android/log.h>
 #define GVDM_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkVideoDecoderManager", __VA_ARGS__)
@@ -417,8 +416,7 @@ GonkVideoDecoderManager::codecReserved()
   if (mMimeType.EqualsLiteral("video/mp4v-es")) {
     rv = mDecoder->Input(mCodecSpecificData->Elements(),
                          mCodecSpecificData->Length(), 0,
-                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG,
-                         CODECCONFIG_TIMEOUT_US);
+                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
   }
 
   if (rv != OK) {

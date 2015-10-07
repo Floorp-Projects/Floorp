@@ -26,11 +26,18 @@ public:
 
   virtual ~GonkDecoderManager() {}
 
-  virtual nsRefPtr<InitPromise> Init() = 0;
-
-  // Asynchronously send sample into mDecoder. If out of input buffer, aSample
-  // will be queued for later re-send.
+  // Add samples into OMX decoder or queue them if decoder is out of input buffer.
   nsresult Input(MediaRawData* aSample);
+
+  // Produces decoded output, it blocks until output can be produced or a timeout
+  // is expired or until EOS. Returns NS_OK on success, or NS_ERROR_NOT_AVAILABLE
+  // if there's not enough data to produce more output. If this returns a failure
+  // code other than NS_ERROR_NOT_AVAILABLE, an error will be reported to the
+  // MP4Reader.
+  // The overrided class should follow the same behaviour.
+  virtual nsresult Output(int64_t aStreamOffset,
+                          nsRefPtr<MediaData>& aOutput) = 0;
+  virtual nsRefPtr<InitPromise> Init() = 0;
 
   // Flush the queued sample.
   nsresult Flush();
@@ -52,29 +59,12 @@ protected:
   GonkDecoderManager()
     : mMutex("GonkDecoderManager")
     , mLastTime(0)
-    , mFlushMonitor("GonkDecoderManager::Flush")
-    , mIsFlushing(false)
     , mDecodeCallback(nullptr)
   {}
 
   bool InitLoopers(MediaData::Type aType);
 
   void onMessageReceived(const android::sp<android::AMessage> &aMessage) override;
-
-  // Produces decoded output. It returns NS_OK on success, or NS_ERROR_NOT_AVAILABLE
-  // when output is not produced yet.
-  // If this returns a failure code other than NS_ERROR_NOT_AVAILABLE, an error
-  // will be reported through mDecodeCallback.
-  virtual nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) = 0;
-
-  // Send queued samples to OMX. It returns how many samples are still in
-  // queue after processing, or negtive error code if failed.
-  int32_t ProcessQueuedSamples();
-
-  void ProcessInput(bool aEndOfStream);
-  void ProcessFlush();
-  void ProcessToDo(bool aEndOfStream);
 
   nsRefPtr<MediaByteBuffer> mCodecSpecificData;
 
@@ -84,18 +74,8 @@ protected:
   android::sp<android::MediaCodecProxy> mDecoder;
   // Looper for mDecoder to run on.
   android::sp<android::ALooper> mDecodeLooper;
-  // Looper to run decode tasks such as processing input, output, flush, and
-  // recycling output buffers.
+  // Looper to run decode tasks such as recycling output buffers.
   android::sp<android::ALooper> mTaskLooper;
-  enum {
-    // Decoder will send this to indicate internal state change such as input or
-    // output buffers availability. Used to run pending input & output tasks.
-    kNotifyDecoderActivity = 'nda ',
-    // Signal the decoder to flush.
-    kNotifyProcessFlush = 'npf ',
-    // Used to process queued samples when there is new input.
-    kNotifyProcessInput = 'npi ',
-  };
 
   MozPromiseHolder<InitPromise> mInitPromise;
 
@@ -106,17 +86,6 @@ protected:
   nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
 
   int64_t mLastTime;  // The last decoded frame presentation time.
-
-  Monitor mFlushMonitor; // Waits for flushing to complete.
-  bool mIsFlushing;
-
-  // Remembers the notification that is currently waiting for the decoder event
-  // to avoid requesting more than one notification at the time, which is
-  // forbidden by mDecoder.
-  android::sp<android::AMessage> mToDo;
-
-  // Stores the offset of every output that needs to be read from mDecoder.
-  nsTArray<int64_t> mWaitOutput;
 
   MediaDataDecoderCallback* mDecodeCallback; // Reports decoder output or error.
 };
@@ -145,9 +114,33 @@ public:
   nsresult Shutdown() override;
 
 private:
+
+  // Called on the task queue. Inserts the sample into the decoder, and
+  // extracts output if available, if aSample is null, it means there is
+  // no data from source, it will notify the decoder EOS and flush all the
+  // decoded frames.
+  void ProcessDecode(MediaRawData* aSample);
+
+  // Called on the task queue. Extracts output if available, and delivers
+  // it to the reader. Called after ProcessDecode() and ProcessDrain().
+  void ProcessOutput();
+
+  // Called on the task queue. Orders the Gonk to drain, and then extracts
+  // all available output.
+  void ProcessDrain();
+
   RefPtr<FlushableTaskQueue> mTaskQueue;
+  MediaDataDecoderCallback* mCallback;
 
   android::sp<GonkDecoderManager> mManager;
+
+  // The last offset into the media resource that was passed into Input().
+  // This is used to approximate the decoder's position in the media resource.
+  int64_t mLastStreamOffset;
+  // Set it ture when there is no input data
+  bool mSignaledEOS;
+  // Set if there is no more output data from decoder
+  bool mDrainComplete;
 };
 
 } // namespace mozilla
