@@ -56,12 +56,13 @@ var gEditItemOverlay = {
                             PlacesUIUtils.isContentsReadOnly(parent);
       }
     }
+    let focusedElement = aInitInfo.focusedElement;
 
     return this._paneInfo = { itemId, itemGuid, isItem,
                               isURI, uri, title,
                               isBookmark, isFolderShortcut, isParentReadOnly,
                               bulkTagging, uris,
-                              visibleRows, postData, isTag };
+                              visibleRows, postData, isTag, focusedElement };
   },
 
   get initialized() {
@@ -181,7 +182,7 @@ var gEditItemOverlay = {
     let { itemId, itemGuid, isItem,
           isURI, uri, title,
           isBookmark, bulkTagging, uris,
-          visibleRows } = this._setPaneInfo(aInfo);
+          visibleRows, focusedElement } = this._setPaneInfo(aInfo);
 
     let showOrCollapse =
       (rowId, isAppropriateForInput, nameInHiddenRows = null) => {
@@ -251,6 +252,24 @@ var gEditItemOverlay = {
       PlacesUtils.bookmarks.addObserver(this, false);
       window.addEventListener("unload", this, false);
       this._observersAdded = true;
+    }
+
+    // The focusedElement possible values are:
+    //  * preferred: focus the field that the user touched first the last
+    //    time the pane was shown (either namePicker or tagsField)
+    //  * first: focus the first non collapsed textbox
+    // Note: since all controls are collapsed by default, we don't get the
+    // default XUL dialog behavior, that selects the first control, so we set
+    // the focus explicitly.
+    let elt;
+    if (focusedElement === "preferred") {
+      elt = this._element(gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField"));
+    } else if (focusedElement === "first") {
+      elt = document.querySelector("textbox:not([collapsed=true])");
+    }
+    if (elt) {
+      elt.focus();
+      elt.select();
     }
   },
 
