@@ -3,7 +3,7 @@
 
 // Tests errors are handled properly by the DevToolsWorker.
 
-const { DevToolsWorker } = require("devtools/shared/shared/worker");
+const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const WORKER_URL =
   "resource:///modules/devtools/client/shared/widgets/GraphsWorker.js";
 

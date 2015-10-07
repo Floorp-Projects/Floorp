@@ -26,7 +26,8 @@ DIRS += [
     'tern',
     'touch',
     'transport',
-    'webconsole'
+    'webconsole',
+    'worker',
 ]
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
@@ -48,5 +49,4 @@ DevToolsModules(
     'output-parser.js',
     'path.js',
     'system.js',
-    'worker-loader.js',
 )

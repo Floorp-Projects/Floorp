@@ -27,7 +27,7 @@ var MESSAGE_COUNTER = 0;
 /**
  * Creates a wrapper around a ChromeWorker, providing easy
  * communication to offload demanding tasks. The corresponding URL
- * must implement the interface provided by `devtools/toolkit/shared/worker-helper`.
+ * must implement the interface provided by `devtools/shared/worker/helper`.
  *
  * @see `./devtools/client/shared/widgets/GraphsWorker.js`
  *
@@ -160,7 +160,7 @@ exports.workerify = workerify;
  */
 function createWorkerString (fn) {
   return `importScripts("resource://gre/modules/workers/require.js");
-    const { createTask } = require("resource://gre/modules/devtools/shared/shared/worker-helper.js");
+    const { createTask } = require("resource://gre/modules/devtools/shared/worker/helper.js");
     createTask(self, "workerifiedTask", ${fn.toString()});
   `;
 }
