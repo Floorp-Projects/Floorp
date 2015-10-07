@@ -1428,7 +1428,6 @@ class XPCShellTests(object):
 
 def main():
     parser = parser_desktop()
-    commandline.add_logging_group(parser)
     options = parser.parse_args()
 
     log = commandline.setup_logging("XPCShell", options, {"tbpl": sys.stdout})
