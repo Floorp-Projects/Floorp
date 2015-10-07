@@ -8,6 +8,7 @@ include('../templates.mozbuild')
 
 DIRS += [
     'actors',
+    'performance',
     'shims',
 ]
 

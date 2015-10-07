@@ -28,7 +28,7 @@ loader.lazyRequireGetter(this, "PerformanceRecordingActor",
 loader.lazyRequireGetter(this, "PerformanceRecordingFront",
   "devtools/server/actors/performance-recording", true);
 loader.lazyRequireGetter(this, "mapRecordingOptions",
-  "devtools/shared/performance/utils", true);
+  "devtools/shared/performance/recording-utils", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "getSystemInfo",
