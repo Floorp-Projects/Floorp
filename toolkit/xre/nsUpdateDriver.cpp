@@ -11,7 +11,7 @@
 #include "nsAppRunner.h"
 #include "nsIWritablePropertyBag.h"
 #include "nsIFile.h"
-#include "nsIVariant.h"
+#include "nsVariant.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prproces.h"
@@ -691,12 +691,7 @@ SetOSApplyToDir(nsIUpdate* update, const nsACString& osApplyToDir)
     return;
   }
 
-  nsCOMPtr<nsIWritableVariant> variant =
-    do_CreateInstance("@mozilla.org/variant;1", &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
+  nsRefPtr<nsVariant> variant = new nsVariant();
   rv = variant->SetAsACString(osApplyToDir);
   if (NS_FAILED(rv)) {
     return;

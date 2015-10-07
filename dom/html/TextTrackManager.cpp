@@ -13,6 +13,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsComponentManagerUtils.h"
+#include "nsVariant.h"
 #include "nsVideoFrame.h"
 #include "nsIFrame.h"
 #include "nsTArrayHelpers.h"
@@ -214,8 +215,7 @@ TextTrackManager::UpdateCueDisplay()
   mTextTracks->UpdateAndGetShowingCues(activeCues);
 
   if (activeCues.Length() > 0) {
-    nsCOMPtr<nsIWritableVariant> jsCues =
-      do_CreateInstance("@mozilla.org/variant;1");
+    nsRefPtr<nsVariant> jsCues = new nsVariant();
 
     jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE,
                        &NS_GET_IID(nsIDOMEventTarget),
