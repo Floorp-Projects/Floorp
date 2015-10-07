@@ -6,37 +6,28 @@
 
 // Check the animation player's updated state
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "animation.html");
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
-
-  yield playStateIsUpdatedDynamically(walker, front);
+  yield playStateIsUpdatedDynamically(walker, animations);
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
 
-function* playStateIsUpdatedDynamically(walker, front) {
+function* playStateIsUpdatedDynamically(walker, animations) {
   let node = yield walker.querySelector(walker.rootNode, ".short-animation");
 
   // Restart the animation to make sure we can get the player (it might already
-  // be finished by now). Do this by toggling the class and forcing a sync reflow
-  // using the CPOW.
+  // be finished by now). Do this by toggling the class and forcing a sync
+  // reflow using the CPOW.
   let cpow = content.document.querySelector(".short-animation");
   cpow.classList.remove("short-animation");
   let reflow = cpow.offsetWidth;
   cpow.classList.add("short-animation");
 
-  let [player] = yield front.getAnimationPlayersForNode(node);
+  let [player] = yield animations.getAnimationPlayersForNode(node);
 
   yield player.ready();
   let state = yield player.getCurrentState();
@@ -45,7 +36,8 @@ function* playStateIsUpdatedDynamically(walker, front) {
     "The playState is running while the transition is running");
 
   info("Wait until the animation stops (more than 1000ms)");
-  yield wait(1500); // Waiting 1.5sec for good measure
+  // Waiting 1.5sec for good measure
+  yield wait(1500);
 
   state = yield player.getCurrentState();
   is(state.playState, "finished",

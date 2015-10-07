@@ -7,9 +7,6 @@
 // Check that the AnimationsActor can pause/play all animations at once, and
 // check that it can also pause/play a given list of animations at once.
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 // List of selectors that match "all" animated nodes in the test page.
 // This list misses a bunch of animated nodes on purpose. Only the ones that
 // have infinite animations are listed. This is done to avoid intermittents
@@ -21,64 +18,58 @@ const ALL_ANIMATED_NODES = [".simple-animation", ".multiple-animations",
 const SOME_ANIMATED_NODES = [".simple-animation", ".delayed-animation"];
 
 add_task(function*() {
-  yield addTab(MAIN_DOMAIN + "animation.html");
-
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Pause all animations in the test document");
-  yield front.pauseAll();
-  yield checkAnimationsStates(walker, front, ALL_ANIMATED_NODES, "paused");
+  yield animations.pauseAll();
+  yield checkStates(walker, animations, ALL_ANIMATED_NODES, "paused");
 
   info("Play all animations in the test document");
-  yield front.playAll();
-  yield checkAnimationsStates(walker, front, ALL_ANIMATED_NODES, "running");
+  yield animations.playAll();
+  yield checkStates(walker, animations, ALL_ANIMATED_NODES, "running");
 
   info("Pause all animations in the test document using toggleAll");
-  yield front.toggleAll();
-  yield checkAnimationsStates(walker, front, ALL_ANIMATED_NODES, "paused");
+  yield animations.toggleAll();
+  yield checkStates(walker, animations, ALL_ANIMATED_NODES, "paused");
 
   info("Play all animations in the test document using toggleAll");
-  yield front.toggleAll();
-  yield checkAnimationsStates(walker, front, ALL_ANIMATED_NODES, "running");
+  yield animations.toggleAll();
+  yield checkStates(walker, animations, ALL_ANIMATED_NODES, "running");
 
   info("Pause a given list of animations only");
   let players = [];
   for (let selector of SOME_ANIMATED_NODES) {
-    let [player] = yield getPlayersFor(walker, front, selector);
+    let [player] = yield getPlayersFor(walker, animations, selector);
     players.push(player);
   }
-  yield front.toggleSeveral(players, true);
-  yield checkAnimationsStates(walker, front, SOME_ANIMATED_NODES, "paused");
-  yield checkAnimationsStates(walker, front, [".multiple-animations"], "running");
+  yield animations.toggleSeveral(players, true);
+  yield checkStates(walker, animations, SOME_ANIMATED_NODES, "paused");
+  yield checkStates(walker, animations, [".multiple-animations"], "running");
 
   info("Play the same list of animations");
-  yield front.toggleSeveral(players, false);
-  yield checkAnimationsStates(walker, front, ALL_ANIMATED_NODES, "running");
+  yield animations.toggleSeveral(players, false);
+  yield checkStates(walker, animations, ALL_ANIMATED_NODES, "running");
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
 
-function* checkAnimationsStates(walker, front, selectors, playState) {
+function* checkStates(walker, animations, selectors, playState) {
   info("Checking the playState of all the nodes that have infinite running " +
        "animations");
 
   for (let selector of selectors) {
     info("Getting the AnimationPlayerFront for node " + selector);
-    let [player] = yield getPlayersFor(walker, front, selector);
+    let [player] = yield getPlayersFor(walker, animations, selector);
     yield player.ready();
     yield checkPlayState(player, selector, playState);
   }
 }
 
-function* getPlayersFor(walker, front, selector) {
+function* getPlayersFor(walker, animations, selector) {
   let node = yield walker.querySelector(walker.rootNode, selector);
-  return front.getAnimationPlayersForNode(node);
+  return animations.getAnimationPlayersForNode(node);
 }
 
 function* checkPlayState(player, selector, expectedState) {

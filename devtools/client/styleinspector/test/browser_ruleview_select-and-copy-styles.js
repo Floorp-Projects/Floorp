@@ -64,10 +64,10 @@ function* checkCopySelection(view) {
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
                         "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-                        "    color: #AAA;[\\r\\n]+" +
+                        "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
                         "}[\\r\\n]+" +
                         "html {[\\r\\n]+" +
-                        "    color: #000;[\\r\\n]*";
+                        "    color: #000000;[\\r\\n]*";
 
   let onPopup = once(view._contextmenu._menupopup, "popupshown");
   EventUtils.synthesizeMouseAtCenter(prop,
@@ -102,10 +102,10 @@ function* checkSelectAll(view) {
                         "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
                         "    font-family: helvetica,sans-serif;[\\r\\n]+" +
-                        "    color: #AAA;[\\r\\n]+" +
+                        "    color: rgb\\(170, 170, 170\\);[\\r\\n]+" +
                         "}[\\r\\n]+" +
                         "html {[\\r\\n]+" +
-                        "    color: #000;[\\r\\n]+" +
+                        "    color: #000000;[\\r\\n]+" +
                         "}[\\r\\n]*";
 
   let onPopup = once(view._contextmenu._menupopup, "popupshown");

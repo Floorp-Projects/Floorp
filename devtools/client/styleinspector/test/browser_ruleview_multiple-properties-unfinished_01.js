@@ -4,7 +4,7 @@
 
 "use strict";
 
-// Test that the rule-view behaves correctly when entering mutliple and/or
+// Test that the rule-view behaves correctly when entering multiple and/or
 // unfinished properties/values in inplace-editors
 
 const TEST_URI = "<div>Test Element</div>";
@@ -16,24 +16,12 @@ add_task(function*() {
   yield testCreateNewMultiUnfinished(inspector, view);
 });
 
-function waitRuleViewChanged(view, n) {
-  let deferred = promise.defer();
-  let count = 0;
-  let listener = function() {
-    if (++count == n) {
-      view.off("ruleview-changed", listener);
-      deferred.resolve();
-    }
-  };
-  view.on("ruleview-changed", listener);
-  return deferred.promise;
-}
 function* testCreateNewMultiUnfinished(inspector, view) {
   let ruleEditor = getRuleViewRuleEditor(view, 0);
   let onMutation = inspector.once("markupmutation");
-  // There is 5 rule-view updates, one for the rule view creation,
-  // one for each new property
-  let onRuleViewChanged = waitRuleViewChanged(view, 5);
+  // There are 2 rule-view updates: one for the preview and one for
+  // the final commit.
+  let onRuleViewChanged = waitForNEvents(view, "ruleview-changed", 2);
   yield createNewRuleViewProperty(ruleEditor,
     "color:blue;background : orange   ; text-align:center; border-color: ");
   yield onMutation;

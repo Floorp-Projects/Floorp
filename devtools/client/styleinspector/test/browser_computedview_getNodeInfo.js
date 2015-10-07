@@ -75,7 +75,7 @@ const TEST_DATA = [
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "color");
-      is(nodeInfo.value.value, "#F00");
+      is(nodeInfo.value.value, "rgb(255, 0, 0)");
     }
   },
   {
@@ -88,7 +88,7 @@ const TEST_DATA = [
       ok("property" in nodeInfo.value);
       ok("value" in nodeInfo.value);
       is(nodeInfo.value.property, "color");
-      is(nodeInfo.value.value, "#F00");
+      is(nodeInfo.value.value, "rgb(255, 0, 0)");
     }
   },
   {
@@ -149,7 +149,7 @@ const TEST_DATA = [
     assertNodeInfo: function(nodeInfo) {
       is(nodeInfo.type, VIEW_NODE_VALUE_TYPE);
       is(nodeInfo.value.property, "color");
-      is(nodeInfo.value.value, "#F00");
+      is(nodeInfo.value.value, "red");
     }
   },
   {

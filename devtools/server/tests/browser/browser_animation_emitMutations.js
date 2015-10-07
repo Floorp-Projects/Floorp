@@ -7,18 +7,9 @@
 // Test that the AnimationsActor emits events about changed animations on a
 // node after getAnimationPlayersForNode was called on that node.
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 add_task(function*() {
-  yield addTab(MAIN_DOMAIN + "animation.html");
-
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let animations = AnimationsFront(client, form);
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non-animated node");
   let node = yield walker.querySelector(walker.rootNode, ".not-animated");
@@ -60,7 +51,7 @@ add_task(function*() {
 
   ok(true, "The mutations event was emitted");
   is(changes.length, 2, "There are 2 changes in the mutation event");
-  ok(changes.every(({type}) => type === "removed"), "Both changes are removals");
+  ok(changes.every(({type}) => type === "removed"), "Both are removals");
   ok(changes[0].player === p1 || changes[0].player === p2,
     "The first removed player was one of the previously added players");
   ok(changes[1].player === p1 || changes[1].player === p2,
