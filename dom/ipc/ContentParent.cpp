@@ -24,6 +24,7 @@
 
 #include <set>
 
+#include "mozilla/a11y/PDocAccessible.h"
 #include "AppProcessChecker.h"
 #include "AudioChannelService.h"
 #include "BlobParent.h"
@@ -5475,4 +5476,20 @@ ParentIdleListener::Observe(nsISupports*, const char* aTopic, const char16_t* aD
                                                        nsDependentCString(aTopic),
                                                        nsDependentString(aData));
     return NS_OK;
+}
+
+bool
+ContentParent::HandleWindowsMessages(const Message& aMsg) const
+{
+  MOZ_ASSERT(aMsg.is_sync());
+
+  // a11y messages can be triggered by windows messages, which means if we
+  // allow handling windows messages while we wait for the response to a sync
+  // a11y message we can reenter the ipc message sending code.
+  if (a11y::PDocAccessible::PDocAccessibleStart < aMsg.type() &&
+      a11y::PDocAccessible::PDocAccessibleEnd > aMsg.type()) {
+    return false;
+  }
+
+  return true;
 }

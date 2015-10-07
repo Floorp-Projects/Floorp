@@ -427,6 +427,8 @@ public:
     virtual bool
     DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor) override;
 
+    virtual bool HandleWindowsMessages(const Message& aMsg) const override;
+
     bool HasGamepadListener() const { return mHasGamepadListener; }
 
     void SetNuwaParent(NuwaParent* aNuwaParent) { mNuwaParent = aNuwaParent; }
