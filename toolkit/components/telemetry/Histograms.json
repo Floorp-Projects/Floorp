@@ -8998,5 +8998,12 @@
     "high": "30",
     "n_buckets": "29",
     "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
+  },
+  "PLUGIN_ACTIVATION_COUNT": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "48",
+    "kind": "count",
+    "keyed": true,
+    "description": "Counts number of times a certain plugin has been activated."
   }
 }
