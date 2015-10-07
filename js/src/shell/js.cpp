@@ -1538,68 +1538,6 @@ PrintErr(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-SetTimeout(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() < 2) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "setTimeout", args.length() == 0 ? "0" : "1", "s");
-        return false;
-    }
-
-    RootedValue rval(cx);
-    JS::AutoValueVector argValues(cx);
-    argValues.append(args.get(0));
-    argValues.append(args.get(1));
-    HandleValueArray arr(argValues);
-
-    JSAtom* setTimeoutAtom;
-    if (!(setTimeoutAtom = Atomize(cx, "setTimeout", 10)))
-        return false;
-
-    RootedPropertyName name(cx, setTimeoutAtom->asPropertyName());
-    RootedValue selfHostedFun(cx);
-
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, &selfHostedFun))
-        return false;
-
-    RootedObject undef(cx);
-    if (!JS_CallFunctionValue(cx, undef, selfHostedFun, arr, &rval))
-        return false;
-
-    args.rval().set(rval);
-    return true;
-}
-
-static bool
-RunEvents(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    RootedValue rval(cx);
-    JS::AutoValueVector argValues(cx);
-    HandleValueArray arr(argValues);
-
-    JSAtom* runEvents;
-    if (!(runEvents = Atomize(cx, "runEvents", 9)))
-        return false;
-
-    RootedPropertyName name(cx, runEvents->asPropertyName());
-    RootedValue selfHostedFun(cx);
-
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, &selfHostedFun))
-        return false;
-
-    RootedObject undef(cx);
-    if (!JS_CallFunctionValue(cx, undef, selfHostedFun, arr, &rval))
-        return false;
-
-    args.rval().set(rval);
-    return true;
-}
-
-static bool
 Help(JSContext* cx, unsigned argc, Value* vp);
 
 static bool
@@ -4659,15 +4597,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("dateNow", Now, 0, 0,
 "dateNow()",
 "  Return the current time with sub-ms precision."),
-
-    JS_FN_HELP("setTimeout", SetTimeout, 2, 2,
-"setTimeout(fn, timeout)",
-"  Execute a function after a specified timeout. Currently only 0 is supported."),
-
-    JS_FN_HELP("runEvents", RunEvents, 2, 2,
-"runEvents()",
-"  Run events that were scheduled using setTimeout() calls.\n"
-"  This call is required, because there is no real event loop."),
 
     JS_FN_HELP("help", Help, 0, 0,
 "help([name ...])",

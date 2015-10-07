@@ -2776,7 +2776,6 @@ JSScript::linkToFunctionFromEmitter(js::ExclusiveContext* cx, JS::Handle<JSScrip
 
     script->isGeneratorExp_ = funbox->inGenexpLambda;
     script->setGeneratorKind(funbox->generatorKind());
-    script->setAsyncKind(funbox->asyncKind());
 
     // Link the function and the script to each other, so that StaticScopeIter
     // may walk the scope chain of currently compiling scripts.
@@ -2867,7 +2866,6 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
         MOZ_ASSERT(script->functionNonDelazifying() == funbox->function());
         MOZ_ASSERT(script->isGeneratorExp_ == funbox->inGenexpLambda);
         MOZ_ASSERT(script->generatorKind() == funbox->generatorKind());
-        MOZ_ASSERT(script->asyncKind() == funbox->asyncKind());
     } else {
         MOZ_ASSERT(!script->funHasExtensibleScope_);
         MOZ_ASSERT(!script->funNeedsDeclEnvObject_);

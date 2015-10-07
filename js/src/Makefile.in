@@ -284,7 +284,6 @@ selfhosting:: selfhosted.out.h
 selfhosting_srcs := \
   $(srcdir)/builtin/Utilities.js \
   $(srcdir)/builtin/Array.js \
-  $(srcdir)/builtin/AsyncFunctions.js \
   $(srcdir)/builtin/Date.js \
   $(srcdir)/builtin/Error.js \
   $(srcdir)/builtin/Generator.js \
@@ -295,7 +294,6 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Module.js \
   $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/Object.js \
-  $(srcdir)/builtin/Promise.js \
   $(srcdir)/builtin/Reflect.js \
   $(srcdir)/builtin/RegExp.js \
   $(srcdir)/builtin/String.js \

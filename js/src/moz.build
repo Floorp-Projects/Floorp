@@ -154,7 +154,6 @@ UNIFIED_SOURCES += [
     'builtin/ModuleObject.cpp',
     'builtin/Object.cpp',
     'builtin/Profilers.cpp',
-    'builtin/Promise.cpp',
     'builtin/Reflect.cpp',
     'builtin/ReflectParse.cpp',
     'builtin/SIMD.cpp',
