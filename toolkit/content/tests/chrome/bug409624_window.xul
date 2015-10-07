@@ -41,14 +41,14 @@
       gFindBar.clear();
       let textbox = gFindBar.getElement("findbar-textbox");
 
-      // canClear / clear should work regardless of whether or not editor has
-      // been lazily initialised yet
-      ok(!gFindBar.canClear, "canClear property false when findbar empty");
+      // Clear should work regardless of whether the editor has been lazily
+      // initialised yet
+      ok(!gFindBar.hasTransactions, "No transactions when findbar empty");
       textbox.value = "mozilla";
-      ok(gFindBar.canClear, "canClear property true when findbar value set without editor init");
+      ok(gFindBar.hasTransactions, "Has transactions when findbar value set without editor init");
       gFindBar.clear();
       is(textbox.value, '', "findbar input value cleared after clear() call without editor init");
-      ok(!gFindBar.canClear, "canClear property false after clear() call");
+      ok(!gFindBar.hasTransactions, "No transactions after clear() call");
 
       gFindBar.open();
       let matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
@@ -60,7 +60,7 @@
       textbox.focus();
       gFindBar.clear();
       sendChar("m");
-      ok(gFindBar.canClear, "canClear property true after input");
+      ok(gFindBar.hasTransactions, "Has transactions after input");
       let preSelection = gBrowser.contentWindow.getSelection();
       ok(!preSelection.isCollapsed, "Found item and selected range");
       gFindBar.clear();
@@ -83,7 +83,7 @@
       textbox.focus();
       sendChar("m");
       sendKey("BACK_SPACE");
-      ok(gFindBar.canClear, "canClear property true when undo available");
+      ok(gFindBar.hasTransactions, "Has transactions when undo available");
       gFindBar.clear();
       gFindBar.close();
 
