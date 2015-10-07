@@ -1335,7 +1335,7 @@ ObjectGroup::newPlainObject(ExclusiveContext* cx, IdValuePair* properties, size_
     RootedPlainObject obj(cx, NewObjectWithGroup<PlainObject>(cx, group, allocKind,
                                                               newKind));
 
-    if (!obj->setLastProperty(cx, shape))
+    if (!obj || !obj->setLastProperty(cx, shape))
         return nullptr;
 
     for (size_t i = 0; i < nproperties; i++)
