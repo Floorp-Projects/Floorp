@@ -12,9 +12,9 @@ const TEST_FILE_URI =
   "test-network.html";
 const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
-var hud;
+let hud;
 
-var test = asyncTest(function* () {
+let test = asyncTest(function* () {
   let requests = [];
   let { browser } = yield loadTab(TEST_URI);
 

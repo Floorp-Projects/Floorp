@@ -1,6 +1,6 @@
 // Bug 960397: UDP multicast options
 
-var { Constructor: CC } = Components;
+const { Constructor: CC } = Components;
 
 const UDPSocket = CC("@mozilla.org/network/udp-socket;1",
                      "nsIUDPSocket",

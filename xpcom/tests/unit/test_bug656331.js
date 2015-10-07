@@ -1,7 +1,7 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 function info(s) {
   dump("TEST-INFO | test_bug656331.js | " + s + "\n");

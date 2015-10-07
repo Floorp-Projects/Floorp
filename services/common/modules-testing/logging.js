@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = [
   "initTestLogging",
 ];
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 

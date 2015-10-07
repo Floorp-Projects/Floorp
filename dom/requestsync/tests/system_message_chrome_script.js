@@ -3,7 +3,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 'use strict';
 
-var { classes: Cc, interfaces: Ci } = Components;
+const { classes: Cc, interfaces: Ci } = Components;
 
 const systemMessenger = Cc["@mozilla.org/system-message-internal;1"]
                           .getService(Ci.nsISystemMessagesInternal);

@@ -1,4 +1,4 @@
-var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
 /**
  * tests for plugin windows and scroll
@@ -14,8 +14,8 @@ function coordinatesRelativeToWindow(aX, aY, aElement) {
   };
 }
 
-var apzEnabled = Preferences.get("layers.async-pan-zoom.enabled", false);
-var pluginHideEnabled = Preferences.get("gfx.e10s.hide-plugins-for-scroll", true);
+let apzEnabled = Preferences.get("layers.async-pan-zoom.enabled", false);
+let pluginHideEnabled = Preferences.get("gfx.e10s.hide-plugins-for-scroll", true);
 
 
 add_task(function* () {

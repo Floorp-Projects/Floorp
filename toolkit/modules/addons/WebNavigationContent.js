@@ -1,4 +1,4 @@
-var Ci = Components.interfaces;
+const Ci = Components.interfaces;
 
 function getWindowId(window)
 {

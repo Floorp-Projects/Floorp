@@ -7,7 +7,7 @@
 
 // Tests the BezierCanvas API in the CubicBezierWidget module
 
-var Cu = Components.utils;
+const Cu = Components.utils;
 var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var {CubicBezier, BezierCanvas} = require("devtools/client/shared/widgets/CubicBezierWidget");
 

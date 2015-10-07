@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Cr = Components.results;
-var Ci = Components.interfaces;
+const Cr = Components.results;
+const Ci = Components.interfaces;
 
-var CC = Components.Constructor;
+const CC = Components.Constructor;
 var LocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile", "initWithPath");
 
 function run_test()

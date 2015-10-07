@@ -4,7 +4,7 @@
 
 "use strict";
 
-var Cu = Components.utils;
+const Cu = Components.utils;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const { require } =
   Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});

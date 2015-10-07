@@ -18,7 +18,7 @@ this.EXPORTED_SYMBOLS = [
   "BagheeraClientRequestResult",
 ];
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 #endif
 

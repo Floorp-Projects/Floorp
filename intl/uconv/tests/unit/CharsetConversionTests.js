@@ -1,6 +1,6 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var CC = Components.Constructor;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const CC = Components.Constructor;
 
 function CreateScriptableConverter()
 {

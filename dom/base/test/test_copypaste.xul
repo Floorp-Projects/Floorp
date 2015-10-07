@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=888839
 
   <script type="application/javascript"><![CDATA[
 
-var { classes: Cc, interfaces: Ci } = Components;
+let { classes: Cc, interfaces: Ci } = Components;
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(runTest);

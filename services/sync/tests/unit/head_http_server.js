@@ -1,4 +1,4 @@
-var Cm = Components.manager;
+const Cm = Components.manager;
 
 // Shared logging for all HTTP server functions.
 Cu.import("resource://gre/modules/Log.jsm");

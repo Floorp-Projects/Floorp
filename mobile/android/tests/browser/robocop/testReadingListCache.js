@@ -5,7 +5,7 @@
 
 /*globals ReaderMode */
 
-var { utils: Cu } = Components;
+const { utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/ReaderMode.jsm");
 Cu.import("resource://gre/modules/Services.jsm");

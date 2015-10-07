@@ -1,5 +1,5 @@
 
-var CC = Components.Constructor;
+const CC = Components.Constructor;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

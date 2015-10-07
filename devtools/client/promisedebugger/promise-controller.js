@@ -8,7 +8,7 @@
 
 "use strict";
 
-var { utils: Cu } = Components;
+const { utils: Cu } = Components;
 const { loader, require } =
   Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 

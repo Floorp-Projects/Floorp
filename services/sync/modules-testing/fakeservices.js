@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
   "fakeSHA256HMAC",
 ];
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");

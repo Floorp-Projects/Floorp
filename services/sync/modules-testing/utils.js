@@ -22,7 +22,7 @@ this.EXPORTED_SYMBOLS = [
   "sumHistogram",
 ];
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/identity.js");

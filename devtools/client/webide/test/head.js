@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
+const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import("resource://gre/modules/FileUtils.jsm");

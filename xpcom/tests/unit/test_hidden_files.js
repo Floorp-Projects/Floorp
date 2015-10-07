@@ -1,5 +1,5 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
 const NS_OS_TEMP_DIR = "TmpD";
 
 const CWD = do_get_cwd();

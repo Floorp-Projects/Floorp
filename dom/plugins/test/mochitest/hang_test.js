@@ -1,8 +1,8 @@
 
 Components.utils.import("resource://gre/modules/KeyValueParser.jsm");
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 var success = false;
 var observerFired = false;

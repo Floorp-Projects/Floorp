@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 // The following boilerplate makes sure that XPCOM calls
 // that use the profile directory work.

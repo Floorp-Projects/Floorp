@@ -1,4 +1,4 @@
-var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.importGlobalProperties([ "URL" ]);
 

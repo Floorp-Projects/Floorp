@@ -9,8 +9,8 @@
  * UTF16 character and mid-surrogate pair
  */
 
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

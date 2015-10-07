@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["AddonUtils"];
 
-var {interfaces: Ci, utils: Cu} = Components;
+const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");

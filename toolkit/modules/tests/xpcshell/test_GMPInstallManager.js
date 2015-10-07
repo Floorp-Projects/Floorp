@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
 const URL_HOST = "http://localhost";
 
 var GMPScope = Cu.import("resource://gre/modules/GMPInstallManager.jsm");
@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm")
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
-var { computeHash } = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+let { computeHash } = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 do_get_profile();
 

@@ -4,9 +4,9 @@
 
 var EXPORTED_SYMBOLS = ["init", "map"];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 // imports
 var utils = {}; Cu.import('resource://mozmill/stdlib/utils.js', utils);

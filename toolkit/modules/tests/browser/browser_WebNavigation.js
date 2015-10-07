@@ -1,6 +1,6 @@
 "use strict";
 
-var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
+const { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
 var {WebNavigation} = Cu.import("resource://gre/modules/WebNavigation.jsm", {});
 
