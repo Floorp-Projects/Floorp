@@ -152,6 +152,7 @@ private:
 
   size_t SizeOfQueue(TrackType aTrack);
 
+  nsRefPtr<MediaDataDemuxer> mDemuxer;
   nsRefPtr<PDMFactory> mPlatform;
 
   class DecoderCallback : public MediaDataDecoderCallback {
@@ -354,8 +355,6 @@ private:
   void OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason);
 
   // Demuxer objects.
-  nsRefPtr<MediaDataDemuxer> mDemuxer;
-  bool mDemuxerInitDone;
   void OnDemuxerInitDone(nsresult);
   void OnDemuxerInitFailed(DemuxerFailureReason aFailure);
   MozPromiseRequestHolder<MediaDataDemuxer::InitPromise> mDemuxerInitRequest;

@@ -63,10 +63,9 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
                                      MediaDataDemuxer* aDemuxer,
                                      TaskQueue* aBorrowedTaskQueue)
   : MediaDecoderReader(aDecoder, aBorrowedTaskQueue)
+  , mDemuxer(aDemuxer)
   , mAudio(this, MediaData::AUDIO_DATA, Preferences::GetUint("media.audio-decode-ahead", 2))
   , mVideo(this, MediaData::VIDEO_DATA, Preferences::GetUint("media.video-decode-ahead", 2))
-  , mDemuxer(aDemuxer)
-  , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mInitDone(false)
@@ -272,8 +271,6 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
-
-  mDemuxerInitDone = true;
 
   // To decode, we need valid video and a place to put it.
   bool videoActive = !!mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack) &&
@@ -1596,8 +1593,7 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
 
   LOGV("aLength=%u, aOffset=%lld", aLength, aOffset);
-  if (mShutdown || !mDemuxer ||
-      (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
+  if (mShutdown || !mDemuxer) {
     return;
   }
 
