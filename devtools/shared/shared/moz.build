@@ -7,7 +7,6 @@
 BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
 DevToolsModules(
-  'async-storage.js',
   'framerate.js',
   'memory.js',
   'profiler.js',
