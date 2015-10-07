@@ -49,6 +49,9 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/src',
 ]
 
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['tests/gtest']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
