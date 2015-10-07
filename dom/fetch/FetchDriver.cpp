@@ -413,19 +413,23 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
   // if it succeeds, so we need to have everything setup for the original
   // request too.
 
-  // Step 3.3 "Let credentials flag be set if either request's credentials mode
-  // is include, or request's credentials mode is same-origin and the CORS flag
-  // is unset, and unset otherwise."
+  // Step 3.3 "Let credentials flag be set if one of
+  //  - request's credentials mode is "include"
+  //  - request's credentials mode is "same-origin" and either the CORS flag
+  //    is unset or response tainting is "opaque"
+  // is true, and unset otherwise."
   bool useCredentials = false;
   if (mRequest->GetCredentialsMode() == RequestCredentials::Include ||
-      (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin && !aCORSFlag)) {
+      (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin && !aCORSFlag &&
+       mRequest->GetResponseTainting() != InternalRequest::RESPONSETAINT_OPAQUE)) {
     useCredentials = true;
   }
 
   // This is effectivetly the opposite of the use credentials flag in "HTTP
   // network or cache fetch" in the spec and decides whether to transmit
   // cookies and other identifying information. LOAD_ANONYMOUS also prevents
-  // new cookies sent by the server from being stored.
+  // new cookies sent by the server from being stored.  This value will
+  // propagate across redirects, which is what we want.
   const nsLoadFlags credentialsFlag = useCredentials ? 0 : nsIRequest::LOAD_ANONYMOUS;
 
   // Set skip serviceworker flag.
@@ -583,17 +587,25 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
 
   nsCOMPtr<nsIStreamListener> listener = this;
 
+  MOZ_ASSERT_IF(aCORSFlag, mRequest->Mode() == RequestMode::Cors);
+
   // Only use nsCORSListenerProxy if we are in CORS mode.  Otherwise it
   // will overwrite the CorsMode flag unconditionally to "cors" or
   // "cors-with-forced-preflight".
   if (mRequest->Mode() == RequestMode::Cors) {
+    // Passing false for the credentials flag to nsCORSListenerProxy is semantically
+    // the same as the "same-origin" RequestCredentials value.  We implement further
+    // blocking of credentials for "omit" by setting LOAD_ANONYMOUS manually above.
+    bool corsCredentials =
+      mRequest->GetCredentialsMode() == RequestCredentials::Include;
+
     // Set up a CORS proxy that will handle the various requirements of the CORS
     // protocol. It handles the preflight cache and CORS response headers.
     // If the request is allowed, it will start our original request
     // and our observer will be notified. On failure, our observer is notified
     // directly.
     nsRefPtr<nsCORSListenerProxy> corsListener =
-      new nsCORSListenerProxy(this, mPrincipal, useCredentials);
+      new nsCORSListenerProxy(this, mPrincipal, corsCredentials);
     rv = corsListener->Init(chan, DataURIHandling::Allow);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return FailWithNetworkError();
@@ -1086,6 +1098,42 @@ FetchDriver::OnRedirectVerifyCallback(nsresult aResult)
     MOZ_ASSERT(nextOp.mType == BASIC_FETCH || nextOp.mType == HTTP_FETCH);
     MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mType == HTTP_FETCH);
     MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mCORSFlag);
+
+    // Examine and possibly set the LOAD_ANONYMOUS flag on the channel.
+    nsLoadFlags flags;
+    aResult = mNewRedirectChannel->GetLoadFlags(&flags);
+    if (NS_SUCCEEDED(aResult)) {
+      if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
+          mRequest->GetResponseTainting() == InternalRequest::RESPONSETAINT_OPAQUE) {
+        // In the case of a "no-cors" mode request with "same-origin" credentials,
+        // we have to set LOAD_ANONYMOUS manually here in order to avoid sending
+        // credentials on a cross-origin redirect.
+        flags |= nsIRequest::LOAD_ANONYMOUS;
+        aResult = mNewRedirectChannel->SetLoadFlags(flags);
+
+      } else if (mRequest->GetCredentialsMode() == RequestCredentials::Omit) {
+        // Make sure nothing in the redirect chain screws up our credentials
+        // settings.  LOAD_ANONYMOUS must be set if we RequestCredentials is "omit".
+        MOZ_ASSERT(flags & nsIRequest::LOAD_ANONYMOUS);
+
+      } else if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
+                 nextOp.mCORSFlag) {
+        // We also want to verify the LOAD_ANONYMOUS flag is set when we are in
+        // "same-origin" credentials mode and the CORS flag is set.  We can't
+        // unconditionally assert here, however, because the nsCORSListenerProxy
+        // will set the flag later in the redirect callback chain.  Instead,
+        // perform a weaker assertion here by checking if CORS flag was set
+        // before this redirect.  In that case LOAD_ANONYMOUS must still be set.
+        MOZ_ASSERT_IF(mCORSFlagEverSet, flags & nsIRequest::LOAD_ANONYMOUS);
+
+      } else {
+        // Otherwise, we should be sending credentials
+        MOZ_ASSERT(!(flags & nsIRequest::LOAD_ANONYMOUS));
+      }
+    }
+
+    // Track the CORSFlag through redirects.
+    mCORSFlagEverSet = mCORSFlagEverSet || nextOp.mCORSFlag;
   }
 
   mOldRedirectChannel = nullptr;
