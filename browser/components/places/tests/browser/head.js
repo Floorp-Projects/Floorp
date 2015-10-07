@@ -322,6 +322,15 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
   yield waitForCondition(() => dialogWin.gEditItemOverlay.initialized,
                          "EditItemOverlay should be initialized");
 
+  // Check the first textbox is focused.
+  let doc = dialogWin.document;
+  let elt = doc.querySelector("textbox:not([collapsed=true])");
+  if (elt) {
+    info("waiting for focus on the first textfield");
+    yield waitForCondition(() => doc.activeElement == elt.inputField,
+                           "The first non collapsed textbox should have been focused");
+  }
+
   info("withBookmarksDialog: executing the task");
   try {
     yield taskFn(dialogWin);
@@ -331,7 +340,7 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
         ok(false, "The test should have closed the dialog!");
       }
       info("withBookmarksDialog: canceling the dialog");
-      dialogWin.document.documentElement.cancelDialog();
+      doc.documentElement.cancelDialog();
     }
   }
 });
