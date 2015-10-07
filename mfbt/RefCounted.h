@@ -29,8 +29,6 @@
 
 namespace mozilla {
 
-template<typename T> class RefPtr;
-
 /**
  * RefCounted<T> is a sort of a "mixin" for a class T.  RefCounted
  * manages, well, refcounting for T, and because RefCounted is
@@ -92,8 +90,6 @@ enum RefCountAtomicity
 template<typename T, RefCountAtomicity Atomicity>
 class RefCounted
 {
-  friend class RefPtr<T>;
-
 protected:
   RefCounted() : mRefCnt(0) {}
   ~RefCounted() { MOZ_ASSERT(mRefCnt == detail::DEAD); }
