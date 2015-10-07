@@ -434,6 +434,17 @@ nsAppShell::LegacyGeckoEvent::Run()
       }
       break;
 
+    case AndroidGeckoEvent::PROCESS_OBJECT: {
+
+      switch (curEvent->Action()) {
+      case AndroidGeckoEvent::ACTION_OBJECT_LAYER_CLIENT:
+        AndroidBridge::Bridge()->SetLayerClient(
+                widget::GeckoLayerClient::Ref::From(curEvent->Object().wrappedObject()));
+        break;
+      }
+      break;
+    }
+
     case AndroidGeckoEvent::LOCATION_EVENT: {
         if (!gLocationCallback)
             break;
