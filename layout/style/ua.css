@@ -280,6 +280,8 @@
   box-sizing: border-box !important;
 }
 
+/* Selectors here should match the check in
+ * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
 *|*:-moz-full-screen:not(:root):not(:-moz-browser-frame) {
   -moz-top-layer: top !important;
 }
