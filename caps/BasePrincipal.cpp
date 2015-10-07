@@ -120,10 +120,10 @@ public:
   {
     if (aName.EqualsLiteral("appId")) {
       nsresult rv;
-      mOriginAttributes->mAppId = aValue.ToInteger(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
+      int64_t val  = aValue.ToInteger64(&rv);
+      NS_ENSURE_SUCCESS(rv, false);
+      NS_ENSURE_TRUE(val <= UINT32_MAX, false);
+      mOriginAttributes->mAppId = static_cast<uint32_t>(val);
 
       return true;
     }
@@ -145,10 +145,10 @@ public:
 
     if (aName.EqualsLiteral("userContextId")) {
       nsresult rv;
-      mOriginAttributes->mUserContextId = aValue.ToInteger(&rv);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
+      int64_t val  = aValue.ToInteger64(&rv);
+      NS_ENSURE_SUCCESS(rv, false);
+      NS_ENSURE_TRUE(val <= UINT32_MAX, false);
+      mOriginAttributes->mUserContextId  = static_cast<uint32_t>(val);
 
       return true;
     }

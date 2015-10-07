@@ -2809,7 +2809,11 @@ this.XPIProvider = {
                                !XPIDatabase.writeAddonsList());
   },
 
-  updateSystemAddons: Task.async(function XPI_updateSystemAddons() {
+  updateSystemAddons: Task.async(function* XPI_updateSystemAddons() {
+    let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
+    if (!systemAddonLocation)
+      return;
+
     // Don't do anything in safe mode
     if (Services.appinfo.inSafeMode)
       return;
@@ -2817,7 +2821,7 @@ this.XPIProvider = {
     // Download the list of system add-ons
     let url = Preferences.get(PREF_SYSTEM_ADDON_UPDATE_URL, null);
     if (!url)
-      return;
+      return systemAddonLocation.cleanDirectories();
 
     url = UpdateUtils.formatUpdateURL(url);
 
@@ -2827,7 +2831,7 @@ this.XPIProvider = {
     // If there was no list then do nothing.
     if (!addonList) {
       logger.info("No system add-ons list was returned.");
-      return;
+      return systemAddonLocation.cleanDirectories();
     }
 
     addonList = new Map([for (spec of addonList) [spec.id, { spec, path: null, addon: null }]]);
@@ -2854,13 +2858,11 @@ this.XPIProvider = {
       return true;
     };
 
-    let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
-
     // If this matches the current set in the profile location then do nothing.
     let updatedAddons = addonMap(yield getAddonsInLocation(KEY_APP_SYSTEM_ADDONS));
     if (setMatches(addonList, updatedAddons)) {
       logger.info("Retaining existing updated system add-ons.");
-      return;
+      return systemAddonLocation.cleanDirectories();
     }
 
     // If this matches the current set in the default location then reset the
@@ -2869,7 +2871,7 @@ this.XPIProvider = {
     if (setMatches(addonList, defaultAddons)) {
       logger.info("Resetting system add-ons.");
       systemAddonLocation.resetAddonSet();
-      return;
+      return systemAddonLocation.cleanDirectories();
     }
 
     // Download all the add-ons
@@ -2952,6 +2954,8 @@ this.XPIProvider = {
           }
         }
       }
+
+      yield systemAddonLocation.cleanDirectories();
     }
   }),
 
@@ -7507,6 +7511,7 @@ Object.assign(MutableDirectoryInstallLocation.prototype, {
  */
 function SystemAddonInstallLocation(aName, aDirectory, aScope, aResetSet) {
   this._baseDir = aDirectory;
+  this._nextDir = null;
 
   if (aResetSet)
     this.resetAddonSet();
@@ -7628,6 +7633,58 @@ Object.assign(SystemAddonInstallLocation.prototype, {
   },
 
   /**
+   * Removes any directories not currently in use or pending use after a
+   * restart. Any errors that happen here don't really matter as we'll attempt
+   * to cleanup again next time.
+   */
+  cleanDirectories: Task.async(function*() {
+    let iterator;
+    try {
+      iterator = new OS.File.DirectoryIterator(this._baseDir.path);
+    }
+    catch (e) {
+      logger.error("Failed to clean updated system add-ons directories.", e);
+      return;
+    }
+
+    try {
+      let entries = [];
+
+      yield iterator.forEach(entry => {
+        // Skip the directory currently in use
+        if (this._directory && this._directory.path == entry.path)
+          return;
+
+        // Skip the next directory
+        if (this._nextDir && this._nextDir.path == entry.path)
+          return;
+
+        entries.push(entry);
+      });
+
+      for (let entry of entries) {
+        if (entry.isDir) {
+          yield OS.File.removeDir(entry.path, {
+            ignoreAbsent: true,
+            ignorePermissions: true,
+          });
+        }
+        else {
+          yield OS.File.remove(entry.path, {
+            ignoreAbsent: true,
+          });
+        }
+      }
+    }
+    catch (e) {
+      logger.error("Failed to clean updated system add-ons directories.", e);
+    }
+    finally {
+      iterator.close();
+    }
+  }),
+
+  /**
    * Installs a new set of system add-ons into the location and updates the
    * add-on set in prefs. We wait to switch state until a restart.
    */
@@ -7688,6 +7745,7 @@ Object.assign(SystemAddonInstallLocation.prototype, {
     }
 
     this._saveAddonSet(state);
+    this._nextDir = newDir;
   }),
 });
 

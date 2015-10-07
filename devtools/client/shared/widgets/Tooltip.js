@@ -1145,6 +1145,8 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     // Then set spectrum's color and listen to color changes to preview them
     if (this.activeSwatch) {
       this.currentSwatchColor = this.activeSwatch.nextSibling;
+      this._colorUnit =
+        colorUtils.classifyColor(this.currentSwatchColor.textContent);
       let color = this.activeSwatch.style.backgroundColor;
       this.spectrum.then(spectrum => {
         spectrum.off("changed", this._onSpectrumColorChange);
@@ -1222,6 +1224,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
 
   _toDefaultType: function(color) {
     let colorObj = new colorUtils.CssColor(color);
+    colorObj.colorUnit = this._colorUnit;
     return colorObj.toString();
   },
 

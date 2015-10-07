@@ -86,6 +86,12 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this.walker = walker;
   this.highlighter = highlighter;
 
+  // True when we've called update() on the style sheet.
+  this._isUpdating = false;
+  // True when we've just set the editor text based on a style-applied
+  // event from the StyleSheetActor.
+  this._justSetText = false;
+
   this._state = {   // state to use when inputElement attaches
     text: "",
     selection: {
@@ -103,7 +109,8 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this._onPropertyChange = this._onPropertyChange.bind(this);
   this._onError = this._onError.bind(this);
   this._onMediaRuleMatchesChange = this._onMediaRuleMatchesChange.bind(this);
-  this._onMediaRulesChanged = this._onMediaRulesChanged.bind(this)
+  this._onMediaRulesChanged = this._onMediaRulesChanged.bind(this);
+  this._onStyleApplied = this._onStyleApplied.bind(this);
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
   this.saveToFile = this.saveToFile.bind(this);
@@ -119,6 +126,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
     this.cssSheet.getMediaRules().then(this._onMediaRulesChanged, Cu.reportError);
   }
   this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
+  this.cssSheet.on("style-applied", this._onStyleApplied);
   this.savedFile = file;
   this.linkCSSFile();
 }
@@ -245,25 +253,38 @@ StyleSheetEditor.prototype = {
   },
 
   /**
+   * A helper function that fetches the source text from the style
+   * sheet.  The text is possibly prettified using
+   * CssLogic.prettifyCSS.  This also sets |this._state.text| to the
+   * new text.
+   *
+   * @return {Promise} a promise that resolves to the new text
+   */
+  _getSourceTextAndPrettify: function() {
+    return this.styleSheet.getText().then((longStr) => {
+      return longStr.string();
+    }).then((source) => {
+      let ruleCount = this.styleSheet.ruleCount;
+      if (!this.styleSheet.isOriginalSource) {
+        source = CssLogic.prettifyCSS(source, ruleCount);
+      }
+      this._state.text = source;
+      return source;
+    });
+  },
+
+  /**
    * Start fetching the full text source for this editor's sheet.
    *
    * @return {Promise}
    *         A promise that'll resolve with the source text once the source
    *         has been loaded or reject on unexpected error.
    */
-  fetchSource: function () {
-    return Task.spawn(function* () {
-      let longStr = yield this.styleSheet.getText();
-      let source = yield longStr.string();
-      let ruleCount = this.styleSheet.ruleCount;
-      if (!this.styleSheet.isOriginalSource) {
-        source = CssLogic.prettifyCSS(source, ruleCount);
-      }
-      this._state.text = source;
+  fetchSource: function() {
+    return this._getSourceTextAndPrettify().then((source) => {
       this.sourceLoaded = true;
-
       return source;
-    }.bind(this)).then(null, e => {
+    }).then(null, e => {
       if (this._isDestroyed) {
         console.warn("Could not fetch the source for " +
                      this.styleSheet.href +
@@ -321,6 +342,26 @@ StyleSheetEditor.prototype = {
    */
   _onPropertyChange: function(property, value) {
     this.emit("property-change", property, value);
+  },
+
+  /**
+   * Called when the stylesheet text changes.
+   */
+  _onStyleApplied: function() {
+    if (this._isUpdating) {
+      // We just applied an edit in the editor, so we can drop this
+      // notification.
+      this._isUpdating = false;
+    } else if (this.sourceEditor) {
+      this._getSourceTextAndPrettify().then((newText) => {
+        this._justSetText = true;
+        let firstLine = this.sourceEditor.getFirstVisibleLine();
+        let pos = this.sourceEditor.getCursor();
+        this.sourceEditor.setText(newText);
+        this.sourceEditor.setFirstVisibleLine(firstLine);
+        this.sourceEditor.setCursor(pos);
+      });
+    }
   },
 
   /**
@@ -489,6 +530,11 @@ StyleSheetEditor.prototype = {
       return;  // TODO: do we want to do this?
     }
 
+    if (this._justSetText) {
+      this._justSetText = false;
+      return;
+    }
+
     this._updateTask = null; // reset only if we actually perform an update
                              // (stylesheet is enabled) so that 'missed' updates
                              // while the stylesheet is disabled can be performed
@@ -498,6 +544,7 @@ StyleSheetEditor.prototype = {
       this._state.text = this.sourceEditor.getText();
     }
 
+    this._isUpdating = true;
     this.styleSheet.update(this._state.text, this.transitionsEnabled)
                    .then(null, Cu.reportError);
   },
@@ -726,10 +773,11 @@ StyleSheetEditor.prototype = {
     }
     this.cssSheet.off("property-change", this._onPropertyChange);
     this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
+    this.cssSheet.off("style-applied", this._onStyleApplied);
     this.styleSheet.off("error", this._onError);
     this._isDestroyed = true;
   }
-}
+};
 
 /**
  * Find a path on disk for a file given it's hosted uri, the uri of the

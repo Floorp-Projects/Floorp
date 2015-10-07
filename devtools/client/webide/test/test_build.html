@@ -23,6 +23,7 @@
 
         Task.spawn(function* () {
             let win = yield openWebIDE();
+            let winProject = getProjectWindow(win);
             let AppManager = win.AppManager;
 
             function isProjectMarkedAsValid() {
@@ -39,7 +40,7 @@
 
             let packagedAppLocation = getTestFilePath("build_app" + testSuffix + "1");
 
-            yield win.projectList.importPackagedApp(packagedAppLocation);
+            yield winProject.projectList.importPackagedApp(packagedAppLocation);
             yield waitForUpdate(win, "details");
 
             let project = win.AppManager.selectedProject;
@@ -76,7 +77,7 @@
             // # Now test a full featured package.json
             packagedAppLocation = getTestFilePath("build_app" + testSuffix + "2");
 
-            yield win.projectList.importPackagedApp(packagedAppLocation);
+            yield winProject.projectList.importPackagedApp(packagedAppLocation);
             yield waitForUpdate(win, "project-validated");
 
             project = win.AppManager.selectedProject;
@@ -95,7 +96,7 @@
             is(loggedMessages[3], "succeed", "log messages are correct");
 
             // Switch to the package dir in order to verify the generated webapp.manifest
-            yield win.projectList.importPackagedApp(packageDir);
+            yield winProject.projectList.importPackagedApp(packageDir);
             yield waitForUpdate(win, "project-validated");
 
             project = win.AppManager.selectedProject;

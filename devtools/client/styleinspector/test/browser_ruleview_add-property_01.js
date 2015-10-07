@@ -69,6 +69,6 @@ function* testCreateNew(view) {
   yield onModifications;
 
   is(textProp.value, "#XYZ", "Text prop should have been changed.");
-  is(textProp.overridden, false, "Property should not be overridden");
+  is(textProp.overridden, true, "Property should be overridden");
   is(textProp.editor.isValid(), false, "#XYZ should not be a valid entry");
 }

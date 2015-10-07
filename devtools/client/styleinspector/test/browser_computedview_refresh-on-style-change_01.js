@@ -25,5 +25,5 @@ add_task(function*() {
   fontSize = getComputedViewPropertyValue(view, "font-size");
   is(fontSize, "15px", "The computed view shows the updated font-size");
   let color = getComputedViewPropertyValue(view, "color");
-  is(color, "#F00", "The computed view also shows the color now");
+  is(color, "rgb(255, 0, 0)", "The computed view also shows the color now");
 });

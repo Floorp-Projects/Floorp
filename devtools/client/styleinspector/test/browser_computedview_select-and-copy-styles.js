@@ -81,7 +81,7 @@ function checkSelectAll(view) {
   info("Checking that _onSelectAll() then copy returns the correct " +
     "clipboard value");
   view._contextmenu._onSelectAll();
-  let expectedPattern = "color: #FF0;[\\r\\n]+" +
+  let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
                         "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant-caps: small-caps;[\\r\\n]*";

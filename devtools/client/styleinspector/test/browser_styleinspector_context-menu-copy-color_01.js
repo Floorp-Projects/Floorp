@@ -85,7 +85,7 @@ function testIsColorPopupOnNode(view, node) {
   let correct = isColorValueNode(node);
 
   is(result, correct, "_isColorPopup returned the expected value " + correct);
-  is(view._contextmenu._colorToCopy, (correct) ? "#123ABC" : "",
+  is(view._contextmenu._colorToCopy, (correct) ? "rgb(18, 58, 188)" : "",
      "_colorToCopy was set to the expected value");
 }
 
