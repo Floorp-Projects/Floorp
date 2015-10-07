@@ -7,9 +7,9 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/shared/performance/io");
+  "devtools/client/performance/modules/io");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/utils");
+  "devtools/shared/performance/recording-utils");
 loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
   "devtools/shared/performance/recording-common", true);
 loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);

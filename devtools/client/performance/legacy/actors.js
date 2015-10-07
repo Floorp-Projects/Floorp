@@ -12,9 +12,9 @@ loader.lazyRequireGetter(this, "Poller",
   "devtools/client/shared/poller", true);
 
 loader.lazyRequireGetter(this, "CompatUtils",
-  "devtools/shared/performance/legacy/compatibility");
+  "devtools/client/performance/legacy/compatibility");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/utils");
+  "devtools/shared/performance/recording-utils");
 loader.lazyRequireGetter(this, "TimelineFront",
   "devtools/server/actors/timeline", true);
 loader.lazyRequireGetter(this, "ProfilerFront",

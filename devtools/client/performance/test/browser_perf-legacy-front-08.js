@@ -7,12 +7,10 @@
 
 var WAIT_TIME = 100;
 
-const { TargetFactory } = require("devtools/client/framework/target");
-const { LegacyPerformanceFront } = require("devtools/shared/performance/legacy/front");
-const { merge } = require("sdk/util/object");
+const { LegacyPerformanceFront } = require("devtools/client/performance/legacy/front");
 
-add_task(function*() {
-  let tab = yield getTab(MAIN_DOMAIN + "doc_perf.html");
+function* spawnTest() {
+  let tab = yield getTab(SIMPLE_URL);
   let target = TargetFactory.forTab(tab);
   yield target.makeRemote();
 
@@ -55,9 +53,8 @@ add_task(function*() {
   ok(recording.getProfile().threads[0].samples.data.length, "profile data has some samples");
 
   yield front.destroy();
-  yield closeDebuggerClient(target.client);
   gBrowser.removeCurrentTab();
-});
+}
 
 function isEmptyArray (array, name) {
   ok(Array.isArray(array), `${name} is an array`);

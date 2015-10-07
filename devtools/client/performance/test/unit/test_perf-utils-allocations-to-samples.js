@@ -12,7 +12,7 @@ function run_test() {
 }
 
 add_task(function () {
-  const { getProfileThreadFromAllocations } = require("devtools/shared/performance/utils");
+  const { getProfileThreadFromAllocations } = require("devtools/shared/performance/recording-utils");
   let output = getProfileThreadFromAllocations(TEST_DATA);
   equal(output.toSource(), EXPECTED_OUTPUT.toSource(), "The output is correct.");
 });
