@@ -13,7 +13,7 @@ const {
   TAB_SIZE,
   DETECT_INDENT,
   getIndentationFromIteration
-} = require("devtools/shared/shared/indentation");
+} = require("devtools/shared/indentation");
 
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
 const KEYMAP      = "devtools.editor.keymap";
