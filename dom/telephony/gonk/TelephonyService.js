@@ -1070,14 +1070,22 @@ TelephonyService.prototype = {
 
       // Handle unknown MMI code as USSD.
       default:
-        this._sendUSSDInternal(aClientId, aMmi.fullMMI, aResponse => {
-          if (aResponse.errorMsg) {
-            aCallback.notifyDialMMIError(aResponse.errorMsg);
-            return;
-          }
-
-          aCallback.notifyDialMMISuccess("");
-        });
+        if (this._ussdSessions[aClientId]) {
+          // Cancel the previous ussd session first.
+          this._cancelUSSDInternal(aClientId, aResponse => {
+            // Fail to cancel ussd session, report error instead of sending ussd
+            // request.
+            if (aResponse.errorMsg) {
+              aCallback.notifyDialMMIError(aResponse.errorMsg);
+              return;
+            }
+            this._sendUSSDInternal(aClientId, aMmi.fullMMI,
+                                   this._defaultMMICallbackHandler.bind(this, aCallback));
+          });
+          return;
+        }
+        this._sendUSSDInternal(aClientId, aMmi.fullMMI,
+                               this._defaultMMICallbackHandler.bind(this, aCallback));
         break;
     }
   },
@@ -1684,6 +1692,14 @@ TelephonyService.prototype = {
     }
   },
 
+  _defaultMMICallbackHandler: function(aCallback, aResponse) {
+    if (aResponse.errorMsg) {
+      aCallback.notifyDialMMIError(aResponse.errorMsg);
+    } else {
+      aCallback.notifyDialMMISuccess("");
+    }
+  },
+
   _getCallsWithState: function(aClientId, aState) {
     let calls = [];
     for (let i in this._currentCalls[aClientId]) {
@@ -2138,24 +2154,9 @@ TelephonyService.prototype = {
   },
 
   _sendUSSDInternal: function(aClientId, aUssd, aCallback) {
-    if (!this._ussdSessions[aClientId]) {
-      this._sendToRilWorker(aClientId, "sendUSSD", { ussd: aUssd }, aResponse => {
-        this._ussdSessions[aClientId] = !aResponse.errorMsg;
-        aCallback(aResponse);
-      });
-      return;
-    }
-
-    // Cancel the previous ussd session first.
-    this._cancelUSSDInternal(aClientId, aResponse => {
-      // Fail to cancel ussd session, report error instead of sending ussd
-      // request.
-      if (aResponse.errorMsg) {
-        aCallback(aResponse);
-        return;
-      }
-
-      this._sendUSSDInternal(aClientId, aUssd, aCallback);
+    this._sendToRilWorker(aClientId, "sendUSSD", { ussd: aUssd }, aResponse => {
+      this._ussdSessions[aClientId] = !aResponse.errorMsg;
+      aCallback(aResponse);
     });
   },
 
