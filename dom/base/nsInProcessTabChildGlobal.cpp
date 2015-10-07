@@ -49,16 +49,10 @@ class nsAsyncMessageToParent : public nsSameProcessAsyncMessageBase,
                                public SameProcessMessageQueue::Runnable
 {
 public:
-  nsAsyncMessageToParent(JSContext* aCx,
-                         nsInProcessTabChildGlobal* aTabChild,
-                         const nsAString& aMessage,
-                         StructuredCloneData& aData,
-                         JS::Handle<JSObject *> aCpows,
-                         nsIPrincipal* aPrincipal)
-    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal),
-      mTabChild(aTabChild)
-  {
-  }
+  nsAsyncMessageToParent(JSContext* aCx, JS::Handle<JSObject*> aCpows, nsInProcessTabChildGlobal* aTabChild)
+    : nsSameProcessAsyncMessageBase(aCx, aCpows)
+    , mTabChild(aTabChild)
+  { }
 
   virtual nsresult HandleMessage() override
   {
@@ -69,7 +63,7 @@ public:
   nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
 };
 
-bool
+nsresult
 nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
                                               const nsAString& aMessage,
                                               StructuredCloneData& aData,
@@ -78,9 +72,15 @@ nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
   nsRefPtr<nsAsyncMessageToParent> ev =
-    new nsAsyncMessageToParent(aCx, this, aMessage, aData, aCpows, aPrincipal);
+    new nsAsyncMessageToParent(aCx, aCpows, this);
+
+  nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   queue->Push(ev);
-  return true;
+  return NS_OK;
 }
 
 nsInProcessTabChildGlobal::nsInProcessTabChildGlobal(nsIDocShell* aShell,

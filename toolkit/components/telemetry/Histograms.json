@@ -5191,6 +5191,14 @@
     "kind": "boolean",
     "description": "True when an IPC transaction is canceled"
   },
+  "IPC_SAME_PROCESS_MESSAGE_COPY_OOM_KB": {
+     "expires_in_version": "50",
+     "kind": "exponential",
+     "low": 100,
+     "high": 10000000,
+     "n_buckets": 10,
+     "description": "Whenever the same-process MessageManager cannot be sent through sendAsyncMessage as it would cause an OOM, the size of the message content, in kb."
+  },
   "MISBEHAVING_ADDONS_CPOW_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

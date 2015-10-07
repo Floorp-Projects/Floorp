@@ -2921,7 +2921,7 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
                         Principal(aPrincipal), aRetVal);
 }
 
-bool
+nsresult
 TabChild::DoSendAsyncMessage(JSContext* aCx,
                              const nsAString& aMessage,
                              StructuredCloneData& aData,
@@ -2930,14 +2930,17 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
 {
   ClonedMessageData data;
   if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
-    return false;
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
   InfallibleTArray<CpowEntry> cpows;
   if (aCpows && !Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
-    return false;
+    return NS_ERROR_UNEXPECTED;
   }
-  return SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
-                          Principal(aPrincipal));
+  if (!SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
+                        Principal(aPrincipal))) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  return NS_OK;
 }
 
 TabChild*
