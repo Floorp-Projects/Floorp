@@ -6,12 +6,28 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
+    function check_styles() {
+      var redText = document.getElementById('red-text');
+      var blackText = document.getElementById('black-text');
+      var redTextColor = window.getComputedStyle(redText, null).getPropertyValue('color');
+      var blackTextColor = window.getComputedStyle(blackText, null).getPropertyValue('color');
+      ok(redTextColor == 'rgb(255, 0, 0)', "The first part should be red.");
+      todo(blackTextColor == 'rgb(0, 0, 0)', "The second part should still be black.");
+    }
+
     SimpleTest.waitForExplicitFinish();
     window.onload = function() {
+      check_styles();
       SimpleTest.finish();
     }
   </script>
   <script>
+    function good_correctHashCORSLoaded() {
+      ok(true, "A CORS cross-domain stylesheet with correct hash was correctly loaded.");
+    }
+    function bad_correctHashCORSBlocked() {
+      ok(false, "We should load CORS cross-domain stylesheets with hashes that match!");
+    }
     function good_correctHashBlocked() {
       ok(true, "A non-CORS cross-domain stylesheet with correct hash was correctly blocked.");
     }
@@ -26,22 +42,55 @@
       ok(false, "We should load non-CORS cross-domain stylesheets with incorrect hashes!");
     }
 
+    function good_correctDataBlocked() {
+      ok(true, "A stylesheet was correctly blocked, because it came from a data: URI.");
+    }
+    function bad_correctDataLoaded() {
+      ok(false, "We should not load stylesheets in data: URIs!");
+    }
+    function good_correctDataCORSBlocked() {
+      ok(true, "A stylesheet was correctly blocked, because it came from a data: URI even though it was a CORS load.");
+    }
+    function bad_correctDataCORSLoaded() {
+      todo(false, "We should not load stylesheets in data: URIs regardless of CORS mode!");
+    }
   </script>
 
-  <!-- valid non-CORS sha256 hash. should trigger onload -->
+  <!-- valid CORS sha256 hash -->
+  <link rel="stylesheet" href="http://example.com/tests/dom/security/test/sri/style1.css"
+        crossorigin="anonymous"
+        integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
+        onerror="bad_correctHashCORSBlocked()"
+        onload="good_correctHashCORSLoaded()">
+
+  <!-- valid non-CORS sha256 hash -->
   <link rel="stylesheet" href="style_301.css"
         integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
         onerror="good_correctHashBlocked()"
         onload="bad_correctHashLoaded()">
 
-  <!-- invalid non-CORS sha256 hash. should trigger onload -->
+  <!-- invalid non-CORS sha256 hash -->
   <link rel="stylesheet" href="style_301.css?again"
         integrity="sha256-bogus"
         onerror="good_incorrectHashBlocked()"
         onload="bad_incorrectHashLoaded()">
+
+  <!-- valid non-CORS sha256 hash in a data: URL -->
+  <link rel="stylesheet" href="data:text/css,.red-text{color:red}"
+        integrity="sha256-ewUcnAs4+XY5k2JpfUQGFdG5YMZkq80/nIKW67kd7vE="
+        onerror="good_correctDataBlocked()"
+        onload="bad_correctDataLoaded()">
+
+  <!-- valid CORS sha256 hash in a data: URL -->
+  <link rel="stylesheet" href="data:text/css,.red-text{color:red}"
+        crossorigin="anonymous"
+        integrity="sha256-ewUcnAs4+XY5k2JpfUQGFdG5YMZkq80/nIKW67kd7vE="
+        onerror="good_correctDataCORSBlocked()"
+        onload="bad_correctDataCORSLoaded()">
 </head>
 <body>
-<p><span id="red-text">This should be red.</span></p>
+<p><span id="red-text">This should be red</span> but
+  <span id="black-text" class="red-text">this should remain black.</span></p>
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
