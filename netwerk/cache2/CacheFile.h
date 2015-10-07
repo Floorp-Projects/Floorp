@@ -122,7 +122,7 @@ private:
   void     Lock();
   void     Unlock();
   void     AssertOwnsLock() const;
-  void     ReleaseOutsideLock(nsRefPtr<nsISupports> aObject);
+  void     ReleaseOutsideLock(RefPtr<nsISupports> aObject);
 
   enum ECallerType {
     READER    = 0,
@@ -168,7 +168,7 @@ private:
   void PostWriteTimer();
 
   static PLDHashOperator WriteAllCachedChunks(const uint32_t& aIdx,
-                                              nsRefPtr<CacheFileChunk>& aChunk,
+                                              RefPtr<CacheFileChunk>& aChunk,
                                               void* aClosure);
 
   static PLDHashOperator FailListenersIfNonExistentChunk(
@@ -177,11 +177,11 @@ private:
                            void* aClosure);
 
   static PLDHashOperator FailUpdateListeners(const uint32_t& aIdx,
-                                             nsRefPtr<CacheFileChunk>& aChunk,
+                                             RefPtr<CacheFileChunk>& aChunk,
                                              void* aClosure);
 
   static PLDHashOperator CleanUpCachedChunks(const uint32_t& aIdx,
-                                             nsRefPtr<CacheFileChunk>& aChunk,
+                                             RefPtr<CacheFileChunk>& aChunk,
                                              void* aClosure);
 
   nsresult PadChunkWithZeroes(uint32_t aChunkIdx);
@@ -206,8 +206,8 @@ private:
   int64_t        mDataSize;
   nsCString      mKey;
 
-  nsRefPtr<CacheFileHandle>    mHandle;
-  nsRefPtr<CacheFileMetadata>  mMetadata;
+  RefPtr<CacheFileHandle>    mHandle;
+  RefPtr<CacheFileMetadata>  mMetadata;
   nsCOMPtr<CacheFileListener>  mListener;
   nsCOMPtr<CacheFileIOListener>   mDoomAfterOpenListener;
 
@@ -218,7 +218,7 @@ private:
   nsTArray<CacheFileInputStream*> mInputs;
   CacheFileOutputStream          *mOutput;
 
-  nsTArray<nsRefPtr<nsISupports>> mObjsToRelease;
+  nsTArray<RefPtr<nsISupports>> mObjsToRelease;
 };
 
 class CacheFileAutoLock {
@@ -248,7 +248,7 @@ public:
   }
 
 private:
-  nsRefPtr<CacheFile> mFile;
+  RefPtr<CacheFile> mFile;
   bool mLocked;
 };
 

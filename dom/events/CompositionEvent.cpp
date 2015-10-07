@@ -86,7 +86,7 @@ NS_NewDOMCompositionEvent(EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetCompositionEvent* aEvent)
 {
-  nsRefPtr<CompositionEvent> event =
+  RefPtr<CompositionEvent> event =
     new CompositionEvent(aOwner, aPresContext, aEvent);
   return event.forget();
 }

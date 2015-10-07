@@ -73,13 +73,13 @@ TLSServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   nsresult rv;
 
-  nsRefPtr<nsSocketTransport> trans = new nsSocketTransport;
+  RefPtr<nsSocketTransport> trans = new nsSocketTransport;
   if (NS_WARN_IF(!trans)) {
     mCondition = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
 
-  nsRefPtr<TLSServerConnectionInfo> info = new TLSServerConnectionInfo();
+  RefPtr<TLSServerConnectionInfo> info = new TLSServerConnectionInfo();
   info->mServerSocket = this;
   info->mTransport = trans;
   nsCOMPtr<nsISupports> infoSupports =
@@ -270,7 +270,7 @@ NS_IMETHODIMP
 TLSServerSecurityObserverProxy::OnHandshakeDone(nsITLSServerSocket* aServer,
                                                 nsITLSClientStatus* aStatus)
 {
-  nsRefPtr<OnHandshakeDoneRunnable> r =
+  RefPtr<OnHandshakeDoneRunnable> r =
     new OnHandshakeDoneRunnable(mListener, aServer, aStatus);
   return NS_DispatchToMainThread(r);
 }
@@ -403,7 +403,7 @@ TLSServerConnectionInfo::GetMacLength(uint32_t* aMacLength)
 void
 TLSServerConnectionInfo::HandshakeCallback(PRFileDesc* aFD, void* aArg)
 {
-  nsRefPtr<TLSServerConnectionInfo> info =
+  RefPtr<TLSServerConnectionInfo> info =
     static_cast<TLSServerConnectionInfo*>(aArg);
   nsISocketTransport* transport = info->mTransport;
   // No longer needed outside this function, so clear the weak ref

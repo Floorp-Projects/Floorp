@@ -242,7 +242,7 @@ private:
 struct nsThreadShutdownContext
 {
   // NB: This will be the last reference.
-  nsRefPtr<nsThread> terminatingThread;
+  RefPtr<nsThread> terminatingThread;
   nsThread* joiningThread;
   bool      awaitingShutdownAck;
 };
@@ -296,7 +296,7 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<nsThread>       mThread;
+  RefPtr<nsThread>       mThread;
   nsThreadShutdownContext* mShutdownContext;
 };
 
@@ -494,7 +494,7 @@ nsresult
 nsThread::Init()
 {
   // spawn thread and wait until it is fully setup
-  nsRefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
+  RefPtr<nsThreadStartupEvent> startup = new nsThreadStartupEvent();
 
   NS_ADDREF_THIS();
 
@@ -610,7 +610,7 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
     //     be able to monitor the slot occupied by this event and use
     //     that to tell us when the event has been processed.
 
-    nsRefPtr<nsThreadSyncDispatch> wrapper =
+    RefPtr<nsThreadSyncDispatch> wrapper =
       new nsThreadSyncDispatch(thread, event.take());
     nsresult rv = PutEvent(wrapper, aTarget); // hold a ref
     // Don't wait for the event to finish if we didn't dispatch it...
@@ -1140,7 +1140,7 @@ nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
 
   // Don't delete or release anything while holding the lock.
   nsAutoPtr<nsChainedEventQueue> queue;
-  nsRefPtr<nsNestedEventTarget> target;
+  RefPtr<nsNestedEventTarget> target;
 
   {
     MutexAutoLock lock(mLock);

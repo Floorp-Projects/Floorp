@@ -92,7 +92,7 @@ public:
   static inline already_AddRefed<nsZipArchive> GetReader(Type aType)
   {
     MOZ_ASSERT(IsInitialized(), "Omnijar not initialized");
-    nsRefPtr<nsZipArchive> reader = sReader[aType];
+    RefPtr<nsZipArchive> reader = sReader[aType];
     return reader.forget();
   }
 

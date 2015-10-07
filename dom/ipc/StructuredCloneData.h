@@ -41,12 +41,12 @@ public:
   StructuredCloneData&
   operator=(const StructuredCloneData& aOther) = delete;
 
-  const nsTArray<nsRefPtr<BlobImpl>>& BlobImpls() const
+  const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const
   {
     return mBlobImplArray;
   }
 
-  nsTArray<nsRefPtr<BlobImpl>>& BlobImpls()
+  nsTArray<RefPtr<BlobImpl>>& BlobImpls()
   {
     return mBlobImplArray;
   }

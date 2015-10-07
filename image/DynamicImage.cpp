@@ -7,7 +7,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "ImageRegion.h"
 #include "Orientation.h"
 #include "SVGImageContext.h"
@@ -178,14 +178,14 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize,
                              uint32_t aWhichFrame,
                              uint32_t aFlags)
 {
-  nsRefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+  RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
     CreateOffscreenContentDrawTarget(aSize, SurfaceFormat::B8G8R8A8);
   if (!dt) {
     gfxWarning() <<
       "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
     return nullptr;
   }
-  nsRefPtr<gfxContext> context = new gfxContext(dt);
+  RefPtr<gfxContext> context = new gfxContext(dt);
 
   auto result = Draw(context, aSize, ImageRegion::Create(aSize),
                      aWhichFrame, GraphicsFilter::FILTER_NEAREST,

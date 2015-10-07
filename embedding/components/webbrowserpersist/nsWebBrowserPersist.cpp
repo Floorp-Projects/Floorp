@@ -105,7 +105,7 @@ struct nsWebBrowserPersist::URIData
 
 struct nsWebBrowserPersist::URIFixupData
 {
-    nsRefPtr<FlatURIMap> mFlatMap;
+    RefPtr<FlatURIMap> mFlatMap;
     nsCOMPtr<nsIURI> mTargetBaseURI;
 };
 
@@ -172,7 +172,7 @@ public:
     NS_DECL_NSIWEBBROWSERPERSISTRESOURCEVISITOR
     NS_DECL_ISUPPORTS
 private:
-    nsRefPtr<nsWebBrowserPersist> mParent;
+    RefPtr<nsWebBrowserPersist> mParent;
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIFile> mDataPath;
 
@@ -197,7 +197,7 @@ public:
     NS_DECL_NSIWEBBROWSERPERSISTWRITECOMPLETION
     NS_DECL_ISUPPORTS
 private:
-    nsRefPtr<nsWebBrowserPersist> mParent;
+    RefPtr<nsWebBrowserPersist> mParent;
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIFile> mLocalFile;
 
@@ -660,7 +660,7 @@ nsWebBrowserPersist::SerializeNextFile()
     // mFlatURIMap must be rebuilt each time through SerializeNextFile, as
     // mTargetBaseURI is used to create the relative URLs and will be different
     // with each serialized document.
-    nsRefPtr<FlatURIMap> flatMap = new FlatURIMap(targetBaseSpec);
+    RefPtr<FlatURIMap> flatMap = new FlatURIMap(targetBaseSpec);
     
     URIFixupData fixupData;
     fixupData.mFlatMap = flatMap;
@@ -696,7 +696,7 @@ nsWebBrowserPersist::SerializeNextFile()
         return;
     }
 
-    nsRefPtr<OnWrite> finish = new OnWrite(this, docData->mFile, localFile);
+    RefPtr<OnWrite> finish = new OnWrite(this, docData->mFile, localFile);
     rv = docData->mDocument->WriteContent(outputStream,
                                           mFlatURIMap,
                                           NS_ConvertUTF16toUTF8(mContentType),

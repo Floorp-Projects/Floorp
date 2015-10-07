@@ -729,7 +729,7 @@ nsWindow::BringToFront()
         return;
     }
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     nsWindow *oldTop = nullptr;
     nsWindow *newTop = this;
@@ -949,7 +949,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             if (!obs)
                 break;
 
-            nsRefPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
+            RefPtr<ContentCreationNotifier> notifier = new ContentCreationNotifier;
             if (NS_SUCCEEDED(obs->AddObserver(notifier, "ipc:content-created", false))) {
                 if (NS_SUCCEEDED(obs->AddObserver(notifier, "xpcom-shutdown", false)))
                     gContentCreationNotifier = notifier;
@@ -1098,7 +1098,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
 void
 nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 {
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     WidgetMouseEvent event = ae->MakeMouseEvent(this);
     if (event.mMessage == eVoidEvent) {
@@ -1112,7 +1112,7 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 bool
 nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
 {
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     CSSPoint pt;
     const nsTArray<nsIntPoint>& points = ae->Points();
@@ -1147,7 +1147,7 @@ nsWindow::OnContextmenuEvent(AndroidGeckoEvent *ae)
 void
 nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
 {
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     CSSPoint pt;
     const nsTArray<nsIntPoint>& points = ae->Points();
@@ -1171,7 +1171,7 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
 
 bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     // End any composition in progress in case the touch event listener
     // modifies the input field value (see bug 856155)
@@ -1275,7 +1275,7 @@ nsWindow::OnNativeGestureEvent(AndroidGeckoEvent *ae)
             return;
     }
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     WidgetSimpleGestureEvent event(true, msg, this);
 
@@ -1655,7 +1655,7 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
 void
 nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 {
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
     nsCOMPtr<nsIAtom> command;
     bool isDown = ae->Action() == AKEY_EVENT_ACTION_DOWN;
     bool isLongPress = !!(ae->Flags() & AKEY_EVENT_FLAG_LONG_PRESS);
@@ -1711,7 +1711,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
 void
 nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
 {
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
     RemoveIMEComposition();
     EventMessage msg;
     switch (ae->Action()) {
@@ -1797,7 +1797,7 @@ public:
 /*
  * Get the current composition object, if any.
  */
-nsRefPtr<mozilla::TextComposition>
+RefPtr<mozilla::TextComposition>
 nsWindow::GetIMEComposition()
 {
     MOZ_ASSERT(this == TopWindow());
@@ -1815,7 +1815,7 @@ nsWindow::RemoveIMEComposition()
         return;
     }
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
 
     WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommitAsIs,
@@ -1855,7 +1855,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         * Java controls the composition, and Gecko shadows the Java
            composition through update composition events
     */
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     if (ae->Action() == AndroidGeckoEvent::IME_ACKNOWLEDGE_FOCUS) {
         MOZ_ASSERT(mIMEMaskEventsCount > 0);
@@ -2182,7 +2182,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 
             // Cancel composition on Gecko side
             if (!!GetIMEComposition()) {
-                nsRefPtr<nsWindow> kungFuDeathGrip(this);
+                RefPtr<nsWindow> kungFuDeathGrip(this);
 
                 WidgetCompositionEvent compositionCommitEvent(
                                          true, eCompositionCommit, this);
@@ -2331,7 +2331,7 @@ nsWindow::FlushIMEChanges()
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(IMEStateManager::GetFocusSelectionAndRoot(
             getter_AddRefs(imeSelection), getter_AddRefs(imeRoot))));
 
-    nsRefPtr<nsWindow> kungFuDeathGrip(this);
+    RefPtr<nsWindow> kungFuDeathGrip(this);
 
     for (uint32_t i = 0; i < mIMETextChanges.Length(); i++) {
         IMEChange &change = mIMETextChanges[i];
@@ -2657,7 +2657,7 @@ nsWindow::ConfigureAPZControllerThread()
 already_AddRefed<GeckoContentController>
 nsWindow::CreateRootContentController()
 {
-    nsRefPtr<GeckoContentController> controller = new widget::android::AndroidContentController(this, mAPZEventState, mAPZC);
+    RefPtr<GeckoContentController> controller = new widget::android::AndroidContentController(this, mAPZEventState, mAPZC);
     return controller.forget();
 }
 

@@ -80,7 +80,7 @@ public:
 
     if (!aInput.IsSilentOrSubnormal()) {
       if (mLeftOverData <= 0) {
-        nsRefPtr<PlayingRefChanged> refchanged =
+        RefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
         aStream->Graph()->
           DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
@@ -96,7 +96,7 @@ public:
         // Delete our buffered data now we no longer need it
         mBuffer.Reset();
 
-        nsRefPtr<PlayingRefChanged> refchanged =
+        RefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
         aStream->Graph()->
           DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());

@@ -16,7 +16,7 @@
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 #include "nsIObserver.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 class nsIThread;
 class nsIThreadPool;
@@ -92,7 +92,7 @@ private:
   static StaticRefPtr<DecodePool> sSingleton;
   static uint32_t sNumCores;
 
-  nsRefPtr<DecodePoolImpl>    mImpl;
+  RefPtr<DecodePoolImpl>    mImpl;
 
   // mMutex protects mThreads and mIOThread.
   Mutex                     mMutex;

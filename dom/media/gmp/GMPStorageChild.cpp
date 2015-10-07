@@ -81,7 +81,7 @@ GMPRecordImpl::WriteComplete(GMPErr aStatus)
 GMPErr
 GMPRecordImpl::Close()
 {
-  nsRefPtr<GMPRecordImpl> kungfuDeathGrip(this);
+  RefPtr<GMPRecordImpl> kungfuDeathGrip(this);
   // Delete our self reference.
   Release();
   mOwner->Close(this->Name());
@@ -114,7 +114,7 @@ GMPStorageChild::CreateRecord(const nsCString& aRecordName,
     return GMPRecordInUse;
   }
 
-  nsRefPtr<GMPRecordImpl> record(new GMPRecordImpl(this, aRecordName, aClient));
+  RefPtr<GMPRecordImpl> record(new GMPRecordImpl(this, aRecordName, aClient));
   mRecords.Put(aRecordName, record); // Addrefs
 
   // The GMPRecord holds a self reference until the GMP calls Close() on
@@ -136,7 +136,7 @@ already_AddRefed<GMPRecordImpl>
 GMPStorageChild::GetRecord(const nsCString& aRecordName)
 {
   MonitorAutoLock lock(mMonitor);
-  nsRefPtr<GMPRecordImpl> record;
+  RefPtr<GMPRecordImpl> record;
   mRecords.Get(aRecordName, getter_AddRefs(record));
   return record.forget();
 }
@@ -235,7 +235,7 @@ GMPStorageChild::RecvOpenComplete(const nsCString& aRecordName,
   if (mShutdown) {
     return true;
   }
-  nsRefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
+  RefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
   if (!record) {
     // Not fatal.
     return true;
@@ -252,7 +252,7 @@ GMPStorageChild::RecvReadComplete(const nsCString& aRecordName,
   if (mShutdown) {
     return true;
   }
-  nsRefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
+  RefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
   if (!record) {
     // Not fatal.
     return true;
@@ -268,7 +268,7 @@ GMPStorageChild::RecvWriteComplete(const nsCString& aRecordName,
   if (mShutdown) {
     return true;
   }
-  nsRefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
+  RefPtr<GMPRecordImpl> record = GetRecord(aRecordName);
   if (!record) {
     // Not fatal.
     return true;

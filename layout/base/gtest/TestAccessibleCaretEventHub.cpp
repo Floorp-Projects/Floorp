@@ -149,7 +149,7 @@ public:
     float rotationAngle = 0;
     float force = 1;
 
-    nsRefPtr<dom::Touch> touch(
+    RefPtr<dom::Touch> touch(
       new dom::Touch(identifier, point, radius, rotationAngle, force));
     event->touches.AppendElement(touch);
 
@@ -229,7 +229,7 @@ public:
     ReleaseEventCreator aReleaseEventCreator);
 
   // Member variables
-  nsRefPtr<MockAccessibleCaretEventHub> mHub{new MockAccessibleCaretEventHub()};
+  RefPtr<MockAccessibleCaretEventHub> mHub{new MockAccessibleCaretEventHub()};
 
 }; // class AccessibleCaretEventHubTester
 

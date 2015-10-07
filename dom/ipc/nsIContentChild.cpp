@@ -57,7 +57,7 @@ nsIContentChild::AllocPBrowserChild(const TabId& aTabId,
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  nsRefPtr<TabChild> child =
+  RefPtr<TabChild> child =
     TabChild::Create(this, aTabId, tc.GetTabContext(), aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
@@ -91,7 +91,7 @@ nsIContentChild::GetOrCreateActorForBlob(Blob* aBlob)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<BlobImpl> blobImpl = aBlob->Impl();
+  RefPtr<BlobImpl> blobImpl = aBlob->Impl();
   MOZ_ASSERT(blobImpl);
 
   return GetOrCreateActorForBlobImpl(blobImpl);
@@ -115,7 +115,7 @@ nsIContentChild::RecvAsyncMessage(const nsString& aMsg,
                                   InfallibleTArray<CpowEntry>&& aCpows,
                                   const IPC::Principal& aPrincipal)
 {
-  nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
+  RefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForChild(aData, data);

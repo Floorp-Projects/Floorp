@@ -82,7 +82,7 @@ ClientPaintedLayer::PaintThebes()
   while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
     SetAntialiasingFlags(this, target);
 
-    nsRefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
+    RefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(target);
 
     ClientManager()->GetPaintedLayerCallback()(this,
                                               ctx,
@@ -159,11 +159,11 @@ ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
           AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)
 #endif
   ) {
-    nsRefPtr<ClientTiledPaintedLayer> layer = new ClientTiledPaintedLayer(this, aHint);
+    RefPtr<ClientTiledPaintedLayer> layer = new ClientTiledPaintedLayer(this, aHint);
     CREATE_SHADOW(Painted);
     return layer.forget();
   } else {
-    nsRefPtr<ClientPaintedLayer> layer = new ClientPaintedLayer(this, aHint);
+    RefPtr<ClientPaintedLayer> layer = new ClientPaintedLayer(this, aHint);
     CREATE_SHADOW(Painted);
     return layer.forget();
   }

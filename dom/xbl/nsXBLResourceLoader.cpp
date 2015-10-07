@@ -120,7 +120,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
       // Now kick off the image load...
       // Passing nullptr for pretty much everything -- cause we don't care!
       // XXX: initialDocumentURI is nullptr! 
-      nsRefPtr<imgRequestProxy> req;
+      RefPtr<imgRequestProxy> req;
       nsContentUtils::LoadImage(url, doc, docPrincipal, docURL,
                                 doc->GetReferrerPolicy(), nullptr,
                                 nsIRequest::LOAD_BACKGROUND, EmptyString(),
@@ -139,7 +139,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
           CheckLoadURIWithPrincipal(docPrincipal, url,
                                     nsIScriptSecurityManager::ALLOW_CHROME);
         if (NS_SUCCEEDED(rv)) {
-          nsRefPtr<CSSStyleSheet> sheet;
+          RefPtr<CSSStyleSheet> sheet;
           rv = cssLoader->LoadSheetSync(url, getter_AddRefs(sheet));
           NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
           if (NS_SUCCEEDED(rv))

@@ -38,7 +38,7 @@ TVManager::~TVManager()
 /* static */ already_AddRefed<TVManager>
 TVManager::Create(nsPIDOMWindow* aWindow)
 {
-  nsRefPtr<TVManager> manager = new TVManager(aWindow);
+  RefPtr<TVManager> manager = new TVManager(aWindow);
   return (manager->Init()) ? manager.forget() : nullptr;
 }
 
@@ -62,7 +62,7 @@ TVManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 nsresult
-TVManager::SetTuners(const nsTArray<nsRefPtr<TVTuner>>& aTuners)
+TVManager::SetTuners(const nsTArray<RefPtr<TVTuner>>& aTuners)
 {
   // Should be called only when TV Manager hasn't been ready yet.
   if (mIsReady) {
@@ -104,7 +104,7 @@ TVManager::GetTuners(ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

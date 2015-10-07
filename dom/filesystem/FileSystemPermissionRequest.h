@@ -39,7 +39,7 @@ private:
 
   nsCString mPermissionType;
   nsCString mPermissionAccess;
-  nsRefPtr<FileSystemTaskBase> mTask;
+  RefPtr<FileSystemTaskBase> mTask;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIContentPermissionRequester> mRequester;

@@ -306,7 +306,7 @@ CreateAnonTempFileRemover()
   if (!XRE_IsParentProcess()) {
     return NS_OK;
   }
-  nsRefPtr<nsAnonTempFileRemover> tempRemover = new nsAnonTempFileRemover();
+  RefPtr<nsAnonTempFileRemover> tempRemover = new nsAnonTempFileRemover();
   return tempRemover->Init();
 }
 

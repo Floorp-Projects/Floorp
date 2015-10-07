@@ -79,7 +79,7 @@ private:
     nsCOMPtr<nsIOutputStream>        mSocketOutput;
     nsCOMPtr<nsIAsyncInputStream>    mSocketInput;
 
-    nsRefPtr<nsFtpControlConnectionListener> mListener;
+    RefPtr<nsFtpControlConnectionListener> mListener;
 };
 
 #endif

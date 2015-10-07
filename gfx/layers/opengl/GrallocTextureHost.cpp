@@ -242,7 +242,7 @@ GrallocTextureHostOGL::GetAsSurface() {
   if (rv) {
     return nullptr;
   }
-  nsRefPtr<gfx::DataSourceSurface> grallocTempSurf =
+  RefPtr<gfx::DataSourceSurface> grallocTempSurf =
     gfx::Factory::CreateWrappingDataSourceSurface(grallocData,
                                                   graphicBuffer->getStride() * android::bytesPerPixel(graphicBuffer->getPixelFormat()),
                                                   GetSize(), GetFormat());
@@ -250,7 +250,7 @@ GrallocTextureHostOGL::GetAsSurface() {
     graphicBuffer->unlock();
     return nullptr;
   }
-  nsRefPtr<gfx::DataSourceSurface> surf = CreateDataSourceSurfaceByCloning(grallocTempSurf);
+  RefPtr<gfx::DataSourceSurface> surf = CreateDataSourceSurfaceByCloning(grallocTempSurf);
 
   graphicBuffer->unlock();
 
@@ -397,7 +397,7 @@ GrallocTextureHostOGL::WaitAcquireFenceHandleSyncComplete()
     return;
   }
 
-  nsRefPtr<FenceHandle::FdObj> fence = mAcquireFenceHandle.GetAndResetFdObj();
+  RefPtr<FenceHandle::FdObj> fence = mAcquireFenceHandle.GetAndResetFdObj();
   int fenceFd = fence->GetAndResetFd();
 
   EGLint attribs[] = {

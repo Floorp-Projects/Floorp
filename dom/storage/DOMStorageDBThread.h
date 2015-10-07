@@ -152,8 +152,8 @@ public:
 
     friend class PendingOperations;
     OperationType mType;
-    nsRefPtr<DOMStorageCacheBridge> mCache;
-    nsRefPtr<DOMStorageUsageBridge> mUsage;
+    RefPtr<DOMStorageCacheBridge> mCache;
+    RefPtr<DOMStorageUsageBridge> mUsage;
     nsString mKey;
     nsString mValue;
     nsCString mScope;
@@ -282,7 +282,7 @@ private:
   PRThread* mThread;
 
   // Used to observe runnables dispatched to our thread and to monitor it.
-  nsRefPtr<ThreadObserver> mThreadObserver;
+  RefPtr<ThreadObserver> mThreadObserver;
 
   // Flag to stop, protected by the monitor returned by
   // mThreadObserver->GetMonitor().

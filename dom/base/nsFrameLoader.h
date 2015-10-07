@@ -126,12 +126,12 @@ public:
   // frame loader owner needs to call this, and pass in the two references to
   // nsRefPtrs for frame loaders that need to be swapped.
   nsresult SwapWithOtherLoader(nsFrameLoader* aOther,
-                               nsRefPtr<nsFrameLoader>& aFirstToSwap,
-                               nsRefPtr<nsFrameLoader>& aSecondToSwap);
+                               RefPtr<nsFrameLoader>& aFirstToSwap,
+                               RefPtr<nsFrameLoader>& aSecondToSwap);
 
   nsresult SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
-                                     nsRefPtr<nsFrameLoader>& aFirstToSwap,
-                                     nsRefPtr<nsFrameLoader>& aSecondToSwap);
+                                     RefPtr<nsFrameLoader>& aFirstToSwap,
+                                     RefPtr<nsFrameLoader>& aSecondToSwap);
 
   /**
    * Return the primary frame for our owning content, or null if it
@@ -221,7 +221,7 @@ public:
   nsresult GetWindowDimensions(nsIntRect& aRect);
 
   // public because a callback needs these.
-  nsRefPtr<nsFrameMessageManager> mMessageManager;
+  RefPtr<nsFrameMessageManager> mMessageManager;
   nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
 
 private:
@@ -330,7 +330,7 @@ private:
   // After the frameloader has been removed from the DOM but before all of the
   // messages from the frame have been received, we keep a strong reference to
   // our <browser> element.
-  nsRefPtr<mozilla::dom::Element> mOwnerContentStrong;
+  RefPtr<mozilla::dom::Element> mOwnerContentStrong;
 
   // Note: this variable must be modified only by ResetPermissionManagerStatus()
   uint32_t mAppIdSentToPermissionManager;

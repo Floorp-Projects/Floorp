@@ -72,7 +72,7 @@ PathBuilderRecording::CurrentPoint() const
 already_AddRefed<Path>
 PathBuilderRecording::Finish()
 {
-  nsRefPtr<Path> path = mPathBuilder->Finish();
+  RefPtr<Path> path = mPathBuilder->Finish();
   return MakeAndAddRef<PathRecording>(path, mPathOps, mFillRule);
 }
 
@@ -87,8 +87,8 @@ PathRecording::~PathRecording()
 already_AddRefed<PathBuilder>
 PathRecording::CopyToBuilder(FillRule aFillRule) const
 {
-  nsRefPtr<PathBuilder> pathBuilder = mPath->CopyToBuilder(aFillRule);
-  nsRefPtr<PathBuilderRecording> recording = new PathBuilderRecording(pathBuilder, aFillRule);
+  RefPtr<PathBuilder> pathBuilder = mPath->CopyToBuilder(aFillRule);
+  RefPtr<PathBuilderRecording> recording = new PathBuilderRecording(pathBuilder, aFillRule);
   recording->mPathOps = mPathOps;
   return recording.forget();
 }
@@ -96,8 +96,8 @@ PathRecording::CopyToBuilder(FillRule aFillRule) const
 already_AddRefed<PathBuilder>
 PathRecording::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
-  nsRefPtr<PathBuilder> pathBuilder = mPath->TransformedCopyToBuilder(aTransform, aFillRule);
-  nsRefPtr<PathBuilderRecording> recording = new PathBuilderRecording(pathBuilder, aFillRule);
+  RefPtr<PathBuilder> pathBuilder = mPath->TransformedCopyToBuilder(aTransform, aFillRule);
+  RefPtr<PathBuilderRecording> recording = new PathBuilderRecording(pathBuilder, aFillRule);
   typedef std::vector<PathOp> pathOpVec;
   for (pathOpVec::const_iterator iter = mPathOps.begin(); iter != mPathOps.end(); iter++) {
     PathOp newPathOp;

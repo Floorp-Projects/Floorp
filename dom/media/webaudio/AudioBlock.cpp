@@ -41,7 +41,7 @@ public:
       MOZ_CRASH();
     }
     void* m = moz_xmalloc(size.value());
-    nsRefPtr<AudioBlockBuffer> p = new (m) AudioBlockBuffer();
+    RefPtr<AudioBlockBuffer> p = new (m) AudioBlockBuffer();
     NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
                  "AudioBlockBuffers should be at least 4-byte aligned");
     return p.forget();
@@ -152,7 +152,7 @@ AudioBlock::AllocateChannels(uint32_t aChannelCount)
 
   // XXX for SIMD purposes we should do something here to make sure the
   // channel buffers are 16-byte aligned.
-  nsRefPtr<AudioBlockBuffer> buffer = AudioBlockBuffer::Create(aChannelCount);
+  RefPtr<AudioBlockBuffer> buffer = AudioBlockBuffer::Create(aChannelCount);
   mChannelData.SetLength(aChannelCount);
   for (uint32_t i = 0; i < aChannelCount; ++i) {
     mChannelData[i] = buffer->ChannelData(i);

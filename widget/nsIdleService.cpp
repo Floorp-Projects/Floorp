@@ -385,7 +385,7 @@ nsIdleService* gIdleService;
 already_AddRefed<nsIdleService>
 nsIdleService::GetInstance()
 {
-  nsRefPtr<nsIdleService> instance(gIdleService);
+  RefPtr<nsIdleService> instance(gIdleService);
   return instance.forget();
 }
 

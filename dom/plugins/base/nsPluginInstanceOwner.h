@@ -284,19 +284,19 @@ private:
 #endif
  
   nsPluginNativeWindow       *mPluginWindow;
-  nsRefPtr<nsNPAPIPluginInstance> mInstance;
+  RefPtr<nsNPAPIPluginInstance> mInstance;
   nsPluginFrame              *mPluginFrame;
   nsWeakPtr                   mContent; // WEAK, content owns us
   nsCString                   mDocumentBase;
   bool                        mWidgetCreationComplete;
   nsCOMPtr<nsIWidget>         mWidget;
-  nsRefPtr<nsPluginHost>      mPluginHost;
+  RefPtr<nsPluginHost>      mPluginHost;
   
 #ifdef XP_MACOSX
   NP_CGContext                              mCGPluginPortCopy;
   int32_t                                   mInCGPaintLevel;
-  nsRefPtr<MacIOSurface>             mIOSurface;
-  nsRefPtr<nsCARenderer>             mCARenderer;
+  RefPtr<MacIOSurface>             mIOSurface;
+  RefPtr<nsCARenderer>             mCARenderer;
   CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
@@ -331,7 +331,7 @@ private:
 #endif
   
   // pointer to wrapper for nsIDOMContextMenuListener
-  nsRefPtr<nsPluginDOMContextMenuListener> mCXMenuListener;
+  RefPtr<nsPluginDOMContextMenuListener> mCXMenuListener;
   
   nsresult DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent);
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,

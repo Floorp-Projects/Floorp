@@ -104,18 +104,18 @@ public:
                                  const nsAString& aName);
 
 private:
-  nsTArray<nsRefPtr<FileManager> >&
+  nsTArray<RefPtr<FileManager> >&
   GetArray(PersistenceType aPersistenceType);
 
-  const nsTArray<nsRefPtr<FileManager> >&
+  const nsTArray<RefPtr<FileManager> >&
   GetImmutableArray(PersistenceType aPersistenceType) const
   {
     return const_cast<FileManagerInfo*>(this)->GetArray(aPersistenceType);
   }
 
-  nsTArray<nsRefPtr<FileManager> > mPersistentStorageFileManagers;
-  nsTArray<nsRefPtr<FileManager> > mTemporaryStorageFileManagers;
-  nsTArray<nsRefPtr<FileManager> > mDefaultStorageFileManagers;
+  nsTArray<RefPtr<FileManager> > mPersistentStorageFileManagers;
+  nsTArray<RefPtr<FileManager> > mTemporaryStorageFileManagers;
+  nsTArray<RefPtr<FileManager> > mDefaultStorageFileManagers;
 };
 
 namespace {
@@ -178,10 +178,10 @@ class DeleteFilesRunnable final
     State_Completed
   };
 
-  nsRefPtr<FileManager> mFileManager;
+  RefPtr<FileManager> mFileManager;
   nsTArray<int64_t> mFileIds;
 
-  nsRefPtr<DirectoryLock> mDirectoryLock;
+  RefPtr<DirectoryLock> mDirectoryLock;
 
   nsCOMPtr<nsIFile> mDirectory;
   nsCOMPtr<nsIFile> mJournalDirectory;
@@ -335,7 +335,7 @@ IndexedDatabaseManager::GetOrCreate()
       }
     }
 
-    nsRefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
+    RefPtr<IndexedDatabaseManager> instance(new IndexedDatabaseManager());
 
     nsresult rv = instance->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
@@ -500,14 +500,14 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
   MOZ_ASSERT(eventTarget);
 
   // Only mess with events that were originally targeted to an IDBRequest.
-  nsRefPtr<IDBRequest> request;
+  RefPtr<IDBRequest> request;
   if (NS_FAILED(eventTarget->QueryInterface(kIDBRequestIID,
                                             getter_AddRefs(request))) ||
       !request) {
     return NS_OK;
   }
 
-  nsRefPtr<DOMError> error = request->GetErrorAfterResult();
+  RefPtr<DOMError> error = request->GetErrorAfterResult();
 
   nsString errorName;
   if (error) {
@@ -542,10 +542,10 @@ IndexedDatabaseManager::CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    nsRefPtr<WorkerGlobalScope> globalScope = workerPrivate->GlobalScope();
+    RefPtr<WorkerGlobalScope> globalScope = workerPrivate->GlobalScope();
     MOZ_ASSERT(globalScope);
 
-    nsRefPtr<ErrorEvent> errorEvent =
+    RefPtr<ErrorEvent> errorEvent =
       ErrorEvent::Constructor(globalScope,
                               nsDependentString(kErrorEventType),
                               init);
@@ -644,7 +644,7 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
     return false;
   }
 
-  nsRefPtr<IDBFactory> factory;
+  RefPtr<IDBFactory> factory;
   if (NS_FAILED(IDBFactory::CreateForMainThreadJS(aCx,
                                                   aGlobal,
                                                   getter_AddRefs(factory)))) {
@@ -775,7 +775,7 @@ IndexedDatabaseManager::GetFileManager(PersistenceType aPersistenceType,
     return nullptr;
   }
 
-  nsRefPtr<FileManager> fileManager =
+  RefPtr<FileManager> fileManager =
     info->GetFileManager(aPersistenceType, aDatabaseName);
 
   return fileManager.forget();
@@ -899,7 +899,7 @@ IndexedDatabaseManager::BlockAndGetFileReferences(
   }
 
   if (IsMainProcess()) {
-    nsRefPtr<GetFileReferencesHelper> helper =
+    RefPtr<GetFileReferencesHelper> helper =
       new GetFileReferencesHelper(aPersistenceType, aOrigin, aDatabaseName,
                                   aFileId);
 
@@ -1057,7 +1057,7 @@ IndexedDatabaseManager::Notify(nsITimer* aTimer)
     auto value = iter.Data();
     MOZ_ASSERT(!value->IsEmpty());
 
-    nsRefPtr<DeleteFilesRunnable> runnable =
+    RefPtr<DeleteFilesRunnable> runnable =
       new DeleteFilesRunnable(key, *value);
 
     MOZ_ASSERT(value->IsEmpty());
@@ -1076,14 +1076,14 @@ FileManagerInfo::GetFileManager(PersistenceType aPersistenceType,
 {
   AssertIsOnIOThread();
 
-  const nsTArray<nsRefPtr<FileManager> >& managers =
+  const nsTArray<RefPtr<FileManager> >& managers =
     GetImmutableArray(aPersistenceType);
 
   for (uint32_t i = 0; i < managers.Length(); i++) {
-    const nsRefPtr<FileManager>& fileManager = managers[i];
+    const RefPtr<FileManager>& fileManager = managers[i];
 
     if (fileManager->DatabaseName() == aName) {
-      nsRefPtr<FileManager> result = fileManager;
+      RefPtr<FileManager> result = fileManager;
       return result.forget();
     }
   }
@@ -1096,7 +1096,7 @@ FileManagerInfo::AddFileManager(FileManager* aFileManager)
 {
   AssertIsOnIOThread();
 
-  nsTArray<nsRefPtr<FileManager> >& managers = GetArray(aFileManager->Type());
+  nsTArray<RefPtr<FileManager> >& managers = GetArray(aFileManager->Type());
 
   NS_ASSERTION(!managers.Contains(aFileManager), "Adding more than once?!");
 
@@ -1129,7 +1129,7 @@ FileManagerInfo::InvalidateAndRemoveFileManagers(
 {
   AssertIsOnIOThread();
 
-  nsTArray<nsRefPtr<FileManager > >& managers = GetArray(aPersistenceType);
+  nsTArray<RefPtr<FileManager > >& managers = GetArray(aPersistenceType);
 
   for (uint32_t i = 0; i < managers.Length(); i++) {
     managers[i]->Invalidate();
@@ -1145,10 +1145,10 @@ FileManagerInfo::InvalidateAndRemoveFileManager(
 {
   AssertIsOnIOThread();
 
-  nsTArray<nsRefPtr<FileManager > >& managers = GetArray(aPersistenceType);
+  nsTArray<RefPtr<FileManager > >& managers = GetArray(aPersistenceType);
 
   for (uint32_t i = 0; i < managers.Length(); i++) {
-    nsRefPtr<FileManager>& fileManager = managers[i];
+    RefPtr<FileManager>& fileManager = managers[i];
     if (fileManager->DatabaseName() == aName) {
       fileManager->Invalidate();
       managers.RemoveElementAt(i);
@@ -1157,7 +1157,7 @@ FileManagerInfo::InvalidateAndRemoveFileManager(
   }
 }
 
-nsTArray<nsRefPtr<FileManager> >&
+nsTArray<RefPtr<FileManager> >&
 FileManagerInfo::GetArray(PersistenceType aPersistenceType)
 {
   switch (aPersistenceType) {
@@ -1399,11 +1399,11 @@ GetFileReferencesHelper::Run()
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never fail!");
 
-  nsRefPtr<FileManager> fileManager =
+  RefPtr<FileManager> fileManager =
     mgr->GetFileManager(mPersistenceType, mOrigin, mDatabaseName);
 
   if (fileManager) {
-    nsRefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(mFileId);
+    RefPtr<FileInfo> fileInfo = fileManager->GetFileInfo(mFileId);
 
     if (fileInfo) {
       fileInfo->GetReferences(&mMemRefCnt, &mDBRefCnt, &mSliceRefCnt);

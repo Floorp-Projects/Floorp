@@ -192,7 +192,7 @@ nsJARProtocolHandler::NewURI(const nsACString &aSpec,
 {
     nsresult rv = NS_OK;
 
-    nsRefPtr<nsJARURI> jarURI = new nsJARURI();
+    RefPtr<nsJARURI> jarURI = new nsJARURI();
     if (!jarURI)
         return NS_ERROR_OUT_OF_MEMORY;
 

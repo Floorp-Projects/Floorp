@@ -128,7 +128,7 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     }
 
     if (needNewRequest) {
-      nsRefPtr<imgRequestProxy> newRequestClone;
+      RefPtr<imgRequestProxy> newRequestClone;
       newRequest->Clone(mListener, getter_AddRefs(newRequestClone));
 
       // Deregister the old request. We wait until after Clone is done in case
@@ -304,7 +304,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     }
   }
 
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   ColorPattern color(ToDeviceColor(
                        nsLayoutUtils::GetColor(this, eCSSProperty_color)));
 
@@ -323,9 +323,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                   mRect.width - (padding.left + padding.right),
                   mRect.height - (padding.top + padding.bottom));
       Rect devPxRect = NSRectToRect(rect, appUnitsPerDevPixel);
-      nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
-      nsRefPtr<Path> ellipse = builder->Finish();
+      RefPtr<Path> ellipse = builder->Finish();
       if (listStyleType->GetStyle() == NS_STYLE_LIST_STYLE_DISC) {
         drawTarget->Fill(ellipse, color);
       } else {
@@ -379,7 +379,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
       rect.x = pc->RoundAppUnitsToNearestDevPixels(rect.x);
       rect.y = pc->RoundAppUnitsToNearestDevPixels(rect.y);
 
-      nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       if (isDown) {
         // to bottom
         builder->MoveTo(NSPointToPoint(rect.TopLeft(), appUnitsPerDevPixel));
@@ -402,7 +402,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                                          appUnitsPerDevPixel));
         }
       }
-      nsRefPtr<Path> path = builder->Finish();
+      RefPtr<Path> path = builder->Finish();
       drawTarget->Fill(path, color);
     }
     break;
@@ -535,7 +535,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 
   const nsStyleList* myList = StyleList();
   nscoord ascent;
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         aFontSizeInflation);
 
@@ -893,7 +893,7 @@ nsBulletFrame::GetLogicalBaseline(WritingMode aWritingMode) const
   if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
     ascent = BSize(aWritingMode);
   } else {
-    nsRefPtr<nsFontMetrics> fm;
+    RefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
     CounterStyle* listStyleType = StyleList()->GetCounterStyle();

@@ -1066,7 +1066,7 @@ nsXULAppInfo::EnsureContentProcess()
   if (!XRE_IsParentProcess())
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsRefPtr<ContentParent> unused = ContentParent::GetNewOrUsedBrowserProcess();
+  RefPtr<ContentParent> unused = ContentParent::GetNewOrUsedBrowserProcess();
   return NS_OK;
 }
 
@@ -3514,7 +3514,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
  */
 static void AnnotateSystemManufacturer()
 {
-  nsRefPtr<IWbemLocator> locator;
+  RefPtr<IWbemLocator> locator;
 
   HRESULT hr = CoCreateInstance(CLSID_WbemLocator, nullptr, CLSCTX_INPROC_SERVER,
                                 IID_IWbemLocator, getter_AddRefs(locator));
@@ -3523,7 +3523,7 @@ static void AnnotateSystemManufacturer()
     return;
   }
 
-  nsRefPtr<IWbemServices> services;
+  RefPtr<IWbemServices> services;
 
   hr = locator->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), nullptr, nullptr, nullptr,
                               0, nullptr, nullptr, getter_AddRefs(services));
@@ -3540,7 +3540,7 @@ static void AnnotateSystemManufacturer()
     return;
   }
 
-  nsRefPtr<IEnumWbemClassObject> enumerator;
+  RefPtr<IEnumWbemClassObject> enumerator;
 
   hr = services->ExecQuery(_bstr_t(L"WQL"), _bstr_t(L"SELECT * FROM Win32_BIOS"),
                            WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
@@ -3550,7 +3550,7 @@ static void AnnotateSystemManufacturer()
     return;
   }
 
-  nsRefPtr<IWbemClassObject> classObject;
+  RefPtr<IWbemClassObject> classObject;
   ULONG results;
 
   hr = enumerator->Next(WBEM_INFINITE, 1, getter_AddRefs(classObject), &results);

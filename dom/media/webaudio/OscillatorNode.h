@@ -92,9 +92,9 @@ private:
 
 private:
   OscillatorType mType;
-  nsRefPtr<PeriodicWave> mPeriodicWave;
-  nsRefPtr<AudioParam> mFrequency;
-  nsRefPtr<AudioParam> mDetune;
+  RefPtr<PeriodicWave> mPeriodicWave;
+  RefPtr<AudioParam> mFrequency;
+  RefPtr<AudioParam> mDetune;
   bool mStartCalled;
 };
 

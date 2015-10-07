@@ -69,10 +69,10 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
                             ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<ClipboardEvent> e = new ClipboardEvent(t, nullptr, nullptr);
+  RefPtr<ClipboardEvent> e = new ClipboardEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
-  nsRefPtr<DataTransfer> clipboardData;
+  RefPtr<DataTransfer> clipboardData;
   if (e->mEventIsInternal) {
     InternalClipboardEvent* event = e->mEvent->AsClipboardEvent();
     if (event) {
@@ -128,7 +128,7 @@ NS_NewDOMClipboardEvent(EventTarget* aOwner,
                         nsPresContext* aPresContext,
                         InternalClipboardEvent* aEvent)
 {
-  nsRefPtr<ClipboardEvent> it =
+  RefPtr<ClipboardEvent> it =
     new ClipboardEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

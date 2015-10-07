@@ -47,7 +47,7 @@ public:
     }
   }
 protected:
-  nsRefPtr<nsWyciwygChannel> mChannel;
+  RefPtr<nsWyciwygChannel> mChannel;
 };
 
 class nsWyciwygSetCharsetandSourceEvent : public nsWyciwygAsyncEvent {
@@ -795,7 +795,7 @@ nsWyciwygChannel::OpenCacheEntry(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool anonymous = mLoadFlags & LOAD_ANONYMOUS;
-  nsRefPtr<LoadContextInfo> loadInfo = mozilla::net::GetLoadContextInfo(
+  RefPtr<LoadContextInfo> loadInfo = mozilla::net::GetLoadContextInfo(
     mPrivateBrowsing, mAppId, mInBrowser, anonymous);
 
   nsCOMPtr<nsICacheStorage> cacheStorage;

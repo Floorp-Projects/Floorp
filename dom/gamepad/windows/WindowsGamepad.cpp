@@ -398,7 +398,7 @@ private:
   // List of connected devices.
   nsTArray<Gamepad> mGamepads;
 
-  nsRefPtr<Observer> mObserver;
+  RefPtr<Observer> mObserver;
   nsCOMPtr<nsITimer> mXInputPollTimer;
 
   HIDLoader mHID;

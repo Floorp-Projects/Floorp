@@ -40,7 +40,7 @@ private:
   virtual
   ~FileSystemRequestParent();
 
-  nsRefPtr<FileSystemBase> mFileSystem;
+  RefPtr<FileSystemBase> mFileSystem;
 };
 
 } // namespace dom

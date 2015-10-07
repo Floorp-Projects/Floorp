@@ -50,7 +50,7 @@ private:
   virtual ~PresentationChild();
 
   bool mActorDestroyed;
-  nsRefPtr<PresentationIPCService> mService;
+  RefPtr<PresentationIPCService> mService;
 };
 
 class PresentationRequestChild final : public PPresentationRequestChild

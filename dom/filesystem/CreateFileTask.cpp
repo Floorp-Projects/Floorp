@@ -80,7 +80,7 @@ CreateFileTask::CreateFileTask(FileSystemBase* aFileSystem,
   }
 
   BlobParent* bp = static_cast<BlobParent*>(static_cast<PBlobParent*>(data));
-  nsRefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
+  RefPtr<BlobImpl> blobImpl = bp->GetBlobImpl();
   MOZ_ASSERT(blobImpl, "blobData should not be null.");
 
   ErrorResult rv;
@@ -104,7 +104,7 @@ already_AddRefed<Promise>
 CreateFileTask::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return nsRefPtr<Promise>(mPromise).forget();
+  return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
@@ -297,7 +297,7 @@ CreateFileTask::HandlerCallback()
   }
 
   if (HasError()) {
-    nsRefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
+    RefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
       mErrorValue);
     mPromise->MaybeRejectBrokenly(domError);
     mPromise = nullptr;
@@ -305,7 +305,7 @@ CreateFileTask::HandlerCallback()
     return;
   }
 
-  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
+  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
   mPromise->MaybeResolve(blob);
   mPromise = nullptr;
   mBlobData = nullptr;

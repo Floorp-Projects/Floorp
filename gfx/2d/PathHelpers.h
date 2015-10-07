@@ -184,7 +184,7 @@ inline already_AddRefed<Path> MakePathForRect(const DrawTarget& aDrawTarget,
                                           const Rect& aRect,
                                           bool aDrawClockwise = true)
 {
-  nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   AppendRectToPath(builder, aRect, aDrawClockwise);
   return builder->Finish();
 }
@@ -277,7 +277,7 @@ inline already_AddRefed<Path> MakePathForRoundedRect(const DrawTarget& aDrawTarg
                                                  const RectCornerRadii& aRadii,
                                                  bool aDrawClockwise = true)
 {
-  nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   AppendRoundedRectToPath(builder, aRect, aRadii, aDrawClockwise);
   return builder->Finish();
 }
@@ -297,7 +297,7 @@ inline already_AddRefed<Path> MakePathForEllipse(const DrawTarget& aDrawTarget,
                                              const Point& aCenter,
                                              const Size& aDimensions)
 {
-  nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   AppendEllipseToPath(builder, aCenter, aDimensions);
   return builder->Finish();
 }

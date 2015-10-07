@@ -189,7 +189,7 @@ nsUsageArrayHelper::GetUsagesArray(const char *suffix,
   if (outArraySize < max_returned_out_array_size)
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   uint32_t &count = *_count;

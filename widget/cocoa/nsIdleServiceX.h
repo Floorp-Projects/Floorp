@@ -16,7 +16,7 @@ public:
 
   static already_AddRefed<nsIdleServiceX> GetInstance() 
   {
-    nsRefPtr<nsIdleService> idleService = nsIdleService::GetInstance();
+    RefPtr<nsIdleService> idleService = nsIdleService::GetInstance();
     if (!idleService) {
       idleService = new nsIdleServiceX();
     }

@@ -56,7 +56,7 @@ private:
   ~IccManager();
 
 private:
-  nsTArray<nsRefPtr<IccListener>> mIccListeners;
+  nsTArray<RefPtr<IccListener>> mIccListeners;
 };
 
 } // namespace dom

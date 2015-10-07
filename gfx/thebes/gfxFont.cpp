@@ -231,7 +231,7 @@ gfxFontCache::Lookup(const gfxFontEntry* aFontEntry,
     if (!entry)
         return nullptr;
 
-    nsRefPtr<gfxFont> font = entry->mFont;
+    RefPtr<gfxFont> font = entry->mFont;
     return font.forget();
 }
 
@@ -1523,7 +1523,7 @@ private:
             if (state.pattern || mFontParams.contextPaint) {
                 Pattern *pat;
 
-                nsRefPtr<gfxPattern> fillPattern;
+                RefPtr<gfxPattern> fillPattern;
                 if (!mFontParams.contextPaint ||
                     !(fillPattern = mFontParams.contextPaint->GetFillPattern(
                                         mRunParams.context->GetDrawTarget(),
@@ -1604,10 +1604,10 @@ private:
 
     void FlushStroke(gfx::GlyphBuffer& aBuf, gfxContext::AzureState& aState)
     {
-        nsRefPtr<Path> path =
+        RefPtr<Path> path =
             mFontParams.scaledFont->GetPathForGlyphs(aBuf, mRunParams.dt);
         if (mFontParams.contextPaint) {
-            nsRefPtr<gfxPattern> strokePattern =
+            RefPtr<gfxPattern> strokePattern =
                 mFontParams.contextPaint->GetStrokePattern(
                     mRunParams.context->GetDrawTarget(),
                     mRunParams.context->CurrentMatrix());
@@ -1909,7 +1909,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         // If no pattern is specified for fill, use the current pattern
         NS_ASSERTION((int(aRunParams.drawMode) & int(DrawMode::GLYPH_STROKE)) == 0,
                      "no pattern supplied for stroking text");
-        nsRefPtr<gfxPattern> fillPattern = aRunParams.context->GetPattern();
+        RefPtr<gfxPattern> fillPattern = aRunParams.context->GetPattern();
         contextPaint =
             new SimpleTextContextPaint(fillPattern, nullptr,
                                        aRunParams.context->CurrentMatrix());
@@ -2060,7 +2060,7 @@ gfxFont::RenderColorGlyph(gfxContext* aContext,
         return false;
     }
 
-    nsRefPtr<DrawTarget> dt = aContext->GetDrawTarget();
+    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
          layerIndex++) {
         Glyph glyph;
@@ -2916,7 +2916,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
 {
     bool ok = true;
 
-    nsRefPtr<gfxFont> smallCapsFont = GetSmallCapsFont();
+    RefPtr<gfxFont> smallCapsFont = GetSmallCapsFont();
 
     enum RunCaseAction {
         kNoChange,

@@ -24,7 +24,7 @@ bool MediaEngineCameraVideoSource::AppendToTrack(SourceMediaStream* aSource,
   MOZ_ASSERT(aSource);
 
   VideoSegment segment;
-  nsRefPtr<layers::Image> image = aImage;
+  RefPtr<layers::Image> image = aImage;
   IntSize size(image ? mWidth : 0, image ? mHeight : 0);
   segment.AppendFrame(image.forget(), delta, size);
 

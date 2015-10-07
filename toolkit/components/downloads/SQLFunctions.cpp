@@ -36,7 +36,7 @@ namespace downloads {
 nsresult
 GenerateGUIDFunction::create(mozIStorageConnection *aDBConn)
 {
-  nsRefPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
+  RefPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
   nsresult rv = aDBConn->CreateFunction(
     NS_LITERAL_CSTRING("generate_guid"), 0, function
   );

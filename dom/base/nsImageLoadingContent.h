@@ -286,7 +286,7 @@ protected:
    *
    * @param aImageLoadType The ImageLoadType for this request
    */
-   nsRefPtr<imgRequestProxy>& PrepareNextRequest(ImageLoadType aImageLoadType);
+   RefPtr<imgRequestProxy>& PrepareNextRequest(ImageLoadType aImageLoadType);
 
   /**
    * Called when we would normally call PrepareNextRequest(), but the request was
@@ -303,8 +303,8 @@ protected:
    *
    * @param aImageLoadType The ImageLoadType for this request
    */
-  nsRefPtr<imgRequestProxy>& PrepareCurrentRequest(ImageLoadType aImageLoadType);
-  nsRefPtr<imgRequestProxy>& PreparePendingRequest(ImageLoadType aImageLoadType);
+  RefPtr<imgRequestProxy>& PrepareCurrentRequest(ImageLoadType aImageLoadType);
+  RefPtr<imgRequestProxy>& PreparePendingRequest(ImageLoadType aImageLoadType);
 
   /**
    * Switch our pending request to be our current request.
@@ -358,8 +358,8 @@ protected:
                     uint32_t aNonvisibleAction = ON_NONVISIBLE_NO_ACTION);
 
   /* MEMBERS */
-  nsRefPtr<imgRequestProxy> mCurrentRequest;
-  nsRefPtr<imgRequestProxy> mPendingRequest;
+  RefPtr<imgRequestProxy> mCurrentRequest;
+  RefPtr<imgRequestProxy> mPendingRequest;
   uint32_t mCurrentRequestFlags;
   uint32_t mPendingRequestFlags;
 

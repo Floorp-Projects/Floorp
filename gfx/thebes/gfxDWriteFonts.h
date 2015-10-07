@@ -90,7 +90,7 @@ protected:
     DWRITE_MEASURING_MODE GetMeasuringMode();
     bool GetForceGDIClassic();
 
-    nsRefPtr<IDWriteFontFace> mFontFace;
+    RefPtr<IDWriteFontFace> mFontFace;
     cairo_font_face_t *mCairoFontFace;
 
     Metrics *mMetrics;

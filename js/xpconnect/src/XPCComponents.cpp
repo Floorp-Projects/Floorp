@@ -1764,8 +1764,8 @@ private:
                              JSContext* cx, HandleObject obj,
                              const CallArgs& args, bool* _retval);
 private:
-    nsRefPtr<nsIJSCID> mClassID;
-    nsRefPtr<nsIJSIID> mInterfaceID;
+    RefPtr<nsIJSCID> mClassID;
+    RefPtr<nsIJSIID> mInterfaceID;
     char*              mInitializer;
 };
 
@@ -1866,7 +1866,7 @@ nsXPCConstructor::~nsXPCConstructor()
 NS_IMETHODIMP
 nsXPCConstructor::GetClassID(nsIJSCID * *aClassID)
 {
-    nsRefPtr<nsIJSCID> rval = mClassID;
+    RefPtr<nsIJSCID> rval = mClassID;
     rval.forget(aClassID);
     return NS_OK;
 }
@@ -1874,7 +1874,7 @@ nsXPCConstructor::GetClassID(nsIJSCID * *aClassID)
 NS_IMETHODIMP
 nsXPCConstructor::GetInterfaceID(nsIJSIID * *aInterfaceID)
 {
-    nsRefPtr<nsIJSIID> rval = mInterfaceID;
+    RefPtr<nsIJSIID> rval = mInterfaceID;
     rval.forget(aInterfaceID);
     return NS_OK;
 }
@@ -2568,7 +2568,7 @@ NS_IMETHODIMP
 nsXPCComponents_Utils::GetWeakReference(HandleValue object, JSContext* cx,
                                         xpcIJSWeakReference** _retval)
 {
-    nsRefPtr<xpcJSWeakReference> ref = new xpcJSWeakReference();
+    RefPtr<xpcJSWeakReference> ref = new xpcJSWeakReference();
     nsresult rv = ref->Init(cx, object);
     NS_ENSURE_SUCCESS(rv, rv);
     ref.forget(_retval);
@@ -2657,21 +2657,21 @@ class PreciseGCRunnable : public nsRunnable
     }
 
   private:
-    nsRefPtr<ScheduledGCCallback> mCallback;
+    RefPtr<ScheduledGCCallback> mCallback;
     bool mShrinking;
 };
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::SchedulePreciseGC(ScheduledGCCallback* aCallback)
 {
-    nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback, false);
+    RefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback, false);
     return NS_DispatchToMainThread(event);
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::SchedulePreciseShrinkingGC(ScheduledGCCallback* aCallback)
 {
-    nsRefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback, true);
+    RefPtr<PreciseGCRunnable> event = new PreciseGCRunnable(aCallback, true);
     return NS_DispatchToMainThread(event);
 }
 
@@ -3204,7 +3204,7 @@ class WrappedJSHolder : public nsISupports
     NS_DECL_ISUPPORTS
     WrappedJSHolder() {}
 
-    nsRefPtr<nsXPCWrappedJS> mWrappedJS;
+    RefPtr<nsXPCWrappedJS> mWrappedJS;
 
 private:
     virtual ~WrappedJSHolder() {}
@@ -3224,7 +3224,7 @@ nsXPCComponents_Utils::GenerateXPCWrappedJS(HandleValue aObj, HandleValue aScope
     if (!JS_WrapObject(aCx, &obj))
         return NS_ERROR_FAILURE;
 
-    nsRefPtr<WrappedJSHolder> holder = new WrappedJSHolder();
+    RefPtr<WrappedJSHolder> holder = new WrappedJSHolder();
     nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsISupports),
                                                getter_AddRefs(holder->mWrappedJS));
     holder.forget(aOut);
@@ -3448,7 +3448,7 @@ NS_IMETHODIMP _class::Get##_n(nsIXPCComponents_##_n * *a##_n) {               \
     NS_ENSURE_ARG_POINTER(a##_n);                                             \
     if (!m##_n)                                                               \
         m##_n = new nsXPCComponents_##_n();                                   \
-    nsRefPtr<nsXPCComponents_##_n> ret = m##_n;                               \
+    RefPtr<nsXPCComponents_##_n> ret = m##_n;                               \
     ret.forget(a##_n);                                                        \
     return NS_OK;                                                             \
 }

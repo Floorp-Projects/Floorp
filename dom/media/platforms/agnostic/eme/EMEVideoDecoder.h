@@ -52,7 +52,7 @@ private:
   nsCString GetNodeId() override;
   GMPUniquePtr<GMPVideoEncodedFrame> CreateFrame(MediaRawData* aSample) override;
 
-  nsRefPtr<CDMProxy> mProxy;
+  RefPtr<CDMProxy> mProxy;
 };
 
 } // namespace mozilla

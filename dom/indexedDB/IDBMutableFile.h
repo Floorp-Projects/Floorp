@@ -40,7 +40,7 @@ class IDBMutableFile final
   : public DOMEventTargetHelper
   , public MutableFileBase
 {
-  nsRefPtr<IDBDatabase> mDatabase;
+  RefPtr<IDBDatabase> mDatabase;
 
   nsTHashtable<nsPtrHashKey<IDBFileHandle>> mFileHandles;
 

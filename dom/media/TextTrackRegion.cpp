@@ -33,7 +33,7 @@ TextTrackRegion::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<TextTrackRegion> region = new TextTrackRegion(aGlobal.GetAsSupports());
+  RefPtr<TextTrackRegion> region = new TextTrackRegion(aGlobal.GetAsSupports());
   return region.forget();
 }
 

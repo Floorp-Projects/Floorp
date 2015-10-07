@@ -476,7 +476,7 @@ NS_IMPL_ISUPPORTS(ShimInterfaceInfo, nsISupports, nsIInterfaceInfo)
 already_AddRefed<ShimInterfaceInfo>
 ShimInterfaceInfo::MaybeConstruct(const char* aName, JSContext* cx)
 {
-    nsRefPtr<ShimInterfaceInfo> info;
+    RefPtr<ShimInterfaceInfo> info;
     for (uint32_t i = 0; i < ArrayLength(kComponentsInterfaceShimMap); ++i) {
         if (!strcmp(aName, kComponentsInterfaceShimMap[i].geckoName)) {
             const ComponentsInterfaceShimEntry& shimEntry =

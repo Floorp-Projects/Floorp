@@ -10,7 +10,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils
-#include "mozilla/nsRefPtr.h"             // for already_AddRefed
+#include "mozilla/RefPtr.h"             // for already_AddRefed
 #include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
@@ -56,7 +56,7 @@ ImageFactory::CreateImage(ImageFormat aFormat,
                           const gfx::IntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
-  nsRefPtr<Image> img;
+  RefPtr<Image> img;
 #ifdef MOZ_WIDGET_GONK
   if (aFormat == ImageFormat::GRALLOC_PLANAR_YCBCR) {
     img = new GrallocImage();
@@ -226,7 +226,7 @@ ImageContainer::CreateImage(ImageFormat aFormat)
   }
 #endif
   if (mImageClient) {
-    nsRefPtr<Image> img = mImageClient->CreateImage(aFormat);
+    RefPtr<Image> img = mImageClient->CreateImage(aFormat);
     if (img) {
       return img.forget();
     }
@@ -552,7 +552,7 @@ already_AddRefed<gfx::SourceSurface>
 PlanarYCbCrImage::GetAsSourceSurface()
 {
   if (mSourceSurface) {
-    nsRefPtr<gfx::SourceSurface> surface(mSourceSurface);
+    RefPtr<gfx::SourceSurface> surface(mSourceSurface);
     return surface.forget();
   }
 
@@ -565,7 +565,7 @@ PlanarYCbCrImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  nsRefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateDataSourceSurface(size, format);
+  RefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateDataSourceSurface(size, format);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
@@ -598,12 +598,12 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
   }
 
   CompositableForwarder* forwarder = aClient->GetForwarder();
-  nsRefPtr<TextureClient> textureClient = mTextureClients.Get(forwarder->GetSerial());
+  RefPtr<TextureClient> textureClient = mTextureClients.Get(forwarder->GetSerial());
   if (textureClient) {
     return textureClient;
   }
 
-  nsRefPtr<SourceSurface> surface = GetAsSourceSurface();
+  RefPtr<SourceSurface> surface = GetAsSourceSurface();
   MOZ_ASSERT(surface);
   if (!surface) {
     return nullptr;
@@ -617,7 +617,7 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
 // XXX only gonk ensure when TextureClient is recycled,
 // TextureHost is not used by CompositableHost.
 #ifdef MOZ_WIDGET_GONK
-  nsRefPtr<TextureClientRecycleAllocator> recycler =
+  RefPtr<TextureClientRecycleAllocator> recycler =
     aClient->GetTextureClientRecycler();
   if (recycler) {
     textureClient =

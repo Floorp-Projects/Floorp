@@ -204,7 +204,7 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
-  nsRefPtr<JSObjectHolder> mSandbox;
+  RefPtr<JSObjectHolder> mSandbox;
 #ifdef MOZ_ENABLE_PROFILER_SPS
   nsCOMPtr<nsIProfiler> mProfiler;
 #endif

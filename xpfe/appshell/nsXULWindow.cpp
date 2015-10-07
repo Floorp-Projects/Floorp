@@ -231,7 +231,7 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
     nsCOMPtr<nsIDocument> doc = cv->GetDocument();
     if (doc) {
       ErrorResult rv;
-      nsRefPtr<dom::Event> event =
+      RefPtr<dom::Event> event =
         doc->CreateEvent(NS_LITERAL_STRING("Events"),rv);
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("windowZLevel"), true, false);
@@ -1976,8 +1976,8 @@ void nsXULWindow::SetContentScrollbarVisibility(bool aVisible)
   if (contentWin) {
     mozilla::ErrorResult rv;
 
-    nsRefPtr<nsGlobalWindow> window = static_cast<nsGlobalWindow*>(contentWin.get());
-    nsRefPtr<mozilla::dom::BarProp> scrollbars = window->GetScrollbars(rv);
+    RefPtr<nsGlobalWindow> window = static_cast<nsGlobalWindow*>(contentWin.get());
+    RefPtr<mozilla::dom::BarProp> scrollbars = window->GetScrollbars(rv);
     if (scrollbars) {
       scrollbars->SetVisible(aVisible, rv);
     }

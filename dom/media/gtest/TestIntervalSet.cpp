@@ -535,7 +535,7 @@ TEST(IntervalSet, TimeRangesSeconds)
   i1.Add(media::TimeInterval(media::TimeUnit::FromSeconds(45), media::TimeUnit::FromSeconds(50)));
 
   media::TimeIntervals i(i0 + i1);
-  nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
+  RefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   i.ToTimeRanges(tr);
   EXPECT_EQ(tr->Length(), i.Length());
   for (dom::TimeRanges::index_type index = 0; index < tr->Length(); index++) {
@@ -549,7 +549,7 @@ TEST(IntervalSet, TimeRangesSeconds)
 
 static void CheckTimeRanges(dom::TimeRanges* aTr, const media::TimeIntervals& aTi)
 {
-  nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges;
+  RefPtr<dom::TimeRanges> tr = new dom::TimeRanges;
   tr->Union(aTr, 0); // This will normalize the time range.
   EXPECT_EQ(tr->Length(), aTi.Length());
   for (dom::TimeRanges::index_type i = 0; i < tr->Length(); i++) {
@@ -563,7 +563,7 @@ static void CheckTimeRanges(dom::TimeRanges* aTr, const media::TimeIntervals& aT
 
 TEST(IntervalSet, TimeRangesConversion)
 {
-  nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
+  RefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   tr->Add(20, 25);
   tr->Add(40, 60);
   tr->Add(5, 10);
@@ -610,7 +610,7 @@ TEST(IntervalSet, TimeRangesMicroseconds)
   i1.Add(media::TimeInterval(media::Microseconds(45), media::Microseconds(50)));
 
   media::TimeIntervals i(i0 + i1);
-  nsRefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
+  RefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   i.ToTimeRanges(tr);
   EXPECT_EQ(tr->Length(), i.Length());
   for (dom::TimeRanges::index_type index = 0; index < tr->Length(); index++) {
@@ -636,7 +636,7 @@ TEST(IntervalSet, TimeRangesMicroseconds)
   tr->Add(0, 30);
   tr->Add(50, std::numeric_limits<double>::infinity());
   media::TimeIntervals i_oo{media::TimeIntervals::FromTimeRanges(tr)};
-  nsRefPtr<dom::TimeRanges> tr2 = new dom::TimeRanges();
+  RefPtr<dom::TimeRanges> tr2 = new dom::TimeRanges();
   i_oo.ToTimeRanges(tr2);
   EXPECT_EQ(tr->Length(), tr2->Length());
   for (dom::TimeRanges::index_type index = 0; index < tr->Length(); index++) {

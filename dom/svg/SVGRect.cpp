@@ -43,7 +43,7 @@ already_AddRefed<mozilla::dom::SVGRect>
 NS_NewSVGRect(nsIContent* aParent, float aX, float aY, float aWidth,
               float aHeight)
 {
-  nsRefPtr<mozilla::dom::SVGRect> rect =
+  RefPtr<mozilla::dom::SVGRect> rect =
     new mozilla::dom::SVGRect(aParent, aX, aY, aWidth, aHeight);
 
   return rect.forget();

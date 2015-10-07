@@ -29,8 +29,8 @@ public:
 private:
   ~MobileMessageCallback();
 
-  nsRefPtr<DOMRequest> mDOMRequest;
-  nsRefPtr<Promise> mPromise;
+  RefPtr<DOMRequest> mDOMRequest;
+  RefPtr<Promise> mPromise;
 
   nsresult NotifySuccess(JS::Handle<JS::Value> aResult, bool aAsync = false);
   nsresult NotifySuccess(nsISupports *aMessage, bool aAsync = false);

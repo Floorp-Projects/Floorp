@@ -26,7 +26,7 @@ class StreamWrapper final
 
   nsCOMPtr<nsIEventTarget> mOwningThread;
   nsCOMPtr<nsIInputStream> mInputStream;
-  nsRefPtr<IDBFileHandle> mFileHandle;
+  RefPtr<IDBFileHandle> mFileHandle;
   bool mFinished;
 
 public:
@@ -103,7 +103,7 @@ class StreamWrapper::CloseRunnable final
 {
   friend class StreamWrapper;
 
-  nsRefPtr<StreamWrapper> mStreamWrapper;
+  RefPtr<StreamWrapper> mStreamWrapper;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -155,7 +155,7 @@ BlobImplSnapshot::CreateSlice(uint64_t aStart,
                               const nsAString& aContentType,
                               ErrorResult& aRv)
 {
-  nsRefPtr<BlobImpl> blobImpl =
+  RefPtr<BlobImpl> blobImpl =
     mBlobImpl->CreateSlice(aStart, aLength, aContentType, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
@@ -170,7 +170,7 @@ void
 BlobImplSnapshot::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> et = do_QueryReferent(mFileHandle);
-  nsRefPtr<IDBFileHandle> fileHandle = static_cast<IDBFileHandle*>(et.get());
+  RefPtr<IDBFileHandle> fileHandle = static_cast<IDBFileHandle*>(et.get());
   if (!fileHandle || !fileHandle->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR);
     return;
@@ -182,7 +182,7 @@ BlobImplSnapshot::GetInternalStream(nsIInputStream** aStream, ErrorResult& aRv)
     return;
   }
 
-  nsRefPtr<StreamWrapper> wrapper = new StreamWrapper(stream, fileHandle);
+  RefPtr<StreamWrapper> wrapper = new StreamWrapper(stream, fileHandle);
 
   wrapper.forget(aStream);
 }
@@ -191,7 +191,7 @@ BlobImpl*
 BlobImplSnapshot::GetBlobImpl() const
 {
   nsCOMPtr<EventTarget> et = do_QueryReferent(mFileHandle);
-  nsRefPtr<IDBFileHandle> fileHandle = static_cast<IDBFileHandle*>(et.get());
+  RefPtr<IDBFileHandle> fileHandle = static_cast<IDBFileHandle*>(et.get());
   if (!fileHandle || !fileHandle->IsOpen()) {
     return nullptr;
   }
@@ -217,7 +217,7 @@ StreamWrapper::Close()
 {
   MOZ_ASSERT(!IsOnOwningThread());
 
-  nsRefPtr<CloseRunnable> closeRunnable = new CloseRunnable(this);
+  RefPtr<CloseRunnable> closeRunnable = new CloseRunnable(this);
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mOwningThread->Dispatch(closeRunnable,
                                                        NS_DISPATCH_NORMAL)));

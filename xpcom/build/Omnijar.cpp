@@ -80,12 +80,12 @@ Omnijar::InitOne(nsIFile* aPath, Type aType)
     return;
   }
 
-  nsRefPtr<nsZipArchive> zipReader = new nsZipArchive();
+  RefPtr<nsZipArchive> zipReader = new nsZipArchive();
   if (NS_FAILED(zipReader->OpenArchive(file))) {
     return;
   }
 
-  nsRefPtr<nsZipHandle> handle;
+  RefPtr<nsZipHandle> handle;
   if (NS_SUCCEEDED(nsZipHandle::Init(zipReader, NS_STRINGIFY(OMNIJAR_NAME),
                                      getter_AddRefs(handle)))) {
     zipReader = new nsZipArchive();

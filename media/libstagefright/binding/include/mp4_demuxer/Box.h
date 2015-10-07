@@ -28,7 +28,7 @@ public:
   {
   }
 
-  nsRefPtr<Stream> mSource;
+  RefPtr<Stream> mSource;
   const nsTArray<MediaByteRange>& mByteRanges;
 };
 

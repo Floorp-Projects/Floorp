@@ -110,7 +110,7 @@ FetchUtil::ConsumeBlob(nsISupports* aParent, const nsString& aMimeType,
                        uint32_t aInputLength, uint8_t* aInput,
                        ErrorResult& aRv)
 {
-  nsRefPtr<Blob> blob =
+  RefPtr<Blob> blob =
     Blob::CreateMemoryBlob(aParent,
                            reinterpret_cast<void *>(aInput), aInputLength,
                            aMimeType);
@@ -144,7 +144,7 @@ FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
       return nullptr;
     }
 
-    nsRefPtr<nsFormData> fd = parser.FormData();
+    RefPtr<nsFormData> fd = parser.FormData();
     MOZ_ASSERT(fd);
     return fd.forget();
   }
@@ -160,7 +160,7 @@ FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
     URLParams params;
     params.ParseInput(aStr);
 
-    nsRefPtr<nsFormData> fd = new nsFormData(aParent);
+    RefPtr<nsFormData> fd = new nsFormData(aParent);
     FillFormIterator iterator(fd);
     DebugOnly<bool> status = params.ForEach(iterator);
     MOZ_ASSERT(status);

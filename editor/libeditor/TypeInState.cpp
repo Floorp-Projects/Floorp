@@ -83,7 +83,7 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
   // XXX:
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
-  nsRefPtr<Selection> selection = static_cast<Selection*>(aSelection);
+  RefPtr<Selection> selection = static_cast<Selection*>(aSelection);
 
   if (aSelection) {
     int32_t rangeCount = selection->RangeCount();

@@ -519,7 +519,7 @@ nsSMILAnimationController::DoMilestoneSamples()
       break;
     }
 
-    nsTArray<nsRefPtr<mozilla::dom::SVGAnimationElement>> elements;
+    nsTArray<RefPtr<mozilla::dom::SVGAnimationElement>> elements;
     for (auto iter = mChildContainerTable.Iter(); !iter.Done(); iter.Next()) {
       nsSMILTimeContainer* container = iter.Get()->GetKey();
       if (container->IsPausedByType(nsSMILTimeContainer::PAUSE_BEGIN)) {

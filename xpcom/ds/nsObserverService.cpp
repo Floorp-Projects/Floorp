@@ -203,7 +203,7 @@ nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
 {
   LOG(("nsObserverService::Create()"));
 
-  nsRefPtr<nsObserverService> os = new nsObserverService();
+  RefPtr<nsObserverService> os = new nsObserverService();
 
   if (!os) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -212,7 +212,7 @@ nsObserverService::Create(nsISupports* aOuter, const nsIID& aIID,
   // The memory reporter can not be immediately registered here because
   // the nsMemoryReporterManager may attempt to get the nsObserverService
   // during initialization, causing a recursive GetService.
-  nsRefPtr<nsRunnableMethod<nsObserverService>> registerRunnable =
+  RefPtr<nsRunnableMethod<nsObserverService>> registerRunnable =
     NS_NewRunnableMethod(os, &nsObserverService::RegisterReporter);
   NS_DispatchToCurrentThread(registerRunnable);
 

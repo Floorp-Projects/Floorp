@@ -82,12 +82,12 @@ private:
 
 private:
   nsCOMPtr<nsIVoicemailService> mService;
-  nsRefPtr<Listener> mListener;
+  RefPtr<Listener> mListener;
 
   // |mStatuses| keeps all instantiated VoicemailStatus objects as well as the
   // empty slots for not interested ones. The length of |mStatuses| is decided
   // in the constructor and is never changed ever since.
-  nsAutoTArray<nsRefPtr<VoicemailStatus>, 1> mStatuses;
+  nsAutoTArray<RefPtr<VoicemailStatus>, 1> mStatuses;
 
   // Return a nsIVoicemailProvider instance based on the requests from external
   // components. Return nullptr if aOptionalServiceId contains an invalid

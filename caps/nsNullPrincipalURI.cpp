@@ -54,7 +54,7 @@ nsNullPrincipalURI::Init()
 already_AddRefed<nsNullPrincipalURI>
 nsNullPrincipalURI::Create()
 {
-  nsRefPtr<nsNullPrincipalURI> uri = new nsNullPrincipalURI();
+  RefPtr<nsNullPrincipalURI> uri = new nsNullPrincipalURI();
   nsresult rv = uri->Init();
   NS_ENSURE_SUCCESS(rv, nullptr);
   return uri.forget();
@@ -274,7 +274,7 @@ NS_IMETHODIMP
 nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
 {
   *_equals = false;
-  nsRefPtr<nsNullPrincipalURI> otherURI;
+  RefPtr<nsNullPrincipalURI> otherURI;
   nsresult rv = aOther->QueryInterface(kNullPrincipalURIImplementationCID,
                                        getter_AddRefs(otherURI));
   if (NS_SUCCEEDED(rv)) {

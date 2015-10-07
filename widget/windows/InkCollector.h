@@ -66,10 +66,10 @@ protected:
   void Enable(bool aNewState);
 
 private:
-  nsRefPtr<IUnknown>          mMarshaller;
-  nsRefPtr<IInkCollector>     mInkCollector;
-  nsRefPtr<IConnectionPoint>  mConnectionPoint;
-  nsRefPtr<InkCollectorEvent> mInkCollectorEvent;
+  RefPtr<IUnknown>          mMarshaller;
+  RefPtr<IInkCollector>     mInkCollector;
+  RefPtr<IConnectionPoint>  mConnectionPoint;
+  RefPtr<InkCollectorEvent> mInkCollectorEvent;
 
   HWND                        mTargetWindow     = 0;
   DWORD                       mCookie           = 0;

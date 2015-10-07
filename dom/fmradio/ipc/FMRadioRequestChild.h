@@ -25,7 +25,7 @@ public:
   Recv__delete__(const FMRadioResponseType& aResponse) override;
 
 private:
-  nsRefPtr<FMRadioReplyRunnable> mReplyRunnable;
+  RefPtr<FMRadioReplyRunnable> mReplyRunnable;
 };
 
 END_FMRADIO_NAMESPACE

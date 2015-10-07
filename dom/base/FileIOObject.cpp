@@ -118,7 +118,7 @@ FileIOObject::DispatchProgressEvent(const nsAString& aType)
     init.mLengthComputable = false;
     init.mTotal = 0;
   }
-  nsRefPtr<ProgressEvent> event =
+  RefPtr<ProgressEvent> event =
     ProgressEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
 

@@ -199,7 +199,7 @@ already_AddRefed<CanvasLayer>
 ClientLayerManager::CreateCanvasLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<ClientCanvasLayer> layer =
+  RefPtr<ClientCanvasLayer> layer =
     new ClientCanvasLayer(this);
   CREATE_SHADOW(Canvas);
   return layer.forget();

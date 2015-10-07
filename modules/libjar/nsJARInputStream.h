@@ -40,14 +40,14 @@ class nsJARInputStream final : public nsIInputStream
   private:
     ~nsJARInputStream() { Close(); }
 
-    nsRefPtr<nsZipHandle>  mFd;         // handle for reading
+    RefPtr<nsZipHandle>  mFd;         // handle for reading
     uint32_t               mOutSize;    // inflated size 
     uint32_t               mInCrc;      // CRC as provided by the zipentry
     uint32_t               mOutCrc;     // CRC as calculated by me
     z_stream               mZs;         // zip data structure
 
     /* For directory reading */
-    nsRefPtr<nsJAR>        mJar;        // string reference to zipreader
+    RefPtr<nsJAR>        mJar;        // string reference to zipreader
     uint32_t               mNameLen;    // length of dirname
     nsCString              mBuffer;     // storage for generated text of stream
     uint32_t               mCurPos;     // Current position in buffer

@@ -361,7 +361,7 @@ private:
     // A delete protector reference to gSocketTransportService held for lifetime
     // of 'this'. Sometimes used interchangably with gSocketTransportService due
     // to scoping.
-    nsRefPtr<nsSocketTransportService> mSocketTransportService;
+    RefPtr<nsSocketTransportService> mSocketTransportService;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsITransportEventSink> mEventSink;

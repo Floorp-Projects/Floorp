@@ -341,18 +341,18 @@ protected:
 
   WeakPtr<nsDocShell> mContainer; // it owns me!
   nsWeakPtr mTopContainerWhilePrinting;
-  nsRefPtr<nsDeviceContext> mDeviceContext;  // We create and own this baby
+  RefPtr<nsDeviceContext> mDeviceContext;  // We create and own this baby
 
   // the following six items are explicitly in this order
   // so they will be destroyed in the reverse order (pinkerton, scc)
   nsCOMPtr<nsIDocument>    mDocument;
   nsCOMPtr<nsIWidget>      mWindow;      // may be null
-  nsRefPtr<nsViewManager> mViewManager;
-  nsRefPtr<nsPresContext>  mPresContext;
+  RefPtr<nsViewManager> mViewManager;
+  RefPtr<nsPresContext>  mPresContext;
   nsCOMPtr<nsIPresShell>   mPresShell;
 
   nsCOMPtr<nsISelectionListener> mSelectionListener;
-  nsRefPtr<nsDocViewerFocusListener> mFocusListener;
+  RefPtr<nsDocViewerFocusListener> mFocusListener;
 
   nsCOMPtr<nsIContentViewer> mPreviousViewer;
   nsCOMPtr<nsISHEntry> mSHEntry;
@@ -393,7 +393,7 @@ protected:
   nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
   nsCOMPtr<nsIWebProgressListener> mCachedPrintWebProgressListner;
 
-  nsRefPtr<nsPrintEngine>          mPrintEngine;
+  RefPtr<nsPrintEngine>          mPrintEngine;
   float                            mOriginalPrintPreviewScale;
   float                            mPrintPreviewZoom;
   nsAutoPtr<nsPrintEventDispatcher> mBeforeAndAfterPrint;
@@ -450,7 +450,7 @@ private:
 already_AddRefed<nsIContentViewer>
 NS_NewContentViewer()
 {
-  nsRefPtr<nsDocumentViewer> viewer = new nsDocumentViewer();
+  RefPtr<nsDocumentViewer> viewer = new nsDocumentViewer();
   return viewer.forget();
 }
 
@@ -694,7 +694,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     mSelectionListener = selectionListener;
   }
 
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
+  RefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
   if (!selection) {
     return NS_ERROR_FAILURE;
   }
@@ -704,7 +704,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     return rv;
 
   // Save old listener so we can unregister it
-  nsRefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
+  RefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
 
   // focus listener
   //
@@ -919,7 +919,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
      http://bugzilla.mozilla.org/show_bug.cgi?id=78445 for more
      explanation.
   */
-  nsRefPtr<nsDocumentViewer> kungFuDeathGrip(this);
+  RefPtr<nsDocumentViewer> kungFuDeathGrip(this);
 
   // Flush out layout so it's up-to-date by the time onload is called.
   // Note that this could destroy the window, so do this before
@@ -974,7 +974,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
       nsCOMPtr<nsIDocument> d = mDocument;
       mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
 
-      nsRefPtr<nsDOMNavigationTiming> timing(d->GetNavigationTiming());
+      RefPtr<nsDOMNavigationTiming> timing(d->GetNavigationTiming());
       if (timing) {
         timing->NotifyLoadEventStart();
       }
@@ -1109,7 +1109,7 @@ nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
 
   // In evil cases we might be destroyed while handling the
   // onbeforeunload event, don't let that happen. (see also bug#331040)
-  nsRefPtr<nsDocumentViewer> kungFuDeathGrip(this);
+  RefPtr<nsDocumentViewer> kungFuDeathGrip(this);
 
   bool dialogsAreEnabled = false;
   {
@@ -1331,7 +1331,7 @@ AttachContainerRecurse(nsIDocShell* aShell)
     if (doc) {
       doc->SetContainer(static_cast<nsDocShell*>(aShell));
     }
-    nsRefPtr<nsPresContext> pc;
+    RefPtr<nsPresContext> pc;
     viewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->SetContainer(static_cast<nsDocShell*>(aShell));
@@ -1485,7 +1485,7 @@ DetachContainerRecurse(nsIDocShell *aShell)
     if (doc) {
       doc->SetContainer(nullptr);
     }
-    nsRefPtr<nsPresContext> pc;
+    RefPtr<nsPresContext> pc;
     viewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
       pc->Detach();
@@ -2197,7 +2197,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
   nsCOMPtr<nsIDocShell> ds(mContainer);
   nsCOMPtr<nsIDOMEventTarget> chromeHandler;
   nsCOMPtr<nsIURI> uri;
-  nsRefPtr<CSSStyleSheet> csssheet;
+  RefPtr<CSSStyleSheet> csssheet;
 
   if (ds) {
     ds->GetChromeEventHandler(getter_AddRefs(chromeHandler));
@@ -2211,7 +2211,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
       nsAutoString sheets;
       elt->GetAttribute(NS_LITERAL_STRING("usechromesheets"), sheets);
       if (!sheets.IsEmpty() && baseURI) {
-        nsRefPtr<mozilla::css::Loader> cssLoader = new mozilla::css::Loader();
+        RefPtr<mozilla::css::Loader> cssLoader = new mozilla::css::Loader();
 
         char *str = ToNewCString(sheets);
         char *newStr = str;
@@ -2540,7 +2540,7 @@ nsDocumentViewer::GetDocumentSelection()
 NS_IMETHODIMP nsDocumentViewer::ClearSelection()
 {
   // use nsCopySupport::GetSelectionForCopy() ?
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
+  RefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
   if (!selection) {
     return NS_ERROR_FAILURE;
   }
@@ -2555,7 +2555,7 @@ NS_IMETHODIMP nsDocumentViewer::SelectAll()
   // functions to make this easier.
 
   // use nsCopySupport::GetSelectionForCopy() ?
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
+  RefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
   if (!selection) {
     return NS_ERROR_FAILURE;
   }
@@ -3324,7 +3324,7 @@ nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight)
   nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-   nsRefPtr<nsPresContext> presContext;
+   RefPtr<nsPresContext> presContext;
    GetPresContext(getter_AddRefs(presContext));
    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
@@ -3526,7 +3526,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
   NS_ASSERTION(mDocViewer, "Should have doc viewer!");
 
   // get the selection state
-  nsRefPtr<mozilla::dom::Selection> selection = mDocViewer->GetDocumentSelection();
+  RefPtr<mozilla::dom::Selection> selection = mDocViewer->GetDocumentSelection();
   if (!selection) {
     return NS_ERROR_FAILURE;
   }
@@ -4303,7 +4303,7 @@ nsDocumentViewer::OnDonePrinting()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   if (mPrintEngine) {
-    nsRefPtr<nsPrintEngine> pe = mPrintEngine;
+    RefPtr<nsPrintEngine> pe = mPrintEngine;
     if (GetIsPrintPreview()) {
       pe->DestroyPrintingData();
     } else {
@@ -4400,7 +4400,7 @@ nsDocumentViewer::DestroyPresShell()
   // Break circular reference (or something)
   mPresShell->EndObservingDocument();
 
-  nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
+  RefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
   if (selection && mSelectionListener)
     selection->RemoveSelectionListener(mSelectionListener);
 

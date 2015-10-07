@@ -9,7 +9,7 @@
 #include <string>
 
 #include "m_cpp_utils.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 #include "sslt.h"
 #include "ScopedNSSTypes.h"
@@ -29,7 +29,7 @@ class DtlsIdentity final {
 
   // This is only for use in tests, or for external linkage.  It makes a (bad)
   // instance of this class.
-  static nsRefPtr<DtlsIdentity> Generate();
+  static RefPtr<DtlsIdentity> Generate();
 
   // These don't create copies or transfer ownership. If you want these to live
   // on, make a copy.

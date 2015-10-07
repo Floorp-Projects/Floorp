@@ -41,7 +41,7 @@ RtspMediaCodecDecoder::ChangeState(PlayState aState)
   // Notify RTSP controller if the play state is ended.
   // This is necessary for RTSP controller to transit its own state.
   if (mPlayState == PLAY_STATE_ENDED) {
-    nsRefPtr<RtspMediaResource> resource = mResource->GetRtspPointer();
+    RefPtr<RtspMediaResource> resource = mResource->GetRtspPointer();
     if (resource) {
       nsIStreamingProtocolController* controller =
         resource->GetMediaStreamController();

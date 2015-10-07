@@ -58,13 +58,13 @@ struct DeviceAttachmentsD3D11
   bool CreateShaders();
   bool InitSyncObject();
 
-  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, nsRefPtr<ID3D11VertexShader>>
+  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11VertexShader>>
           VertexShaderArray;
-  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, nsRefPtr<ID3D11PixelShader>>
+  typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11PixelShader>>
           PixelShaderArray;
 
-  nsRefPtr<ID3D11InputLayout> mInputLayout;
-  nsRefPtr<ID3D11Buffer> mVertexBuffer;
+  RefPtr<ID3D11InputLayout> mInputLayout;
+  RefPtr<ID3D11Buffer> mVertexBuffer;
 
   VertexShaderArray mVSQuadShader;
   PixelShaderArray mSolidColorShader;
@@ -73,41 +73,41 @@ struct DeviceAttachmentsD3D11
   PixelShaderArray mRGBShader;
   PixelShaderArray mYCbCrShader;
   PixelShaderArray mComponentAlphaShader;
-  nsRefPtr<ID3D11Buffer> mPSConstantBuffer;
-  nsRefPtr<ID3D11Buffer> mVSConstantBuffer;
-  nsRefPtr<ID3D11RasterizerState> mRasterizerState;
-  nsRefPtr<ID3D11SamplerState> mLinearSamplerState;
-  nsRefPtr<ID3D11SamplerState> mPointSamplerState;
-  nsRefPtr<ID3D11BlendState> mPremulBlendState;
-  nsRefPtr<ID3D11BlendState> mNonPremulBlendState;
-  nsRefPtr<ID3D11BlendState> mPremulBlendMultiplyState;
-  nsRefPtr<ID3D11BlendState> mPremulBlendScreenState;
-  nsRefPtr<ID3D11BlendState> mComponentBlendState;
-  nsRefPtr<ID3D11BlendState> mDisabledBlendState;
-  nsRefPtr<IDXGIResource> mSyncTexture;
+  RefPtr<ID3D11Buffer> mPSConstantBuffer;
+  RefPtr<ID3D11Buffer> mVSConstantBuffer;
+  RefPtr<ID3D11RasterizerState> mRasterizerState;
+  RefPtr<ID3D11SamplerState> mLinearSamplerState;
+  RefPtr<ID3D11SamplerState> mPointSamplerState;
+  RefPtr<ID3D11BlendState> mPremulBlendState;
+  RefPtr<ID3D11BlendState> mNonPremulBlendState;
+  RefPtr<ID3D11BlendState> mPremulBlendMultiplyState;
+  RefPtr<ID3D11BlendState> mPremulBlendScreenState;
+  RefPtr<ID3D11BlendState> mComponentBlendState;
+  RefPtr<ID3D11BlendState> mDisabledBlendState;
+  RefPtr<IDXGIResource> mSyncTexture;
   HANDLE mSyncHandle;
 
   //
   // VR pieces
   //
-  typedef EnumeratedArray<VRHMDType, VRHMDType::NumHMDTypes, nsRefPtr<ID3D11InputLayout>>
+  typedef EnumeratedArray<VRHMDType, VRHMDType::NumHMDTypes, RefPtr<ID3D11InputLayout>>
           VRDistortionInputLayoutArray;
-  typedef EnumeratedArray<VRHMDType, VRHMDType::NumHMDTypes, nsRefPtr<ID3D11VertexShader>>
+  typedef EnumeratedArray<VRHMDType, VRHMDType::NumHMDTypes, RefPtr<ID3D11VertexShader>>
           VRVertexShaderArray;
-  typedef EnumeratedArray<VRHMDType, VRHMDType::NumHMDTypes, nsRefPtr<ID3D11PixelShader>>
+  typedef EnumeratedArray<VRHMDType, VRHMDType::NumHMDTypes, RefPtr<ID3D11PixelShader>>
           VRPixelShaderArray;
 
   VRDistortionInputLayoutArray mVRDistortionInputLayout;
   VRVertexShaderArray mVRDistortionVS;
   VRPixelShaderArray mVRDistortionPS;
 
-  nsRefPtr<ID3D11Buffer> mVRDistortionConstants;
+  RefPtr<ID3D11Buffer> mVRDistortionConstants;
 
   // These will be created/filled in as needed during rendering whenever the configuration
   // changes.
   VRHMDConfiguration mVRConfiguration;
-  nsRefPtr<ID3D11Buffer> mVRDistortionVertices[2]; // one for each eye
-  nsRefPtr<ID3D11Buffer> mVRDistortionIndices[2];
+  RefPtr<ID3D11Buffer> mVRDistortionVertices[2]; // one for each eye
+  RefPtr<ID3D11Buffer> mVRDistortionIndices[2];
   uint32_t mVRDistortionIndexCount[2];
 
 private:
@@ -144,7 +144,7 @@ private:
   }
 
   // Only used during initialization.
-  nsRefPtr<ID3D11Device> mDevice;
+  RefPtr<ID3D11Device> mDevice;
   bool mInitOkay;
 };
 
@@ -409,14 +409,14 @@ CompositorD3D11::Initialize()
     }
   }
 
-  nsRefPtr<IDXGIDevice> dxgiDevice;
-  nsRefPtr<IDXGIAdapter> dxgiAdapter;
+  RefPtr<IDXGIDevice> dxgiDevice;
+  RefPtr<IDXGIAdapter> dxgiAdapter;
 
   mDevice->QueryInterface(dxgiDevice.StartAssignment());
   dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter));
 
   {
-    nsRefPtr<IDXGIFactory> dxgiFactory;
+    RefPtr<IDXGIFactory> dxgiFactory;
     dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
 
     DXGI_SWAP_CHAIN_DESC swapDesc;
@@ -462,7 +462,7 @@ CompositorD3D11::Initialize()
 already_AddRefed<DataTextureSource>
 CompositorD3D11::CreateDataTextureSource(TextureFlags aFlags)
 {
-  nsRefPtr<DataTextureSource> result = new DataTextureSourceD3D11(gfx::SurfaceFormat::UNKNOWN,
+  RefPtr<DataTextureSource> result = new DataTextureSourceD3D11(gfx::SurfaceFormat::UNKNOWN,
                                                                 this, aFlags);
   return result.forget();
 }
@@ -511,14 +511,14 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aRect.width, aRect.height, 1, 1,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
-  nsRefPtr<ID3D11Texture2D> texture;
+  RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (Failed(hr) || !texture) {
     gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed in CreateRenderTarget";
     return nullptr;
   }
 
-  nsRefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture, aRect.TopLeft());
+  RefPtr<CompositingRenderTargetD3D11> rt = new CompositingRenderTargetD3D11(texture, aRect.TopLeft());
   rt->SetSize(IntSize(aRect.width, aRect.height));
 
   if (aInit == INIT_MODE_CLEAR) {
@@ -544,7 +544,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                              aRect.width, aRect.height, 1, 1,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
-  nsRefPtr<ID3D11Texture2D> texture;
+  RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   NS_ASSERTION(texture, "Could not create texture");
   if (Failed(hr) || !texture) {
@@ -582,7 +582,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
     }
   }
 
-  nsRefPtr<CompositingRenderTargetD3D11> rt =
+  RefPtr<CompositingRenderTargetD3D11> rt =
     new CompositingRenderTargetD3D11(texture, aRect.TopLeft());
   rt->SetSize(aRect.Size());
 
@@ -1155,7 +1155,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   ClearRect(Rect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height));
 
   if (mAttachments->mSyncTexture) {
-    nsRefPtr<IDXGIKeyedMutex> mutex;
+    RefPtr<IDXGIKeyedMutex> mutex;
     mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
     MOZ_ASSERT(mutex);
@@ -1191,7 +1191,7 @@ CompositorD3D11::EndFrame()
   }
 
   if (oldSize == mSize) {
-    nsRefPtr<IDXGISwapChain1> chain;
+    RefPtr<IDXGISwapChain1> chain;
     HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
     nsString vendorID;
     nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
@@ -1327,7 +1327,7 @@ CompositorD3D11::UpdateRenderTarget()
 
   HRESULT hr;
 
-  nsRefPtr<ID3D11Texture2D> backBuf;
+  RefPtr<ID3D11Texture2D> backBuf;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
   if (hr == DXGI_ERROR_INVALID_CALL) {
@@ -1361,7 +1361,7 @@ DeviceAttachmentsD3D11::InitSyncObject()
                              D3D11_BIND_RENDER_TARGET);
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-  nsRefPtr<ID3D11Texture2D> texture;
+  RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (Failed(hr, "create sync texture")) {
     return false;
@@ -1472,7 +1472,7 @@ CompositorD3D11::SetSamplerForFilter(Filter aFilter)
 void
 CompositorD3D11::PaintToTarget()
 {
-  nsRefPtr<ID3D11Texture2D> backBuf;
+  RefPtr<ID3D11Texture2D> backBuf;
   HRESULT hr;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
@@ -1490,7 +1490,7 @@ CompositorD3D11::PaintToTarget()
   softDesc.Usage = D3D11_USAGE_STAGING;
   softDesc.BindFlags = 0;
 
-  nsRefPtr<ID3D11Texture2D> readTexture;
+  RefPtr<ID3D11Texture2D> readTexture;
 
   hr = mDevice->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
   if (Failed(hr)) {
@@ -1505,7 +1505,7 @@ CompositorD3D11::PaintToTarget()
     gfxCriticalErrorOnce(gfxCriticalError::DefaultOptions(false)) << "Failed in PaintToTarget 3";
     return;
   }
-  nsRefPtr<DataSourceSurface> sourceSurface =
+  RefPtr<DataSourceSurface> sourceSurface =
     Factory::CreateWrappingDataSourceSurface((uint8_t*)map.pData,
                                              map.RowPitch,
                                              IntSize(bbDesc.Width, bbDesc.Height),

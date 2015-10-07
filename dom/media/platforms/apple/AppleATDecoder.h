@@ -25,7 +25,7 @@ public:
                  MediaDataDecoderCallback* aCallback);
   virtual ~AppleATDecoder();
 
-  nsRefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -41,13 +41,13 @@ public:
   bool mFileStreamError;
 
 private:
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   AudioConverterRef mConverter;
   AudioStreamBasicDescription mOutputFormat;
   UInt32 mFormatID;
   AudioFileStreamID mStream;
-  nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
+  nsTArray<RefPtr<MediaRawData>> mQueuedSamples;
 
   void SubmitSample(MediaRawData* aSample);
   nsresult DecodeSample(MediaRawData* aSample);

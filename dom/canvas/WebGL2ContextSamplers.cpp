@@ -19,7 +19,7 @@ WebGL2Context::CreateSampler()
     MakeContextCurrent();
     gl->fGenSamplers(1, &sampler);
 
-    nsRefPtr<WebGLSampler> globj = new WebGLSampler(this, sampler);
+    RefPtr<WebGLSampler> globj = new WebGLSampler(this, sampler);
     return globj.forget();
 }
 

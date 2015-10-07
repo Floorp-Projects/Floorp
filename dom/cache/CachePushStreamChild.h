@@ -49,7 +49,7 @@ private:
 
   nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIAsyncInputStream> mStream;
-  nsRefPtr<Callback> mCallback;
+  RefPtr<Callback> mCallback;
   bool mClosed;
 
   NS_DECL_OWNINGTHREAD

@@ -20,7 +20,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                         const nsACString& aFileExt,
                                         bool* aFound)
 {
-    nsRefPtr<nsMIMEInfoAndroid> mimeInfo;
+    RefPtr<nsMIMEInfoAndroid> mimeInfo;
     *aFound = false;
     if (!aMIMEType.IsEmpty())
         *aFound = 

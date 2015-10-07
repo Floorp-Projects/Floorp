@@ -79,7 +79,7 @@ public:
         return NS_OK;
     }
 
-    nsRefPtr<nsTransportEventSinkProxy> mProxy;
+    RefPtr<nsTransportEventSinkProxy> mProxy;
 
     // parameters to OnTransportStatus
     nsCOMPtr<nsITransport> mTransport;
@@ -97,7 +97,7 @@ nsTransportEventSinkProxy::OnTransportStatus(nsITransport *transport,
                                              int64_t progressMax)
 {
     nsresult rv = NS_OK;
-    nsRefPtr<nsTransportStatusEvent> event;
+    RefPtr<nsTransportStatusEvent> event;
     {
         MutexAutoLock lock(mLock);
 

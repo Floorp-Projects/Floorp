@@ -155,7 +155,7 @@ public:
   void RemoveOutputStream(MediaStream* aStream);
 
   // Seeks to the decoder to aTarget asynchronously.
-  nsRefPtr<MediaDecoder::SeekPromise> InvokeSeek(SeekTarget aTarget);
+  RefPtr<MediaDecoder::SeekPromise> InvokeSeek(SeekTarget aTarget);
 
   // Set/Unset dormant state.
   void DispatchSetDormant(bool aDormant);
@@ -181,7 +181,7 @@ public:
   // samples in advance of when they're needed for playback.
   void DispatchMinimizePrerollUntilPlaybackStarts()
   {
-    nsRefPtr<MediaDecoderStateMachine> self = this;
+    RefPtr<MediaDecoderStateMachine> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
     {
       MOZ_ASSERT(self->OnTaskQueue());
@@ -197,7 +197,7 @@ public:
   // Set the media fragment end time. aEndTime is in microseconds.
   void DispatchSetFragmentEndTime(int64_t aEndTime)
   {
-    nsRefPtr<MediaDecoderStateMachine> self = this;
+    RefPtr<MediaDecoderStateMachine> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self, aEndTime] () {
       self->mFragmentEndTime = aEndTime;
     });
@@ -206,7 +206,7 @@ public:
 
   void DispatchAudioOffloading(bool aAudioOffloading)
   {
-    nsRefPtr<MediaDecoderStateMachine> self = this;
+    RefPtr<MediaDecoderStateMachine> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
       if (self->mAudioOffloading != aAudioOffloading) {
         self->mAudioOffloading = aAudioOffloading;
@@ -263,7 +263,7 @@ private:
 
   void SetAudioCaptured(bool aCaptured);
 
-  nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
+  RefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
 
   void Shutdown();
 
@@ -388,8 +388,8 @@ protected:
   void Push(MediaData* aSample, MediaData::Type aSampleType);
   void PushFront(MediaData* aSample, MediaData::Type aSampleType);
 
-  void OnAudioPopped(const nsRefPtr<MediaData>& aSample);
-  void OnVideoPopped(const nsRefPtr<MediaData>& aSample);
+  void OnAudioPopped(const RefPtr<MediaData>& aSample);
+  void OnVideoPopped(const RefPtr<MediaData>& aSample);
 
   void VolumeChanged();
   void LogicalPlaybackRateChanged();
@@ -661,10 +661,10 @@ private:
   // shutting down, the state machine will then release this reference,
   // causing the decoder to be destroyed. This is accessed on the decode,
   // state machine, audio and main threads.
-  nsRefPtr<MediaDecoder> mDecoder;
+  RefPtr<MediaDecoder> mDecoder;
 
   // Task queue for running the state machine.
-  nsRefPtr<TaskQueue> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
 
   // State-watching manager.
   WatchManager<MediaDecoderStateMachine> mWatchManager;
@@ -720,7 +720,7 @@ private:
 
   private:
     MediaDecoderStateMachine* mSelf;
-    nsRefPtr<MediaTimer> mMediaTimer;
+    RefPtr<MediaTimer> mMediaTimer;
     MozPromiseRequestHolder<mozilla::MediaTimerPromise> mRequest;
     TimeStamp mTarget;
 
@@ -762,7 +762,7 @@ private:
       mHaveStartTimePromise.RejectIfExists(false, __func__);
     }
 
-    nsRefPtr<HaveStartTimePromise> AwaitStartTime()
+    RefPtr<HaveStartTimePromise> AwaitStartTime()
     {
       if (HaveStartTime()) {
         return HaveStartTimePromise::CreateAndResolve(true, __func__);
@@ -776,7 +776,7 @@ private:
     };
 
     template<typename PromiseType, MediaData::Type SampleType>
-    nsRefPtr<PromiseType> ProcessFirstSample(typename PromiseSampleType<PromiseType>::Type* aData)
+    RefPtr<PromiseType> ProcessFirstSample(typename PromiseSampleType<PromiseType>::Type* aData)
     {
       typedef typename PromiseSampleType<PromiseType>::Type DataType;
       typedef typename PromiseType::Private PromisePrivate;
@@ -784,9 +784,9 @@ private:
 
       MaybeSetChannelStartTime<SampleType>(aData->mTime);
 
-      nsRefPtr<PromisePrivate> p = new PromisePrivate(__func__);
-      nsRefPtr<DataType> data = aData;
-      nsRefPtr<StartTimeRendezvous> self = this;
+      RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
+      RefPtr<DataType> data = aData;
+      RefPtr<StartTimeRendezvous> self = this;
       AwaitStartTime()->Then(mOwnerThread, __func__,
                              [p, data, self] () -> void {
                                MOZ_ASSERT(self->mOwnerThread->IsCurrentThreadIn());
@@ -844,11 +844,11 @@ private:
     }
 
     MozPromiseHolder<HaveStartTimePromise> mHaveStartTimePromise;
-    nsRefPtr<AbstractThread> mOwnerThread;
+    RefPtr<AbstractThread> mOwnerThread;
     Maybe<int64_t> mAudioStartTime;
     Maybe<int64_t> mVideoStartTime;
   };
-  nsRefPtr<StartTimeRendezvous> mStartTimeRendezvous;
+  RefPtr<StartTimeRendezvous> mStartTimeRendezvous;
 
   bool HaveStartTime() { return mStartTimeRendezvous && mStartTimeRendezvous->HaveStartTime(); }
   int64_t StartTime() { return mStartTimeRendezvous->StartTime(); }
@@ -955,11 +955,11 @@ private:
   int64_t mFragmentEndTime;
 
   // The media sink resource.  Used on the state machine thread.
-  nsRefPtr<media::MediaSink> mMediaSink;
+  RefPtr<media::MediaSink> mMediaSink;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the state machine's constructor.
-  nsRefPtr<MediaDecoderReader> mReader;
+  RefPtr<MediaDecoderReader> mReader;
 
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
@@ -1077,7 +1077,7 @@ private:
   // This is so that if we hit end of stream while we're decoding to reach
   // the seek target, we will still have a frame that we can display as the
   // last frame in the media.
-  nsRefPtr<MediaData> mFirstVideoFrameAfterSeek;
+  RefPtr<MediaData> mFirstVideoFrameAfterSeek;
 
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
@@ -1231,10 +1231,10 @@ private:
   // Only written on the main thread while holding the monitor. Therefore it
   // can be read on any thread while holding the monitor, or on the main thread
   // without holding the monitor.
-  nsRefPtr<DecodedStream> mStreamSink;
+  RefPtr<DecodedStream> mStreamSink;
 
   // Media data resource from the decoder.
-  nsRefPtr<MediaResource> mResource;
+  RefPtr<MediaResource> mResource;
 
   MozPromiseRequestHolder<GenericPromise> mMediaSinkPromise;
 
@@ -1246,9 +1246,9 @@ private:
   bool mAudioOffloading;
 
 #ifdef MOZ_EME
-  void OnCDMProxyReady(nsRefPtr<CDMProxy> aProxy);
+  void OnCDMProxyReady(RefPtr<CDMProxy> aProxy);
   void OnCDMProxyNotReady();
-  nsRefPtr<CDMProxy> mCDMProxy;
+  RefPtr<CDMProxy> mCDMProxy;
   MozPromiseRequestHolder<MediaDecoder::CDMProxyPromise> mCDMProxyPromise;
 #endif
 

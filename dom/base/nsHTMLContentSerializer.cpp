@@ -43,7 +43,7 @@ using namespace mozilla::dom;
 nsresult
 NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer)
 {
-  nsRefPtr<nsHTMLContentSerializer> it = new nsHTMLContentSerializer();
+  RefPtr<nsHTMLContentSerializer> it = new nsHTMLContentSerializer();
   it.forget(aSerializer);
   return NS_OK;
 }

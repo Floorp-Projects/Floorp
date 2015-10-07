@@ -30,7 +30,7 @@ public:
 
   static bool Link();
 
-  nsRefPtr<InitPromise> Init() override = 0;
+  RefPtr<InitPromise> Init() override = 0;
   nsresult Input(MediaRawData* aSample) override = 0;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -44,12 +44,12 @@ protected:
   AVFrame*        PrepareFrame();
   nsresult        InitDecoder();
 
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   AVCodecContext* mCodecContext;
   AVFrame*        mFrame;
-  nsRefPtr<MediaByteBuffer> mExtraData;
+  RefPtr<MediaByteBuffer> mExtraData;
   AVCodecID mCodecID;
 
   // For wait on mIsFlushing during Shutdown() process.

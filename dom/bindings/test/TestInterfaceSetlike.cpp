@@ -37,7 +37,7 @@ TestInterfaceSetlike::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<TestInterfaceSetlike> r = new TestInterfaceSetlike(nullptr, window);
+  RefPtr<TestInterfaceSetlike> r = new TestInterfaceSetlike(nullptr, window);
   return r.forget();
 }
 

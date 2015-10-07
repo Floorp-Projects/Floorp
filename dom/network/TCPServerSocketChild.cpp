@@ -76,7 +76,7 @@ TCPServerSocketChild::~TCPServerSocketChild()
 bool
 TCPServerSocketChild::RecvCallbackAccept(PTCPSocketChild *psocket)
 {
-  nsRefPtr<TCPSocketChild> socket = static_cast<TCPSocketChild*>(psocket);
+  RefPtr<TCPSocketChild> socket = static_cast<TCPSocketChild*>(psocket);
   nsresult rv = mServerSocket->AcceptChildSocket(socket);
   NS_ENSURE_SUCCESS(rv, true);
   return true;

@@ -138,7 +138,7 @@ private:
 
   const bool mConnect;
   nsString mDeviceAddress;
-  nsRefPtr<BluetoothReplyRunnable> mRunnable;
+  RefPtr<BluetoothReplyRunnable> mRunnable;
   BluetoothProfileControllerCallback mCallback;
 
   bool mCurrentProfileFinished;

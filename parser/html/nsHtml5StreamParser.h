@@ -435,7 +435,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * The first buffer in the pending UTF-16 buffer queue
      */
-    nsRefPtr<nsHtml5OwningUTF16Buffer> mFirstBuffer;
+    RefPtr<nsHtml5OwningUTF16Buffer> mFirstBuffer;
 
     /**
      * The last buffer in the pending UTF-16 buffer queue
@@ -472,7 +472,7 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     /**
      * The owner parser.
      */
-    nsRefPtr<nsHtml5Parser>       mOwner;
+    RefPtr<nsHtml5Parser>       mOwner;
 
     /**
      * Whether the last character tokenized was a carriage return (for CRLF)

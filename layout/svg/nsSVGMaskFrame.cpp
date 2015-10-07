@@ -10,7 +10,7 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsSVGEffects.h"
 #include "mozilla/dom/SVGMaskElement.h"
 #ifdef BUILD_ARM_NEON
@@ -249,7 +249,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
     return nullptr;
   }
 
-  nsRefPtr<DrawTarget> maskDT =
+  RefPtr<DrawTarget> maskDT =
     Factory::CreateDrawTarget(BackendType::CAIRO, maskSurfaceSize,
                               SurfaceFormat::B8G8R8A8);
   if (!maskDT) {
@@ -259,7 +259,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   gfxMatrix maskSurfaceMatrix =
     aContext->CurrentMatrix() * gfxMatrix::Translation(-maskSurfaceRect.TopLeft());
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(maskDT);
+  RefPtr<gfxContext> tmpCtx = new gfxContext(maskDT);
   tmpCtx->SetMatrix(maskSurfaceMatrix);
 
   mMatrixForChildren = GetMaskTransform(aMaskedFrame) * aMatrix;
@@ -279,28 +279,28 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m);
   }
 
-  nsRefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
+  RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
   if (!maskSnapshot) {
     return nullptr;
   }
-  nsRefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
+  RefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
   DataSourceSurface::MappedSurface map;
   if (!maskSurface->Map(DataSourceSurface::MapType::READ, &map)) {
     return nullptr;
   }
 
   // Create alpha channel mask for output
-  nsRefPtr<DrawTarget> destMaskDT =
+  RefPtr<DrawTarget> destMaskDT =
     Factory::CreateDrawTarget(BackendType::CAIRO, maskSurfaceSize,
                               SurfaceFormat::A8);
   if (!destMaskDT) {
     return nullptr;
   }
-  nsRefPtr<SourceSurface> destMaskSnapshot = destMaskDT->Snapshot();
+  RefPtr<SourceSurface> destMaskSnapshot = destMaskDT->Snapshot();
   if (!destMaskSnapshot) {
     return nullptr;
   }
-  nsRefPtr<DataSourceSurface> destMaskSurface = destMaskSnapshot->GetDataSurface();
+  RefPtr<DataSourceSurface> destMaskSurface = destMaskSnapshot->GetDataSurface();
   DataSourceSurface::MappedSurface destMap;
   if (!destMaskSurface->Map(DataSourceSurface::MapType::READ_WRITE, &destMap)) {
     return nullptr;

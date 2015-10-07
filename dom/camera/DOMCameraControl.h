@@ -194,12 +194,12 @@ protected:
   nsresult NotifyRecordingStatusChange(const nsString& aMsg);
 
   already_AddRefed<dom::Promise> CreatePromise(ErrorResult& aRv);
-  void AbortPromise(nsRefPtr<dom::Promise>& aPromise);
+  void AbortPromise(RefPtr<dom::Promise>& aPromise);
   virtual void EventListenerAdded(nsIAtom* aType) override;
   void DispatchPreviewStateEvent(DOMCameraControlListener::PreviewState aState);
   void DispatchStateEvent(const nsString& aType, const nsString& aState);
 
-  nsRefPtr<ICameraControl> mCameraControl; // non-DOM camera control
+  RefPtr<ICameraControl> mCameraControl; // non-DOM camera control
 
   // An agent used to join audio channel service.
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
@@ -207,16 +207,16 @@ protected:
   nsresult Set(uint32_t aKey, const dom::Optional<dom::Sequence<dom::CameraRegion> >& aValue, uint32_t aLimit);
   nsresult Get(uint32_t aKey, nsTArray<dom::CameraRegion>& aValue);
 
-  nsRefPtr<DOMCameraConfiguration>              mCurrentConfiguration;
-  nsRefPtr<dom::CameraCapabilities>             mCapabilities;
+  RefPtr<DOMCameraConfiguration>              mCurrentConfiguration;
+  RefPtr<dom::CameraCapabilities>             mCapabilities;
 
   // camera control pending promises
-  nsRefPtr<dom::Promise>                        mGetCameraPromise;
-  nsRefPtr<dom::Promise>                        mAutoFocusPromise;
-  nsRefPtr<dom::Promise>                        mTakePicturePromise;
-  nsRefPtr<dom::Promise>                        mStartRecordingPromise;
-  nsRefPtr<dom::Promise>                        mReleasePromise;
-  nsRefPtr<dom::Promise>                        mSetConfigurationPromise;
+  RefPtr<dom::Promise>                        mGetCameraPromise;
+  RefPtr<dom::Promise>                        mAutoFocusPromise;
+  RefPtr<dom::Promise>                        mTakePicturePromise;
+  RefPtr<dom::Promise>                        mStartRecordingPromise;
+  RefPtr<dom::Promise>                        mReleasePromise;
+  RefPtr<dom::Promise>                        mSetConfigurationPromise;
 
   // Camera event listener; we only need this weak reference so that
   //  we can remove the listener from the camera when we're done
@@ -224,13 +224,13 @@ protected:
   DOMCameraControlListener* mListener;
 
   // our viewfinder stream
-  nsRefPtr<CameraPreviewMediaStream> mInput;
+  RefPtr<CameraPreviewMediaStream> mInput;
 
   // set once when this object is created
   nsCOMPtr<nsPIDOMWindow>   mWindow;
 
   dom::CameraStartRecordingOptions mOptions;
-  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
+  RefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   DOMCameraControlListener::PreviewState mPreviewState;
   bool mRecording;
   bool mRecordingStoppedDeferred;

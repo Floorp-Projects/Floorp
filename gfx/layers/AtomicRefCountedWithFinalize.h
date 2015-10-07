@@ -6,7 +6,7 @@
 #ifndef MOZILLA_ATOMICREFCOUNTEDWITHFINALIZE_H_
 #define MOZILLA_ATOMICREFCOUNTEDWITHFINALIZE_H_
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Likely.h"
 #include "MainThreadUtils.h"
 #include "base/message_loop.h"
@@ -66,7 +66,7 @@ public:
     friend class ::mozilla::StaticRefPtr;
 
     template<class U>
-    friend class ::nsRefPtr;
+    friend class ::RefPtr;
 
     template<class U>
     friend struct ::RunnableMethodTraits;

@@ -55,8 +55,8 @@ typedef unsigned long NS_RESULT;
               void  AnFooPtrPtrContext( Foo** );
               void	AnISupportsPtrPtrContext( nsISupports** );
               void  AVoidPtrPtrContext( void** );
-              void  set_a_Foo( nsRefPtr<Foo>* result );
-nsRefPtr<Foo>  return_a_Foo();
+              void  set_a_Foo( RefPtr<Foo>* result );
+RefPtr<Foo>  return_a_Foo();
 
 
 
@@ -194,21 +194,21 @@ CreateFoo( void** result )
   }
 
 void
-set_a_Foo( nsRefPtr<Foo>* result )
+set_a_Foo( RefPtr<Foo>* result )
   {
     printf(">>set_a_Foo()\n");
     assert(result);
 
-    nsRefPtr<Foo> foop( do_QueryObject(new Foo) );
+    RefPtr<Foo> foop( do_QueryObject(new Foo) );
     *result = foop;
     printf("<<set_a_Foo()\n");
   }
 
-nsRefPtr<Foo>
+RefPtr<Foo>
 return_a_Foo()
   {
     printf(">>return_a_Foo()\n");
-    nsRefPtr<Foo> foop( do_QueryObject(new Foo) );
+    RefPtr<Foo> foop( do_QueryObject(new Foo) );
     printf("<<return_a_Foo()\n");
     return foop;
   }
@@ -340,10 +340,10 @@ static
 nsresult
 TestBloat_Smart()
 	{
-		nsRefPtr<Bar> barP;
+		RefPtr<Bar> barP;
 		nsresult result = CreateBar( getter_AddRefs(barP) );
 
-		nsRefPtr<Foo> fooP( do_QueryObject(barP, &result) );
+		RefPtr<Foo> fooP( do_QueryObject(barP, &result) );
 
 		if ( fooP )
 			fooP->print_totals();
@@ -384,20 +384,20 @@ public:
   NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING(ObjectForConstPtr)
   void ConstMemberFunction( int aArg1, int* aArgPtr, int& aArgRef ) const
   {
-    printf("const member function is invoked by nsRefPtr<const T>->*.\n");
+    printf("const member function is invoked by RefPtr<const T>->*.\n");
   }
 };
 #undef NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING
 
 
-nsRefPtr<Foo> gFoop;
+RefPtr<Foo> gFoop;
 
 int
 main()
   {
     printf(">>main()\n");
 
-		printf("sizeof(nsRefPtr<Foo>) --> %u\n", unsigned(sizeof(nsRefPtr<Foo>)));
+		printf("sizeof(RefPtr<Foo>) --> %u\n", unsigned(sizeof(RefPtr<Foo>)));
 
 		TestBloat_Raw_Unsafe();
 		TestBloat_Smart();
@@ -405,7 +405,7 @@ main()
 
     {
       printf("\n### Test  1: will a |nsCOMPtr| call |AddRef| on a pointer assigned into it?\n");
-      nsRefPtr<Foo> foop( do_QueryObject(new Foo) );
+      RefPtr<Foo> foop( do_QueryObject(new Foo) );
 
       printf("\n### Test  2: will a |nsCOMPtr| |Release| its old pointer when a new one is assigned in?\n");
       foop = do_QueryObject(new Foo);
@@ -430,13 +430,13 @@ main()
 
     {
       printf("\n### Test  6: will a |nsCOMPtr| call the correct destructor?\n");
-      nsRefPtr<Foo> foop( do_QueryObject(new Bar) );
+      RefPtr<Foo> foop( do_QueryObject(new Bar) );
     }
 
     {
       printf("\n### Test  7: can you compare one |nsCOMPtr| with another [!=]?\n");
 
-      nsRefPtr<Foo> foo1p( do_QueryObject(new Foo) );
+      RefPtr<Foo> foo1p( do_QueryObject(new Foo) );
 
         // [Shouldn't compile] Is it a compile time error to omit |getter_[doesnt_]AddRef[s]|?
       //AnFooPtrPtrContext(&foo1p);
@@ -444,7 +444,7 @@ main()
         // [Shouldn't compile] Is it a compile time error to omit |getter_[doesnt_]AddRef[s]|?
       //AVoidPtrPtrContext(&foo1p);
 
-      nsRefPtr<Foo> foo2p( do_QueryObject(new Foo) );
+      RefPtr<Foo> foo2p( do_QueryObject(new Foo) );
 
       if ( foo1p != foo2p )
         printf("foo1p != foo2p\n");
@@ -488,7 +488,7 @@ main()
 
 #if 1
       printf("\n### Test 11.5: can you compare a |nsCOMPtr| with a raw interface pointer [==]?\n");
-      if ( nsRefPtr<Foo>( raw_foo2p ) == foo2p )
+      if ( RefPtr<Foo>( raw_foo2p ) == foo2p )
         printf("raw_foo2p == foo2p\n");
       else
         printf("raw_foo2p != foo2p\n");
@@ -523,11 +523,11 @@ main()
       raw_foo2p->AddRef();
 
       printf("\n### Test 15: what if I don't want to |AddRef| when I construct?\n");
-      nsRefPtr<Foo> foo1p( dont_AddRef(raw_foo1p) );
-      //nsRefPtr<Foo> foo1p = dont_AddRef(raw_foo1p);
+      RefPtr<Foo> foo1p( dont_AddRef(raw_foo1p) );
+      //RefPtr<Foo> foo1p = dont_AddRef(raw_foo1p);
 
       printf("\n### Test 16: what if I don't want to |AddRef| when I assign in?\n");
-      nsRefPtr<Foo> foo2p;
+      RefPtr<Foo> foo2p;
       foo2p = dont_AddRef(raw_foo2p);
     }
 
@@ -539,16 +539,16 @@ main()
 
     {
     	printf("\n### setup for Test 17\n");
-      nsRefPtr<Foo> foop;
+      RefPtr<Foo> foop;
       printf("### Test 17: basic parameter behavior?\n");
-      CreateFoo( nsRefPtrGetterAddRefs<Foo>(foop) );
+      CreateFoo( RefPtrGetterAddRefs<Foo>(foop) );
     }
     printf("### End Test 17\n");
 
 
     {
     	printf("\n### setup for Test 18\n");
-      nsRefPtr<Foo> foop;
+      RefPtr<Foo> foop;
       printf("### Test 18: basic parameter behavior, using the short form?\n");
       CreateFoo( getter_AddRefs(foop) );
     }
@@ -557,7 +557,7 @@ main()
 
     {
     	printf("\n### setup for Test 19, 20\n");
-      nsRefPtr<Foo> foop;
+      RefPtr<Foo> foop;
       printf("### Test 19: reference parameter behavior?\n");
       set_a_Foo(address_of(foop));
 
@@ -568,7 +568,7 @@ main()
 
 		{
     	printf("\n### setup for Test 21\n");
-			nsRefPtr<Foo> fooP;
+			RefPtr<Foo> fooP;
 
 			printf("### Test 21: is |QueryInterface| called on assigning in a raw pointer?\n");
 			fooP = do_QueryObject(new Foo);
@@ -577,10 +577,10 @@ main()
 
 		{
     	printf("\n### setup for Test 22\n");
-			nsRefPtr<Foo> fooP;
+			RefPtr<Foo> fooP;
 			fooP = do_QueryObject(new Foo);
 
-			nsRefPtr<Foo> foo2P;
+			RefPtr<Foo> foo2P;
 
 			printf("### Test 22: is |QueryInterface| _not_ called when assigning in a smart-pointer of the same type?\n");
 			foo2P = fooP;
@@ -589,11 +589,11 @@ main()
 
 		{
     	printf("\n### setup for Test 23\n");
-			nsRefPtr<Bar> barP( do_QueryObject(new Bar) );
+			RefPtr<Bar> barP( do_QueryObject(new Bar) );
 
 			printf("### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?\n");
 
-			nsRefPtr<Foo> fooP( do_QueryObject(barP) );
+			RefPtr<Foo> fooP( do_QueryObject(barP) );
 			if ( fooP )
 				printf("an Bar* is an Foo*\n");
 		}
@@ -602,15 +602,15 @@ main()
 
 		{
     	printf("\n### setup for Test 24\n");
-			nsRefPtr<Foo> fooP( do_QueryObject(new Foo) );
+			RefPtr<Foo> fooP( do_QueryObject(new Foo) );
 
 			printf("### Test 24: does |forget| avoid an AddRef/Release when assigning to another nsCOMPtr?\n");
-      nsRefPtr<Foo> fooP2( fooP.forget() );
+      RefPtr<Foo> fooP2( fooP.forget() );
 		}
     printf("### End Test 24\n");
 
 		{
-			nsRefPtr<Foo> fooP;
+			RefPtr<Foo> fooP;
 
 			AnFooPtrPtrContext( getter_AddRefs(fooP) );
 			AVoidPtrPtrContext( getter_AddRefs(fooP) );
@@ -618,19 +618,19 @@ main()
 
 		{
 		  printf("\n### setup for Test 25\n");
-		  nsRefPtr<Foo> fooP(new Foo);
+		  RefPtr<Foo> fooP(new Foo);
 
-		  printf("### Test 25: can you construct an |nsRefPtr<const T>| from an |nsRefPtr<T>|?\n");
-		  nsRefPtr<const Foo> constFooP = fooP;
+		  printf("### Test 25: can you construct an |RefPtr<const T>| from an |RefPtr<T>|?\n");
+		  RefPtr<const Foo> constFooP = fooP;
 
-		  printf("### Test 25: can you call a non-const method on an |nsRefPtr<const T>|?\n");
+		  printf("### Test 25: can you call a non-const method on an |RefPtr<const T>|?\n");
 		  constFooP->ConstMethod();
 
-		  // [Shouldn't compile] Is it a compile time error to call a non-const method on an |nsRefPtr<const T>|?
+		  // [Shouldn't compile] Is it a compile time error to call a non-const method on an |RefPtr<const T>|?
 		  //constFooP->NonconstMethod();
 
-		  // [Shouldn't compile] Is it a compile time error to construct an |nsRefPtr<T> from an |nsRefPtr<const T>|?
-		  //nsRefPtr<Foo> otherFooP(constFooP);
+		  // [Shouldn't compile] Is it a compile time error to construct an |RefPtr<T> from an |RefPtr<const T>|?
+		  //RefPtr<Foo> otherFooP(constFooP);
 		}
 
 
@@ -639,9 +639,9 @@ main()
 
     {
       printf("\n### setup for Test 26, 27, 28\n");
-      nsRefPtr<Foo> foop = new Foo;
-      nsRefPtr<Foo> foop2 = new Bar;
-      nsRefPtr<const ObjectForConstPtr> foop3 = new ObjectForConstPtr;
+      RefPtr<Foo> foop = new Foo;
+      RefPtr<Foo> foop2 = new Bar;
+      RefPtr<const ObjectForConstPtr> foop3 = new ObjectForConstPtr;
       int test = 1;
       void (Foo::*fPtr)( int, int*, int& ) = &Foo::MemberFunction;
       void (Foo::*fVPtr)( int, int*, int& ) = &Foo::VirtualMemberFunction;
@@ -657,7 +657,7 @@ main()
       (foop2->*fVCPtr)(test, &test, test);
       printf("### End Test 27\n");
 
-      printf("### Test 28: invoke virtual const member function via nsRefPtr<const T> operator ->*\n");
+      printf("### Test 28: invoke virtual const member function via RefPtr<const T> operator ->*\n");
       (foop3->*fCPtr2)(test, &test, test);
       printf("### End Test 28\n");
     }

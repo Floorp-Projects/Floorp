@@ -46,7 +46,7 @@ NS_INTERFACE_MAP_END
 already_AddRefed<Promise>
 Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
 {
-  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
+  RefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
     aFileSystem, EmptyString(), true, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -101,7 +101,7 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
 {
   nsresult error = NS_OK;
   nsAutoString realPath;
-  nsRefPtr<Blob> blobData;
+  RefPtr<Blob> blobData;
   InfallibleTArray<uint8_t> arrayData;
   bool replace = (aOptions.mIfExists == CreateIfExistsMode::Replace);
 
@@ -129,7 +129,7 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions,
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
 
-  nsRefPtr<CreateFileTask> task =
+  RefPtr<CreateFileTask> task =
     new CreateFileTask(mFileSystem, realPath, blobData, arrayData, replace, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -147,7 +147,7 @@ Directory::CreateDirectory(const nsAString& aPath, ErrorResult& aRv)
   if (!DOMPathToRealPath(aPath, realPath)) {
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
-  nsRefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(
+  RefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(
     mFileSystem, realPath, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -165,7 +165,7 @@ Directory::Get(const nsAString& aPath, ErrorResult& aRv)
   if (!DOMPathToRealPath(aPath, realPath)) {
     error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
-  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
+  RefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
     mFileSystem, realPath, false, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -193,7 +193,7 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
 {
   nsresult error = NS_OK;
   nsAutoString realPath;
-  nsRefPtr<BlobImpl> blob;
+  RefPtr<BlobImpl> blob;
 
   // Check and get the target path.
 
@@ -213,7 +213,7 @@ Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
     }
   }
 
-  nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, blob, realPath,
+  RefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, blob, realPath,
     aRecursive, aRv);
   if (aRv.Failed()) {
     return nullptr;
@@ -241,7 +241,7 @@ Directory::GetFilesAndDirectories()
   nsresult error = NS_OK;
   nsString realPath;
   ErrorResult rv;
-  nsRefPtr<GetDirectoryListingTask> task =
+  RefPtr<GetDirectoryListingTask> task =
     new GetDirectoryListingTask(mFileSystem, mPath, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return nullptr;

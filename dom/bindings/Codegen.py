@@ -1082,7 +1082,7 @@ class CGHeaders(CGWrapper):
                         # Dictionaries with interface members rely on the
                         # actual class definition of that interface member
                         # being visible in the binding header, because they
-                        # store them in nsRefPtr and have inline
+                        # store them in RefPtr and have inline
                         # constructors/destructors.
                         #
                         # XXXbz maybe dictionaries with interface members
@@ -1716,7 +1716,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
             ErrorResult rv;
             JS::Rooted<JS::Value> v(aCx);
             {  // Scope to make sure |result| goes out of scope while |v| is rooted
-              nsRefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
+              RefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
               rv.WouldReportJSException();
               if (rv.Failed()) {
                 ThrowMethodFailed(aCx, rv);
@@ -3957,7 +3957,7 @@ class CastableObjectUnwrapper():
 
         if descriptor.hasXPConnectImpls:
             self.substitution["codeOnFailure"] = string.Template(
-                "nsRefPtr<${type}> objPtr;\n" +
+                "RefPtr<${type}> objPtr;\n" +
                 xpconnectUnwrap +
                 "if (NS_FAILED(rv)) {\n"
                 "${indentedCodeOnFailure}"
@@ -4938,7 +4938,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if descriptor.interface.isCallback():
             name = descriptor.interface.identifier.name
             if type.nullable() or isCallbackReturnValue:
-                declType = CGGeneric("nsRefPtr<%s>" % name)
+                declType = CGGeneric("RefPtr<%s>" % name)
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
             conversion = indent(CGCallbackTempRoot(name).define())
@@ -4958,7 +4958,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         # or an XPCOM interface.
 
         # Allow null pointers for nullable types and old-binding classes, and
-        # use an nsRefPtr or raw pointer for callback return values to make
+        # use an RefPtr or raw pointer for callback return values to make
         # them easier to return.
         argIsPointer = (type.nullable() or type.unroll().inner.isExternal() or
                         isCallbackReturnValue)
@@ -4991,7 +4991,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         holderType = None
         if argIsPointer:
             if forceOwningType:
-                declType = "nsRefPtr<" + typeName + ">"
+                declType = "RefPtr<" + typeName + ">"
             else:
                 declType = typePtr
         else:
@@ -5047,14 +5047,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
             # to addref when unwrapping or not.  So we just pass an
-            # getter_AddRefs(nsRefPtr) to XPConnect and if we'll need a release
+            # getter_AddRefs(RefPtr) to XPConnect and if we'll need a release
             # it'll put a non-null pointer in there.
             if forceOwningType:
                 # Don't return a holderType in this case; our declName
                 # will just own stuff.
-                templateBody += "nsRefPtr<" + typeName + "> ${holderName};\n"
+                templateBody += "RefPtr<" + typeName + "> ${holderName};\n"
             else:
-                holderType = "nsRefPtr<" + typeName + ">"
+                holderType = "RefPtr<" + typeName + ">"
             templateBody += (
                 "JS::Rooted<JSObject*> source(cx, &${val}.toObject());\n" +
                 "if (NS_FAILED(UnwrapArg<" + typeName + ">(source, getter_AddRefs(${holderName})))) {\n")
@@ -5317,7 +5317,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         callback = type.unroll().callback
         name = callback.identifier.name
         if type.nullable():
-            declType = CGGeneric("nsRefPtr<%s>" % name)
+            declType = CGGeneric("RefPtr<%s>" % name)
         else:
             declType = CGGeneric("OwningNonNull<%s>" % name)
         conversion = indent(CGCallbackTempRoot(name).define())
@@ -6473,7 +6473,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, None, None, None, conversion
     if returnType.isCallback():
         name = returnType.unroll().callback.identifier.name
-        return CGGeneric("nsRefPtr<%s>" % name), None, None, None, None
+        return CGGeneric("RefPtr<%s>" % name), None, None, None, None
     if returnType.isAny():
         if isMember:
             return CGGeneric("JS::Value"), None, None, None, None
@@ -13144,7 +13144,7 @@ class CGNativeMember(ClassMethod):
                 iface.identifier.name).prettyNativeType)
             if self.resultAlreadyAddRefed:
                 if isMember:
-                    holder = "nsRefPtr"
+                    holder = "RefPtr"
                 else:
                     holder = "already_AddRefed"
                 if memberReturnsNewObject(self.member) or isMember:
@@ -13157,7 +13157,7 @@ class CGNativeMember(ClassMethod):
             else:
                 result = CGWrapper(result, post="*")
             # Since we always force an owning type for callback return values,
-            # our ${declName} is an OwningNonNull or nsRefPtr.  So we can just
+            # our ${declName} is an OwningNonNull or RefPtr.  So we can just
             # .forget() to get our already_AddRefed.
             return result.define(), "nullptr", "return ${declName}.forget();\n"
         if type.isCallback():
@@ -13343,7 +13343,7 @@ class CGNativeMember(ClassMethod):
                                iface.identifier.name == "Promise")
             if argIsPointer:
                 if (optional or isMember) and forceOwningType:
-                    typeDecl = "nsRefPtr<%s>"
+                    typeDecl = "RefPtr<%s>"
                 else:
                     typeDecl = "%s*"
             else:
@@ -13383,7 +13383,7 @@ class CGNativeMember(ClassMethod):
             forceOwningType = optional or isMember
             if type.nullable():
                 if forceOwningType:
-                    declType = "nsRefPtr<%s>"
+                    declType = "RefPtr<%s>"
                 else:
                     declType = "%s*"
             else:
@@ -13950,7 +13950,7 @@ def genConstructorBody(descriptor, initCall=""):
           return nullptr;
         }
         // Build the C++ implementation.
-        nsRefPtr<${implClass}> impl = new ${implClass}(jsImplObj, globalHolder);
+        RefPtr<${implClass}> impl = new ${implClass}(jsImplObj, globalHolder);
         $*{initCall}
         return impl.forget();
         """,
@@ -14100,7 +14100,7 @@ class CGJSImplClass(CGBindingImplClass):
               $*{ccDecl}
 
             private:
-              nsRefPtr<${jsImplName}> mImpl;
+              RefPtr<${jsImplName}> mImpl;
               nsCOMPtr<nsISupports> mParent;
 
             """,
@@ -14208,7 +14208,7 @@ class CGJSImplClass(CGBindingImplClass):
             nsCOMPtr<nsIGlobalObject> globalHolder = do_QueryInterface(global.GetAsSupports());
             MOZ_ASSERT(globalHolder);
             JS::Rooted<JSObject*> arg(cx, &args[1].toObject());
-            nsRefPtr<${implName}> impl = new ${implName}(arg, globalHolder);
+            RefPtr<${implName}> impl = new ${implName}(arg, globalHolder);
             MOZ_ASSERT(js::IsObjectInContextCompartment(arg, cx));
             return GetOrCreateDOMReflector(cx, impl, args.rval());
             """,
@@ -15938,7 +15938,7 @@ class CGEventMethod(CGNativeMember):
                         # assignment because the underlying types may not match.
                         # For example, the argument can be a
                         # Sequence<OwningNonNull<SomeInterface>> while our
-                        # member is an nsTArray<nsRefPtr<SomeInterface>>.  So
+                        # member is an nsTArray<RefPtr<SomeInterface>>.  So
                         # use AppendElements, which is actually a template on
                         # the incoming type on nsTArray and does the right thing
                         # for this case.
@@ -15979,7 +15979,7 @@ class CGEventMethod(CGNativeMember):
 
         self.body = fill(
             """
-            nsRefPtr<${nativeType}> e = new ${nativeType}(aOwner);
+            RefPtr<${nativeType}> e = new ${nativeType}(aOwner);
             bool trusted = e->Init(aOwner);
             e->InitEvent(${eventType}, ${eventInit}.mBubbles, ${eventInit}.mCancelable);
             $*{members}
@@ -16182,7 +16182,7 @@ class CGEventClass(CGBindingImplClass):
                 nativeType.pop(0)
                 if nativeType[0] == "dom":
                     nativeType.pop(0)
-            nativeType = CGWrapper(CGGeneric("::".join(nativeType)), pre="nsRefPtr<", post=">")
+            nativeType = CGWrapper(CGGeneric("::".join(nativeType)), pre="RefPtr<", post=">")
         elif type.isAny():
             nativeType = CGGeneric("JS::Heap<JS::Value>")
         elif type.isObject() or type.isSpiderMonkeyInterface():

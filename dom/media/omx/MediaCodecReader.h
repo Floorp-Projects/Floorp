@@ -70,7 +70,7 @@ public:
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as Shutdown() is
   // irreversible, whereas ReleaseMediaResources() is reversible.
-  virtual nsRefPtr<ShutdownPromise> Shutdown();
+  virtual RefPtr<ShutdownPromise> Shutdown();
 
 protected:
   // Used to retrieve some special information that can only be retrieved after
@@ -83,22 +83,22 @@ public:
   virtual nsresult ResetDecode() override;
 
   // Disptach a DecodeVideoFrameTask to decode video data.
-  virtual nsRefPtr<VideoDataPromise>
+  virtual RefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe,
                    int64_t aTimeThreshold) override;
 
   // Disptach a DecodeAduioDataTask to decode video data.
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() override;
+  virtual RefPtr<AudioDataPromise> RequestAudioData() override;
 
   virtual bool HasAudio();
   virtual bool HasVideo();
 
-  virtual nsRefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
+  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
-  virtual nsRefPtr<SeekPromise>
+  virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
   virtual bool IsMediaSeekable() override;
@@ -155,7 +155,7 @@ protected:
     int64_t mSeekTimeUs;
     bool mFlushed; // meaningless when mSeekTimeUs is invalid.
     bool mDiscontinuity;
-    nsRefPtr<TaskQueue> mTaskQueue;
+    RefPtr<TaskQueue> mTaskQueue;
     Monitor mTrackMonitor;
 
   private:
@@ -241,7 +241,7 @@ private:
     // Protected by mTrackMonitor.
     MozPromiseHolder<VideoDataPromise> mVideoPromise;
 
-    nsRefPtr<TaskQueue> mReleaseBufferTaskQueue;
+    RefPtr<TaskQueue> mReleaseBufferTaskQueue;
   private:
     // Forbidden
     VideoTrack(const VideoTrack &rhs) = delete;
@@ -285,11 +285,11 @@ private:
   class ParseCachedDataRunnable : public nsRunnable
   {
   public:
-    ParseCachedDataRunnable(nsRefPtr<MediaCodecReader> aReader,
+    ParseCachedDataRunnable(RefPtr<MediaCodecReader> aReader,
                             const char* aBuffer,
                             uint32_t aLength,
                             int64_t aOffset,
-                            nsRefPtr<SignalObject> aSignal);
+                            RefPtr<SignalObject> aSignal);
 
     NS_IMETHOD Run() override;
 
@@ -299,18 +299,18 @@ private:
     ParseCachedDataRunnable(const ParseCachedDataRunnable &rhs) = delete;
     const ParseCachedDataRunnable &operator=(const ParseCachedDataRunnable &rhs) = delete;
 
-    nsRefPtr<MediaCodecReader> mReader;
+    RefPtr<MediaCodecReader> mReader;
     nsAutoArrayPtr<const char> mBuffer;
     uint32_t mLength;
     int64_t mOffset;
-    nsRefPtr<SignalObject> mSignal;
+    RefPtr<SignalObject> mSignal;
   };
   friend class ParseCachedDataRunnable;
 
   class ProcessCachedDataTask : public Task
   {
   public:
-    ProcessCachedDataTask(nsRefPtr<MediaCodecReader> aReader,
+    ProcessCachedDataTask(RefPtr<MediaCodecReader> aReader,
                           int64_t aOffset);
 
     void Run() override;
@@ -321,7 +321,7 @@ private:
     ProcessCachedDataTask(const ProcessCachedDataTask &rhs) = delete;
     const ProcessCachedDataTask &operator=(const ProcessCachedDataTask &rhs) = delete;
 
-    nsRefPtr<MediaCodecReader> mReader;
+    RefPtr<MediaCodecReader> mReader;
     int64_t mOffset;
   };
   friend class ProcessCachedDataTask;
@@ -342,7 +342,7 @@ private:
   bool CreateMediaSources();
   void DestroyMediaSources();
 
-  nsRefPtr<MediaResourcePromise> CreateMediaCodecs();
+  RefPtr<MediaResourcePromise> CreateMediaCodecs();
   static bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
                                Track& aTrack,
                                bool aAsync,
@@ -388,7 +388,7 @@ private:
   void ClearColorConverterBuffer();
 
   int64_t ProcessCachedData(int64_t aOffset,
-                            nsRefPtr<SignalObject> aSignal);
+                            RefPtr<SignalObject> aSignal);
   bool ParseDataSegment(const char* aBuffer,
                         uint32_t aLength,
                         int64_t aOffset);

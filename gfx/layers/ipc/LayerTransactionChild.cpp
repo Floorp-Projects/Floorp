@@ -87,7 +87,7 @@ LayerTransactionChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
         FenceHandle fence = op.fence();
         PTextureChild* child = op.textureChild();
 
-        nsRefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
+        RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
         if (texture) {
           texture->SetReleaseFenceHandle(fence);
         }

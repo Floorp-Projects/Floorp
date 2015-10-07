@@ -41,7 +41,7 @@ TransitionEvent::Constructor(const GlobalObject& aGlobal,
                              ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<TransitionEvent> e = new TransitionEvent(t, nullptr, nullptr);
+  RefPtr<TransitionEvent> e = new TransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
@@ -93,7 +93,7 @@ NS_NewDOMTransitionEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
                          InternalTransitionEvent* aEvent)
 {
-  nsRefPtr<TransitionEvent> it =
+  RefPtr<TransitionEvent> it =
     new TransitionEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

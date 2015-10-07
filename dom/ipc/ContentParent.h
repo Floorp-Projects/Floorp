@@ -971,7 +971,7 @@ private:
     // Allows NuwaParent to access OnNuwaReady() and OnNewProcessCreated().
     friend class NuwaParent;
 
-    nsRefPtr<nsConsoleService>  mConsoleService;
+    RefPtr<nsConsoleService>  mConsoleService;
     nsConsoleService* GetConsoleService();
 
     nsTArray<nsCOMPtr<nsIObserver>> mIdleListeners;
@@ -991,10 +991,10 @@ private:
 
     // NuwaParent and ContentParent hold strong references to each other. The
     // cycle will be broken when either actor is destroyed.
-    nsRefPtr<NuwaParent> mNuwaParent;
+    RefPtr<NuwaParent> mNuwaParent;
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    nsRefPtr<mozilla::ProfileGatherer> mGatherer;
+    RefPtr<mozilla::ProfileGatherer> mGatherer;
 #endif
     nsCString mProfile;
 
@@ -1016,7 +1016,7 @@ public:
   {}
 private:
   virtual ~ParentIdleListener() {}
-  nsRefPtr<mozilla::dom::ContentParent> mParent;
+  RefPtr<mozilla::dom::ContentParent> mParent;
   uint64_t mObserver;
   uint32_t mTime;
 };

@@ -362,7 +362,7 @@ void data_ss_release_callback(void *aDataSourceSurface,
 nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface,
                                                 CGImageRef* aResult)
 {
-  nsRefPtr<DataSourceSurface> dataSurface;
+  RefPtr<DataSourceSurface> dataSurface;
 
   if (aSurface->GetFormat() ==  SurfaceFormat::B8G8R8A8) {
     dataSurface = aSurface->GetDataSurface();
@@ -468,7 +468,7 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage 
 
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult, CGFloat scaleFactor)
 {
-  nsRefPtr<SourceSurface> surface;
+  RefPtr<SourceSurface> surface;
   int32_t width = 0, height = 0;
   aImage->GetWidth(&width);
   aImage->GetHeight(&height);
@@ -477,14 +477,14 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
   if (aImage->GetType() == imgIContainer::TYPE_VECTOR && scaleFactor != 1.0f) {
     IntSize scaledSize(ceil(width * scaleFactor), ceil(height * scaleFactor));
 
-    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(scaledSize, SurfaceFormat::B8G8R8A8);
     if (!drawTarget) {
       NS_ERROR("Failed to create DrawTarget");
       return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<gfxContext> context = new gfxContext(drawTarget);
+    RefPtr<gfxContext> context = new gfxContext(drawTarget);
     if (!context) {
       NS_ERROR("Failed to create gfxContext");
       return NS_ERROR_FAILURE;

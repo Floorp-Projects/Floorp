@@ -21,7 +21,7 @@
 using namespace mozilla;
 
 #define NS_ENSURE_NATIVE_COLUMN(_col)                                \
-  nsRefPtr<nsTreeColumn> col = nsTreeBodyFrame::GetColumnImpl(_col); \
+  RefPtr<nsTreeColumn> col = nsTreeBodyFrame::GetColumnImpl(_col); \
   if (!col) {                                                        \
     return NS_ERROR_INVALID_ARG;                                     \
   }

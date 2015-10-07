@@ -59,7 +59,7 @@ nsInstantiationNode::Propagate(InstantiationSet& aInstantiations,
             if (node) {
                 nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(node);
                 if (resource) {
-                    nsRefPtr<nsXULTemplateResultRDF> nextresult =
+                    RefPtr<nsXULTemplateResultRDF> nextresult =
                         new nsXULTemplateResultRDF(mQuery, *inst, resource);
                     if (! nextresult)
                         return NS_ERROR_OUT_OF_MEMORY;

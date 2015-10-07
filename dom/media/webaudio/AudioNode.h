@@ -168,7 +168,7 @@ public:
 
     // Weak reference.
     AudioNode* mInputNode;
-    nsRefPtr<MediaInputPort> mStreamPort;
+    RefPtr<MediaInputPort> mStreamPort;
     // The index of the input port this node feeds into.
     // This is not used for connections to AudioParams.
     uint32_t mInputPort;
@@ -183,11 +183,11 @@ public:
   {
     return mInputNodes;
   }
-  const nsTArray<nsRefPtr<AudioNode> >& OutputNodes() const
+  const nsTArray<RefPtr<AudioNode> >& OutputNodes() const
   {
     return mOutputNodes;
   }
-  const nsTArray<nsRefPtr<AudioParam> >& OutputParams() const
+  const nsTArray<RefPtr<AudioParam> >& OutputParams() const
   {
     return mOutputParams;
   }
@@ -222,11 +222,11 @@ protected:
   void SendChannelMixingParametersToStream();
 
 private:
-  nsRefPtr<AudioContext> mContext;
+  RefPtr<AudioContext> mContext;
 
 protected:
   // Must be set in the constructor. Must not be null unless finished.
-  nsRefPtr<AudioNodeStream> mStream;
+  RefPtr<AudioNodeStream> mStream;
 
 private:
   // For every InputNode, there is a corresponding entry in mOutputNodes of the
@@ -236,13 +236,13 @@ private:
   // of the mOutputNode entry. We won't necessarily be able to identify the
   // exact matching entry, since mOutputNodes doesn't include the port
   // identifiers and the same node could be connected on multiple ports.
-  nsTArray<nsRefPtr<AudioNode> > mOutputNodes;
+  nsTArray<RefPtr<AudioNode> > mOutputNodes;
   // For every mOutputParams entry, there is a corresponding entry in
   // AudioParam::mInputNodes of the mOutputParams entry. We won't necessarily be
   // able to identify the exact matching entry, since mOutputParams doesn't
   // include the port identifiers and the same node could be connected on
   // multiple ports.
-  nsTArray<nsRefPtr<AudioParam> > mOutputParams;
+  nsTArray<RefPtr<AudioParam> > mOutputParams;
   uint32_t mChannelCount;
   ChannelCountMode mChannelCountMode;
   ChannelInterpretation mChannelInterpretation;

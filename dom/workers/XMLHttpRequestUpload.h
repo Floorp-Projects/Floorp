@@ -15,7 +15,7 @@ class XMLHttpRequest;
 
 class XMLHttpRequestUpload final : public nsXHREventTarget
 {
-  nsRefPtr<XMLHttpRequest> mXHR;
+  RefPtr<XMLHttpRequest> mXHR;
 
   explicit XMLHttpRequestUpload(XMLHttpRequest* aXHR);
 

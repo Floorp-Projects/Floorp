@@ -50,7 +50,7 @@ private:
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   PNeckoParent* mNeckoParent;
-  nsRefPtr<TCPServerSocket> mServerSocket;
+  RefPtr<TCPServerSocket> mServerSocket;
   bool mIPCOpen;
 };
 

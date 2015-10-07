@@ -435,7 +435,7 @@ nsHTMLEditor::GetPositionAndDimensions(nsIDOMElement * aElement,
     mResizedObjectIsAbsolutelyPositioned = true;
 
     // Get the all the computed css styles attached to the element node
-    nsRefPtr<nsComputedDOMStyle> cssDecl =
+    RefPtr<nsComputedDOMStyle> cssDecl =
       mHTMLCSSUtils->GetComputedStyle(element);
     NS_ENSURE_STATE(cssDecl);
 

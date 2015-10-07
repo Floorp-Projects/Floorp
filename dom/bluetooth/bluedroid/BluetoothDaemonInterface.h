@@ -155,12 +155,12 @@ private:
   void DispatchError(BluetoothResultHandler* aRes, nsresult aRv);
 
   nsCString mListenSocketName;
-  nsRefPtr<mozilla::ipc::ListenSocket> mListenSocket;
-  nsRefPtr<mozilla::ipc::DaemonSocket> mCmdChannel;
-  nsRefPtr<mozilla::ipc::DaemonSocket> mNtfChannel;
+  RefPtr<mozilla::ipc::ListenSocket> mListenSocket;
+  RefPtr<mozilla::ipc::DaemonSocket> mCmdChannel;
+  RefPtr<mozilla::ipc::DaemonSocket> mNtfChannel;
   nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
 
-  nsTArray<nsRefPtr<BluetoothResultHandler> > mResultHandlerQ;
+  nsTArray<RefPtr<BluetoothResultHandler> > mResultHandlerQ;
 
   nsAutoPtr<BluetoothDaemonSocketInterface> mSocketInterface;
   nsAutoPtr<BluetoothDaemonHandsfreeInterface> mHandsfreeInterface;

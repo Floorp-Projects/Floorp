@@ -55,7 +55,7 @@ private:
                               const char* aFromSegment, uint32_t aToOffset,
                               uint32_t aCount, uint32_t* aWriteCount);
 
-  nsRefPtr<HTMLTrackElement> mElement;
+  RefPtr<HTMLTrackElement> mElement;
   nsCOMPtr<nsIWebVTTParserWrapper> mParserWrapper;
 };
 

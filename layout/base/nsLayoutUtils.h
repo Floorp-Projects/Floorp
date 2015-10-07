@@ -2059,7 +2059,7 @@ public:
     SurfaceFromElementResult();
 
     /* mSourceSurface will contain the resulting surface, or will be nullptr on error */
-    nsRefPtr<SourceSurface> mSourceSurface;
+    RefPtr<SourceSurface> mSourceSurface;
     /* Contains info for drawing when there is no mSourceSurface. */
     DirectDrawInfo mDrawInfo;
 

@@ -131,8 +131,8 @@ private:
 
   bool mShutdown;
 
-  nsRefPtr<ListenSocket> mListenSocket;
-  nsRefPtr<StreamSocket> mStreamSocket;
+  RefPtr<ListenSocket> mListenSocket;
+  RefPtr<StreamSocket> mStreamSocket;
 };
 
 } // namespace ipc

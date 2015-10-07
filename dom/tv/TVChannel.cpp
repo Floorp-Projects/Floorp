@@ -43,7 +43,7 @@ TVChannel::Create(nsPIDOMWindow* aWindow,
                   TVSource* aSource,
                   nsITVChannelData* aData)
 {
-  nsRefPtr<TVChannel> channel = new TVChannel(aWindow, aSource);
+  RefPtr<TVChannel> channel = new TVChannel(aWindow, aSource);
   return (channel->Init(aData)) ? channel.forget() : nullptr;
 }
 
@@ -91,12 +91,12 @@ TVChannel::GetPrograms(const TVGetProgramsOptions& aOptions, ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<TVTuner> tuner = mSource->Tuner();
+  RefPtr<TVTuner> tuner = mSource->Tuner();
   nsString tunerId;
   tuner->GetId(tunerId);
 
@@ -143,7 +143,7 @@ TVChannel::GetServiceId(nsAString& aServiceId) const
 already_AddRefed<TVSource>
 TVChannel::Source() const
 {
-  nsRefPtr<TVSource> source = mSource;
+  RefPtr<TVSource> source = mSource;
   return source.forget();
 }
 
@@ -183,12 +183,12 @@ TVChannel::GetCurrentProgram(ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  nsRefPtr<TVTuner> tuner = mSource->Tuner();
+  RefPtr<TVTuner> tuner = mSource->Tuner();
   nsString tunerId;
   tuner->GetId(tunerId);
 

@@ -22,10 +22,10 @@ namespace media {
 already_AddRefed<Pledge<nsCString>>
 GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing, bool aPersist)
 {
-  nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   MOZ_ASSERT(mgr);
 
-  nsRefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
+  RefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
   uint32_t id = mgr->mGetOriginKeyPledges.Append(*p);
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -90,11 +90,11 @@ void Child::ActorDestroy(ActorDestroyReason aWhy)
 bool
 Child::RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey)
 {
-  nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  RefPtr<MediaManager> mgr = MediaManager::GetInstance();
   if (!mgr) {
     return false;
   }
-  nsRefPtr<Pledge<nsCString>> pledge = mgr->mGetOriginKeyPledges.Remove(aRequestId);
+  RefPtr<Pledge<nsCString>> pledge = mgr->mGetOriginKeyPledges.Remove(aRequestId);
   if (pledge) {
     pledge->Resolve(aKey);
   }

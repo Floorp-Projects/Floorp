@@ -24,7 +24,7 @@ MP3Decoder::Clone() {
 
 MediaDecoderStateMachine*
 MP3Decoder::CreateStateMachine() {
-  nsRefPtr<MediaDecoderReader> reader =
+  RefPtr<MediaDecoderReader> reader =
       new MediaFormatReader(this, new mp3::MP3Demuxer(GetResource()));
   return new MediaDecoderStateMachine(this, reader);
 }
@@ -34,12 +34,12 @@ CreateTestMP3Decoder(AudioInfo& aConfig)
 {
   PlatformDecoderModule::Init();
 
-  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  RefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
   if (!platform || !platform->SupportsMimeType(aConfig.mMimeType)) {
     return nullptr;
   }
 
-  nsRefPtr<MediaDataDecoder> decoder(
+  RefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr));
   if (!decoder) {
     return nullptr;
@@ -61,7 +61,7 @@ CanCreateMP3Decoder()
   config.mRate = 48000;
   config.mChannels = 2;
   config.mBitDepth = 16;
-  nsRefPtr<MediaDataDecoder> decoder(CreateTestMP3Decoder(config));
+  RefPtr<MediaDataDecoder> decoder(CreateTestMP3Decoder(config));
   if (decoder) {
     result = true;
   }

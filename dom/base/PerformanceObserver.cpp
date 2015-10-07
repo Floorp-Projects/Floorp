@@ -86,7 +86,7 @@ PerformanceObserver::Constructor(const GlobalObject& aGlobal,
     }
     MOZ_ASSERT(ownerWindow->IsInnerWindow());
 
-    nsRefPtr<PerformanceObserver> observer =
+    RefPtr<PerformanceObserver> observer =
       new PerformanceObserver(ownerWindow, aCb);
     return observer.forget();
   }
@@ -95,7 +95,7 @@ PerformanceObserver::Constructor(const GlobalObject& aGlobal,
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
 
-  nsRefPtr<PerformanceObserver> observer =
+  RefPtr<PerformanceObserver> observer =
     new PerformanceObserver(workerPrivate, aCb);
   return observer.forget();
 }
@@ -112,7 +112,7 @@ PerformanceObserver::Notify()
   if (mQueuedEntries.IsEmpty()) {
     return;
   }
-  nsRefPtr<PerformanceObserverEntryList> list =
+  RefPtr<PerformanceObserverEntryList> list =
     new PerformanceObserverEntryList(this, mQueuedEntries);
 
   ErrorResult rv;

@@ -304,7 +304,7 @@ private:
    * Cycles between `this` and `mConnectionShutdown` are broken
    * in `Shutdown()`.
    */
-  nsRefPtr<DatabaseShutdown> mConnectionShutdown;
+  RefPtr<DatabaseShutdown> mConnectionShutdown;
 };
 
 } // namespace places

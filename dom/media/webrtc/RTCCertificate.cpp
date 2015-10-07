@@ -234,7 +234,7 @@ private:
     // object is deleted, the structures they reference will be deleted too.
     SECKEYPrivateKey* key = mKeyPair.mPrivateKey.get()->GetPrivateKey();
     CERTCertificate* cert = CERT_DupCertificate(mCertificate);
-    nsRefPtr<RTCCertificate> result =
+    RefPtr<RTCCertificate> result =
         new RTCCertificate(mResultPromise->GetParentObject(),
                            key, cert, mAuthType, mExpires);
     mResultPromise->MaybeResolve(result);
@@ -247,7 +247,7 @@ RTCCertificate::GenerateCertificate(
     ErrorResult& aRv, JSCompartment* aCompartment)
 {
   nsIGlobalObject* global = xpc::NativeGlobal(aGlobal.Get());
-  nsRefPtr<Promise> p = Promise::Create(global, aRv);
+  RefPtr<Promise> p = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -255,7 +255,7 @@ RTCCertificate::GenerateCertificate(
   if (!usages.AppendElement(NS_LITERAL_STRING("sign"), fallible)) {
     return nullptr;
   }
-  nsRefPtr<WebCryptoTask> task =
+  RefPtr<WebCryptoTask> task =
       new GenerateRTCCertificateTask(aGlobal.Context(),
                                      aKeygenAlgorithm, usages);
   task->DispatchWithPromise(p);
@@ -305,7 +305,7 @@ RTCCertificate::~RTCCertificate()
 // RTCPeerConnection provides this guarantee by holding a strong reference to
 // the RTCCertificate.  It will cleanup any DtlsIdentity instances that it
 // creates before the RTCCertificate reference is released.
-nsRefPtr<DtlsIdentity>
+RefPtr<DtlsIdentity>
 RTCCertificate::CreateDtlsIdentity() const
 {
   nsNSSShutDownPreventionLock locker;
@@ -314,7 +314,7 @@ RTCCertificate::CreateDtlsIdentity() const
   }
   SECKEYPrivateKey* key = SECKEY_CopyPrivateKey(mPrivateKey);
   CERTCertificate* cert = CERT_DupCertificate(mCertificate);
-  nsRefPtr<DtlsIdentity> id = new DtlsIdentity(key, cert, mAuthType);
+  RefPtr<DtlsIdentity> id = new DtlsIdentity(key, cert, mAuthType);
   return id;
 }
 

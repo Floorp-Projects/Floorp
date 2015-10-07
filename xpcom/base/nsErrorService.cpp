@@ -17,7 +17,7 @@ nsErrorService::Create(nsISupports* aOuter, const nsIID& aIID,
   if (NS_WARN_IF(aOuter)) {
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsRefPtr<nsErrorService> serv = new nsErrorService();
+  RefPtr<nsErrorService> serv = new nsErrorService();
   return serv->QueryInterface(aIID, aInstancePtr);
 }
 

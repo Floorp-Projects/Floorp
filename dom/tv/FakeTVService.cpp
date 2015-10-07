@@ -280,7 +280,7 @@ FakeTVService::StartScanningChannels(const nsAString& aTunerId,
     // called before firing.)
     mEITBroadcastedTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     NS_ENSURE_TRUE(mEITBroadcastedTimer, NS_ERROR_OUT_OF_MEMORY);
-    nsRefPtr<EITBroadcastedCallback> eitBroadcastedCb =
+    RefPtr<EITBroadcastedCallback> eitBroadcastedCb =
       new EITBroadcastedCallback(aTunerId, aSourceType, mSourceListener, mChannels[0]);
     rv = mEITBroadcastedTimer->InitWithCallback(eitBroadcastedCb, 10,
                                                 nsITimer::TYPE_ONE_SHOT);
@@ -291,7 +291,7 @@ FakeTVService::StartScanningChannels(const nsAString& aTunerId,
     // called before firing.)
     mScanCompleteTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     NS_ENSURE_TRUE(mScanCompleteTimer, NS_ERROR_OUT_OF_MEMORY);
-    nsRefPtr<ScanCompleteCallback> scanCompleteCb =
+    RefPtr<ScanCompleteCallback> scanCompleteCb =
       new ScanCompleteCallback(aTunerId, aSourceType, mSourceListener);
     rv = mScanCompleteTimer->InitWithCallback(scanCompleteCb, 20,
                                               nsITimer::TYPE_ONE_SHOT);

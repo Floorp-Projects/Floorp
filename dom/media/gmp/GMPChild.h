@@ -83,8 +83,8 @@ private:
   nsTArray<UniquePtr<GMPContentChild>> mGMPContentChildren;
 
   GMPAsyncShutdown* mAsyncShutdown;
-  nsRefPtr<GMPTimerChild> mTimerChild;
-  nsRefPtr<GMPStorageChild> mStorage;
+  RefPtr<GMPTimerChild> mTimerChild;
+  RefPtr<GMPStorageChild> mStorage;
 
   MessageLoop* mGMPMessageLoop;
   nsString mPluginPath;

@@ -84,9 +84,9 @@ private:
   RadialGradientEffectD2D1();
 
   uint32_t mRefCount;
-  nsRefPtr<ID2D1GradientStopCollection> mStopCollection;
-  nsRefPtr<ID2D1EffectContext> mEffectContext;
-  nsRefPtr<ID2D1DrawInfo> mDrawInfo;
+  RefPtr<ID2D1GradientStopCollection> mStopCollection;
+  RefPtr<ID2D1EffectContext> mEffectContext;
+  RefPtr<ID2D1DrawInfo> mDrawInfo;
   SIMPLE_PROP(D2D1_VECTOR_2F, Center1);
   SIMPLE_PROP(D2D1_VECTOR_2F, Center2);
   SIMPLE_PROP(FLOAT, Radius1);

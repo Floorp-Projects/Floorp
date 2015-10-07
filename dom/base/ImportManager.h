@@ -224,7 +224,7 @@ private:
 
   // List of pending ScriptLoaders that are waiting for this import
   // to finish.
-  nsTArray<nsRefPtr<nsScriptLoader>> mBlockedScriptLoaders;
+  nsTArray<RefPtr<nsScriptLoader>> mBlockedScriptLoaders;
 
   // There is always exactly one referrer link that is flagged as
   // the main referrer the primary link. This is the one that is

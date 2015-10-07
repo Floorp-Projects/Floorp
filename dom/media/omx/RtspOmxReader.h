@@ -48,7 +48,7 @@ public:
   }
 
   // Implement a time-based seek instead of byte-based..
-  virtual nsRefPtr<SeekPromise>
+  virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) final override;
 
   // Override GetBuffered() to do nothing for below reasons:
@@ -66,7 +66,7 @@ public:
 
   virtual void SetIdle() override;
 
-  virtual nsRefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata()
+  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata()
     override;
 
   virtual void HandleResourceAllocated() override;

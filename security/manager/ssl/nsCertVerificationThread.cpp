@@ -46,7 +46,7 @@ void nsCertVerificationJob::Run()
   char16_t **usages;
 
   nsCOMPtr<nsICertVerificationResult> ires;
-  nsRefPtr<nsCertVerificationResult> vres(new nsCertVerificationResult);
+  RefPtr<nsCertVerificationResult> vres(new nsCertVerificationResult);
   if (vres)
   {
     nsresult rv = mCert->GetUsagesArray(false, // do not ignore OCSP

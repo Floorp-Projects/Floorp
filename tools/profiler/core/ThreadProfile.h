@@ -71,7 +71,7 @@ private:
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
   ThreadInfo* mThreadInfo;
 
-  const nsRefPtr<ProfileBuffer> mBuffer;
+  const RefPtr<ProfileBuffer> mBuffer;
 
   // JS frames in the buffer may require a live JSRuntime to stream (e.g.,
   // stringifying JIT frames). In the case of JSRuntime destruction,

@@ -125,7 +125,7 @@ public:
   
   PRIntervalTime mTimeoutInterval;
   
-  nsRefPtr<nsHTTPListener> mListener;
+  RefPtr<nsHTTPListener> mListener;
   
 protected:
   nsNSSHttpRequestSession();

@@ -39,7 +39,7 @@
 #include "mozilla/dom/TypedArray.h"
 
 #include "nsCOMPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "jsapi.h"
 
 class nsIGlobalObject;
@@ -148,7 +148,7 @@ protected:
 
 private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  nsRefPtr<PushManagerImpl> mImpl;
+  RefPtr<PushManagerImpl> mImpl;
   nsString mScope;
 };
 

@@ -200,9 +200,9 @@ WebrtcGmpVideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
   codecParams.mWidth = aCodecSettings->width;
   codecParams.mHeight = aCodecSettings->height;
 
-  nsRefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
+  RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
   mGMPThread->Dispatch(WrapRunnableNM(WebrtcGmpVideoEncoder::InitEncode_g,
-                                      nsRefPtr<WebrtcGmpVideoEncoder>(this),
+                                      RefPtr<WebrtcGmpVideoEncoder>(this),
                                       codecParams,
                                       aNumberOfCores,
                                       aMaxPayloadSize,
@@ -219,11 +219,11 @@ WebrtcGmpVideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
 /* static */
 void
 WebrtcGmpVideoEncoder::InitEncode_g(
-    const nsRefPtr<WebrtcGmpVideoEncoder>& aThis,
+    const RefPtr<WebrtcGmpVideoEncoder>& aThis,
     const GMPVideoCodec& aCodecParams,
     int32_t aNumberOfCores,
     uint32_t aMaxPayloadSize,
-    const nsRefPtr<GmpInitDoneRunnable>& aInitDone)
+    const RefPtr<GmpInitDoneRunnable>& aInitDone)
 {
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
@@ -345,7 +345,7 @@ void
 WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(
     uint32_t aWidth,
     uint32_t aHeight,
-    const nsRefPtr<GmpInitDoneRunnable>& aInitDone)
+    const RefPtr<GmpInitDoneRunnable>& aInitDone)
 {
   Close_g();
 
@@ -386,7 +386,7 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
     LOGD(("GMP Encode: resolution change from %ux%u to %dx%d",
           mCodecParams.mWidth, mCodecParams.mHeight, aInputImage->width(), aInputImage->height()));
 
-    nsRefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
+    RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
     RegetEncoderForResolutionChange(aInputImage->width(),
                                     aInputImage->height(),
                                     initDone);
@@ -458,7 +458,7 @@ WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallba
 }
 
 /* static */ void
-WebrtcGmpVideoEncoder::ReleaseGmp_g(nsRefPtr<WebrtcGmpVideoEncoder>& aEncoder)
+WebrtcGmpVideoEncoder::ReleaseGmp_g(RefPtr<WebrtcGmpVideoEncoder>& aEncoder)
 {
   aEncoder->Close_g();
 }
@@ -470,7 +470,7 @@ WebrtcGmpVideoEncoder::ReleaseGmp()
   if (mGMPThread) {
     mGMPThread->Dispatch(
         WrapRunnableNM(&WebrtcGmpVideoEncoder::ReleaseGmp_g,
-                       nsRefPtr<WebrtcGmpVideoEncoder>(this)),
+                       RefPtr<WebrtcGmpVideoEncoder>(this)),
         NS_DISPATCH_NORMAL);
   }
   return WEBRTC_VIDEO_CODEC_OK;
@@ -488,7 +488,7 @@ WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
   MOZ_ASSERT(mGMPThread);
   MOZ_ASSERT(!NS_IsMainThread());
   mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::SetRates_g,
-                                      nsRefPtr<WebrtcGmpVideoEncoder>(this),
+                                      RefPtr<WebrtcGmpVideoEncoder>(this),
                                       aNewBitRate,
                                       aFrameRate),
                        NS_DISPATCH_NORMAL);
@@ -497,7 +497,7 @@ WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
 }
 
 /* static */ int32_t
-WebrtcGmpVideoEncoder::SetRates_g(nsRefPtr<WebrtcGmpVideoEncoder> aThis,
+WebrtcGmpVideoEncoder::SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
                                   uint32_t aNewBitRate,
                                   uint32_t aFrameRate)
 {
@@ -685,9 +685,9 @@ WebrtcGmpVideoDecoder::InitDecode(const webrtc::VideoCodec* aCodecSettings,
     }
   }
 
-  nsRefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
+  RefPtr<GmpInitDoneRunnable> initDone(new GmpInitDoneRunnable(mPCHandle));
   mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoDecoder::InitDecode_g,
-                                      nsRefPtr<WebrtcGmpVideoDecoder>(this),
+                                      RefPtr<WebrtcGmpVideoDecoder>(this),
                                       aCodecSettings,
                                       aNumberOfCores,
                                       initDone),
@@ -698,10 +698,10 @@ WebrtcGmpVideoDecoder::InitDecode(const webrtc::VideoCodec* aCodecSettings,
 
 /* static */ void
 WebrtcGmpVideoDecoder::InitDecode_g(
-    const nsRefPtr<WebrtcGmpVideoDecoder>& aThis,
+    const RefPtr<WebrtcGmpVideoDecoder>& aThis,
     const webrtc::VideoCodec* aCodecSettings,
     int32_t aNumberOfCores,
-    const nsRefPtr<GmpInitDoneRunnable>& aInitDone)
+    const RefPtr<GmpInitDoneRunnable>& aInitDone)
 {
   nsTArray<nsCString> tags;
   tags.AppendElement(NS_LITERAL_CSTRING("h264"));
@@ -883,7 +883,7 @@ WebrtcGmpVideoDecoder::RegisterDecodeCompleteCallback( webrtc::DecodedImageCallb
 
 
 /* static */ void
-WebrtcGmpVideoDecoder::ReleaseGmp_g(nsRefPtr<WebrtcGmpVideoDecoder>& aDecoder)
+WebrtcGmpVideoDecoder::ReleaseGmp_g(RefPtr<WebrtcGmpVideoDecoder>& aDecoder)
 {
   aDecoder->Close_g();
 }
@@ -895,7 +895,7 @@ WebrtcGmpVideoDecoder::ReleaseGmp()
   if (mGMPThread) {
     mGMPThread->Dispatch(
         WrapRunnableNM(&WebrtcGmpVideoDecoder::ReleaseGmp_g,
-                       nsRefPtr<WebrtcGmpVideoDecoder>(this)),
+                       RefPtr<WebrtcGmpVideoDecoder>(this)),
         NS_DISPATCH_NORMAL);
   }
   return WEBRTC_VIDEO_CODEC_OK;

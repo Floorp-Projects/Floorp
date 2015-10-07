@@ -10,7 +10,7 @@
 #include <set>
 #include "nsRect.h"
 #include "GonkMediaDataDecoder.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "I420ColorConverterHelper.h"
 #include "MediaCodecProxy.h"
 #include <stagefright/foundation/AHandler.h>
@@ -44,12 +44,12 @@ public:
 
   virtual ~GonkVideoDecoderManager() override;
 
-  nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
+  RefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
 
   nsresult Input(MediaRawData* aSample) override;
 
   nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) override;
+                          RefPtr<MediaData>& aOutput) override;
 
   nsresult Flush() override;
 
@@ -132,7 +132,7 @@ private:
   nsIntRect mPicture;
   nsIntSize mInitialFrame;
 
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
 
   android::MediaBuffer* mVideoBuffer;
 
@@ -173,12 +173,12 @@ private:
 
   // This TaskQueue should be the same one in mReaderCallback->OnReaderTaskQueue().
   // It is for codec resource mangement, decoding task should not dispatch to it.
-  nsRefPtr<TaskQueue> mReaderTaskQueue;
+  RefPtr<TaskQueue> mReaderTaskQueue;
 
   // An queue with the MP4 samples which are waiting to be sent into OMX.
   // If an element is an empty MP4Sample, that menas EOS. There should not
   // any sample be queued after EOS.
-  nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
+  nsTArray<RefPtr<MediaRawData>> mQueueSample;
 };
 
 } // namespace mozilla

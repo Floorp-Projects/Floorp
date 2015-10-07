@@ -86,7 +86,7 @@ public:
   virtual void WillRefresh(TimeStamp aTime) override;
 
   static void FadeBeginTimerFired(nsITimer* aTimer, void* aSelf) {
-    nsRefPtr<ScrollbarActivity> scrollbarActivity(
+    RefPtr<ScrollbarActivity> scrollbarActivity(
       reinterpret_cast<ScrollbarActivity*>(aSelf));
     scrollbarActivity->BeginFade();
   }

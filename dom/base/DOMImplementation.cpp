@@ -77,7 +77,7 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   }
 
   // Indicate that there is no internal subset (not just an empty one)
-  nsRefPtr<DocumentType> docType =
+  RefPtr<DocumentType> docType =
     NS_NewDOMDocumentType(mOwner->NodeInfoManager(), name, aPublicId,
                           aSystemId, NullString(), aRv);
   return docType.forget();
@@ -226,7 +226,7 @@ DOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
     rv = head->AppendChildTo(title, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<nsTextNode> titleText = new nsTextNode(doc->NodeInfoManager());
+    RefPtr<nsTextNode> titleText = new nsTextNode(doc->NodeInfoManager());
     rv = titleText->SetText(aTitle, false);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = title->AppendChildTo(titleText, false);

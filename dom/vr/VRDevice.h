@@ -127,13 +127,13 @@ protected:
   double mTimeStamp;
   gfx::VRHMDSensorState mVRState;
 
-  nsRefPtr<DOMPoint> mPosition;
-  nsRefPtr<DOMPoint> mLinearVelocity;
-  nsRefPtr<DOMPoint> mLinearAcceleration;
+  RefPtr<DOMPoint> mPosition;
+  RefPtr<DOMPoint> mLinearVelocity;
+  RefPtr<DOMPoint> mLinearAcceleration;
 
-  nsRefPtr<DOMPoint> mOrientation;
-  nsRefPtr<DOMPoint> mAngularVelocity;
-  nsRefPtr<DOMPoint> mAngularAcceleration;
+  RefPtr<DOMPoint> mOrientation;
+  RefPtr<DOMPoint> mAngularVelocity;
+  RefPtr<DOMPoint> mAngularAcceleration;
 };
 
 class VREyeParameters final : public nsWrapperCache
@@ -165,12 +165,12 @@ protected:
 
   nsCOMPtr<nsISupports> mParent;
 
-  nsRefPtr<VRFieldOfView> mMinFOV;
-  nsRefPtr<VRFieldOfView> mMaxFOV;
-  nsRefPtr<VRFieldOfView> mRecFOV;
-  nsRefPtr<DOMPoint> mEyeTranslation;
-  nsRefPtr<VRFieldOfView> mCurFOV;
-  nsRefPtr<DOMRect> mRenderRect;
+  RefPtr<VRFieldOfView> mMinFOV;
+  RefPtr<VRFieldOfView> mMaxFOV;
+  RefPtr<VRFieldOfView> mRecFOV;
+  RefPtr<DOMPoint> mEyeTranslation;
+  RefPtr<VRFieldOfView> mCurFOV;
+  RefPtr<DOMRect> mRenderRect;
 };
 
 class VRDevice : public nsISupports,
@@ -178,7 +178,7 @@ class VRDevice : public nsISupports,
 {
 public:
   // create new VRDevice objects for all known underlying gfx::vr devices
-  static bool CreateAllKnownVRDevices(nsISupports *aParent, nsTArray<nsRefPtr<VRDevice>>& aDevices);
+  static bool CreateAllKnownVRDevices(nsISupports *aParent, nsTArray<RefPtr<VRDevice>>& aDevices);
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -250,7 +250,7 @@ protected:
 
   virtual ~HMDVRDevice() { }
 
-  nsRefPtr<gfx::VRHMDInfo> mHMD;
+  RefPtr<gfx::VRHMDInfo> mHMD;
 };
 
 class PositionSensorVRDevice : public VRDevice

@@ -114,7 +114,7 @@ ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer)
       aLayer->mBackgroundColor = colorLayer->GetColor();
       NS_ASSERTION(aLayer->mBackgroundColor.a == 1.f,
                    "Color layer said it was opaque!");
-      nsRefPtr<gfxContext> ctx =
+      RefPtr<gfxContext> ctx =
           aLayer->mSink->BeginUpdate(aLayer->GetRect(),
                                      aLayer->AllocateSequenceNumber());
       if (ctx) {

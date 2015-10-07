@@ -107,9 +107,9 @@ private:
   // Gets the responsible document as defined in the spec.
   nsIDocument* GetResponsibleDocument() const;
 
-  nsRefPtr<nsScreen> mScreen;
-  nsRefPtr<FullScreenEventListener> mFullScreenListener;
-  nsRefPtr<VisibleEventListener> mVisibleListener;
+  RefPtr<nsScreen> mScreen;
+  RefPtr<FullScreenEventListener> mFullScreenListener;
+  RefPtr<VisibleEventListener> mVisibleListener;
   OrientationType mType;
   uint16_t mAngle;
 };

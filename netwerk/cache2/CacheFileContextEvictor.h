@@ -21,7 +21,7 @@ struct CacheFileContextEvictorEntry
 {
   nsCOMPtr<nsILoadContextInfo> mInfo;
   PRTime                       mTimeStamp; // in milliseconds
-  nsRefPtr<CacheIndexIterator> mIterator;
+  RefPtr<CacheIndexIterator> mIterator;
 };
 
 class CacheFileContextEvictor

@@ -32,7 +32,7 @@ private:
   typedef std::map<nsString, DeviceStorageAreaChangedEventOperation> StateMapType;
   StateMapType mStorageAreaStateMap;
 
-  nsRefPtr<VolumeStateObserver> mVolumeStateObserver;
+  RefPtr<VolumeStateObserver> mVolumeStateObserver;
 
   ~DeviceStorageAreaListener();
 

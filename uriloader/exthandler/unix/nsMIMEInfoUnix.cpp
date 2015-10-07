@@ -52,7 +52,7 @@ nsMIMEInfoUnix::GetHasDefaultHandler(bool *_retval)
   if (mClass == eProtocolInfo) {
     *_retval = nsGNOMERegistry::HandlerExists(mSchemeOrType.get());
   } else {
-    nsRefPtr<nsMIMEInfoBase> mimeInfo = nsGNOMERegistry::GetFromType(mSchemeOrType);
+    RefPtr<nsMIMEInfoBase> mimeInfo = nsGNOMERegistry::GetFromType(mSchemeOrType);
     if (!mimeInfo) {
       nsAutoCString ext;
       nsresult rv = GetPrimaryExtension(ext);

@@ -77,7 +77,7 @@ public:
 private:
   friend class PathRecording;
 
-  nsRefPtr<PathBuilder> mPathBuilder;
+  RefPtr<PathBuilder> mPathBuilder;
   FillRule mFillRule;
   std::vector<PathOp> mPathOps;
 };
@@ -122,7 +122,7 @@ private:
   friend class DrawTargetRecording;
   friend class RecordedPathCreation;
 
-  nsRefPtr<Path> mPath;
+  RefPtr<Path> mPath;
   std::vector<PathOp> mPathOps;
   FillRule mFillRule;
 

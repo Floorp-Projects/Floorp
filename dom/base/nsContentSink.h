@@ -273,12 +273,12 @@ private:
 protected:
 
   nsCOMPtr<nsIDocument>         mDocument;
-  nsRefPtr<nsParserBase>        mParser;
+  RefPtr<nsParserBase>        mParser;
   nsCOMPtr<nsIURI>              mDocumentURI;
   nsCOMPtr<nsIDocShell>         mDocShell;
-  nsRefPtr<mozilla::css::Loader> mCSSLoader;
-  nsRefPtr<nsNodeInfoManager>   mNodeInfoManager;
-  nsRefPtr<nsScriptLoader>      mScriptLoader;
+  RefPtr<mozilla::css::Loader> mCSSLoader;
+  RefPtr<nsNodeInfoManager>   mNodeInfoManager;
+  RefPtr<nsScriptLoader>      mScriptLoader;
 
   // back off timer notification after count
   int32_t mBackoffCount;

@@ -227,7 +227,7 @@ private:
   ~nsPerformanceTiming();
   bool IsInitialized() const;
   void InitializeTimingInfo(nsITimedChannel* aChannel);
-  nsRefPtr<nsPerformance> mPerformance;
+  RefPtr<nsPerformance> mPerformance;
   DOMHighResTimeStamp mFetchStart;
   // This is an offset that will be added to each timing ([ms] resolution).
   // There are only 2 possible values: (1) logicaly equal to navigationStart
@@ -286,7 +286,7 @@ public:
 
 private:
   ~nsPerformanceNavigation();
-  nsRefPtr<nsPerformance> mPerformance;
+  RefPtr<nsPerformance> mPerformance;
 };
 
 // Base class for main-thread and worker Performance API
@@ -303,12 +303,12 @@ public:
   typedef mozilla::dom::PerformanceEntry PerformanceEntry;
   typedef mozilla::dom::PerformanceObserver PerformanceObserver;
 
-  void GetEntries(nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
+  void GetEntries(nsTArray<RefPtr<PerformanceEntry>>& aRetval);
   void GetEntriesByType(const nsAString& aEntryType,
-                        nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
+                        nsTArray<RefPtr<PerformanceEntry>>& aRetval);
   void GetEntriesByName(const nsAString& aName,
                         const mozilla::dom::Optional<nsAString>& aEntryType,
-                        nsTArray<nsRefPtr<PerformanceEntry>>& aRetval);
+                        nsTArray<RefPtr<PerformanceEntry>>& aRetval);
   void ClearResourceTimings();
 
   virtual DOMHighResTimeStamp Now() const = 0;
@@ -366,8 +366,8 @@ protected:
   nsTObserverArray<PerformanceObserver*> mObservers;
 
 private:
-  nsTArray<nsRefPtr<PerformanceEntry>> mUserEntries;
-  nsTArray<nsRefPtr<PerformanceEntry>> mResourceEntries;
+  nsTArray<RefPtr<PerformanceEntry>> mUserEntries;
+  nsTArray<RefPtr<PerformanceEntry>> mResourceEntries;
 
   uint64_t mResourceTimingBufferSize;
   static const uint64_t kDefaultResourceTimingBufferSize = 150;
@@ -453,11 +453,11 @@ private:
 
   void DispatchBufferFullEvent() override;
 
-  nsRefPtr<nsDOMNavigationTiming> mDOMTiming;
+  RefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
-  nsRefPtr<nsPerformanceTiming> mTiming;
-  nsRefPtr<nsPerformanceNavigation> mNavigation;
-  nsRefPtr<nsPerformance> mParentPerformance;
+  RefPtr<nsPerformanceTiming> mTiming;
+  RefPtr<nsPerformanceNavigation> mNavigation;
+  RefPtr<nsPerformance> mParentPerformance;
   JS::Heap<JSObject*> mMozMemory;
 };
 

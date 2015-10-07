@@ -152,8 +152,8 @@ private:
   uint32_t mLength;
   WebAudioDecodeJob& mDecodeJob;
   PhaseEnum mPhase;
-  nsRefPtr<BufferDecoder> mBufferDecoder;
-  nsRefPtr<MediaDecoderReader> mDecoderReader;
+  RefPtr<BufferDecoder> mBufferDecoder;
+  RefPtr<MediaDecoderReader> mDecoderReader;
   MediaInfo mMediaInfo;
   MediaQueue<MediaData> mAudioQueue;
   bool mFirstFrameDecoded;
@@ -190,7 +190,7 @@ MediaDecodeTask::CreateReader()
     principal = sop->GetPrincipal();
   }
 
-  nsRefPtr<BufferMediaResource> resource =
+  RefPtr<BufferMediaResource> resource =
     new BufferMediaResource(static_cast<uint8_t*> (mBuffer),
                             mLength, principal, mContentType);
 
@@ -352,9 +352,9 @@ MediaDecodeTask::FinishDecode()
     return;
   }
 
-  nsRefPtr<MediaData> mediaData;
+  RefPtr<MediaData> mediaData;
   while ((mediaData = mAudioQueue.PopFront())) {
-    nsRefPtr<AudioData> audioData = mediaData->As<AudioData>();
+    RefPtr<AudioData> audioData = mediaData->As<AudioData>();
     audioData->EnsureAudioBuffer(); // could lead to a copy :(
     AudioDataValue* bufferData = static_cast<AudioDataValue*>
       (audioData->mAudioBuffer->Data());
@@ -480,7 +480,7 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
     return;
   }
 
-  nsRefPtr<MediaDecodeTask> task =
+  RefPtr<MediaDecodeTask> task =
     new MediaDecodeTask(aContentType, aBuffer, aLength, aDecodeJob);
   if (!task->CreateReader()) {
     nsCOMPtr<nsIRunnable> event =

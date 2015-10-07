@@ -70,7 +70,7 @@ already_AddRefed<ColorLayer>
 ClientLayerManager::CreateColorLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<ClientColorLayer> layer =
+  RefPtr<ClientColorLayer> layer =
     new ClientColorLayer(this);
   CREATE_SHADOW(Color);
   return layer.forget();

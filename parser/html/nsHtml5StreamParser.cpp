@@ -116,7 +116,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 class nsHtml5ExecutorFlusher : public nsRunnable
 {
   private:
-    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
+    RefPtr<nsHtml5TreeOpExecutor> mExecutor;
   public:
     explicit nsHtml5ExecutorFlusher(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
@@ -133,7 +133,7 @@ class nsHtml5ExecutorFlusher : public nsRunnable
 class nsHtml5LoadFlusher : public nsRunnable
 {
   private:
-    nsRefPtr<nsHtml5TreeOpExecutor> mExecutor;
+    RefPtr<nsHtml5TreeOpExecutor> mExecutor;
   public:
     explicit nsHtml5LoadFlusher(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
@@ -809,7 +809,7 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     return NS_ERROR_NULL_POINTER;
   }
   if (mLastBuffer->getEnd() == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
-    nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+    RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
       nsHtml5OwningUTF16Buffer::FalliblyCreate(
         NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
     if (!newBuf) {
@@ -840,7 +840,7 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
     NS_ASSERTION(byteCount >= -1, "The decoder consumed fewer than -1 bytes.");
 
     if (convResult == NS_PARTIAL_MORE_OUTPUT) {
-      nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+      RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
         nsHtml5OwningUTF16Buffer::FalliblyCreate(
           NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
       if (!newBuf) {
@@ -917,7 +917,7 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   rv = mExecutor->WillBuildModel(eDTDMode_unknown);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
+  RefPtr<nsHtml5OwningUTF16Buffer> newBuf =
     nsHtml5OwningUTF16Buffer::FalliblyCreate(
       NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE);
   if (!newBuf) {

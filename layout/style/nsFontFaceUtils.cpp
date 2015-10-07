@@ -34,7 +34,7 @@ StyleContextContainsFont(nsStyleContext* aStyleContext,
 
   // family name is in the fontlist, check to see if the font group
   // associated with the frame includes the specific userfont
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
                                                getter_AddRefs(fm),
                                                1.0f);

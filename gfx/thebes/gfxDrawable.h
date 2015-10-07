@@ -90,7 +90,7 @@ protected:
                       gfxFloat aOpacity,
                       const gfxMatrix& aTransform = gfxMatrix());
 
-    nsRefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
+    RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     const gfxMatrix mTransform;
 };
 
@@ -138,8 +138,8 @@ public:
 protected:
     already_AddRefed<gfxSurfaceDrawable> MakeSurfaceDrawable(const GraphicsFilter aFilter = GraphicsFilter::FILTER_FAST);
 
-    nsRefPtr<gfxDrawingCallback> mCallback;
-    nsRefPtr<gfxSurfaceDrawable> mSurfaceDrawable;
+    RefPtr<gfxDrawingCallback> mCallback;
+    RefPtr<gfxSurfaceDrawable> mSurfaceDrawable;
 };
 
 /**
@@ -162,7 +162,7 @@ public:
 protected:
     already_AddRefed<gfxCallbackDrawable> MakeCallbackDrawable();
 
-    nsRefPtr<gfxPattern> mPattern;
+    RefPtr<gfxPattern> mPattern;
 };
 
 #endif /* GFX_DRAWABLE_H */

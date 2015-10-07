@@ -115,7 +115,7 @@ private:
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
-  nsRefPtr<ChannelEventQueue> mEventQ;
+  RefPtr<ChannelEventQueue> mEventQ;
   bool mCanceled;
   uint32_t mSuspendCount;
   bool mIsPending;

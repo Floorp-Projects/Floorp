@@ -86,7 +86,7 @@ DOMSVGPathSegList::GetDOMWrapper(void *aList,
                                  nsSVGElement *aElement,
                                  bool aIsAnimValList)
 {
-  nsRefPtr<DOMSVGPathSegList> wrapper =
+  RefPtr<DOMSVGPathSegList> wrapper =
     SVGPathSegListTearoffTable().GetTearoff(aList);
   if (!wrapper) {
     wrapper = new DOMSVGPathSegList(aElement, aIsAnimValList);
@@ -161,7 +161,7 @@ DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
 
   uint32_t newSegType;
 
-  nsRefPtr<DOMSVGPathSegList> kungFuDeathGrip;
+  RefPtr<DOMSVGPathSegList> kungFuDeathGrip;
   if (length) {
     // RemovingFromList() might clear last reference to |this|.
     // Retain a temporary reference to keep from dying before returning.
@@ -304,7 +304,7 @@ DOMSVGPathSegList::Initialize(DOMSVGPathSeg& aNewItem, ErrorResult& aError)
   // clone of aNewItem, it would actually insert aNewItem. To prevent that
   // from happening we have to do the clone here, if necessary.
 
-  nsRefPtr<DOMSVGPathSeg> domItem = &aNewItem;
+  RefPtr<DOMSVGPathSeg> domItem = &aNewItem;
   if (aNewItem.HasOwner()) {
     domItem = aNewItem.Clone();
   }
@@ -318,7 +318,7 @@ already_AddRefed<DOMSVGPathSeg>
 DOMSVGPathSegList::GetItem(uint32_t index, ErrorResult& error)
 {
   bool found;
-  nsRefPtr<DOMSVGPathSeg> item = IndexedGetter(index, found, error);
+  RefPtr<DOMSVGPathSeg> item = IndexedGetter(index, found, error);
   if (!found) {
     error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
   }
@@ -361,7 +361,7 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGPathSeg> domItem = &aNewItem;
+  RefPtr<DOMSVGPathSeg> domItem = &aNewItem;
   if (domItem->HasOwner()) {
     domItem = domItem->Clone(); // must do this before changing anything!
   }
@@ -417,7 +417,7 @@ DOMSVGPathSegList::ReplaceItem(DOMSVGPathSeg& aNewItem,
     return nullptr;
   }
 
-  nsRefPtr<DOMSVGPathSeg> domItem = &aNewItem;
+  RefPtr<DOMSVGPathSeg> domItem = &aNewItem;
   if (domItem->HasOwner()) {
     domItem = domItem->Clone(); // must do this before changing anything!
   }
@@ -479,7 +479,7 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
     return nullptr;
   }
   // We have to return the removed item, so get it, creating it if necessary:
-  nsRefPtr<DOMSVGPathSeg> result = GetItemAt(aIndex);
+  RefPtr<DOMSVGPathSeg> result = GetItemAt(aIndex);
 
   AutoChangePathSegListNotifier notifier(this);
   // Notify the DOM item of removal *before* modifying the lists so that the
@@ -514,7 +514,7 @@ DOMSVGPathSegList::GetItemAt(uint32_t aIndex)
   if (!ItemAt(aIndex)) {
     ItemAt(aIndex) = DOMSVGPathSeg::CreateFor(this, aIndex, IsAnimValList());
   }
-  nsRefPtr<DOMSVGPathSeg> result = ItemAt(aIndex);
+  RefPtr<DOMSVGPathSeg> result = ItemAt(aIndex);
   return result.forget();
 }
 
@@ -564,7 +564,7 @@ DOMSVGPathSegList::
 
   // This needs to be a strong reference; otherwise, the RemovingFromList call
   // below might drop the last reference to animVal before we're done with it.
-  nsRefPtr<DOMSVGPathSegList> animVal =
+  RefPtr<DOMSVGPathSegList> animVal =
     GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
   if (!animVal) {
     // No animVal list wrapper

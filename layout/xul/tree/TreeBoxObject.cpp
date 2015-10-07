@@ -575,7 +575,7 @@ TreeBoxObject::GetCoordsForCellItem(int32_t row, nsTreeColumn& col, const nsAStr
 {
   int32_t x, y, w, h;
   GetCoordsForCellItem(row, &col, element, &x, &y, &w, &h);
-  nsRefPtr<DOMRect> rect = new DOMRect(mContent, x, y, w, h);
+  RefPtr<DOMRect> rect = new DOMRect(mContent, x, y, w, h);
   return rect.forget();
 }
 

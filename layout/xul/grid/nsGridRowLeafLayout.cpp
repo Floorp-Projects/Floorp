@@ -22,7 +22,7 @@
 
 already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout()
 {
-  nsRefPtr<nsBoxLayout> layout = new nsGridRowLeafLayout();
+  RefPtr<nsBoxLayout> layout = new nsGridRowLeafLayout();
   return layout.forget();
 } 
 

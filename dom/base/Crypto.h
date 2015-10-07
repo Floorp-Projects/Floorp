@@ -59,7 +59,7 @@ public:
 
 private:
   nsCOMPtr<nsIGlobalObject> mParent;
-  nsRefPtr<SubtleCrypto> mSubtle;
+  RefPtr<SubtleCrypto> mSubtle;
 };
 
 } // namespace dom

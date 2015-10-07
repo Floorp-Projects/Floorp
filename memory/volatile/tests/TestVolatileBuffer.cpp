@@ -20,7 +20,7 @@ using namespace mozilla;
 
 TEST(VolatileBufferTest, HeapVolatileBuffersWork)
 {
-  nsRefPtr<VolatileBuffer> heapbuf = new VolatileBuffer();
+  RefPtr<VolatileBuffer> heapbuf = new VolatileBuffer();
 
   ASSERT_TRUE(heapbuf) << "Failed to create VolatileBuffer";
   ASSERT_TRUE(heapbuf->Init(512)) << "Failed to initialize VolatileBuffer";
@@ -34,7 +34,7 @@ TEST(VolatileBufferTest, HeapVolatileBuffersWork)
 
 TEST(VolatileBufferTest, RealVolatileBuffersWork)
 {
-  nsRefPtr<VolatileBuffer> buf = new VolatileBuffer();
+  RefPtr<VolatileBuffer> buf = new VolatileBuffer();
 
   ASSERT_TRUE(buf) << "Failed to create VolatileBuffer";
   ASSERT_TRUE(buf->Init(16384)) << "Failed to initialize VolatileBuffer";

@@ -8,7 +8,7 @@
 #define WEBGLCONTEXTUNCHECKED_H
 
 #include "GLDefs.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "WebGLTypes.h"
 
 namespace mozilla {
@@ -44,7 +44,7 @@ public:
     void SamplerParameterfv(WebGLSampler* sampler, GLenum pname, const GLfloat* param);
 
 protected: // data
-    nsRefPtr<gl::GLContext> gl;
+    RefPtr<gl::GLContext> gl;
 };
 
 } // namespace mozilla

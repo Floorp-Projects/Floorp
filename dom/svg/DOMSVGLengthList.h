@@ -172,7 +172,7 @@ private:
   // of clearing our pointer to them when they die.
   FallibleTArray<DOMSVGLength*> mItems;
 
-  nsRefPtr<DOMSVGAnimatedLengthList> mAList;
+  RefPtr<DOMSVGAnimatedLengthList> mAList;
 };
 
 } // namespace mozilla

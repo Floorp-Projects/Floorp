@@ -25,7 +25,7 @@ protected:
   virtual ~BluetoothLeDeviceEvent();
   explicit BluetoothLeDeviceEvent(mozilla::dom::EventTarget* aOwner);
 
-  nsRefPtr<BluetoothDevice> mDevice;
+  RefPtr<BluetoothDevice> mDevice;
   int16_t mRssi;
   JS::Heap<JSObject*> mScanRecord;
 

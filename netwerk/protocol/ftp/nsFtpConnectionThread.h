@@ -163,7 +163,7 @@ private:
     nsCString           mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
-    nsRefPtr<nsFtpControlConnection> mControlConnection;       // cacheable control connection (owns mCPipe)
+    RefPtr<nsFtpControlConnection> mControlConnection;       // cacheable control connection (owns mCPipe)
     bool                            mReceivedControlData;  
     bool                            mTryingCachedControl;     // retrying the password
     bool                            mRETRFailed;              // Did we already try a RETR and it failed?
@@ -171,7 +171,7 @@ private:
     nsCString                       mModTime;
 
         // ****** consumer vars
-    nsRefPtr<nsFtpChannel>          mChannel;         // our owning FTP channel we pass through our events
+    RefPtr<nsFtpChannel>          mChannel;         // our owning FTP channel we pass through our events
     nsCOMPtr<nsIProxyInfo>          mProxyInfo;
 
         // ****** connection cache vars

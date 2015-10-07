@@ -65,7 +65,7 @@ private:
   SendRequest(const IccRequest& aRequest, nsIIccCallback* aRequestReply);
 
   nsCOMArray<nsIIccListener> mListeners;
-  nsRefPtr<IccInfo> mIccInfo;
+  RefPtr<IccInfo> mIccInfo;
   uint32_t mCardState;
   bool mIsAlive;
 };

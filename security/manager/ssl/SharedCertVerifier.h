@@ -7,7 +7,7 @@
 
 #include "certt.h"
 #include "CertVerifier.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla { namespace psm {
 

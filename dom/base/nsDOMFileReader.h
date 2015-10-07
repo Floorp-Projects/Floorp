@@ -141,7 +141,7 @@ protected:
   }
 
   char *mFileData;
-  nsRefPtr<Blob> mBlob;
+  RefPtr<Blob> mBlob;
   nsCString mCharset;
   uint32_t mDataLen;
 

@@ -35,7 +35,7 @@ public:
   // Threadsafe so that the controller and compositor threads can both maintain
   // nsRefPtrs to the same handoff chain.
   // Mutable so that we can pass around the class by
-  // nsRefPtr<const OverscrollHandoffChain> and thus enforce that, once built,
+  // RefPtr<const OverscrollHandoffChain> and thus enforce that, once built,
   // the chain is not modified.
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OverscrollHandoffChain)
 
@@ -50,7 +50,7 @@ public:
    * Methods for accessing the handoff chain.
    */
   uint32_t Length() const { return mChain.size(); }
-  const nsRefPtr<AsyncPanZoomController>& GetApzcAtIndex(uint32_t aIndex) const;
+  const RefPtr<AsyncPanZoomController>& GetApzcAtIndex(uint32_t aIndex) const;
   // Returns Length() if |aApzc| is not on this chain.
   uint32_t IndexOf(const AsyncPanZoomController* aApzc) const;
 
@@ -86,10 +86,10 @@ public:
   // Determine whether any APZC along this handoff chain has been flung fast.
   bool HasFastFlungApzc() const;
 
-  nsRefPtr<AsyncPanZoomController> FindFirstScrollable(const InputData& aInput) const;
+  RefPtr<AsyncPanZoomController> FindFirstScrollable(const InputData& aInput) const;
 
 private:
-  std::vector<nsRefPtr<AsyncPanZoomController>> mChain;
+  std::vector<RefPtr<AsyncPanZoomController>> mChain;
 
   typedef void (AsyncPanZoomController::*APZCMethod)();
   typedef bool (AsyncPanZoomController::*APZCPredicate)() const;

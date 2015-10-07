@@ -54,14 +54,14 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     rv = keyName.init(keyQName, mMappings, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<txAExprResult> exprResult;
+    RefPtr<txAExprResult> exprResult;
     rv = mParams[1]->evaluate(aContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
     txXPathTreeWalker walker(aContext->getContextNode());
     walker.moveToRoot();
 
-    nsRefPtr<txNodeSet> res;
+    RefPtr<txNodeSet> res;
     txNodeSet* nodeSet;
     if (exprResult->getResultType() == txAExprResult::NODESET &&
         (nodeSet = static_cast<txNodeSet*>
@@ -75,7 +75,7 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             nsAutoString val;
             txXPathNodeUtils::appendNodeValue(nodeSet->get(i), val);
 
-            nsRefPtr<txNodeSet> nodes;
+            RefPtr<txNodeSet> nodes;
             rv = es->getKeyNodes(keyName, walker.getCurrentPosition(), val,
                                  i == 0, getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -346,7 +346,7 @@ nsresult txXSLKey::testNode(const txXPathNode& aNode,
             nsresult rv = aEs.pushEvalContext(evalContext);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<txAExprResult> exprResult;
+            RefPtr<txAExprResult> exprResult;
             rv = mKeys[currKey].useExpr->evaluate(evalContext,
                                                   getter_AddRefs(exprResult));
 

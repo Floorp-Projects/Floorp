@@ -261,7 +261,7 @@ int main(int argc, char** argv)
 
   AutoCreateAndDestroyReentrantMonitor mon1(&gReentrantMonitor);
 
-  nsRefPtr<Runnable> runnable = new Runnable();
+  RefPtr<Runnable> runnable = new Runnable();
   NS_ENSURE_TRUE(runnable, 1);
 
   // Run the classID test

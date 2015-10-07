@@ -65,7 +65,7 @@ void
 JobScheduler::SubmitJob(Job* aJob)
 {
   MOZ_ASSERT(aJob);
-  nsRefPtr<SyncObject> start = aJob->GetStartSync();
+  RefPtr<SyncObject> start = aJob->GetStartSync();
   if (start && start->Register(aJob)) {
     // The Job buffer starts with a non-signaled sync object, it
     // is now registered in the list of task buffers waiting on the
@@ -203,7 +203,7 @@ void SyncObject::SubmitWaitingJobs()
   // be owned by another thread. We need to make sure the reference count
   // does not reach 0 on another thread before the end of this method, so
   // hold a strong ref to prevent that!
-  nsRefPtr<SyncObject> kungFuDeathGrip(this);
+  RefPtr<SyncObject> kungFuDeathGrip(this);
 
   // First atomically swap mFirstWaitingJob and waitingJobs...
   Job* waitingJobs = nullptr;

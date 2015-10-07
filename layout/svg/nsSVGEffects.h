@@ -265,7 +265,7 @@ protected:
   virtual void DoUpdate() = 0;
 
 private:
-  nsTArray<nsRefPtr<nsSVGFilterReference>> mReferences;
+  nsTArray<RefPtr<nsSVGFilterReference>> mReferences;
 };
 
 class nsSVGFilterProperty : public nsSVGFilterChainObserver {

@@ -140,7 +140,7 @@ protected:
     // If we're using a BasicCompositor, these fields are temporarily
     // set during frame composition.  They wrap the hardware
     // framebuffer.
-    nsRefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
+    RefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
     ANativeWindowBuffer* mFramebuffer;
     // If we're using a BasicCompositor, this is our window back
     // buffer.  The gralloc framebuffer driver expects us to draw the
@@ -150,7 +150,7 @@ protected:
     //
     // Only accessed on the compositor thread, except during
     // destruction.
-    nsRefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
+    RefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
 
     virtual ~nsWindow();
 
@@ -165,9 +165,9 @@ private:
     // multiple synthesized points
     nsAutoPtr<mozilla::MultiTouchInput> mSynthesizedTouchInput;
 
-    nsRefPtr<nsScreenGonk> mScreen;
+    RefPtr<nsScreenGonk> mScreen;
 
-    nsRefPtr<mozilla::HwcComposer2D> mComposer2D;
+    RefPtr<mozilla::HwcComposer2D> mComposer2D;
 };
 
 #endif /* nsWindow_h */

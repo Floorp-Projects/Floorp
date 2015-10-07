@@ -656,7 +656,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
     return;
   }
 
-  nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
+  RefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
   nsWeakFrame weak(rootFrame);
 
   nsTransparencyMode mode = nsLayoutUtils::GetFrameTransparency(aFrame, rootFrame);

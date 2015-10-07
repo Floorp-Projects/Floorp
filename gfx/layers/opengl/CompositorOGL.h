@@ -14,7 +14,7 @@
 #include "Units.h"                      // for ScreenPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override, final
-#include "mozilla/nsRefPtr.h"             // for already_AddRefed, RefPtr
+#include "mozilla/RefPtr.h"             // for already_AddRefed, RefPtr
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
@@ -106,7 +106,7 @@ protected:
 
   GLenum mTextureTarget;
   nsTArray<GLuint> mTextures;
-  nsRefPtr<gl::GLContext> mGL;
+  RefPtr<gl::GLContext> mGL;
 };
 
 /**
@@ -144,7 +144,7 @@ protected:
   void DestroyTextures();
 
   GLenum mTextureTarget;
-  nsRefPtr<gl::GLContext> mGL;
+  RefPtr<gl::GLContext> mGL;
   nsTArray<GLuint> mCreatedTextures;
   nsTArray<GLuint> mUnusedTextures;
 };
@@ -331,7 +331,7 @@ private:
   /** Widget associated with this compositor */
   nsIWidget *mWidget;
   gfx::IntSize mWidgetSize;
-  nsRefPtr<GLContext> mGLContext;
+  RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
 
@@ -346,7 +346,7 @@ private:
   GLenum mFBOTextureTarget;
 
   /** Currently bound render target */
-  nsRefPtr<CompositingRenderTargetOGL> mCurrentRenderTarget;
+  RefPtr<CompositingRenderTargetOGL> mCurrentRenderTarget;
 #ifdef DEBUG
   CompositingRenderTargetOGL* mWindowRenderTarget;
 #endif
@@ -442,7 +442,7 @@ private:
    */
   GLint FlipY(GLint y) const { return mViewportSize.height - y; }
 
-  nsRefPtr<CompositorTexturePoolOGL> mTexturePool;
+  RefPtr<CompositorTexturePoolOGL> mTexturePool;
 
   ContextStateTrackerOGL mContextStateTracker;
 

@@ -95,7 +95,7 @@ public:
 
   NS_DECL_NSISTREAMLISTENER
 
-  nsRefPtr<MediaDocument>      mDocument;
+  RefPtr<MediaDocument>      mDocument;
   nsCOMPtr<nsIStreamListener>  mNextStream;
 };
 

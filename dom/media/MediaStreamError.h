@@ -12,7 +12,7 @@
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #if defined(XP_WIN) && defined(GetMessage)
 #undef GetMessage
@@ -88,7 +88,7 @@ public:
 private:
   virtual ~MediaStreamError() {}
 
-  nsRefPtr<nsPIDOMWindow> mParent;
+  RefPtr<nsPIDOMWindow> mParent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaStreamError,

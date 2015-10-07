@@ -69,7 +69,7 @@ public:
           );
         }
 
-        nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+        RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
         const nsTArray<nsWindow*>& windows = screen->GetTopWindows();
 
         for (uint32_t i = 0; i < windows.Length(); i++) {
@@ -90,7 +90,7 @@ private:
 static void
 displayEnabledCallback(bool enabled)
 {
-    nsRefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
+    RefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
     screenManager->DisplayEnabled(enabled);
 }
 
@@ -452,7 +452,7 @@ nsScreenGonk::EnableMirroring()
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!IsPrimaryScreen());
 
-    nsRefPtr<nsScreenGonk> primaryScreen = nsScreenManagerGonk::GetPrimaryScreen();
+    RefPtr<nsScreenGonk> primaryScreen = nsScreenManagerGonk::GetPrimaryScreen();
     NS_ENSURE_TRUE(primaryScreen, false);
 
     bool ret = primaryScreen->SetMirroringScreen(this);
@@ -461,7 +461,7 @@ nsScreenGonk::EnableMirroring()
     // Create a widget for mirroring
     nsWidgetInitData initData;
     initData.mScreenId = mId;
-    nsRefPtr<nsWindow> window = new nsWindow();
+    RefPtr<nsWindow> window = new nsWindow();
     window->Create(nullptr, nullptr, mNaturalBounds, &initData);
     MOZ_ASSERT(static_cast<nsWindow*>(window)->GetScreen() == this);
 
@@ -483,7 +483,7 @@ nsScreenGonk::DisableMirroring()
     MOZ_ASSERT(!IsPrimaryScreen());
 
     mIsMirroring = false;
-    nsRefPtr<nsScreenGonk> primaryScreen = nsScreenManagerGonk::GetPrimaryScreen();
+    RefPtr<nsScreenGonk> primaryScreen = nsScreenManagerGonk::GetPrimaryScreen();
     NS_ENSURE_TRUE(primaryScreen, false);
 
     bool ret = primaryScreen->ClearMirroringScreen(this);
@@ -570,7 +570,7 @@ nsScreenManagerGonk::GetInstance()
 /* static */ already_AddRefed< nsScreenGonk>
 nsScreenManagerGonk::GetPrimaryScreen()
 {
-    nsRefPtr<nsScreenManagerGonk> manager = nsScreenManagerGonk::GetInstance();
+    RefPtr<nsScreenManagerGonk> manager = nsScreenManagerGonk::GetInstance();
     nsCOMPtr<nsIScreen> screen;
     manager->GetPrimaryScreen(getter_AddRefs(screen));
     MOZ_ASSERT(screen);
@@ -757,7 +757,7 @@ public:
         return NS_OK;
     }
 private:
-    nsRefPtr<DisplayInfo> mDisplayInfo;
+    RefPtr<DisplayInfo> mDisplayInfo;
 };
 
 void

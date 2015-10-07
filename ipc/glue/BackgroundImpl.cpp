@@ -160,10 +160,10 @@ private:
 
   // This is only modified on the main thread. It is a FIFO queue for callbacks
   // waiting for the background thread to be created.
-  static StaticAutoPtr<nsTArray<nsRefPtr<CreateCallback>>> sPendingCallbacks;
+  static StaticAutoPtr<nsTArray<RefPtr<CreateCallback>>> sPendingCallbacks;
 
   // Only touched on the main thread, null if this is a same-process actor.
-  nsRefPtr<ContentParent> mContent;
+  RefPtr<ContentParent> mContent;
 
   // mTransport is "owned" by this object but it must only be released on the
   // IPC thread. It's left as a raw pointer here to prevent accidentally
@@ -323,7 +323,7 @@ class ChildImpl final : public BackgroundChildImpl
       mCallbacks.AppendElement(aCallback);
     }
 
-    nsRefPtr<ChildImpl> mActor;
+    RefPtr<ChildImpl> mActor;
     nsTArray<nsCOMPtr<nsIIPCBackgroundChildCreateCallback>> mCallbacks;
     nsAutoPtr<BackgroundChildImpl::ThreadLocal> mConsumerThreadLocal;
     DebugOnly<bool> mClosed;
@@ -551,7 +551,7 @@ private:
 
 class ParentImpl::CreateCallbackRunnable final : public nsRunnable
 {
-  nsRefPtr<CreateCallback> mCallback;
+  RefPtr<CreateCallback> mCallback;
 
 public:
   explicit CreateCallbackRunnable(CreateCallback* aCallback)
@@ -573,7 +573,7 @@ private:
 
 class ParentImpl::ConnectActorRunnable final : public nsRunnable
 {
-  nsRefPtr<ParentImpl> mActor;
+  RefPtr<ParentImpl> mActor;
   Transport* mTransport;
   ProcessId mOtherPid;
   nsTArray<ParentImpl*>* mLiveActorArray;
@@ -727,7 +727,7 @@ protected:
 
 class ChildImpl::OpenChildProcessActorRunnable final : public nsRunnable
 {
-  nsRefPtr<ChildImpl> mActor;
+  RefPtr<ChildImpl> mActor;
   nsAutoPtr<Transport> mTransport;
   ProcessId mOtherPid;
 
@@ -759,8 +759,8 @@ private:
 
 class ChildImpl::OpenMainProcessActorRunnable final : public nsRunnable
 {
-  nsRefPtr<ChildImpl> mActor;
-  nsRefPtr<ParentImpl> mParentActor;
+  RefPtr<ChildImpl> mActor;
+  RefPtr<ParentImpl> mParentActor;
   MessageLoop* mParentMessageLoop;
 
 public:
@@ -901,7 +901,7 @@ BackgroundChild::GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
 {
   MOZ_ASSERT(aBlob);
 
-  nsRefPtr<BlobImpl> blobImpl = static_cast<Blob*>(aBlob)->Impl();
+  RefPtr<BlobImpl> blobImpl = static_cast<Blob*>(aBlob)->Impl();
   MOZ_ASSERT(blobImpl);
 
   return GetOrCreateActorForBlobImpl(aBackgroundActor, blobImpl);
@@ -965,7 +965,7 @@ bool ParentImpl::sShutdownObserverRegistered = false;
 
 bool ParentImpl::sShutdownHasStarted = false;
 
-StaticAutoPtr<nsTArray<nsRefPtr<ParentImpl::CreateCallback>>>
+StaticAutoPtr<nsTArray<RefPtr<ParentImpl::CreateCallback>>>
   ParentImpl::sPendingCallbacks;
 
 // -----------------------------------------------------------------------------
@@ -1060,7 +1060,7 @@ ParentImpl::Alloc(ContentParent* aContent,
 
   sLiveActorCount++;
 
-  nsRefPtr<ParentImpl> actor = new ParentImpl(aContent, aTransport);
+  RefPtr<ParentImpl> actor = new ParentImpl(aContent, aTransport);
 
   nsCOMPtr<nsIRunnable> connectRunnable =
     new ConnectActorRunnable(actor, aTransport, aOtherPid,
@@ -1104,7 +1104,7 @@ ParentImpl::CreateActorForSameProcess(CreateCallback* aCallback)
   }
 
   if (!sPendingCallbacks) {
-    sPendingCallbacks = new nsTArray<nsRefPtr<CreateCallback>>();
+    sPendingCallbacks = new nsTArray<RefPtr<CreateCallback>>();
   }
 
   sPendingCallbacks->AppendElement(aCallback);
@@ -1190,11 +1190,11 @@ ParentImpl::ShutdownBackgroundThread()
 
   if (sPendingCallbacks) {
     if (!sPendingCallbacks->IsEmpty()) {
-      nsTArray<nsRefPtr<CreateCallback>> callbacks;
+      nsTArray<RefPtr<CreateCallback>> callbacks;
       sPendingCallbacks->SwapElements(callbacks);
 
       for (uint32_t index = 0; index < callbacks.Length(); index++) {
-        nsRefPtr<CreateCallback> callback;
+        RefPtr<CreateCallback> callback;
         callbacks[index].swap(callback);
         MOZ_ASSERT(callback);
 
@@ -1426,7 +1426,7 @@ ParentImpl::RequestMessageLoopRunnable::Run()
     sBackgroundThreadMessageLoop = mMessageLoop;
 
     if (sPendingCallbacks && !sPendingCallbacks->IsEmpty()) {
-      nsTArray<nsRefPtr<CreateCallback>> callbacks;
+      nsTArray<RefPtr<CreateCallback>> callbacks;
       sPendingCallbacks->SwapElements(callbacks);
 
       for (uint32_t index = 0; index < callbacks.Length(); index++) {
@@ -1531,10 +1531,10 @@ ParentImpl::CreateCallbackRunnable::Run()
   MOZ_ASSERT(sBackgroundThreadMessageLoop);
   MOZ_ASSERT(mCallback);
 
-  nsRefPtr<CreateCallback> callback;
+  RefPtr<CreateCallback> callback;
   mCallback.swap(callback);
 
-  nsRefPtr<ParentImpl> actor = new ParentImpl();
+  RefPtr<ParentImpl> actor = new ParentImpl();
 
   callback->Success(actor.forget(), sBackgroundThreadMessageLoop);
 
@@ -1639,7 +1639,7 @@ ChildImpl::Alloc(Transport* aTransport, ProcessId aOtherPid)
 
   sPendingTargets->RemoveElementAt(0);
 
-  nsRefPtr<ChildImpl> actor = new ChildImpl();
+  RefPtr<ChildImpl> actor = new ChildImpl();
 
   ChildImpl* weakActor = actor;
 
@@ -1723,7 +1723,7 @@ ChildImpl::GetOrCreateForCurrentThread(
     return true;
   }
 
-  nsRefPtr<CreateActorRunnable> runnable = new CreateActorRunnable();
+  RefPtr<CreateActorRunnable> runnable = new CreateActorRunnable();
   if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
     CRASH_IN_CHILD_PROCESS("Failed to dispatch to main thread!");
     return false;
@@ -1875,7 +1875,7 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
              "There should be at least one callback when first creating the "
              "actor!");
 
-  nsRefPtr<ChildImpl> strongActor;
+  RefPtr<ChildImpl> strongActor;
   mActor.swap(strongActor);
 
   if (!strongActor->Open(mTransport.forget(), mOtherPid,
@@ -1897,7 +1897,7 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
   MOZ_ASSERT(threadLocalInfo);
   MOZ_ASSERT(!threadLocalInfo->mActor);
 
-  nsRefPtr<ChildImpl>& actor = threadLocalInfo->mActor;
+  RefPtr<ChildImpl>& actor = threadLocalInfo->mActor;
   strongActor.swap(actor);
 
   actor->SetBoundThread();
@@ -1929,10 +1929,10 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
              "There should be at least one callback when first creating the "
              "actor!");
 
-  nsRefPtr<ChildImpl> strongChildActor;
+  RefPtr<ChildImpl> strongChildActor;
   mActor.swap(strongChildActor);
 
-  nsRefPtr<ParentImpl> parentActor;
+  RefPtr<ParentImpl> parentActor;
   mParentActor.swap(parentActor);
 
   MessageChannel* parentChannel = parentActor->GetIPCChannel();
@@ -1963,7 +1963,7 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
   MOZ_ASSERT(threadLocalInfo);
   MOZ_ASSERT(!threadLocalInfo->mActor);
 
-  nsRefPtr<ChildImpl>& childActor = threadLocalInfo->mActor;
+  RefPtr<ChildImpl>& childActor = threadLocalInfo->mActor;
   strongChildActor.swap(childActor);
 
   childActor->SetBoundThread();
@@ -1999,12 +1999,12 @@ ChildImpl::ParentCreateCallback::Success(
   AssertIsInMainProcess();
   AssertIsOnMainThread();
 
-  nsRefPtr<ParentImpl> parentActor = aParentActor;
+  RefPtr<ParentImpl> parentActor = aParentActor;
   MOZ_ASSERT(parentActor);
   MOZ_ASSERT(aParentMessageLoop);
   MOZ_ASSERT(mEventTarget);
 
-  nsRefPtr<ChildImpl> childActor = new ChildImpl();
+  RefPtr<ChildImpl> childActor = new ChildImpl();
 
   nsCOMPtr<nsIEventTarget> target;
   mEventTarget.swap(target);
@@ -2043,7 +2043,7 @@ ChildImpl::OpenProtocolOnMainThread(nsIEventTarget* aEventTarget)
   }
 
   if (XRE_IsParentProcess()) {
-    nsRefPtr<ParentImpl::CreateCallback> parentCallback =
+    RefPtr<ParentImpl::CreateCallback> parentCallback =
       new ParentCreateCallback(aEventTarget);
 
     if (!ParentImpl::CreateActorForSameProcess(parentCallback)) {

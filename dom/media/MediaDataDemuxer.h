@@ -14,7 +14,7 @@
 #include "MediaInfo.h"
 #include "TimeUnits.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -50,7 +50,7 @@ public:
   // supplied. For example, an incomplete metadata would cause the promise to be
   // rejected should no more data be coming, while the demuxer would wait
   // otherwise.
-  virtual nsRefPtr<InitPromise> Init() = 0;
+  virtual RefPtr<InitPromise> Init() = 0;
 
   // Returns true if a aType track type is available.
   virtual bool HasTrackType(TrackInfo::TrackType aType) const = 0;
@@ -107,7 +107,7 @@ public:
   class SamplesHolder {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SamplesHolder)
-    nsTArray<nsRefPtr<MediaRawData>> mSamples;
+    nsTArray<RefPtr<MediaRawData>> mSamples;
   private:
     ~SamplesHolder() {}
   };
@@ -123,7 +123,7 @@ public:
   };
 
   typedef MozPromise<media::TimeUnit, DemuxerFailureReason, /* IsExclusive = */ true> SeekPromise;
-  typedef MozPromise<nsRefPtr<SamplesHolder>, DemuxerFailureReason, /* IsExclusive = */ true> SamplesPromise;
+  typedef MozPromise<RefPtr<SamplesHolder>, DemuxerFailureReason, /* IsExclusive = */ true> SamplesPromise;
   typedef MozPromise<uint32_t, SkipFailureHolder, /* IsExclusive = */ true> SkipAccessPointPromise;
 
   // Returns the TrackInfo (a.k.a Track Description) for this track.
@@ -135,7 +135,7 @@ public:
 
   // Seeks to aTime. Upon success, SeekPromise will be resolved with the
   // actual time seeked to. Typically the random access point time
-  virtual nsRefPtr<SeekPromise> Seek(media::TimeUnit aTime) = 0;
+  virtual RefPtr<SeekPromise> Seek(media::TimeUnit aTime) = 0;
 
   // Returns the next aNumSamples sample(s) available.
   // If only a lesser amount of samples is available, only those will be
@@ -143,7 +143,7 @@ public:
   // A aNumSamples value of -1 indicates to return all remaining samples.
   // A video sample is typically made of a single video frame while an audio
   // sample will contains multiple audio frames.
-  virtual nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) = 0;
+  virtual RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) = 0;
 
   // Returns true if a call to GetSamples() may block while waiting on the
   // underlying resource to return the data.
@@ -179,7 +179,7 @@ public:
   // The first frame returned by the next call to GetSamples() will be the
   // first random access point found after aTimeThreshold.
   // Upon success, returns the number of frames skipped.
-  virtual nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) = 0;
+  virtual RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) = 0;
 
   // Gets the resource's offset used for the last Seek() or GetSample().
   // A negative value indicates that this functionality isn't supported.
