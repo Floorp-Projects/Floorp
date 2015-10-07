@@ -570,11 +570,22 @@ var LoginManagerParent = {
   },
 
   /**
+   * Returns true if the page currently loaded in the given browser element has
+   * insecure login forms. This state may be updated asynchronously, in which
+   * case a custom event named InsecureLoginFormsStateChange will be dispatched
+   * on the browser element.
+   */
+  hasInsecureLoginForms(browser) {
+    return !!this.stateForBrowser(browser).hasInsecureLoginForms;
+  },
+
+  /**
    * Called to indicate whether a login form on the currently loaded page is
    * present or not. This is one of the factors used to control the visibility
    * of the password fill doorhanger.
    */
-  updateLoginFormPresence(browser, { loginFormOrigin, loginFormPresent }) {
+  updateLoginFormPresence(browser, { loginFormOrigin, loginFormPresent,
+                                     hasInsecureLoginForms }) {
     const ANCHOR_DELAY_MS = 200;
 
     let state = this.stateForBrowser(browser);
@@ -583,8 +594,13 @@ var LoginManagerParent = {
     // processed in order, this will always be the latest version to use.
     state.loginFormOrigin = loginFormOrigin;
     state.loginFormPresent = loginFormPresent;
+    state.hasInsecureLoginForms = hasInsecureLoginForms;
 
-    // Apply the data to the currently displayed icon later.
+    // Report the insecure login form state immediately.
+    browser.dispatchEvent(new browser.ownerDocument.defaultView
+                                 .CustomEvent("InsecureLoginFormsStateChange"));
+
+    // Apply the data to the currently displayed login fill icon later.
     if (!state.anchorDeferredTask) {
       state.anchorDeferredTask = new DeferredTask(
         () => this.updateLoginAnchor(browser),
