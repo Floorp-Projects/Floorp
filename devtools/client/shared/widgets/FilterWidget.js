@@ -17,7 +17,7 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const {cssTokenizer} = require("devtools/client/shared/css-parsing-utils");
 
 loader.lazyGetter(this, "asyncStorage",
-                  () => require("devtools/shared/shared/async-storage"));
+                  () => require("devtools/shared/async-storage"));
 
 const DEFAULT_FILTER_TYPE = "length";
 const UNIT_MAPPING = {

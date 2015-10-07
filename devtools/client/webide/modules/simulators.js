@@ -9,7 +9,7 @@ loader.lazyRequireGetter(this, "ConnectionManager", "devtools/shared/client/conn
 loader.lazyRequireGetter(this, "AddonSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
 loader.lazyRequireGetter(this, "OldAddonSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
 loader.lazyRequireGetter(this, "CustomSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
-const asyncStorage = require("devtools/shared/shared/async-storage");
+const asyncStorage = require("devtools/shared/async-storage");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 
