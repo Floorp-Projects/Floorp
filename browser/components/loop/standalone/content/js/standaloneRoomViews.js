@@ -416,20 +416,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
-  var StandaloneRoomFooter = React.createClass({displayName: "StandaloneRoomFooter",
-    propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
-    },
-
-    render: function() {
-      return (
-        React.createElement("footer", {className: "rooms-footer"}, 
-          React.createElement("div", {className: "footer-logo"})
-        )
-      );
-    }
-  });
-
   var StandaloneRoomView = React.createClass({displayName: "StandaloneRoomView",
     mixins: [
       Backbone.Events,
@@ -678,10 +664,22 @@ loop.standaloneRoomViews = (function(mozL10n) {
               publishStream: this.publishStream, 
               show: true, 
               video: {enabled: !this.state.videoMuted,
-                      visible: this._roomIsActive()}})
-          ), 
-          React.createElement(StandaloneRoomFooter, {dispatcher: this.props.dispatcher})
+                      visible: this._roomIsActive()}}), 
+            React.createElement(StandaloneMozLogo, {dispatcher: this.props.dispatcher})
+          )
         )
+      );
+    }
+  });
+
+  var StandaloneMozLogo = React.createClass({displayName: "StandaloneMozLogo",
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    render: function() {
+      return (
+        React.createElement("div", {className: "standalone-moz-logo"})
       );
     }
   });
@@ -726,7 +724,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
     StandaloneHandleUserAgentView: StandaloneHandleUserAgentView,
     StandaloneRoomControllerView: StandaloneRoomControllerView,
     StandaloneRoomFailureView: StandaloneRoomFailureView,
-    StandaloneRoomFooter: StandaloneRoomFooter,
     StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomInfoArea: StandaloneRoomInfoArea,
     StandaloneRoomView: StandaloneRoomView,
