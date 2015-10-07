@@ -315,7 +315,8 @@ var BookmarkPropertiesPanel = {
     switch (this._action) {
       case ACTION_EDIT:
         gEditItemOverlay.initPanel({ node: this._node
-                                   , hiddenRows: this._hiddenRows });
+                                   , hiddenRows: this._hiddenRows
+                                   , focusedElement: "first" });
         acceptButton.disabled = gEditItemOverlay.readOnly;
         break;
       case ACTION_ADD:
@@ -323,7 +324,8 @@ var BookmarkPropertiesPanel = {
         // Edit the new item
         gEditItemOverlay.initPanel({ node: this._node
                                    , hiddenRows: this._hiddenRows
-                                   , postData: this._postData });
+                                   , postData: this._postData
+                                   , focusedElement: "first" });
 
         // Empty location field if the uri is about:blank, this way inserting a new
         // url will be easier for the user, Accept button will be automatically
