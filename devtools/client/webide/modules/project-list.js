@@ -22,13 +22,8 @@ module.exports = ProjectList = function(win, parentWindow) {
   this._doc = win.document;
   this._UI = parentWindow.UI;
   this._parentWindow = parentWindow;
-  this._panelNodeEl = "toolbarbutton";
-  this._sidebarsEnabled = Services.prefs.getBoolPref("devtools.webide.sidebars");
   this._telemetry = new Telemetry();
-
-  if (this._sidebarsEnabled) {
-    this._panelNodeEl = "div";
-  }
+  this._panelNodeEl = "div";
 
   this.onWebIDEUpdate = this.onWebIDEUpdate.bind(this);
   this._UI.on("webide-update", this.onWebIDEUpdate);
@@ -41,10 +36,6 @@ module.exports = ProjectList = function(win, parentWindow) {
 ProjectList.prototype = {
   get doc() {
     return this._doc;
-  },
-
-  get sidebarsEnabled() {
-    return this._sidebarsEnabled;
   },
 
   appManagerUpdate: function(event, what, details) {
@@ -134,19 +125,14 @@ ProjectList.prototype = {
    * }
    */
   _renderProjectItem: function(opts) {
-    if (this._sidebarsEnabled && this._doc !== this._parentWindow.document) {
-      let span = opts.panel.querySelector("span") || this._doc.createElement("span");
-      span.textContent = opts.name;
-      let icon = opts.panel.querySelector("img") || this._doc.createElement("img");
-      icon.className = "project-image";
-      icon.setAttribute("src", opts.icon);
-      opts.panel.appendChild(icon);
-      opts.panel.appendChild(span);
-      opts.panel.setAttribute("title", opts.name);
-    } else {
-      opts.panel.setAttribute("label", opts.name);
-      opts.panel.setAttribute("image", opts.icon);
-    }
+    let span = opts.panel.querySelector("span") || this._doc.createElement("span");
+    span.textContent = opts.name;
+    let icon = opts.panel.querySelector("img") || this._doc.createElement("img");
+    icon.className = "project-image";
+    icon.setAttribute("src", opts.icon);
+    opts.panel.appendChild(icon);
+    opts.panel.appendChild(span);
+    opts.panel.setAttribute("title", opts.name);
   },
 
   refreshTabs: function() {
@@ -208,9 +194,6 @@ ProjectList.prototype = {
         icon: tab.favicon || AppManager.DEFAULT_PROJECT_ICON
       });
       panelItemNode.addEventListener("click", () => {
-        if (!this._sidebarsEnabled) {
-          this._UI.hidePanels();
-        }
         AppManager.selectedProject = {
           type: "tab",
           app: tab,
@@ -256,9 +239,6 @@ ProjectList.prototype = {
       });
       runtimeAppsNode.appendChild(panelItemNode);
       panelItemNode.addEventListener("click", () => {
-        if (!this._sidebarsEnabled) {
-          this._UI.hidePanels();
-        }
         AppManager.selectedProject = {
           type: "mainProcess",
           name: Strings.GetStringFromName("mainProcess_label"),
@@ -278,9 +258,6 @@ ProjectList.prototype = {
       });
       runtimeAppsNode.appendChild(panelItemNode);
       panelItemNode.addEventListener("click", () => {
-        if (!this._sidebarsEnabled) {
-          this._UI.hidePanels();
-        }
         AppManager.selectedProject = {
           type: "runtimeApp",
           app: app.manifest,
@@ -299,15 +276,9 @@ ProjectList.prototype = {
     let packagedAppCmd;
     let hostedAppCmd;
 
-    if (this._sidebarsEnabled) {
-      newAppCmd = doc.querySelector("#new-app");
-      packagedAppCmd = doc.querySelector("#packaged-app");
-      hostedAppCmd = doc.querySelector("#hosted-app");
-    } else {
-      newAppCmd = doc.querySelector("#cmd_newApp")
-      packagedAppCmd = doc.querySelector("#cmd_importPackagedApp");
-      hostedAppCmd = doc.querySelector("#cmd_importHostedApp");
-    }
+    newAppCmd = doc.querySelector("#new-app");
+    packagedAppCmd = doc.querySelector("#packaged-app");
+    hostedAppCmd = doc.querySelector("#hosted-app");
 
     if (!newAppCmd || !packagedAppCmd || !hostedAppCmd) {
       return;
@@ -373,9 +344,6 @@ ProjectList.prototype = {
           });
         }
         panelItemNode.addEventListener("click", () => {
-          if (!this._sidebarsEnabled) {
-            this._UI.hidePanels();
-          }
           AppManager.selectedProject = project;
         }, true);
       }
@@ -403,12 +371,9 @@ ProjectList.prototype = {
   destroy: function() {
     this._doc = null;
     AppManager.off("app-manager-update", this.appManagerUpdate);
-    if (this._sidebarsEnabled) {
-      this._UI.off("webide-update", this.onWebIDEUpdate);
-    }
+    this._UI.off("webide-update", this.onWebIDEUpdate);
     this._UI = null;
     this._parentWindow = null;
     this._panelNodeEl = null;
-    this._sidebarsEnabled = null;
   }
 };
