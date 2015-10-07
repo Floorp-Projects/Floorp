@@ -915,6 +915,20 @@ protected:
   void ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                               ChildListID aChildListID);
 
+  /**
+   * GetOutOfFlowFrameItems selects the out-of-flow frame list the new
+   * frame should be added to. If the frame shouldn't be added to any
+   * out-of-flow list, it returns nullptr. The corresponding type of
+   * placeholder is also returned via the aPlaceholderType parameter
+   * if this method doesn't return nullptr. The caller should check
+   * whether the returned list really has a containing block.
+   */
+  nsAbsoluteItems* GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
+                                          bool aCanBePositioned,
+                                          bool aCanBeFloated,
+                                          bool aIsOutOfFlowPopup,
+                                          nsFrameState* aPlaceholderType);
+
   // Our list of all pending bindings.  When we're done, we need to call
   // AddToAttachedQueue on all of them, in order.
   LinkedList<PendingBinding> mPendingBindings;
@@ -1101,6 +1115,39 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
   return aContentParentFrame;
 }
 
+nsAbsoluteItems*
+nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
+                                                bool aCanBePositioned,
+                                                bool aCanBeFloated,
+                                                bool aIsOutOfFlowPopup,
+                                                nsFrameState* aPlaceholderType)
+{
+#ifdef MOZ_XUL
+  if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
+    MOZ_ASSERT(mPopupItems.containingBlock, "Must have a popup set frame!");
+    *aPlaceholderType = PLACEHOLDER_FOR_POPUP;
+    return &mPopupItems;
+  }
+#endif // MOZ_XUL
+  if (aCanBeFloated && aNewFrame->IsFloating()) {
+    *aPlaceholderType = PLACEHOLDER_FOR_FLOAT;
+    return &mFloatedItems;
+  }
+
+  if (aCanBePositioned) {
+    const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
+    if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
+      *aPlaceholderType = PLACEHOLDER_FOR_ABSPOS;
+      return &mAbsoluteItems;
+    }
+    if (disp->mPosition == NS_STYLE_POSITION_FIXED) {
+      *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
+      return &GetFixedItems();
+    }
+  }
+  return nullptr;
+}
+
 void
 nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
                                   nsFrameItems& aFrameItems,
@@ -1115,53 +1162,25 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
 {
   NS_PRECONDITION(!aNewFrame->GetNextSibling(), "Shouldn't happen");
 
-  const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
+  nsFrameState placeholderType;
+  nsAbsoluteItems* outOfFlowFrameItems =
+    GetOutOfFlowFrameItems(aNewFrame, aCanBePositioned, aCanBeFloated,
+                           aIsOutOfFlowPopup, &placeholderType);
 
   // The comments in GetGeometricParent regarding root table frames
-  // all apply here, unfortunately.
-
-  bool needPlaceholder = false;
-  nsFrameState placeholderType;
-  nsFrameItems* frameItems = &aFrameItems;
-#ifdef MOZ_XUL
-  if (MOZ_UNLIKELY(aIsOutOfFlowPopup)) {
-      NS_ASSERTION(aNewFrame->GetParent() == mPopupItems.containingBlock,
-                   "Popup whose parent is not the popup containing block?");
-      NS_ASSERTION(mPopupItems.containingBlock, "Must have a popup set frame!");
-      needPlaceholder = true;
-      frameItems = &mPopupItems;
-      placeholderType = PLACEHOLDER_FOR_POPUP;
-  }
-  else
-#endif // MOZ_XUL
-  if (aCanBeFloated && aNewFrame->IsFloating() &&
-      mFloatedItems.containingBlock) {
-    NS_ASSERTION(aNewFrame->GetParent() == mFloatedItems.containingBlock,
-                 "Float whose parent is not the float containing block?");
-    needPlaceholder = true;
-    frameItems = &mFloatedItems;
-    placeholderType = PLACEHOLDER_FOR_FLOAT;
-  }
-  else if (aCanBePositioned) {
-    if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
-        mAbsoluteItems.containingBlock) {
-      NS_ASSERTION(aNewFrame->GetParent() == mAbsoluteItems.containingBlock,
-                   "Abs pos whose parent is not the abs pos containing block?");
-      needPlaceholder = true;
-      frameItems = &mAbsoluteItems;
-      placeholderType = PLACEHOLDER_FOR_ABSPOS;
-    }
-    if (disp->mPosition == NS_STYLE_POSITION_FIXED &&
-        GetFixedItems().containingBlock) {
-      NS_ASSERTION(aNewFrame->GetParent() == GetFixedItems().containingBlock,
-                   "Fixed pos whose parent is not the fixed pos containing block?");
-      needPlaceholder = true;
-      frameItems = &GetFixedItems();
-      placeholderType = PLACEHOLDER_FOR_FIXEDPOS;
-    }
+  // all apply here, unfortunately. Thus, we need to check whether
+  // the returned frame items really has containing block.
+  nsFrameItems* frameItems;
+  if (outOfFlowFrameItems && outOfFlowFrameItems->containingBlock) {
+    MOZ_ASSERT(aNewFrame->GetParent() == outOfFlowFrameItems->containingBlock,
+               "Parent of the frame is not the containing block?");
+    frameItems = outOfFlowFrameItems;
+  } else {
+    frameItems = &aFrameItems;
+    placeholderType = nsFrameState(0);
   }
 
-  if (needPlaceholder) {
+  if (placeholderType) {
     NS_ASSERTION(frameItems != &aFrameItems,
                  "Putting frame in-flow _and_ want a placeholder?");
     nsIFrame* placeholderFrame =
