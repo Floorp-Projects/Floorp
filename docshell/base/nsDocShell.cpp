@@ -14070,18 +14070,13 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel,
     return NS_OK;
   }
 
-  bool isNavigation = false;
-  nsresult rv = aChannel->GetIsNavigation(&isNavigation);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsContentPolicyType loadType;
-  rv = aChannel->GetInternalContentPolicyType(&loadType);
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc;
 
-  bool isSubresourceLoad = !isNavigation &&
-                           !nsContentUtils::IsWorkerLoad(loadType);
+  bool isSubresourceLoad = !nsContentUtils::IsNonSubresourceRequest(channel);
   if (isSubresourceLoad) {
     doc = GetDocument();
     if (!doc) {
