@@ -510,8 +510,6 @@ const PanelUI = {
   },
 };
 
-XPCOMUtils.defineConstant(this, "PanelUI", PanelUI);
-
 /**
  * Gets the currently selected locale for display.
  * @return  the selected locale or "en-US" if none is selected

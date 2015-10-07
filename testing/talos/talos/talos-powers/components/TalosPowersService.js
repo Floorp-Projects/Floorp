@@ -72,4 +72,4 @@ TalosPowersService.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TalosPowersService]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([TalosPowersService]);

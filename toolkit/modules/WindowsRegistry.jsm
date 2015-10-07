@@ -7,7 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = ["WindowsRegistry"];
 
-var WindowsRegistry = {
+const WindowsRegistry = {
   /**
    * Safely reads a value from the registry.
    *

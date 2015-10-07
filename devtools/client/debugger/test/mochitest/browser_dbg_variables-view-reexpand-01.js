@@ -74,8 +74,7 @@ function testVariablesExpand() {
   let localScope = gVariables.getScopeAtIndex(0);
   let withScope = gVariables.getScopeAtIndex(1);
   let functionScope = gVariables.getScopeAtIndex(2);
-  let globalLexicalScope = gVariables.getScopeAtIndex(3);
-  let globalScope = gVariables.getScopeAtIndex(4);
+  let globalScope = gVariables.getScopeAtIndex(3);
 
   let thisVar = localScope.get("this");
   let windowVar = thisVar.get("window");
@@ -86,8 +85,6 @@ function testVariablesExpand() {
     "The withScope arrow should still be expanded.");
   is(functionScope.target.querySelector(".arrow").hasAttribute("open"), true,
     "The functionScope arrow should still be expanded.");
-  is(globalLexicalScope.target.querySelector(".arrow").hasAttribute("open"), true,
-    "The globalLexicalScope arrow should still be expanded.");
   is(globalScope.target.querySelector(".arrow").hasAttribute("open"), true,
     "The globalScope arrow should still be expanded.");
   is(thisVar.target.querySelector(".arrow").hasAttribute("open"), true,
@@ -101,8 +98,6 @@ function testVariablesExpand() {
     "The withScope enumerables should still be expanded.");
   is(functionScope.target.querySelector(".variables-view-element-details").hasAttribute("open"), true,
     "The functionScope enumerables should still be expanded.");
-  is(globalLexicalScope.target.querySelector(".variables-view-element-details").hasAttribute("open"), true,
-    "The globalLexicalScope enumerables should still be expanded.");
   is(globalScope.target.querySelector(".variables-view-element-details").hasAttribute("open"), true,
     "The globalScope enumerables should still be expanded.");
   is(thisVar.target.querySelector(".variables-view-element-details").hasAttribute("open"), true,
@@ -116,8 +111,6 @@ function testVariablesExpand() {
     "The withScope expanded getter should return true.");
   is(functionScope.expanded, true,
     "The functionScope expanded getter should return true.");
-  is(globalLexicalScope.expanded, true,
-    "The globalScope expanded getter should return true.");
   is(globalScope.expanded, true,
     "The globalScope expanded getter should return true.");
   is(thisVar.expanded, true,
@@ -132,8 +125,7 @@ function prepareVariablesAndProperties() {
   let localScope = gVariables.getScopeAtIndex(0);
   let withScope = gVariables.getScopeAtIndex(1);
   let functionScope = gVariables.getScopeAtIndex(2);
-  let globalLexicalScope = gVariables.getScopeAtIndex(3);
-  let globalScope = gVariables.getScopeAtIndex(4);
+  let globalScope = gVariables.getScopeAtIndex(3);
 
   is(localScope.expanded, true,
     "The localScope should be expanded.");
@@ -141,8 +133,6 @@ function prepareVariablesAndProperties() {
     "The withScope should not be expanded yet.");
   is(functionScope.expanded, false,
     "The functionScope should not be expanded yet.");
-  is(globalLexicalScope.expanded, false,
-    "The globalLexicalScope should not be expanded yet.");
   is(globalScope.expanded, false,
     "The globalScope should not be expanded yet.");
 
@@ -155,8 +145,6 @@ function prepareVariablesAndProperties() {
       "The withScope should now be expanded.");
     is(functionScope.expanded, true,
       "The functionScope should now be expanded.");
-    is(globalLexicalScope.expanded, true,
-      "The globalLexicalScope should now be expanded.");
     is(globalScope.expanded, true,
       "The globalScope should now be expanded.");
 
@@ -198,7 +186,6 @@ function prepareVariablesAndProperties() {
 
   withScope.expand();
   functionScope.expand();
-  globalLexicalScope.expand();
   globalScope.expand();
 
   return deferred.promise;

@@ -3,7 +3,7 @@
 
 const protocol = require("devtools/server/protocol");
 
-var HelloActor = protocol.ActorClass({
+const HelloActor = protocol.ActorClass({
   typeName: "helloActor",
 
   hello: protocol.method(function () {

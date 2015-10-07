@@ -6,4 +6,4 @@
 const { utils: Cu } = Components;
 const {require} = Cu.import(`${ROOT}/toolkit/require.js`, {});
 const {Bootstrap} = require(`${ROOT}/sdk/addon/bootstrap.js`);
-var {startup, shutdown, install, uninstall} = new Bootstrap();
+const {startup, shutdown, install, uninstall} = new Bootstrap();
