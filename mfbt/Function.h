@@ -155,10 +155,11 @@ public:
     return *this;
   }
 
-  ReturnType operator()(Arguments... aArguments) const
+  template<typename... Args>
+  ReturnType operator()(Args&&... aArguments) const
   {
     MOZ_ASSERT(mImpl);
-    return mImpl->call(Forward<Arguments>(aArguments)...);
+    return mImpl->call(Forward<Args>(aArguments)...);
   }
 private:
   // TODO: Consider implementing a small object optimization.
