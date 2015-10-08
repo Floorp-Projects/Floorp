@@ -42,12 +42,12 @@ function testSessionAvailable() {
         session = aSession;
 
         ok(session.id, "Session ID should be set: " + session.id);
-        is(session.state, "disconnected", "Session state at receiver side should be disconnected by default.");
+        is(session.state, "closed", "Session state at receiver side should be closed by default.");
         aResolve();
       },
       function(aError) {
         ok(false, "Error occurred when getting the session: " + aError);
-        teardown();
+        finish();
         aReject();
       }
     );
@@ -81,7 +81,7 @@ function testIncomingMessage() {
   });
 }
 
-function testCloseSession() {
+function testTerminateSession() {
   return new Promise(function(aResolve, aReject) {
     session.onstatechange = function() {
       session.onstatechange = null;
@@ -89,14 +89,14 @@ function testCloseSession() {
       aResolve();
     };
 
-    session.close();
+    session.terminate();
   });
 }
 
 testSessionAvailable().
 then(testSessionReady).
 then(testIncomingMessage).
-then(testCloseSession).
+then(testTerminateSession).
 then(finish);
 
 </script>

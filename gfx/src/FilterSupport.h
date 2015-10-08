@@ -437,7 +437,8 @@ public:
 
   /**
    * Computes the region that changes in the filter output due to a change in
-   * input.
+   * input.  This is primarily needed when an individual piece of content inside
+   * a filtered container element changes.
    */
   static nsIntRegion
   ComputeResultChangeRegion(const FilterDescription& aFilter,

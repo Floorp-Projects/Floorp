@@ -25,7 +25,7 @@ public:
   already_AddRefed<MediaTrackDemuxer> GetTrackDemuxer(
       TrackInfo::TrackType aType, uint32_t aTrackNumber) override;
   bool IsSeekable() const override;
-  void NotifyDataArrived(uint32_t aLength, int64_t aOffset) override;
+  void NotifyDataArrived() override;
   void NotifyDataRemoved() override;
   // Do not shift the calculated buffered range by the start time of the first
   // decoded frame. The mac MP3 decoder will buffer some samples and the first

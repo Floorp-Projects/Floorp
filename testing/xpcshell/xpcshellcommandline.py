@@ -1,5 +1,7 @@
 import argparse
 
+from mozlog import commandline
+
 def add_common_arguments(parser):
     parser.add_argument("--app-path",
                         type=unicode, dest="appPath", default=None,
@@ -179,6 +181,8 @@ def add_b2g_arguments(parser):
 def parser_desktop():
     parser = argparse.ArgumentParser()
     add_common_arguments(parser)
+    commandline.add_logging_group(parser)
+
     return parser
 
 def parser_remote():
@@ -187,6 +191,7 @@ def parser_remote():
     add_common_arguments(common)
     remote = parser.add_argument_group("Remote Options")
     add_remote_arguments(remote)
+    commandline.add_logging_group(parser)
 
     return parser
 
@@ -198,5 +203,6 @@ def parser_b2g():
     add_remote_arguments(remote)
     b2g = parser.add_argument_group("B2G Options")
     add_b2g_arguments(b2g)
+    commandline.add_logging_group(parser)
 
     return parser

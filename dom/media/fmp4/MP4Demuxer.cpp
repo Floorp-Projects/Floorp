@@ -186,7 +186,7 @@ MP4Demuxer::IsSeekable() const
 }
 
 void
-MP4Demuxer::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
+MP4Demuxer::NotifyDataArrived()
 {
   for (uint32_t i = 0; i < mDemuxers.Length(); i++) {
     mDemuxers[i]->NotifyDataArrived();

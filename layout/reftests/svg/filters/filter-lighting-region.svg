@@ -1,0 +1,30 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="600px" height="300px">
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1203376 -->
+  <defs>
+    <!-- the filter lights are intentionally chosen to fill the entire area with
+         a solid color since we're only testing the extents of the filter region
+    -->
+    <filter id="diffuse" x="-50%" y="-50%" width="200%" height="200%">
+      <!-- gives a black filter region -->
+      <feDiffuseLighting lighting-color="black">
+        <feDistantLight />
+      </feDiffuseLighting>
+    </filter>
+
+    <filter id="specular" x="-50%" y="-50%" width="200%" height="200%">
+      <!-- gives a white filter region -->
+      <feSpecularLighting lighting-color="white" specularConstant="100">
+        <feDistantLight elevation="90"/>
+      </feSpecularLighting>
+    </filter>
+  </defs>
+
+  <rect x="100" y="100" width="100" height="100" filter="url(#diffuse)" />
+
+  <rect x="340" y="40" width="220" height="220" fill="grey" />
+  <rect x="400" y="100" width="100" height="100" filter="url(#specular)" />
+</svg>

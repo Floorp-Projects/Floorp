@@ -23,10 +23,9 @@ public:
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
 
-  static already_AddRefed<PresentationSession>
-    Create(nsPIDOMWindow* aWindow,
-           const nsAString& aId,
-           PresentationSessionState aState);
+  static already_AddRefed<PresentationSession> Create(nsPIDOMWindow* aWindow,
+                                                      const nsAString& aId,
+                                                      PresentationSessionState aState);
 
   virtual void DisconnectFromOwner() override;
 
@@ -38,9 +37,12 @@ public:
 
   PresentationSessionState State() const;
 
-  void Send(const nsAString& aData, ErrorResult& aRv);
+  void Send(const nsAString& aData,
+            ErrorResult& aRv);
 
-  void Close();
+  void Close(ErrorResult& aRv);
+
+  void Terminate(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(statechange);
   IMPL_EVENT_HANDLER(message);

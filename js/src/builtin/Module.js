@@ -97,12 +97,12 @@ function ModuleDeclarationInstantiation()
     let module = this;
 
     // Step 5
-    if (module.environment !== undefined)
+    if (GetModuleEnvironment(module) !== undefined)
         return;
 
     // Step 7
     CreateModuleEnvironment(module);
-    let env = module.environment;
+    let env = GetModuleEnvironment(module);
 
     // Step 8
     let requestedModules = module.requestedModules;
@@ -131,7 +131,7 @@ function ModuleDeclarationInstantiation()
         if (imp.importName === "*") {
             // TODO
             // let namespace = GetModuleNamespace(importedModule);
-            // CreateNamespaceBinding(module.environment, imp.localName, namespace);
+            // CreateNamespaceBinding(env, imp.localName, namespace);
         } else {
             let resolution = importedModule.resolveExport(imp.importName);
             if (resolution === null)

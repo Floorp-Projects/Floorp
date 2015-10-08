@@ -1199,13 +1199,15 @@ JS::AutoCheckRequestDepth::~AutoCheckRequestDepth()
 #endif
 
 #ifdef JS_CRASH_DIAGNOSTICS
-void CompartmentChecker::check(InterpreterFrame* fp)
+void
+CompartmentChecker::check(InterpreterFrame* fp)
 {
     if (fp)
         check(fp->scopeChain());
 }
 
-void CompartmentChecker::check(AbstractFramePtr frame)
+void
+CompartmentChecker::check(AbstractFramePtr frame)
 {
     if (frame)
         check(frame.scopeChain());
@@ -1213,7 +1215,7 @@ void CompartmentChecker::check(AbstractFramePtr frame)
 #endif
 
 void
-js::CrashAtUnhandlableOOM(const char* reason)
+AutoEnterOOMUnsafeRegion::crash(const char* reason)
 {
     char msgbuf[1024];
     JS_snprintf(msgbuf, sizeof(msgbuf), "[unhandlable oom] %s", reason);

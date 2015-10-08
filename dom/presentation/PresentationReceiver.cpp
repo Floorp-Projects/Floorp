@@ -168,7 +168,7 @@ PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
 
   nsRefPtr<PresentationSession> session =
     PresentationSession::Create(GetOwner(), aSessionId,
-                                PresentationSessionState::Disconnected);
+                                PresentationSessionState::Closed);
   if (NS_WARN_IF(!session)) {
     return NS_ERROR_NOT_AVAILABLE;
   }

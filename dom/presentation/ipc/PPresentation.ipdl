@@ -25,7 +25,12 @@ struct SendSessionMessageRequest
   InputStreamParams data;
 };
 
-struct TerminateRequest
+struct CloseSessionRequest
+{
+  nsString sessionId;
+};
+
+struct TerminateSessionRequest
 {
   nsString sessionId;
 };
@@ -34,7 +39,8 @@ union PresentationIPCRequest
 {
   StartSessionRequest;
   SendSessionMessageRequest;
-  TerminateRequest;
+  CloseSessionRequest;
+  TerminateSessionRequest;
 };
 
 sync protocol PPresentation

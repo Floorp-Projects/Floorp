@@ -84,11 +84,10 @@ MP3Demuxer::IsSeekable() const {
 }
 
 void
-MP3Demuxer::NotifyDataArrived(uint32_t aLength, int64_t aOffset) {
+MP3Demuxer::NotifyDataArrived() {
   // TODO: bug 1169485.
   NS_WARNING("Unimplemented function NotifyDataArrived");
-  MP3DEMUXER_LOGV("NotifyDataArrived(%u, %" PRId64 ") mOffset=%" PRId64,
-                  aLength, aOffset, mTrackDemuxer->GetResourceOffset());
+  MP3DEMUXER_LOGV("NotifyDataArrived()");
 }
 
 void

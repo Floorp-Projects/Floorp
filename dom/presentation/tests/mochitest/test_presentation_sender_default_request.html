@@ -97,7 +97,7 @@ function testStartSession() {
   });
 }
 
-function testCloseSession() {
+function testTerminateSession() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
@@ -110,7 +110,7 @@ function testCloseSession() {
       aResolve();
     };
 
-    session.close();
+    session.terminate();
   });
 }
 
@@ -130,7 +130,7 @@ function runTests() {
 
   testSetup().
   then(testStartSession).
-  then(testCloseSession).
+  then(testTerminateSession).
   then(teardown);
 }
 
