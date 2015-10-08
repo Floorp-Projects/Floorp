@@ -1,0 +1,91 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Variable declarations for light and dark devtools themes.
+ * Colors are taken from:
+ * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
+ * Changes should be kept in sync with commandline.css and commandline.inc.css.
+ */
+
+/* IMPORTANT NOTE:
+ * This file is parsed in js (see client/shared/theme.js)
+ * so the formatting should be consistent (i.e. no '}' inside a rule).
+ */
+
+:root.theme-light {
+  --theme-body-background: #fcfcfc;
+  --theme-sidebar-background: #f7f7f7;
+  --theme-contrast-background: #e6b064;
+
+  --theme-tab-toolbar-background: #ebeced;
+  --theme-toolbar-background: #f0f1f2;
+  --theme-selection-background: #4c9ed9;
+  --theme-selection-background-semitransparent: rgba(76, 158, 217, .23);
+  --theme-selection-color: #f5f7fa;
+  --theme-splitter-color: #aaaaaa;
+  --theme-comment: #757873;
+
+  --theme-body-color: #18191a;
+  --theme-body-color-alt: #585959;
+  --theme-content-color1: #292e33;
+  --theme-content-color2: #8fa1b2;
+  --theme-content-color3: #667380;
+
+  --theme-highlight-green: #2cbb0f;
+  --theme-highlight-blue: #0088cc;
+  --theme-highlight-bluegrey: #0072ab;
+  --theme-highlight-purple: #5b5fff;
+  --theme-highlight-lightorange: #d97e00;
+  --theme-highlight-orange: #f13c00;
+  --theme-highlight-red: #ed2655;
+  --theme-highlight-pink: #b82ee5;
+
+  /* Colors used in Graphs, like performance tools. Similar colors to Chrome's timeline. */
+  --theme-graphs-green: #85d175;
+  --theme-graphs-blue: #83b7f6;
+  --theme-graphs-bluegrey: #0072ab;
+  --theme-graphs-purple: #b693eb;
+  --theme-graphs-yellow: #efc052;
+  --theme-graphs-red: #e57180;
+  --theme-graphs-grey: #cccccc;
+}
+
+:root.theme-dark {
+  --theme-body-background: #14171a;
+  --theme-sidebar-background: #181d20;
+  --theme-contrast-background: #b28025;
+
+  --theme-tab-toolbar-background: #252c33;
+  --theme-toolbar-background: #343c45;
+  --theme-selection-background: #1d4f73;
+  --theme-selection-background-semitransparent: rgba(29, 79, 115, .5);
+  --theme-selection-color: #f5f7fa;
+  --theme-splitter-color: black;
+  --theme-comment: #757873;
+
+  --theme-body-color: #8fa1b2;
+  --theme-body-color-alt: #b6babf;
+  --theme-content-color1: #a9bacb;
+  --theme-content-color2: #8fa1b2;
+  --theme-content-color3: #5f7387;
+
+  --theme-highlight-green: #70bf53;
+  --theme-highlight-blue: #46afe3;
+  --theme-highlight-bluegrey: #5e88b0;
+  --theme-highlight-purple: #6b7abb;
+  --theme-highlight-lightorange: #d99b28;
+  --theme-highlight-orange: #d96629;
+  --theme-highlight-red: #eb5368;
+  --theme-highlight-pink: #df80ff;
+
+  /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
+  --theme-graphs-green: #70bf53;
+  --theme-graphs-blue: #46afe3;
+  --theme-graphs-bluegrey: #5e88b0;
+  --theme-graphs-purple: #df80ff;
+  --theme-graphs-yellow: #d99b28;
+  --theme-graphs-red: #eb5368;
+  --theme-graphs-grey: #757873;
+}

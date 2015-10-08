@@ -5,13 +5,20 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MobileMessageDatabaseService.h"
+
 #include "AndroidBridge.h"
+#include "SmsManager.h"
 
 namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
 NS_IMPL_ISUPPORTS(MobileMessageDatabaseService, nsIMobileMessageDatabaseService)
+
+MobileMessageDatabaseService::MobileMessageDatabaseService()
+{
+  SmsManager::Init();
+}
 
 NS_IMETHODIMP
 MobileMessageDatabaseService::GetMessageMoz(int32_t aMessageId,
@@ -60,9 +67,29 @@ MobileMessageDatabaseService::CreateMessageCursor(bool aHasStartDate,
                                                   uint64_t aThreadId,
                                                   bool aReverse,
                                                   nsIMobileMessageCursorCallback* aCallback,
-                                                  nsICursorContinueCallback** aResult)
+                                                  nsICursorContinueCallback** aCursor)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!AndroidBridge::Bridge()) {
+    *aCursor = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsICursorContinueCallback> cursor =
+    AndroidBridge::Bridge()->CreateMessageCursor(aHasStartDate,
+                                                 aStartDate,
+                                                 aHasEndDate,
+                                                 aEndDate,
+                                                 aNumbers,
+                                                 aNumbersCount,
+                                                 aDelivery,
+                                                 aHasRead,
+                                                 aRead,
+                                                 aHasThreadId,
+                                                 aThreadId,
+                                                 aReverse,
+                                                 aCallback);
+  cursor.forget(aCursor);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -76,11 +103,18 @@ MobileMessageDatabaseService::MarkMessageRead(int32_t aMessageId,
 }
 
 NS_IMETHODIMP
-MobileMessageDatabaseService::CreateThreadCursor(nsIMobileMessageCursorCallback* aCallback,
-                                                 nsICursorContinueCallback** aResult)
+MobileMessageDatabaseService::CreateThreadCursor(nsIMobileMessageCursorCallback* aRequest,
+                                                 nsICursorContinueCallback** aCursor)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!AndroidBridge::Bridge()) {
+    *aCursor = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsICursorContinueCallback> cursor =
+    AndroidBridge::Bridge()->CreateThreadCursor(aRequest);
+  cursor.forget(aCursor);
+  return NS_OK;
 }
 
 } // namespace mobilemessage

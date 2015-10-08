@@ -164,6 +164,7 @@ devtools.jar:
 *   skin/themes/common.css (themes/common.css)
 *   skin/themes/dark-theme.css (themes/dark-theme.css)
 *   skin/themes/light-theme.css (themes/light-theme.css)
+    skin/themes/variables.css (themes/variables.css)
     skin/themes/images/add.svg (themes/images/add.svg)
     skin/themes/images/filters.svg (themes/images/filters.svg)
     skin/themes/images/filter-swatch.svg (themes/images/filter-swatch.svg)
