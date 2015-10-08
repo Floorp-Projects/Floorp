@@ -2950,13 +2950,6 @@ nsXPCComponents_Utils::ForcePermissiveCOWs(JSContext* cx)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::SkipCOWCallableChecks(JSContext* cx)
-{
-    CompartmentPrivate::Get(CurrentGlobalOrNull(cx))->skipCOWCallableChecks = true;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::ForcePrivilegedComponentsForScope(HandleValue vscope,
                                                          JSContext* cx)
 {
