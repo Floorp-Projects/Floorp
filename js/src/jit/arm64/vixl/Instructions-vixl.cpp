@@ -256,7 +256,7 @@ const Instruction* Instruction::ImmPCOffsetTarget() const {
 }
 
 
-inline int Instruction::ImmBranch() const {
+int Instruction::ImmBranch() const {
   switch (BranchType()) {
     case CondBranchType: return ImmCondBranch();
     case UncondBranchType: return ImmUncondBranch();

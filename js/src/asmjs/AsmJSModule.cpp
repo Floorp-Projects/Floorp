@@ -1792,6 +1792,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
 #elif defined(JS_CODEGEN_ARM64)
         MOZ_CRASH();
         void* callee = nullptr;
+        (void)callerRetAddr;
 #elif defined(JS_CODEGEN_MIPS32)
         Instruction* instr = (Instruction*)(callerRetAddr - 4 * sizeof(uint32_t));
         void* callee = (void*)Assembler::ExtractLuiOriValue(instr, instr->next());
@@ -1817,6 +1818,7 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
 #elif defined(JS_CODEGEN_ARM)
         new (caller) InstBLImm(BOffImm(newCallee - caller), Assembler::Always);
 #elif defined(JS_CODEGEN_ARM64)
+        (void)newCallee;
         MOZ_CRASH();
 #elif defined(JS_CODEGEN_MIPS32)
         Assembler::WriteLuiOriInstructions(instr, instr->next(),
@@ -1882,6 +1884,8 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext* cx)
             new (jump) InstNOP();
         }
 #elif defined(JS_CODEGEN_ARM64)
+        (void)jump;
+        (void)profilingEpilogue;
         MOZ_CRASH();
 #elif defined(JS_CODEGEN_MIPS32)
         Instruction* instr = (Instruction*)jump;
