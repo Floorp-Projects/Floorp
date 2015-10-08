@@ -76,11 +76,17 @@ function contentHandler_type_missing(metadata, response)
   response.bodyOutputStream.write(body, body.length);
 }
 
-function contentHandler_with_package_header(metadata, response)
+function contentHandler_with_package_header(chunkSize, metadata, response)
 {
   response.setHeader("Content-Type", 'application/package');
   var body = testData.packageHeader + testData.getData();
-  response.bodyOutputStream.write(body, body.length);
+
+  response.bodyOutputStream.write(body.substring(0,chunkSize), chunkSize);
+  response.processAsync();
+  do_timeout(5, function() {
+    response.bodyOutputStream.write(body.substring(chunkSize), body.length-chunkSize);
+    response.finish();
+  });
 }
 
 var testData = {
@@ -244,7 +250,7 @@ function test_multipart_content_type_other() {
   chan.asyncOpen(conv, null);
 }
 
-function test_multipart_package_header() {
+function test_multipart_package_header(aChunkSize) {
   var streamConv = Cc["@mozilla.org/streamConverters;1"]
                      .getService(Ci.nsIStreamConverterService);
 
@@ -253,8 +259,27 @@ function test_multipart_package_header() {
            new multipartListener(testData, false, true),
            null);
 
-  var chan = make_channel(uri + "/multipart5");
+  var chan = make_channel(uri + "/multipart5_" + aChunkSize);
   chan.asyncOpen(conv, null);
+}
+
+// Bug 1212223 - Test multipart with package header and different chunk size.
+// Use explict function name to make the test case log more readable.
+
+function test_multipart_package_header_50() {
+  return test_multipart_package_header(50);
+}
+
+function test_multipart_package_header_100() {
+  return test_multipart_package_header(100);
+}
+
+function test_multipart_package_header_150() {
+  return test_multipart_package_header(150);
+}
+
+function test_multipart_package_header_200() {
+  return test_multipart_package_header(200);
 }
 
 function run_test()
@@ -264,7 +289,13 @@ function run_test()
   httpserver.registerPathHandler("/multipart2", contentHandler_with_boundary);
   httpserver.registerPathHandler("/multipart3", contentHandler_chunked_headers);
   httpserver.registerPathHandler("/multipart4", contentHandler_type_missing);
-  httpserver.registerPathHandler("/multipart5", contentHandler_with_package_header);
+
+  // Bug 1212223 - Test multipart with package header and different chunk size.
+  httpserver.registerPathHandler("/multipart5_50", contentHandler_with_package_header.bind(null, 50));
+  httpserver.registerPathHandler("/multipart5_100", contentHandler_with_package_header.bind(null, 100));
+  httpserver.registerPathHandler("/multipart5_150", contentHandler_with_package_header.bind(null, 150));
+  httpserver.registerPathHandler("/multipart5_200", contentHandler_with_package_header.bind(null, 200));
+
   httpserver.start(-1);
 
   run_next_test();
@@ -274,4 +305,9 @@ add_test(test_multipart);
 add_test(test_multipart_with_boundary);
 add_test(test_multipart_chunked_headers);
 add_test(test_multipart_content_type_other);
-add_test(test_multipart_package_header);
+
+// Bug 1212223 - Test multipart with package header and different chunk size.
+add_test(test_multipart_package_header_50);
+add_test(test_multipart_package_header_100);
+add_test(test_multipart_package_header_150);
+add_test(test_multipart_package_header_200);

@@ -3548,6 +3548,9 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFu
     if (!dst)
         return nullptr;
 
+    // Save flags in case we need to undo the early mutations.
+    const int preservedFlags = fun->flags();
+
     dst->setFunction(fun);
     Rooted<LazyScript*> lazy(cx);
     if (fun->isInterpretedLazy()) {
@@ -3562,6 +3565,7 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFu
             fun->initLazyScript(lazy);
         else
             fun->setScript(nullptr);
+        fun->setFlags(preservedFlags);
         return nullptr;
     }
 
@@ -4023,17 +4027,11 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
             continue;
         AbstractFramePtr frame = i.abstractFramePtr();
         if (frame.isFunctionFrame() && frame.script() == script) {
+            /* We crash on OOM since cleaning up here would be complicated. */
+            AutoEnterOOMUnsafeRegion oomUnsafe;
             ArgumentsObject* argsobj = ArgumentsObject::createExpected(cx, frame);
-            if (!argsobj) {
-                /*
-                 * We can't leave stack frames with script->needsArgsObj but no
-                 * arguments object. It is, however, safe to leave frames with
-                 * an arguments object but !script->needsArgsObj.
-                 */
-                script->needsArgsObj_ = false;
-                return false;
-            }
-
+            if (!argsobj)
+                oomUnsafe.crash("JSScript::argumentsOptimizationFailed");
             SetFrameArgumentsObject(cx, frame, script, argsobj);
         }
     }

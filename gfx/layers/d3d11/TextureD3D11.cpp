@@ -424,7 +424,7 @@ TextureClientD3D11::BorrowDrawTarget()
     mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture10, mFormat);
   }
   if (!mDrawTarget) {
-      gfxWarning() << "Invalid draw target for borrowing";
+    gfxCriticalNote << "Invalid draw target for borrowing D3D11 " << (int)mFormat;
   }
   return mDrawTarget;
 }

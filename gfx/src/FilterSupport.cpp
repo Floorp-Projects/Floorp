@@ -1232,9 +1232,6 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
 {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
 
-  Rect resultNeededRect(aResultNeededRect);
-  resultNeededRect.RoundOut();
-
   RefPtr<FilterCachedColorModels> sourceFilters[4];
   nsTArray<RefPtr<FilterCachedColorModels> > primitiveFilters;
 
@@ -1407,6 +1404,9 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
 
     case PrimitiveType::ConvolveMatrix:
     {
+      if (atts.GetUint(eConvolveMatrixEdgeMode) != EDGE_MODE_NONE) {
+        return aDescription.PrimitiveSubregion();
+      }
       Size kernelUnitLength = atts.GetSize(eConvolveMatrixKernelUnitLength);
       IntSize kernelSize = atts.GetIntSize(eConvolveMatrixKernelSize);
       IntPoint target = atts.GetIntPoint(eConvolveMatrixTarget);
@@ -1603,6 +1603,8 @@ FilterSupport::PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& a
 
     case PrimitiveType::Turbulence:
     case PrimitiveType::Image:
+    case PrimitiveType::DiffuseLighting:
+    case PrimitiveType::SpecularLighting:
     {
       return aDescription.PrimitiveSubregion();
     }

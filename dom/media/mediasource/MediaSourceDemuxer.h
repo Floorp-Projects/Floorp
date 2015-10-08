@@ -42,7 +42,7 @@ public:
 
   bool ShouldComputeStartTime() const override { return false; }
 
-  void NotifyDataArrived(uint32_t aLength, int64_t aOffset) override;
+  void NotifyDataArrived() override;
 
   /* interface for TrackBuffersManager */
   void AttachSourceBuffer(TrackBuffersManager* aSourceBuffer);
