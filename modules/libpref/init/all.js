@@ -3248,6 +3248,11 @@ pref("ui.osk.on_screen_keyboard_path", "");
 // Only show the on-screen keyboard when Windows is in Tablet mode. Setting
 // this pref to false will allow the OSK to show in regular non-tablet mode.
 pref("ui.osk.require_tablet_mode", true);
+// This pref stores the "reason" that the on-screen keyboard was either
+// shown or not shown when focus is moved to an editable text field. It is
+// used to help debug why the keyboard is either not appearing when expected
+// or appearing when it is not expected.
+pref("ui.osk.debug.keyboardDisplayReason", "");
 
 # XP_WIN
 #endif
