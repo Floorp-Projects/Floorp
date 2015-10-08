@@ -57,9 +57,6 @@ class SafepointWriter
     const uint8_t* buffer() const {
         return stream_.buffer();
     }
-    bool oom() const {
-        return stream_.oom();
-    }
 };
 
 class SafepointReader
