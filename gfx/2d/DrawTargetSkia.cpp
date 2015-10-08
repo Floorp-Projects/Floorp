@@ -837,20 +837,18 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
         aSize.width, aSize.height,
         GfxFormatToSkiaColorType(aFormat),
         alphaType);
+  // we need to have surfaces that have a stride aligned to 4 for interop with cairo
+  int stride = (BytesPerPixel(aFormat)*aSize.width + (4-1)) & -4;
 
-  SkAutoTUnref<SkBaseDevice> device(SkBitmapDevice::Create(skiInfo));
-  if (!device) {
-      return false;
-  }
-
-  SkBitmap bitmap = device->accessBitmap(true);
+  SkBitmap bitmap;
+  bitmap.setInfo(skiInfo, stride);
   if (!bitmap.allocPixels()) {
     return false;
   }
 
   bitmap.eraseARGB(0, 0, 0, 0);
 
-  mCanvas.adopt(new SkCanvas(device.get()));
+  mCanvas.adopt(new SkCanvas(bitmap));
   mSize = aSize;
 
   mFormat = aFormat;
