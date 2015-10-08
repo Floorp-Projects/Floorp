@@ -7,11 +7,13 @@
 EXPORTS.mozilla += [
     'SandboxBroker.h',
     'SandboxBrokerCommon.h',
+    'SandboxBrokerPolicyFactory.h',
 ]
 
 SOURCES += [
     'SandboxBroker.cpp',
     'SandboxBrokerCommon.cpp',
+    'SandboxBrokerPolicyFactory.cpp',
 ]
 
 LOCAL_INCLUDES += [
