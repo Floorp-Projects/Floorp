@@ -429,7 +429,7 @@ PresentationService::SendSessionMessage(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationService::Terminate(const nsAString& aSessionId)
+PresentationService::CloseSession(const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
@@ -439,7 +439,21 @@ PresentationService::Terminate(const nsAString& aSessionId)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return info->Close(NS_OK);
+  return info->Close(NS_OK, nsIPresentationSessionListener::STATE_CLOSED);
+}
+
+NS_IMETHODIMP
+PresentationService::TerminateSession(const nsAString& aSessionId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+
+  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return info->Close(NS_OK, nsIPresentationSessionListener::STATE_TERMINATED);
 }
 
 NS_IMETHODIMP
@@ -495,7 +509,7 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId)
 
   nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (info) {
-    NS_WARN_IF(NS_FAILED(info->Close(NS_OK)));
+    NS_WARN_IF(NS_FAILED(info->Close(NS_OK, nsIPresentationSessionListener::STATE_TERMINATED)));
     UntrackSessionInfo(aSessionId);
     return info->SetListener(nullptr);
   }
