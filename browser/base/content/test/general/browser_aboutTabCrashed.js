@@ -22,6 +22,11 @@ add_task(function* setup() {
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
+  // On debug builds, crashing tabs results in much thinking, which
+  // slows down the test and results in intermittent test timeouts,
+  // so we'll pump up the expected timeout for this test.
+  requestLongerTimeout(2);
+
   registerCleanupFunction(function() {
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverUrl);
@@ -195,4 +200,3 @@ add_task(function* test_send_all() {
     "Email": EMAIL,
   });
 });
-
