@@ -6,14 +6,14 @@
     <item android:state_pressed="true">
         <shape>
             <solid android:color="@color/toolbar_grey_pressed"/>
-            <corners android:radius="4dp"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
     </item>
 
     <item>
         <shape>
             <solid android:color="@color/toolbar_grey"/>
-            <corners android:radius="4dp"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
     </item>
 </selector>
