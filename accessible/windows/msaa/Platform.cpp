@@ -46,6 +46,7 @@ a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t aInterfaces)
     wrapper = new ProxyAccessibleWrap(aProxy);
   }
 
+  wrapper->SetProxyInterfaces(aInterfaces);
   wrapper->AddRef();
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(wrapper));
 }
