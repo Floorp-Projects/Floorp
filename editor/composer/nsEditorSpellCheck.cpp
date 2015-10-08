@@ -35,7 +35,7 @@
 #include "nsITextServicesDocument.h"    // for nsITextServicesDocument
 #include "nsITextServicesFilter.h"      // for nsITextServicesFilter
 #include "nsIURI.h"                     // for nsIURI
-#include "nsIVariant.h"                 // for nsIWritableVariant, etc
+#include "nsVariant.h"                  // for nsIWritableVariant, etc
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING, etc
 #include "nsMemory.h"                   // for nsMemory
 #include "nsRange.h"
@@ -201,8 +201,7 @@ StoreCurrentDictionary(nsIEditor* aEditor, const nsAString& aDictionary)
   rv = docUri->GetSpec(docUriSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIWritableVariant> prefValue = do_CreateInstance(NS_VARIANT_CONTRACTID);
-  NS_ENSURE_TRUE(prefValue, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsVariant> prefValue = new nsVariant();
   prefValue->SetAsAString(aDictionary);
 
   nsCOMPtr<nsIContentPrefService2> contentPrefService =

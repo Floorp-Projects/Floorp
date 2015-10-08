@@ -577,22 +577,6 @@ var AutoCompletePopup = {
   }
 }
 
-addMessageListener("InPermitUnload", msg => {
-  let inPermitUnload = docShell.contentViewer && docShell.contentViewer.inPermitUnload;
-  sendAsyncMessage("InPermitUnload", {id: msg.data.id, inPermitUnload});
-});
-
-addMessageListener("PermitUnload", msg => {
-  sendAsyncMessage("PermitUnload", {id: msg.data.id, kind: "start"});
-
-  let permitUnload = true;
-  if (docShell && docShell.contentViewer) {
-    permitUnload = docShell.contentViewer.permitUnload();
-  }
-
-  sendAsyncMessage("PermitUnload", {id: msg.data.id, kind: "end", permitUnload});
-});
-
 // We may not get any responses to Browser:Init if the browser element
 // is torn down too quickly.
 var outerWindowID = content.QueryInterface(Ci.nsIInterfaceRequestor)

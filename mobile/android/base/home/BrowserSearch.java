@@ -14,7 +14,6 @@ import java.util.Locale;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -535,14 +534,11 @@ public class BrowserSearch extends HomeFragment
         }
         getLoaderManager().restartLoader(LOADER_ID_SUGGESTION, null, mSearchEngineSuggestionLoaderCallbacks);
 
-        // Start search history suggestions query only in nightly. Bug 1201325
-        if (AppConstants.NIGHTLY_BUILD) {
-            // Saved suggestions
-            if (mSearchHistorySuggestionLoaderCallback == null) {
-                mSearchHistorySuggestionLoaderCallback = new SearchHistorySuggestionLoaderCallbacks();
-            }
-            getLoaderManager().restartLoader(LOADER_ID_SAVED_SUGGESTION, null, mSearchHistorySuggestionLoaderCallback);
+        // Saved suggestions
+        if (mSearchHistorySuggestionLoaderCallback == null) {
+            mSearchHistorySuggestionLoaderCallback = new SearchHistorySuggestionLoaderCallbacks();
         }
+        getLoaderManager().restartLoader(LOADER_ID_SAVED_SUGGESTION, null, mSearchHistorySuggestionLoaderCallback);
     }
 
     private void setSuggestions(ArrayList<String> suggestions) {

@@ -18,6 +18,7 @@ MOCHITEST_MANIFESTS += [
     'failures/html/dom/lists/mochitest.ini',
     'failures/html/dom/mochitest.ini',
     'failures/html/dom/nodes/mochitest.ini',
+    'failures/html/dom/ranges/mochitest.ini',
     'failures/html/html/browsers/the-window-object/mochitest.ini',
     'failures/html/html/browsers/the-window-object/named-access-on-the-window-object/mochitest.ini',
     'failures/html/html/dom/documents/dta/doc.gEBN/mochitest.ini',

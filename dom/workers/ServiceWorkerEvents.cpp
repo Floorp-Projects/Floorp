@@ -395,7 +395,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 void
 RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
+  CancelRequest(NS_ERROR_REJECTED_RESPONSE_INTERCEPTION);
 }
 
 void

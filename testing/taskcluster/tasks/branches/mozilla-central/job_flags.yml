@@ -5,6 +5,11 @@
 $inherits:
   from: tasks/branches/base_jobs.yml
 
+# Flags specific to this branch
+flags:
+  post-build:
+    - simulator
+
 builds:
   android-api-11:
     platforms:

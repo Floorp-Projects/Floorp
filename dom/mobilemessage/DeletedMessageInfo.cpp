@@ -69,10 +69,9 @@ DeletedMessageInfo::GetDeletedMessageIds(nsIVariant** aDeletedMessageIds)
     return NS_OK;
   }
 
-  nsresult rv;
-  mDeletedMessageIds = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mDeletedMessageIds = new nsVariant();
 
+  nsresult rv;
   rv = mDeletedMessageIds->SetAsArray(nsIDataType::VTYPE_INT32,
                                       nullptr,
                                       length,
@@ -103,10 +102,9 @@ DeletedMessageInfo::GetDeletedThreadIds(nsIVariant** aDeletedThreadIds)
     return NS_OK;
   }
 
-  nsresult rv;
-  mDeletedThreadIds = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mDeletedThreadIds = new nsVariant();
 
+  nsresult rv;
   rv = mDeletedThreadIds->SetAsArray(nsIDataType::VTYPE_UINT64,
                                      nullptr,
                                      length,

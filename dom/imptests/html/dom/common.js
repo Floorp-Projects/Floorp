@@ -827,94 +827,211 @@ function myExtractContents(range) {
 }
 
 /**
- * insertNode() implementation, following the spec.  If an exception is
- * supposed to be thrown, will return a string with the name (e.g.,
- * "HIERARCHY_REQUEST_ERR") instead of a document fragment.  It might also
- * return an arbitrary human-readable string if a condition is hit that implies
- * a spec bug.
+ * insertNode() implementation, following the spec.  If an exception is meant
+ * to be thrown, will return a string with the expected exception name, for
+ * instance "HIERARCHY_REQUEST_ERR".
  */
 function myInsertNode(range, node) {
-	// "If the detached flag is set, throw an "InvalidStateError" exception and
-	// terminate these steps."
-	//
-	// Assume that if accessing collapsed throws, it's detached.
-	try {
-		range.collapsed;
-	} catch (e) {
-		return "INVALID_STATE_ERR";
-	}
+    // "If range's start node is either a ProcessingInstruction or Comment
+    // node, or a Text node whose parent is null, throw an
+    // "HierarchyRequestError" exception and terminate these steps."
+    if (range.startContainer.nodeType == Node.PROCESSING_INSTRUCTION_NODE
+            || range.startContainer.nodeType == Node.COMMENT_NODE
+            || (range.startContainer.nodeType == Node.TEXT_NODE
+                && !range.startContainer.parentNode)) {
+                    return "HIERARCHY_REQUEST_ERR";
+    }
 
-	// "If start node is a Comment node, or a Text node whose parent is null,
-	// throw an "HierarchyRequestError" exception and terminate these steps."
-	if (range.startContainer.nodeType == Node.COMMENT_NODE
-	|| (range.startContainer.nodeType == Node.TEXT_NODE
-	&& !range.startContainer.parentNode)) {
-		return "HIERARCHY_REQUEST_ERR";
-	}
+    // "Let referenceNode be null."
+    var referenceNode = null;
 
-	// "If start node is a Text node, split it with offset context object's
-	// start offset, and let reference node be the result."
-	var referenceNode;
-	if (range.startContainer.nodeType == Node.TEXT_NODE) {
-		// We aren't testing how ranges vary under mutations, and browsers vary
-		// in how they mutate for splitText, so let's just force the correct
-		// way.
-		var start = [range.startContainer, range.startOffset];
-		var end = [range.endContainer, range.endOffset];
+    // "If range's start node is a Text node, set referenceNode to that Text node."
+    if (range.startContainer.nodeType == Node.TEXT_NODE) {
+        referenceNode = range.startContainer;
 
-		referenceNode = range.startContainer.splitText(range.startOffset);
+        // "Otherwise, set referenceNode to the child of start node whose index is
+        // start offset, and null if there is no such child."
+    } else {
+        if (range.startOffset < range.startContainer.childNodes.length) {
+            referenceNode = range.startContainer.childNodes[range.startOffset];
+        } else {
+            referenceNode = null;
+        }
+    }
 
-		if (start[0] == end[0]
-		&& end[1] > start[1]) {
-			end[0] = referenceNode;
-			end[1] -= start[1];
-		} else if (end[0] == start[0].parentNode
-		&& end[1] > indexOf(referenceNode)) {
-			end[1]++;
-		}
-		range.setStart(start[0], start[1]);
-		range.setEnd(end[0], end[1]);
+    // "Let parent be range's start node if referenceNode is null, and
+    // referenceNode's parent otherwise."
+    var parent_ = referenceNode === null ? range.startContainer :
+        referenceNode.parentNode;
 
-	// "Otherwise, let reference node be the child of start node whose index is
-	// start offset, or null if there is no such child."
-	} else {
-		referenceNode = range.startContainer.childNodes[range.startOffset];
-		if (typeof referenceNode == "undefined") {
-			referenceNode = null;
-		}
-	}
+    // "Ensure pre-insertion validity of node into parent before
+    // referenceNode."
+    var error = ensurePreInsertionValidity(node, parent_, referenceNode);
+    if (error) {
+        return error;
+    }
 
-	// "If reference node is null, let parent be start node."
-	var parent_;
-	if (!referenceNode) {
-		parent_ = range.startContainer;
+    // "If range's start node is a Text node, set referenceNode to the result
+    // of splitting it with offset range's start offset."
+    if (range.startContainer.nodeType == Node.TEXT_NODE) {
+        referenceNode = range.startContainer.splitText(range.startOffset);
+    }
 
-	// "Otherwise, let parent be the parent of reference node."
-	} else {
-		parent_ = referenceNode.parentNode;
-	}
+    // "If node is referenceNode, set referenceNode to its next sibling."
+    if (node == referenceNode) {
+        referenceNode = referenceNode.nextSibling;
+    }
 
-	// "Let new offset be the index of reference node, or parent's length if
-	// reference node is null."
-	var newOffset = referenceNode ? indexOf(referenceNode) : nodeLength(parent_);
+    // "If node's parent is not null, remove node from its parent."
+    if (node.parentNode) {
+        node.parentNode.removeChild(node);
+    }
 
-	// "Add node's length to new offset, if node is a DocumentFragment.
-	// Otherwise add one to new offset."
-	newOffset += node.nodeType == Node.DOCUMENT_FRAGMENT_NODE
-		? nodeLength(node)
-		: 1;
+    // "Let newOffset be parent's length if referenceNode is null, and
+    // referenceNode's index otherwise."
+    var newOffset = referenceNode === null ? nodeLength(parent_) :
+        indexOf(referenceNode);
 
-	// "Pre-insert node into parent before reference node."
-	try {
-		parent_.insertBefore(node, referenceNode);
-	} catch (e) {
-		return getDomExceptionName(e);
-	}
+    // "Increase newOffset by node's length if node is a DocumentFragment node,
+    // and one otherwise."
+    newOffset += node.nodeType == Node.DOCUMENT_FRAGMENT_NODE ?
+        nodeLength(node) : 1;
 
-	// "If start and end are the same, set end to (parent, new offset)."
-	if (range.collapsed) {
-		range.setEnd(parent_, newOffset);
-	}
+    // "Pre-insert node into parent before referenceNode."
+    parent_.insertBefore(node, referenceNode);
+
+    // "If range's start and end are the same, set range's end to (parent,
+    // newOffset)."
+    if (range.startContainer == range.endContainer
+    && range.startOffset == range.endOffset) {
+        range.setEnd(parent_, newOffset);
+    }
+}
+
+// To make filter() calls more readable
+function isElement(node) {
+    return node.nodeType == Node.ELEMENT_NODE;
+}
+
+function isText(node) {
+    return node.nodeType == Node.TEXT_NODE;
+}
+
+function isDoctype(node) {
+    return node.nodeType == Node.DOCUMENT_TYPE_NODE;
+}
+
+function ensurePreInsertionValidity(node, parent_, child) {
+    // "If parent is not a Document, DocumentFragment, or Element node, throw a
+    // HierarchyRequestError."
+    if (parent_.nodeType != Node.DOCUMENT_NODE
+            && parent_.nodeType != Node.DOCUMENT_FRAGMENT_NODE
+            && parent_.nodeType != Node.ELEMENT_NODE) {
+                return "HIERARCHY_REQUEST_ERR";
+    }
+
+    // "If node is a host-including inclusive ancestor of parent, throw a
+    // HierarchyRequestError."
+    //
+    // XXX Does not account for host
+    if (isInclusiveAncestor(node, parent_)) {
+        return "HIERARCHY_REQUEST_ERR";
+    }
+
+    // "If child is not null and its parent is not parent, throw a NotFoundError
+    // exception."
+    if (child && child.parentNode != parent_) {
+        return "NOT_FOUND_ERR";
+    }
+
+    // "If node is not a DocumentFragment, DocumentType, Element, Text,
+    // ProcessingInstruction, or Comment node, throw a HierarchyRequestError."
+    if (node.nodeType != Node.DOCUMENT_FRAGMENT_NODE
+            && node.nodeType != Node.DOCUMENT_TYPE_NODE
+            && node.nodeType != Node.ELEMENT_NODE
+            && node.nodeType != Node.TEXT_NODE
+            && node.nodeType != Node.PROCESSING_INSTRUCTION_NODE
+            && node.nodeType != Node.COMMENT_NODE) {
+                return "HIERARCHY_REQUEST_ERR";
+    }
+
+    // "If either node is a Text node and parent is a document, or node is a
+    // doctype and parent is not a document, throw a HierarchyRequestError."
+    if ((node.nodeType == Node.TEXT_NODE
+                && parent_.nodeType == Node.DOCUMENT_NODE)
+            || (node.nodeType == Node.DOCUMENT_TYPE_NODE
+                && parent_.nodeType != Node.DOCUMENT_NODE)) {
+                    return "HIERARCHY_REQUEST_ERR";
+    }
+
+    // "If parent is a document, and any of the statements below, switched on
+    // node, are true, throw a HierarchyRequestError."
+    if (parent_.nodeType == Node.DOCUMENT_NODE) {
+        switch (node.nodeType) {
+        case Node.DOCUMENT_FRAGMENT_NODE:
+            // "If node has more than one element child or has a Text node
+            // child.  Otherwise, if node has one element child and either
+            // parent has an element child, child is a doctype, or child is not
+            // null and a doctype is following child."
+            if ([].filter.call(node.childNodes, isElement).length > 1) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+
+            if ([].some.call(node.childNodes, isText)) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+
+            if ([].filter.call(node.childNodes, isElement).length == 1) {
+                if ([].some.call(parent_.childNodes, isElement)) {
+                    return "HIERARCHY_REQUEST_ERR";
+                }
+
+                if (child && child.nodeType == Node.DOCUMENT_TYPE_NODE) {
+                    return "HIERARCHY_REQUEST_ERR";
+                }
+
+                if (child && [].slice.call(parent_.childNodes, indexOf(child) + 1)
+                               .filter(isDoctype)) {
+                    return "HIERARCHY_REQUEST_ERR";
+                }
+            }
+            break;
+
+        case Node.ELEMENT_NODE:
+            // "parent has an element child, child is a doctype, or child is
+            // not null and a doctype is following child."
+            if ([].some.call(parent_.childNodes, isElement)) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+
+            if (child.nodeType == Node.DOCUMENT_TYPE_NODE) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+
+            if (child && [].slice.call(parent_.childNodes, indexOf(child) + 1)
+                           .filter(isDoctype)) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+            break;
+
+        case Node.DOCUMENT_TYPE_NODE:
+            // "parent has a doctype child, an element is preceding child, or
+            // child is null and parent has an element child."
+            if ([].some.call(parent_.childNodes, isDoctype)) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+
+            if (child && [].slice.call(parent_.childNodes, 0, indexOf(child))
+                           .some(isElement)) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+
+            if (!child && [].some.call(parent_.childNodes, isElement)) {
+                return "HIERARCHY_REQUEST_ERR";
+            }
+            break;
+        }
+    }
 }
 
 /**

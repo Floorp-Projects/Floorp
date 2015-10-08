@@ -312,6 +312,8 @@ public:
     return false;
   }
 
+  virtual void StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) override;
+
   /**
    * Use this when GetLayerManager() returns a BasicLayerManager
    * (nsBaseWidget::GetLayerManager() does). This sets up the widget's

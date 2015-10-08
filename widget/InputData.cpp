@@ -28,6 +28,61 @@ already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch() const
   return touch.forget();
 }
 
+MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
+  : InputData(MOUSE_INPUT, aMouseEvent.time, aMouseEvent.timeStamp,
+              aMouseEvent.modifiers)
+{
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Can only copy from WidgetTouchEvent on main thread");
+
+  mButtonType = NONE;
+
+  switch (aMouseEvent.button) {
+    case WidgetMouseEventBase::eLeftButton:
+      mButtonType = MouseInput::LEFT_BUTTON;
+      break;
+    case WidgetMouseEventBase::eMiddleButton:
+      mButtonType = MouseInput::MIDDLE_BUTTON;
+      break;
+    case WidgetMouseEventBase::eRightButton:
+      mButtonType = MouseInput::RIGHT_BUTTON;
+      break;
+  }
+
+  switch (aMouseEvent.mMessage) {
+    case eMouseMove:
+      mType = MOUSE_MOVE;
+      break;
+    case eMouseUp:
+      mType = MOUSE_UP;
+      break;
+    case eMouseDown:
+      mType = MOUSE_DOWN;
+      break;
+    case eDragStart:
+      mType = MOUSE_DRAG_START;
+      break;
+    case eDragEnd:
+      mType = MOUSE_DRAG_END;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Mouse event type not supported");
+      break;
+  }
+}
+
+bool
+MouseInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
+  if (!point) {
+    return false;
+  }
+  mLocalOrigin = *point;
+
+  return true;
+}
+
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
   : InputData(MULTITOUCH_INPUT, aTouchEvent.time, aTouchEvent.timeStamp,
               aTouchEvent.modifiers)

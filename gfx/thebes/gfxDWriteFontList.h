@@ -364,9 +364,8 @@ public:
     IDWriteGdiInterop *GetGDIInterop() { return mGDIInterop; }
     bool UseGDIFontTableAccess() { return mGDIFontTableAccess; }
 
-    virtual gfxFontFamily* FindFamily(const nsAString& aFamily,
-                                      nsIAtom* aLanguage = nullptr,
-                                      bool aUseSystemFonts = false);
+    gfxFontFamily* FindFamily(const nsAString& aFamily,
+                              gfxFontStyle* aStyle = nullptr) override;
 
     gfxFloat GetForceGDIClassicMaxFontSize() { return mForceGDIClassicMaxFontSize; }
 

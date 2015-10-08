@@ -401,21 +401,5 @@ this.BrowserUtils = {
 
     return { text: selectionStr, docSelectionIsCollapsed: collapsed,
              linkURL: url ? url.spec : null, linkText: url ? linkText : "" };
-  },
-
-  // Iterates through every docshell in the window and calls PermitUnload.
-  canCloseWindow(window) {
-    let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation);
-    let node = docShell.QueryInterface(Ci.nsIDocShellTreeItem);
-    for (let i = 0; i < node.childCount; ++i) {
-      let docShell = node.getChildAt(i).QueryInterface(Ci.nsIDocShell);
-      let contentViewer = docShell.contentViewer;
-      if (contentViewer && !contentViewer.permitUnload()) {
-        return false;
-      }
-    }
-
-    return true;
-  },
+  }
 };
