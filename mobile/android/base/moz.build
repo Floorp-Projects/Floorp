@@ -549,7 +549,6 @@ gbjar.sources += [
     'widget/DoorHanger.java',
     'widget/DoorhangerConfig.java',
     'widget/EllipsisTextView.java',
-    'widget/ExternalIntentDuringPrivateBrowsingPromptFragment.java',
     'widget/FadedMultiColorTextView.java',
     'widget/FadedSingleColorTextView.java',
     'widget/FadedTextView.java',

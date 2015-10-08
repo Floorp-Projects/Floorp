@@ -595,8 +595,6 @@
   <string name="remote_tabs_last_synced">&remote_tabs_last_synced;</string>
 
   <string name="intent_uri_cannot_open">&intent_uri_cannot_open;</string>
-  <string name="intent_uri_private_browsing_prompt">&intent_uri_private_browsing_prompt;</string>
-  <string name="intent_uri_private_browsing_multiple_match_title">&intent_uri_private_browsing_multiple_match_title;</string>
 
   <string name="devtools_auth_scan_header">&devtools_auth_scan_header;</string>
 </resources>
