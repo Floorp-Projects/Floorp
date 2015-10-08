@@ -4,11 +4,14 @@
 # versions and registry deployment... It also attempts to detect any potential
 # missing dependencies and warns you about them.
 
+gecko_root="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
+
 usage() {
-  echo "Build a docker image in the given folder (and tag it)"
+  echo "Build a docker image (and tag it)"
   echo
-  echo "$0 <folder>"
+  echo "$0 <image-name>"
   echo
+  echo "  Images are defined in testing/docker/<image-name>."
   echo "  For more see: $PWD/README.md"
   echo
 }
@@ -31,17 +34,18 @@ find_registry() {
 }
 
 build() {
-  local folder=$1
-  local folder_reg="$1/REGISTRY"
-  local folder_ver="$1/VERSION"
+  local image_name=$1
+  local folder="$gecko_root/testing/docker/$image_name"
+  local folder_reg="$folder/REGISTRY"
+  local folder_ver="$folder/VERSION"
 
-  if [ "$folder" == "" ];
+  if [ "$image_name" == "" ];
   then
     usage
     return
   fi
 
-  test -d "$folder" || usage_err "Unknown folder: $folder"
+  test -d "$folder" || usage_err "Unknown image: $image_name"
   test -f "$folder_ver" || usage_err "$folder must contain VERSION file"
 
   # Fallback to default registry if one is not in the folder...
@@ -55,7 +59,7 @@ build() {
   test -n "$registry" || usage_err "$folder_reg is empty aborting..."
   test -n "$version" || usage_err "$folder_ver is empty aborting..."
 
-  local tag="$registry/$folder:$version"
+  local tag="$registry/$image_name:$version"
 
   if [ -f $folder/build.sh ]; then
     shift
@@ -63,10 +67,10 @@ build() {
   else
     # use --no-cache so that we always get the latest updates from yum
     # and use the latest version of system-setup.sh
-    docker build --no-cache -t $tag $folder || exit 1
+    ( cd $folder/.. && docker build --no-cache -t $tag $image_name ) || exit 1
   fi
 
-  echo "Success built $folder and tagged with $tag"
+  echo "Success built $image_name and tagged with $tag"
   echo "If deploying now you can run 'docker push $tag'"
 }
 
