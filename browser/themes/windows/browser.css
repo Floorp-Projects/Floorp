@@ -1376,7 +1376,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   transition: opacity 0.15s ease;
 }
 
-#urlbar:not(:hover) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#navigator-toolbox:not(:hover) .urlbar-history-dropmarker {
   opacity: 0;
 }
 
