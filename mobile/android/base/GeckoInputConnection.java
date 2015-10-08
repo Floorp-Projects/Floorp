@@ -11,6 +11,7 @@ import java.lang.reflect.Proxy;
 import java.util.concurrent.SynchronousQueue;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -39,7 +40,7 @@ import android.view.inputmethod.InputMethodManager;
 
 class GeckoInputConnection
     extends BaseInputConnection
-    implements InputConnectionListener, GeckoEditableListener {
+    implements InputConnectionHandler, GeckoEditableListener {
 
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
@@ -1006,7 +1007,7 @@ final class DebugGeckoInputConnection
     public static GeckoEditableListener create(View targetView,
                                                GeckoEditableClient editable) {
         final Class<?>[] PROXY_INTERFACES = { InputConnection.class,
-                InputConnectionListener.class,
+                InputConnectionHandler.class,
                 GeckoEditableListener.class };
         DebugGeckoInputConnection dgic =
                 new DebugGeckoInputConnection(targetView, editable);
