@@ -5,9 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/arm64/MoveEmitter-arm64.h"
+#include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;
+
+MemOperand
+MoveEmitterARM64::toMemOperand(const MoveOperand& operand) const
+{
+    MOZ_ASSERT(operand.isMemory());
+    ARMRegister base(operand.base(), 64);
+    if (operand.base() == masm.getStackPointer())
+        return MemOperand(base, operand.disp() + (masm.framePushed() - pushedAtStart_));
+    return MemOperand(base, operand.disp());
+}
 
 void
 MoveEmitterARM64::emit(const MoveResolver& moves)
