@@ -20,6 +20,7 @@ message ColorPacket {
 }
 
 message TexturePacket {
+  // Basic info
   required uint64 layerref = 1;
   optional uint32 width = 2;
   optional uint32 height = 3;
@@ -29,6 +30,13 @@ message TexturePacket {
   optional uint32 dataformat = 7;
   optional uint64 glcontext = 8;
   optional bytes data = 9;
+
+  // Texture effect attributes (10 to 19)
+  // TODO: reserved for primary textured effect attributes, see Bug 1205521
+
+  // Mask effect attributes (20 to 29)
+  optional bool isMask = 20;
+  // TODO: reserved for secondary mask effect attributes, see Bug 1205521
 }
 
 message LayersPacket {

@@ -89,6 +89,10 @@ const PREFS_WHITELIST = [
   "storage.vacuum.last.",
   "svg.",
   "toolkit.startup.recent_crashes",
+  "ui.osk.enabled",
+  "ui.osk.detect_physical_keyboard",
+  "ui.osk.require_tablet_mode",
+  "ui.osk.debug.keyboardDisplayReason",
   "webgl.",
 ];
 

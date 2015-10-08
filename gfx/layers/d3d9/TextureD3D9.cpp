@@ -541,6 +541,7 @@ TextureClientD3D9::BorrowDrawTarget()
   MOZ_ASSERT(mIsLocked && mD3D9Surface);
   if (!mIsLocked || !mD3D9Surface) {
     NS_WARNING("Calling BorrowDrawTarget on an Unlocked TextureClient");
+    gfxCriticalNote << "BorrowDrawTarget on an Unlocked TextureClient";
     return nullptr;
   }
 
@@ -552,10 +553,14 @@ TextureClientD3D9::BorrowDrawTarget()
     nsRefPtr<gfxASurface> surface = new gfxWindowsSurface(mD3D9Surface);
     if (!surface || surface->CairoStatus()) {
       NS_WARNING("Could not create surface for d3d9 surface");
+      gfxCriticalNote << "Failed creation on D3D9";
       return nullptr;
     }
     mDrawTarget =
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, mSize);
+    if (!mDrawTarget) {
+      gfxCriticalNote << "Bad draw target creation for surface D3D9 " << mSize;
+    }
   } else {
     // gfxWindowsSurface don't support transparency so we can't use the d3d9
     // windows surface optimization.
@@ -569,6 +574,9 @@ TextureClientD3D9::BorrowDrawTarget()
     mDrawTarget =
      gfxPlatform::GetPlatform()->CreateDrawTargetForData((uint8_t*)rect.pBits, mSize,
                                                          rect.Pitch, mFormat);
+    if (!mDrawTarget) {
+      gfxCriticalNote << "Bad draw target creation for data D3D9 " << mSize << ", " << (int)mFormat;
+    }
     mLockRect = true;
   }
 

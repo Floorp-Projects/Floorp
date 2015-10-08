@@ -142,31 +142,44 @@ PresentationSession::Send(const nsAString& aData,
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if(NS_WARN_IF(!service)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
     return;
   }
 
   rv = service->SendSessionMessage(mId, stream);
   if(NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
   }
 }
 
 void
-PresentationSession::Close()
+PresentationSession::Close(ErrorResult& aRv)
 {
-  // Closing does nothing if the session is already terminated.
-  if (NS_WARN_IF(mState == PresentationSessionState::Terminated)) {
+  // It only works when the state is CONNECTED.
+  if (NS_WARN_IF(mState != PresentationSessionState::Connected)) {
+    return;
+  }
+
+  // TODO Bug 1210340 - Support close semantics.
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
+void
+PresentationSession::Terminate(ErrorResult& aRv)
+{
+  // It only works when the state is CONNECTED.
+  if (NS_WARN_IF(mState != PresentationSessionState::Connected)) {
     return;
   }
 
   nsCOMPtr<nsIPresentationService> service =
     do_GetService(PRESENTATION_SERVICE_CONTRACTID);
   if(NS_WARN_IF(!service)) {
+    aRv.Throw(NS_ERROR_DOM_OPERATION_ERR);
     return;
   }
 
-  NS_WARN_IF(NS_FAILED(service->Terminate(mId)));
+  NS_WARN_IF(NS_FAILED(service->TerminateSession(mId)));
 }
 
 NS_IMETHODIMP
@@ -182,8 +195,8 @@ PresentationSession::NotifyStateChange(const nsAString& aSessionId,
     case nsIPresentationSessionListener::STATE_CONNECTED:
       state = PresentationSessionState::Connected;
       break;
-    case nsIPresentationSessionListener::STATE_DISCONNECTED:
-      state = PresentationSessionState::Disconnected;
+    case nsIPresentationSessionListener::STATE_CLOSED:
+      state = PresentationSessionState::Closed;
       break;
     case nsIPresentationSessionListener::STATE_TERMINATED:
       state = PresentationSessionState::Terminated;

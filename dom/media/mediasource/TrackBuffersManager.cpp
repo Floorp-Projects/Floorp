@@ -876,10 +876,8 @@ void
 TrackBuffersManager::AppendDataToCurrentInputBuffer(MediaByteBuffer* aData)
 {
   MOZ_ASSERT(mCurrentInputBuffer);
-  int64_t offset = mCurrentInputBuffer->GetLength();
   mCurrentInputBuffer->AppendData(aData);
-  // A MediaByteBuffer has a maximum size of 2GiB.
-  mInputDemuxer->NotifyDataArrived(uint32_t(aData->Length()), offset);
+  mInputDemuxer->NotifyDataArrived();
 }
 
 void
