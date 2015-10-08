@@ -3548,6 +3548,9 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFu
     if (!dst)
         return nullptr;
 
+    // Save flags in case we need to undo the early mutations.
+    const int preservedFlags = fun->flags();
+
     dst->setFunction(fun);
     Rooted<LazyScript*> lazy(cx);
     if (fun->isInterpretedLazy()) {
@@ -3562,6 +3565,7 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFu
             fun->initLazyScript(lazy);
         else
             fun->setScript(nullptr);
+        fun->setFlags(preservedFlags);
         return nullptr;
     }
 
