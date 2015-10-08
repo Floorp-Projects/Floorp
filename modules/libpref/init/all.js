@@ -2270,7 +2270,7 @@ pref("layout.css.getBoxQuads.enabled", false);
 pref("layout.css.getBoxQuads.enabled", true);
 #endif
 
-// Is support for GeometryUtils.getBoxQuads enabled?
+// Is support for GeometryUtils.convert*FromNode enabled?
 #ifdef RELEASE_BUILD
 pref("layout.css.convertFromNode.enabled", false);
 #else
