@@ -13,11 +13,11 @@ interface nsIPresentationAvailabilityListener : nsISupports
   void notifyAvailableChange(in bool available);
 };
 
-[scriptable, uuid(3b9ae71f-2905-4969-9117-101627c1c2ea)]
+[scriptable, uuid(7dd48df8-8f8c-48c7-ac37-7b9fd1acf2f8)]
 interface nsIPresentationSessionListener : nsISupports
 {
   const unsigned short STATE_CONNECTED = 0;
-  const unsigned short STATE_DISCONNECTED = 1;
+  const unsigned short STATE_CLOSED = 1;
   const unsigned short STATE_TERMINATED = 2;
 
   /*

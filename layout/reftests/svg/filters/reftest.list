@@ -109,9 +109,11 @@ fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.
 == feTile-large-02.svg feTile-large-02-ref.svg
 == feTile-outside-01.svg feTile-outside-01-ref.svg
 
-fuzzy(1,119) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
+fuzzy(1,217) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
 fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
+
+== filter-lighting-region.svg filter-lighting-region-ref.svg
 
 == fePointLight-zoomed-page.svg fePointLight-zoomed-page-ref.svg
 

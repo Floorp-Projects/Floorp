@@ -3,13 +3,11 @@ load(libdir + "class.js");
 // Test top-level module environment
 
 function testInitialEnvironment(source, expected) {
-    print(source);
-    let m = parseModule(source);
-    let scope = m.initialEnvironment;
-    let keys = Object.keys(scope);
-    assertEq(keys.length, expected.length);
+    let module = parseModule(source);
+    let names = getModuleEnvironmentNames(module);
+    assertEq(names.length, expected.length);
     expected.forEach(function(name) {
-        assertEq(name in scope, true);
+        assertEq(names.includes(name), true);
     });
 }
 

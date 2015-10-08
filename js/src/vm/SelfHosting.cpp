@@ -1294,6 +1294,23 @@ intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_GetModuleEnvironment(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    RootedModuleEnvironmentObject env(cx, module->environment());
+    args.rval().setUndefined();
+    if (!env) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setObject(*env);
+    return true;
+}
+
+static bool
 intrinsic_CreateModuleEnvironment(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1586,7 +1603,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallModuleMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ModuleObject>>, 2, 0),
     JS_FN("HostResolveImportedModule", intrinsic_HostResolveImportedModule, 2, 0),
-    JS_FN("CreateModuleEnvironment", intrinsic_CreateModuleEnvironment, 2, 0),
+    JS_FN("GetModuleEnvironment", intrinsic_GetModuleEnvironment, 1, 0),
+    JS_FN("CreateModuleEnvironment", intrinsic_CreateModuleEnvironment, 1, 0),
     JS_FN("CreateImportBinding", intrinsic_CreateImportBinding, 4, 0),
     JS_FN("SetModuleEvaluated", intrinsic_SetModuleEvaluated, 1, 0),
     JS_FN("EvaluateModule", intrinsic_EvaluateModule, 1, 0),
