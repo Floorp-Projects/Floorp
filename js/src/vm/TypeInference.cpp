@@ -4338,8 +4338,7 @@ TypeZone::beginSweep(FreeOp* fop, bool releaseTypes, AutoClearTypeInferenceState
             if (output.isValid()) {
                 JSScript* script = output.script();
                 if (IsAboutToBeFinalizedUnbarriered(&script)) {
-                    if (script->hasIonScript())
-                        script->ionScript()->recompileInfoRef() = RecompileInfo();
+                    script->ionScript()->recompileInfoRef() = RecompileInfo();
                     output.invalidate();
                 } else {
                     CompilerOutput newOutput(script);
