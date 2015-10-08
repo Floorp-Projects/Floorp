@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
+#include "nsITimer.h"
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
@@ -53,6 +54,9 @@ private:
     // Called when xpcom-shutdown-threads is received.
     nsresult Shutdown(void);
 
+    // Called when a network change was detected
+    nsresult NetworkChanged();
+
     // Sends the network event.
     nsresult SendEvent(const char *aEventID);
 
@@ -78,6 +82,12 @@ private:
 
     // Flag to signal child thread kill with
     mozilla::Atomic<bool, mozilla::Relaxed> mChildThreadShutdown;
-};
+
+    // Flag set while coalescing change events
+    bool mCoalescingActive;
+
+    // Time stamp for first event during coalescing
+    mozilla::TimeStamp mChangeTime;
+ };
 
 #endif /* NSNOTIFYADDRLISTENER_LINUX_H_ */
