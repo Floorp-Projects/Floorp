@@ -34,7 +34,6 @@ class ErrorResult;
 
 namespace dom {
 
-class AsyncVerifyRedirectCallbackFwr;
 struct EventSourceInit;
 
 class EventSource final : public DOMEventTargetHelper
@@ -44,8 +43,6 @@ class EventSource final : public DOMEventTargetHelper
                         , public nsIInterfaceRequestor
                         , public nsSupportsWeakReference
 {
-friend class AsyncVerifyRedirectCallbackFwr;
-
 public:
   explicit EventSource(nsPIDOMWindow* aOwnerWindow);
   NS_DECL_ISUPPORTS_INHERITED
@@ -232,13 +229,6 @@ protected:
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
-  /**
-   * The notification callbacks the channel had initially.
-   * We want to forward things here as needed.
-   */
-  nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
-  nsCOMPtr<nsIChannelEventSink>   mChannelEventSink;
-
   nsCOMPtr<nsIHttpChannel> mHttpChannel;
 
   nsCOMPtr<nsITimer> mTimer;
@@ -248,10 +238,6 @@ protected:
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsString mOrigin;
-
-  uint32_t mRedirectFlags;
-  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
-  nsCOMPtr<nsIChannel> mNewRedirectChannel;
 
   // Event Source owner information:
   // - the script file name
