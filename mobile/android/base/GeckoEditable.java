@@ -16,6 +16,7 @@ import java.util.concurrent.Semaphore;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -862,10 +863,10 @@ final class GeckoEditable
                 // Set InputConnectionHandler in notifyIMEContext because
                 // GeckoInputConnection.notifyIMEContext calls restartInput() which will invoke
                 // InputConnectionHandler.onCreateInputConnection
-                GeckoView v = GeckoAppShell.getLayerView();
+                LayerView v = GeckoAppShell.getLayerView();
                 if (v != null) {
                     mListener = GeckoInputConnection.create(v, GeckoEditable.this);
-                    v.setInputConnectionListener((InputConnectionListener) mListener);
+                    v.setInputConnectionHandler((InputConnectionHandler)mListener);
                     mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
                 }
             }

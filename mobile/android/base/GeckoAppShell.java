@@ -317,9 +317,9 @@ public class GeckoAppShell
         }
     }
 
-    private static GeckoView sLayerView;
+    private static LayerView sLayerView;
 
-    public static void setLayerView(GeckoView lv) {
+    public static void setLayerView(LayerView lv) {
         if (sLayerView == lv) {
             return;
         }
@@ -338,7 +338,7 @@ public class GeckoAppShell
     }
 
     @RobocopTarget
-    public static GeckoView getLayerView() {
+    public static LayerView getLayerView() {
         return sLayerView;
     }
 
@@ -2417,7 +2417,7 @@ public class GeckoAppShell
 
     private static boolean sImeWasEnabledOnLastResize = false;
     public static void viewSizeChanged() {
-        GeckoView v = getLayerView();
+        LayerView v = getLayerView();
         if (v == null) {
             return;
         }
