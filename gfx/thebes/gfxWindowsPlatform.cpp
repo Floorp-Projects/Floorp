@@ -1967,6 +1967,10 @@ gfxWindowsPlatform::CheckD3D11Support(bool* aCanUseHardware)
     *aCanUseHardware = false;
     return FeatureStatus::Available;
   }
+  if (gfxPrefs::LayersAccelerationForceEnabled()) {
+    *aCanUseHardware = true;
+    return FeatureStatus::Available;
+  }
 
   if (nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo()) {
     int32_t status;
