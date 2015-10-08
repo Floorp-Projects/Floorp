@@ -64,7 +64,7 @@ def updated_env(env):
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
     run_in(base, [tar,
-                  "-c -%s -f" % "J" if ".xz" in name else "j",
+                  "-c -%s -f" % ("J" if ".xz" in name else "j"),
                   name, directory])
 
 
