@@ -10,7 +10,7 @@ const {Cc, Ci, Cu} = require("chrome");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
 const {parseDeclarations} =
-      require("devtools/client/styleinspector/css-parsing-utils");
+      require("devtools/client/shared/css-parsing-utils");
 const promise = require("promise");
 
 loader.lazyServiceGetter(this, "domUtils",

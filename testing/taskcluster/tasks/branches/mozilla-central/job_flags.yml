@@ -5,6 +5,11 @@
 $inherits:
   from: tasks/branches/base_jobs.yml
 
+# Flags specific to this branch
+flags:
+  post-build:
+    - simulator
+
 builds:
   android-api-11:
     platforms:
@@ -34,3 +39,9 @@ builds:
         task: tasks/builds/b2g_flame_kk_ota_opt.yml
       debug:
         task: tasks/builds/b2g_flame_kk_ota_debug.yml
+
+post-build:
+  simulator:
+    allowed_build_tasks:
+      - tasks/builds/mulet_linux.yml
+    task: tasks/post-builds/mulet_simulator.yml
