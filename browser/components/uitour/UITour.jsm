@@ -161,9 +161,6 @@ this.UITour = {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
         let loopUI = aDocument.defaultView.LoopUI;
-        if (loopUI.selectedTab != "rooms") {
-          return null;
-        }
         // Use the parentElement full-width container of the button so our arrow
         // doesn't overlap the panel contents much.
         return loopUI.browser.contentDocument.querySelector(".new-room-button").parentElement;
@@ -173,9 +170,6 @@ this.UITour = {
       infoPanelPosition: "leftcenter topright",
       query: (aDocument) => {
         let loopUI = aDocument.defaultView.LoopUI;
-        if (loopUI.selectedTab != "rooms") {
-          return null;
-        }
         return loopUI.browser.contentDocument.querySelector(".room-list");
       },
     }],
