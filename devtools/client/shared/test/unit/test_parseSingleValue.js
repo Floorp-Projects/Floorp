@@ -6,8 +6,8 @@
 "use strict";
 
 var Cu = Components.utils;
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
-const {parseSingleValue} = require("devtools/client/styleinspector/css-parsing-utils");
+const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {parseSingleValue} = require("devtools/client/shared/css-parsing-utils");
 
 const TEST_DATA = [
   {input: null, throws: true},

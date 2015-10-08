@@ -38,6 +38,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
 
 const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
 
+// The maximum length of a string (e.g. description) in the addons section.
+const MAX_ADDON_STRING_LENGTH = 100;
+
 /**
  * This is a policy object used to override behavior for testing.
  */
@@ -247,6 +250,21 @@ function getGfxField(aPropertyName, aDefault) {
   } catch (e) {}
 
   return aDefault;
+}
+
+/**
+ * Returns a substring of the input string.
+ *
+ * @param {String} aString The input string.
+ * @param {Integer} aMaxLength The maximum length of the returned substring. If this is
+ *        greater than the length of the input string, we return the whole input string.
+ * @return {String} The substring or null if the input string is null.
+ */
+function limitStringToLength(aString, aMaxLength) {
+  if (aString === null) {
+    return null;
+  }
+  return aString.substring(0, aMaxLength);
 }
 
 /**
@@ -500,11 +518,11 @@ EnvironmentAddonBuilder.prototype = {
 
       activeAddons[addon.id] = {
         blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
-        description: addon.description,
-        name: addon.name,
+        description: limitStringToLength(addon.description, MAX_ADDON_STRING_LENGTH),
+        name: limitStringToLength(addon.name, MAX_ADDON_STRING_LENGTH),
         userDisabled: addon.userDisabled,
         appDisabled: addon.appDisabled,
-        version: addon.version,
+        version: limitStringToLength(addon.version, MAX_ADDON_STRING_LENGTH),
         scope: addon.scope,
         type: addon.type,
         foreignInstall: addon.foreignInstall,
@@ -540,11 +558,11 @@ EnvironmentAddonBuilder.prototype = {
       activeTheme = {
         id: theme.id,
         blocklisted: (theme.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
-        description: theme.description,
-        name: theme.name,
+        description: limitStringToLength(theme.description, MAX_ADDON_STRING_LENGTH),
+        name: limitStringToLength(theme.name, MAX_ADDON_STRING_LENGTH),
         userDisabled: theme.userDisabled,
         appDisabled: theme.appDisabled,
-        version: theme.version,
+        version: limitStringToLength(theme.version, MAX_ADDON_STRING_LENGTH),
         scope: theme.scope,
         foreignInstall: theme.foreignInstall,
         hasBinaryComponents: theme.hasBinaryComponents,
@@ -575,9 +593,9 @@ EnvironmentAddonBuilder.prototype = {
       let updateDate = new Date(Math.max(0, tag.lastModifiedTime));
 
       activePlugins.push({
-        name: tag.name,
-        version: tag.version,
-        description: tag.description,
+        name: limitStringToLength(tag.name, MAX_ADDON_STRING_LENGTH),
+        version: limitStringToLength(tag.version, MAX_ADDON_STRING_LENGTH),
+        description: limitStringToLength(tag.description, MAX_ADDON_STRING_LENGTH),
         blocklisted: tag.blocklisted,
         disabled: tag.disabled,
         clicktoplay: tag.clicktoplay,

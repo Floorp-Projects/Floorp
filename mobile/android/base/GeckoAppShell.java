@@ -2381,31 +2381,42 @@ public class GeckoAppShell
         SmsManager.getInstance().deleteMessage(aMessageId, aRequestId);
     }
 
-    @WrapForJNI(stubName = "CreateMessageListWrapper")
-    public static void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId) {
+    @WrapForJNI(stubName = "CreateMessageCursorWrapper")
+    public static void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
 
-        SmsManager.getInstance().createMessageList(aStartDate, aEndDate, aNumbers, aNumbersCount, aDelivery, aHasRead, aRead, aThreadId, aReverse, aRequestId);
+        SmsManager.getInstance().createMessageCursor(aStartDate, aEndDate, aNumbers, aNumbersCount, aDelivery, aHasRead, aRead, aHasThreadId, aThreadId, aReverse, aRequestId);
     }
 
-    @WrapForJNI(stubName = "GetNextMessageInListWrapper")
-    public static void getNextMessageInList(int aListId, int aRequestId) {
+    @WrapForJNI(stubName = "GetNextMessageWrapper")
+    public static void getNextMessage(int aRequestId) {
         if (!SmsManager.isEnabled()) {
             return;
         }
 
-        SmsManager.getInstance().getNextMessageInList(aListId, aRequestId);
+        SmsManager.getInstance().getNextMessage(aRequestId);
     }
 
-    @WrapForJNI
-    public static void clearMessageList(int aListId) {
+    @WrapForJNI(stubName = "CreateThreadCursorWrapper")
+    public static void createThreadCursor(int aRequestId) {
+        Log.i("GeckoAppShell", "CreateThreadCursorWrapper!");
+
         if (!SmsManager.isEnabled()) {
             return;
         }
 
-        SmsManager.getInstance().clearMessageList(aListId);
+        SmsManager.getInstance().createThreadCursor(aRequestId);
+    }
+
+    @WrapForJNI(stubName = "GetNextThreadWrapper")
+    public static void getNextThread(int aRequestId) {
+        if (!SmsManager.isEnabled()) {
+            return;
+        }
+
+        SmsManager.getInstance().getNextThread(aRequestId);
     }
 
     /* Called by JNI from AndroidBridge, and by reflection from tests/BaseTest.java.in */

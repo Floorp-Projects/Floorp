@@ -299,3 +299,8 @@ The following is a partial list of collected preferences.
 - ``browser.urlbar.unifiedcomplete``: True if the urlbar's UnifiedComplete back-end is enabled.
 
 - ``browser.urlbar.userMadeSearchSuggestionsChoice``: True if the user has clicked Yes or No in the urlbar's opt-in notification. Defaults to false.
+
+activeAddons
+~~~~~~~~~~~~
+
+Starting from Firefox 44, the length of the following string fields: ``name``, ``description`` and ``version`` is limited to 100 characters. The same limitation applies to the same fields in ``theme`` and ``activePlugins``.

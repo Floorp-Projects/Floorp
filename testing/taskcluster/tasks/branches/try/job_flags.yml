@@ -9,7 +9,6 @@ $inherits:
 flags:
   post-build:
     - upload-symbols
-    - simulator
 
 builds:
   linux64_gecko:
@@ -225,10 +224,6 @@ post-build:
       - tasks/builds/dbg_linux64.yml
       - tasks/builds/android_api_11.yml
     task: tasks/post-builds/upload_symbols.yml
-  simulator:
-    allowed_build_tasks:
-      - tasks/builds/mulet_linux.yml
-    task: tasks/post-builds/mulet_simulator.yml
 
 tests:
   cppunit:

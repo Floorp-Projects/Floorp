@@ -188,17 +188,19 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
 // Lazily-loaded browser scripts that use message listeners.
 [
   ["Reader", [
-    "Reader:AddToList",
-    "Reader:ArticleGet",
-    "Reader:FaviconRequest",
-    "Reader:ListStatusRequest",
-    "Reader:RemoveFromList",
-    "Reader:Share",
-    "Reader:ToolbarHidden",
-    "Reader:SystemUIVisibility",
-    "Reader:UpdateReaderButton",
-    "Reader:SetIntPref",
-    "Reader:SetCharPref",
+    ["Reader:AddToList", false],
+    ["Reader:ArticleGet", false],
+    ["Reader:DropdownClosed", true], // 'true' allows us to survive mid-air cycle-collection.
+    ["Reader:DropdownOpened", false],
+    ["Reader:FaviconRequest", false],
+    ["Reader:ListStatusRequest", false],
+    ["Reader:RemoveFromList", false],
+    ["Reader:Share", false],
+    ["Reader:ToolbarHidden", false],
+    ["Reader:SystemUIVisibility", false],
+    ["Reader:UpdateReaderButton", false],
+    ["Reader:SetIntPref", false],
+    ["Reader:SetCharPref", false],
   ], "chrome://browser/content/Reader.js"],
 ].forEach(aScript => {
   let [name, messages, script] = aScript;
@@ -211,11 +213,21 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
   let mm = window.getGroupMessageManager("browsers");
   let listener = (message) => {
     mm.removeMessageListener(message.name, listener);
-    mm.addMessageListener(message.name, window[name]);
+    let listenAfterClose = false;
+    for (let [name, laClose] of messages) {
+      if (message.name === name) {
+        listenAfterClose = laClose;
+        break;
+      }
+    }
+
+    mm.addMessageListener(message.name, window[name], listenAfterClose);
     window[name].receiveMessage(message);
   };
+
   messages.forEach((message) => {
-    mm.addMessageListener(message, listener);
+    let [name, listenAfterClose] = message;
+    mm.addMessageListener(name, listener, listenAfterClose);
   });
 });
 
@@ -4731,6 +4743,11 @@ var BrowserEventHandler = {
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
     InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
+
+    // ReaderViews support backPress listeners.
+    Messaging.addListener(() => {
+      return Reader.onBackPress(BrowserApp.selectedTab.id);
+    }, "Browser:OnBackPressed");
   },
 
   handleEvent: function(aEvent) {
