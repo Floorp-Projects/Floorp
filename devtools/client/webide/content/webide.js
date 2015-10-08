@@ -1070,10 +1070,15 @@ var Cmds = {
     UI.selectDeckPanel("monitor");
   },
 
-  play: function() {
+  play: Task.async(function*() {
     let busy;
     switch(AppManager.selectedProject.type) {
       case "packaged":
+        let autosave =
+          Services.prefs.getBoolPref("devtools.webide.autosaveFiles");
+        if (autosave && UI.projecteditor) {
+          yield UI.projecteditor.saveAllFiles();
+        }
         busy = UI.busyWithProgressUntil(AppManager.installAndRunProject(),
                                         "installing and running app");
         break;
@@ -1093,7 +1098,7 @@ var Cmds = {
     }
     UI.onAction("play");
     return busy;
-  },
+  }),
 
   stop: function() {
     return UI.busyUntil(AppManager.stopRunningApp(), "stopping app");
