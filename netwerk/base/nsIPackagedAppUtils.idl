@@ -24,7 +24,7 @@ interface nsIVerificationCallback;
  *   https://wiki.mozilla.org/FirefoxOS/New_security_model/Packaging
  */
 
-[scriptable, uuid(cc245638-6a38-4f70-8d77-21c55aabd636)]
+[scriptable, uuid(edf91fee-ef4a-4479-9136-27eb3b7a6312)]
 interface nsIPackagedAppUtils : nsISupports
 {
   /**
@@ -37,7 +37,8 @@ interface nsIPackagedAppUtils : nsISupports
    */
   void verifyManifest(in ACString aHeader,
                       in ACString aManifest,
-                      in nsIVerificationCallback aVerifier);
+                      in nsIVerificationCallback aVerifier,
+                      in boolean aDeveloperMode);
 
   /**
    * @aFileName is the name of a resource in the package
