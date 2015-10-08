@@ -1,0 +1,32 @@
+# -*- Mode: python; python-indent: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla += [
+    'SandboxBroker.h',
+    'SandboxBrokerCommon.h',
+]
+
+SOURCES += [
+    'SandboxBroker.cpp',
+    'SandboxBrokerCommon.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/security/sandbox/linux', # SandboxLogging.h
+    '/security/sandbox/linux/common', # SandboxInfo.h
+]
+
+# Need this for mozilla::ipc::FileDescriptor etc.
+include('/ipc/chromium/chromium-config.mozbuild')
+
+# Need this for safe_sprintf.h used by SandboxLogging.h,
+# but it has to be after ipc/chromium/src.
+LOCAL_INCLUDES += [
+    '/security/sandbox/chromium',
+]
+
+
+FINAL_LIBRARY = 'xul'
