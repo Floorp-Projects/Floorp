@@ -8010,7 +8010,8 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                            : FrameSizeClass::FromDepth(frameDepth_).frameSize();
 
     // We encode safepoints after the OSI-point offsets have been determined.
-    encodeSafepoints();
+    if (!encodeSafepoints())
+        return false;
 
     AutoDiscardIonCode discardIonCode(cx, &recompileInfo);
 
