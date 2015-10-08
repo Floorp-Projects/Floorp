@@ -180,8 +180,8 @@ ContentBridgeParent::NotifyTabDestroyed()
 jsipc::CPOWManager*
 ContentBridgeParent::GetCPOWManager()
 {
-  if (ManagedPJavaScriptParent().Length()) {
-    return CPOWManagerFor(ManagedPJavaScriptParent()[0]);
+  if (PJavaScriptParent* p = LoneManagedOrNull(ManagedPJavaScriptParent())) {
+    return CPOWManagerFor(p);
   }
   return nullptr;
 }
