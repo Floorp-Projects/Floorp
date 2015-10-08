@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+  <title>Test that WaveShaperNode doesn't corrupt its inputs when the gain is !=
+    1.0 (bug 1203616)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+var samplerate = 44100;
+var context = new OfflineAudioContext(1, 44100, samplerate);
+
+var dc = context.createBufferSource();
+
+var buffer = context.createBuffer(1, 1, samplerate);
+buffer.getChannelData(0)[0] = 1.0;
+dc.buffer = buffer;
+
+var gain = context.createGain();
+var ws2 = context.createWaveShaper();
+var ws = [];
+
+// No-op waveshaper curves.
+for (var i = 0; i < 2; i++) {
+  ws[i] = context.createWaveShaper();
+  var curve = new Float32Array(2);
+  curve[0] = -1.0;
+  curve[1] = 1.0;
+  ws[i].curve = curve;
+  ws[i].connect(context.destination);
+  gain.connect(ws[i]);
+}
+
+dc.connect(gain);
+dc.start();
+
+gain.gain.value = 0.5;
+
+context.startRendering().then(buffer => {
+  document.querySelector("pre").innerHTML = buffer.getChannelData(0)[0];
+  ok(buffer.getChannelData(0)[0] == 1.0, "Volume was handled properly");
+  SimpleTest.finish();
+});
+</script>
+<pre>
+</pre>
+</body>
+
