@@ -350,14 +350,15 @@ def main():
     test_dir = dirname(abspath(__file__))
 
     if options.debug:
-        if len(list(test_gen)) > 1:
+        tests = list(test_gen)
+        if len(tests) > 1:
             print('Multiple tests match command line arguments,'
                   ' debugger can only run one')
-            for tc in test_gen:
+            for tc in tests:
                 print('    {}'.format(tc.path))
             return 2
 
-        cmd = test_gen[0].get_command(RefTestCase.js_cmd_prefix)
+        cmd = tests[0].get_command(prefix)
         if options.show_cmd:
             print(list2cmdline(cmd))
         with changedir(test_dir):
