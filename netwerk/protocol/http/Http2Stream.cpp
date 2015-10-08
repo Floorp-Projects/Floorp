@@ -27,7 +27,6 @@
 #include "nsHttpHandler.h"
 #include "nsHttpRequestHead.h"
 #include "nsIClassOfService.h"
-#include "nsIPipe.h"
 #include "nsISocketTransport.h"
 #include "nsStandardURL.h"
 #include "prnetdb.h"
@@ -64,7 +63,6 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mSentFin(0)
   , mSentWaitingFor(0)
   , mSetTCPSocketBuffer(0)
-  , mBypassInputBuffer(0)
   , mTxInlineFrameSize(Http2Session::kDefaultBufferSize)
   , mTxInlineFrameUsed(0)
   , mTxStreamFrameSize(0)
@@ -238,69 +236,6 @@ Http2Stream::ReadSegments(nsAHttpSegmentReader *reader,
   return rv;
 }
 
-static bool
-IsDataAvailable(nsIInputStream *stream)
-{
-  if (!stream) {
-    return false;
-  }
-  uint64_t avail;
-  if (NS_FAILED(stream->Available(&avail))) {
-    return false;
-  }
-  return (avail > 0);
-}
-
-uint64_t
-Http2Stream::LocalUnAcked()
-{
-  // reduce unacked by the amount of undelivered data
-  // to help assert flow control
-  uint64_t undelivered = 0;
-  if (mInputBufferIn) {
-    mInputBufferIn->Available(&undelivered);
-  }
-
-  if (undelivered > mLocalUnacked) {
-    return 0;
-  }
-  return mLocalUnacked - undelivered;
-}
-
-nsresult
-Http2Stream::BufferInput(uint32_t count, uint32_t *countWritten)
-{
-  static const uint32_t segmentSize = 32768;
-  char buf[segmentSize];
-
-  count = std::min(segmentSize, count);
-  if (!mInputBufferOut) {
-    NS_NewPipe(getter_AddRefs(mInputBufferIn), getter_AddRefs(mInputBufferOut),
-               segmentSize, UINT32_MAX);
-    if (!mInputBufferOut) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  mBypassInputBuffer = 1;
-  nsresult rv = mSegmentWriter->OnWriteSegment(buf, count, countWritten);
-  mBypassInputBuffer = 0;
-  if (NS_SUCCEEDED(rv)) {
-    uint32_t buffered;
-    rv = mInputBufferOut->Write(buf, *countWritten, &buffered);
-    if (NS_SUCCEEDED(rv) && (buffered != *countWritten)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  return rv;
-}
-
-bool
-Http2Stream::DeferCleanup(nsresult status)
-{
-  // do not cleanup a stream that has data buffered for the transaction
-  return (NS_SUCCEEDED(status) && IsDataAvailable(mInputBufferIn));
-}
-
 // WriteSegments() is used to read data off the socket. Generally this is
 // just a call through to the associated nsHttpTransaction for this stream
 // for the remaining data bytes indicated by the current DATA frame.
@@ -318,16 +253,8 @@ Http2Stream::WriteSegments(nsAHttpSegmentWriter *writer,
 
   mSegmentWriter = writer;
   nsresult rv = mTransaction->WriteSegments(this, count, countWritten);
-
-  if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-    // consuming transaction won't take data. but we need to read it into a buffer so that it
-    // won't block other streams. but we should not advance the flow control window
-    // so that we'll eventually push back on the sender.
-
-    // stash this data
-    rv = BufferInput(count, countWritten);
-  }
   mSegmentWriter = nullptr;
+
   return rv;
 }
 
@@ -696,21 +623,8 @@ Http2Stream::AdjustInitialWindow()
     return;
   }
 
-  // right now mClientReceiveWindow is the lower push limit
-  // bump it up to the pull limit set by the channel or session
-  // don't allow windows less than push
-  uint32_t bump = 0;
-  nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
-  if (trans && trans->InitialRwin()) {
-    bump = (trans->InitialRwin() > mClientReceiveWindow) ?
-      (trans->InitialRwin() - mClientReceiveWindow) : 0;
-  } else {
-    MOZ_ASSERT(mSession->InitialRwin() >= mClientReceiveWindow);
-    bump = mSession->InitialRwin() - mClientReceiveWindow;
-  }
-
-  LOG3(("AdjustInitialwindow increased flow control window %p 0x%X %u\n",
-        this, stream->mStreamID, bump));
+  MOZ_ASSERT(mClientReceiveWindow <= ASpdySession::kInitialRwin);
+  uint32_t bump = ASpdySession::kInitialRwin - mClientReceiveWindow;
   if (!bump) { // nothing to do
     return;
   }
@@ -727,6 +641,8 @@ Http2Stream::AdjustInitialWindow()
   mClientReceiveWindow += bump;
   bump = PR_htonl(bump);
   memcpy(packet + Http2Session::kFrameHeaderBytes, &bump, 4);
+  LOG3(("AdjustInitialwindow increased flow control window %p 0x%X\n",
+        this, stream->mStreamID));
 }
 
 void
@@ -1402,34 +1318,16 @@ Http2Stream::OnWriteSegment(char *buf,
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   MOZ_ASSERT(mSegmentWriter);
 
-  if (mPushSource) {
-    nsresult rv;
-    rv = mPushSource->GetBufferedData(buf, count, countWritten);
-    if (NS_FAILED(rv))
-      return rv;
+  if (!mPushSource)
+    return mSegmentWriter->OnWriteSegment(buf, count, countWritten);
 
-    mSession->ConnectPushedStream(this);
-    return NS_OK;
-  }
-
-  // sometimes we have read data from the network and stored it in a pipe
-  // so that other streams can proceed when the gecko caller is not processing
-  // data events fast enough and flow control hasn't caught up yet. This
-  // gets the stored data out of that pipe
-  if (!mBypassInputBuffer && IsDataAvailable(mInputBufferIn)) {
-    nsresult rv = mInputBufferIn->Read(buf, count, countWritten);
-    LOG3(("Http2Stream::OnWriteSegment read from flow control buffer %p %x %d\n",
-          this, mStreamID, *countWritten));
-    if (!IsDataAvailable(mInputBufferIn)) {
-      // drop the pipe if we don't need it anymore
-      mInputBufferIn = nullptr;
-      mInputBufferOut = nullptr;
-    }
+  nsresult rv;
+  rv = mPushSource->GetBufferedData(buf, count, countWritten);
+  if (NS_FAILED(rv))
     return rv;
-  }
 
-  // read from the network
-  return mSegmentWriter->OnWriteSegment(buf, count, countWritten);
+  mSession->ConnectPushedStream(this);
+  return NS_OK;
 }
 
 /// connect tunnels
