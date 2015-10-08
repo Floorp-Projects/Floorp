@@ -90,6 +90,7 @@ class BalrogMixin(object):
         cmd.extend(["--buildbot-configs", "https://hg.mozilla.org/build/buildbot-configs"])
         cmd.extend(["--release-config", os.path.join(dirs['build_dir'], self.config.get("release_config_file"))])
         cmd.extend(["--credentials-file", os.path.join(dirs['base_work_dir'], self.config.get("balrog_credentials_file"))])
+        cmd.extend(["--release-channel", self.query_release_config()['release_channel']])
 
         return_codes = []
         for server in self.config["balrog_servers"]:
