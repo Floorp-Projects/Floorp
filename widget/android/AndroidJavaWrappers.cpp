@@ -562,6 +562,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
 
         case TELEMETRY_HISTOGRAM_ADD: {
             ReadCharactersField(jenv);
+            ReadCharactersExtraField(jenv);
             mCount = jenv->GetIntField(jobj, jCountField);
             break;
         }

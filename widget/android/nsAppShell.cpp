@@ -743,8 +743,15 @@ nsAppShell::LegacyGeckoEvent::Run()
     }
 
     case AndroidGeckoEvent::TELEMETRY_HISTOGRAM_ADD:
-        Telemetry::Accumulate(NS_ConvertUTF16toUTF8(curEvent->Characters()).get(),
-                              curEvent->Count());
+        // If the extras field is not empty then this is a keyed histogram.
+        if (!curEvent->CharactersExtra().IsVoid()) {
+            Telemetry::Accumulate(NS_ConvertUTF16toUTF8(curEvent->Characters()).get(),
+                                  NS_ConvertUTF16toUTF8(curEvent->CharactersExtra()),
+                                  curEvent->Count());
+        } else {
+            Telemetry::Accumulate(NS_ConvertUTF16toUTF8(curEvent->Characters()).get(),
+                                  curEvent->Count());
+        }
         break;
 
     case AndroidGeckoEvent::GAMEPAD_ADDREMOVE: {

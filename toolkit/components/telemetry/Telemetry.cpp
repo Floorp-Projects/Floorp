@@ -3725,6 +3725,19 @@ Accumulate(const char* name, uint32_t sample)
 }
 
 void
+Accumulate(const char *name, const nsCString& key, uint32_t sample)
+{
+    if (!TelemetryImpl::CanRecordBase()) {
+      return;
+    }
+    ID id;
+    nsresult rv = TelemetryImpl::GetHistogramEnumId(name, &id);
+    if (NS_SUCCEEDED(rv)) {
+      Accumulate(id, key, sample);
+    }
+}
+
+void
 AccumulateTimeDelta(ID aHistogram, TimeStamp start, TimeStamp end)
 {
   Accumulate(aHistogram,
