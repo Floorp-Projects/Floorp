@@ -46,7 +46,7 @@ interface nsIVerifySignedManifestCallback : nsISupports
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(0a47571d-602c-4b21-9f52-c3d0e681d83a)]
+[scriptable, uuid(a36c45fb-f7b5-423e-a0f7-ea1eb4fd60b5)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -319,6 +319,14 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AddonsPublicRoot = 7;
   const AppTrustedRoot AddonsStageRoot = 8;
   const AppTrustedRoot PrivilegedPackageRoot = 9;
+  /*
+   * If DeveloperImportedRoot is set as trusted root, a CA from local file
+   * system will be imported. Only used when preference
+   * "network.http.packaged-apps-developer-mode" is set.
+   * The path of the CA is specified by preference
+   * "network.http.packaged-apps-developer-trusted-root".
+   */
+  const AppTrustedRoot DeveloperImportedRoot = 10;
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
