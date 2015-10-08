@@ -60,18 +60,33 @@ protected:
 
     nsCOMPtr<nsIThread> mThread;
 
-    HANDLE        mShutdownEvent;
-
 private:
+    // Returns the new timeout period for coalescing (or INFINITE)
+    DWORD nextCoalesceWaitTime();
+
+    // Called for every detected network change
+    nsresult NetworkChanged();
+
+    HANDLE mCheckEvent;
+
+    // set true when mCheckEvent means shutdown
+    bool mShutdown;
+
     // This is a checksum of various meta data for all network interfaces
     // considered UP at last check.
     ULONG mIPInterfaceChecksum;
 
-    // time of the last sent changed event
-    mozilla::TimeStamp mChangedTime;
+    // start time of the checking
+    mozilla::TimeStamp mStartTime;
 
     // Network changed events are enabled
     bool mAllowChangedEvent;
+
+    // Flag set while coalescing change events
+    bool mCoalescingActive;
+
+    // Time stamp for first event during coalescing
+    mozilla::TimeStamp mChangeTime;
 };
 
 #endif /* NSNOTIFYADDRLISTENER_H_ */
