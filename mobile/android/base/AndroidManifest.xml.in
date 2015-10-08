@@ -13,7 +13,7 @@
 #ifdef MOZ_ANDROID_MAX_SDK_VERSION
               android:maxSdkVersion="@MOZ_ANDROID_MAX_SDK_VERSION@"
 #endif
-              android:targetSdkVersion="@ANDROID_TARGET_SDK@"/>
+              android:targetSdkVersion="22"/>
 
 #include ../services/manifests/FxAccountAndroidManifest_permissions.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_permissions.xml.in
