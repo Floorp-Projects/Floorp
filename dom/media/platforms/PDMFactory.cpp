@@ -96,6 +96,7 @@ PDMFactory::Init()
 #ifdef MOZ_FFMPEG
   FFmpegRuntimeLinker::Link();
 #endif
+  GMPDecoderModule::Init();
 }
 
 PDMFactory::PDMFactory()
