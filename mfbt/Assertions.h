@@ -23,7 +23,6 @@
 
 #if defined(MOZ_CRASHREPORTER) && defined(MOZILLA_INTERNAL_API) && \
     !defined(MOZILLA_EXTERNAL_LINKAGE) && defined(__cplusplus)
-#  define MOZ_CRASH_CRASHREPORT
 namespace CrashReporter {
 // This declaration is present here as well as in nsExceptionHandler.h
 // nsExceptionHandler.h is not directly included in this file as it includes
@@ -33,6 +32,10 @@ namespace CrashReporter {
 // nsExceptionHandler.h
 void AnnotateMozCrashReason(const char* aReason);
 } // namespace CrashReporter
+
+#  define MOZ_CRASH_ANNOTATE(...) CrashReporter::AnnotateMozCrashReason("" __VA_ARGS__)
+#else
+#  define MOZ_CRASH_ANNOTATE(...) do { /* nothing */ } while (0)
 #endif
 
 #include <stddef.h>
@@ -263,19 +266,16 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  * corrupted.
  */
 #ifndef DEBUG
-#  ifdef MOZ_CRASH_CRASHREPORT
-#    define MOZ_CRASH(...) \
-       do { \
-         CrashReporter::AnnotateMozCrashReason("MOZ_CRASH(" __VA_ARGS__ ")"); \
-         MOZ_REALLY_CRASH(); \
-       } while (0)
-#  else
-#    define MOZ_CRASH(...) MOZ_REALLY_CRASH()
-#  endif
+#  define MOZ_CRASH(...) \
+     do { \
+       MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
+       MOZ_REALLY_CRASH(); \
+     } while (0)
 #else
 #  define MOZ_CRASH(...) \
      do { \
        MOZ_ReportCrash("" __VA_ARGS__, __FILE__, __LINE__); \
+       MOZ_CRASH_ANNOTATE("MOZ_CRASH(" __VA_ARGS__ ")"); \
        MOZ_REALLY_CRASH(); \
      } while (0)
 #endif
@@ -382,6 +382,7 @@ struct AssertionConditionType
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
     if (MOZ_UNLIKELY(!(expr))) { \
       MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
+      MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ")"); \
       MOZ_REALLY_CRASH(); \
     } \
   } while (0)
@@ -391,6 +392,7 @@ struct AssertionConditionType
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
     if (MOZ_UNLIKELY(!(expr))) { \
       MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
+      MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ") (" explain ")"); \
       MOZ_REALLY_CRASH(); \
     } \
   } while (0)
