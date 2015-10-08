@@ -33,7 +33,7 @@ interface nsIPresentationServiceCallback : nsISupports
   void notifyError(in nsresult error);
 };
 
-[scriptable, uuid(5a254519-45c3-4229-9b16-f58c05b78fc6)]
+[scriptable, uuid(c177a13a-bf1a-48bf-8032-d415c3343c46)]
 interface nsIPresentationService : nsISupports
 {
   /*
@@ -63,11 +63,18 @@ interface nsIPresentationService : nsISupports
                           in nsIInputStream stream);
 
   /*
+   * Close the session.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   */
+  void closeSession(in DOMString sessionId);
+
+  /*
    * Terminate the session.
    *
    * @param sessionId: An ID to identify presentation session.
    */
-  void terminate(in DOMString sessionId);
+  void terminateSession(in DOMString sessionId);
 
   /*
    * Register an availability listener. Must be called from the main thread.

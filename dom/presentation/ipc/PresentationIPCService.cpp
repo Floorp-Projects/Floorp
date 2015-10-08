@@ -71,11 +71,19 @@ PresentationIPCService::SendSessionMessage(const nsAString& aSessionId,
 }
 
 NS_IMETHODIMP
-PresentationIPCService::Terminate(const nsAString& aSessionId)
+PresentationIPCService::CloseSession(const nsAString& aSessionId)
 {
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  return SendRequest(nullptr, TerminateRequest(nsAutoString(aSessionId)));
+  return SendRequest(nullptr, CloseSessionRequest(nsAutoString(aSessionId)));
+}
+
+NS_IMETHODIMP
+PresentationIPCService::TerminateSession(const nsAString& aSessionId)
+{
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+
+  return SendRequest(nullptr, TerminateSessionRequest(nsAutoString(aSessionId)));
 }
 
 nsresult
