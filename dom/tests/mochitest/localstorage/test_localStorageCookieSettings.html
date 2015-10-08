@@ -27,21 +27,6 @@ function test1() {
     is(ex.name, "SecurityError");
   }
 
-  // Set cookies behavior to "ask every time".
-  SpecialPowers.pushPrefEnv({"set": [["network.cookie.lifetimePolicy", 1]],
-                             "clear": [["network.cookie.cookieBehavior"]]},
-                            test2);
-}
-
-function test2() {
-  try {
-    localStorage.setItem("contentkey", "test-value");
-    ok(false, "Setting localStorageItem should throw a security exception");
-  }
-  catch(ex) {
-    is(ex.name, "SecurityError");
-  }
-
   // Set cookies behavior to "reject 3rd party"
   SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]],
                              "clear": [["network.cookie.lifetimePolicy"]]},

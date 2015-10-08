@@ -34,7 +34,7 @@
 
 // values for mCookiesLifetimePolicy
 // 0 == accept normally
-// 1 == ask before accepting
+// 1 == ask before accepting, no more supported, treated like ACCEPT_NORMALLY (Bug 606655).
 // 2 == downgrade to session
 // 3 == limit lifetime to N days
 static const uint32_t ACCEPT_NORMALLY = 0;
@@ -51,7 +51,6 @@ static const char kCookiesPrefsMigrated[] = "network.cookie.prefsMigrated";
 // obsolete pref names for migration
 static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
 static const char kCookiesLifetimeBehavior[] = "network.cookie.lifetime.behavior";
-static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 
 static const char kPermissionType[] = "cookie";
 
@@ -84,19 +83,11 @@ nsCookiePermission::Init()
     bool migrated;
     rv = prefBranch->GetBoolPref(kCookiesPrefsMigrated, &migrated);
     if (NS_FAILED(rv) || !migrated) {
-      bool warnAboutCookies = false;
-      prefBranch->GetBoolPref(kCookiesAskPermission, &warnAboutCookies);
-
-      // if the user is using ask before accepting, we'll use that
-      if (warnAboutCookies)
-        prefBranch->SetIntPref(kCookiesLifetimePolicy, ASK_BEFORE_ACCEPT);
-        
       bool lifetimeEnabled = false;
       prefBranch->GetBoolPref(kCookiesLifetimeEnabled, &lifetimeEnabled);
-      
-      // if they're limiting lifetime and not using the prompts, use the 
-      // appropriate limited lifetime pref
-      if (lifetimeEnabled && !warnAboutCookies) {
+
+      // if they're limiting lifetime, use the appropriate limited lifetime pref
+      if (lifetimeEnabled) {
         int32_t lifetimeBehavior;
         prefBranch->GetIntPref(kCookiesLifetimeBehavior, &lifetimeBehavior);
         if (lifetimeBehavior)
@@ -120,8 +111,12 @@ nsCookiePermission::PrefChanged(nsIPrefBranch *aPrefBranch,
 #define PREF_CHANGED(_P) (!aPref || !strcmp(aPref, _P))
 
   if (PREF_CHANGED(kCookiesLifetimePolicy) &&
-      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimePolicy, &val)))
+      NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimePolicy, &val))) {
+    if (val != static_cast<int32_t>(ACCEPT_SESSION) && val != static_cast<int32_t>(ACCEPT_FOR_N_DAYS)) {
+      val = ACCEPT_NORMALLY;
+    }
     mCookiesLifetimePolicy = val;
+  }
 
   if (PREF_CHANGED(kCookiesLifetimeDays) &&
       NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
@@ -253,112 +248,15 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     int64_t currentTime = PR_Now() / PR_USEC_PER_SEC;
     int64_t delta = *aExpiry - currentTime;
 
-    // check whether the user wants to be prompted
-    if (mCookiesLifetimePolicy == ASK_BEFORE_ACCEPT) {
-      // if it's a session cookie and the user wants to accept these 
-      // without asking, or if we are in private browsing mode, just
-      // accept the cookie and return
-      if ((*aIsSession && mCookiesAlwaysAcceptSession) ||
-          (aChannel && NS_UsePrivateBrowsing(aChannel))) {
-        *aResult = true;
-        return NS_OK;
-      }
-
-      // default to rejecting, in case the prompting process fails
-      *aResult = false;
-
-      nsAutoCString hostPort;
-      aURI->GetHostPort(hostPort);
-
-      if (!aCookie) {
-         return NS_ERROR_UNEXPECTED;
-      }
-      // If there is no host, use the scheme, and append "://",
-      // to make sure it isn't a host or something.
-      // This is done to make the dialog appear for javascript cookies from
-      // file:// urls, and make the text on it not too weird. (bug 209689)
-      if (hostPort.IsEmpty()) {
-        aURI->GetScheme(hostPort);
-        if (hostPort.IsEmpty()) {
-          // still empty. Just return the default.
-          return NS_OK;
-        }
-        hostPort = hostPort + NS_LITERAL_CSTRING("://");
-      }
-
-      // we don't cache the cookiePromptService - it's not used often, so not
-      // worth the memory.
-      nsresult rv;
-      nsCOMPtr<nsICookiePromptService> cookiePromptService =
-          do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      // get some useful information to present to the user:
-      // whether a previous cookie already exists, and how many cookies this host
-      // has set
-      bool foundCookie = false;
-      uint32_t countFromHost;
-      nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoCString rawHost;
-        aCookie->GetRawHost(rawHost);
-        rv = cookieManager->CountCookiesFromHost(rawHost, &countFromHost);
-
-        if (NS_SUCCEEDED(rv) && countFromHost > 0)
-          rv = cookieManager->CookieExists(aCookie, &foundCookie);
-      }
-      if (NS_FAILED(rv)) return rv;
-
-      // check if the cookie we're trying to set is already expired, and return;
-      // but only if there's no previous cookie, because then we need to delete the previous
-      // cookie. we need this check to avoid prompting the user for already-expired cookies.
-      if (!foundCookie && !*aIsSession && delta <= 0) {
-        // the cookie has already expired. accept it, and let the backend figure
-        // out it's expired, so that we get correct logging & notifications.
-        *aResult = true;
-        return rv;
-      }
-
-      bool rememberDecision = false;
-      int32_t dialogRes = nsICookiePromptService::DENY_COOKIE;
-      rv = cookiePromptService->CookieDialog(nullptr, aCookie, hostPort, 
-                                             countFromHost, foundCookie,
-                                             &rememberDecision, &dialogRes);
-      if (NS_FAILED(rv)) return rv;
-
-      *aResult = !!dialogRes;
-      if (dialogRes == nsICookiePromptService::ACCEPT_SESSION_COOKIE)
+    // We are accepting the cookie, but,
+    // if it's not a session cookie, we may have to limit its lifetime.
+    if (!*aIsSession && delta > 0) {
+      if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
+        // limit lifetime to session
         *aIsSession = true;
-
-      if (rememberDecision) {
-        switch (dialogRes) {
-          case nsICookiePromptService::DENY_COOKIE:
-            mPermMgr->Add(aURI, kPermissionType, (uint32_t) nsIPermissionManager::DENY_ACTION,
-                          nsIPermissionManager::EXPIRE_NEVER, 0);
-            break;
-          case nsICookiePromptService::ACCEPT_COOKIE:
-            mPermMgr->Add(aURI, kPermissionType, (uint32_t) nsIPermissionManager::ALLOW_ACTION,
-                          nsIPermissionManager::EXPIRE_NEVER, 0);
-            break;
-          case nsICookiePromptService::ACCEPT_SESSION_COOKIE:
-            mPermMgr->Add(aURI, kPermissionType, nsICookiePermission::ACCESS_SESSION,
-                          nsIPermissionManager::EXPIRE_NEVER, 0);
-            break;
-          default:
-            break;
-        }
-      }
-    } else {
-      // we're not prompting, so we must be limiting the lifetime somehow
-      // if it's a session cookie, we do nothing
-      if (!*aIsSession && delta > 0) {
-        if (mCookiesLifetimePolicy == ACCEPT_SESSION) {
-          // limit lifetime to session
-          *aIsSession = true;
-        } else if (delta > mCookiesLifetimeSec) {
-          // limit lifetime to specified time
-          *aExpiry = currentTime + mCookiesLifetimeSec;
-        }
+      } else if (delta > mCookiesLifetimeSec) {
+        // limit lifetime to specified time
+        *aExpiry = currentTime + mCookiesLifetimeSec;
       }
     }
   }

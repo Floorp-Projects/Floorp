@@ -232,8 +232,6 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
 
 static const char kPermissionType[] = "cookie";
 static const char kStorageEnabled[] = "dom.storage.enabled";
-static const char kCookiesBehavior[] = "network.cookie.cookieBehavior";
-static const char kCookiesLifetimePolicy[] = "network.cookie.lifetimePolicy";
 
 // static, public
 bool
