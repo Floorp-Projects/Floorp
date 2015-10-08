@@ -327,6 +327,17 @@ DuplicateHandle(HANDLE aSourceHandle,
 #endif
 
 } // namespace ipc
+
+template<typename Protocol>
+Protocol*
+LoneManagedOrNull(const nsTArray<Protocol*>& aManagees)
+{
+    if (aManagees.Length() == 0) {
+        return nullptr;
+    }
+    return aManagees[0];
+}
+
 } // namespace mozilla
 
 

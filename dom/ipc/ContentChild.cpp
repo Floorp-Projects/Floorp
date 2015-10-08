@@ -1549,8 +1549,8 @@ ContentChild::DeallocPTestShellChild(PTestShellChild* shell)
 jsipc::CPOWManager*
 ContentChild::GetCPOWManager()
 {
-    if (ManagedPJavaScriptChild().Length()) {
-        return CPOWManagerFor(ManagedPJavaScriptChild()[0]);
+    if (PJavaScriptChild* c = LoneManagedOrNull(ManagedPJavaScriptChild())) {
+        return CPOWManagerFor(c);
     }
     return CPOWManagerFor(SendPJavaScriptConstructor());
 }
@@ -2038,11 +2038,11 @@ ContentChild::ProcessingError(Result aCode, const char* aReason)
     }
 
 #if defined(MOZ_CRASHREPORTER) && !defined(MOZ_B2G)
-    if (ManagedPCrashReporterChild().Length() > 0) {
+    if (PCrashReporterChild* c = LoneManagedOrNull(ManagedPCrashReporterChild())) {
         CrashReporterChild* crashReporter =
-            static_cast<CrashReporterChild*>(ManagedPCrashReporterChild()[0]);
-            nsDependentCString reason(aReason);
-            crashReporter->SendAnnotateCrashReport(
+            static_cast<CrashReporterChild*>(c);
+        nsDependentCString reason(aReason);
+        crashReporter->SendAnnotateCrashReport(
                 NS_LITERAL_CSTRING("ipc_channel_error"),
                 reason);
     }
