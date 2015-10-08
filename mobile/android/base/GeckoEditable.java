@@ -366,10 +366,39 @@ final class GeckoEditable
                 Editable.class.getClassLoader(),
                 PROXY_INTERFACES, this);
 
-        LayerView v = GeckoAppShell.getLayerView();
-        mListener = GeckoInputConnection.create(v, this);
-
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
+    }
+
+    @WrapForJNI
+    /* package */ void onViewChange(final GeckoView v) {
+        if (DEBUG) {
+            // Called by nsWindow.
+            ThreadUtils.assertOnGeckoThread();
+            Log.d(LOGTAG, "onViewChange(" + v + ")");
+        }
+
+        final GeckoEditableListener newListener = GeckoInputConnection.create(v, this);
+        geckoPostToIc(new Runnable() {
+            @Override
+            public void run() {
+                if (DEBUG) {
+                    Log.d(LOGTAG, "onViewChange (set listener)");
+                }
+                // Make sure there are no other things going on
+                mActionQueue.syncWithGecko();
+                mListener = newListener;
+            }
+        });
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (DEBUG) {
+                    Log.d(LOGTAG, "onViewChange (set IC)");
+                }
+                v.setInputConnectionListener((InputConnectionListener) newListener);
+            }
+        });
     }
 
     private boolean onIcThread() {
@@ -863,17 +892,7 @@ final class GeckoEditable
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                // Make sure there are no other things going on
-                mActionQueue.syncWithGecko();
-                // Set InputConnectionHandler in notifyIMEContext because
-                // GeckoInputConnection.notifyIMEContext calls restartInput() which will invoke
-                // InputConnectionHandler.onCreateInputConnection
-                GeckoView v = GeckoAppShell.getLayerView();
-                if (v != null) {
-                    mListener = GeckoInputConnection.create(v, GeckoEditable.this);
-                    v.setInputConnectionListener((InputConnectionListener) mListener);
-                    mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
-                }
+                mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
             }
         });
     }
