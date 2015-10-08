@@ -184,8 +184,10 @@ function test() {
   }
 
   function clickOnBreakpoint(aIndex) {
+    let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_CLICKED);
     EventUtils.sendMouseEvent({ type: "click" },
       gDebugger.document.querySelectorAll(".dbg-breakpoint")[aIndex],
       gDebugger);
+    return finished;
   }
 }

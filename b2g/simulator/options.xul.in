@@ -1,5 +1,0 @@
-<?xml version="1.0" ?>
-<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <setting pref="extensions.@ADDON_ID@.gaiaProfile" type="directory" title="Select a custom Gaia profile directory"/>
-  <setting pref="extensions.@ADDON_ID@.customRuntime" type="file" title="Select a custom runtime executable"/>
-</vbox>

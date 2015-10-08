@@ -466,9 +466,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // If the breakpoint requires a new conditional expression, display
     // the panel to input the corresponding expression.
     if (aOptions.openPopup) {
-      this._openConditionalPopup();
+      return this._openConditionalPopup();
     } else {
-      this._hideConditionalPopup();
+      return this._hideConditionalPopup();
     }
   },
 
@@ -717,13 +717,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // retrieve the current conditional epression.
     let breakpointPromise = this.Breakpoints._getAdded(attachment);
     if (breakpointPromise) {
-      breakpointPromise.then(aBreakpointClient => {
+      return breakpointPromise.then(aBreakpointClient => {
         let isConditionalBreakpoint = aBreakpointClient.hasCondition();
         let condition = aBreakpointClient.getCondition();
-        doOpen.call(this, isConditionalBreakpoint ? condition : "")
+        return doOpen.call(this, isConditionalBreakpoint ? condition : "")
       });
     } else {
-      doOpen.call(this, "")
+      return doOpen.call(this, "")
     }
 
     function doOpen(aConditionalExpression) {
@@ -1040,18 +1040,24 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let attachment = breakpointItem.attachment;
 
     // Check if this is an enabled conditional breakpoint.
-    let breakpointPromise = this.Breakpoints._getAdded(attachment);
-    if (breakpointPromise) {
-      breakpointPromise.then(aBreakpointClient => {
-        doHighlight.call(this, aBreakpointClient.hasCondition());
+    let promise = this.Breakpoints._getAdded(attachment);
+    if (promise) {
+      promise = promise.then(aBreakpointClient => {
+        return doHighlight.call(this, aBreakpointClient.hasCondition());
       });
     } else {
-      doHighlight.call(this, false);
+      promise = Promise.resolve().then(() => {
+        return doHighlight.call(this, false)
+      });
     }
+
+    promise.then(() => {
+      window.emit(EVENTS.BREAKPOINT_CLICKED);
+    });
 
     function doHighlight(aConditionalBreakpointFlag) {
       // Highlight the breakpoint in this pane and in the editor.
-      this.highlightBreakpoint(attachment, {
+      return this.highlightBreakpoint(attachment, {
         // Don't show the conditional expression popup if this is not a
         // conditional breakpoint, or the right mouse button was pressed (to
         // avoid clashing the popup with the context menu).

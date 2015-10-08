@@ -42,6 +42,7 @@ const EVENTS = {
   // When a breakpoint has been added or removed on the debugger server.
   BREAKPOINT_ADDED: "Debugger:BreakpointAdded",
   BREAKPOINT_REMOVED: "Debugger:BreakpointRemoved",
+  BREAKPOINT_CLICKED: "Debugger:BreakpointClicked",
 
   // When a breakpoint has been shown or hidden in the source editor
   // or the pane.

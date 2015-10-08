@@ -43,6 +43,12 @@ public class Telemetry {
         GeckoAppShell.sendEventToGecko(event);
     }
 
+    public static void addToKeyedHistogram(String histogram, String keyName, int value) {
+        GeckoEvent event = GeckoEvent.createTelemetryKeyedHistogramAddEvent(histogram,
+                keyName, value);
+        GeckoAppShell.sendEventToGecko(event);
+    }
+
     public abstract static class Timer {
         private final long mStartTime;
         private final String mName;

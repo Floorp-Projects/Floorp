@@ -98,6 +98,7 @@ public class FxAccountStatusFragment
   protected Preference emailPreference;
   protected Preference manageAccountPreference;
   protected Preference authServerPreference;
+  protected Preference removeAccountPreference;
 
   protected Preference needsPasswordPreference;
   protected Preference needsUpgradePreference;
@@ -177,6 +178,7 @@ public class FxAccountStatusFragment
       accountCategory.removePreference(manageAccountPreference);
     }
     authServerPreference = ensureFindPreference("auth_server");
+    removeAccountPreference = ensureFindPreference("remove_account");
 
     needsPasswordPreference = ensureFindPreference("needs_credentials");
     needsUpgradePreference = ensureFindPreference("needs_upgrade");
@@ -205,6 +207,7 @@ public class FxAccountStatusFragment
       emailPreference.setOnPreferenceClickListener(this);
     }
     manageAccountPreference.setOnPreferenceClickListener(this);
+    removeAccountPreference.setOnPreferenceClickListener(this);
 
     needsPasswordPreference.setOnPreferenceClickListener(this);
     needsVerificationPreference.setOnPreferenceClickListener(this);
@@ -252,6 +255,11 @@ public class FxAccountStatusFragment
     if (preference == manageAccountPreference) {
       // There's no native equivalent, so no need to re-direct through an Intent filter.
       ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), "about:accounts?action=manage");
+      return true;
+    }
+
+    if (preference == removeAccountPreference) {
+      FxAccountStatusActivity.maybeDeleteAndroidAccount(getActivity(), fxAccount.getAndroidAccount(), null);
       return true;
     }
 

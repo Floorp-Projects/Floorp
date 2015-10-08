@@ -210,69 +210,6 @@ describe("loop.panel", function() {
         .to.have.length.of(0);
     });
 
-    describe("TabView", function() {
-      var view, callTab, roomsTab, contactsTab;
-
-      beforeEach(function() {
-        navigator.mozLoop.getLoopPref = function(pref) {
-          if (pref === "gettingStarted.seen") {
-            return true;
-          }
-        };
-
-        view = createTestPanelView();
-
-        [roomsTab, contactsTab] =
-          TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
-      });
-
-      it("should select contacts tab when clicking tab button", function() {
-        TestUtils.Simulate.click(
-          view.getDOMNode().querySelector("li[data-tab-name=\"contacts\"]"));
-
-        expect(contactsTab.getDOMNode().classList.contains("selected"))
-          .to.be.true;
-      });
-
-      it("should select rooms tab when clicking tab button", function() {
-        TestUtils.Simulate.click(
-          view.getDOMNode().querySelector("li[data-tab-name=\"rooms\"]"));
-
-        expect(roomsTab.getDOMNode().classList.contains("selected"))
-          .to.be.true;
-      });
-    });
-
-    describe("Contacts", function() {
-      var view, roomsTab, contactsTab;
-
-      beforeEach(function() {
-        view = TestUtils.renderIntoDocument(
-          React.createElement(loop.panel.PanelView, {
-            dispatcher: dispatcher,
-            initialSelectedTabComponent: "contactList",
-            mozLoop: navigator.mozLoop,
-            notifications: notifications,
-            roomStore: roomStore,
-            selectedTab: "contacts",
-            showTabButtons: true
-          }));
-
-        [roomsTab, contactsTab] =
-          TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
-      });
-
-      it("should expect Contacts tab to be selected when Contacts List displayed", function() {
-        expect(contactsTab.getDOMNode().classList.contains("selected"))
-          .to.be.true;
-      });
-
-      it("should expect Rooms tab to be not selected when Contacts List displayed", function() {
-        expect(roomsTab.getDOMNode().classList.contains("selected"))
-          .to.be.false;
-      });
-    });
-
     describe("AccountLink", function() {
       beforeEach(function() {
         navigator.mozLoop.calls = { clearCallInProgress: function() {} };
