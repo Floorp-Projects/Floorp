@@ -626,7 +626,7 @@ CodeGeneratorShared::assignBailoutId(LSnapshot* snapshot)
     return bailouts_.append(snapshot->snapshotOffset());
 }
 
-void
+bool
 CodeGeneratorShared::encodeSafepoints()
 {
     for (SafepointIndex& index : safepointIndices_) {
@@ -639,6 +639,8 @@ CodeGeneratorShared::encodeSafepoints()
 
         index.resolve();
     }
+
+    return !safepoints_.oom();
 }
 
 bool
