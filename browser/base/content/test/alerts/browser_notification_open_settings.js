@@ -13,6 +13,6 @@ add_task(function* test_settingsOpen() {
     Services.obs.notifyObservers(principal, "notifications-open-settings", null);
     let tab = yield tabPromise;
     ok(tab, "The notification settings tab opened");
-    BrowserTestUtils.removeTab(tab);
+    yield BrowserTestUtils.removeTab(tab);
   });
 });

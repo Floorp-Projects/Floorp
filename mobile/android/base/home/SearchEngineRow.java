@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -74,9 +73,6 @@ class SearchEngineRow extends AnimatedHeightLayout {
     // Maximums for suggestions
     private int mMaxSavedSuggestions;
     private int mMaxSearchSuggestions;
-
-    // Remove this default limit value in Bug 1201325
-    private static final int SUGGESTIONS_MAX = 4;
 
     public SearchEngineRow(Context context) {
         this(context, null);
@@ -269,14 +265,10 @@ class SearchEngineRow extends AnimatedHeightLayout {
      * @return the global count of how many suggestions have been bound/shown in the search engine row
      */
     private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount, int savedSuggestionCount) {
-        // Remove this default limit value in Bug 1201325
-        int maxSuggestions = SUGGESTIONS_MAX;
-        if (AppConstants.NIGHTLY_BUILD) {
-            maxSuggestions = mMaxSearchSuggestions;
-            // If there are less than max saved searches on phones, fill the space with more search engine suggestions
-            if (!HardwareUtils.isTablet() && savedSuggestionCount < mMaxSavedSuggestions) {
-                maxSuggestions += mMaxSavedSuggestions - savedSuggestionCount;
-            }
+        int maxSuggestions = mMaxSearchSuggestions;
+        // If there are less than max saved searches on phones, fill the space with more search engine suggestions
+        if (!HardwareUtils.isTablet() && savedSuggestionCount < mMaxSavedSuggestions) {
+            maxSuggestions += mMaxSavedSuggestions - savedSuggestionCount;
         }
 
         int suggestionCounter = 0;
@@ -319,13 +311,6 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
         // Set the initial content description.
         setDescriptionOnSuggestion(mUserEnteredTextView, mUserEnteredTextView.getText().toString());
-
-        if (!AppConstants.NIGHTLY_BUILD) {
-            if (searchSuggestionsEnabled) {
-                updateFromSearchEngine(animate, mSuggestionView.getChildCount(), 0);
-            }
-            return;
-        }
 
         final int recycledSuggestionCount = mSuggestionView.getChildCount();
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(getContext());

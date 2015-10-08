@@ -33,7 +33,7 @@ const {
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS
-} = require("devtools/client/styleinspector/css-parsing-utils");
+} = require("devtools/client/shared/css-parsing-utils");
 loader.lazyRequireGetter(this, "overlays",
   "devtools/client/styleinspector/style-inspector-overlays");
 loader.lazyRequireGetter(this, "EventEmitter",

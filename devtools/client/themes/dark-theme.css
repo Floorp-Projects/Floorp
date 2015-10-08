@@ -3,47 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Colors are taken from:
- * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
- * Changes should be kept in sync with commandline.css and commandline.inc.css.
- */
-:root {
-  --theme-body-background: #14171a;
-  --theme-sidebar-background: #181d20;
-  --theme-contrast-background: #b28025;
-
-  --theme-tab-toolbar-background: #252c33;
-  --theme-toolbar-background: #343c45;
-  --theme-selection-background: #1d4f73;
-  --theme-selection-background-semitransparent: rgba(29, 79, 115, .5);
-  --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: black;
-  --theme-comment: #757873;
-
-  --theme-body-color: #8fa1b2;
-  --theme-body-color-alt: #b6babf;
-  --theme-content-color1: #a9bacb;
-  --theme-content-color2: #8fa1b2;
-  --theme-content-color3: #5f7387;
-
-  --theme-highlight-green: #70bf53;
-  --theme-highlight-blue: #46afe3;
-  --theme-highlight-bluegrey: #5e88b0;
-  --theme-highlight-purple: #6b7abb;
-  --theme-highlight-lightorange: #d99b28;
-  --theme-highlight-orange: #d96629;
-  --theme-highlight-red: #eb5368;
-  --theme-highlight-pink: #df80ff;
-
-  /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
-  --theme-graphs-green: #70bf53;
-  --theme-graphs-blue: #46afe3;
-  --theme-graphs-bluegrey: #5e88b0;
-  --theme-graphs-purple: #df80ff;
-  --theme-graphs-yellow: #d99b28;
-  --theme-graphs-red: #eb5368;
-  --theme-graphs-grey: #757873;
-}
+@import url(variables.css);
 
 .theme-body {
   background: var(--theme-body-background);
