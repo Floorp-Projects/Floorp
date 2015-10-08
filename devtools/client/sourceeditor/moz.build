@@ -7,7 +7,6 @@
 DevToolsModules(
     'autocomplete.js',
     'css-autocompleter.js',
-    'css-tokenizer.js',
     'debugger.js',
     'editor.js'
 )

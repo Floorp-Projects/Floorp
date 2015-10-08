@@ -23,6 +23,11 @@ add_task(function*() {
 
   parentContainer.elt.scrollIntoView(true);
 
+  info("Testing putting an element back in it's original place");
+  yield dragElementToOriginalLocation("#firstChild", inspector);
+  is(parent.children[0].id, "firstChild", "#firstChild is still the first child of #test");
+  is(parent.children[1].id, "middleChild", "#middleChild is still the second child of #test");
+
   info("Testing switching elements inside their parent");
   yield moveElementDown("#firstChild", "#middleChild", inspector);
 
@@ -95,6 +100,27 @@ function* dragContainer(selector, targetOffset, inspector) {
   return updated;
 };
 
+function* dragElementToOriginalLocation(selector, inspector) {
+  let el = yield getContainerForSelector(selector, inspector);
+  let height = el.tagLine.getBoundingClientRect().height;
+
+  info("Picking up and putting back down " + selector);
+
+  function onMutation() {
+    ok(false, "Mutation received from dragging a node back to its location");
+  }
+  inspector.on("markupmutation", onMutation);
+  yield dragContainer(selector, {x: 0, y: 0}, inspector);
+
+  // Wait a bit to make sure the event never fires.
+  // This doesn't need to catch *all* cases, since the mutation
+  // will cause failure later in the test when it checks element ordering.
+  yield new Promise(resolve => {
+    setTimeout(resolve, 500);
+  });
+  inspector.off("markupmutation", onMutation);
+}
+
 function* moveElementDown(selector, next, inspector) {
   let onMutated = inspector.once("markupmutation");
   let uiUpdate = inspector.once("inspector-updated");
@@ -106,6 +132,7 @@ function* moveElementDown(selector, next, inspector) {
 
   yield dragContainer(selector, {x: 0, y: Math.round(height) + 2}, inspector);
 
-  yield onMutated;
+  let mutations = yield onMutated;
+  is(mutations.length, 2, "2 mutations");
   yield uiUpdate;
 };

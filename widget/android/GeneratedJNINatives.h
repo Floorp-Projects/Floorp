@@ -67,6 +67,65 @@ template<class Impl>
 constexpr JNINativeMethod GeckoJavaSampler::Natives<Impl>::methods[];
 
 template<class Impl>
+class GeckoSmsManager::Natives : public mozilla::jni::NativeImpl<GeckoSmsManager, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyCursorDone_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifyCursorDone_t, Impl>
+                ::template Wrap<&Impl::NotifyCursorDone>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyCursorError_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifyCursorError_t, Impl>
+                ::template Wrap<&Impl::NotifyCursorError>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyGetSms_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifyGetSms_t, Impl>
+                ::template Wrap<&Impl::NotifyGetSms>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyGetSmsFailed_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifyGetSmsFailed_t, Impl>
+                ::template Wrap<&Impl::NotifyGetSmsFailed>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyMessageCursorResult_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifyMessageCursorResult_t, Impl>
+                ::template Wrap<&Impl::NotifyMessageCursorResult>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsDeleteFailed_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDeleteFailed_t, Impl>
+                ::template Wrap<&Impl::NotifySmsDeleteFailed>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsDeleted_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDeleted_t, Impl>
+                ::template Wrap<&Impl::NotifySmsDeleted>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsDelivery_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDelivery_t, Impl>
+                ::template Wrap<&Impl::NotifySmsDelivery>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsReceived_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsReceived_t, Impl>
+                ::template Wrap<&Impl::NotifySmsReceived>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsSendFailed_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsSendFailed_t, Impl>
+                ::template Wrap<&Impl::NotifySmsSendFailed>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsSent_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsSent_t, Impl>
+                ::template Wrap<&Impl::NotifySmsSent>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifyThreadCursorResult_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifyThreadCursorResult_t, Impl>
+                ::template Wrap<&Impl::NotifyThreadCursorResult>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod GeckoSmsManager::Natives<Impl>::methods[];
+
+template<class Impl>
 class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 {
 public:
