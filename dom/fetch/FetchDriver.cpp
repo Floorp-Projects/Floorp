@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/FetchDriver.h"
 
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIDocument.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -42,7 +43,7 @@ namespace dom {
 
 NS_IMPL_ISUPPORTS(FetchDriver,
                   nsIStreamListener, nsIChannelEventSink, nsIInterfaceRequestor,
-                  nsIAsyncVerifyRedirectCallback, nsIThreadRetargetableStreamListener)
+                  nsIThreadRetargetableStreamListener)
 
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
                          nsILoadGroup* aLoadGroup)
@@ -459,7 +460,13 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
 
   // Insert ourselves into the notification callbacks chain so we can handle
   // cross-origin redirects.
-  chan->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks;
+    chan->GetNotificationCallbacks(getter_AddRefs(notificationCallbacks));
+    MOZ_ASSERT(!notificationCallbacks);
+  }
+#endif
   chan->SetNotificationCallbacks(this);
 
   // FIXME(nsm): Bug 1120715.
@@ -915,8 +922,6 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 {
   NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
 
-  nsresult rv;
-
   // HTTP Fetch step 5, "redirect status", step 1
   if (NS_WARN_IF(mRequest->GetRedirectMode() == RequestRedirect::Error)) {
     aOldChannel->Cancel(NS_BINDING_FAILED);
@@ -970,27 +975,85 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   // to a URL with credentials in CORS mode.  This is implemented in
   // nsCORSListenerProxy.
 
-  mRedirectCallback = aCallback;
-  mOldRedirectChannel = aOldChannel;
-  mNewRedirectChannel = aNewChannel;
+  // On a successful redirect we perform the following substeps of HTTP Fetch,
+  // step 5, "redirect status", step 11.
 
-  nsCOMPtr<nsIChannelEventSink> outer =
-    do_GetInterface(mNotificationCallbacks);
-  if (outer) {
-    // The callee is supposed to call OnRedirectVerifyCallback() on success,
-    // and nobody has to call it on failure, so we can just return after this
-    // block.
-    rv = outer->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, this);
-    if (NS_FAILED(rv)) {
-      aOldChannel->Cancel(rv);
-      mRedirectCallback = nullptr;
-      mOldRedirectChannel = nullptr;
-      mNewRedirectChannel = nullptr;
-    }
+  // Step 11.5 "Append locationURL to request's url list." so that when we set the
+  // Response's URL from the Request's URL in Main Fetch, step 15, we get the
+  // final value. Note, we still use a single URL value instead of a list.
+  nsCOMPtr<nsIURI> newURI;
+  nsresult rv = NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newURI));
+  if (NS_FAILED(rv)) {
+    aOldChannel->Cancel(rv);
     return rv;
   }
 
-  (void) OnRedirectVerifyCallback(NS_OK);
+  // We need to update our request's URL.
+  nsAutoCString newUrl;
+  newURI->GetSpec(newUrl);
+  mRequest->SetURL(newUrl);
+
+  // Implement Main Fetch step 8 again on redirect.
+  MainFetchOp nextOp = SetTaintingAndGetNextOp(mCORSFlagEverSet);
+
+  if (nextOp.mType == NETWORK_ERROR) {
+    // Cancel the channel if Main Fetch blocks the redirect from continuing.
+    aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
+    return NS_ERROR_DOM_BAD_URI;
+  }
+
+  // Otherwise, we rely on necko and the CORS proxy to do the right thing
+  // as the redirect is followed.  In general this means basic or http
+  // fetch.  If we've ever been CORS, we need to stay CORS.
+  MOZ_ASSERT(nextOp.mType == BASIC_FETCH || nextOp.mType == HTTP_FETCH);
+  MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mType == HTTP_FETCH);
+  MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mCORSFlag);
+
+  // Examine and possibly set the LOAD_ANONYMOUS flag on the channel.
+  nsLoadFlags flags;
+  rv = aNewChannel->GetLoadFlags(&flags);
+  if (NS_FAILED(rv)) {
+    aOldChannel->Cancel(rv);
+    return rv;
+  }
+
+  if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
+      mRequest->GetResponseTainting() == InternalRequest::RESPONSETAINT_OPAQUE) {
+    // In the case of a "no-cors" mode request with "same-origin" credentials,
+    // we have to set LOAD_ANONYMOUS manually here in order to avoid sending
+    // credentials on a cross-origin redirect.
+    flags |= nsIRequest::LOAD_ANONYMOUS;
+    rv = aNewChannel->SetLoadFlags(flags);
+    if (NS_FAILED(rv)) {
+      aOldChannel->Cancel(rv);
+      return rv;
+    }
+
+  } else if (mRequest->GetCredentialsMode() == RequestCredentials::Omit) {
+    // Make sure nothing in the redirect chain screws up our credentials
+    // settings.  LOAD_ANONYMOUS must be set if we RequestCredentials is "omit".
+    MOZ_ASSERT(flags & nsIRequest::LOAD_ANONYMOUS);
+
+  } else if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
+             nextOp.mCORSFlag) {
+    // We also want to verify the LOAD_ANONYMOUS flag is set when we are in
+    // "same-origin" credentials mode and the CORS flag is set.  We can't
+    // unconditionally assert here, however, because the nsCORSListenerProxy
+    // will set the flag later in the redirect callback chain.  Instead,
+    // perform a weaker assertion here by checking if CORS flag was set
+    // before this redirect.  In that case LOAD_ANONYMOUS must still be set.
+    MOZ_ASSERT_IF(mCORSFlagEverSet, flags & nsIRequest::LOAD_ANONYMOUS);
+
+  } else {
+    // Otherwise, we should be sending credentials
+    MOZ_ASSERT(!(flags & nsIRequest::LOAD_ANONYMOUS));
+  }
+
+  // Track the CORSFlag through redirects.
+  mCORSFlagEverSet = mCORSFlagEverSet || nextOp.mCORSFlag;
+
+  aCallback->OnRedirectVerifyCallback(NS_OK);
+
   return NS_OK;
 }
 
@@ -1036,111 +1099,18 @@ FetchDriver::GetInterface(const nsIID& aIID, void **aResult)
     return NS_OK;
   }
 
-  nsresult rv;
-
-  if (mNotificationCallbacks) {
-    rv = mNotificationCallbacks->GetInterface(aIID, aResult);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
-      return rv;
-    }
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
+  if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aResult = static_cast<nsIStreamListener*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
+  if (aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
     *aResult = static_cast<nsIRequestObserver*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
   return QueryInterface(aIID, aResult);
-}
-
-NS_IMETHODIMP
-FetchDriver::OnRedirectVerifyCallback(nsresult aResult)
-{
-  // On a successful redirect we perform the following substeps of HTTP Fetch,
-  // step 5, "redirect status", step 11.
-  if (NS_SUCCEEDED(aResult)) {
-    // Step 11.5 "Append locationURL to request's url list." so that when we set the
-    // Response's URL from the Request's URL in Main Fetch, step 15, we get the
-    // final value. Note, we still use a single URL value instead of a list.
-    nsCOMPtr<nsIURI> newURI;
-    nsresult rv = NS_GetFinalChannelURI(mNewRedirectChannel, getter_AddRefs(newURI));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aResult = rv;
-    } else {
-      // We need to update our request's URL.
-      nsAutoCString newUrl;
-      newURI->GetSpec(newUrl);
-      mRequest->SetURL(newUrl);
-    }
-  }
-
-  if (NS_FAILED(aResult)) {
-    mOldRedirectChannel->Cancel(aResult);
-  }
-
-  // Implement Main Fetch step 8 again on redirect.
-  MainFetchOp nextOp = SetTaintingAndGetNextOp(mCORSFlagEverSet);
-
-  if (nextOp.mType == NETWORK_ERROR) {
-    // Cancel the channel if Main Fetch blocks the redirect from continuing.
-    aResult = NS_ERROR_DOM_BAD_URI;
-    mOldRedirectChannel->Cancel(aResult);
-  } else {
-    // Otherwise, we rely on necko and the CORS proxy to do the right thing
-    // as the redirect is followed.  In general this means basic or http
-    // fetch.  If we've ever been CORS, we need to stay CORS.
-    MOZ_ASSERT(nextOp.mType == BASIC_FETCH || nextOp.mType == HTTP_FETCH);
-    MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mType == HTTP_FETCH);
-    MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mCORSFlag);
-
-    // Examine and possibly set the LOAD_ANONYMOUS flag on the channel.
-    nsLoadFlags flags;
-    aResult = mNewRedirectChannel->GetLoadFlags(&flags);
-    if (NS_SUCCEEDED(aResult)) {
-      if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
-          mRequest->GetResponseTainting() == InternalRequest::RESPONSETAINT_OPAQUE) {
-        // In the case of a "no-cors" mode request with "same-origin" credentials,
-        // we have to set LOAD_ANONYMOUS manually here in order to avoid sending
-        // credentials on a cross-origin redirect.
-        flags |= nsIRequest::LOAD_ANONYMOUS;
-        aResult = mNewRedirectChannel->SetLoadFlags(flags);
-
-      } else if (mRequest->GetCredentialsMode() == RequestCredentials::Omit) {
-        // Make sure nothing in the redirect chain screws up our credentials
-        // settings.  LOAD_ANONYMOUS must be set if we RequestCredentials is "omit".
-        MOZ_ASSERT(flags & nsIRequest::LOAD_ANONYMOUS);
-
-      } else if (mRequest->GetCredentialsMode() == RequestCredentials::Same_origin &&
-                 nextOp.mCORSFlag) {
-        // We also want to verify the LOAD_ANONYMOUS flag is set when we are in
-        // "same-origin" credentials mode and the CORS flag is set.  We can't
-        // unconditionally assert here, however, because the nsCORSListenerProxy
-        // will set the flag later in the redirect callback chain.  Instead,
-        // perform a weaker assertion here by checking if CORS flag was set
-        // before this redirect.  In that case LOAD_ANONYMOUS must still be set.
-        MOZ_ASSERT_IF(mCORSFlagEverSet, flags & nsIRequest::LOAD_ANONYMOUS);
-
-      } else {
-        // Otherwise, we should be sending credentials
-        MOZ_ASSERT(!(flags & nsIRequest::LOAD_ANONYMOUS));
-      }
-    }
-
-    // Track the CORSFlag through redirects.
-    mCORSFlagEverSet = mCORSFlagEverSet || nextOp.mCORSFlag;
-  }
-
-  mOldRedirectChannel = nullptr;
-  mNewRedirectChannel = nullptr;
-  mRedirectCallback->OnRedirectVerifyCallback(aResult);
-  mRedirectCallback = nullptr;
-  return NS_OK;
 }
 
 void
