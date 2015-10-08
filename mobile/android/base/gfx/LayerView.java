@@ -31,7 +31,6 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -41,8 +40,6 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
 import android.view.InputDevice;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -57,7 +54,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private PanZoomController mPanZoomController;
     private DynamicToolbarAnimator mToolbarAnimator;
     private final GLController mGLController;
-    private InputConnectionHandler mInputConnectionHandler;
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
     private int mPaintState;
@@ -136,7 +132,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         mToolbarAnimator = mLayerClient.getDynamicToolbarAnimator();
 
         mRenderer = new LayerRenderer(this);
-        mInputConnectionHandler = null;
 
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -364,70 +359,10 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         mLayerClient.setIsRTL(aIsRTL);
     }
 
-    public void setInputConnectionHandler(InputConnectionHandler inputConnectionHandler) {
-        mInputConnectionHandler = inputConnectionHandler;
-    }
-
-    @Override
-    public Handler getHandler() {
-        if (mInputConnectionHandler != null)
-            return mInputConnectionHandler.getHandler(super.getHandler());
-        return super.getHandler();
-    }
-
-    @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if (mInputConnectionHandler != null)
-            return mInputConnectionHandler.onCreateInputConnection(outAttrs);
-        return null;
-    }
-
-    @Override
-    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
-        if (mInputConnectionHandler != null && mInputConnectionHandler.onKeyPreIme(keyCode, event)) {
-            return true;
-        }
-        return false;
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (mPanZoomController != null && mPanZoomController.onKeyEvent(event)) {
             return true;
-        }
-        if (mInputConnectionHandler != null && mInputConnectionHandler.onKeyDown(keyCode, event)) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        if (mInputConnectionHandler != null && mInputConnectionHandler.onKeyLongPress(keyCode, event)) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-        if (mInputConnectionHandler != null && mInputConnectionHandler.onKeyMultiple(keyCode, repeatCount, event)) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (mInputConnectionHandler != null && mInputConnectionHandler.onKeyUp(keyCode, event)) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isIMEEnabled() {
-        if (mInputConnectionHandler != null) {
-            return mInputConnectionHandler.isIMEEnabled();
         }
         return false;
     }
