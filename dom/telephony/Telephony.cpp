@@ -63,7 +63,6 @@ public:
 
 Telephony::Telephony(nsPIDOMWindow* aOwner)
   : DOMEventTargetHelper(aOwner),
-    mAudioAgentNotify(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY),
     mIsAudioStartPlaying(false),
     mHaveDispatchedInterruptBeginEvent(false),
     mMuted(AudioChannelService::IsAudioChannelMutedByDefault())
@@ -554,7 +553,7 @@ Telephony::HandleAudioAgentState()
   if ((!mCalls.Length() && !mGroup->CallsArray().Length()) &&
        mIsAudioStartPlaying) {
     mIsAudioStartPlaying = false;
-    rv = mAudioAgent->NotifyStoppedPlaying(mAudioAgentNotify);
+    rv = mAudioAgent->NotifyStoppedPlaying();
     mAudioAgent = nullptr;
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -563,7 +562,8 @@ Telephony::HandleAudioAgentState()
     mIsAudioStartPlaying = true;
     float volume;
     bool muted;
-    rv = mAudioAgent->NotifyStartedPlaying(mAudioAgentNotify, &volume, &muted);
+    rv = mAudioAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
+                                           &volume, &muted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

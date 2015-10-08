@@ -34,7 +34,7 @@ class nsIStringInputStream;
 #define	HTTP_X_GZIP_TYPE	    "x-gzip"
 #define	HTTP_COMPRESS_TYPE	    "compress"
 #define	HTTP_X_COMPRESS_TYPE	"x-compress"
-#define	HTTP_BROTLI_TYPE        "brotli"
+#define	HTTP_BROTLI_TYPE        "br"
 #define	HTTP_IDENTITY_TYPE	    "identity"
 #define	HTTP_UNCOMPRESSED_TYPE	"uncompressed"
 

@@ -37,6 +37,7 @@ AudioChannelAgent::AudioChannelAgent()
   : mAudioChannelType(AUDIO_AGENT_CHANNEL_ERROR)
   , mInnerWindowID(0)
   , mIsRegToService(false)
+  , mNotifyPlayback(false)
 {
 }
 
@@ -49,7 +50,7 @@ void
 AudioChannelAgent::Shutdown()
 {
   if (mIsRegToService) {
-    NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY);
+    NotifyStoppedPlaying();
   }
 }
 
@@ -162,11 +163,12 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(uint32_t aNotifyPlayback,
 
   service->GetState(mWindow, mAudioChannelType, aVolume, aMuted);
 
+  mNotifyPlayback = aNotifyPlayback;
   mIsRegToService = true;
   return NS_OK;
 }
 
-NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying(uint32_t aNotifyPlayback)
+NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying()
 {
   if (mAudioChannelType == AUDIO_AGENT_CHANNEL_ERROR ||
       !mIsRegToService) {
@@ -174,7 +176,7 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying(uint32_t aNotifyPlayback)
   }
 
   nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->UnregisterAudioChannelAgent(this, aNotifyPlayback);
+  service->UnregisterAudioChannelAgent(this, mNotifyPlayback);
   mIsRegToService = false;
   return NS_OK;
 }

@@ -2724,8 +2724,10 @@ nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIn
   }
 
   nsTableOuterFrame* tableFrame = GetTableFrame(aTable);
-  if (!tableFrame)
-    return NS_ERROR_FAILURE;
+  if (!tableFrame) {
+    *aCell = nullptr;
+    return NS_EDITOR_ELEMENT_NOT_FOUND;
+  }
 
   nsCOMPtr<nsIDOMElement> domCell =
     do_QueryInterface(tableFrame->GetCellAt(aRowIndex, aColIndex));

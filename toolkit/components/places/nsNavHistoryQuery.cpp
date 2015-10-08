@@ -18,6 +18,7 @@
 #include "nsNetUtil.h"
 #include "nsTArray.h"
 #include "prprf.h"
+#include "nsVariant.h"
 
 using namespace mozilla;
 
@@ -1130,13 +1131,11 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant **aTags)
 {
   NS_ENSURE_ARG_POINTER(aTags);
 
-  nsresult rv;
-  nsCOMPtr<nsIWritableVariant> out = do_CreateInstance(NS_VARIANT_CONTRACTID,
-                                                       &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsVariant> out = new nsVariant();
 
   uint32_t arrayLen = mTags.Length();
 
+  nsresult rv;
   if (arrayLen == 0)
     rv = out->SetAsEmptyArray();
   else {

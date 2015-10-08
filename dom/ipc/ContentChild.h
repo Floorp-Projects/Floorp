@@ -130,7 +130,7 @@ public:
     AllocPProcessHangMonitorChild(Transport* aTransport,
                                   ProcessId aOtherProcess) override;
 
-    virtual bool RecvSetProcessSandbox() override;
+    virtual bool RecvSetProcessSandbox(const MaybeFileDesc& aBroker) override;
 
     PBackgroundChild*
     AllocPBackgroundChild(Transport* aTransport, ProcessId aOtherProcess)

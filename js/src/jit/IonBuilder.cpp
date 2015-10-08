@@ -857,6 +857,18 @@ IonBuilder::build()
     // what we can in an infallible manner.
     rewriteParameters();
 
+    // Check for redeclaration errors for global scripts.
+    if (!info().funMaybeLazy() && !info().module() &&
+        script()->bindings.numBodyLevelLocals() > 0)
+    {
+        MGlobalNameConflictsCheck* redeclCheck = MGlobalNameConflictsCheck::New(alloc());
+        current->add(redeclCheck);
+        MResumePoint* entryRpCopy = MResumePoint::Copy(alloc(), current->entryResumePoint());
+        if (!entryRpCopy)
+            return false;
+        redeclCheck->setResumePoint(entryRpCopy);
+    }
+
     // It's safe to start emitting actual IR, so now build the scope chain.
     if (!initScopeChain())
         return false;
@@ -1239,16 +1251,6 @@ IonBuilder::initScopeChain(MDefinition* callee)
         MOZ_ASSERT(!script()->isForEval());
         MOZ_ASSERT(!script()->hasNonSyntacticScope());
         scope = constant(ObjectValue(script()->global().lexicalScope()));
-
-        // Check for redeclaration errors for global scripts.
-        if (script()->bindings.numBodyLevelLocals() > 0) {
-            MGlobalNameConflictsCheck* redeclCheck = MGlobalNameConflictsCheck::New(alloc());
-            current->add(redeclCheck);
-            MResumePoint* entryRpCopy = MResumePoint::Copy(alloc(), current->entryResumePoint());
-            if (!entryRpCopy)
-                return false;
-            redeclCheck->setResumePoint(entryRpCopy);
-        }
     }
 
     current->setScopeChain(scope);
@@ -8197,7 +8199,7 @@ IonBuilder::jsop_getgname(PropertyName* name)
     if (!getStaticName(obj, name, &emitted) || emitted)
         return emitted;
 
-    if (!forceInlineCaches()) {
+    if (!forceInlineCaches() && obj->is<GlobalObject>()) {
         TemporaryTypeSet* types = bytecodeTypes(pc);
         MDefinition* globalObj = constant(ObjectValue(*obj));
         if (!getPropTryCommonGetter(&emitted, globalObj, name, types) || emitted)

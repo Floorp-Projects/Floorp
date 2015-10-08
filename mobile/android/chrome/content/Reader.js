@@ -20,6 +20,39 @@ var Reader = {
     return this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
   },
 
+  /**
+   * BackPressListener (listeners / ReaderView Ids).
+   */
+  _backPressListeners: [],
+  _backPressViewIds: [],
+
+  /**
+   * Set a backPressListener for this tabId / ReaderView Id pair.
+   */
+  _addBackPressListener: function(tabId, viewId, listener) {
+    this._backPressListeners[tabId] = listener;
+    this._backPressViewIds[viewId] = tabId;
+  },
+
+  /**
+   * Remove a backPressListener for this ReaderView Id.
+   */
+  _removeBackPressListener: function(viewId) {
+    let tabId = this._backPressViewIds[viewId];
+    if (tabId != undefined) {
+      this._backPressListeners[tabId] = null;
+      delete this._backPressViewIds[viewId];
+    }
+  },
+
+  /**
+   * If the requested tab has a backPress listener, return its results, else false.
+   */
+  onBackPress: function(tabId) {
+    let listener = this._backPressListeners[tabId];
+    return { handled: (listener ? listener() : false) };
+  },
+
   observe: function Reader_observe(aMessage, aTopic, aData) {
     switch (aTopic) {
       case "Reader:FetchContent": {
@@ -65,6 +98,29 @@ var Reader = {
           }
         });
         break;
+
+      // On DropdownClosed in ReaderView, we cleanup / clear existing BackPressListener.
+      case "Reader:DropdownClosed": {
+        this._removeBackPressListener(message.data);
+        break;
+      }
+
+      // On DropdownOpened in ReaderView, we add BackPressListener to handle a subsequent BACK request.
+      case "Reader:DropdownOpened": {
+        let tabId = BrowserApp.selectedTab.id;
+        this._addBackPressListener(tabId, message.data, () => {
+          // User hit BACK key while ReaderView has the banner font-dropdown opened.
+          // Close it and return prevent-default.
+          if (message.target.messageManager) {
+            message.target.messageManager.sendAsyncMessage("Reader:CloseDropdown");
+            return true;
+          }
+          // We can assume ReaderView banner's font-dropdown doesn't need to be closed.
+          return false;
+        });
+
+        break;
+      }
 
       case "Reader:FaviconRequest": {
         Messaging.sendRequestForResult({

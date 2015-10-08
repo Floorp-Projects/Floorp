@@ -6,10 +6,6 @@ add_task(function* () {
   /** Bug 607016 - If a tab is never restored, attributes (eg. hidden) aren't updated correctly **/
   ignoreAllUncaughtExceptions();
 
-  // Ensure TabView has been initialized already. Otherwise it could
-  // activate at an unexpected time and show/hide tabs.
-  yield new Promise(resolve => TabView._initFrame(resolve));
-
   // Set the pref to true so we know exactly how many tabs should be restoring at
   // any given time. This guarantees that a finishing load won't start another.
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);

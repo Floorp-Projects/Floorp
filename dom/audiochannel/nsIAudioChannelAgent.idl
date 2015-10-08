@@ -34,7 +34,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[uuid(62e0037c-9786-4b79-b986-27111f6e553b)]
+[uuid(18222148-1b32-463d-b050-b741f43a07ba)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -118,14 +118,10 @@ interface nsIAudioChannelAgent : nsISupports
   /**
    * Notify the agent we no longer want to play.
    *
-   * @param notifyPlaying
-   *   Whether to send audio-playback notifications, one of AUDIO_CHANNEL_NOTIFY
-   *   or AUDIO_CHANNEL_DONT_NOTIFY.
-   *
    * Note : even if notifyStartedPlaying() returned false, the agent would
    * still be registered with the audio channel service and receive callbacks
    * for status changes. So notifyStoppedPlaying must still eventually be
    * called to unregister the agent with the channel service.
    */
-  void notifyStoppedPlaying(in unsigned long notifyPlayback);
+  void notifyStoppedPlaying();
 };

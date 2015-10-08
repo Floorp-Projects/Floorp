@@ -370,8 +370,9 @@ struct Zone : public JS::shadow::Zone,
         // If the cell was in the nursery, hopefully unlikely, then we need to
         // tell the nursery about it so that it can sweep the uid if the thing
         // does not get tenured.
+        js::AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!runtimeFromAnyThread()->gc.nursery.addedUniqueIdToCell(cell))
-            js::CrashAtUnhandlableOOM("failed to allocate tracking data for a nursery uid");
+            oomUnsafe.crash("failed to allocate tracking data for a nursery uid");
         return true;
     }
 

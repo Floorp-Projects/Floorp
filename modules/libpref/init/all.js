@@ -322,6 +322,8 @@ pref("media.directshow.enabled", true);
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
 pref("media.fragmented-mp4.gmp.enabled", false);
+pref("media.fragmented-mp4.gmp.aac", 0);
+pref("media.fragmented-mp4.gmp.h264", 0);
 // Specifies whether the fragmented MP4 parser uses a test decoder that
 // just outputs blank frames/audio instead of actually decoding. The blank
 // decoder works on all platforms.
@@ -541,6 +543,7 @@ pref("apz.axis_lock.breakout_angle", "0.3926991");    // PI / 8 (22.5 degrees)
 pref("apz.axis_lock.direct_pan_angle", "1.047197");   // PI / 3 (60 degrees)
 pref("apz.content_response_timeout", 300);
 pref("apz.cross_slide.enabled", false);
+pref("apz.drag.enabled", false);
 pref("apz.danger_zone_x", 50);
 pref("apz.danger_zone_y", 100);
 pref("apz.enlarge_displayport_when_clipped", false);
@@ -1326,7 +1329,7 @@ pref("network.http.redirection-limit", 20);
 // NOTE: support for "compress" has been disabled per bug 196406.
 // NOTE: separate values with comma+space (", "): see bug 576033
 pref("network.http.accept-encoding", "gzip, deflate");
-pref("network.http.accept-encoding.secure", "gzip, deflate, brotli");
+pref("network.http.accept-encoding.secure", "gzip, deflate, br");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.pipelining.ssl"  , false); // disable pipelining over SSL
@@ -2269,7 +2272,7 @@ pref("layout.css.getBoxQuads.enabled", false);
 pref("layout.css.getBoxQuads.enabled", true);
 #endif
 
-// Is support for GeometryUtils.getBoxQuads enabled?
+// Is support for GeometryUtils.convert*FromNode enabled?
 #ifdef RELEASE_BUILD
 pref("layout.css.convertFromNode.enabled", false);
 #else

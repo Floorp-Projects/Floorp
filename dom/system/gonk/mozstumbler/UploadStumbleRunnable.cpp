@@ -10,9 +10,9 @@
 #include "nsIInputStream.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURLFormatter.h"
-#include "nsIVariant.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsNetUtil.h"
+#include "nsVariant.h"
 
 UploadStumbleRunnable::UploadStumbleRunnable(nsIInputStream* aUploadData)
 : mUploadInputStream(aUploadData)
@@ -34,8 +34,7 @@ nsresult
 UploadStumbleRunnable::Upload()
 {
   nsresult rv;
-  nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance("@mozilla.org/variant;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsVariant> variant = new nsVariant();
 
   rv = variant->SetAsISupports(mUploadInputStream);
   NS_ENSURE_SUCCESS(rv, rv);

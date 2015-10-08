@@ -1425,16 +1425,9 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   NS_ASSERTION(request, "null request in stream complete handler");
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIHttpChannel> httpChannel;
-  {
-    nsCOMPtr<nsIRequest> req;
-    aLoader->GetRequest(getter_AddRefs(req));
-    httpChannel = do_QueryInterface(req);
-  } // throw away req, we only need the channel
-
   nsresult rv = NS_ERROR_SRI_CORRUPT;
   if (request->mIntegrity.IsEmpty() ||
-      NS_SUCCEEDED(SRICheck::VerifyIntegrity(request->mIntegrity, httpChannel,
+      NS_SUCCEEDED(SRICheck::VerifyIntegrity(request->mIntegrity, aLoader,
                                              request->mCORSMode, aStringLen,
                                              aString, mDocument))) {
     rv = PrepareLoadedRequest(request, aLoader, aStatus, aStringLen, aString);

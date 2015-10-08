@@ -75,7 +75,7 @@ this.InsecurePasswordUtils = {
    *   both places. Look at
    *   https://bugzilla.mozilla.org/show_bug.cgi?id=899099 for more info.
    */
-  _checkIfURIisSecure : function(uri) {
+  checkIfURIisSecure : function(uri) {
     let isSafe = false;
     let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
     let ph = Ci.nsIProtocolHandler;
@@ -109,7 +109,7 @@ this.InsecurePasswordUtils = {
       // We are at the top, nothing to check here
       return false;
     }
-    if (!this._checkIfURIisSecure(uri)) {
+    if (!this.checkIfURIisSecure(uri)) {
       // We are insecure
       return true;
     }
@@ -127,7 +127,7 @@ this.InsecurePasswordUtils = {
   checkForInsecurePasswords : function (aForm) {
     var domDoc = aForm.ownerDocument;
     let pageURI = domDoc.defaultView.top.document.documentURIObject;
-    let isSafePage = this._checkIfURIisSecure(pageURI);
+    let isSafePage = this.checkIfURIisSecure(pageURI);
 
     if (!isSafePage) {
       this._sendWebConsoleMessage("InsecurePasswordsPresentOnPage", domDoc);

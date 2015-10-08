@@ -18,6 +18,7 @@
 #include "nsPlacesIndexes.h"
 #include "nsPlacesTriggers.h"
 #include "nsPlacesMacros.h"
+#include "nsVariant.h"
 #include "SQLFunctions.h"
 #include "Helpers.h"
 
@@ -420,9 +421,7 @@ NS_IMETHODIMP DatabaseShutdown::GetState(nsIPropertyBag** aState)
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
 
   // Put `mState` in field `progress`
-  nsCOMPtr<nsIWritableVariant> progress =
-    do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
+  nsRefPtr<nsVariant> progress = new nsVariant();
 
   rv = progress->SetAsUint8(mState);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
@@ -440,9 +439,7 @@ NS_IMETHODIMP DatabaseShutdown::GetState(nsIPropertyBag** aState)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIWritableVariant> barrier =
-    do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
+  nsRefPtr<nsVariant> barrier = new nsVariant();
 
   rv = barrier->SetAsInterface(NS_GET_IID(nsIPropertyBag), barrierState);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;

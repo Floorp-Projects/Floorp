@@ -47,7 +47,7 @@ parent:
 
   // Reports approval/veto of redirect by child process redirect observers
   Redirect2Verify(nsresult result, RequestHeaderTuples changedHeaders,
-                  OptionalURIParams apiRedirectTo);
+                  uint32_t loadFlags, OptionalURIParams apiRedirectTo);
 
   // For document loads we keep this protocol open after child's
   // OnStopRequest, and send this msg (instead of __delete__) to allow

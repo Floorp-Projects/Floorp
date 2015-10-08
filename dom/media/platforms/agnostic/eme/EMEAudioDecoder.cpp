@@ -24,7 +24,7 @@ EMEAudioCallbackAdapter::Error(GMPErr aErr)
 void
 EMEAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
-  GMPAudioDecoder::InitTags(aTags);
+  aTags.AppendElement(NS_LITERAL_CSTRING("aac"));
   aTags.AppendElement(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
 }
 

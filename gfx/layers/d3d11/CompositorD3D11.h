@@ -172,7 +172,6 @@ private:
   void SetSamplerForFilter(gfx::Filter aFilter);
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
   void PaintToTarget();
-  bool SetBlendMode(gfx::CompositionOp aOp, bool aPremultipled = true);
 
   virtual gfx::IntSize GetWidgetSize() const override { return mSize; }
 
