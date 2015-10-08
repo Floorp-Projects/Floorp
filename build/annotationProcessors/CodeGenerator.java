@@ -392,7 +392,6 @@ public class CodeGenerator {
         if (isStatic && isFinal && (type.isPrimitive() || type == String.class)) {
             Object val = null;
             try {
-                field.setAccessible(true);
                 val = field.get(null);
             } catch (final IllegalAccessException e) {
             }
