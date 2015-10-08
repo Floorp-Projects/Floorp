@@ -16,6 +16,7 @@
 #include "mozilla/HalTypes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsDataHashtable.h"
 #include "nsFrameMessageManager.h"
@@ -41,6 +42,11 @@ namespace mozilla {
 class PRemoteSpellcheckEngineParent;
 #ifdef MOZ_ENABLE_PROFILER_SPS
 class ProfileGatherer;
+#endif
+
+#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+class SandboxBroker;
+class SandboxBrokerPolicyFactory;
 #endif
 
 namespace ipc {
@@ -999,6 +1005,12 @@ private:
     nsCString mProfile;
 
     UniquePtr<gfx::DriverCrashGuard> mDriverCrashGuard;
+
+#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+    mozilla::UniquePtr<SandboxBroker> mSandboxBroker;
+    static mozilla::UniquePtr<SandboxBrokerPolicyFactory>
+        sSandboxBrokerPolicyFactory;
+#endif
 };
 
 } // namespace dom

@@ -23,6 +23,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsISliderListener.h"
+#include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsScrollbarFrame.h"
 #include "nsRepeatService.h"
@@ -35,9 +36,13 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/layers/AsyncDragMetrics.h"
+#include "mozilla/layers/InputAPZContext.h"
 #include <algorithm>
 
 using namespace mozilla;
+using mozilla::layers::AsyncDragMetrics;
+using mozilla::layers::InputAPZContext;
 
 bool nsSliderFrame::gMiddlePref = false;
 int32_t nsSliderFrame::gSnapMultiplier;
@@ -893,6 +898,53 @@ nsSliderMediator::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+bool
+nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent)
+{
+  if (!gfxPlatform::GetPlatform()->SupportsApzDragInput()) {
+    return false;
+  }
+
+  nsContainerFrame* cf = GetScrollbar()->GetParent();
+  if (!cf) {
+    return false;
+  }
+
+  nsIContent* scrollableContent = cf->GetContent();
+  if (!scrollableContent) {
+    return false;
+  }
+
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId;
+  bool hasID = nsLayoutUtils::FindIDFor(scrollableContent, &scrollTargetId);
+  bool hasAPZView = hasID && (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
+
+  if (!hasAPZView) {
+    return false;
+  }
+
+  nsIFrame* scrollbarBox = GetScrollbar();
+  nsCOMPtr<nsIContent> scrollbar = GetContentOfBox(scrollbarBox);
+
+  // This rect is the range in which the scroll thumb can slide in.
+  nsRect sliderTrack = GetRect() - scrollbarBox->GetPosition();
+  CSSIntRect sliderTrackCSS = CSSIntRect::FromAppUnitsRounded(sliderTrack);
+
+  uint64_t inputblockId = InputAPZContext::GetInputBlockId();
+  uint32_t presShellId = PresContext()->PresShell()->GetPresShellId();
+  AsyncDragMetrics dragMetrics(scrollTargetId, presShellId, inputblockId,
+                               NSAppUnitsToIntPixels(mDragStart,
+                                 float(AppUnitsPerCSSPixel())),
+                               sliderTrackCSS,
+                               IsHorizontal() ? AsyncDragMetrics::HORIZONTAL :
+                                                AsyncDragMetrics::VERTICAL);
+
+  // When we start an APZ drag, we wont get mouse events for the drag.
+  // APZ will consume them all and only notify us of the new scroll position.
+  this->GetNearestWidget()->StartAsyncScrollbarDrag(dragMetrics);
+  return true;
+}
+
 nsresult
 nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
 {
@@ -959,6 +1011,8 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
     mThumbStart = thumbFrame->GetPosition().y;
 
   mDragStart = pos - mThumbStart;
+
+  StartAPZDrag(event);
 
 #ifdef DEBUG_SLIDER
   printf("Pressed mDragStart=%d\n",mDragStart);

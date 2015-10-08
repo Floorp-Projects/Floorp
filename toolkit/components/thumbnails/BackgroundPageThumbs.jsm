@@ -20,6 +20,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 // possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON_2 telemetry values
 const TEL_CAPTURE_DONE_OK = 0;
@@ -87,23 +88,27 @@ const BackgroundPageThumbs = {
    * @param url      The URL to capture.
    * @param options  An optional object that configures the capture.  See
    *                 capture() for description.
+   * @return {Promise} Promise;
    */
-  captureIfMissing: function (url, options={}) {
+  captureIfMissing: Task.async(function* (url, options={}) {
     // The fileExistsForURL call is an optimization, potentially but unlikely
     // incorrect, and no big deal when it is.  After the capture is done, we
     // atomically test whether the file exists before writing it.
-    PageThumbsStorage.fileExistsForURL(url).then(exists => {
-      if (exists) {
-        if (options.onDone)
-          options.onDone(url);
-        return;
-      }
-      this.capture(url, options);
-    }, err => {
-      if (options.onDone)
+    let exists = yield PageThumbsStorage.fileExistsForURL(url);
+    if (exists) {
+      if(options.onDone){
         options.onDone(url);
-    });
-  },
+      }
+      return url;
+    }
+    try{
+      this.capture(url, options);
+    } catch (err) {
+      options.onDone(url);
+      throw err;
+    }
+    return url;
+  }),
 
   /**
    * Ensures that initialization of the thumbnail browser's parent window has

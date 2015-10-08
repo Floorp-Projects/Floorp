@@ -33,6 +33,7 @@
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/DoubleTapToZoom.h"
 #include "mozilla/layers/ImageBridgeChild.h"
+#include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/LookAndFeel.h"
@@ -1914,20 +1915,29 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& event)
+TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& event,
+                                 const ScrollableLayerGuid& aGuid,
+                                 const uint64_t& aInputBlockId)
 {
-  return RecvRealMouseButtonEvent(event);
+  return RecvRealMouseButtonEvent(event, aGuid, aInputBlockId);
 }
 
 bool
-TabChild::RecvSynthMouseMoveEvent(const WidgetMouseEvent& event)
+TabChild::RecvSynthMouseMoveEvent(const WidgetMouseEvent& event,
+                                  const ScrollableLayerGuid& aGuid,
+                                  const uint64_t& aInputBlockId)
 {
-  return RecvRealMouseButtonEvent(event);
+  return RecvRealMouseButtonEvent(event, aGuid, aInputBlockId);
 }
 
 bool
-TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& event)
+TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& event,
+                                   const ScrollableLayerGuid& aGuid,
+                                   const uint64_t& aInputBlockId)
 {
+  nsEventStatus unused;
+  InputAPZContext context(aGuid, aInputBlockId, unused);
+
   WidgetMouseEvent localEvent(event);
   localEvent.widget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);

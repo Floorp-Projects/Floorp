@@ -111,6 +111,7 @@ class NameConstraints(univ.Sequence):
 class UnknownBaseError(Exception):
     """Base class for handling unexpected input in this module."""
     def __init__(self, value):
+        super(UnknownBaseError, self).__init__()
         self.value = value
         self.category = 'input'
 
@@ -217,7 +218,6 @@ def stringToDN(string, tag=None):
     if '/' not in string:
         string = '/CN=%s' % string
     rdns = rfc2459.RDNSequence()
-    pos = 0
     pattern = '/(C|ST|L|O|OU|CN|emailAddress)='
     split = re.split(pattern, string)
     # split should now be [[encoding], <type>, <value>, <type>, <value>, ...]
@@ -225,7 +225,7 @@ def stringToDN(string, tag=None):
         encoding = split[0]
     else:
         encoding = 'utf8String'
-    for (nameType, value) in zip(split[1::2], split[2::2]):
+    for pos, (nameType, value) in enumerate(zip(split[1::2], split[2::2])):
         ava = rfc2459.AttributeTypeAndValue()
         if nameType == 'C':
             ava.setComponentByName('type', rfc2459.id_at_countryName)
@@ -259,7 +259,6 @@ def stringToDN(string, tag=None):
         rdn = rfc2459.RelativeDistinguishedName()
         rdn.setComponentByPosition(0, ava)
         rdns.setComponentByPosition(pos, rdn)
-        pos = pos + 1
     if tag:
         name = rfc2459.Name().subtype(implicitTag=tag)
     else:
@@ -298,7 +297,7 @@ def datetimeToTime(dt):
     time.setComponentByName('generalTime', useful.GeneralizedTime(dt.strftime('%Y%m%d%H%M%SZ')))
     return time
 
-class Certificate:
+class Certificate(object):
     """Utility class for reading a certificate specification and
     generating a signed x509 certificate"""
 
@@ -395,7 +394,7 @@ class Certificate:
             self.notAfter = self.now + delta
 
     def decodeExtension(self, extension):
-        match = re.search('([a-zA-Z]+)(\[critical\])?:(.*)', extension)
+        match = re.search(r'([a-zA-Z]+)(\[critical\])?:(.*)', extension)
         if not match:
             raise UnknownExtensionTypeError(extension)
         extensionType = match.group(1)
@@ -479,23 +478,19 @@ class Certificate:
 
     def addExtKeyUsage(self, extKeyUsage, critical):
         extKeyUsageExtension = rfc2459.ExtKeyUsageSyntax()
-        count = 0
-        for keyPurpose in extKeyUsage.split(','):
+        for count, keyPurpose in enumerate(extKeyUsage.split(',')):
             extKeyUsageExtension.setComponentByPosition(count, self.keyPurposeToOID(keyPurpose))
-            count += 1
         self.addExtension(rfc2459.id_ce_extKeyUsage, extKeyUsageExtension, critical)
 
     def addSubjectAlternativeName(self, dNSNames, critical):
         subjectAlternativeName = rfc2459.SubjectAltName()
-        count = 0
-        for dNSName in dNSNames.split(','):
+        for count, dNSName in enumerate(dNSNames.split(',')):
             generalName = rfc2459.GeneralName()
             # The string may have things like '\0' (i.e. a slash
             # followed by the number zero) that have to be decoded into
             # the resulting '\x00' (i.e. a byte with value zero).
             generalName.setComponentByName('dNSName', dNSName.decode(encoding='string_escape'))
             subjectAlternativeName.setComponentByPosition(count, generalName)
-            count += 1
         self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName, critical)
 
     def addAuthorityInformationAccess(self, ocspURI, critical):
@@ -525,19 +520,17 @@ class Certificate:
         generalSubtrees = rfc2459.GeneralSubtrees().subtype(
             implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatConstructed, subtreesTag))
         subtrees = constraints[(constraints.find(':') + 1):]
-        pos = 0
-        for name in subtrees.split(','):
+        for pos, name in enumerate(subtrees.split(',')):
             generalName = rfc2459.GeneralName()
             if '/' in name:
                 directoryName = stringToDN(name,
-                  tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4))
+                                           tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 4))
                 generalName.setComponentByName('directoryName', directoryName)
             else:
                 generalName.setComponentByName('dNSName', name)
             generalSubtree = GeneralSubtree()
             generalSubtree.setComponentByName('base', generalName)
             generalSubtrees.setComponentByPosition(pos, generalSubtree)
-            pos = pos + 1
         nameConstraints.setComponentByName(subtreesType, generalSubtrees)
         self.addExtension(rfc2459.id_ce_nameConstraints, nameConstraints, critical)
 
@@ -545,7 +538,7 @@ class Certificate:
         if certType != 'sslServer':
             raise UnknownNSCertTypeError(certType)
         self.addExtension(univ.ObjectIdentifier('2.16.840.1.113730.1.1'), univ.BitString("'01'B"),
-            critical)
+                          critical)
 
     def getVersion(self):
         return rfc2459.Version(self.versionValue).subtype(
@@ -586,10 +579,8 @@ class Certificate:
         if self.extensions:
             extensions = rfc2459.Extensions().subtype(
                 explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 3))
-            count = 0
-            for extension in self.extensions:
+            for count, extension in enumerate(self.extensions):
                 extensions.setComponentByPosition(count, extension)
-                count += 1
             tbsCertificate.setComponentByName('extensions', extensions)
         certificate = rfc2459.Certificate()
         certificate.setComponentByName('tbsCertificate', tbsCertificate)

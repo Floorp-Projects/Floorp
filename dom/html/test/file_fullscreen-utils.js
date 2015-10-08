@@ -37,8 +37,11 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
     } else if (type == "exit") {
       // If we just revert the state to a previous fullscreen state,
       // the window won't back to the normal mode. Hence we check
-      // mozFullScreenElement first here.
-      return doc.mozFullScreenElement || inNormalMode();
+      // mozFullScreenElement first here. Note that we need to check
+      // the fullscreen element of the outmost document here instead
+      // of the current one.
+      var topDoc = doc.defaultView.top.document;
+      return topDoc.mozFullScreenElement || inNormalMode();
     } else {
       throw "'type' must be either 'enter', or 'exit'.";
     }

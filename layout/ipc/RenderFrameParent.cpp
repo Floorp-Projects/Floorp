@@ -598,6 +598,21 @@ RenderFrameParent::HitTest(const nsRect& aRect)
 }
 
 void
+RenderFrameParent::StartScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
+{
+  if (GetApzcTreeManager()) {
+    uint64_t layersId = GetLayersId();
+    ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId,
+                             aDragMetrics.mViewId);
+
+    APZThreadUtils::RunOnControllerThread(
+      NewRunnableMethod(GetApzcTreeManager(),
+                        &APZCTreeManager::StartScrollbarDrag,
+                        guid, aDragMetrics));
+  }
+}
+
+void
 RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
   nsRefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;

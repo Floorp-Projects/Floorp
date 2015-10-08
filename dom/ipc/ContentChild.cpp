@@ -85,6 +85,7 @@
 #include "nsMemoryInfoDumper.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
+#include "nsVariant.h"
 #include "nsXULAppAPI.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
@@ -647,6 +648,10 @@ ContentChild::Init(MessageLoop* aIOLoop,
     }
     sSingleton = this;
 
+    // Make sure there's an nsAutoScriptBlocker on the stack when dispatching
+    // urgent messages.
+    GetIPCChannel()->BlockScripts();
+
     // If communications with the parent have broken down, take the process
     // down so it's not hanging around.
     bool abortOnError = true;
@@ -1164,7 +1169,7 @@ StartMacOSContentSandbox()
 #endif
 
 bool
-ContentChild::RecvSetProcessSandbox()
+ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 {
     // We may want to move the sandbox initialization somewhere else
     // at some point; see bug 880808.
@@ -1180,7 +1185,15 @@ ContentChild::RecvSetProcessSandbox()
         return true;
     }
 #endif
-    SetContentProcessSandbox();
+    int brokerFd = -1;
+    if (aBroker.type() == MaybeFileDesc::TFileDescriptor) {
+        brokerFd = aBroker.get_FileDescriptor().PlatformHandle();
+        // brokerFd < 0 means to allow direct filesystem access, so
+        // make absolutely sure that doesn't happen if the parent
+        // didn't intend it.
+        MOZ_RELEASE_ASSERT(brokerFd >= 0);
+    }
+    SetContentProcessSandbox(brokerFd);
 #elif defined(XP_WIN)
     mozilla::SandboxTarget::Instance()->StartSandbox();
 #elif defined(XP_MACOSX)
@@ -2864,9 +2877,7 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
         auto& items = aTransfers[i].items();
         for (uint32_t j = 0; j < items.Length(); ++j) {
           const IPCDataTransferItem& item = items[j];
-          nsCOMPtr<nsIWritableVariant> variant =
-             do_CreateInstance(NS_VARIANT_CONTRACTID);
-          NS_ENSURE_TRUE(variant, false);
+          nsRefPtr<nsVariant> variant = new nsVariant();
           if (item.data().type() == IPCDataTransferData::TnsString) {
             const nsString& data = item.data().get_nsString();
             variant->SetAsAString(data);

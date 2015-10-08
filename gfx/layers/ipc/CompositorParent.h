@@ -474,7 +474,7 @@ protected:
   mozilla::Monitor mResumeCompositionMonitor;
 
   uint64_t mCompositorID;
-  uint64_t mRootLayerTreeID;
+  const uint64_t mRootLayerTreeID;
 
   bool mOverrideComposeReadiness;
   CancelableTask* mForceCompositionTask;

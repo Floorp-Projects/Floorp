@@ -44,6 +44,7 @@
 #include "nsContainerFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsVariant.h"
 #include "nsWidgetsCID.h"
 #include "nsBoxFrame.h"
 #include "nsIURL.h"
@@ -4635,10 +4636,7 @@ nsTreeBodyFrame::FireRowCountChangedEvent(int32_t aIndex, int32_t aCount)
   // Set 'count' data - the number of changed rows.
   propBag->SetPropertyAsInt32(NS_LITERAL_STRING("count"), aCount);
 
-  nsCOMPtr<nsIWritableVariant> detailVariant(
-    do_CreateInstance("@mozilla.org/variant;1"));
-  if (!detailVariant)
-    return;
+  nsRefPtr<nsVariant> detailVariant(new nsVariant());
 
   detailVariant->SetAsISupports(propBag);
   treeEvent->InitCustomEvent(NS_LITERAL_STRING("TreeRowCountChanged"),
@@ -4707,10 +4705,7 @@ nsTreeBodyFrame::FireInvalidateEvent(int32_t aStartRowIdx, int32_t aEndRowIdx,
                                 endColIdx);
   }
 
-  nsCOMPtr<nsIWritableVariant> detailVariant(
-    do_CreateInstance("@mozilla.org/variant;1"));
-  if (!detailVariant)
-    return;
+  nsRefPtr<nsVariant> detailVariant(new nsVariant());
 
   detailVariant->SetAsISupports(propBag);
   treeEvent->InitCustomEvent(NS_LITERAL_STRING("TreeInvalidated"),
