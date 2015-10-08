@@ -77,15 +77,17 @@ public:
     return nullptr;
   }
 
-  // Notifies the demuxer that the underlying resource has received more data.
+  // Notifies the demuxer that the underlying resource has received more data
+  // since the demuxer was initialized.
   // The demuxer can use this mechanism to inform all track demuxers that new
-  // data is available.
-  virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset) { }
+  // data is available and to refresh its buffered range.
+  virtual void NotifyDataArrived() { }
 
-  // Notifies the demuxer that the underlying resource has had data removed.
+  // Notifies the demuxer that the underlying resource has had data removed
+  // since the demuxer was initialized.
   // The demuxer can use this mechanism to inform all track demuxers to update
-  // its TimeIntervals.
-  // This will be called should the demuxer be used with MediaSource.
+  // its buffered range.
+  // This will be called should the demuxer be used with MediaSourceResource.
   virtual void NotifyDataRemoved() { }
 
   // Indicate to MediaFormatReader if it should compute the start time

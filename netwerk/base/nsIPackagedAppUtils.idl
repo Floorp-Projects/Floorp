@@ -24,7 +24,7 @@ interface nsIVerificationCallback;
  *   https://wiki.mozilla.org/FirefoxOS/New_security_model/Packaging
  */
 
-[scriptable, uuid(d0a98a69-a215-4cf9-abb3-7a0b9237cd27)]
+[scriptable, uuid(cc245638-6a38-4f70-8d77-21c55aabd636)]
 interface nsIPackagedAppUtils : nsISupports
 {
   /**
@@ -48,6 +48,12 @@ interface nsIPackagedAppUtils : nsISupports
   void checkIntegrity(in ACString aFileName,
                       in ACString aHashValue,
                       in nsIVerificationCallback aVerifier);
+
+  /**
+   * The package identifier for signed package. Only available after the
+   * manifest is verified.
+   */
+  readonly attribute ACString packageIdentifier;
 };
 
 /**

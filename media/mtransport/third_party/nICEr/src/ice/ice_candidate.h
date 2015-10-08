@@ -76,6 +76,9 @@ struct nr_ice_candidate_ {
     struct {
       nr_stun_client_ctx *stun;
       void *stun_handle;
+      /* If this is a srflx that is piggybacking on a relay candidate, this is
+       * a back pointer to that relay candidate. */
+      nr_ice_candidate *relay_candidate;
     } srvrflx;
     struct {
       nr_turn_client_ctx *turn;

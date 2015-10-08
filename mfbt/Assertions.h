@@ -21,6 +21,20 @@
 #include "nsTraceRefcnt.h"
 #endif
 
+#if defined(MOZ_CRASHREPORTER) && defined(MOZILLA_INTERNAL_API) && \
+    !defined(MOZILLA_EXTERNAL_LINKAGE) && defined(__cplusplus)
+#  define MOZ_CRASH_CRASHREPORT
+namespace CrashReporter {
+// This declaration is present here as well as in nsExceptionHandler.h
+// nsExceptionHandler.h is not directly included in this file as it includes
+// windows.h, which can cause problems when it is imported into some files due
+// to the number of macros defined.
+// XXX If you change this definition - also change the definition in
+// nsExceptionHandler.h
+void AnnotateMozCrashReason(const char* aReason);
+} // namespace CrashReporter
+#endif
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -249,7 +263,15 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
  * corrupted.
  */
 #ifndef DEBUG
-#  define MOZ_CRASH(...) MOZ_REALLY_CRASH()
+#  ifdef MOZ_CRASH_CRASHREPORT
+#    define MOZ_CRASH(...) \
+       do { \
+         CrashReporter::AnnotateMozCrashReason("MOZ_CRASH(" __VA_ARGS__ ")"); \
+         MOZ_REALLY_CRASH(); \
+       } while (0)
+#  else
+#    define MOZ_CRASH(...) MOZ_REALLY_CRASH()
+#  endif
 #else
 #  define MOZ_CRASH(...) \
      do { \
@@ -509,5 +531,6 @@ struct AssertionConditionType
 #endif
 
 #undef MOZ_DUMP_ASSERTION_STACK
+#undef MOZ_CRASH_CRASHREPORT
 
 #endif /* mozilla_Assertions_h */

@@ -17,17 +17,15 @@
 #include "stagefright/MediaBuffer.h"
 #include "stagefright/MetaData.h"
 #include "stagefright/MediaErrors.h"
-#include <stagefright/foundation/ADebug.h>
-#include <stagefright/foundation/AMessage.h>
 #include <stagefright/foundation/AString.h>
-#include <stagefright/foundation/ALooper.h>
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/TextureClient.h"
 #include <cutils/properties.h>
 
-#define READ_OUTPUT_BUFFER_TIMEOUT_US  3000
+#define CODECCONFIG_TIMEOUT_US 10000LL
+#define READ_OUTPUT_BUFFER_TIMEOUT_US  0LL
 
 #include <android/log.h>
 #define GVDM_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkVideoDecoderManager", __VA_ARGS__)
@@ -44,12 +42,9 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   mozilla::layers::ImageContainer* aImageContainer,
   const VideoInfo& aConfig)
   : mImageContainer(aImageContainer)
-  , mReaderCallback(nullptr)
-  , mLastDecodedTime(0)
   , mColorConverterBufferSize(0)
   , mNativeWindow(nullptr)
   , mPendingReleaseItemsLock("GonkVideoDecoderManager::mPendingReleaseItemsLock")
-  , mMonitor("GonkVideoDecoderManager")
 {
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
   mMimeType = aConfig.mMimeType;
@@ -64,7 +59,6 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   nsIntSize frameSize(mVideoWidth, mVideoHeight);
   mPicture = pictureRect;
   mInitialFrame = frameSize;
-  mHandler = new MessageHandler(this);
   mVideoListener = new VideoResourceListener(this);
 
 }
@@ -76,7 +70,7 @@ GonkVideoDecoderManager::~GonkVideoDecoderManager()
 }
 
 nsRefPtr<MediaDataDecoder::InitPromise>
-GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
+GonkVideoDecoderManager::Init()
 {
   nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
   nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
@@ -101,26 +95,19 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
-  mReaderCallback = aCallback;
-
   mReaderTaskQueue = AbstractThread::GetCurrent()->AsTaskQueue();
   MOZ_ASSERT(mReaderTaskQueue);
 
-  if (mLooper.get() != nullptr) {
+  if (mDecodeLooper.get() != nullptr) {
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
-  // Create ALooper
-  mLooper = new ALooper;
-  mManagerLooper = new ALooper;
-  mManagerLooper->setName("GonkVideoDecoderManager");
-  // Register AMessage handler to ALooper.
-  mManagerLooper->registerHandler(mHandler);
-  // Start ALooper thread.
-  if (mLooper->start() != OK || mManagerLooper->start() != OK ) {
+
+  if (!InitLoopers(MediaData::VIDEO_DATA)) {
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
+
   nsRefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
-  mDecoder = MediaCodecProxy::CreateByType(mLooper, mMimeType.get(), false, mVideoListener);
+  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false, mVideoListener);
   mDecoder->AsyncAskMediaCodec();
 
   uint32_t capability = MediaCodecProxy::kEmptyCapability;
@@ -130,52 +117,6 @@ GonkVideoDecoderManager::Init(MediaDataDecoderCallback* aCallback)
   }
 
   return p;
-}
-
-nsresult
-GonkVideoDecoderManager::Input(MediaRawData* aSample)
-{
-  MonitorAutoLock mon(mMonitor);
-  nsRefPtr<MediaRawData> sample;
-
-  if (!aSample) {
-    // It means EOS with empty sample.
-    sample = new MediaRawData();
-  } else {
-    sample = aSample;
-  }
-
-  mQueueSample.AppendElement(sample);
-
-  status_t rv;
-  while (mQueueSample.Length()) {
-    nsRefPtr<MediaRawData> data = mQueueSample.ElementAt(0);
-    {
-      MonitorAutoUnlock mon_unlock(mMonitor);
-      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->Data()),
-                           data->Size(),
-                           data->mTime,
-                           0);
-    }
-    if (rv == OK) {
-      mQueueSample.RemoveElementAt(0);
-    } else if (rv == -EAGAIN || rv == -ETIMEDOUT) {
-      // In most cases, EAGAIN or ETIMEOUT are safe because OMX can't fill
-      // buffer on time.
-      return NS_OK;
-    } else {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  return NS_OK;
-}
-
-bool
-GonkVideoDecoderManager::HasQueuedSample()
-{
-    MonitorAutoLock mon(mMonitor);
-    return mQueueSample.Length();
 }
 
 nsresult
@@ -197,12 +138,12 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (mLastDecodedTime > timeUs) {
+  if (mLastTime > timeUs) {
     ReleaseVideoBuffer();
     GVDM_LOG("Output decoded sample time is revert. time=%lld", timeUs);
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mLastDecodedTime = timeUs;
+  mLastTime = timeUs;
 
   if (mVideoBuffer->range_length() == 0) {
     // Some decoders may return spurious empty buffers that we just want to ignore
@@ -367,27 +308,6 @@ GonkVideoDecoderManager::SetVideoFormat()
   return false;
 }
 
-nsresult
-GonkVideoDecoderManager::Flush()
-{
-  if (mDecoder == nullptr) {
-    GVDM_LOG("Decoder is not inited");
-    return NS_ERROR_UNEXPECTED;
-  }
-  {
-    MonitorAutoLock mon(mMonitor);
-    mQueueSample.Clear();
-  }
-
- mLastDecodedTime = 0;
-
-  if (mDecoder->flush() != OK) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
 // Blocks until decoded sample is produced by the deoder.
 nsresult
 GonkVideoDecoderManager::Output(int64_t aStreamOffset,
@@ -497,7 +417,8 @@ GonkVideoDecoderManager::codecReserved()
   if (mMimeType.EqualsLiteral("video/mp4v-es")) {
     rv = mDecoder->Input(mCodecSpecificData->Elements(),
                          mCodecSpecificData->Length(), 0,
-                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG);
+                         android::MediaCodec::BUFFER_FLAG_CODECCONFIG,
+                         CODECCONFIG_TIMEOUT_US);
   }
 
   if (rv != OK) {
@@ -516,7 +437,7 @@ GonkVideoDecoderManager::codecCanceled()
   mInitPromise.RejectIfExists(DecoderFailureReason::CANCELED, __func__);
 }
 
-// Called on GonkVideoDecoderManager::mManagerLooper thread.
+// Called on GonkDecoderManager::mTaskLooper thread.
 void
 GonkVideoDecoderManager::onMessageReceived(const sp<AMessage> &aMessage)
 {
@@ -528,26 +449,10 @@ GonkVideoDecoderManager::onMessageReceived(const sp<AMessage> &aMessage)
     }
 
     default:
-      TRESPASS();
+    {
+      GonkDecoderManager::onMessageReceived(aMessage);
       break;
-  }
-}
-
-GonkVideoDecoderManager::MessageHandler::MessageHandler(GonkVideoDecoderManager *aManager)
-  : mManager(aManager)
-{
-}
-
-GonkVideoDecoderManager::MessageHandler::~MessageHandler()
-{
-  mManager = nullptr;
-}
-
-void
-GonkVideoDecoderManager::MessageHandler::onMessageReceived(const android::sp<android::AMessage> &aMessage)
-{
-  if (mManager != nullptr) {
-    mManager->onMessageReceived(aMessage);
+    }
   }
 }
 
@@ -652,7 +557,7 @@ void GonkVideoDecoderManager::PostReleaseVideoBuffer(
     }
   }
   sp<AMessage> notify =
-            new AMessage(kNotifyPostReleaseBuffer, mHandler->id());
+            new AMessage(kNotifyPostReleaseBuffer, id());
   notify->post();
 
 }

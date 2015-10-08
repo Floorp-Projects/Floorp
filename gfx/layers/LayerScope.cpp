@@ -435,12 +435,14 @@ public:
     DebugGLGraphicBuffer(void *layerRef,
                          GLenum target,
                          GLuint name,
-                         const LayerRenderState &aState)
+                         const LayerRenderState &aState,
+                         bool aIsMask)
         : DebugGLData(Packet::TEXTURE),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
           mTarget(target),
           mName(name),
-          mState(aState)
+          mState(aState),
+          mIsMask(aIsMask)
     {
     }
 
@@ -457,6 +459,7 @@ public:
         tp->set_layerref(mLayerRef);
         tp->set_name(mName);
         tp->set_target(mTarget);
+        tp->set_ismask(mIsMask);
 
         int pFormat = buffer->getPixelFormat();
         if (HAL_PIXEL_FORMAT_RGBA_8888 != pFormat &&
@@ -513,6 +516,7 @@ private:
     GLenum mTarget;
     GLuint mName;
     const LayerRenderState &mState;
+    bool mIsMask;
     Packet mPacket;
 };
 #endif
@@ -523,13 +527,15 @@ public:
                        void* layerRef,
                        GLenum target,
                        GLuint name,
-                       DataSourceSurface* img)
+                       DataSourceSurface* img,
+                       bool aIsMask)
         : DebugGLData(Packet::TEXTURE),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
           mTarget(target),
           mName(name),
           mContextAddress(reinterpret_cast<intptr_t>(cx)),
-          mDatasize(0)
+          mDatasize(0),
+          mIsMask(aIsMask)
     {
         // pre-packing
         // DataSourceSurface may have locked buffer,
@@ -552,6 +558,7 @@ private:
         tp->set_target(mTarget);
         tp->set_dataformat(LOCAL_GL_RGBA);
         tp->set_glcontext(static_cast<uint64_t>(mContextAddress));
+        tp->set_ismask(mIsMask);
 
         if (aImage) {
             tp->set_width(aImage->GetSize().width);
@@ -590,6 +597,7 @@ protected:
     GLuint mName;
     intptr_t mContextAddress;
     uint32_t mDatasize;
+    bool mIsMask;
 
     // Packet data
     Packet mPacket;
@@ -872,9 +880,11 @@ NS_IMPL_ISUPPORTS(DebugDataSender::SendTask, nsIRunnable);
  * 2. SendEffectChain
  *   1. SendTexturedEffect
  *      -> SendTextureSource
- *   2. SendYCbCrEffect
+ *   2. SendMaskEffect
  *      -> SendTextureSource
- *   3. SendColor
+ *   3. SendYCbCrEffect
+ *      -> SendTextureSource
+ *   4. SendColor
  */
 class SenderHelper
 {
@@ -895,7 +905,7 @@ public:
 
     static bool GetLayersTreeSendable() {return sLayersTreeSendable;}
 
-    static void ClearTextureIdList();
+    static void ClearSentTextureIds();
 
 
 // Sender private functions
@@ -907,58 +917,52 @@ private:
     static void SendTextureSource(GLContext* aGLContext,
                                   void* aLayerRef,
                                   TextureSourceOGL* aSource,
-                                  GLuint aTexID,
-                                  bool aFlipY);
+                                  bool aFlipY,
+                                  bool aIsMask);
 #ifdef MOZ_WIDGET_GONK
-    static bool SendGraphicBuffer(void* aLayerRef,
+    static bool SendGraphicBuffer(GLContext* aGLContext,
+                                  void* aLayerRef,
                                   TextureSourceOGL* aSource,
-                                  GLuint aTexID,
-                                  const TexturedEffect* aEffect);
+                                  const TexturedEffect* aEffect,
+                                  bool aIsMask);
 #endif
     static void SendTexturedEffect(GLContext* aGLContext,
                                    void* aLayerRef,
                                    const TexturedEffect* aEffect);
+    static void SendMaskEffect(GLContext* aGLContext,
+                                   void* aLayerRef,
+                                   const EffectMask* aEffect);
     static void SendYCbCrEffect(GLContext* aGLContext,
                                 void* aLayerRef,
                                 const EffectYCbCr* aEffect);
     static GLuint GetTextureID(GLContext* aGLContext,
                                TextureSourceOGL* aSource);
-    static bool IsTextureIdContainsInList(GLuint aTextureId);
+    static bool HasTextureIdBeenSent(GLuint aTextureId);
 // Data fields
 private:
     static bool sLayersTreeSendable;
     static bool sLayersBufferSendable;
-    static std::list<GLuint> sTextureIdList;
+    static std::vector<GLuint> sSentTextureIds;
 };
 
 bool SenderHelper::sLayersTreeSendable = true;
 bool SenderHelper::sLayersBufferSendable = true;
-std::list<GLuint> SenderHelper::sTextureIdList;
+std::vector<GLuint> SenderHelper::sSentTextureIds;
 
 
 // ----------------------------------------------
 // SenderHelper implementation
 // ----------------------------------------------
 void
-SenderHelper::ClearTextureIdList()
+SenderHelper::ClearSentTextureIds()
 {
-    std::list<GLuint>::iterator it;
-    while (!sTextureIdList.empty()) {
-        it = sTextureIdList.begin();
-        sTextureIdList.erase(it);
-    }
+    sSentTextureIds.clear();
 }
 
 bool
-SenderHelper::IsTextureIdContainsInList(GLuint aTextureId)
+SenderHelper::HasTextureIdBeenSent(GLuint aTextureId)
 {
-    for (std::list<GLuint>::iterator it = sTextureIdList.begin();
-         it != sTextureIdList.end(); ++it) {
-        if (*it == aTextureId) {
-          return true;
-        }
-    }
-    return false;
+    return std::find(sSentTextureIds.begin(), sSentTextureIds.end(), aTextureId) != sSentTextureIds.end();
 }
 
 void
@@ -1035,11 +1039,15 @@ void
 SenderHelper::SendTextureSource(GLContext* aGLContext,
                                 void* aLayerRef,
                                 TextureSourceOGL* aSource,
-                                GLuint aTexID,
-                                bool aFlipY)
+                                bool aFlipY,
+                                bool aIsMask)
 {
     MOZ_ASSERT(aGLContext);
     if (!aGLContext) {
+        return;
+    }
+    GLuint texID = GetTextureID(aGLContext, aSource);
+    if (HasTextureIdBeenSent(texID)) {
         return;
     }
 
@@ -1058,26 +1066,31 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
                                                          shaderConfig, aFlipY);
     gLayerScopeManager.GetSocketManager()->AppendDebugData(
         new DebugGLTextureData(aGLContext, aLayerRef, textureTarget,
-                               aTexID, img));
+                               texID, img, aIsMask));
 
-    sTextureIdList.push_back(aTexID);
-    gLayerScopeManager.CurrentSession().mTexIDs.push_back(aTexID);
+    sSentTextureIds.push_back(texID);
+    gLayerScopeManager.CurrentSession().mTexIDs.push_back(texID);
 
 }
 
 #ifdef MOZ_WIDGET_GONK
 bool
-SenderHelper::SendGraphicBuffer(void* aLayerRef,
+SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
+                                void* aLayerRef,
                                 TextureSourceOGL* aSource,
-                                GLuint aTexID,
-                                const TexturedEffect* aEffect) {
+                                const TexturedEffect* aEffect,
+                                bool aIsMask) {
+    GLuint texID = GetTextureID(aGLContext, aSource);
+    if (HasTextureIdBeenSent(texID)) {
+        return false;
+    }
     if (!aEffect->mState.mSurface.get()) {
         return false;
     }
 
     GLenum target = aSource->GetTextureTarget();
     mozilla::UniquePtr<DebugGLGraphicBuffer> package =
-        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, aTexID, aEffect->mState);
+        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, texID, aEffect->mState, aIsMask);
 
     // The texure content in this TexureHost is not altered,
     // we don't need to send it again.
@@ -1089,9 +1102,9 @@ SenderHelper::SendGraphicBuffer(void* aLayerRef,
 
     // Transfer ownership to SocketManager.
     gLayerScopeManager.GetSocketManager()->AppendDebugData(package.release());
-    sTextureIdList.push_back(aTexID);
+    sSentTextureIds.push_back(texID);
 
-    gLayerScopeManager.CurrentSession().mTexIDs.push_back(aTexID);
+    gLayerScopeManager.CurrentSession().mTexIDs.push_back(texID);
 
     gLayerScopeManager.GetContentMonitor()->ClearChangedHost(aEffect->mState.mTexture);
     return true;
@@ -1108,19 +1121,27 @@ SenderHelper::SendTexturedEffect(GLContext* aGLContext,
         return;
     }
 
-    GLuint texID = GetTextureID(aGLContext, source);
-    if (IsTextureIdContainsInList(texID)) {
-        return;
-    }
-
 #ifdef MOZ_WIDGET_GONK
-    if (SendGraphicBuffer(aLayerRef, source, texID, aEffect)) {
+    if (SendGraphicBuffer(aGLContext, aLayerRef, source, aEffect, false)) {
         return;
     }
 #endif
     // Fallback texture sending path.
     // Render to texture and read pixels back.
-    SendTextureSource(aGLContext, aLayerRef, source, texID, false);
+    SendTextureSource(aGLContext, aLayerRef, source, false, false);
+}
+
+void
+SenderHelper::SendMaskEffect(GLContext* aGLContext,
+                                 void* aLayerRef,
+                                 const EffectMask* aEffect)
+{
+    TextureSourceOGL* source = aEffect->mMaskTexture->AsSourceOGL();
+    if (!source) {
+        return;
+    }
+
+    SendTextureSource(aGLContext, aLayerRef, source, false, true);
 }
 
 void
@@ -1137,20 +1158,9 @@ SenderHelper::SendYCbCrEffect(GLContext* aGLContext,
     TextureSourceOGL* sourceCb = sourceYCbCr->GetSubSource(Cb)->AsSourceOGL();
     TextureSourceOGL* sourceCr = sourceYCbCr->GetSubSource(Cr)->AsSourceOGL();
 
-    GLuint texID = GetTextureID(aGLContext, sourceY);
-    if (!IsTextureIdContainsInList(texID)) {
-        SendTextureSource(aGLContext, aLayerRef, sourceY, texID, false);
-    }
-
-    texID = GetTextureID(aGLContext, sourceCb);
-    if (!IsTextureIdContainsInList(texID)) {
-        SendTextureSource(aGLContext, aLayerRef, sourceCb, texID, false);
-    }
-
-    texID = GetTextureID(aGLContext, sourceCr);
-    if (!IsTextureIdContainsInList(texID)) {
-        SendTextureSource(aGLContext, aLayerRef, sourceCr, texID, false);
-    }
+    SendTextureSource(aGLContext, aLayerRef, sourceY, false, false);
+    SendTextureSource(aGLContext, aLayerRef, sourceCb, false, false);
+    SendTextureSource(aGLContext, aLayerRef, sourceCr, false, false);
 }
 
 void
@@ -1188,8 +1198,11 @@ SenderHelper::SendEffectChain(GLContext* aGLContext,
             break;
     }
 
-    //const Effect* secondaryEffect = aEffectChain.mSecondaryEffects[EffectTypes::MASK];
-    // TODO:
+    if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
+        const EffectMask* effectMask =
+            static_cast<const EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
+        SendMaskEffect(aGLContext, aEffectChain.mLayerRef, effectMask);
+    }
 }
 
 void
@@ -1872,7 +1885,7 @@ LayerScopeAutoFrame::BeginFrame(int64_t aFrameStamp)
     if (!LayerScope::CheckSendable()) {
         return;
     }
-    SenderHelper::ClearTextureIdList();
+    SenderHelper::ClearSentTextureIds();
 
     gLayerScopeManager.GetSocketManager()->AppendDebugData(
         new DebugGLFrameStatusData(Packet::FRAMESTART, aFrameStamp));

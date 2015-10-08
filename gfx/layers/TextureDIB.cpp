@@ -53,6 +53,10 @@ TextureClientDIB::BorrowDrawTarget()
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mSurface, mSize);
   }
 
+  if (!mDrawTarget) {
+    gfxCriticalNote << "DIB failed draw target surface " << mSize << ", " << (int)mIsLocked << ", " << IsAllocated();
+  }
+
   return mDrawTarget;
 }
 

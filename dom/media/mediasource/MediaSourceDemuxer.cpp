@@ -53,7 +53,7 @@ MediaSourceDemuxer::AttemptInit()
   return p;
 }
 
-void MediaSourceDemuxer::NotifyDataArrived(uint32_t aLength, int64_t aOffset)
+void MediaSourceDemuxer::NotifyDataArrived()
 {
   nsRefPtr<MediaSourceDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
