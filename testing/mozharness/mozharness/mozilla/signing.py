@@ -35,7 +35,7 @@ AndroidSignatureVerificationErrorList = BaseErrorList + [{
 
 class SigningMixin(BaseSigningMixin):
     """Generic signing helper methods."""
-    def query_moz_sign_cmd(self, formats='gpg'):
+    def query_moz_sign_cmd(self, formats=['gpg']):
         if 'MOZ_SIGNING_SERVERS' not in os.environ:
             self.fatal("MOZ_SIGNING_SERVERS not in env; no MOZ_SIGN_CMD for you!")
         dirs = self.query_abs_dirs()
@@ -54,7 +54,8 @@ class SigningMixin(BaseSigningMixin):
             '-c', host_cert,
         ]
         if formats:
-            cmd += ['-f', formats]
+            for f in formats:
+                cmd += ['-f', f]
         for h in os.environ['MOZ_SIGNING_SERVERS'].split(","):
             cmd += ['-H', h]
         return cmd
