@@ -14,6 +14,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
@@ -11224,15 +11225,29 @@ nsDocument::RestorePreviousFullScreenState()
     return;
   }
 
-  // Check whether we are restoring to non-fullscreen state.
-  bool exitingFullscreen = true;
-  for (nsIDocument* doc = this; doc; doc = doc->GetParentDocument()) {
-    if (static_cast<nsDocument*>(doc)->mFullScreenStack.Length() > 1) {
-      exitingFullscreen = false;
+  nsCOMPtr<nsIDocument> fullScreenDoc = GetFullscreenLeaf(this);
+  nsAutoTArray<nsDocument*, 8> exitDocs;
+
+  nsIDocument* doc = fullScreenDoc;
+  // Collect all subdocuments.
+  for (; doc != this; doc = doc->GetParentDocument()) {
+    exitDocs.AppendElement(static_cast<nsDocument*>(doc));
+  }
+  MOZ_ASSERT(doc == this, "Must have reached this doc");
+  // Collect all ancestor documents which we are going to change.
+  for (; doc; doc = doc->GetParentDocument()) {
+    nsDocument* theDoc = static_cast<nsDocument*>(doc);
+    MOZ_ASSERT(!theDoc->mFullScreenStack.IsEmpty(),
+               "Ancestor of fullscreen document must also be in fullscreen");
+    exitDocs.AppendElement(theDoc);
+    if (theDoc->mFullScreenStack.Length() > 1) {
       break;
     }
   }
-  if (exitingFullscreen) {
+
+  nsDocument* lastDoc = exitDocs.LastElement();
+  if (!lastDoc->GetParentDocument() &&
+      lastDoc->mFullScreenStack.Length() == 1) {
     // If we are fully exiting fullscreen, don't touch anything here,
     // just wait for the window to get out from fullscreen first.
     AskWindowToExitFullscreen(this);
@@ -11241,50 +11256,39 @@ nsDocument::RestorePreviousFullScreenState()
 
   // If fullscreen mode is updated the pointer should be unlocked
   UnlockPointer();
-
-  nsCOMPtr<nsIDocument> fullScreenDoc = GetFullscreenLeaf(this);
-
-  // Clear full-screen stacks in all descendant in process documents, bottom up.
-  nsIDocument* doc = fullScreenDoc;
-  while (doc != this) {
-    NS_ASSERTION(doc->IsFullScreenDoc(), "Should be full-screen doc");
-    static_cast<nsDocument*>(doc)->CleanupFullscreenState();
-    DispatchFullScreenChange(doc);
-    doc = doc->GetParentDocument();
+  // All documents listed in the array except the last one are going to
+  // completely exit from the fullscreen state.
+  for (auto i : MakeRange(exitDocs.Length() - 1)) {
+    exitDocs[i]->CleanupFullscreenState();
+  }
+  // The last document will either rollback one fullscreen element, or
+  // completely exit from the fullscreen state as well.
+  nsIDocument* newFullscreenDoc;
+  if (lastDoc->mFullScreenStack.Length() > 1) {
+    lastDoc->FullScreenStackPop();
+    newFullscreenDoc = lastDoc;
+  } else {
+    lastDoc->CleanupFullscreenState();
+    newFullscreenDoc = lastDoc->GetParentDocument();
+  }
+  // Dispatch the fullscreenchange event to all document listed.
+  for (nsDocument* d : exitDocs) {
+    DispatchFullScreenChange(d);
   }
 
-  // Roll-back full-screen state to previous full-screen element.
-  NS_ASSERTION(doc == this, "Must have reached this doc.");
-  while (doc != nullptr) {
-    static_cast<nsDocument*>(doc)->FullScreenStackPop();
-    DispatchFullScreenChange(doc);
-    if (static_cast<nsDocument*>(doc)->mFullScreenStack.IsEmpty()) {
-      // Full-screen stack in document is empty. Go back up to the parent
-      // document. We'll pop the containing element off its stack, and use
-      // its next full-screen element as the full-screen element.
-      static_cast<nsDocument*>(doc)->CleanupFullscreenState();
-      doc = doc->GetParentDocument();
-    } else {
-      // Else we popped the top of the stack, and there's still another
-      // element in there, so that will become the full-screen element.
-      if (fullScreenDoc != doc) {
-        // We've popped so enough off the stack that we've rolled back to
-        // a fullscreen element in a parent document. If this document isn't
-        // approved for fullscreen, or if it's cross origin, dispatch an
-        // event to chrome so it knows to show the authorization/warning UI.
-        if (!nsContentUtils::HaveEqualPrincipals(fullScreenDoc, doc)) {
-          DispatchCustomEventWithFlush(
-            doc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
-            /* Bubbles */ true, /* ChromeOnly */ true);
-        }
-      }
-      break;
-    }
+  MOZ_ASSERT(newFullscreenDoc, "If we were going to exit from fullscreen on "
+             "all documents in this doctree, we should've asked the window to "
+             "exit first instead of reaching here.");
+  if (fullScreenDoc != newFullscreenDoc &&
+      !nsContentUtils::HaveEqualPrincipals(fullScreenDoc, newFullscreenDoc)) {
+    // We've popped so enough off the stack that we've rolled back to
+    // a fullscreen element in a parent document. If this document is
+    // cross origin, dispatch an event to chrome so it knows to show
+    // the warning UI.
+    DispatchCustomEventWithFlush(
+      newFullscreenDoc, NS_LITERAL_STRING("MozDOMFullscreen:NewOrigin"),
+      /* Bubbles */ true, /* ChromeOnly */ true);
   }
-
-  MOZ_ASSERT(doc, "If we were going to exit from fullscreen on all documents "
-             "in this doctree, we should've asked the window to exit first "
-             "instead of reaching here.");
 }
 
 bool
