@@ -1056,6 +1056,13 @@ CreateObjectPrototype(JSContext* cx, JSProtoKey key)
     if (!objectProto)
         return nullptr;
 
+    bool succeeded;
+    if (!SetImmutablePrototype(cx, objectProto, &succeeded))
+        return nullptr;
+    MOZ_ASSERT(succeeded,
+               "should have been able to make a fresh Object.prototype's "
+               "[[Prototype]] immutable");
+
     /*
      * The default 'new' type of Object.prototype is required by type inference
      * to have unknown properties, to simplify handling of e.g. heterogenous
