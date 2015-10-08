@@ -235,6 +235,8 @@ using namespace mozilla::system;
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
 #include "mozilla/SandboxInfo.h"
+#include "mozilla/SandboxBroker.h"
+#include "mozilla/SandboxBrokerPolicyFactory.h"
 #endif
 
 #ifdef MOZ_TOOLKIT_SEARCH
@@ -636,6 +638,9 @@ nsDataHashtable<nsStringHashKey, ContentParent*>* ContentParent::sAppContentPare
 nsTArray<ContentParent*>* ContentParent::sNonAppContentParents;
 nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 StaticAutoPtr<LinkedList<ContentParent> > ContentParent::sContentParents;
+#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+UniquePtr<SandboxBrokerPolicyFactory> ContentParent::sSandboxBrokerPolicyFactory;
+#endif
 
 #ifdef MOZ_NUWA_PROCESS
 // The pref updates sent to the Nuwa process.
@@ -842,6 +847,10 @@ ContentParent::StartUp()
     MaybeTestPBackground();
 
     sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
+
+#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+    sSandboxBrokerPolicyFactory = MakeUnique<SandboxBrokerPolicyFactory>();
+#endif
 }
 
 /*static*/ void
@@ -850,6 +859,10 @@ ContentParent::ShutDown()
     // No-op for now.  We rely on normal process shutdown and
     // ClearOnShutdown() to clean up our state.
     sCanLaunchSubprocesses = false;
+
+#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+    sSandboxBrokerPolicyFactory = nullptr;
+#endif
 }
 
 /*static*/ void
@@ -2587,7 +2600,25 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         shouldSandbox = false;
     }
 #endif
-    if (shouldSandbox && !SendSetProcessSandbox()) {
+    MaybeFileDesc brokerFd = void_t();
+#ifdef XP_LINUX
+    if (shouldSandbox) {
+        MOZ_ASSERT(!mSandboxBroker);
+        UniquePtr<SandboxBroker::Policy> policy =
+            sSandboxBrokerPolicyFactory->GetContentPolicy(Pid());
+        if (policy) {
+            brokerFd = FileDescriptor();
+            mSandboxBroker = SandboxBroker::Create(Move(policy), Pid(),
+                                                   brokerFd);
+            if (!mSandboxBroker) {
+                KillHard("SandboxBroker::Create failed");
+                return;
+            }
+            MOZ_ASSERT(static_cast<const FileDescriptor&>(brokerFd).IsValid());
+        }
+    }
+#endif
+    if (shouldSandbox && !SendSetProcessSandbox(brokerFd)) {
         KillHard("SandboxInitFailed");
     }
 #endif
