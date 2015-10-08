@@ -2428,7 +2428,7 @@ public class GeckoAppShell
 
     private static boolean sImeWasEnabledOnLastResize = false;
     public static void viewSizeChanged() {
-        LayerView v = getLayerView();
+        GeckoView v = (GeckoView) getLayerView();
         if (v == null) {
             return;
         }
