@@ -664,6 +664,10 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
                     // Push the cursor to the token so that the while loop below will
                     // find token from the right position.
                     cursor = tokenPos;
+
+                    // Update bufLen to exlude the preamble. Otherwise, the first
+                    // |SendData| would claim longer buffer length.
+                    bufLen -= mPreamble.Length();
                 }
             } else {
                 // If the boundary was set in the header,

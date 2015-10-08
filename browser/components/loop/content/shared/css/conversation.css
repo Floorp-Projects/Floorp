@@ -1112,7 +1112,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 /* e.g. very narrow widths similar to conversation window */
-@media screen and (max-width:300px) {
+@media screen and (max-width:350px) {
   .media-layout > .media-wrapper {
     flex-flow: column nowrap;
   }
@@ -1439,7 +1439,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 }
 
 /* e.g. very narrow widths similar to conversation window */
-@media screen and (max-width:300px) {
+@media screen and (max-width:350px) {
   .text-chat-view {
     display: flex;
     flex-flow: column nowrap;

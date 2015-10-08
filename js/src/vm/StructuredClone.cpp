@@ -734,9 +734,13 @@ JSStructuredCloneWriter::~JSStructuredCloneWriter()
     // Free any transferable data left lying around in the buffer
     uint64_t* data;
     size_t size;
-    MOZ_ALWAYS_TRUE(extractBuffer(&data, &size));
-    DiscardTransferables(data, size, callbacks, closure);
-    js_free(data);
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!extractBuffer(&data, &size))
+            oomUnsafe.crash("Unable to extract clone buffer");
+        DiscardTransferables(data, size, callbacks, closure);
+        js_free(data);
+    }
 }
 
 bool

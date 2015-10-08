@@ -102,7 +102,11 @@
             android:key="sync_server"
             android:persistent="false"
             android:title="@string/fxaccount_status_sync_server" />
-
+        <Preference
+            android:editable="false"
+            android:key="remove_account"
+            android:persistent="false"
+            android:title="@string/fxaccount_remove_account" />
         <Preference
             android:editable="false"
             android:key="more"
