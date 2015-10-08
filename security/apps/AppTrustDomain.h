@@ -8,6 +8,8 @@
 #define mozilla_psm_AppsTrustDomain_h
 
 #include "pkix/pkixtypes.h"
+#include "mozilla/StaticMutex.h"
+#include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsIX509CertDB.h"
 #include "ScopedNSSTypes.h"
@@ -69,6 +71,10 @@ private:
   void* mPinArg; // non-owning!
   ScopedCERTCertificate mTrustedRoot;
   unsigned int mMinRSABits;
+
+  static StaticMutex sMutex;
+  static nsAutoArrayPtr<unsigned char> sDevImportedDERData;
+  static unsigned int sDevImportedDERLen;
 };
 
 } } // namespace mozilla::psm

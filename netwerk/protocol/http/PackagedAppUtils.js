@@ -29,7 +29,7 @@ PackagedAppUtils.prototype = {
   classDescription: "Packaged App Utils",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPackagedAppUtils]),
 
-  verifyManifest: function(aHeader, aManifest, aCallback) {
+  verifyManifest: function(aHeader, aManifest, aCallback, aDeveloperMode) {
     debug("Manifest: " + aManifest);
 
     // parse signature from header
@@ -83,8 +83,10 @@ PackagedAppUtils.prototype = {
       throw "CERTDB_ERROR";
     }
 
-    certDb.verifySignedManifestAsync(
-      Ci.nsIX509CertDB.PrivilegedPackageRoot, manifestStream, signatureStream,
+    let trustedRoot = aDeveloperMode ? Ci.nsIX509CertDB.DeveloperImportedRoot
+                                     : Ci.nsIX509CertDB.PrivilegedPackageRoot;
+
+    certDb.verifySignedManifestAsync(trustedRoot, manifestStream, signatureStream,
       function(aRv, aCert) {
         aCallback.fireVerifiedEvent(true, Components.isSuccessCode(aRv));
       });

@@ -8,7 +8,13 @@
 #include "certdb.h"
 #include "pkix/pkixnss.h"
 #include "mozilla/ArrayUtils.h"
+#include "MainThreadUtils.h"
+#include "mozilla/Preferences.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIFile.h"
+#include "nsIFileStreams.h"
 #include "nsIX509CertDB.h"
+#include "nsNetUtil.h"
 #include "nsNSSCertificate.h"
 #include "prerror.h"
 #include "secerr.h"
@@ -34,8 +40,14 @@ using namespace mozilla::pkix;
 extern PRLogModuleInfo* gPIPNSSLog;
 
 static const unsigned int DEFAULT_MIN_RSA_BITS = 2048;
+static char kDevImportedDER[] =
+  "network.http.packaged-apps-developer-trusted-root";
 
 namespace mozilla { namespace psm {
+
+StaticMutex AppTrustDomain::sMutex;
+nsAutoArrayPtr<unsigned char> AppTrustDomain::sDevImportedDERData(nullptr);
+unsigned int AppTrustDomain::sDevImportedDERLen = 0;
 
 AppTrustDomain::AppTrustDomain(ScopedCERTCertList& certChain, void* pinArg)
   : mCertChain(certChain)
@@ -100,6 +112,53 @@ AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot)
       trustedDER.data = const_cast<uint8_t*>(privilegedPackageRoot);
       trustedDER.len = mozilla::ArrayLength(privilegedPackageRoot);
       break;
+
+    case nsIX509CertDB::DeveloperImportedRoot: {
+      StaticMutexAutoLock lock(sMutex);
+      if (!sDevImportedDERData) {
+        MOZ_ASSERT(!NS_IsMainThread());
+        nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+        if (!file) {
+          PR_SetError(SEC_ERROR_IO, 0);
+          return SECFailure;
+        }
+        nsresult rv = file->InitWithNativePath(
+            Preferences::GetCString(kDevImportedDER));
+        if (NS_FAILED(rv)) {
+          PR_SetError(SEC_ERROR_IO, 0);
+          return SECFailure;
+        }
+
+        nsCOMPtr<nsIInputStream> inputStream;
+        NS_NewLocalFileInputStream(getter_AddRefs(inputStream), file, -1, -1,
+                                   nsIFileInputStream::CLOSE_ON_EOF);
+        if (!inputStream) {
+          PR_SetError(SEC_ERROR_IO, 0);
+          return SECFailure;
+        }
+
+        uint64_t length;
+        rv = inputStream->Available(&length);
+        if (NS_FAILED(rv)) {
+          PR_SetError(SEC_ERROR_IO, 0);
+          return SECFailure;
+        }
+
+        char* data = new char[length];
+        rv = inputStream->Read(data, length, &sDevImportedDERLen);
+        if (NS_FAILED(rv)) {
+          PR_SetError(SEC_ERROR_IO, 0);
+          return SECFailure;
+        }
+
+        MOZ_ASSERT(length == sDevImportedDERLen);
+        sDevImportedDERData = reinterpret_cast<unsigned char*>(data);
+      }
+
+      trustedDER.data = sDevImportedDERData;
+      trustedDER.len = sDevImportedDERLen;
+      break;
+    }
 
     default:
       PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
