@@ -127,8 +127,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.appCacheClientID(), a.allowSpdy(), a.allowAltSvc(), a.fds(),
                        a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
-                       a.cacheKey(), a.schedulingContextID(), a.preflightArgs(),
-                       a.initialRwin());
+                       a.cacheKey(), a.schedulingContextID(), a.preflightArgs());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -287,8 +286,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const nsCString&           aSecurityInfoSerialization,
                                  const uint32_t&            aCacheKey,
                                  const nsCString&           aSchedulingContextID,
-                                 const OptionalCorsPreflightArgs& aCorsPreflightArgs,
-                                 const uint32_t&            aInitialRwin)
+                                 const OptionalCorsPreflightArgs& aCorsPreflightArgs)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -456,7 +454,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   mChannel->SetThirdPartyFlags(thirdPartyFlags);
   mChannel->SetAllowSpdy(allowSpdy);
   mChannel->SetAllowAltSvc(allowAltSvc);
-  mChannel->SetInitialRwin(aInitialRwin);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
     do_QueryObject(mChannel);

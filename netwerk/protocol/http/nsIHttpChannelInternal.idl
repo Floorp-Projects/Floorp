@@ -39,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(5f019a6f-6f6f-4b5c-8994-70cdbc40258e)]
+[scriptable, uuid(46ef729f-4c9b-4084-b9e2-498992a31aee)]
 
 interface nsIHttpChannelInternal : nsISupports
 {
@@ -201,13 +201,6 @@ interface nsIHttpChannelInternal : nsISupports
      * response. Enabled by default.
      */
     attribute boolean responseTimeoutEnabled;
-
-    /**
-     * If the underlying transport supports RWIN manipulation, this is the
-     * intiial window value for the channel. HTTP/2 implements this.
-     * 0 means no override from system default. Set before opening channel.
-     */
-    attribute unsigned long initialRwin;
 
     /**
      * Get value of the URI passed to nsIHttpChannel.redirectTo() if any.

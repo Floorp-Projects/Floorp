@@ -1407,8 +1407,7 @@ pref("network.http.spdy.ping-threshold", 58);
 pref("network.http.spdy.ping-timeout", 8);
 pref("network.http.spdy.send-buffer-size", 131072);
 pref("network.http.spdy.allow-push", true);
-pref("network.http.spdy.push-allowance", 131072);   // 128KB
-pref("network.http.spdy.pull-allowance", 12582912); // 12MB
+pref("network.http.spdy.push-allowance", 131072);
 pref("network.http.spdy.default-concurrent", 100);
 
 // alt-svc allows separation of transport routing from
