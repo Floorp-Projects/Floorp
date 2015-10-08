@@ -542,30 +542,6 @@ auto GeckoAppShell::NotifyDefaultPrevented(bool a0) -> void
     return mozilla::jni::Method<NotifyDefaultPrevented_t>::Call(nullptr, nullptr, a0);
 }
 
-constexpr char GeckoAppShell::NotifyIME_t::name[];
-constexpr char GeckoAppShell::NotifyIME_t::signature[];
-
-auto GeckoAppShell::NotifyIME(int32_t a0) -> void
-{
-    return mozilla::jni::Method<NotifyIME_t>::Call(nullptr, nullptr, a0);
-}
-
-constexpr char GeckoAppShell::NotifyIMEChange_t::name[];
-constexpr char GeckoAppShell::NotifyIMEChange_t::signature[];
-
-auto GeckoAppShell::NotifyIMEChange(mozilla::jni::String::Param a0, int32_t a1, int32_t a2, int32_t a3) -> void
-{
-    return mozilla::jni::Method<NotifyIMEChange_t>::Call(nullptr, nullptr, a0, a1, a2, a3);
-}
-
-constexpr char GeckoAppShell::NotifyIMEContext_t::name[];
-constexpr char GeckoAppShell::NotifyIMEContext_t::signature[];
-
-auto GeckoAppShell::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3) -> void
-{
-    return mozilla::jni::Method<NotifyIMEContext_t>::Call(nullptr, nullptr, a0, a1, a2, a3);
-}
-
 constexpr char GeckoAppShell::NotifyWakeLockChanged_t::name[];
 constexpr char GeckoAppShell::NotifyWakeLockChanged_t::signature[];
 
@@ -733,6 +709,50 @@ auto GeckoAppShell::VibrateA(mozilla::jni::LongArray::Param a0, int32_t a1) -> v
 {
     return mozilla::jni::Method<VibrateA_t>::Call(nullptr, nullptr, a0, a1);
 }
+
+constexpr char GeckoEditable::name[];
+
+constexpr char GeckoEditable::New_t::name[];
+constexpr char GeckoEditable::New_t::signature[];
+
+auto GeckoEditable::New() -> GeckoEditable::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr);
+}
+
+constexpr char GeckoEditable::NotifyIME_t::name[];
+constexpr char GeckoEditable::NotifyIME_t::signature[];
+
+auto GeckoEditable::NotifyIME(int32_t a0) const -> void
+{
+    return mozilla::jni::Method<NotifyIME_t>::Call(this, nullptr, a0);
+}
+
+constexpr char GeckoEditable::NotifyIMEContext_t::name[];
+constexpr char GeckoEditable::NotifyIMEContext_t::signature[];
+
+auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3) const -> void
+{
+    return mozilla::jni::Method<NotifyIMEContext_t>::Call(this, nullptr, a0, a1, a2, a3);
+}
+
+constexpr char GeckoEditable::OnSelectionChange_t::name[];
+constexpr char GeckoEditable::OnSelectionChange_t::signature[];
+
+auto GeckoEditable::OnSelectionChange(int32_t a0, int32_t a1) const -> void
+{
+    return mozilla::jni::Method<OnSelectionChange_t>::Call(this, nullptr, a0, a1);
+}
+
+constexpr char GeckoEditable::OnTextChange_t::name[];
+constexpr char GeckoEditable::OnTextChange_t::signature[];
+
+auto GeckoEditable::OnTextChange(mozilla::jni::String::Param a0, int32_t a1, int32_t a2, int32_t a3) const -> void
+{
+    return mozilla::jni::Method<OnTextChange_t>::Call(this, nullptr, a0, a1, a2, a3);
+}
+
+constexpr char GeckoEditableListener::name[];
 
 constexpr char GeckoJavaSampler::name[];
 
