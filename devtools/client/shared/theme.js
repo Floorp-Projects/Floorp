@@ -14,12 +14,13 @@ const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 loader.lazyRequireGetter(this, "Services");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
-const themeURIs = {
-  light: "chrome://devtools/skin/themes/light-theme.css",
-  dark: "chrome://devtools/skin/themes/dark-theme.css"
+const VARIABLES_URI = "chrome://devtools/skin/themes/variables.css";
+const THEME_SELECTOR_STRINGS = {
+  light: ":root.theme-light {",
+  dark: ":root.theme-dark {"
 }
 
-const cachedThemes = {};
+let variableFileContents;
 
 /**
  * Returns a string of the file found at URI
@@ -37,19 +38,29 @@ function readURI (uri) {
 }
 
 /**
- * Takes a theme name and either returns it from the cache,
- * or fetches the theme CSS file and caches it.
+ * Takes a theme name and returns the contents of its variable rule block.
+ * The first time this runs fetches the variables CSS file and caches it.
  */
 function getThemeFile (name) {
-  // Use the cached theme, or generate it
-  let themeFile = cachedThemes[name] || readURI(themeURIs[name]).match(/--theme-.*: .*;/g).join("\n");
-
-  // Cache if not already cached
-  if (!cachedThemes[name]) {
-    cachedThemes[name] = themeFile;
+  if (!variableFileContents) {
+    variableFileContents = readURI(VARIABLES_URI);
   }
 
-  return themeFile;
+  // If there's no theme expected for this name, use `light` as default.
+  let selector = THEME_SELECTOR_STRINGS[name] ||
+                 THEME_SELECTOR_STRINGS["light"];
+
+  // This is a pretty naive way to find the contents between:
+  // selector {
+  //   name: val;
+  // }
+  // There is test coverage for this feature (browser_theme.js)
+  // so if an } is introduced in the variables file it will catch that.
+  let theme = variableFileContents;
+  theme = theme.substring(theme.indexOf(selector));
+  theme = theme.substring(0, theme.indexOf("}"));
+
+  return theme;
 }
 
 /**
@@ -66,17 +77,11 @@ const getTheme = exports.getTheme = () => Services.prefs.getCharPref("devtools.t
  */
 const getColor = exports.getColor = (type, theme) => {
   let themeName = theme || getTheme();
-
-  // If there's no theme URIs for this theme, use `light` as default.
-  if (!themeURIs[themeName]) {
-    themeName = "light";
-  }
-
   let themeFile = getThemeFile(themeName);
-  let match;
+  let match = themeFile.match(new RegExp("--theme-" + type + ": (.*);"));
 
   // Return the appropriate variable in the theme, or otherwise, null.
-  return (match = themeFile.match(new RegExp("--theme-" + type + ": (.*);"))) ? match[1] : null;
+  return match ? match[1] : null;
 };
 
 /**

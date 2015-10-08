@@ -38,6 +38,7 @@ var AboutReader = function(mm, win, articlePromise) {
   this._mm.addMessageListener("Reader:Removed", this);
   this._mm.addMessageListener("Sidebar:VisibilityChange", this);
   this._mm.addMessageListener("ReadingList:VisibilityStatus", this);
+  this._mm.addMessageListener("Reader:CloseDropdown", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -178,6 +179,15 @@ AboutReader.prototype = {
     return this._toolbarVertical = Services.prefs.getBoolPref("reader.toolbar.vertical");
   },
 
+  // Provides unique view Id.
+  get viewId() {
+    let _viewId = Cc["@mozilla.org/uuid-generator;1"].
+      getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+    Object.defineProperty(this, "viewId", { value: _viewId });
+
+    return _viewId;
+  },
+
   receiveMessage: function (message) {
     switch (message.name) {
       case "Reader:Added": {
@@ -190,6 +200,14 @@ AboutReader.prototype = {
         }
         break;
       }
+
+      // Triggered by Android user pressing BACK while the banner font-dropdown is open.
+      case "Reader:CloseDropdown": {
+        // Just close it.
+        this._closeDropdown();
+        break;
+      }
+
       case "Reader:Removed": {
         if (message.data.url == this._article.url) {
           if (this._isReadingListItem != 0) {
@@ -246,10 +264,14 @@ AboutReader.prototype = {
         break;
 
       case "unload":
+        // Close the Banners Font-dropdown, cleanup Android BackPressListener.
+        this._closeDropdown();
+
         this._mm.removeMessageListener("Reader:Added", this);
         this._mm.removeMessageListener("Reader:Removed", this);
         this._mm.removeMessageListener("Sidebar:VisibilityChange", this);
         this._mm.removeMessageListener("ReadingList:VisibilityStatus", this);
+        this._mm.removeMessageListener("Reader:CloseDropdown", this);
         this._windowUnloaded = true;
         break;
     }
@@ -584,8 +606,7 @@ AboutReader.prototype = {
   },
 
   _setToolbarVisibility: function(visible) {
-    let dropdown = this._doc.getElementById("style-dropdown");
-    dropdown.classList.remove("open");
+    this._closeDropdown();
 
     if (this._getToolbarVisibility() === visible) {
       return;
@@ -943,13 +964,41 @@ AboutReader.prototype = {
       event.stopPropagation();
 
       if (dropdown.classList.contains("open")) {
-        dropdown.classList.remove("open");
+        this._closeDropdown();
       } else {
-        dropdown.classList.add("open");
+        this._openDropdown();
         if (this._isToolbarVertical) {
           updatePopupPosition();
         }
       }
     }, true);
+  },
+
+  /*
+   * If the ReaderView banner font-dropdown is closed, open it.
+   */
+  _openDropdown: function() {
+    let dropdown = this._doc.getElementById("style-dropdown");
+    if (dropdown.classList.contains("open")) {
+      return;
+    }
+
+    // Trigger BackPressListener initialization in Android.
+    dropdown.classList.add("open");
+    this._mm.sendAsyncMessage("Reader:DropdownOpened", this.viewId);
+  },
+
+  /*
+   * If the ReaderView banner font-dropdown is opened, close it.
+   */
+  _closeDropdown: function() {
+    let dropdown = this._doc.getElementById("style-dropdown");
+    if (!dropdown.classList.contains("open")) {
+      return;
+    }
+
+    // Trigger BackPressListener cleanup in Android.
+    dropdown.classList.remove("open");
+    this._mm.sendAsyncMessage("Reader:DropdownClosed", this.viewId);
   },
 };

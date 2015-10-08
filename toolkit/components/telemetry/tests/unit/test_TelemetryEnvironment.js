@@ -1017,6 +1017,37 @@ add_task(function* test_signedAddon() {
   }
 });
 
+add_task(function* test_addonsFieldsLimit() {
+  const ADDON_INSTALL_URL = gDataRoot + "long-fields.xpi";
+  const ADDON_ID = "tel-longfields-xpi@tests.mozilla.org";
+
+  // Set the clock in the future so our changes don't get throttled.
+  gNow = fakeNow(futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE));
+
+  // Install the addon and wait for the TelemetryEnvironment to pick it up.
+  let deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener("test_longFieldsAddon", deferred.resolve);
+  yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
+  yield deferred.promise;
+  TelemetryEnvironment.unregisterChangeListener("test_longFieldsAddon");
+
+  let data = TelemetryEnvironment.currentEnvironment;
+  checkEnvironmentData(data);
+
+  // Check that the addon is available and that the string fields are limited.
+  Assert.ok(ADDON_ID in data.addons.activeAddons, "Add-on should be in the environment.");
+  let targetAddon = data.addons.activeAddons[ADDON_ID];
+
+  // TelemetryEnvironment limits the length of string fields for activeAddons to 100 chars,
+  // to mitigate misbehaving addons.
+  Assert.lessOrEqual(targetAddon.version.length, 100,
+               "The version string must have been limited");
+  Assert.lessOrEqual(targetAddon.name.length, 100,
+               "The name string must have been limited");
+  Assert.lessOrEqual(targetAddon.description.length, 100,
+               "The description string must have been limited");
+});
+
 add_task(function* test_changeThrottling() {
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   const PREFS_TO_WATCH = new Map([

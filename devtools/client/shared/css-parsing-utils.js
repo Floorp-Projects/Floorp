@@ -14,7 +14,6 @@
 
 "use strict";
 
-const {cssTokenizer} = require("devtools/client/sourceeditor/css-tokenizer");
 const {Cc, Ci, Cu} = require("chrome");
 Cu.importGlobalProperties(["CSS"]);
 const promise = require("promise");
@@ -42,6 +41,85 @@ const BLANK_LINE_RX = /^[ \t]*(?:\r\n|\n|\r|\f|$)/;
 // comment opener so that future parses of the commented text know to
 // bypass the property name validity heuristic.
 const COMMENT_PARSING_HEURISTIC_BYPASS_CHAR = "!";
+
+/**
+ * A generator function that lexes a CSS source string, yielding the
+ * CSS tokens.  Comment tokens are dropped.
+ *
+ * @param {String} CSS source string
+ * @yield {CSSToken} The next CSSToken that is lexed
+ * @see CSSToken for details about the returned tokens
+ */
+function* cssTokenizer(string) {
+  let lexer = DOMUtils.getCSSLexer(string);
+  while (true) {
+    let token = lexer.nextToken();
+    if (!token) {
+      break;
+    }
+    // None of the existing consumers want comments.
+    if (token.tokenType !== "comment") {
+      yield token;
+    }
+  }
+}
+
+/**
+ * Pass |string| to the CSS lexer and return an array of all the
+ * returned tokens.  Comment tokens are not included.  In addition to
+ * the usual information, each token will have starting and ending
+ * line and column information attached.  Specifically, each token
+ * has an additional "loc" attribute.  This attribute is an object
+ * of the form {line: L, column: C}.  Lines and columns are both zero
+ * based.
+ *
+ * It's best not to add new uses of this function.  In general it is
+ * simpler and better to use the CSSToken offsets, rather than line
+ * and column.  Also, this function lexes the entire input string at
+ * once, rather than lazily yielding a token stream.  Use
+ * |cssTokenizer| or |DOMUtils.getCSSLexer| instead.
+ *
+ * @param{String} string The input string.
+ * @return {Array} An array of tokens (@see CSSToken) that have
+ *        line and column information.
+ */
+function cssTokenizerWithLineColumn(string) {
+  let lexer = DOMUtils.getCSSLexer(string);
+  let result = [];
+  let prevToken = undefined;
+  while (true) {
+    let token = lexer.nextToken();
+    let lineNumber = lexer.lineNumber;
+    let columnNumber = lexer.columnNumber;
+
+    if (prevToken) {
+      prevToken.loc.end = {
+        line: lineNumber,
+        column: columnNumber
+      };
+    }
+
+    if (!token) {
+      break;
+    }
+
+    if (token.tokenType === "comment") {
+      // We've already dealt with the previous token's location.
+      prevToken = undefined;
+    } else {
+      let startLoc = {
+        line: lineNumber,
+        column: columnNumber
+      };
+      token.loc = {start: startLoc};
+
+      result.push(token);
+      prevToken = token;
+    }
+  }
+
+  return result;
+}
 
 /**
  * Escape a comment body.  Find the comment start and end strings in a
@@ -992,6 +1070,8 @@ function parseSingleValue(value) {
   };
 }
 
+exports.cssTokenizer = cssTokenizer;
+exports.cssTokenizerWithLineColumn = cssTokenizerWithLineColumn;
 exports.escapeCSSComment = escapeCSSComment;
 // unescapeCSSComment is exported for testing.
 exports._unescapeCSSComment = unescapeCSSComment;
