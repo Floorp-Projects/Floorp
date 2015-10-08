@@ -32,10 +32,10 @@ CrashReporterChild::GetCrashReporter()
     default:
       break;
   }
-  if (reporters && reporters->Length() > 0) {
-    return reporters->ElementAt(0);
+  if (!reporters) {
+    return nullptr;
   }
-  return nullptr;
+  return LoneManagedOrNull(*reporters);
 }
 
 } // namespace dom

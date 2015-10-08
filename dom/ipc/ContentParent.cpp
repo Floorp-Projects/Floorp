@@ -2081,9 +2081,9 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             // There's a window in which child processes can crash
             // after IPC is established, but before a crash reporter
             // is created.
-            if (ManagedPCrashReporterParent().Length() > 0) {
+            if (PCrashReporterParent* p = LoneManagedOrNull(ManagedPCrashReporterParent())) {
                 CrashReporterParent* crashReporter =
-                    static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
+                    static_cast<CrashReporterParent*>(p);
 
                 // If we're an app process, always stomp the latest URI
                 // loaded in the child process with our manifest URL.  We
@@ -2265,8 +2265,8 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
 jsipc::CPOWManager*
 ContentParent::GetCPOWManager()
 {
-    if (ManagedPJavaScriptParent().Length()) {
-        return CPOWManagerFor(ManagedPJavaScriptParent()[0]);
+    if (PJavaScriptParent* p = LoneManagedOrNull(ManagedPJavaScriptParent())) {
+        return CPOWManagerFor(p);
     }
     return nullptr;
 }
@@ -2286,9 +2286,8 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 TestShellParent*
 ContentParent::GetTestShellSingleton()
 {
-    if (!ManagedPTestShellParent().Length())
-        return nullptr;
-    return static_cast<TestShellParent*>(ManagedPTestShellParent()[0]);
+    PTestShellParent* p = LoneManagedOrNull(ManagedPTestShellParent());
+    return static_cast<TestShellParent*>(p);
 }
 
 void
@@ -3545,9 +3544,9 @@ ContentParent::KillHard(const char* aReason)
     // We're about to kill the child process associated with this content.
     // Something has gone wrong to get us here, so we generate a minidump
     // of the parent and child for submission to the crash server.
-    if (ManagedPCrashReporterParent().Length() > 0) {
+    if (PCrashReporterParent* p = LoneManagedOrNull(ManagedPCrashReporterParent())) {
         CrashReporterParent* crashReporter =
-            static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
+            static_cast<CrashReporterParent*>(p);
         // GeneratePairedMinidump creates two minidumps for us - the main
         // one is for the content process we're about to kill, and the other
         // one is for the main browser process. That second one is the extra

@@ -1484,7 +1484,7 @@ PluginModuleChromeParent::OnHangUIContinue()
 CrashReporterParent*
 PluginModuleChromeParent::CrashReporter()
 {
-    return static_cast<CrashReporterParent*>(ManagedPCrashReporterParent()[0]);
+    return static_cast<CrashReporterParent*>(LoneManagedOrNull(ManagedPCrashReporterParent()));
 }
 
 #ifdef MOZ_CRASHREPORTER_INJECTOR
