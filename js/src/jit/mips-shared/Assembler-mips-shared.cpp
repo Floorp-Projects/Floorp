@@ -231,12 +231,6 @@ AssemblerMIPSShared::oom() const
            preBarriers_.oom();
 }
 
-void
-AssemblerMIPSShared::addCodeLabel(CodeLabel label)
-{
-    propagateOOM(codeLabels_.append(label));
-}
-
 // Size of the instruction stream, in bytes.
 size_t
 AssemblerMIPSShared::size() const

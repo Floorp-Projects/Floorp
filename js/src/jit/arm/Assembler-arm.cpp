@@ -1371,12 +1371,6 @@ Assembler::oom() const
            preBarriers_.oom();
 }
 
-void
-Assembler::addCodeLabel(CodeLabel label)
-{
-    propagateOOM(codeLabels_.append(label));
-}
-
 // Size of the instruction stream, in bytes. Including pools. This function
 // expects all pools that need to be placed have been placed. If they haven't
 // then we need to go an flush the pools :(
