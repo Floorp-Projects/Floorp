@@ -524,10 +524,9 @@ RTPStats.prototype = {
     return line;
   },
 
-  renderTransportStats: function(stats, type) {
-    let label = this.labelize(type);
+  renderTransportStats: function(stats, typeLabel) {
     let time  = new Date(stats.timestamp).toTimeString();
-    let statsString = `${label}: ${time} ${stats.type} SSRC: ${stats.ssrc}`;
+    let statsString = `${typeLabel}: ${time} ${stats.type} SSRC: ${stats.ssrc}`;
 
     if (stats.packetsReceived) {
       statsString += ` ${getString("received_label")}: ${stats.packetsReceived} ${getString("packets")}`;
@@ -565,18 +564,14 @@ RTPStats.prototype = {
     }
 
     div.appendChild(this.renderCoderStats(stats));
-    div.appendChild(this.renderTransportStats(stats, getString("local")));
+    div.appendChild(this.renderTransportStats(stats, getString("typeLocal")));
 
     if (stats.remoteId && stats.remoteRtpStats) {
-      div.appendChild(this.renderTransportStats(stats.remoteRtpStats, getString("remote")));
+      div.appendChild(this.renderTransportStats(stats.remoteRtpStats, getString("typeRemote")));
     }
 
     return div;
   },
-
-  labelize: function(label) {
-    return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
-  }
 };
 
 function ICEStats(report) {

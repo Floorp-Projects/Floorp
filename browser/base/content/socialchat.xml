@@ -473,8 +473,8 @@
         <body><![CDATA[
           // These are from the CSS for the chatbox and must be kept in sync.
           // We can't use calcTotalWidthOf due to the transitions...
-          const CHAT_WIDTH_OPEN = 260;
-          const CHAT_WIDTH_OPEN_ALT = 300;
+          const CHAT_WIDTH_OPEN = 300;
+          const CHAT_WIDTH_OPEN_ALT = 350;
           const CHAT_WIDTH_MINIMIZED = 160;
           let openWidth = aChatbox.hasAttribute("customSize") ?
             CHAT_WIDTH_OPEN_ALT : CHAT_WIDTH_OPEN;
