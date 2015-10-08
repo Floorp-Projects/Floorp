@@ -782,6 +782,16 @@ public class GeckoEvent {
         return event;
     }
 
+    public static GeckoEvent createTelemetryKeyedHistogramAddEvent(String histogram,
+                                                                   String key,
+                                                                   int value) {
+        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_HISTOGRAM_ADD);
+        event.mCharacters = histogram;
+        event.mCharactersExtra = key;
+        event.mCount = value;
+        return event;
+    }
+
     public static GeckoEvent createTelemetryUISessionStartEvent(String session, long timestamp) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_UI_SESSION_START);
         event.mCharacters = session;
