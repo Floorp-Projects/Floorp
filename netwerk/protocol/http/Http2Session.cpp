@@ -104,7 +104,6 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mServerInitialStreamWindow(kDefaultRwin)
   , mLocalSessionWindow(kDefaultRwin)
   , mServerSessionWindow(kDefaultRwin)
-  , mInitialRwin(ASpdySession::kInitialRwin)
   , mOutputQueueSize(kDefaultQueueSize)
   , mOutputQueueUsed(0)
   , mOutputQueueSent(0)
@@ -128,7 +127,6 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   mDecompressor.SetCompressor(&mCompressor);
 
   mPushAllowance = gHttpHandler->SpdyPushAllowance();
-  mInitialRwin = std::max(gHttpHandler->SpdyPullAllowance(), mPushAllowance);
   mMaxConcurrent = gHttpHandler->DefaultSpdyConcurrent();
   mSendingChunkSize = gHttpHandler->SpdySendingChunkSize();
   SendHello();
@@ -896,10 +894,10 @@ Http2Session::SendHello()
   LogIO(this, nullptr, "Generate Settings", packet, kFrameHeaderBytes + dataLen);
 
   // now bump the local session window from 64KB
-  uint32_t sessionWindowBump = mInitialRwin - kDefaultRwin;
-  if (kDefaultRwin < mInitialRwin) {
+  uint32_t sessionWindowBump = ASpdySession::kInitialRwin - kDefaultRwin;
+  if (kDefaultRwin < ASpdySession::kInitialRwin) {
     // send a window update for the session (Stream 0) for something large
-    mLocalSessionWindow = mInitialRwin;
+    mLocalSessionWindow = ASpdySession::kInitialRwin;
 
     packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
     CreateFrameHeader(packet, 4, FRAME_TYPE_WINDOW_UPDATE, 0, 0);
@@ -1111,8 +1109,7 @@ Http2Session::RemoveStreamFromQueues(Http2Stream *aStream)
 {
   RemoveStreamFromQueue(aStream, mReadyForWrite);
   RemoveStreamFromQueue(aStream, mQueuedStreams);
-  RemoveStreamFromQueue(aStream, mPushesReadyForRead);
-  RemoveStreamFromQueue(aStream, mSlowConsumersReadyForRead);
+  RemoveStreamFromQueue(aStream, mReadyForRead);
 }
 
 void
@@ -2462,20 +2459,35 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
   // trigger that data pump here. This only reads from buffers (not the network)
   // so mDownstreamState doesn't matter.
   Http2Stream *pushConnectedStream =
-    static_cast<Http2Stream *>(mPushesReadyForRead.PopFront());
+    static_cast<Http2Stream *>(mReadyForRead.PopFront());
   if (pushConnectedStream) {
-    return ProcessConnectedPush(pushConnectedStream, writer, count, countWritten);
-  }
+    LOG3(("Http2Session::WriteSegments %p processing pushed stream 0x%X\n",
+          this, pushConnectedStream->StreamID()));
+    mSegmentWriter = writer;
+    rv = pushConnectedStream->WriteSegments(this, count, countWritten);
+    mSegmentWriter = nullptr;
 
-  // feed gecko channels that previously stopped consuming data
-  // only take data from stored buffers
-  Http2Stream *slowConsumer =
-    static_cast<Http2Stream *>(mSlowConsumersReadyForRead.PopFront());
-  if (slowConsumer) {
-    internalStateType savedState = mDownstreamState;
-    mDownstreamState = NOT_USING_NETWORK;
-    rv = ProcessSlowConsumer(slowConsumer, writer, count, countWritten);
-    mDownstreamState = savedState;
+    // The pipe in nsHttpTransaction rewrites CLOSED error codes into OK
+    // so we need this check to determine the truth.
+    if (NS_SUCCEEDED(rv) && !*countWritten &&
+        pushConnectedStream->PushSource() &&
+        pushConnectedStream->PushSource()->GetPushComplete()) {
+      rv = NS_BASE_STREAM_CLOSED;
+    }
+
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      CleanupStream(pushConnectedStream, NS_OK, CANCEL_ERROR);
+      rv = NS_OK;
+    }
+
+    // if we return OK to nsHttpConnection it will use mSocketInCondition
+    // to determine whether to schedule more reads, incorrectly
+    // assuming that nsHttpConnection::OnSocketWrite() was called.
+    if (NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK) {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+      ResumeRecv();
+    }
+
     return rv;
   }
 
@@ -2824,69 +2836,6 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
   return rv;
 }
 
-nsresult
-Http2Session::ProcessConnectedPush(Http2Stream *pushConnectedStream,
-                                   nsAHttpSegmentWriter * writer,
-                                   uint32_t count, uint32_t *countWritten)
-{
-  LOG3(("Http2Session::ProcessConnectedPush %p 0x%X\n",
-        this, pushConnectedStream->StreamID()));
-  mSegmentWriter = writer;
-  nsresult rv = pushConnectedStream->WriteSegments(this, count, countWritten);
-  mSegmentWriter = nullptr;
-
-  // The pipe in nsHttpTransaction rewrites CLOSED error codes into OK
-  // so we need this check to determine the truth.
-  if (NS_SUCCEEDED(rv) && !*countWritten &&
-      pushConnectedStream->PushSource() &&
-      pushConnectedStream->PushSource()->GetPushComplete()) {
-    rv = NS_BASE_STREAM_CLOSED;
-  }
-
-  if (rv == NS_BASE_STREAM_CLOSED) {
-    CleanupStream(pushConnectedStream, NS_OK, CANCEL_ERROR);
-    rv = NS_OK;
-  }
-
-  // if we return OK to nsHttpConnection it will use mSocketInCondition
-  // to determine whether to schedule more reads, incorrectly
-  // assuming that nsHttpConnection::OnSocketWrite() was called.
-  if (NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK) {
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
-    ResumeRecv();
-  }
-  return rv;
-}
-
-nsresult
-Http2Session::ProcessSlowConsumer(Http2Stream *slowConsumer,
-                                  nsAHttpSegmentWriter * writer,
-                                  uint32_t count, uint32_t *countWritten)
-{
-  LOG3(("Http2Session::ProcessSlowConsumer %p 0x%X\n",
-        this, slowConsumer->StreamID()));
-  mSegmentWriter = writer;
-  nsresult rv = slowConsumer->WriteSegments(this, count, countWritten);
-  mSegmentWriter = nullptr;
-  LOG3(("Http2Session::ProcessSlowConsumer Writesegments %p 0x%X rv %X %d\n",
-        this, slowConsumer->StreamID(), rv, *countWritten));
-  if (NS_SUCCEEDED(rv) && !*countWritten && slowConsumer->RecvdFin()) {
-    rv = NS_BASE_STREAM_CLOSED;
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    UpdateLocalRwin(slowConsumer, 0);
-    ConnectSlowConsumer(slowConsumer);
-  }
-
-  if (rv == NS_BASE_STREAM_CLOSED) {
-    CleanupStream(slowConsumer, NS_OK, CANCEL_ERROR);
-    rv = NS_OK;
-  }
-
-  return rv;
-}
-
 void
 Http2Session::UpdateLocalStreamWindow(Http2Stream *stream, uint32_t bytes)
 {
@@ -2961,12 +2910,12 @@ Http2Session::UpdateLocalSessionWindow(uint32_t bytes)
 
   // Don't necessarily ack every data packet. Only do it
   // after a significant amount of data.
-  if ((mLocalSessionWindow > (mInitialRwin - kMinimumToAck)) &&
+  if ((mLocalSessionWindow > (ASpdySession::kInitialRwin - kMinimumToAck)) &&
       (mLocalSessionWindow > kEmergencyWindowThreshold))
     return;
 
   // Only send max  bits of window updates at a time.
-  uint64_t toack64 = mInitialRwin - mLocalSessionWindow;
+  uint64_t toack64 = ASpdySession::kInitialRwin - mLocalSessionWindow;
   uint32_t toack = (toack64 <= 0x7fffffffU) ? toack64 : 0x7fffffffU;
 
   LOG3(("Http2Session::UpdateLocalSessionWindow Ack this=%p acksize=%u\n",
@@ -3177,10 +3126,6 @@ Http2Session::OnWriteSegment(char *buf,
     return NS_ERROR_FAILURE;
   }
 
-  if (mDownstreamState == NOT_USING_NETWORK) {
-    return NS_BASE_STREAM_WOULD_BLOCK;
-  }
-
   if (mDownstreamState == PROCESSING_DATA_FRAME) {
 
     if (mInputFrameFinal &&
@@ -3278,16 +3223,7 @@ Http2Session::SetNeedsCleanup()
 void
 Http2Session::ConnectPushedStream(Http2Stream *stream)
 {
-  mPushesReadyForRead.Push(stream);
-  ForceRecv();
-}
-
-void
-Http2Session::ConnectSlowConsumer(Http2Stream *stream)
-{
-  LOG3(("Http2Session::ConnectSlowConsumer %p 0x%X\n",
-        this, stream->StreamID()));
-  mSlowConsumersReadyForRead.Push(stream);
+  mReadyForRead.Push(stream);
   ForceRecv();
 }
 
@@ -3543,25 +3479,7 @@ Http2Session::TransactionHasDataToWrite(nsAHttpTransaction *caller)
   // that are ready - so we can get into a deadlock waiting for the system IO
   // to come back here if we don't force the send loop manually.
   ForceSend();
-}
 
-void
-Http2Session::TransactionHasDataToRecv(nsAHttpTransaction *caller)
-{
-  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
-  LOG3(("Http2Session::TransactionHasDataToRecv %p trans=%p", this, caller));
-
-  // a signal from the http transaction to the connection that it will consume more
-  Http2Stream *stream = mStreamTransactionHash.Get(caller);
-  if (!stream || !VerifyStream(stream)) {
-    LOG3(("Http2Session::TransactionHasDataToRecv %p caller %p not found",
-          this, caller));
-    return;
-  }
-
-  LOG3(("Http2Session::TransactionHasDataToRecv %p ID is 0x%X\n",
-        this, stream->StreamID()));
-  ConnectSlowConsumer(stream);
 }
 
 void
