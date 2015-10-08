@@ -2703,6 +2703,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         {
             ensure_entry_widget();
             style = gtk_widget_get_style_context(gEntryWidget);
+
+            // XXX: Subtract 1 pixel from the padding to account for the default
+            // padding in forms.css. See bug 1187385.
+            *left = *top = *right = *bottom = -1;
+            moz_gtk_add_style_padding(style, left, top, right, bottom);
             moz_gtk_add_style_border(style, left, top, right, bottom);
 
             return MOZ_GTK_SUCCESS;
