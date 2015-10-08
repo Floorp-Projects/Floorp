@@ -32,45 +32,13 @@ registerCleanupFunction(function*() {
 add_task(function* test_LoopUI_getters() {
   Assert.ok(LoopUI.panel, "LoopUI panel element should be set");
   Assert.strictEqual(LoopUI.browser, null, "Browser element should not be there yet");
-  Assert.strictEqual(LoopUI.selectedTab, null, "No tab should be selected yet");
 
   // Load and show the Loop panel for the very first time this session.
   yield loadLoopPanel();
   Assert.ok(LoopUI.browser, "Browser element should be there");
-  Assert.strictEqual(LoopUI.selectedTab, "rooms", "Initially the rooms tab should be selected");
-  let panelTabs = LoopUI.browser.contentDocument.querySelectorAll(".tab-view > li:not(.slide-bar)");
-  Assert.strictEqual(panelTabs.length, 1, "Only one tab, 'rooms', should be visible");
 
   // Hide the panel.
   yield LoopUI.togglePanel();
-  Assert.strictEqual(LoopUI.selectedTab, "rooms", "Rooms tab should still be selected");
-
-  // Make sure the contacts tab shows up by simulating a login.
-  MozLoopServiceInternal.fxAOAuthTokenData = fxASampleToken;
-  MozLoopServiceInternal.fxAOAuthProfile = fxASampleProfile;
-  yield MozLoopServiceInternal.notifyStatusChanged("login");
-
-  yield LoopUI.togglePanel();
-  Assert.strictEqual(LoopUI.selectedTab, "rooms", "Rooms tab should still be selected");
-  panelTabs = LoopUI.browser.contentDocument.querySelectorAll(".tab-view > li:not(.slide-bar)");
-  Assert.strictEqual(panelTabs.length, 2, "Two tabs should be visible");
-  yield LoopUI.togglePanel();
-
-  // Programmatically select the contacts tab.
-  yield LoopUI.togglePanel(null, "contacts");
-  Assert.strictEqual(LoopUI.selectedTab, "contacts", "Contacts tab should be selected now");
-
-  // Switch back to the rooms tab.
-  yield LoopUI.openCallPanel(null, "rooms");
-  Assert.strictEqual(LoopUI.selectedTab, "rooms", "Rooms tab should be selected now");
-
-  // Hide the panel.
-  yield LoopUI.togglePanel();
-
-  // Logout to prevent interfering with the tests after this one.
-  MozLoopServiceInternal.fxAOAuthTokenData =
-    MozLoopServiceInternal.fxAOAuthProfile = null;
-  yield MozLoopServiceInternal.notifyStatusChanged();
 });
 
 add_task(function* test_doNotDisturb() {

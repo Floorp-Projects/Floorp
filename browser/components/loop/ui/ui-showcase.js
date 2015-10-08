@@ -766,8 +766,7 @@
                   dispatcher: dispatcher, 
                   mozLoop: firstTimeUseMozLoop, 
                   notifications: notifications, 
-                  roomStore: roomStore, 
-                  selectedTab: "rooms"})
+                  roomStore: roomStore})
               )
             ), 
 
@@ -784,75 +783,70 @@
             React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
                            dashed: true, 
                            height: 410, 
-                           summary: "Room list tab", 
+                           summary: "Room list", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(PanelView, {client: mockClient, 
                            dispatcher: dispatcher, 
                            mozLoop: mockMozLoopLoggedIn, 
                            notifications: notifications, 
-                           roomStore: roomStore, 
-                           selectedTab: "rooms"})
+                           roomStore: roomStore})
               )
             ), 
 
             React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
                            dashed: true, 
                            height: 410, 
-                           summary: "Room list tab (No Context)", 
+                           summary: "Room list (No Context)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(PanelView, {client: mockClient, 
                            dispatcher: dispatcher, 
                            mozLoop: mockMozLoopLoggedInNoContext, 
                            notifications: notifications, 
-                           roomStore: roomStore, 
-                           selectedTab: "rooms"})
+                           roomStore: roomStore})
               )
             ), 
 
             React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
                            dashed: true, 
                            height: 410, 
-                           summary: "Room list tab (no rooms)", 
+                           summary: "Room list (no rooms)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(PanelView, {client: mockClient, 
                            dispatcher: dispatcher, 
                            mozLoop: mockMozLoopNoRooms, 
                            notifications: notifications, 
-                           roomStore: roomStoreNoRooms, 
-                           selectedTab: "rooms"})
+                           roomStore: roomStoreNoRooms})
               )
             ), 
 
             React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
                            dashed: true, 
                            height: 410, 
-                           summary: "Room list tab (no rooms and no context)", 
+                           summary: "Room list (no rooms and no context)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(PanelView, {client: mockClient, 
                            dispatcher: dispatcher, 
                            mozLoop: mockMozLoopNoRoomsNoContext, 
                            notifications: notifications, 
-                           roomStore: roomStoreNoRooms, 
-                           selectedTab: "rooms"})
+                           roomStore: roomStoreNoRooms})
               )
             ), 
 
             React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
                            dashed: true, 
                            height: 410, 
-                           summary: "Room list tab (loading view)", 
+                           summary: "Room list (loading view)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
                 React.createElement(PanelView, {client: mockClient, 
                            dispatcher: dispatcher, 
                            mozLoop: mockMozLoopNoRoomsNoContext, 
                            notifications: notifications, 
-                           roomStore: roomStoreNoRoomsPending, 
-                           selectedTab: "rooms"})
+                           roomStore: roomStoreNoRoomsPending})
               )
             ), 
 
@@ -1215,10 +1209,10 @@
 
           React.createElement(Section, {name: "OngoingConversationView"}, 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: conversationStores[0].forcedUpdate, 
                            summary: "Desktop ongoing conversation window", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
                   audio: { enabled: true, visible: true}, 
@@ -1271,10 +1265,10 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: conversationStores[3].forcedUpdate, 
                            summary: "Desktop ongoing conversation window - local face mute", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
                   audio: { enabled: true, visible: true}, 
@@ -1290,10 +1284,10 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: conversationStores[4].forcedUpdate, 
                            summary: "Desktop ongoing conversation window - remote face mute", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(OngoingConversationView, {
                   audio: { enabled: true, visible: true}, 
@@ -1314,9 +1308,9 @@
             React.createElement("p", {className: "note"}
             ), 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 272, 
+                           height: 288, 
                            summary: "Default (useable demo)", 
-                           width: 300}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(FeedbackView, {mozLoop: {}, 
                               onAfterFeedbackReceived: function() {}})
@@ -1326,9 +1320,9 @@
 
           React.createElement(Section, {name: "AlertMessages"}, 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 272, 
+                           height: 288, 
                            summary: "Various alerts", 
-                           width: 300}, 
+                           width: 348}, 
               React.createElement("div", null, 
                 React.createElement("div", {className: "alert alert-warning"}, 
                   React.createElement("button", {className: "close"}), 
@@ -1374,9 +1368,9 @@
           React.createElement(Section, {name: "RoomFailureView"}, 
             React.createElement(FramedExample, {
               dashed: true, 
-              height: 254, 
+              height: 288, 
               summary: "Desktop Room Failure View", 
-              width: 298}, 
+              width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(RoomFailureView, {
                   dispatcher: dispatcher, 
@@ -1390,7 +1384,7 @@
             React.createElement(FramedExample, {height: 398, 
                            onContentsRendered: invitationRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
                   chatWindowDetached: false, 
@@ -1403,10 +1397,10 @@
               )
             ), 
 
-            React.createElement(FramedExample, {height: 278.6, 
+            React.createElement(FramedExample, {height: 288, 
                            onContentsRendered: invitationRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room Edit Context w/Error", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded room-invitation-overlay"}, 
                 React.createElement(DesktopRoomEditContextView, {
                   dispatcher: dispatcher, 
@@ -1421,10 +1415,10 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: desktopRoomStoreLoading.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation (loading)", 
-                           width: 298}, 
+                           width: 348}, 
               /* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */
               React.createElement("div", {className: "fx-embedded overflow-hidden"}, 
@@ -1441,10 +1435,10 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: roomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
                   chatWindowDetached: false, 
@@ -1495,10 +1489,10 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: desktopLocalFaceMuteRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation local face-mute", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
                   chatWindowDetached: false, 
@@ -1511,10 +1505,10 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 394, 
+                           height: 398, 
                            onContentsRendered: desktopRemoteFaceMuteRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation remote face-mute", 
-                           width: 298}, 
+                           width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
                   chatWindowDetached: false, 

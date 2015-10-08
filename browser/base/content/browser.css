@@ -919,16 +919,16 @@ notification[value="loop-sharing-notification"] .close-icon {
 chatbox {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");
   transition: height 150ms ease-out, width 150ms ease-out;
-  height: 285px;
-  width: 260px; /* CHAT_WIDTH_OPEN in socialchat.xml */
+  height: 290px;
+  width: 300px; /* CHAT_WIDTH_OPEN in socialchat.xml */
 }
 
 chatbox[customSize] {
-  width: 300px; /* CHAT_WIDTH_OPEN_ALT in socialchat.xml */
+  width: 350px; /* CHAT_WIDTH_OPEN_ALT in socialchat.xml */
 }
 
 #chat-window[customSize] {
-  min-width: 300px;
+  min-width: 350px;
 }
 
 chatbox[customSize="loopChatEnabled"] {
@@ -942,13 +942,13 @@ chatbox[customSize="loopChatEnabled"] {
 }
 
 chatbox[customSize="loopChatMessageAppended"] {
-  /* 445px as defined per UX */
-  height: 445px;
+  /* 400px as defined per UX */
+  height: 400px;
 }
 
 #chat-window[customSize="loopChatMessageAppended"] {
   /* 445px + 30px top bar height. */
-  min-height: calc(445px + 30px);
+  min-height: calc(400px + 30px);
 }
 
 chatbox[minimized="true"] {
