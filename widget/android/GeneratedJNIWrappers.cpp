@@ -752,6 +752,14 @@ auto GeckoEditable::OnTextChange(mozilla::jni::String::Param a0, int32_t a1, int
     return mozilla::jni::Method<OnTextChange_t>::Call(this, nullptr, a0, a1, a2, a3);
 }
 
+constexpr char GeckoEditable::OnViewChange_t::name[];
+constexpr char GeckoEditable::OnViewChange_t::signature[];
+
+auto GeckoEditable::OnViewChange(mozilla::jni::Object::Param a0) const -> void
+{
+    return mozilla::jni::Method<OnViewChange_t>::Call(this, nullptr, a0);
+}
+
 constexpr char GeckoEditableListener::name[];
 
 constexpr char GeckoJavaSampler::name[];
