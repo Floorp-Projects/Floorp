@@ -187,14 +187,6 @@ public:
     static void Open(const jni::ClassObject::LocalRef& cls,
                      GeckoView::Window::Param gvWindow,
                      int32_t width, int32_t height);
-
-    // Set the active layer client object
-    static void SetLayerClient(jni::Object::Param client)
-    {
-        MOZ_ASSERT(NS_IsMainThread());
-        AndroidBridge::Bridge()->SetLayerClient(
-                widget::GeckoLayerClient::Ref::From(client.Get()));
-    }
 };
 
 void
