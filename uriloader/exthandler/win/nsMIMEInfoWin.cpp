@@ -7,7 +7,6 @@
 #include "nsArrayEnumerator.h"
 #include "nsCOMArray.h"
 #include "nsIFile.h"
-#include "nsIVariant.h"
 #include "nsMIMEInfoWin.h"
 #include "nsNetUtil.h"
 #include <windows.h>
@@ -22,6 +21,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsUnicharUtils.h"
 #include "nsITextToSubURI.h"
+#include "nsVariant.h"
 
 #define RUNDLL32_EXE L"\\rundll32.exe"
 
@@ -172,15 +172,13 @@ nsMIMEInfoWin::GetEnumerator(nsISimpleEnumerator* *_retval)
 
 static nsresult GetIconURLVariant(nsIFile* aApplication, nsIVariant* *_retval)
 {
-  nsresult rv = CallCreateInstance("@mozilla.org/variant;1", _retval);
-  if (NS_FAILED(rv))
-    return rv;
   nsAutoCString fileURLSpec;
   NS_GetURLSpecFromFile(aApplication, fileURLSpec);
   nsAutoCString iconURLSpec; iconURLSpec.AssignLiteral("moz-icon://");
   iconURLSpec += fileURLSpec;
-  nsCOMPtr<nsIWritableVariant> writable(do_QueryInterface(*_retval));
+  nsRefPtr<nsVariant> writable(new nsVariant());
   writable->SetAsAUTF8String(iconURLSpec);
+  writable.forget(_retval);
   return NS_OK;
 }
 

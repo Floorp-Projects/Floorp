@@ -39,18 +39,11 @@ var RemotePrompt = {
     let tabPrompt = window.gBrowser.getTabModalPromptBox(browser)
     let callbackInvoked = false;
     let newPrompt;
-    let needRemove = false;
     let promptId = args._remoteId;
 
     function onPromptClose(forceCleanup) {
-      // It's possible that we removed the prompt during the
-      // appendPrompt call below. In that case, newPrompt will be
-      // undefined. We set the needRemove flag to remember to remove
-      // it right after we've finished adding it.
       if (newPrompt)
         tabPrompt.removePrompt(newPrompt);
-      else
-        needRemove = true;
 
       PromptUtils.fireDialogEvent(window, "DOMModalDialogClosed", browser);
       browser.messageManager.sendAsyncMessage("Prompt:Close", args);
@@ -75,10 +68,6 @@ var RemotePrompt = {
       args.promptActive = true;
 
       newPrompt = tabPrompt.appendPrompt(args, onPromptClose);
-
-      if (needRemove) {
-        tabPrompt.removePrompt(newPrompt);
-      }
 
       // TODO since we don't actually open a window, need to check if
       // there's other stuff in nsWindowWatcher::OpenWindowInternal

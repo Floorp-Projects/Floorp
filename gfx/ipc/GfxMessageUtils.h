@@ -19,6 +19,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "gfxTypes.h"
+#include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
@@ -1083,6 +1084,40 @@ struct ParamTraits<mozilla::layers::EventRegionsOverride>
             mozilla::layers::EventRegionsOverride,
             mozilla::layers::EventRegionsOverride::ALL_BITS>
 {};
+
+template<>
+struct ParamTraits<mozilla::layers::AsyncDragMetrics::DragDirection>
+  : public ContiguousEnumSerializer<
+             mozilla::layers::AsyncDragMetrics::DragDirection,
+             mozilla::layers::AsyncDragMetrics::DragDirection::NONE,
+             mozilla::layers::AsyncDragMetrics::DragDirection::SENTINEL>
+{};
+
+template<>
+struct ParamTraits<mozilla::layers::AsyncDragMetrics>
+{
+  typedef mozilla::layers::AsyncDragMetrics paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mViewId);
+    WriteParam(aMsg, aParam.mPresShellId);
+    WriteParam(aMsg, aParam.mDragStartSequenceNumber);
+    WriteParam(aMsg, aParam.mScrollbarDragOffset);
+    WriteParam(aMsg, aParam.mScrollTrack);
+    WriteParam(aMsg, aParam.mDirection);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mViewId) &&
+            ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
+            ReadParam(aMsg, aIter, &aResult->mDragStartSequenceNumber) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollbarDragOffset) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollTrack) &&
+            ReadParam(aMsg, aIter, &aResult->mDirection));
+  }
+};
 
 } /* namespace IPC */
 

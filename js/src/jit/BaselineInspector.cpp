@@ -594,7 +594,16 @@ GlobalShapeForGetPropFunction(ICStub* stub)
             if (shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL)
                 return shape;
         }
+    } else if (stub->isGetProp_CallNativeGlobal()) {
+        ICGetProp_CallNativeGlobal* nstub = stub->toGetProp_CallNativeGlobal();
+        if (nstub->isOwnGetter())
+            return nullptr;
+
+        Shape* shape = nstub->globalShape();
+        MOZ_ASSERT(shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL);
+        return shape;
     }
+
     return nullptr;
 }
 
@@ -616,7 +625,8 @@ BaselineInspector::commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shap
 
     for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isGetProp_CallScripted() ||
-            stub->isGetProp_CallNative())
+            stub->isGetProp_CallNative() ||
+            stub->isGetProp_CallNativeGlobal())
         {
             ICGetPropCallGetter* nstub = static_cast<ICGetPropCallGetter*>(stub);
             bool isOwn = nstub->isOwnGetter();

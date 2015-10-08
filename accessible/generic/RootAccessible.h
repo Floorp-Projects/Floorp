@@ -42,6 +42,11 @@ public:
    */
   virtual void DocumentActivated(DocAccessible* aDocument);
 
+  /**
+   * Return the primary remote top level document if any.
+   */
+  ProxyAccessible* GetPrimaryRemoteTopLevelContentDoc() const;
+
 protected:
   virtual ~RootAccessible();
 

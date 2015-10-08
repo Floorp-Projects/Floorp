@@ -560,8 +560,8 @@ YInvertImageSurface(DataSourceSurface* aSurf)
         return nullptr;
     }
 
-    dt->SetTransform(Matrix::Translation(0.0, aSurf->GetSize().height) *
-                     Matrix::Scaling(1.0, -1.0));
+    dt->SetTransform(Matrix::Scaling(1.0, -1.0) *
+                     Matrix::Translation(0.0, aSurf->GetSize().height));
     Rect rect(0, 0, aSurf->GetSize().width, aSurf->GetSize().height);
     dt->DrawSurface(aSurf, rect, rect, DrawSurfaceOptions(),
                     DrawOptions(1.0, CompositionOp::OP_SOURCE, AntialiasMode::NONE));

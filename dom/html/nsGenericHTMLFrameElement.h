@@ -113,6 +113,11 @@ protected:
   bool mBrowserFrameListenersRegistered;
   bool mFrameLoaderCreationDisallowed;
 
+  // This flag is only used by <iframe>. See HTMLIFrameElement::
+  // FullscreenFlag() for details. It is placed here so that we
+  // do not bloat any struct.
+  bool mFullscreenFlag = false;
+
 private:
   void GetManifestURLByType(nsIAtom *aAppType, nsAString& aOut);
 };

@@ -7,7 +7,10 @@
 Library('sandboxtest')
 
 SOURCES = [
+    '../SandboxBrokerClient.cpp',
     '../SandboxUtil.cpp',
+    'TestBroker.cpp',
+    'TestBrokerPolicy.cpp',
     'TestSandboxUtil.cpp',
 ]
 
@@ -15,6 +18,9 @@ LOCAL_INCLUDES += [
     '/security/sandbox/linux',
     '/security/sandbox/linux/common',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 LOCAL_INCLUDES += [
     '/security/sandbox/chromium',
 ]

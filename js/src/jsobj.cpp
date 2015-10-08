@@ -35,6 +35,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 #include "jswatchpoint.h"
+#include "jswin.h"
 #include "jswrapper.h"
 
 #include "asmjs/AsmJSModule.h"

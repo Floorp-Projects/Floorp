@@ -20,7 +20,7 @@
 #include "mozIStorageValueArray.h"
 #include "mozIStorageFunction.h"
 #include "nsIObserverService.h"
-#include "nsIVariant.h"
+#include "nsVariant.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Services.h"
 
@@ -403,10 +403,7 @@ nsReverseStringSQLFunction::OnFunctionCall(
   nsAutoCString result;
   ReverseString(stringToReverse, result);
 
-  nsCOMPtr<nsIWritableVariant> outVar(do_CreateInstance(
-      NS_VARIANT_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsRefPtr<nsVariant> outVar(new nsVariant());
   rv = outVar->SetAsAUTF8String(result);
   NS_ENSURE_SUCCESS(rv, rv);
 

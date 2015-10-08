@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test playback of media files that should play OK</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<div id="log"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function startTest() {
+  var v = document.createElement("video");
+  ok(v.canPlayType('video/mp4; codecs="avc1.64000d,mp4a.40.2"') != "",
+     "Should be able to play MP4/H.264/AAC via <video> using GMP");
+  v.src = "short.mp4";
+  v.addEventListener("ended", function(event) {
+    ok(true, "Reached end");
+    SimpleTest.finish();
+  });
+  document.body.appendChild(v);
+  v.play();
+}
+
+var testPrefs = [
+  ['media.fragmented-mp4.gmp.aac', 1],  // gmp-clearkey
+  ['media.fragmented-mp4.gmp.h264', 1], // gmp-clearkey
+  ['media.fragmented-mp4.gmp.enabled', true]
+];
+
+SpecialPowers.pushPrefEnv({'set': testPrefs}, startTest);
+
+</script>
+</pre>
+</body>
+</html>
