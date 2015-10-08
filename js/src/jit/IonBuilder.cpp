@@ -8199,7 +8199,7 @@ IonBuilder::jsop_getgname(PropertyName* name)
     if (!getStaticName(obj, name, &emitted) || emitted)
         return emitted;
 
-    if (!forceInlineCaches() && obj->is<GlobalObject>()) {
+    if (!forceInlineCaches()) {
         TemporaryTypeSet* types = bytecodeTypes(pc);
         MDefinition* globalObj = constant(ObjectValue(*obj));
         if (!getPropTryCommonGetter(&emitted, globalObj, name, types) || emitted)
