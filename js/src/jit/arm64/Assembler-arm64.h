@@ -236,15 +236,6 @@ class Assembler : public vixl::Assembler
             preBarrierTableBytes();
     }
 
-    void addCodeLabel(CodeLabel label) {
-        propagateOOM(codeLabels_.append(label));
-    }
-    size_t numCodeLabels() const {
-        return codeLabels_.length();
-    }
-    CodeLabel codeLabel(size_t i) {
-        return codeLabels_[i];
-    }
     void processCodeLabels(uint8_t* rawCode) {
         for (size_t i = 0; i < codeLabels_.length(); i++) {
             CodeLabel label = codeLabels_[i];
@@ -435,8 +426,6 @@ class Assembler : public vixl::Assembler
           : offset(offset), target(target), kind(kind)
         { }
     };
-
-    js::Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
 
     // List of jumps for which the target is either unknown until finalization,
     // or cannot be known due to GC. Each entry here requires a unique entry

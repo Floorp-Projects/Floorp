@@ -363,8 +363,8 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     // Relative link metadata: absolute addresses that refer to another point within
     // the asm.js module.
 
-    // CodeLabels are used for switch cases and loads from doubles in the
-    // constant pool.
+    // CodeLabels are used for switch cases and loads from floating-point /
+    // SIMD values in the constant pool.
     for (size_t i = 0; i < masm.numCodeLabels(); i++) {
         CodeLabel src = masm.codeLabel(i);
         int32_t labelOffset = src.dest()->offset();
