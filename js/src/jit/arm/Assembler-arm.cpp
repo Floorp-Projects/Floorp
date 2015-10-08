@@ -2416,11 +2416,6 @@ Assembler::as_b(Label* l, Condition c)
         BOffImm inv;
         ret = as_b(inv, c, l);
     }
-
-    // We might oom while adding more instructions.
-    if (!ret.assigned())
-        return ret;
-
     DebugOnly<int32_t> check = l->use(ret.getOffset());
     MOZ_ASSERT(check == old);
     return ret;
