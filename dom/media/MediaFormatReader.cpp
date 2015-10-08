@@ -221,9 +221,10 @@ MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
   nsRefPtr<CDMProxy> proxy = aProxy;
   nsRefPtr<MediaFormatReader> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    MOZ_ASSERT(self->OnTaskQueue());
     self->mCDMProxy = proxy;
   });
-  OwnerThread()->DispatchDirectTask(r.forget());
+  OwnerThread()->Dispatch(r.forget());
 }
 #endif // MOZ_EME
 
