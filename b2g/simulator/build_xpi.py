@@ -10,7 +10,6 @@
 # - retrieve usefull app version metadata from the build system
 # - finally, use addon sdk's cfx tool to build the addon xpi
 #   that ships:
-#     * a small firefox addon registering to the app manager
 #     * b2g desktop runtime
 #     * gaia profile
 
@@ -126,19 +125,10 @@ def main(platform):
                     app_buildid,
                     update_url)
 
-    options_file = os.path.join(build.topobjdir, "b2g", "simulator", "options.xul")
-    preprocess_file(os.path.join(srcdir, "options.xul.in"),
-                    options_file,
-                    version,
-                    app_buildid,
-                    update_url)
-
     with JarWriter(xpi_path, optimize=False) as zip:
         # Ship addon files into the .xpi
-        add_dir_to_zip(zip, os.path.join(srcdir, "lib"), "lib")
         add_file_to_zip(zip, manifest, "install.rdf")
         add_file_to_zip(zip, os.path.join(srcdir, "bootstrap.js"), "bootstrap.js")
-        add_file_to_zip(zip, options_file, "options.xul")
         add_file_to_zip(zip, os.path.join(srcdir, "icon.png"), "icon.png")
         add_file_to_zip(zip, os.path.join(srcdir, "icon64.png"), "icon64.png")
 
