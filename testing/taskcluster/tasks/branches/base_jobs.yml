@@ -28,6 +28,14 @@ builds:
         task: tasks/builds/b2g_emulator_kk_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_kk_debug.yml
+  emulator-x86-kk:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_x86_kk_opt.yml
+      debug:
+        task: tasks/builds/b2g_emulator_x86_kk_debug.yml
   emulator-l:
     platforms:
       - b2g

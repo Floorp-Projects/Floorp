@@ -102,7 +102,21 @@
     function bad_invalid302Loaded() {
       ok(false, "We should not load scripts with a 302 response and the wrong hash!");
     }
-  </script>
+
+    function good_validBlobLoaded() {
+      ok(true, "A script was loaded successfully from a blob: URL.");
+    }
+    function bad_validBlobBlocked() {
+      ok(false, "We should load scripts using blob: URLs with the right hash!");
+    }
+
+    function good_invalidBlobBlocked() {
+      ok(true, "A script was blocked successfully from a blob: URL.");
+    }
+    function bad_invalidBlobLoaded() {
+      ok(false, "We should not load scripts using blob: URLs with the wrong hash!");
+    }
+</script>
 </head>
 <body>
   <!-- valid hash. should trigger onload -->
@@ -199,6 +213,32 @@
           integrity="sha256-JSi74NSN8WQNr9syBGmNg2APJp9PnHUO5ioZo5hmIiQ="
           onerror="good_invalid302Blocked()"
           onload="bad_invalid302Loaded()"></script>
+
+  <!-- valid sha256 for a blob: URL -->
+  <script>
+   var blob = new Blob(["console.log('blob:valid');"],
+                       {type:"application/javascript"});
+   var script = document.createElement('script');
+   script.setAttribute('src', URL.createObjectURL(blob));
+   script.setAttribute('integrity', 'sha256-AwLdXiGfCqOxOXDPUim73G8NVEL34jT0IcQR/tqv/GQ=');
+   script.onerror = bad_validBlobBlocked;
+   script.onload = good_validBlobLoaded;
+   var head = document.getElementsByTagName('head').item(0);
+   head.appendChild(script);
+  </script>
+
+  <!-- invalid sha256 for a blob: URL -->
+  <script>
+   var blob = new Blob(["console.log('blob:invalid');"],
+                       {type:"application/javascript"});
+   var script = document.createElement('script');
+   script.setAttribute('src', URL.createObjectURL(blob));
+   script.setAttribute('integrity', 'sha256-AwLdXiGfCqOxOXDPUim73G8NVEL34jT0IcQR/tqv/GQ=');
+   script.onerror = good_invalidBlobBlocked;
+   script.onload = bad_invalidBlobLoaded;
+   var head = document.getElementsByTagName('head').item(0);
+   head.appendChild(script);
+  </script>
 
 <p id="display"></p>
 <div id="content" style="display: none">

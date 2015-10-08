@@ -106,7 +106,7 @@ struct RunnableMethodTraits<mozilla::ipc::MessageChannel>
             DebugAbort(__FILE__, __LINE__, #_cond,## __VA_ARGS__);  \
     } while (0)
 
-static MessageChannel* gMainThreadBlocker;
+static MessageChannel* gParentProcessBlocker;
 
 namespace mozilla {
 namespace ipc {
@@ -275,6 +275,31 @@ private:
     CxxStackFrame& operator=(const CxxStackFrame&) = delete;
 };
 
+namespace {
+
+class MOZ_RAII MaybeScriptBlocker {
+public:
+    explicit MaybeScriptBlocker(MessageChannel *aChannel, bool aBlock
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : mBlocked(aChannel->ShouldBlockScripts() && aBlock)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        if (mBlocked) {
+            nsContentUtils::AddScriptBlocker();
+        }
+    }
+    ~MaybeScriptBlocker() {
+        if (mBlocked) {
+            nsContentUtils::RemoveScriptBlocker();
+        }
+    }
+private:
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    bool mBlocked;
+};
+
+} // namespace
+
 MessageChannel::MessageChannel(MessageListener *aListener)
   : mListener(aListener),
     mChannelState(ChannelClosed),
@@ -300,6 +325,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mSawInterruptOutMsg(false),
     mIsWaitingForIncoming(false),
     mAbortOnError(false),
+    mBlockScripts(false),
     mFlags(REQUIRE_DEFAULT),
     mPeerPidSet(false),
     mPeerPid(-1)
@@ -378,8 +404,8 @@ MessageChannel::Clear()
     // In practice, mListener owns the channel, so the channel gets deleted
     // before mListener.  But just to be safe, mListener is a weak pointer.
 
-    if (gMainThreadBlocker == this) {
-        gMainThreadBlocker = nullptr;
+    if (gParentProcessBlocker == this) {
+        gParentProcessBlocker = nullptr;
     }
 
     mDequeueOneTask->Cancel();
@@ -814,6 +840,9 @@ bool
 MessageChannel::Send(Message* aMsg, Message* aReply)
 {
     nsAutoPtr<Message> msg(aMsg);
+
+    // See comment in DispatchSyncMessage.
+    MaybeScriptBlocker scriptBlocker(this, true);
 
     // Sanity checks.
     AssertWorkerThread();
@@ -1296,10 +1325,16 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     AssertWorkerThread();
 
     int prio = aMsg.priority();
+
+    // We don't want to run any code that might run a nested event loop here, so
+    // we avoid running event handlers. Once we've sent the response to the
+    // urgent message, it's okay to run event handlers again since the parent is
+    // no longer blocked.
     MOZ_ASSERT_IF(prio > IPC::Message::PRIORITY_NORMAL, NS_IsMainThread());
+    MaybeScriptBlocker scriptBlocker(this, prio > IPC::Message::PRIORITY_NORMAL);
 
     MessageChannel* dummy;
-    MessageChannel*& blockingVar = NS_IsMainThread() ? gMainThreadBlocker : dummy;
+    MessageChannel*& blockingVar = ShouldBlockScripts() ? gParentProcessBlocker : dummy;
 
     Result rv;
     if (mTimedOutMessageSeqno && mTimedOutMessagePriority >= prio) {
@@ -1855,6 +1890,13 @@ MessageChannel::CloseWithTimeout()
 }
 
 void
+MessageChannel::BlockScripts()
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    mBlockScripts = true;
+}
+
+void
 MessageChannel::Close()
 {
     AssertWorkerThread();
@@ -2004,26 +2046,22 @@ MessageChannel::CancelCurrentTransactionInternal()
     // see if mCurrentTransaction is 0 before examining DispatchSyncMessage.
 }
 
-bool
+void
 MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
-    if (mCurrentTransaction &&
-        !DispatchingAsyncMessage() &&
-        DispatchingSyncMessagePriority() >= IPC::Message::PRIORITY_HIGH)
-    {
+    if (mCurrentTransaction) {
         CancelCurrentTransactionInternal();
         mLink->SendMessage(new CancelMessage());
-        return true;
     }
-    return false;
 }
 
 void
 CancelCPOWs()
 {
-    if (gMainThreadBlocker && gMainThreadBlocker->CancelCurrentTransaction()) {
+    if (gParentProcessBlocker) {
         mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_TRANSACTION_CANCEL, true);
+        gParentProcessBlocker->CancelCurrentTransaction();
     }
 }
 

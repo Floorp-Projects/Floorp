@@ -254,8 +254,7 @@ public:
 
   static JSObject* ReadFullySerializableObjects(JSContext* aCx,
                                                 JSStructuredCloneReader* aReader,
-                                                uint32_t aTag,
-                                                uint32_t aIndex);
+                                                uint32_t aTag);
 
   static bool  WriteFullySerializableObjects(JSContext* aCx,
                                              JSStructuredCloneWriter* aWriter,

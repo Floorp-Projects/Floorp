@@ -8,6 +8,7 @@
 
 #include "LinuxCapabilities.h"
 #include "LinuxSched.h"
+#include "SandboxBrokerClient.h"
 #include "SandboxChroot.h"
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
@@ -30,6 +31,7 @@
 #include <unistd.h>
 
 #include "mozilla/Atomics.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/SandboxInfo.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
@@ -625,13 +627,22 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
  * Will normally make the process exit on failure.
 */
 void
-SetContentProcessSandbox()
+SetContentProcessSandbox(int aBrokerFd)
 {
   if (!SandboxInfo::Get().Test(SandboxInfo::kEnabledForContent)) {
+    if (aBrokerFd >= 0) {
+      close(aBrokerFd);
+    }
     return;
   }
 
-  SetCurrentProcessSandbox(GetContentSandboxPolicy());
+  // This needs to live until the process exits.
+  static Maybe<SandboxBrokerClient> sBroker;
+  if (aBrokerFd >= 0) {
+    sBroker.emplace(aBrokerFd);
+  }
+
+  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker.ptrOr(nullptr)));
 }
 #endif // MOZ_CONTENT_SANDBOX
 
