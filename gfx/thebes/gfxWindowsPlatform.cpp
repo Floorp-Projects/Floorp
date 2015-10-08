@@ -1858,16 +1858,16 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
       gfxInfo->GetAdapterVendorID(vendorID);
       gfxInfo->GetAdapterVendorID2(vendorID2);
       if (vendorID.EqualsLiteral("0x8086") && vendorID2.IsEmpty()) {
-        gfxCriticalError(CriticalLog::DefaultOptions(false)) << "Unexpected Intel/AMD dual-GPU setup";
-        return false;
+        gfxCriticalError(CriticalLog::DefaultOptions(false)) << "PossiblyBrokenSurfaceSharing_UnexpectedAMDGPU";
       }
     }
   }
 
   RefPtr<ID3D11Texture2D> texture;
   D3D11_TEXTURE2D_DESC desc;
-  desc.Width = 32;
-  desc.Height = 32;
+  const int texture_size = 32;
+  desc.Width = texture_size;
+  desc.Height = texture_size;
   desc.MipLevels = 1;
   desc.ArraySize = 1;
   desc.Format = format;
@@ -1877,7 +1877,17 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   desc.CPUAccessFlags = 0;
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
   desc.BindFlags = bindflags;
-  if (FAILED(device->CreateTexture2D(&desc, NULL, getter_AddRefs(texture)))) {
+
+  uint32_t color[texture_size * texture_size];
+  for (size_t i = 0; i < sizeof(color)/sizeof(color[0]); i++) {
+    color[i] = 0xff00ffff;
+  }
+  // We're going to check that sharing actually works with this format
+  D3D11_SUBRESOURCE_DATA data;
+  data.pSysMem = color;
+  data.SysMemPitch = texture_size * 4;
+  data.SysMemSlicePitch = 0;
+  if (FAILED(device->CreateTexture2D(&desc, &data, byRef(texture)))) {
     return false;
   }
 
@@ -1905,6 +1915,50 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   if (FAILED(sharedResource->QueryInterface(__uuidof(ID3D11Texture2D),
                                             getter_AddRefs(sharedTexture))))
   {
+    return false;
+  }
+
+  // create a staging texture for readback
+  RefPtr<ID3D11Texture2D> cpuTexture;
+  desc.Usage = D3D11_USAGE_STAGING;
+  desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  desc.MiscFlags = 0;
+  desc.BindFlags = 0;
+  if (FAILED(device->CreateTexture2D(&desc, nullptr, byRef(cpuTexture)))) {
+    return false;
+  }
+
+  nsRefPtr<IDXGIKeyedMutex> sharedMutex;
+  nsRefPtr<ID3D11DeviceContext> deviceContext;
+  sharedResource->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sharedMutex));
+  device->GetImmediateContext(getter_AddRefs(deviceContext));
+  if (FAILED(sharedMutex->AcquireSync(0, 30*1000))) {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_AcquireSyncTimeout";
+    // only wait for 30 seconds
+    return false;
+  }
+
+  // Copy to the cpu texture so that we can readback
+  deviceContext->CopyResource(cpuTexture, sharedTexture);
+
+  D3D11_MAPPED_SUBRESOURCE mapped;
+  int resultColor = 0;
+  if (SUCCEEDED(deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &mapped))) {
+    // read the texture
+    resultColor = *(int*)mapped.pData;
+    deviceContext->Unmap(cpuTexture, 0);
+  } else {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_MapFailed";
+    return false;
+  }
+
+  sharedMutex->ReleaseSync(0);
+
+  // check that the color we put in is the color we get out
+  if (resultColor != color[0]) {
+    // Shared surfaces seem to be broken on dual AMD & Intel HW when using the
+    // AMD GPU
+    gfxCriticalNote << "DoesD3D11TextureSharingWork_ColorMismatch";
     return false;
   }
 
