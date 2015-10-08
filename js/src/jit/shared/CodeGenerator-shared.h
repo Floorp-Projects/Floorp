@@ -303,7 +303,7 @@ class CodeGeneratorShared : public LElementVisitor
 
     // Encode all encountered safepoints in CG-order, and resolve |indices| for
     // safepoint offsets.
-    void encodeSafepoints();
+    bool encodeSafepoints();
 
     // Fixup offsets of native-to-bytecode map.
     bool createNativeToBytecodeScriptList(JSContext* cx);
