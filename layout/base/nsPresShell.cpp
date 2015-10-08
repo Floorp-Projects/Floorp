@@ -4659,6 +4659,11 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   gfxContextAutoSaveRestore save(aThebesContext);
 
   CompositionOp oldOp = aThebesContext->CurrentOp();
+  if (oldOp == CompositionOp::OP_OVER) {
+    // Clip to the destination rectangle before we push the group,
+    // to limit the size of the temporary surface
+    aThebesContext->Clip();
+  }
 
   // we want the window to be composited as a single image using
   // whatever operator was set; set OP_OVER here, which is
@@ -4671,14 +4676,17 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
                               gfxContentType::COLOR :
                               gfxContentType::COLOR_ALPHA);
+    aThebesContext->Save();
 
-    // Clip now while we paint to the temporary surface. For
-    // non-source-bounded operators (e.g., SOURCE), we need to do clip
-    // here after we've pushed the group, so that eventually popping
-    // the group and painting it will be able to clear the entire
-    // destination surface. PopGroup will take care of restoring.
-    aThebesContext->Clip();
-    aThebesContext->SetOp(CompositionOp::OP_OVER);
+    if (oldOp != CompositionOp::OP_OVER) {
+      // Clip now while we paint to the temporary surface. For
+      // non-source-bounded operators (e.g., SOURCE), we need to do clip
+      // here after we've pushed the group, so that eventually popping
+      // the group and painting it will be able to clear the entire
+      // destination surface.
+      aThebesContext->Clip();
+      aThebesContext->SetOp(CompositionOp::OP_OVER);
+    }
   }
 
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
@@ -4753,6 +4761,7 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
 
   // if we had to use a group, paint it to the destination now
   if (needsGroup) {
+    aThebesContext->Restore();
     aThebesContext->PopGroupToSource();
     aThebesContext->Paint();
   }
