@@ -993,7 +993,7 @@ class BOffImm
     {
         MOZ_ASSERT((offset & 0x3) == 0);
         if (!IsInRange(offset))
-            CrashAtUnhandlableOOM("BOffImm");
+            MOZ_CRASH("BOffImm offset out of range");
     }
 
     explicit BOffImm()

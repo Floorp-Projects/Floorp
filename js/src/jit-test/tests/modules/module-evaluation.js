@@ -26,15 +26,15 @@ assertEq(typeof m.evaluation(), "undefined");
 
 // Check top level variables are initialized by evaluation.
 m = parseModule("export var x = 2 + 2;");
-assertEq(typeof m.initialEnvironment.x, "undefined");
+assertEq(typeof getModuleEnvironmentValue(m, "x"), "undefined");
 m.declarationInstantiation();
 m.evaluation();
-assertEq(m.environment.x, 4);
+assertEq(getModuleEnvironmentValue(m, "x"), 4);
 
 m = parseModule("export let x = 2 * 3;");
 m.declarationInstantiation();
 m.evaluation();
-assertEq(m.environment.x, 6);
+assertEq(getModuleEnvironmentValue(m, "x"), 6);
 
 // Set up a module to import from.
 let a = moduleRepo['a'] =
@@ -99,4 +99,5 @@ assertDeepEq(parseAndEvaluate(`import { x as x1, y as y1 } from 'c1';
 m = parseModule("import { x } from 'a'; function f() { return x; }")
 m.declarationInstantiation();
 m.evaluation();
-assertEq(m.environment.f(), 1);
+let f = getModuleEnvironmentValue(m, "f");
+assertEq(f(), 1);

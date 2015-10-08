@@ -10,10 +10,10 @@ enum PresentationSessionState
   "connected",
 
   // Existing presentation, but the communication channel is inactive.
-  "disconnected",
+  "closed",
 
   // The presentation is nonexistent anymore. It could be terminated manually,
-  // or either requesting page or presenting page is no longer available.
+  // or either controlling or receiving browsing context is no longer available.
   "terminated"
 };
 
@@ -27,27 +27,24 @@ interface PresentationSession : EventTarget {
   readonly attribute DOMString id;
 
   /*
-   * Please refer to PresentationSessionStateEvent.webidl for the declaration of
-   * PresentationSessionState.
-   *
-   * @value "connected", "disconnected", or "terminated".
+   * @value "connected", "closed", or "terminated".
    */
   readonly attribute PresentationSessionState state;
 
   /*
-   * It is called when session state changes. New state is dispatched with the
-   * event.
+   * It is called when session state changes.
    */
   attribute EventHandler onstatechange;
 
   /*
-   * After a communication channel has been established between the requesting
-   * page and the presenting page, send() is called to send message out, and the
-   * event handler "onmessage" will be invoked on the remote side.
+   * After a communication channel has been established between the controlling
+   * and receiving context, this function is called to send message out, and the
+   * event handler "onmessage" will be invoked at the remote side.
    *
-   * This function only works when state equals "connected".
+   * This function only works when the state is "connected".
    *
-   * @data: String literal-only for current implementation.
+   * TODO bug 1148307 Implement PresentationSessionTransport with DataChannel to
+   * support other binary types.
    */
   [Throws]
   void send(DOMString data);
@@ -58,12 +55,21 @@ interface PresentationSession : EventTarget {
   attribute EventHandler onmessage;
 
   /*
-   * Both the requesting page and the presenting page can close the session by
-   * calling terminate(). Then, the session is destroyed and its state is
-   * truned into "terminated". After getting into the state of "terminated",
-   * resumeSession() is incapable of re-establishing the connection.
+   * Both the controlling and receving browsing context can close the session.
+   * Then, the session state should turn into "closed".
    *
-   * This function does nothing if the state has already been "terminated".
+   * This function only works when the state is not "connected".
    */
-  void close();
+  // TODO Bug 1210340 - Support close semantics.
+  // [Throws]
+  // void close();
+
+  /*
+   * Both the controlling and receving browsing context can terminate the session.
+   * Then the session state should turn into "terminated".
+   *
+   * This function only works when the state is not "connected".
+   */
+   [Throws]
+   void terminate();
 };

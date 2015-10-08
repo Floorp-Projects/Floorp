@@ -547,8 +547,9 @@ GroupPos
 ARIARowAccessible::GroupPosition()
 {
   int32_t count = 0, index = 0;
-  if (nsCoreUtils::GetUIntAttr(nsAccUtils::TableFor(this)->GetContent(),
-                               nsGkAtoms::aria_rowcount, &count) &&
+  Accessible* table = nsAccUtils::TableFor(this);
+  if (table && nsCoreUtils::GetUIntAttr(table->GetContent(),
+                                        nsGkAtoms::aria_rowcount, &count) &&
       nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_rowindex, &index)) {
     return GroupPos(0, index, count);
   }
