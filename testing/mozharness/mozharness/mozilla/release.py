@@ -40,6 +40,7 @@ class ReleaseMixin():
             self.release_config['ftp_server'] = rc['stagingServer']
             self.release_config['ftp_user'] = c.get('ftp_user', rc['hgUsername'])
             self.release_config['ftp_ssh_key'] = c.get('ftp_ssh_key', rc['hgSshKey'])
+            self.release_config['release_channel'] = rc['releaseChannel']
         else:
             self.info("No release config file; using default config.")
             for key in ('version', 'buildnum',
