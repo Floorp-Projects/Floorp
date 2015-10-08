@@ -110,6 +110,7 @@ public class GeckoView extends LayerView
     @WrapForJNI
     private static final class Window extends JNIObject {
         static native void open(Window instance, int width, int height);
+        static native void setLayerClient(Object client);
         @Override protected native void disposeNative();
     }
 
@@ -142,8 +143,14 @@ public class GeckoView extends LayerView
         GeckoAppShell.setLayerView(this);
 
         initializeView(EventDispatcher.getInstance());
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
-                GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, getLayerClientObject()));
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+            Window.setLayerClient(getLayerClientObject());
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.JNI_READY,
+                    Window.class, "setLayerClient",
+                    Object.class, getLayerClientObject());
+        }
 
         // TODO: Fennec currently takes care of its own initialization, so this
         // flag is a hack used in Fennec to prevent GeckoView initialization.
