@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1187801</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+<iframe src="about:blank" allowfullscreen></iframe>
+<script type="text/javascript">
+
+/** Test for Bug 1187801 **/
+
+function info(msg) {
+  opener.info("[nested] " + msg);
+}
+
+function ok(condition, msg) {
+  opener.ok(condition, "[nested] " + msg);
+}
+
+function is(a, b, msg) {
+  opener.is(a, b, "[nested] " + msg);
+}
+
+var gInnerDoc;
+var gTestSteps;
+var gTestIndex = 0;
+
+function begin() {
+  var root = document.documentElement;
+  var iframe = document.querySelector("iframe");
+  var innerDoc = gInnerDoc = iframe.contentDocument;
+  var innerRoot = innerDoc.documentElement;
+
+  // The format of each test step is:
+  // [[action, target], [fsOuter, fsInner]] where:
+  // * "action" is either "enter" or "exit", means whether we want to
+  //   enter or exit fullscreen in this step.
+  // * "target" is where we apply this action. For "enter" action, it
+  //   is the element we want to call requestFullscreen() on, and for
+  //   "exit", it is the document we want to call exitFullscreen() on.
+  // * "fsOuter" and "fsInner" are the expected fullscreen elements of
+  //   the outer and inner document respectively after executing the
+  //   action in this step.
+  gTestSteps = [
+    // innerRoot
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  innerDoc], [  null,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  document], [  null,      null]],
+    // root, innerRoot
+    [["enter",      root], [  root,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  innerDoc], [  root,      null]],
+    [[ "exit",  document], [  null,      null]],
+    [["enter",      root], [  root,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  document], [  root,      null]],
+    [[ "exit",  document], [  null,      null]],
+    // iframe, innerRoot
+    [["enter",    iframe], [iframe,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  innerDoc], [iframe,      null]],
+    [[ "exit",  document], [  null,      null]],
+    [["enter",    iframe], [iframe,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  document], [  null,      null]],
+    // root, iframe, innerRoot
+    [["enter",      root], [  root,      null]],
+    [["enter",    iframe], [iframe,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  innerDoc], [iframe,      null]],
+    [[ "exit",  document], [  root,      null]],
+    [[ "exit",  document], [  null,      null]],
+    [["enter",      root], [  root,      null]],
+    [["enter",    iframe], [iframe,      null]],
+    [["enter", innerRoot], [iframe, innerRoot]],
+    [[ "exit",  document], [  root,      null]],
+    [[ "exit",  document], [  null,      null]],
+  ];
+
+  nextStep();
+}
+
+function nextStep() {
+  if (gTestIndex == gTestSteps.length) {
+    opener.nextTest();
+    return;
+  }
+
+  var index = gTestIndex;
+  var [[action, target], [fsOuter, fsInner]] = gTestSteps[gTestIndex++];
+
+  function checkAndNext() {
+    is(document.mozFullScreenElement, fsOuter,
+       `Fullscreen element of outer doc should match after step ${index}`);
+    is(gInnerDoc.mozFullScreenElement, fsInner,
+       `Fullscreen element of inner doc should match after step ${index}`);
+    nextStep();
+  }
+
+  info(`Executing step ${index}: ${action} on ${target}...`);
+  if (action == "enter") {
+    // For "enter" action, the target is the element
+    var doc = target.ownerDocument;
+    addFullscreenChangeContinuation("enter", checkAndNext, doc);
+    target.mozRequestFullScreen();
+  } else if (action == "exit") {
+    // For "exit" action, the target is the document
+    addFullscreenChangeContinuation("exit", checkAndNext, target);
+    target.mozCancelFullScreen();
+  } else {
+    ok(false, `Unknown action ${action}`);
+  }
+}
+</script>
+</body>
+</html>
