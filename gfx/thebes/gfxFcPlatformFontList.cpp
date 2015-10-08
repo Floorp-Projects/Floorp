@@ -1215,12 +1215,11 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 }
 
 gfxFontFamily*
-gfxFcPlatformFontList::FindFamily(const nsAString& aFamily,
-                                  nsIAtom* aLanguage,
-                                  bool aUseSystemFonts)
+gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle)
 {
     nsAutoString familyName(aFamily);
     ToLowerCase(familyName);
+    nsIAtom* language = (aStyle ? aStyle->language.get() : nullptr);
 
     // deprecated generic names are explicitly converted to standard generics
     bool isDeprecatedGeneric = false;
@@ -1236,7 +1235,7 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily,
     // fontconfig generics? use fontconfig to determine the family for lang
     if (isDeprecatedGeneric ||
         mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
-        return FindGenericFamily(familyName, aLanguage);
+        return FindGenericFamily(familyName, language);
     }
 
     // fontconfig allows conditional substitutions in such a way that it's
