@@ -9,6 +9,7 @@
 #include "mozilla/Endian.h"
 #include "prsystem.h"
 #include "MediaData.h"
+#include "GMPDecoderModule.h"
 
 namespace mozilla {
 
@@ -107,6 +108,11 @@ void
 GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
   aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  const Maybe<nsCString> gmp(
+    GMPDecoderModule::PreferredGMP(NS_LITERAL_CSTRING("video/avc")));
+  if (gmp.isSome()) {
+    aTags.AppendElement(gmp.value());
+  }
 }
 
 nsCString
