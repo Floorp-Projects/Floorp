@@ -58,6 +58,19 @@
     ok(false, "Non-CORS loads with correct hashes redirecting to a different origin should be blocked!");
   }
 
+  function good_correctDataBlocked() {
+    ok(true, "A data: URL was blocked correctly.");
+  }
+  function bad_correctDataLoaded() {
+    ok(false, "Since data: URLs are neither same-origin nor CORS, they should be blocked!");
+  }
+  function good_correctDataCORSBlocked() {
+    ok(true, "A data: URL was blocked correctly even though it was a CORS load.");
+  }
+  function bad_correctDataCORSLoaded() {
+    todo(false, "We should not load scripts in data: URIs regardless of CORS mode!");
+  }
+
   window.onload = function() {
     SimpleTest.finish()
   }
@@ -98,6 +111,19 @@
         integrity="sha384-1NpiDI6decClMaTWSCAfUjTdx1BiOffsCPgH4lW5hCLwmHk0VyV/g6B9Sw2kD2K3"
         onerror="good_correct301Blocked()"
         onload="bad_correct301Loaded()"></script>
+
+<!-- data: URLs are not same-origin -->
+<script src="data:,console.log('data:valid');"
+        integrity="sha256-W5I4VIN+mCwOfR9kDbvWoY1UOVRXIh4mKRN0Nz0ookg="
+        onerror="good_correctDataBlocked()"
+        onload="bad_correctDataLoaded()"></script>
+
+<!-- data: URLs should always be opaque -->
+<script src="data:,console.log('data:valid');"
+        crossorigin="anonymous"
+        integrity="sha256-W5I4VIN+mCwOfR9kDbvWoY1UOVRXIh4mKRN0Nz0ookg="
+        onerror="good_correctDataCORSBlocked()"
+        onload="bad_correctDataCORSLoaded()"></script>
 
 <script>
   ok(window.hasCORSLoaded, "CORS-enabled resource with a correct hash");

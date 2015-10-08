@@ -99,7 +99,7 @@ function checkBookmarksPanel(invoker, phase)
         if (currentInvoker < invokers.length) {
           checkBookmarksPanel(invokers[currentInvoker], 1);
         } else {
-          gBrowser.removeTab(gBrowser.selectedTab, {skipPermitUnload: true});
+          gBrowser.removeCurrentTab();
           PlacesUtils.bookmarks.removeItem(bookmarkId);
           executeSoon(finish);
         }

@@ -27,10 +27,6 @@
 # - PYTHON, the path to the python executable
 # - ACDEFINES, which contains a set of -Dvar=name to be used during
 #   preprocessing
-# - MOZ_CHROME_FILE_FORMAT, which defines whether to use file copies or
-#   symbolic links
-# - JAR_MN_TARGETS, which defines the targets to use for jar manifest
-#   processing, see further below
 # - INSTALL_MANIFESTS, which defines the list of base directories handled
 #   by install manifests, see further below
 # - MANIFEST_TARGETS, which defines the file paths of chrome manifests, see
@@ -42,7 +38,6 @@
 
 # Targets to be triggered for a default build
 default: $(addprefix install-,$(INSTALL_MANIFESTS))
-default: $(addprefix jar-,$(JAR_MN_TARGETS))
 
 # Explicit files to be built for a default build
 default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
@@ -52,6 +47,12 @@ default: $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini
 
 # Targets from the recursive make backend to be built for a default build
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+# Mac builds require to copy things in dist/bin/*.app
+default:
+	$(MAKE) -C $(TOPOBJDIR)/$(MOZ_BUILD_APP)/app repackage
+endif
 
 .PHONY: FORCE
 
@@ -95,52 +96,6 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 		$(MOZ_DEBUG_DEFINES) \
 		install_$(subst /,_,$*)
 
-# Install files from jar manifests. Ideally, they would be using install
-# manifests, but the code to read jar manifests and emit appropriate
-# install manifests is not there yet.
-# Things missing:
-# - DEFINES from config/config.mk
-# - L10N
-# - -e when USE_EXTENSION_MANIFEST is set in moz.build
-#
-# The list given in JAR_MN_TARGETS corresponds to the list of `jar-%` targets
-# to be processed, with the `jar-` prefix stripped.
-# The Makefile is expected to specify the source jar manifest as a dependency
-# to each target. There is no expectation that the `jar-%` target name matches
-# the source file name in any way. For example:
-#   JAR_MN_TARGETS = foo
-#   jar-foo: /path/to/some/jar.mn
-# Additionally, extra defines can be specified for the processing of the jar
-# manifest by settig the `defines` variable specifically for the given target.
-# For example:
-#   jar-foo: defines = -Dqux=foo
-# The default base path where files are going to be installed is `dist/bin`.
-# It is possible to use a different path by setting the `install_target`
-# variable. For example:
-#   jar-foo: install_target = dist/bin/foo
-# When processing jar manifests, relative paths given inside a jar manifest
-# can be resolved from an object directory. The default path for that object
-# directory is the translation of the jar manifest directory path from the
-# source directory to the object directory. That is, for
-# $(TOPSRCDIR)/path/to/jar.mn, the default would be $(TOPOBJDIR)/path/to.
-# In case a different path must be used for the object directory, the `objdir`
-# variable can be set. For example:
-#   jar-foo: objdir=/some/other/path
-jar-%: objdir ?= $(dir $(patsubst $(TOPSRCDIR)%,$(TOPOBJDIR)%,$<))
-jar-%: install_target ?= dist/bin
-jar-%:
-	cd $(objdir) && \
-	$(PYTHON) -m mozbuild.action.jar_maker \
-		-j $(TOPOBJDIR)/$(install_target)/chrome \
-		-t $(TOPSRCDIR) \
-		-f $(MOZ_CHROME_FILE_FORMAT) \
-		-c $(dir $<)/en-US \
-		-DAB_CD=en-US \
-		$(defines) \
-		$(ACDEFINES) \
-		$(MOZ_DEBUG_DEFINES) \
-		$<
-
 # Create some chrome manifests
 # This rule is forced to run every time because it may be updating files that
 # already exit.
@@ -158,13 +113,6 @@ $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS)): FORCE
 # ============================================================================
 # Below is a set of additional dependencies and variables used to build things
 # that are not supported by data in moz.build.
-
-# GENERATED_FILES are not supported yet, and even if they were, the
-# dependencies are missing information.
-$(foreach p,linux osx windows,jar-browser-themes-$(p)-jar.mn): \
-jar-browser-themes-%-jar.mn: \
-	$(TOPOBJDIR)/browser/themes/%/tab-selected-end.svg \
-	$(TOPOBJDIR)/browser/themes/%/tab-selected-start.svg
 
 # Files to build with the recursive backend and simply copy
 $(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js

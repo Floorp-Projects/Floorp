@@ -33,6 +33,7 @@ import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.GeckoRequest;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -2344,31 +2345,57 @@ public abstract class GeckoApp
             return;
         }
 
-        Tabs tabs = Tabs.getInstance();
-        Tab tab = tabs.getSelectedTab();
+        final Tabs tabs = Tabs.getInstance();
+        final Tab tab = tabs.getSelectedTab();
         if (tab == null) {
             moveTaskToBack(true);
             return;
         }
 
-        if (tab.doBack())
-            return;
+        // Give Gecko a chance to handle the back press first, then fallback to the Java UI.
+        GeckoAppShell.sendRequestToGecko(new GeckoRequest("Browser:OnBackPressed", null) {
+            @Override
+            public void onResponse(NativeJSObject nativeJSObject) {
+                if (!nativeJSObject.getBoolean("handled")) {
+                    // Default behavior is Gecko didn't prevent.
+                    onDefault();
+                }
+            }
 
-        if (tab.isExternal()) {
-            moveTaskToBack(true);
-            tabs.closeTab(tab);
-            return;
-        }
+            @Override
+            public void onError(NativeJSObject error) {
+                // Default behavior is Gecko didn't prevent, via failure.
+                onDefault();
+            }
 
-        int parentId = tab.getParentId();
-        Tab parent = tabs.getTab(parentId);
-        if (parent != null) {
-            // The back button should always return to the parent (not a sibling).
-            tabs.closeTab(tab, parent);
-            return;
-        }
+            // Return from Gecko thread, then back-press through the Java UI.
+            private void onDefault() {
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (tab.doBack()) {
+                            return;
+                        }
 
-        moveTaskToBack(true);
+                        if (tab.isExternal()) {
+                            moveTaskToBack(true);
+                            tabs.closeTab(tab);
+                            return;
+                        }
+
+                        final int parentId = tab.getParentId();
+                        final Tab parent = tabs.getTab(parentId);
+                        if (parent != null) {
+                            // The back button should always return to the parent (not a sibling).
+                            tabs.closeTab(tab, parent);
+                            return;
+                        }
+
+                        moveTaskToBack(true);
+                    }
+                });
+            }
+        });
     }
 
     @Override

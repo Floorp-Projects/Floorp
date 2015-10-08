@@ -767,13 +767,6 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
-                } else if (PREFS_HISTORY_SAVED_SEARCH.equals(key)) {
-                    // Remove settings UI if not on Nightly
-                    if (!AppConstants.NIGHTLY_BUILD) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
                 } else if (PREFS_TRACKING_PROTECTION.equals(key)) {
                     // Remove UI for global TP pref in non-Nightly builds.
                     if (!AppConstants.NIGHTLY_BUILD) {

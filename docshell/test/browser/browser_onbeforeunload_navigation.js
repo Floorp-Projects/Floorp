@@ -10,7 +10,6 @@ SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunlo
 
 var loadExpected = TEST_PAGE;
 var testTab;
-var testsLength;
 
 var loadStarted = false;
 var tabStateListener = {
@@ -39,10 +38,6 @@ function onTabLoaded(event) {
   if (!loadExpected) {
     ok(false, "Expected no page loads, but loaded " + loadedPage + " instead!");
     return;
-  }
-
-  if (!testsLength) {
-    testsLength = testTab.linkedBrowser.contentWindow.wrappedJSObject.testFns.length;
   }
 
   is(loadedPage, loadExpected, "Loaded the expected page");
@@ -107,9 +102,47 @@ function onTabModalDialogLoaded(node) {
 // Listen for the dialog being created
 Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded", false);
 
+var testFns = [
+  function(e) {
+    e.target.location.href = 'otherpage-href-set.html';
+    return "stop";
+  },
+  function(e) {
+    e.target.location.reload();
+    return "stop";
+  },
+  function(e) {
+    e.target.location.replace('otherpage-location-replaced.html');
+    return "stop";
+  },
+  function(e) {
+    var link = e.target.createElement('a');
+    link.href = "otherpage.html";
+    e.target.body.appendChild(link);
+    link.click();
+    return "stop";
+  },
+  function(e) {
+    var link = e.target.createElement('a');
+    link.href = "otherpage.html";
+    link.setAttribute("target", "_blank");
+    e.target.body.appendChild(link);
+    link.click();
+    return "stop";
+  },
+  function(e) {
+    var link = e.target.createElement('a');
+    link.href = e.target.location.href;
+    e.target.body.appendChild(link);
+    link.setAttribute("target", "somearbitrarywindow");
+    link.click();
+    return "stop";
+  },
+];
+
 function runNextTest() {
   currentTest++;
-  if (currentTest >= testsLength) {
+  if (currentTest >= testFns.length) {
     if (!stayingOnPage) {
       finish();
       return;
@@ -138,10 +171,10 @@ function runCurrentTest() {
   contentWindow.dialogWasInvoked = false;
   originalLocation = contentWindow.location.href;
   // And run this test:
-  info("Running test with onbeforeunload " + contentWindow.wrappedJSObject.testFns[currentTest].toSource());
-  contentWindow.onbeforeunload = contentWindow.wrappedJSObject.testFns[currentTest];
+  info("Running test with onbeforeunload " + testFns[currentTest].toSource());
+  contentWindow.onbeforeunload = testFns[currentTest];
   loadStarted = false;
-  testTab.linkedBrowser.loadURI(TARGETED_PAGE);
+  contentWindow.location.href = TARGETED_PAGE;
 }
 
 var onAfterPageLoad = runNextTest;

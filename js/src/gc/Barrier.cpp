@@ -125,8 +125,9 @@ MovableCellHasher<T>::hash(const Lookup& l)
                l->zoneFromAnyThread()->isSelfHostingZone());
 
     HashNumber hn;
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!l->zoneFromAnyThread()->getHashCode(l, &hn))
-        CrashAtUnhandlableOOM("failed to get a stable hash code");
+        oomUnsafe.crash("failed to get a stable hash code");
     return hn;
 }
 

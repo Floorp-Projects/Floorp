@@ -27,7 +27,7 @@ var tests = [
 
     {url: "/test/cebrotli1",
      flags: CL_EXPECT_GZIP,
-     ce: "brotli",
+     ce: "br",
      body: [0x0B, 0x02, 0x80, 0x74, 0x65, 0x73, 0x74, 0x0A, 0x03],
 
      datalen: 5 // the data length of the uncompressed document
@@ -36,7 +36,7 @@ var tests = [
     // this is not a brotli document
     {url: "/test/cebrotli2",
      flags: CL_EXPECT_GZIP | CL_EXPECT_FAILURE,
-     ce: "brotli",
+     ce: "br",
      body: [0x0B, 0x0A, 0x09],
      datalen: 3
     },
@@ -44,7 +44,7 @@ var tests = [
     // this is brotli but should come through as identity due to prefs
     {url: "/test/cebrotli3",
      flags: 0,
-     ce: "brotli",
+     ce: "br",
      body: [0x0B, 0x02, 0x80, 0x74, 0x65, 0x73, 0x74, 0x0A, 0x03],
 
      datalen: 9
@@ -92,7 +92,7 @@ var cePref;
 function run_test() {
     prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
     cePref = prefs.getCharPref("network.http.accept-encoding");
-    prefs.setCharPref("network.http.accept-encoding", "gzip, deflate, brotli");
+    prefs.setCharPref("network.http.accept-encoding", "gzip, deflate, br");
 
     httpserver.registerPathHandler("/test/cegzip1", handler);
     httpserver.registerPathHandler("/test/cegzip2", handler);

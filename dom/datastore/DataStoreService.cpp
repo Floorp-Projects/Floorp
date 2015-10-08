@@ -823,22 +823,20 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
   // window, so we can skip the ipc communication.
   if (XRE_IsParentProcess()) {
     uint32_t appId;
-    nsresult rv = principal->GetAppId(&appId);
-    if (NS_FAILED(rv)) {
-      RejectPromise(window, promise, rv);
+    rv = principal->GetAppId(&appId);
+    if (NS_WARN_IF(rv.Failed())) {
+      RejectPromise(window, promise, rv.StealNSResult());
       promise.forget(aDataStores);
       return NS_OK;
     }
 
     rv = GetDataStoreInfos(aName, aOwner, appId, principal, stores);
-    if (NS_FAILED(rv)) {
-      RejectPromise(window, promise, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      RejectPromise(window, promise, rv.StealNSResult());
       promise.forget(aDataStores);
       return NS_OK;
     }
-  }
-
-  else {
+  } else {
     // This method can be called in the child so we need to send a request
     // to the parent and create DataStore object here.
     ContentChild* contentChild = ContentChild::GetSingleton();
@@ -971,7 +969,7 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
   }
 }
 
-// Thie method populates 'aStores' with the list of DataStores with 'aName' as
+// This method populates 'aStores' with the list of DataStores with 'aName' as
 // name and available for this 'aAppId'.
 nsresult
 DataStoreService::GetDataStoreInfos(const nsAString& aName,
@@ -1009,12 +1007,12 @@ DataStoreService::GetDataStoreInfos(const nsAString& aName,
     return NS_OK;
   }
 
-  DataStoreInfo* info = nullptr;
-  if (apps->Get(aAppId, &info) &&
-      (aOwner.IsEmpty() || aOwner.Equals(info->mManifestURL))) {
+  DataStoreInfo* appsInfo = nullptr;
+  if (apps->Get(aAppId, &appsInfo) &&
+      (aOwner.IsEmpty() || aOwner.Equals(appsInfo->mManifestURL))) {
     DataStoreInfo* owned = aStores.AppendElement();
-    owned->Init(info->mName, info->mOriginURL, info->mManifestURL, false,
-                info->mEnabled);
+    owned->Init(appsInfo->mName, appsInfo->mOriginURL, appsInfo->mManifestURL,
+                false, appsInfo->mEnabled);
   }
 
   for (auto iter = apps->ConstIter(); !iter.Done(); iter.Next()) {
@@ -1022,29 +1020,29 @@ DataStoreService::GetDataStoreInfos(const nsAString& aName,
       continue;
     }
 
-    DataStoreInfo* info = iter.UserData();
-    MOZ_ASSERT(info);
+    DataStoreInfo* appInfo = iter.UserData();
+    MOZ_ASSERT(appInfo);
 
-    HashApp* app;
-    if (!mAccessStores.Get(aName, &app)) {
+    HashApp* accessApp;
+    if (!mAccessStores.Get(aName, &accessApp)) {
       continue;
     }
 
     if (!aOwner.IsEmpty() &&
-        !aOwner.Equals(info->mManifestURL)) {
+        !aOwner.Equals(appInfo->mManifestURL)) {
       continue;
     }
 
     DataStoreInfo* accessInfo = nullptr;
-    if (!app->Get(aAppId, &accessInfo)) {
+    if (!accessApp->Get(aAppId, &accessInfo)) {
       continue;
     }
 
-    bool readOnly = info->mReadOnly || accessInfo->mReadOnly;
+    bool readOnly = appInfo->mReadOnly || accessInfo->mReadOnly;
     DataStoreInfo* accessStore = aStores.AppendElement();
-    accessStore->Init(aName, info->mOriginURL,
-                      info->mManifestURL, readOnly,
-                      info->mEnabled);
+    accessStore->Init(aName, appInfo->mOriginURL,
+                      appInfo->mManifestURL, readOnly,
+                      appInfo->mEnabled);
   }
 
   return NS_OK;

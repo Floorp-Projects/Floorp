@@ -17,6 +17,7 @@ DevToolsModules(
     'AppCacheUtils.jsm',
     'autocomplete-popup.js',
     'browser-loader.js',
+    'css-parsing-utils.js',
     'Curl.jsm',
     'DeveloperToolbar.jsm',
     'devices.js',

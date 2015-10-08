@@ -25,7 +25,8 @@ npm_install:
 # assets
 .PHONY: dist
 dist:
-	cp -pr content dist
+	mkdir -p dist
+	cp -pR content dist
 	NODE_ENV="production" $(NODE_LOCAL_BIN)/webpack \
 		-p -v --display-errors
 	sed 's#webappEntryPoint.js#js/standalone.js#' \

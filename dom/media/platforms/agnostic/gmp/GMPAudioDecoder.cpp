@@ -7,6 +7,7 @@
 #include "GMPAudioDecoder.h"
 #include "nsServiceManagerUtils.h"
 #include "MediaInfo.h"
+#include "GMPDecoderModule.h"
 
 namespace mozilla {
 
@@ -125,6 +126,11 @@ void
 GMPAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
   aTags.AppendElement(NS_LITERAL_CSTRING("aac"));
+  const Maybe<nsCString> gmp(
+    GMPDecoderModule::PreferredGMP(NS_LITERAL_CSTRING("audio/mp4a-latm")));
+  if (gmp.isSome()) {
+    aTags.AppendElement(gmp.value());
+  }
 }
 
 nsCString
@@ -134,23 +140,12 @@ GMPAudioDecoder::GetNodeId()
 }
 
 void
-GMPAudioDecoder::GetGMPAPI(GMPInitDoneRunnable* aInitDone)
-{
-  MOZ_ASSERT(IsOnGMPThread());
-
-  nsTArray<nsCString> tags;
-  InitTags(tags);
-  UniquePtr<GetGMPAudioDecoderCallback> callback(
-    new GMPInitDoneCallback(this, aInitDone));
-  if (NS_FAILED(mMPS->GetGMPAudioDecoder(&tags, GetNodeId(), Move(callback)))) {
-    aInitDone->Dispatch();
-  }
-}
-
-void
 GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
 {
-  MOZ_ASSERT(aGMP);
+  if (!aGMP) {
+    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    return;
+  }
   nsTArray<uint8_t> codecSpecific;
   codecSpecific.AppendElements(mConfig.mCodecSpecificConfig->Elements(),
                                mConfig.mCodecSpecificConfig->Length());
@@ -161,9 +156,14 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
                                  mConfig.mRate,
                                  codecSpecific,
                                  mAdapter);
-  if (NS_SUCCEEDED(rv)) {
-    mGMP = aGMP;
+  if (NS_FAILED(rv)) {
+    aGMP->Close();
+    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    return;
   }
+
+  mGMP = aGMP;
+  mInitPromise.Resolve(TrackInfo::kAudioTrack, __func__);
 }
 
 nsRefPtr<MediaDataDecoder::InitPromise>
@@ -174,21 +174,16 @@ GMPAudioDecoder::Init()
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  nsCOMPtr<nsIThread> gmpThread = NS_GetCurrentThread();
+  nsRefPtr<InitPromise> promise(mInitPromise.Ensure(__func__));
 
-  nsRefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
-  gmpThread->Dispatch(
-    NS_NewRunnableMethodWithArg<GMPInitDoneRunnable*>(this,
-                                                      &GMPAudioDecoder::GetGMPAPI,
-                                                      initDone),
-    NS_DISPATCH_NORMAL);
-
-  while (!initDone->IsDone()) {
-    NS_ProcessNextEvent(gmpThread, true);
+  nsTArray<nsCString> tags;
+  InitTags(tags);
+  UniquePtr<GetGMPAudioDecoderCallback> callback(new GMPInitDoneCallback(this));
+  if (NS_FAILED(mMPS->GetGMPAudioDecoder(&tags, GetNodeId(), Move(callback)))) {
+    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
   }
 
-  return mGMP ? InitPromise::CreateAndResolve(TrackInfo::kAudioTrack, __func__)
-              : InitPromise::CreateAndReject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+  return promise;
 }
 
 nsresult
@@ -242,6 +237,7 @@ GMPAudioDecoder::Drain()
 nsresult
 GMPAudioDecoder::Shutdown()
 {
+  mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::CANCELED, __func__);
   if (!mGMP) {
     return NS_ERROR_FAILURE;
   }

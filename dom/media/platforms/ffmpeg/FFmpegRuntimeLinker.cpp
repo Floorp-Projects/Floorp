@@ -9,11 +9,14 @@
 #include "FFmpegRuntimeLinker.h"
 #include "mozilla/ArrayUtils.h"
 #include "FFmpegLog.h"
+#include "mozilla/Preferences.h"
 
 #define NUM_ELEMENTS(X) (sizeof(X) / sizeof((X)[0]))
 
 namespace mozilla
 {
+
+bool FFmpegRuntimeLinker::sFFmpegDecoderEnabled = false;
 
 FFmpegRuntimeLinker::LinkStatus FFmpegRuntimeLinker::sLinkStatus =
   LinkStatus_INIT;
@@ -58,6 +61,9 @@ FFmpegRuntimeLinker::Link()
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
+
+  Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
+                               "media.fragmented-mp4.ffmpeg.enabled", false);
 
   MOZ_ASSERT(NS_IsMainThread());
 

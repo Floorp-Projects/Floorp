@@ -178,7 +178,14 @@ private:
   {
     mPingOutstanding = 0;
     if (mPingTimer) {
-      mPingTimer->SetDelay(mPingInterval);
+      if (!mPingInterval) {
+        // The timer was created by forced ping and regular pinging is disabled,
+        // so cancel and null out mPingTimer.
+        mPingTimer->Cancel();
+        mPingTimer = nullptr;
+      } else {
+        mPingTimer->SetDelay(mPingInterval);
+      }
     }
   }
 

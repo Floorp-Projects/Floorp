@@ -26,7 +26,7 @@ EMEVideoCallbackAdapter::Error(GMPErr aErr)
 void
 EMEVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
-  GMPVideoDecoder::InitTags(aTags);
+  aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
   aTags.AppendElement(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
 }
 
