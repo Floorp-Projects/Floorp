@@ -828,9 +828,7 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
 }
 
 gfxFontFamily*
-gfxGDIFontList::FindFamily(const nsAString& aFamily,
-                           nsIAtom* aLanguage,
-                           bool aUseSystemFonts)
+gfxGDIFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle)
 {
     nsAutoString keyName(aFamily);
     BuildKeyNameFromFontName(keyName);

@@ -1115,15 +1115,15 @@ gfxFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 //
 //////////////////////////////////////////////////////////////////////////////
 
-// we consider faces with mStandardFace == true to be "greater than" those with false,
-// because during style matching, later entries will replace earlier ones
+// we consider faces with mStandardFace == true to be "less than" those with false,
+// because during style matching, earlier entries are tried first
 class FontEntryStandardFaceComparator {
   public:
     bool Equals(const nsRefPtr<gfxFontEntry>& a, const nsRefPtr<gfxFontEntry>& b) const {
         return a->mStandardFace == b->mStandardFace;
     }
     bool LessThan(const nsRefPtr<gfxFontEntry>& a, const nsRefPtr<gfxFontEntry>& b) const {
-        return (a->mStandardFace == false && b->mStandardFace == true);
+        return (a->mStandardFace == true && b->mStandardFace == false);
     }
 };
 
