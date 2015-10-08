@@ -5015,6 +5015,18 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
         ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
 
+        // The CallNativeGlobal stub needs to generate 3 shape checks:
+        //
+        // 1. The global lexical scope shape check.
+        // 2. The global object shape check.
+        // 3. The holder shape check.
+        //
+        // 1 is done as the receiver check, as for GETNAME the global lexical scope is in the
+        // receiver position. 2 is done as a manual check that other GetProp stubs don't do. 3 is
+        // done as the holder check per normal.
+        //
+        // In the case the holder is the global object, check 2 is redundant but is not yet
+        // optimized away.
         JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName/NativeGetter) stub");
         if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativeGlobal, current,
                                            globalLexical, getter))
