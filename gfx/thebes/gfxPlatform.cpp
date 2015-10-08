@@ -2157,13 +2157,9 @@ gfxPlatform::PerfWarnings()
   return gfxPrefs::PerfWarnings();
 }
 
-void
-gfxPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
+static inline bool
+AllowOpenGL(bool* aWhitelisted)
 {
-  // Being whitelisted is not enough to accelerate, but not being whitelisted is
-  // enough not to:
-  bool whitelisted = false;
-
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
     // bug 655578: on X11 at least, we must always call GetData (even if we don't need that information)
@@ -2175,10 +2171,24 @@ gfxPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends
     int32_t status;
     if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status))) {
       if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
-        aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
-        whitelisted = true;
+        *aWhitelisted = true;
+        return true;
       }
     }
+  }
+
+  return gfxPrefs::LayersAccelerationForceEnabled();
+}
+
+void
+gfxPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
+{
+  // Being whitelisted is not enough to accelerate, but not being whitelisted is
+  // enough not to:
+  bool whitelisted = false;
+
+  if (AllowOpenGL(&whitelisted)) {
+    aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 
   if (!whitelisted) {
