@@ -766,8 +766,7 @@
                   dispatcher={dispatcher}
                   mozLoop={firstTimeUseMozLoop}
                   notifications={notifications}
-                  roomStore={roomStore}
-                  selectedTab="rooms" />
+                  roomStore={roomStore} />
               </div>
             </FramedExample>
 
@@ -784,75 +783,70 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Room list tab"
+                           summary="Room list"
                            width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
                            mozLoop={mockMozLoopLoggedIn}
                            notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="rooms" />
+                           roomStore={roomStore} />
               </div>
             </FramedExample>
 
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Room list tab (No Context)"
+                           summary="Room list (No Context)"
                            width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
                            mozLoop={mockMozLoopLoggedInNoContext}
                            notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="rooms" />
+                           roomStore={roomStore} />
               </div>
             </FramedExample>
 
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Room list tab (no rooms)"
+                           summary="Room list (no rooms)"
                            width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
                            mozLoop={mockMozLoopNoRooms}
                            notifications={notifications}
-                           roomStore={roomStoreNoRooms}
-                           selectedTab="rooms" />
+                           roomStore={roomStoreNoRooms} />
               </div>
             </FramedExample>
 
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Room list tab (no rooms and no context)"
+                           summary="Room list (no rooms and no context)"
                            width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
                            mozLoop={mockMozLoopNoRoomsNoContext}
                            notifications={notifications}
-                           roomStore={roomStoreNoRooms}
-                           selectedTab="rooms" />
+                           roomStore={roomStoreNoRooms} />
               </div>
             </FramedExample>
 
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Room list tab (loading view)"
+                           summary="Room list (loading view)"
                            width={330}>
               <div className="panel">
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
                            mozLoop={mockMozLoopNoRoomsNoContext}
                            notifications={notifications}
-                           roomStore={roomStoreNoRoomsPending}
-                           selectedTab="rooms" />
+                           roomStore={roomStoreNoRoomsPending} />
               </div>
             </FramedExample>
 

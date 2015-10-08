@@ -10,109 +10,8 @@ loop.panel = (function(_, mozL10n) {
   var sharedModels = loop.shared.models;
   var sharedMixins = loop.shared.mixins;
   var sharedActions = loop.shared.actions;
-  var sharedUtils = loop.shared.utils;
   var Button = sharedViews.Button;
-  var ButtonGroup = sharedViews.ButtonGroup;
   var Checkbox = sharedViews.Checkbox;
-  var ContactsControllerView = loop.contacts.ContactsControllerView;
-
-  var TabView = React.createClass({displayName: "TabView",
-    propTypes: {
-      buttonsHidden: React.PropTypes.array,
-      children: React.PropTypes.arrayOf(React.PropTypes.element),
-      mozLoop: React.PropTypes.object,
-      // The selectedTab prop is used by the UI showcase.
-      selectedTab: React.PropTypes.string
-    },
-
-    getDefaultProps: function() {
-      return {
-        buttonsHidden: []
-      };
-    },
-
-    shouldComponentUpdate: function(nextProps, nextState) {
-      var tabChange = this.state.selectedTab !== nextState.selectedTab;
-      if (tabChange) {
-        this.props.mozLoop.notifyUITour("Loop:PanelTabChanged", nextState.selectedTab);
-      }
-
-      if (!tabChange && nextProps.buttonsHidden) {
-        if (nextProps.buttonsHidden.length !== this.props.buttonsHidden.length) {
-          tabChange = true;
-        } else {
-          for (var i = 0, l = nextProps.buttonsHidden.length; i < l && !tabChange; ++i) {
-            if (this.props.buttonsHidden.indexOf(nextProps.buttonsHidden[i]) === -1) {
-              tabChange = true;
-            }
-          }
-        }
-      }
-      return tabChange;
-    },
-
-    getInitialState: function() {
-      // XXX Work around props.selectedTab being undefined initially.
-      // When we don't need to rely on the pref, this can move back to
-      // getDefaultProps (bug 1100258).
-      return {
-        selectedTab: this.props.selectedTab || "rooms"
-      };
-    },
-
-    handleSelectTab: function(event) {
-      var tabName = event.target.dataset.tabName;
-      this.setState({selectedTab: tabName});
-    },
-
-    render: function() {
-      var cx = React.addons.classSet;
-      var tabButtons = [];
-      var tabs = [];
-      React.Children.forEach(this.props.children, function(tab, i) {
-        // Filter out null tabs (eg. rooms when the feature is disabled)
-        if (!tab) {
-          return;
-        }
-        var tabName = tab.props.name;
-        if (this.props.buttonsHidden.indexOf(tabName) > -1) {
-          return;
-        }
-        var isSelected = (this.state.selectedTab === tabName);
-        if (!tab.props.hidden) {
-          var label = mozL10n.get(tabName + "_tab_button");
-          tabButtons.push(
-            React.createElement("li", {className: cx({selected: isSelected}), 
-                "data-tab-name": tabName, 
-                key: i, 
-                onClick: this.handleSelectTab}, 
-              React.createElement("div", null, label)
-            )
-          );
-        }
-        tabs.push(
-          React.createElement("div", {className: cx({tab: true, selected: isSelected}), key: i}, 
-            tab.props.children
-          )
-        );
-      }, this);
-      return (
-        React.createElement("div", {className: "tab-view-container"}, 
-          React.createElement("ul", {className: "tab-view"}, 
-            tabButtons, 
-            React.createElement("li", {className: "slide-bar"})
-          ), 
-          tabs
-        )
-      );
-    }
-  });
-
-  var Tab = React.createClass({displayName: "Tab",
-    render: function() {
-      return null;
-    }
-  });
 
   /**
    * Availability drop down menu subview.
@@ -1001,14 +900,10 @@ loop.panel = (function(_, mozL10n) {
   var PanelView = React.createClass({displayName: "PanelView",
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      initialSelectedTabComponent: React.PropTypes.string,
       mozLoop: React.PropTypes.object.isRequired,
       notifications: React.PropTypes.object.isRequired,
       roomStore:
-        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
-      selectedTab: React.PropTypes.string,
-      // Used only for unit tests.
-      showTabButtons: React.PropTypes.bool
+        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
 
     getInitialState: function() {
@@ -1056,8 +951,6 @@ loop.panel = (function(_, mozL10n) {
         // Update the state of hasEncryptionKey as this might have changed now.
         this.setState({hasEncryptionKey: this.props.mozLoop.hasEncryptionKey});
       } else {
-        // On profile change (login, logout), switch back to the default tab.
-        this.selectTab("rooms");
         this.setState({userProfile: profile});
       }
       this.updateServiceErrors();
@@ -1069,25 +962,6 @@ loop.panel = (function(_, mozL10n) {
       });
     },
 
-    _UIActionHandler: function(e) {
-      switch (e.detail.action) {
-        case "selectTab":
-          this.selectTab(e.detail.tab);
-          break;
-        default:
-          console.error("Invalid action", e.detail.action);
-          break;
-      }
-    },
-
-    selectTab: function(name) {
-      // The tab view might not be created yet (e.g. getting started or fxa
-      // re-sign in.
-      if (this.refs.tabView) {
-        this.refs.tabView.setState({ selectedTab: name });
-      }
-    },
-
     componentWillMount: function() {
       this.updateServiceErrors();
     },
@@ -1095,13 +969,11 @@ loop.panel = (function(_, mozL10n) {
     componentDidMount: function() {
       window.addEventListener("LoopStatusChanged", this._onStatusChanged);
       window.addEventListener("GettingStartedSeen", this._gettingStartedSeen);
-      window.addEventListener("UIAction", this._UIActionHandler);
     },
 
     componentWillUnmount: function() {
       window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
       window.removeEventListener("GettingStartedSeen", this._gettingStartedSeen);
-      window.removeEventListener("UIAction", this._UIActionHandler);
     },
 
     render: function() {
@@ -1123,35 +995,15 @@ loop.panel = (function(_, mozL10n) {
         return React.createElement(SignInRequestView, {mozLoop: this.props.mozLoop});
       }
 
-      // Determine which buttons to NOT show.
-      var hideButtons = [];
-      if (!this.state.userProfile && !this.props.showTabButtons) {
-        hideButtons.push("contacts");
-      }
-
       return (
         React.createElement("div", {className: "panel-content"}, 
           React.createElement(NotificationListView, {
             clearOnDocumentHidden: true, 
             notifications: this.props.notifications}), 
-          React.createElement(TabView, {
-            buttonsHidden: hideButtons, 
-            mozLoop: this.props.mozLoop, 
-            ref: "tabView", 
-            selectedTab: this.props.selectedTab}, 
-            React.createElement(Tab, {name: "rooms"}, 
-              React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
-                        mozLoop: this.props.mozLoop, 
-                        store: this.props.roomStore, 
-                        userProfile: this.state.userProfile})
-            ), 
-            React.createElement(Tab, {name: "contacts"}, 
-              React.createElement(ContactsControllerView, {initialSelectedTabComponent: this.props.initialSelectedTabComponent, 
-                                      mozLoop: this.props.mozLoop, 
-                                      notifications: this.props.notifications, 
-                                      ref: "contactControllerView"})
-            )
-          ), 
+            React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
+                      mozLoop: this.props.mozLoop, 
+                      store: this.props.roomStore, 
+                      userProfile: this.state.userProfile}), 
           React.createElement("div", {className: "footer"}, 
             React.createElement("div", {className: "user-details"}, 
               React.createElement(AvailabilityDropdown, null)
