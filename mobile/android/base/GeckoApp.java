@@ -639,7 +639,7 @@ public abstract class GeckoApp
                 final String url = ReaderModeUtils.stripAboutReaderUrl(tab.getURL());
                 text += "\n\n" + url;
             }
-            GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
+            GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title);
 
             // Context: Sharing via chrome list (no explicit session is active)
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
