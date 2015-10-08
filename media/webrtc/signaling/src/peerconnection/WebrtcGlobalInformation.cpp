@@ -819,8 +819,38 @@ MOZ_IMPLICIT WebrtcGlobalChild::~WebrtcGlobalChild()
 
 struct StreamResult {
   StreamResult() : candidateTypeBitpattern(0), streamSucceeded(false) {}
-  uint8_t candidateTypeBitpattern;
+  uint32_t candidateTypeBitpattern;
   bool streamSucceeded;
+};
+
+static uint32_t GetCandidateIpAndTransportMask(const RTCIceCandidateStats *cand) {
+
+  enum {
+    CANDIDATE_BITMASK_UDP = 1,
+    CANDIDATE_BITMASK_TCP = 1 << 1,
+    CANDIDATE_BITMASK_IPV6 = 1 << 2,
+  };
+
+  uint32_t res = 0;
+
+  nsAutoCString transport;
+  // prefer local transport for local relay candidates
+  if (cand->mMozLocalTransport.WasPassed()) {
+    transport.Assign(NS_ConvertUTF16toUTF8(cand->mMozLocalTransport.Value()));
+  } else {
+    transport.Assign(NS_ConvertUTF16toUTF8(cand->mTransport.Value()));
+  }
+  if (transport == kNrIceTransportUdp) {
+    res |= CANDIDATE_BITMASK_UDP;
+  } else if (transport == kNrIceTransportTcp) {
+    res |= CANDIDATE_BITMASK_TCP;
+  }
+
+  if (cand->mIpAddress.Value().FindChar(':') != -1) {
+    res |= CANDIDATE_BITMASK_IPV6;
+  }
+
+  return res;
 };
 
 static void StoreLongTermICEStatisticsImpl_m(
@@ -837,17 +867,6 @@ static void StoreLongTermICEStatisticsImpl_m(
   }
 
   query->report->mClosed.Construct(true);
-
-  // First, store stuff in telemetry
-  enum {
-    REMOTE_GATHERED_SERVER_REFLEXIVE = 1,
-    REMOTE_GATHERED_TURN = 1 << 1,
-    LOCAL_GATHERED_SERVER_REFLEXIVE = 1 << 2,
-    LOCAL_GATHERED_TURN_UDP = 1 << 3,
-    LOCAL_GATHERED_TURN_TCP = 1 << 4,
-    LOCAL_GATHERED_TURN_TLS = 1 << 5,
-    LOCAL_GATHERED_TURN_HTTPS = 1 << 6,
-  };
 
   // TODO(bcampen@mozilla.com): Do we need to watch out for cases where the
   // components within a stream didn't have the same types of relayed
@@ -887,53 +906,74 @@ static void StoreLongTermICEStatisticsImpl_m(
 
     if (!cand.mType.WasPassed() ||
         !cand.mCandidateType.WasPassed() ||
+        !cand.mTransport.WasPassed() ||
+        !cand.mIpAddress.WasPassed() ||
         !cand.mComponentId.WasPassed()) {
       // Crash on debug, ignore this candidate otherwise.
       MOZ_CRASH();
       continue;
     }
 
+    /* The bitmask after examaning a candidate should look like this:
+     * REMOTE_GATHERED_HOST_UDP = 1,
+     * REMOTE_GATHERED_HOST_TCP = 1 << 1,
+     * REMOTE_GATHERED_HOST_IPV6 = 1 << 2,
+     * REMOTE_GATHERED_SERVER_REFLEXIVE_UDP = 1 << 3,
+     * REMOTE_GATHERED_SERVER_REFLEXIVE_TCP = 1 << 4,
+     * REMOTE_GATHERED_SERVER_REFLEXIVE_IPV6 = 1 << 5,
+     * REMOTE_GATHERED_TURN_UDP = 1 << 6,
+     * REMOTE_GATHERED_TURN_TCP = 1 << 7, // dummy place holder
+     * REMOTE_GATHERED_TURN_IPV6 = 1 << 8,
+     * REMOTE_GATHERED_PEER_REFLEXIVE_UDP = 1 << 9,
+     * REMOTE_GATHERED_PEER_REFLEXIVE_TCP = 1 << 10,
+     * REMOTE_GATHERED_PEER_REFLEXIVE_IPV6 = 1 << 11,
+     * LOCAL_GATHERED_HOST_UDP = 1 << 16,
+     * LOCAL_GATHERED_HOST_TCP = 1 << 17,
+     * LOCAL_GATHERED_HOST_IPV6 = 1 << 18,
+     * LOCAL_GATHERED_SERVER_REFLEXIVE_UDP = 1 << 19,
+     * LOCAL_GATHERED_SERVER_REFLEXIVE_TCP = 1 << 20,
+     * LOCAL_GATHERED_SERVER_REFLEXIVE_IPV6 = 1 << 21,
+     * LOCAL_GATHERED_TURN_UDP = 1 << 22,
+     * LOCAL_GATHERED_TURN_TCP = 1 << 23,
+     * LOCAL_GATHERED_TURN_IPV6 = 1 << 24,
+     * LOCAL_GATHERED_PEERREFLEXIVE_UDP = 1 << 25,
+     * LOCAL_GATHERED_PEERREFLEXIVE_TCP = 1 << 26,
+     * LOCAL_GATHERED_PEERREFLEXIVE_IPV6 = 1 << 27,
+     *
+     * This results in following shift values
+     */
+    static const uint32_t kLocalShift = 16;
+    static const uint32_t kSrflxShift = 3;
+    static const uint32_t kRelayShift = 6;
+    static const uint32_t kPrflxShift = 9;
+
+    uint32_t candBitmask = GetCandidateIpAndTransportMask(&cand);
+
+    // Note: shift values need to result in the above enum table
+    if (cand.mType.Value() == RTCStatsType::Localcandidate) {
+      candBitmask <<= kLocalShift;
+    }
+
+    if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Serverreflexive) {
+      candBitmask <<= kSrflxShift;
+    } else if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Relayed) {
+      candBitmask <<= kRelayShift;
+    } else if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Peerreflexive) {
+      candBitmask <<= kPrflxShift;
+    }
+
     // Note: this is not a "component" in the ICE definition, this is really a
-    // stream ID. This is just the way the stats API is standardized right now
+    // stream ID. This is just the way the stats API is standardized right now.
     // Very confusing.
     std::string streamId(
       NS_ConvertUTF16toUTF8(cand.mComponentId.Value()).get());
 
-    if (cand.mCandidateType.Value() == RTCStatsIceCandidateType::Relayed) {
-      if (cand.mType.Value() == RTCStatsType::Localcandidate) {
-        NS_ConvertUTF16toUTF8 transport(cand.mMozLocalTransport.Value());
-        if (transport == kNrIceTransportUdp) {
-          streamResults[streamId].candidateTypeBitpattern |=
-            LOCAL_GATHERED_TURN_UDP;
-        } else if (transport == kNrIceTransportTcp) {
-          streamResults[streamId].candidateTypeBitpattern |=
-            LOCAL_GATHERED_TURN_TCP;
-        }
-      } else {
-        streamResults[streamId].candidateTypeBitpattern |= REMOTE_GATHERED_TURN;
-      }
-    } else if (cand.mCandidateType.Value() ==
-               RTCStatsIceCandidateType::Serverreflexive) {
-      if (cand.mType.Value() == RTCStatsType::Localcandidate) {
-        streamResults[streamId].candidateTypeBitpattern |=
-          LOCAL_GATHERED_SERVER_REFLEXIVE;
-      } else {
-        streamResults[streamId].candidateTypeBitpattern |=
-          REMOTE_GATHERED_SERVER_REFLEXIVE;
-      }
-    }
+    streamResults[streamId].candidateTypeBitpattern |= candBitmask;
   }
 
   for (auto i = streamResults.begin(); i != streamResults.end(); ++i) {
-    if (i->second.streamSucceeded) {
-      Telemetry::Accumulate(aIsLoop ? Telemetry::LOOP_CANDIDATE_TYPES_GIVEN_SUCCESS :
-                                      Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_SUCCESS,
-                            i->second.candidateTypeBitpattern);
-    } else {
-      Telemetry::Accumulate(aIsLoop ? Telemetry::LOOP_CANDIDATE_TYPES_GIVEN_FAILURE :
-                                      Telemetry::WEBRTC_CANDIDATE_TYPES_GIVEN_FAILURE,
-                            i->second.candidateTypeBitpattern);
-    }
+    Telemetry::RecordWebRtcIceCandidates(i->second.candidateTypeBitpattern,
+                                         i->second.streamSucceeded, aIsLoop);
   }
 
   // Beyond ICE, accumulate telemetry for various PER_CALL settings here.
