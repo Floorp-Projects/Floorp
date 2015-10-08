@@ -39,6 +39,7 @@ public:
     , mSessionId(aSessionId)
     , mIsResponderReady(false)
     , mIsTransportReady(false)
+    , mState(nsIPresentationSessionListener::STATE_CLOSED)
     , mCallback(aCallback)
   {
     MOZ_ASSERT(!mUrl.IsEmpty());
@@ -89,7 +90,8 @@ public:
 
   nsresult Send(nsIInputStream* aData);
 
-  nsresult Close(nsresult aReason);
+  nsresult Close(nsresult aReason,
+                 uint32_t aState);
 
   nsresult ReplyError(nsresult aReason);
 
@@ -112,10 +114,26 @@ protected:
 
   virtual nsresult UntrackFromService();
 
+  void SetState(uint32_t aState)
+  {
+    if (mState == aState) {
+      return;
+    }
+
+    mState = aState;
+
+    // Notify session state change.
+    if (mListener) {
+      nsresult rv = mListener->NotifyStateChange(mSessionId, mState);
+      NS_WARN_IF(NS_FAILED(rv));
+    }
+  }
+
   nsString mUrl;
   nsString mSessionId;
   bool mIsResponderReady;
   bool mIsTransportReady;
+  uint32_t mState; // CONNECTED, CLOSED, TERMINATED
   nsCOMPtr<nsIPresentationServiceCallback> mCallback;
   nsCOMPtr<nsIPresentationSessionListener> mListener;
   nsCOMPtr<nsIPresentationDevice> mDevice;

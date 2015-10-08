@@ -185,6 +185,7 @@ static char const * const kCrashEventAnnotations[] = {
   // "TotalPageFile"
   // "TotalPhysicalMemory"
   // "TotalVirtualMemory"
+  // "MozCrashReason"
 };
 
 static const char kCrashMainID[] = "crash.main.2\n";
@@ -451,6 +452,13 @@ Concat(XP_CHAR* str, const XP_CHAR* toAppend, int* size)
   *size -= appendLen;
 
   return str;
+}
+
+static const char* gMozCrashReason = nullptr;
+
+void AnnotateMozCrashReason(const char* aReason)
+{
+  gMozCrashReason = aReason;
 }
 
 static size_t gOOMAllocationSize = 0;
@@ -841,6 +849,12 @@ bool MinidumpCallback(
 #undef WRITE_STATEX_FIELD
     }
 #endif // XP_WIN
+
+    if (gMozCrashReason) {
+      WriteAnnotation(apiData, "MozCrashReason", gMozCrashReason);
+      WriteAnnotation(eventFile, "MozCrashReason", gMozCrashReason);
+    }
+
     if (oomAllocationSizeBuffer[0]) {
       WriteAnnotation(apiData, "OOMAllocationSize", oomAllocationSizeBuffer);
       WriteAnnotation(eventFile, "OOMAllocationSize", oomAllocationSizeBuffer);

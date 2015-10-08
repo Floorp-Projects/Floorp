@@ -952,7 +952,7 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 
     SliceData data(budget, reason, PRMJ_Now(), JS_GetCurrentEmbedderTime(), GetPageFaultCount());
     if (!slices.append(data)) {
-        // OOM testing fails if we CrashAtUnhandlableOOM here.
+        // OOM testing fails if we crash here, so set a flag instead.
         aborted = true;
         return;
     }

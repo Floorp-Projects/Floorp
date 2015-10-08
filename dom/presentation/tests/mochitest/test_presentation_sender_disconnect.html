@@ -113,23 +113,11 @@ function testSessionDisconnection() {
 
     session.onstatechange = function() {
       session.onstatechange = null;
-      is(session.state, "disconnected", "Session should be disconnected.");
+      is(session.state, "closed", "Session should be closed.");
       aResolve();
     };
 
     gScript.sendAsyncMessage('trigger-data-transport-close', SpecialPowers.Cr.NS_ERROR_FAILURE);
-  });
-}
-
-function testCloseSession() {
-  return new Promise(function(aResolve, aReject) {
-    session.onstatechange = function() {
-      session.onstatechange = null;
-      is(session.state, "terminated", "Session should be terminated.");
-      aResolve();
-    };
-
-    session.close();
   });
 }
 
@@ -149,7 +137,6 @@ function runTests() {
   testSetup().
   then(testStartSession).
   then(testSessionDisconnection).
-  then(testCloseSession).
   then(teardown);
 }
 

@@ -148,7 +148,6 @@ def run_remote_xpcshell(parser, options, log):
 
 def main():
     parser = parser_b2g()
-    commandline.add_logging_group(parser)
     options = parser.parse_args()
     log = commandline.setup_logging("Remote XPCShell",
                                     options,

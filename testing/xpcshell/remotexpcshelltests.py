@@ -573,7 +573,6 @@ def main():
         sys.exit(1)
 
     parser = parser_remote()
-    commandline.add_logging_group(parser)
     options = parser.parse_args()
     if not options.localAPK:
         for file in os.listdir(os.path.join(options.objdir, "dist")):

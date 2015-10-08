@@ -551,14 +551,6 @@ var gDevToolsBrowser = {
     isDocked ? toolbox.destroy() : gDevTools.showToolbox(target);
   },
 
-  toggleBrowserToolboxCommand: function(gBrowser) {
-    let target = TargetFactory.forWindow(gBrowser.ownerDocument.defaultView);
-    let toolbox = gDevTools.getToolbox(target);
-
-    toolbox ? toolbox.destroy()
-     : gDevTools.showToolbox(target, "inspector", Toolbox.HostType.WINDOW);
-  },
-
   /**
    * This function ensures the right commands are enabled in a window,
    * depending on their relevant prefs. It gets run when a window is registered,
