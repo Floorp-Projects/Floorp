@@ -2395,6 +2395,22 @@ public:
     };
 
 public:
+    struct SetLayerClient_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "setLayerClient";
+        static constexpr char signature[] =
+                "(Ljava/lang/Object;)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     template<class Impl> class Natives;
 };
 
