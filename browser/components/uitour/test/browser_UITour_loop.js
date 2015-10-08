@@ -184,55 +184,6 @@ var tests = [
       });
     });
   },
-  taskify(function* test_panelTabChangeNotifications() {
-    // First make sure the Loop panel looks like we're logged in to have more than
-    // just one tab to switch to.
-    const fxASampleToken = {
-      token_type: "bearer",
-      access_token: "1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",
-      scope: "profile"
-    };
-    const fxASampleProfile = {
-      email: "test@example.com",
-      uid: "abcd1234"
-    };
-    MozLoopServiceInternal.fxAOAuthTokenData = fxASampleToken;
-    MozLoopServiceInternal.fxAOAuthProfile = fxASampleProfile;
-    Services.prefs.setCharPref("loop.key.fxa", "fake");
-    yield MozLoopServiceInternal.notifyStatusChanged("login");
-
-    // Show the Loop menu.
-    yield showMenuPromise("loop");
-
-    // Listen for and test the notifications that will arrive from now on.
-    let tabChangePromise = new Promise(resolve => {
-      gContentAPI.observe((event, params) => {
-        is(event, "Loop:PanelTabChanged", "Check Loop:PanelTabChanged notification");
-        is(params, "contacts", "Check the tab name param");
-
-        gContentAPI.observe((event, params) => {
-          is(event, "Loop:PanelTabChanged", "Check Loop:PanelTabChanged notification");
-          is(params, "rooms", "Check the tab name param");
-
-          gContentAPI.observe((event, params) => {
-            ok(false, "No more notifications should have arrived");
-          });
-          resolve();
-        });
-      });
-    });
-
-    // Switch to the contacts tab.
-    yield window.LoopUI.openCallPanel(null, "contacts");
-
-    // Logout. The panel tab will switch back to 'rooms'.
-    MozLoopServiceInternal.fxAOAuthTokenData =
-      MozLoopServiceInternal.fxAOAuthProfile = null;
-    Services.prefs.clearUserPref("loop.key.fxa");
-    yield MozLoopServiceInternal.notifyStatusChanged();
-
-    yield tabChangePromise;
-  }),
   runOffline(function test_notifyLoopChatWindowOpenedClosed(done) {
     gContentAPI.observe((event, params) => {
       is(event, "Loop:ChatWindowOpened", "Check Loop:ChatWindowOpened notification");
