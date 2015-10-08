@@ -45,13 +45,7 @@ protected:
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   bool
-  SupportsMimeType(const nsACString& aMimeType) override
-  {
-    // TODO Properly.
-    return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-      aMimeType.EqualsLiteral("video/mp4") ||
-      aMimeType.EqualsLiteral("video/avc");
-  }
+  SupportsMimeType(const nsACString& aMimeType) override;
 
 private:
   nsRefPtr<CDMProxy> mProxy;
