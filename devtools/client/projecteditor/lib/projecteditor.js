@@ -19,6 +19,7 @@ const promise = require("promise");
 const { ViewHelpers } = Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
 const { DOMHelpers } = Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const ITCHPAD_URL = "chrome://devtools/content/projecteditor/chrome/content/projecteditor.xul";
 const { confirm } = require("devtools/client/projecteditor/lib/helpers/prompts");
 const { getLocalizedString } = require("devtools/client/projecteditor/lib/helpers/l10n");
@@ -752,7 +753,6 @@ var ProjectEditor = Class({
    *          Otherwise, ask the user to confirm and return the outcome.
    */
   confirmUnsaved: function() {
-
     if (this.hasUnsavedResources) {
       return confirm(
         getLocalizedString("projecteditor.confirmUnsavedTitle"),
@@ -761,7 +761,28 @@ var ProjectEditor = Class({
     }
 
     return true;
-  }
+  },
+
+  /**
+   * Save all the changes in source files.
+   *
+   * @returns Boolean
+   *          True if there were resources to save.
+   */
+  saveAllFiles: Task.async(function*() {
+    if (this.hasUnsavedResources) {
+      for (let resource of this.project.allResources()) {
+        let editor = this.editorFor(resource);
+        if (editor && !editor.isClean()) {
+          yield editor.save(resource);
+        }
+      }
+
+      return true;
+    }
+
+    return false;
+  })
 
 });
 
