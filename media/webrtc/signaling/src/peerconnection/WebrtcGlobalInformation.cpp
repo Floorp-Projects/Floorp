@@ -972,7 +972,7 @@ static void StoreLongTermICEStatisticsImpl_m(
   }
 
   for (auto i = streamResults.begin(); i != streamResults.end(); ++i) {
-    Telemetry::RecordWebRtcIceCandidates(i->second.candidateTypeBitpattern,
+    Telemetry::RecordWebrtcIceCandidates(i->second.candidateTypeBitpattern,
                                          i->second.streamSucceeded, aIsLoop);
   }
 
