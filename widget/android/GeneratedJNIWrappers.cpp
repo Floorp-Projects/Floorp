@@ -1507,14 +1507,6 @@ auto SQLiteBridgeException::New(mozilla::jni::String::Param a0) -> SQLiteBridgeE
     return mozilla::jni::Constructor<New2_t>::Call(nullptr, nullptr, a0);
 }
 
-constexpr char SQLiteBridgeException::SerialVersionUID_t::name[];
-constexpr char SQLiteBridgeException::SerialVersionUID_t::signature[];
-
-auto SQLiteBridgeException::SerialVersionUID() -> int64_t
-{
-    return mozilla::jni::Field<SerialVersionUID_t>::Get(nullptr, nullptr);
-}
-
 constexpr char Clipboard::name[];
 
 constexpr char Clipboard::ClearText_t::name[];
