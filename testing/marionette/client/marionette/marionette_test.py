@@ -697,7 +697,7 @@ class MarionetteTestCase(CommonTestCase):
                                                (self.filepath.replace('\\', '\\\\'),
                                                 self.methodName))
                 self.marionette.test_name = None
-            except:
+            except (MarionetteException, IOError):
                 # We have tried to log the test end when there is no listener
                 # object that we can access
                 pass

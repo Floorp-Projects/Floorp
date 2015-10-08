@@ -9,7 +9,7 @@
 #include "nsUnicharUtils.h"
 
 #include "nsArrayUtils.h"
-#include "nsIVariant.h"
+#include "nsVariant.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIURI.h"
@@ -110,7 +110,7 @@ nsXULTemplateResultSetStorage::FillColumnValues(nsCOMArray<nsIVariant>& aArray)
     int32_t count = mColumnNames.Count();
 
     for (int32_t c = 0; c < count; c++) {
-        nsCOMPtr<nsIWritableVariant> value = do_CreateInstance("@mozilla.org/variant;1");
+        nsRefPtr<nsVariant> value = new nsVariant();
 
         int32_t type;
         mStatement->GetTypeOfIndex(c, &type);

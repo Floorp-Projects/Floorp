@@ -59,7 +59,6 @@ class Telephony final : public DOMEventTargetHelper,
 
   nsRefPtr<Promise> mReadyPromise;
 
-  uint32_t mAudioAgentNotify;
   bool mIsAudioStartPlaying;
   bool mHaveDispatchedInterruptBeginEvent;
   bool mMuted;

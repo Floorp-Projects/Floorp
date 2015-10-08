@@ -190,7 +190,7 @@ FMRadio::Notify(const FMRadioEventType& aType)
         DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
         if (mAudioChannelAgentEnabled) {
-          mAudioChannelAgent->NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY);
+          mAudioChannelAgent->NotifyStoppedPlaying();
           mAudioChannelAgentEnabled = false;
         }
 

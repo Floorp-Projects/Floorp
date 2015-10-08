@@ -241,15 +241,6 @@ struct IdleObserverHolder
   }
 };
 
-static inline already_AddRefed<nsIVariant>
-CreateVoidVariant()
-{
-  nsCOMPtr<nsIWritableVariant> writable =
-    do_CreateInstance(NS_VARIANT_CONTRACTID);
-  writable->SetAsVoid();
-  return writable.forget();
-}
-
 // Helper class to manage modal dialog arguments and all their quirks.
 //
 // Given our clunky embedding APIs, modal dialog arguments need to be passed
@@ -271,17 +262,7 @@ public:
   DialogValueHolder(nsIPrincipal* aSubject, nsIVariant* aValue)
     : mOrigin(aSubject)
     , mValue(aValue) {}
-  nsresult Get(nsIPrincipal* aSubject, nsIVariant** aResult)
-  {
-    nsCOMPtr<nsIVariant> result;
-    if (aSubject->SubsumesConsideringDomain(mOrigin)) {
-      result = mValue;
-    } else {
-      result = CreateVoidVariant();
-    }
-    result.forget(aResult);
-    return NS_OK;
-  }
+  nsresult Get(nsIPrincipal* aSubject, nsIVariant** aResult);
   void Get(JSContext* aCx, JS::Handle<JSObject*> aScope, nsIPrincipal* aSubject,
            JS::MutableHandle<JS::Value> aResult, mozilla::ErrorResult& aError)
   {

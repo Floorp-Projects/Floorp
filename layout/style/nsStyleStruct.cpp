@@ -98,11 +98,22 @@ static bool AreShadowArraysEqual(nsCSSShadowArray* lhs,
 //
 nsStyleFont::nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext)
   : mFont(aFont)
+  , mSize(nsStyleFont::ZoomText(aPresContext, mFont.size))
   , mGenericID(kGenericFont_NONE)
+  , mScriptLevel(0)
+  , mMathVariant(NS_MATHML_MATHVARIANT_NONE)
+  , mMathDisplay(NS_MATHML_DISPLAYSTYLE_INLINE)
+  , mMinFontSizeRatio(100) // 100%
   , mExplicitLanguage(false)
+  , mAllowZoom(true)
+  , mScriptUnconstrainedSize(mSize)
+  , mScriptMinSize(aPresContext->CSSTwipsToAppUnits(
+      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT)))
+  , mScriptSizeMultiplier(NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER)
+  , mLanguage(GetLanguage(aPresContext))
 {
   MOZ_COUNT_CTOR(nsStyleFont);
-  Init(aPresContext);
+  mFont.size = mSize;
 }
 
 nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
@@ -112,6 +123,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   , mScriptLevel(aSrc.mScriptLevel)
   , mMathVariant(aSrc.mMathVariant)
   , mMathDisplay(aSrc.mMathDisplay)
+  , mMinFontSizeRatio(aSrc.mMinFontSizeRatio)
   , mExplicitLanguage(aSrc.mExplicitLanguage)
   , mAllowZoom(aSrc.mAllowZoom)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
@@ -123,45 +135,9 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
 }
 
 nsStyleFont::nsStyleFont(nsPresContext* aPresContext)
-  // passing nullptr to GetDefaultFont make it use the doc language
-  : mFont(*(aPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                         nullptr)))
-  , mGenericID(kGenericFont_NONE)
-  , mExplicitLanguage(false)
+  : nsStyleFont(*(aPresContext->GetDefaultFont(
+      kPresContext_DefaultVariableFont_ID, nullptr)), aPresContext)
 {
-  MOZ_COUNT_CTOR(nsStyleFont);
-  Init(aPresContext);
-}
-
-void
-nsStyleFont::Init(nsPresContext* aPresContext)
-{
-  mSize = mFont.size = nsStyleFont::ZoomText(aPresContext, mFont.size);
-  mScriptUnconstrainedSize = mSize;
-  mScriptMinSize = aPresContext->CSSTwipsToAppUnits(
-      NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT));
-  mScriptLevel = 0;
-  mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
-  mMathVariant = NS_MATHML_MATHVARIANT_NONE;
-  mMathDisplay = NS_MATHML_DISPLAYSTYLE_INLINE;
-  mAllowZoom = true;
-
-  nsAutoString language;
-  aPresContext->Document()->GetContentLanguage(language);
-  language.StripWhitespace();
-
-  // Content-Language may be a comma-separated list of language codes,
-  // in which case the HTML5 spec says to treat it as unknown
-  if (!language.IsEmpty() &&
-      !language.Contains(char16_t(','))) {
-    mLanguage = do_GetAtom(language);
-    // NOTE:  This does *not* count as an explicit language; in other
-    // words, it doesn't trigger language-specific hyphenation.
-  } else {
-    // we didn't find a (usable) Content-Language, so we fall back
-    // to whatever the presContext guessed from the charset
-    mLanguage = aPresContext->GetLanguageFromCharset();
-  }
 }
 
 void 
@@ -199,7 +175,8 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
       mLanguage != aOther.mLanguage ||
       mExplicitLanguage != aOther.mExplicitLanguage ||
       mMathVariant != aOther.mMathVariant ||
-      mMathDisplay != aOther.mMathDisplay) {
+      mMathDisplay != aOther.mMathDisplay ||
+      mMinFontSizeRatio != aOther.mMinFontSizeRatio) {
     return NS_STYLE_HINT_REFLOW;
   }
 
@@ -230,6 +207,27 @@ nsStyleFont::ZoomText(nsPresContext *aPresContext, nscoord aSize)
 nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
   return nscoord(float(aSize) / aPresContext->TextZoom());
+}
+
+/* static */ already_AddRefed<nsIAtom>
+nsStyleFont::GetLanguage(nsPresContext* aPresContext)
+{
+  nsAutoString language;
+  aPresContext->Document()->GetContentLanguage(language);
+  language.StripWhitespace();
+
+  // Content-Language may be a comma-separated list of language codes,
+  // in which case the HTML5 spec says to treat it as unknown
+  if (!language.IsEmpty() &&
+      !language.Contains(char16_t(','))) {
+    return do_GetAtom(language);
+    // NOTE:  This does *not* count as an explicit language; in other
+    // words, it doesn't trigger language-specific hyphenation.
+  } else {
+    // we didn't find a (usable) Content-Language, so we fall back
+    // to whatever the presContext guessed from the charset
+    return do_AddRef(aPresContext->GetLanguageFromCharset());
+  }
 }
 
 nsChangeHint nsStyleFont::CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2)

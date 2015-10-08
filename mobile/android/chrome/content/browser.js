@@ -61,9 +61,6 @@ if (AppConstants.MOZ_SAFE_BROWSING) {
                                     "resource://gre/modules/SafeBrowsing.jsm");
 }
 
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
-                                  "resource://gre/modules/BrowserUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -1783,14 +1780,15 @@ var BrowserApp = {
           break;
 
       case "Session:Reload": {
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
         // Check to see if this is a message to enable/disable mixed content blocking.
         if (aData) {
           let data = JSON.parse(aData);
 
           if (data.bypassCache) {
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
+                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
           }
 
           if (data.contentType === "tracking") {
@@ -3450,10 +3448,6 @@ nsBrowserAccess.prototype = {
 
   isTabContentWindow: function(aWindow) {
     return BrowserApp.getBrowserForWindow(aWindow) != null;
-  },
-
-  canClose() {
-    return BrowserUtils.canCloseWindow(window);
   },
 };
 

@@ -1,0 +1,542 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test scrolling flattened inactive frames</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style>
+p {
+  width:200px;
+  height:200px;
+  border:solid 1px black;
+  overflow:auto;
+}
+</style>
+</head>
+<body>
+<div id="iframe-body" style="overflow: auto; height: 1000px">
+<hr>
+<hr>
+<hr>
+<p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p id="subframe">
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p><p>
+1	<br>
+2	<br>
+3	<br>
+4	<br>
+5	<br>
+6	<br>
+7	<br>
+8	<br>
+9	<br>
+10	<br>
+11	<br>
+12	<br>
+13	<br>
+14	<br>
+15	<br>
+16	<br>
+17	<br>
+18	<br>
+19	<br>
+20	<br>
+21	<br>
+22	<br>
+23	<br>
+24	<br>
+25	<br>
+26	<br>
+27	<br>
+28	<br>
+29	<br>
+30	<br>
+31	<br>
+32	<br>
+33	<br>
+34	<br>
+35	<br>
+36	<br>
+37	<br>
+38	<br>
+39	<br>
+40	<br>
+
+</p>
+</div>
+<script clss="testbody" type="text/javascript;version=1.7">
+function ScrollTops() {
+  this.outerScrollTop = document.getElementById('iframe-body').scrollTop;
+  this.innerScrollTop = document.getElementById('subframe').scrollTop;
+}
+
+var DefaultEvent = {
+  deltaMode: WheelEvent.DOM_DELTA_LINE,
+  deltaX: 0, deltaY: 1,
+  lineOrPageDeltaX: 0, lineOrPageDeltaY: 1,
+};
+
+function test() {
+  var subframe = document.getElementById('subframe');
+  var oldpos = new ScrollTops();
+  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function () {
+    var newpos = new ScrollTops();
+    ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
+    ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
+    doOuterScroll(subframe, newpos);
+  });
+}
+
+function doOuterScroll(subframe, oldpos) {
+  var outer = document.getElementById('iframe-body');
+  sendWheelAndPaint(outer, 20, 5, DefaultEvent, function () {
+    var newpos = new ScrollTops();
+    ok(oldpos.outerScrollTop != newpos.outerScrollTop, "viewport should have scrolled");
+    ok(oldpos.innerScrollTop == newpos.innerScrollTop, "subframe should not have scrolled");
+    doInnerScrollAgain(subframe, newpos);
+  });
+}
+
+function doInnerScrollAgain(subframe, oldpos) {
+  sendWheelAndPaint(subframe, 10, 10, DefaultEvent, function () {
+    var newpos = new ScrollTops();
+    ok(oldpos.outerScrollTop == newpos.outerScrollTop, "viewport should not have scrolled");
+    ok(oldpos.innerScrollTop != newpos.innerScrollTop, "subframe should have scrolled");
+    SimpleTest.finish();
+  });
+}
+
+window.onload = function() {
+  SpecialPowers.pushPrefEnv({
+    'set': [['general.smoothScroll', false],
+            ['mousewheel.transaction.timeout', 0],
+            ['mousewheel.transaction.ignoremovedelay', 0]]
+  }, function () {
+    SimpleTest.waitForFocus(test);
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

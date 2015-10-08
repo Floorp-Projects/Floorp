@@ -138,6 +138,7 @@ protected:
   virtual bool RecvCancel(const nsresult& status) override;
   virtual bool RecvRedirect2Verify(const nsresult& result,
                                    const RequestHeaderTuples& changedHeaders,
+                                   const uint32_t& loadFlags,
                                    const OptionalURIParams& apiRedirectUri) override;
   virtual bool RecvUpdateAssociatedContentSecurity(const int32_t& broken,
                                                    const int32_t& no) override;

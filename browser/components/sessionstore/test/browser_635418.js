@@ -7,12 +7,6 @@
 
 function test() {
   waitForExplicitFinish();
-  // Ensure TabView has been initialized already. Otherwise it could
-  // activate at an unexpected time and show/hide tabs.
-  TabView._initFrame(runTest);
-}
-
-function runTest() {
   // We speed up the interval between session saves to ensure that the test
   // runs quickly.
   Services.prefs.setIntPref("browser.sessionstore.interval", 2000);

@@ -53,16 +53,10 @@ SoftwareWebMVideoDecoder::Create(WebMReader* aReader)
   return new SoftwareWebMVideoDecoder(aReader);
 }
 
-nsRefPtr<InitPromise>
+nsresult
 SoftwareWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
 {
-  nsresult rv = InitDecoder(aWidth, aHeight);
-
-  if (NS_SUCCEEDED(rv)) {
-    return InitPromise::CreateAndResolve(TrackType::kVideoTrack, __func__);
-  }
-
-  return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  return InitDecoder(aWidth, aHeight);
 }
 
 nsresult

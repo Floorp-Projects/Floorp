@@ -50,6 +50,10 @@ InterfacesFor(Accessible* aAcc)
     interfaces |= Interfaces::SELECTION;
   }
 
+  if (aAcc->ActionCount()) {
+    interfaces |= Interfaces::ACTION;
+  }
+
   return interfaces;
 }
 
