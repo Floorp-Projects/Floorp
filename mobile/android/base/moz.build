@@ -417,6 +417,7 @@ gbjar.sources += [
     'preferences/CustomCheckBoxPreference.java',
     'preferences/CustomListCategory.java',
     'preferences/CustomListPreference.java',
+    'preferences/DistroSharedPrefsImport.java',
     'preferences/FontSizePreference.java',
     'preferences/GeckoPreferenceFragment.java',
     'preferences/GeckoPreferences.java',
