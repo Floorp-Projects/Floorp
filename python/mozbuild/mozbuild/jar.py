@@ -89,7 +89,7 @@ class JarInfo(object):
 class JarManifestParser(object):
 
     ignore = re.compile('\s*(\#.*)?$')
-    jarline = re.compile('(?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:$')
+    jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:)|(?:\s*(\#.*)?)\s*$')
     relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
     regline = re.compile('\%\s+(.*)$')
     entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
@@ -115,8 +115,9 @@ class JarManifestParser(object):
             m = self.jarline.match(line)
             if not m:
                 raise RuntimeError(line)
-            self._current_jar = JarInfo(m.group('jarfile'))
-            self._jars.append(self._current_jar)
+            if m.group('jarfile'):
+                self._current_jar = JarInfo(m.group('jarfile'))
+                self._jars.append(self._current_jar)
             return
 
         # Within each section, there can be three different types of entries:
