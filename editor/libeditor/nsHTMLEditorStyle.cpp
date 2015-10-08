@@ -592,12 +592,22 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
         // or the style is specified in the style attribute
         isSet) {
       // found a style node we need to split
-      nsresult rv = SplitNodeDeep(GetAsDOMNode(node), *aNode, *aOffset,
-                                  &offset, false, outLeftNode, outRightNode);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIContent> outLeftContent, outRightContent;
+      nsCOMPtr<nsIContent> nodeParam = do_QueryInterface(*aNode);
+      NS_ENSURE_STATE(nodeParam || !*aNode);
+      offset = SplitNodeDeep(*node, *nodeParam, *aOffset, EmptyContainers::yes,
+                             getter_AddRefs(outLeftContent),
+                             getter_AddRefs(outRightContent));
+      NS_ENSURE_TRUE(offset != -1, NS_ERROR_FAILURE);
       // reset startNode/startOffset
       *aNode = GetAsDOMNode(node->GetParent());
       *aOffset = offset;
+      if (outLeftNode) {
+        *outLeftNode = GetAsDOMNode(outLeftContent);
+      }
+      if (outRightNode) {
+        *outRightNode = GetAsDOMNode(outRightContent);
+      }
     }
     node = node->GetParent();
   }
