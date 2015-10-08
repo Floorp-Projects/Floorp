@@ -121,7 +121,6 @@ var test = Task.async(function*() {
 
   let importedData = PerformanceController.getCurrentRecording().getAllData();
   let expected = Object.create({
-    label: "",
     duration: 10000,
     markers: [].toSource(),
     frames: [].toSource(),
