@@ -664,6 +664,7 @@ class GCRuntime
     // Internal public interface
     js::gc::State state() const { return incrementalState; }
     bool isHeapCompacting() const { return state() == COMPACT; }
+    bool isForegroundSweeping() const { return state() == SWEEP; }
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() {
