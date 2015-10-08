@@ -2446,11 +2446,11 @@ void
 TypeSet::MarkTypeUnbarriered(JSTracer* trc, TypeSet::Type* v, const char* name)
 {
     if (v->isSingletonUnchecked()) {
-        JSObject* obj = v->singleton();
+        JSObject* obj = v->singletonNoBarrier();
         DispatchToTracer(trc, &obj, name);
         *v = TypeSet::ObjectType(obj);
     } else if (v->isGroupUnchecked()) {
-        ObjectGroup* group = v->group();
+        ObjectGroup* group = v->groupNoBarrier();
         DispatchToTracer(trc, &group, name);
         *v = TypeSet::ObjectType(group);
     }

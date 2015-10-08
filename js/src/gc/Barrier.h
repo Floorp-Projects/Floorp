@@ -821,8 +821,8 @@ struct ReadBarrieredHasher
     typedef T Lookup;
 
     static HashNumber hash(Lookup obj) { return DefaultHasher<T>::hash(obj); }
-    static bool match(const Key& k, Lookup l) { return k.get() == l; }
-    static void rekey(Key& k, const Key& newKey) { k.set(newKey); }
+    static bool match(const Key& k, Lookup l) { return k.unbarrieredGet() == l; }
+    static void rekey(Key& k, const Key& newKey) { k.set(newKey.unbarrieredGet()); }
 };
 
 /* Specialized hashing policy for ReadBarriereds. */
@@ -894,15 +894,12 @@ typedef ImmutableTenuredPtr<JS::Symbol*> ImmutableSymbolPtr;
 
 typedef ReadBarriered<DebugScopeObject*> ReadBarrieredDebugScopeObject;
 typedef ReadBarriered<GlobalObject*> ReadBarrieredGlobalObject;
-typedef ReadBarriered<JSFunction*> ReadBarrieredFunction;
 typedef ReadBarriered<JSObject*> ReadBarrieredObject;
 typedef ReadBarriered<JSScript*> ReadBarrieredScript;
 typedef ReadBarriered<ScriptSourceObject*> ReadBarrieredScriptSourceObject;
 typedef ReadBarriered<Shape*> ReadBarrieredShape;
-typedef ReadBarriered<UnownedBaseShape*> ReadBarrieredUnownedBaseShape;
 typedef ReadBarriered<jit::JitCode*> ReadBarrieredJitCode;
 typedef ReadBarriered<ObjectGroup*> ReadBarrieredObjectGroup;
-typedef ReadBarriered<JSAtom*> ReadBarrieredAtom;
 typedef ReadBarriered<JS::Symbol*> ReadBarrieredSymbol;
 
 typedef ReadBarriered<Value> ReadBarrieredValue;

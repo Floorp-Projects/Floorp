@@ -165,6 +165,9 @@ struct Runtime
     {}
 
     bool isHeapBusy() const { return heapState_ != JS::HeapState::Idle; }
+    bool isHeapMajorCollecting() const { return heapState_ == JS::HeapState::MajorCollecting; }
+    bool isHeapMinorCollecting() const { return heapState_ == JS::HeapState::MinorCollecting; }
+    bool isHeapCollecting() const { return isHeapMinorCollecting() || isHeapMajorCollecting(); }
 
     js::gc::StoreBuffer* gcStoreBufferPtr() { return gcStoreBufferPtr_; }
 
