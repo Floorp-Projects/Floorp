@@ -4801,7 +4801,8 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
                                HandleFunction getter)
 {
     MOZ_ASSERT(kind == ICStub::GetProp_CallScripted ||
-               kind == ICStub::GetProp_CallNative);
+               kind == ICStub::GetProp_CallNative ||
+               kind == ICStub::GetProp_CallNativeGlobal);
     MOZ_ASSERT(fallbackStub->isGetName_Fallback() ||
                fallbackStub->isGetProp_Fallback());
     MOZ_ASSERT(holder);
@@ -4822,7 +4823,9 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
                     getPropStub->receiverGuard().update(receiverGuard);
 
                 MOZ_ASSERT(getPropStub->holderShape() != holder->lastProperty() ||
-                           !getPropStub->receiverGuard().matches(receiverGuard),
+                           !getPropStub->receiverGuard().matches(receiverGuard) ||
+                           getPropStub->toGetProp_CallNativeGlobal()->globalShape() !=
+                           receiver->as<ClonedBlockObject>().global().lastProperty(),
                            "Why didn't we end up using this stub?");
 
                 // We want to update the holder shape to match the new one no
@@ -4832,6 +4835,13 @@ UpdateExistingGetPropCallStubs(ICFallbackStub* fallbackStub,
                 // Make sure to update the getter, since a shape change might
                 // have changed which getter we want to use.
                 getPropStub->getter() = getter;
+
+                if (getPropStub->isGetProp_CallNativeGlobal()) {
+                    ICGetProp_CallNativeGlobal* globalStub =
+                        getPropStub->toGetProp_CallNativeGlobal();
+                    globalStub->globalShape() =
+                        receiver->as<ClonedBlockObject>().global().lastProperty();
+                }
 
                 if (getPropStub->receiverGuard().matches(receiverGuard))
                     foundMatchingStub = true;
@@ -5006,8 +5016,8 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
 
         JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName/NativeGetter) stub");
-        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNative, current, global,
-                                           getter))
+        if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativeGlobal, current,
+                                           globalLexical, getter))
         {
             *attached = true;
             return true;

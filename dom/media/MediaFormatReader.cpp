@@ -63,9 +63,10 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
                                      MediaDataDemuxer* aDemuxer,
                                      TaskQueue* aBorrowedTaskQueue)
   : MediaDecoderReader(aDecoder, aBorrowedTaskQueue)
-  , mDemuxer(aDemuxer)
   , mAudio(this, MediaData::AUDIO_DATA, Preferences::GetUint("media.audio-decode-ahead", 2))
   , mVideo(this, MediaData::VIDEO_DATA, Preferences::GetUint("media.video-decode-ahead", 2))
+  , mDemuxer(aDemuxer)
+  , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
   , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mInitDone(false)
@@ -169,7 +170,7 @@ nsresult
 MediaFormatReader::Init(MediaDecoderReader* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  PlatformDecoderModule::Init();
+  PDMFactory::Init();
 
   InitLayersBackendType();
 
@@ -220,9 +221,10 @@ MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
   nsRefPtr<CDMProxy> proxy = aProxy;
   nsRefPtr<MediaFormatReader> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    MOZ_ASSERT(self->OnTaskQueue());
     self->mCDMProxy = proxy;
   });
-  OwnerThread()->DispatchDirectTask(r.forget());
+  OwnerThread()->Dispatch(r.forget());
 }
 #endif // MOZ_EME
 
@@ -234,20 +236,6 @@ MediaFormatReader::IsWaitingOnCDMResource() {
 #else
   return false;
 #endif
-}
-
-bool
-MediaFormatReader::IsSupportedAudioMimeType(const nsACString& aMimeType)
-{
-  return mPlatform && (mPlatform->SupportsMimeType(aMimeType) ||
-    PlatformDecoderModule::AgnosticMimeType(aMimeType));
-}
-
-bool
-MediaFormatReader::IsSupportedVideoMimeType(const nsACString& aMimeType)
-{
-  return mPlatform && (mPlatform->SupportsMimeType(aMimeType) ||
-    PlatformDecoderModule::AgnosticMimeType(aMimeType));
 }
 
 nsRefPtr<MediaDecoderReader::MetadataPromise>
@@ -285,6 +273,8 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 {
   MOZ_ASSERT(OnTaskQueue());
   mDemuxerInitRequest.Complete();
+
+  mDemuxerInitDone = true;
 
   // To decode, we need valid video and a place to put it.
   bool videoActive = !!mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack) &&
@@ -379,33 +369,20 @@ MediaFormatReader::EnsureDecodersCreated()
   MOZ_ASSERT(OnTaskQueue());
 
   if (!mPlatform) {
+    mPlatform = new PDMFactory();
+    NS_ENSURE_TRUE(mPlatform, false);
     if (IsEncrypted()) {
 #ifdef MOZ_EME
-      // We have encrypted audio or video. We'll need a CDM to decrypt and
-      // possibly decode this. Wait until we've received a CDM from the
-      // JavaScript player app. Note: we still go through the motions here
-      // even if EME is disabled, so that if script tries and fails to create
-      // a CDM, we can detect that and notify chrome and show some UI
-      // explaining that we failed due to EME being disabled.
       MOZ_ASSERT(mCDMProxy);
-      mPlatform = PlatformDecoderModule::CreateCDMWrapper(mCDMProxy);
-      NS_ENSURE_TRUE(mPlatform, false);
+      mPlatform->SetCDMProxy(mCDMProxy);
 #else
       // EME not supported.
       return false;
 #endif
-    } else {
-      mPlatform = PlatformDecoderModule::Create();
-      NS_ENSURE_TRUE(mPlatform, false);
     }
   }
 
-  MOZ_ASSERT(mPlatform);
-
   if (HasAudio() && !mAudio.mDecoder) {
-    NS_ENSURE_TRUE(IsSupportedAudioMimeType(mInfo.mAudio.mMimeType),
-                   false);
-
     mAudio.mDecoderInitialized = false;
     mAudio.mDecoder =
       mPlatform->CreateDecoder(mAudio.mInfo ?
@@ -417,9 +394,6 @@ MediaFormatReader::EnsureDecodersCreated()
   }
 
   if (HasVideo() && !mVideo.mDecoder) {
-    NS_ENSURE_TRUE(IsSupportedVideoMimeType(mInfo.mVideo.mMimeType),
-                   false);
-
     mVideo.mDecoderInitialized = false;
     // Decoders use the layers backend to decide if they can use hardware decoding,
     // so specify LAYERS_NONE if we want to forcibly disable it.
@@ -1623,7 +1597,8 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(OnTaskQueue());
 
   LOGV("aLength=%u, aOffset=%lld", aLength, aOffset);
-  if (mShutdown || !mDemuxer) {
+  if (mShutdown || !mDemuxer ||
+      (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
     return;
   }
 

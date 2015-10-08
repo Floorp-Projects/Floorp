@@ -2124,6 +2124,10 @@ gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
   if (SupportsApzTouchInput()) {
     aObj.DefineProperty("ApzTouchInput", 1);
   }
+
+  if (SupportsApzDragInput()) {
+    aObj.DefineProperty("ApzDragInput", 1);
+  }
 }
 
 /*static*/ bool
@@ -2243,4 +2247,10 @@ gfxPlatform::UpdateDeviceInitData()
   mozilla::dom::ContentChild::GetSingleton()->SendGetGraphicsDeviceInitData(&data);
 
   SetDeviceInitData(data);
+}
+
+bool
+gfxPlatform::SupportsApzDragInput() const
+{
+  return gfxPrefs::APZDragEnabled();
 }

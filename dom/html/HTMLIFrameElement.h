@@ -184,6 +184,13 @@ public:
   // nsGenericHTMLFrameElement::GetFrameLoader is fine
   // nsGenericHTMLFrameElement::GetAppManifestURL is fine
 
+  // The fullscreen flag is set to true only when requestFullscreen is
+  // explicitly called on this <iframe> element. In case this flag is
+  // set, the fullscreen state of this element will not be reverted
+  // automatically when its subdocument exits fullscreen.
+  bool FullscreenFlag() const { return mFullscreenFlag; }
+  void SetFullscreenFlag(bool aValue) { mFullscreenFlag = aValue; }
+
 protected:
   virtual ~HTMLIFrameElement();
 

@@ -25,6 +25,7 @@ class InputEvent;
 
 namespace layers {
 class APZCTreeManager;
+class AsyncDragMetrics;
 class TargetConfig;
 struct TextureFactoryIdentifier;
 struct ScrollableLayerGuid;
@@ -36,6 +37,7 @@ class RemoteContentController;
 
 class RenderFrameParent : public PRenderFrameParent
 {
+  typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ContainerLayer ContainerLayer;
   typedef mozilla::layers::Layer Layer;
@@ -92,6 +94,8 @@ public:
                              const Maybe<ZoomConstraints>& aConstraints);
 
   bool HitTest(const nsRect& aRect);
+
+  void StartScrollbarDrag(const AsyncDragMetrics& aDragMetrics);
 
   void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
 

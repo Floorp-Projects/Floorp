@@ -337,6 +337,8 @@
   ERROR(NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION,     FAILURE(106)),
   /* Service worker intentionally canceled load via preventDefault(). */
   ERROR(NS_ERROR_INTERCEPTION_CANCELED,                FAILURE(107)),
+  /* Service worker passed a rejected promise to respondwith. */
+  ERROR(NS_ERROR_REJECTED_RESPONSE_INTERCEPTION,       FAILURE(108)),
 #undef MODULE
 
 

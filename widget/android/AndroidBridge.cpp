@@ -1101,52 +1101,91 @@ AndroidBridge::DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequ
     GeckoAppShell::DeleteMessageWrapper(aMessageId, requestId);
 }
 
-void
-AndroidBridge::CreateMessageList(const dom::mobilemessage::SmsFilterData& aFilter, bool aReverse,
-                                 nsIMobileMessageCallback* aRequest)
+NS_IMPL_ISUPPORTS0(MessageCursorContinueCallback)
+
+NS_IMETHODIMP
+MessageCursorContinueCallback::HandleContinue()
 {
-    ALOG_BRIDGE("AndroidBridge::CreateMessageList");
+    GeckoAppShell::GetNextMessageWrapper(mRequestId);
+    return NS_OK;
+}
+
+already_AddRefed<nsICursorContinueCallback>
+AndroidBridge::CreateMessageCursor(bool aHasStartDate,
+                                   uint64_t aStartDate,
+                                   bool aHasEndDate,
+                                   uint64_t aEndDate,
+                                   const char16_t** aNumbers,
+                                   uint32_t aNumbersCount,
+                                   const nsAString& aDelivery,
+                                   bool aHasRead,
+                                   bool aRead,
+                                   bool aHasThreadId,
+                                   uint64_t aThreadId,
+                                   bool aReverse,
+                                   nsIMobileMessageCursorCallback* aRequest)
+{
+    ALOG_BRIDGE("AndroidBridge::CreateMessageCursor");
 
     JNIEnv* const env = jni::GetGeckoThreadEnv();
 
     uint32_t requestId;
-    if (!QueueSmsRequest(aRequest, &requestId))
-        return;
+    if (!QueueSmsCursorRequest(aRequest, &requestId))
+        return nullptr;
 
     AutoLocalJNIFrame jniFrame(env, 2);
 
     jobjectArray numbers =
-        (jobjectArray)env->NewObjectArray(aFilter.numbers().Length(),
+        (jobjectArray)env->NewObjectArray(aNumbersCount,
                                           jStringClass,
                                           NewJavaString(&jniFrame, EmptyString()));
 
-    for (uint32_t i = 0; i < aFilter.numbers().Length(); ++i) {
-        jstring elem = NewJavaString(&jniFrame, aFilter.numbers()[i]);
+    for (uint32_t i = 0; i < aNumbersCount; ++i) {
+        jstring elem = NewJavaString(&jniFrame, nsDependentString(aNumbers[i]));
         env->SetObjectArrayElement(numbers, i, elem);
         env->DeleteLocalRef(elem);
     }
 
-    int64_t startDate = aFilter.hasStartDate() ? aFilter.startDate() : -1;
-    int64_t endDate = aFilter.hasEndDate() ? aFilter.endDate() : -1;
-    GeckoAppShell::CreateMessageListWrapper(startDate, endDate,
-                                            ObjectArray::Ref::From(numbers),
-                                            aFilter.numbers().Length(),
-                                            aFilter.delivery(),
-                                            aFilter.hasRead(), aFilter.read(),
-                                            aFilter.threadId(),
-                                            aReverse, requestId);
+    int64_t startDate = aHasStartDate ? aStartDate : -1;
+    int64_t endDate = aHasEndDate ? aEndDate : -1;
+    GeckoAppShell::CreateMessageCursorWrapper(startDate, endDate,
+                                              ObjectArray::Ref::From(numbers),
+                                              aNumbersCount,
+                                              aDelivery,
+                                              aHasRead, aRead,
+                                              aHasThreadId, aThreadId,
+                                              aReverse,
+                                              requestId);
+
+    nsCOMPtr<nsICursorContinueCallback> callback = 
+       new MessageCursorContinueCallback(requestId);
+    return callback.forget();
 }
 
-void
-AndroidBridge::GetNextMessageInList(int32_t aListId, nsIMobileMessageCallback* aRequest)
+NS_IMPL_ISUPPORTS0(ThreadCursorContinueCallback)
+
+NS_IMETHODIMP
+ThreadCursorContinueCallback::HandleContinue()
 {
-    ALOG_BRIDGE("AndroidBridge::GetNextMessageInList");
+    GeckoAppShell::GetNextThreadWrapper(mRequestId);
+    return NS_OK;
+}
+
+already_AddRefed<nsICursorContinueCallback>
+AndroidBridge::CreateThreadCursor(nsIMobileMessageCursorCallback* aRequest)
+{
+    ALOG_BRIDGE("AndroidBridge::CreateThreadCursor");
 
     uint32_t requestId;
-    if (!QueueSmsRequest(aRequest, &requestId))
-        return;
+    if (!QueueSmsCursorRequest(aRequest, &requestId)) {
+        return nullptr;
+    }
 
-    GeckoAppShell::GetNextMessageInListWrapper(aListId, requestId);
+    GeckoAppShell::CreateThreadCursorWrapper(requestId);
+
+    nsCOMPtr<nsICursorContinueCallback> callback =
+        new ThreadCursorContinueCallback(requestId);
+    return callback.forget();
 }
 
 bool
@@ -1182,6 +1221,57 @@ AndroidBridge::DequeueSmsRequest(uint32_t aRequestId)
     }
 
     return mSmsRequests[aRequestId].forget();
+}
+
+bool
+AndroidBridge::QueueSmsCursorRequest(nsIMobileMessageCursorCallback* aRequest,
+                                     uint32_t* aRequestIdOut)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+    MOZ_ASSERT(aRequest && aRequestIdOut);
+
+    const uint32_t length = mSmsCursorRequests.Length();
+    for (uint32_t i = 0; i < length; i++) {
+        if (!(mSmsCursorRequests)[i]) {
+            (mSmsCursorRequests)[i] = aRequest;
+            *aRequestIdOut = i;
+            return true;
+        }
+    }
+
+    mSmsCursorRequests.AppendElement(aRequest);
+
+    // After AppendElement(), previous `length` points to the new tail element.
+    *aRequestIdOut = length;
+    return true;
+}
+
+nsCOMPtr<nsIMobileMessageCursorCallback>
+AndroidBridge::GetSmsCursorRequest(uint32_t aRequestId)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+
+    MOZ_ASSERT(aRequestId < mSmsCursorRequests.Length());
+    if (aRequestId >= mSmsCursorRequests.Length()) {
+        return nullptr;
+    }
+
+    // TODO: remove on final dequeue
+    return mSmsCursorRequests[aRequestId];
+}
+
+already_AddRefed<nsIMobileMessageCursorCallback>
+AndroidBridge::DequeueSmsCursorRequest(uint32_t aRequestId)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+
+    MOZ_ASSERT(aRequestId < mSmsCursorRequests.Length());
+    if (aRequestId >= mSmsCursorRequests.Length()) {
+        return nullptr;
+    }
+
+    // TODO: remove on final dequeue
+    return mSmsCursorRequests[aRequestId].forget();
 }
 
 void

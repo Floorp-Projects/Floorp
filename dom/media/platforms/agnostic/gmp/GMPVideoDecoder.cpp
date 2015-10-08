@@ -9,6 +9,7 @@
 #include "mozilla/Endian.h"
 #include "prsystem.h"
 #include "MediaData.h"
+#include "GMPDecoderModule.h"
 
 namespace mozilla {
 
@@ -107,6 +108,11 @@ void
 GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
   aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
+  const Maybe<nsCString> gmp(
+    GMPDecoderModule::PreferredGMP(NS_LITERAL_CSTRING("video/avc")));
+  if (gmp.isSome()) {
+    aTags.AppendElement(gmp.value());
+  }
 }
 
 nsCString
@@ -159,23 +165,13 @@ GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
 }
 
 void
-GMPVideoDecoder::GetGMPAPI(GMPInitDoneRunnable* aInitDone)
-{
-  MOZ_ASSERT(IsOnGMPThread());
-
-  nsTArray<nsCString> tags;
-  InitTags(tags);
-  UniquePtr<GetGMPVideoDecoderCallback> callback(
-    new GMPInitDoneCallback(this, aInitDone));
-  if (NS_FAILED(mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), Move(callback)))) {
-    aInitDone->Dispatch();
-  }
-}
-
-void
 GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
 {
-  MOZ_ASSERT(aHost && aGMP);
+  if (!aGMP) {
+    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    return;
+  }
+  MOZ_ASSERT(aHost);
 
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
@@ -195,20 +191,26 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
                                  codecSpecific,
                                  mAdapter,
                                  PR_GetNumberOfProcessors());
-  if (NS_SUCCEEDED(rv)) {
-    mGMP = aGMP;
-    mHost = aHost;
-
-    // GMP implementations have interpreted the meaning of GMP_BufferLength32
-    // differently.  The OpenH264 GMP expects GMP_BufferLength32 to behave as
-    // specified in the GMP API, where each buffer is prefixed by a 32-bit
-    // host-endian buffer length that includes the size of the buffer length
-    // field.  Other existing GMPs currently expect GMP_BufferLength32 (when
-    // combined with kGMPVideoCodecH264) to mean "like AVCC but restricted to
-    // 4-byte NAL lengths" (i.e. buffer lengths are specified in big-endian
-    // and do not include the length of the buffer length field.
-    mConvertNALUnitLengths = mGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
+  if (NS_FAILED(rv)) {
+    aGMP->Close();
+    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
+    return;
   }
+
+  mGMP = aGMP;
+  mHost = aHost;
+
+  // GMP implementations have interpreted the meaning of GMP_BufferLength32
+  // differently.  The OpenH264 GMP expects GMP_BufferLength32 to behave as
+  // specified in the GMP API, where each buffer is prefixed by a 32-bit
+  // host-endian buffer length that includes the size of the buffer length
+  // field.  Other existing GMPs currently expect GMP_BufferLength32 (when
+  // combined with kGMPVideoCodecH264) to mean "like AVCC but restricted to
+  // 4-byte NAL lengths" (i.e. buffer lengths are specified in big-endian
+  // and do not include the length of the buffer length field.
+  mConvertNALUnitLengths = mGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
+
+  mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
 }
 
 nsRefPtr<MediaDataDecoder::InitPromise>
@@ -219,21 +221,16 @@ GMPVideoDecoder::Init()
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  nsCOMPtr<nsIThread> gmpThread = NS_GetCurrentThread();
+  nsRefPtr<InitPromise> promise(mInitPromise.Ensure(__func__));
 
-  nsRefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
-  gmpThread->Dispatch(
-    NS_NewRunnableMethodWithArg<GMPInitDoneRunnable*>(this,
-                                                      &GMPVideoDecoder::GetGMPAPI,
-                                                      initDone),
-    NS_DISPATCH_NORMAL);
-
-  while (!initDone->IsDone()) {
-    NS_ProcessNextEvent(gmpThread, true);
+  nsTArray<nsCString> tags;
+  InitTags(tags);
+  UniquePtr<GetGMPVideoDecoderCallback> callback(new GMPInitDoneCallback(this));
+  if (NS_FAILED(mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), Move(callback)))) {
+    mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
   }
 
-  return mGMP ? InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__)
-              : InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
+  return promise;
 }
 
 nsresult
@@ -288,6 +285,7 @@ GMPVideoDecoder::Drain()
 nsresult
 GMPVideoDecoder::Shutdown()
 {
+  mInitPromise.RejectIfExists(MediaDataDecoder::DecoderFailureReason::CANCELED, __func__);
   // Note that this *may* be called from the proxy thread also.
   if (!mGMP) {
     return NS_ERROR_FAILURE;

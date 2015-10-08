@@ -716,3 +716,20 @@ RootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent* aEvent,
   aAccessible->TreeViewInvalidated(startRow, endRow, startCol, endCol);
 }
 #endif
+
+ProxyAccessible*
+RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const
+{
+  nsCOMPtr<nsIDocShellTreeOwner> owner;
+  mDocumentNode->GetDocShell()->GetTreeOwner(getter_AddRefs(owner));
+  NS_ENSURE_TRUE(owner, nullptr);
+
+  nsCOMPtr<nsITabParent> tabParent;
+  owner->GetPrimaryTabParent(getter_AddRefs(tabParent));
+  if (!tabParent) {
+    return nullptr;
+  }
+
+  auto tab = static_cast<dom::TabParent*>(tabParent.get());
+  return tab->GetTopLevelDocAccessible();
+}

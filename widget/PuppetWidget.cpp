@@ -1141,6 +1141,12 @@ uint32_t PuppetWidget::GetMaxTouchPoints() const
   return sTouchPoints;
 }
 
+void
+PuppetWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
+{
+  mTabChild->SendStartScrollbarDrag(aDragMetrics);
+}
+
 PuppetScreen::PuppetScreen(void *nativeScreen)
 {
 }

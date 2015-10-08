@@ -997,7 +997,9 @@ ChoiceNode::FilterASCII(int depth, bool ignore_case)
             alternatives()[i].node()->FilterASCII(depth - 1, ignore_case);
         if (replacement != nullptr) {
             alternatives()[i].set_node(replacement);
-            new_alternatives.append(alternatives()[i]);
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!new_alternatives.append(alternatives()[i]))
+                oomUnsafe.crash("ChoiceNode::FilterASCII");
         }
     }
 

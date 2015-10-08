@@ -42,6 +42,7 @@
 #include "WindowNamedPropertiesHandler.h"
 #include "nsFrameSelection.h"
 #include "nsNetUtil.h"
+#include "nsVariant.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -557,6 +558,27 @@ bool
 nsTimeout::HasRefCntOne()
 {
   return mRefCnt.get() == 1;
+}
+
+static already_AddRefed<nsIVariant>
+CreateVoidVariant()
+{
+  nsRefPtr<nsVariant> writable = new nsVariant();
+  writable->SetAsVoid();
+  return writable.forget();
+}
+
+nsresult
+DialogValueHolder::Get(nsIPrincipal* aSubject, nsIVariant** aResult)
+{
+  nsCOMPtr<nsIVariant> result;
+  if (aSubject->SubsumesConsideringDomain(mOrigin)) {
+    result = mValue;
+  } else {
+    result = CreateVoidVariant();
+  }
+  result.forget(aResult);
+  return NS_OK;
 }
 
 namespace mozilla {
@@ -8752,17 +8774,6 @@ nsGlobalWindow::CanClose()
 {
   MOZ_ASSERT(IsOuterWindow());
 
-  if (mIsChrome) {
-    nsCOMPtr<nsIBrowserDOMWindow> bwin;
-    nsIDOMChromeWindow* chromeWin = static_cast<nsGlobalChromeWindow*>(this);
-    chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
-
-    bool canClose = true;
-    if (bwin && NS_SUCCEEDED(bwin->CanClose(&canClose))) {
-      return canClose;
-    }
-  }
-
   if (!mDocShell) {
     return true;
   }
@@ -8776,7 +8787,7 @@ nsGlobalWindow::CanClose()
   mDocShell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
     bool canClose;
-    nsresult rv = cv->PermitUnload(&canClose);
+    nsresult rv = cv->PermitUnload(false, &canClose);
     if (NS_SUCCEEDED(rv) && !canClose)
       return false;
 
