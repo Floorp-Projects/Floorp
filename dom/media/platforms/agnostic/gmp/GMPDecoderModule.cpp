@@ -11,6 +11,8 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Preferences.h"
+#include "gmp-audio-decode.h"
+#include "gmp-video-decode.h"
 
 namespace mozilla {
 
@@ -122,6 +124,43 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
   }
 
   return rv;
+}
+
+bool
+GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
+                                   const Maybe<nsCString>& aGMP)
+{
+  nsTArray<nsCString> tags;
+  nsCString api;
+  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
+    tags.AppendElement(NS_LITERAL_CSTRING("aac"));
+    api = NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER);
+  } else if (aMimeType.EqualsLiteral("video/avc") ||
+             aMimeType.EqualsLiteral("video/mp4")) {
+    tags.AppendElement(NS_LITERAL_CSTRING("h264"));
+    api = NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
+  } else {
+    return false;
+  }
+  if (aGMP.isSome()) {
+    tags.AppendElement(aGMP.value());
+  }
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (NS_WARN_IF(!mps)) {
+    return false;
+  }
+  bool hasPlugin = false;
+  if (NS_FAILED(mps->HasPluginForAPI(api, &tags, &hasPlugin))) {
+    return false;
+  }
+  return hasPlugin;
+}
+
+bool
+GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+{
+  return SupportsMimeType(aMimeType, PreferredGMP(aMimeType));
 }
 
 } // namespace mozilla

@@ -14,6 +14,7 @@
 #include "nsServiceManagerUtils.h"
 #include "MediaInfo.h"
 #include "nsClassHashtable.h"
+#include "GMPDecoderModule.h"
 
 namespace mozilla {
 
@@ -299,6 +300,14 @@ EMEDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
   } else {
     return kNeedNone;
   }
+}
+
+bool
+EMEDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+{
+  Maybe<nsCString> gmp;
+  gmp.emplace(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
+  return GMPDecoderModule::SupportsMimeType(aMimeType, gmp);
 }
 
 } // namespace mozilla
