@@ -44,6 +44,12 @@ interface MessageEvent : Event {
    * data, origin, source, and lastEventId attributes of this appropriately.
    */
   readonly attribute MessagePortList? ports;
+
+  [Throws]
+  void initMessageEvent(DOMString type, boolean bubbles, boolean cancelable,
+                        any data, DOMString origin, DOMString lastEventId,
+                        (WindowProxy or MessagePort)? source,
+                        sequence<MessagePort>? ports);
 };
 
 dictionary MessageEventInit : EventInit {
