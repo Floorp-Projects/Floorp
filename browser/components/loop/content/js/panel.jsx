@@ -668,9 +668,7 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       mozLoop: React.PropTypes.object.isRequired,
-      store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
-      // Used for room creation, associated with room owner.
-      userProfile: userProfileValidator
+      store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
 
     getInitialState: function() {
@@ -701,11 +699,6 @@ loop.panel = (function(_, mozL10n) {
 
     _onStoreStateChanged: function() {
       this.setState(this.props.store.getStoreState());
-    },
-
-    _getUserDisplayName: function() {
-      return this.props.userProfile && this.props.userProfile.email ||
-        mozL10n.get("display_name_guest");
     },
 
     /**
@@ -746,8 +739,7 @@ loop.panel = (function(_, mozL10n) {
         <NewRoomView dispatcher={this.props.dispatcher}
           mozLoop={this.props.mozLoop}
           pendingOperation={this.state.pendingCreation ||
-                            this.state.pendingInitialRetrieval}
-          userDisplayName={this._getUserDisplayName()} />
+                            this.state.pendingInitialRetrieval} />
       );
     },
 
@@ -792,8 +784,7 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       mozLoop: React.PropTypes.object.isRequired,
-      pendingOperation: React.PropTypes.bool.isRequired,
-      userDisplayName: React.PropTypes.string.isRequired
+      pendingOperation: React.PropTypes.bool.isRequired
     },
 
     mixins: [
@@ -1002,8 +993,7 @@ loop.panel = (function(_, mozL10n) {
             notifications={this.props.notifications} />
             <RoomList dispatcher={this.props.dispatcher}
                       mozLoop={this.props.mozLoop}
-                      store={this.props.roomStore}
-                      userProfile={this.state.userProfile} />
+                      store={this.props.roomStore} />
           <div className="footer">
             <div className="user-details">
               <AvailabilityDropdown />
