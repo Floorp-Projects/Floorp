@@ -137,6 +137,8 @@
 <!ENTITY prefs_options_autoclosebrackets_tooltip "Automatically insert closing brackets">
 <!ENTITY prefs_options_keybindings "Keybindings">
 <!ENTITY prefs_options_keybindings_default "Default">
+<!ENTITY prefs_options_autosavefiles "Autosave files">
+<!ENTITY prefs_options_autosavefiles_tooltip "Automatically save edited files before running project">
 
 <!-- Permissions Table -->
 <!ENTITY permissionstable_title "Permissions Table">

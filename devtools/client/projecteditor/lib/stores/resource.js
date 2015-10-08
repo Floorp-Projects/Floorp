@@ -348,19 +348,15 @@ var FileResource = Class({
    *          Resolves once it has been written to disk.
    *          Rejected if there is an error
    */
-  save: function(content) {
-    let buffer = gEncoder.encode(content);
-    let path = this.path;
-
+  save: Task.async(function*(content) {
     // XXX: writeAtomic was losing permissions after saving on OSX
     // return OS.File.writeAtomic(this.path, buffer, { tmpPath: this.path + ".tmp" });
-
-    return Task.spawn(function*() {
-        let pfh = yield OS.File.open(path, {truncate: true});
-        yield pfh.write(buffer);
-        yield pfh.close();
-    });
-  },
+    let buffer = gEncoder.encode(content);
+    let path = this.path;
+    let file = yield OS.File.open(path, {truncate: true});
+    yield file.write(buffer);
+    yield file.close();
+  }),
 
   /**
    * Attempts to get the content type from the file.
