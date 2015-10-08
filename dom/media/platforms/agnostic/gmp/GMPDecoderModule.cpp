@@ -10,6 +10,7 @@
 #include "MediaDataDecoderProxy.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 
@@ -84,6 +85,43 @@ GMPDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
   } else {
     return kNeedNone;
   }
+}
+
+static uint32_t sPreferredAacGmp = 0;
+static uint32_t sPreferredH264Gmp = 0;
+
+/* static */
+void
+GMPDecoderModule::Init()
+{
+  Preferences::AddUintVarCache(&sPreferredAacGmp,
+                               "media.fragmented-mp4.gmp.aac", 0);
+  Preferences::AddUintVarCache(&sPreferredH264Gmp,
+                               "media.fragmented-mp4.gmp.h264", 0);
+}
+
+/* static */
+const Maybe<nsCString>
+GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
+{
+  Maybe<nsCString> rv;
+  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
+    switch (sPreferredAacGmp) {
+      case 1: rv.emplace(NS_LITERAL_CSTRING("org.w3.clearkey")); break;
+      case 2: rv.emplace(NS_LITERAL_CSTRING("com.adobe.primetime")); break;
+      default: break;
+    }
+  }
+
+  if (aMimeType.EqualsLiteral("video/avc")) {
+    switch (sPreferredH264Gmp) {
+      case 1: rv.emplace(NS_LITERAL_CSTRING("org.w3.clearkey")); break;
+      case 2: rv.emplace(NS_LITERAL_CSTRING("com.adobe.primetime")); break;
+      default: break;
+    }
+  }
+
+  return rv;
 }
 
 } // namespace mozilla

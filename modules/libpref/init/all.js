@@ -322,6 +322,8 @@ pref("media.directshow.enabled", true);
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
 pref("media.fragmented-mp4.gmp.enabled", false);
+pref("media.fragmented-mp4.gmp.aac", 0);
+pref("media.fragmented-mp4.gmp.h264", 0);
 // Specifies whether the fragmented MP4 parser uses a test decoder that
 // just outputs blank frames/audio instead of actually decoding. The blank
 // decoder works on all platforms.
