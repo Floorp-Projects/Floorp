@@ -13,6 +13,7 @@
 #include "jit/arm64/vixl/Debugger-vixl.h"
 #endif
 
+#include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;
