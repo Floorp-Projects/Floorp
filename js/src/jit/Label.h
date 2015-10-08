@@ -60,7 +60,7 @@ struct LabelBase
 
         int32_t old = offset_;
         offset_ = offset;
-        MOZ_ASSERT(offset_ == offset);
+        MOZ_ASSERT(offset_ == offset, "bitfield overflow");
 
         return old;
     }
