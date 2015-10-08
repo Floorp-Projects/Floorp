@@ -64,6 +64,11 @@ SourceSurfaceD2DTarget::GetDataSurface()
   desc.BindFlags = 0;
   desc.MiscFlags = 0;
 
+  if (!Factory::GetDirect3D10Device()) {
+    gfxCriticalError() << "Invalid D3D10 device in D2D target surface";
+    return nullptr;
+  }
+
   HRESULT hr = Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(dataSurf->mTexture));
 
   if (FAILED(hr)) {
