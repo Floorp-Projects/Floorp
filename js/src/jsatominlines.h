@@ -26,6 +26,13 @@ js::AtomStateEntry::asPtr() const
     return atom;
 }
 
+inline JSAtom*
+js::AtomStateEntry::asPtrUnbarriered() const
+{
+    MOZ_ASSERT(bits != 0);
+    return reinterpret_cast<JSAtom*>(bits & NO_TAG_MASK);
+}
+
 namespace js {
 
 inline jsid
