@@ -59,6 +59,7 @@
 #include "nsISimpleEnumerator.h"
 #include "nsCharTraits.h"
 #include "nsCocoaFeatures.h"
+#include "nsCocoaUtils.h"
 #include "gfxFontConstants.h"
 
 #include "mozilla/MemoryReporting.h"
@@ -70,20 +71,6 @@
 #include <time.h>
 
 using namespace mozilla;
-
-class nsAutoreleasePool {
-public:
-    nsAutoreleasePool()
-    {
-        mLocalPool = [[NSAutoreleasePool alloc] init];
-    }
-    ~nsAutoreleasePool()
-    {
-        [mLocalPool release];
-    }
-private:
-    NSAutoreleasePool *mLocalPool;
-};
 
 // indexes into the NSArray objects that the Cocoa font manager returns
 // as the available members of a family
@@ -565,7 +552,6 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
     }
 }
 
-
 /* gfxSingleFaceMacFontFamily */
 #pragma mark-
 
@@ -642,7 +628,8 @@ gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformF
 
 gfxMacPlatformFontList::gfxMacPlatformFontList() :
     gfxPlatformFontList(false),
-    mDefaultFont(nullptr)
+    mDefaultFont(nullptr),
+    mUseSizeSensitiveSystemFont(false)
 {
 #ifdef MOZ_BUNDLED_FONTS
     ActivateBundledFonts();
@@ -658,12 +645,55 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
     // cache this in a static variable so that MacOSFontFamily objects
     // don't have to repeatedly look it up
     sFontManager = [NSFontManager sharedFontManager];
+
+#ifdef DEBUG
+    // different system font API's always map to the same family under OSX, so
+    // just assume that and emit a warning if that ever changes
+    NSString *sysFamily = [[NSFont systemFontOfSize:0.0] familyName];
+    if ([sysFamily compare:[[NSFont boldSystemFontOfSize:0.0] familyName]] != NSOrderedSame ||
+        [sysFamily compare:[[NSFont controlContentFontOfSize:0.0] familyName]] != NSOrderedSame ||
+        [sysFamily compare:[[NSFont menuBarFontOfSize:0.0] familyName]] != NSOrderedSame ||
+        [sysFamily compare:[[NSFont toolTipsFontOfSize:0.0] familyName]] != NSOrderedSame) {
+        NS_WARNING("system font types map to different font families -- please log a bug!!");
+    }
+#endif
 }
 
 gfxMacPlatformFontList::~gfxMacPlatformFontList()
 {
     if (mDefaultFont) {
         ::CFRelease(mDefaultFont);
+    }
+}
+
+void
+gfxMacPlatformFontList::AddFamily(CFStringRef aFamily)
+{
+    NSString* family = (NSString*)aFamily;
+
+    // CTFontManager includes weird internal family names and
+    // LastResort, skip over those
+    if (!family || [family caseInsensitiveCompare:@"LastResort"] == NSOrderedSame) {
+        return;
+    }
+
+    bool hiddenSystemFont = [family hasPrefix:@"."];
+
+    FontFamilyTable& table =
+        hiddenSystemFont ? mSystemFontFamilies : mFontFamilies;
+
+    nsAutoString familyName;
+    nsCocoaUtils::GetStringForNSString(family, familyName);
+
+    nsAutoString key;
+    ToLowerCase(familyName, key);
+
+    gfxFontFamily* familyEntry = new gfxMacFontFamily(familyName);
+    table.Put(key, familyEntry);
+
+    // check the bad underline blacklist
+    if (mBadUnderlineFamilyNames.Contains(key)) {
+        familyEntry->SetBadUnderlineFamily();
     }
 }
 
@@ -682,54 +712,15 @@ gfxMacPlatformFontList::InitFontList()
 
     CFArrayRef familyNames = CTFontManagerCopyAvailableFontFamilyNames();
 
-    // iterate over families
-    uint32_t i, numFamilies;
-
-    numFamilies = CFArrayGetCount(familyNames);
-    for (i = 0; i < numFamilies; i++) {
-        CFStringRef family = (CFStringRef)CFArrayGetValueAtIndex(familyNames, i);
-
-        // CTFontManager includes weird internal family names and
-        // LastResort, skip over those
-        if (!family ||
-            CFStringCompare(family, CFSTR("LastResort"),
-                            kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
-            continue;
-        }
-
-        bool hiddenSystemFont = false;
-        if (::CFStringHasPrefix(family, CFSTR("."))) {
-            hiddenSystemFont = true;
-        }
-
-        nsAutoTArray<UniChar, 1024> buffer;
-        CFIndex len = ::CFStringGetLength(family);
-        buffer.SetLength(len+1);
-        ::CFStringGetCharacters(family, ::CFRangeMake(0, len),
-                                buffer.Elements());
-        buffer[len] = 0;
-        nsAutoString familyName(reinterpret_cast<char16_t*>(buffer.Elements()), len);
-
-        // create a family entry
-        gfxFontFamily *familyEntry = new gfxMacFontFamily(familyName);
-        if (!familyEntry) break;
-
-        // add the family entry to the hash table
-        ToLowerCase(familyName);
-        if (!hiddenSystemFont) {
-            mFontFamilies.Put(familyName, familyEntry);
-        } else {
-            mSystemFontFamilies.Put(familyName, familyEntry);
-        }
-
-        // check the bad underline blacklist
-        if (mBadUnderlineFamilyNames.Contains(familyName))
-            familyEntry->SetBadUnderlineFamily();
+    for (NSString* familyName in (NSArray*)familyNames) {
+        AddFamily((CFStringRef)familyName);
     }
 
     CFRelease(familyNames);
 
     InitSingleFaceList();
+
+    InitSystemFonts();
 
     // to avoid full search of font name tables, seed the other names table with localized names from
     // some of the prefs fonts which are accessed via their localized names.  changes in the pref fonts will only cause
@@ -778,6 +769,90 @@ gfxMacPlatformFontList::InitSingleFaceList()
             }
         }
     }
+}
+
+// System fonts under OSX may contain weird "meta" names but if we create
+// a new font using just the Postscript name, the NSFont api returns an object
+// with the actual real family name. For example, under OSX 10.11:
+//
+// [[NSFont menuFontOfSize:8.0] familyName] ==> .AppleSystemUIFont
+// [[NSFont fontWithName:[[[NSFont menuFontOfSize:8.0] fontDescriptor] postscriptName]
+//          size:8.0] familyName] ==> .SF NS Text
+
+static NSString* GetRealFamilyName(NSFont* aFont)
+{
+    NSFont* f = [NSFont fontWithName: [[aFont fontDescriptor] postscriptName]
+                        size: 0.0];
+    return [f familyName];
+}
+
+// System fonts under OSX 10.11 use a combination of two families, one
+// for text sizes and another for larger, display sizes. Each has a
+// different number of weights. There aren't efficient API's for looking
+// this information up, so hard code the logic here but confirm via
+// debug assertions that the logic is correct.
+
+const CGFloat kTextDisplayCrossover = 20.0; // use text family below this size
+
+void
+gfxMacPlatformFontList::InitSystemFonts()
+{
+    // system font under 10.11 are two distinct families for text/display sizes
+    if (nsCocoaFeatures::OnElCapitanOrLater()) {
+        mUseSizeSensitiveSystemFont = true;
+    }
+
+    // text font family
+    NSFont* sys = [NSFont systemFontOfSize: 0.0];
+    NSString* textFamilyName = GetRealFamilyName(sys);
+    nsAutoString familyName;
+    nsCocoaUtils::GetStringForNSString(textFamilyName, familyName);
+    mSystemTextFontFamily = FindSystemFontFamily(familyName);
+    NS_ASSERTION(mSystemTextFontFamily, "null system display font family");
+
+    // display font family, if on OSX 10.11
+    if (mUseSizeSensitiveSystemFont) {
+        sys = [NSFont systemFontOfSize: 128.0];
+        NSString* displayFamilyName = GetRealFamilyName(sys);
+        nsCocoaUtils::GetStringForNSString(displayFamilyName, familyName);
+        mSystemDisplayFontFamily = FindSystemFontFamily(familyName);
+        NS_ASSERTION(mSystemDisplayFontFamily, "null system display font family");
+
+#if DEBUG
+        // confirm that the optical size switch is at 20.0
+        NS_ASSERTION(mSystemTextFontFamily && mSystemDisplayFontFamily &&
+                     [textFamilyName compare:displayFamilyName] != NSOrderedSame,
+                     "system text/display fonts are the same!");
+        NSString* fam19 = GetRealFamilyName([NSFont systemFontOfSize:
+                                             (kTextDisplayCrossover - 1.0)]);
+        NSString* fam20 = GetRealFamilyName([NSFont systemFontOfSize:
+                                             kTextDisplayCrossover]);
+        NS_ASSERTION(fam19 && fam20 && [fam19 compare:fam20] != NSOrderedSame,
+                     "system text/display font size switch point is not as expected!");
+#endif
+    }
+
+}
+
+gfxFontFamily*
+gfxMacPlatformFontList::FindSystemFontFamily(const nsAString& aFamily)
+{
+    nsAutoString key;
+    GenerateFontListKey(aFamily, key);
+
+    gfxFontFamily* familyEntry;
+
+    // lookup in hidden system family name list
+    if ((familyEntry = mSystemFontFamilies.GetWeak(key))) {
+        return CheckFamily(familyEntry);
+    }
+
+    // lookup in user-exposed family name list
+    if ((familyEntry = mFontFamilies.GetWeak(key))) {
+        return CheckFamily(familyEntry);
+    }
+
+    return nullptr;
 }
 
 bool
@@ -1017,6 +1092,97 @@ gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 #endif
 
     return nullptr;
+}
+
+// Webkit code uses a system font meta name, so mimic that here
+// WebCore/platform/graphics/mac/FontCacheMac.mm
+static const char kSystemFont_system[] = "-apple-system";
+
+gfxFontFamily*
+gfxMacPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle)
+{
+    // search for special system font name, -apple-system
+    if (aFamily.EqualsLiteral(kSystemFont_system)) {
+        if (mUseSizeSensitiveSystemFont &&
+            aStyle && aStyle->size >= kTextDisplayCrossover) {
+            return mSystemDisplayFontFamily;
+        }
+        return mSystemTextFontFamily;
+    }
+
+    return gfxPlatformFontList::FindFamily(aFamily, aStyle);
+}
+
+void
+gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
+                                         nsAString& aSystemFontName,
+                                         gfxFontStyle &aFontStyle,
+                                         float aDevPixPerCSSPixel)
+{
+    // code moved here from widget/cocoa/nsLookAndFeel.mm
+    NSFont *font = nullptr;
+    char* systemFontName = nullptr;
+    switch (aSystemFontID) {
+        case LookAndFeel::eFont_MessageBox:
+        case LookAndFeel::eFont_StatusBar:
+        case LookAndFeel::eFont_List:
+        case LookAndFeel::eFont_Field:
+        case LookAndFeel::eFont_Button:
+        case LookAndFeel::eFont_Widget:
+            font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
+            systemFontName = (char*) kSystemFont_system;
+            break;
+
+        case LookAndFeel::eFont_SmallCaption:
+            font = [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]];
+            systemFontName = (char*) kSystemFont_system;
+            break;
+
+        case LookAndFeel::eFont_Icon: // used in urlbar; tried labelFont, but too small
+        case LookAndFeel::eFont_Workspace:
+        case LookAndFeel::eFont_Desktop:
+        case LookAndFeel::eFont_Info:
+            font = [NSFont controlContentFontOfSize:0.0];
+            systemFontName = (char*) kSystemFont_system;
+            break;
+
+        case LookAndFeel::eFont_PullDownMenu:
+            font = [NSFont menuBarFontOfSize:0.0];
+            systemFontName = (char*) kSystemFont_system;
+            break;
+
+        case LookAndFeel::eFont_Tooltips:
+            font = [NSFont toolTipsFontOfSize:0.0];
+            systemFontName = (char*) kSystemFont_system;
+            break;
+
+        case LookAndFeel::eFont_Caption:
+        case LookAndFeel::eFont_Menu:
+        case LookAndFeel::eFont_Dialog:
+        default:
+            font = [NSFont systemFontOfSize:0.0];
+            systemFontName = (char*) kSystemFont_system;
+            break;
+    }
+    NS_ASSERTION(font, "system font not set");
+    NS_ASSERTION(systemFontName, "system font name not set");
+
+    if (systemFontName) {
+        aSystemFontName.AssignASCII(systemFontName);
+    }
+
+    NSFontSymbolicTraits traits = [[font fontDescriptor] symbolicTraits];
+    aFontStyle.style =
+        (traits & NSFontItalicTrait) ?  NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL;
+    aFontStyle.weight =
+        (traits & NSFontBoldTrait) ? NS_FONT_WEIGHT_BOLD : NS_FONT_WEIGHT_NORMAL;
+    aFontStyle.stretch =
+        (traits & NSFontExpandedTrait) ?
+            NS_FONT_STRETCH_EXPANDED : (traits & NSFontCondensedTrait) ?
+                NS_FONT_STRETCH_CONDENSED : NS_FONT_STRETCH_NORMAL;
+    // convert size from css pixels to device pixels
+    aFontStyle.size = [font pointSize] * aDevPixPerCSSPixel;
+    aFontStyle.systemFont = true;
 }
 
 // used to load system-wide font info on off-main thread

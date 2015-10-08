@@ -1416,8 +1416,11 @@ HelperThread::handleParseWorkload()
 
     // FinishOffThreadScript will need to be called on the script to
     // migrate it into the correct compartment.
-    if (!HelperThreadState().parseFinishedList().append(task))
-        CrashAtUnhandlableOOM("handleParseWorkload");
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!HelperThreadState().parseFinishedList().append(task))
+            oomUnsafe.crash("handleParseWorkload");
+    }
 
     currentTask.reset();
 

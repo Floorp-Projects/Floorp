@@ -894,7 +894,7 @@ CommonStructuredCloneReadCallback(JSContext* aCx,
   }
 
   return StructuredCloneHolder::ReadFullySerializableObjects(aCx, aReader,
-                                                             aTag, aData);
+                                                             aTag);
 }
 
 // static

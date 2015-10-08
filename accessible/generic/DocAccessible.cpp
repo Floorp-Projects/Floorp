@@ -1364,14 +1364,15 @@ DocAccessible::ProcessInvalidationList()
       continue;
     }
 
-    if (!child->Parent()) {
+    Accessible* oldParent = child->Parent();
+    if (!oldParent) {
       NS_ERROR("The accessible is in document but doesn't have a parent");
       continue;
     }
+    int32_t idxInParent = child->IndexInParent();
 
     // XXX: update context flags
     {
-      Accessible* oldParent = child->Parent();
       nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(oldParent);
       nsRefPtr<AccMutationEvent> hideEvent =
         new AccHideEvent(child, child->GetContent(), false);
@@ -1385,21 +1386,29 @@ DocAccessible::ProcessInvalidationList()
       FireDelayedEvent(reorderEvent);
     }
 
+    bool isReinserted = false;
     {
       AutoTreeMutation mut(owner);
-      owner->AppendChild(child);
-
-      nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
-      nsRefPtr<AccMutationEvent> showEvent =
-        new AccShowEvent(child, child->GetContent());
-      FireDelayedEvent(showEvent);
-      reorderEvent->AddSubMutationEvent(showEvent);
-
-      MaybeNotifyOfValueChange(owner);
-      FireDelayedEvent(reorderEvent);
+      isReinserted = owner->AppendChild(child);
     }
 
-    child->SetRepositioned(true);
+    Accessible* newParent = owner;
+    if (!isReinserted) {
+      AutoTreeMutation mut(oldParent);
+      oldParent->InsertChildAt(idxInParent, child);
+      newParent = oldParent;
+    }
+
+    nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(newParent);
+    nsRefPtr<AccMutationEvent> showEvent =
+      new AccShowEvent(child, child->GetContent());
+    FireDelayedEvent(showEvent);
+    reorderEvent->AddSubMutationEvent(showEvent);
+
+    MaybeNotifyOfValueChange(newParent);
+    FireDelayedEvent(reorderEvent);
+
+    child->SetRepositioned(isReinserted);
   }
 
   mARIAOwnsInvalidationList.Clear();

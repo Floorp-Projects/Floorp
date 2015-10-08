@@ -454,8 +454,10 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     Linker linker(masm);
     AutoFlushICache afc("RegExp");
     JitCode* code = linker.newCode<NoGC>(cx, REGEXP_CODE);
-    if (!code)
+    if (!code) {
+        ReportOutOfMemory(cx);
         return RegExpCode();
+    }
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExp");

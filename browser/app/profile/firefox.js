@@ -1825,6 +1825,11 @@ pref("ui.key.menuAccessKeyFocuses", true);
 pref("media.eme.enabled", true);
 pref("media.eme.apiVisible", true);
 
+// If decoding-via-gmp is turned on for <video>, default to using
+// Adobe's GMP for decoding.
+pref("media.fragmented-mp4.gmp.aac", 2);
+pref("media.fragmented-mp4.gmp.h264", 2);
+
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
 // decode H.264.
 pref("media.gmp.trial-create.enabled", true);
