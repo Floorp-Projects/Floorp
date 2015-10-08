@@ -115,7 +115,7 @@ public class GeckoView extends LayerView
 
     @WrapForJNI
     private static final class Window extends JNIObject {
-        static native void open(Window instance, int width, int height);
+        static native void open(Window instance, GeckoView view, int width, int height);
         static native void setLayerClient(Object client);
         @Override protected native void disposeNative();
     }
@@ -225,10 +225,11 @@ public class GeckoView extends LayerView
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, metrics.widthPixels, metrics.heightPixels);
+            Window.open(window, this, metrics.widthPixels, metrics.heightPixels);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
-                    "open", window, metrics.widthPixels, metrics.heightPixels);
+                    "open", window, GeckoView.class, this,
+                    metrics.widthPixels, metrics.heightPixels);
         }
     }
 
