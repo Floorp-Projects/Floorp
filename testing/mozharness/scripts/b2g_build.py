@@ -628,7 +628,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             return
 
         self.checkout_tools()
-        cmd = self.query_moz_sign_cmd(formats='b2gmar')
+        cmd = self.query_moz_sign_cmd(formats=['b2gmar'])
         cmd.append(self.query_marfile_path())
 
         retval = self.run_command(cmd)
