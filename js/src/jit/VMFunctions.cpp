@@ -576,7 +576,6 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
             if (!script || !script->ensureHasTypes(cx))
                 return false;
             if (script->isDerivedClassConstructor()) {
-                MOZ_ASSERT(fun->isClassConstructor());
                 rval.set(MagicValue(JS_UNINITIALIZED_LEXICAL));
             } else {
                 JSObject* thisObj = CreateThisForFunction(cx, callee, newTarget, GenericObject);
