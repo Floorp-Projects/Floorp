@@ -1828,8 +1828,16 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
       *CurrentPanGestureBlock()->GetOverscrollHandoffChain(),
       panDistance,
       ScrollSource::Wheel);
+
+  // Create fake "touch" positions that will result in the desired scroll motion.
+  // Note that the pan displacement describes the change in scroll position:
+  // positive displacement values mean that the scroll position increases.
+  // However, an increase in scroll position means that the scrolled contents
+  // are moved to the left / upwards. Since our simulated "touches" determine
+  // the motion of the scrolled contents, not of the scroll position, they need
+  // to move in the opposite direction of the pan displacement.
   ParentLayerPoint startPoint = aEvent.mLocalPanStartPoint;
-  ParentLayerPoint endPoint = aEvent.mLocalPanStartPoint + aEvent.mLocalPanDisplacement;
+  ParentLayerPoint endPoint = aEvent.mLocalPanStartPoint - aEvent.mLocalPanDisplacement;
   CallDispatchScroll(startPoint, endPoint, handoffState);
 
   return nsEventStatus_eConsumeNoDefault;
