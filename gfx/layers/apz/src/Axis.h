@@ -43,6 +43,9 @@ public:
   /**
    * Notify this Axis that a new touch has been received, including a timestamp
    * for when the touch was received. This triggers a recalculation of velocity.
+   * This can also used for pan gesture events. For those events, the "touch"
+   * location is stationary and the scroll displacement is passed in as
+   * aAdditionalDelta.
    */
   void UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, ParentLayerCoord aAdditionalDelta, uint32_t aTimestampMs);
 
