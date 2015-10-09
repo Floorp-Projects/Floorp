@@ -76,6 +76,44 @@ loop.roomViews = (function(mozL10n) {
   };
 
   /**
+   * Used to display errors in direct calls and rooms to the user.
+   */
+  var FailureInfoView = React.createClass({
+    propTypes: {
+      failureReason: React.PropTypes.string.isRequired
+    },
+
+    /**
+     * Returns the translated message appropraite to the failure reason.
+     *
+     * @return {String} The translated message for the failure reason.
+     */
+    _getMessage: function() {
+      switch (this.props.failureReason) {
+        case FAILURE_DETAILS.NO_MEDIA:
+        case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
+          return mozL10n.get("no_media_failure_message");
+        case FAILURE_DETAILS.TOS_FAILURE:
+          return mozL10n.get("tos_failure_message",
+            { clientShortname: mozL10n.get("clientShortname2") });
+        case FAILURE_DETAILS.ICE_FAILED:
+          return mozL10n.get("ice_failure_message");
+        default:
+          return mozL10n.get("generic_failure_message");
+      }
+    },
+
+    render: function() {
+      return (
+        <div className="failure-info">
+          <div className="failure-info-logo" />
+          <h2 className="failure-info-message">{this._getMessage()}</h2>
+        </div>
+      );
+    }
+  });
+
+  /**
    * Something went wrong view. Displayed when there's a big problem.
    */
   var RoomFailureView = React.createClass({
@@ -110,8 +148,7 @@ loop.roomViews = (function(mozL10n) {
 
       return (
         <div className="room-failure">
-          <loop.conversationViews.FailureInfoView
-            failureReason={this.props.failureReason} />
+          <FailureInfoView failureReason={this.props.failureReason} />
           <div className="btn-group call-action-group">
             <button className="btn btn-info btn-rejoin"
                     onClick={this.handleRejoinCall}>
@@ -820,6 +857,7 @@ loop.roomViews = (function(mozL10n) {
 
   return {
     ActiveRoomStoreMixin: ActiveRoomStoreMixin,
+    FailureInfoView: FailureInfoView,
     RoomFailureView: RoomFailureView,
     SocialShareDropdown: SocialShareDropdown,
     DesktopRoomEditContextView: DesktopRoomEditContextView,
