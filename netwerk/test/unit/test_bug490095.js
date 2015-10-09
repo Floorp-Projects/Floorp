@@ -9,7 +9,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 var httpserver = new HttpServer();
 var index = 0;
 var tests = [
-    // RFC 2616 section 13.9 2nd paragraph - query-url should be validated
     {url: "/freshness?a", server: "0", expected: "0"},
     {url: "/freshness?a", server: "1", expected: "1"},
 
@@ -20,8 +19,6 @@ var tests = [
     // Finally, check that request is validated with no flags set
     {url: "/freshness?a", server: "99", expected: "99"},
     
-    
-    // RFC 2616 section 13.9 2nd paragraph - query-url should be validated
     {url: "/freshness?b", server: "0", expected: "0"},
     {url: "/freshness?b", server: "1", expected: "1"},
 
@@ -98,6 +95,7 @@ function handler(metadata, response) {
     var body = metadata.getHeader("x-request");
     response.setHeader("Content-Type", "text/plain", false);
     response.setHeader("Date", getDateString(0), false);
+    response.setHeader("Cache-Control", "max-age=0", false);
     
     var header = tests[index].responseheader;
     if (header == null) {
