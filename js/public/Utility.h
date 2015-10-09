@@ -201,7 +201,8 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
         if (oomEnabled_) {
             MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
             int64_t maxAllocations = OOM_counter + oomAfter_;
-            MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX);
+            MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX,
+                       "alloc count + oom limit exceeds range, your oom limit is probably too large");
             OOM_maxAllocations = uint32_t(maxAllocations);
         }
     }

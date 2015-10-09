@@ -17,7 +17,7 @@ const TEST_URI = `
 
 add_task(function*() {
   let TESTS = [
-    {name: "hex", result: "#0F0"},
+    {name: "hex", result: "#0f0"},
     {name: "rgb", result: "rgb(0, 255, 0)"}
   ];
 

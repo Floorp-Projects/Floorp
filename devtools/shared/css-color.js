@@ -30,10 +30,10 @@ const SPECIALVALUES = new Set([
  *   color.valid === true
  *   color.transparent === false // transparent has a special status.
  *   color.name === "red"        // returns hex or rgba when no name available.
- *   color.hex === "#F00"        // returns shortHex when available else returns
+ *   color.hex === "#f00"        // returns shortHex when available else returns
  *                                  longHex. If alpha channel is present then we
  *                                  return this.rgba.
- *   color.longHex === "#FF0000" // If alpha channel is present then we return
+ *   color.longHex === "#ff0000" // If alpha channel is present then we return
  *                                  this.rgba.
  *   color.rgb === "rgb(255, 0, 0)" // If alpha channel is present then we return
  *                                     this.rgba.
@@ -42,10 +42,10 @@ const SPECIALVALUES = new Set([
  *   color.hsla === "hsla(0, 100%, 50%, 1)" // If alpha channel is present
  *                                             then we return this.rgba.
  *
- *   color.toString() === "#F00"; // Outputs the color type determined in the
+ *   color.toString() === "#f00"; // Outputs the color type determined in the
  *                                   COLOR_UNIT_PREF constant (above).
  *   // Color objects can be reused
- *   color.newColor("green") === "#0F0"; // true
+ *   color.newColor("green") === "#0f0"; // true
  *
  *   Valid values for COLOR_UNIT_PREF are contained in CssColor.COLORUNIT.
  */
@@ -74,6 +74,7 @@ CssColor.COLORUNIT = {
 
 CssColor.prototype = {
   _colorUnit: null,
+  _colorUnitUppercase: false,
 
   // The value as-authored.
   authored: null,
@@ -84,6 +85,8 @@ CssColor.prototype = {
     if (this._colorUnit === null) {
       let defaultUnit = Services.prefs.getCharPref(COLOR_UNIT_PREF);
       this._colorUnit = CssColor.COLORUNIT[defaultUnit];
+      this._colorUnitUppercase =
+        (this.authored === this.authored.toUpperCase());
     }
     return this._colorUnit;
   },
@@ -103,6 +106,7 @@ CssColor.prototype = {
     if (Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
         CssColor.COLORUNIT.authored) {
       this._colorUnit = classifyColor(color);
+      this._colorUnitUppercase = (color === color.toUpperCase());
     }
   },
 
@@ -180,7 +184,7 @@ CssColor.prototype = {
     }
 
     let tuple = this._getRGBATuple();
-    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0)).toString(16).substr(-6).toUpperCase();
+    return "#" + ((1 << 24) + (tuple.r << 16) + (tuple.g << 8) + (tuple.b << 0)).toString(16).substr(-6);
   },
 
   get rgb() {
@@ -325,6 +329,12 @@ CssColor.prototype = {
       default:
         color = this.rgb;
     }
+
+    if (this._colorUnitUppercase &&
+        this.colorUnit != CssColor.COLORUNIT.authored) {
+      color = color.toUpperCase();
+    }
+
     return color;
   },
 
