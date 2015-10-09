@@ -1040,6 +1040,12 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     {
         JSAutoCompartment ac(cx, sandbox);
 
+        nsCOMPtr<nsIScriptObjectPrincipal> sbp =
+            new SandboxPrivate(principal, sandbox);
+
+        // Pass on ownership of sbp to |sandbox|.
+        JS_SetPrivate(sandbox, sbp.forget().take());
+
         if (options.proto) {
             bool ok = JS_WrapObject(cx, &options.proto);
             if (!ok)
@@ -1074,16 +1080,10 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
                     return NS_ERROR_OUT_OF_MEMORY;
             }
 
-            ok = JS_SetPrototype(cx, sandbox, options.proto);
+            ok = JS_SplicePrototype(cx, sandbox, options.proto);
             if (!ok)
                 return NS_ERROR_XPC_UNEXPECTED;
         }
-
-        nsCOMPtr<nsIScriptObjectPrincipal> sbp =
-            new SandboxPrivate(principal, sandbox);
-
-        // Pass on ownership of sbp to |sandbox|.
-        JS_SetPrivate(sandbox, sbp.forget().take());
 
         // Don't try to mirror the properties that are set below.
         AutoSkipPropertyMirroring askip(CompartmentPrivate::Get(sandbox));
