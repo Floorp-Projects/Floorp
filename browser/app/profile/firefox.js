@@ -1707,7 +1707,6 @@ pref("loop.feedback.baseUrl", "https://input.mozilla.org/api/v1/feedback");
 pref("loop.feedback.product", "Loop");
 pref("loop.debug.loglevel", "Error");
 pref("loop.debug.dispatcher", false);
-pref("loop.debug.websocket", false);
 pref("loop.debug.sdk", false);
 pref("loop.debug.twoWayMediaTelemetry", false);
 pref("loop.feedback.dateLastSeenSec", 0);

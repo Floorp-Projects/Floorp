@@ -9,7 +9,7 @@
 const TEST_URI = `
   <style type="text/css">
     .matches {
-      color: #F00;
+      color: #f00;
     }
   </style>
   <span id="matches" class="matches">Some styled text</span>
@@ -41,7 +41,7 @@ function checkColorCycling(container, inspector) {
   // Hex
   EventUtils.synthesizeMouseAtCenter(swatch,
                                      {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "#F00", "Color displayed as a hex value.");
+  is(valueNode.textContent, "#f00", "Color displayed as a hex value.");
 
   // HSL
   EventUtils.synthesizeMouseAtCenter(swatch,
