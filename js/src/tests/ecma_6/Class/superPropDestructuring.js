@@ -37,10 +37,12 @@ class derived extends base {
     }
 }
 
+assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
+/*
 let d = new derived();
 d.testProps();
 d.testElems();
-
+*/
 `;
 
 if (classesEnabled())

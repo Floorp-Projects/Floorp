@@ -18,7 +18,8 @@ class derived extends base {
     }
 }
 
-new derived().test();
+// This shouldn't throw, but we don't have |super()| yet.
+assertThrowsInstanceOf(() => new derived().test(), TypeError);
 
 `;
 

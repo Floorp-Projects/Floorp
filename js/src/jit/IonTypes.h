@@ -111,8 +111,13 @@ enum BailoutKind
     // We hit a |debugger;| statement.
     Bailout_Debugger,
 
-    // END Normal bailouts
+    // |this| used uninitialized in a derived constructor
+    Bailout_UninitializedThis,
 
+    // Derived constructors must return object or undefined
+    Bailout_BadDerivedConstructorReturn,
+
+    // END Normal bailouts
 
     // Bailouts caused by invalid assumptions based on Baseline code.
     // Causes immediate invalidation.
@@ -151,7 +156,7 @@ enum BailoutKind
     Bailout_UninitializedLexical,
 
     // A bailout to baseline from Ion on exception to handle Debugger hooks.
-    Bailout_IonExceptionDebugMode,
+    Bailout_IonExceptionDebugMode
 };
 
 inline const char*
@@ -209,6 +214,10 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_InitialState";
       case Bailout_Debugger:
         return "Bailout_Debugger";
+      case Bailout_UninitializedThis:
+        return "Bailout_UninitializedThis";
+      case Bailout_BadDerivedConstructorReturn:
+        return "Bailout_BadDerivedConstructorReturn";
 
       // Bailouts caused by invalid assumptions.
       case Bailout_OverflowInvalidate:

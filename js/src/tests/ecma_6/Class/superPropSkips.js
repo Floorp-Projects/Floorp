@@ -37,11 +37,14 @@ class derived extends base {
 }
 
 Object.defineProperty(derived.prototype, "nonWritableProp", { writable: false, value: "pony" });
+
+assertThrowsInstanceOf(()=> new derived(), TypeError, "You implemented |super()|?!");
+/*
 let instance = new derived();
 instance.testSkipGet();
 instance.testSkipDerivedOverrides();
 instance.testSkipSet();
-
+*/
 `;
 
 if (classesEnabled())

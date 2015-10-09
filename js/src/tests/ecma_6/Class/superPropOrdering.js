@@ -9,13 +9,13 @@ class derived extends base {
     constructor() { this.methodCalled = 0; }
 
     // Test orderings of various evaluations relative to the superbase
-    
+
     // Unlike in regular element evaluation, the propVal is evaluated before
     // checking the starting object ([[HomeObject]].[[Prototype]])
     testElem() { super[ruin()]; }
-   
+
     // The starting object for looking up super.method is determined before
-    // ruin() is called. 
+    // ruin() is called.
     testProp() { super.method(ruin()); }
 
     // The entire super.method property lookup has concluded before the args
@@ -70,8 +70,9 @@ function reset() {
     Object.setPrototypeOf(derived.prototype, base.prototype);
 }
 
+assertThrowsInstanceOf(() => new derived(), TypeError, "You implemented |super()|?!");
+/*
 let instance = new derived();
-
 assertThrowsInstanceOf(() => instance.testElem(), TypeError);
 reset();
 
@@ -91,6 +92,7 @@ instance.testAssignElemPropValChange();
 instance.testAssignProp();
 
 instance.testCompoundAssignProp();
+*/
 `;
 
 if (classesEnabled())

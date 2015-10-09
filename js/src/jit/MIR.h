@@ -7230,8 +7230,10 @@ class MLexicalCheck
   : public MUnaryInstruction,
     public BoxPolicy<0>::Data
 {
-    explicit MLexicalCheck(MDefinition* input)
-      : MUnaryInstruction(input)
+    BailoutKind kind_;
+    explicit MLexicalCheck(MDefinition* input, BailoutKind kind)
+      : MUnaryInstruction(input),
+        kind_(kind)
     {
         setResultType(MIRType_Value);
         setResultTypeSet(input->resultTypeSet());
@@ -7242,8 +7244,9 @@ class MLexicalCheck
   public:
     INSTRUCTION_HEADER(LexicalCheck)
 
-    static MLexicalCheck* New(TempAllocator& alloc, MDefinition* input) {
-        return new(alloc) MLexicalCheck(input);
+    static MLexicalCheck* New(TempAllocator& alloc, MDefinition* input,
+                              BailoutKind kind = Bailout_UninitializedLexical) {
+        return new(alloc) MLexicalCheck(input, kind);
     }
 
     AliasSet getAliasSet() const override {
@@ -7252,6 +7255,10 @@ class MLexicalCheck
 
     MDefinition* input() const {
         return getOperand(0);
+    }
+
+    BailoutKind bailoutKind() const {
+        return kind_;
     }
 
     bool congruentTo(const MDefinition* ins) const override {
@@ -12933,6 +12940,33 @@ class MHasClass
         if (getClass() != ins->toHasClass()->getClass())
             return false;
         return congruentIfOperandsEqual(ins);
+    }
+};
+
+class MCheckReturn
+  : public MBinaryInstruction,
+    public BoxInputsPolicy::Data
+{
+    explicit MCheckReturn(MDefinition* retVal, MDefinition* thisVal)
+      : MBinaryInstruction(retVal, thisVal)
+    {
+        setGuard();
+        setResultType(MIRType_Value);
+        setResultTypeSet(retVal->resultTypeSet());
+    }
+
+  public:
+    INSTRUCTION_HEADER(CheckReturn)
+
+    static MCheckReturn* New(TempAllocator& alloc, MDefinition* retVal, MDefinition* thisVal) {
+        return new (alloc) MCheckReturn(retVal, thisVal);
+    }
+
+    MDefinition* returnValue() const {
+        return getOperand(0);
+    }
+    MDefinition* thisValue() const {
+        return getOperand(1);
     }
 };
 
