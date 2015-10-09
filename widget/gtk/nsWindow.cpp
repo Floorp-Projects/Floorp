@@ -531,6 +531,10 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     debug_DumpEvent(stdout, aEvent->widget, aEvent,
                     nsAutoCString("something"), 0);
 #endif
+    // Translate the mouse event into device pixels.
+    aEvent->refPoint.x = GdkCoordToDevicePixels(aEvent->refPoint.x);
+    aEvent->refPoint.y = GdkCoordToDevicePixels(aEvent->refPoint.y);
+
     aStatus = nsEventStatus_eIgnore;
     nsIWidgetListener* listener =
         mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
@@ -2435,7 +2439,9 @@ nsWindow::OnEnterNotifyEvent(GdkEventCrossing *aEvent)
     WidgetMouseEvent event(true, eMouseEnterIntoWidget, this,
                            WidgetMouseEvent::eReal);
 
-    event.refPoint = GdkPointToDevicePixels({aEvent->x, aEvent->y});
+    event.refPoint.x = nscoord(aEvent->x);
+    event.refPoint.y = nscoord(aEvent->y);
+
     event.time = aEvent->time;
     event.timeStamp = GetEventTimeStamp(aEvent->time);
 
@@ -2476,7 +2482,9 @@ nsWindow::OnLeaveNotifyEvent(GdkEventCrossing *aEvent)
     WidgetMouseEvent event(true, eMouseExitFromWidget, this,
                            WidgetMouseEvent::eReal);
 
-    event.refPoint = GdkPointToDevicePixels({aEvent->x, aEvent->y});
+    event.refPoint.x = nscoord(aEvent->x);
+    event.refPoint.y = nscoord(aEvent->y);
+
     event.time = aEvent->time;
     event.timeStamp = GetEventTimeStamp(aEvent->time);
 
@@ -2541,7 +2549,8 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         event.time = xevent.xmotion.time;
         event.timeStamp = GetEventTimeStamp(xevent.xmotion.time);
 #else
-        event.refPoint = GdkPointToDevicePixels({aEvent->x, aEvent->y});
+        event.refPoint.x = nscoord(aEvent->x);
+        event.refPoint.y = nscoord(aEvent->y);
 
         modifierState = aEvent->state;
 
@@ -2552,10 +2561,11 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
     else {
         // XXX see OnScrollEvent()
         if (aEvent->window == mGdkWindow) {
-            event.refPoint = GdkPointToDevicePixels({aEvent->x, aEvent->y});
+            event.refPoint.x = nscoord(aEvent->x);
+            event.refPoint.y = nscoord(aEvent->y);
         } else {
-            LayoutDeviceIntPoint point = GdkPointToDevicePixels(
-                    {aEvent->x_root, aEvent->y_root});
+            LayoutDeviceIntPoint point(NSToIntFloor(aEvent->x_root),
+                                       NSToIntFloor(aEvent->y_root));
             event.refPoint = point - WidgetToScreenOffset();
         }
 
@@ -2628,10 +2638,11 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
 {
     // XXX see OnScrollEvent()
     if (aGdkEvent->window == mGdkWindow) {
-        aEvent.refPoint = GdkPointToDevicePixels({aGdkEvent->x, aGdkEvent->y});
+        aEvent.refPoint.x = nscoord(aGdkEvent->x);
+        aEvent.refPoint.y = nscoord(aGdkEvent->y);
     } else {
-        LayoutDeviceIntPoint point = GdkPointToDevicePixels(
-                {aGdkEvent->x_root, aGdkEvent->y_root});
+        LayoutDeviceIntPoint point(NSToIntFloor(aGdkEvent->x_root),
+                                   NSToIntFloor(aGdkEvent->y_root));
         aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
@@ -3150,13 +3161,14 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
 
     if (aEvent->window == mGdkWindow) {
         // we are the window that the event happened on so no need for expensive WidgetToScreenOffset
-        wheelEvent.refPoint = GdkPointToDevicePixels({aEvent->x, aEvent->y});
+        wheelEvent.refPoint.x = nscoord(aEvent->x);
+        wheelEvent.refPoint.y = nscoord(aEvent->y);
     } else {
         // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
         // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
         // coordinates relative to this widget.
-        LayoutDeviceIntPoint point = GdkPointToDevicePixels(
-                {aEvent->x_root, aEvent->y_root});
+        LayoutDeviceIntPoint point(NSToIntFloor(aEvent->x_root),
+                                   NSToIntFloor(aEvent->y_root));
         wheelEvent.refPoint = point - WidgetToScreenOffset();
     }
 
