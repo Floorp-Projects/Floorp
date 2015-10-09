@@ -143,8 +143,6 @@ public class GeckoActionProvider {
         PackageManager packageManager = mContext.getPackageManager();
 
         // Populate the sub-menu with a sub set of the activities.
-        final String shareDialogClassName = ShareDialog.class.getCanonicalName();
-        final String sendTabLabel = mContext.getResources().getString(R.string.overlay_share_send_other);
         final int count = dataModel.getActivityCount();
         for (int i = 0; i < count; i++) {
             ResolveInfo activity = dataModel.getActivity(i);
@@ -152,13 +150,7 @@ public class GeckoActionProvider {
 
             // Pin internal actions to the top. Note:
             // the order here does not affect quick share.
-            final int order;
-            if (shareDialogClassName.equals(activity.activityInfo.name) &&
-                    sendTabLabel.equals(activityLabel)) {
-                order = Menu.FIRST + i;
-            } else {
-                order = Menu.FIRST + (i | Menu.CATEGORY_SECONDARY);
-            }
+            final int order = Menu.FIRST + (i | Menu.CATEGORY_SECONDARY);
 
             subMenu.add(0, i, order, activityLabel)
                 .setIcon(activity.loadIcon(packageManager))
