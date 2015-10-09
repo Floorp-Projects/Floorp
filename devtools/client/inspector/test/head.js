@@ -482,6 +482,35 @@ function dispatchCommandEvent(node) {
 }
 
 /**
+ * A helper that simulates a contextmenu event on the given chrome DOM element.
+ */
+function contextMenuClick(element) {
+  let evt = element.ownerDocument.createEvent('MouseEvents');
+  let button = 2;  // right click
+
+  evt.initMouseEvent('contextmenu', true, true,
+       element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
+       false, false, false, button, null);
+
+  element.dispatchEvent(evt);
+}
+
+/**
+ * A helper that fetches a front for a node that matches the given selector or
+ * doctype node if the selector is falsy.
+ */
+function* getNodeFrontForSelector(selector, inspector) {
+  if (selector) {
+    info("Retrieving front for selector " + selector);
+    return getNodeFront(selector, inspector);
+  } else {
+    info("Retrieving front for doctype node");
+    let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+    return nodes[0];
+  }
+}
+
+/**
  * Encapsulate some common operations for highlighter's tests, to have
  * the tests cleaner, without exposing directly `inspector`, `highlighter`, and
  * `testActor` if not needed.
@@ -534,3 +563,33 @@ const getHighlighterHelperFor = (type) => Task.async(
     };
   }
 );
+
+// The expand all operation of the markup-view calls itself recursively and
+// there's not one event we can wait for to know when it's done
+// so use this helper function to wait until all recursive children updates are done.
+function* waitForMultipleChildrenUpdates(inspector) {
+// As long as child updates are queued up while we wait for an update already
+// wait again
+    if (inspector.markup._queuedChildUpdates &&
+        inspector.markup._queuedChildUpdates.size) {
+        yield waitForChildrenUpdated(inspector);
+        return yield waitForMultipleChildrenUpdates(inspector);
+    }
+}
+
+/**
+ * Using the markupview's _waitForChildren function, wait for all queued
+ * children updates to be handled.
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return a promise that resolves when all queued children updates have been
+ * handled
+ */
+function waitForChildrenUpdated({markup}) {
+    info("Waiting for queued children updates to be handled");
+    let def = promise.defer();
+    markup._waitForChildren().then(() => {
+        executeSoon(def.resolve);
+    });
+    return def.promise;
+}

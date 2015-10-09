@@ -8,7 +8,10 @@ import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityResultHandlerMap;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 public class ActivityHandlerHelper {
     private static final String LOGTAG = "GeckoActivityHandlerHelper";
@@ -20,6 +23,26 @@ public class ActivityHandlerHelper {
 
     public static void startIntent(Intent intent, ActivityResultHandler activityResultHandler) {
         startIntentForActivity(GeckoAppShell.getGeckoInterface().getActivity(), intent, activityResultHandler);
+    }
+
+    /**
+     * Starts the Activity, catching & logging if the Activity fails to start.
+     *
+     * We catch to prevent callers from passing in invalid Intents and crashing the browser.
+     *
+     * @return true if the Activity is successfully started, false otherwise.
+     */
+    public static boolean startIntentAndCatch(final String logtag, final Context context, final Intent intent) {
+        try {
+            context.startActivity(intent);
+            return true;
+        } catch (final ActivityNotFoundException e) {
+            Log.w(logtag, "Activity not found.", e);
+            return false;
+        } catch (final SecurityException e) {
+            Log.w(logtag, "Forbidden to launch activity.", e);
+            return false;
+        }
     }
 
     public static void startIntentForActivity(Activity activity, Intent intent, ActivityResultHandler activityResultHandler) {

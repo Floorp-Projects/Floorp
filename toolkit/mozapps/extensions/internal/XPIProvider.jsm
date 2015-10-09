@@ -660,17 +660,16 @@ function isUsableAddon(aAddon) {
   if (aAddon.type == "theme" && aAddon.internalName == XPIProvider.defaultSkin)
     return true;
 
-  if (mustSign(aAddon.type)) {
+  if (aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS &&
+      aAddon.signedState != AddonManager.SIGNEDSTATE_SYSTEM) {
+    return false;
+  }
+
+  if (aAddon._installLocation.name != KEY_APP_SYSTEM_DEFAULTS && mustSign(aAddon.type)) {
     if (aAddon.signedState <= AddonManager.SIGNEDSTATE_MISSING)
       return false;
     if (aAddon.foreignInstall && aAddon.signedState < AddonManager.SIGNEDSTATE_SIGNED)
       return false;
-
-    if (aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS ||
-        aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS) {
-      if (aAddon.signedState != AddonManager.SIGNEDSTATE_SYSTEM)
-        return false;
-    }
   }
 
   if (aAddon.blocklistState == Blocklist.STATE_BLOCKED)
@@ -2525,7 +2524,7 @@ this.XPIProvider = {
       if (!REQUIRE_SIGNING)
         Services.prefs.addObserver(PREF_XPI_SIGNATURES_REQUIRED, this, false);
       Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
-      if (Cu.isModuleLoaded("resource:///modules/devtools/ToolboxProcess.jsm")) {
+      if (Cu.isModuleLoaded("resource:///modules/devtools/client/framework/ToolboxProcess.jsm")) {
         // If BrowserToolboxProcess is already loaded, set the boolean to true
         // and do whatever is needed
         this._toolboxProcessLoaded = true;
