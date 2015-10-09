@@ -867,12 +867,13 @@ AccessibleWrap::get_accDefaultAction(
   if (xpAccessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  // TODO make this work with proxies.
-  if (xpAccessible->IsProxy())
-    return E_NOTIMPL;
-
   nsAutoString defaultAction;
-  xpAccessible->ActionNameAt(0, defaultAction);
+  if (xpAccessible->IsProxy()) {
+    xpAccessible->Proxy()->ActionNameAt(0, defaultAction);
+  } else {
+    xpAccessible->ActionNameAt(0, defaultAction);
+  }
+
   *pszDefaultAction = ::SysAllocStringLen(defaultAction.get(),
                                           defaultAction.Length());
   return *pszDefaultAction ? S_OK : E_OUTOFMEMORY;
