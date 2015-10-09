@@ -13,7 +13,6 @@ DIRS += [
     'feeds',
     'loop',
     'migration',
-    'newtab',
     'places',
     'pocket',
     'preferences',
