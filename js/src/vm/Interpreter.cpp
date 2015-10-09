@@ -319,6 +319,17 @@ SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval, HandleId id, Hand
            result.checkStrictErrorOrWarning(cx, obj, id, op == JSOP_STRICTSETPROP);
 }
 
+static JSFunction*
+MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
+{
+    bool derived = op == JSOP_DERIVEDCONSTRUCTOR;
+    MOZ_ASSERT(derived == !!proto);
+
+    RootedAtom name(cx, atom);
+    JSNative native = derived ? DefaultDerivedClassConstructor : DefaultClassConstructor;
+    return NewFunctionWithProto(cx, native, 0, JSFunction::NATIVE_CTOR, nullptr, name, proto);
+}
+
 bool
 js::ReportIsNotFunction(JSContext* cx, HandleValue v, int numToSkip, MaybeConstruct construct)
 {
@@ -2087,8 +2098,6 @@ CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
 CASE(JSOP_UNUSED14)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED167)
-CASE(JSOP_UNUSED168)
 CASE(JSOP_UNUSED169)
 CASE(JSOP_UNUSED170)
 CASE(JSOP_UNUSED171)
@@ -4167,6 +4176,30 @@ CASE(JSOP_SETTHIS)
 }
 END_CASE(JSOP_SETTHIS)
 
+CASE(JSOP_DERIVEDCONSTRUCTOR)
+{
+    MOZ_ASSERT(REGS.sp[-1].isObject());
+    ReservedRooted<JSObject*> proto(&rootObject0, &REGS.sp[-1].toObject());
+
+    JSFunction* constructor = MakeDefaultConstructor(cx, JSOp(*REGS.pc), script->getAtom(REGS.pc),
+                                                     proto);
+    if (!constructor)
+        goto error;
+
+    REGS.sp[-1].setObject(*constructor);
+}
+END_CASE(JSOP_DERIVEDCONSTRUCTOR)
+
+CASE(JSOP_CLASSCONSTRUCTOR)
+{
+    JSFunction* constructor = MakeDefaultConstructor(cx, JSOp(*REGS.pc), script->getAtom(REGS.pc),
+                                                     nullptr);
+    if (!constructor)
+        goto error;
+    PUSH_OBJECT(*constructor);
+}
+END_CASE(JSOP_CLASSCONSTRUCTOR)
+
 DEFAULT()
 {
     char numBuf[12];
@@ -5026,6 +5059,63 @@ js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* p
     }
 
     ReportUninitializedLexical(cx, name);
+}
+
+bool
+js::DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.isConstructing()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
+        return false;
+    }
+
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    RootedValue protoVal(cx);
+
+    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protoVal))
+        return false;
+
+    RootedObject proto(cx);
+    if (!protoVal.isObject()) {
+        if (!GetBuiltinPrototype(cx, JSProto_Object, &proto))
+            return false;
+    } else {
+        proto = &protoVal.toObject();
+    }
+
+    JSObject* obj = NewObjectWithGivenProto(cx, &PlainObject::class_, proto);
+    if (!obj)
+        return false;
+
+    args.rval().set(ObjectValue(*obj));
+    return true;
+}
+
+bool
+js::DefaultDerivedClassConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.isConstructing()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
+        return false;
+    }
+
+    RootedObject fun(cx, &args.callee());
+    RootedObject superFun(cx);
+    if (!GetPrototype(cx, fun, &superFun))
+        return false;
+
+    RootedValue fval(cx, ObjectOrNullValue(superFun));
+    if (!IsConstructor(fval)) {
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
+        return false;
+    }
+
+    ConstructArgs constArgs(cx);
+    if (!FillArgumentsFromArraylike(cx, constArgs, args))
+        return false;
+    return Construct(cx, fval, constArgs, args.newTarget(), args.rval());
 }
 
 void
