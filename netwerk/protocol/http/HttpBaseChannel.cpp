@@ -2313,7 +2313,7 @@ HttpBaseChannel::ShouldIntercept()
   GetCallback(controller);
   bool shouldIntercept = false;
   if (controller && !BypassServiceWorker() && mLoadInfo) {
-    nsresult rv = controller->ShouldPrepareForIntercept(aURI,
+    nsresult rv = controller->ShouldPrepareForIntercept(mURI,
                                                         nsContentUtils::IsNonSubresourceRequest(this),
                                                         &shouldIntercept);
     if (NS_FAILED(rv)) {
