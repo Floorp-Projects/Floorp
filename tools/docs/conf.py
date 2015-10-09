@@ -14,8 +14,17 @@ from datetime import datetime
 OUR_DIR = os.path.dirname(__file__)
 topsrcdir = os.path.normpath(os.path.join(OUR_DIR, '..', '..'))
 
-sys.path.insert(0, os.path.join(topsrcdir, 'python', 'jsmin'))
-sys.path.insert(0, os.path.join(topsrcdir, 'python', 'mozbuild'))
+EXTRA_PATHS = (
+    'python/jsmin',
+    'python/mach',
+    'python/mozbuild',
+    'python/which',
+    'testing/mozbase/mozfile',
+    'testing/mozbase/mozprocess',
+)
+
+sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
+
 sys.path.insert(0, OUR_DIR)
 
 extensions = [
