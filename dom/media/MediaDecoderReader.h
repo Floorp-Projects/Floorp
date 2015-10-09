@@ -428,8 +428,6 @@ private:
   MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
   MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 
-  bool mTaskQueueIsBorrowed;
-
   // Flags whether a the next audio/video sample comes after a "gap" or
   // "discontinuity" in the stream. For example after a seek.
   bool mAudioDiscontinuity;
