@@ -1021,9 +1021,14 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
         return false;
     }
 
-    uint32_t count;
-    if (!JS::ToUint32(cx, args.get(0), &count))
+    int32_t count;
+    if (!JS::ToInt32(cx, args.get(0), &count))
         return false;
+
+    if (count <= 0) {
+        JS_ReportError(cx, "OOM cutoff should be positive");
+        return false;
+    }
 
     uint32_t targetThread = js::oom::THREAD_TYPE_MAIN;
     if (args.length() > 1 && !ToUint32(cx, args[1], &targetThread))
@@ -1036,8 +1041,13 @@ SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
 
     HelperThreadState().waitForAllThreads();
     js::oom::targetThread = targetThread;
+    if (uint64_t(OOM_counter) + count >= UINT32_MAX) {
+        JS_ReportError(cx, "OOM cutoff out of range");
+        return false;
+    }
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = failAlways;
+    args.rval().setUndefined();
     return true;
 }
 
