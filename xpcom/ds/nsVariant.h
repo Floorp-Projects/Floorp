@@ -174,24 +174,31 @@ public:
  *
  * nsIVariant users won't usually need to see this class.
  */
-class nsVariantBase final : public nsIWritableVariant
+class nsVariantBase : public nsIWritableVariant
 {
 public:
-  NS_DECL_ISUPPORTS
   NS_DECL_NSIVARIANT
   NS_DECL_NSIWRITABLEVARIANT
 
   nsVariantBase();
 
-private:
+protected:
   ~nsVariantBase() {};
 
-protected:
   nsDiscriminatedUnion mData;
   bool mWritable;
 };
 
-typedef nsVariantBase nsVariant;
+class nsVariant final : public nsVariantBase
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsVariant() {};
+
+private:
+  ~nsVariant() {};
+};
 
 /**
  * Users of nsIVariant should be using the contractID and not this CID.
