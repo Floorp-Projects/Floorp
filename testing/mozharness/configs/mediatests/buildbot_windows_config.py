@@ -57,4 +57,14 @@ config = {
     "firefox_ui_branch": 'mozilla-central',
     "firefox_ui_rev": '6d6d57917f85399e903ac69b7e4297091b2d474c',
 
+    "suite_definitions": {
+        "media-tests": {
+            "options": [],
+        },
+        "media-youtube-tests": {
+            "options": [
+                "--tests=%(test_manifest)s"
+            ],
+        },
+    },
 }
