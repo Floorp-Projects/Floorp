@@ -373,7 +373,7 @@ def main():
 
         results = ResultsSink(options, test_count)
         try:
-            for out in run_all_tests(test_gen, prefix, results, options):
+            for out in run_all_tests(test_gen, prefix, results.pb, options):
                 results.push(out)
             results.finish(True)
         except KeyboardInterrupt:
