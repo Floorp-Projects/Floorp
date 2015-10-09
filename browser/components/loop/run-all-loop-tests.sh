@@ -49,8 +49,16 @@ TESTS="
   browser/base/content/test/general/browser_parsable_css.js
 "
 
-./mach mochitest $TESTS
-
-if [ "$1" != "--skip-e10s" ]; then
-  ./mach mochitest --e10s $TESTS
-fi
+# Due to bug 1209463, we need to split these up and run them individually to
+# ensure we stop and report that there's an error.
+for test in $TESTS
+do
+  ./mach mochitest $test
+  # UITour & get user media aren't compatible with e10s currenly.
+  if [ "$1" != "--skip-e10s" ] && \
+     [ "$test" != "browser/components/uitour/test/browser_UITour_loop.js" ] && \
+     [ "$test" != "browser/base/content/test/general/browser_devices_get_user_media_about_urls.js" ];
+  then
+    ./mach mochitest --e10s $test
+  fi
+done
