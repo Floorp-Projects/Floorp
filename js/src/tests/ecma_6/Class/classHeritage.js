@@ -36,11 +36,11 @@ class base {
     override() { overrideCalled = "base" }
 }
 class derived extends base {
-    constructor() { };
+    constructor() { super(); };
     override() { overrideCalled = "derived"; }
 }
 var derivedExpr = class extends base {
-    constructor() { };
+    constructor() { super(); };
     override() { overrideCalled = "derived"; }
 };
 

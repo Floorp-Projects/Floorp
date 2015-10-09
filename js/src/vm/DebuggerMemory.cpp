@@ -314,7 +314,18 @@ DebuggerMemory::setAllocationSamplingProbability(JSContext* cx, unsigned argc, V
         return false;
     }
 
-    memory->getDebugger()->allocationSamplingProbability = probability;
+    Debugger* dbg = memory->getDebugger();
+    if (dbg->allocationSamplingProbability != probability) {
+        dbg->allocationSamplingProbability = probability;
+
+        // If this is a change any debuggees would observe, have all debuggee
+        // compartments recompute their sampling probabilities.
+        if (dbg->enabled && dbg->trackingAllocationSites) {
+            for (auto r = dbg->debuggees.all(); !r.empty(); r.popFront())
+                r.front()->compartment()->chooseAllocationSamplingProbability();
+        }
+    }
+
     args.rval().setUndefined();
     return true;
 }

@@ -374,6 +374,12 @@ struct JSCompartment
     js::NewObjectMetadataState objectMetadataState;
 
   public:
+    // Recompute the probability with which this compartment should record
+    // profiling data (stack traces, allocations log, etc.) about each
+    // allocation. We consult the probabilities requested by the Debugger
+    // instances observing us, if any.
+    void chooseAllocationSamplingProbability() { savedStacks_.chooseSamplingProbability(this); }
+
     bool hasObjectPendingMetadata() const { return objectMetadataState.is<js::PendingMetadata>(); }
 
     void setObjectPendingMetadata(JSContext* cx, JSObject* obj) {

@@ -38,20 +38,15 @@ if (classesEnabled()) {
                 this.newTarget = new.target;
             }
         }
-        //class Derived extends Base {
-        //    constructor(...args) { super(...args); }
-        //}
+        class Derived extends Base {
+            constructor(...args) { super(...args); }
+        }
 
         assertDeepEq(Reflect.construct(Base, []), new Base);
-        //assertDeepEq(Reflect.construct(Derived, [7]), new Derived(7));
-        //g = Derived.bind(null, "q");
-        //assertDeepEq(Reflect.construct(g, [8, 9]), new g(8, 9));
+        assertDeepEq(Reflect.construct(Derived, [7]), new Derived(7));
+        g = Derived.bind(null, "q");
+        assertDeepEq(Reflect.construct(g, [8, 9]), new g(8, 9));
     }`);
-
-    if (classesEnabled("class X extends Y { constructor() { super(); } }")) {
-        throw new Error("Congratulations on implementing super()! " +
-                        "Please uncomment the Derived tests in this file!");
-    }
 }
 
 // Cross-compartment wrappers:

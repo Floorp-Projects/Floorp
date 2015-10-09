@@ -967,14 +967,14 @@ CreateThisForFunctionWithGroup(JSContext* cx, HandleObjectGroup group,
 }
 
 JSObject*
-js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObject proto,
-                                   NewObjectKind newKind /* = GenericObject */)
+js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                                   HandleObject proto, NewObjectKind newKind /* = GenericObject */)
 {
     RootedObject res(cx);
 
     if (proto) {
         RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
-                                                                 &callee->as<JSFunction>()));
+                                                                 newTarget));
         if (!group)
             return nullptr;
 
@@ -986,7 +986,7 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
                 // The script was analyzed successfully and may have changed
                 // the new type table, so refetch the group.
                 group = ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
-                                                     &callee->as<JSFunction>());
+                                                     newTarget);
                 MOZ_ASSERT(group && group->newScript());
             }
         }
@@ -1007,15 +1007,16 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
 }
 
 JSObject*
-js::CreateThisForFunction(JSContext* cx, HandleObject callee, NewObjectKind newKind)
+js::CreateThisForFunction(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                          NewObjectKind newKind)
 {
     RootedValue protov(cx);
-    if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
+    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov))
         return nullptr;
     RootedObject proto(cx);
     if (protov.isObject())
         proto = &protov.toObject();
-    JSObject* obj = CreateThisForFunctionWithProto(cx, callee, proto, newKind);
+    JSObject* obj = CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
 
     if (obj && newKind == SingletonObject) {
         RootedPlainObject nobj(cx, &obj->as<PlainObject>());
@@ -2394,7 +2395,7 @@ JSObject::reportNotExtensible(JSContext* cx, unsigned report)
 // immutable-prototype behavior is enforced; if it's false, behavior is not
 // enforced, and immutable-prototype bits stored on objects are completely
 // ignored.
-static const bool ImmutablePrototypesEnabled = true;
+static const bool ImmutablePrototypesEnabled = false;
 
 JS_FRIEND_API(bool)
 JS_ImmutablePrototypesEnabled()
@@ -3340,6 +3341,7 @@ JSObject::dump()
     if (obj->hasUncacheableProto()) fprintf(stderr, " has_uncacheable_proto");
     if (obj->hadElementsAccess()) fprintf(stderr, " had_elements_access");
     if (obj->wasNewScriptCleared()) fprintf(stderr, " new_script_cleared");
+    if (!obj->hasLazyPrototype() && obj->nonLazyPrototypeIsImmutable()) fprintf(stderr, " immutable_prototype");
 
     if (obj->isNative()) {
         NativeObject* nobj = &obj->as<NativeObject>();
