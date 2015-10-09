@@ -524,28 +524,6 @@ describe("loop.shared.views", function() {
       expect(comp.getDOMNode().classList.contains("idle")).eql(false);
     });
 
-    it("should accept a hangupButtonLabel optional prop", function() {
-      var comp = mountTestComponent({
-        hangupButtonLabel: "foo",
-        hangup: hangup,
-        publishStream: publishStream
-      });
-
-      expect(comp.getDOMNode().querySelector("button.btn-hangup").textContent)
-            .eql("foo");
-    });
-
-    it("should accept an enableHangup optional prop", function() {
-      var comp = mountTestComponent({
-        enableHangup: false,
-        hangup: hangup,
-        publishStream: publishStream
-      });
-
-      expect(comp.getDOMNode().querySelector("button.btn-hangup").disabled)
-            .eql(true);
-    });
-
     it("should accept a showHangup optional prop", function() {
       var comp = mountTestComponent({
         showHangup: false,
