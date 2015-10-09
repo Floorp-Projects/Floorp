@@ -258,13 +258,19 @@ InterpreterFrame::prologue(JSContext* cx)
     if (fun()->needsCallObject() && !initFunctionScopeObjects(cx))
         return false;
 
-    if (isConstructing() && functionThis().isPrimitive()) {
-        RootedObject callee(cx, &this->callee());
-        JSObject* obj = CreateThisForFunction(cx, callee,
-                                              createSingleton() ? SingletonObject : GenericObject);
-        if (!obj)
-            return false;
-        functionThis() = ObjectValue(*obj);
+    if (isConstructing()) {
+        if (script->isDerivedClassConstructor()) {
+            MOZ_ASSERT(callee().isClassConstructor());
+            functionThis() = MagicValue(JS_UNINITIALIZED_LEXICAL);
+        } else if (functionThis().isPrimitive()) {
+            RootedObject callee(cx, &this->callee());
+            RootedObject newTarget(cx, &this->newTarget().toObject());
+            JSObject* obj = CreateThisForFunction(cx, callee, newTarget,
+                                                  createSingleton() ? SingletonObject : GenericObject);
+            if (!obj)
+                return false;
+            functionThis() = ObjectValue(*obj);
+        }
     }
 
     return probes::EnterScript(cx, script, script->functionNonDelazifying(), this);
@@ -314,6 +320,43 @@ InterpreterFrame::epilogue(JSContext* cx)
 
     if (!fun()->isGenerator() && isConstructing() && thisValue().isObject() && returnValue().isPrimitive())
         setReturnValue(ObjectValue(constructorThis()));
+}
+
+bool
+InterpreterFrame::checkThis(JSContext* cx)
+{
+    if (script()->isDerivedClassConstructor()) {
+        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(fun()->isClassConstructor());
+
+        if (thisValue().isMagic(JS_UNINITIALIZED_LEXICAL)) {
+            RootedFunction func(cx, fun());
+            return ThrowUninitializedThis(cx, this);
+        }
+    }
+    return true;
+}
+
+bool
+InterpreterFrame::checkReturn(JSContext* cx)
+{
+    if (script()->isDerivedClassConstructor()) {
+        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(callee().isClassConstructor());
+
+        HandleValue retVal = returnValue();
+        if (retVal.isObject())
+            return true;
+
+        if (!retVal.isUndefined()) {
+            ReportValueError(cx, JSMSG_BAD_DERIVED_RETURN, JSDVG_IGNORE_STACK, retVal, nullptr);
+            return false;
+        }
+
+        if (!checkThis(cx))
+            return false;
+    }
+    return true;
 }
 
 bool

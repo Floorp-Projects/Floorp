@@ -156,6 +156,7 @@ class JSFunction : public js::NativeObject
                nonLazyScript()->funHasExtensibleScope() ||
                nonLazyScript()->funNeedsDeclEnvObject() ||
                nonLazyScript()->needsHomeObject()       ||
+               nonLazyScript()->isDerivedClassConstructor() ||
                isGenerator();
     }
 
@@ -514,6 +515,16 @@ class JSFunction : public js::NativeObject
     void setJitInfo(const JSJitInfo* data) {
         MOZ_ASSERT(isNative());
         u.n.jitinfo = data;
+    }
+
+    bool isDerivedClassConstructor() {
+        bool derived;
+        if (isInterpretedLazy())
+            derived = lazyScript()->isDerivedClassConstructor();
+        else
+            derived = nonLazyScript()->isDerivedClassConstructor();
+        MOZ_ASSERT_IF(derived, isClassConstructor());
+        return derived;
     }
 
     static unsigned offsetOfNativeOrScript() {

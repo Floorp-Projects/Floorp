@@ -15,6 +15,7 @@ import time
 import random
 import urlparse
 import os.path
+import re
 from external_tools.detect_repo import detect_git, detect_hg, detect_local
 
 try:
@@ -40,6 +41,7 @@ from mozharness.mozilla.repo_manifest import (load_manifest, rewrite_remotes,
 B2GMakefileErrorList = MakefileErrorList + [
     {'substr': r'''NS_ERROR_FILE_ALREADY_EXISTS: Component returned failure code''', 'level': ERROR},
     {'substr': r'''no version information available''', 'level': DEBUG},
+    {'regex': re.compile(r'''\[/build_stage/.*\] \[l10n\] \[\S+\]: \d+ missing compared to en-US:'''), 'level': DEBUG},
 ]
 B2GMakefileErrorList.insert(0, {'substr': r'/bin/bash: java: command not found', 'level': WARNING})
 

@@ -13,7 +13,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() {}
+    constructor() { super(); }
 
     get a() { return super.getValue(); }
     set a(v) { super.setValue(v); }
