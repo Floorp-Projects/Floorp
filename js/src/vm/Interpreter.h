@@ -488,12 +488,6 @@ ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
 bool
 ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame);
 
-bool
-DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
-
-bool
-DefaultDerivedClassConstructor(JSContext* cx, unsigned argc, Value* vp);
-
 }  /* namespace js */
 
 #endif /* vm_Interpreter_h */

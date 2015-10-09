@@ -24,14 +24,6 @@ Object.setPrototypeOf(inst, base2);
 
 assertEq(new inst().base, 2);
 
-// Still works with default constructor
-
-class defaultInst extends base1 { }
-
-assertEq(new defaultInst().base, 1);
-Object.setPrototypeOf(defaultInst, base2);
-assertEq(new defaultInst().base, 2);
-
 `;
 
 if (classesEnabled())
