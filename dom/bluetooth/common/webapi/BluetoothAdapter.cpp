@@ -16,6 +16,13 @@
 
 #include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothAttributeEvent.h"
+#include "mozilla/dom/BluetoothMapFolderListingEvent.h"
+#include "mozilla/dom/BluetoothMapGetMessageEvent.h"
+#include "mozilla/dom/BluetoothMapMessagesListingEvent.h"
+#include "mozilla/dom/BluetoothMapMessageUpdateEvent.h"
+#include "mozilla/dom/BluetoothMapSetMessageStatusEvent.h"
+#include "mozilla/dom/BluetoothMapSendMessageEvent.h"
+
 #include "mozilla/dom/BluetoothPhonebookPullingEvent.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
 #include "mozilla/dom/BluetoothVCardListingEvent.h"
@@ -534,6 +541,18 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
     HandlePullVCardEntryReq(aData.value());
   } else if (aData.name().EqualsLiteral(PULL_VCARD_LISTING_REQ_ID)) {
     HandlePullVCardListingReq(aData.value());
+  } else if (aData.name().EqualsLiteral(MAP_MESSAGES_LISTING_REQ_ID)) {
+    HandleMapMessagesListing(aData.value());
+  } else if (aData.name().EqualsLiteral(MAP_FOLDER_LISTING_REQ_ID)) {
+    HandleMapFolderListing(aData.value());
+  } else if (aData.name().EqualsLiteral(MAP_GET_MESSAGE_REQ_ID)) {
+    HandleMapGetMessage(aData.value());
+  } else if (aData.name().EqualsLiteral(MAP_SET_MESSAGE_STATUS_REQ_ID)) {
+    HandleMapSetMessageStatus(aData.value());
+  } else if (aData.name().EqualsLiteral(MAP_PUSH_MESSAGE_REQ_ID)) {
+    HandleMapSendMessage(aData.value());
+  } else if (aData.name().EqualsLiteral(MAP_MESSAGE_UPDATE_REQ_ID)) {
+    HandleMapMessageUpdate(aData.value());
   } else {
     BT_WARNING("Not handling adapter signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -1337,6 +1356,238 @@ BluetoothAdapter::getVCardProperties(const BluetoothValue &aValue)
 
   return propSelector;
 }
+
+Sequence<ParameterMask>
+BluetoothAdapter::GetParameterMask(const BluetoothValue &aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfuint32_t);
+
+  Sequence<ParameterMask> parameterMask;
+
+  const InfallibleTArray<uint32_t>& parameterMaskArr =
+    aValue.get_ArrayOfuint32_t();
+  for (uint32_t i = 0; i < parameterMaskArr.Length(); ++i) {
+    parameterMask.AppendElement(
+      static_cast<ParameterMask>(parameterMaskArr[i]), mozilla::fallible);
+  }
+
+  return parameterMask;
+}
+
+void
+BluetoothAdapter::HandleMapFolderListing(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() >= 1 &&
+             arr[0].value().type() == BluetoothValue::Tuint32_t);
+
+  BluetoothMapFolderListingEventInit init;
+
+  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+    const nsString& name = arr[i].name();
+    const BluetoothValue& value = arr[i].value();
+    if (name.EqualsLiteral("maxListCount")) {
+      init.mMaxListCount = value.get_uint32_t();
+    } else if (name.EqualsLiteral("startOffset")) {
+      init.mListStartOffset = value.get_uint32_t();
+    }
+  }
+
+  init.mHandle = BluetoothMapRequestHandle::Create(GetOwner());
+
+  nsRefPtr<BluetoothMapFolderListingEvent> event =
+    BluetoothMapFolderListingEvent::Constructor(this,
+      NS_LITERAL_STRING(MAP_FOLDER_LISTING_REQ_ID), init);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothAdapter::HandleMapMessagesListing(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() >= 1 &&
+    arr[0].value().type() == BluetoothValue::Tuint32_t);
+
+  BluetoothMapMessagesListingEventInit init;
+
+  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+    const nsString& name = arr[i].name();
+    const BluetoothValue& value = arr[i].value();
+    if (name.EqualsLiteral("maxListCount")) {
+      init.mMaxListCount = value.get_uint32_t();
+    } else if (name.EqualsLiteral("startOffset")) {
+      init.mListStartOffset = value.get_uint32_t();
+    } else if (name.EqualsLiteral("subLength")) {
+      init.mSubjectLength = value.get_uint32_t();
+    } else if (name.EqualsLiteral("parameterMask")) {
+      init.mParameterMask = GetParameterMask(value);
+    } else if (name.EqualsLiteral("filterMessageType")) {
+      init.mFilterMessageType = static_cast<MessageType>(value.get_uint32_t());
+    } else if (name.EqualsLiteral("filterPeriodBegin")) {
+      init.mFilterPeriodBegin = value.get_nsString();
+    } else if (name.EqualsLiteral("filterPeriodEnd")) {
+      init.mFilterPeriodEnd = value.get_nsString();
+    } else if (name.EqualsLiteral("filterReadStatus")) {
+      init.mFilterReadStatus = static_cast<ReadStatus>(value.get_uint32_t());
+    } else if (name.EqualsLiteral("filterRecipient")) {
+      init.mFilterRecipient = value.get_nsString();
+    } else if (name.EqualsLiteral("filterOriginator")) {
+      init.mFilterOriginator = value.get_nsString();
+    } else if (name.EqualsLiteral("filterPriority")) {
+      init.mFilterPriority = static_cast<Priority>(value.get_uint32_t());
+    }
+  }
+
+  init.mHandle = BluetoothMapRequestHandle::Create(GetOwner());
+
+  nsRefPtr<BluetoothMapMessagesListingEvent> event =
+    BluetoothMapMessagesListingEvent::Constructor(this,
+      NS_LITERAL_STRING(MAP_MESSAGES_LISTING_REQ_ID), init);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothAdapter::HandleMapGetMessage(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() >= 1 &&
+    arr[0].value().type() == BluetoothValue::Tbool);
+
+  BluetoothMapGetMessageEventInit init;
+
+  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+    const nsString& name = arr[i].name();
+    const BluetoothValue& value = arr[i].value();
+    if (name.EqualsLiteral("hasAttachment")) {
+      init.mHasAttachment = value.get_bool();
+    } else if (name.EqualsLiteral("charset")) {
+      if (value.get_uint32_t() == 0) {
+        init.mCharset = FilterCharset::Native;
+      } else {
+        init.mCharset = FilterCharset::Utf_8;
+      }
+    }
+  }
+
+  init.mHandle = BluetoothMapRequestHandle::Create(GetOwner());
+
+  nsRefPtr<BluetoothMapGetMessageEvent> event =
+    BluetoothMapGetMessageEvent::Constructor(this,
+      NS_LITERAL_STRING(MAP_GET_MESSAGE_REQ_ID), init);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothAdapter::HandleMapSetMessageStatus(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() >= 1 &&
+    arr[0].value().type() == BluetoothValue::Tuint32_t);
+
+  BluetoothMapSetMessageStatusEventInit init;
+
+  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+    const nsString& name = arr[i].name();
+    const BluetoothValue& value = arr[i].value();
+    if (name.EqualsLiteral("handleId")) {
+      init.mHandleId = value.get_uint32_t();
+    } else if (name.EqualsLiteral("statusIndicator")) {
+      if (value.get_uint32_t()) {
+        init.mStatusIndicator = StatusIndicators::Deletedstatus;
+      } else {
+        init.mStatusIndicator = StatusIndicators::Readstatus;
+      }
+    } else if (name.EqualsLiteral("statusValue")) {
+      init.mStatusValue = static_cast<bool>(value.get_uint32_t());
+    }
+  }
+
+  init.mHandle = BluetoothMapRequestHandle::Create(GetOwner());
+
+  nsRefPtr<BluetoothMapSetMessageStatusEvent> event =
+    BluetoothMapSetMessageStatusEvent::Constructor(this,
+      NS_LITERAL_STRING(MAP_SET_MESSAGE_STATUS_REQ_ID), init);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothAdapter::HandleMapSendMessage(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() >= 1 &&
+    arr[0].value().type() == BluetoothValue::TnsString);
+
+  BluetoothMapSendMessageEventInit init;
+
+  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+    const nsString& name = arr[i].name();
+    const BluetoothValue& value = arr[i].value();
+    if (name.EqualsLiteral("recipient")) {
+      init.mRecipient = value.get_nsString();
+    } else if (name.EqualsLiteral("messageBody")) {
+      init.mMessageBody = value.get_nsString();
+    } else if (name.EqualsLiteral("retry")) {
+      init.mRetry = value.get_uint32_t();
+    }
+  }
+
+  init.mHandle = BluetoothMapRequestHandle::Create(GetOwner());
+
+  nsRefPtr<BluetoothMapSendMessageEvent> event =
+    BluetoothMapSendMessageEvent::Constructor(this,
+      NS_LITERAL_STRING(MAP_PUSH_MESSAGE_REQ_ID), init);
+  DispatchTrustedEvent(event);
+}
+
+void
+BluetoothAdapter::HandleMapMessageUpdate(const BluetoothValue& aValue)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() >= 1 &&
+    arr[0].value().type() == BluetoothValue::TnsString);
+
+  BluetoothMapMessageUpdateEventInit init;
+
+  for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+    const nsString& name = arr[i].name();
+    const BluetoothValue& value = arr[i].value();
+    if (name.EqualsLiteral("instanceId")) {
+      init.mInstanceId = value.get_uint32_t();
+    }
+  }
+
+  init.mHandle = BluetoothMapRequestHandle::Create(GetOwner());
+
+  nsRefPtr<BluetoothMapMessageUpdateEvent> event =
+    BluetoothMapMessageUpdateEvent::Constructor(this,
+      NS_LITERAL_STRING(MAP_MESSAGE_UPDATE_REQ_ID), init);
+  DispatchTrustedEvent(event);
+}
+
 
 void
 BluetoothAdapter::DispatchAttributeEvent(const Sequence<nsString>& aTypes)
