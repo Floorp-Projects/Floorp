@@ -169,9 +169,6 @@ struct ErrorResult::Message {
 nsTArray<nsString>&
 ErrorResult::CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType)
 {
-  if (IsErrorWithMessage()) {
-    delete mMessage;
-  }
   mResult = errorType;
 
   mMessage = new Message();
@@ -249,12 +246,7 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
   MOZ_ASSERT(mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to throw a JS exception?");
 
-  if (IsErrorWithMessage()) {
-    delete mMessage;
-#ifdef DEBUG
-    mHasMessage = false;
-#endif
-  }
+  ClearUnionData();
 
   // Make sure mJSException is initialized _before_ we try to root it.  But
   // don't set it to exn yet, because we don't want to do that until after we
@@ -304,6 +296,19 @@ ErrorResult::StealJSException(JSContext* cx,
 }
 
 void
+ErrorResult::ClearUnionData()
+{
+  if (IsJSException()) {
+    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+    MOZ_ASSERT(cx);
+    mJSException.setUndefined();
+    js::RemoveRawValueRoot(cx, &mJSException);
+  } else if (IsErrorWithMessage()) {
+    ClearMessage();
+  }
+}
+
+void
 ErrorResult::ReportGenericError(JSContext* cx)
 {
   MOZ_ASSERT(!IsErrorWithMessage());
@@ -314,6 +319,10 @@ ErrorResult::ReportGenericError(JSContext* cx)
 ErrorResult&
 ErrorResult::operator=(ErrorResult&& aRHS)
 {
+  // Clear out any union members we may have right now, before we
+  // start writing to it.
+  ClearUnionData();
+
 #ifdef DEBUG
   mMightHaveUnreportedJSException = aRHS.mMightHaveUnreportedJSException;
   aRHS.mMightHaveUnreportedJSException = false;
@@ -353,15 +362,7 @@ void
 ErrorResult::SuppressException()
 {
   WouldReportJSException();
-  if (IsErrorWithMessage()) {
-    ClearMessage();
-  } else if (IsJSException()) {
-    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
-    // Just steal it into a stack value (unrooting it in the process)
-    // that we then allow to die.
-    JS::Rooted<JS::Value> temp(cx);
-    StealJSException(cx, &temp);
-  }
+  ClearUnionData();
   // We don't use AssignErrorCode, because we want to override existing error
   // states, which AssignErrorCode is not allowed to do.
   mResult = NS_OK;
