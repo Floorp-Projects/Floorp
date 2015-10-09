@@ -79,6 +79,7 @@
  *     Object
  *     Array
  *     RegExp
+ *     Class
  *   [Other]
  */
 
@@ -1708,8 +1709,24 @@
      *   Stack: callee, this, args, newTarget => rval
      */ \
     macro(JSOP_SPREADSUPERCALL, 166, "spreadsupercall", NULL, 1,  4,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
-    macro(JSOP_UNUSED167,     167,"unused167",  NULL,     1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED168,     168,"unused168",  NULL,     1,  0,  0,  JOF_BYTE) \
+    /*
+     * Push a default constructor for a base class literal.
+     *
+     *   Category: Literals
+     *   Type: Class
+     *   Operands: atom className
+     *   Stack: => constructor
+     */ \
+    macro(JSOP_CLASSCONSTRUCTOR, 167,"classconstructor", NULL, 5,  0,  1,  JOF_ATOM) \
+    /*
+     * Push a default constructor for a derived class literal.
+     *
+     *   Category: Literals
+     *   Type: Class
+     *   Operands: atom className
+     *   Stack: => constructor
+     */ \
+    macro(JSOP_DERIVEDCONSTRUCTOR, 168,"derivedconstructor", NULL, 5,  1,  1,  JOF_ATOM) \
     macro(JSOP_UNUSED169,     169,"unused169",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED170,     170,"unused170",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED171,     171,"unused171",  NULL,     1,  0,  0,  JOF_BYTE) \
