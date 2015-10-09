@@ -114,9 +114,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EventSource,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrc)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationCallbacks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadGroup)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannelEventSink)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHttpChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnicodeDecoder)
@@ -490,48 +488,6 @@ EventSource::OnStopRequest(nsIRequest *aRequest,
   return NS_OK;
 }
 
-/**
- * Simple helper class that just forwards the redirect callback back
- * to the EventSource.
- */
-class AsyncVerifyRedirectCallbackFwr final : public nsIAsyncVerifyRedirectCallback
-{
-public:
-  explicit AsyncVerifyRedirectCallbackFwr(EventSource* aEventsource)
-    : mEventSource(aEventsource)
-  {
-  }
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(AsyncVerifyRedirectCallbackFwr)
-
-  // nsIAsyncVerifyRedirectCallback implementation
-  NS_IMETHOD OnRedirectVerifyCallback(nsresult aResult) override
-  {
-    nsresult rv = mEventSource->OnRedirectVerifyCallback(aResult);
-    if (NS_FAILED(rv)) {
-      mEventSource->mErrorLoadOnRedirect = true;
-      mEventSource->DispatchFailConnection();
-    }
-
-    return NS_OK;
-  }
-
-private:
-  ~AsyncVerifyRedirectCallbackFwr() {}
-  nsRefPtr<EventSource> mEventSource;
-};
-
-NS_IMPL_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackFwr, mEventSource)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackFwr)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIAsyncVerifyRedirectCallback)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(AsyncVerifyRedirectCallbackFwr)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(AsyncVerifyRedirectCallbackFwr)
-
 //-----------------------------------------------------------------------------
 // EventSource::nsIChannelEventSink
 //-----------------------------------------------------------------------------
@@ -564,56 +520,20 @@ EventSource::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
      return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  // Prepare to receive callback
-  mRedirectFlags = aFlags;
-  mRedirectCallback = aCallback;
-  mNewRedirectChannel = aNewChannel;
-
-  if (mChannelEventSink) {
-    nsRefPtr<AsyncVerifyRedirectCallbackFwr> fwd =
-      new AsyncVerifyRedirectCallbackFwr(this);
-
-    rv = mChannelEventSink->AsyncOnChannelRedirect(aOldChannel,
-                                                   aNewChannel,
-                                                   aFlags, fwd);
-    if (NS_FAILED(rv)) {
-      mRedirectCallback = nullptr;
-      mNewRedirectChannel = nullptr;
-      mErrorLoadOnRedirect = true;
-      DispatchFailConnection();
-    }
-    return rv;
-  }
-  OnRedirectVerifyCallback(NS_OK);
-  return NS_OK;
-}
-
-nsresult
-EventSource::OnRedirectVerifyCallback(nsresult aResult)
-{
-  MOZ_ASSERT(mRedirectCallback, "mRedirectCallback not set in callback");
-  MOZ_ASSERT(mNewRedirectChannel,
-             "mNewRedirectChannel not set in callback");
-
-  NS_ENSURE_SUCCESS(aResult, aResult);
-
   // update our channel
 
-  mHttpChannel = do_QueryInterface(mNewRedirectChannel);
+  mHttpChannel = do_QueryInterface(aNewChannel);
   NS_ENSURE_STATE(mHttpChannel);
 
-  nsresult rv = SetupHttpChannel();
+  rv = SetupHttpChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if ((mRedirectFlags & nsIChannelEventSink::REDIRECT_PERMANENT) != 0) {
+  if ((aFlags & nsIChannelEventSink::REDIRECT_PERMANENT) != 0) {
     rv = NS_GetFinalChannelURI(mHttpChannel, getter_AddRefs(mSrc));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mNewRedirectChannel = nullptr;
-
-  mRedirectCallback->OnRedirectVerifyCallback(aResult);
-  mRedirectCallback = nullptr;
+  aCallback->OnRedirectVerifyCallback(NS_OK);
 
   return NS_OK;
 }
@@ -626,25 +546,10 @@ NS_IMETHODIMP
 EventSource::GetInterface(const nsIID & aIID,
                           void **aResult)
 {
-  // Make sure to return ourselves for the channel event sink interface,
-  // no matter what.  We can forward these to mNotificationCallbacks
-  // if it wants to get notifications for them.  But we
-  // need to see these notifications for proper functioning.
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
-    mChannelEventSink = do_GetInterface(mNotificationCallbacks);
     *aResult = static_cast<nsIChannelEventSink*>(this);
     NS_ADDREF_THIS();
     return NS_OK;
-  }
-
-  // Now give mNotificationCallbacks (if non-null) a chance to return the
-  // desired interface.
-  if (mNotificationCallbacks) {
-    nsresult rv = mNotificationCallbacks->GetInterface(aIID, aResult);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ASSERTION(*aResult, "Lying nsIInterfaceRequestor implementation!");
-      return rv;
-    }
   }
 
   if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
@@ -807,12 +712,14 @@ EventSource::InitChannelAndRequestEventSource()
   rv = SetupHttpChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks;
-  mHttpChannel->GetNotificationCallbacks(getter_AddRefs(notificationCallbacks));
-  if (notificationCallbacks != this) {
-    mNotificationCallbacks = notificationCallbacks;
-    mHttpChannel->SetNotificationCallbacks(this);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIInterfaceRequestor> notificationCallbacks;
+    mHttpChannel->GetNotificationCallbacks(getter_AddRefs(notificationCallbacks));
+    MOZ_ASSERT(!notificationCallbacks);
   }
+#endif
+  mHttpChannel->SetNotificationCallbacks(this);
 
   // Start reading from the channel
   rv = mHttpChannel->AsyncOpen2(this);
@@ -878,11 +785,7 @@ EventSource::ResetConnection()
   mLastConvertionResult = NS_OK;
 
   mHttpChannel = nullptr;
-  mNotificationCallbacks = nullptr;
-  mChannelEventSink = nullptr;
   mStatus = PARSE_STATE_OFF;
-  mRedirectCallback = nullptr;
-  mNewRedirectChannel = nullptr;
 
   mReadyState = CONNECTING;
 

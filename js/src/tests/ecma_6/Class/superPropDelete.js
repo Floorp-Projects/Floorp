@@ -8,7 +8,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() { }
+    constructor() { super(); }
     testDeleteProp() { delete super.prop; }
     testDeleteElem() {
         let sideEffect = 0;
