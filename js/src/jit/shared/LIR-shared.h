@@ -1300,18 +1300,22 @@ class LToIdV : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1>
 
 // Allocate an object for |new| on the caller-side,
 // when there is no templateObject or prototype known
-class LCreateThis : public LCallInstructionHelper<BOX_PIECES, 1, 0>
+class LCreateThis : public LCallInstructionHelper<BOX_PIECES, 2, 0>
 {
   public:
     LIR_HEADER(CreateThis)
 
-    explicit LCreateThis(const LAllocation& callee)
+    LCreateThis(const LAllocation& callee, const LAllocation& newTarget)
     {
         setOperand(0, callee);
+        setOperand(1, newTarget);
     }
 
     const LAllocation* getCallee() {
         return getOperand(0);
+    }
+    const LAllocation* getNewTarget() {
+        return getOperand(1);
     }
 
     MCreateThis* mir() const {
@@ -1321,22 +1325,27 @@ class LCreateThis : public LCallInstructionHelper<BOX_PIECES, 1, 0>
 
 // Allocate an object for |new| on the caller-side,
 // when the prototype is known.
-class LCreateThisWithProto : public LCallInstructionHelper<1, 2, 0>
+class LCreateThisWithProto : public LCallInstructionHelper<1, 3, 0>
 {
   public:
     LIR_HEADER(CreateThisWithProto)
 
-    LCreateThisWithProto(const LAllocation& callee, const LAllocation& prototype)
+    LCreateThisWithProto(const LAllocation& callee, const LAllocation& newTarget,
+                         const LAllocation& prototype)
     {
         setOperand(0, callee);
-        setOperand(1, prototype);
+        setOperand(1, newTarget);
+        setOperand(2, prototype);
     }
 
     const LAllocation* getCallee() {
         return getOperand(0);
     }
-    const LAllocation* getPrototype() {
+    const LAllocation* getNewTarget() {
         return getOperand(1);
+    }
+    const LAllocation* getPrototype() {
+        return getOperand(2);
     }
 
     MCreateThis* mir() const {

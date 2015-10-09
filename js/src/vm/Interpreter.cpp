@@ -351,8 +351,9 @@ RunState::maybeCreateThisForConstructor(JSContext* cx)
                 MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
                 invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
             } else {
+                RootedObject newTarget(cx, &invoke.args().newTarget().toObject());
                 NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
-                JSObject* obj = CreateThisForFunction(cx, callee, newKind);
+                JSObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
                 if (!obj)
                     return false;
                 invoke.args().setThis(ObjectValue(*obj));
