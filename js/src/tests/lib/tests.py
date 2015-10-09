@@ -94,6 +94,37 @@ def change_env(env_overlay):
                 del os.environ[key]
 
 
+def get_cpu_count():
+    """
+    Guess at a reasonable parallelism count to set as the default for the
+    current machine and run.
+    """
+    # Python 2.6+
+    try:
+        import multiprocessing
+        return multiprocessing.cpu_count()
+    except (ImportError, NotImplementedError):
+        pass
+
+    # POSIX
+    try:
+        res = int(os.sysconf('SC_NPROCESSORS_ONLN'))
+        if res > 0:
+            return res
+    except (AttributeError, ValueError):
+        pass
+
+    # Windows
+    try:
+        res = int(os.environ['NUMBER_OF_PROCESSORS'])
+        if res > 0:
+            return res
+    except (KeyError, ValueError):
+        pass
+
+    return 1
+
+
 class RefTest(object):
     """A runnable test."""
     def __init__(self, path):
@@ -116,6 +147,7 @@ class RefTest(object):
         cmd = prefix + self.jitflags + self.options \
               + RefTest.prefix_command(dirname) + ['-f', self.path]
         return cmd
+
 
 class RefTestCase(RefTest):
     """A test case consisting of a test and an expected result."""
