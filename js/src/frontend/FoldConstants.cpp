@@ -414,6 +414,7 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_CLASSNAMES:
       case PNK_NEWTARGET:
       case PNK_POSHOLDER:
+      case PNK_SUPERCALL:
         MOZ_CRASH("ContainsHoistedDeclaration should have indicated false on "
                   "some parent node without recurring to test this node");
 
@@ -1579,7 +1580,8 @@ static bool
 FoldCall(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& parser,
          bool inGenexpLambda)
 {
-    MOZ_ASSERT(node->isKind(PNK_CALL) || node->isKind(PNK_TAGGED_TEMPLATE));
+    MOZ_ASSERT(node->isKind(PNK_CALL) || node->isKind(PNK_SUPERCALL) ||
+               node->isKind(PNK_TAGGED_TEMPLATE));
     MOZ_ASSERT(node->isArity(PN_LIST));
 
     // Don't fold a parenthesized callable component in an invocation, as this
@@ -1876,6 +1878,7 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return FoldAdd(cx, pnp, parser, inGenexpLambda);
 
       case PNK_CALL:
+      case PNK_SUPERCALL:
       case PNK_TAGGED_TEMPLATE:
         return FoldCall(cx, pn, parser, inGenexpLambda);
 

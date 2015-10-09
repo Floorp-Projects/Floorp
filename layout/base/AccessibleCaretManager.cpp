@@ -453,6 +453,10 @@ AccessibleCaretManager::OnScrollStart()
 {
   AC_LOG("%s", __FUNCTION__);
 
+  if (GetCaretMode() == CaretMode::Cursor) {
+    mFirstCaretAppearanceOnScrollStart = mFirstCaret->GetAppearance();
+  }
+
   HideCarets();
 }
 
@@ -464,12 +468,16 @@ AccessibleCaretManager::OnScrollEnd()
   }
 
   if (GetCaretMode() == CaretMode::Cursor) {
-    AC_LOG("%s: HideCarets()", __FUNCTION__);
-    HideCarets();
-  } else {
-    AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-    UpdateCarets();
+    mFirstCaret->SetAppearance(mFirstCaretAppearanceOnScrollStart);
+    if (!mFirstCaret->IsLogicallyVisible()) {
+      // If the caret is hide (Appearance::None) due to timeout or blur, no need
+      // to update it.
+      return;
+    }
   }
+
+  AC_LOG("%s: UpdateCarets()", __FUNCTION__);
+  UpdateCarets();
 }
 
 void

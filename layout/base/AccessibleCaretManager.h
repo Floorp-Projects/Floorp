@@ -7,6 +7,7 @@
 #ifndef AccessibleCaretManager_h
 #define AccessibleCaretManager_h
 
+#include "AccessibleCaret.h"
 #include "nsCOMPtr.h"
 #include "nsCoord.h"
 #include "nsIFrame.h"
@@ -29,8 +30,6 @@ namespace dom {
 class Element;
 class Selection;
 } // namespace dom
-
-class AccessibleCaret;
 
 // -----------------------------------------------------------------------------
 // AccessibleCaretManager does not deal with events or callbacks directly. It
@@ -224,6 +223,11 @@ protected:
 
   // The caret mode since last update carets.
   CaretMode mLastUpdateCaretMode = CaretMode::None;
+
+  // Store the appearance of the first caret when calling OnScrollStart so that
+  // it can be restored in OnScrollEnd.
+  AccessibleCaret::Appearance mFirstCaretAppearanceOnScrollStart =
+                                 AccessibleCaret::Appearance::None;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 

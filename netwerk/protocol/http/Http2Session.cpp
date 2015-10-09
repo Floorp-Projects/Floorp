@@ -2886,7 +2886,10 @@ Http2Session::ProcessSlowConsumer(Http2Stream *slowConsumer,
     rv = NS_BASE_STREAM_CLOSED;
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && (*countWritten > 0)) {
+    // There have been buffered bytes successfully fed into the
+    // formerly blocked consumer. Repeat until buffer empty or
+    // consumer is blocked again.
     UpdateLocalRwin(slowConsumer, 0);
     ConnectSlowConsumer(slowConsumer);
   }
@@ -3189,7 +3192,8 @@ Http2Session::OnWriteSegment(char *buf,
     return NS_ERROR_FAILURE;
   }
 
-  if (mDownstreamState == NOT_USING_NETWORK) {
+  if (mDownstreamState == NOT_USING_NETWORK ||
+      mDownstreamState == BUFFERING_FRAME_HEADER) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 

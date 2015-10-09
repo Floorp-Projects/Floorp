@@ -2114,9 +2114,17 @@ void
 nsHttpConnection::CheckForTraffic(bool check)
 {
     if (check) {
+        LOG((" CheckForTraffic conn %p\n", this));
         if (mSpdySession) {
-            // Send a ping to verify it is still alive
-            mSpdySession->SendPing();
+            if (PR_IntervalToMilliseconds(IdleTime()) >= 500) {
+                // Send a ping to verify it is still alive if it has been idle
+                // more than half a second, the network changed events are
+                // rate-limited to one per 1000 ms.
+                LOG((" SendPing\n"));
+                mSpdySession->SendPing();
+            } else {
+                LOG((" SendPing skipped due to network activity\n"));
+            }
         } else {
             // If not SPDY, Store snapshot amount of data right now
             mTrafficCount = mTotalBytesWritten + mTotalBytesRead;

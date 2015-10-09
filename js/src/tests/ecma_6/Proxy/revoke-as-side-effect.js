@@ -71,8 +71,13 @@ assertEq(Object.getOwnPropertyNames(createProxy({a: 5})).length, 1);
 assertEq(createProxy(function() { return "ok" })(), "ok");
 
 // [[Construct]]
-// This should throw per bug 1141865.
-assertEq(new (createProxy(function(){ return obj; })), obj);
+// This throws because after the "construct" trap on the proxy is consulted,
+// OrdinaryCreateFromConstructor (called because the |q| function's
+// [[ConstructorKind]] is "base" per FunctionAllocate) accesses
+// |new.target.prototype| to create the |this| for the construct operation, that
+// would be returned if |return obj;| didn't override it.
+assertThrowsInstanceOf(() => new (createProxy(function q(){ return obj; })),
+                       TypeError);
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);
