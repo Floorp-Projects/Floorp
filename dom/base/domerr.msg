@@ -147,3 +147,4 @@ DOM4_MSG_DEF(AbortError, "A request was aborted, for example through a call to F
 DOM4_MSG_DEF(QuotaExceededError, "The current file handle exceeded its quota limitations.", NS_ERROR_DOM_FILEHANDLE_QUOTA_ERR)
 
 DOM_MSG_DEF(NS_ERROR_DOM_JS_EXCEPTION, "A callback threw an exception")
+DOM_MSG_DEF(NS_ERROR_DOM_DOMEXCEPTION, "A DOMException was thrown")
