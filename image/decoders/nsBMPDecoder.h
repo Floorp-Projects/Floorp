@@ -1,8 +1,8 @@
-/* vim:set tw=80 expandtab softtabstop=4 ts=4 sw=4: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=8 sts=4 et sw=4 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 #ifndef mozilla_image_decoders_nsBMPDecoder_h
 #define mozilla_image_decoders_nsBMPDecoder_h
@@ -11,6 +11,7 @@
 #include "Decoder.h"
 #include "gfxColor.h"
 #include "nsAutoPtr.h"
+#include "StreamingLexer.h"
 
 namespace mozilla {
 namespace image {
@@ -66,52 +67,72 @@ private:
 
     /// Calculates the red-, green- and blueshift in mBitFields using
     /// the bitmasks from mBitFields
-    NS_METHOD CalcBitShift();
+    void CalcBitShift();
 
-    uint32_t mPos; //< Number of bytes read from aBuffer in WriteInternal()
+    void DoReadBitfields(const char* aData);
 
-    BMPFILEHEADER mBFH;
-    BITMAPV5HEADER mBIH;
-    char mRawBuf[BIH_INTERNAL_LENGTH::WIN_V3]; //< If this is changed,
-                                               // WriteInternal() MUST be updated
+    uint32_t* RowBuffer();
 
-    uint32_t mLOH; //< Length of the header
+    void FinishRow();
 
-    uint32_t mNumColors; //< The number of used colors, i.e. the number of
-                         // entries in mColors
-    colorTable* mColors;
+    enum class State {
+        FILE_HEADER,
+        INFO_HEADER_SIZE,
+        INFO_HEADER_REST,
+        BITFIELDS,
+        COLOR_TABLE,
+        GAP,
+        PIXEL_ROW,
+        RLE_SEGMENT,
+        RLE_DELTA,
+        RLE_ABSOLUTE,
+        SUCCESS,
+        FAILURE
+    };
 
-    bitFields mBitFields;
+    LexerTransition<State> ReadFileHeader(const char* aData, size_t aLength);
+    LexerTransition<State> ReadInfoHeaderSize(const char* aData, size_t aLength);
+    LexerTransition<State> ReadInfoHeaderRest(const char* aData, size_t aLength);
+    LexerTransition<State> ReadBitfields(const char* aData, size_t aLength);
+    LexerTransition<State> ReadColorTable(const char* aData, size_t aLength);
+    LexerTransition<State> SkipGap();
+    LexerTransition<State> ReadPixelRow(const char* aData);
+    LexerTransition<State> ReadRLESegment(const char* aData);
+    LexerTransition<State> ReadRLEDelta(const char* aData);
+    LexerTransition<State> ReadRLEAbsolute(const char* aData, size_t aLength);
 
-    uint8_t* mRow;      //< Holds one raw line of the image
-    uint32_t mRowBytes; //< How many bytes of the row were already received
-    int32_t mCurLine;   //< Index of the line of the image that's currently
-                        // being decoded: [height,1]
-    int32_t mOldLine;   //< Previous index of the line
-    int32_t mCurPos;    //< Index in the current line of the image
+    StreamingLexer<State> mLexer;
 
-    ERLEState mState;   //< Maintains the current state of the RLE decoding
-    uint32_t mStateData;//< Decoding information that is needed depending
-                        // on mState
+    bmp::FileHeader mBFH;
+    bmp::V5InfoHeader mBIH;
 
-    /// Set mBFH from the raw data in mRawBuf, converting from little-endian
-    /// data to native data as necessary
-    void ProcessFileHeader();
+    bmp::BitFields mBitFields;
 
-    /// Set mBIH from the raw data in mRawBuf, converting from little-endian
-    /// data to native data as necessary
-    void ProcessInfoHeader();
+    uint32_t mNumColors;      // The number of used colors, i.e. the number of
+                              // entries in mColors, if it's present.
+    bmp::ColorTable* mColors; // The color table, if it's present.
+    uint32_t mBytesPerColor;  // 3 or 4, depending on the format
 
-    /// True if we've already processed the BMP header.
-    bool mProcessedHeader;
+    // The number of bytes prior to the optional gap that have been read. This
+    // is used to find the start of the pixel data.
+    uint32_t mPreGapLength;
 
-    // Stores whether the image data may store alpha data, or if
-    // the alpha data is unspecified and filled with a padding byte of 0.
-    // When a 32BPP bitmap is stored in an ICO or CUR file, its 4th byte
-    // is used for alpha transparency.  When it is stored in a BMP, its
-    // 4th byte is reserved and is always 0.
-    // Reference:
-    // http://en.wikipedia.org/wiki/ICO_(file_format)#cite_note-9
+    uint32_t mPixelRowSize;   // The number of bytes per pixel row.
+
+    int32_t mCurrentRow;      // Index of the row of the image that's currently
+                              // being decoded: [height,1].
+    int32_t mCurrentPos;      // Index into the current line; only used when
+                              // doing RLE decoding.
+
+    // Only used in RLE_ABSOLUTE state: the number of pixels to read.
+    uint32_t mAbsoluteModeNumPixels;
+
+    // Stores whether the image data may store alpha data, or if the alpha data
+    // is unspecified and filled with a padding byte of 0. When a 32BPP bitmap
+    // is stored in an ICO or CUR file, its 4th byte is used for alpha
+    // transparency.  When it is stored in a BMP, its 4th byte is reserved and
+    // is always 0. Reference:
+    //   http://en.wikipedia.org/wiki/ICO_(file_format)#cite_note-9
     // Bitmaps where the alpha bytes are all 0 should be fully visible.
     bool mUseAlphaData;
 
@@ -130,7 +151,7 @@ SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen,
 }
 
 static inline void
-SetPixel(uint32_t*& aDecoded, uint8_t idx, colorTable* aColors)
+SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTable* aColors)
 {
     SetPixel(aDecoded, aColors[idx].red, aColors[idx].green, aColors[idx].blue);
 }
@@ -142,7 +163,7 @@ SetPixel(uint32_t*& aDecoded, uint8_t idx, colorTable* aColors)
 /// @param aCount Current count. Is decremented by one or two.
 inline void
 Set4BitPixel(uint32_t*& aDecoded, uint8_t aData, uint32_t& aCount,
-             colorTable* aColors)
+             bmp::ColorTable* aColors)
 {
     uint8_t idx = aData >> 4;
     SetPixel(aDecoded, idx, aColors);
