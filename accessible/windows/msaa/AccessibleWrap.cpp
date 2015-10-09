@@ -658,12 +658,15 @@ AccessibleWrap::get_accFocus(
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  // TODO make this work with proxies.
-  if (IsProxy())
-    return E_NOTIMPL;
-
   // Return the current IAccessible child that has focus
-  Accessible* focusedAccessible = FocusedChild();
+  Accessible* focusedAccessible;
+  if (IsProxy()) {
+    ProxyAccessible* proxy = Proxy()->FocusedChild();
+    focusedAccessible = proxy ? WrapperFor(proxy) : nullptr;
+  } else {
+    focusedAccessible = FocusedChild();
+  }
+
   if (focusedAccessible == this) {
     pvarChild->vt = VT_I4;
     pvarChild->lVal = CHILDID_SELF;
