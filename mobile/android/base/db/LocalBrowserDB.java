@@ -228,9 +228,8 @@ public class LocalBrowserDB implements BrowserDB {
                 if (RestrictedProfiles.isRestrictedProfile(context)) {
                     // matching on variable name from strings.xml.in
                     final String addons = "bookmarkdefaults_title_addons";
-                    final String marketplace = "bookmarkdefaults_title_marketplace";
                     final String regularSumo = "bookmarkdefaults_title_support";
-                    if (name.equals(addons) || name.equals(marketplace) || name.equals(regularSumo)) {
+                    if (name.equals(addons) || name.equals(regularSumo)) {
                         continue;
                     }
                 }

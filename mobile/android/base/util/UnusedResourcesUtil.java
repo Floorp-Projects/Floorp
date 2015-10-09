@@ -60,7 +60,6 @@ final class UnusedResourcesUtil {
 
     public static final int[] USED_IN_BOOKMARKDEFAULTS = {
             R.raw.bookmarkdefaults_favicon_addons,
-            R.raw.bookmarkdefaults_favicon_marketplace,
             R.raw.bookmarkdefaults_favicon_support,
             R.raw.bookmarkdefaults_favicon_restricted_support,
             R.raw.bookmarkdefaults_favicon_restricted_webmaker,
