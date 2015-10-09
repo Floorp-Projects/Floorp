@@ -286,8 +286,6 @@ def main(argv):
         ok = None
         if options.remote:
             ok = jittests.run_tests_remote(job_list, prefix, options)
-        elif options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
-            ok = jittests.run_tests_parallel(job_list, prefix, options)
         else:
             with change_env(test_environment):
                 ok = jittests.run_tests(job_list, prefix, options)
