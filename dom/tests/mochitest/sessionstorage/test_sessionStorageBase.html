@@ -44,7 +44,6 @@ function startTest()
   is(typeof sessionStorage["nonexisting2"], "undefined", "['nonexisting2'] is undefined");
   is(typeof sessionStorage.nonexisting2, "undefined", "nonexisting2 is undefined");
 
-  var mozStorageChangedReceived = 0;
   var sessionStorageCopy = sessionStorage;
 
   function onStorageChanged(e) {
@@ -55,8 +54,8 @@ function startTest()
     }
   }
 
-  // Listen for MozStorageChanged
-  SpecialPowers.addChromeEventListener("MozStorageChanged", onStorageChanged, false);
+  // Listen for MozSessionStorageChanged
+  SpecialPowers.addChromeEventListener("MozSessionStorageChanged", onStorageChanged, false);
 
   // add an empty-value key
   sessionStorage.setItem("empty", "");
@@ -161,7 +160,7 @@ function startTest()
   sessionStorage.removeItem("key2"); // Just check there is no exception
 
   SimpleTest.executeSoon(function () {
-    SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
+    SpecialPowers.removeChromeEventListener("MozSessionStorageChanged", onStorageChanged, false);
     is(expectedEvents.length, 0, "received the correct number of events");
 
     sessionStorage.clear();

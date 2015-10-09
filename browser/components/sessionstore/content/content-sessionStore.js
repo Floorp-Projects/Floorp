@@ -62,20 +62,6 @@ function createLazy(fn) {
 }
 
 /**
- * Determines whether the given storage event was triggered by changes
- * to the sessionStorage object and not the local or globalStorage.
- */
-function isSessionStorageEvent(event) {
-  try {
-    return event.storageArea == event.target.sessionStorage;
-  } catch (ex if ex instanceof Ci.nsIException && ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
-    // This page does not have a DOMSessionStorage
-    // (this is typically the case for about: pages)
-    return false;
-  }
-}
-
-/**
  * Listens for and handles content events that we need for the
  * session store service to be notified of state changes in content.
  */
@@ -520,7 +506,7 @@ var DocShellCapabilitiesListener = {
  */
 var SessionStorageListener = {
   init: function () {
-    addEventListener("MozStorageChanged", this, true);
+    addEventListener("MozSessionStorageChanged", this, true);
     Services.obs.addObserver(this, "browser:purge-domain-data", false);
     gFrameTree.addObserver(this);
   },
@@ -530,8 +516,7 @@ var SessionStorageListener = {
   },
 
   handleEvent: function (event) {
-    // Ignore events triggered by localStorage or globalStorage changes.
-    if (gFrameTree.contains(event.target) && isSessionStorageEvent(event)) {
+    if (gFrameTree.contains(event.target)) {
       this.collect();
     }
   },
