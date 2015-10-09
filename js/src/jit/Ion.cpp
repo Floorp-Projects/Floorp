@@ -2547,8 +2547,11 @@ jit::CanEnter(JSContext* cx, RunState& state)
         }
 
         if (!state.maybeCreateThisForConstructor(cx)) {
-            cx->recoverFromOutOfMemory();
-            return Method_Skipped;
+            if (cx->isThrowingOutOfMemory()) {
+                cx->recoverFromOutOfMemory();
+                return Method_Skipped;
+            }
+            return Method_Error;
         }
     }
 

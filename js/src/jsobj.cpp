@@ -967,14 +967,14 @@ CreateThisForFunctionWithGroup(JSContext* cx, HandleObjectGroup group,
 }
 
 JSObject*
-js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObject proto,
-                                   NewObjectKind newKind /* = GenericObject */)
+js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                                   HandleObject proto, NewObjectKind newKind /* = GenericObject */)
 {
     RootedObject res(cx);
 
     if (proto) {
         RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
-                                                                 &callee->as<JSFunction>()));
+                                                                 newTarget));
         if (!group)
             return nullptr;
 
@@ -986,7 +986,7 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
                 // The script was analyzed successfully and may have changed
                 // the new type table, so refetch the group.
                 group = ObjectGroup::defaultNewGroup(cx, nullptr, TaggedProto(proto),
-                                                     &callee->as<JSFunction>());
+                                                     newTarget);
                 MOZ_ASSERT(group && group->newScript());
             }
         }
@@ -1007,15 +1007,16 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
 }
 
 JSObject*
-js::CreateThisForFunction(JSContext* cx, HandleObject callee, NewObjectKind newKind)
+js::CreateThisForFunction(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                          NewObjectKind newKind)
 {
     RootedValue protov(cx);
-    if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
+    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov))
         return nullptr;
     RootedObject proto(cx);
     if (protov.isObject())
         proto = &protov.toObject();
-    JSObject* obj = CreateThisForFunctionWithProto(cx, callee, proto, newKind);
+    JSObject* obj = CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
 
     if (obj && newKind == SingletonObject) {
         RootedPlainObject nobj(cx, &obj->as<PlainObject>());

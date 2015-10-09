@@ -264,8 +264,9 @@ InterpreterFrame::prologue(JSContext* cx)
             functionThis() = MagicValue(JS_UNINITIALIZED_LEXICAL);
         } else if (functionThis().isPrimitive()) {
             RootedObject callee(cx, &this->callee());
-            JSObject* obj = CreateThisForFunction(cx, callee,
-                                                createSingleton() ? SingletonObject : GenericObject);
+            RootedObject newTarget(cx, &this->newTarget().toObject());
+            JSObject* obj = CreateThisForFunction(cx, callee, newTarget,
+                                                  createSingleton() ? SingletonObject : GenericObject);
             if (!obj)
                 return false;
             functionThis() = ObjectValue(*obj);

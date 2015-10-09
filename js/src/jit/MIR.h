@@ -4613,11 +4613,11 @@ class MCreateThisWithTemplate
 // Caller-side allocation of |this| for |new|:
 // Given a prototype operand, construct |this| for JSOP_NEW.
 class MCreateThisWithProto
-  : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
+  : public MTernaryInstruction,
+    public Mix3Policy<ObjectPolicy<0>, ObjectPolicy<1>, ObjectPolicy<2> >::Data
 {
-    MCreateThisWithProto(MDefinition* callee, MDefinition* prototype)
-      : MBinaryInstruction(callee, prototype)
+    MCreateThisWithProto(MDefinition* callee, MDefinition* newTarget, MDefinition* prototype)
+      : MTernaryInstruction(callee, newTarget, prototype)
     {
         setResultType(MIRType_Object);
     }
@@ -4625,16 +4625,19 @@ class MCreateThisWithProto
   public:
     INSTRUCTION_HEADER(CreateThisWithProto)
     static MCreateThisWithProto* New(TempAllocator& alloc, MDefinition* callee,
-                                     MDefinition* prototype)
+                                     MDefinition* newTarget, MDefinition* prototype)
     {
-        return new(alloc) MCreateThisWithProto(callee, prototype);
+        return new(alloc) MCreateThisWithProto(callee, newTarget, prototype);
     }
 
     MDefinition* getCallee() const {
         return getOperand(0);
     }
-    MDefinition* getPrototype() const {
+    MDefinition* getNewTarget() const {
         return getOperand(1);
+    }
+    MDefinition* getPrototype() const {
+        return getOperand(2);
     }
 
     // Although creation of |this| modifies global state, it is safely repeatable.
@@ -4649,23 +4652,26 @@ class MCreateThisWithProto
 // Caller-side allocation of |this| for |new|:
 // Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
 class MCreateThis
-  : public MUnaryInstruction,
-    public ObjectPolicy<0>::Data
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
 {
-    explicit MCreateThis(MDefinition* callee)
-      : MUnaryInstruction(callee)
+    explicit MCreateThis(MDefinition* callee, MDefinition* newTarget)
+      : MBinaryInstruction(callee, newTarget)
     {
         setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(CreateThis)
-    static MCreateThis* New(TempAllocator& alloc, MDefinition* callee)
+    static MCreateThis* New(TempAllocator& alloc, MDefinition* callee, MDefinition* newTarget)
     {
-        return new(alloc) MCreateThis(callee);
+        return new(alloc) MCreateThis(callee, newTarget);
     }
 
     MDefinition* getCallee() const {
+        return getOperand(0);
+    }
+    MDefinition* getNewTarget() const {
         return getOperand(0);
     }
 
