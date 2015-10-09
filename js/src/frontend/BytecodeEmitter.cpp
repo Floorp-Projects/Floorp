@@ -1934,13 +1934,18 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_TRUE:
       case PNK_FALSE:
       case PNK_NULL:
-      case PNK_THIS:
       case PNK_ELISION:
       case PNK_GENERATOR:
       case PNK_NUMBER:
       case PNK_OBJECT_PROPERTY_NAME:
         MOZ_ASSERT(pn->isArity(PN_NULLARY));
         *answer = false;
+        return true;
+
+      // |this| can throw in derived class constructors.
+      case PNK_THIS:
+        MOZ_ASSERT(pn->isArity(PN_NULLARY));
+        *answer = sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor();
         return true;
 
       // Trivial binary nodes with more token pos holders.

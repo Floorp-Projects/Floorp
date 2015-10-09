@@ -70,11 +70,13 @@ class derived extends base {
 
 }
 
+assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
+/*
 derivedInstance = new derived();
 derivedInstance.test();
 derivedInstance.testInEval();
 derivedInstance.testInArrow();
-
+*/
 `;
 
 if (classesEnabled())

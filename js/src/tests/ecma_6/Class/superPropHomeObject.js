@@ -20,6 +20,8 @@ class derived extends base {
     ["testCPN"](expected) { super.test(expected); }
 }
 
+assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
+/*
 let derivedInstance = new derived();
 derivedInstance.test(derivedInstance);
 derivedInstance.testCPN(derivedInstance);
@@ -59,7 +61,7 @@ for (let exprBase of [base1, base2])
         test() { animals.push(super["test"]()); }
     }().test();
 assertDeepEq(animals, ["llama", "alpaca"]);
-
+*/
 `;
 
 if (classesEnabled())

@@ -10,10 +10,13 @@ class Mid extends Base {
 class Derived extends Mid {
     constructor() {}
 }
+
+assertThrowsInstanceOf(()=>new Derived(), TypeError, "You implemented |super()|?!");
+/*
 let d = new Derived();
 var df = d.f();
 assertEq(df.constructor, Base);
-
+*/
 `;
 
 if (classesEnabled())

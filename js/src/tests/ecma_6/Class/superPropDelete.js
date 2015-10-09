@@ -22,6 +22,9 @@ class derived extends base {
     }
 }
 
+assertThrowsInstanceOf(()=> new derived(), TypeError, "You implemented |super()|?!");
+
+/*
 var d = new derived();
 assertThrowsInstanceOf(() => d.testDeleteProp(), ReferenceError);
 d.testDeleteElem();
@@ -43,7 +46,7 @@ Object.setPrototypeOf(thing2, new Proxy({}, {
     deleteProperty(x) { throw "FAIL"; }
 }));
 assertThrowsInstanceOf(() => thing2.go(), ReferenceError);
-
+*/
 `;
 
 if (classesEnabled())

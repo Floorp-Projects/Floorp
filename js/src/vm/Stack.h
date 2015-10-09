@@ -452,6 +452,9 @@ class InterpreterFrame
     bool prologue(JSContext* cx);
     void epilogue(JSContext* cx);
 
+    bool checkReturn(JSContext* cx);
+    bool checkThis(JSContext* cx);
+
     bool initFunctionScopeObjects(JSContext* cx);
 
     /*
