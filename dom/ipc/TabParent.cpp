@@ -3588,7 +3588,7 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
     nsTArray<DataTransferItem>& itemArray = mInitialDataTransferItems[i];
     for (uint32_t j = 0; j < itemArray.Length(); ++j) {
       DataTransferItem& item = itemArray[j];
-      nsRefPtr<nsVariant> variant = new nsVariant();
+      nsRefPtr<nsVariantCC> variant = new nsVariantCC();
       // Special case kFilePromiseMime so that we get the right
       // nsIFlavorDataProvider for it.
       if (item.mFlavor.EqualsLiteral(kFilePromiseMime)) {
