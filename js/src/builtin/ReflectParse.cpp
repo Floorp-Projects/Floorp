@@ -3111,13 +3111,20 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_NEW:
       case PNK_TAGGED_TEMPLATE:
       case PNK_CALL:
+      case PNK_SUPERCALL:
       {
         ParseNode* next = pn->pn_head;
         MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
         RootedValue callee(cx);
-        if (!expression(next, &callee))
-            return false;
+        if (pn->isKind(PNK_SUPERCALL)) {
+            MOZ_ASSERT(next->isKind(PNK_POSHOLDER));
+            if (!builder.super(&next->pn_pos, &callee))
+                return false;
+        } else {
+            if (!expression(next, &callee))
+                return false;
+        }
 
         NodeVector args(cx);
         if (!args.reserve(pn->pn_count - 1))
@@ -3135,6 +3142,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         if (pn->getKind() == PNK_TAGGED_TEMPLATE)
             return builder.taggedTemplate(callee, args, &pn->pn_pos, dst);
 
+        // SUPERCALL is Call(super, args)
         return pn->isKind(PNK_NEW)
                ? builder.newExpression(callee, args, &pn->pn_pos, dst)
 

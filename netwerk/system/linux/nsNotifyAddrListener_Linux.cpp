@@ -36,6 +36,10 @@
 /* a shorter name that better explains what it does */
 #define EINTR_RETRY(x) MOZ_TEMP_FAILURE_RETRY(x)
 
+// period during which to absorb subsequent network change events, in
+// milliseconds
+static const unsigned int kNetworkChangeCoalescingPeriod  = 1000;
+
 using namespace mozilla;
 
 static PRLogModuleInfo *gNotifyAddrLog = nullptr;
@@ -53,6 +57,7 @@ nsNotifyAddrListener::nsNotifyAddrListener()
     , mStatusKnown(false)
     , mAllowChangedEvent(true)
     , mChildThreadShutdown(false)
+    , mCoalescingActive(false)
 {
     mShutdownPipe[0] = -1;
     mShutdownPipe[1] = -1;
@@ -223,7 +228,7 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
     }
 
     if (networkChange && mAllowChangedEvent) {
-        SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+        NetworkChanged();
     }
 
     if (networkChange) {
@@ -275,8 +280,9 @@ nsNotifyAddrListener::Run()
 
     nsresult rv = NS_OK;
     bool shutdown = false;
+    int pollWait = pollTimeout;
     while (!shutdown) {
-        int rc = EINTR_RETRY(poll(fds, 2, pollTimeout));
+        int rc = EINTR_RETRY(poll(fds, 2, pollWait));
 
         if (rc > 0) {
             if (fds[0].revents & POLLIN) {
@@ -290,6 +296,19 @@ nsNotifyAddrListener::Run()
         } else if (rc < 0) {
             rv = NS_ERROR_FAILURE;
             break;
+        }
+        if (mCoalescingActive) {
+            // check if coalescing period should continue
+            double period = (TimeStamp::Now() - mChangeTime).ToMilliseconds();
+            if (period >= kNetworkChangeCoalescingPeriod) {
+                SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+                mCoalescingActive = false;
+                pollWait = pollTimeout; // restore to default
+            } else {
+                // wait no longer than to the end of the period
+                pollWait = static_cast<int>
+                    (kNetworkChangeCoalescingPeriod - period);
+            }
         }
         if (mChildThreadShutdown) {
             LOG(("thread shutdown via variable, dying...\n"));
@@ -385,6 +404,27 @@ nsNotifyAddrListener::Shutdown(void)
     mThread = nullptr;
 
     return rv;
+}
+
+
+/*
+ * A network event has been registered. Delay the actual sending of the event
+ * for a while and absorb subsequent events in the mean time in an effort to
+ * squash potentially many triggers into a single event.
+ * Only ever called from the same thread.
+ */
+nsresult
+nsNotifyAddrListener::NetworkChanged()
+{
+    if (mCoalescingActive) {
+        LOG(("NetworkChanged: absorbed an event (coalescing active)\n"));
+    } else {
+        // A fresh trigger!
+        mChangeTime = TimeStamp::Now();
+        mCoalescingActive = true;
+        LOG(("NetworkChanged: coalescing period started\n"));
+    }
+    return NS_OK;
 }
 
 /* Sends the given event.  Assumes aEventID never goes out of scope (static

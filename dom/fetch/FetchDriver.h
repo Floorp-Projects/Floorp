@@ -8,7 +8,6 @@
 #define mozilla_dom_FetchDriver_h
 
 #include "nsAutoPtr.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
@@ -58,7 +57,6 @@ private:
 class FetchDriver final : public nsIStreamListener,
                           public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
-                          public nsIAsyncVerifyRedirectCallback,
                           public nsIThreadRetargetableStreamListener
 {
 public:
@@ -67,7 +65,6 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   explicit FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
@@ -84,10 +81,6 @@ private:
   nsRefPtr<InternalResponse> mResponse;
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   nsRefPtr<FetchDriverObserver> mObserver;
-  nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
-  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
-  nsCOMPtr<nsIChannel> mOldRedirectChannel;
-  nsCOMPtr<nsIChannel> mNewRedirectChannel;
   nsCOMPtr<nsIDocument> mDocument;
   uint32_t mFetchRecursionCount;
   bool mCORSFlagEverSet;

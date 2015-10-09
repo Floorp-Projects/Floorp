@@ -395,6 +395,8 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, JSScript* script, 
     }
 
     if (val.isPrimitive()) {
+        if (val.isMagic(JS_UNINITIALIZED_LEXICAL))
+            return true;
         MOZ_ASSERT(!val.isMagic());
         JSValueType type = val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
 
@@ -503,10 +505,15 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
 {
     // It's possible that we arrived here from bailing out of Ion, and that
     // Ion proved that the value is dead and optimized out. In such cases, do
-    // nothing.
-    if (value.isMagic(JS_OPTIMIZED_OUT)) {
-        res.set(value);
-        return true;
+    // nothing. However, it's also possible that we have an uninitialized this,
+    // in which case we should not look for other magic values.
+    if (stub->monitorsThis()) {
+        MOZ_ASSERT_IF(value.isMagic(), value.isMagic(JS_UNINITIALIZED_LEXICAL));
+    } else {
+        if (value.isMagic(JS_OPTIMIZED_OUT)) {
+            res.set(value);
+            return true;
+        }
     }
 
     RootedScript script(cx, frame->script());
@@ -516,7 +523,10 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
     uint32_t argument;
     if (stub->monitorsThis()) {
         MOZ_ASSERT(pc == script->code());
-        TypeScript::SetThis(cx, script, value);
+        if (value.isMagic(JS_UNINITIALIZED_LEXICAL))
+            TypeScript::SetThis(cx, script, TypeSet::UnknownType());
+        else
+            TypeScript::SetThis(cx, script, value);
     } else if (stub->monitorsArgument(&argument)) {
         MOZ_ASSERT(pc == script->code());
         TypeScript::SetArgument(cx, script, argument, value);
@@ -5015,6 +5025,18 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
         ICStub* monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
         RootedFunction getter(cx, &shape->getterObject()->as<JSFunction>());
 
+        // The CallNativeGlobal stub needs to generate 3 shape checks:
+        //
+        // 1. The global lexical scope shape check.
+        // 2. The global object shape check.
+        // 3. The holder shape check.
+        //
+        // 1 is done as the receiver check, as for GETNAME the global lexical scope is in the
+        // receiver position. 2 is done as a manual check that other GetProp stubs don't do. 3 is
+        // done as the holder check per normal.
+        //
+        // In the case the holder is the global object, check 2 is redundant but is not yet
+        // optimized away.
         JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName/NativeGetter) stub");
         if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativeGlobal, current,
                                            globalLexical, getter))
@@ -8622,6 +8644,8 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                   JSOp op, uint32_t argc, Value* vp, bool constructing, bool isSpread,
                   bool createSingleton, bool* handled)
 {
+    bool isSuper = op == JSOP_SUPERCALL || op == JSOP_SPREADSUPERCALL;
+
     if (createSingleton || op == JSOP_EVAL || op == JSOP_STRICTEVAL)
         return true;
 
@@ -8729,9 +8753,11 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             EnsureTrackPropertyTypes(cx, fun, NameToId(cx->names().prototype));
 
         // Remember the template object associated with any script being called
-        // as a constructor, for later use during Ion compilation.
+        // as a constructor, for later use during Ion compilation. This is unsound
+        // for super(), as a single callsite can have multiple possible prototype object
+        // created (via different newTargets)
         RootedObject templateObject(cx);
-        if (constructing) {
+        if (constructing && !isSuper) {
             // If we are calling a constructor for which the new script
             // properties analysis has not been performed yet, don't attach a
             // stub. After the analysis is performed, CreateThisForFunction may
@@ -8740,15 +8766,16 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
             // Only attach a stub if the function already has a prototype and
             // we can look it up without causing side effects.
+            RootedObject newTarget(cx, &vp[2 + argc].toObject());
             RootedValue protov(cx);
-            if (!GetPropertyPure(cx, fun, NameToId(cx->names().prototype), protov.address())) {
+            if (!GetPropertyPure(cx, newTarget, NameToId(cx->names().prototype), protov.address())) {
                 JitSpew(JitSpew_BaselineIC, "  Can't purely lookup function prototype");
                 return true;
             }
 
             if (protov.isObject()) {
                 TaggedProto proto(&protov.toObject());
-                ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, nullptr, proto, fun);
+                ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, nullptr, proto, newTarget);
                 if (!group)
                     return false;
 
@@ -8762,7 +8789,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                 }
             }
 
-            JSObject* thisObject = CreateThisForFunction(cx, fun, TenuredObject);
+            JSObject* thisObject = CreateThisForFunction(cx, fun, newTarget, TenuredObject);
             if (!thisObject)
                 return false;
 
@@ -8830,7 +8857,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
         }
 
         RootedObject templateObject(cx);
-        if (MOZ_LIKELY(!isSpread)) {
+        if (MOZ_LIKELY(!isSpread && !isSuper)) {
             bool skipAttach = false;
             CallArgs args = CallArgsFromVp(argc, vp);
             if (!GetTemplateObjectForNative(cx, fun->native(), args, &templateObject, &skipAttach))
@@ -9516,7 +9543,8 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<Jit
                                                                     isConstructing_);
 }
 
-typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, MutableHandleValue rval);
+typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                             MutableHandleValue rval);
 static const VMFunction CreateThisInfoBaseline = FunctionInfo<CreateThisFn>(CreateThis);
 
 bool
@@ -9610,24 +9638,31 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
 
         // Stack now looks like:
         //      [..., Callee, ThisV, Arg0V, ..., ArgNV, NewTarget, StubFrameHeader, ArgC ]
+        masm.loadValue(Address(masm.getStackPointer(), STUB_FRAME_SIZE + sizeof(size_t)), R1);
+        masm.push(masm.extractObject(R1, ExtractTemp0));
+
         if (isSpread_) {
             masm.loadValue(Address(masm.getStackPointer(),
-                                   3 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t)), R1);
+                                   3 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t) +
+                                   sizeof(JSObject*)),
+                                   R1);
         } else {
             BaseValueIndex calleeSlot2(masm.getStackPointer(), argcReg,
-                                       2 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t));
+                                       2 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t) +
+                                       sizeof(JSObject*));
             masm.loadValue(calleeSlot2, R1);
         }
         masm.push(masm.extractObject(R1, ExtractTemp0));
         if (!callVM(CreateThisInfoBaseline, masm))
             return false;
 
-        // Return of CreateThis must be an object.
+        // Return of CreateThis must be an object or uninitialized.
 #ifdef DEBUG
-        Label createdThisIsObject;
-        masm.branchTestObject(Assembler::Equal, JSReturnOperand, &createdThisIsObject);
-        masm.assumeUnreachable("The return of CreateThis must be an object.");
-        masm.bind(&createdThisIsObject);
+        Label createdThisOK;
+        masm.branchTestObject(Assembler::Equal, JSReturnOperand, &createdThisOK);
+        masm.branchTestMagic(Assembler::Equal, JSReturnOperand, &createdThisOK);
+        masm.assumeUnreachable("The return of CreateThis must be an object or uninitialized.");
+        masm.bind(&createdThisOK);
 #endif
 
         // Reset the register set from here on in.

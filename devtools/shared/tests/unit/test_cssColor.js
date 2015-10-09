@@ -25,5 +25,10 @@ function run_test() {
   for (let test of CLASSIFY_TESTS) {
     let result = colorUtils.classifyColor(test.input);
     equal(result, test.output, "test classifyColor(" + test.input + ")");
+
+    let obj = new colorUtils.CssColor("purple");
+    obj.setAuthoredUnitFromColor(test.input);
+    equal(obj.colorUnit, test.output,
+          "test setAuthoredUnitFromColor(" + test.input + ")");
   }
 }

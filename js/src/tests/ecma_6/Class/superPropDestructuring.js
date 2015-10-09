@@ -22,7 +22,7 @@ Object.defineProperty(base.prototype, "intendent",
 
 const testArr = [525600, "Fred"];
 class derived extends base {
-    constructor() { }
+    constructor() { super(); }
     prepForTest() { seenValues = []; }
     testAsserts() { assertDeepEq(seenValues, testArr); }
     testProps() {

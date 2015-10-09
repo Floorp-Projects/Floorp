@@ -3682,7 +3682,6 @@ public:
         , skipWriteToGlobalPrototype(false)
         , universalXPConnectEnabled(false)
         , forcePermissiveCOWs(false)
-        , skipCOWCallableChecks(false)
         , scriptability(c)
         , scope(nullptr)
     {
@@ -3742,10 +3741,6 @@ public:
     //
     // Using it in production is inherently unsafe.
     bool forcePermissiveCOWs;
-
-    // Disables the XPConnect security checks that deny access to callables and
-    // accessor descriptors on COWs. Do not use this unless you are bholley.
-    bool skipCOWCallableChecks;
 
     // Whether we've emitted a warning about a property that was filtered out
     // by a security wrapper. See XrayWrapper.cpp.
