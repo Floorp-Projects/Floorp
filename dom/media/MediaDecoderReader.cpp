@@ -62,13 +62,11 @@ public:
   size_t mSize;
 };
 
-MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder,
-                                       TaskQueue* aBorrowedTaskQueue)
+MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
-  , mTaskQueue(aBorrowedTaskQueue ? aBorrowedTaskQueue
-                                  : new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                                                  /* aSupportsTailDispatch = */ true))
+  , mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+                             /* aSupportsTailDispatch = */ true))
   , mWatchManager(this, mTaskQueue)
   , mTimer(new MediaTimer())
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
