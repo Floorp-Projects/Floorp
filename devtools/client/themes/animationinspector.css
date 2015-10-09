@@ -349,24 +349,26 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .animation-target .attribute-name {
   padding-left: 4px;
 }
 
-.animation-target .node-selector {
+.animation-target .node-highlighter {
   background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png") no-repeat 0 0;
   padding-left: 16px;
   margin-right: 5px;
   cursor: pointer;
 }
 
-.animation-target .node-selector:hover {
+.animation-target .node-highlighter:hover {
   background-position: -32px 0;
 }
 
-.animation-target .node-selector:active {
+.animation-target .node-highlighter:active,
+.animation-target .node-highlighter.selected {
   background-position: -16px 0;
 }
 
