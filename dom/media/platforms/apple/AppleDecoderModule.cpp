@@ -22,6 +22,7 @@ bool AppleDecoderModule::sIsVTAvailable = false;
 bool AppleDecoderModule::sIsVTHWAvailable = false;
 bool AppleDecoderModule::sIsVDAAvailable = false;
 bool AppleDecoderModule::sForceVDA = false;
+bool AppleDecoderModule::sCanUseHardwareVideoDecoder = true;
 
 AppleDecoderModule::AppleDecoderModule()
 {
@@ -55,6 +56,9 @@ AppleDecoderModule::Init()
   sIsVTAvailable = haveCoreMedia && haveVideoToolbox;
 
   sIsVTHWAvailable = AppleVTLinker::skPropEnableHWAccel != nullptr;
+
+  sCanUseHardwareVideoDecoder =
+    gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
 
   sInitialized = true;
 }
