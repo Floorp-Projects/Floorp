@@ -142,10 +142,6 @@ loop.store.ConversationAppStore = (function() {
      */
     LoopHangupNowHandler: function() {
       switch (this.getStoreState().windowType) {
-        case "incoming":
-        case "outgoing":
-          this._dispatcher.dispatch(new loop.shared.actions.HangupCall());
-          break;
         case "room":
           if (this._activeRoomStore.getStoreState().used &&
               !this._storeState.showFeedbackForm) {

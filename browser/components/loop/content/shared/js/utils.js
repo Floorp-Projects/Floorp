@@ -62,16 +62,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     ROOM_FULL: 202
   };
 
-  var WEBSOCKET_REASONS = {
-    ANSWERED_ELSEWHERE: "answered-elsewhere",
-    BUSY: "busy",
-    CANCEL: "cancel",
-    CLOSED: "closed",
-    MEDIA_FAIL: "media-fail",
-    REJECT: "reject",
-    TIMEOUT: "timeout"
-  };
-
   var FAILURE_DETAILS = {
     MEDIA_DENIED: "reason-media-denied",
     NO_MEDIA: "reason-no-media",
@@ -786,7 +776,6 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     CHAT_CONTENT_TYPES: CHAT_CONTENT_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
     REST_ERRNOS: REST_ERRNOS,
-    WEBSOCKET_REASONS: WEBSOCKET_REASONS,
     STREAM_PROPERTIES: STREAM_PROPERTIES,
     SCREEN_SHARE_STATES: SCREEN_SHARE_STATES,
     ROOM_INFO_FAILURES: ROOM_INFO_FAILURES,
