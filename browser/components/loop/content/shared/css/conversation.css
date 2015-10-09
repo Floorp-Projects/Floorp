@@ -103,56 +103,7 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   float: left;
 }
 
-.fx-embedded-answer-btn-text {
-  /* always leave space for the icon (width and margin) */
-  max-width: calc(100% - 24px - .2rem);
-  height: 22px;
-  line-height: 22px;
-}
-
-.fx-embedded-btn-icon-video,
-.fx-embedded-btn-icon-audio {
-  width: 24px;
-  height: 24px;
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 14px 14px;
-  border-radius: 50%;
-  -moz-margin-start: .2rem;
-}
-
 /* conversationViews.jsx */
-
-.fx-embedded-btn-icon-video,
-.fx-embedded-btn-video-small,
-.fx-embedded-tiny-video-icon {
-  background-image: url("../img/video-inverse-14x14.png");
-}
-
-.fx-embedded-btn-icon-audio,
-.fx-embedded-btn-audio-small,
-.fx-embedded-tiny-audio-icon {
-  background-image: url("../img/audio-inverse-14x14.png");
-}
-
-.fx-embedded-btn-audio-small,
-.fx-embedded-btn-video-small {
-  width: 26px;
-  height: 26px;
-  border-left: 1px solid rgba(255,255,255,.4);
-  background-color: #56b397;
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
-
-  .fx-embedded-btn-video-small:hover,
-  .fx-embedded-btn-audio-small:hover {
-    background-color: #50e3c2;
-  }
 
 .conversation-toolbar .btn-hangup {
   background-image: url("../img/svg/exit.svg");
@@ -229,23 +180,6 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 
 /* General Call (incoming or outgoing). */
 
-/* XXX call-window currently relates to multiple things like the AcceptCallView,
-   DirectCallFailureView, PendingConversationView. It doesn't relate to the direct
-   call media views. We should probably make this more explicit at some stage. */
-
-/*
- * Height matches the height of the docked window
- * but the UI breaks when you pop out
- * Bug 1040985
- */
-.call-window {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 230px;
-}
-
 .call-action-group {
   display: flex;
   padding: 0 4px;
@@ -310,7 +244,6 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   display: block;
 }
 
-.direct-call-failure,
 .room-failure {
   /* This flex allows us to not calculate the height of the logo area
      versus the buttons */
@@ -322,25 +255,21 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   height: 100%;
 }
 
-.direct-call-failure > .call-action-group,
 .room-failure > .call-action-group {
   flex: none;
   margin: 1rem 0 2rem;
 }
 
-.direct-call-failure > .failure-info,
 .room-failure > .failure-info {
   flex: auto;
 }
 
-.direct-call-failure > .settings-control,
 .room-failure > .settings-control {
   position: absolute;
   top: 1rem;
   right: .5rem;
 }
 
-html[dir="rtl"] .direct-call-failure > .settings-control,
 html[dir="rtl"] .room-failure > .settings-control {
   left: .5rem;
   right: auto;
@@ -388,51 +317,6 @@ html[dir="rtl"] .room-failure > .settings-control {
 
 .failure-info-extra-failure {
   color: #f00;
-}
-
-.fx-embedded-call-button-spacer {
-  display: flex;
-  flex: 1;
-}
-
-/*
- * Dropdown menu hidden behind a chevron
- *
- * .native-dropdown-menu Generic class, contains common styles
- * .conversation-window-dropdown Dropdown menu for answer/decline/block options
- */
-
-.native-dropdown-menu {
-  /* Should match a native select menu */
-  padding: 0;
-  position: absolute; /* element can be wider than the parent */
-  background: #fff;
-  margin: 0;
-  box-shadow: 0 4px 5px rgba(30,30,30,.3);
-  border-style: solid;
-  border-width: 1px 1px 1px 2px;
-  border-color: #aaa #111 #111 #aaa;
-}
-
-  .native-dropdown-menu li {
-    list-style: none;
-    cursor: pointer;
-    color: #000;
-  }
-
-  .native-dropdown-menu li:hover {
-    color: #fff;
-    background-color: #111;
-  }
-
-.conversation-window-dropdown {
-  bottom: 4rem;
-}
-
-.conversation-window-dropdown > li {
-  padding: .2rem;
-  font-size: 1rem;
-  white-space: nowrap;
 }
 
 .screen-share-menu.dropdown-menu,
@@ -567,79 +451,11 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
   opacity: 0.25;
 }
 
-.fx-embedded-call-identifier {
-  display: inline;
-  width: 100%;
-  padding: 1.2em;
-}
-
-.fx-embedded-call-identifier-item {
-  height: 50px;
-}
-
-.fx-embedded-call-identifier-avatar {
-  max-width: 50px;
-  min-width: 50px;
-  background: #ccc;
-  border-radius: 50%;
-  background-image: url("../img/audio-call-avatar.svg");
-  background-repeat: no-repeat;
-  background-color: #4ba6e7;
-  background-size: contain;
-  overflow: hidden;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3);
-  float: left;
-  -moz-margin-end: 1em;
-}
-
-.fx-embedded-call-identifier-text {
-  font-weight: bold;
-}
-
-.fx-embedded-call-identifier-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  -moz-margin-start: 1em;
-}
-
-.fx-embedded-conversation-timestamp {
-  font-size: .6rem;
-  line-height: 17px;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.fx-embedded-call-detail {
-  padding-top: 0.6em;
-}
-
-.fx-embedded-tiny-video-icon {
-  margin: 0 .8em;
-}
-
-.fx-embedded-tiny-audio-icon,
-.fx-embedded-tiny-video-icon {
-  width: 24px;
-  height: 24px;
-  background-color: #00a9dc;
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position: center;
-  border-radius: 50%;
-}
-
-  .fx-embedded-tiny-video-icon.muted {
-    background-color: rgba(0,0,0,.2)
-  }
-
 /* Force full height on all parents up to the video elements
  * this way we can ensure the aspect ratio and use height 100%
  * on the video element
  * */
 html, .fx-embedded, #main,
-.desktop-call-wrapper,
 .desktop-room-wrapper {
   height: 100%;
 }
@@ -943,7 +759,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   height: calc(100% - 300px);
 }
 
-.desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view,
 .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
   height: calc(100% - 150px);
 }
@@ -1070,7 +885,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   }
 
 
-  .desktop-call-wrapper > .media-layout > .media-wrapper > .text-chat-view,
   .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
     /* This is temp, to echo the .media-wrapper > .text-chat-view above */
     height: 30%;

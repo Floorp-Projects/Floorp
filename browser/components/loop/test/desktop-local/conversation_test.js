@@ -136,7 +136,7 @@ describe("loop.conversation", function() {
   });
 
   describe("AppControllerView", function() {
-    var conversationStore, activeRoomStore, client, ccView, dispatcher;
+    var activeRoomStore, ccView, dispatcher;
     var conversationAppStore, roomStore, feedbackPeriodMs = 15770000000;
     var ROOM_STATES = loop.store.ROOM_STATES;
 
@@ -150,23 +150,7 @@ describe("loop.conversation", function() {
     }
 
     beforeEach(function() {
-      client = new loop.Client();
       dispatcher = new loop.Dispatcher();
-      conversationStore = new loop.store.ConversationStore(
-        dispatcher, {
-          client: client,
-          mozLoop: navigator.mozLoop,
-          sdkDriver: {}
-        });
-
-      conversationStore.setStoreState({contact: {
-        name: [ "Mr Smith" ],
-        email: [{
-          type: "home",
-          value: "fakeEmail",
-          pref: true
-        }]
-      }});
 
       activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
         mozLoop: {},
@@ -183,31 +167,12 @@ describe("loop.conversation", function() {
       });
 
       loop.store.StoreMixin.register({
-        conversationAppStore: conversationAppStore,
-        conversationStore: conversationStore
+        conversationAppStore: conversationAppStore
       });
     });
 
     afterEach(function() {
       ccView = undefined;
-    });
-
-    it("should display the CallControllerView for outgoing calls", function() {
-      conversationAppStore.setStoreState({windowType: "outgoing"});
-
-      ccView = mountTestComponent();
-
-      TestUtils.findRenderedComponentWithType(ccView,
-        loop.conversationViews.CallControllerView);
-    });
-
-    it("should display the CallControllerView for incoming calls", function() {
-      conversationAppStore.setStoreState({windowType: "incoming"});
-
-      ccView = mountTestComponent();
-
-      TestUtils.findRenderedComponentWithType(ccView,
-        loop.conversationViews.CallControllerView);
     });
 
     it("should display the RoomView for rooms", function() {
@@ -220,20 +185,17 @@ describe("loop.conversation", function() {
         loop.roomViews.DesktopRoomConversationView);
     });
 
-    it("should display the DirectCallFailureView for failures", function() {
+    it("should display the RoomFailureView for failures", function() {
       conversationAppStore.setStoreState({
         contact: {},
         outgoing: false,
         windowType: "failed"
       });
-      conversationStore.setStoreState({
-        callStateReason: FAILURE_DETAILS.UNKNOWN
-      });
 
       ccView = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(ccView,
-        loop.conversationViews.DirectCallFailureView);
+        loop.roomViews.RoomFailureView);
     });
 
     it("should set the correct title when rendering feedback view", function() {
