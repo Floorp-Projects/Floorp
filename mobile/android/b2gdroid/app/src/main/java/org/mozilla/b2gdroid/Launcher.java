@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 
@@ -35,7 +36,7 @@ import org.mozilla.b2gdroid.ScreenStateObserver;
 import org.mozilla.b2gdroid.Apps;
 import org.mozilla.b2gdroid.SettingsMapper;
 
-public class Launcher extends Activity
+public class Launcher extends FragmentActivity
                       implements GeckoEventListener, ContextGetter {
     private static final String LOGTAG = "B2G";
 
