@@ -2178,3 +2178,24 @@ nsVariantBase::SetFromVariant(nsIVariant* aValue)
 /* nsVariant implementation */
 
 NS_IMPL_ISUPPORTS(nsVariant, nsIVariant, nsIWritableVariant)
+
+
+/* nsVariantCC implementation */
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsVariantCC)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIVariant)
+  NS_INTERFACE_MAP_ENTRY(nsIWritableVariant)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsVariantCC)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsVariantCC)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsVariantCC)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsVariantCC)
+  tmp->mData.Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsVariantCC)
+  tmp->mData.Cleanup();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END

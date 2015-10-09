@@ -10,8 +10,7 @@
 #include "nsIVariant.h"
 #include "nsStringFwd.h"
 #include "mozilla/Attributes.h"
-
-class nsCycleCollectionTraversalCallback;
+#include "nsCycleCollectionParticipant.h"
 
 /**
  * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
@@ -198,6 +197,18 @@ public:
 
 private:
   ~nsVariant() {};
+};
+
+class nsVariantCC final : public nsVariantBase
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsVariantCC)
+
+  nsVariantCC() {};
+
+private:
+  ~nsVariantCC() {};
 };
 
 /**
