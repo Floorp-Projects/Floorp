@@ -112,8 +112,6 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws=Workers]
   readonly attribute unsigned short status;
 
-  readonly attribute unsigned long internalErrorCode;
-
   readonly attribute ByteString statusText;
   [Throws]
   ByteString? getResponseHeader(ByteString header);
