@@ -13,7 +13,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() {}
+    constructor() { super(); }
 
     get a() { return super.getValue(); }
     set a(v) { super.setValue(v); }
@@ -31,11 +31,8 @@ class derived extends base {
     }
 }
 
-assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
-/*
 var derivedInstance = new derived();
 derivedInstance.test();
-*/
 
 `;
 

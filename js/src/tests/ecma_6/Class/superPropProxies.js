@@ -11,7 +11,7 @@ let midStaticHandler = { };
 let getterCalled, setterCalled;
 
 class mid extends new Proxy(base, midStaticHandler) {
-    constructor() { }
+    constructor() { super(); }
     testSuperInProxy() {
         super.prop = "looking";
         assertEq(setterCalled, true);
@@ -21,7 +21,7 @@ class mid extends new Proxy(base, midStaticHandler) {
 }
 
 class child extends mid {
-    constructor() { }
+    constructor() { super(); }
     static testStaticLookups() {
         // This funtion is called more than once.
         this.called = false;
@@ -30,9 +30,6 @@ class child extends mid {
     }
 }
 
-assertThrowsInstanceOf(()=> new mid(), TypeError, "You implemented |super()|?!");
-
-/*
 let midInstance = new mid();
 
 // Make sure proxies are searched properly on the prototype chain
@@ -83,7 +80,7 @@ var wrappedBase = g.eval("({ method() { return this.__secretProp__; } })");
 var unwrappedDerived = { __secretProp__: 42, method() { return super.method(); } }
 Object.setPrototypeOf(unwrappedDerived, wrappedBase);
 assertEq(unwrappedDerived.method(), 42);
-*/
+
 `;
 
 if (classesEnabled())

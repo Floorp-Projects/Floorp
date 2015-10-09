@@ -10,7 +10,7 @@ class base {
 let standin = { test() { return true; } };
 
 class derived extends base {
-    constructor() { }
+    constructor() { super(); }
     test() {
         assertEq(super.test(), false);
         Object.setPrototypeOf(derived.prototype, standin);
@@ -18,8 +18,7 @@ class derived extends base {
     }
 }
 
-// This shouldn't throw, but we don't have |super()| yet.
-assertThrowsInstanceOf(() => new derived().test(), TypeError);
+new derived().test();
 
 `;
 

@@ -2903,7 +2903,7 @@ BaselineCompiler::emitCall()
 {
     MOZ_ASSERT(IsCallPC(pc));
 
-    bool construct = JSOp(*pc) == JSOP_NEW;
+    bool construct = JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL;
     uint32_t argc = GET_ARGC(pc);
 
     frame.syncStack(0);
@@ -2930,13 +2930,13 @@ BaselineCompiler::emitSpreadCall()
     masm.move32(Imm32(1), R0.scratchReg());
 
     // Call IC
-    ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ JSOp(*pc) == JSOP_SPREADNEW,
+    bool construct = JSOp(*pc) == JSOP_SPREADNEW || JSOp(*pc) == JSOP_SPREADSUPERCALL;
+    ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ construct,
                                            /* isSpread = */ true);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Update FrameInfo.
-    bool construct = JSOp(*pc) == JSOP_SPREADNEW;
     frame.popn(3 + construct);
     frame.push(R0);
     return true;
@@ -2950,6 +2950,12 @@ BaselineCompiler::emit_JSOP_CALL()
 
 bool
 BaselineCompiler::emit_JSOP_NEW()
+{
+    return emitCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SUPERCALL()
 {
     return emitCall();
 }
@@ -2986,6 +2992,12 @@ BaselineCompiler::emit_JSOP_SPREADCALL()
 
 bool
 BaselineCompiler::emit_JSOP_SPREADNEW()
+{
+    return emitSpreadCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SPREADSUPERCALL()
 {
     return emitSpreadCall();
 }

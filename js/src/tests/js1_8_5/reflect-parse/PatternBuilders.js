@@ -207,6 +207,9 @@ function newExpr(callee, args) {
 function callExpr(callee, args) {
     return Pattern({ type: "CallExpression", callee: callee, arguments: args });
 }
+function superCallExpr(args) {
+    return callExpr({ type: "Super" }, args);
+}
 function arrExpr(elts) {
     return Pattern({ type: "ArrayExpression", elements: elts });
 }
