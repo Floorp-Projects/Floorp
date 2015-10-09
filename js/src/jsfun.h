@@ -156,6 +156,7 @@ class JSFunction : public js::NativeObject
                nonLazyScript()->funHasExtensibleScope() ||
                nonLazyScript()->funNeedsDeclEnvObject() ||
                nonLazyScript()->needsHomeObject()       ||
+               nonLazyScript()->isDerivedClassConstructor() ||
                isGenerator();
     }
 

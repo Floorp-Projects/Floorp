@@ -9,7 +9,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() { this.prop = "flamingo"; }
+    constructor() { super(); this.prop = "flamingo"; }
 
     toString() { throw "No!"; }
 
@@ -38,13 +38,11 @@ class derived extends base {
 
 Object.defineProperty(derived.prototype, "nonWritableProp", { writable: false, value: "pony" });
 
-assertThrowsInstanceOf(()=> new derived(), TypeError, "You implemented |super()|?!");
-/*
 let instance = new derived();
 instance.testSkipGet();
 instance.testSkipDerivedOverrides();
 instance.testSkipSet();
-*/
+
 `;
 
 if (classesEnabled())

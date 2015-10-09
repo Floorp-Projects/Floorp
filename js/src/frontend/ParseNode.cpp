@@ -489,6 +489,7 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_COMMA:
       case PNK_NEW:
       case PNK_CALL:
+      case PNK_SUPERCALL:
       case PNK_GENEXP:
       case PNK_ARRAY:
       case PNK_OBJECT:

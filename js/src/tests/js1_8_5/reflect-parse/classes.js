@@ -437,6 +437,30 @@ function testClasses() {
     assertError("{ foo() { super } }", SyntaxError);
     assertClassError("class NAME { constructor() { super; } }", SyntaxError);
 
+    /* SuperCall */
+
+    // SuperCall is invalid outside derived class constructors.
+    assertError("super()", SyntaxError);
+    assertError("(function() { super(); })", SyntaxError);
+
+    // Even in class constructors
+    assertClassError("class NAME { constructor() { super(); } }", SyntaxError);
+
+    function superConstructor(args) {
+        return classMethod(ident("constructor"),
+                           methodFun("constructor", "method", false,
+                                     [], [exprStmt(superCallExpr(args))]),
+                           "method", false);
+    }
+
+    // SuperCall works with various argument configurations.
+    assertClass("class NAME extends null { constructor() { super() } }",
+                [superConstructor([])], lit(null));
+    assertClass("class NAME extends null { constructor() { super(1) } }",
+                [superConstructor([lit(1)])], lit(null));
+    assertClass("class NAME extends null { constructor() { super(...[]) } }",
+                [superConstructor([spread(arrExpr([]))])], lit(null));
+
     /* EOF */
     // Clipped classes should throw a syntax error
     assertClassError("class NAME {", SyntaxError);
