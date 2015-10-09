@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "jspubtd.h"
 #include "nsIException.h"
+#include "nsStringGlue.h"
 
 class nsIStackFrame;
 class nsPIDOMWindow;
@@ -23,13 +24,14 @@ namespace dom {
 
 class Exception;
 
+// If we're throwing a DOMException and message is empty, the default
+// message for the nsresult in question will be used.
 bool
-Throw(JSContext* cx, nsresult rv, const char* sz = nullptr);
+Throw(JSContext* cx, nsresult rv, const nsACString& message = EmptyCString());
 
 // Create, throw and report an exception to a given window.
 void
-ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv,
-               const char* aMessage = nullptr);
+ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv);
 
 bool
 ThrowExceptionObject(JSContext* aCx, Exception* aException);
@@ -37,10 +39,14 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException);
 bool
 ThrowExceptionObject(JSContext* aCx, nsIException* aException);
 
-// Create an exception object for the given nsresult and message but
-// don't set it pending on aCx.  This never returns null.
+// Create an exception object for the given nsresult and message but don't set
+// it pending on aCx.  If we're throwing a DOMException and aMessage is empty,
+// the default message for the nsresult in question will be used.
+//
+// This never returns null.
 already_AddRefed<Exception>
-CreateException(JSContext* aCx, nsresult aRv, const char* aMessage = nullptr);
+CreateException(JSContext* aCx, nsresult aRv,
+                const nsACString& aMessage = EmptyCString());
 
 already_AddRefed<nsIStackFrame>
 GetCurrentJSStack();
