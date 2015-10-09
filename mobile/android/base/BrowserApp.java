@@ -591,6 +591,8 @@ public class BrowserApp extends GeckoApp
                 new ButtonToast.ToastListener() {
                     @Override
                     public void onButtonClicked() {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "reading_list");
+
                         final String aboutPageUrl = AboutPages.getURLForBuiltinPanelType(PanelType.READING_LIST);
                         Tabs.getInstance().loadUrlInTab(aboutPageUrl);
                     }
@@ -3742,6 +3744,8 @@ public class BrowserApp extends GeckoApp
         final ToastListener listener = new ButtonToast.ToastListener() {
             @Override
             public void onButtonClicked() {
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "switchtab");
+
                 maybeSwitchToTab(newTabId);
             }
 
