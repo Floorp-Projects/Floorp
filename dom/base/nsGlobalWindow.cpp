@@ -563,7 +563,7 @@ nsTimeout::HasRefCntOne()
 static already_AddRefed<nsIVariant>
 CreateVoidVariant()
 {
-  nsRefPtr<nsVariant> writable = new nsVariant();
+  nsRefPtr<nsVariantCC> writable = new nsVariantCC();
   writable->SetAsVoid();
   return writable.forget();
 }
