@@ -127,8 +127,9 @@ function testClasses() {
                 [ctorPlaceholder, emptyCPNMethod("prototype", true)]);
 
     /* Constructor */
-    // Currently, we do not allow default constructors
-    assertClassError("class NAME { }", TypeError);
+    // Allow default constructors
+    assertClass("class NAME { }", []);
+    assertClass("class NAME extends null { }", [], lit(null));
 
     // For now, disallow arrow functions in derived class constructors
     assertClassError("class NAME extends null { constructor() { (() => 0); }", InternalError);
