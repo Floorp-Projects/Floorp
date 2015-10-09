@@ -36,6 +36,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/DOMErrorBinding.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
@@ -140,6 +141,10 @@ ThrowMethodFailed(JSContext* cx, ErrorResult& rv)
   }
   if (rv.IsJSException()) {
     rv.ReportJSException(cx);
+    return false;
+  }
+  if (rv.IsDOMException()) {
+    rv.ReportDOMException(cx);
     return false;
   }
   rv.ReportGenericError(cx);
@@ -295,6 +300,81 @@ ErrorResult::StealJSException(JSContext* cx,
   mResult = NS_OK;
 }
 
+struct ErrorResult::DOMExceptionInfo {
+  DOMExceptionInfo(nsresult rv, const nsACString& message)
+    : mMessage(message)
+    , mRv(rv)
+  {}
+
+  nsCString mMessage;
+  nsresult mRv;
+};
+
+void
+ErrorResult::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
+{
+  using namespace IPC;
+  MOZ_ASSERT(mDOMExceptionInfo);
+  MOZ_ASSERT(mHasDOMExceptionInfo);
+  WriteParam(aMsg, mDOMExceptionInfo->mMessage);
+  WriteParam(aMsg, mDOMExceptionInfo->mRv);
+}
+
+bool
+ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, void** aIter)
+{
+  using namespace IPC;
+  nsCString message;
+  nsresult rv;
+  if (!ReadParam(aMsg, aIter, &message) ||
+      !ReadParam(aMsg, aIter, &rv)) {
+    return false;
+  }
+
+  MOZ_ASSERT(!mHasDOMExceptionInfo);
+  MOZ_ASSERT(IsDOMException());
+  mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
+#ifdef DEBUG
+  mHasDOMExceptionInfo = true;
+#endif
+  return true;
+}
+
+void
+ErrorResult::ThrowDOMException(nsresult rv, const nsACString& message)
+{
+  ClearUnionData();
+
+  mResult = NS_ERROR_DOM_DOMEXCEPTION;
+  mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
+#ifdef DEBUG
+  mHasDOMExceptionInfo = true;
+#endif
+}
+
+void
+ErrorResult::ReportDOMException(JSContext* cx)
+{
+  MOZ_ASSERT(mDOMExceptionInfo, "ReportDOMException() can be called only once");
+  MOZ_ASSERT(mHasDOMExceptionInfo);
+
+  dom::Throw(cx, mDOMExceptionInfo->mRv, mDOMExceptionInfo->mMessage);
+
+  ClearDOMExceptionInfo();
+}
+
+void
+ErrorResult::ClearDOMExceptionInfo()
+{
+  MOZ_ASSERT(IsDOMException());
+  MOZ_ASSERT(mHasDOMExceptionInfo || !mDOMExceptionInfo);
+  delete mDOMExceptionInfo;
+  mDOMExceptionInfo = nullptr;
+#ifdef DEBUG
+  mHasDOMExceptionInfo = false;
+#endif
+}
+
 void
 ErrorResult::ClearUnionData()
 {
@@ -305,6 +385,8 @@ ErrorResult::ClearUnionData()
     js::RemoveRawValueRoot(cx, &mJSException);
   } else if (IsErrorWithMessage()) {
     ClearMessage();
+  } else if (IsDOMException()) {
+    ClearDOMExceptionInfo();
   }
 }
 
@@ -313,6 +395,7 @@ ErrorResult::ReportGenericError(JSContext* cx)
 {
   MOZ_ASSERT(!IsErrorWithMessage());
   MOZ_ASSERT(!IsJSException());
+  MOZ_ASSERT(!IsDOMException());
   dom::Throw(cx, ErrorCode());
 }
 
@@ -344,11 +427,19 @@ ErrorResult::operator=(ErrorResult&& aRHS)
     mJSException = aRHS.mJSException;
     aRHS.mJSException.setUndefined();
     js::RemoveRawValueRoot(cx, &aRHS.mJSException);
+  } else if (aRHS.IsDOMException()) {
+    mDOMExceptionInfo = aRHS.mDOMExceptionInfo;
+    aRHS.mDOMExceptionInfo = nullptr;
+#ifdef DEBUG
+    mHasDOMExceptionInfo = aRHS.mHasDOMExceptionInfo;
+    aRHS.mHasDOMExceptionInfo = false;
+#endif // DEBUG
   } else {
     // Null out the union on both sides for hygiene purposes.
     mMessage = aRHS.mMessage = nullptr;
 #ifdef DEBUG
     mHasMessage = aRHS.mHasMessage = false;
+    mHasDOMExceptionInfo = aRHS.mHasDOMExceptionInfo = false;
 #endif
   }
   // Note: It's important to do this last, since this affects the condition
