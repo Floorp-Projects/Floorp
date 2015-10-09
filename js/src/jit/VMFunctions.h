@@ -734,6 +734,8 @@ IonMarkFunction(MIRType type)
 bool ObjectIsCallable(JSObject* obj);
 
 bool ThrowUninitializedLexical(JSContext* cx);
+bool BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);
+bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 
 } // namespace jit
 } // namespace js

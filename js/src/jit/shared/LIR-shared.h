@@ -7247,6 +7247,15 @@ class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS>
     }
 };
 
+class LCheckReturn : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
+{
+  public:
+    static const size_t ReturnValue = 0;
+    static const size_t ThisValue = BOX_PIECES;
+
+    LIR_HEADER(CheckReturn)
+};
+
 } // namespace jit
 } // namespace js
 

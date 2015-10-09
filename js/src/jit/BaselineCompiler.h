@@ -305,6 +305,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitFormalArgAccess(uint32_t arg, bool get);
 
     bool emitUninitializedLexicalCheck(const ValueOperand& val);
+    bool emitCheckThis();
 
     bool addPCMappingEntry(bool addIndexEntry);
 

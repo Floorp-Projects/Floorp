@@ -10325,6 +10325,19 @@ CodeGenerator::visitNewTarget(LNewTarget *ins)
     masm.bind(&done);
 }
 
+void
+CodeGenerator::visitCheckReturn(LCheckReturn* ins)
+{
+    ValueOperand returnValue = ToValue(ins, LCheckReturn::ReturnValue);
+    ValueOperand thisValue = ToValue(ins, LCheckReturn::ThisValue);
+    Label bail, noChecks;
+    masm.branchTestObject(Assembler::Equal, returnValue, &noChecks);
+    masm.branchTestUndefined(Assembler::NotEqual, returnValue, &bail);
+    masm.branchTestMagicValue(Assembler::Equal, thisValue, JS_UNINITIALIZED_LEXICAL, &bail);
+    bailoutFrom(&bail, ins->snapshot());
+    masm.bind(&noChecks);
+}
+
 // Out-of-line math_random_no_outparam call for LRandom.
 class OutOfLineRandom : public OutOfLineCodeBase<CodeGenerator>
 {

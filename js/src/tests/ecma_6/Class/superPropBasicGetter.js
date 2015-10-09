@@ -31,8 +31,11 @@ class derived extends base {
     }
 }
 
+assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
+/*
 var derivedInstance = new derived();
 derivedInstance.test();
+*/
 
 `;
 

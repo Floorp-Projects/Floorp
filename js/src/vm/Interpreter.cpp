@@ -347,11 +347,16 @@ RunState::maybeCreateThisForConstructor(JSContext* cx)
         InvokeState& invoke = *asInvoke();
         if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
             RootedObject callee(cx, &invoke.args().callee());
-            NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
-            JSObject* obj = CreateThisForFunction(cx, callee, newKind);
-            if (!obj)
-                return false;
-            invoke.args().setThis(ObjectValue(*obj));
+            if (script()->isDerivedClassConstructor()) {
+                MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
+                invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
+            } else {
+                NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
+                JSObject* obj = CreateThisForFunction(cx, callee, newKind);
+                if (!obj)
+                    return false;
+                invoke.args().setThis(ObjectValue(*obj));
+            }
         }
     }
     return true;
@@ -2197,8 +2202,12 @@ CASE(JSOP_RETRVAL)
      */
     CHECK_BRANCH();
 
+    if (!REGS.fp()->checkReturn(cx))
+        goto error;
+
   successful_return_continuation:
     interpReturnOK = true;
+
   return_continuation:
     if (activation.entryFrame() != REGS.fp()) {
         // Stop the engine. (No details about which engine exactly, could be
@@ -2774,6 +2783,8 @@ END_CASE(JSOP_VOID)
 
 CASE(JSOP_THIS)
     if (!ComputeThis(cx, REGS.fp()))
+        goto error;
+    if (!REGS.fp()->checkThis(cx))
         goto error;
     PUSH_COPY(REGS.fp()->thisValue());
 END_CASE(JSOP_THIS)
@@ -4979,4 +4990,24 @@ js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
                              kindStr, printable.ptr());
     }
+}
+
+bool
+js::ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame)
+{
+    RootedFunction fun(cx, frame.callee());
+
+    MOZ_ASSERT(fun->isClassConstructor());
+    MOZ_ASSERT(fun->nonLazyScript()->isDerivedClassConstructor());
+
+    const char* name = "anonymous";
+    JSAutoByteString str;
+    if (fun->atom()) {
+        if (!AtomToPrintableString(cx, fun->atom(), &str))
+            return false;
+        name = str.ptr();
+    }
+
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_THIS, name);
+    return false;
 }

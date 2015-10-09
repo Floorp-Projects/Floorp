@@ -4258,7 +4258,7 @@ LIRGenerator::visitLexicalCheck(MLexicalCheck* ins)
     MOZ_ASSERT(input->type() == MIRType_Value);
     LLexicalCheck* lir = new(alloc()) LLexicalCheck();
     useBox(lir, LLexicalCheck::Input, input);
-    assignSnapshot(lir, Bailout_UninitializedLexical);
+    assignSnapshot(lir, ins->bailoutKind());
     add(lir, ins);
     redefine(ins, input);
 }
@@ -4291,6 +4291,22 @@ void
 LIRGenerator::visitAtomicIsLockFree(MAtomicIsLockFree* ins)
 {
     define(new(alloc()) LAtomicIsLockFree(useRegister(ins->input())), ins);
+}
+
+void
+LIRGenerator::visitCheckReturn(MCheckReturn* ins)
+{
+    MDefinition* retVal = ins->returnValue();
+    MDefinition* thisVal = ins->thisValue();
+    MOZ_ASSERT(retVal->type() == MIRType_Value);
+    MOZ_ASSERT(thisVal->type() == MIRType_Value);
+
+    LCheckReturn* lir = new(alloc()) LCheckReturn();
+    useBoxAtStart(lir, LCheckReturn::ReturnValue, retVal);
+    useBoxAtStart(lir, LCheckReturn::ThisValue, thisVal);
+    assignSnapshot(lir, Bailout_BadDerivedConstructorReturn);
+    add(lir, ins);
+    redefine(ins, retVal);
 }
 
 static void

@@ -30,7 +30,9 @@ class child extends mid {
     }
 }
 
+assertThrowsInstanceOf(()=> new mid(), TypeError, "You implemented |super()|?!");
 
+/*
 let midInstance = new mid();
 
 // Make sure proxies are searched properly on the prototype chain
@@ -81,7 +83,7 @@ var wrappedBase = g.eval("({ method() { return this.__secretProp__; } })");
 var unwrappedDerived = { __secretProp__: 42, method() { return super.method(); } }
 Object.setPrototypeOf(unwrappedDerived, wrappedBase);
 assertEq(unwrappedDerived.method(), 42);
-
+*/
 `;
 
 if (classesEnabled())

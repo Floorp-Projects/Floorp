@@ -44,6 +44,8 @@ var derivedExpr = class extends base {
     override() { overrideCalled = "derived"; }
 };
 
+assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
+/*
 // Make sure we get the right object layouts.
 for (let extension of [derived, derivedExpr]) {
     baseMethodCalled = false;
@@ -65,6 +67,7 @@ for (let extension of [derived, derivedExpr]) {
     extension.staticMethod();
     assertEq(staticMethodCalled, true);
 }
+*/
 
 // Gotta extend an object, or null.
 function nope() {

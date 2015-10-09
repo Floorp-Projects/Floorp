@@ -25,6 +25,8 @@ class derived extends middle {
     }
 }
 
+assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
+/*
 new derived().testChain();
 
 // Super even chains in a wellbehaved fashion with normal functions.
@@ -55,7 +57,7 @@ inst.testChain();
 assertEq(inst.baseCalled, true);
 
 assertEq(inst.x, "yeehaw");
-
+*/
 `;
 
 if (classesEnabled())
