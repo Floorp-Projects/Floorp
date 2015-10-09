@@ -38,6 +38,9 @@
 
 #include_next <wchar.h>
 
+#if !defined(__aarch64__) && !defined(__x86_64__) && \
+    !(defined(__mips__) && _MIPS_SIM == _ABI64)
+
 // This needs to be in an extern "C" namespace, or Googletest will not
 // compile against it.
 #ifdef __cplusplus
@@ -68,5 +71,6 @@ static int inline wcscasecmp(const wchar_t* s1, const wchar_t* s2) {
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
+#endif
 
 #endif  // GOOGLEBREAKPAD_COMMON_ANDROID_INCLUDE_WCHAR_H
