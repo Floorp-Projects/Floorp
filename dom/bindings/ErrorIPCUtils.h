@@ -42,8 +42,11 @@ struct ParamTraits<mozilla::ErrorResult>
 
     WriteParam(aMsg, aParam.mResult);
     WriteParam(aMsg, aParam.IsErrorWithMessage());
+    WriteParam(aMsg, aParam.IsDOMException());
     if (aParam.IsErrorWithMessage()) {
       aParam.SerializeMessage(aMsg);
+    } else if (aParam.IsDOMException()) {
+      aParam.SerializeDOMExceptionInfo(aMsg);
     }
   }
 
@@ -57,7 +60,18 @@ struct ParamTraits<mozilla::ErrorResult>
     if (!ReadParam(aMsg, aIter, &hasMessage)) {
       return false;
     }
+    bool hasDOMExceptionInfo = false;
+    if (!ReadParam(aMsg, aIter, &hasDOMExceptionInfo)) {
+      return false;
+    }
+    if (hasMessage && hasDOMExceptionInfo) {
+      // Shouldn't have both!
+      return false;
+    }
     if (hasMessage && !readValue.DeserializeMessage(aMsg, aIter)) {
+      return false;
+    } else if (hasDOMExceptionInfo &&
+               !readValue.DeserializeDOMExceptionInfo(aMsg, aIter)) {
       return false;
     }
     *aResult = Move(readValue);
