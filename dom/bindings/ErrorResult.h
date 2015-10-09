@@ -94,6 +94,10 @@ public:
 #endif
 
   ErrorResult(ErrorResult&& aRHS)
+    // Initialize mResult and whatever else we need to default-initialize, so
+    // the ClearUnionData call in our operator= will do the right thing
+    // (nothing).
+    : ErrorResult()
   {
     *this = Move(aRHS);
   }
@@ -229,13 +233,8 @@ private:
                   "Pass in the right number of arguments");
 #endif
 
-    if (IsJSException()) {
-      // We have rooted our mJSException, and we don't have the info
-      // needed to unroot here, so just bail.
-      MOZ_ASSERT(false,
-                 "Ignoring ThrowErrorWithMessage call because we have a JS exception");
-      return;
-    }
+    ClearUnionData();
+
     nsTArray<nsString>& messageArgsArray = CreateErrorMessageHelper(errorNumber, errorType);
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
     dom::StringArrayAppender::Append(messageArgsArray, argCount, messageArgs...);
@@ -255,6 +254,13 @@ private:
   }
 
   void ClearMessage();
+
+  // ClearUnionData will try to clear the data in our mMessage/mJSException
+  // union.  After this the union may be in an uninitialized state
+  // (e.g. mMessage may be pointing to deleted memory) and the caller must
+  // either reinitialize it or change mResult to something that will not involve
+  // us touching the union anymore.
+  void ClearUnionData();
 
   nsresult mResult;
   struct Message;
