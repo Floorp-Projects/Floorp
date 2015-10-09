@@ -11,6 +11,7 @@
 #include "jsprf.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Exceptions.h"
+#include "nsStringGlue.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -26,7 +27,7 @@ XPCThrower::Throw(nsresult rv, JSContext* cx)
         return;
     if (!nsXPCException::NameAndFormatForNSResult(rv, nullptr, &format))
         format = "";
-    dom::Throw(cx, rv, format);
+    dom::Throw(cx, rv, nsDependentCString(format));
 }
 
 namespace xpc {
@@ -81,7 +82,7 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
     if (sz && sVerbose)
         Verbosify(ccx, &sz, false);
 
-    dom::Throw(ccx, rv, sz);
+    dom::Throw(ccx, rv, nsDependentCString(sz));
 
     if (sz && sz != format)
         JS_smprintf_free(sz);
@@ -122,7 +123,7 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
     if (sz && sVerbose)
         Verbosify(ccx, &sz, true);
 
-    dom::Throw(ccx, result, sz);
+    dom::Throw(ccx, result, nsDependentCString(sz));
 
     if (sz)
         JS_smprintf_free(sz);
@@ -143,7 +144,7 @@ XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
     if (sz && sVerbose)
         Verbosify(ccx, &sz, true);
 
-    dom::Throw(ccx, rv, sz);
+    dom::Throw(ccx, rv, nsDependentCString(sz));
 
     if (sz)
         JS_smprintf_free(sz);
