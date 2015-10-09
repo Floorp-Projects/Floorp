@@ -48,11 +48,17 @@ html[dir="rtl"] .conversation-toolbar > li {
 
 .conversation-toolbar .btn {
   background-position: center;
-  background-size: 24px;
+  background-size: 28px;
   background-repeat: no-repeat;
   background-color: transparent;
-  height: 24px;
-  width: 24px;
+  height: 28px;
+  width: 33px;
+}
+
+.btn-hangup-entry > .btn {
+  /* Make the button the width of the background, so that we don't get an
+     extra gap which appears to push the toolbar in further than necessary */
+  width: 28px;
 }
 
 .conversation-toolbar-media-btn-group-box {
