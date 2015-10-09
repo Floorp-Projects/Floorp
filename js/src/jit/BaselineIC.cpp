@@ -8762,15 +8762,16 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
 
             // Only attach a stub if the function already has a prototype and
             // we can look it up without causing side effects.
+            RootedObject newTarget(cx, &vp[2 + argc].toObject());
             RootedValue protov(cx);
-            if (!GetPropertyPure(cx, fun, NameToId(cx->names().prototype), protov.address())) {
+            if (!GetPropertyPure(cx, newTarget, NameToId(cx->names().prototype), protov.address())) {
                 JitSpew(JitSpew_BaselineIC, "  Can't purely lookup function prototype");
                 return true;
             }
 
             if (protov.isObject()) {
                 TaggedProto proto(&protov.toObject());
-                ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, nullptr, proto, fun);
+                ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, nullptr, proto, newTarget);
                 if (!group)
                     return false;
 
@@ -8784,7 +8785,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                 }
             }
 
-            JSObject* thisObject = CreateThisForFunction(cx, fun, TenuredObject);
+            JSObject* thisObject = CreateThisForFunction(cx, fun, newTarget, TenuredObject);
             if (!thisObject)
                 return false;
 
@@ -9538,7 +9539,8 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<Jit
                                                                     isConstructing_);
 }
 
-typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, MutableHandleValue rval);
+typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                             MutableHandleValue rval);
 static const VMFunction CreateThisInfoBaseline = FunctionInfo<CreateThisFn>(CreateThis);
 
 bool
@@ -9632,12 +9634,18 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm)
 
         // Stack now looks like:
         //      [..., Callee, ThisV, Arg0V, ..., ArgNV, NewTarget, StubFrameHeader, ArgC ]
+        masm.loadValue(Address(masm.getStackPointer(), STUB_FRAME_SIZE + sizeof(size_t)), R1);
+        masm.push(masm.extractObject(R1, ExtractTemp0));
+
         if (isSpread_) {
             masm.loadValue(Address(masm.getStackPointer(),
-                                   3 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t)), R1);
+                                   3 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t) +
+                                   sizeof(JSObject*)),
+                                   R1);
         } else {
             BaseValueIndex calleeSlot2(masm.getStackPointer(), argcReg,
-                                       2 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t));
+                                       2 * sizeof(Value) + STUB_FRAME_SIZE + sizeof(size_t) +
+                                       sizeof(JSObject*));
             masm.loadValue(calleeSlot2, R1);
         }
         masm.push(masm.extractObject(R1, ExtractTemp0));

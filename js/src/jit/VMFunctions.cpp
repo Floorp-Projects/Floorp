@@ -565,7 +565,7 @@ GetIntrinsicValue(JSContext* cx, HandlePropertyName name, MutableHandleValue rva
 }
 
 bool
-CreateThis(JSContext* cx, HandleObject callee, MutableHandleValue rval)
+CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHandleValue rval)
 {
     rval.set(MagicValue(JS_IS_CONSTRUCTING));
 
@@ -579,7 +579,7 @@ CreateThis(JSContext* cx, HandleObject callee, MutableHandleValue rval)
                 MOZ_ASSERT(fun->isClassConstructor());
                 rval.set(MagicValue(JS_UNINITIALIZED_LEXICAL));
             } else {
-                JSObject* thisObj = CreateThisForFunction(cx, callee, GenericObject);
+                JSObject* thisObj = CreateThisForFunction(cx, callee, newTarget, GenericObject);
                 if (!thisObj)
                     return false;
                 rval.set(ObjectValue(*thisObj));
