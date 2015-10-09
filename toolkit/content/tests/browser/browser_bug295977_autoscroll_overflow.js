@@ -1,7 +1,10 @@
-function test()
+add_task(function* ()
 {
-  const kPrefName_AutoScroll = "general.autoScroll";
-  Services.prefs.setBoolPref(kPrefName_AutoScroll, true);
+  function pushPref(name, value) {
+    return new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [[name, value]]}, resolve));
+  }
+
+  yield pushPref("general.autoScroll", true);
 
   const expectScrollNone = 0;
   const expectScrollVert = 1;
@@ -78,24 +81,52 @@ function test()
     {elem: 's', expected: expectScrollNone, testwindow: true, middlemousepastepref: true}
   ];
 
-  var doc;
-
-  function nextTest() {
-    var test = allTests.shift();
-    if (!test) {
-      endTest();
-      return;
-    }
-
+  for (let test of allTests) {
     if (test.dataUri) {
-      startLoad(test.dataUri);
-      return;
+      let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+      gBrowser.loadURI(test.dataUri);
+      yield loadedPromise;
+      continue;
+     }
+
+    let prefsChanged = (test.middlemousepastepref == false || test.middlemousepastepref == true);
+    if (prefsChanged) {
+      yield pushPref("middlemouse.paste", test.middlemousepastepref);
     }
 
-    var elem = doc.getElementById(test.elem);
+    yield BrowserTestUtils.synthesizeMouse("#" + test.elem, 50, 80, { button: 1 },
+                                           gBrowser.selectedBrowser);
+ 
+    // This ensures bug 605127 is fixed: pagehide in an unrelated document
+    // should not cancel the autoscroll.
+    yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+      var iframe = content.document.getElementById("iframe");
 
+      if (iframe) {
+        var e = new iframe.contentWindow.PageTransitionEvent("pagehide",
+                                                             { bubbles: true,
+                                                               cancelable: true,
+                                                               persisted: false });
+        iframe.contentDocument.dispatchEvent(e);
+        iframe.contentDocument.documentElement.dispatchEvent(e);
+      }
+    });
+
+    is(document.activeElement, gBrowser.selectedBrowser, "Browser still focused after autoscroll started");
+
+    yield BrowserTestUtils.synthesizeMouse("#" + test.elem, 100, 100,
+                                           { type: "mousemove", clickCount: "0" },
+                                           gBrowser.selectedBrowser);
+
+    if (prefsChanged) {
+      yield new Promise(resolve => SpecialPowers.popPrefEnv(resolve));
+    }
+
+    // Start checking for the scroll.
     let firstTimestamp = undefined;
-    function checkScroll(timestamp) {
+    let timeCompensation;
+    do {
+      let timestamp = yield new Promise(resolve => window.requestAnimationFrame(resolve));
       if (firstTimestamp === undefined) {
         firstTimestamp = timestamp;
       }
@@ -104,7 +135,7 @@ function test()
       // ClickEventHandler.autoscrollLoop, except here it's cumulative across
       // all frames after the first one instead of being based only on the
       // current frame.
-      let timeCompensation = (timestamp - firstTimestamp) / 20;
+      timeCompensation = (timestamp - firstTimestamp) / 20;
       info("timestamp=" + timestamp + " firstTimestamp=" + firstTimestamp +
            " timeCompensation=" + timeCompensation);
 
@@ -116,101 +147,62 @@ function test()
       // more likely that the accumulated scroll in autoscrollLoop will be >= 1,
       // although it also depends on acceleration, which here in this test
       // should be > 1 due to how it synthesizes mouse events below.
-      if (timeCompensation < 5) {
-        window.requestAnimationFrame(checkScroll);
-        return;
-      }
+    } while (timeCompensation < 5);
 
-      // Close the autoscroll popup by synthesizing Esc.
-      EventUtils.synthesizeKey("VK_ESCAPE", {}, gBrowser.contentWindow);
-      var scrollVert = test.expected & expectScrollVert;
-      var scrollHori = test.expected & expectScrollHori;
+    // Close the autoscroll popup by synthesizing Esc.
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    let scrollVert = test.expected & expectScrollVert;
+    let scrollHori = test.expected & expectScrollHori;
 
-      if (test.testwindow) {
-        ok((scrollVert && gBrowser.contentWindow.scrollY > 0) ||
-           (!scrollVert && gBrowser.contentWindow.scrollY == 0),
-           'Window for '+test.elem+' should'+(scrollVert ? '' : ' not')+' have scrolled vertically');
-        ok((scrollHori && gBrowser.contentWindow.scrollX > 0) ||
-           (!scrollHori && gBrowser.contentWindow.scrollX == 0),
-           'Window for '+test.elem+' should'+(scrollHori ? '' : ' not')+' have scrolled horizontally');
-      } else {
-        ok((scrollVert && elem.scrollTop > 0) ||
-           (!scrollVert && elem.scrollTop == 0),
-           test.elem+' should'+(scrollVert ? '' : ' not')+' have scrolled vertically');
-        ok((scrollHori && elem.scrollLeft > 0) ||
-           (!scrollHori && elem.scrollLeft == 0),
-           test.elem+' should'+(scrollHori ? '' : ' not')+' have scrolled horizontally');
-      }
+    let checkScroll = yield ContentTask.spawn(gBrowser.selectedBrowser,
+                                              { scrollVert : scrollVert,
+                                                scrollHori: scrollHori,
+                                                elemid : test.elem,
+                                                checkWindow: test.testwindow },
+      function* (args) {
+        let msg = "";
+        if (args.checkWindow) {
+          if (!((args.scrollVert && content.scrollY > 0) ||
+                (!args.scrollVert && content.scrollY == 0))) {
+            msg += "Failed: ";
+          }
+          msg += 'Window for ' + args.elemid + ' should' + (args.scrollVert ? '' : ' not') + ' have scrolled vertically\n';
+         
+          if (!((args.scrollHori && content.scrollX > 0) ||
+                (!args.scrollHori && content.scrollX == 0))) {
+            msg += "Failed: ";
+          }
+          msg += ' Window for ' + args.elemid + ' should' + (args.scrollHori ? '' : ' not') + ' have scrolled horizontally\n';
+        } else {
+          let elem = content.document.getElementById(args.elemid);
+          if (!((args.scrollVert && elem.scrollTop > 0) ||
+                (!args.scrollVert && elem.scrollTop == 0))) {
+            msg += "Failed: ";
+          }
+          msg += ' ' + args.elemid + ' should' + (args.scrollVert ? '' : ' not') + ' have scrolled vertically\n';
+          if (!((args.scrollHori && elem.scrollLeft > 0) ||
+                (!args.scrollHori && elem.scrollLeft == 0))) {
+            msg += "Failed: ";
+          }
+          msg += args.elemid + ' should' + (args.scrollHori ? '' : ' not') + ' have scrolled horizontally';
+        }
 
-      // Before continuing the test, we need to ensure that the IPC
-      // message that stops autoscrolling has had time to arrive.
-      executeSoon(nextTest);
-    };
+        return msg;
+       }
+    );
 
-    if (test.middlemousepastepref == false || test.middlemousepastepref == true)
-      Services.prefs.setBoolPref("middlemouse.paste", test.middlemousepastepref);
+    ok(checkScroll.indexOf("Failed") == -1, checkScroll)
 
-    EventUtils.synthesizeMouse(elem, 50, 50, { button: 1 },
-                               gBrowser.contentWindow);
-
-    // This ensures bug 605127 is fixed: pagehide in an unrelated document
-    // should not cancel the autoscroll.
-    var iframe = gBrowser.contentDocument.getElementById("iframe");
-
-    if (iframe) {
-      var e = new iframe.contentWindow.PageTransitionEvent("pagehide",
-                                                           { bubbles: true,
-                                                             cancelable: true,
-                                                             persisted: false });
-      iframe.contentDocument.dispatchEvent(e);
-      iframe.contentDocument.documentElement.dispatchEvent(e);
-    }
-
-    EventUtils.synthesizeMouse(elem, 100, 100,
-                               { type: "mousemove", clickCount: "0" },
-                               gBrowser.contentWindow);
-
-    if (Services.prefs.prefHasUserValue("middlemouse.paste"))
-      Services.prefs.clearUserPref("middlemouse.paste");
-
-    // Start checking for the scroll.
-    window.requestAnimationFrame(checkScroll);
+    // Before continuing the test, we need to ensure that the IPC
+    // message that stops autoscrolling has had time to arrive.
+    yield new Promise(resolve => executeSoon(resolve));
   }
 
-  waitForExplicitFinish();
-
-  nextTest();
-
-  function startLoad(dataUri) {
-    gBrowser.selectedBrowser.addEventListener("pageshow", onLoad, false);
-    gBrowser.loadURI(dataUri);
+  // remove 2 tabs that were opened by middle-click on links
+  while (gBrowser.visibleTabs.length > 1) {
+    gBrowser.removeTab(gBrowser.visibleTabs[gBrowser.visibleTabs.length - 1]);
   }
 
-  function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("pageshow", onLoad, false);
-    waitForFocus(onFocus, content);
-  }
-
-  function onFocus() {
-    doc = gBrowser.contentDocument;
-    nextTest();
-  }
-
-  function endTest() {
-    registerCleanupFunction(function() {
-      // restore the changed prefs
-      if (Services.prefs.prefHasUserValue(kPrefName_AutoScroll))
-        Services.prefs.clearUserPref(kPrefName_AutoScroll);
-      if (Services.prefs.prefHasUserValue("middlemouse.paste"))
-        Services.prefs.clearUserPref("middlemouse.paste");
-
-      // remove 2 tabs that were opened by middle-click on links
-      while (gBrowser.visibleTabs.length > 1) {
-        gBrowser.removeTab(gBrowser.visibleTabs[gBrowser.visibleTabs.length - 1]);
-      }
-    });
-
-    // waitForFocus() fixes a failure in the next test if the latter runs too soon.
-    waitForFocus(finish);
-  }
-}
+  // wait for focus to fix a failure in the next test if the latter runs too soon.
+  yield SimpleTest.promiseFocus();
+});
