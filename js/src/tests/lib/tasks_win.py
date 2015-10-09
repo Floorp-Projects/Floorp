@@ -68,7 +68,7 @@ def _do_watch(qWatch, timeout):
             assert fin is TaskFinishedMarker, "invalid finish marker"
 
 
-def run_all_tests(tests, prefix, results, options):
+def run_all_tests(tests, prefix, pb, options):
     """
     Uses scatter-gather to a thread-pool to manage children.
     """
@@ -114,7 +114,7 @@ def run_all_tests(tests, prefix, results, options):
             else:
                 yield result
         except Empty:
-            results.pb.poke()
+            pb.poke()
 
     # Cleanup and exit.
     pusher.join()
