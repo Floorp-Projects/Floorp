@@ -147,6 +147,7 @@ public class HistoryPanel extends HomeFragment {
                         selected = rangeItem;
                         mRangeAdapter.notifyDataSetChanged();
                         getLoaderManager().getLoader(LOADER_ID_HISTORY).forceLoad();
+                        mList.smoothScrollToPosition(0);
                     }
                 }
             });

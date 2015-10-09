@@ -55,13 +55,13 @@ import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -106,6 +106,7 @@ import android.os.SystemClock;
 import android.os.Vibrator;
 import android.provider.Browser;
 import android.provider.Settings;
+import android.support.v4.app.FragmentActivity;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Base64;
@@ -1049,6 +1050,17 @@ public class GeckoAppShell
         return true;
     }
 
+    @WrapForJNI
+    public static boolean openUriExternal(String targetURI,
+                                          String mimeType,
+                                          String packageName,
+                                          String className,
+                                          String action,
+                                          String title) {
+        // Default to showing prompt in private browsing to be safe.
+        return openUriExternal(targetURI, mimeType, packageName, className, action, title, true);
+    }
+
     /**
      * Given the inputs to <code>getOpenURIIntent</code>, plus an optional
      * package name and class name, create and fire an intent to open the
@@ -1062,15 +1074,20 @@ public class GeckoAppShell
      * @param action an Android action specifier, such as
      *               <code>Intent.ACTION_SEND</code>.
      * @param title the title to use in <code>ACTION_SEND</code> intents.
-     * @return true if the activity started successfully; false otherwise.
+     * @param showPromptInPrivateBrowsing whether or not the user should be prompted when opening
+     *                                    this uri from private browsing. This should be true
+     *                                    when the user doesn't explicitly choose to open an an
+     *                                    external app (e.g. just clicked a link).
+     * @return true if the activity started successfully or the user was prompted to open the
+     *              application; false otherwise.
      */
-    @WrapForJNI
     public static boolean openUriExternal(String targetURI,
                                           String mimeType,
                                           String packageName,
                                           String className,
                                           String action,
-                                          String title) {
+                                          String title,
+                                          final boolean showPromptInPrivateBrowsing) {
         final Context context = getContext();
         final Intent intent = getOpenURIIntent(context, targetURI,
                                                mimeType, action, title);
@@ -1089,15 +1106,16 @@ public class GeckoAppShell
         }
 
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        try {
-            context.startActivity(intent);
-            return true;
-        } catch (ActivityNotFoundException e) {
-            Log.w(LOGTAG, "Activity not found.", e);
-            return false;
-        } catch (SecurityException e) {
-            Log.w(LOGTAG, "Forbidden to launch activity.", e);
-            return false;
+
+        if (!showPromptInPrivateBrowsing) {
+            return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
+        } else {
+            // Ideally we retrieve the Activity from the calling args, rather than
+            // statically, but since this method is called from Gecko and I'm
+            // unfamiliar with that code, this is a simpler solution.
+            final FragmentActivity fragmentActivity = (FragmentActivity) getGeckoInterface().getActivity();
+            return ExternalIntentDuringPrivateBrowsingPromptFragment.showDialogOrAndroidChooser(
+                    context, fragmentActivity.getSupportFragmentManager(), intent);
         }
     }
 
