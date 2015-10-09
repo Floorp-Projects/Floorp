@@ -550,13 +550,13 @@ function modifySessionStorage(browser, data, options = {}) {
     let storage = frame.sessionStorage;
 
     return new Promise(resolve => {
-      addEventListener("MozStorageChanged", function onStorageChanged(event) {
+      addEventListener("MozSessionStorageChanged", function onStorageChanged(event) {
         if (event.storageArea == storage) {
           keys.delete(event.key);
         }
 
         if (keys.size == 0) {
-          removeEventListener("MozStorageChanged", onStorageChanged, true);
+          removeEventListener("MozSessionStorageChanged", onStorageChanged, true);
           resolve();
         }
       }, true);
