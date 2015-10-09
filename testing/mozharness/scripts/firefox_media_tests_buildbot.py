@@ -28,13 +28,22 @@ from mozharness.mozilla.testing.firefox_media_tests import (
     FirefoxMediaTestsBase, BUSTED, TESTFAILED, UNKNOWN, EXCEPTION, SUCCESS
 )
 
+buildbot_media_test_options = [
+    [["--suite"],
+     {"action": "store",
+      "dest": "test_suite",
+      "default": "media-tests",
+      "help": "suite name",
+      }],
+]
+
 
 class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
 
     def __init__(self):
         config_options = copy.deepcopy(blobupload_config_options)
         super(FirefoxMediaTestsBuildbot, self).__init__(
-            config_options=config_options,
+            config_options=config_options + buildbot_media_test_options,
             all_actions=['clobber',
                          'read-buildbot-config',
                          'checkout',
@@ -84,6 +93,21 @@ class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
                                            'media_tests.html')]
         cmd += ['--log-mach', os.path.join(blob_upload_dir,
                                            'media_tests_mach.log')]
+
+        test_suite = self.config.get('test_suite')
+        test_manifest = None if test_suite != 'media-youtube-tests' else \
+            os.path.join(dirs['firefox_media_dir'],
+                         'firefox_media_tests',
+                         'playback', 'youtube', 'manifest.ini')
+        config_fmt_args = {
+            'test_manifest': test_manifest,
+        }
+
+        if test_suite not in self.config["suite_definitions"]:
+            self.fatal("%s is not defined in the config!" % test_suite)
+        for s in self.config["suite_definitions"][test_suite]["options"]:
+            cmd.append(s % config_fmt_args)
+
         return cmd
 
     def run_media_tests(self):
