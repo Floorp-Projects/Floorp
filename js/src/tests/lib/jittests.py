@@ -629,8 +629,9 @@ def get_parallel_results(async_test_result_queue, notify_queue):
 
 def process_test_results_parallel(async_test_result_queue, return_queue,
                                   notify_queue, num_tests, options):
+    pb = create_progressbar(num_tests, options)
     gen = get_parallel_results(async_test_result_queue, notify_queue)
-    ok = process_test_results(gen, num_tests, options)
+    ok = process_test_results(gen, num_tests, pb, options)
     return_queue.put(ok)
 
 def print_test_summary(num_tests, failures, complete, doing, options):
@@ -685,8 +686,19 @@ def print_test_summary(num_tests, failures, complete, doing, options):
 
     return not failures
 
-def process_test_results(results, num_tests, options):
-    pb = NullProgressBar()
+def create_progressbar(num_tests, options):
+    if not options.hide_progress and not options.show_cmd \
+       and ProgressBar.conservative_isatty():
+        fmt = [
+            {'value': 'PASS',    'color': 'green'},
+            {'value': 'FAIL',    'color': 'red'},
+            {'value': 'TIMEOUT', 'color': 'blue'},
+            {'value': 'SKIP',    'color': 'brightgray'},
+        ]
+        return ProgressBar(num_tests, fmt)
+    return NullProgressBar()
+
+def process_test_results(results, num_tests, pb, options):
     failures = []
     timeouts = 0
     complete = False
@@ -696,16 +708,6 @@ def process_test_results(results, num_tests, options):
         pb.finish(True)
         complete = True
         return print_test_summary(num_tests, failures, complete, doing, options)
-
-    if not options.hide_progress and not options.show_cmd \
-       and ProgressBar.conservative_isatty():
-        fmt = [
-            {'value': 'PASS',    'color': 'green'},
-            {'value': 'FAIL',    'color': 'red'},
-            {'value': 'TIMEOUT', 'color': 'blue'},
-            {'value': 'SKIP',    'color': 'brightgray'},
-        ]
-        pb = ProgressBar(num_tests, fmt)
 
     try:
         for i, res in enumerate(results):
@@ -760,8 +762,10 @@ def get_serial_results(tests, prefix, options):
             yield run_test(test, prefix, options)
 
 def run_tests(tests, prefix, options):
+    num_tests = len(tests) * options.repeat
+    pb = create_progressbar(num_tests, options)
     gen = get_serial_results(tests, prefix, options)
-    ok = process_test_results(gen, len(tests) * options.repeat, options)
+    ok = process_test_results(gen, num_tests, pb, options)
     return ok
 
 def get_remote_results(tests, device, prefix, options):
@@ -842,8 +846,10 @@ def run_tests_remote(tests, prefix, options):
     prefix[0] = os.path.join(options.remote_test_root, 'js')
 
     # Run all tests.
+    num_tests = len(tests) * options.repeat
+    pb = create_progressbar(num_tests, options)
     gen = get_remote_results(tests, dm, prefix, options)
-    ok = process_test_results(gen, len(tests) * options.repeat, options)
+    ok = process_test_results(gen, num_tests, pb, options)
     return ok
 
 def platform_might_be_android():
