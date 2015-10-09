@@ -80,6 +80,30 @@ const kEventConstructors = {
                                                           return new BluetoothPairingEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothMapFolderListingEvent:            { create: function (aName, aProps) {
+                                                          return new BluetoothMapFolderListingEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothMapGetMessageEvent:               { create: function (aName, aProps) {
+                                                          return new BluetoothMapGetMessageEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothMapMessagesListingEvent:          { create: function (aName, aProps) {
+                                                          return new BluetoothMapMessagesListingEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothMapMessageUpdateEvent:            { create: function (aName, aProps) {
+                                                          return new BluetoothMapMessageUpdateEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothMapSendMessageEvent:              { create: function (aName, aProps) {
+                                                          return new BluetoothMapSendMessageEvent(aName, aProps);
+                                                       },
+                                             },
+  BluetoothMapSetMessageStatusEvent:         { create: function (aName, aProps) {
+                                                          return new BluetoothMapSetMessageStatusEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothPhonebookPullingEvent:            { create: function (aName, aProps) {
                                                           return new BluetoothPhonebookPullingEvent(aName, aProps);
                                                        },
