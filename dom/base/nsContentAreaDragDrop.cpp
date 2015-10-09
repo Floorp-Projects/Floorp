@@ -727,7 +727,7 @@ DragDataProducer::AddString(DataTransfer* aDataTransfer,
                             const nsAString& aData,
                             nsIPrincipal* aPrincipal)
 {
-  nsRefPtr<nsVariant> variant = new nsVariant();
+  nsRefPtr<nsVariantCC> variant = new nsVariantCC();
   variant->SetAsAString(aData);
   aDataTransfer->SetDataWithPrincipal(aFlavor, variant, 0, aPrincipal);
 }
@@ -783,7 +783,7 @@ DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
   // a new flavor so as not to confuse anyone who is really registered
   // for image/gif or image/jpg.
   if (mImage) {
-    nsRefPtr<nsVariant> variant = new nsVariant();
+    nsRefPtr<nsVariantCC> variant = new nsVariantCC();
     variant->SetAsISupports(mImage);
     aDataTransfer->SetDataWithPrincipal(NS_LITERAL_STRING(kNativeImageMime),
                                         variant, 0, principal);
@@ -795,7 +795,7 @@ DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
     nsCOMPtr<nsIFlavorDataProvider> dataProvider =
       new nsContentAreaDragDropDataProvider();
     if (dataProvider) {
-      nsRefPtr<nsVariant> variant = new nsVariant();
+      nsRefPtr<nsVariantCC> variant = new nsVariantCC();
       variant->SetAsISupports(dataProvider);
       aDataTransfer->SetDataWithPrincipal(NS_LITERAL_STRING(kFilePromiseMime),
                                           variant, 0, principal);
