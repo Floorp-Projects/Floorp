@@ -9,9 +9,13 @@
         Base application theme. This could be overridden by GeckoBaseTheme
         in other res/values-XXX/themes.xml.
     -->
-    <style name="GeckoBase" parent="@android:style/Theme.Light">
+    <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
+
+        <!-- AppCompat sets this to transparent by default:
+             http://stackoverflow.com/a/31777488 -->
+        <item name="android:panelBackground">@color/gingerbread_menu_background_color</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">
@@ -21,8 +25,9 @@
 
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
 
-    <style name="GeckoPreferencesBase" parent="GeckoBase">
+    <style name="GeckoPreferencesBase" parent="@android:style/Theme.Light">
         <item name="android:windowNoTitle">false</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
     <!--

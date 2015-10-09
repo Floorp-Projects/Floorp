@@ -14,7 +14,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() { }
+    constructor() { super(); }
     test(expected) { super.test(expected); }
     testArrow() { return (() => super.test(this)); }
     ["testCPN"](expected) { super.test(expected); }
@@ -55,7 +55,7 @@ class base2 {
 let animals = [];
 for (let exprBase of [base1, base2])
     new class extends exprBase {
-        constructor() { }
+        constructor() { super(); }
         test() { animals.push(super["test"]()); }
     }().test();
 assertDeepEq(animals, ["llama", "alpaca"]);

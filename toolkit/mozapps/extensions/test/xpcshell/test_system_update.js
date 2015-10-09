@@ -8,9 +8,6 @@ const PREF_APP_UPDATE_ENABLED         = "app.update.enabled";
 Components.utils.import("resource://testing-common/httpd.js");
 const { computeHash } = Components.utils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
-// Enable signature checks for these tests
-Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
-
 BootstrapMonitor.init();
 
 const featureDir = FileUtils.getDir("ProfD", ["features"], false);
@@ -176,7 +173,9 @@ function* check_installed(inProfile, ...versions) {
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
       do_check_eq(uri.file.path, file.path);
 
-      do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+      if (inProfile) {
+        do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+      }
 
       // Verify the add-on actually started
       BootstrapMonitor.checkAddonStarted(id, versions[i]);
@@ -352,6 +351,15 @@ const TESTS = {
     ],
     finalState: [true, null, "3.0", "3.0", null, "1.0"]
   },
+
+  // A bad certificate should stop updates
+  badCert: {
+    fails: true,
+    updateList: [
+      { id: "system1@tests.mozilla.org", version: "1.0", path: "system1_1_badcert.xpi" },
+      { id: "system3@tests.mozilla.org", version: "1.0", path: "system3_1.xpi" }
+    ],
+  }
 }
 
 add_task(function* setup() {

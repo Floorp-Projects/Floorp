@@ -4928,13 +4928,19 @@ CodeGenerator::visitInitPropGetterSetter(LInitPropGetterSetter* lir)
     callVM(InitPropGetterSetterInfo, lir);
 }
 
-typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, MutableHandleValue rval);
+typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHandleValue rval);
 static const VMFunction CreateThisInfoCodeGen = FunctionInfo<CreateThisFn>(CreateThis);
 
 void
 CodeGenerator::visitCreateThis(LCreateThis* lir)
 {
     const LAllocation* callee = lir->getCallee();
+    const LAllocation* newTarget = lir->getNewTarget();
+
+    if (newTarget->isConstant())
+        pushArg(ImmGCPtr(&newTarget->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(newTarget));
 
     if (callee->isConstant())
         pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
@@ -4945,12 +4951,14 @@ CodeGenerator::visitCreateThis(LCreateThis* lir)
 }
 
 static JSObject*
-CreateThisForFunctionWithProtoWrapper(JSContext* cx, js::HandleObject callee, HandleObject proto)
+CreateThisForFunctionWithProtoWrapper(JSContext* cx, HandleObject callee, HandleObject newTarget,
+                                      HandleObject proto)
 {
-    return CreateThisForFunctionWithProto(cx, callee, proto);
+    return CreateThisForFunctionWithProto(cx, callee, newTarget, proto);
 }
 
-typedef JSObject* (*CreateThisWithProtoFn)(JSContext* cx, HandleObject callee, HandleObject proto);
+typedef JSObject* (*CreateThisWithProtoFn)(JSContext* cx, HandleObject callee,
+                                           HandleObject newTarget, HandleObject proto);
 static const VMFunction CreateThisWithProtoInfo =
 FunctionInfo<CreateThisWithProtoFn>(CreateThisForFunctionWithProtoWrapper);
 
@@ -4958,12 +4966,18 @@ void
 CodeGenerator::visitCreateThisWithProto(LCreateThisWithProto* lir)
 {
     const LAllocation* callee = lir->getCallee();
+    const LAllocation* newTarget = lir->getNewTarget();
     const LAllocation* proto = lir->getPrototype();
 
     if (proto->isConstant())
         pushArg(ImmGCPtr(&proto->toConstant()->toObject()));
     else
         pushArg(ToRegister(proto));
+
+    if (newTarget->isConstant())
+        pushArg(ImmGCPtr(&newTarget->toConstant()->toObject()));
+    else
+        pushArg(ToRegister(newTarget));
 
     if (callee->isConstant())
         pushArg(ImmGCPtr(&callee->toConstant()->toObject()));
@@ -10323,6 +10337,19 @@ CodeGenerator::visitNewTarget(LNewTarget *ins)
     masm.loadValue(newTarget, output);
 
     masm.bind(&done);
+}
+
+void
+CodeGenerator::visitCheckReturn(LCheckReturn* ins)
+{
+    ValueOperand returnValue = ToValue(ins, LCheckReturn::ReturnValue);
+    ValueOperand thisValue = ToValue(ins, LCheckReturn::ThisValue);
+    Label bail, noChecks;
+    masm.branchTestObject(Assembler::Equal, returnValue, &noChecks);
+    masm.branchTestUndefined(Assembler::NotEqual, returnValue, &bail);
+    masm.branchTestMagicValue(Assembler::Equal, thisValue, JS_UNINITIALIZED_LEXICAL, &bail);
+    bailoutFrom(&bail, ins->snapshot());
+    masm.bind(&noChecks);
 }
 
 // Out-of-line math_random_no_outparam call for LRandom.

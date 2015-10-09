@@ -175,6 +175,7 @@ class PackedScopeCoordinate
     F(CLASSNAMES) \
     F(NEWTARGET) \
     F(POSHOLDER) \
+    F(SUPERCALL) \
     \
     /* Unary operators. */ \
     F(TYPEOFNAME) \

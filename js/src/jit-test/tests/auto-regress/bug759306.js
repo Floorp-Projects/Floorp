@@ -1,4 +1,4 @@
-// |jit-test| error:InternalError
+// |jit-test| error:TypeError
 
 // Binary: cache/js-dbg-32-4ce3983a43f4-linux
 // Flags:
