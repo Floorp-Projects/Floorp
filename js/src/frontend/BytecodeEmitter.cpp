@@ -7451,6 +7451,7 @@ BytecodeEmitter::emitClass(ParseNode* pn)
             break;
         }
     }
+    MOZ_ASSERT(constructor, "For now, no default constructors");
 
     bool savedStrictness = sc->setLocalStrictMode(true);
 
@@ -7482,22 +7483,12 @@ BytecodeEmitter::emitClass(ParseNode* pn)
             return false;
     }
 
-    if (constructor) {
-        if (!emitFunction(constructor, !!heritageExpression))
+    if (!emitFunction(constructor, !!heritageExpression))
+        return false;
+
+    if (constructor->pn_funbox->needsHomeObject()) {
+        if (!emit2(JSOP_INITHOMEOBJECT, 0))
             return false;
-        if (constructor->pn_funbox->needsHomeObject()) {
-            if (!emit2(JSOP_INITHOMEOBJECT, 0))
-                return false;
-        }
-    } else {
-        JSAtom *name = names ? names->innerBinding()->pn_atom : nullptr;
-        if (heritageExpression) {
-            if (!emitAtomOp(name, JSOP_DERIVEDCONSTRUCTOR))
-                return false;
-        } else {
-            if (!emitAtomOp(name, JSOP_CLASSCONSTRUCTOR))
-                return false;
-        }
     }
 
     if (!emit1(JSOP_SWAP))

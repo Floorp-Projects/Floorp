@@ -5,8 +5,6 @@ class instance extends null {
 }
 
 assertThrowsInstanceOf(() => new instance(), TypeError);
-assertThrowsInstanceOf(() => new class extends null { }(), TypeError);
-
 
 `;
 

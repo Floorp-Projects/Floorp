@@ -10,11 +10,6 @@ function testBase(base) {
     let inst = new instance(instance, 1);
     assertEq(Object.getPrototypeOf(inst), instance.prototype);
     assertEq(inst.calledBase, true);
-
-    class defaultInstance extends base { }
-    let defInst = new defaultInstance(defaultInstance, 1);
-    assertEq(Object.getPrototypeOf(defInst), defaultInstance.prototype);
-    assertEq(defInst.calledBase, true);
 }
 
 class base {
@@ -45,13 +40,7 @@ function baseFunc(nt, one) {
 }
 
 testBase(baseFunc);
-
-let handler = {};
-let p = new Proxy(baseFunc, handler);
-testBase(p);
-
-handler.construct = (target, args, nt) => Reflect.construct(target, args, nt);
-testBase(p);
+testBase(new Proxy(baseFunc, {}));
 
 // Object will have to wait for fixed builtins.
 
