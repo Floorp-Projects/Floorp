@@ -14,15 +14,10 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 this.NewTabURL = {
   _url: "about:newtab",
-  _remoteUrl: "about:remote-newtab",
   _overridden: false,
 
   get: function() {
-    let output = this._url;
-    if (Services.prefs.getBoolPref("browser.newtabpage.remote")) {
-      output = this._remoteUrl;
-    }
-    return output;
+    return this._url;
   },
 
   get overridden() {
