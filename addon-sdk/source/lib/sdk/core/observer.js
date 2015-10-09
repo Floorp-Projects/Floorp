@@ -9,14 +9,17 @@ module.metadata = {
 };
 
 
-const { Cc, Ci, Cr } = require("chrome");
+const { Cc, Ci, Cr, Cu } = require("chrome");
 const { Class } = require("./heritage");
 const { isWeak } = require("./reference");
 const method = require("../../method/core");
 
-const { addObserver, removeObserver } = Cc['@mozilla.org/observer-service;1'].
-                                          getService(Ci.nsIObserverService);
+const observerService = Cc['@mozilla.org/observer-service;1'].
+                          getService(Ci.nsIObserverService);
 
+const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");
+const addObserver = ShimWaiver.getProperty(observerService, "addObserver");
+const removeObserver = ShimWaiver.getProperty(observerService, "removeObserver");
 
 // This is a method that will be invoked when notification observer
 // subscribed to occurs.

@@ -142,7 +142,7 @@ exports["test compatibility"] = function(assert) {
                require("sdk/tabs/utils"), "sdk/tabs/utils -> tabs/utils");
 
   assert.equal(require("dom/events"),
-               require("sdk/dom/events"), "sdk/dom/events -> dom/events");
+               require("sdk/dom/events-shimmed"), "sdk/dom/events-shimmed -> dom/events");
 
   assert.equal(require("tabs/tab.js"),
                require("sdk/tabs/tab"), "sdk/tabs/tab -> tabs/tab.js");
