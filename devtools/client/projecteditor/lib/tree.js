@@ -227,6 +227,25 @@ var TreeView = Class({
   },
 
   /**
+   * Helper function to create DOM elements for promptNew and promptEdit
+   */
+  createInputContainer: function() {
+    let inputholder = this.doc.createElementNS(HTML_NS, "div");
+    inputholder.className = "child entry";
+
+    let expander = this.doc.createElementNS(HTML_NS, "span");
+    expander.className = "arrow expander";
+    expander.setAttribute("invisible", "");
+    inputholder.appendChild(expander);
+
+    let placeholder = this.doc.createElementNS(HTML_NS, "div");
+    placeholder.className = "child";
+    inputholder.appendChild(placeholder);
+
+    return {inputholder, placeholder};
+  },
+
+  /**
    * Prompt the user to create a new file in the tree.
    *
    * @param string initial
@@ -246,9 +265,9 @@ var TreeView = Class({
     let parentContainer = this._containers.get(parent);
     let item = this.doc.createElement("li");
     item.className = "child";
-    let placeholder = this.doc.createElementNS(HTML_NS, "div");
-    placeholder.className = "child";
-    item.appendChild(placeholder);
+
+    let {inputholder,placeholder} = this.createInputContainer();
+    item.appendChild(inputholder);
 
     let children = parentContainer.children;
     sibling = sibling ? this._containers.get(sibling).elt : null;
@@ -257,6 +276,7 @@ var TreeView = Class({
     new InplaceEditor({
       element: placeholder,
       initial: initial,
+      preserveTextStyles: true,
       start: editor => {
         editor.input.select();
       },
@@ -289,15 +309,28 @@ var TreeView = Class({
    */
   promptEdit: function(initial, resource) {
     let deferred = promise.defer();
-    let placeholder = this._containers.get(resource).elt;
+    let item = this._containers.get(resource).elt;
+    let originalText = item.childNodes[0];
+
+    let {inputholder,placeholder} = this.createInputContainer();
+    item.insertBefore(inputholder, originalText);
+
+    item.removeChild(originalText);
 
     new InplaceEditor({
       element: placeholder,
       initial: initial,
+      preserveTextStyles: true,
       start: editor => {
         editor.input.select();
       },
       done: function(val, commit) {
+        if (val === initial) {
+          item.insertBefore(originalText, inputholder);
+        }
+
+        item.removeChild(inputholder);
+
         if (commit) {
           deferred.resolve(val);
         } else {
