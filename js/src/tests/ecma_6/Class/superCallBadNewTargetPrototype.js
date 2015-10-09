@@ -18,8 +18,10 @@ function get(target, property, receiver) {
 class inst extends base {
     constructor() { super(); }
 }
-
 assertThrowsInstanceOf(()=>new new Proxy(inst, {get})(), TypeError);
+
+class defaultInst extends base {}
+assertThrowsInstanceOf(()=>new new Proxy(defaultInst, {get})(), TypeError);
 
 `;
 

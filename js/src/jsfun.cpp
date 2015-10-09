@@ -1074,11 +1074,23 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
     } else {
         MOZ_ASSERT(!fun->isExprBody());
 
-        if ((!bodyOnly && !out.append("() {\n    "))
-            || !out.append("[native code]")
-            || (!bodyOnly && !out.append("\n}")))
-        {
-            return nullptr;
+        if (fun->isNative() && fun->native() == js::DefaultDerivedClassConstructor) {
+            if ((!bodyOnly && !out.append("(...args) {\n    ")) ||
+                !out.append("super(...args);\n}"))
+            {
+                return nullptr;
+            }
+        } else {
+            if (!bodyOnly && !out.append("() {\n    "))
+                return nullptr;
+
+            if (!fun->isNative() || fun->native() != js::DefaultClassConstructor) {
+                if (!out.append("[native code]"))
+                    return nullptr;
+            }
+
+            if (!bodyOnly && !out.append("\n}"))
+                return nullptr;
         }
     }
     return out.finishString();
