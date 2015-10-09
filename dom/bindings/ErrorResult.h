@@ -80,8 +80,7 @@ public:
     : mResult(NS_OK)
 #ifdef DEBUG
     , mMightHaveUnreportedJSException(false)
-    , mHasMessage(false)
-    , mHasDOMExceptionInfo(false)
+    , mUnionState(HasNothing)
 #endif
   {
   }
@@ -91,10 +90,9 @@ public:
     MOZ_ASSERT_IF(IsErrorWithMessage(), !mMessage);
     MOZ_ASSERT_IF(IsDOMException(), !mDOMExceptionInfo);
     MOZ_ASSERT(!mMightHaveUnreportedJSException);
-    MOZ_ASSERT(!mHasMessage);
-    MOZ_ASSERT(!mHasDOMExceptionInfo);
+    MOZ_ASSERT(mUnionState == HasNothing);
   }
-#endif
+#endif // DEBUG
 
   ErrorResult(ErrorResult&& aRHS)
     // Initialize mResult and whatever else we need to default-initialize, so
@@ -229,6 +227,15 @@ protected:
   }
 
 private:
+#ifdef DEBUG
+  enum UnionState {
+    HasMessage,
+    HasDOMExceptionInfo,
+    HasJSException,
+    HasNothing
+  };
+#endif // DEBUG
+
   friend struct IPC::ParamTraits<ErrorResult>;
   void SerializeMessage(IPC::Message* aMsg) const;
   bool DeserializeMessage(const IPC::Message* aMsg, void** aIter);
@@ -254,8 +261,8 @@ private:
     uint16_t argCount = dom::GetErrorArgCount(errorNumber);
     dom::StringArrayAppender::Append(messageArgsArray, argCount, messageArgs...);
 #ifdef DEBUG
-    mHasMessage = true;
-#endif
+    mUnionState = HasMessage;
+#endif // DEBUG
   }
 
   void AssignErrorCode(nsresult aRv) {
@@ -307,15 +314,12 @@ private:
   // Used to keep track of codepaths that might throw JS exceptions,
   // for assertion purposes.
   bool mMightHaveUnreportedJSException;
-  // Used to keep track of whether mMessage has ever been assigned to.
-  // We need to check this in order to ensure that not attempting to
-  // delete mMessage in DeserializeMessage doesn't leak memory.
-  bool mHasMessage;
-  // Used to keep track of whether mDOMExceptionInfo has ever been assigned
-  // to.  We need to check this in order to ensure that not attempting to
-  // delete mDOMExceptionInfo in DeserializeDOMExceptionInfo doesn't leak
-  // memory.
-  bool mHasDOMExceptionInfo;
+
+  // Used to keep track of what's stored in our union right now.  Note
+  // that this may be set to HasNothing even if our mResult suggests
+  // we should have something, if we have already cleaned up the
+  // something.
+  UnionState mUnionState;
 #endif
 
   // Not to be implemented, to make sure people always pass this by
