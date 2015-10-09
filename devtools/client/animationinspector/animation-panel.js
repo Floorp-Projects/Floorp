@@ -78,8 +78,6 @@ var AnimationsPanel = {
     this.animationsTimelineComponent.destroy();
     this.animationsTimelineComponent = null;
 
-    yield this.destroyPlayerWidgets();
-
     this.playersEl = this.errorMessageEl = null;
     this.toggleAllButtonEl = this.pickerButtonEl = null;
     this.playTimelineButtonEl = null;
@@ -187,7 +185,6 @@ var AnimationsPanel = {
 
     // Empty the whole panel first.
     this.togglePlayers(true);
-    yield this.destroyPlayerWidgets();
 
     // Re-render the timeline component.
     this.animationsTimelineComponent.render(
@@ -205,17 +202,6 @@ var AnimationsPanel = {
 
     this.emit(this.UI_UPDATED_EVENT);
     done();
-  }),
-
-  destroyPlayerWidgets: Task.async(function*() {
-    if (!this.playerWidgets) {
-      return;
-    }
-
-    let destroyers = this.playerWidgets.map(widget => widget.destroy());
-    yield promise.all(destroyers);
-    this.playerWidgets = null;
-    this.playersEl.innerHTML = "";
   })
 };
 

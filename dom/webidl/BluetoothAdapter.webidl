@@ -78,6 +78,24 @@ interface BluetoothAdapter : EventTarget {
   // Fired when PBAP manager requests for 'pullvcardlisting'
            attribute EventHandler   onpullvcardlistingreq;
 
+  // Fired when remote devices request to list SMS/MMS/Email folders
+           attribute EventHandler   onmapfolderlistingreq;
+
+  // Fired when remote devices request to list SMS/MMS/Email messages
+           attribute EventHandler   onmapmessageslistingreq;
+
+  // Fired when remote devices fetch the specific message
+           attribute EventHandler   onmapgetmessagereq;
+
+  // Fired when remote devices set message status
+           attribute EventHandler   onmapsetmessagestatusreq;
+
+  // Fired when remote devices send out SMS/MMS/Email message
+           attribute EventHandler   onmapsendmessagereq;
+
+  // Fired when remote devices download SMS/MMS/Email messages
+           attribute EventHandler   onmapmessageupdatereq;
+
   /**
    * Enable/Disable a local bluetooth adapter by asynchronus methods and return
    * its result through a Promise.
