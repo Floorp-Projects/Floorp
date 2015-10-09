@@ -12,6 +12,7 @@ if CONFIG['DEBUG_JS_MODULES']:
     ]
 
 modules += [
+    'react-redux.js',
     'react.js',
     'redux.js',
 ]
