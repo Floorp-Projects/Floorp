@@ -4934,8 +4934,14 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
       fs = MakeOrReuseFileSystem(dirname, fs, window);
       nsAutoString dompath(NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR));
       dompath.Append(Substring(path, leafSeparatorIndex + 1));
-      filesAndDirsSeq[i].SetAsDirectory() = new Directory(fs, dompath);
+      RefPtr<Directory> directory = new Directory(fs, dompath);
+      // In future we could refactor SetFilePickerFiltersFromAccept to return a
+      // semicolon separated list of file extensions and include that in the
+      // filter string passed here.
+      directory->SetContentFilters(NS_LITERAL_STRING("filter-out-sensitive"));
+      filesAndDirsSeq[i].SetAsDirectory() = directory;
     } else {
+      // This file was directly selected by the user, so don't filter it.
       filesAndDirsSeq[i].SetAsFile() = filesAndDirs[i];
     }
   }

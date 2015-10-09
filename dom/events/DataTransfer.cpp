@@ -910,7 +910,9 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
         nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
         nsDependentSubstring basename = Substring(path, leafSeparatorIndex);
         fs = MakeOrReuseFileSystem(dirname, fs, window);
-        filesAndDirsSeq[i].SetAsDirectory() = new Directory(fs, basename);
+        RefPtr<Directory> directory = new Directory(fs, basename);
+        directory->SetContentFilters(NS_LITERAL_STRING("filter-out-sensitive"));
+        filesAndDirsSeq[i].SetAsDirectory() = directory;
       } else {
         filesAndDirsSeq[i].SetAsFile() = mFiles->Item(i);
       }
