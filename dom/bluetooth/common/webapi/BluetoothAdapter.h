@@ -12,6 +12,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BluetoothAdapterBinding.h"
 #include "mozilla/dom/BluetoothDeviceEvent.h"
+#include "mozilla/dom/BluetoothMapParametersBinding.h"
 #include "mozilla/dom/BluetoothPbapParametersBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
@@ -95,6 +96,12 @@ public:
   IMPL_EVENT_HANDLER(pullvcardlistingreq);
   IMPL_EVENT_HANDLER(requestmediaplaystatus);
   IMPL_EVENT_HANDLER(scostatuschanged);
+  IMPL_EVENT_HANDLER(mapfolderlistingreq);
+  IMPL_EVENT_HANDLER(mapmessageslistingreq);
+  IMPL_EVENT_HANDLER(mapgetmessagereq);
+  IMPL_EVENT_HANDLER(mapsetmessagestatusreq);
+  IMPL_EVENT_HANDLER(mapsendmessagereq);
+  IMPL_EVENT_HANDLER(mapmessageupdatereq);
 
   /****************************************************************************
    * Methods (Web API Implementation)
@@ -341,6 +348,84 @@ private:
    *                    'vCardSelector_OR' or 'vCardSelector_AND'.
    */
   Sequence<vCardProperties> getVCardProperties(const BluetoothValue &aValue);
+
+   /**
+   * Handle "MapFolderListing" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the MAP request.
+   *                    The array should contain a few properties:
+   *                    - uint32_t  'MaxListCount'
+   *                    - uint32_t  'ListStartOffset'
+   */
+  void HandleMapFolderListing(const BluetoothValue& aValue);
+
+  /**
+   * Handle "MapMessageListing" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the MAP request.
+   *                    The array should contain a few properties:
+   *                    - uint32_t  'MaxListCount'
+   *                    - uint32_t  'ListStartOffset'
+   *                    - uint32_t  'SubjectLength'
+   *                    - uint32_t  'ParameterMask'
+   *                    - uint32_t  'FilterMessageType'
+   *                    - nsString  'FilterPeriodBegin'
+   *                    - nsString  'FilterPeriodEnd'
+   *                    - uint32_t  'FilterReadStatus'
+   *                    - nsString  'FilterRecipient'
+   *                    - nsString  'FilterOriginator'
+   *                    - uint32_t  'FilterPriority'
+   */
+  void HandleMapMessagesListing(const BluetoothValue& aValue);
+
+  /**
+   * Handle "MapGetMessage" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the MAP request.
+   *                    The array should contain a few properties:
+   *                    - bool       'Attachment'
+   *                    - nsString   'Charset'
+   */
+  void HandleMapGetMessage(const BluetoothValue& aValue);
+
+  /**
+   * Handle "MapSetMessageStatus" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the scanned device.
+   *                    The array should contain a few properties:
+   *                    - long       'HandleId'
+   *                    - uint32_t   'StatusIndicator'
+   *                    - bool       'StatusValue'
+   */
+  void HandleMapSetMessageStatus(const BluetoothValue& aValue);
+
+  /**
+   * Handle "MapSendMessage" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the scanned device.
+   *                    The array should contain a few properties:
+   *                    - nsString    'Recipient'
+   *                    - nsString    'MessageBody'
+   *                    - uint32_t    'Retry'
+   */
+  void HandleMapSendMessage(const BluetoothValue& aValue);
+
+  /**
+   * Handle "MapMessageUpdate" bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the scanned device.
+   *                    - nsString     'MASInstanceID'
+   */
+  void HandleMapMessageUpdate(const BluetoothValue& aValue);
+
+  /**
+   * Get a Sequence of ParameterMask from a BluetoothValue. The name of
+   * BluetoothValue must be parameterMask.
+   *
+   * @param aValue [in] a BluetoothValue with 'TArrayOfuint32_t' type
+   *                    The name of BluetoothValue must be 'parameterMask'.
+   */
+  Sequence<ParameterMask> GetParameterMask(const BluetoothValue &aValue);
 
   /**
    * Fire BluetoothAttributeEvent to trigger onattributechanged event handler.

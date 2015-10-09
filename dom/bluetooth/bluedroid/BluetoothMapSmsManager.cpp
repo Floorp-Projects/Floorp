@@ -13,12 +13,18 @@
 #include "BluetoothUuid.h"
 #include "ObexBase.h"
 
+#include "mozilla/dom/BluetoothMapParametersBinding.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+
+#define FILTER_NO_SMS_GSM   0x01
+#define FILTER_NO_SMS_CDMA  0x02
+#define FILTER_NO_EMAIL     0x04
+#define FILTER_NO_MMS       0x08
 
 USING_BLUETOOTH_NAMESPACE
 using namespace mozilla;
@@ -711,7 +717,8 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
       // convert big endian to little endian
       maxListCount = (maxListCount >> 8) | (maxListCount << 8);
       BT_LOGR("max list count: %d", maxListCount);
-      AppendNamedValue(aValues, "maxListCount", maxListCount);
+      AppendNamedValue(aValues, "maxListCount",
+                       static_cast<uint32_t>(maxListCount));
       break;
     }
     case Map::AppParametersTagId::StartOffset: {
@@ -719,13 +726,14 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
       // convert big endian to little endian
       startOffset = (startOffset >> 8) | (startOffset << 8);
       BT_LOGR("start offset : %d", startOffset);
-      AppendNamedValue(aValues, "startOffset", startOffset);
+      AppendNamedValue(aValues, "startOffset",
+                       static_cast<uint32_t>(startOffset));
       break;
     }
     case Map::AppParametersTagId::SubjectLength: {
       uint8_t subLength = *((uint8_t *)buf);
       BT_LOGR("msg subLength : %d", subLength);
-      AppendNamedValue(aValues, "subLength", subLength);
+      AppendNamedValue(aValues, "subLength", static_cast<uint32_t>(subLength));
       break;
     }
     case Map::AppParametersTagId::ParameterMask: {
@@ -740,43 +748,81 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
       break;
     }
     case Map::AppParametersTagId::FilterMessageType: {
-      uint8_t filterMessageType = *((uint8_t *)buf);
+      /* Follow MAP 1.2, 6.3.1
+       * 0000xxx1 = "SMS_GSM"
+       * 0000xx1x = "SMS_CDMA"
+       * 0000x1xx = "EMAIL"
+       * 00001xxx = "MMS"
+       * Where
+       * 0 = "no filtering, get this type"
+       * 1 = "filter out this type"
+       */
+      uint32_t filterMessageType = *((uint8_t *)buf);
+
+      if (filterMessageType == (FILTER_NO_EMAIL | FILTER_NO_MMS |
+                                FILTER_NO_SMS_GSM) ||
+          filterMessageType == (FILTER_NO_EMAIL | FILTER_NO_MMS |
+                                FILTER_NO_SMS_CDMA)) {
+        filterMessageType = static_cast<uint32_t>(MessageType::Sms);
+      } else if (filterMessageType == (FILTER_NO_EMAIL | FILTER_NO_SMS_GSM |
+                                       FILTER_NO_SMS_CDMA)) {
+        filterMessageType = static_cast<uint32_t>(MessageType::Mms);
+      } else if (filterMessageType == (FILTER_NO_MMS | FILTER_NO_SMS_GSM |
+                                          FILTER_NO_SMS_CDMA)) {
+        filterMessageType = static_cast<uint32_t>(MessageType::Email);
+      } else {
+        BT_LOGR("Unsupportted filter message type");
+        filterMessageType = static_cast<uint32_t>(MessageType::Sms);
+      }
+
       BT_LOGR("msg filterMessageType : %d", filterMessageType);
-      AppendNamedValue(aValues, "filterMessageType", filterMessageType);
+      AppendNamedValue(aValues, "filterMessageType",
+                       static_cast<uint32_t>(filterMessageType));
       break;
     }
     case Map::AppParametersTagId::FilterPeriodBegin: {
       nsCString filterPeriodBegin((char *) buf);
       BT_LOGR("msg FilterPeriodBegin : %s", filterPeriodBegin.get());
-      AppendNamedValue(aValues, "filterPeriodBegin", filterPeriodBegin);
+      AppendNamedValue(aValues, "filterPeriodBegin",
+                       NS_ConvertUTF8toUTF16(filterPeriodBegin));
       break;
     }
     case Map::AppParametersTagId::FilterPeriodEnd: {
       nsCString filterPeriodEnd((char*)buf);
       BT_LOGR("msg filterPeriodEnd : %s", filterPeriodEnd.get());
-      AppendNamedValue(aValues, "filterPeriodEnd", filterPeriodEnd);
+      AppendNamedValue(aValues, "filterPeriodEnd",
+                       NS_ConvertUTF8toUTF16(filterPeriodEnd));
       break;
     }
     case Map::AppParametersTagId::FilterReadStatus: {
-      uint8_t filterReadStatus = *((uint8_t *)buf);
+      using namespace mozilla::dom::ReadStatusValues;
+      uint32_t filterReadStatus =
+        buf[0] < ArrayLength(strings) ? static_cast<uint32_t>(buf[0]) : 0;
       BT_LOGR("msg filter read status : %d", filterReadStatus);
       AppendNamedValue(aValues, "filterReadStatus", filterReadStatus);
       break;
     }
     case Map::AppParametersTagId::FilterRecipient: {
+      // FilterRecipient encodes as UTF-8
       nsCString filterRecipient((char*) buf);
       BT_LOGR("msg filterRecipient : %s", filterRecipient.get());
-      AppendNamedValue(aValues, "filterRecipient", filterRecipient);
+      AppendNamedValue(aValues, "filterRecipient",
+                       NS_ConvertUTF8toUTF16(filterRecipient));
       break;
     }
     case Map::AppParametersTagId::FilterOriginator: {
+      // FilterOriginator encodes as UTF-8
       nsCString filterOriginator((char*) buf);
       BT_LOGR("msg filter Originator : %s", filterOriginator.get());
-      AppendNamedValue(aValues, "filterOriginator", filterOriginator);
+      AppendNamedValue(aValues, "filterOriginator",
+                       NS_ConvertUTF8toUTF16(filterOriginator));
       break;
     }
     case Map::AppParametersTagId::FilterPriority: {
-      uint8_t filterPriority = *((uint8_t *)buf);
+      using namespace mozilla::dom::PriorityValues;
+      uint32_t filterPriority =
+        buf[0] < ArrayLength(strings) ? static_cast<uint32_t>(buf[0]) : 0;
+
       BT_LOGR("msg filter priority: %d", filterPriority);
       AppendNamedValue(aValues, "filterPriority", filterPriority);
       break;
@@ -784,20 +830,25 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     case Map::AppParametersTagId::Attachment: {
       uint8_t attachment = *((uint8_t *)buf);
       BT_LOGR("msg filter attachment: %d", attachment);
-      AppendNamedValue(aValues, "attachment", attachment);
+      AppendNamedValue(aValues, "attachment", static_cast<uint32_t>(attachment));
       break;
     }
     case Map::AppParametersTagId::Charset: {
-      uint8_t charset = *((uint8_t *)buf);
-      BT_LOGR("msg filter charset: %d", charset);
-      AppendNamedValue(aValues, "charset", charset);
+      using namespace mozilla::dom::FilterCharsetValues;
+      uint32_t filterCharset =
+        buf[0] < ArrayLength(strings) ? static_cast<uint32_t>(buf[0]) : 0;
+
+      BT_LOGR("msg filter charset: %d", filterCharset);
+      AppendNamedValue(aValues, "charset", filterCharset);
       break;
     }
     case Map::AppParametersTagId::StatusIndicator: {
-      uint8_t statusIndicator = *((uint8_t *)buf);
-      BT_LOGR("msg filter statusIndicator: %d", statusIndicator);
-      AppendNamedValue(aValues, "statusIndicator",
-                       static_cast<uint32_t>(statusIndicator));
+      using namespace mozilla::dom::StatusIndicatorsValues;
+      uint32_t filterStatusIndicator =
+        buf[0] < ArrayLength(strings) ? static_cast<uint32_t>(buf[0]) : 0;
+
+      BT_LOGR("msg filter statusIndicator: %d", filterStatusIndicator);
+      AppendNamedValue(aValues, "statusIndicator", filterStatusIndicator);
       break;
     }
     case Map::AppParametersTagId::StatusValue: {
