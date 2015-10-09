@@ -6,4 +6,4 @@ if (!('oomAfterAllocations' in this))
 var g = newGlobal();
 x = Debugger(g);
 selectforgc(g);
-oomAfterAllocations(0);
+oomAfterAllocations(1);
