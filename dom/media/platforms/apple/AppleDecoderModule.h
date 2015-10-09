@@ -39,6 +39,8 @@ public:
 
   static void Init();
 
+  static bool sCanUseHardwareVideoDecoder;
+
 private:
   static bool sInitialized;
   static bool sIsVTAvailable;
