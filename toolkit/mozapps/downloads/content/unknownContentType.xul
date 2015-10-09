@@ -90,9 +90,9 @@
       
       <separator/>
 #ifdef XP_UNIX
-      <description id="settingsChange" hidden="true">&settingsChangePreferences.label;</description>
+      <description id="settingsChange" style="visibility: hidden;">&settingsChangePreferences.label;</description>
 #else
-      <description id="settingsChange" hidden="true">&settingsChangeOptions.label;</description>
+      <description id="settingsChange" style="visibility: hidden;">&settingsChangeOptions.label;</description>
 #endif
       <separator class="thin"/>
     </groupbox>
