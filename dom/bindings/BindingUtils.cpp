@@ -185,8 +185,8 @@ void
 ErrorResult::SerializeMessage(IPC::Message* aMsg) const
 {
   using namespace IPC;
+  MOZ_ASSERT(mUnionState == HasMessage);
   MOZ_ASSERT(mMessage);
-  MOZ_ASSERT(mHasMessage);
   WriteParam(aMsg, mMessage->mArgs);
   WriteParam(aMsg, mMessage->mErrorNumber);
 }
@@ -204,11 +204,11 @@ ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
     return false;
   }
 
-  MOZ_ASSERT(!mHasMessage);
+  MOZ_ASSERT(mUnionState == HasNothing);
   mMessage = readMessage.forget();
 #ifdef DEBUG
-  mHasMessage = true;
-#endif
+  mUnionState = HasMessage;
+#endif // DEBUG
   return true;
 }
 
@@ -216,7 +216,7 @@ void
 ErrorResult::ReportErrorWithMessage(JSContext* aCx)
 {
   MOZ_ASSERT(mMessage, "ReportErrorWithMessage() can be called only once");
-  MOZ_ASSERT(mHasMessage);
+  MOZ_ASSERT(mUnionState == HasMessage);
 
   Message* message = mMessage;
   MOZ_RELEASE_ASSERT(message->HasCorrectNumberOfArguments());
@@ -241,8 +241,8 @@ ErrorResult::ClearMessage()
   delete mMessage;
   mMessage = nullptr;
 #ifdef DEBUG
-  mHasMessage = false;
-#endif
+  mUnionState = HasNothing;
+#endif // DEBUG
 }
 
 void
@@ -264,6 +264,9 @@ ErrorResult::ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn)
   } else {
     mJSException = exn;
     mResult = NS_ERROR_DOM_JS_EXCEPTION;
+#ifdef DEBUG
+    mUnionState = HasJSException;
+#endif // DEBUG
   }
 }
 
@@ -272,6 +275,7 @@ ErrorResult::ReportJSException(JSContext* cx)
 {
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
              "Why didn't you tell us you planned to handle JS exceptions?");
+  MOZ_ASSERT(mUnionState == HasJSException);
 
   JS::Rooted<JS::Value> exception(cx, mJSException);
   if (JS_WrapValue(cx, &exception)) {
@@ -285,6 +289,9 @@ ErrorResult::ReportJSException(JSContext* cx)
   // We no longer have a useful exception but we do want to signal that an error
   // occured.
   mResult = NS_ERROR_FAILURE;
+#ifdef DEBUG
+  mUnionState = HasNothing;
+#endif // DEBUG
 }
 
 void
@@ -294,10 +301,14 @@ ErrorResult::StealJSException(JSContext* cx,
   MOZ_ASSERT(!mMightHaveUnreportedJSException,
              "Must call WouldReportJSException unconditionally in all codepaths that might call StealJSException");
   MOZ_ASSERT(IsJSException(), "No exception to steal");
+  MOZ_ASSERT(mUnionState == HasJSException);
 
   value.set(mJSException);
   js::RemoveRawValueRoot(cx, &mJSException);
   mResult = NS_OK;
+#ifdef DEBUG
+  mUnionState = HasNothing;
+#endif // DEBUG
 }
 
 struct ErrorResult::DOMExceptionInfo {
@@ -315,7 +326,7 @@ ErrorResult::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
 {
   using namespace IPC;
   MOZ_ASSERT(mDOMExceptionInfo);
-  MOZ_ASSERT(mHasDOMExceptionInfo);
+  MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
   WriteParam(aMsg, mDOMExceptionInfo->mMessage);
   WriteParam(aMsg, mDOMExceptionInfo->mRv);
 }
@@ -331,12 +342,12 @@ ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, void** aIter)
     return false;
   }
 
-  MOZ_ASSERT(!mHasDOMExceptionInfo);
+  MOZ_ASSERT(mUnionState == HasNothing);
   MOZ_ASSERT(IsDOMException());
   mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
 #ifdef DEBUG
-  mHasDOMExceptionInfo = true;
-#endif
+  mUnionState = HasDOMExceptionInfo;
+#endif // DEBUG
   return true;
 }
 
@@ -348,7 +359,7 @@ ErrorResult::ThrowDOMException(nsresult rv, const nsACString& message)
   mResult = NS_ERROR_DOM_DOMEXCEPTION;
   mDOMExceptionInfo = new DOMExceptionInfo(rv, message);
 #ifdef DEBUG
-  mHasDOMExceptionInfo = true;
+  mUnionState = HasDOMExceptionInfo;
 #endif
 }
 
@@ -356,7 +367,7 @@ void
 ErrorResult::ReportDOMException(JSContext* cx)
 {
   MOZ_ASSERT(mDOMExceptionInfo, "ReportDOMException() can be called only once");
-  MOZ_ASSERT(mHasDOMExceptionInfo);
+  MOZ_ASSERT(mUnionState == HasDOMExceptionInfo);
 
   dom::Throw(cx, mDOMExceptionInfo->mRv, mDOMExceptionInfo->mMessage);
 
@@ -367,12 +378,12 @@ void
 ErrorResult::ClearDOMExceptionInfo()
 {
   MOZ_ASSERT(IsDOMException());
-  MOZ_ASSERT(mHasDOMExceptionInfo || !mDOMExceptionInfo);
+  MOZ_ASSERT(mUnionState == HasDOMExceptionInfo || !mDOMExceptionInfo);
   delete mDOMExceptionInfo;
   mDOMExceptionInfo = nullptr;
 #ifdef DEBUG
-  mHasDOMExceptionInfo = false;
-#endif
+  mUnionState = HasNothing;
+#endif // DEBUG
 }
 
 void
@@ -383,6 +394,9 @@ ErrorResult::ClearUnionData()
     MOZ_ASSERT(cx);
     mJSException.setUndefined();
     js::RemoveRawValueRoot(cx, &mJSException);
+#ifdef DEBUG
+    mUnionState = HasNothing;
+#endif // DEBUG
   } else if (IsErrorWithMessage()) {
     ClearMessage();
   } else if (IsDOMException()) {
@@ -413,10 +427,6 @@ ErrorResult::operator=(ErrorResult&& aRHS)
   if (aRHS.IsErrorWithMessage()) {
     mMessage = aRHS.mMessage;
     aRHS.mMessage = nullptr;
-#ifdef DEBUG
-    mHasMessage = aRHS.mHasMessage;
-    aRHS.mHasMessage = false;
-#endif
   } else if (aRHS.IsJSException()) {
     JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
     MOZ_ASSERT(cx);
@@ -430,18 +440,16 @@ ErrorResult::operator=(ErrorResult&& aRHS)
   } else if (aRHS.IsDOMException()) {
     mDOMExceptionInfo = aRHS.mDOMExceptionInfo;
     aRHS.mDOMExceptionInfo = nullptr;
-#ifdef DEBUG
-    mHasDOMExceptionInfo = aRHS.mHasDOMExceptionInfo;
-    aRHS.mHasDOMExceptionInfo = false;
-#endif // DEBUG
   } else {
     // Null out the union on both sides for hygiene purposes.
     mMessage = aRHS.mMessage = nullptr;
-#ifdef DEBUG
-    mHasMessage = aRHS.mHasMessage = false;
-    mHasDOMExceptionInfo = aRHS.mHasDOMExceptionInfo = false;
-#endif
   }
+
+#ifdef DEBUG
+  mUnionState = aRHS.mUnionState;
+  aRHS.mUnionState = HasNothing;
+#endif // DEBUG
+
   // Note: It's important to do this last, since this affects the condition
   // checks above!
   mResult = aRHS.mResult;
