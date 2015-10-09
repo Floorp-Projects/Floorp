@@ -1162,12 +1162,13 @@ GetInitialHeap(NewObjectKind newKind, const Class* clasp)
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.
 extern JSObject*
-CreateThisForFunctionWithProto(JSContext* cx, js::HandleObject callee, HandleObject proto,
-                               NewObjectKind newKind = GenericObject);
+CreateThisForFunctionWithProto(JSContext* cx, js::HandleObject callee, HandleObject newTarget,
+                               HandleObject proto, NewObjectKind newKind = GenericObject);
 
 // Specialized call for constructing |this| with a known function callee.
 extern JSObject*
-CreateThisForFunction(JSContext* cx, js::HandleObject callee, NewObjectKind newKind);
+CreateThisForFunction(JSContext* cx, js::HandleObject callee, js::HandleObject newTarget,
+                      NewObjectKind newKind);
 
 // Generic call for constructing |this|.
 extern JSObject*

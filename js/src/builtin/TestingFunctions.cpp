@@ -868,7 +868,7 @@ SetSavedStacksRNGState(JSContext* cx, unsigned argc, Value* vp)
     if (!ToInt32(cx, args[0], &seed))
         return false;
 
-    cx->compartment()->savedStacks().setRNGState((seed ^ RNG_MULTIPLIER) & RNG_MASK);
+    cx->compartment()->savedStacks().setRNGState(seed, seed * 33);
     return true;
 }
 

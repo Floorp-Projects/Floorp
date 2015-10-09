@@ -125,6 +125,7 @@ js::StackUses(JSScript* script, jsbytecode* pc)
       case JSOP_POPN:
         return GET_UINT16(pc);
       case JSOP_NEW:
+      case JSOP_SUPERCALL:
         return 2 + GET_ARGC(pc) + 1;
       default:
         /* stack: fun, this, [argc arguments] */
