@@ -11,7 +11,7 @@ module.metadata = {
 // NOTE: This file should only export Tab instances
 
 
-const { getTabForContentWindow, getTabForBrowser: getRawTabForBrowser } = require('./utils');
+const { getTabForBrowser: getRawTabForBrowser } = require('./utils');
 const { modelFor } = require('../model/core');
 
 exports.getTabForRawTab = modelFor;
