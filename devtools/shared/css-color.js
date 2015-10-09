@@ -92,6 +92,20 @@ CssColor.prototype = {
     this._colorUnit = unit;
   },
 
+  /**
+   * If the current color unit pref is "authored", then set the
+   * default color unit from the given color.  Otherwise, leave the
+   * color unit untouched.
+   *
+   * @param {String} color The color to use
+   */
+  setAuthoredUnitFromColor: function(color) {
+    if (Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
+        CssColor.COLORUNIT.authored) {
+      this._colorUnit = classifyColor(color);
+    }
+  },
+
   get hasAlpha() {
     if (!this.valid) {
       return false;
