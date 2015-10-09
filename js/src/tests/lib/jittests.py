@@ -9,10 +9,16 @@
 from __future__ import print_function
 import os, posixpath, sys, tempfile, traceback, time
 import subprocess
+from collections import namedtuple
 from subprocess import Popen, PIPE
 from threading import Thread
 import signal
 import StringIO
+
+if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+    from tasks_unix import run_all_tests
+else:
+    from tasks_win import run_all_tests
 
 try:
     from multiprocessing import Process, Manager, cpu_count
@@ -121,6 +127,9 @@ class JitTest:
         self.expect_error = '' # Errors to expect and consider passing
         self.expect_status = 0 # Exit status to expect from shell
 
+        # Expected by the test runner. Always true for jit-tests.
+        self.enable = True
+
     def copy(self):
         t = JitTest(self.path)
         t.jitflags = self.jitflags[:]
@@ -135,6 +144,7 @@ class JitTest:
         t.test_join = self.test_join
         t.expect_error = self.expect_error
         t.expect_status = self.expect_status
+        t.enable = True
         return t
 
     def copy_and_extend_jitflags(self, variant):
@@ -260,6 +270,13 @@ class JitTest:
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
         return cmd
+
+    # The test runner expects this to be set to give to get_command.
+    js_cmd_prefix = None
+    def get_command(self, prefix):
+        """Shim for the test runner."""
+        return self.command(prefix, LIB_DIR)
+
 
 def find_tests(substring=None):
     ans = []
@@ -762,9 +779,21 @@ def get_serial_results(tests, prefix, options):
             yield run_test(test, prefix, options)
 
 def run_tests(tests, prefix, options):
+    # The jstests tasks runner requires the following options. The names are
+    # taken from the jstests options processing code, which are frequently
+    # subtly different from the options jit-tests expects. As such, we wrap
+    # them here, as needed.
+    AdaptorOptions = namedtuple("AdaptorOptions", ["worker_count",
+        "passthrough", "timeout", "output_fp", "hide_progress", "run_skipped"])
+    shim_options = AdaptorOptions(options.max_jobs, False, options.timeout,
+                                  sys.stdout, False, True)
+
+    # The test runner wants the prefix as a static on the Test class.
+    JitTest.js_cmd_prefix = prefix
+
     num_tests = len(tests) * options.repeat
     pb = create_progressbar(num_tests, options)
-    gen = get_serial_results(tests, prefix, options)
+    gen = run_all_tests(tests, prefix, pb, shim_options)
     ok = process_test_results(gen, num_tests, pb, options)
     return ok
 
