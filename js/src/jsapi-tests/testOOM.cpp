@@ -70,6 +70,8 @@ uint32_t oomAfter;
 void
 setOOMAfter(uint32_t numAllocs)
 {
+    if (uint64_t(OOM_counter) + numAllocs >= UINT32_MAX)
+	MOZ_CRASH("Can't set maxAllocations - out of range");
     OOM_maxAllocations = OOM_counter + numAllocs;
 }
 
