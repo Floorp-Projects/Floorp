@@ -4,6 +4,7 @@
 # metadata, and know how to run the tests and determine failures.
 
 import datetime, os, sys, time
+from contextlib import contextmanager
 from subprocess import Popen, PIPE
 from threading import Thread
 
@@ -44,6 +45,54 @@ def get_jitflags(variant, **kwargs):
     if variant == 'none' and 'none' in kwargs:
         return kwargs['none']
     return JITFLAGS[variant]
+
+
+def get_environment_overlay(js_shell):
+    """
+    Build a dict of additional environment variables that must be set to run
+    tests successfully.
+    """
+    env = {
+        # Force Pacific time zone to avoid failures in Date tests.
+        'TZ': 'PST8PDT',
+        # Force date strings to English.
+        'LC_TIME': 'en_US.UTF-8',
+    }
+    # Add the binary's directory to the library search path so that we find the
+    # nspr and icu we built, instead of the platform supplied ones (or none at
+    # all on windows).
+    if sys.platform.startswith('linux'):
+        env['LD_LIBRARY_PATH'] = os.path.dirname(js_shell)
+    elif sys.platform.startswith('darwin'):
+        env['DYLD_LIBRARY_PATH'] = os.path.dirname(js_shell)
+    elif sys.platform.startswith('win'):
+        env['PATH'] = os.path.dirname(js_shell)
+    return env
+
+
+@contextmanager
+def change_env(env_overlay):
+    # Apply the overlaid environment and record the current state.
+    prior_env = {}
+    for key, val in env_overlay.items():
+        prior_env[key] = os.environ.get(key, None)
+        if 'PATH' in key and key in os.environ:
+            os.environ[key] = '{}{}{}'.format(val, os.pathsep, os.environ[key])
+        else:
+            os.environ[key] = val
+
+    try:
+        # Execute with the new environment.
+        yield
+
+    finally:
+        # Restore the prior environment.
+        for key, val in prior_env.items():
+            if val is not None:
+                os.environ[key] = val
+            else:
+                del os.environ[key]
+
 
 class RefTest(object):
     """A runnable test."""
