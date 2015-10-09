@@ -1490,14 +1490,15 @@ nsWindow::GetClientBounds(nsIntRect &aRect)
     return NS_OK;
 }
 
-nsIntPoint
-nsWindow::GetClientOffset()
+void
+nsWindow::UpdateClientOffset()
 {
-    PROFILER_LABEL("nsWindow", "GetClientOffset", js::ProfileEntry::Category::GRAPHICS);
+    PROFILER_LABEL("nsWindow", "UpdateClientOffset", js::ProfileEntry::Category::GRAPHICS);
 
     if (!mIsTopLevel || !mShell || !mGdkWindow ||
         gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
-        return nsIntPoint(0, 0);
+        mClientOffset = nsIntPoint(0, 0);
+        return;
     }
 
     GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
@@ -1518,8 +1519,8 @@ nsWindow::GetClientOffset()
                           &length_returned,
                           (guchar **) &frame_extents) ||
         length_returned/sizeof(glong) != 4) {
-
-        return nsIntPoint(0, 0);
+        mClientOffset = nsIntPoint(0, 0);
+        return;
     }
 
     // data returned is in the order left, right, top, bottom
@@ -1528,7 +1529,29 @@ nsWindow::GetClientOffset()
 
     g_free(frame_extents);
 
-    return nsIntPoint(left, top);
+    mClientOffset = nsIntPoint(left, top);
+}
+
+nsIntPoint
+nsWindow::GetClientOffset()
+{
+    return mClientOffset;
+}
+
+gboolean
+nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget, GdkEventProperty* aEvent)
+
+{
+  if (aEvent->atom == gdk_atom_intern("_NET_FRAME_EXTENTS", FALSE)) {
+    UpdateClientOffset();
+    return FALSE;
+  }
+
+  if (GetCurrentTimeGetter()->PropertyNotifyHandler(aWidget, aEvent)) {
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 NS_IMETHODIMP
@@ -5747,8 +5770,7 @@ property_notify_event_cb(GtkWidget* aWidget, GdkEventProperty* aEvent)
     if (!window)
         return FALSE;
 
-    CurrentX11TimeGetter* currentTimeGetter = window->GetCurrentTimeGetter();
-    return currentTimeGetter->PropertyNotifyHandler(aWidget, aEvent);
+    return window->OnPropertyNotifyEvent(aWidget, aEvent);
 }
 
 static gboolean
