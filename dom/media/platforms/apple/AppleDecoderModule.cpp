@@ -44,6 +44,9 @@ AppleDecoderModule::Init()
 
   Preferences::AddBoolVarCache(&sForceVDA, "media.apple.forcevda", false);
 
+  // Ensure IOSurface framework is loaded.
+  MacIOSurfaceLib::LoadLibrary();
+
   // dlopen VideoDecodeAcceleration.framework if it's available.
   sIsVDAAvailable = AppleVDALinker::Link();
 
