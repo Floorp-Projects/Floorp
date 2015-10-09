@@ -917,7 +917,8 @@ class NativeObject : public JSObject
         return true;
     }
 
-    static uint32_t goodElementsAllocationAmount(uint32_t n, uint32_t length);
+    static bool goodElementsAllocationAmount(ExclusiveContext* cx, uint32_t reqAllocated,
+                                             uint32_t length, uint32_t* goodAmount);
     bool growElements(ExclusiveContext* cx, uint32_t newcap);
     void shrinkElements(ExclusiveContext* cx, uint32_t cap);
     void setDynamicElements(ObjectElements* header) {

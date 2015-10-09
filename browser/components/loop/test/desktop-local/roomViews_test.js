@@ -162,7 +162,7 @@ describe("loop.roomViews", function () {
       view = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(view,
-        loop.conversationViews.FailureInfoView);
+        loop.roomViews.FailureInfoView);
     });
 
     it("should dispatch a JoinRoom action when the rejoin call button is pressed", function() {

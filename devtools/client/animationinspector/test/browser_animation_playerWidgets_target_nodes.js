@@ -23,7 +23,7 @@ add_task(function*() {
   is(targetNodeComponent.el.textContent, "div#.ball.animated",
     "The target element's content is correct");
 
-  let selectorEl = targetNodeComponent.el.querySelector(".node-selector");
-  ok(selectorEl,
-    "The icon to select the target element in the inspector exists");
+  let highlighterEl = targetNodeComponent.el.querySelector(".node-highlighter");
+  ok(highlighterEl,
+    "The icon to highlight the target element in the page exists");
 });

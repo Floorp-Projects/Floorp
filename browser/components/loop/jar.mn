@@ -11,13 +11,11 @@ browser.jar:
   content/browser/loop/libs/l10n.js                 (content/libs/l10n.js)
 
   # Desktop script
-  content/browser/loop/js/client.js                 (content/js/client.js)
   content/browser/loop/js/conversation.js           (content/js/conversation.js)
   content/browser/loop/js/conversationAppStore.js   (content/js/conversationAppStore.js)
   content/browser/loop/js/otconfig.js               (content/js/otconfig.js)
   content/browser/loop/js/panel.js                  (content/js/panel.js)
   content/browser/loop/js/contacts.js               (content/js/contacts.js)
-  content/browser/loop/js/conversationViews.js      (content/js/conversationViews.js)
   content/browser/loop/js/roomStore.js              (content/js/roomStore.js)
   content/browser/loop/js/roomViews.js              (content/js/roomViews.js)
   content/browser/loop/js/feedbackViews.js          (content/js/feedbackViews.js)
@@ -43,18 +41,12 @@ browser.jar:
   content/browser/loop/shared/img/sad_hello_icon_64x64.svg      (content/shared/img/sad_hello_icon_64x64.svg)
   content/browser/loop/shared/img/chatbubble-arrow-left.svg     (content/shared/img/chatbubble-arrow-left.svg)
   content/browser/loop/shared/img/chatbubble-arrow-right.svg    (content/shared/img/chatbubble-arrow-right.svg)
-  content/browser/loop/shared/img/audio-inverse-14x14.png       (content/shared/img/audio-inverse-14x14.png)
-  content/browser/loop/shared/img/audio-inverse-14x14@2x.png    (content/shared/img/audio-inverse-14x14@2x.png)
   content/browser/loop/shared/img/facemute-14x14.png            (content/shared/img/facemute-14x14.png)
   content/browser/loop/shared/img/facemute-14x14@2x.png         (content/shared/img/facemute-14x14@2x.png)
   content/browser/loop/shared/img/hangup-inverse-14x14.png      (content/shared/img/hangup-inverse-14x14.png)
   content/browser/loop/shared/img/hangup-inverse-14x14@2x.png   (content/shared/img/hangup-inverse-14x14@2x.png)
   content/browser/loop/shared/img/mute-inverse-14x14.png        (content/shared/img/mute-inverse-14x14.png)
   content/browser/loop/shared/img/mute-inverse-14x14@2x.png     (content/shared/img/mute-inverse-14x14@2x.png)
-  content/browser/loop/shared/img/video-inverse-14x14.png       (content/shared/img/video-inverse-14x14.png)
-  content/browser/loop/shared/img/video-inverse-14x14@2x.png    (content/shared/img/video-inverse-14x14@2x.png)
-  content/browser/loop/shared/img/dropdown-inverse.png          (content/shared/img/dropdown-inverse.png)
-  content/browser/loop/shared/img/dropdown-inverse@2x.png       (content/shared/img/dropdown-inverse@2x.png)
   content/browser/loop/shared/img/svg/glyph-email-16x16.svg     (content/shared/img/svg/glyph-email-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-facebook-16x16.svg  (content/shared/img/svg/glyph-facebook-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-help-16x16.svg      (content/shared/img/svg/glyph-help-16x16.svg)
@@ -103,7 +95,6 @@ browser.jar:
 
   # Shared scripts
   content/browser/loop/shared/js/actions.js             (content/shared/js/actions.js)
-  content/browser/loop/shared/js/conversationStore.js   (content/shared/js/conversationStore.js)
   content/browser/loop/shared/js/store.js               (content/shared/js/store.js)
   content/browser/loop/shared/js/activeRoomStore.js     (content/shared/js/activeRoomStore.js)
   content/browser/loop/shared/js/dispatcher.js          (content/shared/js/dispatcher.js)
@@ -117,7 +108,6 @@ browser.jar:
   content/browser/loop/shared/js/urlRegExps.js          (content/shared/js/urlRegExps.js)
   content/browser/loop/shared/js/utils.js               (content/shared/js/utils.js)
   content/browser/loop/shared/js/validate.js            (content/shared/js/validate.js)
-  content/browser/loop/shared/js/websocket.js           (content/shared/js/websocket.js)
 
   # Shared libs
 #ifdef DEBUG
