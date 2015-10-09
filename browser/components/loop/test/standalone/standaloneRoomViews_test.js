@@ -886,46 +886,46 @@ describe("loop.standaloneRoomViews", function() {
           return elem.getDOMNode().querySelector(".btn-hangup");
         }
 
-        it("should disable the Leave button when the room state is READY",
+        it("should remove the Leave button when the room state is READY",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
 
-            expect(getLeaveButton(view).disabled).eql(true);
+            expect(getLeaveButton(view)).eql(null);
           });
 
-        it("should disable the Leave button when the room state is FAILED",
+        it("should remove the Leave button when the room state is FAILED",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.FAILED});
 
-            expect(getLeaveButton(view).disabled).eql(true);
+            expect(getLeaveButton(view)).eql(null);
           });
 
-        it("should disable the Leave button when the room state is FULL",
+        it("should remove the Leave button when the room state is FULL",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.FULL});
 
-            expect(getLeaveButton(view).disabled).eql(true);
+            expect(getLeaveButton(view)).eql(null);
           });
 
-        it("should enable the Leave button when the room state is SESSION_CONNECTED",
+        it("should display the Leave button when the room state is SESSION_CONNECTED",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
 
-            expect(getLeaveButton(view).disabled).eql(false);
+            expect(getLeaveButton(view)).not.eql(null);
           });
 
-        it("should enable the Leave button when the room state is JOINED",
+        it("should display the Leave button when the room state is JOINED",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
 
-            expect(getLeaveButton(view).disabled).eql(false);
+            expect(getLeaveButton(view)).not.eql(null);
           });
 
-        it("should enable the Leave button when the room state is HAS_PARTICIPANTS",
+        it("should display the Leave button when the room state is HAS_PARTICIPANTS",
           function() {
             activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
 
-            expect(getLeaveButton(view).disabled).eql(false);
+            expect(getLeaveButton(view)).not.eql(null);
           });
 
         it("should leave the room when clicking the Leave button", function() {
