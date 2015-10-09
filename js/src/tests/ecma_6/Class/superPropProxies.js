@@ -11,7 +11,7 @@ let midStaticHandler = { };
 let getterCalled, setterCalled;
 
 class mid extends new Proxy(base, midStaticHandler) {
-    constructor() { }
+    constructor() { super(); }
     testSuperInProxy() {
         super.prop = "looking";
         assertEq(setterCalled, true);
@@ -21,7 +21,7 @@ class mid extends new Proxy(base, midStaticHandler) {
 }
 
 class child extends mid {
-    constructor() { }
+    constructor() { super(); }
     static testStaticLookups() {
         // This funtion is called more than once.
         this.called = false;
@@ -29,7 +29,6 @@ class child extends mid {
         assertEq(this.called, true);
     }
 }
-
 
 let midInstance = new mid();
 

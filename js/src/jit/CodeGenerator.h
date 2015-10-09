@@ -335,6 +335,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitDebugger(LDebugger* ins);
     void visitNewTarget(LNewTarget* ins);
     void visitArrowNewTarget(LArrowNewTarget* ins);
+    void visitCheckReturn(LCheckReturn* ins);
 
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);

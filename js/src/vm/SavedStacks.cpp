@@ -6,6 +6,7 @@
 
 #include "vm/SavedStacks.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
@@ -904,6 +905,10 @@ SavedFrame::toStringMethod(JSContext* cx, unsigned argc, Value* vp)
 bool
 SavedStacks::init()
 {
+    uint64_t seed[2];
+    random_generateSeed(seed, mozilla::ArrayLength(seed));
+    bernoulli.setRandomState(seed[0], seed[1]);
+
     if (!pcLocationMap.init())
         return false;
 
@@ -1326,16 +1331,20 @@ SavedStacks::getLocation(JSContext* cx, const FrameIter& iter, MutableHandleLoca
 }
 
 void
-SavedStacks::chooseSamplingProbability(JSContext* cx)
+SavedStacks::chooseSamplingProbability(JSCompartment* compartment)
 {
-    GlobalObject::DebuggerVector* dbgs = cx->global()->getDebuggers();
+    GlobalObject* global = compartment->maybeGlobal();
+    if (!global)
+        return;
+
+    GlobalObject::DebuggerVector* dbgs = global->getDebuggers();
     if (!dbgs || dbgs->empty())
         return;
 
     mozilla::DebugOnly<Debugger**> begin = dbgs->begin();
     mozilla::DebugOnly<bool> foundAnyDebuggers = false;
 
-    allocationSamplingProbability = 0;
+    double probability = 0;
     for (Debugger** dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
         // The set of debuggers had better not change while we're iterating,
         // such that the vector gets reallocated.
@@ -1343,11 +1352,13 @@ SavedStacks::chooseSamplingProbability(JSContext* cx)
 
         if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled) {
             foundAnyDebuggers = true;
-            allocationSamplingProbability = std::max((*dbgp)->allocationSamplingProbability,
-                                                     allocationSamplingProbability);
+            probability = std::max((*dbgp)->allocationSamplingProbability,
+                                   probability);
         }
     }
     MOZ_ASSERT(foundAnyDebuggers);
+
+    bernoulli.setProbability(probability);
 }
 
 JSObject*
@@ -1356,39 +1367,8 @@ SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
     RootedObject obj(cx, target);
 
     SavedStacks& stacks = cx->compartment()->savedStacks();
-    if (stacks.allocationSkipCount > 0) {
-        stacks.allocationSkipCount--;
+    if (!stacks.bernoulli.trial())
         return nullptr;
-    }
-
-    stacks.chooseSamplingProbability(cx);
-    if (stacks.allocationSamplingProbability == 0.0)
-        return nullptr;
-
-    // If the sampling probability is set to 1.0, we are always taking a sample
-    // and can therefore leave allocationSkipCount at 0.
-    if (stacks.allocationSamplingProbability != 1.0) {
-        // Rather than generating a random number on every allocation to decide
-        // if we want to sample that particular allocation (which would be
-        // expensive), we calculate the number of allocations to skip before
-        // taking the next sample.
-        //
-        // P = the probability we sample any given event.
-        //
-        // ~P = 1-P, the probability we don't sample a given event.
-        //
-        // (~P)^n = the probability that we skip at least the next n events.
-        //
-        // let X = random between 0 and 1.
-        //
-        // floor(log base ~P of X) = n, aka the number of events we should skip
-        // until we take the next sample. Any value for X less than (~P)^n
-        // yields a skip count greater than n, so the likelihood of a skip count
-        // greater than n is (~P)^n, as required.
-        double notSamplingProb = 1.0 - stacks.allocationSamplingProbability;
-        stacks.allocationSkipCount = std::floor(std::log(random_nextDouble(&stacks.rngState)) /
-                                                std::log(notSamplingProb));
-    }
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     RootedSavedFrame frame(cx);

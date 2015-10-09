@@ -634,7 +634,7 @@ bool OperatorInI(JSContext* cx, uint32_t index, HandleObject obj, bool* out);
 
 bool GetIntrinsicValue(JSContext* cx, HandlePropertyName name, MutableHandleValue rval);
 
-bool CreateThis(JSContext* cx, HandleObject callee, MutableHandleValue rval);
+bool CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHandleValue rval);
 
 void GetDynamicName(JSContext* cx, JSObject* scopeChain, JSString* str, Value* vp);
 
@@ -734,6 +734,8 @@ IonMarkFunction(MIRType type)
 bool ObjectIsCallable(JSObject* obj);
 
 bool ThrowUninitializedLexical(JSContext* cx);
+bool BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);
+bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 
 } // namespace jit
 } // namespace js

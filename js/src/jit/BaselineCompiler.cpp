@@ -1285,6 +1285,30 @@ BaselineCompiler::emit_JSOP_NULL()
     return true;
 }
 
+typedef bool (*ThrowUninitializedThisFn)(JSContext*, BaselineFrame* frame);
+static const VMFunction ThrowUninitializedThisInfo =
+    FunctionInfo<ThrowUninitializedThisFn>(BaselineThrowUninitializedThis);
+
+bool
+BaselineCompiler::emitCheckThis()
+{
+    frame.assertSyncedStack();
+
+    Label thisOK;
+    masm.branchTestMagic(Assembler::NotEqual, frame.addressOfThis(), &thisOK);
+
+    prepareVMCall();
+
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(ThrowUninitializedThisInfo))
+        return false;
+
+    masm.bind(&thisOK);
+    return true;
+}
+
 bool
 BaselineCompiler::emit_JSOP_THIS()
 {
@@ -1297,6 +1321,12 @@ BaselineCompiler::emit_JSOP_THIS()
         masm.loadValue(Address(scratch, FunctionExtended::offsetOfArrowThisSlot()), R0);
         frame.push(R0);
         return true;
+    }
+
+    if (script->isDerivedClassConstructor()) {
+        frame.syncStack(0);
+        if (!emitCheckThis())
+            return false;
     }
 
     // Keep this value in R0
@@ -2873,7 +2903,7 @@ BaselineCompiler::emitCall()
 {
     MOZ_ASSERT(IsCallPC(pc));
 
-    bool construct = JSOp(*pc) == JSOP_NEW;
+    bool construct = JSOp(*pc) == JSOP_NEW || JSOp(*pc) == JSOP_SUPERCALL;
     uint32_t argc = GET_ARGC(pc);
 
     frame.syncStack(0);
@@ -2900,13 +2930,13 @@ BaselineCompiler::emitSpreadCall()
     masm.move32(Imm32(1), R0.scratchReg());
 
     // Call IC
-    ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ JSOp(*pc) == JSOP_SPREADNEW,
+    bool construct = JSOp(*pc) == JSOP_SPREADNEW || JSOp(*pc) == JSOP_SPREADSUPERCALL;
+    ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ construct,
                                            /* isSpread = */ true);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
     // Update FrameInfo.
-    bool construct = JSOp(*pc) == JSOP_SPREADNEW;
     frame.popn(3 + construct);
     frame.push(R0);
     return true;
@@ -2920,6 +2950,12 @@ BaselineCompiler::emit_JSOP_CALL()
 
 bool
 BaselineCompiler::emit_JSOP_NEW()
+{
+    return emitCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SUPERCALL()
 {
     return emitCall();
 }
@@ -2956,6 +2992,12 @@ BaselineCompiler::emit_JSOP_SPREADCALL()
 
 bool
 BaselineCompiler::emit_JSOP_SPREADNEW()
+{
+    return emitSpreadCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_SPREADSUPERCALL()
 {
     return emitSpreadCall();
 }
@@ -3290,6 +3332,10 @@ BaselineCompiler::emit_JSOP_DEBUGGER()
     return true;
 }
 
+typedef bool (*ThrowBadDerivedReturnFn)(JSContext*, HandleValue);
+static const VMFunction ThrowBadDerivedReturnInfo =
+    FunctionInfo<ThrowBadDerivedReturnFn>(jit::ThrowBadDerivedReturn);
+
 typedef bool (*DebugEpilogueFn)(JSContext*, BaselineFrame*, jsbytecode*);
 static const VMFunction DebugEpilogueInfo =
     FunctionInfo<DebugEpilogueFn>(jit::DebugEpilogueOnBaselineReturn);
@@ -3297,6 +3343,29 @@ static const VMFunction DebugEpilogueInfo =
 bool
 BaselineCompiler::emitReturn()
 {
+    if (script->isDerivedClassConstructor()) {
+        frame.syncStack(0);
+
+        Label derivedDone, returnOK;
+        masm.branchTestObject(Assembler::Equal, JSReturnOperand, &derivedDone);
+        masm.branchTestUndefined(Assembler::Equal, JSReturnOperand, &returnOK);
+
+        // This is going to smash JSReturnOperand, but we don't care, because it's
+        // also going to throw unconditionally.
+        prepareVMCall();
+        pushArg(JSReturnOperand);
+        if (!callVM(ThrowBadDerivedReturnInfo))
+            return false;
+        masm.assumeUnreachable("Should throw on bad derived constructor return");
+
+        masm.bind(&returnOK);
+
+        if (!emitCheckThis())
+            return false;
+
+        masm.bind(&derivedDone);
+    }
+
     if (compileDebugInstrumentation_) {
         // Move return value into the frame's rval slot.
         masm.storeValue(JSReturnOperand, frame.addressOfReturnValue());

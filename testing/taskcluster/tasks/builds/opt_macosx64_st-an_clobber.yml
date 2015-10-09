@@ -1,0 +1,23 @@
+$inherits:
+  from: 'tasks/builds/opt_macosx64_clobber.yml'
+  variables:
+    build_name: 'macosx64-st-an'
+task:
+  metadata:
+      name: '[TC] MacOSX64 Static Analysis Opt'
+      description: 'MacOSX64 Static Analysis Opt'
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.macosx64-st-an'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.macosx64-st-an'
+
+  payload:
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'cross-opt'
+      DIST_UPLOADS: ''
+      DIST_TARGET_UPLOADS: ''
+  extra:
+    treeherder:
+      groupSymbol: "?"
+      groupName: Submitted by taskcluster
+      symbol: S

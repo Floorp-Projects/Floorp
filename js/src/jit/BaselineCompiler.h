@@ -201,7 +201,9 @@ namespace jit {
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
     _(JSOP_RETURN)             \
-    _(JSOP_NEWTARGET)
+    _(JSOP_NEWTARGET)          \
+    _(JSOP_SUPERCALL)          \
+    _(JSOP_SPREADSUPERCALL)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {
@@ -305,6 +307,7 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool emitFormalArgAccess(uint32_t arg, bool get);
 
     bool emitUninitializedLexicalCheck(const ValueOperand& val);
+    bool emitCheckThis();
 
     bool addPCMappingEntry(bool addIndexEntry);
 

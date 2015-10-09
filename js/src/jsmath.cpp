@@ -734,15 +734,11 @@ js::math_pow(JSContext* cx, unsigned argc, Value* vp)
     return math_pow_handle(cx, args.get(0), args.get(1), args.rval());
 }
 
-static uint64_t
-random_generateSeed()
+void
+js::random_generateSeed(uint64_t* seedBuffer, size_t length)
 {
-    union {
-        uint8_t     u8[8];
-        uint32_t    u32[2];
-        uint64_t    u64;
-    } seed;
-    seed.u64 = 0;
+    if (length == 0)
+        return;
 
 #if defined(XP_WIN)
     /*
@@ -760,6 +756,12 @@ random_generateSeed()
     if (oldWay && !newWay)
         MOZ_CRASH();
 
+    union {
+        uint32_t    u32[2];
+        uint64_t    u64;
+    } seed;
+    seed.u64 = 0;
+
     errno_t error = rand_s(&seed.u32[0]);
 
     if (oldWay)
@@ -771,24 +773,44 @@ random_generateSeed()
 
     error = rand_s(&seed.u32[1]);
     MOZ_ASSERT(error == 0, "rand_s() error?!");
+
+    seedBuffer[0] = seed.u64 ^= PRMJ_Now();
+    for (size_t i = 1; i < length; i++) {
+        error = rand_s(&seed.u32[0]);
+        MOZ_ASSERT(error == 0, "rand_s() error?!");
+
+        error = rand_s(&seed.u32[1]);
+        MOZ_ASSERT(error == 0, "rand_s() error?!");
+
+        seedBuffer[i] = seed.u64 ^ PRMJ_Now();
+    }
+
 #elif defined(HAVE_ARC4RANDOM)
-    seed.u32[0] = arc4random();
-    seed.u32[1] = arc4random();
+    union {
+        uint32_t    u32[2];
+        uint64_t    u64;
+    } seed;
+    seed.u64 = 0;
+
+    for (size_t i = 0; i < length; i++) {
+        seed.u32[0] = arc4random();
+        seed.u32[1] = arc4random();
+        seedBuffer[i] = seed.u64 ^ PRMJ_Now();
+    }
+
 #elif defined(XP_UNIX)
     int fd = open("/dev/urandom", O_RDONLY);
     MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom?!");
     if (fd >= 0) {
-        ssize_t nread = read(fd, seed.u8, mozilla::ArrayLength(seed.u8));
-        MOZ_ASSERT(nread == 8, "Can't read /dev/urandom?!");
+        ssize_t size = length * sizeof(seedBuffer[0]);
+        ssize_t nread = read(fd, (char *) seedBuffer, size);
+        MOZ_ASSERT(nread == size, "Can't read /dev/urandom?!");
         mozilla::unused << nread;
         close(fd);
     }
 #else
 # error "Platform needs to implement random_generateSeed()"
 #endif
-
-    seed.u64 ^= PRMJ_Now();
-    return seed.u64;
 }
 
 /*
@@ -798,7 +820,8 @@ void
 js::random_initState(uint64_t* rngState)
 {
     /* Our PRNG only uses 48 bits, so squeeze our entropy into those bits. */
-    uint64_t seed = random_generateSeed();
+    uint64_t seed;
+    random_generateSeed(&seed, 1);
     seed ^= (seed >> 16);
     *rngState = (seed ^ RNG_MULTIPLIER) & RNG_MASK;
 }

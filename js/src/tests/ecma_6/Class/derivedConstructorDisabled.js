@@ -18,6 +18,7 @@ class derived extends base {
 // Make sure eval and arrows are still valid in non-derived constructors.
 new base();
 
+
 // Eval throws in derived class constructors, in both class expressions and
 // statements.
 assertThrowsInstanceOf((() => new derived()), InternalError);
@@ -26,8 +27,8 @@ assertThrowsInstanceOf((() => new class extends base { constructor() { eval('') 
 var g = newGlobal();
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function(frame) { assertThrowsInstanceOf(()=>frame.eval(''), InternalError); };
-g.eval("new class foo extends null { constructor() { debugger; } }()");
 
+g.eval("new class foo extends null { constructor() { debugger; return {}; } }()");
 `;
 
 if (classesEnabled())

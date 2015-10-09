@@ -1735,7 +1735,7 @@ bool
 Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                double when)
 {
-    MOZ_ASSERT(trackingAllocationSites);
+    MOZ_ASSERT(trackingAllocationSites && enabled);
 
     AutoCompartment ac(cx, object);
     RootedObject wrappedFrame(cx, frame);
@@ -2319,19 +2319,20 @@ Debugger::isObservedByDebuggerTrackingAllocations(const GlobalObject& debuggee)
 }
 
 /* static */ bool
-Debugger::addAllocationsTracking(JSContext* cx, GlobalObject& debuggee)
+Debugger::addAllocationsTracking(JSContext* cx, Handle<GlobalObject*> debuggee)
 {
     // Precondition: the given global object is being observed by at least one
     // Debugger that is tracking allocations.
-    MOZ_ASSERT(isObservedByDebuggerTrackingAllocations(debuggee));
+    MOZ_ASSERT(isObservedByDebuggerTrackingAllocations(*debuggee));
 
-    if (Debugger::cannotTrackAllocations(debuggee)) {
+    if (Debugger::cannotTrackAllocations(*debuggee)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_OBJECT_METADATA_CALLBACK_ALREADY_SET);
         return false;
     }
 
-    debuggee.compartment()->setObjectMetadataCallback(SavedStacksMetadataCallback);
+    debuggee->compartment()->setObjectMetadataCallback(SavedStacksMetadataCallback);
+    debuggee->compartment()->chooseAllocationSamplingProbability();
     return true;
 }
 
@@ -2339,9 +2340,12 @@ Debugger::addAllocationsTracking(JSContext* cx, GlobalObject& debuggee)
 Debugger::removeAllocationsTracking(GlobalObject& global)
 {
     // If there are still Debuggers that are observing allocations, we cannot
-    // remove the metadata callback yet.
-    if (isObservedByDebuggerTrackingAllocations(global))
+    // remove the metadata callback yet. Recompute the sampling probability
+    // based on the remaining debuggers' needs.
+    if (isObservedByDebuggerTrackingAllocations(global)) {
+        global.compartment()->chooseAllocationSamplingProbability();
         return;
+    }
 
     global.compartment()->forgetObjectMetadataCallback();
 }
@@ -2364,10 +2368,12 @@ Debugger::addAllocationsTrackingForAllDebuggees(JSContext* cx)
         }
     }
 
+    Rooted<GlobalObject*> g(cx);
     for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
         // This should always succeed, since we already checked for the
         // error case above.
-        MOZ_ALWAYS_TRUE(Debugger::addAllocationsTracking(cx, *r.front().get()));
+        g = r.front().get();
+        MOZ_ALWAYS_TRUE(Debugger::addAllocationsTracking(cx, g));
     }
 
     return true;
@@ -2376,9 +2382,9 @@ Debugger::addAllocationsTrackingForAllDebuggees(JSContext* cx)
 void
 Debugger::removeAllocationsTrackingForAllDebuggees()
 {
-    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront()) {
+    for (WeakGlobalObjectSet::Range r = debuggees.all(); !r.empty(); r.popFront())
         Debugger::removeAllocationsTracking(*r.front().get());
-    }
+
     allocationsLog.clear();
 }
 
@@ -3422,8 +3428,9 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     });
 
     // (5)
-    if (trackingAllocationSites && enabled && !Debugger::addAllocationsTracking(cx, *global))
-            return false;
+    if (trackingAllocationSites && enabled && !Debugger::addAllocationsTracking(cx, global))
+        return false;
+
     auto allocationsTrackingGuard = MakeScopeExit([&] {
         if (trackingAllocationSites && enabled)
             Debugger::removeAllocationsTracking(*global);

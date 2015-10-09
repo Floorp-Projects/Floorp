@@ -277,7 +277,8 @@ namespace jit {
     _(GlobalNameConflictsCheck)                                             \
     _(Debugger)                                                             \
     _(NewTarget)                                                            \
-    _(ArrowNewTarget)
+    _(ArrowNewTarget)                                                       \
+    _(CheckReturn)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;
