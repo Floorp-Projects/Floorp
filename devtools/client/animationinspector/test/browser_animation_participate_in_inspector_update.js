@@ -10,12 +10,8 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
+  let {inspector, panel, controller} = yield openAnimationInspector();
 
-  let ui = yield openAnimationInspector();
-  yield testEventsOrder(ui);
-});
-
-function* testEventsOrder({inspector, panel, controller}) {
   info("Listen for the players-updated, ui-updated and inspector-updated events");
   let receivedEvents = [];
   controller.once(controller.PLAYERS_UPDATED_EVENT, () => {
@@ -32,12 +28,16 @@ function* testEventsOrder({inspector, panel, controller}) {
   let node = yield getNodeFront(".animated", inspector);
   yield selectNode(node, inspector);
 
-  info("Check that all events were received, and in the right order");
+  info("Check that all events were received");
+  // Only assert that the inspector-updated event is last, the order of the
+  // first 2 events is irrelevant.
+
   is(receivedEvents.length, 3, "3 events were received");
-  is(receivedEvents[0], controller.PLAYERS_UPDATED_EVENT,
-    "The first event received was the players-updated event");
-  is(receivedEvents[1], panel.UI_UPDATED_EVENT,
-    "The second event received was the ui-updated event");
   is(receivedEvents[2], "inspector-updated",
-    "The third event received was the inspector-updated event");
-}
+     "The third event received was the inspector-updated event");
+
+  ok(receivedEvents.indexOf(controller.PLAYERS_UPDATED_EVENT) !== -1,
+     "The players-updated event was received");
+  ok(receivedEvents.indexOf(panel.UI_UPDATED_EVENT) !== -1,
+     "The ui-updated event was received");
+});
