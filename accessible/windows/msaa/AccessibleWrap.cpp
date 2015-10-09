@@ -899,23 +899,42 @@ AccessibleWrap::accSelect(
   if (xpAccessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  // TODO make this work with proxies.
-  if (xpAccessible->IsProxy())
-    return E_NOTIMPL;
-
-  if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
-  {
-    if (flagsSelect & SELFLAG_TAKEFOCUS)
+  if (flagsSelect & SELFLAG_TAKEFOCUS) {
+    if (xpAccessible->IsProxy()) {
+      xpAccessible->Proxy()->TakeFocus();
+    } else {
       xpAccessible->TakeFocus();
+    }
 
-    if (flagsSelect & SELFLAG_TAKESELECTION)
+    return S_OK;
+  }
+
+  if (flagsSelect & SELFLAG_TAKESELECTION) {
+    if (xpAccessible->IsProxy()) {
+      xpAccessible->Proxy()->TakeSelection();
+    } else {
       xpAccessible->TakeSelection();
+    }
 
-    if (flagsSelect & SELFLAG_ADDSELECTION)
+    return S_OK;
+  }
+
+  if (flagsSelect & SELFLAG_ADDSELECTION) {
+    if (xpAccessible->IsProxy()) {
+      xpAccessible->Proxy()->SetSelected(true);
+    } else {
       xpAccessible->SetSelected(true);
+    }
 
-    if (flagsSelect & SELFLAG_REMOVESELECTION)
+    return S_OK;
+  }
+
+  if (flagsSelect & SELFLAG_REMOVESELECTION) {
+    if (xpAccessible->IsProxy()) {
+      xpAccessible->Proxy()->SetSelected(false);
+    } else {
       xpAccessible->SetSelected(false);
+    }
 
     return S_OK;
   }
