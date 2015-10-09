@@ -11,7 +11,7 @@
         <shape android:shape="rectangle">
             <!-- @color/fennec_ui_orange with alpha -->
             <solid android:color="#B3FF9500"/>
-            <corners android:radius="3dp"/>            
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
@@ -22,7 +22,7 @@
         <shape android:shape="rectangle">
             <!-- @color/private_browsing_purple with alpha -->
             <solid android:color="#B3CF68FF"/>
-            <corners android:radius="3dp"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
@@ -33,7 +33,7 @@
         <shape android:shape="rectangle">
             <!-- @color/private_browsing_purple with alpha -->
             <solid android:color="#B3CF68FF"/>
-            <corners android:radius="3dp"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
@@ -43,7 +43,7 @@
         <shape android:shape="rectangle">
             <!-- @color/fennec_ui_orange with alpha -->
             <solid android:color="#B3FF9500"/>
-            <corners android:radius="3dp"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
@@ -52,7 +52,7 @@
 
         <shape android:shape="rectangle">
             <solid android:color="#FFFF0000"/>
-            <corners android:radius="3dp"/>            
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
@@ -65,7 +65,7 @@
 
         <shape android:shape="rectangle">
             <solid android:color="@color/private_browsing_purple"/>
-            <corners android:radius="3dp"/>
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
@@ -77,7 +77,7 @@
 
         <shape android:shape="rectangle">
             <solid android:color="@color/fennec_ui_orange"/>
-            <corners android:radius="3dp"/>            
+            <corners android:radius="@dimen/standard_corner_radius"/>
         </shape>
 
     </item>
