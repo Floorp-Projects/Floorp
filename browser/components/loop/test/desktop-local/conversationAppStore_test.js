@@ -77,8 +77,8 @@ describe("loop.store.ConversationAppStore", function () {
 
     beforeEach(function() {
       fakeWindowData = {
-        type: "incoming",
-        callId: "123456"
+        type: "room",
+        roomToken: "123456"
       };
 
       fakeGetWindowData = {
@@ -113,7 +113,7 @@ describe("loop.store.ConversationAppStore", function () {
     it("should fetch the window type from the mozLoop API", function() {
       store.getWindowData(new sharedActions.GetWindowData(fakeGetWindowData));
 
-      expect(store.getStoreState().windowType).eql("incoming");
+      expect(store.getStoreState().windowType).eql("room");
     });
 
     it("should have the feedback period in initial state", function() {
@@ -217,26 +217,6 @@ describe("loop.store.ConversationAppStore", function () {
     describe("#LoopHangupNowHandler", function() {
       beforeEach(function() {
         sandbox.stub(loop.shared.mixins.WindowCloseMixin, "closeWindow");
-      });
-
-      it("should dispatch the correct action for windowType 'incoming'", function() {
-        store.setStoreState({ windowType: "incoming" });
-
-        store.LoopHangupNowHandler();
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.HangupCall());
-        sinon.assert.notCalled(loop.shared.mixins.WindowCloseMixin.closeWindow);
-      });
-
-      it("should dispatch the correct action for windowType 'outgoing'", function() {
-        store.setStoreState({ windowType: "outgoing" });
-
-        store.LoopHangupNowHandler();
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.HangupCall());
-        sinon.assert.notCalled(loop.shared.mixins.WindowCloseMixin.closeWindow);
       });
 
       it("should dispatch the correct action when a room was used", function() {

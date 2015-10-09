@@ -10,13 +10,9 @@
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
 
-  let ui = yield openAnimationInspector();
-  yield testTargetNode(ui);
-});
+  let {toolbox, inspector, panel} = yield openAnimationInspector();
 
-function* testTargetNode({toolbox, inspector, panel}) {
   info("Select the simple animated node");
-
   let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
   yield selectNode(".animated", inspector);
   yield onPanelUpdated;
@@ -36,7 +32,7 @@ function* testTargetNode({toolbox, inspector, panel}) {
 
   // Do not forget to mouseout, otherwise we get random mouseover event
   // when selecting another node, which triggers some requests in animation
-  // inspector
+  // inspector.
   EventUtils.synthesizeMouse(highlightingEl, 10, 5, {type: "mouseout"},
                              highlightingEl.ownerDocument.defaultView);
 
@@ -58,19 +54,18 @@ function* testTargetNode({toolbox, inspector, panel}) {
   targets = yield waitForAllAnimationTargets(panel);
   targetNodeComponent = targets[0];
 
-  info("Click on the first animation widget's selector icon and wait for the " +
-    "selection to change");
+  info("Click on the first animated node component and wait for the " +
+       "selection to change");
   let onSelection = inspector.selection.once("new-node-front");
   onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);
-  let selectIconEl = targetNodeComponent.selectNodeEl;
-  EventUtils.sendMouseEvent({type: "click"}, selectIconEl,
-                            selectIconEl.ownerDocument.defaultView);
+  let nodeEl = targetNodeComponent.previewEl;
+  EventUtils.sendMouseEvent({type: "click"}, nodeEl,
+                            nodeEl.ownerDocument.defaultView);
   yield onSelection;
 
   is(inspector.selection.nodeFront, targetNodeComponent.nodeFront,
     "The selected node is the one stored on the animation widget");
 
   yield onPanelUpdated;
-
   yield waitForAllAnimationTargets(panel);
-}
+});
