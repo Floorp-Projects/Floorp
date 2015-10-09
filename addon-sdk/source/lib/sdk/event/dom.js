@@ -14,6 +14,9 @@ var { emit } = require("./core");
 var { when: unload } = require("../system/unload");
 var listeners = new Map();
 
+const { Cu } = require("chrome");
+const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");
+
 var getWindowFrom = x =>
                     x instanceof Ci.nsIDOMWindow ? x :
                     x instanceof Ci.nsIDOMDocument ? x.defaultView :
@@ -21,7 +24,7 @@ var getWindowFrom = x =>
                     null;
 
 function removeFromListeners() {
-  this.removeEventListener("DOMWindowClose", removeFromListeners);
+  ShimWaiver.getProperty(this, "removeEventListener")("DOMWindowClose", removeFromListeners);
   for (let cleaner of listeners.get(this))
     cleaner();
 
@@ -56,11 +59,11 @@ function open(target, type, options) {
 
     // We need to remove from our map the `window` once is closed, to prevent
     // memory leak
-    window.addEventListener("DOMWindowClose", removeFromListeners);
+    ShimWaiver.getProperty(window, "addEventListener")("DOMWindowClose", removeFromListeners);
   }
 
-  cleaners.push(() => target.removeEventListener(type, listener, capture));
-  target.addEventListener(type, listener, capture);
+  cleaners.push(() => ShimWaiver.getProperty(target, "removeEventListener")(type, listener, capture));
+  ShimWaiver.getProperty(target, "addEventListener")(type, listener, capture);
 
   return output;
 }
