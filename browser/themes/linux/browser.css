@@ -19,7 +19,7 @@
 %define conditionalForwardWithUrlbarWidth 30
 
 :root {
-  --backbutton-urlbar-overlap: 5px;
+  --backbutton-urlbar-overlap: 6px;
 
   --toolbarbutton-hover-background: hsla(0,0%,100%,.3) linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.2));
   --toolbarbutton-hover-boxshadow: 0 1px 0 hsla(0,0%,100%,.3) inset, 0 0 0 1px hsla(0,0%,100%,.2) inset, 0 1px 0 hsla(0,0%,0%,.03);
@@ -697,10 +697,19 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   margin-bottom: 3px;
 }
 
+:-moz-any(#back-button, #forward-button) > .toolbarbutton-icon {
+  border-color: ThreeDShadow !important /* bug 561154 */;
+}
+
+:-moz-any(#back-button, #forward-button):not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
+:-moz-any(#back-button, #forward-button)[disabled=true] > .toolbarbutton-icon {
+  background-color: rgba(255,255,255,.15) !important /* bug 561154 */;
+}
+
 #back-button {
-  padding-top: 3px;
-  padding-bottom: 3px;
-  -moz-padding-start: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-padding-start: 4px;
   -moz-padding-end: 0;
   position: relative;
   z-index: 1;
@@ -717,41 +726,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 #back-button > .toolbarbutton-icon {
   border-radius: 10000px;
-  background-clip: padding-box;
   padding: 6px;
-  border: none;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.3) inset,
-              0 0 0 1px hsla(0,0%,100%,.3) inset,
-              0 0 0 1px hsla(210,54%,20%,.25),
-              0 1px 0 hsla(210,54%,20%,.35);
-  background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1));
-  transition-property: background-color, box-shadow;
-  transition-duration: 250ms;
-}
-
-#back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
-  background-color: hsla(210,48%,96%,.75);
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.3) inset,
-              0 0 0 1px hsla(0,0%,100%,.3) inset,
-              0 0 0 1px hsla(210,54%,20%,.3),
-              0 1px 0 hsla(210,54%,20%,.4),
-              0 0 4px hsla(210,54%,20%,.2);
-}
-
-#back-button:not([disabled="true"]):hover:active > .toolbarbutton-icon,
-#back-button[open="true"] > .toolbarbutton-icon {
-  background-color: hsla(210,54%,20%,.15);
-  box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
-              0 0 1px hsla(210,54%,20%,.2) inset,
-              0 0 0 1px hsla(210,54%,20%,.4),
-              0 1px 0 hsla(210,54%,20%,.2);
-  transition: none;
-}
-
-#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
-  box-shadow: 0 0 0 1px hsla(210,54%,20%,.55),
-              0 1px 0 hsla(210,54%,20%,.65) !important;
-  transition: none;
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
@@ -764,10 +739,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #forward-button > .toolbarbutton-icon {
-  background-clip: padding-box;
-  padding-left: calc(var(--backbutton-urlbar-overlap) + 4px);
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 3px);
   padding-right: 3px;
-  border: 1px solid #9a9a9a;
   border-left-style: none;
   border-radius: 0;
 }
