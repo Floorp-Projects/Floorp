@@ -201,7 +201,9 @@ namespace jit {
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
     _(JSOP_RETURN)             \
-    _(JSOP_NEWTARGET)
+    _(JSOP_NEWTARGET)          \
+    _(JSOP_SUPERCALL)          \
+    _(JSOP_SPREADSUPERCALL)
 
 class BaselineCompiler : public BaselineCompilerSpecific
 {

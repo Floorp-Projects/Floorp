@@ -741,6 +741,14 @@ class InterpreterFrame
         return argv()[-1];
     }
 
+    void setDerivedConstructorThis(HandleObject thisv) {
+        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(script()->isDerivedClassConstructor());
+        MOZ_ASSERT(callee().isClassConstructor());
+        MOZ_ASSERT(thisValue().isMagic(JS_UNINITIALIZED_LEXICAL));
+        argv()[-1] = ObjectValue(*thisv);
+    }
+
     /*
      * Callee
      *

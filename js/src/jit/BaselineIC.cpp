@@ -8644,6 +8644,8 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
                   JSOp op, uint32_t argc, Value* vp, bool constructing, bool isSpread,
                   bool createSingleton, bool* handled)
 {
+    bool isSuper = op == JSOP_SUPERCALL || op == JSOP_SPREADSUPERCALL;
+
     if (createSingleton || op == JSOP_EVAL || op == JSOP_STRICTEVAL)
         return true;
 
@@ -8751,9 +8753,11 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
             EnsureTrackPropertyTypes(cx, fun, NameToId(cx->names().prototype));
 
         // Remember the template object associated with any script being called
-        // as a constructor, for later use during Ion compilation.
+        // as a constructor, for later use during Ion compilation. This is unsound
+        // for super(), as a single callsite can have multiple possible prototype object
+        // created (via different newTargets)
         RootedObject templateObject(cx);
-        if (constructing) {
+        if (constructing && !isSuper) {
             // If we are calling a constructor for which the new script
             // properties analysis has not been performed yet, don't attach a
             // stub. After the analysis is performed, CreateThisForFunction may
@@ -8853,7 +8857,7 @@ TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub, HandleScript script, jsb
         }
 
         RootedObject templateObject(cx);
-        if (MOZ_LIKELY(!isSpread)) {
+        if (MOZ_LIKELY(!isSpread && !isSuper)) {
             bool skipAttach = false;
             CallArgs args = CallArgsFromVp(argc, vp);
             if (!GetTemplateObjectForNative(cx, fun->native(), args, &templateObject, &skipAttach))

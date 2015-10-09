@@ -26,7 +26,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() { }
+    constructor() { super(); }
 
     // |super| actually checks the chain, not |this|
     method() { throw "FAIL"; }
@@ -70,13 +70,11 @@ class derived extends base {
 
 }
 
-assertThrowsInstanceOf(()=>new derived(), TypeError, "You implemented |super()|?!");
-/*
 derivedInstance = new derived();
 derivedInstance.test();
 derivedInstance.testInEval();
 derivedInstance.testInArrow();
-*/
+
 `;
 
 if (classesEnabled())

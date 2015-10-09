@@ -28,9 +28,7 @@ var g = newGlobal();
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function(frame) { assertThrowsInstanceOf(()=>frame.eval(''), InternalError); };
 
-// Remove the assertion and add super() when super() is implemented!
-assertThrownErrorContains(() => g.eval("new class foo extends null { constructor() { debugger; } }"), "|this|");
-// g.eval("new class foo extends null { constructor() { debugger; } }()");
+g.eval("new class foo extends null { constructor() { debugger; return {}; } }()");
 `;
 
 if (classesEnabled())

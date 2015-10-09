@@ -6,7 +6,7 @@ class base {
 }
 
 class derived extends base {
-    constructor() { this.methodCalled = 0; }
+    constructor() { super(); this.methodCalled = 0; }
 
     // Test orderings of various evaluations relative to the superbase
 
@@ -70,8 +70,6 @@ function reset() {
     Object.setPrototypeOf(derived.prototype, base.prototype);
 }
 
-assertThrowsInstanceOf(() => new derived(), TypeError, "You implemented |super()|?!");
-/*
 let instance = new derived();
 assertThrowsInstanceOf(() => instance.testElem(), TypeError);
 reset();
@@ -92,7 +90,7 @@ instance.testAssignElemPropValChange();
 instance.testAssignProp();
 
 instance.testCompoundAssignProp();
-*/
+
 `;
 
 if (classesEnabled())
