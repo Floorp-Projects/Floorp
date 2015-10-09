@@ -376,9 +376,14 @@ function testPopupMovement()
 
   popup.moveTo(-1, -1);
   [screenX, screenY] = getScreenXY(popup);
-  [buttonScreenX, buttonScreenY] = getScreenXY(button);
-  is(screenX, buttonScreenX, gTests[gTestIndex] + " original x");
-  is(screenY, buttonScreenY + Math.round(button.getBoundingClientRect().height), gTests[gTestIndex] + " original y");
+
+  expectedx = (overlapOSChrome ? screen.left : screen.availLeft);
+  expectedy = (overlapOSChrome ? screen.top : screen.availTop);
+
+  is(screenX, expectedx, gTests[gTestIndex] + " move after set left and top x to -1");
+  is(screenY, expectedy, gTests[gTestIndex] + " move after set left and top y to -1");
+  is(popup.left, "", gTests[gTestIndex] + " left is not set after moving to -1");
+  is(popup.top, "", gTests[gTestIndex] + " top is not set after moving to -1");
 
   popup.hidePopup();
 }

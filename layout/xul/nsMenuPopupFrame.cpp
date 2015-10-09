@@ -2183,8 +2183,7 @@ nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs)
   }
 
   nsPresContext* presContext = PresContext();
-  mAnchorType = aPos.x == -1 || aPos.y == -1 ?
-                MenuPopupAnchorType_Node : MenuPopupAnchorType_Point;
+  mAnchorType = MenuPopupAnchorType_Point;
   mScreenRect.x = aPos.x - presContext->AppUnitsToIntCSSPixels(margin.left);
   mScreenRect.y = aPos.y - presContext->AppUnitsToIntCSSPixels(margin.top);
 
