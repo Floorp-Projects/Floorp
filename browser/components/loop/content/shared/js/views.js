@@ -1118,7 +1118,6 @@ loop.shared.views = (function(_, mozL10n) {
                this.state.localMediaAboslutelyPositioned ?
                 this.renderLocalVideo() : null, 
                this.props.children
-
             ), 
             React.createElement("div", {className: screenShareStreamClasses}, 
               React.createElement(MediaView, {displayAvatar: false, 

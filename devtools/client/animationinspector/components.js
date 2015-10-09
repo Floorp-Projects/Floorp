@@ -25,7 +25,8 @@ const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {
   createNode,
   drawGraphElementBackground,
-  findOptimalTimeInterval
+  findOptimalTimeInterval,
+  TargetNodeHighlighter
 } = require("devtools/client/animationinspector/utils");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
@@ -52,6 +53,8 @@ function AnimationTargetNode(inspector, options={}) {
   this.onPreviewMouseOut = this.onPreviewMouseOut.bind(this);
   this.onSelectNodeClick = this.onSelectNodeClick.bind(this);
   this.onMarkupMutations = this.onMarkupMutations.bind(this);
+  this.onHighlightNodeClick = this.onHighlightNodeClick.bind(this);
+  this.onTargetHighlighterLocked = this.onTargetHighlighterLocked.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -71,18 +74,22 @@ AnimationTargetNode.prototype = {
     });
 
     // Icon to select the node in the inspector.
-    this.selectNodeEl = createNode({
+    this.highlightNodeEl = createNode({
       parent: this.el,
       nodeType: "span",
       attributes: {
-        "class": "node-selector"
+        "class": "node-highlighter",
+        "title": L10N.getStr("node.highlightNodeLabel")
       }
     });
 
     // Wrapper used for mouseover/out event handling.
     this.previewEl = createNode({
       parent: this.el,
-      nodeType: "span"
+      nodeType: "span",
+      attributes: {
+        "title": L10N.getStr("node.selectNodeLabel")
+      }
     });
 
     if (!this.options.compact) {
@@ -180,32 +187,48 @@ AnimationTargetNode.prototype = {
     // Init events for highlighting and selecting the node.
     this.previewEl.addEventListener("mouseover", this.onPreviewMouseOver);
     this.previewEl.addEventListener("mouseout", this.onPreviewMouseOut);
-    this.selectNodeEl.addEventListener("click", this.onSelectNodeClick);
+    this.previewEl.addEventListener("click", this.onSelectNodeClick);
+    this.highlightNodeEl.addEventListener("click", this.onHighlightNodeClick);
 
     // Start to listen for markupmutation events.
     this.inspector.on("markupmutation", this.onMarkupMutations);
+
+    // Listen to the target node highlighter.
+    TargetNodeHighlighter.on("highlighted", this.onTargetHighlighterLocked);
   },
 
   destroy: function() {
+    TargetNodeHighlighter.unhighlight().catch(e => console.error(e));
+
+    TargetNodeHighlighter.off("highlighted", this.onTargetHighlighterLocked);
     this.inspector.off("markupmutation", this.onMarkupMutations);
     this.previewEl.removeEventListener("mouseover", this.onPreviewMouseOver);
     this.previewEl.removeEventListener("mouseout", this.onPreviewMouseOut);
-    this.selectNodeEl.removeEventListener("click", this.onSelectNodeClick);
+    this.previewEl.removeEventListener("click", this.onSelectNodeClick);
+    this.highlightNodeEl.removeEventListener("click", this.onHighlightNodeClick);
+
     this.el.remove();
     this.el = this.tagNameEl = this.idEl = this.classEl = null;
-    this.selectNodeEl = this.previewEl = null;
+    this.highlightNodeEl = this.previewEl = null;
     this.nodeFront = this.inspector = this.playerFront = null;
+  },
+
+  get highlighterUtils() {
+    return this.inspector.toolbox.highlighterUtils;
   },
 
   onPreviewMouseOver: function() {
     if (!this.nodeFront) {
       return;
     }
-    this.inspector.toolbox.highlighterUtils.highlightNodeFront(this.nodeFront);
+    this.highlighterUtils.highlightNodeFront(this.nodeFront);
   },
 
   onPreviewMouseOut: function() {
-    this.inspector.toolbox.highlighterUtils.unhighlight();
+    if (!this.nodeFront) {
+      return;
+    }
+    this.highlighterUtils.unhighlight();
   },
 
   onSelectNodeClick: function() {
@@ -213,6 +236,29 @@ AnimationTargetNode.prototype = {
       return;
     }
     this.inspector.selection.setNodeFront(this.nodeFront, "animationinspector");
+  },
+
+  onHighlightNodeClick: function() {
+    let classList = this.highlightNodeEl.classList;
+
+    let isHighlighted = classList.contains("selected");
+    if (isHighlighted) {
+      classList.remove("selected");
+      TargetNodeHighlighter.unhighlight().then(() => {
+        this.emit("target-highlighter-unlocked");
+      }, e => console.error(e));
+    } else {
+      classList.add("selected");
+      TargetNodeHighlighter.highlight(this).then(() => {
+        this.emit("target-highlighter-locked");
+      }, e => console.error(e));
+    }
+  },
+
+  onTargetHighlighterLocked: function(e, animationTargetNode) {
+    if (animationTargetNode !== this) {
+      this.highlightNodeEl.classList.remove("selected");
+    }
   },
 
   onMarkupMutations: function(e, mutations) {
@@ -237,13 +283,14 @@ AnimationTargetNode.prototype = {
       this.nodeFront = yield this.inspector.walker.getNodeFromActor(
                              playerFront.actorID, ["node"]);
     } catch (e) {
-      // We might have been destroyed in the meantime, or the node might not be
-      // found.
       if (!this.el) {
+        // The panel was destroyed in the meantime. Just log a warning.
         console.warn("Cound't retrieve the animation target node, widget " +
                      "destroyed");
+      } else {
+        // This was an unexpected error, log it.
+        console.error(e);
       }
-      console.error(e);
       return;
     }
 

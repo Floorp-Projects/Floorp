@@ -40,7 +40,6 @@ require("script!shared/js/mixins.js");
 require("script!shared/js/actions.js");
 require("script!shared/js/validate.js");
 require("script!shared/js/dispatcher.js");
-require("script!shared/js/websocket.js");
 require("script!shared/js/otSdkDriver.js");
 require("script!shared/js/store.js");
 require("script!shared/js/activeRoomStore.js");
