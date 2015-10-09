@@ -1,0 +1,21 @@
+#! /bin/bash -ex
+
+# This file is intended to be used as the "entrypoint" or first command in the
+# docker image. It uses "eval" so it takes place of the usual /bin/bash -c
+# <stuff> conventions you need when running a docker image. Primarily it
+# bootstraps any processes that need to run outside of mozharness (like Xvfb)
+
+# XXX: Note that all tests could be faster at smaller bit depth
+Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 2>/dev/null &
+export DISPLAY=:0
+
+pulseaudio --start
+
+# Download mozharness only when $MOZHARNESS_URL is defined
+if [ ! -z "$MOZHARNESS_URL" ]; then
+  buildbot_step 'Download mozharness' wget -c $MOZHARNESS_URL && \
+    unzip -q mozharness.zip && \
+    rm mozharness.zip
+fi
+
+buildbot_step 'Running tests' $@
