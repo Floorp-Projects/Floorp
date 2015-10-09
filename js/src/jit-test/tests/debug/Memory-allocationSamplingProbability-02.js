@@ -32,5 +32,5 @@ dbg.memory.trackingAllocationSites = true;
 // probability is fine.
 measure(0.0, 0);
 measure(1.0, 100);
-measure(0.1, 9);
-measure(0.5, 51);
+measure(0.1, 7);
+measure(0.5, 44);

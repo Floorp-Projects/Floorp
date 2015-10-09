@@ -3969,6 +3969,14 @@ var gCSSProperties = {
     other_values: [ "non-scaling-stroke" ],
     invalid_values: []
   },
+  "-moz-window-dragging": {
+    domProp: "MozWindowDragging",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "no-drag" ],
+    other_values: [ "drag" ],
+    invalid_values: [ "none" ]
+  },
   "align-content": {
     domProp: "alignContent",
     inherited: false,
@@ -6623,14 +6631,6 @@ for (var prop in gCSSProperties) {
 if (false) {
   // TODO These properties are chrome-only, and are not exposed via CSSOM.
   // We may still want to find a way to test them. See bug 1206999.
-  gCSSProperties["-moz-window-dragging"] = {
-    //domProp: "MozWindowDragging",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "no-drag" ],
-    other_values: [ "drag" ],
-    invalid_values: [ "none" ]
-  };
   gCSSProperties["-moz-window-shadow"] = {
     //domProp: "MozWindowShadow",
     inherited: false,

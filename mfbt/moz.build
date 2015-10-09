@@ -39,6 +39,7 @@ EXPORTS.mozilla = [
     'EnumeratedArray.h',
     'EnumeratedRange.h',
     'EnumSet.h',
+    'FastBernoulliTrial.h',
     'FloatingPoint.h',
     'Function.h',
     'GuardObjects.h',

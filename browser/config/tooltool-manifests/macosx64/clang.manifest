@@ -6,7 +6,7 @@
 "size": 97314461,
 "digest": "9a74670fa917f760a4767923485d5166bbd258a8023c8aeb899b8c4d22f2847be76508ac5f26d7d2193318a2bb368a71bc62888d1bfe9d81eb45329a60451aa4",
 "algorithm": "sha512",
-"filename": "clang.tar.xz",
+"filename": "clang.tar.bz2",
 "unpack": true
 },
 {

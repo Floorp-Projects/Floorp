@@ -1443,6 +1443,7 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
 a11y::DocAccessibleParent*
 TabParent::GetTopLevelDocAccessible() const
 {
+#ifdef ACCESSIBILITY
   // XXX Consider managing non top level PDocAccessibles with their parent
   // document accessible.
   const nsTArray<PDocAccessibleParent*>& docs = ManagedPDocAccessibleParent();
@@ -1453,7 +1454,7 @@ TabParent::GetTopLevelDocAccessible() const
       return doc;
     }
   }
-
+#endif
   return nullptr;
 }
 

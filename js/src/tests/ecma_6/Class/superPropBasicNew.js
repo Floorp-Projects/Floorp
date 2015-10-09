@@ -4,12 +4,13 @@ class Base {
     constructor() {}
 }
 class Mid extends Base {
-    constructor() {}
+    constructor() { super(); }
     f() { return new super.constructor(); }
 }
 class Derived extends Mid {
-    constructor() {}
+    constructor() { super(); }
 }
+
 let d = new Derived();
 var df = d.f();
 assertEq(df.constructor, Base);
