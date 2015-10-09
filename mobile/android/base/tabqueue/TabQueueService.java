@@ -31,7 +31,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-import org.mozilla.gecko.util.ThreadUtils;
+import android.widget.Toast;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -164,7 +164,11 @@ public class TabQueueService extends Service {
             tabQueueHandler.removeCallbacks(stopServiceRunnable);
             stopServiceRunnable.run(false);
         } else {
-            windowManager.addView(toastLayout, toastLayoutParams);
+            try {
+                windowManager.addView(toastLayout, toastLayoutParams);
+            } catch (final SecurityException e) {
+                Toast.makeText(this, getText(R.string.tab_queue_toast_message), Toast.LENGTH_SHORT).show();
+            }
         }
 
         stopServiceRunnable = new StopServiceRunnable(startId) {
