@@ -511,7 +511,7 @@ bool ModuleInfoCallback(const ModuleInfo &module_info, void *context) {
   int count;
 
   snprintf(path, sizeof (path), "/proc/self/path/%s", module_info.name);
-  if ((count = readlink(path, buf, PATH_MAX - 1)) < 0)
+  if ((count = readlink(path, buf, PATH_MAX)) < 0)
     return false;
   buf[count] = '\0';
 

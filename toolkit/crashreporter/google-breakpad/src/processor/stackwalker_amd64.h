@@ -78,6 +78,14 @@ class StackwalkerAMD64 : public Stackwalker {
   StackFrameAMD64* GetCallerByCFIFrameInfo(const vector<StackFrame*> &frames,
                                            CFIFrameInfo* cfi_frame_info);
 
+  // Assumes a traditional frame layout where the frame pointer has not been
+  // omitted. The expectation is that caller's %rbp is pushed to the stack
+  // after the return address of the callee, and that the callee's %rsp can
+  // be used to find the pushed %rbp.
+  // Caller owns the returned frame object. Returns NULL on failure.
+  StackFrameAMD64* GetCallerByFramePointerRecovery(
+      const vector<StackFrame*>& frames);
+
   // Scan the stack for plausible return addresses. The caller takes ownership
   // of the returned frame. Return NULL on failure.
   StackFrameAMD64* GetCallerByStackScan(const vector<StackFrame*> &frames);

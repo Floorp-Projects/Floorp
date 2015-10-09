@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "common/byte_cursor.h"
+#include "common/mac/super_fat_arch.h"
 
 namespace google_breakpad {
 namespace mach_o {
@@ -93,7 +94,7 @@ class FatReader {
     // complete header, or the header implies that contents are present
     // beyond the actual end of the file.
     virtual void TooShort();
-  
+
    private:
     // The filename to which the reader should attribute problems.
     string filename_;
@@ -101,7 +102,7 @@ class FatReader {
 
   // Create a fat binary file reader that uses |reporter| to report problems.
   explicit FatReader(Reporter *reporter) : reporter_(reporter) { }
-  
+
   // Read the |size| bytes at |buffer| as a fat binary file. On success,
   // return true; on failure, report the problem to reporter_ and return
   // false.
@@ -111,13 +112,13 @@ class FatReader {
   // single object file is the Mach-O file.
   bool Read(const uint8_t *buffer, size_t size);
 
-  // Return an array of 'struct fat_arch' structures describing the
+  // Return an array of 'SuperFatArch' structures describing the
   // object files present in this fat binary file. Set |size| to the
   // number of elements in the array.
   //
-  // Assuming Read returned true, the entries are validated: it is
-  // safe to assume that the offsets and sizes in each 'struct
-  // fat_arch' refer to subranges of the bytes passed to Read.
+  // Assuming Read returned true, the entries are validated: it is safe to
+  // assume that the offsets and sizes in each SuperFatArch refer to subranges
+  // of the bytes passed to Read.
   //
   // If there are no object files in this fat binary, then this
   // function can return NULL.
@@ -129,7 +130,7 @@ class FatReader {
   // possible to use the result with OS X functions like NXFindBestFatArch,
   // so that the symbol dumper will behave consistently with other OS X
   // utilities that work with fat binaries.
-  const struct fat_arch *object_files(size_t *count) const { 
+  const SuperFatArch* object_files(size_t *count) const {
     *count = object_files_.size();
     if (object_files_.size() > 0)
       return &object_files_[0];
@@ -149,7 +150,7 @@ class FatReader {
 
   // The list of object files in this binary.
   // object_files_.size() == fat_header.nfat_arch
-  vector<struct fat_arch> object_files_;
+  vector<SuperFatArch> object_files_;
 };
 
 // A segment in a Mach-O file. All these fields have been byte-swapped as
@@ -177,7 +178,7 @@ struct Segment {
   // The maximum and initial VM protection of this segment's contents.
   uint32_t maxprot;
   uint32_t initprot;
-  
+
   // The number of sections in section_list.
   uint32_t nsects;
 
@@ -376,7 +377,7 @@ class Reader {
     return Read(buffer.start,
                 buffer.Size(),
                 expected_cpu_type,
-                expected_cpu_subtype); 
+                expected_cpu_subtype);
   }
 
   // Return this file's characteristics, as found in the Mach-O header.

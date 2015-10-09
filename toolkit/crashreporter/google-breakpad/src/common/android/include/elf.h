@@ -38,7 +38,7 @@ extern "C" {
 #endif  // __cplusplus
 
 // The Android <elf.h> provides BSD-based definitions for the ElfXX_Nhdr
-// types 
+// types
 // always source-compatible with the GLibc/kernel ones. To overcome this
 // issue without modifying a lot of code in Breakpad, use an ugly macro
 // renaming trick with #include_next
@@ -110,9 +110,14 @@ typedef struct {
 
 
 // __WORDSIZE is GLibc-specific and used by Google Breakpad on Linux.
-// All Android platforms are 32-bit for now.
 #ifndef __WORDSIZE
+#if defined(__i386__) ||  defined(__ARM_EABI__) || defined(__mips__)
 #define __WORDSIZE 32
+#elif defined(__x86_64__) || defined(__aarch64__)
+#define __WORDSIZE 64
+#else
+#error "Unsupported Android CPU ABI"
+#endif
 #endif
 
 // The Android headers don't always define this constant.
@@ -150,6 +155,10 @@ typedef struct {
 
 #if !defined(NT_FPREGSET)
 #define NT_FPREGSET 2
+#endif
+
+#if !defined(SHT_MIPS_DWARF)
+#define SHT_MIPS_DWARF 0x7000001e
 #endif
 
 #ifdef __cplusplus
