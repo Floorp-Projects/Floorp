@@ -9,6 +9,7 @@
 #include "nsError.h"
 #include "TimeUnits.h"
 #include "mozilla/PodOperations.h"
+#include "prsystem.h"
 
 #include <algorithm>
 
@@ -56,13 +57,26 @@ VPXDecoder::Shutdown()
 nsRefPtr<MediaDataDecoder::InitPromise>
 VPXDecoder::Init()
 {
+  int decode_threads = 2;
+
   vpx_codec_iface_t* dx = nullptr;
   if (mCodec == Codec::VP8) {
     dx = vpx_codec_vp8_dx();
   } else if (mCodec == Codec::VP9) {
     dx = vpx_codec_vp9_dx();
+    if (mInfo.mDisplay.width >= 2048) {
+      decode_threads = 8;
+    } else if (mInfo.mDisplay.width >= 1024) {
+      decode_threads = 4;
+    }
   }
-  if (!dx || vpx_codec_dec_init(&mVPX, dx, nullptr, 0)) {
+  decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors());
+
+  vpx_codec_dec_cfg_t config;
+  config.threads = decode_threads;
+  config.w = config.h = 0; // set after decode
+
+  if (!dx || vpx_codec_dec_init(&mVPX, dx, &config, 0)) {
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
