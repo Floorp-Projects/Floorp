@@ -26,6 +26,9 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       groupName: Marionette WebAPI Tests
       symbol: Mnw
