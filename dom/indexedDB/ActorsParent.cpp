@@ -16382,6 +16382,25 @@ QuotaClient::PerformIdleMaintenanceOnDatabaseInternal(
   MOZ_ASSERT(!aMaintenanceInfo.mGroup.IsEmpty());
   MOZ_ASSERT(!aMaintenanceInfo.mOrigin.IsEmpty());
 
+  class MOZ_STACK_CLASS AutoClose final
+  {
+    nsCOMPtr<mozIStorageConnection> mConnection;
+
+  public:
+    AutoClose(mozIStorageConnection* aConnection)
+      : mConnection(aConnection)
+    {
+      MOZ_ASSERT(aConnection);
+    }
+
+    ~AutoClose()
+    {
+      MOZ_ASSERT(mConnection);
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mConnection->Close()));
+    }
+  };
+
   nsCOMPtr<nsIFile> databaseFile =
     GetFileForPath(aMaintenanceInfo.mDatabasePath);
   MOZ_ASSERT(databaseFile);
@@ -16396,6 +16415,8 @@ QuotaClient::PerformIdleMaintenanceOnDatabaseInternal(
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
+
+  AutoClose autoClose(connection);
 
   if (IdleMaintenanceMustEnd(aRunId)) {
     return;
