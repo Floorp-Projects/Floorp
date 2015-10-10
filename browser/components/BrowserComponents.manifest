@@ -46,3 +46,5 @@ component {d8903bf6-68d5-4e97-bcd1-e4d3012f721a} nsBrowserGlue.js
 #ifndef MOZ_MULET
 contract @mozilla.org/content-permission/prompt;1 {d8903bf6-68d5-4e97-bcd1-e4d3012f721a}
 #endif
+component {97eea4bb-db50-4ae0-9147-1e5ed55b4ed5} nsBrowserGlue.js
+contract @mozilla.org/browser/aboutnewtab-service;1 {97eea4bb-db50-4ae0-9147-1e5ed55b4ed5}
