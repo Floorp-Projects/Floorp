@@ -170,6 +170,7 @@ def build_one_stage_aux(src_dir, stage_dir, build_libcxx,
                   "-DPYTHON_EXECUTABLE=%s" % python_path,
                   "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
                   "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
+                  "-DLIBCXX_LIBCPPABI_VERSION=\"\"",
                   src_dir];
     build_package(build_dir, run_cmake, cmake_args)
 
