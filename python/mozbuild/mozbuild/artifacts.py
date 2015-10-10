@@ -37,6 +37,7 @@ consumers will need to arrange this themselves.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import functools
+import hashlib
 import logging
 import operator
 import os
@@ -55,6 +56,7 @@ from mozbuild.util import (
     FileAvoidWrite,
 )
 import mozpack.path as mozpath
+from mozversion import mozversion
 from mozregression.download_manager import (
     DownloadManager,
 )
@@ -76,7 +78,7 @@ MAX_CACHED_ARTIFACTS = 6
 # Keep the keys of this map in sync with the |mach artifact| --job options.
 JOB_DETAILS = {
     # 'android-api-9': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
-    'android-api-11': {'re': re.compile('public/build/geckolibs-(.*)\.aar')},
+    'android-api-11': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
     # 'linux': {'re': re.compile('public/build/firefox-(.*)\.linux-i686\.tar\.bz2')},
     # 'linux64': {'re': re.compile('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2')},
     # 'macosx64': {'re': re.compile('public/build/firefox-(.*)\.mac\.dmg')},
@@ -234,7 +236,10 @@ class TaskCache(CacheManager):
 
         # TODO: Handle multiple artifacts, taking the latest one.
         for name in names():
-            # We can easily extract the task ID and the build ID from the URL.
+            # We can easily extract the task ID from the URL.  We can't easily
+            # extract the build ID; we use the .ini files embedded in the
+            # downloaded artifact for this.  We could also use the uploaded
+            # public/build/buildprops.json for this purpose.
             url = self._queue.buildUrl('getLatestArtifact', taskId, name)
             return url
         raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))
@@ -269,12 +274,31 @@ class ArtifactCache(CacheManager):
 
     @cachedmethod(operator.attrgetter('_cache'))
     def fetch(self, url, force=False):
-        fname = os.path.basename(url)
+        # We download to a temporary name like HASH[:16]-basename to
+        # differentiate among URLs with the same basenames.  We then extract the
+        # build ID from the downloaded artifact and use it to make a human
+        # readable unique name.
+        hash = hashlib.sha256(url).hexdigest()[:16]
+        fname = hash + '-' + os.path.basename(url)
+        self.log(logging.INFO, 'artifact',
+            {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
+            'Downloading to temporary location {path}')
         try:
             dl = self._download_manager.download(url, fname)
             if dl:
                 dl.wait()
-            return os.path.abspath(mozpath.join(self._cache_dir, fname))
+            # Version information is extracted from {application,platform}.ini
+            # in the package itself.
+            info = mozversion.get_version(mozpath.join(self._cache_dir, fname))
+            buildid = info['platform_buildid'] or info['application_buildid']
+            if not buildid:
+                raise ValueError('Artifact for {url} existed, but no build ID could be extracted!'.format(url=url))
+            newname = buildid + '-' + os.path.basename(url)
+            os.rename(mozpath.join(self._cache_dir, fname), mozpath.join(self._cache_dir, newname))
+            self.log(logging.INFO, 'artifact',
+                {'path': os.path.abspath(mozpath.join(self._cache_dir, newname))},
+                'Downloaded artifact to {path}')
+            return os.path.abspath(mozpath.join(self._cache_dir, newname))
         finally:
             # Cancel any background downloads in progress.
             self._download_manager.cancel()
