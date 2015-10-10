@@ -89,6 +89,18 @@ net_EnsureIOService(nsIIOService **ios, nsCOMPtr<nsIIOService> &grip)
 }
 
 INLINE_IF_EXTERN nsresult
+NS_URIChainHasFlags(nsIURI   *uri,
+                    uint32_t  flags,
+                    bool     *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return util->URIChainHasFlags(uri, flags, result);
+}
+
+INLINE_IF_EXTERN nsresult
 NS_NewURI(nsIURI **result,
           const nsACString &spec,
           const char *charset /* = nullptr */,
