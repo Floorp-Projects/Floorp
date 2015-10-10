@@ -733,7 +733,10 @@ nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
 {
 #ifdef MOZ_CROSS_PROCESS_IME
-  // e10s requires IME information cache into TabParent
+  // e10s requires IME content cache in in the TabParent for handling query
+  // content event only with the parent process.  Therefore, this process
+  // needs to receive a lot of information from the focused editor to sent
+  // the latest content to the parent process.
   return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
                                nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
                                nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
@@ -800,7 +803,13 @@ PuppetWidget::NotifyIMEOfSelectionChange(
     aIMENotification.mSelectionChangeData.mReversed,
     aIMENotification.mSelectionChangeData.GetWritingMode());
 
-  mTabChild->SendNotifyIMESelection(mContentCache, aIMENotification);
+  if (mIMEPreferenceOfParent.WantSelectionChange() &&
+      (mIMEPreferenceOfParent.WantChangesCausedByComposition() ||
+       !aIMENotification.mSelectionChangeData.mCausedByComposition)) {
+    mTabChild->SendNotifyIMESelection(mContentCache, aIMENotification);
+  } else {
+    mTabChild->SendUpdateContentCache(mContentCache);
+  }
   return NS_OK;
 }
 
@@ -835,9 +844,10 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
-  if (!mTabChild->SendNotifyIMEPositionChange(mContentCache,
-                                              aIMENotification)) {
-    return NS_ERROR_FAILURE;
+  if (mIMEPreferenceOfParent.WantPositionChanged()) {
+    mTabChild->SendNotifyIMEPositionChange(mContentCache, aIMENotification);
+  } else {
+    mTabChild->SendUpdateContentCache(mContentCache);
   }
   return NS_OK;
 }
