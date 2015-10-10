@@ -347,7 +347,7 @@ class Artifacts(object):
 
         self.log(logging.INFO, 'artifact',
             {'revset': revset},
-            'Installing from {revset}')
+            'Installing from local revision {revset}')
 
         url = None
         with self._task_cache as task_cache, self._pushhead_cache as pushhead_cache:
@@ -358,6 +358,9 @@ class Artifacts(object):
                     'Trying to find artifacts for pushhead {pushhead}.')
                 try:
                     url = task_cache.artifact_url(self._tree, self._job, pushhead)
+                    self.log(logging.INFO, 'artifact',
+                        {'pushhead': pushhead},
+                        'Installing from remote pushhead {pushhead}')
                     break
                 except ValueError:
                     pass
