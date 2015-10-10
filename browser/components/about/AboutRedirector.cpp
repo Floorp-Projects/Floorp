@@ -7,11 +7,14 @@
 
 #include "AboutRedirector.h"
 #include "nsNetUtil.h"
+#include "nsIAboutNewTabService.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIProtocolHandler.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsDOMString.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace browser {
@@ -176,14 +179,50 @@ AboutRedirector::NewChannel(nsIURI* aURI,
 
   for (int i = 0; i < kRedirTotal; i++) {
     if (!strcmp(path.get(), kRedirMap[i].id)) {
+      nsAutoCString url;
+
+      // check if about:newtab got overridden
+      if (path.EqualsLiteral("newtab")) {
+        nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
+          do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        bool overridden = false;
+        rv = aboutNewTabService->GetOverridden(&overridden);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (overridden) {
+          rv = aboutNewTabService->GetNewTabURL(url);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+      }
+      // fall back to the specified url in the map
+      if (url.IsEmpty()) {
+        url.AssignASCII(kRedirMap[i].url);
+      }
+
       nsCOMPtr<nsIChannel> tempChannel;
       nsCOMPtr<nsIURI> tempURI;
-      rv = NS_NewURI(getter_AddRefs(tempURI),
-                     nsDependentCString(kRedirMap[i].url));
+      rv = NS_NewURI(getter_AddRefs(tempURI), url);
       NS_ENSURE_SUCCESS(rv, rv);
+
+      // If tempURI links to an external URI (i.e. something other than
+      // chrome:// or resource://) then set the LOAD_REPLACE flag on the
+      // channel which forces the channel owner to reflect the displayed
+      // URL rather then being the systemPrincipal.
+      bool isUIResource = false;
+      rv = NS_URIChainHasFlags(tempURI, nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                               &isUIResource);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsLoadFlags loadFlags =
+        isUIResource ? static_cast<nsLoadFlags>(nsIChannel::LOAD_NORMAL)
+                     : static_cast<nsLoadFlags>(nsIChannel::LOAD_REPLACE);
+
       rv = NS_NewChannelInternal(getter_AddRefs(tempChannel),
                                  tempURI,
-                                 aLoadInfo);
+                                 aLoadInfo,
+                                 nullptr, // aLoadGroup
+                                 nullptr, // aCallbacks
+                                 loadFlags);
       NS_ENSURE_SUCCESS(rv, rv);
 
       tempChannel->SetOriginalURI(aURI);
