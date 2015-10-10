@@ -1482,7 +1482,7 @@ needs-focus != 542116-1.html 542116-1-ref.html
 needs-focus != 542116-2.html 542116-2-ref.html
 needs-focus != 542116-3.html 542116-3-ref.html
 == 542317-1.html 542317-1-ref.html
-fuzzy-if(Android,17,2) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,230) skip-if((B2G&&browserIsRemote)||Mulet) == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,17,2) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,238) skip-if((B2G&&browserIsRemote)||Mulet) == 542605-hidden-unscrollable.xul 542605-hidden-unscrollable-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 542620-1.html 542620-1-ref.html
 == 545049-1.html 545049-1-ref.html
 == 546033-1.html 546033-1-ref.html
