@@ -16387,7 +16387,7 @@ QuotaClient::PerformIdleMaintenanceOnDatabaseInternal(
     nsCOMPtr<mozIStorageConnection> mConnection;
 
   public:
-    AutoClose(mozIStorageConnection* aConnection)
+    explicit AutoClose(mozIStorageConnection* aConnection)
       : mConnection(aConnection)
     {
       MOZ_ASSERT(aConnection);
