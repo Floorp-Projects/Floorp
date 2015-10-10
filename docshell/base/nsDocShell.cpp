@@ -13969,7 +13969,8 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     do_GetService(THIRDPARTYUTIL_CONTRACTID, &result);
   NS_ENSURE_SUCCESS(result, result);
 
-  if (mCurrentURI) {
+  if (mCurrentURI &&
+      nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
     nsAutoCString uriSpec;
     mCurrentURI->GetSpec(uriSpec);
     if (!(uriSpec.EqualsLiteral("about:blank"))) {
@@ -13984,10 +13985,7 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
           return result;
       }
 
-      if (isThirdPartyURI &&
-          (Preferences::GetInt("network.cookie.cookieBehavior",
-                               nsICookieService::BEHAVIOR_ACCEPT) ==
-                               nsICookieService::BEHAVIOR_REJECT_FOREIGN)) {
+      if (isThirdPartyURI) {
         return NS_OK;
       }
     }
