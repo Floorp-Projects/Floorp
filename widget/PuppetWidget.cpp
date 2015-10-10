@@ -647,6 +647,8 @@ NS_IMETHODIMP_(void)
 PuppetWidget::SetInputContext(const InputContext& aContext,
                               const InputContextAction& aAction)
 {
+  mInputContext = aContext;
+
 #ifndef MOZ_CROSS_PROCESS_IME
   return;
 #endif
@@ -737,6 +739,13 @@ PuppetWidget::GetIMEUpdatePreference()
   // content event only with the parent process.  Therefore, this process
   // needs to receive a lot of information from the focused editor to sent
   // the latest content to the parent process.
+  if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+    // But if a plugin has focus, we cannot receive text nor selection change
+    // in the plugin.  Therefore, PuppetWidget needs to receive only position
+    // change event for updating the editor rect cache.
+    return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
+                                 nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE);
+  }
   return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
                                nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
                                nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
