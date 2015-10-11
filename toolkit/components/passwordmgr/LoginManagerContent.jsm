@@ -15,14 +15,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
-                                  "resource://gre/modules/DeferredTask.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
-                                  "resource://gre/modules/InsecurePasswordUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
-                                  "resource://gre/modules/LoginHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginRecipesContent",
                                   "resource://gre/modules/LoginRecipes.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerContent");
@@ -416,18 +414,6 @@ var LoginManagerContent = {
       return null;
     };
 
-    // Returns true if this window or any subframes have insecure login forms.
-    let hasInsecureLoginForms = (thisWindow, parentIsInsecure) => {
-      let doc = thisWindow.document;
-      let isInsecure =
-          parentIsInsecure ||
-          !InsecurePasswordUtils.checkIfURIisSecure(doc.documentURIObject);
-      let hasLoginForm = !!this.stateForDocument(doc).loginForm;
-      return (hasLoginForm && isInsecure) ||
-             Array.some(thisWindow.frames,
-                        frame => hasInsecureLoginForms(frame, isInsecure));
-    };
-
     // Store the actual form to use on the state for the top-level document.
     let topState = this.stateForDocument(topWindow.document);
     topState.loginFormForFill = getFirstLoginForm(topWindow);
@@ -437,7 +423,6 @@ var LoginManagerContent = {
     messageManager.sendAsyncMessage("RemoteLogins:updateLoginFormPresence", {
       loginFormOrigin,
       loginFormPresent: !!topState.loginFormForFill,
-      hasInsecureLoginForms: hasInsecureLoginForms(topWindow, false),
     });
   },
 
