@@ -195,6 +195,12 @@ private:
   bool mKeptAlive;            // IPC kept open, but only for security info
   nsRefPtr<ChannelEventQueue> mEventQ;
 
+  // If nsUnknownDecoder is involved OnStartRequest call will be delayed and
+  // this queue keeps OnDataAvailable data until OnStartRequest is finally
+  // called.
+  nsTArray<nsAutoPtr<ChannelEvent>> mUnknownDecoderEventQ;
+  bool mUnknownDecoderInvolved;
+
   // Once set, OnData and possibly OnStop will be diverted to the parent.
   bool mDivertingToParent;
   // Once set, no OnStart/OnData/OnStop callbacks should be received from the
@@ -229,6 +235,9 @@ private:
                       const NetAddr& selfAddr,
                       const NetAddr& peerAddr,
                       const uint32_t& cacheKey);
+  void MaybeDivertOnData(const nsCString& data,
+                         const uint64_t& offset,
+                         const uint32_t& count);
   void OnTransportAndData(const nsresult& channelStatus,
                           const nsresult& status,
                           const uint64_t progress,
@@ -237,6 +246,7 @@ private:
                           const uint64_t& offset,
                           const uint32_t& count);
   void OnStopRequest(const nsresult& channelStatus, const ResourceTimingStruct& timing);
+  void MaybeDivertOnStop(const nsresult& aChannelStatus);
   void OnProgress(const int64_t& progress, const int64_t& progressMax);
   void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);
@@ -253,6 +263,8 @@ private:
   friend class StartRequestEvent;
   friend class StopRequestEvent;
   friend class TransportAndDataEvent;
+  friend class MaybeDivertOnDataHttpEvent;
+  friend class MaybeDivertOnStopHttpEvent;
   friend class ProgressEvent;
   friend class StatusEvent;
   friend class FailedAsyncOpenEvent;

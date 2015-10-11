@@ -101,13 +101,19 @@ protected:
                          const nsCString& data,
                          const uint64_t& offset,
                          const uint32_t& count);
+  void MaybeDivertOnData(const nsCString& data,
+                         const uint64_t& offset,
+                         const uint32_t& count);
+  void MaybeDivertOnStop(const nsresult& statusCode);
   void DoOnStopRequest(const nsresult& statusCode);
   void DoFailedAsyncOpen(const nsresult& statusCode);
   void DoDeleteSelf();
 
   friend class FTPStartRequestEvent;
   friend class FTPDataAvailableEvent;
+  friend class MaybeDivertOnDataFTPEvent;
   friend class FTPStopRequestEvent;
+  friend class MaybeDivertOnStopFTPEvent;
   friend class FTPFailedAsyncOpenEvent;
   friend class FTPDeleteSelfEvent;
 
@@ -116,6 +122,13 @@ private:
 
   bool mIPCOpen;
   nsRefPtr<ChannelEventQueue> mEventQ;
+
+  // If nsUnknownDecoder is involved we queue onDataAvailable (and possibly
+  // OnStopRequest) so that we can divert them if needed when the listener's
+  // OnStartRequest is finally called
+  nsTArray<nsAutoPtr<ChannelEvent>> mUnknownDecoderEventQ;
+  bool mUnknownDecoderInvolved;
+
   bool mCanceled;
   uint32_t mSuspendCount;
   bool mIsPending;
