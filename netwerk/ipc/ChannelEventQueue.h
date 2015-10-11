@@ -51,6 +51,7 @@ class ChannelEventQueue final
   // Puts IPDL-generated channel event into queue, to be run later
   // automatically when EndForcedQueueing and/or Resume is called.
   inline void Enqueue(ChannelEvent* callback);
+  inline nsresult PrependEvents(nsTArray<nsAutoPtr<ChannelEvent> >& aEvents);
 
   // After StartForcedQueueing is called, ShouldEnqueue() will return true and
   // no events will be run/flushed until EndForcedQueueing is called.
@@ -125,6 +126,19 @@ ChannelEventQueue::EndForcedQueueing()
 {
   mForced = false;
   MaybeFlushQueue();
+}
+
+inline nsresult
+ChannelEventQueue::PrependEvents(nsTArray<nsAutoPtr<ChannelEvent> >& aEvents)
+{
+  if (!mEventQueue.InsertElementsAt(0, aEvents.Length())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t i = 0; i < aEvents.Length(); i++) {
+    mEventQueue.ReplaceElementAt(i, aEvents[i].forget());
+  }
+  return NS_OK;
 }
 
 inline void
