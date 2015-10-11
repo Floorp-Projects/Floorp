@@ -7,7 +7,7 @@
 interface nsIMobileCallForwardingOptions;
 interface nsITelephonyCallInfo;
 
-[scriptable, uuid(80faf34e-286b-4487-bd55-135bd92668b9)]
+[scriptable, uuid(baa9f5f3-5cab-40e0-81e9-ae0abd917907)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -28,17 +28,6 @@ interface nsITelephonyListener : nsISupports
    */
   void callStateChanged(in unsigned long length,
                         [array, size_is(length)] in nsITelephonyCallInfo allInfo);
-
-  /**
-   * Called when participants of a conference call have been updated, and the
-   * conference call state changes.
-   *
-   * @param callState
-   *        Possible values are: nsITelephonyService::CALL_STATE_UNKNOWN,
-   *        nsITelephonyService::CALL_STATE_HELD,
-   *        nsITelephonyService::CALL_STATE_CONNECTED.
-   */
-  void conferenceCallStateChanged(in unsigned short callState);
 
   /**
    * Notify when RIL receives supplementary service notification.
