@@ -259,6 +259,7 @@ class Instruction {
   bool IsCBZ() const;
   bool IsCBNZ() const;
   bool IsLDR() const;
+  bool IsNOP() const;
   bool IsADR() const;
   bool IsADRP() const;
   bool IsBranchLinkImm() const;
