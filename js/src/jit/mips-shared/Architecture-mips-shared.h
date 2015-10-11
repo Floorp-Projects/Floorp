@@ -223,7 +223,7 @@ class Registers
 // Smallest integer type that can hold a register bitmask.
 typedef uint32_t PackedRegisterMask;
 
-class BaseFloatRegisters
+class FloatRegistersMIPSShared
 {
   public:
     enum FPRegisterID {
@@ -286,13 +286,13 @@ class BaseFloatRegisters
 template <typename T>
 class TypedRegisterSet;
 
-class BaseFloatRegister
+class FloatRegisterMIPSShared
 {
   public:
     bool isInt32x4() const { return false; }
     bool isFloat32x4() const { return false; }
 
-    typedef BaseFloatRegisters::SetType SetType;
+    typedef FloatRegistersMIPSShared::SetType SetType;
 
     static uint32_t SetSize(SetType x) {
         static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
