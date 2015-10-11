@@ -344,7 +344,7 @@ Telephony::HandleCallInfo(nsITelephonyCallInfo* aInfo)
       NS_ENSURE_SUCCESS(rv, rv);
     }
     return NS_OK;
-  } 
+  }
 
   // Update an existing call
   call->UpdateEmergency(isEmergency);
@@ -723,6 +723,7 @@ Telephony::WindowAudioCaptureChanged()
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
 {
+  // Update call state
   nsresult rv;
   for (uint32_t i = 0; i < aLength; ++i) {
     rv = HandleCallInfo(aAllInfo[i]);
@@ -730,6 +731,9 @@ Telephony::CallStateChanged(uint32_t aLength, nsITelephonyCallInfo** aAllInfo)
       return rv;
     }
   }
+
+  // Update conference state
+  mGroup->ChangeState();
 
   rv = HandleAudioAgentState();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -742,17 +746,6 @@ NS_IMETHODIMP
 Telephony::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 {
   return HandleCallInfo(aInfo);
-}
-
-NS_IMETHODIMP
-Telephony::ConferenceCallStateChanged(uint16_t aCallState)
-{
-  // The current design of Telephony Stack gaurantees that the calls within a
-  // call group are updated before this method being called, so we can let a
-  // call update its state by its own, and we can discard |aCallState| here.
-  // Anyway, this method is going to be deprecated in Bug 1155072.
-  mGroup->ChangeState();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
