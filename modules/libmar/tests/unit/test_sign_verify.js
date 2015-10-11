@@ -142,18 +142,13 @@ function run_test() {
     // Will reference the arguments to use for verification in signmar
     let args = [];
 
-    // The XPCShell test wiki indicates this is the preferred way for
-    // Windows and OSX detection.
-    var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-    var isOSX = ("nsILocalFileMac" in Components.interfaces);
-
     // Setup the command line arguments to create the MAR.
     // Windows & Mac vs. Linux/... have different command line for verification
     // since on Windows we verify with CryptoAPI, on Mac with Security
     // Transforms or CDSA/CSSM and on all other platforms we verify with NSS. So
     // on Windows and Mac we use an exported DER file and on other platforms we
     // use the NSS config db.
-    if (isWindows || isOSX) {
+    if (mozinfo.os == "win" || mozinfo.os == "mac") {
       if (certs.length == 1 && useShortHandCmdLine) {
         args.push("-D", "data/" + certs[0] + ".der");
       } else {
