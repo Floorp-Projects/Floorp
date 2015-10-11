@@ -101,6 +101,7 @@ var initTable = [
   ["uriFixup", "@mozilla.org/docshell/urifixup;1", "nsIURIFixup"],
   ["blocklist", "@mozilla.org/extensions/blocklist;1", "nsIBlocklistService"],
   ["netUtils", "@mozilla.org/network/util;1", "nsINetUtil"],
+  ["loadContextInfo", "@mozilla.org/load-context-info-factory;1", "nsILoadContextInfoFactory"],
 ];
 
 initTable.forEach(([name, contract, intf, enabled = true]) => {

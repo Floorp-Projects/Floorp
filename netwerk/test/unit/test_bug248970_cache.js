@@ -47,7 +47,7 @@ function store_entries(cb)
   asyncOpenCacheEntry(entries[store_idx][0],
                       entries[store_idx][2],
                       Ci.nsICacheStorage.OPEN_TRUNCATE,
-                      LoadContextInfo.custom(!entries[store_idx][3]),
+                      LoadContextInfo.custom(!entries[store_idx][3], false, {}),
                       store_data,
                       appCache);
 }
@@ -87,7 +87,7 @@ function check_entries(cb, pbExited)
   asyncOpenCacheEntry(entries[check_idx][0],
                       entries[check_idx][2],
                       Ci.nsICacheStorage.OPEN_READONLY,
-                      LoadContextInfo.custom(!entries[check_idx][3]),
+                      LoadContextInfo.custom(!entries[check_idx][3], false, {}),
                       check_data,
                       appCache);
 }

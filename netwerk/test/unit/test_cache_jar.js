@@ -63,12 +63,10 @@ function run_all_tests() {
   if (procType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
     return;
 
-  let subject = {
-    appId: 1,
-    browserOnly: true,
-    QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
-  };
-  Services.obs.notifyObservers(subject, "webapps-clear-data", null);
+  let attrs_inBrowser = JSON.stringify({ appId:1, inBrowser:true });
+  let attrs_notInBrowser = JSON.stringify({ appId:1 });
+
+  Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);
 
   for (let test of secondTests) {
     handlers_called = 0;
@@ -77,12 +75,8 @@ function run_all_tests() {
     yield undefined;
   }
 
-  subject = {
-    appId: 1,
-    browserOnly: false,
-    QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
-  };
-  Services.obs.notifyObservers(subject, "webapps-clear-data", null);
+  Services.obs.notifyObservers(null, "clear-origin-data", attrs_notInBrowser);
+  Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);
 
   for (let test of thirdTests) {
     handlers_called = 0;
