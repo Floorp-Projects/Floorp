@@ -180,6 +180,20 @@ static uint32_t sVideoQueueDefaultSize = MAX_VIDEO_QUEUE_SIZE;
 static uint32_t sVideoQueueHWAccelSize = MIN_VIDEO_QUEUE_SIZE;
 static uint32_t sVideoQueueSendToCompositorSize = VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE;
 
+static void InitVideoQueuePrefs() {
+  MOZ_ASSERT(NS_IsMainThread());
+  static bool sPrefInit = false;
+  if (!sPrefInit) {
+    sPrefInit = true;
+    sVideoQueueDefaultSize = Preferences::GetUint(
+      "media.video-queue.default-size", MAX_VIDEO_QUEUE_SIZE);
+    sVideoQueueHWAccelSize = Preferences::GetUint(
+      "media.video-queue.hw-accel-size", MIN_VIDEO_QUEUE_SIZE);
+    sVideoQueueSendToCompositorSize = Preferences::GetUint(
+      "media.video-queue.send-to-compositor-size", VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE);
+  }
+}
+
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
@@ -269,19 +283,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::InitializationTask);
   mTaskQueue->Dispatch(r.forget());
 
-  static bool sPrefCacheInit = false;
-  if (!sPrefCacheInit) {
-    sPrefCacheInit = true;
-    Preferences::AddUintVarCache(&sVideoQueueDefaultSize,
-                                 "media.video-queue.default-size",
-                                 MAX_VIDEO_QUEUE_SIZE);
-    Preferences::AddUintVarCache(&sVideoQueueHWAccelSize,
-                                 "media.video-queue.hw-accel-size",
-                                 MIN_VIDEO_QUEUE_SIZE);
-    Preferences::AddUintVarCache(&sVideoQueueSendToCompositorSize,
-                                 "media.video-queue.send-to-compositor-size",
-                                 VIDEO_QUEUE_SEND_TO_COMPOSITOR_SIZE);
-  }
+  InitVideoQueuePrefs();
 
   mBufferingWait = IsRealTime() ? 0 : 15;
   mLowDataThresholdUsecs = IsRealTime() ? 0 : detail::LOW_DATA_THRESHOLD_USECS;
