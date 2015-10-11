@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1209414
+-->
+<head>
+  <title>Test for Bug 1209414</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1209414">Mozilla Bug 1209414</a>
+<p id="display"></p>
+</div>
+
+<textarea id="de-DE" lang="de-DE">heute ist ein guter Tag - today is a good day</textarea>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Ci = SpecialPowers.Ci;
+
+function getMisspelledWords(editor) {
+  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
+}
+
+var elem_de;
+var editor_de;
+var de_DE;
+var hunspell;
+var chromeWin, contextMenu;
+
+/** Test for Bug 1209414 **/
+/*
+ * All we want to do in this test is change the spelling using a right-click and selection from the menu.
+ * This is necessary since all the other tests use SetCurrentDictionary() which doesn't reflect
+ * user behaviour.
+ */
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+
+  chromeWin = SpecialPowers.wrap(window)
+                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIWebNavigation)
+                  .QueryInterface(Ci.nsIDocShellTreeItem)
+                  .rootTreeItem
+                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindow)
+                  .QueryInterface(Ci.nsIDOMChromeWindow);
+  contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
+  is(contextMenu!=null, true, "Got context menu XUL");
+  contextMenu.addEventListener("popupshown", handlePopup, false);
+
+  var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                      .getService(Components.interfaces.nsIProperties)
+                      .get("CurWorkD", Components.interfaces.nsIFile);
+  dir.append("tests");
+  dir.append("editor");
+  dir.append("composer");
+  dir.append("test");
+
+  hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                       .getService(Components.interfaces.mozISpellCheckingEngine);
+
+  // Install de-DE dictionary.
+  de_DE = dir.clone();
+  de_DE.append("de-DE");
+  is(de_DE.exists(), true, "true expected (de_DE directory should exist)");
+  hunspell.addDirectory(de_DE);
+
+  elem_de = document.getElementById('de-DE');
+  editor_de = elem_de.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  editor_de.setSpellcheckUserOverride(true);
+
+  onSpellCheck(elem_de, function () {
+    var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      var currentDictonary = spellchecker.GetCurrentDictionary();
+    } catch(e) {}
+
+    // Check that the German dictionary is loaded and that the spell check has worked.
+    is(currentDictonary, "de-DE", "expected de-DE");
+    is(getMisspelledWords(editor_de), "today" + "is" + "a" + "good" + "day", "some misspelled words expected: today is a good day");
+
+    // Focus again, just to be sure that the context-click won't trigger another spell check.
+    elem_de.focus();
+
+    // Make sure all spell checking action is done before right-click to select the en-US dictionary.
+    onSpellCheck(elem_de, function () {
+      synthesizeMouse(elem_de, 2, 2, { type : "contextmenu", button : 2 }, window);
+    });
+  });
+});
+
+function handlePopup() {
+
+  is(contextMenu.state, "open", "checking if popup is open");
+
+  // Select Language from the menu.
+  // Take a look at toolkit/modules/InlineSpellChecker.jsm to see how the menu works.
+  contextMenu.ownerDocument.getElementById("spell-check-dictionary-en-US").doCommand();
+  contextMenu.hidePopup();
+
+  onSpellCheck(elem_de, function () {
+    var inlineSpellChecker = editor_de.getInlineSpellChecker(true);
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      currentDictonary = spellchecker.GetCurrentDictionary();
+    } catch(e) {}
+
+    // Check that the English dictionary is loaded and that the spell check has worked.
+    is(currentDictonary, "en-US", "expected en-US");
+    is(getMisspelledWords(editor_de), "heute" + "ist" + "ein" + "guter", "some misspelled words expected: heute ist ein guter");
+
+    // Remove the fake de_DE dictionary again.
+    hunspell.removeDirectory(de_DE);
+
+    // This will clear the content preferences and reset "spellchecker.dictionary".
+    spellchecker.SetCurrentDictionary("");
+    SimpleTest.finish();
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
