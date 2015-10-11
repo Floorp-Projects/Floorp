@@ -24,11 +24,13 @@ ShrinkCallback(nsITimer *aTimer, void *aClosure)
 }
 
 TextureClientPool::TextureClientPool(gfx::SurfaceFormat aFormat,
+                                     TextureFlags aFlags,
                                      gfx::IntSize aSize,
                                      uint32_t aMaxTextureClients,
                                      uint32_t aShrinkTimeoutMsec,
                                      CompositableForwarder* aAllocator)
   : mFormat(aFormat)
+  , mFlags(aFlags)
   , mSize(aSize)
   , mMaxTextureClients(aMaxTextureClients)
   , mShrinkTimeoutMsec(aShrinkTimeoutMsec)
@@ -108,10 +110,10 @@ TextureClientPool::GetTextureClient()
     // gfx::BackendType::NONE means use the content backend
     textureClient = TextureClient::CreateForRawBufferAccess(mSurfaceAllocator,
       mFormat, mSize, gfx::BackendType::NONE,
-      TextureFlags::IMMEDIATE_UPLOAD, ALLOC_DEFAULT);
+      mFlags, ALLOC_DEFAULT);
   } else {
     textureClient = TextureClient::CreateForDrawing(mSurfaceAllocator,
-      mFormat, mSize, BackendSelector::Content, TextureFlags::IMMEDIATE_UPLOAD);
+      mFormat, mSize, BackendSelector::Content, mFlags);
   }
 
   mOutstandingClients++;
