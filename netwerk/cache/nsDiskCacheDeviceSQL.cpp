@@ -46,6 +46,7 @@
 
 using namespace mozilla;
 using namespace mozilla::storage;
+using mozilla::OriginAttributes;
 
 static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
@@ -1299,33 +1300,12 @@ GetGroupForCache(const nsCSubstring &clientID, nsCString &group)
   return NS_OK;
 }
 
-nsresult
-AppendJARIdentifier(nsACString &_result, int32_t appId, bool isInBrowserElement)
+void
+AppendJARIdentifier(nsACString &_result, OriginAttributes const *aOriginAttributes)
 {
-    _result.Append('#');
-    _result.AppendInt(appId);
-    _result.Append('+');
-    _result.Append(isInBrowserElement ? 't' : 'f');
-
-    return NS_OK;
-}
-
-nsresult
-GetJARIdentifier(nsIURI *aURI,
-                 uint32_t appId, bool isInBrowserElement,
-                 nsACString &_result)
-{
-    _result.Truncate();
-
-    // These lines are here for compatibility only.  We must not fill the
-    // JAR identifier when this is no-app context, otherwise web content
-    // offline application cache loads would not be satisfied (cache would
-    // not be found).
-    if (!isInBrowserElement && appId == NECKO_NO_APP_ID)
-        return NS_OK;
-
-    // This load context has some special attributes, create a jar identifier
-    return AppendJARIdentifier(_result, appId, isInBrowserElement);
+  nsAutoCString suffix;
+  aOriginAttributes->CreateSuffix(suffix);
+  _result.Append(suffix);
 }
 
 } // namespace
@@ -1333,7 +1313,7 @@ GetJARIdentifier(nsIURI *aURI,
 // static
 nsresult
 nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
-                                                   uint32_t appId, bool isInBrowserElement,
+                                                   OriginAttributes const *aOriginAttributes,
                                                    nsACString &_result)
 {
   nsCOMPtr<nsIURI> newURI;
@@ -1346,13 +1326,9 @@ nsOfflineCacheDevice::BuildApplicationCacheGroupID(nsIURI *aManifestURL,
 
   _result.Assign(manifestSpec);
 
-  nsAutoCString jarid;
-  rv = GetJARIdentifier(aManifestURL, appId, isInBrowserElement, jarid);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Include JAR ID, i.e. the extended origin if present.
-  if (!jarid.IsEmpty())
-    _result.Append(jarid);
+  if (aOriginAttributes) {
+    AppendJARIdentifier(_result, aOriginAttributes);
+  }
 
   return NS_OK;
 }
@@ -2430,9 +2406,17 @@ nsOfflineCacheDevice::DiscardByAppId(int32_t appID, bool browserEntriesOnly)
   nsresult rv;
 
   nsAutoCString jaridsuffix;
+
   jaridsuffix.Append('%');
-  rv = AppendJARIdentifier(jaridsuffix, appID, browserEntriesOnly);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  // TODO - this method should accept OriginAttributes* from outside instead.
+  // If passed null, we should then delegate to
+  // nsCacheService::GlobalInstance()->EvictEntriesInternal(nsICache::STORE_OFFLINE);
+
+  OriginAttributes oa;
+  oa.mAppId = appID;
+  oa.mInBrowser = browserEntriesOnly;
+  AppendJARIdentifier(jaridsuffix, &oa);
 
   {
     AutoResetStatement statement(mStatement_EnumerateApps);
@@ -2489,8 +2473,9 @@ nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI,
 
   nsCOMPtr<nsIURI> groupURI;
   rv = NS_NewURI(getter_AddRefs(groupURI), groupID);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return false;
+  }
 
   // When we are choosing an initial cache to load the top
   // level document from, the URL of that document must have
@@ -2499,28 +2484,24 @@ nsOfflineCacheDevice::CanUseCache(nsIURI *keyURI,
   // and dynamic entries might have origin different from the
   // manifest origin.
   if (!NS_SecurityCompareURIs(keyURI, groupURI,
-                              GetStrictFileOriginPolicy()))
+                              GetStrictFileOriginPolicy())) {
     return false;
-
-  // Get extended origin attributes
-  uint32_t appId = NECKO_NO_APP_ID;
-  bool isInBrowserElement = false;
-
-  if (loadContextInfo) {
-      appId = loadContextInfo->AppId();
-      isInBrowserElement = loadContextInfo->IsInBrowserElement();
   }
 
   // Check the groupID we found is equal to groupID based
   // on the load context demanding load from app cache.
   // This is check of extended origin.
   nsAutoCString demandedGroupID;
-  rv = BuildApplicationCacheGroupID(groupURI, appId, isInBrowserElement,
-                                    demandedGroupID);
+
+  const OriginAttributes *oa = loadContextInfo
+    ? loadContextInfo->OriginAttributesPtr()
+    : nullptr;
+  rv = BuildApplicationCacheGroupID(groupURI, oa, demandedGroupID);
   NS_ENSURE_SUCCESS(rv, false);
 
-  if (groupID != demandedGroupID)
+  if (groupID != demandedGroupID) {
     return false;
+  }
 
   return true;
 }

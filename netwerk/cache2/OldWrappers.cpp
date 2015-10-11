@@ -528,8 +528,7 @@ GetCacheSessionNameForStoragePolicy(
         nsCSubstring const &scheme,
         nsCacheStoragePolicy storagePolicy,
         bool isPrivate,
-        uint32_t appId,
-        bool inBrowser,
+        OriginAttributes const *originAttribs,
         nsACString& sessionName)
 {
   MOZ_ASSERT(!isPrivate || storagePolicy == nsICache::STORE_IN_MEMORY);
@@ -582,12 +581,9 @@ GetCacheSessionNameForStoragePolicy(
       sessionName.AppendLiteral("-private");
   }
 
-  if (appId != nsILoadContextInfo::NO_APP_ID || inBrowser) {
-    sessionName.Append('~');
-    sessionName.AppendInt(appId);
-    sessionName.Append('~');
-    sessionName.AppendInt(inBrowser);
-  }
+  nsAutoCString suffix;
+  originAttribs->CreateSuffix(suffix);
+  sessionName.Append(suffix);
 
   return NS_OK;
 }
@@ -618,8 +614,7 @@ GetCacheSession(nsCSubstring const &aScheme,
       aScheme,
       storagePolicy,
       aLoadInfo->IsPrivate(),
-      aLoadInfo->AppId(),
-      aLoadInfo->IsInBrowserElement(),
+      aLoadInfo->OriginAttributesPtr(),
       clientId);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1000,9 +995,12 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCallbac
   nsresult rv;
 
   if (!mAppCache && mOfflineStorage) {
+    // TODO - bug 1165256, have an API on nsIApplicationCacheService that takes
+    // optional OAs and decides internally what to do.
+
     // Special casing for pure offline storage
-    if (mLoadInfo->AppId() == nsILoadContextInfo::NO_APP_ID &&
-        !mLoadInfo->IsInBrowserElement()) {
+    if (mLoadInfo->OriginAttributesPtr()->mAppId == nsILoadContextInfo::NO_APP_ID &&
+        !mLoadInfo->OriginAttributesPtr()->mInBrowser) {
 
       // Clear everything.
       nsCOMPtr<nsICacheService> serv =
@@ -1018,8 +1016,8 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCallbac
         do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = appCacheService->DiscardByAppId(mLoadInfo->AppId(),
-                                           mLoadInfo->IsInBrowserElement());
+      rv = appCacheService->DiscardByAppId(mLoadInfo->OriginAttributesPtr()->mAppId,
+                                           mLoadInfo->OriginAttributesPtr()->mInBrowser);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

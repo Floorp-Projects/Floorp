@@ -4,6 +4,7 @@ var Cu = Components.utils;
 var Cr = Components.results;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/LoadContextInfo.jsm");
 
 var running_single_process = false;
 
@@ -150,21 +151,7 @@ var prepListener = {
 };
 
 function open_and_continue(uris, continueCallback) {
-  var lci = {
-    QueryInterface: function (iid) {
-      if (iid.equals(Ci.nsILoadContextInfo)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    },
-
-    isPrivate: false,
-    appId: Ci.nsILoadContextInfo.NO_APP_ID,
-    isInBrowserElement: false,
-    isAnonymous: false
-  };
-
-  var ds = Services.cache2.diskCacheStorage(lci, false);
+  var ds = Services.cache2.diskCacheStorage(LoadContextInfo.default, false);
 
   prepListener.init(uris.length, continueCallback);
   for (var i = 0; i < uris.length; ++i) {
