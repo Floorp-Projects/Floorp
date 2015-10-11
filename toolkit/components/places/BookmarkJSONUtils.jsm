@@ -276,7 +276,7 @@ BookmarkImporter.prototype = {
             let childIds = [];
             for (let i = 0; i < root.childCount; i++) {
               let childId = root.getChild(i).itemId;
-              if (excludeItems.indexOf(childId) == -1 &&
+              if (!excludeItems.includes(childId) &&
                   childId != PlacesUtils.tagsFolderId) {
                 childIds.push(childId);
               }

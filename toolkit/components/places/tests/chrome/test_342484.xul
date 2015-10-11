@@ -43,7 +43,7 @@ function runTest() {
         is(nodes.length, 2, "Created the two good livemark items");
         for (let i = 0; i < nodes.length; ++i) {
           let node = nodes[i];
-          ok(GOOD_URLS.indexOf(node.uri) != -1, "livemark item created with bad uri " + node.uri);
+          ok(GOOD_URLS.includes(node.uri), "livemark item created with bad uri " + node.uri);
         }
 
         PlacesUtils.livemarks.removeLivemark(aLivemark).then(() => {

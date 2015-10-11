@@ -243,7 +243,7 @@ function ensureTimestampsUpdated(aGuid, aCheckDateAdded = false) {
 function ensureTagsForURI(aURI, aTags) {
   let tagsSet = tagssvc.getTagsForURI(aURI);
   do_check_eq(tagsSet.length, aTags.length);
-  do_check_true(aTags.every( t => tagsSet.indexOf(t) != -1 ));
+  do_check_true(aTags.every( t => tagsSet.includes(t)));
 }
 
 function createTestFolderInfo(aTitle = "Test Folder") {
@@ -1162,7 +1162,7 @@ add_task(function* test_untag_uri() {
       for (let url of urls) {
         let expectedTags = tagsRemoved.length == 0 ?
            [] : [for (tag of preRemovalTags.get(url))
-                 if (tagsRemoved.indexOf(tag) == -1) tag];
+                 if (!tagsRemoved.includes(tag)) tag];
         ensureTagsForURI(url, expectedTags);
       }
     }

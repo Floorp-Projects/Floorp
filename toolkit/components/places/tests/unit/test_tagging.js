@@ -93,9 +93,9 @@ function run_test() {
   var uri3 = uri("http://testuri/3");
   tagssvc.tagURI(uri3, [tagId, "tag 3", "456"]);
   var tags = tagssvc.getTagsForURI(uri3);
-  do_check_true(tags.indexOf(tagTitle) != -1);
-  do_check_true(tags.indexOf("tag 3") != -1);
-  do_check_true(tags.indexOf("456") != -1);
+  do_check_true(tags.includes(tagTitle));
+  do_check_true(tags.includes("tag 3"));
+  do_check_true(tags.includes("456"));
 
   // test mixed id/name tagging
   tagssvc.untagURI(uri3, [tagId, "tag 3", "456"]);
@@ -112,9 +112,9 @@ function run_test() {
             getService(Ci.nsITaggingService);
   var uri4Tags = tagssvc.getTagsForURI(uri4);
   do_check_eq(uri4Tags.length, 3);
-  do_check_true(uri4Tags.indexOf(tagTitle) != -1);
-  do_check_true(uri4Tags.indexOf("tag 3") != -1);
-  do_check_true(uri4Tags.indexOf("456") != -1);
+  do_check_true(uri4Tags.includes(tagTitle));
+  do_check_true(uri4Tags.includes("tag 3"));
+  do_check_true(uri4Tags.includes("456"));
 
   // Test sparse arrays.
   let curChildCount = tagRoot.childCount;
