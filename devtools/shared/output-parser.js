@@ -10,8 +10,6 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const MAX_ITERATIONS = 100;
-
 const BEZIER_KEYWORDS = ["linear", "ease-in-out", "ease-in", "ease-out",
                          "ease"];
 
@@ -144,7 +142,6 @@ OutputParser.prototype = {
     this.parsed.length = 0;
 
     let tokenStream = DOMUtils.getCSSLexer(text);
-    let i = 0;
     let parenDepth = 0;
     let outerMostFunctionTakesColor = false;
 
@@ -160,16 +157,6 @@ OutputParser.prototype = {
         break;
       }
       if (token.tokenType === "comment") {
-        continue;
-      }
-
-      // Prevent this loop from slowing down the browser with too
-      // many nodes being appended into output. In practice it is very unlikely
-      // that this will ever happen.
-      i++;
-      if (i > MAX_ITERATIONS) {
-        this._appendTextNode(text.substring(token.startOffset,
-                                            token.endOffset));
         continue;
       }
 
