@@ -183,10 +183,9 @@ class MediaCache;
  */
 class MediaCacheStream {
 public:
-  enum {
-    // This needs to be a power of two
-    BLOCK_SIZE = 32768
-  };
+  // This needs to be a power of two
+  static const int64_t BLOCK_SIZE = 32768;
+
   enum ReadMode {
     MODE_METADATA,
     MODE_PLAYBACK
