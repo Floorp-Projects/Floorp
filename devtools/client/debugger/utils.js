@@ -316,6 +316,48 @@ var SourceUtils = {
     }
     // Give up.
     return aUrl.spec;
+  },
+
+  parseSource: function(aDebuggerView, aParser) {
+    let editor = aDebuggerView.editor;
+
+    let contents = editor.getText();
+    let location = aDebuggerView.Sources.selectedValue;
+    let parsedSource = aParser.get(contents, location);
+
+    return parsedSource;
+  },
+
+  findIdentifier: function(aEditor, parsedSource, x, y) {
+    let editor = aEditor;
+
+    // Calculate the editor's line and column at the current x and y coords.
+    let hoveredPos = editor.getPositionFromCoords({ left: x, top: y });
+    let hoveredOffset = editor.getOffset(hoveredPos);
+    let hoveredLine = hoveredPos.line;
+    let hoveredColumn = hoveredPos.ch;
+
+    let scriptInfo = parsedSource.getScriptInfo(hoveredOffset);
+
+    // If the script length is negative, we're not hovering JS source code.
+    if (scriptInfo.length == -1) {
+      return;
+    }
+
+    // Using the script offset, determine the actual line and column inside the
+    // script, to use when finding identifiers.
+    let scriptStart = editor.getPosition(scriptInfo.start);
+    let scriptLineOffset = scriptStart.line;
+    let scriptColumnOffset = (hoveredLine == scriptStart.line ? scriptStart.ch : 0);
+
+    let scriptLine = hoveredLine - scriptLineOffset;
+    let scriptColumn = hoveredColumn - scriptColumnOffset;
+    let identifierInfo = parsedSource.getIdentifierAt({
+      line: scriptLine + 1,
+      column: scriptColumn,
+      scriptIndex: scriptInfo.index
+    });
+
+    return identifierInfo;
   }
 };
-
