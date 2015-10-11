@@ -644,7 +644,7 @@ TagAutoCompleteSearch.prototype = {
         // for each match, prepend what the user has typed so far
         if (searchResults[i].toLowerCase()
                             .indexOf(searchString.toLowerCase()) == 0 &&
-            comments.indexOf(searchResults[i]) == -1) {
+            !comments.includes(searchResults[i])) {
           results.push(before + searchResults[i]);
           comments.push(searchResults[i]);
         }

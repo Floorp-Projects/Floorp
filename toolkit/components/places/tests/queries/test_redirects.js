@@ -50,7 +50,7 @@ function check_results_callback(aSequence) {
   // Remove duplicates, since queries are RESULTS_AS_URI (unique pages).
   let seen = [];
   expectedData = expectedData.filter(function (aData) {
-    if (seen.indexOf(aData.uri) != -1)
+    if (seen.includes(aData.uri))
       return false;
     else
       seen.push(aData.uri);

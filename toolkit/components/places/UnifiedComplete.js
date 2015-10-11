@@ -1290,7 +1290,7 @@ Search.prototype = {
     // when searching for "Firefox".
     let terms = parseResult.terms.toLowerCase();
     if (this._searchTokens.length > 0 &&
-        this._searchTokens.every(token => terms.indexOf(token) == -1)) {
+        this._searchTokens.every(token => !terms.includes(token))) {
       return;
     }
 

@@ -45,9 +45,9 @@
       Array.forEach(children, function (aChild) {
         let tag = aChild.getAttribute("label");
         ok(true, "Found tag '" + tag + "' in the selector");
-        ok(aAvailableTags.indexOf(tag) != -1, "Found expected tag");
+        ok(aAvailableTags.includes(tag), "Found expected tag");
         let checked = aChild.getAttribute("checked") == "true";
-        is(checked, aCheckedTags.indexOf(tag) != -1,
+        is(checked, aCheckedTags.includes(tag),
            "Tag is correctly marked");
       });
     }
