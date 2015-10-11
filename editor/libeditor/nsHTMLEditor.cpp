@@ -817,7 +817,7 @@ nsHTMLEditor::SetDocumentTitle(const nsAString &aTitle)
 ///////////////////////////////////////////////////////////////////////////
 // GetBlockNodeParent: returns enclosing block level ancestor, if any
 //
-already_AddRefed<Element>
+Element*
 nsHTMLEditor::GetBlockNodeParent(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -826,7 +826,7 @@ nsHTMLEditor::GetBlockNodeParent(nsINode* aNode)
 
   while (p) {
     if (NodeIsBlockStatic(p)) {
-      return p.forget().downcast<Element>();
+      return p->AsElement();
     }
     p = p->GetParentNode();
   }
@@ -834,7 +834,7 @@ nsHTMLEditor::GetBlockNodeParent(nsINode* aNode)
   return nullptr;
 }
 
-already_AddRefed<nsIDOMNode>
+nsIDOMNode*
 nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
@@ -844,9 +844,7 @@ nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMNode> ret =
-    dont_AddRef(GetAsDOMNode(GetBlockNodeParent(node).take()));
-  return ret.forget();
+  return GetAsDOMNode(GetBlockNodeParent(node));
 }
 
 static const char16_t nbsp = 160;
@@ -1065,7 +1063,7 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
     node = iter->GetCurrentNode();
 
     if (node && nsHTMLEditUtils::IsTableCell(node) &&
-        nsCOMPtr<Element>(GetEnclosingTable(node)) == table) {
+        GetEnclosingTable(node) == table) {
       CollapseSelectionToDeepestNonTableFirstChild(nullptr, node);
       *outHandled = true;
       return NS_OK;
@@ -3656,7 +3654,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 ///////////////////////////////////////////////////////////////////////////
 // GetEnclosingTable: find ancestor who is a table, if any
 //
-already_AddRefed<Element>
+Element*
 nsHTMLEditor::GetEnclosingTable(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
@@ -3665,13 +3663,13 @@ nsHTMLEditor::GetEnclosingTable(nsINode* aNode)
        block;
        block = GetBlockNodeParent(block)) {
     if (nsHTMLEditUtils::IsTable(block)) {
-      return block.forget();
+      return block;
     }
   }
   return nullptr;
 }
 
-nsCOMPtr<nsIDOMNode>
+nsIDOMNode*
 nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
 {
   NS_PRECONDITION(aNode, "null node passed to nsHTMLEditor::GetEnclosingTable");
