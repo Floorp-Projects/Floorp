@@ -23,7 +23,10 @@ struct ConvertibleToInt
 int increment(int arg) { return arg + 1; }
 
 struct S {
+  S() {}
   static int increment(int arg) { return arg + 1; }
+  int decrement(int arg) { return arg - 1;}
+  int sum(int arg1, int arg2) const { return arg1 + arg2;}
 };
 
 struct Incrementor {
@@ -82,6 +85,21 @@ TestReassignment()
   CHECK(f(42) == 44);
 }
 
+static void
+TestMemberFunction()
+{
+  Function<int(S&, int)> f = &S::decrement;
+  S s;
+  CHECK((f(s, 1) == 0));
+}
+
+static void
+TestConstMemberFunction()
+{
+  Function<int(const S*, int, int)> f = &S::sum;
+  const S s;
+  CHECK((f(&s, 1, 1) == 2));
+}
 int
 main()
 {
@@ -91,5 +109,7 @@ main()
   TestLambda();
   TestDefaultConstructionAndAssignmentLater();
   TestReassignment();
+  TestMemberFunction();
+  TestConstMemberFunction();
   return 0;
 }
