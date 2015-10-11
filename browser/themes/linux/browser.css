@@ -1186,7 +1186,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-appearance: none;
   list-style-image: url("chrome://browser/skin/reload-stop-go.png");
   padding: 0 9px;
-  margin-inline-start: 2px;
+  margin-inline-start: 5px;
   border-inline-start: 1px solid var(--urlbar-separator-color);
   border-image: linear-gradient(transparent 15%,
                                 var(--urlbar-separator-color) 15%,
