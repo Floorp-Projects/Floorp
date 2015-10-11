@@ -231,8 +231,8 @@ public:
   nsresult SetHTMLBackgroundColor(const nsAString& aColor);
 
   /* ------------ Block methods moved from nsEditor -------------- */
-  static already_AddRefed<mozilla::dom::Element> GetBlockNodeParent(nsINode* aNode);
-  static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
+  static mozilla::dom::Element* GetBlockNodeParent(nsINode* aNode);
+  static nsIDOMNode* GetBlockNodeParent(nsIDOMNode* aNode);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
@@ -495,9 +495,8 @@ protected:
 
 // End of Table Editing utilities
 
-  static already_AddRefed<mozilla::dom::Element>
-    GetEnclosingTable(nsINode* aNode);
-  static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
+  static mozilla::dom::Element* GetEnclosingTable(nsINode* aNode);
+  static nsIDOMNode* GetEnclosingTable(nsIDOMNode *aNode);
 
   /** content-based query returns true if <aProperty aAttribute=aValue> effects aNode
     * If <aProperty aAttribute=aValue> contains aNode,
