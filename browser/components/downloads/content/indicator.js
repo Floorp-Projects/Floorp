@@ -181,6 +181,12 @@ const DownloadsButton = {
   }
 };
 
+Object.defineProperty(this, "DownloadsButton", {
+  value: DownloadsButton,
+  enumerable: true,
+  writable: false
+});
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadsIndicatorView
 
