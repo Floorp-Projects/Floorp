@@ -477,7 +477,7 @@ elif CONFIG['JS_CODEGEN_ARM64']:
             'jit/arm64/vixl/MozSimulator-vixl.cpp',
             'jit/arm64/vixl/Simulator-vixl.cpp'
         ]
-elif CONFIG['JS_CODEGEN_MIPS32']:
+elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
     UNIFIED_SOURCES += [
         'jit/mips-shared/Architecture-mips-shared.cpp',
         'jit/mips-shared/Assembler-mips-shared.cpp',
@@ -506,6 +506,10 @@ elif CONFIG['JS_CODEGEN_MIPS32']:
             UNIFIED_SOURCES += [
                 'jit/mips32/Simulator-mips32.cpp'
             ]
+    elif CONFIG['JS_CODEGEN_MIPS64']:
+        UNIFIED_SOURCES += [
+            'jit/mips64/Architecture-mips64.cpp',
+        ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
