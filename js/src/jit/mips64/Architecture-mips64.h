@@ -41,7 +41,7 @@ static const uint32_t ShadowStackSpace = 0;
 
 // MIPS64 have 64 bit floating-point coprocessor. There are 32 double
 // precision register which can also be used as single precision registers.
-class FloatRegisters : public BaseFloatRegisters
+class FloatRegisters : public FloatRegistersMIPSShared
 {
   public:
     enum ContentType {
@@ -52,7 +52,7 @@ class FloatRegisters : public BaseFloatRegisters
 
     static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < TotalPhys);
-        return BaseFloatRegisters::GetName(Encoding(i));
+        return FloatRegistersMIPSShared::GetName(Encoding(i));
     }
 
     static Encoding FromName(const char* name);
@@ -109,7 +109,7 @@ class FloatRegisters : public BaseFloatRegisters
 template <typename T>
 class TypedRegisterSet;
 
-class FloatRegister : public BaseFloatRegister
+class FloatRegister : public FloatRegisterMIPSShared
 {
   public:
     typedef FloatRegisters Codes;
