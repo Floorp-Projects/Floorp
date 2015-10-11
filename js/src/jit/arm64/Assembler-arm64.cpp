@@ -14,6 +14,7 @@
 
 #include "gc/Marking.h"
 
+#include "jit/arm64/Architecture-arm64.h"
 #include "jit/arm64/MacroAssembler-arm64.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
@@ -384,17 +385,22 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
 void
 Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 {
-    Instruction* first = (Instruction*)inst_.raw();
+    const Instruction* first = reinterpret_cast<Instruction*>(inst_.raw());
     Instruction* load;
     Instruction* call;
 
-    if (first->InstructionBits() == 0x9100039f) {
-        load = (Instruction*)NextInstruction(first);
-        call = NextInstruction(load);
-    } else {
-        load = first;
-        call = NextInstruction(first);
-    }
+    // There might be a constant pool at the very first instruction.
+    first = first->skipPool();
+
+    // Skip the stack pointer restore instruction.
+    if (first->IsStackPtrSync())
+        first = first->InstructionAtOffset(vixl::kInstructionSize)->skipPool();
+
+    load = const_cast<Instruction*>(first);
+
+    // The call instruction follows the load, but there may be an injected
+    // constant pool.
+    call = const_cast<Instruction*>(load->InstructionAtOffset(vixl::kInstructionSize)->skipPool());
 
     if (call->IsBLR() == enabled)
         return;

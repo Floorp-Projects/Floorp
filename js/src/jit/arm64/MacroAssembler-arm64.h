@@ -2870,13 +2870,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         // for the debugger to match offset with Baseline's pcMappingEntries_.
         BufferOffset offset = nextOffset();
 
-        // TODO: Random pool insertion between instructions below is terrible.
-        // Unfortunately, we can't forbid pool prevention, because we're trying
-        // to add an entry to a pool. So as a temporary fix, just flush the pool
-        // now, so that it won't add later. If you're changing this, also
-        // check ToggleCall(), which will probably break.
-        armbuffer_.flushPool();
-
         syncStackPtr();
 
         BufferOffset loadOffset;
