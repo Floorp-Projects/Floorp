@@ -49,6 +49,8 @@ bool PDMFactory::sGonkDecoderEnabled = false;
 bool PDMFactory::sAndroidMCDecoderEnabled = false;
 bool PDMFactory::sAndroidMCDecoderPreferred = false;
 bool PDMFactory::sGMPDecoderEnabled = false;
+bool PDMFactory::sFFmpegDecoderEnabled = false;
+
 bool PDMFactory::sEnableFuzzingWrapper = false;
 uint32_t PDMFactory::sVideoOutputMinimumInterval_ms = 0;
 bool PDMFactory::sDontDelayInputExhausted = false;
@@ -79,6 +81,8 @@ PDMFactory::Init()
 
   Preferences::AddBoolVarCache(&sGMPDecoderEnabled,
                                "media.fragmented-mp4.gmp.enabled", false);
+  Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
+                               "media.fragmented-mp4.ffmpeg.enabled", false);
 
   Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,
                                "media.decoder.fuzzing.enabled", false);
@@ -204,8 +208,10 @@ PDMFactory::CreatePDMs()
   StartupPDM(m);
 #endif
 #ifdef MOZ_FFMPEG
-  m = FFmpegRuntimeLinker::CreateDecoderModule();
-  StartupPDM(m);
+  if (sFFmpegDecoderEnabled) {
+    m = FFmpegRuntimeLinker::CreateDecoderModule();
+    StartupPDM(m);
+  }
 #endif
 #ifdef MOZ_APPLEMEDIA
   m = new AppleDecoderModule();

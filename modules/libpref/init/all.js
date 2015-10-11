@@ -320,7 +320,7 @@ pref("media.directshow.enabled", true);
 #endif
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
-pref("media.fragmented-mp4.ffmpeg.enabled", false);
+pref("media.fragmented-mp4.ffmpeg.enabled", true);
 pref("media.fragmented-mp4.gmp.enabled", false);
 pref("media.fragmented-mp4.gmp.aac", 0);
 pref("media.fragmented-mp4.gmp.h264", 0);
