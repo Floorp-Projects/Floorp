@@ -3,15 +3,6 @@ var Cc = Components.classes;
 const NS_OS_TEMP_DIR = "TmpD";
 
 const CWD = do_get_cwd();
-function checkOS(os) {
-  const nsILocalFile_ = "nsILocalFile" + os;
-  return nsILocalFile_ in Components.interfaces &&
-         CWD instanceof Components.interfaces[nsILocalFile_];
-}
-
-const isWin = checkOS("Win");
-const isMac = checkOS("Mac");
-const isUnix = !(isWin || isMac);
 
 var hiddenUnixFile;
 function createUNIXHiddenFile() {
@@ -28,7 +19,7 @@ function createUNIXHiddenFile() {
 
 function run_test() {
   // Skip this test on Windows
-  if (isWin)
+  if (mozinfo.os == "win")
     return;
 
   do_check_true(createUNIXHiddenFile());
