@@ -2,7 +2,7 @@
 var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 var Cu = SpecialPowers.Cu;
-var LoadContextInfo = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {}).LoadContextInfo;
+var LoadContextInfo = Cc["@mozilla.org/load-context-info-factory;1"].getService(Ci.nsILoadContextInfoFactory);
 var CommonUtils = Cu.import("resource://services-common/utils.js", {}).CommonUtils;
 
 const kNetBase = 2152398848; // 0x804B0000

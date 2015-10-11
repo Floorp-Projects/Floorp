@@ -10,6 +10,7 @@
 #include "CacheHashUtils.h"
 #include "CacheObserver.h"
 #include "mozilla/Endian.h"
+#include "mozilla/BasePrincipal.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
@@ -127,8 +128,7 @@ public:
   nsresult SyncReadMetadata(nsIFile *aFile);
 
   bool     IsAnonymous() { return mAnonymous; }
-  bool     IsInBrowser() { return mInBrowser; }
-  uint32_t AppId()       { return mAppId; }
+  mozilla::OriginAttributes const & OriginAttributes() const { return mOriginAttributes; }
 
   const char * GetElement(const char *aKey);
   nsresult     SetElement(const char *aKey, const char *aValue);
@@ -189,11 +189,10 @@ private:
   uint32_t                            mElementsSize;
   bool                                mIsDirty        : 1;
   bool                                mAnonymous      : 1;
-  bool                                mInBrowser      : 1;
   bool                                mAllocExactSize : 1;
   bool                                mFirstRead      : 1;
+  mozilla::OriginAttributes           mOriginAttributes;
   mozilla::TimeStamp                  mReadStart;
-  uint32_t                            mAppId;
   nsCOMPtr<CacheFileMetadataListener> mListener;
 };
 

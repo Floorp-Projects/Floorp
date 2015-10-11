@@ -5,36 +5,44 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+#include "mozilla/BasePrincipal.h"
+%}
+native OriginAttributesNativePtr(const mozilla::OriginAttributes*);
+
+interface nsILoadContext;
+interface nsIDOMWindow;
+
 /**
  * Helper interface to carry informatin about the load context
- * encapsulating an AppID, IsInBrowser and IsPrivite properties.
+ * encapsulating origin attributes and IsAnonymous, IsPrivite properties.
  * It shall be used where nsILoadContext cannot be used or is not
  * available.
  */
-[scriptable, uuid(1ea9cbdb-9df4-46a0-8c45-f4091aad9459)]
+
+[scriptable, builtinclass, uuid(555e2f8a-a1f6-41dd-88ca-ed4ed6b98a22)]
 interface nsILoadContextInfo : nsISupports
 {
+  const unsigned long NO_APP_ID = 0;
+  const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
+
   /**
    * Whether the context is in a Private Browsing mode
    */
   readonly attribute boolean isPrivate;
 
   /**
-   * Whether the context belongs under an App
-   */
-  const unsigned long NO_APP_ID = 0;
-  const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
-  readonly attribute uint32_t appId;
-
-  /**
-   * Whether the context is in a browser tag
-   */
-  readonly attribute boolean isInBrowserElement;
-
-  /**
    * Whether the load is initiated as anonymous
    */
   readonly attribute boolean isAnonymous;
+
+  /**
+   * OriginAttributes hiding all the security context attributes
+   */
+  [implicit_jscontext]
+  readonly attribute jsval originAttributes;
+  [noscript, notxpcom, nostdcall, binaryname(OriginAttributesPtr)]
+  OriginAttributesNativePtr binaryOriginAttributesPtr();
 
 %{C++
   /**
@@ -47,20 +55,6 @@ interface nsILoadContextInfo : nsISupports
     return pb;
   }
 
-  uint32_t AppId()
-  {
-    uint32_t appId;
-    GetAppId(&appId);
-    return appId;
-  }
-
-  bool IsInBrowserElement()
-  {
-    bool ib;
-    GetIsInBrowserElement(&ib);
-    return ib;
-  }
-
   bool IsAnonymous()
   {
     bool anon;
@@ -70,10 +64,27 @@ interface nsILoadContextInfo : nsISupports
 
   bool Equals(nsILoadContextInfo *aOther)
   {
-    return (IsPrivate() == aOther->IsPrivate() &&
-            AppId() == aOther->AppId() &&
-            IsInBrowserElement() == aOther->IsInBrowserElement() &&
-            IsAnonymous() == aOther->IsAnonymous());
+    return IsPrivate() == aOther->IsPrivate() &&
+           IsAnonymous() == aOther->IsAnonymous() &&
+           *OriginAttributesPtr() == *aOther->OriginAttributesPtr();
   }
 %}
+};
+
+/**
+ * Since OriginAttributes struct limits the implementation of
+ * nsILoadContextInfo (that needs to be thread safe) to C++,
+ * we need a scriptable factory to create instances of that
+ * interface from JS.
+ */
+[scriptable, uuid(c1c7023d-4318-4f99-8307-b5ccf0558793)]
+interface nsILoadContextInfoFactory : nsISupports
+{
+  readonly attribute nsILoadContextInfo default;
+  readonly attribute nsILoadContextInfo private;
+  readonly attribute nsILoadContextInfo anonymous;
+  [implicit_jscontext]
+  nsILoadContextInfo custom(in boolean aPrivate, in boolean aAnonymous, in jsval aOriginAttributes);
+  nsILoadContextInfo fromLoadContext(in nsILoadContext aLoadContext, in boolean aAnonymous);
+  nsILoadContextInfo fromWindow(in nsIDOMWindow aWindow, in boolean aAnonymous);
 };
