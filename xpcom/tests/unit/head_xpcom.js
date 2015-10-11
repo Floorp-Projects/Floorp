@@ -1,11 +1,8 @@
-var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-
 function get_test_program(prog)
 {
   var progPath = do_get_cwd();
   progPath.append(prog);
-  if (isWindows)
-    progPath.leafName = progPath.leafName + ".exe";
+  progPath.leafName = progPath.leafName + mozinfo.bin_suffix;
   return progPath;
 }
 
