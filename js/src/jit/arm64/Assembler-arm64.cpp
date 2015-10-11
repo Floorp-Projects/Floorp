@@ -400,22 +400,25 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
         return;
 
     if (call->IsBLR()) {
-        // if the second instruction is blr(), then wehave:
-        // ldr x17, [pc, offset]
-        // blr x17
-        // we want to transform this to:
-        // adr xzr, [pc, offset]
-        // nop
+        // If the second instruction is blr(), then wehave:
+        //   ldr x17, [pc, offset]
+        //   blr x17
+        MOZ_ASSERT(load->IsLDR());
+        // We want to transform this to:
+        //   adr xzr, [pc, offset]
+        //   nop
         int32_t offset = load->ImmLLiteral();
         adr(load, xzr, int32_t(offset));
         nop(call);
     } else {
-        // we have adr xzr, [pc, offset]
-        // nop
-        // transform this to
-        // ldr x17, [pc, offset]
-        // blr x17
-
+        // We have:
+        //   adr xzr, [pc, offset] (or ldr x17, [pc, offset])
+        //   nop
+        MOZ_ASSERT(load->IsADR() || load->IsLDR());
+        MOZ_ASSERT(call->IsNOP());
+        // Transform this to:
+        //   ldr x17, [pc, offset]
+        //   blr x17
         int32_t offset = (int)load->ImmPCRawOffset();
         MOZ_ASSERT(vixl::is_int19(offset));
         ldr(load, ScratchReg2_64, int32_t(offset));

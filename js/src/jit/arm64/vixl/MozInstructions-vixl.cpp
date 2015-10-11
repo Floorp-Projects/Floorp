@@ -78,6 +78,11 @@ bool Instruction::IsLDR() const {
 }
 
 
+bool Instruction::IsNOP() const {
+  return Mask(SystemHintMask) == HINT && ImmHint() == NOP;
+}
+
+
 bool Instruction::IsADR() const {
   return Mask(PCRelAddressingMask) == ADR;
 }
