@@ -1718,6 +1718,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
 
   nsSecurityFlags secFlags = nsILoadInfo::SEC_NORMAL;
+  nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND;
   if (IsSystemXHR()) {
     // Don't give this document the system principal.  We need to keep track of
     // mPrincipal being system because we use it for various security checks
@@ -1725,6 +1726,9 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
     // principal.  Hence we set the sandbox flag in loadinfo, so that 
     // GetChannelResultPrincipal will give us the nullprincipal.
     secFlags |= nsILoadInfo::SEC_SANDBOXED;
+
+    //For a XHR, disable interception
+    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
   } else {
     secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
@@ -1738,7 +1742,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                        loadGroup,
                        nullptr,   // aCallbacks
-                       nsIRequest::LOAD_BACKGROUND);
+                       loadFlags);
   } else {
     //otherwise use the principal
     rv = NS_NewChannel(getter_AddRefs(mChannel),
@@ -1748,7 +1752,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                        loadGroup,
                        nullptr,   // aCallbacks
-                       nsIRequest::LOAD_BACKGROUND);
+                       loadFlags);
   }
 
   if (NS_FAILED(rv)) return rv;
