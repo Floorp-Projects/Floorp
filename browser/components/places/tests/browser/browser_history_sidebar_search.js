@@ -80,7 +80,7 @@ function check_sidebar_tree_order(aExpectedRows) {
     var node = treeView.nodeForTreeIndex(r);
     // We could inherit visits from previous tests, skip them since they are
     // not interesting for us.
-    if (pages.indexOf(node.uri) == -1)
+    if (!pages.includes(node.uri))
       continue;
     is(node.uri, pages[r], "Node is in correct position based on its visit date");
     found++;

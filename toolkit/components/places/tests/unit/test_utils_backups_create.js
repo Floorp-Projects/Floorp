@@ -23,7 +23,7 @@ add_task(function () {
     let randomDate = new Date(dateObj.getFullYear() - 1,
                               Math.floor(12 * Math.random()),
                               Math.floor(28 * Math.random()));
-    if (dates.indexOf(randomDate.getTime()) == -1)
+    if (!dates.includes(randomDate.getTime()))
       dates.push(randomDate.getTime());
   }
   // Sort dates from oldest to newest.
