@@ -1,8 +1,9 @@
 function run_test() { 
   // this is a hack to skip the rest of the code on non-Mac platforms, 
   // since #ifdef is not available to xpcshell tests...
-  if (!("nsILocalFileMac" in Components.interfaces))
+  if (mozinfo.os != "mac") {
     return;
+  }
   
   // OK, here's the real part of the test:
   // make sure these two test bundles are recognized as bundles (or "packages") 

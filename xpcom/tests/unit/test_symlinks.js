@@ -1,9 +1,4 @@
 const CWD = do_get_cwd();
-function checkOS(os) {
-  const nsILocalFile_ = "nsILocalFile" + os;
-  return nsILocalFile_ in Components.interfaces &&
-         CWD instanceof Components.interfaces[nsILocalFile_];
-}
 
 const DIR_TARGET     = "target";
 const DIR_LINK       = "link";
@@ -15,10 +10,6 @@ const FILE_LINK_LINK = "link_link.txt";
 const DOES_NOT_EXIST = "doesnotexist";
 const DANGLING_LINK  = "dangling_link";
 const LOOP_LINK      = "loop_link";
-
-const isWin = checkOS("Win");
-const isMac = checkOS("Mac");
-const isUnix = !(isWin || isMac);
 
 const nsIFile = Components.interfaces.nsIFile;
 
@@ -142,7 +133,7 @@ function testSymLinks(testDir, relative) {
 
 function run_test() {
   // Skip this test on Windows
-  if (isWin)
+  if (mozinfo.os == "win")
     return;
 
   var testDir = CWD;
