@@ -1241,7 +1241,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     aTile.SetLayerManager(mManager);
     aTile.SetTextureAllocator(mManager->GetTexturePool(
       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content),
-      TextureFlags::IMMEDIATE_UPLOAD));
+      TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD));
   }
   aTile.SetCompositableClient(mCompositableClient);
 
