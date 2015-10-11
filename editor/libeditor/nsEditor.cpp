@@ -3795,104 +3795,66 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, bool *aResult)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// SplitNodeDeep: this splits a node "deeply", splitting children as
-//                appropriate.  The place to split is represented by
-//                a dom point at {splitPointParent, splitPointOffset}.
-//                That dom point must be inside aNode, which is the node to
-//                split.  outOffset is set to the offset in the parent of aNode where
-//                the split terminates - where you would want to insert
-//                a new element, for instance, if that's why you were splitting
-//                the node.
-//
+/**
+ * This splits a node "deeply", splitting children as appropriate.  The place
+ * to split is represented by a DOM point at {splitPointParent,
+ * splitPointOffset}.  That DOM point must be inside aNode, which is the node
+ * to split.  We return the offset in the parent of aNode where the split
+ * terminates - where you would want to insert a new element, for instance, if
+ * that's why you were splitting the node.
+ *
+ * -1 is returned on failure, in unlikely cases like the selection being
+ * unavailable or cloning the node failing.  Make sure not to use the returned
+ * offset for anything without checking that it's valid!  If you're not using
+ * the offset, it's okay to ignore the return value.
+ */
 int32_t
-nsEditor::SplitNodeDeep(nsIContent& aNode, nsIContent& aSplitPointParent,
+nsEditor::SplitNodeDeep(nsIContent& aNode,
+                        nsIContent& aSplitPointParent,
                         int32_t aSplitPointOffset,
                         EmptyContainers aEmptyContainers,
-                        nsIContent** outLeftNode,
-                        nsIContent** outRightNode)
+                        nsIContent** aOutLeftNode,
+                        nsIContent** aOutRightNode)
 {
-  int32_t offset;
-  nsCOMPtr<nsIDOMNode> leftNodeDOM, rightNodeDOM;
-  nsresult res = SplitNodeDeep(aNode.AsDOMNode(),
-      aSplitPointParent.AsDOMNode(), aSplitPointOffset, &offset,
-      aEmptyContainers == EmptyContainers::no, address_of(leftNodeDOM),
-      address_of(rightNodeDOM));
-  NS_ENSURE_SUCCESS(res, -1);
-  if (outLeftNode) {
-    nsCOMPtr<nsIContent> leftNode = do_QueryInterface(leftNodeDOM);
-    MOZ_ASSERT(!leftNodeDOM || leftNode);
-    leftNode.forget(outLeftNode);
-  }
-  if (outRightNode) {
-    nsCOMPtr<nsIContent> rightNode = do_QueryInterface(rightNodeDOM);
-    MOZ_ASSERT(!rightNodeDOM || rightNode);
-    rightNode.forget(outRightNode);
-  }
-  return offset;
-}
-
-nsresult
-nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
-                        nsIDOMNode *aSplitPointParent,
-                        int32_t aSplitPointOffset,
-                        int32_t *outOffset,
-                        bool    aNoEmptyContainers,
-                        nsCOMPtr<nsIDOMNode> *outLeftNode,
-                        nsCOMPtr<nsIDOMNode> *outRightNode)
-{
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node && aSplitPointParent && outOffset, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(&aSplitPointParent == &aNode ||
+             nsEditorUtils::IsDescendantOf(&aSplitPointParent, &aNode));
   int32_t offset = aSplitPointOffset;
 
-  if (outLeftNode)  *outLeftNode  = nullptr;
-  if (outRightNode) *outRightNode = nullptr;
+  nsCOMPtr<nsIContent> leftNode, rightNode;
+  OwningNonNull<nsIContent> nodeToSplit = aSplitPointParent;
+  while (true) {
+    // Need to insert rules code call here to do things like not split a list
+    // if you are after the last <li> or before the first, etc.  For now we
+    // just have some smarts about unneccessarily splitting text nodes, which
+    // should be universal enough to put straight in this nsEditor routine.
 
-  nsCOMPtr<nsINode> nodeToSplit = do_QueryInterface(aSplitPointParent);
-  while (nodeToSplit) {
-    // need to insert rules code call here to do things like
-    // not split a list if you are after the last <li> or before the first, etc.
-    // for now we just have some smarts about unneccessarily splitting
-    // textnodes, which should be universal enough to put straight in
-    // this nsEditor routine.
+    bool didSplit = false;
 
-    nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(nodeToSplit);
-    uint32_t len = nodeToSplit->Length();
-    bool bDoSplit = false;
+    if ((aEmptyContainers == EmptyContainers::yes &&
+         !nodeToSplit->GetAsText()) ||
+        (offset && offset != (int32_t)nodeToSplit->Length())) {
+      didSplit = true;
+      ErrorResult rv;
+      nsCOMPtr<nsIContent> newLeftNode = SplitNode(nodeToSplit, offset, rv);
+      NS_ENSURE_TRUE(!rv.Failed(), -1);
 
-    if (!(aNoEmptyContainers || nodeAsText) || (offset && (offset != (int32_t)len)))
-    {
-      bDoSplit = true;
-      nsCOMPtr<nsIDOMNode> tempNode;
-      nsresult rv = SplitNode(nodeToSplit->AsDOMNode(), offset,
-                              getter_AddRefs(tempNode));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (outRightNode) {
-        *outRightNode = nodeToSplit->AsDOMNode();
-      }
-      if (outLeftNode) {
-        *outLeftNode = tempNode;
-      }
+      rightNode = nodeToSplit;
+      leftNode = newLeftNode;
     }
 
-    nsINode* parentNode = nodeToSplit->GetParentNode();
-    NS_ENSURE_TRUE(parentNode, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(nodeToSplit->GetParent(), -1);
+    OwningNonNull<nsIContent> parentNode = *nodeToSplit->GetParent();
 
-    if (!bDoSplit && offset) {
-      // must be "end of text node" case, we didn't split it, just move past it
+    if (!didSplit && offset) {
+      // Must be "end of text node" case, we didn't split it, just move past it
       offset = parentNode->IndexOf(nodeToSplit) + 1;
-      if (outLeftNode) {
-        *outLeftNode = nodeToSplit->AsDOMNode();
-      }
+      leftNode = nodeToSplit;
     } else {
       offset = parentNode->IndexOf(nodeToSplit);
-      if (outRightNode) {
-        *outRightNode = nodeToSplit->AsDOMNode();
-      }
+      rightNode = nodeToSplit;
     }
 
-    if (nodeToSplit == node) {
+    if (nodeToSplit == &aNode) {
       // we split all the way up to (and including) aNode; we're done
       break;
     }
@@ -3900,13 +3862,14 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
     nodeToSplit = parentNode;
   }
 
-  if (!nodeToSplit) {
-    NS_NOTREACHED("null node obtained in nsEditor::SplitNodeDeep()");
-    return NS_ERROR_FAILURE;
+  if (aOutLeftNode) {
+    leftNode.forget(aOutLeftNode);
+  }
+  if (aOutRightNode) {
+    rightNode.forget(aOutRightNode);
   }
 
-  *outOffset = offset;
-  return NS_OK;
+  return offset;
 }
 
 
