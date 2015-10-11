@@ -630,12 +630,7 @@ nsHTMLEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       nsCOMPtr<nsINode> node = selection->GetRangeAt(0)->GetStartParent();
       MOZ_ASSERT(node);
 
-      nsCOMPtr<nsINode> blockParent;
-      if (IsBlockNode(node)) {
-        blockParent = node;
-      } else {
-        blockParent = GetBlockNodeParent(node);
-      }
+      nsCOMPtr<Element> blockParent = GetBlock(*node);
 
       if (!blockParent) {
         break;
@@ -845,6 +840,18 @@ nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
   }
 
   return GetAsDOMNode(GetBlockNodeParent(node));
+}
+
+/**
+ * Returns the node if it's a block, otherwise GetBlockNodeParent
+ */
+Element*
+nsHTMLEditor::GetBlock(nsINode& aNode)
+{
+  if (NodeIsBlockStatic(&aNode)) {
+    return aNode.AsElement();
+  }
+  return GetBlockNodeParent(&aNode);
 }
 
 static const char16_t nbsp = 160;
@@ -1753,12 +1760,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
   if (aBlockLevel) {
     // we are querying the block background (and not the text background), let's
     // climb to the block container
-    nsCOMPtr<Element> blockParent;
-    if (NodeIsBlockStatic(nodeToExamine)) {
-      blockParent = nodeToExamine->AsElement();
-    } else {
-      blockParent = GetBlockNodeParent(nodeToExamine);
-    }
+    nsCOMPtr<Element> blockParent = GetBlock(*nodeToExamine);
     NS_ENSURE_TRUE(blockParent, NS_OK);
 
     // Make sure to not walk off onto the Document node
@@ -4566,12 +4568,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         // A unique node is selected, let's also apply the background color to
         // the containing block, possibly the node itself
         nsCOMPtr<nsIContent> selectedNode = startNode->GetChildAt(startOffset);
-        nsCOMPtr<Element> blockParent;
-        if (NodeIsBlockStatic(selectedNode)) {
-          blockParent = selectedNode->AsElement();
-        } else {
-          blockParent = GetBlockNodeParent(selectedNode);
-        }
+        nsCOMPtr<Element> blockParent = GetBlock(*selectedNode);
         if (blockParent && cachedBlockParent != blockParent) {
           cachedBlockParent = blockParent;
           mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,
@@ -4625,12 +4622,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 
         // Then loop through the list, set the property on each node
         for (auto& node : arrayOfNodes) {
-          nsCOMPtr<Element> blockParent;
-          if (NodeIsBlockStatic(node)) {
-            blockParent = node->AsElement();
-          } else {
-            blockParent = GetBlockNodeParent(node);
-          }
+          nsCOMPtr<Element> blockParent = GetBlock(node);
           if (blockParent && cachedBlockParent != blockParent) {
             cachedBlockParent = blockParent;
             mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(blockParent, nullptr,

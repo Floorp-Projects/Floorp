@@ -233,6 +233,7 @@ public:
   /* ------------ Block methods moved from nsEditor -------------- */
   static mozilla::dom::Element* GetBlockNodeParent(nsINode* aNode);
   static nsIDOMNode* GetBlockNodeParent(nsIDOMNode* aNode);
+  static mozilla::dom::Element* GetBlock(nsINode& aNode);
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent,
                                   int32_t aOffset,
