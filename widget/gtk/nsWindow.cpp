@@ -3462,6 +3462,7 @@ nsWindow::Create(nsIWidget        *aParent,
     GtkWindow      *topLevelParent = nullptr;
     nsWindow       *parentnsWindow = nullptr;
     GtkWidget      *eventWidget = nullptr;
+    bool            shellHasCSD = false;
 
     if (aParent) {
         parentnsWindow = static_cast<nsWindow*>(aParent);
@@ -3614,9 +3615,7 @@ nsWindow::Create(nsIWidget        *aParent,
         GtkWidget *container = moz_container_new();
         mContainer = MOZ_CONTAINER(container);
 
-#if (MOZ_WIDGET_GTK == 2)
-        bool containerHasWindow = false;
-#else
+#if (MOZ_WIDGET_GTK == 3)
         // "csd" style is set when widget is realized so we need to call
         // it explicitly now.
         gtk_widget_realize(mShell);
@@ -3624,16 +3623,16 @@ nsWindow::Create(nsIWidget        *aParent,
         // We can't draw directly to top-level window when client side
         // decorations are enabled. We use container with GdkWindow instead.
         GtkStyleContext* style = gtk_widget_get_style_context(mShell);
-        bool containerHasWindow = gtk_style_context_has_class(style, "csd");
+        shellHasCSD = gtk_style_context_has_class(style, "csd");
 #endif
-        if (!containerHasWindow) {
+        if (!shellHasCSD) {
             // Use mShell's window for drawing and events.
             gtk_widget_set_has_window(container, FALSE);
             // Prevent GtkWindow from painting a background to flicker.
             gtk_widget_set_app_paintable(mShell, TRUE);
         }
         // Set up event widget
-        eventWidget = containerHasWindow ? container : mShell;
+        eventWidget = shellHasCSD ? container : mShell;
         gtk_widget_add_events(eventWidget, kEvents);
 
         gtk_container_add(GTK_CONTAINER(mShell), container);
@@ -3782,7 +3781,8 @@ nsWindow::Create(nsIWidget        *aParent,
         g_signal_connect(mContainer, "drag_data_received",
                          G_CALLBACK(drag_data_received_event_cb), nullptr);
 
-        GtkWidget *widgets[] = { GTK_WIDGET(mContainer), mShell };
+        GtkWidget *widgets[] = { GTK_WIDGET(mContainer),
+                                 !shellHasCSD ? mShell : nullptr };
         for (size_t i = 0; i < ArrayLength(widgets) && widgets[i]; ++i) {
             // Visibility events are sent to the owning widget of the relevant
             // window but do not propagate to parent widgets so connect on
