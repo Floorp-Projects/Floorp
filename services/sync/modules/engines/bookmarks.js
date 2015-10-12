@@ -1352,7 +1352,15 @@ BookmarksStore.prototype = {
 
   getAllIDs: function BStore_getAllIDs() {
     let items = {"menu": true,
-                 "toolbar": true};
+                 "toolbar": true,
+                 "unfiled": true,
+                };
+    // We also want "mobile" but only if a local mobile folder already exists
+    // (otherwise we'll later end up creating it, which we want to avoid until
+    // we actually need it.)
+    if (kSpecialIds.findMobileRoot(false)) {
+      items["mobile"] = true;
+    }
     for each (let guid in kSpecialIds.guids) {
       if (guid != "places" && guid != "tags")
         this._getChildren(guid, items);
