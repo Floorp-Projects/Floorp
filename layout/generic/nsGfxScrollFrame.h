@@ -506,9 +506,9 @@ public:
   // If true, the resizer is collapsed and not displayed
   bool mCollapsedResizer:1;
 
-  // If true, the layer should always be active because we always build a
-  // scrollable layer. Used for asynchronous scrolling.
-  bool mShouldBuildScrollableLayer:1;
+  // If true, the scroll frame should always be active because we always build
+  // a scrollable layer. Used for asynchronous scrolling.
+  bool mWillBuildScrollableLayer:1;
 
   // Whether we are the root scroll frame that is used for containerful
   // scrolling with a display port. If true, the scrollable frame
