@@ -101,13 +101,11 @@ DCFromDrawTarget::DCFromDrawTarget(DrawTarget& aDrawTarget)
         cairo_win32_scaled_font_select_font(scaled, mDC);
       }
     }
-  }
-
-  if (!mDC) {
-    // Get the whole screen DC:
-    mDC = GetDC(nullptr);
-    SetGraphicsMode(mDC, GM_ADVANCED);
-    mNeedsRelease = true;
+    if (!mDC) {
+      mDC = GetDC(nullptr);
+      SetGraphicsMode(mDC, GM_ADVANCED);
+      mNeedsRelease = true;
+    }
   }
 }
 
@@ -686,13 +684,10 @@ gfxPlatformFontList*
 gfxWindowsPlatform::CreatePlatformFontList()
 {
     gfxPlatformFontList *pfl;
-
 #ifdef CAIRO_HAS_DWRITE_FONT
     // bug 630201 - older pre-RTM versions of Direct2D/DirectWrite cause odd
     // crashers so blacklist them altogether
-    if (IsNotWin7PreRTM() && GetDWriteFactory() &&
-        // Skia doesn't support DirectWrite fonts yet.
-       (GetContentBackend() != BackendType::SKIA)) {
+    if (IsNotWin7PreRTM() && GetDWriteFactory()) {
         pfl = new gfxDWriteFontList();
         if (NS_SUCCEEDED(pfl->InitFontList())) {
             return pfl;
