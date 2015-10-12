@@ -128,6 +128,7 @@ public:
               nsTArray<nsCString> aExtensions,
               bool aIsJavaPlugin,
               bool aIsFlashPlugin,
+              bool aSupportsAsyncInit,
               int64_t aLastModifiedTime,
               bool aFromExtension);
 
