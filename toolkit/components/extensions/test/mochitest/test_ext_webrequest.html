@@ -42,14 +42,14 @@ const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/nonexistent_script_url.js",
                               BASE + "/xhr_resource"];
 
-const expected_headersReceived = [BASE + "/file_WebRequest_page1.html",
-                                  BASE + "/file_style_good.css",
-                                  BASE + "/file_image_good.png",
-                                  BASE + "/file_script_good.js",
-                                  BASE + "/file_script_xhr.js",
-                                  BASE + "/file_WebRequest_page2.html",
-                                  BASE + "/nonexistent_script_url.js",
-                                  BASE + "/xhr_resource"];
+const expected_complete = [BASE + "/file_WebRequest_page1.html",
+                           BASE + "/file_style_good.css",
+                           BASE + "/file_image_good.png",
+                           BASE + "/file_script_good.js",
+                           BASE + "/file_script_xhr.js",
+                           BASE + "/file_WebRequest_page2.html",
+                           BASE + "/nonexistent_script_url.js",
+                           BASE + "/xhr_resource"];
 
 function removeDupes(list)
 {
@@ -101,13 +101,17 @@ function backgroundScript()
 
   var frameIDs = new Map();
 
-  var requested = [];
+  var recorded = {requested: [],
+                  beforeSendHeaders: [],
+                  sendHeaders: [],
+                  responseStarted: [],
+                  completed: []};
 
   function onBeforeRequest(details)
   {
     browser.test.log(`onBeforeRequest ${details.url}`);
     if (details.url.startsWith(BASE)) {
-      requested.push(details.url);
+      recorded.requested.push(details.url);
 
       if (savedTabId == -1) {
         browser.test.assertTrue(details.tabId !== undefined, "tab ID defined");
@@ -134,13 +138,11 @@ function backgroundScript()
     return {};
   }
 
-  var beforeSendHeaders = [];
-
   function onBeforeSendHeaders(details)
   {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
     if (details.url.startsWith(BASE)) {
-      beforeSendHeaders.push(details.url);
+      recorded.beforeSendHeaders.push(details.url);
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
       checkType(details);
@@ -154,32 +156,22 @@ function backgroundScript()
     return {};
   }
 
-  var sendHeaders = [];
-
-  function onSendHeaders(details)
+  function onRecord(kind, details)
   {
     if (details.url.startsWith(BASE)) {
-      sendHeaders.push(details.url);
-    }
-  }
-
-  var headersReceived = [];
-
-  function onResponseStarted(details)
-  {
-    if (details.url.startsWith(BASE)) {
-      headersReceived.push(details.url);
+      recorded[kind].push(details.url);
     }
   }
 
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: "<all_urls>"}, ["blocking"]);
   browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: "<all_urls>"}, ["blocking"]);
-  browser.webRequest.onSendHeaders.addListener(onSendHeaders, {urls: "<all_urls>"});
-  browser.webRequest.onResponseStarted.addListener(onResponseStarted, {urls: "<all_urls>"});
+  browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: "<all_urls>"});
+  browser.webRequest.onResponseStarted.addListener(onRecord.bind(null, "responseStarted"), {urls: "<all_urls>"});
+  browser.webRequest.onCompleted.addListener(onRecord.bind(null, "completed"), {urls: "<all_urls>"});
 
   function onTestMessage()
   {
-    browser.test.sendMessage("results", [requested, beforeSendHeaders, sendHeaders, headersReceived]);
+    browser.test.sendMessage("results", recorded);
   }
 
   browser.test.onMessage.addListener(onTestMessage);
@@ -229,12 +221,13 @@ function* test_once()
   win.close();
 
   extension.sendMessage("getResults");
-  let [requested, beforeSendHeaders, sendHeaders, headersReceived] = yield extension.awaitMessage("results");
+  let recorded = yield extension.awaitMessage("results");
 
-  compareLists(requested, expected_requested, "requested");
-  compareLists(beforeSendHeaders, expected_sendHeaders, "sendHeaders");
-  compareLists(sendHeaders, expected_headersReceived, "sendHeaders");
-  compareLists(headersReceived, expected_headersReceived, "headersReceived");
+  compareLists(recorded.requested, expected_requested, "requested");
+  compareLists(recorded.beforeSendHeaders, expected_sendHeaders, "beforeSendHeaders");
+  compareLists(recorded.sendHeaders, expected_complete, "sendHeaders");
+  compareLists(recorded.responseStarted, expected_complete, "responseStarted");
+  compareLists(recorded.completed, expected_complete, "completed");
 
   yield extension.unload();
   info("webrequest extension unloaded");
