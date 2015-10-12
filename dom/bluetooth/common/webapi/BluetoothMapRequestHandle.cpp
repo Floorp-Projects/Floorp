@@ -10,6 +10,7 @@
 #include "BluetoothService.h"
 
 #include "mozilla/dom/BluetoothMapRequestHandleBinding.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Promise.h"
 
 using namespace mozilla;
@@ -50,8 +51,37 @@ already_AddRefed<Promise>
 BluetoothMapRequestHandle::ReplyToFolderListing(long aMasId,
   const nsAString& aFolderlists, ErrorResult& aRv)
 {
-  // TODO: Implement this fuction in Bug 1208492
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process reply
+    bs->ReplyToMapFolderListing(aMasId, aFolderlists,
+      new BluetoothVoidReplyRunnable(nullptr, promise));
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->ReplyToMapFolderListing(aMasId, aFolderlists,
+      new BluetoothVoidReplyRunnable(nullptr, promise));
+  }
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -62,16 +92,86 @@ BluetoothMapRequestHandle::ReplyToMessagesListing(long aMasId,
                                                   int aSize,
                                                   ErrorResult& aRv)
 {
-  // TODO: Implement this fuction in Bug 1208492
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process reply
+    bs->ReplyToMapMessagesListing(aMasId, &aBlob, aNewMessage, aTimestamp,
+      aSize, new BluetoothVoidReplyRunnable(nullptr, promise));
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    BlobChild* actor = cc->GetOrCreateActorForBlob(&aBlob);
+    if (!actor) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->ReplyToMapMessagesListing(nullptr, actor, aMasId, aNewMessage,
+      aTimestamp, aSize, new BluetoothVoidReplyRunnable(nullptr, promise));
+  }
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
 BluetoothMapRequestHandle::ReplyToGetMessage(long aMasId, Blob& aBlob,
                                              ErrorResult& aRv)
 {
-  // TODO: Implement this fuction in Bug 1208492
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process reply
+    bs->ReplyToMapGetMessage(&aBlob, aMasId,
+      new BluetoothVoidReplyRunnable(nullptr, promise));
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    BlobChild* actor = cc->GetOrCreateActorForBlob(&aBlob);
+    if (!actor) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->ReplyToMapGetMessage(nullptr, actor, aMasId,
+      new BluetoothVoidReplyRunnable(nullptr, promise));
+  }
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -79,8 +179,25 @@ BluetoothMapRequestHandle::ReplyToSetMessageStatus(long aMasId,
                                                    bool aStatus,
                                                    ErrorResult& aRv)
 {
-  // TODO: Implement this fuction in Bug 1208492
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  bs->ReplyToMapSetMessageStatus(aMasId, aStatus,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -88,8 +205,25 @@ BluetoothMapRequestHandle::ReplyToSendMessage(long aMasId,
                                               bool aStatus,
                                               ErrorResult& aRv)
 {
-  // TODO: Implement this fuction in Bug 1208492
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  bs->ReplyToMapSendMessage(aMasId, aStatus,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>
@@ -97,8 +231,25 @@ BluetoothMapRequestHandle::ReplyToMessageUpdate(long aMasId,
                                                 bool aStatus,
                                                 ErrorResult& aRv)
 {
-  // TODO: Implement this fuction in Bug 1208492
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  bs->ReplyToMapMessageUpdate(aMasId, aStatus,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
+
+  return promise.forget();
 }
 
 JSObject*
