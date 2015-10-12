@@ -41,6 +41,7 @@ if CONFIG['MOZ_OMX_ENCODER']:
         'OMXCodecDescriptorUtil.cpp',
         'OMXCodecWrapper.cpp',
     ]
+    LOCAL_INCLUDES += ['/media/libyuv/include']
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:
     EXPORTS += [
