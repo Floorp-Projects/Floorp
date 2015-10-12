@@ -78,7 +78,7 @@
           let found = false;
           for (let i = 0; i < tree.view.rowCount && !found; i++) {
             rowProperties = tree.view.getCellProperties(i, titleColumn).split(" ");
-            found = rowProperties.indexOf("OrganizerQuery_" + aQueryName) != -1;
+            found = rowProperties.includes("OrganizerQuery_" + aQueryName);
           }
           ok(found, "OrganizerQuery_" + aQueryName + " is set");
         }

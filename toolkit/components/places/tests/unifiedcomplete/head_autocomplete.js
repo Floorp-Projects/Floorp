@@ -131,7 +131,7 @@ function _check_autocomplete_matches(match, result) {
   if (style)
     Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
   if (uri.spec.startsWith("moz-action:")) {
-    Assert.ok(actualStyle.indexOf("action") != -1, "moz-action results should always have 'action' in their style");
+    Assert.ok(actualStyle.includes("action"), "moz-action results should always have 'action' in their style");
   }
 
   if (match.icon)
