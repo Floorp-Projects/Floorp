@@ -3323,29 +3323,6 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins)
 }
 
 void
-LIRGenerator::visitGetElementCache(MGetElementCache* ins)
-{
-    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
-
-    if (ins->monitoredResult())
-        gen->setPerformsCall(); // See visitGetPropertyCache.
-
-    if (ins->type() == MIRType_Value) {
-        MOZ_ASSERT(ins->index()->type() == MIRType_Value);
-        LGetElementCacheV* lir = new(alloc()) LGetElementCacheV(useRegister(ins->object()));
-        useBox(lir, LGetElementCacheV::Index, ins->index());
-        defineBox(lir, ins);
-        assignSafepoint(lir, ins);
-    } else {
-        MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
-        LGetElementCacheT* lir = new(alloc()) LGetElementCacheT(useRegister(ins->object()),
-                                                                useRegister(ins->index()));
-        define(lir, ins);
-        assignSafepoint(lir, ins);
-    }
-}
-
-void
 LIRGenerator::visitBindNameCache(MBindNameCache* ins)
 {
     MOZ_ASSERT(ins->scopeChain()->type() == MIRType_Object);

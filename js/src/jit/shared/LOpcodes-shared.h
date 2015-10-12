@@ -274,8 +274,6 @@
     _(GetPropertyCacheT)            \
     _(GetPropertyPolymorphicV)      \
     _(GetPropertyPolymorphicT)      \
-    _(GetElementCacheV)             \
-    _(GetElementCacheT)             \
     _(BindNameCache)                \
     _(CallGetProperty)              \
     _(GetNameCache)                 \
