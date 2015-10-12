@@ -260,6 +260,8 @@ class RemoteReftest(RefTest):
         # Disable skia-gl: see bug 907351
         prefs["gfx.canvas.azure.accelerated"] = False
 
+        prefs["media.autoplay.enabled"] = True
+
         # Set the extra prefs.
         profile.set_preferences(prefs)
 
