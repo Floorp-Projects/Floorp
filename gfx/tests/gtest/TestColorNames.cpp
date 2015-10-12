@@ -8,7 +8,7 @@
 #include <string.h>
 #include "nsColor.h"
 #include "nsColorNames.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "nsString.h"
 #include "mozilla/ArrayUtils.h"
 
@@ -71,7 +71,7 @@ void RunColorTests() {
       rgb = NS_RGB(r, g, b);
     }
     char cbuf[50];
-    PR_snprintf(cbuf, sizeof(cbuf), "%02x%02x%02x", r, g, b);
+    snprintf_literal(cbuf, "%02x%02x%02x", r, g, b);
     nscolor hexrgb;
     ASSERT_TRUE(NS_HexToRGB(NS_ConvertASCIItoUTF16(cbuf), &hexrgb)) <<
       "hex conversion to color of '" << cbuf << "'";
