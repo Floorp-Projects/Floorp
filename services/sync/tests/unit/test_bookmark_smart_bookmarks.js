@@ -112,7 +112,7 @@ add_test(function test_annotation_uploaded() {
   try {
     engine.sync();
     let wbos = collection.keys(function (id) {
-                 return ["menu", "toolbar", "mobile"].indexOf(id) == -1;
+                 return ["menu", "toolbar", "mobile", "unfiled"].indexOf(id) == -1;
                });
     do_check_eq(wbos.length, 1);
 
