@@ -397,6 +397,7 @@ class GetPropertyIC : public IonCache
     bool hasMappedArgumentsElementStub_ : 1;
     bool hasUnmappedArgumentsElementStub_ : 1;
     bool hasGenericProxyStub_ : 1;
+    bool hasDenseStub_ : 1;
 
     void emitIdGuard(MacroAssembler& masm, jsid id, Label* fail);
 
@@ -418,7 +419,8 @@ class GetPropertyIC : public IonCache
         hasUnmappedArgumentsLengthStub_(false),
         hasMappedArgumentsElementStub_(false),
         hasUnmappedArgumentsElementStub_(false),
-        hasGenericProxyStub_(false)
+        hasGenericProxyStub_(false),
+        hasDenseStub_(false)
     {
     }
 
@@ -449,6 +451,14 @@ class GetPropertyIC : public IonCache
     }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
+    }
+
+    bool hasDenseStub() const {
+        return hasDenseStub_;
+    }
+    void setHasDenseStub() {
+        MOZ_ASSERT(!hasDenseStub());
+        hasDenseStub_ = true;
     }
 
     void setHasTypedArrayLengthStub(HandleObject obj) {
@@ -525,6 +535,9 @@ class GetPropertyIC : public IonCache
 
     bool tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                    HandleObject obj, HandleValue idval, bool* emitted);
+
+    bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                               HandleObject obj, HandleValue idval, bool* emitted);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);
@@ -628,7 +641,6 @@ class GetElementIC : public IonCache
 
     bool monitoredResult_ : 1;
     bool allowDoubleResult_ : 1;
-    bool hasDenseStub_ : 1;
 
     size_t failedUpdates_;
 
@@ -643,7 +655,6 @@ class GetElementIC : public IonCache
         output_(output),
         monitoredResult_(monitoredResult),
         allowDoubleResult_(allowDoubleResult),
-        hasDenseStub_(false),
         failedUpdates_(0)
     {
     }
@@ -667,13 +678,6 @@ class GetElementIC : public IonCache
     bool allowDoubleResult() const {
         return allowDoubleResult_;
     }
-    bool hasDenseStub() const {
-        return hasDenseStub_;
-    }
-    void setHasDenseStub() {
-        MOZ_ASSERT(!hasDenseStub());
-        hasDenseStub_ = true;
-    }
 
     // Helpers for CanAttachNativeGetProp
     typedef JSContext * Context;
@@ -684,7 +688,6 @@ class GetElementIC : public IonCache
     }
 
     static bool canAttachGetProp(JSObject* obj, const Value& idval, jsid id);
-    static bool canAttachDenseElement(JSObject* obj, const Value& idval);
     static bool canAttachDenseElementHole(JSObject* obj, const Value& idval,
                                           TypedOrValueRegister output);
     static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
@@ -692,9 +695,6 @@ class GetElementIC : public IonCache
 
     bool attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* ion,
                        HandleObject obj, const Value& idval, HandlePropertyName name);
-
-    bool attachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                            HandleObject obj, const Value& idval);
 
     bool attachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                 HandleObject obj, const Value& idval);
