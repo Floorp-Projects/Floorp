@@ -2962,11 +2962,16 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // If the element is marked 'scrollgrab', also force building of a layer
   // so that APZ can implement scroll grabbing.
   mWillBuildScrollableLayer = usingDisplayPort || nsContentUtils::HasScrollgrab(mOuter->GetContent());
-  bool shouldBuildLayer = false;
+  // Whether we might want to build a scrollable layer for this scroll frame
+  // at some point in the future. This controls whether we add the information
+  // to the layer tree (a scroll info layer if necessary, and add the right
+  // area to the dispatch to content layer event regions) necessary to activate
+  // a scroll frame so it creates a scrollable layer.
+  bool couldBuildLayer = false;
   if (mWillBuildScrollableLayer) {
-    shouldBuildLayer = true;
+    couldBuildLayer = true;
   } else {
-    shouldBuildLayer =
+    couldBuildLayer =
       nsLayoutUtils::AsyncPanZoomEnabled(mOuter) &&
       WantAsyncScroll() &&
       // If we are using containers for root frames, and we are the root
@@ -3036,7 +3041,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // and scroll info layers.
     nsDisplayListBuilder::AutoCurrentScrollParentIdSetter idSetter(
         aBuilder,
-        shouldBuildLayer && mScrolledFrame->GetContent()
+        couldBuildLayer && mScrolledFrame->GetContent()
             ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
             : aBuilder->GetCurrentScrollParentId());
 
@@ -3115,7 +3120,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // above (where the idSetter variable is created).
       //
       // This is not compatible when using containes for root scrollframes.
-      MOZ_ASSERT(shouldBuildLayer && mScrolledFrame->GetContent());
+      MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent());
       mWillBuildScrollableLayer = true;
     }
   }
@@ -3129,13 +3134,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                          *contentBoxClipForNonCaretContent, usingDisplayPort);
   }
 
-  if (shouldBuildLayer) {
+  if (couldBuildLayer) {
     // Make sure that APZ will dispatch events back to content so we can create
     // a displayport for this frame. We'll add the item later on.
     nsDisplayLayerEventRegions* inactiveRegionItem = nullptr;
     if (aBuilder->IsPaintingToWindow() &&
         !mWillBuildScrollableLayer &&
-        shouldBuildLayer &&
         aBuilder->IsBuildingLayerEventRegions())
     {
       inactiveRegionItem = new (aBuilder) nsDisplayLayerEventRegions(aBuilder, mScrolledFrame);
