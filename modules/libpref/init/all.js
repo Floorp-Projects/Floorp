@@ -1448,6 +1448,10 @@ pref("network.http.enforce-framing.soft", true);
 // See http://www.w3.org/TR/web-packaging/#streamable-package-format
 pref("network.http.enable-packaged-apps", false);
 
+// Enable this to bring in the signature verification if the signature exists.
+// Set to false if you don't need the signed packaged web app support (i.e. NSec).
+pref("network.http.packaged-signed-apps-enabled", false);
+
 // Enable this pref to skip verification process. The packaged app
 // will be considered signed no matter the package has a valid/invalid
 // signature or no signature.
