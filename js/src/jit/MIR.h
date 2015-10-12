@@ -10238,20 +10238,18 @@ class CacheLocationList : public InlineConcatList<CacheLocationList>
 };
 
 class MGetPropertyCache
-  : public MUnaryInstruction,
-    public SingleObjectPolicy::Data
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<0>, CacheIdPolicy<1>>::Data
 {
-    CompilerPropertyName name_;
-    bool idempotent_;
-    bool monitoredResult_;
+    bool idempotent_ : 1;
+    bool monitoredResult_ : 1;
 
     CacheLocationList location_;
 
     InlinePropertyTable* inlinePropertyTable_;
 
-    MGetPropertyCache(MDefinition* obj, PropertyName* name, bool monitoredResult)
-      : MUnaryInstruction(obj),
-        name_(name),
+    MGetPropertyCache(MDefinition* obj, MDefinition* id, bool monitoredResult)
+      : MBinaryInstruction(obj, id),
         idempotent_(false),
         monitoredResult_(monitoredResult),
         location_(),
@@ -10268,9 +10266,9 @@ class MGetPropertyCache
   public:
     INSTRUCTION_HEADER(GetPropertyCache)
 
-    static MGetPropertyCache* New(TempAllocator& alloc, MDefinition* obj, PropertyName* name,
+    static MGetPropertyCache* New(TempAllocator& alloc, MDefinition* obj, MDefinition* id,
                                   bool monitoredResult) {
-        return new(alloc) MGetPropertyCache(obj, name, monitoredResult);
+        return new(alloc) MGetPropertyCache(obj, id, monitoredResult);
     }
 
     InlinePropertyTable* initInlinePropertyTable(TempAllocator& alloc, jsbytecode* pc) {
@@ -10290,9 +10288,10 @@ class MGetPropertyCache
     MDefinition* object() const {
         return getOperand(0);
     }
-    PropertyName* name() const {
-        return name_;
+    MDefinition* idval() const {
+        return getOperand(1);
     }
+
     bool idempotent() const {
         return idempotent_;
     }
@@ -10311,8 +10310,6 @@ class MGetPropertyCache
         if (!idempotent_)
             return false;
         if (!ins->isGetPropertyCache())
-            return false;
-        if (name() != ins->toGetPropertyCache()->name())
             return false;
         return congruentIfOperandsEqual(ins);
     }
