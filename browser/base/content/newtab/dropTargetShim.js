@@ -113,6 +113,10 @@ var gDropTargetShim = {
     // We're accepting all drops.
     aEvent.preventDefault();
 
+    // remember that drop event was seen, this explicitly
+    // assumes that drop event preceeds dragend event
+    this._dropSeen = true;
+
     // Make sure to determine the current drop target
     // in case the dragover event hasn't been fired.
     this._updateDropTarget(aEvent);
@@ -127,8 +131,8 @@ var gDropTargetShim = {
    */
   _dragend: function (aEvent) {
     if (this._lastDropTarget) {
-      if (aEvent.dataTransfer.mozUserCancelled) {
-        // The drag operation was cancelled.
+      if (aEvent.dataTransfer.mozUserCancelled || !this._dropSeen) {
+        // The drag operation was cancelled or no drop event was generated
         this._dispatchEvent(aEvent, "dragexit", this._lastDropTarget);
         this._dispatchEvent(aEvent, "dragleave", this._lastDropTarget);
       }
@@ -138,6 +142,7 @@ var gDropTargetShim = {
       this._cellPositions = null;
     }
 
+    this._dropSeen = false;
     gGrid.unlock();
     this._removeEventListeners();
   },

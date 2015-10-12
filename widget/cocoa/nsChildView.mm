@@ -1876,6 +1876,10 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 nsIMEUpdatePreference
 nsChildView::GetIMEUpdatePreference()
 {
+  // While a plugin has focus, IMEInputHandler doesn't need any notifications.
+  if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+    return nsIMEUpdatePreference();
+  }
   return nsIMEUpdatePreference(nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE);
 }
 

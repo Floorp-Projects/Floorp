@@ -27,20 +27,18 @@ namespace ipc {
 bool
 StructuredCloneData::Copy(const StructuredCloneData& aData)
 {
-  if (!aData.mData) {
+  if (!aData.Data()) {
     return true;
   }
 
-  uint64_t* data = static_cast<uint64_t*>(js_malloc(aData.mDataLength));
-  if (!data) {
-    return false;
+  if (aData.SharedData()) {
+    mSharedData = aData.SharedData();
+  } else {
+    mSharedData =
+      SharedJSAllocatedData::CreateFromExternalData(aData.Data(),
+                                                    aData.DataLength());
+    NS_ENSURE_TRUE(mSharedData, false);
   }
-
-  memcpy(data, aData.mData, aData.mDataLength);
-
-  mData = data;
-  mDataLength = aData.mDataLength;
-  mDataOwned = eJSAllocated;
 
   MOZ_ASSERT(BlobImpls().IsEmpty());
   BlobImpls().AppendElements(aData.BlobImpls());
@@ -55,12 +53,12 @@ StructuredCloneData::Read(JSContext* aCx,
                           JS::MutableHandle<JS::Value> aValue,
                           ErrorResult &aRv)
 {
-  MOZ_ASSERT(mData);
+  MOZ_ASSERT(Data());
 
   nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
   MOZ_ASSERT(global);
 
-  ReadFromBuffer(global, aCx, mData, mDataLength, aValue, aRv);
+  ReadFromBuffer(global, aCx, Data(), DataLength(), aValue, aRv);
 }
 
 void
@@ -68,26 +66,28 @@ StructuredCloneData::Write(JSContext* aCx,
                            JS::Handle<JS::Value> aValue,
                            ErrorResult &aRv)
 {
-  MOZ_ASSERT(!mData);
+  MOZ_ASSERT(!Data());
 
   StructuredCloneHolder::Write(aCx, aValue, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  mBuffer->steal(&mData, &mDataLength);
+  uint64_t* data = nullptr;
+  size_t dataLength = 0;
+  mBuffer->steal(&data, &dataLength);
   mBuffer = nullptr;
-  mDataOwned = eJSAllocated;
+  mSharedData = new SharedJSAllocatedData(data, dataLength);
 }
 
 void
 StructuredCloneData::WriteIPCParams(Message* aMsg) const
 {
-  WriteParam(aMsg, mDataLength);
+  WriteParam(aMsg, DataLength());
 
-  if (mDataLength) {
+  if (DataLength()) {
     // Structured clone data must be 64-bit aligned.
-    aMsg->WriteBytes(mData, mDataLength, sizeof(uint64_t));
+    aMsg->WriteBytes(Data(), DataLength(), sizeof(uint64_t));
   }
 }
 
@@ -95,31 +95,29 @@ bool
 StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
                                    void** aIter)
 {
-  MOZ_ASSERT(!mData);
+  MOZ_ASSERT(!Data());
 
-  if (!ReadParam(aMsg, aIter, &mDataLength)) {
+  size_t dataLength = 0;
+  if (!ReadParam(aMsg, aIter, &dataLength)) {
     return false;
   }
 
-  if (!mDataLength) {
+  if (!dataLength) {
     return true;
   }
 
+  uint64_t* dataBuffer = nullptr;
   const char** buffer =
-    const_cast<const char**>(reinterpret_cast<char**>(&mData));
+    const_cast<const char**>(reinterpret_cast<char**>(&dataBuffer));
   // Structured clone data must be 64-bit aligned.
-  if (!aMsg->ReadBytes(aIter, buffer, mDataLength, sizeof(uint64_t))) {
+  if (!aMsg->ReadBytes(aIter, buffer, dataLength, sizeof(uint64_t))) {
     return false;
   }
 
-  uint64_t* data = static_cast<uint64_t*>(js_malloc(mDataLength));
-  if (!data) {
-     return false;
-  }
+  mSharedData = SharedJSAllocatedData::CreateFromExternalData(dataBuffer,
+                                                              dataLength);
+  NS_ENSURE_TRUE(mSharedData, false);
 
-  memcpy(data, mData, mDataLength);
-  mData = data;
-  mDataOwned = eJSAllocated;
   return true;
 }
 
@@ -127,17 +125,10 @@ bool
 StructuredCloneData::CopyExternalData(const void* aData,
                                       size_t aDataLength)
 {
-  MOZ_ASSERT(!mData);
-  uint64_t* data = static_cast<uint64_t*>(js_malloc(aDataLength));
-  if (!data) {
-     return false;
-  }
-
-  memcpy(data, aData, aDataLength);
-  mData = data;
-  mDataLength = aDataLength;
-  mDataOwned = eJSAllocated;
-
+  MOZ_ASSERT(!Data());
+  mSharedData = SharedJSAllocatedData::CreateFromExternalData(aData,
+                                                              aDataLength);
+  NS_ENSURE_TRUE(mSharedData, false);
   return true;
 }
 

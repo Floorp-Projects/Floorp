@@ -11,7 +11,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.menu.MenuItemActionView;
-import org.mozilla.gecko.menu.QuickShareBarActionView;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -91,20 +90,12 @@ public class GeckoActionProvider {
      * Creates the action view using the default history size.
      */
     public View onCreateActionView(final ActionViewType viewType) {
-        return onCreateActionView(MAX_HISTORY_SIZE_DEFAULT, viewType);
-    }
-
-    public View onCreateActionView(final int maxHistorySize, final ActionViewType viewType) {
         // Create the view and set its data model.
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
         final MenuItemActionView view;
         switch (viewType) {
             case DEFAULT:
                 view = new MenuItemActionView(mContext, null);
-                break;
-
-            case QUICK_SHARE_ICON:
-                view = new QuickShareBarActionView(mContext, null);
                 break;
 
             case CONTEXT_MENU:
@@ -120,8 +111,8 @@ public class GeckoActionProvider {
 
         final PackageManager packageManager = mContext.getPackageManager();
         int historySize = dataModel.getDistinctActivityCountInHistory();
-        if (historySize > maxHistorySize) {
-            historySize = maxHistorySize;
+        if (historySize > MAX_HISTORY_SIZE_DEFAULT) {
+            historySize = MAX_HISTORY_SIZE_DEFAULT;
         }
 
         // Historical data is dependent on past selection of activities.
@@ -152,8 +143,6 @@ public class GeckoActionProvider {
         PackageManager packageManager = mContext.getPackageManager();
 
         // Populate the sub-menu with a sub set of the activities.
-        final String shareDialogClassName = ShareDialog.class.getCanonicalName();
-        final String sendTabLabel = mContext.getResources().getString(R.string.overlay_share_send_other);
         final int count = dataModel.getActivityCount();
         for (int i = 0; i < count; i++) {
             ResolveInfo activity = dataModel.getActivity(i);
@@ -161,13 +150,7 @@ public class GeckoActionProvider {
 
             // Pin internal actions to the top. Note:
             // the order here does not affect quick share.
-            final int order;
-            if (shareDialogClassName.equals(activity.activityInfo.name) &&
-                    sendTabLabel.equals(activityLabel)) {
-                order = Menu.FIRST + i;
-            } else {
-                order = Menu.FIRST + (i | Menu.CATEGORY_SECONDARY);
-            }
+            final int order = Menu.FIRST + (i | Menu.CATEGORY_SECONDARY);
 
             subMenu.add(0, i, order, activityLabel)
                 .setIcon(activity.loadIcon(packageManager))
@@ -267,7 +250,6 @@ public class GeckoActionProvider {
 
     public enum ActionViewType {
         DEFAULT,
-        QUICK_SHARE_ICON,
         CONTEXT_MENU,
     }
 }

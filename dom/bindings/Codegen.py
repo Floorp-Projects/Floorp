@@ -2953,9 +2953,32 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             unforgeableHolderSetup = None
 
+        if (self.descriptor.interface.isOnGlobalProtoChain() and
+            needInterfacePrototypeObject):
+            makeProtoPrototypeImmutable = CGGeneric(fill(
+                """
+                if (*${protoCache}) {
+                  bool succeeded;
+                  JS::Handle<JSObject*> prot = GetProtoObjectHandle(aCx, aGlobal);
+                  if (!JS_SetImmutablePrototype(aCx, prot, &succeeded)) {
+                    $*{failureCode}
+                  }
+
+                  MOZ_ASSERT(succeeded,
+                             "making a fresh prototype object's [[Prototype]] "
+                             "immutable can internally fail, but it should "
+                             "never be unsuccessful");
+                }
+                """,
+                protoCache=protoCache,
+                failureCode=failureCode))
+        else:
+            makeProtoPrototypeImmutable = None
+
         return CGList(
             [getParentProto, CGGeneric(getConstructorProto), initIds,
-             prefCache, CGGeneric(call), defineAliases, unforgeableHolderSetup],
+             prefCache, CGGeneric(call), defineAliases, unforgeableHolderSetup,
+             makeProtoPrototypeImmutable],
             "\n").define()
 
 

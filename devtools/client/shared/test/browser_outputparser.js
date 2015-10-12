@@ -33,7 +33,7 @@ var COLOR_TEST_CLASS = "test-class";
 // property.  |value| is the CSS text to use.  |segments| is an array
 // describing the expected result.  If an element of |segments| is a
 // string, it is simply appended to the expected string.  Otherwise,
-// it must be an object with a |value| property, which is the color
+// it must be an object with a |name| property, which is the color
 // name as it appears in the input.
 //
 // This approach is taken to reduce boilerplate and to make it simpler
@@ -98,6 +98,51 @@ function testParseCssProperty(doc, parser) {
                    ") url(red.svg#blue)</span></span>"]),
 
     makeColorTest("color", "currentColor", ["currentColor"]),
+
+    // Test a very long property.
+    makeColorTest("background-image",
+                  "linear-gradient(0deg, transparent 0, transparent 5%,#F00 0, #F00 10%,#FF0 0, #FF0 15%,#0F0 0, #0F0 20%,#0FF 0, #0FF 25%,#00F 0, #00F 30%,#800 0, #800 35%,#880 0, #880 40%,#080 0, #080 45%,#088 0, #088 50%,#008 0, #008 55%,#FFF 0, #FFF 60%,#EEE 0, #EEE 65%,#CCC 0, #CCC 70%,#999 0, #999 75%,#666 0, #666 80%,#333 0, #333 85%,#111 0, #111 90%,#000 0, #000 95%,transparent 0, transparent 100%)",
+                  ["linear-gradient(0deg, ", {name: "transparent"},
+                   " 0, ", {name: "transparent"},
+                   " 5%,", {name: "#F00"},
+                   " 0, ", {name: "#F00"},
+                   " 10%,", {name: "#FF0"},
+                   " 0, ", {name: "#FF0"},
+                   " 15%,", {name: "#0F0"},
+                   " 0, ", {name: "#0F0"},
+                   " 20%,", {name: "#0FF"},
+                   " 0, ", {name: "#0FF"},
+                   " 25%,", {name: "#00F"},
+                   " 0, ", {name: "#00F"},
+                   " 30%,", {name: "#800"},
+                   " 0, ", {name: "#800"},
+                   " 35%,", {name: "#880"},
+                   " 0, ", {name: "#880"},
+                   " 40%,", {name: "#080"},
+                   " 0, ", {name: "#080"},
+                   " 45%,", {name: "#088"},
+                   " 0, ", {name: "#088"},
+                   " 50%,", {name: "#008"},
+                   " 0, ", {name: "#008"},
+                   " 55%,", {name: "#FFF"},
+                   " 0, ", {name: "#FFF"},
+                   " 60%,", {name: "#EEE"},
+                   " 0, ", {name: "#EEE"},
+                   " 65%,", {name: "#CCC"},
+                   " 0, ", {name: "#CCC"},
+                   " 70%,", {name: "#999"},
+                   " 0, ", {name: "#999"},
+                   " 75%,", {name: "#666"},
+                   " 0, ", {name: "#666"},
+                   " 80%,", {name: "#333"},
+                   " 0, ", {name: "#333"},
+                   " 85%,", {name: "#111"},
+                   " 0, ", {name: "#111"},
+                   " 90%,", {name: "#000"},
+                   " 0, ", {name: "#000"},
+                   " 95%,", {name: "transparent"},
+                   " 0, ", {name: "transparent"},
+                   " 100%)"]),
   ];
 
   let target = doc.querySelector("div");

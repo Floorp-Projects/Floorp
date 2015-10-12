@@ -1081,4 +1081,17 @@
  */
 #define NS_NSS_ERRORS_SERVICE_CONTRACTID "@mozilla.org/nss_errors_service;1"
 
+/**
+ * LoadContextInfo factory
+ */
+#define NS_NSILOADCONTEXTINFOFACTORY_CONTRACTID \
+    "@mozilla.org/load-context-info-factory;1"
+#define NS_NSILOADCONTEXTINFOFACTORY_CID             \
+{ /* 62d4b190-3642-4450-b019-d1c1fba56025 */         \
+    0x62d4b190,                                      \
+    0x3642,                                          \
+    0x4450,                                          \
+    {0xb0, 0x19, 0xd1, 0xc1, 0xfb, 0xa5, 0x60, 0x25} \
+}
+
 #endif // nsNetCID_h__

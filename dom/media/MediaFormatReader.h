@@ -25,9 +25,7 @@ class MediaFormatReader final : public MediaDecoderReader
   typedef media::Interval<int64_t> ByteInterval;
 
 public:
-  explicit MediaFormatReader(AbstractMediaDecoder* aDecoder,
-                             MediaDataDemuxer* aDemuxer,
-                             TaskQueue* aBorrowedTaskQueue = nullptr);
+  MediaFormatReader(AbstractMediaDecoder* aDecoder, MediaDataDemuxer* aDemuxer);
 
   virtual ~MediaFormatReader();
 

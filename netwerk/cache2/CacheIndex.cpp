@@ -2571,8 +2571,11 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
   aEntry->InitNew();
   aEntry->MarkDirty();
   aEntry->MarkFresh();
-  aEntry->Init(aMetaData->AppId(), aMetaData->IsAnonymous(),
-               aMetaData->IsInBrowser());
+
+  // Bug 1201042 - will pass OriginAttributes directly.
+  aEntry->Init(aMetaData->OriginAttributes().mAppId,
+               aMetaData->IsAnonymous(),
+               aMetaData->OriginAttributes().mInBrowser);
 
   uint32_t expirationTime;
   aMetaData->GetExpirationTime(&expirationTime);

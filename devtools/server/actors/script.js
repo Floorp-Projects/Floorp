@@ -18,7 +18,7 @@ const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
-const { DevToolsWorker } = require("devtools/shared/shared/worker");
+const { DevToolsWorker } = require("devtools/shared/worker/worker");
 
 const { defer, resolve, reject, all } = promise;
 

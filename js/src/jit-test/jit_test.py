@@ -17,7 +17,8 @@ def add_libdir_to_path():
 add_libdir_to_path()
 
 import jittests
-from tests import get_jitflags
+from tests import get_jitflags, get_cpu_count, get_environment_overlay, \
+                  change_env
 
 # Python 3.3 added shutil.which, but we can't use that yet.
 def which(name):
@@ -32,18 +33,8 @@ def which(name):
     return name
 
 def main(argv):
-
-    # If no multiprocessing is available, fallback to serial test execution
-    max_jobs_default = 1
-    if jittests.HAVE_MULTIPROCESSING:
-        try:
-            max_jobs_default = jittests.cpu_count()
-        except NotImplementedError:
-            pass
-
     # The [TESTS] optional arguments are paths of test files relative
     # to the jit-test/tests directory.
-
     from optparse import OptionParser
     op = OptionParser(usage='%prog [options] JS_SHELL [TESTS]')
     op.add_option('-s', '--show-cmd', dest='show_cmd', action='store_true',
@@ -112,7 +103,7 @@ def main(argv):
                   help='Run tests with all IonMonkey option combinations'
                   ' (ignores --jitflags)')
     op.add_option('-j', '--worker-count', dest='max_jobs', type=int,
-                  default=max_jobs_default,
+                  default=max(1, get_cpu_count()),
                   help='Number of tests to run in parallel (default %default)')
     op.add_option('--remote', action='store_true',
                   help='Run tests on a remote device')
@@ -149,8 +140,9 @@ def main(argv):
     options, args = op.parse_args(argv)
     if len(args) < 1:
         op.error('missing JS_SHELL argument')
-    # We need to make sure we are using backslashes on Windows.
+    js_shell = which(args[0])
     test_args = args[1:]
+    test_environment = get_environment_overlay(js_shell)
 
     if jittests.stdio_might_be_broken():
         # Prefer erring on the side of caution and not using stdio if
@@ -249,7 +241,7 @@ def main(argv):
     else:
         options.ignore_timeouts = set()
 
-    prefix = [which(args[0])] + shlex.split(options.shell_args)
+    prefix = [js_shell] + shlex.split(options.shell_args)
     prologue = os.path.join(jittests.LIB_DIR, 'prologue.js')
     if options.remote:
         prologue = posixpath.join(options.remote_test_root,
@@ -277,17 +269,17 @@ def main(argv):
         else:
             debug_cmd = options.debugger.split()
 
-        subprocess.call(debug_cmd + tc.command(prefix, jittests.LIB_DIR))
+        with change_env(test_environment):
+            subprocess.call(debug_cmd + tc.command(prefix, jittests.LIB_DIR))
         sys.exit()
 
     try:
         ok = None
         if options.remote:
             ok = jittests.run_tests_remote(job_list, prefix, options)
-        elif options.max_jobs > 1 and jittests.HAVE_MULTIPROCESSING:
-            ok = jittests.run_tests_parallel(job_list, prefix, options)
         else:
-            ok = jittests.run_tests(job_list, prefix, options)
+            with change_env(test_environment):
+                ok = jittests.run_tests(job_list, prefix, options)
         if not ok:
             sys.exit(2)
     except OSError:

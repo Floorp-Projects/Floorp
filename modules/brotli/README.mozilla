@@ -42,3 +42,31 @@ diff --git a/modules/brotli/dec/bit_reader.h b/modules/brotli/dec/bit_reader.h
  /* Copies remaining input bytes stored in the bit reader to the output. Value
     num may not be larger than BrotliGetRemainingBytes. The bit reader must be
     warmed up again after this. */
+
+
+This patch fixes a use-before declare error on big endian platforms
+in bit_reader.h.  Upstream has already fixed this error by re-arranging 
+some functions in the file.
+
+diff --git a/modules/brotli/dec/bit_reader.h b/modules/brotli/dec/bit_reader.h
+--- a/modules/brotli/dec/bit_reader.h
++++ b/modules/brotli/dec/bit_reader.h
+@@ -58,17 +58,17 @@ typedef struct {
+ /* Initializes the bitreader fields. */
+ void BrotliInitBitReader(BrotliBitReader* const br, BrotliInput input);
+ 
+ /* Ensures that accumulator is not empty. May consume one byte of input.
+    Returns 0 if data is required but there is no input available.
+    For BROTLI_BUILD_PORTABLE this function also prepares bit reader for aligned
+    reading. */
+ int BrotliWarmupBitReader(BrotliBitReader* const br);
+-
++static BROTLI_INLINE void BrotliPullByte(BrotliBitReader* const br);
+ /* Pulls data from the input to the the read buffer.
+ 
+    Returns 0 if one of:
+     - the input callback returned an error, or
+     - there is no more input and the position is past the end of the stream.
+     - finish is false and less than BROTLI_READ_SIZE are available - a next call
+       when more data is available makes it continue including the partially read
+       data

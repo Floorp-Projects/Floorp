@@ -141,8 +141,22 @@ SdpHelper::DisableMsection(Sdp* sdp, SdpMediaSection* msection)
 
   msection->ClearCodecs();
 
-  // We need to have something here to fit the grammar, this seems safe.
-  msection->AddCodec("0", "PCMU", 8000, 1);
+  auto mediaType = msection->GetMediaType();
+  switch (mediaType) {
+    case SdpMediaSection::kAudio:
+      msection->AddCodec("0", "PCMU", 8000, 1);
+      break;
+    case SdpMediaSection::kVideo:
+      msection->AddCodec("120", "VP8", 90000, 1);
+      break;
+    case SdpMediaSection::kApplication:
+      msection->AddDataChannel("5000", "rejected", 0);
+      break;
+    default:
+      // We need to have something here to fit the grammar, this seems safe
+      // and 19 is a reserved payload type which should not be used by anyone.
+      msection->AddCodec("19", "reserved", 8000, 1);
+  }
 }
 
 void

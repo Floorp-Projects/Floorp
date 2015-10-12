@@ -259,9 +259,9 @@ public:
                                            nsILoadContextInfo *aInfo)
   {
     if (!aInfo->IsPrivate() &&
-        aInfo->AppId() == aRec->mAppId &&
+        aInfo->OriginAttributesPtr()->mAppId == aRec->mAppId &&
         aInfo->IsAnonymous() == !!(aRec->mFlags & kAnonymousMask) &&
-        aInfo->IsInBrowserElement() == !!(aRec->mFlags & kInBrowserMask)) {
+        aInfo->OriginAttributesPtr()->mInBrowser == !!(aRec->mFlags & kInBrowserMask)) {
       return true;
     }
 

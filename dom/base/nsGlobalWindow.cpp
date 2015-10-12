@@ -563,7 +563,7 @@ nsTimeout::HasRefCntOne()
 static already_AddRefed<nsIVariant>
 CreateVoidVariant()
 {
-  nsRefPtr<nsVariant> writable = new nsVariant();
+  nsRefPtr<nsVariantCC> writable = new nsVariantCC();
   writable->SetAsVoid();
   return writable.forget();
 }
@@ -11837,6 +11837,8 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIDOMStorage> istorage = changingStorage.get();
 
     bool fireMozStorageChanged = false;
+    nsAutoString eventType;
+    eventType.AssignLiteral("storage");
     principal = GetPrincipal();
     if (!principal) {
       return NS_OK;
@@ -11872,6 +11874,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       }
 
       fireMozStorageChanged = mSessionStorage == changingStorage;
+      if (fireMozStorageChanged) {
+        eventType.AssignLiteral("MozSessionStorageChanged");
+      }
       break;
     }
 
@@ -11889,6 +11894,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
         return NS_OK;
 
       fireMozStorageChanged = mLocalStorage == changingStorage;
+      if (fireMozStorageChanged) {
+        eventType.AssignLiteral("MozLocalStorageChanged");
+      };
       break;
     }
     default:
@@ -11898,11 +11906,8 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     // Clone the storage event included in the observer notification. We want
     // to dispatch clones rather than the original event.
     ErrorResult error;
-    nsRefPtr<StorageEvent> newEvent =
-      CloneStorageEvent(fireMozStorageChanged ?
-                          NS_LITERAL_STRING("MozStorageChanged") :
-                          NS_LITERAL_STRING("storage"),
-                        event, error);
+    nsRefPtr<StorageEvent> newEvent = CloneStorageEvent(eventType,
+                                                        event, error);
     if (error.Failed()) {
       return error.StealNSResult();
     }
