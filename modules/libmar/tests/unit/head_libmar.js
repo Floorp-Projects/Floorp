@@ -4,9 +4,8 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 
-const isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-const refMARPrefix = (isWindows ? "win_" : "");
-const BIN_SUFFIX = (isWindows ? ".exe" : "");
+const refMARPrefix = (mozinfo.os == "win" ? "win_" : "");
+const BIN_SUFFIX = mozinfo.bin_suffix;
 
 var tempDir = do_get_tempdir();
 

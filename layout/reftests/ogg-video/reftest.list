@@ -1,4 +1,5 @@
 # NOTE: bug 1084564 covers "fails"/"skip" annotations for b2g/android below:
+fuzzy(255,5000) == 444-1.html 444-1-ref.html
 fails-if(Android||B2G||Mulet) HTTP(..) == aspect-ratio-1a.xhtml aspect-ratio-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G||Mulet) HTTP(..) == aspect-ratio-1b.xhtml aspect-ratio-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(Android||B2G||Mulet) skip-if(gtkWidget) HTTP(..) == aspect-ratio-2a.xhtml aspect-ratio-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop

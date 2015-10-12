@@ -7,10 +7,9 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Promise.jsm");
 
-const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-const gIsOSX = ("nsILocalFileMac" in Ci);
-const gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc) ||
-  ("@mozilla.org/gio-service;1" in Cc);
+const gIsWindows = mozinfo.os == "win";
+const gIsOSX = mozinfo.os == "mac";
+const gIsLinux = mozinfo.os == "linux";
 const gDirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
 
 // Finds the test plugin library

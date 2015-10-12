@@ -6,9 +6,7 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Plugin registry uses different field delimeters on different platforms
-var DELIM = ":";
-if ("@mozilla.org/windows-registry-key;1" in Components.classes)
-  DELIM = "|";
+var DELIM = mozinfo.os == "win" ? "|" : ":";
 
 var gProfD = do_get_profile_startup();
 

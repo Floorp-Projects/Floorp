@@ -183,7 +183,7 @@ ContentBridgeParent::GetCPOWManager()
   if (ManagedPJavaScriptParent().Length()) {
     return CPOWManagerFor(ManagedPJavaScriptParent()[0]);
   }
-  return CPOWManagerFor(SendPJavaScriptConstructor());
+  return nullptr;
 }
 
 NS_IMETHODIMP

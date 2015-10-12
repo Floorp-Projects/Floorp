@@ -98,17 +98,16 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   // etc output).
   const bool isMP4Audio = aMIMETypeExcludingCodecs.EqualsASCII("audio/mp4") ||
                           aMIMETypeExcludingCodecs.EqualsASCII("audio/x-m4a");
-  const bool isMP4Video = aMIMETypeExcludingCodecs.EqualsASCII("video/mp4") ||
-                          aMIMETypeExcludingCodecs.EqualsASCII("video/x-m4v");
+  const bool isMP4Video =
+  // On B2G, treat 3GPP as MP4 when Gonk PDM is available.
+#ifdef MOZ_GONK_MEDIACODEC
+    aMIMETypeExcludingCodecs.EqualsASCII(VIDEO_3GPP) ||
+#endif
+    aMIMETypeExcludingCodecs.EqualsASCII("video/mp4") ||
+    aMIMETypeExcludingCodecs.EqualsASCII("video/x-m4v");
   if (!isMP4Audio && !isMP4Video) {
     return false;
   }
-
-#ifdef MOZ_GONK_MEDIACODEC
-  if (aMIMETypeExcludingCodecs.EqualsASCII(VIDEO_3GPP)) {
-    return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
-  }
-#endif
 
   nsTArray<nsCString> codecMimes;
   if (aCodecs.IsEmpty()) {

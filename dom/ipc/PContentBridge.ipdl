@@ -41,6 +41,8 @@ parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
+
+    async PJavaScript();
 both:
     // Both the parent and the child can construct the PBrowser.
     // See the comment in PContent::PBrowser().
@@ -48,8 +50,6 @@ both:
                    ContentParentId cpId, bool isForApp, bool isForBrowser);
 
     async PBlob(BlobConstructorParams params);
-
-    async PJavaScript();
 
     AsyncMessage(nsString aMessage, ClonedMessageData aData,
                  CpowEntry[] aCpows, Principal aPrincipal);

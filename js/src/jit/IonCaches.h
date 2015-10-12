@@ -29,7 +29,6 @@ class LInstruction;
 #define IONCACHE_KIND_LIST(_)                                   \
     _(GetProperty)                                              \
     _(SetProperty)                                              \
-    _(GetElement)                                               \
     _(SetElement)                                               \
     _(BindName)                                                 \
     _(Name)
@@ -382,37 +381,51 @@ class GetPropertyIC : public IonCache
     LiveRegisterSet liveRegs_;
 
     Register object_;
-    PropertyName* name_;
+    ConstantOrRegister id_;
     TypedOrValueRegister output_;
 
     // Only valid if idempotent
     size_t locationsIndex_;
     size_t numLocations_;
 
+    static const size_t MAX_FAILED_UPDATES = 16;
+    uint16_t failedUpdates_;
+
     bool monitoredResult_ : 1;
+    bool allowDoubleResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasSharedTypedArrayLengthStub_ : 1;
     bool hasMappedArgumentsLengthStub_ : 1;
     bool hasUnmappedArgumentsLengthStub_ : 1;
+    bool hasMappedArgumentsElementStub_ : 1;
+    bool hasUnmappedArgumentsElementStub_ : 1;
     bool hasGenericProxyStub_ : 1;
+    bool hasDenseStub_ : 1;
+
+    void emitIdGuard(MacroAssembler& masm, jsid id, Label* fail);
 
   public:
     GetPropertyIC(LiveRegisterSet liveRegs,
-                  Register object, PropertyName* name,
+                  Register object, ConstantOrRegister id,
                   TypedOrValueRegister output,
-                  bool monitoredResult)
+                  bool monitoredResult, bool allowDoubleResult)
       : liveRegs_(liveRegs),
         object_(object),
-        name_(name),
+        id_(id),
         output_(output),
         locationsIndex_(0),
         numLocations_(0),
+        failedUpdates_(0),
         monitoredResult_(monitoredResult),
+        allowDoubleResult_(allowDoubleResult),
         hasTypedArrayLengthStub_(false),
         hasSharedTypedArrayLengthStub_(false),
         hasMappedArgumentsLengthStub_(false),
         hasUnmappedArgumentsLengthStub_(false),
-        hasGenericProxyStub_(false)
+        hasMappedArgumentsElementStub_(false),
+        hasUnmappedArgumentsElementStub_(false),
+        hasGenericProxyStub_(false),
+        hasDenseStub_(false)
     {
     }
 
@@ -423,8 +436,8 @@ class GetPropertyIC : public IonCache
     Register object() const {
         return object_;
     }
-    PropertyName* name() const {
-        return name_;
+    ConstantOrRegister id() const {
+        return id_;
     }
     TypedOrValueRegister output() const {
         return output_;
@@ -438,8 +451,19 @@ class GetPropertyIC : public IonCache
     bool hasArgumentsLengthStub(bool mapped) const {
         return mapped ? hasMappedArgumentsLengthStub_ : hasUnmappedArgumentsLengthStub_;
     }
+    bool hasArgumentsElementStub(bool mapped) const {
+        return mapped ? hasMappedArgumentsElementStub_ : hasUnmappedArgumentsElementStub_;
+    }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
+    }
+
+    bool hasDenseStub() const {
+        return hasDenseStub_;
+    }
+    void setHasDenseStub() {
+        MOZ_ASSERT(!hasDenseStub());
+        hasDenseStub_ = true;
     }
 
     void setHasTypedArrayLengthStub(HandleObject obj) {
@@ -478,49 +502,64 @@ class GetPropertyIC : public IonCache
         return monitoredResult() && !idempotent();
     }
 
+    void maybeDisable(bool emitted);
+
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandlePropertyName name, bool* emitted);
+                       HandleObject obj, HandleValue idval, bool* emitted);
 
     bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                        HandleObject obj, HandlePropertyName name,
-                        void* returnAddr, bool* emitted);
+                        HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                               HandleObject obj, HandlePropertyName name,
-                               void* returnAddr, bool* emitted);
+                               HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, void* returnAddr, bool* emitted);
+                                   HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj, HandlePropertyName name, bool resetNeeded,
+                                     HandleObject obj, HandleId id, bool resetNeeded,
                                      void* returnAddr, bool* emitted);
 
     bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                         HandleObject obj, HandlePropertyName name,
-                         void* returnAddr, bool* emitted);
+                         HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandlePropertyName name,
-                          void* returnAddr, bool* emitted);
+                          HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                 HandleObject obj, HandlePropertyName name,
-                                 void* returnAddr, bool* emitted);
+                                 HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachUnboxedArrayLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj, HandlePropertyName name,
-                                     void* returnAddr, bool* emitted);
+                                     HandleObject obj, HandleId id, void* returnAddr,
+                                     bool* emitted);
 
     bool tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandlePropertyName name, bool* emitted);
+                                   HandleObject obj, HandleId id, bool* emitted);
 
     bool tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  HandleObject obj, HandlePropertyName name, bool* emitted);
+                                  HandleObject obj, HandleId id, bool* emitted);
+
+    bool tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                   HandleObject obj, HandleValue idval, bool* emitted);
+
+    bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                               HandleObject obj, HandleValue idval, bool* emitted);
+
+    static bool canAttachDenseElementHole(JSObject* obj, HandleValue idval,
+                                          TypedOrValueRegister output);
+    bool tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                   HandleObject obj, HandleValue idval, bool* emitted);
+
+    static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
+                                                    TypedOrValueRegister output);
+
+    bool tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
+                                             IonScript* ion, HandleObject obj,
+                                             HandleValue idval, bool* emitted);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
-                       HandleObject obj, MutableHandleValue vp);
+                       HandleObject obj, HandleValue id, MutableHandleValue vp);
 };
 
 class SetPropertyIC : public IonCache
@@ -608,117 +647,6 @@ class SetPropertyIC : public IonCache
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue value);
-};
-
-class GetElementIC : public IonCache
-{
-  protected:
-    LiveRegisterSet liveRegs_;
-
-    Register object_;
-    TypedOrValueRegister index_;
-    TypedOrValueRegister output_;
-
-    bool monitoredResult_ : 1;
-    bool allowDoubleResult_ : 1;
-    bool hasDenseStub_ : 1;
-    bool hasMappedArgumentsStub_ : 1;
-    bool hasUnmappedArgumentsStub_ : 1;
-
-    size_t failedUpdates_;
-
-    static const size_t MAX_FAILED_UPDATES;
-
-  public:
-    GetElementIC(LiveRegisterSet liveRegs, Register object, TypedOrValueRegister index,
-                 TypedOrValueRegister output, bool monitoredResult, bool allowDoubleResult)
-      : liveRegs_(liveRegs),
-        object_(object),
-        index_(index),
-        output_(output),
-        monitoredResult_(monitoredResult),
-        allowDoubleResult_(allowDoubleResult),
-        hasDenseStub_(false),
-        hasMappedArgumentsStub_(false),
-        hasUnmappedArgumentsStub_(false),
-        failedUpdates_(0)
-    {
-    }
-
-    CACHE_HEADER(GetElement)
-
-    void reset(ReprotectCode reprotect);
-
-    Register object() const {
-        return object_;
-    }
-    TypedOrValueRegister index() const {
-        return index_;
-    }
-    TypedOrValueRegister output() const {
-        return output_;
-    }
-    bool monitoredResult() const {
-        return monitoredResult_;
-    }
-    bool allowDoubleResult() const {
-        return allowDoubleResult_;
-    }
-    bool hasDenseStub() const {
-        return hasDenseStub_;
-    }
-    bool hasArgumentsStub(bool mapped) const {
-        return mapped ? hasMappedArgumentsStub_ : hasUnmappedArgumentsStub_;
-    }
-    void setHasDenseStub() {
-        MOZ_ASSERT(!hasDenseStub());
-        hasDenseStub_ = true;
-    }
-
-    // Helpers for CanAttachNativeGetProp
-    typedef JSContext * Context;
-    bool allowGetters() const { MOZ_ASSERT(!idempotent()); return true; }
-    bool allowArrayLength(Context) const { return false; }
-    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
-        return monitoredResult();
-    }
-
-    static bool canAttachGetProp(JSObject* obj, const Value& idval, jsid id);
-    static bool canAttachDenseElement(JSObject* obj, const Value& idval);
-    static bool canAttachDenseElementHole(JSObject* obj, const Value& idval,
-                                          TypedOrValueRegister output);
-    static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
-                                                    TypedOrValueRegister output);
-
-    bool attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, const Value& idval, HandlePropertyName name);
-
-    bool attachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                            HandleObject obj, const Value& idval);
-
-    bool attachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj, const Value& idval);
-
-    bool attachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                          HandleObject tarr, const Value& idval);
-
-    bool attachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj);
-
-    static bool
-    update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
-           HandleValue idval, MutableHandleValue vp);
-
-    void incFailedUpdates() {
-        failedUpdates_++;
-    }
-    void resetFailedUpdates() {
-        failedUpdates_ = 0;
-    }
-    bool shouldDisable() const {
-        return !canAttachStub() ||
-               (stubCount_ == 0 && failedUpdates_ > MAX_FAILED_UPDATES);
-    }
 };
 
 class SetElementIC : public IonCache

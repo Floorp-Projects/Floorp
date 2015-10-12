@@ -229,8 +229,7 @@ function test_upload_file() {
 
 function test_load_replace() {
   // lnk files should resolve to their targets
-  const isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-  if (isWindows) {
+  if (mozinfo.os == "win") {
     dump("*** test_load_replace\n");
     file = do_get_file("data/system_root.lnk", false);
     var chan = new_file_channel(file);

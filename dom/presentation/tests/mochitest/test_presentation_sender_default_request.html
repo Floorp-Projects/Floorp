@@ -15,7 +15,7 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var session;
+var connection;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
@@ -40,7 +40,7 @@ function testSetup() {
   });
 }
 
-function testStartSession() {
+function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -83,12 +83,12 @@ function testStartSession() {
 
     ok(!navigator.presentation.receiver, "Sender shouldn't get a presentation receiver instance.");
 
-    navigator.presentation.defaultRequest.onsessionconnect = function(aEvent) {
-      navigator.presentation.defaultRequest.onsessionconnect = null;
-      session = aEvent.session;
-      ok(session, "|sessionconnect| event is fired with a session.");
-      ok(session.id, "Session ID should be set.");
-      is(session.state, "connected", "Session state at sender side should be connected by default.");
+    navigator.presentation.defaultRequest.onconnectionavailable = function(aEvent) {
+      navigator.presentation.defaultRequest.onconnectionavailable = null;
+      connection = aEvent.connection;
+      ok(connection, "|connectionavailable| event is fired with a connection.");
+      ok(connection.id, "Connection ID should be set.");
+      is(connection.state, "connected", "Connection state at sender side should be connected by default.");
       aResolve();
     };
 
@@ -97,20 +97,20 @@ function testStartSession() {
   });
 }
 
-function testTerminateSession() {
+function testTerminateConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
-    session.onstatechange = function() {
-      session.onstatechange = null;
-      is(session.state, "terminated", "Session should be terminated.");
+    connection.onstatechange = function() {
+      connection.onstatechange = null;
+      is(connection.state, "terminated", "Connection should be terminated.");
       aResolve();
     };
 
-    session.terminate();
+    connection.terminate();
   });
 }
 
@@ -129,8 +129,8 @@ function runTests() {
   ok(navigator.presentation, "navigator.presentation should be available.");
 
   testSetup().
-  then(testStartSession).
-  then(testTerminateSession).
+  then(testStartConnection).
+  then(testTerminateConnection).
   then(teardown);
 }
 

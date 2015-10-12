@@ -20,6 +20,11 @@ add_task(function* () {
   yield notificationPromise;
   Assert.ok(!NewTabURL.overridden, "Newtab URL should not be overridden");
   Assert.equal(NewTabURL.get(), "about:newtab", "Newtab URL should be the about:newtab");
+
+  // change newtab page to remote
+  Services.prefs.setBoolPref("browser.newtabpage.remote", true);
+  Assert.equal(NewTabURL.get(), "about:remote-newtab", "Newtab URL should be the about:remote-newtab");
+  Assert.ok(!NewTabURL.overridden, "Newtab URL should not be overridden");
 });
 
 function promiseNewtabURLNotification(aNewURL) {
