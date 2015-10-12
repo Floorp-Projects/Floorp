@@ -27,6 +27,7 @@ EXPORTS.mozilla.dom += [
     'DOMString.h',
     'Errors.msg',
     'Exceptions.h',
+    'IterableIterator.h',
     'JSSlots.h',
     'MozMap.h',
     'NonRefcountedDOMObject.h',
@@ -74,6 +75,7 @@ UNIFIED_SOURCES += [
     'Date.cpp',
     'DOMJSProxyHandler.cpp',
     'Exceptions.cpp',
+    'IterableIterator.cpp',
     'ToJSValue.cpp',
 ]
 
@@ -88,12 +90,16 @@ SOURCES += [
 # them are only run in debug mode.
 if CONFIG['MOZ_DEBUG']:
     EXPORTS.mozilla.dom += [
+        "test/TestInterfaceIterableDouble.h",
+        "test/TestInterfaceIterableSingle.h",
         "test/TestInterfaceMaplike.h",
         "test/TestInterfaceMaplikeObject.h",
         "test/TestInterfaceSetlike.h",
         "test/TestInterfaceSetlikeNode.h"
         ]
     UNIFIED_SOURCES += [
+        "test/TestInterfaceIterableDouble.cpp",
+        "test/TestInterfaceIterableSingle.cpp",
         "test/TestInterfaceMaplike.cpp",
         "test/TestInterfaceMaplikeObject.cpp",
         "test/TestInterfaceSetlike.cpp",
