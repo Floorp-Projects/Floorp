@@ -186,7 +186,7 @@ template<typename OnRunType>
 class LambdaRunnable : public nsRunnable
 {
 public:
-  explicit LambdaRunnable(OnRunType& aOnRun) : mOnRun(aOnRun) {}
+  explicit LambdaRunnable(OnRunType&& aOnRun) : mOnRun(Move(aOnRun)) {}
 private:
   NS_IMETHODIMP
   Run()
@@ -198,16 +198,16 @@ private:
 
 template<typename OnRunType>
 LambdaRunnable<OnRunType>*
-NewRunnableFrom(OnRunType aOnRun)
+NewRunnableFrom(OnRunType&& aOnRun)
 {
-  return new LambdaRunnable<OnRunType>(aOnRun);
+  return new LambdaRunnable<OnRunType>(Forward<OnRunType>(aOnRun));
 }
 
 template<typename OnRunType>
 class LambdaTask : public Task
 {
 public:
-  explicit LambdaTask(OnRunType& aOnRun) : mOnRun(aOnRun) {}
+  explicit LambdaTask(OnRunType&& aOnRun) : mOnRun(Move(aOnRun)) {}
 private:
   void
   Run()
@@ -219,9 +219,9 @@ private:
 
 template<typename OnRunType>
 LambdaTask<OnRunType>*
-NewTaskFrom(OnRunType aOnRun)
+NewTaskFrom(OnRunType&& aOnRun)
 {
-  return new LambdaTask<OnRunType>(aOnRun);
+  return new LambdaTask<OnRunType>(Forward<OnRunType>(aOnRun));
 }
 
 /* media::CoatCheck - There and back again. Park an object in exchange for an id.
