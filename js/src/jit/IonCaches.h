@@ -394,6 +394,8 @@ class GetPropertyIC : public IonCache
     bool hasSharedTypedArrayLengthStub_ : 1;
     bool hasMappedArgumentsLengthStub_ : 1;
     bool hasUnmappedArgumentsLengthStub_ : 1;
+    bool hasMappedArgumentsElementStub_ : 1;
+    bool hasUnmappedArgumentsElementStub_ : 1;
     bool hasGenericProxyStub_ : 1;
 
     void emitIdGuard(MacroAssembler& masm, jsid id, Label* fail);
@@ -414,6 +416,8 @@ class GetPropertyIC : public IonCache
         hasSharedTypedArrayLengthStub_(false),
         hasMappedArgumentsLengthStub_(false),
         hasUnmappedArgumentsLengthStub_(false),
+        hasMappedArgumentsElementStub_(false),
+        hasUnmappedArgumentsElementStub_(false),
         hasGenericProxyStub_(false)
     {
     }
@@ -439,6 +443,9 @@ class GetPropertyIC : public IonCache
     }
     bool hasArgumentsLengthStub(bool mapped) const {
         return mapped ? hasMappedArgumentsLengthStub_ : hasUnmappedArgumentsLengthStub_;
+    }
+    bool hasArgumentsElementStub(bool mapped) const {
+        return mapped ? hasMappedArgumentsElementStub_ : hasUnmappedArgumentsElementStub_;
     }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
@@ -515,6 +522,9 @@ class GetPropertyIC : public IonCache
 
     bool tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                   HandleObject obj, HandleId id, bool* emitted);
+
+    bool tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                   HandleObject obj, HandleValue idval, bool* emitted);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);
@@ -619,8 +629,6 @@ class GetElementIC : public IonCache
     bool monitoredResult_ : 1;
     bool allowDoubleResult_ : 1;
     bool hasDenseStub_ : 1;
-    bool hasMappedArgumentsStub_ : 1;
-    bool hasUnmappedArgumentsStub_ : 1;
 
     size_t failedUpdates_;
 
@@ -636,8 +644,6 @@ class GetElementIC : public IonCache
         monitoredResult_(monitoredResult),
         allowDoubleResult_(allowDoubleResult),
         hasDenseStub_(false),
-        hasMappedArgumentsStub_(false),
-        hasUnmappedArgumentsStub_(false),
         failedUpdates_(0)
     {
     }
@@ -663,9 +669,6 @@ class GetElementIC : public IonCache
     }
     bool hasDenseStub() const {
         return hasDenseStub_;
-    }
-    bool hasArgumentsStub(bool mapped) const {
-        return mapped ? hasMappedArgumentsStub_ : hasUnmappedArgumentsStub_;
     }
     void setHasDenseStub() {
         MOZ_ASSERT(!hasDenseStub());
@@ -698,9 +701,6 @@ class GetElementIC : public IonCache
 
     bool attachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                           HandleObject tarr, const Value& idval);
-
-    bool attachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj);
 
     static bool
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
