@@ -122,9 +122,10 @@ var ContentPolicyManager = {
 };
 ContentPolicyManager.init();
 
-function StartStopListener(manager)
+function StartStopListener(manager, loadContext)
 {
   this.manager = manager;
+  this.loadContext = loadContext;
   this.orig = null;
 }
 
@@ -134,13 +135,13 @@ StartStopListener.prototype = {
                                          Ci.nsISupports]),
 
   onStartRequest: function(request, context) {
-    this.manager.onStartRequest(request);
+    this.manager.onStartRequest(request, this.loadContext);
     return this.orig.onStartRequest(request, context);
   },
 
   onStopRequest(request, context, statusCode) {
     let result = this.orig.onStopRequest(request, context, statusCode);
-    this.manager.onStopRequest(request);
+    this.manager.onStopRequest(request, this.loadContext);
     return result;
   },
 
@@ -229,12 +230,14 @@ var HttpObserverManager = {
   },
 
   observe(subject, topic, data) {
+    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+
     if (topic == "http-on-modify-request") {
-      this.modify(subject, topic, data);
+      this.modify(channel, topic, data);
     } else if (topic == "http-on-examine-response" ||
                topic == "http-on-examine-cached-response" ||
                topic == "http-on-examine-merged-response") {
-      this.examine(subject, topic, data);
+      this.examine(channel, topic, data);
     }
   },
 
@@ -243,10 +246,8 @@ var HttpObserverManager = {
            WebRequestCommon.urlMatches(uri, filter.urls);
   },
 
-  runChannelListener(request, kind) {
+  runChannelListener(channel, loadContext, kind) {
     let listeners = this.listeners[kind];
-    let channel = request.QueryInterface(Ci.nsIHttpChannel);
-    let loadContext = this.getLoadContext(channel);
     let browser = loadContext ? loadContext.topFrameElement : null;
     let loadInfo = channel.loadInfo;
     let policyType = loadInfo.contentPolicyType;
@@ -324,33 +325,38 @@ var HttpObserverManager = {
         }
       }
     }
+
+    return true;
   },
 
-  modify(subject, topic, data) {
-    if (this.runChannelListener(subject, "modify")) {
-      this.runChannelListener(subject, "afterModify");
+  modify(channel, topic, data) {
+    let loadContext = this.getLoadContext(channel);
+
+    if (this.runChannelListener(channel, loadContext, "modify")) {
+      this.runChannelListener(channel, loadContext, "afterModify");
     }
   },
 
-  examine(subject, topic, data) {
-    let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+  examine(channel, topic, data) {
+    let loadContext = this.getLoadContext(channel);
+
     if (this.listeners.onStart.size || this.listeners.onStop.size) {
       if (channel instanceof Components.interfaces.nsITraceableChannel) {
-        let listener = new StartStopListener(this);
-        let orig = subject.setNewListener(listener);
+        let listener = new StartStopListener(this, loadContext);
+        let orig = channel.setNewListener(listener);
         listener.orig = orig;
       }
     }
 
-    this.runChannelListener(subject, "headersReceived");
+    this.runChannelListener(channel, loadContext, "headersReceived");
   },
 
-  onStartRequest(request) {
-    this.runChannelListener(request, "onStart");
+  onStartRequest(channel, loadContext) {
+    this.runChannelListener(channel, loadContext, "onStart");
   },
 
-  onStopRequest(request) {
-    this.runChannelListener(request, "onStop");
+  onStopRequest(channel, loadContext) {
+    this.runChannelListener(channel, loadContext, "onStop");
   },
 };
 
