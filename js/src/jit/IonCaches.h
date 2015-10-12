@@ -539,6 +539,11 @@ class GetPropertyIC : public IonCache
     bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                HandleObject obj, HandleValue idval, bool* emitted);
 
+    static bool canAttachDenseElementHole(JSObject* obj, HandleValue idval,
+                                          TypedOrValueRegister output);
+    bool tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                   HandleObject obj, HandleValue idval, bool* emitted);
+
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);
 };
@@ -688,16 +693,11 @@ class GetElementIC : public IonCache
     }
 
     static bool canAttachGetProp(JSObject* obj, const Value& idval, jsid id);
-    static bool canAttachDenseElementHole(JSObject* obj, const Value& idval,
-                                          TypedOrValueRegister output);
     static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
                                                     TypedOrValueRegister output);
 
     bool attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* ion,
                        HandleObject obj, const Value& idval, HandlePropertyName name);
-
-    bool attachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj, const Value& idval);
 
     bool attachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                           HandleObject tarr, const Value& idval);
