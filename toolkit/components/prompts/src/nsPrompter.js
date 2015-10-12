@@ -371,7 +371,8 @@ function openModalWindow(domWin, uri, args) {
 }
 
 function openTabPrompt(domWin, tabPrompt, args) {
-    PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog");
+    let eventDetail = Cu.cloneInto({tabPrompt: true}, domWin);
+    PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog", null, eventDetail);
 
     let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
@@ -440,7 +441,8 @@ function openRemotePrompt(domWin, args, tabPrompt) {
                          .getInterface(Ci.nsITabChild)
                          .messageManager;
 
-    PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog");
+    let eventDetail = Cu.cloneInto({tabPrompt}, domWin);
+    PromptUtils.fireDialogEvent(domWin, "DOMWillOpenModalDialog", null, eventDetail);
 
     let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);

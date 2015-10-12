@@ -444,11 +444,21 @@
   position: absolute;
 }
 
-.tabbrowser-tab[pinned][titlechanged]:not([visuallyselected="true"]) > .tab-stack > .tab-content {
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([visuallyselected="true"]),
+.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([visuallyselected="true"]) {
   background-image: radial-gradient(farthest-corner at center bottom, rgb(255,255,255) 3%, rgba(186,221,251,0.75) 20%, rgba(127,179,255,0.25) 40%, transparent 70%);
   background-position: center bottom var(--tab-toolbar-navbar-overlap);
   background-repeat: no-repeat;
   background-size: 85% 100%;
+}
+
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([visuallyselected="true"]) {
+  background-position: left bottom var(--tab-toolbar-navbar-overlap);
+  background-size: 34px 100%;
+}
+
+.tab-label[attention]:not([visuallyselected="true"]) {
+  font-weight: bold;
 }
 
 /* Tab separators */
