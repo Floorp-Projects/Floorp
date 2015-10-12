@@ -4,28 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_PresentationSession_h
-#define mozilla_dom_PresentationSession_h
+#ifndef mozilla_dom_PresentationConnection_h
+#define mozilla_dom_PresentationConnection_h
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/PresentationSessionBinding.h"
+#include "mozilla/dom/PresentationConnectionBinding.h"
 #include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
 
-class PresentationSession final : public DOMEventTargetHelper
-                                , public nsIPresentationSessionListener
+class PresentationConnection final : public DOMEventTargetHelper
+                                   , public nsIPresentationSessionListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationSession,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PresentationConnection,
                                            DOMEventTargetHelper)
   NS_DECL_NSIPRESENTATIONSESSIONLISTENER
 
-  static already_AddRefed<PresentationSession> Create(nsPIDOMWindow* aWindow,
-                                                      const nsAString& aId,
-                                                      PresentationSessionState aState);
+  static already_AddRefed<PresentationConnection> Create(nsPIDOMWindow* aWindow,
+                                                         const nsAString& aId,
+                                                         PresentationConnectionState aState);
 
   virtual void DisconnectFromOwner() override;
 
@@ -35,7 +35,7 @@ public:
   // WebIDL (public APIs)
   void GetId(nsAString& aId) const;
 
-  PresentationSessionState State() const;
+  PresentationConnectionState State() const;
 
   void Send(const nsAString& aData,
             ErrorResult& aRv);
@@ -48,11 +48,11 @@ public:
   IMPL_EVENT_HANDLER(message);
 
 private:
-  PresentationSession(nsPIDOMWindow* aWindow,
-                      const nsAString& aId,
-                      PresentationSessionState aState);
+  PresentationConnection(nsPIDOMWindow* aWindow,
+                         const nsAString& aId,
+                         PresentationConnectionState aState);
 
-  ~PresentationSession();
+  ~PresentationConnection();
 
   bool Init();
 
@@ -63,10 +63,10 @@ private:
   nsresult DispatchMessageEvent(JS::Handle<JS::Value> aData);
 
   nsString mId;
-  PresentationSessionState mState;
+  PresentationConnectionState mState;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_PresentationSession_h
+#endif // mozilla_dom_PresentationConnection_h
