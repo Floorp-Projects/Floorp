@@ -52,6 +52,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void generateArgumentsChecks(bool bailout = true);
     bool generateBody();
 
+    ConstantOrRegister toConstantOrRegister(LInstruction* lir, size_t n, MIRType type);
+
   public:
     CodeGenerator(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm = nullptr);
     ~CodeGenerator();
@@ -397,7 +399,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
   private:
     void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                             PropertyName* name, TypedOrValueRegister output,
+                             ConstantOrRegister id, TypedOrValueRegister output,
                              bool monitoredResult, jsbytecode* profilerLeavePc);
     void addGetElementCache(LInstruction* ins, Register obj, TypedOrValueRegister index,
                             TypedOrValueRegister output, bool monitoredResult,

@@ -1636,7 +1636,7 @@ EmitCallProxyGet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& at
 
 bool
 GetPropertyIC::tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                         HandleObject obj, void* returnAddr,
+                                         HandleObject obj, HandlePropertyName name, void* returnAddr,
                                          bool* emitted)
 {
     MOZ_ASSERT(canAttachStub());
@@ -1664,7 +1664,7 @@ GetPropertyIC::tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript
     // guard enforces a given JSClass, so just go ahead and emit the call to
     // ProxyGet.
 
-    if (!EmitCallProxyGet(cx, masm, attacher, name(), liveRegs_, object(), output(),
+    if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(),
                           pc(), returnAddr))
     {
         return false;
@@ -1805,7 +1805,7 @@ GetPropertyIC::tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript
         if (shadows == ShadowCheckFailed)
             return false;
         if (DOMProxyIsShadowing(shadows))
-            return tryAttachDOMProxyShadowed(cx, outerScript, ion, obj, returnAddr, emitted);
+            return tryAttachDOMProxyShadowed(cx, outerScript, ion, obj, name, returnAddr, emitted);
 
         MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
         return tryAttachDOMProxyUnshadowed(cx, outerScript, ion, obj, name,
@@ -1936,12 +1936,21 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript,
 
 bool
 GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                             HandleObject obj, HandlePropertyName name, bool* emitted)
+                             HandleObject obj, HandleValue idval, bool* emitted)
 {
     MOZ_ASSERT(!*emitted);
 
     if (!canAttachStub())
         return true;
+
+    uint32_t dummy;
+    if (!idval.isString() || !idval.toString()->isAtom() || idval.toString()->asAtom().isIndex(&dummy))
+        return true;
+
+    if (!id().constant())
+        return true;
+
+    RootedPropertyName name(cx, idval.toString()->asAtom().asPropertyName());
 
     if (!*emitted && !tryAttachArgumentsLength(cx, outerScript, ion, obj, name, emitted))
         return false;
@@ -1974,12 +1983,11 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
 
 /* static */ bool
 GetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
-                      HandleObject obj, MutableHandleValue vp)
+                      HandleObject obj, HandleValue idval, MutableHandleValue vp)
 {
     IonScript* ion = outerScript->ionScript();
 
     GetPropertyIC& cache = ion->getCache(cacheIndex).toGetProperty();
-    RootedPropertyName name(cx, cache.name());
 
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, vp, ion);
@@ -1992,7 +2000,7 @@ GetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
     bool emitted = false;
-    if (!cache.tryAttachStub(cx, outerScript, ion, obj, name, &emitted))
+    if (!cache.tryAttachStub(cx, outerScript, ion, obj, idval, &emitted))
         return false;
 
     if (cache.idempotent() && !emitted) {
@@ -2014,9 +2022,16 @@ GetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         return Invalidate(cx, outerScript);
     }
 
-    RootedId id(cx, NameToId(name));
-    if (!GetProperty(cx, obj, obj, id, vp))
-        return false;
+    jsbytecode* pc = cache.idempotent() ? nullptr : cache.pc();
+
+    if (!pc || *pc == JSOP_GETPROP || *pc == JSOP_CALLPROP || *pc == JSOP_LENGTH) {
+        if (!GetProperty(cx, obj, obj, idval.toString()->asAtom().asPropertyName(), vp))
+            return false;
+    } else {
+        MOZ_ASSERT(*pc == JSOP_GETELEM || *pc == JSOP_CALLELEM);
+        if (!GetObjectElementOperation(cx, JSOp(*pc), obj, obj, idval, vp))
+            return false;
+    }
 
     if (!cache.idempotent()) {
         RootedScript script(cx);
@@ -2029,7 +2044,7 @@ GetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
 #if JS_HAS_NO_SUCH_METHOD
         // Handle objects with __noSuchMethod__.
         if (JSOp(*pc) == JSOP_CALLPROP && MOZ_UNLIKELY(vp.isUndefined())) {
-            if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
+            if (!OnUnknownMethod(cx, obj, idval, vp))
                 return false;
         }
 #endif

@@ -163,6 +163,11 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline void useBox(LInstruction* lir, size_t n, MDefinition* mir,
                        LUse::Policy policy = LUse::REGISTER, bool useAtStart = false);
 
+    // Adds a use at operand |n|. The use is either typed, a Value, or a
+    // constant (if useConstant is true).
+    inline void useBoxOrTypedOrConstant(LInstruction* lir, size_t n, MDefinition* mir,
+                                        bool useConstant);
+
     // Rather than defining a new virtual register, sets |ins| to have the same
     // virtual register as |as|.
     inline void redefine(MDefinition* ins, MDefinition* as);

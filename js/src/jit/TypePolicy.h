@@ -385,6 +385,18 @@ class BoxExceptPolicy final : public TypePolicy
     }
 };
 
+// Box if not a typical property id (string, symbol, int32).
+template <unsigned Op>
+class CacheIdPolicy final : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    static bool staticAdjustInputs(TempAllocator& alloc, MInstruction* ins);
+    bool adjustInputs(TempAllocator& alloc, MInstruction* ins) {
+        return staticAdjustInputs(alloc, ins);
+    }
+};
+
 // Combine multiple policies.
 template <class Lhs, class Rhs>
 class MixPolicy final : public TypePolicy
