@@ -386,7 +386,13 @@ BluetoothPbapManager::SetPhoneBookPath(uint8_t flags,
   if (flags & 1) {
     // Go up 1 level
     if (!newPath.IsEmpty()) {
-      newPath = StringHead(newPath, newPath.RFindChar('/'));
+      int32_t lastSlashIdx = newPath.RFindChar('/');
+      if (lastSlashIdx != -1) {
+        newPath = StringHead(newPath, lastSlashIdx);
+      } else {
+        // The parent folder is root.
+        newPath.AssignLiteral("");
+      }
     }
   } else {
     MOZ_ASSERT(aHeader.Has(ObexHeaderId::Name));
@@ -398,7 +404,9 @@ BluetoothPbapManager::SetPhoneBookPath(uint8_t flags,
       newPath.AssignLiteral("");
     } else {
       // Go down 1 level
-      newPath.AppendLiteral("/");
+      if (!newPath.IsEmpty()) {
+        newPath.AppendLiteral("/");
+      }
       newPath.Append(childFolderName);
     }
   }
@@ -430,6 +438,14 @@ BluetoothPbapManager::PullPhonebook(const ObexHeaderSet& aHeader)
 
   nsString name;
   aHeader.GetName(name);
+
+  // Ensure the name of phonebook object is legal
+  if (!IsLegalPhonebookName(name)) {
+    BT_LOGR("Illegal phone book object name [%s]",
+            NS_ConvertUTF16toUTF8(name).get());
+    return ObexResponseCode::NotFound;
+  }
+
   AppendNamedValue(data, "name", name);
 
   AppendNamedValueByTagId(aHeader, data, AppParameterTag::Format);
@@ -457,9 +473,17 @@ BluetoothPbapManager::PullvCardListing(const ObexHeaderSet& aHeader)
 
   InfallibleTArray<BluetoothNamedValue> data;
 
-  nsString name;
-  aHeader.GetName(name);
-  AppendNamedValue(data, "name", name);
+  nsString folderName;
+  aHeader.GetName(folderName);
+
+  // Section 5.3.3 "Name", PBAP 1.2
+  // ... PullvCardListing function uses relative paths. An empty name header may
+  // be sent to retrieve the vCard Listing object of the current folder.
+  nsString folderPath = mCurrentPath;
+  if (!folderName.IsEmpty()) {
+    folderPath += NS_LITERAL_STRING("/") + folderName;
+  }
+  AppendNamedValue(data, "name", folderPath);
 
   AppendNamedValueByTagId(aHeader, data, AppParameterTag::Order);
   AppendNamedValueByTagId(aHeader, data, AppParameterTag::SearchValue);
@@ -600,24 +624,50 @@ BluetoothPbapManager::IsLegalPath(const nsAString& aPath)
 {
   static const char* sLegalPaths[] = {
     "", // root
-    "/telecom",
-    "/telecom/pb",
-    "/telecom/ich",
-    "/telecom/och",
-    "/telecom/mch",
-    "/telecom/cch",
-    "/SIM1",
-    "/SIM1/telecom",
-    "/SIM1/telecom/pb",
-    "/SIM1/telecom/ich",
-    "/SIM1/telecom/och",
-    "/SIM1/telecom/mch",
-    "/SIM1/telecom/cch"
+    "telecom",
+    "telecom/pb",
+    "telecom/ich",
+    "telecom/och",
+    "telecom/mch",
+    "telecom/cch",
+    "SIM1",
+    "SIM1/telecom",
+    "SIM1/telecom/pb",
+    "SIM1/telecom/ich",
+    "SIM1/telecom/och",
+    "SIM1/telecom/mch",
+    "SIM1/telecom/cch"
   };
 
   NS_ConvertUTF16toUTF8 path(aPath);
   for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sLegalPaths); i++) {
     if (!strcmp(path.get(), sLegalPaths[i])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+BluetoothPbapManager::IsLegalPhonebookName(const nsAString& aName)
+{
+  static const char* sLegalNames[] = {
+    "telecom/pb.vcf",
+    "telecom/ich.vcf",
+    "telecom/och.vcf",
+    "telecom/mch.vcf",
+    "telecom/cch.vcf",
+    "SIM1/telecom/pb.vcf",
+    "SIM1/telecom/ich.vcf",
+    "SIM1/telecom/och.vcf",
+    "SIM1/telecom/mch.vcf",
+    "SIM1/telecom/cch.vcf"
+  };
+
+  NS_ConvertUTF16toUTF8 name(aName);
+  for (uint8_t i = 0; i < MOZ_ARRAY_LENGTH(sLegalNames); i++) {
+    if (!strcmp(name.get(), sLegalNames[i])) {
       return true;
     }
   }

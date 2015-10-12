@@ -14,6 +14,15 @@
 #include "BluetoothSocketObserver.h"
 #include "mozilla/ipc/SocketBase.h"
 
+class nsIInputStream;
+
+namespace mozilla {
+  namespace dom {
+    class Blob;
+    class BlobParent;
+  }
+}
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 struct Map {
@@ -78,6 +87,104 @@ public:
 
   static BluetoothMapSmsManager* Get();
   bool Listen();
+
+  /**
+   * Reply folder-listing object to the *IPC* 'folderlisting'
+   *
+   * @param aMasId [in]          MAS id
+   * @param aFolderlists [in]    folder listing object
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToFolderListing(long aMasId, const nsAString& aFolderlists);
+
+  /**
+   * Reply message-listing object to the *IPC* 'messageslisting'
+   *
+   * @param aActor [in]          a blob actor containing message-listing objects
+   * @param aMasId [in]          MAS id
+   * @param aNewMessage [in]     indicate whether there are unread messages
+   * @param aTimestamp [in]      time stamp
+   * @param aSize [in]           total number of messages
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToMessagesListing(
+    BlobParent* aActor, long aMasId, bool aNewMessage,
+    const nsAString& aTimestamp, int aSize);
+
+  /**
+   * Reply messages-listing object to the *in-process* 'messageslisting' request
+   *
+   * @param aBlob [in]           a blob contained the vCard objects
+   * @param aMasId [in]          MAS id
+   * @param aNewMessage [in]     indicate whether there are unread messages
+   * @param aTimestamp [in]      time stamp
+   * @param aSize [in]           total number of messages
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToMessagesListing(
+    Blob* aBlob, long aMasId, bool aNewMessage, const nsAString& aTimestamp,
+    int aSize);
+
+  /**
+   * Reply bMessage object to the *IPC* 'getmessage' request.
+   *
+   * @param aActor [in]          a blob actor containing the bMessage object
+   * @param aMasId [in]          MAS id
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToGetMessage(BlobParent* aActor, long aMasId);
+
+  /**
+   * Reply bMessage to the *in-process* 'getmessage' request.
+   *
+   * @param aBlob [in]          a blob containing the bMessage object
+   * @param aMasId [in]         the number of vCard indexes in the blob
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToGetMessage(Blob* aBlob, long aMasId);
+
+  /**
+   * Reply to the *IPC* 'setmessage' request.
+   *
+   * @param aMasId [in]         MAS id
+   * @param aStatus [in]        success or failure
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToSetMessageStatus(long aMasId, bool aStatus);
+
+  /**
+   * Reply to the *in-process* 'sendmessage' request.
+   *
+   * @param aMasId [in]         MAS id
+   * @param aStatus [in]        success or failure
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToSendMessage(long aMasId, bool aStatus);
+
+  /**
+   * Reply to the *in-process* 'messageupdate' request.
+   *
+   * @param aMasId [in]         MAS id
+   * @param aStatus [in]        success or failure
+   *
+   * @return true if the response packet has been packed correctly and started
+   *         to be sent to the remote device; false otherwise.
+   */
+  bool ReplyToMessageUpdate(long aMasId, bool aStatus);
 
 protected:
   virtual ~BluetoothMapSmsManager();
