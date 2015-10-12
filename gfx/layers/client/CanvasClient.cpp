@@ -412,6 +412,15 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
     auto layersBackend = shadowForwarder->GetCompositorBackendType();
     mReadbackClient = TexClientFromReadback(surf, forwarder, flags, layersBackend);
 
+    if (asyncRenderer) {
+      // Above codes will readback the GLContext to mReadbackClient
+      // in order to send frame to compositor. We copy from this
+      // TextureClient directly by calling CopyFromTextureClient().
+      // Therefore, if main-thread want the content of GLContext,
+      // it don't have to readback it again.
+      asyncRenderer->CopyFromTextureClient(mReadbackClient);
+    }
+
     newFront = mReadbackClient;
   } else {
     mReadbackClient = nullptr;
