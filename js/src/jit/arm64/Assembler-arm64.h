@@ -34,14 +34,14 @@ static constexpr ARMRegister ScratchReg64 = { ScratchReg, 64 };
 static constexpr Register ScratchReg2 = { Registers::ip1 };
 static constexpr ARMRegister ScratchReg2_64 = { ScratchReg2, 64 };
 
-static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::d31 };
-static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::d0 };
+static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::d31, FloatRegisters::Double };
+static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::d0, FloatRegisters::Double };
 
-static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::s0 , FloatRegisters::Single };
-static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::s31 , FloatRegisters::Single };
+static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::s0, FloatRegisters::Single };
+static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::s31, FloatRegisters::Single };
 
 static constexpr Register InvalidReg = { Registers::invalid_reg };
-static constexpr FloatRegister InvalidFloatReg = { FloatRegisters::invalid_fpreg };
+static constexpr FloatRegister InvalidFloatReg = { FloatRegisters::invalid_fpreg, FloatRegisters::Single };
 
 static constexpr FloatRegister ReturnInt32x4Reg = InvalidFloatReg;
 static constexpr FloatRegister ReturnFloat32x4Reg = InvalidFloatReg;
@@ -64,8 +64,8 @@ static constexpr Register ZeroRegister = { Registers::sp };
 static constexpr ARMRegister ZeroRegister64 = { Registers::sp, 64 };
 static constexpr ARMRegister ZeroRegister32 = { Registers::sp, 32 };
 
-static constexpr FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
-static constexpr FloatRegister ScratchFloatReg = { FloatRegisters::d31 };
+static constexpr FloatRegister ReturnFloatReg = { FloatRegisters::d0, FloatRegisters::Single };
+static constexpr FloatRegister ScratchFloatReg = { FloatRegisters::d31, FloatRegisters::Single };
 
 static constexpr FloatRegister ReturnSimdReg = InvalidFloatReg;
 static constexpr FloatRegister ScratchSimdReg = InvalidFloatReg;
@@ -142,7 +142,7 @@ static constexpr Register AsmJSIonExitRegD2 = r4;
 static constexpr Register JSReturnReg_Type = r3;
 static constexpr Register JSReturnReg_Data = r2;
 
-static constexpr FloatRegister NANReg = { FloatRegisters::d14 };
+static constexpr FloatRegister NANReg = { FloatRegisters::d14, FloatRegisters::Single };
 // N.B. r8 isn't listed as an aapcs temp register, but we can use it as such because we never
 // use return-structs.
 static constexpr Register CallTempNonArgRegs[] = { r8, r9, r10, r11, r12, r13, r14, r15 };
