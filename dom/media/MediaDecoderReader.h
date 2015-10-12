@@ -82,7 +82,7 @@ public:
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder, TaskQueue* aBorrowedTaskQueue = nullptr);
+  explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder);
 
   // Does any spinup that needs to happen on this task queue. This runs on a
   // different thread than Init, and there should not be ordering dependencies
@@ -427,8 +427,6 @@ private:
   // of Request{Audio,Video}Data.
   MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
   MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
-
-  bool mTaskQueueIsBorrowed;
 
   // Flags whether a the next audio/video sample comes after a "gap" or
   // "discontinuity" in the stream. For example after a seek.

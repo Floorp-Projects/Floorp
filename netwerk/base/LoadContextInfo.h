@@ -19,33 +19,43 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSILOADCONTEXTINFO
 
-  LoadContextInfo(bool aIsPrivate, uint32_t aAppId, bool aIsInBrowser, bool aIsAnonymous);
+  LoadContextInfo(bool aIsPrivate, bool aIsAnonymous, OriginAttributes aOriginAttributes);
 
 private:
   virtual ~LoadContextInfo();
 
 protected:
-  uint32_t mAppId;
   bool mIsPrivate : 1;
-  bool mIsInBrowser : 1;
   bool mIsAnonymous : 1;
+  OriginAttributes mOriginAttributes;
 };
 
-LoadContextInfo *
-GetLoadContextInfo(nsIChannel * aChannel);
+class LoadContextInfoFactory : public nsILoadContextInfoFactory
+{
+  virtual ~LoadContextInfoFactory() {}
+public:
+  NS_DECL_ISUPPORTS // deliberately not thread-safe
+  NS_DECL_NSILOADCONTEXTINFOFACTORY
+};
 
-LoadContextInfo *
-GetLoadContextInfo(nsILoadContext * aLoadContext,
-                   bool aAnonymous);
+LoadContextInfo*
+GetLoadContextInfo(nsIChannel *aChannel);
 
-LoadContextInfo *
-GetLoadContextInfo(nsILoadContextInfo* aInfo);
+LoadContextInfo*
+GetLoadContextInfo(nsILoadContext *aLoadContext,
+                   bool aIsAnonymous);
 
-LoadContextInfo *
-GetLoadContextInfo(bool const aIsPrivate = false,
-                   uint32_t const aAppId = nsILoadContextInfo::NO_APP_ID,
-                   bool const aIsInBrowserElement = false,
-                   bool const aIsAnonymous = false);
+LoadContextInfo*
+GetLoadContextInfo(nsIDOMWindow *aLoadContext,
+                   bool aIsAnonymous);
+
+LoadContextInfo*
+GetLoadContextInfo(nsILoadContextInfo *aInfo);
+
+LoadContextInfo*
+GetLoadContextInfo(bool const aIsPrivate,
+                   bool const aIsAnonymous,
+                   OriginAttributes const &aOriginAttributes);
 
 } // namespace net
 } // namespace mozilla

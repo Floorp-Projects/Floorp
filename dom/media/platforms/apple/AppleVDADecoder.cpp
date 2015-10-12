@@ -6,6 +6,7 @@
 
 #include <CoreFoundation/CFString.h>
 
+#include "AppleDecoderModule.h"
 #include "AppleUtils.h"
 #include "AppleVDADecoder.h"
 #include "AppleVDALinker.h"
@@ -647,7 +648,7 @@ AppleVDADecoder::CreateVDADecoder(
   MediaDataDecoderCallback* aCallback,
   layers::ImageContainer* aImageContainer)
 {
-  if (!gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
+  if (!AppleDecoderModule::sCanUseHardwareVideoDecoder) {
     // This GPU is blacklisted for hardware decoding.
     return nullptr;
   }

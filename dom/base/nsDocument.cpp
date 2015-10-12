@@ -12027,18 +12027,15 @@ nsDocument::IsFullScreenEnabled(bool aCallerIsChrome, bool aLogFailure)
     return false;
   }
 
-  // Ensure that all ancestor <iframe> elements have the allowfullscreen
-  // boolean attribute set.
+  // Ensure that all containing elements are <iframe> and have
+  // allowfullscreen attribute set.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
-  bool allowed = false;
-  if (docShell) {
-    docShell->GetFullscreenAllowed(&allowed);
-  }
-  if (!allowed) {
-    LogFullScreenDenied(aLogFailure, "FullScreenDeniedIframeNotAllowed", this);
+  if (!docShell || !docShell->GetFullscreenAllowed()) {
+    LogFullScreenDenied(aLogFailure, "FullScreenDeniedContainerNotAllowed", this);
+    return false;
   }
 
-  return allowed;
+  return true;
 }
 
 uint16_t

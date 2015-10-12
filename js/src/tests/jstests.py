@@ -13,7 +13,8 @@ from contextlib import contextmanager
 from copy import copy
 from subprocess import list2cmdline, call
 
-from lib.tests import RefTestCase, get_jitflags
+from lib.tests import RefTestCase, get_jitflags, get_cpu_count, \
+                      get_environment_overlay, change_env
 from lib.results import ResultsSink
 from lib.progressbar import ProgressBar
 
@@ -21,37 +22,6 @@ if sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
     from lib.tasks_unix import run_all_tests
 else:
     from lib.tasks_win import run_all_tests
-
-
-def get_cpu_count():
-    """
-    Guess at a reasonable parallelism count to set as the default for the
-    current machine and run.
-    """
-    # Python 2.6+
-    try:
-        import multiprocessing
-        return multiprocessing.cpu_count()
-    except (ImportError, NotImplementedError):
-        pass
-
-    # POSIX
-    try:
-        res = int(os.sysconf('SC_NPROCESSORS_ONLN'))
-        if res > 0:
-            return res
-    except (AttributeError, ValueError):
-        pass
-
-    # Windows
-    try:
-        res = int(os.environ['NUMBER_OF_PROCESSORS'])
-        if res > 0:
-            return res
-    except (KeyError, ValueError):
-        pass
-
-    return 1
 
 
 @contextmanager
@@ -342,6 +312,7 @@ def main():
         print('Could not find shell at given path.')
         return 1
     test_count, test_gen = load_tests(options, requested_paths, excluded_paths)
+    test_environment = get_environment_overlay(options.js_shell)
 
     if test_count == 0:
         print('no tests selected')
@@ -361,19 +332,14 @@ def main():
         cmd = tests[0].get_command(prefix)
         if options.show_cmd:
             print(list2cmdline(cmd))
-        with changedir(test_dir):
+        with changedir(test_dir), change_env(test_environment):
             call(cmd)
         return 0
 
-    with changedir(test_dir):
-        # Force Pacific time zone to avoid failures in Date tests.
-        os.environ['TZ'] = 'PST8PDT'
-        # Force date strings to English.
-        os.environ['LC_TIME'] = 'en_US.UTF-8'
-
+    with changedir(test_dir), change_env(test_environment):
         results = ResultsSink(options, test_count)
         try:
-            for out in run_all_tests(test_gen, prefix, results, options):
+            for out in run_all_tests(test_gen, prefix, results.pb, options):
                 results.push(out)
             results.finish(True)
         except KeyboardInterrupt:

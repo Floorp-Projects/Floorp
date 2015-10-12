@@ -7,6 +7,7 @@
 #include <CoreFoundation/CFString.h>
 
 #include "AppleCMLinker.h"
+#include "AppleDecoderModule.h"
 #include "AppleUtils.h"
 #include "AppleVTDecoder.h"
 #include "AppleVTLinker.h"
@@ -382,7 +383,7 @@ AppleVTDecoder::CreateDecoderSpecification()
 
   const void* specKeys[] = { AppleVTLinker::skPropEnableHWAccel };
   const void* specValues[1];
-  if (gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding()) {
+  if (AppleDecoderModule::sCanUseHardwareVideoDecoder) {
     specValues[0] = kCFBooleanTrue;
   } else {
     // This GPU is blacklisted for hardware decoding.

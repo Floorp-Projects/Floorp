@@ -3,11 +3,12 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=545812
 
-Test DOM full-screen API.
+Test DOM fullscreen API.
 
 -->
 <head>
   <title>Test for Bug 545812</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="file_fullscreen-utils.js"></script>
   <style>
@@ -30,66 +31,99 @@ function is(a, b, msg) {
   opener.is(a, b, "[denied] " + msg);
 }
 
-var gotFullScreenChange = false;
-
-function begin() {
-  document.addEventListener("mozfullscreenchange",
-    function() {
-      ok(false, "Should never receive a mozfullscreenchange event in the main window.");
-      gotFullScreenChange = true;
-    },
-    false);
-
-  // Request full-screen from a non trusted context (this script isn't a user
-  // generated event!).
-  SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", true]]}, startTest);
-  function startTest() {
-    addFullscreenErrorContinuation(
-      function() {
-        ok(!document.mozFullScreen, "Should not grant request in non-trusted context");
-        // Test requesting full-screen mode in a long-running user-generated event handler.
-        // The request in the key handler should not be granted.
-        window.addEventListener("keypress", keyHandler, false);
-        synthesizeKey("VK_A", {});
-      });
-    document.body.mozRequestFullScreen();
- }
+const INNER_FILE = "file_fullscreen-denied-inner.html";
+function setupForInnerTest(targetName, callback) {
+  window.testTargetName = targetName;
+  window.continueTest = () => {
+    delete window.testTargetName;
+    delete window.continueTest;
+    callback();
+  };
 }
 
-function keyHandler(event) {
-  window.removeEventListener("keypress", keyHandler, false);
+function begin() {
+  document.addEventListener("mozfullscreenchange", () => {
+    ok(false, "Should never receive " +
+       "a fullscreenchange event in the main window.");
+  });
+  SimpleTest.executeSoon(testIFrameWithoutAllowFullscreen);
+}
 
-  // Busy loop until 2s has passed. We should then be past the 1 second threshold, and so
-  // our request for full-screen mode should be rejected.
-  var end = (new Date()).getTime() + 2000;
-  while ((new Date()).getTime() < end) {
-    ; // Wait...
+function testIFrameWithoutAllowFullscreen() {
+  // Create an iframe without an allowfullscreen attribute, whose
+  // contents request fullscreen. The request should be denied, and
+  // we should not receive a fullscreenchange event in this document.
+  var iframe = document.createElement("iframe");
+  iframe.src = INNER_FILE;
+  setupForInnerTest("an iframe without allowfullscreen", () => {
+    document.body.removeChild(iframe);
+    SimpleTest.executeSoon(testFrameElement);
+  });
+  document.body.appendChild(iframe);
+}
+
+function testFrameElement() {
+  var frameset = document.createElement("frameset");
+  var frame = document.createElement("frame");
+  frame.src = INNER_FILE;
+  frameset.appendChild(frame);
+  setupForInnerTest("a frame element", () => {
+    document.documentElement.removeChild(frameset);
+    SimpleTest.executeSoon(testObjectElement);
+  });
+  document.documentElement.appendChild(frameset);
+}
+
+function testObjectElement() {
+  var objectElem = document.createElement("object");
+  objectElem.data = INNER_FILE;
+  setupForInnerTest("an object element", () => {
+    document.body.removeChild(objectElem);
+    // In the following tests we want to test trust context requirement
+    // of fullscreen request, so temporary re-enable this pref.
+    SpecialPowers.pushPrefEnv({
+      "set":[["full-screen-api.allow-trusted-requests-only", true]]
+    }, testNonTrustContext);
+  });
+  document.body.appendChild(objectElem);
+}
+
+function testNonTrustContext() {
+  addFullscreenErrorContinuation(() => {
+    ok(!document.mozFullScreen,
+       "Should not grant request in non-trust context.");
+    SimpleTest.executeSoon(testLongRunningEventHandler);
+  });
+  document.documentElement.mozRequestFullScreen();
+}
+
+function testLongRunningEventHandler() {
+  function longRunningHandler() {
+    window.removeEventListener("keypress", longRunningHandler);
+    // Busy loop until 2s has passed. We should then be past the one
+    // second threshold, and so our request for fullscreen should be
+    // rejected.
+    var end = (new Date()).getTime() + 2000;
+    while ((new Date()).getTime() < end) {
+      ; // Wait...
+    }
+    document.documentElement.mozRequestFullScreen();
   }
-  addFullscreenErrorContinuation(
-    function() {
-      ok(!document.mozFullScreen, "Should not grant request in long-running event handler.");
-
-      // Disable the requirement for trusted contexts only, so the tests are easier
-      // to write.
-      SpecialPowers.pushPrefEnv({"set":[["full-screen-api.allow-trusted-requests-only", false]]}, function() {
-        // Create an iframe without a allowfullscreen attribute, whose contents requests
-        // full-screen. The request should be denied, and we should not receive a fullscreenchange
-        // event in this document.
-        var iframe = document.createElement("iframe");
-        iframe.src = "file_fullscreen-denied-inner.html";
-        document.body.appendChild(iframe);
-      });
-    });
-  document.body.mozRequestFullScreen();
+  addFullscreenErrorContinuation(() => {
+    ok(!document.mozFullScreen,
+       "Should not grant request in long-running event handler.");
+    // Restore the pref environment we changed before
+    // entering testNonTrustContext.
+    SpecialPowers.popPrefEnv(finish);
+  });
+  window.addEventListener("keypress", longRunningHandler);
+  synthesizeKey("VK_A", {});
 }
 
 function finish() {
-  ok(!gotFullScreenChange, "Should not ever grant a fullscreen request in this doc.");
   opener.nextTest();
 }
 
 </script>
-</pre>
-<div id="full-screen-element"></div>
 </body>
 </html>

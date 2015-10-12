@@ -217,7 +217,7 @@ static Maybe<gfx::PointTyped<TargetUnits>> UntransformVector(const gfx::Matrix4x
   if (!projectedAnchor.HasPositiveWCoord() || !projectedTarget.HasPositiveWCoord()){
     return Nothing();
   }
-  return Some(ViewAs<TargetUnits>(projectedAnchor.As2DPoint() - projectedTarget.As2DPoint()));
+  return Some(ViewAs<TargetUnits>(projectedTarget.As2DPoint() - projectedAnchor.As2DPoint()));
 }
 
 } // namespace mozilla

@@ -40,7 +40,11 @@
 // Generated
 #include "nsIDOMEventListener.h"
 #include "nsIDOMWebGLRenderingContext.h"
+#include "nsICanvasRenderingContextInternal.h"
 #include "nsIObserver.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+#include "nsWrapperCache.h"
+#include "nsLayoutUtils.h"
 
 
 class nsIDocShell;
@@ -80,7 +84,6 @@ class WebGLContextLossHandler;
 class WebGLBuffer;
 class WebGLExtensionBase;
 class WebGLFramebuffer;
-class WebGLObserver;
 class WebGLProgram;
 class WebGLQuery;
 class WebGLRenderbuffer;
@@ -95,6 +98,7 @@ class WebGLVertexArray;
 namespace dom {
 class Element;
 class ImageData;
+class OwningHTMLCanvasElementOrOffscreenCanvas;
 struct WebGLContextAttributes;
 template<typename> struct Nullable;
 } // namespace dom
@@ -184,7 +188,6 @@ class WebGLContext
     friend class WebGLExtensionLoseContext;
     friend class WebGLExtensionVertexArray;
     friend class WebGLMemoryTracker;
-    friend class WebGLObserver;
 
     enum {
         UNPACK_FLIP_Y_WEBGL = 0x9240,
@@ -213,6 +216,9 @@ public:
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override = 0;
 
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
+
+    virtual void OnVisibilityChange() override;
+    virtual void OnMemoryPressure() override;
 
     // nsICanvasRenderingContextInternal
     virtual int32_t GetWidth() const override;
@@ -361,8 +367,11 @@ public:
     void AssertCachedBindings();
     void AssertCachedState();
 
-    // WebIDL WebGLRenderingContext API
     dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
+
+    // WebIDL WebGLRenderingContext API
+    void Commit();
+    void GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval);
     GLsizei DrawingBufferWidth() const { return IsContextLost() ? 0 : mWidth; }
     GLsizei DrawingBufferHeight() const {
         return IsContextLost() ? 0 : mHeight;
@@ -1508,8 +1517,6 @@ protected:
     ForceDiscreteGPUHelperCGL mForceDiscreteGPUHelper;
 #endif
 
-    nsRefPtr<WebGLObserver> mContextObserver;
-
 public:
     // console logging helpers
     void GenerateWarning(const char* fmt, ...);
@@ -1613,32 +1620,6 @@ WebGLContext::ValidateObject(const char* info, ObjectType* object)
 
     return ValidateObjectAssumeNonNull(info, object);
 }
-
-// Listen visibilitychange and memory-pressure event for context lose/restore
-class WebGLObserver final
-    : public nsIObserver
-    , public nsIDOMEventListener
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-    NS_DECL_NSIDOMEVENTLISTENER
-
-    explicit WebGLObserver(WebGLContext* webgl);
-
-    void Destroy();
-
-    void RegisterVisibilityChangeEvent();
-    void UnregisterVisibilityChangeEvent();
-
-    void RegisterMemoryPressureEvent();
-    void UnregisterMemoryPressureEvent();
-
-private:
-    ~WebGLObserver();
-
-    WebGLContext* mWebGL;
-};
 
 size_t RoundUpToMultipleOf(size_t value, size_t multiple);
 

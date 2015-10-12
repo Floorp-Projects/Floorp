@@ -8101,10 +8101,21 @@ nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
 
 // static
 bool
-nsContentUtils::IsWorkerLoad(nsContentPolicyType aType)
+nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
 {
-  return aType == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-         aType == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
+  nsLoadFlags loadFlags = 0;
+  aChannel->GetLoadFlags(&loadFlags);
+  if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
+    return true;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (!loadInfo) {
+    return false;
+  }
+  nsContentPolicyType type = loadInfo->InternalContentPolicyType();
+  return type == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
+         type == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
 }
 
 // static, public

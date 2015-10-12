@@ -54,6 +54,7 @@ load invalid-disposal-method-2.gif
 load invalid-disposal-method-3.gif
 
 load 1205923-1.html
+load 1212954-1.svg
 
 # Ensure we handle ICO directory entries which specify the wrong size for the
 # contained resource.

@@ -120,8 +120,8 @@ static void webm_log(nestegg * context,
   va_end(args);
 }
 
-WebMReader::WebMReader(AbstractMediaDecoder* aDecoder, TaskQueue* aBorrowedTaskQueue)
-  : MediaDecoderReader(aDecoder, aBorrowedTaskQueue)
+WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
+  : MediaDecoderReader(aDecoder)
   , mContext(nullptr)
   , mVideoTrack(0)
   , mAudioTrack(0)

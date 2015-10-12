@@ -2512,20 +2512,25 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
   // Assume false until we determine otherwise...
   *aFullscreenAllowed = false;
 
-  // For non-browsers/apps, check that the enclosing iframe element
-  // has the allowfullscreen attribute set to true. If any ancestor
-  // iframe does not have mozallowfullscreen=true, then fullscreen is
-  // prohibited.
   nsCOMPtr<nsPIDOMWindow> win = GetWindow();
   if (!win) {
     return NS_OK;
   }
   nsCOMPtr<Element> frameElement = win->GetFrameElementInternal();
-  if (frameElement &&
-      frameElement->IsHTMLElement(nsGkAtoms::iframe) &&
-      !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::allowfullscreen) &&
-      !frameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozallowfullscreen)) {
-    return NS_OK;
+  if (frameElement && !frameElement->IsXULElement()) {
+    // We do not allow document inside any containing element other
+    // than iframe to enter fullscreen.
+    if (!frameElement->IsHTMLElement(nsGkAtoms::iframe)) {
+      return NS_OK;
+    }
+    // If any ancestor iframe does not have allowfullscreen attribute
+    // set, then fullscreen is not allowed.
+    if (!frameElement->HasAttr(kNameSpaceID_None,
+                               nsGkAtoms::allowfullscreen) &&
+        !frameElement->HasAttr(kNameSpaceID_None,
+                               nsGkAtoms::mozallowfullscreen)) {
+      return NS_OK;
+    }
   }
 
   // If we have no parent then we're the root docshell; no ancestor of the
@@ -11818,8 +11823,6 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
       nsAutoString srcdoc;
       inStrmChan->GetSrcdocData(srcdoc);
       entry->SetSrcdocData(srcdoc);
-      nsCOMPtr<nsILoadInfo> loadInfo;
-      aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
       nsCOMPtr<nsIURI> baseURI;
       inStrmChan->GetBaseURI(getter_AddRefs(baseURI));
       entry->SetBaseURI(baseURI);
@@ -13940,8 +13943,7 @@ nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
 }
 
 NS_IMETHODIMP
-nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
-                                      nsContentPolicyType aLoadContentType,
+nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceRequest,
                                       bool* aShouldIntercept)
 {
   *aShouldIntercept = false;
@@ -13970,7 +13972,8 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
     do_GetService(THIRDPARTYUTIL_CONTRACTID, &result);
   NS_ENSURE_SUCCESS(result, result);
 
-  if (mCurrentURI) {
+  if (mCurrentURI &&
+      nsContentUtils::CookiesBehavior() == nsICookieService::BEHAVIOR_REJECT_FOREIGN) {
     nsAutoCString uriSpec;
     mCurrentURI->GetSpec(uriSpec);
     if (!(uriSpec.EqualsLiteral("about:blank"))) {
@@ -13985,16 +13988,13 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
           return result;
       }
 
-      if (isThirdPartyURI &&
-          (Preferences::GetInt("network.cookie.cookieBehavior",
-                               nsICookieService::BEHAVIOR_ACCEPT) ==
-                               nsICookieService::BEHAVIOR_REJECT_FOREIGN)) {
+      if (isThirdPartyURI) {
         return NS_OK;
       }
     }
   }
 
-  if (aIsNavigate || nsContentUtils::IsWorkerLoad(aLoadContentType)) {
+  if (aIsNonSubresourceRequest) {
     OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
     *aShouldIntercept = swm->IsAvailable(attrs, aURI);
     return NS_OK;
@@ -14070,18 +14070,13 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel,
     return NS_OK;
   }
 
-  bool isNavigation = false;
-  nsresult rv = aChannel->GetIsNavigation(&isNavigation);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsContentPolicyType loadType;
-  rv = aChannel->GetInternalContentPolicyType(&loadType);
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc;
 
-  bool isSubresourceLoad = !isNavigation &&
-                           !nsContentUtils::IsWorkerLoad(loadType);
+  bool isSubresourceLoad = !nsContentUtils::IsNonSubresourceRequest(channel);
   if (isSubresourceLoad) {
     doc = GetDocument();
     if (!doc) {

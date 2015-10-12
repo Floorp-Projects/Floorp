@@ -27,7 +27,7 @@ struct BaseSize {
   void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
 
   bool IsEmpty() const {
-    return width == 0 || height == 0;
+    return width <= 0 || height <= 0;
   }
 
   bool IsSquare() const {
