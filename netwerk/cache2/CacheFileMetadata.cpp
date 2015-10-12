@@ -54,10 +54,8 @@ CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString 
   , mElementsSize(0)
   , mIsDirty(false)
   , mAnonymous(false)
-  , mInBrowser(false)
   , mAllocExactSize(false)
   , mFirstRead(true)
-  , mAppId(nsILoadContextInfo::NO_APP_ID)
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p, handle=%p, key=%s]",
        this, aHandle, PromiseFlatCString(aKey).get()));
@@ -86,10 +84,8 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
   , mElementsSize(0)
   , mIsDirty(true)
   , mAnonymous(false)
-  , mInBrowser(false)
   , mAllocExactSize(false)
   , mFirstRead(true)
-  , mAppId(nsILoadContextInfo::NO_APP_ID)
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p, key=%s]",
        this, PromiseFlatCString(aKey).get()));
@@ -119,10 +115,8 @@ CacheFileMetadata::CacheFileMetadata()
   , mElementsSize(0)
   , mIsDirty(false)
   , mAnonymous(false)
-  , mInBrowser(false)
   , mAllocExactSize(false)
   , mFirstRead(true)
-  , mAppId(nsILoadContextInfo::NO_APP_ID)
 {
   LOG(("CacheFileMetadata::CacheFileMetadata() [this=%p]", this));
 
@@ -1017,8 +1011,7 @@ CacheFileMetadata::ParseKey(const nsACString &aKey)
   NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
 
   mAnonymous =  info->IsAnonymous();
-  mAppId = info->AppId();
-  mInBrowser = info->IsInBrowserElement();
+  mOriginAttributes = *info->OriginAttributesPtr();
 
   return NS_OK;
 }

@@ -7,13 +7,13 @@ const protocol = require("devtools/server/protocol");
 const { actorBridge } = require("devtools/server/actors/common");
 const { method, custom, Arg, Option, RetVal } = protocol;
 const { on, once, off, emit } = require("sdk/event/core");
-const { Framerate } = require("devtools/shared/shared/framerate");
+const { Framerate } = require("devtools/server/performance/framerate");
 
 /**
  * An actor wrapper around Framerate. Uses exposed
  * methods via bridge and provides RDP definitions.
  *
- * @see devtools/shared/shared/framerate.js for documentation.
+ * @see devtools/server/performance/framerate.js for documentation.
  */
 var FramerateActor = exports.FramerateActor = protocol.ActorClass({
   typeName: "framerate",

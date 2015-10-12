@@ -9,6 +9,7 @@
 #include "GLContextProvider.h"
 #include "GLContextGLX.h"
 #include "GLScreenBuffer.h"
+#include "mozilla/gfx/SourceSurfaceCairo.h"
 #include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/ShadowLayerUtilsX11.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
@@ -81,6 +82,38 @@ SharedSurface_GLXDrawable::ToSurfaceDescriptor(layers::SurfaceDescriptor* const 
 
    *out_descriptor = layers::SurfaceDescriptorX11(mXlibSurface, mInSameProcess);
    return true;
+}
+
+bool
+SharedSurface_GLXDrawable::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
+{
+    MOZ_ASSERT(out_surface);
+    RefPtr<gfx::DataSourceSurface> dataSurf =
+        new gfx::DataSourceSurfaceCairo(mXlibSurface->CairoSurface());
+
+    gfx::DataSourceSurface::ScopedMap mapSrc(dataSurf, gfx::DataSourceSurface::READ);
+    if (!mapSrc.IsMapped()) {
+        return false;
+    }
+
+    gfx::DataSourceSurface::ScopedMap mapDest(out_surface, gfx::DataSourceSurface::WRITE);
+    if (!mapDest.IsMapped()) {
+        return false;
+    }
+
+    if (mapDest.GetStride() == mapSrc.GetStride()) {
+        memcpy(mapDest.GetData(),
+               mapSrc.GetData(),
+               out_surface->GetSize().height * mapDest.GetStride());
+    } else {
+        for (int32_t i = 0; i < dataSurf->GetSize().height; i++) {
+            memcpy(mapDest.GetData() + i * mapDest.GetStride(),
+                   mapSrc.GetData() + i * mapSrc.GetStride(),
+                   std::min(mapSrc.GetStride(), mapDest.GetStride()));
+        }
+    }
+
+    return true;
 }
 
 /* static */

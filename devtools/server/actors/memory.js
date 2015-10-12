@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu, components } = require("chrome");
 const protocol = require("devtools/server/protocol");
 const { method, RetVal, Arg, types } = protocol;
-const { Memory } = require("devtools/shared/shared/memory");
+const { Memory } = require("devtools/server/performance/memory");
 const { actorBridge } = require("devtools/server/actors/common");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "StackFrameCache",
@@ -38,10 +38,10 @@ types.addDictType("AllocationsRecordingOptions", {
  * parent tab. A global-scoped instance however, will measure the memory
  * footprint of the chrome window referenced by the root actor.
  *
- * This actor wraps the Memory module at devtools/shared/shared/memory.js
+ * This actor wraps the Memory module at devtools/server/performance/memory.js
  * and provides RDP definitions.
  *
- * @see devtools/shared/shared/memory.js for documentation.
+ * @see devtools/server/performance/memory.js for documentation.
  */
 var MemoryActor = exports.MemoryActor = protocol.ActorClass({
   typeName: "memory",

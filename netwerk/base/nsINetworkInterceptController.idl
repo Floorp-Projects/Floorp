@@ -27,7 +27,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(91d430cc-7e04-4df1-a3c0-879fa30f7ab9)]
+[scriptable, uuid(6be00c37-2e85-42ee-b53c-e6508ce4cef0)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -73,11 +73,6 @@ interface nsIInterceptedChannel : nsISupports
     readonly attribute nsIChannel channel;
 
     /**
-     * True if the underlying request was caused by a navigation attempt.
-     */
-    readonly attribute bool isNavigation;
-
-    /**
      * This method allows to override the channel info for the channel.
      */
     [noscript]
@@ -112,7 +107,7 @@ interface nsIFetchEventDispatcher : nsISupports
  * request should be intercepted before any network request is initiated.
  */
 
-[scriptable, uuid(7157fe12-20e3-45db-b09e-68fdf6d0614f)]
+[scriptable, uuid(49eb1997-90fb-49d6-a25d-41f51c7c99e8)]
 interface nsINetworkInterceptController : nsISupports
 {
     /**
@@ -122,7 +117,7 @@ interface nsINetworkInterceptController : nsISupports
      * @param aURI the URI being requested by a channel
      * @param aIsNavigate True if the request is for a navigation, false for a fetch.
      */
-    bool shouldPrepareForIntercept(in nsIURI aURI, in bool aIsNavigate, in nsContentPolicyType aType);
+    bool shouldPrepareForIntercept(in nsIURI aURI, in bool aIsNonSubresourceRequest);
 
     /**
      * Notification when a given intercepted channel is prepared to accept a synthesized

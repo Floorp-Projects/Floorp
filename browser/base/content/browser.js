@@ -255,9 +255,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
-  "resource://gre/modules/LoginManagerParent.jsm");
-
 var gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -1194,10 +1191,6 @@ var gBrowserInit = {
         break;
       }
     }, false, true);
-
-    gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
-      gIdentityHandler.refreshForInsecureLoginForms();
-    });
 
     let uriToLoad = this._getUriToLoad();
     if (uriToLoad && uriToLoad != "about:blank") {
@@ -5858,38 +5851,79 @@ function UpdateCurrentCharset(target) {
 }
 
 var gPageStyleMenu = {
-
   // This maps from a <browser> element (or, more specifically, a
-  // browser's permanentKey) to a CPOW that gives synchronous access
-  // to the list of style sheets in a content window. The use of the
-  // permanentKey is to avoid issues with docshell swapping.
-  _pageStyleSyncHandlers: new WeakMap(),
+  // browser's permanentKey) to an Object that contains the most recent
+  // information about the browser content's stylesheets. That Object
+  // is populated via the PageStyle:StyleSheets message from the content
+  // process. The Object should have the following structure:
+  //
+  // filteredStyleSheets (Array):
+  //   An Array of objects with a filtered list representing all stylesheets
+  //   that the current page offers. Each object has the following members:
+  //
+  //   title (String):
+  //     The title of the stylesheet
+  //
+  //   disabled (bool):
+  //     Whether or not the stylesheet is currently applied
+  //
+  //   href (String):
+  //     The URL of the stylesheet. Stylesheets loaded via a data URL will
+  //     have this property set to null.
+  //
+  // authorStyleDisabled (bool):
+  //   Whether or not the user currently has "No Style" selected for
+  //   the current page.
+  //
+  // preferredStyleSheetSet (bool):
+  //   Whether or not the user currently has the "Default" style selected
+  //   for the current page.
+  //
+  _pageStyleSheets: new WeakMap(),
 
   init: function() {
     let mm = window.messageManager;
-    mm.addMessageListener("PageStyle:SetSyncHandler", (msg) => {
-      this._pageStyleSyncHandlers.set(msg.target.permanentKey, msg.objects.syncHandler);
+    mm.addMessageListener("PageStyle:StyleSheets", (msg) => {
+      this._pageStyleSheets.set(msg.target.permanentKey, msg.data);
     });
   },
 
-  getAllStyleSheets: function () {
-    let handler = this._pageStyleSyncHandlers.get(gBrowser.selectedBrowser.permanentKey);
-    try {
-      return handler.getAllStyleSheets();
-    } catch (ex) {
-      // In case the child died or timed out.
+  /**
+   * Returns an array of Objects representing stylesheets in a
+   * browser. Note that the pageshow event needs to fire in content
+   * before this information will be available.
+   *
+   * @param browser (optional)
+   *        The <xul:browser> to search for stylesheets. If omitted, this
+   *        defaults to the currently selected tab's browser.
+   * @returns Array
+   *        An Array of Objects representing stylesheets in the browser.
+   *        See the documentation for gPageStyleMenu for a description
+   *        of the Object structure.
+   */
+  getBrowserStyleSheets: function (browser) {
+    if (!browser) {
+      browser = gBrowser.selectedBrowser;
+    }
+
+    let data = this._pageStyleSheets.get(browser.permanentKey);
+    if (!data) {
       return [];
     }
+    return data.filteredStyleSheets;
   },
 
   _getStyleSheetInfo: function (browser) {
-    let handler = this._pageStyleSyncHandlers.get(gBrowser.selectedBrowser.permanentKey);
-    try {
-      return handler.getStyleSheetInfo();
-    } catch (ex) {
-      // In case the child died or timed out.
-      return {styleSheets: [], authorStyleDisabled: false, preferredStyleSheetSet: true};
+    let data = this._pageStyleSheets.get(browser.permanentKey);
+    if (!data) {
+      return {
+        filteredStyleSheets: [],
+        authorStyleDisabled: false,
+        preferredStyleSheetSet: true
+      };
     }
+
+    return data;
   },
 
   fillPopup: function (menuPopup) {
@@ -5900,7 +5934,7 @@ var gPageStyleMenu = {
     while (sep.nextSibling)
       menuPopup.removeChild(sep.nextSibling);
 
-    let styleSheets = styleSheetInfo.styleSheets;
+    let styleSheets = styleSheetInfo.filteredStyleSheets;
     var currentStyleSheets = {};
     var styleDisabled = styleSheetInfo.authorStyleDisabled;
     var haveAltSheets = false;
@@ -5948,7 +5982,6 @@ var gPageStyleMenu = {
 };
 
 /* Legacy global page-style functions */
-var getAllStyleSheets   = gPageStyleMenu.getAllStyleSheets.bind(gPageStyleMenu);
 var stylesheetFillPopup = gPageStyleMenu.fillPopup.bind(gPageStyleMenu);
 function stylesheetSwitchAll(contentWindow, title) {
   // We ignore the contentWindow param. Add-ons don't appear to use
@@ -6997,26 +7030,15 @@ var gIdentityHandler = {
     }
 
     // Then, update the user interface with the available data.
-    this.refreshIdentityBlock();
+
+    if (this._identityBox) {
+      this.refreshIdentityBlock();
+    }
 
     // NOTE: We do NOT update the identity popup (the control center) when
     // we receive a new security state. If the user opened the popup and looks
     // at the provided information we don't want to suddenly change the panel
     // contents.
-  },
-
-  /**
-   * This is called asynchronously when requested by the Logins module, after
-   * the insecure login forms state for the page has been updated.
-   */
-  refreshForInsecureLoginForms() {
-    // Check this._uri because we don't want to refresh the user interface if
-    // this is called before the first page load in the window for any reason.
-    if (!this._uri) {
-      Cu.reportError("Unexpected early call to refreshForInsecureLoginForms.");
-      return;
-    }
-    this.refreshIdentityBlock();
   },
 
   /**
@@ -7055,10 +7077,6 @@ var gIdentityHandler = {
    * Updates the identity block user interface with the data from this object.
    */
   refreshIdentityBlock() {
-    if (!this._identityBox) {
-      return;
-    }
-
     let icon_label = "";
     let tooltip = "";
     let icon_country_label = "";
@@ -7127,11 +7145,6 @@ var gIdentityHandler = {
           this._identityBox.classList.add("weakCipher");
         }
       }
-      if (LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser)) {
-        // Insecure login forms can only be present on "unknown identity"
-        // pages, either already insecure or with mixed active content loaded.
-        this._identityBox.classList.add("insecureLoginForms");
-      }
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
     }
 
@@ -7167,12 +7180,6 @@ var gIdentityHandler = {
       connection = "secure-ev";
     } else if (this._isSecure) {
       connection = "secure";
-    }
-
-    // Determine if there are insecure login forms.
-    let loginforms = "secure";
-    if (LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser)) {
-      loginforms = "insecure";
     }
 
     // Determine the mixed content state.
@@ -7212,7 +7219,6 @@ var gIdentityHandler = {
     for (let id of elementIDs) {
       let element = document.getElementById(id);
       updateAttribute(element, "connection", connection);
-      updateAttribute(element, "loginforms", loginforms);
       updateAttribute(element, "ciphers", ciphers);
       updateAttribute(element, "mixedcontent", mixedcontent);
       updateAttribute(element, "isbroken", this._isBroken);

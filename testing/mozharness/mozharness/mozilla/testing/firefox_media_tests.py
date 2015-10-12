@@ -225,6 +225,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             cmd.append(self.tests)
         if self.e10s:
             cmd.append('--e10s')
+
         return cmd
 
     def run_media_tests(self):

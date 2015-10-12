@@ -22,8 +22,6 @@ public:
   static void Unlink();
   static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
 
-  static bool sFFmpegDecoderEnabled;
-
 private:
   static void* sLinkedLib;
   static const AvCodecLib* sLib;

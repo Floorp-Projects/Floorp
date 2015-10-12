@@ -72,7 +72,7 @@ function renameWithContextMenu(projecteditor, container, newName) {
 
     renameCommand.click();
     popup.hidePopup();
-    let input = container.elt.previousElementSibling;
+    let input = container.elt.childNodes[0].childNodes[1];
     input.value = resource.basename + newName;
     EventUtils.synthesizeKey("VK_RETURN", {}, projecteditor.window);
   });

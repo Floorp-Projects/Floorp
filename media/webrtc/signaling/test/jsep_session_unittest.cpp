@@ -846,6 +846,43 @@ protected:
   }
 
   void
+  ValidateDisabledMSection(const SdpMediaSection* msection)
+  {
+    ASSERT_EQ(1U, msection->GetFormats().size());
+    // Maybe validate that no attributes are present except rtpmap and
+    // inactive? How?
+    ASSERT_EQ(SdpDirectionAttribute::kInactive,
+              msection->GetDirectionAttribute().mValue);
+    if (msection->GetMediaType() == SdpMediaSection::kAudio) {
+      ASSERT_EQ("0", msection->GetFormats()[0]);
+      const SdpRtpmapAttributeList::Rtpmap* rtpmap(msection->FindRtpmap("0"));
+      ASSERT_TRUE(rtpmap);
+      ASSERT_EQ("0", rtpmap->pt);
+      ASSERT_EQ("PCMU", rtpmap->name);
+    } else if (msection->GetMediaType() == SdpMediaSection::kVideo) {
+      ASSERT_EQ("120", msection->GetFormats()[0]);
+      const SdpRtpmapAttributeList::Rtpmap* rtpmap(msection->FindRtpmap("120"));
+      ASSERT_TRUE(rtpmap);
+      ASSERT_EQ("120", rtpmap->pt);
+      ASSERT_EQ("VP8", rtpmap->name);
+    } else if (msection->GetMediaType() == SdpMediaSection::kApplication) {
+      ASSERT_EQ("5000", msection->GetFormats()[0]);
+      const SdpSctpmapAttributeList::Sctpmap* sctpmap(msection->FindSctpmap("5000"));
+      ASSERT_TRUE(sctpmap);
+      ASSERT_EQ("5000", sctpmap->pt);
+      ASSERT_EQ("rejected", sctpmap->name);
+      ASSERT_EQ(0U, sctpmap->streams);
+    } else {
+      // Not that we would have any test which tests this...
+      ASSERT_EQ("19", msection->GetFormats()[0]);
+      const SdpRtpmapAttributeList::Rtpmap* rtpmap(msection->FindRtpmap("19"));
+      ASSERT_TRUE(rtpmap);
+      ASSERT_EQ("19", rtpmap->pt);
+      ASSERT_EQ("reserved", rtpmap->name);
+    }
+  }
+
+  void
   DumpTrack(const JsepTrack& track)
   {
     std::cerr << "  type=" << track.GetMediaType() << std::endl;
@@ -909,10 +946,7 @@ private:
       }
 
       if (msection.GetPort() == 0) {
-        ASSERT_EQ(SdpDirectionAttribute::kInactive,
-                  msection.GetDirectionAttribute().mValue);
-        // Maybe validate that no attributes are present except rtpmap and
-        // inactive?
+        ValidateDisabledMSection(&msection);
         continue;
       }
       const SdpAttributeList& attrs = msection.GetAttributeList();

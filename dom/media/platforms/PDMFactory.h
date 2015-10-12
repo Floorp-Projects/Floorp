@@ -60,6 +60,7 @@ private:
   static bool sAndroidMCDecoderPreferred;
   static bool sAndroidMCDecoderEnabled;
   static bool sGMPDecoderEnabled;
+  static bool sFFmpegDecoderEnabled;
   static bool sEnableFuzzingWrapper;
   static uint32_t sVideoOutputMinimumInterval_ms;
   static bool sDontDelayInputExhausted;
