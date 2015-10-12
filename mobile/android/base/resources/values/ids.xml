@@ -11,5 +11,6 @@
     <item type="id" name="menu_items"/>
     <item type="id" name="menu_margin"/>
     <item type="id" name="recycler_view_click_support" />
+    <item type="id" name="range_list"/>
 
 </resources>
