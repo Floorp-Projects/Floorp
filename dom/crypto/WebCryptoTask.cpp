@@ -1145,8 +1145,7 @@ private:
     nsresult rv;
     if (mSign) {
       ScopedSECItem signature(::SECITEM_AllocItem(nullptr, nullptr, 0));
-      ScopedSGNContext ctx(SGN_NewContext(mOidTag, mPrivKey));
-      if (!signature.get() || !ctx.get()) {
+      if (!signature.get()) {
         return NS_ERROR_DOM_OPERATION_ERR;
       }
 

@@ -170,6 +170,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_INTERCEPTION_OPAQUE_ENABLED "dom.serviceWorkers.interception.opaque.enabled"
 #define PREF_PUSH_ENABLED              "dom.push.enabled"
 #define PREF_REQUESTCONTEXT_ENABLED    "dom.requestcontext.enabled"
+#define PREF_OFFSCREENCANVAS_ENABLED   "gfx.offscreencanvas.enabled"
 
 namespace {
 
@@ -1963,6 +1964,10 @@ RuntimeService::Init()
                                   WorkerPrefChanged,
                                   PREF_REQUESTCONTEXT_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_REQUESTCONTEXT))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
+                                  PREF_OFFSCREENCANVAS_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_OFFSCREENCANVAS))) ||
       NS_FAILED(Preferences::RegisterCallback(LoadRuntimeOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
@@ -2202,6 +2207,10 @@ RuntimeService::Cleanup()
                                   WorkerPrefChanged,
                                   PREF_REQUESTCONTEXT_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_REQUESTCONTEXT))) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_OFFSCREENCANVAS_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_OFFSCREENCANVAS))) ||
 #if DUMP_CONTROLLED_BY_PREF
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
@@ -2780,6 +2789,7 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
     case WORKERPREF_SERVICEWORKERS_TESTING:
     case WORKERPREF_PUSH:
     case WORKERPREF_REQUESTCONTEXT:
+    case WORKERPREF_OFFSCREENCANVAS:
       sDefaultPreferences[key] = Preferences::GetBool(aPrefName, false);
       break;
 

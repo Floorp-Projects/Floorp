@@ -1328,6 +1328,13 @@ public:
   }
 
   bool
+  OffscreenCanvasEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_OFFSCREENCANVAS];
+  }
+
+  bool
   OnLine() const
   {
     AssertIsOnWorkerThread();

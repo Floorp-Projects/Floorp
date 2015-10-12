@@ -202,7 +202,7 @@ public:
   static nsresult SetFloat(const char* aPref, float aValue);
   static nsresult SetCString(const char* aPref, const char* aValue);
   static nsresult SetCString(const char* aPref, const nsACString &aValue);
-  static nsresult SetString(const char* aPref, const char16_t* aValue);
+  static nsresult SetString(const char* aPref, const char16ptr_t aValue);
   static nsresult SetString(const char* aPref, const nsAString &aValue);
 
   static nsresult SetComplex(const char* aPref, const nsIID &aType,

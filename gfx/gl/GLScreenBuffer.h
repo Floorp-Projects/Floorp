@@ -25,6 +25,7 @@
 
 namespace mozilla {
 namespace layers {
+class CompositableForwarder;
 class SharedSurfaceTextureClient;
 } // namespace layers
 
@@ -132,6 +133,12 @@ public:
     static UniquePtr<GLScreenBuffer> Create(GLContext* gl,
                                             const gfx::IntSize& size,
                                             const SurfaceCaps& caps);
+
+    static UniquePtr<SurfaceFactory>
+    CreateFactory(GLContext* gl,
+                  const SurfaceCaps& caps,
+                  const RefPtr<layers::CompositableForwarder>& forwarder,
+                  const layers::TextureFlags& flags);
 
 protected:
     GLContext* const mGL; // Owns us.

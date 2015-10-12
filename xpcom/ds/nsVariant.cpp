@@ -1667,9 +1667,7 @@ nsDiscriminatedUnion::Traverse(nsCycleCollectionTraversalCallback& aCb) const
 /***************************************************************************/
 // members...
 
-NS_IMPL_ISUPPORTS(nsVariant, nsIVariant, nsIWritableVariant)
-
-nsVariant::nsVariant()
+nsVariantBase::nsVariantBase()
   : mWritable(true)
 {
 #ifdef DEBUG
@@ -1725,104 +1723,104 @@ nsVariant::nsVariant()
 // 'ConvertTo' functions.
 
 NS_IMETHODIMP
-nsVariant::GetDataType(uint16_t* aDataType)
+nsVariantBase::GetDataType(uint16_t* aDataType)
 {
   *aDataType = mData.GetType();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsInt8(uint8_t* aResult)
+nsVariantBase::GetAsInt8(uint8_t* aResult)
 {
   return mData.ConvertToInt8(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsInt16(int16_t* aResult)
+nsVariantBase::GetAsInt16(int16_t* aResult)
 {
   return mData.ConvertToInt16(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsInt32(int32_t* aResult)
+nsVariantBase::GetAsInt32(int32_t* aResult)
 {
   return mData.ConvertToInt32(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsInt64(int64_t* aResult)
+nsVariantBase::GetAsInt64(int64_t* aResult)
 {
   return mData.ConvertToInt64(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsUint8(uint8_t* aResult)
+nsVariantBase::GetAsUint8(uint8_t* aResult)
 {
   return mData.ConvertToUint8(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsUint16(uint16_t* aResult)
+nsVariantBase::GetAsUint16(uint16_t* aResult)
 {
   return mData.ConvertToUint16(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsUint32(uint32_t* aResult)
+nsVariantBase::GetAsUint32(uint32_t* aResult)
 {
   return mData.ConvertToUint32(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsUint64(uint64_t* aResult)
+nsVariantBase::GetAsUint64(uint64_t* aResult)
 {
   return mData.ConvertToUint64(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsFloat(float* aResult)
+nsVariantBase::GetAsFloat(float* aResult)
 {
   return mData.ConvertToFloat(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsDouble(double* aResult)
+nsVariantBase::GetAsDouble(double* aResult)
 {
   return mData.ConvertToDouble(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsBool(bool* aResult)
+nsVariantBase::GetAsBool(bool* aResult)
 {
   return mData.ConvertToBool(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsChar(char* aResult)
+nsVariantBase::GetAsChar(char* aResult)
 {
   return mData.ConvertToChar(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsWChar(char16_t* aResult)
+nsVariantBase::GetAsWChar(char16_t* aResult)
 {
   return mData.ConvertToWChar(aResult);
 }
 
 NS_IMETHODIMP_(nsresult)
-nsVariant::GetAsID(nsID* aResult)
+nsVariantBase::GetAsID(nsID* aResult)
 {
   return mData.ConvertToID(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsAString(nsAString& aResult)
+nsVariantBase::GetAsAString(nsAString& aResult)
 {
   return mData.ConvertToAString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsDOMString(nsAString& aResult)
+nsVariantBase::GetAsDOMString(nsAString& aResult)
 {
   // A DOMString maps to an AString internally, so we can re-use
   // ConvertToAString here.
@@ -1830,63 +1828,63 @@ nsVariant::GetAsDOMString(nsAString& aResult)
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsACString(nsACString& aResult)
+nsVariantBase::GetAsACString(nsACString& aResult)
 {
   return mData.ConvertToACString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsAUTF8String(nsAUTF8String& aResult)
+nsVariantBase::GetAsAUTF8String(nsAUTF8String& aResult)
 {
   return mData.ConvertToAUTF8String(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsString(char** aResult)
+nsVariantBase::GetAsString(char** aResult)
 {
   return mData.ConvertToString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsWString(char16_t** aResult)
+nsVariantBase::GetAsWString(char16_t** aResult)
 {
   return mData.ConvertToWString(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsISupports(nsISupports** aResult)
+nsVariantBase::GetAsISupports(nsISupports** aResult)
 {
   return mData.ConvertToISupports(aResult);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsJSVal(JS::MutableHandleValue)
+nsVariantBase::GetAsJSVal(JS::MutableHandleValue)
 {
   // Can only get the jsval from an XPCVariant.
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsInterface(nsIID** aIID, void** aInterface)
+nsVariantBase::GetAsInterface(nsIID** aIID, void** aInterface)
 {
   return mData.ConvertToInterface(aIID, aInterface);
 }
 
 NS_IMETHODIMP_(nsresult)
-nsVariant::GetAsArray(uint16_t* aType, nsIID* aIID,
+nsVariantBase::GetAsArray(uint16_t* aType, nsIID* aIID,
                       uint32_t* aCount, void** aPtr)
 {
   return mData.ConvertToArray(aType, aIID, aCount, aPtr);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsStringWithSize(uint32_t* aSize, char** aStr)
+nsVariantBase::GetAsStringWithSize(uint32_t* aSize, char** aStr)
 {
   return mData.ConvertToStringWithSize(aSize, aStr);
 }
 
 NS_IMETHODIMP
-nsVariant::GetAsWStringWithSize(uint32_t* aSize, char16_t** aStr)
+nsVariantBase::GetAsWStringWithSize(uint32_t* aSize, char16_t** aStr)
 {
   return mData.ConvertToWStringWithSize(aSize, aStr);
 }
@@ -1894,13 +1892,13 @@ nsVariant::GetAsWStringWithSize(uint32_t* aSize, char16_t** aStr)
 /***************************************************************************/
 
 NS_IMETHODIMP
-nsVariant::GetWritable(bool* aWritable)
+nsVariantBase::GetWritable(bool* aWritable)
 {
   *aWritable = mWritable;
   return NS_OK;
 }
 NS_IMETHODIMP
-nsVariant::SetWritable(bool aWritable)
+nsVariantBase::SetWritable(bool aWritable)
 {
   if (!mWritable && aWritable) {
     return NS_ERROR_FAILURE;
@@ -1915,7 +1913,7 @@ nsVariant::SetWritable(bool aWritable)
 // 'SetFrom' functions.
 
 NS_IMETHODIMP
-nsVariant::SetAsInt8(uint8_t aValue)
+nsVariantBase::SetAsInt8(uint8_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1924,7 +1922,7 @@ nsVariant::SetAsInt8(uint8_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsInt16(int16_t aValue)
+nsVariantBase::SetAsInt16(int16_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1933,7 +1931,7 @@ nsVariant::SetAsInt16(int16_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsInt32(int32_t aValue)
+nsVariantBase::SetAsInt32(int32_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1942,7 +1940,7 @@ nsVariant::SetAsInt32(int32_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsInt64(int64_t aValue)
+nsVariantBase::SetAsInt64(int64_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1951,7 +1949,7 @@ nsVariant::SetAsInt64(int64_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsUint8(uint8_t aValue)
+nsVariantBase::SetAsUint8(uint8_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1960,7 +1958,7 @@ nsVariant::SetAsUint8(uint8_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsUint16(uint16_t aValue)
+nsVariantBase::SetAsUint16(uint16_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1969,7 +1967,7 @@ nsVariant::SetAsUint16(uint16_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsUint32(uint32_t aValue)
+nsVariantBase::SetAsUint32(uint32_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1978,7 +1976,7 @@ nsVariant::SetAsUint32(uint32_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsUint64(uint64_t aValue)
+nsVariantBase::SetAsUint64(uint64_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1987,7 +1985,7 @@ nsVariant::SetAsUint64(uint64_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsFloat(float aValue)
+nsVariantBase::SetAsFloat(float aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -1996,7 +1994,7 @@ nsVariant::SetAsFloat(float aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsDouble(double aValue)
+nsVariantBase::SetAsDouble(double aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2005,7 +2003,7 @@ nsVariant::SetAsDouble(double aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsBool(bool aValue)
+nsVariantBase::SetAsBool(bool aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2014,7 +2012,7 @@ nsVariant::SetAsBool(bool aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsChar(char aValue)
+nsVariantBase::SetAsChar(char aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2023,7 +2021,7 @@ nsVariant::SetAsChar(char aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsWChar(char16_t aValue)
+nsVariantBase::SetAsWChar(char16_t aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2032,7 +2030,7 @@ nsVariant::SetAsWChar(char16_t aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsID(const nsID& aValue)
+nsVariantBase::SetAsID(const nsID& aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2041,7 +2039,7 @@ nsVariant::SetAsID(const nsID& aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsAString(const nsAString& aValue)
+nsVariantBase::SetAsAString(const nsAString& aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2050,7 +2048,7 @@ nsVariant::SetAsAString(const nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsDOMString(const nsAString& aValue)
+nsVariantBase::SetAsDOMString(const nsAString& aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2060,7 +2058,7 @@ nsVariant::SetAsDOMString(const nsAString& aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsACString(const nsACString& aValue)
+nsVariantBase::SetAsACString(const nsACString& aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2069,7 +2067,7 @@ nsVariant::SetAsACString(const nsACString& aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsAUTF8String(const nsAUTF8String& aValue)
+nsVariantBase::SetAsAUTF8String(const nsAUTF8String& aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2078,7 +2076,7 @@ nsVariant::SetAsAUTF8String(const nsAUTF8String& aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsString(const char* aValue)
+nsVariantBase::SetAsString(const char* aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2087,7 +2085,7 @@ nsVariant::SetAsString(const char* aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsWString(const char16_t* aValue)
+nsVariantBase::SetAsWString(const char16_t* aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2096,7 +2094,7 @@ nsVariant::SetAsWString(const char16_t* aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsISupports(nsISupports* aValue)
+nsVariantBase::SetAsISupports(nsISupports* aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2105,7 +2103,7 @@ nsVariant::SetAsISupports(nsISupports* aValue)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsInterface(const nsIID& aIID, void* aInterface)
+nsVariantBase::SetAsInterface(const nsIID& aIID, void* aInterface)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2114,7 +2112,7 @@ nsVariant::SetAsInterface(const nsIID& aIID, void* aInterface)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsArray(uint16_t aType, const nsIID* aIID,
+nsVariantBase::SetAsArray(uint16_t aType, const nsIID* aIID,
                       uint32_t aCount, void* aPtr)
 {
   if (!mWritable) {
@@ -2124,7 +2122,7 @@ nsVariant::SetAsArray(uint16_t aType, const nsIID* aIID,
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsStringWithSize(uint32_t aSize, const char* aStr)
+nsVariantBase::SetAsStringWithSize(uint32_t aSize, const char* aStr)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2133,7 +2131,7 @@ nsVariant::SetAsStringWithSize(uint32_t aSize, const char* aStr)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsWStringWithSize(uint32_t aSize, const char16_t* aStr)
+nsVariantBase::SetAsWStringWithSize(uint32_t aSize, const char16_t* aStr)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2142,7 +2140,7 @@ nsVariant::SetAsWStringWithSize(uint32_t aSize, const char16_t* aStr)
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsVoid()
+nsVariantBase::SetAsVoid()
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2151,7 +2149,7 @@ nsVariant::SetAsVoid()
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsEmpty()
+nsVariantBase::SetAsEmpty()
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2160,7 +2158,7 @@ nsVariant::SetAsEmpty()
 }
 
 NS_IMETHODIMP
-nsVariant::SetAsEmptyArray()
+nsVariantBase::SetAsEmptyArray()
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -2169,10 +2167,35 @@ nsVariant::SetAsEmptyArray()
 }
 
 NS_IMETHODIMP
-nsVariant::SetFromVariant(nsIVariant* aValue)
+nsVariantBase::SetFromVariant(nsIVariant* aValue)
 {
   if (!mWritable) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
   return mData.SetFromVariant(aValue);
 }
+
+/* nsVariant implementation */
+
+NS_IMPL_ISUPPORTS(nsVariant, nsIVariant, nsIWritableVariant)
+
+
+/* nsVariantCC implementation */
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsVariantCC)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIVariant)
+  NS_INTERFACE_MAP_ENTRY(nsIWritableVariant)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsVariantCC)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsVariantCC)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsVariantCC)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsVariantCC)
+  tmp->mData.Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsVariantCC)
+  tmp->mData.Cleanup();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END

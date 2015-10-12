@@ -60,9 +60,8 @@ TrackTypeToStr(TrackInfo::TrackType aTrack)
 }
 
 MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
-                                     MediaDataDemuxer* aDemuxer,
-                                     TaskQueue* aBorrowedTaskQueue)
-  : MediaDecoderReader(aDecoder, aBorrowedTaskQueue)
+                                     MediaDataDemuxer* aDemuxer)
+  : MediaDecoderReader(aDecoder)
   , mAudio(this, MediaData::AUDIO_DATA, Preferences::GetUint("media.audio-decode-ahead", 2))
   , mVideo(this, MediaData::VIDEO_DATA, Preferences::GetUint("media.video-decode-ahead", 2))
   , mDemuxer(aDemuxer)

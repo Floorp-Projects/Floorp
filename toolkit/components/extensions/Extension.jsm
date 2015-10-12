@@ -48,6 +48,7 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-webNavigatio
 ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-bookmarks.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {

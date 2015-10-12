@@ -55,27 +55,15 @@ static_assert(sizeof(nsCString::char_type) == 1,
 class NS_LossyConvertUTF16toASCII : public nsAutoCString
 {
 public:
-  explicit NS_LossyConvertUTF16toASCII(const char16_t* aString)
+  explicit NS_LossyConvertUTF16toASCII(const char16ptr_t aString)
   {
     LossyAppendUTF16toASCII(aString, *this);
   }
 
-  NS_LossyConvertUTF16toASCII(const char16_t* aString, uint32_t aLength)
+  NS_LossyConvertUTF16toASCII(const char16ptr_t aString, uint32_t aLength)
   {
     LossyAppendUTF16toASCII(Substring(aString, aLength), *this);
   }
-
-#ifdef MOZ_USE_CHAR16_WRAPPER
-  explicit NS_LossyConvertUTF16toASCII(char16ptr_t aString)
-    : NS_LossyConvertUTF16toASCII(static_cast<const char16_t*>(aString))
-  {
-  }
-
-  NS_LossyConvertUTF16toASCII(char16ptr_t aString, uint32_t aLength)
-    : NS_LossyConvertUTF16toASCII(static_cast<const char16_t*>(aString), aLength)
-  {
-  }
-#endif
 
   explicit NS_LossyConvertUTF16toASCII(const nsAString& aString)
   {
@@ -118,27 +106,15 @@ private:
 class NS_ConvertUTF16toUTF8 : public nsAutoCString
 {
 public:
-  explicit NS_ConvertUTF16toUTF8(const char16_t* aString)
+  explicit NS_ConvertUTF16toUTF8(const char16ptr_t aString)
   {
     AppendUTF16toUTF8(aString, *this);
   }
 
-  NS_ConvertUTF16toUTF8(const char16_t* aString, uint32_t aLength)
+  NS_ConvertUTF16toUTF8(const char16ptr_t aString, uint32_t aLength)
   {
     AppendUTF16toUTF8(Substring(aString, aLength), *this);
   }
-
-#ifdef MOZ_USE_CHAR16_WRAPPER
-  NS_ConvertUTF16toUTF8(char16ptr_t aString)
-    : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString))
-  {
-  }
-
-  NS_ConvertUTF16toUTF8(char16ptr_t aString, uint32_t aLength)
-    : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString), aLength)
-  {
-  }
-#endif
 
   explicit NS_ConvertUTF16toUTF8(const nsAString& aString)
   {

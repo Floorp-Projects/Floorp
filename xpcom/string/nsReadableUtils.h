@@ -36,7 +36,7 @@ Distance(const nsReadingIterator<char>& aStart,
 void LossyCopyUTF16toASCII(const nsAString& aSource, nsACString& aDest);
 void CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest);
 
-void LossyCopyUTF16toASCII(const char16_t* aSource, nsACString& aDest);
+void LossyCopyUTF16toASCII(const char16ptr_t aSource, nsACString& aDest);
 void CopyASCIItoUTF16(const char* aSource, nsAString& aDest);
 
 void CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest);
@@ -45,7 +45,7 @@ MOZ_WARN_UNUSED_RESULT bool CopyUTF16toUTF8(const nsAString& aSource,
                                             const mozilla::fallible_t&);
 void CopyUTF8toUTF16(const nsACString& aSource, nsAString& aDest);
 
-void CopyUTF16toUTF8(const char16_t* aSource, nsACString& aDest);
+void CopyUTF16toUTF8(const char16ptr_t aSource, nsACString& aDest);
 void CopyUTF8toUTF16(const char* aSource, nsAString& aDest);
 
 void LossyAppendUTF16toASCII(const nsAString& aSource, nsACString& aDest);
@@ -54,7 +54,7 @@ MOZ_WARN_UNUSED_RESULT bool AppendASCIItoUTF16(const nsACString& aSource,
                                                nsAString& aDest,
                                                const mozilla::fallible_t&);
 
-void LossyAppendUTF16toASCII(const char16_t* aSource, nsACString& aDest);
+void LossyAppendUTF16toASCII(const char16ptr_t aSource, nsACString& aDest);
 MOZ_WARN_UNUSED_RESULT     bool AppendASCIItoUTF16(const char* aSource,
                                               nsAString& aDest,
                                               const mozilla::fallible_t&);
@@ -69,15 +69,8 @@ MOZ_WARN_UNUSED_RESULT bool AppendUTF8toUTF16(const nsACString& aSource,
                                               nsAString& aDest,
                                               const mozilla::fallible_t&);
 
-void AppendUTF16toUTF8(const char16_t* aSource, nsACString& aDest);
+void AppendUTF16toUTF8(const char16ptr_t aSource, nsACString& aDest);
 void AppendUTF8toUTF16(const char* aSource, nsAString& aDest);
-
-#ifdef MOZ_USE_CHAR16_WRAPPER
-inline void AppendUTF16toUTF8(char16ptr_t aSource, nsACString& aDest)
-{
-  return AppendUTF16toUTF8(static_cast<const char16_t*>(aSource), aDest);
-}
-#endif
 
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.

@@ -2811,10 +2811,11 @@ CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo)
 nsresult
 CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo)
 {
+  nsAutoCString suffix;
+  aLoadContextInfo->OriginAttributesPtr()->CreateSuffix(suffix);
   LOG(("CacheFileIOManager::EvictByContextInternal() [loadContextInfo=%p, "
-       "anonymous=%u, inBrowser=%u, appId=%u]", aLoadContextInfo,
-       aLoadContextInfo->IsAnonymous(), aLoadContextInfo->IsInBrowserElement(),
-       aLoadContextInfo->AppId()));
+       "anonymous=%u, suffix=%s]", aLoadContextInfo, aLoadContextInfo->IsAnonymous(),
+       suffix.get()));
 
   nsresult rv;
 

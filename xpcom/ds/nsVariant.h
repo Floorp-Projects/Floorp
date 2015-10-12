@@ -10,8 +10,7 @@
 #include "nsIVariant.h"
 #include "nsStringFwd.h"
 #include "mozilla/Attributes.h"
-
-class nsCycleCollectionTraversalCallback;
+#include "nsCycleCollectionParticipant.h"
 
 /**
  * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
@@ -173,26 +172,43 @@ public:
  * these objects. They are created 'empty' and 'writable'.
  *
  * nsIVariant users won't usually need to see this class.
- *
- * This class also has static helper methods that nsIVariant *implementors* can
- * use to help them do all the 'standard' nsIVariant data conversions.
  */
-
-class nsVariant final : public nsIWritableVariant
+class nsVariantBase : public nsIWritableVariant
 {
 public:
-  NS_DECL_ISUPPORTS
   NS_DECL_NSIVARIANT
   NS_DECL_NSIWRITABLEVARIANT
 
-  nsVariant();
+  nsVariantBase();
+
+protected:
+  ~nsVariantBase() {};
+
+  nsDiscriminatedUnion mData;
+  bool mWritable;
+};
+
+class nsVariant final : public nsVariantBase
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsVariant() {};
 
 private:
   ~nsVariant() {};
+};
 
-protected:
-  nsDiscriminatedUnion mData;
-  bool                 mWritable;
+class nsVariantCC final : public nsVariantBase
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsVariantCC)
+
+  nsVariantCC() {};
+
+private:
+  ~nsVariantCC() {};
 };
 
 /**

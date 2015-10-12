@@ -647,6 +647,8 @@ NS_IMETHODIMP_(void)
 PuppetWidget::SetInputContext(const InputContext& aContext,
                               const InputContextAction& aAction)
 {
+  mInputContext = aContext;
+
 #ifndef MOZ_CROSS_PROCESS_IME
   return;
 #endif
@@ -695,9 +697,18 @@ PuppetWidget::NotifyIMEOfFocusChange(const IMENotification& aIMENotification)
 
   bool gotFocus = aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS;
   if (gotFocus) {
-    // When IME gets focus, we should initalize all information of the content.
-    if (NS_WARN_IF(!mContentCache.CacheAll(this, &aIMENotification))) {
-      return NS_ERROR_FAILURE;
+    if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN) {
+      // When IME gets focus, we should initalize all information of the
+      // content.
+      if (NS_WARN_IF(!mContentCache.CacheAll(this, &aIMENotification))) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      // However, if a plugin has focus, only the editor rect information is
+      // available.
+      if (NS_WARN_IF(!mContentCache.CacheEditorRect(this, &aIMENotification))) {
+        return NS_ERROR_FAILURE;
+      }
     }
   } else {
     // When IME loses focus, we don't need to store anything.
@@ -722,7 +733,8 @@ PuppetWidget::NotifyIMEOfCompositionUpdate(
 
   NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
 
-  if (NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
+  if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
+      NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendNotifyIMECompositionUpdate(mContentCache, aIMENotification);
@@ -733,7 +745,17 @@ nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
 {
 #ifdef MOZ_CROSS_PROCESS_IME
-  // e10s requires IME information cache into TabParent
+  // e10s requires IME content cache in in the TabParent for handling query
+  // content event only with the parent process.  Therefore, this process
+  // needs to receive a lot of information from the focused editor to sent
+  // the latest content to the parent process.
+  if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+    // But if a plugin has focus, we cannot receive text nor selection change
+    // in the plugin.  Therefore, PuppetWidget needs to receive only position
+    // change event for updating the editor rect cache.
+    return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
+                                 nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE);
+  }
   return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
                                nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
                                nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
@@ -756,6 +778,11 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
 
   if (!mTabChild)
     return NS_ERROR_FAILURE;
+
+  // While a plugin has focus, text change notification shouldn't be available.
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // FYI: text change notification is the first notification after
   //      a user operation changes the content.  So, we need to modify
@@ -791,6 +818,12 @@ PuppetWidget::NotifyIMEOfSelectionChange(
   if (!mTabChild)
     return NS_ERROR_FAILURE;
 
+  // While a plugin has focus, selection change notification shouldn't be
+  // available.
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Note that selection change must be notified after text change if it occurs.
   // Therefore, we don't need to query text content again here.
   mContentCache.SetSelection(
@@ -800,7 +833,13 @@ PuppetWidget::NotifyIMEOfSelectionChange(
     aIMENotification.mSelectionChangeData.mReversed,
     aIMENotification.mSelectionChangeData.GetWritingMode());
 
-  mTabChild->SendNotifyIMESelection(mContentCache, aIMENotification);
+  if (mIMEPreferenceOfParent.WantSelectionChange() &&
+      (mIMEPreferenceOfParent.WantChangesCausedByComposition() ||
+       !aIMENotification.mSelectionChangeData.mCausedByComposition)) {
+    mTabChild->SendNotifyIMESelection(mContentCache, aIMENotification);
+  } else {
+    mTabChild->SendUpdateContentCache(mContentCache);
+  }
   return NS_OK;
 }
 
@@ -811,6 +850,13 @@ PuppetWidget::NotifyIMEOfMouseButtonEvent(
   if (!mTabChild) {
     return NS_ERROR_FAILURE;
   }
+
+  // While a plugin has focus, mouse button event notification shouldn't be
+  // available.
+  if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
+    return NS_ERROR_FAILURE;
+  }
+
 
   bool consumedByIME = false;
   if (!mTabChild->SendNotifyIMEMouseButtonEvent(aIMENotification,
@@ -831,13 +877,19 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_WARN_IF(!mContentCache.CacheEditorRect(this, &aIMENotification)) ||
+  if (NS_WARN_IF(!mContentCache.CacheEditorRect(this, &aIMENotification))) {
+    return NS_ERROR_FAILURE;
+  }
+  // While a plugin has focus, selection range isn't available.  So, we don't
+  // need to cache it at that time.
+  if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
     return NS_ERROR_FAILURE;
   }
-  if (!mTabChild->SendNotifyIMEPositionChange(mContentCache,
-                                              aIMENotification)) {
-    return NS_ERROR_FAILURE;
+  if (mIMEPreferenceOfParent.WantPositionChanged()) {
+    mTabChild->SendNotifyIMEPositionChange(mContentCache, aIMENotification);
+  } else {
+    mTabChild->SendUpdateContentCache(mContentCache);
   }
   return NS_OK;
 }

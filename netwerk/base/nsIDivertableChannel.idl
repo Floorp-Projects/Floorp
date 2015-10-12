@@ -22,7 +22,7 @@ interface nsIStreamListener;
  * A channel implementing this interface allows diverting from an
  * nsIStreamListener in the child process to one in the parent.
  */
-[uuid(4430e0d0-ff70-45f5-99dc-b5fd06943fc1)]
+[uuid(7a9bf52d-f828-4b31-b8df-b40fdd37d007)]
 interface nsIDivertableChannel : nsISupports
 {
   /**
@@ -57,4 +57,22 @@ interface nsIDivertableChannel : nsISupports
    *         canceled channel.
    */
   ChannelDiverterChild divertToParent();
+
+  /**
+   * nsUnknownDecoder delays calling OnStartRequest until it gets enough data
+   * to decide about the content type (until OnDataAvaiable is called). In a
+   * OnStartRequest DivertToParent can be called but some OnDataAvailables are
+   * already called and therefore can not be diverted to parent.
+   *
+   * nsUnknownDecoder will call UnknownDecoderInvolvedKeepData in its
+   * OnStartRequest function and when it calls OnStartRequest of the next
+   * listener it will call UnknownDecoderInvolvedOnStartRequestCalled. In this
+   * function Child process will decide to discarge data if it is not diverting
+   * to parent or keep them if it is diverting to parent.
+   */
+  void unknownDecoderInvolvedKeepData();
+
+  void unknownDecoderInvolvedOnStartRequestCalled();
+
+  readonly attribute bool divertingToParent;
 };
