@@ -226,7 +226,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGetPropertyCache(MGetPropertyCache* ins);
     void visitGetPropertyPolymorphic(MGetPropertyPolymorphic* ins);
     void visitSetPropertyPolymorphic(MSetPropertyPolymorphic* ins);
-    void visitGetElementCache(MGetElementCache* ins);
     void visitBindNameCache(MBindNameCache* ins);
     void visitGuardObjectIdentity(MGuardObjectIdentity* ins);
     void visitGuardClass(MGuardClass* ins);

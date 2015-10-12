@@ -10645,42 +10645,6 @@ class MFunctionDispatch : public MDispatchInstruction
     }
 };
 
-class MGetElementCache
-  : public MBinaryInstruction
-{
-    MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data PolicyV;
-    MixPolicy<ObjectPolicy<0>, IntPolicy<1> >::Data PolicyT;
-    TypePolicy* thisTypePolicy();
-
-    // See the comment in IonBuilder::jsop_getelem.
-    bool monitoredResult_;
-
-    MGetElementCache(MDefinition* obj, MDefinition* value, bool monitoredResult)
-      : MBinaryInstruction(obj, value), monitoredResult_(monitoredResult)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(GetElementCache)
-
-    static MGetElementCache* New(TempAllocator& alloc, MDefinition* obj, MDefinition* value,
-                                 bool monitoredResult)
-    {
-        return new(alloc) MGetElementCache(obj, value, monitoredResult);
-    }
-
-    MDefinition* object() const {
-        return getOperand(0);
-    }
-    MDefinition* index() const {
-        return getOperand(1);
-    }
-    bool monitoredResult() const {
-        return monitoredResult_;
-    }
-};
-
 class MBindNameCache
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
