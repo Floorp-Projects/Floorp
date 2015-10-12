@@ -7,12 +7,15 @@
 #ifndef vm_SavedFrame_h
 #define vm_SavedFrame_h
 
+#include "jswrapper.h"
+
 #include "js/UbiNode.h"
 
 namespace js {
 
 class SavedFrame : public NativeObject {
     friend class SavedStacks;
+    friend struct ::JSStructuredCloneReader;
 
   public:
     static const Class          class_;
@@ -120,6 +123,12 @@ class SavedFrame : public NativeObject {
                !obj.as<SavedFrame>().getReservedSlot(JSSLOT_SOURCE).isNull();
     }
 
+    static bool isSavedFrameOrWrapperAndNotProto(JSObject& obj) {
+        auto unwrapped = CheckedUnwrap(&obj);
+        MOZ_ASSERT(unwrapped);
+        return isSavedFrameAndNotProto(*unwrapped);
+    }
+
     struct Lookup;
     struct HashPolicy;
 
@@ -142,8 +151,17 @@ class SavedFrame : public NativeObject {
     };
 
   private:
+    static SavedFrame* create(JSContext* cx);
     static bool finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject proto);
     void initFromLookup(HandleLookup lookup);
+    void initSource(JSAtom* source);
+    void initLine(uint32_t line);
+    void initColumn(uint32_t column);
+    void initFunctionDisplayName(JSAtom* maybeName);
+    void initAsyncCause(JSAtom* maybeCause);
+    void initParent(SavedFrame* maybeParent);
+    void initPrincipalsAlreadyHeld(JSPrincipals* principals);
+    void initPrincipals(JSPrincipals* principals);
 
     enum {
         // The reserved slots in the SavedFrame class.

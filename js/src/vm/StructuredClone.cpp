@@ -42,6 +42,7 @@
 #include "builtin/MapObject.h"
 #include "js/Date.h"
 #include "js/TraceableHashTable.h"
+#include "vm/SavedFrame.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -92,6 +93,12 @@ enum StructuredDataType : uint32_t {
     SCTAG_END_OF_KEYS,
     SCTAG_SHARED_TYPED_ARRAY_OBJECT,
     SCTAG_DATA_VIEW_OBJECT,
+    SCTAG_SAVED_FRAME_OBJECT,
+
+    SCTAG_JSPRINCIPALS,
+    SCTAG_NULL_JSPRINCIPALS,
+    SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_SYSTEM,
+    SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_NOT_SYSTEM,
 
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
@@ -243,6 +250,7 @@ struct JSStructuredCloneReader {
     bool readSharedTypedArray(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
     bool readArrayBuffer(uint32_t nbytes, MutableHandleValue vp);
     bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, MutableHandleValue vp);
+    JSObject* readSavedFrame(uint32_t principalsTag);
     bool startRead(MutableHandleValue vp);
 
     SCInput& in;
@@ -305,6 +313,7 @@ struct JSStructuredCloneWriter {
     bool traverseObject(HandleObject obj);
     bool traverseMap(HandleObject obj);
     bool traverseSet(HandleObject obj);
+    bool traverseSavedFrame(HandleObject obj);
 
     bool parseTransferable();
     bool reportErrorTransferable(uint32_t errorId);
@@ -327,6 +336,7 @@ struct JSStructuredCloneWriter {
     // For JSObject: Property IDs as value
     // For Map: Key followed by value
     // For Set: Key
+    // For SavedFrame: parent SavedFrame
     AutoValueVector entries;
 
     // The "memory" list described in the HTML5 internal structured cloning algorithm.
@@ -1057,6 +1067,84 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
 // Notice how the end-of-children marker for key1 is sandwiched between the
 // value1 beginning and end.
 bool
+JSStructuredCloneWriter::traverseSavedFrame(HandleObject obj)
+{
+    RootedObject unwrapped(context(), js::CheckedUnwrap(obj));
+    MOZ_ASSERT(unwrapped && unwrapped->is<SavedFrame>());
+
+    RootedSavedFrame savedFrame(context(), &unwrapped->as<SavedFrame>());
+
+    RootedObject parent(context(), savedFrame->getParent());
+    if (!context()->compartment()->wrap(context(), &parent))
+        return false;
+
+    if (!objs.append(ObjectValue(*obj)) ||
+        !entries.append(parent ? ObjectValue(*parent) : NullValue()) ||
+        !counts.append(1))
+    {
+        return false;
+    }
+
+    checkStack();
+
+    // Write the SavedFrame tag and the SavedFrame's principals.
+
+    if (savedFrame->getPrincipals() == &ReconstructedSavedFramePrincipals::IsSystem) {
+        if (!out.writePair(SCTAG_SAVED_FRAME_OBJECT,
+                           SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_SYSTEM))
+        {
+            return false;
+        };
+    } else if (savedFrame->getPrincipals() == &ReconstructedSavedFramePrincipals::IsNotSystem) {
+        if (!out.writePair(SCTAG_SAVED_FRAME_OBJECT,
+                           SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_NOT_SYSTEM))
+        {
+            return false;
+        }
+    } else {
+        if (auto principals = savedFrame->getPrincipals()) {
+            if (!out.writePair(SCTAG_SAVED_FRAME_OBJECT, SCTAG_JSPRINCIPALS) ||
+                !principals->write(context(), this))
+            {
+                return false;
+            }
+        } else {
+            if (!out.writePair(SCTAG_SAVED_FRAME_OBJECT, SCTAG_NULL_JSPRINCIPALS))
+                return false;
+        }
+    }
+
+    // Write the SavedFrame's reserved slots, except for the parent, which is
+    // queued on objs for further traversal.
+
+    RootedValue val(context());
+
+    val = StringValue(savedFrame->getSource());
+    if (!startWrite(val))
+        return false;
+
+    val = NumberValue(savedFrame->getLine());
+    if (!startWrite(val))
+        return false;
+
+    val = NumberValue(savedFrame->getColumn());
+    if (!startWrite(val))
+        return false;
+
+    auto name = savedFrame->getFunctionDisplayName();
+    val = name ? StringValue(name) : NullValue();
+    if (!startWrite(val))
+        return false;
+
+    auto cause = savedFrame->getAsyncCause();
+    val = cause ? StringValue(cause) : NullValue();
+    if (!startWrite(val))
+        return false;
+
+    return true;
+}
+
+bool
 JSStructuredCloneWriter::startWrite(HandleValue v)
 {
     assertSameCompartment(context(), v);
@@ -1130,6 +1218,8 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return traverseMap(obj);
         } else if (cls == ESClass_Set) {
             return traverseSet(obj);
+        } else if (SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
+            return traverseSavedFrame(obj);
         }
 
         if (callbacks && callbacks->write)
@@ -1287,7 +1377,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
                 if (!startWrite(key) || !startWrite(val))
                     return false;
-            } else if (cls == ESClass_Set) {
+            } else if (cls == ESClass_Set || SavedFrame::isSavedFrameOrWrapperAndNotProto(*obj)) {
                 if (!startWrite(key))
                     return false;
             } else {
@@ -1796,6 +1886,14 @@ JSStructuredCloneReader::startRead(MutableHandleValue vp)
         break;
       }
 
+      case SCTAG_SAVED_FRAME_OBJECT: {
+        auto obj = readSavedFrame(data);
+        if (!obj || !objs.append(ObjectValue(*obj)))
+            return false;
+        vp.setObject(*obj);
+        break;
+      }
+
       default: {
         if (tag <= SCTAG_FLOAT_MAX) {
             double d = ReinterpretPairAsDouble(tag, data);
@@ -1913,6 +2011,83 @@ JSStructuredCloneReader::readTransferMap()
     return true;
 }
 
+JSObject*
+JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag)
+{
+    RootedSavedFrame savedFrame(context(), SavedFrame::create(context()));
+    if (!savedFrame)
+        return nullptr;
+
+    JSPrincipals* principals;
+    if (principalsTag == SCTAG_JSPRINCIPALS) {
+        if (!context()->runtime()->readPrincipals) {
+            JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
+                                 JSMSG_SC_UNSUPPORTED_TYPE);
+            return nullptr;
+        }
+
+        if (!context()->runtime()->readPrincipals(context(), this, &principals))
+            return nullptr;
+    } else if (principalsTag == SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_SYSTEM) {
+        principals = &ReconstructedSavedFramePrincipals::IsSystem;
+        principals->refcount++;
+    } else if (principalsTag == SCTAG_RECONSTRUCTED_SAVED_FRAME_PRINCIPALS_IS_NOT_SYSTEM) {
+        principals = &ReconstructedSavedFramePrincipals::IsNotSystem;
+        principals->refcount++;
+    } else if (principalsTag == SCTAG_NULL_JSPRINCIPALS) {
+        principals = nullptr;
+    } else {
+        JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
+                             JSMSG_SC_BAD_SERIALIZED_DATA, "bad SavedFrame principals");
+        return nullptr;
+    }
+    savedFrame->initPrincipalsAlreadyHeld(principals);
+
+    RootedValue source(context());
+    if (!startRead(&source) || !source.isString())
+        return nullptr;
+    auto atomSource = AtomizeString(context(), source.toString());
+    if (!atomSource)
+        return nullptr;
+    savedFrame->initSource(atomSource);
+
+    RootedValue lineVal(context());
+    uint32_t line;
+    if (!startRead(&lineVal) || !lineVal.isNumber() || !ToUint32(context(), lineVal, &line))
+        return nullptr;
+    savedFrame->initLine(line);
+
+    RootedValue columnVal(context());
+    uint32_t column;
+    if (!startRead(&columnVal) || !columnVal.isNumber() || !ToUint32(context(), columnVal, &column))
+        return nullptr;
+    savedFrame->initColumn(column);
+
+    RootedValue name(context());
+    if (!startRead(&name) || !(name.isString() || name.isNull()))
+        return nullptr;
+    JSAtom* atomName = nullptr;
+    if (name.isString()) {
+        atomName = AtomizeString(context(), name.toString());
+        if (!atomName)
+            return nullptr;
+    }
+    savedFrame->initFunctionDisplayName(atomName);
+
+    RootedValue cause(context());
+    if (!startRead(&cause) || !(cause.isString() || cause.isNull()))
+        return nullptr;
+    JSAtom* atomCause = nullptr;
+    if (cause.isString()) {
+        atomCause = AtomizeString(context(), cause.toString());
+        if (!atomCause)
+            return nullptr;
+    }
+    savedFrame->initAsyncCause(atomCause);
+
+    return savedFrame;
+}
+
 // Perform the whole recursive reading procedure.
 bool
 JSStructuredCloneReader::read(MutableHandleValue vp)
@@ -1961,7 +2136,9 @@ JSStructuredCloneReader::read(MutableHandleValue vp)
         if (!startRead(&key))
             return false;
 
-        if (key.isNull() && !(obj->is<MapObject>() || obj->is<SetObject>())) {
+        if (key.isNull() &&
+            !(obj->is<MapObject>() || obj->is<SetObject>() || obj->is<SavedFrame>()))
+        {
             // Backwards compatibility: Null formerly indicated the end of
             // object properties.
             objs.popBack();
@@ -1973,6 +2150,21 @@ JSStructuredCloneReader::read(MutableHandleValue vp)
         if (obj->is<SetObject>()) {
             if (!SetObject::add(context(), obj, key))
                 return false;
+            continue;
+        }
+
+        // SavedFrame object: there is one following value, the parent
+        // SavedFrame, which is either null or another SavedFrame object.
+        if (obj->is<SavedFrame>()) {
+            SavedFrame* parentFrame;
+            if (key.isNull())
+                parentFrame = nullptr;
+            else if (key.isObject() && key.toObject().is<SavedFrame>())
+                parentFrame = &key.toObject().as<SavedFrame>();
+            else
+                return false;
+
+            obj->as<SavedFrame>().initParent(parentFrame);
             continue;
         }
 
