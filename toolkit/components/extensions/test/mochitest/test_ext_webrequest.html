@@ -107,9 +107,16 @@ function backgroundScript()
                   responseStarted: [],
                   completed: []};
 
+  function checkResourceType(type)
+  {
+    var key = type.toUpperCase();
+    browser.test.assertTrue(key in browser.webRequest.ResourceType);
+  }
+
   function onBeforeRequest(details)
   {
     browser.test.log(`onBeforeRequest ${details.url}`);
+    checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
       recorded.requested.push(details.url);
 
@@ -141,6 +148,7 @@ function backgroundScript()
   function onBeforeSendHeaders(details)
   {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
+    checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
       recorded.beforeSendHeaders.push(details.url);
 
@@ -158,6 +166,7 @@ function backgroundScript()
 
   function onRecord(kind, details)
   {
+    checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
       recorded[kind].push(details.url);
     }
@@ -176,7 +185,7 @@ function backgroundScript()
 
   browser.test.onMessage.addListener(onTestMessage);
 
-  browser.test.sendMessage("ready");
+  browser.test.sendMessage("ready", browser.webRequest.ResourceType);
 }
 
 function* test_once()
@@ -192,8 +201,13 @@ function* test_once()
   };
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  let [, resourceTypes] = yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   info("webrequest extension loaded");
+
+  for (var key in resourceTypes) {
+    var value = resourceTypes[key];
+    is(key, value.toUpperCase());
+  }
 
   yield new Promise(resolve => { setTimeout(resolve, 0); });
 
