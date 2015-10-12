@@ -31,6 +31,16 @@ function is(a, b, msg) {
   opener.is(a, b, "[denied] " + msg);
 }
 
+const INNER_FILE = "file_fullscreen-denied-inner.html";
+function setupForInnerTest(targetName, callback) {
+  window.testTargetName = targetName;
+  window.continueTest = () => {
+    delete window.testTargetName;
+    delete window.continueTest;
+    callback();
+  };
+}
+
 function begin() {
   document.addEventListener("mozfullscreenchange", () => {
     ok(false, "Should never receive " +
@@ -40,21 +50,42 @@ function begin() {
 }
 
 function testIFrameWithoutAllowFullscreen() {
-  window.continueTest = () => {
-    delete window.continueTest;
+  // Create an iframe without an allowfullscreen attribute, whose
+  // contents request fullscreen. The request should be denied, and
+  // we should not receive a fullscreenchange event in this document.
+  var iframe = document.createElement("iframe");
+  iframe.src = INNER_FILE;
+  setupForInnerTest("an iframe without allowfullscreen", () => {
     document.body.removeChild(iframe);
+    SimpleTest.executeSoon(testFrameElement);
+  });
+  document.body.appendChild(iframe);
+}
+
+function testFrameElement() {
+  var frameset = document.createElement("frameset");
+  var frame = document.createElement("frame");
+  frame.src = INNER_FILE;
+  frameset.appendChild(frame);
+  setupForInnerTest("a frame element", () => {
+    document.documentElement.removeChild(frameset);
+    SimpleTest.executeSoon(testObjectElement);
+  });
+  document.documentElement.appendChild(frameset);
+}
+
+function testObjectElement() {
+  var objectElem = document.createElement("object");
+  objectElem.data = INNER_FILE;
+  setupForInnerTest("an object element", () => {
+    document.body.removeChild(objectElem);
     // In the following tests we want to test trust context requirement
     // of fullscreen request, so temporary re-enable this pref.
     SpecialPowers.pushPrefEnv({
       "set":[["full-screen-api.allow-trusted-requests-only", true]]
     }, testNonTrustContext);
-  };
-  // Create an iframe without an allowfullscreen attribute, whose
-  // contents request fullscreen. The request should be denied, and
-  // we should not receive a fullscreenchange event in this document.
-  var iframe = document.createElement("iframe");
-  iframe.src = "file_fullscreen-denied-inner.html";
-  document.body.appendChild(iframe);
+  });
+  document.body.appendChild(objectElem);
 }
 
 function testNonTrustContext() {
