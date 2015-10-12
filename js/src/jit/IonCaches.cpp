@@ -2091,6 +2091,8 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
     if (idval.isInt32()) {
         if (!*emitted && !tryAttachArgumentsElement(cx, outerScript, ion, obj, idval, emitted))
             return false;
+        if (!*emitted && !tryAttachDenseElement(cx, outerScript, ion, obj, idval, emitted))
+            return false;
     }
 
     if (!*emitted)
@@ -2186,6 +2188,7 @@ GetPropertyIC::reset(ReprotectCode reprotect)
     hasMappedArgumentsElementStub_ = false;
     hasUnmappedArgumentsElementStub_ = false;
     hasGenericProxyStub_ = false;
+    hasDenseStub_ = false;
 }
 
 void
@@ -3660,19 +3663,11 @@ GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* 
     return linkAndAttachStub(cx, masm, attacher, ion, "property", trackedOutcome);
 }
 
-/* static */ bool
-GetElementIC::canAttachDenseElement(JSObject* obj, const Value& idval)
-{
-    return obj->isNative() && idval.isInt32();
-}
-
 static bool
 GenerateDenseElement(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
                      JSObject* obj, const Value& idval, Register object,
                      TypedOrValueRegister index, TypedOrValueRegister output)
 {
-    MOZ_ASSERT(GetElementIC::canAttachDenseElement(obj, idval));
-
     Label failures;
 
     // Guard object's shape.
@@ -3726,12 +3721,23 @@ GenerateDenseElement(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher
 }
 
 bool
-GetElementIC::attachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                 HandleObject obj, const Value& idval)
+GetPropertyIC::tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                     HandleObject obj, HandleValue idval, bool* emitted)
 {
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(!*emitted);
+
+    if (hasDenseStub())
+        return true;
+
+    if (!obj->isNative() || !idval.isInt32())
+        return true;
+
+    *emitted = true;
+
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     StubAttacher attacher(*this);
-    if (!GenerateDenseElement(cx, masm, attacher, obj, idval, object(), index(), output()))
+    if (!GenerateDenseElement(cx, masm, attacher, obj, idval, object(), id().reg(), output()))
         return false;
 
     setHasDenseStub();
@@ -4214,11 +4220,6 @@ GetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                 return false;
             attachedStub = true;
         }
-        if (!attachedStub && !cache.hasDenseStub() && canAttachDenseElement(obj, idval)) {
-            if (!cache.attachDenseElement(cx, outerScript, ion, obj, idval))
-                return false;
-            attachedStub = true;
-        }
         if (!attachedStub && cache.monitoredResult() &&
             canAttachDenseElementHole(obj, idval, cache.output()))
         {
@@ -4256,7 +4257,6 @@ void
 GetElementIC::reset(ReprotectCode reprotect)
 {
     IonCache::reset(reprotect);
-    hasDenseStub_ = false;
 }
 
 static bool
