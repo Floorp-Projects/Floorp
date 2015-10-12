@@ -10,11 +10,11 @@ function doRequestFullscreen() {
     document.removeEventListener("mozfullscreenchange", handler);
     document.removeEventListener("mozfullscreenerror", handler);
     parent.is(evt.type, "mozfullscreenerror", "Request from " +
-              "an iframe without allowfullscreen should be denied");
+              `document inside ${parent.testTargetName} should be denied`);
     parent.continueTest();
   }
   parent.ok(!document.mozFullScreenEnabled, "Fullscreen " +
-            "should not be enabled in an iframe without allowfullscreen");
+            `should not be enabled in ${parent.testTargetName}`);
   document.addEventListener("mozfullscreenchange", handler);
   document.addEventListener("mozfullscreenerror", handler);
   document.documentElement.mozRequestFullScreen();
