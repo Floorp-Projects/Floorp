@@ -199,7 +199,13 @@ private:
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
-      mSignatureAlg = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+      KeyAlgorithmProxy& alg = mKeyPair->mPublicKey.get()->Algorithm();
+      if (alg.mType != KeyAlgorithmProxy::RSA ||
+          !alg.mRsa.mHash.mName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+      }
+
+      mSignatureAlg = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
       mAuthType = ssl_kea_rsa;
 
     } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA)) {
