@@ -5,16 +5,16 @@
  */
 
 [Constructor(DOMString type,
-             optional PresentationSessionConnectEventInit eventInitDict),
+             optional PresentationConnectionAvailableEventInit eventInitDict),
  Pref="dom.presentation.enabled",
  CheckAnyPermissions="presentation"]
-interface PresentationSessionConnectEvent : Event
+interface PresentationConnectionAvailableEvent : Event
 {
   [SameObject]
-  readonly attribute PresentationSession session;
+  readonly attribute PresentationConnection connection;
 };
 
-dictionary PresentationSessionConnectEventInit : EventInit
+dictionary PresentationConnectionAvailableEventInit : EventInit
 {
-  required PresentationSession session;
+  required PresentationConnection connection;
 };

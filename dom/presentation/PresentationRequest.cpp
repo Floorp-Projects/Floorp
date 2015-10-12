@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PresentationRequestBinding.h"
-#include "mozilla/dom/PresentationSessionConnectEvent.h"
+#include "mozilla/dom/PresentationConnectionAvailableEvent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsCycleCollectionParticipant.h"
@@ -151,15 +151,15 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
 }
 
 nsresult
-PresentationRequest::DispatchSessionConnectEvent(PresentationSession* aSession)
+PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aConnection)
 {
-  PresentationSessionConnectEventInit init;
-  init.mSession = aSession;
+  PresentationConnectionAvailableEventInit init;
+  init.mConnection = aConnection;
 
-  nsRefPtr<PresentationSessionConnectEvent> event =
-    PresentationSessionConnectEvent::Constructor(this,
-                                                 NS_LITERAL_STRING("sessionconnect"),
-                                                 init);
+  nsRefPtr<PresentationConnectionAvailableEvent> event =
+    PresentationConnectionAvailableEvent::Constructor(this,
+                                                      NS_LITERAL_STRING("connectionavailable"),
+                                                      init);
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_FAILURE;
   }

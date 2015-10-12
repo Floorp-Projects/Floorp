@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test for startSession errors of B2G Presentation API at receiver side</title>
+  <title>Test for connection establishing errors of B2G Presentation API at receiver side</title>
 </head>
 <body>
 <div id="content"></div>
@@ -30,23 +30,23 @@ function finish() {
   window.parent.postMessage('DONE', '*');
 }
 
-var session;
+var connection;
 
-function testSessionAvailable() {
+function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
     ok(navigator.presentation, "navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available.");
 
-    navigator.presentation.receiver.getSession().then(
-      function(aSession) {
-        session = aSession;
+    navigator.presentation.receiver.getConnection().then(
+      function(aConnection) {
+        connection = aConnection;
 
-        ok(session.id, "Session ID should be set: " + session.id);
-        is(session.state, "closed", "Session state at receiver side should be closed by default.");
+        ok(connection.id, "Connection ID should be set: " + connection.id);
+        is(connection.state, "closed", "Connection state at receiver side should be closed by default.");
         aResolve();
       },
       function(aError) {
-        ok(false, "Error occurred when getting the session: " + aError);
+        ok(false, "Error occurred when getting the connection: " + aError);
         finish();
         aReject();
       }
@@ -56,9 +56,9 @@ function testSessionAvailable() {
 
 function testUnexpectedControlChannelClose() {
   return new Promise(function(aResolve, aReject) {
-    session.onstatechange = function() {
-      session.onstatechange = null;
-      is(session.state, "terminated", "Session state should become terminated.");
+    connection.onstatechange = function() {
+      connection.onstatechange = null;
+      is(connection.state, "terminated", "Connection state should become terminated.");
       aResolve();
     };
 
@@ -67,7 +67,7 @@ function testUnexpectedControlChannelClose() {
   });
 }
 
-testSessionAvailable().
+testConnectionAvailable().
 then(testUnexpectedControlChannelClose).
 then(finish);
 

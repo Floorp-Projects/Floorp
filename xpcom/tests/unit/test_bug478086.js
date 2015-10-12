@@ -9,8 +9,7 @@ function run_test() {
   // copied from http://mxr.mozilla.org/mozilla-central/source/image/test/unit/test_imgtools.js#135
   // nsIXULRuntime.OS doesn't seem to be available in xpcshell, so we'll use
   // this as a kludgy way to figure out if we're running on Windows.
-  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-  if (isWindows) {
+  if (mozinfo.os == "win") {
     root.initWithPath("\\\\.");
   } else {
     return; // XXX disabled, since this causes intermittent failures on Mac (bug 481369).

@@ -4,19 +4,19 @@
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <head>
   <meta charset="utf-8">
-  <title>Test for session disconnection of B2G Presentation API at sender side</title>
+  <title>Test for disconnection of B2G Presentation API at sender side</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for session disconnection of B2G Presentation API at sender side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for disconnection of B2G Presentation API at sender side</a>
 <script type="application/javascript;version=1.8">
 
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
 var request;
-var session;
+var connection;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
@@ -41,7 +41,7 @@ function testSetup() {
   });
 }
 
-function testStartSession() {
+function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -88,15 +88,15 @@ function testStartSession() {
     });
 
     request.start().then(
-      function(aSession) {
-        session = aSession;
-        ok(session, "Session should be availlable.");
-        ok(session.id, "Session ID should be set.");
-        is(session.state, "connected", "Session state at sender side should be connected by default.");
+      function(aConnection) {
+        connection = aConnection;
+        ok(connection, "Connection should be available.");
+        ok(connection.id, "Connection ID should be set.");
+        is(connection.state, "connected", "Connection state at sender side should be connected by default.");
         aResolve();
       },
       function(aError) {
-        ok(false, "Error occurred when starting session: " + aError);
+        ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
         aReject();
       }
@@ -104,16 +104,16 @@ function testStartSession() {
   });
 }
 
-function testSessionDisconnection() {
+function testDisconnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
-    session.onstatechange = function() {
-      session.onstatechange = null;
-      is(session.state, "closed", "Session should be closed.");
+    connection.onstatechange = function() {
+      connection.onstatechange = null;
+      is(connection.state, "closed", "Connection should be closed.");
       aResolve();
     };
 
@@ -135,8 +135,8 @@ function runTests() {
   ok(window.PresentationRequest, "PresentationRequest should be available.");
 
   testSetup().
-  then(testStartSession).
-  then(testSessionDisconnection).
+  then(testStartConnection).
+  then(testDisconnection).
   then(teardown);
 }
 

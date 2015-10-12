@@ -619,6 +619,25 @@ LIRGeneratorShared::useBox(LInstruction* lir, size_t n, MDefinition* mir,
 #endif
 }
 
+void
+LIRGeneratorShared::useBoxOrTypedOrConstant(LInstruction* lir, size_t n, MDefinition* mir,
+                                            bool useConstant)
+{
+    if (mir->type() == MIRType_Value) {
+        useBox(lir, n, mir);
+        return;
+    }
+
+    if (useConstant && mir->isConstant())
+        lir->setOperand(n, LAllocation(mir->toConstant()->vp()));
+    else
+        lir->setOperand(n, useRegister(mir));
+
+#if defined(JS_NUNBOX32)
+    lir->setOperand(n + 1, LAllocation());
+#endif
+}
+
 } // namespace jit
 } // namespace js
 

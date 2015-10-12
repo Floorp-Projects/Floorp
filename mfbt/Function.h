@@ -44,21 +44,78 @@ class FunctionImplBase
 {
 public:
   virtual ~FunctionImplBase() {}
-  virtual ReturnType call(Arguments... arguments) = 0;
+  virtual ReturnType call(Arguments... aArguments) = 0;
 };
 
+// Normal Callable Object.
 template <typename Callable, typename ReturnType, typename... Arguments>
 class FunctionImpl : public FunctionImplBase<ReturnType, Arguments...>
 {
+  public:
+    explicit FunctionImpl(const Callable& aCallable)
+      : mCallable(aCallable) {}
+
+    ReturnType call(Arguments... aArguments) override
+    {
+      return mCallable(Forward<Arguments>(aArguments)...);
+    }
+  private:
+    Callable mCallable;
+};
+
+// Base class for passing pointer to member function.
+template <typename Callable, typename ReturnType, typename... Arguments>
+class MemberFunctionImplBase : public FunctionImplBase<ReturnType, Arguments...>
+{
 public:
-  explicit FunctionImpl(const Callable& aCallable) : mCallable(aCallable) {}
+  explicit MemberFunctionImplBase(const Callable& aCallable)
+    : mCallable(aCallable) {}
 
   ReturnType call(Arguments... aArguments) override
   {
-    return mCallable(Forward<Arguments>(aArguments)...);
+    return callInternal(Forward<Arguments>(aArguments)...);
   }
 private:
+  template<typename ThisType, typename... Args>
+  ReturnType callInternal(ThisType* aThis, Args&&... aArguments)
+  {
+    return (aThis->*mCallable)(Forward<Args>(aArguments)...);
+  }
+
+  template<typename ThisType, typename... Args>
+  ReturnType callInternal(ThisType&& aThis, Args&&... aArguments)
+  {
+    return (aThis.*mCallable)(Forward<Args>(aArguments)...);
+  }
   Callable mCallable;
+};
+
+// For non-const member function specialization of FunctionImpl.
+template <typename ThisType, typename... Args, typename ReturnType, typename... Arguments>
+class FunctionImpl<ReturnType(ThisType::*)(Args...),
+                   ReturnType, Arguments...>
+  : public MemberFunctionImplBase<ReturnType(ThisType::*)(Args...),
+                                  ReturnType, Arguments...>
+{
+public:
+  explicit FunctionImpl(ReturnType(ThisType::*aMemberFunc)(Args...))
+    : MemberFunctionImplBase<ReturnType(ThisType::*)(Args...),
+                             ReturnType, Arguments...>(aMemberFunc)
+  {}
+};
+
+// For const member function specialization of FunctionImpl.
+template <typename ThisType, typename... Args, typename ReturnType, typename... Arguments>
+class FunctionImpl<ReturnType(ThisType::*)(Args...) const,
+                   ReturnType, Arguments...>
+  : public MemberFunctionImplBase<ReturnType(ThisType::*)(Args...) const,
+                                  ReturnType, Arguments...>
+{
+public:
+  explicit FunctionImpl(ReturnType(ThisType::*aConstMemberFunc)(Args...) const)
+    : MemberFunctionImplBase<ReturnType(ThisType::*)(Args...) const,
+                             ReturnType, Arguments...>(aConstMemberFunc)
+  {}
 };
 
 } // namespace detail
@@ -98,10 +155,11 @@ public:
     return *this;
   }
 
-  ReturnType operator()(Arguments... aArguments) const
+  template<typename... Args>
+  ReturnType operator()(Args&&... aArguments) const
   {
     MOZ_ASSERT(mImpl);
-    return mImpl->call(Forward<Arguments>(aArguments)...);
+    return mImpl->call(Forward<Args>(aArguments)...);
   }
 private:
   // TODO: Consider implementing a small object optimization.
