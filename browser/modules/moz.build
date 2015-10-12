@@ -30,7 +30,6 @@ EXTRA_JS_MODULES += [
     'FormValidationHandler.jsm',
     'HiddenFrame.jsm',
     'NetworkPrioritizer.jsm',
-    'NewTabURL.jsm',
     'offlineAppCache.jsm',
     'PanelFrame.jsm',
     'PluginContent.jsm',
