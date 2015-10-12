@@ -71,8 +71,7 @@ PermissionSettings.prototype = {
       .createCodebasePrincipal(uri, {appId: app.localId, inBrowser: aBrowserFlag});
 
     return isExplicitInPermissionsTable(aPermName,
-                                        principal.appStatus,
-                                        app.kind);
+                                        principal.appStatus);
   },
 
   set: function set(aPermName, aPermValue, aManifestURL, aOrigin,

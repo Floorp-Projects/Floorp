@@ -35,7 +35,7 @@ this.PermissionSettingsModule = {
   },
 
 
-  _isChangeAllowed: function(aPrincipal, aPermName, aAction, aAppKind) {
+  _isChangeAllowed: function(aPrincipal, aPermName, aAction) {
     // Bug 812289:
     // Change is allowed from a child process when all of the following
     // conditions stand true:
@@ -50,7 +50,7 @@ this.PermissionSettingsModule = {
     // on permissionManager also but we currently don't.
     let perm =
       Services.perms.testExactPermissionFromPrincipal(aPrincipal,aPermName);
-    let isExplicit = isExplicitInPermissionsTable(aPermName, aPrincipal.appStatus, aAppKind);
+    let isExplicit = isExplicitInPermissionsTable(aPermName, aPrincipal.appStatus);
 
     return (aAction === "unknown" &&
             aPrincipal.appStatus === Ci.nsIPrincipal.APP_STATUS_NOT_INSTALLED) ||
@@ -106,7 +106,7 @@ this.PermissionSettingsModule = {
     }
 
     if (aAllowAllChanges ||
-        this._isChangeAllowed(principal, aData.type, aData.value, app.kind)) {
+        this._isChangeAllowed(principal, aData.type, aData.value)) {
       debug("add: " + aData.origin + " " + app.localId + " " + action);
       Services.perms.addFromPrincipal(principal, aData.type, action);
       return true;
