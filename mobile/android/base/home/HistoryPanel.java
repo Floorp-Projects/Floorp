@@ -120,11 +120,7 @@ public class HistoryPanel extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if (HardwareUtils.isTablet() && GeckoScreenOrientation.getInstance().getAndroidOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
-            return inflater.inflate(R.layout.home_history_split_pane_panel, container, false);
-        } else {
-            return inflater.inflate(R.layout.home_history_panel, container, false);
-        }
+        return inflater.inflate(R.layout.home_history_panel, container, false);
     }
 
     @Override
