@@ -2450,6 +2450,7 @@ nsPluginHost::FindPluginsInContent(bool aCreatePluginList, bool* aPluginsChanged
                                                nsTArray<nsCString>(tag.extensions()),
                                                tag.isJavaPlugin(),
                                                tag.isFlashPlugin(),
+                                               tag.supportsAsyncInit(),
                                                tag.lastModifiedTime(),
                                                tag.isFromExtension());
       AddPluginTag(pluginTag);
@@ -2686,6 +2687,7 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
                                       tag->Extensions(),
                                       tag->mIsJavaPlugin,
                                       tag->mIsFlashPlugin,
+                                      tag->mSupportsAsyncInit,
                                       tag->FileName(),
                                       tag->Version(),
                                       tag->mLastModifiedTime,
