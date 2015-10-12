@@ -324,8 +324,8 @@ struct JSStructuredCloneWriter {
     // counts.length() == objs.length() and sum(counts) == entries.length().
     Vector<size_t> counts;
 
-    // For JSObject: Propery IDs as value
-    // For Map: Key followed by value.
+    // For JSObject: Property IDs as value
+    // For Map: Key followed by value
     // For Set: Key
     AutoValueVector entries;
 
@@ -1037,6 +1037,25 @@ JSStructuredCloneWriter::traverseSet(HandleObject obj)
     return out.writePair(SCTAG_SET_OBJECT, 0);
 }
 
+// Objects are written as a "preorder" traversal of the object graph: object
+// "headers" (the class tag and any data needed for initial construction) are
+// visited first, then the children are recursed through (where children are
+// properties, Set or Map entries, etc.). So for example
+//
+//     m = new Map();
+//     m.set(key1 = {}, value1 = {})
+//
+// would be stored as
+//
+//     <Map tag>
+//     <key1 class tag>
+//     <value1 class tag>
+//     <end-of-children marker for key1>
+//     <end-of-children marker for value1>
+//     <end-of-children marker for Map>
+//
+// Notice how the end-of-children marker for key1 is sandwiched between the
+// value1 beginning and end.
 bool
 JSStructuredCloneWriter::startWrite(HandleValue v)
 {
@@ -1894,16 +1913,22 @@ JSStructuredCloneReader::readTransferMap()
     return true;
 }
 
+// Perform the whole recursive reading procedure.
 bool
 JSStructuredCloneReader::read(MutableHandleValue vp)
 {
     if (!readTransferMap())
         return false;
 
+    // Start out by reading in the main object and pushing it onto the 'objs'
+    // stack. The data related to this object and its descendants extends from
+    // here to the SCTAG_END_OF_KEYS at the end of the stream.
     if (!startRead(vp))
         return false;
 
+    // Stop when the stack shows that all objects have been read.
     while (objs.length() != 0) {
+        // What happens depends on the top obj on the objs stack.
         RootedObject obj(context(), &objs.back().toObject());
 
         uint32_t tag, data;
@@ -1911,36 +1936,59 @@ JSStructuredCloneReader::read(MutableHandleValue vp)
             return false;
 
         if (tag == SCTAG_END_OF_KEYS) {
+            // Pop the current obj off the stack, since we are done with it and
+            // its children.
             MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
             objs.popBack();
             continue;
         }
 
+        // The input stream contains a sequence of "child" values, whose
+        // interpretation depends on the type of obj. These values can be
+        // anything, and startRead() will push onto 'objs' for any non-leaf
+        // value (i.e., anything that may contain children).
+        //
+        // startRead() will allocate the (empty) object, but note that when
+        // startRead() returns, 'key' is not yet initialized with any of its
+        // properties. Those will be filled in by returning to the head of this
+        // loop, processing the first child obj, and continuing until all
+        // children have been fully created.
+        //
+        // Note that this means the ordering in the stream is a little funky
+        // for things like Map. See the comment above startWrite() for an
+        // example.
         RootedValue key(context());
         if (!startRead(&key))
             return false;
 
         if (key.isNull() && !(obj->is<MapObject>() || obj->is<SetObject>())) {
-            // Backwards compatibility: Null used to indicate
-            // the end of object properties.
+            // Backwards compatibility: Null formerly indicated the end of
+            // object properties.
             objs.popBack();
             continue;
         }
 
+        // Set object: the values between obj header (from startRead()) and
+        // SCTAG_END_OF_KEYS are all interpreted as values to add to the set.
         if (obj->is<SetObject>()) {
             if (!SetObject::add(context(), obj, key))
                 return false;
             continue;
         }
 
+        // Everything else uses a series of key,value,key,value,... Value
+        // objects.
         RootedValue val(context());
         if (!startRead(&val))
             return false;
 
         if (obj->is<MapObject>()) {
+            // For a Map, store those <key,value> pairs in the contained map
+            // data structure.
             if (!MapObject::set(context(), obj, key, val))
                 return false;
         } else {
+            // For any other Object, interpret them as plain properties.
             RootedId id(context());
             if (!ValueToId<CanGC>(context(), key, &id))
                 return false;
