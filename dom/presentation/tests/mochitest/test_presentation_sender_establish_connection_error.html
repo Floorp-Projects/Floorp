@@ -4,12 +4,12 @@
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <head>
   <meta charset="utf-8">
-  <title>Test for startSession errors of B2G Presentation API at sender side</title>
+  <title>Test for connection establishing errors of B2G Presentation API at sender side</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for startSession errors of B2G Presentation API at sender side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for connection establishing errors of B2G Presentation API at sender side</a>
 <script type="application/javascript;version=1.8">
 
 'use strict';
@@ -51,7 +51,7 @@ function testCreateRequestWithEmptyURL() {
   });
 }
 
-function testStartSessionCancelPrompt() {
+function testStartConnectionCancelPrompt() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -60,7 +60,7 @@ function testStartSessionCancelPrompt() {
     });
 
     request.start().then(
-      function(aSession) {
+      function(aConnection) {
         ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
@@ -72,7 +72,7 @@ function testStartSessionCancelPrompt() {
   });
 }
 
-function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit() {
+function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -103,19 +103,19 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit() 
     });
 
     request.start().then(
-      function(aSession) {
+      function(aConnection) {
         ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during starting session.");
+        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
         aResolve();
       }
     );
   });
 }
 
-function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportReady() {
+function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -157,19 +157,19 @@ function testStartSessionUnexpectedControlChannelCloseBeforeDataTransportReady()
     });
 
     request.start().then(
-      function(aSession) {
+      function(aConnection) {
         ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during starting session.");
+        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
         aResolve();
       }
     );
   });
 }
 
-function testStartSessionUnexpectedDataTransportClose() {
+function testStartConnectionUnexpectedDataTransportClose() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -211,12 +211,12 @@ function testStartSessionUnexpectedDataTransportClose() {
     });
 
     request.start().then(
-      function(aSession) {
+      function(aConnection) {
         ok(false, "|start| shouldn't succeed in this case.");
         aReject();
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during starting session.");
+        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
         aResolve();
       }
     );
@@ -238,10 +238,10 @@ function runTests() {
 
   testCreateRequestWithEmptyURL().
   then(setup).
-  then(testStartSessionCancelPrompt).
-  then(testStartSessionUnexpectedControlChannelCloseBeforeDataTransportInit).
-  then(testStartSessionUnexpectedControlChannelCloseBeforeDataTransportReady).
-  then(testStartSessionUnexpectedDataTransportClose).
+  then(testStartConnectionCancelPrompt).
+  then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit).
+  then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady).
+  then(testStartConnectionUnexpectedDataTransportClose).
   then(teardown);
 }
 
