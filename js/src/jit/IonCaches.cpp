@@ -2093,6 +2093,8 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
             return false;
         if (!*emitted && !tryAttachDenseElement(cx, outerScript, ion, obj, idval, emitted))
             return false;
+        if (!*emitted && !tryAttachDenseElementHole(cx, outerScript, ion, obj, idval, emitted))
+            return false;
     }
 
     if (!*emitted)
@@ -3747,7 +3749,7 @@ GetPropertyIC::tryAttachDenseElement(JSContext* cx, HandleScript outerScript, Io
 
 
 /* static */ bool
-GetElementIC::canAttachDenseElementHole(JSObject* obj, const Value& idval, TypedOrValueRegister output)
+GetPropertyIC::canAttachDenseElementHole(JSObject* obj, HandleValue idval, TypedOrValueRegister output)
 {
     if (!idval.isInt32() || idval.toInt32() < 0)
         return false;
@@ -3787,10 +3789,10 @@ GetElementIC::canAttachDenseElementHole(JSObject* obj, const Value& idval, Typed
 
 static bool
 GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
-                         IonScript* ion, JSObject* obj, const Value& idval,
+                         IonScript* ion, JSObject* obj, HandleValue idval,
                          Register object, TypedOrValueRegister index, TypedOrValueRegister output)
 {
-    MOZ_ASSERT(GetElementIC::canAttachDenseElementHole(obj, idval, output));
+    MOZ_ASSERT(GetPropertyIC::canAttachDenseElementHole(obj, idval, output));
 
     Register scratchReg = output.valueReg().scratchReg();
 
@@ -3834,15 +3836,17 @@ GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
     }
 
     // Ensure the index is an int32 value.
-    Register indexReg = scratchReg;
-
-    MOZ_ASSERT(index.hasValue());
-    ValueOperand val = index.valueReg();
-
-    masm.branchTestInt32(Assembler::NotEqual, val, &failures);
-
-    // Unbox the index.
-    masm.unboxInt32(val, indexReg);
+    Register indexReg;
+    if (index.hasValue()) {
+        // Unbox the index.
+        ValueOperand val = index.valueReg();
+        masm.branchTestInt32(Assembler::NotEqual, val, &failures);
+        indexReg = scratchReg;
+        masm.unboxInt32(val, indexReg);
+    } else {
+        MOZ_ASSERT(index.type() == MIRType_Int32);
+        indexReg = index.typedReg().gpr();
+    }
 
     // Make sure index is nonnegative.
     masm.branch32(Assembler::LessThan, indexReg, Imm32(0), &failures);
@@ -3882,12 +3886,23 @@ GenerateDenseElementHole(JSContext* cx, MacroAssembler& masm, IonCache::StubAtta
 }
 
 bool
-GetElementIC::attachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj, const Value& idval)
+GetPropertyIC::tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                         HandleObject obj, HandleValue idval, bool* emitted)
 {
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(!*emitted);
+
+    if (!monitoredResult())
+        return true;
+
+    if (!canAttachDenseElementHole(obj, idval, output()))
+        return true;
+
+    *emitted = true;
+
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     StubAttacher attacher(*this);
-    GenerateDenseElementHole(cx, masm, attacher, ion, obj, idval, object(), index(), output());
+    GenerateDenseElementHole(cx, masm, attacher, ion, obj, idval, object(), id().reg(), output());
 
     return linkAndAttachStub(cx, masm, attacher, ion, "dense hole",
                              JS::TrackedOutcome::ICGetElemStub_DenseHole);
@@ -4217,13 +4232,6 @@ GetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
         if (!attachedStub && cache.monitoredResult() && canAttachGetProp(obj, idval, id)) {
             RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
             if (!cache.attachGetProp(cx, outerScript, ion, obj, idval, name))
-                return false;
-            attachedStub = true;
-        }
-        if (!attachedStub && cache.monitoredResult() &&
-            canAttachDenseElementHole(obj, idval, cache.output()))
-        {
-            if (!cache.attachDenseElementHole(cx, outerScript, ion, obj, idval))
                 return false;
             attachedStub = true;
         }
