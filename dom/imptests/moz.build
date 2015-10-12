@@ -24,7 +24,6 @@ MOCHITEST_MANIFESTS += [
     'failures/html/html/dom/documents/dta/doc.gEBN/mochitest.ini',
     'failures/html/html/dom/documents/dta/mochitest.ini',
     'failures/html/html/obsolete/implreq/oeaaa/mochitest.ini',
-    'failures/html/html/semantics/forms/the-option-element/mochitest.ini',
     'failures/html/html/semantics/forms/the-select-element/mochitest.ini',
     'failures/html/html/semantics/scripting-1/the-script-element/mochitest.ini',
     'failures/html/html/semantics/tabular-data/the-table-element/mochitest.ini',
