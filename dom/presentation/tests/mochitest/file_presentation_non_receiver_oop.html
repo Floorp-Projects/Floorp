@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test for B2G Presentation Session API on a non-receiver page at receiver side (OOP)</title>
+  <title>Test for B2G PresentationReceiver on a non-receiver page at receiver side (OOP)</title>
 </head>
 <body>
 <div id="content"></div>
@@ -26,7 +26,7 @@ function finish() {
   alert('DONE');
 }
 
-function testSessionAvailable() {
+function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
     ok(navigator.presentation, "navigator.presentation should be available in OOP pages.");
     ok(!navigator.presentation.receiver, "Non-receiving OOP pages shouldn't get a presentation receiver instance.");
@@ -34,7 +34,7 @@ function testSessionAvailable() {
   });
 }
 
-testSessionAvailable().
+testConnectionAvailable().
 then(finish);
 
 </script>
