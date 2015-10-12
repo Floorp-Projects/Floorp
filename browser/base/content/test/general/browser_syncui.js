@@ -144,20 +144,23 @@ function checkButtonsStatus(shouldBeActive) {
   }
 }
 
-function* testButtonActions(startNotification, endNotification) {
+function* testButtonActions(startNotification, endNotification, expectActive = true) {
   checkButtonsStatus(false);
   // pretend a sync is starting.
   yield notifyAndPromiseUIUpdated(startNotification);
-  checkButtonsStatus(true);
+  checkButtonsStatus(expectActive);
   // and has stopped
   yield notifyAndPromiseUIUpdated(endNotification);
   checkButtonsStatus(false);
 }
 
 function *doTestButtonActivities() {
-  yield testButtonActions("weave:service:login:start", "weave:service:login:finish");
-  yield testButtonActions("weave:service:login:start", "weave:service:login:error");
+  // logins do not "activate" the spinner/button as they may block and make
+  // the UI look like Sync is never completing.
+  yield testButtonActions("weave:service:login:start", "weave:service:login:finish", false);
+  yield testButtonActions("weave:service:login:start", "weave:service:login:error", false);
 
+  // But notifications for Sync itself should activate it.
   yield testButtonActions("weave:service:sync:start", "weave:service:sync:finish");
   yield testButtonActions("weave:service:sync:start", "weave:service:sync:error");
 
