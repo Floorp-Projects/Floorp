@@ -691,14 +691,10 @@ PopupNotifications.prototype = {
 
     if (!notifications)
       notifications = this._currentNotifications;
-    let notificationsToShow = [];
-    // Filter out notifications that have been dismissed.
-    notificationsToShow = notifications.filter(function (n) {
-      return !n.dismissed && !n.options.neverShow;
-    });
 
-    if (!anchors.size && notificationsToShow.length)
-      anchors = this._getAnchorsForNotifications(notificationsToShow);
+    let haveNotifications = notifications.length > 0;
+    if (!anchors.size && haveNotifications)
+      anchors = this._getAnchorsForNotifications(notifications);
 
     let useIconBox = !!this.iconBox;
     if (useIconBox && anchors.size) {
@@ -710,24 +706,31 @@ PopupNotifications.prototype = {
       }
     }
 
+    // Filter out notifications that have been dismissed.
+    let notificationsToShow = notifications.filter(function (n) {
+      return !n.dismissed && !n.options.neverShow;
+    });
+
     if (useIconBox) {
-      // hide icons of the previous tab.
+      // Hide icons of the previous tab.
       this._hideIcons();
     }
 
-    let haveNotifications = notifications.length > 0;
     if (haveNotifications) {
-      if (useIconBox) {
-        this._showIcons(notifications);
-        this.iconBox.hidden = false;
-      } else if (anchors.size) {
-        this._updateAnchorIcons(notifications, anchors);
-      }
-
       // Also filter out notifications that are for a different anchor.
       notificationsToShow = notificationsToShow.filter(function (n) {
         return anchors.has(n.anchorElement);
       });
+
+      if (useIconBox) {
+        this._showIcons(notifications);
+        this.iconBox.hidden = false;
+        // Make sure that panels can only be attached to anchors of shown
+        // notifications inside an iconBox.
+        anchors = this._getAnchorsForNotifications(notificationsToShow);
+      } else if (anchors.size) {
+        this._updateAnchorIcons(notifications, anchors);
+      }
     }
 
     if (notificationsToShow.length > 0) {
