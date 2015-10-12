@@ -16,6 +16,7 @@
 
 class gfxASurface;
 class gfxDrawable;
+class nsIInputStream;
 class nsIGfxInfo;
 class nsIntRegion;
 class nsIPresShell;
@@ -280,6 +281,17 @@ public:
     static nsCString GetAsDataURI(SourceSurface* aSourceSurface);
     static nsCString GetAsDataURI(DrawTarget* aDT);
     static nsCString GetAsLZ4Base64Str(DataSourceSurface* aSourceSurface);
+
+    static void GetImageBuffer(DataSourceSurface* aSurface,
+                               bool aIsAlphaPremultiplied,
+                               uint8_t** outImageBuffer,
+                               int32_t* outFormat);
+
+    static nsresult GetInputStream(DataSourceSurface* aSurface,
+                                   bool aIsAlphaPremultiplied,
+                                   const char* aMimeType,
+                                   const char16_t* aEncoderOptions,
+                                   nsIInputStream** outStream);
 
     static nsresult ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                                                int32_t feature,

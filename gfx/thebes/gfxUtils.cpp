@@ -12,6 +12,7 @@
 #include "gfxDrawable.h"
 #include "imgIEncoder.h"
 #include "mozilla/Base64.h"
+#include "mozilla/dom/ImageEncoder.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
@@ -1544,6 +1545,69 @@ gfxUtils::CopyAsDataURI(DrawTarget* aDT)
   } else {
     NS_WARNING("Failed to get surface!");
   }
+}
+
+/* static */ void
+gfxUtils::GetImageBuffer(gfx::DataSourceSurface* aSurface,
+                         bool aIsAlphaPremultiplied,
+                         uint8_t** outImageBuffer,
+                         int32_t* outFormat)
+{
+    *outImageBuffer = nullptr;
+    *outFormat = 0;
+
+    DataSourceSurface::MappedSurface map;
+    if (!aSurface->Map(DataSourceSurface::MapType::READ, &map))
+        return;
+
+    uint32_t bufferSize = aSurface->GetSize().width * aSurface->GetSize().height * 4;
+    uint8_t* imageBuffer = new (fallible) uint8_t[bufferSize];
+    if (!imageBuffer) {
+        aSurface->Unmap();
+        return;
+    }
+    memcpy(imageBuffer, map.mData, bufferSize);
+
+    aSurface->Unmap();
+
+    int32_t format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
+    if (!aIsAlphaPremultiplied) {
+        // We need to convert to INPUT_FORMAT_RGBA, otherwise
+        // we are automatically considered premult, and unpremult'd.
+        // Yes, it is THAT silly.
+        // Except for different lossy conversions by color,
+        // we could probably just change the label, and not change the data.
+        gfxUtils::ConvertBGRAtoRGBA(imageBuffer, bufferSize);
+        format = imgIEncoder::INPUT_FORMAT_RGBA;
+    }
+
+    *outImageBuffer = imageBuffer;
+    *outFormat = format;
+}
+
+/* static */ nsresult
+gfxUtils::GetInputStream(gfx::DataSourceSurface* aSurface,
+                         bool aIsAlphaPremultiplied,
+                         const char* aMimeType,
+                         const char16_t* aEncoderOptions,
+                         nsIInputStream** outStream)
+{
+    nsCString enccid("@mozilla.org/image/encoder;2?type=");
+    enccid += aMimeType;
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
+    if (!encoder)
+        return NS_ERROR_FAILURE;
+
+    nsAutoArrayPtr<uint8_t> imageBuffer;
+    int32_t format = 0;
+    GetImageBuffer(aSurface, aIsAlphaPremultiplied, getter_Transfers(imageBuffer), &format);
+    if (!imageBuffer)
+        return NS_ERROR_FAILURE;
+
+    return dom::ImageEncoder::GetInputStream(aSurface->GetSize().width,
+                                             aSurface->GetSize().height,
+                                             imageBuffer, format,
+                                             encoder, aEncoderOptions, outStream);
 }
 
 class GetFeatureStatusRunnable final : public dom::workers::WorkerMainThreadRunnable
