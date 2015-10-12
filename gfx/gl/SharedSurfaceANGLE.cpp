@@ -273,6 +273,138 @@ SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor(layers::SurfaceDescriptor* c
     return true;
 }
 
+class ScopedLockTexture final
+{
+public:
+    explicit ScopedLockTexture(ID3D11Texture2D* texture, bool* succeeded)
+      : mIsLocked(false)
+      , mTexture(texture)
+    {
+        MOZ_ASSERT(mTexture);
+        MOZ_ASSERT(succeeded);
+        *succeeded = false;
+
+        HRESULT hr;
+        mTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mMutex));
+        if (mMutex) {
+            hr = mMutex->AcquireSync(0, 10000);
+            if (hr == WAIT_TIMEOUT) {
+                MOZ_CRASH();
+            }
+
+            if (FAILED(hr)) {
+                NS_WARNING("Failed to lock the texture");
+                return;
+            }
+        }
+
+        ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
+        device->GetImmediateContext(byRef(mDeviceContext));
+
+        mTexture->GetDesc(&mDesc);
+        mDesc.BindFlags = 0;
+        mDesc.Usage = D3D11_USAGE_STAGING;
+        mDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        mDesc.MiscFlags = 0;
+
+        hr = device->CreateTexture2D(&mDesc, nullptr, byRef(mCopiedTexture));
+
+        if (FAILED(hr)) {
+            return;
+        }
+
+        mDeviceContext->CopyResource(mCopiedTexture, mTexture);
+
+        hr = mDeviceContext->Map(mCopiedTexture, 0, D3D11_MAP_READ, 0, &mSubresource);
+        if (FAILED(hr)) {
+            return;
+        }
+
+        *succeeded = true;
+        mIsLocked = true;
+    }
+
+    ~ScopedLockTexture()
+    {
+        mDeviceContext->Unmap(mCopiedTexture, 0);
+        if (mMutex) {
+            HRESULT hr = mMutex->ReleaseSync(0);
+            if (FAILED(hr)) {
+                NS_WARNING("Failed to unlock the texture");
+            }
+        }
+        mIsLocked = false;
+    }
+
+    bool mIsLocked;
+    RefPtr<ID3D11Texture2D> mTexture;
+    RefPtr<ID3D11Texture2D> mCopiedTexture;
+    RefPtr<IDXGIKeyedMutex> mMutex;
+    RefPtr<ID3D11DeviceContext> mDeviceContext;
+    D3D11_TEXTURE2D_DESC mDesc;
+    D3D11_MAPPED_SUBRESOURCE mSubresource;
+};
+
+bool
+SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
+{
+    MOZ_ASSERT(out_surface);
+    RefPtr<ID3D11Texture2D> tex;
+    ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
+    HRESULT hr = device->OpenSharedResource(mShareHandle,
+                                            __uuidof(ID3D11Texture2D),
+                                            (void**)(ID3D11Texture2D**)byRef(tex));
+
+    if (FAILED(hr)) {
+        return false;
+    }
+
+    bool succeeded = false;
+    ScopedLockTexture scopedLock(tex, &succeeded);
+    if (!succeeded) {
+        return false;
+    }
+
+    const uint8_t* data = reinterpret_cast<uint8_t*>(scopedLock.mSubresource.pData);
+    uint32_t srcStride = scopedLock.mSubresource.RowPitch;
+
+    gfx::DataSourceSurface::ScopedMap map(out_surface, gfx::DataSourceSurface::WRITE);
+    if (!map.IsMapped()) {
+        return false;
+    }
+
+    if (map.GetStride() == srcStride) {
+        memcpy(map.GetData(), data, out_surface->GetSize().height * map.GetStride());
+    } else {
+        const uint8_t bytesPerPixel = BytesPerPixel(out_surface->GetFormat());
+        for (int32_t i = 0; i < out_surface->GetSize().height; i++) {
+            memcpy(map.GetData() + i * map.GetStride(),
+                   data + i * srcStride,
+                   bytesPerPixel * out_surface->GetSize().width);
+        }
+    }
+
+    DXGI_FORMAT srcFormat = scopedLock.mDesc.Format;
+    MOZ_ASSERT(srcFormat == DXGI_FORMAT_B8G8R8A8_UNORM ||
+               srcFormat == DXGI_FORMAT_B8G8R8X8_UNORM ||
+               srcFormat == DXGI_FORMAT_R8G8B8A8_UNORM);
+    bool isSrcRGB = srcFormat == DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    gfx::SurfaceFormat destFormat = out_surface->GetFormat();
+    MOZ_ASSERT(destFormat == gfx::SurfaceFormat::R8G8B8X8 ||
+               destFormat == gfx::SurfaceFormat::R8G8B8A8 ||
+               destFormat == gfx::SurfaceFormat::B8G8R8X8 ||
+               destFormat == gfx::SurfaceFormat::B8G8R8A8);
+    bool isDestRGB = destFormat == gfx::SurfaceFormat::R8G8B8X8 ||
+                     destFormat == gfx::SurfaceFormat::R8G8B8A8;
+
+    if (isSrcRGB != isDestRGB) {
+        SwapRAndBComponents(out_surface);
+    }
+
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Factory
 

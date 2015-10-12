@@ -34,6 +34,7 @@ class HTMLCanvasElement;
 namespace layers {
 
 class CanvasClient;
+class TextureClient;
 
 /**
  * Since HTMLCanvasElement and OffscreenCanvas are not thread-safe, we create
@@ -86,6 +87,12 @@ public:
   // in the DataSourceSurface.
   // Can be called in main thread only.
   already_AddRefed<gfx::DataSourceSurface> GetSurface();
+
+  // For SharedSurface_Basic case, before the frame sending to the compositor,
+  // we readback it to a texture client because SharedSurface_Basic cannot shared.
+  // We don't want to readback it again here, so just copy the content of that
+  // texture client here to avoid readback again.
+  void CopyFromTextureClient(TextureClient *aClient);
 
   // Readback current WebGL's content and convert it to InputStream. This
   // function called GetSurface implicitly and GetSurface handles only get
@@ -142,6 +149,12 @@ private:
   // need to protect this member.
   CanvasClient* mCanvasClient;
 
+  // When backend is LAYER_BASIC and SharedSurface type is Basic.
+  // CanvasClient will readback the GLContext to a TextureClient
+  // in order to send frame to compositor. To avoid readback again,
+  // we copy from this TextureClient to this mSurfaceForBasic directly
+  // by calling CopyFromTextureClient().
+  RefPtr<gfx::DataSourceSurface> mSurfaceForBasic;
 
   // Protect non thread-safe objects.
   Mutex mMutex;
