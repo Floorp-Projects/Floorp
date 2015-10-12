@@ -16,6 +16,7 @@
 
 class gfxASurface;
 class gfxDrawable;
+class nsIGfxInfo;
 class nsIntRegion;
 class nsIPresShell;
 
@@ -279,6 +280,10 @@ public:
     static nsCString GetAsDataURI(SourceSurface* aSourceSurface);
     static nsCString GetAsDataURI(DrawTarget* aDT);
     static nsCString GetAsLZ4Base64Str(DataSourceSurface* aSourceSurface);
+
+    static nsresult ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                                               int32_t feature,
+                                               int32_t* status);
 
     /**
      * Copy to the clipboard as a PNG encoded Data URL.
