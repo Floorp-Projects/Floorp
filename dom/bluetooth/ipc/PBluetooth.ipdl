@@ -188,6 +188,45 @@ struct ReplyTovCardListingRequest
   uint16_t phonebookSize;
 };
 
+struct ReplyToFolderListingRequest
+{
+  uint16_t masId;
+  nsString folderList;
+};
+
+struct ReplyToMessagesListingRequest
+{
+  uint16_t masId;
+  PBlob blob;
+  bool newMessage;
+  nsString timeStamp;
+  uint16_t size;
+};
+
+struct ReplyToGetMessageRequest
+{
+  uint16_t masId;
+  PBlob blob;
+};
+
+struct ReplyToSetMessageStatusRequest
+{
+  uint16_t masId;
+  bool messageStatus;
+};
+
+struct ReplyToSendMessageRequest
+{
+  uint16_t masId;
+  bool messageStatus;
+};
+
+struct ReplyToMessageUpdateRequest
+{
+  uint16_t masId;
+  bool messageStatus;
+};
+
 struct AnswerWaitingCallRequest
 {
 };
@@ -411,6 +450,12 @@ union Request
   ReplyTovCardPullingRequest;
   ReplyToPhonebookPullingRequest;
   ReplyTovCardListingRequest;
+  ReplyToFolderListingRequest;
+  ReplyToMessagesListingRequest;
+  ReplyToGetMessageRequest;
+  ReplyToSetMessageStatusRequest;
+  ReplyToSendMessageRequest;
+  ReplyToMessageUpdateRequest;
   AnswerWaitingCallRequest;
   IgnoreWaitingCallRequest;
   ToggleCallsRequest;

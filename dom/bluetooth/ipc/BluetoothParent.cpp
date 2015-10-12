@@ -252,6 +252,18 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_ReplyToPhonebookPullingRequest());
     case Request::TReplyTovCardListingRequest:
       return actor->DoRequest(aRequest.get_ReplyTovCardListingRequest());
+    case Request::TReplyToFolderListingRequest:
+      return actor->DoRequest(aRequest.get_ReplyToFolderListingRequest());
+    case Request::TReplyToMessagesListingRequest:
+      return actor->DoRequest(aRequest.get_ReplyToMessagesListingRequest());
+    case Request::TReplyToGetMessageRequest:
+      return actor->DoRequest(aRequest.get_ReplyToGetMessageRequest());
+    case Request::TReplyToSetMessageStatusRequest:
+      return actor->DoRequest(aRequest.get_ReplyToSetMessageStatusRequest());
+    case Request::TReplyToSendMessageRequest:
+      return actor->DoRequest(aRequest.get_ReplyToSendMessageRequest());
+    case Request::TReplyToMessageUpdateRequest:
+      return actor->DoRequest(aRequest.get_ReplyToMessageUpdateRequest());
 #ifdef MOZ_B2G_RIL
     case Request::TAnswerWaitingCallRequest:
       return actor->DoRequest(aRequest.get_AnswerWaitingCallRequest());
@@ -773,6 +785,83 @@ BluetoothRequestParent::DoRequest(const ReplyTovCardListingRequest& aRequest)
                                 (BlobChild*)aRequest.blobChild(),
                                 aRequest.phonebookSize(),
                                 mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToFolderListingRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToFolderListingRequest);
+
+  mService->ReplyToMapFolderListing(aRequest.masId(),
+                                           aRequest.folderList(),
+                                           mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToMessagesListingRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToMessagesListingRequest);
+
+  mService->ReplyToMapMessagesListing((BlobParent*)aRequest.blobParent(),
+                                             (BlobChild*)aRequest.blobChild(),
+                                             aRequest.masId(),
+                                             aRequest.newMessage(),
+                                             aRequest.timeStamp(),
+                                             aRequest.size(),
+                                             mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToGetMessageRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToGetMessageRequest);
+
+  mService->ReplyToMapGetMessage((BlobParent*)aRequest.blobParent(),
+                                     (BlobChild*)aRequest.blobChild(),
+                                     aRequest.masId(),
+                                     mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToSetMessageStatusRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToSetMessageStatusRequest);
+
+  mService->ReplyToMapSetMessageStatus(aRequest.masId(),
+                                       aRequest.messageStatus(),
+                                       mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToSendMessageRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToSendMessageRequest);
+
+  mService->ReplyToMapSendMessage(aRequest.masId(),
+                                  aRequest.messageStatus(),
+                                  mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ReplyToMessageUpdateRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TReplyToMessageUpdateRequest);
+
+  mService->ReplyToMapMessageUpdate(aRequest.masId(),
+                                    aRequest.messageStatus(),
+                                    mReplyRunnable.get());
   return true;
 }
 
