@@ -118,6 +118,7 @@ function contentHandlerWithSignature(metadata, response)
 var httpserver = null;
 var originalPref = false;
 var originalDevMode = false;
+var originalSignedAppEnabled = false;
 
 function run_test()
 {
@@ -131,8 +132,10 @@ function run_test()
   // Enable the feature and save the original pref value
   originalPref = Services.prefs.getBoolPref("network.http.enable-packaged-apps");
   originalDevMode = Services.prefs.getBoolPref("network.http.packaged-apps-developer-mode");
+  originalSignedAppEnabled = Services.prefs.getBoolPref("network.http.packaged-signed-apps-enabled");
   Services.prefs.setBoolPref("network.http.enable-packaged-apps", true);
   Services.prefs.setBoolPref("network.http.packaged-apps-developer-mode", false);
+  Services.prefs.setBoolPref("network.http.packaged-signed-apps-enabled", true);
   do_register_cleanup(reset_pref);
 
   add_test(test_channel);
@@ -206,4 +209,5 @@ function reset_pref() {
   // Set the pref to its original value
   Services.prefs.setBoolPref("network.http.enable-packaged-apps", originalPref);
   Services.prefs.setBoolPref("network.http.packaged-apps-developer-mode", originalDevMode);
+  Services.prefs.setBoolPref("network.http.packaged-signed-apps-enabled", originalSignedAppEnabled);
 }
