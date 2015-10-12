@@ -2831,46 +2831,6 @@ ScrollFrameHelper::IsUsingDisplayPort(const nsDisplayListBuilder* aBuilder) cons
     nsLayoutUtils::GetDisplayPort(mOuter->GetContent());
 }
 
-bool
-ScrollFrameHelper::WillUseDisplayPort(const nsDisplayListBuilder* aBuilder) const
-{
-  bool wantsDisplayPort = nsLayoutUtils::WantDisplayPort(aBuilder, mOuter);
-
-  if (mIsRoot && gfxPrefs::LayoutUseContainersForRootFrames()) {
-    // This condition mirrors the calls to GetOrMaybeCreateDisplayPort in
-    // nsSubDocumentFrame::BuildDisplayList and nsLayoutUtils::PaintFrame.
-    if (wantsDisplayPort) {
-      return true;
-    }
-  }
-
-  // The following conditions mirror the checks in BuildDisplayList
-
-  if (IsUsingDisplayPort(aBuilder)) {
-    return true;
-  }
-
-  if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
-    return false;
-  }
-
-  return wantsDisplayPort;
-}
-
-bool
-ScrollFrameHelper::WillBuildScrollableLayer(const nsDisplayListBuilder* aBuilder) const
-{
-  if (WillUseDisplayPort(aBuilder)) {
-    return true;
-  }
-
-  if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
-    return false;
-  }
-
-  return nsContentUtils::HasScrollgrab(mOuter->GetContent());
-}
-
 void
 ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
@@ -2912,7 +2872,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     mOuter->PresContext()->IsRootContentDocument();
 
   bool usingDisplayPort = IsUsingDisplayPort(aBuilder);
-  mShouldBuildScrollableLayer = WillBuildScrollableLayer(aBuilder);
 
   if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
     // Root scrollframes have FrameMetrics and clipping on their container
@@ -2922,7 +2881,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (usingDisplayPort) {
       // There is a display port for this frame, so we want to appear as having
       // active scrolling, so that animated geometry roots are assigned correctly.
-      MOZ_ASSERT(mShouldBuildScrollableLayer);
+      mShouldBuildScrollableLayer = true;
       mIsScrollableLayerInRootContainer = true;
     }
 
@@ -3008,7 +2967,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // document.
   // If the element is marked 'scrollgrab', also force building of a layer
   // so that APZ can implement scroll grabbing.
-  MOZ_ASSERT(mShouldBuildScrollableLayer == (usingDisplayPort || nsContentUtils::HasScrollgrab(mOuter->GetContent())));
+  mShouldBuildScrollableLayer = usingDisplayPort || nsContentUtils::HasScrollgrab(mOuter->GetContent());
   bool shouldBuildLayer = false;
   if (mShouldBuildScrollableLayer) {
     shouldBuildLayer = true;
