@@ -24,7 +24,7 @@ loader.lazyRequireGetter(this, "EventEmitter",
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "system",
-  "devtools/shared/shared/system");
+  "devtools/shared/system");
 
 // Logic modules
 
@@ -35,7 +35,7 @@ loader.lazyRequireGetter(this, "PerformanceTelemetry",
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
   "devtools/client/performance/modules/markers", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/utils");
+  "devtools/shared/performance/recording-utils");
 loader.lazyRequireGetter(this, "GraphsController",
   "devtools/client/performance/modules/widgets/graphs", true);
 loader.lazyRequireGetter(this, "OptimizationsGraph",

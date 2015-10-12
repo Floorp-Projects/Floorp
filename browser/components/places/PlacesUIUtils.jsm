@@ -170,7 +170,7 @@ this.PlacesUIUtils = {
     let annos = [];
     if (aData.annos) {
       annos = aData.annos.filter(function (aAnno) {
-        return this._copyableAnnotations.indexOf(aAnno.name) != -1;
+        return this._copyableAnnotations.includes(aAnno.name);
       }, this);
     }
 
@@ -282,7 +282,7 @@ this.PlacesUIUtils = {
     let annos = [];
     if (aData.annos) {
       annos = aData.annos.filter(function (aAnno) {
-        return this._copyableAnnotations.indexOf(aAnno.name) != -1;
+        return this._copyableAnnotations.includes(aAnno.name);
       }, this);
     }
 
@@ -323,7 +323,7 @@ this.PlacesUIUtils = {
         else if (aAnno.name == PlacesUtils.LMANNO_SITEURI) {
           siteURI = PlacesUtils._uri(aAnno.value);
         }
-        return this._copyableAnnotations.indexOf(aAnno.name) != -1
+        return this._copyableAnnotations.includes(aAnno.name)
       }, this);
     }
 
@@ -411,11 +411,11 @@ this.PlacesUIUtils = {
    *          move/insert command.
    */
   getTransactionForData: function(aData, aType, aNewParentGuid, aIndex, aCopy) {
-    if (this.SUPPORTED_FLAVORS.indexOf(aData.type) == -1)
+    if (!this.SUPPORTED_FLAVORS.includes(aData.type))
       throw new Error(`Unsupported '${aData.type}' data type`);
 
     if ("itemGuid" in aData) {
-      if (this.PLACES_FLAVORS.indexOf(aData.type) == -1)
+      if (!this.PLACES_FLAVORS.includes(aData.type))
         throw new Error (`itemGuid unexpectedly set on ${aData.type} data`);
 
       let info = { guid: aData.itemGuid
@@ -466,7 +466,7 @@ this.PlacesUIUtils = {
     // a folder picker or not, since it needs more horizontal space than the
     // other controls.
     let hasFolderPicker = !("hiddenRows" in aInfo) ||
-                          aInfo.hiddenRows.indexOf("folderPicker") == -1;
+                          !aInfo.hiddenRows.includes("folderPicker");
     // Use a different chrome url to persist different sizes.
     let dialogURL = hasFolderPicker ?
                     "chrome://browser/content/places/bookmarkProperties2.xul" :
@@ -1045,7 +1045,7 @@ this.PlacesUIUtils = {
 
         // Check that all queries have valid parents.
         let parentId = bs.getFolderIdForItem(query.itemId);
-        if (items.indexOf(parentId) == -1 && parentId != leftPaneRoot) {
+        if (!items.includes(parentId) && parentId != leftPaneRoot) {
           // The parent is not part of the left pane, bail out and create a new
           // left pane root.
           corrupt = true;

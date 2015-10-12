@@ -172,7 +172,7 @@
             var containerURI = container.uri;
             if (containerURI == placeURI)
               return container;
-            if (nodesURIChecked.indexOf(containerURI) != -1)
+            if (nodesURIChecked.includes(containerURI))
               return null;
 
             // never check the contents of the same query

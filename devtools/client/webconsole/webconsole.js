@@ -25,7 +25,7 @@ loader.lazyGetter(this, "ConsoleOutput",
 loader.lazyGetter(this, "Messages",
                   () => require("devtools/client/webconsole/console-output").Messages);
 loader.lazyGetter(this, "asyncStorage",
-                  () => require("devtools/shared/shared/async-storage"));
+                  () => require("devtools/shared/async-storage"));
 loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");

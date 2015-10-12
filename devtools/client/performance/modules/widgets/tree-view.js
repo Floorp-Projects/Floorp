@@ -376,7 +376,10 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   _onUrlClick: function(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.root.emit("link", this);
+    // Only emit for left click events
+    if (e.button === 0) {
+      this.root.emit("link", this);
+    }
   },
 });
 

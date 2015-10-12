@@ -423,13 +423,10 @@ var gSyncUI = {
     // First handle "activity" only.
     switch (topic) {
       case "weave:service:sync:start":
-      case "weave:service:login:start":
         this.onActivityStart();
         break;
       case "weave:service:sync:finish":
       case "weave:service:sync:error":
-      case "weave:service:login:finish":
-      case "weave:service:login:error":
         this.onActivityStop();
         break;
     }
@@ -441,6 +438,8 @@ var gSyncUI = {
         break;
       case "weave:ui:sync:error":
       case "weave:service:setup-complete":
+      case "weave:service:login:finish":
+      case "weave:service:login:start":
         this.updateUI();
         break;
       case "weave:ui:login:error":
