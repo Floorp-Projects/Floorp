@@ -9,8 +9,6 @@
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(WebGLObserver, nsIObserver)
-
 NS_IMETHODIMP
 WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* handleReport,
                                    nsISupports* data, bool)
