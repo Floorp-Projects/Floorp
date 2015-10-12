@@ -457,9 +457,17 @@ BluetoothPbapManager::PullvCardListing(const ObexHeaderSet& aHeader)
 
   InfallibleTArray<BluetoothNamedValue> data;
 
-  nsString name;
-  aHeader.GetName(name);
-  AppendNamedValue(data, "name", name);
+  nsString folderName;
+  aHeader.GetName(folderName);
+
+  // Section 5.3.3 "Name", PBAP 1.2
+  // ... PullvCardListing function uses relative paths. An empty name header may
+  // be sent to retrieve the vCard Listing object of the current folder.
+  nsString folderPath = mCurrentPath;
+  if (!folderName.IsEmpty()) {
+    folderPath += NS_LITERAL_STRING("/") + folderName;
+  }
+  AppendNamedValue(data, "name", folderPath);
 
   AppendNamedValueByTagId(aHeader, data, AppParameterTag::Order);
   AppendNamedValueByTagId(aHeader, data, AppParameterTag::SearchValue);
