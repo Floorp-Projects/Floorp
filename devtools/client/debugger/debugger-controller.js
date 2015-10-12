@@ -763,14 +763,16 @@ StackFrames.prototype = {
     DebuggerView.StackFrames.empty();
 
     for (let frame of this.activeThread.cachedFrames) {
-      let { depth, source, where: { line } } = frame;
+      let { depth, source, where: { line, column } } = frame;
 
       let isBlackBoxed = source ? this.activeThread.source(source).isBlackBoxed : false;
-      DebuggerView.StackFrames.addFrame(frame, line, depth, isBlackBoxed);
+      DebuggerView.StackFrames.addFrame(frame, line, column, depth, isBlackBoxed);
     }
 
     DebuggerView.StackFrames.selectedDepth = Math.max(this.currentFrameDepth, 0);
     DebuggerView.StackFrames.dirty = this.activeThread.moreFrames;
+
+    DebuggerView.StackFrames.addCopyContextMenu();
 
     window.emit(EVENTS.AFTER_FRAMES_REFILLED);
   },
