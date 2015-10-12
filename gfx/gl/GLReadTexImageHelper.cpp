@@ -533,8 +533,8 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 #endif
 }
 
-static already_AddRefed<DataSourceSurface>
-YInvertImageSurface(DataSourceSurface* aSurf)
+already_AddRefed<gfx::DataSourceSurface>
+YInvertImageSurface(gfx::DataSourceSurface* aSurf)
 {
     RefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),

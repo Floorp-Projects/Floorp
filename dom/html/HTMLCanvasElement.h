@@ -18,6 +18,7 @@
 
 #include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/layers/LayersTypes.h"
 
 class nsICanvasRenderingContextInternal;
 class nsITimerCallback;
@@ -330,11 +331,14 @@ public:
 
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
+  layers::LayersBackend GetCompositorBackendType() const;
+
   void OnVisibilityChange();
 
   void OnMemoryPressure();
 
   static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
+  static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
 
 protected:
   virtual ~HTMLCanvasElement();
@@ -360,6 +364,7 @@ protected:
 
   AsyncCanvasRenderer* GetAsyncCanvasRenderer();
 
+  bool mResetLayer;
   nsRefPtr<HTMLCanvasElement> mOriginalCanvas;
   nsRefPtr<PrintCallback> mPrintCallback;
   nsRefPtr<HTMLCanvasPrintState> mPrintState;
