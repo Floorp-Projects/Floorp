@@ -51,6 +51,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "sessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionWorker",
   "resource:///modules/sessionstore/SessionWorker.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
+  "resource:///modules/sessionstore/SessionStore.jsm");
 
 const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";
 const PREF_MAX_UPGRADE_BACKUPS = "browser.sessionstore.upgradeBackup.maxUpgradeBackups";
@@ -199,6 +201,12 @@ var SessionFileInternal = {
         let startMs = Date.now();
         let source = yield OS.File.read(path, { encoding: "utf-8" });
         let parsed = JSON.parse(source);
+
+        if (!SessionStore.isFormatVersionCompatible(parsed.version || ["sessionrestore", 0] /*fallback for old versions*/)) {
+          // Skip sessionstore files that we don't understand.
+          Cu.reportError("Cannot extract data from Session Restore file " + path + ". Wrong format/version: " + JSON.stringify(parsed.version) + ".");
+          continue;
+        }
         result = {
           origin: key,
           source: source,

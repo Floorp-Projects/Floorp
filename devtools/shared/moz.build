@@ -20,19 +20,20 @@ DIRS += [
     'qrcode',
     'security',
     'sourcemap',
-    'shared',
     'shims',
     'styleinspector',
-    'tern',
     'touch',
     'transport',
-    'webconsole'
+    'webconsole',
+    'worker',
 ]
 
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 DevToolsModules(
+    'async-storage.js',
     'async-utils.js',
     'Console.jsm',
     'content-observer.js',
@@ -41,8 +42,9 @@ DevToolsModules(
     'DevToolsUtils.js',
     'event-emitter.js',
     'event-parsers.js',
+    'indentation.js',
     'Loader.jsm',
     'output-parser.js',
     'path.js',
-    'worker-loader.js',
+    'system.js',
 )
