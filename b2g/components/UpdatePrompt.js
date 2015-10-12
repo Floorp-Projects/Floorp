@@ -165,6 +165,8 @@ UpdatePrompt.prototype = {
   },
   _pendingUpdateAvailablePackageInfo: null,
   _isPendingUpdateReady: false,
+  _updateErrorQueue: [ ],
+  _receivedUpdatePromptReady: false,
 
   // nsISystemUpdateProvider
   checkForUpdate: function() {
@@ -320,6 +322,19 @@ UpdatePrompt.prototype = {
     this.waitForIdle();
   },
 
+  storeUpdateError: function UP_storeUpdateError(aUpdate) {
+    log("Storing update error for later use");
+    this._updateErrorQueue.push(aUpdate);
+  },
+
+  sendStoredUpdateError: function UP_sendStoredUpdateError() {
+    log("Sending stored update error");
+    this._updateErrorQueue.forEach(aUpdate => {
+      this.sendUpdateEvent("update-error", aUpdate);
+    });
+    this._updateErrorQueue = [ ];
+  },
+
   showUpdateError: function UP_showUpdateError(aUpdate) {
     log("Update error, state: " + aUpdate.state + ", errorCode: " +
         aUpdate.errorCode);
@@ -327,7 +342,12 @@ UpdatePrompt.prototype = {
       this._systemUpdateListener.onError("update-error: " + aUpdate.errorCode + " " + aUpdate.statusText);
     }
 
-    this.sendUpdateEvent("update-error", aUpdate);
+    if (!this._receivedUpdatePromptReady) {
+      this.storeUpdateError(aUpdate);
+    } else {
+      this.sendUpdateEvent("update-error", aUpdate);
+    }
+
     this.setUpdateStatus(aUpdate.statusText);
   },
 
@@ -600,6 +620,10 @@ UpdatePrompt.prototype = {
         break;
       case "update-prompt-apply-result":
         this.handleApplyPromptResult(detail);
+        break;
+      case "update-prompt-ready":
+        this._receivedUpdatePromptReady = true;
+        this.sendStoredUpdateError();
         break;
     }
   },

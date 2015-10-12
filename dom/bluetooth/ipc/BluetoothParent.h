@@ -221,6 +221,24 @@ protected:
   bool
   DoRequest(const ReplyTovCardListingRequest& aRequest);
 
+  bool
+  DoRequest(const ReplyToFolderListingRequest& aRequest);
+
+  bool
+  DoRequest(const ReplyToMessagesListingRequest& aRequest);
+
+  bool
+  DoRequest(const ReplyToGetMessageRequest& aRequest);
+
+  bool
+  DoRequest(const ReplyToSetMessageStatusRequest& aRequest);
+
+  bool
+  DoRequest(const ReplyToSendMessageRequest& aRequest);
+
+  bool
+  DoRequest(const ReplyToMessageUpdateRequest& aRequest);
+
 #ifdef MOZ_B2G_RIL
   bool
   DoRequest(const AnswerWaitingCallRequest& aRequest);

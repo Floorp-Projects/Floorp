@@ -426,6 +426,88 @@ BluetoothServiceChildProcess::ReplyTovCardListing(
   MOZ_CRASH("This should never be called!");
 }
 
+void
+BluetoothServiceChildProcess::ReplyToMapFolderListing(long aMasId,
+  const nsAString& aFolderList,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              ReplyToFolderListingRequest(aMasId, nsString(aFolderList)));
+}
+
+void
+BluetoothServiceChildProcess::ReplyToMapMessagesListing(BlobParent* aBlobParent,
+  BlobChild* aBlobChild,
+  long aMasId,
+  bool aNewMessage,
+  const nsAString& aTimestamp,
+  int aSize,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+              ReplyToMessagesListingRequest(aMasId, nullptr, aBlobChild,
+                                            aNewMessage, nsString(aTimestamp), aSize));
+}
+
+void
+BluetoothServiceChildProcess::ReplyToMapMessagesListing(long aMasId,
+  Blob* aBlob,
+  bool aNewMessage,
+  const nsAString& aTimestamp,
+  int aSize,
+  BluetoothReplyRunnable* aRunnable)
+{
+  // Parent-process-only method
+  MOZ_CRASH("This should never be called!");
+}
+
+
+void
+BluetoothServiceChildProcess::ReplyToMapGetMessage(BlobParent* aBlobParent,
+  BlobChild* aBlobChild,
+  long aMasId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    ReplyToGetMessageRequest(aMasId, nullptr, aBlobChild));
+}
+
+void
+BluetoothServiceChildProcess::ReplyToMapGetMessage(Blob* aBlob,
+  long aMasId,
+  BluetoothReplyRunnable* aRunnable)
+{
+  // Parent-process-only method
+  MOZ_CRASH("This should never be called!");
+}
+
+void
+BluetoothServiceChildProcess::ReplyToMapSetMessageStatus(long aMasId,
+  bool aStatus,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    ReplyToSetMessageStatusRequest(aMasId, aStatus));
+}
+
+void
+BluetoothServiceChildProcess::ReplyToMapSendMessage(long aMasId,
+  bool aStatus,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    ReplyToSendMessageRequest(aMasId, aStatus));
+}
+
+void
+BluetoothServiceChildProcess::ReplyToMapMessageUpdate(long aMasId,
+  bool aStatus,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    ReplyToMessageUpdateRequest(aMasId, aStatus));
+}
+
 #ifdef MOZ_B2G_RIL
 void
 BluetoothServiceChildProcess::AnswerWaitingCall(

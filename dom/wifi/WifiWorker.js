@@ -1432,6 +1432,14 @@ var WifiManager = (function() {
                               ? wifiCommand.getConnectionInfoICS
                               : wifiCommand.getConnectionInfoGB;
 
+  manager.ensureSupplicantDetached = aCallback => {
+    if (!manager.enabled) {
+      aCallback();
+      return;
+    }
+    wifiCommand.closeSupplicantConnection(aCallback);
+  };
+
   manager.isHandShakeState = function(state) {
     switch (state) {
       case "AUTHENTICATING":
@@ -3820,10 +3828,14 @@ WifiWorker.prototype = {
       break;
 
     case "xpcom-shutdown":
-      let wifiService = Cc["@mozilla.org/wifi/service;1"].getService(Ci.nsIWifiProxyService);
-      wifiService.shutdown();
-      let wifiCertService = Cc["@mozilla.org/wifi/certservice;1"].getService(Ci.nsIWifiCertService);
-      wifiCertService.shutdown();
+      // Ensure the supplicant is detached from B2G to avoid XPCOM shutdown
+      // blocks forever.
+      WifiManager.ensureSupplicantDetached(() => {
+        let wifiService = Cc["@mozilla.org/wifi/service;1"].getService(Ci.nsIWifiProxyService);
+        wifiService.shutdown();
+        let wifiCertService = Cc["@mozilla.org/wifi/certservice;1"].getService(Ci.nsIWifiCertService);
+        wifiCertService.shutdown();
+      });
       break;
     }
   },
