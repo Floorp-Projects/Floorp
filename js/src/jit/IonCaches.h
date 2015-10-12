@@ -389,6 +389,9 @@ class GetPropertyIC : public IonCache
     size_t locationsIndex_;
     size_t numLocations_;
 
+    static const size_t MAX_FAILED_UPDATES = 16;
+    uint16_t failedUpdates_;
+
     bool monitoredResult_ : 1;
     bool allowDoubleResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
@@ -413,6 +416,7 @@ class GetPropertyIC : public IonCache
         output_(output),
         locationsIndex_(0),
         numLocations_(0),
+        failedUpdates_(0),
         monitoredResult_(monitoredResult),
         allowDoubleResult_(allowDoubleResult),
         hasTypedArrayLengthStub_(false),
@@ -498,6 +502,8 @@ class GetPropertyIC : public IonCache
     bool allowGetters() const {
         return monitoredResult() && !idempotent();
     }
+
+    void maybeDisable(bool emitted);
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
