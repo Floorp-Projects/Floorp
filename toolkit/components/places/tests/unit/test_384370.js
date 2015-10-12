@@ -168,6 +168,6 @@ function testTags() {
     do_print("Test tags for " + uri.spec + ": " + tags + "\n");
     let foundTags = PlacesUtils.tagging.getTagsForURI(uri);
     Assert.equal(foundTags.length, tags.length);
-    Assert.ok(tags.every(tag => foundTags.indexOf(tag) != -1));
+    Assert.ok(tags.every(tag => foundTags.includes(tag)));
   }
 }

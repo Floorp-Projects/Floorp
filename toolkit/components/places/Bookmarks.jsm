@@ -146,7 +146,7 @@ var Bookmarks = Object.freeze({
              , validIf: b => b.type == this.TYPE_BOOKMARK }
       , parentGuid: { required: true }
       , title: { validIf: b => [ this.TYPE_BOOKMARK
-                               , this.TYPE_FOLDER ].indexOf(b.type) != -1 }
+                               , this.TYPE_FOLDER ].includes(b.type) }
       , dateAdded: { defaultValue: time
                    , validIf: b => !b.lastModified ||
                                     b.dateAdded <= b.lastModified }
@@ -254,7 +254,7 @@ var Bookmarks = Object.freeze({
       updateInfo = validateBookmarkObject(updateInfo,
         { url: { validIf: () => item.type == this.TYPE_BOOKMARK }
         , title: { validIf: () => [ this.TYPE_BOOKMARK
-                                  , this.TYPE_FOLDER ].indexOf(item.type) != -1 }
+                                  , this.TYPE_FOLDER ].includes(item.type) }
         , lastModified: { defaultValue: new Date()
                         , validIf: b => b.lastModified >= item.dateAdded }
         });
@@ -278,7 +278,7 @@ var Bookmarks = Object.freeze({
                SELECT guid FROM moz_bookmarks
                WHERE id IN descendants
               `, { id: item._id, type: this.TYPE_FOLDER });
-            if ([r.getResultByName("guid") for (r of rows)].indexOf(updateInfo.parentGuid) != -1)
+            if ([r.getResultByName("guid") for (r of rows)].includes(updateInfo.parentGuid))
               throw new Error("Cannot insert a folder into itself or one of its descendants");
           }
 
@@ -384,7 +384,7 @@ var Bookmarks = Object.freeze({
 
     // Disallow removing the root folders.
     if ([this.rootGuid, this.menuGuid, this.toolbarGuid, this.unfiledGuid,
-         this.tagsGuid].indexOf(info.guid) != -1) {
+         this.tagsGuid].includes(info.guid)) {
       throw new Error("It's not possible to remove Places root folders.");
     }
 
@@ -1183,7 +1183,7 @@ const VALIDATORS = Object.freeze({
   type: simpleValidateFunc(v => Number.isInteger(v) &&
                                 [ Bookmarks.TYPE_BOOKMARK
                                 , Bookmarks.TYPE_FOLDER
-                                , Bookmarks.TYPE_SEPARATOR ].indexOf(v) != -1),
+                                , Bookmarks.TYPE_SEPARATOR ].includes(v)),
   title: v => {
     simpleValidateFunc(val => val === null || typeof(val) == "string").call(this, v);
     if (!v)

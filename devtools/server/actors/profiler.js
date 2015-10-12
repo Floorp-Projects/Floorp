@@ -7,7 +7,7 @@
 const { Cu } = require("chrome");
 const protocol = require("devtools/server/protocol");
 const { custom, method, RetVal, Arg, Option, types } = protocol;
-const { Profiler } = require("devtools/shared/shared/profiler");
+const { Profiler } = require("devtools/server/performance/profiler");
 const { actorBridge } = require("devtools/server/actors/common");
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
@@ -30,10 +30,10 @@ types.addType("profiler-data", {
 });
 
 /**
- * This actor wraps the Profiler module at devtools/shared/shared/profiler.js
+ * This actor wraps the Profiler module at devtools/server/performance/profiler.js
  * and provides RDP definitions.
  *
- * @see devtools/shared/shared/profiler.js for documentation.
+ * @see devtools/server/performance/profiler.js for documentation.
  */
 var ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
   typeName: "profiler",

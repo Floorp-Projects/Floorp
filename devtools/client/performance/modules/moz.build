@@ -10,5 +10,6 @@ DIRS += [
 
 DevToolsModules(
     'global.js',
+    'io.js',
     'markers.js',
 )

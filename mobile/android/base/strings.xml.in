@@ -482,10 +482,6 @@
   <string name="bookmarkdefaults_title_support">&bookmarks_support;</string>
   <string name="bookmarkdefaults_url_support">https://support.mozilla.org/products/mobile</string>
 
-  <!-- Icon is automatically generated from R.drawable.bookmarkdefaults_favicon_marketplace -->
-  <string name="bookmarkdefaults_title_marketplace">&bookmarks_marketplace;</string>
-  <string name="bookmarkdefaults_url_marketplace">https://marketplace.firefox.com/</string>
-
   <string name="bookmarkdefaults_title_restricted_webmaker">&bookmarks_restricted_webmaker;</string>
   <string name="bookmarkdefaults_url_restricted_webmaker">https://webmaker.org/</string>
 
