@@ -1293,14 +1293,6 @@ thisTypeSpecialization()
 
 } // namespace
 
-TypePolicy*
-MGetElementCache::thisTypePolicy()
-{
-    if (type() == MIRType_Value)
-        return PolicyV.thisTypePolicy();
-    return PolicyT.thisTypePolicy();
-}
-
 // For each MIR Instruction, this macro define the |typePolicy| method which is
 // using the |thisTypePolicy| method.  The |thisTypePolicy| method is either a
 // member of the MIR Instruction, such as with MGetElementCache, a member

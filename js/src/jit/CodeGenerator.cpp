@@ -8567,62 +8567,6 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetProperty
 }
 
 void
-CodeGenerator::addGetElementCache(LInstruction* ins, Register obj, TypedOrValueRegister index,
-                                  TypedOrValueRegister output, bool monitoredResult,
-                                  jsbytecode* profilerLeavePc)
-{
-    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
-    GetElementIC cache(liveRegs, obj, index, output, monitoredResult);
-    cache.setProfilerLeavePC(profilerLeavePc);
-    addCache(ins, allocateCache(cache));
-}
-
-void
-CodeGenerator::visitGetElementCacheV(LGetElementCacheV* ins)
-{
-    Register obj = ToRegister(ins->object());
-    TypedOrValueRegister index = TypedOrValueRegister(ToValue(ins, LGetElementCacheV::Index));
-    TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
-    const MGetElementCache* mir = ins->mir();
-
-    addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
-                       mir->profilerLeavePc());
-}
-
-void
-CodeGenerator::visitGetElementCacheT(LGetElementCacheT* ins)
-{
-    Register obj = ToRegister(ins->object());
-    TypedOrValueRegister index = TypedOrValueRegister(MIRType_Int32, ToAnyRegister(ins->index()));
-    TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
-    const MGetElementCache* mir = ins->mir();
-
-    addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
-                       mir->profilerLeavePc());
-}
-
-typedef bool (*GetElementICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,
-                               MutableHandleValue);
-const VMFunction GetElementIC::UpdateInfo = FunctionInfo<GetElementICFn>(GetElementIC::update);
-
-void
-CodeGenerator::visitGetElementIC(OutOfLineUpdateCache* ool, DataPtr<GetElementIC>& ic)
-{
-    LInstruction* lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->index());
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    pushArg(ImmGCPtr(gen->info().script()));
-    callVM(GetElementIC::UpdateInfo, lir);
-    StoreValueTo(ic->output()).generate(this);
-    restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
-
-    masm.jump(ool->rejoin());
-}
-
-void
 CodeGenerator::visitSetElementCacheV(LSetElementCacheV* ins)
 {
     Register obj = ToRegister(ins->object());

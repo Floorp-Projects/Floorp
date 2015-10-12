@@ -29,7 +29,6 @@ class LInstruction;
 #define IONCACHE_KIND_LIST(_)                                   \
     _(GetProperty)                                              \
     _(SetProperty)                                              \
-    _(GetElement)                                               \
     _(SetElement)                                               \
     _(BindName)                                                 \
     _(Name)
@@ -648,79 +647,6 @@ class SetPropertyIC : public IonCache
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue value);
-};
-
-class GetElementIC : public IonCache
-{
-  protected:
-    LiveRegisterSet liveRegs_;
-
-    Register object_;
-    TypedOrValueRegister index_;
-    TypedOrValueRegister output_;
-
-    bool monitoredResult_ : 1;
-
-    size_t failedUpdates_;
-
-    static const size_t MAX_FAILED_UPDATES;
-
-  public:
-    GetElementIC(LiveRegisterSet liveRegs, Register object, TypedOrValueRegister index,
-                 TypedOrValueRegister output, bool monitoredResult)
-      : liveRegs_(liveRegs),
-        object_(object),
-        index_(index),
-        output_(output),
-        monitoredResult_(monitoredResult),
-        failedUpdates_(0)
-    {
-    }
-
-    CACHE_HEADER(GetElement)
-
-    void reset(ReprotectCode reprotect);
-
-    Register object() const {
-        return object_;
-    }
-    TypedOrValueRegister index() const {
-        return index_;
-    }
-    TypedOrValueRegister output() const {
-        return output_;
-    }
-    bool monitoredResult() const {
-        return monitoredResult_;
-    }
-
-    // Helpers for CanAttachNativeGetProp
-    typedef JSContext * Context;
-    bool allowGetters() const { MOZ_ASSERT(!idempotent()); return true; }
-    bool allowArrayLength(Context) const { return false; }
-    bool canMonitorSingletonUndefinedSlot(HandleObject holder, HandleShape shape) const {
-        return monitoredResult();
-    }
-
-    static bool canAttachGetProp(JSObject* obj, const Value& idval, jsid id);
-
-    bool attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, const Value& idval, HandlePropertyName name);
-
-    static bool
-    update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
-           HandleValue idval, MutableHandleValue vp);
-
-    void incFailedUpdates() {
-        failedUpdates_++;
-    }
-    void resetFailedUpdates() {
-        failedUpdates_ = 0;
-    }
-    bool shouldDisable() const {
-        return !canAttachStub() ||
-               (stubCount_ == 0 && failedUpdates_ > MAX_FAILED_UPDATES);
-    }
 };
 
 class SetElementIC : public IonCache
