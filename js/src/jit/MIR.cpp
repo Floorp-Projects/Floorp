@@ -4607,7 +4607,7 @@ MStoreTypedArrayElementStatic::base() const
 }
 
 bool
-MGetElementCache::allowDoubleResult() const
+MGetPropertyCache::allowDoubleResult() const
 {
     if (!resultTypeSet())
         return true;

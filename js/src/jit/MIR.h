@@ -10325,6 +10325,8 @@ class MGetPropertyCache
 
     void setBlock(MBasicBlock* block) override;
     bool updateForReplacement(MDefinition* ins) override;
+
+    bool allowDoubleResult() const;
 };
 
 // Emit code to load a value from an object if it matches one of the receivers
@@ -10677,8 +10679,6 @@ class MGetElementCache
     bool monitoredResult() const {
         return monitoredResult_;
     }
-
-    bool allowDoubleResult() const;
 };
 
 class MBindNameCache
