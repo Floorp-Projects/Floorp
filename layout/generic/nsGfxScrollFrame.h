@@ -366,6 +366,10 @@ public:
 
   bool UsesContainerScrolling() const;
 
+  bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                             nsRect* aDirtyRect,
+                             bool aAllowCreateDisplayPort);
+
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
 
@@ -873,6 +877,11 @@ public:
   virtual bool UsesContainerScrolling() const override {
     return mHelper.UsesContainerScrolling();
   }
+  virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aDirtyRect,
+                                     bool aAllowCreateDisplayPort) override {
+    return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
+  }
 
   // nsIStatefulFrame
   NS_IMETHOD SaveState(nsPresState** aState) override {
@@ -1351,6 +1360,12 @@ public:
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
   }
+  virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aDirtyRect,
+                                     bool aAllowCreateDisplayPort) override {
+    return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
+  }
+
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
