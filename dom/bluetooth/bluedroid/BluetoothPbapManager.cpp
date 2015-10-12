@@ -11,7 +11,6 @@
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
 #include "BluetoothUuid.h"
-#include "ObexBase.h"
 
 #include "mozilla/dom/BluetoothPbapParametersBinding.h"
 #include "mozilla/dom/File.h"
@@ -44,6 +43,31 @@ namespace {
       0x79, 0x61, 0x35, 0xF0, 0xF0, 0xC5, 0x11, 0xD8,
       0x09, 0x66, 0x08, 0x00, 0x20, 0x0C, 0x9A, 0x66
     }
+  };
+
+  // App parameters to pull phonebook
+  static const AppParameterTag sPhonebookTags[] = {
+    AppParameterTag::Format,
+    AppParameterTag::PropertySelector,
+    AppParameterTag::MaxListCount,
+    AppParameterTag::ListStartOffset,
+    AppParameterTag::vCardSelector
+  };
+
+  // App parameters to pull vCard listing
+  static const AppParameterTag sVCardListingTags[] = {
+    AppParameterTag::Order,
+    AppParameterTag::SearchValue,
+    AppParameterTag::SearchProperty,
+    AppParameterTag::MaxListCount,
+    AppParameterTag::ListStartOffset,
+    AppParameterTag::vCardSelector
+  };
+
+  // App parameters to pull vCard entry
+  static const AppParameterTag sVCardEntryTags[] = {
+    AppParameterTag::Format,
+    AppParameterTag::PropertySelector
   };
 
   StaticRefPtr<BluetoothPbapManager> sPbapManager;
@@ -261,7 +285,7 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
         return;
       }
 
-      uint8_t response = SetPhoneBookPath(data[3], pktHeaders);
+      ObexResponseCode response = SetPhoneBookPath(pktHeaders, data[3]);
       if (response != ObexResponseCode::Success) {
         ReplyError(response);
         return;
@@ -271,18 +295,22 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       break;
     }
     case ObexRequestCode::Get:
-      // Section 6.2.2 "OBEX Headers in Multi-Packet Responses", IrOBEX 1.2
-      // All OBEX request messages shall be sent as one OBEX packet containing
-      // all of the headers. I.e. OBEX GET with opcode 0x83 shall always be
-      // used. OBEX GET with opcode 0x03 shall never be used.
+      /*
+       * Section 6.2.2 "OBEX Headers in Multi-Packet Responses", IrOBEX 1.2
+       * All OBEX request messages shall be sent as one OBEX packet containing
+       * all the headers, i.e., OBEX GET with opcode 0x83 shall always be
+       * used, and GET with opcode 0x03 shall never be used.
+       */
       BT_LOGR("PBAP shall always use OBEX GetFinal instead of Get.");
 
       // no break. Treat 'Get' as 'GetFinal' for error tolerance.
     case ObexRequestCode::GetFinal: {
-      // When |mVCardDataStream| requires multiple response packets to complete,
-      // the client should continue to issue GET requests until the final body
-      // information (i.e., End-of-Body header) arrives, along with
-      // ObexResponseCode::Success
+      /*
+       * When |mVCardDataStream| requires multiple response packets to complete,
+       * the client should continue to issue GET requests until the final body
+       * information (i.e., End-of-Body header) arrives, along with
+       * ObexResponseCode::Success
+       */
       if (mVCardDataStream) {
         if (!ReplyToGet()) {
           BT_LOGR("Failed to reply to PBAP GET request.");
@@ -300,33 +328,18 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
         return;
       }
 
-      nsString type;
-      pktHeaders.GetContentType(type);
-
-      uint8_t response;
-      if (type.EqualsLiteral("x-bt/vcard-listing")) {
-        response = PullvCardListing(pktHeaders);
-      } else if (type.EqualsLiteral("x-bt/vcard")) {
-        response = PullvCardEntry(pktHeaders);
-      } else if (type.EqualsLiteral("x-bt/phonebook")) {
-        response = PullPhonebook(pktHeaders);
-      } else {
-        response = ObexResponseCode::BadRequest;
-        BT_LOGR("Unknown PBAP request type: %s",
-                NS_ConvertUTF16toUTF8(type).get());
-      }
-
-      // The OBEX success response will be sent after Gaia replies the PBAP
-      // request.
+      ObexResponseCode response = NotifyPbapRequest(pktHeaders);
       if (response != ObexResponseCode::Success) {
         ReplyError(response);
         return;
       }
+      // OBEX success response will be sent after gaia replies PBAP request
       break;
     }
     case ObexRequestCode::Put:
     case ObexRequestCode::PutFinal:
       ReplyError(ObexResponseCode::BadRequest);
+      BT_LOGR("Unsupported ObexRequestCode %x", opCode);
       break;
     default:
       ReplyError(ObexResponseCode::NotImplemented);
@@ -363,9 +376,9 @@ BluetoothPbapManager::CompareHeaderTarget(const ObexHeaderSet& aHeader)
   return true;
 }
 
-uint8_t
-BluetoothPbapManager::SetPhoneBookPath(uint8_t flags,
-                                       const ObexHeaderSet& aHeader)
+ObexResponseCode
+BluetoothPbapManager::SetPhoneBookPath(const ObexHeaderSet& aHeader,
+                                       uint8_t flags)
 {
   // Section 5.2 "SetPhoneBook Function", PBAP 1.2
   // flags bit 1 must be 1 and bit 2~7 be 0
@@ -424,103 +437,59 @@ BluetoothPbapManager::SetPhoneBookPath(uint8_t flags,
   return ObexResponseCode::Success;
 }
 
-uint8_t
-BluetoothPbapManager::PullPhonebook(const ObexHeaderSet& aHeader)
+ObexResponseCode
+BluetoothPbapManager::NotifyPbapRequest(const ObexHeaderSet& aHeader)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    return ObexResponseCode::PreconditionFailed;
-  }
-
-  InfallibleTArray<BluetoothNamedValue> data;
-
-  nsString name;
+  // Get content type and name
+  nsString type, name;
+  aHeader.GetContentType(type);
   aHeader.GetName(name);
 
-  // Ensure the name of phonebook object is legal
-  if (!IsLegalPhonebookName(name)) {
-    BT_LOGR("Illegal phone book object name [%s]",
-            NS_ConvertUTF16toUTF8(name).get());
-    return ObexResponseCode::NotFound;
+  // Configure request based on content type
+  nsString reqId;
+  uint8_t tagCount;
+  const AppParameterTag* tags;
+  if (type.EqualsLiteral("x-bt/phonebook")) {
+    reqId.AssignLiteral(PULL_PHONEBOOK_REQ_ID);
+    tagCount = MOZ_ARRAY_LENGTH(sPhonebookTags);
+    tags = sPhonebookTags;
+  } else if (type.EqualsLiteral("x-bt/vcard-listing")) {
+    reqId.AssignLiteral(PULL_VCARD_LISTING_REQ_ID);
+    tagCount = MOZ_ARRAY_LENGTH(sVCardListingTags);
+    tags = sVCardListingTags;
+
+    // Section 5.3.3 "Name", PBAP 1.2:
+    // ... PullvCardListing function uses relative paths. An empty name header
+    // may be sent to retrieve the vCard Listing object of the current folder.
+    name = name.IsEmpty() ? mCurrentPath
+                          : mCurrentPath + NS_LITERAL_STRING("/") + name;
+  } else if (type.EqualsLiteral("x-bt/vcard")) {
+    reqId.AssignLiteral(PULL_VCARD_ENTRY_REQ_ID);
+    tagCount = MOZ_ARRAY_LENGTH(sVCardEntryTags);
+    tags = sVCardEntryTags;
+  } else {
+    BT_LOGR("Unknown PBAP request type: %s",
+            NS_ConvertUTF16toUTF8(type).get());
+    return ObexResponseCode::BadRequest;
   }
 
-  AppendNamedValue(data, "name", name);
-
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::Format);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
-
-  bs->DistributeSignal(NS_LITERAL_STRING(PULL_PHONEBOOK_REQ_ID),
-                       NS_LITERAL_STRING(KEY_ADAPTER),
-                       data);
-
-  return ObexResponseCode::Success;
-}
-
-uint8_t
-BluetoothPbapManager::PullvCardListing(const ObexHeaderSet& aHeader)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
+  // Ensure bluetooth service is available
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
+    BT_LOGR("Failed to get Bluetooth service");
     return ObexResponseCode::PreconditionFailed;
   }
 
+  // Pack PBAP request
   InfallibleTArray<BluetoothNamedValue> data;
-
-  nsString folderName;
-  aHeader.GetName(folderName);
-
-  // Section 5.3.3 "Name", PBAP 1.2
-  // ... PullvCardListing function uses relative paths. An empty name header may
-  // be sent to retrieve the vCard Listing object of the current folder.
-  nsString folderPath = mCurrentPath;
-  if (!folderName.IsEmpty()) {
-    folderPath += NS_LITERAL_STRING("/") + folderName;
-  }
-  AppendNamedValue(data, "name", folderPath);
-
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::Order);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::SearchValue);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::SearchProperty);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::MaxListCount);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::ListStartOffset);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::vCardSelector);
-
-  bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_LISTING_REQ_ID),
-                       NS_LITERAL_STRING(KEY_ADAPTER),
-                       data);
-
-  return ObexResponseCode::Success;
-}
-
-uint8_t
-BluetoothPbapManager::PullvCardEntry(const ObexHeaderSet& aHeader)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  BluetoothService* bs = BluetoothService::Get();
-  if (!bs) {
-    return ObexResponseCode::PreconditionFailed;
-  }
-
-  InfallibleTArray<BluetoothNamedValue> data;
-
-  nsString name;
-  aHeader.GetName(name);
   AppendNamedValue(data, "name", name);
+  for (uint8_t i = 0; i < tagCount; i++) {
+    AppendNamedValueByTagId(aHeader, data, tags[i]);
+  }
 
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::Format);
-  AppendNamedValueByTagId(aHeader, data, AppParameterTag::PropertySelector);
-
-  bs->DistributeSignal(NS_LITERAL_STRING(PULL_VCARD_ENTRY_REQ_ID),
-                       NS_LITERAL_STRING(KEY_ADAPTER),
-                       data);
+  bs->DistributeSignal(reqId, NS_LITERAL_STRING(KEY_ADAPTER), data);
 
   return ObexResponseCode::Success;
 }
@@ -557,8 +526,7 @@ BluetoothPbapManager::AppendNamedValueByTagId(
       // Section 5.3.4.3 "SearchValue {<text string>}", PBAP 1.2
       // The UTF-8 character set shall be used for <text string>.
 
-      // Store UTF-8 string with nsCString to follow
-      // MDN:Internal_strings suggestion
+      // Store UTF-8 string with nsCString to follow MDN:Internal_strings
       AppendNamedValue(aValues, "searchText", nsCString((char *) buf));
       break;
     case AppParameterTag::MaxListCount: {
