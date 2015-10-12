@@ -390,6 +390,7 @@ class GetPropertyIC : public IonCache
     size_t numLocations_;
 
     bool monitoredResult_ : 1;
+    bool allowDoubleResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasSharedTypedArrayLengthStub_ : 1;
     bool hasMappedArgumentsLengthStub_ : 1;
@@ -405,7 +406,7 @@ class GetPropertyIC : public IonCache
     GetPropertyIC(LiveRegisterSet liveRegs,
                   Register object, ConstantOrRegister id,
                   TypedOrValueRegister output,
-                  bool monitoredResult)
+                  bool monitoredResult, bool allowDoubleResult)
       : liveRegs_(liveRegs),
         object_(object),
         id_(id),
@@ -413,6 +414,7 @@ class GetPropertyIC : public IonCache
         locationsIndex_(0),
         numLocations_(0),
         monitoredResult_(monitoredResult),
+        allowDoubleResult_(allowDoubleResult),
         hasTypedArrayLengthStub_(false),
         hasSharedTypedArrayLengthStub_(false),
         hasMappedArgumentsLengthStub_(false),
@@ -544,6 +546,13 @@ class GetPropertyIC : public IonCache
     bool tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                    HandleObject obj, HandleValue idval, bool* emitted);
 
+    static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
+                                                    TypedOrValueRegister output);
+
+    bool tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
+                                             IonScript* ion, HandleObject obj,
+                                             HandleValue idval, bool* emitted);
+
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);
 };
@@ -645,7 +654,6 @@ class GetElementIC : public IonCache
     TypedOrValueRegister output_;
 
     bool monitoredResult_ : 1;
-    bool allowDoubleResult_ : 1;
 
     size_t failedUpdates_;
 
@@ -653,13 +661,12 @@ class GetElementIC : public IonCache
 
   public:
     GetElementIC(LiveRegisterSet liveRegs, Register object, TypedOrValueRegister index,
-                 TypedOrValueRegister output, bool monitoredResult, bool allowDoubleResult)
+                 TypedOrValueRegister output, bool monitoredResult)
       : liveRegs_(liveRegs),
         object_(object),
         index_(index),
         output_(output),
         monitoredResult_(monitoredResult),
-        allowDoubleResult_(allowDoubleResult),
         failedUpdates_(0)
     {
     }
@@ -680,9 +687,6 @@ class GetElementIC : public IonCache
     bool monitoredResult() const {
         return monitoredResult_;
     }
-    bool allowDoubleResult() const {
-        return allowDoubleResult_;
-    }
 
     // Helpers for CanAttachNativeGetProp
     typedef JSContext * Context;
@@ -693,14 +697,9 @@ class GetElementIC : public IonCache
     }
 
     static bool canAttachGetProp(JSObject* obj, const Value& idval, jsid id);
-    static bool canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
-                                                    TypedOrValueRegister output);
 
     bool attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* ion,
                        HandleObject obj, const Value& idval, HandlePropertyName name);
-
-    bool attachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                          HandleObject tarr, const Value& idval);
 
     static bool
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
