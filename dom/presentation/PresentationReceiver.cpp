@@ -11,7 +11,7 @@
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
 #include "PresentationReceiver.h"
-#include "PresentationSession.h"
+#include "PresentationConnection.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -19,14 +19,14 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationReceiver)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PresentationReceiver, DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSessions)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingGetSessionPromises)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnections)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingGetConnectionPromises)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PresentationReceiver, DOMEventTargetHelper)
   tmp->Shutdown();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSessions)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingGetSessionPromises)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConnections)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingGetConnectionPromises)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(PresentationReceiver, DOMEventTargetHelper)
@@ -86,8 +86,8 @@ PresentationReceiver::Init(const nsAString& aSessionId)
 
 void PresentationReceiver::Shutdown()
 {
-  mSessions.Clear();
-  mPendingGetSessionPromises.Clear();
+  mConnections.Clear();
+  mPendingGetConnectionPromises.Clear();
 
   // Unregister listener for incoming sessions.
   nsCOMPtr<nsIPresentationService> service =
@@ -115,7 +115,7 @@ PresentationReceiver::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<Promise>
-PresentationReceiver::GetSession(ErrorResult& aRv)
+PresentationReceiver::GetConnection(ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
@@ -128,20 +128,20 @@ PresentationReceiver::GetSession(ErrorResult& aRv)
     return nullptr;
   }
 
-  // If there's no existing session, leave the promise pending until a
+  // If there's no existing connection, leave the promise pending until a
   // connecting request arrives from the controlling browsing context (sender).
-  // http://w3c.github.io/presentation-api/#dom-presentation-getsession
-  if (!mSessions.IsEmpty()) {
-    promise->MaybeResolve(mSessions[0]);
+  // http://w3c.github.io/presentation-api/#dom-presentation-getconnection
+  if (!mConnections.IsEmpty()) {
+    promise->MaybeResolve(mConnections[0]);
   } else {
-    mPendingGetSessionPromises.AppendElement(promise);
+    mPendingGetConnectionPromises.AppendElement(promise);
   }
 
   return promise.forget();
 }
 
 already_AddRefed<Promise>
-PresentationReceiver::GetSessions(ErrorResult& aRv) const
+PresentationReceiver::GetConnections(ErrorResult& aRv) const
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
@@ -154,7 +154,7 @@ PresentationReceiver::GetSessions(ErrorResult& aRv) const
     return nullptr;
   }
 
-  promise->MaybeResolve(mSessions);
+  promise->MaybeResolve(mConnections);
   return promise.forget();
 }
 
@@ -166,29 +166,29 @@ PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRefPtr<PresentationSession> session =
-    PresentationSession::Create(GetOwner(), aSessionId,
-                                PresentationSessionState::Closed);
-  if (NS_WARN_IF(!session)) {
+  nsRefPtr<PresentationConnection> connection =
+    PresentationConnection::Create(GetOwner(), aSessionId,
+                                   PresentationConnectionState::Closed);
+  if (NS_WARN_IF(!connection)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  mSessions.AppendElement(session);
+  mConnections.AppendElement(connection);
 
-  // Resolve pending |GetSession| promises if any.
-  if (!mPendingGetSessionPromises.IsEmpty()) {
-    for(uint32_t i = 0; i < mPendingGetSessionPromises.Length(); i++) {
-      mPendingGetSessionPromises[i]->MaybeResolve(session);
+  // Resolve pending |GetConnection| promises if any.
+  if (!mPendingGetConnectionPromises.IsEmpty()) {
+    for(uint32_t i = 0; i < mPendingGetConnectionPromises.Length(); i++) {
+      mPendingGetConnectionPromises[i]->MaybeResolve(connection);
     }
-    mPendingGetSessionPromises.Clear();
+    mPendingGetConnectionPromises.Clear();
   }
 
-  return DispatchSessionAvailableEvent();
+  return DispatchConnectionAvailableEvent();
 }
 
 nsresult
-PresentationReceiver::DispatchSessionAvailableEvent()
+PresentationReceiver::DispatchConnectionAvailableEvent()
 {
   nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("sessionavailable"), false);
+    new AsyncEventDispatcher(this, NS_LITERAL_STRING("connectionavailable"), false);
   return asyncDispatcher->PostDOMEvent();
 }

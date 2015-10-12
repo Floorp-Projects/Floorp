@@ -9,8 +9,8 @@
 interface Presentation : EventTarget {
  /*
   * This should be used by the UA as the default presentation request for the
-  * controller. When the UA wishes to initiate a PresentationSession on the
-  * controller's behalf, it MUST start a presentation session using the default
+  * controller. When the UA wishes to initiate a PresentationConnection on the
+  * controller's behalf, it MUST start a presentation connection using the default
   * presentation request (as if the controller had called |defaultRequest.start()|).
   *
   * Only used by controlling browsing context (senders).
