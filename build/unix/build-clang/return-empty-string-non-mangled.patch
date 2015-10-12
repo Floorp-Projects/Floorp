@@ -1,0 +1,21 @@
+commit 009de5ea7a1913f0b4619cf514787bd52af38c28
+Author: Michael Wu <mwu@mozilla.com>
+Date:   Thu Sep 24 11:36:08 2015 -0400
+
+    Return an empty string when a symbol isn't mangled
+
+diff --git a/llvm/tools/clang/tools/libclang/CIndex.cpp b/llvm/tools/clang/tools/libclang/CIndex.cpp
+index 9fa18d3..1253832 100644
+--- a/llvm/tools/clang/tools/libclang/CIndex.cpp
++++ b/llvm/tools/clang/tools/libclang/CIndex.cpp
+@@ -3891,6 +3891,10 @@ CXString clang_Cursor_getMangling(CXCursor C) {
+   ASTContext &Ctx = ND->getASTContext();
+   std::unique_ptr<MangleContext> MC(Ctx.createMangleContext());
+ 
++  // Don't mangle if we don't need to.
++  if (!MC->shouldMangleCXXName(ND))
++    return cxstring::createEmpty();
++
+   std::string FrontendBuf;
+   llvm::raw_string_ostream FrontendBufOS(FrontendBuf);
+   MC->mangleName(ND, FrontendBufOS);
