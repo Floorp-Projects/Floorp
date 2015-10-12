@@ -12,7 +12,7 @@
 #include "nsServiceManagerUtils.h"
 #include "PresentationCallbacks.h"
 #include "PresentationRequest.h"
-#include "PresentationSession.h"
+#include "PresentationConnection.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -47,18 +47,18 @@ PresentationRequesterCallback::NotifySuccess()
   MOZ_ASSERT(NS_IsMainThread());
 
   // At the sender side, this function must get called after the transport
-  // channel is ready. So we simply set the session state as connected.
-  nsRefPtr<PresentationSession> session =
-    PresentationSession::Create(mRequest->GetOwner(), mSessionId,
-                                PresentationSessionState::Connected);
-  if (NS_WARN_IF(!session)) {
+  // channel is ready. So we simply set the connection state as connected.
+  nsRefPtr<PresentationConnection> connection =
+    PresentationConnection::Create(mRequest->GetOwner(), mSessionId,
+                                   PresentationConnectionState::Connected);
+  if (NS_WARN_IF(!connection)) {
     mPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
     return NS_OK;
   }
 
-  mPromise->MaybeResolve(session);
+  mPromise->MaybeResolve(connection);
 
-  return mRequest->DispatchSessionConnectEvent(session);
+  return mRequest->DispatchConnectionAvailableEvent(connection);
 }
 
 NS_IMETHODIMP
