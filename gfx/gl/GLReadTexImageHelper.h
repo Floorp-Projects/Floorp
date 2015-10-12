@@ -37,6 +37,9 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, gfx::SurfaceForma
 already_AddRefed<gfx::DataSourceSurface>
 YInvertImageSurface(gfx::DataSourceSurface* aSurf);
 
+void
+SwapRAndBComponents(gfx::DataSourceSurface* surf);
+
 class GLReadTexImageHelper final
 {
     // The GLContext is the sole owner of the GLBlitHelper.
@@ -68,12 +71,17 @@ public:
       * passed as int to eliminate including LayerManagerOGLProgram.h here.
       */
     already_AddRefed<gfx::DataSourceSurface> ReadTexImage(GLuint aTextureId,
-                                                      GLenum aTextureTarget,
-                                                      const gfx::IntSize& aSize,
-                              /* ShaderProgramType */ int aShaderProgram,
-                                                      bool aYInvert = false);
+                                                          GLenum aTextureTarget,
+                                                          const gfx::IntSize& aSize,
+                                  /* ShaderProgramType */ int aShaderProgram,
+                                                          bool aYInvert = false);
 
-
+    bool ReadTexImage(gfx::DataSourceSurface* aDest,
+                      GLuint aTextureId,
+                      GLenum aTextureTarget,
+                      const gfx::IntSize& aSize,
+                      int aShaderProgram,
+                      bool aYInvert = false);
 };
 
 } // namespace gl
