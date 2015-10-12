@@ -9,7 +9,7 @@ function isHomeNetwork(network) {
   is(network.longName, "Android");
   is(network.shortName, "Android");
   is(network.mcc, "310");
-  is(network.mnc, "260");
+  is(network.mnc, "410");
 }
 
 function isRoamingNetwork(network) {
@@ -42,7 +42,7 @@ function testGetNetworks() {
   return getNetworks()
     .then(function resolve(aNetworks) {
       // The emulator RIL server should always return 2 networks:
-      // {"longName":"Android","shortName":"Android","mcc":310,"mnc":260,"state":"available"}
+      // {"longName":"Android","shortName":"Android","mcc":310,"mnc":410,"state":"available"}
       // {"longName":"TelKila","shortName":"TelKila","mcc":310,"mnc":295,"state":"available"}
       is(aNetworks.length, 2);
 
