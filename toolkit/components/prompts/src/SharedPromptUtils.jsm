@@ -13,10 +13,16 @@ this.PromptUtils = {
     // For remote dialogs, we pass in a different DOM window and a separate
     // target. If the caller doesn't pass in the target, then we'll simply use
     // the passed-in DOM window.
-    fireDialogEvent : function (domWin, eventName, maybeTarget) {
+    // The detail may contain information about the principal on which the
+    // prompt is triggered, as well as whether or not this is a tabprompt
+    // (ie tabmodal alert/prompt/confirm and friends)
+    fireDialogEvent : function (domWin, eventName, maybeTarget, detail) {
         let target = maybeTarget || domWin;
-        let event = domWin.document.createEvent("Events");
-        event.initEvent(eventName, true, true);
+        let eventOptions = {cancelable: true, bubbles: true};
+        if (detail) {
+          eventOptions.detail = detail;
+        }
+        let event = new domWin.CustomEvent(eventName, eventOptions);
         let winUtils = domWin.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
         winUtils.dispatchEventToChromeOnly(target, event);
