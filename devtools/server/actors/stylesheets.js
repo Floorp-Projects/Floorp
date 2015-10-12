@@ -26,7 +26,7 @@ loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/styleinspecto
 const {
   getIndentationFromPrefs,
   getIndentationFromString
-} = require("devtools/shared/shared/indentation");
+} = require("devtools/shared/indentation");
 
 var TRANSITION_CLASS = "moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;

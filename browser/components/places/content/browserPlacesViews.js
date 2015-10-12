@@ -339,7 +339,7 @@ PlacesViewBase.prototype = {
         element.setAttribute("scheme",
                              PlacesUIUtils.guessUrlSchemeForUI(aPlacesNode.uri));
       }
-      else if (PlacesUtils.containerTypes.indexOf(type) != -1) {
+      else if (PlacesUtils.containerTypes.includes(type)) {
         element = document.createElement("menu");
         element.setAttribute("container", "true");
 
@@ -1058,7 +1058,7 @@ PlacesToolbar.prototype = {
       if (icon)
         button.setAttribute("image", icon);
 
-      if (PlacesUtils.containerTypes.indexOf(type) != -1) {
+      if (PlacesUtils.containerTypes.includes(type)) {
         button.setAttribute("type", "menu");
         button.setAttribute("container", "true");
 
@@ -1885,7 +1885,7 @@ PlacesPanelMenuView.prototype = {
       if (icon)
         button.setAttribute("image", icon);
 
-      if (PlacesUtils.containerTypes.indexOf(type) != -1) {
+      if (PlacesUtils.containerTypes.includes(type)) {
         button.setAttribute("container", "true");
 
         if (PlacesUtils.nodeIsQuery(aChild)) {

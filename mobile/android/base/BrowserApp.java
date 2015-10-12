@@ -592,6 +592,8 @@ public class BrowserApp extends GeckoApp
                 new ButtonToast.ToastListener() {
                     @Override
                     public void onButtonClicked() {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "reading_list");
+
                         final String aboutPageUrl = AboutPages.getURLForBuiltinPanelType(PanelType.READING_LIST);
                         Tabs.getInstance().loadUrlInTab(aboutPageUrl);
                     }
@@ -3022,12 +3024,9 @@ public class BrowserApp extends GeckoApp
         // Action providers are available only ICS+.
         if (Versions.feature14Plus) {
             GeckoMenuItem share = (GeckoMenuItem) mMenu.findItem(R.id.share);
-            final GeckoMenuItem quickShare = (GeckoMenuItem) mMenu.findItem(R.id.quickshare);
 
             GeckoActionProvider provider = GeckoActionProvider.getForType(GeckoActionProvider.DEFAULT_MIME_TYPE, this);
-
             share.setActionProvider(provider);
-            quickShare.setActionProvider(provider);
         }
 
         return true;
@@ -3122,7 +3121,7 @@ public class BrowserApp extends GeckoApp
         final MenuItem back = aMenu.findItem(R.id.back);
         final MenuItem forward = aMenu.findItem(R.id.forward);
         final MenuItem share = aMenu.findItem(R.id.share);
-        final MenuItem quickShare = aMenu.findItem(R.id.quickshare);
+        final MenuItem sendToDevice = aMenu.findItem(R.id.send_to_device);
         final MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
         final MenuItem print = aMenu.findItem(R.id.print);
         final MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
@@ -3148,7 +3147,7 @@ public class BrowserApp extends GeckoApp
             back.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
-            quickShare.setEnabled(false);
+            sendToDevice.setEnabled(false);
             saveAsPDF.setEnabled(false);
             print.setEnabled(false);
             findInPage.setEnabled(false);
@@ -3234,8 +3233,10 @@ public class BrowserApp extends GeckoApp
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         final boolean shareVisible = RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_SHARE);
         share.setVisible(shareVisible);
+        sendToDevice.setVisible(shareVisible);
         final boolean shareEnabled = StringUtils.isShareableUrl(url) && shareVisible;
         share.setEnabled(shareEnabled);
+        sendToDevice.setEnabled(shareEnabled);
         MenuUtils.safeSetEnabled(aMenu, R.id.downloads, RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DOWNLOADS));
 
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
@@ -3250,10 +3251,6 @@ public class BrowserApp extends GeckoApp
 
         // Action providers are available only ICS+.
         if (Versions.feature14Plus) {
-            quickShare.setVisible(shareVisible);
-            quickShare.setEnabled(shareEnabled);
-
-            // This provider also applies to the quick share menu item.
             final GeckoActionProvider provider = ((GeckoMenuItem) share).getGeckoActionProvider();
             if (provider != null) {
                 Intent shareIntent = provider.getIntent();
@@ -3397,6 +3394,23 @@ public class BrowserApp extends GeckoApp
                     tab.addToReadingList();
                     item.setIcon(resolveReadingListIconID(true));
                     item.setTitle(resolveReadingListTitleID(true));
+                }
+            }
+            return true;
+        }
+
+        if (itemId == R.id.send_to_device) {
+            tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                String url = tab.getURL();
+                if (url != null) {
+                    if (AboutPages.isAboutReader(url)) {
+                        url = ReaderModeUtils.getUrlFromAboutReader(url);
+                    }
+                    Intent sendToDeviceIntent = GeckoAppShell.getShareIntent(getContext(), url,
+                            "text/plain", tab.getDisplayTitle());
+                    sendToDeviceIntent.setClass(getContext(), ShareDialog.class);
+                    startActivity(sendToDeviceIntent);
                 }
             }
             return true;
@@ -3779,6 +3793,8 @@ public class BrowserApp extends GeckoApp
         final ToastListener listener = new ButtonToast.ToastListener() {
             @Override
             public void onButtonClicked() {
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "switchtab");
+
                 maybeSwitchToTab(newTabId);
             }
 

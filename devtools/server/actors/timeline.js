@@ -9,17 +9,17 @@
  * has a name, start and end timestamps. Markers are stored in docShells.
  *
  * This actor exposes this tracking mechanism to the devtools protocol.
- * Most of the logic is handled in devtools/shared/shared/timeline.js
+ * Most of the logic is handled in devtools/server/performance/timeline.js
  * This just wraps that module up and exposes it via RDP.
  *
  * For more documentation:
- * @see devtools/shared/shared/timeline.js
+ * @see devtools/server/performance/timeline.js
  */
 
 const protocol = require("devtools/server/protocol");
 const { method, Arg, RetVal, Option } = protocol;
 const events = require("sdk/event/core");
-const { Timeline } = require("devtools/shared/shared/timeline");
+const { Timeline } = require("devtools/server/performance/timeline");
 const { actorBridge } = require("devtools/server/actors/common");
 
 /**
