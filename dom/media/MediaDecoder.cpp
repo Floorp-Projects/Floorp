@@ -1238,12 +1238,6 @@ MediaDecoder::SetPreservesPitch(bool aPreservesPitch)
   mPreservesPitch = aPreservesPitch;
 }
 
-bool
-MediaDecoder::OnDecodeTaskQueue() const {
-  NS_WARN_IF_FALSE(mDecoderStateMachine, "mDecoderStateMachine is null");
-  return mDecoderStateMachine ? mDecoderStateMachine->OnDecodeTaskQueue() : false;
-}
-
 void
 MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
 {

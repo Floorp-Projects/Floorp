@@ -54,8 +54,6 @@ public:
 
   virtual bool OnStateMachineTaskQueue() const = 0;
 
-  virtual bool OnDecodeTaskQueue() const = 0;
-
   // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.
   virtual MediaResource* GetResource() const = 0;
