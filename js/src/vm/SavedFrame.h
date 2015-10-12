@@ -125,7 +125,8 @@ class SavedFrame : public NativeObject {
 
     static bool isSavedFrameOrWrapperAndNotProto(JSObject& obj) {
         auto unwrapped = CheckedUnwrap(&obj);
-        MOZ_ASSERT(unwrapped);
+        if (!unwrapped)
+            return false;
         return isSavedFrameAndNotProto(*unwrapped);
     }
 
