@@ -372,7 +372,6 @@ HarCollector.prototype = {
    */
   onResponseContent: function(response) {
     let file = this.getFile(response.from);
-    file.mimeType = "text/plain";
     file.responseContent = response;
 
     // Resolve long string
