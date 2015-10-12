@@ -6438,4 +6438,3 @@ JS::ResetTimeZone()
     icu::TimeZone::recreateDefault();
 #endif
 }
-
