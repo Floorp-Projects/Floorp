@@ -255,9 +255,7 @@ WebMReader::RetrieveWebMMetadata(MediaInfo* aInfo)
   io.seek = webm_seek;
   io.tell = webm_tell;
   io.userdata = &mResource;
-  int64_t maxOffset = mDecoder->HasInitializationData() ?
-    mBufferedState->GetInitEndOffset() : -1;
-  int r = nestegg_init(&mContext, io, &webm_log, maxOffset);
+  int r = nestegg_init(&mContext, io, &webm_log, -1);
   if (r == -1) {
     return NS_ERROR_FAILURE;
   }

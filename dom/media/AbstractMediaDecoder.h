@@ -122,10 +122,6 @@ public:
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsVisible) {}
 
-  // Called by some MediaDecoderReader to determine if we can rely
-  // on the resource length to limit reads.
-  virtual bool HasInitializationData() { return false; }
-
   // Stack based class to assist in notifying the frame statistics of
   // parsed and decoded frames. Use inside video demux & decode functions
   // to ensure all parsed and decoded frames are reported on all return paths.
