@@ -46,6 +46,13 @@ partial interface HTMLCanvasElement {
   CanvasCaptureMediaStream captureStream(optional double frameRate);
 };
 
+// For OffscreenCanvas
+// Reference: https://wiki.whatwg.org/wiki/OffscreenCanvas
+partial interface HTMLCanvasElement {
+  [Pref="gfx.offscreencanvas.enabled", Throws]
+  OffscreenCanvas transferControlToOffscreen();
+};
+
 [ChromeOnly]
 interface MozCanvasPrintState
 {
