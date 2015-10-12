@@ -125,6 +125,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
     t->mTextureClient = mBuffer;
     t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mBuffer->GetSize());
+    t->mFrameID = mFrameID;
     GetForwarder()->UseTextures(this, textures);
     mBuffer->SyncWithObject(GetForwarder()->GetSyncObject());
   }
@@ -460,6 +461,7 @@ CanvasClientSharedSurface::Updated()
   CompositableForwarder::TimedTextureClient* t = textures.AppendElement();
   t->mTextureClient = mFront;
   t->mPictureRect = nsIntRect(nsIntPoint(0, 0), mFront->GetSize());
+  t->mFrameID = mFrameID;
   forwarder->UseTextures(this, textures);
 }
 
