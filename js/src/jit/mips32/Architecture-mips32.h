@@ -64,7 +64,7 @@ class FloatRegisters : public FloatRegistersMIPSShared
   public:
     static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
-        return BaseFloatRegisters::GetName(Code(i % 32));
+        return FloatRegistersMIPSShared::GetName(Code(i % 32));
     }
 
     static Code FromName(const char* name);
