@@ -525,6 +525,12 @@ var BrowserApp = {
       Services.prefs.setBoolPref("xpinstall.enabled", true);
     }
 
+    let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+    if (sysInfo.get("version") < 16) {
+      let defaults = Services.prefs.getDefaultBranch(null);
+      defaults.setBoolPref("media.autoplay.enabled", false);
+    }
+
     try {
       // Set the tiles click observer only if tiles reporting is enabled (that
       // is, a report URL is set in prefs).
