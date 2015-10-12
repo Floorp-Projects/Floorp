@@ -42,9 +42,7 @@ class TextureClientPool final : public TextureClientAllocator
   ~TextureClientPool();
 
 public:
-  TextureClientPool(gfx::SurfaceFormat aFormat,
-                    TextureFlags aFlags,
-                    gfx::IntSize aSize,
+  TextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                     uint32_t aMaxTextureClients,
                     uint32_t aShrinkTimeoutMsec,
                     CompositableForwarder* aAllocator);
@@ -103,7 +101,6 @@ public:
   void Clear();
 
   gfx::SurfaceFormat GetFormat() { return mFormat; }
-  TextureFlags GetFlags() const { return mFlags; }
 
 private:
   // The minimum size of the pool (the number of tiles that will be kept after
@@ -112,9 +109,6 @@ private:
 
   /// Format is passed to the TextureClient for buffer creation.
   gfx::SurfaceFormat mFormat;
-
-  /// Flags passed to the TextureClient for buffer creation.
-  const TextureFlags mFlags;
 
   /// The width and height of the tiles to be used.
   gfx::IntSize mSize;

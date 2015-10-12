@@ -681,19 +681,17 @@ ClientLayerManager::SetIsFirstPaint()
 }
 
 TextureClientPool*
-ClientLayerManager::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
+ClientLayerManager::GetTexturePool(SurfaceFormat aFormat)
 {
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    if (mTexturePools[i]->GetFormat() == aFormat &&
-        mTexturePools[i]->GetFlags() == aFlags) {
+    if (mTexturePools[i]->GetFormat() == aFormat) {
       return mTexturePools[i];
     }
   }
 
   mTexturePools.AppendElement(
-      new TextureClientPool(aFormat, aFlags,
-                            IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
-                                    gfxPlatform::GetPlatform()->GetTileHeight()),
+      new TextureClientPool(aFormat, IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
+                                             gfxPlatform::GetPlatform()->GetTileHeight()),
                             gfxPrefs::LayersTileMaxPoolSize(),
                             gfxPrefs::LayersTileShrinkPoolTimeout(),
                             mForwarder));
@@ -703,20 +701,17 @@ ClientLayerManager::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
 
 void
 ClientLayerManager::ReturnTextureClientDeferred(TextureClient& aClient) {
-  GetTexturePool(aClient.GetFormat(),
-                 aClient.GetFlags())->ReturnTextureClientDeferred(&aClient);
+  GetTexturePool(aClient.GetFormat())->ReturnTextureClientDeferred(&aClient);
 }
 
 void
 ClientLayerManager::ReturnTextureClient(TextureClient& aClient) {
-  GetTexturePool(aClient.GetFormat(),
-                 aClient.GetFlags())->ReturnTextureClient(&aClient);
+  GetTexturePool(aClient.GetFormat())->ReturnTextureClient(&aClient);
 }
 
 void
 ClientLayerManager::ReportClientLost(TextureClient& aClient) {
-  GetTexturePool(aClient.GetFormat(),
-                 aClient.GetFlags())->ReportClientLost();
+  GetTexturePool(aClient.GetFormat())->ReportClientLost();
 }
 
 void

@@ -1240,8 +1240,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   if (aTile.IsPlaceholderTile()) {
     aTile.SetLayerManager(mManager);
     aTile.SetTextureAllocator(mManager->GetTexturePool(
-      gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content),
-      TextureFlags::IMMEDIATE_UPLOAD));
+      gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content)));
   }
   aTile.SetCompositableClient(mCompositableClient);
 
