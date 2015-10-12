@@ -192,6 +192,8 @@ public:
 
   // checks whether aType is a type we recognize for potential special handling
   enum SpecialType { eSpecialType_None,
+                     // Needed to whitelist for async init support
+                     eSpecialType_Test,
                      // Informs some decisions about OOP and quirks
                      eSpecialType_Flash,
                      // Binds to the <applet> tag, has various special
