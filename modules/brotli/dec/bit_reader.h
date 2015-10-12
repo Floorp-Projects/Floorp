@@ -63,7 +63,7 @@ void BrotliInitBitReader(BrotliBitReader* const br, BrotliInput input);
    For BROTLI_BUILD_PORTABLE this function also prepares bit reader for aligned
    reading. */
 int BrotliWarmupBitReader(BrotliBitReader* const br);
-
+static BROTLI_INLINE void BrotliPullByte(BrotliBitReader* const br);
 /* Pulls data from the input to the the read buffer.
 
    Returns 0 if one of:

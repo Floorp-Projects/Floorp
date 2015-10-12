@@ -62,8 +62,8 @@ function startTest()
     }
   }
 
-  // Listen for MozStorageChanged
-  SpecialPowers.addChromeEventListener("MozStorageChanged", onStorageChanged, false);
+  // Listen for MozLocalStorageChanged
+  SpecialPowers.addChromeEventListener("MozLocalStorageChanged", onStorageChanged, false);
 
   // add an empty-value key
   localStorage.setItem("empty", "");
@@ -227,7 +227,7 @@ function startTest()
   localStorage.removeItem("key2"); // Just check there is no exception
 
   SimpleTest.executeSoon(function () {
-    SpecialPowers.removeChromeEventListener("MozStorageChanged", onStorageChanged, false);
+    SpecialPowers.removeChromeEventListener("MozLocalStorageChanged", onStorageChanged, false);
     is(expectedEvents.length, 0, "received the correct number of events");
 
     localStorage.clear();

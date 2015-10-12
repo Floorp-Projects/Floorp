@@ -320,7 +320,7 @@ pref("media.directshow.enabled", true);
 #endif
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
-pref("media.fragmented-mp4.ffmpeg.enabled", false);
+pref("media.fragmented-mp4.ffmpeg.enabled", true);
 pref("media.fragmented-mp4.gmp.enabled", false);
 pref("media.fragmented-mp4.gmp.aac", 0);
 pref("media.fragmented-mp4.gmp.h264", 0);
@@ -4195,6 +4195,8 @@ pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);
 pref("webgl.angle.force-warp", false);
 #endif
+
+pref("gfx.offscreencanvas.enabled", false);
 
 #ifdef MOZ_WIDGET_GONK
 pref("gfx.gralloc.fence-with-readpixels", false);

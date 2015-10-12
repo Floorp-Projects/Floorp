@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+function backgroundScript() {
+  function get(idOrIdList) {
+    return new Promise(resolve => {
+      browser.bookmarks.get(idOrIdList, resolve);
+    });
+  }
+
+  function create(bookmark) {
+    return new Promise(resolve => {
+      browser.bookmarks.create(bookmark, resolve);
+    });
+  }
+
+  function getChildren(id) {
+    return new Promise(resolve => {
+      browser.bookmarks.getChildren(id, resolve);
+    })
+  }
+
+  function update(id, changes) {
+    return new Promise(resolve => {
+      browser.bookmarks.update(id, changes, resolve);
+    });
+  }
+
+  function getTree(id) {
+    return new Promise(resolve => {
+      browser.bookmarks.getTree(resolve);
+    })
+  }
+
+  function remove(idOrIdList) {
+    return new Promise(resolve => {
+      browser.bookmarks.remove(idOrIdList, resolve);
+    });
+  }
+
+  function assertExpected(cookie, expected) {
+    for (var key of Object.keys(cookie)) {
+      browser.test.assertTrue(key in expected, "found property " + key);
+      browser.test.assertEq(cookie[key], expected[key], "property value for " + key + " is wrong");
+    }
+    browser.test.assertEq(Object.keys(cookie).length, Object.keys(expected).length, "all expected properties found");
+  }
+
+  var unsortedId, ourId;
+
+  function checkOurBookmark(bookmark) {
+    browser.test.assertEq(bookmark.id, ourId);
+    browser.test.assertTrue("parentId" in bookmark);
+    browser.test.assertEq(bookmark.index, 0); // We assume there are no other bookmarks.
+    browser.test.assertEq(bookmark.url, "http://example.org/");
+    browser.test.assertEq(bookmark.title, "test bookmark");
+    browser.test.assertTrue("dateAdded" in bookmark);
+    browser.test.assertFalse("dateGroupModified" in bookmark);
+    browser.test.assertFalse("unmodifiable" in bookmark);
+  }
+
+  get(["not-a-bookmark-guid"]).then(result => {
+    // TODO: check lastError
+    browser.test.assertEq(result.length, 0, "invalid bookmark guid returned nothing")
+    return get(["000000000000"]);
+  }).then(results => {
+    // TODO: check lastError
+    browser.test.assertEq(results.length, 0, "correctly did not find bookmark");
+    return create({title: "test bookmark", url: "http://example.org"});
+  }).then(result => {
+    ourId = result.id;
+    checkOurBookmark(result);
+
+    return get(ourId);
+  }).then(results => {
+    browser.test.assertEq(results.length, 1);
+    checkOurBookmark(results[0]);
+
+    unsortedId = results[0].parentId;
+    return get(unsortedId);
+  }).then(results => {
+    var folder = results[0];
+    browser.test.assertEq(results.length, 1);
+
+    browser.test.assertEq(folder.id, unsortedId);
+    browser.test.assertTrue("parentId" in folder);
+    browser.test.assertTrue("index" in folder);
+    browser.test.assertFalse("url" in folder);
+    browser.test.assertEq(folder.title, "Unsorted Bookmarks");
+    browser.test.assertTrue("dateAdded" in folder);
+    browser.test.assertTrue("dateGroupModified" in folder);
+    browser.test.assertFalse("unmodifiable" in folder); // TODO: Do we want to enable this?
+
+    return getChildren(unsortedId);
+  }).then(results => {
+    browser.test.assertEq(results.length, 1);
+    checkOurBookmark(results[0]);
+
+    return update(ourId, {title: "new test title"});
+  }).then(result => {
+    browser.test.assertEq(result.title, "new test title");
+    browser.test.assertEq(result.id, ourId);
+
+    return getTree();
+  }).then(results => {
+    browser.test.assertEq(results.length, 1);
+    var bookmark = results[0].children.find(bookmark => bookmark.id == unsortedId);
+    browser.test.assertEq(bookmark.title, "Unsorted Bookmarks");
+
+    return create({parentId: "invalid"});
+  }).then(result => {
+    // TODO: Check lastError
+    browser.test.assertEq(result, null);
+
+    return remove(ourId);
+  }).then(() => {
+    return get(ourId);
+  }).then(results => {
+    // TODO: Check lastError
+    browser.test.assertEq(results.length, 0);
+
+    return remove("000000000000");
+  }).then(() => {
+    // TODO: Check lastError
+  }).then(() => {
+    browser.test.notifyPass("bookmarks");
+  });
+}
+
+let extensionData = {
+  background: "(" + backgroundScript.toString() + ")()",
+  manifest: {
+    permissions: ["bookmarks"]
+  },
+};
+
+add_task(function* test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("bookmarks");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+</script>
+
+</body>
+</html>

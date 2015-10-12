@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<!--
+  This test needs several workers run offscreen canvas simultaneously.
+  So we choose 8 workers, 4 of them run basic webgl drawing test and
+  others run size changing test.
+-->
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function createCanvas() {
+  var htmlCanvas = document.createElement('canvas');
+  htmlCanvas.width = 64;
+  htmlCanvas.height = 64;
+  document.body.appendChild(htmlCanvas);
+  return htmlCanvas;
+}
+
+function runTest() {
+  var stillRunning = 0;
+
+  var startWorker = function(canvas, test) {
+    stillRunning++;
+    var worker = new Worker("offscreencanvas.js");
+
+    worker.onmessage = function(evt) {
+      var msg = evt.data || {};
+      if (msg.type == "test") {
+        ok(msg.result, msg.name);
+      }
+      if (msg.type == "finish") {
+        worker.terminate();
+        if (--stillRunning == 0)
+          SimpleTest.finish();
+      }
+    }
+
+    var offscreenCanvas = canvas.transferControlToOffscreen();
+    worker.postMessage({test: test, canvas: offscreenCanvas}, [offscreenCanvas]);
+  }
+
+  /* create 4 workers that do the regular drawing test and 4 workers
+     that do the size change test */
+  for (var i = 0; i < 4; i++) {
+    startWorker(createCanvas(), 'webgl');
+  }
+
+  for (var i = 0; i < 4; i++) {
+    startWorker(createCanvas(), 'webgl_changesize');
+  }
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+  ['webgl.force-enabled', true]
+]}, runTest);
+
+</script>
+</body>
+</html>

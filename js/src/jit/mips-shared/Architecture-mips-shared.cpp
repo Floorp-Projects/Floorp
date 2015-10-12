@@ -23,7 +23,7 @@ uint32_t GetMIPSFlags()
     static uint32_t flags = 0;
     if (isSet)
         return flags;
-#ifdef JS_SIMULATOR_MIPS32
+#if defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
     isSet = true;
     flags |= HWCAP_FPU;
     return flags;
@@ -46,7 +46,7 @@ uint32_t GetMIPSFlags()
 #endif
 
     return flags;
-#endif // JS_SIMULATOR_MIPS32
+#endif // JS_SIMULATOR_MIPS32 || JS_SIMULATOR_MIPS64
 }
 
 bool hasFPU()

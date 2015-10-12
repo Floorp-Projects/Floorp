@@ -88,7 +88,7 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException)
 }
 
 bool
-Throw(JSContext* aCx, nsresult aRv, const char* aMessage)
+Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
 {
   if (aRv == NS_ERROR_UNCATCHABLE_EXCEPTION) {
     // Nuke any existing exception on aCx, to make sure we're uncatchable.
@@ -134,7 +134,7 @@ Throw(JSContext* aCx, nsresult aRv, const char* aMessage)
 }
 
 void
-ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv, const char* aMessage)
+ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv)
 {
   MOZ_ASSERT(aRv != NS_ERROR_UNCATCHABLE_EXCEPTION,
              "Doesn't make sense to report uncatchable exceptions!");
@@ -144,11 +144,11 @@ ThrowAndReport(nsPIDOMWindow* aWindow, nsresult aRv, const char* aMessage)
   }
   jsapi.TakeOwnershipOfErrorReporting();
 
-  Throw(jsapi.cx(), aRv, aMessage);
+  Throw(jsapi.cx(), aRv);
 }
 
 already_AddRefed<Exception>
-CreateException(JSContext* aCx, nsresult aRv, const char* aMessage)
+CreateException(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
 {
   // Do we use DOM exceptions for this error code?
   switch (NS_ERROR_GET_MODULE(aRv)) {
@@ -158,16 +158,17 @@ CreateException(JSContext* aCx, nsresult aRv, const char* aMessage)
   case NS_ERROR_MODULE_DOM_INDEXEDDB:
   case NS_ERROR_MODULE_DOM_FILEHANDLE:
   case NS_ERROR_MODULE_DOM_BLUETOOTH:
-    return DOMException::Create(aRv);
+    if (aMessage.IsEmpty()) {
+      return DOMException::Create(aRv);
+    }
+    return DOMException::Create(aRv, aMessage);
   default:
     break;
   }
 
   // If not, use the default.
-  // aMessage can be null, so we can't use nsDependentCString on it.
   nsRefPtr<Exception> exception =
-    new Exception(nsCString(aMessage), aRv,
-                  EmptyCString(), nullptr, nullptr);
+    new Exception(aMessage, aRv, EmptyCString(), nullptr, nullptr);
   return exception.forget();
 }
 

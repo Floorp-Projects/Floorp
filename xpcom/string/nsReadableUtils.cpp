@@ -26,7 +26,7 @@ CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest)
 }
 
 void
-LossyCopyUTF16toASCII(const char16_t* aSource, nsACString& aDest)
+LossyCopyUTF16toASCII(const char16ptr_t aSource, nsACString& aDest)
 {
   aDest.Truncate();
   if (aSource) {
@@ -72,7 +72,7 @@ CopyUTF8toUTF16(const nsACString& aSource, nsAString& aDest)
 }
 
 void
-CopyUTF16toUTF8(const char16_t* aSource, nsACString& aDest)
+CopyUTF16toUTF8(const char16ptr_t aSource, nsACString& aDest)
 {
   aDest.Truncate();
   AppendUTF16toUTF8(aSource, aDest);
@@ -139,7 +139,7 @@ AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest,
 }
 
 void
-LossyAppendUTF16toASCII(const char16_t* aSource, nsACString& aDest)
+LossyAppendUTF16toASCII(const char16ptr_t aSource, nsACString& aDest)
 {
   if (aSource) {
     LossyAppendUTF16toASCII(nsDependentString(aSource), aDest);
@@ -255,7 +255,7 @@ AppendUTF8toUTF16(const nsACString& aSource, nsAString& aDest,
 }
 
 void
-AppendUTF16toUTF8(const char16_t* aSource, nsACString& aDest)
+AppendUTF16toUTF8(const char16ptr_t aSource, nsACString& aDest)
 {
   if (aSource) {
     AppendUTF16toUTF8(nsDependentString(aSource), aDest);

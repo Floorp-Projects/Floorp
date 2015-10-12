@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+
+  var htmlCanvas = document.getElementById("c");
+  var worker = new SharedWorker("offscreencanvas.js");
+
+  ok(htmlCanvas, "Should have HTML canvas element");
+  ok(worker, "Web worker successfully created");
+
+  ok(htmlCanvas.transferControlToOffscreen, "HTMLCanvasElement has transferControlToOffscreen function");
+
+  var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
+  ok(offscreenCanvas, "Expected transferControlToOffscreen to succeed");
+
+  worker.port.start();
+
+  // We don't support transferring OffscreenCanvas via shared worker.
+  SimpleTest.doesThrow(
+    function() {
+      worker.port.postMessage({test: 'webgl', canvas: offscreenCanvas}, [offscreenCanvas]);
+    },
+    "OffscreenCanvas cannot transfer to shared worker"
+  );
+
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+  ['webgl.force-enabled', true],
+]}, runTest);
+
+</script>
+</body>
+</html>

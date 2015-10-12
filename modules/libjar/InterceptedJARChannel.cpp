@@ -13,11 +13,9 @@ using namespace mozilla::net;
 NS_IMPL_ISUPPORTS(InterceptedJARChannel, nsIInterceptedChannel)
 
 InterceptedJARChannel::InterceptedJARChannel(nsJARChannel* aChannel,
-                                             nsINetworkInterceptController* aController,
-                                             bool aIsNavigation)
+                                             nsINetworkInterceptController* aController)
 : mController(aController)
 , mChannel(aChannel)
-, mIsNavigation(aIsNavigation)
 {
 }
 
@@ -25,13 +23,6 @@ NS_IMETHODIMP
 InterceptedJARChannel::GetResponseBody(nsIOutputStream** aStream)
 {
   NS_IF_ADDREF(*aStream = mResponseBody);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedJARChannel::GetIsNavigation(bool* aIsNavigation)
-{
-  *aIsNavigation = mIsNavigation;
   return NS_OK;
 }
 
