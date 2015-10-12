@@ -70,7 +70,8 @@ const EXPECTED = {
       totalCount: 10,
       children: undefined
     },
-  ]
+  ],
+  id: 1
 };
 
 function run_test() {
