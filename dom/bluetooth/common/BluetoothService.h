@@ -341,6 +341,52 @@ public:
                       uint16_t aPhonebookSize,
                       BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual void
+  ReplyToMapFolderListing(long aMasId,
+                          const nsAString& aFolderlists,
+                          BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapMessagesListing(BlobParent* aBlobParent,
+                            BlobChild* aBlobChild,
+                            long aMasId,
+                            bool aNewMessage,
+                            const nsAString& aTimestamp,
+                            int aSize,
+                            BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapMessagesListing(long aMasId,
+                            Blob* aBlob,
+                            bool aNewMessage,
+                            const nsAString& aTimestamp,
+                            int aSize,
+                            BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapGetMessage(BlobParent* aBlobParent,
+                       BlobChild* aBlobChild,
+                       long aMasId,
+                       BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapGetMessage(Blob* aBlob,
+                       long aMasId,
+                       BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapSetMessageStatus(long aMasId,
+                             bool aStatus,
+                             BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapSendMessage(
+    long aMasId, bool aStatus, BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ReplyToMapMessageUpdate(
+    long aMasId, bool aStatus, BluetoothReplyRunnable* aRunnable) = 0;
+
 #ifdef MOZ_B2G_RIL
   virtual void
   AnswerWaitingCall(BluetoothReplyRunnable* aRunnable) = 0;
