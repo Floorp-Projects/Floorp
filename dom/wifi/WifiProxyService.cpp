@@ -248,6 +248,10 @@ WifiProxyService::SendCommand(JS::Handle<JS::Value> aOptions,
     return NS_ERROR_FAILURE;
   }
 
+  if (!mControlThread) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Dispatch the command to the control thread.
   CommandOptions commandOptions(options);
   nsCOMPtr<nsIRunnable> runnable = new ControlRunnable(commandOptions, aInterface);
@@ -293,8 +297,10 @@ WifiProxyService::DispatchWifiResult(const WifiResultOptions& aOptions, const ns
     return;
   }
 
-  // Call the listener with a JS value.
-  mListener->OnCommand(val, aInterface);
+  if (mListener) {
+    // Call the listener with a JS value.
+    mListener->OnCommand(val, aInterface);
+  }
 }
 
 void

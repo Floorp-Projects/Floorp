@@ -14,10 +14,14 @@
 #include "ObexBase.h"
 
 #include "mozilla/dom/BluetoothMapParametersBinding.h"
+#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/File.h"
+
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
+#include "nsIInputStream.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 
@@ -567,6 +571,75 @@ BluetoothMapSmsManager::ReplyToPut()
   SendMasObexData(req, ObexResponseCode::Success, index);
 }
 
+bool
+BluetoothMapSmsManager::ReplyToFolderListing(long aMasId,
+                                             const nsAString& aFolderlists)
+{
+  // TODO: Implement this for future Email support
+  return false;
+}
+
+bool
+BluetoothMapSmsManager::ReplyToMessagesListing(BlobParent* aActor,
+                                                  long aMasId,
+                                                  bool aNewMessage,
+                                                  const nsAString& aTimestamp,
+                                                  int aSize)
+{
+  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+
+  return ReplyToMessagesListing(blob.get(), aMasId, aNewMessage, aTimestamp,
+                                aSize);
+}
+
+bool
+BluetoothMapSmsManager::ReplyToMessagesListing(Blob* aBlob, long aMasId,
+                                               bool aNewMessage,
+                                               const nsAString& aTimestamp,
+                                               int aSize)
+{
+  // TODO: Implement in Bug 1211769
+  return false;
+}
+
+bool
+BluetoothMapSmsManager::ReplyToGetMessage(BlobParent* aActor, long aMasId)
+{
+  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+
+  return ReplyToGetMessage(blob.get(), aMasId);
+}
+
+bool
+BluetoothMapSmsManager::ReplyToGetMessage(Blob* aBlob, long aMasId)
+{
+  // TODO: Implement in Bug 1211769
+  return false;
+}
+
+bool
+BluetoothMapSmsManager::ReplyToSetMessageStatus(long aMasId, bool aStatus)
+{
+  // TODO: Implement in Bug 1211769
+  return false;
+}
+
+bool
+BluetoothMapSmsManager::ReplyToSendMessage(long aMasId, bool aStatus)
+{
+  // TODO: Implement in Bug 1211769
+  return false;
+}
+
+bool
+BluetoothMapSmsManager::ReplyToMessageUpdate(long aMasId, bool aStatus)
+{
+  // TODO: Implement in Bug 1211769
+  return false;
+}
+
 void
 BluetoothMapSmsManager::CreateMnsObexConnection()
 {
@@ -1003,7 +1076,7 @@ BluetoothMapSmsManager::HandleNotificationRegistration(
 void
 BluetoothMapSmsManager::HandleEventReport(const ObexHeaderSet& aHeader)
 {
-  // TODO: Handle event report in Bug 1166666
+  // TODO: Handle event report in Bug 1211769
 }
 
 void
