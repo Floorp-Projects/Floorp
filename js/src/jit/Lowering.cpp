@@ -3252,6 +3252,12 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
 
+    MDefinition* id = ins->idval();
+    MOZ_ASSERT(id->type() == MIRType_String ||
+               id->type() == MIRType_Symbol ||
+               id->type() == MIRType_Int32 ||
+               id->type() == MIRType_Value);
+
     if (ins->monitoredResult()) {
         // Set the performs-call flag so that we don't omit the overrecursed
         // check. This is necessary because the cache can attach a scripted
@@ -3259,12 +3265,18 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins)
         gen->setPerformsCall();
     }
 
+    // If this is a GETPROP, the id is a constant string. Allow passing it as a
+    // constant to reduce register allocation pressure.
+    bool useConstId = id->type() == MIRType_String || id->type() == MIRType_Symbol;
+
     if (ins->type() == MIRType_Value) {
         LGetPropertyCacheV* lir = new(alloc()) LGetPropertyCacheV(useRegister(ins->object()));
+        useBoxOrTypedOrConstant(lir, LGetPropertyCacheV::Id, id, useConstId);
         defineBox(lir, ins);
         assignSafepoint(lir, ins);
     } else {
         LGetPropertyCacheT* lir = new(alloc()) LGetPropertyCacheT(useRegister(ins->object()));
+        useBoxOrTypedOrConstant(lir, LGetPropertyCacheT::Id, id, useConstId);
         define(lir, ins);
         assignSafepoint(lir, ins);
     }

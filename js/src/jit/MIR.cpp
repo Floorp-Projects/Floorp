@@ -4668,7 +4668,8 @@ MGetPropertyCache::setBlock(MBasicBlock* block)
 }
 
 bool
-MGetPropertyCache::updateForReplacement(MDefinition* ins) {
+MGetPropertyCache::updateForReplacement(MDefinition* ins)
+{
     MGetPropertyCache* other = ins->toGetPropertyCache();
     location_.append(&other->location_);
     return true;

@@ -956,8 +956,8 @@ class IonBuilder
                                   const BaselineInspector::ObjectGroupVector& convertUnboxedGroups,
                                   bool isOwnProperty);
 
-    bool annotateGetPropertyCache(MDefinition* obj, MGetPropertyCache* getPropCache,
-                                  TemporaryTypeSet* objTypes,
+    bool annotateGetPropertyCache(MDefinition* obj, PropertyName* name,
+                                  MGetPropertyCache* getPropCache, TemporaryTypeSet* objTypes,
                                   TemporaryTypeSet* pushedTypes);
 
     MGetPropertyCache* getInlineableGetPropertyCache(CallInfo& callInfo);

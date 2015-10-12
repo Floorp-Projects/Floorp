@@ -382,7 +382,7 @@ class GetPropertyIC : public IonCache
     LiveRegisterSet liveRegs_;
 
     Register object_;
-    PropertyName* name_;
+    ConstantOrRegister id_;
     TypedOrValueRegister output_;
 
     // Only valid if idempotent
@@ -398,12 +398,12 @@ class GetPropertyIC : public IonCache
 
   public:
     GetPropertyIC(LiveRegisterSet liveRegs,
-                  Register object, PropertyName* name,
+                  Register object, ConstantOrRegister id,
                   TypedOrValueRegister output,
                   bool monitoredResult)
       : liveRegs_(liveRegs),
         object_(object),
-        name_(name),
+        id_(id),
         output_(output),
         locationsIndex_(0),
         numLocations_(0),
@@ -423,8 +423,8 @@ class GetPropertyIC : public IonCache
     Register object() const {
         return object_;
     }
-    PropertyName* name() const {
-        return name_;
+    ConstantOrRegister id() const {
+        return id_;
     }
     TypedOrValueRegister output() const {
         return output_;
@@ -480,7 +480,7 @@ class GetPropertyIC : public IonCache
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandlePropertyName name, bool* emitted);
+                       HandleObject obj, HandleValue idval, bool* emitted);
 
     bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
                         HandleObject obj, HandlePropertyName name,
@@ -491,7 +491,8 @@ class GetPropertyIC : public IonCache
                                void* returnAddr, bool* emitted);
 
     bool tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, void* returnAddr, bool* emitted);
+                                   HandleObject obj, HandlePropertyName name, void* returnAddr,
+                                   bool* emitted);
 
     bool tryAttachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                      HandleObject obj, HandlePropertyName name, bool resetNeeded,
@@ -520,7 +521,7 @@ class GetPropertyIC : public IonCache
                                   HandleObject obj, HandlePropertyName name, bool* emitted);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
-                       HandleObject obj, MutableHandleValue vp);
+                       HandleObject obj, HandleValue id, MutableHandleValue vp);
 };
 
 class SetPropertyIC : public IonCache
