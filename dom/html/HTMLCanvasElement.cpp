@@ -350,6 +350,7 @@ NS_IMPL_ISUPPORTS(HTMLCanvasElementObserver, nsIObserver)
 
 HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
+    mResetLayer(true) ,
     mWriteOnly(false)
 {
 }
@@ -690,6 +691,7 @@ HTMLCanvasElement::ExtractData(nsAString& aType,
                                    aOptions,
                                    GetSize(),
                                    mCurrentContext,
+                                   mAsyncCanvasRenderer,
                                    aStream);
 }
 
@@ -773,7 +775,10 @@ HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
     renderer->SetWidth(sz.width);
     renderer->SetHeight(sz.height);
 
-    mOffscreenCanvas = new OffscreenCanvas(sz.width, sz.height, renderer);
+    mOffscreenCanvas = new OffscreenCanvas(sz.width,
+                                           sz.height,
+                                           GetCompositorBackendType(),
+                                           renderer);
     mContextObserver = new HTMLCanvasElementObserver(this);
   } else {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1042,7 +1047,8 @@ HTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   }
 
   if (mOffscreenCanvas) {
-    if (aOldLayer && aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
+    if (!mResetLayer &&
+        aOldLayer && aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
       nsRefPtr<CanvasLayer> ret = aOldLayer;
       return ret.forget();
     }
@@ -1055,7 +1061,12 @@ HTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
     LayerUserData* userData = nullptr;
     layer->SetUserData(&sOffscreenCanvasLayerUserDataDummy, userData);
-    layer->SetAsyncRenderer(GetAsyncCanvasRenderer());
+
+    CanvasLayer::Data data;
+    data.mRenderer = GetAsyncCanvasRenderer();
+    data.mSize = GetWidthHeight();
+    layer->Initialize(data);
+
     layer->Updated();
     return layer.forget();
   }
@@ -1201,6 +1212,18 @@ HTMLCanvasElement::GetAsyncCanvasRenderer()
   return mAsyncCanvasRenderer;
 }
 
+layers::LayersBackend
+HTMLCanvasElement::GetCompositorBackendType() const
+{
+  nsIWidget* docWidget = nsContentUtils::WidgetForDocument(OwnerDoc());
+  if (docWidget) {
+    layers::LayerManager* layerManager = docWidget->GetLayerManager();
+    return layerManager->GetCompositorBackendType();
+  }
+
+  return LayersBackend::LAYERS_NONE;
+}
+
 void
 HTMLCanvasElement::OnVisibilityChange()
 {
@@ -1235,8 +1258,9 @@ HTMLCanvasElement::OnVisibilityChange()
     };
 
     nsRefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    if (mAsyncCanvasRenderer->mActiveThread) {
-      mAsyncCanvasRenderer->mActiveThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+    nsCOMPtr<nsIThread> activeThread = mAsyncCanvasRenderer->GetActiveThread();
+    if (activeThread) {
+      activeThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
     }
     return;
   }
@@ -1276,8 +1300,9 @@ HTMLCanvasElement::OnMemoryPressure()
     };
 
     nsRefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    if (mAsyncCanvasRenderer->mActiveThread) {
-      mAsyncCanvasRenderer->mActiveThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+    nsCOMPtr<nsIThread> activeThread = mAsyncCanvasRenderer->GetActiveThread();
+    if (activeThread) {
+      activeThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
     }
     return;
   }
@@ -1295,6 +1320,10 @@ HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer
     return;
   }
 
+  if (element->GetWidthHeight() == aRenderer->GetSize()) {
+    return;
+  }
+
   gfx::IntSize asyncCanvasSize = aRenderer->GetSize();
 
   ErrorResult rv;
@@ -1307,6 +1336,19 @@ HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer
   if (rv.Failed()) {
     NS_WARNING("Failed to set height attribute to a canvas element asynchronously.");
   }
+
+  element->mResetLayer = true;
+}
+
+/* static */ void
+HTMLCanvasElement::InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer)
+{
+  HTMLCanvasElement *element = aRenderer->mHTMLCanvasElement;
+  if (!element) {
+    return;
+  }
+
+  element->InvalidateCanvasContent(nullptr);
 }
 
 } // namespace dom

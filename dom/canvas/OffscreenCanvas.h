@@ -8,6 +8,7 @@
 #define MOZILLA_DOM_OFFSCREENCANVAS_H_
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
 #include "CanvasRenderingContextHelper.h"
 #include "nsCycleCollectionParticipant.h"
@@ -33,12 +34,14 @@ struct OffscreenCanvasCloneData final
 {
   OffscreenCanvasCloneData(layers::AsyncCanvasRenderer* aRenderer,
                            uint32_t aWidth, uint32_t aHeight,
+                           layers::LayersBackend aCompositorBackend,
                            bool aNeutered);
   ~OffscreenCanvasCloneData();
 
   RefPtr<layers::AsyncCanvasRenderer> mRenderer;
   uint32_t mWidth;
   uint32_t mHeight;
+  layers::LayersBackend mCompositorBackendType;
   bool mNeutered;
 };
 
@@ -51,12 +54,15 @@ public:
 
   OffscreenCanvas(uint32_t aWidth,
                   uint32_t aHeight,
+                  layers::LayersBackend aCompositorBackend,
                   layers::AsyncCanvasRenderer* aRenderer);
 
   OffscreenCanvas* GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  void ClearResources();
 
   uint32_t Width() const
   {
@@ -141,6 +147,11 @@ public:
     return mNeutered;
   }
 
+  layers::LayersBackend GetCompositorBackendType() const
+  {
+    return mCompositorBackendType;
+  }
+
 private:
   ~OffscreenCanvas();
 
@@ -155,6 +166,8 @@ private:
 
   uint32_t mWidth;
   uint32_t mHeight;
+
+  layers::LayersBackend mCompositorBackendType;
 
   layers::CanvasClient* mCanvasClient;
   RefPtr<layers::AsyncCanvasRenderer> mCanvasRenderer;
