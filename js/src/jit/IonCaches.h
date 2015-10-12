@@ -396,6 +396,8 @@ class GetPropertyIC : public IonCache
     bool hasUnmappedArgumentsLengthStub_ : 1;
     bool hasGenericProxyStub_ : 1;
 
+    void emitIdGuard(MacroAssembler& masm, jsid id, Label* fail);
+
   public:
     GetPropertyIC(LiveRegisterSet liveRegs,
                   Register object, ConstantOrRegister id,
@@ -483,42 +485,36 @@ class GetPropertyIC : public IonCache
                        HandleObject obj, HandleValue idval, bool* emitted);
 
     bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                        HandleObject obj, HandlePropertyName name,
-                        void* returnAddr, bool* emitted);
+                        HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                               HandleObject obj, HandlePropertyName name,
-                               void* returnAddr, bool* emitted);
+                               HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandlePropertyName name, void* returnAddr,
-                                   bool* emitted);
+                                   HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj, HandlePropertyName name, bool resetNeeded,
+                                     HandleObject obj, HandleId id, bool resetNeeded,
                                      void* returnAddr, bool* emitted);
 
     bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                         HandleObject obj, HandlePropertyName name,
-                         void* returnAddr, bool* emitted);
+                         HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandlePropertyName name,
-                          void* returnAddr, bool* emitted);
+                          HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                 HandleObject obj, HandlePropertyName name,
-                                 void* returnAddr, bool* emitted);
+                                 HandleObject obj, HandleId id, void* returnAddr, bool* emitted);
 
     bool tryAttachUnboxedArrayLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj, HandlePropertyName name,
-                                     void* returnAddr, bool* emitted);
+                                     HandleObject obj, HandleId id, void* returnAddr,
+                                     bool* emitted);
 
     bool tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                   HandleObject obj, HandlePropertyName name, bool* emitted);
+                                   HandleObject obj, HandleId id, bool* emitted);
 
     bool tryAttachArgumentsLength(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  HandleObject obj, HandlePropertyName name, bool* emitted);
+                                  HandleObject obj, HandleId id, bool* emitted);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue id, MutableHandleValue vp);
