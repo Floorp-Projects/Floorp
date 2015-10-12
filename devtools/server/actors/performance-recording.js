@@ -12,9 +12,9 @@ const { actorBridge } = require("devtools/server/actors/common");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "merge", "sdk/util/object", true);
 loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/shared/performance/io");
+  "devtools/client/performance/modules/io");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/shared/performance/utils");
+  "devtools/shared/performance/recording-utils");
 loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
   "devtools/shared/performance/recording-common", true);
 

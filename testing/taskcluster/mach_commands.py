@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import
 
+from collections import defaultdict
 import os
 import json
 import copy
@@ -288,6 +289,9 @@ class Graph(object):
         action="store_true",
         dest="interactive",
         help="Run the tasks with the interactive feature enabled")
+    @CommandArgument('--print-names-only',
+        action='store_true', default=False,
+        help="Only print the names of each scheduled task, one per line.")
     def create_graph(self, **params):
         from taskcluster_graph.commit_parser import parse_commit
         from slugid import nice as slugid
@@ -503,6 +507,27 @@ class Graph(object):
                     graph['scopes'].extend(test_task['task'].get('scopes', []))
 
         graph['scopes'] = list(set(graph['scopes']))
+
+        if params['print_names_only']:
+            tIDs = defaultdict(list)
+
+            def print_task(task, indent=0):
+                print('{}- {}'.format(' ' * indent, task['task']['metadata']['name']))
+
+                for child in tIDs[task['taskId']]:
+                    print_task(child, indent=indent+2)
+
+            # build a dependency map
+            for task in graph['tasks']:
+                if 'requires' in task:
+                    for tID in task['requires']:
+                        tIDs[tID].append(task)
+
+            # recursively print root tasks
+            for task in graph['tasks']:
+                if 'requires' not in task:
+                    print_task(task)
+            return
 
         # When we are extending the graph remove extra fields...
         if params['ci'] is True:

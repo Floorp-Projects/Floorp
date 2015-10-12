@@ -59,12 +59,12 @@ static const uint32_t BAILOUT_TABLE_ENTRY_SIZE = 2 * sizeof(void*);
 
 // When using O32 ABI, floating-point coprocessor is 32 bit.
 // When using N32 ABI, floating-point coprocessor is 64 bit.
-class FloatRegisters : public BaseFloatRegisters
+class FloatRegisters : public FloatRegistersMIPSShared
 {
   public:
     static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
-        return GetName(Code(i % 32));
+        return FloatRegistersMIPSShared::GetName(Code(i % 32));
     }
 
     static Code FromName(const char* name);
@@ -128,7 +128,7 @@ class FloatRegisters : public BaseFloatRegisters
     static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
-class FloatRegister : public BaseFloatRegister
+class FloatRegister : public FloatRegisterMIPSShared
 {
   public:
     enum RegType {

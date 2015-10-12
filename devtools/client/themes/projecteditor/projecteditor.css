@@ -57,7 +57,7 @@
 }
 
 .sources-tree input {
-  margin: 2px;
+  margin: -1px;
   border: 1px solid gray;
 }
 

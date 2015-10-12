@@ -97,8 +97,6 @@ BuiltinProvider.prototype = {
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "tern": "resource://gre/modules/devtools/tern",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         // Allow access to xpcshell test items from the loader.
@@ -146,7 +144,6 @@ SrcdirProvider.prototype = {
                                                "Promise-backend.js"));
     let acornURI = this.fileURI(OS.Path.join(sharedDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
-    let ternURI = OS.Path.join(sharedDir, "tern");
     let sourceMapURI = this.fileURI(OS.Path.join(sharedDir,
                                                  "sourcemap", "source-map.js"));
     this.loader = new Loader.Loader({
@@ -165,8 +162,6 @@ SrcdirProvider.prototype = {
         "acorn": acornURI,
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn/util/walk": acornWalkURI,
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "tern": ternURI,
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "source-map": sourceMapURI,
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

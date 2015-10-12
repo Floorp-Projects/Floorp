@@ -1156,7 +1156,7 @@ PlacesTreeView.prototype = {
       properties = "";
       let itemId = node.itemId;
       let nodeType = node.type;
-      if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
+      if (PlacesUtils.containerTypes.includes(nodeType)) {
         if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY) {
           properties += " query";
           if (PlacesUtils.nodeIsTagQuery(node))

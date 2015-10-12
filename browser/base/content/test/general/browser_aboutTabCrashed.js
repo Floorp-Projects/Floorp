@@ -1,97 +1,9 @@
 "use strict";
 
-var { TabCrashReporter } =
-  Cu.import("resource:///modules/ContentCrashReporters.jsm");
-
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
 const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 const COMMENTS = "Here's my test comment!";
 const EMAIL = "foo@privacy.com";
-
-/**
- * For an nsIPropertyBag, returns the value for a given
- * key.
- *
- * @param bag
- *        The nsIPropertyBag to retrieve the value from
- * @param key
- *        The key that we want to get the value for from the
- *        bag
- * @returns The value corresponding to the key from the bag,
- *          or null if the value could not be retrieved (for
- *          example, if no value is set at that key).
-*/
-function getPropertyBagValue(bag, key) {
-  try {
-    let val = bag.getProperty(key);
-    return val;
-  } catch(e if e.result == Cr.NS_ERROR_FAILURE) {}
-
-  return null;
-}
-
-/**
- * Returns a Promise that resolves once a crash report has
- * been submitted. This function will also test the crash
- * reports extra data to see if it matches expectedExtra.
- *
- * @param expectedExtra
- *        An Object whose key-value pairs will be compared
- *        against the key-value pairs in the extra data of the
- *        crash report. A test failure will occur if there is
- *        a mismatch.
- *
- *        Note that this will only check the values that exist
- *        in expectedExtra. It's possible that the crash report
- *        will contain other extra information that is not
- *        compared against.
- * @returns Promise
- */
-function promiseCrashReport(expectedExtra) {
-  return Task.spawn(function*() {
-    info("Starting wait on crash-report-status");
-    let [subject, data] =
-      yield TestUtils.topicObserved("crash-report-status", (subject, data) => {
-        return data == "success";
-      });
-    info("Topic observed!");
-
-    if (!(subject instanceof Ci.nsIPropertyBag2)) {
-      throw new Error("Subject was not a Ci.nsIPropertyBag2");
-    }
-
-    let remoteID = getPropertyBagValue(subject, "serverCrashID");
-    if (!remoteID) {
-      throw new Error("Report should have a server ID");
-    }
-
-    let file = Cc["@mozilla.org/file/local;1"]
-                 .createInstance(Ci.nsILocalFile);
-    file.initWithPath(Services.crashmanager._submittedDumpsDir);
-    file.append(remoteID + ".txt");
-    if (!file.exists()) {
-      throw new Error("Report should have been received by the server");
-    }
-
-    file.remove(false);
-
-    let extra = getPropertyBagValue(subject, "extra");
-    if (!(extra instanceof Ci.nsIPropertyBag2)) {
-      throw new Error("extra was not a Ci.nsIPropertyBag2");
-    }
-
-    info("Iterating crash report extra keys");
-    let enumerator = extra.enumerator;
-    while (enumerator.hasMoreElements()) {
-      let key = enumerator.getNext().QueryInterface(Ci.nsIProperty).name;
-      let value = extra.getPropertyAsAString(key);
-      if (key in expectedExtra) {
-        is(value, expectedExtra[key],
-           `Crash report had the right extra value for ${key}`);
-      }
-    }
-  });
-}
 
 /**
  * Sets up the browser to send crash reports to the local crash report
@@ -109,6 +21,11 @@ add_task(function* setup() {
   let serverUrl = env.get("MOZ_CRASHREPORTER_URL");
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
+
+  // On debug builds, crashing tabs results in much thinking, which
+  // slows down the test and results in intermittent test timeouts,
+  // so we'll pump up the expected timeout for this test.
+  requestLongerTimeout(2);
 
   registerCleanupFunction(function() {
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
@@ -281,55 +198,5 @@ add_task(function* test_send_all() {
     "Comments": COMMENTS,
     "URL": PAGE,
     "Email": EMAIL,
-  });
-});
-
-/**
- * Test that if we have an email address stored in prefs, and we decide
- * not to submit the email address in the next crash report, that we
- * clear the email address.
- */
-add_task(function* test_clear_email() {
-  return BrowserTestUtils.withNewTab({
-    gBrowser,
-    url: PAGE,
-  }, function*(browser) {
-    let prefs = TabCrashReporter.prefs;
-    let originalSendReport = prefs.getBoolPref("sendReport");
-    let originalEmailMe = prefs.getBoolPref("emailMe");
-    let originalIncludeURL = prefs.getBoolPref("includeURL");
-    let originalEmail = prefs.getCharPref("email");
-
-    // Pretend that we stored an email address from the previous
-    // crash
-    prefs.setCharPref("email", EMAIL);
-    prefs.setBoolPref("emailMe", true);
-
-    let tab = gBrowser.getTabForBrowser(browser);
-    yield BrowserTestUtils.crashBrowser(browser);
-    let doc = browser.contentDocument;
-
-    // Since about:tabcrashed will run in the parent process, we can safely
-    // manipulate its DOM nodes directly
-    let emailMe = doc.getElementById("emailMe");
-    emailMe.checked = false;
-
-    let crashReport = promiseCrashReport({
-      Email: "",
-    });
-
-    let restoreTab = browser.contentDocument.getElementById("restoreTab");
-    restoreTab.click();
-    yield BrowserTestUtils.waitForEvent(tab, "SSTabRestored");
-    yield crashReport;
-
-    is(prefs.getCharPref("email"), "", "No email address should be stored");
-
-    // Submitting the crash report may have set some prefs regarding how to
-    // send tab crash reports. Let's reset them for the next test.
-    prefs.setBoolPref("sendReport", originalSendReport);
-    prefs.setBoolPref("emailMe", originalEmailMe);
-    prefs.setBoolPref("includeURL", originalIncludeURL);
-    prefs.setCharPref("email", originalEmail);
   });
 });

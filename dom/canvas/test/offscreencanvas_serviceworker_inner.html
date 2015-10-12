@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+</head>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+function ok(expect, msg) {
+  parent.postMessage({type: "test", result: !!expect, name: msg}, "*");
+}
+
+var htmlCanvas = document.getElementById("c");
+
+ok(htmlCanvas, "Should have HTML canvas element");
+
+var messageChannel = new MessageChannel();
+messageChannel.port1.onmessage = function(evt) {
+  parent.postMessage(evt.data, "*");
+}
+
+ok(htmlCanvas.transferControlToOffscreen, "HTMLCanvasElement has transferControlToOffscreen function");
+
+var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
+ok(offscreenCanvas, "Expected transferControlToOffscreen to succeed");
+
+navigator.serviceWorker.ready.then(function() {
+  navigator.serviceWorker.controller.postMessage({test: 'webgl', canvas: offscreenCanvas}, [offscreenCanvas, messageChannel.port2]);
+});
+</script>
+</body>
+</html>

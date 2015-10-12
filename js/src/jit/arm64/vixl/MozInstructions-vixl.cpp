@@ -24,6 +24,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "jit/arm64/Architecture-arm64.h"
 #include "jit/arm64/vixl/Instructions-vixl.h"
 
 namespace vixl {
@@ -78,6 +79,11 @@ bool Instruction::IsLDR() const {
 }
 
 
+bool Instruction::IsNOP() const {
+  return Mask(SystemHintMask) == HINT && ImmHint() == NOP;
+}
+
+
 bool Instruction::IsADR() const {
   return Mask(PCRelAddressingMask) == ADR;
 }
@@ -122,6 +128,43 @@ ptrdiff_t Instruction::ImmPCRawOffset() const {
     offset = ImmBranch();
   }
   return offset;
+}
+
+// Is this a stack pointer synchronization instruction as inserted by
+// MacroAssembler::syncStackPtr()?
+bool
+Instruction::IsStackPtrSync() const
+{
+    // The stack pointer sync is a move to the stack pointer.
+    // This is encoded as 'add sp, Rs, #0'.
+    return IsAddSubImmediate() && Rd() == js::jit::Registers::sp && ImmAddSub() == 0;
+}
+
+// Skip over a constant pool at |this| if there is one.
+//
+// If |this| is pointing to the artifical guard branch around a constant pool,
+// return the instruction after the pool. Otherwise return |this| itself.
+//
+// This function does not skip constant pools with a natural guard branch. It
+// is assumed that anyone inspecting the instruction stream understands about
+// branches that were inserted naturally.
+const Instruction*
+Instruction::skipPool() const
+{
+    // Artificial pool guards can only be B (rather than BR), and they must be
+    // forward branches.
+    if (!IsUncondB() || ImmUncondBranch() <= 0)
+        return this;
+
+    // Check for a constant pool header which has the high 16 bits set. See
+    // struct PoolHeader. Bit 15 indicates a natural pool guard when set. It
+    // must be clear which indicates an artificial pool guard.
+    const Instruction *header = InstructionAtOffset(kInstructionSize);
+    if (header->Mask(0xffff8000) != 0xffff0000)
+        return this;
+
+    // OK, this is an artificial jump around a constant pool.
+    return ImmPCOffsetTarget();
 }
 
 

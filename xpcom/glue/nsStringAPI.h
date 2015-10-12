@@ -1218,20 +1218,12 @@ public:
     NS_UTF16ToCString(aStr, NS_CSTRING_ENCODING_UTF8, *this);
   }
 
-  explicit NS_ConvertUTF16toUTF8(const char16_t* aData,
+  explicit NS_ConvertUTF16toUTF8(const char16ptr_t aData,
                                  uint32_t aLength = UINT32_MAX)
   {
     NS_UTF16ToCString(nsDependentString(aData, aLength),
                       NS_CSTRING_ENCODING_UTF8, *this);
   }
-
-#ifdef MOZ_USE_CHAR16_WRAPPER
-  explicit NS_ConvertUTF16toUTF8(char16ptr_t aString,
-                                 uint32_t aLength = UINT32_MAX)
-    : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString), aLength)
-  {
-  }
-#endif
 
 private:
   self_type& operator=(const self_type& aString) = delete;
@@ -1247,7 +1239,7 @@ public:
     NS_UTF16ToCString(aStr, NS_CSTRING_ENCODING_ASCII, *this);
   }
 
-  explicit NS_LossyConvertUTF16toASCII(const char16_t* aData,
+  explicit NS_LossyConvertUTF16toASCII(const char16ptr_t aData,
                                        uint32_t aLength = UINT32_MAX)
   {
     NS_UTF16ToCString(nsDependentString(aData, aLength),

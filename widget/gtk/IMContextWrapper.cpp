@@ -277,6 +277,12 @@ IMContextWrapper::~IMContextWrapper()
 nsIMEUpdatePreference
 IMContextWrapper::GetIMEUpdatePreference() const
 {
+    // While a plugin has focus, IMContextWrapper doesn't need any
+    // notifications.
+    if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
+      return nsIMEUpdatePreference();
+    }
+
     nsIMEUpdatePreference::Notifications notifications =
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE;
     // If it's not enabled, we don't need position change notification.

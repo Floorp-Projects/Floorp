@@ -84,6 +84,22 @@ public:
   }
 };
 
+class AppendAppNotesRunnable : public nsCancelableRunnable {
+public:
+  explicit AppendAppNotesRunnable(nsAutoCString aFeatureStr)
+    : mFeatureString(aFeatureStr)
+  {
+  }
+
+  NS_IMETHOD Run() override {
+    CrashReporter::AppendAppNotesToCrashReport(mFeatureString);
+    return NS_OK;
+  }
+
+private:
+  nsCString mFeatureString;
+};
+
 void
 ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
 {
@@ -102,7 +118,8 @@ ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
 
   if (!gFeaturesAlreadyReported->Contains(featureString)) {
     gFeaturesAlreadyReported->AppendElement(featureString);
-    CrashReporter::AppendAppNotesToCrashReport(featureString);
+    nsCOMPtr<nsIRunnable> r = new AppendAppNotesRunnable(featureString);
+    NS_DispatchToMainThread(r);
   }
 }
 

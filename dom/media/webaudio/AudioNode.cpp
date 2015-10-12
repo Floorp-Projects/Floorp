@@ -37,19 +37,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioNode,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(AudioNode, DOMEventTargetHelper)
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-AudioNode::Release()
-{
-  if (mRefCnt.get() == 1) {
-    // We are about to be deleted, disconnect the object from the graph before
-    // the derived type is destroyed.
-    DisconnectFromGraph();
-  }
-  nsrefcnt r = DOMEventTargetHelper::Release();
-  NS_LOG_RELEASE(this, r, "AudioNode");
-  return r;
-}
+NS_IMPL_RELEASE_INHERITED(AudioNode, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioNode)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -150,9 +138,8 @@ FindIndexOfNodeWithPorts(const nsTArray<InputNode>& aInputNodes, const AudioNode
 void
 AudioNode::DisconnectFromGraph()
 {
-  // Addref this temporarily so the refcount bumping below doesn't destroy us
-  // prematurely
-  nsRefPtr<AudioNode> kungFuDeathGrip = this;
+  MOZ_ASSERT(mRefCnt.get() > mInputNodes.Length(),
+             "Caller should be holding a reference");
 
   // The idea here is that we remove connections one by one, and at each step
   // the graph is in a valid state.

@@ -510,8 +510,12 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   sPresContext = aPresContext;
   sContent = aContent;
 
-  // Don't call CreateIMEContentObserver() here, it should be called from
-  // focus event handler of editor.
+  // Don't call CreateIMEContentObserver() here except when a plugin gets
+  // focus because it will be called from the focus event handler of focused
+  // editor.
+  if (newState.mEnabled == IMEState::PLUGIN) {
+    CreateIMEContentObserver(nullptr);
+  }
 
   return NS_OK;
 }
@@ -1515,7 +1519,7 @@ IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
 bool
 IMEStateManager::IsIMEObserverNeeded(const IMEState& aState)
 {
-  return aState.IsEditable();
+  return aState.MaybeEditable();
 }
 
 // static

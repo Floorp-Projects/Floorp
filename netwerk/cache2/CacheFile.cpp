@@ -1966,10 +1966,11 @@ CacheFile::InitIndexEntry()
 
   nsresult rv;
 
+  // Bug 1201042 - will pass OriginAttributes directly.
   rv = CacheFileIOManager::InitIndexEntry(mHandle,
-                                          mMetadata->AppId(),
+                                          mMetadata->OriginAttributes().mAppId,
                                           mMetadata->IsAnonymous(),
-                                          mMetadata->IsInBrowser());
+                                          mMetadata->OriginAttributes().mInBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t expTime;

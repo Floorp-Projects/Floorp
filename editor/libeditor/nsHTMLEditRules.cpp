@@ -849,14 +849,8 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 
   NS_NAMED_LITERAL_STRING(typeAttrName, "align");
   nsIAtom  *dummyProperty = nullptr;
-  nsCOMPtr<Element> blockParent;
   NS_ENSURE_STATE(mHTMLEditor);
-  if (mHTMLEditor->IsBlockNode(nodeToExamine))
-    blockParent = nodeToExamine->AsElement();
-  else {
-    NS_ENSURE_STATE(mHTMLEditor);
-    blockParent = mHTMLEditor->GetBlockNodeParent(nodeToExamine);
-  }
+  nsCOMPtr<Element> blockParent = mHTMLEditor->GetBlock(*nodeToExamine);
 
   NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
 
@@ -2339,21 +2333,9 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       }
 
       // Figure out block parents
-      nsCOMPtr<Element> leftParent;
-      if (IsBlockNode(GetAsDOMNode(startNode))) {
-        leftParent = startNode->AsElement();
-      } else {
-        NS_ENSURE_STATE(mHTMLEditor);
-        leftParent = mHTMLEditor->GetBlockNodeParent(startNode);
-      }
-
-      nsCOMPtr<Element> rightParent;
-      if (IsBlockNode(GetAsDOMNode(endNode))) {
-        rightParent = endNode->AsElement();
-      } else {
-        NS_ENSURE_STATE(mHTMLEditor);
-        rightParent = mHTMLEditor->GetBlockNodeParent(endNode);
-      }
+      NS_ENSURE_STATE(mHTMLEditor);
+      nsCOMPtr<Element> leftParent = mHTMLEditor->GetBlock(*startNode);
+      nsCOMPtr<Element> rightParent = mHTMLEditor->GetBlock(*endNode);
 
       // Are endpoint block parents the same?  Use default deletion
       if (leftParent && leftParent == rightParent) {
@@ -3459,13 +3441,8 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection* aSelection,
     if (tString.EqualsLiteral("normal") ||
         tString.IsEmpty() ) // we are removing blocks (going to "body text")
     {
-      nsCOMPtr<Element> curBlock;
-      if (IsBlockNode(GetAsDOMNode(parent))) {
-        curBlock = parent->AsElement();
-      } else {
-        NS_ENSURE_STATE(mHTMLEditor);
-        curBlock = mHTMLEditor->GetBlockNodeParent(parent);
-      }
+      NS_ENSURE_STATE(mHTMLEditor);
+      nsCOMPtr<Element> curBlock = mHTMLEditor->GetBlock(*parent);
       NS_ENSURE_TRUE(curBlock, NS_ERROR_NULL_POINTER);
       nsCOMPtr<nsIDOMNode> curBlockPar =
         GetAsDOMNode(curBlock->GetParentNode());
@@ -3617,17 +3594,11 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   nsCOMPtr<Element> liNode;
   if (aSelection->Collapsed()) {
     nsCOMPtr<nsINode> node;
-    nsCOMPtr<Element> block;
     int32_t offset;
     NS_ENSURE_STATE(mHTMLEditor);
     nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
     NS_ENSURE_SUCCESS(res, res);
-    if (IsBlockNode(GetAsDOMNode(node))) {
-      block = node->AsElement();
-    } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      block = mHTMLEditor->GetBlockNodeParent(node);
-    }
+    nsCOMPtr<Element> block = mHTMLEditor->GetBlock(*node);
     if (block && nsHTMLEditUtils::IsListItem(block))
       liNode = block;
   }
@@ -4978,27 +4949,23 @@ nsHTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
   if (IsInlineNode(GetAsDOMNode(aBodyNode))) {
     return NS_OK;
   }
+  NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
+
   // If we are inside an empty block, delete it.  Note: do NOT delete table
   // elements this way.
-  nsCOMPtr<Element> block;
-  if (IsBlockNode(GetAsDOMNode(aStartNode))) {
-    block = aStartNode->AsElement();
-  } else {
-    block = mHTMLEditor->GetBlockNodeParent(aStartNode);
-  }
+  nsCOMPtr<Element> block = mHTMLEditor->GetBlock(*aStartNode);
   bool bIsEmptyNode;
   nsCOMPtr<Element> emptyBlock;
   nsresult res;
   if (block && block != aBodyNode) {
     // Efficiency hack, avoiding IsEmptyNode() call when in body
-    NS_ENSURE_STATE(mHTMLEditor);
     res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, true, false);
     NS_ENSURE_SUCCESS(res, res);
     while (block && bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(block) &&
            block != aBodyNode) {
       emptyBlock = block;
       block = mHTMLEditor->GetBlockNodeParent(emptyBlock);
-      NS_ENSURE_STATE(mHTMLEditor);
       if (block) {
         res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, true, false);
         NS_ENSURE_SUCCESS(res, res);
@@ -5719,12 +5686,7 @@ nsHTMLEditRules::PromoteRange(nsRange& aRange, EditAction aOperationType)
   // inside block elements that contain nothing but a solo <br>.  It's easier
   // to put a workaround here than to revamp GetPromotedPoint.  :-(
   if (startNode == endNode && startOffset == endOffset) {
-    nsCOMPtr<Element> block;
-    if (IsBlockNode(GetAsDOMNode(startNode))) {
-      block = startNode->AsElement();
-    } else {
-      block = mHTMLEditor->GetBlockNodeParent(startNode);
-    }
+    nsCOMPtr<Element> block = mHTMLEditor->GetBlock(*startNode);
     if (block) {
       bool bIsEmptyNode = false;
       nsCOMPtr<nsIContent> root = mHTMLEditor->GetActiveEditingHost();
@@ -7549,14 +7511,9 @@ nsHTMLEditRules::AdjustSelection(Selection* aSelection,
 
   // make sure we aren't in an empty block - user will see no cursor.  If this
   // is happening, put a <br> in the block if allowed.
-  nsCOMPtr<nsINode> theblock;
-  if (IsBlockNode(GetAsDOMNode(selNode))) {
-    theblock = selNode;
-  } else {
-    NS_ENSURE_STATE(mHTMLEditor);
-    theblock = mHTMLEditor->GetBlockNodeParent(selNode);
-  }
   NS_ENSURE_STATE(mHTMLEditor);
+  nsCOMPtr<Element> theblock = mHTMLEditor->GetBlock(*selNode);
+
   if (theblock && mHTMLEditor->IsEditable(theblock)) {
     bool bIsEmptyNode;
     NS_ENSURE_STATE(mHTMLEditor);
@@ -7597,15 +7554,9 @@ nsHTMLEditRules::AdjustSelection(Selection* aSelection,
   if (nearNode)
   {
     // is nearNode also a descendant of same block?
-    nsCOMPtr<nsINode> block, nearBlock;
-    if (IsBlockNode(GetAsDOMNode(selNode))) {
-      block = selNode;
-    } else {
-      NS_ENSURE_STATE(mHTMLEditor);
-      block = mHTMLEditor->GetBlockNodeParent(selNode);
-    }
     NS_ENSURE_STATE(mHTMLEditor);
-    nearBlock = mHTMLEditor->GetBlockNodeParent(nearNode);
+    nsCOMPtr<Element> block = mHTMLEditor->GetBlock(*selNode);
+    nsCOMPtr<Element> nearBlock = mHTMLEditor->GetBlockNodeParent(nearNode);
     if (block && block == nearBlock) {
       if (nearNode && nsTextEditUtils::IsBreak(nearNode) )
       {
