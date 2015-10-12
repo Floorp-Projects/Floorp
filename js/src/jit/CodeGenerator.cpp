@@ -8467,9 +8467,10 @@ CodeGenerator::visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic)
 void
 CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                                    ConstantOrRegister id, TypedOrValueRegister output,
-                                   bool monitoredResult, jsbytecode* profilerLeavePc)
+                                   bool monitoredResult, bool allowDoubleResult,
+                                   jsbytecode* profilerLeavePc)
 {
-    GetPropertyIC cache(liveRegs, objReg, id, output, monitoredResult);
+    GetPropertyIC cache(liveRegs, objReg, id, output, monitoredResult, allowDoubleResult);
     cache.setProfilerLeavePC(profilerLeavePc);
     addCache(ins, allocateCache(cache));
 }
@@ -8520,7 +8521,7 @@ CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV* ins)
     TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
 
     addGetPropertyCache(ins, liveRegs, objReg, id, output, monitoredResult,
-                        ins->mir()->profilerLeavePc());
+                        ins->mir()->allowDoubleResult(), ins->mir()->profilerLeavePc());
 }
 
 void
@@ -8533,7 +8534,7 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT* ins)
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->getDef(0)));
 
     addGetPropertyCache(ins, liveRegs, objReg, id, output, monitoredResult,
-                        ins->mir()->profilerLeavePc());
+                        ins->mir()->allowDoubleResult(), ins->mir()->profilerLeavePc());
 }
 
 typedef bool (*GetPropertyICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,
@@ -8568,10 +8569,10 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetProperty
 void
 CodeGenerator::addGetElementCache(LInstruction* ins, Register obj, TypedOrValueRegister index,
                                   TypedOrValueRegister output, bool monitoredResult,
-                                  bool allowDoubleResult, jsbytecode* profilerLeavePc)
+                                  jsbytecode* profilerLeavePc)
 {
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
-    GetElementIC cache(liveRegs, obj, index, output, monitoredResult, allowDoubleResult);
+    GetElementIC cache(liveRegs, obj, index, output, monitoredResult);
     cache.setProfilerLeavePC(profilerLeavePc);
     addCache(ins, allocateCache(cache));
 }
@@ -8585,7 +8586,7 @@ CodeGenerator::visitGetElementCacheV(LGetElementCacheV* ins)
     const MGetElementCache* mir = ins->mir();
 
     addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
-                       mir->allowDoubleResult(), mir->profilerLeavePc());
+                       mir->profilerLeavePc());
 }
 
 void
@@ -8597,7 +8598,7 @@ CodeGenerator::visitGetElementCacheT(LGetElementCacheT* ins)
     const MGetElementCache* mir = ins->mir();
 
     addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
-                       mir->allowDoubleResult(), mir->profilerLeavePc());
+                       mir->profilerLeavePc());
 }
 
 typedef bool (*GetElementICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,

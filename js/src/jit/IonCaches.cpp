@@ -2097,6 +2097,11 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
             return false;
     }
 
+    if (idval.isInt32() || idval.isString()) {
+        if (!*emitted && !tryAttachTypedOrUnboxedArrayElement(cx, outerScript, ion, obj, idval, emitted))
+            return false;
+    }
+
     if (!*emitted)
         JitSpew(JitSpew_IonIC, "Failed to attach GETPROP cache");
 
@@ -3909,14 +3914,13 @@ GetPropertyIC::tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript
 }
 
 /* static */ bool
-GetElementIC::canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
-                                                  TypedOrValueRegister output)
+GetPropertyIC::canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
+                                                   TypedOrValueRegister output)
 {
     if (!IsAnyTypedArray(obj) && !obj->is<UnboxedArrayObject>())
         return false;
 
-    if (!idval.isInt32() && !idval.isString())
-        return false;
+    MOZ_ASSERT(idval.isInt32() || idval.isString());
 
     // Don't emit a stub if the access is out of bounds. We make to make
     // certain that we monitor the type coming out of the typed array when
@@ -3961,7 +3965,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
                                       TypedOrValueRegister index, TypedOrValueRegister output,
                                       bool allowDoubleResult)
 {
-    MOZ_ASSERT(GetElementIC::canAttachTypedOrUnboxedArrayElement(array, idval, output));
+    MOZ_ASSERT(GetPropertyIC::canAttachTypedOrUnboxedArrayElement(array, idval, output));
 
     Label failures;
 
@@ -4076,14 +4080,22 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
 }
 
 bool
-GetElementIC::attachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
-                                               IonScript* ion, HandleObject tarr,
-                                               const Value& idval)
+GetPropertyIC::tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outerScript,
+                                                   IonScript* ion, HandleObject obj,
+                                                   HandleValue idval, bool* emitted)
 {
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(!*emitted);
+
+    if (!canAttachTypedOrUnboxedArrayElement(obj, idval, output()))
+        return true;
+
+    *emitted = true;
+
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     StubAttacher attacher(*this);
-    GenerateGetTypedOrUnboxedArrayElement(cx, masm, attacher, tarr, idval, object(), index(),
-                                          output(), allowDoubleResult());
+    GenerateGetTypedOrUnboxedArrayElement(cx, masm, attacher, obj, idval, object(), id().reg(),
+                                          output(), allowDoubleResult_);
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array",
                              JS::TrackedOutcome::ICGetElemStub_TypedArray);
 }
@@ -4232,11 +4244,6 @@ GetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
         if (!attachedStub && cache.monitoredResult() && canAttachGetProp(obj, idval, id)) {
             RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
             if (!cache.attachGetProp(cx, outerScript, ion, obj, idval, name))
-                return false;
-            attachedStub = true;
-        }
-        if (!attachedStub && canAttachTypedOrUnboxedArrayElement(obj, idval, cache.output())) {
-            if (!cache.attachTypedOrUnboxedArrayElement(cx, outerScript, ion, obj, idval))
                 return false;
             attachedStub = true;
         }
