@@ -138,6 +138,23 @@
   border-style: none;
 }
 
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
+  background-clip: padding-box;
+  background-image: linear-gradient(@toolbarHighlight@, @toolbarHighlight@);
+}
+
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  #nav-bar {
+    background-image: linear-gradient(@toolbarHighlight@, transparent) !important;
+  }
+
+  #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
+    background-image: none;
+  }
+}
+
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(:-moz-lwtheme) {
   background-color: -moz-Dialog;
 }
@@ -342,11 +359,6 @@
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
-}
-
-#nav-bar {
-  background-clip: padding-box;
-  background-image: linear-gradient(@toolbarHighlight@, transparent);
 }
 
 #nav-bar {
@@ -2004,12 +2016,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* Invert the unhovered close tab icons on bright-text tabs */
 @media not all and (min-resolution: 1.1dppx) {
+  .tab-close-button:-moz-lwtheme-brighttext,
   #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
     list-style-image: url("chrome://global/skin/icons/close-inverted.png");
   }
 }
 
 @media (min-resolution: 1.1dppx) {
+  .tab-close-button:-moz-lwtheme-brighttext,
   #TabsToolbar[brighttext] .tab-close-button:not([visuallyselected="true"]) {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
