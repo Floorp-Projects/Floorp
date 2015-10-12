@@ -29,6 +29,7 @@ ANDROID_EXTRA_JARS += \
 	$(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB) \
 	$(ANDROID_SUPPORT_V4_AAR_LIB) \
 	$(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
+	$(ANDROID_APPCOMPAT_V7_AAR_LIB) \
 	$(NULL)
 
 # The GeckoView consuming APK depends on the GeckoView resources.  This hacks a

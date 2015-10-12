@@ -725,7 +725,7 @@ DefineTransaction.annotationObjectValidate = function (obj) {
       checkProperty("value", false, isPrimitive) ) {
     // Nothing else should be set
     let validKeys = ["name", "value", "flags", "expires"];
-    if (Object.keys(obj).every( (k) => validKeys.indexOf(k) != -1 ))
+    if (Object.keys(obj).every( (k) => validKeys.includes(k)))
       return obj;
   }
   throw new Error("Invalid annotation object");
@@ -1041,7 +1041,7 @@ function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
     if (annos.length > 0) {
       if (!aRestoring && aExcludingAnnotations.length > 0) {
         annos = [for(a of annos)
-                 if (aExcludingAnnotations.indexOf(a.name) == -1) a];
+                 if (!aExcludingAnnotations.includes(a.name)) a];
       }
 
       PlacesUtils.setAnnotationsForItem(itemId, annos);
@@ -1095,7 +1095,7 @@ PT.NewBookmark.prototype = Object.seal({
           PlacesUtils.setAnnotationsForItem(itemId, aAnnos);
         if (aTags.length > 0) {
           let currentTags = PlacesUtils.tagging.getTagsForURI(aURI);
-          aTags = [t for (t of aTags) if (currentTags.indexOf(t) == -1)];
+          aTags = [t for (t of aTags) if (!currentTags.includes(t))];
           PlacesUtils.tagging.tagURI(aURI, aTags);
         }
 
@@ -1268,7 +1268,7 @@ PT.EditUrl.prototype = Object.seal({
 
       let currentNewURITags = PlacesUtils.tagging.getTagsForURI(aURI);
       newURIAdditionalTags = [t for (t of oldURITags)
-                              if (currentNewURITags.indexOf(t) == -1)];
+                              if (!currentNewURITags.includes(t))];
       if (newURIAdditionalTags)
         PlacesUtils.tagging.tagURI(aURI, newURIAdditionalTags);
     }
@@ -1505,7 +1505,7 @@ PT.Tag.prototype = {
       }
       else {
         let currentTags = PlacesUtils.tagging.getTagsForURI(currentURI);
-        let newTags = [t for (t of aTags) if (currentTags.indexOf(t) == -1)];
+        let newTags = [t for (t of aTags) if (!currentTags.includes(t))];
         PlacesUtils.tagging.tagURI(currentURI, newTags);
         onUndo.unshift(() => {
           PlacesUtils.tagging.untagURI(currentURI, newTags);
@@ -1546,7 +1546,7 @@ PT.Untag.prototype = {
       let tagsToRemove;
       let tagsSet = PlacesUtils.tagging.getTagsForURI(currentURI);
       if (aTags.length > 0)
-        tagsToRemove = [t for (t of aTags) if (tagsSet.indexOf(t) != -1)];
+        tagsToRemove = [t for (t of aTags) if (tagsSet.includes(t))];
       else
         tagsToRemove = tagsSet;
       PlacesUtils.tagging.untagURI(currentURI, tagsToRemove);

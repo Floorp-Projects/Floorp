@@ -134,7 +134,7 @@ function decodeRequestPayload(request) {
     unicodeConverter.charset = "UTF-8";
     let utf8string = unicodeConverter.ConvertToUnicode(observer.buffer);
     utf8string += unicodeConverter.Finish();
-    payload = decoder.decode(utf8string);
+    payload = JSON.parse(utf8string);
   } else {
     payload = decoder.decodeFromStream(s, s.available());
   }

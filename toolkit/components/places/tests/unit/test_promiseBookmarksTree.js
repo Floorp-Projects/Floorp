@@ -85,7 +85,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       for (let i = 0; i < aNode.childCount; i++) {
         let childNode = aNode.getChild(i);
         if (childNode.itemId == PlacesUtils.tagsFolderId ||
-            aExcludedGuids.indexOf(childNode.bookmarkGuid) != -1) {
+            aExcludedGuids.includes(childNode.bookmarkGuid)) {
           continue;
         }
         expectedChildrenNodes.push(childNode);
