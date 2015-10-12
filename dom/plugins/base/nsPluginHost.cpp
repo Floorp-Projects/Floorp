@@ -1911,6 +1911,10 @@ nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
 nsPluginHost::SpecialType
 nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
 {
+  if (aMIMEType.LowerCaseEqualsASCII("application/x-test")) {
+    return eSpecialType_Test;
+  }
+
   if (aMIMEType.LowerCaseEqualsASCII("application/x-shockwave-flash") ||
       aMIMEType.LowerCaseEqualsASCII("application/futuresplash")) {
     return eSpecialType_Flash;
