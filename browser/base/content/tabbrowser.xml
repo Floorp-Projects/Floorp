@@ -1110,6 +1110,7 @@
               this.updateTitlebar();
 
               this.mCurrentTab.removeAttribute("titlechanged");
+              this.mCurrentTab.removeAttribute("attention");
             }
 
             // If the new tab is busy, and our current state is not busy, then
@@ -4330,15 +4331,28 @@
           if (!event.isTrusted)
             return;
 
-          // We're about to open a modal dialog, make sure the opening
-          // tab is brought to the front.
+          let targetIsWindow = event.target instanceof Window;
+
+          // We're about to open a modal dialog, so figure out for which tab:
           // If this is a same-process modal dialog, then we're given its DOM
           // window as the event's target. For remote dialogs, we're given the
-          // browser, but that's in the originalTarget.
-          // XXX Why originalTarget for the browser?
-          this.selectedTab = (event.target instanceof Window) ?
-                               this._getTabForContentWindow(event.target.top) :
-                               this.getTabForBrowser(event.originalTarget);
+          // browser, but that's in the originalTarget and not the target,
+          // because it's across the tabbrowser's XBL boundary.
+          let tabForEvent = targetIsWindow ?
+                            this._getTabForContentWindow(event.target.top) :
+                            this.getTabForBrowser(event.originalTarget);
+
+          // Don't need to act if the tab is already selected:
+          if (tabForEvent.selected)
+            return;
+
+          if (event.detail && event.detail.tabPrompt &&
+              Services.prefs.getBoolPref("browser.tabs.dontfocusfordialogs")) {
+            tabForEvent.setAttribute("attention", "true");
+          } else {
+            // bring tab to the front:
+            this.selectedTab = tabForEvent;
+          }
         ]]>
       </handler>
       <handler event="DOMTitleChanged">
@@ -5831,16 +5845,16 @@
 
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,fadein"
+        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,fadein"
                   class="tab-background">
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
                     class="tab-background-start"/>
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
                     class="tab-background-middle"/>
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
                     class="tab-background-end"/>
         </xul:hbox>
-        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
           <xul:image xbl:inherits="fadein,pinned,busy,progress,selected,visuallyselected"
                      class="tab-throbber"
@@ -5857,7 +5871,7 @@
                      role="presentation"/>
           <xul:label flex="1"
                      anonid="tab-label"
-                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected"
+                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected,attention"
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:image xbl:inherits="soundplaying,pinned,muted,visuallyselected"
