@@ -2088,6 +2088,11 @@ GetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript*
             return false;
     }
 
+    if (idval.isInt32()) {
+        if (!*emitted && !tryAttachArgumentsElement(cx, outerScript, ion, obj, idval, emitted))
+            return false;
+    }
+
     if (!*emitted)
         JitSpew(JitSpew_IonIC, "Failed to attach GETPROP cache");
 
@@ -2178,6 +2183,8 @@ GetPropertyIC::reset(ReprotectCode reprotect)
     hasSharedTypedArrayLengthStub_ = false;
     hasMappedArgumentsLengthStub_ = false;
     hasUnmappedArgumentsLengthStub_ = false;
+    hasMappedArgumentsElementStub_ = false;
+    hasUnmappedArgumentsElementStub_ = false;
     hasGenericProxyStub_ = false;
 }
 
@@ -4061,10 +4068,27 @@ GetElementIC::attachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript outer
 }
 
 bool
-GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                     HandleObject obj)
+GetPropertyIC::tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                         HandleObject obj, HandleValue idval, bool* emitted)
 {
+    MOZ_ASSERT(canAttachStub());
+    MOZ_ASSERT(!*emitted);
+
+    if (!IsOptimizableArgumentsObjectForGetElem(obj, idval))
+        return true;
+
     MOZ_ASSERT(obj->is<ArgumentsObject>());
+
+    if (hasArgumentsElementStub(obj->is<MappedArgumentsObject>()))
+        return true;
+
+    TypedOrValueRegister index = id().reg();
+    if (index.type() != MIRType_Value && index.type() != MIRType_Int32)
+        return true;
+
+    MOZ_ASSERT(output().hasValue());
+
+    *emitted = true;
 
     Label failures;
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
@@ -4086,16 +4110,16 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
 
     // Check index against length.
     Label failureRestoreIndex;
-    if (index().hasValue()) {
-        ValueOperand val = index().valueReg();
+    if (index.hasValue()) {
+        ValueOperand val = index.valueReg();
         masm.branchTestInt32(Assembler::NotEqual, val, &failures);
         indexReg = val.scratchReg();
 
         masm.unboxInt32(val, indexReg);
         masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failureRestoreIndex);
     } else {
-        MOZ_ASSERT(index().type() == MIRType_Int32);
-        indexReg = index().typedReg().gpr();
+        MOZ_ASSERT(index.type() == MIRType_Int32);
+        indexReg = index.typedReg().gpr();
         masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failures);
     }
     // Save indexReg because it needs to be clobbered to check deleted bit.
@@ -4126,22 +4150,11 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
     // Ensure result is not magic value, and type-check result.
     masm.branchTestMagic(Assembler::Equal, elemIdx, &failureRestoreIndex);
 
-    if (output().hasTyped()) {
-        MOZ_ASSERT(!output().typedReg().isFloat());
-        MOZ_ASSERT(index().type() == MIRType_Boolean ||
-                   index().type() == MIRType_Int32 ||
-                   index().type() == MIRType_String ||
-                   index().type() == MIRType_Symbol ||
-                   index().type() == MIRType_Object);
-        masm.branchTestMIRType(Assembler::NotEqual, elemIdx, index().type(),
-                               &failureRestoreIndex);
-    }
-
     masm.loadTypedOrValue(elemIdx, output());
 
     // indexReg may need to be reconstructed if it was originally a value.
-    if (index().hasValue())
-        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().valueReg());
+    if (index.hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index.valueReg());
 
     // Success.
     attacher.jumpRejoin(masm);
@@ -4150,20 +4163,20 @@ GetElementIC::attachArgumentsElement(JSContext* cx, HandleScript outerScript, Io
     masm.bind(&failurePopIndex);
     masm.pop(indexReg);
     masm.bind(&failureRestoreIndex);
-    if (index().hasValue())
-        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index().valueReg());
+    if (index.hasValue())
+        masm.tagValue(JSVAL_TYPE_INT32, indexReg, index.valueReg());
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
 
     if (obj->is<UnmappedArgumentsObject>()) {
-        MOZ_ASSERT(!hasUnmappedArgumentsStub_);
-        hasUnmappedArgumentsStub_ = true;
+        MOZ_ASSERT(!hasUnmappedArgumentsElementStub_);
+        hasUnmappedArgumentsElementStub_ = true;
         return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (unmapped)",
                                  JS::TrackedOutcome::ICGetElemStub_ArgsElementUnmapped);
     }
 
-    MOZ_ASSERT(!hasMappedArgumentsStub_);
-    hasMappedArgumentsStub_ = true;
+    MOZ_ASSERT(!hasMappedArgumentsElementStub_);
+    hasMappedArgumentsElementStub_ = true;
     return linkAndAttachStub(cx, masm, attacher, ion, "ArgsObj element (mapped)",
                              JS::TrackedOutcome::ICGetElemStub_ArgsElementMapped);
 }
@@ -4195,16 +4208,6 @@ GetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
 
     bool attachedStub = false;
     if (cache.canAttachStub()) {
-        if (IsOptimizableArgumentsObjectForGetElem(obj, idval) &&
-            !cache.hasArgumentsStub(obj->is<MappedArgumentsObject>()) &&
-            (cache.index().hasValue() ||
-             cache.index().type() == MIRType_Int32) &&
-            (cache.output().hasValue() || !cache.output().typedReg().isFloat()))
-        {
-            if (!cache.attachArgumentsElement(cx, outerScript, ion, obj))
-                return false;
-            attachedStub = true;
-        }
         if (!attachedStub && cache.monitoredResult() && canAttachGetProp(obj, idval, id)) {
             RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
             if (!cache.attachGetProp(cx, outerScript, ion, obj, idval, name))
@@ -4254,8 +4257,6 @@ GetElementIC::reset(ReprotectCode reprotect)
 {
     IonCache::reset(reprotect);
     hasDenseStub_ = false;
-    hasMappedArgumentsStub_ = false;
-    hasUnmappedArgumentsStub_ = false;
 }
 
 static bool
