@@ -103,6 +103,6 @@ function* selectWithElementPicker(inspector) {
   executeInContent("Test:SynthesizeKey", {
     key: "VK_RETURN",
     options: {}
-  }, false);
+  }, {}, false);
   yield inspector.once("inspector-updated");
 }
