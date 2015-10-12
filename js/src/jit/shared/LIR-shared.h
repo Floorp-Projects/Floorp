@@ -5482,10 +5482,12 @@ class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0>
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
-class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>
+class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(GetPropertyCacheV)
+
+    static const size_t Id = 1;
 
     explicit LGetPropertyCacheV(const LAllocation& object) {
         setOperand(0, object);
@@ -5497,10 +5499,12 @@ class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // value of a known type, possibly into an FP register.
-class LGetPropertyCacheT : public LInstructionHelper<1, 1, 0>
+class LGetPropertyCacheT : public LInstructionHelper<1, 1 + BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(GetPropertyCacheT)
+
+    static const size_t Id = 1;
 
     explicit LGetPropertyCacheT(const LAllocation& object) {
         setOperand(0, object);
@@ -5610,47 +5614,6 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     }
     const char* extraName() const {
         return StringFromMIRType(valueType_);
-    }
-};
-
-class LGetElementCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(GetElementCacheV)
-
-    static const size_t Index = 1;
-
-    explicit LGetElementCacheV(const LAllocation& object) {
-        setOperand(0, object);
-    }
-    const LAllocation* object() {
-        return getOperand(0);
-    }
-    const MGetElementCache* mir() const {
-        return mir_->toGetElementCache();
-    }
-};
-
-class LGetElementCacheT : public LInstructionHelper<1, 2, 0>
-{
-  public:
-    LIR_HEADER(GetElementCacheT)
-
-    LGetElementCacheT(const LAllocation& object, const LAllocation& index) {
-        setOperand(0, object);
-        setOperand(1, index);
-    }
-    const LAllocation* object() {
-        return getOperand(0);
-    }
-    const LAllocation* index() {
-        return getOperand(1);
-    }
-    const LDefinition* output() {
-        return getDef(0);
-    }
-    const MGetElementCache* mir() const {
-        return mir_->toGetElementCache();
     }
 };
 

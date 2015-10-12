@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-enum PresentationSessionState
+enum PresentationConnectionState
 {
   // Existing presentation, and the communication channel is active.
   "connected",
@@ -19,9 +19,9 @@ enum PresentationSessionState
 
 [Pref="dom.presentation.enabled",
  CheckAnyPermissions="presentation"]
-interface PresentationSession : EventTarget {
+interface PresentationConnection : EventTarget {
   /*
-   * Unique id for all existing sessions.
+   * Unique id for all existing connections.
    */
   [Constant]
   readonly attribute DOMString id;
@@ -29,10 +29,10 @@ interface PresentationSession : EventTarget {
   /*
    * @value "connected", "closed", or "terminated".
    */
-  readonly attribute PresentationSessionState state;
+  readonly attribute PresentationConnectionState state;
 
   /*
-   * It is called when session state changes.
+   * It is called when connection state changes.
    */
   attribute EventHandler onstatechange;
 
@@ -55,8 +55,8 @@ interface PresentationSession : EventTarget {
   attribute EventHandler onmessage;
 
   /*
-   * Both the controlling and receving browsing context can close the session.
-   * Then, the session state should turn into "closed".
+   * Both the controlling and receiving browsing context can close the
+   * connection. Then the connection state should turn into "closed".
    *
    * This function only works when the state is not "connected".
    */
@@ -65,8 +65,8 @@ interface PresentationSession : EventTarget {
   // void close();
 
   /*
-   * Both the controlling and receving browsing context can terminate the session.
-   * Then the session state should turn into "terminated".
+   * Both the controlling and receiving browsing context can terminate the
+   * connection. Then the connection state should turn into "terminated".
    *
    * This function only works when the state is not "connected".
    */

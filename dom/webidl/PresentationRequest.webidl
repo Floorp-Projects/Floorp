@@ -9,13 +9,13 @@
  CheckAnyPermissions="presentation"]
 interface PresentationRequest : EventTarget {
   /*
-   * A requesting page use start() to start a new session, and the session will
-   * be returned with the promise. UA may show a prompt box with a list of
+   * A requesting page use start() to start a new connection, and it will be
+   * returned with the promise. UA may show a prompt box with a list of
    * available devices and ask the user to grant permission, choose a device, or
    * cancel the operation.
    *
    * The promise is resolved when the presenting page is successfully loaded and
-   * the communication channel is established, i.e., the session state is
+   * the communication channel is established, i.e., the connection state is
    * "connected".
    *
    * The promise may be rejected duo to one of the following reasons:
@@ -26,7 +26,7 @@ interface PresentationRequest : EventTarget {
    * - "TimeoutError":   Presenting page takes too long to load.
    */
   [Throws]
-  Promise<PresentationSession> start();
+  Promise<PresentationConnection> start();
 
  /*
   * UA triggers device discovery mechanism periodically and monitor device
@@ -39,8 +39,8 @@ interface PresentationRequest : EventTarget {
   Promise<PresentationAvailability> getAvailability();
 
   /*
-   * It is called when a session associated with a PresentationRequest is created.
-   * The event is fired for all sessions that are created for the controller.
+   * It is called when a connection associated with a PresentationRequest is created.
+   * The event is fired for all connections that are created for the controller.
    */
-  attribute EventHandler onsessionconnect;
+  attribute EventHandler onconnectionavailable;
 };

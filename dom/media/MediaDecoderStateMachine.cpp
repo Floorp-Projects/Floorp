@@ -2864,11 +2864,6 @@ MediaDecoderStateMachine::ScheduleStateMachineIn(int64_t aMicroseconds)
   mDelayedScheduler.Ensure(target);
 }
 
-bool MediaDecoderStateMachine::OnDecodeTaskQueue() const
-{
-  return !DecodeTaskQueue() || DecodeTaskQueue()->IsCurrentThreadIn();
-}
-
 bool MediaDecoderStateMachine::OnTaskQueue() const
 {
   return OwnerThread()->IsCurrentThreadIn();

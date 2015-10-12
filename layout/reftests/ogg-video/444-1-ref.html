@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<video id="v1" src="seek420.ogv" style="position:absolute; left:0; top:0"></video>
+<!-- hide bottom of video -->
+<div style="position:absolute; top:120px; left:0; right:0; bottom:0; background:black"></div>
+<script>
+function doTest() {
+  v1.play();
+  setTimeout(function() {
+    document.documentElement.removeAttribute('class');
+  }, 500);
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>

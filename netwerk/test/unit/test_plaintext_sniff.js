@@ -183,7 +183,7 @@ function run_test() {
   // disable on Windows for now, because it seems to leak sockets and die.
   // Silly operating system!
   // This is a really nasty way to detect Windows.  I wish we could do better.
-  if ("@mozilla.org/windows-registry-key;1" in Cc) {
+  if (mozinfo.os == "win") {
     return;
   }
 

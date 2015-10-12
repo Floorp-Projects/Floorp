@@ -34,6 +34,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
                                   "resource://gre/modules/GMPInstallManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource://gre/modules/NewTabUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
+                                  "resource:///modules/RemoteNewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
@@ -3511,8 +3513,11 @@ const BrowserSearch = {
       if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
         let url = gBrowser.currentURI.spec.toLowerCase();
         let mm = gBrowser.selectedBrowser.messageManager;
+        let newTabRemoted = Services.prefs.getBoolPref("browser.newtabpage.remote");
         if (url === "about:home" ||
-            (url === "about:newtab" && NewTabUtils.allPages.enabled)) {
+            (url === "about:newtab" &&
+             ((!newTabRemoted && NewTabUtils.allPages.enabled) ||
+              (newTabRemoted && RemoteNewTabUtils.allPages.enabled)))) {
           ContentSearch.focusInput(mm);
         } else {
           openUILinkIn("about:home", "current");

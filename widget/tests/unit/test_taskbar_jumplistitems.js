@@ -249,10 +249,9 @@ function test_jumplist()
 
 function run_test()
 {
-  var isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
-  if (!isWindows)
+  if (mozinfo.os != "win") {
     return;
-
+  }
   test_basics();
   test_separator();
   test_hashes();

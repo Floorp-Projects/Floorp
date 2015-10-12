@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class Promise;
-class PresentationSession;
+class PresentationConnection;
 
 class PresentationReceiver final : public DOMEventTargetHelper
                                  , public nsIPresentationRespondingListener
@@ -34,11 +34,11 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL (public APIs)
-  already_AddRefed<Promise> GetSession(ErrorResult& aRv);
+  already_AddRefed<Promise> GetConnection(ErrorResult& aRv);
 
-  already_AddRefed<Promise> GetSessions(ErrorResult& aRv) const;
+  already_AddRefed<Promise> GetConnections(ErrorResult& aRv) const;
 
-  IMPL_EVENT_HANDLER(sessionavailable);
+  IMPL_EVENT_HANDLER(connectionavailable);
 
 private:
   explicit PresentationReceiver(nsPIDOMWindow* aWindow);
@@ -49,14 +49,14 @@ private:
 
   void Shutdown();
 
-  nsresult DispatchSessionAvailableEvent();
+  nsresult DispatchConnectionAvailableEvent();
 
   // Store the inner window ID for |UnregisterRespondingListener| call in
   // |Shutdown| since the inner window may not exist at that moment.
   uint64_t mWindowId;
 
-  nsTArray<nsRefPtr<PresentationSession>> mSessions;
-  nsTArray<nsRefPtr<Promise>> mPendingGetSessionPromises;
+  nsTArray<nsRefPtr<PresentationConnection>> mConnections;
+  nsTArray<nsRefPtr<Promise>> mPendingGetConnectionPromises;
 };
 
 } // namespace dom

@@ -8466,10 +8466,11 @@ CodeGenerator::visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic)
 
 void
 CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                                   PropertyName* name, TypedOrValueRegister output,
-                                   bool monitoredResult, jsbytecode* profilerLeavePc)
+                                   ConstantOrRegister id, TypedOrValueRegister output,
+                                   bool monitoredResult, bool allowDoubleResult,
+                                   jsbytecode* profilerLeavePc)
 {
-    GetPropertyIC cache(liveRegs, objReg, name, output, monitoredResult);
+    GetPropertyIC cache(liveRegs, objReg, id, output, monitoredResult, allowDoubleResult);
     cache.setProfilerLeavePC(profilerLeavePc);
     addCache(ins, allocateCache(cache));
 }
@@ -8497,17 +8498,30 @@ CodeGenerator::addSetElementCache(LInstruction* ins, Register obj, Register unbo
     addCache(ins, allocateCache(cache));
 }
 
+ConstantOrRegister
+CodeGenerator::toConstantOrRegister(LInstruction* lir, size_t n, MIRType type)
+{
+    if (type == MIRType_Value)
+        return TypedOrValueRegister(ToValue(lir, n));
+
+    const LAllocation* value = lir->getOperand(n);
+    if (value->isConstant())
+        return ConstantOrRegister(*value->toConstant());
+
+    return TypedOrValueRegister(type, ToAnyRegister(value));
+}
+
 void
 CodeGenerator::visitGetPropertyCacheV(LGetPropertyCacheV* ins)
 {
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
-    PropertyName* name = ins->mir()->name();
+    ConstantOrRegister id = toConstantOrRegister(ins, LGetPropertyCacheV::Id, ins->mir()->idval()->type());
     bool monitoredResult = ins->mir()->monitoredResult();
     TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
 
-    addGetPropertyCache(ins, liveRegs, objReg, name, output, monitoredResult,
-                        ins->mir()->profilerLeavePc());
+    addGetPropertyCache(ins, liveRegs, objReg, id, output, monitoredResult,
+                        ins->mir()->allowDoubleResult(), ins->mir()->profilerLeavePc());
 }
 
 void
@@ -8515,15 +8529,15 @@ CodeGenerator::visitGetPropertyCacheT(LGetPropertyCacheT* ins)
 {
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
-    PropertyName* name = ins->mir()->name();
+    ConstantOrRegister id = toConstantOrRegister(ins, LGetPropertyCacheT::Id, ins->mir()->idval()->type());
     bool monitoredResult = ins->mir()->monitoredResult();
     TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->getDef(0)));
 
-    addGetPropertyCache(ins, liveRegs, objReg, name, output, monitoredResult,
-                        ins->mir()->profilerLeavePc());
+    addGetPropertyCache(ins, liveRegs, objReg, id, output, monitoredResult,
+                        ins->mir()->allowDoubleResult(), ins->mir()->profilerLeavePc());
 }
 
-typedef bool (*GetPropertyICFn)(JSContext*, HandleScript, size_t, HandleObject,
+typedef bool (*GetPropertyICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,
                                 MutableHandleValue);
 const VMFunction GetPropertyIC::UpdateInfo = FunctionInfo<GetPropertyICFn>(GetPropertyIC::update);
 
@@ -8541,66 +8555,11 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetProperty
 
     saveLive(lir);
 
+    pushArg(ic->id());
     pushArg(ic->object());
     pushArg(Imm32(ool->getCacheIndex()));
     pushArg(ImmGCPtr(gen->info().script()));
     callVM(GetPropertyIC::UpdateInfo, lir);
-    StoreValueTo(ic->output()).generate(this);
-    restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
-
-    masm.jump(ool->rejoin());
-}
-
-void
-CodeGenerator::addGetElementCache(LInstruction* ins, Register obj, TypedOrValueRegister index,
-                                  TypedOrValueRegister output, bool monitoredResult,
-                                  bool allowDoubleResult, jsbytecode* profilerLeavePc)
-{
-    LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
-    GetElementIC cache(liveRegs, obj, index, output, monitoredResult, allowDoubleResult);
-    cache.setProfilerLeavePC(profilerLeavePc);
-    addCache(ins, allocateCache(cache));
-}
-
-void
-CodeGenerator::visitGetElementCacheV(LGetElementCacheV* ins)
-{
-    Register obj = ToRegister(ins->object());
-    TypedOrValueRegister index = TypedOrValueRegister(ToValue(ins, LGetElementCacheV::Index));
-    TypedOrValueRegister output = TypedOrValueRegister(GetValueOutput(ins));
-    const MGetElementCache* mir = ins->mir();
-
-    addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
-                       mir->allowDoubleResult(), mir->profilerLeavePc());
-}
-
-void
-CodeGenerator::visitGetElementCacheT(LGetElementCacheT* ins)
-{
-    Register obj = ToRegister(ins->object());
-    TypedOrValueRegister index = TypedOrValueRegister(MIRType_Int32, ToAnyRegister(ins->index()));
-    TypedOrValueRegister output(ins->mir()->type(), ToAnyRegister(ins->output()));
-    const MGetElementCache* mir = ins->mir();
-
-    addGetElementCache(ins, obj, index, output, mir->monitoredResult(),
-                       mir->allowDoubleResult(), mir->profilerLeavePc());
-}
-
-typedef bool (*GetElementICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,
-                               MutableHandleValue);
-const VMFunction GetElementIC::UpdateInfo = FunctionInfo<GetElementICFn>(GetElementIC::update);
-
-void
-CodeGenerator::visitGetElementIC(OutOfLineUpdateCache* ool, DataPtr<GetElementIC>& ic)
-{
-    LInstruction* lir = ool->lir();
-    saveLive(lir);
-
-    pushArg(ic->index());
-    pushArg(ic->object());
-    pushArg(Imm32(ool->getCacheIndex()));
-    pushArg(ImmGCPtr(gen->info().script()));
-    callVM(GetElementIC::UpdateInfo, lir);
     StoreValueTo(ic->output()).generate(this);
     restoreLiveIgnore(lir, StoreValueTo(ic->output()).clobbered());
 

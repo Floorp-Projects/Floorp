@@ -16,7 +16,7 @@
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
 var request;
-var session;
+var connection;
 
 function testSetup() {
   return new Promise(function(aResolve, aReject) {
@@ -41,7 +41,7 @@ function testSetup() {
   });
 }
 
-function testStartSession() {
+function testStartConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
       gScript.removeMessageListener('device-prompt', devicePromptHandler);
@@ -87,32 +87,32 @@ function testStartSession() {
       info("Data notification is enabled for data transport channel.");
     });
 
-    var sessionFromEvent;
-    request.onsessionconnect = function(aEvent) {
-      request.onsessionconnect = null;
-      sessionFromEvent = aEvent.session;
-      ok(sessionFromEvent, "|sessionconnect| event is fired with a session.");
+    var connectionFromEvent;
+    request.onconnectionavailable = function(aEvent) {
+      request.onconnectionavailable = null;
+      connectionFromEvent = aEvent.connection;
+      ok(connectionFromEvent, "|connectionavailable| event is fired with a connection.");
 
-      if (session) {
-        is(session, sessionFromEvent, "The session from promise and the one from |sessionconnect| event should be the same.");
+      if (connection) {
+        is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
         aResolve();
       }
     };
 
     request.start().then(
-      function(aSession) {
-        session = aSession;
-        ok(session, "Session should be availlable.");
-        ok(session.id, "Session ID should be set.");
-        is(session.state, "connected", "Session state at sender side should be connected by default.");
+      function(aConnection) {
+        connection = aConnection;
+        ok(connection, "Connection should be available.");
+        ok(connection.id, "Connection ID should be set.");
+        is(connection.state, "connected", "Connection state at sender side should be connected by default.");
 
-        if (sessionFromEvent) {
-          is(session, sessionFromEvent, "The session from promise and the one from |sessionconnect| event should be the same.");
+        if (connectionFromEvent) {
+          is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
           aResolve();
         }
       },
       function(aError) {
-        ok(false, "Error occurred when starting session: " + aError);
+        ok(false, "Error occurred when establishing a connection: " + aError);
         teardown();
         aReject();
       }
@@ -130,7 +130,7 @@ function testSend() {
       aResolve();
     });
 
-    session.send(outgoingMessage);
+    connection.send(outgoingMessage);
   });
 }
 
@@ -138,8 +138,8 @@ function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
     const incomingMessage = "test incoming message";
 
-    session.addEventListener('message', function messageHandler(aEvent) {
-      session.removeEventListener('message', messageHandler);
+    connection.addEventListener('message', function messageHandler(aEvent) {
+      connection.removeEventListener('message', messageHandler);
       is(aEvent.data, incomingMessage, "An incoming message should be received.");
       aResolve();
     });
@@ -148,20 +148,20 @@ function testIncomingMessage() {
   });
 }
 
-function testTerminateSession() {
+function testTerminateConnection() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
       gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
-    session.onstatechange = function() {
-      session.onstatechange = null;
-      is(session.state, "terminated", "Session should be terminated.");
+    connection.onstatechange = function() {
+      connection.onstatechange = null;
+      is(connection.state, "terminated", "Connection should be terminated.");
       aResolve();
     };
 
-    session.terminate();
+    connection.terminate();
   });
 }
 
@@ -179,10 +179,10 @@ function runTests() {
   ok(window.PresentationRequest, "PresentationRequest should be available.");
 
   testSetup().
-  then(testStartSession).
+  then(testStartConnection).
   then(testSend).
   then(testIncomingMessage).
-  then(testTerminateSession).
+  then(testTerminateConnection).
   then(teardown);
 }
 

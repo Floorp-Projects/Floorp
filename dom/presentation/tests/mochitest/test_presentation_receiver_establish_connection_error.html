@@ -4,22 +4,21 @@
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 <head>
   <meta charset="utf-8">
-  <title>Test for startSession errors of B2G Presentation API at receiver side</title>
+  <title>Test for connection establishing errors of B2G Presentation API at receiver side</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for startSession errors of B2G Presentation API at receiver side</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1069230">Test for connection establishing errors of B2G Presentation API at receiver side</a>
 <script type="application/javascript;version=1.8">
 
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver_start_session_error.html');
+var receiverUrl = SimpleTest.getTestFileURL('file_presentation_receiver_establish_connection_error.html');
 
 var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
           .getService(SpecialPowers.Ci.nsIObserverService);
-var session;
 
 function setup() {
   return new Promise(function(aResolve, aReject) {

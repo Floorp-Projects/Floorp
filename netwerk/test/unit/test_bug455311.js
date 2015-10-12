@@ -1,14 +1,11 @@
-const isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
-const isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
-
 Cu.import("resource://gre/modules/Services.jsm");
 
 function getLinkFile()
 {
-  if (isWindows) {
+  if (mozinfo.os == "win") {
     return do_get_file("test_link.url");
   }
-  if (isLinux) {
+  if (mozinfo.os == "linux") {
     return do_get_file("test_link.desktop");
   }
   do_throw("Unexpected platform");
@@ -113,7 +110,7 @@ function test_cancel()
 
 function run_test()
 {
-  if (!isWindows && !isLinux) {
+  if (mozinfo.os != "win" && mozinfo.os != "linux") {
     return;
   }
 

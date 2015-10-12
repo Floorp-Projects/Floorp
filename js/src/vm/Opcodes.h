@@ -1673,19 +1673,19 @@
     /*
      * Bind the |this| value of a function to the supplied value.
      *
-     *  Category: Variables and Scopes
-     *  Type: This
-     *  Operands:
-     *  Stack: this => this
+     *   Category: Variables and Scopes
+     *   Type: This
+     *   Operands:
+     *   Stack: this => this
      */ \
-    macro(JSOP_SETTHIS  ,     163,"setthis",    NULL,     1,  1,  1,  JOF_BYTE) \
+    macro(JSOP_SETTHIS,       163,"setthis",    NULL,     1,  1,  1,  JOF_BYTE) \
     /*
      * Find the function to invoke with |super()| on the scope chain.
      *
-     *  Category: Variables and Scopes
-     *  Type: Super
-     *  Operands:
-     *  Stack: => superFun
+     *   Category: Variables and Scopes
+     *   Type: Super
+     *   Operands:
+     *   Stack: => superFun
      */ \
     macro(JSOP_SUPERFUN,      164,"superfun",   NULL,     1,  0,  1,  JOF_BYTE) \
     /*
