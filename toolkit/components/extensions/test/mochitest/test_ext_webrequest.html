@@ -131,15 +131,16 @@ function backgroundScript()
     if (details.url.indexOf("_bad.") != -1) {
       return {cancel: true};
     }
+    return {};
   }
 
-  var sendHeaders = [];
+  var beforeSendHeaders = [];
 
   function onBeforeSendHeaders(details)
   {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
     if (details.url.startsWith(BASE)) {
-      sendHeaders.push(details.url);
+      beforeSendHeaders.push(details.url);
 
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
       checkType(details);
@@ -149,6 +150,16 @@ function backgroundScript()
     }
     if (details.url.indexOf("_redirect.") != -1) {
       return {redirectUrl: details.url.replace("_redirect.", "_good.")};
+    }
+    return {};
+  }
+
+  var sendHeaders = [];
+
+  function onSendHeaders(details)
+  {
+    if (details.url.startsWith(BASE)) {
+      sendHeaders.push(details.url);
     }
   }
 
@@ -163,11 +174,12 @@ function backgroundScript()
 
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: "<all_urls>"}, ["blocking"]);
   browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: "<all_urls>"}, ["blocking"]);
+  browser.webRequest.onSendHeaders.addListener(onSendHeaders, {urls: "<all_urls>"});
   browser.webRequest.onResponseStarted.addListener(onResponseStarted, {urls: "<all_urls>"});
 
   function onTestMessage()
   {
-    browser.test.sendMessage("results", [requested, sendHeaders, headersReceived]);
+    browser.test.sendMessage("results", [requested, beforeSendHeaders, sendHeaders, headersReceived]);
   }
 
   browser.test.onMessage.addListener(onTestMessage);
@@ -217,10 +229,11 @@ function* test_once()
   win.close();
 
   extension.sendMessage("getResults");
-  let [requested, sendHeaders, headersReceived] = yield extension.awaitMessage("results");
+  let [requested, beforeSendHeaders, sendHeaders, headersReceived] = yield extension.awaitMessage("results");
 
   compareLists(requested, expected_requested, "requested");
-  compareLists(sendHeaders, expected_sendHeaders, "sendHeaders");
+  compareLists(beforeSendHeaders, expected_sendHeaders, "sendHeaders");
+  compareLists(sendHeaders, expected_headersReceived, "sendHeaders");
   compareLists(headersReceived, expected_headersReceived, "headersReceived");
 
   yield extension.unload();
