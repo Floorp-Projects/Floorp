@@ -270,8 +270,8 @@ GetMaxOptionBSize(nsIFrame* aContainer, WritingMode aWM)
     nscoord optionBSize;
     if (nsCOMPtr<nsIDOMHTMLOptGroupElement>
         (do_QueryInterface(option->GetContent()))) {
-      // an optgroup
-      optionBSize = GetMaxOptionBSize(option, aWM);
+      // An optgroup; drill through any scroll frame and recurse.
+      optionBSize = GetMaxOptionBSize(option->GetContentInsertionFrame(), aWM);
     } else {
       // an option
       optionBSize = option->BSize(aWM);
