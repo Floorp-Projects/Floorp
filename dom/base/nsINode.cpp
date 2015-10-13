@@ -1074,13 +1074,6 @@ nsINode::IsEqualNode(nsINode* aOther)
         if (!string1.Equals(string2)) {
           return false;
         }
-    
-        // Internal subset
-        docType1->GetInternalSubset(string1);
-        docType2->GetInternalSubset(string2);
-        if (!string1.Equals(string2)) {
-          return false;
-        }
 
         break;
       }

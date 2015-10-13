@@ -265,7 +265,7 @@ static bool test_replace()
     return true;
   }
 
-static const char* kWhitespace="\b\t\r\n ";
+static const char* kWhitespace="\f\t\r\n ";
 
 static void
 CompressWhitespace(nsACString &str)

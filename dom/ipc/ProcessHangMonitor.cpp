@@ -257,6 +257,10 @@ HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
 
 HangMonitorChild::~HangMonitorChild()
 {
+  // For some reason IPDL doesn't automatically delete the channel for a
+  // bridged protocol (bug 1090570). So we have to do it ourselves.
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new DeleteTask<Transport>(GetTransport()));
+
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance == this);
   sInstance = nullptr;
@@ -469,7 +473,7 @@ DeleteMinidump(const uint32_t& aPluginId, nsString aCrashId, void* aUserData)
 
 HangMonitorParent::~HangMonitorParent()
 {
-  // For some reason IPDL doesn't autmatically delete the channel for a
+  // For some reason IPDL doesn't automatically delete the channel for a
   // bridged protocol (bug 1090570). So we have to do it ourselves.
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new DeleteTask<Transport>(GetTransport()));
 

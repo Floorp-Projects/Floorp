@@ -81,10 +81,6 @@ public:
                            bool                    aCreateLayer,
                            bool                    aPositioned);
 
-  bool IsUsingDisplayPort(const nsDisplayListBuilder* aBuilder) const;
-  bool WillUseDisplayPort(const nsDisplayListBuilder* aBuilder) const;
-  bool WillBuildScrollableLayer(const nsDisplayListBuilder* aBuilder) const;
-
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       Sides aSkipSides, nscoord aRadii[8]) const;
 
@@ -370,6 +366,10 @@ public:
 
   bool UsesContainerScrolling() const;
 
+  bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                             nsRect* aDirtyRect,
+                             bool aAllowCreateDisplayPort);
+
   void ScheduleSyntheticMouseMove();
   static void ScrollActivityCallback(nsITimer *aTimer, void* anInstance);
 
@@ -390,7 +390,7 @@ public:
     Layer* aLayer, nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     bool aIsForCaret) const;
-  virtual mozilla::Maybe<mozilla::DisplayItemClip> ComputeScrollClip(bool aIsForCaret) const;
+  mozilla::Maybe<mozilla::DisplayItemClip> ComputeScrollClip(bool aIsForCaret) const;
 
   // nsIScrollbarMediator
   void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
@@ -510,9 +510,9 @@ public:
   // If true, the resizer is collapsed and not displayed
   bool mCollapsedResizer:1;
 
-  // If true, the layer should always be active because we always build a
-  // scrollable layer. Used for asynchronous scrolling.
-  bool mShouldBuildScrollableLayer:1;
+  // If true, the scroll frame should always be active because we always build
+  // a scrollable layer. Used for asynchronous scrolling.
+  bool mWillBuildScrollableLayer:1;
 
   // Whether we are the root scroll frame that is used for containerful
   // scrolling with a display port. If true, the scrollable frame
@@ -876,6 +876,11 @@ public:
   }
   virtual bool UsesContainerScrolling() const override {
     return mHelper.UsesContainerScrolling();
+  }
+  virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aDirtyRect,
+                                     bool aAllowCreateDisplayPort) override {
+    return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
   }
 
   // nsIStatefulFrame
@@ -1355,6 +1360,12 @@ public:
   void SetZoomableByAPZ(bool aZoomable) override {
     mHelper.SetZoomableByAPZ(aZoomable);
   }
+  virtual bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
+                                     nsRect* aDirtyRect,
+                                     bool aAllowCreateDisplayPort) override {
+    return mHelper.DecideScrollableLayer(aBuilder, aDirtyRect, aAllowCreateDisplayPort);
+  }
+
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;

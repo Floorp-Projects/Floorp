@@ -604,4 +604,16 @@ InsertNamedValue(InfallibleTArray<BluetoothNamedValue>& aArray,
   aArray.InsertElementAt(aIndex, BluetoothNamedValue(name, aValue));
 }
 
+uint16_t
+ConvertEndiannessUInt16(uint16_t aValue)
+{
+  return (aValue >> 8) | (aValue << 8);
+}
+
+uint16_t
+ReadLittleEndianUInt16(const uint8_t* aBuf)
+{
+  return ConvertEndiannessUInt16(*((uint16_t *) aBuf));
+}
+
 END_BLUETOOTH_NAMESPACE

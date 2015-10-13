@@ -932,10 +932,6 @@ pref("nglayout.debug.invalidation", false);
 // Whether image visibility is enabled globally (ie we will try to unlock images
 // that are not visible).
 pref("layout.imagevisibility.enabled", true);
-// Whether image visibility is enabled in documents that are within a browser
-// element as defined by nsDocShell::FrameType and GetInheritedFrameType. This
-// pref only has an effect if layout.imagevisibility.enabled is false.
-pref("layout.imagevisibility.enabled_for_browser_elements_only", false);
 pref("layout.imagevisibility.numscrollportwidths", 0);
 pref("layout.imagevisibility.numscrollportheights", 1);
 

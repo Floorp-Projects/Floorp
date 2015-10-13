@@ -109,8 +109,8 @@ function getFilePath(aName, aAllowMissing=false, aUsePlatformPathSeparator=false
   return path;
 }
 
-function saveNewHeapSnapshot() {
-  const filePath = ChromeUtils.saveHeapSnapshot({ runtime: true });
+function saveNewHeapSnapshot(opts = { runtime: true }) {
+  const filePath = ChromeUtils.saveHeapSnapshot(opts);
   ok(filePath, "Should get a file path to save the core dump to.");
   ok(true, "Saved a heap snapshot to " + filePath);
   return filePath;
