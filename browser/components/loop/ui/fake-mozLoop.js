@@ -215,7 +215,6 @@ var fakeFewerContacts = fakeManyContacts.slice(0, 4);
         // Ensure we skip FTE completely.
         case "gettingStarted.seen":
         case "contacts.gravatars.promo":
-        case "contextInConversations.enabled":
           return true;
         case "contacts.gravatars.show":
           return false;
