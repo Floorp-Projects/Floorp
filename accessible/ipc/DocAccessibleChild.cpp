@@ -1622,6 +1622,28 @@ DocAccessibleChild::RecvUnselectAll(const uint64_t& aID,
 }
 
 bool
+DocAccessibleChild::RecvTakeSelection(const uint64_t& aID)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->TakeSelection();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSetSelected(const uint64_t& aID, const bool& aSelect)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->SetSelected(aSelect);
+  }
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvDoAction(const uint64_t& aID,
                                  const uint8_t& aIndex,
                                  bool* aSuccess)
