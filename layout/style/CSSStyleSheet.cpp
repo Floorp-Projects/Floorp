@@ -2331,8 +2331,11 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   mInner->mFirstChild = nullptr;
   mInner->mNameSpaceMap = nullptr;
 
-  // allow unsafe rules if the style sheet's principal is the system principal
-  bool allowUnsafeRules = nsContentUtils::IsSystemPrincipal(mInner->mPrincipal);
+  // allow agent features if the style sheet's principal is the system principal
+  css::SheetParsingMode parsingMode =
+    nsContentUtils::IsSystemPrincipal(mInner->mPrincipal)
+      ? css::eAgentSheetFeatures
+      : css::eAuthorSheetFeatures;
 
   uint32_t lineNumber = 1;
   if (mOwningNode) {
@@ -2345,7 +2348,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   nsCSSParser parser(loader, this);
   nsresult rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
                                   mInner->mPrincipal, lineNumber,
-                                  allowUnsafeRules, &reusableSheets);
+                                  parsingMode, &reusableSheets);
   DidDirty(); // we are always 'dirty' here since we always remove rules first
   NS_ENSURE_SUCCESS(rv, rv);
 
