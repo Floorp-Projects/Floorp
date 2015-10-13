@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://gre/modules/devtools/shared/Loader.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
+                                  "resource://gre/modules/LoginManagerContent.jsm");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function() {
@@ -48,50 +50,6 @@ this.InsecurePasswordUtils = {
   },
 
   /*
-   * Checks whether the passed uri is secure
-   * Check Protocol Flags to determine if scheme is secure:
-   * URI_DOES_NOT_RETURN_DATA - e.g.
-   *   "mailto"
-   * URI_IS_LOCAL_RESOURCE - e.g.
-   *   "data",
-   *   "resource",
-   *   "moz-icon"
-   * URI_INHERITS_SECURITY_CONTEXT - e.g.
-   *   "javascript"
-   * URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT - e.g.
-   *   "https",
-   *   "moz-safe-about"
-   *
-   *   The use of this logic comes directly from nsMixedContentBlocker.cpp
-   *   At the time it was decided to include these protocols since a secure
-   *   uri for mixed content blocker means that the resource can't be
-   *   easily tampered with because 1) it is sent over an encrypted channel or
-   *   2) it is a local resource that never hits the network
-   *   or 3) it is a request sent without any response that could alter
-   *   the behavior of the page. It was decided to include the same logic
-   *   here both to be consistent with MCB and to make sure we cover all
-   *   "safe" protocols. Eventually, the code here and the code in MCB
-   *   will be moved to a common location that will be referenced from
-   *   both places. Look at
-   *   https://bugzilla.mozilla.org/show_bug.cgi?id=899099 for more info.
-   */
-  _checkIfURIisSecure : function(uri) {
-    let isSafe = false;
-    let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
-    let ph = Ci.nsIProtocolHandler;
-
-    if (netutil.URIChainHasFlags(uri, ph.URI_IS_LOCAL_RESOURCE) ||
-        netutil.URIChainHasFlags(uri, ph.URI_DOES_NOT_RETURN_DATA) ||
-        netutil.URIChainHasFlags(uri, ph.URI_INHERITS_SECURITY_CONTEXT) ||
-        netutil.URIChainHasFlags(uri, ph.URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT)) {
-
-      isSafe = true;
-    }
-
-    return isSafe;
-  },
-
-  /*
    * Checks whether the passed nested document is insecure
    * or is inside an insecure parent document.
    *
@@ -109,7 +67,7 @@ this.InsecurePasswordUtils = {
       // We are at the top, nothing to check here
       return false;
     }
-    if (!this._checkIfURIisSecure(uri)) {
+    if (!LoginManagerContent.checkIfURIisSecure(uri)) {
       // We are insecure
       return true;
     }
@@ -127,7 +85,7 @@ this.InsecurePasswordUtils = {
   checkForInsecurePasswords : function (aForm) {
     var domDoc = aForm.ownerDocument;
     let pageURI = domDoc.defaultView.top.document.documentURIObject;
-    let isSafePage = this._checkIfURIisSecure(pageURI);
+    let isSafePage = LoginManagerContent.checkIfURIisSecure(pageURI);
 
     if (!isSafePage) {
       this._sendWebConsoleMessage("InsecurePasswordsPresentOnPage", domDoc);
