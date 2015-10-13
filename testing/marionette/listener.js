@@ -13,6 +13,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 loader.loadSubScript("chrome://marionette/content/simpletest.js");
 loader.loadSubScript("chrome://marionette/content/common.js");
 loader.loadSubScript("chrome://marionette/content/actions.js");
+Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -1997,89 +1998,47 @@ function importScript(msg) {
 }
 
 /**
- * Takes a screen capture of the given web element if <code>id</code>
- * property exists in the message's JSON object, or if null captures
- * the bounding box of the current frame.
+ * Perform a screen capture in content context.
  *
- * If given an array of web element references in
- * <code>msg.json.highlights</code>, a red box will be painted around
- * them to highlight their position.
+ * @param {UUID=} id
+ *     Optional web element reference of an element to take a screenshot
+ *     of.
+ * @param {boolean=} full
+ *     True to take a screenshot of the entire document element.  Is not
+ *     considered if {@code id} is not defined.  Defaults to true.
+ * @param {Array.<UUID>=} highlights
+ *     Draw a border around the elements found by their web element
+ *     references.
+ *
+ * @return {string}
+ *     Base64 encoded string of an image/png type.
  */
-function takeScreenshot(id, highlights, full) {
-  let node = null;
-  if (id) {
-    node = elementManager.getKnownElement(id, curContainer)
-  } else {
-    node = curContainer.frame;
+function takeScreenshot(id, full=true, highlights=[]) {
+  let canvas;
+
+  let highlightEls = [];
+  for (let h of highlights) {
+    let el = elementManager.getKnownElement(h, curContainer);
+    highlightEls.push(el);
   }
 
-  let document = curContainer.frame.document;
-  let rect, win, width, height, left, top;
+  // viewport
+  if (!id && !full) {
+    canvas = capture.viewport(curContainer.frame.document, highlightEls);
 
-  // node can be either a window or an arbitrary DOM node
-  if (node == curContainer.frame) {
-    // node is a window
-    win = node;
-    if (full) {
-      // the full window
-      width = document.body.scrollWidth;
-      height = document.body.scrollHeight;
-      top = 0;
-      left = 0;
+  // element or full document element
+  } else {
+    let node;
+    if (id) {
+      node = elementManager.getKnownElement(id, curContainer);
     } else {
-      // only the viewport
-      width = document.documentElement.clientWidth;
-      height = document.documentElement.clientHeight;
-      left = curContainer.frame.pageXOffset;
-      top = curContainer.frame.pageYOffset;
+      node = curContainer.frame.document.documentElement;
     }
-  } else {
-    // node is an arbitrary DOM node
-    win = node.ownerDocument.defaultView;
-    rect = node.getBoundingClientRect();
-    width = rect.width;
-    height = rect.height;
-    top = rect.top;
-    left = rect.left;
+
+    canvas = capture.element(node, highlightEls);
   }
 
-  let canvas = document.createElementNS(
-      "http://www.w3.org/1999/xhtml", "canvas");
-  canvas.width = width;
-  canvas.height = height;
-  let ctx = canvas.getContext("2d");
-
-  // draws the DOM contents of the window to the canvas
-  ctx.drawWindow(win, left, top, width, height, "rgb(255,255,255)");
-
-  // this section is for drawing a red rectangle around each element
-  // passed in via the highlights array
-  if (highlights) {
-    ctx.lineWidth = "2";
-    ctx.strokeStyle = "red";
-    ctx.save();
-
-    for (var i = 0; i < highlights.length; ++i) {
-      let elem = elementManager.getKnownElement(highlights[i], curContainer);
-      rect = elem.getBoundingClientRect();
-
-      let offsetY = -top;
-      let offsetX = -left;
-
-      // draw the rectangle
-      ctx.strokeRect(
-          rect.left + offsetX,
-          rect.top + offsetY,
-          rect.width,
-          rect.height);
-    }
-  }
-
-  // return the Base64 encoded string back to the client
-  // so that it can save the file to disk if it is required
-  let dataUrl = canvas.toDataURL("image/png", "");
-  let encoded = dataUrl.substring(dataUrl.indexOf(",") + 1);
-  return encoded;
+  return capture.toBase64(canvas);
 }
 
 // Call register self when we get loaded
