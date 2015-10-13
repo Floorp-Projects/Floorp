@@ -3747,7 +3747,15 @@ this.DOMApplicationRegistry = {
           break;
 
         case "https://marketplace-dev.allizom.org":
-          root = manifestPath.startsWith("/reviewers/")
+          // There are different reviewer paths for apps & addons so we keep
+          // them in a comma separated preference.
+          bool isReviewer = false;
+          try {
+            let reviewerPaths =
+              Services.prefs.getCharPref("dom.apps.reviewer_paths").split(",");
+            isReviewer = reviewerPaths.some(path => { return manifestPath.startsWith(path); });
+          } catch(e) {}
+          root = isReviewer
                ? Ci.nsIX509CertDB.AppMarketplaceDevReviewersRoot
                : Ci.nsIX509CertDB.AppMarketplaceDevPublicRoot;
           break;
