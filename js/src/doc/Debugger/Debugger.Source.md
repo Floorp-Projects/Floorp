@@ -40,6 +40,17 @@ to store metadata about particular pieces of source code.
 A `Debugger.Source` instance inherits the following accessor properties
 from its prototype:
 
+`canonicalId`
+:   A stable, unique identifier for the source referent. This identifier is
+    suitable for checking if two `Debugger.Source` instances originating from
+    different `Debugger` instances refer to the same source that was compiled by
+    SpiderMonkey. The `canonicalId` is reliable even when the source does not
+    have a URL, or shares the same URL as another source but has different
+    source text. It is more efficient to compare `canonicalId`s than to compare
+    source text character-by-character. The `canonicalId` is not suitable for
+    ordering comparisons such as "greater than" or "less than". It is not
+    suitable for checking the equality of sources across worker threads.
+
 `text`
 :   The JavaScript source code, as a string. The value satisfies the
     `Program`, `FunctionDeclaration`, or `FunctionExpression` productions in
