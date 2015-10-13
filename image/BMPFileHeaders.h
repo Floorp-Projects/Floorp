@@ -77,46 +77,6 @@ struct V5InfoHeader {
   static const uint32_t COLOR_SPACE_LCS_SRGB = 0x73524742;
 };
 
-struct ColorTable {
-  uint8_t red;
-  uint8_t green;
-  uint8_t blue;
-};
-
-struct BitFields {
-  uint32_t red;
-  uint32_t green;
-  uint32_t blue;
-  uint8_t redLeftShift;
-  uint8_t redRightShift;
-  uint8_t greenLeftShift;
-  uint8_t greenRightShift;
-  uint8_t blueLeftShift;
-  uint8_t blueRightShift;
-
-  // Length of the bitfields structure in the BMP file.
-  static const size_t LENGTH = 12;
-};
-
-struct Compression {
-  enum {
-    RGB = 0,
-    RLE8 = 1,
-    RLE4 = 2,
-    BITFIELDS = 3
-  };
-};
-
-// RLE escape codes.
-struct RLE {
-  enum {
-    ESCAPE = 0,
-    ESCAPE_EOL = 0,
-    ESCAPE_EOF = 1,
-    ESCAPE_DELTA = 2
-  };
-};
-
 } // namespace bmp
 } // namespace image
 } // namespace mozilla
