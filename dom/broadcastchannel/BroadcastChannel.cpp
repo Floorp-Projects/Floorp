@@ -16,6 +16,7 @@
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 
+#include "nsIBFCacheEntry.h"
 #include "nsIDocument.h"
 #include "nsISupportsPrimitives.h"
 
@@ -127,9 +128,6 @@ public:
     nsIDocument* doc = window->GetExtantDoc();
     if (doc) {
       mPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
-
-      // No bfcache when BroadcastChannel is used.
-      doc->DisallowBFCaching();
     }
 
     return true;
@@ -381,9 +379,6 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     nsIDocument* doc = window->GetExtantDoc();
     if (doc) {
       privateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
-
-      // No bfcache when BroadcastChannel is used.
-      doc->DisallowBFCaching();
     }
   } else {
     JSContext* cx = aGlobal.Context();
@@ -466,6 +461,8 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
 void
 BroadcastChannel::PostMessageData(BroadcastChannelMessage* aData)
 {
+  RemoveDocFromBFCache();
+
   if (mActor) {
     nsRefPtr<BCPostMessageRunnable> runnable =
       new BCPostMessageRunnable(mActor, aData);
@@ -664,6 +661,31 @@ BroadcastChannel::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   return NS_OK;
+}
+
+void
+BroadcastChannel::RemoveDocFromBFCache()
+{
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  nsPIDOMWindow* window = GetOwner();
+  if (!window) {
+    return;
+  }
+
+  nsIDocument* doc = window->GetExtantDoc();
+  if (!doc) {
+    return;
+  }
+
+  nsCOMPtr<nsIBFCacheEntry> bfCacheEntry = doc->GetBFCacheEntry();
+  if (!bfCacheEntry) {
+    return;
+  }
+
+  bfCacheEntry->RemoveFromBFCacheSync();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BroadcastChannel)
