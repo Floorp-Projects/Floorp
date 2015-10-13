@@ -40,6 +40,7 @@ describe("loop.standaloneRoomViews", function() {
       close: sandbox.stub(),
       addEventListener: function() {},
       document: { addEventListener: function(){} },
+      removeEventListener: function() {},
       setTimeout: function(callback) { callback(); }
     };
     loop.shared.mixins.setRootObject(fakeWindow);
@@ -211,7 +212,7 @@ describe("loop.standaloneRoomViews", function() {
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
         React.createElement(
-          loop.standaloneRoomViews.StandaloneRoomHeader, {
+          loop.standaloneRoomViews.StandaloneOverlayWrapper, {
             dispatcher: dispatcher
           }));
     }

@@ -1123,14 +1123,15 @@ loop.shared.views = (function(_, mozL10n) {
                 srcMediaElement: this.props.remoteSrcMediaElement}), 
                this.state.localMediaAboslutelyPositioned ?
                 this.renderLocalVideo() : null, 
-               this.props.children
+               this.props.displayScreenShare ? null : this.props.children
             ), 
             React.createElement("div", {className: screenShareStreamClasses}, 
               React.createElement(MediaView, {displayAvatar: false, 
                 isLoading: this.props.isScreenShareLoading, 
                 mediaType: "screen-share", 
                 posterUrl: this.props.screenSharePosterUrl, 
-                srcMediaElement: this.props.screenShareMediaElement})
+                srcMediaElement: this.props.screenShareMediaElement}), 
+               this.props.displayScreenShare ? this.props.children : null
             ), 
             React.createElement(loop.shared.views.chat.TextChatView, {
               dispatcher: this.props.dispatcher, 

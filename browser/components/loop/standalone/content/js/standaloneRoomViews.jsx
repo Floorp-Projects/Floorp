@@ -390,32 +390,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
-  var StandaloneRoomHeader = React.createClass({
-    propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
-    },
-
-    recordClick: function() {
-      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
-        linkInfo: "Support link click"
-      }));
-    },
-
-    render: function() {
-      return (
-        <header>
-          <h1>{mozL10n.get("clientShortname2")}</h1>
-          <a href={loop.config.generalSupportUrl}
-             onClick={this.recordClick}
-             rel="noreferrer"
-             target="_blank">
-            <i className="icon icon-help"></i>
-          </a>
-        </header>
-      );
-    }
-  });
-
   var StandaloneRoomView = React.createClass({
     mixins: [
       Backbone.Events,
@@ -628,8 +602,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         <div className="room-conversation-wrapper standalone-room-wrapper">
-          <div className="beta-logo" />
-          <StandaloneRoomHeader dispatcher={this.props.dispatcher} />
           <sharedViews.MediaLayoutView
             dispatcher={this.props.dispatcher}
             displayScreenShare={displayScreenShare}
@@ -647,6 +619,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
             screenSharePosterUrl={this.props.screenSharePosterUrl}
             showContextRoomName={true}
             useDesktopPaths={false}>
+            <StandaloneOverlayWrapper dispatcher={this.props.dispatcher} />
             <StandaloneRoomInfoArea activeRoomStore={this.props.activeRoomStore}
               dispatcher={this.props.dispatcher}
               failureReason={this.state.failureReason}
@@ -663,21 +636,48 @@ loop.standaloneRoomViews = (function(mozL10n) {
               show={true}
               video={{enabled: !this.state.videoMuted,
                       visible: this._roomIsActive()}} />
-            <StandaloneMozLogo dispatcher={this.props.dispatcher}/>
           </sharedViews.MediaLayoutView>
         </div>
       );
     }
   });
 
-  var StandaloneMozLogo = React.createClass({
+  var StandaloneOverlayWrapper = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
     render: function() {
       return (
-        <div className="standalone-moz-logo" />
+        <div className="standalone-overlay-wrapper">
+          <div className="hello-logo"></div>
+          <GeneralSupportURL dispatcher={this.props.dispatcher} />
+          <div className="standalone-moz-logo" />
+        </div>
+      );
+    }
+  });
+
+  var GeneralSupportURL = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    generalSupportUrlClick: function() {
+      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+        linkInfo: "Support link click"
+      }));
+    },
+
+    render: function() {
+      return (
+        <a className="general-support-url"
+          href={loop.config.generalSupportUrl}
+          onClick={this.generalSupportUrlClick}
+          rel="noreferrer"
+          target="_blank">
+          <div className="icon icon-help"></div>
+        </a>
       );
     }
   });
@@ -722,8 +722,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
     StandaloneHandleUserAgentView: StandaloneHandleUserAgentView,
     StandaloneRoomControllerView: StandaloneRoomControllerView,
     StandaloneRoomFailureView: StandaloneRoomFailureView,
-    StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomInfoArea: StandaloneRoomInfoArea,
+    StandaloneOverlayWrapper: StandaloneOverlayWrapper,
     StandaloneRoomView: StandaloneRoomView,
     ToSView: ToSView
   };
