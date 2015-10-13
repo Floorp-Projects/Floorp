@@ -841,8 +841,10 @@ MOZ_WIN_MEM_TRY_BEGIN
   // -- check if there is enough source data in the file
   if (!offset ||
       mFd->mLen < aItem->Size() ||
-      offset > mFd->mLen - aItem->Size())
+      offset > mFd->mLen - aItem->Size() ||
+      (aItem->Compression() == STORED && aItem->Size() != aItem->RealSize())) {
     return nullptr;
+  }
 
   return mFd->mFileData + offset;
 MOZ_WIN_MEM_TRY_CATCH(return nullptr)
