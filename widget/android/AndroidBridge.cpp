@@ -1101,6 +1101,25 @@ AndroidBridge::DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequ
     GeckoAppShell::DeleteMessageWrapper(aMessageId, requestId);
 }
 
+void
+AndroidBridge::MarkMessageRead(int32_t aMessageId,
+                               bool aValue,
+                               bool aSendReadReport,
+                               nsIMobileMessageCallback* aRequest)
+{
+    ALOG_BRIDGE("AndroidBridge::MarkMessageRead");
+
+    uint32_t requestId;
+    if (!QueueSmsRequest(aRequest, &requestId)) {
+        return;
+    }
+
+    GeckoAppShell::MarkMessageRead(aMessageId,
+                                   aValue,
+                                   aSendReadReport,
+                                   requestId);
+}
+
 NS_IMPL_ISUPPORTS0(MessageCursorContinueCallback)
 
 NS_IMETHODIMP

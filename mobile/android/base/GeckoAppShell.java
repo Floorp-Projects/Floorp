@@ -2361,6 +2361,15 @@ public class GeckoAppShell
         SmsManager.getInstance().deleteMessage(aMessageId, aRequestId);
     }
 
+    @WrapForJNI
+    public static void markMessageRead(int aMessageId, boolean aValue, boolean aSendReadReport, int aRequestId) {
+        if (!SmsManager.isEnabled()) {
+            return;
+        }
+
+        SmsManager.getInstance().markMessageRead(aMessageId, aValue, aSendReadReport, aRequestId);
+    }
+
     @WrapForJNI(stubName = "CreateMessageCursorWrapper")
     public static void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
         if (!SmsManager.isEnabled()) {
