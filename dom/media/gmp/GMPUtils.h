@@ -40,6 +40,9 @@ ToBase64(const nsTArray<uint8_t>& aBytes);
 bool
 FileExists(nsIFile* aFile);
 
+bool
+FileExists(nsIFile* aFile);
+
 } // namespace mozilla
 
 #endif
