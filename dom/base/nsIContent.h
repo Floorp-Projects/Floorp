@@ -911,11 +911,11 @@ public:
   mozilla::dom::Element* GetEditingHost();
 
   /**
-   * Determing language. Look at the nearest ancestor element that has a lang
+   * Determining language. Look at the nearest ancestor element that has a lang
    * attribute in the XML namespace or is an HTML/SVG element and has a lang in
-   * no namespace attribute.
+   * no namespace attribute.  Returns false if no language was specified.
    */
-  void GetLang(nsAString& aResult) const {
+  bool GetLang(nsAString& aResult) const {
     for (const nsIContent* content = this; content; content = content->GetParent()) {
       if (content->GetAttrCount() > 0) {
         // xml:lang has precedence over lang on HTML elements (see
@@ -930,10 +930,11 @@ public:
         NS_ASSERTION(hasAttr || aResult.IsEmpty(),
                      "GetAttr that returns false should not make string non-empty");
         if (hasAttr) {
-          return;
+          return true;
         }
       }
     }
+    return false;
   }
 
   // Overloaded from nsINode
