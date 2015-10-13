@@ -522,7 +522,9 @@ var Output = {
 
   stop: function stop() {
     if (this.highlightBox) {
-      Utils.win.document.documentElement.removeChild(this.highlightBox.get());
+      let doc = Utils.win.document;
+      (doc.body || doc.documentElement).documentElement.removeChild(
+        this.highlightBox.get());
       delete this.highlightBox;
     }
   },
@@ -538,16 +540,17 @@ var Output = {
       {
         let highlightBox = null;
         if (!this.highlightBox) {
+          let doc = Utils.win.document;
           // Add highlight box
           highlightBox = Utils.win.document.
             createElementNS('http://www.w3.org/1999/xhtml', 'div');
-          Utils.win.document.documentElement.appendChild(highlightBox);
+          let parent = doc.body || doc.documentElement;
+          parent.appendChild(highlightBox);
           highlightBox.id = 'virtual-cursor-box';
 
           // Add highlight inset for inner shadow
           highlightBox.appendChild(
-            Utils.win.document.createElementNS(
-              'http://www.w3.org/1999/xhtml', 'div'));
+            doc.createElementNS('http://www.w3.org/1999/xhtml', 'div'));
 
           this.highlightBox = Cu.getWeakReference(highlightBox);
         } else {
