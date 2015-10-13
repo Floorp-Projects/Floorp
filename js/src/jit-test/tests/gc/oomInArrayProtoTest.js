@@ -1,4 +1,5 @@
-load(libdir + 'oomTest.js');
+if (!('oomTest' in this))
+    quit();
 
 function arrayProtoOutOfRange() {
     function f(obj) {
