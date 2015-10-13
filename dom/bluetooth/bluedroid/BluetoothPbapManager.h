@@ -12,9 +12,9 @@
 #include "BluetoothSocketObserver.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/SocketBase.h"
+#include "ObexBase.h"
 
 class nsIInputStream;
-
 namespace mozilla {
   namespace dom {
     class Blob;
@@ -141,20 +141,18 @@ private:
   void ReplyToConnect();
   void ReplyToDisconnectOrAbort();
   void ReplyToSetPath();
+  bool ReplyToGet(uint16_t aPhonebookSize = 0);
   void ReplyError(uint8_t aError);
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
-  bool ReplyToGet(uint16_t aPhonebookSize = 0);
 
-  uint8_t SetPhoneBookPath(uint8_t flags, const ObexHeaderSet& aHeader);
-  uint8_t PullPhonebook(const ObexHeaderSet& aHeader);
-  uint8_t PullvCardListing(const ObexHeaderSet& aHeader);
-  uint8_t PullvCardEntry(const ObexHeaderSet& aHeader);
-  void AppendNamedValueByTagId(
-    const ObexHeaderSet& aHeader,
-    InfallibleTArray<BluetoothNamedValue>& aValues,
-    const AppParameterTag aTagId);
+  ObexResponseCode SetPhoneBookPath(const ObexHeaderSet& aHeader,
+                                    uint8_t flags);
+  ObexResponseCode NotifyPbapRequest(const ObexHeaderSet& aHeader);
+  void AppendNamedValueByTagId(const ObexHeaderSet& aHeader,
+                               InfallibleTArray<BluetoothNamedValue>& aValues,
+                               const AppParameterTag aTagId);
 
-  InfallibleTArray<uint32_t>  PackPropertiesMask(uint8_t* aData, int aSize);
+  InfallibleTArray<uint32_t> PackPropertiesMask(uint8_t* aData, int aSize);
   bool CompareHeaderTarget(const ObexHeaderSet& aHeader);
   bool IsLegalPath(const nsAString& aPath);
   bool IsLegalPhonebookName(const nsAString& aName);
