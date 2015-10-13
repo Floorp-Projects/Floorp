@@ -397,6 +397,17 @@
     callback(null, []);
   };
 
+  var roomStoreOpenedRoom = new loop.store.RoomStore(dispatcher, {
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.HAS_PARTICIPANTS
+    })
+  });
+
+  roomStoreOpenedRoom.setStoreState({
+    openedRoom: "3jKS_Els9IU"
+  });
+
   var roomStoreNoRooms = new loop.store.RoomStore(new loop.Dispatcher(), {
     mozLoop: mockMozLoopNoRooms,
     activeRoomStore: new loop.store.ActiveRoomStore(new loop.Dispatcher(), {
@@ -687,6 +698,20 @@
                            mozLoop: mockMozLoopLoggedIn, 
                            notifications: notifications, 
                            roomStore: roomStore})
+              )
+            ), 
+
+            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
+                           dashed: true, 
+                           height: 410, 
+                           summary: "Room list (active view)", 
+                           width: 330}, 
+              React.createElement("div", {className: "panel"}, 
+                React.createElement(PanelView, {client: mockClient, 
+                           dispatcher: dispatcher, 
+                           mozLoop: navigator.mozLoop, 
+                           notifications: notifications, 
+                           roomStore: roomStoreOpenedRoom})
               )
             ), 
 

@@ -157,6 +157,23 @@ describe("loop.store.RoomStore", function() {
         });
       });
 
+      describe("close", function() {
+        it("should update the openedRoom state to null", function() {
+          store.setStoreState({ openedRoom: "fake1234" });
+          fakeMozLoop.rooms.trigger("close", "close");
+
+          expect(store.getStoreState().openedRoom).to.eql(null);
+        });
+      });
+
+      describe("open", function() {
+        it("should update the openedRoom state to the room token", function() {
+          fakeMozLoop.rooms.trigger("open", "open", "fake1234");
+
+          expect(store.getStoreState().openedRoom).to.eql("fake1234");
+        });
+      });
+
       describe("update", function() {
         it("should update a room entry", function() {
           fakeMozLoop.rooms.trigger("update", "update", {
