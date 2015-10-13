@@ -1,14 +1,30 @@
 "use strict"
 
 add_task(function* () {
-  info("Bug 475529 - Add is the default button for the new folder dialog.");
+  info("Bug 475529 - Add is the default button for the new folder dialog + " +
+       "Bug 1206376 - Changing properties of a new bookmark while adding it " +
+       "acts on the last bookmark in the current container");
+
+  // Add a new bookmark at index 0 in the unfiled folder.
+  let insertionIndex = 0;
+  let newBookmark = yield PlacesUtils.bookmarks.insert({
+    index: insertionIndex,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://example.com/",
+  });
+  let newBookmarkId = yield PlacesUtils.promiseItemId(newBookmark.guid);
 
   yield withSidebarTree("bookmarks", function* (tree) {
+    // Select the new bookmark in the sidebar.
     let itemId = PlacesUIUtils.leftPaneQueries["UnfiledBookmarks"];
-    tree.selectItems([itemId]);
+    tree.selectItems([newBookmarkId]);
     ok(tree.controller.isCommandEnabled("placesCmd_new:folder"),
        "'placesCmd_new:folder' on current selected node is enabled");
 
+    // Create a new folder.  Since the new bookmark is selected, and new items
+    // are inserted at the index of the currently selected item, the new folder
+    // will be inserted at index 0.
     yield withBookmarksDialog(
       false,
       function openDialog() {
@@ -24,13 +40,14 @@ add_task(function* () {
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
         yield promiseTitleChangeNotification;
 
-        let bookmark = yield PlacesUtils.bookmarks.fetch({
+        let newFolder = yield PlacesUtils.bookmarks.fetch({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-          index: PlacesUtils.bookmarks.DEFAULT_INDEX
+          index: insertionIndex,
         });
 
-        is(bookmark.title, "n", "folder name has been edited");
-        yield PlacesUtils.bookmarks.remove(bookmark);
+        is(newFolder.title, "n", "folder name has been edited");
+        yield PlacesUtils.bookmarks.remove(newFolder);
+        yield PlacesUtils.bookmarks.remove(newBookmark);
       }
     );
   });
