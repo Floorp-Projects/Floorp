@@ -57,6 +57,8 @@ def get_environment_overlay(js_shell):
         'TZ': 'PST8PDT',
         # Force date strings to English.
         'LC_TIME': 'en_US.UTF-8',
+        # Tell the shell to disable crash dialogs on windows.
+        'XRE_NO_WINDOWS_CRASH_DIALOG': '1',
     }
     # Add the binary's directory to the library search path so that we find the
     # nspr and icu we built, instead of the platform supplied ones (or none at
