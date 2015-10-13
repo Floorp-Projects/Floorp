@@ -662,10 +662,10 @@ loop.panel = (function(_, mozL10n) {
     _renderLoadingRoomsView: function() {
       return (
         <div className="room-list">
+          {this._renderNewRoomButton()}
           <div className="room-list-loading">
             <img src="loop/shared/img/animated-spinner.svg" />
           </div>
-          {this._renderNewRoomButton()}
         </div>
       );
     },
@@ -673,6 +673,7 @@ loop.panel = (function(_, mozL10n) {
     _renderNoRoomsView: function() {
       return (
         <div className="rooms">
+          {this._renderNewRoomButton()}
           <div className="room-list-empty">
             <div className="no-conversations-message">
               <p className="panel-text-medium">
@@ -683,7 +684,6 @@ loop.panel = (function(_, mozL10n) {
               </p>
             </div>
           </div>
-          {this._renderNewRoomButton()}
         </div>
       );
     },
@@ -713,6 +713,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="rooms">
+          {this._renderNewRoomButton()}
           <h1>{mozL10n.get("rooms_list_recent_conversations")}</h1>
           <div className="room-list">{
             this.state.rooms.map(function(room, i) {
@@ -725,7 +726,6 @@ loop.panel = (function(_, mozL10n) {
               );
             }, this)
           }</div>
-          {this._renderNewRoomButton()}
         </div>
       );
     }
