@@ -192,10 +192,5 @@ OuterDocAccessible::RemoteChildDoc() const
   if (!tab)
     return nullptr;
 
-  if (DocAccessibleParent* doc = tab->GetTopLevelDocAccessible()) {
-    return doc;
-  }
-
-  MOZ_ASSERT(false, "no top level tab document?");
-  return nullptr;
+  return tab->GetTopLevelDocAccessible();
 }
