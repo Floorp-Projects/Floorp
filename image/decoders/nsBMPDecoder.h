@@ -16,6 +16,32 @@
 namespace mozilla {
 namespace image {
 
+namespace bmp {
+
+/// An entry in the color table.
+struct ColorTableEntry {
+  uint8_t mRed;
+  uint8_t mGreen;
+  uint8_t mBlue;
+};
+
+struct BitFields {
+  uint32_t red;
+  uint32_t green;
+  uint32_t blue;
+  uint8_t redLeftShift;
+  uint8_t redRightShift;
+  uint8_t greenLeftShift;
+  uint8_t greenRightShift;
+  uint8_t blueLeftShift;
+  uint8_t blueRightShift;
+
+  // Length of the bitfields structure in the BMP file.
+  static const size_t LENGTH = 12;
+};
+
+} // namespace bmp
+
 class RasterImage;
 
 /// Decoder for BMP-Files, as used by Windows and OS/2.
@@ -110,7 +136,7 @@ private:
 
   uint32_t mNumColors;      // The number of used colors, i.e. the number of
                             // entries in mColors, if it's present.
-  bmp::ColorTable* mColors; // The color table, if it's present.
+  bmp::ColorTableEntry* mColors; // The color table, if it's present.
   uint32_t mBytesPerColor;  // 3 or 4, depending on the format
 
   // The number of bytes prior to the optional gap that have been read. This
@@ -151,9 +177,10 @@ SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen,
 }
 
 static inline void
-SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTable* aColors)
+SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTableEntry* aColors)
 {
-  SetPixel(aDecoded, aColors[idx].red, aColors[idx].green, aColors[idx].blue);
+  SetPixel(aDecoded,
+           aColors[idx].mRed, aColors[idx].mGreen, aColors[idx].mBlue);
 }
 
 /// Sets two (or one if aCount = 1) pixels
@@ -163,7 +190,7 @@ SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTable* aColors)
 /// @param aCount Current count. Is decremented by one or two.
 inline void
 Set4BitPixel(uint32_t*& aDecoded, uint8_t aData, uint32_t& aCount,
-             bmp::ColorTable* aColors)
+             bmp::ColorTableEntry* aColors)
 {
   uint8_t idx = aData >> 4;
   SetPixel(aDecoded, idx, aColors);
