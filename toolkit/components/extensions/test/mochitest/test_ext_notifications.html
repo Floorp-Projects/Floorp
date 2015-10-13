@@ -12,7 +12,25 @@
 <script type="application/javascript;version=1.8">
 
 add_task(function* test_notifications() {
-  let extension = ExtensionTestUtils.loadExtension("notifications");
+  function backgroundScript() {
+    browser.test.log("running background script");
+
+    var opts = {title: "Testing Notification", message: "Carry on"};
+
+    browser.notifications.create("5", opts, function(id) {
+      browser.test.sendMessage("running", id);
+      browser.test.notifyPass("background test passed");
+    });
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: ["notifications"]
+    },
+    background: "(" + backgroundScript.toString() + ")()"
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
   info("load complete");
   yield extension.startup();
   info("startup complete");

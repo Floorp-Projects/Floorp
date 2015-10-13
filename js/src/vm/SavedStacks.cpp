@@ -407,28 +407,90 @@ SavedFrame::getPrincipals()
 }
 
 void
+SavedFrame::initSource(JSAtom* source)
+{
+    MOZ_ASSERT(source);
+    initReservedSlot(JSSLOT_SOURCE, StringValue(source));
+}
+
+void
+SavedFrame::initLine(uint32_t line)
+{
+    initReservedSlot(JSSLOT_LINE, PrivateUint32Value(line));
+}
+
+void
+SavedFrame::initColumn(uint32_t column)
+{
+    initReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(column));
+}
+
+void
+SavedFrame::initPrincipals(JSPrincipals* principals)
+{
+    if (principals)
+        JS_HoldPrincipals(principals);
+    initPrincipalsAlreadyHeld(principals);
+}
+
+void
+SavedFrame::initPrincipalsAlreadyHeld(JSPrincipals* principals)
+{
+    MOZ_ASSERT_IF(principals, principals->refcount > 0);
+    initReservedSlot(JSSLOT_PRINCIPALS, PrivateValue(principals));
+}
+
+void
+SavedFrame::initFunctionDisplayName(JSAtom* maybeName)
+{
+    initReservedSlot(JSSLOT_FUNCTIONDISPLAYNAME, maybeName ? StringValue(maybeName) : NullValue());
+}
+
+void
+SavedFrame::initAsyncCause(JSAtom* maybeCause)
+{
+    initReservedSlot(JSSLOT_ASYNCCAUSE, maybeCause ? StringValue(maybeCause) : NullValue());
+}
+
+void
+SavedFrame::initParent(SavedFrame* maybeParent)
+{
+    initReservedSlot(JSSLOT_PARENT, ObjectOrNullValue(maybeParent));
+}
+
+void
 SavedFrame::initFromLookup(SavedFrame::HandleLookup lookup)
 {
-    MOZ_ASSERT(lookup->source);
-    MOZ_ASSERT(getReservedSlot(JSSLOT_SOURCE).isUndefined());
-    setReservedSlot(JSSLOT_SOURCE, StringValue(lookup->source));
+    initSource(lookup->source);
+    initLine(lookup->line);
+    initColumn(lookup->column);
+    initFunctionDisplayName(lookup->functionDisplayName);
+    initAsyncCause(lookup->asyncCause);
+    initParent(lookup->parent);
+    initPrincipals(lookup->principals);
+}
 
-    setReservedSlot(JSSLOT_LINE, PrivateUint32Value(lookup->line));
-    setReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(lookup->column));
-    setReservedSlot(JSSLOT_FUNCTIONDISPLAYNAME,
-                    lookup->functionDisplayName
-                        ? StringValue(lookup->functionDisplayName)
-                        : NullValue());
-    setReservedSlot(JSSLOT_ASYNCCAUSE,
-                    lookup->asyncCause
-                        ? StringValue(lookup->asyncCause)
-                        : NullValue());
-    setReservedSlot(JSSLOT_PARENT, ObjectOrNullValue(lookup->parent));
+/* static */ SavedFrame*
+SavedFrame::create(JSContext* cx)
+{
+    RootedGlobalObject global(cx, cx->global());
+    assertSameCompartment(cx, global);
 
-    MOZ_ASSERT(getReservedSlot(JSSLOT_PRINCIPALS).isUndefined());
-    if (lookup->principals)
-        JS_HoldPrincipals(lookup->principals);
-    setReservedSlot(JSSLOT_PRINCIPALS, PrivateValue(lookup->principals));
+    // Ensure that we don't try to capture the stack again in the
+    // `SavedStacksMetadataCallback` for this new SavedFrame object, and
+    // accidentally cause O(n^2) behavior.
+    SavedStacks::AutoReentrancyGuard guard(cx->compartment()->savedStacks());
+
+    RootedNativeObject proto(cx, GlobalObject::getOrCreateSavedFramePrototype(cx, global));
+    if (!proto)
+        return nullptr;
+    assertSameCompartment(cx, proto);
+
+    RootedObject frameObj(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_, proto));
+    if (!frameObj)
+        return nullptr;
+
+    return &frameObj->as<SavedFrame>();
 }
 
 bool
@@ -1222,30 +1284,15 @@ SavedStacks::getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup looku
 SavedFrame*
 SavedStacks::createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup lookup)
 {
-    RootedGlobalObject global(cx, cx->global());
-    assertSameCompartment(cx, global);
-
-    // Ensure that we don't try to capture the stack again in the
-    // `SavedStacksMetadataCallback` for this new SavedFrame object, and
-    // accidentally cause O(n^2) behavior.
-    SavedStacks::AutoReentrancyGuard guard(*this);
-
-    RootedNativeObject proto(cx, GlobalObject::getOrCreateSavedFramePrototype(cx, global));
-    if (!proto)
+    RootedSavedFrame frame(cx, SavedFrame::create(cx));
+    if (!frame)
         return nullptr;
-    assertSameCompartment(cx, proto);
+    frame->initFromLookup(lookup);
 
-    RootedObject frameObj(cx, NewObjectWithGivenProto(cx, &SavedFrame::class_, proto));
-    if (!frameObj)
+    if (!FreezeObject(cx, frame))
         return nullptr;
 
-    RootedSavedFrame f(cx, &frameObj->as<SavedFrame>());
-    f->initFromLookup(lookup);
-
-    if (!FreezeObject(cx, frameObj))
-        return nullptr;
-
-    return f.get();
+    return frame;
 }
 
 /*

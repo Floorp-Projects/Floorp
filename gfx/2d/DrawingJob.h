@@ -13,6 +13,7 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/JobScheduler.h"
 #include "mozilla/gfx/IterableArena.h"
+#include "mozilla/RefCounted.h"
 #include "DrawCommand.h"
 
 namespace mozilla {

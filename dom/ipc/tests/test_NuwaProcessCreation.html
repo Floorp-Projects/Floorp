@@ -14,6 +14,9 @@ Test if Nuwa process created successfully.
 
 function runTest()
 {
+  info("Shut down processes by disabling process prelaunch");
+  SpecialPowers.setBoolPref('dom.ipc.processPrelaunch.enabled', false);
+
   info("Launch the Nuwa process");
   let cpmm = SpecialPowers.Cc["@mozilla.org/childprocessmessagemanager;1"]
                           .getService(SpecialPowers.Ci.nsISyncMessageSender);
@@ -22,12 +25,11 @@ function runTest()
     receiveMessage: function receiveMessage(msg) {
       msg = SpecialPowers.wrap(msg);
       if (msg.name == 'TEST-ONLY:nuwa-ready') {
-        ok(true, "Got nuwa-ready");
-        is(seenNuwaReady, false, "Already received nuwa ready");
+        is(seenNuwaReady, false, "The Nuwa process is launched");
         seenNuwaReady = true;
       } else if (msg.name == 'TEST-ONLY:nuwa-add-new-process') {
         ok(true, "Got nuwa-add-new-process");
-        is(seenNuwaReady, true, "Receive nuwa-add-new-process before nuwa-ready");
+        is(seenNuwaReady, true, "The preallocated process is launched from the Nuwa process");
         shutdown();
       }
     }
@@ -56,7 +58,6 @@ function setup()
 
   SpecialPowers.pushPrefEnv({
     'set': [
-      ['dom.ipc.processPrelaunch.enabled', false],
       ['dom.ipc.preallocatedProcessManager.testMode', true]
     ]
   }, runTest);

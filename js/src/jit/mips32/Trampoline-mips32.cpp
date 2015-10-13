@@ -210,6 +210,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         regs.take(OsrFrameReg);
         regs.take(BaselineFrameReg);
         regs.take(reg_code);
+        regs.take(ReturnReg);
 
         const Address slotNumStackValues(BaselineFrameReg, sizeof(EnterJITRegs) +
                                          offsetof(EnterJITArgs, numStackValues));
@@ -265,10 +266,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, jit::InitBaselineFrameForOsr));
 
         regs.add(OsrFrameReg);
-        regs.add(scratch);
-        regs.add(numStackValues);
         regs.take(JSReturnOperand);
-        regs.take(ReturnReg);
         Register jitcode = regs.takeAny();
         masm.loadPtr(Address(StackPointer, 0), jitcode);
         masm.loadPtr(Address(StackPointer, sizeof(uintptr_t)), framePtr);

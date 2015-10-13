@@ -2186,12 +2186,6 @@ extern JS_PUBLIC_API(void*)
 JS_GetInstancePrivate(JSContext* cx, JS::Handle<JSObject*> obj, const JSClass* clasp,
                       JS::CallArgs* args);
 
-extern JS_PUBLIC_API(bool)
-JS_GetPrototype(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject protop);
-
-extern JS_PUBLIC_API(bool)
-JS_SetPrototype(JSContext* cx, JS::HandleObject obj, JS::HandleObject proto);
-
 extern JS_PUBLIC_API(JSObject*)
 JS_GetConstructor(JSContext* cx, JS::Handle<JSObject*> proto);
 
@@ -2417,10 +2411,6 @@ JS_FireOnNewGlobalObject(JSContext* cx, JS::HandleObject global);
 extern JS_PUBLIC_API(JSObject*)
 JS_NewObject(JSContext* cx, const JSClass* clasp);
 
-/* Queries the [[Extensible]] property of the object. */
-extern JS_PUBLIC_API(bool)
-JS_IsExtensible(JSContext* cx, JS::HandleObject obj, bool* extensible);
-
 extern JS_PUBLIC_API(bool)
 JS_IsNative(JSObject* obj);
 
@@ -2451,29 +2441,6 @@ JS_DeepFreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
  */
 extern JS_PUBLIC_API(bool)
 JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
-
-/*
- * Attempt to make |obj| non-extensible.  If an error occurs while making the
- * attempt, return false (with a pending exception set, depending upon the
- * nature of the error).  If no error occurs, return true with |result| set
- * to indicate whether the attempt successfully set the [[Extensible]] property
- * to false.
- */
-extern JS_PUBLIC_API(bool)
-JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
-
-/*
- * Attempt to make the [[Prototype]] of |obj| immutable, such that any attempt
- * to modify it will fail.  If an error occurs during the attempt, return false
- * (with a pending exception set, depending upon the nature of the error).  If
- * no error occurs, return true with |*succeeded| set to indicate whether the
- * attempt successfully made the [[Prototype]] immutable.
- */
-extern JS_PUBLIC_API(bool)
-JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded);
-
-extern JS_PUBLIC_API(JSObject*)
-JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
 
 
 /*** Property descriptors ************************************************************************/
@@ -2768,108 +2735,86 @@ ObjectToCompletePropertyDescriptor(JSContext* cx,
 } // namespace JS
 
 
-/*** [[DefineOwnProperty]] and variations ********************************************************/
+/*** Standard internal methods ********************************************************************
+ *
+ * The functions below are the fundamental operations on objects.
+ *
+ * ES6 specifies 14 internal methods that define how objects behave.  The
+ * standard is actually quite good on this topic, though you may have to read
+ * it a few times. See ES6 sections 6.1.7.2 and 6.1.7.3.
+ *
+ * When 'obj' is an ordinary object, these functions have boring standard
+ * behavior as specified by ES6 section 9.1; see the section about internal
+ * methods in js/src/vm/NativeObject.h.
+ *
+ * Proxies override the behavior of internal methods. So when 'obj' is a proxy,
+ * any one of the functions below could do just about anything. See
+ * js/public/Proxy.h.
+ */
 
+/**
+ * Get the prototype of obj, storing it in result.
+ *
+ * Implements: ES6 [[GetPrototypeOf]] internal method.
+ */
 extern JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleValue value,
-                  unsigned attrs,
-                  JSNative getter = nullptr, JSNative setter = nullptr);
+JS_GetPrototype(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject result);
 
+/**
+ * Change the prototype of obj.
+ *
+ * Implements: ES6 [[SetPrototypeOf]] internal method.
+ *
+ * In cases where ES6 [[SetPrototypeOf]] returns false without an exception,
+ * JS_SetPrototype throws a TypeError and returns false.
+ *
+ * Performance warning: JS_SetPrototype is very bad for performance. It may
+ * cause compiled jit-code to be invalidated. It also causes not only obj but
+ * all other objects in the same "group" as obj to be permanently deoptimized.
+ * It's better to create the object with the right prototype from the start.
+ */
 extern JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleObject value,
-                  unsigned attrs,
-                  JSNative getter = nullptr, JSNative setter = nullptr);
+JS_SetPrototype(JSContext* cx, JS::HandleObject obj, JS::HandleObject proto);
 
+/**
+ * Determine whether obj is extensible. Extensible objects can have new
+ * properties defined on them. Inextensible objects can't, and their
+ * [[Prototype]] slot is fixed as well.
+ *
+ * Implements: ES6 [[IsExtensible]] internal method.
+ */
 extern JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleString value,
-                  unsigned attrs,
-                  JSNative getter = nullptr, JSNative setter = nullptr);
+JS_IsExtensible(JSContext* cx, JS::HandleObject obj, bool* extensible);
 
+/**
+ * Attempt to make |obj| non-extensible.
+ *
+ * Not all failures are treated as errors. See the comment on
+ * JS::ObjectOpResult in js/public/Class.h.
+ *
+ * Implements: ES6 [[PreventExtensions]] internal method.
+ */
 extern JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, int32_t value,
-                  unsigned attrs,
-                  JSNative getter = nullptr, JSNative setter = nullptr);
+JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
 
+/**
+ * Attempt to make the [[Prototype]] of |obj| immutable, such that any attempt
+ * to modify it will fail.  If an error occurs during the attempt, return false
+ * (with a pending exception set, depending upon the nature of the error).  If
+ * no error occurs, return true with |*succeeded| set to indicate whether the
+ * attempt successfully made the [[Prototype]] immutable.
+ *
+ * This is a nonstandard internal method.
+ */
 extern JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, uint32_t value,
-                  unsigned attrs,
-                  JSNative getter = nullptr, JSNative setter = nullptr);
+JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded);
 
-extern JS_PUBLIC_API(bool)
-JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, double value,
-                  unsigned attrs,
-                  JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
-                      unsigned attrs,
-                      JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject value,
-                      unsigned attrs,
-                      JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleString value,
-                      unsigned attrs,
-                      JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, int32_t value,
-                      unsigned attrs,
-                      JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, uint32_t value,
-                      unsigned attrs,
-                      JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, double value,
-                      unsigned attrs,
-                      JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                      JS::Handle<JSPropertyDescriptor> desc,
-                      JS::ObjectOpResult& result);
-
-extern JS_PUBLIC_API(bool)
-JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                      JS::Handle<JSPropertyDescriptor> desc);
-
-extern JS_PUBLIC_API(JSObject*)
-JS_DefineObject(JSContext* cx, JS::HandleObject obj, const char* name,
-                const JSClass* clasp = nullptr, unsigned attrs = 0);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineConstDoubles(JSContext* cx, JS::HandleObject obj, const JSConstDoubleSpec* cds);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineConstIntegers(JSContext* cx, JS::HandleObject obj, const JSConstIntegerSpec* cis);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineProperties(JSContext* cx, JS::HandleObject obj, const JSPropertySpec* ps);
-
-
-/* * */
-
-extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnProperty(JSContext* cx, JS::HandleObject obj, const char* name,
-                         bool* foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                             bool* foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_HasProperty(JSContext* cx, JS::HandleObject obj, const char* name, bool* foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_HasPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
-
-
+/**
+ * Get a description of one of obj's own properties. If no such property exists
+ * on obj, return true with desc.object() set to null.
+ *
+ * Implements: ES6 [[GetOwnProperty]] internal method.
+ */
 extern JS_PUBLIC_API(bool)
 JS_GetOwnPropertyDescriptorById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                                 JS::MutableHandle<JSPropertyDescriptor> desc);
@@ -2882,16 +2827,11 @@ extern JS_PUBLIC_API(bool)
 JS_GetOwnUCPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char16_t* name,
                               JS::MutableHandle<JSPropertyDescriptor> desc);
 
-extern JS_PUBLIC_API(bool)
-JS_HasOwnPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_HasOwnProperty(JSContext* cx, JS::HandleObject obj, const char* name, bool* foundp);
-
-/*
- * Like JS_GetOwnPropertyDescriptorById but will return a property on
- * an object on the prototype chain (returned in desc->obj). If desc->obj is null,
- * then this property was not found on the prototype chain.
+/**
+ * Like JS_GetOwnPropertyDescriptorById, but also searches the prototype chain
+ * if no own property is found directly on obj. The object on which the
+ * property is found is returned in desc.object(). If the property is not found
+ * on the prototype chain, this returns true with desc.object() set to null.
  */
 extern JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptorById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
@@ -2901,39 +2841,86 @@ extern JS_PUBLIC_API(bool)
 JS_GetPropertyDescriptor(JSContext* cx, JS::HandleObject obj, const char* name,
                          JS::MutableHandle<JSPropertyDescriptor> desc);
 
+/**
+ * Define a property on obj.
+ *
+ * This function uses JS::ObjectOpResult to indicate conditions that ES6
+ * specifies as non-error failures. This is inconvenient at best, so use this
+ * function only if you are implementing a proxy handler's defineProperty()
+ * method. For all other purposes, use one of the many DefineProperty functions
+ * below that throw an exception in all failure cases.
+ *
+ * Implements: ES6 [[DefineOwnProperty]] internal method.
+ */
 extern JS_PUBLIC_API(bool)
-JS_GetProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_GetPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_ForwardGetPropertyTo(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue onBehalfOf,
-                        JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_SetProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleValue v);
-
-extern JS_PUBLIC_API(bool)
-JS_SetPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v);
-
-extern JS_PUBLIC_API(bool)
-JS_ForwardSetPropertyTo(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v,
-                        JS::HandleValue receiver, JS::ObjectOpResult& result);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name,
-                  JS::ObjectOpResult& result);
-
-extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, jsid id);
-
-extern JS_PUBLIC_API(bool)
-JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                      JS::Handle<JSPropertyDescriptor> desc,
                       JS::ObjectOpResult& result);
+
+/**
+ * Define a property on obj, throwing a TypeError if the attempt fails.
+ * This is the C++ equivalent of `Object.defineProperty(obj, id, desc)`.
+ */
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                      JS::Handle<JSPropertyDescriptor> desc);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
+                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject value,
+                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleString value,
+                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, int32_t value,
+                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, uint32_t value,
+                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, double value,
+                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleValue value,
+                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleObject value,
+                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleString value,
+                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, int32_t value,
+                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, uint32_t value,
+                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, double value,
+                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                    JS::Handle<JSPropertyDescriptor> desc,
+                    JS::ObjectOpResult& result);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                    JS::Handle<JSPropertyDescriptor> desc);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
@@ -2966,36 +2953,370 @@ JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, s
                     JSNative getter = nullptr, JSNative setter = nullptr);
 
 extern JS_PUBLIC_API(bool)
-JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::Handle<JSPropertyDescriptor> desc,
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value,
+                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleObject value,
+                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleString value,
+                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, int32_t value,
+                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, uint32_t value,
+                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, double value,
+                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+
+/**
+ * Compute the expression `id in obj`.
+ *
+ * If obj has an own or inherited property obj[id], set *foundp = true and
+ * return true. If not, set *foundp = false and return true. On error, return
+ * false with an exception pending.
+ *
+ * Implements: ES6 [[Has]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_HasPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
+
+extern JS_PUBLIC_API(bool)
+JS_HasProperty(JSContext* cx, JS::HandleObject obj, const char* name, bool* foundp);
+
+extern JS_PUBLIC_API(bool)
+JS_HasUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                 bool* vp);
+
+extern JS_PUBLIC_API(bool)
+JS_HasElement(JSContext* cx, JS::HandleObject obj, uint32_t index, bool* foundp);
+
+/**
+ * Determine whether obj has an own property with the key `id`.
+ *
+ * Implements: ES6 7.3.11 HasOwnProperty(O, P).
+ */
+extern JS_PUBLIC_API(bool)
+JS_HasOwnPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
+
+extern JS_PUBLIC_API(bool)
+JS_HasOwnProperty(JSContext* cx, JS::HandleObject obj, const char* name, bool* foundp);
+
+/**
+ * Get the value of the property `obj[id]`, or undefined if no such property
+ * exists. This is the C++ equivalent of `vp = Reflect.get(obj, id, receiver)`.
+ *
+ * Most callers don't need the `receiver` argument. Consider using
+ * JS_GetProperty instead. (But if you're implementing a proxy handler's set()
+ * method, it's often correct to call this function and pass the receiver
+ * through.)
+ *
+ * Implements: ES6 [[Get]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_ForwardGetPropertyTo(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                        JS::HandleValue receiver, JS::MutableHandleValue vp);
+
+extern JS_PUBLIC_API(bool)
+JS_ForwardGetElementTo(JSContext* cx, JS::HandleObject obj, uint32_t index,
+                       JS::HandleObject receiver, JS::MutableHandleValue vp);
+
+/**
+ * Get the value of the property `obj[id]`, or undefined if no such property
+ * exists. The result is stored in vp.
+ *
+ * Implements: ES6 7.3.1 Get(O, P).
+ */
+extern JS_PUBLIC_API(bool)
+JS_GetPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                   JS::MutableHandleValue vp);
+
+extern JS_PUBLIC_API(bool)
+JS_GetProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::MutableHandleValue vp);
+
+extern JS_PUBLIC_API(bool)
+JS_GetUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                 JS::MutableHandleValue vp);
+
+extern JS_PUBLIC_API(bool)
+JS_GetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
+
+/**
+ * Perform the same property assignment as `Reflect.set(obj, id, v, receiver)`.
+ *
+ * This function has a `receiver` argument that most callers don't need.
+ * Consider using JS_SetProperty instead.
+ *
+ * Implements: ES6 [[Set]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_ForwardSetPropertyTo(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v,
+                        JS::HandleValue receiver, JS::ObjectOpResult& result);
+
+/**
+ * Perform the assignment `obj[id] = v`.
+ *
+ * This function performs non-strict assignment, so if the property is
+ * read-only, nothing happens and no error is thrown.
+ */
+extern JS_PUBLIC_API(bool)
+JS_SetPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleValue v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                 JS::HandleValue v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleValue v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleObject v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleString v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, int32_t v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, uint32_t v);
+
+extern JS_PUBLIC_API(bool)
+JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, double v);
+
+/**
+ * Delete a property. This is the C++ equivalent of
+ * `result = Reflect.deleteProperty(obj, id)`.
+ *
+ * This function has a `result` out parameter that most callers don't need.
+ * Unless you can pass through an ObjectOpResult provided by your caller, it's
+ * probably best to use the JS_DeletePropertyById signature with just 3
+ * arguments.
+ *
+ * Implements: ES6 [[Delete]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                      JS::ObjectOpResult& result);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name,
+                  JS::ObjectOpResult& result);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
                     JS::ObjectOpResult& result);
 
 extern JS_PUBLIC_API(bool)
-JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::Handle<JSPropertyDescriptor> desc);
+JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::ObjectOpResult& result);
+
+/**
+ * Delete a property, ignoring strict failures. This is the C++ equivalent of
+ * the JS `delete obj[id]` in non-strict mode code.
+ */
+extern JS_PUBLIC_API(bool)
+JS_DeletePropertyById(JSContext* cx, JS::HandleObject obj, jsid id);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteProperty(JSContext* cx, JS::HandleObject obj, const char* name);
+
+extern JS_PUBLIC_API(bool)
+JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
+
+/**
+ * Get an array of the non-symbol enumerable properties of obj.
+ * This function is roughly equivalent to:
+ *
+ *     var result = [];
+ *     for (key in obj)
+ *         result.push(key);
+ *     return result;
+ *
+ * This is the closest thing we currently have to the ES6 [[Enumerate]]
+ * internal method.
+ *
+ * The JSIdArray returned by JS_Enumerate must be rooted to protect its
+ * contents from garbage collection. Use JS::AutoIdArray.
+ */
+extern JS_PUBLIC_API(bool)
+JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
+
+/*
+ * API for determining callability and constructability. [[Call]] and
+ * [[Construct]] are internal methods that aren't present on all objects, so it
+ * is useful to ask if they are there or not. The standard itself asks these
+ * questions routinely.
+ */
+namespace JS {
+
+/**
+ * Return true if the given object is callable. In ES6 terms, an object is
+ * callable if it has a [[Call]] internal method.
+ *
+ * Implements: ES6 7.2.3 IsCallable(argument).
+ *
+ * Functions are callable. A scripted proxy or wrapper is callable if its
+ * target is callable. Most other objects aren't callable.
+ */
+extern JS_PUBLIC_API(bool)
+IsCallable(JSObject* obj);
+
+/**
+ * Return true if the given object is a constructor. In ES6 terms, an object is
+ * a constructor if it has a [[Construct]] internal method. The expression
+ * `new obj()` throws a TypeError if obj is not a constructor.
+ *
+ * Implements: ES6 7.2.4 IsConstructor(argument).
+ *
+ * JS functions and classes are constructors. Arrow functions and most builtin
+ * functions are not. A scripted proxy or wrapper is a constructor if its
+ * target is a constructor.
+ */
+extern JS_PUBLIC_API(bool)
+IsConstructor(JSObject* obj);
+
+} /* namespace JS */
+
+/**
+ * Call a function, passing a this-value and arguments. This is the C++
+ * equivalent of `rval = Reflect.apply(fun, obj, args)`.
+ *
+ * Implements: ES6 7.3.12 Call(F, V, [argumentsList]).
+ * Use this function to invoke the [[Call]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+JS_CallFunctionValue(JSContext* cx, JS::HandleObject obj, JS::HandleValue fval,
+                     const JS::HandleValueArray& args, JS::MutableHandleValue rval);
+
+extern JS_PUBLIC_API(bool)
+JS_CallFunction(JSContext* cx, JS::HandleObject obj, JS::HandleFunction fun,
+                const JS::HandleValueArray& args, JS::MutableHandleValue rval);
+
+/**
+ * Perform the method call `rval = obj[name](args)`.
+ */
+extern JS_PUBLIC_API(bool)
+JS_CallFunctionName(JSContext* cx, JS::HandleObject obj, const char* name,
+                    const JS::HandleValueArray& args, JS::MutableHandleValue rval);
+
+namespace JS {
+
+static inline bool
+Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleFunction fun,
+     const JS::HandleValueArray& args, MutableHandleValue rval)
+{
+    return !!JS_CallFunction(cx, thisObj, fun, args, rval);
+}
+
+static inline bool
+Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleValue fun, const JS::HandleValueArray& args,
+     MutableHandleValue rval)
+{
+    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval);
+}
+
+static inline bool
+Call(JSContext* cx, JS::HandleObject thisObj, const char* name, const JS::HandleValueArray& args,
+     MutableHandleValue rval)
+{
+    return !!JS_CallFunctionName(cx, thisObj, name, args, rval);
+}
+
+extern JS_PUBLIC_API(bool)
+Call(JSContext* cx, JS::HandleValue thisv, JS::HandleValue fun, const JS::HandleValueArray& args,
+     MutableHandleValue rval);
+
+static inline bool
+Call(JSContext* cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::HandleValueArray& args,
+     MutableHandleValue rval)
+{
+    MOZ_ASSERT(funObj);
+    JS::RootedValue fun(cx, JS::ObjectValue(*funObj));
+    return Call(cx, thisv, fun, args, rval);
+}
+
+/**
+ * Invoke a constructor. This is the C++ equivalent of
+ * `rval = Reflect.construct(fun, args, newTarget)`.
+ *
+ * JS::Construct() takes a `newTarget` argument that most callers don't need.
+ * Consider using the four-argument Construct signature instead. (But if you're
+ * implementing a subclass or a proxy handler's construct() method, this is the
+ * right function to call.)
+ *
+ * Implements: ES6 7.3.13 Construct(F, [argumentsList], [newTarget]).
+ * Use this function to invoke the [[Construct]] internal method.
+ */
+extern JS_PUBLIC_API(bool)
+Construct(JSContext* cx, JS::HandleValue fun, HandleObject newTarget,
+          const JS::HandleValueArray &args, MutableHandleValue rval);
+
+/**
+ * Invoke a constructor. This is the C++ equivalent of
+ * `rval = new fun(...args)`.
+ *
+ * The value left in rval on success is always an object in practice,
+ * though at the moment this is not enforced by the C++ type system.
+ *
+ * Implements: ES6 7.3.13 Construct(F, [argumentsList], [newTarget]), when
+ * newTarget is omitted.
+ */
+extern JS_PUBLIC_API(bool)
+Construct(JSContext* cx, JS::HandleValue fun, const JS::HandleValueArray& args,
+          MutableHandleValue rval);
+
+} /* namespace JS */
+
+/**
+ * Invoke a constructor, like the JS expression `new ctor(...args)`. Returns
+ * the new object, or null on error.
+ */
+extern JS_PUBLIC_API(JSObject*)
+JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
+
+
+/*** Other property-defining functions ***********************************************************/
+
+extern JS_PUBLIC_API(JSObject*)
+JS_DefineObject(JSContext* cx, JS::HandleObject obj, const char* name,
+                const JSClass* clasp = nullptr, unsigned attrs = 0);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineConstDoubles(JSContext* cx, JS::HandleObject obj, const JSConstDoubleSpec* cds);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineConstIntegers(JSContext* cx, JS::HandleObject obj, const JSConstIntegerSpec* cis);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperties(JSContext* cx, JS::HandleObject obj, const JSPropertySpec* ps);
+
+
+/* * */
+
+extern JS_PUBLIC_API(bool)
+JS_AlreadyHasOwnPropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                             bool* foundp);
+
+extern JS_PUBLIC_API(bool)
+JS_AlreadyHasOwnProperty(JSContext* cx, JS::HandleObject obj, const char* name,
+                         bool* foundp);
 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name,
                            size_t namelen, bool* foundp);
 
 extern JS_PUBLIC_API(bool)
-JS_HasUCProperty(JSContext* cx, JS::HandleObject obj,
-                 const char16_t* name, size_t namelen,
-                 bool* vp);
-
-extern JS_PUBLIC_API(bool)
-JS_GetUCProperty(JSContext* cx, JS::HandleObject obj,
-                 const char16_t* name, size_t namelen,
-                 JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_SetUCProperty(JSContext* cx, JS::HandleObject obj,
-                 const char16_t* name, size_t namelen,
-                 JS::HandleValue v);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::ObjectOpResult& result);
+JS_AlreadyHasOwnElement(JSContext* cx, JS::HandleObject obj, uint32_t index, bool* foundp);
 
 extern JS_PUBLIC_API(JSObject*)
 JS_NewArrayObject(JSContext* cx, const JS::HandleValueArray& contents);
@@ -3024,73 +3345,6 @@ JS_GetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t* lengthp);
 
 extern JS_PUBLIC_API(bool)
 JS_SetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t length);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value,
-                 unsigned attrs,
-                 JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleObject value,
-                 unsigned attrs,
-                 JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleString value,
-                 unsigned attrs,
-                 JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, int32_t value,
-                 unsigned attrs,
-                 JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, uint32_t value,
-                 unsigned attrs,
-                 JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, double value,
-                 unsigned attrs,
-                 JSNative getter = nullptr, JSNative setter = nullptr);
-
-extern JS_PUBLIC_API(bool)
-JS_AlreadyHasOwnElement(JSContext* cx, JS::HandleObject obj, uint32_t index, bool* foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_HasElement(JSContext* cx, JS::HandleObject obj, uint32_t index, bool* foundp);
-
-extern JS_PUBLIC_API(bool)
-JS_GetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_ForwardGetElementTo(JSContext* cx, JS::HandleObject obj, uint32_t index,
-                       JS::HandleObject onBehalfOf, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleValue v);
-
-extern JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleObject v);
-
-extern JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleString v);
-
-extern JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, int32_t v);
-
-extern JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, uint32_t v);
-
-extern JS_PUBLIC_API(bool)
-JS_SetElement(JSContext* cx, JS::HandleObject obj, uint32_t index, double v);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index);
-
-extern JS_PUBLIC_API(bool)
-JS_DeleteElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::ObjectOpResult& result);
 
 /*
  * Assign 'undefined' to all of the object's non-reserved slots. Note: this is
@@ -3141,14 +3395,12 @@ JS_CreateMappedArrayBufferContents(int fd, size_t offset, size_t length);
 extern JS_PUBLIC_API(void)
 JS_ReleaseMappedArrayBufferContents(void* contents, size_t length);
 
-extern JS_PUBLIC_API(bool)
-JS_Enumerate(JSContext* cx, JS::HandleObject obj, JS::MutableHandle<JS::IdVector> props);
-
 extern JS_PUBLIC_API(JS::Value)
 JS_GetReservedSlot(JSObject* obj, uint32_t index);
 
 extern JS_PUBLIC_API(void)
 JS_SetReservedSlot(JSObject* obj, uint32_t index, JS::Value v);
+
 
 /************************************************************************/
 
@@ -3205,20 +3457,6 @@ JS_GetFunctionDisplayId(JSFunction* fun);
  */
 extern JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction* fun);
-
-/*
- * API for determining callability and constructability. This does the right
- * thing for proxies.
- */
-namespace JS {
-
-extern JS_PUBLIC_API(bool)
-IsCallable(JSObject* obj);
-
-extern JS_PUBLIC_API(bool)
-IsConstructor(JSObject* obj);
-
-} /* namespace JS */
 
 /*
  * Infallible predicate to test whether obj is a function object (faster than
@@ -3915,66 +4153,6 @@ Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
 extern JS_PUBLIC_API(bool)
 Evaluate(JSContext* cx, const ReadOnlyCompileOptions& options,
          const char* filename, JS::MutableHandleValue rval);
-
-} /* namespace JS */
-
-extern JS_PUBLIC_API(bool)
-JS_CallFunction(JSContext* cx, JS::HandleObject obj, JS::HandleFunction fun,
-                const JS::HandleValueArray& args, JS::MutableHandleValue rval);
-
-extern JS_PUBLIC_API(bool)
-JS_CallFunctionName(JSContext* cx, JS::HandleObject obj, const char* name,
-                    const JS::HandleValueArray& args, JS::MutableHandleValue rval);
-
-extern JS_PUBLIC_API(bool)
-JS_CallFunctionValue(JSContext* cx, JS::HandleObject obj, JS::HandleValue fval,
-                     const JS::HandleValueArray& args, JS::MutableHandleValue rval);
-
-namespace JS {
-
-static inline bool
-Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleFunction fun,
-     const JS::HandleValueArray& args, MutableHandleValue rval)
-{
-    return !!JS_CallFunction(cx, thisObj, fun, args, rval);
-}
-
-static inline bool
-Call(JSContext* cx, JS::HandleObject thisObj, const char* name, const JS::HandleValueArray& args,
-     MutableHandleValue rval)
-{
-    return !!JS_CallFunctionName(cx, thisObj, name, args, rval);
-}
-
-static inline bool
-Call(JSContext* cx, JS::HandleObject thisObj, JS::HandleValue fun, const JS::HandleValueArray& args,
-     MutableHandleValue rval)
-{
-    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval);
-}
-
-extern JS_PUBLIC_API(bool)
-Call(JSContext* cx, JS::HandleValue thisv, JS::HandleValue fun, const JS::HandleValueArray& args,
-     MutableHandleValue rval);
-
-static inline bool
-Call(JSContext* cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::HandleValueArray& args,
-     MutableHandleValue rval)
-{
-    MOZ_ASSERT(funObj);
-    JS::RootedValue fun(cx, JS::ObjectValue(*funObj));
-    return Call(cx, thisv, fun, args, rval);
-}
-
-extern JS_PUBLIC_API(bool)
-Construct(JSContext* cx, JS::HandleValue fun,
-          const JS::HandleValueArray& args,
-          MutableHandleValue rval);
-
-extern JS_PUBLIC_API(bool)
-Construct(JSContext* cx, JS::HandleValue fun,
-          HandleObject newTarget, const JS::HandleValueArray &args,
-          MutableHandleValue rval);
 
 } /* namespace JS */
 
