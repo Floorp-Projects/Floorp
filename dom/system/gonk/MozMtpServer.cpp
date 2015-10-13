@@ -39,13 +39,15 @@ using namespace android;
 using namespace mozilla;
 BEGIN_MTP_NAMESPACE
 
-class FileWatcherUpdateRunnable final : public nsRunnable
+static const char* kMtpWatcherUpdate = "mtp-watcher-update";
+
+class MtpWatcherUpdateRunnable final : public nsRunnable
 {
 public:
-  FileWatcherUpdateRunnable(MozMtpDatabase* aMozMtpDatabase,
-                            RefCountedMtpServer* aMtpServer,
-                            DeviceStorageFile* aFile,
-                            const nsACString& aEventType)
+  MtpWatcherUpdateRunnable(MozMtpDatabase* aMozMtpDatabase,
+                           RefCountedMtpServer* aMtpServer,
+                           DeviceStorageFile* aFile,
+                           const nsACString& aEventType)
     : mMozMtpDatabase(aMozMtpDatabase),
       mMtpServer(aMtpServer),
       mFile(aFile),
@@ -54,10 +56,10 @@ public:
 
   NS_IMETHOD Run()
   {
-    // Runs on the FileWatcherUpdate->mIOThread
+    // Runs on the MtpWatcherUpdate->mIOThread
     MOZ_ASSERT(!NS_IsMainThread());
 
-    mMozMtpDatabase->FileWatcherUpdate(mMtpServer, mFile, mEventType);
+    mMozMtpDatabase->MtpWatcherUpdate(mMtpServer, mFile, mEventType);
     return NS_OK;
   }
 
@@ -68,24 +70,24 @@ private:
   nsCString mEventType;
 };
 
-// The FileWatcherUpdate class listens for file-watcher-update events
-// and tells the MtpServer about the changes.
-class FileWatcherUpdate final : public nsIObserver
+// The MtpWatcherUpdate class listens for mtp-watcher-update events
+// and tells the MtpServer about changes made in device storage.
+class MtpWatcherUpdate final : public nsIObserver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  FileWatcherUpdate(MozMtpServer* aMozMtpServer)
+  MtpWatcherUpdate(MozMtpServer* aMozMtpServer)
     : mMozMtpServer(aMozMtpServer)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     mIOThread = new LazyIdleThread(
       DEFAULT_THREAD_TIMEOUT_MS,
-      NS_LITERAL_CSTRING("MTP FileWatcherUpdate"));
+      NS_LITERAL_CSTRING("MtpWatcherUpdate"));
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->AddObserver(this, "file-watcher-update", false);
+    obs->AddObserver(this, kMtpWatcherUpdate, false);
   }
 
   NS_IMETHOD
@@ -93,8 +95,8 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (strcmp(aTopic, "file-watcher-update")) {
-      // We're only interested in file-watcher-update events
+    if (strcmp(aTopic, kMtpWatcherUpdate)) {
+      // We're only interested in mtp-watcher-update events
       return NS_OK;
     }
 
@@ -106,8 +108,8 @@ public:
     }
 
     DeviceStorageFile* file = static_cast<DeviceStorageFile*>(aSubject);
-    file->Dump("file-watcher-update");
-    MTP_LOG("file-watcher-update: file %s %s",
+    file->Dump(kMtpWatcherUpdate);
+    MTP_LOG("%s: file %s %s", kMtpWatcherUpdate,
             NS_LossyConvertUTF16toASCII(file->mPath).get(),
             eventType.get());
 
@@ -117,33 +119,33 @@ public:
     // We're not supposed to perform I/O on the main thread, so punt the
     // notification (which will write to /dev/mtp_usb) to an I/O Thread.
 
-    nsRefPtr<FileWatcherUpdateRunnable> r =
-      new FileWatcherUpdateRunnable(mozMtpDatabase, mtpServer, file, eventType);
+    nsRefPtr<MtpWatcherUpdateRunnable> r =
+      new MtpWatcherUpdateRunnable(mozMtpDatabase, mtpServer, file, eventType);
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
 
     return NS_OK;
   }
 
 protected:
-  ~FileWatcherUpdate()
+  ~MtpWatcherUpdate()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->RemoveObserver(this, "file-watcher-update");
+    obs->RemoveObserver(this, kMtpWatcherUpdate);
   }
 
 private:
   nsRefPtr<MozMtpServer> mMozMtpServer;
   nsCOMPtr<nsIThread> mIOThread;
 };
-NS_IMPL_ISUPPORTS(FileWatcherUpdate, nsIObserver)
-static StaticRefPtr<FileWatcherUpdate> sFileWatcherUpdate;
+NS_IMPL_ISUPPORTS(MtpWatcherUpdate, nsIObserver)
+static StaticRefPtr<MtpWatcherUpdate> sMtpWatcherUpdate;
 
-class AllocFileWatcherUpdateRunnable final : public nsRunnable
+class AllocMtpWatcherUpdateRunnable final : public nsRunnable
 {
 public:
-  AllocFileWatcherUpdateRunnable(MozMtpServer* aMozMtpServer)
+  AllocMtpWatcherUpdateRunnable(MozMtpServer* aMozMtpServer)
     : mMozMtpServer(aMozMtpServer)
   {}
 
@@ -151,17 +153,17 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    sFileWatcherUpdate = new FileWatcherUpdate(mMozMtpServer);
+    sMtpWatcherUpdate = new MtpWatcherUpdate(mMozMtpServer);
     return NS_OK;
   }
 private:
   nsRefPtr<MozMtpServer> mMozMtpServer;
 };
 
-class FreeFileWatcherUpdateRunnable final : public nsRunnable
+class FreeMtpWatcherUpdateRunnable final : public nsRunnable
 {
 public:
-  FreeFileWatcherUpdateRunnable(MozMtpServer* aMozMtpServer)
+  FreeMtpWatcherUpdateRunnable(MozMtpServer* aMozMtpServer)
     : mMozMtpServer(aMozMtpServer)
   {}
 
@@ -169,7 +171,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    sFileWatcherUpdate = nullptr;
+    sMtpWatcherUpdate = nullptr;
     return NS_OK;
   }
 private:
@@ -190,7 +192,7 @@ public:
     nsRefPtr<RefCountedMtpServer> server = mMozMtpServer->GetMtpServer();
 
     DebugOnly<nsresult> rv =
-      NS_DispatchToMainThread(new AllocFileWatcherUpdateRunnable(mMozMtpServer));
+      NS_DispatchToMainThread(new AllocMtpWatcherUpdateRunnable(mMozMtpServer));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     MTP_LOG("MozMtpServer started");
@@ -200,7 +202,7 @@ public:
     // server->run will have closed the file descriptor.
     mMtpUsbFd.forget();
 
-    rv = NS_DispatchToMainThread(new FreeFileWatcherUpdateRunnable(mMozMtpServer));
+    rv = NS_DispatchToMainThread(new FreeMtpWatcherUpdateRunnable(mMozMtpServer));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     return NS_OK;
