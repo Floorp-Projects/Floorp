@@ -9,8 +9,8 @@
         Base application theme.
     -->
     <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:colorPrimary">@color/text_and_tabs_tray_grey</item>
-        <item name="android:colorPrimaryDark">@color/text_and_tabs_tray_grey</item>
+        <item name="colorPrimary">@color/text_and_tabs_tray_grey</item>
+        <item name="colorPrimaryDark">@color/text_and_tabs_tray_grey</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:actionBarStyle">@style/GeckoActionBar</item>

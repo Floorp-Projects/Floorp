@@ -66,6 +66,8 @@ public:
                                           bool aRead,
                                           int32_t aRequestId);
     static void NotifyCursorDone(int32_t aRequestId);
+    static void NotifySmsMarkedAsRead(bool aMarkedAsRead, int32_t aRequestId);
+    static void NotifySmsMarkAsReadFailed(int32_t aError, int32_t aRequestId);
 };
 
 } // namespace

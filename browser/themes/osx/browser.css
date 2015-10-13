@@ -596,6 +596,18 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
+.toolbarbutton-1 > .toolbarbutton-icon,
+.toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
+  max-width: 16px;
+  margin: 1px;
+}
+
+.toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
+.toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
+  max-width: 18px;
+  margin: 0;
+}
+
 toolbar .toolbarbutton-1:not([type="menu-button"]),
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
@@ -1070,12 +1082,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(36px, 1440px, 72px, 1404px);
   }
 
-  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-  :-moz-any(@primaryToolbarButtons@) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-    width: 18px;
-  }
-
   #add-share-provider {
     list-style-image: url(chrome://browser/skin/menuPanel-small@2x.png);
     -moz-image-region: rect(0px, 192px, 32px, 160px);
@@ -1085,17 +1091,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 toolbar .toolbarbutton-1:not([type="menu-button"]),
 toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   min-width: 28px;
-}
-
-/* Help 16px icons fit: */
-toolbar .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon {
-  margin: 2px;
-}
-
-/* Help SDK icons fit: */
-toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-icon,
-toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: 16px;
 }
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,

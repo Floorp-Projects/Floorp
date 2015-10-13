@@ -270,6 +270,10 @@ public:
                      nsIMobileMessageCallback* aRequest);
     void GetMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);
     void DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest);
+    void MarkMessageRead(int32_t aMessageId,
+                         bool aValue,
+                         bool aSendReadReport,
+                         nsIMobileMessageCallback* aRequest);
     already_AddRefed<nsICursorContinueCallback>
     CreateMessageCursor(bool aHasStartDate,
                         uint64_t aStartDate,
