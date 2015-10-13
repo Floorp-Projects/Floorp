@@ -243,7 +243,7 @@ class BaseStackFrame {
 
     // Get a unique identifier for this StackFrame. The identifier is not valid
     // across garbage collections.
-    virtual uint64_t identifier() const { return reinterpret_cast<uint64_t>(ptr); }
+    virtual uint64_t identifier() const { return uint64_t(uintptr_t(ptr)); }
 
     // Get this frame's parent frame.
     virtual StackFrame parent() const = 0;
@@ -418,7 +418,11 @@ class StackFrame : public JS::Traceable {
     // Methods that forward to virtual calls through BaseStackFrame.
 
     void trace(JSTracer* trc) { base()->trace(trc); }
-    uint64_t identifier() const { return base()->identifier(); }
+    uint64_t identifier() const {
+        auto id = base()->identifier();
+        MOZ_ASSERT(JS::Value::isNumberRepresentable(id));
+        return id;
+    }
     uint32_t line() const { return base()->line(); }
     uint32_t column() const { return base()->column(); }
     AtomOrTwoByteChars source() const { return base()->source(); }
@@ -564,7 +568,7 @@ class Base {
     // caveats about multiple objects allocated at the same address for
     // 'ubi::Node::operator=='.)
     using Id = uint64_t;
-    virtual Id identifier() const { return reinterpret_cast<Id>(ptr); }
+    virtual Id identifier() const { return Id(uintptr_t(ptr)); }
 
     // Returns true if this node is pointing to something on the live heap, as
     // opposed to something from a deserialized core dump. Returns false,
@@ -790,7 +794,11 @@ class Node {
     }
 
     using Id = Base::Id;
-    Id identifier() const { return base()->identifier(); }
+    Id identifier() const {
+        auto id = base()->identifier();
+        MOZ_ASSERT(JS::Value::isNumberRepresentable(id));
+        return id;
+    }
 
     // A hash policy for ubi::Nodes.
     // This simply uses the stock PointerHasher on the ubi::Node's pointer.
