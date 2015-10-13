@@ -124,11 +124,6 @@
   background-color: -moz-Dialog;
 }
 
-#urlbar:-moz-lwtheme:not([focused="true"]),
-.searchbar-textbox:-moz-lwtheme:not([focused="true"]) {
-  opacity: .85;
-}
-
 /* Places toolbar */
 toolbarbutton.bookmark-item:not(.subviewbutton),
 #personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
@@ -707,12 +702,13 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 :-moz-any(#back-button, #forward-button) > .toolbarbutton-icon {
-  border-color: ThreeDShadow !important /* bug 561154 */;
+  border-color: var(--urlbar-border-color) !important /* bug 561154 */;
 }
 
 :-moz-any(#back-button, #forward-button):not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
 :-moz-any(#back-button, #forward-button)[disabled=true] > .toolbarbutton-icon {
-  background-color: rgba(255,255,255,.15) !important /* bug 561154 */;
+  background-color: rgba(255,255,255,.25) !important /* bug 561154 */;
+  background-clip: padding-box;
 }
 
 #back-button {
@@ -845,12 +841,21 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 /* Location bar */
+#nav-bar {
+  --urlbar-border-color: ThreeDShadow;
+}
+
+#nav-bar:-moz-lwtheme {
+  --urlbar-border-color: rgba(0,0,0,.3);
+}
+
 #urlbar,
 .searchbar-textbox {
   -moz-appearance: none;
   padding: 0;
-  border: 1px solid ThreeDShadow;
+  border: 1px solid var(--urlbar-border-color);
   border-radius: 2px;
+  background-clip: padding-box;
   margin: 0 3px;
 }
 
@@ -861,6 +866,17 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 #urlbar {
   background-color: -moz-field;
+}
+
+#urlbar:-moz-lwtheme,
+.searchbar-textbox:-moz-lwtheme {
+  background-color: rgba(255,255,255,.8);
+  color: black;
+}
+
+#urlbar:-moz-lwtheme[focused=true],
+.searchbar-textbox:-moz-lwtheme[focused=true] {
+  background-color: white;
 }
 
 .urlbar-textbox-container {
