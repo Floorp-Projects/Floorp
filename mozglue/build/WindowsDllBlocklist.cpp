@@ -182,6 +182,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
 
   // NetOp School, discontinued product, bug 763395
   { "nlsp.dll", MAKE_VERSION(6, 23, 2012, 19) },
+  
+  // Startup crashes with Freecorder dll, bug 1205987
+  { "flvsrvlib.dll", MAKE_VERSION(1, 0, 0, 0) },
 
   { nullptr, 0 }
 };
