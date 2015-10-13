@@ -571,6 +571,8 @@ public class BrowserApp extends GeckoApp
                 new ButtonToast.ToastListener() {
                     @Override
                     public void onButtonClicked() {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
+                            TelemetryContract.Method.TOAST, "bookmark_options");
                         showBookmarkDialog();
                     }
 
@@ -1192,7 +1194,9 @@ public class BrowserApp extends GeckoApp
     }
 
     private void showBookmarkDialog() {
+        final Resources res = getResources();
         final Tab tab = Tabs.getInstance().getSelectedTab();
+
         final Prompt ps = new Prompt(this, new Prompt.PromptCallback() {
             @Override
             public void onPromptFinished(String result) {
@@ -1203,12 +1207,21 @@ public class BrowserApp extends GeckoApp
                     Log.e(LOGTAG, "Exception reading bookmark prompt result", ex);
                 }
 
-                if (tab == null)
+                if (tab == null) {
                     return;
+                }
 
                 if (itemId == 0) {
+                    final String extrasId = res.getResourceEntryName(R.string.contextmenu_edit_bookmark);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
+                        TelemetryContract.Method.DIALOG, extrasId);
+
                     new EditBookmarkDialog(BrowserApp.this).show(tab.getURL());
                 } else if (itemId == 1) {
+                    final String extrasId = res.getResourceEntryName(R.string.contextmenu_add_to_launcher);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
+                        TelemetryContract.Method.DIALOG, extrasId);
+
                     String url = tab.getURL();
                     String title = tab.getDisplayTitle();
                     Bitmap favicon = tab.getFavicon();
@@ -1220,7 +1233,6 @@ public class BrowserApp extends GeckoApp
         });
 
         final PromptListItem[] items = new PromptListItem[2];
-        Resources res = getResources();
         items[0] = new PromptListItem(res.getString(R.string.contextmenu_edit_bookmark));
         items[1] = new PromptListItem(res.getString(R.string.contextmenu_add_to_launcher));
 
@@ -1367,6 +1379,8 @@ public class BrowserApp extends GeckoApp
                                      LoadFaviconTask.FLAG_PERSIST,
                                      listener);
 
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
+                getResources().getResourceEntryName(itemId));
             return true;
         }
 
