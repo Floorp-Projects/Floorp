@@ -99,7 +99,7 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
     if (mBypassShaderValidation)
         return nullptr;
 
-    ShShaderSpec spec = SH_WEBGL_SPEC;
+    ShShaderSpec spec = IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC;
     ShShaderOutput outputLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT
                                                  : SH_GLSL_OUTPUT;
 
