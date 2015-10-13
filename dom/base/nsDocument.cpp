@@ -7014,8 +7014,8 @@ nsIDocument::GetHtmlChildElement(nsIAtom* aTag)
   return nullptr;
 }
 
-nsIContent*
-nsDocument::GetTitleContent(uint32_t aNamespace)
+Element*
+nsDocument::GetTitleElement()
 {
   // mMayHaveTitleElement will have been set to true if any HTML or SVG
   // <title> element has been bound to this document. So if it's false,
@@ -7025,19 +7025,26 @@ nsDocument::GetTitleContent(uint32_t aNamespace)
   if (!mMayHaveTitleElement)
     return nullptr;
 
+  Element* root = GetRootElement();
+  if (root && root->IsSVGElement(nsGkAtoms::svg)) {
+    // In SVG, the document's title must be a child
+    for (nsIContent* child = root->GetFirstChild();
+         child; child = child->GetNextSibling()) {
+      if (child->IsSVGElement(nsGkAtoms::title)) {
+        return child->AsElement();
+      }
+    }
+    return nullptr;
+  }
+
+  // We check the HTML namespace even for non-HTML documents, except SVG.  This
+  // matches the spec and the behavior of all tested browsers.
   nsRefPtr<nsContentList> list =
-    NS_GetContentList(this, aNamespace, NS_LITERAL_STRING("title"));
+    NS_GetContentList(this, kNameSpaceID_XHTML, NS_LITERAL_STRING("title"));
 
-  return list->Item(0, false);
-}
+  nsIContent* first = list->Item(0, false);
 
-void
-nsDocument::GetTitleFromElement(uint32_t aNamespace, nsAString& aTitle)
-{
-  nsIContent* title = GetTitleContent(aNamespace);
-  if (!title)
-    return;
-  nsContentUtils::GetNodeTextContent(title, false, aTitle);
+  return first ? first->AsElement() : nullptr;
 }
 
 NS_IMETHODIMP
@@ -7054,26 +7061,24 @@ nsDocument::GetTitle(nsString& aTitle)
 {
   aTitle.Truncate();
 
-  nsIContent *rootElement = GetRootElement();
-  if (!rootElement)
+  Element* rootElement = GetRootElement();
+  if (!rootElement) {
     return;
+  }
 
   nsAutoString tmp;
 
-  switch (rootElement->GetNameSpaceID()) {
 #ifdef MOZ_XUL
-    case kNameSpaceID_XUL:
-      rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
-      break;
+  if (rootElement->IsXULElement()) {
+    rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
+  } else
 #endif
-    case kNameSpaceID_SVG:
-      if (rootElement->IsSVGElement(nsGkAtoms::svg)) {
-        GetTitleFromElement(kNameSpaceID_SVG, tmp);
-        break;
-      } // else fall through
-    default:
-      GetTitleFromElement(kNameSpaceID_XHTML, tmp);
-      break;
+  {
+    Element* title = GetTitleElement();
+    if (!title) {
+      return;
+    }
+    nsContentUtils::GetNodeTextContent(title, false, tmp);
   }
 
   tmp.CompressWhitespace();
@@ -7083,41 +7088,56 @@ nsDocument::GetTitle(nsString& aTitle)
 NS_IMETHODIMP
 nsDocument::SetTitle(const nsAString& aTitle)
 {
-  Element *rootElement = GetRootElement();
-  if (!rootElement)
+  Element* rootElement = GetRootElement();
+  if (!rootElement) {
     return NS_OK;
-
-  switch (rootElement->GetNameSpaceID()) {
-    case kNameSpaceID_SVG:
-      return NS_OK; // SVG doesn't support setting a title
-#ifdef MOZ_XUL
-    case kNameSpaceID_XUL:
-      return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                  aTitle, true);
-#endif
   }
+
+#ifdef MOZ_XUL
+  if (rootElement->IsXULElement()) {
+    return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
+                                aTitle, true);
+  }
+#endif
 
   // Batch updates so that mutation events don't change "the title
   // element" under us
   mozAutoDocUpdate updateBatch(this, UPDATE_CONTENT_MODEL, true);
 
-  nsIContent* title = GetTitleContent(kNameSpaceID_XHTML);
-  if (!title) {
-    Element *head = GetHeadElement();
-    if (!head)
-      return NS_OK;
+  nsCOMPtr<Element> title = GetTitleElement();
+  if (rootElement->IsSVGElement(nsGkAtoms::svg)) {
+    if (!title) {
+      nsRefPtr<mozilla::dom::NodeInfo> titleInfo =
+        mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
+                                      kNameSpaceID_SVG,
+                                      nsIDOMNode::ELEMENT_NODE);
+      NS_NewSVGElement(getter_AddRefs(title), titleInfo.forget(),
+                       NOT_FROM_PARSER);
+      if (!title) {
+        return NS_OK;
+      }
+      rootElement->InsertChildAt(title, 0, true);
+    }
+  } else if (rootElement->IsHTMLElement()) {
+    if (!title) {
+      Element* head = GetHeadElement();
+      if (!head) {
+        return NS_OK;
+      }
 
-    {
       nsRefPtr<mozilla::dom::NodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
-                                                kNameSpaceID_XHTML,
-                                                nsIDOMNode::ELEMENT_NODE);
+          kNameSpaceID_XHTML,
+          nsIDOMNode::ELEMENT_NODE);
       title = NS_NewHTMLTitleElement(titleInfo.forget());
-      if (!title)
+      if (!title) {
         return NS_OK;
-    }
+      }
 
-    head->AppendChildTo(title, true);
+      head->AppendChildTo(title, true);
+    }
+  } else {
+    return NS_OK;
   }
 
   return nsContentUtils::SetNodeTextContent(title, aTitle, false);
