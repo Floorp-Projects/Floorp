@@ -369,6 +369,13 @@ class GeckoInputConnection
         final InputMethodManager imm = getInputMethodManager();
         if (imm != null) {
             final View v = getView();
+
+            if (v.hasFocus() && !imm.isActive(v)) {
+                // Workaround: The view has focus but it is not the active view for the input method. (Bug 1211848)
+                v.clearFocus();
+                v.requestFocus();
+            }
+
             imm.showSoftInput(v, 0);
         }
     }
