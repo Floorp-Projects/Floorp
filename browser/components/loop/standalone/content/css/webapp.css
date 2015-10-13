@@ -46,45 +46,80 @@ body,
   height: 30px;
 }
 
-.room-conversation-wrapper > .beta-logo {
-  position: fixed;
-  top: 0;
+/* Standalone Overlay wrapper */
+.standalone-overlay-wrapper {
+  position: absolute;
   left: 0;
-  width: 50px;
-  height: 50px;
-  background: transparent url(../shared/img/beta-ribbon.svg) no-repeat;
-  background-size: 50px;
-  z-index: 1000;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  margin: 1.2rem;
+  pointer-events: none;
 }
 
-/* Mozilla Logo */
+.standalone-overlay-wrapper > .hello-logo {
+  width: 128px;
+  height: 21px;
+  background-image: url("../shared/img/hello_logo.svg");
+  background-size: contain;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
 
-.focus-stream > .standalone-moz-logo {
+html[dir="rtl"] .standalone-overlay-wrapper > .hello-logo {
+  right: 0;
+  left: auto;
+}
+
+.standalone-overlay-wrapper > .general-support-url {
+  position: absolute;
+  top: 0;
+  right: 0;
+  pointer-events: auto;
+}
+
+html[dir="rtl"] .standalone-overlay-wrapper > .general-support-url {
+  left: 0;
+  right: auto;
+}
+
+.standalone-overlay-wrapper .icon-help {
+  background-size: contain;
+  width: 16px;
+  height: 16px;
+  background: transparent url("../shared/img/svg/glyph-help-16x16.svg") no-repeat;
+}
+
+.standalone-overlay-wrapper > .standalone-moz-logo {
   width: 50px;
   height: 13px;
   background-size: contain;
   background-image: url("../img/mozilla-logo.svg#logo-white");
   background-repeat: no-repeat;
   position: absolute;
-  bottom: 1.2rem;
-  right: 1.2rem;
-  left: auto;
+  bottom: 0;
+  right: 0;
 }
 
-html[dir="rtl"] .focus-stream > .standalone-moz-logo {
-  left: 1.2rem;
+html[dir="rtl"] .standalone-overlay-wrapper > .standalone-moz-logo {
+  left: 0;
   right: auto;
-}
-
-@media screen and (max-width:640px) {
-  .focus-stream > .standalone-moz-logo {
-    display: none;
-  }
 }
 
 .btn-large {
   font-size: 1rem;
   padding: .3em .5rem;
+}
+
+@media screen and (max-width:640px) {
+  .standalone-overlay-wrapper > .standalone-moz-logo {
+    display: none;
+  }
+
+  .standalone-overlay-wrapper > .hello-logo {
+    display: none;
+  }
 }
 
 /**
