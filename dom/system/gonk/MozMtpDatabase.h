@@ -115,9 +115,9 @@ public:
   void AddStorage(MtpStorageID aStorageID, const char* aPath, const char *aName);
   void RemoveStorage(MtpStorageID aStorageID);
 
-  void FileWatcherUpdate(RefCountedMtpServer* aMtpServer,
-                         DeviceStorageFile* aFile,
-                         const nsACString& aEventType);
+  void MtpWatcherUpdate(RefCountedMtpServer* aMtpServer,
+                        DeviceStorageFile* aFile,
+                        const nsACString& aEventType);
 
 protected:
   virtual ~MozMtpDatabase();
@@ -270,7 +270,7 @@ private:
 
   StorageArray::index_type FindStorage(MtpStorageID aStorageID);
   MtpStorageID FindStorageIDFor(const nsACString& aPath, nsCSubstring& aRemainder);
-  void FileWatcherNotify(DbEntry* aEntry, const char* aEventType);
+  void MtpWatcherNotify(DbEntry* aEntry, const char* aEventType);
 
   // We need a mutex to protext mDb and mStorage. The MTP server runs on a
   // dedicated thread, and it updates/accesses mDb. When files are updated
