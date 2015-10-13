@@ -202,6 +202,12 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     return false;
   NodeId id = node.id();
 
+  // NodeIds are derived from pointers (at most 48 bits) and we rely on them
+  // fitting into JS numbers (IEEE 754 doubles, can precisely store 53 bit
+  // integers) despite storing them on disk as 64 bit integers.
+  if (NS_WARN_IF(!JS::Value::isNumberRepresentable(id)))
+    return false;
+
   // Should only deserialize each node once.
   if (NS_WARN_IF(nodes.has(id)))
     return false;
