@@ -20,7 +20,6 @@ protected:
   ~RawReader();
 
 public:
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
   virtual nsresult ResetDecode() override;
   virtual bool DecodeAudioData() override;
 

@@ -166,7 +166,7 @@ MediaFormatReader::InitLayersBackendType()
 static bool sIsEMEEnabled = false;
 
 nsresult
-MediaFormatReader::Init(MediaDecoderReader* aCloneDonor)
+MediaFormatReader::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   PDMFactory::Init();

@@ -103,7 +103,7 @@ AppleMP3Reader::Read(uint32_t *aNumBytes, char *aData)
 }
 
 nsresult
-AppleMP3Reader::Init(MediaDecoderReader* aCloneDonor)
+AppleMP3Reader::Init()
 {
   AudioFileTypeID fileType = kAudioFileMP3Type;
 

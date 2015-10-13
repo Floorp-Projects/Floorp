@@ -1033,13 +1033,7 @@ bool MediaDecoderStateMachine::IsPlaying() const
 nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  MediaDecoderReader* cloneReader = nullptr;
-  if (aCloneDonor) {
-    cloneReader = aCloneDonor->mReader;
-  }
-
-  nsresult rv = mReader->Init(cloneReader);
+  nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
   ScheduleStateMachineCrossThread();
   return NS_OK;

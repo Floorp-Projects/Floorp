@@ -60,10 +60,6 @@ public:
   MediaCodecReader(AbstractMediaDecoder* aDecoder);
   virtual ~MediaCodecReader();
 
-  // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
-  // on failure.
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor);
-
   // Release media resources they should be released in dormant state
   virtual void ReleaseMediaResources();
 

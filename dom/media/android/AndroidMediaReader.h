@@ -12,7 +12,7 @@
 #include "ImageContainer.h"
 #include "nsAutoPtr.h"
 #include "mozilla/layers/SharedRGBImage.h"
- 
+
 #include "MPAPI.h"
 
 class nsACString;
@@ -42,7 +42,6 @@ public:
   AndroidMediaReader(AbstractMediaDecoder* aDecoder,
                      const nsACString& aContentType);
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
 
   virtual bool DecodeAudioData();
