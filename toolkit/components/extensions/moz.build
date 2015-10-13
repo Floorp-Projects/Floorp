@@ -15,5 +15,3 @@ EXTRA_JS_MODULES += [
 JAR_MANIFESTS += ['jar.mn']
 
 MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
-
-DIRS += ['test/extensions']

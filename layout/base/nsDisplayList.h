@@ -289,7 +289,7 @@ public:
   /**
    * Get the scrollframe to ignore, if any.
    */
-  nsIFrame* GetIgnoreScrollFrame() const { return mIgnoreScrollFrame; }
+  nsIFrame* GetIgnoreScrollFrame() { return mIgnoreScrollFrame; }
   /**
    * Get the ViewID of the nearest scrolling ancestor frame.
    */

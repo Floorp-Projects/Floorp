@@ -17,6 +17,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/CriticalSection.h"
+#include "mozilla/RefCounted.h"
 
 namespace mozilla {
 namespace gfx {
