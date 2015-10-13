@@ -7,12 +7,10 @@
 #ifndef mozilla_CamerasParent_h
 #define mozilla_CamerasParent_h
 
-#include "nsIObserver.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/camera/PCamerasParent.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ShmemPool.h"
-#include "mozilla/Atomics.h"
 
 // conflicts with #include of scoped_ptr.h
 #undef FF
@@ -75,11 +73,9 @@ public:
   bool mEngineIsRunning;
 };
 
-class CamerasParent :  public PCamerasParent,
-                       public nsIObserver
+class CamerasParent :  public PCamerasParent
 {
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CamerasParent);
 
 public:
   static already_AddRefed<CamerasParent> Create();
@@ -98,9 +94,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   nsIThread* GetBackgroundThread() { return mPBackgroundThread; };
-  bool IsShuttingDown() { return !mChildIsAlive
-                              ||  mDestroyed
-                              || !mWebRTCAlive; };
+  bool IsShuttingDown() { return !mChildIsAlive || mDestroyed; };
   ShmemBuffer GetBuffer(size_t aSize);
 
   // helper to forward to the PBackground thread
@@ -122,12 +116,15 @@ protected:
   bool SetupEngine(CaptureEngine aCapEngine);
   void CloseEngines();
   bool EnsureInitialized(int aEngine);
+  void DoShutdown();
   void StopIPC();
-  void StopVideoCapture();
-  nsresult DispatchToVideoCaptureThread(nsRunnable *event);
 
   EngineHelper mEngines[CaptureEngine::MaxEngine];
   nsTArray<CallbackHelper*> mCallbacks;
+  // Protects the callback arrays
+  Mutex mCallbackMutex;
+  // Protects the engines array
+  Mutex mEngineMutex;
 
   // image buffers
   mozilla::ShmemPool mShmemPool;
@@ -135,18 +132,12 @@ protected:
   // PBackground parent thread
   nsCOMPtr<nsIThread> mPBackgroundThread;
 
-  // Monitors creation of the thread below
-  Monitor mThreadMonitor;
-
   // video processing thread - where webrtc.org capturer code runs
   base::Thread* mVideoCaptureThread;
 
   // Shutdown handling
   bool mChildIsAlive;
   bool mDestroyed;
-  // Above 2 are PBackground only, but this is potentially
-  // read cross-thread.
-  mozilla::Atomic<bool> mWebRTCAlive;
 };
 
 PCamerasParent* CreateCamerasParent();
