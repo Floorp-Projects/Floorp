@@ -2216,6 +2216,15 @@ GetPropertyIC::maybeDisable(bool emitted)
         return;
     }
 
+    if (!canAttachStub() && id().constant()) {
+        // Don't disable the cache (and discard stubs) if we have a GETPROP and
+        // attached the maximum number of stubs. This can happen when JS code
+        // uses an AST-like data structure and accesses a field of a "base
+        // class", like node.nodeType. This should be temporary until we handle
+        // this case better, see bug 1107515.
+        return;
+    }
+
     if (!canAttachStub() || (stubCount_ == 0 && failedUpdates_ > MAX_FAILED_UPDATES)) {
         JitSpew(JitSpew_IonIC, "Disable inline cache");
         disable();
