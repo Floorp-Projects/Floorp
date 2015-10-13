@@ -13,11 +13,11 @@ var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { Promise: promise } = Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { Promise: promise } = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {});
+var { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/client/framework/ToolboxProcess.jsm", {});
+var { BrowserToolboxProcess } = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient, ObjectClient } = require("devtools/shared/client/main");
 var { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});

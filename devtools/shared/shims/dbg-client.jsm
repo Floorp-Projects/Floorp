@@ -22,7 +22,7 @@ if (Services.prefs.getBoolPref(WARNING_PREF)) {
 }
 
 const { require } =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",

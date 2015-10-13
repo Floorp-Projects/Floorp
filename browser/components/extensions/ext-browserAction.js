@@ -5,7 +5,7 @@
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 
-Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
+Cu.import("resource://devtools/shared/event-emitter.js");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {

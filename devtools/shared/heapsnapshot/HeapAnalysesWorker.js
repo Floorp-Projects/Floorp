@@ -11,9 +11,9 @@
 "use strict";
 
 importScripts("resource://gre/modules/workers/require.js");
-importScripts("resource://gre/modules/devtools/shared/worker/helper.js");
-const { CensusTreeNode } = require("resource://gre/modules/devtools/shared/heapsnapshot/census-tree-node.js");
-const CensusUtils = require("resource://gre/modules/devtools/shared/heapsnapshot/CensusUtils.js");
+importScripts("resource://devtools/shared/worker/helper.js");
+const { CensusTreeNode } = require("resource://devtools/shared/heapsnapshot/census-tree-node.js");
+const CensusUtils = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
 
 // The set of HeapSnapshot instances this worker has read into memory. Keyed by
 // snapshot file path.

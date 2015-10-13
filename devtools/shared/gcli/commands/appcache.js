@@ -6,7 +6,7 @@
 
 const l10n = require("gcli/l10n");
 
-loader.lazyImporter(this, "AppCacheUtils", "resource:///modules/devtools/client/shared/AppCacheUtils.jsm");
+loader.lazyImporter(this, "AppCacheUtils", "resource://devtools/client/shared/AppCacheUtils.jsm");
 
 exports.items = [
   {

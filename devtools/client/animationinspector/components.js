@@ -20,7 +20,7 @@
 //    c.destroy();
 
 const {Cu} = require("chrome");
-Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {
   createNode,

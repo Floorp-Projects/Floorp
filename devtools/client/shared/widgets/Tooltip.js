@@ -23,13 +23,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout",
-  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearNamedTimeout",
-  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
-  "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+  "resource://devtools/client/shared/widgets/VariablesView.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
-  "resource:///modules/devtools/client/shared/widgets/VariablesViewController.jsm");
+  "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 

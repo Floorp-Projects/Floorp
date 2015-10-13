@@ -13,7 +13,7 @@ do_register_cleanup(() => {
 });
 
 const { require } =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");

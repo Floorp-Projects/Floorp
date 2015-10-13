@@ -15,7 +15,7 @@
   } else { // Cu.import
     const Cu = Components.utils;
     const { require } =
-      Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+      Cu.import("resource://devtools/shared/Loader.jsm", {});
     this.isWorker = false;
     this.promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
     factory.call(this, require, this, { exports: this });

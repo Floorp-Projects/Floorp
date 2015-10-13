@@ -1,5 +1,5 @@
 var Cu = Components.utils;
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");

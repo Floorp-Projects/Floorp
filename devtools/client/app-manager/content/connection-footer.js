@@ -5,11 +5,11 @@
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+Cu.import("resource://devtools/client/framework/gDevTools.jsm");
 
-const {Simulator} = Cu.import("resource://gre/modules/devtools/shared/apps/Simulator.jsm")
-const {Devices} = Cu.import("resource://gre/modules/devtools/shared/apps/Devices.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {Simulator} = Cu.import("resource://devtools/shared/apps/Simulator.jsm")
+const {Devices} = Cu.import("resource://devtools/shared/apps/Devices.jsm");
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
 const {getDeviceFront} = require("devtools/server/actors/device");

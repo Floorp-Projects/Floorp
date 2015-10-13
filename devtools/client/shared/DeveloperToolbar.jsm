@@ -13,7 +13,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { TargetFactory } = require("devtools/client/framework/target");
 const promise = require("promise");
 
@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://gre/modules/devtools/shared/event-emitter.js");
+                                  "resource://devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Cc["@mozilla.org/preferences-service;1"]

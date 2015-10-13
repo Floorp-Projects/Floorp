@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 this.DevToolsUtils = devtools.require("devtools/shared/DevToolsUtils");
 
 XPCOMUtils.defineLazyServiceGetter(
