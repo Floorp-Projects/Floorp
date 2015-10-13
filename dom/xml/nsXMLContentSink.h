@@ -171,18 +171,15 @@ protected:
 
   nsCOMPtr<nsIContent> mDocElement;
   nsCOMPtr<nsIContent> mCurrentHead;  // When set, we're in an XHTML <haed>
-  char16_t*       mText;
 
   XMLContentSinkState mState;
 
+  // The length of the valid data in mText.
   int32_t mTextLength;
-  int32_t mTextSize;
   
   int32_t mNotifyLevel;
   nsCOMPtr<nsIContent> mLastTextNode;
-  int32_t mLastTextNodeSize;
 
-  uint8_t mConstrainSize : 1;
   uint8_t mPrettyPrintXML : 1;
   uint8_t mPrettyPrintHasSpecialRoot : 1;
   uint8_t mPrettyPrintHasFactoredElements : 1;
@@ -194,6 +191,10 @@ protected:
   nsTArray<StackNode>              mContentStack;
 
   nsCOMPtr<nsIDocumentTransformer> mXSLTProcessor;
+
+  static const int NS_ACCUMULATION_BUFFER_SIZE = 4096;
+  // Our currently accumulated text that we have not flushed to a textnode yet.
+  char16_t mText[NS_ACCUMULATION_BUFFER_SIZE];
 };
 
 #endif // nsXMLContentSink_h__
