@@ -662,10 +662,10 @@ loop.panel = (function(_, mozL10n) {
     _renderLoadingRoomsView: function() {
       return (
         React.createElement("div", {className: "room-list"}, 
+          this._renderNewRoomButton(), 
           React.createElement("div", {className: "room-list-loading"}, 
             React.createElement("img", {src: "loop/shared/img/animated-spinner.svg"})
-          ), 
-          this._renderNewRoomButton()
+          )
         )
       );
     },
@@ -673,6 +673,7 @@ loop.panel = (function(_, mozL10n) {
     _renderNoRoomsView: function() {
       return (
         React.createElement("div", {className: "rooms"}, 
+          this._renderNewRoomButton(), 
           React.createElement("div", {className: "room-list-empty"}, 
             React.createElement("div", {className: "no-conversations-message"}, 
               React.createElement("p", {className: "panel-text-medium"}, 
@@ -682,8 +683,7 @@ loop.panel = (function(_, mozL10n) {
                 mozL10n.get("no_conversations_start_message2")
               )
             )
-          ), 
-          this._renderNewRoomButton()
+          )
         )
       );
     },
@@ -713,6 +713,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "rooms"}, 
+          this._renderNewRoomButton(), 
           React.createElement("h1", null, mozL10n.get("rooms_list_recent_conversations")), 
           React.createElement("div", {className: "room-list"}, 
             this.state.rooms.map(function(room, i) {
@@ -724,8 +725,7 @@ loop.panel = (function(_, mozL10n) {
                   room: room})
               );
             }, this)
-          ), 
-          this._renderNewRoomButton()
+          )
         )
       );
     }
