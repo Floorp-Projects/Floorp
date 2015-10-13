@@ -116,11 +116,6 @@ WaveReader::~WaveReader()
   MOZ_COUNT_DTOR(WaveReader);
 }
 
-nsresult WaveReader::Init(MediaDecoderReader* aCloneDonor)
-{
-  return NS_OK;
-}
-
 nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
                                   MetadataTags** aTags)
 {

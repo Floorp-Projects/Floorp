@@ -70,7 +70,7 @@ protected:
 
 public:
   virtual nsRefPtr<ShutdownPromise> Shutdown() override;
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
+  virtual nsresult Init() override;
   virtual nsresult ResetDecode() override;
   virtual bool DecodeAudioData() override;
 

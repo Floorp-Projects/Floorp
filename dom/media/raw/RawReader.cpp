@@ -26,11 +26,6 @@ RawReader::~RawReader()
   MOZ_COUNT_DTOR(RawReader);
 }
 
-nsresult RawReader::Init(MediaDecoderReader* aCloneDonor)
-{
-  return NS_OK;
-}
-
 nsresult RawReader::ResetDecode()
 {
   mCurrentFrame = 0;
