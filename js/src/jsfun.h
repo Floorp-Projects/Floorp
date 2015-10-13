@@ -761,7 +761,7 @@ JSFunction::getExtendedSlot(size_t which) const
 
 namespace js {
 
-JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lambdaParen);
+JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen);
 
 template<XDRMode mode>
 bool

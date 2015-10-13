@@ -3698,8 +3698,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-DecompileFunctionSomehow(JSContext* cx, unsigned argc, Value* vp,
-                         JSString* (*decompiler)(JSContext*, HandleFunction, unsigned))
+DecompileFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
@@ -3707,23 +3706,11 @@ DecompileFunctionSomehow(JSContext* cx, unsigned argc, Value* vp,
         return true;
     }
     RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    JSString* result = decompiler(cx, fun, 0);
+    JSString* result = JS_DecompileFunction(cx, fun, 0);
     if (!result)
         return false;
     args.rval().setString(result);
     return true;
-}
-
-static bool
-DecompileBody(JSContext* cx, unsigned argc, Value* vp)
-{
-    return DecompileFunctionSomehow(cx, argc, vp, JS_DecompileFunctionBody);
-}
-
-static bool
-DecompileFunction(JSContext* cx, unsigned argc, Value* vp)
-{
-    return DecompileFunctionSomehow(cx, argc, vp, JS_DecompileFunction);
 }
 
 static bool
@@ -4865,10 +4852,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("decompileFunction", DecompileFunction, 1, 0,
 "decompileFunction(func)",
 "  Decompile a function."),
-
-    JS_FN_HELP("decompileBody", DecompileBody, 1, 0,
-"decompileBody(func)",
-"  Decompile a function's body."),
 
     JS_FN_HELP("decompileThis", DecompileThisScript, 0, 0,
 "decompileThis()",
