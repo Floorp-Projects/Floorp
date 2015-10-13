@@ -896,7 +896,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/webapprt/modules/Startup.jsm
 @RESPATH@/webapprt/modules/WebappRT.jsm
 @RESPATH@/webapprt/modules/WebappManager.jsm
-@RESPATH@/webapprt/modules/RemoteDebugger.jsm
 @RESPATH@/webapprt/modules/WebRTCHandler.jsm
 #endif
 
