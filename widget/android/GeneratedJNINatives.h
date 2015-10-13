@@ -104,6 +104,14 @@ public:
                 mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsDelivery_t, Impl>
                 ::template Wrap<&Impl::NotifySmsDelivery>),
 
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsMarkAsReadFailed_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsMarkAsReadFailed_t, Impl>
+                ::template Wrap<&Impl::NotifySmsMarkAsReadFailed>),
+
+        mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsMarkedAsRead_t>(
+                mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsMarkedAsRead_t, Impl>
+                ::template Wrap<&Impl::NotifySmsMarkedAsRead>),
+
         mozilla::jni::MakeNativeMethod<GeckoSmsManager::NotifySmsReceived_t>(
                 mozilla::jni::NativeStub<GeckoSmsManager::NotifySmsReceived_t, Impl>
                 ::template Wrap<&Impl::NotifySmsReceived>),

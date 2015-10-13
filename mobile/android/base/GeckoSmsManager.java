@@ -763,6 +763,48 @@ public class GeckoSmsManager
   }
 
   @Override
+  public void markMessageRead(int aMessageId, boolean aValue, boolean aSendReadReport, int aRequestId) {
+    class MarkMessageReadRunnable implements Runnable {
+      private final int mMessageId;
+      private final boolean mValue;
+      private final int mRequestId;
+
+      MarkMessageReadRunnable(int aMessageId, boolean aValue, int aRequestId) {
+        mMessageId = aMessageId;
+        mValue = aValue;
+        mRequestId = aRequestId;
+      }
+
+      @Override
+      public void run() {
+        try {
+          ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
+          Uri message = ContentUris.withAppendedId(kSmsContentUri, mMessageId);
+
+          ContentValues updatedProps = new ContentValues();
+          updatedProps.put("read", mValue);
+
+          int count = cr.update(message, updatedProps, null, null);
+
+          notifySmsMarkedAsRead(count == 1, mRequestId);
+        } catch (Exception e) {
+          Log.e("GeckoSmsManager", "Error while trying to mark message as read: " + e);
+          notifySmsMarkAsReadFailed(kUnknownError, mRequestId);
+        }
+      }
+    }
+
+    if (aSendReadReport == true) {
+      Log.w("GeckoSmsManager", "Android SmsManager doesn't suport read receipts for SMS.");
+    }
+
+    if (!SmsIOThread.getInstance().execute(new MarkMessageReadRunnable(aMessageId, aValue, aRequestId))) {
+      Log.e("GeckoSmsManager", "Failed to add MarkMessageReadRunnable to the SmsIOThread");
+      notifySmsMarkAsReadFailed(kUnknownError, aRequestId);
+    }
+  }
+
+  @Override
   public void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
     class CreateMessageCursorRunnable implements Runnable {
       private final long     mStartDate;
@@ -1100,6 +1142,10 @@ public class GeckoSmsManager
   private static native void notifySmsDeleted(boolean aDeleted, int aRequestId);
   @WrapForJNI
   private static native void notifySmsDeleteFailed(int aError, int aRequestId);
+  @WrapForJNI
+  private static native void notifySmsMarkedAsRead(boolean aMarkedAsRead, int aRequestId);
+  @WrapForJNI
+  private static native void notifySmsMarkAsReadFailed(int aError, int aRequestId);
   @WrapForJNI
   private static native void notifyCursorError(int aError, int aRequestId);
   @WrapForJNI
