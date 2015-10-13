@@ -1,4 +1,6 @@
-load(libdir + 'oomTest.js');
+if (!('oomTest' in this))
+    quit();
+
 function parseAsmJS() {
     eval(`function m(stdlib)
           {

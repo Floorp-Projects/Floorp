@@ -54,6 +54,25 @@ static bool fuzzingSafe = false;
 static bool disableOOMFunctions = false;
 
 static bool
+EnvVarIsDefined(const char* name)
+{
+    const char* value = getenv(name);
+    return value && *value;
+}
+
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+static bool
+EnvVarAsInt(const char* name, int* valueOut)
+{
+    if (!EnvVarIsDefined(name))
+        return false;
+
+    *valueOut = atoi(getenv(name));
+    return true;
+}
+#endif
+
+static bool
 GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1070,6 +1089,93 @@ ResetOOMFailure(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setBoolean(OOM_counter >= OOM_maxAllocations);
     js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
     OOM_maxAllocations = UINT32_MAX;
+    return true;
+}
+
+static bool
+OOMTest(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        JS_ReportError(cx, "oomTest() takes a single function argument.");
+        return false;
+    }
+
+    if (disableOOMFunctions) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    RootedFunction function(cx, &args[0].toObject().as<JSFunction>());
+
+    bool verbose = EnvVarIsDefined("OOM_VERBOSE");
+
+    unsigned threadStart = oom::THREAD_TYPE_MAIN;
+    unsigned threadEnd = oom::THREAD_TYPE_MAX;
+
+    // Test a single thread type if specified by the OOM_THREAD environment variable.
+    int threadOption = 0;
+    if (EnvVarAsInt("OOM_THREAD", &threadOption)) {
+        if (threadOption < oom::THREAD_TYPE_MAIN || threadOption > oom::THREAD_TYPE_MAX) {
+            JS_ReportError(cx, "OOM_THREAD value out of range.");
+            return false;
+        }
+
+        threadStart = threadOption;
+        threadEnd = threadOption + 1;
+    }
+
+    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
+
+    for (unsigned thread = threadStart; thread < threadEnd; thread++) {
+        if (verbose)
+            fprintf(stderr, "thread %d\n", thread);
+
+        HelperThreadState().waitForAllThreads();
+        js::oom::targetThread = thread;
+
+        unsigned allocation = 1;
+        bool handledOOM;
+        do {
+            if (verbose)
+                fprintf(stderr, "  allocation %d\n", allocation);
+
+            MOZ_ASSERT(!cx->isExceptionPending());
+            MOZ_ASSERT(!cx->runtime()->hadOutOfMemory);
+
+            OOM_maxAllocations = OOM_counter + allocation;
+            OOM_failAlways = false;
+
+            RootedValue result(cx);
+            bool ok = JS_CallFunction(cx, cx->global(), function,
+                                      HandleValueArray::empty(), &result);
+
+            handledOOM = OOM_counter >= OOM_maxAllocations;
+            OOM_maxAllocations = UINT32_MAX;
+
+            MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
+            MOZ_ASSERT_IF(!ok, cx->isExceptionPending());
+
+            // Note that it is possible that the function throws an exception
+            // unconnected to OOM, in which case we ignore it. More correct
+            // would be to have the caller pass some kind of exception
+            // specification and to check the exception against it.
+
+            cx->clearPendingException();
+            cx->runtime()->hadOutOfMemory = false;
+
+            allocation++;
+        } while (handledOOM);
+
+        if (verbose) {
+            fprintf(stderr, "  finished after %d allocations\n", allocation - 2);
+        }
+    }
+
+    js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
+
+    args.rval().setUndefined();
     return true;
 }
 #endif
@@ -3062,6 +3168,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "resetOOMFailure()",
 "  Remove the allocation failure scheduled by either oomAfterAllocations() or\n"
 "  oomAtAllocation() and return whether any allocation had been caused to fail."),
+
+    JS_FN_HELP("oomTest", OOMTest, 0, 0,
+"oomTest(function)",
+"  Test that the passed function behaves correctly under OOM conditions by\n"
+"  repeatedly executing it and simulating allocation failure at successive\n"
+"  allocations until the function completes without seeing a failure."),
 #endif
 
     JS_FN_HELP("makeFakePromise", MakeFakePromise, 0, 0,
@@ -3464,7 +3576,7 @@ js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
                            bool disableOOMFunctions_)
 {
     fuzzingSafe = fuzzingSafe_;
-    if (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0')
+    if (EnvVarIsDefined("MOZ_FUZZING_SAFE"))
         fuzzingSafe = true;
 
     disableOOMFunctions = disableOOMFunctions_;
