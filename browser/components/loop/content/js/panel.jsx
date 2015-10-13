@@ -735,7 +735,6 @@ loop.panel = (function(_, mozL10n) {
 
     getInitialState: function() {
       return {
-        checked: false,
         previewImage: "",
         description: "",
         url: ""
@@ -759,7 +758,6 @@ loop.panel = (function(_, mozL10n) {
         var description = metadata.title || metadata.description;
         var url = metadata.url;
         this.setState({
-          checked: false,
           previewImage: previewImage,
           description: description,
           url: url
@@ -767,55 +765,22 @@ loop.panel = (function(_, mozL10n) {
       }.bind(this));
     },
 
-    onCheckboxChange: function(newState) {
-      this.setState({checked: newState.checked});
-    },
-
     handleCreateButtonClick: function() {
       var createRoomAction = new sharedActions.CreateRoom({
         nameTemplate: mozL10n.get("rooms_default_room_name_template")
       });
 
-      if (this.state.checked) {
-        createRoomAction.urls = [{
-          location: this.state.url,
-          description: this.state.description,
-          thumbnail: this.state.previewImage
-        }];
-      }
+      createRoomAction.urls = [{
+        location: this.state.url,
+        description: this.state.description,
+        thumbnail: this.state.previewImage
+      }];
       this.props.dispatcher.dispatch(createRoomAction);
     },
 
     render: function() {
-      var hostname;
-
-      try {
-        hostname = new URL(this.state.url).hostname;
-      } catch (ex) {
-        // Empty catch - if there's an error, then we won't show the context.
-      }
-
-      var contextClasses = React.addons.classSet({
-        context: true,
-        "context-checkbox-checked": this.state.checked,
-        hide: !hostname ||
-          !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
-      });
-
       return (
         <div className="new-room-view">
-          <div className={contextClasses}>
-            <Checkbox checked={this.state.checked}
-                      label={mozL10n.get("context_inroom_label2")}
-                      onChange={this.onCheckboxChange} />
-            <sharedViews.ContextUrlView
-              allowClick={false}
-              description={this.state.description}
-              showContextTitle={false}
-              thumbnail={this.state.previewImage}
-              url={this.state.url}
-              useDesktopPaths={true} />
-          </div>
           <button className="btn btn-info new-room-button"
                   disabled={this.props.pendingOperation}
                   onClick={this.handleCreateButtonClick}>
