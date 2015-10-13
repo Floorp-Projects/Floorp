@@ -1221,9 +1221,6 @@ VectorImage::OnSVGDocumentError()
 {
   CancelAllListeners();
 
-  // XXXdholbert Need to do something more for the parsing failed case -- right
-  // now, this just makes us draw the "object" icon, rather than the (jagged)
-  // "broken image" icon.  See bug 594505.
   mError = true;
 
   if (mProgressTracker) {
