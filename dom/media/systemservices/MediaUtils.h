@@ -68,19 +68,19 @@ public:
   Pledge& operator = (const Pledge&) = delete;
 
   template<typename OnSuccessType>
-  void Then(OnSuccessType aOnSuccess)
+  void Then(OnSuccessType&& aOnSuccess)
   {
-    Then(aOnSuccess, [](ErrorType&){});
+    Then(Forward<OnSuccessType>(aOnSuccess), [](ErrorType&){});
   }
 
   template<typename OnSuccessType, typename OnFailureType>
-  void Then(OnSuccessType aOnSuccess, OnFailureType aOnFailure)
+  void Then(OnSuccessType&& aOnSuccess, OnFailureType&& aOnFailure)
   {
     class Functors : public FunctorsBase
     {
     public:
-      Functors(OnSuccessType& aOnSuccess, OnFailureType& aOnFailure)
-        : mOnSuccess(aOnSuccess), mOnFailure(aOnFailure) {}
+      Functors(OnSuccessType&& aOnSuccess, OnFailureType&& aOnFailure)
+        : mOnSuccess(Move(aOnSuccess)), mOnFailure(Move(aOnFailure)) {}
 
       void Succeed(ValueType& result)
       {
@@ -94,8 +94,8 @@ public:
       OnSuccessType mOnSuccess;
       OnFailureType mOnFailure;
     };
-    mFunctors = new Functors(aOnSuccess, aOnFailure);
-
+    mFunctors = new Functors(Forward<OnSuccessType>(aOnSuccess),
+                             Forward<OnFailureType>(aOnFailure));
     if (mDone) {
       if (!mRejected) {
         mFunctors->Succeed(mValue);
