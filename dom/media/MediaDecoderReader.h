@@ -92,7 +92,7 @@ public:
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) = 0;
+  virtual nsresult Init() { return NS_OK; }
 
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().

@@ -35,11 +35,6 @@ AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
 {
 }
 
-nsresult AndroidMediaReader::Init(MediaDecoderReader* aCloneDonor)
-{
-  return NS_OK;
-}
-
 nsresult AndroidMediaReader::ReadMetadata(MediaInfo* aInfo,
                                           MetadataTags** aTags)
 {

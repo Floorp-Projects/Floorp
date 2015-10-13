@@ -43,8 +43,6 @@ public:
 
   virtual ~DirectShowReader();
 
-  nsresult Init(MediaDecoderReader* aCloneDonor) override;
-
   bool DecodeAudioData() override;
   bool DecodeVideoFrame(bool &aKeyframeSkip,
                         int64_t aTimeThreshold) override;
