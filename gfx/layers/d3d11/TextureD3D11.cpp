@@ -143,6 +143,14 @@ static bool LockD3DTexture(T* aTexture)
   return true;
 }
 
+template<typename T>
+static bool HasKeyedMutex(T* aTexture)
+{
+  RefPtr<IDXGIKeyedMutex> mutex;
+  aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
+  return !!mutex;
+}
+
 template<typename T> // ID3D10Texture2D or ID3D11Texture2D
 static void UnlockD3DTexture(T* aTexture)
 {

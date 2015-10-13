@@ -192,6 +192,145 @@ TextureChild::ActorDestroy(ActorDestroyReason why)
   mKeep = nullptr;
 }
 
+bool
+ClientTexture::Lock(OpenMode aMode)
+{
+  MOZ_ASSERT(mValid);
+  MOZ_ASSERT(!mIsLocked);
+  if (mIsLocked) {
+    return mOpenMode == aMode;
+  }
+
+  mIsLocked = mData->Lock(aMode);
+  mOpenMode = aMode;
+
+  return mIsLocked;
+}
+
+void
+ClientTexture::Unlock()
+{
+  MOZ_ASSERT(mValid);
+  MOZ_ASSERT(mIsLocked);
+  if (!mIsLocked) {
+    return;
+  }
+
+  if (mBorrowedDrawTarget) {
+    MOZ_ASSERT(mBorrowedDrawTarget->refCount() == 1);
+    if (mOpenMode & OpenMode::OPEN_WRITE) {
+      mBorrowedDrawTarget->Flush();
+      if (mReadbackSink) {
+        RefPtr<SourceSurface> snapshot = mBorrowedDrawTarget->Snapshot();
+        RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
+        mReadbackSink->ProcessReadback(dataSurf);
+      }
+    }
+    mBorrowedDrawTarget = nullptr;
+  }
+
+  mData->Unlock();
+  mIsLocked = false;
+  mOpenMode = OpenMode::OPEN_NONE;
+}
+
+bool
+ClientTexture::HasInternalBuffer() const
+{
+  MOZ_ASSERT(mValid);
+  return mData->HasInternalBuffer();
+}
+
+gfx::IntSize
+ClientTexture::GetSize() const
+{
+  MOZ_ASSERT(mValid);
+  return mData->GetSize();
+}
+
+gfx::SurfaceFormat
+ClientTexture::GetFormat() const
+{
+  MOZ_ASSERT(mValid);
+  return mData->GetFormat();
+}
+
+ClientTexture::~ClientTexture()
+{
+  // All the destruction code that may lead to virtual method calls must
+  // be in Finalize() which is called just before the destructor.
+  if (ShouldDeallocateInDestructor()) {
+    mData->Deallocate(mAllocator);
+  }
+  delete mData;
+}
+
+void
+ClientTexture::UpdateFromSurface(gfx::SourceSurface* aSurface)
+{
+  MOZ_ASSERT(mValid);
+  MOZ_ASSERT(mIsLocked);
+
+  if (CanExposeDrawTarget() && NS_IsMainThread()) {
+    RefPtr<DrawTarget> dt = BorrowDrawTarget();
+
+    MOZ_ASSERT(dt);
+    if (!dt) {
+      return;
+    }
+
+    dt->CopySurface(aSurface,
+                    gfx::IntRect(gfx::IntPoint(0, 0), aSurface->GetSize()),
+                    gfx::IntPoint(0, 0));
+    return;
+  }
+
+  if (!mData->UpdateFromSurface(aSurface)) {
+    NS_WARNING("ClientTexture::UpdateFromSurface failed");
+  }
+}
+
+
+already_AddRefed<TextureClient>
+ClientTexture::CreateSimilar(TextureFlags aFlags, TextureAllocationFlags aAllocFlags) const
+{
+  MOZ_ASSERT(mValid);
+  TextureData* data = mData->CreateSimilar(mAllocator, aFlags, aAllocFlags);
+  if (!data) {
+    return nullptr;
+  }
+
+  return MakeAndAddRef<ClientTexture>(data, aFlags, mAllocator);
+}
+
+gfx::DrawTarget*
+ClientTexture::BorrowDrawTarget()
+{
+  MOZ_ASSERT(mValid);
+  MOZ_ASSERT(mIsLocked);
+  // TODO- We can't really assert that at the moment because there is code that Borrows
+  // the DrawTarget, just to get a snapshot, which is legit in term of OpenMode
+  // but we should have a way to get a SourceSurface directly instead.
+  //MOZ_ASSERT(mOpenMode & OpenMode::OPEN_WRITE);
+
+  if (!mIsLocked) {
+    return nullptr;
+  }
+
+  if (!mBorrowedDrawTarget) {
+    mBorrowedDrawTarget = mData->BorrowDrawTarget();
+  }
+
+  return mBorrowedDrawTarget;
+}
+
+bool
+ClientTexture::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+{
+  MOZ_ASSERT(mValid);
+  return mData->Serialize(aOutDescriptor);
+}
+
 // static
 PTextureChild*
 TextureClient::CreateIPDLActor()
@@ -441,7 +580,10 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
       moz2DBackend == gfx::BackendType::CAIRO &&
       type == gfxSurfaceType::Xlib)
   {
-    texture = new TextureClientX11(aAllocator, aFormat, aTextureFlags);
+    texture = CreateX11TextureClient(aSize, aFormat, aTextureFlags, aAllocator);
+    if (texture) {
+      return texture.forget();
+    }
   }
 #ifdef GL_PROVIDER_GLX
   if (parentBackend == LayersBackend::LAYERS_OPENGL &&
@@ -449,7 +591,10 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
       aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap())
   {
-    texture = new TextureClientX11(aAllocator, aFormat, aTextureFlags);
+    texture = CreateX11TextureClient(aSize, aFormat, aTextureFlags, aAllocator);
+    if (texture) {
+      return texture.forget();
+    }
   }
 #endif
 #endif
