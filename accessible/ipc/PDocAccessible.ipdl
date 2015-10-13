@@ -216,6 +216,9 @@ child:
   prio(high) sync SelectAll(uint64_t aID) returns(bool aSuccess);
   prio(high) sync UnselectAll(uint64_t aID) returns(bool aSuccess);
 
+  async TakeSelection(uint64_t aID);
+  async SetSelected(uint64_t aID, bool aSelected);
+
   prio(high) sync DoAction(uint64_t aID, uint8_t aIndex) returns(bool aSuccess);
   prio(high) sync ActionCount(uint64_t aID) returns(uint8_t aCount);
   prio(high) sync ActionDescriptionAt(uint64_t aID, uint8_t aIndex) returns(nsString aDescription);

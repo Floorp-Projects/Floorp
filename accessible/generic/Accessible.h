@@ -534,11 +534,6 @@ public:
   virtual void SetSelected(bool aSelect);
 
   /**
-   * Extend selection to this accessible.
-   */
-  void ExtendSelection() { };
-
-  /**
    * Select the accessible within its container.
    */
   void TakeSelection();
