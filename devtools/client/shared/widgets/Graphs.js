@@ -6,7 +6,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { Heritage, setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+const { Heritage, setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
 loader.lazyRequireGetter(this, "promise");
@@ -14,12 +14,12 @@ loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
 loader.lazyImporter(this, "DevToolsWorker",
-  "resource://gre/modules/devtools/shared/worker/worker.js");
+  "resource://devtools/shared/worker/worker.js");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";
 const WORKER_URL =
-  "resource:///modules/devtools/client/shared/widgets/GraphsWorker.js";
+  "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
 // Generic constants.
 

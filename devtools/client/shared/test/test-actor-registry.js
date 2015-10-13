@@ -10,7 +10,7 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var CC = Components.Constructor;
 
-var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var promise = require("promise");
 

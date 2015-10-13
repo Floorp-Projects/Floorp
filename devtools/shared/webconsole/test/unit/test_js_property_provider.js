@@ -3,7 +3,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 "use strict";
-const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const { JSPropertyProvider } = require("devtools/shared/webconsole/utils");
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");

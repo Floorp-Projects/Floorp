@@ -12,7 +12,7 @@ var Ci = Components.interfaces;
 const DOMParser = Cc["@mozilla.org/xmlextras/domparser;1"]
                     .createInstance(Ci.nsIDOMParser);
 const { VariablesView } =
-  Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesView.jsm", {});
+  Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm", {});
 
 function run_test() {
   let doc = DOMParser.parseFromString("<div>", "text/html");

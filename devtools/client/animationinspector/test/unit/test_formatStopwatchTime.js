@@ -6,7 +6,7 @@
 "use strict";
 
 var Cu = Components.utils;
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
 
 

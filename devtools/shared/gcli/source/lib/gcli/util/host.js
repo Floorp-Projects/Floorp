@@ -116,7 +116,7 @@ exports.staticRequire = function(requistingModule, name) {
     return new Promise(function(resolve, reject) {
       var filename = resourceDirName(requistingModule.id) + '/' + name;
       filename = filename.replace(/\/\.\//g, '/');
-      filename = 'resource://gre/modules/devtools/' + filename;
+      filename = 'resource://devtools/' + filename;
 
       var xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
                   .createInstance(Ci.nsIXMLHttpRequest);

@@ -9,13 +9,13 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
-Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
-Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
-var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Telemetry = require("devtools/client/shared/telemetry");
 var { showDoorhanger } = require("devtools/client/shared/doorhanger");
 var { TouchEventSimulator } = require("devtools/shared/touch/simulator");
@@ -143,7 +143,7 @@ function ResponsiveUI(aWindow, aTab)
   this.mm.addMessageListener("ResponsiveMode:Start:Done", childOn);
 
   let requiresFloatingScrollbars = !this.mainWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
-  this.mm.loadFrameScript("resource:///modules/devtools/client/responsivedesign/responsivedesign-child.js", true);
+  this.mm.loadFrameScript("resource://devtools/client/responsivedesign/responsivedesign-child.js", true);
   this.mm.addMessageListener("ResponsiveMode:ChildScriptReady", () => {
     this.mm.sendAsyncMessage("ResponsiveMode:Start", {
       requiresFloatingScrollbars: requiresFloatingScrollbars

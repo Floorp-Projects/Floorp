@@ -4,9 +4,9 @@
 
 var Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
-const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {TargetFactory} = require("devtools/client/framework/target");
 
 const {ConnectionManager, Connection}

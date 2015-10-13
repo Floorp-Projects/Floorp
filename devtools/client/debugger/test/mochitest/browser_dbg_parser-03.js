@@ -6,7 +6,7 @@
  */
 
 function test() {
-  let { Parser } = Cu.import("resource://gre/modules/devtools/shared/Parser.jsm", {});
+  let { Parser } = Cu.import("resource://devtools/shared/Parser.jsm", {});
 
   let source = [
     "<!doctype html>",

@@ -4,7 +4,7 @@
 
 var Cu = Components.utils;
 
-const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { GetDevices, GetDeviceString } = require("devtools/client/shared/devices");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const { Simulators, Simulator } = require("devtools/client/webide/modules/simulators");

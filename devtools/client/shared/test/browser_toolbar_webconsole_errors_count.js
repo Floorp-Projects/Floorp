@@ -6,7 +6,7 @@
 function test() {
   const TEST_URI = TEST_URI_ROOT + "browser_toolbar_webconsole_errors_count.html";
 
-  let gDevTools = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm",
+  let gDevTools = Cu.import("resource://devtools/client/framework/gDevTools.jsm",
                              {}).gDevTools;
 
   let webconsole = document.getElementById("developer-toolbar-toolbox-button");
