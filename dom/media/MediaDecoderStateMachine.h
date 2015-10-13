@@ -679,51 +679,8 @@ private:
   // yet to run.
   bool mDispatchedStateMachine;
 
-  // Class for managing delayed dispatches of the state machine.
-  class DelayedScheduler {
-  public:
-    explicit DelayedScheduler(MediaDecoderStateMachine* aSelf)
-      : mSelf(aSelf), mMediaTimer(new MediaTimer()) {}
-
-    bool IsScheduled() const { return !mTarget.IsNull(); }
-
-    void Reset()
-    {
-      MOZ_ASSERT(mSelf->OnTaskQueue(), "Must be on state machine queue to disconnect");
-      if (IsScheduled()) {
-        mRequest.Disconnect();
-        mTarget = TimeStamp();
-      }
-    }
-
-    void Ensure(mozilla::TimeStamp& aTarget)
-    {
-      MOZ_ASSERT(mSelf->OnTaskQueue());
-      if (IsScheduled() && mTarget <= aTarget) {
-        return;
-      }
-      Reset();
-      mTarget = aTarget;
-      mRequest.Begin(mMediaTimer->WaitUntil(mTarget, __func__)->Then(
-        mSelf->OwnerThread(), __func__, mSelf,
-        &MediaDecoderStateMachine::OnDelayedSchedule,
-        &MediaDecoderStateMachine::NotReached));
-    }
-
-    void CompleteRequest()
-    {
-      MOZ_ASSERT(mSelf->OnTaskQueue());
-      mRequest.Complete();
-      mTarget = TimeStamp();
-    }
-
-  private:
-    MediaDecoderStateMachine* mSelf;
-    nsRefPtr<MediaTimer> mMediaTimer;
-    MozPromiseRequestHolder<mozilla::MediaTimerPromise> mRequest;
-    TimeStamp mTarget;
-
-  } mDelayedScheduler;
+  // Used to dispatch another round schedule with specific target time.
+  DelayedScheduler mDelayedScheduler;
 
   // StartTimeRendezvous is a helper class that quarantines the first sample
   // until it gets a sample from both channels, such that we can be guaranteed
