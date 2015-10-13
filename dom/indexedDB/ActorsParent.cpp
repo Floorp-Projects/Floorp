@@ -20115,13 +20115,9 @@ FactoryOp::ActorDestroy(ActorDestroyReason aWhy)
 
   NoteActorDestroyed();
 
-  // There may be an event in the event queue that would do the cleanup later,
-  // but if we are being destroyed abnormally (not by calling
-  // PBackgroundIDBFactoryRequestParent::Send__delete__) we need to do the
-  // cleanup here and just ignore the cleanup event in FactoryOp::Run.
-  // Otherwise some Database objects may be still alive and registered in
-  // gLiveDatabaseHashtable at the time the last factory is destroyed.
-  if (aWhy != Deletion) {
+  if (mState == State::WaitingForTransactionsToComplete ||
+      (mState == State::SendingResults && aWhy != Deletion)) {
+    // We didn't get an opportunity to clean up.  Do that now.
     mState = State::SendingResults;
     IDB_REPORT_INTERNAL_ERR();
     mResultCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
