@@ -60,6 +60,14 @@ class TempAllocPolicy
     JS_FRIEND_API(void*) onOutOfMemory(AllocFunction allocFunc, size_t nbytes,
                                        void* reallocPtr = nullptr);
 
+    template <typename T>
+    T* onOutOfMemoryTyped(AllocFunction allocFunc, size_t numElems, void* reallocPtr = nullptr) {
+        size_t bytes;
+        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(numElems, &bytes)))
+            return nullptr;
+        return static_cast<T*>(onOutOfMemory(allocFunc, bytes, reallocPtr));
+    }
+
   public:
     MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_((ContextFriendFields*) cx) {} // :(
     MOZ_IMPLICIT TempAllocPolicy(ContextFriendFields* cx) : cx_(cx) {}
@@ -68,7 +76,7 @@ class TempAllocPolicy
     T* pod_malloc(size_t numElems) {
         T* p = js_pod_malloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = static_cast<T*>(onOutOfMemory(AllocFunction::Malloc, numElems * sizeof(T)));
+            p = onOutOfMemoryTyped<T>(AllocFunction::Malloc, numElems);
         return p;
     }
 
@@ -76,7 +84,7 @@ class TempAllocPolicy
     T* pod_calloc(size_t numElems) {
         T* p = js_pod_calloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = static_cast<T*>(onOutOfMemory(AllocFunction::Calloc, numElems * sizeof(T)));
+            p = onOutOfMemoryTyped<T>(AllocFunction::Calloc, numElems);
         return p;
     }
 
@@ -84,7 +92,7 @@ class TempAllocPolicy
     T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
         T* p2 = js_pod_realloc<T>(prior, oldSize, newSize);
         if (MOZ_UNLIKELY(!p2))
-            p2 = static_cast<T*>(onOutOfMemory(AllocFunction::Realloc, newSize * sizeof(T), prior));
+            p2 = onOutOfMemoryTyped<T>(AllocFunction::Realloc, newSize, prior);
         return p2;
     }
 
