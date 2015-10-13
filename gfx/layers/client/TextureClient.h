@@ -315,12 +315,14 @@ public:
                                    const gfx::IntPoint* aPoint);
 
   /**
-   * Returns true if this texture has a lock/unlock mechanism.
-   * Textures that do not implement locking should be immutable or should
+   * Returns true if this texture has a synchronization mechanism (mutex, fence, etc.).
+   * Textures that do not implement synchronization should be immutable or should
    * use immediate uploads (see TextureFlags in CompositorTypes.h)
+   * Even if a texture does not implement synchronization, Lock and Unlock need
+   * to be used appropriately since the latter are also there to map/numap data.
    */
-  virtual bool ImplementsLocking() const { return false; }
-
+  virtual bool HasSynchronization() const { return false; }
+ 
   /**
    * Indicates whether the TextureClient implementation is backed by an
    * in-memory buffer. The consequence of this is that locking the
@@ -565,6 +567,91 @@ public:
   // Pointer to the pool this tile came from.
   TextureClientPool* mPoolTracker;
 #endif
+};
+
+class TextureData {
+public:
+  TextureData() { MOZ_COUNT_CTOR(TextureData); }
+
+  virtual ~TextureData() { MOZ_COUNT_DTOR(TextureData); }
+
+  virtual gfx::IntSize GetSize() const = 0;
+
+  virtual gfx::SurfaceFormat GetFormat() const = 0;
+
+  virtual bool Lock(OpenMode aMode) = 0;
+
+  virtual void Unlock() = 0;
+
+  virtual bool SupportsMoz2D() const { return false; }
+
+  virtual bool HasInternalBuffer() const = 0;
+
+  virtual bool HasSynchronization() const { return false; }
+
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() { return nullptr; }
+
+  virtual void Deallocate(ISurfaceAllocator* aAllocator) = 0;
+
+  virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
+
+  virtual TextureData*
+  CreateSimilar(ISurfaceAllocator* aAllocator,
+                TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const { return nullptr; }
+
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) { return false; };
+};
+
+/// temporary class that will be merged back into TextureClient when all texture implementations
+/// are based on TextureData.
+class ClientTexture : public TextureClient {
+public:
+  ClientTexture(TextureData* aData, TextureFlags aFlags, ISurfaceAllocator* aAllocator)
+  : TextureClient(aAllocator, aFlags)
+  , mData(aData)
+  , mOpenMode(OpenMode::OPEN_NONE)
+  , mIsLocked(false)
+  {}
+
+  ~ClientTexture();
+
+  virtual bool CanExposeDrawTarget() const override { return mData->SupportsMoz2D(); }
+
+  virtual bool HasInternalBuffer() const override;
+
+  virtual bool HasSynchronization() const { return mData->HasSynchronization(); }
+
+  virtual gfx::IntSize GetSize() const override;
+
+  virtual gfx::SurfaceFormat GetFormat() const override;
+
+  virtual bool Lock(OpenMode aMode) override;
+
+  virtual void Unlock() override;
+
+  virtual bool IsLocked() const override { return mIsLocked; }
+
+  virtual gfx::DrawTarget* BorrowDrawTarget() override;
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
+
+  virtual already_AddRefed<TextureClient>
+  CreateSimilar(TextureFlags aFlags = TextureFlags::DEFAULT,
+                TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+
+  virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+
+  // by construction, ClientTexture cannot be created without successful allocation.
+  virtual bool IsAllocated() const override { return true; }
+
+protected:
+  TextureData* mData;
+  RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
+  RefPtr<TextureReadbackSink> mReadbackSink;
+
+  OpenMode mOpenMode;
+  bool mIsLocked;
 };
 
 /**
