@@ -521,6 +521,7 @@ private:
     // From GDK
     int GdkCoordToDevicePixels(gint coord);
     mozilla::LayoutDeviceIntPoint GdkPointToDevicePixels(GdkPoint point);
+    mozilla::LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
     nsIntRect GdkRectToDevicePixels(GdkRectangle rect);
 };
 
