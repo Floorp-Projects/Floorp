@@ -4348,11 +4348,35 @@
 
           if (event.detail && event.detail.tabPrompt &&
               Services.prefs.getBoolPref("browser.tabs.dontfocusfordialogs")) {
-            tabForEvent.setAttribute("attention", "true");
-          } else {
-            // bring tab to the front:
-            this.selectedTab = tabForEvent;
+            let docPrincipal = targetIsWindow ? event.target.document.nodePrincipal : null;
+            // At least one of these should/will be non-null:
+            let promptPrincipal = event.detail.promptPrincipal || docPrincipal ||
+                                  tabForEvent.linkedBrowser.contentPrincipal;
+            // For null principals, we bail immediately and don't show the checkbox:
+            if (!promptPrincipal || promptPrincipal.isNullPrincipal) {
+              tabForEvent.setAttribute("attention", "true");
+              return;
+            }
+
+            // For non-system/expanded principals, we bail and show the checkbox
+            if (promptPrincipal.URI &&
+                !Services.scriptSecurityManager.isSystemPrincipal(promptPrincipal)) {
+              let permission = Services.perms.testPermissionFromPrincipal(promptPrincipal,
+                                                                          "focus-tab-by-prompt");
+              if (permission != Services.perms.ALLOW_ACTION) {
+                // Tell the prompt box we want to show the user a checkbox:
+                let tabPrompt = this.getTabModalPromptBox(tabForEvent.linkedBrowser);
+                tabPrompt.onNextPromptShowAllowFocusCheckboxFor(promptPrincipal);
+                tabForEvent.setAttribute("attention", "true");
+                return;
+              }
+            }
+            // ... so system and expanded principals, as well as permitted "normal"
+            // URI-based principals, always get to steal focus for the tab when prompting.
           }
+
+          // if prefs/permissions/origins so dictate, bring tab to the front:
+          this.selectedTab = tabForEvent;
         ]]>
       </handler>
       <handler event="DOMTitleChanged">
