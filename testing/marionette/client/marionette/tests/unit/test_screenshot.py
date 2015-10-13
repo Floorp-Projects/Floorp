@@ -102,7 +102,6 @@ class Content(ScreenCaptureTestCase):
         self.assertEqual(
             self.body_scroll_dimensions, self.get_image_dimensions(string))
 
-    @skip("https://bugzilla.mozilla.org/show_bug.cgi?id=1213797")
     def test_svg_document_element(self):
         self.marionette.navigate(svg)
         doc_el = self.document_element
