@@ -91,6 +91,31 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace image {
+namespace bmp {
+
+struct Compression {
+  enum {
+    RGB = 0,
+    RLE8 = 1,
+    RLE4 = 2,
+    BITFIELDS = 3
+  };
+};
+
+// RLE escape codes and constants.
+struct RLE {
+  enum {
+    ESCAPE = 0,
+    ESCAPE_EOL = 0,
+    ESCAPE_EOF = 1,
+    ESCAPE_DELTA = 2,
+
+    SEGMENT_LENGTH = 2,
+    DELTA_LENGTH = 2
+  };
+};
+
+} // namespace bmp
 
 using namespace bmp;
 
@@ -103,10 +128,6 @@ GetBMPLog()
   }
   return sBMPLog;
 }
-
-// Constants relating to RLE compression.
-static const size_t RLE_SEGMENT_LENGTH = 2;
-static const size_t RLE_DELTA_LENGTH = 2;
 
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   : Decoder(aImage)
@@ -471,8 +492,8 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
 
     // Always allocate and zero 256 entries, even though mNumColors might be
     // smaller, because the file might erroneously index past mNumColors.
-    mColors = new ColorTable[256];
-    memset(mColors, 0, 256 * sizeof(ColorTable));
+    mColors = new ColorTableEntry[256];
+    memset(mColors, 0, 256 * sizeof(ColorTableEntry));
 
     // OS/2 Bitmaps have no padding byte.
     mBytesPerColor = (mBIH.bihsize == InfoHeaderLength::WIN_V2) ? 3 : 4;
@@ -554,9 +575,9 @@ nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
 
   for (uint32_t i = 0; i < mNumColors; i++) {
     // The format is BGR or BGR0.
-    mColors[i].blue  = uint8_t(aData[0]);
-    mColors[i].green = uint8_t(aData[1]);
-    mColors[i].red   = uint8_t(aData[2]);
+    mColors[i].mBlue  = uint8_t(aData[0]);
+    mColors[i].mGreen = uint8_t(aData[1]);
+    mColors[i].mRed   = uint8_t(aData[2]);
     aData += mBytesPerColor;
   }
 
@@ -581,7 +602,7 @@ nsBMPDecoder::SkipGap()
   bool hasRLE = mBIH.compression == Compression::RLE8 ||
                 mBIH.compression == Compression::RLE4;
   return hasRLE
-       ? Transition::To(State::RLE_SEGMENT, RLE_SEGMENT_LENGTH)
+       ? Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH)
        : Transition::To(State::PIXEL_ROW, mPixelRowSize);
 }
 
@@ -706,7 +727,7 @@ nsBMPDecoder::ReadRLESegment(const char* aData)
         } while (pixelsNeeded);
       }
     }
-    return Transition::To(State::RLE_SEGMENT, RLE_SEGMENT_LENGTH);
+    return Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
   }
 
   if (byte2 == RLE::ESCAPE_EOL) {
@@ -714,7 +735,7 @@ nsBMPDecoder::ReadRLESegment(const char* aData)
     FinishRow();
     return mCurrentRow == 0
          ? Transition::Terminate(State::SUCCESS)
-         : Transition::To(State::RLE_SEGMENT, RLE_SEGMENT_LENGTH);
+         : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
   }
 
   if (byte2 == RLE::ESCAPE_EOF) {
@@ -722,7 +743,7 @@ nsBMPDecoder::ReadRLESegment(const char* aData)
   }
 
   if (byte2 == RLE::ESCAPE_DELTA) {
-    return Transition::To(State::RLE_DELTA, RLE_DELTA_LENGTH);
+    return Transition::To(State::RLE_DELTA, RLE::DELTA_LENGTH);
   }
 
   // Absolute mode. |byte2| gives the number of pixels. The length depends on
@@ -780,7 +801,7 @@ nsBMPDecoder::ReadRLEDelta(const char* aData)
 
   return mCurrentRow == 0
        ? Transition::Terminate(State::SUCCESS)
-       : Transition::To(State::RLE_SEGMENT, RLE_SEGMENT_LENGTH);
+       : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
 }
 
 LexerTransition<nsBMPDecoder::State>
@@ -817,7 +838,7 @@ nsBMPDecoder::ReadRLEAbsolute(const char* aData, size_t aLength)
   // We should read all the data (unless the last byte is zero padding).
   MOZ_ASSERT(iSrc == aLength - 1 || iSrc == aLength);
 
-  return Transition::To(State::RLE_SEGMENT, RLE_SEGMENT_LENGTH);
+  return Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
 }
 
 } // namespace image
