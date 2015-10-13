@@ -8,6 +8,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/RefCounted.h"
 
 #ifdef WIN32
 #include "mozilla/gfx/JobScheduler_win32.h"

@@ -2586,9 +2586,6 @@ def run_test_harness(options):
     if runner.getTestFlavor(options) == 'mochitest':
         options.runByDir = True
 
-    if mozinfo.info['asan'] and options.e10s:
-        options.runByDir = False
-
     if runner.getTestFlavor(options) == 'browser-chrome':
         options.runByDir = True
 
