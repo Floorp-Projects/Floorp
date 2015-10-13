@@ -455,6 +455,13 @@ BluetoothPbapManager::NotifyPbapRequest(const ObexHeaderSet& aHeader)
     reqId.AssignLiteral(PULL_PHONEBOOK_REQ_ID);
     tagCount = MOZ_ARRAY_LENGTH(sPhonebookTags);
     tags = sPhonebookTags;
+
+    // Ensure the name of phonebook object is legal
+    if (!IsLegalPhonebookName(name)) {
+      BT_LOGR("Illegal phone book object name [%s]",
+              NS_ConvertUTF16toUTF8(name).get());
+      return ObexResponseCode::NotFound;
+    }
   } else if (type.EqualsLiteral("x-bt/vcard-listing")) {
     reqId.AssignLiteral(PULL_VCARD_LISTING_REQ_ID);
     tagCount = MOZ_ARRAY_LENGTH(sVCardListingTags);
