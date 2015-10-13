@@ -31,6 +31,10 @@
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
+var Cu = Components.utils;
+
+Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
+
 
 var dialog = {
   //////////////////////////////////////////////////////////////////////////////
@@ -41,6 +45,7 @@ var dialog = {
   _itemChoose: null,
   _okButton: null,
   _windowCtxt: null,
+  _buttonDisabled: true,
   
   //////////////////////////////////////////////////////////////////////////////
   //// Methods
@@ -57,8 +62,6 @@ var dialog = {
       this._windowCtxt.QueryInterface(Ci.nsIInterfaceRequestor);
     this._itemChoose  = document.getElementById("item-choose");
     this._okButton    = document.documentElement.getButton("accept");
-
-    this.updateOKButton();
 
     var description = {
       image: document.getElementById("description-image"),
@@ -85,6 +88,18 @@ var dialog = {
 
     // UI is ready, lets populate our list
     this.populateList();
+
+    this._delayHelper = new EnableDelayHelper({
+      disableDialog: () => {
+        this._buttonDisabled = true;
+        this.updateOKButton();
+      },
+      enableDialog: () => {
+        this._buttonDisabled = false;
+        this.updateOKButton();
+      },
+      focusTarget: window
+    });
   },
 
  /**
@@ -222,7 +237,8 @@ var dialog = {
   */
   updateOKButton: function updateOKButton()
   {
-    this._okButton.disabled = this._itemChoose.selected;
+    this._okButton.disabled = this._itemChoose.selected ||
+                              this._buttonDisabled;
   },
 
  /**
