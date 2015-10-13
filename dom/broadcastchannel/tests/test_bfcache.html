@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for bfcache and BroadcastChannel</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+  /* This test is hard to follow so here a quick description of what it is about.
+   * We want to test that when BroadcastChannel is used in a bfcached page,
+   * this page is fully removed by bfcache.
+   *
+   * To test it we have 2 pages (testUrl1 and testUrl2).
+   * The steps are:
+   * - we show testUrl1. When this is shown page1Shown is called.
+   * - page1Shown creates a BroadcastChannel object, then it loads testUrl2.
+   * - page2Shown is called by testUrl2.
+   * - Based on expectedPersisted we use or not the BroadcastChannel object of
+   *   testUrl1.
+   * - Then we call history.back() and testUrl1 will be loaded again.
+   * - when page1Shown is called by testUrl1, if BroadcastChannel has been used
+   *   when testUrl2 was shown, we want event.persisted be false, otherwise
+   *   true.
+   */
+  var testUrl1 = "data:text/html,<script>onpageshow = function(e) { opener.page1Shown(e); };<" + "/script>";
+  var testUrl2 = "data:text/html,<script>onpageshow = function(e) { opener.page2Shown(e); };<" + "/script>";
+
+  var testWin;
+  var counter = 0;
+  var expectedPersisted = false;
+  var bc;
+
+  function page1Shown(e) {
+    info("Page1Shown: " + testWin.location.href);
+
+    if (counter == 0) {
+      ok(!e.persisted, "test page should have been persisted initially");
+
+      bc = new testWin.BroadcastChannel('a');
+
+      SimpleTest.executeSoon(function() {
+        info("New location: " + testUrl2);
+        testWin.location.href = testUrl2;
+      });
+    } else {
+      is(e.persisted, expectedPersisted, "test page should have been persisted in pageshow");
+      testWin.close();
+      runTest();
+    }
+
+    counter++;
+  }
+
+  function page2Shown(e) {
+    info("Page2Shown: " + testWin.location.href);
+
+    if (!expectedPersisted) {
+      SimpleTest.executeSoon(function() {
+        info("Posting a message.");
+        bc.postMessage(42);
+      });
+    }
+
+    SimpleTest.executeSoon(function() {
+      info("Going back");
+      testWin.history.back();
+    });
+  }
+
+  var tests = [
+    { expectedPersisted: true },
+    { expectedPersisted: false },
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+
+    counter = 0;
+    expectedPersisted = test.expectedPersisted;
+    testWin = window.open(testUrl1);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+
+  </script>
+</body>
+</html>
