@@ -38,8 +38,7 @@ function checkDoc(title, expectedtitle, normalizedtitle) {
   }
   isElement(doc.documentElement.lastChild, "body");
   is(doc.documentElement.lastChild.childNodes.length, 0);
-  ((!title || title.indexOf("\f") === -1) ? is : todo_is)
-    (doc.title, normalizedtitle);
+  is(doc.title, normalizedtitle);
   doc.body.innerHTML = "foo";
   is(doc.body.innerHTML, "foo", "innerHTML should work in HTML data documents!");
 }
