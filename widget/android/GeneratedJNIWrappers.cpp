@@ -518,6 +518,14 @@ auto GeckoAppShell::LockScreenOrientation(int32_t a0) -> void
     return mozilla::jni::Method<LockScreenOrientation_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char GeckoAppShell::MarkMessageRead_t::name[];
+constexpr char GeckoAppShell::MarkMessageRead_t::signature[];
+
+auto GeckoAppShell::MarkMessageRead(int32_t a0, bool a1, bool a2, int32_t a3) -> void
+{
+    return mozilla::jni::Method<MarkMessageRead_t>::Call(nullptr, nullptr, a0, a1, a2, a3);
+}
+
 constexpr char GeckoAppShell::MarkURIVisited_t::name[];
 constexpr char GeckoAppShell::MarkURIVisited_t::signature[];
 
@@ -856,6 +864,12 @@ constexpr char GeckoSmsManager::NotifySmsDeleted_t::signature[];
 
 constexpr char GeckoSmsManager::NotifySmsDelivery_t::name[];
 constexpr char GeckoSmsManager::NotifySmsDelivery_t::signature[];
+
+constexpr char GeckoSmsManager::NotifySmsMarkAsReadFailed_t::name[];
+constexpr char GeckoSmsManager::NotifySmsMarkAsReadFailed_t::signature[];
+
+constexpr char GeckoSmsManager::NotifySmsMarkedAsRead_t::name[];
+constexpr char GeckoSmsManager::NotifySmsMarkedAsRead_t::signature[];
 
 constexpr char GeckoSmsManager::NotifySmsReceived_t::name[];
 constexpr char GeckoSmsManager::NotifySmsReceived_t::signature[];

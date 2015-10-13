@@ -5851,20 +5851,15 @@ bool
 PresShell::AssumeAllImagesVisible()
 {
   static bool sImageVisibilityEnabled = true;
-  static bool sImageVisibilityEnabledForBrowserElementsOnly = false;
   static bool sImageVisibilityPrefCached = false;
 
   if (!sImageVisibilityPrefCached) {
     Preferences::AddBoolVarCache(&sImageVisibilityEnabled,
       "layout.imagevisibility.enabled", true);
-    Preferences::AddBoolVarCache(&sImageVisibilityEnabledForBrowserElementsOnly,
-      "layout.imagevisibility.enabled_for_browser_elements_only", false);
     sImageVisibilityPrefCached = true;
   }
 
-  if ((!sImageVisibilityEnabled &&
-       !sImageVisibilityEnabledForBrowserElementsOnly) ||
-      !mPresContext || !mDocument) {
+  if (!sImageVisibilityEnabled || !mPresContext || !mDocument) {
     return true;
   }
 
@@ -5876,14 +5871,6 @@ PresShell::AssumeAllImagesVisible()
       mDocument->IsResourceDoc() ||
       mDocument->IsXULDocument()) {
     return true;
-  }
-
-  if (!sImageVisibilityEnabled &&
-      sImageVisibilityEnabledForBrowserElementsOnly) {
-    nsCOMPtr<nsIDocShell> docshell(mPresContext->GetDocShell());
-    if (!docshell || !docshell->GetIsInBrowserElement()) {
-      return true;
-    }
   }
 
   return false;

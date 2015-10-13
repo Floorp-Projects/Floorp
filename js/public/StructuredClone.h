@@ -121,7 +121,7 @@ typedef void (*FreeTransferStructuredCloneOp)(uint32_t tag, JS::TransferableOwne
 // Increment this when anything at all changes in the serialization format.
 // (Note that this does not need to be bumped for Transferable-only changes,
 // since they are never saved to persistent storage.)
-#define JS_STRUCTURED_CLONE_VERSION 5
+#define JS_STRUCTURED_CLONE_VERSION 6
 
 struct JSStructuredCloneCallbacks {
     ReadStructuredCloneOp read;

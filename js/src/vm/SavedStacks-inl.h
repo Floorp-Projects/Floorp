@@ -22,13 +22,7 @@
 inline void
 js::AssertObjectIsSavedFrameOrWrapper(JSContext* cx, HandleObject stack)
 {
-#ifdef DEBUG
-    if (stack) {
-        RootedObject savedFrameObj(cx, CheckedUnwrap(stack));
-        MOZ_ASSERT(savedFrameObj);
-        MOZ_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*savedFrameObj));
-    }
-#endif
+    MOZ_ASSERT_IF(stack, js::SavedFrame::isSavedFrameOrWrapperAndNotProto(*stack));
 }
 
 #endif // vm_SavedStacksInl_h

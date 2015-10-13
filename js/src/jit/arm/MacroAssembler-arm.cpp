@@ -2339,9 +2339,9 @@ MacroAssemblerARMCompat::store32(Imm32 src, const Address& address)
 void
 MacroAssemblerARMCompat::store32(Imm32 imm, const BaseIndex& dest)
 {
-    AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
-    ma_mov(imm, scratch2);
-    store32(scratch2, dest);
+    ScratchRegisterScope scratch(asMasm());
+    ma_mov(imm, scratch);
+    store32(scratch, dest);
 }
 
 void
@@ -2350,11 +2350,11 @@ MacroAssemblerARMCompat::store32(Register src, const BaseIndex& dest)
     Register base = dest.base;
     uint32_t scale = Imm32::ShiftOf(dest.scale).value;
 
-    ScratchRegisterScope scratch(asMasm());
+    AutoRegisterScope scratch2(asMasm(), secondScratchReg_);
 
     if (dest.offset != 0) {
-        ma_add(base, Imm32(dest.offset), scratch);
-        base = scratch;
+        ma_add(base, Imm32(dest.offset), scratch2);
+        base = scratch2;
     }
     ma_str(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
 }
