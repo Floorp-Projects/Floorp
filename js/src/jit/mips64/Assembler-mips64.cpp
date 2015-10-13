@@ -368,10 +368,10 @@ uint64_t
 Assembler::ExtractLoad64Value(Instruction* inst0)
 {
     InstImm* i0 = (InstImm*) inst0;
-    InstImm* i1 = (InstImm*) inst0->next();
-    InstReg* i2 = (InstReg*) inst1->next();
-    InstImm* i3 = (InstImm*) inst2->next();
-    InstImm* i5 = (InstImm*) inst3->next()->next();
+    InstImm* i1 = (InstImm*) i0->next();
+    InstReg* i2 = (InstReg*) i1->next();
+    InstImm* i3 = (InstImm*) i2->next();
+    InstImm* i5 = (InstImm*) i3->next()->next();
 
     MOZ_ASSERT(i0->extractOpcode() == ((uint32_t)op_lui >> OpcodeShift));
     MOZ_ASSERT(i1->extractOpcode() == ((uint32_t)op_ori >> OpcodeShift));
@@ -398,10 +398,10 @@ void
 Assembler::UpdateLoad64Value(Instruction* inst0, uint64_t value)
 {
     InstImm* i0 = (InstImm*) inst0;
-    InstImm* i1 = (InstImm*) inst0->next();
-    InstReg* i2 = (InstReg*) inst1->next();
-    InstImm* i3 = (InstImm*) inst2->next();
-    InstImm* i5 = (InstImm*) inst3->next()->next();
+    InstImm* i1 = (InstImm*) i0->next();
+    InstReg* i2 = (InstReg*) i1->next();
+    InstImm* i3 = (InstImm*) i2->next();
+    InstImm* i5 = (InstImm*) i3->next()->next();
 
     MOZ_ASSERT(i0->extractOpcode() == ((uint32_t)op_lui >> OpcodeShift));
     MOZ_ASSERT(i1->extractOpcode() == ((uint32_t)op_ori >> OpcodeShift));
