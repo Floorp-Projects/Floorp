@@ -13,76 +13,6 @@ loop.panel = (function(_, mozL10n) {
   var Button = sharedViews.Button;
   var Checkbox = sharedViews.Checkbox;
 
-  /**
-   * Availability drop down menu subview.
-   */
-  var AvailabilityDropdown = React.createClass({displayName: "AvailabilityDropdown",
-    mixins: [sharedMixins.DropdownMenuMixin()],
-
-    getInitialState: function() {
-      return {
-        doNotDisturb: navigator.mozLoop.doNotDisturb
-      };
-    },
-
-    // XXX target event can either be the li, the span or the i tag
-    // this makes it easier to figure out the target by making a
-    // closure with the desired status already passed in.
-    changeAvailability: function(newAvailabilty) {
-      return function(event) {
-        // Note: side effect!
-        switch (newAvailabilty) {
-          case "available":
-            this.setState({doNotDisturb: false});
-            navigator.mozLoop.doNotDisturb = false;
-            break;
-          case "do-not-disturb":
-            this.setState({doNotDisturb: true});
-            navigator.mozLoop.doNotDisturb = true;
-            break;
-        }
-        this.hideDropdownMenu();
-      }.bind(this);
-    },
-
-    render: function() {
-      var cx = React.addons.classSet;
-      var availabilityDropdown = cx({
-        "dropdown-menu": true,
-        "hide": !this.state.showMenu
-      });
-      var statusIcon = cx({
-        "status-unavailable": this.state.doNotDisturb,
-        "status-available": !this.state.doNotDisturb
-      });
-      var availabilityText = this.state.doNotDisturb ?
-                             mozL10n.get("display_name_dnd_status") :
-                             mozL10n.get("display_name_available_status");
-
-      return (
-        React.createElement("div", {className: "dropdown"}, 
-          React.createElement("p", {className: "dnd-status"}, 
-            React.createElement("span", {className: statusIcon, 
-                  onClick: this.toggleDropdownMenu, 
-                  ref: "menu-button"}, 
-              availabilityText
-            )
-          ), 
-          React.createElement("ul", {className: availabilityDropdown}, 
-            React.createElement("li", {className: "dropdown-menu-item status-available", 
-                onClick: this.changeAvailability("available")}, 
-              React.createElement("span", null, mozL10n.get("display_name_available_status"))
-            ), 
-            React.createElement("li", {className: "dropdown-menu-item status-unavailable", 
-                onClick: this.changeAvailability("do-not-disturb")}, 
-              React.createElement("span", null, mozL10n.get("display_name_dnd_status"))
-            )
-          )
-        )
-      );
-    }
-  });
-
   var GettingStartedView = React.createClass({displayName: "GettingStartedView",
     mixins: [sharedMixins.WindowCloseMixin],
 
@@ -290,6 +220,11 @@ loop.panel = (function(_, mozL10n) {
       this.closeWindow();
     },
 
+    handleToggleNotifications: function() {
+      this.props.mozLoop.doNotDisturb = !this.props.mozLoop.doNotDisturb;
+      this.hideDropdownMenu();
+    },
+
     _isSignedIn: function() {
       return !!this.props.mozLoop.userProfile;
     },
@@ -303,6 +238,8 @@ loop.panel = (function(_, mozL10n) {
       var cx = React.addons.classSet;
       var accountEntryCSSClass = this._isSignedIn() ? "entry-settings-signout" :
                                                       "entry-settings-signin";
+      var notificationsLabel = this.props.mozLoop.doNotDisturb ? "settings_menu_item_turnnotificationson" :
+                                                                 "settings_menu_item_turnnotificationsoff";
 
       return (
         React.createElement("div", {className: "settings-menu dropdown"}, 
@@ -311,6 +248,10 @@ loop.panel = (function(_, mozL10n) {
              ref: "menu-button", 
              title: mozL10n.get("settings_menu_button_tooltip")}), 
           React.createElement("ul", {className: cx({"dropdown-menu": true, hide: !this.state.showMenu})}, 
+            React.createElement(SettingsDropdownEntry, {
+                extraCSSClass: "entry-settings-notifications entries-divider", 
+                label: mozL10n.get(notificationsLabel), 
+                onClick: this.handleToggleNotifications}), 
             React.createElement(SettingsDropdownEntry, {
                 displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled, 
                 extraCSSClass: "entry-settings-account", 
@@ -996,11 +937,10 @@ loop.panel = (function(_, mozL10n) {
                       store: this.props.roomStore}), 
           React.createElement("div", {className: "footer"}, 
             React.createElement("div", {className: "user-details"}, 
-              React.createElement(AvailabilityDropdown, null)
+              React.createElement(AccountLink, {fxAEnabled: this.props.mozLoop.fxAEnabled, 
+                           userProfile: this.state.userProfile})
             ), 
             React.createElement("div", {className: "signin-details"}, 
-              React.createElement(AccountLink, {fxAEnabled: this.props.mozLoop.fxAEnabled, 
-                           userProfile: this.state.userProfile}), 
               React.createElement(SettingsDropdown, {mozLoop: this.props.mozLoop})
             )
           )
@@ -1042,7 +982,6 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     AccountLink: AccountLink,
-    AvailabilityDropdown: AvailabilityDropdown,
     ConversationDropdown: ConversationDropdown,
     GettingStartedView: GettingStartedView,
     init: init,
