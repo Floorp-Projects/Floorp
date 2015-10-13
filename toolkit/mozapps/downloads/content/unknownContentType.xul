@@ -19,7 +19,6 @@
 <dialog id="unknownContentType"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="dialog.initDialog();" onunload="if (dialog) dialog.onCancel();"
-        onblur="if (dialog) dialog.onBlur(event);" onfocus="dialog.onFocus(event);"
 #ifdef XP_WIN
         style="width: 36em;"
 #else
