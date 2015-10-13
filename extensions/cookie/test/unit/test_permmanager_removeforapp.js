@@ -59,7 +59,8 @@ function run_test() {
     ['http://mozilla.com', 1011, false, 'a', 1],
   ];
 
-  pm.removePermissionsForApp(1001, false);
+  let attrs = { appId: 1001 };
+  pm.removePermissionsWithAttributes(JSON.stringify(attrs));
   checkPerms(remove_false_perms);
 
   let restore = [
@@ -91,6 +92,8 @@ function run_test() {
     ['http://mozilla.com', 1011, false, 'a', 1],
   ];
 
-  pm.removePermissionsForApp(1001, true);
+  attrs = { appId: 1001,
+            inBrowser: true };
+  pm.removePermissionsWithAttributes(JSON.stringify(attrs));
   checkPerms(remove_true_perms);
 }
