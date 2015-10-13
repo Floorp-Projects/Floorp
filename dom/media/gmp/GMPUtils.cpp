@@ -64,4 +64,11 @@ ToBase64(const nsTArray<uint8_t>& aBytes)
   return base64;
 }
 
+bool
+FileExists(nsIFile* aFile)
+{
+  bool exists = false;
+  return aFile && NS_SUCCEEDED(aFile->Exists(&exists)) && exists;
+}
+
 } // namespace mozilla
