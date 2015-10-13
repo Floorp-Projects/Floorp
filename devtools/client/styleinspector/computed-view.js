@@ -18,7 +18,7 @@ const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm",
 const {OutputParser} = require("devtools/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {createChild} = require("devtools/client/styleinspector/utils");
-const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 
 loader.lazyRequireGetter(this, "overlays",
   "devtools/client/styleinspector/style-inspector-overlays");

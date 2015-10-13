@@ -4,7 +4,7 @@ function a(){b()}function b(){debugger}
 // Generate this file by evaluating the following in a browser-environment
 // scratchpad:
 //
-//    let { require } = Components.utils.import('resource://gre/modules/devtools/shared/Loader.jsm', {});
+//    let { require } = Components.utils.import('resource://devtools/shared/Loader.jsm', {});
 //    let { SourceNode } = require("source-map");
 //
 //    let dataUrl = s => "data:text/javascript," + s;

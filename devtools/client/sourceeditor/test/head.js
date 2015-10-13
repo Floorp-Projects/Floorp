@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Editor  = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

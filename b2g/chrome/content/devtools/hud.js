@@ -10,7 +10,7 @@ const DEVELOPER_HUD_LOG_PREFIX = 'DeveloperHUD';
 const CUSTOM_HISTOGRAM_PREFIX = 'DEVTOOLS_HUD_CUSTOM_';
 
 XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
-  const {devtools} = Cu.import('resource://gre/modules/devtools/shared/Loader.jsm', {});
+  const {devtools} = Cu.import('resource://devtools/shared/Loader.jsm', {});
   return devtools;
 });
 

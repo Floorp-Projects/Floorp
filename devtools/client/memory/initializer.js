@@ -6,8 +6,8 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const BrowserLoaderModule = {};
-Cu.import("resource:///modules/devtools/client/shared/browser-loader.js", BrowserLoaderModule);
-const { require } = BrowserLoaderModule.BrowserLoader("resource:///modules/devtools/client/memory/", this);
+Cu.import("resource://devtools/client/shared/browser-loader.js", BrowserLoaderModule);
+const { require } = BrowserLoaderModule.BrowserLoader("resource://devtools/client/memory/", this);
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { createFactory, createElement, render } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");

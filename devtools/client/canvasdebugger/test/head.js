@@ -13,8 +13,8 @@ Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var promise = require("promise");
 var { DebuggerClient } = require("devtools/shared/client/main");

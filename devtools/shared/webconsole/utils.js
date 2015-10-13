@@ -12,11 +12,11 @@ const {isWindowIncluded} = require("devtools/shared/layout/utils");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-loader.lazyImporter(this, "Parser", "resource://gre/modules/devtools/shared/Parser.jsm");
+loader.lazyImporter(this, "Parser", "resource://devtools/shared/Parser.jsm");
 
 // TODO: Bug 842672 - browser/ imports modules from toolkit/.
 // Note that these are only used in WebConsoleCommands, see $0 and pprint().
-loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // Match the function name from the result of toString() or toSource().

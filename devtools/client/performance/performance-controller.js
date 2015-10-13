@@ -4,10 +4,10 @@
 "use strict";
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+const { Heritage, ViewHelpers, WidgetMethods } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 // Events emitted by various objects in the panel.
 const EVENTS = require("devtools/client/performance/events");
@@ -73,11 +73,11 @@ loader.lazyRequireGetter(this, "TreeWidget",
   "devtools/client/shared/widgets/TreeWidget", true);
 
 loader.lazyImporter(this, "SideMenuWidget",
-  "resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
+  "resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 loader.lazyImporter(this, "setNamedTimeout",
-  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyImporter(this, "clearNamedTimeout",
-  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyImporter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
 

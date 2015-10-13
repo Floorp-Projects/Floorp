@@ -4,7 +4,7 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/devtools/shared/event-emitter.js");
+Components.utils.import("resource://devtools/shared/event-emitter.js");
 
 const EXPORTED_SYMBOLS = ["Devices"];
 

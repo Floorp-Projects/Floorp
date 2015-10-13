@@ -8,7 +8,7 @@
 
 const {Cu} = require("chrome");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-var {loader} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
+var {loader} = Cu.import("resource://devtools/shared/Loader.jsm");
 loader.lazyRequireGetter(this, "EventEmitter",
                                "devtools/shared/event-emitter");
 

@@ -27,10 +27,10 @@
  *     { id, error }
  */
 
-importScripts("resource://gre/modules/devtools/shared/worker/helper.js");
-importScripts("resource://gre/modules/devtools/acorn/acorn.js");
-importScripts("resource://gre/modules/devtools/sourcemap/source-map.js");
-importScripts("resource://gre/modules/devtools/shared/pretty-fast/pretty-fast.js");
+importScripts("resource://devtools/shared/worker/helper.js");
+importScripts("resource://devtools/acorn/acorn.js");
+importScripts("resource://devtools/sourcemap/source-map.js");
+importScripts("resource://devtools/shared/pretty-fast/pretty-fast.js");
 
 workerHelper.createTask(self, "pretty-print", ({ url, indent, source }) => {
   try {

@@ -13,9 +13,9 @@ loader.lazyRequireGetter(this, "TreeWidget",
 loader.lazyRequireGetter(this, "TableWidget",
                          "devtools/client/shared/widgets/TableWidget", true);
 loader.lazyImporter(this, "ViewHelpers",
-  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+  "resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyImporter(this, "VariablesView",
-  "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+  "resource://devtools/client/shared/widgets/VariablesView.jsm");
 
 const Telemetry = require("devtools/client/shared/telemetry");
 
