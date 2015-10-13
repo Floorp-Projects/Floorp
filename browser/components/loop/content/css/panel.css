@@ -209,6 +209,16 @@ body {
   padding: 1rem;
 }
 
+.new-room-view > .stop-sharing-button {
+  background-color: #d13f1a;
+  border-color: #d13f1a;
+}
+
+.new-room-view > .stop-sharing-button:hover {
+  background-color: #ef6745;
+  border-color: #ef6745;
+}
+
 .room-list {
   /* xxx  not sure why flex needs the 3 value setting
     but setting flex to just 1, the whole tab including the new room is scrollable.
