@@ -1244,6 +1244,27 @@ public:
     static auto LockScreenOrientation(int32_t) -> void;
 
 public:
+    struct MarkMessageRead_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                bool,
+                bool,
+                int32_t> Args;
+        static constexpr char name[] = "markMessageRead";
+        static constexpr char signature[] =
+                "(IZZI)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto MarkMessageRead(int32_t, bool, bool, int32_t) -> void;
+
+public:
     struct MarkURIVisited_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;
@@ -2175,6 +2196,40 @@ public:
         static constexpr char name[] = "notifySmsDelivery";
         static constexpr char signature[] =
                 "(IILjava/lang/String;Ljava/lang/String;J)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct NotifySmsMarkAsReadFailed_t {
+        typedef GeckoSmsManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "notifySmsMarkAsReadFailed";
+        static constexpr char signature[] =
+                "(II)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct NotifySmsMarkedAsRead_t {
+        typedef GeckoSmsManager Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool,
+                int32_t> Args;
+        static constexpr char name[] = "notifySmsMarkedAsRead";
+        static constexpr char signature[] =
+                "(ZI)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
