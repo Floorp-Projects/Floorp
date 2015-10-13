@@ -635,55 +635,6 @@ html[dir="rtl"] .generate-url-spinner {
   text-decoration: none;
 }
 
-/* DnD menu */
-
-.dnd-status {
-  border: 1px solid transparent;
-  padding: 2px 4px;
-  margin: 0;
-  /* Undo the start border + padding so that unhovered dnd-status is aligned
-     as if there was no additional spacing. */
-  -moz-margin-start: calc(-1px + -4px);
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-.dnd-status:hover {
-  border-color: #ddd;
-  background-color: #f1f1f1;
-}
-
-.status-available:before,
-.status-unavailable:before {
-  content: "";
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  vertical-align: bottom;
-  background-repeat: no-repeat;
-  background-size: cover;
-  -moz-margin-end: .2rem;
-  margin-bottom: -3px;
-}
-
-.dropdown-menu-item.status-available:before,
-.dropdown-menu-item.status-unavailable:before {
-  margin-bottom: 2px;
-}
-
-html[dir="rtl"] .dropdown-menu-item.status-available:before,
-html[dir="rtl"] .dropdown-menu-item.status-unavailable:before {
-  margin-right: -3px;
-}
-
-.status-available:before {
-  background-image: url("../shared/img/icons-16x16.svg#status-available");
-}
-
-.status-unavailable:before {
-  background-image: url("../shared/img/icons-16x16.svg#status-unavailable");
-}
-
 /* Status badges -- Available/Unavailable */
 .status {
   display: inline-block;
@@ -741,6 +692,12 @@ html[dir="rtl"] .user-details .dropdown-menu {
   left: auto;
   bottom: 1.1em;
   right: 14px;
+}
+
+.entries-divider {
+  border-left: 0;
+  border-right: 0;
+  border-bottom: solid 1px #d8d8d8;
 }
 
 html[dir="rtl"] .settings-menu .dropdown-menu {
