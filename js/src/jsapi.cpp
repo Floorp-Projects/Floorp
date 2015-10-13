@@ -4583,17 +4583,7 @@ JS_DecompileFunction(JSContext* cx, HandleFunction fun, unsigned indent)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, fun);
-    return FunctionToString(cx, fun, false, !(indent & JS_DONT_PRETTY_PRINT));
-}
-
-JS_PUBLIC_API(JSString*)
-JS_DecompileFunctionBody(JSContext* cx, HandleFunction fun, unsigned indent)
-{
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, fun);
-    return FunctionToString(cx, fun, true, !(indent & JS_DONT_PRETTY_PRINT));
+    return FunctionToString(cx, fun, !(indent & JS_DONT_PRETTY_PRINT));
 }
 
 MOZ_NEVER_INLINE static bool
