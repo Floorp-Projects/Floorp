@@ -9,7 +9,6 @@ var t = async_test();
 onload = setTimeout(function() {
                       var iframe = document.getElementsByTagName("iframe")[0];
                       iframe.src="about:blank";
-                      setTimeout(t.step_func(function() {assert_unreached();}), 1000)
                     }, 100)
 </script>
 <iframe src="009-1.html"></iframe>
