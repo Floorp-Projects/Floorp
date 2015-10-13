@@ -14,7 +14,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOM.h"
 
 #undef LOG
 #undef LOG_ENABLED
@@ -143,79 +142,6 @@ private:
   int mResult;
 };
 
-NS_IMPL_ISUPPORTS(CamerasParent, nsIObserver)
-
-NS_IMETHODIMP
-CamerasParent::Observe(nsISupports *aSubject,
-                       const char *aTopic,
-                       const char16_t *aData)
-{
-  MOZ_ASSERT(!strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID));
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  MOZ_ASSERT(obs);
-  obs->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
-  StopVideoCapture();
-  return NS_OK;
-}
-
-nsresult
-CamerasParent::DispatchToVideoCaptureThread(nsRunnable *event)
-{
-  MonitorAutoLock lock(mThreadMonitor);
-
-  while(mChildIsAlive && mWebRTCAlive &&
-        (!mVideoCaptureThread || !mVideoCaptureThread->IsRunning())) {
-    mThreadMonitor.Wait();
-  }
-  if (!mVideoCaptureThread || !mVideoCaptureThread->IsRunning()) {
-    return NS_ERROR_FAILURE;
-  }
-  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE,
-                                                new RunnableTask(event));
-  return NS_OK;
-}
-
-void
-CamerasParent::StopVideoCapture()
-{
-  // We are called from the main thread (xpcom-shutdown) or
-  // from PBackground (when the Actor shuts down).
-  // Shut down the WebRTC stack (on the capture thread)
-  nsRefPtr<CamerasParent> self(this);
-  nsRefPtr<nsRunnable> webrtc_runnable =
-    media::NewRunnableFrom([self]() -> nsresult {
-        MonitorAutoLock lock(self->mThreadMonitor);
-        self->CloseEngines();
-        self->mThreadMonitor.NotifyAll();
-        return NS_OK;
-      });
-  DispatchToVideoCaptureThread(webrtc_runnable);
-  // Hold here until the WebRTC thread is gone. We need to dispatch
-  // the thread deletion *now*, or there will be no more possibility
-  // to get to the main thread.
-  MonitorAutoLock lock(mThreadMonitor);
-  while (mWebRTCAlive) {
-    mThreadMonitor.Wait();
-  }
-  // After closing the WebRTC stack, clean up the
-  // VideoCapture thread.
-  if (self->mVideoCaptureThread) {
-    base::Thread *thread = self->mVideoCaptureThread;
-    self->mVideoCaptureThread = nullptr;
-    nsRefPtr<nsRunnable> threadShutdown =
-      media::NewRunnableFrom([thread]() -> nsresult {
-        if (thread->IsRunning()) {
-          thread->Stop();
-        }
-        delete thread;
-        return NS_OK;
-      });
-    if (NS_FAILED(NS_DispatchToMainThread(threadShutdown))) {
-      LOG(("Could not dispatch VideoCaptureThread destruction"));
-    }
-  }
-}
-
 int
 CamerasParent::DeliverFrameOverIPC(CaptureEngine cap_engine,
                                    int cap_id,
@@ -309,7 +235,6 @@ CamerasParent::RecvReleaseFrame(mozilla::ipc::Shmem&& s) {
 bool
 CamerasParent::SetupEngine(CaptureEngine aCapEngine)
 {
-  MOZ_ASSERT(mVideoCaptureThread->thread_id() == PlatformThread::CurrentId());
   EngineHelper *helper = &mEngines[aCapEngine];
 
   // Already initialized
@@ -383,57 +308,51 @@ CamerasParent::SetupEngine(CaptureEngine aCapEngine)
 void
 CamerasParent::CloseEngines()
 {
-  if (!mWebRTCAlive) {
-    return;
-  }
-  MOZ_ASSERT(mVideoCaptureThread->thread_id() == PlatformThread::CurrentId());
-
-  // Stop the callers
-  while (mCallbacks.Length()) {
-    auto capEngine = mCallbacks[0]->mCapEngine;
-    auto capNum = mCallbacks[0]->mCapturerId;
-    LOG(("Forcing shutdown of engine %d, capturer %d", capEngine, capNum));
-    RecvStopCapture(capEngine, capNum);
-    RecvReleaseCaptureDevice(capEngine, capNum);
-  }
-
-  for (int i = 0; i < CaptureEngine::MaxEngine; i++) {
-    if (mEngines[i].mEngineIsRunning) {
-      LOG(("Being closed down while engine %d is running!", i));
+  {
+    MutexAutoLock lock(mCallbackMutex);
+    // Stop the callers
+    while (mCallbacks.Length()) {
+      auto capEngine = mCallbacks[0]->mCapEngine;
+      auto capNum = mCallbacks[0]->mCapturerId;
+      LOG(("Forcing shutdown of engine %d, capturer %d", capEngine, capNum));
+      {
+        MutexAutoUnlock unlock(mCallbackMutex);
+        RecvStopCapture(capEngine, capNum);
+        RecvReleaseCaptureDevice(capEngine, capNum);
+      }
+      // The callbacks list might have changed while we released the lock,
+      // but note that due to the loop construct this will not break us.
     }
-    if (mEngines[i].mPtrViERender) {
-      mEngines[i].mPtrViERender->Release();
-      mEngines[i].mPtrViERender = nullptr;
-    }
-    if (mEngines[i].mPtrViECapture) {
-      mEngines[i].mPtrViECapture->Release();
+  }
+
+  {
+    MutexAutoLock lock(mEngineMutex);
+    for (int i = 0; i < CaptureEngine::MaxEngine; i++) {
+      if (mEngines[i].mEngineIsRunning) {
+        LOG(("Being closed down while engine %d is running!", i));
+      }
+      if (mEngines[i].mPtrViERender) {
+        mEngines[i].mPtrViERender->Release();
+        mEngines[i].mPtrViERender = nullptr;
+      }
+      if (mEngines[i].mPtrViECapture) {
+        mEngines[i].mPtrViECapture->Release();
         mEngines[i].mPtrViECapture = nullptr;
-    }
-    if(mEngines[i].mPtrViEBase) {
-      mEngines[i].mPtrViEBase->Release();
-      mEngines[i].mPtrViEBase = nullptr;
-    }
-    if (mEngines[i].mEngine) {
-      mEngines[i].mEngine->SetTraceCallback(nullptr);
-      webrtc::VideoEngine::Delete(mEngines[i].mEngine);
-      mEngines[i].mEngine = nullptr;
+      }
+      if(mEngines[i].mPtrViEBase) {
+        mEngines[i].mPtrViEBase->Release();
+        mEngines[i].mPtrViEBase = nullptr;
+      }
     }
   }
-
-  mWebRTCAlive = false;
 }
 
 bool
 CamerasParent::EnsureInitialized(int aEngine)
 {
   LOG((__PRETTY_FUNCTION__));
-  // We're shutting down, don't try to do new WebRTC ops.
-  if (!mWebRTCAlive) {
-    return false;
-  }
   CaptureEngine capEngine = static_cast<CaptureEngine>(aEngine);
   if (!SetupEngine(capEngine)) {
-    LOG(("CamerasParent failed to initialize engine"));
     return false;
   }
 
@@ -449,12 +368,18 @@ bool
 CamerasParent::RecvNumberOfCaptureDevices(const int& aCapEngine)
 {
   LOG((__PRETTY_FUNCTION__));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("RecvNumberOfCaptureDevices fails to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine]() -> nsresult {
+      MutexAutoLock lock(self->mEngineMutex);
       int num = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
+      if (self->mEngines[aCapEngine].mPtrViECapture) {
         num = self->mEngines[aCapEngine].mPtrViECapture->NumberOfCaptureDevices();
       }
       nsRefPtr<nsIRunnable> ipc_runnable =
@@ -475,7 +400,8 @@ CamerasParent::RecvNumberOfCaptureDevices(const int& aCapEngine)
         self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
+
   return true;
 }
 
@@ -484,13 +410,19 @@ CamerasParent::RecvNumberOfCapabilities(const int& aCapEngine,
                                         const nsCString& unique_id)
 {
   LOG((__PRETTY_FUNCTION__));
-  LOG(("Getting caps for %s", unique_id.get()));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("RecvNumberOfCapabilities fails to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
+  LOG(("Getting caps for %s", unique_id.get()));
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, unique_id, aCapEngine]() -> nsresult {
+      MutexAutoLock lock(self->mEngineMutex);
       int num = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
+      if (self->mEngines[aCapEngine].mPtrViECapture) {
         num =
           self->mEngines[aCapEngine].mPtrViECapture->NumberOfCapabilities(
             unique_id.get(),
@@ -514,7 +446,7 @@ CamerasParent::RecvNumberOfCapabilities(const int& aCapEngine,
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
   return true;
 }
 
@@ -524,14 +456,21 @@ CamerasParent::RecvGetCaptureCapability(const int &aCapEngine,
                                         const int& num)
 {
   LOG((__PRETTY_FUNCTION__));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("Fails to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
+
   LOG(("RecvGetCaptureCapability: %s %d", unique_id.get(), num));
 
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, unique_id, aCapEngine, num]() -> nsresult {
       webrtc::CaptureCapability webrtcCaps;
+      MutexAutoLock lock(self->mEngineMutex);
       int error = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
+      if (self->mEngines[aCapEngine].mPtrViECapture) {
         error = self->mEngines[aCapEngine].mPtrViECapture->GetCaptureCapability(
           unique_id.get(), MediaEngineSource::kMaxUniqueIdLength, num, webrtcCaps);
       }
@@ -564,7 +503,7 @@ CamerasParent::RecvGetCaptureCapability(const int &aCapEngine,
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
   return true;
 }
 
@@ -573,7 +512,13 @@ CamerasParent::RecvGetCaptureDevice(const int& aCapEngine,
                                     const int& aListNumber)
 {
   LOG((__PRETTY_FUNCTION__));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("Fails to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
+  LOG(("RecvGetCaptureDevice"));
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, aListNumber]() -> nsresult {
@@ -581,18 +526,20 @@ CamerasParent::RecvGetCaptureDevice(const int& aCapEngine,
       char deviceUniqueId[MediaEngineSource::kMaxUniqueIdLength];
       nsCString name;
       nsCString uniqueId;
+      MutexAutoLock lock(self->mEngineMutex);
       int error = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
-          error = self->mEngines[aCapEngine].mPtrViECapture->GetCaptureDevice(aListNumber,
-                                                                              deviceName,
-                                                                              sizeof(deviceName),
-                                                                              deviceUniqueId,
-                                                                              sizeof(deviceUniqueId));
+      if (self->mEngines[aCapEngine].mPtrViECapture) {
+        error = self->mEngines[aCapEngine].mPtrViECapture->GetCaptureDevice(aListNumber,
+                                                                            deviceName,
+                                                                            sizeof(deviceName),
+                                                                            deviceUniqueId,
+                                                                            sizeof(deviceUniqueId));
       }
       if (!error) {
         name.Assign(deviceName);
         uniqueId.Assign(deviceUniqueId);
       }
+
       nsRefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, error, name, uniqueId]() -> nsresult {
           if (self->IsShuttingDown()) {
@@ -611,7 +558,7 @@ CamerasParent::RecvGetCaptureDevice(const int& aCapEngine,
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
   return true;
 }
 
@@ -620,13 +567,19 @@ CamerasParent::RecvAllocateCaptureDevice(const int& aCapEngine,
                                          const nsCString& unique_id)
 {
   LOG((__PRETTY_FUNCTION__));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("Fails to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, unique_id]() -> nsresult {
       int numdev = -1;
+      MutexAutoLock lock(self->mEngineMutex);
       int error = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
+      if (self->mEngines[aCapEngine].mPtrViECapture) {
         error = self->mEngines[aCapEngine].mPtrViECapture->AllocateCaptureDevice(
           unique_id.get(), MediaEngineSource::kMaxUniqueIdLength, numdev);
       }
@@ -647,7 +600,7 @@ CamerasParent::RecvAllocateCaptureDevice(const int& aCapEngine,
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
   return true;
 }
 
@@ -656,13 +609,19 @@ CamerasParent::RecvReleaseCaptureDevice(const int& aCapEngine,
                                         const int& numdev)
 {
   LOG((__PRETTY_FUNCTION__));
-  LOG(("RecvReleaseCamera device nr %d", numdev));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("Fails to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, numdev]() -> nsresult {
+      LOG(("RecvReleaseCamera device nr %d", numdev));
+      MutexAutoLock lock(self->mEngineMutex);
       int error = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
+      if (self->mEngines[aCapEngine].mPtrViECapture) {
         error = self->mEngines[aCapEngine].mPtrViECapture->ReleaseCaptureDevice(numdev);
       }
       nsRefPtr<nsIRunnable> ipc_runnable =
@@ -682,7 +641,12 @@ CamerasParent::RecvReleaseCaptureDevice(const int& aCapEngine,
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+#ifndef XP_MACOSX
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
+#else
+  // Mac OS X hangs on shutdown if we don't do this on the main thread.
+  NS_DispatchToMainThread(webrtc_runnable);
+#endif
   return true;
 }
 
@@ -692,6 +656,11 @@ CamerasParent::RecvStartCapture(const int& aCapEngine,
                                 const CaptureCapability& ipcCaps)
 {
   LOG((__PRETTY_FUNCTION__));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("Failure to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
@@ -699,15 +668,23 @@ CamerasParent::RecvStartCapture(const int& aCapEngine,
       CallbackHelper** cbh;
       webrtc::ExternalRenderer* render;
       EngineHelper* helper = nullptr;
-      int error = -1;
-      if (self->EnsureInitialized(aCapEngine)) {
+      int error;
+      {
+        MutexAutoLock lockCallback(self->mCallbackMutex);
         cbh = self->mCallbacks.AppendElement(
           new CallbackHelper(static_cast<CaptureEngine>(aCapEngine), capnum, self));
         render = static_cast<webrtc::ExternalRenderer*>(*cbh);
+      }
+      {
+        MutexAutoLock lockEngine(self->mEngineMutex);
+        if (self->mEngines[aCapEngine].mPtrViECapture) {
+          helper = &self->mEngines[aCapEngine];
+          error =
+            helper->mPtrViERender->AddRenderer(capnum, webrtc::kVideoI420, render);
+        } else {
+          error = -1;
+        }
 
-        helper = &self->mEngines[aCapEngine];
-        error =
-          helper->mPtrViERender->AddRenderer(capnum, webrtc::kVideoI420, render);
         if (!error) {
           error = helper->mPtrViERender->StartRender(capnum);
         }
@@ -728,6 +705,7 @@ CamerasParent::RecvStartCapture(const int& aCapEngine,
           helper->mEngineIsRunning = true;
         }
       }
+
       nsRefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, error]() -> nsresult {
           if (self->IsShuttingDown()) {
@@ -744,7 +722,7 @@ CamerasParent::RecvStartCapture(const int& aCapEngine,
       self->mPBackgroundThread->Dispatch(ipc_runnable, NS_DISPATCH_NORMAL);
       return NS_OK;
     });
-  DispatchToVideoCaptureThread(webrtc_runnable);
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
   return true;
 }
 
@@ -753,32 +731,40 @@ CamerasParent::RecvStopCapture(const int& aCapEngine,
                                const int& capnum)
 {
   LOG((__PRETTY_FUNCTION__));
+  if (!EnsureInitialized(aCapEngine)) {
+    LOG(("Failure to initialize"));
+    unused << SendReplyFailure();
+    return false;
+  }
 
   nsRefPtr<CamerasParent> self(this);
   nsRefPtr<nsRunnable> webrtc_runnable =
     media::NewRunnableFrom([self, aCapEngine, capnum]() -> nsresult {
-      if (self->EnsureInitialized(aCapEngine)) {
-        self->mEngines[aCapEngine].mPtrViECapture->StopCapture(capnum);
-        self->mEngines[aCapEngine].mPtrViERender->StopRender(capnum);
-        self->mEngines[aCapEngine].mPtrViERender->RemoveRenderer(capnum);
-        self->mEngines[aCapEngine].mEngineIsRunning = false;
-
-        for (size_t i = 0; i < self->mCallbacks.Length(); i++) {
-          if (self->mCallbacks[i]->mCapEngine == aCapEngine
-              && self->mCallbacks[i]->mCapturerId == capnum) {
-            delete self->mCallbacks[i];
-            self->mCallbacks.RemoveElementAt(i);
-            break;
-          }
+      {
+        MutexAutoLock lock(self->mEngineMutex);
+        // We only need to check mPtrViECapture as all other engines are guaranteed
+        // to be nulled under the same lock.
+        if (self->mEngines[aCapEngine].mPtrViECapture) {
+          self->mEngines[aCapEngine].mPtrViECapture->StopCapture(capnum);
+          self->mEngines[aCapEngine].mPtrViERender->StopRender(capnum);
+          self->mEngines[aCapEngine].mPtrViERender->RemoveRenderer(capnum);
+          self->mEngines[aCapEngine].mEngineIsRunning = false;
+        }
+      }
+      MutexAutoLock lock(self->mCallbackMutex);
+      for (unsigned int i = 0; i < self->mCallbacks.Length(); i++) {
+        if (self->mCallbacks[i]->mCapEngine == aCapEngine
+            && self->mCallbacks[i]->mCapturerId == capnum) {
+          delete self->mCallbacks[i];
+          self->mCallbacks.RemoveElementAt(i);
+          break;
         }
       }
       return NS_OK;
     });
-  if (NS_SUCCEEDED(DispatchToVideoCaptureThread(webrtc_runnable))) {
-    return SendReplySuccess();
-  } else {
-    return SendReplyFailure();
-  }
+
+  mVideoCaptureThread->message_loop()->PostTask(FROM_HERE, new RunnableTask(webrtc_runnable));
+  return SendReplySuccess();
 }
 
 void
@@ -802,24 +788,49 @@ CamerasParent::RecvAllDone()
   return Send__delete__(this);
 }
 
+void CamerasParent::DoShutdown()
+{
+  LOG((__PRETTY_FUNCTION__));
+  CloseEngines();
+
+  {
+    MutexAutoLock lock(mEngineMutex);
+    for (int i = 0; i < CaptureEngine::MaxEngine; i++) {
+      if (mEngines[i].mEngine) {
+        mEngines[i].mEngine->SetTraceCallback(nullptr);
+        webrtc::VideoEngine::Delete(mEngines[i].mEngine);
+        mEngines[i].mEngine = nullptr;
+      }
+    }
+  }
+
+  mPBackgroundThread = nullptr;
+
+  if (mVideoCaptureThread) {
+    if (mVideoCaptureThread->IsRunning()) {
+      mVideoCaptureThread->Stop();
+    }
+    delete mVideoCaptureThread;
+    mVideoCaptureThread = nullptr;
+  }
+}
+
 void
 CamerasParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   // No more IPC from here
   LOG((__PRETTY_FUNCTION__));
   StopIPC();
-  // Shut down WebRTC (if we're not in full shutdown, else this
-  // will already have happened)
-  StopVideoCapture();
+  CloseEngines();
 }
 
 CamerasParent::CamerasParent()
-  : mShmemPool(CaptureEngine::MaxEngine),
-    mThreadMonitor("CamerasParent::mThreadMonitor"),
+  : mCallbackMutex("CamerasParent.mCallbackMutex"),
+    mEngineMutex("CamerasParent.mEngineMutex"),
+    mShmemPool(CaptureEngine::MaxEngine),
     mVideoCaptureThread(nullptr),
     mChildIsAlive(true),
-    mDestroyed(false),
-    mWebRTCAlive(true)
+    mDestroyed(false)
 {
   if (!gCamerasParentLog) {
     gCamerasParentLog = PR_NewLogModule("CamerasParent");
@@ -830,37 +841,16 @@ CamerasParent::CamerasParent()
   MOZ_ASSERT(mPBackgroundThread != nullptr, "GetCurrentThread failed");
 
   LOG(("Spinning up WebRTC Cameras Thread"));
-
-  nsRefPtr<CamerasParent> self(this);
-  nsRefPtr<nsRunnable> threadStart =
-    media::NewRunnableFrom([self]() -> nsresult {
-      // Register thread shutdown observer
-      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-      if (NS_WARN_IF(!obs)) {
-        return NS_ERROR_FAILURE;
-      }
-      nsresult rv =
-        obs->AddObserver(self, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID, false);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-      // Start the thread
-      MonitorAutoLock lock(self->mThreadMonitor);
-      self->mVideoCaptureThread = new base::Thread("VideoCapture");
-      base::Thread::Options options;
+  mVideoCaptureThread = new base::Thread("VideoCapture");
+  base::Thread::Options options;
 #if defined(_WIN32)
-      options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD;
+  options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD;
 #else
-
-      options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
+  options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
 #endif
-      if (!self->mVideoCaptureThread->StartWithOptions(options)) {
-        MOZ_CRASH();
-      }
-      self->mThreadMonitor.NotifyAll();
-      return NS_OK;
-    });
-  NS_DispatchToMainThread(threadStart);
+  if (!mVideoCaptureThread->StartWithOptions(options)) {
+    MOZ_CRASH();
+  }
 
   MOZ_COUNT_CTOR(CamerasParent);
 }
@@ -870,15 +860,7 @@ CamerasParent::~CamerasParent()
   LOG(("~CamerasParent: %p", this));
 
   MOZ_COUNT_DTOR(CamerasParent);
-#ifdef DEBUG
-  // Verify we have shut down the webrtc engines, this is
-  // supposed to happen in ActorDestroy.
-  // That runnable takes a ref to us, so it must have finished
-  // by the time we get here.
-  for (int i = 0; i < CaptureEngine::MaxEngine; i++) {
-    MOZ_ASSERT(!mEngines[i].mEngine);
-  }
-#endif
+  DoShutdown();
 }
 
 already_AddRefed<CamerasParent>
