@@ -98,7 +98,14 @@ MobileMessageDatabaseService::MarkMessageRead(int32_t aMessageId,
                                               bool aSendReadReport,
                                               nsIMobileMessageCallback* aRequest)
 {
-  // TODO: This would need to be implemented as part of Bug 748391
+  if (!AndroidBridge::Bridge()) {
+    return NS_OK;
+  }
+
+  AndroidBridge::Bridge()->MarkMessageRead(aMessageId,
+                                           aValue,
+                                           aSendReadReport,
+                                           aRequest);
   return NS_OK;
 }
 
