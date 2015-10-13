@@ -422,14 +422,16 @@ nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
 }
 
 bool
-nsStandardURL::ValidIPv6orHostname(const char *host)
+nsStandardURL::ValidIPv6orHostname(const char *host, uint32_t length)
 {
-    if (!host || !*host) {
-        // Should not be NULL or empty string
+    if (!host) {
         return false;
     }
 
-    int32_t length = strlen(host);
+    if (length != strlen(host)) {
+        // Embedded null
+        return false;
+    }
 
     bool openBracket = host[0] == '[';
     bool closeBracket = host[length - 1] == ']';
@@ -443,8 +445,9 @@ nsStandardURL::ValidIPv6orHostname(const char *host)
         return false;
     }
 
-    if (PL_strchr(host, ':')) {
-        // Hostnames should not contain a colon
+    const char *end = host + length;
+    if (end != net_FindCharInSet(host, end, "\t\n\v\f\r #/:?@[\\]")) {
+        // % is allowed because we don't do hostname percent decoding yet.
         return false;
     }
 
@@ -582,6 +585,11 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
             approxLen += encHost.Length();
         else
             approxLen += mHost.mLen;
+
+        if ((useEncHost && !ValidIPv6orHostname(encHost.BeginReading(), encHost.Length())) ||
+            (!useEncHost && !ValidIPv6orHostname(tempHost.BeginReading(), tempHost.Length()))) {
+            return NS_ERROR_MALFORMED_URI;
+        }
     }
 
     //
@@ -1582,14 +1590,10 @@ nsStandardURL::SetHost(const nsACString &input)
     if (strchr(host, ' '))
         return NS_ERROR_MALFORMED_URI;
 
-    if (!ValidIPv6orHostname(host)) {
-        return NS_ERROR_MALFORMED_URI;
-    }
-
     InvalidateCache();
     mHostEncoding = eEncoding_ASCII;
 
-    int32_t len;
+    uint32_t len;
     nsAutoCString hostBuf;
     if (NormalizeIDN(flat, hostBuf)) {
         host = hostBuf.get();
@@ -1597,6 +1601,10 @@ nsStandardURL::SetHost(const nsACString &input)
     }
     else
         len = flat.Length();
+
+    if (!ValidIPv6orHostname(host, len)) {
+        return NS_ERROR_MALFORMED_URI;
+    }
 
     if (mHost.mLen < 0) {
         int port_length = 0;
