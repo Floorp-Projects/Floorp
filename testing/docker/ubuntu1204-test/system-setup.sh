@@ -111,6 +111,9 @@ apt_packages+=('xvfb')
 apt_packages+=('yasm')
 apt_packages+=('zip')
 
+# get xvinfo for test-linux.sh to monitor Xvfb startup
+apt_packages+=('x11-utils')
+
 # Bug 1176031: need `xset` to disable screensavers
 apt_packages+=('x11-xserver-utils')
 
@@ -189,7 +192,7 @@ tar -zxf xcb-repo-*.tgz
 cp /etc/apt/sources.list sources.list.orig
 echo "deb file://$PWD/xcb precise all" >> /etc/apt/sources.list
 apt-get update
-apt-get -q -y --force-yes install libxcb1 libxcb-render0 libxcb-shm0 libxcb-glx0 libxcb-glx0:i386
+apt-get -q -y --force-yes install libxcb1 libxcb-render0 libxcb-shm0 libxcb-glx0 libxcb-shape0 libxcb-glx0:i386
 libxcb1_version=$(dpkg-query -s libxcb1 | grep ^Version | awk '{ print $2 }')
 [ "$libxcb1_version" = "1.8.1-2ubuntu2.1mozilla1" ] || exit 1
 cp sources.list.orig /etc/apt/sources.list
