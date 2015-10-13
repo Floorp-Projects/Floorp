@@ -15,7 +15,6 @@
 
   // 1. Desktop components
   // 1.1 Panel
-  var AvailabilityDropdown = loop.panel.AvailabilityDropdown;
   var PanelView = loop.panel.PanelView;
   var SignInRequestView = loop.panel.SignInRequestView;
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
@@ -536,8 +535,7 @@
         "google-active", "history", "history-hover", "history-active", "leave",
         "screen-white", "screenmute-white", "settings", "settings-hover", "settings-active",
         "share-darkgrey", "tag", "tag-hover", "tag-active", "trash", "unblock",
-        "unblock-hover", "unblock-active", "video", "video-hover", "video-active",
-        "status-available", "status-unavailable"
+        "unblock-hover", "unblock-active", "video", "video-hover", "video-active"
       ]
     },
 
@@ -920,31 +918,6 @@
                            roomStore: roomStore, 
                            selectedTab: "contacts", 
                            userProfile: {email: "test@example.com"}})
-              )
-            )
-          ), 
-
-          React.createElement(Section, {name: "Availability Dropdown"}, 
-            React.createElement("p", {className: "note"}, 
-              React.createElement("strong", null, "Note:"), " 332px wide."
-            ), 
-            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
-                           dashed: true, 
-                           height: 200, 
-                           summary: "AvailabilityDropdown", 
-                           width: 332}, 
-              React.createElement("div", {className: "panel"}, 
-                React.createElement(AvailabilityDropdown, null)
-              )
-            ), 
-
-            React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
-                           dashed: true, 
-                           height: 200, 
-                           summary: "AvailabilityDropdown Expanded", 
-                           width: 332}, 
-              React.createElement("div", {className: "panel force-menu-show", style: {"height": "100%", "paddingTop": "50px"}}, 
-                React.createElement(AvailabilityDropdown, null)
               )
             )
           ), 

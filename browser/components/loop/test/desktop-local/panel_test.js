@@ -131,39 +131,6 @@ describe("loop.panel", function() {
     });
   });
 
-  describe("loop.panel.AvailabilityDropdown", function() {
-    var view;
-
-    beforeEach(function() {
-      view = TestUtils.renderIntoDocument(
-        React.createElement(loop.panel.AvailabilityDropdown));
-    });
-
-    describe("doNotDisturb preference change", function() {
-      beforeEach(function() {
-        navigator.mozLoop.doNotDisturb = true;
-      });
-
-      it("should toggle mozLoop.doNotDisturb to false", function() {
-        var availableMenuOption = view.getDOMNode()
-                                      .querySelector(".status-available");
-
-        TestUtils.Simulate.click(availableMenuOption);
-
-        expect(navigator.mozLoop.doNotDisturb).eql(false);
-      });
-
-      it("should toggle the dropdown menu", function() {
-        var availableMenuOption = view.getDOMNode()
-                                      .querySelector(".dnd-status span");
-
-        TestUtils.Simulate.click(availableMenuOption);
-
-        expect(view.state.showMenu).eql(true);
-      });
-    });
-  });
-
   describe("loop.panel.PanelView", function() {
     var fakeClient, dispatcher, roomStore, callUrlData;
 
@@ -388,6 +355,46 @@ describe("loop.panel", function() {
                                    .querySelector(".entry-settings-signout"));
 
         sinon.assert.calledOnce(navigator.mozLoop.logOutFromFxA);
+      });
+
+      describe("Toggle Notifications", function() {
+        var view;
+
+        beforeEach(function() {
+          view = mountTestComponent();
+        });
+
+        it("should toggle mozLoop.doNotDisturb to false", function() {
+          navigator.mozLoop.doNotDisturb = true;
+          var toggleNotificationsMenuOption = view.getDOMNode()
+                                                .querySelector(".entry-settings-notifications");
+
+          TestUtils.Simulate.click(toggleNotificationsMenuOption);
+
+          expect(navigator.mozLoop.doNotDisturb).eql(false);
+        });
+
+        it("should toggle mozLoop.doNotDisturb to true", function() {
+          navigator.mozLoop.doNotDisturb = false;
+          var toggleNotificationsMenuOption = view.getDOMNode()
+                                                .querySelector(".entry-settings-notifications");
+
+          TestUtils.Simulate.click(toggleNotificationsMenuOption);
+
+          expect(navigator.mozLoop.doNotDisturb).eql(true);
+        });
+
+        it("should close dropdown menu", function() {
+          navigator.mozLoop.doNotDisturb = true;
+          var toggleNotificationsMenuOption = view.getDOMNode()
+                                                .querySelector(".entry-settings-notifications");
+
+          view.setState({ showMenu: true });
+
+          TestUtils.Simulate.click(toggleNotificationsMenuOption);
+
+          expect(view.state.showMenu).eql(false);
+        });
       });
     });
 
