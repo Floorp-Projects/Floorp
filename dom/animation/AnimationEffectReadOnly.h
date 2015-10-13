@@ -4,24 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_AnimationEffect_h
-#define mozilla_dom_AnimationEffect_h
+#ifndef mozilla_dom_AnimationEffectReadOnly_h
+#define mozilla_dom_AnimationEffectReadOnly_h
 
-#include "nsISupports.h"
-#include "nsWrapperCache.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsCOMPtr.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
 
-class AnimationEffectReadOnly
-  : public nsISupports
-  , public nsWrapperCache
-{
-protected:
-  virtual ~AnimationEffectReadOnly() { }
+struct ComputedTimingProperties;
 
+class AnimationEffectReadOnly : public nsISupports,
+                                public nsWrapperCache
+{
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationEffectReadOnly)
@@ -33,6 +30,13 @@ public:
 
   nsISupports* GetParentObject() const { return mParent; }
 
+  virtual void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const
+  {
+  }
+
+protected:
+  virtual ~AnimationEffectReadOnly() = default;
+
 protected:
   nsCOMPtr<nsISupports> mParent;
 };
@@ -40,4 +44,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_AnimationEffect_h
+#endif // mozilla_dom_AnimationEffectReadOnly_h
