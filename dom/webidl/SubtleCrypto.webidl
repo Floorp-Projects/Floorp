@@ -66,6 +66,10 @@ dictionary RsaOaepParams : Algorithm {
   BufferSource label;
 };
 
+dictionary RsaPssParams : Algorithm {
+  [EnforceRange] required unsigned long saltLength;
+};
+
 dictionary DhKeyGenParams : Algorithm {
   required BigInteger prime;
   required BigInteger generator;
