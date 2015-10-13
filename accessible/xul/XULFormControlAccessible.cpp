@@ -224,22 +224,28 @@ XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen) const
 {
   bool isOpen = false;
 
-  nsCOMPtr<nsIDOMXULButtonElement> parentButtonElement =
-    do_QueryInterface(mContent->GetFlattenedTreeParent());
+  nsIContent* parent = mContent->GetFlattenedTreeParent();
 
-  if (parentButtonElement) {
-    parentButtonElement->GetOpen(&isOpen);
-    if (aToggleOpen)
-      parentButtonElement->SetOpen(!isOpen);
-  }
-  else {
+  bool foundRightElement = false;
+  while (parent) {
+    nsCOMPtr<nsIDOMXULButtonElement> parentButtonElement =
+      do_QueryInterface(parent);
+    if (parentButtonElement) {
+      parentButtonElement->GetOpen(&isOpen);
+      if (aToggleOpen)
+        parentButtonElement->SetOpen(!isOpen);
+      return isOpen;
+    }
+
     nsCOMPtr<nsIDOMXULMenuListElement> parentMenuListElement =
-      do_QueryInterface(parentButtonElement);
+      do_QueryInterface(parent);
     if (parentMenuListElement) {
       parentMenuListElement->GetOpen(&isOpen);
       if (aToggleOpen)
         parentMenuListElement->SetOpen(!isOpen);
+      return isOpen;
     }
+    parent = parent->GetFlattenedTreeParent();
   }
 
   return isOpen;
