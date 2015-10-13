@@ -157,7 +157,7 @@ public class HistoryPanel extends HomeFragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final String url = ((HistoryUrlProvider) mAdapter).getURL(position);
 
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "history");
 
                 // This item is a TwoLinePageRow, so we allow switch-to-tab.
                 mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
