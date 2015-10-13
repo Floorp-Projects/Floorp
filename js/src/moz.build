@@ -512,6 +512,7 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
             'jit/mips64/Assembler-mips64.cpp',
             'jit/mips64/Bailouts-mips64.cpp',
             'jit/mips64/BaselineCompiler-mips64.cpp',
+            'jit/mips64/BaselineIC-mips64.cpp',
         ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
