@@ -4226,7 +4226,6 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption)
             return false;
         next = binding->pn_next;
 
-        ParseNode* initializer;
         if (binding->isKind(PNK_ARRAY) || binding->isKind(PNK_OBJECT)) {
             // Destructuring BindingPattern in a `for` loop head:
             //     for (let [x, y] of pts) ...;
@@ -4277,100 +4276,102 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption)
              * here and initialize the name.
              */
             if (binding->pn_left->isKind(PNK_NAME)) {
-                initializer = binding->pn_right;
-                binding = binding->pn_left;
-                goto do_name;
-            }
-
-            initializer = binding->pn_left;
-            if (!emitDestructuringDecls(pn->getOp(), initializer))
-                return false;
-
-            if (!emitTree(binding->pn_right))
-                return false;
-
-            if (!emitDestructuringOpsHelper(initializer, emitOption))
-                return false;
-
-            if (emitOption == InitializeVars) {
-                if (!emit1(JSOP_POP))
+                if (!emitSingleVariable(pn, binding->pn_left, binding->pn_right, emitOption))
                     return false;
+            } else {
+                ParseNode* initializer = binding->pn_left;
+                if (!emitDestructuringDecls(pn->getOp(), initializer))
+                    return false;
+
+                if (!emitTree(binding->pn_right))
+                    return false;
+
+                if (!emitDestructuringOpsHelper(initializer, emitOption))
+                    return false;
+
+                if (emitOption == InitializeVars) {
+                    if (!emit1(JSOP_POP))
+                        return false;
+                }
             }
         } else {
-            /*
-             * Load initializer early to share code above that jumps to
-             * do_name. NB: if this var redeclares an existing binding, then
-             * `binding` is linked on its definition's use-chain and pn_expr
-             * has been overlayed with pn_lexdef.
-             */
-            initializer = binding->maybeExpr();
-
-         do_name:
-            MOZ_ASSERT(binding->isKind(PNK_NAME));
-            if (!bindNameToSlot(binding))
+            if (!emitSingleVariable(pn, binding, binding->maybeExpr(), emitOption))
                 return false;
-
-            JSOp op;
-            op = binding->getOp();
-            MOZ_ASSERT(op != JSOP_CALLEE);
-            MOZ_ASSERT(!binding->pn_scopecoord.isFree() || !pn->isOp(JSOP_NOP));
-
-            jsatomid atomIndex;
-            if (!maybeEmitVarDecl(pn->getOp(), binding, &atomIndex))
-                return false;
-
-            if (initializer) {
-                MOZ_ASSERT(emitOption != DefineVars);
-                if (op == JSOP_SETNAME ||
-                    op == JSOP_STRICTSETNAME ||
-                    op == JSOP_SETGNAME ||
-                    op == JSOP_STRICTSETGNAME ||
-                    op == JSOP_SETINTRINSIC)
-                {
-                    MOZ_ASSERT(emitOption != PushInitialValues);
-                    JSOp bindOp;
-                    if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
-                        bindOp = JSOP_BINDNAME;
-                    else if (op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
-                        bindOp = JSOP_BINDGNAME;
-                    else
-                        bindOp = JSOP_BINDINTRINSIC;
-                    if (!emitIndex32(bindOp, atomIndex))
-                        return false;
-                }
-
-                bool oldEmittingForInit = emittingForInit;
-                emittingForInit = false;
-                if (!emitTree(initializer))
-                    return false;
-                emittingForInit = oldEmittingForInit;
-            } else if (op == JSOP_INITLEXICAL ||
-                       op == JSOP_INITGLEXICAL ||
-                       emitOption == PushInitialValues)
-            {
-                // 'let' bindings cannot be used before they are
-                // initialized. JSOP_INITLEXICAL distinguishes the binding site.
-                MOZ_ASSERT(emitOption != DefineVars);
-                if (!emit1(JSOP_UNDEFINED))
-                    return false;
-            }
-
-            // If we are not initializing, nothing to pop. If we are initializing
-            // lets, we must emit the pops.
-            if (emitOption == InitializeVars) {
-                MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
-                if (!binding->pn_scopecoord.isFree()) {
-                    if (!emitVarOp(binding, op))
-                        return false;
-                } else {
-                    if (!emitIndexOp(op, atomIndex))
-                        return false;
-                }
-                if (!emit1(JSOP_POP))
-                    return false;
-            }
         }
     }
+    return true;
+}
+
+bool
+BytecodeEmitter::emitSingleVariable(ParseNode* pn, ParseNode* binding, ParseNode* initializer,
+                                    VarEmitOption emitOption)
+{
+    // NB: if this var redeclares an existing binding, then `binding` is linked
+    // on its definition's use-chain and pn_expr has been overlayed with
+    // pn_lexdef.
+    MOZ_ASSERT(binding->isKind(PNK_NAME));
+    if (!bindNameToSlot(binding))
+        return false;
+
+    JSOp op = binding->getOp();
+    MOZ_ASSERT(op != JSOP_CALLEE);
+    MOZ_ASSERT(!binding->pn_scopecoord.isFree() || !pn->isOp(JSOP_NOP));
+
+    jsatomid atomIndex;
+    if (!maybeEmitVarDecl(pn->getOp(), binding, &atomIndex))
+        return false;
+
+    if (initializer) {
+        MOZ_ASSERT(emitOption != DefineVars);
+        if (op == JSOP_SETNAME ||
+            op == JSOP_STRICTSETNAME ||
+            op == JSOP_SETGNAME ||
+            op == JSOP_STRICTSETGNAME ||
+            op == JSOP_SETINTRINSIC)
+        {
+            MOZ_ASSERT(emitOption != PushInitialValues);
+            JSOp bindOp;
+            if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
+                bindOp = JSOP_BINDNAME;
+            else if (op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
+                bindOp = JSOP_BINDGNAME;
+            else
+                bindOp = JSOP_BINDINTRINSIC;
+            if (!emitIndex32(bindOp, atomIndex))
+                return false;
+        }
+
+        bool oldEmittingForInit = emittingForInit;
+        emittingForInit = false;
+        if (!emitTree(initializer))
+            return false;
+        emittingForInit = oldEmittingForInit;
+    } else if (op == JSOP_INITLEXICAL ||
+               op == JSOP_INITGLEXICAL ||
+               emitOption == PushInitialValues)
+    {
+        // 'let' bindings cannot be used before they are
+        // initialized. JSOP_INITLEXICAL distinguishes the binding site.
+        MOZ_ASSERT(emitOption != DefineVars);
+        if (!emit1(JSOP_UNDEFINED))
+            return false;
+    }
+
+    // If we are not initializing, nothing to pop. If we are initializing
+    // lets, we must emit the pops.
+    if (emitOption == InitializeVars) {
+        MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
+        if (!binding->pn_scopecoord.isFree()) {
+            if (!emitVarOp(binding, op))
+                return false;
+        } else {
+            if (!emitIndexOp(op, atomIndex))
+                return false;
+        }
+        if (!emit1(JSOP_POP))
+            return false;
+    }
+
     return true;
 }
 
