@@ -393,7 +393,7 @@ nsICODecoder::SniffResource(const char* aData)
     // is the AND mask, which isn't present in standalone BMPs.
     nsBMPDecoder* bmpDecoder = new nsBMPDecoder(mImage);
     mContainedDecoder = bmpDecoder;
-    bmpDecoder->SetUseAlphaData(true);
+    bmpDecoder->SetIsWithinICO();
     mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
     mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
     mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
@@ -525,9 +525,9 @@ nsICODecoder::PrepareForMask()
   MOZ_ASSERT(bmpLengthWithHeader < mDirEntry.mBytesInRes);
   uint32_t maskLength = mDirEntry.mBytesInRes - bmpLengthWithHeader;
 
-  // If we have a 32-bpp BMP with alpha data, we ignore the AND mask. We can
+  // If the BMP provides its own transparency, we ignore the AND mask. We can
   // also obviously ignore it if the image has zero width or zero height.
-  if ((bmpDecoder->GetBitsPerPixel() == 32 && bmpDecoder->HasAlphaData()) ||
+  if (bmpDecoder->HasTransparency() ||
       GetRealWidth() == 0 || GetRealHeight() == 0) {
     return Transition::ToUnbuffered(ICOState::FINISHED_RESOURCE,
                                     ICOState::SKIP_MASK,
@@ -658,7 +658,7 @@ nsICODecoder::FinishMask()
 
     RefPtr<nsBMPDecoder> bmpDecoder =
       static_cast<nsBMPDecoder*>(mContainedDecoder.get());
-    bmpDecoder->SetHasAlphaData();
+    bmpDecoder->SetHasTransparency();
   }
 
   return Transition::To(ICOState::FINISHED_RESOURCE, 0);
