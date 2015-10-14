@@ -265,6 +265,24 @@ var NetworkHelper = {
   },
 
   /**
+   * Determines whether the request has been made for the top level document.
+   *
+   * @param nsIHttpChannel aRequest
+   * @returns Boolean True if the request represents the top level document.
+   */
+  isTopLevelLoad: function(aRequest)
+  {
+    if (aRequest instanceof Ci.nsIChannel) {
+      let loadInfo = aRequest.loadInfo;
+      if (loadInfo && loadInfo.parentOuterWindowID == loadInfo.outerWindowID) {
+        return (aRequest.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI);
+      }
+    }
+
+    return false;
+  },
+
+  /**
    * Loads the content of aUrl from the cache.
    *
    * @param string aUrl
