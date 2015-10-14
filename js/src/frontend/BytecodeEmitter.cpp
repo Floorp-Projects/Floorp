@@ -4228,50 +4228,46 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
         next = binding->pn_next;
 
         ParseNode* initializer;
-        if (!binding->isKind(PNK_NAME)) {
-            if (binding->isKind(PNK_ARRAY) || binding->isKind(PNK_OBJECT)) {
-                // Destructuring BindingPattern in a `for` loop head:
-                //     for (let [x, y] of pts) ...;
-                // or in a deprecated comprehension:
-                //     a = [x*y for (let [x, y] of pts)];
-                //
-                // (ES6 calls this a ForDeclaration. When emitting code for a
-                // plain LexicalDeclaration, like `let [x, y] = pt;`,
-                // binding will be a PNK_ASSIGN node, not a PNK_ARRAY node.
-                // `let [x, y];` without an initializer is a SyntaxError.)
+        if (binding->isKind(PNK_ARRAY) || binding->isKind(PNK_OBJECT)) {
+            // Destructuring BindingPattern in a `for` loop head:
+            //     for (let [x, y] of pts) ...;
+            // or in a deprecated comprehension:
+            //     a = [x*y for (let [x, y] of pts)];
+            //
+            // (ES6 calls this a ForDeclaration. When emitting code for a plain
+            // LexicalDeclaration, like `let [x, y] = pt;`, binding will be a
+            // PNK_ASSIGN node, not a PNK_ARRAY node.  `let [x, y];` without an
+            // initializer is a SyntaxError.)
 
-                MOZ_ASSERT(pn->pn_count == 1);
-                if (emitOption == DefineVars) {
-                    // Emit JSOP_DEFVAR instructions if needed, but not
-                    // destructuring ops. Each iteration of the for-loop is
-                    // responsible for initializing these variables, so it's
-                    // the caller's responsibility.
-                    if (!emitDestructuringDecls(pn->getOp(), binding))
-                        return false;
-                } else {
-                    // We're emitting destructuring let binding initialization
-                    // for a legacy comprehension expression. See
-                    // emitForInOrOfVariables.
+            MOZ_ASSERT(pn->pn_count == 1);
+            if (emitOption == DefineVars) {
+                // Emit JSOP_DEFVAR instructions if needed, but not
+                // destructuring ops. Each iteration of the for-loop is
+                // responsible for initializing these variables, so it's
+                // the caller's responsibility.
+                if (!emitDestructuringDecls(pn->getOp(), binding))
+                    return false;
+            } else {
+                // We're emitting destructuring let binding initialization
+                // for a legacy comprehension expression. See
+                // emitForInOrOfVariables.
 
-                    // Lexical bindings cannot be used before they are
-                    // initialized. Similar to the JSOP_INITLEXICAL case below.
-                    MOZ_ASSERT(emitOption != DefineVars);
-                    MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
-                    if (!emit1(JSOP_UNDEFINED))
-                        return false;
-                    if (!emitInitializeDestructuringDecls(pn->getOp(), binding))
-                        return false;
-                }
-                continue;
+                // Lexical bindings cannot be used before they are
+                // initialized. Similar to the JSOP_INITLEXICAL case below.
+                MOZ_ASSERT(emitOption != DefineVars);
+                MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
+                if (!emit1(JSOP_UNDEFINED))
+                    return false;
+                if (!emitInitializeDestructuringDecls(pn->getOp(), binding))
+                    return false;
             }
-
+        } else if (binding->isKind(PNK_ASSIGN)) {
             /*
              * A destructuring initialiser assignment preceded by var will
              * never occur to the left of 'in' in a for-in loop.  As with 'for
              * (var x = i in o)...', this will cause the entire 'var [a, b] =
              * i' to be hoisted out of the loop.
              */
-            MOZ_ASSERT(binding->isKind(PNK_ASSIGN));
             MOZ_ASSERT(binding->isOp(JSOP_NOP));
             MOZ_ASSERT(emitOption != DefineVars);
 
@@ -4300,7 +4296,6 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
             if (emitOption != InitializeVars)
                 continue;
         } else {
-
             /*
              * Load initializer early to share code above that jumps to
              * do_name. NB: if this var redeclares an existing binding, then
@@ -4310,6 +4305,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
             initializer = binding->maybeExpr();
 
          do_name:
+            MOZ_ASSERT(binding->isKind(PNK_NAME));
             if (!bindNameToSlot(binding))
                 return false;
 
