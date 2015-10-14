@@ -37,12 +37,6 @@ SplitAt(const char* aDelims,
 nsCString
 ToBase64(const nsTArray<uint8_t>& aBytes);
 
-enum GMPCrashReason {
-  kPrefChange, // media.gmp.plugin.crash has been toggled.
-  kGmpApiTimeout, // Some API did not respond.
-  kInvalid,
-};
-
 } // namespace mozilla
 
 #endif
