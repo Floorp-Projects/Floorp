@@ -16,4 +16,3 @@ toolkit.jar:
     content/extensions/ext-extension.js
     content/extensions/ext-storage.js
     content/extensions/ext-test.js
-    content/extensions/ext-bookmarks.js
