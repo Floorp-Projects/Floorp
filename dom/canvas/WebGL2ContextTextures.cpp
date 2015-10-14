@@ -39,7 +39,7 @@ void
 WebGL2Context::TexImage3D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth,
                           GLint border, GLenum unpackFormat, GLenum unpackType,
-                          const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                          const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                           ErrorResult& out_rv)
 {
     const char funcName[] = "texImage3D";
@@ -59,7 +59,7 @@ WebGL2Context::TexSubImage3D(GLenum rawTexImageTarget, GLint level,
                              GLint xOffset, GLint yOffset, GLint zOffset,
                              GLsizei width, GLsizei height, GLsizei depth,
                              GLenum unpackFormat, GLenum unpackType,
-                             const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                             const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                              ErrorResult& out_rv)
 {
     const char funcName[] = "texSubImage3D";
@@ -95,7 +95,7 @@ WebGL2Context::CopyTexSubImage3D(GLenum target, GLint level,
 void
 WebGL2Context::CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
                                     GLsizei width, GLsizei height, GLsizei depth,
-                                    GLint border, GLsizei imageSize, const dom::ArrayBufferView& view)
+                                    GLint border, GLsizei imageSize, const dom::ArrayBufferViewOrSharedArrayBufferView& view)
 {
     GenerateWarning("compressedTexImage3D: Not implemented.");
 }
@@ -103,7 +103,7 @@ WebGL2Context::CompressedTexImage3D(GLenum target, GLint level, GLenum internalF
 void
 WebGL2Context::CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
                                        GLsizei width, GLsizei height, GLsizei depth,
-                                       GLenum unpackFormat, GLsizei imageSize, const dom::ArrayBufferView& view)
+                                       GLenum unpackFormat, GLsizei imageSize, const dom::ArrayBufferViewOrSharedArrayBufferView& view)
 {
     GenerateWarning("compressedTexSubImage3D: Not implemented.");
 }
