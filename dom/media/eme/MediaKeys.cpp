@@ -199,6 +199,13 @@ MediaKeys::StorePromise(DetailedPromise* aPromise)
   // promises are rejected in Shutdown().
   AddRef();
 
+#ifdef DEBUG
+  // We should not have already stored this promise!
+  for (auto iter = mPromises.ConstIter(); !iter.Done(); iter.Next()) {
+    MOZ_ASSERT(iter.Data() != aPromise);
+  }
+#endif
+
   mPromises.Put(id, aPromise);
   return id;
 }
@@ -293,6 +300,7 @@ MediaKeys::ResolvePromise(PromiseId aId)
   } else {
     promise->MaybeResolve(JS::UndefinedHandleValue);
   }
+  MOZ_ASSERT(!mPromises.Contains(aId));
 }
 
 already_AddRefed<DetailedPromise>
