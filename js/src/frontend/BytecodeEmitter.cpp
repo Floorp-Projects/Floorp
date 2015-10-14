@@ -4254,11 +4254,13 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
 
                 // Lexical bindings cannot be used before they are
                 // initialized. Similar to the JSOP_INITLEXICAL case below.
-                MOZ_ASSERT(emitOption != DefineVars);
-                MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
+                MOZ_ASSERT(emitOption == InitializeVars);
+                MOZ_ASSERT(pn->pn_xflags & PNX_POPVAR);
                 if (!emit1(JSOP_UNDEFINED))
                     return false;
                 if (!emitInitializeDestructuringDecls(pn->getOp(), binding))
+                    return false;
+                if (!emit1(JSOP_POP))
                     return false;
             }
         } else if (binding->isKind(PNK_ASSIGN)) {
@@ -4291,6 +4293,13 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
 
             if (!emitDestructuringOps(initializer, isLetExpr))
                 return false;
+
+            MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
+            MOZ_ASSERT_IF(pn->pn_xflags & PNX_POPVAR, emitOption == InitializeVars);
+            if (emitOption == InitializeVars) {
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
         } else {
             /*
              * Load initializer early to share code above that jumps to
@@ -4350,6 +4359,8 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
 
             // If we are not initializing, nothing to pop. If we are initializing
             // lets, we must emit the pops.
+            MOZ_ASSERT_IF(emitOption == InitializeVars, (pn->pn_xflags & PNX_POPVAR) != 0);
+            MOZ_ASSERT_IF((pn->pn_xflags & PNX_POPVAR) != 0, emitOption == InitializeVars);
             if (emitOption == InitializeVars) {
                 MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
                 if (!binding->pn_scopecoord.isFree()) {
@@ -4359,21 +4370,11 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
                     if (!emitIndexOp(op, atomIndex))
                         return false;
                 }
+                if (!emit1(JSOP_POP))
+                    return false;
             }
         }
-
-        MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
-        if (next && emitOption == InitializeVars) {
-            if (!emit1(JSOP_POP))
-                return false;
-        }
     }
-
-    if (pn->pn_xflags & PNX_POPVAR) {
-        if (!emit1(JSOP_POP))
-            return false;
-    }
-
     return true;
 }
 
