@@ -268,7 +268,7 @@ struct hb_font_t {
   {
     *x = get_glyph_h_advance (glyph) / 2;
 
-    /* TODO use font_metrics.ascent */
+    /* TODO use font_metics.ascent */
     *y = y_scale;
   }
 
