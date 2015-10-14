@@ -1195,8 +1195,9 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   border-color: rgba(0,0,0,0.2);
 }
 
-#back-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+#back-button > .toolbarbutton-icon,
+#forward-button > .toolbarbutton-icon {
+  max-width: none;
 }
 
 /* Back button styles */
@@ -1207,6 +1208,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 4px 5px 4px 3px;
   -moz-margin-end: 0;
   border-radius: 10000px;
+}
+
+#back-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 #back-button:not(:-moz-lwtheme) {
