@@ -470,6 +470,8 @@ DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks)
 void
 DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
 {
+  MOZ_RELEASE_ASSERT(mPlaybackStream);
+
   RefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
   MOZ_ASSERT(dest);
   if (!dest) {
@@ -549,7 +551,9 @@ DOMMediaStream::InitSourceStream(nsIDOMWindow* aWindow,
                                  MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
-  InitStreamCommon(aGraph->CreateSourceStream(nullptr), aGraph);
+  InitInputStreamCommon(aGraph->CreateSourceStream(nullptr), aGraph);
+  InitOwnedStreamCommon(aGraph);
+  InitPlaybackStreamCommon(aGraph);
 }
 
 void
@@ -557,7 +561,9 @@ DOMMediaStream::InitTrackUnionStream(nsIDOMWindow* aWindow,
                                      MediaStreamGraph* aGraph)
 {
   mWindow = aWindow;
-  InitStreamCommon(aGraph->CreateTrackUnionStream(nullptr), aGraph);
+  InitInputStreamCommon(aGraph->CreateTrackUnionStream(nullptr), aGraph);
+  InitOwnedStreamCommon(aGraph);
+  InitPlaybackStreamCommon(aGraph);
 }
 
 void
@@ -568,34 +574,53 @@ DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
 
   const TrackID AUDIO_TRACK = 1;
 
-  InitStreamCommon(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK), aGraph);
+  InitInputStreamCommon(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK), aGraph);
+  InitOwnedStreamCommon(aGraph);
+  InitPlaybackStreamCommon(aGraph);
   CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO);
 }
 
 void
-DOMMediaStream::InitStreamCommon(MediaStream* aStream,
-                                 MediaStreamGraph* aGraph)
+DOMMediaStream::InitInputStreamCommon(MediaStream* aStream,
+                                      MediaStreamGraph* aGraph)
 {
+  MOZ_ASSERT(!mOwnedStream, "Input stream must be initialized before owned stream");
+
   mInputStream = aStream;
+}
+
+void
+DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph)
+{
+  MOZ_ASSERT(!mPlaybackStream, "Owned stream must be initialized before playback stream");
 
   // We pass null as the wrapper since it is only used to signal finished
   // streams. This is only needed for the playback stream.
   mOwnedStream = aGraph->CreateTrackUnionStream(nullptr);
   mOwnedStream->SetAutofinish(true);
-  mOwnedPort = mOwnedStream->AllocateInputPort(mInputStream);
-
-  mPlaybackStream = aGraph->CreateTrackUnionStream(this);
-  mPlaybackStream->SetAutofinish(true);
-  mPlaybackPort = mPlaybackStream->AllocateInputPort(mOwnedStream);
-
-  LOG(LogLevel::Debug, ("DOMMediaStream %p Initiated with mInputStream=%p, mOwnedStream=%p, mPlaybackStream=%p",
-                        this, mInputStream, mOwnedStream, mPlaybackStream));
+  if (mInputStream) {
+    mOwnedPort = mOwnedStream->AllocateInputPort(mInputStream);
+  }
 
   // Setup track listeners
   mOwnedListener = new OwnedStreamListener(this);
   mOwnedStream->AddListener(mOwnedListener);
+}
+
+void
+DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph)
+{
+  mPlaybackStream = aGraph->CreateTrackUnionStream(this);
+  mPlaybackStream->SetAutofinish(true);
+  if (mOwnedStream) {
+    mPlaybackPort = mPlaybackStream->AllocateInputPort(mOwnedStream);
+  }
+
   mPlaybackListener = new PlaybackStreamListener(this);
   mPlaybackStream->AddListener(mPlaybackListener);
+
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Initiated with mInputStream=%p, mOwnedStream=%p, mPlaybackStream=%p",
+                        this, mInputStream, mOwnedStream, mPlaybackStream));
 }
 
 already_AddRefed<DOMMediaStream>
@@ -705,6 +730,9 @@ DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver
 MediaStreamTrack*
 DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
 {
+  MOZ_RELEASE_ASSERT(mInputStream);
+  MOZ_RELEASE_ASSERT(mOwnedStream);
+
   MOZ_ASSERT(FindOwnedDOMTrack(GetOwnedStream(), aTrackID) == nullptr);
 
   MediaStreamTrack* track;
@@ -736,6 +764,8 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
 MediaStreamTrack*
 DOMMediaStream::FindOwnedDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const
 {
+  MOZ_RELEASE_ASSERT(mOwnedStream);
+
   if (aOwningStream != mOwnedStream) {
     return nullptr;
   }
@@ -751,6 +781,8 @@ DOMMediaStream::FindOwnedDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) 
 MediaStreamTrack*
 DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTrackID) const
 {
+  MOZ_RELEASE_ASSERT(mPlaybackStream);
+
   for (const nsRefPtr<TrackPort>& info : mTracks) {
     if (info->GetInputPort() == mPlaybackPort &&
         aInputStream == mOwnedStream &&

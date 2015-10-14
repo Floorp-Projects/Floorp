@@ -424,7 +424,23 @@ protected:
   void InitSourceStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitTrackUnionStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitAudioCaptureStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
-  void InitStreamCommon(MediaStream* aStream, MediaStreamGraph* aGraph);
+
+  // Sets up aStream as mInputStream. A producer may append data to a
+  // SourceMediaStream input stream, or connect another stream to a
+  // TrackUnionStream input stream.
+  void InitInputStreamCommon(MediaStream* aStream, MediaStreamGraph* aGraph);
+
+  // Sets up a new TrackUnionStream as mOwnedStream and connects it to
+  // mInputStream with a TRACK_ANY MediaInputPort if available.
+  // If this DOMMediaStream should have an input stream (producing data),
+  // it has to be initiated before the owned stream.
+  void InitOwnedStreamCommon(MediaStreamGraph* aGraph);
+
+  // Sets up a new TrackUnionStream as mPlaybackStream and connects it to
+  // mOwnedStream with a TRACK_ANY MediaInputPort if available.
+  // If this DOMMediaStream should have an owned stream (producer or clone),
+  // it has to be initiated before the playback stream.
+  void InitPlaybackStreamCommon(MediaStreamGraph* aGraph);
 
   void CheckTracksAvailable();
 
