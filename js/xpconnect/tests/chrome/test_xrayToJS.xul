@@ -527,6 +527,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       var t = new iwin[c](10);
       checkThrows(function() { t[2]; }, /performant/, "direct property-wise reading of typed arrays forbidden over Xrays");
       checkThrows(function() { t[2] = 3; }, /performant/, "direct property-wise writing of typed arrays forbidden over Xrays");
+      var wesb = new Cu.Sandbox([iwin], {isWebExtensionContentScript: true});
+      wesb.t = t;
+      wesb.eval('t[2] = 3');
+      is(wesb.eval('t.wrappedJSObject[2]'), 3, "direct property-wise writing of typed arrays allowed for WebExtension content scripts");
+      is(wesb.eval('t[2]'), 3, "direct property-wise reading and writing of typed arrays allowed for WebExtensions content scripts");
+
       t.wrappedJSObject[2] = 3;
       is(t.wrappedJSObject[2], 3, "accessing elements over waivers works");
       t.wrappedJSObject.expando = 'hi';
