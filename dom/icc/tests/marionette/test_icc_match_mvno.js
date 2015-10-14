@@ -6,16 +6,16 @@ MARIONETTE_HEAD_JS = "head.js";
 
 const TEST_DATA = [
   // mvno type, mvno data, request success, expected result
-  // Emulator's hard coded IMSI: 310260000000000
-  ["imsi", "3102600",            true, true               ],
+  // Emulator's hard coded IMSI: 310410000000000
+  ["imsi", "3104100",            true, true               ],
   // x and X means skip the comparison.
-  ["imsi", "31026xx0",           true, true               ],
-  ["imsi", "310260x0x",          true, true               ],
-  ["imsi", "310260X00",          true, true               ],
-  ["imsi", "310260XX1",          true, false              ],
-  ["imsi", "31026012",           true, false              ],
-  ["imsi", "310260000000000",    true, true               ],
-  ["imsi", "310260000000000123", true, false              ],
+  ["imsi", "31041xx0",           true, true               ],
+  ["imsi", "310410x0x",          true, true               ],
+  ["imsi", "310410X00",          true, true               ],
+  ["imsi", "310410XX1",          true, false              ],
+  ["imsi", "31041012",           true, false              ],
+  ["imsi", "310410000000000",    true, true               ],
+  ["imsi", "310410000000000123", true, false              ],
   ["imsi", "",                   false, "InvalidParameter"],
   // Emulator's hard coded SPN:  Android
   ["spn",  "Android",            true, true               ],
