@@ -5273,43 +5273,44 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
     MOZ_ASSERT_IF(isForDecl, pn1->isArity(PN_LIST));
     MOZ_ASSERT(!!blockObj == (isForDecl && (pn1->isOp(JSOP_DEFLET) || pn1->isOp(JSOP_DEFCONST))));
 
-    // All forms of for-loop (for(;;), for-in, for-of) generate an implicit
-    // block to store any lexical variables declared by the loop-head.  We
-    // implement this by desugaring such loops.  These:
+    // If the head of a for-loop declares any lexical variables, we generate an
+    // implicit block to store them. We implement this by desugaring. These:
     //
-    //   for (let/const <pattern-and-assigns>; <test>; <update>) <stmt>
-    //   for (let <pattern> in <expr>) <stmt>
-    //   for (let <pattern> of <expr>) <stmt>
+    //     for (let/const <bindings>; <test>; <update>) <stmt>
+    //     for (let <pattern> in <expr>) <stmt>
+    //     for (let <pattern> of <expr>) <stmt>
     //
-    // transform into almost these desugarings:
+    // transform into roughly the same parse trees as these (using deprecated
+    // let-block syntax):
     //
-    //   let (<pattern-and-assigns>) { for (; <test>; <update>) <stmt> }
-    //   let (<pattern>) { for (<pattern> in <expr>) <stmt> }
-    //   let (<pattern>) { for (<pattern> of <expr>) <stmt> }
+    //     let (<bindings>) { for (; <test>; <update>) <stmt> }
+    //     let (<pattern>) { for (<pattern> in <expr>) <stmt> }
+    //     let (<pattern>) { for (<pattern> of <expr>) <stmt> }
     //
-    // This desugaring is not *quite* correct.  Assignments in the head of a
-    // let-block are evaluated *outside* the scope of the variables declared by
-    // the let-block-head.  But ES6 mandates that they be evaluated in the same
-    // scope, triggering used-before-initialization temporal dead zone errors
-    // as necessary.  Bug 1069480 will fix this.
+    // This desugaring is not ES6 compliant. Initializers in the head of a
+    // let-block are evaluated *outside* the scope of the variables being
+    // initialized. ES6 mandates that they be evaluated in the same scope,
+    // triggering used-before-initialization temporal dead zone errors as
+    // necessary. See bug 1216623 on scoping and bug 1069480 on TDZ.
     //
-    // Additionally, ES6 mandates that *each iteration* of a for-loop create a
-    // fresh binding of loop variables.  For example:
+    // Additionally, in ES6, each iteration of a for-loop creates a fresh
+    // binding of the loop variables. For example:
     //
-    //   var funcs = [];
-    //   for (let i = 0; i < 2; i++)
-    //     funcs.push(function() { return i; });
-    //   assertEq(funcs[0](), 0);
-    //   assertEq(funcs[1](), 1);
+    //     var funcs = [];
+    //     for (let i = 0; i < 2; i++)
+    //         funcs.push(function() { return i; });
+    //     assertEq(funcs[0](), 0);  // the two closures capture...
+    //     assertEq(funcs[1](), 1);  // ...two different `i` bindings
     //
     // These semantics are implemented by "freshening" the implicit block --
     // changing the scope chain to a fresh clone of the instantaneous block
     // object -- each iteration, just before evaluating the "update" in
-    // for(;;) loops.  (We don't implement this freshening for for-in/of loops,
-    // but soon: bug 449811.)  No freshening occurs in for (const ...;;) as
-    // there's no point (you can't reassign consts), and moreover the spec
-    // requires it (which fact isn't exposed in-language but can be observed
-    // through the Debugger API).
+    // for(;;) loops. We don't implement this freshening for for-in/of loops
+    // yet: bug 449811.
+    //
+    // No freshening occurs in `for (const ...;;)` as there's no point: you
+    // can't reassign consts. This is observable through the Debugger API. (The
+    // ES6 spec also skips cloning the environment in this case.)
     //
     // If the for-loop head includes a lexical declaration, then we create an
     // implicit block scope, and:
