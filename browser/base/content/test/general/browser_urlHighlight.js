@@ -66,6 +66,19 @@ function test() {
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar>");
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
   testVal("<https://>mozilla.org</sub/file.ext?foo&bar#top>");
+  testVal("foo.bar<?q=test>");
+  testVal("foo.bar<#mozilla.org>");
+  testVal("foo.bar<?somewhere.mozilla.org>");
+  testVal("foo.bar<?@mozilla.org>");
+  testVal("foo.bar<#x@mozilla.org>");
+  testVal("foo.bar<#@x@mozilla.org>");
+  testVal("foo.bar<?x@mozilla.org>");
+  testVal("foo.bar<?@x@mozilla.org>");
+  testVal("<foo.bar@x@>mozilla.org");
+  testVal("<foo.bar@:baz@>mozilla.org");
+  testVal("<foo.bar:@baz@>mozilla.org");
+  testVal("<foo.bar@:ba:z@>mozilla.org");
+  testVal("<foo.:bar:@baz@>mozilla.org");
 
   testVal("<https://sub.>mozilla.org<:666/file.ext>");
   testVal("<sub.>mozilla.org<:666/file.ext>");
