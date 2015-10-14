@@ -34,7 +34,7 @@ is(testDoc1.inputEncoding, "windows-1252", "wrong encoding");
 
 testDoc2 = document.implementation.createDocument("", "", null);
 testDoc2.appendChild(testDoc2.createComment(" doc 2 "));
-testDoc2.appendChild(testDoc2.createElement("res"));
+testDoc2.appendChild(testDoc2.createElementNS(null, "res"));
 testDoc2.documentElement.appendChild(testDoc2.createTextNode("text"));
 is(testDoc2.inputEncoding, "UTF-8", "wrong encoding");
 

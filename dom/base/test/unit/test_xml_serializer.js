@@ -175,7 +175,7 @@ function test5() {
   // Handling of kids in the null namespace when the default is a
   // different namespace (bug 301260).
   var doc = ParseXML('<root xmlns="ns1"/>')
-  var child = doc.createElement('child');
+  var child = doc.createElementNS(null, 'child');
   doc.documentElement.appendChild(child);
   do_check_serialize(doc);
   do_check_eq(SerializeXML(doc),
