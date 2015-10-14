@@ -168,6 +168,7 @@ GetBMPLog()
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   : Decoder(aImage)
   , mLexer(Transition::To(State::FILE_HEADER, FileHeader::LENGTH))
+  , mMayHaveTransparency(false)
   , mNumColors(0)
   , mColors(nullptr)
   , mBytesPerColor(0)
@@ -530,6 +531,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   // Post our size to the superclass.
   uint32_t realHeight = GetHeight();
   PostSize(mBIH.width, realHeight);
+  mCurrentRow = realHeight;
 
   // Round it up to the nearest byte count, then pad to 4-byte boundary.
   // Compute this even for a metadate decode because GetCompressedImageSize()
@@ -543,56 +545,11 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   // We treat BMPs as transparent if they're 32bpp and alpha is enabled, but
   // also if they use RLE encoding, because the 'delta' mode can skip pixels
   // and cause implicit transparency.
-  bool hasTransparency = (mBIH.compression == Compression::RLE8) ||
+  mMayHaveTransparency = (mBIH.compression == Compression::RLE8) ||
                          (mBIH.compression == Compression::RLE4) ||
                          (mBIH.bpp == 32 && mUseAlphaData);
-  if (hasTransparency) {
+  if (mMayHaveTransparency) {
     PostHasTransparency();
-  }
-
-  // If we're doing a metadata decode, we're done.
-  if (IsMetadataDecode()) {
-    return Transition::Terminate(State::SUCCESS);
-  }
-
-  // We're doing a real decode.
-  mCurrentRow = realHeight;
-
-  // Set up the color table, if present; it'll be filled in by ReadColorTable().
-  if (mBIH.bpp <= 8) {
-    mNumColors = 1 << mBIH.bpp;
-    if (0 < mBIH.colors && mBIH.colors < mNumColors) {
-      mNumColors = mBIH.colors;
-    }
-
-    // Always allocate and zero 256 entries, even though mNumColors might be
-    // smaller, because the file might erroneously index past mNumColors.
-    mColors = new ColorTableEntry[256];
-    memset(mColors, 0, 256 * sizeof(ColorTableEntry));
-
-    // OS/2 Bitmaps have no padding byte.
-    mBytesPerColor = (mBIH.bihsize == InfoHeaderLength::WIN_V2) ? 3 : 4;
-  }
-
-  MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-  IntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
-  nsresult rv = AllocateFrame(/* aFrameNum = */ 0, targetSize,
-                              IntRect(IntPoint(), targetSize),
-                              SurfaceFormat::B8G8R8A8);
-  if (NS_FAILED(rv)) {
-    return Transition::Terminate(State::FAILURE);
-  }
-  MOZ_ASSERT(mImageData, "Should have a buffer now");
-
-  if (mDownscaler) {
-    // BMPs store their rows in reverse order, so the downscaler needs to
-    // reverse them again when writing its output.
-    rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
-                                 mImageData, hasTransparency,
-                                 /* aFlipVertically = */ true);
-    if (NS_FAILED(rv)) {
-      return Transition::Terminate(State::FAILURE);
-    }
   }
 
   size_t bitFieldsLengthStillToRead = 0;
@@ -632,6 +589,49 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   // in ReadInfoHeader().
   if (aLength != 0) {
     mBitFields.ReadFromHeader(aData);
+  }
+
+  // We've now read all the headers. If we're doing a metadata decode, we're
+  // done.
+  if (IsMetadataDecode()) {
+    return Transition::Terminate(State::SUCCESS);
+  }
+
+  // Set up the color table, if present; it'll be filled in by ReadColorTable().
+  if (mBIH.bpp <= 8) {
+    mNumColors = 1 << mBIH.bpp;
+    if (0 < mBIH.colors && mBIH.colors < mNumColors) {
+      mNumColors = mBIH.colors;
+    }
+
+    // Always allocate and zero 256 entries, even though mNumColors might be
+    // smaller, because the file might erroneously index past mNumColors.
+    mColors = new ColorTableEntry[256];
+    memset(mColors, 0, 256 * sizeof(ColorTableEntry));
+
+    // OS/2 Bitmaps have no padding byte.
+    mBytesPerColor = (mBIH.bihsize == InfoHeaderLength::WIN_V2) ? 3 : 4;
+  }
+
+  MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
+  IntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
+  nsresult rv = AllocateFrame(/* aFrameNum = */ 0, targetSize,
+                              IntRect(IntPoint(), targetSize),
+                              SurfaceFormat::B8G8R8A8);
+  if (NS_FAILED(rv)) {
+    return Transition::Terminate(State::FAILURE);
+  }
+  MOZ_ASSERT(mImageData, "Should have a buffer now");
+
+  if (mDownscaler) {
+    // BMPs store their rows in reverse order, so the downscaler needs to
+    // reverse them again when writing its output.
+    rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
+                                 mImageData, mMayHaveTransparency,
+                                 /* aFlipVertically = */ true);
+    if (NS_FAILED(rv)) {
+      return Transition::Terminate(State::FAILURE);
+    }
   }
 
   return Transition::To(State::COLOR_TABLE, mNumColors * mBytesPerColor);
