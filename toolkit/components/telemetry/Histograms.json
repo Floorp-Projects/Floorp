@@ -9851,6 +9851,13 @@
     "kind": "count",
     "description": "Number of times the D3D11 compositor failed to get a texture sync handle."
   },
+  "GFX_CRASH": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Graphics Crash Reason (...)"
+  },
   "PLUGIN_ACTIVATION_COUNT": {
     "alert_emails": ["cpeterson@mozilla.com"],
     "expires_in_version": "48",
