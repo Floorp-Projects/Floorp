@@ -531,10 +531,6 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     debug_DumpEvent(stdout, aEvent->widget, aEvent,
                     nsAutoCString("something"), 0);
 #endif
-    // Translate the mouse event into device pixels.
-    aEvent->refPoint.x = GdkCoordToDevicePixels(aEvent->refPoint.x);
-    aEvent->refPoint.y = GdkCoordToDevicePixels(aEvent->refPoint.y);
-
     aStatus = nsEventStatus_eIgnore;
     nsIWidgetListener* listener =
         mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
@@ -2462,9 +2458,7 @@ nsWindow::OnEnterNotifyEvent(GdkEventCrossing *aEvent)
     WidgetMouseEvent event(true, eMouseEnterIntoWidget, this,
                            WidgetMouseEvent::eReal);
 
-    event.refPoint.x = nscoord(aEvent->x);
-    event.refPoint.y = nscoord(aEvent->y);
-
+    event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
     event.time = aEvent->time;
     event.timeStamp = GetEventTimeStamp(aEvent->time);
 
@@ -2505,9 +2499,7 @@ nsWindow::OnLeaveNotifyEvent(GdkEventCrossing *aEvent)
     WidgetMouseEvent event(true, eMouseExitFromWidget, this,
                            WidgetMouseEvent::eReal);
 
-    event.refPoint.x = nscoord(aEvent->x);
-    event.refPoint.y = nscoord(aEvent->y);
-
+    event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
     event.time = aEvent->time;
     event.timeStamp = GetEventTimeStamp(aEvent->time);
 
@@ -2572,8 +2564,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         event.time = xevent.xmotion.time;
         event.timeStamp = GetEventTimeStamp(xevent.xmotion.time);
 #else
-        event.refPoint.x = nscoord(aEvent->x);
-        event.refPoint.y = nscoord(aEvent->y);
+        event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
 
         modifierState = aEvent->state;
 
@@ -2584,11 +2575,10 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
     else {
         // XXX see OnScrollEvent()
         if (aEvent->window == mGdkWindow) {
-            event.refPoint.x = nscoord(aEvent->x);
-            event.refPoint.y = nscoord(aEvent->y);
+            event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
         } else {
-            LayoutDeviceIntPoint point(NSToIntFloor(aEvent->x_root),
-                                       NSToIntFloor(aEvent->y_root));
+            LayoutDeviceIntPoint point = GdkEventCoordsToDevicePixels(
+                    aEvent->x_root, aEvent->y_root);
             event.refPoint = point - WidgetToScreenOffset();
         }
 
@@ -2661,11 +2651,10 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
 {
     // XXX see OnScrollEvent()
     if (aGdkEvent->window == mGdkWindow) {
-        aEvent.refPoint.x = nscoord(aGdkEvent->x);
-        aEvent.refPoint.y = nscoord(aGdkEvent->y);
+        aEvent.refPoint = GdkEventCoordsToDevicePixels(aGdkEvent->x, aGdkEvent->y);
     } else {
-        LayoutDeviceIntPoint point(NSToIntFloor(aGdkEvent->x_root),
-                                   NSToIntFloor(aGdkEvent->y_root));
+        LayoutDeviceIntPoint point = GdkEventCoordsToDevicePixels(
+                aGdkEvent->x_root, aGdkEvent->y_root);
         aEvent.refPoint = point - WidgetToScreenOffset();
     }
 
@@ -3184,14 +3173,13 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
 
     if (aEvent->window == mGdkWindow) {
         // we are the window that the event happened on so no need for expensive WidgetToScreenOffset
-        wheelEvent.refPoint.x = nscoord(aEvent->x);
-        wheelEvent.refPoint.y = nscoord(aEvent->y);
+        wheelEvent.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
     } else {
         // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
         // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
         // coordinates relative to this widget.
-        LayoutDeviceIntPoint point(NSToIntFloor(aEvent->x_root),
-                                   NSToIntFloor(aEvent->y_root));
+        LayoutDeviceIntPoint point = GdkEventCoordsToDevicePixels(
+                aEvent->x_root, aEvent->y_root);
         wheelEvent.refPoint = point - WidgetToScreenOffset();
     }
 
@@ -3462,6 +3450,7 @@ nsWindow::Create(nsIWidget        *aParent,
     GtkWindow      *topLevelParent = nullptr;
     nsWindow       *parentnsWindow = nullptr;
     GtkWidget      *eventWidget = nullptr;
+    bool            shellHasCSD = false;
 
     if (aParent) {
         parentnsWindow = static_cast<nsWindow*>(aParent);
@@ -3614,9 +3603,7 @@ nsWindow::Create(nsIWidget        *aParent,
         GtkWidget *container = moz_container_new();
         mContainer = MOZ_CONTAINER(container);
 
-#if (MOZ_WIDGET_GTK == 2)
-        bool containerHasWindow = false;
-#else
+#if (MOZ_WIDGET_GTK == 3)
         // "csd" style is set when widget is realized so we need to call
         // it explicitly now.
         gtk_widget_realize(mShell);
@@ -3624,16 +3611,16 @@ nsWindow::Create(nsIWidget        *aParent,
         // We can't draw directly to top-level window when client side
         // decorations are enabled. We use container with GdkWindow instead.
         GtkStyleContext* style = gtk_widget_get_style_context(mShell);
-        bool containerHasWindow = gtk_style_context_has_class(style, "csd");
+        shellHasCSD = gtk_style_context_has_class(style, "csd");
 #endif
-        if (!containerHasWindow) {
+        if (!shellHasCSD) {
             // Use mShell's window for drawing and events.
             gtk_widget_set_has_window(container, FALSE);
             // Prevent GtkWindow from painting a background to flicker.
             gtk_widget_set_app_paintable(mShell, TRUE);
         }
         // Set up event widget
-        eventWidget = containerHasWindow ? container : mShell;
+        eventWidget = shellHasCSD ? container : mShell;
         gtk_widget_add_events(eventWidget, kEvents);
 
         gtk_container_add(GTK_CONTAINER(mShell), container);
@@ -3782,7 +3769,8 @@ nsWindow::Create(nsIWidget        *aParent,
         g_signal_connect(mContainer, "drag_data_received",
                          G_CALLBACK(drag_data_received_event_cb), nullptr);
 
-        GtkWidget *widgets[] = { GTK_WIDGET(mContainer), mShell };
+        GtkWidget *widgets[] = { GTK_WIDGET(mContainer),
+                                 !shellHasCSD ? mShell : nullptr };
         for (size_t i = 0; i < ArrayLength(widgets) && widgets[i]; ++i) {
             // Visibility events are sent to the owning widget of the relevant
             // window but do not propagate to parent widgets so connect on
@@ -6601,6 +6589,13 @@ nsWindow::DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize) {
 int
 nsWindow::GdkCoordToDevicePixels(gint coord) {
     return coord * GdkScaleFactor();
+}
+
+LayoutDeviceIntPoint
+nsWindow::GdkEventCoordsToDevicePixels(gdouble x, gdouble y)
+{
+    gint scale = GdkScaleFactor();
+    return LayoutDeviceIntPoint(floor(x * scale + 0.5), floor(y * scale + 0.5));
 }
 
 LayoutDeviceIntPoint

@@ -1148,7 +1148,7 @@ PREF_DIR = defaults/pref
 # If DIST_SUBDIR is defined it indicates that app and gre dirs are
 # different and that we are building app related resources. Hence,
 # PREF_DIR should point to the app prefs location.
-ifneq (,$(DIST_SUBDIR)$(XPI_NAME)$(LIBXUL_SDK))
+ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
 PREF_DIR = defaults/preferences
 endif
 

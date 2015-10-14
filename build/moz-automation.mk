@@ -101,17 +101,13 @@ automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
 AUTOMATION_EXTRA_CMDLINE-l10n-check = -j1
 AUTOMATION_EXTRA_CMDLINE-pretty-l10n-check = -j1
 
-# And force -j1 here until bug 1077670 is fixed.
-AUTOMATION_EXTRA_CMDLINE-package-tests = -j1
-AUTOMATION_EXTRA_CMDLINE-pretty-package-tests = -j1
-
 # The commands only run if the corresponding MOZ_AUTOMATION_* variable is
 # enabled. This means, for example, if we enable MOZ_AUTOMATION_UPLOAD, then
 # 'buildsymbols' will only run if MOZ_AUTOMATION_BUILD_SYMBOLS is also set.
 # However, the target automation/buildsymbols will still be executed in this
 # case because it is a prerequisite of automation/upload.
 define automation_commands
-@$(MAKE) $1 $(AUTOMATION_EXTRA_CMDLINE-$1)
+@+$(MAKE) $1 $(AUTOMATION_EXTRA_CMDLINE-$1)
 $(call BUILDSTATUS,TIER_FINISH $1)
 endef
 

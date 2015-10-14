@@ -283,12 +283,6 @@ MediaCodecReader::~MediaCodecReader()
 {
 }
 
-nsresult
-MediaCodecReader::Init(MediaDecoderReader* aCloneDonor)
-{
-  return NS_OK;
-}
-
 void
 MediaCodecReader::ReleaseMediaResources()
 {

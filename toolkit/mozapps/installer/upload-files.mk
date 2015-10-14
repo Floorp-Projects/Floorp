@@ -64,7 +64,6 @@ SDK           = $(SDK_PATH)$(PKG_BASENAME)-$(TARGET_CPU).sdk$(SDK_SUFFIX)
 endif
 
 # JavaScript Shell packaging
-ifndef LIBXUL_SDK
 JSSHELL_BINS  = \
   js$(BIN_SUFFIX) \
   $(DLL_PREFIX)mozglue$(DLL_SUFFIX) \
@@ -116,7 +115,6 @@ endif # Darwin
 endif # WINNT
 endif # MOZ_STATIC_JS
 MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
-endif # LIBXUL_SDK
 
 _ABS_DIST = $(abspath $(DIST))
 JARLOG_DIR = $(abspath $(DEPTH)/jarlog/)
