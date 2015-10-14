@@ -3772,9 +3772,11 @@ JSScript::traceChildren(JSTracer* trc)
                   static_cast<GCMarker*>(trc)->shouldCheckCompartments(),
                   zone()->isCollecting());
 
-    for (uint32_t i = 0; i < natoms(); ++i) {
-        if (atoms[i])
-            TraceEdge(trc, &atoms[i], "atom");
+    if (atoms) {
+        for (uint32_t i = 0; i < natoms(); ++i) {
+            if (atoms[i])
+                TraceEdge(trc, &atoms[i], "atom");
+        }
     }
 
     if (hasObjects()) {
