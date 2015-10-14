@@ -42,21 +42,33 @@ public:
   // nsIDOMLocation
   NS_DECL_NSIDOMLOCATION
 
+  #define THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME() { \
+    if (!CallerSubsumes()) { \
+      aError.Throw(NS_ERROR_DOM_SECURITY_ERR); \
+      return; \
+    } \
+  }
+
   // WebIDL API:
   void Assign(const nsAString& aUrl, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = Assign(aUrl);
   }
+
   void Replace(const nsAString& aUrl, ErrorResult& aError)
   {
     aError = Replace(aUrl);
   }
+
   void Reload(bool aForceget, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = Reload(aForceget);
   }
   void GetHref(nsAString& aHref, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetHref(aHref);
   }
   void SetHref(const nsAString& aHref, ErrorResult& aError)
@@ -65,14 +77,17 @@ public:
   }
   void GetOrigin(nsAString& aOrigin, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetOrigin(aOrigin);
   }
   void GetProtocol(nsAString& aProtocol, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetProtocol(aProtocol);
   }
   void SetProtocol(const nsAString& aProtocol, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetProtocol(aProtocol);
   }
   void GetUsername(nsAString& aUsername, ErrorResult& aError);
@@ -81,47 +96,58 @@ public:
   void SetPassword(const nsAString& aPassword, ErrorResult& aError);
   void GetHost(nsAString& aHost, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetHost(aHost);
   }
   void SetHost(const nsAString& aHost, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetHost(aHost);
   }
   void GetHostname(nsAString& aHostname, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetHostname(aHostname);
   }
   void SetHostname(const nsAString& aHostname, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetHostname(aHostname);
   }
   void GetPort(nsAString& aPort, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetPort(aPort);
   }
   void SetPort(const nsAString& aPort, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetPort(aPort);
   }
   void GetPathname(nsAString& aPathname, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetPathname(aPathname);
   }
   void SetPathname(const nsAString& aPathname, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetPathname(aPathname);
   }
   void GetSearch(nsAString& aSeach, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetSearch(aSeach);
   }
   void SetSearch(const nsAString& aSeach, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetSearch(aSeach);
   }
 
   void GetHash(nsAString& aHash, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = GetHash(aHash);
   }
   void SetHash(const nsAString& aHash, ErrorResult& aError)
@@ -130,6 +156,7 @@ public:
   }
   void Stringify(nsAString& aRetval, ErrorResult& aError)
   {
+    // GetHref checks CallerSubsumes.
     GetHref(aRetval, aError);
   }
   nsPIDOMWindow* GetParentObject() const
