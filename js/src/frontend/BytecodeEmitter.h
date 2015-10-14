@@ -469,7 +469,7 @@ struct BytecodeEmitter
     bool emitNameIncDec(ParseNode* pn);
 
     bool maybeEmitVarDecl(JSOp prologueOp, ParseNode* pn, jsatomid* result);
-    bool emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isLetExpr = false);
+    bool emitVariables(ParseNode* pn, VarEmitOption emitOption);
 
     bool emitNewInit(JSProtoKey key);
     bool emitSingletonInitialiser(ParseNode* pn);
