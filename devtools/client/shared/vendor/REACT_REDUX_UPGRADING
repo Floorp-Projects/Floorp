@@ -1,0 +1,9 @@
+"react-redux" uses UMD style loading to work in many different environments.
+It assumes that "react" and "redux" are both included via `require("react")`
+as in node or browserify, but the paths to our react and redux installation are different.
+
+If upgrading react-redux, define the correct paths and replace the require statements
+for the module.exports case with the correct paths.
+
+Path to react: "devtools/client/shared/vendor/react"
+Path to redux: "devtools/client/shared/vendor/redux"
