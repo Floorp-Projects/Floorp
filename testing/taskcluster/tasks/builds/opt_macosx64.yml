@@ -5,6 +5,10 @@ task:
   scopes:
     - 'docker-worker:cache:build-macosx64-workspace'
 
+  routes:
+    - 'index.buildbot.branches.{{project}}.macosx64'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.macosx64'
+
   payload:
     cache:
       build-macosx64-workspace: '/home/worker/workspace'
