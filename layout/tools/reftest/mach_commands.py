@@ -63,8 +63,6 @@ Add 'ENABLE_MARIONETTE=1' to your mozconfig file and re-build the application.
 Your currently active mozconfig is %s.
 '''.lstrip()
 
-here = os.path.abspath(os.path.dirname(__file__))
-
 class ReftestRunner(MozbuildObject):
     """Easily run reftests.
 
@@ -212,8 +210,10 @@ class ReftestRunner(MozbuildObject):
         #Remove the stdout handler from the internal logger and let mach deal with it
         runreftest.log.removeHandler(runreftest.log.handlers[0])
         self.log_manager.enable_unstructured()
-        rv = runreftest.run(**kwargs)
-        self.log_manager.disable_unstructured()
+        try:
+            rv = runreftest.run(**kwargs)
+        finally:
+            self.log_manager.disable_unstructured()
 
         return rv
 
@@ -287,8 +287,10 @@ class ReftestRunner(MozbuildObject):
         # Remove the stdout handler from the internal logger and let mach deal with it
         runreftest.log.removeHandler(runreftest.log.handlers[0])
         self.log_manager.enable_unstructured()
-        rv = reftest.run(**kwargs)
-        self.log_manager.disable_unstructured()
+        try:
+            rv = reftest.run(**kwargs)
+        finally:
+            self.log_manager.disable_unstructured()
 
         return rv
 
@@ -304,6 +306,7 @@ def process_test_objects(kwargs):
         del kwargs["test_objects"]
 
 def get_parser():
+    here = os.path.abspath(os.path.dirname(__file__))
     build_obj = MozbuildObject.from_environment(cwd=here)
     if conditions.is_android(build_obj):
         return reftestcommandline.RemoteArgumentsParser()
