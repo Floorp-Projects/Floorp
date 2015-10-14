@@ -28,6 +28,7 @@ public:
     , mHeight(0)
     , mInitDone(false)
     , mHasDirectListeners(false)
+    , mNrAllocations(0)
     , mCaptureIndex(aIndex)
     , mTrackID(0)
   {}
@@ -115,6 +116,7 @@ static void LogCapability(const char* aHeader,
 
   bool mInitDone;
   bool mHasDirectListeners;
+  int mNrAllocations; // When this becomes 0, we shut down HW
   int mCaptureIndex;
   TrackID mTrackID;
 
