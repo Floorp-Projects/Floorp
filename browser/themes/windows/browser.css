@@ -816,6 +816,12 @@ toolbar .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarb
   -moz-padding-end: 17px;
 }
 
+#nav-bar .toolbarbutton-1[type=panel] > .toolbarbutton-icon,
+#nav-bar .toolbarbutton-1[type=menu]:not(#PanelUI-menu-button):not(#back-button):not(#forward-button) > .toolbarbutton-icon {
+  /* horizontal padding + border + icon width */
+  max-width: 43px;
+}
+
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
   -moz-margin-start: -15px;
 }

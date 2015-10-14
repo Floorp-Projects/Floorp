@@ -177,3 +177,34 @@ var TargetNodeHighlighter = {
 
 EventEmitter.decorate(TargetNodeHighlighter);
 exports.TargetNodeHighlighter = TargetNodeHighlighter;
+
+/**
+ * Format a timestamp (in ms) as a mm:ss.mmm string.
+ * @param {Number} time
+ * @return {String}
+ */
+function formatStopwatchTime(time) {
+  // Format falsy values as 0
+  if (!time) {
+    return "00:00.000";
+  }
+
+  let milliseconds = parseInt(time % 1000, 10);
+  let seconds = parseInt((time / 1000) % 60, 10);
+  let minutes = parseInt((time / (1000 * 60)), 10);
+
+  let pad = (nb, max) => {
+    if (nb < max) {
+      return new Array((max+"").length - (nb+"").length + 1).join("0") + nb;
+    }
+    return nb;
+  }
+
+  minutes = pad(minutes, 10);
+  seconds = pad(seconds, 10);
+  milliseconds = pad(milliseconds, 100);
+
+  return `${minutes}:${seconds}.${milliseconds}`;
+}
+
+exports.formatStopwatchTime = formatStopwatchTime;
