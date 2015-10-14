@@ -455,10 +455,11 @@ def etlparser(xperf_path, etl_filename, processID, approot=None,
             with open(error_filename, 'w') as errorFile:
                 errorFile.write('\n'.join(errors))
 
-        mud = os.environ.get('MOZ_UPLOAD_DIR', None)
-        if mud:
-            mud_filename = os.path.join(mud, etl_filename)
-            os.rename(etl_filename, mud_filename)
+# TODO: commented this out from bug 1205005, we have a memory error in blobber upload
+#        mud = os.environ.get('MOZ_UPLOAD_DIR', None)
+#        if mud:
+#            mud_filename = os.path.join(mud, etl_filename)
+#            os.rename(etl_filename, mud_filename)
 
 
 def etlparser_from_config(config_file, **kwargs):
