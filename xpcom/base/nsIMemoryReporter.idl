@@ -205,7 +205,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(5e4eaa5a-4808-4b97-8005-e7cdc4d73693)]
+[scriptable, builtinclass, uuid(fcad440e-64dd-4fb8-9a5e-b19d1b91423b)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -325,11 +325,6 @@ interface nsIMemoryReporterManager : nsISupports
    * If you add a new distinguished amount, please update
    * toolkit/components/aboutmemory/tests/test_memoryReporters.xul.
    *
-   * |explicit| (UNITS_BYTES)  The total size of explicit memory allocations,
-   * both at the OS-level (eg. via mmap, VirtualAlloc) and at the heap level
-   * (eg. via malloc, calloc, operator new).  It covers all heap allocations,
-   * but will miss any OS-level ones not covered by memory reporters.
-   *
    * |vsize| (UNITS_BYTES)  The virtual size, i.e. the amount of address space
    * taken up.
    *
@@ -378,7 +373,6 @@ interface nsIMemoryReporterManager : nsISupports
    * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
    * major) page faults that have occurred since the process started.
    */
-  readonly attribute int64_t explicit;
   readonly attribute int64_t vsize;
   readonly attribute int64_t vsizeMaxContiguous;
   readonly attribute int64_t resident;
