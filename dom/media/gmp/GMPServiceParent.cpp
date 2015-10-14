@@ -83,7 +83,6 @@ NS_IMPL_ISUPPORTS_INHERITED(GeckoMediaPluginServiceParent,
 
 static int32_t sMaxAsyncShutdownWaitMs = 0;
 static bool sHaveSetTimeoutPrefCache = false;
-static bool sKillHungPlugins = true;
 
 GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   : mShuttingDown(false)
@@ -99,9 +98,6 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
     Preferences::AddIntVarCache(&sMaxAsyncShutdownWaitMs,
                                 "media.gmp.async-shutdown-timeout",
                                 GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT);
-    Preferences::AddBoolVarCache(&sKillHungPlugins,
-                                "media.gmp.kill-hung-plugins",
-                                true);
   }
 }
 
@@ -550,7 +546,7 @@ GeckoMediaPluginServiceParent::CrashPlugins()
 
   MutexAutoLock lock(mMutex);
   for (size_t i = 0; i < mPlugins.Length(); i++) {
-    mPlugins[i]->Crash(kPrefChange);
+    mPlugins[i]->Crash();
   }
 }
 
@@ -1260,24 +1256,6 @@ GeckoMediaPluginServiceParent::UpdateTrialCreateState(const nsAString& aKeySyste
 #endif
 }
 
-void
-GeckoMediaPluginServiceParent::CrashPluginNow(uint32_t aPluginId, GMPCrashReason aReason)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  if (aReason == kGmpApiTimeout && !sKillHungPlugins) {
-    LOGD(("%s::%s(%u, %u) but killing hung plugins disabled.",
-          __CLASS__, __FUNCTION__, aPluginId, aReason));
-    return;
-  }
-  LOGD(("%s::%s(%u, %u)", __CLASS__, __FUNCTION__, aPluginId, aReason));
-  MutexAutoLock lock(mMutex);
-  for (const auto& plugin : mPlugins) {
-    if (plugin->GetPluginId() == aPluginId) {
-      plugin->Crash(aReason);
-    }
-  }
-}
-
 static bool
 ExtractHostName(const nsACString& aOrigin, nsACString& aOutData)
 {
@@ -1610,14 +1588,6 @@ GMPServiceParent::~GMPServiceParent()
 {
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new DeleteTask<Transport>(GetTransport()));
-}
-
-bool
-GMPServiceParent::RecvCrashPluginNow(const uint32_t& aPluginId,
-                                     const GMPCrashReason& aReason)
-{
-  mService->CrashPluginNow(aPluginId, aReason);
-  return true;
 }
 
 bool

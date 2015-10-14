@@ -13,7 +13,6 @@
 #include "nsDataHashtable.h"
 #include "mozilla/Atomics.h"
 #include "nsThreadUtils.h"
-#include "GMPUtils.h"
 
 template <class> struct already_AddRefed;
 
@@ -57,8 +56,6 @@ public:
 #ifdef MOZ_CRASHREPORTER
   void SetAsyncShutdownPluginState(GMPParent* aGMPParent, char aId, const nsCString& aState);
 #endif // MOZ_CRASHREPORTER
-
-  void CrashPluginNow(uint32_t aPluginId, GMPCrashReason aReason);
 
 private:
   friend class GMPServiceParent;
@@ -226,8 +223,6 @@ public:
                                             nsCString* aVersion);
   virtual bool RecvUpdateGMPTrialCreateState(const nsString& aKeySystem,
                                              const uint32_t& aState) override;
-  virtual bool RecvCrashPluginNow(const uint32_t& aPluginId,
-                                  const GMPCrashReason& aReason) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
