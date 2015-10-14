@@ -354,7 +354,9 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Promise)
   if (tmp->IsBlack()) {
-    JS::ExposeValueToActiveJS(tmp->mResult);
+    if (tmp->mResult.isObject()) {
+      JS::ExposeObjectToActiveJS(&(tmp->mResult.toObject()));
+    }
     if (tmp->mAllocationStack) {
       JS::ExposeObjectToActiveJS(tmp->mAllocationStack);
     }
@@ -613,7 +615,6 @@ Promise::CreateFunction(JSContext* aCx, Promise* aPromise, int32_t aTask)
     return nullptr;
   }
 
-  JS::ExposeValueToActiveJS(promiseObj);
   js::SetFunctionNativeReserved(obj, SLOT_PROMISE, promiseObj);
   js::SetFunctionNativeReserved(obj, SLOT_DATA, JS::Int32Value(aTask));
 
@@ -641,7 +642,6 @@ Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTas
     return nullptr;
   }
 
-  JS::ExposeValueToActiveJS(promiseObj);
   js::SetFunctionNativeReserved(obj, SLOT_PROMISE, promiseObj);
 
   return obj;
