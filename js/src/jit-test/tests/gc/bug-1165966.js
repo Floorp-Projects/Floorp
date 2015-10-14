@@ -1,5 +1,7 @@
 // |jit-test| --no-ion
-load(libdir + 'oomTest.js');
+if (!('oomTest' in this))
+    quit();
+
 var g = newGlobal();
 oomTest(function() {
     Debugger(g);

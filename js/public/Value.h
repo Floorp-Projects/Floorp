@@ -1010,6 +1010,15 @@ class Value
     Value(const Value& v) = default;
 #endif
 
+    /**
+     * Returns false if creating a NumberValue containing the given type would
+     * be lossy, true otherwise.
+     */
+    template <typename T>
+    static bool isNumberRepresentable(const T t) {
+        return T(double(t)) == t;
+    }
+
     /*** Mutators ***/
 
     void setNull() {
@@ -1611,7 +1620,7 @@ template <typename T>
 static inline Value
 NumberValue(const T t)
 {
-    MOZ_ASSERT(T(double(t)) == t, "value creation would be lossy");
+    MOZ_ASSERT(Value::isNumberRepresentable(t), "value creation would be lossy");
     return detail::MakeNumberValue<std::numeric_limits<T>::is_signed>::create(t);
 }
 

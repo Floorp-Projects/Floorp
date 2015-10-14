@@ -122,6 +122,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   margin: -6px 0 0 !important;
   -moz-margin-end: -8px !important;
   min-width: 14px;
+  max-width: 28px;
   line-height: 10px;
   text-align: center;
   -moz-stack-sizing: ignore;

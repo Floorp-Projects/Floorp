@@ -225,11 +225,6 @@ FileExists(const char *path)
 #endif
 }
 
-#ifdef LIBXUL_SDK
-#  define XPCOM_PATH "xulrunner" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL
-#else
-#  define XPCOM_PATH XPCOM_DLL
-#endif
 static nsresult
 InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
 {
@@ -242,55 +237,13 @@ InitXPCOMGlue(const char *argv0, nsIFile **xreDirectory)
   }
 
   char *lastSlash = strrchr(exePath, XPCOM_FILE_PATH_SEPARATOR[0]);
-  if (!lastSlash || (size_t(lastSlash - exePath) > MAXPATHLEN - sizeof(XPCOM_PATH) - 1))
+  if (!lastSlash || (size_t(lastSlash - exePath) > MAXPATHLEN -
+sizeof(XPCOM_DLL) - 1))
     return NS_ERROR_FAILURE;
 
-  strcpy(lastSlash + 1, XPCOM_PATH);
-  lastSlash += sizeof(XPCOM_PATH) - sizeof(XPCOM_DLL);
+  strcpy(lastSlash + 1, XPCOM_DLL);
 
   if (!FileExists(exePath)) {
-#if defined(LIBXUL_SDK) && defined(XP_MACOSX)
-    // Check for <bundle>/Contents/Frameworks/XUL.framework/libxpcom.dylib
-    bool greFound = false;
-    CFBundleRef appBundle = CFBundleGetMainBundle();
-    if (!appBundle)
-      return NS_ERROR_FAILURE;
-    CFURLRef fwurl = CFBundleCopyPrivateFrameworksURL(appBundle);
-    CFURLRef absfwurl = nullptr;
-    if (fwurl) {
-      absfwurl = CFURLCopyAbsoluteURL(fwurl);
-      CFRelease(fwurl);
-    }
-    if (absfwurl) {
-      CFURLRef xulurl =
-        CFURLCreateCopyAppendingPathComponent(nullptr, absfwurl,
-                                              CFSTR("XUL.framework"),
-                                              true);
-
-      if (xulurl) {
-        CFURLRef xpcomurl =
-          CFURLCreateCopyAppendingPathComponent(nullptr, xulurl,
-                                                CFSTR("libxpcom.dylib"),
-                                                false);
-
-        if (xpcomurl) {
-          if (CFURLGetFileSystemRepresentation(xpcomurl, true,
-                                               (UInt8*) exePath,
-                                               sizeof(exePath)) &&
-              access(tbuffer, R_OK | X_OK) == 0) {
-            if (realpath(tbuffer, exePath)) {
-              greFound = true;
-            }
-          }
-          CFRelease(xpcomurl);
-        }
-        CFRelease(xulurl);
-      }
-      CFRelease(absfwurl);
-    }
-  }
-  if (!greFound) {
-#endif
     Output("Could not find the Mozilla runtime.\n");
     return NS_ERROR_FAILURE;
   }

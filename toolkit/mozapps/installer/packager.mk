@@ -58,14 +58,12 @@ stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
 	$(call py_action,test_archive, \
 		mozharness \
 		$(abspath $(DIST))/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
-ifndef LIBXUL_SDK
 ifdef MOZ_PACKAGE_JSSHELL
 	# Package JavaScript Shell
 	@echo 'Packaging JavaScript Shell...'
 	$(RM) $(PKG_JSSHELL)
 	$(MAKE_JSSHELL)
 endif # MOZ_PACKAGE_JSSHELL
-endif # LIBXUL_SDK
 ifdef MOZ_CODE_COVERAGE
 	# Package code coverage gcno tree
 	@echo 'Packaging code coverage data...'

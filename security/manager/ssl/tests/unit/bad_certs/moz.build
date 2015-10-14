@@ -16,6 +16,7 @@ test_certificates = (
     'expired-ee.pem',
     'expiredINT.pem',
     'expiredissuer.pem',
+    'idn-certificate.pem',
     'inadequateKeySizeEE.pem',
     'inadequatekeyusage-ee.pem',
     'ipAddressAsDNSNameInSAN.pem',

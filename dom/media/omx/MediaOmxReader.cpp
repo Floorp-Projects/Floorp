@@ -135,11 +135,6 @@ MediaOmxReader::~MediaOmxReader()
 {
 }
 
-nsresult MediaOmxReader::Init(MediaDecoderReader* aCloneDonor)
-{
-  return NS_OK;
-}
-
 already_AddRefed<AbstractMediaDecoder>
 MediaOmxReader::SafeGetDecoder() {
   nsRefPtr<AbstractMediaDecoder> decoder;

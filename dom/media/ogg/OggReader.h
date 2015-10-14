@@ -50,7 +50,7 @@ protected:
   ~OggReader();
 
 public:
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
+  virtual nsresult Init() override;
   virtual nsresult ResetDecode() override;
   virtual bool DecodeAudioData() override;
 

@@ -2,7 +2,6 @@ function f1(foo, bar) foo + bar;
 assertEq(f1.toString(), "function f1(foo, bar) foo + bar");
 assertEq(f1.toString(), f1.toSource());
 assertEq(decompileFunction(f1), f1.toString());
-assertEq(decompileBody(f1), "foo + bar;");
 // No semicolon on purpose
 function f2(foo, bar) foo + bar
 assertEq(f2.toString(), "function f2(foo, bar) foo + bar");

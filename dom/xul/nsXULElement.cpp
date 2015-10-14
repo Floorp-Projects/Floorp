@@ -687,7 +687,7 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         }
         if (aKeyCausesActivation &&
             !content->IsAnyOfXULElements(nsGkAtoms::textbox, nsGkAtoms::menulist)) {
-          elm->ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD);
+          elm->ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD, aIsTrustedEvent);
         }
     } else {
         return content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
@@ -1726,17 +1726,17 @@ nsXULElement::Blur(ErrorResult& rv)
 NS_IMETHODIMP
 nsXULElement::Click()
 {
-  return ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN);
+  return ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN, /* aIsTrusted = */ true);
 }
 
 void
 nsXULElement::Click(ErrorResult& rv)
 {
-  rv = Click();
+  rv = ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN, nsContentUtils::IsCallerChrome());
 }
 
 nsresult
-nsXULElement::ClickWithInputSource(uint16_t aInputSource)
+nsXULElement::ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent)
 {
     if (BoolAttrIsTrue(nsGkAtoms::disabled))
         return NS_OK;
@@ -1748,13 +1748,11 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource)
             // strong ref to PresContext so events don't destroy it
             nsRefPtr<nsPresContext> context = shell->GetPresContext();
 
-            bool isCallerChrome = nsContentUtils::IsCallerChrome();
-
-            WidgetMouseEvent eventDown(isCallerChrome, eMouseDown,
+            WidgetMouseEvent eventDown(aIsTrustedEvent, eMouseDown,
                                        nullptr, WidgetMouseEvent::eReal);
-            WidgetMouseEvent eventUp(isCallerChrome, eMouseUp,
+            WidgetMouseEvent eventUp(aIsTrustedEvent, eMouseUp,
                                      nullptr, WidgetMouseEvent::eReal);
-            WidgetMouseEvent eventClick(isCallerChrome, eMouseClick, nullptr,
+            WidgetMouseEvent eventClick(aIsTrustedEvent, eMouseClick, nullptr,
                                         WidgetMouseEvent::eReal);
             eventDown.inputSource = eventUp.inputSource = eventClick.inputSource
                                   = aInputSource;

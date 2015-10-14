@@ -30,10 +30,6 @@ dist_idl_dir := $(DIST)/idl
 dist_include_dir := $(DIST)/include
 process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 
-ifdef LIBXUL_SDK
-libxul_sdk_includes := -I$(LIBXUL_SDK)/idl
-endif
-
 # TODO we should use py_action, but that would require extra directories to be
 # in the virtualenv.
 %.xpt:
