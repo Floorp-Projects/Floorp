@@ -534,7 +534,7 @@ MediaFormatReader::GetDecoderData(TrackType aTrack)
 }
 
 void
-MediaFormatReader::DisableHardwareAcceleration()
+MediaFormatReader::DisableHardwareAccelerationInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
   if (HasVideo() && !mHardwareAccelerationDisabled) {
