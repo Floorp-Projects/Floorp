@@ -46,6 +46,12 @@ var gSyncUI = {
       return;
     }
 
+    // Sync isn't ready yet, but we can still update the UI with an initial
+    // state - we haven't called initUI() yet, but that's OK - that's more
+    // about observers for state changes, and will be called once Sync is
+    // ready to start sending notifications.
+    this.updateUI();
+
     Services.obs.addObserver(this, "weave:service:ready", true);
 
     // Remove the observer if the window is closed before the observer
@@ -143,6 +149,13 @@ var gSyncUI = {
   // still need to track a login-failed state so the "Tools" menu updates
   // with the correct state.
   _loginFailed: function () {
+    // If Sync isn't already ready, we don't want to force it to initialize
+    // by referencing Weave.Status - and it isn't going to be accurate before
+    // Sync is ready anyway.
+    if (!this.weaveService.ready) {
+      this.log.debug("_loginFailed has sync not ready, so returning false");
+      return false;
+    }
     this.log.debug("_loginFailed has sync state=${sync}",
                    { sync: Weave.Status.login});
     return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED;
