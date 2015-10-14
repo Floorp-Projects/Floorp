@@ -403,7 +403,7 @@ RespondWithHandler::CancelRequest(nsresult aStatus)
 void
 FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
 {
-  if (EventPhase() == nsIDOMEvent::NONE || mWaitToRespond) {
+  if (mWaitToRespond) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
