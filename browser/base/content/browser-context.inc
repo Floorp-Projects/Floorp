@@ -419,8 +419,14 @@
                 oncommand="gContextMenu.switchPageDirection();"/>
       <menuseparator id="fill-login-separator" hidden="true"/>
       <menu id="fill-login"
-            label="&fillPasswordMenu.label;"
-            accesskey="&fillPasswordMenu.accesskey;"
+            label="&fillLoginMenu.label;"
+            label-login="&fillLoginMenu.label;"
+            label-password="&fillPasswordMenu.label;"
+            label-username="&fillUsernameMenu.label;"
+            accesskey="&fillLoginMenu.accesskey;"
+            accesskey-login="&fillLoginMenu.accesskey;"
+            accesskey-password="&fillPasswordMenu.accesskey;"
+            accesskey-username="&fillUsernameMenu.accesskey;"
             hidden="true">
         <menupopup id="fill-login-popup">
           <menuitem id="fill-login-no-logins"
