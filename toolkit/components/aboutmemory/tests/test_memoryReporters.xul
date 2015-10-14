@@ -141,21 +141,6 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Access the distinguished amounts (mgr.explicit et al.) just to make sure
-  // they don't crash.  We can't check their actual values because they're
-  // non-deterministic.
-  //
-  // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
-  // --disable-jemalloc build.  Allow for that exception, but *only* that
-  // exception.
-  let dummy;
-  let haveExplicit = true;
-  try {
-    dummy = mgr.explicit;
-  } catch (ex) {
-    is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
-    haveExplicit = false;
-  }
   let amounts = [
     "vsize",
     "vsizeMaxContiguous",
@@ -182,7 +167,7 @@
       // aren't available on all platforms.  But if the attribute simply
       // isn't present, that indicates the distinguished amounts have changed
       // and this file hasn't been updated appropriately.
-      dummy = mgr[amounts[i]];
+      let dummy = mgr[amounts[i]];
       ok(dummy !== undefined,
          "accessed an unknown distinguished amount: " + amounts[i]);
     } catch (ex) {
@@ -226,9 +211,14 @@
     }
   }
 
-  // If mgr.explicit failed, we won't have "heap-allocated" either.
-  if (haveExplicit) {
+  try {
+    // Nb: mgr.heapAllocated will throw NS_ERROR_NOT_AVAILABLE if this is a
+    // --disable-jemalloc build.  Allow for skipping this test on that
+    // exception, but *only* that exception.
+    let dummy = mgr.heapAllocated;
     checkSpecialReport("heap-allocated", heapAllocatedAmounts);
+  } catch (ex) {
+    is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.heapAllocated exception");
   }
   // vsize may be unreasonable if ASAN is enabled
   checkSpecialReport("vsize",          vsizeAmounts, /*canBeUnreasonable*/true);
