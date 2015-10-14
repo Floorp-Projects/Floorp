@@ -4714,17 +4714,43 @@ HTMLMediaElement::MaybeCreateAudioChannelAgent()
   return true;
 }
 
+bool
+HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
+{
+  // Are we paused or muted
+  if (mPaused || Muted()) {
+    return false;
+  }
+
+  // The volume should not be ~0
+  if (std::fabs(Volume()) <= 1e-7) {
+    return false;
+  }
+
+  // A loop always is playing
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
+    return true;
+  }
+
+  // If we are actually playing...
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
+      !IsPlaybackEnded()) {
+    return true;
+  }
+
+  // If we are seeking, we consider it as playing
+  if (mPlayingThroughTheAudioChannelBeforeSeek) {
+    return true;
+  }
+
+  return false;
+}
+
 void
 HTMLMediaElement::UpdateAudioChannelPlayingState()
 {
-  bool playingThroughTheAudioChannel =
-     (!mPaused &&
-      !Muted() &&
-      std::fabs(Volume()) > 1e-7 &&
-      (HasAttr(kNameSpaceID_None, nsGkAtoms::loop) ||
-       (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-        !IsPlaybackEnded()) ||
-       mPlayingThroughTheAudioChannelBeforeSeek));
+  bool playingThroughTheAudioChannel = IsPlayingThroughTheAudioChannel();
+
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
 
