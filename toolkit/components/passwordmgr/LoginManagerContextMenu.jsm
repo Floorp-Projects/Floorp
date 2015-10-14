@@ -60,7 +60,7 @@ let LoginManagerContextMenu = {
 
         // login is bound so we can keep the reference to each object.
         item.addEventListener("command", function(login, event) {
-          this._fillPassword(login, inputElement, browser, documentURI);
+          this._fillTargetField(login, inputElement, browser, documentURI);
         }.bind(this, login));
 
         fragment.appendChild(item);
@@ -151,7 +151,7 @@ let LoginManagerContextMenu = {
    *        This isn't the same as the browser's top-level
    *        document URI when subframes are involved.
    */
-  _fillPassword(login, inputElement, browser, documentURI) {
+  _fillTargetField(login, inputElement, browser, documentURI) {
     LoginManagerParent.fillForm({
       browser: browser,
       loginFormOrigin: documentURI.prePath,
