@@ -13,7 +13,7 @@ interface nsIPresentationDeviceProvider;
 %}
 
 /*
- * Manager for the device availability. User can observe "presentation-device-change"
+ * Manager for the device availablility. User can observe "presentation-device-change"
  * for any update of the available devices.
  */
 [scriptable, uuid(beb61db5-3d5f-454f-a15a-dbfa0337c569)]
@@ -41,8 +41,6 @@ interface nsIPresentationDeviceManager : nsISupports
 
   /*
    * Retrieve all available devices, return a list of nsIPresentationDevice.
-   * The returned list is a cached device list and could be out-of-date.
-   * Observe device change events to get following updates.
    */
   nsIArray getAvailableDevices();
 };

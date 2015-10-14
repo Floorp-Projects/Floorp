@@ -1,7 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* global Services, do_register_cleanup, do_test_pending */
 
 "use strict";
 
@@ -49,7 +48,7 @@ function ContractHook(aContractID, aClass) {
   this._newFactory = new MockFactory(aClass);
 
   if (!this.hookedMap.has(this._contractID)) {
-    this.hookedMap.set(this._contractID, []);
+    this.hookedMap.set(this._contractID, new Array());
   }
 
   this.init();
@@ -159,26 +158,13 @@ MockDNSServiceInfo.prototype = {
   }
 };
 
-function TestPresentationDeviceListener() {
-  this.devices = {};
-}
+function TestPresentationDeviceListener() {}
 TestPresentationDeviceListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
-                                         Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener]),
 
-  addDevice: function(device) { this.devices[device.id] = device; },
-  removeDevice: function(device) { delete this.devices[device.id]; },
-  updateDevice: function(device) { this.devices[device.id] = device; },
-
-  count: function() {
-    var size = 0, key;
-    for (key in this.devices) {
-        if (this.devices.hasOwnProperty(key)) {
-          ++size;
-        }
-    }
-    return size;
-  }
+  addDevice: function(device) {},
+  removeDevice: function(device) {},
+  updateDevice: function(device) {}
 };
 
 function createDevice(host, port, serviceName, serviceType, domainName, attributes) {
@@ -351,19 +337,26 @@ function addDevice() {
 
   let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
-  let listener = new TestPresentationDeviceListener();
-  Assert.equal(listener.count(), 0);
+  let listener = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
+                                           Ci.nsISupportsWeakReference]),
+    addDevice: function(device) { this.devices.push(device); },
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+    devices: []
+  };
+  Assert.equal(listener.devices.length, 0);
 
   // Start discovery
   provider.listener = listener;
-  Assert.equal(listener.count(), 1);
+  Assert.equal(listener.devices.length, 1);
 
   // Force discovery again
   provider.forceDiscovery();
-  Assert.equal(listener.count(), 1);
+  Assert.equal(listener.devices.length, 1);
 
   provider.listener = null;
-  Assert.equal(listener.count(), 1);
+  Assert.equal(listener.devices.length, 1);
 
   run_next_test();
 }
@@ -431,191 +424,24 @@ function addDeviceDynamically() {
 
   let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
   let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
-  let listener = new TestPresentationDeviceListener();
-  provider.listener = listener;
-  Assert.equal(listener.count(), 0);
-
-  // Enable discovery
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-  Assert.equal(listener.count(), 1);
-
-  // Try discovery again
-  provider.forceDiscovery();
-  Assert.equal(listener.count(), 1);
-
-  // Try discovery once more
-  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-  provider.forceDiscovery();
-  Assert.equal(listener.count(), 1);
-
-  provider.listener = null;
-
-  run_next_test();
-}
-
-function updateDevice() {
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-
-  let mockDevice1 = createDevice("A.local", 12345, "N1", "_mozilla_papi._tcp");
-  let mockDevice2 = createDevice("A.local", 23456, "N2", "_mozilla_papi._tcp");
-
-  let mockObj = {
-    discovered: false,
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
-      listener.onDiscoveryStarted(serviceType);
-
-      if (!this.discovered) {
-        listener.onServiceFound(mockDevice1);
-      } else {
-        listener.onServiceFound(mockDevice2);
-      }
-      this.discovered = true;
-
-      return {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
-          listener.onDiscoveryStopped(serviceType);
-        }
-      };
-    },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
-      Assert.equal(serviceInfo.serviceType, "_mozilla_papi._tcp");
-      if (serviceInfo.serviceName == "N1") {
-        listener.onServiceResolved(mockDevice1);
-      } else if (serviceInfo.serviceName == "N2") {
-        listener.onServiceResolved(mockDevice2);
-      } else {
-        Assert.ok(false);
-      }
-    }
-  };
-
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
-  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
   let listener = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceListener,
                                            Ci.nsISupportsWeakReference]),
-
-    addDevice: function(device) {
-      Assert.ok(!this.isDeviceAdded);
-      Assert.equal(device.id, mockDevice1.host);
-      Assert.equal(device.name, mockDevice1.serviceName);
-      this.isDeviceAdded = true;
-    },
-    removeDevice: function(device) { Assert.ok(false); },
-    updateDevice: function(device) {
-      Assert.ok(!this.isDeviceUpdated);
-      Assert.equal(device.id, mockDevice2.host);
-      Assert.equal(device.name, mockDevice2.serviceName);
-      this.isDeviceUpdated = true;
-    },
-
-    isDeviceAdded: false,
-    isDeviceUpdated: false
+    addDevice: function(device) { this.devices.push(device); },
+    removeDevice: function(device) {},
+    updateDevice: function(device) {},
+    devices: []
   };
-  Assert.equal(listener.isDeviceAdded, false);
-  Assert.equal(listener.isDeviceUpdated, false);
+  provider.listener = listener;
+  Assert.equal(listener.devices.length, 0);
 
-  // Start discovery
-  provider.listener = listener; // discover: N1
-
-  Assert.equal(listener.isDeviceAdded, true);
-  Assert.equal(listener.isDeviceUpdated, false);
-
-  // temporarily disable to stop discovery and re-enable
-  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+  // Enable discovery
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+  Assert.equal(listener.devices.length, 1);
 
-  provider.forceDiscovery(); // discover: N2
-
-  Assert.equal(listener.isDeviceAdded, true);
-  Assert.equal(listener.isDeviceUpdated, true);
-
-  provider.listener = null;
-
-  run_next_test();
-}
-
-function diffDiscovery() {
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-
-  let mockDevice1 = createDevice("A.local", 12345, "N1", "_mozilla_papi._tcp");
-  let mockDevice2 = createDevice("B.local", 23456, "N2", "_mozilla_papi._tcp");
-  let mockDevice3 = createDevice("C.local", 45678, "N3", "_mozilla_papi._tcp");
-
-  let mockObj = {
-    discovered: false,
-
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
-    startDiscovery: function(serviceType, listener) {
-      listener.onDiscoveryStarted(serviceType);
-
-      if (!this.discovered) {
-        listener.onServiceFound(mockDevice1);
-        listener.onServiceFound(mockDevice2);
-      } else {
-        listener.onServiceFound(mockDevice1);
-        listener.onServiceFound(mockDevice3);
-      }
-      this.discovered = true;
-
-      return {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
-        cancel: function() {
-          listener.onDiscoveryStopped(serviceType);
-        }
-      };
-    },
-    registerService: function(serviceInfo, listener) {},
-    resolveService: function(serviceInfo, listener) {
-      Assert.equal(serviceInfo.serviceType, "_mozilla_papi._tcp");
-      if (serviceInfo.serviceName == "N1") {
-        listener.onServiceResolved(mockDevice1);
-      } else if (serviceInfo.serviceName == "N2") {
-        listener.onServiceResolved(mockDevice2);
-      } else if (serviceInfo.serviceName == "N3") {
-        listener.onServiceResolved(mockDevice3);
-      } else {
-        Assert.ok(false);
-      }
-    }
-  };
-
-  let contractHook = new ContractHook(SD_CONTRACT_ID, mockObj);
-  let provider = Cc[PROVIDER_CONTRACT_ID].createInstance(Ci.nsIPresentationDeviceProvider);
-  let listener = new TestPresentationDeviceListener();
-  Assert.equal(listener.count(), 0);
-
-  // Start discovery
-  provider.listener = listener; // discover: N1, N2
-  Assert.equal(listener.count(), 2);
-  Assert.equal(listener.devices['A.local'].name, mockDevice1.serviceName);
-  Assert.equal(listener.devices['B.local'].name, mockDevice2.serviceName);
-  Assert.ok(!listener.devices['C.local']);
-
-  // temporarily disable to stop discovery and re-enable
-  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-
-  provider.forceDiscovery(); // discover: N1, N3, going to remove: N2
-  Assert.equal(listener.count(), 3);
-  Assert.equal(listener.devices['A.local'].name, mockDevice1.serviceName);
-  Assert.equal(listener.devices['B.local'].name, mockDevice2.serviceName);
-  Assert.equal(listener.devices['C.local'].name, mockDevice3.serviceName);
-
-  // temporarily disable to stop discovery and re-enable
-  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
-  Services.prefs.setBoolPref(PREF_DISCOVERY, true);
-
-  provider.forceDiscovery(); // discover: N1, N3, remove: N2
-  Assert.equal(listener.count(), 2);
-  Assert.equal(listener.devices['A.local'].name, mockDevice1.serviceName);
-  Assert.ok(!listener.devices['B.local']);
-  Assert.equal(listener.devices['C.local'].name, mockDevice3.serviceName);
+  // Try discovery again
+  provider.forceDiscovery();
+  Assert.equal(listener.devices.length, 1);
 
   provider.listener = null;
 
@@ -691,13 +517,13 @@ function serverClosed() {
 
   Assert.equal(mockObj.serviceRegistered, 2);
   Assert.equal(mockObj.serviceUnregistered, 1);
-  Assert.equal(listener.devices.length, 1);
+  Assert.equal(listener.devices.length, 2);
 
   // Unregister
   provider.listener = null;
   Assert.equal(mockObj.serviceRegistered, 2);
   Assert.equal(mockObj.serviceUnregistered, 2);
-  Assert.equal(listener.devices.length, 1);
+  Assert.equal(listener.devices.length, 2);
 
   run_next_test();
 }
@@ -716,8 +542,6 @@ function run_test() {
   add_test(addDevice);
   add_test(noAddDevice);
   add_test(addDeviceDynamically);
-  add_test(updateDevice);
-  add_test(diffDiscovery);
   add_test(serverClosed);
 
   run_next_test();
