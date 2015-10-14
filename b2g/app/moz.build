@@ -4,27 +4,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if not CONFIG['LIBXUL_SDK']:
-    if CONFIG['GAIADIR']:
-        GeckoProgram(CONFIG['MOZ_APP_NAME'] + "-bin")
-    else:
-        GeckoProgram(CONFIG['MOZ_APP_NAME'])
-    if CONFIG['MOZ_B2G_LOADER']:
-        SOURCES += [
-            'B2GLoader.cpp',
-        ]
-
+if CONFIG['GAIADIR']:
+    GeckoProgram(CONFIG['MOZ_APP_NAME'] + "-bin")
+else:
+    GeckoProgram(CONFIG['MOZ_APP_NAME'])
+if CONFIG['MOZ_B2G_LOADER']:
     SOURCES += [
-        'nsBrowserApp.cpp',
+        'B2GLoader.cpp',
     ]
-    if CONFIG['_MSC_VER']:
-        # Always enter a Windows program through wmain, whether or not we're
-        # a console application.
-        WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
-    USE_LIBS += [
-        'zlib',
-    ]
+SOURCES += [
+    'nsBrowserApp.cpp',
+]
+if CONFIG['_MSC_VER']:
+    # Always enter a Windows program through wmain, whether or not we're
+    # a console application.
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+
+USE_LIBS += [
+    'zlib',
+]
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'MOZ_UPDATER'):
     DEFINES[var] = CONFIG[var]

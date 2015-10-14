@@ -8200,7 +8200,7 @@ IonBuilder::testGlobalLexicalBinding(PropertyName* name)
         HeapTypeSetKey lexicalProperty = lexicalKey->property(id);
         if (!obj->containsPure(name)) {
             Shape* shape = script()->global().lookupPure(name);
-            if (!shape || !shape->configurable())
+            if (!shape || shape->configurable())
                 MOZ_ALWAYS_FALSE(lexicalProperty.isOwnProperty(constraints()));
             obj = &script()->global();
         }

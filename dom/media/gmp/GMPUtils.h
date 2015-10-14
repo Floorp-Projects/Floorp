@@ -43,6 +43,9 @@ enum GMPCrashReason {
   kInvalid,
 };
 
+bool
+FileExists(nsIFile* aFile);
+
 } // namespace mozilla
 
 #endif

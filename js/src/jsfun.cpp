@@ -909,7 +909,7 @@ js::FindBody(JSContext* cx, HandleFunction fun, HandleLinearString src, size_t* 
 }
 
 JSString*
-js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lambdaParen)
+js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
 {
     if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
         return nullptr;
@@ -925,9 +925,9 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
     if (fun->hasScript()) {
         script = fun->nonLazyScript();
         if (script->isGeneratorExp()) {
-            if ((!bodyOnly && !out.append("function genexp() {")) ||
+            if (!out.append("function genexp() {") ||
                 !out.append("\n    [generator expression]\n") ||
-                (!bodyOnly && !out.append("}")))
+                !out.append("}"))
             {
                 return nullptr;
             }
@@ -937,21 +937,21 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
 
     bool funIsMethodOrNonArrowLambda = (fun->isLambda() && !fun->isArrow()) || fun->isMethod() ||
                                         fun->isGetter() || fun->isSetter();
-    if (!bodyOnly) {
-        // If we're not in pretty mode, put parentheses around lambda functions and methods.
-        if (fun->isInterpreted() && !lambdaParen && funIsMethodOrNonArrowLambda) {
-            if (!out.append("("))
-                return nullptr;
-        }
-        if (!fun->isArrow()) {
-            if (!(fun->isStarGenerator() ? out.append("function* ") : out.append("function ")))
-                return nullptr;
-        }
-        if (fun->atom()) {
-            if (!out.append(fun->atom()))
-                return nullptr;
-        }
+
+    // If we're not in pretty mode, put parentheses around lambda functions and methods.
+    if (fun->isInterpreted() && !lambdaParen && funIsMethodOrNonArrowLambda) {
+        if (!out.append("("))
+            return nullptr;
     }
+    if (!fun->isArrow()) {
+        if (!(fun->isStarGenerator() ? out.append("function* ") : out.append("function ")))
+            return nullptr;
+    }
+    if (fun->atom()) {
+        if (!out.append(fun->atom()))
+            return nullptr;
+    }
+
     bool haveSource = fun->isInterpreted() && !fun->isSelfHostedBuiltin();
     if (haveSource && !script->scriptSource()->hasSourceData() &&
         !JSScript::loadSource(cx, script->scriptSource(), &haveSource))
@@ -987,7 +987,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
         // resulting function will have the same semantics.
         bool addUseStrict = script->strict() && !script->explicitUseStrict() && !fun->isArrow();
 
-        bool buildBody = funCon && !bodyOnly;
+        bool buildBody = funCon;
         if (buildBody) {
             // This function was created with the Function constructor. We don't
             // have source for the arguments, so we have to generate that. Part
@@ -1012,7 +1012,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
             if (!out.append(") {\n"))
                 return nullptr;
         }
-        if ((bodyOnly && !funCon) || addUseStrict) {
+        if (addUseStrict) {
             // We need to get at the body either because we're only supposed to
             // return the body or we need to insert "use strict" into the body.
             size_t bodyStart = 0, bodyEnd;
@@ -1043,10 +1043,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
                 }
             }
 
-            // Output just the body (for bodyOnly) or the body and possibly
-            // closing braces (for addUseStrict).
-            size_t dependentEnd = bodyOnly ? bodyEnd : src->length();
-            if (!out.appendSubstring(src, bodyStart, dependentEnd - bodyStart))
+            // Output the body and possibly closing braces (for addUseStrict).
+            if (!out.appendSubstring(src, bodyStart, src->length() - bodyStart))
                 return nullptr;
         } else {
             if (!out.append(src))
@@ -1056,32 +1054,30 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
             if (!out.append("\n}"))
                 return nullptr;
         }
-        if (bodyOnly) {
-            // Slap a semicolon on the end of functions with an expression body.
-            if (exprBody && !out.append(";"))
-                return nullptr;
-        } else if (!lambdaParen && funIsMethodOrNonArrowLambda) {
+        if (!lambdaParen && funIsMethodOrNonArrowLambda) {
             if (!out.append(")"))
                 return nullptr;
         }
     } else if (fun->isInterpreted() && !fun->isSelfHostedBuiltin()) {
-        if ((!bodyOnly && !out.append("() {\n    ")) ||
+        if (!out.append("() {\n    ") ||
             !out.append("[sourceless code]") ||
-            (!bodyOnly && !out.append("\n}")))
+            !out.append("\n}"))
+        {
             return nullptr;
+        }
         if (!lambdaParen && fun->isLambda() && !fun->isArrow() && !out.append(")"))
             return nullptr;
     } else {
         MOZ_ASSERT(!fun->isExprBody());
 
         if (fun->isNative() && fun->native() == js::DefaultDerivedClassConstructor) {
-            if ((!bodyOnly && !out.append("(...args) {\n    ")) ||
+            if (!out.append("(...args) {\n    ") ||
                 !out.append("super(...args);\n}"))
             {
                 return nullptr;
             }
         } else {
-            if (!bodyOnly && !out.append("() {\n    "))
+            if (!out.append("() {\n    "))
                 return nullptr;
 
             if (!fun->isNative() || fun->native() != js::DefaultClassConstructor) {
@@ -1089,7 +1085,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
                     return nullptr;
             }
 
-            if (!bodyOnly && !out.append("\n}"))
+            if (!out.append("\n}"))
                 return nullptr;
         }
     }
@@ -1110,7 +1106,7 @@ fun_toStringHelper(JSContext* cx, HandleObject obj, unsigned indent)
     }
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
-    return FunctionToString(cx, fun, false, indent != JS_DONT_PRETTY_PRINT);
+    return FunctionToString(cx, fun, indent != JS_DONT_PRETTY_PRINT);
 }
 
 bool

@@ -401,7 +401,7 @@ public:
 
     virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                   bool aIsTrustedEvent) override;
-    nsresult ClickWithInputSource(uint16_t aInputSource);
+    nsresult ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
     virtual nsIContent *GetBindingParent() const override;
     virtual bool IsNodeOfType(uint32_t aFlags) const override;
