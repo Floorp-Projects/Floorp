@@ -60,7 +60,6 @@ PyMakeIgnoreList = [
 # it's a list of values that are already known before starting a build
 configuration_tokens = ('branch',
                         'platform',
-                        'en_us_binary_url',
                         'update_platform',
                         'update_channel',
                         'ssh_key_dir',
@@ -70,7 +69,8 @@ configuration_tokens = ('branch',
 # are defined at run time and they cannot be enforced in the _pre_config_lock
 # phase
 runtime_config_tokens = ('buildid', 'version', 'locale', 'from_buildid',
-                         'abs_objdir', 'abs_merge_dir', 'version', 'to_buildid')
+                         'abs_objdir', 'abs_merge_dir', 'version',
+                         'to_buildid', 'en_us_binary_url')
 
 
 # DesktopSingleLocale {{{1
@@ -329,18 +329,19 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             return self.bootstrap_env
         config = self.config
         replace_dict = self.query_abs_dirs()
-        bootstrap_env = self.query_env(partial_env=config.get("bootstrap_env"),
-                                       replace_dict=replace_dict)
+
         if config.get('en_us_binary_url') and \
            config.get('release_config_file'):
-            bootstrap_env['EN_US_BINARY_URL'] = config['en_us_binary_url']
+            replace_dict['en_us_binary_url'] = config['en_us_binary_url']
         # Override en_us_binary_url if passed as a buildbot property
         self.read_buildbot_config()
-        if self.buildbot_config.get("en_us_binary_url"):
+        if self.buildbot_config["properties"].get("en_us_binary_url"):
             self.info("Overriding en_us_binary_url with %s" %
-                      self.buildbot_config["en_us_binary_url"])
-            bootstrap_env['EN_US_BINARY_URL'] = \
-                self.buildbot_config["en_us_binary_url"]
+                      self.buildbot_config["properties"]["en_us_binary_url"])
+            replace_dict['en_us_binary_url'] = \
+                str(self.buildbot_config["properties"]["en_us_binary_url"])
+        bootstrap_env = self.query_env(partial_env=config.get("bootstrap_env"),
+                                       replace_dict=replace_dict)
         if 'MOZ_SIGNING_SERVERS' in os.environ:
             sign_cmd = self.query_moz_sign_cmd(formats=None)
             sign_cmd = subprocess.list2cmdline(sign_cmd)
@@ -676,20 +677,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         env = self.query_bootstrap_env()
         dirs = self.query_abs_dirs()
         cwd = dirs['abs_locales_dir']
-        binary_file = env['EN_US_BINARY_URL']
-        if binary_file.endswith(('tar.bz2', 'dmg', 'exe')):
-            # specified EN_US_BINARY url is an installer file...
-            dst_filename = binary_file.split('/')[-1].strip()
-            dst_filename = os.path.join(dirs['abs_objdir'], 'dist', dst_filename)
-            # we need to set ZIP_IN so make unpack finds this binary file.
-            # Please note this is required only if the en-us-binary-url provided
-            # has a different version number from the one in the current
-            # checkout.
-            self.bootstrap_env['ZIP_IN'] = dst_filename
-            return self.download_file(url=binary_file, file_name=dst_filename,
-                                      error_level=FATAL)
-
-        # binary url is not an installer, use make wget-en-US to download it
         return self._make(target=["wget-en-US"], cwd=cwd, env=env)
 
     def make_upload(self, locale):
