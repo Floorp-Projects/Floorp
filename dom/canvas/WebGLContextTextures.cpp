@@ -298,7 +298,7 @@ void
 WebGLContext::TexImage2D(GLenum rawTexImageTarget, GLint level, GLenum internalFormat,
                          GLsizei width, GLsizei height, GLint border, GLenum unpackFormat,
                          GLenum unpackType,
-                         const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                         const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                          ErrorResult& out_rv)
 {
     TexImageTarget texImageTarget;
@@ -356,7 +356,7 @@ void
 WebGLContext::TexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOffset,
                             GLint yOffset, GLsizei width, GLsizei height,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                            const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                             ErrorResult& out_rv)
 {
     TexImageTarget texImageTarget;
@@ -434,7 +434,7 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImageTarget, GLint level, GLint xOf
 void
 WebGLContext::CompressedTexImage2D(GLenum rawTexImageTarget, GLint level,
                                    GLenum internalFormat, GLsizei width, GLsizei height,
-                                   GLint border, const dom::ArrayBufferView& view)
+                                   GLint border, const dom::ArrayBufferViewOrSharedArrayBufferView& view)
 {
     TexImageTarget texImageTarget;
     WebGLTexture* tex;
@@ -452,7 +452,7 @@ void
 WebGLContext::CompressedTexSubImage2D(GLenum rawTexImageTarget, GLint level,
                                       GLint xOffset, GLint yOffset, GLsizei width,
                                       GLsizei height, GLenum unpackFormat,
-                                      const dom::ArrayBufferView& view)
+                                      const dom::ArrayBufferViewOrSharedArrayBufferView& view)
 {
     TexImageTarget texImageTarget;
     WebGLTexture* tex;

@@ -38,7 +38,7 @@ public:
 
   virtual MediaDecoder* Clone() override;
   virtual MediaDecoderStateMachine* CreateStateMachine() override;
-  virtual nsresult Load(nsIStreamListener**, MediaDecoder*) override;
+  virtual nsresult Load(nsIStreamListener**) override;
   virtual media::TimeIntervals GetSeekable() override;
   media::TimeIntervals GetBuffered() override;
 

@@ -142,6 +142,8 @@ struct Zone : public JS::shadow::Zone,
     void onTooMuchMalloc();
 
     void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr = nullptr) {
+        if (!CurrentThreadCanAccessRuntime(runtime_))
+            return nullptr;
         return runtimeFromMainThread()->onOutOfMemory(allocFunc, nbytes, reallocPtr);
     }
     void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }

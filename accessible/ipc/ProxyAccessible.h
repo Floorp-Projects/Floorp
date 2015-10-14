@@ -309,6 +309,9 @@ public:
   bool SelectAll();
   bool UnselectAll();
 
+  void TakeSelection();
+  void SetSelected(bool aSelect);
+
   bool DoAction(uint8_t aIndex);
   uint8_t ActionCount();
   void ActionDescriptionAt(uint8_t aIndex, nsString& aDescription);

@@ -310,8 +310,6 @@ pref("media.hardware-video-decoding.enabled", true);
 pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
 
-pref("media.gmp.kill-hung-plugins", true);
-
 #ifdef MOZ_WMF
 pref("media.wmf.decoder.thread-count", -1);
 #endif
@@ -1447,6 +1445,10 @@ pref("network.http.enforce-framing.soft", true);
 // such as http://domain.com/package.pak!//resource.html
 // See http://www.w3.org/TR/web-packaging/#streamable-package-format
 pref("network.http.enable-packaged-apps", false);
+
+// Enable this to bring in the signature verification if the signature exists.
+// Set to false if you don't need the signed packaged web app support (i.e. NSec).
+pref("network.http.packaged-signed-apps-enabled", false);
 
 // Enable this pref to skip verification process. The packaged app
 // will be considered signed no matter the package has a valid/invalid

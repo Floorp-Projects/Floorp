@@ -182,25 +182,25 @@ WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
     }
 }
 
+// BufferT may be one of
+// const dom::ArrayBuffer&
+// const dom::SharedArrayBuffer&
+// const dom::ArrayBufferView&
+// const dom::SharedArrayBufferView&
+template<typename BufferT>
 void
-WebGLContext::BufferData(GLenum target,
-                         const dom::Nullable<dom::ArrayBuffer>& maybeData,
-                         GLenum usage)
+WebGLContext::BufferDataT(GLenum target,
+                          const BufferT& data,
+                          GLenum usage)
 {
     if (IsContextLost())
         return;
-
-    if (maybeData.IsNull()) {
-        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
-        return ErrorInvalidValue("bufferData: null object passed");
-    }
 
     if (!ValidateBufferTarget(target, "bufferData"))
         return;
 
     const WebGLRefPtr<WebGLBuffer>& bufferSlot = GetBufferSlotByTarget(target);
 
-    const dom::ArrayBuffer& data = maybeData.Value();
     data.ComputeLengthAndData();
 
     // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
@@ -229,22 +229,63 @@ WebGLContext::BufferData(GLenum target,
     boundBuffer->SetByteLength(data.Length());
     if (!boundBuffer->ElementArrayCacheBufferData(data.Data(), data.Length()))
         return ErrorOutOfMemory("bufferData: out of memory");
+}
+
+void
+WebGLContext::BufferData(GLenum target,
+                         const dom::SharedArrayBuffer& data,
+                         GLenum usage)
+{
+    BufferDataT(target, data, usage);
+}
+
+void
+WebGLContext::BufferData(GLenum target,
+                         const dom::Nullable<dom::ArrayBuffer>& maybeData,
+                         GLenum usage)
+{
+    if (maybeData.IsNull()) {
+        // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
+        return ErrorInvalidValue("bufferData: null object passed");
+    }
+    BufferDataT(target, maybeData.Value(), usage);
 }
 
 void
 WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& data,
                          GLenum usage)
 {
+    BufferDataT(target, data, usage);
+}
+
+void
+WebGLContext::BufferData(GLenum target, const dom::SharedArrayBufferView& data,
+                         GLenum usage)
+{
+    BufferDataT(target, data, usage);
+}
+
+// BufferT may be one of
+// const dom::ArrayBuffer&
+// const dom::SharedArrayBuffer&
+// const dom::ArrayBufferView&
+// const dom::SharedArrayBufferView&
+template<typename BufferT>
+void
+WebGLContext::BufferSubDataT(GLenum target,
+                             WebGLsizeiptr byteOffset,
+                             const BufferT& data)
+{
     if (IsContextLost())
         return;
 
-    if (!ValidateBufferTarget(target, "bufferData"))
+    if (!ValidateBufferTarget(target, "bufferSubData"))
         return;
 
     WebGLRefPtr<WebGLBuffer>& bufferSlot = GetBufferSlotByTarget(target);
 
-    if (!ValidateBufferUsageEnum(usage, "bufferData: usage"))
-        return;
+    if (byteOffset < 0)
+        return ErrorInvalidValue("bufferSubData: negative offset");
 
     WebGLBuffer* boundBuffer = bufferSlot.get();
     if (!boundBuffer)
@@ -252,119 +293,60 @@ WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& data,
 
     data.ComputeLengthAndData();
 
-    // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
-    // is like intptr_t.
-    if (!CheckedInt<GLsizeiptr>(data.Length()).isValid())
-        return ErrorOutOfMemory("bufferData: bad size");
+    CheckedInt<WebGLsizeiptr> checked_neededByteLength =
+        CheckedInt<WebGLsizeiptr>(byteOffset) + data.Length();
 
-    InvalidateBufferFetching();
-    MakeContextCurrent();
-
-    GLenum error = CheckedBufferData(target, data.Length(), data.Data(), usage);
-    if (error) {
-        GenerateWarning("bufferData generated error %s", ErrorName(error));
+    if (!checked_neededByteLength.isValid()) {
+        ErrorInvalidValue("bufferSubData: Integer overflow computing the needed"
+                          " byte length.");
         return;
     }
 
-    boundBuffer->SetByteLength(data.Length());
-    if (!boundBuffer->ElementArrayCacheBufferData(data.Data(), data.Length()))
-        return ErrorOutOfMemory("bufferData: out of memory");
+    if (checked_neededByteLength.value() > boundBuffer->ByteLength()) {
+        ErrorInvalidValue("bufferSubData: Not enough data. Operation requires"
+                          " %d bytes, but buffer only has %d bytes.",
+                          checked_neededByteLength.value(),
+                          boundBuffer->ByteLength());
+        return;
+    }
+
+    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(),
+                                                data.Length());
+
+    MakeContextCurrent();
+    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
 }
 
 void
 WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const dom::Nullable<dom::ArrayBuffer>& maybeData)
 {
-    if (IsContextLost())
-        return;
-
     if (maybeData.IsNull()) {
         // see http://www.khronos.org/bugzilla/show_bug.cgi?id=386
         return;
     }
+    BufferSubDataT(target, byteOffset, maybeData.Value());
+}
 
-    if (!ValidateBufferTarget(target, "bufferSubData"))
-        return;
-
-    WebGLRefPtr<WebGLBuffer>& bufferSlot = GetBufferSlotByTarget(target);
-
-    if (byteOffset < 0)
-        return ErrorInvalidValue("bufferSubData: negative offset");
-
-    WebGLBuffer* boundBuffer = bufferSlot.get();
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferData: no buffer bound!");
-
-    const dom::ArrayBuffer& data = maybeData.Value();
-    data.ComputeLengthAndData();
-
-    CheckedInt<WebGLsizeiptr> checked_neededByteLength =
-        CheckedInt<WebGLsizeiptr>(byteOffset) + data.Length();
-
-    if (!checked_neededByteLength.isValid()) {
-        ErrorInvalidValue("bufferSubData: Integer overflow computing the needed"
-                          " byte length.");
-        return;
-    }
-
-    if (checked_neededByteLength.value() > boundBuffer->ByteLength()) {
-        ErrorInvalidValue("bufferSubData: Not enough data. Operation requires"
-                          " %d bytes, but buffer only has %d bytes.",
-                          checked_neededByteLength.value(),
-                          boundBuffer->ByteLength());
-        return;
-    }
-
-    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(),
-                                                data.Length());
-
-    MakeContextCurrent();
-    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
+void
+WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
+                            const dom::SharedArrayBuffer& data)
+{
+    BufferSubDataT(target, byteOffset, data);
 }
 
 void
 WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
                             const dom::ArrayBufferView& data)
 {
-    if (IsContextLost())
-        return;
+    BufferSubDataT(target, byteOffset, data);
+}
 
-    if (!ValidateBufferTarget(target, "bufferSubData"))
-        return;
-
-    WebGLRefPtr<WebGLBuffer>& bufferSlot = GetBufferSlotByTarget(target);
-
-    if (byteOffset < 0)
-        return ErrorInvalidValue("bufferSubData: negative offset");
-
-    WebGLBuffer* boundBuffer = bufferSlot.get();
-    if (!boundBuffer)
-        return ErrorInvalidOperation("bufferSubData: no buffer bound!");
-
-    data.ComputeLengthAndData();
-
-    CheckedInt<WebGLsizeiptr> checked_neededByteLength =
-        CheckedInt<WebGLsizeiptr>(byteOffset) + data.Length();
-
-    if (!checked_neededByteLength.isValid()) {
-        ErrorInvalidValue("bufferSubData: Integer overflow computing the needed"
-                          " byte length.");
-        return;
-    }
-
-    if (checked_neededByteLength.value() > boundBuffer->ByteLength()) {
-        ErrorInvalidValue("bufferSubData: Not enough data. Operation requires"
-                          " %d bytes, but buffer only has %d bytes.",
-                          checked_neededByteLength.value(),
-                          boundBuffer->ByteLength());
-        return;
-    }
-
-    boundBuffer->ElementArrayCacheBufferSubData(byteOffset, data.Data(),
-                                                data.Length());
-
-    MakeContextCurrent();
-    gl->fBufferSubData(target, byteOffset, data.Length(), data.Data());
+void
+WebGLContext::BufferSubData(GLenum target, WebGLsizeiptr byteOffset,
+                            const dom::SharedArrayBufferView& data)
+{
+    BufferSubDataT(target, byteOffset, data);
 }
 
 already_AddRefed<WebGLBuffer>

@@ -10,7 +10,7 @@ function check(aLongName, aShortName) {
   is(network.longName, aLongName, "network.longName");
   is(network.shortName, aShortName, "network.shortName");
   is(network.mcc, "310", "network.mcc");
-  is(network.mnc, "260", "network.mnc");
+  is(network.mnc, "410", "network.mnc");
 }
 
 function test(aLongName, aShortName) {

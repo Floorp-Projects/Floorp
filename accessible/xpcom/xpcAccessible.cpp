@@ -499,16 +499,6 @@ xpcAccessible::SetSelected(bool aSelect)
 }
 
 NS_IMETHODIMP
-xpcAccessible::ExtendSelection()
-{
-  if (!Intl())
-    return NS_ERROR_FAILURE;
-
-  Intl()->ExtendSelection();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 xpcAccessible::TakeSelection()
 {
   if (!Intl())
