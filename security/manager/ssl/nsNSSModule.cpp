@@ -4,48 +4,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ModuleUtils.h"
-
-#include "nsNSSComponent.h"
-#include "nsSSLSocketProvider.h"
-#include "nsTLSSocketProvider.h"
+#include "CertBlocklist.h"
+#include "nsCertOverrideService.h"
+#include "nsCertPicker.h"
+#include "nsCrypto.h"
+#include "nsCryptoHash.h"
+#include "nsCURILoader.h"
+#include "nsDataSignatureVerifier.h"
+#include "nsDOMCID.h" //For the NS_CRYPTO_CONTRACTID define
+#include "nsEntropyCollector.h"
+#include "nsICategoryManager.h"
 #include "nsKeygenHandler.h"
-
-#include "nsSDR.h"
-
+#include "nsKeyModule.h"
+#include "mozilla/ModuleUtils.h"
+#include "nsNetCID.h"
+#include "nsNSSCertificate.h"
+#include "nsNSSCertificateDB.h"
+#include "nsNSSCertificateFakeTransport.h"
+#include "nsNSSComponent.h"
+#include "NSSErrorsService.h"
+#include "nsNSSVersion.h"
+#include "nsNTLMAuthModule.h"
 #include "nsPK11TokenDB.h"
 #include "nsPKCS11Slot.h"
-#include "nsNSSCertificate.h"
-#include "nsNSSCertificateFakeTransport.h"
-#include "nsNSSCertificateDB.h"
+#include "PSMContentListener.h"
+#include "nsRandomGenerator.h"
+#include "nsSDR.h"
+#include "nsSecureBrowserUIImpl.h"
+#include "nsSiteSecurityService.h"
+#include "nsSSLSocketProvider.h"
+#include "nsSSLStatus.h"
+#include "nsTLSSocketProvider.h"
+#include "TransportSecurityInfo.h"
+#include "WeakCryptoOverride.h"
+#include "nsXULAppAPI.h"
+
 #ifdef MOZ_XUL
 #include "nsCertTree.h"
 #endif
-#include "nsCrypto.h"
-#include "nsCryptoHash.h"
-//For the NS_CRYPTO_CONTRACTID define
-#include "nsDOMCID.h"
-#include "nsNetCID.h"
-#include "nsCertPicker.h"
-#include "nsCURILoader.h"
-#include "nsICategoryManager.h"
-#include "nsNTLMAuthModule.h"
-#include "nsKeyModule.h"
-#include "nsDataSignatureVerifier.h"
-#include "nsCertOverrideService.h"
-#include "nsRandomGenerator.h"
-#include "nsSSLStatus.h"
-#include "TransportSecurityInfo.h"
-#include "NSSErrorsService.h"
-#include "nsNSSVersion.h"
-#include "CertBlocklist.h"
-#include "nsEntropyCollector.h"
-#include "nsSecureBrowserUIImpl.h"
-#include "nsSiteSecurityService.h"
-
-#include "nsXULAppAPI.h"
-
-#include "PSMContentListener.h"
 
 #define NS_IS_PROCESS_DEFAULT                                                 \
     (GeckoProcessType_Default == XRE_GetProcessType())
@@ -223,6 +219,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntropyCollector)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecureBrowserUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertBlocklist, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSiteSecurityService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(WeakCryptoOverride)
 
 NS_DEFINE_NAMED_CID(NS_NSSCOMPONENT_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSOCKETPROVIDER_CID);
@@ -256,6 +253,7 @@ NS_DEFINE_NAMED_CID(NS_ENTROPYCOLLECTOR_CID);
 NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
 NS_DEFINE_NAMED_CID(NS_SITE_SECURITY_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_BLOCKLIST_CID);
+NS_DEFINE_NAMED_CID(NS_WEAKCRYPTOOVERRIDE_CID);
 
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor },
@@ -290,6 +288,7 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_SECURE_BROWSER_UI_CID, false, nullptr, nsSecureBrowserUIImplConstructor },
   { &kNS_SITE_SECURITY_SERVICE_CID, false, nullptr, nsSiteSecurityServiceConstructor },
   { &kNS_CERT_BLOCKLIST_CID, false, nullptr, CertBlocklistConstructor},
+  { &kNS_WEAKCRYPTOOVERRIDE_CID, false, nullptr, WeakCryptoOverrideConstructor },
   { nullptr }
 };
 
@@ -325,6 +324,7 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID },
   { NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID },
   { NS_CERTBLOCKLIST_CONTRACTID, &kNS_CERT_BLOCKLIST_CID },
+  { NS_WEAKCRYPTOOVERRIDE_CONTRACTID, &kNS_WEAKCRYPTOOVERRIDE_CID },
   { nullptr }
 };
 
