@@ -15,11 +15,6 @@ JS_PREFERENCE_FILES += [
     'profile/firefox.js',
 ]
 
-if CONFIG['LIBXUL_SDK']:
-    PREF_JS_EXPORTS += [
-        'profile/channel-prefs.js',
-    ]
-
 SOURCES += [
     'nsBrowserApp.cpp',
 ]
@@ -28,9 +23,6 @@ FINAL_TARGET_FILES += ['blocklist.xml']
 FINAL_TARGET_FILES.defaults.profile += ['profile/prefs.js']
 
 DEFINES['APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
-
-if CONFIG['LIBXUL_SDK']:
-    DEFINES['LIBXUL_SDK'] = True
 
 GENERATED_INCLUDES += [
     '/build',

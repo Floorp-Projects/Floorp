@@ -351,12 +351,34 @@ nsDocumentRuleResultCacheKey::Finalize()
 #endif
 }
 
+#ifdef DEBUG
+static bool
+ArrayIsSorted(const nsTArray<css::DocumentRule*>& aRules)
+{
+  for (size_t i = 1; i < aRules.Length(); i++) {
+    if (aRules[i - 1] > aRules[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
 bool
 nsDocumentRuleResultCacheKey::Matches(
                        nsPresContext* aPresContext,
                        const nsTArray<css::DocumentRule*>& aRules) const
 {
   MOZ_ASSERT(mFinalized);
+  MOZ_ASSERT(ArrayIsSorted(mMatchingRules));
+  MOZ_ASSERT(ArrayIsSorted(aRules));
+
+#ifdef DEBUG
+  for (css::DocumentRule* rule : mMatchingRules) {
+    MOZ_ASSERT(aRules.BinaryIndexOf(rule) != aRules.NoIndex,
+               "aRules must contain all rules in mMatchingRules");
+  }
+#endif
 
   // First check that aPresContext matches all the rules listed in
   // mMatchingRules.
@@ -382,8 +404,6 @@ nsDocumentRuleResultCacheKey::Matches(
   while (pr < pr_end) {
     while (pm < pm_end && *pm < *pr) {
       ++pm;
-      MOZ_ASSERT(pm >= pm_end || *pm == *pr,
-                 "shouldn't find rule in mMatchingRules that is not in aRules");
     }
     if (pm >= pm_end || *pm != *pr) {
       if ((*pr)->UseForPresentation(aPresContext)) {
@@ -2331,8 +2351,11 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   mInner->mFirstChild = nullptr;
   mInner->mNameSpaceMap = nullptr;
 
-  // allow unsafe rules if the style sheet's principal is the system principal
-  bool allowUnsafeRules = nsContentUtils::IsSystemPrincipal(mInner->mPrincipal);
+  // allow agent features if the style sheet's principal is the system principal
+  css::SheetParsingMode parsingMode =
+    nsContentUtils::IsSystemPrincipal(mInner->mPrincipal)
+      ? css::eAgentSheetFeatures
+      : css::eAuthorSheetFeatures;
 
   uint32_t lineNumber = 1;
   if (mOwningNode) {
@@ -2345,7 +2368,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   nsCSSParser parser(loader, this);
   nsresult rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
                                   mInner->mPrincipal, lineNumber,
-                                  allowUnsafeRules, &reusableSheets);
+                                  parsingMode, &reusableSheets);
   DidDirty(); // we are always 'dirty' here since we always remove rules first
   NS_ENSURE_SUCCESS(rv, rv);
 

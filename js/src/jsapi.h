@@ -4047,15 +4047,13 @@ JS_DecompileScript(JSContext* cx, JS::Handle<JSScript*> script, const char* name
 
 /*
  * API extension: OR this into indent to avoid pretty-printing the decompiled
- * source resulting from JS_DecompileFunction{,Body}.
+ * source resulting from JS_DecompileFunction.
  */
 #define JS_DONT_PRETTY_PRINT    ((unsigned)0x8000)
 
 extern JS_PUBLIC_API(JSString*)
 JS_DecompileFunction(JSContext* cx, JS::Handle<JSFunction*> fun, unsigned indent);
 
-extern JS_PUBLIC_API(JSString*)
-JS_DecompileFunctionBody(JSContext* cx, JS::Handle<JSFunction*> fun, unsigned indent);
 
 /*
  * NB: JS_ExecuteScript and the JS::Evaluate APIs come in two flavors: either

@@ -30,6 +30,13 @@
       }, "NotSupportedError", "1023-bit is too small to succeed"),
 
       badCertificate({
+        name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-384",
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1])
+      }, "NotSupportedError", "SHA-384 isn't supported yet"),
+
+      badCertificate({
         name: "ECDH",
         namedCurve: "P-256"
       }, "DataError", "otherwise valid ECDH config is rejected"),

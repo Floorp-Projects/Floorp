@@ -115,7 +115,7 @@ GStreamerReader::~GStreamerReader()
   NS_ASSERTION(!mPlayBin, "No Shutdown() after Init()");
 }
 
-nsresult GStreamerReader::Init(MediaDecoderReader* aCloneDonor)
+nsresult GStreamerReader::Init()
 {
   GStreamerFormatHelper::Instance();
 

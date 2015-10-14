@@ -79,6 +79,7 @@
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "../plugins/ipc/PluginWidgetParent.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
@@ -283,19 +284,8 @@ nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI)
   nsRefPtr<TabParent> tp = nullptr;
 
   MutableTabContext context;
-  nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
-  nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
-
-  bool tabContextUpdated = true;
-  if (ownApp) {
-    tabContextUpdated = context.SetTabContextForAppFrame(ownApp, containingApp);
-  } else if (OwnerIsBrowserFrame()) {
-    // The |else| above is unnecessary; OwnerIsBrowserFrame() implies !ownApp.
-    tabContextUpdated = context.SetTabContextForBrowserFrame(containingApp);
-  } else {
-    tabContextUpdated = context.SetTabContextForNormalFrame();
-  }
-  NS_ENSURE_STATE(tabContextUpdated);
+  nsresult rv = GetNewTabContext(&context);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
   tp = ContentParent::CreateBrowserOrApp(context, ownerElement, nullptr);
@@ -304,7 +294,7 @@ nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI)
   }
   mRemoteBrowserShown = false;
 
-  nsresult rv = SwapRemoteBrowser(tp);
+  rv = SwapRemoteBrowser(tp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2269,19 +2259,8 @@ nsFrameLoader::TryRemoteBrowser()
     js::ProfileEntry::Category::OTHER);
 
   MutableTabContext context;
-  nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
-  nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
-
-  bool rv = true;
-  if (ownApp) {
-    rv = context.SetTabContextForAppFrame(ownApp, containingApp);
-  } else if (OwnerIsBrowserFrame()) {
-    // The |else| above is unnecessary; OwnerIsBrowserFrame() implies !ownApp.
-    rv = context.SetTabContextForBrowserFrame(containingApp);
-  } else {
-    rv = context.SetTabContextForNormalFrame();
-  }
-  NS_ENSURE_TRUE(rv, false);
+  nsresult rv = GetNewTabContext(&context);
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
   mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement, openerContentParent);
@@ -3044,4 +3023,31 @@ nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange)
       parentTreeOwner->TabParentAdded(mRemoteBrowser, isPrimary);
     }
   }
+}
+
+nsresult
+nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext)
+{
+  nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
+  nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
+  OriginAttributes attrs = OriginAttributes();
+  attrs.mInBrowser = OwnerIsBrowserFrame();
+
+  // Get the AppId from ownApp
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  if (ownApp) {
+    nsresult rv = ownApp->GetLocalId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(appId != nsIScriptSecurityManager::NO_APP_ID);
+  } else if (containingApp) {
+    nsresult rv = containingApp->GetLocalId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(appId != nsIScriptSecurityManager::NO_APP_ID);
+  }
+  attrs.mAppId = appId;
+
+  bool tabContextUpdated = aTabContext->SetTabContext(ownApp, containingApp, attrs);
+  NS_ENSURE_STATE(tabContextUpdated);
+
+  return NS_OK;
 }

@@ -175,7 +175,7 @@ ClampToSubject(nsIGlobalObject* aGlobalOrNull)
 
   nsIPrincipal* globalPrin = aGlobalOrNull->PrincipalOrNull();
   NS_ENSURE_TRUE(globalPrin, GetCurrentGlobal());
-  if (!nsContentUtils::SubjectPrincipal()->SubsumesConsideringDomain(globalPrin)) {
+  if (!nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->SubsumesConsideringDomain(globalPrin)) {
     return GetCurrentGlobal();
   }
 

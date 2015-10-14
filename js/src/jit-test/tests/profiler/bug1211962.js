@@ -1,5 +1,6 @@
 // |jit-test| slow;
-load(libdir + "oomTest.js");
+if (!('oomTest' in this))
+    quit();
 
 enableSPSProfiling();
 var lfGlobal = newGlobal();
