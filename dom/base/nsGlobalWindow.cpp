@@ -8800,7 +8800,7 @@ nsGlobalWindow::CanClose()
 }
 
 void
-nsGlobalWindow::CloseOuter()
+nsGlobalWindow::CloseOuter(bool aTrustedCaller)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
@@ -8832,7 +8832,7 @@ nsGlobalWindow::CloseOuter()
   mDoc->GetURL(url);
   if (!mDocShell->GetIsApp() &&
       !StringBeginsWith(url, NS_LITERAL_STRING("about:neterror")) &&
-      !mHadOriginalOpener && !nsContentUtils::IsCallerChrome()) {
+      !mHadOriginalOpener && !aTrustedCaller) {
     bool allowClose = mAllowScriptsToClose ||
       Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
     if (!allowClose) {
@@ -8876,18 +8876,15 @@ nsGlobalWindow::CloseOuter()
 void
 nsGlobalWindow::Close(ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(CloseOuter, (), aError, );
+  FORWARD_TO_OUTER_OR_THROW(CloseOuter, (nsContentUtils::IsCallerChrome()), aError, );
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::Close()
 {
-  FORWARD_TO_INNER(Close, (), NS_ERROR_UNEXPECTED);
-
-  ErrorResult rv;
-  Close(rv);
-
-  return rv.StealNSResult();
+  FORWARD_TO_OUTER(Close, (), NS_ERROR_UNEXPECTED);
+  CloseOuter(/* aTrustedCaller = */ true);
+  return NS_OK;
 }
 
 void
