@@ -65,9 +65,7 @@ fuzzy(1,899) == pal8os2v2-16.bmp pal8.png
 # a yellow-green shadow. That’s because they’re doing simple bit-shifting
 # (possibly including one round of bit replication), instead of proper
 # scaling."
-# [XXX: We have the yellow-green shadow because we don't do proper scaling.
-# Chromium renders it properly.]
-fails == rgb16-231.bmp rgb16-231.png
+== rgb16-231.bmp rgb16-231.png
 
 # BMP: bihsize=124, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with an alpha channel. There are 4 bits for each color

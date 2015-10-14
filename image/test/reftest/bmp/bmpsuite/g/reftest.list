@@ -76,22 +76,18 @@ fuzzy(1,899) == pal8v5.bmp pal8.png
 # "A 16-bit image with the default color format: 5 bits each for red, green, and
 # blue, and 1 unused bit. The whitest colors should (I assume) be displayed as
 # pure white: (255,255,255), not (248,248,248)."
-# [XXX: we do the cheap scaling that gives (248,248,248) for white, which
-# explains the overly generous fuzzy values. Chromium does proper scaling.]
-fuzzy(7,7236) == rgb16.bmp rgb16.png
+fuzzy(1,1296) == rgb16.bmp rgb16.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=0
 # "A 16-bit image with a BITFIELDS segment indicating 5 red, 6 green, and 5 blue
 # bits. This is a standard 16-bit format, even supported by old versions of
 # Windows that don’t support any other non-default 16-bit formats. The whitest
 # colors should be displayed as pure white: (255,255,255), not (248,252,248)."
-# [XXX: same as rgb16.bmp]
-fuzzy(7,7221) == rgb16-565.bmp rgb16-565.png
+fuzzy(1,1296) == rgb16.bmp rgb16.png
 
 # BMP: bihsize=40, 127 x 64, bpp=16, compression=3, colors=256
 # "A 16-bit image with both a BITFIELDS segment and a palette."
-# [XXX: same as rgb16.bmp]
-fuzzy(7,7221) == rgb16-565pal.bmp rgb16-565.png
+fuzzy(1,1516) == rgb16.bmp rgb16.png
 
 # BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=0
 # "A perfectly ordinary 24-bit (truecolor) image."
