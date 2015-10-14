@@ -8,7 +8,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
@@ -16,7 +15,6 @@
 #include "nsServiceManagerUtils.h"
 
 #define PREF_PRESENTATION_DISCOVERY "dom.presentation.discovery.enabled"
-#define PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS "dom.presentation.discovery.timeout_ms"
 #define PREF_PRESENTATION_DISCOVERABLE "dom.presentation.discoverable"
 #define PREF_PRESENTATION_DEVICE_NAME "dom.presentation.device.name"
 
@@ -42,7 +40,6 @@ namespace presentation {
 
 static const char* kObservedPrefs[] = {
   PREF_PRESENTATION_DISCOVERY,
-  PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS,
   PREF_PRESENTATION_DISCOVERABLE,
   PREF_PRESENTATION_DEVICE_NAME,
   nullptr
@@ -126,15 +123,9 @@ MulticastDNSDeviceProvider::Init()
     return rv;
   }
 
-  mDiscoveryTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   Preferences::AddStrongObservers(this, kObservedPrefs);
 
   mDiscoveryEnabled = Preferences::GetBool(PREF_PRESENTATION_DISCOVERY);
-  mDiscveryTimeoutMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS);
   mDiscoverable = Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE);
   mServiceName = Preferences::GetCString(PREF_PRESENTATION_DEVICE_NAME);
 
@@ -245,9 +236,6 @@ nsresult
 MulticastDNSDeviceProvider::StopDiscovery(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDiscoveryTimer);
-
-  unused << mDiscoveryTimer->Cancel();
 
   if (mDiscoveryRequest) {
     mDiscoveryRequest->Cancel(aReason);
@@ -325,14 +313,6 @@ MulticastDNSDeviceProvider::OnDiscoveryStarted(const nsACString& aServiceType)
 {
   LOG_I("OnDiscoveryStarted");
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDiscoveryTimer);
-
-  nsresult rv;
-  if (NS_WARN_IF(NS_FAILED(rv = mDiscoveryTimer->Init(this,
-                                                      mDiscveryTimeoutMs,
-                                                      nsITimer::TYPE_ONE_SHOT)))) {
-    return rv;
-  }
 
   return NS_OK;
 }
@@ -614,15 +594,11 @@ MulticastDNSDeviceProvider::Observe(nsISupports* aSubject,
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     if (data.EqualsLiteral(PREF_PRESENTATION_DISCOVERY)) {
       OnDiscoveryChanged(Preferences::GetBool(PREF_PRESENTATION_DISCOVERY));
-    } else if (data.EqualsLiteral(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS)) {
-      OnDiscoveryTimeoutChanged(Preferences::GetUint(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS));
     } else if (data.EqualsLiteral(PREF_PRESENTATION_DISCOVERABLE)) {
       OnDiscoverableChanged(Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE));
     } else if (data.EqualsLiteral(PREF_PRESENTATION_DEVICE_NAME)) {
       OnServiceNameChanged(Preferences::GetCString(PREF_PRESENTATION_DEVICE_NAME));
     }
-  } else if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
-    StopDiscovery(NS_OK);
   }
 
   return NS_OK;
@@ -641,17 +617,6 @@ MulticastDNSDeviceProvider::OnDiscoveryChanged(bool aEnabled)
   }
 
   return StopDiscovery(NS_OK);
-}
-
-nsresult
-MulticastDNSDeviceProvider::OnDiscoveryTimeoutChanged(uint32_t aTimeoutMs)
-{
-  LOG_I("OnDiscoveryTimeoutChanged = %d\n", aTimeoutMs);
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mDiscveryTimeoutMs = aTimeoutMs;
-
-  return NS_OK;
 }
 
 nsresult
