@@ -141,15 +141,15 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
   AutoReleaseVideoFrame ensureFrameReleased(aInput);
   HRESULT hr;
 
-  if (mIsFlushing) {
-    CK_LOGD("VideoDecoder::DecodeTask rejecting frame: flushing.");
-    return;
-  }
-
   {
     AutoLock lock(mMutex);
     mNumInputTasks--;
     assert(mNumInputTasks >= 0);
+  }
+
+  if (mIsFlushing) {
+    CK_LOGD("VideoDecoder::DecodeTask rejecting frame: flushing.");
+    return;
   }
 
   if (!aInput || !mHostAPI || !mDecoder) {
