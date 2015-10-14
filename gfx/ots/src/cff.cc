@@ -375,17 +375,11 @@ bool ParsePrivateDictData(
     operands.pop_back();
 
     switch (op) {
-      // hints
+      // array
       case 6:  // BlueValues
       case 7:  // OtherBlues
       case 8:  // FamilyBlues
       case 9:  // FamilyOtherBlues
-        if (operands.empty() || (operands.size() % 2) != 0) {
-          return OTS_FAILURE();
-        }
-        break;
-
-      // array
       case (12U << 8) + 12:  // StemSnapH (delta)
       case (12U << 8) + 13:  // StemSnapV (delta)
         if (operands.empty()) {
@@ -904,14 +898,14 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
 
 namespace ots {
 
-bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_cff_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
-  font->cff = new OpenTypeCFF;
-  font->cff->data = data;
-  font->cff->length = length;
-  font->cff->font_dict_length = 0;
-  font->cff->local_subrs = NULL;
+  file->cff = new OpenTypeCFF;
+  file->cff->data = data;
+  file->cff->length = length;
+  file->cff->font_dict_length = 0;
+  file->cff->local_subrs = NULL;
 
   // parse "6. Header" in the Adobe Compact Font Format Specification
   uint8_t major = 0;
@@ -949,7 +943,7 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
   if (!ParseIndex(&table, &name_index)) {
     return OTS_FAILURE();
   }
-  if (!ParseNameData(&table, name_index, &(font->cff->name))) {
+  if (!ParseNameData(&table, name_index, &(file->cff->name))) {
     return OTS_FAILURE();
   }
 
@@ -973,14 +967,14 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
     return OTS_FAILURE();
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  const uint16_t num_glyphs = file->maxp->num_glyphs;
   const size_t sid_max = string_index.count + kNStdString;
   // string_index.count == 0 is allowed.
 
   // parse "9. Top DICT Data"
   if (!ParseDictData(data, length, top_dict_index,
                      num_glyphs, sid_max,
-                     DICT_DATA_TOPLEVEL, font->cff)) {
+                     DICT_DATA_TOPLEVEL, file->cff)) {
     return OTS_FAILURE();
   }
 
@@ -993,21 +987,21 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
 
   // Check if all fd_index in FDSelect are valid.
   std::map<uint16_t, uint8_t>::const_iterator iter;
-  std::map<uint16_t, uint8_t>::const_iterator end = font->cff->fd_select.end();
-  for (iter = font->cff->fd_select.begin(); iter != end; ++iter) {
-    if (iter->second >= font->cff->font_dict_length) {
+  std::map<uint16_t, uint8_t>::const_iterator end = file->cff->fd_select.end();
+  for (iter = file->cff->fd_select.begin(); iter != end; ++iter) {
+    if (iter->second >= file->cff->font_dict_length) {
       return OTS_FAILURE();
     }
   }
 
   // Check if all charstrings (font hinting code for each glyph) are valid.
-  for (size_t i = 0; i < font->cff->char_strings_array.size(); ++i) {
-    if (!ValidateType2CharStringIndex(font,
-                                      *(font->cff->char_strings_array.at(i)),
+  for (size_t i = 0; i < file->cff->char_strings_array.size(); ++i) {
+    if (!ValidateType2CharStringIndex(file,
+                                      *(file->cff->char_strings_array.at(i)),
                                       global_subrs_index,
-                                      font->cff->fd_select,
-                                      font->cff->local_subrs_per_font,
-                                      font->cff->local_subrs,
+                                      file->cff->fd_select,
+                                      file->cff->local_subrs_per_font,
+                                      file->cff->local_subrs,
                                       &table)) {
       return OTS_FAILURE_MSG("Failed validating charstring set %d", (int) i);
     }
@@ -1016,34 +1010,29 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_cff_should_serialise(Font *font) {
-  return font->cff != NULL;
+bool ots_cff_should_serialise(OpenTypeFile *file) {
+  return file->cff != NULL;
 }
 
-bool ots_cff_serialise(OTSStream *out, Font *font) {
+bool ots_cff_serialise(OTSStream *out, OpenTypeFile *file) {
   // TODO(yusukes): would be better to transcode the data,
   //                rather than simple memcpy.
-  if (!out->Write(font->cff->data, font->cff->length)) {
+  if (!out->Write(file->cff->data, file->cff->length)) {
     return OTS_FAILURE();
   }
   return true;
 }
 
-void ots_cff_reuse(Font *font, Font *other) {
-  font->cff = other->cff;
-  font->cff_reused = true;
-}
-
-void ots_cff_free(Font *font) {
-  if (font->cff) {
-    for (size_t i = 0; i < font->cff->char_strings_array.size(); ++i) {
-      delete (font->cff->char_strings_array)[i];
+void ots_cff_free(OpenTypeFile *file) {
+  if (file->cff) {
+    for (size_t i = 0; i < file->cff->char_strings_array.size(); ++i) {
+      delete (file->cff->char_strings_array)[i];
     }
-    for (size_t i = 0; i < font->cff->local_subrs_per_font.size(); ++i) {
-      delete (font->cff->local_subrs_per_font)[i];
+    for (size_t i = 0; i < file->cff->local_subrs_per_font.size(); ++i) {
+      delete (file->cff->local_subrs_per_font)[i];
     }
-    delete font->cff->local_subrs;
-    delete font->cff;
+    delete file->cff->local_subrs;
+    delete file->cff;
   }
 }
 

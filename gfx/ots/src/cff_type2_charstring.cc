@@ -30,7 +30,7 @@ const size_t kMaxSubrNesting = 10;
 // will fail with the dummy value.
 const int32_t dummy_result = INT_MAX;
 
-bool ExecuteType2CharString(ots::Font *font,
+bool ExecuteType2CharString(ots::OpenTypeFile *file,
                             size_t call_depth,
                             const ots::CFFIndex& global_subrs_index,
                             const ots::CFFIndex& local_subrs_index,
@@ -225,7 +225,7 @@ bool ReadNextNumberFromType2CharString(ots::Buffer *char_string,
 // succeeds. If the |op| is kCallSubr or kCallGSubr, the function recursively
 // calls ExecuteType2CharString() function. The arguments other than |op| and
 // |argument_stack| are passed for that reason.
-bool ExecuteType2CharStringOperator(ots::Font *font,
+bool ExecuteType2CharStringOperator(ots::OpenTypeFile *file,
                                     int32_t op,
                                     size_t call_depth,
                                     const ots::CFFIndex& global_subrs_index,
@@ -290,7 +290,7 @@ bool ExecuteType2CharStringOperator(ots::Font *font,
     }
     ots::Buffer char_string_to_jump(cff_table->buffer() + offset, length);
 
-    return ExecuteType2CharString(font,
+    return ExecuteType2CharString(file,
                                   call_depth + 1,
                                   global_subrs_index,
                                   local_subrs_index,
@@ -729,7 +729,7 @@ bool ExecuteType2CharStringOperator(ots::Font *font,
 // in_out_found_width: true is set if |char_string| contains 'width' byte (which
 //                     is 0 or 1 byte.)
 // in_out_num_stems: total number of hstems and vstems processed so far.
-bool ExecuteType2CharString(ots::Font *font,
+bool ExecuteType2CharString(ots::OpenTypeFile *file,
                             size_t call_depth,
                             const ots::CFFIndex& global_subrs_index,
                             const ots::CFFIndex& local_subrs_index,
@@ -779,7 +779,7 @@ bool ExecuteType2CharString(ots::Font *font,
     }
 
     // An operator is found. Execute it.
-    if (!ExecuteType2CharStringOperator(font,
+    if (!ExecuteType2CharStringOperator(file,
                                         operator_or_operand,
                                         call_depth,
                                         global_subrs_index,
@@ -845,19 +845,21 @@ bool SelectLocalSubr(const std::map<uint16_t, uint8_t> &fd_select,
 namespace ots {
 
 bool ValidateType2CharStringIndex(
-    ots::Font *font,
+    ots::OpenTypeFile *file,
     const CFFIndex& char_strings_index,
     const CFFIndex& global_subrs_index,
     const std::map<uint16_t, uint8_t> &fd_select,
     const std::vector<CFFIndex *> &local_subrs_per_font,
     const CFFIndex *local_subrs,
     Buffer* cff_table) {
-  if (char_strings_index.offsets.size() == 0) {
+  const uint16_t num_offsets =
+      static_cast<uint16_t>(char_strings_index.offsets.size());
+  if (num_offsets != char_strings_index.offsets.size() || num_offsets == 0) {
     return OTS_FAILURE();  // no charstring.
   }
 
   // For each glyph, validate the corresponding charstring.
-  for (unsigned i = 1; i < char_strings_index.offsets.size(); ++i) {
+  for (uint16_t i = 1; i < num_offsets; ++i) {
     // Prepare a Buffer object, |char_string|, which contains the charstring
     // for the |i|-th glyph.
     const size_t length =
@@ -873,7 +875,7 @@ bool ValidateType2CharStringIndex(
     Buffer char_string(cff_table->buffer() + offset, length);
 
     // Get a local subrs for the glyph.
-    const unsigned glyph_index = i - 1;  // index in the map is 0-origin.
+    const uint16_t glyph_index = i - 1;  // index in the map is 0-origin.
     const CFFIndex *local_subrs_to_use = NULL;
     if (!SelectLocalSubr(fd_select,
                          local_subrs_per_font,
@@ -893,7 +895,7 @@ bool ValidateType2CharStringIndex(
     bool found_endchar = false;
     bool found_width = false;
     size_t num_stems = 0;
-    if (!ExecuteType2CharString(font,
+    if (!ExecuteType2CharString(file,
                                 0 /* initial call_depth is zero */,
                                 global_subrs_index, *local_subrs_to_use,
                                 cff_table, &char_string, &argument_stack,

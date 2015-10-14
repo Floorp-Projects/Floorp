@@ -14,10 +14,10 @@
 
 namespace ots {
 
-bool ots_hhea_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_hhea_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
   OpenTypeHHEA *hhea = new OpenTypeHHEA;
-  font->hhea = hhea;
+  file->hhea = hhea;
 
   if (!table.ReadU32(&hhea->header.version)) {
     return OTS_FAILURE_MSG("Failed to read hhea version");
@@ -26,31 +26,26 @@ bool ots_hhea_parse(Font *font, const uint8_t *data, size_t length) {
     return OTS_FAILURE_MSG("Bad hhea version of %d", hhea->header.version);
   }
 
-  if (!ParseMetricsHeader(font, &table, &hhea->header)) {
+  if (!ParseMetricsHeader(file, &table, &hhea->header)) {
     return OTS_FAILURE_MSG("Failed to parse horizontal metrics");
   }
 
   return true;
 }
 
-bool ots_hhea_should_serialise(Font *font) {
-  return font->hhea != NULL;
+bool ots_hhea_should_serialise(OpenTypeFile *file) {
+  return file->hhea != NULL;
 }
 
-bool ots_hhea_serialise(OTSStream *out, Font *font) {
-  if (!SerialiseMetricsHeader(font, out, &font->hhea->header)) {
+bool ots_hhea_serialise(OTSStream *out, OpenTypeFile *file) {
+  if (!SerialiseMetricsHeader(file, out, &file->hhea->header)) {
     return OTS_FAILURE_MSG("Failed to serialise horizontal metrics");
   }
   return true;
 }
 
-void ots_hhea_reuse(Font *font, Font *other) {
-  font->hhea = other->hhea;
-  font->hhea_reused = true;
-}
-
-void ots_hhea_free(Font *font) {
-  delete font->hhea;
+void ots_hhea_free(OpenTypeFile *file) {
+  delete file->hhea;
 }
 
 }  // namespace ots

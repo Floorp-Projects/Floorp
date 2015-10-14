@@ -50,7 +50,7 @@ const unsigned kGlyphPartRecordSize = 5 * 2;
 
 // Shared Table: MathValueRecord
 
-bool ParseMathValueRecord(const ots::Font *font,
+bool ParseMathValueRecord(const ots::OpenTypeFile *file,
                           ots::Buffer* subtable, const uint8_t *data,
                           const size_t length) {
   // Check the Value field.
@@ -67,7 +67,7 @@ bool ParseMathValueRecord(const ots::Font *font,
     if (offset >= length) {
       return OTS_FAILURE();
     }
-    if (!ots::ParseDeviceTable(font, data + offset, length - offset)) {
+    if (!ots::ParseDeviceTable(file, data + offset, length - offset)) {
       return OTS_FAILURE();
     }
   }
@@ -75,7 +75,7 @@ bool ParseMathValueRecord(const ots::Font *font,
   return true;
 }
 
-bool ParseMathConstantsTable(const ots::Font *font,
+bool ParseMathConstantsTable(const ots::OpenTypeFile *file,
                              const uint8_t *data, size_t length) {
   ots::Buffer subtable(data, length);
 
@@ -146,7 +146,7 @@ bool ParseMathConstantsTable(const ots::Font *font,
   //
   // RadicalKernAfterDegree
   for (unsigned i = 0; i < static_cast<unsigned>(51); ++i) {
-    if (!ParseMathValueRecord(font, &subtable, data, length)) {
+    if (!ParseMathValueRecord(file, &subtable, data, length)) {
       return OTS_FAILURE();
     }
   }
@@ -160,7 +160,7 @@ bool ParseMathConstantsTable(const ots::Font *font,
   return true;
 }
 
-bool ParseMathValueRecordSequenceForGlyphs(const ots::Font *font,
+bool ParseMathValueRecordSequenceForGlyphs(const ots::OpenTypeFile *file,
                                            ots::Buffer* subtable,
                                            const uint8_t *data,
                                            const size_t length,
@@ -183,7 +183,7 @@ bool ParseMathValueRecordSequenceForGlyphs(const ots::Font *font,
   if (offset_coverage < sequence_end || offset_coverage >= length) {
     return OTS_FAILURE();
   }
-  if (!ots::ParseCoverageTable(font, data + offset_coverage,
+  if (!ots::ParseCoverageTable(file, data + offset_coverage,
                                length - offset_coverage,
                                num_glyphs, sequence_count)) {
     return OTS_FAILURE();
@@ -191,7 +191,7 @@ bool ParseMathValueRecordSequenceForGlyphs(const ots::Font *font,
 
   // Check sequence.
   for (unsigned i = 0; i < sequence_count; ++i) {
-    if (!ParseMathValueRecord(font, subtable, data, length)) {
+    if (!ParseMathValueRecord(file, subtable, data, length)) {
       return OTS_FAILURE();
     }
   }
@@ -199,25 +199,25 @@ bool ParseMathValueRecordSequenceForGlyphs(const ots::Font *font,
   return true;
 }
 
-bool ParseMathItalicsCorrectionInfoTable(const ots::Font *font,
+bool ParseMathItalicsCorrectionInfoTable(const ots::OpenTypeFile *file,
                                          const uint8_t *data,
                                          size_t length,
                                          const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
-  return ParseMathValueRecordSequenceForGlyphs(font, &subtable, data, length,
+  return ParseMathValueRecordSequenceForGlyphs(file, &subtable, data, length,
                                                num_glyphs);
 }
 
-bool ParseMathTopAccentAttachmentTable(const ots::Font *font,
+bool ParseMathTopAccentAttachmentTable(const ots::OpenTypeFile *file,
                                        const uint8_t *data,
                                        size_t length,
                                        const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
-  return ParseMathValueRecordSequenceForGlyphs(font, &subtable, data, length,
+  return ParseMathValueRecordSequenceForGlyphs(file, &subtable, data, length,
                                                num_glyphs);
 }
 
-bool ParseMathKernTable(const ots::Font *font,
+bool ParseMathKernTable(const ots::OpenTypeFile *file,
                         const uint8_t *data, size_t length) {
   ots::Buffer subtable(data, length);
 
@@ -229,14 +229,14 @@ bool ParseMathKernTable(const ots::Font *font,
 
   // Check the Correction Heights.
   for (unsigned i = 0; i < height_count; ++i) {
-    if (!ParseMathValueRecord(font, &subtable, data, length)) {
+    if (!ParseMathValueRecord(file, &subtable, data, length)) {
       return OTS_FAILURE();
     }
   }
 
   // Check the Kern Values.
   for (unsigned i = 0; i <= height_count; ++i) {
-    if (!ParseMathValueRecord(font, &subtable, data, length)) {
+    if (!ParseMathValueRecord(file, &subtable, data, length)) {
       return OTS_FAILURE();
     }
   }
@@ -244,7 +244,7 @@ bool ParseMathKernTable(const ots::Font *font,
   return true;
 }
 
-bool ParseMathKernInfoTable(const ots::Font *font,
+bool ParseMathKernInfoTable(const ots::OpenTypeFile *file,
                             const uint8_t *data, size_t length,
                             const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
@@ -267,7 +267,7 @@ bool ParseMathKernInfoTable(const ots::Font *font,
   if (offset_coverage < sequence_end || offset_coverage >= length) {
     return OTS_FAILURE();
   }
-  if (!ots::ParseCoverageTable(font, data + offset_coverage, length - offset_coverage,
+  if (!ots::ParseCoverageTable(file, data + offset_coverage, length - offset_coverage,
                                num_glyphs, sequence_count)) {
     return OTS_FAILURE();
   }
@@ -282,7 +282,7 @@ bool ParseMathKernInfoTable(const ots::Font *font,
       }
       if (offset_math_kern) {
         if (offset_math_kern < sequence_end || offset_math_kern >= length ||
-            !ParseMathKernTable(font, data + offset_math_kern,
+            !ParseMathKernTable(file, data + offset_math_kern,
                                 length - offset_math_kern)) {
           return OTS_FAILURE();
         }
@@ -293,7 +293,7 @@ bool ParseMathKernInfoTable(const ots::Font *font,
   return true;
 }
 
-bool ParseMathGlyphInfoTable(const ots::Font *font,
+bool ParseMathGlyphInfoTable(const ots::OpenTypeFile *file,
                              const uint8_t *data, size_t length,
                              const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
@@ -318,7 +318,7 @@ bool ParseMathGlyphInfoTable(const ots::Font *font,
     if (offset_math_italics_correction_info >= length ||
         offset_math_italics_correction_info < kMathGlyphInfoHeaderSize ||
         !ParseMathItalicsCorrectionInfoTable(
-            font, data + offset_math_italics_correction_info,
+            file, data + offset_math_italics_correction_info,
             length - offset_math_italics_correction_info,
             num_glyphs)) {
       return OTS_FAILURE();
@@ -327,7 +327,7 @@ bool ParseMathGlyphInfoTable(const ots::Font *font,
   if (offset_math_top_accent_attachment) {
     if (offset_math_top_accent_attachment >= length ||
         offset_math_top_accent_attachment < kMathGlyphInfoHeaderSize ||
-        !ParseMathTopAccentAttachmentTable(font, data +
+        !ParseMathTopAccentAttachmentTable(file, data +
                                            offset_math_top_accent_attachment,
                                            length -
                                            offset_math_top_accent_attachment,
@@ -338,7 +338,7 @@ bool ParseMathGlyphInfoTable(const ots::Font *font,
   if (offset_extended_shaped_coverage) {
     if (offset_extended_shaped_coverage >= length ||
         offset_extended_shaped_coverage < kMathGlyphInfoHeaderSize ||
-        !ots::ParseCoverageTable(font, data + offset_extended_shaped_coverage,
+        !ots::ParseCoverageTable(file, data + offset_extended_shaped_coverage,
                                  length - offset_extended_shaped_coverage,
                                  num_glyphs)) {
       return OTS_FAILURE();
@@ -347,7 +347,7 @@ bool ParseMathGlyphInfoTable(const ots::Font *font,
   if (offset_math_kern_info) {
     if (offset_math_kern_info >= length ||
         offset_math_kern_info < kMathGlyphInfoHeaderSize ||
-        !ParseMathKernInfoTable(font, data + offset_math_kern_info,
+        !ParseMathKernInfoTable(file, data + offset_math_kern_info,
                                 length - offset_math_kern_info, num_glyphs)) {
       return OTS_FAILURE();
     }
@@ -356,14 +356,14 @@ bool ParseMathGlyphInfoTable(const ots::Font *font,
   return true;
 }
 
-bool ParseGlyphAssemblyTable(const ots::Font *font,
+bool ParseGlyphAssemblyTable(const ots::OpenTypeFile *file,
                              const uint8_t *data,
                              size_t length, const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
 
   // Check the header.
   uint16_t part_count = 0;
-  if (!ParseMathValueRecord(font, &subtable, data, length) ||
+  if (!ParseMathValueRecord(file, &subtable, data, length) ||
       !subtable.ReadU16(&part_count)) {
     return OTS_FAILURE();
   }
@@ -394,7 +394,7 @@ bool ParseGlyphAssemblyTable(const ots::Font *font,
   return true;
 }
 
-bool ParseMathGlyphConstructionTable(const ots::Font *font,
+bool ParseMathGlyphConstructionTable(const ots::OpenTypeFile *file,
                                      const uint8_t *data,
                                      size_t length, const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
@@ -419,7 +419,7 @@ bool ParseMathGlyphConstructionTable(const ots::Font *font,
         offset_glyph_assembly < sequence_end) {
       return OTS_FAILURE();
     }
-    if (!ParseGlyphAssemblyTable(font, data + offset_glyph_assembly,
+    if (!ParseGlyphAssemblyTable(file, data + offset_glyph_assembly,
                                  length - offset_glyph_assembly, num_glyphs)) {
       return OTS_FAILURE();
     }
@@ -440,7 +440,7 @@ bool ParseMathGlyphConstructionTable(const ots::Font *font,
   return true;
 }
 
-bool ParseMathGlyphConstructionSequence(const ots::Font *font,
+bool ParseMathGlyphConstructionSequence(const ots::OpenTypeFile *file,
                                         ots::Buffer* subtable,
                                         const uint8_t *data,
                                         size_t length,
@@ -452,7 +452,7 @@ bool ParseMathGlyphConstructionSequence(const ots::Font *font,
   if (offset_coverage < sequence_end || offset_coverage >= length) {
     return OTS_FAILURE();
   }
-  if (!ots::ParseCoverageTable(font, data + offset_coverage,
+  if (!ots::ParseCoverageTable(file, data + offset_coverage,
                                length - offset_coverage,
                                num_glyphs, glyph_count)) {
     return OTS_FAILURE();
@@ -466,7 +466,7 @@ bool ParseMathGlyphConstructionSequence(const ots::Font *font,
       }
       if (offset_glyph_construction < sequence_end ||
           offset_glyph_construction >= length ||
-          !ParseMathGlyphConstructionTable(font, data + offset_glyph_construction,
+          !ParseMathGlyphConstructionTable(file, data + offset_glyph_construction,
                                            length - offset_glyph_construction,
                                            num_glyphs)) {
         return OTS_FAILURE();
@@ -476,7 +476,7 @@ bool ParseMathGlyphConstructionSequence(const ots::Font *font,
   return true;
 }
 
-bool ParseMathVariantsTable(const ots::Font *font,
+bool ParseMathVariantsTable(const ots::OpenTypeFile *file,
                             const uint8_t *data,
                             size_t length, const uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
@@ -500,11 +500,11 @@ bool ParseMathVariantsTable(const ots::Font *font,
     return OTS_FAILURE();
   }
 
-  if (!ParseMathGlyphConstructionSequence(font, &subtable, data, length, num_glyphs,
+  if (!ParseMathGlyphConstructionSequence(file, &subtable, data, length, num_glyphs,
                                           offset_vert_glyph_coverage,
                                           vert_glyph_count,
                                           sequence_end) ||
-      !ParseMathGlyphConstructionSequence(font, &subtable, data, length, num_glyphs,
+      !ParseMathGlyphConstructionSequence(file, &subtable, data, length, num_glyphs,
                                           offset_horiz_glyph_coverage,
                                           horiz_glyph_count,
                                           sequence_end)) {
@@ -519,24 +519,24 @@ bool ParseMathVariantsTable(const ots::Font *font,
 #define DROP_THIS_TABLE(msg_) \
   do { \
     OTS_FAILURE_MSG(msg_ ", table discarded"); \
-    font->math->data = 0; \
-    font->math->length = 0; \
+    file->math->data = 0; \
+    file->math->length = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_math_parse(Font *font, const uint8_t *data, size_t length) {
-  // Grab the number of glyphs in the font from the maxp table to check
+bool ots_math_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
+  // Grab the number of glyphs in the file from the maxp table to check
   // GlyphIDs in MATH table.
-  if (!font->maxp) {
+  if (!file->maxp) {
     return OTS_FAILURE();
   }
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  const uint16_t num_glyphs = file->maxp->num_glyphs;
 
   Buffer table(data, length);
 
   OpenTypeMATH* math = new OpenTypeMATH;
-  font->math = math;
+  file->math = math;
 
   uint32_t version = 0;
   if (!table.ReadU32(&version)) {
@@ -566,17 +566,17 @@ bool ots_math_parse(Font *font, const uint8_t *data, size_t length) {
     return true;
   }
 
-  if (!ParseMathConstantsTable(font, data + offset_math_constants,
+  if (!ParseMathConstantsTable(file, data + offset_math_constants,
                                length - offset_math_constants)) {
     DROP_THIS_TABLE("failed to parse MathConstants table");
     return true;
   }
-  if (!ParseMathGlyphInfoTable(font, data + offset_math_glyph_info,
+  if (!ParseMathGlyphInfoTable(file, data + offset_math_glyph_info,
                                length - offset_math_glyph_info, num_glyphs)) {
     DROP_THIS_TABLE("failed to parse MathGlyphInfo table");
     return true;
   }
-  if (!ParseMathVariantsTable(font, data + offset_math_variants,
+  if (!ParseMathVariantsTable(file, data + offset_math_variants,
                               length - offset_math_variants, num_glyphs)) {
     DROP_THIS_TABLE("failed to parse MathVariants table");
     return true;
@@ -587,25 +587,20 @@ bool ots_math_parse(Font *font, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_math_should_serialise(Font *font) {
-  return font->math != NULL && font->math->data != NULL;
+bool ots_math_should_serialise(OpenTypeFile *file) {
+  return file->math != NULL && file->math->data != NULL;
 }
 
-bool ots_math_serialise(OTSStream *out, Font *font) {
-  if (!out->Write(font->math->data, font->math->length)) {
+bool ots_math_serialise(OTSStream *out, OpenTypeFile *file) {
+  if (!out->Write(file->math->data, file->math->length)) {
     return OTS_FAILURE();
   }
 
   return true;
 }
 
-void ots_math_reuse(Font *font, Font *other) {
-  font->math = other->math;
-  font->math_reused = true;
-}
-
-void ots_math_free(Font *font) {
-  delete font->math;
+void ots_math_free(OpenTypeFile *file) {
+  delete file->math;
 }
 
 }  // namespace ots

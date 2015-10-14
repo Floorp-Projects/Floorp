@@ -13,18 +13,18 @@
 
 #define DROP_THIS_TABLE(...) \
   do { \
-    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
+    OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__); \
     OTS_FAILURE_MSG("Table discarded"); \
-    delete font->vorg; \
-    font->vorg = 0; \
+    delete file->vorg; \
+    file->vorg = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_vorg_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_vorg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
-  font->vorg = new OpenTypeVORG;
-  OpenTypeVORG * const vorg = font->vorg;
+  file->vorg = new OpenTypeVORG;
+  OpenTypeVORG * const vorg = file->vorg;
 
   uint16_t num_recs;
   if (!table.ReadU16(&vorg->major_version) ||
@@ -68,13 +68,13 @@ bool ots_vorg_parse(Font *font, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_vorg_should_serialise(Font *font) {
-  if (!font->cff) return false;  // this table is not for fonts with TT glyphs.
-  return font->vorg != NULL;
+bool ots_vorg_should_serialise(OpenTypeFile *file) {
+  if (!file->cff) return false;  // this table is not for fonts with TT glyphs.
+  return file->vorg != NULL;
 }
 
-bool ots_vorg_serialise(OTSStream *out, Font *font) {
-  OpenTypeVORG * const vorg = font->vorg;
+bool ots_vorg_serialise(OTSStream *out, OpenTypeFile *file) {
+  OpenTypeVORG * const vorg = file->vorg;
   
   const uint16_t num_metrics = static_cast<uint16_t>(vorg->metrics.size());
   if (num_metrics != vorg->metrics.size() ||
@@ -96,13 +96,8 @@ bool ots_vorg_serialise(OTSStream *out, Font *font) {
   return true;
 }
 
-void ots_vorg_reuse(Font *font, Font *other) {
-  font->vorg = other->vorg;
-  font->vorg_reused = true;
-}
-
-void ots_vorg_free(Font *font) {
-  delete font->vorg;
+void ots_vorg_free(OpenTypeFile *file) {
+  delete file->vorg;
 }
 
 }  // namespace ots
