@@ -1550,8 +1550,6 @@ nsDocument::nsDocument(const char* aContentType)
   , mAnimatingImages(true)
   , mViewportType(Unknown)
 {
-  mDefaultElementType = kNameSpaceID_XHTML;
-
   SetContentTypeInternal(nsDependentCString(aContentType));
 
   if (!gDocumentLeakPRLog)

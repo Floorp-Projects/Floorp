@@ -24,7 +24,11 @@ function testDoc(doc, contentType) {
                   "Wrong MIME type -- incorrect server config?");
   }
 
-  assert_equals(doc.createElement("x").namespaceURI, "http://www.w3.org/1999/xhtml");
+  var expectedNamespace = contentType == "text/html" ||
+                          contentType == "application/xhtml+xml"
+                          ? "http://www.w3.org/1999/xhtml" : null;
+
+  assert_equals(doc.createElement("x").namespaceURI, expectedNamespace);
 }
 
 // First test various objects we create in JS

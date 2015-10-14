@@ -176,6 +176,7 @@ nsHTMLDocument::nsHTMLDocument()
   // bother initializing members to 0.
 
   mType = eHTML;
+  mDefaultElementType = kNameSpaceID_XHTML;
   mCompatMode = eCompatibility_NavQuirks;
 }
 
