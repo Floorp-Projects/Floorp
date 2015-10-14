@@ -7,6 +7,7 @@ const TEST_LIST = "test-track-simple";
 const TRACK_SUFFIX = "-track-digest256";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const LISTS_PREF_BRANCH = "browser.safebrowsing.provider.mozilla.lists.";
+const UPDATE_TIME_PREF = "browser.safebrowsing.provider.mozilla.nextupdatetime";
 
 var gBlocklistManager = {
   _type: "",
@@ -133,6 +134,7 @@ var gBlocklistManager = {
         if (shouldProceed) {
           let trackingTable = TEST_LIST + "," + selected.id + TRACK_SUFFIX;
           Services.prefs.setCharPref(TRACKING_TABLE_PREF, trackingTable);
+          Services.prefs.setCharPref(UPDATE_TIME_PREF, 42);
 
           Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |
                                 Ci.nsIAppStartup.eRestart);
