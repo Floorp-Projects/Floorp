@@ -606,7 +606,6 @@ loop.roomViews = (function(mozL10n) {
 
     getInitialState: function() {
       return {
-        contextEnabled: this.props.mozLoop.getLoopPref("contextInConversations.enabled"),
         showEditContext: false
       };
     },
@@ -767,7 +766,7 @@ loop.roomViews = (function(mozL10n) {
       };
 
       var shouldRenderInvitationOverlay = this._shouldRenderInvitationOverlay();
-      var shouldRenderEditContextView = this.state.contextEnabled && this.state.showEditContext;
+      var shouldRenderEditContextView = this.state.showEditContext;
       var roomData = this.props.roomStore.getStoreState("activeRoom");
 
       switch(this.state.roomState) {
@@ -792,7 +791,7 @@ loop.roomViews = (function(mozL10n) {
             {
               id: "edit",
               enabled: !this.state.showEditContext,
-              visible: this.state.contextEnabled,
+              visible: true,
               onClick: this.handleEditContextClick
             },
             { id: "feedback" },

@@ -3698,8 +3698,7 @@ NestedShell(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-DecompileFunctionSomehow(JSContext* cx, unsigned argc, Value* vp,
-                         JSString* (*decompiler)(JSContext*, HandleFunction, unsigned))
+DecompileFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
@@ -3707,23 +3706,11 @@ DecompileFunctionSomehow(JSContext* cx, unsigned argc, Value* vp,
         return true;
     }
     RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    JSString* result = decompiler(cx, fun, 0);
+    JSString* result = JS_DecompileFunction(cx, fun, 0);
     if (!result)
         return false;
     args.rval().setString(result);
     return true;
-}
-
-static bool
-DecompileBody(JSContext* cx, unsigned argc, Value* vp)
-{
-    return DecompileFunctionSomehow(cx, argc, vp, JS_DecompileFunctionBody);
-}
-
-static bool
-DecompileFunction(JSContext* cx, unsigned argc, Value* vp)
-{
-    return DecompileFunctionSomehow(cx, argc, vp, JS_DecompileFunction);
 }
 
 static bool
@@ -4865,10 +4852,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("decompileFunction", DecompileFunction, 1, 0,
 "decompileFunction(func)",
 "  Decompile a function."),
-
-    JS_FN_HELP("decompileBody", DecompileBody, 1, 0,
-"decompileBody(func)",
-"  Decompile a function's body."),
 
     JS_FN_HELP("decompileThis", DecompileThisScript, 0, 0,
 "decompileThis()",
@@ -6352,11 +6335,14 @@ static void
 PreInit()
 {
 #ifdef XP_WIN
-    // Disable the segfault dialog. We want to fail the tests immediately
-    // instead of hanging automation.
-    UINT prevMode = SetErrorMode(0);
-    UINT newMode = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
-    SetErrorMode(prevMode | newMode);
+    const char* crash_option = getenv("XRE_NO_WINDOWS_CRASH_DIALOG");
+    if (crash_option && strncmp(crash_option, "1", 1)) {
+        // Disable the segfault dialog. We want to fail the tests immediately
+        // instead of hanging automation.
+        UINT newMode = SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
+        UINT prevMode = SetErrorMode(newMode);
+        SetErrorMode(prevMode | newMode);
+    }
 #endif
 }
 
@@ -6371,15 +6357,6 @@ main(int argc, char** argv, char** envp)
     JSRuntime* rt;
     JSContext* cx;
     int result;
-#ifdef XP_WIN
-    {
-        const char* crash_option = getenv("XRE_NO_WINDOWS_CRASH_DIALOG");
-        if (crash_option && strncmp(crash_option, "1", 1)) {
-            DWORD oldmode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
-            SetErrorMode(oldmode | SEM_NOGPFAULTERRORBOX);
-        }
-    }
-#endif
 
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");

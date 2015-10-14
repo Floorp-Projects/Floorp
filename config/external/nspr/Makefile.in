@@ -5,9 +5,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef LIBXUL_SDK
-$(error config/external/nspr/Makefile.in is not compatible with --enable-libxul-sdk=)
-endif
 ifdef MOZ_BUILD_NSPR
 
 # Copy NSPR to the SDK

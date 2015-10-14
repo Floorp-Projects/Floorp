@@ -56,13 +56,6 @@ DirectShowReader::~DirectShowReader()
 #endif
 }
 
-nsresult
-DirectShowReader::Init(MediaDecoderReader* aCloneDonor)
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  return NS_OK;
-}
-
 // Try to parse the MP3 stream to make sure this is indeed an MP3, get the
 // estimated duration of the stream, and find the offset of the actual MP3
 // frames in the stream, as DirectShow doesn't like large ID3 sections.

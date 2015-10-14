@@ -7,7 +7,5 @@ function f2(a, /* ))))pernicious comment */ b,
             c, // another comment((
             d) {}
 assertEq(f2.toString(), "function f2(a, /* ))))pernicious comment */ b,\n            c, // another comment((\n            d) {}");
-assertEq(decompileBody(f2), "");
 function f3() { }
 assertEq(f3.toString(), "function f3() { }");
-assertEq(decompileBody(f3), " ");

@@ -30,7 +30,7 @@ import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.firstrun.FirstrunPane;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 
@@ -918,6 +918,9 @@ public final class GeckoProfile {
                     final LocalBrowserDB db = new LocalBrowserDB(getName());
                     final int offset = distribution == null ? 0 : db.addDistributionBookmarks(cr, distribution, 0);
                     db.addDefaultBookmarks(context, cr, offset);
+
+                    Log.d(LOGTAG, "Running post-distribution task: android preferences.");
+                    DistroSharedPrefsImport.importPreferences(context, distribution);
                 }
             }
 
@@ -937,6 +940,9 @@ public final class GeckoProfile {
                     final ContentResolver cr = context.getContentResolver();
                     final int offset = db.getCount(cr, "bookmarks");
                     db.addDistributionBookmarks(cr, distribution, offset);
+
+                    Log.d(LOGTAG, "Running late distribution task: android preferences.");
+                    DistroSharedPrefsImport.importPreferences(context, distribution);
                 }
             }
         });

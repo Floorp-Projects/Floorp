@@ -70,8 +70,6 @@ public:
   MediaOmxReader(AbstractMediaDecoder* aDecoder);
   ~MediaOmxReader();
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor);
-
 protected:
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
 public:
