@@ -266,16 +266,6 @@ public class SendTab extends ShareMethod {
         }
     }
 
-    @Override
-    public String getSuccessMessage() {
-        return context.getResources().getString(R.string.sync_text_tab_sent);
-    }
-
-    @Override
-    public String getFailureMessage() {
-        return context.getResources().getString(R.string.overlay_share_tab_not_sent);
-    }
-
     /**
      * Inteface for interacting with Sync accounts. Used to hide the difference in implementation
      * between FXA and "old sync" accounts when sending tabs.
