@@ -62,7 +62,8 @@ body {
   display: flex;
 }
 
-#global-toolbar .label {
+#global-toolbar .label,
+#timeline-toolbar .label {
   padding: 1px 4px;
 }
 
