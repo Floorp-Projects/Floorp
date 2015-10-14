@@ -74,19 +74,9 @@ public class RestrictedProfiles {
             return false;
         }
 
+        // The user is on a restricted profile if, and only if, we injected application restrictions during account setup.
         final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
-        final Bundle restrictions = new Bundle();
-        restrictions.putAll(mgr.getApplicationRestrictions(context.getPackageName()));
-        restrictions.putAll(mgr.getUserRestrictions());
-
-        for (String key : restrictions.keySet()) {
-            if (restrictions.getBoolean(key)) {
-                // At least one restriction is enabled -> We are a restricted profile
-                return true;
-            }
-        }
-
-        return false;
+        return !mgr.getApplicationRestrictions(context.getPackageName()).isEmpty();
     }
 
     public static void update(Context context) {
