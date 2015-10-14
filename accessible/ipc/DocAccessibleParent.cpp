@@ -262,6 +262,7 @@ DocAccessibleParent::Destroy()
     mChildDocs[i]->Destroy();
 
   for (auto iter = mAccessibles.Iter(); !iter.Done(); iter.Next()) {
+    MOZ_ASSERT(iter.Get()->mProxy != this);
     ProxyDestroyed(iter.Get()->mProxy);
     iter.Remove();
   }
