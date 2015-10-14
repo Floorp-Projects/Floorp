@@ -1647,7 +1647,7 @@ Toolbox.prototype = {
   },
 
   reload: function () {
-    const {devtools} = Cu.import("resource://devtools/Loader.jsm", {});
+    const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     devtools.reload(true);
   },
 
