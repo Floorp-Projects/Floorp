@@ -30,3 +30,4 @@ var curDirURI = ios.newFileURI(cwd);
 protocolHandler.setSubstitution("test", curDirURI);
 Components.utils.import("resource://test/CrashTestUtils.jsm");
 var crashType = CrashTestUtils.CRASH_INVALID_POINTER_DEREF;
+var shouldDelay = false;
