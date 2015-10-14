@@ -95,7 +95,7 @@ function startTest(test, token)
       ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
     }
 
-    manager.finished(token);
+    v.closeSessions().then(() => manager.finished(token));
   });
 
   LoadTest(test, v, token)
