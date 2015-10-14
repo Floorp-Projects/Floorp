@@ -3241,8 +3241,8 @@ IonBuilder::whileOrForInLoop(jssrcnote* sn)
 IonBuilder::ControlStatus
 IonBuilder::forLoop(JSOp op, jssrcnote* sn)
 {
-    // Skip the NOP or POP.
-    MOZ_ASSERT(op == JSOP_POP || op == JSOP_NOP);
+    // Skip the NOP.
+    MOZ_ASSERT(op == JSOP_NOP);
     pc = GetNextPc(pc);
 
     jsbytecode* condpc = pc + GetSrcNoteOffset(sn, 0);

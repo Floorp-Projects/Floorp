@@ -4362,6 +4362,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
             }
         }
 
+        MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
         if (next && emitOption == InitializeVars) {
             if (!emit1(JSOP_POP))
                 return false;
@@ -5600,33 +5601,32 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
 
     /* C-style for (init; cond; update) ... loop. */
     bool forLoopRequiresFreshening = false;
-    JSOp op;
-    ParseNode* init = forHead->pn_kid1;
-    if (!init) {
-        // If there's no init, emit a nop so that there's somewhere to put the
-        // SRC_FOR annotation that IonBuilder will look for.
-        op = JSOP_NOP;
-    } else if (init->isKind(PNK_FRESHENBLOCK)) {
-        // Also emit a nop, as above.
-        op = JSOP_NOP;
-
-        // The loop's init declaration was hoisted into an enclosing lexical
-        // scope node.  Note that the block scope must be freshened each
-        // iteration.
-        forLoopRequiresFreshening = true;
-    } else {
-        emittingForInit = true;
-        if (!updateSourceCoordNotes(init->pn_pos.begin))
-            return false;
-        if (!emitTree(init))
-            return false;
-        emittingForInit = false;
-
-        op = JSOP_POP;
+    if (ParseNode* init = forHead->pn_kid1) {
+        if (init->isKind(PNK_FRESHENBLOCK)) {
+            // The loop's init declaration was hoisted into an enclosing lexical
+            // scope node.  Note that the block scope must be freshened each
+            // iteration.
+            forLoopRequiresFreshening = true;
+        } else {
+            emittingForInit = true;
+            if (!updateSourceCoordNotes(init->pn_pos.begin))
+                return false;
+            if (init->isKind(PNK_VAR) || init->isKind(PNK_LET) || init->isKind(PNK_CONST)) {
+                init->pn_xflags |= PNX_POPVAR;  // Momentary hack, removed later in this patch stack.
+                if (!emitTree(init))
+                    return false;
+            } else {
+                if (!emitTree(init))
+                    return false;
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
+            emittingForInit = false;
+        }
     }
 
     /*
-     * NB: the SRC_FOR note has offsetBias 1 (JSOP_{NOP,POP}_LENGTH).
+     * NB: the SRC_FOR note has offsetBias 1 (JSOP_NOP_LENGTH).
      * Use tmp to hold the biased srcnote "top" offset, which differs
      * from the top local variable by the length of the JSOP_GOTO
      * emitted in between tmp and top if this loop has a condition.
@@ -5634,7 +5634,7 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     unsigned noteIndex;
     if (!newSrcNote(SRC_FOR, &noteIndex))
         return false;
-    if (!emit1(op))
+    if (!emit1(JSOP_NOP))
         return false;
     ptrdiff_t tmp = offset();
 
@@ -5642,9 +5642,6 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     if (forHead->pn_kid2) {
         /* Goto the loop condition, which branches back to iterate. */
         if (!emitJump(JSOP_GOTO, 0, &jmp))
-            return false;
-    } else {
-        if (op != JSOP_NOP && !emit1(JSOP_NOP))
             return false;
     }
 
@@ -5692,12 +5689,9 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     if (ParseNode* update = forHead->pn_kid3) {
         if (!updateSourceCoordNotes(update->pn_pos.begin))
             return false;
-        op = JSOP_POP;
         if (!emitTree(update))
             return false;
-
-        /* Always emit the POP or NOP to help IonBuilder. */
-        if (!emit1(op))
+        if (!emit1(JSOP_POP))
             return false;
 
         /* Restore the absolute line number for source note readers. */
@@ -5728,13 +5722,13 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
         return false;
     if (!setSrcNoteOffset(noteIndex, 1, tmp2 - tmp))
         return false;
+
     /* The third note offset helps us find the loop-closing jump. */
     if (!setSrcNoteOffset(noteIndex, 2, offset() - tmp))
         return false;
 
     /* If no loop condition, just emit a loop-closing jump. */
-    op = forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO;
-    if (!emitJump(op, top - offset()))
+    if (!emitJump(forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO, top - offset()))
         return false;
 
     if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top, offset()))
