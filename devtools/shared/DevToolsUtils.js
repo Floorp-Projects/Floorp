@@ -384,13 +384,6 @@ exports.dumpv = function(msg) {
 // loader, so define it on dumpn instead.
 exports.dumpv.wantVerbose = false;
 
-exports.dbg_assert = function dbg_assert(cond, e) {
-  if (!cond) {
-    return e;
-  }
-};
-
-
 /**
  * Utility function for updating an object with the properties of
  * other objects.
@@ -446,6 +439,43 @@ exports.defineLazyGetter = function defineLazyGetter(aObject, aName, aLambda) {
     enumerable: true
   });
 };
+
+// DEPRECATED: use DevToolsUtils.assert(condition, message) instead!
+exports.dbg_assert = function dbg_assert(cond, e) {
+  if (!cond) {
+    return e;
+  }
+};
+
+/**
+ * DevToolsUtils.assert(condition, message)
+ *
+ * @param Boolean condition
+ * @param String message
+ *
+ * If DEBUG_JS_MODULES is set, then `condition` is checked and if false-y, the
+ * assertion failure is logged and then an error is thrown.
+ *
+ * If DEBUG_JS_MODULES is not set, then this function is a no-op.
+ *
+ * This is an improvement over `dbg_assert`, which doesn't actually cause any
+ * fatal behavior, and is therefore much easier to accidentally ignore.
+ */
+exports.defineLazyGetter(exports, "assert", () => {
+  function noop(condition, msg) { }
+
+  function assert(condition, message) {
+    if (!condition) {
+      const err = new Error("Assertion failure: " + message);
+      exports.reportException("DevToolsUtils.assert", err);
+      throw err;
+    }
+  }
+
+  const scope = {};
+  Cu.import("resource://gre/modules/AppConstants.jsm", scope);
+  return scope.AppConstants.DEBUG_JS_MODULES ? assert : noop;
+});
 
 /**
  * Defines a getter on a specified object for a module.  The module will not
