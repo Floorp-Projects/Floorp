@@ -1,7 +1,8 @@
 $inherits:
-  from: 'tasks/builds/opt_linux64_clobber.yml'
+  from: 'tasks/builds/linux64_clobber.yml'
   variables:
     build_name: 'linux64-st-an'
+    build_type: 'opt'
 task:
   metadata:
       name: '[TC] Linux64 Static Analysis Opt'
@@ -10,6 +11,8 @@ task:
   routes:
     - 'index.buildbot.branches.{{project}}.linux64-st-an'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-st-an'
+
+  workerType: opt-linux64
 
   payload:
     env:

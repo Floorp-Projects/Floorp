@@ -10,10 +10,6 @@ task:
 
   workerType: opt-macosx64
 
-  routes:
-    - 'index.buildbot.branches.{{project}}.macosx64'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.macosx64'
-
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
