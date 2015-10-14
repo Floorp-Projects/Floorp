@@ -421,6 +421,72 @@ DOMMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return dom::MediaStreamBinding::Wrap(aCx, this, aGivenProto);
 }
 
+/* static */ already_AddRefed<DOMMediaStream>
+DOMMediaStream::Constructor(const GlobalObject& aGlobal,
+                            ErrorResult& aRv)
+{
+  Sequence<OwningNonNull<MediaStreamTrack>> emptyTrackSeq;
+  return Constructor(aGlobal, emptyTrackSeq, aRv);
+}
+
+/* static */ already_AddRefed<DOMMediaStream>
+DOMMediaStream::Constructor(const GlobalObject& aGlobal,
+                            const DOMMediaStream& aStream,
+                            ErrorResult& aRv)
+{
+  nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+  aStream.GetTracks(tracks);
+
+  Sequence<OwningNonNull<MediaStreamTrack>> nonNullTrackSeq;
+  if (!nonNullTrackSeq.SetLength(tracks.Length(), fallible)) {
+    MOZ_ASSERT(false);
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  for (size_t i = 0; i < tracks.Length(); ++i) {
+    nonNullTrackSeq[i] = tracks[i];
+  }
+
+  return Constructor(aGlobal, nonNullTrackSeq, aRv);
+}
+
+/* static */ already_AddRefed<DOMMediaStream>
+DOMMediaStream::Constructor(const GlobalObject& aGlobal,
+                            const Sequence<OwningNonNull<MediaStreamTrack>>& aTracks,
+                            ErrorResult& aRv)
+{
+  nsCOMPtr<nsIDOMWindow> ownerWindow = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!ownerWindow) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMMediaStream> newStream = new DOMMediaStream();
+  newStream->mWindow = ownerWindow;
+
+  for (MediaStreamTrack& track : aTracks) {
+    if (!newStream->GetPlaybackStream()) {
+      MOZ_RELEASE_ASSERT(track.GetStream());
+      MOZ_RELEASE_ASSERT(track.GetStream()->GetPlaybackStream());
+      MOZ_RELEASE_ASSERT(track.GetStream()->GetPlaybackStream()->Graph());
+      MediaStreamGraph* graph = track.GetStream()->GetPlaybackStream()->Graph();
+      newStream->InitPlaybackStreamCommon(graph);
+    }
+    newStream->AddTrack(track);
+  }
+
+  if (!newStream->GetPlaybackStream()) {
+    MOZ_ASSERT(aTracks.IsEmpty());
+    MediaStreamGraph* graph =
+      MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
+                                    AudioChannel::Normal);
+    newStream->InitPlaybackStreamCommon(graph);
+  }
+
+  return newStream.forget();
+}
+
 double
 DOMMediaStream::CurrentTime()
 {
