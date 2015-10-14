@@ -56,7 +56,7 @@ AudioStreamAnalyser.prototype = {
    * Useful to debug tests.
    */
   enableDebugCanvas: function() {
-    var cvs = document.createElement("canvas");
+    var cvs = this.debugCanvas = document.createElement("canvas");
     document.getElementById("content").appendChild(cvs);
 
     // Easy: 1px per bin
@@ -73,9 +73,24 @@ AudioStreamAnalyser.prototype = {
       for (var i = 0; i < array.length; i++) {
         c.fillRect(i, (256 - (array[i])), 1, 256);
       }
-      requestAnimationFrame(render);
+      if (!cvs.stopDrawing) {
+        requestAnimationFrame(render);
+      }
     }
     requestAnimationFrame(render);
+  },
+
+  /**
+   * Stop drawing of and remove the debug canvas from the DOM if it was
+   * previously added.
+   */
+  disableDebugCanvas: function() {
+    if (!this.debugCanvas || !this.debugCanvas.parentElement) {
+      return;
+    }
+
+    this.debugCanvas.stopDrawing = true;
+    this.debugCanvas.parentElement.removeChild(this.debugCanvas);
   },
 
   /**
