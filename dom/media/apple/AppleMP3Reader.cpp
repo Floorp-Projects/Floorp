@@ -430,9 +430,10 @@ AppleMP3Reader::SetupDecoder()
   // Set output format
 #if defined(MOZ_SAMPLE_TYPE_FLOAT32)
   outputFormat.mBitsPerChannel = 32;
-  outputFormat.mFormatFlags =
-    kLinearPCMFormatFlagIsFloat |
-    0;
+  outputFormat.mFormatFlags = kLinearPCMFormatFlagIsFloat;
+#elif defined(MOZ_SAMPLE_TYPE_S16)
+  outputFormat.mBitsPerChannel = 32;
+  outputFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger;
 #else
 #error Unknown audio sample type
 #endif

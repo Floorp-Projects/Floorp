@@ -14,15 +14,18 @@
 #include "mp4_demuxer/H264.h"
 #include "MP4Decoder.h"
 #include "MediaData.h"
-#include "MacIOSurfaceImage.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsAutoPtr.h"
-#include "nsCocoaFeatures.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
 #include <algorithm>
 #include "gfxPlatform.h"
+
+#ifndef MOZ_WIDGET_UIKIT
+#include "nsCocoaFeatures.h"
+#include "MacIOSurfaceImage.h"
+#endif
 
 extern PRLogModuleInfo* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -43,8 +46,13 @@ AppleVDADecoder::AppleVDADecoder(const VideoInfo& aConfig,
   , mDisplayHeight(aConfig.mDisplay.height)
   , mInputIncoming(0)
   , mIsShutDown(false)
+#ifdef MOZ_WIDGET_UIKIT
+  , mUseSoftwareImages(true)
+  , mIs106(false)
+#else
   , mUseSoftwareImages(false)
   , mIs106(!nsCocoaFeatures::OnLionOrLater())
+  #endif
   , mQueuedSamples(0)
   , mMonitor("AppleVideoDecoder")
   , mIsFlushing(false)
@@ -383,6 +391,7 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
     // Unlock the returned image data.
     CVPixelBufferUnlockBaseAddress(aImage, kCVPixelBufferLock_ReadOnly);
   } else {
+#ifndef MOZ_WIDGET_UIKIT
     IOSurfacePtr surface = MacIOSurfaceLib::CVPixelBufferGetIOSurface(aImage);
     MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
 
@@ -404,6 +413,9 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
                                  aFrameRef.is_sync_point,
                                  aFrameRef.decode_timestamp.ToMicroseconds(),
                                  visible);
+#else
+    MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
+#endif
   }
 
   if (!data) {
@@ -608,6 +620,7 @@ AppleVDADecoder::CreateOutputConfiguration()
                               &kCFTypeDictionaryValueCallBacks);
   }
 
+#ifndef MOZ_WIDGET_UIKIT
   // Construct IOSurface Properties
   const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
   const void* IOSurfaceValues[] = { kCFBooleanTrue };
@@ -638,6 +651,9 @@ AppleVDADecoder::CreateOutputConfiguration()
                             ArrayLength(outputKeys),
                             &kCFTypeDictionaryKeyCallBacks,
                             &kCFTypeDictionaryValueCallBacks);
+#else
+  MOZ_ASSERT_UNREACHABLE("No MacIOSurface on iOS");
+#endif
 }
 
 /* static */
