@@ -119,18 +119,6 @@ GMPContentParent::DecryptorDestroyed(GMPDecryptorParent* aSession)
 }
 
 void
-GMPContentParent::CrashPluginNow(GMPCrashReason aReason)
-{
-  if (mParent) {
-    mParent->Crash(aReason);
-  } else {
-    nsRefPtr<GeckoMediaPluginServiceChild> gmp(
-      GeckoMediaPluginServiceChild::GetSingleton());
-    gmp->CrashPluginNow(mPluginId, aReason);
-  }
-}
-
-void
 GMPContentParent::CloseIfUnused()
 {
   if (mAudioDecoders.IsEmpty() &&
