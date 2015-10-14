@@ -31,6 +31,7 @@
 #include "imgIRequest.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProtocolHandler.h"
