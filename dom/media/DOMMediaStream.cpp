@@ -481,6 +481,27 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
   LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p with ID %d)",
                        this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
 
+  if (mPlaybackStream->Graph() !=
+      aTrack.GetStream()->mPlaybackStream->Graph()) {
+    NS_ASSERTION(false, "Cannot combine tracks from different MediaStreamGraphs");
+    LOG(LogLevel::Error, ("DOMMediaStream %p Own MSG %p != aTrack's MSG %p",
+                         this, mPlaybackStream->Graph(),
+                         aTrack.GetStream()->mPlaybackStream->Graph()));
+
+    nsAutoString trackId;
+    aTrack.GetId(trackId);
+    const char16_t* params[] = { trackId.get() };
+    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
+    nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("Media"),
+                                    document,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "MediaStreamAddTrackDifferentAudioChannel",
+                                    params, ArrayLength(params));
+    return;
+  }
+
   if (HasTrack(aTrack)) {
     LOG(LogLevel::Debug, ("DOMMediaStream %p already contains track %p", this, &aTrack));
     return;
