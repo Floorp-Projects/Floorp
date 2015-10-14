@@ -616,7 +616,6 @@ if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
         'overlays/service/sharemethods/SendTab.java',
         'overlays/service/sharemethods/ShareMethod.java',
         'overlays/ui/OverlayDialogButton.java',
-        'overlays/ui/OverlayToastHelper.java',
         'overlays/ui/SendTabDeviceListArrayAdapter.java',
         'overlays/ui/SendTabList.java',
         'overlays/ui/SendTabTargetSelectedListener.java',
