@@ -711,8 +711,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                     bool allowCallSyntax, InvokedPrediction invoked = PredictUninvoked);
     Node primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling, TokenKind tt,
                      InvokedPrediction invoked = PredictUninvoked);
-    Node parenExprOrGeneratorComprehension(YieldHandling yieldHandling);
-    Node exprInParens(InHandling inHandling, YieldHandling yieldHandling);
+    Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
+                      TripledotHandling tripledotHandling);
 
     bool tryNewTarget(Node& newTarget);
     bool checkAndMarkSuperScope();
