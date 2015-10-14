@@ -11,11 +11,11 @@
 
 namespace ots {
 
-bool ots_cvt_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_cvt_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
   OpenTypeCVT *cvt = new OpenTypeCVT;
-  font->cvt = cvt;
+  file->cvt = cvt;
 
   if (length >= 128 * 1024u) {
     return OTS_FAILURE_MSG("Length (%d) > 120K");  // almost all cvt tables are less than 4k bytes.
@@ -34,15 +34,15 @@ bool ots_cvt_parse(Font *font, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_cvt_should_serialise(Font *font) {
-  if (!font->glyf) {
+bool ots_cvt_should_serialise(OpenTypeFile *file) {
+  if (!file->glyf) {
     return false;  // this table is not for CFF fonts.
   }
-  return font->cvt != NULL;
+  return file->cvt != NULL;
 }
 
-bool ots_cvt_serialise(OTSStream *out, Font *font) {
-  const OpenTypeCVT *cvt = font->cvt;
+bool ots_cvt_serialise(OTSStream *out, OpenTypeFile *file) {
+  const OpenTypeCVT *cvt = file->cvt;
 
   if (!out->Write(cvt->data, cvt->length)) {
     return OTS_FAILURE_MSG("Failed to write CVT table");
@@ -51,13 +51,8 @@ bool ots_cvt_serialise(OTSStream *out, Font *font) {
   return true;
 }
 
-void ots_cvt_reuse(Font *font, Font *other) {
-  font->cvt = other->cvt;
-  font->cvt_reused = true;
-}
-
-void ots_cvt_free(Font *font) {
-  delete font->cvt;
+void ots_cvt_free(OpenTypeFile *file) {
+  delete file->cvt;
 }
 
 }  // namespace ots

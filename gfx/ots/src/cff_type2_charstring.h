@@ -35,7 +35,7 @@ namespace ots {
 //  cff_table: A buffer which contains actual byte code of charstring, global
 //             subroutines and local subroutines.
 bool ValidateType2CharStringIndex(
-    Font *font,
+    OpenTypeFile *file,
     const CFFIndex &char_strings_index,
     const CFFIndex &global_subrs_index,
     const std::map<uint16_t, uint8_t> &fd_select,

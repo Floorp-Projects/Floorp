@@ -12,17 +12,17 @@
 #define DROP_THIS_TABLE(msg_) \
   do { \
     OTS_FAILURE_MSG(msg_ ", table discarded"); \
-    delete font->kern; \
-    font->kern = 0; \
+    delete file->kern; \
+    file->kern = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_kern_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
   OpenTypeKERN *kern = new OpenTypeKERN;
-  font->kern = kern;
+  file->kern = kern;
 
   uint16_t num_tables = 0;
   if (!table.ReadU16(&kern->version) ||
@@ -70,7 +70,7 @@ bool ots_kern_parse(Font *font, const uint8_t *data, size_t length) {
       continue;
     }
     if (subtable.coverage & 0xF0) {
-      DROP_THIS_TABLE("Reserved fields should zero-filled");
+      DROP_THIS_TABLE("Reserved fields should zero-filled.");
       return true;
     }
     const uint32_t format = (subtable.coverage & 0xFF00) >> 8;
@@ -89,7 +89,7 @@ bool ots_kern_parse(Font *font, const uint8_t *data, size_t length) {
     }
 
     if (!num_pairs) {
-      DROP_THIS_TABLE("Zero length subtable is found");
+      DROP_THIS_TABLE("Zero length subtable is found.");
       return true;
     }
 
@@ -98,7 +98,7 @@ bool ots_kern_parse(Font *font, const uint8_t *data, size_t length) {
     const size_t kFormat0PairSize = 6;  // left, right, and value. 2 bytes each.
     if (num_pairs > (65536 / kFormat0PairSize)) {
       // Some fonts (e.g. calibri.ttf, pykes_peak_zero.ttf) have pairs >= 10923.
-      DROP_THIS_TABLE("Too large subtable");
+      DROP_THIS_TABLE("Too large subtable.");
       return true;
     }
     unsigned max_pow2 = 0;
@@ -135,7 +135,7 @@ bool ots_kern_parse(Font *font, const uint8_t *data, size_t length) {
       if (j != 0 && current_pair <= last_pair) {
         // Many free fonts don't follow this rule, so we don't call OTS_FAILURE
         // in order to support these fonts.
-        DROP_THIS_TABLE("Kerning pairs are not sorted");
+        DROP_THIS_TABLE("Kerning pairs are not sorted.");
         return true;
       }
       last_pair = current_pair;
@@ -146,20 +146,20 @@ bool ots_kern_parse(Font *font, const uint8_t *data, size_t length) {
   }
 
   if (!kern->subtables.size()) {
-    DROP_THIS_TABLE("All subtables are removed");
+    DROP_THIS_TABLE("All subtables are removed.");
     return true;
   }
 
   return true;
 }
 
-bool ots_kern_should_serialise(Font *font) {
-  if (!font->glyf) return false;  // this table is not for CFF fonts.
-  return font->kern != NULL;
+bool ots_kern_should_serialise(OpenTypeFile *file) {
+  if (!file->glyf) return false;  // this table is not for CFF fonts.
+  return file->kern != NULL;
 }
 
-bool ots_kern_serialise(OTSStream *out, Font *font) {
-  const OpenTypeKERN *kern = font->kern;
+bool ots_kern_serialise(OTSStream *out, OpenTypeFile *file) {
+  const OpenTypeKERN *kern = file->kern;
 
   const uint16_t num_subtables = static_cast<uint16_t>(kern->subtables.size());
   if (num_subtables != kern->subtables.size() ||
@@ -193,13 +193,8 @@ bool ots_kern_serialise(OTSStream *out, Font *font) {
   return true;
 }
 
-void ots_kern_reuse(Font *font, Font *other) {
-  font->kern = other->kern;
-  font->kern_reused = true;
-}
-
-void ots_kern_free(Font *font) {
-  delete font->kern;
+void ots_kern_free(OpenTypeFile *file) {
+  delete file->kern;
 }
 
 }  // namespace ots
