@@ -36,9 +36,9 @@
 #include "mozilla/SizePrintfMacros.h"
 
 #include "asmjs/AsmJSValidate.h"
+#include "jit/AtomicOperations.h"
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
-#include "jit/AtomicOperations.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
 
