@@ -664,6 +664,12 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           dest="httpdPath",
                           help="path to the httpd.js file")
 
+        self.add_argument("--suppressDeviceInfo",
+                          action="store_false",
+                          dest="printDeviceInfo",
+                          default=True,
+                          help="do not display verbose diagnostics about the remote device")
+
     def validate_remote(self, options, automation):
         # Ensure our defaults are set properly for everything we can infer
         if not options.remoteTestRoot:
@@ -735,6 +741,6 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                 'screen')['screen'][0].split()
             width = int(parts[0].split(':')[1])
             height = int(parts[1].split(':')[1])
-            if (width < 1050 or height < 1050):
+            if (width < 1366 or height < 1050):
                 self.error("ERROR: Invalid screen resolution %sx%s, please adjust to 1366x1050 or higher" % (
                     width, height))
