@@ -473,6 +473,25 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
             @Override
             public void onAnimationRepeat(Animation animation) { /* Unused. */ }
         });
+
+        // Allows the user to dismiss the animation early.
+        setFullscreenFinishOnClickListener();
+    }
+
+    /**
+     * Sets a fullscreen {@link #finish()} click listener. We do this rather than attaching an
+     * onClickListener to the root View because in that case, we need to remove all of the
+     * existing listeners, which is less robust.
+     */
+    private void setFullscreenFinishOnClickListener() {
+        final View clickTarget = findViewById(R.id.fullscreen_click_target);
+        clickTarget.setVisibility(View.VISIBLE);
+        clickTarget.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
     }
 
     /**
