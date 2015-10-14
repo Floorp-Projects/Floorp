@@ -2463,9 +2463,7 @@ MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
     if (mReader->VideoIsHardwareAccelerated() &&
         frameStats.GetPresentedFrames() > 60 &&
         mCorruptFrames.mean() >= 2 /* 20% */) {
-        nsCOMPtr<nsIRunnable> task =
-          NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration);
-        DecodeTaskQueue()->Dispatch(task.forget());
+        mReader->DisableHardwareAcceleration();
         mCorruptFrames.clear();
       gfxCriticalNote << "Too many dropped/corrupted frames, disabling DXVA";
     }
