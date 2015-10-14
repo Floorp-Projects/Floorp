@@ -1269,8 +1269,7 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     // that run after ResetDecode are supposed to run with a clean slate. We rely
     // on that in other places (i.e. seeking), so it seems reasonable to rely on
     // it here as well.
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
-    DecodeTaskQueue()->Dispatch(r.forget());
+    mReader->ReleaseMediaResources();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     ScheduleStateMachine();
     mDecodingFirstFrame = true;
