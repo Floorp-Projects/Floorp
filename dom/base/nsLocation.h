@@ -152,6 +152,7 @@ public:
   }
   void SetHash(const nsAString& aHash, ErrorResult& aError)
   {
+    THROW_AND_RETURN_IF_CALLER_DOESNT_SUBSUME();
     aError = SetHash(aHash);
   }
   void Stringify(nsAString& aRetval, ErrorResult& aError)
