@@ -438,7 +438,7 @@ DOMMediaStream::GetId(nsAString& aID) const
 }
 
 void
-DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks)
+DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks) const
 {
   for (const nsRefPtr<TrackPort>& info : mTracks) {
     AudioStreamTrack* t = info->GetTrack()->AsAudioStreamTrack();
@@ -449,7 +449,7 @@ DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks)
 }
 
 void
-DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks)
+DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks) const
 {
   for (const nsRefPtr<TrackPort>& info : mTracks) {
     VideoStreamTrack* t = info->GetTrack()->AsVideoStreamTrack();
@@ -460,7 +460,7 @@ DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks)
 }
 
 void
-DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks)
+DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks) const
 {
   for (const nsRefPtr<TrackPort>& info : mTracks) {
     aTracks.AppendElement(info->GetTrack());
