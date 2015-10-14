@@ -222,8 +222,8 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(uint32_t aLevel)
 
   // do it
   mediator->SetZLevel(this, aLevel);
-  SetAttributesDirty(PAD_MISC);
-  SaveAttributes();
+  PersistentAttributesDirty(PAD_MISC);
+  SavePersistentAttributes();
 
   nsCOMPtr<nsIContentViewer> cv;
   mDocShell->GetContentViewer(getter_AddRefs(cv));
@@ -546,8 +546,8 @@ NS_IMETHODIMP nsXULWindow::SetPosition(int32_t aX, int32_t aY)
     mIgnoreXULPosition = true;
     return NS_OK;
   }
-  SetAttributesDirty(PAD_POSITION);
-  SaveAttributes();
+  PersistentAttributesDirty(PAD_POSITION);
+  SavePersistentAttributes();
   return NS_OK;
 }
 
@@ -578,8 +578,8 @@ NS_IMETHODIMP nsXULWindow::SetSize(int32_t aCX, int32_t aCY, bool aRepaint)
     mIgnoreXULSizeMode = true;
     return NS_OK;
   }
-  SetAttributesDirty(PAD_SIZE);
-  SaveAttributes();
+  PersistentAttributesDirty(PAD_SIZE);
+  SavePersistentAttributes();
   return NS_OK;
 }
 
@@ -612,8 +612,8 @@ NS_IMETHODIMP nsXULWindow::SetPositionAndSize(int32_t aX, int32_t aY,
     mIgnoreXULSizeMode = true;
     return NS_OK;
   }
-  SetAttributesDirty(PAD_POSITION | PAD_SIZE);
-  SaveAttributes();
+  PersistentAttributesDirty(PAD_POSITION | PAD_SIZE);
+  SavePersistentAttributes();
   return NS_OK;
 }
 
@@ -1429,17 +1429,22 @@ void nsXULWindow::SyncAttributesToWidget()
   }
 }
 
-void nsXULWindow::SaveAttributes()
+NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 {
   // can happen when the persistence timer fires at an inopportune time
   // during window shutdown
-  if (!mDocShell) {
-    return;
-  }
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
-  if (!docShellElement) {
-    return;
+  if (!docShellElement)
+    return NS_ERROR_FAILURE;
+
+  nsAutoString   persistString;
+  docShellElement->GetAttribute(PERSIST_ATTRIBUTE, persistString);
+  if (persistString.IsEmpty()) { // quick check which sometimes helps
+    mPersistentAttributesDirty = 0;
+    return NS_OK;
   }
 
   // get our size, position and mode to persist
@@ -1460,27 +1465,49 @@ void nsXULWindow::SaveAttributes()
 
   char                        sizeBuf[10];
   nsAutoString                sizeString;
+  nsAutoString                windowElementId;
+  nsCOMPtr<nsIDOMXULDocument> ownerXULDoc;
+
+  // fetch docShellElement's ID and XUL owner document
+  ownerXULDoc = do_QueryInterface(docShellElement->OwnerDoc());
+  if (docShellElement->IsXULElement()) {
+    docShellElement->GetId(windowElementId);
+  }
 
   ErrorResult rv;
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
-    PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.x / scale.scale));
-    sizeString.AssignWithConversion(sizeBuf);
-    docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
-
-    PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.y / scale.scale));
-    sizeString.AssignWithConversion(sizeBuf);
-    docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
+    if (persistString.Find("screenX") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.x / scale.scale));
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
+      if (ownerXULDoc) // force persistence in case the value didn't change
+        ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
+    }
+    if (persistString.Find("screenY") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.y / scale.scale));
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE);
+    }
   }
 
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
-    PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.width / scale.scale));
-    sizeString.AssignWithConversion(sizeBuf);
-    docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
-
-    PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.height / scale.scale));
-    sizeString.AssignWithConversion(sizeBuf);
-    docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
+    if (persistString.Find("width") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.width / scale.scale));
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
+    }
+    if (persistString.Find("height") >= 0) {
+      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.height / scale.scale));
+      sizeString.AssignWithConversion(sizeBuf);
+      docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
+      if (ownerXULDoc)
+        ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE);
+    }
   }
 
   if (mPersistentAttributesDirty & PAD_MISC) {
@@ -1494,19 +1521,24 @@ void nsXULWindow::SaveAttributes()
       else
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
+      if (ownerXULDoc && persistString.Find("sizemode") >= 0)
+        ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
     }
-
-    uint32_t zLevel;
-    nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
-    if (mediator) {
-      mediator->GetZLevel(this, &zLevel);
-      PR_snprintf(sizeBuf, sizeof(sizeBuf), "%lu", (unsigned long)zLevel);
-      sizeString.AssignWithConversion(sizeBuf);
-      docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
+    if (persistString.Find("zlevel") >= 0) {
+      uint32_t zLevel;
+      nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
+      if (mediator) {
+        mediator->GetZLevel(this, &zLevel);
+        PR_snprintf(sizeBuf, sizeof(sizeBuf), "%lu", (unsigned long)zLevel);
+        sizeString.AssignWithConversion(sizeBuf);
+        docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
+        ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);
+      }
     }
   }
 
   mPersistentAttributesDirty = 0;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::GetWindowDOMWindow(nsIDOMWindow** aDOMWindow)
@@ -1976,7 +2008,7 @@ bool nsXULWindow::GetContentScrollbarVisibility()
 }
 
 // during spinup, attributes that haven't been loaded yet can't be dirty
-void nsXULWindow::SetAttributesDirty(uint32_t aDirtyFlags)
+void nsXULWindow::PersistentAttributesDirty(uint32_t aDirtyFlags)
 {
   mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
 }
