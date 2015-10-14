@@ -797,22 +797,26 @@ add_test(function test_findBrowsingTrafficStats() {
     stats.push({ appId: 1008, isInBrowser: 0,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 200, txBytes: 100});
+                 rxBytes: 200, txBytes: 100,
+                 rxTotalBytes: 200, txTotalBytes: 100});
     // Browser of system app.
     stats.push({ appId: 1008, isInBrowser: 1,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 1000, txBytes: 500});
+                 rxBytes: 1000, txBytes: 500,
+                 rxTotalBytes: 1000, txTotalBytes: 500});
     // Another app.
     stats.push({ appId: 1021, isInBrowser: 0,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 300, txBytes: 150});
+                 rxBytes: 300, txBytes: 150,
+                 rxTotalBytes: 300, txTotalBytes: 150});
     // Browser of another app.
     stats.push({ appId: 1021, isInBrowser: 1,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 600, txBytes: 300});
+                 rxBytes: 600, txBytes: 300,
+                 rxTotalBytes: 600, txTotalBytes: 300});
   }
 
   prepareFind(stats, function(error, result) {
@@ -853,22 +857,26 @@ add_test(function test_findAppTrafficStats() {
     stats.push({ appId: 1008, isInBrowser: 0,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 200, txBytes: 100});
+                 rxBytes: 200, txBytes: 100,
+                 rxTotalBytes: 200, txTotalBytes: 100});
     // Browser of system app.
     stats.push({ appId: 1008, isInBrowser: 1,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 1000, txBytes: 500});
+                 rxBytes: 1000, txBytes: 500,
+                 rxTotalBytes: 1000, txTotalBytes: 500});
     // Another app.
     stats.push({ appId: 1021, isInBrowser: 0,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 300, txBytes: 150});
+                 rxBytes: 300, txBytes: 150,
+                 rxTotalBytes: 300, txTotalBytes: 150});
     // Browser of another app.
     stats.push({ appId: 1021, isInBrowser: 1,
                  serviceType: serviceType, network: networkMobile,
                  timestamp: saveDate + (sampleRate * i),
-                 rxBytes: 600, txBytes: 300});
+                 rxBytes: 600, txBytes: 300,
+                 rxTotalBytes: 600, txTotalBytes: 300});
   }
 
   prepareFind(stats, function(error, result) {
