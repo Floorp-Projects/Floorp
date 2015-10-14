@@ -283,8 +283,8 @@ struct Zone : public JS::shadow::Zone,
 
     js::TypeZone types;
 
-    /* Live weakmaps in this zone. */
-    mozilla::LinkedList<js::WeakMapBase> gcWeakMapList;
+    /* Linked list of live weakmaps in this zone. */
+    js::WeakMapBase* gcWeakMapList;
 
     // The set of compartments in this zone.
     typedef js::Vector<JSCompartment*, 1, js::SystemAllocPolicy> CompartmentVector;

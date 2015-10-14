@@ -1780,7 +1780,10 @@ ComputePlainObjectLayout(ExclusiveContext* cx, Shape* templateShape,
     // properties, which will allow us to generate better code if the objects
     // have a subtype/supertype relation and are accessed at common sites.
     UnboxedLayout* bestExisting = nullptr;
-    for (UnboxedLayout* existing : cx->compartment()->unboxedLayouts) {
+    for (UnboxedLayout* existing = cx->compartment()->unboxedLayouts.getFirst();
+         existing;
+         existing = existing->getNext())
+    {
         if (PropertiesAreSuperset(properties, existing)) {
             if (!bestExisting ||
                 existing->properties().length() > bestExisting->properties().length())
