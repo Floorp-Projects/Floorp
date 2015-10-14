@@ -69,20 +69,14 @@ HTMLOptGroupElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   return nsGenericHTMLElement::PreHandleEvent(aVisitor);
 }
 
-nsIContent*
+Element*
 HTMLOptGroupElement::GetSelect()
 {
-  nsIContent* parent = this;
-  while ((parent = parent->GetParent()) && parent->IsHTMLElement()) {
-    if (parent->IsHTMLElement(nsGkAtoms::select)) {
-      return parent;
-    }
-    if (!parent->IsHTMLElement(nsGkAtoms::optgroup)) {
-      break;
-    }
+  Element* parent = nsINode::GetParentElement();
+  if (!parent || !parent->IsHTMLElement(nsGkAtoms::select)) {
+    return nullptr;
   }
-  
-  return nullptr;
+  return parent;
 }
 
 nsresult

@@ -1454,6 +1454,9 @@ TabParent::GetTopLevelDocAccessible() const
       return doc;
     }
   }
+
+  MOZ_ASSERT(docCount == 0, "If there isn't a top level accessible doc "
+                             "there shouldn't be an accessible doc at all!");
 #endif
   return nullptr;
 }

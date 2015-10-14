@@ -401,6 +401,10 @@ public:
   virtual bool RecvUnselectAll(const uint64_t& aID,
                                bool* aSuccess) override;
 
+  virtual bool RecvTakeSelection(const uint64_t& aID) override;
+  virtual bool RecvSetSelected(const uint64_t& aID,
+                               const bool& aSelect) override;
+
   virtual bool RecvDoAction(const uint64_t& aID,
                             const uint8_t& aIndex,
                             bool* aSuccess) override;

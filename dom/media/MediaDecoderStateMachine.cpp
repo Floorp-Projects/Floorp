@@ -1030,7 +1030,7 @@ bool MediaDecoderStateMachine::IsPlaying() const
   return mMediaSink->IsPlaying();
 }
 
-nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
+nsresult MediaDecoderStateMachine::Init()
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = mReader->Init();
@@ -1269,8 +1269,7 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     // that run after ResetDecode are supposed to run with a clean slate. We rely
     // on that in other places (i.e. seeking), so it seems reasonable to rely on
     // it here as well.
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
-    DecodeTaskQueue()->Dispatch(r.forget());
+    mReader->ReleaseMediaResources();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     ScheduleStateMachine();
     mDecodingFirstFrame = true;
@@ -2464,9 +2463,7 @@ MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
     if (mReader->VideoIsHardwareAccelerated() &&
         frameStats.GetPresentedFrames() > 60 &&
         mCorruptFrames.mean() >= 2 /* 20% */) {
-        nsCOMPtr<nsIRunnable> task =
-          NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration);
-        DecodeTaskQueue()->Dispatch(task.forget());
+        mReader->DisableHardwareAcceleration();
         mCorruptFrames.clear();
       gfxCriticalNote << "Too many dropped/corrupted frames, disabling DXVA";
     }

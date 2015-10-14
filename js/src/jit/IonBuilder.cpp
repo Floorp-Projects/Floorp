@@ -12451,12 +12451,8 @@ IonBuilder::setPropTryCache(bool* emitted, MDefinition* obj,
     MOZ_ASSERT(*emitted == false);
 
     bool strict = IsStrictSetPC(pc);
-    // Emit SetPropertyCache.
+
     MSetPropertyCache* ins = MSetPropertyCache::New(alloc(), obj, value, name, strict, barrier);
-
-    if (!objTypes || objTypes->propertyNeedsBarrier(constraints(), NameToId(name)))
-        ins->setNeedsBarrier();
-
     current->add(ins);
     current->push(value);
 

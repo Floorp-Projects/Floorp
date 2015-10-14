@@ -22,6 +22,7 @@ static const short kResourceHashType = nsICryptoHash::SHA256;
 // If it's true, all the verification will be skipped and the package will
 // be treated signed.
 static bool gDeveloperMode = false;
+static bool gSignedAppEnabled = false;
 
 namespace mozilla {
 namespace net {
@@ -69,6 +70,8 @@ NS_IMETHODIMP PackagedAppVerifier::Init(nsIPackagedAppVerifierListener* aListene
   if (!onceThru) {
     Preferences::AddBoolVarCache(&gDeveloperMode,
                                  "network.http.packaged-apps-developer-mode", false);
+    Preferences::AddBoolVarCache(&gSignedAppEnabled,
+                                 "network.http.packaged-signed-apps-enabled", false);
     onceThru = true;
   }
 
@@ -416,6 +419,12 @@ PackagedAppVerifier::SetHasBrokenLastPart(nsresult aStatusCode)
     = new ResourceCacheInfo(nullptr, nullptr, aStatusCode, true);
 
   mPendingResourceCacheInfoList.insertBack(info);
+}
+
+bool
+PackagedAppVerifier::WouldVerify() const
+{
+  return gSignedAppEnabled && !mSignature.IsEmpty();
 }
 
 //---------------------------------------------------------------

@@ -18,88 +18,88 @@
       <xul:vbox flex="1">
 
         <xul:hbox>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFFFF" color="#FFFFFF"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFCCCC" color="#FFCCCC"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFCC99" color="#FFCC99"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF99" color="#FFFF99"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFFCC" color="#FFFFCC"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #99FF99" color="#99FF99"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #99FFFF" color="#99FFFF"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #CCFFFF" color="#CCFFFF"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #CCCCFF" color="#CCCCFF"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFCCFF" color="#FFCCFF"/>
+          <xul:image class="colorpickertile cp-light" color="#FFFFFF"/>
+          <xul:image class="colorpickertile cp-light" color="#FFCCCC"/>
+          <xul:image class="colorpickertile cp-light" color="#FFCC99"/>
+          <xul:image class="colorpickertile cp-light" color="#FFFF99"/>
+          <xul:image class="colorpickertile cp-light" color="#FFFFCC"/>
+          <xul:image class="colorpickertile cp-light" color="#99FF99"/>
+          <xul:image class="colorpickertile cp-light" color="#99FFFF"/>
+          <xul:image class="colorpickertile cp-light" color="#CCFFFF"/>
+          <xul:image class="colorpickertile cp-light" color="#CCCCFF"/>
+          <xul:image class="colorpickertile cp-light" color="#FFCCFF"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spacer class="colorpickertile" style="background-color: #CCCCCC" color="#CCCCCC"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FF6666" color="#FF6666"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FF9966" color="#FF9966"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF66" color="#FFFF66"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF33" color="#FFFF33"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #66FF99" color="#66FF99"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #33FFFF" color="#33FFFF"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #66FFFF" color="#66FFFF"/>
-          <xul:spacer class="colorpickertile" style="background-color: #9999FF" color="#9999FF"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FF99FF" color="#FF99FF"/>
+          <xul:image class="colorpickertile" color="#CCCCCC"/>
+          <xul:image class="colorpickertile" color="#FF6666"/>
+          <xul:image class="colorpickertile" color="#FF9966"/>
+          <xul:image class="colorpickertile cp-light" color="#FFFF66"/>
+          <xul:image class="colorpickertile cp-light" color="#FFFF33"/>
+          <xul:image class="colorpickertile cp-light" color="#66FF99"/>
+          <xul:image class="colorpickertile cp-light" color="#33FFFF"/>
+          <xul:image class="colorpickertile cp-light" color="#66FFFF"/>
+          <xul:image class="colorpickertile" color="#9999FF"/>
+          <xul:image class="colorpickertile" color="#FF99FF"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spacer class="colorpickertile" style="background-color: #C0C0C0" color="#C0C0C0"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FF0000" color="#FF0000"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FF9900" color="#FF9900"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FFCC66" color="#FFCC66"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF00" color="#FFFF00"/>
-          <xul:spacer class="colorpickertile cp-light" style="background-color: #33FF33" color="#33FF33"/>
-          <xul:spacer class="colorpickertile" style="background-color: #66CCCC" color="#66CCCC"/>
-          <xul:spacer class="colorpickertile" style="background-color: #33CCFF" color="#33CCFF"/>
-          <xul:spacer class="colorpickertile" style="background-color: #6666CC" color="#6666CC"/>
-          <xul:spacer class="colorpickertile" style="background-color: #CC66CC" color="#CC66CC"/>
+          <xul:image class="colorpickertile" color="#C0C0C0"/>
+          <xul:image class="colorpickertile" color="#FF0000"/>
+          <xul:image class="colorpickertile" color="#FF9900"/>
+          <xul:image class="colorpickertile" color="#FFCC66"/>
+          <xul:image class="colorpickertile cp-light" color="#FFFF00"/>
+          <xul:image class="colorpickertile cp-light" color="#33FF33"/>
+          <xul:image class="colorpickertile" color="#66CCCC"/>
+          <xul:image class="colorpickertile" color="#33CCFF"/>
+          <xul:image class="colorpickertile" color="#6666CC"/>
+          <xul:image class="colorpickertile" color="#CC66CC"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spacer class="colorpickertile" style="background-color: #999999" color="#999999"/>
-          <xul:spacer class="colorpickertile" style="background-color: #CC0000" color="#CC0000"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FF6600" color="#FF6600"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
-          <xul:spacer class="colorpickertile" style="background-color: #FFCC00" color="#FFCC00"/>
-          <xul:spacer class="colorpickertile" style="background-color: #33CC00" color="#33CC00"/>
-          <xul:spacer class="colorpickertile" style="background-color: #00CCCC" color="#00CCCC"/>
-          <xul:spacer class="colorpickertile" style="background-color: #3366FF" color="#3366FF"/>
-          <xul:spacer class="colorpickertile" style="background-color: #6633FF" color="#6633FF"/>
-          <xul:spacer class="colorpickertile" style="background-color: #CC33CC" color="#CC33CC"/>
+          <xul:image class="colorpickertile" color="#999999"/>
+          <xul:image class="colorpickertile" color="#CC0000"/>
+          <xul:image class="colorpickertile" color="#FF6600"/>
+          <xul:image class="colorpickertile" color="#FFCC33"/>
+          <xul:image class="colorpickertile" color="#FFCC00"/>
+          <xul:image class="colorpickertile" color="#33CC00"/>
+          <xul:image class="colorpickertile" color="#00CCCC"/>
+          <xul:image class="colorpickertile" color="#3366FF"/>
+          <xul:image class="colorpickertile" color="#6633FF"/>
+          <xul:image class="colorpickertile" color="#CC33CC"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spacer class="colorpickertile" style="background-color: #666666" color="#666666"/>
-          <xul:spacer class="colorpickertile" style="background-color: #990000" color="#990000"/>
-          <xul:spacer class="colorpickertile" style="background-color: #CC6600" color="#CC6600"/>
-          <xul:spacer class="colorpickertile" style="background-color: #CC9933" color="#CC9933"/>
-          <xul:spacer class="colorpickertile" style="background-color: #999900" color="#999900"/>
-          <xul:spacer class="colorpickertile" style="background-color: #009900" color="#009900"/>
-          <xul:spacer class="colorpickertile" style="background-color: #339999" color="#339999"/>
-          <xul:spacer class="colorpickertile" style="background-color: #3333FF" color="#3333FF"/>
-          <xul:spacer class="colorpickertile" style="background-color: #6600CC" color="#6600CC"/>
-          <xul:spacer class="colorpickertile" style="background-color: #993399" color="#993399"/>
+          <xul:image class="colorpickertile" color="#666666"/>
+          <xul:image class="colorpickertile" color="#990000"/>
+          <xul:image class="colorpickertile" color="#CC6600"/>
+          <xul:image class="colorpickertile" color="#CC9933"/>
+          <xul:image class="colorpickertile" color="#999900"/>
+          <xul:image class="colorpickertile" color="#009900"/>
+          <xul:image class="colorpickertile" color="#339999"/>
+          <xul:image class="colorpickertile" color="#3333FF"/>
+          <xul:image class="colorpickertile" color="#6600CC"/>
+          <xul:image class="colorpickertile" color="#993399"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spacer class="colorpickertile" style="background-color: #333333" color="#333333"/>
-          <xul:spacer class="colorpickertile" style="background-color: #660000" color="#660000"/>
-          <xul:spacer class="colorpickertile" style="background-color: #993300" color="#993300"/>
-          <xul:spacer class="colorpickertile" style="background-color: #996633" color="#996633"/>
-          <xul:spacer class="colorpickertile" style="background-color: #666600" color="#666600"/>
-          <xul:spacer class="colorpickertile" style="background-color: #006600" color="#006600"/>
-          <xul:spacer class="colorpickertile" style="background-color: #336666" color="#336666"/>
-          <xul:spacer class="colorpickertile" style="background-color: #000099" color="#000099"/>
-          <xul:spacer class="colorpickertile" style="background-color: #333399" color="#333399"/>
-          <xul:spacer class="colorpickertile" style="background-color: #663366" color="#663366"/>
+          <xul:image class="colorpickertile" color="#333333"/>
+          <xul:image class="colorpickertile" color="#660000"/>
+          <xul:image class="colorpickertile" color="#993300"/>
+          <xul:image class="colorpickertile" color="#996633"/>
+          <xul:image class="colorpickertile" color="#666600"/>
+          <xul:image class="colorpickertile" color="#006600"/>
+          <xul:image class="colorpickertile" color="#336666"/>
+          <xul:image class="colorpickertile" color="#000099"/>
+          <xul:image class="colorpickertile" color="#333399"/>
+          <xul:image class="colorpickertile" color="#663366"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spacer class="colorpickertile" style="background-color: #000000" color="#000000"/>
-          <xul:spacer class="colorpickertile" style="background-color: #330000" color="#330000"/>
-          <xul:spacer class="colorpickertile" style="background-color: #663300" color="#663300"/>
-          <xul:spacer class="colorpickertile" style="background-color: #663333" color="#663333"/>
-          <xul:spacer class="colorpickertile" style="background-color: #333300" color="#333300"/>
-          <xul:spacer class="colorpickertile" style="background-color: #003300" color="#003300"/>
-          <xul:spacer class="colorpickertile" style="background-color: #003333" color="#003333"/>
-          <xul:spacer class="colorpickertile" style="background-color: #000066" color="#000066"/>
-          <xul:spacer class="colorpickertile" style="background-color: #330099" color="#330099"/>
-          <xul:spacer class="colorpickertile" style="background-color: #330033" color="#330033"/>
+          <xul:image class="colorpickertile" color="#000000"/>
+          <xul:image class="colorpickertile" color="#330000"/>
+          <xul:image class="colorpickertile" color="#663300"/>
+          <xul:image class="colorpickertile" color="#663333"/>
+          <xul:image class="colorpickertile" color="#333300"/>
+          <xul:image class="colorpickertile" color="#003300"/>
+          <xul:image class="colorpickertile" color="#003333"/>
+          <xul:image class="colorpickertile" color="#000066"/>
+          <xul:image class="colorpickertile" color="#330099"/>
+          <xul:image class="colorpickertile" color="#330033"/>
         </xul:hbox>
       </xul:vbox>
       <!-- Something to take tab focus
@@ -197,6 +197,17 @@
           this.mBox = document.getAnonymousNodes(this)[0];
           this.mIsPopup = false;
           this.mDoOnSelect = true;
+
+          let imageEls = this.mBox.querySelectorAll("image");
+          // We set the background of the picker tiles here using images in
+          // order for the color to show up even when author colors are
+          // disabled or the user is using high contrast mode.
+          for (let el of imageEls) {
+            let dataURI = "data:image/svg+xml,<svg style='background-color: " +
+                          encodeURIComponent(el.getAttribute("color")) +
+                          "' xmlns='http://www.w3.org/2000/svg' />";
+            el.setAttribute("src", dataURI);
+          }
 
           this.hoverCell(this.mBox.childNodes[0].childNodes[0]);
           
@@ -420,7 +431,7 @@
     </resources>
     
     <content>
-      <xul:hbox class="colorpicker-button-colorbox" anonid="colorbox" flex="1" xbl:inherits="disabled"/>
+      <xul:image class="colorpicker-button-colorbox" anonid="colorbox" flex="1" xbl:inherits="disabled"/>
 
       <xul:panel class="colorpicker-button-menupopup"
                  anonid="colorpopup" noautofocus="true" level="top"
@@ -441,7 +452,10 @@
           return this.getAttribute("color");
         ]]></getter>
         <setter><![CDATA[
-          this.mColorBox.style.backgroundColor = val;
+          this.mColorBox.setAttribute("src",
+            "data:image/svg+xml,<svg style='background-color: " +
+            encodeURIComponent(val) +
+            "' xmlns='http://www.w3.org/2000/svg' />");
           this.setAttribute("color", val);
           return val;
         ]]></setter>
@@ -450,7 +464,10 @@
       <method name="initialize">
         <body><![CDATA[
           this.mColorBox = document.getAnonymousElementByAttribute(this, "anonid", "colorbox");
-          this.mColorBox.style.backgroundColor = this.color;
+          this.mColorBox.setAttribute("src",
+            "data:image/svg+xml,<svg style='background-color: " +
+            encodeURIComponent(this.color) +
+            "' xmlns='http://www.w3.org/2000/svg' />");
         
           var popup = document.getAnonymousElementByAttribute(this, "anonid", "colorpopup")
           popup._colorPicker = this;

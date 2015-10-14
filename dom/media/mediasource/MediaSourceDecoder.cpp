@@ -51,7 +51,7 @@ MediaSourceDecoder::CreateStateMachine()
 }
 
 nsresult
-MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
+MediaSourceDecoder::Load(nsIStreamListener**)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!GetStateMachine());
@@ -61,7 +61,7 @@ MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = GetStateMachine()->Init(nullptr);
+  nsresult rv = GetStateMachine()->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   SetStateMachineParameters();
