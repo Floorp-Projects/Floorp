@@ -9525,24 +9525,23 @@ Parser<ParseHandler>::parenExprOrGeneratorComprehension(YieldHandling yieldHandl
     return pn;
 }
 
-// Legacy generator comprehensions can sometimes appear without parentheses.
-// For example:
-//
-//   foo(x for (x in bar))
-//
-// In this case the parens are part of the call, and not part of the generator
-// comprehension.  This can happen in these contexts:
+// Legacy generator comprehensions can appear anywhere an expression is
+// enclosed in parentheses, even if those parentheses are part of statement
+// syntax or a function call:
 //
 //   if (_)
 //   while (_) {}
 //   do {} while (_)
 //   switch (_) {}
 //   with (_) {}
-//   foo(_) // must be first and only argument
+//   foo(_)  // must be first and only argument
 //
-// This is not the case for ES6 generator comprehensions; they must always be in
-// parentheses.
-
+// This is not the case for also-nonstandard ES6-era generator comprehensions.
+// Those must be enclosed in PrimaryExpression parentheses.
+//
+//     sum(x*x for (x in y)); // ok
+//     sum(for (x of y) x*x); // SyntaxError: needs more parens
+//
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHandling)
