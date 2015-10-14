@@ -16,7 +16,8 @@ const TESTCASES = [
   {
     description: "Non-password input with no <form> present",
     document: `<input>`,
-    returnedFieldIDsByFormLike: [],
+    // Only the IDs of password fields should be in this array
+    returnedFieldIDsByFormLike: [[]],
     skipEmptyFields: undefined,
   },
   {
@@ -96,11 +97,7 @@ for (let tc of TESTCASES) {
 
       let mapRootElementToFormLike = new Map();
       for (let input of document.querySelectorAll("input")) {
-        if (input.type != "password") {
-          continue;
-        }
-
-        let formLike = FormLikeFactory.createFromPasswordField(input);
+        let formLike = FormLikeFactory.createFromField(input);
         let existingFormLike = mapRootElementToFormLike.get(formLike.rootElement);
         if (!existingFormLike) {
           mapRootElementToFormLike.set(formLike.rootElement, formLike);
