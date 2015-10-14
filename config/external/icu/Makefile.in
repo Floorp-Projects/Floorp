@@ -47,9 +47,9 @@ buildicu::
 # Msys screws up GENRBOPTS when it contains spaces, so all genrb flags need
 # to be stuck together. See https://bugzilla.mozilla.org/show_bug.cgi?id=1034594#c34
 ifdef CROSS_COMPILE
-	+$(MAKE) -j1 -C $(DEPTH)/intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kRC'
+	+ASAN_OPTIONS=detect_leaks=0 $(MAKE) -j1 -C $(DEPTH)/intl/icu/host STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kRC'
 endif
-	+$(MAKE) -j1 -C $(DEPTH)/intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kR'
+	+ASAN_OPTIONS=detect_leaks=0 $(MAKE) -j1 -C $(DEPTH)/intl/icu/target STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-kR'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
