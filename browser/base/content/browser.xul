@@ -1092,7 +1092,7 @@
 
       <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
       <vbox id="appcontent" flex="1">
-        <notificationbox id="high-priority-global-notificationbox"/>
+        <notificationbox id="high-priority-global-notificationbox" notificationside="top"/>
         <tabbrowser id="content"
                     flex="1" contenttooltip="aHTMLTooltip"
                     tabcontainer="tabbrowser-tabs"
@@ -1175,7 +1175,7 @@
   </html:div>
 
   <vbox id="browser-bottombox" layer="true">
-    <notificationbox id="global-notificationbox"/>
+    <notificationbox id="global-notificationbox" notificationside="bottom"/>
     <toolbar id="developer-toolbar"
              hidden="true">
 #ifdef XP_MACOSX
