@@ -58,7 +58,7 @@ WebGLTexture::CompressedTexImage2D(TexImageTarget texImageTarget,
                                    GLint level,
                                    GLenum internalFormat,
                                    GLsizei width, GLsizei height, GLint border,
-                                   const dom::ArrayBufferView& view)
+                                   const dom::ArrayBufferViewOrSharedArrayBufferView& view)
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexImage;
     const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
@@ -76,9 +76,11 @@ WebGLTexture::CompressedTexImage2D(TexImageTarget texImageTarget,
         return;
     }
 
-    view.ComputeLengthAndData();
+    size_t byteLength;
+    void* data;
+    js::Scalar::Type dataType;
+    ComputeLengthAndData(view, &data, &byteLength, &dataType);
 
-    uint32_t byteLength = view.Length();
     if (!mContext->ValidateCompTexImageDataSize(level, internalFormat, width, height, byteLength, func, dims)) {
         return;
     }
@@ -96,7 +98,7 @@ WebGLTexture::CompressedTexImage2D(TexImageTarget texImageTarget,
 
     mContext->MakeContextCurrent();
     gl::GLContext* gl = mContext->gl;
-    gl->fCompressedTexImage2D(texImageTarget.get(), level, internalFormat, width, height, border, byteLength, view.Data());
+    gl->fCompressedTexImage2D(texImageTarget.get(), level, internalFormat, width, height, border, byteLength, data);
 
     SetImageInfo(texImageTarget, level, width, height, 1, internalFormat,
                       WebGLImageDataStatus::InitializedImageData);
@@ -106,7 +108,7 @@ void
 WebGLTexture::CompressedTexSubImage2D(TexImageTarget texImageTarget, GLint level, GLint xOffset,
                                       GLint yOffset, GLsizei width, GLsizei height,
                                       GLenum internalFormat,
-                                      const dom::ArrayBufferView& view)
+                                      const dom::ArrayBufferViewOrSharedArrayBufferView& view)
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexSubImage;
     const WebGLTexDimensions dims = WebGLTexDimensions::Tex2D;
@@ -131,9 +133,11 @@ WebGLTexture::CompressedTexSubImage2D(TexImageTarget texImageTarget, GLint level
         return mContext->ErrorInvalidOperation("compressedTexImage2D: internalFormat does not match the existing image");
     }
 
-    view.ComputeLengthAndData();
+    size_t byteLength;
+    void* data;
+    js::Scalar::Type dataType;
+    ComputeLengthAndData(view, &data, &byteLength, &dataType);
 
-    uint32_t byteLength = view.Length();
     if (!mContext->ValidateCompTexImageDataSize(level, internalFormat, width, height, byteLength, func, dims))
         return;
 
@@ -161,7 +165,7 @@ WebGLTexture::CompressedTexSubImage2D(TexImageTarget texImageTarget, GLint level
 
     mContext->MakeContextCurrent();
     gl::GLContext* gl = mContext->gl;
-    gl->fCompressedTexSubImage2D(texImageTarget.get(), level, xOffset, yOffset, width, height, internalFormat, byteLength, view.Data());
+    gl->fCompressedTexSubImage2D(texImageTarget.get(), level, xOffset, yOffset, width, height, internalFormat, byteLength, data);
 }
 
 void
@@ -614,23 +618,19 @@ void
 WebGLTexture::TexImage2D(TexImageTarget texImageTarget, GLint level,
                          GLenum internalFormat, GLsizei width,
                          GLsizei height, GLint border, GLenum unpackFormat,
-                         GLenum unpackType, const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                         GLenum unpackType, const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                          ErrorResult* const out_rv)
 {
     void* data;
-    uint32_t length;
+    size_t length;
     js::Scalar::Type jsArrayType;
     if (maybeView.IsNull()) {
         data = nullptr;
         length = 0;
         jsArrayType = js::Scalar::MaxTypedArrayViewType;
     } else {
-        const dom::ArrayBufferView& view = maybeView.Value();
-        view.ComputeLengthAndData();
-
-        data = view.Data();
-        length = view.Length();
-        jsArrayType = view.Type();
+        const auto& view = maybeView.Value();
+        ComputeLengthAndData(view, &data, &length, &jsArrayType);
     }
 
     const char funcName[] = "texImage2D";
@@ -850,14 +850,17 @@ WebGLTexture::TexSubImage2D(TexImageTarget texImageTarget, GLint level,
                             GLint xOffset, GLint yOffset,
                             GLsizei width, GLsizei height,
                             GLenum unpackFormat, GLenum unpackType,
-                            const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                            const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                             ErrorResult* const out_rv)
 {
     if (maybeView.IsNull())
         return mContext->ErrorInvalidValue("texSubImage2D: pixels must not be null!");
 
-    const dom::ArrayBufferView& view = maybeView.Value();
-    view.ComputeLengthAndData();
+    const auto& view = maybeView.Value();
+    size_t length;
+    void* data;
+    js::Scalar::Type jsArrayType;
+    ComputeLengthAndData(view, &data, &length, &jsArrayType);
 
     const char funcName[] = "texSubImage2D";
     if (!DoesTargetMatchDimensions(mContext, texImageTarget, 2, funcName))
@@ -865,7 +868,7 @@ WebGLTexture::TexSubImage2D(TexImageTarget texImageTarget, GLint level,
 
     return TexSubImage2D_base(texImageTarget, level, xOffset, yOffset,
                               width, height, 0, unpackFormat, unpackType,
-                              view.Data(), view.Length(), view.Type(),
+                              data, length, jsArrayType,
                               WebGLTexelFormat::Auto, false);
 }
 
@@ -1211,7 +1214,7 @@ void
 WebGLTexture::TexImage3D(TexImageTarget texImageTarget, GLint level, GLenum internalFormat,
                           GLsizei width, GLsizei height, GLsizei depth,
                           GLint border, GLenum unpackFormat, GLenum unpackType,
-                          const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                          const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                           ErrorResult* const out_rv)
 {
     void* data;
@@ -1222,12 +1225,8 @@ WebGLTexture::TexImage3D(TexImageTarget texImageTarget, GLint level, GLenum inte
         dataLength = 0;
         jsArrayType = js::Scalar::MaxTypedArrayViewType;
     } else {
-        const dom::ArrayBufferView& view = maybeView.Value();
-        view.ComputeLengthAndData();
-
-        data = view.Data();
-        dataLength = view.Length();
-        jsArrayType = view.Type();
+        const auto& view = maybeView.Value();
+        ComputeLengthAndData(view, &data, &dataLength, &jsArrayType);
     }
 
     const char funcName[] = "texImage3D";
@@ -1318,14 +1317,17 @@ WebGLTexture::TexSubImage3D(TexImageTarget texImageTarget, GLint level,
                              GLint xOffset, GLint yOffset, GLint zOffset,
                              GLsizei width, GLsizei height, GLsizei depth,
                              GLenum unpackFormat, GLenum unpackType,
-                             const dom::Nullable<dom::ArrayBufferView>& maybeView,
+                             const dom::Nullable<dom::ArrayBufferViewOrSharedArrayBufferView>& maybeView,
                              ErrorResult* const out_rv)
 {
     if (maybeView.IsNull())
         return mContext->ErrorInvalidValue("texSubImage3D: pixels must not be null!");
 
-    const dom::ArrayBufferView& view = maybeView.Value();
-    view.ComputeLengthAndData();
+    const auto& view = maybeView.Value();
+    void* data;
+    size_t dataLength;
+    js::Scalar::Type jsArrayType;
+    ComputeLengthAndData(view, &data, &dataLength, &jsArrayType);
 
     const char funcName[] = "texSubImage3D";
     if (!DoesTargetMatchDimensions(mContext, texImageTarget, 3, funcName))
@@ -1357,10 +1359,6 @@ WebGLTexture::TexSubImage3D(TexImageTarget texImageTarget, GLint level,
     if (unpackType != existingType) {
         return mContext->ErrorInvalidOperation("texSubImage3D: type differs from that of the existing image");
     }
-
-    js::Scalar::Type jsArrayType = view.Type();
-    void* data = view.Data();
-    size_t dataLength = view.Length();
 
     if (!mContext->ValidateTexInputData(unpackType, jsArrayType, func, dims))
         return;

@@ -189,11 +189,11 @@ nsScriptNameSpaceManager* GetNameSpaceManager();
 nsScriptNameSpaceManager* PeekNameSpaceManager();
 
 // Runnable that's used to do async error reporting
-class AsyncErrorReporter : public nsRunnable
+class AsyncErrorReporter final : public nsRunnable
 {
 public:
   // aWindow may be null if this error report is not associated with a window
-  AsyncErrorReporter(JSRuntime* aRuntime, xpc::ErrorReport* aReport)
+  explicit AsyncErrorReporter(xpc::ErrorReport* aReport)
     : mReport(aReport)
   {}
 

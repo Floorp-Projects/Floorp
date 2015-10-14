@@ -128,6 +128,8 @@ private:
     result.push_back("rl0");
     result.push_back("wi0");
     result.push_back("en0");
+    result.push_back("enp2s0");
+    result.push_back("enp3s0");
     result.push_back("en1");
     result.push_back("en2");
     result.push_back("en3");

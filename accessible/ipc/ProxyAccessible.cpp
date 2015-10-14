@@ -906,6 +906,18 @@ ProxyAccessible::UnselectAll()
   return success;
 }
 
+void
+ProxyAccessible::TakeSelection()
+{
+  unused << mDoc->SendTakeSelection(mID);
+}
+
+void
+ProxyAccessible::SetSelected(bool aSelect)
+{
+  unused << mDoc->SendSetSelected(mID, aSelect);
+}
+
 bool
 ProxyAccessible::DoAction(uint8_t aIndex)
 {
