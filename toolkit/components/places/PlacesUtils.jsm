@@ -581,11 +581,11 @@ this.PlacesUtils = {
       if (PlacesUtils.nodeIsFolder(node) &&
           node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT &&
           asQuery(node).queryOptions.excludeItems) {
-        let node = PlacesUtils.getFolderContents(node.itemId, false, true).root;
+        let folderRoot = PlacesUtils.getFolderContents(node.itemId, false, true).root;
         try {
-          return gatherDataFunc(node);
+          return gatherDataFunc(folderRoot);
         } finally {
-          node.containerOpen = false;
+          folderRoot.containerOpen = false;
         }
       }
       // If we didn't create our own query, do not alter the node's state.
