@@ -153,6 +153,10 @@ private:
 
   bmp::BitFields mBitFields;
 
+  // Might the image have transparency? Determined from the headers during
+  // metadata decode. (Does not guarantee the image actually has transparency.)
+  bool mMayHaveTransparency;
+
   uint32_t mNumColors;      // The number of used colors, i.e. the number of
                             // entries in mColors, if it's present.
   bmp::ColorTableEntry* mColors; // The color table, if it's present.
