@@ -45,16 +45,3 @@ interface TestInterfaceSetlike {
 interface TestInterfaceSetlikeNode {
   setlike<Node>;
 };
-
-[Constructor()]
-// Pref="dom.expose_test_interfaces"]
-interface TestInterfaceIterableSingle {
-  iterable<long>;
-};
-
-[Constructor()]
-//   Pref="dom.expose_test_interfaces"]
-interface TestInterfaceIterableDouble {
-  iterable<DOMString, DOMString>;
-};
-
