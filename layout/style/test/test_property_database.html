@@ -94,11 +94,11 @@ for (var prop in gCSSProperties) {
   if (entry.type == CSS_TYPE_LONGHAND) {
     ok(!("subproperties" in entry),
        "longhand property '" + prop + "' must not have subproperty list");
-  } else if (entry.type == CSS_TYPE_TRUE_SHORTHAND) {
+  } else if (entry.type == CSS_TYPE_TRUE_SHORTHAND ||
+             entry.type == CSS_TYPE_SHORTHAND_AND_LONGHAND) {
     ok("subproperties" in entry,
        "shorthand property '" + prop + "' must have subproperty list");
   }
-  /* optional for CSS_TYPE_SHORTHAND_AND_LONGHAND */
 
   if ("subproperties" in entry) {
     var good = true;
