@@ -88,6 +88,10 @@
 #define JWK_ALG_RSA_OAEP_256        "RSA-OAEP-256"
 #define JWK_ALG_RSA_OAEP_384        "RSA-OAEP-384"
 #define JWK_ALG_RSA_OAEP_512        "RSA-OAEP-512"
+#define JWK_ALG_PS1                 "PS1"      // RSA-PSS
+#define JWK_ALG_PS256               "PS256"
+#define JWK_ALG_PS384               "PS384"
+#define JWK_ALG_PS512               "PS512"
 #define JWK_ALG_ECDSA_P_256         "ES256"
 #define JWK_ALG_ECDSA_P_384         "ES384"
 #define JWK_ALG_ECDSA_P_521         "ES521"
@@ -206,6 +210,8 @@ MapAlgorithmNameToMechanism(const nsString& aName)
     mechanism = CKM_RSA_PKCS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
     mechanism = CKM_RSA_PKCS_OAEP;
+  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
+    mechanism = CKM_RSA_PKCS_PSS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
     mechanism = CKM_ECDH1_DERIVE;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {

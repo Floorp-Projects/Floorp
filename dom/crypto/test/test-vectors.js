@@ -418,6 +418,86 @@ tv = {
     ),
   },
 
+  // RSA-PSS test vectors, pss-vect.txt, Example 1: A 1024-bit RSA Key Pair
+  // <ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip>
+  rsapss: {
+    pkcs8: util.hex2abv(
+      "30820275020100300d06092a864886f70d01010105000482025f3082025b0201" +
+      "0002818100a56e4a0e701017589a5187dc7ea841d156f2ec0e36ad52a44dfeb1" +
+      "e61f7ad991d8c51056ffedb162b4c0f283a12a88a394dff526ab7291cbb307ce" +
+      "abfce0b1dfd5cd9508096d5b2b8b6df5d671ef6377c0921cb23c270a70e2598e" +
+      "6ff89d19f105acc2d3f0cb35f29280e1386b6f64c4ef22e1e1f20d0ce8cffb22" +
+      "49bd9a2137020301000102818033a5042a90b27d4f5451ca9bbbd0b44771a101" +
+      "af884340aef9885f2a4bbe92e894a724ac3c568c8f97853ad07c0266c8c6a3ca" +
+      "0929f1e8f11231884429fc4d9ae55fee896a10ce707c3ed7e734e44727a39574" +
+      "501a532683109c2abacaba283c31b4bd2f53c3ee37e352cee34f9e503bd80c06" +
+      "22ad79c6dcee883547c6a3b325024100e7e8942720a877517273a356053ea2a1" +
+      "bc0c94aa72d55c6e86296b2dfc967948c0a72cbccca7eacb35706e09a1df55a1" +
+      "535bd9b3cc34160b3b6dcd3eda8e6443024100b69dca1cf7d4d7ec81e75b90fc" +
+      "ca874abcde123fd2700180aa90479b6e48de8d67ed24f9f19d85ba275874f542" +
+      "cd20dc723e6963364a1f9425452b269a6799fd024028fa13938655be1f8a159c" +
+      "baca5a72ea190c30089e19cd274a556f36c4f6e19f554b34c077790427bbdd8d" +
+      "d3ede2448328f385d81b30e8e43b2fffa02786197902401a8b38f398fa712049" +
+      "898d7fb79ee0a77668791299cdfa09efc0e507acb21ed74301ef5bfd48be455e" +
+      "aeb6e1678255827580a8e4e8e14151d1510a82a3f2e729024027156aba4126d2" +
+      "4a81f3a528cbfb27f56886f840a9f6e86e17a44b94fe9319584b8e22fdde1e5a" +
+      "2e3bd8aa5ba8d8584194eb2190acf832b847f13a3d24a79f4d"
+    ),
+    spki: util.hex2abv(
+      "30819f300d06092a864886f70d010101050003818d0030818902818100a56e4a" +
+      "0e701017589a5187dc7ea841d156f2ec0e36ad52a44dfeb1e61f7ad991d8c510" +
+      "56ffedb162b4c0f283a12a88a394dff526ab7291cbb307ceabfce0b1dfd5cd95" +
+      "08096d5b2b8b6df5d671ef6377c0921cb23c270a70e2598e6ff89d19f105acc2" +
+      "d3f0cb35f29280e1386b6f64c4ef22e1e1f20d0ce8cffb2249bd9a2137020301" +
+      "0001"
+    ),
+    data: util.hex2abv(
+      "cdc87da223d786df3b45e0bbbc721326d1ee2af806cc315475cc6f0d9c66e1b6" +
+      "2371d45ce2392e1ac92844c310102f156a0d8d52c1f4c40ba3aa65095786cb76" +
+      "9757a6563ba958fed0bcc984e8b517a3d5f515b23b8a41e74aa867693f90dfb0" +
+      "61a6e86dfaaee64472c00e5f20945729cbebe77f06ce78e08f4098fba41f9d61" +
+      "93c0317e8b60d4b6084acb42d29e3808a3bc372d85e331170fcbf7cc72d0b71c" +
+      "296648b3a4d10f416295d0807aa625cab2744fd9ea8fd223c42537029828bd16" +
+      "be02546f130fd2e33b936d2676e08aed1b73318b750a0167d0"
+    ),
+    sig: util.hex2abv(
+      "9074308fb598e9701b2294388e52f971faac2b60a5145af185df5287b5ed2887" +
+      "e57ce7fd44dc8634e407c8e0e4360bc226f3ec227f9d9e54638e8d31f5051215" +
+      "df6ebb9c2f9579aa77598a38f914b5b9c1bd83c4e2f9f382a0d0aa3542ffee65" +
+      "984a601bc69eb28deb27dca12c82c2d4c3f66cd500f1ff2b994d8a4e30cbb33c"
+    ),
+    salt: util.hex2abv(
+      "dee959c7e06411361420ff80185ed57f3e6776af"
+    ),
+    jwk_priv: {
+      kty: "RSA",
+      n: "pW5KDnAQF1iaUYfcfqhB0Vby7A42rVKkTf6x5h962ZHYxRBW_-2xYrTA8oOhK" +
+         "oijlN_1JqtykcuzB86r_OCx39XNlQgJbVsri2311nHvY3fAkhyyPCcKcOJZjm" +
+         "_4nRnxBazC0_DLNfKSgOE4a29kxO8i4eHyDQzoz_siSb2aITc",
+      e: "AQAB",
+      d: "M6UEKpCyfU9UUcqbu9C0R3GhAa-IQ0Cu-YhfKku-kuiUpySsPFaMj5eFOtB8A" +
+         "mbIxqPKCSnx6PESMYhEKfxNmuVf7olqEM5wfD7X5zTkRyejlXRQGlMmgxCcKr" +
+         "rKuig8MbS9L1PD7jfjUs7jT55QO9gMBiKtecbc7og1R8ajsyU",
+      p: "5-iUJyCod1Fyc6NWBT6iobwMlKpy1VxuhilrLfyWeUjApyy8zKfqyzVwbgmh3" +
+         "1WhU1vZs8w0Fgs7bc0-2o5kQw",
+      q: "tp3KHPfU1-yB51uQ_MqHSrzeEj_ScAGAqpBHm25I3o1n7ST58Z2FuidYdPVCz" +
+         "SDccj5pYzZKH5QlRSsmmmeZ_Q",
+      dp: "KPoTk4ZVvh-KFZy6ylpy6hkMMAieGc0nSlVvNsT24Z9VSzTAd3kEJ7vdjdPt" +
+          "4kSDKPOF2Bsw6OQ7L_-gJ4YZeQ",
+      dq: "Gos485j6cSBJiY1_t57gp3ZoeRKZzfoJ78DlB6yyHtdDAe9b_Ui-RV6utuFn" +
+          "glWCdYCo5OjhQVHRUQqCo_LnKQ",
+      qi: "JxVqukEm0kqB86Uoy_sn9WiG-ECp9uhuF6RLlP6TGVhLjiL93h5aLjvYqluo" +
+          "2FhBlOshkKz4MrhH8To9JKefTQ",
+    },
+    jwk_pub: {
+      kty: "RSA",
+      n: "pW5KDnAQF1iaUYfcfqhB0Vby7A42rVKkTf6x5h962ZHYxRBW_-2xYrTA8oOhK" +
+         "oijlN_1JqtykcuzB86r_OCx39XNlQgJbVsri2311nHvY3fAkhyyPCcKcOJZjm" +
+         "_4nRnxBazC0_DLNfKSgOE4a29kxO8i4eHyDQzoz_siSb2aITc",
+      e: "AQAB",
+    },
+  },
+
   key_wrap_known_answer: {
     key:          util.hex2abv("0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a"),
     wrapping_key: util.hex2abv("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"),

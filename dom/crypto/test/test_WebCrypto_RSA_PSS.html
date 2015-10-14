@@ -73,6 +73,204 @@ TestArray.addTest(
       .then(complete(that, x => x), error(that))
   }
 );
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS verify known signature (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      return crypto.subtle.verify(alg, x, tv.rsapss.sig, tv.rsapss.data);
+    }
+
+    crypto.subtle.importKey("spki", tv.rsapss.spki, alg, false, ["verify"])
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS verify known signature (SHA-1, 1024-bit, JWK)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      return crypto.subtle.verify(alg, x, tv.rsapss.sig, tv.rsapss.data);
+    }
+
+    crypto.subtle.importKey("jwk", tv.rsapss.jwk_pub, alg, false, ["verify"])
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS import SPKI/PKCS#8 keys and sign/verify (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    var privKey, pubKey;
+    function setKeys([pub, priv]) { pubKey = pub; privKey = priv; }
+    function doSign() {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      return crypto.subtle.sign(alg, privKey, tv.rsapss.data);
+    }
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      return crypto.subtle.verify(alg, pubKey, x, tv.rsapss.data);
+    }
+
+    var spki =
+      crypto.subtle.importKey("spki", tv.rsapss.spki, alg, false, ["verify"]);
+    var pkcs8 =
+      crypto.subtle.importKey("pkcs8", tv.rsapss.pkcs8, alg, false, ["sign"]);
+
+    Promise.all([spki, pkcs8])
+      .then(setKeys, error(that))
+      .then(doSign, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS import JWK keys and sign/verify (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    var privKey, pubKey;
+    function setKeys([pub, priv]) { pubKey = pub; privKey = priv; }
+    function doSign() {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      return crypto.subtle.sign(alg, privKey, tv.rsapss.data);
+    }
+    function doVerify(x) {
+      var alg = {name: "RSA-PSS", saltLength: tv.rsapss.salt.byteLength};
+      return crypto.subtle.verify(alg, pubKey, x, tv.rsapss.data);
+    }
+
+    var spki =
+      crypto.subtle.importKey("jwk", tv.rsapss.jwk_pub, alg, false, ["verify"]);
+    var pkcs8 =
+      crypto.subtle.importKey("jwk", tv.rsapss.jwk_priv, alg, false, ["sign"]);
+
+    Promise.all([spki, pkcs8])
+      .then(setKeys, error(that))
+      .then(doSign, error(that))
+      .then(doVerify, error(that))
+      .then(complete(that, x => x), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS SPKI import/export (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("spki", x);
+    }
+
+    crypto.subtle.importKey("spki", tv.rsapss.spki, alg, true, ["verify"])
+      .then(doExport, error(that))
+      .then(memcmp_complete(that, tv.rsapss.spki), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS PKCS#8 import/export (SHA-1, 1024-bit)",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("pkcs8", x);
+    }
+
+    crypto.subtle.importKey("pkcs8", tv.rsapss.pkcs8, alg, true, ["sign"])
+      .then(doExport, error(that))
+      .then(memcmp_complete(that, tv.rsapss.pkcs8), error(that));
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS JWK export a public key",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var jwk = tv.rsapss.jwk_pub;
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("jwk", x);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["verify"])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ["n", "e"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "PS1" &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ["verify"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e;
+          }),
+        error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "RSA-PSS JWK export a private key",
+  function () {
+    var that = this;
+    var alg = {name: "RSA-PSS", hash: "SHA-1"};
+    var jwk = tv.rsapss.jwk_priv;
+
+    function doExport(x) {
+      return crypto.subtle.exportKey("jwk", x);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ["sign"])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ["n", "e", "d", "p", "q", "dp", "dq", "qi"]) &&
+                 x.kty == "RSA" &&
+                 x.alg == "PS1" &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ["sign"]) &&
+                 x.n == jwk.n &&
+                 x.e == jwk.e &&
+                 x.d == jwk.d &&
+                 x.p == jwk.p &&
+                 x.q == jwk.q &&
+                 x.dp == jwk.dp &&
+                 x.dq == jwk.dq &&
+                 x.qi == jwk.qi;
+          }),
+        error(that)
+      );
+  }
+);
 /*]]>*/</script>
 </head>
 
