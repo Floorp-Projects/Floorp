@@ -128,7 +128,7 @@ hb_shape_plan_create (hb_face_t                     *face,
     face = hb_face_get_empty ();
   if (unlikely (!props))
     return hb_shape_plan_get_empty ();
-  if (num_user_features && !(features = (hb_feature_t *) calloc (num_user_features, sizeof (hb_feature_t))))
+  if (num_user_features && !(features = (hb_feature_t *) malloc (num_user_features * sizeof (hb_feature_t))))
     return hb_shape_plan_get_empty ();
   if (!(shape_plan = hb_object_create<hb_shape_plan_t> ())) {
     free (features);
@@ -293,13 +293,8 @@ hb_shape_plan_execute (hb_shape_plan_t    *shape_plan,
 		  num_features,
 		  shape_plan->shaper_func);
 
-  if (unlikely (!buffer->len))
-    return true;
-
-  assert (!hb_object_is_inert (buffer));
-  assert (buffer->content_type == HB_BUFFER_CONTENT_TYPE_UNICODE);
-
-  if (unlikely (hb_object_is_inert (shape_plan)))
+  if (unlikely (hb_object_is_inert (shape_plan) ||
+		hb_object_is_inert (buffer)))
     return false;
 
   assert (shape_plan->face_unsafe == font->face);

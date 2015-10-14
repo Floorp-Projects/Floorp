@@ -125,9 +125,6 @@ _hb_coretext_shaper_face_data_destroy (hb_coretext_shaper_face_data_t *data)
   CFRelease (data);
 }
 
-/*
- * Since: 0.9.10
- */
 CGFontRef
 hb_coretext_face_get_cg_font (hb_face_t *face)
 {

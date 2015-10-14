@@ -138,9 +138,6 @@ _hb_graphite2_shaper_face_data_destroy (hb_graphite2_shaper_face_data_t *data)
   free (data);
 }
 
-/*
- * Since: 0.9.10
- */
 gr_face *
 hb_graphite2_face_get_gr_face (hb_face_t *face)
 {
@@ -175,9 +172,6 @@ _hb_graphite2_shaper_font_data_destroy (hb_graphite2_shaper_font_data_t *data)
   gr_font_destroy (data);
 }
 
-/*
- * Since: 0.9.10
- */
 gr_font *
 hb_graphite2_font_get_gr_font (hb_font_t *font)
 {

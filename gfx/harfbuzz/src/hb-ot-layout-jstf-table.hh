@@ -57,17 +57,17 @@ struct JstfPriority
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) &&
-		  shrinkageEnableGSUB.sanitize (c, this) &&
-		  shrinkageDisableGSUB.sanitize (c, this) &&
-		  shrinkageEnableGPOS.sanitize (c, this) &&
-		  shrinkageDisableGPOS.sanitize (c, this) &&
-		  shrinkageJstfMax.sanitize (c, this) &&
-		  extensionEnableGSUB.sanitize (c, this) &&
-		  extensionDisableGSUB.sanitize (c, this) &&
-		  extensionEnableGPOS.sanitize (c, this) &&
-		  extensionDisableGPOS.sanitize (c, this) &&
-		  extensionJstfMax.sanitize (c, this));
+    return TRACE_RETURN (c->check_struct (this) &&
+			 shrinkageEnableGSUB.sanitize (c, this) &&
+			 shrinkageDisableGSUB.sanitize (c, this) &&
+			 shrinkageEnableGPOS.sanitize (c, this) &&
+			 shrinkageDisableGPOS.sanitize (c, this) &&
+			 shrinkageJstfMax.sanitize (c, this) &&
+			 extensionEnableGSUB.sanitize (c, this) &&
+			 extensionDisableGSUB.sanitize (c, this) &&
+			 extensionEnableGPOS.sanitize (c, this) &&
+			 extensionDisableGPOS.sanitize (c, this) &&
+			 extensionJstfMax.sanitize (c, this));
   }
 
   protected:
@@ -127,7 +127,7 @@ struct JstfLangSys : OffsetListOf<JstfPriority>
 			const Record<JstfLangSys>::sanitize_closure_t * = NULL) const
   {
     TRACE_SANITIZE (this);
-    return_trace (OffsetListOf<JstfPriority>::sanitize (c));
+    return TRACE_RETURN (OffsetListOf<JstfPriority>::sanitize (c));
   }
 };
 
@@ -168,9 +168,9 @@ struct JstfScript
 			const Record<JstfScript>::sanitize_closure_t * = NULL) const
   {
     TRACE_SANITIZE (this);
-    return_trace (extenderGlyphs.sanitize (c, this) &&
-		  defaultLangSys.sanitize (c, this) &&
-		  langSys.sanitize (c, this));
+    return TRACE_RETURN (extenderGlyphs.sanitize (c, this) &&
+			 defaultLangSys.sanitize (c, this) &&
+			 langSys.sanitize (c, this));
   }
 
   protected:
@@ -212,9 +212,8 @@ struct JSTF
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (version.sanitize (c) &&
-		  likely (version.major == 1) &&
-		  scriptList.sanitize (c, this));
+    return TRACE_RETURN (version.sanitize (c) && likely (version.major == 1) &&
+			 scriptList.sanitize (c, this));
   }
 
   protected:
