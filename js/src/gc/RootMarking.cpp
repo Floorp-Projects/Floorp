@@ -220,7 +220,7 @@ struct PersistentRootedMarker
     static void
     markChain(JSTracer* trc, List& list, const char* name)
     {
-        for (Element* r : list)
+        for (Element* r = list.getFirst(); r; r = r->getNext())
             TraceFn(trc, r->address(), name);
     }
 };

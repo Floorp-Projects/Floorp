@@ -53,7 +53,12 @@ void
 JS::WeakMapPtr<K, V>::destroy()
 {
     MOZ_ASSERT(initialized());
-    js_delete(Utils<K, V>::cast(ptr));
+    auto map = Utils<K, V>::cast(ptr);
+    // If this destruction happens mid-GC, we might be in the compartment's list
+    // of known live weakmaps. If we are, remove ourselves before deleting.
+    if (map->isInList())
+        WeakMapBase::removeWeakMapFromList(map);
+    js_delete(map);
     ptr = nullptr;
 }
 

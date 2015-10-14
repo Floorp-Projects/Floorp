@@ -7,7 +7,6 @@
 #ifndef jsweakmap_h
 #define jsweakmap_h
 
-#include "mozilla/LinkedList.h"
 #include "mozilla/Move.h"
 
 #include "jscompartment.h"
@@ -36,12 +35,14 @@ class WeakMapBase;
 // implementation takes care of the iterative marking needed for weak tables and removing
 // table entries when collection is complete.
 
+// The value for the next pointer for maps not in the map list.
+static WeakMapBase * const WeakMapNotInList = reinterpret_cast<WeakMapBase*>(1);
+
 typedef HashSet<WeakMapBase*, DefaultHasher<WeakMapBase*>, SystemAllocPolicy> WeakMapSet;
 
 // Common base class for all WeakMap specializations. The collector uses this to call
 // their markIteratively and sweep methods.
-class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
-{
+class WeakMapBase {
     friend void js::GCMarker::enterWeakMarkingMode();
 
   public:
@@ -74,11 +75,16 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
     // Trace all delayed weak map bindings. Used by the cycle collector.
     static void traceAllMappings(WeakMapTracer* tracer);
 
+    bool isInList() { return next != WeakMapNotInList; }
+
     // Save information about which weak maps are marked for a zone.
     static bool saveZoneMarkedWeakMaps(JS::Zone* zone, WeakMapSet& markedWeakMaps);
 
     // Restore information about which weak maps are marked for many zones.
     static void restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps);
+
+    // Remove a weakmap from its zone's weakmaps list.
+    static void removeWeakMapFromList(WeakMapBase* weakmap);
 
     // Any weakmap key types that want to participate in the non-iterative
     // ephemeron marking must override this method.
@@ -102,6 +108,11 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase>
 
     // Zone containing this weak map.
     JS::Zone* zone;
+
+    // Link in a list of all WeakMaps in a Zone, headed by
+    // JS::Zone::gcWeakMapList. The last element of the list has nullptr as its
+    // next. Maps not in the list have WeakMapNotInList as their next.
+    WeakMapBase* next;
 
     // Whether this object has been traced during garbage collection.
     bool marked;
@@ -136,7 +147,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     bool init(uint32_t len = 16) {
         if (!Base::init(len))
             return false;
-        zone->gcWeakMapList.insertFront(this);
+        next = zone->gcWeakMapList;
+        zone->gcWeakMapList = this;
         marked = JS::IsIncrementalGCInProgress(zone->runtimeFromMainThread());
         return true;
     }
@@ -164,9 +176,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
             exposeGCThingToActiveJS(p->value());
         return p;
     }
-
-    // Resolve ambiguity with LinkedListElement<>::remove.
-    using Base::remove;
 
     // The WeakMap and some part of the key are marked. If the entry is marked
     // according to the exact semantics of this WeakMap, then mark the value.
@@ -409,6 +418,7 @@ class ObjectWeakMap
   public:
     explicit ObjectWeakMap(JSContext* cx);
     bool init();
+    ~ObjectWeakMap();
 
     JSObject* lookup(const JSObject* obj);
     bool add(JSContext* cx, JSObject* obj, JSObject* target);

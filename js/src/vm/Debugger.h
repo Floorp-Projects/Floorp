@@ -93,6 +93,16 @@ class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, Relocatabl
           compartment(cx->compartment())
     { }
 
+    ~DebuggerWeakMap() {
+        // If our owning Debugger fails construction after already initializing
+        // this DebuggerWeakMap, we need to make sure that we aren't in the
+        // compartment's weak map list anymore. Normally, when we are destroyed
+        // because the GC finds us unreachable, the GC takes care of removing us
+        // from this list.
+        if (WeakMapBase::isInList())
+            WeakMapBase::removeWeakMapFromList(this);
+    }
+
   public:
     /* Expose those parts of HashMap public interface that are used by Debugger methods. */
 
@@ -200,7 +210,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend class DebuggerMemory;
     friend class SavedStacks;
     friend class mozilla::LinkedListElement<Debugger>;
-    friend class mozilla::LinkedList<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext* cx, JS::HandleObject obj);
     friend bool (::JS::dbg::IsDebugger)(JSObject&);
     friend bool (::JS::dbg::GetDebuggeeGlobals)(JSContext*, JSObject&, AutoObjectVector&);
