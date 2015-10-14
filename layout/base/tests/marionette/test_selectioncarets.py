@@ -40,6 +40,7 @@ class CommonCaretsTestCase(object):
         self._textarea_rtl = self.marionette.find_element(By.ID, 'textarea_rtl')
         self._contenteditable = self.marionette.find_element(By.ID, 'contenteditable')
         self._content = self.marionette.find_element(By.ID, 'content')
+        self._non_selectable = self.marionette.find_element(By.ID, 'non_selectable')
 
     def open_test_html2(self):
         'Open html for testing and locate elements.'
@@ -261,6 +262,15 @@ class CommonCaretsTestCase(object):
         self._test_minimum_select_one_character(el2, self.assertEqual,
                                                 x=x, y=y)
 
+    def _test_focus_not_being_changed_by_long_press_on_non_selectable(self, el):
+        # Goal: Focus remains on the editable element el after long pressing on
+        # the non-selectable element.
+        sel = SelectionManager(el)
+        self.long_press_on_word(el, 0)
+        self.long_press_on_location(self._non_selectable)
+        active_sel = SelectionManager(self.marionette.get_active_element())
+        self.assertEqual(sel.content, active_sel.content)
+
     def _test_handle_tilt_when_carets_overlap_to_each_other(self, el, assertFunc):
         '''Test tilt handling when carets overlap to each other.
 
@@ -452,6 +462,10 @@ class CommonCaretsTestCase(object):
         self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._input, self.assertEqual)
 
+    def test_input_focus_not_changed_by_long_press_on_non_selectable(self):
+        self.open_test_html()
+        self._test_focus_not_being_changed_by_long_press_on_non_selectable(self._input)
+
     ########################################################################
     # <input> test cases with selection carets disabled
     ########################################################################
@@ -496,6 +510,10 @@ class CommonCaretsTestCase(object):
         self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._textarea, self.assertEqual)
 
+    def test_textarea_focus_not_changed_by_long_press_on_non_selectable(self):
+        self.open_test_html()
+        self._test_focus_not_being_changed_by_long_press_on_non_selectable(self._textarea)
+
     ########################################################################
     # <textarea> test cases with selection carets disabled
     ########################################################################
@@ -523,6 +541,10 @@ class CommonCaretsTestCase(object):
     def test_textarea_rtl_minimum_select_one_character(self):
         self.open_test_html()
         self._test_minimum_select_one_character(self._textarea_rtl, self.assertEqual)
+
+    def test_textarea_rtl_focus_not_changed_by_long_press_on_non_selectable(self):
+        self.open_test_html()
+        self._test_focus_not_being_changed_by_long_press_on_non_selectable(self._textarea_rtl)
 
     ########################################################################
     # <textarea> right-to-left test cases with selection carets disabled
@@ -567,6 +589,10 @@ class CommonCaretsTestCase(object):
     def test_contenteditable_handle_tilt_when_carets_overlap_to_each_other(self):
         self.open_test_html()
         self._test_handle_tilt_when_carets_overlap_to_each_other(self._contenteditable, self.assertEqual)
+
+    def test_contenteditable_focus_not_changed_by_long_press_on_non_selectable(self):
+        self.open_test_html()
+        self._test_focus_not_being_changed_by_long_press_on_non_selectable(self._contenteditable)
 
     ########################################################################
     # <div> contenteditable test cases with selection carets disabled

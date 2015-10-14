@@ -9,6 +9,7 @@
 
 #include "mozIApplication.h"
 #include "nsCOMPtr.h"
+#include "mozilla/BasePrincipal.h"
 
 namespace mozilla {
 namespace dom {
@@ -102,6 +103,13 @@ public:
   already_AddRefed<mozIApplication> GetOwnOrContainingApp() const;
   bool HasOwnOrContainingApp() const;
 
+  /**
+   * OriginAttributesRef() returns the OriginAttributes of this frame to the
+   * caller. This is used to store any attribute associated with the frame's
+   * docshell, such as the AppId.
+   */
+  const OriginAttributes& OriginAttributesRef() const;
+
 protected:
   friend class MaybeInvalidTabContext;
 
@@ -120,22 +128,15 @@ protected:
   bool SetTabContext(const TabContext& aContext);
 
   /**
-   * Set this TabContext to be an app frame (with the given own app) inside the
-   * given app.  Either or both apps may be null.
+   * Set the TabContext for this frame. This can either be:
+   *  - an app frame (with the given own app) inside the given owner app. Either
+   *    apps can be null.
+   *  - a browser frame inside the given owner app (which may be null).
+   *  - a non-browser, non-app frame. Both own app and owner app should be null.
    */
-  bool SetTabContextForAppFrame(mozIApplication* aOwnApp,
-                                mozIApplication* aAppFrameOwnerApp);
-
-  /**
-   * Set this TabContext to be a browser frame inside the given app (which may
-   * be null).
-   */
-  bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp);
-
-  /**
-   * Set this TabContext to be a normal non-browser non-app frame.
-   */
-  bool SetTabContextForNormalFrame();
+  bool SetTabContext(mozIApplication* aOwnApp,
+                     mozIApplication* aAppFrameOwnerApp,
+                     const OriginAttributes& aOriginAttributes);
 
 private:
   /**
@@ -150,12 +151,6 @@ private:
   nsCOMPtr<mozIApplication> mOwnApp;
 
   /**
-   * A cache of mOwnApp->GetLocalId().  Speed really does matter here, since we
-   * read this ID often during process startup.
-   */
-  uint32_t mOwnAppId;
-
-  /**
    * This TabContext's containing app.  If mIsBrowser, this corresponds to the
    * app which contains the browser frame; otherwise, this corresponds to the
    * app which contains the app frame.
@@ -168,11 +163,10 @@ private:
   uint32_t mContainingAppId;
 
   /**
-   * Does this TabContext correspond to a browser element?
-   *
-   * If this is true, mOwnApp must be null.
+   * OriginAttributes of the top level tab docShell
    */
-  bool mIsBrowser;
+  OriginAttributes mOriginAttributes;
+
 };
 
 /**
@@ -188,20 +182,13 @@ public:
     return TabContext::SetTabContext(aContext);
   }
 
-  bool SetTabContextForAppFrame(mozIApplication* aOwnApp,
-                                mozIApplication* aAppFrameOwnerApp)
+  bool SetTabContext(mozIApplication* aOwnApp,
+                     mozIApplication* aAppFrameOwnerApp,
+                     const OriginAttributes& aOriginAttributes)
   {
-    return TabContext::SetTabContextForAppFrame(aOwnApp, aAppFrameOwnerApp);
-  }
-
-  bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp)
-  {
-    return TabContext::SetTabContextForBrowserFrame(aBrowserFrameOwnerApp);
-  }
-
-  bool SetTabContextForNormalFrame()
-  {
-    return TabContext::SetTabContextForNormalFrame();
+    return TabContext::SetTabContext(aOwnApp,
+                                     aAppFrameOwnerApp,
+                                     aOriginAttributes);
   }
 };
 

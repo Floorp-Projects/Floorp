@@ -39,7 +39,6 @@ add_task(function*() {
   hs._onMouseMove({target: valueSpan});
   ok(!hs.highlighters[TYPE],
     "No highlighter was created for the overriden property");
-  ok(!hs.promises[TYPE], "And no highlighter is being initialized either");
 
   info("Disabling the applied property");
   let classRuleEditor = getRuleViewRuleEditor(view, 1);
@@ -52,14 +51,10 @@ add_task(function*() {
   hs._onMouseMove({target: valueSpan});
   ok(!hs.highlighters[TYPE],
     "No highlighter was created for the disabled property");
-  ok(!hs.promises[TYPE], "And no highlighter is being initialized either");
 
   info("Faking a mousemove on the now unoverriden property");
   ({valueSpan} = getRuleViewProperty(view, "div", "transform"));
   let onHighlighterShown = hs.once("highlighter-shown");
   hs._onMouseMove({target: valueSpan});
   yield onHighlighterShown;
-  ok(hs.promises[TYPE], "The highlighter is being initialized now");
-  let h = yield hs.promises[TYPE];
-  is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
 });

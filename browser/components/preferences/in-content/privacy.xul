@@ -226,7 +226,6 @@
               <menupopup>
                 <menuitem label="&expire.label;" value="0"/>
                 <menuitem label="&close.label;" value="2"/>
-                <menuitem label="&askEachTime.label;" value="1"/>
               </menupopup>
             </menulist>
             <spacer flex="1"/>

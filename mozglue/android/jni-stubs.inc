@@ -362,6 +362,272 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv * arg0, jclass ar
 
 #ifdef JNI_STUBS
 
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived_t)(JNIEnv *, jclass, jstring, jstring, jint, jlong);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3, jint arg4, jlong arg5) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived(arg0, arg1, arg2, arg3, arg4, arg5);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsReceived);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent_t)(JNIEnv *, jclass, jint, jstring, jstring, jlong, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent(JNIEnv * arg0, jclass arg1, jint arg2, jstring arg3, jstring arg4, jlong arg5, jint arg6) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSent);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery_t)(JNIEnv *, jclass, jint, jint, jstring, jstring, jlong);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3, jstring arg4, jstring arg5, jlong arg6) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDelivery);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed_t)(JNIEnv *, jclass, jint, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsSendFailed);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms_t)(JNIEnv *, jclass, jint, jint, jstring, jstring, jstring, jlong, jboolean, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3, jstring arg4, jstring arg5, jstring arg6, jlong arg7, jboolean arg8, jint arg9) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSms);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed_t)(JNIEnv *, jclass, jint, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifyGetSmsFailed);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted_t)(JNIEnv *, jclass, jboolean, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted(JNIEnv * arg0, jclass arg1, jboolean arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleted);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed_t)(JNIEnv *, jclass, jint, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsDeleteFailed);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead_t)(JNIEnv *, jclass, jboolean, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead(JNIEnv * arg0, jclass arg1, jboolean arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkedAsRead);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed_t)(JNIEnv *, jclass, jint, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifySmsMarkAsReadFailed);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError_t)(JNIEnv *, jclass, jint, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorError);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult_t)(JNIEnv *, jclass, jlong, jstring, jstring, jlong, jobjectArray, jlong, jstring, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult(JNIEnv * arg0, jclass arg1, jlong arg2, jstring arg3, jstring arg4, jlong arg5, jobjectArray arg6, jlong arg7, jstring arg8, jint arg9) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifyThreadCursorResult);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult_t)(JNIEnv *, jclass, jint, jint, jstring, jstring, jstring, jlong, jlong, jboolean, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3, jstring arg4, jstring arg5, jstring arg6, jlong arg7, jlong arg8, jboolean arg9, jint arg10) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifyMessageCursorResult);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef void (*Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone_t)(JNIEnv *, jclass, jint);
+static Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone_t f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone;
+extern "C" NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone(JNIEnv * arg0, jclass arg1, jint arg2) {
+    if (!f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return ;
+    }
+     f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone", &f_Java_org_mozilla_gecko_GeckoSmsManager_notifyCursorDone);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation;
 extern "C" NS_EXPORT void JNICALL

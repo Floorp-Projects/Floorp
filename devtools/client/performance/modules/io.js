@@ -104,6 +104,10 @@ function loadRecordingFromFile (file) {
     if (recordingData.profile.meta.version === 2) {
       RecordingUtils.deflateProfile(recordingData.profile);
     }
+    if (!recordingData.label) {
+      // set the label to the filename without its extension
+      recordingData.label = file.leafName.replace(/\..+$/, "");
+    }
     deferred.resolve(recordingData);
   });
 

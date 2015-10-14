@@ -13,76 +13,6 @@ loop.panel = (function(_, mozL10n) {
   var Button = sharedViews.Button;
   var Checkbox = sharedViews.Checkbox;
 
-  /**
-   * Availability drop down menu subview.
-   */
-  var AvailabilityDropdown = React.createClass({
-    mixins: [sharedMixins.DropdownMenuMixin()],
-
-    getInitialState: function() {
-      return {
-        doNotDisturb: navigator.mozLoop.doNotDisturb
-      };
-    },
-
-    // XXX target event can either be the li, the span or the i tag
-    // this makes it easier to figure out the target by making a
-    // closure with the desired status already passed in.
-    changeAvailability: function(newAvailabilty) {
-      return function(event) {
-        // Note: side effect!
-        switch (newAvailabilty) {
-          case "available":
-            this.setState({doNotDisturb: false});
-            navigator.mozLoop.doNotDisturb = false;
-            break;
-          case "do-not-disturb":
-            this.setState({doNotDisturb: true});
-            navigator.mozLoop.doNotDisturb = true;
-            break;
-        }
-        this.hideDropdownMenu();
-      }.bind(this);
-    },
-
-    render: function() {
-      var cx = React.addons.classSet;
-      var availabilityDropdown = cx({
-        "dropdown-menu": true,
-        "hide": !this.state.showMenu
-      });
-      var statusIcon = cx({
-        "status-unavailable": this.state.doNotDisturb,
-        "status-available": !this.state.doNotDisturb
-      });
-      var availabilityText = this.state.doNotDisturb ?
-                             mozL10n.get("display_name_dnd_status") :
-                             mozL10n.get("display_name_available_status");
-
-      return (
-        <div className="dropdown">
-          <p className="dnd-status">
-            <span className={statusIcon}
-                  onClick={this.toggleDropdownMenu}
-                  ref="menu-button">
-              {availabilityText}
-            </span>
-          </p>
-          <ul className={availabilityDropdown}>
-            <li className="dropdown-menu-item status-available"
-                onClick={this.changeAvailability("available")}>
-              <span>{mozL10n.get("display_name_available_status")}</span>
-            </li>
-            <li className="dropdown-menu-item status-unavailable"
-                onClick={this.changeAvailability("do-not-disturb")}>
-              <span>{mozL10n.get("display_name_dnd_status")}</span>
-            </li>
-          </ul>
-        </div>
-      );
-    }
-  });
-
   var GettingStartedView = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
@@ -290,6 +220,11 @@ loop.panel = (function(_, mozL10n) {
       this.closeWindow();
     },
 
+    handleToggleNotifications: function() {
+      this.props.mozLoop.doNotDisturb = !this.props.mozLoop.doNotDisturb;
+      this.hideDropdownMenu();
+    },
+
     _isSignedIn: function() {
       return !!this.props.mozLoop.userProfile;
     },
@@ -303,6 +238,8 @@ loop.panel = (function(_, mozL10n) {
       var cx = React.addons.classSet;
       var accountEntryCSSClass = this._isSignedIn() ? "entry-settings-signout" :
                                                       "entry-settings-signin";
+      var notificationsLabel = this.props.mozLoop.doNotDisturb ? "settings_menu_item_turnnotificationson" :
+                                                                 "settings_menu_item_turnnotificationsoff";
 
       return (
         <div className="settings-menu dropdown">
@@ -311,6 +248,10 @@ loop.panel = (function(_, mozL10n) {
              ref="menu-button"
              title={mozL10n.get("settings_menu_button_tooltip")} />
           <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}>
+            <SettingsDropdownEntry
+                extraCSSClass="entry-settings-notifications entries-divider"
+                label={mozL10n.get(notificationsLabel)}
+                onClick={this.handleToggleNotifications} />
             <SettingsDropdownEntry
                 displayed={this._isSignedIn() && this.props.mozLoop.fxAEnabled}
                 extraCSSClass="entry-settings-account"
@@ -794,7 +735,6 @@ loop.panel = (function(_, mozL10n) {
 
     getInitialState: function() {
       return {
-        checked: false,
         previewImage: "",
         description: "",
         url: ""
@@ -818,7 +758,6 @@ loop.panel = (function(_, mozL10n) {
         var description = metadata.title || metadata.description;
         var url = metadata.url;
         this.setState({
-          checked: false,
           previewImage: previewImage,
           description: description,
           url: url
@@ -826,55 +765,22 @@ loop.panel = (function(_, mozL10n) {
       }.bind(this));
     },
 
-    onCheckboxChange: function(newState) {
-      this.setState({checked: newState.checked});
-    },
-
     handleCreateButtonClick: function() {
       var createRoomAction = new sharedActions.CreateRoom({
         nameTemplate: mozL10n.get("rooms_default_room_name_template")
       });
 
-      if (this.state.checked) {
-        createRoomAction.urls = [{
-          location: this.state.url,
-          description: this.state.description,
-          thumbnail: this.state.previewImage
-        }];
-      }
+      createRoomAction.urls = [{
+        location: this.state.url,
+        description: this.state.description,
+        thumbnail: this.state.previewImage
+      }];
       this.props.dispatcher.dispatch(createRoomAction);
     },
 
     render: function() {
-      var hostname;
-
-      try {
-        hostname = new URL(this.state.url).hostname;
-      } catch (ex) {
-        // Empty catch - if there's an error, then we won't show the context.
-      }
-
-      var contextClasses = React.addons.classSet({
-        context: true,
-        "context-checkbox-checked": this.state.checked,
-        hide: !hostname ||
-          !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
-      });
-
       return (
         <div className="new-room-view">
-          <div className={contextClasses}>
-            <Checkbox checked={this.state.checked}
-                      label={mozL10n.get("context_inroom_label2")}
-                      onChange={this.onCheckboxChange} />
-            <sharedViews.ContextUrlView
-              allowClick={false}
-              description={this.state.description}
-              showContextTitle={false}
-              thumbnail={this.state.previewImage}
-              url={this.state.url}
-              useDesktopPaths={true} />
-          </div>
           <button className="btn btn-info new-room-button"
                   disabled={this.props.pendingOperation}
                   onClick={this.handleCreateButtonClick}>
@@ -996,11 +902,10 @@ loop.panel = (function(_, mozL10n) {
                       store={this.props.roomStore} />
           <div className="footer">
             <div className="user-details">
-              <AvailabilityDropdown />
-            </div>
-            <div className="signin-details">
               <AccountLink fxAEnabled={this.props.mozLoop.fxAEnabled}
                            userProfile={this.state.userProfile}/>
+            </div>
+            <div className="signin-details">
               <SettingsDropdown mozLoop={this.props.mozLoop}/>
             </div>
           </div>
@@ -1042,7 +947,6 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     AccountLink: AccountLink,
-    AvailabilityDropdown: AvailabilityDropdown,
     ConversationDropdown: ConversationDropdown,
     GettingStartedView: GettingStartedView,
     init: init,
