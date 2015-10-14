@@ -25,18 +25,44 @@ struct ColorTableEntry {
   uint8_t mBlue;
 };
 
-struct BitFields {
-  uint32_t red;
-  uint32_t green;
-  uint32_t blue;
-  uint8_t redLeftShift;
-  uint8_t redRightShift;
-  uint8_t greenLeftShift;
-  uint8_t greenRightShift;
-  uint8_t blueLeftShift;
-  uint8_t blueRightShift;
+/// All the color-related bitfields for 16bpp and 32bpp images. We use this
+/// even for older format BMPs that don't have explicit bitfields.
+class BitFields {
+  class Value {
+    friend class BitFields;
 
-  // Length of the bitfields structure in the BMP file.
+    uint32_t mMask;       // The mask for the value.
+    uint8_t mRightShift;  // The amount to right-shift after masking.
+    uint8_t mBitWidth;    // The width (in bits) of the value.
+
+    /// Sets the mask (and thus the right-shift and bit-width as well).
+    void Set(uint32_t aMask);
+
+  public:
+    /// Extracts the single color value from the multi-color value.
+    uint8_t Get(uint32_t aVal) const;
+
+    /// Specialized version of Get() for the case where the bit-width is 5.
+    /// (It will assert if called and the bit-width is not 5.)
+    uint8_t Get5(uint32_t aVal) const;
+  };
+
+public:
+  /// The individual color channels.
+  Value mRed;
+  Value mGreen;
+  Value mBlue;
+
+  /// Set bitfields to the standard 5-5-5 16bpp values.
+  void SetR5G5B5();
+
+  /// Test if bitfields have the standard 5-5-5 16bpp values.
+  bool IsR5G5B5() const;
+
+  /// Read the bitfields from a header.
+  void ReadFromHeader(const char* aData);
+
+  /// Length of the bitfields structure in the BMP file.
   static const size_t LENGTH = 12;
 };
 
@@ -90,12 +116,6 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   // XXX(seth): nsICODecoder is temporarily an exception to this rule.
   explicit nsBMPDecoder(RasterImage* aImage);
-
-  /// Calculates the red-, green- and blueshift in mBitFields using the
-  /// bitmasks from mBitFields
-  void CalcBitShift();
-
-  void DoReadBitfields(const char* aData);
 
   uint32_t* RowBuffer();
 
