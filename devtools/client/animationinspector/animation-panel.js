@@ -9,6 +9,7 @@
 "use strict";
 
 const {AnimationsTimeline} = require("devtools/client/animationinspector/components");
+const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
 
 var $ = (selector, target = document) => target.querySelector(selector);
 
@@ -37,6 +38,7 @@ var AnimationsPanel = {
     this.toggleAllButtonEl = $("#toggle-all");
     this.playTimelineButtonEl = $("#pause-resume-timeline");
     this.rewindTimelineButtonEl = $("#rewind-timeline");
+    this.timelineCurrentTimeEl = $("#timeline-current-time");
 
     // If the server doesn't support toggling all animations at once, hide the
     // whole global toolbar.
@@ -84,6 +86,7 @@ var AnimationsPanel = {
     this.playersEl = this.errorMessageEl = null;
     this.toggleAllButtonEl = this.pickerButtonEl = null;
     this.playTimelineButtonEl = this.rewindTimelineButtonEl = null;
+    this.timelineCurrentTimeEl = null;
 
     this.destroyed.resolve();
   }),
@@ -189,6 +192,16 @@ var AnimationsPanel = {
         AnimationsController.setCurrentTimeAll(time, true)
                             .catch(error => console.error(error))
                             .then(() => this.setCurrentTimeAllPromise = null);
+    }
+
+    this.displayTimelineCurrentTime();
+  },
+
+  displayTimelineCurrentTime: function() {
+    let {isMoving, isPaused, time} = this.timelineData;
+
+    if (isMoving || isPaused) {
+      this.timelineCurrentTimeEl.textContent = formatStopwatchTime(time);
     }
   },
 

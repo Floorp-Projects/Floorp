@@ -1198,6 +1198,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 #back-button > .toolbarbutton-icon,
 #forward-button > .toolbarbutton-icon {
   max-width: none;
+  width: 18px;
 }
 
 /* Back button styles */
