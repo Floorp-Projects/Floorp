@@ -4730,8 +4730,7 @@ HTMLMediaElement::UpdateAudioChannelPlayingState()
       (HasAttr(kNameSpaceID_None, nsGkAtoms::loop) ||
        (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
         !IsPlaybackEnded()) ||
-       mPlayingThroughTheAudioChannelBeforeSeek ||
-       mSrcAttrStream));
+       mPlayingThroughTheAudioChannelBeforeSeek));
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
 
