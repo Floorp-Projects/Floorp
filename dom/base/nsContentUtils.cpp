@@ -8072,25 +8072,6 @@ nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
   return workerPrivate->PushEnabled();
 }
 
-// static
-bool
-nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
-{
-  nsLoadFlags loadFlags = 0;
-  aChannel->GetLoadFlags(&loadFlags);
-  if (loadFlags & nsIChannel::LOAD_DOCUMENT_URI) {
-    return true;
-  }
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
-  if (!loadInfo) {
-    return false;
-  }
-  nsContentPolicyType type = loadInfo->InternalContentPolicyType();
-  return type == nsIContentPolicy::TYPE_INTERNAL_WORKER ||
-         type == nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER;
-}
-
 // static, public
 nsContentUtils::StorageAccess
 nsContentUtils::StorageAllowedForWindow(nsPIDOMWindow* aWindow)

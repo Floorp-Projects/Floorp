@@ -44,10 +44,14 @@ class InterceptedJARChannel : public nsIInterceptedChannel
   // The content type of the synthesized response.
   nsCString mContentType;
 
+  // Wether this intercepted channel was performing a navigation.
+  bool mIsNavigation;
+
   virtual ~InterceptedJARChannel() {};
 public:
   InterceptedJARChannel(nsJARChannel* aChannel,
-                        nsINetworkInterceptController* aController);
+                        nsINetworkInterceptController* aController,
+                        bool aIsNavigation);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERCEPTEDCHANNEL

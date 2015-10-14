@@ -13846,7 +13846,7 @@ nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
 }
 
 NS_IMETHODIMP
-nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceRequest,
+nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
                                       bool* aShouldIntercept)
 {
   *aShouldIntercept = false;
@@ -13899,7 +13899,7 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     }
   }
 
-  if (aIsNonSubresourceRequest) {
+  if (aIsNavigate) {
     OriginAttributes attrs(GetAppId(), GetIsInBrowserElement());
     *aShouldIntercept = swm->IsAvailable(attrs, aURI);
     return NS_OK;
@@ -13928,14 +13928,13 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIChannel> channel;
-  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
+  bool isNavigation = false;
+  nsresult rv = aChannel->GetIsNavigation(&isNavigation);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDocument> doc;
 
-  bool isSubresourceLoad = !nsContentUtils::IsNonSubresourceRequest(channel);
-  if (isSubresourceLoad) {
+  if (!isNavigation) {
     doc = GetDocument();
     if (!doc) {
       return NS_ERROR_NOT_AVAILABLE;
