@@ -142,6 +142,26 @@ AudioStreamAnalyser.prototype = {
 };
 
 /**
+ * Creates a MediaStream with an audio track containing a sine tone at the
+ * given frequency.
+ *
+ * @param {AudioContext} ac
+ *        AudioContext in which to create the OscillatorNode backing the stream
+ * @param {double} frequency
+ *        The frequency in Hz of the generated sine tone
+ * @returns {MediaStream} the MediaStream containing sine tone audio track
+ */
+function createOscillatorStream(ac, frequency) {
+  var osc = ac.createOscillator();
+  osc.frequency.value = frequency;
+
+  var oscDest = ac.createMediaStreamDestination();
+  osc.connect(oscDest);
+  osc.start();
+  return oscDest.stream;
+}
+
+/**
  * Create the necessary HTML elements for head and body as used by Mochitests
  *
  * @param {object} meta
