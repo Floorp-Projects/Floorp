@@ -5779,7 +5779,7 @@ Parser<ParseHandler>::switchStatement(YieldHandling yieldHandling)
             handler.addList(body, stmt);
         }
 
-        // In ES6, lexical bindings canot be accessed until initialized. If
+        // In ES6, lexical bindings cannot be accessed until initialized. If
         // there was a 'let' declaration in the case we just parsed, remember
         // the slot starting at which new lexical bindings will be
         // assigned. Since lexical bindings from previous cases will not
@@ -7550,6 +7550,25 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
     }
 }
 
+
+/*** Comprehensions *******************************************************************************
+ *
+ * We currently support four flavors of comprehensions, all deprecated:
+ *
+ *     [EXPR for (V in OBJ) if (COND)]  // legacy array comprehension
+ *     (EXPR for (V in OBJ) if (COND))  // legacy generator expression
+ *     [for (V of OBJ) if (COND) EXPR]  // ES6-era array comprehension
+ *     (for (V of OBJ) if (COND) EXPR)  // ES6-era generator expression
+ *
+ * (The last two flavors are called "ES6-era" because they were in ES6 draft
+ * specifications for a while. Shortly after this syntax was implemented in SM,
+ * TC39 decided to drop it.)
+ *
+ * Legacy generator expressions evaluate to legacy generators (using the
+ * StopIteration protocol); ES6-era generator expressions evaluate to ES6
+ * generators (using the `{done:, value:}` protocol).
+ */
+
 /*
  * A dedicated helper for transplanting the legacy comprehension expression E in
  *
@@ -8191,18 +8210,18 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
 
 /*
  * Starting from a |for| keyword after an expression, parse the comprehension
- * tail completing this generator expression. Wrap the expression at kid in a
+ * tail completing this generator expression. Wrap the expression |expr| in a
  * generator function that is immediately called to evaluate to the generator
  * iterator that is the value of this legacy generator expression.
  *
- * |kid| must be the expression before the |for| keyword; we return an
+ * |expr| must be the expression before the |for| keyword; we return an
  * application of a generator function that includes the |for| loops and
- * |if| guards, with |kid| as the operand of a |yield| expression as the
+ * |if| guards, with |expr| as the operand of a |yield| expression as the
  * innermost loop body.
  *
- * Note how unlike Python, we do not evaluate the expression to the right of
- * the first |in| in the chain of |for| heads. Instead, a generator expression
- * is merely sugar for a generator function expression and its application.
+ * Unlike Python, we do not evaluate the expression to the right of the first
+ * |in| in the chain of |for| heads. Instead, a generator expression is merely
+ * sugar for a generator function expression and its application.
  */
 template <>
 ParseNode*
@@ -8369,8 +8388,8 @@ Parser<ParseHandler>::comprehensionTail(GeneratorKind comprehensionKind)
     return handler.newExprStatement(yieldExpr, pos().end);
 }
 
-// Parse an ES6 generator or array comprehension, starting at the first 'for'.
-// The caller is responsible for matching the ending TOK_RP or TOK_RB.
+// Parse an ES6-era generator or array comprehension, starting at the first
+// `for`. The caller is responsible for matching the ending TOK_RP or TOK_RB.
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::comprehension(GeneratorKind comprehensionKind)
@@ -8437,6 +8456,9 @@ Parser<ParseHandler>::generatorComprehension(uint32_t begin)
 
     return result;
 }
+
+
+/* * */
 
 template <typename ParseHandler>
 typename ParseHandler::Node
@@ -8849,7 +8871,7 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
     if (!tokenStream.getToken(&tt, TokenStream::Operand))
         return null();
 
-    // Handle an ES7 array comprehension first.
+    // Handle an ES6-era array comprehension first.
     if (tt == TOK_FOR)
         return arrayComprehension(begin);
 

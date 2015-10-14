@@ -737,18 +737,17 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node condition(InHandling inHandling, YieldHandling yieldHandling);
 
-    Node generatorComprehensionLambda(GeneratorKind comprehensionKind, unsigned begin,
-                                      Node innerStmt);
-
+    /* comprehensions */
     Node legacyComprehensionTail(Node kid, unsigned blockid, GeneratorKind comprehensionKind,
                                  ParseContext<ParseHandler>* outerpc,
                                  unsigned innerBlockScopeDepth);
     Node legacyArrayComprehension(Node array);
+    Node generatorComprehensionLambda(GeneratorKind comprehensionKind, unsigned begin,
+                                      Node innerStmt);
     Node legacyGeneratorExpr(Node kid);
-
-    Node comprehensionTail(GeneratorKind comprehensionKind);
-    Node comprehensionIf(GeneratorKind comprehensionKind);
     Node comprehensionFor(GeneratorKind comprehensionKind);
+    Node comprehensionIf(GeneratorKind comprehensionKind);
+    Node comprehensionTail(GeneratorKind comprehensionKind);
     Node comprehension(GeneratorKind comprehensionKind);
     Node arrayComprehension(uint32_t begin);
     Node generatorComprehension(uint32_t begin);
