@@ -80,7 +80,7 @@ function runTest(testNum) {
                     "context-inspect", true];
   }
 
-  var passwordFillItems = [
+  var loginFillItems = [
     "---", null,
     "fill-login", null,
       [
@@ -652,7 +652,8 @@ function runTest(testNum) {
                           "context-searchselect",true,
                           "---",                 null,
                           "spell-check-enabled", true
-                         ].concat(inspectItems));
+                         ].concat(loginFillItems)
+                          .concat(inspectItems));
         closeContextMenu();
         selectInputText(select_inputtext_password); // Select text prior to opening context menu.
         openContextMenuFor(select_inputtext_password); // Invoke context menu for next test.
@@ -675,7 +676,7 @@ function runTest(testNum) {
                               ["spell-check-dictionary-en-US", true,
                                "---",                          null,
                                "spell-add-dictionaries",       true], null
-                         ].concat(passwordFillItems)
+                         ].concat(loginFillItems)
                           .concat(inspectItems));
         closeContextMenu();
         subwindow.getSelection().removeAllRanges();
