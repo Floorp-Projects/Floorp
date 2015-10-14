@@ -7,7 +7,7 @@ See the adjacent README.txt for more details.
 
 from __future__ import print_function
 
-import os, sys, textwrap
+import os, sys, textwrap, platform
 from os.path import abspath, dirname, isfile, realpath
 from contextlib import contextmanager
 from copy import copy
@@ -323,9 +323,15 @@ def load_tests(options, requested_paths, excluded_paths):
 
 def main():
     options, prefix, requested_paths, excluded_paths = parse_args()
-    if options.js_shell is not None and not isfile(options.js_shell):
-        print('Could not find shell at given path.')
-        return 1
+    if options.js_shell is not None and not (isfile(options.js_shell) and
+                                             os.access(options.js_shell, os.X_OK)):
+        if (platform.system() != 'Windows' or
+            isfile(options.js_shell) or not
+            isfile(options.js_shell + ".exe") or not
+            os.access(options.js_shell + ".exe", os.X_OK)):
+           print('Could not find executable shell: ' + options.js_shell)
+           return 1
+
     test_count, test_gen = load_tests(options, requested_paths, excluded_paths)
     test_environment = get_environment_overlay(options.js_shell)
 
