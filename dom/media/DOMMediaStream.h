@@ -223,6 +223,21 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
+
+  static already_AddRefed<DOMMediaStream>
+  Constructor(const dom::GlobalObject& aGlobal,
+              ErrorResult& aRv);
+
+  static already_AddRefed<DOMMediaStream>
+  Constructor(const dom::GlobalObject& aGlobal,
+              const DOMMediaStream& aStream,
+              ErrorResult& aRv);
+
+  static already_AddRefed<DOMMediaStream>
+  Constructor(const dom::GlobalObject& aGlobal,
+              const dom::Sequence<OwningNonNull<MediaStreamTrack>>& aTracks,
+              ErrorResult& aRv);
+
   double CurrentTime();
 
   void GetId(nsAString& aID) const;
@@ -357,20 +372,20 @@ public:
   void AssignId(const nsAString& aID) { mID = aID; }
 
   /**
-   * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
+   * Create a DOMMediaStream whose underlying input stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMMediaStream> CreateSourceStream(nsIDOMWindow* aWindow,
                                                              MediaStreamGraph* aGraph);
 
   /**
-   * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
+   * Create a DOMMediaStream whose underlying input stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                                                  MediaStreamGraph* aGraph);
 
   /**
-   * Create an nsDOMMediaStream whose underlying stream is an
-   * AudioCaptureStream
+   * Create an DOMMediaStream whose underlying input stream is an
+   * AudioCaptureStream.
    */
   static already_AddRefed<DOMMediaStream> CreateAudioCaptureStream(
     nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
