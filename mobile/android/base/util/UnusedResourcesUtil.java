@@ -53,7 +53,6 @@ final class UnusedResourcesUtil {
 
     public static final int[] USED_IN_SUGGESTEDSITES = {
             R.drawable.suggestedsites_fxaddons,
-            R.drawable.suggestedsites_fxmarketplace,
             R.drawable.suggestedsites_fxsupport,
             R.drawable.suggestedsites_mozilla,
     };
