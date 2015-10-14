@@ -599,7 +599,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
   } else {
     // non-YCbCr case
     if (!mFirstSource) {
-      mFirstSource = mCompositor->CreateDataTextureSource();
+      mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
     }
     ImageDataDeserializer deserializer(GetBuffer(), GetBufferSize());
     if (!deserializer.IsValid()) {
