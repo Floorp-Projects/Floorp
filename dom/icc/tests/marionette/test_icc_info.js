@@ -19,7 +19,7 @@ function basicTest(aIcc) {
     // The emulator's hard coded mcc and mnc codes.
     // See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
     is(iccInfo.mcc, 310);
-    is(iccInfo.mnc, 260);
+    is(iccInfo.mnc, 410);
     // Phone number is hardcoded in MSISDN
     // See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io().
     is(iccInfo.msisdn, "15555215554");

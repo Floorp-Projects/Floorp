@@ -710,6 +710,9 @@ var settingsToObserve = {
   'ui.touch.radius.bottommm': {
     resetToPref: true
   },
+  'ui.click_hold_context_menus.delay': {
+    resetToPref: true
+  },
   'wap.UAProf.tagname': 'x-wap-profile',
   'wap.UAProf.url': ''
 };
