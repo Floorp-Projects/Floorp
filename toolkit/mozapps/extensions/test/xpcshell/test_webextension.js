@@ -17,7 +17,7 @@ function promiseAddonStartup() {
     let listener = (extension) => {
       Management.off("startup", listener);
       resolve(extension);
-    }
+    };
 
     Management.on("startup", listener);
   });
@@ -55,6 +55,11 @@ add_task(function*() {
   do_check_eq(addon.type, "extension");
   do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_MISSING : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
+  let uri = do_get_addon_root_uri(profileDir, ID);
+
+  do_check_eq(addon.iconURL, uri + "icon48.png");
+  do_check_eq(addon.icon64URL, uri + "icon64.png");
+
   // Should persist through a restart
   yield promiseShutdownManager();
 
@@ -79,6 +84,11 @@ add_task(function*() {
 
   let file = getFileForAddon(profileDir, ID);
   do_check_true(file.exists());
+
+  uri = do_get_addon_root_uri(profileDir, ID);
+
+  do_check_eq(addon.iconURL, uri + "icon48.png");
+  do_check_eq(addon.icon64URL, uri + "icon64.png");
 
   addon.userDisabled = true;
 

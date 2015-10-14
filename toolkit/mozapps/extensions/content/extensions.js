@@ -2894,7 +2894,7 @@ var gDetailView = {
       gCategories.select("addons://list/" + aAddon.type);
 
     document.getElementById("detail-name").textContent = aAddon.name;
-    var icon = aAddon.icon64URL ? aAddon.icon64URL : aAddon.iconURL;
+    var icon = AddonManager.getPreferredIconURL(aAddon, 64, window);
     document.getElementById("detail-icon").src = icon ? icon : "";
     document.getElementById("detail-creator").setCreator(aAddon.creator, aAddon.homepageURL);
 
