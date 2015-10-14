@@ -261,7 +261,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             trimmedLength = "http://".length;
           }
 
-          let matchedURL = value.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
+          let matchedURL = value.match(/^((?:[a-z]+:\/\/)(?:[^\/#?]+@)?)(.+?)(?::\d+)?(?:[\/#?]|$)/);
           if (!matchedURL)
             return;
 
