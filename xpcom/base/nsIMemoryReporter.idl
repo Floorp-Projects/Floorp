@@ -520,15 +520,6 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 }
 
 #if defined(MOZ_DMD) && !defined(MOZILLA_XPCOMRT_API)
-namespace mozilla {
-namespace dmd {
-// This runs all the memory reporters in the current process but does nothing
-// with the results;  i.e. it does the minimal amount of work possible for DMD
-// to do its thing.  It does nothing with child processes.
-void RunReportersForThisProcess();
-}
-}
-
 #if !defined(MOZ_MEMORY)
 #error "MOZ_DMD requires MOZ_MEMORY"
 #endif
