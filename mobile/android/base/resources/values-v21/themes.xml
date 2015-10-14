@@ -15,7 +15,6 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:actionBarStyle">@style/GeckoActionBar</item>
         <item name="android:actionBarTheme">@style/ActionBarTheme</item>
-        <item name="colorAccent">@color/action_orange</item>
     </style>
 
     <style name="GeckoPreferencesBase" parent="GeckoBase">
