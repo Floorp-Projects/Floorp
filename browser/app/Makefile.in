@@ -62,12 +62,10 @@ libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default48.png  $(FINAL_TARGET)/chrome/icons/default
 endif
 
-ifndef LIBXUL_SDK
 # channel-prefs.js is handled separate from other prefs due to bug 756325
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
 	$(call py_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
-endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
@@ -107,13 +105,3 @@ tools repackage:: $(PROGRAM)
 	cp -RL $(DIST)/branding/document.icns $(dist_dest)/Contents/Resources/document.icns
 	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo
 endif
-
-ifdef LIBXUL_SDK #{
-libs::
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{
-	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(dist_dest)/Contents/Frameworks
-else
-	$(NSINSTALL) -D $(DIST)/bin/xulrunner
-	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
-endif #} cocoa
-endif #} LIBXUL_SDK

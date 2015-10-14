@@ -67,4 +67,9 @@ function* runEditOuterHTMLTest(test, inspector) {
   // Wait for the inspector to be fully updated to avoid causing errors by
   // abruptly closing hanging requests when the test ends
   yield onUpdated;
+
+  let closeTagLine = inspector.markup.getContainer(pageNodeFront).closeTagLine;
+  if (closeTagLine) {
+    is(closeTagLine.querySelectorAll(".theme-fg-contrast").length, 0, "No contrast class");
+  }
 }

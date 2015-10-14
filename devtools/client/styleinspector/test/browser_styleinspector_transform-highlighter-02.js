@@ -25,24 +25,17 @@ add_task(function*() {
   let hs = view.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
-  ok(!hs.promises[TYPE],
-    "No highlighter is being created in the rule-view (1)");
 
   info("Faking a mousemove on a non-transform property");
   let {valueSpan} = getRuleViewProperty(view, "body", "color");
   hs._onMouseMove({target: valueSpan});
   ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (2)");
-  ok(!hs.promises[TYPE],
-    "No highlighter is being created in the rule-view (2)");
 
   info("Faking a mousemove on a transform property");
   ({valueSpan} = getRuleViewProperty(view, "body", "transform"));
   let onHighlighterShown = hs.once("highlighter-shown");
   hs._onMouseMove({target: valueSpan});
   yield onHighlighterShown;
-  ok(hs.promises[TYPE], "The highlighter is being initialized");
-  let h = yield hs.promises[TYPE];
-  is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
 
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   let {view: cView} = yield openComputedView();
@@ -50,22 +43,15 @@ add_task(function*() {
   hs = cView.highlighters;
 
   ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (1)");
-  ok(!hs.promises[TYPE],
-    "No highlighter is being created in the computed-view (1)");
 
   info("Faking a mousemove on a non-transform property");
   ({valueSpan} = getComputedViewProperty(cView, "color"));
   hs._onMouseMove({target: valueSpan});
   ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (2)");
-  ok(!hs.promises[TYPE],
-    "No highlighter is being created in the computed-view (2)");
 
   info("Faking a mousemove on a transform property");
   ({valueSpan} = getComputedViewProperty(cView, "transform"));
   onHighlighterShown = hs.once("highlighter-shown");
   hs._onMouseMove({target: valueSpan});
   yield onHighlighterShown;
-  ok(hs.promises[TYPE], "The highlighter is being initialized");
-  h = yield hs.promises[TYPE];
-  is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
 });

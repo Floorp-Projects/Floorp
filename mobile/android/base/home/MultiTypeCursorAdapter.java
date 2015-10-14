@@ -69,6 +69,11 @@ abstract class MultiTypeCursorAdapter extends CursorAdapter {
     }
 
     @Override
+    public boolean hasStableIds() {
+        return false;
+    }
+
+    @Override
     public final View newView(Context context, Cursor cursor, ViewGroup parent) {
         return null;
     }

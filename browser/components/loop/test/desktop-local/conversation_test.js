@@ -28,8 +28,6 @@ describe("loop.conversation", function() {
       setLoopPref: setLoopPrefStub,
       getLoopPref: function(prefName) {
         switch (prefName) {
-          case "contextInConversations.enabled":
-            return false;
           case "debug.sdk":
             return false;
           default:

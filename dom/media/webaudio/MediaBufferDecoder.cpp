@@ -206,7 +206,7 @@ MediaDecodeTask::CreateReader()
     return false;
   }
 
-  nsresult rv = mDecoderReader->Init(nullptr);
+  nsresult rv = mDecoderReader->Init();
   if (NS_FAILED(rv)) {
     return false;
   }

@@ -605,6 +605,9 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
             // doesn't has code to handle it after linking happened. So it's
             // not OK to throw a catchable exception from there.
             cx->clearPendingException();
+
+            // Reset the TypeZone's compiler output for this script, if any.
+            InvalidateCompilerOutputsForScript(cx, calleeScript);
         }
     }
 
@@ -2207,9 +2210,6 @@ IonCompile(JSContext* cx, JSScript* script,
 
     // If possible, compile the script off thread.
     if (options.offThreadCompilationAvailable()) {
-        if (!recompile)
-            builderScript->setIonScript(cx, ION_COMPILING_SCRIPT);
-
         JitSpew(JitSpew_IonSyncLogs, "Can't log script %s:%" PRIuSIZE
                 ". (Compiled on background thread.)",
                 builderScript->filename(), builderScript->lineno());
@@ -2219,6 +2219,9 @@ IonCompile(JSContext* cx, JSScript* script,
             builder->graphSpewer().endFunction();
             return AbortReason_Alloc;
         }
+
+        if (!recompile)
+            builderScript->setIonScript(cx, ION_COMPILING_SCRIPT);
 
         // The allocator and associated data will be destroyed after being
         // processed in the finishedOffThreadCompilations list.

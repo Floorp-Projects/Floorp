@@ -6740,6 +6740,11 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     // Fixup compartment pointers in source to refer to target, and make sure
     // type information generations are in sync.
 
+    // Get the static global lexical scope of the target compartment. Static
+    // scopes need to be fixed up below.
+    RootedObject targetStaticGlobalLexicalScope(rt);
+    targetStaticGlobalLexicalScope = &target->maybeGlobal()->lexicalScope().staticBlock();
+
     for (ZoneCellIter iter(source->zone(), AllocKind::SCRIPT); !iter.done(); iter.next()) {
         JSScript* script = iter.get<JSScript>();
         MOZ_ASSERT(script->compartment() == source);
@@ -6752,6 +6757,20 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
         if (JSObject* enclosing = script->enclosingStaticScope()) {
             if (IsStaticGlobalLexicalScope(enclosing))
                 script->fixEnclosingStaticGlobalLexicalScope();
+        }
+
+        if (script->hasBlockScopes()) {
+            BlockScopeArray* scopes = script->blockScopes();
+            for (uint32_t i = 0; i < scopes->length; i++) {
+                uint32_t scopeIndex = scopes->vector[i].index;
+                if (scopeIndex != BlockScopeNote::NoBlockScopeIndex) {
+                    ScopeObject* scope = &script->getObject(scopeIndex)->as<ScopeObject>();
+                    MOZ_ASSERT(!IsStaticGlobalLexicalScope(scope));
+                    JSObject* enclosing = &scope->enclosingScope();
+                    if (IsStaticGlobalLexicalScope(enclosing))
+                        scope->setEnclosingScope(targetStaticGlobalLexicalScope);
+                }
+            }
         }
     }
 

@@ -425,6 +425,25 @@ peep install -r requirements.txt
 # TC-VCS
 npm install -g taskcluster-vcs@2.3.12
 
+# Ninja
+cd $BUILD
+tooltool_fetch <<'EOF'
+[
+{
+    "size": 174501,
+    "digest": "551a9e14b95c2d2ddad6bee0f939a45614cce86719748dc580192dd122f3671e3d95fd6a6fb3facb2d314ba100d61a004af4df77f59df119b1b95c6fe8c38875",
+    "algorithm": "sha512",
+    "filename": "ninja-1.6.0.tar.gz",
+    "unpack": true
+}
+]
+EOF
+cd ninja-1.6.0
+./configure.py --bootstrap
+cp ninja /usr/local/bin/ninja
+# Old versions of Cmake can only find ninja in this location!
+ln -s /usr/local/bin/ninja /usr/local/bin/ninja-build
+
 # note that TC will replace workspace with a cache mount; there's no sense
 # creating anything inside there
 mkdir -p /home/worker/workspace

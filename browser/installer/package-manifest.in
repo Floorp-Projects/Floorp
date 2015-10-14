@@ -709,15 +709,10 @@
 @RESPATH@/defaults/autoconfig/prefcalls.js
 @RESPATH@/browser/defaults/profile/prefs.js
 
-#ifndef LIBXUL_SDK
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
 ; Technically this is an app pref file, but we are keeping it in the original
 ; gre location for now.
 @RESPATH@/defaults/pref/channel-prefs.js
-#else
-; For Fx-on-xr, channel-prefs lives with the app preferences. (Bug 762588)
-@RESPATH@/@PREF_DIR@/channel-prefs.js
-#endif
 
 ; Services (gre) prefs
 #ifdef MOZ_SERVICES_NOTIFICATIONS

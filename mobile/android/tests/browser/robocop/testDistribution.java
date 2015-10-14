@@ -28,6 +28,8 @@ import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.ReferrerDescriptor;
 import org.mozilla.gecko.distribution.ReferrerReceiver;
+import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -152,6 +154,7 @@ public class testDistribution extends ContentProviderTest {
         setTestLocale("en-US");
         initDistribution(mockPackagePath);
         checkPreferences();
+        checkAndroidPreferences();
         checkLocalizedPreferences("en-US");
         checkSearchPlugin();
         checkAddon();
@@ -284,6 +287,7 @@ public class testDistribution extends ContentProviderTest {
         // Call Distribution.init with the mock package.
         Actions.EventExpecter distributionSetExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
         Distribution dist = Distribution.init(mActivity, aPackagePath, "prefs-" + System.currentTimeMillis());
+        DistroSharedPrefsImport.importPreferences(mActivity, dist);
         distributionSetExpecter.blockForEvent();
         distributionSetExpecter.unregisterListener();
         return dist;
@@ -327,6 +331,35 @@ public class testDistribution extends ContentProviderTest {
             }
 
         } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting preferences", e.toString());
+        }
+    }
+
+    private void checkAndroidPreferences() {
+        final SharedPreferences sharedPreferences = GeckoSharedPrefs.forProfile(getActivity());
+        String prefTestBoolean = "android.distribution.test.boolean";
+        String prefTestString = "android.distribution.test.string";
+        String prefTestInt = "android.distribution.test.int";
+        String prefTestLong = "android.distribution.test.long";
+
+        final String[] prefNames = { prefTestBoolean,
+                                     prefTestString,
+                                     prefTestInt,
+                                     prefTestLong };
+
+        try {
+            for (String name : prefNames) {
+                if (name.equals(prefTestBoolean)) {
+                    mAsserter.is(sharedPreferences.getBoolean(GeckoPreferences.NON_PREF_PREFIX + name, false), true, "check " + prefTestBoolean);
+                } else if (name.equals(prefTestString)) {
+                    mAsserter.is(sharedPreferences.getString(GeckoPreferences.NON_PREF_PREFIX + name, ""), "test", "check " + prefTestString);
+                } else if (name.equals(prefTestInt)) {
+                    mAsserter.is(sharedPreferences.getInt(GeckoPreferences.NON_PREF_PREFIX + name, 0), 1, "check " + prefTestInt);
+                } else if (name.equals(prefTestLong)) {
+                    mAsserter.is(sharedPreferences.getLong(GeckoPreferences.NON_PREF_PREFIX + name, 0), 2147483648l, "check " + prefTestLong);
+                }
+            }
+        } catch (ClassCastException e) {
             mAsserter.ok(false, "exception getting preferences", e.toString());
         }
     }
@@ -379,7 +412,7 @@ public class testDistribution extends ContentProviderTest {
         }
         eventExpecter.unregisterListener();
 
-        return data.getJSONArray("preferences"); 
+        return data.getJSONArray("preferences");
     }
 
     // Sets the distribution locale preference for the test.

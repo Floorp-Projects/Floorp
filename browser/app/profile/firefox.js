@@ -1624,6 +1624,13 @@ pref("devtools.fontinspector.enabled", true);
 // version for each user.
 pref("devtools.telemetry.tools.opened.version", "{}");
 
+// Enable the JSON View tool (an inspector for application/json documents)
+#ifdef MOZ_DEV_EDITION
+  pref("devtools.jsonview.enabled", true);
+#else
+  pref("devtools.jsonview.enabled", false);
+#endif
+
 // Whether the character encoding menu is under the main Firefox button. This
 // preference is a string so that localizers can alter it.
 pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.properties");
@@ -1728,7 +1735,6 @@ pref("loop.support_url", "https://support.mozilla.org/kb/group-conversations-fir
 pref("loop.contacts.gravatars.show", false);
 pref("loop.contacts.gravatars.promo", true);
 pref("loop.browserSharing.showInfoBar", true);
-pref("loop.contextInConversations.enabled", true);
 
 pref("social.sidebar.unload_timeout_ms", 10000);
 
