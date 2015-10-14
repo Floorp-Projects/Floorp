@@ -650,12 +650,19 @@ AnimationsTimeline.prototype = {
       this.scrubberEl.style.display = "none";
     } else {
       this.scrubberEl.style.display = "block";
-      this.startAnimatingScrubber(documentCurrentTime);
+      this.startAnimatingScrubber(this.wasRewound()
+                                  ? TimeScale.minStartTime
+                                  : documentCurrentTime);
     }
   },
 
   isAtLeastOneAnimationPlaying: function() {
     return this.animations.some(({state}) => state.playState === "running");
+  },
+
+  wasRewound: function() {
+    return !this.isAtLeastOneAnimationPlaying() &&
+           this.animations.every(({state}) => state.currentTime === 0);
   },
 
   startAnimatingScrubber: function(time) {

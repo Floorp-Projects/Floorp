@@ -51,6 +51,7 @@ body {
 
 #timeline-toolbar {
   display: none;
+  justify-content: flex-start;
 }
 
 [timeline] #global-toolbar {
@@ -100,6 +101,10 @@ body {
   min-height: var(--toolbar-height);
 }
 
+#timeline-toolbar .devtools-button {
+  border-width: 0 1px 0 0;
+}
+
 .devtools-button {
   position: relative;
 }
@@ -123,6 +128,10 @@ body {
   background-image: url("images/debugger-pause.png");
 }
 
+#rewind-timeline::before {
+  background-image: url("images/rewind.png");
+}
+
 #element-picker[checked]::before {
   background-position: -48px 0;
   filter: none; /* Icon is blue when checked, don't invert for light theme */
@@ -144,6 +153,10 @@ body {
 
   .pause-button.paused::before {
     background-image: url("images/debugger-play@2x.png");
+  }
+
+  #rewind-timeline::before {
+    background-image: url("images/rewind@2x.png");
   }
 }
 
@@ -399,112 +412,4 @@ body {
        its tooltip appears on hover */
     z-index: 1;
     position: relative;
-}
-
-/* Timeline wiget */
-
-.timeline {
-  height: var(--timeline-animation-height);
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  border-bottom: 1px solid var(--theme-splitter-color);
-}
-
-.timeline .playback-controls {
-  display: flex;
-  flex-direction: row;
-}
-
-/* Playback control buttons */
-
-.timeline .playback-controls button {
-  flex-grow: 1;
-  border-width: 0 1px 0 0;
-}
-
-.timeline .toggle::before {
-  background-image: url(images/debugger-pause.png);
-}
-
-.paused .timeline .toggle::before,
-.finished .timeline .toggle::before {
-  background-image: url(images/debugger-play.png);
-}
-
-.timeline .ff::before {
-  background-image: url(images/fast-forward.png);
-}
-
-.timeline .rw::before {
-  background-image: url(images/rewind.png);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .timeline .toggle::before {
-    background-image: url(images/debugger-pause@2x.png);
-  }
-
-  .paused .timeline .toggle::before,
-  .finished .timeline .toggle::before {
-    background-image: url(images/debugger-play@2x.png);
-  }
-
-  .timeline .ff::before {
-    background-image: url(images/fast-forward@2x.png);
-  }
-
-  .timeline .rw::before {
-    background-image: url(images/rewind@2x.png);
-  }
-}
-
-.timeline .rate {
-  -moz-appearance: none;
-  text-align: center;
-  color: var(--theme-body-color);
-  border-right: 1px solid var(--theme-splitter-color);
-}
-
-/* Slider (input type range) container */
-
-.timeline .sliders-container {
-  flex-grow: 1;
-  height: 100%;
-  position: relative;
-  border-width: 1px 0;
-}
-
-.timeline .sliders-container .current-time {
-  position: absolute;
-  padding: 0;
-  margin: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.timeline .sliders-container .current-time::-moz-range-thumb {
-  height: 100%;
-  width: 4px;
-  border-radius: 0;
-  border: none;
-  background: var(--theme-highlight-blue);
-}
-
-.timeline .sliders-container .current-time::-moz-range-track {
-  width: 100%;
-  height: 50px;
-  background: transparent;
-}
-
-/* Current time label */
-
-.timeline .time-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 50px;
-  border-left: 1px solid var(--theme-splitter-color);
-  background: var(--theme-toolbar-background);
 }

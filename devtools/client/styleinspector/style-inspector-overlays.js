@@ -55,7 +55,6 @@ function HighlightersOverlay(view) {
   this._onMouseMove = this._onMouseMove.bind(this);
   this._onMouseLeave = this._onMouseLeave.bind(this);
 
-  this.promises = {};
   this.highlighters = {};
 
   // Only initialize the overlay if at least one of the highlighter types is
@@ -176,20 +175,21 @@ HighlightersOverlay.prototype = {
    * Hide the currently shown highlighter
    */
   _hideCurrent: function() {
-    if (this.highlighterShown) {
-      this._getHighlighter(this.highlighterShown).then(highlighter => {
-        // For some reason, the call to highlighter.hide doesn't always return a
-        // promise. This causes some tests to fail when trying to install a
-        // rejection handler on the result of the call. To avoid this, check
-        // whether the result is truthy before installing the handler.
-        let promise = highlighter.hide();
-        if (promise) {
-          promise.then(null, Cu.reportError);
-        }
-        this.highlighterShown = null;
-        this.emit("highlighter-hidden");
-      });
+    if (!this.highlighterShown || !this.highlighters[this.highlighterShown]) {
+      return;
     }
+
+    // For some reason, the call to highlighter.hide doesn't always return a
+    // promise. This causes some tests to fail when trying to install a
+    // rejection handler on the result of the call. To avoid this, check
+    // whether the result is truthy before installing the handler.
+    let promise = this.highlighters[this.highlighterShown].hide();
+    if (promise) {
+      promise.then(null, e => console.error(e));
+    }
+
+    this.highlighterShown = null;
+    this.emit("highlighter-hidden");
   },
 
   /**
@@ -200,11 +200,11 @@ HighlightersOverlay.prototype = {
   _getHighlighter: function(type) {
     let utils = this.highlighterUtils;
 
-    if (this.promises[type]) {
-      return this.promises[type];
+    if (this.highlighters[type]) {
+      return promise.resolve(this.highlighters[type]);
     }
 
-    return this.promises[type] = utils.getHighlighterByType(type).then(highlighter => {
+    return utils.getHighlighterByType(type).then(highlighter => {
       this.highlighters[type] = highlighter;
       return highlighter;
     });
@@ -224,7 +224,6 @@ HighlightersOverlay.prototype = {
       }
     }
 
-    this.promises = null;
     this.view = null;
     this.highlighterUtils = null;
 
