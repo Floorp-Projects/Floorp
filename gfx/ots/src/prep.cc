@@ -11,11 +11,11 @@
 
 namespace ots {
 
-bool ots_prep_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_prep_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
   OpenTypePREP *prep = new OpenTypePREP;
-  font->prep = prep;
+  file->prep = prep;
 
   if (length >= 128 * 1024u) {
     return OTS_FAILURE_MSG("table length %ld > 120K", length);  // almost all prep tables are less than 9k bytes.
@@ -30,13 +30,13 @@ bool ots_prep_parse(Font *font, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_prep_should_serialise(Font *font) {
-  if (!font->glyf) return false;  // this table is not for CFF fonts.
-  return font->prep != NULL;
+bool ots_prep_should_serialise(OpenTypeFile *file) {
+  if (!file->glyf) return false;  // this table is not for CFF fonts.
+  return file->prep != NULL;
 }
 
-bool ots_prep_serialise(OTSStream *out, Font *font) {
-  const OpenTypePREP *prep = font->prep;
+bool ots_prep_serialise(OTSStream *out, OpenTypeFile *file) {
+  const OpenTypePREP *prep = file->prep;
 
   if (!out->Write(prep->data, prep->length)) {
     return OTS_FAILURE_MSG("Failed to write table length");
@@ -45,13 +45,8 @@ bool ots_prep_serialise(OTSStream *out, Font *font) {
   return true;
 }
 
-void ots_prep_reuse(Font *font, Font *other) {
-  font->prep = other->prep;
-  font->prep_reused = true;
-}
-
-void ots_prep_free(Font *font) {
-  delete font->prep;
+void ots_prep_free(OpenTypeFile *file) {
+  delete file->prep;
 }
 
 }  // namespace ots

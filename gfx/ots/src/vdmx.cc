@@ -11,18 +11,18 @@
 
 #define DROP_THIS_TABLE(...) \
   do { \
-    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
+    OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__); \
     OTS_FAILURE_MSG("Table discarded"); \
-    delete font->vdmx; \
-    font->vdmx = 0; \
+    delete file->vdmx; \
+    file->vdmx = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_vdmx_parse(Font *font, const uint8_t *data, size_t length) {
+bool ots_vdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   Buffer table(data, length);
-  font->vdmx = new OpenTypeVDMX;
-  OpenTypeVDMX * const vdmx = font->vdmx;
+  file->vdmx = new OpenTypeVDMX;
+  OpenTypeVDMX * const vdmx = file->vdmx;
 
   if (!table.ReadU16(&vdmx->version) ||
       !table.ReadU16(&vdmx->num_recs) ||
@@ -121,13 +121,13 @@ bool ots_vdmx_parse(Font *font, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_vdmx_should_serialise(Font *font) {
-  if (!font->glyf) return false;  // this table is not for CFF fonts.
-  return font->vdmx != NULL;
+bool ots_vdmx_should_serialise(OpenTypeFile *file) {
+  if (!file->glyf) return false;  // this table is not for CFF fonts.
+  return file->vdmx != NULL;
 }
 
-bool ots_vdmx_serialise(OTSStream *out, Font *font) {
-  OpenTypeVDMX * const vdmx = font->vdmx;
+bool ots_vdmx_serialise(OTSStream *out, OpenTypeFile *file) {
+  OpenTypeVDMX * const vdmx = file->vdmx;
 
   if (!out->WriteU16(vdmx->version) ||
       !out->WriteU16(vdmx->num_recs) ||
@@ -171,13 +171,8 @@ bool ots_vdmx_serialise(OTSStream *out, Font *font) {
   return true;
 }
 
-void ots_vdmx_reuse(Font *font, Font *other) {
-  font->vdmx = other->vdmx;
-  font->vdmx_reused = true;
-}
-
-void ots_vdmx_free(Font *font) {
-  delete font->vdmx;
+void ots_vdmx_free(OpenTypeFile *file) {
+  delete file->vdmx;
 }
 
 }  // namespace ots

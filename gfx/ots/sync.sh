@@ -22,8 +22,7 @@ cp -r $1/include .
 
 echo "Updating README.mozilla..."
 REVISION=`cd $1; git log | head -1 | sed "s/commit //"`
-sed -e "s/\(Current revision: \).*/\1$REVISION/" README.mozilla > README.tmp
-mv README.tmp README.mozilla
+sed -e "s/\(Current revision: \).*/\1$REVISION/" -i "" README.mozilla
 
 echo "Applying ots-visibility.patch..."
 patch -p3 < ots-visibility.patch
