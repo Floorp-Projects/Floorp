@@ -1040,7 +1040,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInput
     JSContext* cx = api.cx();
 
     JS::Rooted<JS::Value> value(cx);
-    if (!ToJSValue(cx, TypedArrayCreator<Uint8Array>(buffer), &value)) {
+    if (!ToJSValue(cx, TypedArrayCreator<ArrayBuffer>(buffer), &value)) {
       return NS_ERROR_FAILURE;
     }
     FireDataEvent(cx, NS_LITERAL_STRING("data"), value);
