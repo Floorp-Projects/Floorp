@@ -1783,12 +1783,6 @@ int64_t MediaDecoderStateMachine::AudioDecodedUsecs()
   // already decoded and pushed to the hardware, plus the amount of audio
   // data waiting to be pushed to the hardware.
   int64_t pushed = mMediaSink->IsStarted() ? (AudioEndTime() - GetMediaTime()) : 0;
-
-  // Currently for real time streams, AudioQueue().Duration() produce
-  // wrong values (Bug 1114434), so we use frame counts to calculate duration.
-  if (IsRealTime()) {
-    return pushed + FramesToUsecs(AudioQueue().FrameCount(), mInfo.mAudio.mRate).value();
-  }
   return pushed + AudioQueue().Duration();
 }
 
