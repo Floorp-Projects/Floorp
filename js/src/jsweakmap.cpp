@@ -25,6 +25,7 @@ using namespace js::gc;
 WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
   : memberOf(memOf),
     zone(zone),
+    next(WeakMapNotInList),
     marked(false)
 {
     MOZ_ASSERT_IF(memberOf, memberOf->compartment()->zone() == zone);
@@ -33,6 +34,9 @@ WeakMapBase::WeakMapBase(JSObject* memOf, Zone* zone)
 WeakMapBase::~WeakMapBase()
 {
     MOZ_ASSERT(CurrentThreadIsGCSweeping() || CurrentThreadIsHandlingInitFailure());
+    MOZ_ASSERT_IF(CurrentThreadIsGCSweeping(), !isInList());
+    if (isInList())
+        removeWeakMapFromList(this);
 }
 
 void
@@ -67,7 +71,7 @@ WeakMapBase::trace(JSTracer* tracer)
 void
 WeakMapBase::unmarkZone(JS::Zone* zone)
 {
-    for (WeakMapBase* m : zone->gcWeakMapList)
+    for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next)
         m->marked = false;
 }
 
@@ -75,7 +79,7 @@ void
 WeakMapBase::markAll(JS::Zone* zone, JSTracer* tracer)
 {
     MOZ_ASSERT(tracer->weakMapAction() != DoNotTraceWeakMaps);
-    for (WeakMapBase* m : zone->gcWeakMapList) {
+    for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
         m->trace(tracer);
         if (m->memberOf)
             TraceEdge(tracer, &m->memberOf, "memberOf");
@@ -86,7 +90,7 @@ bool
 WeakMapBase::markZoneIteratively(JS::Zone* zone, JSTracer* tracer)
 {
     bool markedAny = false;
-    for (WeakMapBase* m : zone->gcWeakMapList) {
+    for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
         if (m->marked && m->markIteratively(tracer))
             markedAny = true;
     }
@@ -96,7 +100,7 @@ WeakMapBase::markZoneIteratively(JS::Zone* zone, JSTracer* tracer)
 bool
 WeakMapBase::findInterZoneEdges(JS::Zone* zone)
 {
-    for (WeakMapBase* m : zone->gcWeakMapList) {
+    for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
         if (!m->findZoneEdges())
             return false;
     }
@@ -106,20 +110,24 @@ WeakMapBase::findInterZoneEdges(JS::Zone* zone)
 void
 WeakMapBase::sweepZone(JS::Zone* zone)
 {
-    for (WeakMapBase* m = zone->gcWeakMapList.getFirst(); m; ) {
-        WeakMapBase* next = m->getNext();
+    WeakMapBase** tailPtr = &zone->gcWeakMapList;
+    for (WeakMapBase* m = zone->gcWeakMapList; m; ) {
+        WeakMapBase* next = m->next;
         if (m->marked) {
             m->sweep();
+            *tailPtr = m;
+            tailPtr = &m->next;
         } else {
             /* Destroy the hash map now to catch any use after this point. */
             m->finish();
-            m->removeFrom(zone->gcWeakMapList);
+            m->next = WeakMapNotInList;
         }
         m = next;
     }
+    *tailPtr = nullptr;
 
 #ifdef DEBUG
-    for (WeakMapBase* m : zone->gcWeakMapList)
+    for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next)
         MOZ_ASSERT(m->isInList() && m->marked);
 #endif
 }
@@ -129,7 +137,7 @@ WeakMapBase::traceAllMappings(WeakMapTracer* tracer)
 {
     JSRuntime* rt = tracer->runtime;
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        for (WeakMapBase* m : zone->gcWeakMapList) {
+        for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
             // The WeakMapTracer callback is not allowed to GC.
             JS::AutoSuppressGCAnalysis nogc;
             m->traceMappings(tracer);
@@ -140,7 +148,7 @@ WeakMapBase::traceAllMappings(WeakMapTracer* tracer)
 bool
 WeakMapBase::saveZoneMarkedWeakMaps(JS::Zone* zone, WeakMapSet& markedWeakMaps)
 {
-    for (WeakMapBase* m : zone->gcWeakMapList) {
+    for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
         if (m->marked && !markedWeakMaps.put(m))
             return false;
     }
@@ -155,6 +163,19 @@ WeakMapBase::restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps)
         MOZ_ASSERT(map->zone->isGCMarking());
         MOZ_ASSERT(!map->marked);
         map->marked = true;
+    }
+}
+
+void
+WeakMapBase::removeWeakMapFromList(WeakMapBase* weakmap)
+{
+    JS::Zone* zone = weakmap->zone;
+    for (WeakMapBase** p = &zone->gcWeakMapList; *p; p = &(*p)->next) {
+        if (*p == weakmap) {
+            *p = (*p)->next;
+            weakmap->next = WeakMapNotInList;
+            break;
+        }
     }
 }
 
@@ -194,6 +215,11 @@ bool
 ObjectWeakMap::init()
 {
     return map.init();
+}
+
+ObjectWeakMap::~ObjectWeakMap()
+{
+    WeakMapBase::removeWeakMapFromList(&map);
 }
 
 JSObject*

@@ -1775,7 +1775,7 @@ GCMarker::enterWeakMarkingMode()
         tag_ = TracerKindTag::WeakMarking;
 
         for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
-            for (WeakMapBase* m : zone->gcWeakMapList) {
+            for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
                 if (m->marked)
                     m->markEphemeronEntries(this);
             }
