@@ -318,6 +318,32 @@ this.LoginHelper = {
   },
 
   /**
+   * Checks if a field type is username compatible.
+   *
+   * @param {Element} element
+   *                  the field we want to check.
+   *
+   * @returns {Boolean} true if the field type is one
+   *                    of the username types.
+   */
+  isUsernameFieldType(element) {
+    if (!(element instanceof Ci.nsIDOMHTMLInputElement))
+      return false;
+
+    let fieldType = (element.hasAttribute("type") ?
+                     element.getAttribute("type").toLowerCase() :
+                     element.type);
+    if (fieldType == "text"  ||
+        fieldType == "email" ||
+        fieldType == "url"   ||
+        fieldType == "tel"   ||
+        fieldType == "number") {
+      return true;
+    }
+    return false;
+  },
+
+  /**
    * Add the login to the password manager if a similar one doesn't already exist. Merge it
    * otherwise with the similar existing ones.
    * @param {Object} loginData - the data about the login that needs to be added.
