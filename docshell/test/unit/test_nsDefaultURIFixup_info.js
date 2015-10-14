@@ -212,10 +212,11 @@ let testcases = [ {
     protocolChange: true
   }, {
     input: "[::1][100",
-    fixedURI: null,
-    alternateURI: null,
+    fixedURI: "http://[::1][100/",
+    alternateURI: "http://[::1][100/",
     keywordLookup: true,
-    protocolChange: true
+    protocolChange: true,
+    affectedByDNSForSingleHosts: true,
   }, {
     input: "[::1]]",
     keywordLookup: true,
@@ -502,14 +503,13 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
     fixedURI: "file:////mozilla",
     protocolChange: true,
   });
-  // \ is an invalid character in the hostname until bug 652186 is implemented
   testcases.push({
     input: "mozilla\\",
-    // fixedURI: "http://mozilla\\/",
-    // alternateURI: "http://www.mozilla/",
+    fixedURI: "http://mozilla\\/",
+    alternateURI: "http://www.mozilla/",
     keywordLookup: true,
     protocolChange: true,
-    // affectedByDNSForSingleHosts: true,
+    affectedByDNSForSingleHosts: true,
   });
 }
 
