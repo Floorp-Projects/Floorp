@@ -674,7 +674,7 @@ AnimationsTimeline.prototype = {
         !this.isAtLeastOneAnimationPlaying()) {
       this.stopAnimatingScrubber();
       this.emit("timeline-data-changed", {
-        isPaused: false,
+        isPaused: !this.isAtLeastOneAnimationPlaying(),
         isMoving: false,
         time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
       });
