@@ -308,8 +308,9 @@ def load_tests(options, requested_paths, excluded_paths):
 
 def main():
     options, prefix, requested_paths, excluded_paths = parse_args()
-    if options.js_shell is not None and not isfile(options.js_shell):
-        print('Could not find shell at given path.')
+    if options.js_shell is not None and not (isfile(options.js_shell) and
+                                             os.access(options.js_shell, os.X_OK)):
+        print('Could not find executable shell at given path.')
         return 1
     test_count, test_gen = load_tests(options, requested_paths, excluded_paths)
     test_environment = get_environment_overlay(options.js_shell)
