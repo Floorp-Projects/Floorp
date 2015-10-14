@@ -92,7 +92,6 @@ InternalResponse::OpaqueResponse()
   nsRefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
   response->mType = ResponseType::Opaque;
   response->mTerminationReason = mTerminationReason;
-  response->mURL = mURL;
   response->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
     response->mPrincipalInfo = MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
