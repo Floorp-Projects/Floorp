@@ -937,13 +937,16 @@ Statistics::endGC()
     for (size_t d = PHASE_DAG_NONE; d < NumTimingArrays; d++)
         PodZero(&phaseTimes[d][PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
 
-    aborted = false;
+    // Clear the OOM flag but only if we are not in a nested GC.
+    if (gcDepth == 1)
+        aborted = false;
 }
 
 void
 Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                        SliceBudget budget, JS::gcreason::Reason reason)
 {
+    gcDepth++;
     this->zoneStats = zoneStats;
 
     bool first = !runtime->gc.isIncrementalGCInProgress();
@@ -952,15 +955,15 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 
     SliceData data(budget, reason, PRMJ_Now(), JS_GetCurrentEmbedderTime(), GetPageFaultCount());
     if (!slices.append(data)) {
-        // OOM testing fails if we crash here, so set a flag instead.
+        // If we are OOM, set a flag to indicate we have missing slice data.
         aborted = true;
         return;
     }
 
     runtime->addTelemetry(JS_TELEMETRY_GC_REASON, reason);
 
-    // Slice callbacks should only fire for the outermost level
-    if (++gcDepth == 1) {
+    // Slice callbacks should only fire for the outermost level.
+    if (gcDepth == 1) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
         if (sliceCallback)
             (*sliceCallback)(runtime, first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
@@ -998,8 +1001,8 @@ Statistics::endSlice()
     if (last)
         endGC();
 
-    // Slice callbacks should only fire for the outermost level
-    if (--gcDepth == 0) {
+    // Slice callbacks should only fire for the outermost level.
+    if (gcDepth == 1 && !aborted) {
         bool wasFullGC = zoneStats.isCollectingAllZones();
         if (sliceCallback)
             (*sliceCallback)(runtime, last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
@@ -1009,6 +1012,9 @@ Statistics::endSlice()
     /* Do this after the slice callback since it uses these values. */
     if (last)
         PodArrayZero(counts);
+
+    gcDepth--;
+    MOZ_ASSERT(gcDepth >= 0);
 }
 
 void
