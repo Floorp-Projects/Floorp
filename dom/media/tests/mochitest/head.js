@@ -29,9 +29,6 @@ try {
  *                 A MediaStream object whose audio track we shall analyse.
  */
 function AudioStreamAnalyser(ac, stream) {
-  if (stream.getAudioTracks().length === 0) {
-    throw new Error("No audio track in stream");
-  }
   this.audioContext = ac;
   this.stream = stream;
   this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
