@@ -1596,42 +1596,6 @@ or run without that action (ie: --no-{action})"
                                    hash_prop.strip().split(' ', 2)[1],
                                    write_to_file=True)
 
-    def _query_previous_buildid(self):
-        dirs = self.query_abs_dirs()
-        previous_buildid = self.query_buildbot_property('previous_buildid')
-        if previous_buildid:
-            return previous_buildid
-        cmd = [
-            "bash", "-c", "find previous -maxdepth 4 -type f -name application.ini"
-        ]
-        self.info("finding previous mar's inipath...")
-        prev_ini_path = self.get_output_from_command(cmd,
-                                                     cwd=dirs['abs_obj_dir'],
-                                                     halt_on_failure=True,
-                                                     fatal_exit_code=3)
-        print_conf_path = os.path.join(dirs['abs_src_dir'],
-                                       'config',
-                                       'printconfigsetting.py')
-        abs_prev_ini_path = os.path.join(dirs['abs_obj_dir'], prev_ini_path)
-        python = self.query_exe('python2.7')
-        cmd = [
-            python, os.path.join(dirs['abs_src_dir'], 'mach'), 'python',
-            print_conf_path, abs_prev_ini_path, 'App', 'BuildID'
-        ]
-        env = self.query_build_env()
-        # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
-        # mac, and that confuses mach.
-        del env['MOZ_OBJDIR']
-        previous_buildid = self.get_output_from_command_m(cmd,
-            cwd=dirs['abs_obj_dir'], env=env)
-        if not previous_buildid:
-            self.fatal("Could not determine previous_buildid. This property"
-                       "requires the upload action creating a partial mar.")
-        self.set_buildbot_property("previous_buildid",
-                                   previous_buildid,
-                                   write_to_file=True)
-        return previous_buildid
-
     def clone_tools(self):
         """clones the tools repo."""
         self._assert_cfg_valid_for_action(['tools_repo'], 'clone_tools')
