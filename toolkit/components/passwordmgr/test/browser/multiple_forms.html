@@ -2,52 +2,124 @@
 <!-- Any copyright is dedicated to the Public Domain.
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 
-<!-- Password only form -->
-<form id='form-1'>
+
+<form class="test-form"
+      description="Password only form">
     <input id='test-password-1' type='password' name='pname' value=''>
     <input type='submit'>Submit</input>
 </form>
 
-<!-- Simple username and password blank form -->
-<form id='form-2'>
+
+<form class="test-form"
+      description="Username only form">
+    <input id='test-username-1' type='text' name='uname' value=''>
+    <input type='submit'>Submit</input>
+</form>
+
+
+<form class="test-form"
+      description="Simple username and password blank form">
     <input id='test-username-2' type='text'     name='uname' value=''>
     <input id='test-password-2' type='password' name='pname' value=''>
     <button type='submit'>Submit</button>
 </form>
 
-<!-- Simple username and password form, prefilled username -->
-<form id='form-3'>
+
+<form class="test-form"
+      description="Simple username and password form, prefilled username">
     <input id='test-username-3' type='text'     name='uname' value='testuser'>
     <input id='test-password-3' type='password' name='pname' value=''>
     <button type='submit'>Submit</button>
 </form>
 
-<!-- Simple username and password form, prefilled username and password -->
-<form id='form-4'>
+
+<form class="test-form"
+      description="Simple username and password form, prefilled username and password">
     <input id='test-username-4' type='text'     name='uname' value='testuser'>
     <input id='test-password-4' type='password' name='pname' value='testpass'>
     <button type='submit'>Submit</button>
 </form>
 
-<!-- One username and two passwords empty form -->
-<form id='form-5'>
+
+<form class="test-form"
+      description="One username and two passwords empty form">
     <input id='test-username-5'  type='text'     name='uname'>
     <input id='test-password-5'  type='password' name='pname'>
     <input id='test-password2-5' type='password' name='pname2'>
     <button type='submit'>Submit</button>
 </form>
 
-<!-- One username and two passwords form, fields prefiled -->
-<form id='form-6'>
+
+<form class="test-form"
+      description="One username and two passwords form, fields prefiled">
     <input id='test-username-6'  type='text'     name='uname' value="testuser">
     <input id='test-password-6'  type='password' name='pname' value="testpass">
     <input id='test-password2-6' type='password' name='pname2' value="testpass">
     <button type='submit'>Submit</button>
 </form>
 
-<!-- Password field with no form -->
-<div id='form-7'>
+
+<div class="test-form"
+     description="Username and password fields with no form">
+    <input id='test-username-7' type='text'     name='uname' value="testuser">
     <input id='test-password-7' type='password' name='pname' value="testpass">
+</div>
+
+
+<form class="test-form"
+      description="Simple username and password blank form, with disabled password">
+    <input id='test-username-8' type='text'     name='uname' value=''>
+    <input id='test-password-8' type='password' name='pname' value='' disabled>
+    <button type='submit'>Submit</button>
+</form>
+
+
+<form class="test-form"
+      description="Simple username and password blank form, with disabled username">
+    <input id='test-username-9' type='text'     name='uname' value='' disabled>
+    <input id='test-password-9' type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+
+<form class="test-form"
+      description="Simple username and password blank form, with readonly password">
+    <input id='test-username-10' type='text'     name='uname' value=''>
+    <input id='test-password-10' type='password' name='pname' value='' readonly>
+    <button type='submit'>Submit</button>
+</form>
+
+
+<form class="test-form"
+      description="Simple username and password blank form, with readonly username">
+    <input id='test-username-11' type='text'     name='uname' value='' readonly>
+    <input id='test-password-11' type='password' name='pname' value=''>
+    <button type='submit'>Submit</button>
+</form>
+
+
+<form class="test-form"
+      description="Two username and one passwords form, fields prefiled">
+    <input id='test-username-12'  type='text'     name='uname'  value="testuser">
+    <input id='test-username2-12' type='text'     name='uname2' value="testuser">
+    <input id='test-password-12'  type='password' name='pname'  value="testpass">
+    <button type='submit'>Submit</button>
+</form>
+
+
+<form class="test-form"
+      description="Two username and one passwords form, one disabled username field">
+    <input id='test-username-13'  type='text'     name='uname'>
+    <input id='test-username2-13' type='text'     name='uname2' disabled>
+    <input id='test-password-13'  type='password' name='pname'>
+    <button type='submit'>Submit</button>
+</form>
+
+
+<div class="test-form"
+     description="Second username and password fields with no form">
+    <input id='test-username-14' type='text'     name='uname'>
+    <input id='test-password-14' type='password' name='pname' expectedFail>
 </div>
 
 <!-- Form in an iframe -->
