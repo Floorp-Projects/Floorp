@@ -2621,11 +2621,11 @@ ContentPermissionPrompt.prototype = {
   },
 
   _promptWebNotifications : function(aRequest) {
-    var message = gBrowserBundle.GetStringFromName("webNotifications.showFromSite2");
+    var message = gBrowserBundle.GetStringFromName("webNotifications.receiveFromSite");
 
     var actions = [
       {
-        stringId: "webNotifications.alwaysShow",
+        stringId: "webNotifications.alwaysReceive",
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
         expireType: null,
         callback: function() {},
