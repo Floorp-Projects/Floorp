@@ -419,8 +419,8 @@ nsWebShellWindow::WindowActivated()
     fm->WindowRaised(window);
 
   if (mChromeLoaded) {
-    SetAttributesDirty(PAD_POSITION | PAD_SIZE | PAD_MISC);
-    SaveAttributes();
+    PersistentAttributesDirty(PAD_POSITION | PAD_SIZE | PAD_MISC);
+    SavePersistentAttributes();
    }
 }
 
@@ -512,14 +512,14 @@ nsWebShellWindow::SetPersistenceTimer(uint32_t aDirtyFlags)
   mSPTimer->InitWithCallback(callback, SIZE_PERSISTENCE_TIMEOUT,
                              nsITimer::TYPE_ONE_SHOT);
 
-  SetAttributesDirty(aDirtyFlags);
+  PersistentAttributesDirty(aDirtyFlags);
 }
 
 void
 nsWebShellWindow::FirePersistenceTimer()
 {
   MutexAutoLock lock(mSPTimerLock);
-  SaveAttributes();
+  SavePersistentAttributes();
 }
 
 
@@ -772,7 +772,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
     MutexAutoLock lock(mSPTimerLock);
     if (mSPTimer) {
       mSPTimer->Cancel();
-      SaveAttributes();
+      SavePersistentAttributes();
       mSPTimer = nullptr;
     }
   }

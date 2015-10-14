@@ -96,7 +96,7 @@ protected:
    bool       LoadSizeFromXUL();
    bool       LoadMiscPersistentAttributesFromXUL();
    void       SyncAttributesToWidget();
-   void       SaveAttributes();
+   NS_IMETHOD SavePersistentAttributes();
 
    NS_IMETHOD GetWindowDOMWindow(nsIDOMWindow** aDOMWindow);
    mozilla::dom::Element* GetWindowDOMElement() const;
@@ -119,7 +119,7 @@ protected:
                                       nsIXULWindow *aBehind);
    void       SetContentScrollbarVisibility(bool aVisible);
    bool       GetContentScrollbarVisibility();
-   void       SetAttributesDirty(uint32_t aDirtyFlags);
+   void       PersistentAttributesDirty(uint32_t aDirtyFlags);
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
