@@ -35,6 +35,9 @@ protected:
   // Response head for use when synthesizing
   Maybe<nsAutoPtr<nsHttpResponseHead>> mSynthesizedResponseHead;
 
+  // Whether this intercepted channel was performing a navigation.
+  bool mIsNavigation;
+
   void EnsureSynthesizedResponse();
   void DoNotifyController();
   nsresult DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason);
@@ -42,7 +45,8 @@ protected:
 
   virtual ~InterceptedChannelBase();
 public:
-  explicit InterceptedChannelBase(nsINetworkInterceptController* aController);
+  InterceptedChannelBase(nsINetworkInterceptController* aController,
+                         bool aIsNavigation);
 
   // Notify the interception controller that the channel has been intercepted
   // and prepare the response body output stream.
@@ -51,6 +55,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetResponseBody(nsIOutputStream** aOutput) override;
+  NS_IMETHOD GetIsNavigation(bool* aIsNavigation) override;
 };
 
 class InterceptedChannelChrome : public InterceptedChannelBase
