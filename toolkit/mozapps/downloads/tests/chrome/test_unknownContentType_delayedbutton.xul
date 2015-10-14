@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<!--
+ * The unknownContentType popup can have two different layouts depending on
+ * whether a helper application can be selected or not.
+ * This tests that both layouts have correct collapsed elements.
+-->
+
+<window title="Unknown Content Type Dialog Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="doTest()">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="utils.js"/>
+
+  <script type="application/javascript"><![CDATA[
+    Components.utils.import("resource://gre/modules/Services.jsm");
+    Components.utils.import("resource://gre/modules/Task.jsm");
+    Components.utils.import("resource://gre/modules/Promise.jsm");
+
+    const UCT_URI = "chrome://mozapps/content/downloads/unknownContentType.xul";
+    const LOAD_URI = "http://mochi.test:8888/chrome/toolkit/mozapps/downloads/tests/chrome/unknownContentType_dialog_layout_data.txt";
+
+    const DIALOG_DELAY = Services.prefs.getIntPref("security.dialog_enable_delay") + 200;
+
+    let UCTObserver = {
+      opened: Promise.defer(),
+      closed: Promise.defer(),
+
+      observe: function(aSubject, aTopic, aData) {
+        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
+
+        switch (aTopic) {
+          case "domwindowopened":
+            win.addEventListener("load", function onLoad(event) {
+              win.removeEventListener("load", onLoad, false);
+
+              // Let the dialog initialize
+              SimpleTest.executeSoon(function() {
+                UCTObserver.opened.resolve(win);
+              });
+            }, false);
+            break;
+
+          case "domwindowclosed":
+            if (win.location == UCT_URI) {
+              this.closed.resolve();
+            }
+            break;
+        }
+      }
+    };
+
+    Services.ww.registerNotification(UCTObserver);
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestFlakyTimeout("This test is testing a timing-based feature, so it really needs to wait a certain amount of time to verify that the feature worked.");
+
+    function waitDelay(delay) {
+      return new Promise((resolve, reject) => {
+        window.setTimeout(resolve, delay);
+      });
+    }
+
+    function doTest() {
+      Task.spawn(function test_aboutCrashed() {
+        let frame = document.getElementById("testframe");
+        frame.setAttribute("src", LOAD_URI);
+
+        let uctWindow = yield UCTObserver.opened.promise;
+        let ok = uctWindow.document.documentElement.getButton("accept");
+
+        SimpleTest.is(ok.disabled, true, "button started disabled");
+
+        yield waitDelay(DIALOG_DELAY);
+
+        SimpleTest.is(ok.disabled, false, "button was enabled");
+
+        focusOutOfDialog = SimpleTest.promiseFocus(window);
+        window.focus();
+        yield focusOutOfDialog;
+
+        SimpleTest.is(ok.disabled, true, "button was disabled");
+
+        focusOnDialog = SimpleTest.promiseFocus(uctWindow);
+        uctWindow.focus();
+        yield focusOnDialog;
+
+        SimpleTest.is(ok.disabled, true, "button remained disabled");
+
+        yield waitDelay(DIALOG_DELAY);
+        SimpleTest.is(ok.disabled, false, "button re-enabled after delay");
+
+        uctWindow.document.documentElement.cancelDialog();
+        yield UCTObserver.closed.promise;
+
+        Services.ww.unregisterNotification(UCTObserver);
+        uctWindow = null;
+        UCTObserver = null;
+        SimpleTest.finish();
+      });
+    }
+  ]]></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+
+  <iframe xmlns="http://www.w3.org/1999/xhtml"
+          id="testframe">
+  </iframe>
+</window>

@@ -1065,6 +1065,7 @@ pref("dom.wakelock.enabled", true);
 
 // Enable webapps add-ons
 pref("dom.apps.customization.enabled", true);
+pref("dom.apps.reviewer_paths", "/reviewers/,/content/addon/review/");
 
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", true);

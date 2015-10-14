@@ -26,7 +26,7 @@ function byteValueToHexString(aValue) {
 }
 
 var ref_num = 0;
-function buildTextPdus(aDcs) {
+function buildTextPdus(aDcs, aInsertDuplication = false) {
   ref_num++;
 
   let IEI_CONCATE_1 = "0003" + byteValueToHexString(ref_num) + "0301";
@@ -42,14 +42,24 @@ function buildTextPdus(aDcs) {
   let PDU_COMMON = PDU_SMSC_NONE + PDU_FIRST_OCTET + PDU_SENDER +
     PDU_PID_NORMAL + aDcs + PDU_TIMESTAMP + PDU_UDL + PDU_UDHL;
 
-  return [
+  let pdus = [
     PDU_COMMON + IEI_CONCATE_1 + PDU_UD_A,
     PDU_COMMON + IEI_CONCATE_2 + PDU_UD_B,
     PDU_COMMON + IEI_CONCATE_3 + PDU_UD_C
   ];
+
+  if (aInsertDuplication) {
+    log("Insert Duplicated text PDU");
+    // The 2nd PDU_UD_A is expected to be ignored.
+    pdus.unshift(PDU_COMMON + IEI_CONCATE_1 + PDU_UD_A);
+    // Expected to be replaced with PDU_UD_A;
+    pdus.unshift(PDU_COMMON + IEI_CONCATE_1 + PDU_UD_C);
+  }
+
+  return pdus;
 }
 
-function buildBinaryPdus(aDcs) {
+function buildBinaryPdus(aDcs, aInsertDuplication = false) {
   ref_num++;
   let IEI_PORT = "05040B8423F0";
 
@@ -81,10 +91,20 @@ function buildBinaryPdus(aDcs) {
     return udl + ud;
   }
 
-  return [
+  let pdus = [
     PDU_COMMON + construstBinaryUserData(PDU_DATA1, 1),
     PDU_COMMON + construstBinaryUserData(PDU_DATA2, 2)
   ];
+
+  if (aInsertDuplication) {
+    log("Insert Duplicated binary PDU");
+    // The 2nd PDU_DATA1 is expected to be ignored.
+    pdus.unshift(PDU_COMMON + construstBinaryUserData(PDU_DATA1, 1));
+    // Expected to be replaced with PDU_DATA1;
+    pdus.unshift(PDU_COMMON + construstBinaryUserData(PDU_DATA2, 1));
+  }
+
+  return pdus;
 }
 
 function verifyTextMessage(aMessage, aMessageClass) {
@@ -104,12 +124,16 @@ function verifyBinaryMessage(aMessage) {
 function testText(aDcs, aClass) {
   log("testText(): aDcs = " + aDcs + ", aClass = " + aClass);
   return sendMultipleRawSmsToEmulatorAndWait(buildTextPdus(aDcs))
+    .then((results) => verifyTextMessage(results[0].message, aClass))
+    .then(() => sendMultipleRawSmsToEmulatorAndWait(buildTextPdus(aDcs, true)))
     .then((results) => verifyTextMessage(results[0].message, aClass));
 }
 
 function testBinary(aDcs) {
   log("testBinary(): aDcs = " + aDcs);
   return sendMultipleRawSmsToEmulatorAndWait(buildBinaryPdus(aDcs))
+    .then((results) => verifyBinaryMessage(results[0].message))
+    .then(() => sendMultipleRawSmsToEmulatorAndWait(buildBinaryPdus(aDcs, true)))
     .then((results) => verifyBinaryMessage(results[0].message));
 }
 
