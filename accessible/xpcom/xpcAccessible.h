@@ -73,7 +73,6 @@ public:
     final override;
 
   NS_IMETHOD SetSelected(bool aSelect) final override;
-  NS_IMETHOD ExtendSelection() final override;
   NS_IMETHOD TakeSelection() final override;
   NS_IMETHOD TakeFocus() final override;
 

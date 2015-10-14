@@ -88,11 +88,11 @@ public:
                                       nsIPrincipal* aPrincipal,
                                       nsTArray<StructuredCloneData>* aRetVal,
                                       bool aIsSync) override;
-  virtual bool DoSendAsyncMessage(JSContext* aCx,
-                                  const nsAString& aMessage,
-                                  StructuredCloneData& aData,
-                                  JS::Handle<JSObject *> aCpows,
-                                  nsIPrincipal* aPrincipal) override;
+  virtual nsresult DoSendAsyncMessage(JSContext* aCx,
+                                      const nsAString& aMessage,
+                                      StructuredCloneData& aData,
+                                      JS::Handle<JSObject *> aCpows,
+                                      nsIPrincipal* aPrincipal) override;
 
   virtual nsresult PreHandleEvent(
                      mozilla::EventChainPreVisitor& aVisitor) override;

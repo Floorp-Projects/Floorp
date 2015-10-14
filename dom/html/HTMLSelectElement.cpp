@@ -226,7 +226,33 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
                                          bool aNotify)
 {
   int32_t insertIndex = aListIndex;
-  InsertOptionsIntoListRecurse(aOptions, &insertIndex, aDepth);
+
+  HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
+  if (optElement) {
+    mOptions->InsertOptionAt(optElement, insertIndex);
+    insertIndex++;
+  } else {
+    // If it's at the top level, then we just found out there are non-options
+    // at the top level, which will throw off the insert count
+    if (aDepth == 0) {
+      mNonOptionChildren++;
+    }
+
+    // Deal with optgroups
+    if (aOptions->IsHTMLElement(nsGkAtoms::optgroup)) {
+      mOptGroupCount++;
+
+      for (nsIContent* child = aOptions->GetFirstChild();
+           child;
+           child = child->GetNextSibling()) {
+        optElement = HTMLOptionElement::FromContent(child);
+        if (optElement) {
+          mOptions->InsertOptionAt(optElement, insertIndex);
+          insertIndex++;
+        }
+      }
+    }
+  }
 
   // Deal with the selected list
   if (insertIndex - aListIndex) {
@@ -282,9 +308,40 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
                                          bool aNotify)
 {
   int32_t numRemoved = 0;
-  nsresult rv = RemoveOptionsFromListRecurse(aOptions, aListIndex, &numRemoved,
-                                             aDepth);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
+  if (optElement) {
+    if (mOptions->ItemAsOption(aListIndex) != optElement) {
+      NS_ERROR("wrong option at index");
+      return NS_ERROR_UNEXPECTED;
+    }
+    mOptions->RemoveOptionAt(aListIndex);
+    numRemoved++;
+  } else {
+    // Yay, one less artifact at the top level.
+    if (aDepth == 0) {
+      mNonOptionChildren--;
+    }
+
+    // Recurse down deeper for options
+    if (mOptGroupCount && aOptions->IsHTMLElement(nsGkAtoms::optgroup)) {
+      mOptGroupCount--;
+
+      for (nsIContent* child = aOptions->GetFirstChild();
+          child;
+          child = child->GetNextSibling()) {
+        optElement = HTMLOptionElement::FromContent(child);
+        if (optElement) {
+          if (mOptions->ItemAsOption(aListIndex) != optElement) {
+            NS_ERROR("wrong option at index");
+            return NS_ERROR_UNEXPECTED;
+          }
+          mOptions->RemoveOptionAt(aListIndex);
+          numRemoved++;
+        }
+      }
+    }
+  }
 
   if (numRemoved) {
     // Tell the widget we removed the options
@@ -324,91 +381,6 @@ HTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
   return NS_OK;
 }
 
-// If the document is such that recursing over these options gets us
-// deeper than four levels, there is something terribly wrong with the
-// world.
-void
-HTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
-                                                int32_t* aInsertIndex,
-                                                int32_t aDepth)
-{
-  // We *assume* here that someone's brain has not gone horribly
-  // wrong by putting <option> inside of <option>.  I'm sorry, I'm
-  // just not going to look for an option inside of an option.
-  // Sue me.
-
-  HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
-  if (optElement) {
-    mOptions->InsertOptionAt(optElement, *aInsertIndex);
-    (*aInsertIndex)++;
-    return;
-  }
-
-  // If it's at the top level, then we just found out there are non-options
-  // at the top level, which will throw off the insert count
-  if (aDepth == 0) {
-    mNonOptionChildren++;
-  }
-
-  // Recurse down into optgroups
-  if (aOptions->IsHTMLElement(nsGkAtoms::optgroup)) {
-    mOptGroupCount++;
-
-    for (nsIContent* child = aOptions->GetFirstChild();
-         child;
-         child = child->GetNextSibling()) {
-      InsertOptionsIntoListRecurse(child, aInsertIndex, aDepth + 1);
-    }
-  }
-}
-
-// If the document is such that recursing over these options gets us deeper than
-// four levels, there is something terribly wrong with the world.
-nsresult
-HTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
-                                                int32_t aRemoveIndex,
-                                                int32_t* aNumRemoved,
-                                                int32_t aDepth)
-{
-  // We *assume* here that someone's brain has not gone horribly
-  // wrong by putting <option> inside of <option>.  I'm sorry, I'm
-  // just not going to look for an option inside of an option.
-  // Sue me.
-
-  nsCOMPtr<nsIDOMHTMLOptionElement> optElement(do_QueryInterface(aOptions));
-  if (optElement) {
-    if (mOptions->ItemAsOption(aRemoveIndex) != optElement) {
-      NS_ERROR("wrong option at index");
-      return NS_ERROR_UNEXPECTED;
-    }
-    mOptions->RemoveOptionAt(aRemoveIndex);
-    (*aNumRemoved)++;
-    return NS_OK;
-  }
-
-  // Yay, one less artifact at the top level.
-  if (aDepth == 0) {
-    mNonOptionChildren--;
-  }
-
-  // Recurse down deeper for options
-  if (mOptGroupCount && aOptions->IsHTMLElement(nsGkAtoms::optgroup)) {
-    mOptGroupCount--;
-
-    for (nsIContent* child = aOptions->GetFirstChild();
-         child;
-         child = child->GetNextSibling()) {
-      nsresult rv = RemoveOptionsFromListRecurse(child,
-                                                 aRemoveIndex,
-                                                 aNumRemoved,
-                                                 aDepth + 1);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
-
-  return NS_OK;
-}
-
 // XXXldb Doing the processing before the content nodes have been added
 // to the document (as the name of this function seems to require, and
 // as the callers do), is highly unusual.  Passing around unparented
@@ -420,10 +392,10 @@ HTMLSelectElement::WillAddOptions(nsIContent* aOptions,
                                   int32_t aContentIndex,
                                   bool aNotify)
 {
-  int32_t level = GetContentDepth(aParent);
-  if (level == -1) {
-    return NS_ERROR_FAILURE;
+  if (this != aParent && this != aParent->GetParent()) {
+    return NS_OK;
   }
+  int32_t level = aParent == this ? 0 : 1;
 
   // Get the index where the options will be inserted
   int32_t ind = -1;
@@ -462,11 +434,10 @@ HTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
                                      int32_t aContentIndex,
                                      bool aNotify)
 {
-  int32_t level = GetContentDepth(aParent);
-  NS_ASSERTION(level >= 0, "getting notified by unexpected content");
-  if (level == -1) {
-    return NS_ERROR_FAILURE;
+  if (this != aParent && this != aParent->GetParent()) {
+    return NS_OK;
   }
+  int32_t level = this == aParent ? 0 : 1;
 
   // Get the index where the options will be removed
   nsIContent* currentKid = aParent->GetChildAt(aContentIndex);
@@ -490,24 +461,6 @@ HTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
 }
 
 int32_t
-HTMLSelectElement::GetContentDepth(nsIContent* aContent)
-{
-  nsIContent* content = aContent;
-
-  int32_t retval = 0;
-  while (content != this) {
-    retval++;
-    content = content->GetParent();
-    if (!content) {
-      retval = -1;
-      break;
-    }
-  }
-
-  return retval;
-}
-
-int32_t
 HTMLSelectElement::GetOptionIndexAt(nsIContent* aOptions)
 {
   // Search this node and below.
@@ -528,9 +481,7 @@ HTMLSelectElement::GetOptionIndexAfter(nsIContent* aOptions)
   //   in the parent.
   // - If it's not there, search for the first option after the parent.
   if (aOptions == this) {
-    uint32_t len;
-    GetLength(&len);
-    return len;
+    return Length();
   }
 
   int32_t retval = -1;
@@ -558,8 +509,6 @@ HTMLSelectElement::GetFirstOptionIndex(nsIContent* aOptions)
   HTMLOptionElement* optElement = HTMLOptionElement::FromContent(aOptions);
   if (optElement) {
     GetOptionIndex(optElement, 0, true, &listIndex);
-    // If you nested stuff under the option, you're just plain
-    // screwed.  *I'm* not going to aid and abet your evil deed.
     return listIndex;
   }
 
@@ -1785,16 +1734,23 @@ HTMLSelectElement::DispatchContentReset()
 }
 
 static void
-AddOptionsRecurse(nsIContent* aRoot, HTMLOptionsCollection* aArray)
+AddOptions(nsIContent* aRoot, HTMLOptionsCollection* aArray)
 {
-  for (nsIContent* cur = aRoot->GetFirstChild();
-       cur;
-       cur = cur->GetNextSibling()) {
-    HTMLOptionElement* opt = HTMLOptionElement::FromContent(cur);
+  for (nsIContent* child = aRoot->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    HTMLOptionElement* opt = HTMLOptionElement::FromContent(child);
     if (opt) {
       aArray->AppendOption(opt);
-    } else if (cur->IsHTMLElement(nsGkAtoms::optgroup)) {
-      AddOptionsRecurse(cur, aArray);
+    } else if (child->IsHTMLElement(nsGkAtoms::optgroup)) {
+      for (nsIContent* grandchild = child->GetFirstChild();
+           grandchild;
+           grandchild = grandchild->GetNextSibling()) {
+        opt = HTMLOptionElement::FromContent(grandchild);
+        if (opt) {
+          aArray->AppendOption(opt);
+        }
+      }
     }
   }
 }
@@ -1803,7 +1759,7 @@ void
 HTMLSelectElement::RebuildOptionsArray(bool aNotify)
 {
   mOptions->Clear();
-  AddOptionsRecurse(this, mOptions);
+  AddOptions(this, mOptions);
   FindSelectedIndex(0, aNotify);
 }
 
@@ -1863,28 +1819,29 @@ HTMLSelectElement::GetValidationMessage(nsAString& aValidationMessage,
 
 #ifdef DEBUG
 
-static void
-VerifyOptionsRecurse(nsIContent* aRoot, int32_t& aIndex,
-                     HTMLOptionsCollection* aArray)
-{
-  for (nsIContent* cur = aRoot->GetFirstChild();
-       cur;
-       cur = cur->GetNextSibling()) {
-    nsCOMPtr<nsIDOMHTMLOptionElement> opt = do_QueryInterface(cur);
-    if (opt) {
-      NS_ASSERTION(opt == aArray->ItemAsOption(aIndex++),
-                   "Options collection broken");
-    } else if (cur->IsHTMLElement(nsGkAtoms::optgroup)) {
-      VerifyOptionsRecurse(cur, aIndex, aArray);
-    }
-  }
-}
-
 void
 HTMLSelectElement::VerifyOptionsArray()
 {
-  int32_t aIndex = 0;
-  VerifyOptionsRecurse(this, aIndex, mOptions);
+  int32_t index = 0;
+  for (nsIContent* child = nsINode::GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    HTMLOptionElement* opt = HTMLOptionElement::FromContent(child);
+    if (opt) {
+      NS_ASSERTION(opt == mOptions->ItemAsOption(index++),
+                   "Options collection broken");
+    } else if (child->IsHTMLElement(nsGkAtoms::optgroup)) {
+      for (nsIContent* grandchild = child->GetFirstChild();
+           grandchild;
+           grandchild = grandchild->GetNextSibling()) {
+        opt = HTMLOptionElement::FromContent(grandchild);
+        if (opt) {
+          NS_ASSERTION(opt == mOptions->ItemAsOption(index++),
+                       "Options collection broken");
+        }
+      }
+    }
+  }
 }
 
 #endif

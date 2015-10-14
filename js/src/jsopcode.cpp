@@ -36,6 +36,7 @@
 #include "asmjs/AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
+#include "gc/GCInternals.h"
 #include "js/CharacterEncoding.h"
 #include "vm/CodeCoverage.h"
 #include "vm/Opcodes.h"
@@ -1952,6 +1953,9 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
     JSRuntime* rt = cx->runtime();
 
     // Collect the list of scripts which are part of the current compartment.
+    {
+        js::gc::AutoPrepareForTracing apft(rt, SkipAtoms);
+    }
     Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {

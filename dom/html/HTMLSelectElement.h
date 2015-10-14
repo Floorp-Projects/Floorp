@@ -502,37 +502,11 @@ protected:
                                  int32_t aListIndex,
                                  int32_t aDepth,
                                  bool aNotify);
-  /**
-   * Insert option(s) into the options[] array (called by InsertOptionsIntoList)
-   * @param aOptions the option or optgroup being added
-   * @param aInsertIndex the index to start adding options into the list at
-   * @param aDepth the depth of aOptions (1=direct child of select ...)
-   */
-  void InsertOptionsIntoListRecurse(nsIContent* aOptions,
-                                    int32_t* aInsertIndex,
-                                    int32_t aDepth);
-  /**
-   * Remove option(s) from the options[] array (called by RemoveOptionsFromList)
-   * @param aOptions the option or optgroup being added
-   * @param aListIndex the index to start removing options from the list at
-   * @param aNumRemoved the number removed so far [OUT]
-   * @param aDepth the depth of aOptions (1=direct child of select ...)
-   */
-  nsresult RemoveOptionsFromListRecurse(nsIContent* aOptions,
-                                        int32_t aRemoveIndex,
-                                        int32_t* aNumRemoved,
-                                        int32_t aDepth);
 
   // nsIConstraintValidation
   void UpdateBarredFromConstraintValidation();
   bool IsValueMissing();
 
-  /**
-   * Find out how deep this content is from the select (1=direct child)
-   * @param aContent the content to check
-   * @return the depth
-   */
-  int32_t GetContentDepth(nsIContent* aContent);
   /**
    * Get the index of the first option at, under or following the content in
    * the select, or length of options[] if none are found

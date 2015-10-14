@@ -4743,6 +4743,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "border-inline-end-color",
+      subproperties: [ "border-inline-end-color" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-border-end-style": {
@@ -4750,6 +4751,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "border-inline-end-style",
+      subproperties: [ "border-inline-end-style" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-border-end-width": {
@@ -4757,6 +4759,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "border-inline-end-width",
+      subproperties: [ "border-inline-end-width" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-border-start": {
@@ -4771,6 +4774,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "border-inline-start-color",
+      subproperties: [ "border-inline-start-color" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-border-start-style": {
@@ -4778,6 +4782,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "border-inline-start-style",
+      subproperties: [ "border-inline-start-style" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-border-start-width": {
@@ -4785,6 +4790,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "border-inline-start-width",
+      subproperties: [ "border-inline-start-width" ],
       get_computed: logical_box_prop_get_computed,
     },
     "inline-size": {
@@ -4855,6 +4861,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "margin-inline-end",
+      subproperties: [ "margin-inline-end" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-margin-start": {
@@ -4862,6 +4869,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "margin-inline-start",
+      subproperties: [ "margin-inline-start" ],
       get_computed: logical_box_prop_get_computed,
     },
     "max-block-size": {
@@ -5061,6 +5069,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "padding-inline-end",
+      subproperties: [ "padding-inline-end" ],
       get_computed: logical_box_prop_get_computed,
     },
     "-moz-padding-start": {
@@ -5068,6 +5077,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
       inherited: false,
       type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
       alias_for: "padding-inline-start",
+      subproperties: [ "padding-inline-start" ],
       get_computed: logical_box_prop_get_computed,
     },
   };

@@ -121,7 +121,7 @@ public:
 
   virtual void SetIsFirstPaint() override;
 
-  TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat);
+  TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
 
   /// Utility methods for managing texture clients.
   void ReturnTextureClientDeferred(TextureClient& aClient);
