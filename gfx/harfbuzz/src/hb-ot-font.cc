@@ -238,9 +238,10 @@ struct hb_ot_font_t
 
 
 static hb_ot_font_t *
-_hb_ot_font_create (hb_face_t *face)
+_hb_ot_font_create (hb_font_t *font)
 {
   hb_ot_font_t *ot_font = (hb_ot_font_t *) calloc (1, sizeof (hb_ot_font_t));
+  hb_face_t *face = font->face;
 
   if (unlikely (!ot_font))
     return NULL;
@@ -261,7 +262,6 @@ _hb_ot_font_destroy (hb_ot_font_t *ot_font)
   ot_font->cmap.fini ();
   ot_font->h_metrics.fini ();
   ot_font->v_metrics.fini ();
-  ot_font->glyf.fini ();
 
   free (ot_font);
 }
@@ -423,7 +423,7 @@ _hb_ot_get_font_funcs (void)
 void
 hb_ot_font_set_funcs (hb_font_t *font)
 {
-  hb_ot_font_t *ot_font = _hb_ot_font_create (font->face);
+  hb_ot_font_t *ot_font = _hb_ot_font_create (font);
   if (unlikely (!ot_font))
     return;
 

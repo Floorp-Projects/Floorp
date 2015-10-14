@@ -77,7 +77,7 @@ const hb_face_t _hb_face_nil = {
  *
  * Return value: (transfer full)
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_face_t *
 hb_face_create_for_tables (hb_reference_table_func_t  reference_table_func,
@@ -113,7 +113,7 @@ _hb_face_for_data_closure_create (hb_blob_t *blob, unsigned int index)
 {
   hb_face_for_data_closure_t *closure;
 
-  closure = (hb_face_for_data_closure_t *) calloc (1, sizeof (hb_face_for_data_closure_t));
+  closure = (hb_face_for_data_closure_t *) malloc (sizeof (hb_face_for_data_closure_t));
   if (unlikely (!closure))
     return NULL;
 
@@ -157,7 +157,7 @@ _hb_face_for_data_reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void
  *
  * Return value: (transfer full):
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_face_t *
 hb_face_create (hb_blob_t    *blob,
@@ -189,7 +189,7 @@ hb_face_create (hb_blob_t    *blob,
  *
  * Return value: (transfer full)
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_face_t *
 hb_face_get_empty (void)
@@ -206,7 +206,7 @@ hb_face_get_empty (void)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_face_t *
 hb_face_reference (hb_face_t *face)
@@ -220,7 +220,7 @@ hb_face_reference (hb_face_t *face)
  *
  * 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 void
 hb_face_destroy (hb_face_t *face)
@@ -257,7 +257,7 @@ hb_face_destroy (hb_face_t *face)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_bool_t
 hb_face_set_user_data (hb_face_t          *face,
@@ -278,7 +278,7 @@ hb_face_set_user_data (hb_face_t          *face,
  *
  * Return value: (transfer none):
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 void *
 hb_face_get_user_data (hb_face_t          *face,
@@ -293,7 +293,7 @@ hb_face_get_user_data (hb_face_t          *face,
  *
  * 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 void
 hb_face_make_immutable (hb_face_t *face)
@@ -312,7 +312,7 @@ hb_face_make_immutable (hb_face_t *face)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_bool_t
 hb_face_is_immutable (hb_face_t *face)
@@ -330,7 +330,7 @@ hb_face_is_immutable (hb_face_t *face)
  *
  * Return value: (transfer full):
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_blob_t *
 hb_face_reference_table (hb_face_t *face,
@@ -417,7 +417,7 @@ hb_face_set_upem (hb_face_t    *face,
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 unsigned int
 hb_face_get_upem (hb_face_t *face)

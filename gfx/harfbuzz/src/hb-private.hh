@@ -54,23 +54,6 @@
 #include <stdarg.h>
 
 
-/* Compile-time custom allocator support. */
-
-#if defined(hb_malloc_impl) \
- && defined(hb_calloc_impl) \
- && defined(hb_realloc_impl) \
- && defined(hb_free_impl)
-extern "C" void* hb_malloc_impl(size_t size);
-extern "C" void* hb_calloc_impl(size_t nmemb, size_t size);
-extern "C" void* hb_realloc_impl(void *ptr, size_t size);
-extern "C" void  hb_free_impl(void *ptr);
-#define malloc hb_malloc_impl
-#define calloc hb_calloc_impl
-#define realloc hb_realloc_impl
-#define free hb_free_impl
-#endif
-
-
 /* Compiler attributes */
 
 
@@ -757,7 +740,7 @@ template <typename T>
 static inline void _hb_warn_no_return (bool returned)
 {
   if (unlikely (!returned)) {
-    fprintf (stderr, "OUCH, returned with no call to return_trace().  This is a bug, please report.\n");
+    fprintf (stderr, "OUCH, returned with no call to TRACE_RETURN.  This is a bug, please report.\n");
   }
 }
 template <>
@@ -792,7 +775,7 @@ struct hb_auto_trace_t {
   inline ret_t ret (ret_t v, unsigned int line = 0)
   {
     if (unlikely (returned)) {
-      fprintf (stderr, "OUCH, double calls to return_trace().  This is a bug, please report.\n");
+      fprintf (stderr, "OUCH, double calls to TRACE_RETURN.  This is a bug, please report.\n");
       return v;
     }
 
@@ -823,7 +806,7 @@ struct hb_auto_trace_t<0, ret_t> {
   inline ret_t ret (ret_t v, unsigned int line HB_UNUSED = 0) { return v; }
 };
 
-#define return_trace(RET) return trace.ret (RET, __LINE__)
+#define TRACE_RETURN(RET) trace.ret (RET, __LINE__)
 
 /* Misc */
 

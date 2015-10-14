@@ -64,7 +64,7 @@ _hb_options_init (void)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_tag_t
 hb_tag_from_string (const char *str, int len)
@@ -122,7 +122,7 @@ const char direction_strings[][4] = {
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_direction_t
 hb_direction_from_string (const char *str, int len)
@@ -149,7 +149,7 @@ hb_direction_from_string (const char *str, int len)
  *
  * Return value: (transfer none): 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 const char *
 hb_direction_to_string (hb_direction_t direction)
@@ -288,26 +288,26 @@ retry:
  *
  * Return value: (transfer none):
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_language_t
 hb_language_from_string (const char *str, int len)
 {
+  char strbuf[64];
+
   if (!str || !len || !*str)
     return HB_LANGUAGE_INVALID;
 
-  hb_language_item_t *item = NULL;
   if (len >= 0)
   {
     /* NUL-terminate it. */
-    char strbuf[64];
     len = MIN (len, (int) sizeof (strbuf) - 1);
     memcpy (strbuf, str, len);
     strbuf[len] = '\0';
-    item = lang_find_or_insert (strbuf);
+    str = strbuf;
   }
-  else
-    item = lang_find_or_insert (str);
+
+  hb_language_item_t *item = lang_find_or_insert (str);
 
   return likely (item) ? item->lang : HB_LANGUAGE_INVALID;
 }
@@ -320,7 +320,7 @@ hb_language_from_string (const char *str, int len)
  *
  * Return value: (transfer none): 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 const char *
 hb_language_to_string (hb_language_t language)
@@ -336,7 +336,7 @@ hb_language_to_string (hb_language_t language)
  *
  * Return value: (transfer none):
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_language_t
 hb_language_get_default (void)
@@ -363,7 +363,7 @@ hb_language_get_default (void)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_script_t
 hb_script_from_iso15924_tag (hb_tag_t tag)
@@ -408,7 +408,7 @@ hb_script_from_iso15924_tag (hb_tag_t tag)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_script_t
 hb_script_from_string (const char *s, int len)
@@ -424,7 +424,7 @@ hb_script_from_string (const char *s, int len)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_tag_t
 hb_script_to_iso15924_tag (hb_script_t script)
@@ -440,7 +440,7 @@ hb_script_to_iso15924_tag (hb_script_t script)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_direction_t
 hb_script_get_horizontal_direction (hb_script_t script)
@@ -545,7 +545,7 @@ hb_user_data_array_t::get (hb_user_data_key_t *key)
  *
  * Returns library version as three integer components.
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 void
 hb_version (unsigned int *major,
@@ -564,7 +564,7 @@ hb_version (unsigned int *major,
  *
  * Return value: library version string.
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 const char *
 hb_version_string (void)

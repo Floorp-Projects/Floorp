@@ -40,7 +40,7 @@ static const char *serialize_formats[] = {
  *
  * Return value: (transfer none):
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 const char **
 hb_buffer_serialize_list_formats (void)
@@ -57,7 +57,7 @@ hb_buffer_serialize_list_formats (void)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_buffer_serialize_format_t
 hb_buffer_serialize_format_from_string (const char *str, int len)
@@ -74,7 +74,7 @@ hb_buffer_serialize_format_from_string (const char *str, int len)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 const char *
 hb_buffer_serialize_format_to_string (hb_buffer_serialize_format_t format)
@@ -259,7 +259,7 @@ _hb_buffer_serialize_glyphs_text (hb_buffer_t *buffer,
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 unsigned int
 hb_buffer_serialize_glyphs (hb_buffer_t *buffer,
@@ -366,7 +366,7 @@ parse_int (const char *pp, const char *end, int32_t *pv)
  *
  * Return value: 
  *
- * Since: 0.9.2
+ * Since: 1.0
  **/
 hb_bool_t
 hb_buffer_deserialize_glyphs (hb_buffer_t *buffer,

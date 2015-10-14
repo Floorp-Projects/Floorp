@@ -64,7 +64,7 @@ retry:
     }
 
     /* Not found; allocate one. */
-    shapers = (hb_shaper_pair_t *) calloc (1, sizeof (all_shapers));
+    shapers = (hb_shaper_pair_t *) malloc (sizeof (all_shapers));
     if (unlikely (!shapers)) {
       (void) hb_atomic_ptr_cmpexch (&static_shapers, NULL, &all_shapers[0]);
       return (const hb_shaper_pair_t *) all_shapers;

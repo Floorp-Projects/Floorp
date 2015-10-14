@@ -1,6 +1,5 @@
 /*
  * Copyright © 2009  Red Hat, Inc.
- * Copyright © 2015  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -23,7 +22,6 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
- * Google Author(s): Behdad Esfahbod
  */
 
 #ifndef HB_FT_H
@@ -107,18 +105,13 @@ hb_ft_font_create (FT_Face           ft_face,
 hb_font_t *
 hb_ft_font_create_referenced (FT_Face ft_face);
 
-FT_Face
-hb_ft_font_get_face (hb_font_t *font);
-
-void
-hb_ft_font_set_load_flags (hb_font_t *font, int load_flags);
-
-int
-hb_ft_font_get_load_flags (hb_font_t *font);
 
 /* Makes an hb_font_t use FreeType internally to implement font functions. */
 void
 hb_ft_font_set_funcs (hb_font_t *font);
+
+FT_Face
+hb_ft_font_get_face (hb_font_t *font);
 
 
 HB_END_DECLS
