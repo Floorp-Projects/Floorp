@@ -608,26 +608,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         src = os.path.join(dirs['abs_work_dir'], mozconfig)
         dst = os.path.join(dirs['abs_mozilla_dir'], '.mozconfig')
         self.copyfile(src, dst)
-
-        # STUPID HACK HERE
-        # should we update the mozconfig so it has the right value?
-        with self.opened(src, 'r') as (in_mozconfig, in_error):
-            if in_error:
-                self.fatal('cannot open {0}'.format(src))
-            with self.opened(dst, open_mode='w') as (out_mozconfig, out_error):
-                if out_error:
-                    self.fatal('cannot write {0}'.format(dst))
-                for line in in_mozconfig:
-                    if 'with-l10n-base' in line:
-                        line = 'ac_add_options --with-l10n-base=../../l10n\n'
-                        self.l10n_dir = line.partition('=')[2].strip()
-                    out_mozconfig.write(line)
-        # now log
-        with self.opened(dst, 'r') as (mozconfig, in_error):
-            if in_error:
-                self.fatal('cannot open {0}'.format(dst))
-            for line in mozconfig:
-                self.info(line.strip())
+        self.read_from_file(dst, verbose=True)
 
     def _mach(self, target, env, halt_on_failure=True, output_parser=None):
         dirs = self.query_abs_dirs()
