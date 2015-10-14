@@ -23,3 +23,4 @@ Client-side, this consists of:
    crash-ping
    uitour-ping
    preferences
+   crashes

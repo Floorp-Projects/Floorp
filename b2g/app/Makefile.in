@@ -52,24 +52,14 @@ tools repackage:: $(libs-preqs)
 	sed -e 's/%APP_VERSION%/$(APP_VERSION)/' -e 's/%APP_NAME%/$(APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/$(LPROJ)/InfoPlist.strings
 	rsync -a --exclude 'mangle' --exclude 'shlibsign' --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/Resources
 	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
-ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(APP_BINARY)
-	rsync -a --exclude nsinstall --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
-else
 	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
-endif
 	cp -RL $(DIST)/branding/app.icns $(DIST)/$(APP_NAME).app/Contents/Resources/$(MOZ_APP_NAME).icns
 	printf APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 
 else # MOZ_WIDGET_TOOLKIT != cocoa
 
 libs::
-ifdef LIBXUL_SDK
-	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
-	$(NSINSTALL) -D $(DIST)/bin/xulrunner
-	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
-endif
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 
 # Copy the app icon for b2g-desktop

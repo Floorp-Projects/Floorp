@@ -30,9 +30,27 @@ static const char* kPrefTesting = "device.storage.testing";
 static const char* kPrefPromptTesting = "device.storage.prompt.testing";
 static const char* kPrefWritableName = "device.storage.writable.name";
 
+// file-watcher-notify comes from some process (but not the MTP Server)
+// to indicate that a file has changed. It eventually winds up in the
+// parent process, and then gets broadcast out to all child listeners
+// as a file-watcher-update and mtp-watcher-update.
+//
+// mtp-watcher-notify comes from the MTP Server whenever it detects a change
+// and this gets rebroadcast as file-watcher-update to the device storage
+// listeners.
+//
+// download-watcher-notify is treated similarly to file-watcher-notify,
+// and gets converted into file-watcher-update and mtp-watcher-update.
+//
+// We need to make sure that the MTP server doesn't get notified about
+// files which it told us it added, otherwise it confuses some clients
+// (like the Android-File-Transfer program which runs under OS X).
+
 static const char* kFileWatcherUpdate = "file-watcher-update";
+static const char* kMtpWatcherUpdate = "mtp-watcher-update";
 static const char* kDiskSpaceWatcher = "disk-space-watcher";
 static const char* kFileWatcherNotify = "file-watcher-notify";
+static const char* kMtpWatcherNotify = "mtp-watcher-notify";
 static const char* kDownloadWatcherNotify = "download-watcher-notify";
 
 StaticRefPtr<DeviceStorageStatics> DeviceStorageStatics::sInstance;
@@ -100,6 +118,7 @@ DeviceStorageStatics::Init()
   if (obs) {
     obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     obs->AddObserver(this, kFileWatcherNotify, false);
+    obs->AddObserver(this, kMtpWatcherNotify, false);
     obs->AddObserver(this, kDownloadWatcherNotify, false);
   }
   DS_LOG_INFO("");
@@ -704,7 +723,8 @@ DeviceStorageStatics::Observe(nsISupports* aSubject,
 #endif
     dsf = new DeviceStorageFile(NS_LITERAL_STRING(DEVICESTORAGE_SDCARD), volName, path);
 
-  } else if (!strcmp(aTopic, kFileWatcherNotify)) {
+  } else if (!strcmp(aTopic, kFileWatcherNotify) ||
+             !strcmp(aTopic, kMtpWatcherNotify)) {
     dsf = static_cast<DeviceStorageFile*>(aSubject);
   } else {
     DS_LOG_WARN("unhandled topic '%s'", aTopic);
@@ -754,6 +774,11 @@ DeviceStorageStatics::Observe(nsISupports* aSubject,
     }
   } else {
     obs->NotifyObservers(dsf, kFileWatcherUpdate, aData);
+  }
+  if (strcmp(aTopic, kMtpWatcherNotify)) {
+    // Only send mtp-watcher-updates out if the MTP Server wasn't the one
+    // telling us about the change.
+    obs->NotifyObservers(dsf, kMtpWatcherUpdate, aData);
   }
   return NS_OK;
 }

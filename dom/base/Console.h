@@ -20,7 +20,6 @@
 
 class nsIConsoleAPIStorage;
 class nsIPrincipal;
-class nsIProfiler;
 
 namespace mozilla {
 namespace dom {
@@ -205,9 +204,6 @@ private:
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
   nsRefPtr<JSObjectHolder> mSandbox;
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  nsCOMPtr<nsIProfiler> mProfiler;
-#endif
 
   nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
   nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;

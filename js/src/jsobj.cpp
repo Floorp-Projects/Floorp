@@ -2467,6 +2467,15 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
     if (!extensible)
         return result.fail(JSMSG_CANT_SET_PROTO);
 
+    // If this is a global object, resolve the Object class so that its
+    // [[Prototype]] chain is always properly immutable, even in the presence
+    // of lazy standard classes.
+    if (obj->is<GlobalObject>()) {
+        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+        if (!GlobalObject::ensureConstructor(cx, global, JSProto_Object))
+            return false;
+    }
+
     /*
      * ES6 9.1.2 step 6 forbids generating cyclical prototype chains. But we
      * have to do this comparison on the observable outer objects, not on the

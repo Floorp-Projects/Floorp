@@ -29,26 +29,15 @@ struct PopupIPCTabContext
   bool isBrowserElement;
 };
 
-// An IPCTabContext which corresponds to an app frame.
-struct AppFrameIPCTabContext
+// An IPCTabContext which corresponds to an app, browser, or normal frame.
+struct FrameIPCTabContext
 {
-  // The ID of the app this frame corresponds to.  May be NO_APP_ID.
-  uint32_t ownAppId;
+  // The stringified originAttributes dictionary.
+  nsCString originSuffix;
 
-  // The ID of the app containing this frame.  May be NO_APP_ID.
-  uint32_t appFrameOwnerAppId;
+  // The ID of the app containing this app/browser frame, if applicable.
+  uint32_t frameOwnerAppId;
 };
-
-// An IPCTabContext which corresponds to a browser frame.
-struct BrowserFrameIPCTabContext
-{
-  // The ID of the app which contains this browser frame.  May be NO_APP_ID.
-  uint32_t browserFrameOwnerAppId;
-};
-
-// This is equivalent to AppFrameIPCTabContext with all fields set to NO_APP_ID.
-struct VanillaFrameIPCTabContext
-{};
 
 // IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
 // iframe/PBrowser's own and containing app-ids and tell you whether the
@@ -58,16 +47,14 @@ struct VanillaFrameIPCTabContext
 // We need IPCTabContext (specifically, PopupIPCTabContext) to prevent a
 // privilege escalation attack by a compromised child process.  See the comment
 // on AllocPBrowser for details.
-union IPCTabAppBrowserContext
+union IPCTabContextUnion
 {
   PopupIPCTabContext;
-  AppFrameIPCTabContext;
-  BrowserFrameIPCTabContext;
-  VanillaFrameIPCTabContext;
+  FrameIPCTabContext;
 };
 
 struct IPCTabContext {
-  IPCTabAppBrowserContext appBrowserContext;
+  IPCTabContextUnion contextUnion;
 };
 
 }
