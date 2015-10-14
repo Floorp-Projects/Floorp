@@ -68,6 +68,8 @@
         <item name="android:textAppearanceLargeInverse">@style/TextAppearance.Large.Inverse</item>
         <item name="android:textAppearanceMediumInverse">@style/TextAppearance.Medium.Inverse</item>
         <item name="android:textAppearanceSmallInverse">@style/TextAppearance.Small.Inverse</item>
+
+        <item name="colorAccent">@color/action_orange</item>
     </style>
 
     <style name="Gecko.Dialog" parent="GeckoDialogBase"/>
