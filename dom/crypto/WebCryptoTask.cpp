@@ -1668,7 +1668,8 @@ public:
 
     // If this is RSA with a hash, cache the hash name
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+        mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
       RootedDictionary<RsaHashedImportParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv)) {
@@ -1770,7 +1771,8 @@ private:
            mKey->HasUsageOtherThan(CryptoKey::DECRYPT | CryptoKey::UNWRAPKEY))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
-    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
+               mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
       if ((mKey->GetKeyType() == CryptoKey::PUBLIC &&
            mKey->HasUsageOtherThan(CryptoKey::VERIFY)) ||
           (mKey->GetKeyType() == CryptoKey::PRIVATE &&
@@ -3336,7 +3338,8 @@ WebCryptoTask::CreateImportKeyTask(JSContext* aCx,
     return new ImportSymmetricKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                       aExtractable, aKeyUsages);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+             algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS)) {
     return new ImportRsaKeyTask(aCx, aFormat, aKeyData, aAlgorithm,
                                 aExtractable, aKeyUsages);
   } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
@@ -3382,6 +3385,7 @@ WebCryptoTask::CreateExportKeyTask(const nsAString& aFormat,
       algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP) ||
+      algName.EqualsLiteral(WEBCRYPTO_ALG_RSA_PSS) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_ECDSA) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_ECDH) ||
       algName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
@@ -3604,7 +3608,8 @@ WebCryptoTask::CreateUnwrapKeyTask(JSContext* aCx,
                                             aUnwrappedKeyAlgorithm,
                                             aExtractable, aKeyUsages);
   } else if (keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSASSA_PKCS1) ||
-             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP)) {
+             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_OAEP) ||
+             keyAlgName.EqualsASCII(WEBCRYPTO_ALG_RSA_PSS)) {
     importTask = new ImportRsaKeyTask(aCx, aFormat,
                                       aUnwrappedKeyAlgorithm,
                                       aExtractable, aKeyUsages);
