@@ -664,7 +664,7 @@ class RemoteArgumentsParser(ReftestArgumentsParser):
                           dest="httpdPath",
                           help="path to the httpd.js file")
 
-        self.add_argument("--suppressDeviceInfo",
+        self.add_argument("--no-device-info",
                           action="store_false",
                           dest="printDeviceInfo",
                           default=True,
