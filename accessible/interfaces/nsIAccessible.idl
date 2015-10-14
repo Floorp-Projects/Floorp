@@ -30,7 +30,7 @@ class Accessible;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(66b110b0-c25a-4784-8623-f6ba40c7cfee)]
+[scriptable, uuid(de2869d9-563c-4943-996b-31a4daa4d097)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -230,12 +230,6 @@ interface nsIAccessible : nsISupports
    * Add or remove this accessible to the current selection
    */
   void setSelected(in boolean isSelected);
-
-  /**
-   * Extend the current selection from its current accessible anchor node
-   * to this accessible
-   */
-  void extendSelection();
 
   /**
    * Select this accessible node only

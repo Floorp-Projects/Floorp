@@ -11,8 +11,6 @@
 #include "gmp-audio-codec.h"
 #include "gmp-decryption.h"
 
-#include "GMPUtils.h"
-
 namespace IPC {
 
 template <>
@@ -248,13 +246,6 @@ struct ParamTraits<GMPVideoCodec>
                               aParam.mHeight));
   }
 };
-
-template <>
-struct ParamTraits<mozilla::GMPCrashReason>
-  : public ContiguousEnumSerializer<mozilla::GMPCrashReason,
-  mozilla::kPrefChange,
-  mozilla::kInvalid>
-{};
 
 } // namespace IPC
 

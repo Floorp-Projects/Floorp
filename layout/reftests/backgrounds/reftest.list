@@ -148,17 +148,17 @@ HTTP == background-referrer.html background-referrer-ref.html
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1-ref.html
 == attachment-local-clipping-color-2.html attachment-local-clipping-color-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
-fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html #Bug 959165
-fails-if(Android&&AndroidVersion==15) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html  # Same ref as the previous test. #Bug 959165
-fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),50,500) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html #Bug 959165
+== attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
+== attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
+fuzzy(50,500) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
 
 == attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
 == attachment-local-clipping-image-2.html attachment-local-clipping-image-1-ref.html  # Same ref as the previous test.
 == attachment-local-clipping-image-3.html attachment-local-clipping-image-3-ref.html
 # The next three tests are fuzzy due to bug 1128229.
-fails-if(Android&&AndroidVersion==15) fuzzy-if(winWidget||(Android&&AndroidVersion!=15),16,69) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html #Bug 959165
-fails-if(Android&&AndroidVersion==15) fuzzy-if(winWidget||(Android&&AndroidVersion!=15),16,69) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html  # Same ref as the previous test. #Bug 959165
-fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersion!=15),80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html #Bug 959165
+fuzzy(16,69) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
+fuzzy(16,69) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
+fuzzy(80,500) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
 
 == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
 == background-repeat-large-area.html background-repeat-large-area-ref.html

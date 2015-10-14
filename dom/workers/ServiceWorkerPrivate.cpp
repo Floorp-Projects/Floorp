@@ -338,8 +338,7 @@ public:
     xpcReport->Init(report.report(), report.message(),
                     /* aIsChrome = */ false, /* aWindowID = */ 0);
 
-    nsRefPtr<AsyncErrorReporter> aer =
-      new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
+    nsRefPtr<AsyncErrorReporter> aer = new AsyncErrorReporter(xpcReport);
     NS_DispatchToMainThread(aer);
   }
 };

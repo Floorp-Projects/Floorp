@@ -509,8 +509,7 @@ MediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
 }
 
 nsresult
-MediaDecoder::Load(nsIStreamListener** aStreamListener,
-                   MediaDecoder* aCloneDonor)
+MediaDecoder::Load(nsIStreamListener** aStreamListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mResource, "Can't load without a MediaResource");
@@ -521,18 +520,16 @@ MediaDecoder::Load(nsIStreamListener** aStreamListener,
   SetStateMachine(CreateStateMachine());
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
-  return InitializeStateMachine(aCloneDonor);
+  return InitializeStateMachine();
 }
 
 nsresult
-MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
+MediaDecoder::InitializeStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(mDecoderStateMachine, "Cannot initialize null state machine!");
 
-  MediaDecoder* cloneDonor = static_cast<MediaDecoder*>(aCloneDonor);
-  nsresult rv = mDecoderStateMachine->Init(
-      cloneDonor ? cloneDonor->mDecoderStateMachine.get() : nullptr);
+  nsresult rv = mDecoderStateMachine->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If some parameters got set before the state machine got created,

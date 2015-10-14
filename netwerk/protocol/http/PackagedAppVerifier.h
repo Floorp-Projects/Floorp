@@ -114,6 +114,8 @@ public:
     return mPackageOrigin;
   }
 
+  bool WouldVerify() const;
+
   static const char* kSignedPakOriginMetadataKey;
 
 private:
