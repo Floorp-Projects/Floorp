@@ -4291,10 +4291,6 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
 
             if (!emitDestructuringOps(initializer, isLetExpr))
                 return false;
-
-            /* If we are not initializing, nothing to pop. */
-            if (emitOption != InitializeVars)
-                continue;
         } else {
             /*
              * Load initializer early to share code above that jumps to
@@ -4354,20 +4350,19 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
 
             // If we are not initializing, nothing to pop. If we are initializing
             // lets, we must emit the pops.
-            if (emitOption != InitializeVars)
-                continue;
-
-            MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
-            if (!binding->pn_scopecoord.isFree()) {
-                if (!emitVarOp(binding, op))
-                    return false;
-            } else {
-                if (!emitIndexOp(op, atomIndex))
-                    return false;
+            if (emitOption == InitializeVars) {
+                MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
+                if (!binding->pn_scopecoord.isFree()) {
+                    if (!emitVarOp(binding, op))
+                        return false;
+                } else {
+                    if (!emitIndexOp(op, atomIndex))
+                        return false;
+                }
             }
         }
 
-        if (next) {
+        if (next && emitOption == InitializeVars) {
             if (!emit1(JSOP_POP))
                 return false;
         }
