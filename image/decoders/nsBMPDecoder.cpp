@@ -79,6 +79,7 @@
 #include <stdlib.h>
 
 #include "ImageLogging.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Likely.h"
 #include "nsBMPDecoder.h"
@@ -227,40 +228,79 @@ nsBMPDecoder::FinishInternal()
 // Actual Data Processing
 // ----------------------------------------
 
-static void
-calcBitmask(uint32_t aMask, uint8_t& aBegin, uint8_t& aLength)
+void
+BitFields::Value::Set(uint32_t aMask)
 {
+  mMask = aMask;
+
   // Find the rightmost 1.
-  uint8_t pos;
   bool started = false;
-  aBegin = aLength = 0;
-  for (pos = 0; pos <= 31; pos++) {
+  mRightShift = mBitWidth = 0;
+  for (uint8_t pos = 0; pos <= 31; pos++) {
     if (!started && (aMask & (1 << pos))) {
-      aBegin = pos;
+      mRightShift = pos;
       started = true;
     } else if (started && !(aMask & (1 << pos))) {
-      aLength = pos - aBegin;
+      mBitWidth = pos - mRightShift;
       break;
     }
   }
 }
 
-void
-nsBMPDecoder::CalcBitShift()
+inline uint8_t
+BitFields::Value::Get(uint32_t aValue) const
 {
-  uint8_t begin, length;
+  // Extract the unscaled value.
+  uint32_t v = (aValue & mMask) >> mRightShift;
 
-  calcBitmask(mBitFields.red, begin, length);
-  mBitFields.redRightShift = begin;
-  mBitFields.redLeftShift = 8 - length;
+  // Idea: to upscale v precisely we need to duplicate its bits, possibly
+  // repeatedly, possibly partially in the last case, from bit 7 down to bit 0
+  // in v2. For example:
+  //
+  // - mBitWidth=1:  v2 = v<<7 | v<<6 | ... | v<<1 | v>>0     k -> kkkkkkkk
+  // - mBitWidth=2:  v2 = v<<6 | v<<4 | v<<2 | v>>0          jk -> jkjkjkjk
+  // - mBitWidth=3:  v2 = v<<5 | v<<2 | v>>1                ijk -> ijkijkij
+  // - mBitWidth=4:  v2 = v<<4 | v>>0                      hijk -> hijkhijk
+  // - mBitWidth=5:  v2 = v<<3 | v>>2                     ghijk -> ghijkghi
+  // - mBitWidth=6:  v2 = v<<2 | v>>4                    fghijk -> fghijkfg
+  // - mBitWidth=7:  v2 = v<<1 | v>>6                   efghijk -> efghijke
+  // - mBitWidth=8:  v2 = v>>0                         defghijk -> defghijk
+  // - mBitWidth=9:  v2 = v>>1                        cdefghijk -> cdefghij
+  // - mBitWidth=10: v2 = v>>2                       bcdefghijk -> bcdefghi
+  // - mBitWidth=11: v2 = v>>3                      abcdefghijk -> abcdefgh
+  // - etc.
+  //
+  uint8_t v2 = 0;
+  int32_t i;      // must be a signed integer
+  for (i = 8 - mBitWidth; i > 0; i -= mBitWidth) {
+    v2 |= v << uint32_t(i);
+  }
+  v2 |= v >> uint32_t(-i);
+  return v2;
+}
 
-  calcBitmask(mBitFields.green, begin, length);
-  mBitFields.greenRightShift = begin;
-  mBitFields.greenLeftShift = 8 - length;
+MOZ_ALWAYS_INLINE uint8_t
+BitFields::Value::Get5(uint32_t aValue) const
+{
+  MOZ_ASSERT(mBitWidth == 5);
+  uint32_t v = (aValue & mMask) >> mRightShift;
+  return (v << 3u) | (v >> 2u);
+}
 
-  calcBitmask(mBitFields.blue, begin, length);
-  mBitFields.blueRightShift = begin;
-  mBitFields.blueLeftShift = 8 - length;
+void
+BitFields::SetR5G5B5()
+{
+  mRed.Set(0x7c00);
+  mGreen.Set(0x03e0);
+  mBlue.Set(0x001f);
+}
+
+bool
+BitFields::IsR5G5B5() const
+{
+  return mRed.mBitWidth == 5 &&
+         mGreen.mBitWidth == 5 &&
+         mBlue.mBitWidth == 5;
 }
 
 uint32_t*
@@ -526,7 +566,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     if (mBIH.bihsize >= InfoHeaderLength::WIN_V4) {
       // Bitfields are present in the info header, so we can read them
       // immediately.
-      DoReadBitfields(aData + 36);
+      mBitFields.ReadFromHeader(aData + 36);
     } else {
       // Bitfields are present after the info header, so we will read them in
       // ReadBitfields().
@@ -534,22 +574,18 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     }
   } else if (mBIH.bpp == 16) {
     // No bitfields specified; use the default 5-5-5 values.
-    mBitFields.red   = 0x7C00;
-    mBitFields.green = 0x03E0;
-    mBitFields.blue  = 0x001F;
-    CalcBitShift();
+    mBitFields.SetR5G5B5();
   }
 
   return Transition::To(State::BITFIELDS, bitFieldsLengthStillToRead);
 }
 
 void
-nsBMPDecoder::DoReadBitfields(const char* aData)
+BitFields::ReadFromHeader(const char* aData)
 {
-  mBitFields.red   = LittleEndian::readUint32(aData + 0);
-  mBitFields.green = LittleEndian::readUint32(aData + 4);
-  mBitFields.blue  = LittleEndian::readUint32(aData + 8);
-  CalcBitShift();
+  mRed.Set  (LittleEndian::readUint32(aData + 0));
+  mGreen.Set(LittleEndian::readUint32(aData + 4));
+  mBlue.Set (LittleEndian::readUint32(aData + 8));
 }
 
 LexerTransition<nsBMPDecoder::State>
@@ -560,7 +596,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   // If aLength is zero there are no bitfields to read, or we already read them
   // in ReadInfoHeader().
   if (aLength != 0) {
-    DoReadBitfields(aData);
+    mBitFields.ReadFromHeader(aData);
   }
 
   return Transition::To(State::COLOR_TABLE, mNumColors * mBytesPerColor);
@@ -644,20 +680,25 @@ nsBMPDecoder::ReadPixelRow(const char* aData)
       break;
 
     case 16:
-      while (lpos > 0) {
-        uint16_t val = LittleEndian::readUint16(src);
-        SetPixel(dst,
-                 (val & mBitFields.red) >>
-                 mBitFields.redRightShift <<
-                 mBitFields.redLeftShift,
-                 (val & mBitFields.green) >>
-                 mBitFields.greenRightShift <<
-                 mBitFields.greenLeftShift,
-                 (val & mBitFields.blue) >>
-                 mBitFields.blueRightShift <<
-                 mBitFields.blueLeftShift);
-        --lpos;
-        src += 2;
+      if (mBitFields.IsR5G5B5()) {
+        // Specialize this common case.
+        while (lpos > 0) {
+          uint16_t val = LittleEndian::readUint16(src);
+          SetPixel(dst, mBitFields.mRed.Get5(val),
+                        mBitFields.mGreen.Get5(val),
+                        mBitFields.mBlue.Get5(val));
+          --lpos;
+          src += 2;
+        }
+      } else {
+        while (lpos > 0) {
+          uint16_t val = LittleEndian::readUint16(src);
+          SetPixel(dst, mBitFields.mRed.Get(val),
+                        mBitFields.mGreen.Get(val),
+                        mBitFields.mBlue.Get(val));
+          --lpos;
+          src += 2;
+        }
       }
       break;
 
