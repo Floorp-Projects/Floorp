@@ -4216,10 +4216,9 @@ BytecodeEmitter::emitTemplateString(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isLetExpr)
+BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption)
 {
     MOZ_ASSERT(pn->isArity(PN_LIST));
-    MOZ_ASSERT(isLetExpr == (emitOption == PushInitialValues));
 
     ParseNode* next;
     for (ParseNode* binding = pn->pn_head; binding; binding = next) {
@@ -4290,7 +4289,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
             if (!emitTree(binding->pn_right))
                 return false;
 
-            if (!emitDestructuringOps(initializer, isLetExpr))
+            if (!emitDestructuringOpsHelper(initializer, emitOption))
                 return false;
 
             if (emitOption == InitializeVars) {
@@ -4345,7 +4344,10 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
                 if (!emitTree(initializer))
                     return false;
                 emittingForInit = oldEmittingForInit;
-            } else if (op == JSOP_INITLEXICAL || op == JSOP_INITGLEXICAL || isLetExpr) {
+            } else if (op == JSOP_INITLEXICAL ||
+                       op == JSOP_INITGLEXICAL ||
+                       emitOption == PushInitialValues)
+            {
                 // 'let' bindings cannot be used before they are
                 // initialized. JSOP_INITLEXICAL distinguishes the binding site.
                 MOZ_ASSERT(emitOption != DefineVars);
@@ -5173,7 +5175,7 @@ BytecodeEmitter::emitLetBlock(ParseNode* pnLet)
 
     int letHeadDepth = this->stackDepth;
 
-    if (!emitVariables(varList, PushInitialValues, true))
+    if (!emitVariables(varList, PushInitialValues))
         return false;
 
     /* Push storage for hoisted let decls (e.g. 'let (x) { let y }'). */
