@@ -8,6 +8,9 @@
 
 const {utils: Cu, interfaces: Ci, classes: Cc, results: Cr} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EnableDelayHelper",
+                                  "resource://gre/modules/SharedPromptUtils.jsm");
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Helper Functions
@@ -539,25 +542,21 @@ nsUnknownContentTypeDialog.prototype = {
 
     this.mDialog.setTimeout("dialog.postShowCallback()", 0);
 
-    let acceptDelay = Services.prefs.getIntPref("security.dialog_enable_delay");
-    this.mDialog.document.documentElement.getButton("accept").disabled = true;
-    this._showTimer = Components.classes["@mozilla.org/timer;1"]
-                                .createInstance(nsITimer);
-    this._showTimer.initWithCallback(this, acceptDelay, nsITimer.TYPE_ONE_SHOT);
+    this.delayHelper = new EnableDelayHelper({
+      disableDialog: () => {
+        this.mDialog.document.documentElement.getButton("accept").disabled = true;
+      },
+      enableDialog: () => {
+        this.mDialog.document.documentElement.getButton("accept").disabled = false;
+      },
+      focusTarget: this.mDialog
+    });
   },
 
   notify: function (aTimer) {
     if (aTimer == this._showTimer) {
       if (!this.mDialog) {
         this.reallyShow();
-      } else {
-        // The user may have already canceled the dialog.
-        try {
-          if (!this._blurred) {
-            this.mDialog.document.documentElement.getButton("accept").disabled = false;
-          }
-        } catch (ex) {}
-        this._delayExpired = true;
       }
       // The timer won't release us, so we have to release it.
       this._showTimer = null;
@@ -638,21 +637,6 @@ nsUnknownContentTypeDialog.prototype = {
     }
     else {
       type.value = typeString;
-    }
-  },
-
-  _blurred: false,
-  _delayExpired: false,
-  onBlur: function(aEvent) {
-    this._blurred = true;
-    this.mDialog.document.documentElement.getButton("accept").disabled = true;
-  },
-
-  onFocus: function(aEvent) {
-    this._blurred = false;
-    if (this._delayExpired) {
-      var script = "document.documentElement.getButton('accept').disabled = false";
-      this.mDialog.setTimeout(script, 250);
     }
   },
 

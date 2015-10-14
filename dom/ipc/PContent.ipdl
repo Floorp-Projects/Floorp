@@ -465,9 +465,9 @@ both:
     // content calls window.open()), and the parent creates the PBrowser as part
     // of ContentParent::CreateBrowserOrApp.
     //
-    // When the parent constructs a PBrowser, the child trusts the app token it
-    // receives from the parent.  In that case, context can be any of the
-    // IPCTabContext subtypes.
+    // When the parent constructs a PBrowser, the child trusts the app token and
+    // other attributes it receives from the parent.  In that case, the
+    // context should be FrameIPCTabContext.
     //
     // When the child constructs a PBrowser, the parent doesn't trust the app
     // token it receives from the child.  In this case, context must have type

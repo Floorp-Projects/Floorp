@@ -10,10 +10,12 @@
   </head>
   <body>
   <style>
-    *
-    {
-      -moz-user-select:none;
-    }
+  div.block {
+    width: 10em;
+    height: 4em;
+    word-wrap: break-word;
+    overflow: auto;
+  }
   </style>
     <div><input id="input" value="ABC DEF GHI"></div>
     <br />
@@ -21,8 +23,10 @@
     <br />
     <div><textarea dir="rtl" id="textarea_rtl" rows="8" cols="8">موزيلا فيرفكس موزيلا فيرفكس</textarea></div>
     <br />
-    <div style="width: 10em; height: 4em; word-wrap: break-word; overflow: auto; -moz-user-select:text" contenteditable="true" id="contenteditable">ABC DEF GHI</div>
+    <div class="block" contenteditable="true" id="contenteditable">ABC DEF GHI</div>
     <br />
-    <div style="width: 10em; height: 4em; word-wrap: break-word; overflow: auto; -moz-user-select:text" id="content">ABC DEF GHI</div>
+    <div class="block" id="content">ABC DEF GHI</div>
+    <br />
+    <div style="-moz-user-select: none;" id="non_selectable">Non-selectable</div>
   </body>
 </html>

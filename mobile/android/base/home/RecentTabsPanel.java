@@ -133,7 +133,7 @@ public class RecentTabsPanel extends HomeFragment
                     return;
                 }
 
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "recent_tabs");
 
                 final List<String> dataList = new ArrayList<>();
                 dataList.add(c.getString(c.getColumnIndexOrThrow(RecentTabs.DATA)));
