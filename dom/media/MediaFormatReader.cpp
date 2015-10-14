@@ -1569,8 +1569,9 @@ MediaFormatReader::GetBuffered()
   return intervals.Shift(media::TimeUnit::FromMicroseconds(-startTime));
 }
 
-void MediaFormatReader::ReleaseMediaResources()
+void MediaFormatReader::ReleaseMediaResourcesInternal()
 {
+  MOZ_ASSERT(OnTaskQueue());
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
   VideoFrameContainer* container =
