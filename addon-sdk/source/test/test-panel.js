@@ -1368,6 +1368,43 @@ exports["test Panel links"] = function*(assert) {
   loader.unload();
 }
 
+exports["test Panel script allow property"] = function*(assert) {
+  const loader = Loader(module);
+  const { Panel } = loader.require('sdk/panel');
+  const { getActiveView } = loader.require('sdk/view/core');
+
+  const contentURL = 'data:text/html;charset=utf-8,' +
+    encodeURIComponent(`<body onclick='postMessage("got script click", "*")'>
+        <script>
+        document.body.appendChild(document.createElement('unwanted'))
+        </script>
+        </body>`);
+  let panel = Panel({
+    contentURL,
+    allow: {script: false},
+  });
+
+  panel.show();
+
+  yield wait(panel, 'show');
+
+  let { contentWindow } = getActiveView(panel).querySelector('iframe');
+
+  assert.equal(contentWindow.document.body.lastElementChild.localName, "script",
+               "Script should not have executed");
+
+  panel.allow.script = true;
+
+  let p = wait(contentWindow, "message");
+  let event = new contentWindow.MouseEvent('click', {});
+  contentWindow.document.body.dispatchEvent(event);
+
+  let msg = yield p;
+  assert.equal(msg.data, "got script click", "Should have seen script click");
+
+  loader.unload();
+};
+
 after(exports, function*(name, assert) {
   yield cleanUI();
   assert.pass("ui was cleaned.");
