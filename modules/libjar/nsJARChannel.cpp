@@ -883,8 +883,9 @@ nsJARChannel::ShouldIntercept()
                                   getter_AddRefs(controller));
     bool shouldIntercept = false;
     if (controller && !BypassServiceWorker() && mLoadInfo) {
+      bool isNavigation = mLoadFlags & LOAD_DOCUMENT_URI;
       nsresult rv = controller->ShouldPrepareForIntercept(mAppURI,
-                                                          nsContentUtils::IsNonSubresourceRequest(this),
+                                                          isNavigation,
                                                           &shouldIntercept);
       NS_ENSURE_SUCCESS(rv, false);
     }
@@ -968,8 +969,9 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
                                     NS_GET_IID(nsINetworkInterceptController),
                                     getter_AddRefs(controller));
 
+      bool isNavigation = mLoadFlags & LOAD_DOCUMENT_URI;
       nsRefPtr<InterceptedJARChannel> intercepted =
-        new InterceptedJARChannel(this, controller);
+        new InterceptedJARChannel(this, controller, isNavigation);
       intercepted->NotifyController();
 
       // We get the JAREntry so we can infer the content type later in case
