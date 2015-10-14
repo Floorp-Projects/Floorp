@@ -2514,18 +2514,6 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         chromeRegistry->SendRegisteredChrome(this);
     }
 
-    // Initialize the message manager (and load delayed scripts) now that we
-    // have established communications with the child.
-    mMessageManager->InitWithCallback(this);
-
-    // Set the subprocess's priority.  We do this early on because we're likely
-    // /lowering/ the process's CPU and memory priority, which it has inherited
-    // from this process.
-    //
-    // This call can cause us to send IPC messages to the child process, so it
-    // must come after the Open() call above.
-    ProcessPriorityManager::SetProcessPriority(this, aInitialPriority);
-
     if (gAppData) {
         nsCString version(gAppData->version);
         nsCString buildID(gAppData->buildID);
@@ -2537,6 +2525,18 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         // Sending all information to content process.
         unused << SendAppInfo(version, buildID, name, UAName, ID, vendor);
     }
+
+    // Initialize the message manager (and load delayed scripts) now that we
+    // have established communications with the child.
+    mMessageManager->InitWithCallback(this);
+
+    // Set the subprocess's priority.  We do this early on because we're likely
+    // /lowering/ the process's CPU and memory priority, which it has inherited
+    // from this process.
+    //
+    // This call can cause us to send IPC messages to the child process, so it
+    // must come after the Open() call above.
+    ProcessPriorityManager::SetProcessPriority(this, aInitialPriority);
 
     if (aSetupOffMainThreadCompositing) {
         // NB: internally, this will send an IPC message to the child

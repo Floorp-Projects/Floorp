@@ -596,14 +596,14 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
-.toolbarbutton-1 > .toolbarbutton-icon,
-.toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
+toolbar .toolbarbutton-1 > .toolbarbutton-icon,
+toolbar .toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
   max-width: 16px;
   margin: 1px;
 }
 
-.toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
-.toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
+toolbar .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
   max-width: 18px;
   margin: 0;
 }
@@ -1195,8 +1195,9 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   border-color: rgba(0,0,0,0.2);
 }
 
-#back-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+#back-button > .toolbarbutton-icon,
+#forward-button > .toolbarbutton-icon {
+  max-width: none;
 }
 
 /* Back button styles */
@@ -1207,6 +1208,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 4px 5px 4px 3px;
   -moz-margin-end: 0;
   border-radius: 10000px;
+}
+
+#back-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 #back-button:not(:-moz-lwtheme) {

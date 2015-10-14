@@ -44,12 +44,13 @@ add_task(function*() {
       this.nodeFront = null;
       this.isShown = false;
       return promise.resolve();
-    }
+    },
+    finalize: function() {}
   };
 
   // Inject the mock highlighter in the rule-view
   let hs = view.highlighters;
-  hs.promises[TYPE] = promise.resolve(HighlighterFront);
+  hs.highlighters[TYPE] = HighlighterFront;
 
   let {valueSpan} = getRuleViewProperty(view, "body", "transform");
 
