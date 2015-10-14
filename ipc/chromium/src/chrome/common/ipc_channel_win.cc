@@ -502,14 +502,17 @@ uint32_t Channel::ChannelImpl::Unsound_NumQueuedMessages() const
 Channel::Channel(const std::wstring& channel_id, Mode mode,
                  Listener* listener)
     : channel_impl_(new ChannelImpl(channel_id, mode, listener)) {
+  MOZ_COUNT_CTOR(IPC::Channel);
 }
 
 Channel::Channel(const std::wstring& channel_id, void* server_pipe,
                  Mode mode, Listener* listener)
    : channel_impl_(new ChannelImpl(channel_id, server_pipe, mode, listener)) {
+  MOZ_COUNT_CTOR(IPC::Channel);
 }
 
 Channel::~Channel() {
+  MOZ_COUNT_DTOR(IPC::Channel);
   delete channel_impl_;
 }
 
