@@ -21,7 +21,7 @@ interface nsITCPPresentationServerListener: nsISupports
 /**
  * TCP presentation server which can be used by discovery services.
  */
-[scriptable, uuid(fcadc9fe-f1e9-4f74-b9d3-9cd6b74afc9e)]
+[scriptable, uuid(4fc57682-33d5-4793-b149-e2cc4714d70f)]
 interface nsITCPPresentationServer: nsISupports
 {
   /**
@@ -59,27 +59,6 @@ interface nsITCPPresentationServer: nsISupports
    * @throws  NS_ERROR_INVALID_ARG if a TCPDevice with |aId| have existed.
    */
   nsIPresentationDevice createTCPDevice(in AUTF8String aId,
-                                        in AUTF8String aName,
-                                        in AUTF8String aType,
-                                        in AUTF8String aHost,
-                                        in uint16_t aPort);
-
-  /**
-   * Update TCPDevice for this server.
-   * @param   aId
-   *          The unique Id for the discovered device
-   * @param   aName
-   *          The human-readable name of the discovered device
-   * @param   aType
-   *          The category of the discovered device
-   * @param   aHost
-   *          The host of the provided control channel of the discovered device
-   * @param   aPort
-   *          The port of the provided control channel of the discovered device
-   * @returns The updated device
-   * @throws  NS_ERROR_INVALID_ARG if a TCPDevice with |aId| does not existed.
-   */
-  nsIPresentationDevice updateTCPDevice(in AUTF8String aId,
                                         in AUTF8String aName,
                                         in AUTF8String aType,
                                         in AUTF8String aHost,

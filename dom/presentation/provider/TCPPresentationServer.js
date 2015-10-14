@@ -127,21 +127,6 @@ TCPPresentationServer.prototype = {
     return this._devices.get(aId);
   },
 
-  updateTCPDevice: function(aId, aName, aType, aHost, aPort) {
-    DEBUG && log("TCPPresentationServer - updateTCPDevice with id: " + aId);
-    if (!this._devices.has(aId)) {
-      throw Cr.NS_ERROR_INVALID_ARG;
-    }
-
-    let device = this._devices.get(aId);
-    device.name = aName;
-    device.type = aType;
-    device.host = aHost;
-    device.port = aPort;
-
-    return device;
-  },
-
   getTCPDevice: function(aId) {
     DEBUG && log("TCPPresentationServer - getTCPDevice with id: " + aId);
     if (!this._devices.has(aId)) {
