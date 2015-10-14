@@ -2304,6 +2304,76 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Gets an icon from the icon set provided by the add-on
+   * that is closest to the specified size.
+   *
+   * The optional window parameter will be used to determine
+   * the screen resolution and select a more appropriate icon.
+   * Calling this method with 48px on retina screens will try to
+   * match an icon of size 96px.
+   *
+   * @param  aAddon
+   *         The addon to find an icon for
+   * @param  aSize
+   *         Ideal icon size in pixels
+   * @param  aWindow
+   *         Optional window object for determining the correct scale.
+   * @return {String} The absolute URL of the icon or null if the addon doesn't have icons
+   */
+  getPreferredIconURL: function AMI_getPreferredIconURL(aAddon, aSize, aWindow = undefined) {
+    if (aWindow && aWindow.devicePixelRatio) {
+      aSize *= aWindow.devicePixelRatio;
+    }
+
+    let icons = aAddon.icons;
+
+    // certain addon-types only have iconURLs
+    if (!icons) {
+      icons = {};
+      if (aAddon.iconURL) {
+        icons[32] = aAddon.iconURL;
+        icons[48] = aAddon.iconURL;
+      }
+      if (aAddon.icon64URL) {
+        icons[64] = aAddon.icon64URL;
+      }
+    }
+
+    // quick return if the exact size was found
+    if (icons[aSize]) {
+      return icons[aSize];
+    }
+
+    let bestSize = null;
+
+    for (let size of Object.keys(icons)) {
+      size = parseInt(size, 10);
+      if (isNaN(size)) {
+        throw Components.Exception("Invalid icon size, must be an integer",
+                                   Cr.NS_ERROR_ILLEGAL_VALUE);
+      }
+
+      if (!bestSize) {
+        bestSize = size;
+        continue;
+      }
+
+      if (size > aSize && bestSize > aSize) {
+        // If both best size and current size are larger than the wanted size then choose
+        // the one closest to the wanted size
+        bestSize = Math.min(bestSize, size);
+      }
+      else {
+        // Otherwise choose the largest of the two so we'll prefer sizes as close to below aSize
+        // or above aSize
+        bestSize = Math.max(bestSize, size);
+      }
+    }
+
+    return icons[bestSize] || null;
+  },
+
+  /**
    * Asynchronously gets an add-on with a specific ID.
    *
    * @param  aID
@@ -3228,6 +3298,10 @@ this.AddonManager = {
 
   escapeAddonURI: function AM_escapeAddonURI(aAddon, aUri, aAppVersion) {
     return AddonManagerInternal.escapeAddonURI(aAddon, aUri, aAppVersion);
+  },
+
+  getPreferredIconURL: function AM_getPreferredIconURL(aAddon, aSize, aWindow = undefined) {
+    return AddonManagerInternal.getPreferredIconURL(aAddon, aSize, aWindow);
   },
 
   get shutdown() {
