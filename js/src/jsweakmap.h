@@ -7,8 +7,8 @@
 #ifndef jsweakmap_h
 #define jsweakmap_h
 
-#include "mozilla/Move.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/Move.h"
 
 #include "jscompartment.h"
 #include "jsfriendapi.h"
