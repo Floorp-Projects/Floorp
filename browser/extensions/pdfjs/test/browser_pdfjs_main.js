@@ -4,9 +4,7 @@
 const RELATIVE_DIR = "browser/extensions/pdfjs/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
-function test() {
-  var tab;
-
+add_task(function* test() {
   let handlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
   let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
   let handlerInfo = mimeService.getFromTypeAndExtension('application/pdf', 'pdf');
@@ -17,70 +15,68 @@ function test() {
 
   info('Pref action: ' + handlerInfo.preferredAction);
 
-  waitForExplicitFinish();
-  registerCleanupFunction(function() {
-    gBrowser.removeTab(tab);
-  });
+  yield BrowserTestUtils.withNewTab({ gBrowser: gBrowser, url: TESTROOT + "file_pdfjs_test.pdf" },
+    function* (newTabBrowser) {
+      ok(gBrowser.isFindBarInitialized(), "Browser FindBar initialized!");
 
-  tab = gBrowser.addTab(TESTROOT + "file_pdfjs_test.pdf");
-  var newTabBrowser = gBrowser.getBrowserForTab(tab);
-  newTabBrowser.addEventListener("load", function eventHandler() {
-    newTabBrowser.removeEventListener("load", eventHandler, true);
+      //
+      // Overall sanity tests
+      //
+      let [ viewer, PDFJS ] = yield ContentTask.spawn(newTabBrowser, null, function() {
+        return [ content.document.querySelector('div#viewer') !== null,
+                 'PDFJS' in content.wrappedJSObject ];
+      });
 
-    var document = newTabBrowser.contentDocument,
-        window = newTabBrowser.contentWindow;
+      ok(viewer, "document content has viewer UI");
+      ok(PDFJS, "window content has PDFJS object");
 
-    // Runs tests after all 'load' event handlers have fired off
-    window.addEventListener("documentload", function() {
-      runTests(document, window, tab, finish);
-    }, false, true);
-  }, true);
-}
+      //
+      // Sidebar: open
+      //
+      let contains = yield ContentTask.spawn(newTabBrowser, null, function() {
+        var sidebar = content.document.querySelector('button#sidebarToggle'),
+            outerContainer = content.document.querySelector('div#outerContainer');
 
+        sidebar.click();
+        return outerContainer.classList.contains('sidebarOpen');
+      });
 
-function runTests(document, window, tab, callback) {
+      ok(contains, "sidebar opens on click");
 
-  //
-  // Overall sanity tests
-  //
-  ok(document.querySelector('div#viewer'), "document content has viewer UI");
-  ok('PDFJS' in window.wrappedJSObject, "window content has PDFJS object");
+      //
+      // Sidebar: close
+      //
+      contains = yield ContentTask.spawn(newTabBrowser, null, function() {
+        var sidebar = content.document.querySelector('button#sidebarToggle'),
+            outerContainer = content.document.querySelector('div#outerContainer');
 
-  //
-  // Browser Find
-  //
-  ok(gBrowser.isFindBarInitialized(tab), "Browser FindBar initialized!");
+        sidebar.click();
+        return outerContainer.classList.contains('sidebarOpen');
+      });
 
-  //
-  // Sidebar: open
-  //
-  var sidebar = document.querySelector('button#sidebarToggle'),
-      outerContainer = document.querySelector('div#outerContainer');
+      ok(!contains, "sidebar closes on click");
 
-  sidebar.click();
-  ok(outerContainer.classList.contains('sidebarOpen'), 'sidebar opens on click');
+      //
+      // Page change from prev/next buttons
+      //
+      let pageNumber = yield ContentTask.spawn(newTabBrowser, null, function() {
+        var prevPage = content.document.querySelector('button#previous'),
+            nextPage = content.document.querySelector('button#next');
 
-  //
-  // Sidebar: close
-  //
-  sidebar.click();
-  ok(!outerContainer.classList.contains('sidebarOpen'), 'sidebar closes on click');
+        return content.document.querySelector('input#pageNumber').value;
+      });
 
-  //
-  // Page change from prev/next buttons
-  //
-  var prevPage = document.querySelector('button#previous'),
-      nextPage = document.querySelector('button#next');
+      is(parseInt(pageNumber), 1, 'initial page is 1');
 
-  var pageNumber = document.querySelector('input#pageNumber');
-  is(parseInt(pageNumber.value), 1, 'initial page is 1');
+      //
+      // Bookmark button
+      //
+      let numBookmarks = yield ContentTask.spawn(newTabBrowser, null, function() {
+        var viewBookmark = content.document.querySelector('a#viewBookmark');
+        viewBookmark.click();
+        return viewBookmark.href.length;
+      });
 
-  //
-  // Bookmark button
-  //
-  var viewBookmark = document.querySelector('a#viewBookmark');
-  viewBookmark.click();
-  ok(viewBookmark.href.length > 0, 'viewBookmark button has href');
-
-  callback();
-}
+      ok(numBookmarks > 0, "viewBookmark button has href");
+    });
+});
