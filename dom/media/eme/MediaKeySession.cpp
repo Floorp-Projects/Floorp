@@ -315,7 +315,7 @@ MediaKeySession::Close(ErrorResult& aRv)
     return promise.forget();
   }
   PromiseId pid = mKeys->StorePromise(promise);
-  mKeys->GetCDMProxy()->CloseSession(mSessionId, mKeys->StorePromise(promise));
+  mKeys->GetCDMProxy()->CloseSession(mSessionId, pid);
 
   EME_LOG("MediaKeySession[%p,'%s'] Close() sent to CDM, promiseId=%d",
           this, NS_ConvertUTF16toUTF8(mSessionId).get(), pid);

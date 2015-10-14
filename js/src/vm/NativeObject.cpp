@@ -677,7 +677,7 @@ NativeObject::goodElementsAllocationAmount(ExclusiveContext* cx, uint32_t reqCap
                                            uint32_t length, uint32_t* goodAmount)
 {
     if (reqCapacity > MAX_DENSE_ELEMENTS_COUNT) {
-        ReportAllocationOverflow(cx);
+        ReportOutOfMemory(cx);
         return false;
     }
 

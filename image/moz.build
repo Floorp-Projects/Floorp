@@ -36,6 +36,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'imglib2'
 
 EXPORTS += [
+    'DrawResult.h',
     'ImageCacheKey.h',
     'ImageLogging.h',
     'ImageOps.h',

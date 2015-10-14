@@ -1,0 +1,200 @@
+<html>
+  <head>
+    <meta charset='UTF-8'>
+    <script src='/tests/SimpleTest/SimpleTest.js'></script>
+    <link rel='stylesheet' href='/tests/SimpleTest/test.css'>
+  </head>
+  <body>
+<canvas id='c' width='200' height='200'></canvas>
+<canvas id='c2' width='200' height='200'></canvas>
+
+<script>
+
+var gl;
+
+function RGBAToString(arr) {
+  return '[' + arr[0].toPrecision(4) + ', ' +
+               arr[1].toPrecision(4) + ', ' +
+               arr[2].toPrecision(4) + ', ' +
+               arr[3].toPrecision(4) + ']';
+}
+
+function TestScreenColor(gl, r, g, b, a) {
+  var arr = new SharedArrayBuffer(4);
+  var view = new SharedUint8Array(arr);
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, view);
+
+  var err = gl.getError();
+  ok(err == 0, 'Should be no errors.');
+  if (err)
+    return;
+
+  var floatArr;
+  floatArr = new Float32Array(4);
+  floatArr[0] = view[0] / 255.0;
+  floatArr[1] = view[1] / 255.0;
+  floatArr[2] = view[2] / 255.0;
+  floatArr[3] = view[3] / 255.0;
+
+  var testText = RGBAToString(floatArr);
+  var refText = RGBAToString([r, g, b, a]);
+
+  var eps = 1.0 / 255.0;
+  var isSame = (Math.abs(floatArr[0] - r) < eps &&
+                Math.abs(floatArr[1] - g) < eps &&
+                Math.abs(floatArr[2] - b) < eps &&
+                Math.abs(floatArr[3] - a) < eps);
+
+  ok(isSame, 'Should be ' + refText + ', was ' + testText + ',');
+}
+
+// Give ourselves a scope to return early from:
+(function() {
+  var canvas = document.getElementById('c');
+  var attribs = {
+    antialias: false,
+    depth: false,
+  };
+  gl = canvas.getContext('experimental-webgl', attribs);
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+  if (typeof SharedArrayBuffer === 'undefined') {
+    todo(false, 'SharedArrayBuffer is unavailable.');
+    return;
+  }
+  if (SharedFloat32Array === 'undefined') {
+    todo(false, 'SharedFloat32Array is unavailable.');
+    return;
+  }
+
+  var vs = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vs, "attribute vec2 aVertCoord; void main(void) { gl_Position = vec4(aVertCoord, 0.0, 1.0); }");
+  gl.compileShader(vs);
+  var fs = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fs, "precision mediump float; uniform vec4 uFragColor; void main(void) { gl_FragColor = uFragColor; }");
+  gl.compileShader(fs);
+  var prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+
+  var success = gl.getProgramParameter(prog, gl.LINK_STATUS);
+  if (!success) {
+    console.log('Error linking program for \'' + vsId + '\' and \'' + fsId + '\'.');
+    console.log('\nLink log: ' + gl.getProgramInfoLog(prog));
+    console.log('\nVert shader log: ' + gl.getShaderInfoLog(vs));
+    console.log('\nFrag shader log: ' + gl.getShaderInfoLog(fs));
+  }
+  ok(prog, 'Program should link.');
+  if (!prog) {
+    return;
+  }
+
+  prog.aVertCoord = gl.getAttribLocation(prog, 'aVertCoord');
+  prog.uFragColor = gl.getUniformLocation(prog, 'uFragColor');
+
+  gl.useProgram(prog);
+
+  // Test gl.bufferData(), gl.bufferSubData() and gl.readPixels() APIs with SAB as input.
+  var arr = new SharedArrayBuffer(8*4);
+  var view = new SharedFloat32Array(arr);
+  view.set(new Float32Array([-1, -1, 1, -1, -1,  1, 1,  1]));
+  var vb = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+  gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+  ok(gl.getError() == 0, 'bufferData with SAB as input parameter works ok.');
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, arr);
+  ok(gl.getError() == 0, 'bufferSubData with SAB as input parameter works ok.');
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.clearColor(0, 0, 0, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.uniform4f(prog.uFragColor, 0.2, 0.4, 0.6, 1.0);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  var arr = new Uint8Array(4);
+  TestScreenColor(gl, 0.2, 0.4, 0.6, 1.0);
+
+  // Test gl.texImage2D() and gl.texSubImage2D() APIs with SAB as input.
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  var width = 4;
+  var height = 4;
+  var numChannels = 4;
+  var sab = new SharedArrayBuffer(width * height * numChannels);
+  var data = new SharedUint8Array(sab);
+  for (var i = 0; i < data.length; ++i) {
+    data[i] = i;
+  }
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  ok(gl.getError() == 0, 'texImage2D() with SAB as input parameter works ok.');
+  gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  ok(gl.getError() == 0, 'texSubImage2D() with SAB as input parameter works ok.');
+
+  ok(gl.getError() == 0, 'Should be no errors after test.');
+})();
+
+// Test WebGL 2
+(function() {
+  var canvas = document.getElementById('c2');
+  var attribs = {
+    antialias: false,
+    depth: false,
+  };
+  gl = canvas.getContext('webgl2', attribs);
+  if (!gl) {
+    todo(false, 'WebGL 2 is unavailable.');
+    return;
+  }
+  if (typeof SharedArrayBuffer === 'undefined') {
+    todo(false, 'SharedArrayBuffer is unavailable.');
+    return;
+  }
+  if (SharedFloat32Array === 'undefined') {
+    todo(false, 'SharedFloat32Array is unavailable.');
+    return;
+  }
+
+  var arr = new SharedArrayBuffer(8*4);
+  var view = new SharedFloat32Array(arr);
+  view.set(new Float32Array([-1, -1, 1, -1, -1,  1, 1,  1]));
+  var vb = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+  gl.bufferData(gl.ARRAY_BUFFER, arr, gl.STATIC_DRAW);
+
+  var arr2 = new SharedArrayBuffer(8*4);
+  gl.getBufferSubData(gl.ARRAY_BUFFER, 0, arr2);
+  var view2 = new SharedFloat32Array(arr2);
+  var equal = true;
+  for(var i = 0; i < 8; ++i) {
+    if (view[i] != view2[i]) equal = false;
+  }
+  ok(equal, 'getBufferSubData with SAB as input parameter works ok.');
+
+  // Test gl.texImage3D() and gl.texSubImage3D() APIs with SAB as input.
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_3D, tex);
+  var width = 4;
+  var height = 4;
+  var depth = 4;
+  var numChannels = 4;
+  var sab = new SharedArrayBuffer(width * height * depth* numChannels);
+  var data = new SharedUint8Array(sab);
+  for (var i = 0; i < data.length; ++i) {
+    data[i] = i;
+  }
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA, width, height, depth, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  ok(gl.getError() == 0, 'texImage3D() with SAB as input parameter works ok.');
+  gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, width, height, depth, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  ok(gl.getError() == 0, 'texSubImage3D() with SAB as input parameter works ok.');
+
+  ok(gl.getError() == 0, 'Should be no errors after test.');
+})();
+
+ok(true, 'TEST COMPLETE');
+
+</script>
+
+  </body>
+</html>

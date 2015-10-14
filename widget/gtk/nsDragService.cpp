@@ -555,6 +555,26 @@ nsDragService::GetCanDrop(bool *aCanDrop)
     return NS_OK;
 }
 
+static void
+UTF16ToNewUTF8(const char16_t* aUTF16,
+               uint32_t aUTF16Len,
+               char** aUTF8,
+               uint32_t* aUTF8Len)
+{
+  nsDependentSubstring utf16(aUTF16, aUTF16Len);
+  *aUTF8 = ToNewUTF8String(utf16, aUTF8Len);
+}
+
+static void
+UTF8ToNewUTF16(const char* aUTF8,
+               uint32_t aUTF8Len,
+               char16_t** aUTF16,
+               uint32_t* aUTF16Len)
+{
+  nsDependentCSubstring utf8(aUTF8, aUTF8Len);
+  *aUTF16 = UTF8ToNewUnicode(utf8, aUTF16Len);
+}
+
 // count the number of URIs in some text/uri-list format data.
 static uint32_t
 CountTextUriListItems(const char *data,
@@ -586,7 +606,7 @@ GetTextUriListItem(const char *data,
                    uint32_t datalen,
                    uint32_t aItemIndex,
                    char16_t **convertedText,
-                   int32_t *convertedTextLen)
+                   uint32_t *convertedTextLen)
 {
     const char *p = data;
     const char *endPtr = p + datalen;
@@ -605,8 +625,7 @@ GetTextUriListItem(const char *data,
             const char *q = p;
             while (q < endPtr && *q != '\0' && *q != '\n' && *q != '\r')
               q++;
-            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
-                                p, q - p, convertedText, convertedTextLen);
+            UTF8ToNewUTF16(p, q - p, convertedText, convertedTextLen);
             break;
         }
         // skip to the end of the line
@@ -617,8 +636,7 @@ GetTextUriListItem(const char *data,
 
     // didn't find the desired item, so just pass the whole lot
     if (!*convertedText) {
-        nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
-                            data, datalen, convertedText, convertedTextLen);
+        UTF8ToNewUTF16(data, datalen, convertedText, convertedTextLen);
     }
 }
 
@@ -776,7 +794,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                     if (mTargetDragData) {
                         const char* text = static_cast<char*>(mTargetDragData);
                         char16_t* convertedText = nullptr;
-                        int32_t convertedTextLen = 0;
+                        uint32_t convertedTextLen = 0;
 
                         GetTextUriListItem(text, mTargetDragDataLen, aItemIndex,
                                            &convertedText, &convertedTextLen);
@@ -848,10 +866,9 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             const char* castedText =
                                         reinterpret_cast<char*>(mTargetDragData);
                             char16_t* convertedText = nullptr;
-                            int32_t convertedTextLen = 0;
-                            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
-                                                castedText, mTargetDragDataLen,
-                                                &convertedText, &convertedTextLen);
+                            uint32_t convertedTextLen = 0;
+                            UTF8ToNewUTF16(castedText, mTargetDragDataLen,
+                                           &convertedText, &convertedTextLen);
                             if ( convertedText ) {
                                 MOZ_LOG(sDragLm, LogLevel::Debug,
                                        ("successfully converted plain text \
@@ -881,7 +898,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                         const char *data =
                                    reinterpret_cast<char*>(mTargetDragData);
                         char16_t* convertedText = nullptr;
-                        int32_t convertedTextLen = 0;
+                        uint32_t convertedTextLen = 0;
 
                         GetTextUriListItem(data, mTargetDragDataLen, aItemIndex,
                                            &convertedText, &convertedTextLen);
@@ -913,8 +930,8 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             const char* castedText =
                                   reinterpret_cast<char*>(mTargetDragData);
                             char16_t* convertedText = nullptr;
-                            int32_t convertedTextLen = 0;
-                            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText, mTargetDragDataLen, &convertedText, &convertedTextLen);
+                            uint32_t convertedTextLen = 0;
+                            UTF8ToNewUTF16(castedText, mTargetDragDataLen, &convertedText, &convertedTextLen);
                             if ( convertedText ) {
                                 MOZ_LOG(sDragLm,
                                        LogLevel::Debug,
@@ -1471,14 +1488,13 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
                 char* plainTextData = nullptr;
                 char16_t* castedUnicode = reinterpret_cast<char16_t*>
                                                            (tmpData);
-                int32_t plainTextLen = 0;
-                nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
-                                    castedUnicode,
-                                    tmpDataLen / 2,
-                                    &plainTextData,
-                                    &plainTextLen);
+                uint32_t plainTextLen = 0;
+                UTF16ToNewUTF8(castedUnicode,
+                               tmpDataLen / 2,
+                               &plainTextData,
+                               &plainTextLen);
                 if (plainTextData) {
-                    int32_t j;
+                    uint32_t j;
 
                     // text/x-moz-url is of form url + "\n" + title.
                     // We just want the url.
@@ -1577,19 +1593,11 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
                 char* plainTextData = nullptr;
                 char16_t* castedUnicode = reinterpret_cast<char16_t*>
                                                            (tmpData);
-                int32_t plainTextLen = 0;
-                if (strcmp(mimeFlavor, gTextPlainUTF8Type) == 0) {
-                    plainTextData =
-                        ToNewUTF8String(
-                            nsDependentString(castedUnicode, tmpDataLen / 2),
-                            (uint32_t*)&plainTextLen);
-                } else {
-                    nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
-                                        castedUnicode,
-                                        tmpDataLen / 2,
-                                        &plainTextData,
-                                        &plainTextLen);
-                }
+                uint32_t plainTextLen = 0;
+                UTF16ToNewUTF8(castedUnicode,
+                               tmpDataLen / 2,
+                               &plainTextData,
+                               &plainTextLen);
                 if (tmpData) {
                     // this was not allocated using glib
                     free(tmpData);

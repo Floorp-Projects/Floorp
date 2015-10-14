@@ -46,7 +46,7 @@ TextEncoder::Encode(JSContext* aCx,
   // Run the steps of the encoding algorithm.
   int32_t srcLen = aString.Length();
   int32_t maxLen;
-  const char16_t* data = PromiseFlatString(aString).get();
+  const char16_t* data = aString.BeginReading();
   nsresult rv = mEncoder->GetMaxLength(data, srcLen, &maxLen);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

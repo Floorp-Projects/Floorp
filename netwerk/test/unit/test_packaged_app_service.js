@@ -155,11 +155,14 @@ function run_test()
   // TODO: To be removed in Bug 1178518.
   do_register_cleanup(function() {
     gPrefs.clearUserPref("network.http.packaged-apps-developer-mode");
+    gPrefs.clearUserPref("network.http.packaged-signed-apps-enabled");
   });
 
   paservice = Cc["@mozilla.org/network/packaged-app-service;1"]
                      .getService(Ci.nsIPackagedAppService);
   ok(!!paservice, "test service exists");
+
+  gPrefs.setBoolPref("network.http.packaged-signed-apps-enabled", true);
 
   add_test(test_bad_args);
 
