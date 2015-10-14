@@ -285,6 +285,7 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
                                             const MediaEnginePrefs &aPrefs,
                                             const nsString& aDeviceId)
 {
+  AssertIsOnOwningThread();
   if (mState == kReleased) {
     if (mInitDone) {
       ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw(webrtc::VoEHardware::GetInterface(mVoiceEngine));
@@ -312,6 +313,7 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
 nsresult
 MediaEngineWebRTCMicrophoneSource::Deallocate()
 {
+  AssertIsOnOwningThread();
   --mNrAllocations;
   MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
   if (mNrAllocations == 0) {
@@ -332,6 +334,7 @@ nsresult
 MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
                                          TrackID aID)
 {
+  AssertIsOnOwningThread();
   if (!mInitDone || !aStream) {
     return NS_ERROR_FAILURE;
   }
@@ -385,6 +388,7 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
 nsresult
 MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
 {
+  AssertIsOnOwningThread();
   {
     MonitorAutoLock lock(mMonitor);
 
@@ -661,6 +665,7 @@ nsresult
 MediaEngineWebRTCAudioCaptureSource::Start(SourceMediaStream *aMediaStream,
                                            TrackID aId)
 {
+  AssertIsOnOwningThread();
   aMediaStream->AddTrack(aId, 0, new AudioSegment());
   return NS_OK;
 }
@@ -669,6 +674,7 @@ nsresult
 MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
                                           TrackID aId)
 {
+  AssertIsOnOwningThread();
   aMediaStream->EndAllTrackAndFinish();
   return NS_OK;
 }
