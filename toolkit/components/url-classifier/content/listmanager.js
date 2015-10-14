@@ -233,9 +233,9 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
       let nextUpdate = this.prefs_.getPref(targetPref);
       if (nextUpdate) {
         updateDelay = Math.max(0, nextUpdate - Date.now());
-        log("Next update at " + nextUpdate
-            + " which is " + updateDelay + "ms from now");
+        log("Next update at " + nextUpdate);
       }
+      log("Next update " + updateDelay + "ms from now");
 
       // Set the last update time to verify if data is still valid.
       let freshnessPref = "browser.safebrowsing.provider." + provider + ".lastupdatetime";
