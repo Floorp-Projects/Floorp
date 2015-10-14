@@ -159,6 +159,10 @@ var TabStateInternal = {
     else
       delete tabData.pinned;
     tabData.hidden = tab.hidden;
+    if (browser.audioMuted)
+      tabData.muted = true;
+    else
+      delete tabData.muted;
 
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
