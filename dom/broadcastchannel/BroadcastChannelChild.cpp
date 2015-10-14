@@ -69,6 +69,8 @@ BroadcastChannelChild::RecvNotify(const ClonedMessageData& aData)
     return true;
   }
 
+  mBC->RemoveDocFromBFCache();
+
   AutoJSAPI jsapi;
   nsCOMPtr<nsIGlobalObject> globalObject;
 
