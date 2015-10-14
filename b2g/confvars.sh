@@ -44,11 +44,7 @@ fi
 # use custom widget for html:select
 MOZ_USE_NATIVE_POPUP_WINDOWS=1
 
-if test "$LIBXUL_SDK"; then
-MOZ_XULRUNNER=1
-else
 MOZ_XULRUNNER=
-fi
 
 MOZ_MEDIA_NAVIGATOR=1
 

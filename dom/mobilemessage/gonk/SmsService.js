@@ -549,12 +549,35 @@ SmsService.prototype = {
       options.receivedSegments = 0;
       options.segments = [];
     } else if (options.segments[seq]) {
-      // Duplicated segment?
-      if (DEBUG) {
-        debug("Got duplicated segment no." + seq +
-              " of a multipart SMS: " + JSON.stringify(aSegment));
+      if (options.encoding == Ci.nsIGonkSmsService.SMS_MESSAGE_ENCODING_8BITS_ALPHABET &&
+          options.encoding == aSegment.encoding &&
+          options.segments[seq].length == aSegment.data.length &&
+          options.segments[seq].every(function(aElement, aIndex) {
+            return aElement == aSegment.data[aIndex];
+          })) {
+        if (DEBUG) {
+          debug("Got duplicated binary segment no: " + seq);
+        }
+        return null;
       }
-      return null;
+
+      if (options.encoding != Ci.nsIGonkSmsService.SMS_MESSAGE_ENCODING_8BITS_ALPHABET &&
+          aSegment.encoding != Ci.nsIGonkSmsService.SMS_MESSAGE_ENCODING_8BITS_ALPHABET &&
+          options.segments[seq] == aSegment.body) {
+        if (DEBUG) {
+          debug("Got duplicated text segment no: " + seq);
+        }
+        return null;
+      }
+
+      // Update mandatory properties to ensure that the segments could be
+      // concatenated properly.
+      options.encoding = aSegment.encoding;
+      options.originatorPort = aSegment.originatorPort;
+      options.destinationPort = aSegment.destinationPort;
+      options.teleservice = aSegment.teleservice;
+      // Decrease the counter for this collided segment.
+      options.receivedSegments--;
     }
 
     if (options.receivedSegments > 0) {

@@ -168,14 +168,9 @@ WebMReader::Shutdown()
   return MediaDecoderReader::Shutdown();
 }
 
-nsresult WebMReader::Init(MediaDecoderReader* aCloneDonor)
+nsresult WebMReader::Init()
 {
-  if (aCloneDonor) {
-    mBufferedState = static_cast<WebMReader*>(aCloneDonor)->mBufferedState;
-  } else {
-    mBufferedState = new WebMBufferedState;
-  }
-
+  mBufferedState = new WebMBufferedState;
   return NS_OK;
 }
 

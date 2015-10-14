@@ -41,10 +41,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIXPConnect.h"
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
-#include "nsIProfiler.h"
-#endif
-
 // The maximum allowed number of concurrent timers per page.
 #define MAX_PAGE_TIMERS 10000
 
@@ -826,23 +822,6 @@ Console::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
   if (aData.isString() && !data.AppendElement(aData, fallible)) {
     return;
   }
-
-#ifdef MOZ_ENABLE_PROFILER_SPS
-  if (aData.isString() && NS_IsMainThread()) {
-    if (!mProfiler) {
-      mProfiler = do_GetService("@mozilla.org/tools/profiler;1");
-    }
-    if (mProfiler) {
-      bool active = false;
-      if (NS_SUCCEEDED(mProfiler->IsActive(&active)) && active) {
-        nsAutoJSString stringValue;
-        if (stringValue.init(aCx, aData)) {
-          mProfiler->AddMarker(NS_ConvertUTF16toUTF8(stringValue).get());
-        }
-      }
-    }
-  }
-#endif
 
   Method(aCx, MethodTimeStamp, NS_LITERAL_STRING("timeStamp"), data);
 }

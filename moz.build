@@ -32,21 +32,20 @@ if not CONFIG['JS_STANDALONE']:
         'probes',
     ]
 
-if not CONFIG['LIBXUL_SDK']:
-    DIRS += [
-        'config/external/zlib',
-        'memory',
-        'mfbt',
-        'mozglue',
-    ]
+DIRS += [
+    'config/external/zlib',
+    'memory',
+    'mfbt',
+    'mozglue',
+]
 
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and int(CONFIG['MOZ_ANDROID_MIN_SDK_VERSION']) < 11:
-        DIRS += ['other-licenses/android']
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and int(CONFIG['MOZ_ANDROID_MIN_SDK_VERSION']) < 11:
+    DIRS += ['other-licenses/android']
 
 if not CONFIG['JS_STANDALONE']:
     DIRS += ['xpcom/xpidl']
 
-if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
+if CONFIG['COMPILE_ENVIRONMENT']:
     DIRS += ['config/external/nspr']
 
     if not CONFIG['JS_STANDALONE']:

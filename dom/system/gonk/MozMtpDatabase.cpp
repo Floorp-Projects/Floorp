@@ -34,6 +34,8 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCloseDir, PRDir, PR_CloseDir)
 
 BEGIN_MTP_NAMESPACE
 
+static const char* kMtpWatcherNotify = "mtp-watcher-notify";
+
 #if 0
 // Some debug code for figuring out deadlocks, if you happen to run into
 // that scenario
@@ -253,12 +255,12 @@ MozMtpDatabase::UpdateEntry(MtpObjectHandle aHandle, DeviceStorageFile* aFile)
 }
 
 
-class FileWatcherNotifyRunnable final : public nsRunnable
+class MtpWatcherNotifyRunnable final : public nsRunnable
 {
 public:
-  FileWatcherNotifyRunnable(nsACString& aStorageName,
-                            nsACString& aPath,
-                            const char* aEventType)
+  MtpWatcherNotifyRunnable(nsACString& aStorageName,
+                           nsACString& aPath,
+                           const char* aEventType)
     : mStorageName(aStorageName),
       mPath(aPath),
       mEventType(aEventType)
@@ -277,10 +279,10 @@ public:
     NS_ConvertUTF8toUTF16 eventType(mEventType);
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
 
-    MTP_DBG("Sending file-watcher-notify %s %s %s",
+    MTP_DBG("Sending mtp-watcher-notify %s %s %s",
             mEventType.get(), mStorageName.get(), mPath.get());
 
-    obs->NotifyObservers(dsf, "file-watcher-notify", eventType.get());
+    obs->NotifyObservers(dsf, kMtpWatcherNotify, eventType.get());
     return NS_OK;
   }
 
@@ -290,10 +292,10 @@ private:
   nsCString mEventType;
 };
 
-// FileWatcherNotify is used to tell DeviceStorage when a file was changed
+// MtpWatcherNotify is used to tell DeviceStorage when a file was changed
 // through the MTP server.
 void
-MozMtpDatabase::FileWatcherNotify(DbEntry* aEntry, const char* aEventType)
+MozMtpDatabase::MtpWatcherNotify(DbEntry* aEntry, const char* aEventType)
 {
   // This function gets called from the MozMtpServer::mServerThread
   MOZ_ASSERT(!NS_IsMainThread());
@@ -320,19 +322,19 @@ MozMtpDatabase::FileWatcherNotify(DbEntry* aEntry, const char* aEventType)
   nsAutoCString relPath(Substring(aEntry->mPath,
                                   storageEntry->mStoragePath.Length() + 1));
 
-  nsRefPtr<FileWatcherNotifyRunnable> r =
-    new FileWatcherNotifyRunnable(storageEntry->mStorageName, relPath, aEventType);
+  nsRefPtr<MtpWatcherNotifyRunnable> r =
+    new MtpWatcherNotifyRunnable(storageEntry->mStorageName, relPath, aEventType);
   DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 // Called to tell the MTP server about new or deleted files,
 void
-MozMtpDatabase::FileWatcherUpdate(RefCountedMtpServer* aMtpServer,
-                                  DeviceStorageFile* aFile,
-                                  const nsACString& aEventType)
+MozMtpDatabase::MtpWatcherUpdate(RefCountedMtpServer* aMtpServer,
+                                 DeviceStorageFile* aFile,
+                                 const nsACString& aEventType)
 {
-  // Runs on the FileWatcherUpdate->mIOThread (see MozMtpServer.cpp)
+  // Runs on the MtpWatcherUpdate->mIOThread (see MozMtpServer.cpp)
   MOZ_ASSERT(!NS_IsMainThread());
 
   // Figure out which storage the belongs to (if any)
@@ -557,7 +559,7 @@ MozMtpDatabase::StorageArray::index_type
 MozMtpDatabase::FindStorage(MtpStorageID aStorageID)
 {
   // Currently, this routine is called from MozMtpDatabase::RemoveStorage
-  // and MozMtpDatabase::FileWatcherNotify, which both hold mMutex.
+  // and MozMtpDatabase::MtpWatcherNotify, which both hold mMutex.
 
   StorageArray::size_type numStorages = mStorage.Length();
   StorageArray::index_type storageIndex;
@@ -788,7 +790,7 @@ MozMtpDatabase::endSendObject(const char* aPath,
       new_times.modtime = entry->mDateModified;
       utime(entry->mPath.get(), &new_times);
 
-      FileWatcherNotify(entry, "modified");
+      MtpWatcherNotify(entry, "modified");
     }
   } else {
     RemoveEntry(aHandle);
@@ -1422,7 +1424,7 @@ MozMtpDatabase::deleteFile(MtpObjectHandle aHandle)
   RemoveEntry(aHandle);
 
   // Tell Device Storage that the file is gone.
-  FileWatcherNotify(entry, "deleted");
+  MtpWatcherNotify(entry, "deleted");
 
   return MTP_RESPONSE_OK;
 }

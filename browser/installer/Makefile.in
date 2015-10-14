@@ -20,10 +20,6 @@ endif
 
 DEFINES += -DMOZ_APP_NAME=$(MOZ_APP_NAME) -DPREF_DIR=$(PREF_DIR)
 
-ifdef LIBXUL_SDK
-DEFINES += -DLIBXUL_SDK=1
-endif
-
 ifdef MOZ_DEBUG
 DEFINES += -DMOZ_DEBUG=1
 endif
@@ -103,9 +99,7 @@ MOZ_PKG_MAC_ICON=branding/disk.icns
 MOZ_PKG_MAC_EXTRA=--symlink '/Applications:/ '
 endif
 
-ifndef LIBXUL_SDK
 INSTALL_SDK = 1
-endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/signing.mk
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

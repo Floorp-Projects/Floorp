@@ -22,7 +22,6 @@ protected:
   ~WaveReader();
 
 public:
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
   virtual bool DecodeAudioData() override;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                   int64_t aTimeThreshold) override;
