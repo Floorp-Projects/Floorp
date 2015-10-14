@@ -8,7 +8,7 @@ interface nsIX509Cert;
 interface nsITLSServerSecurityObserver;
 interface nsISocketTransport;
 
-[scriptable, uuid(2e025b6c-96ba-4781-85fb-d1cf1a653207)]
+[scriptable, uuid(cc2c30f9-cfaa-4b8a-bd44-c24881981b74)]
 interface nsITLSServerSocket : nsIServerSocket
 {
   /**
@@ -60,6 +60,15 @@ interface nsITLSServerSocket : nsIServerSocket
    * change the default.
    */
   void setRequestClientCertificate(in unsigned long aRequestClientCert);
+
+  /**
+   * setCipherSuites
+   *
+   * The server's cipher suites that is used by the TLS handshake.
+   * This is required to be set before calling |asyncListen|.
+   */
+  void setCipherSuites([array, size_is(aLength)] in unsigned short aCipherSuites,
+                       in unsigned long aLength);
 };
 
 /**
