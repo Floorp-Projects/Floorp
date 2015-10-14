@@ -96,6 +96,7 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
                                        const nsString& aDeviceId)
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
 
   if (!mInitDone) {
     LOG(("Init not done"));
@@ -135,6 +136,7 @@ nsresult
 MediaEngineRemoteVideoSource::Deallocate()
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
 
   --mNrAllocations;
   MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
@@ -156,6 +158,7 @@ nsresult
 MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
   if (!mInitDone || !aStream) {
     LOG(("No stream or init not done"));
     return NS_ERROR_FAILURE;
@@ -190,6 +193,7 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
                                    mozilla::TrackID aID)
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
   {
     MonitorAutoLock lock(mMonitor);
 
@@ -223,6 +227,7 @@ MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstra
                                       const MediaEnginePrefs& aPrefs,
                                       const nsString& aDeviceId)
 {
+  AssertIsOnOwningThread();
   if (!mInitDone) {
     LOG(("Init not done"));
     return NS_ERROR_FAILURE;
@@ -398,6 +403,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aCon
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId)
 {
+  AssertIsOnOwningThread();
 
   switch(mMediaSource) {
     case dom::MediaSourceEnum::Screen:
