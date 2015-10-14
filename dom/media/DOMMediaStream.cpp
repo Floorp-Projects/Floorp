@@ -877,7 +877,8 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
       // This track is in our owned and playback streams.
       return info->GetTrack();
     }
-    if (info->GetInputPort()->GetSource() == aInputStream &&
+    if (info->GetInputPort() &&
+        info->GetInputPort()->GetSource() == aInputStream &&
         info->GetSourceTrackId() == aInputTrackID) {
       // This track is owned externally but in our playback stream.
       MOZ_ASSERT(aInputTrackID != TRACK_NONE);
