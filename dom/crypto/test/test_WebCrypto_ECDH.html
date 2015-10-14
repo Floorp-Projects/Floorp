@@ -373,7 +373,7 @@ TestArray.addTest(
         .then(setPub)
     ]).then(doDerive)
       .then(doSignAndVerify)
-      .then(complete(that), error(that));
+      .then(complete(that, x => x), error(that));
   }
 );
 
