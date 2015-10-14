@@ -781,8 +781,8 @@ nsUnknownContentTypeDialog.prototype = {
   },
 
   toggleRememberChoice: function (aCheckbox) {
-    this.dialogElement("settingsChange").style.visibility = aCheckbox.checked ?
-      "visible" : "hidden";
+    this.dialogElement("settingsChange").hidden = !aCheckbox.checked;
+    this.mDialog.sizeToContent();
   },
 
   openHandlerCommand: function () {
