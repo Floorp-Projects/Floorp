@@ -4222,7 +4222,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
     MOZ_ASSERT(isLetExpr == (emitOption == PushInitialValues));
 
     ParseNode* next;
-    for (ParseNode* pn2 = pn->pn_head; ; pn2 = next) {
+    for (ParseNode* pn2 = pn->pn_head; pn2; pn2 = next) {
         if (!updateSourceCoordNotes(pn2->pn_pos.begin))
             return false;
         next = pn2->pn_next;
@@ -4259,7 +4259,7 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
                     if (!emitInitializeDestructuringDecls(pn->getOp(), pn2))
                         return false;
                 }
-                break;
+                continue;
             }
 
             /*
@@ -4294,12 +4294,9 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
                 return false;
 
             /* If we are not initializing, nothing to pop. */
-            if (emitOption != InitializeVars) {
-                if (next)
-                    continue;
-                break;
-            }
-            goto emit_note_pop;
+            if (emitOption != InitializeVars)
+                continue;
+            goto emit_pop;
         }
 
         /*
@@ -4360,11 +4357,8 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
 
         // If we are not initializing, nothing to pop. If we are initializing
         // lets, we must emit the pops.
-        if (emitOption != InitializeVars) {
-            if (next)
-                continue;
-            break;
-        }
+        if (emitOption != InitializeVars)
+            continue;
 
         MOZ_ASSERT_IF(pn2->isDefn(), pn3 == pn2->pn_expr);
         if (!pn2->pn_scopecoord.isFree()) {
@@ -4375,11 +4369,11 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
                 return false;
         }
 
-    emit_note_pop:
-        if (!next)
-            break;
-        if (!emit1(JSOP_POP))
-            return false;
+    emit_pop:
+        if (next) {
+            if (!emit1(JSOP_POP))
+                return false;
+        }
     }
 
     if (pn->pn_xflags & PNX_POPVAR) {
