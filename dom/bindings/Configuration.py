@@ -26,7 +26,6 @@ class Configuration:
         # |parseData|.
         self.descriptors = []
         self.interfaces = {}
-        self.descriptorsByName = {}
         self.optimizedOutDescriptorNames = set()
         self.generatedEvents = generatedEvents
         self.maxProtoChainLength = 0
@@ -87,18 +86,15 @@ class Configuration:
             else:
                 raise TypeError("Interface " + iface.identifier.name +
                                 " should have no more than two entries in Bindings.conf")
-            descs = [Descriptor(self, iface, x) for x in entry]
-            self.descriptors.extend(descs)
-            # Setting up descriptorsByName while iterating through interfaces
-            # means we can get the nativeType of iterable interfaces without
-            # having to do multiple loops.
-            for d in descs:
-                self.descriptorsByName.setdefault(d.interface.identifier.name,
-                                                  []).append(d)
+            self.descriptors.extend([Descriptor(self, iface, x) for x in entry])
 
         # Keep the descriptor list sorted for determinism.
         self.descriptors.sort(lambda x, y: cmp(x.name, y.name))
 
+        self.descriptorsByName = {}
+        for d in self.descriptors:
+            self.descriptorsByName.setdefault(d.interface.identifier.name,
+                                              []).append(d)
 
         self.descriptorsByFile = {}
         for d in self.descriptors:
@@ -352,18 +348,7 @@ class Descriptor(DescriptorProvider):
 
         # Read the desc, and fill in the relevant defaults.
         ifaceName = self.interface.identifier.name
-        # For generated iterator interfaces for other iterable interfaces, we
-        # just use IterableIterator as the native type, templated on the
-        # nativeType of the iterable interface. That way we can have a
-        # templated implementation for all the duplicated iterator
-        # functionality.
-        if self.interface.isIteratorInterface():
-            itrName = self.interface.iterableInterface.identifier.name
-            itrDesc = self.getDescriptor(itrName)
-            nativeTypeDefault = ("mozilla::dom::IterableIterator<%s>"
-                                 % itrDesc.nativeType)
-
-        elif self.interface.isExternal():
+        if self.interface.isExternal():
             assert not self.workers
             nativeTypeDefault = "nsIDOM" + ifaceName
         elif self.interface.isCallback():
@@ -401,8 +386,6 @@ class Descriptor(DescriptorProvider):
                 headerDefault = "mozilla/dom/workers/bindings/%s.h" % ifaceName
             elif not self.interface.isExternal() and self.interface.getExtendedAttribute("HeaderFile"):
                 headerDefault = self.interface.getExtendedAttribute("HeaderFile")[0]
-            elif self.interface.isIteratorInterface():
-                headerDefault = "mozilla/dom/IterableIterator.h"
             else:
                 headerDefault = self.nativeType
                 headerDefault = headerDefault.replace("::", "/") + ".h"
@@ -531,7 +514,6 @@ class Descriptor(DescriptorProvider):
         if desc.get('wantsQI', None) is not None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
-                             not self.interface.isIteratorInterface() and
                              desc.get('wrapperCache', True))
 
         def make_name(name):
