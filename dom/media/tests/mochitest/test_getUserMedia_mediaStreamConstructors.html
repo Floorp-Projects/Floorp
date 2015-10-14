@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  "use strict";
+
+  createHTML({
+    title: "MediaStream constructors with getUserMedia streams Test",
+    bug: "1070216",
+    visible: true
+  });
+
+  var audioContext = new AudioContext();
+  var videoElement;
+
+  runTest(() => Promise.resolve()
+    .then(() => videoElement = createMediaElement('video', 'constructorsTest'))
+    .then(() => getUserMedia({video: true})).then(gUMStream => {
+      info("Test default constructor with video");
+      var track = gUMStream.getTracks()[0];
+
+      var stream = new MediaStream();
+      checkMediaStreamContains(stream, [], "Default constructed stream");
+
+      stream.addTrack(track);
+      checkMediaStreamContains(stream, [track], "Added video track");
+
+      var playback = new MediaStreamPlayback(videoElement, stream);
+      return playback.playMedia(false).then(() => gUMStream.stop());
+    })
+    .then(() => getUserMedia({video: true})).then(gUMStream => {
+      info("Test copy constructor with gUM stream");
+      var track = gUMStream.getTracks()[0];
+
+      var stream = new MediaStream(gUMStream);
+      checkMediaStreamContains(stream, [track], "Copy constructed video track");
+
+      var playback = new MediaStreamPlayback(videoElement, stream);
+      return playback.playMedia(false).then(() => gUMStream.stop());
+    })
+    .then(() => getUserMedia({video: true})).then(gUMStream => {
+      info("Test list constructor with empty list");
+      var track = gUMStream.getTracks()[0];
+
+      var stream = new MediaStream([]);
+      checkMediaStreamContains(stream, [], "Empty-list constructed stream");
+
+      stream.addTrack(track);
+      checkMediaStreamContains(stream, [track], "Added video track");
+
+      var playback = new MediaStreamPlayback(videoElement, stream);
+      return playback.playMedia(false).then(() => gUMStream.stop());
+    })
+    .then(() => getUserMedia({audio: true, video: true})).then(gUMStream => {
+      info("Test list constructor with a gUM audio/video stream");
+      var audioTrack = gUMStream.getAudioTracks()[0];
+      var videoTrack = gUMStream.getVideoTracks()[0];
+
+      var stream = new MediaStream([audioTrack, videoTrack]);
+      checkMediaStreamContains(stream, [audioTrack, videoTrack],
+                               "List constructed audio and video tracks");
+
+      var playback = new MediaStreamPlayback(videoElement, stream);
+      return playback.playMedia(false).then(() => gUMStream.stop());
+    })
+    .then(() => getUserMedia({video: true})).then(gUMStream => {
+      info("Test list constructor with gUM-video and WebAudio tracks");
+      var audioStream = createOscillatorStream(audioContext, 2000);
+      var audioTrack = audioStream.getTracks()[0];
+      var videoTrack = gUMStream.getTracks()[0];
+
+      var stream = new MediaStream([audioTrack, videoTrack]);
+      checkMediaStreamContains(stream, [audioTrack, videoTrack],
+                               "List constructed WebAudio and gUM-video tracks");
+
+      var playback = new MediaStreamPlayback(videoElement, stream);
+      return playback.playMedia(false).then(() => gUMStream.stop());
+    })
+    .then(() => {
+      var osc1k = createOscillatorStream(audioContext, 1000);
+      var audioTrack1k = osc1k.getTracks()[0];
+
+      var osc5k = createOscillatorStream(audioContext, 5000);
+      var audioTrack5k = osc5k.getTracks()[0];
+
+      var osc10k = createOscillatorStream(audioContext, 10000);
+      var audioTrack10k = osc10k.getTracks()[0];
+
+      return Promise.resolve().then(() => {
+        info("Analysing audio output with empty default constructed stream");
+        var stream = new MediaStream();
+        var analyser = new AudioStreamAnalyser(audioContext, stream);
+        analyser.enableDebugCanvas();
+        return analyser.waitForAnalysisSuccess(array =>
+          array[analyser.binIndexForFrequency(1000)]  < 50 &&
+          array[analyser.binIndexForFrequency(5000)]  < 50 &&
+          array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disableDebugCanvas());
+      }).then(() => {
+        info("Analysing audio output with copy constructed 5k stream");
+        var stream = new MediaStream(osc5k);
+        var analyser = new AudioStreamAnalyser(audioContext, stream);
+        analyser.enableDebugCanvas();
+        return analyser.waitForAnalysisSuccess(array =>
+          array[analyser.binIndexForFrequency(1000)]  < 50 &&
+          array[analyser.binIndexForFrequency(5000)]  > 200 &&
+          array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disableDebugCanvas());
+      }).then(() => {
+        info("Analysing audio output with empty-list constructed stream");
+        var stream = new MediaStream([]);
+        var analyser = new AudioStreamAnalyser(audioContext, stream);
+        analyser.enableDebugCanvas();
+        return analyser.waitForAnalysisSuccess(array =>
+          array[analyser.binIndexForFrequency(1000)]  < 50 &&
+          array[analyser.binIndexForFrequency(5000)]  < 50 &&
+          array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disableDebugCanvas());
+      }).then(() => {
+        info("Analysing audio output with list constructed 1k, 5k and 10k tracks");
+        var stream = new MediaStream([audioTrack1k, audioTrack5k, audioTrack10k]);
+        var analyser = new AudioStreamAnalyser(audioContext, stream);
+        analyser.enableDebugCanvas();
+        return analyser.waitForAnalysisSuccess(array =>
+          array[analyser.binIndexForFrequency(50)]    < 50 &&
+          array[analyser.binIndexForFrequency(1000)]  > 200 &&
+          array[analyser.binIndexForFrequency(2500)]  < 50 &&
+          array[analyser.binIndexForFrequency(5000)]  > 200 &&
+          array[analyser.binIndexForFrequency(7500)]  < 50 &&
+          array[analyser.binIndexForFrequency(10000)] > 200 &&
+          array[analyser.binIndexForFrequency(11000)] < 50)
+          .then(() => analyser.disableDebugCanvas());
+      });
+    }));
+</script>
+</pre>
+</body>
+</html>
