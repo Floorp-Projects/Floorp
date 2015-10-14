@@ -277,6 +277,19 @@ function SetupEME(test, token, params)
 {
   var v = document.createElement("video");
   v.crossOrigin = test.crossOrigin || false;
+  v.sessions = [];
+
+  v.closeSessions = function() {
+    return Promise.all(v.sessions.map(s => s.close().then(() => s.closed))).then(
+      () => {
+        v.setMediaKeys(null);
+        if (v.parentNode) {
+          v.parentNode.removeChild(v);
+        }
+        v.onerror = null;
+        v.src = null;
+      });
+  };
 
   // Log events dispatched to make debugging easier...
   [ "canplay", "canplaythrough", "ended", "error", "loadeddata",
@@ -311,6 +324,7 @@ function SetupEME(test, token, params)
     if (params && params.onsessioncreated) {
       params.onsessioncreated(session);
     }
+    v.sessions.push(session);
 
     return new Promise(function (resolve, reject) {
       session.addEventListener("message", UpdateSessionFunc(test, token, sessionType, resolve, reject));
