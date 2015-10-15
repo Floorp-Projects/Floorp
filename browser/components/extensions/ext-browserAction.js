@@ -1,3 +1,7 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 
@@ -14,20 +18,9 @@ var {
 // WeakMap[Extension -> BrowserAction]
 var browserActionMap = new WeakMap();
 
-// WeakMap[Extension -> docshell]
-// This map is a cache of the windowless browser that's used to render ImageData
-// for the browser_action icon.
-var imageRendererMap = new WeakMap();
-
 function browserActionOf(extension)
 {
   return browserActionMap.get(extension);
-}
-
-function makeWidgetId(id)
-{
-  id = id.toLowerCase();
-  return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
 var nextActionId = 0;
@@ -43,10 +36,8 @@ function BrowserAction(options, extension)
   this.title = new DefaultWeakMap(extension.localize(options.default_title));
   this.badgeText = new DefaultWeakMap();
   this.badgeBackgroundColor = new DefaultWeakMap();
-  this.icon = new DefaultWeakMap(options.default_icon);
+  this.icon = new DefaultWeakMap(IconDetails.normalize({path: options.default_icon}, extension));
   this.popup = new DefaultWeakMap(options.default_popup);
-
-  this.context = null;
 }
 
 BrowserAction.prototype = {
@@ -95,67 +86,7 @@ BrowserAction.prototype = {
   },
 
   togglePopup(node, popupResource) {
-    let popupURL = this.extension.baseURI.resolve(popupResource);
-
-    let document = node.ownerDocument;
-    let panel = document.createElement("panel");
-    panel.setAttribute("class", "browser-action-panel");
-    panel.setAttribute("type", "arrow");
-    panel.setAttribute("flip", "slide");
-    node.appendChild(panel);
-
-    panel.addEventListener("popuphidden", () => {
-      this.context.unload();
-      this.context = null;
-      panel.remove();
-    });
-
-    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let browser = document.createElementNS(XUL_NS, "browser");
-    browser.setAttribute("type", "content");
-    browser.setAttribute("disableglobalhistory", "true");
-    panel.appendChild(browser);
-
-    let loadListener = () => {
-      panel.removeEventListener("load", loadListener);
-
-      this.context = new ExtensionPage(this.extension, {
-        type: "popup",
-        contentWindow: browser.contentWindow,
-        uri: Services.io.newURI(popupURL, null, null),
-        docShell: browser.docShell,
-      });
-      GlobalManager.injectInDocShell(browser.docShell, this.extension, this.context);
-      browser.setAttribute("src", popupURL);
-
-      let contentLoadListener = () => {
-        browser.removeEventListener("load", contentLoadListener);
-
-        let contentViewer = browser.docShell.contentViewer;
-        let width = {}, height = {};
-        try {
-          contentViewer.getContentSize(width, height);
-          [width, height] = [width.value, height.value];
-        } catch (e) {
-          // getContentSize can throw
-          [width, height] = [400, 400];
-        }
-
-        let window = document.defaultView;
-        width /= window.devicePixelRatio;
-        height /= window.devicePixelRatio;
-        width = Math.min(width, 800);
-        height = Math.min(height, 800);
-
-        browser.setAttribute("width", width);
-        browser.setAttribute("height", height);
-
-        let anchor = document.getAnonymousElementByAttribute(node, "class", "toolbarbutton-icon");
-        panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
-      };
-      browser.addEventListener("load", contentLoadListener, true);
-    };
-    panel.addEventListener("load", loadListener);
+    openPanel(node, popupResource, this.extension);
   },
 
   // Initialize the toolbar icon and popup given that |tab| is the
@@ -192,7 +123,7 @@ BrowserAction.prototype = {
       if (Array.isArray(color)) {
         color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       }
-      badgeNode.style.backgroundColor = color;
+      badgeNode.style.backgroundColor = color || "";
     }
 
     let iconURL = this.getIcon(tab, node);
@@ -202,26 +133,8 @@ BrowserAction.prototype = {
   // Note: tab is allowed to be null here.
   getIcon(tab, node) {
     let icon = this.icon.get(tab);
-
-    let url;
-    if (typeof(icon) != "object") {
-      url = icon;
-    } else {
-      let window = node.ownerDocument.defaultView;
-      let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Components.interfaces.nsIDOMWindowUtils);
-      let res = {value: 1}
-      utils.getResolution(res);
-
-      let size = res.value == 1 ? 19 : 38;
-      url = icon[size];
-    }
-
-    if (url) {
-      return this.extension.baseURI.resolve(url);
-    } else {
-      return "chrome://browser/content/extension.svg";
-    }
+    return IconDetails.getURL(icon, node.ownerDocument.defaultView,
+                              this.extension);
   },
 
   // Update the toolbar button for a given window.
@@ -288,36 +201,7 @@ extensions.on("shutdown", (type, extension) => {
     browserActionMap.get(extension).shutdown();
     browserActionMap.delete(extension);
   }
-  imageRendererMap.delete(extension);
 });
-
-function convertImageDataToPNG(extension, imageData)
-{
-  let webNav = imageRendererMap.get(extension);
-  if (!webNav) {
-    webNav = Services.appShell.createWindowlessBrowser(false);
-    let principal = Services.scriptSecurityManager.createCodebasePrincipal(extension.baseURI,
-                                                                           {addonId: extension.id});
-    let interfaceRequestor = webNav.QueryInterface(Ci.nsIInterfaceRequestor);
-    let docShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
-
-    GlobalManager.injectInDocShell(docShell, extension, null);
-
-    docShell.createAboutBlankContentViewer(principal);
-  }
-
-  let document = webNav.document;
-  let canvas = document.createElement("canvas");
-  canvas.width = imageData.width;
-  canvas.height = imageData.height;
-  canvas.getContext("2d").putImageData(imageData, 0, 0);
-
-  let url = canvas.toDataURL("image/png");
-
-  canvas.remove();
-
-  return url;
-}
 
 extensions.registerAPI((extension, context) => {
   return {
@@ -346,12 +230,8 @@ extensions.registerAPI((extension, context) => {
 
       setIcon: function(details, callback) {
         let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
-        if (details.imageData) {
-          let url = convertImageDataToPNG(extension, details.imageData);
-          browserActionOf(extension).setProperty(tab, "icon", url);
-        } else {
-          browserActionOf(extension).setProperty(tab, "icon", details.path);
-        }
+        let icon = IconDetails.normalize(details, extension, context);
+        browserActionOf(extension).setProperty(tab, "icon", icon);
       },
 
       setBadgeText: function(details) {
