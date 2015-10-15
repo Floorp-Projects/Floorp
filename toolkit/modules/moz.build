@@ -24,6 +24,7 @@ EXTRA_JS_MODULES += [
     'CertUtils.jsm',
     'CharsetMenu.jsm',
     'ClientID.jsm',
+    'Console.jsm',
     'debug.js',
     'DeferredTask.jsm',
     'Deprecated.jsm',

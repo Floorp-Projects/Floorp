@@ -15,7 +15,7 @@ const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm",
 const Editor  = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
-const {console} = require("resource://gre/modules/devtools/shared/Console.jsm");
+const {console} = require("resource://gre/modules/Console.jsm");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");

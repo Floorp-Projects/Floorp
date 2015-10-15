@@ -203,25 +203,17 @@ body {
 }
 
 .new-room-view {
+  border-bottom: 1px solid #d8d8d8;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid #d8d8d8;
 }
 
 .new-room-view > .btn {
-  flex: 1;
-  height: 3rem;
-  display: block;
+  border-radius: 5px;
   font-size: 1.2rem;
-  margin: 7px 15px 0 15px;
-  padding: .5rem 1rem;
-  border-radius: 4px;
-}
-
-/* Remove when bug 1142671 is backed out. */
-.new-room-view > .context.hide + .new-room-button {
-  border-radius: 3px;
-  margin-top: 0.5rem;
+  font-weight: bold;
+  margin: 1rem;
+  padding: 1rem;
 }
 
 .room-list {

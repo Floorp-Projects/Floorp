@@ -31,7 +31,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIEffectiveTLDService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
@@ -167,39 +166,24 @@ GetNextSubDomainForHost(const nsACString& aHost)
   return subDomain;
 }
 
-class AppClearDataObserver final : public nsIObserver {
-  ~AppClearDataObserver() {}
+class ClearOriginDataObserver final : public nsIObserver {
+  ~ClearOriginDataObserver() {}
 
 public:
   NS_DECL_ISUPPORTS
 
   // nsIObserver implementation.
   NS_IMETHODIMP
-  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data) override
+  Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) override
   {
-    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-clear-data"));
-
-    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
-      do_QueryInterface(aSubject);
-    if (!params) {
-      NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    uint32_t appId;
-    nsresult rv = params->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool browserOnly;
-    rv = params->GetBrowserOnly(&browserOnly);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "clear-origin-data"));
 
     nsCOMPtr<nsIPermissionManager> permManager = do_GetService("@mozilla.org/permissionmanager;1");
-    return permManager->RemovePermissionsForApp(appId, browserOnly);
+    return permManager->RemovePermissionsWithAttributes(nsDependentString(aData));
   }
 };
 
-NS_IMPL_ISUPPORTS(AppClearDataObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(ClearOriginDataObserver, nsIObserver)
 
 class MOZ_STACK_CLASS UpgradeHostToOriginHelper {
 public:
@@ -709,11 +693,11 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason)
 }
 
 /* static */ void
-nsPermissionManager::AppClearDataObserverInit()
+nsPermissionManager::ClearOriginDataObserverInit()
 {
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  observerService->AddObserver(new AppClearDataObserver(), "webapps-clear-data", /* holdsWeak= */ false);
+  observerService->AddObserver(new ClearOriginDataObserver(), "clear-origin-data", /* holdsWeak= */ false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2308,11 +2292,20 @@ nsPermissionManager::RemoveAllModifiedSince(int64_t aModificationTime)
 }
 
 NS_IMETHODIMP
-nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
+nsPermissionManager::RemovePermissionsWithAttributes(const nsAString& aPattern)
 {
   ENSURE_NOT_CHILD_PROCESS;
-  NS_ENSURE_ARG(aAppId != nsIScriptSecurityManager::NO_APP_ID);
+  mozilla::OriginAttributesPattern pattern;
+  if (!pattern.Init(aPattern)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
+  return RemovePermissionsWithAttributes(pattern);
+}
+
+nsresult
+nsPermissionManager::RemovePermissionsWithAttributes(mozilla::OriginAttributesPattern& aPattern)
+{
   nsCOMArray<nsIPermission> permissions;
   for (auto iter = mPermissionTable.Iter(); !iter.Done(); iter.Next()) {
     PermissionHashKey* entry = iter.Get();
@@ -2324,12 +2317,7 @@ nsPermissionManager::RemovePermissionsForApp(uint32_t aAppId, bool aBrowserOnly)
       continue;
     }
 
-    uint32_t appId;
-    bool isInBrowserElement;
-    principal->GetAppId(&appId);
-    principal->GetIsInBrowserElement(&isInBrowserElement);
-
-    if (appId != aAppId || (aBrowserOnly && !isInBrowserElement)) {
+    if (!aPattern.Matches(mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef())) {
       continue;
     }
 
@@ -2955,3 +2943,4 @@ nsPermissionManager::FetchPermissions() {
   }
   return NS_OK;
 }
+

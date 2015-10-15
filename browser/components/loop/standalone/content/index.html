@@ -48,20 +48,16 @@
         insertScript(devTimeUrl, true);
       }
 
+      // Various browsers use different mechanisms to indicate whether
+      // the user has opted-in to the "Do Not Track" mechanism. We check for
+      // each of them and disable the use of Google Analytics if any are
+      // present. Note that Internet Explorer versions 10 and 11 did not
+      // have an opt-in "Do not Track" mechanism, so we specifically
+      // ignore their indications.
+
       (function() {
-        // window.navigator.doNotTrack "yes" is for old versions of FF
-        // window.navigator.doNotTrack "1" is for current versions of FF + Chrome + Opera
-        // window.doNotTrack is Safari + IE11
-        // window.navigator.msDoNotTrack for IE9 and IE10
-        // See also
-        // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/doNotTrack#Browser_compatibility
-        if (window.navigator.doNotTrack !== "yes" &&
-            window.navigator.doNotTrack !== "1" &&
-            window.doNotTrack !== "1" &&
-            window.navigator.msDoNotTrack !== "1") {
 
-          insertScript("//cdn.optimizely.com/js/2768540301.js");
-
+        function enableTracking() {
           // This is an unfolded, readable version of the official GA inclusion
           // script.
           window.GoogleAnalyticsObject = "ga";
@@ -81,6 +77,42 @@
           });
           window.ga("send", "pageview");
         }
+
+        insertScript("//cdn.optimizely.com/js/2768540301.js");
+
+        // See also
+        // https://developer.mozilla.org/en-US/docs/Web/API/Navigator/doNotTrack#Browser_compatibility
+        var trackEnable = true;
+        // window.navigator.doNotTrack "yes" is for old versions of FF
+        // window.navigator.doNotTrack "1" is for current versions of FF + Chrome + Opera
+        if (window.navigator.doNotTrack === "yes" || String(window.navigator.doNotTrack) === "1") {
+          trackEnable = false;
+        }
+        // window.doNotTrack is "1" for Safari, IE11, and IE12
+        // Ignore IE11 DNT setting
+        if (String(window.doNotTrack) === "1") {
+          // Honour if Safari or IE12
+          if (navigator.userAgent.indexOf("Safari") !== -1) {
+            trackEnable = false;
+          } else {
+            // Is MS IE11 or IE12
+            // Disable tracking for IE12 only
+            if (!/rv[ :]11/g.test(window.navigator.userAgent)) {
+              trackEnable = false;
+            }
+          }
+        }
+        // window.navigator.msDoNotTrack is "1" for IE9 and IE10
+        // Honor MS-specific "Do Not Track" for IE 9 only
+        if (String(window.navigator.msDoNotTrack) === "1" &&
+            window.navigator.userAgent.search("IE 9") !== -1) {
+          trackEnable = false;
+        }
+
+        if (trackEnable) {
+          enableTracking();
+        }
+
       })();
     </script>
 

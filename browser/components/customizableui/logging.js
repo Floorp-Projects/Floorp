@@ -5,7 +5,7 @@
 #endif
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/shared/Console.jsm");
+  "resource://gre/modules/Console.jsm");
 
 var gDebug = false;
 try {
