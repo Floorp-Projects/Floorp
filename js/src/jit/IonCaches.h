@@ -570,6 +570,7 @@ class SetPropertyIC : public IonCache
     LiveRegisterSet liveRegs_;
 
     Register object_;
+    Register temp_;
     PropertyName* name_;
     ConstantOrRegister value_;
     bool strict_;
@@ -578,10 +579,11 @@ class SetPropertyIC : public IonCache
     bool hasGenericProxyStub_;
 
   public:
-    SetPropertyIC(LiveRegisterSet liveRegs, Register object, PropertyName* name,
+    SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, PropertyName* name,
                   ConstantOrRegister value, bool strict, bool needsTypeBarrier)
       : liveRegs_(liveRegs),
         object_(object),
+        temp_(temp),
         name_(name),
         value_(value),
         strict_(strict),
@@ -596,6 +598,9 @@ class SetPropertyIC : public IonCache
 
     Register object() const {
         return object_;
+    }
+    Register temp() const {
+        return temp_;
     }
     PropertyName* name() const {
         return name_;
