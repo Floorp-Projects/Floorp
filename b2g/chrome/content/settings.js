@@ -698,6 +698,10 @@ var settingsToObserve = {
     prefName: 'dom.sms.maxReadAheadEntries',
     defaultValue: 7
   },
+  'services.sync.enabled': {
+    defaultValue: false,
+    notifyChange: true
+  },
   'ui.touch.radius.leftmm': {
     resetToPref: true
   },
@@ -716,6 +720,18 @@ var settingsToObserve = {
   'wap.UAProf.tagname': 'x-wap-profile',
   'wap.UAProf.url': ''
 };
+
+function settingObserver(setPref, prefName, setting) {
+  return value => {
+    setPref(prefName, value);
+    if (setting.notifyChange) {
+      SystemAppProxy._sendCustomEvent('mozPrefChromeEvent', {
+        prefName: prefName,
+        value: value
+      });
+    }
+  };
+}
 
 for (let key in settingsToObserve) {
   let setting = settingsToObserve[key];
@@ -766,7 +782,6 @@ for (let key in settingsToObserve) {
       break;
   }
 
-  SettingsListener.observe(key, defaultValue, function(value) {
-    setPref(prefName, value);
-  });
+  SettingsListener.observe(key, defaultValue,
+                           settingObserver(setPref, prefName, setting));
 };
