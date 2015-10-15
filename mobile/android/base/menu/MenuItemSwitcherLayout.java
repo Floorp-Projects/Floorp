@@ -40,7 +40,7 @@ public class MenuItemSwitcherLayout extends LinearLayout
     }
 
     public MenuItemSwitcherLayout(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.menuItemActionViewStyle);
+        this(context, attrs, R.attr.menuItemSwitcherLayoutStyle);
     }
 
     @TargetApi(14)
@@ -177,7 +177,7 @@ public class MenuItemSwitcherLayout extends LinearLayout
      * Update the styles if this view is being used in the context menus.
      *
      * Ideally, we just use different layout files and styles to set this, but
-     * MenuItemActionView is too integrated into GeckoActionProvider to provide
+     * MenuItemSwitcherLayout is too integrated into GeckoActionProvider to provide
      * an easy separation so instead I provide this hack. I'm sorry.
      */
     public void initContextMenuStyles() {
