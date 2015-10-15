@@ -5,18 +5,20 @@
 
 DIRS += [
     'actions',
+    'components',
     'modules',
     'reducers',
 ]
 
 DevToolsModules(
+    'app.js',
     'constants.js',
-    'controller.js',
     'initializer.js',
     'panel.js',
     'reducers.js',
     'store.js',
 )
 
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

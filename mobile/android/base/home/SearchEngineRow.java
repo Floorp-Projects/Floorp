@@ -23,6 +23,10 @@ import org.mozilla.gecko.widget.FlowLayout;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
+import android.graphics.Typeface;
+import android.text.style.StyleSpan;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -73,6 +77,11 @@ class SearchEngineRow extends AnimatedHeightLayout {
     // Maximums for suggestions
     private int mMaxSavedSuggestions;
     private int mMaxSearchSuggestions;
+
+    // Styles for text in a suggestion 'button' that is not part of the first instance of mUserSearchTerm
+    // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
+    StyleSpan mPriorToSearchTerm;
+    StyleSpan mAfterSearchTerm;
 
     public SearchEngineRow(Context context) {
         this(context, null);
@@ -139,6 +148,9 @@ class SearchEngineRow extends AnimatedHeightLayout {
         // Suggestion limits
         mMaxSavedSuggestions = getResources().getInteger(R.integer.max_saved_suggestions);
         mMaxSearchSuggestions = getResources().getInteger(R.integer.max_search_suggestions);
+
+        mPriorToSearchTerm = new StyleSpan(Typeface.BOLD);
+        mAfterSearchTerm = new StyleSpan(Typeface.BOLD);
     }
 
     private void setDescriptionOnSuggestion(View v, String suggestion) {
@@ -161,7 +173,20 @@ class SearchEngineRow extends AnimatedHeightLayout {
         }
 
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
-        suggestionText.setText(suggestion);
+        final String searchTerm = getSuggestionTextFromView(mUserEnteredView);
+        // If there is more than one copy of mUserSearchTerm, only the first is not bolded
+        final int startOfSearchTerm = suggestion.indexOf(searchTerm);
+        // Sometimes the suggestion does not contain mUserSearmTerm at all, in which case, bold nothing
+        if (startOfSearchTerm >= 0) {
+            final int endOfSearchTerm = startOfSearchTerm + searchTerm.length();
+            final SpannableStringBuilder sb = new SpannableStringBuilder(suggestion);
+            sb.setSpan(mPriorToSearchTerm, 0, startOfSearchTerm, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            sb.setSpan(mAfterSearchTerm, endOfSearchTerm, suggestion.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            suggestionText.setText(sb);
+        } else {
+            suggestionText.setText(suggestion);
+        }
+
         setDescriptionOnSuggestion(suggestionText, suggestion);
     }
 
