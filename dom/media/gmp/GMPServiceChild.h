@@ -11,7 +11,6 @@
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/gmp/PGMPServiceChild.h"
 #include "nsRefPtrHashtable.h"
-#include "GMPUtils.h"
 
 namespace mozilla {
 namespace gmp {
@@ -50,8 +49,6 @@ public:
                        const nsAString& aTopLevelOrigin,
                        bool aInPrivateBrowsingMode,
                        UniquePtr<GetNodeIdCallback>&& aCallback) override;
-
-  void CrashPluginNow(uint32_t aPluginId, GMPCrashReason aReason);
 
   NS_DECL_NSIOBSERVER
 
