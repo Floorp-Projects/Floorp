@@ -631,11 +631,6 @@ class SetPropertyIC : public IonCache
                        HandleObject obj, HandleShape oldShape, HandleObjectGroup oldGroup,
                        bool checkTypeset);
 
-    bool attachSetUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                          HandleObject obj, HandleId id,
-                          uint32_t unboxedOffset, JSValueType unboxedType,
-                          bool checkTypeset);
-
     bool attachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
                             void* returnAddr);
 
@@ -647,6 +642,26 @@ class SetPropertyIC : public IonCache
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
                        HandleObject obj, HandleValue value);
+
+    bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                         HandleObject obj, HandleId id, bool* emitted, bool* tryNativeAddSlot);
+
+    bool tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                          HandleObject obj, HandleId id, bool* emitted);
+
+    bool tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                 HandleObject obj, HandleId id, bool* emitted);
+
+    bool tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                        HandleObject obj, HandleId id, bool* emitted);
+
+    bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                       HandleObject obj, HandleId id, bool* emitted,
+                       bool* tryNativeAddSlot);
+
+    bool tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                          HandleObject obj, HandleId id, HandleObjectGroup oldGroup,
+                          HandleShape oldShape, bool tryNativeAddSlot, bool* emitted);
 };
 
 class SetElementIC : public IonCache
