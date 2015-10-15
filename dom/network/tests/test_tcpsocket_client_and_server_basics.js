@@ -55,6 +55,8 @@ function listenForEventsOnSocket(socket, socketType) {
   socket.ondata = function(event) {
     dump('(' + socketType + ' event: ' + event.type + ' length: ' +
          event.data.byteLength + ')\n');
+    ok(socketCompartmentInstanceOfArrayBuffer(event.data),
+       'payload is ArrayBuffer');
     var arr = new Uint8Array(event.data);
     if (receivedData === null) {
       receivedData = arr;

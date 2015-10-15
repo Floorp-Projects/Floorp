@@ -371,11 +371,6 @@ hb_shape_full (hb_font_t          *font,
 	       unsigned int        num_features,
 	       const char * const *shaper_list)
 {
-  if (unlikely (!buffer->len))
-    return true;
-
-  assert (buffer->content_type == HB_BUFFER_CONTENT_TYPE_UNICODE);
-
   hb_shape_plan_t *shape_plan = hb_shape_plan_create_cached (font->face, &buffer->props, features, num_features, shaper_list);
   hb_bool_t res = hb_shape_plan_execute (shape_plan, font, buffer, features, num_features);
   hb_shape_plan_destroy (shape_plan);
@@ -399,7 +394,7 @@ hb_shape_full (hb_font_t          *font,
  *
  * Return value: %FALSE if all shapers failed, %TRUE otherwise
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_shape (hb_font_t           *font,

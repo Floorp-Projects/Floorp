@@ -96,8 +96,14 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
                                        const nsString& aDeviceId)
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
 
-  if (mState == kReleased && mInitDone) {
+  if (!mInitDone) {
+    LOG(("Init not done"));
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mState == kReleased) {
     // Note: if shared, we don't allow a later opener to affect the resolution.
     // (This may change depending on spec changes for Constraints/settings)
 
@@ -121,19 +127,21 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
     }
   }
 
+  ++mNrAllocations;
+
   return NS_OK;
 }
 
 nsresult
 MediaEngineRemoteVideoSource::Deallocate()
 {
-  LOG((__FUNCTION__));
-  bool empty;
-  {
-    MonitorAutoLock lock(mMonitor);
-    empty = mSources.IsEmpty();
-  }
-  if (empty) {
+  LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
+
+  --mNrAllocations;
+  MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
+
+  if (mNrAllocations == 0) {
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }
@@ -150,6 +158,7 @@ nsresult
 MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
   if (!mInitDone || !aStream) {
     LOG(("No stream or init not done"));
     return NS_ERROR_FAILURE;
@@ -184,6 +193,7 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
                                    mozilla::TrackID aID)
 {
   LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
   {
     MonitorAutoLock lock(mMonitor);
 
@@ -217,6 +227,7 @@ MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstra
                                       const MediaEnginePrefs& aPrefs,
                                       const nsString& aDeviceId)
 {
+  AssertIsOnOwningThread();
   if (!mInitDone) {
     LOG(("Init not done"));
     return NS_ERROR_FAILURE;
@@ -392,6 +403,7 @@ MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aCon
     const MediaEnginePrefs &aPrefs,
     const nsString& aDeviceId)
 {
+  AssertIsOnOwningThread();
 
   switch(mMediaSource) {
     case dom::MediaSourceEnum::Screen:

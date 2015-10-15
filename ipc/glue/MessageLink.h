@@ -98,6 +98,12 @@ class MessageListener
         return RIPChildWins;
     }
 
+    /**
+     * Return true if windows messages can be handled while waiting for a reply
+     * to a sync IPDL message.
+     */
+    virtual bool HandleWindowsMessages(const Message& aMsg) const { return true; }
+
     virtual void OnEnteredSyncSend() {
     }
     virtual void OnExitedSyncSend() {
