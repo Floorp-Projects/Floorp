@@ -26,7 +26,7 @@ function queryIfBeaconSucceeded() {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "beacon-preflight-handler.sjs?verify", true);
   xhr.onload = function() {
-    is(xhr.responseText, "red", "SendBeacon should have failed because of a failed preflight!");
+    is(xhr.responseText, "green", "SendBeacon should have failed because of a failed preflight!");
     SimpleTest.finish();
   };
   xhr.onerror = function() {
