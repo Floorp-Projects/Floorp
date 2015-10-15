@@ -394,10 +394,10 @@ private:
   ~MP3TrackDemuxer() {}
 
   // Fast approximate seeking to given time.
-  media::TimeUnit FastSeek(media::TimeUnit aTime);
+  media::TimeUnit FastSeek(const media::TimeUnit& aTime);
 
   // Seeks by scanning the stream up to the given time for more accurate results.
-  media::TimeUnit ScanUntil(media::TimeUnit aTime);
+  media::TimeUnit ScanUntil(const media::TimeUnit& aTime);
 
   // Finds the next valid frame and returns its byte range.
   MediaByteRange FindNextFrame();
@@ -410,6 +410,12 @@ private:
 
   // Updates post-read meta data.
   void UpdateState(const MediaByteRange& aRange);
+
+  // Returns the frame index for the given offset.
+  int64_t FrameIndexFromOffset(int64_t aOffset) const;
+
+  // Returns the frame index for the given time.
+  int64_t FrameIndexFromTime(const media::TimeUnit& aTime) const;
 
   // Reads aSize bytes into aBuffer from the source starting at aOffset.
   // Returns the actual size read.
