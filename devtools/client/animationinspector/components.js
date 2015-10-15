@@ -459,10 +459,10 @@ function AnimationsTimeline(inspector) {
   this.inspector = inspector;
 
   this.onAnimationStateChanged = this.onAnimationStateChanged.bind(this);
-  this.onTimeHeaderMouseDown = this.onTimeHeaderMouseDown.bind(this);
-  this.onTimeHeaderMouseUp = this.onTimeHeaderMouseUp.bind(this);
-  this.onTimeHeaderMouseOut = this.onTimeHeaderMouseOut.bind(this);
-  this.onTimeHeaderMouseMove = this.onTimeHeaderMouseMove.bind(this);
+  this.onScrubberMouseDown = this.onScrubberMouseDown.bind(this);
+  this.onScrubberMouseUp = this.onScrubberMouseUp.bind(this);
+  this.onScrubberMouseOut = this.onScrubberMouseOut.bind(this);
+  this.onScrubberMouseMove = this.onScrubberMouseMove.bind(this);
 
   EventEmitter.decorate(this);
 }
@@ -487,13 +487,21 @@ AnimationsTimeline.prototype = {
       }
     });
 
+    this.scrubberHandleEl = createNode({
+      parent: this.scrubberEl,
+      attributes: {
+        "class": "scrubber-handle"
+      }
+    });
+    this.scrubberHandleEl.addEventListener("mousedown", this.onScrubberMouseDown);
+
     this.timeHeaderEl = createNode({
       parent: this.rootWrapperEl,
       attributes: {
         "class": "time-header"
       }
     });
-    this.timeHeaderEl.addEventListener("mousedown", this.onTimeHeaderMouseDown);
+    this.timeHeaderEl.addEventListener("mousedown", this.onScrubberMouseDown);
 
     this.animationsEl = createNode({
       parent: this.rootWrapperEl,
@@ -509,7 +517,9 @@ AnimationsTimeline.prototype = {
     this.unrender();
 
     this.timeHeaderEl.removeEventListener("mousedown",
-      this.onTimeHeaderMouseDown);
+      this.onScrubberMouseDown);
+    this.scrubberHandleEl.removeEventListener("mousedown",
+      this.onScrubberMouseDown);
 
     this.rootWrapperEl.remove();
     this.animations = [];
@@ -518,6 +528,7 @@ AnimationsTimeline.prototype = {
     this.timeHeaderEl = null;
     this.animationsEl = null;
     this.scrubberEl = null;
+    this.scrubberHandleEl = null;
     this.win = null;
     this.inspector = null;
   },
@@ -539,18 +550,21 @@ AnimationsTimeline.prototype = {
     this.animationsEl.innerHTML = "";
   },
 
-  onTimeHeaderMouseDown: function(e) {
+  onScrubberMouseDown: function(e) {
     this.moveScrubberTo(e.pageX);
-    this.win.addEventListener("mouseup", this.onTimeHeaderMouseUp);
-    this.win.addEventListener("mouseout", this.onTimeHeaderMouseOut);
-    this.win.addEventListener("mousemove", this.onTimeHeaderMouseMove);
+    this.win.addEventListener("mouseup", this.onScrubberMouseUp);
+    this.win.addEventListener("mouseout", this.onScrubberMouseOut);
+    this.win.addEventListener("mousemove", this.onScrubberMouseMove);
+
+    // Prevent text selection while dragging.
+    e.preventDefault();
   },
 
-  onTimeHeaderMouseUp: function() {
+  onScrubberMouseUp: function() {
     this.cancelTimeHeaderDragging();
   },
 
-  onTimeHeaderMouseOut: function(e) {
+  onScrubberMouseOut: function(e) {
     // Check that mouseout happened on the window itself, and if yes, cancel
     // the dragging.
     if (!this.win.document.contains(e.relatedTarget)) {
@@ -559,12 +573,12 @@ AnimationsTimeline.prototype = {
   },
 
   cancelTimeHeaderDragging: function() {
-    this.win.removeEventListener("mouseup", this.onTimeHeaderMouseUp);
-    this.win.removeEventListener("mouseout", this.onTimeHeaderMouseOut);
-    this.win.removeEventListener("mousemove", this.onTimeHeaderMouseMove);
+    this.win.removeEventListener("mouseup", this.onScrubberMouseUp);
+    this.win.removeEventListener("mouseout", this.onScrubberMouseOut);
+    this.win.removeEventListener("mousemove", this.onScrubberMouseMove);
   },
 
-  onTimeHeaderMouseMove: function(e) {
+  onScrubberMouseMove: function(e) {
     this.moveScrubberTo(e.pageX);
   },
 
