@@ -7,7 +7,7 @@
 #ifndef mozilla_image_decoders_nsBMPDecoder_h
 #define mozilla_image_decoders_nsBMPDecoder_h
 
-#include "BMPFileHeaders.h"
+#include "BMPHeaders.h"
 #include "Decoder.h"
 #include "gfxColor.h"
 #include "StreamingLexer.h"
@@ -17,6 +17,32 @@ namespace mozilla {
 namespace image {
 
 namespace bmp {
+
+/// This struct contains the fields from the file header and info header that
+/// we use during decoding. (Excluding bitfields fields, which are kept in
+/// BitFields.)
+struct Header {
+  uint32_t mDataOffset;     // Offset to raster data.
+  uint32_t mBIHSize;        // Header size.
+  int32_t  mWidth;          // Image width.
+  int32_t  mHeight;         // Image height.
+  uint16_t mBpp;            // Bits per pixel.
+  uint32_t mCompression;    // See struct Compression for valid values.
+  uint32_t mImageSize;      // (compressed) image size. Can be 0 if
+                            // mCompression==0.
+  uint32_t mNumColors;      // Used colors.
+
+  Header()
+   : mDataOffset(0)
+   , mBIHSize(0)
+   , mWidth(0)
+   , mHeight(0)
+   , mBpp(0)
+   , mCompression(0)
+   , mImageSize(0)
+   , mNumColors(0)
+  {}
+};
 
 /// An entry in the color table.
 struct ColorTableEntry {
@@ -173,8 +199,7 @@ private:
 
   StreamingLexer<State> mLexer;
 
-  bmp::FileHeader mBFH;
-  bmp::V5InfoHeader mBIH;
+  bmp::Header mH;
 
   // If the BMP is within an ICO file our treatment of it differs slightly.
   bool mIsWithinICO;
