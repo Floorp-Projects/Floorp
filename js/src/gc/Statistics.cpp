@@ -173,6 +173,8 @@ static const PhaseInfo phases[] = {
         /* PHASE_MARK_ROOTS */
     { PHASE_TRACE_HEAP, "Trace Heap", PHASE_NO_PARENT, 47 },
         /* PHASE_MARK_ROOTS */
+    { PHASE_BARRIER, "Barriers", PHASE_NO_PARENT, 55 },
+        { PHASE_UNMARK_GRAY, "Unmark gray", PHASE_BARRIER, 56 },
     { PHASE_MARK_ROOTS, "Mark Roots", PHASE_MULTI_PARENTS, 48 },
         { PHASE_BUFFER_GRAY_ROOTS, "Buffer Gray Roots", PHASE_MARK_ROOTS, 49 },
         { PHASE_MARK_CCWS, "Mark Cross Compartment Wrappers", PHASE_MARK_ROOTS, 50 },
@@ -180,7 +182,11 @@ static const PhaseInfo phases[] = {
         { PHASE_MARK_RUNTIME_DATA, "Mark Runtime-wide Data", PHASE_MARK_ROOTS, 52 },
         { PHASE_MARK_EMBEDDING, "Mark Embedding", PHASE_MARK_ROOTS, 53 },
         { PHASE_MARK_COMPARTMENTS, "Mark Compartments", PHASE_MARK_ROOTS, 54 },
-    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 55 }
+    { PHASE_LIMIT, nullptr, PHASE_NO_PARENT, 57 }
+
+    // Current number of telemetryBuckets is 57. If you insert new phases
+    // somewhere, start at that number and count up. Do not change any existing
+    // numbers.
 };
 
 static ExtraPhaseInfo phaseExtra[PHASE_LIMIT] = { { 0, 0 } };
