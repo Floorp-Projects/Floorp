@@ -231,7 +231,9 @@ ClientTexture::Unlock()
     MOZ_ASSERT(mBorrowedDrawTarget->refCount() <= mExpectedDtRefs);
     if (mOpenMode & OpenMode::OPEN_WRITE) {
       mBorrowedDrawTarget->Flush();
-      if (mReadbackSink) {
+      if (mReadbackSink && !mData->ReadBack(mReadbackSink)) {
+        // Fallback implementation for reading back, because mData does not
+        // have a backend-specific implementation and returned false.
         RefPtr<SourceSurface> snapshot = mBorrowedDrawTarget->Snapshot();
         RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
         mReadbackSink->ProcessReadback(dataSurf);
@@ -268,16 +270,18 @@ ClientTexture::GetFormat() const
 
 ClientTexture::~ClientTexture()
 {
-  // All the destruction code that may lead to virtual method calls must
-  // be in Finalize() which is called just before the destructor.
-
-  // TODO[nical] temporarily integrate this with FinalizeOnIPDLThred
   if (ShouldDeallocateInDestructor()) {
     mData->Deallocate(mAllocator);
   } else {
     mData->Forget(mAllocator);
   }
   delete mData;
+}
+
+void
+ClientTexture::FinalizeOnIPDLThread()
+{
+  mData->FinalizeOnIPDLThread(this);
 }
 
 void
@@ -333,6 +337,10 @@ ClientTexture::BorrowDrawTarget()
   //MOZ_ASSERT(mOpenMode & OpenMode::OPEN_WRITE);
 
   if (!mIsLocked) {
+    return nullptr;
+  }
+
+  if (!NS_IsMainThread()) {
     return nullptr;
   }
 
@@ -562,7 +570,10 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
       aSize.width <= maxTextureSize &&
       aSize.height <= maxTextureSize)
   {
-    texture = new TextureClientD3D11(aAllocator, aFormat, aTextureFlags);
+    texture = CreateDXGITextureClient(aSize, aFormat, aTextureFlags, aAllocFlags, aAllocator);
+    if (texture) {
+      return texture.forget();
+    }
   }
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
       moz2DBackend == gfx::BackendType::CAIRO &&
@@ -919,6 +930,15 @@ SyncObject::CreateSyncObject(SyncHandle aHandle)
   MOZ_ASSERT_UNREACHABLE();
   return nullptr;
 #endif
+}
+
+already_AddRefed<TextureClient>
+TextureClient::CreateWithData(TextureData* aData, TextureFlags aFlags, ISurfaceAllocator* aAllocator)
+{
+  if (!aData) {
+    return nullptr;
+  }
+  return MakeAndAddRef<ClientTexture>(aData, aFlags, aAllocator);
 }
 
 bool
