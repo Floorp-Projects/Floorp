@@ -225,6 +225,16 @@ loop.panel = (function(_, mozL10n) {
       this.hideDropdownMenu();
     },
 
+    /**
+     * Load on the browser the feedback url from prefs
+     */
+    handleSubmitFeedback: function(event) {
+      event.preventDefault();
+      var helloFeedbackUrl = this.props.mozLoop.getLoopPref("feedback.formURL");
+      this.props.mozLoop.openURL(helloFeedbackUrl);
+      this.closeWindow();
+    },
+
     _isSignedIn: function() {
       return !!this.props.mozLoop.userProfile;
     },
@@ -262,6 +272,9 @@ loop.panel = (function(_, mozL10n) {
                                    onClick={this.handleClickSettingsEntry} />
             <SettingsDropdownEntry label={mozL10n.get("tour_label")}
                                    onClick={this.openGettingStartedTour} />
+            <SettingsDropdownEntry extraCSSClass="entry-settings-feedback"
+                                   label={mozL10n.get("settings_menu_item_feedback")}
+                                   onClick={this.handleSubmitFeedback} />
             <SettingsDropdownEntry displayed={this.props.mozLoop.fxAEnabled}
                                    extraCSSClass={accountEntryCSSClass}
                                    label={this._isSignedIn() ?
