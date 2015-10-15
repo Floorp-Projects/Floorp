@@ -29,7 +29,7 @@ public:
     MOZ_COUNT_DTOR(RtspOmxDecoder);
   }
 
-  virtual MediaDecoder* Clone() override final;
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override final;
   virtual MediaDecoderStateMachine* CreateStateMachine() override final;
   virtual void ChangeState(PlayState aState) override final;
 };

@@ -14,7 +14,7 @@ class AppleDecoder : public MediaDecoder
 public:
   explicit AppleDecoder(MediaDecoderOwner* aOwner);
 
-  virtual MediaDecoder* Clone() override;
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
   virtual MediaDecoderStateMachine* CreateStateMachine() override;
 
 };

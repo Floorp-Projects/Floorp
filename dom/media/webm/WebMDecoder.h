@@ -14,11 +14,11 @@ class WebMDecoder : public MediaDecoder
 {
 public:
   explicit WebMDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  virtual MediaDecoder* Clone() {
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
     if (!IsWebMEnabled()) {
       return nullptr;
     }
-    return new WebMDecoder();
+    return new WebMDecoder(aOwner);
   }
   virtual MediaDecoderStateMachine* CreateStateMachine();
 };
