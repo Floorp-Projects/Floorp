@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: memory reporting</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  // Test that memory reporting works once we've played a video.
+  once(v, "stalled", () => {
+    // Grab a memory report.
+    var mgr = SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"]
+          .getService(SpecialPowers.Ci.nsIMemoryReporterManager);
+
+    var amount = 0;
+    var resourcesPathSeen = false;
+    var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+      if (aPath == "explicit/media/resources") {
+        resourcePathSeen = true;
+        amount += aAmount;
+      }
+    }
+
+    var finished = function () {
+      ok(true, "Yay didn't crash!");
+      ok(resourcePathSeen, "Got media resources amount");
+      ok(amount > 0, "Non-zero amount reported for media resources");
+      SimpleTest.finish();
+    }
+
+    mgr.getReports(handleReport, null, finished, null, /* anonymized = */ false);
+  });
+
+  // Load a webm video and play it.
+  ms.addEventListener("sourceopen", () => {
+    var sb = ms.addSourceBuffer("video/webm");
+    fetchAndLoad(sb, 'seek', [''], '.webm').then(() => v.play());
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
