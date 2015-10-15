@@ -1126,6 +1126,7 @@ protected:
   enum GradientParsingFlags {
     eGradient_Repeating    = 1 << 0, // repeating-{linear|radial}-gradient
     eGradient_MozLegacy    = 1 << 1, // -moz-{linear|radial}-gradient
+    eGradient_WebkitLegacy = 1 << 2, // -webkit-{linear|radial}-gradient
   };
   bool ParseLinearGradient(nsCSSValue& aValue, uint8_t aFlags);
   bool ParseRadialGradient(nsCSSValue& aValue, uint8_t aFlags);
@@ -7481,6 +7482,10 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
         StringBeginsWith(tmp, NS_LITERAL_STRING("-moz-"))) {
       tmp.Rebind(tmp, 5);
       gradientFlags |= eGradient_MozLegacy;
+    } else if (sWebkitPrefixedAliasesEnabled &&
+               StringBeginsWith(tmp, NS_LITERAL_STRING("-webkit-"))) {
+      tmp.Rebind(tmp, 8);
+      gradientFlags |= eGradient_WebkitLegacy;
     }
     if (StringBeginsWith(tmp, NS_LITERAL_STRING("repeating-"))) {
       tmp.Rebind(tmp, 10);
@@ -10681,10 +10686,12 @@ CSSParserImpl::IsFunctionTokenValidForBackgroundImage(
     funcName.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
     funcName.LowerCaseEqualsLiteral("-moz-image-rect") ||
     funcName.LowerCaseEqualsLiteral("-moz-element") ||
-    (ShouldUseUnprefixingService() &&
+    ((sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService()) &&
      (funcName.LowerCaseEqualsLiteral("-webkit-gradient") ||
       funcName.LowerCaseEqualsLiteral("-webkit-linear-gradient") ||
-      funcName.LowerCaseEqualsLiteral("-webkit-radial-gradient")));
+      funcName.LowerCaseEqualsLiteral("-webkit-radial-gradient") ||
+      funcName.LowerCaseEqualsLiteral("-webkit-repeating-linear-gradient") ||
+      funcName.LowerCaseEqualsLiteral("-webkit-repeating-radial-gradient")));
 }
 
 // Parse one item of the background shorthand property.
