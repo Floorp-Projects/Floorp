@@ -20,6 +20,12 @@ MOZ_ARG_WITH_STRING(android-gnu-compiler-version,
                           gnu compiler version to use],
     android_gnu_compiler_version=$withval)
 
+MOZ_ARG_WITH_STRING(android-cxx-stl,
+[  --with-android-cxx-stl=VALUE
+                          use the specified C++ STL (stlport, libstdc++, libc++)],
+    android_cxx_stl=$withval,
+    android_cxx_stl=mozstlport)
+
 MOZ_ARG_ENABLE_BOOL(android-libstdcxx,
 [  --enable-android-libstdcxx
                           use GNU libstdc++ instead of STLPort],
@@ -210,22 +216,55 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
 
     AC_SUBST(ANDROID_CPU_ARCH)
 
+    cpu_arch_dir="$ANDROID_CPU_ARCH"
+    if test "$MOZ_THUMB2" = 1; then
+        cpu_arch_dir="$cpu_arch_dir/thumb"
+    fi
+
     if test -z "$STLPORT_CPPFLAGS$STLPORT_LIBS"; then
-        if test -n "$MOZ_ANDROID_LIBSTDCXX" ; then
+        case "$android_cxx_stl" in
+        libstdc++)
             # android-ndk-r8b and later
             ndk_base="$android_ndk/sources/cxx-stl/gnu-libstdc++/$android_gnu_compiler_version"
-            ndk_libs="$ndk_base/libs/$ANDROID_CPU_ARCH"
+            ndk_libs_include="$ndk_base/libs/$ANDROID_CPU_ARCH"
+            ndk_libs="$ndk_base/libs/$cpu_arch_dir"
             ndk_include="$ndk_base/include"
 
-            if test -e "$ndk_libs/libgnustl_static.a"; then
-                STLPORT_LIBS="-L$ndk_libs -lgnustl_static"
-                STLPORT_CPPFLAGS="-I$ndk_include -I$ndk_include/backward -I$ndk_libs/include"
-            else
+            if ! test -e "$ndk_libs/libgnustl_static.a"; then
                 AC_MSG_ERROR([Couldn't find path to gnu-libstdc++ in the android ndk])
             fi
-        else
+
+            STLPORT_LIBS="-L$ndk_libs -lgnustl_static"
+            STLPORT_CPPFLAGS="-I$ndk_include -I$ndk_include/backward -I$ndk_libs_include/include"
+            ;;
+        libc++)
+            # android-ndk-r8b and later
+            ndk_base="$android_ndk/sources/cxx-stl"
+            cxx_base="$ndk_base/llvm-libc++"
+            cxx_libs="$cxx_base/libs/$cpu_arch_dir"
+            cxx_include="$cxx_base/libcxx/include"
+            cxxabi_base="$ndk_base/llvm-libc++abi"
+            cxxabi_include="$cxxabi_base/libcxxabi/include"
+
+            if ! test -e "$cxx_libs/libc++_static.a"; then
+                AC_MSG_ERROR([Couldn't find path to llvm-libc++ in the android ndk])
+            fi
+
+            STLPORT_LIBS="-L$cxx_libs -lc++_static"
+            # Add android/support/include/ for prototyping long double math
+            # functions, locale-specific C library functions, multibyte support,
+            # etc.
+            STLPORT_CPPFLAGS="-I$android_ndk/sources/android/support/include -I$cxx_include -I$cxxabi_include"
+            ;;
+        mozstlport)
+            # We don't need to set STLPORT_LIBS, because the build system will
+            # take care of linking in our home-built stlport where it is needed.
             STLPORT_CPPFLAGS="-isystem $_topsrcdir/build/stlport/stlport -isystem $_topsrcdir/build/stlport/overrides -isystem $android_ndk/sources/cxx-stl/system/include"
-        fi
+            ;;
+        *)
+            AC_MSG_ERROR([Bad value for --enable-android-cxx-stl])
+            ;;
+        esac
     fi
     CXXFLAGS="$CXXFLAGS $STLPORT_CPPFLAGS"
 fi
