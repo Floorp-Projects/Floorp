@@ -198,7 +198,8 @@ NS_GetContentList(nsINode* aRootNode,
   NS_ASSERTION(aRootNode, "content list has to have a root");
 
   nsRefPtr<nsContentList> list;
-  nsContentListKey hashKey(aRootNode, aMatchNameSpaceId, aTagname);
+  nsContentListKey hashKey(aRootNode, aMatchNameSpaceId, aTagname,
+                           aRootNode->OwnerDoc()->IsHTMLDocument());
   uint32_t recentlyUsedCacheIndex = RecentlyUsedCacheIndex(hashKey);
   nsContentList* cachedList = sRecentlyUsedContentLists[recentlyUsedCacheIndex];
   if (cachedList && cachedList->MatchesKey(hashKey)) {
@@ -398,7 +399,8 @@ nsContentList::nsContentList(nsINode* aRootNode,
     mData(nullptr),
     mState(LIST_DIRTY),
     mDeep(aDeep),
-    mFuncMayDependOnAttr(false)
+    mFuncMayDependOnAttr(false),
+    mIsHTMLDocument(aRootNode->OwnerDoc()->IsHTMLDocument())
 {
   NS_ASSERTION(mRootNode, "Must have root");
   if (nsGkAtoms::_asterisk == mHTMLMatchAtom) {
@@ -438,7 +440,8 @@ nsContentList::nsContentList(nsINode* aRootNode,
     mState(LIST_DIRTY),
     mMatchAll(false),
     mDeep(aDeep),
-    mFuncMayDependOnAttr(aFuncMayDependOnAttr)
+    mFuncMayDependOnAttr(aFuncMayDependOnAttr),
+    mIsHTMLDocument(false)
 {
   NS_ASSERTION(mRootNode, "Must have root");
   mRootNode->AddMutationObserver(this);
@@ -839,7 +842,7 @@ nsContentList::Match(Element *aElement)
   if (!mXMLMatchAtom)
     return false;
 
-  mozilla::dom::NodeInfo *ni = aElement->NodeInfo();
+  NodeInfo *ni = aElement->NodeInfo();
 
   bool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard ||
                   mMatchNameSpaceId == kNameSpaceID_Unknown;
@@ -850,9 +853,9 @@ nsContentList::Match(Element *aElement)
   if (toReturn)
     return toReturn;
 
-  bool matchHTML = aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&
-    aElement->OwnerDoc()->IsHTMLDocument();
- 
+  bool matchHTML =
+    mIsHTMLDocument && aElement->GetNameSpaceID() == kNameSpaceID_XHTML;
+
   if (wildcard) {
     return matchHTML ? ni->Equals(mHTMLMatchAtom) :
                        ni->Equals(mXMLMatchAtom);
@@ -957,7 +960,7 @@ nsContentList::RemoveFromHashtable()
   }
   
   nsDependentAtomString str(mXMLMatchAtom);
-  nsContentListKey key(mRootNode, mMatchNameSpaceId, str);
+  nsContentListKey key(mRootNode, mMatchNameSpaceId, str, mIsHTMLDocument);
   uint32_t recentlyUsedCacheIndex = RecentlyUsedCacheIndex(key);
   if (sRecentlyUsedContentLists[recentlyUsedCacheIndex] == this) {
     sRecentlyUsedContentLists[recentlyUsedCacheIndex] = nullptr;
