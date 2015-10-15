@@ -594,14 +594,10 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     if (savedCallerFun && !saveCallerFun(evalCaller, pc.ref()))
         return nullptr;
 
-    // Global scripts are parsed incrementally, statement by statement.
-    //
-    // Eval scripts cannot be, as the block depth needs to be computed for all
-    // lexical bindings in the entire eval script.
-    if (isEvalCompilationUnit()) {
+    {
         ParseNode* pn;
         do {
-            pn = parser->evalBody();
+            pn = isEvalCompilationUnit() ? parser->evalBody() : parser->globalBody();
             if (!pn && !handleStatementParseFailure(scopeChain, evalCaller, pc, globalsc))
                 return nullptr;
         } while (!pn);
@@ -613,42 +609,6 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
             return nullptr;
 
         parser->handler.freeTree(pn);
-    } else {
-        bool canHaveDirectives = true;
-        for (;;) {
-            TokenKind tt;
-            if (!parser->tokenStream.peekToken(&tt, TokenStream::Operand))
-                return nullptr;
-            if (tt == TOK_EOF)
-                break;
-
-            parser->tokenStream.tell(&startPosition);
-
-            ParseNode* pn = parser->statement(YieldIsName, canHaveDirectives);
-            if (!pn) {
-                if (!handleStatementParseFailure(scopeChain, evalCaller, pc, globalsc))
-                    return nullptr;
-
-                pn = parser->statement(YieldIsName);
-                if (!pn) {
-                    MOZ_ASSERT(!parser->hadAbortedSyntaxParse());
-                    return nullptr;
-                }
-            }
-
-            if (canHaveDirectives) {
-                if (!parser->maybeParseDirective(/* stmtList = */ nullptr, pn, &canHaveDirectives))
-                    return nullptr;
-            }
-
-            if (!prepareAndEmitTree(&pn, *pc))
-                return nullptr;
-
-            if (!pc->drainGlobalOrEvalBindings(cx, &vars, &lexicals))
-                return nullptr;
-
-            parser->handler.freeTree(pn);
-        }
     }
 
     if (!maybeCheckEvalFreeVariables(evalCaller, scopeChain, *pc) ||
