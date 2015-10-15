@@ -441,7 +441,18 @@ exports.defineLazyGetter = function defineLazyGetter(aObject, aName, aLambda) {
 };
 
 // DEPRECATED: use DevToolsUtils.assert(condition, message) instead!
+let haveLoggedDeprecationMessage = false;
 exports.dbg_assert = function dbg_assert(cond, e) {
+  if (!haveLoggedDeprecationMessage) {
+    haveLoggedDeprecationMessage = true;
+    const deprecationMessage = "DevToolsUtils.dbg_assert is deprecated! Use DevToolsUtils.assert instead!\n"
+          + Error().stack;
+    dump(deprecationMessage);
+    if (typeof console === "object" && console && console.warn) {
+      console.warn(deprecationMessage);
+    }
+  }
+
   if (!cond) {
     return e;
   }
