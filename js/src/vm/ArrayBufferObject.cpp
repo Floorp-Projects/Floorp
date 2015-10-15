@@ -461,7 +461,7 @@ ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!WarnIfNotConstructing(cx, args, "ArrayBuffer"))
+    if (!ThrowIfNotConstructing(cx, args, "ArrayBuffer"))
         return false;
 
     int32_t nbytes = 0;
