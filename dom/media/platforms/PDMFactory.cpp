@@ -56,6 +56,9 @@ bool PDMFactory::sGMPDecoderEnabled = false;
 #ifdef MOZ_FFMPEG
 bool PDMFactory::sFFmpegDecoderEnabled = false;
 #endif
+#ifdef XP_WIN
+bool PDMFactory::sWMFDecoderEnabled = false;
+#endif
 
 bool PDMFactory::sEnableFuzzingWrapper = false;
 uint32_t PDMFactory::sVideoOutputMinimumInterval_ms = 0;
@@ -90,6 +93,10 @@ PDMFactory::Init()
 #ifdef MOZ_FFMPEG
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
                                "media.ffmpeg.enabled", false);
+#endif
+#ifdef XP_WIN
+  Preferences::AddBoolVarCache(&sWMFDecoderEnabled,
+                               "media.wmf.enabled", false);
 #endif
 
   Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,
@@ -212,8 +219,10 @@ PDMFactory::CreatePDMs()
   }
 #endif
 #ifdef XP_WIN
-  m = new WMFDecoderModule();
-  StartupPDM(m);
+  if (sWMFDecoderEnabled) {
+    m = new WMFDecoderModule();
+    StartupPDM(m);
+  }
 #endif
 #ifdef MOZ_FFMPEG
   if (sFFmpegDecoderEnabled) {
