@@ -14,20 +14,15 @@ const App = createFactory(require("devtools/client/memory/app"));
 const Store = require("devtools/client/memory/store");
 
 /**
- * The current target, toolbox and MemoryFront, set by this tool's host.
+ * The current target, toolbox, MemoryFront, and HeapAnalysesClient, set by this tool's host.
  */
-var gToolbox, gTarget, gFront;
-
-/**
- * The current target, toolbox and MemoryFront, set by this tool's host.
- */
-var gToolbox, gTarget, gFront;
+var gToolbox, gTarget, gFront, gHeapAnalysesClient;
 
 function initialize () {
   return Task.spawn(function*() {
     let root = document.querySelector("#app");
     let store = Store();
-    let app = createElement(App, { front: gFront });
+    let app = createElement(App, { front: gFront, heapWorker: gHeapAnalysesClient });
     let provider = createElement(Provider, { store }, app);
     render(provider, root);
   });
