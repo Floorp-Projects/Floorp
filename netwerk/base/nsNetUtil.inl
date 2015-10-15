@@ -200,34 +200,38 @@ NS_NewChannelInternal(nsIChannel           **outChannel,
   // NS_NewChannelInternal is mostly called for channel redirects. We should allow
   // the creation of a channel even if the original channel did not have a loadinfo
   // attached.
-  if (!aLoadInfo) {
-    return NS_NewChannelInternal(outChannel,
-                                 aUri,
-                                 nullptr, // aLoadingNode
-                                 nullptr, // aLoadingPrincipal
-                                 nullptr, // aTriggeringPrincipal
-                                 nsILoadInfo::SEC_NORMAL,
-                                 nsIContentPolicy::TYPE_OTHER,
-                                 aLoadGroup,
-                                 aCallbacks,
-                                 aLoadFlags,
-                                 aIoService);
-  }
-  nsresult rv = NS_NewChannelInternal(outChannel,
-                                      aUri,
-                                      aLoadInfo->LoadingNode(),
-                                      aLoadInfo->LoadingPrincipal(),
-                                      aLoadInfo->TriggeringPrincipal(),
-                                      aLoadInfo->GetSecurityFlags(),
-                                      aLoadInfo->GetContentPolicyType(),
-                                      aLoadGroup,
-                                      aCallbacks,
-                                      aLoadFlags,
-                                      aIoService);
+  NS_ENSURE_ARG_POINTER(outChannel);
+
+  nsCOMPtr<nsIIOService> grip;
+  nsresult rv = net_EnsureIOService(&aIoService, grip);
   NS_ENSURE_SUCCESS(rv, rv);
-  // Please note that we still call SetLoadInfo on the channel because
-  // we want the same instance of the loadInfo to be set on the channel.
-  (*outChannel)->SetLoadInfo(aLoadInfo);
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = aIoService->NewChannelFromURIWithLoadInfo(
+         aUri,
+         aLoadInfo,
+         getter_AddRefs(channel));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aLoadGroup) {
+    rv = channel->SetLoadGroup(aLoadGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aCallbacks) {
+    rv = channel->SetNotificationCallbacks(aCallbacks);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (aLoadFlags != nsIRequest::LOAD_NORMAL) {
+    // Retain the LOAD_REPLACE load flag if set.
+    nsLoadFlags normalLoadFlags = 0;
+    channel->GetLoadFlags(&normalLoadFlags);
+    rv = channel->SetLoadFlags(aLoadFlags | (normalLoadFlags & nsIChannel::LOAD_REPLACE));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  channel.forget(outChannel);
   return NS_OK;
 }
 
