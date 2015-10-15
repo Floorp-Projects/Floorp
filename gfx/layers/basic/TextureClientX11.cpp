@@ -45,7 +45,7 @@ X11TextureData::X11TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 bool
-X11TextureData::Lock(OpenMode aMode)
+X11TextureData::Lock(OpenMode aMode, FenceHandle*)
 {
   return true;
 }
