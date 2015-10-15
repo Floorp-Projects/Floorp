@@ -51,7 +51,10 @@
 #include "nsICachingChannel.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIContentPolicy.h"
+#include "nsContentPolicyUtils.h"
 #include "nsError.h"
+#include "nsCORSListenerProxy.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStorageStream.h"
 #include "nsIPromptFactory.h"
@@ -123,7 +126,7 @@ using namespace mozilla::dom;
 #define XML_HTTP_REQUEST_SYNCLOOPING    (1 << 10) // Internal
 #define XML_HTTP_REQUEST_BACKGROUND     (1 << 13) // Internal
 #define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 14) // Internal
-#define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE (1 << 15) // Internal
+#define XML_HTTP_REQUEST_NEED_AC_PREFLIGHT (1 << 15) // Internal
 #define XML_HTTP_REQUEST_AC_WITH_CREDENTIALS (1 << 16) // Internal
 #define XML_HTTP_REQUEST_TIMED_OUT (1 << 17) // Internal
 #define XML_HTTP_REQUEST_DELETED (1 << 18) // Internal
@@ -1530,15 +1533,47 @@ nsXMLHttpRequest::IsSystemXHR()
   return mIsSystem || nsContentUtils::IsSystemPrincipal(mPrincipal);
 }
 
-void
+nsresult
 nsXMLHttpRequest::CheckChannelForCrossSiteRequest(nsIChannel* aChannel)
 {
   // A system XHR (chrome code or a web app with the right permission) can
-  // load anything, and same-origin loads are always allowed.
-  if (!IsSystemXHR() &&
-      !nsContentUtils::CheckMayLoad(mPrincipal, aChannel, true)) {
-    mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
+  // always perform cross-site requests. In the web app case, however, we
+  // must still check for protected URIs like file:///.
+  if (IsSystemXHR()) {
+    if (!nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+      nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+      nsCOMPtr<nsIURI> uri;
+      aChannel->GetOriginalURI(getter_AddRefs(uri));
+      return secMan->CheckLoadURIWithPrincipal(
+        mPrincipal, uri, nsIScriptSecurityManager::STANDARD);
+    }
+    return NS_OK;
   }
+
+  // If this is a same-origin request or the channel's URI inherits
+  // its principal, it's allowed.
+  if (nsContentUtils::CheckMayLoad(mPrincipal, aChannel, true)) {
+    return NS_OK;
+  }
+
+  // This is a cross-site request
+  mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
+
+  // Check if we need to do a preflight request.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  NS_ENSURE_TRUE(httpChannel, NS_ERROR_DOM_BAD_URI);
+
+  nsAutoCString method;
+  httpChannel->GetRequestMethod(method);
+  if (!mCORSUnsafeHeaders.IsEmpty() ||
+      (mUpload && mUpload->HasListeners()) ||
+      (!method.LowerCaseEqualsLiteral("get") &&
+       !method.LowerCaseEqualsLiteral("post") &&
+       !method.LowerCaseEqualsLiteral("head"))) {
+    mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1645,6 +1680,21 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
 
   rv = CheckInnerWindowCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
+                                 uri,
+                                 mPrincipal,
+                                 doc,
+                                 EmptyCString(), //mime guess
+                                 nullptr,         //extra
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv)) return rv;
+  if (NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
 
   // XXXbz this is wrong: we should only be looking at whether
   // user/password were passed, not at the values!  See bug 759624.
@@ -1667,27 +1717,20 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
   // will be automatically aborted if the user leaves the page.
   nsCOMPtr<nsILoadGroup> loadGroup = GetLoadGroup();
 
-  nsSecurityFlags secFlags;
+  nsSecurityFlags secFlags = nsILoadInfo::SEC_NORMAL;
   nsLoadFlags loadFlags = nsIRequest::LOAD_BACKGROUND;
-  if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
-    // When chrome is loading we want to make sure to sandbox any potential
-    // result document. We also want to allow cross-origin loads.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL |
-               nsILoadInfo::SEC_SANDBOXED;
-  }
-  else if (IsSystemXHR()) {
-    // For pages that have appropriate permissions, we want to still allow
-    // cross-origin loads, but make sure that the any potential result
-    // documents get the same principal as the loader.
-    secFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS |
-               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  if (IsSystemXHR()) {
+    // Don't give this document the system principal.  We need to keep track of
+    // mPrincipal being system because we use it for various security checks
+    // that should be passing, but the document data shouldn't get a system
+    // principal.  Hence we set the sandbox flag in loadinfo, so that 
+    // GetChannelResultPrincipal will give us the nullprincipal.
+    secFlags |= nsILoadInfo::SEC_SANDBOXED;
+
+    //For a XHR, disable interception
     loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-  }
-  else {
-    // Otherwise use CORS. Again, make sure that potential result documents
-    // use the same principal as the loader.
-    secFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
-               nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
+  } else {
+    secFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
   // If we have the document, use it
@@ -1712,10 +1755,10 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        loadFlags);
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   mState &= ~(XML_HTTP_REQUEST_USE_XSITE_AC |
-              XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE);
+              XML_HTTP_REQUEST_NEED_AC_PREFLIGHT);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (httpChannel) {
@@ -1731,7 +1774,7 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
 
   ChangeState(XML_HTTP_REQUEST_OPENED);
 
-  return NS_OK;
+  return rv;
 }
 
 void
@@ -2775,20 +2818,14 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
 
   ResetResponse();
 
-  CheckChannelForCrossSiteRequest(mChannel);
+  rv = CheckChannelForCrossSiteRequest(mChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   bool withCredentials = !!(mState & XML_HTTP_REQUEST_AC_WITH_CREDENTIALS);
 
-  // Not doing this for system XHR uses since those don't use CORS.
-  if (!IsSystemXHR() && withCredentials) {
-    // This is quite sad. We have to create the channel in .open(), since the
-    // chrome-only xhr.channel API depends on that. However .withCredentials
-    // can be modified after, so we don't know what to set the
-    // SEC_REQUIRE_CORS_WITH_CREDENTIALS flag to when the channel is
-    // created. So set it here using a hacky internal API.
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    static_cast<LoadInfo*>(loadInfo.get())->SetWithCredentialsSecFlag();
-  }
+  // Hook us up to listen to redirects and the like
+  mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
+  mChannel->SetNotificationCallbacks(this);
 
   // Blocking gets are common enough out of XHR that we should mark
   // the channel slow by default for pipeline purposes
@@ -2809,12 +2846,33 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     internalHttpChannel->SetResponseTimeoutEnabled(false);
   }
 
+  nsCOMPtr<nsIStreamListener> listener = this;
+  if (!IsSystemXHR()) {
+    // Always create a nsCORSListenerProxy here even if it's
+    // a same-origin request right now, since it could be redirected.
+    nsRefPtr<nsCORSListenerProxy> corsListener =
+      new nsCORSListenerProxy(listener, mPrincipal, withCredentials);
+    rv = corsListener->Init(mChannel, DataURIHandling::Allow);
+    NS_ENSURE_SUCCESS(rv, rv);
+    listener = corsListener;
+  }
+  else {
+    // Because of bug 682305, we can't let listener be the XHR object itself
+    // because JS wouldn't be able to use it. So if we haven't otherwise
+    // created a listener around 'this', do so now.
+
+    listener = new nsStreamListenerWrapper(listener);
+  }
+
   if (mIsAnon) {
     AddLoadFlags(mChannel, nsIRequest::LOAD_ANONYMOUS);
   }
   else {
     AddLoadFlags(mChannel, nsIChannel::LOAD_EXPLICIT_CREDENTIALS);
   }
+
+  NS_ASSERTION(listener != this,
+               "Using an object as a listener that can't be exposed to JS");
 
   // When we are sync loading, we need to bypass the local cache when it would
   // otherwise block us waiting for exclusive access to the cache.  If we don't
@@ -2848,19 +2906,10 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   mRequestSentTime = PR_Now();
   StartTimeoutTimer();
 
-  // Check if we need to do a preflight request.
-  if (!mCORSUnsafeHeaders.IsEmpty() ||
-      (mUpload && mUpload->HasListeners()) ||
-      (!method.LowerCaseEqualsLiteral("get") &&
-       !method.LowerCaseEqualsLiteral("post") &&
-       !method.LowerCaseEqualsLiteral("head"))) {
-    mState |= XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE;
-  }
-
   // Set up the preflight if needed
-  if ((mState & XML_HTTP_REQUEST_USE_XSITE_AC) &&
-      (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE)) {
-    NS_ENSURE_TRUE(internalHttpChannel, NS_ERROR_DOM_BAD_URI);
+  if (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT) {
+    // Check to see if this initial OPTIONS request has already been cached
+    // in our special Access Control Cache.
 
     rv = internalHttpChannel->SetCorsPreflightParameters(mCORSUnsafeHeaders,
                                                          withCredentials, mPrincipal);
@@ -2883,30 +2932,16 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     }
   }
 
-  // Hook us up to listen to redirects and the like
-  // Only do this very late since this creates a cycle between
-  // the channel and us. This cycle has to be manually broken if anything
-  // below fails.
-  mChannel->GetNotificationCallbacks(getter_AddRefs(mNotificationCallbacks));
-  mChannel->SetNotificationCallbacks(this);
-
   // Start reading from the channel
-  // Because of bug 682305, we can't let listener be the XHR object itself
-  // because JS wouldn't be able to use it. So create a listener around 'this'.
-  // Make sure to hold a strong reference so that we don't leak the wrapper.
-  nsCOMPtr<nsIStreamListener> listener = new nsStreamListenerWrapper(this);
-  rv = mChannel->AsyncOpen2(listener);
-  listener = nullptr;
+  rv = mChannel->AsyncOpen(listener, nullptr);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Drop our ref to the channel to avoid cycles. Also drop channel's
-    // ref to us to be extra safe.
-    mChannel->SetNotificationCallbacks(mNotificationCallbacks);
+    // Drop our ref to the channel to avoid cycles
     mChannel = nullptr;
-
     return rv;
   }
 
+  // Either AsyncOpen was called, or CORS will open the channel later.
   mWaitingForOnStopRequest = true;
 
   // If we're synchronous, spin an event loop here and wait
@@ -3349,12 +3384,17 @@ nsXMLHttpRequest::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
   nsresult rv;
 
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
-    CheckChannelForCrossSiteRequest(aNewChannel);
+    rv = CheckChannelForCrossSiteRequest(aNewChannel);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("nsXMLHttpRequest::OnChannelRedirect: "
+                 "CheckChannelForCrossSiteRequest returned failure");
+      return rv;
+    }
 
     // Disable redirects for preflighted cross-site requests entirely for now
-    if ((mState & XML_HTTP_REQUEST_USE_XSITE_AC) &&
-        (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE)) {
-       aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
+    // Note, do this after the call to CheckChannelForCrossSiteRequest
+    // to make sure that XML_HTTP_REQUEST_USE_XSITE_AC is up-to-date
+    if ((mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT)) {
        return NS_ERROR_DOM_BAD_URI;
     }
   }
@@ -3515,7 +3555,7 @@ bool
 nsXMLHttpRequest::AllowUploadProgress()
 {
   return !(mState & XML_HTTP_REQUEST_USE_XSITE_AC) ||
-    (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT_IF_XSITE);
+    (mState & XML_HTTP_REQUEST_NEED_AC_PREFLIGHT);
 }
 
 /////////////////////////////////////////////////////

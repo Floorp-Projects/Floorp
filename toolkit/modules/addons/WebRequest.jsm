@@ -250,9 +250,7 @@ var HttpObserverManager = {
     let listeners = this.listeners[kind];
     let browser = loadContext ? loadContext.topFrameElement : null;
     let loadInfo = channel.loadInfo;
-    let policyType = loadInfo ?
-                     loadInfo.externalContentPolicyType :
-                     Ci.nsIContentPolicy.TYPE_OTHER;
+    let policyType = loadInfo.contentPolicyType;
 
     let requestHeaders;
     let responseHeaders;
@@ -269,8 +267,8 @@ var HttpObserverManager = {
         method: channel.requestMethod,
         browser: browser,
         type: WebRequestCommon.typeForPolicyType(policyType),
-        windowId: loadInfo ? loadInfo.outerWindowID : 0,
-        parentWindowId: loadInfo ? loadInfo.parentOuterWindowID : 0,
+        windowId: loadInfo.outerWindowID,
+        parentWindowId: loadInfo.parentOuterWindowID,
       };
       if (opts.requestHeaders) {
         if (!requestHeaders) {

@@ -414,7 +414,8 @@ nsPreflightCache::GetCacheKey(nsIURI* aURI,
 
 NS_IMPL_ISUPPORTS(nsCORSListenerProxy, nsIStreamListener,
                   nsIRequestObserver, nsIChannelEventSink,
-                  nsIInterfaceRequestor, nsIThreadRetargetableStreamListener)
+                  nsIInterfaceRequestor, nsIAsyncVerifyRedirectCallback,
+                  nsIThreadRetargetableStreamListener)
 
 /* static */
 void
@@ -591,6 +592,9 @@ nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
   nsresult rv = mOuterListener->OnStopRequest(aRequest, aContext, aStatusCode);
   mOuterListener = nullptr;
   mOuterNotificationCallbacks = nullptr;
+  mRedirectCallback = nullptr;
+  mOldRedirectChannel = nullptr;
+  mNewRedirectChannel = nullptr;
   return rv;
 }
 
@@ -646,7 +650,7 @@ NS_IMETHODIMP
 nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
                                             nsIChannel *aNewChannel,
                                             uint32_t aFlags,
-                                            nsIAsyncVerifyRedirectCallback *aCb)
+                                            nsIAsyncVerifyRedirectCallback *cb)
 {
   nsresult rv;
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags) &&
@@ -710,24 +714,54 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
         return rv;
       }
     }
-
-    rv = UpdateChannel(aNewChannel, DataURIHandling::Disallow);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("nsCORSListenerProxy::AsyncOnChannelRedirect: "
-                   "UpdateChannel() returned failure");
-      aOldChannel->Cancel(rv);
-      return rv;
-    }
   }
+
+  // Prepare to receive callback
+  mRedirectCallback = cb;
+  mOldRedirectChannel = aOldChannel;
+  mNewRedirectChannel = aNewChannel;
 
   nsCOMPtr<nsIChannelEventSink> outer =
     do_GetInterface(mOuterNotificationCallbacks);
   if (outer) {
-    return outer->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, aCb);
+    rv = outer->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, this);
+    if (NS_FAILED(rv)) {
+        aOldChannel->Cancel(rv); // is this necessary...?
+        mRedirectCallback = nullptr;
+        mOldRedirectChannel = nullptr;
+        mNewRedirectChannel = nullptr;
+    }
+    return rv;  
   }
 
-  aCb->OnRedirectVerifyCallback(NS_OK);
+  (void) OnRedirectVerifyCallback(NS_OK);
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsCORSListenerProxy::OnRedirectVerifyCallback(nsresult result)
+{
+  NS_ASSERTION(mRedirectCallback, "mRedirectCallback not set in callback");
+  NS_ASSERTION(mOldRedirectChannel, "mOldRedirectChannel not set in callback");
+  NS_ASSERTION(mNewRedirectChannel, "mNewRedirectChannel not set in callback");
+
+  if (NS_SUCCEEDED(result)) {
+    nsresult rv = UpdateChannel(mNewRedirectChannel, DataURIHandling::Disallow);
+      if (NS_FAILED(rv)) {
+          NS_WARNING("nsCORSListenerProxy::OnRedirectVerifyCallback: "
+                     "UpdateChannel() returned failure");
+      }
+      result = rv;
+  }
+
+  if (NS_FAILED(result)) {
+    mOldRedirectChannel->Cancel(result);
+  }
+
+  mOldRedirectChannel = nullptr;
+  mNewRedirectChannel = nullptr;
+  mRedirectCallback->OnRedirectVerifyCallback(result);
+  mRedirectCallback   = nullptr;
   return NS_OK;
 }
 
