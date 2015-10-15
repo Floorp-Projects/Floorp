@@ -12,6 +12,7 @@ namespace mozilla {
 class RawDecoder : public MediaDecoder
 {
 public:
+  explicit RawDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
   virtual MediaDecoder* Clone() {
     if (!IsRawEnabled()) {
       return nullptr;

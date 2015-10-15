@@ -15,6 +15,8 @@ namespace mozilla {
 class MediaCodecDecoder : public MediaOmxCommonDecoder
 {
 public:
+  explicit MediaCodecDecoder(MediaDecoderOwner* aOwner)
+    : MediaOmxCommonDecoder(aOwner) {}
 
   virtual MediaDecoder* Clone();
 

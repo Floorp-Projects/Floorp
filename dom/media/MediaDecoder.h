@@ -299,7 +299,7 @@ public:
   // Must be called exactly once, on the main thread, during startup.
   static void InitStatics();
 
-  MediaDecoder();
+  explicit MediaDecoder(MediaDecoderOwner* aOwner);
 
   // Reset the decoder and notify the media element that
   // server connection is closed.

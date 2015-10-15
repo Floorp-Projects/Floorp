@@ -15,6 +15,7 @@ namespace mozilla {
 class GStreamerDecoder : public MediaDecoder
 {
 public:
+  explicit GStreamerDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
   virtual MediaDecoder* Clone() { return new GStreamerDecoder(); }
   virtual MediaDecoderStateMachine* CreateStateMachine();
   static bool CanHandleMediaType(const nsACString& aMIMEType, const nsAString* aCodecs);
