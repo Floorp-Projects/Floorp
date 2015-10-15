@@ -162,7 +162,7 @@
 
     <declare-styleable name="TabMenuStrip">
         <attr name="strip" format="reference"/>
-        <attr name="tabContentStart" format="dimension" />
+        <attr name="tabsMarginLeft" format="dimension" />
         <attr name="activeTextColor" format="color" />
         <attr name="inactiveTextColor" format="color" />
         <attr name="titlebarFill" format="boolean" />
