@@ -142,6 +142,11 @@ protected:
     // framebuffer.
     mozilla::RefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
     ANativeWindowBuffer* mFramebuffer;
+    /**
+     * Points to a mapped gralloc buffer between calls to lock and unlock.
+     * Should be null outside of the lock-unlock pair.
+     */
+    uint8_t* mMappedBuffer;
     // If we're using a BasicCompositor, this is our window back
     // buffer.  The gralloc framebuffer driver expects us to draw the
     // entire framebuffer on every frame, but gecko expects the

@@ -21,7 +21,8 @@ def Binary():
     if CONFIG['STLPORT_LIBS']:
         OS_LIBS += [CONFIG['STLPORT_LIBS']]
     elif CONFIG['OS_TARGET'] == 'Android':
-        USE_LIBS += ['stlport']
+        if CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
+            USE_LIBS += ['stlport']
 
 
 @template

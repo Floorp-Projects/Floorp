@@ -362,7 +362,13 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
                 // Terribly, deoptimized bindings may be updated with
                 // optimized bindings due to hoisted function statements, so
                 // give the new declaration a slot.
-                if (oldDecl->isDeoptimized() && !newDecl->isDeoptimized()) {
+                //
+                // Global bindings are excluded as currently they are never
+                // frame slots. The notion of being deoptimized is not
+                // applicable to them.
+                if (oldDecl->isDeoptimized() && !newDecl->isDeoptimized() &&
+                    !sc->isGlobalContext())
+                {
                     newDecl->pn_dflags |= PND_BOUND;
                     newDecl->pn_scopecoord.setSlot(ts, i);
                     newDecl->setOp(JSOP_GETLOCAL);
@@ -431,15 +437,27 @@ AppendPackedBindings(const ParseContext<ParseHandler>* pc, const DeclVector& vec
             MOZ_CRASH("unexpected dn->kind");
         }
 
-        /*
-         * Bindings::init does not check for duplicates so we must ensure that
-         * only one binding with a given name is marked aliased. pc->decls
-         * maintains the canonical definition for each name, so use that.
-         */
-        MOZ_ASSERT_IF(dn->isClosed(), pc->decls().lookupFirst(name) == dn);
-        bool aliased = dn->isClosed() ||
-                       (pc->sc->allLocalsAliased() &&
-                        pc->decls().lookupFirst(name) == dn);
+        bool aliased;
+        if (pc->sc->isGlobalContext()) {
+            // Bindings for global and eval scripts are used solely for redeclaration
+            // checks in the prologue. Neither 'true' nor 'false' accurately describe
+            // their aliased-ness. These bindings don't live in CallObjects or the
+            // frame, but either on the global object and the global lexical
+            // scope. Force aliased to be false to avoid confusing other analyses in
+            // the engine that assumes the frame has a call object if there are
+            // aliased bindings.
+            aliased = false;
+        } else {
+            /*
+             * Bindings::init does not check for duplicates so we must ensure that
+             * only one binding with a given name is marked aliased. pc->decls
+             * maintains the canonical definition for each name, so use that.
+             */
+            MOZ_ASSERT_IF(dn->isClosed(), pc->decls().lookupFirst(name) == dn);
+            aliased = dn->isClosed() ||
+                      (pc->sc->allLocalsAliased() &&
+                       pc->decls().lookupFirst(name) == dn);
+        }
 
         *dst = Binding(name, kind, aliased);
         if (!aliased && numUnaliased)
@@ -463,18 +481,23 @@ ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& 
     if (UINT32_MAX - args_.length() <= vars_.length() + bodyLevelLexicals_.length())
         return ts.reportError(JSMSG_TOO_MANY_LOCALS);
 
-    // Fix up the blockids of vars, whose static scope is always at the body
-    // level. This could not be done up front in ParseContext::Define, as
-    // the original blockids are used for redeclaration checks.
-    for (size_t i = 0; i < vars_.length(); i++)
-        vars_[i]->pn_blockid = bodyid;
+    // Fix up slots in non-global contexts. In global contexts all body-level
+    // names are dynamically defined and do not live in either frame or
+    // CallObject slots.
+    if (!sc->isGlobalContext()) {
+        // Fix up the blockids of vars, whose static scope is always at the body
+        // level. This could not be done up front in ParseContext::define, as
+        // the original blockids are used for redeclaration checks.
+        for (size_t i = 0; i < vars_.length(); i++)
+            vars_[i]->pn_blockid = bodyid;
 
-    // Fix up the slots of body-level lets to come after the vars now that we
-    // know how many vars there are.
-    for (size_t i = 0; i < bodyLevelLexicals_.length(); i++) {
-        Definition* dn = bodyLevelLexicals_[i];
-        if (!dn->pn_scopecoord.setSlot(ts, vars_.length() + i))
-            return false;
+        // Fix up the slots of body-level lets to come after the vars now that we
+        // know how many vars there are.
+        for (size_t i = 0; i < bodyLevelLexicals_.length(); i++) {
+            Definition* dn = bodyLevelLexicals_[i];
+            if (!dn->pn_scopecoord.setSlot(ts, vars_.length() + i))
+                return false;
+        }
     }
 
     uint32_t count = args_.length() + vars_.length() + bodyLevelLexicals_.length();
@@ -496,32 +519,6 @@ ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& 
                                               bodyLevelLexicals_.length(), blockScopeDepth,
                                               numUnaliasedVars, numUnaliasedBodyLevelLexicals,
                                               packedBindings, sc->isModuleBox());
-}
-
-template <>
-bool
-ParseContext<FullParseHandler>::drainGlobalOrEvalBindings(ExclusiveContext* cx,
-                                                          MutableHandle<TraceableVector<Binding>> vars,
-                                                          MutableHandle<TraceableVector<Binding>> lexicals)
-{
-    MOZ_ASSERT(sc->isGlobalContext());
-
-    uint32_t newVarsPos = vars.length();
-    uint32_t newLexicalsPos = lexicals.length();
-
-    if (!vars.growBy(vars_.length()))
-        return false;
-    AppendPackedBindings(this, vars_, vars.begin() + newVarsPos);
-    vars_.clear();
-
-    if (!sc->staticScope()->is<StaticEvalObject>()) {
-        if (!lexicals.growBy(bodyLevelLexicals_.length()))
-            return false;
-        AppendPackedBindings(this, bodyLevelLexicals_, lexicals.begin() + newLexicalsPos);
-    }
-    bodyLevelLexicals_.clear();
-
-    return true;
 }
 
 template <typename ParseHandler>
@@ -841,8 +838,7 @@ Parser<ParseHandler>::parse()
     GlobalSharedContext globalsc(context, staticLexical, directives,
                                  options().extraWarningsOption);
     ParseContext<ParseHandler> globalpc(this, /* parent = */ nullptr, ParseHandler::null(),
-                                        &globalsc, /* newDirectives = */ nullptr,
-                                        /* blockScopeDepth = */ 0);
+                                        &globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init(*this))
         return null();
 
@@ -919,7 +915,7 @@ Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
         return null();
     handler.setModuleBox(mn, modulebox);
 
-    ParseContext<FullParseHandler> modulepc(this, pc, mn, modulebox, nullptr, 0);
+    ParseContext<FullParseHandler> modulepc(this, pc, mn, modulebox, nullptr);
     if (!modulepc.init(*this))
         return null();
 
@@ -961,6 +957,26 @@ Parser<SyntaxParseHandler>::standaloneModule(HandleModuleObject module)
 }
 
 template <>
+bool
+Parser<FullParseHandler>::checkStatementsEOF()
+{
+    // This is designed to be paired with parsing a statement list at the top
+    // level.
+    //
+    // The statements() call breaks on TOK_RC, so make sure we've
+    // reached EOF here.
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+        return false;
+    if (tt != TOK_EOF) {
+        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+               "expression", TokenKindToDesc(tt));
+        return false;
+    }
+    return true;
+}
+
+template <>
 ParseNode*
 Parser<FullParseHandler>::evalBody()
 {
@@ -977,20 +993,28 @@ Parser<FullParseHandler>::evalBody()
     if (!body)
         return nullptr;
 
-    // The statements() call above breaks on TOK_RC, so make sure we've
-    // reached EOF here.
-    TokenKind tt;
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+    if (!checkStatementsEOF())
         return nullptr;
-    if (tt != TOK_EOF) {
-        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
-               "expression", TokenKindToDesc(tt));
-        return nullptr;
-    }
 
     block->pn_expr = body;
     block->pn_pos = body->pn_pos;
     return block;
+}
+
+template <>
+ParseNode*
+Parser<FullParseHandler>::globalBody()
+{
+    MOZ_ASSERT(pc->atGlobalLevel());
+
+    ParseNode* body = statements(YieldIsName);
+    if (!body)
+        return nullptr;
+
+    if (!checkStatementsEOF())
+        return nullptr;
+
+    return body;
 }
 
 template <>
@@ -1020,8 +1044,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
     funbox->length = fun->nargs() - fun->hasRest();
     handler.setFunctionBox(fn, funbox);
 
-    ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
-                                         /* blockScopeDepth = */ 0);
+    ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives);
     if (!funpc.init(*this))
         return null();
 
@@ -2643,8 +2666,7 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
                 return false;
 
             ParseContext<SyntaxParseHandler> funpc(parser, outerpc, SyntaxParseHandler::null(),
-                                                   funbox, newDirectives,
-                                                   /* blockScopeDepth = */ 0);
+                                                   funbox, newDirectives);
             if (!funpc.init(*parser))
                 return false;
 
@@ -2681,8 +2703,7 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
     blockScopes.resize(oldBlockScopesLength);
 
     // Continue doing a full parse for this inner function.
-    ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives,
-                                         /* blockScopeDepth = */ 0);
+    ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives);
     if (!funpc.init(*this))
         return false;
 
@@ -2720,8 +2741,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(InHandling inHandling, Node pn, 
         return false;
 
     // Initialize early for possible flags mutation via destructuringExpr.
-    ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives,
-                                           /* blockScopeDepth = */ 0);
+    ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives);
     if (!funpc.init(*this))
         return false;
 
@@ -2785,7 +2805,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ nullptr, pn, funbox,
-                                         &newDirectives, /* blockScopeDepth = */ 0);
+                                         &newDirectives);
     if (!funpc.init(*this))
         return null();
 
@@ -8101,8 +8121,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
         return null();
 
     ParseContext<ParseHandler> genpc(this, outerpc, genfn, genFunbox,
-                                     /* newDirectives = */ nullptr,
-                                     /* blockScopeDepth = */ 0);
+                                     /* newDirectives = */ nullptr);
     if (!genpc.init(*this))
         return null();
 

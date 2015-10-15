@@ -23,8 +23,8 @@ namespace mozilla {
 extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
-MediaOmxCommonDecoder::MediaOmxCommonDecoder()
-  : MediaDecoder()
+MediaOmxCommonDecoder::MediaOmxCommonDecoder(MediaDecoderOwner* aOwner)
+  : MediaDecoder(aOwner)
   , mReader(nullptr)
   , mCanOffloadAudio(false)
   , mFallbackToStateMachine(false)

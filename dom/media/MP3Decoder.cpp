@@ -15,11 +15,11 @@
 namespace mozilla {
 
 MediaDecoder*
-MP3Decoder::Clone() {
+MP3Decoder::Clone(MediaDecoderOwner* aOwner) {
   if (!IsEnabled()) {
     return nullptr;
   }
-  return new MP3Decoder();
+  return new MP3Decoder(aOwner);
 }
 
 MediaDecoderStateMachine*
