@@ -832,8 +832,7 @@ Parser<ParseHandler>::parse()
     GlobalSharedContext globalsc(context, staticLexical, directives,
                                  options().extraWarningsOption);
     ParseContext<ParseHandler> globalpc(this, /* parent = */ nullptr, ParseHandler::null(),
-                                        &globalsc, /* newDirectives = */ nullptr,
-                                        /* blockScopeDepth = */ 0);
+                                        &globalsc, /* newDirectives = */ nullptr);
     if (!globalpc.init(*this))
         return null();
 
@@ -910,7 +909,7 @@ Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
         return null();
     handler.setModuleBox(mn, modulebox);
 
-    ParseContext<FullParseHandler> modulepc(this, pc, mn, modulebox, nullptr, 0);
+    ParseContext<FullParseHandler> modulepc(this, pc, mn, modulebox, nullptr);
     if (!modulepc.init(*this))
         return null();
 
@@ -1039,8 +1038,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
     funbox->length = fun->nargs() - fun->hasRest();
     handler.setFunctionBox(fn, funbox);
 
-    ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
-                                         /* blockScopeDepth = */ 0);
+    ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives);
     if (!funpc.init(*this))
         return null();
 
@@ -2662,8 +2660,7 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
                 return false;
 
             ParseContext<SyntaxParseHandler> funpc(parser, outerpc, SyntaxParseHandler::null(),
-                                                   funbox, newDirectives,
-                                                   /* blockScopeDepth = */ 0);
+                                                   funbox, newDirectives);
             if (!funpc.init(*parser))
                 return false;
 
@@ -2700,8 +2697,7 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
     blockScopes.resize(oldBlockScopesLength);
 
     // Continue doing a full parse for this inner function.
-    ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives,
-                                         /* blockScopeDepth = */ 0);
+    ParseContext<FullParseHandler> funpc(this, pc, pn, funbox, newDirectives);
     if (!funpc.init(*this))
         return false;
 
@@ -2739,8 +2735,7 @@ Parser<SyntaxParseHandler>::functionArgsAndBody(InHandling inHandling, Node pn, 
         return false;
 
     // Initialize early for possible flags mutation via destructuringExpr.
-    ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives,
-                                           /* blockScopeDepth = */ 0);
+    ParseContext<SyntaxParseHandler> funpc(this, pc, handler.null(), funbox, newDirectives);
     if (!funpc.init(*this))
         return false;
 
@@ -2804,7 +2799,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ nullptr, pn, funbox,
-                                         &newDirectives, /* blockScopeDepth = */ 0);
+                                         &newDirectives);
     if (!funpc.init(*this))
         return null();
 
@@ -8120,8 +8115,7 @@ Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKi
         return null();
 
     ParseContext<ParseHandler> genpc(this, outerpc, genfn, genFunbox,
-                                     /* newDirectives = */ nullptr,
-                                     /* blockScopeDepth = */ 0);
+                                     /* newDirectives = */ nullptr);
     if (!genpc.init(*this))
         return null();
 
