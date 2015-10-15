@@ -13,11 +13,12 @@ namespace mozilla {
 class WebMDecoder : public MediaDecoder
 {
 public:
-  virtual MediaDecoder* Clone() {
+  explicit WebMDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
     if (!IsWebMEnabled()) {
       return nullptr;
     }
-    return new WebMDecoder();
+    return new WebMDecoder(aOwner);
   }
   virtual MediaDecoderStateMachine* CreateStateMachine();
 };

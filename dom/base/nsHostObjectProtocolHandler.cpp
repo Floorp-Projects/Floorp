@@ -419,16 +419,26 @@ GetDataInfo(const nsACString& aUri)
   }
 
   DataInfo* res;
-  nsCString uriIgnoringRef;
-  int32_t hashPos = aUri.FindChar('#');
-  if (hashPos < 0) {
-    uriIgnoringRef = aUri;
+
+  // Let's remove any fragment and query from this URI.
+  int32_t hasFragmentPos = aUri.FindChar('#');
+  int32_t hasQueryPos = aUri.FindChar('?');
+
+  int32_t pos = -1;
+  if (hasFragmentPos >= 0 && hasQueryPos >= 0) {
+    pos = std::min(hasFragmentPos, hasQueryPos);
+  } else if (hasFragmentPos >= 0) {
+    pos = hasFragmentPos;
+  } else {
+    pos = hasQueryPos;
   }
-  else {
-    uriIgnoringRef = StringHead(aUri, hashPos);
+
+  if (pos < 0) {
+    gDataTable->Get(aUri, &res);
+  } else {
+    gDataTable->Get(StringHead(aUri, pos), &res);
   }
-  gDataTable->Get(uriIgnoringRef, &res);
-  
+
   return res;
 }
 

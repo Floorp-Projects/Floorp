@@ -49,7 +49,8 @@ DirectShowDecoder::IsEnabled()
          Preferences::GetBool("media.directshow.enabled");
 }
 
-DirectShowDecoder::DirectShowDecoder()
+DirectShowDecoder::DirectShowDecoder(MediaDecoderOwner* aOwner)
+  : MediaDecoder(aOwner)
 {
   MOZ_COUNT_CTOR(DirectShowDecoder);
 }
