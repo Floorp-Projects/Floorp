@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/Http.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource:///modules/loop/LoopCalls.jsm");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 const { MozLoopServiceInternal } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
