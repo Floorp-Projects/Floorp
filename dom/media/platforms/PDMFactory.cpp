@@ -45,11 +45,17 @@ extern already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule();
 extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 
 bool PDMFactory::sUseBlankDecoder = false;
+#ifdef MOZ_GONK_MEDIACODEC
 bool PDMFactory::sGonkDecoderEnabled = false;
+#endif
+#ifdef MOZ_WIDGET_ANDROID
 bool PDMFactory::sAndroidMCDecoderEnabled = false;
 bool PDMFactory::sAndroidMCDecoderPreferred = false;
+#endif
 bool PDMFactory::sGMPDecoderEnabled = false;
+#ifdef MOZ_FFMPEG
 bool PDMFactory::sFFmpegDecoderEnabled = false;
+#endif
 
 bool PDMFactory::sEnableFuzzingWrapper = false;
 uint32_t PDMFactory::sVideoOutputMinimumInterval_ms = 0;
@@ -81,8 +87,10 @@ PDMFactory::Init()
 
   Preferences::AddBoolVarCache(&sGMPDecoderEnabled,
                                "media.gmp.decoder.enabled", false);
+#ifdef MOZ_FFMPEG
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
                                "media.ffmpeg.enabled", false);
+#endif
 
   Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,
                                "media.decoder.fuzzing.enabled", false);
