@@ -922,6 +922,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         return false;
     }
 
+    bool handleWindowsMessages = mListener->HandleWindowsMessages(*aMsg);
     mLink->SendMessage(msg.forget());
 
     while (true) {
@@ -942,7 +943,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
         MOZ_ASSERT(!mTimedOutMessageSeqno);
 
-        bool maybeTimedOut = !WaitForSyncNotify();
+        bool maybeTimedOut = !WaitForSyncNotify(handleWindowsMessages);
 
         if (!Connected()) {
             ReportConnectionError("MessageChannel::SendAndWait");
@@ -1576,7 +1577,7 @@ MessageChannel::WaitResponse(bool aWaitTimedOut)
 
 #ifndef OS_WIN
 bool
-MessageChannel::WaitForSyncNotify()
+MessageChannel::WaitForSyncNotify(bool /* aHandleWindowsMessages */)
 {
     PRIntervalTime timeout = (kNoTimeout == mTimeoutMs) ?
                              PR_INTERVAL_NO_TIMEOUT :
@@ -1594,7 +1595,7 @@ MessageChannel::WaitForSyncNotify()
 bool
 MessageChannel::WaitForInterruptNotify()
 {
-    return WaitForSyncNotify();
+    return WaitForSyncNotify(true);
 }
 
 void

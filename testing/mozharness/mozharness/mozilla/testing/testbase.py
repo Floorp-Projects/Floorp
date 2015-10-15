@@ -398,6 +398,9 @@ You can set this by:
             'webapprt': 'mochitest',
             'jsreftest': 'reftest',
             'crashtest': 'reftest',
+            'reftest-debug': 'reftest',
+            'jsreftest-debug': 'reftest',
+            'crashtest-debug': 'reftest',
         }
         suite_categories = [aliases.get(name, name) for name in suite_categories]
 

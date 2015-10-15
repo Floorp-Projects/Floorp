@@ -52,7 +52,7 @@ class LocalesMixin(ChunkingMixin):
         if hasattr(self, 'read_buildbot_config'):
             self.read_buildbot_config()
             if self.buildbot_config:
-                locales = self.buildbot_config.get("locales")
+                locales = self.buildbot_config['properties'].get("locales")
             if locales:
                 self.info("Using locales from buildbot: %s" % locales)
                 locales = locales.split()
@@ -227,7 +227,7 @@ class LocalesMixin(ChunkingMixin):
                 tag = self.l10n_revisions[locale]
             locale_repos.append({
                 'repo': "%s/%s" % (hg_l10n_base, locale),
-                'tag': tag,
+                'revision': tag,
                 'vcs': vcs
             })
         revs = self.vcs_checkout_repos(repo_list=locale_repos,

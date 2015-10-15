@@ -55,7 +55,7 @@ TestArray.addTest(
   "ECDSA JWK import and verify a known-good signature",
   function() {
     var that = this;
-    var alg = { name: "ECDSA", namedCurve: "P-256", hash: "SHA-256" };
+    var alg = { name: "ECDSA", namedCurve: "P-521", hash: "SHA-512" };
 
     function doVerify(x) {
       return crypto.subtle.verify(alg, x, tv.ecdsa_verify.sig, tv.ecdsa_verify.data);
@@ -63,7 +63,7 @@ TestArray.addTest(
 
     crypto.subtle.importKey("jwk", tv.ecdsa_verify.pub_jwk, alg, true, ["verify"])
       .then(doVerify)
-      .then(complete(that), error(that))
+      .then(complete(that, x => x), error(that))
   }
 );
 
@@ -82,7 +82,7 @@ TestArray.addTest(
             .then(spki => crypto.subtle.importKey("spki", spki, alg, false, ["verify"]))
       ]))
       .then(sigAndKey => crypto.subtle.verify(alg, sigAndKey[1], sigAndKey[0], msg))
-      .then(complete(that), error(that))
+      .then(complete(that, x => x), error(that))
   }
 );
 
@@ -124,7 +124,7 @@ TestArray.addTest(
     crypto.subtle.generateKey(alg, true, ["sign", "verify"])
       .then(doSign)
       .then(doVerify)
-      .then(complete(that), error(that))
+      .then(complete(that, x => x), error(that))
   }
 );
 
@@ -174,7 +174,7 @@ TestArray.addTest(
 
     crypto.subtle.importKey("raw", tv.ecdsa_verify.raw, alg, true, ["verify"])
       .then(doVerify)
-      .then(complete(that), error(that))
+      .then(complete(that, x => x), error(that))
   }
 );
 

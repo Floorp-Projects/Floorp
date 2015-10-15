@@ -1,0 +1,39 @@
+bmpsuite, by Jason Summers, is an excellent BMP test suite that covers many
+obscure corners of the BMP format. All the test images can be seen here:
+
+  http://entropymine.com/jason/bmpsuite/bmpsuite/html/bmpsuite.html
+
+The code used to generate the test images is available here:
+
+  https://github.com/jsummers/bmpsuite/
+
+The readme.txt file states that the code is GPLv3 and the generated image files
+are in the public domain. We have not included the code, but we have included:
+(a) some quotes from the documentation and (b) some of the reference PNG
+images. However, (a) and (b) are for testing purposes only and are not included
+in Firefox releases.
+
+The BMP files within this directory were generated with bmpsuite v2.3 (git
+revision 3adcc9e20c0b6d2d665966b7e047b6f9474cef12).
+
+There are three sub-directories.
+- g/: for "good" images.
+- q/: for "questionable" images.
+- b/: for "bad" images.
+
+Each file listed in a reftest.list file is annotated with the following lines.
+
+- The first line starts with "BMP:" and is the output of the MOZ_LOG call in
+  nsBMPDecoder.cpp. It has basic image info.
+
+- Next is a quote from the bmpsuite docs, which describes the particulars of
+  the file.
+
+- Some files also have additional notes in square brackets. These explain
+  anything non-obvious about the file, such as how we handle things that are
+  ambiguous, any shortcomings in our decoding, and how Chromium handles the
+  image.
+
+Some of the reference PNGs need a small amount of fuzziness to match the BMPs.
+This might be due to PNG color correction.
+

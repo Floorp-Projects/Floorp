@@ -272,6 +272,9 @@ typedef enum
   /*6.1*/ HB_SCRIPT_SORA_SOMPENG		= HB_TAG ('S','o','r','a'),
   /*6.1*/ HB_SCRIPT_TAKRI			= HB_TAG ('T','a','k','r'),
 
+  /*
+   * Since: 0.9.30
+   */
   /*7.0*/ HB_SCRIPT_BASSA_VAH			= HB_TAG ('B','a','s','s'),
   /*7.0*/ HB_SCRIPT_CAUCASIAN_ALBANIAN		= HB_TAG ('A','g','h','b'),
   /*7.0*/ HB_SCRIPT_DUPLOYAN			= HB_TAG ('D','u','p','l'),

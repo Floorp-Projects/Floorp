@@ -13,24 +13,24 @@
 
 #define DROP_THIS_TABLE(...) \
   do { \
-    OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__); \
+    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
     OTS_FAILURE_MSG("Table discarded"); \
-    delete file->hdmx; \
-    file->hdmx = 0; \
+    delete font->hdmx; \
+    font->hdmx = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
+bool ots_hdmx_parse(Font *font, const uint8_t *data, size_t length) {
   Buffer table(data, length);
-  file->hdmx = new OpenTypeHDMX;
-  OpenTypeHDMX * const hdmx = file->hdmx;
+  font->hdmx = new OpenTypeHDMX;
+  OpenTypeHDMX * const hdmx = font->hdmx;
 
-  if (!file->head || !file->maxp) {
+  if (!font->head || !font->maxp) {
     return OTS_FAILURE_MSG("Missing maxp or head tables in font, needed by hdmx");
   }
 
-  if ((file->head->flags & 0x14) == 0) {
+  if ((font->head->flags & 0x14) == 0) {
     // http://www.microsoft.com/typography/otspec/recom.htm
     DROP_THIS_TABLE("the table should not be present when bit 2 and 4 of the "
                     "head->flags are not set");
@@ -51,7 +51,7 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     DROP_THIS_TABLE("bad num_recs: %d", num_recs);
     return true;
   }
-  const int32_t actual_size_device_record = file->maxp->num_glyphs + 2;
+  const int32_t actual_size_device_record = font->maxp->num_glyphs + 2;
   if (hdmx->size_device_record < actual_size_device_record) {
     DROP_THIS_TABLE("bad hdmx->size_device_record: %d", hdmx->size_device_record);
     return true;
@@ -78,8 +78,8 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     }
     last_pixel_size = rec.pixel_size;
 
-    rec.widths.reserve(file->maxp->num_glyphs);
-    for (unsigned j = 0; j < file->maxp->num_glyphs; ++j) {
+    rec.widths.reserve(font->maxp->num_glyphs);
+    for (unsigned j = 0; j < font->maxp->num_glyphs; ++j) {
       uint8_t width;
       if (!table.ReadU8(&width)) {
         return OTS_FAILURE_MSG("Failed to read glyph width %d in record %d", j, i);
@@ -98,14 +98,14 @@ bool ots_hdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_hdmx_should_serialise(OpenTypeFile *file) {
-  if (!file->hdmx) return false;
-  if (!file->glyf) return false;  // this table is not for CFF fonts.
+bool ots_hdmx_should_serialise(Font *font) {
+  if (!font->hdmx) return false;
+  if (!font->glyf) return false;  // this table is not for CFF fonts.
   return true;
 }
 
-bool ots_hdmx_serialise(OTSStream *out, OpenTypeFile *file) {
-  OpenTypeHDMX * const hdmx = file->hdmx;
+bool ots_hdmx_serialise(OTSStream *out, Font *font) {
+  OpenTypeHDMX * const hdmx = font->hdmx;
 
   const int16_t num_recs = static_cast<int16_t>(hdmx->records.size());
   if (hdmx->records.size() >
@@ -132,8 +132,13 @@ bool ots_hdmx_serialise(OTSStream *out, OpenTypeFile *file) {
   return true;
 }
 
-void ots_hdmx_free(OpenTypeFile *file) {
-  delete file->hdmx;
+void ots_hdmx_reuse(Font *font, Font *other) {
+  font->hdmx = other->hdmx;
+  font->hdmx_reused = true;
+}
+
+void ots_hdmx_free(Font *font) {
+  delete font->hdmx;
 }
 
 }  // namespace ots

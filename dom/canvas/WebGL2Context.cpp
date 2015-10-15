@@ -180,8 +180,6 @@ WebGLContext::InitWebGL2()
     mDefaultTransformFeedback = new WebGLTransformFeedback(this, 0);
     mBoundTransformFeedback = mDefaultTransformFeedback;
 
-    mBypassShaderValidation = true;
-
     return true;
 }
 

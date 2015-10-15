@@ -162,9 +162,10 @@ nsICOEncoder::AddImageFrame(const uint8_t* aData,
 
     // Icon files that wrap a BMP file must not include the BITMAPFILEHEADER
     // section at the beginning of the encoded BMP data, so we must skip over
-    // BMPFILEHEADER::LENGTH bytes when adding the BMP content to the icon file.
+    // bmp::FileHeader::LENGTH bytes when adding the BMP content to the icon
+    // file.
     mICODirEntry.mBytesInRes =
-      BMPImageBufferSize - BMPFILEHEADER::LENGTH + andMaskSize;
+      BMPImageBufferSize - bmp::FileHeader::LENGTH + andMaskSize;
 
     // Encode the icon headers
     EncodeFileHeader();
@@ -173,14 +174,14 @@ nsICOEncoder::AddImageFrame(const uint8_t* aData,
     char* imageBuffer;
     rv = mContainedEncoder->GetImageBuffer(&imageBuffer);
     NS_ENSURE_SUCCESS(rv, rv);
-    memcpy(mImageBufferCurr, imageBuffer + BMPFILEHEADER::LENGTH,
-           BMPImageBufferSize - BMPFILEHEADER::LENGTH);
+    memcpy(mImageBufferCurr, imageBuffer + bmp::FileHeader::LENGTH,
+           BMPImageBufferSize - bmp::FileHeader::LENGTH);
     // We need to fix the BMP height to be *2 for the AND mask
     uint32_t fixedHeight = GetRealHeight() * 2;
     NativeEndian::swapToLittleEndianInPlace(&fixedHeight, 1);
     // The height is stored at an offset of 8 from the DIB header
     memcpy(mImageBufferCurr + 8, &fixedHeight, sizeof(fixedHeight));
-    mImageBufferCurr += BMPImageBufferSize - BMPFILEHEADER::LENGTH;
+    mImageBufferCurr += BMPImageBufferSize - bmp::FileHeader::LENGTH;
 
     // Calculate rowsize in DWORD's
     uint32_t rowSize = ((GetRealWidth() + 31) / 32) * 4; // + 31 to round up

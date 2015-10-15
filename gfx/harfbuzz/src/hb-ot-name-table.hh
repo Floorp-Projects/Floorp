@@ -60,7 +60,7 @@ struct NameRecord
   {
     TRACE_SANITIZE (this);
     /* We can check from base all the way up to the end of string... */
-    return TRACE_RETURN (c->check_struct (this) && c->check_range ((char *) base, (unsigned int) length + offset));
+    return_trace (c->check_struct (this) && c->check_range ((char *) base, (unsigned int) length + offset));
   }
 
   USHORT	platformID;	/* Platform ID. */
@@ -107,17 +107,17 @@ struct name
     char *string_pool = (char *) this + stringOffset;
     unsigned int _count = count;
     for (unsigned int i = 0; i < _count; i++)
-      if (!nameRecord[i].sanitize (c, string_pool)) return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
+      if (!nameRecord[i].sanitize (c, string_pool)) return_trace (false);
+    return_trace (true);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (c->check_struct (this) &&
-			 likely (format == 0 || format == 1) &&
-			 c->check_array (nameRecord, nameRecord[0].static_size, count) &&
-			 sanitize_records (c));
+    return_trace (c->check_struct (this) &&
+		  likely (format == 0 || format == 1) &&
+		  c->check_array (nameRecord, nameRecord[0].static_size, count) &&
+		  sanitize_records (c));
   }
 
   /* We only implement format 0 for now. */
