@@ -25,95 +25,95 @@ function run_test() {
   var netutil = Components.classes["@mozilla.org/network/util;1"]
                           .getService(Components.interfaces.nsINetUtil);
 
-  type = netutil.parseResponseContentType("text/html", charset, hadCharset);
+  type = netutil.parseContentType("text/html", charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType("TEXT/HTML", charset, hadCharset);
+  type = netutil.parseContentType("TEXT/HTML", charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType("text/html, text/html", charset, hadCharset);
+  type = netutil.parseContentType("text/html, text/html", charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType("text/html, text/plain",
+  type = netutil.parseContentType("text/html, text/plain",
 				  charset, hadCharset);
   check("text/plain", "", false);
 
-  type = netutil.parseResponseContentType('text/html, ', charset, hadCharset);
+  type = netutil.parseContentType('text/html, ', charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType('text/html, */*', charset, hadCharset);
+  type = netutil.parseContentType('text/html, */*', charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType('text/html, foo', charset, hadCharset);
+  type = netutil.parseContentType('text/html, foo', charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType("text/html; charset=ISO-8859-1",
+  type = netutil.parseContentType("text/html; charset=ISO-8859-1",
 				  charset, hadCharset);
   check("text/html", "ISO-8859-1", true);
 
-  type = netutil.parseResponseContentType('text/html; charset="ISO-8859-1"',
+  type = netutil.parseContentType('text/html; charset="ISO-8859-1"',
 				  charset, hadCharset);
   check("text/html", "ISO-8859-1", true);
 
-  type = netutil.parseResponseContentType("text/html; charset='ISO-8859-1'",
+  type = netutil.parseContentType("text/html; charset='ISO-8859-1'",
 				  charset, hadCharset);
   check("text/html", "'ISO-8859-1'", true);
 
-  type = netutil.parseResponseContentType("text/html; charset=\"ISO-8859-1\", text/html",
+  type = netutil.parseContentType("text/html; charset=\"ISO-8859-1\", text/html",
 				  charset, hadCharset);
   check("text/html", "ISO-8859-1", true);
 
-  type = netutil.parseResponseContentType("text/html; charset=\"ISO-8859-1\", text/html; charset=UTF8",
+  type = netutil.parseContentType("text/html; charset=\"ISO-8859-1\", text/html; charset=UTF8",
 				  charset, hadCharset);
   check("text/html", "UTF8", true);
 
-  type = netutil.parseResponseContentType("text/html; charset=ISO-8859-1, TEXT/HTML", charset, hadCharset);
+  type = netutil.parseContentType("text/html; charset=ISO-8859-1, TEXT/HTML", charset, hadCharset);
   check("text/html", "ISO-8859-1", true);
 
-  type = netutil.parseResponseContentType("text/html; charset=ISO-8859-1, TEXT/plain", charset, hadCharset);
+  type = netutil.parseContentType("text/html; charset=ISO-8859-1, TEXT/plain", charset, hadCharset);
   check("text/plain", "", true);
 
-  type = netutil.parseResponseContentType("text/plain, TEXT/HTML; charset=ISO-8859-1, text/html, TEXT/HTML", charset, hadCharset);
+  type = netutil.parseContentType("text/plain, TEXT/HTML; charset=ISO-8859-1, text/html, TEXT/HTML", charset, hadCharset);
   check("text/html", "ISO-8859-1", true);
 
-  type = netutil.parseResponseContentType('text/plain, TEXT/HTML; param="charset=UTF8"; charset="ISO-8859-1"; param2="charset=UTF16", text/html, TEXT/HTML', charset, hadCharset);
+  type = netutil.parseContentType('text/plain, TEXT/HTML; param="charset=UTF8"; charset="ISO-8859-1"; param2="charset=UTF16", text/html, TEXT/HTML', charset, hadCharset);
   check("text/html", "ISO-8859-1", true);
 
-  type = netutil.parseResponseContentType('text/plain, TEXT/HTML; param=charset=UTF8; charset="ISO-8859-1"; param2=charset=UTF16, text/html, TEXT/HTML', charset, hadCharset);
+  type = netutil.parseContentType('text/plain, TEXT/HTML; param=charset=UTF8; charset="ISO-8859-1"; param2=charset=UTF16, text/html, TEXT/HTML', charset, hadCharset);
   check("text/html", "ISO-8859-1", true);  
 
-  type = netutil.parseResponseContentType("text/plain; param= , text/html", charset, hadCharset);
+  type = netutil.parseContentType("text/plain; param= , text/html", charset, hadCharset);
   check("text/html", "", false);
 
-  type = netutil.parseResponseContentType('text/plain; param=", text/html"', charset, hadCharset);
+  type = netutil.parseContentType('text/plain; param=", text/html"', charset, hadCharset);
   check("text/plain", "", false);
 
-  type = netutil.parseResponseContentType('text/plain; param=", \\" , text/html"', charset, hadCharset);
+  type = netutil.parseContentType('text/plain; param=", \\" , text/html"', charset, hadCharset);
   check("text/plain", "", false);
 
-  type = netutil.parseResponseContentType('text/plain; param=", \\" , text/html , "', charset, hadCharset);
+  type = netutil.parseContentType('text/plain; param=", \\" , text/html , "', charset, hadCharset);
   check("text/plain", "", false);
 
-  type = netutil.parseResponseContentType('text/plain param=", \\" , text/html , "', charset, hadCharset);
+  type = netutil.parseContentType('text/plain param=", \\" , text/html , "', charset, hadCharset);
   check("text/plain", "", false);
 
-  type = netutil.parseResponseContentType('text/plain charset=UTF8', charset, hadCharset);
+  type = netutil.parseContentType('text/plain charset=UTF8', charset, hadCharset);
   check("text/plain", "", false);
 
-  type = netutil.parseResponseContentType('text/plain, TEXT/HTML; param="charset=UTF8"; ; param2="charset=UTF16", text/html, TEXT/HTML', charset, hadCharset);
+  type = netutil.parseContentType('text/plain, TEXT/HTML; param="charset=UTF8"; ; param2="charset=UTF16", text/html, TEXT/HTML', charset, hadCharset);
   check("text/html", "", false);
 
   // Bug 562915 - correctness: "\x" is "x"
-  type = netutil.parseResponseContentType('text/plain; charset="UTF\\-8"', charset, hadCharset);
+  type = netutil.parseContentType('text/plain; charset="UTF\\-8"', charset, hadCharset);
   check("text/plain", "UTF-8", true);
 
   // Bug 700589
 
   // check that single quote doesn't confuse parsing of subsequent parameters
-  type = netutil.parseResponseContentType("text/plain; x='; charset=\"UTF-8\"", charset, hadCharset);
+  type = netutil.parseContentType("text/plain; x='; charset=\"UTF-8\"", charset, hadCharset);
   check("text/plain", "UTF-8", true);
 
   // check that single quotes do not get removed from extracted charset
-  type = netutil.parseResponseContentType("text/plain; charset='UTF-8'", charset, hadCharset);
+  type = netutil.parseContentType("text/plain; charset='UTF-8'", charset, hadCharset);
   check("text/plain", "'UTF-8'", true);
 }
