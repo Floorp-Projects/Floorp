@@ -158,7 +158,7 @@ hb_unicode_funcs_get_default (void)
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_unicode_funcs_t *
 hb_unicode_funcs_create (hb_unicode_funcs_t *parent)
@@ -204,7 +204,7 @@ const hb_unicode_funcs_t _hb_unicode_funcs_nil = {
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_unicode_funcs_t *
 hb_unicode_funcs_get_empty (void)
@@ -220,7 +220,7 @@ hb_unicode_funcs_get_empty (void)
  *
  * Return value: (transfer full):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_unicode_funcs_t *
 hb_unicode_funcs_reference (hb_unicode_funcs_t *ufuncs)
@@ -234,7 +234,7 @@ hb_unicode_funcs_reference (hb_unicode_funcs_t *ufuncs)
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_unicode_funcs_destroy (hb_unicode_funcs_t *ufuncs)
@@ -263,7 +263,7 @@ hb_unicode_funcs_destroy (hb_unicode_funcs_t *ufuncs)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_unicode_funcs_set_user_data (hb_unicode_funcs_t *ufuncs,
@@ -284,7 +284,7 @@ hb_unicode_funcs_set_user_data (hb_unicode_funcs_t *ufuncs,
  *
  * Return value: (transfer none):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void *
 hb_unicode_funcs_get_user_data (hb_unicode_funcs_t *ufuncs,
@@ -300,7 +300,7 @@ hb_unicode_funcs_get_user_data (hb_unicode_funcs_t *ufuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_unicode_funcs_make_immutable (hb_unicode_funcs_t *ufuncs)
@@ -319,7 +319,7 @@ hb_unicode_funcs_make_immutable (hb_unicode_funcs_t *ufuncs)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_bool_t
 hb_unicode_funcs_is_immutable (hb_unicode_funcs_t *ufuncs)
@@ -335,7 +335,7 @@ hb_unicode_funcs_is_immutable (hb_unicode_funcs_t *ufuncs)
  *
  * Return value: 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_unicode_funcs_t *
 hb_unicode_funcs_get_parent (hb_unicode_funcs_t *ufuncs)

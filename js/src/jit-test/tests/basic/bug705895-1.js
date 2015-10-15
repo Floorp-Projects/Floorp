@@ -2,7 +2,8 @@ load(libdir + "immutable-prototype.js");
 
 c = Number.prototype;
 function f(o) {
-    o.__proto__ = null
+    if (globalPrototypeChainIsMutable() || o !== Object.prototype)
+        o.__proto__ = null
     for (x in o) {}
 }
 for (i = 0; i < 9; i++) {

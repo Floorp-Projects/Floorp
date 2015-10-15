@@ -27,10 +27,10 @@ dictionary MediaStreamConstraints {
     DOMString? peerIdentity = null;
 };
 
-// [Exposed=Window,
-//  Constructor,
-//  Constructor (MediaStream stream),
-//  Constructor (sequence<MediaStreamTrack> tracks)]
+[Exposed=Window,
+ Constructor,
+ Constructor (MediaStream stream),
+ Constructor (sequence<MediaStreamTrack> tracks)]
 interface MediaStream : EventTarget {
     readonly    attribute DOMString    id;
     sequence<AudioStreamTrack> getAudioTracks ();

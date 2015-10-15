@@ -224,6 +224,33 @@ bool isInterestingDeclForImplicitConversion(const Decl *decl) {
   return !isInIgnoredNamespaceForImplicitConversion(decl) &&
          !isIgnoredPathForImplicitConversion(decl);
 }
+
+bool isIgnoredExprForMustUse(const Expr *E) {
+  if (const CXXOperatorCallExpr *OpCall = dyn_cast<CXXOperatorCallExpr>(E)) {
+    switch (OpCall->getOperator()) {
+    case OO_Equal:
+    case OO_PlusEqual:
+    case OO_MinusEqual:
+    case OO_StarEqual:
+    case OO_SlashEqual:
+    case OO_PercentEqual:
+    case OO_CaretEqual:
+    case OO_AmpEqual:
+    case OO_PipeEqual:
+    case OO_LessLessEqual:
+    case OO_GreaterGreaterEqual:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  if (const BinaryOperator *Op = dyn_cast<BinaryOperator>(E)) {
+    return Op->isAssignmentOp();
+  }
+
+  return false;
+}
 }
 
 class CustomTypeAnnotation {
@@ -320,7 +347,7 @@ public:
     const Expr *E = dyn_cast_or_null<Expr>(stmt);
     if (E) {
       QualType T = E->getType();
-      if (MustUse.hasEffectiveAnnotation(T)) {
+      if (MustUse.hasEffectiveAnnotation(T) && !isIgnoredExprForMustUse(E)) {
         unsigned errorID = Diag.getDiagnosticIDs()->getCustomDiagID(
             DiagnosticIDs::Error, "Unused value of must-use type %0");
 

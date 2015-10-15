@@ -44,7 +44,7 @@ namespace OT {
 
 
 #define NOT_COVERED		((unsigned int) -1)
-#define MAX_NESTING_LEVEL	8
+#define MAX_NESTING_LEVEL	6
 #define MAX_CONTEXT_LENGTH	64
 
 
@@ -75,7 +75,7 @@ struct Record
   {
     TRACE_SANITIZE (this);
     const sanitize_closure_t closure = {tag, base};
-    return TRACE_RETURN (c->check_struct (this) && offset.sanitize (c, base, &closure));
+    return_trace (c->check_struct (this) && offset.sanitize (c, base, &closure));
   }
 
   Tag		tag;		/* 4-byte Tag identifier */
@@ -131,7 +131,7 @@ struct RecordListOf : RecordArrayOf<Type>
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (RecordArrayOf<Type>::sanitize (c, this));
+    return_trace (RecordArrayOf<Type>::sanitize (c, this));
   }
 };
 
@@ -145,7 +145,7 @@ struct RangeRecord
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (c->check_struct (this));
+    return_trace (c->check_struct (this));
   }
 
   inline bool intersects (const hb_set_t *glyphs) const {
@@ -211,7 +211,7 @@ struct LangSys
 			const Record<LangSys>::sanitize_closure_t * = NULL) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (c->check_struct (this) && featureIndex.sanitize (c));
+    return_trace (c->check_struct (this) && featureIndex.sanitize (c));
   }
 
   Offset<>	lookupOrderZ;	/* = Null (reserved for an offset to a
@@ -251,7 +251,7 @@ struct Script
 			const Record<Script>::sanitize_closure_t * = NULL) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (defaultLangSys.sanitize (c, this) && langSys.sanitize (c, this));
+    return_trace (defaultLangSys.sanitize (c, this) && langSys.sanitize (c, this));
   }
 
   protected:
@@ -274,7 +274,7 @@ struct FeatureParamsSize
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    if (unlikely (!c->check_struct (this))) return TRACE_RETURN (false);
+    if (unlikely (!c->check_struct (this))) return_trace (false);
 
     /* This subtable has some "history", if you will.  Some earlier versions of
      * Adobe tools calculated the offset of the FeatureParams sutable from the
@@ -326,19 +326,19 @@ struct FeatureParamsSize
      */
 
     if (!designSize)
-      return TRACE_RETURN (false);
+      return_trace (false);
     else if (subfamilyID == 0 &&
 	     subfamilyNameID == 0 &&
 	     rangeStart == 0 &&
 	     rangeEnd == 0)
-      return TRACE_RETURN (true);
+      return_trace (true);
     else if (designSize < rangeStart ||
 	     designSize > rangeEnd ||
 	     subfamilyNameID < 256 ||
 	     subfamilyNameID > 32767)
-      return TRACE_RETURN (false);
+      return_trace (false);
     else
-      return TRACE_RETURN (true);
+      return_trace (true);
   }
 
   USHORT	designSize;	/* Represents the design size in 720/inch
@@ -388,7 +388,7 @@ struct FeatureParamsStylisticSet
     TRACE_SANITIZE (this);
     /* Right now minorVersion is at zero.  Which means, any table supports
      * the uiNameID field. */
-    return TRACE_RETURN (c->check_struct (this));
+    return_trace (c->check_struct (this));
   }
 
   USHORT	version;	/* (set to 0): This corresponds to a “minor”
@@ -420,8 +420,8 @@ struct FeatureParamsCharacterVariants
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (c->check_struct (this) &&
-			 characters.sanitize (c));
+    return_trace (c->check_struct (this) &&
+		  characters.sanitize (c));
   }
 
   USHORT	format;			/* Format number is set to 0. */
@@ -462,12 +462,12 @@ struct FeatureParams
   {
     TRACE_SANITIZE (this);
     if (tag == HB_TAG ('s','i','z','e'))
-      return TRACE_RETURN (u.size.sanitize (c));
+      return_trace (u.size.sanitize (c));
     if ((tag & 0xFFFF0000u) == HB_TAG ('s','s','\0','\0')) /* ssXX */
-      return TRACE_RETURN (u.stylisticSet.sanitize (c));
+      return_trace (u.stylisticSet.sanitize (c));
     if ((tag & 0xFFFF0000u) == HB_TAG ('c','v','\0','\0')) /* cvXX */
-      return TRACE_RETURN (u.characterVariants.sanitize (c));
-    return TRACE_RETURN (true);
+      return_trace (u.characterVariants.sanitize (c));
+    return_trace (true);
   }
 
   inline const FeatureParamsSize& get_size_params (hb_tag_t tag) const
@@ -505,7 +505,7 @@ struct Feature
   {
     TRACE_SANITIZE (this);
     if (unlikely (!(c->check_struct (this) && lookupIndex.sanitize (c))))
-      return TRACE_RETURN (false);
+      return_trace (false);
 
     /* Some earlier versions of Adobe tools calculated the offset of the
      * FeatureParams subtable from the beginning of the FeatureList table!
@@ -520,10 +520,10 @@ struct Feature
 
     OffsetTo<FeatureParams> orig_offset = featureParams;
     if (unlikely (!featureParams.sanitize (c, this, closure ? closure->tag : HB_TAG_NONE)))
-      return TRACE_RETURN (false);
+      return_trace (false);
 
     if (likely (orig_offset.is_null ()))
-      return TRACE_RETURN (true);
+      return_trace (true);
 
     if (featureParams == 0 && closure &&
 	closure->tag == HB_TAG ('s','i','z','e') &&
@@ -538,10 +538,10 @@ struct Feature
       if (new_offset == new_offset_int &&
 	  c->try_set (&featureParams, new_offset) &&
 	  !featureParams.sanitize (c, this, closure ? closure->tag : HB_TAG_NONE))
-	return TRACE_RETURN (false);
+	return_trace (false);
     }
 
-    return TRACE_RETURN (true);
+    return_trace (true);
   }
 
   OffsetTo<FeatureParams>
@@ -613,9 +613,9 @@ struct Lookup
     for (unsigned int i = 0; i < count; i++) {
       typename context_t::return_t r = get_subtable<SubTableType> (i).dispatch (c, lookup_type);
       if (c->stop_sublookup_iteration (r))
-        return TRACE_RETURN (r);
+        return_trace (r);
     }
-    return TRACE_RETURN (c->default_return_value ());
+    return_trace (c->default_return_value ());
   }
 
   inline bool serialize (hb_serialize_context_t *c,
@@ -624,29 +624,29 @@ struct Lookup
 			 unsigned int num_subtables)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    if (unlikely (!c->extend_min (*this))) return_trace (false);
     lookupType.set (lookup_type);
     lookupFlag.set (lookup_props & 0xFFFFu);
-    if (unlikely (!subTable.serialize (c, num_subtables))) return TRACE_RETURN (false);
+    if (unlikely (!subTable.serialize (c, num_subtables))) return_trace (false);
     if (lookupFlag & LookupFlag::UseMarkFilteringSet)
     {
       USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
       markFilteringSet.set (lookup_props >> 16);
     }
-    return TRACE_RETURN (true);
+    return_trace (true);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
     /* Real sanitize of the subtables is done by GSUB/GPOS/... */
-    if (!(c->check_struct (this) && subTable.sanitize (c))) return TRACE_RETURN (false);
+    if (!(c->check_struct (this) && subTable.sanitize (c))) return_trace (false);
     if (lookupFlag & LookupFlag::UseMarkFilteringSet)
     {
       const USHORT &markFilteringSet = StructAfter<USHORT> (subTable);
-      if (!markFilteringSet.sanitize (c)) return TRACE_RETURN (false);
+      if (!markFilteringSet.sanitize (c)) return_trace (false);
     }
-    return TRACE_RETURN (true);
+    return_trace (true);
   }
 
   private:
@@ -685,19 +685,19 @@ struct CoverageFormat1
 			 unsigned int num_glyphs)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    if (unlikely (!c->extend_min (*this))) return_trace (false);
     glyphArray.len.set (num_glyphs);
-    if (unlikely (!c->extend (glyphArray))) return TRACE_RETURN (false);
+    if (unlikely (!c->extend (glyphArray))) return_trace (false);
     for (unsigned int i = 0; i < num_glyphs; i++)
       glyphArray[i] = glyphs[i];
     glyphs.advance (num_glyphs);
-    return TRACE_RETURN (true);
+    return_trace (true);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (glyphArray.sanitize (c));
+    return_trace (glyphArray.sanitize (c));
   }
 
   inline bool intersects_coverage (const hb_set_t *glyphs, unsigned int index) const {
@@ -754,16 +754,16 @@ struct CoverageFormat2
 			 unsigned int num_glyphs)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    if (unlikely (!c->extend_min (*this))) return_trace (false);
 
-    if (unlikely (!num_glyphs)) return TRACE_RETURN (true);
+    if (unlikely (!num_glyphs)) return_trace (true);
 
     unsigned int num_ranges = 1;
     for (unsigned int i = 1; i < num_glyphs; i++)
       if (glyphs[i - 1] + 1 != glyphs[i])
         num_ranges++;
     rangeRecord.len.set (num_ranges);
-    if (unlikely (!c->extend (rangeRecord))) return TRACE_RETURN (false);
+    if (unlikely (!c->extend (rangeRecord))) return_trace (false);
 
     unsigned int range = 0;
     rangeRecord[range].start = glyphs[0];
@@ -778,13 +778,13 @@ struct CoverageFormat2
         rangeRecord[range].end = glyphs[i];
       }
     glyphs.advance (num_glyphs);
-    return TRACE_RETURN (true);
+    return_trace (true);
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (rangeRecord.sanitize (c));
+    return_trace (rangeRecord.sanitize (c));
   }
 
   inline bool intersects_coverage (const hb_set_t *glyphs, unsigned int index) const {
@@ -864,27 +864,27 @@ struct Coverage
 			 unsigned int num_glyphs)
   {
     TRACE_SERIALIZE (this);
-    if (unlikely (!c->extend_min (*this))) return TRACE_RETURN (false);
+    if (unlikely (!c->extend_min (*this))) return_trace (false);
     unsigned int num_ranges = 1;
     for (unsigned int i = 1; i < num_glyphs; i++)
       if (glyphs[i - 1] + 1 != glyphs[i])
         num_ranges++;
     u.format.set (num_glyphs * 2 < num_ranges * 3 ? 1 : 2);
     switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.serialize (c, glyphs, num_glyphs));
-    case 2: return TRACE_RETURN (u.format2.serialize (c, glyphs, num_glyphs));
-    default:return TRACE_RETURN (false);
+    case 1: return_trace (u.format1.serialize (c, glyphs, num_glyphs));
+    case 2: return_trace (u.format2.serialize (c, glyphs, num_glyphs));
+    default:return_trace (false);
     }
   }
 
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
+    if (!u.format.sanitize (c)) return_trace (false);
     switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    case 2: return TRACE_RETURN (u.format2.sanitize (c));
-    default:return TRACE_RETURN (true);
+    case 1: return_trace (u.format1.sanitize (c));
+    case 2: return_trace (u.format2.sanitize (c));
+    default:return_trace (true);
     }
   }
 
@@ -993,7 +993,7 @@ struct ClassDefFormat1
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (c->check_struct (this) && classValue.sanitize (c));
+    return_trace (c->check_struct (this) && classValue.sanitize (c));
   }
 
   template <typename set_t>
@@ -1050,7 +1050,7 @@ struct ClassDefFormat2
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (rangeRecord.sanitize (c));
+    return_trace (rangeRecord.sanitize (c));
   }
 
   template <typename set_t>
@@ -1108,11 +1108,11 @@ struct ClassDef
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
+    if (!u.format.sanitize (c)) return_trace (false);
     switch (u.format) {
-    case 1: return TRACE_RETURN (u.format1.sanitize (c));
-    case 2: return TRACE_RETURN (u.format2.sanitize (c));
-    default:return TRACE_RETURN (true);
+    case 1: return_trace (u.format1.sanitize (c));
+    case 2: return_trace (u.format2.sanitize (c));
+    default:return_trace (true);
     }
   }
 
@@ -1201,7 +1201,7 @@ struct Device
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return TRACE_RETURN (c->check_struct (this) && c->check_range (this, this->get_size ()));
+    return_trace (c->check_struct (this) && c->check_range (this, this->get_size ()));
   }
 
   protected:

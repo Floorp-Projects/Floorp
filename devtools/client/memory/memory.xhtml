@@ -11,8 +11,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <link rel="stylesheet" href="chrome://browser/skin/" type="text/css"/>
-    <link rel="stylesheet" href="chrome://browser/content/devtools/widgets.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/themes/common.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/themes/widgets.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://devtools/skin/themes/memory.css" type="text/css"/>
@@ -23,18 +21,7 @@
             src="initializer.js"></script>
   </head>
   <body class="theme-body">
-    <div class="devtools-toolbar">
-      <div id="snapshot-button" class="devtools-toolbarbutton" />
-    </div>
-    <div class="devtools-horizontal-splitter"></div>
-    <div id="memory-content"
-         class="devtools-responsive-container"
-         flex="1">
-      <toolbar class="devtools-toolbar">
-        <spacer flex="1"></spacer>
-      </toolbar>
-      <hbox flex="1">
-      </hbox>
+    <div id="app">
     </div>
   </body>
 </html>

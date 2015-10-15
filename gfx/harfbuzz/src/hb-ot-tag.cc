@@ -733,7 +733,6 @@ static const LangTag ot_languages[] = {
 /*{"fuf?",	HB_TAG('F','T','A',' ')},*/	/* Futa */
 /*{"ar-Syrc?",	HB_TAG('G','A','R',' ')},*/	/* Garshuni */
 /*{"cfm/rnl?",	HB_TAG('H','A','L',' ')},*/	/* Halam */
-/*{"fonipa",	HB_TAG('I','P','P','H')},*/	/* Phonetic transcription—IPA conventions */
 /*{"ga-Latg?/Latg?",	HB_TAG('I','R','T',' ')},*/	/* Irish Traditional */
 /*{"krc",	HB_TAG('K','A','R',' ')},*/	/* Karachay */
 /*{"alw?/ktb?",	HB_TAG('K','E','B',' ')},*/	/* Kebena */
@@ -832,6 +831,14 @@ hb_ot_tag_from_language (hb_language_t language)
     }
   }
 
+  /*
+   * The International Phonetic Alphabet is a variant tag in BCP-47,
+   * which can be applied to any language.
+   */
+  if (strstr (lang_str, "-fonipa")) {
+    return HB_TAG('I','P','P','H');  /* Phonetic transcription—IPA conventions */
+  }
+
   /* Find a language matching in the first component */
   {
     const LangTag *lang_tag;
@@ -877,7 +884,7 @@ hb_ot_tag_from_language (hb_language_t language)
  *
  * Return value: (transfer none):
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 hb_language_t
 hb_ot_tag_to_language (hb_tag_t tag)
@@ -899,6 +906,12 @@ hb_ot_tag_to_language (hb_tag_t tag)
       case HB_TAG('Z','H','T',' '): return hb_language_from_string ("zh-Hant", -1); /* Traditional */
       default: break; /* Fall through */
     }
+  }
+
+  /* struct LangTag has only room for 3-letter language tags. */
+  switch (tag) {
+  case HB_TAG('I','P','P','H'):  /* Phonetic transcription—IPA conventions */
+    return hb_language_from_string ("und-fonipa", -1);
   }
 
   /* Else return a custom language in the form of "x-hbotABCD" */

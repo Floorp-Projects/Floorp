@@ -1,16 +1,85 @@
-/* vim:set tw=80 expandtab softtabstop=4 ts=4 sw=4: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// I got the format description from http://www.daubnet.com/formats/BMP.html
-
-// This is a Cross-Platform BMP Decoder, which should work everywhere, including
-// Big-Endian machines like the PowerPC.
+// This is a cross-platform BMP Decoder, which should work everywhere,
+// including big-endian machines like the PowerPC.
+//
+// BMP is a format that has been extended multiple times. To understand the
+// decoder you need to understand this history. The summary of the history
+// below was determined from the following documents.
+//
+// - http://www.fileformat.info/format/bmp/egff.htm
+// - http://www.fileformat.info/format/os2bmp/egff.htm
+// - http://fileformats.archiveteam.org/wiki/BMP
+// - http://fileformats.archiveteam.org/wiki/OS/2_BMP
+// - https://en.wikipedia.org/wiki/BMP_file_format
+// - https://upload.wikimedia.org/wikipedia/commons/c/c4/BMPfileFormat.png
+//
+// WINDOWS VERSIONS OF THE BMP FORMAT
+// ----------------------------------
+// WinBMPv1.
+// - This version is no longer used and can be ignored.
+//
+// WinBMPv2.
+// - First is a 14 byte file header that includes: the magic number ("BM"),
+//   file size, and offset to the pixel data (|dataoffset|).
+// - Next is a 12 byte info header which includes: the info header size
+//   (bihsize), width, height, number of color planes, and bits-per-pixel
+//   (|bpp|) which must be 1, 4, 8 or 24.
+// - Next is the semi-optional color table, which has length 2^|bpp| and has 3
+//   bytes per value (BGR). The color table is required if |bpp| is 1, 4, or 8.
+// - Next is an optional gap.
+// - Next is the pixel data, which is pointed to by |dataoffset|.
+//
+// WinBMPv3. This is the most widely used version.
+// - It changed the info header to 40 bytes by taking the WinBMPv2 info
+//   header, enlargening its width and height fields, and adding more fields
+//   including: a compression type (|compression|) and number of colors
+//   (|colors|).
+// - The semi-optional color table is now 4 bytes per value (BGR0), and its
+//   length is |colors|, or 2^|bpp| if |colors| is zero.
+// - |compression| can be RGB (i.e. no compression), RLE4 (if bpp==4) or RLE8
+//   (if bpp==8) values.
+//
+// WinBMPv3-NT. A variant of WinBMPv3.
+// - It did not change the info header layout from WinBMPv3.
+// - |bpp| can now be 16 or 32, in which case |compression| can be RGB or the
+//   new BITFIELDS value; in the latter case an additional 12 bytes of color
+//   bitfields follow the info header.
+//
+// WinBMPv4.
+// - It extended the info header to 108 bytes, including the 12 bytes of color
+//   mask data from WinBMPv3-NT, plus alpha mask data, and also color-space and
+//   gamma correction fields.
+//
+// WinBMPv5.
+// - It extended the info header to 124 bytes, adding color profile data.
+// - It also added an optional color profile table after the pixel data (and
+//   another optional gap).
+//
+// OS/2 VERSIONS OF THE BMP FORMAT
+// -------------------------------
+// OS2-BMPv1.
+// - Almost identical to WinBMPv2; the differences are basically ignorable.
+//
+// OS2-BMPv2.
+// - Similar to WinBMPv3.
+// - The info header is 64 bytes but can be reduced to as little as 16; any
+//   omitted fields are treated as zero. The first 40 bytes of these fields are
+//   nearly identical to the WinBMPv3 info header; the remaining 24 bytes are
+//   different.
+// - Also adds compression types "Huffman 1D" and "RLE24", which we don't
+//   support.
+// - We treat OS2-BMPv2 files as if they are WinBMPv3 (i.e. ignore the extra 24
+//   bytes in the info header), which in practice is good enough.
 
 #include <stdlib.h>
 
 #include "ImageLogging.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Likely.h"
 #include "nsBMPDecoder.h"
@@ -23,6 +92,33 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace image {
+namespace bmp {
+
+struct Compression {
+  enum {
+    RGB = 0,
+    RLE8 = 1,
+    RLE4 = 2,
+    BITFIELDS = 3
+  };
+};
+
+// RLE escape codes and constants.
+struct RLE {
+  enum {
+    ESCAPE = 0,
+    ESCAPE_EOL = 0,
+    ESCAPE_EOF = 1,
+    ESCAPE_DELTA = 2,
+
+    SEGMENT_LENGTH = 2,
+    DELTA_LENGTH = 2
+  };
+};
+
+} // namespace bmp
+
+using namespace bmp;
 
 static PRLogModuleInfo*
 GetBMPLog()
@@ -34,970 +130,756 @@ GetBMPLog()
   return sBMPLog;
 }
 
-// Convert from row (1..height) to absolute line (0..height-1)
-#define LINE(row) ((mBIH.height < 0) ? (-mBIH.height - (row)) : ((row) - 1))
-#define PIXEL_OFFSET(row, col) (LINE(row) * mBIH.width + col)
-
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   : Decoder(aImage)
-  , mPos(0)
-  , mLOH(BMP_HEADER_LENGTH::WIN_V3)
+  , mLexer(Transition::To(State::FILE_HEADER, FileHeader::LENGTH))
   , mNumColors(0)
   , mColors(nullptr)
-  , mRow(nullptr)
-  , mRowBytes(0)
-  , mCurLine(1)  // Otherwise decoder will never start.
-  , mOldLine(1)
-  , mCurPos(0)
-  , mState(eRLEStateInitial)
-  , mStateData(0)
-  , mProcessedHeader(false)
+  , mBytesPerColor(0)
+  , mPreGapLength(0)
+  , mCurrentRow(0)
+  , mCurrentPos(0)
+  , mAbsoluteModeNumPixels(0)
   , mUseAlphaData(false)
   , mHaveAlphaData(false)
-{ }
+{
+  memset(&mBFH, 0, sizeof(mBFH));
+  memset(&mBIH, 0, sizeof(mBIH));
+}
 
 nsBMPDecoder::~nsBMPDecoder()
 {
   delete[] mColors;
-  if (mRow) {
-      free(mRow);
-  }
 }
 
-// Sets whether or not the BMP will use alpha data
+// Sets whether or not the BMP will use alpha data.
 void
 nsBMPDecoder::SetUseAlphaData(bool useAlphaData)
 {
   mUseAlphaData = useAlphaData;
 }
 
-// Obtains the bits per pixel from the internal BIH header
+// Obtains the bits per pixel from the internal BIH header.
 int32_t
 nsBMPDecoder::GetBitsPerPixel() const
 {
   return mBIH.bpp;
 }
 
-// Obtains the width from the internal BIH header
+// Obtains the width from the internal BIH header.
 int32_t
 nsBMPDecoder::GetWidth() const
 {
   return mBIH.width;
 }
 
-// Obtains the abs-value of the height from the internal BIH header
+// Obtains the absolute value of the height from the internal BIH header.
+// If it's positive the bitmap is stored bottom to top, otherwise top to bottom.
 int32_t
 nsBMPDecoder::GetHeight() const
 {
   return abs(mBIH.height);
 }
 
-// Obtains the internal output image buffer
+// Obtains the internal output image buffer.
 uint32_t*
 nsBMPDecoder::GetImageData()
 {
   return reinterpret_cast<uint32_t*>(mImageData);
 }
 
-// Obtains the size of the compressed image resource
+// Obtains the size of the compressed image resource.
 int32_t
 nsBMPDecoder::GetCompressedImageSize() const
 {
-  // For everything except BMPINFOHEADER::RGB the header field must be defined
-  if (mBIH.compression != BMPINFOHEADER::RGB) {
-    return mBIH.image_size;
-  }
-
-  // mBIH.image_size isn't always filled for BMPINFOHEADER::RGB so calculate it
-  // manually. The pixel array size is calculated based on extra 4 byte
-  // boundary padding.
-  uint32_t rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // + 7 to round up
-
-  // Pad to DWORD Boundary
-  if (rowSize % 4) {
-    rowSize += (4 - (rowSize % 4));
-  }
-
-  // The height should be the absolute value of what the height is in the BIH.
-  // If positive the bitmap is stored bottom to top, otherwise top to bottom
-  int32_t pixelArraySize = rowSize * GetHeight();
-  return pixelArraySize;
+  // In the RGB case image_size might not be set, so compute it manually.
+  MOZ_ASSERT(mPixelRowSize != 0);
+  return mBIH.compression == Compression::RGB
+       ? mPixelRowSize * GetHeight()
+       : mBIH.image_size;
 }
 
 void
 nsBMPDecoder::FinishInternal()
 {
-    // We shouldn't be called in error cases
-    MOZ_ASSERT(!HasError(), "Can't call FinishInternal on error!");
+  // We shouldn't be called in error cases.
+  MOZ_ASSERT(!HasError(), "Can't call FinishInternal on error!");
 
-    // We should never make multiple frames
-    MOZ_ASSERT(GetFrameCount() <= 1, "Multiple BMP frames?");
+  // We should never make multiple frames.
+  MOZ_ASSERT(GetFrameCount() <= 1, "Multiple BMP frames?");
 
-    // Send notifications if appropriate
-    if (!IsMetadataDecode() && HasSize()) {
+  // Send notifications if appropriate.
+  if (!IsMetadataDecode() && HasSize()) {
 
-        // Invalidate
-        nsIntRect r(0, 0, mBIH.width, GetHeight());
-        PostInvalidation(r);
+    // Invalidate.
+    nsIntRect r(0, 0, mBIH.width, GetHeight());
+    PostInvalidation(r);
 
-        if (mUseAlphaData && mHaveAlphaData) {
-          PostFrameStop(Opacity::SOME_TRANSPARENCY);
-        } else {
-          PostFrameStop(Opacity::OPAQUE);
-        }
-        PostDecodeDone();
+    if (mUseAlphaData && mHaveAlphaData) {
+      PostFrameStop(Opacity::SOME_TRANSPARENCY);
+    } else {
+      PostFrameStop(Opacity::OPAQUE);
     }
+    PostDecodeDone();
+  }
 }
 
 // ----------------------------------------
 // Actual Data Processing
 // ----------------------------------------
 
-static void
-calcBitmask(uint32_t aMask, uint8_t& aBegin, uint8_t& aLength)
+void
+BitFields::Value::Set(uint32_t aMask)
 {
-    // find the rightmost 1
-    uint8_t pos;
-    bool started = false;
-    aBegin = aLength = 0;
-    for (pos = 0; pos <= 31; pos++) {
-        if (!started && (aMask & (1 << pos))) {
-            aBegin = pos;
-            started = true;
-        } else if (started && !(aMask & (1 << pos))) {
-            aLength = pos - aBegin;
-            break;
-        }
+  mMask = aMask;
+
+  // Find the rightmost 1.
+  bool started = false;
+  mRightShift = mBitWidth = 0;
+  for (uint8_t pos = 0; pos <= 31; pos++) {
+    if (!started && (aMask & (1 << pos))) {
+      mRightShift = pos;
+      started = true;
+    } else if (started && !(aMask & (1 << pos))) {
+      mBitWidth = pos - mRightShift;
+      break;
     }
+  }
 }
 
-NS_METHOD
-nsBMPDecoder::CalcBitShift()
+inline uint8_t
+BitFields::Value::Get(uint32_t aValue) const
 {
-    uint8_t begin, length;
-    // red
-    calcBitmask(mBitFields.red, begin, length);
-    mBitFields.redRightShift = begin;
-    mBitFields.redLeftShift = 8 - length;
-    // green
-    calcBitmask(mBitFields.green, begin, length);
-    mBitFields.greenRightShift = begin;
-    mBitFields.greenLeftShift = 8 - length;
-    // blue
-    calcBitmask(mBitFields.blue, begin, length);
-    mBitFields.blueRightShift = begin;
-    mBitFields.blueLeftShift = 8 - length;
-    return NS_OK;
+  // Extract the unscaled value.
+  uint32_t v = (aValue & mMask) >> mRightShift;
+
+  // Idea: to upscale v precisely we need to duplicate its bits, possibly
+  // repeatedly, possibly partially in the last case, from bit 7 down to bit 0
+  // in v2. For example:
+  //
+  // - mBitWidth=1:  v2 = v<<7 | v<<6 | ... | v<<1 | v>>0     k -> kkkkkkkk
+  // - mBitWidth=2:  v2 = v<<6 | v<<4 | v<<2 | v>>0          jk -> jkjkjkjk
+  // - mBitWidth=3:  v2 = v<<5 | v<<2 | v>>1                ijk -> ijkijkij
+  // - mBitWidth=4:  v2 = v<<4 | v>>0                      hijk -> hijkhijk
+  // - mBitWidth=5:  v2 = v<<3 | v>>2                     ghijk -> ghijkghi
+  // - mBitWidth=6:  v2 = v<<2 | v>>4                    fghijk -> fghijkfg
+  // - mBitWidth=7:  v2 = v<<1 | v>>6                   efghijk -> efghijke
+  // - mBitWidth=8:  v2 = v>>0                         defghijk -> defghijk
+  // - mBitWidth=9:  v2 = v>>1                        cdefghijk -> cdefghij
+  // - mBitWidth=10: v2 = v>>2                       bcdefghijk -> bcdefghi
+  // - mBitWidth=11: v2 = v>>3                      abcdefghijk -> abcdefgh
+  // - etc.
+  //
+  uint8_t v2 = 0;
+  int32_t i;      // must be a signed integer
+  for (i = 8 - mBitWidth; i > 0; i -= mBitWidth) {
+    v2 |= v << uint32_t(i);
+  }
+  v2 |= v >> uint32_t(-i);
+  return v2;
+}
+
+MOZ_ALWAYS_INLINE uint8_t
+BitFields::Value::Get5(uint32_t aValue) const
+{
+  MOZ_ASSERT(mBitWidth == 5);
+  uint32_t v = (aValue & mMask) >> mRightShift;
+  return (v << 3u) | (v >> 2u);
+}
+
+void
+BitFields::SetR5G5B5()
+{
+  mRed.Set(0x7c00);
+  mGreen.Set(0x03e0);
+  mBlue.Set(0x001f);
+}
+
+bool
+BitFields::IsR5G5B5() const
+{
+  return mRed.mBitWidth == 5 &&
+         mGreen.mBitWidth == 5 &&
+         mBlue.mBitWidth == 5;
+}
+
+uint32_t*
+nsBMPDecoder::RowBuffer()
+{
+  if (mDownscaler) {
+    return reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer()) + mCurrentPos;
+  }
+
+  // Convert from row (1..height) to absolute line (0..height-1).
+  int32_t line = (mBIH.height < 0)
+               ? -mBIH.height - mCurrentRow
+               : mCurrentRow - 1;
+  int32_t offset = line * mBIH.width + mCurrentPos;
+  return reinterpret_cast<uint32_t*>(mImageData) + offset;
+}
+
+void
+nsBMPDecoder::FinishRow()
+{
+  if (mDownscaler) {
+    mDownscaler->CommitRow();
+
+    if (mDownscaler->HasInvalidation()) {
+      DownscalerInvalidRect invalidRect = mDownscaler->TakeInvalidRect();
+      PostInvalidation(invalidRect.mOriginalSizeRect,
+                       Some(invalidRect.mTargetSizeRect));
+    }
+  } else {
+    PostInvalidation(IntRect(0, mCurrentRow, mBIH.width, 1));
+  }
+  mCurrentRow--;
 }
 
 void
 nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aCount > 0);
 
-  // aCount=0 means EOF, mCurLine=0 means we're past end of image
-  if (!aCount || !mCurLine) {
-      return;
+  Maybe<State> terminalState =
+    mLexer.Lex(aBuffer, aCount, [=](State aState,
+                                    const char* aData, size_t aLength) {
+      switch (aState) {
+        case State::FILE_HEADER:      return ReadFileHeader(aData, aLength);
+        case State::INFO_HEADER_SIZE: return ReadInfoHeaderSize(aData, aLength);
+        case State::INFO_HEADER_REST: return ReadInfoHeaderRest(aData, aLength);
+        case State::BITFIELDS:        return ReadBitfields(aData, aLength);
+        case State::COLOR_TABLE:      return ReadColorTable(aData, aLength);
+        case State::GAP:              return SkipGap();
+        case State::PIXEL_ROW:        return ReadPixelRow(aData);
+        case State::RLE_SEGMENT:      return ReadRLESegment(aData);
+        case State::RLE_DELTA:        return ReadRLEDelta(aData);
+        case State::RLE_ABSOLUTE:     return ReadRLEAbsolute(aData, aLength);
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown State");
+          return Transition::Terminate(State::FAILURE);
+      }
+    });
+
+  if (!terminalState) {
+    return;  // Need more data.
   }
 
-  // This code assumes that mRawBuf == BIH_INTERNAL_LENGTH::WIN_V3
-  // and that sizeof(mRawBuf) >= BMPFILEHEADER::INTERNAL_LENGTH
-  MOZ_ASSERT(sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3);
-  MOZ_ASSERT(sizeof(mRawBuf) >= BMPFILEHEADER::INTERNAL_LENGTH);
-  MOZ_ASSERT(BIH_INTERNAL_LENGTH::OS2 < BIH_INTERNAL_LENGTH::WIN_V3);
-
-  // This code also assumes it's working with a byte array
-  MOZ_ASSERT(sizeof(mRawBuf[0]) == 1);
-
-  if (mPos < BMPFILEHEADER::INTERNAL_LENGTH) { /* In BITMAPFILEHEADER */
-      // BMPFILEHEADER::INTERNAL_LENGTH < sizeof(mRawBuf)
-      // mPos < BMPFILEHEADER::INTERNAL_LENGTH
-      // BMPFILEHEADER::INTERNAL_LENGTH - mPos < sizeof(mRawBuf)
-      // so toCopy <= BMPFILEHEADER::INTERNAL_LENGTH
-      // so toCopy < sizeof(mRawBuf)
-      // so toCopy > 0 && toCopy <= BMPFILEHEADER::INTERNAL_LENGTH
-      uint32_t toCopy = BMPFILEHEADER::INTERNAL_LENGTH - mPos;
-      if (toCopy > aCount) {
-          toCopy = aCount;
-      }
-
-      // mRawBuf is a byte array of size BIH_INTERNAL_LENGTH::WIN_V3
-      // (verified above)
-      // mPos is < BMPFILEHEADER::INTERNAL_LENGTH
-      // BMPFILEHEADER::INTERNAL_LENGTH < BIH_INTERNAL_LENGTH::WIN_V3
-      // so mPos < sizeof(mRawBuf)
-      //
-      // Therefore this assert should hold
-      MOZ_ASSERT(mPos < sizeof(mRawBuf));
-
-      // toCopy <= BMPFILEHEADER::INTERNAL_LENGTH
-      // mPos >= 0 && mPos < BMPFILEHEADER::INTERNAL_LENGTH
-      // sizeof(mRawBuf) >= BMPFILEHEADER::INTERNAL_LENGTH (verified above)
-      //
-      // Therefore this assert should hold
-      MOZ_ASSERT(mPos + toCopy <= sizeof(mRawBuf));
-
-      memcpy(mRawBuf + mPos, aBuffer, toCopy);
-      mPos += toCopy;
-      aCount -= toCopy;
-      aBuffer += toCopy;
-  }
-  if (mPos == BMPFILEHEADER::INTERNAL_LENGTH) {
-      ProcessFileHeader();
-      if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M') {
-          PostDataError();
-          return;
-      }
-      if (mBFH.bihsize == BIH_LENGTH::OS2) {
-          mLOH = BMP_HEADER_LENGTH::OS2;
-      }
-  }
-  if (mPos >= BMPFILEHEADER::INTERNAL_LENGTH && mPos < mLOH) { /* In BITMAPINFOHEADER */
-      // mLOH == BMP_HEADER_LENGTH::WIN_V3 || mLOH == BMP_HEADER_LENGTH::OS2
-      // BMP_HEADER_LENGTH::OS2 < BMP_HEADER_LENGTH::WIN_V3
-      // BMPFILEHEADER::INTERNAL_LENGTH < BMP_HEADER_LENGTH::OS2
-      // BMPFILEHEADER::INTERNAL_LENGTH < BMP_HEADER_LENGTH::WIN_V3
-      //
-      // So toCopy is in the range
-      //      1 to (BMP_HEADER_LENGTH::WIN_V3 - BMPFILEHEADER::INTERNAL_LENGTH)
-      // or   1 to (BMP_HEADER_LENGTH::OS2 - BMPFILEHEADER::INTERNAL_LENGTH)
-      //
-      // But BMP_HEADER_LENGTH::WIN_V3 =
-      //     BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::WIN_V3
-      // and BMP_HEADER_LENGTH::OS2 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::OS2
-      //
-      // So toCopy is in the range
-      //
-      //      1 to BIH_INTERNAL_LENGTH::WIN_V3
-      // or   1 to BIH_INTERNAL_LENGTH::OS2
-      // and  BIH_INTERNAL_LENGTH::OS2 < BIH_INTERNAL_LENGTH::WIN_V3
-      //
-      // sizeof(mRawBuf) = BIH_INTERNAL_LENGTH::WIN_V3
-      // so toCopy <= sizeof(mRawBuf)
-      uint32_t toCopy = mLOH - mPos;
-      if (toCopy > aCount) {
-          toCopy = aCount;
-      }
-
-      // mPos is in the range
-      //      BMPFILEHEADER::INTERNAL_LENGTH to (BMP_HEADER_LENGTH::WIN_V3 - 1)
-      //
-      // offset is then in the range (see toCopy comments for more details)
-      //      0 to (BIH_INTERNAL_LENGTH::WIN_V3 - 1)
-      //
-      // sizeof(mRawBuf) is BIH_INTERNAL_LENGTH::WIN_V3 so this
-      // offset stays within bounds and this assert should hold
-      const uint32_t offset = mPos - BMPFILEHEADER::INTERNAL_LENGTH;
-      MOZ_ASSERT(offset < sizeof(mRawBuf));
-
-      // Two cases:
-      //      mPos = BMPFILEHEADER::INTERNAL_LENGTH
-      //      mLOH = BMP_HEADER_LENGTH::WIN_V3
-      //
-      // offset = 0
-      // toCopy = BIH_INTERNAL_LENGTH::WIN_V3
-      //
-      //      This will be in the bounds of sizeof(mRawBuf)
-      //
-      // Second Case:
-      //      mPos = BMP_HEADER_LENGTH::WIN_V3 - 1
-      //      mLOH = BMP_HEADER_LENGTH::WIN_V3
-      //
-      // offset = BIH_INTERNAL_LENGTH::WIN_V3 - 1
-      // toCopy = 1
-      //
-      //      This will be in the bounds of sizeof(mRawBuf)
-      //
-      // As sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3 (verified above)
-      // and BMP_HEADER_LENGTH::WIN_V3 is the largest range of values. If mLOH
-      // was equal to BMP_HEADER_LENGTH::OS2 then the ranges are smaller.
-      MOZ_ASSERT(offset + toCopy <= sizeof(mRawBuf));
-
-      memcpy(mRawBuf + offset, aBuffer, toCopy);
-      mPos += toCopy;
-      aCount -= toCopy;
-      aBuffer += toCopy;
+  if (*terminalState == State::FAILURE) {
+    PostDataError();
+    return;
   }
 
-  // At this point mPos should be >= mLOH unless aBuffer did not have enough
-  // data. In the latter case aCount should be 0.
-  MOZ_ASSERT(mPos >= mLOH || aCount == 0);
-
-  // mProcessedHeader is checked to ensure that if at this point mPos == mLOH
-  // but we have no data left to process, the next time WriteInternal is called
-  // we won't enter this condition again.
-  if (mPos == mLOH && !mProcessedHeader) {
-      mProcessedHeader = true;
-
-      ProcessInfoHeader();
-      MOZ_LOG(GetBMPLog(), LogLevel::Debug,
-             ("BMP is %lix%lix%lu. compression=%lu\n",
-             mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
-      // Verify we support this bit depth
-      if (mBIH.bpp != 1 && mBIH.bpp != 4 && mBIH.bpp != 8 &&
-          mBIH.bpp != 16 && mBIH.bpp != 24 && mBIH.bpp != 32) {
-        PostDataError();
-        return;
-      }
-
-      // BMPs with negative width are invalid
-      // Reject extremely wide images to keep the math sane
-      const int32_t k64KWidth = 0x0000FFFF;
-      if (mBIH.width < 0 || mBIH.width > k64KWidth) {
-        PostDataError();
-        return;
-      }
-
-      if (mBIH.height == INT_MIN) {
-        PostDataError();
-        return;
-      }
-
-      uint32_t real_height = GetHeight();
-
-      // Post our size to the superclass
-      PostSize(mBIH.width, real_height);
-      if (HasError()) {
-        // Setting the size led to an error.
-        return;
-      }
-
-      // We treat BMPs as transparent if they're 32bpp and alpha is enabled, but
-      // also if they use RLE encoding, because the 'delta' mode can skip pixels
-      // and cause implicit transparency.
-      bool hasTransparency = (mBIH.compression == BMPINFOHEADER::RLE8) ||
-                             (mBIH.compression == BMPINFOHEADER::RLE4) ||
-                             (mBIH.bpp == 32 && mUseAlphaData);
-      if (hasTransparency) {
-        PostHasTransparency();
-      }
-
-      // We have the size. If we're doing a metadata decode, we're done.
-      if (IsMetadataDecode()) {
-        return;
-      }
-
-      // We're doing a real decode.
-      mOldLine = mCurLine = real_height;
-
-      if (mBIH.bpp <= 8) {
-        mNumColors = 1 << mBIH.bpp;
-        if (mBIH.colors && mBIH.colors < mNumColors) {
-            mNumColors = mBIH.colors;
-        }
-
-        // Always allocate 256 even though mNumColors might be smaller
-        mColors = new colorTable[256];
-        memset(mColors, 0, 256 * sizeof(colorTable));
-      } else if (mBIH.compression != BMPINFOHEADER::BITFIELDS &&
-                 mBIH.bpp == 16) {
-        // Use default 5-5-5 format
-        mBitFields.red   = 0x7C00;
-        mBitFields.green = 0x03E0;
-        mBitFields.blue  = 0x001F;
-        CalcBitShift();
-      }
-
-      // Make sure we have a valid value for our supported compression modes
-      // before adding the frame
-      if (mBIH.compression != BMPINFOHEADER::RGB &&
-          mBIH.compression != BMPINFOHEADER::RLE8 &&
-          mBIH.compression != BMPINFOHEADER::RLE4 &&
-          mBIH.compression != BMPINFOHEADER::BITFIELDS) {
-        PostDataError();
-        return;
-      }
-
-      // If we have RLE4 or RLE8 or BMPINFOHEADER::ALPHABITFIELDS, then ensure
-      // we have valid BPP values before adding the frame.
-      if (mBIH.compression == BMPINFOHEADER::RLE8 && mBIH.bpp != 8) {
-        MOZ_LOG(GetBMPLog(), LogLevel::Debug,
-               ("BMP RLE8 compression only supports 8 bits per pixel\n"));
-        PostDataError();
-        return;
-      }
-      if (mBIH.compression == BMPINFOHEADER::RLE4 &&
-          mBIH.bpp != 4 && mBIH.bpp != 1) {
-        MOZ_LOG(GetBMPLog(), LogLevel::Debug,
-               ("BMP RLE4 compression only supports 4 bits per pixel\n"));
-        PostDataError();
-        return;
-      }
-      if (mBIH.compression == BMPINFOHEADER::ALPHABITFIELDS &&
-          mBIH.bpp != 16 && mBIH.bpp != 32) {
-        MOZ_LOG(GetBMPLog(), LogLevel::Debug,
-               ("BMP ALPHABITFIELDS only supports 16 or 32 bits per pixel\n"
-                ));
-        PostDataError();
-        return;
-      }
-
-      if (mBIH.compression != BMPINFOHEADER::RLE8 &&
-          mBIH.compression != BMPINFOHEADER::RLE4 &&
-          mBIH.compression != BMPINFOHEADER::ALPHABITFIELDS) {
-        // mRow is not used for RLE encoded images
-        mRow = (uint8_t*)malloc((mBIH.width * mBIH.bpp) / 8 + 4);
-        // + 4 because the line is padded to a 4 bit boundary, but
-        // I don't want to make exact calculations here, that's unnecessary.
-        // Also, it compensates rounding error.
-        if (!mRow) {
-          PostDataError();
-          return;
-        }
-      }
-
-      MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-      IntSize targetSize = mDownscaler ? mDownscaler->TargetSize()
-                                       : GetSize();
-      nsresult rv = AllocateFrame(/* aFrameNum = */ 0, targetSize,
-                                  IntRect(IntPoint(), targetSize),
-                                  SurfaceFormat::B8G8R8A8);
-      if (NS_FAILED(rv)) {
-          return;
-      }
-
-      MOZ_ASSERT(mImageData, "Should have a buffer now");
-
-      if (mDownscaler) {
-        // BMPs store their rows in reverse order, so the downscaler needs to
-        // reverse them again when writing its output.
-        rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
-                                     mImageData, hasTransparency,
-                                     /* aFlipVertically = */ true);
-        if (NS_FAILED(rv)) {
-          return;
-        }
-      }
-  }
-
-  if (mColors && mPos >= mLOH) {
-    // OS/2 Bitmaps have no padding byte
-    uint8_t bytesPerColor = (mBFH.bihsize == BIH_LENGTH::OS2) ? 3 : 4;
-    if (mPos < (mLOH + mNumColors * bytesPerColor)) {
-      // Number of bytes already received
-      uint32_t colorBytes = mPos - mLOH;
-      // Color which is currently received
-      uint8_t colorNum = colorBytes / bytesPerColor;
-      uint8_t at = colorBytes % bytesPerColor;
-      while (aCount && (mPos < (mLOH + mNumColors * bytesPerColor))) {
-        switch (at) {
-          case 0:
-            mColors[colorNum].blue = *aBuffer;
-            break;
-          case 1:
-            mColors[colorNum].green = *aBuffer;
-            break;
-          case 2:
-            mColors[colorNum].red = *aBuffer;
-            // If there is no padding byte, increment the color index
-            // since we're done with the current color.
-            if (bytesPerColor == 3) {
-              colorNum++;
-            }
-            break;
-          case 3:
-            // This is a padding byte only in Windows BMPs. Increment
-            // the color index since we're done with the current color.
-            colorNum++;
-            break;
-        }
-        mPos++; aBuffer++; aCount--;
-        at = (at + 1) % bytesPerColor;
-      }
-    }
-  } else if (aCount &&
-             mBIH.compression == BMPINFOHEADER::BITFIELDS &&
-             mPos < (BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH)) {
-    // If compression is used, this is a windows bitmap (compression can't be
-    // used with OS/2 bitmaps), hence we can use BMP_HEADER_LENGTH::WIN_V3
-    // instead of mLOH.  (verified below)
-
-    // If aCount != 0 then mPos should be >= mLOH due to the if statements
-    // at the beginning of the function
-    MOZ_ASSERT(mPos >= mLOH);
-    MOZ_ASSERT(mLOH == BMP_HEADER_LENGTH::WIN_V3);
-
-    // mLOH == BMP_HEADER_LENGTH::WIN_V3 (verified above)
-    // mPos >= mLOH (verified above)
-    // mPos < BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH
-    //
-    // So toCopy is in the range
-    //      0 to (bitFields::LENGTH - 1)
-    uint32_t toCopy = (BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH) - mPos;
-    if (toCopy > aCount) {
-      toCopy = aCount;
-    }
-
-    // mPos >= BMP_HEADER_LENGTH::WIN_V3
-    // mPos < BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH
-    //
-    // offset is in the range
-    //      0 to (bitFields::LENGTH - 1)
-    //
-    // bitFields::LENGTH < BIH_INTERNAL_LENGTH::WIN_V3
-    // and sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3 (verified at
-    // top of function)
-    //
-    // Therefore this assert should hold
-    const uint32_t offset = mPos - BMP_HEADER_LENGTH::WIN_V3;
-    MOZ_ASSERT(offset < sizeof(mRawBuf));
-
-    // Two cases:
-    //      mPos = BMP_HEADER_LENGTH::WIN_V3
-    //
-    // offset = 0
-    // toCopy = bitFields::LENGTH
-    //
-    //      This will be in the bounds of sizeof(mRawBuf)
-    //
-    // Second case:
-    //
-    //      mPos = BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH - 1
-    //
-    // offset = bitFields::LENGTH - 1
-    // toCopy = 1
-    //
-    //      This will be in the bounds of sizeof(mRawBuf)
-    //
-    // As bitFields::LENGTH < BIH_INTERNAL_LENGTH::WIN_V3 and
-    // sizeof(mRawBuf) == BIH_INTERNAL_LENGTH::WIN_V3
-    //
-    // Therefore this assert should hold
-    MOZ_ASSERT(offset + toCopy <= sizeof(mRawBuf));
-
-    memcpy(mRawBuf + offset, aBuffer, toCopy);
-    mPos += toCopy;
-    aBuffer += toCopy;
-    aCount -= toCopy;
-  }
-  if (mPos == BMP_HEADER_LENGTH::WIN_V3 + bitFields::LENGTH &&
-      mBIH.compression == BMPINFOHEADER::BITFIELDS) {
-    mBitFields.red = LittleEndian::readUint32(reinterpret_cast<uint32_t*>
-                                              (mRawBuf));
-    mBitFields.green = LittleEndian::readUint32(reinterpret_cast<uint32_t*>
-                                                (mRawBuf + 4));
-    mBitFields.blue = LittleEndian::readUint32(reinterpret_cast<uint32_t*>
-                                               (mRawBuf + 8));
-    CalcBitShift();
-  }
-  while (aCount && (mPos < mBFH.dataoffset)) { // Skip whatever is between
-                                               // header and data
-    mPos++; aBuffer++; aCount--;
-  }
-  if (aCount && ++mPos >= mBFH.dataoffset) {
-    // Need to increment mPos, else we might get to mPos==mLOH again
-    // From now on, mPos is irrelevant
-    if (!mBIH.compression || mBIH.compression == BMPINFOHEADER::BITFIELDS) {
-        uint32_t rowSize = (mBIH.bpp * mBIH.width + 7) / 8; // + 7 to
-                                                            // round up
-        if (rowSize % 4) {
-          rowSize += (4 - (rowSize % 4)); // Pad to DWORD Boundary
-        }
-        uint32_t toCopy;
-        do {
-          toCopy = rowSize - mRowBytes;
-          if (toCopy) {
-            if (toCopy > aCount) {
-              toCopy = aCount;
-            }
-            memcpy(mRow + mRowBytes, aBuffer, toCopy);
-            aCount -= toCopy;
-            aBuffer += toCopy;
-            mRowBytes += toCopy;
-        }
-        if (rowSize == mRowBytes) {
-          // Collected a whole row into mRow, process it
-          uint8_t* p = mRow;
-          uint32_t* d = mDownscaler
-                      ? reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer())
-                      : reinterpret_cast<uint32_t*>(mImageData)
-                        + PIXEL_OFFSET(mCurLine, 0);
-          uint32_t lpos = mBIH.width;
-          switch (mBIH.bpp) {
-            case 1:
-              while (lpos > 0) {
-                int8_t bit;
-                uint8_t idx;
-                for (bit = 7; bit >= 0 && lpos > 0; bit--) {
-                  idx = (*p >> bit) & 1;
-                  SetPixel(d, idx, mColors);
-                  --lpos;
-                }
-                ++p;
-              }
-              break;
-            case 4:
-              while (lpos > 0) {
-                Set4BitPixel(d, *p, lpos, mColors);
-                ++p;
-              }
-              break;
-            case 8:
-              while (lpos > 0) {
-                SetPixel(d, *p, mColors);
-                --lpos;
-                ++p;
-              }
-              break;
-            case 16:
-              while (lpos > 0) {
-                uint16_t val = LittleEndian::
-                               readUint16(reinterpret_cast<uint16_t*>(p));
-                SetPixel(d,
-                         (val & mBitFields.red) >>
-                         mBitFields.redRightShift <<
-                         mBitFields.redLeftShift,
-                         (val & mBitFields.green) >>
-                         mBitFields.greenRightShift <<
-                         mBitFields.greenLeftShift,
-                         (val & mBitFields.blue) >>
-                         mBitFields.blueRightShift <<
-                         mBitFields.blueLeftShift);
-                --lpos;
-                p+=2;
-              }
-              break;
-            case 24:
-              while (lpos > 0) {
-                SetPixel(d, p[2], p[1], p[0]);
-                p += 2;
-                --lpos;
-                ++p;
-              }
-              break;
-            case 32:
-              while (lpos > 0) {
-                if (mUseAlphaData) {
-                  if (MOZ_UNLIKELY(!mHaveAlphaData && p[3])) {
-                    PostHasTransparency();
-                    mHaveAlphaData = true;
-                  }
-                  SetPixel(d, p[2], p[1], p[0], p[3]);
-                } else {
-                  SetPixel(d, p[2], p[1], p[0]);
-                }
-                p += 4;
-                --lpos;
-              }
-              break;
-            default:
-              NS_NOTREACHED("Unsupported color depth,"
-                            " but earlier check didn't catch it");
-          }
-
-          if (mDownscaler) {
-            mDownscaler->CommitRow();
-          }
-          
-          mCurLine --;
-          if (mCurLine == 0) { // Finished last line
-            break;
-          }
-          mRowBytes = 0;
-        }
-      } while (aCount > 0);
-    } else if ((mBIH.compression == BMPINFOHEADER::RLE8) ||
-               (mBIH.compression == BMPINFOHEADER::RLE4)) {
-      if (((mBIH.compression == BMPINFOHEADER::RLE8) && (mBIH.bpp != 8)) ||
-          ((mBIH.compression == BMPINFOHEADER::RLE4) && (mBIH.bpp != 4) &&
-           (mBIH.bpp != 1))) {
-        MOZ_LOG(GetBMPLog(), LogLevel::Debug,
-               ("BMP RLE8/RLE4 compression only supports 8/4 bits per"
-               " pixel\n"));
-        PostDataError();
-        return;
-      }
-
-      while (aCount > 0) {
-        uint8_t byte;
-
-        switch(mState) {
-          case eRLEStateInitial:
-            mStateData = (uint8_t)*aBuffer++;
-            aCount--;
-
-            mState = eRLEStateNeedSecondEscapeByte;
-            continue;
-
-          case eRLEStateNeedSecondEscapeByte:
-            byte = *aBuffer++;
-            aCount--;
-            if (mStateData != RLE::ESCAPE) { // encoded mode
-              // Encoded mode consists of two bytes:
-              // the first byte (mStateData) specifies the
-              // number of consecutive pixels to be drawn
-              // using the color index contained in
-              // the second byte
-              // Work around bitmaps that specify too many pixels
-              mState = eRLEStateInitial;
-              uint32_t pixelsNeeded = std::min<uint32_t>(mBIH.width - mCurPos,
-                                    mStateData);
-              if (pixelsNeeded) {
-                uint32_t* d = mDownscaler
-                  ? reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer())
-                      + mCurPos
-                  : reinterpret_cast<uint32_t*>(mImageData)
-                      + PIXEL_OFFSET(mCurLine, mCurPos);
-
-                mCurPos += pixelsNeeded;
-                if (mBIH.compression == BMPINFOHEADER::RLE8) {
-                  do {
-                    SetPixel(d, byte, mColors);
-                    pixelsNeeded --;
-                  } while (pixelsNeeded);
-                } else {
-                    do {
-                      Set4BitPixel(d, byte, pixelsNeeded, mColors);
-                  } while (pixelsNeeded);
-                }
-              }
-              continue;
-            }
-
-            switch(byte) {
-              case RLE::ESCAPE_EOL:
-                // End of Line: Go to next row
-                if (mDownscaler) {
-                  mDownscaler->CommitRow();
-                }
-
-                mCurLine --;
-                mCurPos = 0;
-                mState = eRLEStateInitial;
-                break;
-
-              case RLE::ESCAPE_EOF: // EndOfFile
-                mCurPos = mCurLine = 0;
-                break;
-
-              case RLE::ESCAPE_DELTA:
-                mState = eRLEStateNeedXDelta;
-                continue;
-
-              default : // absolute mode
-                // Save the number of pixels to read
-                mStateData = byte;
-                if (mCurPos + mStateData > (uint32_t)mBIH.width) {
-                  // We can work around bitmaps that specify
-                  // one pixel too many, but only if their
-                  // width is odd.
-                  mStateData -= mBIH.width & 1;
-                  if (mCurPos + mStateData > (uint32_t)mBIH.width) {
-                      PostDataError();
-                      return;
-                  }
-                }
-
-              // See if we will need to skip a byte
-              // to word align the pixel data
-              // mStateData is a number of pixels
-              // so allow for the RLE compression type
-              // Pixels RLE8=1 RLE4=2
-              //    1    Pad    Pad
-              //    2    No     Pad
-              //    3    Pad    No
-              //    4    No     No
-              if (((mStateData - 1) & mBIH.compression) != 0) {
-                  mState = eRLEStateAbsoluteMode;
-              } else {
-                  mState = eRLEStateAbsoluteModePadded;
-              }
-              continue;
-            }
-            break;
-
-          case eRLEStateNeedXDelta:
-            // Handle the XDelta and proceed to get Y Delta
-            byte = *aBuffer++;
-            aCount--;
-
-            if (mDownscaler) {
-              // Clear the skipped pixels. (This clears to the end of the row,
-              // which is perfect if there's a Y delta and harmless if not).
-              mDownscaler->ClearRow(/* aStartingAtCol = */ mCurPos);
-            }
-
-            mCurPos += byte;
-
-            // Delta encoding makes it possible to skip pixels
-            // making the image transparent.
-            if (MOZ_UNLIKELY(!mHaveAlphaData)) {
-                PostHasTransparency();
-                mHaveAlphaData = true;
-            }
-            mUseAlphaData = mHaveAlphaData = true;
-            if (mCurPos > mBIH.width) {
-                mCurPos = mBIH.width;
-            }
-
-            mState = eRLEStateNeedYDelta;
-            continue;
-
-          case eRLEStateNeedYDelta: {
-            // Get the Y Delta and then "handle" the move
-            byte = *aBuffer++;
-            aCount--;
-            mState = eRLEStateInitial;
-            // Delta encoding makes it possible to skip pixels
-            // making the image transparent.
-            if (MOZ_UNLIKELY(!mHaveAlphaData)) {
-                PostHasTransparency();
-                mHaveAlphaData = true;
-            }
-            mUseAlphaData = mHaveAlphaData = true;
-
-            int32_t yDelta = std::min<int32_t>(byte, mCurLine);
-            mCurLine -= yDelta;
-
-            if (mDownscaler && yDelta > 0) {
-              // Commit the current row (the first of the skipped rows).
-              mDownscaler->CommitRow();
-
-              // Clear and commit the remaining skipped rows. 
-              for (int32_t line = 1 ; line < yDelta ; ++line) {
-                mDownscaler->ClearRow();
-                mDownscaler->CommitRow();
-              }
-            }
-
-            break;
-          }
-
-          case eRLEStateAbsoluteMode: // Absolute Mode
-          case eRLEStateAbsoluteModePadded:
-            if (mStateData) {
-              // In absolute mode, the second byte (mStateData)
-              // represents the number of pixels
-              // that follow, each of which contains
-              // the color index of a single pixel.
-              uint32_t* d = mDownscaler
-                ? reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer())
-                    + mCurPos
-                : reinterpret_cast<uint32_t*>(mImageData)
-                    + PIXEL_OFFSET(mCurLine, mCurPos);
-
-              uint32_t* oldPos = d;
-              if (mBIH.compression == BMPINFOHEADER::RLE8) {
-                  while (aCount > 0 && mStateData > 0) {
-                    byte = *aBuffer++;
-                    aCount--;
-                    SetPixel(d, byte, mColors);
-                    mStateData--;
-                  }
-              } else {
-                  while (aCount > 0 && mStateData > 0) {
-                    byte = *aBuffer++;
-                    aCount--;
-                    Set4BitPixel(d, byte, mStateData, mColors);
-                  }
-              }
-              mCurPos += d - oldPos;
-            }
-
-            if (mStateData == 0) {
-              // In absolute mode, each run must
-              // be aligned on a word boundary
-
-              if (mState == eRLEStateAbsoluteMode) {
-                // word aligned
-                mState = eRLEStateInitial;
-              } else if (aCount > 0) {
-                // not word aligned
-                // "next" byte is just a padding byte
-                // so "move" past it and we can continue
-                aBuffer++;
-                aCount--;
-                mState = eRLEStateInitial;
-              }
-            }
-            // else state is still eRLEStateAbsoluteMode
-            continue;
-
-          default :
-            MOZ_ASSERT(0, "BMP RLE decompression: unknown state!");
-            PostDecoderError(NS_ERROR_UNEXPECTED);
-            return;
-        }
-        // Because of the use of the continue statement
-        // we only get here for eol, eof or y delta
-        if (mCurLine == 0) {
-          // Finished last line
-          break;
-        }
-      }
-    }
-  }
-
-  const uint32_t rows = mOldLine - mCurLine;
-  if (rows) {
-    // Invalidate
-    if (!mDownscaler) {
-      nsIntRect r(0, mBIH.height < 0 ? -mBIH.height - mOldLine : mCurLine,
-                  mBIH.width, rows);
-      PostInvalidation(r);
-    } else if (mDownscaler->HasInvalidation()) {
-      DownscalerInvalidRect invalidRect = mDownscaler->TakeInvalidRect();
-      PostInvalidation(invalidRect.mOriginalSizeRect,
-                       Some(invalidRect.mTargetSizeRect));
-    }
-
-    mOldLine = mCurLine;
-  }
+  MOZ_ASSERT(*terminalState == State::SUCCESS);
 
   return;
 }
 
-void
-nsBMPDecoder::ProcessFileHeader()
-{
-  memset(&mBFH, 0, sizeof(mBFH));
-  memcpy(&mBFH.signature, mRawBuf, sizeof(mBFH.signature));
-  memcpy(&mBFH.filesize, mRawBuf + 2, sizeof(mBFH.filesize));
-  memcpy(&mBFH.reserved, mRawBuf + 6, sizeof(mBFH.reserved));
-  memcpy(&mBFH.dataoffset, mRawBuf + 10, sizeof(mBFH.dataoffset));
-  memcpy(&mBFH.bihsize, mRawBuf + 14, sizeof(mBFH.bihsize));
+// The length of the bihsize field in the info header.
+static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
 
-  // Now correct the endianness of the header
-  mBFH.filesize = LittleEndian::readUint32(&mBFH.filesize);
-  mBFH.dataoffset = LittleEndian::readUint32(&mBFH.dataoffset);
-  mBFH.bihsize = LittleEndian::readUint32(&mBFH.bihsize);
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadFileHeader(const char* aData, size_t aLength)
+{
+  mPreGapLength += aLength;
+
+  mBFH.signature[0] = aData[0];
+  mBFH.signature[1] = aData[1];
+  bool signatureOk = mBFH.signature[0] == 'B' && mBFH.signature[1] == 'M';
+  if (!signatureOk) {
+    PostDataError();
+    return Transition::Terminate(State::FAILURE);
+  }
+
+  // Nb: this field is unreliable. In Windows BMPs it's the file size, but in
+  // OS/2 BMPs it's sometimes the size of the file and info headers. It doesn't
+  // matter because we don't consult it.
+  mBFH.filesize = LittleEndian::readUint32(aData + 2);
+
+  mBFH.reserved = 0;
+
+  mBFH.dataoffset = LittleEndian::readUint32(aData + 10);
+
+  return Transition::To(State::INFO_HEADER_SIZE, BIHSIZE_FIELD_LENGTH);
+}
+
+// We read the info header in two steps: (a) read the bihsize field to
+// determine how long the header is; (b) read the rest of the header.
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
+{
+  mPreGapLength += aLength;
+
+  mBIH.bihsize = LittleEndian::readUint32(aData);
+
+  bool bihsizeOk = mBIH.bihsize == InfoHeaderLength::WIN_V2 ||
+                   mBIH.bihsize == InfoHeaderLength::WIN_V3 ||
+                   mBIH.bihsize == InfoHeaderLength::WIN_V4 ||
+                   mBIH.bihsize == InfoHeaderLength::WIN_V5 ||
+                   (mBIH.bihsize >= InfoHeaderLength::OS2_V2_MIN &&
+                    mBIH.bihsize <= InfoHeaderLength::OS2_V2_MAX);
+  if (!bihsizeOk) {
+    PostDataError();
+    return Transition::Terminate(State::FAILURE);
+  }
+
+  return Transition::To(State::INFO_HEADER_REST,
+                        mBIH.bihsize - BIHSIZE_FIELD_LENGTH);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
+{
+  mPreGapLength += aLength;
+
+  // |width| and |height| may be signed (Windows) or unsigned (OS/2). We just
+  // read as unsigned because in practice that's good enough.
+  if (mBIH.bihsize == InfoHeaderLength::WIN_V2) {
+    mBIH.width       = LittleEndian::readUint16(aData + 0);
+    mBIH.height      = LittleEndian::readUint16(aData + 2);
+    mBIH.planes      = LittleEndian::readUint16(aData + 4);
+    mBIH.bpp         = LittleEndian::readUint16(aData + 6);
+  } else {
+    mBIH.width       = LittleEndian::readUint32(aData + 0);
+    mBIH.height      = LittleEndian::readUint32(aData + 4);
+    mBIH.planes      = LittleEndian::readUint16(aData + 8);
+    mBIH.bpp         = LittleEndian::readUint16(aData + 10);
+
+    // For OS2-BMPv2 the info header may be as little as 16 bytes, so be
+    // careful for these fields.
+    mBIH.compression = aLength >= 16 ? LittleEndian::readUint32(aData + 12) : 0;
+    mBIH.image_size  = aLength >= 20 ? LittleEndian::readUint32(aData + 16) : 0;
+    mBIH.xppm        = aLength >= 24 ? LittleEndian::readUint32(aData + 20) : 0;
+    mBIH.yppm        = aLength >= 28 ? LittleEndian::readUint32(aData + 24) : 0;
+    mBIH.colors      = aLength >= 32 ? LittleEndian::readUint32(aData + 28) : 0;
+    mBIH.important_colors
+                     = aLength >= 36 ? LittleEndian::readUint32(aData + 32) : 0;
+
+    // For WinBMPv4, WinBMPv5 and (possibly) OS2-BMPv2 there are additional
+    // fields in the info header which we ignore, with the possible exception
+    // of the color bitfields (see below).
+  }
+
+  // Run with NSPR_LOG_MODULES=BMPDecoder:4 set to see this output.
+  MOZ_LOG(GetBMPLog(), LogLevel::Debug,
+          ("BMP: bihsize=%u, %d x %d, bpp=%u, compression=%u, colors=%u\n",
+          mBIH.bihsize, mBIH.width, mBIH.height, uint32_t(mBIH.bpp),
+          mBIH.compression, mBIH.colors));
+
+  // BMPs with negative width are invalid. Also, reject extremely wide images
+  // to keep the math sane. And reject INT_MIN as a height because you can't
+  // get its absolute value (because -INT_MIN is one more than INT_MAX).
+  const int32_t k64KWidth = 0x0000FFFF;
+  bool sizeOk = 0 <= mBIH.width && mBIH.width <= k64KWidth &&
+                mBIH.height != INT_MIN;
+  if (!sizeOk) {
+    PostDataError();
+    return Transition::Terminate(State::FAILURE);
+  }
+
+  // Check bpp and compression.
+  bool bppCompressionOk =
+    (mBIH.compression == Compression::RGB &&
+      (mBIH.bpp ==  1 || mBIH.bpp ==  4 || mBIH.bpp ==  8 ||
+       mBIH.bpp == 16 || mBIH.bpp == 24 || mBIH.bpp == 32)) ||
+    (mBIH.compression == Compression::RLE8 && mBIH.bpp == 8) ||
+    (mBIH.compression == Compression::RLE4 && mBIH.bpp == 4) ||
+    (mBIH.compression == Compression::BITFIELDS &&
+      (mBIH.bpp == 16 || mBIH.bpp == 32));
+  if (!bppCompressionOk) {
+    PostDataError();
+    return Transition::Terminate(State::FAILURE);
+  }
+
+  // Post our size to the superclass.
+  uint32_t realHeight = GetHeight();
+  PostSize(mBIH.width, realHeight);
+
+  // Round it up to the nearest byte count, then pad to 4-byte boundary.
+  // Compute this even for a metadate decode because GetCompressedImageSize()
+  // relies on it.
+  mPixelRowSize = (mBIH.bpp * mBIH.width + 7) / 8;
+  uint32_t surplus = mPixelRowSize % 4;
+  if (surplus != 0) {
+    mPixelRowSize += 4 - surplus;
+  }
+
+  // We treat BMPs as transparent if they're 32bpp and alpha is enabled, but
+  // also if they use RLE encoding, because the 'delta' mode can skip pixels
+  // and cause implicit transparency.
+  bool hasTransparency = (mBIH.compression == Compression::RLE8) ||
+                         (mBIH.compression == Compression::RLE4) ||
+                         (mBIH.bpp == 32 && mUseAlphaData);
+  if (hasTransparency) {
+    PostHasTransparency();
+  }
+
+  // If we're doing a metadata decode, we're done.
+  if (IsMetadataDecode()) {
+    return Transition::Terminate(State::SUCCESS);
+  }
+
+  // We're doing a real decode.
+  mCurrentRow = realHeight;
+
+  // Set up the color table, if present; it'll be filled in by ReadColorTable().
+  if (mBIH.bpp <= 8) {
+    mNumColors = 1 << mBIH.bpp;
+    if (0 < mBIH.colors && mBIH.colors < mNumColors) {
+      mNumColors = mBIH.colors;
+    }
+
+    // Always allocate and zero 256 entries, even though mNumColors might be
+    // smaller, because the file might erroneously index past mNumColors.
+    mColors = new ColorTableEntry[256];
+    memset(mColors, 0, 256 * sizeof(ColorTableEntry));
+
+    // OS/2 Bitmaps have no padding byte.
+    mBytesPerColor = (mBIH.bihsize == InfoHeaderLength::WIN_V2) ? 3 : 4;
+  }
+
+  MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
+  IntSize targetSize = mDownscaler ? mDownscaler->TargetSize() : GetSize();
+  nsresult rv = AllocateFrame(/* aFrameNum = */ 0, targetSize,
+                              IntRect(IntPoint(), targetSize),
+                              SurfaceFormat::B8G8R8A8);
+  if (NS_FAILED(rv)) {
+    return Transition::Terminate(State::FAILURE);
+  }
+  MOZ_ASSERT(mImageData, "Should have a buffer now");
+
+  if (mDownscaler) {
+    // BMPs store their rows in reverse order, so the downscaler needs to
+    // reverse them again when writing its output.
+    rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
+                                 mImageData, hasTransparency,
+                                 /* aFlipVertically = */ true);
+    if (NS_FAILED(rv)) {
+      return Transition::Terminate(State::FAILURE);
+    }
+  }
+
+  size_t bitFieldsLengthStillToRead = 0;
+  if (mBIH.compression == Compression::BITFIELDS) {
+    // Need to read bitfields.
+    if (mBIH.bihsize >= InfoHeaderLength::WIN_V4) {
+      // Bitfields are present in the info header, so we can read them
+      // immediately.
+      mBitFields.ReadFromHeader(aData + 36);
+    } else {
+      // Bitfields are present after the info header, so we will read them in
+      // ReadBitfields().
+      bitFieldsLengthStillToRead = BitFields::LENGTH;
+    }
+  } else if (mBIH.bpp == 16) {
+    // No bitfields specified; use the default 5-5-5 values.
+    mBitFields.SetR5G5B5();
+  }
+
+  return Transition::To(State::BITFIELDS, bitFieldsLengthStillToRead);
 }
 
 void
-nsBMPDecoder::ProcessInfoHeader()
+BitFields::ReadFromHeader(const char* aData)
 {
-  memset(&mBIH, 0, sizeof(mBIH));
-  if (mBFH.bihsize == 12) { // OS/2 Bitmap
-    memcpy(&mBIH.width, mRawBuf, 2);
-    memcpy(&mBIH.height, mRawBuf + 2, 2);
-    memcpy(&mBIH.planes, mRawBuf + 4, sizeof(mBIH.planes));
-    memcpy(&mBIH.bpp, mRawBuf + 6, sizeof(mBIH.bpp));
-  } else {
-    memcpy(&mBIH.width, mRawBuf, sizeof(mBIH.width));
-    memcpy(&mBIH.height, mRawBuf + 4, sizeof(mBIH.height));
-    memcpy(&mBIH.planes, mRawBuf + 8, sizeof(mBIH.planes));
-    memcpy(&mBIH.bpp, mRawBuf + 10, sizeof(mBIH.bpp));
-    memcpy(&mBIH.compression, mRawBuf + 12, sizeof(mBIH.compression));
-    memcpy(&mBIH.image_size, mRawBuf + 16, sizeof(mBIH.image_size));
-    memcpy(&mBIH.xppm, mRawBuf + 20, sizeof(mBIH.xppm));
-    memcpy(&mBIH.yppm, mRawBuf + 24, sizeof(mBIH.yppm));
-    memcpy(&mBIH.colors, mRawBuf + 28, sizeof(mBIH.colors));
-    memcpy(&mBIH.important_colors, mRawBuf + 32,
-           sizeof(mBIH.important_colors));
+  mRed.Set  (LittleEndian::readUint32(aData + 0));
+  mGreen.Set(LittleEndian::readUint32(aData + 4));
+  mBlue.Set (LittleEndian::readUint32(aData + 8));
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
+{
+  mPreGapLength += aLength;
+
+  // If aLength is zero there are no bitfields to read, or we already read them
+  // in ReadInfoHeader().
+  if (aLength != 0) {
+    mBitFields.ReadFromHeader(aData);
   }
 
-  // Convert endianness
-  mBIH.width = LittleEndian::readUint32(&mBIH.width);
-  mBIH.height = LittleEndian::readUint32(&mBIH.height);
-  mBIH.planes = LittleEndian::readUint16(&mBIH.planes);
-  mBIH.bpp = LittleEndian::readUint16(&mBIH.bpp);
+  return Transition::To(State::COLOR_TABLE, mNumColors * mBytesPerColor);
+}
 
-  mBIH.compression = LittleEndian::readUint32(&mBIH.compression);
-  mBIH.image_size = LittleEndian::readUint32(&mBIH.image_size);
-  mBIH.xppm = LittleEndian::readUint32(&mBIH.xppm);
-  mBIH.yppm = LittleEndian::readUint32(&mBIH.yppm);
-  mBIH.colors = LittleEndian::readUint32(&mBIH.colors);
-  mBIH.important_colors = LittleEndian::readUint32(&mBIH.important_colors);
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
+{
+  MOZ_ASSERT_IF(aLength != 0, mNumColors > 0 && mColors);
+
+  mPreGapLength += aLength;
+
+  for (uint32_t i = 0; i < mNumColors; i++) {
+    // The format is BGR or BGR0.
+    mColors[i].mBlue  = uint8_t(aData[0]);
+    mColors[i].mGreen = uint8_t(aData[1]);
+    mColors[i].mRed   = uint8_t(aData[2]);
+    aData += mBytesPerColor;
+  }
+
+  // We know how many bytes we've read so far (mPreGapLength) and we know the
+  // offset of the pixel data (mBFH.dataoffset), so we can determine the length
+  // of the gap (possibly zero) between the color table and the pixel data.
+  //
+  // If the gap is negative the file must be malformed (e.g. mBFH.dataoffset
+  // points into the middle of the color palette instead of past the end) and
+  // we give up.
+  if (mPreGapLength > mBFH.dataoffset) {
+    PostDataError();
+    return Transition::Terminate(State::FAILURE);
+  }
+  uint32_t gapLength = mBFH.dataoffset - mPreGapLength;
+  return Transition::To(State::GAP, gapLength);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::SkipGap()
+{
+  bool hasRLE = mBIH.compression == Compression::RLE8 ||
+                mBIH.compression == Compression::RLE4;
+  return hasRLE
+       ? Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH)
+       : Transition::To(State::PIXEL_ROW, mPixelRowSize);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadPixelRow(const char* aData)
+{
+  MOZ_ASSERT(mCurrentPos == 0);
+
+  const uint8_t* src = reinterpret_cast<const uint8_t*>(aData);
+  uint32_t* dst = RowBuffer();
+  uint32_t lpos = mBIH.width;
+  switch (mBIH.bpp) {
+    case 1:
+      while (lpos > 0) {
+        int8_t bit;
+        uint8_t idx;
+        for (bit = 7; bit >= 0 && lpos > 0; bit--) {
+          idx = (*src >> bit) & 1;
+          SetPixel(dst, idx, mColors);
+          --lpos;
+        }
+        ++src;
+      }
+      break;
+
+    case 4:
+      while (lpos > 0) {
+        Set4BitPixel(dst, *src, lpos, mColors);
+        ++src;
+      }
+      break;
+
+    case 8:
+      while (lpos > 0) {
+        SetPixel(dst, *src, mColors);
+        --lpos;
+        ++src;
+      }
+      break;
+
+    case 16:
+      if (mBitFields.IsR5G5B5()) {
+        // Specialize this common case.
+        while (lpos > 0) {
+          uint16_t val = LittleEndian::readUint16(src);
+          SetPixel(dst, mBitFields.mRed.Get5(val),
+                        mBitFields.mGreen.Get5(val),
+                        mBitFields.mBlue.Get5(val));
+          --lpos;
+          src += 2;
+        }
+      } else {
+        while (lpos > 0) {
+          uint16_t val = LittleEndian::readUint16(src);
+          SetPixel(dst, mBitFields.mRed.Get(val),
+                        mBitFields.mGreen.Get(val),
+                        mBitFields.mBlue.Get(val));
+          --lpos;
+          src += 2;
+        }
+      }
+      break;
+
+    case 24:
+      while (lpos > 0) {
+        SetPixel(dst, src[2], src[1], src[0]);
+        --lpos;
+        src += 3;
+      }
+      break;
+
+    case 32:
+      while (lpos > 0) {
+        if (mUseAlphaData) {
+          if (MOZ_UNLIKELY(!mHaveAlphaData && src[3])) {
+            PostHasTransparency();
+            mHaveAlphaData = true;
+          }
+          SetPixel(dst, src[2], src[1], src[0], src[3]);
+        } else {
+          SetPixel(dst, src[2], src[1], src[0]);
+        }
+        --lpos;
+        src += 4;
+      }
+      break;
+
+    default:
+      MOZ_CRASH("Unsupported color depth; earlier check didn't catch it?");
+  }
+
+  FinishRow();
+  return mCurrentRow == 0
+       ? Transition::Terminate(State::SUCCESS)
+       : Transition::To(State::PIXEL_ROW, mPixelRowSize);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadRLESegment(const char* aData)
+{
+  if (mCurrentRow == 0) {
+    return Transition::Terminate(State::SUCCESS);
+  }
+
+  uint8_t byte1 = uint8_t(aData[0]);
+  uint8_t byte2 = uint8_t(aData[1]);
+
+  if (byte1 != RLE::ESCAPE) {
+    // Encoded mode consists of two bytes: byte1 specifies the number of
+    // consecutive pixels to be drawn using the color index contained in
+    // byte2.
+    //
+    // Work around bitmaps that specify too many pixels.
+    uint32_t pixelsNeeded =
+      std::min<uint32_t>(mBIH.width - mCurrentPos, byte1);
+    if (pixelsNeeded) {
+      uint32_t* dst = RowBuffer();
+      mCurrentPos += pixelsNeeded;
+      if (mBIH.compression == Compression::RLE8) {
+        do {
+          SetPixel(dst, byte2, mColors);
+          pixelsNeeded --;
+        } while (pixelsNeeded);
+      } else {
+        do {
+          Set4BitPixel(dst, byte2, pixelsNeeded, mColors);
+        } while (pixelsNeeded);
+      }
+    }
+    return Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
+  }
+
+  if (byte2 == RLE::ESCAPE_EOL) {
+    mCurrentPos = 0;
+    FinishRow();
+    return mCurrentRow == 0
+         ? Transition::Terminate(State::SUCCESS)
+         : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
+  }
+
+  if (byte2 == RLE::ESCAPE_EOF) {
+    return Transition::Terminate(State::SUCCESS);
+  }
+
+  if (byte2 == RLE::ESCAPE_DELTA) {
+    return Transition::To(State::RLE_DELTA, RLE::DELTA_LENGTH);
+  }
+
+  // Absolute mode. |byte2| gives the number of pixels. The length depends on
+  // whether it's 4-bit or 8-bit RLE. Also, the length must be even (and zero
+  // padding is used to achieve this when necessary).
+  MOZ_ASSERT(mAbsoluteModeNumPixels == 0);
+  mAbsoluteModeNumPixels = byte2;
+  uint32_t length = byte2;
+  if (mBIH.compression == Compression::RLE4) {
+    length = (length + 1) / 2;    // halve, rounding up
+  }
+  if (length & 1) {
+    length++;
+  }
+  return Transition::To(State::RLE_ABSOLUTE, length);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadRLEDelta(const char* aData)
+{
+  // Delta encoding makes it possible to skip pixels making the image
+  // transparent.
+  if (MOZ_UNLIKELY(!mHaveAlphaData)) {
+    PostHasTransparency();
+    mHaveAlphaData = true;
+  }
+  mUseAlphaData = mHaveAlphaData = true;
+
+  if (mDownscaler) {
+    // Clear the skipped pixels. (This clears to the end of the row,
+    // which is perfect if there's a Y delta and harmless if not).
+    mDownscaler->ClearRow(/* aStartingAtCol = */ mCurrentPos);
+  }
+
+  // Handle the XDelta.
+  mCurrentPos += uint8_t(aData[0]);
+  if (mCurrentPos > mBIH.width) {
+    mCurrentPos = mBIH.width;
+  }
+
+  // Handle the Y Delta.
+  int32_t yDelta = std::min<int32_t>(uint8_t(aData[1]), mCurrentRow);
+  mCurrentRow -= yDelta;
+
+  if (mDownscaler && yDelta > 0) {
+    // Commit the current row (the first of the skipped rows).
+    mDownscaler->CommitRow();
+
+    // Clear and commit the remaining skipped rows.
+    for (int32_t line = 1; line < yDelta; line++) {
+      mDownscaler->ClearRow();
+      mDownscaler->CommitRow();
+    }
+  }
+
+  return mCurrentRow == 0
+       ? Transition::Terminate(State::SUCCESS)
+       : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadRLEAbsolute(const char* aData, size_t aLength)
+{
+  uint32_t n = mAbsoluteModeNumPixels;
+  mAbsoluteModeNumPixels = 0;
+
+  if (mCurrentPos + n > uint32_t(mBIH.width)) {
+    // Bad data. Stop decoding; at least part of the image may have been
+    // decoded.
+    return Transition::Terminate(State::SUCCESS);
+  }
+
+  // In absolute mode, n represents the number of pixels that follow, each of
+  // which contains the color index of a single pixel.
+  uint32_t* dst = RowBuffer();
+  uint32_t iSrc = 0;
+  uint32_t* oldPos = dst;
+  if (mBIH.compression == Compression::RLE8) {
+    while (n > 0) {
+      SetPixel(dst, aData[iSrc], mColors);
+      n--;
+      iSrc++;
+    }
+  } else {
+    while (n > 0) {
+      Set4BitPixel(dst, aData[iSrc], n, mColors);
+      iSrc++;
+    }
+  }
+  mCurrentPos += dst - oldPos;
+
+  // We should read all the data (unless the last byte is zero padding).
+  MOZ_ASSERT(iSrc == aLength - 1 || iSrc == aLength);
+
+  return Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
 }
 
 } // namespace image

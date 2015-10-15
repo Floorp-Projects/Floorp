@@ -13,23 +13,23 @@
 
 #define DROP_THIS_TABLE(...) \
   do { \
-    OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__); \
+    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
     OTS_FAILURE_MSG("Table discarded"); \
-    delete file->ltsh; \
-    file->ltsh = 0; \
+    delete font->ltsh; \
+    font->ltsh = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_ltsh_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
+bool ots_ltsh_parse(Font *font, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
-  if (!file->maxp) {
+  if (!font->maxp) {
     return OTS_FAILURE_MSG("Missing maxp table from font needed by ltsh");
   }
 
   OpenTypeLTSH *ltsh = new OpenTypeLTSH;
-  file->ltsh = ltsh;
+  font->ltsh = ltsh;
 
   uint16_t num_glyphs = 0;
   if (!table.ReadU16(&ltsh->version) ||
@@ -42,7 +42,7 @@ bool ots_ltsh_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     return true;
   }
 
-  if (num_glyphs != file->maxp->num_glyphs) {
+  if (num_glyphs != font->maxp->num_glyphs) {
     DROP_THIS_TABLE("bad num_glyphs: %u", num_glyphs);
     return true;
   }
@@ -59,13 +59,13 @@ bool ots_ltsh_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_ltsh_should_serialise(OpenTypeFile *file) {
-  if (!file->glyf) return false;  // this table is not for CFF fonts.
-  return file->ltsh != NULL;
+bool ots_ltsh_should_serialise(Font *font) {
+  if (!font->glyf) return false;  // this table is not for CFF fonts.
+  return font->ltsh != NULL;
 }
 
-bool ots_ltsh_serialise(OTSStream *out, OpenTypeFile *file) {
-  const OpenTypeLTSH *ltsh = file->ltsh;
+bool ots_ltsh_serialise(OTSStream *out, Font *font) {
+  const OpenTypeLTSH *ltsh = font->ltsh;
 
   const uint16_t num_ypels = static_cast<uint16_t>(ltsh->ypels.size());
   if (num_ypels != ltsh->ypels.size() ||
@@ -82,8 +82,13 @@ bool ots_ltsh_serialise(OTSStream *out, OpenTypeFile *file) {
   return true;
 }
 
-void ots_ltsh_free(OpenTypeFile *file) {
-  delete file->ltsh;
+void ots_ltsh_reuse(Font *font, Font *other) {
+  font->ltsh = other->ltsh;
+  font->ltsh_reused = true;
+}
+
+void ots_ltsh_free(Font *font) {
+  delete font->ltsh;
 }
 
 }  // namespace ots
