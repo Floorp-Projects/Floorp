@@ -626,7 +626,7 @@ protected:
    *
    * Also updates the XML_HTTP_REQUEST_USE_XSITE_AC bit.
    */
-  nsresult CheckChannelForCrossSiteRequest(nsIChannel* aChannel);
+  void CheckChannelForCrossSiteRequest(nsIChannel* aChannel);
 
   void StartProgressEventTimer();
 
