@@ -77,14 +77,9 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool isEvalCompilationUnit();
     bool isNonGlobalEvalCompilationUnit();
     bool isNonSyntacticCompilationUnit();
-    bool createParseContext(Maybe<ParseContext<FullParseHandler>>& parseContext,
-                            SharedContext& globalsc, uint32_t blockScopeDepth = 0);
-    bool saveCallerFun(HandleScript evalCaller, ParseContext<FullParseHandler>& parseContext);
-    bool handleStatementParseFailure(HandleObject scopeChain, HandleScript evalCaller,
-                                     Maybe<ParseContext<FullParseHandler>>& parseContext,
-                                     SharedContext& globalsc);
+    bool saveCallerFun(HandleScript evalCaller);
     bool handleParseFailure(const Directives& newDirectives);
-    bool prepareAndEmitTree(ParseNode** pn, ParseContext<FullParseHandler>& pc);
+    bool prepareAndEmitTree(ParseNode** pn);
     bool checkArgumentsWithinEval(JSContext* cx, HandleFunction fun);
     bool maybeCheckEvalFreeVariables(HandleScript evalCaller, HandleObject scopeChain,
                                      ParseContext<FullParseHandler>& pc);
@@ -301,17 +296,7 @@ BytecodeCompiler::isNonSyntacticCompilationUnit()
 }
 
 bool
-BytecodeCompiler::createParseContext(Maybe<ParseContext<FullParseHandler>>& parseContext,
-                                     SharedContext& globalsc, uint32_t blockScopeDepth)
-{
-    parseContext.emplace(parser.ptr(), (GenericParseContext*) nullptr, (ParseNode*) nullptr,
-                         &globalsc, (Directives*) nullptr, blockScopeDepth);
-    return parseContext->init(*parser);
-}
-
-bool
-BytecodeCompiler::saveCallerFun(HandleScript evalCaller,
-                                ParseContext<FullParseHandler>& parseContext)
+BytecodeCompiler::saveCallerFun(HandleScript evalCaller)
 {
     /*
      * An eval script in a caller frame needs to have its enclosing
@@ -323,42 +308,13 @@ BytecodeCompiler::saveCallerFun(HandleScript evalCaller,
     RootedFunction fun(cx, evalCaller->functionOrCallerFunction());
     MOZ_ASSERT_IF(fun->strict(), options.strictOption);
     Directives directives(/* strict = */ options.strictOption);
-    ObjectBox* funbox = parser->newFunctionBox(/* fn = */ nullptr, fun, &parseContext,
-                                              directives, fun->generatorKind());
+    ObjectBox* funbox = parser->newFunctionBox(/* fn = */ nullptr, fun,
+                                               directives, fun->generatorKind(),
+                                               enclosingStaticScope);
     if (!funbox)
         return false;
 
     emitter->objectList.add(funbox);
-    return true;
-}
-
-bool
-BytecodeCompiler::handleStatementParseFailure(HandleObject scopeChain, HandleScript evalCaller,
-                                              Maybe<ParseContext<FullParseHandler>>& parseContext,
-                                              SharedContext& globalsc)
-{
-    if (!parser->hadAbortedSyntaxParse())
-        return false;
-
-    // Parsing inner functions lazily may lead the parser into an
-    // unrecoverable state and may require starting over on the top
-    // level statement. Restart the parse; syntax parsing has
-    // already been disabled for the parser and the result will not
-    // be ambiguous.
-    parser->clearAbortedSyntaxParse();
-    parser->tokenStream.seek(startPosition);
-    parser->blockScopes.clear();
-
-    // Destroying the parse context will destroy its free
-    // variables, so check if any deoptimization is needed.
-    if (!maybeCheckEvalFreeVariables(evalCaller, scopeChain, parseContext.ref()))
-        return false;
-
-    parseContext.reset();
-    if (!createParseContext(parseContext, globalsc, script->bindings.numBlockScoped()))
-        return false;
-
-    MOZ_ASSERT(parser->pc == parseContext.ptr());
     return true;
 }
 
@@ -384,13 +340,8 @@ BytecodeCompiler::handleParseFailure(const Directives& newDirectives)
 }
 
 bool
-BytecodeCompiler::prepareAndEmitTree(ParseNode** ppn, ParseContext<FullParseHandler>& pc)
+BytecodeCompiler::prepareAndEmitTree(ParseNode** ppn)
 {
-    // Accumulate the maximum block scope depth, so that emitTree can assert
-    // when emitting JSOP_GETLOCAL that the local is indeed within the fixed
-    // part of the stack frame.
-    script->bindings.updateNumBlockScoped(pc.blockScopeDepth);
-
     if (!FoldConstants(cx, ppn, parser.ptr()) ||
         !NameFunctions(cx, *ppn) ||
         !emitter->updateLocalsToFrameSlots() ||
@@ -551,39 +502,43 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     if (!createEmitter(&globalsc, evalCaller, isNonGlobalEvalCompilationUnit()))
         return nullptr;
 
-    // Syntax parsing may cause us to restart processing of top level
-    // statements in the script. Use Maybe<> so that the parse context can be
-    // reset when this occurs.
-    //
-    // WARNING: ParseContext contains instances of Rooted and may be
-    // reset(). Do not make any new Rooted instances below this point to avoid
-    // violating the Rooted LIFO invariant.
-    Maybe<ParseContext<FullParseHandler>> pc;
-    if (!createParseContext(pc, globalsc))
+    if (savedCallerFun && !saveCallerFun(evalCaller))
         return nullptr;
 
-    if (savedCallerFun && !saveCallerFun(evalCaller, pc.ref()))
-        return nullptr;
+    for (;;) {
+        ParseContext<FullParseHandler> pc(parser.ptr(),
+                                          /* parent = */ nullptr,
+                                          /* maybeFunction = */ nullptr,
+                                          &globalsc,
+                                          /* newDirectives = */ nullptr);
+        if (!pc.init(*parser))
+            return nullptr;
 
-    {
         ParseNode* pn;
-        do {
-            pn = isEvalCompilationUnit() ? parser->evalBody() : parser->globalBody();
-            if (!pn && !handleStatementParseFailure(scopeChain, evalCaller, pc, globalsc))
+        if (isEvalCompilationUnit())
+            pn = parser->evalBody();
+        else
+            pn = parser->globalBody();
+
+        // Successfully parsed. Emit the script.
+        if (pn) {
+            if (!initGlobalOrEvalBindings(pc))
                 return nullptr;
-        } while (!pn);
+            if (!maybeCheckEvalFreeVariables(evalCaller, scopeChain, pc))
+                return nullptr;
+            if (!prepareAndEmitTree(&pn))
+                return nullptr;
+            parser->handler.freeTree(pn);
 
-        if (!prepareAndEmitTree(&pn, *pc))
+            break;
+        }
+
+        // Maybe we aborted a syntax parse. See if we can try again.
+        if (!handleParseFailure(directives))
             return nullptr;
-
-        if (!initGlobalOrEvalBindings(*pc))
-            return nullptr;
-
-        parser->handler.freeTree(pn);
     }
 
-    if (!maybeCheckEvalFreeVariables(evalCaller, scopeChain, *pc) ||
-        !maybeSetDisplayURL(parser->tokenStream) ||
+    if (!maybeSetDisplayURL(parser->tokenStream) ||
         !maybeSetSourceMap(parser->tokenStream) ||
         !maybeSetSourceMapFromOptions() ||
         !emitFinalReturn() ||
