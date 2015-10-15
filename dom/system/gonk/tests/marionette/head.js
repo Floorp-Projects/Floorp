@@ -302,7 +302,7 @@ function cleanUp() {
 function startTestBase(aTestCaseMain) {
   Promise.resolve()
     .then(aTestCaseMain)
-    .then(finish, function(aException) {
+    .then(cleanUp, function(aException) {
       ok(false, "promise rejects during test: " + aException);
       cleanUp();
     });
