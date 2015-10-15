@@ -167,9 +167,13 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
                  requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
                  "type_xml requires requestingContext of type Document");
 
+      // We're checking for the external TYPE_XMLHTTPREQUEST here in case
+      // an addon creates a request with that type.
       if (internalContentPolicyType ==
-            nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST) {
-        mimeTypeGuess = NS_LITERAL_CSTRING("application/xml");
+            nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST ||
+          internalContentPolicyType ==
+            nsIContentPolicy::TYPE_XMLHTTPREQUEST) {
+        mimeTypeGuess = EmptyCString();
       }
       else {
         MOZ_ASSERT(internalContentPolicyType ==
