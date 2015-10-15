@@ -311,12 +311,6 @@ public:
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
 
-  // Call on the main thread only.
-  // Perform any initialization required for the decoder.
-  // Return true on successful initialisation, false
-  // on failure.
-  virtual bool Init(MediaDecoderOwner* aOwner);
-
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.
   virtual void Shutdown();
