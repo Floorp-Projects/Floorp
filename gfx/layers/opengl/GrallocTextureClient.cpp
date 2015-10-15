@@ -112,6 +112,7 @@ GrallocTextureClientOGL::WaitForBufferOwnership(bool aWaitReleaseFence)
 bool
 GrallocTextureClientOGL::Lock(OpenMode aMode)
 {
+  MOZ_ASSERT(!mIsLocked);
   MOZ_ASSERT(IsValid());
   if (!IsValid() || !IsAllocated()) {
     return false;
@@ -148,26 +149,20 @@ GrallocTextureClientOGL::Lock(OpenMode aMode)
     NS_WARNING("Couldn't lock graphic buffer");
     return false;
   }
-  return BufferTextureClient::Lock(aMode);
+  mIsLocked = true;
+  return true;
 }
 
 void
 GrallocTextureClientOGL::Unlock()
 {
-  BufferTextureClient::Unlock();
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
   mDrawTarget = nullptr;
   if (mMappedBuffer) {
     mMappedBuffer = nullptr;
     mGraphicBuffer->unlock();
   }
-}
-
-uint8_t*
-GrallocTextureClientOGL::GetBuffer() const
-{
-  MOZ_ASSERT(IsValid());
-  NS_WARN_IF_FALSE(mMappedBuffer, "Trying to get a gralloc buffer without getting the lock?");
-  return mMappedBuffer;
 }
 
 static gfx::SurfaceFormat
@@ -377,22 +372,6 @@ bool
 GrallocTextureClientOGL::IsAllocated() const
 {
   return !!mGraphicBuffer.get();
-}
-
-bool
-GrallocTextureClientOGL::Allocate(uint32_t aSize)
-{
-  // see Bug 908196
-  MOZ_CRASH("This method should never be called.");
-  return false;
-}
-
-size_t
-GrallocTextureClientOGL::GetBufferSize() const
-{
-  // see Bug 908196
-  MOZ_CRASH("This method should never be called.");
-  return 0;
 }
 
 /*static*/ already_AddRefed<TextureClient>
