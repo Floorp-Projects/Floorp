@@ -319,7 +319,7 @@ pref("media.cache_readahead_limit", 30);
 
 #ifdef MOZ_FMP4
 // Enable/Disable Gonk Decoder Module
-pref("media.fragmented-mp4.gonk.enabled", true);
+pref("media.gonk.enabled", true);
 #endif
 
 //Encrypted media extensions.

@@ -176,7 +176,7 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
 bool
 MP4Decoder::IsEnabled()
 {
-  return Preferences::GetBool("media.fragmented-mp4.enabled");
+  return Preferences::GetBool("media.mp4.enabled");
 }
 
 static const uint8_t sTestH264ExtraData[] = {

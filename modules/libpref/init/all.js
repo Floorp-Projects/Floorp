@@ -310,23 +310,26 @@ pref("media.hardware-video-decoding.enabled", true);
 pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
 
-#ifdef MOZ_WMF
-pref("media.wmf.decoder.thread-count", -1);
-#endif
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);
 #endif
 #ifdef MOZ_FMP4
-pref("media.fragmented-mp4.enabled", true);
-pref("media.fragmented-mp4.ffmpeg.enabled", true);
-pref("media.fragmented-mp4.gmp.enabled", false);
-pref("media.fragmented-mp4.gmp.aac", 0);
-pref("media.fragmented-mp4.gmp.h264", 0);
-// Specifies whether the fragmented MP4 parser uses a test decoder that
+pref("media.mp4.enabled", true);
+// Specifies whether the PDMFactory can create a test decoder that
+#endif
 // just outputs blank frames/audio instead of actually decoding. The blank
 // decoder works on all platforms.
-pref("media.fragmented-mp4.use-blank-decoder", false);
+pref("media.use-blank-decoder", false);
+#ifdef MOZ_WMF
+pref("media.wmf.enabled", true);
+pref("media.wmf.decoder.thread-count", -1);
 #endif
+#if defined(MOZ_FFMPEG)
+pref("media.ffmpeg.enabled", true);
+#endif
+pref("media.gmp.decoder.enabled", false);
+pref("media.gmp.decoder.aac", 0);
+pref("media.gmp.decoder.h264", 0);
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
 #endif

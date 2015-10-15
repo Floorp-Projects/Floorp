@@ -124,24 +124,20 @@ function IsJellyBeanOrLater() {
   return androidVersion >= 16;
 }
 
-// Check whether we should expect the new MP4Reader-based support to work.
-function IsMP4ReaderAvailable() {
-  var prefs = getPref("media.fragmented-mp4.enabled");
-  return prefs && (IsWindowsVistaOrLater() || IsMacOSSnowLeopardOrLater() || IsJellyBeanOrLater());
-}
-
-var haveMp4 = IsWindowsVistaOrLater() ||
+var haveMp4 = (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
+              IsMacOSSnowLeopardOrLater() ||
+              IsJellyBeanOrLater() ||
               getPref("media.omx.enabled") ||
               getPref("media.gstreamer.enabled") ||
-              IsMP4ReaderAvailable();
-// TODO:  Add "getPref("media.plugins.enabled")" once MP4 works on Gingerbread.
+              getPref("media.ffmpeg.enabled");
 
 check_mp4(document.getElementById('v'), haveMp4);
 
 var haveMp3 = getPref("media.directshow.enabled") ||
-              (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
-               getPref("media.gstreamer.enabled") ||
-               getPref("media.apple.mp3.enabled");
+              (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
+              getPref("media.gstreamer.enabled") ||
+              getPref("media.ffmpeg.enabled") ||
+              getPref("media.apple.mp3.enabled");
 check_mp3(document.getElementById('v'), haveMp3);
 
 mediaTestCleanup();

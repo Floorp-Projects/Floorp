@@ -27,9 +27,9 @@ function startTest() {
 }
 
 var testPrefs = [
-  ['media.fragmented-mp4.gmp.aac', 1],  // gmp-clearkey
-  ['media.fragmented-mp4.gmp.h264', 1], // gmp-clearkey
-  ['media.fragmented-mp4.gmp.enabled', true]
+  ['media.gmp.decoder.aac', 1],  // gmp-clearkey
+  ['media.gmp.decoder.h264', 1], // gmp-clearkey
+  ['media.gmp.decoder.enabled', true]
 ];
 
 SpecialPowers.pushPrefEnv({'set': testPrefs}, startTest);
