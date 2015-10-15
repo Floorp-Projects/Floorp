@@ -265,17 +265,18 @@ public:
         // buffer, but correct for input latency.  If starting before mStart,
         // then align the resampler so that the time corresponding to the
         // first input sample is mStart.
-        uint32_t skipFracNum = inputLatency * ratioDen;
+        int64_t skipFracNum = static_cast<int64_t>(inputLatency) * ratioDen;
         double leadTicks = mStart - *aCurrentPosition;
         if (leadTicks > 0.0) {
           // Round to nearest output subsample supported by the resampler at
           // these rates.
-          uint32_t leadSubsamples = leadTicks * ratioNum + 0.5;
+          int64_t leadSubsamples = leadTicks * ratioNum + 0.5;
           MOZ_ASSERT(leadSubsamples <= skipFracNum,
                      "mBeginProcessing is wrong?");
           skipFracNum -= leadSubsamples;
         }
-        speex_resampler_set_skip_frac_num(resampler, skipFracNum);
+        speex_resampler_set_skip_frac_num(resampler,
+                                  std::min<int64_t>(skipFracNum, UINT32_MAX));
 
         mBeginProcessing = -STREAM_TIME_MAX;
       }
