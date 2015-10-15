@@ -55,8 +55,7 @@ loop.shared.actions = (function() {
 
       // Optional Items. There are other optional items typically sent
       // around with this action. They are for the setup of calls and rooms and
-      // depend on the type. See LoopCalls and LoopRooms for the details of this
-      // data.
+      // depend on the type. See LoopRooms for the details of this data.
     }),
 
     /**
