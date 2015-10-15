@@ -54,9 +54,9 @@ void
 SharedSurfaceTextureClient::SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle)
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
   }
   if (surf && surf->GetTextureClient()) {
     surf->GetTextureClient()->SetReleaseFenceHandle(aReleaseFenceHandle);
@@ -70,9 +70,9 @@ FenceHandle
 SharedSurfaceTextureClient::GetAndResetReleaseFenceHandle()
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->GetAndResetReleaseFenceHandle();
@@ -85,9 +85,9 @@ void
 SharedSurfaceTextureClient::SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->SetAcquireFenceHandle(aAcquireFenceHandle);
@@ -100,9 +100,9 @@ const FenceHandle&
 SharedSurfaceTextureClient::GetAcquireFenceHandle() const
 {
 #ifdef MOZ_WIDGET_GONK
-  SharedSurface_Gralloc* surf = nullptr;
-  if (mSurf->mType == SharedSurfaceType::Gralloc) {
-    surf = SharedSurface_Gralloc::Cast(mSurf.get());
+  gl::SharedSurface_Gralloc* surf = nullptr;
+  if (mSurf->mType == gl::SharedSurfaceType::Gralloc) {
+    surf = gl::SharedSurface_Gralloc::Cast(mSurf.get());
   }
   if (surf && surf->GetTextureClient()) {
     return surf->GetTextureClient()->GetAcquireFenceHandle();
