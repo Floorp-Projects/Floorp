@@ -149,6 +149,8 @@ def precompile_cache(formatter, source_path, gre_path, app_path):
         extra_env = {'MOZ_STARTUP_CACHE': cache}
         if buildconfig.substs.get('MOZ_TSAN'):
             extra_env['TSAN_OPTIONS'] = 'report_bugs=0'
+        if buildconfig.substs.get('MOZ_ASAN'):
+            extra_env['ASAN_OPTIONS'] = 'detect_leaks=0'
         if launcher.launch(['xpcshell', '-g', gre_path, '-a', app_path,
                             '-f', os.path.join(os.path.dirname(__file__),
                             'precompile_cache.js'),
