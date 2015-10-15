@@ -17,7 +17,7 @@ public:
   explicit RtspMediaCodecDecoder(MediaDecoderOwner* aOwner)
     : MediaOmxCommonDecoder(aOwner) {}
 
-  virtual MediaDecoder* Clone() override;
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
 
   virtual MediaOmxCommonReader* CreateReader() override;
 

@@ -306,7 +306,7 @@ public:
   virtual void ResetConnectionState();
   // Create a new decoder of the same type as this one.
   // Subclasses must implement this.
-  virtual MediaDecoder* Clone() = 0;
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) = 0;
   // Create a new state machine to run this decoder.
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
