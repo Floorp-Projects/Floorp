@@ -757,8 +757,10 @@ class GCRuntime
     void setGCCallback(JSGCCallback callback, void* data);
     bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
     void removeFinalizeCallback(JSFinalizeCallback func);
-    bool addWeakPointerCallback(JSWeakPointerCallback callback, void* data);
-    void removeWeakPointerCallback(JSWeakPointerCallback func);
+    bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback, void* data);
+    void removeWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback);
+    bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback, void* data);
+    void removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback);
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
 
     void setValidate(bool enable);
@@ -969,7 +971,8 @@ class GCRuntime
 #endif
 
     void callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const;
-    void callWeakPointerCallbacks() const;
+    void callWeakPointerZoneGroupCallbacks() const;
+    void callWeakPointerCompartmentCallbacks(JSCompartment* comp) const;
 
   public:
     JSRuntime* rt;
@@ -1269,7 +1272,8 @@ class GCRuntime
 
     Callback<JSGCCallback> gcCallback;
     CallbackVector<JSFinalizeCallback> finalizeCallbacks;
-    CallbackVector<JSWeakPointerCallback> updateWeakPointerCallbacks;
+    CallbackVector<JSWeakPointerZoneGroupCallback> updateWeakPointerZoneGroupCallbacks;
+    CallbackVector<JSWeakPointerCompartmentCallback> updateWeakPointerCompartmentCallbacks;
 
     /*
      * Malloc counter to measure memory pressure for GC scheduling. It runs

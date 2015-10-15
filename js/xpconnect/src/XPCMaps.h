@@ -47,6 +47,16 @@ public:
         return p ? p->value() : nullptr;
     }
 
+#ifdef DEBUG
+    inline bool HasWrapper(nsXPCWrappedJS* wrapper) {
+        for (auto r = mTable.all(); !r.empty(); r.popFront()) {
+            if (r.front().value() == wrapper)
+                return true;
+        }
+        return false;
+    }
+#endif
+
     inline nsXPCWrappedJS* Add(JSContext* cx, nsXPCWrappedJS* wrapper) {
         NS_PRECONDITION(wrapper,"bad param");
         JSObject* obj = wrapper->GetJSObjectPreserveColor();

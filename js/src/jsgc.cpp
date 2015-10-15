@@ -1619,31 +1619,54 @@ GCRuntime::callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const
 }
 
 bool
-GCRuntime::addWeakPointerCallback(JSWeakPointerCallback callback, void* data)
+GCRuntime::addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback, void* data)
 {
-    return updateWeakPointerCallbacks.append(Callback<JSWeakPointerCallback>(callback, data));
+    return updateWeakPointerZoneGroupCallbacks.append(
+            Callback<JSWeakPointerZoneGroupCallback>(callback, data));
 }
 
 void
-GCRuntime::removeWeakPointerCallback(JSWeakPointerCallback callback)
+GCRuntime::removeWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback)
 {
-    for (Callback<JSWeakPointerCallback>* p = updateWeakPointerCallbacks.begin();
-         p < updateWeakPointerCallbacks.end(); p++)
-    {
-        if (p->op == callback) {
-            updateWeakPointerCallbacks.erase(p);
+    for (auto& p : updateWeakPointerZoneGroupCallbacks) {
+        if (p.op == callback) {
+            updateWeakPointerZoneGroupCallbacks.erase(&p);
             break;
         }
     }
 }
 
 void
-GCRuntime::callWeakPointerCallbacks() const
+GCRuntime::callWeakPointerZoneGroupCallbacks() const
 {
-    for (const Callback<JSWeakPointerCallback>* p = updateWeakPointerCallbacks.begin();
-         p < updateWeakPointerCallbacks.end(); p++)
-    {
-        p->op(rt, p->data);
+    for (auto const& p : updateWeakPointerZoneGroupCallbacks) {
+        p.op(rt, p.data);
+    }
+}
+
+bool
+GCRuntime::addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback, void* data)
+{
+    return updateWeakPointerCompartmentCallbacks.append(
+            Callback<JSWeakPointerCompartmentCallback>(callback, data));
+}
+
+void
+GCRuntime::removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback)
+{
+    for (auto& p : updateWeakPointerCompartmentCallbacks) {
+        if (p.op == callback) {
+            updateWeakPointerCompartmentCallbacks.erase(&p);
+            break;
+        }
+    }
+}
+
+void
+GCRuntime::callWeakPointerCompartmentCallbacks(JSCompartment* comp) const
+{
+    for (auto const& p : updateWeakPointerCompartmentCallbacks) {
+        p.op(rt, comp, p.data);
     }
 }
 
@@ -2665,7 +2688,9 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
     rt->nativeIterCache.purge();
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
-    callWeakPointerCallbacks();
+    callWeakPointerZoneGroupCallbacks();
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
+        callWeakPointerCompartmentCallbacks(comp);
 
     // Finally, iterate through all cells that can contain JSObject pointers to
     // update them. Since updating each cell is independent we try to
@@ -5020,7 +5045,17 @@ GCRuntime::beginSweepingZoneGroup()
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_START);
         callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
-        callWeakPointerCallbacks();
+        {
+            gcstats::AutoPhase ap2(stats, gcstats::PHASE_WEAK_ZONEGROUP_CALLBACK);
+            callWeakPointerZoneGroupCallbacks();
+        }
+        {
+            gcstats::AutoPhase ap2(stats, gcstats::PHASE_WEAK_COMPARTMENT_CALLBACK);
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+                for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
+                    callWeakPointerCompartmentCallbacks(comp);
+            }
+        }
     }
 
     if (sweepingAtoms) {
