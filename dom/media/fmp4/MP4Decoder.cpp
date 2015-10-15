@@ -47,7 +47,10 @@ MP4Decoder::MP4Decoder(MediaDecoderOwner* aOwner)
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
-  MediaDecoderReader* reader = new MediaFormatReader(this, new MP4Demuxer(GetResource()));
+  MediaDecoderReader* reader =
+    new MediaFormatReader(this,
+                          new MP4Demuxer(GetResource()),
+                          GetVideoFrameContainer());
 
   return new MediaDecoderStateMachine(this, reader);
 }
