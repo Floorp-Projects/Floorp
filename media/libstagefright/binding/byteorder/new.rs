@@ -88,6 +88,7 @@ pub trait ReadBytesExt: io::Read {
     ///
     /// Note that since this reads a single byte, no byte order conversions
     /// are used. It is included for completeness.
+    #[inline]
     fn read_u8(&mut self) -> Result<u8> {
         let mut buf = [0; 1];
         try!(read_full(self, &mut buf));
@@ -98,6 +99,7 @@ pub trait ReadBytesExt: io::Read {
     ///
     /// Note that since this reads a single byte, no byte order conversions
     /// are used. It is included for completeness.
+    #[inline]
     fn read_i8(&mut self) -> Result<i8> {
         let mut buf = [0; 1];
         try!(read_full(self, &mut buf));
@@ -105,6 +107,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads an unsigned 16 bit integer from the underlying reader.
+    #[inline]
     fn read_u16<T: ByteOrder>(&mut self) -> Result<u16> {
         let mut buf = [0; 2];
         try!(read_full(self, &mut buf));
@@ -112,6 +115,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads a signed 16 bit integer from the underlying reader.
+    #[inline]
     fn read_i16<T: ByteOrder>(&mut self) -> Result<i16> {
         let mut buf = [0; 2];
         try!(read_full(self, &mut buf));
@@ -119,6 +123,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads an unsigned 32 bit integer from the underlying reader.
+    #[inline]
     fn read_u32<T: ByteOrder>(&mut self) -> Result<u32> {
         let mut buf = [0; 4];
         try!(read_full(self, &mut buf));
@@ -126,6 +131,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads a signed 32 bit integer from the underlying reader.
+    #[inline]
     fn read_i32<T: ByteOrder>(&mut self) -> Result<i32> {
         let mut buf = [0; 4];
         try!(read_full(self, &mut buf));
@@ -133,6 +139,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads an unsigned 64 bit integer from the underlying reader.
+    #[inline]
     fn read_u64<T: ByteOrder>(&mut self) -> Result<u64> {
         let mut buf = [0; 8];
         try!(read_full(self, &mut buf));
@@ -140,6 +147,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads a signed 64 bit integer from the underlying reader.
+    #[inline]
     fn read_i64<T: ByteOrder>(&mut self) -> Result<i64> {
         let mut buf = [0; 8];
         try!(read_full(self, &mut buf));
@@ -147,6 +155,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads an unsigned n-bytes integer from the underlying reader.
+    #[inline]
     fn read_uint<T: ByteOrder>(&mut self, nbytes: usize) -> Result<u64> {
         let mut buf = [0; 8];
         try!(read_full(self, &mut buf[..nbytes]));
@@ -154,6 +163,7 @@ pub trait ReadBytesExt: io::Read {
     }
 
     /// Reads a signed n-bytes integer from the underlying reader.
+    #[inline]
     fn read_int<T: ByteOrder>(&mut self, nbytes: usize) -> Result<i64> {
         let mut buf = [0; 8];
         try!(read_full(self, &mut buf[..nbytes]));
@@ -162,6 +172,7 @@ pub trait ReadBytesExt: io::Read {
 
     /// Reads a IEEE754 single-precision (4 bytes) floating point number from
     /// the underlying reader.
+    #[inline]
     fn read_f32<T: ByteOrder>(&mut self) -> Result<f32> {
         let mut buf = [0; 4];
         try!(read_full(self, &mut buf));
@@ -170,6 +181,7 @@ pub trait ReadBytesExt: io::Read {
 
     /// Reads a IEEE754 double-precision (8 bytes) floating point number from
     /// the underlying reader.
+    #[inline]
     fn read_f64<T: ByteOrder>(&mut self) -> Result<f64> {
         let mut buf = [0; 8];
         try!(read_full(self, &mut buf));
@@ -221,6 +233,7 @@ pub trait WriteBytesExt: io::Write {
     ///
     /// Note that since this writes a single byte, no byte order conversions
     /// are used. It is included for completeness.
+    #[inline]
     fn write_u8(&mut self, n: u8) -> Result<()> {
         write_all(self, &[n])
     }
@@ -229,11 +242,13 @@ pub trait WriteBytesExt: io::Write {
     ///
     /// Note that since this writes a single byte, no byte order conversions
     /// are used. It is included for completeness.
+    #[inline]
     fn write_i8(&mut self, n: i8) -> Result<()> {
         write_all(self, &[n as u8])
     }
 
     /// Writes an unsigned 16 bit integer to the underlying writer.
+    #[inline]
     fn write_u16<T: ByteOrder>(&mut self, n: u16) -> Result<()> {
         let mut buf = [0; 2];
         T::write_u16(&mut buf, n);
@@ -241,6 +256,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes a signed 16 bit integer to the underlying writer.
+    #[inline]
     fn write_i16<T: ByteOrder>(&mut self, n: i16) -> Result<()> {
         let mut buf = [0; 2];
         T::write_i16(&mut buf, n);
@@ -248,6 +264,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes an unsigned 32 bit integer to the underlying writer.
+    #[inline]
     fn write_u32<T: ByteOrder>(&mut self, n: u32) -> Result<()> {
         let mut buf = [0; 4];
         T::write_u32(&mut buf, n);
@@ -255,6 +272,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes a signed 32 bit integer to the underlying writer.
+    #[inline]
     fn write_i32<T: ByteOrder>(&mut self, n: i32) -> Result<()> {
         let mut buf = [0; 4];
         T::write_i32(&mut buf, n);
@@ -262,6 +280,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes an unsigned 64 bit integer to the underlying writer.
+    #[inline]
     fn write_u64<T: ByteOrder>(&mut self, n: u64) -> Result<()> {
         let mut buf = [0; 8];
         T::write_u64(&mut buf, n);
@@ -269,6 +288,7 @@ pub trait WriteBytesExt: io::Write {
     }
 
     /// Writes a signed 64 bit integer to the underlying writer.
+    #[inline]
     fn write_i64<T: ByteOrder>(&mut self, n: i64) -> Result<()> {
         let mut buf = [0; 8];
         T::write_i64(&mut buf, n);
@@ -277,6 +297,7 @@ pub trait WriteBytesExt: io::Write {
 
     /// Writes a IEEE754 single-precision (4 bytes) floating point number to
     /// the underlying writer.
+    #[inline]
     fn write_f32<T: ByteOrder>(&mut self, n: f32) -> Result<()> {
         let mut buf = [0; 4];
         T::write_f32(&mut buf, n);
@@ -285,6 +306,7 @@ pub trait WriteBytesExt: io::Write {
 
     /// Writes a IEEE754 double-precision (8 bytes) floating point number to
     /// the underlying writer.
+    #[inline]
     fn write_f64<T: ByteOrder>(&mut self, n: f64) -> Result<()> {
         let mut buf = [0; 8];
         T::write_f64(&mut buf, n);
