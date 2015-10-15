@@ -3462,6 +3462,7 @@ public:
         , allowWaivers(true)
         , wantComponents(true)
         , wantExportHelpers(false)
+        , isWebExtensionContentScript(false)
         , proto(cx)
         , addonId(cx)
         , writeToGlobalPrototype(false)
@@ -3478,6 +3479,7 @@ public:
     bool allowWaivers;
     bool wantComponents;
     bool wantExportHelpers;
+    bool isWebExtensionContentScript;
     JS::RootedObject proto;
     nsCString sandboxName;
     JS::RootedString addonId;
@@ -3680,6 +3682,7 @@ public:
         , allowWaivers(true)
         , writeToGlobalPrototype(false)
         , skipWriteToGlobalPrototype(false)
+        , isWebExtensionContentScript(false)
         , universalXPConnectEnabled(false)
         , forcePermissiveCOWs(false)
         , scriptability(c)
@@ -3725,6 +3728,10 @@ public:
     // disable the writeToGlobalPrototype behavior (when resolving standard
     // classes, for example).
     bool skipWriteToGlobalPrototype;
+
+    // This scope corresponds to a WebExtension content script, and receives
+    // various bits of special compatibility behavior.
+    bool isWebExtensionContentScript;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

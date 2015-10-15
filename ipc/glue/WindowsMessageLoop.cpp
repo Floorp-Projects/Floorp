@@ -944,7 +944,7 @@ DeneuteredWindowRegion::~DeneuteredWindowRegion()
 }
 
 bool
-MessageChannel::WaitForSyncNotify()
+MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
 {
   mMonitor->AssertCurrentThreadOwns();
 
@@ -952,7 +952,7 @@ MessageChannel::WaitForSyncNotify()
 
   // Use a blocking wait if this channel does not require
   // Windows message deferral behavior.
-  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
+  if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION) || !aHandleWindowsMessages) {
     PRIntervalTime timeout = (kNoTimeout == mTimeoutMs) ?
                              PR_INTERVAL_NO_TIMEOUT :
                              PR_MillisecondsToInterval(mTimeoutMs);
@@ -1088,7 +1088,7 @@ MessageChannel::WaitForInterruptNotify()
   // Re-use sync notification wait code if this channel does not require
   // Windows message deferral behavior. 
   if (!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION)) {
-    return WaitForSyncNotify();
+    return WaitForSyncNotify(true);
   }
 
   if (!InterruptStackDepth() && !AwaitingIncomingMessage()) {

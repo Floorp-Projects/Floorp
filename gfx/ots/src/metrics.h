@@ -33,18 +33,18 @@ struct OpenTypeMetricsTable {
   std::vector<int16_t> sbs;
 };
 
-bool ParseMetricsHeader(OpenTypeFile *file, Buffer *table,
+bool ParseMetricsHeader(Font *font, Buffer *table,
                         OpenTypeMetricsHeader *header);
-bool SerialiseMetricsHeader(const ots::OpenTypeFile *file,
+bool SerialiseMetricsHeader(const ots::Font *font,
                             OTSStream *out,
                             const OpenTypeMetricsHeader *header);
 
-bool ParseMetricsTable(const ots::OpenTypeFile *file,
+bool ParseMetricsTable(const ots::Font *font,
                        Buffer *table,
                        const uint16_t num_glyphs,
                        const OpenTypeMetricsHeader *header,
                        OpenTypeMetricsTable *metrics);
-bool SerialiseMetricsTable(const ots::OpenTypeFile *file,
+bool SerialiseMetricsTable(const ots::Font *font,
                            OTSStream *out,
                            const OpenTypeMetricsTable *metrics);
 
