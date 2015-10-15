@@ -20,6 +20,94 @@
   --row-hover-background-color: rgba(76,158,217,0.2);
 }
 
+/**
+ * TODO bug 1213100
+ * should generalize toolbar buttons with images in them
+ * toolbars.inc.css contains definitions for .devtools-button,
+ * I wager that many of the below styles can be rolled into that
+ */
+.devtools-button.take-snapshot {
+  margin: 2px 1px;
+  padding: 1px;
+  border-width: 0px;
+  /* [standalone] buttons override min-height from 18px to 24px -- why? */
+  min-height: 18px;
+  /* not sure why this is needed for positioning */
+  display: -moz-box;
+}
+
+.devtools-button.take-snapshot::before {
+  background-image: url(images/command-screenshot.png);
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-size: 64px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
+}
+@media (min-resolution: 1.1dppx) {
+  .devtools-button.take-snapshot::before {
+    background-image: url(images/command-screenshot@2x.png);
+  }
+}
+
+/**
+ * TODO bug 1213100
+ * Should this be codified in .devtools-toolbar itself?
+ */
+#memory-tool .devtools-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 20px;
+}
+
+/**
+ * TODO bug 1213100
+ * Once we figure out how to store invertable buttons (pseudo element like in this case?)
+ * we should add a .invertable class to handle this generally, rather than the definitions
+ * in toolbars.inc.css.
+ *
+ * @see bug 1173397 for another inverted related bug
+ */
+.theme-light .devtools-toolbarbutton.take-snapshot::before {
+  filter: url(images/filters.svg#invert);
+}
+
+/**
+ * TODO bug 1213100
+ * The .list style is for a generalized React list component. It's children (.list > li)
+ * are generally styled here, as the component can take any type of child component.
+ * Memory tool specific styling are handling in (li.snapshot-list-item).
+ */
+
+.list {
+  margin: 0;
+  padding: 0;
+  width: 186px;
+  list-style-type: none;
+  font-size: 12px;
+}
+
+.list > li {
+  height: 40px;
+  color: var(--theme-body-color);
+  border-bottom: 1px solid transparent;
+  border-top: 1px solid rgba(128,128,128,0.15);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.list > li.selected {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+
+/**
+ * Heap View
+ */
+
 .heap-view {
   position: relative;
 }
