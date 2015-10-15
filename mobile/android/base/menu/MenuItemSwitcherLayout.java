@@ -20,6 +20,13 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
+/**
+ * This class is a container view for menu items that:
+ *   * Shows text if there is enough space and there are
+ *     no action buttons ({@link #mActionButtons}).
+ *   * Shows an icon if there is not enough space for text,
+ *     or there are action buttons.
+ */
 public class MenuItemSwitcherLayout extends LinearLayout
                                     implements GeckoMenuItem.Layout,
                                                View.OnClickListener {
