@@ -67,22 +67,22 @@ PDMFactory::Init()
   alreadyInitialized = true;
 
   Preferences::AddBoolVarCache(&sUseBlankDecoder,
-                               "media.fragmented-mp4.use-blank-decoder");
+                               "media.use-blank-decoder");
 #ifdef MOZ_GONK_MEDIACODEC
   Preferences::AddBoolVarCache(&sGonkDecoderEnabled,
-                               "media.fragmented-mp4.gonk.enabled", false);
+                               "media.gonk.enabled", false);
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   Preferences::AddBoolVarCache(&sAndroidMCDecoderEnabled,
-                               "media.fragmented-mp4.android-media-codec.enabled", false);
+                               "media.android-media-codec.enabled", false);
   Preferences::AddBoolVarCache(&sAndroidMCDecoderPreferred,
-                               "media.fragmented-mp4.android-media-codec.preferred", false);
+                               "media.android-media-codec.preferred", false);
 #endif
 
   Preferences::AddBoolVarCache(&sGMPDecoderEnabled,
-                               "media.fragmented-mp4.gmp.enabled", false);
+                               "media.gmp.decoder.enabled", false);
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
-                               "media.fragmented-mp4.ffmpeg.enabled", false);
+                               "media.ffmpeg.enabled", false);
 
   Preferences::AddBoolVarCache(&sEnableFuzzingWrapper,
                                "media.decoder.fuzzing.enabled", false);
