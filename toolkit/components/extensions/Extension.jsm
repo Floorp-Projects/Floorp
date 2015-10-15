@@ -23,7 +23,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
 
-
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
@@ -441,12 +440,10 @@ this.Extension.generate = function(id, data)
     let components = filename.split("/");
     let path = "";
     for (let component of components.slice(0, -1)) {
-      path += component;
+      path += component + "/";
       if (!zipW.hasEntry(path)) {
         zipW.addEntryDirectory(path, time, false);
       }
-
-      path += "/";
     }
   }
 
