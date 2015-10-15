@@ -63,6 +63,7 @@ const SEC_ERROR_POLICY_VALIDATION_FAILED                = SEC_ERROR_BASE + 160; 
 const SEC_ERROR_OCSP_BAD_SIGNATURE                      = SEC_ERROR_BASE + 157;
 const SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED       = SEC_ERROR_BASE + 176;
 
+const SSL_ERROR_NO_CYPHER_OVERLAP                       = SSL_ERROR_BASE +   2;
 const SSL_ERROR_BAD_CERT_DOMAIN                         = SSL_ERROR_BASE +  12;
 const SSL_ERROR_BAD_CERT_ALERT                          = SSL_ERROR_BASE +  17;
 const SSL_ERROR_WEAK_SERVER_CERT_KEY                    = SSL_ERROR_BASE + 132;

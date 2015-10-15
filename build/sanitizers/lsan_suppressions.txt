@@ -83,12 +83,6 @@ leak:processInternalEntity
 # Bug 1187421 - With e10s, NSS does not always free the error stack. m1.
 leak:nss_ClearErrorStack
 
-# Bug 1090570 - IPC Transport lifetime is not always managed correctly.
-leak:mozilla::ipc::OpenDescriptor
-leak:IPC::Channel::ChannelImpl::OutputQueuePush
-leak:IPC::Channel::Channel
-leak:base::MessagePumpLibevent::WatchFileDescriptor
-
 # Bug 1122045 - Leaks in MessageLoop::MessageLoop()
 leak:MessageLoop::MessageLoop
 # This may not actually be related to MessageLoop.

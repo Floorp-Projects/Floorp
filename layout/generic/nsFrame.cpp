@@ -1920,13 +1920,17 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // need to have display items built for them.
   bool needEventRegions = aBuilder->IsBuildingLayerEventRegions() &&
       StyleVisibility()->GetEffectivePointerEvents(this) != NS_STYLE_POINTER_EVENTS_NONE;
+  bool opacityItemForEventsOnly = false;
   if (disp->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !aBuilder->WillComputePluginGeometry() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       !nsLayoutUtils::HasCurrentAnimationOfProperty(this,
-                                                    eCSSProperty_opacity) &&
-      !needEventRegions) {
-    return;
+                                                    eCSSProperty_opacity)) {
+    if (needEventRegions) {
+      opacityItemForEventsOnly = true;
+    } else {
+      return;
+    }
   }
 
   if (disp->mWillChangeBitField != 0) {
@@ -2135,7 +2139,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore opacityClipState(aBuilder);
     opacityClipState.Clear();
     resultList.AppendNewToTop(
-        new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList));
+        new (aBuilder) nsDisplayOpacity(aBuilder, this, &resultList, opacityItemForEventsOnly));
   }
   /* If we have sticky positioning, wrap it in a sticky position item.
    */

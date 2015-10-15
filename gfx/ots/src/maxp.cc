@@ -11,11 +11,11 @@
 
 namespace ots {
 
-bool ots_maxp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
+bool ots_maxp_parse(Font *font, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
   OpenTypeMAXP *maxp = new OpenTypeMAXP;
-  file->maxp = maxp;
+  font->maxp = maxp;
 
   uint32_t version = 0;
   if (!table.ReadU32(&version)) {
@@ -72,12 +72,12 @@ bool ots_maxp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_maxp_should_serialise(OpenTypeFile *file) {
-  return file->maxp != NULL;
+bool ots_maxp_should_serialise(Font *font) {
+  return font->maxp != NULL;
 }
 
-bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
-  const OpenTypeMAXP *maxp = file->maxp;
+bool ots_maxp_serialise(OTSStream *out, Font *font) {
+  const OpenTypeMAXP *maxp = font->maxp;
 
   if (!out->WriteU32(maxp->version_1 ? 0x00010000 : 0x00005000) ||
       !out->WriteU16(maxp->num_glyphs)) {
@@ -111,8 +111,13 @@ bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {
   return true;
 }
 
-void ots_maxp_free(OpenTypeFile *file) {
-  delete file->maxp;
+void ots_maxp_reuse(Font *font, Font *other) {
+  font->maxp = other->maxp;
+  font->maxp_reused = true;
+}
+
+void ots_maxp_free(Font *font) {
+  delete font->maxp;
 }
 
 }  // namespace ots

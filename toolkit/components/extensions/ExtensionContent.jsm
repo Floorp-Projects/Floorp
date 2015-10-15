@@ -215,7 +215,7 @@ function ExtensionContext(extensionId, contentWindow)
     prin = Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
   }
 
-  this.sandbox = Cu.Sandbox(prin, {sandboxPrototype: contentWindow, wantXrays: true});
+  this.sandbox = Cu.Sandbox(prin, {sandboxPrototype: contentWindow, wantXrays: true, isWebExtensionContentScript: true});
 
   let delegate = {
     getSender(context, target, sender) {
