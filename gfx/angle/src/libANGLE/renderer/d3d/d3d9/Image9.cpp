@@ -480,6 +480,8 @@ gl::Error Image9::loadData(const gl::Box &area, const gl::PixelUnpackState &unpa
 
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch = formatInfo.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength);
+    GLsizei inputSkipBytes = formatInfo.computeSkipPixels(inputRowPitch, 0, unpack.skipImages,
+                                                          unpack.skipRows, unpack.skipPixels);
 
     const d3d9::TextureFormat &d3dFormatInfo = d3d9::GetTextureFormatInfo(mInternalFormat);
     ASSERT(d3dFormatInfo.loadFunction != NULL);
@@ -498,8 +500,9 @@ gl::Error Image9::loadData(const gl::Box &area, const gl::PixelUnpackState &unpa
     }
 
     d3dFormatInfo.loadFunction(area.width, area.height, area.depth,
-                               reinterpret_cast<const uint8_t*>(input), inputRowPitch, 0,
-                               reinterpret_cast<uint8_t*>(locked.pBits), locked.Pitch, 0);
+                               reinterpret_cast<const uint8_t *>(input) + inputSkipBytes,
+                               inputRowPitch, 0, reinterpret_cast<uint8_t *>(locked.pBits),
+                               locked.Pitch, 0);
 
     unlock();
 
@@ -513,7 +516,8 @@ gl::Error Image9::loadCompressedData(const gl::Box &area, const void *input)
 
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch = formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0);
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0);
+    GLsizei inputDepthPitch =
+        formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0, 0);
 
     const d3d9::TextureFormat &d3d9FormatInfo = d3d9::GetTextureFormatInfo(mInternalFormat);
 

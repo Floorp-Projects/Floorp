@@ -872,3 +872,47 @@ TEST_F(MalformedShaderTest, FragmentShaderInputStructWithInt)
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
+
+// Selecting a field of a vector that's the result of dynamic indexing a constant array should work.
+TEST_F(MalformedShaderTest, ShaderSelectingFieldOfVectorIndexedFromArray)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "uniform int i;\n"
+        "void main() {\n"
+        "    float f = vec2[1](vec2(0.0, 0.1))[i].x;\n"
+        "    my_FragColor = vec4(f);\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Passing an array into a function and then passing a value from that array into another function
+// should work. This is a regression test for a bug where the mangled name of a TType was not
+// properly updated when determining the type resulting from array indexing.
+TEST_F(MalformedShaderTest, ArrayValueFromFunctionParameterAsParameter)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform float u;\n"
+        "float foo(float f) {\n"
+        "   return f * 2.0;\n"
+        "}\n"
+        "float bar(float[2] f) {\n"
+        "    return foo(f[0]);\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "    float arr[2];\n"
+        "    arr[0] = u;\n"
+        "    gl_FragColor = vec4(bar(arr));\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}

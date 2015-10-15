@@ -149,6 +149,15 @@ TEST_P(PackUnpackTest, PackUnpackSnormNormal)
 // Test the correctness of packHalf2x16 and unpackHalf2x16 functions calculating normal floating numbers.
 TEST_P(PackUnpackTest, PackUnpackHalfNormal)
 {
+    // TODO(cwallez) figure out why it is broken on Intel on Mac
+#if defined(ANGLE_PLATFORM_APPLE)
+    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test skipped on Intel on Mac." << std::endl;
+        return;
+    }
+#endif
+
     // Expect the shader to output the same value as the input
     compareBeforeAfter(mHalfProgram, 0.5f, -0.2f);
     compareBeforeAfter(mHalfProgram, -0.35f, 0.75f);

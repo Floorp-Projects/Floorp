@@ -54,6 +54,8 @@ struct UniformBlock
     UniformBlock(const UniformBlock &other) = default;
     UniformBlock &operator=(const UniformBlock &other) = default;
 
+    std::string nameWithArrayIndex() const;
+
     std::string name;
     bool isArray;
     unsigned int arrayElement;
@@ -63,10 +65,6 @@ struct UniformBlock
     bool fragmentStaticUse;
 
     std::vector<unsigned int> memberUniformIndexes;
-
-    // TODO(jmadill): Make D3D-only.
-    unsigned int psRegisterIndex;
-    unsigned int vsRegisterIndex;
 };
 
 }

@@ -523,9 +523,17 @@ void IdentifyBuiltIns(sh::GLenum type, ShShaderSpec spec,
 
             if (resources.EXT_frag_depth)
             {
-                symbolTable.insert(ESSL1_BUILTINS, "GL_EXT_frag_depth", new TVariable(NewPoolTString("gl_FragDepthEXT"),
-                    TType(EbtFloat, resources.FragmentPrecisionHigh ? EbpHigh : EbpMedium, EvqFragDepth, 1)));
+                symbolTable.insert(
+                    ESSL1_BUILTINS, "GL_EXT_frag_depth",
+                    new TVariable(
+                        NewPoolTString("gl_FragDepthEXT"),
+                        TType(EbtFloat, resources.FragmentPrecisionHigh ? EbpHigh : EbpMedium,
+                              EvqFragDepthEXT, 1)));
             }
+
+            symbolTable.insert(ESSL3_BUILTINS,
+                               new TVariable(NewPoolTString("gl_FragDepth"),
+                                             TType(EbtFloat, EbpHigh, EvqFragDepth, 1)));
 
             if (resources.EXT_shader_framebuffer_fetch || resources.NV_shader_framebuffer_fetch)
             {

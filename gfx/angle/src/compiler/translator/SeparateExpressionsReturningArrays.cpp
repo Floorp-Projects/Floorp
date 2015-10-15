@@ -64,7 +64,7 @@ TIntermAggregate *CopyAggregateNode(TIntermAggregate *node)
     {
         copyNode->setUserDefined();
     }
-    copyNode->setName(node->getName());
+    copyNode->setNameObj(node->getNameObj());
     return copyNode;
 }
 

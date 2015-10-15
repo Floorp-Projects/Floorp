@@ -30,18 +30,18 @@
 
         'conditions':
         [
-            ['(OS=="win" or OS=="linux")',
+            ['(OS=="win" or OS=="linux" or OS=="mac")',
             {
                 # Build the dEQP libraries for all Windows/Linux builds
                 'angle_build_deqp_libraries%': 1,
             }],
-            ['((OS=="win" or OS=="linux") and angle_build_winrt==0)',
+            ['((OS=="win" or OS=="linux" or OS=="mac") and angle_build_winrt==0)',
             {
                 # Build the dEQP GoogleTest support helpers for all Windows/Linux builds except WinRT
                 # GoogleTest doesn't support WinRT
                 'angle_build_deqp_gtest_support%': 1,
             }],
-            ['((OS=="win" or OS=="linux") and angle_standalone==1 and angle_build_winrt==0)',
+            ['((OS=="win" or OS=="linux" or OS=="mac") and angle_standalone==1 and angle_build_winrt==0)',
             {
                 # Build the dEQP executables for all standalone Windows/Linux builds except WinRT
                 # GYP doesn't support generating standalone WinRT executables
@@ -72,6 +72,31 @@
                 [
                     '<(deqp_path)/framework/platform/x11',
                 ],
+                'deqp_defines':
+                [
+                    # Ask the system headers to expose all the regular function otherwise
+                    # dEQP doesn't compile and produces warnings about implicitly defined
+                    # functions.
+                    # This has to be GNU_SOURCE as on Linux dEQP uses syscall()
+                    '_GNU_SOURCE',
+                ],
+            }],
+            ['OS=="mac"',
+            {
+                'deqp_include_dirs':
+                [
+                    '<(deqp_path)/framework/platform/osx',
+                ],
+                'deqp_defines':
+                [
+                    # Ask the system headers to expose all the regular function otherwise
+                    # dEQP doesn't compile and produces warnings about implicitly defined
+                    # functions.
+                    '_XOPEN_SOURCE=600',
+                ],
+            }],
+            ['(OS=="linux" and use_x11==1) or OS=="mac"',
+            {
                 'deqp_libtester_sources':
                 [
                     '<(deqp_path)/framework/delibs/dethread/unix/deMutexUnix.c',
@@ -79,13 +104,6 @@
                     '<(deqp_path)/framework/delibs/dethread/unix/deSemaphoreUnix.c',
                     '<(deqp_path)/framework/delibs/dethread/unix/deThreadLocalUnix.c',
                     '<(deqp_path)/framework/delibs/dethread/unix/deThreadUnix.c',
-                ],
-                'deqp_defines':
-                [
-                    # Ask the system headers to expose all the regular function otherwise
-                    # dEQP doesn't compile and produces warnings about implicitly defined
-                    # functions.
-                    '_GNU_SOURCE',
                 ],
             }],
         ],
@@ -1006,7 +1024,6 @@
             '<(angle_path)/src/tests/deqp_support/tcuRandomOrderExecutor.h',
         ],
     },
-
     'conditions':
     [
         ['angle_build_deqp_libraries==1 and angle_standalone==1',
@@ -1288,6 +1305,16 @@
                         },
                         { # angle_standalone!=1
                             'dependencies': [ '<(DEPTH)/third_party/libpng/libpng.gyp:libpng' ],
+                        }],
+                        ['OS=="mac"',
+                        {
+                            'direct_dependent_settings':
+                            {
+                                'xcode_settings':
+                                {
+                                    'DYLIB_INSTALL_NAME_BASE': '@rpath',
+                                },
+                            },
                         }],
                     ],
                 },

@@ -23,7 +23,7 @@ class ElseBlockRewriter : public TIntermTraverser
     ElseBlockRewriter();
 
   protected:
-    bool visitAggregate(Visit visit, TIntermAggregate *aggregate);
+    bool visitAggregate(Visit visit, TIntermAggregate *aggregate) override;
 
   private:
     const TType *mFunctionType;

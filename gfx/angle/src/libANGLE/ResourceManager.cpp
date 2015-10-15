@@ -441,7 +441,7 @@ void ResourceManager::checkSamplerAllocation(GLuint sampler)
 {
     if (sampler != 0 && !getSampler(sampler))
     {
-        Sampler *samplerObject = new Sampler(sampler);
+        Sampler *samplerObject = new Sampler(mFactory, sampler);
         mSamplerMap[sampler] = samplerObject;
         samplerObject->addRef();
         // Samplers cannot be created via Bind

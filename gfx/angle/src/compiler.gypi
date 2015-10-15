@@ -89,6 +89,8 @@
             'compiler/translator/RegenerateStructNames.h',
             'compiler/translator/RemovePow.cpp',
             'compiler/translator/RemovePow.h',
+            'compiler/translator/RewriteDoWhile.cpp',
+            'compiler/translator/RewriteDoWhile.h',
             'compiler/translator/RenameFunction.h',
             'compiler/translator/ScalarizeVecAndMatConstructorArgs.cpp',
             'compiler/translator/ScalarizeVecAndMatConstructorArgs.h',
