@@ -824,7 +824,7 @@ nsHttpChannelAuthProvider::BlockPrompt()
     }
 
     if (gHttpHandler->IsTelemetryEnabled()) {
-      if (loadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+      if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
         Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
                               HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
       } else {
@@ -842,8 +842,8 @@ nsHttpChannelAuthProvider::BlockPrompt()
     }
 
     // Allow if it is the top-level document or xhr.
-    if ((loadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) ||
-        (loadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_XMLHTTPREQUEST)) {
+    if ((loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) ||
+        (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_XMLHTTPREQUEST)) {
         return false;
     }
 

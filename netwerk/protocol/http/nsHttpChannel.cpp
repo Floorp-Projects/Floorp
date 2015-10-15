@@ -343,7 +343,7 @@ nsHttpChannel::Connect()
             nsContentUtils::GetSecurityManager()->
                 GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
             bool crossOriginNavigation =
-                (mLoadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
+                (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
                 (!resultPrincipal->Equals(mLoadInfo->LoadingPrincipal()));
 
             if (!crossOriginNavigation) {
