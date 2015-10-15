@@ -20,24 +20,24 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
-public class MenuItemActionView extends LinearLayout
-                                implements GeckoMenuItem.Layout,
-                                           View.OnClickListener {
+public class MenuItemSwitcherLayout extends LinearLayout
+                                    implements GeckoMenuItem.Layout,
+                                               View.OnClickListener {
     private final MenuItemDefault mMenuItem;
     private final MenuItemActionBar mMenuButton;
     private final List<ImageButton> mActionButtons;
     private final List<View.OnClickListener> mActionButtonListeners = new ArrayList<View.OnClickListener>();
 
-    public MenuItemActionView(Context context) {
+    public MenuItemSwitcherLayout(Context context) {
         this(context, null);
     }
 
-    public MenuItemActionView(Context context, AttributeSet attrs) {
+    public MenuItemSwitcherLayout(Context context, AttributeSet attrs) {
         this(context, attrs, R.attr.menuItemActionViewStyle);
     }
 
     @TargetApi(14)
-    public MenuItemActionView(Context context, AttributeSet attrs, int defStyle) {
+    public MenuItemSwitcherLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
 
         LayoutInflater.from(context).inflate(R.layout.menu_item_action_view, this);
