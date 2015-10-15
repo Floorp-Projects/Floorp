@@ -86,6 +86,7 @@ function populateChildren(menulist, options, selectedIndex, zoom, startIndex = 0
     item.setAttribute("label", option.textContent);
     item.style.direction = option.textDirection;
     item.style.fontSize = adjustedTextSize;
+    item.style.display = option.display;
     item.setAttribute("tooltiptext", option.tooltip);
 
     element.appendChild(item);
