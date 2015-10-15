@@ -305,7 +305,7 @@ add_test(function test_is_cphs_service_available() {
   let context = worker.ContextPool._contexts[0];
   let ICCUtilsHelper = context.ICCUtilsHelper;
   let RIL = context.RIL;
-  RIL.iccInfoPrivate.cphsSt = Uint8Array(2);
+  RIL.iccInfoPrivate.cphsSt = new Uint8Array(2);
 
   function test_table(cphsSt, geckoService) {
     RIL.iccInfoPrivate.cphsSt.set(cphsSt);
