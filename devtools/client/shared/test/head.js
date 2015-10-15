@@ -4,7 +4,7 @@
 
 var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
-var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 var {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
 const {DOMHelpers} = Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/client/framework/toolbox-hosts");

@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
   "resource://gre/modules/devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/shared/Console.jsm");
+  "resource://gre/modules/Console.jsm");
 
 this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
 

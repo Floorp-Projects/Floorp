@@ -12,7 +12,7 @@ Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-var { console } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+var { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 var { EventTarget } = require("sdk/event/target");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
