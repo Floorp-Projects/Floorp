@@ -202,7 +202,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
 {
   aOut.type() = aIn.Type();
 
-  aIn.GetUrl(aOut.url());
+  aIn.GetUnfilteredUrl(aOut.url());
 
   if (aOut.url() != EmptyCString()) {
     // Pass all Response URL schemes through... The spec only requires we take
