@@ -13,16 +13,17 @@ namespace mozilla {
 class OggDecoder : public MediaDecoder
 {
 public:
-  OggDecoder()
-    : mShutdownBitMonitor("mShutdownBitMonitor")
+  explicit OggDecoder(MediaDecoderOwner* aOwner)
+    : MediaDecoder(aOwner)
+    , mShutdownBitMonitor("mShutdownBitMonitor")
     , mShutdownBit(false)
   {}
 
-  virtual MediaDecoder* Clone() override {
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     if (!IsOggEnabled()) {
       return nullptr;
     }
-    return new OggDecoder();
+    return new OggDecoder(aOwner);
   }
   virtual MediaDecoderStateMachine* CreateStateMachine() override;
 

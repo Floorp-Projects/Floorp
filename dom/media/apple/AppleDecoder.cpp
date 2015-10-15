@@ -9,15 +9,15 @@
 
 namespace mozilla {
 
-AppleDecoder::AppleDecoder()
-  : MediaDecoder()
+AppleDecoder::AppleDecoder(MediaDecoderOwner* aOwner)
+  : MediaDecoder(aOwner)
 {
 }
 
 MediaDecoder *
-AppleDecoder::Clone()
+AppleDecoder::Clone(MediaDecoderOwner* aOwner)
 {
-  return new AppleDecoder();
+  return new AppleDecoder(aOwner);
 }
 
 MediaDecoderStateMachine *

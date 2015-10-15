@@ -616,6 +616,49 @@ var unbalancedGradientAndElementValues = [
   "-moz-element(#a()",
 ];
 
+if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
+  // Extend gradient lists with valid/invalid webkit-prefixed expressions:
+  validGradientAndElementValues.push(
+    // Basic linear-gradient syntax (valid when prefixed or unprefixed):
+    "-webkit-linear-gradient(red, green, blue)",
+
+    // Angled linear-gradients (valid when prefixed or unprefixed):
+    "-webkit-linear-gradient(135deg, red, blue)",
+    "-webkit-linear-gradient(280deg, red 60%, blue)",
+
+    // Basic radial-gradient syntax (valid when prefixed or unprefixed):
+    "-webkit-radial-gradient(circle, white, black)",
+    "-webkit-radial-gradient(circle, white, black)",
+    "-webkit-radial-gradient(ellipse closest-side, white, black)",
+    "-webkit-radial-gradient(circle farthest-corner, white, black)",
+
+    // Repeating examples:
+    "-webkit-repeating-linear-gradient(red 10%, blue 30%)",
+    "-webkit-repeating-linear-gradient(30deg, pink 20px, orange 70px)",
+    "-webkit-repeating-radial-gradient(circle, red, blue 10%, red 20%)",
+    "-webkit-repeating-radial-gradient(circle farthest-corner, gray 10px, yellow 20px)"
+  );
+
+  invalidGradientAndElementValues.push(
+    // Syntax that's invalid for all types of gradients:
+    // * empty gradient expressions:
+    "-webkit-linear-gradient()",
+    "-webkit-radial-gradient()",
+    "-webkit-repeating-linear-gradient()",
+    "-webkit-repeating-radial-gradient()",
+
+    // Syntax that's invalid for both -webkit & -moz, but valid for unprefixed:
+    // XXXdholbert (populated in a later patch)
+
+    // Syntax that's invalid for both -webkit & unprefixed, but valid for -moz:
+    // * initial length
+    "-webkit-linear-gradient(10px, red, blue)"
+
+    // Syntax that's invalid for -webkit, but valid for -moz & unprefixed:
+    // XXXdholbert (populated in a later patch)
+  );
+}
+
 var gCSSProperties = {
   "animation": {
     domProp: "animation",
