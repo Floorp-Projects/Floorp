@@ -129,7 +129,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
 
 ID3D11Texture2D*
 D3D11ShareHandleImage::GetTexture() const {
-  return mTextureClient->GetD3D11Texture();
+  return static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())->GetD3D11Texture();
 }
 
 already_AddRefed<TextureClient>
@@ -139,14 +139,12 @@ D3D11RecycleAllocator::Allocate(gfx::SurfaceFormat aFormat,
                                 TextureFlags aTextureFlags,
                                 TextureAllocationFlags aAllocFlags)
 {
-  return TextureClientD3D11::Create(mSurfaceAllocator,
-                                    aFormat,
-                                    TextureFlags::DEFAULT,
-                                    mDevice,
-                                    aSize);
+  return CreateD3D11TextureClientWithDevice(aSize, aFormat,
+                                            aTextureFlags, aAllocFlags,
+                                            mDevice, mSurfaceAllocator);
 }
 
-already_AddRefed<TextureClientD3D11>
+already_AddRefed<TextureClient>
 D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                                              const gfx::IntSize& aSize)
 {
@@ -155,12 +153,7 @@ D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                     aSize,
                     BackendSelector::Content,
                     layers::TextureFlags::DEFAULT);
-  if (!textureClient) {
-    return nullptr;
-  }
-
-  RefPtr<TextureClientD3D11> textureD3D11 = static_cast<TextureClientD3D11*>(textureClient.get());
-  return textureD3D11.forget();
+  return textureClient.forget();
 }
 
 
