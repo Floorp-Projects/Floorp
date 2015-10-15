@@ -13,8 +13,9 @@ namespace mozilla {
 class OggDecoder : public MediaDecoder
 {
 public:
-  OggDecoder()
-    : mShutdownBitMonitor("mShutdownBitMonitor")
+  explicit OggDecoder(MediaDecoderOwner* aOwner)
+    : MediaDecoder(aOwner)
+    , mShutdownBitMonitor("mShutdownBitMonitor")
     , mShutdownBit(false)
   {}
 

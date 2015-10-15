@@ -9,8 +9,8 @@
 
 namespace mozilla {
 
-AppleDecoder::AppleDecoder()
-  : MediaDecoder()
+AppleDecoder::AppleDecoder(MediaDecoderOwner* aOwner)
+  : MediaDecoder(aOwner)
 {
 }
 

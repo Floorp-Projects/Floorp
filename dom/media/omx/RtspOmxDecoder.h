@@ -21,8 +21,7 @@ namespace mozilla {
 class RtspOmxDecoder : public MediaDecoder
 {
 public:
-  RtspOmxDecoder()
-  : MediaDecoder() {
+  explicit RtspOmxDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {
     MOZ_COUNT_CTOR(RtspOmxDecoder);
   }
 
