@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Merge day clobber
+Bug 1199430 oddly seems to require a clobber on Windows
