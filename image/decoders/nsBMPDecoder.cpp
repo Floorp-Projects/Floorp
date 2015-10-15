@@ -172,9 +172,12 @@ GetBMPLog()
   return sBMPLog;
 }
 
-nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
+// The length of the mBIHSize field in the info header.
+static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
+
+nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength)
   : Decoder(aImage)
-  , mLexer(Transition::To(State::FILE_HEADER, FILE_HEADER_LENGTH))
+  , mLexer(Transition::To(aState, aLength))
   , mIsWithinICO(false)
   , mMayHaveTransparency(false)
   , mDoesHaveTransparency(false)
@@ -186,6 +189,28 @@ nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   , mCurrentPos(0)
   , mAbsoluteModeNumPixels(0)
 {
+}
+
+// Constructor for normal BMP files.
+nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
+  : nsBMPDecoder(aImage, State::FILE_HEADER, FILE_HEADER_LENGTH)
+{
+}
+
+// Constructor used for WinBMPv3-ICO files, which lack a file header.
+nsBMPDecoder::nsBMPDecoder(RasterImage* aImage, uint32_t aDataOffset)
+  : nsBMPDecoder(aImage, State::INFO_HEADER_SIZE, BIHSIZE_FIELD_LENGTH)
+{
+  SetIsWithinICO();
+
+  // Even though the file header isn't present in this case, the dataOffset
+  // field is set as if it is, and so we must increment mPreGapLength
+  // accordingly.
+  mPreGapLength += FILE_HEADER_LENGTH;
+
+  // This is the one piece of data we normally get from a BMP file header, so
+  // it must be provided via an argument.
+  mH.mDataOffset = aDataOffset;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
@@ -463,9 +488,6 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 
   return;
 }
-
-// The length of the mBIHSize field in the info header.
-static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
 
 LexerTransition<nsBMPDecoder::State>
 nsBMPDecoder::ReadFileHeader(const char* aData, size_t aLength)
