@@ -44,4 +44,3 @@ task:
     # files are located, relative to the task's artifacts URL
     locations:
       build: 'public/build/target.tar.bz2'
-      tests: 'public/build/target.tests.zip'
