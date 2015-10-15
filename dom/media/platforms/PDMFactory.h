@@ -67,6 +67,9 @@ private:
 #ifdef MOZ_FFMPEG
   static bool sFFmpegDecoderEnabled;
 #endif
+#ifdef XP_WIN
+  static bool sWMFDecoderEnabled;
+#endif
   static bool sEnableFuzzingWrapper;
   static uint32_t sVideoOutputMinimumInterval_ms;
   static bool sDontDelayInputExhausted;
