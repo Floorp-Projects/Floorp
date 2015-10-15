@@ -336,10 +336,13 @@ MP3TrackDemuxer::Duration() const {
     return TimeUnit::FromMicroseconds(-1);
   }
 
-  const int64_t streamLen = StreamLength();
-  // Assume we know the exact number of frames from the VBR header.
-  int64_t numFrames = mParser.VBRInfo().NumFrames();
-  if (numFrames < 0) {
+  int64_t numFrames = 0;
+  const auto numAudioFrames = mParser.VBRInfo().NumAudioFrames();
+  if (numAudioFrames) {
+    // VBR headers don't include the VBR header frame.
+    numFrames = numAudioFrames.value() + 1;
+  } else {
+    const int64_t streamLen = StreamLength();
     if (streamLen < 0) {
       // Unknown length, we can't estimate duration.
       return TimeUnit::FromMicroseconds(-1);
@@ -532,10 +535,15 @@ MP3TrackDemuxer::Read(uint8_t* aBuffer, int64_t aOffset, int32_t aSize) {
 
 double
 MP3TrackDemuxer::AverageFrameLength() const {
-  if (!mNumParsedFrames) {
-    return 0.0;
+  if (mNumParsedFrames) {
+    return static_cast<double>(mTotalFrameLen) / mNumParsedFrames;
   }
-  return static_cast<double>(mTotalFrameLen) / mNumParsedFrames;
+  const auto& vbr = mParser.VBRInfo();
+  if (vbr.NumBytes() && vbr.NumAudioFrames()) {
+    return static_cast<double>(vbr.NumBytes().value()) /
+           (vbr.NumAudioFrames().value() + 1);
+  }
+  return 0.0;
 }
 
 // FrameParser
@@ -833,9 +841,13 @@ FrameParser::FrameHeader::Update(uint8_t c) {
 
 // FrameParser::VBRHeader
 
+namespace vbr_header {
+static const char* TYPE_STR[3] = {"NONE", "XING", "VBRI"};
+static const uint32_t TOC_SIZE = 100;
+} // namespace vbr_header
+
 FrameParser::VBRHeader::VBRHeader()
-  : mNumFrames(-1),
-    mType(NONE)
+  : mType(NONE)
 {
 }
 
@@ -844,17 +856,51 @@ FrameParser::VBRHeader::Type() const {
   return mType;
 }
 
+const Maybe<uint32_t>&
+FrameParser::VBRHeader::NumAudioFrames() const {
+  return mNumAudioFrames;
+}
+
+const Maybe<uint32_t>&
+FrameParser::VBRHeader::NumBytes() const {
+  return mNumBytes;
+}
+
+const Maybe<uint32_t>&
+FrameParser::VBRHeader::Scale() const {
+  return mScale;
+}
+
+bool
+FrameParser::VBRHeader::IsTOCPresent() const {
+  return mTOC.size() == vbr_header::TOC_SIZE;
+}
+
 int64_t
-FrameParser::VBRHeader::NumFrames() const {
-  return mNumFrames;
+FrameParser::VBRHeader::Offset(float aDurationFac) const {
+  if (!IsTOCPresent()) {
+    return -1;
+  }
+
+  // Constrain the duration percentage to [0, 99].
+  const float durationPer = 100.0f * std::min(0.99f, std::max(0.0f, aDurationFac));
+  const size_t fullPer = durationPer;
+  const float rest = durationPer - fullPer;
+
+  MOZ_ASSERT(fullPer < mTOC.size());
+  int64_t offset = mTOC.at(fullPer);
+
+  if (rest > 0.0 && fullPer + 1 < mTOC.size()) {
+    offset += rest * (mTOC.at(fullPer + 1) - offset);
+  }
+
+  return offset;
 }
 
 bool
 FrameParser::VBRHeader::ParseXing(ByteReader* aReader) {
-  static const uint32_t TAG = BigEndian::readUint32("Xing");
-  static const uint32_t TAG2 = BigEndian::readUint32("Info");
-  static const uint32_t FRAME_COUNT_OFFSET = 8;
-  static const uint32_t FRAME_COUNT_SIZE = 4;
+  static const uint32_t XING_TAG = BigEndian::readUint32("Xing");
+  static const uint32_t INFO_TAG = BigEndian::readUint32("Info");
 
   enum Flags {
     NUM_FRAMES = 0x01,
@@ -867,24 +913,44 @@ FrameParser::VBRHeader::ParseXing(ByteReader* aReader) {
   const size_t prevReaderOffset = aReader->Offset();
 
   // We have to search for the Xing header as its position can change.
-  while (aReader->Remaining() >= FRAME_COUNT_OFFSET + FRAME_COUNT_SIZE) {
-    if (aReader->PeekU32() != TAG && aReader->PeekU32() != TAG2) {
-      aReader->Read(1);
-      continue;
-    }
-    // Skip across the VBR header ID tag.
-    aReader->Read(sizeof(TAG));
-
-    const uint32_t flags = aReader->ReadU32();
-    if (flags & NUM_FRAMES) {
-      mNumFrames = aReader->ReadU32();
-    }
-    mType = XING;
-    aReader->Seek(prevReaderOffset);
-    return true;
+  while (aReader->CanRead32() &&
+         aReader->PeekU32() != XING_TAG && aReader->PeekU32() != INFO_TAG) {
+    aReader->Read(1);
   }
+
+  if (aReader->CanRead32()) {
+    // Skip across the VBR header ID tag.
+    aReader->ReadU32();
+    mType = XING;
+  }
+  uint32_t flags = 0;
+  if (aReader->CanRead32()) {
+    flags = aReader->ReadU32();
+  }
+  if (flags & NUM_FRAMES && aReader->CanRead32()) {
+    mNumAudioFrames = Some(aReader->ReadU32());
+  }
+  if (flags & NUM_BYTES && aReader->CanRead32()) {
+    mNumBytes = Some(aReader->ReadU32());
+  }
+  if (flags & TOC && aReader->Remaining() >= vbr_header::TOC_SIZE) {
+    if (!mNumBytes) {
+      // We don't have the stream size to calculate offsets, skip the TOC.
+      aReader->Read(vbr_header::TOC_SIZE);
+    } else {
+      mTOC.clear();
+      mTOC.reserve(vbr_header::TOC_SIZE);
+      for (size_t i = 0; i < vbr_header::TOC_SIZE; ++i) {
+        mTOC.push_back(1.0f / 256.0f * aReader->ReadU8() * mNumBytes.value());
+      }
+    }
+  }
+  if (flags & VBR_SCALE && aReader->CanRead32()) {
+    mScale = Some(aReader->ReadU32());
+  }
+
   aReader->Seek(prevReaderOffset);
-  return false;
+  return mType == XING;
 }
 
 bool
@@ -905,7 +971,7 @@ FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader) {
     aReader->Seek(prevReaderOffset + OFFSET);
     if (aReader->ReadU32() == TAG) {
       aReader->Seek(prevReaderOffset + FRAME_COUNT_OFFSET);
-      mNumFrames = aReader->ReadU32();
+      mNumAudioFrames = Some(aReader->ReadU32());
       mType = VBRI;
       aReader->Seek(prevReaderOffset);
       return true;
@@ -917,7 +983,14 @@ FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader) {
 
 bool
 FrameParser::VBRHeader::Parse(ByteReader* aReader) {
-  return ParseVBRI(aReader) || ParseXing(aReader);
+  const bool rv = ParseVBRI(aReader) || ParseXing(aReader);
+  if (rv) {
+    MP3LOG("VBRHeader::Parse found valid VBR/CBR header: type=%s"
+           " NumAudioFrames=%u NumBytes=%u Scale=%u TOC-size=%u",
+           vbr_header::TYPE_STR[Type()], NumAudioFrames().valueOr(0),
+           NumBytes().valueOr(0), Scale().valueOr(0), mTOC.size());
+  }
+  return rv;
 }
 
 // FrameParser::Frame
