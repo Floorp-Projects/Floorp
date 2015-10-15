@@ -39,6 +39,10 @@ namespace mozilla {
 #define GFX_DEBUG_TRACK_CLIENTS_IN_POOL 1
 #endif
 
+namespace gl {
+class SharedSurface_Gralloc;
+}
+
 namespace layers {
 
 class AsyncTransactionWaiter;
@@ -49,6 +53,7 @@ struct PlanarYCbCrData;
 class Image;
 class PTextureChild;
 class TextureChild;
+class TextureData;
 struct RawTextureBuffer;
 class RawYCbCrTextureBuffer;
 class TextureClient;
@@ -57,7 +62,6 @@ class TextureClientRecycleAllocator;
 class TextureClientPool;
 #endif
 class KeepAlive;
-class GrallocTextureClientOGL;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -246,8 +250,6 @@ public:
   {
     return false;
   }
-
-  virtual GrallocTextureClientOGL* AsGrallocTextureClientOGL() { return nullptr; }
 
   /**
    * Locks the shared data, allowing the caller to get access to it.
@@ -490,7 +492,7 @@ public:
   /**
    * Set AsyncTransactionTracker of RemoveTextureFromCompositableAsync() transaction.
    */
-  virtual void SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter) {}
+  virtual void SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter);
 
   /**
    * This function waits until the buffer is no longer being used.
@@ -505,20 +507,20 @@ public:
      mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
    }
 
-   /**
-    * This sets the readback sink that this texture is to use. This will
-    * receive the data for this texture as soon as it becomes available after
-    * texture unlock.
-    */
-   virtual void SetReadbackSink(TextureReadbackSink* aReadbackSink) {
-     mReadbackSink = aReadbackSink;
-   }
+  /**
+   * This sets the readback sink that this texture is to use. This will
+   * receive the data for this texture as soon as it becomes available after
+   * texture unlock.
+   */
+  virtual void SetReadbackSink(TextureReadbackSink* aReadbackSink) {
+    mReadbackSink = aReadbackSink;
+  }
 
-   virtual void SyncWithObject(SyncObject* aSyncObject) { }
+  virtual void SyncWithObject(SyncObject* aSyncObject) { }
 
-   void MarkShared() {
-     mShared = true;
-   }
+  void MarkShared() {
+    mShared = true;
+  }
 
   ISurfaceAllocator* GetAllocator()
   {
@@ -527,6 +529,9 @@ public:
 
    TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
    void SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator);
+
+  /// If you add new code that uses this funtion, you are probably doing something wrong.
+  virtual TextureData* GetInternalData() { return nullptr; }
 
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
@@ -547,7 +552,7 @@ private:
   virtual void FinalizeOnIPDLThread() {}
 
   friend class AtomicRefCountedWithFinalize<TextureClient>;
-
+  friend class gl::SharedSurface_Gralloc;
 protected:
   /**
    * An invalid TextureClient cannot provide access to its shared data
@@ -568,6 +573,8 @@ protected:
   RefPtr<TextureChild> mActor;
   RefPtr<ISurfaceAllocator> mAllocator;
   RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
+  RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
+
   TextureFlags mFlags;
   FenceHandle mReleaseFenceHandle;
   FenceHandle mAcquireFenceHandle;
@@ -600,7 +607,7 @@ public:
 
   virtual gfx::SurfaceFormat GetFormat() const = 0;
 
-  virtual bool Lock(OpenMode aMode) = 0;
+  virtual bool Lock(OpenMode aMode, FenceHandle* aFence) = 0;
 
   virtual void Unlock() = 0;
 
@@ -620,6 +627,9 @@ public:
 
   virtual void Deallocate(ISurfaceAllocator* aAllocator) = 0;
 
+  /// Depending on the texture's flags either Deallocate or Forget is called.
+  virtual void Forget(ISurfaceAllocator* aAllocator) {}
+
   virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
 
   virtual TextureData*
@@ -628,6 +638,10 @@ public:
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const { return nullptr; }
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) { return false; };
+
+  /// Ideally this should not be exposed and users of TextureClient would use Lock/Unlock
+  /// preoperly but that requires a few changes to SharedSurface and maybe gonk video.
+  virtual void WaitForFence(FenceHandle* aFence) {};
 };
 
 /// temporary class that will be merged back into TextureClient when all texture implementations
@@ -670,9 +684,14 @@ public:
 
   virtual void UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
+  // TODO - we should be able to make this implicit and not expose the method.
+  virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) override;
+
   // by construction, ClientTexture cannot be created without successful allocation.
   virtual bool IsAllocated() const override { return true; }
 
+  /// If you add new code that uses this method, you are probably doing something wrong.
+  virtual TextureData* GetInternalData() override { return mData; }
 protected:
   TextureData* mData;
   RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
