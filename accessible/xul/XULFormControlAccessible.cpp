@@ -226,7 +226,6 @@ XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen) const
 
   nsIContent* parent = mContent->GetFlattenedTreeParent();
 
-  bool foundRightElement = false;
   while (parent) {
     nsCOMPtr<nsIDOMXULButtonElement> parentButtonElement =
       do_QueryInterface(parent);
