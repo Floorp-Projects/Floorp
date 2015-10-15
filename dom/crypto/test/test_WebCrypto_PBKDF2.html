@@ -119,7 +119,7 @@ TestArray.addTest(
     crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
       .then( doDerive, fail )
       .then( doSignAndVerify, fail )
-      .then( complete(that), fail );
+      .then( complete(that, x => x), fail );
   }
 );
 

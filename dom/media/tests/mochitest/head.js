@@ -29,9 +29,6 @@ try {
  *                 A MediaStream object whose audio track we shall analyse.
  */
 function AudioStreamAnalyser(ac, stream) {
-  if (stream.getAudioTracks().length === 0) {
-    throw new Error("No audio track in stream");
-  }
   this.audioContext = ac;
   this.stream = stream;
   this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
@@ -56,7 +53,7 @@ AudioStreamAnalyser.prototype = {
    * Useful to debug tests.
    */
   enableDebugCanvas: function() {
-    var cvs = document.createElement("canvas");
+    var cvs = this.debugCanvas = document.createElement("canvas");
     document.getElementById("content").appendChild(cvs);
 
     // Easy: 1px per bin
@@ -73,9 +70,24 @@ AudioStreamAnalyser.prototype = {
       for (var i = 0; i < array.length; i++) {
         c.fillRect(i, (256 - (array[i])), 1, 256);
       }
-      requestAnimationFrame(render);
+      if (!cvs.stopDrawing) {
+        requestAnimationFrame(render);
+      }
     }
     requestAnimationFrame(render);
+  },
+
+  /**
+   * Stop drawing of and remove the debug canvas from the DOM if it was
+   * previously added.
+   */
+  disableDebugCanvas: function() {
+    if (!this.debugCanvas || !this.debugCanvas.parentElement) {
+      return;
+    }
+
+    this.debugCanvas.stopDrawing = true;
+    this.debugCanvas.parentElement.removeChild(this.debugCanvas);
   },
 
   /**
@@ -128,6 +140,26 @@ AudioStreamAnalyser.prototype = {
            this.analyser.fftSize;
   }
 };
+
+/**
+ * Creates a MediaStream with an audio track containing a sine tone at the
+ * given frequency.
+ *
+ * @param {AudioContext} ac
+ *        AudioContext in which to create the OscillatorNode backing the stream
+ * @param {double} frequency
+ *        The frequency in Hz of the generated sine tone
+ * @returns {MediaStream} the MediaStream containing sine tone audio track
+ */
+function createOscillatorStream(ac, frequency) {
+  var osc = ac.createOscillator();
+  osc.frequency.value = frequency;
+
+  var oscDest = ac.createMediaStreamDestination();
+  osc.connect(oscDest);
+  osc.start();
+  return oscDest.stream;
+}
 
 /**
  * Create the necessary HTML elements for head and body as used by Mochitests

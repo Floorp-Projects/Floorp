@@ -278,7 +278,7 @@ class MessageChannel : HasResultCodes
     //
     // So in sum: true is a meaningful return value; false isn't,
     // necessarily.
-    bool WaitForSyncNotify();
+    bool WaitForSyncNotify(bool aHandleWindowsMessages);
     bool WaitForInterruptNotify();
 
     bool WaitResponse(bool aWaitTimedOut);

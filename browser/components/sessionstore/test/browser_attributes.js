@@ -4,7 +4,7 @@
 /**
  * This test makes sure that we correctly preserve tab attributes when storing
  * and restoring tabs. It also ensures that we skip special attributes like
- * 'image' and 'pending' that need to be handled differently or internally.
+ * 'image', 'muted' and 'pending' that need to be handled differently or internally.
  */
 
 const PREF = "browser.sessionstore.restore_on_demand";
@@ -20,10 +20,16 @@ add_task(function* test() {
   // Check that the tab has an 'image' attribute.
   ok(tab.hasAttribute("image"), "tab.image exists");
 
-  // Make sure we do not persist 'image' attributes.
+  tab.toggleMuteAudio();
+  // Check that the tab has a 'muted' attribute.
+  ok(tab.hasAttribute("muted"), "tab.muted exists");
+
+  // Make sure we do not persist 'image' or 'muted' attributes.
   ss.persistTabAttribute("image");
+  ss.persistTabAttribute("muted");
   let {attributes} = JSON.parse(ss.getTabState(tab));
   ok(!("image" in attributes), "'image' attribute not saved");
+  ok(!("muted" in attributes), "'muted' attribute not saved");
   ok(!("custom" in attributes), "'custom' attribute not saved");
 
   // Test persisting a custom attribute.

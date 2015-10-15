@@ -149,7 +149,7 @@ typedef hb_bool_t (*hb_font_get_glyph_from_name_func_t) (hb_font_t *font, void *
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_func (hb_font_funcs_t *ffuncs,
@@ -165,7 +165,7 @@ hb_font_funcs_set_glyph_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_h_advance_func (hb_font_funcs_t *ffuncs,
@@ -181,7 +181,7 @@ hb_font_funcs_set_glyph_h_advance_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_v_advance_func (hb_font_funcs_t *ffuncs,
@@ -197,7 +197,7 @@ hb_font_funcs_set_glyph_v_advance_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_h_origin_func (hb_font_funcs_t *ffuncs,
@@ -213,7 +213,7 @@ hb_font_funcs_set_glyph_h_origin_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_v_origin_func (hb_font_funcs_t *ffuncs,
@@ -229,7 +229,7 @@ hb_font_funcs_set_glyph_v_origin_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_h_kerning_func (hb_font_funcs_t *ffuncs,
@@ -245,7 +245,7 @@ hb_font_funcs_set_glyph_h_kerning_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_v_kerning_func (hb_font_funcs_t *ffuncs,
@@ -261,7 +261,7 @@ hb_font_funcs_set_glyph_v_kerning_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_extents_func (hb_font_funcs_t *ffuncs,
@@ -277,7 +277,7 @@ hb_font_funcs_set_glyph_extents_func (hb_font_funcs_t *ffuncs,
  *
  * 
  *
- * Since: 1.0
+ * Since: 0.9.2
  **/
 void
 hb_font_funcs_set_glyph_contour_point_func (hb_font_funcs_t *ffuncs,
@@ -458,6 +458,10 @@ hb_font_make_immutable (hb_font_t *font);
 
 hb_bool_t
 hb_font_is_immutable (hb_font_t *font);
+
+void
+hb_font_set_parent (hb_font_t *font,
+		    hb_font_t *parent);
 
 hb_font_t *
 hb_font_get_parent (hb_font_t *font);

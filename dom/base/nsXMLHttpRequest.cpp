@@ -2704,7 +2704,8 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
       nsAutoCString contentType;
       if (NS_FAILED(httpChannel->
                       GetRequestHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                       contentType))) {
+                                       contentType)) ||
+          contentType.IsEmpty()) {
         contentType = defaultContentType;
 
         if (!charset.IsEmpty()) {
