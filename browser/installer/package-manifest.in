@@ -688,6 +688,7 @@
 ; DevTools
 @RESPATH@/browser/chrome/devtools@JAREXT@
 @RESPATH@/browser/chrome/devtools.manifest
+@RESPATH@/browser/@PREF_DIR@/devtools.js
 
 ; shell icons
 #ifdef XP_UNIX

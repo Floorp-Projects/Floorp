@@ -23,6 +23,7 @@ DIRS += [
     'memory',
     'netmonitor',
     'performance',
+    'preferences',
     'projecteditor',
     'promisedebugger',
     'responsivedesign',

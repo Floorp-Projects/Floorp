@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/client/styleeditor/utils");
 const csscoverage = require("devtools/server/actors/csscoverage");
-const console = require("resource://gre/modules/devtools/shared/Console.jsm").console;
+const console = require("resource://gre/modules/Console.jsm").console;
 const promise = require("promise");
 
 const LOAD_ERROR = "error-load";

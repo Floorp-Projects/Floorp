@@ -9,7 +9,7 @@ var { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
-var { console } = require("resource://gre/modules/devtools/shared/Console.jsm");
+var { console } = require("resource://gre/modules/Console.jsm");
 var { TargetFactory } = require("devtools/client/framework/target");
 var Promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -291,7 +291,7 @@ function consoleExecute (console, method, val) {
   ui.on("new-messages", handler);
   jsterm.execute(message);
 
-  let { console: c } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+  let { console: c } = Cu.import("resource://gre/modules/Console.jsm", {});
   function handler (event, messages) {
     for (let msg of messages) {
       if (msg.response._message === message) {

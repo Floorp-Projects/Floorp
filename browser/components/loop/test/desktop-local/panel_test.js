@@ -434,6 +434,47 @@ describe("loop.panel", function() {
       });
     });
 
+    describe("Submit feedback", function() {
+      var view, feedbackUrl;
+
+      function mountTestComponent() {
+        return TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.SettingsDropdown, {
+            mozLoop: fakeMozLoop
+          }));
+      }
+
+      beforeEach(function() {
+        feedbackUrl = "https://example.com";
+        fakeMozLoop.getLoopPref = function(pref) {
+          if (pref === "feedback.formURL") {
+            return feedbackUrl;
+          }
+
+          return "unseen";
+        };
+      });
+
+      it("should open a tab to the feedback page", function() {
+        view = mountTestComponent();
+
+        TestUtils.Simulate
+          .click(view.getDOMNode().querySelector(".entry-settings-feedback"));
+
+        sinon.assert.calledOnce(fakeMozLoop.openURL);
+        sinon.assert.calledWithExactly(fakeMozLoop.openURL, feedbackUrl);
+      });
+
+      it("should close the panel", function() {
+        view = mountTestComponent();
+
+        TestUtils.Simulate
+          .click(view.getDOMNode().querySelector(".entry-settings-feedback"));
+
+        sinon.assert.calledOnce(fakeWindow.close);
+      });
+    });
+
     describe("#render", function() {
       it("should not render a ToSView when gettingStarted.seen is true", function() {
         navigator.mozLoop.getLoopPref = function() {

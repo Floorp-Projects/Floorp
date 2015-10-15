@@ -225,6 +225,16 @@ loop.panel = (function(_, mozL10n) {
       this.hideDropdownMenu();
     },
 
+    /**
+     * Load on the browser the feedback url from prefs
+     */
+    handleSubmitFeedback: function(event) {
+      event.preventDefault();
+      var helloFeedbackUrl = this.props.mozLoop.getLoopPref("feedback.formURL");
+      this.props.mozLoop.openURL(helloFeedbackUrl);
+      this.closeWindow();
+    },
+
     _isSignedIn: function() {
       return !!this.props.mozLoop.userProfile;
     },
@@ -262,6 +272,9 @@ loop.panel = (function(_, mozL10n) {
                                    onClick={this.handleClickSettingsEntry} />
             <SettingsDropdownEntry label={mozL10n.get("tour_label")}
                                    onClick={this.openGettingStartedTour} />
+            <SettingsDropdownEntry extraCSSClass="entry-settings-feedback"
+                                   label={mozL10n.get("settings_menu_item_feedback")}
+                                   onClick={this.handleSubmitFeedback} />
             <SettingsDropdownEntry displayed={this.props.mozLoop.fxAEnabled}
                                    extraCSSClass={accountEntryCSSClass}
                                    label={this._isSignedIn() ?
@@ -649,10 +662,10 @@ loop.panel = (function(_, mozL10n) {
     _renderLoadingRoomsView: function() {
       return (
         <div className="room-list">
+          {this._renderNewRoomButton()}
           <div className="room-list-loading">
             <img src="loop/shared/img/animated-spinner.svg" />
           </div>
-          {this._renderNewRoomButton()}
         </div>
       );
     },
@@ -660,6 +673,7 @@ loop.panel = (function(_, mozL10n) {
     _renderNoRoomsView: function() {
       return (
         <div className="rooms">
+          {this._renderNewRoomButton()}
           <div className="room-list-empty">
             <div className="no-conversations-message">
               <p className="panel-text-medium">
@@ -670,7 +684,6 @@ loop.panel = (function(_, mozL10n) {
               </p>
             </div>
           </div>
-          {this._renderNewRoomButton()}
         </div>
       );
     },
@@ -700,6 +713,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="rooms">
+          {this._renderNewRoomButton()}
           <h1>{mozL10n.get("rooms_list_recent_conversations")}</h1>
           <div className="room-list">{
             this.state.rooms.map(function(room, i) {
@@ -712,7 +726,6 @@ loop.panel = (function(_, mozL10n) {
               );
             }, this)
           }</div>
-          {this._renderNewRoomButton()}
         </div>
       );
     }
