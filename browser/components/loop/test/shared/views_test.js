@@ -287,7 +287,6 @@ describe("loop.shared.views", function() {
   describe("SettingsControlButton", function() {
     var fakeMozLoop;
     var support_url = "https://support.com";
-    var feedback_url = "https://feedback.com";
 
     beforeEach(function() {
       fakeMozLoop = {
@@ -297,8 +296,6 @@ describe("loop.shared.views", function() {
           switch (prefName) {
             case "support_url":
               return support_url;
-            case "feedback.formURL":
-              return feedback_url;
             default:
               return prefName;
           }
@@ -316,7 +313,7 @@ describe("loop.shared.views", function() {
     }
 
     it("should render a visible button", function() {
-      var settingsMenuItems = [{ id: "feedback" }];
+      var settingsMenuItems = [{ id: "help" }];
       var comp = mountTestComponent({ menuItems: settingsMenuItems} );
 
       var node = comp.getDOMNode().querySelector(".btn-settings");
@@ -348,7 +345,7 @@ describe("loop.shared.views", function() {
     });
 
     it("should show the settings dropdown on click", function() {
-      var settingsMenuItems = [{ id: "feedback" }];
+      var settingsMenuItems = [{ id: "help" }];
       var comp = mountTestComponent({ menuItems: settingsMenuItems} );
 
       expect(comp.state.showMenu).eql(false);
@@ -428,22 +425,8 @@ describe("loop.shared.views", function() {
       sinon.assert.calledOnce(settingsMenuItems[0].onClick);
     });
 
-    it("should open a tab to the feedback url when the feedback menu item is clicked", function() {
-      var settingsMenuItems = [
-        { id: "feedback" },
-        { id: "help" }
-      ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
-
-      TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li:first-child"));
-
-      sinon.assert.calledOnce(fakeMozLoop.openURL);
-      sinon.assert.calledWithExactly(fakeMozLoop.openURL, feedback_url);
-    });
-
     it("should open a tab to the support url when the support menu item is clicked", function() {
       var settingsMenuItems = [
-        { id: "feedback" },
         { id: "help" }
       ];
       var comp = mountTestComponent({ menuItems: settingsMenuItems} );

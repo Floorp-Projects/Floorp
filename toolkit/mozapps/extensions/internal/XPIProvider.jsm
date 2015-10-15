@@ -41,7 +41,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserToolboxProcess",
                                   "resource:///modules/devtools/client/framework/ToolboxProcess.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
-                                  "resource://gre/modules/devtools/shared/Console.jsm");
+                                  "resource://gre/modules/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ProductAddonChecker",
                                   "resource://gre/modules/addons/ProductAddonChecker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
