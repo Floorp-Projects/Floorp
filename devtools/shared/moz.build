@@ -35,7 +35,6 @@ XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 DevToolsModules(
     'async-storage.js',
     'async-utils.js',
-    'Console.jsm',
     'content-observer.js',
     'css-color.js',
     'deprecated-sync-thenables.js',
