@@ -25,6 +25,10 @@
 #endif
 #include "mozilla/layers/LayersTypes.h"
 
+#ifdef MOZ_FFMPEG
+#include "FFmpegRuntimeLinker.h"
+#endif
+
 namespace mozilla {
 
 #if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
@@ -184,7 +188,11 @@ IsFFmpegAvailable()
 #ifndef MOZ_FFMPEG
   return false;
 #else
-  return Preferences::GetBool("media.fragmented-mp4.ffmpeg.enabled", false);
+  if (!Preferences::GetBool("media.fragmented-mp4.ffmpeg.enabled", false)) {
+    return  false;
+  }
+  nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
+  return !!m;
 #endif
 }
 
