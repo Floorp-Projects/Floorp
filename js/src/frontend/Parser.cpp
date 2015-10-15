@@ -362,7 +362,13 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
                 // Terribly, deoptimized bindings may be updated with
                 // optimized bindings due to hoisted function statements, so
                 // give the new declaration a slot.
-                if (oldDecl->isDeoptimized() && !newDecl->isDeoptimized()) {
+                //
+                // Global bindings are excluded as currently they are never
+                // frame slots. The notion of being deoptimized is not
+                // applicable to them.
+                if (oldDecl->isDeoptimized() && !newDecl->isDeoptimized() &&
+                    !sc->isGlobalContext())
+                {
                     newDecl->pn_dflags |= PND_BOUND;
                     newDecl->pn_scopecoord.setSlot(ts, i);
                     newDecl->setOp(JSOP_GETLOCAL);
