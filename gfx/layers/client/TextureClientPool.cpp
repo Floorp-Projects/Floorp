@@ -5,7 +5,7 @@
 
 #include "TextureClientPool.h"
 #include "CompositableClient.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/CompositableForwarder.h"
 
 #include "gfxPrefs.h"
 
