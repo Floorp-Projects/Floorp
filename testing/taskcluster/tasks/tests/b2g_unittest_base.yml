@@ -1,0 +1,23 @@
+---
+$inherits:
+  from: 'tasks/test.yml'
+task:
+  scopes:
+    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:linux-cache'
+    - 'docker-worker:capability:device:loopbackVideo'
+    - 'docker-worker:capability:device:loopbackAudio'
+  payload:
+    cache:
+      # So pip installs are cached...
+      linux-cache: /home/worker/.cache
+      tc-vcs: '/home/worker/.tc-vcs'
+    capabilities:
+      devices:
+        loopbackVideo: true
+        loopbackAudio: true
+    env:
+      GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
+      GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
+      GAIA_REF: '{{{gaia_ref}}}'
+      GAIA_REV: '{{{gaia_rev}}}'
