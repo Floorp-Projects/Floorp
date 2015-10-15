@@ -97,9 +97,9 @@ void
 GMPDecoderModule::Init()
 {
   Preferences::AddUintVarCache(&sPreferredAacGmp,
-                               "media.fragmented-mp4.gmp.aac", 0);
+                               "media.gmp.decoder.aac", 0);
   Preferences::AddUintVarCache(&sPreferredH264Gmp,
-                               "media.fragmented-mp4.gmp.h264", 0);
+                               "media.gmp.decoder.h264", 0);
 }
 
 /* static */

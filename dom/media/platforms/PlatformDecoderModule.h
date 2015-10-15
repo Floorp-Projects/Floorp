@@ -42,7 +42,7 @@ class CDMProxy;
 //
 // A cross-platform decoder module that discards input and produces "blank"
 // output samples exists for testing, and is created when the pref
-// "media.fragmented-mp4.use-blank-decoder" is true.
+// "media.use-blank-decoder" is true.
 
 class PlatformDecoderModule {
 public:
