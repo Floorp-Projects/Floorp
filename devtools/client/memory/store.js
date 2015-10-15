@@ -4,5 +4,6 @@ const reducers = require("./reducers");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 module.exports = function () {
-  return createStore({ log: DevToolsUtils.testing })(combineReducers(reducers), {});
+  let shouldLog = DevToolsUtils.testing;
+  return createStore({ log: shouldLog })(combineReducers(reducers), {});
 };
