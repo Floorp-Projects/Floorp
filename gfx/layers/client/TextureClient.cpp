@@ -212,7 +212,7 @@ ClientTexture::Lock(OpenMode aMode)
     return mOpenMode == aMode;
   }
 
-  mIsLocked = mData->Lock(aMode);
+  mIsLocked = mData->Lock(aMode, mReleaseFenceHandle.IsValid() ? &mReleaseFenceHandle : nullptr);
   mOpenMode = aMode;
 
   return mIsLocked;
@@ -270,8 +270,12 @@ ClientTexture::~ClientTexture()
 {
   // All the destruction code that may lead to virtual method calls must
   // be in Finalize() which is called just before the destructor.
+
+  // TODO[nical] temporarily integrate this with FinalizeOnIPDLThred
   if (ShouldDeallocateInDestructor()) {
     mData->Deallocate(mAllocator);
+  } else {
+    mData->Forget(mAllocator);
   }
   delete mData;
 }
@@ -369,6 +373,20 @@ ClientTexture::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
   MOZ_ASSERT(mValid);
   return mData->Serialize(aOutDescriptor);
+}
+
+void
+ClientTexture::WaitForBufferOwnership(bool aWaitReleaseFence)
+{
+  if (mRemoveFromCompositableWaiter) {
+    mRemoveFromCompositableWaiter->WaitComplete();
+    mRemoveFromCompositableWaiter = nullptr;
+  }
+
+  if (aWaitReleaseFence && mReleaseFenceHandle.IsValid()) {
+    mData->WaitForFence(&mReleaseFenceHandle);
+    mReleaseFenceHandle = FenceHandle();
+  }
 }
 
 // static
@@ -496,30 +514,6 @@ TextureClient::GetIPDLActor()
   return mActor;
 }
 
-#ifdef MOZ_WIDGET_GONK
-static bool
-DisableGralloc(SurfaceFormat aFormat, const gfx::IntSize& aSizeHint)
-{
-  if (gfxPrefs::DisableGralloc()) {
-    return true;
-  }
-  if (aFormat == gfx::SurfaceFormat::A8) {
-    return true;
-  }
-
-#if ANDROID_VERSION <= 15
-  // Adreno 200 has a problem of drawing gralloc buffer width less than 64 and
-  // drawing gralloc buffer with a height 9px-16px.
-  // See Bug 983971.
-  if (aSizeHint.width < 64 || aSizeHint.height < 32) {
-    return true;
-  }
-#endif
-
-  return false;
-}
-#endif
-
 static inline gfx::BackendType
 BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSelector)
 {
@@ -557,7 +551,7 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
 
   RefPtr<TextureClient> texture;
 
-#if defined(MOZ_WIDGET_GONK) || defined(XP_WIN)
+#if defined(XP_WIN)
   int32_t maxTextureSize = aAllocator->GetMaxTextureSize();
 #endif
 
@@ -621,13 +615,10 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-  if (!DisableGralloc(aFormat, aSize)) {
-    // Don't allow Gralloc texture clients to exceed the maximum texture size.
-    // BufferTextureClients have code to handle tiling the surface client-side.
-    if (aSize.width <= maxTextureSize && aSize.height <= maxTextureSize) {
-      texture = new GrallocTextureClientOGL(aAllocator, aFormat, moz2DBackend,
-                                           aTextureFlags);
-    }
+  texture = CreateGrallocTextureClientForDrawing(aSize, aFormat, moz2DBackend,
+                                                 aTextureFlags, aAllocator);
+  if (texture) {
+    return texture.forget();
   }
 #endif
 
@@ -841,6 +832,11 @@ TextureClient::ShouldDeallocateInDestructor() const
   // TextureFlags::DEALLOCATE_CLIENT is set, then we should
   // deallocate on the client instead.
   return !mShared || (GetFlags() & TextureFlags::DEALLOCATE_CLIENT);
+}
+
+void
+TextureClient::SetRemoveFromCompositableWaiter(AsyncTransactionWaiter* aWaiter) {
+  mRemoveFromCompositableWaiter = aWaiter;
 }
 
 void
