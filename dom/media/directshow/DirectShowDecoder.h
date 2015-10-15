@@ -16,7 +16,7 @@ class DirectShowDecoder : public MediaDecoder
 {
 public:
 
-  DirectShowDecoder();
+  explicit DirectShowDecoder(MediaDecoderOwner* aOwner);
   virtual ~DirectShowDecoder();
 
   MediaDecoder* Clone() override {

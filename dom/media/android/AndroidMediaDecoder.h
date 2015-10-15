@@ -15,7 +15,7 @@ class AndroidMediaDecoder : public MediaDecoder
 {
   nsCString mType;
 public:
-  AndroidMediaDecoder(const nsACString& aType);
+  AndroidMediaDecoder(MediaDecoderOwner* aOwner, const nsACString& aType);
 
   const nsresult GetContentType(nsACString& aType) const {
     aType = mType;

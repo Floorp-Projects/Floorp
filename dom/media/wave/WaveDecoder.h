@@ -24,6 +24,7 @@ namespace mozilla {
 class WaveDecoder : public MediaDecoder
 {
 public:
+  explicit WaveDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
   virtual MediaDecoder* Clone() {
     if (!IsWaveEnabled()) {
       return nullptr;

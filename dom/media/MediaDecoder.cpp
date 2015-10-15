@@ -348,7 +348,7 @@ MediaDecoder::IsInfinite()
   return mInfiniteStream;
 }
 
-MediaDecoder::MediaDecoder()
+MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   : mWatchManager(this, AbstractThread::MainThread())
   , mDormantSupported(false)
   , mLogicalPosition(0.0)
@@ -358,7 +358,8 @@ MediaDecoder::MediaDecoder()
 #endif
   , mIgnoreProgressData(false)
   , mInfiniteStream(false)
-  , mOwner(nullptr)
+  , mOwner(aOwner)
+  , mVideoFrameContainer(aOwner->GetVideoFrameContainer())
   , mPlaybackStatistics(new MediaChannelStatistics())
   , mPinnedForSeek(false)
   , mShuttingDown(false)

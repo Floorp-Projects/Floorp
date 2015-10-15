@@ -12,7 +12,7 @@ namespace mozilla {
 class AppleDecoder : public MediaDecoder
 {
 public:
-  AppleDecoder();
+  explicit AppleDecoder(MediaDecoderOwner* aOwner);
 
   virtual MediaDecoder* Clone() override;
   virtual MediaDecoderStateMachine* CreateStateMachine() override;
