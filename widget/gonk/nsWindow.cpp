@@ -66,9 +66,9 @@ static nsWindow *gFocusedWindow = nullptr;
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 nsWindow::nsWindow()
+    : mFramebuffer(nullptr)
+    , mMappedBuffer(nullptr)
 {
-    mFramebuffer = nullptr;
-
     nsRefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
     screenManager->Initialize();
 
@@ -630,20 +630,18 @@ gralloc_module()
 }
 
 static SurfaceFormat
-HalFormatToSurfaceFormat(int aHalFormat, int* bytepp)
+HalFormatToSurfaceFormat(int aHalFormat)
 {
     switch (aHalFormat) {
     case HAL_PIXEL_FORMAT_RGBA_8888:
-        *bytepp = 4;
-        return SurfaceFormat::R8G8B8A8;
+        // Needs RB swap
+        return SurfaceFormat::B8G8R8A8;
     case HAL_PIXEL_FORMAT_RGBX_8888:
-        *bytepp = 4;
-        return SurfaceFormat::R8G8B8X8;
+        // Needs RB swap
+        return SurfaceFormat::B8G8R8X8;
     case HAL_PIXEL_FORMAT_BGRA_8888:
-        *bytepp = 4;
         return SurfaceFormat::B8G8R8A8;
     case HAL_PIXEL_FORMAT_RGB_565:
-        *bytepp = 2;
         return SurfaceFormat::R5G6B5;
     default:
         MOZ_CRASH("Unhandled HAL pixel format");
@@ -651,26 +649,46 @@ HalFormatToSurfaceFormat(int aHalFormat, int* bytepp)
     }
 }
 
+static bool
+NeedsRBSwap(int aHalFormat)
+{
+    switch (aHalFormat) {
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+        return true;
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        return true;
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+        return false;
+    case HAL_PIXEL_FORMAT_RGB_565:
+        return false;
+    default:
+        MOZ_CRASH("Unhandled HAL pixel format");
+        return false; // not reached
+    }
+}
+
+
 already_AddRefed<DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
     mFramebuffer = mScreen->DequeueBuffer();
     int width = mFramebuffer->width, height = mFramebuffer->height;
-    void *vaddr;
     if (gralloc_module()->lock(gralloc_module(), mFramebuffer->handle,
                                GRALLOC_USAGE_SW_READ_NEVER |
                                GRALLOC_USAGE_SW_WRITE_OFTEN |
                                GRALLOC_USAGE_HW_FB,
-                               0, 0, width, height, &vaddr)) {
+                               0, 0, width, height,
+                               reinterpret_cast<void**>(&mMappedBuffer))) {
         EndRemoteDrawing();
         return nullptr;
     }
-    int bytepp;
-    SurfaceFormat format = HalFormatToSurfaceFormat(mScreen->GetSurfaceFormat(),
-                                                    &bytepp);
+    SurfaceFormat format = HalFormatToSurfaceFormat(mScreen->GetSurfaceFormat());
     mFramebufferTarget = Factory::CreateDrawTargetForData(
-         BackendType::CAIRO, (uint8_t*)vaddr,
-         IntSize(width, height), mFramebuffer->stride * bytepp, format);
+        BackendType::CAIRO,
+        mMappedBuffer,
+        IntSize(width, height),
+        mFramebuffer->stride * gfx::BytesPerPixel(format),
+        format);
     if (!mFramebufferTarget) {
         MOZ_CRASH("nsWindow::StartRemoteDrawing failed in CreateDrawTargetForData");
     }
@@ -687,12 +705,24 @@ nsWindow::StartRemoteDrawing()
 void
 nsWindow::EndRemoteDrawing()
 {
-    if (mFramebufferTarget) {
+    if (mFramebufferTarget && mFramebuffer) {
         IntSize size = mFramebufferTarget->GetSize();
         Rect rect(0, 0, size.width, size.height);
         RefPtr<SourceSurface> source = mBackBuffer->Snapshot();
         mFramebufferTarget->DrawSurface(source, rect, rect);
-        gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
+
+        // Convert from BGR to RGB
+        // XXX this is a temporary solution. It consumes extra cpu cycles,
+        // it should not be used on product device.
+        if (NeedsRBSwap(mScreen->GetSurfaceFormat())) {
+            LOGE("Very slow composition path, it should not be used on product!!!");
+            SurfaceFormat format = HalFormatToSurfaceFormat(mScreen->GetSurfaceFormat());
+            gfxUtils::ConvertBGRAtoRGBA(
+                mMappedBuffer,
+                mFramebuffer->stride * mFramebuffer->height * gfx::BytesPerPixel(format));
+            mMappedBuffer = nullptr;
+            gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
+        }
     }
     if (mFramebuffer) {
         mScreen->QueueBuffer(mFramebuffer);

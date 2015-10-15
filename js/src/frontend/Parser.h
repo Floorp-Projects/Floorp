@@ -197,37 +197,28 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     /* See the sad story in MakeDefIntoUse. */
     void updateDecl(TokenStream& ts, JSAtom* atom, Node newDecl);
 
-    /*
-     * After a function body or module has been parsed, the parser generates the
-     * code's "bindings". Bindings are a data-structure, ultimately stored in
-     * the compiled JSScript, that serve three purposes:
-     *  - After parsing, the ParseContext is destroyed and 'decls' along with
-     *    it. Mostly, the emitter just uses the binding information stored in
-     *    the use/def nodes, but the emitter occasionally needs 'bindings' for
-     *    various scope-related queries.
-     *  - Bindings provide the initial js::Shape to use when creating a dynamic
-     *    scope object (js::CallObject). This shape is used during dynamic name
-     *    lookup.
-     *  - Sometimes a script's bindings are accessed at runtime to retrieve the
-     *    contents of the lexical scope (e.g., from the debugger).
-     */
+    // After a script has been parsed, the parser generates the code's
+    // "bindings". Bindings are a data-structure, ultimately stored in the
+    // compiled JSScript, that serve three purposes:
+    //
+    //  - After parsing, the ParseContext is destroyed and 'decls' along with
+    //    it. Mostly, the emitter just uses the binding information stored in
+    //    the use/def nodes, but the emitter occasionally needs 'bindings' for
+    //    various scope-related queries.
+    //
+    //  - For functions, bindings provide the initial js::Shape to use when
+    //    creating a dynamic scope object (js::CallObject). This shape is used
+    //    during dynamic name lookup.
+    //
+    //  - Sometimes a script's bindings are accessed at runtime to retrieve the
+    //    contents of the lexical scope (e.g., from the debugger).
+    //
+    //  - For global and eval scripts, ES6 15.1.8 specifies that if there are
+    //    name conflicts in the script, *no* bindings from the script are
+    //    instantiated. So, record the vars and lexical bindings to check for
+    //    redeclarations in the prologue.
     bool generateBindings(ExclusiveContext* cx, TokenStream& ts, LifoAlloc& alloc,
                           MutableHandle<Bindings> bindings) const;
-
-    // All global names in global scripts are added to the scope dynamically
-    // via JSOP_DEF{FUN,VAR,LET,CONST}, but ES6 15.1.8 specifies that if there
-    // are name conflicts in the script, *no* bindings from the script are
-    // instantiated. So, record the vars and lexical bindings to check for
-    // redeclarations in the prologue.
-    //
-    // Eval scripts do not need this mechanism as they always have a
-    // non-extensible lexical scope.
-    //
-    // Global and eval scripts may have block-scoped locals, however, which
-    // are allocated to the fixed part of the stack frame.
-    bool drainGlobalOrEvalBindings(ExclusiveContext* cx,
-                                   MutableHandle<TraceableVector<Binding>> vars,
-                                   MutableHandle<TraceableVector<Binding>> lexicals);
 
   private:
     ParseContext**  parserPC;     /* this points to the Parser's active pc
@@ -268,14 +259,13 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     bool            inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
-                 Node maybeFunction, SharedContext* sc, Directives* newDirectives,
-                 uint32_t blockScopeDepth)
+                 Node maybeFunction, SharedContext* sc, Directives* newDirectives)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
         stmtStack(prs->context),
         maybeFunction(maybeFunction),
         lastYieldOffset(NoYieldOffset),
-        blockScopeDepth(blockScopeDepth),
+        blockScopeDepth(0),
         blockNode(ParseHandler::null()),
         decls_(prs->context, prs->alloc),
         args_(prs->context),
@@ -581,6 +571,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool appendToCallSiteObj(Node callSiteObj);
     bool addExprAndGetNextTemplStrToken(YieldHandling yieldHandling, Node nodeList,
                                         TokenKind* ttp);
+    bool checkStatementsEOF();
 
     inline Node newName(PropertyName* name);
     inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
@@ -599,6 +590,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // 18.2.1.1 steps 9 and 10, all eval scripts are executed under a fresh
     // lexical scope.
     Node evalBody();
+
+    // Parse the body of a global script.
+    Node globalBody();
 
     // Parse a module.
     Node standaloneModule(Handle<ModuleObject*> module);

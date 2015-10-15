@@ -299,23 +299,17 @@ public:
   // Must be called exactly once, on the main thread, during startup.
   static void InitStatics();
 
-  MediaDecoder();
+  explicit MediaDecoder(MediaDecoderOwner* aOwner);
 
   // Reset the decoder and notify the media element that
   // server connection is closed.
   virtual void ResetConnectionState();
   // Create a new decoder of the same type as this one.
   // Subclasses must implement this.
-  virtual MediaDecoder* Clone() = 0;
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) = 0;
   // Create a new state machine to run this decoder.
   // Subclasses must implement this.
   virtual MediaDecoderStateMachine* CreateStateMachine() = 0;
-
-  // Call on the main thread only.
-  // Perform any initialization required for the decoder.
-  // Return true on successful initialisation, false
-  // on failure.
-  virtual bool Init(MediaDecoderOwner* aOwner);
 
   // Cleanup internal data structures. Must be called on the main
   // thread by the owning object before that object disposes of this object.

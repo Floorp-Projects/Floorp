@@ -27,15 +27,15 @@ using namespace mozilla::media;
 namespace mozilla {
 
 MediaSourceDecoder::MediaSourceDecoder(dom::HTMLMediaElement* aElement)
-  : mMediaSource(nullptr)
+  : MediaDecoder(aElement)
+  , mMediaSource(nullptr)
   , mEnded(false)
 {
   SetExplicitDuration(UnspecifiedNaN<double>());
-  Init(aElement);
 }
 
 MediaDecoder*
-MediaSourceDecoder::Clone()
+MediaSourceDecoder::Clone(MediaDecoderOwner* aOwner)
 {
   // TODO: Sort out cloning.
   return nullptr;
