@@ -8,7 +8,9 @@ function handleTakeSnapshot (state, action) {
     case "start":
       return [...state, {
         id: action.seqId,
-        status: action.status
+        status: action.status,
+        // auto selected if this is the first snapshot
+        selected: state.length === 0
       }];
 
     case "done":
@@ -27,10 +29,25 @@ function handleTakeSnapshot (state, action) {
   return [...state];
 }
 
+function handleSelectSnapshot (state, action) {
+  let selected = state.find(s => s.id === action.snapshot.id);
+
+  if (!selected) {
+    DevToolsUtils.reportException(`Cannot select non-existant snapshot ${snapshot.id}`);
+  }
+
+  return state.map(s => {
+    s.selected = s === selected;
+    return s;
+  });
+}
+
 module.exports = function (state=[], action) {
   switch (action.type) {
     case actions.TAKE_SNAPSHOT:
       return handleTakeSnapshot(state, action);
+    case actions.SELECT_SNAPSHOT:
+      return handleSelectSnapshot(state, action);
   }
 
   return state;

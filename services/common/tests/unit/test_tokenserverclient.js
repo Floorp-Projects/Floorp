@@ -100,6 +100,8 @@ add_test(function test_conditions_required_response_handling() {
   function onResponse(error, token) {
     do_check_true(error instanceof TokenServerClientServerError);
     do_check_eq(error.cause, "conditions-required");
+    // Check a JSON.stringify works on our errors as our logging will try and use it.
+    do_check_true(JSON.stringify(error), "JSON.stringify worked");
     do_check_null(token);
 
     do_check_eq(error.urls.tos, tosURL);
