@@ -12,11 +12,12 @@ namespace mozilla {
 class RawDecoder : public MediaDecoder
 {
 public:
-  virtual MediaDecoder* Clone() {
+  explicit RawDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
     if (!IsRawEnabled()) {
       return nullptr;
     }
-    return new RawDecoder();
+    return new RawDecoder(aOwner);
   }
   virtual MediaDecoderStateMachine* CreateStateMachine();
 };

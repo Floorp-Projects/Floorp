@@ -50,8 +50,8 @@ static constexpr Register ExtractTemp1 = r25;
 // since we keep the return address for calls there.
 
 // FloatReg0 must be equal to ReturnFloatReg.
-static constexpr FloatRegister FloatReg0 = { FloatRegisters::v0 };
-static constexpr FloatRegister FloatReg1 = { FloatRegisters::v1 };
+static constexpr FloatRegister FloatReg0 = { FloatRegisters::v0, FloatRegisters::Single };
+static constexpr FloatRegister FloatReg1 = { FloatRegisters::v1, FloatRegisters::Single };
 
 } // namespace jit
 } // namespace js
