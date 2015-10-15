@@ -95,7 +95,6 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime* runtime)
     // the posibility of doing any JS GCThing allocations during the gc cycle.
 
     nsTArray<nsXPCWrappedJS*>& dying = runtime->WrappedJSToReleaseArray();
-    MOZ_ASSERT(dying.IsEmpty());
 
     for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
         nsXPCWrappedJS* wrapper = e.front().value();
