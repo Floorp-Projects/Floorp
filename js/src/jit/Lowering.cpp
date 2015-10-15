@@ -3496,22 +3496,15 @@ LIRGenerator::visitDeleteElement(MDeleteElement* ins)
 void
 LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
 {
-    LUse obj = useRegisterAtStart(ins->object());
-    LDefinition slots = tempCopy(ins->object(), 0);
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
 
     // Set the performs-call flag so that we don't omit the overrecursed check.
     // This is necessary because the cache can attach a scripted setter stub
     // that calls this script recursively.
     gen->setPerformsCall();
 
-    LInstruction* lir;
-    if (ins->value()->type() == MIRType_Value) {
-        lir = new(alloc()) LSetPropertyCacheV(obj, slots);
-        useBox(lir, LSetPropertyCacheV::Value, ins->value());
-    } else {
-        LAllocation value = useRegisterOrConstant(ins->value());
-        lir = new(alloc()) LSetPropertyCacheT(obj, slots, value, ins->value()->type());
-    }
+    LInstruction* lir = new(alloc()) LSetPropertyCache(useRegister(ins->object()), temp());
+    useBoxOrTypedOrConstant(lir, LSetPropertyCache::Value, ins->value(), /* useConstant = */ true);
 
     add(lir, ins);
     assignSafepoint(lir, ins);

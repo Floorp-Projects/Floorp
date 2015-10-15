@@ -361,8 +361,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitSetElementCacheT(LSetElementCacheT* ins);
     void visitBindNameCache(LBindNameCache* ins);
     void visitCallSetProperty(LInstruction* ins);
-    void visitSetPropertyCacheV(LSetPropertyCacheV* ins);
-    void visitSetPropertyCacheT(LSetPropertyCacheT* ins);
+    void visitSetPropertyCache(LSetPropertyCache* ins);
     void visitGetNameCache(LGetNameCache* ins);
 
     void visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetPropertyIC>& ic);
@@ -400,8 +399,8 @@ class CodeGenerator : public CodeGeneratorSpecific
                              bool monitoredResult, bool allowDoubleResult,
                              jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                             PropertyName* name, ConstantOrRegister value, bool strict,
-                             bool needsTypeBarrier, jsbytecode* profilerLeavePc);
+                             Register tempReg, PropertyName* name, ConstantOrRegister value,
+                             bool strict, bool needsTypeBarrier, jsbytecode* profilerLeavePc);
     void addSetElementCache(LInstruction* ins, Register obj, Register unboxIndex, Register temp,
                             FloatRegister tempDouble, FloatRegister tempFloat32,
                             ValueOperand index, ConstantOrRegister value,
