@@ -23,7 +23,6 @@ namespace mozilla {
 namespace layers {
 
 class CompositableClient;
-class BufferTextureClient;
 class ImageBridgeChild;
 class ImageContainer;
 class CompositableForwarder;
@@ -136,7 +135,7 @@ public:
 
   LayersBackend GetCompositorBackendType() const;
 
-  already_AddRefed<BufferTextureClient>
+  already_AddRefed<TextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
                             gfx::IntSize aSize,
                             gfx::BackendType aMoz2dBackend = gfx::BackendType::NONE,

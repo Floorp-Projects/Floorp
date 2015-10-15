@@ -192,7 +192,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
           return false;
         }
 
-        bool status = texture->AsTextureClientYCbCr()->UpdateYCbCr(*data);
+        bool status = UpdateYCbCrTextureClient(texture, *data);
         MOZ_ASSERT(status);
         if (!status) {
           return false;
