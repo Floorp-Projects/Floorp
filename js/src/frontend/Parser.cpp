@@ -961,6 +961,26 @@ Parser<SyntaxParseHandler>::standaloneModule(HandleModuleObject module)
 }
 
 template <>
+bool
+Parser<FullParseHandler>::checkStatementsEOF()
+{
+    // This is designed to be paired with parsing a statement list at the top
+    // level.
+    //
+    // The statements() call breaks on TOK_RC, so make sure we've
+    // reached EOF here.
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+        return false;
+    if (tt != TOK_EOF) {
+        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+               "expression", TokenKindToDesc(tt));
+        return false;
+    }
+    return true;
+}
+
+template <>
 ParseNode*
 Parser<FullParseHandler>::evalBody()
 {
@@ -977,20 +997,28 @@ Parser<FullParseHandler>::evalBody()
     if (!body)
         return nullptr;
 
-    // The statements() call above breaks on TOK_RC, so make sure we've
-    // reached EOF here.
-    TokenKind tt;
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand))
+    if (!checkStatementsEOF())
         return nullptr;
-    if (tt != TOK_EOF) {
-        report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
-               "expression", TokenKindToDesc(tt));
-        return nullptr;
-    }
 
     block->pn_expr = body;
     block->pn_pos = body->pn_pos;
     return block;
+}
+
+template <>
+ParseNode*
+Parser<FullParseHandler>::globalBody()
+{
+    MOZ_ASSERT(pc->atGlobalLevel());
+
+    ParseNode* body = statements(YieldIsName);
+    if (!body)
+        return nullptr;
+
+    if (!checkStatementsEOF())
+        return nullptr;
+
+    return body;
 }
 
 template <>

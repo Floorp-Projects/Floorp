@@ -581,6 +581,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool appendToCallSiteObj(Node callSiteObj);
     bool addExprAndGetNextTemplStrToken(YieldHandling yieldHandling, Node nodeList,
                                         TokenKind* ttp);
+    bool checkStatementsEOF();
 
     inline Node newName(PropertyName* name);
     inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
@@ -599,6 +600,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // 18.2.1.1 steps 9 and 10, all eval scripts are executed under a fresh
     // lexical scope.
     Node evalBody();
+
+    // Parse the body of a global script.
+    Node globalBody();
 
     // Parse a module.
     Node standaloneModule(Handle<ModuleObject*> module);
