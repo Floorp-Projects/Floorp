@@ -454,7 +454,7 @@ nsHttpChannel::ContinueConnect()
         mInterceptCache != INTERCEPTED) {
         MOZ_ASSERT(!mPreflightChannel);
         nsresult rv =
-            nsCORSListenerProxy::StartCORSPreflight(this, mListener,
+            nsCORSListenerProxy::StartCORSPreflight(this,
                                                     mPreflightPrincipal, this,
                                                     mWithCredentials,
                                                     mUnsafeHeaders,
