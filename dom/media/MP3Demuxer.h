@@ -6,6 +6,7 @@
 #define MP3_DEMUXER_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
 #include "mp4_demuxer/ByteReader.h"
@@ -205,8 +206,9 @@ public:
   // this class to parse them and access this info.
   class VBRHeader {
   public:
+    // Synchronize with vbr_header TYPE_STR on change.
     enum VBRHeaderType {
-      NONE,
+      NONE = 0,
       XING,
       VBRI
     };
@@ -217,8 +219,22 @@ public:
     // Returns the parsed VBR header type, or NONE if no valid header found.
     VBRHeaderType Type() const;
 
-    // Returns the total number of frames expected in the stream/file.
-    int64_t NumFrames() const;
+    // Returns the total number of audio frames (excluding the VBR header frame)
+    // expected in the stream/file.
+    const Maybe<uint32_t>& NumAudioFrames() const;
+
+    // Returns the expected size of the stream.
+    const Maybe<uint32_t>& NumBytes() const;
+
+    // Returns the VBR scale factor (0: best quality, 100: lowest quality).
+    const Maybe<uint32_t>& Scale() const;
+
+    // Returns true iff Xing/Info TOC (table of contents) is present.
+    bool IsTOCPresent() const;
+
+    // Returns the byte offset for the given duration percentage as a factor
+    // (0: begin, 1.0: end).
+    int64_t Offset(float aDurationFac) const;
 
     // Parses contents of given ByteReader for a valid VBR header.
     // The offset of the passed ByteReader needs to point to an MPEG frame begin,
@@ -240,7 +256,16 @@ public:
     bool ParseVBRI(mp4_demuxer::ByteReader* aReader);
 
     // The total number of frames expected as parsed from a VBR header.
-    int64_t mNumFrames;
+    Maybe<uint32_t> mNumAudioFrames;
+
+    // The total number of bytes expected in the stream.
+    Maybe<uint32_t> mNumBytes;
+
+    // The VBR scale factor.
+    Maybe<uint32_t> mScale;
+
+    // The TOC table mapping duration percentage to byte offset.
+    std::vector<int64_t> mTOC;
 
     // The detected VBR header type.
     VBRHeaderType mType;

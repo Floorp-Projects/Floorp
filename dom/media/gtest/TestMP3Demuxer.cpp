@@ -224,10 +224,10 @@ TEST_F(MP3DemuxerTest, VBRHeader) {
     if (target.mIsVBR) {
       EXPECT_EQ(FrameParser::VBRHeader::XING, vbr.Type());
       // TODO: find reference number which accounts for trailing headers.
-      // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame, vbr.NumFrames());
+      // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame, vbr.NumAudioFrames().value());
     } else {
       EXPECT_EQ(FrameParser::VBRHeader::NONE, vbr.Type());
-      EXPECT_EQ(-1, vbr.NumFrames());
+      EXPECT_FALSE(vbr.NumAudioFrames());
     }
   }
 }
