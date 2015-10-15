@@ -3525,21 +3525,17 @@ LIRGenerator::visitSetElementCache(MSetElementCache* ins)
 
     gen->setPerformsCall(); // See visitSetPropertyCache.
 
-    // Due to lack of registers on x86, we reuse the object register as a
-    // temporary. This register may be used in a 1-byte store, which on x86
-    // again has constraints; thus the use of |useByteOpRegister| over
-    // |useRegister| below.
     LInstruction* lir;
     if (ins->value()->type() == MIRType_Value) {
         LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LSetElementCacheV(useByteOpRegister(ins->object()), tempToUnbox(),
+        lir = new(alloc()) LSetElementCacheV(useRegister(ins->object()), tempToUnbox(),
                                              temp(), tempDouble(), tempF32);
 
         useBox(lir, LSetElementCacheV::Index, ins->index());
         useBox(lir, LSetElementCacheV::Value, ins->value());
     } else {
         LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LSetElementCacheT(useByteOpRegister(ins->object()),
+        lir = new(alloc()) LSetElementCacheT(useRegister(ins->object()),
                                              useRegisterOrConstant(ins->value()),
                                              tempToUnbox(), temp(), tempDouble(),
                                              tempF32);
