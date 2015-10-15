@@ -76,72 +76,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Fetch a new room url from the server, intended to be sent over email when
-     * a contact can't be reached.
-     */
-    FetchRoomEmailLink: Action.define("fetchRoomEmailLink", {
-      roomName: String
-    }),
-
-    /**
-     * Used to cancel call setup.
-     */
-    CancelCall: Action.define("cancelCall", {
-    }),
-
-    /**
-     * Used to retry a failed call.
-     */
-    RetryCall: Action.define("retryCall", {
-    }),
-
-    /**
-     * Signals when the user wishes to accept a call.
-     */
-    AcceptCall: Action.define("acceptCall", {
-      callType: String
-    }),
-
-    /**
-     * Signals when the user declines a call.
-     */
-    DeclineCall: Action.define("declineCall", {
-      blockCaller: Boolean
-    }),
-
-    /**
-     * Used to initiate connecting of a call with the relevant
-     * sessionData.
-     */
-    ConnectCall: Action.define("connectCall", {
-      // This object contains the necessary details for the
-      // connection of the websocket, and the SDK
-      sessionData: Object
-    }),
-
-    /**
-     * Used for hanging up the call at the end of a successful call.
-     */
-    HangupCall: Action.define("hangupCall", {
-    }),
-
-    /**
      * Used to indicate the remote peer was disconnected for some reason.
      *
      * peerHungup is true if the peer intentionally disconnected, false otherwise.
      */
     RemotePeerDisconnected: Action.define("remotePeerDisconnected", {
       peerHungup: Boolean
-    }),
-
-    /**
-     * Used for notifying of connection progress state changes.
-     * The connection refers to the overall connection flow as indicated
-     * on the websocket.
-     */
-    ConnectionProgress: Action.define("connectionProgress", {
-      // The connection state from the websocket.
-      wsState: String
     }),
 
     /**
