@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/test.yml'
+  from: 'b2g_unittest_base.yml'
 task:
   metadata:
     name: '[TC] - Gaia Build Unit Test'
