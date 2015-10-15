@@ -33,11 +33,25 @@ function BrowserAction(options, extension)
   this.id = makeWidgetId(extension.id) + "-browser-action";
   this.widget = null;
 
-  this.title = new DefaultWeakMap(extension.localize(options.default_title));
-  this.badgeText = new DefaultWeakMap();
-  this.badgeBackgroundColor = new DefaultWeakMap();
-  this.icon = new DefaultWeakMap(IconDetails.normalize({path: options.default_icon}, extension));
-  this.popup = new DefaultWeakMap(options.default_popup);
+  let title = extension.localize(options.default_title || "");
+  let popup = extension.localize(options.default_popup || "");
+  if (popup) {
+    popup = extension.baseURI.resolve(popup);
+  }
+
+  this.defaults = {
+    title: title,
+    badgeText: "",
+    badgeBackgroundColor: null,
+    icon: IconDetails.normalize({ path: options.default_icon }, extension,
+                                null, true),
+    popup: popup,
+  };
+
+  this.tabContext = new TabContext(tab => Object.create(this.defaults),
+                                   extension);
+
+  EventEmitter.decorate(this);
 }
 
 BrowserAction.prototype = {
@@ -53,10 +67,9 @@ BrowserAction.prototype = {
         node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional badged-button");
         node.setAttribute("constrain-size", "true");
 
-        this.updateTab(null, node);
+        this.updateButton(node, this.defaults);
 
         let tabbrowser = document.defaultView.gBrowser;
-        tabbrowser.tabContainer.addEventListener("TabSelect", this);
 
         node.addEventListener("command", event => {
           let tab = tabbrowser.selectedTab;
@@ -71,77 +84,58 @@ BrowserAction.prototype = {
         return node;
       },
     });
-    this.widget = widget;
-  },
 
-  handleEvent(event) {
-    if (event.type == "TabSelect") {
-      let window = event.target.ownerDocument.defaultView;
-      let tabbrowser = window.gBrowser;
-      let instance = CustomizableUI.getWidget(this.id).forWindow(window);
-      if (instance) {
-        this.updateTab(tabbrowser.selectedTab, instance.node);
-      }
-    }
+    this.tabContext.on("tab-select",
+                       (evt, tab) => { this.updateWindow(tab.ownerDocument.defaultView); })
+
+    this.widget = widget;
   },
 
   togglePopup(node, popupResource) {
     openPanel(node, popupResource, this.extension);
   },
 
-  // Initialize the toolbar icon and popup given that |tab| is the
-  // current tab and |node| is the CustomizableUI node. Note: |tab|
-  // will be null if we don't know the current tab yet (during
-  // initialization).
-  updateTab(tab, node) {
-    let window = node.ownerDocument.defaultView;
-
-    let title = this.getProperty(tab, "title");
-    if (title) {
-      node.setAttribute("tooltiptext", title);
-      node.setAttribute("label", title);
+  // Update the toolbar button |node| with the tab context data
+  // in |tabData|.
+  updateButton(node, tabData) {
+    if (tabData.title) {
+      node.setAttribute("tooltiptext", tabData.title);
+      node.setAttribute("label", tabData.title);
+      node.setAttribute("aria-label", tabData.title);
     } else {
       node.removeAttribute("tooltiptext");
       node.removeAttribute("label");
+      node.removeAttribute("aria-label");
     }
 
-    let badgeText = this.badgeText.get(tab);
-    if (badgeText) {
-      node.setAttribute("badge", badgeText);
+    if (tabData.badgeText) {
+      node.setAttribute("badge", tabData.badgeText);
     } else {
       node.removeAttribute("badge");
-    }
-
-    function toHex(n) {
-      return Math.floor(n / 16).toString(16) + (n % 16).toString(16);
     }
 
     let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
                                         'class', 'toolbarbutton-badge');
     if (badgeNode) {
-      let color = this.badgeBackgroundColor.get(tab);
+      let color = tabData.badgeBackgroundColor;
       if (Array.isArray(color)) {
         color = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
       }
       badgeNode.style.backgroundColor = color || "";
     }
 
-    let iconURL = this.getIcon(tab, node);
+    let iconURL = IconDetails.getURL(
+      tabData.icon, node.ownerDocument.defaultView, this.extension);
     node.setAttribute("image", iconURL);
-  },
-
-  // Note: tab is allowed to be null here.
-  getIcon(tab, node) {
-    let icon = this.icon.get(tab);
-    return IconDetails.getURL(icon, node.ownerDocument.defaultView,
-                              this.extension);
   },
 
   // Update the toolbar button for a given window.
   updateWindow(window) {
-    let tab = window.gBrowser ? window.gBrowser.selectedTab : null;
-    let node = CustomizableUI.getWidget(this.id).forWindow(window).node;
-    this.updateTab(tab, node);
+    let widget = this.widget.forWindow(window);
+    if (widget) {
+      let tab = window.gBrowser.selectedTab;
+      this.updateButton(widget.node, this.tabContext.get(tab));
+    }
   },
 
   // Update the toolbar button when the extension changes the icon,
@@ -153,12 +147,8 @@ BrowserAction.prototype = {
         this.updateWindow(tab.ownerDocument.defaultView);
       }
     } else {
-      let e = Services.wm.getEnumerator("navigator:browser");
-      while (e.hasMoreElements()) {
-        let window = e.getNext();
-        if (window.gBrowser) {
-          this.updateWindow(window);
-        }
+      for (let window of WindowListManager.browserWindows()) {
+        this.updateWindow(window);
       }
     }
   },
@@ -166,29 +156,30 @@ BrowserAction.prototype = {
   // tab is allowed to be null.
   // prop should be one of "icon", "title", "badgeText", "popup", or "badgeBackgroundColor".
   setProperty(tab, prop, value) {
-    this[prop].set(tab, value);
+    if (tab == null) {
+      this.defaults[prop] = value;
+    } else {
+      this.tabContext.get(tab)[prop] = value;
+    }
+
     this.updateOnChange(tab);
   },
 
   // tab is allowed to be null.
   // prop should be one of "title", "badgeText", "popup", or "badgeBackgroundColor".
   getProperty(tab, prop) {
-    return this[prop].get(tab);
+    if (tab == null) {
+      return this.defaults[prop];
+    } else {
+      return this.tabContext.get(tab)[prop];
+    }
   },
 
   shutdown() {
-    let widget = CustomizableUI.getWidget(this.id);
-    for (let instance of widget.instances) {
-      let window = instance.node.ownerDocument.defaultView;
-      let tabbrowser = window.gBrowser;
-      tabbrowser.tabContainer.removeEventListener("TabSelect", this);
-    }
-
+    this.tabContext.shutdown();
     CustomizableUI.destroyWidget(this.id);
   },
 };
-
-EventEmitter.decorate(BrowserAction.prototype);
 
 extensions.on("manifest_browser_action", (type, directive, extension, manifest) => {
   let browserAction = new BrowserAction(manifest.browser_action, extension);
@@ -247,7 +238,13 @@ extensions.registerAPI((extension, context) => {
 
       setPopup: function(details) {
         let tab = details.tabId ? TabManager.getTab(details.tabId) : null;
-        browserActionOf(extension).setProperty(tab, "popup", details.popup);
+        // Note: Chrome resolves arguments to setIcon relative to the calling
+        // context, but resolves arguments to setPopup relative to the extension
+        // root.
+        // For internal consistency, we currently resolve both relative to the
+        // calling context.
+        let url = details.popup && context.uri.resolve(details.popup);
+        browserActionOf(extension).setProperty(tab, "popup", url);
       },
 
       getPopup: function(details, callback) {
