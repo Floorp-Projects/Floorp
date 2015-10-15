@@ -17,7 +17,7 @@ function test() {
                          "can't convert the object ({}) to the type test_struct.ptr");
   assertTypeErrorMessage(() => { test_struct.ptr().value = [1, 2]; },
                          "can't convert the array [1, 2] to the type test_struct.ptr");
-  assertTypeErrorMessage(() => { test_struct.ptr().value = Int8Array([1, 2]); },
+  assertTypeErrorMessage(() => { test_struct.ptr().value = new Int8Array([1, 2]); },
                          "can't convert the typed array ({0:1, 1:2}) to the type test_struct.ptr");
 
   // contents setter
