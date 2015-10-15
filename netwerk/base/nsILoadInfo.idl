@@ -22,7 +22,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(ef0080f3-33f5-475f-a3d6-9fd3be0612e3)]
+[scriptable, builtinclass, uuid(07f52282-ab00-4888-b45a-48675ce4a4f5)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -255,13 +255,13 @@ interface nsILoadInfo : nsISupports
    * Specifically, content policy types with _INTERNAL_ in their name will
    * never get returned from this attribute.
    */
-  readonly attribute nsContentPolicyType contentPolicyType;
+  readonly attribute nsContentPolicyType externalContentPolicyType;
 
 %{ C++
-  inline nsContentPolicyType GetContentPolicyType()
+  inline nsContentPolicyType GetExternalContentPolicyType()
   {
     nsContentPolicyType result;
-    mozilla::DebugOnly<nsresult> rv = GetContentPolicyType(&result);
+    mozilla::DebugOnly<nsresult> rv = GetExternalContentPolicyType(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }
