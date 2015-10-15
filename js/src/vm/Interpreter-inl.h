@@ -396,8 +396,8 @@ inline bool
 CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
                               HandleObject scopeChain, HandleObject varObj)
 {
-    MOZ_ASSERT(script->bindings.numBodyLevelLexicals() == 0);
-
+    // We don't need to check body-level lexical bindings for conflict. Eval
+    // scripts always execute under their own lexical scope.
     if (script->bindings.numVars() == 0)
         return true;
 
