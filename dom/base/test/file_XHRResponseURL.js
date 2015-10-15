@@ -50,28 +50,6 @@ function info(aMessage) {
   message(obj);
 }
 
-function todo(aBool, aMessage) {
-  var obj = {
-    type: "todo",
-    bool: aBool,
-    message: aMessage
-  };
-  ++message.ping;
-  message(obj);
-}
-
-function todo_is(aActual, aExpected, aMessage) {
-  var obj = {
-    type: "todo_is",
-    actual: aActual,
-    expected: aExpected,
-    message: aMessage
-  };
-  ++message.ping;
-  message(obj);
-}
-
-
 function request(aURL) {
   return new Promise(function (aResolve, aReject) {
     var xhr = new XMLHttpRequest();
@@ -125,15 +103,11 @@ function testSuccessResponse() {
       message: "request to same-origin redirect to cross-origin URL",
       requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
       responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request to same-origin redirects several times and finally go to cross-origin URL",
       requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text"),
       responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
 
     // tests that start with cross-origin request
@@ -151,43 +125,31 @@ function testSuccessResponse() {
       message: "request to cross-origin redirect to the same cross-origin URL",
       requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
       responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request to cross-origin redirect to another cross-origin URL",
       requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.org/tests/dom/base/test/file_XHRResponseURL.text",
       responseURL: "http://example.org/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request to cross-origin redirects several times and finally go to same-origin URL",
       requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"),
       responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request to cross-origin redirects several times and finally go to the same cross-origin URL",
       requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text"),
       responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request to cross-origin redirects several times and finally go to another cross-origin URL",
       requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.org/tests/dom/base/test/file_XHRResponseURL.text"),
       responseURL: "http://example.org/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request to cross-origin redirects to another cross-origin and finally go to the other cross-origin URL",
       requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.org/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://test1.example.com/tests/dom/base/test/file_XHRResponseURL.text"),
       responseURL: "http://test1.example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      skip: isInWorker(),
-      reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
     {
       message: "request URL has fragment",
@@ -209,13 +171,8 @@ function testSuccessResponse() {
   ];
 
   var sequence = createSequentialRequest(parameters, function (aXHR, aParam) {
-    if (aParam.skip) {
-      todo(aXHR.succeeded, aParam.reason);
-      todo_is(aXHR.responseURL, aParam.responseURL, aParam.reason);
-    } else {
-      ok(aXHR.succeeded, "assert request succeeded");
-      is(aXHR.responseURL, aParam.responseURL, aParam.message);
-    }
+    ok(aXHR.succeeded, "assert request succeeded");
+    is(aXHR.responseURL, aParam.responseURL, aParam.message);
   });
 
   sequence.then(function () {

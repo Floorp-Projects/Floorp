@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 
 class nsINode;
+class nsXMLHttpRequest;
 
 namespace mozilla {
 
@@ -76,6 +77,12 @@ private:
     nsILoadInfo** outLoadInfo);
 
   ~LoadInfo();
+
+  // This function is the *only* function which can change the securityflags
+  // of a loadinfo. It only exists because of the XHR code. Don't call it
+  // from anywhere else!
+  void SetWithCredentialsSecFlag();
+  friend class ::nsXMLHttpRequest;
 
   nsCOMPtr<nsIPrincipal>           mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
