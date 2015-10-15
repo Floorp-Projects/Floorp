@@ -24,13 +24,15 @@ this.TabAttributes = Object.freeze({
 });
 
 var TabAttributesInternal = {
-  _attrs: new Set(["muted"]),
+  _attrs: new Set(),
 
   // We never want to directly read or write those attributes.
   // 'image' should not be accessed directly but handled by using the
   //         gBrowser.getIcon()/setIcon() methods.
+  // 'muted' should not be accessed directly but handled by using the
+  //         tab.linkedBrowser.audioMuted/toggleMuteAudio methods.
   // 'pending' is used internal by sessionstore and managed accordingly.
-  _skipAttrs: new Set(["image", "pending"]),
+  _skipAttrs: new Set(["image", "muted", "pending"]),
 
   persist: function (name) {
     if (this._attrs.has(name) || this._skipAttrs.has(name)) {

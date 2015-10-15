@@ -1,0 +1,84 @@
+# bmpsuite "bad" tests
+
+# See ../README.mozilla for details.
+
+# BMP: bihsize=40, 127 x 64, bpp=30000, compression=0, colors=2
+# "Header indicates an absurdly large number of bits/pixel."
+# [We reject it. So does Chromium.]
+== wrapper.html?badbitcount.bmp about:blank
+
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
+# "Header incorrectly indicates that the bitmap is several GB in size."
+# [We accept it. So does Chromium.]
+== badbitssize.bmp pal1.png
+
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
+# "Density (pixels per meter) suggests the image is much larger in one
+# dimension than the other."
+# [We accept them. So does Chromium.]
+== baddens1.bmp pal1.png
+== baddens2.bmp pal1.png
+
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
+# "Header incorrectly indicates that the file is several GB in size."
+# [We accept it. So does Chromium.]
+== badfilesize.bmp pal1.png
+
+# BMP: <no "BMP:" output is produced for files with bad header sizes>
+# "Header size is 66 bytes, which is not a valid size for any known BMP
+# version."
+# [We reject it. So does Chromium.]
+== wrapper.html?badheadersize.bmp about:blank
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=305402420
+# "Header incorrectly indicates that the palette contains an absurdly large
+# number of colors."
+# [We reject it. Chromium accepts it but draws nothing. Rejecting seems
+# preferable give that the data is clearly untrustworthy.]
+== wrapper.html?badpalettesize.bmp about:blank
+
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
+# "The 'planes' setting, which is required to be 1, is not 1."
+# [We accept it. So does Chromium.]
+== badplanes.bmp pal1.png
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
+# "An invalid RLE-compressed image that tries to cause buffer overruns."
+# [We accept it, drawing the valid first part and leaving the rest black.
+# Chromium accepts it, drawing the valid first part and leaving the rest
+# transparent. Using black for the invalid part is arguably better because it
+# makes the image edges more obvious.]
+== badrle.bmp badrle.png
+
+# BMP: bihsize=40, -127 x 64, bpp=1, compression=0, colors=2
+# "The image claims to be a negative number of pixels in width."
+# [We reject it. So does Chromium.]
+== wrapper.html?badwidth.bmp about:blank
+
+# BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=101
+# "Many of the palette indices used in the image are not present in the
+# palette."
+# [We accept it and use black for the missing colors. So does Chromium.]
+== pal8badindex.bmp pal8badindex.png
+
+# BMP: bihsize=40, 3000000 x 2000000, bpp=24, compression=0, colors=0
+# "An image with a very large reported width and height."
+# [We reject it. So does Chromium.]
+== wrapper.html?reallybig.bmp about:blank
+
+# BMP: bihsize=40, 127 x -64, bpp=8, compression=1, colors=252
+# "An RLE-compressed image that tries to use top-down orientation, which isn’t
+# allowed."
+# [We accept it. Chromium rejects it. Accepting seems better given that we can
+# decode it perfectly well.]
+fuzzy(1,899) == rletopdown.bmp pal8.png
+
+# BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
+# "A file that has been truncated in the middle of the bitmap."
+# [We accept it, drawing the part that is present and leaving the rest black.
+# Chromium draws the part that is present and leaves the rest transparent.
+# Using black for the invalid part is arguably better because it makes the
+# image edges more obvious.]
+== shortfile.bmp shortfile.png
+

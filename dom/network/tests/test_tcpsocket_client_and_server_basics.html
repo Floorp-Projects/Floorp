@@ -25,6 +25,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1084245
     function enablePrefsAndPermissions() {
       return true;
     }
+
+    // In the JSM case, ArrayBuffers will be created in the compartment of the
+    // JSM with different globals than the
+    // test_tcpsocket_client_and_server_basics.js test logic sees, so we (and
+    // tcpsocket_test.jsm) need to do something.  To avoid complexity relating
+    // to wrappers and the varying nuances of the module scope and global scope
+    // in JSM's (they differ on B2G), we hardcode ArrayBuffer rather than taking
+    // a string that we look up, etc.
+    function socketCompartmentInstanceOfArrayBuffer(obj) {
+      return obj instanceof ArrayBuffer;
+    }
   </script>
   <script type="application/javascript;version=1.7" src="test_tcpsocket_client_and_server_basics.js"></script>
 </head>
