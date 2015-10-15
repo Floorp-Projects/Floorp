@@ -12,7 +12,12 @@ const Ci = Components.interfaces;
 
 const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-const {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+
+// Load devtools module lazily.
+XPCOMUtils.defineLazyGetter(this, "devtools", function() {
+  const {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  return devtools;
+});
 
 // Load JsonView services lazily.
 XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {

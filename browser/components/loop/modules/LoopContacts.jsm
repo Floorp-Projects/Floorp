@@ -7,7 +7,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/shared/Console.jsm");
+                                  "resource://gre/modules/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
                                   "resource:///modules/loop/LoopStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",

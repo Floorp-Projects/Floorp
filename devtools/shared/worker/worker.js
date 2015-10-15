@@ -13,7 +13,7 @@
     const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
     this.isWorker = false;
     this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-    this.console = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {}).console;
+    this.console = Cu.import("resource://gre/modules/Console.jsm", {}).console;
     factory.call(
       this, require, this, { exports: this },
       { Cc, Ci, Cu }, ChromeWorker, null

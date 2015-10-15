@@ -185,7 +185,7 @@ function tryImport(url) {
 }
 
 tryImport("resource://gre/modules/devtools/shared/Loader.jsm");
-tryImport("resource://gre/modules/devtools/shared/Console.jsm");
+tryImport("resource://gre/modules/Console.jsm");
 
 function testExceptionHook(ex) {
   try {

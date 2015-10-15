@@ -696,7 +696,8 @@ this.DOMApplicationRegistry = {
           continue;
         // Remove the permissions, cookies and private data for this app.
         let localId = this.webapps[id].localId;
-        permMgr.removePermissionsForApp(localId, false);
+        let attrs = { appId: localId };
+        permMgr.removePermissionsWithAttributes(JSON.stringify(attrs));
         Services.cookies.removeCookiesForApp(localId, false);
         this._clearPrivateData(localId, false);
         delete this.webapps[id];

@@ -131,7 +131,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/shared/Console.jsm");
+  "resource://gre/modules/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 

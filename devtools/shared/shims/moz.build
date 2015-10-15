@@ -15,3 +15,8 @@ EXTRA_JS_MODULES.devtools += [
     'Loader.jsm',
     'Simulator.jsm',
 ]
+
+# Extra compatibility layer for transitional URL used in middle of fx44 cycle
+EXTRA_JS_MODULES.devtools.shared += [
+    'Console.jsm',
+]

@@ -31,7 +31,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SelfSupportBackend",
 
 var nativeConsole = console;
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/shared/Console.jsm");
+  "resource://gre/modules/Console.jsm");
 
 const SIMPLETEST_OVERRIDES =
   ["ok", "is", "isnot", "todo", "todo_is", "todo_isnot", "info", "expectAssertions", "requestCompleteLog"];
