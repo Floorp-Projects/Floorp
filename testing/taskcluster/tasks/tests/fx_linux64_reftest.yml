@@ -1,0 +1,17 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_unittest_base.yml'
+task:
+  metadata:
+    name: '[TC] Linux64 reftest {{chunk}}'
+    description: Reftest run {{chunk}}
+  extra:
+    chunks:
+      total: 4
+    suite:
+      name: reftest
+      flavor: reftest
+    treeherder:
+      groupName: Desktop reftest
+      groupSymbol: tc-R
+      symbol: {{chunk}}

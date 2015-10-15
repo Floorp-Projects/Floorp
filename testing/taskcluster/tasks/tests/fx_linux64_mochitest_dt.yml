@@ -1,0 +1,25 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_unittest_base.yml'
+task:
+  scopes:
+    - 'docker-worker:capability:device:loopbackVideo'
+    - 'docker-worker:capability:device:loopbackAudio'
+  metadata:
+    name: '[TC] Linux64 mochitest-devtools-chrome M(dt{{chunk}})'
+    description: Mochitest devtools-chrome run {{chunk}}
+  payload:
+    capabilities:
+      devices:
+        loopbackVideo: true
+        loopbackAudio: true
+  extra:
+    chunks:
+      total: 2
+    suite:
+      name: mochitest
+      flavor: mochitest-devtools-chrome
+    treeherder:
+      groupName: Desktop mochitests
+      groupSymbol: tc-M
+      symbol: dt{{chunk}}

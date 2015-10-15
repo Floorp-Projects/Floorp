@@ -1,0 +1,17 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_unittest_base.yml'
+task:
+  metadata:
+    name: '[TC] Linux64 xpcshell {{chunk}}'
+    description: XPCShell run {{chunk}}
+  extra:
+    chunks:
+      total: 2
+    suite:
+      name: xpcshell
+      flavor: xpcshell
+    treeherder:
+      groupName: Desktop xpcshell tests
+      groupSymbol: tc-X
+      symbol: {{chunk}}
