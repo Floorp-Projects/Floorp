@@ -71,7 +71,7 @@ private:
                                                   ProcessId aOtherPid) override;
   void GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild);
 
-  virtual bool RecvCrashPluginNow(const GMPCrashReason& aReason) override;
+  virtual bool RecvCrashPluginNow() override;
   virtual bool RecvBeginAsyncShutdown() override;
   virtual bool RecvCloseActive() override;
 

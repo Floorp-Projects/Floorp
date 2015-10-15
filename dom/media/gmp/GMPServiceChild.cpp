@@ -181,38 +181,6 @@ GeckoMediaPluginServiceChild::GetNodeId(const nsAString& aOrigin,
   return NS_OK;
 }
 
-void
-GeckoMediaPluginServiceChild::CrashPluginNow(uint32_t aPluginId, GMPCrashReason aReason)
-{
-  if (NS_GetCurrentThread() != mGMPThread) {
-    mGMPThread->Dispatch(NS_NewRunnableMethodWithArgs<uint32_t, GMPCrashReason>(
-      this, &GeckoMediaPluginServiceChild::CrashPluginNow,
-      aPluginId, aReason), NS_DISPATCH_NORMAL);
-    return;
-  }
-
-  class Callback : public GetServiceChildCallback
-  {
-  public:
-    Callback(uint32_t aPluginId, GMPCrashReason aReason)
-      : mPluginId(aPluginId)
-      , mReason(aReason)
-    { }
-
-    virtual void Done(GMPServiceChild* aService) override
-    {
-      aService->SendCrashPluginNow(mPluginId, mReason);
-    }
-
-  private:
-    uint32_t mPluginId;
-    GMPCrashReason mReason;
-  };
-
-  UniquePtr<GetServiceChildCallback> callback(new Callback(aPluginId, aReason));
-  GetServiceChild(Move(callback));
-}
-
 NS_IMETHODIMP
 GeckoMediaPluginServiceChild::Observe(nsISupports* aSubject,
                                       const char* aTopic,
