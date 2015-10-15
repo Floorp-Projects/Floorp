@@ -237,7 +237,13 @@ public class GeckoView extends LayerView
     public void onDetachedFromWindow()
     {
         super.onDetachedFromWindow();
-        window.disposeNative();
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            window.disposeNative();
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                    window, "disposeNative");
+        }
     }
 
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
