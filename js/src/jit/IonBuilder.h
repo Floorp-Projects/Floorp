@@ -215,6 +215,9 @@ class IonBuilder
                const OptimizationInfo* optimizationInfo, BaselineFrameInspector* baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
 
+    // Callers of build() and buildInline() should always check whether the
+    // call overrecursed, if false is returned.  Overrecursion is not
+    // signaled as OOM and will not in general be caught by OOM paths.
     bool build();
     bool buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoint,
                      CallInfo& callInfo);
