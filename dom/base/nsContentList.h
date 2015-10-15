@@ -142,14 +142,21 @@ private:
  */
 struct nsContentListKey
 {
+  // We have to take an aIsHTMLDocument arg for two reasons:
+  // 1) We don't want to include nsIDocument.h in this header.
+  // 2) We need to do that to make nsContentList::RemoveFromHashtable
+  //    work, because by the time it's called the document of the
+  //    list's root node might have changed.
   nsContentListKey(nsINode* aRootNode,
                    int32_t aMatchNameSpaceId,
-                   const nsAString& aTagname)
+                   const nsAString& aTagname,
+                   bool aIsHTMLDocument)
     : mRootNode(aRootNode),
       mMatchNameSpaceId(aMatchNameSpaceId),
       mTagname(aTagname),
+      mIsHTMLDocument(aIsHTMLDocument),
       mHash(mozilla::AddToHash(mozilla::HashString(aTagname), mRootNode,
-                               mMatchNameSpaceId))
+                               mMatchNameSpaceId, mIsHTMLDocument))
   {
   }
 
@@ -157,6 +164,7 @@ struct nsContentListKey
     : mRootNode(aContentListKey.mRootNode),
       mMatchNameSpaceId(aContentListKey.mMatchNameSpaceId),
       mTagname(aContentListKey.mTagname),
+      mIsHTMLDocument(aContentListKey.mIsHTMLDocument),
       mHash(aContentListKey.mHash)
   {
   }
@@ -169,6 +177,7 @@ struct nsContentListKey
   nsINode* const mRootNode; // Weak ref
   const int32_t mMatchNameSpaceId;
   const nsAString& mTagname;
+  bool mIsHTMLDocument;
   const uint32_t mHash;
 };
 
@@ -319,13 +328,15 @@ public:
   {
     // The root node is most commonly the same: the document.  And the
     // most common namespace id is kNameSpaceID_Unknown.  So check the
-    // string first.
+    // string first.  Cases in which whether our root's ownerDocument
+    // is HTML changes are extremely rare, so check those last.
     NS_PRECONDITION(mXMLMatchAtom,
                     "How did we get here with a null match atom on our list?");
     return
       mXMLMatchAtom->Equals(aKey.mTagname) &&
       mRootNode == aKey.mRootNode &&
-      mMatchNameSpaceId == aKey.mMatchNameSpaceId;
+      mMatchNameSpaceId == aKey.mMatchNameSpaceId &&
+      mIsHTMLDocument == aKey.mIsHTMLDocument;
   }
 
   /**
@@ -446,6 +457,12 @@ protected:
    * Whether we actually need to flush to get our state correct.
    */
   uint8_t mFlushesNeeded : 1;
+  /**
+   * Whether the ownerDocument of our root node at list creation time was an
+   * HTML document.  Only needed when we're doing a namespace/atom match, not
+   * when doing function matching, always false otherwise.
+   */
+  uint8_t mIsHTMLDocument : 1;
 
 #ifdef DEBUG_CONTENT_LIST
   void AssertInSync();
