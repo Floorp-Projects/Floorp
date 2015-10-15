@@ -543,20 +543,28 @@ class Graph(object):
                 if mozharness_url:
                     test_parameters['mozharness_url'] = mozharness_url
                 test_definition = templates.load(test['task'], {})['task']
-                chunk_config = test_definition['extra']['chunks']
+                chunk_config = test_definition['extra'].get('chunks', {})
 
                 # Allow branch configs to override task level chunking...
                 if 'chunks' in test:
                     chunk_config['total'] = test['chunks']
 
-                test_parameters['total_chunks'] = chunk_config['total']
+                chunked = 'total' in chunk_config
+                if chunked:
+                    test_parameters['total_chunks'] = chunk_config['total']
 
-                for chunk in range(1, chunk_config['total'] + 1):
-                    if 'only_chunks' in test and \
+                if 'suite' in test_definition['extra']:
+                    suite_config = test_definition['extra']['suite']
+                    test_parameters['suite'] = suite_config['name']
+                    test_parameters['flavor'] = suite_config.get('flavor', '')
+
+                for chunk in range(1, chunk_config.get('total', 1) + 1):
+                    if 'only_chunks' in test and chunked and \
                         chunk not in test['only_chunks']:
                         continue
 
-                    test_parameters['chunk'] = chunk
+                    if chunked:
+                        test_parameters['chunk'] = chunk
                     test_task = configure_dependent_task(test['task'],
                                                          test_parameters,
                                                          slugid(),
