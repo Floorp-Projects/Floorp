@@ -188,7 +188,6 @@ GMPVideoDecoderParent::Reset()
     LOGD(("GMPVideoDecoderParent[%p]::ResetCompleteTimeout() timed out waiting for ResetComplete", self.get()));
     self->mResetCompleteTimeout = nullptr;
     LogToBrowserConsole(NS_LITERAL_STRING("GMPVideoDecoderParent timed out waiting for ResetComplete()"));
-    self->mPlugin->CrashPluginNow(kGmpApiTimeout);
   });
   CancelResetCompleteTimeout();
   mResetCompleteTimeout = SimpleTimer::Create(task, 5000, mPlugin->GMPThread());

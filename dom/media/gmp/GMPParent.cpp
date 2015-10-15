@@ -119,10 +119,10 @@ GMPParent::Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir)
 }
 
 void
-GMPParent::Crash(GMPCrashReason aReason)
+GMPParent::Crash()
 {
   if (mState != GMPStateNotLoaded) {
-    unused << SendCrashPluginNow(aReason);
+    unused << SendCrashPluginNow();
   }
 }
 

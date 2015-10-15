@@ -297,8 +297,6 @@ pref("media.hardware-video-decoding.enabled", true);
 pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
 
-pref("media.gmp.kill-hung-plugins", true);
-
 #ifdef MOZ_WMF
 pref("media.wmf.decoder.thread-count", -1);
 #endif
