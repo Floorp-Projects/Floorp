@@ -38,7 +38,9 @@
 #include "asmjs/AsmJSValidate.h"
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
+#include "jit/AtomicOperations.h"
 #include "vm/Runtime.h"
+#include "vm/SharedMem.h"
 
 extern "C" {
 
@@ -1127,6 +1129,8 @@ Simulator::Simulator()
     cacheLockHolder_ = nullptr;
 #endif
     redirection_ = nullptr;
+    exclusiveMonitorHeld_ = false;
+    exclusiveMonitor_ = 0;
 }
 
 bool
@@ -1478,6 +1482,27 @@ Simulator::setCallResult(int64_t res)
     set_register(r1, static_cast<int32_t>(res >> 32));
 }
 
+void
+Simulator::exclusiveMonitorSet(uint64_t value)
+{
+    exclusiveMonitor_ = value;
+    exclusiveMonitorHeld_ = true;
+}
+
+uint64_t
+Simulator::exclusiveMonitorGetAndClear(bool* held)
+{
+    *held = exclusiveMonitorHeld_;
+    exclusiveMonitorHeld_ = false;
+    return *held ? exclusiveMonitor_ : 0;
+}
+
+void
+Simulator::exclusiveMonitorClear()
+{
+    exclusiveMonitorHeld_ = false;
+}
+
 int
 Simulator::readW(int32_t addr, SimInstruction* instr)
 {
@@ -1504,14 +1529,66 @@ Simulator::writeW(int32_t addr, int value, SimInstruction* instr)
     }
 }
 
+// For the time being, define Relaxed operations in terms of SeqCst
+// operations - we don't yet need Relaxed operations anywhere else in
+// the system, and the distinction is not important to the simulation
+// at the level where we're operating.
+
+template<typename T>
+static
+T loadRelaxed(SharedMem<T*> addr)
+{
+    return AtomicOperations::loadSeqCst(addr);
+}
+
+template<typename T>
+static
+T compareExchangeRelaxed(SharedMem<T*> addr, T oldval, T newval)
+{
+    return AtomicOperations::compareExchangeSeqCst(addr, oldval, newval);
+}
+
+int
+Simulator::readExW(int32_t addr, SimInstruction* instr)
+{
+    // The regexp engine emits unaligned loads, so we don't check for them here
+    // like most of the other methods do.
+    if ((addr & 3) == 0 || !HasAlignmentFault()) {
+        SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
+        int32_t value = loadRelaxed(ptr);
+        exclusiveMonitorSet(value);
+        return value;
+    } else {
+        printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
+        MOZ_CRASH();
+    }
+}
+
+int32_t
+Simulator::writeExW(int32_t addr, int value, SimInstruction* instr)
+{
+    if ((addr & 3) == 0) {
+        SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
+        bool held;
+        int32_t expected = int32_t(exclusiveMonitorGetAndClear(&held));
+        if (!held)
+            return 1;
+        int32_t old = compareExchangeRelaxed(ptr, expected, int32_t(value));
+        return old != expected;
+    } else {
+        printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
+        MOZ_CRASH();
+    }
+}
+
 uint16_t
 Simulator::readHU(int32_t addr, SimInstruction* instr)
 {
     // The regexp engine emits unaligned loads, so we don't check for them here
     // like most of the other methods do.
     if ((addr & 1) == 0 || !HasAlignmentFault()) {
-       uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
-       return *ptr;
+        uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
+        return *ptr;
     }
     printf("Unaligned unsigned halfword read at 0x%08x, pc=%p\n", addr, instr);
     MOZ_CRASH();
@@ -1554,11 +1631,65 @@ Simulator::writeH(int32_t addr, int16_t value, SimInstruction* instr)
     }
 }
 
+uint16_t
+Simulator::readExHU(int32_t addr, SimInstruction* instr)
+{
+    // The regexp engine emits unaligned loads, so we don't check for them here
+    // like most of the other methods do.
+    if ((addr & 1) == 0 || !HasAlignmentFault()) {
+        SharedMem<uint16_t*> ptr = SharedMem<uint16_t*>::shared(reinterpret_cast<uint16_t*>(addr));
+        uint16_t value = loadRelaxed(ptr);
+        exclusiveMonitorSet(value);
+        return value;
+    }
+    printf("Unaligned atomic unsigned halfword read at 0x%08x, pc=%p\n", addr, instr);
+    MOZ_CRASH();
+    return 0;
+}
+
+int32_t
+Simulator::writeExH(int32_t addr, uint16_t value, SimInstruction* instr)
+{
+    if ((addr & 1) == 0) {
+        SharedMem<uint16_t*> ptr = SharedMem<uint16_t*>::shared(reinterpret_cast<uint16_t*>(addr));
+        bool held;
+        uint16_t expected = uint16_t(exclusiveMonitorGetAndClear(&held));
+        if (!held)
+            return 1;
+        uint16_t old = compareExchangeRelaxed(ptr, expected, value);
+        return old != expected;
+    } else {
+        printf("Unaligned atomic unsigned halfword write at 0x%08x, pc=%p\n", addr, instr);
+        MOZ_CRASH();
+    }
+}
+
 uint8_t
 Simulator::readBU(int32_t addr)
 {
     uint8_t* ptr = reinterpret_cast<uint8_t*>(addr);
     return *ptr;
+}
+
+uint8_t
+Simulator::readExBU(int32_t addr)
+{
+    SharedMem<uint8_t*> ptr = SharedMem<uint8_t*>::shared(reinterpret_cast<uint8_t*>(addr));
+    uint8_t value = loadRelaxed(ptr);
+    exclusiveMonitorSet(value);
+    return value;
+}
+
+int32_t
+Simulator::writeExB(int32_t addr, uint8_t value)
+{
+    SharedMem<uint8_t*> ptr = SharedMem<uint8_t*>::shared(reinterpret_cast<uint8_t*>(addr));
+    bool held;
+    uint8_t expected = uint8_t(exclusiveMonitorGetAndClear(&held));
+    if (!held)
+        return 1;
+    uint8_t old = compareExchangeRelaxed(ptr, expected, value);
+    return old != expected;
 }
 
 int8_t
@@ -1605,6 +1736,49 @@ Simulator::writeDW(int32_t addr, int32_t value1, int32_t value2)
         printf("Unaligned write at 0x%08x\n", addr);
         MOZ_CRASH();
     }
+}
+
+int32_t
+Simulator::readExDW(int32_t addr, int32_t* hibits)
+{
+#if defined(__clang__) && defined(__i386)
+    // This is OK for now, we don't yet generate LDREXD.
+    MOZ_CRASH("Unimplemented - 8-byte atomics are unsupported in Clang on i386");
+#else
+    if ((addr & 3) == 0) {
+        SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
+        uint64_t value = loadRelaxed(ptr);
+        exclusiveMonitorSet(value);
+        *hibits = int32_t(value);
+        return int32_t(value >> 32);
+    }
+    printf("Unaligned read at 0x%08x\n", addr);
+    MOZ_CRASH();
+    return 0;
+#endif
+}
+
+int32_t
+Simulator::writeExDW(int32_t addr, int32_t value1, int32_t value2)
+{
+#if defined(__clang__) && defined(__i386)
+    // This is OK for now, we don't yet generate STREXD.
+    MOZ_CRASH("Unimplemented - 8-byte atomics are unsupported in Clang on i386");
+#else
+    if ((addr & 3) == 0) {
+        SharedMem<uint64_t*> ptr = SharedMem<uint64_t*>::shared(reinterpret_cast<uint64_t*>(addr));
+        uint64_t value = (uint64_t(value1) << 32) | uint32_t(value2);
+        bool held;
+        uint64_t expected = exclusiveMonitorGetAndClear(&held);
+        if (!held)
+            return 1;
+        uint64_t old = compareExchangeRelaxed(ptr, expected, value);
+        return old != expected;
+    } else {
+        printf("Unaligned write at 0x%08x\n", addr);
+        MOZ_CRASH();
+    }
+#endif
 }
 
 uintptr_t
@@ -2554,33 +2728,27 @@ Simulator::decodeType01(SimInstruction* instr)
             } else {
                 if (instr->bits(disasm::ExclusiveOpHi, disasm::ExclusiveOpLo) == disasm::ExclusiveOpcode) {
                     // Load-exclusive / store-exclusive.
-                    //
-                    // Bare-bones simulation: the store always succeeds, and we
-                    // do not execute any fences.  Also, we allow readDW and
-                    // writeDW to split the memory transaction.
-                    //
-                    // The next step up would involve remembering the value
-                    // that was read with load-exclusive so that we could use
-                    // compareExchange for the store-exclusive, and to
-                    // implement atomic doubleword read and write.
-                    //
-                    // Also see DMB/DSB/ISB below.
                     if (instr->bit(disasm::ExclusiveLoad)) {
                         int rn = instr->rnValue();
                         int rt = instr->rtValue();
                         int32_t address = get_register(rn);
                         switch (instr->bits(disasm::ExclusiveSizeHi, disasm::ExclusiveSizeLo)) {
                           case disasm::ExclusiveWord:
-                            set_register(rt, readW(address, instr));
+                            set_register(rt, readExW(address, instr));
                             break;
-                          case disasm::ExclusiveDouble:
-                            set_dw_register(rt, readDW(address));
+                          case disasm::ExclusiveDouble: {
+                            MOZ_ASSERT((rt % 2) == 0);
+                            int32_t hibits;
+                            int32_t lobits = readExDW(address, &hibits);
+                            set_register(rt, lobits);
+                            set_register(rt+1, hibits);
                             break;
+                          }
                           case disasm::ExclusiveByte:
-                            set_register(rt, readBU(address));
+                            set_register(rt, readExBU(address));
                             break;
                           case disasm::ExclusiveHalf:
-                            set_register(rt, readHU(address, instr));
+                            set_register(rt, readExHU(address, instr));
                             break;
                         }
                     } else {
@@ -2589,24 +2757,25 @@ Simulator::decodeType01(SimInstruction* instr)
                         int rt = instr->bits(3,0);
                         int32_t address = get_register(rn);
                         int32_t value = get_register(rt);
+                        int32_t result = 0;
                         switch (instr->bits(disasm::ExclusiveSizeHi, disasm::ExclusiveSizeLo)) {
                           case disasm::ExclusiveWord:
-                            writeW(address, value, instr);
+                            result = writeExW(address, value, instr);
                             break;
                           case disasm::ExclusiveDouble: {
-                              MOZ_ASSERT((rt % 2) == 0);
-                              int32_t value2 = get_register(rt+1);
-                              writeDW(address, value, value2);
-                              break;
+                            MOZ_ASSERT((rt % 2) == 0);
+                            int32_t value2 = get_register(rt+1);
+                            result = writeExDW(address, value, value2);
+                            break;
                           }
                           case disasm::ExclusiveByte:
-                            writeB(address, (uint8_t)value);
+                            result = writeExB(address, (uint8_t)value);
                             break;
                           case disasm::ExclusiveHalf:
-                            writeH(address, (uint16_t)value, instr);
+                            result = writeExH(address, (uint16_t)value, instr);
                             break;
                         }
-                        set_register(rd, 0);
+                        set_register(rd, result);
                     }
                 } else {
                     MOZ_CRASH(); // Not used atm
@@ -3329,12 +3498,15 @@ Simulator::decodeType7CoprocessorIns(SimInstruction* instr)
             int CRn = instr->bits(19,16);
             int CRm = instr->bits(3,0);
             if (opc1 == 0 && opc2 == 4 && CRn == 7 && CRm == 10) {
-                // ARMv6 DSB instruction - do nothing now, see comments above
+                // ARMv6 DSB instruction.  We do not use DSB.
+                MOZ_CRASH("DSB not implemented");
             } else if (opc1 == 0 && opc2 == 5 && CRn == 7 && CRm == 10) {
-                // ARMv6 DMB instruction - do nothing now, see comments above
+                // ARMv6 DMB instruction.
+                AtomicOperations::fenceSeqCst();
             }
             else if (opc1 == 0 && opc2 == 4 && CRn == 7 && CRm == 5) {
-                // ARMv6 ISB instruction - do nothing now, see comments above
+                // ARMv6 ISB instruction.  We do not use ISB.
+                MOZ_CRASH("ISB not implemented");
             }
             else {
                 MOZ_CRASH();
@@ -4156,16 +4328,16 @@ Simulator::decodeSpecialCondition(SimInstruction* instr)
         break;
       case 0xA:
         if (instr->bits(31,20) == 0xf57) {
-            // Minimal simulation: do nothing.
-            //
-            // If/when we upgrade load-exclusive and store-exclusive (above) to
-            // do something useful concurrency-wise, we should also upgrade
-            // these instructions.
             switch (instr->bits(7,4)) {
               case 5: // DMB
-              case 4: // DSB
-              case 6: // ISB
+                AtomicOperations::fenceSeqCst();
                 break;
+              case 4: // DSB
+                // We do not use DSB.
+                MOZ_CRASH("DSB unimplemented");
+              case 6: // ISB
+                // We do not use ISB.
+                MOZ_CRASH("ISB unimplemented");
               default:
                 MOZ_CRASH();
             }

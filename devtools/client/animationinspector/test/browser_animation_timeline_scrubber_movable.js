@@ -8,23 +8,21 @@
 // in the header area.
 // Also check that doing so changes the timeline's play/pause button to paused
 // state.
+// Finally, also check that the scrubber can be moved using the scrubber handle.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
 
   let {panel} = yield openAnimationInspector();
-
   let timeline = panel.animationsTimelineComponent;
-  let win = timeline.win;
-  let timeHeaderEl = timeline.timeHeaderEl;
-  let scrubberEl = timeline.scrubberEl;
+  let {win, timeHeaderEl, scrubberEl, scrubberHandleEl} = timeline;
   let playTimelineButtonEl = panel.playTimelineButtonEl;
 
   ok(!playTimelineButtonEl.classList.contains("paused"),
      "The timeline play button is in its playing state by default");
 
   info("Mousedown in the header to move the scrubber");
-  yield synthesizeMouseAndWaitForTimelineChange(timeline, 50, 1, "mousedown");
+  yield synthesizeInHeaderAndWaitForChange(timeline, 50, 1, "mousedown");
   let newPos = parseInt(scrubberEl.style.left, 10);
   is(newPos, 50, "The scrubber moved on mousedown");
 
@@ -32,7 +30,7 @@ add_task(function*() {
      "The timeline play button is in its paused state after mousedown");
 
   info("Continue moving the mouse and verify that the scrubber tracks it");
-  yield synthesizeMouseAndWaitForTimelineChange(timeline, 100, 1, "mousemove");
+  yield synthesizeInHeaderAndWaitForChange(timeline, 100, 1, "mousemove");
   newPos = parseInt(scrubberEl.style.left, 10);
   is(newPos, 100, "The scrubber followed the mouse");
 
@@ -44,9 +42,19 @@ add_task(function*() {
   EventUtils.synthesizeMouse(timeHeaderEl, 200, 1, {type: "mousemove"}, win);
   newPos = parseInt(scrubberEl.style.left, 10);
   is(newPos, 100, "The scrubber stopped following the mouse");
+
+  info("Try to drag the scrubber handle and check that the scrubber moves");
+  let onDataChanged = timeline.once("timeline-data-changed");
+  EventUtils.synthesizeMouse(scrubberHandleEl, 1, 20, {type: "mousedown"}, win);
+  EventUtils.synthesizeMouse(timeHeaderEl, 0, 0, {type: "mousemove"}, win);
+  EventUtils.synthesizeMouse(timeHeaderEl, 0, 0, {type: "mouseup"}, win);
+  yield onDataChanged;
+
+  newPos = parseInt(scrubberEl.style.left, 10);
+  is(newPos, 0, "The scrubber stopped following the mouse");
 });
 
-function* synthesizeMouseAndWaitForTimelineChange(timeline, x, y, type) {
+function* synthesizeInHeaderAndWaitForChange(timeline, x, y, type) {
   let onDataChanged = timeline.once("timeline-data-changed");
   EventUtils.synthesizeMouse(timeline.timeHeaderEl, x, y, {type}, timeline.win);
   yield onDataChanged;

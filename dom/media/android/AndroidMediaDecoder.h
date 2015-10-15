@@ -15,14 +15,16 @@ class AndroidMediaDecoder : public MediaDecoder
 {
   nsCString mType;
 public:
-  AndroidMediaDecoder(const nsACString& aType);
+  AndroidMediaDecoder(MediaDecoderOwner* aOwner, const nsACString& aType);
 
   const nsresult GetContentType(nsACString& aType) const {
     aType = mType;
     return NS_OK;
   }
 
-  virtual MediaDecoder* Clone() { return new AndroidMediaDecoder(mType); }
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
+    return new AndroidMediaDecoder(aOwner, mType);
+  }
   virtual MediaDecoderStateMachine* CreateStateMachine();
 };
 

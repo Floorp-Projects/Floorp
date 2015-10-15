@@ -7,11 +7,13 @@
 "use strict";
 
 const {Cu, Ci, Cc} = require("chrome");
-const JsonViewUtils = require("devtools/client/jsonview/utils");
 
-// Constants
+const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-const {makeInfallible} = require("devtools/shared/DevToolsUtils");
+
+XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {
+  return require("devtools/client/jsonview/utils");
+});
 
 /**
  * Singleton object that represents the JSON View in-content tool.
@@ -19,7 +21,7 @@ const {makeInfallible} = require("devtools/shared/DevToolsUtils");
  * DevTools() object from gDevTools.jsm
  */
 var JsonView = {
-  initialize: makeInfallible(function() {
+  initialize: function() {
     // Load JSON converter module. This converter is responsible
     // for handling 'application/json' documents and converting
     // them into a simple web-app that allows easy inspection
@@ -33,12 +35,12 @@ var JsonView = {
     // Register for messages coming from the child process.
     Services.ppmm.addMessageListener(
       "devtools:jsonview:save", this.onSaveListener);
-  }),
+  },
 
-  destroy: makeInfallible(function() {
+  destroy: function() {
     Services.ppmm.removeMessageListener(
       "devtools:jsonview:save", this.onSaveListener);
-  }),
+  },
 
   // Message handlers for events from child processes
 

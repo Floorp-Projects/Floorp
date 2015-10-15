@@ -324,7 +324,7 @@ struct FloatRegister
         k_(k)
     { }
 
-    constexpr FloatRegister(uint32_t code)
+    explicit constexpr FloatRegister(uint32_t code)
       : code_(FloatRegisters::Code(code & 31)),
         k_(FloatRegisters::Kind(code >> 5))
     { }

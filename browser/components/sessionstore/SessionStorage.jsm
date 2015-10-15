@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/shared/Console.jsm");
+  "resource://gre/modules/Console.jsm");
 
 // Returns the principal for a given |frame| contained in a given |docShell|.
 function getPrincipalForFrame(docShell, frame) {

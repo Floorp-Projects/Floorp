@@ -225,6 +225,16 @@ loop.panel = (function(_, mozL10n) {
       this.hideDropdownMenu();
     },
 
+    /**
+     * Load on the browser the feedback url from prefs
+     */
+    handleSubmitFeedback: function(event) {
+      event.preventDefault();
+      var helloFeedbackUrl = this.props.mozLoop.getLoopPref("feedback.formURL");
+      this.props.mozLoop.openURL(helloFeedbackUrl);
+      this.closeWindow();
+    },
+
     _isSignedIn: function() {
       return !!this.props.mozLoop.userProfile;
     },
@@ -262,6 +272,9 @@ loop.panel = (function(_, mozL10n) {
                                    onClick: this.handleClickSettingsEntry}), 
             React.createElement(SettingsDropdownEntry, {label: mozL10n.get("tour_label"), 
                                    onClick: this.openGettingStartedTour}), 
+            React.createElement(SettingsDropdownEntry, {extraCSSClass: "entry-settings-feedback", 
+                                   label: mozL10n.get("settings_menu_item_feedback"), 
+                                   onClick: this.handleSubmitFeedback}), 
             React.createElement(SettingsDropdownEntry, {displayed: this.props.mozLoop.fxAEnabled, 
                                    extraCSSClass: accountEntryCSSClass, 
                                    label: this._isSignedIn() ?
@@ -649,10 +662,10 @@ loop.panel = (function(_, mozL10n) {
     _renderLoadingRoomsView: function() {
       return (
         React.createElement("div", {className: "room-list"}, 
+          this._renderNewRoomButton(), 
           React.createElement("div", {className: "room-list-loading"}, 
             React.createElement("img", {src: "loop/shared/img/animated-spinner.svg"})
-          ), 
-          this._renderNewRoomButton()
+          )
         )
       );
     },
@@ -660,6 +673,7 @@ loop.panel = (function(_, mozL10n) {
     _renderNoRoomsView: function() {
       return (
         React.createElement("div", {className: "rooms"}, 
+          this._renderNewRoomButton(), 
           React.createElement("div", {className: "room-list-empty"}, 
             React.createElement("div", {className: "no-conversations-message"}, 
               React.createElement("p", {className: "panel-text-medium"}, 
@@ -669,8 +683,7 @@ loop.panel = (function(_, mozL10n) {
                 mozL10n.get("no_conversations_start_message2")
               )
             )
-          ), 
-          this._renderNewRoomButton()
+          )
         )
       );
     },
@@ -700,6 +713,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "rooms"}, 
+          this._renderNewRoomButton(), 
           React.createElement("h1", null, mozL10n.get("rooms_list_recent_conversations")), 
           React.createElement("div", {className: "room-list"}, 
             this.state.rooms.map(function(room, i) {
@@ -711,8 +725,7 @@ loop.panel = (function(_, mozL10n) {
                   room: room})
               );
             }, this)
-          ), 
-          this._renderNewRoomButton()
+          )
         )
       );
     }

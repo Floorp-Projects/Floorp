@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyGetter(this, "VARIABLES_SORTING_ENABLED", () =>
 );
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/shared/Console.jsm");
+  "resource://gre/modules/Console.jsm");
 
 const MAX_LONG_STRING_LENGTH = 200000;
 const MAX_PROPERTY_ITEMS = 2000;

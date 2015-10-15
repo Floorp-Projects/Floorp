@@ -135,7 +135,6 @@ loop.roomViews = (function(mozL10n) {
 
     render: function() {
       var settingsMenuItems = [
-        { id: "feedback" },
         { id: "help" }
       ];
 
@@ -794,7 +793,6 @@ loop.roomViews = (function(mozL10n) {
               visible: true,
               onClick: this.handleEditContextClick
             },
-            { id: "feedback" },
             { id: "help" }
           ];
           return (
