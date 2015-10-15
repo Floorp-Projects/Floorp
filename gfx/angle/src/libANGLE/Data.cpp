@@ -12,10 +12,15 @@
 namespace gl
 {
 
-Data::Data(GLint clientVersionIn, const State &stateIn, const Caps &capsIn,
-           const TextureCapsMap &textureCapsIn, const Extensions &extensionsIn,
+Data::Data(uintptr_t contextIn,
+           GLint clientVersionIn,
+           const State &stateIn,
+           const Caps &capsIn,
+           const TextureCapsMap &textureCapsIn,
+           const Extensions &extensionsIn,
            const ResourceManager *resourceManagerIn)
-    : clientVersion(clientVersionIn),
+    : context(contextIn),
+      clientVersion(clientVersionIn),
       state(&stateIn),
       caps(&capsIn),
       textureCaps(&textureCapsIn),
@@ -25,27 +30,6 @@ Data::Data(GLint clientVersionIn, const State &stateIn, const Caps &capsIn,
 
 Data::~Data()
 {
-}
-
-Data::Data(const Data &other)
-    : clientVersion(other.clientVersion),
-      state(other.state),
-      caps(other.caps),
-      textureCaps(other.textureCaps),
-      extensions(other.extensions),
-      resourceManager(other.resourceManager)
-{
-}
-
-Data &Data::operator=(const Data &other)
-{
-    clientVersion = other.clientVersion;
-    state = other.state;
-    caps = other.caps;
-    textureCaps = other.textureCaps;
-    extensions = other.extensions;
-    resourceManager = other.resourceManager;
-    return *this;
 }
 
 }

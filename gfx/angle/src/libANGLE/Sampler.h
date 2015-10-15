@@ -13,13 +13,20 @@
 #include "libANGLE/angletypes.h"
 #include "libANGLE/RefCountObject.h"
 
+namespace rx
+{
+class ImplFactory;
+class SamplerImpl;
+}
+
 namespace gl
 {
 
-class Sampler : public RefCountObject
+class Sampler final : public RefCountObject
 {
   public:
-    Sampler(GLuint id);
+    Sampler(rx::ImplFactory *factory, GLuint id);
+    ~Sampler() override;
 
     void setMinFilter(GLenum minFilter);
     GLenum getMinFilter() const;
@@ -53,7 +60,12 @@ class Sampler : public RefCountObject
 
     const SamplerState &getSamplerState() const;
 
+    const rx::SamplerImpl *getImplementation() const;
+    rx::SamplerImpl *getImplementation();
+
   private:
+    rx::SamplerImpl *mImpl;
+
     SamplerState mSamplerState;
 };
 

@@ -23,6 +23,10 @@ class FunctionsWGL : angle::NonCopyable
     // Loads all available wgl functions, may be called multiple times
     void initialize(HMODULE glModule, HDC context);
 
+    // Extension information
+    std::vector<std::string> extensions;
+    bool hasExtension(const std::string &ext) const;
+
     // Base WGL functions
     PFNWGLCOPYCONTEXTPROC copyContext;
     PFNWGLCREATECONTEXTPROC createContext;

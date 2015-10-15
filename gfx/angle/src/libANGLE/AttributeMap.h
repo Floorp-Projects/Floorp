@@ -15,15 +15,15 @@
 namespace egl
 {
 
-class AttributeMap
+class AttributeMap final
 {
   public:
     AttributeMap();
     explicit AttributeMap(const EGLint *attributes);
 
-    virtual void insert(EGLint key, EGLint value);
-    virtual bool contains(EGLint key) const;
-    virtual EGLint get(EGLint key, EGLint defaultValue) const;
+    void insert(EGLint key, EGLint value);
+    bool contains(EGLint key) const;
+    EGLint get(EGLint key, EGLint defaultValue) const;
 
     typedef std::map<EGLint, EGLint>::const_iterator const_iterator;
 

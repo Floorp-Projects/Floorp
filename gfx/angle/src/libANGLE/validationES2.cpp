@@ -31,7 +31,7 @@ bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level,
         return false;
     }
 
-    if (!ValidImageSize(context, target, level, width, height, 1))
+    if (!ValidImageSizeParameters(context, target, level, width, height, 1, isSubImage))
     {
         context->recordError(Error(GL_INVALID_VALUE));
         return false;
@@ -124,23 +124,10 @@ bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level,
         return false;
     }
 
-    GLenum actualInternalFormat = isSubImage ? texture->getInternalFormat(target, level) : internalformat;
-    const InternalFormat &actualFormatInfo = GetInternalFormatInfo(actualInternalFormat);
-
-    if (isCompressed != actualFormatInfo.compressed)
-    {
-        context->recordError(Error(GL_INVALID_OPERATION));
-        return false;
-    }
-
     if (isCompressed)
     {
-        if (!ValidCompressedImageSize(context, actualInternalFormat, width, height))
-        {
-            context->recordError(Error(GL_INVALID_OPERATION));
-            return false;
-        }
-
+        GLenum actualInternalFormat =
+            isSubImage ? texture->getInternalFormat(target, level) : internalformat;
         switch (actualInternalFormat)
         {
           case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
@@ -166,7 +153,13 @@ bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level,
             }
             break;
           default:
-            context->recordError(Error(GL_INVALID_ENUM));
+              context->recordError(Error(
+                  GL_INVALID_ENUM, "internalformat is not a supported compressed internal format"));
+              return false;
+        }
+        if (!ValidCompressedImageSize(context, actualInternalFormat, width, height))
+        {
+            context->recordError(Error(GL_INVALID_OPERATION));
             return false;
         }
     }

@@ -72,6 +72,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/RemoveDynamicIndexing.cpp',
     'src/compiler/translator/RemovePow.cpp',
     'src/compiler/translator/RemoveSwitchFallThrough.cpp',
+    'src/compiler/translator/RewriteDoWhile.cpp',
     'src/compiler/translator/RewriteElseBlocks.cpp',
     'src/compiler/translator/ScalarizeVecAndMatConstructorArgs.cpp',
     'src/compiler/translator/SearchSymbol.cpp',

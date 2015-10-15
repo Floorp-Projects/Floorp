@@ -73,12 +73,6 @@ class TFieldListCollection : angle::NonCopyable
         return *mFields;
     }
 
-    const TString &mangledName() const
-    {
-        if (mMangledName.empty())
-            mMangledName = buildMangledName();
-        return mMangledName;
-    }
     size_t objectSize() const
     {
         if (mObjectSize == 0)
@@ -93,9 +87,8 @@ class TFieldListCollection : angle::NonCopyable
           mObjectSize(0)
     {
     }
-    TString buildMangledName() const;
+    TString buildMangledName(const TString &mangledNamePrefix) const;
     size_t calculateObjectSize() const;
-    virtual TString mangledNamePrefix() const = 0;
 
     const TString *mName;
     TFieldList *mFields;
@@ -150,6 +143,13 @@ class TStructure : public TFieldListCollection
         return mAtGlobalScope;
     }
 
+    const TString &mangledName() const
+    {
+        if (mMangledName.empty())
+            mMangledName = buildMangledName("struct-");
+        return mMangledName;
+    }
+
   private:
     // TODO(zmo): Find a way to get rid of the const_cast in function
     // setName().  At the moment keep this function private so only
@@ -161,7 +161,6 @@ class TStructure : public TFieldListCollection
         *mutableName = name;
     }
 
-    TString mangledNamePrefix() const override { return "struct-"; }
     int calculateDeepestNesting() const;
 
     mutable int mDeepestNesting;
@@ -207,10 +206,14 @@ class TInterfaceBlock : public TFieldListCollection
     {
         return mMatrixPacking;
     }
+    const TString &mangledName() const
+    {
+        if (mMangledName.empty())
+            mMangledName = buildMangledName("iblock-");
+        return mMangledName;
+    }
 
   private:
-    TString mangledNamePrefix() const override { return "iblock-"; }
-
     const TString *mInstanceName; // for interface block instance names
     int mArraySize; // 0 if not an array
     TLayoutBlockStorage mBlockStorage;
@@ -272,7 +275,11 @@ class TType
     }
     void setBasicType(TBasicType t)
     {
-        type = t;
+        if (type != t)
+        {
+            type = t;
+            invalidateMangledName();
+        }
     }
 
     TPrecision getPrecision() const
@@ -327,11 +334,19 @@ class TType
     }
     void setPrimarySize(unsigned char ps)
     {
-        primarySize = ps;
+        if (primarySize != ps)
+        {
+            primarySize = ps;
+            invalidateMangledName();
+        }
     }
     void setSecondarySize(unsigned char ss)
     {
-        secondarySize = ss;
+        if (secondarySize != ss)
+        {
+            secondarySize = ss;
+            invalidateMangledName();
+        }
     }
 
     // Full size of single instance of type
@@ -359,13 +374,21 @@ class TType
     }
     void setArraySize(int s)
     {
-        array = true;
-        arraySize = s;
+        if (!array || arraySize != s)
+        {
+            array     = true;
+            arraySize = s;
+            invalidateMangledName();
+        }
     }
     void clearArrayness()
     {
-        array = false;
-        arraySize = 0;
+        if (array)
+        {
+            array     = false;
+            arraySize = 0;
+            invalidateMangledName();
+        }
     }
 
     TInterfaceBlock *getInterfaceBlock() const
@@ -374,7 +397,11 @@ class TType
     }
     void setInterfaceBlock(TInterfaceBlock *interfaceBlockIn)
     {
-        interfaceBlock = interfaceBlockIn;
+        if (interfaceBlock != interfaceBlockIn)
+        {
+            interfaceBlock = interfaceBlockIn;
+            invalidateMangledName();
+        }
     }
     bool isInterfaceBlock() const
     {
@@ -400,7 +427,11 @@ class TType
     }
     void setStruct(TStructure *s)
     {
-        structure = s;
+        if (structure != s)
+        {
+            structure = s;
+            invalidateMangledName();
+        }
     }
 
     const TString &getMangledName() const
@@ -504,7 +535,8 @@ class TType
         getMangledName();
     }
 
-  protected:
+  private:
+    void invalidateMangledName() { mangled = ""; }
     TString buildMangledName() const;
     size_t getStructSize() const;
 

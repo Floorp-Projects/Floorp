@@ -7,6 +7,8 @@
 # point numbers to 32-bit.
 # It is based on ftp://ftp.fox-toolkit.org/pub/fasthalffloatconversion.pdf.
 
+#include "common/mathutil.h"
+
 def convertMantissa(i):
     if i == 0:
         return 0
@@ -72,7 +74,7 @@ print "};\n"
 print """float float16ToFloat32(unsigned short h)
 {
     unsigned i32 = g_mantissa[g_offset[h >> 10] + (h & 0x3ff)] + g_exponent[h >> 10];
-    return *(float*) &i32;
+    return bitCast<float>(i32);
 }
 }
 """

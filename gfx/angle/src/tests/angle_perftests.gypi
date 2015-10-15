@@ -35,6 +35,8 @@
             '<(angle_path)/src/tests/perf_tests/IndexDataManagerTest.cpp',
         ]
     },
+    # Everything below (except WinRT-related config) must be also maintained for GN.
+    # If you change anything below, also update angle/src/tests/BUILD.gn.
     'dependencies':
     [
         '<(angle_path)/src/angle.gyp:angle_common',

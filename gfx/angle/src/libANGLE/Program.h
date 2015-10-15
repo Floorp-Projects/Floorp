@@ -69,7 +69,7 @@ class InfoLog : angle::NonCopyable
     ~InfoLog();
 
     size_t getLength() const;
-    void getLog(GLsizei bufSize, GLsizei *length, char *infoLog);
+    void getLog(GLsizei bufSize, GLsizei *length, char *infoLog) const;
 
     void appendSanitized(const char *message);
     void reset();
@@ -182,6 +182,10 @@ class Program : angle::NonCopyable
             ASSERT(uniformBlockIndex < IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS);
             return mUniformBlockBindings[uniformBlockIndex];
         }
+        const UniformBlockBindingMask &getActiveUniformBlockBindingsMask() const
+        {
+            return mActiveUniformBlockBindings;
+        }
         const std::vector<sh::Attribute> &getAttributes() const { return mAttributes; }
         const AttributesMask &getActiveAttribLocationsMask() const
         {
@@ -213,6 +217,7 @@ class Program : angle::NonCopyable
         GLenum mTransformFeedbackBufferMode;
 
         GLuint mUniformBlockBindings[IMPLEMENTATION_MAX_COMBINED_SHADER_UNIFORM_BUFFERS];
+        UniformBlockBindingMask mActiveUniformBlockBindings;
 
         std::vector<sh::Attribute> mAttributes;
         std::bitset<MAX_VERTEX_ATTRIBS> mActiveAttribLocationsMask;
@@ -245,29 +250,34 @@ class Program : angle::NonCopyable
     void bindAttributeLocation(GLuint index, const char *name);
 
     Error link(const gl::Data &data);
-    bool isLinked();
+    bool isLinked() const;
 
     Error loadBinary(GLenum binaryFormat, const void *binary, GLsizei length);
     Error saveBinary(GLenum *binaryFormat, void *binary, GLsizei bufSize, GLsizei *length) const;
     GLint getBinaryLength() const;
 
     int getInfoLogLength() const;
-    void getInfoLog(GLsizei bufSize, GLsizei *length, char *infoLog);
-    void getAttachedShaders(GLsizei maxCount, GLsizei *count, GLuint *shaders);
+    void getInfoLog(GLsizei bufSize, GLsizei *length, char *infoLog) const;
+    void getAttachedShaders(GLsizei maxCount, GLsizei *count, GLuint *shaders) const;
 
-    GLuint getAttributeLocation(const std::string &name);
+    GLuint getAttributeLocation(const std::string &name) const;
     bool isAttribLocationActive(size_t attribLocation) const;
 
     void getActiveAttribute(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
-    GLint getActiveAttributeCount();
-    GLint getActiveAttributeMaxLength();
+    GLint getActiveAttributeCount() const;
+    GLint getActiveAttributeMaxLength() const;
     const std::vector<sh::Attribute> &getAttributes() const { return mData.mAttributes; }
 
     GLint getFragDataLocation(const std::string &name) const;
 
-    void getActiveUniform(GLuint index, GLsizei bufsize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
-    GLint getActiveUniformCount();
-    GLint getActiveUniformMaxLength();
+    void getActiveUniform(GLuint index,
+                          GLsizei bufsize,
+                          GLsizei *length,
+                          GLint *size,
+                          GLenum *type,
+                          GLchar *name) const;
+    GLint getActiveUniformCount() const;
+    GLint getActiveUniformMaxLength() const;
     GLint getActiveUniformi(GLuint index, GLenum pname) const;
     bool isValidUniformLocation(GLint location) const;
     const LinkedUniform &getUniformByLocation(GLint location) const;
@@ -296,16 +306,16 @@ class Program : angle::NonCopyable
     void setUniformMatrix3x4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
     void setUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value);
 
-    void getUniformfv(GLint location, GLfloat *params);
-    void getUniformiv(GLint location, GLint *params);
-    void getUniformuiv(GLint location, GLuint *params);
+    void getUniformfv(GLint location, GLfloat *params) const;
+    void getUniformiv(GLint location, GLint *params) const;
+    void getUniformuiv(GLint location, GLuint *params) const;
 
     void getActiveUniformBlockName(GLuint uniformBlockIndex, GLsizei bufSize, GLsizei *length, GLchar *uniformBlockName) const;
     void getActiveUniformBlockiv(GLuint uniformBlockIndex, GLenum pname, GLint *params) const;
-    GLuint getActiveUniformBlockCount();
-    GLint getActiveUniformBlockMaxLength();
+    GLuint getActiveUniformBlockCount() const;
+    GLint getActiveUniformBlockMaxLength() const;
 
-    GLuint getUniformBlockIndex(const std::string &name);
+    GLuint getUniformBlockIndex(const std::string &name) const;
 
     void bindUniformBlock(GLuint uniformBlockIndex, GLuint uniformBlockBinding);
     GLuint getUniformBlockBinding(GLuint uniformBlockIndex) const;
@@ -395,6 +405,11 @@ class Program : angle::NonCopyable
                                          std::vector<LinkedUniform> *samplerUniforms);
 
     void gatherInterfaceBlockInfo();
+    template <typename VarT>
+    void defineUniformBlockMembers(const std::vector<VarT> &fields,
+                                   const std::string &prefix,
+                                   int blockIndex);
+
     void defineUniformBlock(const sh::InterfaceBlock &interfaceBlock, GLenum shaderType);
 
     template <typename T>

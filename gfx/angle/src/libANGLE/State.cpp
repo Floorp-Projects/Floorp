@@ -28,8 +28,17 @@ State::State()
     // TODO(jmadill): additional ES3 state
     mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_ALIGNMENT);
     mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_ROW_LENGTH);
+    mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_IMAGE_HEIGHT);
+    mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_SKIP_IMAGES);
+    mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_SKIP_ROWS);
+    mUnpackStateBitMask.set(DIRTY_BIT_UNPACK_SKIP_PIXELS);
+
     mPackStateBitMask.set(DIRTY_BIT_PACK_ALIGNMENT);
     mPackStateBitMask.set(DIRTY_BIT_PACK_REVERSE_ROW_ORDER);
+    mPackStateBitMask.set(DIRTY_BIT_PACK_ROW_LENGTH);
+    mPackStateBitMask.set(DIRTY_BIT_PACK_SKIP_ROWS);
+    mPackStateBitMask.set(DIRTY_BIT_PACK_SKIP_PIXELS);
+
     mClearStateBitMask.set(DIRTY_BIT_RASTERIZER_DISCARD_ENABLED);
     mClearStateBitMask.set(DIRTY_BIT_SCISSOR_TEST_ENABLED);
     mClearStateBitMask.set(DIRTY_BIT_SCISSOR);
@@ -41,6 +50,9 @@ State::State()
     mClearStateBitMask.set(DIRTY_BIT_DEPTH_MASK);
     mClearStateBitMask.set(DIRTY_BIT_STENCIL_WRITEMASK_FRONT);
     mClearStateBitMask.set(DIRTY_BIT_STENCIL_WRITEMASK_BACK);
+
+    mBlitStateBitMask.set(DIRTY_BIT_SCISSOR_TEST_ENABLED);
+    mBlitStateBitMask.set(DIRTY_BIT_SCISSOR);
 }
 
 State::~State()
@@ -990,32 +1002,10 @@ void State::setIndexedUniformBufferBinding(GLuint index, Buffer *buffer, GLintpt
     mUniformBuffers[index].set(buffer, offset, size);
 }
 
-GLuint State::getIndexedUniformBufferId(GLuint index) const
+const OffsetBindingPointer<Buffer> &State::getIndexedUniformBuffer(size_t index) const
 {
     ASSERT(static_cast<size_t>(index) < mUniformBuffers.size());
-
-    return mUniformBuffers[index].id();
-}
-
-Buffer *State::getIndexedUniformBuffer(GLuint index) const
-{
-    ASSERT(static_cast<size_t>(index) < mUniformBuffers.size());
-
-    return mUniformBuffers[index].get();
-}
-
-GLintptr State::getIndexedUniformBufferOffset(GLuint index) const
-{
-    ASSERT(static_cast<size_t>(index) < mUniformBuffers.size());
-
-    return mUniformBuffers[index].getOffset();
-}
-
-GLsizeiptr State::getIndexedUniformBufferSize(GLuint index) const
-{
-    ASSERT(static_cast<size_t>(index) < mUniformBuffers.size());
-
-    return mUniformBuffers[index].getSize();
+    return mUniformBuffers[index];
 }
 
 void State::setCopyReadBufferBinding(Buffer *buffer)
@@ -1133,6 +1123,39 @@ bool State::getPackReverseRowOrder() const
     return mPack.reverseRowOrder;
 }
 
+void State::setPackRowLength(GLint rowLength)
+{
+    mPack.rowLength = rowLength;
+    mDirtyBits.set(DIRTY_BIT_PACK_ROW_LENGTH);
+}
+
+GLint State::getPackRowLength() const
+{
+    return mPack.rowLength;
+}
+
+void State::setPackSkipRows(GLint skipRows)
+{
+    mPack.skipRows = skipRows;
+    mDirtyBits.set(DIRTY_BIT_PACK_SKIP_ROWS);
+}
+
+GLint State::getPackSkipRows() const
+{
+    return mPack.skipRows;
+}
+
+void State::setPackSkipPixels(GLint skipPixels)
+{
+    mPack.skipPixels = skipPixels;
+    mDirtyBits.set(DIRTY_BIT_PACK_SKIP_PIXELS);
+}
+
+GLint State::getPackSkipPixels() const
+{
+    return mPack.skipPixels;
+}
+
 const PixelPackState &State::getPackState() const
 {
     return mPack;
@@ -1163,6 +1186,50 @@ void State::setUnpackRowLength(GLint rowLength)
 GLint State::getUnpackRowLength() const
 {
     return mUnpack.rowLength;
+}
+
+void State::setUnpackImageHeight(GLint imageHeight)
+{
+    mUnpack.imageHeight = imageHeight;
+    mDirtyBits.set(DIRTY_BIT_UNPACK_IMAGE_HEIGHT);
+}
+
+GLint State::getUnpackImageHeight() const
+{
+    return mUnpack.imageHeight;
+}
+
+void State::setUnpackSkipImages(GLint skipImages)
+{
+    mUnpack.skipImages = skipImages;
+    mDirtyBits.set(DIRTY_BIT_UNPACK_SKIP_IMAGES);
+}
+
+GLint State::getUnpackSkipImages() const
+{
+    return mUnpack.skipImages;
+}
+
+void State::setUnpackSkipRows(GLint skipRows)
+{
+    mUnpack.skipRows = skipRows;
+    mDirtyBits.set(DIRTY_BIT_UNPACK_SKIP_ROWS);
+}
+
+GLint State::getUnpackSkipRows() const
+{
+    return mUnpack.skipRows;
+}
+
+void State::setUnpackSkipPixels(GLint skipPixels)
+{
+    mUnpack.skipPixels = skipPixels;
+    mDirtyBits.set(DIRTY_BIT_UNPACK_SKIP_PIXELS);
+}
+
+GLint State::getUnpackSkipPixels() const
+{
+    return mUnpack.skipPixels;
 }
 
 const PixelUnpackState &State::getUnpackState() const
@@ -1267,8 +1334,29 @@ void State::getIntegerv(const gl::Data &data, GLenum pname, GLint *params)
       case GL_CURRENT_PROGRAM:                          *params = mProgram ? mProgram->id() : 0;                  break;
       case GL_PACK_ALIGNMENT:                           *params = mPack.alignment;                                break;
       case GL_PACK_REVERSE_ROW_ORDER_ANGLE:             *params = mPack.reverseRowOrder;                          break;
+      case GL_PACK_ROW_LENGTH:
+          *params = mPack.rowLength;
+          break;
+      case GL_PACK_SKIP_ROWS:
+          *params = mPack.skipRows;
+          break;
+      case GL_PACK_SKIP_PIXELS:
+          *params = mPack.skipPixels;
+          break;
       case GL_UNPACK_ALIGNMENT:                         *params = mUnpack.alignment;                              break;
       case GL_UNPACK_ROW_LENGTH:                        *params = mUnpack.rowLength;                              break;
+      case GL_UNPACK_IMAGE_HEIGHT:
+          *params = mUnpack.imageHeight;
+          break;
+      case GL_UNPACK_SKIP_IMAGES:
+          *params = mUnpack.skipImages;
+          break;
+      case GL_UNPACK_SKIP_ROWS:
+          *params = mUnpack.skipRows;
+          break;
+      case GL_UNPACK_SKIP_PIXELS:
+          *params = mUnpack.skipPixels;
+          break;
       case GL_GENERATE_MIPMAP_HINT:                     *params = mGenerateMipmapHint;                            break;
       case GL_FRAGMENT_SHADER_DERIVATIVE_HINT_OES:      *params = mFragmentShaderDerivativeHint;                  break;
       case GL_ACTIVE_TEXTURE:

@@ -47,7 +47,7 @@ class BinaryInputStream : angle::NonCopyable
     template <class IntT>
     IntT readInt()
     {
-        int value;
+        int value = 0;
         read(&value);
         return static_cast<IntT>(value);
     }
@@ -60,7 +60,7 @@ class BinaryInputStream : angle::NonCopyable
 
     bool readBool()
     {
-        int value;
+        int value = 0;
         read(&value);
         return (value > 0);
     }

@@ -223,9 +223,9 @@ bool TStructure::containsSamplers() const
     return false;
 }
 
-TString TFieldListCollection::buildMangledName() const
+TString TFieldListCollection::buildMangledName(const TString &mangledNamePrefix) const
 {
-    TString mangledName(mangledNamePrefix());
+    TString mangledName(mangledNamePrefix);
     mangledName += *mName;
     for (size_t i = 0; i < mFields->size(); ++i)
     {

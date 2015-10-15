@@ -2,14 +2,17 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+
 import("//testing/test.gni")
 import("//third_party/angle/build/angle_common.gni")
 
-unittests_gypi = exec_script(
-  "//build/gypi_to_gn.py",
-  [ rebase_path("angle_unittests.gypi"), "--replace=<(angle_path)=." ],
-  "scope",
-  [ "angle_unittests.gypi" ])
+unittests_gypi = exec_script("//build/gypi_to_gn.py",
+                             [
+                               rebase_path("angle_unittests.gypi"),
+                               "--replace=<(angle_path)=.",
+                             ],
+                             "scope",
+                             [ "angle_unittests.gypi" ])
 
 test("angle_unittests") {
   include_dirs = [
@@ -20,12 +23,11 @@ test("angle_unittests") {
   sources = rebase_path(unittests_gypi.angle_unittests_sources, ".", "../..")
 
   if (angle_enable_hlsl) {
-    sources += rebase_path(unittests_gypi.angle_unittests_hlsl_sources, ".", "../..")
+    sources +=
+        rebase_path(unittests_gypi.angle_unittests_hlsl_sources, ".", "../..")
   }
 
-  sources += [
-    "//gpu/angle_unittest_main.cc",
-  ]
+  sources += [ "//gpu/angle_unittest_main.cc" ]
 
   deps = [
     "//base",
@@ -38,11 +40,13 @@ test("angle_unittests") {
   ]
 }
 
-end2end_gypi = exec_script(
-  "//build/gypi_to_gn.py",
-  [ rebase_path("angle_end2end_tests.gypi"), "--replace=<(angle_path)=." ],
-  "scope",
-  [ "angle_unittests.gypi" ])
+end2end_gypi = exec_script("//build/gypi_to_gn.py",
+                           [
+                             rebase_path("angle_end2end_tests.gypi"),
+                             "--replace=<(angle_path)=.",
+                           ],
+                           "scope",
+                           [ "angle_end2end_tests.gypi" ])
 
 test("angle_end2end_tests") {
   include_dirs = [
@@ -54,12 +58,11 @@ test("angle_end2end_tests") {
   sources = rebase_path(end2end_gypi.angle_end2end_tests_sources, ".", "../..")
 
   if (is_win) {
-    sources += rebase_path(end2end_gypi.angle_end2end_tests_win_sources, ".", "../..")
+    sources +=
+        rebase_path(end2end_gypi.angle_end2end_tests_win_sources, ".", "../..")
   }
 
-  sources += [
-    "//gpu/angle_end2end_tests_main.cc",
-  ]
+  sources += [ "//gpu/angle_end2end_tests_main.cc" ]
 
   configs += [
     "//third_party/angle:internal_config",
@@ -77,5 +80,46 @@ test("angle_end2end_tests") {
     "//third_party/angle:libGLESv2",
     "//third_party/angle:preprocessor",
     "//third_party/angle:translator_static",
+  ]
+}
+
+perftests_gypi = exec_script("//build/gypi_to_gn.py",
+                             [
+                               rebase_path("angle_perftests.gypi"),
+                               "--replace=<(angle_path)=.",
+                             ],
+                             "scope",
+                             [ "angle_perftests.gypi" ])
+
+test("angle_perftests") {
+  include_dirs = [
+    "testing/gtest/include",
+    "../../src/tests",
+    "../../util",
+  ]
+
+  sources = rebase_path(perftests_gypi.angle_perf_tests_sources, ".", "../..")
+
+  if (is_win) {
+    sources +=
+        rebase_path(perftests_gypi.angle_perf_tests_win_sources, ".", "../..")
+  }
+
+  sources += [ "//gpu/angle_perftests_main.cc" ]
+
+  configs += [
+    "//third_party/angle:internal_config",
+    "//third_party/angle:libANGLE_config",
+  ]
+
+  deps = [
+    "//base",
+    "//base/test:test_support",
+    "//testing/gmock",
+    "//testing/gtest",
+    "//third_party/angle:angle_util",
+    "//third_party/angle:libANGLE",
+    "//third_party/angle:libEGL",
+    "//third_party/angle:libGLESv2",
   ]
 }

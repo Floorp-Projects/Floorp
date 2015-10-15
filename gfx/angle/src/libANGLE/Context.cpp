@@ -66,7 +66,13 @@ Context::Context(const egl::Config *config,
     : mRenderer(renderer),
       mConfig(config),
       mCurrentSurface(nullptr),
-      mData(clientVersion, mState, mCaps, mTextureCaps, mExtensions, nullptr)
+      mData(reinterpret_cast<uintptr_t>(this),
+            clientVersion,
+            mState,
+            mCaps,
+            mTextureCaps,
+            mExtensions,
+            nullptr)
 {
     ASSERT(robustAccess == false);   // Unimplemented
 
@@ -168,7 +174,10 @@ Context::~Context()
 
     for (auto query : mQueryMap)
     {
-        query.second->release();
+        if (query.second != nullptr)
+        {
+            query.second->release();
+        }
     }
 
     for (auto vertexArray : mVertexArrayMap)
@@ -851,7 +860,7 @@ void Context::getIntegerv(GLenum pname, GLint *params)
       case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:           *params = mCaps.maxVertexTextureImageUnits;                     break;
       case GL_MAX_TEXTURE_IMAGE_UNITS:                  *params = mCaps.maxTextureImageUnits;                           break;
       case GL_MAX_FRAGMENT_UNIFORM_VECTORS:             *params = mCaps.maxFragmentUniformVectors;                      break;
-      case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:          *params = mCaps.maxFragmentInputComponents;                     break;
+      case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:          *params = mCaps.maxFragmentUniformComponents;                   break;
       case GL_MAX_RENDERBUFFER_SIZE:                    *params = mCaps.maxRenderbufferSize;                            break;
       case GL_MAX_COLOR_ATTACHMENTS_EXT:                *params = mCaps.maxColorAttachments;                            break;
       case GL_MAX_DRAW_BUFFERS_EXT:                     *params = mCaps.maxDrawBuffers;                                 break;
@@ -1097,7 +1106,7 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
         case GL_PACK_ROW_LENGTH:
         case GL_PACK_SKIP_ROWS:
         case GL_PACK_SKIP_PIXELS:
-            if (!mExtensions.packSubimage)
+            if ((mClientVersion < 3) && !mExtensions.packSubimage)
             {
                 return false;
             }
@@ -1107,7 +1116,7 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
         case GL_UNPACK_ROW_LENGTH:
         case GL_UNPACK_SKIP_ROWS:
         case GL_UNPACK_SKIP_PIXELS:
-            if (!mExtensions.unpackSubimage)
+            if ((mClientVersion < 3) && !mExtensions.unpackSubimage)
             {
                 return false;
             }
@@ -1228,6 +1237,8 @@ bool Context::getQueryParameterInfo(GLenum pname, GLenum *type, unsigned int *nu
       case GL_PACK_SKIP_ROWS:
       case GL_PACK_SKIP_PIXELS:
       case GL_UNPACK_ROW_LENGTH:
+      case GL_UNPACK_IMAGE_HEIGHT:
+      case GL_UNPACK_SKIP_IMAGES:
       case GL_UNPACK_SKIP_ROWS:
       case GL_UNPACK_SKIP_PIXELS:
         {

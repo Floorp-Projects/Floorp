@@ -308,7 +308,6 @@ ProgramD3D::ProgramD3D(const gl::Program::Data &data, RendererD3D *renderer)
       mUsedVertexSamplerRange(0),
       mUsedPixelSamplerRange(0),
       mDirtySamplerMapping(true),
-      mShaderVersion(100),
       mSerial(issueSerial())
 {
     mDynamicHLSL = new DynamicHLSL(renderer);
@@ -476,8 +475,6 @@ LinkResult ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
         return LinkResult(false, gl::Error(GL_NO_ERROR));
     }
 
-    stream->readInt(&mShaderVersion);
-
     // TODO(jmadill): replace MAX_VERTEX_ATTRIBS
     for (int i = 0; i < gl::MAX_VERTEX_ATTRIBS; ++i)
     {
@@ -528,6 +525,22 @@ LinkResult ProgramD3D::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
         stream->readInt(&d3dUniform->registerElement);
 
         mD3DUniforms.push_back(d3dUniform);
+    }
+
+    const unsigned int blockCount = stream->readInt<unsigned int>();
+    if (stream->error())
+    {
+        infoLog << "Invalid program binary.";
+        return LinkResult(false, gl::Error(GL_NO_ERROR));
+    }
+
+    ASSERT(mD3DUniformBlocks.empty());
+    for (unsigned int blockIndex = 0; blockIndex < blockCount; ++blockIndex)
+    {
+        D3DUniformBlock uniformBlock;
+        stream->readInt(&uniformBlock.psRegisterIndex);
+        stream->readInt(&uniformBlock.vsRegisterIndex);
+        mD3DUniformBlocks.push_back(uniformBlock);
     }
 
     const unsigned int transformFeedbackVaryingCount = stream->readInt<unsigned int>();
@@ -674,8 +687,6 @@ gl::Error ProgramD3D::save(gl::BinaryOutputStream *stream)
 
     stream->writeInt(ANGLE_COMPILE_OPTIMIZATION_LEVEL);
 
-    stream->writeInt(mShaderVersion);
-
     // TODO(jmadill): replace MAX_VERTEX_ATTRIBS
     for (unsigned int i = 0; i < gl::MAX_VERTEX_ATTRIBS; ++i)
     {
@@ -702,15 +713,20 @@ gl::Error ProgramD3D::save(gl::BinaryOutputStream *stream)
     stream->writeInt(mUsedPixelSamplerRange);
 
     stream->writeInt(mD3DUniforms.size());
-    for (size_t uniformIndex = 0; uniformIndex < mD3DUniforms.size(); ++uniformIndex)
+    for (const D3DUniform *uniform : mD3DUniforms)
     {
-        const D3DUniform &uniform = *mD3DUniforms[uniformIndex];
-
         // Type, name and arraySize are redundant, so aren't stored in the binary.
-        stream->writeInt(uniform.psRegisterIndex);
-        stream->writeInt(uniform.vsRegisterIndex);
-        stream->writeInt(uniform.registerCount);
-        stream->writeInt(uniform.registerElement);
+        stream->writeInt(uniform->psRegisterIndex);
+        stream->writeInt(uniform->vsRegisterIndex);
+        stream->writeInt(uniform->registerCount);
+        stream->writeInt(uniform->registerElement);
+    }
+
+    stream->writeInt(mD3DUniformBlocks.size());
+    for (const D3DUniformBlock &uniformBlock : mD3DUniformBlocks)
+    {
+        stream->writeInt(uniformBlock.psRegisterIndex);
+        stream->writeInt(uniformBlock.vsRegisterIndex);
     }
 
     stream->writeInt(mTransformFeedbackLinkedVaryings.size());
@@ -1004,7 +1020,6 @@ LinkResult ProgramD3D::link(const gl::Data &data, gl::InfoLog &infoLog)
 
     mVertexHLSL = vertexShader->getTranslatedSource();
     vertexShaderD3D->generateWorkarounds(&mVertexWorkarounds);
-    mShaderVersion = vertexShader->getShaderVersion();
 
     mPixelHLSL = fragmentShader->getTranslatedSource();
     fragmentShaderD3D->generateWorkarounds(&mPixelWorkarounds);
@@ -1053,6 +1068,8 @@ LinkResult ProgramD3D::link(const gl::Data &data, gl::InfoLog &infoLog)
         return result;
     }
 
+    initUniformBlockInfo();
+
     return LinkResult(true, gl::Error(GL_NO_ERROR));
 }
 
@@ -1062,24 +1079,20 @@ GLboolean ProgramD3D::validate(const gl::Caps & /*caps*/, gl::InfoLog * /*infoLo
     return GL_TRUE;
 }
 
-void ProgramD3D::gatherUniformBlockInfo(std::vector<gl::UniformBlock> *uniformBlocks,
-                                        std::vector<gl::LinkedUniform> *uniforms)
+void ProgramD3D::initUniformBlockInfo()
 {
     const gl::Shader *vertexShader = mData.getAttachedVertexShader();
-
-    BlockInfoMap blockInfo;
-    std::map<std::string, size_t> blockDataSizes;
 
     for (const sh::InterfaceBlock &vertexBlock : vertexShader->getInterfaceBlocks())
     {
         if (!vertexBlock.staticUse && vertexBlock.layout == sh::BLOCKLAYOUT_PACKED)
             continue;
 
-        if (blockDataSizes.count(vertexBlock.name) > 0)
+        if (mBlockDataSizes.count(vertexBlock.name) > 0)
             continue;
 
-        size_t dataSize                  = defineUniformBlock(vertexBlock, &blockInfo);
-        blockDataSizes[vertexBlock.name] = dataSize;
+        size_t dataSize                   = getUniformBlockInfo(vertexBlock);
+        mBlockDataSizes[vertexBlock.name] = dataSize;
     }
 
     const gl::Shader *fragmentShader = mData.getAttachedFragmentShader();
@@ -1089,48 +1102,43 @@ void ProgramD3D::gatherUniformBlockInfo(std::vector<gl::UniformBlock> *uniformBl
         if (!fragmentBlock.staticUse && fragmentBlock.layout == sh::BLOCKLAYOUT_PACKED)
             continue;
 
-        if (blockDataSizes.count(fragmentBlock.name) > 0)
+        if (mBlockDataSizes.count(fragmentBlock.name) > 0)
             continue;
 
-        size_t dataSize                    = defineUniformBlock(fragmentBlock, &blockInfo);
-        blockDataSizes[fragmentBlock.name] = dataSize;
+        size_t dataSize                     = getUniformBlockInfo(fragmentBlock);
+        mBlockDataSizes[fragmentBlock.name] = dataSize;
     }
+}
 
-    // Copy block info out to uniforms.
-    for (gl::LinkedUniform &linkedUniform : *uniforms)
-    {
-        const auto &infoEntry = blockInfo.find(linkedUniform.name);
-
-        if (infoEntry != blockInfo.end())
-        {
-            linkedUniform.blockInfo = infoEntry->second;
-        }
-    }
+void ProgramD3D::assignUniformBlockRegisters()
+{
+    mD3DUniformBlocks.clear();
 
     // Assign registers and update sizes.
-    const ShaderD3D *vertexShaderD3D   = GetImplAs<ShaderD3D>(vertexShader);
-    const ShaderD3D *fragmentShaderD3D = GetImplAs<ShaderD3D>(fragmentShader);
+    const ShaderD3D *vertexShaderD3D   = GetImplAs<ShaderD3D>(mData.getAttachedVertexShader());
+    const ShaderD3D *fragmentShaderD3D = GetImplAs<ShaderD3D>(mData.getAttachedFragmentShader());
 
-    for (gl::UniformBlock &uniformBlock : *uniformBlocks)
+    for (const gl::UniformBlock &uniformBlock : mData.getUniformBlocks())
     {
         unsigned int uniformBlockElement = uniformBlock.isArray ? uniformBlock.arrayElement : 0;
+
+        D3DUniformBlock d3dUniformBlock;
 
         if (uniformBlock.vertexStaticUse)
         {
             unsigned int baseRegister =
                 vertexShaderD3D->getInterfaceBlockRegister(uniformBlock.name);
-            uniformBlock.vsRegisterIndex = baseRegister + uniformBlockElement;
+            d3dUniformBlock.vsRegisterIndex = baseRegister + uniformBlockElement;
         }
 
         if (uniformBlock.fragmentStaticUse)
         {
             unsigned int baseRegister =
                 fragmentShaderD3D->getInterfaceBlockRegister(uniformBlock.name);
-            uniformBlock.psRegisterIndex = baseRegister + uniformBlockElement;
+            d3dUniformBlock.psRegisterIndex = baseRegister + uniformBlockElement;
         }
 
-        ASSERT(blockDataSizes.count(uniformBlock.name) == 1);
-        uniformBlock.dataSize = static_cast<unsigned int>(blockDataSizes[uniformBlock.name]);
+        mD3DUniformBlocks.push_back(d3dUniformBlock);
     }
 }
 
@@ -1180,26 +1188,36 @@ gl::Error ProgramD3D::applyUniforms()
 
 gl::Error ProgramD3D::applyUniformBuffers(const gl::Data &data)
 {
+    if (mData.getUniformBlocks().empty())
+    {
+        return gl::Error(GL_NO_ERROR);
+    }
+
+    // Lazy init.
+    if (mD3DUniformBlocks.empty())
+    {
+        assignUniformBlockRegisters();
+    }
+
     mVertexUBOCache.clear();
     mFragmentUBOCache.clear();
 
     const unsigned int reservedBuffersInVS = mRenderer->getReservedVertexUniformBuffers();
     const unsigned int reservedBuffersInFS = mRenderer->getReservedFragmentUniformBuffers();
 
-    const auto &uniformBlocks = mData.getUniformBlocks();
-    for (unsigned int uniformBlockIndex = 0; uniformBlockIndex < uniformBlocks.size();
+    for (unsigned int uniformBlockIndex = 0; uniformBlockIndex < mD3DUniformBlocks.size();
          uniformBlockIndex++)
     {
-        const gl::UniformBlock &uniformBlock = uniformBlocks[uniformBlockIndex];
-        GLuint blockBinding            = mData.getUniformBlockBinding(uniformBlockIndex);
+        const D3DUniformBlock &uniformBlock = mD3DUniformBlocks[uniformBlockIndex];
+        GLuint blockBinding                 = mData.getUniformBlockBinding(uniformBlockIndex);
 
         // Unnecessary to apply an unreferenced standard or shared UBO
-        if (!uniformBlock.vertexStaticUse && !uniformBlock.fragmentStaticUse)
+        if (!uniformBlock.vertexStaticUse() && !uniformBlock.fragmentStaticUse())
         {
             continue;
         }
 
-        if (uniformBlock.vertexStaticUse)
+        if (uniformBlock.vertexStaticUse())
         {
             unsigned int registerIndex = uniformBlock.vsRegisterIndex - reservedBuffersInVS;
             ASSERT(registerIndex < data.caps->maxVertexUniformBlocks);
@@ -1213,7 +1231,7 @@ gl::Error ProgramD3D::applyUniformBuffers(const gl::Data &data)
             mVertexUBOCache[registerIndex] = blockBinding;
         }
 
-        if (uniformBlock.fragmentStaticUse)
+        if (uniformBlock.fragmentStaticUse())
         {
             unsigned int registerIndex = uniformBlock.psRegisterIndex - reservedBuffersInFS;
             ASSERT(registerIndex < data.caps->maxFragmentUniformBlocks);
@@ -1342,6 +1360,11 @@ void ProgramD3D::setUniform3uiv(GLint location, GLsizei count, const GLuint *v)
 void ProgramD3D::setUniform4uiv(GLint location, GLsizei count, const GLuint *v)
 {
     setUniform(location, count, v, GL_UNSIGNED_INT_VEC4);
+}
+
+void ProgramD3D::setUniformBlockBinding(GLuint /*uniformBlockIndex*/,
+                                        GLuint /*uniformBlockBinding*/)
+{
 }
 
 void ProgramD3D::defineUniformsAndAssignRegisters()
@@ -1679,8 +1702,7 @@ void ProgramD3D::setUniformMatrixfv(GLint location,
     }
 }
 
-size_t ProgramD3D::defineUniformBlock(const sh::InterfaceBlock &interfaceBlock,
-                                      BlockInfoMap *blockInfoOut)
+size_t ProgramD3D::getUniformBlockInfo(const sh::InterfaceBlock &interfaceBlock)
 {
     ASSERT(interfaceBlock.staticUse || interfaceBlock.layout != sh::BLOCKLAYOUT_PACKED);
 
@@ -1699,7 +1721,7 @@ size_t ProgramD3D::defineUniformBlock(const sh::InterfaceBlock &interfaceBlock,
     }
 
     GetUniformBlockInfo(interfaceBlock.fields, "", encoder, interfaceBlock.isRowMajorLayout,
-                        blockInfoOut);
+                        &mBlockInfo);
 
     return encoder->getBlockSize();
 }
@@ -1763,7 +1785,6 @@ void ProgramD3D::reset()
 
     mVertexHLSL.clear();
     mVertexWorkarounds = D3DCompilerWorkarounds();
-    mShaderVersion = 100;
 
     mPixelHLSL.clear();
     mPixelWorkarounds = D3DCompilerWorkarounds();
@@ -1772,6 +1793,7 @@ void ProgramD3D::reset()
     mUsesPointSize = false;
 
     SafeDeleteContainer(mD3DUniforms);
+    mD3DUniformBlocks.clear();
 
     SafeDelete(mVertexUniformStorage);
     SafeDelete(mFragmentUniformStorage);
@@ -1886,5 +1908,35 @@ void ProgramD3D::gatherTransformFeedbackVaryings(
 D3DUniform *ProgramD3D::getD3DUniformFromLocation(GLint location)
 {
     return mD3DUniforms[mData.getUniformLocations()[location].index];
+}
+
+bool ProgramD3D::getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const
+{
+    std::string baseName = blockName;
+    gl::ParseAndStripArrayIndex(&baseName);
+
+    auto sizeIter = mBlockDataSizes.find(baseName);
+    if (sizeIter == mBlockDataSizes.end())
+    {
+        *sizeOut = 0;
+        return false;
+    }
+
+    *sizeOut = sizeIter->second;
+    return true;
+}
+
+bool ProgramD3D::getUniformBlockMemberInfo(const std::string &memberUniformName,
+                                           sh::BlockMemberInfo *memberInfoOut) const
+{
+    auto infoIter = mBlockInfo.find(memberUniformName);
+    if (infoIter == mBlockInfo.end())
+    {
+        *memberInfoOut = sh::BlockMemberInfo::getDefaultBlockInfo();
+        return false;
+    }
+
+    *memberInfoOut = infoIter->second;
+    return true;
 }
 }

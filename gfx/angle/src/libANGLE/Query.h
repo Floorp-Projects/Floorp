@@ -38,6 +38,9 @@ class Query : public RefCountObject
 
     GLenum getType() const;
 
+    rx::QueryImpl *getImplementation();
+    const rx::QueryImpl *getImplementation() const;
+
   private:
     rx::QueryImpl *mQuery;
 };

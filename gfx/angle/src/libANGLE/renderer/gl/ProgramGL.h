@@ -31,9 +31,6 @@ class ProgramGL : public ProgramImpl
               StateManagerGL *stateManager);
     ~ProgramGL() override;
 
-    int getShaderVersion() const override;
-
-    GLenum getBinaryFormat() override;
     LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) override;
     gl::Error save(gl::BinaryOutputStream *stream) override;
 
@@ -62,8 +59,11 @@ class ProgramGL : public ProgramImpl
     void setUniformMatrix3x4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) override;
     void setUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value) override;
 
-    void gatherUniformBlockInfo(std::vector<gl::UniformBlock> *uniformBlocks,
-                                std::vector<gl::LinkedUniform> *uniforms) override;
+    void setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) override;
+
+    bool getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const override;
+    bool getUniformBlockMemberInfo(const std::string &memberUniformName,
+                                   sh::BlockMemberInfo *memberInfoOut) const override;
 
     GLuint getProgramID() const;
     const std::vector<SamplerBindingGL> &getAppliedSamplerUniforms() const;
@@ -78,6 +78,7 @@ class ProgramGL : public ProgramImpl
     StateManagerGL *mStateManager;
 
     std::vector<GLint> mUniformRealLocationMap;
+    std::vector<GLuint> mUniformBlockRealLocationMap;
 
     // An array of the samplers that are used by the program
     std::vector<SamplerBindingGL> mSamplerBindings;
