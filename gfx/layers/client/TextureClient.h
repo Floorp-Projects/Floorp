@@ -195,6 +195,9 @@ public:
                          TextureFlags aFlags = TextureFlags::DEFAULT);
   virtual ~TextureClient();
 
+  static already_AddRefed<TextureClient>
+  CreateWithData(TextureData* aData, TextureFlags aFlags, ISurfaceAllocator* aAllocator);
+
   // Creates and allocates a TextureClient usable with Moz2D.
   static already_AddRefed<TextureClient>
   CreateForDrawing(CompositableForwarder* aAllocator,
@@ -639,9 +642,16 @@ public:
 
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) { return false; };
 
+  virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
+
   /// Ideally this should not be exposed and users of TextureClient would use Lock/Unlock
   /// preoperly but that requires a few changes to SharedSurface and maybe gonk video.
   virtual void WaitForFence(FenceHandle* aFence) {};
+
+  virtual void SyncWithObject(SyncObject* aFence) {};
+
+  /// Needed until the destruction sequence of TextureClient is revamped.
+  virtual void FinalizeOnIPDLThread(TextureClient*) {}
 };
 
 /// temporary class that will be merged back into TextureClient when all texture implementations
@@ -687,11 +697,16 @@ public:
   // TODO - we should be able to make this implicit and not expose the method.
   virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) override;
 
+  virtual void SyncWithObject(SyncObject* aFence) override { mData->SyncWithObject(aFence); }
+
   // by construction, ClientTexture cannot be created without successful allocation.
   virtual bool IsAllocated() const override { return true; }
 
   /// If you add new code that uses this method, you are probably doing something wrong.
   virtual TextureData* GetInternalData() override { return mData; }
+
+  virtual void FinalizeOnIPDLThread() override;
+
 protected:
   TextureData* mData;
   RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;
