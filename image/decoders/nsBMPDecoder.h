@@ -186,41 +186,6 @@ private:
   bool mHaveAlphaData;
 };
 
-/// Sets the pixel data in aDecoded to the given values.
-/// @param aDecoded pointer to pixel to be set, will be incremented to point to
-/// the next pixel.
-static inline void
-SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen,
-         uint8_t aBlue, uint8_t aAlpha = 0xFF)
-{
-  *aDecoded++ = gfxPackedPixel(aAlpha, aRed, aGreen, aBlue);
-}
-
-static inline void
-SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTableEntry* aColors)
-{
-  SetPixel(aDecoded,
-           aColors[idx].mRed, aColors[idx].mGreen, aColors[idx].mBlue);
-}
-
-/// Sets two (or one if aCount = 1) pixels
-/// @param aDecoded where the data is stored. Will be moved 4 resp 8 bytes
-/// depending on whether one or two pixels are written.
-/// @param aData The values for the two pixels
-/// @param aCount Current count. Is decremented by one or two.
-inline void
-Set4BitPixel(uint32_t*& aDecoded, uint8_t aData, uint32_t& aCount,
-             bmp::ColorTableEntry* aColors)
-{
-  uint8_t idx = aData >> 4;
-  SetPixel(aDecoded, idx, aColors);
-  if (--aCount > 0) {
-    idx = aData & 0xF;
-    SetPixel(aDecoded, idx, aColors);
-    --aCount;
-  }
-}
-
 } // namespace image
 } // namespace mozilla
 
