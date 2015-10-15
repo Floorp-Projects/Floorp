@@ -26,6 +26,8 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CORSMode.h"
+#include "mozilla/dom/HTMLLinkElement.h"
 #include "nsIDOMNode.h"
 #include "nsINode.h"
 #include "nsIDocument.h"
@@ -186,12 +188,25 @@ nsPrefetchNode::OpenChannel()
         return NS_ERROR_FAILURE;
     }
     nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
+    CORSMode corsMode = CORS_NONE;
+    if (source->IsHTMLElement(nsGkAtoms::link)) {
+      corsMode = static_cast<dom::HTMLLinkElement*>(source.get())->GetCORSMode();
+    }
+    uint32_t securityFlags;
+    if (corsMode == CORS_NONE) {
+      securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+    } else {
+      securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+      if (corsMode == CORS_USE_CREDENTIALS) {
+        securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+      }
+    }
     nsresult rv = NS_NewChannelInternal(getter_AddRefs(mChannel),
                                         mURI,
                                         source,
                                         source->NodePrincipal(),
                                         nullptr,   //aTriggeringPrincipal
-                                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+                                        securityFlags,
                                         nsIContentPolicy::TYPE_OTHER,
                                         loadGroup, // aLoadGroup
                                         this,      // aCallbacks
