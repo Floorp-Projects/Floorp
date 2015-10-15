@@ -30,7 +30,7 @@ for (var constructor of constructors) {
     if (typeof newGlobal === "function") {
         var keys = newGlobal()[constructor.name].prototype.keys;
         assertDeepEq([...keys.call(new constructor(2))], [0, 1]);
-        arr = newGlobal()[constructor.name](2);
+        arr = new (newGlobal()[constructor.name])(2);
         assertEq([...constructor.prototype.keys.call(arr)].toString(), "0,1");
     }
 
