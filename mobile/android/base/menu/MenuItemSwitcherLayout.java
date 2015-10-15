@@ -47,7 +47,7 @@ public class MenuItemSwitcherLayout extends LinearLayout
     public MenuItemSwitcherLayout(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
 
-        LayoutInflater.from(context).inflate(R.layout.menu_item_action_view, this);
+        LayoutInflater.from(context).inflate(R.layout.menu_item_switcher_layout, this);
         mMenuItem = (MenuItemDefault) findViewById(R.id.menu_item);
         mMenuButton = (MenuItemActionBar) findViewById(R.id.menu_item_button);
         mActionButtons = new ArrayList<ImageButton>();
