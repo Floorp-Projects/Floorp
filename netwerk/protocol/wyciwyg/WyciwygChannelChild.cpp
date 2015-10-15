@@ -104,7 +104,7 @@ WyciwygChannelChild::Init(nsIURI* uri)
     mozilla::ipc::PrincipalToPrincipalInfo(mLoadInfo->TriggeringPrincipal(),
                                            &triggeringPrincipalInfo);
     securityFlags = mLoadInfo->GetSecurityFlags();
-    policyType = mLoadInfo->InternalContentPolicyType();
+    policyType = mLoadInfo->GetContentPolicyType();
   }
   else {
     // use default values if no loadInfo is provided
