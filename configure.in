@@ -318,6 +318,7 @@ if test -n "$gonkdir" ; then
     AC_DEFINE(HAVE_PTHREADS)
     MOZ_CHROME_FILE_FORMAT=omni
     direct_nspr_config=1
+    android_cxx_stl=mozstlport
 else
     MOZ_ANDROID_NDK
 
