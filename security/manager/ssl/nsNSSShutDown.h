@@ -37,12 +37,10 @@ public:
   // Is it forbidden to bring up an UI while holding resources?
   bool isUIForbidden();
   
-  // Check whether setting the current thread restriction is possible.
-  // If it is possible, and the "do_it_for_real" flag is used,
-  // the state tracking will have ensured that we will stay in this state.
-  // As of writing, this includes forbidding PSM UI.
-  enum RealOrTesting {test_only, do_it_for_real};
-  bool ifPossibleDisallowUI(RealOrTesting rot);
+  // Check whether setting the current thread restriction is possible. If it
+  // is possible, the state tracking will have ensured that we will stay in
+  // this state. As of writing, this includes forbidding PSM UI.
+  bool ifPossibleDisallowUI();
 
   // Notify the state tracking that going to the restricted state is
   // no longer planned.
@@ -116,16 +114,6 @@ public:
   static void remember(nsOnPK11LogoutCancelObject *o);
   static void forget(nsOnPK11LogoutCancelObject *o);
 
-  // track the creation and destruction of SSL sockets
-  // performed by clients using PSM services
-  static void trackSSLSocketCreate();
-  static void trackSSLSocketClose();
-  static bool areSSLSocketsActive();
-  
-  // Are we able to do the early cleanup?
-  // Returns failure if at the current time "early cleanup" is not possible.
-  bool isUIActive();
-
   // If possible to do "early cleanup" at the current time, remember that we want to
   // do it, and disallow actions that would change the possibility.
   bool ifPossibleDisallowUI();
@@ -151,7 +139,6 @@ private:
 protected:
   mozilla::Mutex mListLock;
   static nsNSSShutDownList *singleton;
-  uint32_t mActiveSSLSockets;
   PLDHashTable mObjects;
   PLDHashTable mPK11LogoutCancelObjects;
   nsNSSActivityState mActivityState;
