@@ -486,7 +486,7 @@ TabParent::ShouldSwitchProcess(nsIChannel* aChannel)
   nsCOMPtr<nsIURI> uri;
   aChannel->GetURI(getter_AddRefs(uri));
   LogChannelRelevantInfo(uri, loadingPrincipal, resultPrincipal,
-                         loadInfo->InternalContentPolicyType());
+                         loadInfo->GetContentPolicyType());
 
   // Check if the signed package is loaded from the same origin.
   bool sameOrigin = false;
@@ -497,7 +497,7 @@ TabParent::ShouldSwitchProcess(nsIChannel* aChannel)
   }
 
   // If this is not a top level document, there's no need to switch process.
-  if (nsIContentPolicy::TYPE_DOCUMENT != loadInfo->InternalContentPolicyType()) {
+  if (nsIContentPolicy::TYPE_DOCUMENT != loadInfo->GetContentPolicyType()) {
     LOG("Subresource of a document. No need to switch process.\n");
     return false;
   }

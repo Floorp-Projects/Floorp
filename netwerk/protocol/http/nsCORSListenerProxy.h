@@ -40,6 +40,7 @@ enum class DataURIHandling
 class nsCORSListenerProxy final : public nsIStreamListener,
                                   public nsIInterfaceRequestor,
                                   public nsIChannelEventSink,
+                                  public nsIAsyncVerifyRedirectCallback,
                                   public nsIThreadRetargetableStreamListener
 {
 public:
@@ -52,6 +53,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   // Must be called at startup.
@@ -101,6 +103,9 @@ private:
 #ifdef DEBUG
   bool mInited;
 #endif
+  nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
+  nsCOMPtr<nsIChannel> mOldRedirectChannel;
+  nsCOMPtr<nsIChannel> mNewRedirectChannel;
 };
 
 #endif

@@ -155,20 +155,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
 
 
   // Test 1e: insecure xhr
+  var xhrsuccess = true;
   var xhr = new XMLHttpRequest;
   try {
     xhr.open("GET", baseUrl + "?type=xhr", true);
-    xhr.send();
-    xhr.onloadend = function (oEvent) {
-      if (xhr.status == 200) {
-        parent.postMessage({"test": "xhr", "msg": "insecure xhr loaded"}, "http://mochi.test:8888");
-      }
-      else {
-        parent.postMessage({"test": "xhr", "msg": "insecure xhr blocked"}, "http://mochi.test:8888");
+  } catch(ex) {
+     xhrsuccess = false;
+     parent.postMessage({"test": "xhr", "msg": "insecure xhr blocked"}, "http://mochi.test:8888");
+  }
+
+  if(xhrsuccess) {
+    xhr.onreadystatechange = function (oEvent) {
+      var result = false;
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          parent.postMessage({"test": "xhr", "msg": "insecure xhr loaded"}, "http://mochi.test:8888");
+        }
+        else {
+          parent.postMessage({"test": "xhr", "msg": "insecure xhr blocked"}, "http://mochi.test:8888");
+        }
       }
     }
-  } catch(ex) {
-     parent.postMessage({"test": "xhr", "msg": "insecure xhr blocked"}, "http://mochi.test:8888");
+
+    xhr.send(null);
   }
 
   /* Part 2: Mixed Display tests */

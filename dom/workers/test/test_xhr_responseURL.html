@@ -45,6 +45,16 @@ worker.addEventListener("message", function (aEvent) {
     worker.postMessage("pong");
     return;
   }
+  if (data.type === "todo") {
+    SimpleTest.todo(data.bool, data.message);
+    worker.postMessage("pong");
+    return;
+  }
+  if (data.type === "todo_is") {
+    SimpleTest.todo_is(data.actual, data.expected, data.message);
+    worker.postMessage("pong");
+    return;
+  }
   if (data.type === "redirect_test") {
     if (data.status === "start") {
       SpecialPowers.addObserver(requestObserver, "specialpowers-http-notify-request", false);
