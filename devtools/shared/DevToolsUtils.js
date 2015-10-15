@@ -453,10 +453,15 @@ exports.dbg_assert = function dbg_assert(cond, e) {
  * @param Boolean condition
  * @param String message
  *
- * If DEBUG_JS_MODULES is set, then `condition` is checked and if false-y, the
+ * Assertions are enabled when any of the following are true:
+ *   - This is a DEBUG_JS_MODULES build
+ *   - This is a DEBUG build
+ *   - DevToolsUtils.testing is set to true
+ *
+ * If assertions are enabled, then `condition` is checked and if false-y, the
  * assertion failure is logged and then an error is thrown.
  *
- * If DEBUG_JS_MODULES is not set, then this function is a no-op.
+ * If assertions are not enabled, then this function is a no-op.
  *
  * This is an improvement over `dbg_assert`, which doesn't actually cause any
  * fatal behavior, and is therefore much easier to accidentally ignore.
@@ -474,7 +479,9 @@ exports.defineLazyGetter(exports, "assert", () => {
 
   const scope = {};
   Cu.import("resource://gre/modules/AppConstants.jsm", scope);
-  return scope.AppConstants.DEBUG_JS_MODULES ? assert : noop;
+  const { DEBUG, DEBUG_JS_MODULES } = scope.AppConstants;
+
+  return (DEBUG || DEBUG_JS_MODULES || exports.testing) ? assert : noop;
 });
 
 /**
