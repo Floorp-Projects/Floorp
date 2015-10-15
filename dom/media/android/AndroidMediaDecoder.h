@@ -22,7 +22,9 @@ public:
     return NS_OK;
   }
 
-  virtual MediaDecoder* Clone() { return new AndroidMediaDecoder(mType); }
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
+    return new AndroidMediaDecoder(aOwner, mType);
+  }
   virtual MediaDecoderStateMachine* CreateStateMachine();
 };
 

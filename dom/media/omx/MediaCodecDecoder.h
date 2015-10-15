@@ -18,7 +18,7 @@ public:
   explicit MediaCodecDecoder(MediaDecoderOwner* aOwner)
     : MediaOmxCommonDecoder(aOwner) {}
 
-  virtual MediaDecoder* Clone();
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner);
 
   virtual MediaOmxCommonReader* CreateReader();
 

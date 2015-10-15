@@ -12,9 +12,9 @@
 namespace mozilla {
 
 MediaDecoder*
-MediaCodecDecoder::Clone()
+MediaCodecDecoder::Clone(MediaDecoderOwner* aOwner)
 {
-  return new MediaCodecDecoder();
+  return new MediaCodecDecoder(aOwner);
 }
 
 MediaOmxCommonReader*
