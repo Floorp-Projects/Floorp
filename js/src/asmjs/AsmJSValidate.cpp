@@ -6352,8 +6352,7 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut)
         return false;
 
     Directives newDirectives = directives;
-    AsmJSParseContext funpc(&m.parser(), outerpc, fn, funbox, &newDirectives,
-                            /* blockScopeDepth = */ 0);
+    AsmJSParseContext funpc(&m.parser(), outerpc, fn, funbox, &newDirectives);
     if (!funpc.init(m.parser()))
         return false;
 

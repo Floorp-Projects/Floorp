@@ -259,14 +259,13 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     bool            inDeclDestructuring:1;
 
     ParseContext(Parser<ParseHandler>* prs, GenericParseContext* parent,
-                 Node maybeFunction, SharedContext* sc, Directives* newDirectives,
-                 uint32_t blockScopeDepth)
+                 Node maybeFunction, SharedContext* sc, Directives* newDirectives)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
         stmtStack(prs->context),
         maybeFunction(maybeFunction),
         lastYieldOffset(NoYieldOffset),
-        blockScopeDepth(blockScopeDepth),
+        blockScopeDepth(0),
         blockNode(ParseHandler::null()),
         decls_(prs->context, prs->alloc),
         args_(prs->context),
