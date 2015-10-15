@@ -21,7 +21,7 @@ namespace image {
 
 // Constants.
 static const uint32_t ICOHEADERSIZE = 6;
-static const uint32_t BITMAPINFOSIZE = 40;
+static const uint32_t BITMAPINFOSIZE = bmp::InfoHeaderLength::WIN_ICO;
 
 // ----------------------------------------
 // Actual Data Processing
@@ -108,42 +108,6 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
   mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
 
   MOZ_ASSERT(HasError() || !mCurrentFrame || mCurrentFrame->IsImageComplete());
-}
-
-// Returns a buffer filled with the bitmap file header in little endian:
-// Signature 2 bytes 'BM'
-// FileSize      4 bytes File size in bytes
-// reserved      4 bytes unused (=0)
-// DataOffset    4 bytes File offset to Raster Data
-// Returns true if successful
-bool
-nsICODecoder::FillBitmapFileHeaderBuffer(int8_t* bfh)
-{
-  memset(bfh, 0, 14);
-  bfh[0] = 'B';
-  bfh[1] = 'M';
-  int32_t dataOffset = 0;
-  int32_t fileSize = 0;
-  dataOffset = bmp::FILE_HEADER_LENGTH + BITMAPINFOSIZE;
-
-  // The color table is present only if BPP is <= 8
-  if (mDirEntry.mBitCount <= 8) {
-    uint16_t numColors = GetNumColors();
-    if (numColors == (uint16_t)-1) {
-      return false;
-    }
-    dataOffset += 4 * numColors;
-    fileSize = dataOffset + GetRealWidth() * GetRealHeight();
-  } else {
-    fileSize = dataOffset + (mDirEntry.mBitCount * GetRealWidth() *
-                             GetRealHeight()) / 8;
-  }
-
-  NativeEndian::swapToLittleEndianInPlace(&fileSize, 1);
-  memcpy(bfh + 2, &fileSize, sizeof(fileSize));
-  NativeEndian::swapToLittleEndianInPlace(&dataOffset, 1);
-  memcpy(bfh + 10, &dataOffset, sizeof(dataOffset));
-  return true;
 }
 
 // A BMP inside of an ICO has *2 height because of the AND mask
@@ -389,19 +353,6 @@ nsICODecoder::SniffResource(const char* aData)
                                     ICOState::READ_PNG,
                                     toRead);
   } else {
-    // Create a BMP decoder which will do most of the work for us; the exception
-    // is the AND mask, which isn't present in standalone BMPs.
-    nsBMPDecoder* bmpDecoder = new nsBMPDecoder(mImage);
-    mContainedDecoder = bmpDecoder;
-    bmpDecoder->SetIsWithinICO();
-    mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
-    mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
-    mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
-    if (mDownscaler) {
-      mContainedDecoder->SetTargetSize(mDownscaler->TargetSize());
-    }
-    mContainedDecoder->Init();
-
     // Make sure we have a sane size for the bitmap information header.
     int32_t bihSize = ReadBIHSize(aData);
     if (bihSize != static_cast<int32_t>(BITMAPINFOSIZE)) {
@@ -444,17 +395,30 @@ nsICODecoder::ReadBIH(const char* aData)
   mBPP = ReadBPP(mBIHraw);
 
   // The ICO format when containing a BMP does not include the 14 byte
-  // bitmap file header. To use the code of the BMP decoder we need to
-  // generate this header ourselves and feed it to the BMP decoder.
-  int8_t bfhBuffer[BMPFILEHEADERSIZE];
-  if (!FillBitmapFileHeaderBuffer(bfhBuffer)) {
-    return Transition::Terminate(ICOState::FAILURE);
+  // bitmap file header. So we create the BMP decoder via the constructor that
+  // tells it to skip this, and pass in the required data (dataOffset) that
+  // would have been present in the header.
+  uint32_t dataOffset = bmp::FILE_HEADER_LENGTH + BITMAPINFOSIZE;
+  if (mDirEntry.mBitCount <= 8) {
+    // The color table is present only if BPP is <= 8.
+    uint16_t numColors = GetNumColors();
+    if (numColors == (uint16_t)-1) {
+      return Transition::Terminate(ICOState::FAILURE);
+    }
+    dataOffset += 4 * numColors;
   }
 
-  if (!WriteToContainedDecoder(reinterpret_cast<const char*>(bfhBuffer),
-                               sizeof(bfhBuffer))) {
-    return Transition::Terminate(ICOState::FAILURE);
+  // Create a BMP decoder which will do most of the work for us; the exception
+  // is the AND mask, which isn't present in standalone BMPs.
+  RefPtr<nsBMPDecoder> bmpDecoder = new nsBMPDecoder(mImage, dataOffset);
+  mContainedDecoder = bmpDecoder;
+  mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
+  mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
+  mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
+  if (mDownscaler) {
+    mContainedDecoder->SetTargetSize(mDownscaler->TargetSize());
   }
+  mContainedDecoder->Init();
 
   // Fix the ICO height from the BIH. It needs to be halved so our BMP decoder
   // will understand, because the BMP decoder doesn't expect the alpha mask that
@@ -477,8 +441,6 @@ nsICODecoder::ReadBIH(const char* aData)
   // contained resource over our own information.
   // XXX(seth): Is this ever different than the value we obtained from
   // ReadBPP() above?
-  RefPtr<nsBMPDecoder> bmpDecoder =
-    static_cast<nsBMPDecoder*>(mContainedDecoder.get());
   mBPP = bmpDecoder->GetBitsPerPixel();
 
   // Check to make sure we have valid color settings.

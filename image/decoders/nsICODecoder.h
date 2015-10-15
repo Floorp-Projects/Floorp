@@ -87,8 +87,6 @@ private:
   // Gets decoder state from the contained decoder so it's visible externally.
   void GetFinalStateFromContainedDecoder();
 
-  // Creates a bitmap file header buffer, returns true if successful
-  bool FillBitmapFileHeaderBuffer(int8_t* bfh);
   // Fixes the ICO height to match that of the BIH.
   // and also fixes the BIH height to be /2 of what it was.
   // See definition for explanation.
@@ -120,7 +118,7 @@ private:
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   RefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
   UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
-  char mBIHraw[40];                    // The bitmap information header.
+  char mBIHraw[bmp::InfoHeaderLength::WIN_ICO]; // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
   IntSize mBiggestResourceSize;        // Used to select the intrinsic size.
   IntSize mBiggestResourceHotSpot;     // Used to select the intrinsic size.

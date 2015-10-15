@@ -141,7 +141,8 @@ public:
   /// Obtains the size of the compressed image resource.
   int32_t GetCompressedImageSize() const;
 
-  /// Mark this BMP as being within an ICO file.
+  /// Mark this BMP as being within an ICO file. Only used for testing purposes
+  /// because the ICO-specific constructor does this marking automatically.
   void SetIsWithinICO() { mIsWithinICO = true; }
 
   /// Did the BMP file have alpha data of any kind? (Only use this after the
@@ -163,14 +164,6 @@ private:
   friend class DecoderFactory;
   friend class nsICODecoder;
 
-  // Decoders should only be instantiated via DecoderFactory.
-  // XXX(seth): nsICODecoder is temporarily an exception to this rule.
-  explicit nsBMPDecoder(RasterImage* aImage);
-
-  uint32_t* RowBuffer();
-
-  void FinishRow();
-
   enum class State {
     FILE_HEADER,
     INFO_HEADER_SIZE,
@@ -185,6 +178,21 @@ private:
     SUCCESS,
     FAILURE
   };
+
+  // This is the constructor used by DecoderFactory.
+  explicit nsBMPDecoder(RasterImage* aImage);
+
+  // This is the constructor used by nsICODecoder.
+  // XXX(seth): nsICODecoder is temporarily an exception to the rule that
+  //            decoders should only be instantiated via DecoderFactory.
+  nsBMPDecoder(RasterImage* aImage, uint32_t aDataOffset);
+
+  // Helper constructor called by the other two.
+  nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength);
+
+  uint32_t* RowBuffer();
+
+  void FinishRow();
 
   LexerTransition<State> ReadFileHeader(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderSize(const char* aData, size_t aLength);
