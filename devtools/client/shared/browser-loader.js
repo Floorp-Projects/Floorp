@@ -23,7 +23,7 @@ catch(e) {
   };
 }
 
-const VENDOR_CONTENT_URL = "resource:///modules/devtools/shared/vendor";
+const VENDOR_CONTENT_URL = "resource:///modules/devtools/client/shared/vendor";
 
 /*
  * Create a loader to be used in a browser environment. This evaluates
