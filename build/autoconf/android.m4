@@ -26,12 +26,6 @@ MOZ_ARG_WITH_STRING(android-cxx-stl,
     android_cxx_stl=$withval,
     android_cxx_stl=mozstlport)
 
-MOZ_ARG_ENABLE_BOOL(android-libstdcxx,
-[  --enable-android-libstdcxx
-                          use GNU libstdc++ instead of STLPort],
-    MOZ_ANDROID_LIBSTDCXX=1,
-    MOZ_ANDROID_LIBSTDCXX= )
-
 define([MIN_ANDROID_VERSION], [9])
 android_version=MIN_ANDROID_VERSION
 
@@ -268,7 +262,8 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     fi
     CXXFLAGS="$CXXFLAGS $STLPORT_CPPFLAGS"
 fi
-AC_SUBST([MOZ_ANDROID_LIBSTDCXX])
+MOZ_ANDROID_CXX_STL=$android_cxx_stl
+AC_SUBST([MOZ_ANDROID_CXX_STL])
 AC_SUBST([STLPORT_LIBS])
 
 ])
