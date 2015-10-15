@@ -426,7 +426,20 @@ nsDeviceContext::CreateRenderingContext()
     dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
     nsRefPtr<gfxContext> pContext = new gfxContext(dt);
-    pContext->SetMatrix(gfxMatrix::Scaling(mPrintingScale, mPrintingScale));
+
+    gfxMatrix transform;
+    if (printingSurface->GetRotateForLandscape()) {
+      // Rotate page 90 degrees to draw landscape page on portrait paper
+      IntSize size = printingSurface->GetSize();
+      transform.Translate(gfxPoint(0, size.width));
+      gfxMatrix rotate(0, -1,
+                       1,  0,
+                       0,  0);
+      transform = rotate * transform;
+    }
+    transform.Scale(mPrintingScale, mPrintingScale);
+
+    pContext->SetMatrix(transform);
     return pContext.forget();
 }
 
