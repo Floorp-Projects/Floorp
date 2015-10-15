@@ -223,13 +223,28 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
+
+  static already_AddRefed<DOMMediaStream>
+  Constructor(const dom::GlobalObject& aGlobal,
+              ErrorResult& aRv);
+
+  static already_AddRefed<DOMMediaStream>
+  Constructor(const dom::GlobalObject& aGlobal,
+              const DOMMediaStream& aStream,
+              ErrorResult& aRv);
+
+  static already_AddRefed<DOMMediaStream>
+  Constructor(const dom::GlobalObject& aGlobal,
+              const dom::Sequence<OwningNonNull<MediaStreamTrack>>& aTracks,
+              ErrorResult& aRv);
+
   double CurrentTime();
 
   void GetId(nsAString& aID) const;
 
-  void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
-  void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
-  void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
+  void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks) const;
+  void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks) const;
+  void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks) const;
   void AddTrack(MediaStreamTrack& aTrack);
   void RemoveTrack(MediaStreamTrack& aTrack);
 
@@ -357,20 +372,20 @@ public:
   void AssignId(const nsAString& aID) { mID = aID; }
 
   /**
-   * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
+   * Create a DOMMediaStream whose underlying input stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMMediaStream> CreateSourceStream(nsIDOMWindow* aWindow,
                                                              MediaStreamGraph* aGraph);
 
   /**
-   * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
+   * Create a DOMMediaStream whose underlying input stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                                                  MediaStreamGraph* aGraph);
 
   /**
-   * Create an nsDOMMediaStream whose underlying stream is an
-   * AudioCaptureStream
+   * Create an DOMMediaStream whose underlying input stream is an
+   * AudioCaptureStream.
    */
   static already_AddRefed<DOMMediaStream> CreateAudioCaptureStream(
     nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
@@ -424,7 +439,23 @@ protected:
   void InitSourceStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitTrackUnionStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitAudioCaptureStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
-  void InitStreamCommon(MediaStream* aStream, MediaStreamGraph* aGraph);
+
+  // Sets up aStream as mInputStream. A producer may append data to a
+  // SourceMediaStream input stream, or connect another stream to a
+  // TrackUnionStream input stream.
+  void InitInputStreamCommon(MediaStream* aStream, MediaStreamGraph* aGraph);
+
+  // Sets up a new TrackUnionStream as mOwnedStream and connects it to
+  // mInputStream with a TRACK_ANY MediaInputPort if available.
+  // If this DOMMediaStream should have an input stream (producing data),
+  // it has to be initiated before the owned stream.
+  void InitOwnedStreamCommon(MediaStreamGraph* aGraph);
+
+  // Sets up a new TrackUnionStream as mPlaybackStream and connects it to
+  // mOwnedStream with a TRACK_ANY MediaInputPort if available.
+  // If this DOMMediaStream should have an owned stream (producer or clone),
+  // it has to be initiated before the playback stream.
+  void InitPlaybackStreamCommon(MediaStreamGraph* aGraph);
 
   void CheckTracksAvailable();
 

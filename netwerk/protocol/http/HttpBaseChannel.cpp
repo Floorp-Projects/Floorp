@@ -722,13 +722,8 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
     contentLengthStr.AppendInt(aContentLength);
     SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr,
                      false);
-
-    if (aContentType.IsEmpty()) {
-      SetEmptyRequestHeader(NS_LITERAL_CSTRING("Content-Type"));
-    } else {
-      SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType,
-                       false);
-    }
+    SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType,
+                     false);
   }
 
   mUploadStreamHasHeaders = aStreamHasHeaders;

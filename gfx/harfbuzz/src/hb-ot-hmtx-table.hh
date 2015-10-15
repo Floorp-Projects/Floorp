@@ -62,7 +62,7 @@ struct _mtx
     TRACE_SANITIZE (this);
     /* We don't check for anything specific here.  The users of the
      * struct do all the hard work... */
-    return TRACE_RETURN (true);
+    return_trace (true);
   }
 
   public:

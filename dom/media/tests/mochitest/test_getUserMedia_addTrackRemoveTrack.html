@@ -105,16 +105,6 @@
     .then(() => {
       var ac = new AudioContext();
 
-      function createOscillatorStream(ac, frequency) {
-        var osc = ac.createOscillator();
-        osc.frequency.value = frequency;
-
-        var oscDest = ac.createMediaStreamDestination();
-        osc.connect(oscDest);
-        osc.start();
-        return oscDest.stream;
-      }
-
       var osc1k = createOscillatorStream(ac, 1000);
       var audioTrack1k = osc1k.getTracks()[0];
 

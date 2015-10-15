@@ -2252,13 +2252,17 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
 #ifndef XP_MACOSX
     case nsIDOMKeyEvent::DOM_VK_F10:
 #endif
-      // close popups or deactivate menubar when Tab or F10 are pressed
-      if (aTopVisibleMenuItem) {
+      if (aTopVisibleMenuItem &&
+          !aTopVisibleMenuItem->Frame()->GetContent()->AttrValueIs(kNameSpaceID_None,
+           nsGkAtoms::activateontab, nsGkAtoms::_true, eCaseMatters)) {
+        // close popups or deactivate menubar when Tab or F10 are pressed
         Rollup(0, false, nullptr, nullptr);
+        break;
       } else if (mActiveMenuBar) {
         mActiveMenuBar->MenuClosed();
+        break;
       }
-      break;
+      // Intentional fall-through to RETURN case
 
     case nsIDOMKeyEvent::DOM_VK_RETURN: {
       // If there is a popup open, check if the current item needs to be opened.
