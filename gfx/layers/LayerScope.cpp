@@ -979,7 +979,9 @@ SenderHelper::SendLayer(LayerComposite* aLayer,
         case Layer::TYPE_COLOR: {
             EffectChain effect;
             aLayer->GenEffectChain(effect);
-            SenderHelper::SendEffectChain(nullptr, effect, aWidth, aHeight);
+
+            LayerScope::DrawBegin();
+            LayerScope::DrawEnd(nullptr, effect, aWidth, aHeight);
             break;
         }
         case Layer::TYPE_IMAGE:
@@ -995,7 +997,9 @@ SenderHelper::SendLayer(LayerComposite* aLayer,
                 // Generate primary effect (lock and gen)
                 AutoLockCompositableHost lock(compHost);
                 aLayer->GenEffectChain(effect);
-                SenderHelper::SendEffectChain(compOGL->gl(), effect);
+
+                LayerScope::DrawBegin();
+                LayerScope::DrawEnd(compOGL->gl(), effect, aWidth, aHeight);
             }
             break;
         }
@@ -1172,6 +1176,12 @@ SenderHelper::SendEffectChain(GLContext* aGLContext,
     if (!sLayersBufferSendable) return;
 
     const Effect* primaryEffect = aEffectChain.mPrimaryEffect;
+    MOZ_ASSERT(primaryEffect);
+
+    if (!primaryEffect) {
+      return;
+    }
+
     switch (primaryEffect->mType) {
         case EffectTypes::RGB: {
             const TexturedEffect* texturedEffect =
