@@ -41,6 +41,7 @@ class GetVariableTraverser : angle::NonCopyable
 {
   public:
     GetVariableTraverser(const TSymbolTable &symbolTable);
+    virtual ~GetVariableTraverser() {}
 
     template <typename VarT>
     void traverse(const TType &type, const TString &name, std::vector<VarT> *output);

@@ -8,20 +8,39 @@
 
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 
-#include <sstream>
 #include <EGL/eglext.h>
+#include <sstream>
 
-#include "common/utilities.h"
 #include "common/tls.h"
+#include "common/utilities.h"
 #include "libANGLE/Buffer.h"
 #include "libANGLE/Display.h"
+#include "libANGLE/formatutils.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
-#include "libANGLE/Program.h"
-#include "libANGLE/State.h"
-#include "libANGLE/Surface.h"
-#include "libANGLE/formatutils.h"
 #include "libANGLE/histogram_macros.h"
+#include "libANGLE/Program.h"
+#include "libANGLE/renderer/d3d/CompilerD3D.h"
+#include "libANGLE/renderer/d3d/d3d11/Blit11.h"
+#include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
+#include "libANGLE/renderer/d3d/d3d11/Clear11.h"
+#include "libANGLE/renderer/d3d/d3d11/dxgi_support_table.h"
+#include "libANGLE/renderer/d3d/d3d11/Fence11.h"
+#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
+#include "libANGLE/renderer/d3d/d3d11/Framebuffer11.h"
+#include "libANGLE/renderer/d3d/d3d11/Image11.h"
+#include "libANGLE/renderer/d3d/d3d11/IndexBuffer11.h"
+#include "libANGLE/renderer/d3d/d3d11/PixelTransfer11.h"
+#include "libANGLE/renderer/d3d/d3d11/Query11.h"
+#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
+#include "libANGLE/renderer/d3d/d3d11/ShaderExecutable11.h"
+#include "libANGLE/renderer/d3d/d3d11/SwapChain11.h"
+#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
+#include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
+#include "libANGLE/renderer/d3d/d3d11/Trim11.h"
+#include "libANGLE/renderer/d3d/d3d11/VertexArray11.h"
+#include "libANGLE/renderer/d3d/d3d11/VertexBuffer11.h"
 #include "libANGLE/renderer/d3d/FramebufferD3D.h"
 #include "libANGLE/renderer/d3d/IndexDataManager.h"
 #include "libANGLE/renderer/d3d/ProgramD3D.h"
@@ -31,25 +50,9 @@
 #include "libANGLE/renderer/d3d/TextureD3D.h"
 #include "libANGLE/renderer/d3d/TransformFeedbackD3D.h"
 #include "libANGLE/renderer/d3d/VertexDataManager.h"
-#include "libANGLE/renderer/d3d/d3d11/Blit11.h"
-#include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
-#include "libANGLE/renderer/d3d/d3d11/Clear11.h"
-#include "libANGLE/renderer/d3d/d3d11/Fence11.h"
-#include "libANGLE/renderer/d3d/d3d11/Framebuffer11.h"
-#include "libANGLE/renderer/d3d/d3d11/Image11.h"
-#include "libANGLE/renderer/d3d/d3d11/IndexBuffer11.h"
-#include "libANGLE/renderer/d3d/d3d11/PixelTransfer11.h"
-#include "libANGLE/renderer/d3d/d3d11/Query11.h"
-#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
-#include "libANGLE/renderer/d3d/d3d11/ShaderExecutable11.h"
-#include "libANGLE/renderer/d3d/d3d11/SwapChain11.h"
-#include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
-#include "libANGLE/renderer/d3d/d3d11/Trim11.h"
-#include "libANGLE/renderer/d3d/d3d11/VertexArray11.h"
-#include "libANGLE/renderer/d3d/d3d11/VertexBuffer11.h"
-#include "libANGLE/renderer/d3d/d3d11/dxgi_support_table.h"
-#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/State.h"
+#include "libANGLE/Surface.h"
+#include "third_party/trace_event/trace_event.h"
 
 // Include the D3D9 debug annotator header for use by the desktop D3D11 renderer
 // because the D3D11 interface method ID3DUserDefinedAnnotation::GetStatus
@@ -57,8 +60,6 @@
 #ifdef ANGLE_ENABLE_D3D9
 #include "libANGLE/renderer/d3d/d3d9/DebugAnnotator9.h"
 #endif
-
-#include "third_party/trace_event/trace_event.h"
 
 // Enable ANGLE_SKIP_DXGI_1_2_CHECK if there is not a possibility of using cross-process
 // HWNDs or the Windows 7 Platform Update (KB2670838) is expected to be installed.
@@ -1007,13 +1008,14 @@ gl::Error Renderer11::setUniformBuffers(const gl::Data &data,
             continue;
         }
 
-        gl::Buffer *uniformBuffer = data.state->getIndexedUniformBuffer(binding);
-        GLintptr uniformBufferOffset = data.state->getIndexedUniformBufferOffset(binding);
-        GLsizeiptr uniformBufferSize = data.state->getIndexedUniformBufferSize(binding);
+        const OffsetBindingPointer<gl::Buffer> &uniformBuffer =
+            data.state->getIndexedUniformBuffer(binding);
+        GLintptr uniformBufferOffset = uniformBuffer.getOffset();
+        GLsizeiptr uniformBufferSize = uniformBuffer.getSize();
 
-        if (uniformBuffer)
+        if (uniformBuffer.get() != nullptr)
         {
-            Buffer11 *bufferStorage = GetImplAs<Buffer11>(uniformBuffer);
+            Buffer11 *bufferStorage = GetImplAs<Buffer11>(uniformBuffer.get());
             ID3D11Buffer *constantBuffer;
 
             if (mRenderer11DeviceCaps.supportsConstantBufferOffsets)
@@ -1067,13 +1069,14 @@ gl::Error Renderer11::setUniformBuffers(const gl::Data &data,
             continue;
         }
 
-        gl::Buffer *uniformBuffer = data.state->getIndexedUniformBuffer(binding);
-        GLintptr uniformBufferOffset = data.state->getIndexedUniformBufferOffset(binding);
-        GLsizeiptr uniformBufferSize = data.state->getIndexedUniformBufferSize(binding);
+        const OffsetBindingPointer<gl::Buffer> &uniformBuffer =
+            data.state->getIndexedUniformBuffer(binding);
+        GLintptr uniformBufferOffset = uniformBuffer.getOffset();
+        GLsizeiptr uniformBufferSize = uniformBuffer.getSize();
 
-        if (uniformBuffer)
+        if (uniformBuffer.get() != nullptr)
         {
-            Buffer11 *bufferStorage = GetImplAs<Buffer11>(uniformBuffer);
+            Buffer11 *bufferStorage = GetImplAs<Buffer11>(uniformBuffer.get());
             ID3D11Buffer *constantBuffer;
 
             if (mRenderer11DeviceCaps.supportsConstantBufferOffsets)

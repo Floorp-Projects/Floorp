@@ -686,7 +686,8 @@ void GL_APIENTRY BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint sr
         Rectangle srcArea(srcX0, srcY0, srcX1 - srcX0, srcY1 - srcY0);
         Rectangle dstArea(dstX0, dstY0, dstX1 - dstX0, dstY1 - dstY0);
 
-        Error error = drawFramebuffer->blit(context->getState(), srcArea, dstArea, mask, filter, readFramebuffer);
+        Error error =
+            drawFramebuffer->blit(context, srcArea, dstArea, mask, filter, readFramebuffer);
         if (error.isError())
         {
             context->recordError(error);

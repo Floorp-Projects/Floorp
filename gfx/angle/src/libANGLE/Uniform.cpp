@@ -121,13 +121,7 @@ const uint8_t *LinkedUniform::getDataPtrToElement(size_t elementIndex) const
 }
 
 UniformBlock::UniformBlock()
-    : isArray(false),
-      arrayElement(0),
-      dataSize(0),
-      vertexStaticUse(false),
-      fragmentStaticUse(false),
-      psRegisterIndex(GL_INVALID_INDEX),
-      vsRegisterIndex(GL_INVALID_INDEX)
+    : isArray(false), arrayElement(0), dataSize(0), vertexStaticUse(false), fragmentStaticUse(false)
 {
 }
 
@@ -137,10 +131,19 @@ UniformBlock::UniformBlock(const std::string &nameIn, bool isArrayIn, unsigned i
       arrayElement(arrayElementIn),
       dataSize(0),
       vertexStaticUse(false),
-      fragmentStaticUse(false),
-      psRegisterIndex(GL_INVALID_INDEX),
-      vsRegisterIndex(GL_INVALID_INDEX)
+      fragmentStaticUse(false)
 {
 }
 
+std::string UniformBlock::nameWithArrayIndex() const
+{
+    std::stringstream fullNameStr;
+    fullNameStr << name;
+    if (isArray)
+    {
+        fullNameStr << "[" << arrayElement << "]";
+    }
+
+    return fullNameStr.str();
+}
 }

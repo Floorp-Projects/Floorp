@@ -283,6 +283,13 @@ TEST_F(EGLSurfaceTest, MessageLoopBugContext)
 // Test a bug where calling makeCurrent twice would release the surface
 TEST_F(EGLSurfaceTest, MakeCurrentTwice)
 {
+#if defined(ANGLE_PLATFORM_APPLE) && !defined(ANGLE_STANDALONE_BUILD)
+    // TODO(cwallez) Make context creation return at least an OpenGL ES 2 context on
+    // the Mac trybots.
+    std::cout << "Test skipped temporarily skipped on the Mac trybots" << std::endl;
+    return;
+#endif
+
     initializeDisplay(EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE);
     initializeSurfaceWithDefaultConfig();
 

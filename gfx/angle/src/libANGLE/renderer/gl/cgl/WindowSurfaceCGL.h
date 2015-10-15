@@ -22,6 +22,7 @@ class DisplayCGL;
 class FramebufferGL;
 class FunctionsGL;
 class StateManagerGL;
+struct WorkaroundsGL;
 
 class DisplayLink;
 
@@ -63,6 +64,7 @@ class WindowSurfaceCGL : public SurfaceGL
     CALayer *mLayer;
     const FunctionsGL *mFunctions;
     StateManagerGL *mStateManager;
+    const WorkaroundsGL &mWorkarounds;
     DisplayLink *mDisplayLink;
 
     // CGL doesn't have a default framebuffer, we instead render to an IOSurface

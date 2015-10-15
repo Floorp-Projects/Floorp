@@ -125,6 +125,8 @@ std::string Diagnostics::message(ID id)
         return "unrecognized pragma";
       case PP_NON_PP_TOKEN_BEFORE_EXTENSION_ESSL1:
         return "extension directive should occur before any non-preprocessor tokens";
+      case PP_WARNING_MACRO_NAME_RESERVED:
+        return "macro name with a double underscore is reserved - unintented behavior is possible";
       // Warnings end.
       default:
         assert(false);

@@ -22,7 +22,7 @@
 
 #if (DE_OS == DE_OS_WIN32)
 #include <Windows.h>
-#elif (DE_OS == DE_OS_UNIX)
+#elif (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_OSX)
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -66,7 +66,7 @@ deBool deIsDir(const char *filename)
 
     return false;
 }
-#elif (DE_OS == DE_OS_UNIX)
+#elif (DE_OS == DE_OS_UNIX) || (DE_OS == DE_OS_OSX)
 deBool deIsDir(const char *filename)
 {
     struct stat st;

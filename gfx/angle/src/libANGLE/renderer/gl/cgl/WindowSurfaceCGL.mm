@@ -145,6 +145,7 @@ WindowSurfaceCGL::WindowSurfaceCGL(RendererGL *renderer,
       mLayer(layer),
       mFunctions(functions),
       mStateManager(renderer->getStateManager()),
+      mWorkarounds(renderer->getWorkarounds()),
       mDisplayLink(nullptr),
       mCurrentSurface(0),
       mFramebuffer(0),
@@ -342,7 +343,7 @@ EGLint WindowSurfaceCGL::getSwapBehavior() const
 FramebufferImpl *WindowSurfaceCGL::createDefaultFramebuffer(const gl::Framebuffer::Data &data)
 {
     // TODO(cwallez) assert it happens only once?
-    return new FramebufferGL(mFramebuffer, data, mFunctions, mStateManager);
+    return new FramebufferGL(mFramebuffer, data, mFunctions, mWorkarounds, mStateManager);
 }
 
 void WindowSurfaceCGL::freeSurfaceData(Surface *surface)

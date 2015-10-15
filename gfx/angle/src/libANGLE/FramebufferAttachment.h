@@ -146,6 +146,7 @@ class FramebufferAttachmentObject
 {
   public:
     FramebufferAttachmentObject() {}
+    virtual ~FramebufferAttachmentObject() {}
 
     virtual GLsizei getAttachmentWidth(const FramebufferAttachment::Target &target) const = 0;
     virtual GLsizei getAttachmentHeight(const FramebufferAttachment::Target &target) const = 0;

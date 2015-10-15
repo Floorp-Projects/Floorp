@@ -10,23 +10,25 @@
 //
 
 #include "libANGLE/renderer/d3d/d3d11/PixelTransfer11.h"
-#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
-#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
-#include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
-#include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
-#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
-#include "libANGLE/formatutils.h"
-#include "libANGLE/Texture.h"
+
 #include "libANGLE/Buffer.h"
 #include "libANGLE/Context.h"
+#include "libANGLE/formatutils.h"
+#include "libANGLE/renderer/d3d/d3d11/Buffer11.h"
+#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
+#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
+#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
+#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
+#include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
+#include "libANGLE/Texture.h"
 
 // Precompiled shaders
-#include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_vs.h"
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_gs.h"
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_ps_4f.h"
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_ps_4i.h"
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_ps_4ui.h"
+#include "libANGLE/renderer/d3d/d3d11/shaders/compiled/buffertotexture11_vs.h"
 
 namespace rx
 {

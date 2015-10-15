@@ -7,17 +7,18 @@
 // Image11.h: Implements the rx::Image11 class, which acts as the interface to
 // the actual underlying resources of a Texture
 
-#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "libANGLE/renderer/d3d/d3d11/Image11.h"
-#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
-#include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
-#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
-#include "libANGLE/Framebuffer.h"
-#include "libANGLE/FramebufferAttachment.h"
-#include "libANGLE/formatutils.h"
 
 #include "common/utilities.h"
+#include "libANGLE/formatutils.h"
+#include "libANGLE/Framebuffer.h"
+#include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
+#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
+#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
+#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
+#include "libANGLE/renderer/d3d/d3d11/TextureStorage11.h"
 
 namespace rx
 {
@@ -246,7 +247,10 @@ gl::Error Image11::loadData(const gl::Box &area, const gl::PixelUnpackState &unp
 {
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch = formatInfo.computeRowPitch(type, area.width, unpack.alignment, unpack.rowLength);
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(type, area.width, area.height, unpack.alignment, unpack.rowLength);
+    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(
+        type, area.width, area.height, unpack.alignment, unpack.rowLength, unpack.imageHeight);
+    GLsizei inputSkipBytes = formatInfo.computeSkipPixels(
+        inputRowPitch, inputDepthPitch, unpack.skipImages, unpack.skipRows, unpack.skipPixels);
 
     const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(mDXGIFormat);
     GLuint outputPixelSize = dxgiFormatInfo.pixelBytes;
@@ -263,8 +267,8 @@ gl::Error Image11::loadData(const gl::Box &area, const gl::PixelUnpackState &unp
 
     uint8_t *offsetMappedData = (reinterpret_cast<uint8_t*>(mappedImage.pData) + (area.y * mappedImage.RowPitch + area.x * outputPixelSize + area.z * mappedImage.DepthPitch));
     loadFunction(area.width, area.height, area.depth,
-                 reinterpret_cast<const uint8_t*>(input), inputRowPitch, inputDepthPitch,
-                 offsetMappedData, mappedImage.RowPitch, mappedImage.DepthPitch);
+                 reinterpret_cast<const uint8_t *>(input) + inputSkipBytes, inputRowPitch,
+                 inputDepthPitch, offsetMappedData, mappedImage.RowPitch, mappedImage.DepthPitch);
 
     unmap();
 
@@ -275,7 +279,8 @@ gl::Error Image11::loadCompressedData(const gl::Box &area, const void *input)
 {
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(mInternalFormat);
     GLsizei inputRowPitch = formatInfo.computeRowPitch(GL_UNSIGNED_BYTE, area.width, 1, 0);
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0);
+    GLsizei inputDepthPitch =
+        formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0, 0);
 
     const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(mDXGIFormat);
     GLuint outputPixelSize = dxgiFormatInfo.pixelBytes;

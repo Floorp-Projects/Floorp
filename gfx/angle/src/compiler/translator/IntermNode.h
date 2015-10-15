@@ -894,7 +894,7 @@ class TLValueTrackingTraverser : public TIntermTraverser
     bool operatorRequiresLValue() const { return mOperatorRequiresLValue; }
 
     // Add a function encountered during traversal to the function map.
-    void addToFunctionMap(const TString &name, TIntermSequence *paramSequence);
+    void addToFunctionMap(const TName &name, TIntermSequence *paramSequence);
 
     // Return the parameters sequence from the function definition or prototype.
     TIntermSequence *getFunctionParameters(const TIntermAggregate *callNode);
@@ -906,13 +906,20 @@ class TLValueTrackingTraverser : public TIntermTraverser
     bool mOperatorRequiresLValue;
     bool mInFunctionCallOutParameter;
 
-    struct TStringComparator
+    struct TNameComparator
     {
-        bool operator()(const TString &a, const TString &b) const { return a.compare(b) < 0; }
+        bool operator()(const TName &a, const TName &b) const
+        {
+            int compareResult = a.getString().compare(b.getString());
+            if (compareResult != 0)
+                return compareResult < 0;
+            // Internal functions may have same names as non-internal functions.
+            return !a.isInternal() && b.isInternal();
+        }
     };
 
     // Map from mangled function names to their parameter sequences
-    TMap<TString, TIntermSequence *, TStringComparator> mFunctionMap;
+    TMap<TName, TIntermSequence *, TNameComparator> mFunctionMap;
 
     const TSymbolTable &mSymbolTable;
     const int mShaderVersion;

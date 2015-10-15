@@ -557,6 +557,30 @@ TEST_F(CollectFragmentVariablesTest, OutputVarESSL1FragDepthHighp)
     EXPECT_GLENUM_EQ(GL_FLOAT, outputVariable->type);
     EXPECT_GLENUM_EQ(GL_HIGH_FLOAT, outputVariable->precision);
 }
+
+// Test that gl_FragData built-in usage in ESSL3 fragment shader is reflected in the output
+// variables list. Also test that the precision is highp.
+TEST_F(CollectFragmentVariablesTest, OutputVarESSL3FragDepthHighp)
+{
+    const std::string &fragDepthHighShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "void main() {\n"
+        "   gl_FragDepth = 0.7;"
+        "}\n";
+
+    ShBuiltInResources resources = mTranslator->getResources();
+    resources.EXT_frag_depth = 1;
+    initTranslator(resources);
+
+    const sh::OutputVariable *outputVariable = nullptr;
+    validateOutputVariableForShader(fragDepthHighShader, 0u, "gl_FragDepth", &outputVariable);
+    ASSERT_NE(outputVariable, nullptr);
+    EXPECT_EQ(0u, outputVariable->arraySize);
+    EXPECT_GLENUM_EQ(GL_FLOAT, outputVariable->type);
+    EXPECT_GLENUM_EQ(GL_HIGH_FLOAT, outputVariable->precision);
+}
+
 // Test that gl_SecondaryFragColorEXT built-in usage in ESSL1 fragment shader is reflected in the
 // output variables list.
 TEST_F(CollectFragmentVariablesTest, OutputVarESSL1EXTBlendFuncExtendedSecondaryFragColor)

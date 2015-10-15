@@ -250,17 +250,15 @@ gl::Error FramebufferD3D::readPixels(const gl::State &state, const gl::Rectangle
 {
     const gl::PixelPackState &packState = state.getPackState();
 
-    if (packState.rowLength != 0 || packState.skipRows != 0 || packState.skipPixels != 0)
-    {
-        UNIMPLEMENTED();
-        return gl::Error(GL_INVALID_OPERATION, "invalid pixel store parameters in readPixels");
-    }
-
     GLenum sizedInternalFormat = gl::GetSizedInternalFormat(format, type);
     const gl::InternalFormat &sizedFormatInfo = gl::GetInternalFormatInfo(sizedInternalFormat);
-    GLuint outputPitch = sizedFormatInfo.computeRowPitch(type, area.width, packState.alignment, 0);
+    GLuint outputPitch =
+        sizedFormatInfo.computeRowPitch(type, area.width, packState.alignment, packState.rowLength);
+    GLsizei outputSkipBytes = sizedFormatInfo.computeSkipPixels(
+        outputPitch, 0, 0, packState.skipRows, packState.skipPixels);
 
-    return readPixels(area, format, type, outputPitch, packState, reinterpret_cast<uint8_t*>(pixels));
+    return readPixelsImpl(area, format, type, outputPitch, packState,
+                          reinterpret_cast<uint8_t *>(pixels) + outputSkipBytes);
 }
 
 gl::Error FramebufferD3D::blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,

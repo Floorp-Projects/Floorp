@@ -22,7 +22,7 @@ class CompilerGL : public CompilerImpl
     ~CompilerGL() override {}
 
     gl::Error release() override { return gl::Error(GL_NO_ERROR); }
-    ShShaderOutput getTranslatorOutputType() const { return mTranslatorOutputType; }
+    ShShaderOutput getTranslatorOutputType() const override { return mTranslatorOutputType; }
 
   private:
     ShShaderOutput mTranslatorOutputType;

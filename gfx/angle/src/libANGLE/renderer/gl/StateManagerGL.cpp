@@ -12,23 +12,39 @@
 #include "libANGLE/Data.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/VertexArray.h"
+#include "libANGLE/Query.h"
 #include "libANGLE/renderer/gl/BufferGL.h"
 #include "libANGLE/renderer/gl/FramebufferGL.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
 #include "libANGLE/renderer/gl/ProgramGL.h"
+#include "libANGLE/renderer/gl/SamplerGL.h"
 #include "libANGLE/renderer/gl/TextureGL.h"
 #include "libANGLE/renderer/gl/VertexArrayGL.h"
+#include "libANGLE/renderer/gl/QueryGL.h"
 
 namespace rx
 {
+
+static const GLenum QueryTypes[] = {GL_ANY_SAMPLES_PASSED, GL_ANY_SAMPLES_PASSED_CONSERVATIVE,
+                                    GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN};
+
+StateManagerGL::IndexedBufferBinding::IndexedBufferBinding() : offset(0), size(0), buffer(0)
+{
+}
+
 StateManagerGL::StateManagerGL(const FunctionsGL *functions, const gl::Caps &rendererCaps)
     : mFunctions(functions),
       mProgram(0),
       mVAO(0),
       mVertexAttribCurrentValues(rendererCaps.maxVertexAttributes),
       mBuffers(),
+      mIndexedBuffers(),
       mTextureUnitIndex(0),
       mTextures(),
+      mSamplers(rendererCaps.maxCombinedTextureImageUnits, 0),
+      mQueries(),
+      mPrevDrawQueries(),
+      mPrevDrawContext(0),
       mUnpackAlignment(4),
       mUnpackRowLength(0),
       mUnpackSkipRows(0),
@@ -90,6 +106,7 @@ StateManagerGL::StateManagerGL(const FunctionsGL *functions, const gl::Caps &ren
       mClearColor(0.0f, 0.0f, 0.0f, 0.0f),
       mClearDepth(1.0f),
       mClearStencil(0),
+      mFramebufferSRGBEnabled(false),
       mTextureCubemapSeamlessEnabled(false),
       mLocalDirtyBits()
 {
@@ -99,6 +116,13 @@ StateManagerGL::StateManagerGL(const FunctionsGL *functions, const gl::Caps &ren
     mTextures[GL_TEXTURE_CUBE_MAP].resize(rendererCaps.maxCombinedTextureImageUnits);
     mTextures[GL_TEXTURE_2D_ARRAY].resize(rendererCaps.maxCombinedTextureImageUnits);
     mTextures[GL_TEXTURE_3D].resize(rendererCaps.maxCombinedTextureImageUnits);
+
+    mIndexedBuffers[GL_UNIFORM_BUFFER].resize(rendererCaps.maxCombinedUniformBlocks);
+
+    for (GLenum queryType : QueryTypes)
+    {
+        mQueries[queryType] = 0;
+    }
 
     // Initialize point sprite state for desktop GL
     if (mFunctions->standard == STANDARD_GL_DESKTOP)
@@ -161,6 +185,23 @@ void StateManagerGL::deleteTexture(GLuint texture)
         mFunctions->deleteTextures(1, &texture);
     }
 }
+
+void StateManagerGL::deleteSampler(GLuint sampler)
+{
+    if (sampler != 0)
+    {
+        for (size_t unit = 0; unit < mSamplers.size(); unit++)
+        {
+            if (mSamplers[unit] == sampler)
+            {
+                bindSampler(unit, 0);
+            }
+        }
+
+        mFunctions->deleteSamplers(1, &sampler);
+    }
+}
+
 void StateManagerGL::deleteBuffer(GLuint buffer)
 {
     if (buffer != 0)
@@ -170,6 +211,17 @@ void StateManagerGL::deleteBuffer(GLuint buffer)
             if (bufferTypeIter.second == buffer)
             {
                 bindBuffer(bufferTypeIter.first, 0);
+            }
+        }
+
+        for (const auto &bufferTypeIter : mIndexedBuffers)
+        {
+            for (size_t bindIndex = 0; bindIndex < bufferTypeIter.second.size(); bindIndex++)
+            {
+                if (bufferTypeIter.second[bindIndex].buffer == buffer)
+                {
+                    bindBufferBase(bufferTypeIter.first, bindIndex, 0);
+                }
             }
         }
 
@@ -207,6 +259,22 @@ void StateManagerGL::deleteRenderbuffer(GLuint rbo)
     }
 }
 
+void StateManagerGL::deleteQuery(GLuint query)
+{
+    if (query != 0)
+    {
+        for (auto &activeQuery : mQueries)
+        {
+            GLuint activeQueryID = activeQuery.second;
+            if (activeQueryID == query)
+            {
+                GLenum type = activeQuery.first;
+                endQuery(type, query);
+            }
+        }
+    }
+}
+
 void StateManagerGL::useProgram(GLuint program)
 {
     if (mProgram != program)
@@ -235,6 +303,35 @@ void StateManagerGL::bindBuffer(GLenum type, GLuint buffer)
     }
 }
 
+void StateManagerGL::bindBufferBase(GLenum type, size_t index, GLuint buffer)
+{
+    auto &binding = mIndexedBuffers[type][index];
+    if (binding.buffer != buffer || binding.offset != static_cast<size_t>(-1) ||
+        binding.size != static_cast<size_t>(-1))
+    {
+        binding.buffer = buffer;
+        binding.offset = static_cast<size_t>(-1);
+        binding.size = static_cast<size_t>(-1);
+        mFunctions->bindBufferBase(type, static_cast<GLuint>(index), buffer);
+    }
+}
+
+void StateManagerGL::bindBufferRange(GLenum type,
+                                     size_t index,
+                                     GLuint buffer,
+                                     size_t offset,
+                                     size_t size)
+{
+    auto &binding = mIndexedBuffers[type][index];
+    if (binding.buffer != buffer || binding.offset != offset || binding.size != size)
+    {
+        binding.buffer = buffer;
+        binding.offset = offset;
+        binding.size = size;
+        mFunctions->bindBufferRange(type, static_cast<GLuint>(index), buffer, offset, size);
+    }
+}
+
 void StateManagerGL::activeTexture(size_t unit)
 {
     if (mTextureUnitIndex != unit)
@@ -250,6 +347,15 @@ void StateManagerGL::bindTexture(GLenum type, GLuint texture)
     {
         mTextures[type][mTextureUnitIndex] = texture;
         mFunctions->bindTexture(type, texture);
+    }
+}
+
+void StateManagerGL::bindSampler(size_t unit, GLuint sampler)
+{
+    if (mSamplers[unit] != sampler)
+    {
+        mSamplers[unit] = sampler;
+        mFunctions->bindSampler(static_cast<GLuint>(unit), sampler);
     }
 }
 
@@ -410,6 +516,29 @@ void StateManagerGL::bindRenderbuffer(GLenum type, GLuint renderbuffer)
     }
 }
 
+void StateManagerGL::beginQuery(GLenum type, GLuint query)
+{
+    // Make sure this is a valid query type and there is no current active query of this type
+    ASSERT(mQueries.find(type) != mQueries.end());
+    ASSERT(mQueries[type] == 0);
+    ASSERT(query != 0);
+
+    mQueries[type] = query;
+    mFunctions->beginQuery(type, query);
+}
+
+void StateManagerGL::endQuery(GLenum type, GLuint query)
+{
+    ASSERT(mQueries[type] == query);
+    mQueries[type] = 0;
+    mFunctions->endQuery(type);
+}
+
+void StateManagerGL::onDeleteQueryObject(QueryGL *query)
+{
+    mPrevDrawQueries.erase(query);
+}
+
 gl::Error StateManagerGL::setDrawArraysState(const gl::Data &data,
                                              GLint first,
                                              GLsizei count,
@@ -469,6 +598,29 @@ gl::Error StateManagerGL::setGenericDrawState(const gl::Data &data)
     const ProgramGL *programGL = GetImplAs<ProgramGL>(program);
     useProgram(programGL->getProgramID());
 
+    for (size_t uniformBlockIndex = 0; uniformBlockIndex < program->getActiveUniformBlockCount();
+         uniformBlockIndex++)
+    {
+        GLuint binding = program->getUniformBlockBinding(static_cast<GLuint>(uniformBlockIndex));
+        const OffsetBindingPointer<gl::Buffer> &uniformBuffer =
+            data.state->getIndexedUniformBuffer(binding);
+
+        if (uniformBuffer.get() != nullptr)
+        {
+            BufferGL *bufferGL = GetImplAs<BufferGL>(uniformBuffer.get());
+
+            if (uniformBuffer.getSize() == 0)
+            {
+                bindBufferBase(GL_UNIFORM_BUFFER, binding, bufferGL->getBufferID());
+            }
+            else
+            {
+                bindBufferRange(GL_UNIFORM_BUFFER, binding, bufferGL->getBufferID(),
+                                uniformBuffer.getOffset(), uniformBuffer.getSize());
+            }
+        }
+    }
+
     const std::vector<SamplerBindingGL> &appliedSamplerUniforms = programGL->getAppliedSamplerUniforms();
     for (const SamplerBindingGL &samplerUniform : appliedSamplerUniforms)
     {
@@ -487,8 +639,6 @@ gl::Error StateManagerGL::setGenericDrawState(const gl::Data &data)
                 }
 
                 textureGL->syncState(textureUnitIndex, texture->getTextureState());
-
-                // TODO: apply sampler object if one is bound
             }
             else
             {
@@ -498,15 +648,53 @@ gl::Error StateManagerGL::setGenericDrawState(const gl::Data &data)
                     bindTexture(textureType, 0);
                 }
             }
+
+            const gl::Sampler *sampler = state.getSampler(textureUnitIndex);
+            if (sampler != nullptr)
+            {
+                const SamplerGL *samplerGL = GetImplAs<SamplerGL>(sampler);
+                samplerGL->syncState(sampler->getSamplerState());
+                bindSampler(textureUnitIndex, samplerGL->getSamplerID());
+            }
+            else
+            {
+                bindSampler(textureUnitIndex, 0);
+            }
         }
     }
 
     const gl::Framebuffer *framebuffer = state.getDrawFramebuffer();
     const FramebufferGL *framebufferGL = GetImplAs<FramebufferGL>(framebuffer);
     bindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferGL->getFramebufferID());
+    framebufferGL->syncDrawState();
 
     // Seamless cubemaps are required for ES3 and higher contexts.
     setTextureCubemapSeamlessEnabled(data.clientVersion >= 3);
+
+    // If the context has changed, pause the previous context's queries
+    if (data.context != mPrevDrawContext)
+    {
+        for (QueryGL *prevQuery : mPrevDrawQueries)
+        {
+            prevQuery->pause();
+        }
+    }
+    mPrevDrawQueries.clear();
+
+    mPrevDrawContext = data.context;
+
+    // Set the current query state
+    for (GLenum queryType : QueryTypes)
+    {
+        gl::Query *query = state.getActiveQuery(queryType);
+        if (query != nullptr)
+        {
+            QueryGL *queryGL = GetImplAs<QueryGL>(query);
+            queryGL->resume();
+
+            mPrevDrawQueries.insert(queryGL);
+        }
+    }
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -1165,11 +1353,39 @@ void StateManagerGL::syncState(const gl::State &state, const gl::State::DirtyBit
                 // TODO(jmadill): split this
                 setPixelUnpackState(state.getUnpackState());
                 break;
+            case gl::State::DIRTY_BIT_UNPACK_IMAGE_HEIGHT:
+                // TODO(jmadill): split this
+                setPixelUnpackState(state.getUnpackState());
+                break;
+            case gl::State::DIRTY_BIT_UNPACK_SKIP_IMAGES:
+                // TODO(jmadill): split this
+                setPixelUnpackState(state.getUnpackState());
+                break;
+            case gl::State::DIRTY_BIT_UNPACK_SKIP_ROWS:
+                // TODO(jmadill): split this
+                setPixelUnpackState(state.getUnpackState());
+                break;
+            case gl::State::DIRTY_BIT_UNPACK_SKIP_PIXELS:
+                // TODO(jmadill): split this
+                setPixelUnpackState(state.getUnpackState());
+                break;
             case gl::State::DIRTY_BIT_PACK_ALIGNMENT:
                 // TODO(jmadill): split this
                 setPixelPackState(state.getPackState());
                 break;
             case gl::State::DIRTY_BIT_PACK_REVERSE_ROW_ORDER:
+                // TODO(jmadill): split this
+                setPixelPackState(state.getPackState());
+                break;
+            case gl::State::DIRTY_BIT_PACK_ROW_LENGTH:
+                // TODO(jmadill): split this
+                setPixelPackState(state.getPackState());
+                break;
+            case gl::State::DIRTY_BIT_PACK_SKIP_ROWS:
+                // TODO(jmadill): split this
+                setPixelPackState(state.getPackState());
+                break;
+            case gl::State::DIRTY_BIT_PACK_SKIP_PIXELS:
                 // TODO(jmadill): split this
                 setPixelPackState(state.getPackState());
                 break;
@@ -1222,6 +1438,22 @@ void StateManagerGL::syncState(const gl::State &state, const gl::State::DirtyBit
         }
 
         mLocalDirtyBits.reset();
+    }
+}
+
+void StateManagerGL::setFramebufferSRGBEnabled(bool enabled)
+{
+    if (mFramebufferSRGBEnabled != enabled)
+    {
+        mFramebufferSRGBEnabled = enabled;
+        if (mFramebufferSRGBEnabled)
+        {
+            mFunctions->enable(GL_FRAMEBUFFER_SRGB);
+        }
+        else
+        {
+            mFunctions->disable(GL_FRAMEBUFFER_SRGB);
+        }
     }
 }
 

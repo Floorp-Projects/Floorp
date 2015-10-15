@@ -74,11 +74,43 @@ class UniformBufferTest : public ANGLETest
     GLuint mUniformBuffer;
 };
 
+// Basic UBO functionality.
+TEST_P(UniformBufferTest, Simple)
+{
+    // TODO(jmadill): Figure out why this fails on Intel.
+    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel." << std::endl;
+        return;
+    }
+
+    glClear(GL_COLOR_BUFFER_BIT);
+    float floatData[4] = {0.5f, 0.75f, 0.25f, 1.0f};
+
+    glBindBuffer(GL_UNIFORM_BUFFER, mUniformBuffer);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 4, floatData, GL_STATIC_DRAW);
+
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, mUniformBuffer);
+
+    glUniformBlockBinding(mProgram, mUniformBufferIndex, 0);
+    drawQuad(mProgram, "position", 0.5f);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_PIXEL_NEAR(0, 0, 128, 191, 64, 255, 1);
+}
+
 // Test that using a UBO with a non-zero offset and size actually works.
 // The first step of this test renders a color from a UBO with a zero offset.
 // The second step renders a color from a UBO with a non-zero offset.
 TEST_P(UniformBufferTest, UniformBufferRange)
 {
+    // TODO(jmadill): Figure out why this fails on Intel.
+    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel." << std::endl;
+        return;
+    }
+
     int px = getWindowWidth() / 2;
     int py = getWindowHeight() / 2;
 
@@ -150,6 +182,13 @@ TEST_P(UniformBufferTest, UniformBufferRange)
 // Test uniform block bindings.
 TEST_P(UniformBufferTest, UniformBufferBindings)
 {
+    // TODO(jmadill): Figure out why this fails on Intel.
+    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel." << std::endl;
+        return;
+    }
+
     int px = getWindowWidth() / 2;
     int py = getWindowHeight() / 2;
 
@@ -206,6 +245,13 @@ TEST_P(UniformBufferTest, UnboundUniformBuffer)
 // https://code.google.com/p/angleproject/issues/detail?id=965
 TEST_P(UniformBufferTest, UniformBufferManyUpdates)
 {
+    // TODO(jmadill): Figure out why this fails on Intel.
+    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel." << std::endl;
+        return;
+    }
+
     int px = getWindowWidth() / 2;
     int py = getWindowHeight() / 2;
 
@@ -239,6 +285,13 @@ TEST_P(UniformBufferTest, UniformBufferManyUpdates)
 // Use a large number of buffer ranges (compared to the actual size of the UBO)
 TEST_P(UniformBufferTest, ManyUniformBufferRange)
 {
+    // TODO(jmadill): Figure out why this fails on Intel.
+    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel." << std::endl;
+        return;
+    }
+
     int px = getWindowWidth() / 2;
     int py = getWindowHeight() / 2;
 

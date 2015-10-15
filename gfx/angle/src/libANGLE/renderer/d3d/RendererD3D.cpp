@@ -23,6 +23,7 @@
 #include "libANGLE/renderer/d3d/DisplayD3D.h"
 #include "libANGLE/renderer/d3d/IndexDataManager.h"
 #include "libANGLE/renderer/d3d/ProgramD3D.h"
+#include "libANGLE/renderer/d3d/SamplerD3D.h"
 
 namespace rx
 {
@@ -71,6 +72,11 @@ void RendererD3D::cleanup()
 CompilerImpl *RendererD3D::createCompiler()
 {
     return new CompilerD3D(getRendererClass());
+}
+
+SamplerImpl *RendererD3D::createSampler()
+{
+    return new SamplerD3D();
 }
 
 gl::Error RendererD3D::drawArrays(const gl::Data &data, GLenum mode, GLint first, GLsizei count)
