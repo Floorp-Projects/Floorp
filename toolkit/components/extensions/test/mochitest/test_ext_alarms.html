@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* test_alarm_fires() {
+  function backgroundScript() {
+    browser.test.log("running alarm script");
+
+    chrome.alarms.onAlarm.addListener(function (alarm) {
+      browser.test.assertEq(alarm.name, "test_ext_alarms");
+      browser.test.notifyPass("alarms");
+    });
+    chrome.alarms.create("test_ext_alarms", {delayInMinutes: 0.02});
+    setTimeout(() => {
+      browser.test.notifyFail("alarms test failed, took too long");
+    }, 10000);
+  }
+
+
+  let extensionData = {
+    background: "(" + backgroundScript.toString() + ")()",
+    manifest: {
+      permissions: ["alarms"]
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("alarms");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+</script>
+
+</body>
+</html>
