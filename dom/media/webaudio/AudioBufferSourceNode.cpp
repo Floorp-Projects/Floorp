@@ -270,7 +270,8 @@ public:
         if (leadTicks > 0.0) {
           // Round to nearest output subsample supported by the resampler at
           // these rates.
-          skipFracNum -= leadTicks * ratioNum + 0.5;
+          uint32_t leadSubsamples = leadTicks * ratioNum + 0.5;
+          skipFracNum -= leadSubsamples;
           MOZ_ASSERT(skipFracNum < INT32_MAX, "mBeginProcessing is wrong?");
         }
         speex_resampler_set_skip_frac_num(resampler, skipFracNum);
