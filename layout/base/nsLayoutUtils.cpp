@@ -932,74 +932,80 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   nsRect expandedScrollableRect =
     nsLayoutUtils::CalculateExpandedScrollableRect(frame);
 
-
-  // Note on the correctness of applying the alignment in Screen space:
-  //   The correct space to apply the alignment in would be Layer space, but
-  //   we don't necessarily know the scale to convert to Layer space at this
-  //   point because Layout may not yet have chosen the resolution at which to
-  //   render (it chooses that in FrameLayerBuilder, but this can be called
-  //   during display list building). Therefore, we perform the alignment in
-  //   Screen space, which basically assumes that Layout chose to render at
-  //   screen resolution; since this is what Layout does most of the time,
-  //   this is a good approximation. A proper solution would involve moving
-  //   the choosing of the resolution to display-list building time.
-  ScreenSize alignment;
-
   if (gfxPrefs::LayersTilesEnabled()) {
-    alignment = ScreenSize(gfxPlatform::GetPlatform()->GetTileWidth(),
-                           gfxPlatform::GetPlatform()->GetTileHeight());
-  } else {
-    // If we're not drawing with tiles then we need to be careful about not
-    // hitting the max texture size and we only need 1 draw call per layer
-    // so we can align to a smaller multiple.
-    alignment = ScreenSize(128, 128);
-  }
+    // Note on the correctness of applying the alignment in Screen space:
+    //   The correct space to apply the alignment in would be Layer space, but
+    //   we don't necessarily know the scale to convert to Layer space at this
+    //   point because Layout may not yet have chosen the resolution at which to
+    //   render (it chooses that in FrameLayerBuilder, but this can be called
+    //   during display list building). Therefore, we perform the alignment in
+    //   Screen space, which basically assumes that Layout chose to render at
+    //   screen resolution; since this is what Layout does most of the time,
+    //   this is a good approximation. A proper solution would involve moving
+    //   the choosing of the resolution to display-list building time.
+    int alignmentX = gfxPlatform::GetPlatform()->GetTileWidth();
+    int alignmentY = gfxPlatform::GetPlatform()->GetTileHeight();
 
-  // Avoid division by zero.
-  if (alignment.width == 0) {
-    alignment.width = 128;
-  }
-  if (alignment.height == 0) {
-    alignment.height = 128;
-  }
-
-  if (gfxPrefs::LayersTilesEnabled()) {
     // Expand the rect by the margins
     screenRect.Inflate(aMarginsData->mMargins);
-  } else {
-    // Calculate the displayport to make sure we fit within the max texture size
-    // when not tiling.
-    nscoord maxSizeAppUnits = GetMaxDisplayPortSize(aContent);
-    if (maxSizeAppUnits == nscoord_MAX) {
-      // Pick a safe maximum displayport size for sanity purposes. This is the
-      // lowest maximum texture size on tileless-platforms (Windows, D3D10).
-      maxSizeAppUnits = presContext->DevPixelsToAppUnits(8192);
+
+    // Inflate the rectangle by 1 so that we always push to the next tile
+    // boundary. This is desirable to stop from having a rectangle with a
+    // moving origin occasionally being smaller when it coincidentally lines
+    // up to tile boundaries.
+    screenRect.Inflate(1);
+
+    // Avoid division by zero.
+    if (alignmentX == 0) {
+      alignmentX = 1;
+    }
+    if (alignmentY == 0) {
+      alignmentY = 1;
     }
 
-    // The alignment code can round up to 3 tiles, we want to make sure
-    // that the displayport can grow by up to 3 tiles without going
-    // over the max texture size.
-    const int MAX_ALIGN_ROUNDING = 3;
+    ScreenPoint scrollPosScreen = LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel)
+                                * res;
+
+    screenRect += scrollPosScreen;
+    // Round-out the display port to the nearest alignment (tiles)
+    float x = alignmentX * floor(screenRect.x / alignmentX);
+    float y = alignmentY * floor(screenRect.y / alignmentY);
+    float w = alignmentX * ceil(screenRect.width / alignmentX + 1);
+    float h = alignmentY * ceil(screenRect.height / alignmentY + 1);
+    screenRect = ScreenRect(x, y, w, h);
+    screenRect -= scrollPosScreen;
+
+    ScreenRect screenExpScrollableRect =
+      LayoutDeviceRect::FromAppUnits(expandedScrollableRect,
+                                     auPerDevPixel) * res;
+
+    // Make sure the displayport remains within the scrollable rect.
+    screenRect = screenRect.ForceInside(screenExpScrollableRect - scrollPosScreen);
+  } else {
+    nscoord maxSizeInAppUnits = GetMaxDisplayPortSize(aContent);
+    if (maxSizeInAppUnits == nscoord_MAX) {
+      // Pick a safe maximum displayport size for sanity purposes. This is the
+      // lowest maximum texture size on tileless-platforms (Windows, D3D10).
+      maxSizeInAppUnits = presContext->DevPixelsToAppUnits(8192);
+    }
 
     // Find the maximum size in screen pixels.
-    int32_t maxSizeDevPx = presContext->AppUnitsToDevPixels(maxSizeAppUnits);
-    int32_t maxWidthScreenPx = floor(double(maxSizeDevPx) * res.xScale) -
-      MAX_ALIGN_ROUNDING * alignment.width;
-    int32_t maxHeightScreenPx = floor(double(maxSizeDevPx) * res.yScale) -
-      MAX_ALIGN_ROUNDING * alignment.height;
+    int32_t maxSizeInDevPixels = presContext->AppUnitsToDevPixels(maxSizeInAppUnits);
+    int32_t maxWidthInScreenPixels = floor(double(maxSizeInDevPixels) * res.xScale);
+    int32_t maxHeightInScreenPixels = floor(double(maxSizeInDevPixels) * res.yScale);
 
     // For each axis, inflate the margins up to the maximum size.
     const ScreenMargin& margins = aMarginsData->mMargins;
-    if (screenRect.height < maxHeightScreenPx) {
-      int32_t budget = maxHeightScreenPx - screenRect.height;
+    if (screenRect.height < maxHeightInScreenPixels) {
+      int32_t budget = maxHeightInScreenPixels - screenRect.height;
 
       float top = std::min(margins.top, float(budget));
       float bottom = std::min(margins.bottom, budget - top);
       screenRect.y -= top;
       screenRect.height += top + bottom;
     }
-    if (screenRect.width < maxWidthScreenPx) {
-      int32_t budget = maxWidthScreenPx - screenRect.width;
+    if (screenRect.width < maxWidthInScreenPixels) {
+      int32_t budget = maxWidthInScreenPixels - screenRect.width;
 
       float left = std::min(margins.left, float(budget));
       float right = std::min(margins.right, budget - left);
@@ -1007,31 +1013,6 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
       screenRect.width += left + right;
     }
   }
-
-  // Inflate the rectangle by 1 so that we always push to the next tile
-  // boundary. This is desirable to stop from having a rectangle with a
-  // moving origin occasionally being smaller when it coincidentally lines
-  // up to tile boundaries.
-  screenRect.Inflate(1);
-
-  ScreenPoint scrollPosScreen = LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel)
-                              * res;
-
-  // Round-out the display port to the nearest alignment (tiles)
-  screenRect += scrollPosScreen;
-  float x = alignment.width * floor(screenRect.x / alignment.width);
-  float y = alignment.height * floor(screenRect.y / alignment.height);
-  float w = alignment.width * ceil(screenRect.width / alignment.width + 1);
-  float h = alignment.height * ceil(screenRect.height / alignment.height + 1);
-  screenRect = ScreenRect(x, y, w, h);
-  screenRect -= scrollPosScreen;
-
-  ScreenRect screenExpScrollableRect =
-    LayoutDeviceRect::FromAppUnits(expandedScrollableRect,
-                                   auPerDevPixel) * res;
-
-  // Make sure the displayport remains within the scrollable rect.
-  screenRect = screenRect.ForceInside(screenExpScrollableRect - scrollPosScreen);
 
   // Convert the aligned rect back into app units.
   nsRect result = LayoutDeviceRect::ToAppUnits(screenRect / res, auPerDevPixel);
