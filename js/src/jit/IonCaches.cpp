@@ -3326,20 +3326,6 @@ GenerateSetUnboxed(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& 
     attacher.jumpNextStub(masm);
 }
 
-bool
-SetPropertyIC::attachSetUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj, HandleId id,
-                                uint32_t unboxedOffset, JSValueType unboxedType,
-                                bool checkTypeset)
-{
-    MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
-    StubAttacher attacher(*this);
-    GenerateSetUnboxed(cx, masm, attacher, obj, id, unboxedOffset, unboxedType,
-                       object(), value(), checkTypeset);
-    return linkAndAttachStub(cx, masm, attacher, ion, "set_unboxed",
-                             JS::TrackedOutcome::ICSetPropStub_SetUnboxed);
-}
-
 static bool
 CanAttachSetUnboxed(JSContext* cx, HandleObject obj, HandleId id, ConstantOrRegister val,
                     bool needsTypeBarrier, bool* checkTypeset,
@@ -3410,6 +3396,195 @@ CanAttachAddUnboxedExpando(JSContext* cx, HandleObject obj, HandleShape oldShape
 }
 
 bool
+SetPropertyIC::tryAttachUnboxed(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                HandleObject obj, HandleId id, bool* emitted)
+{
+    MOZ_ASSERT(!*emitted);
+
+    bool checkTypeset = false;
+    uint32_t unboxedOffset;
+    JSValueType unboxedType;
+    if (!CanAttachSetUnboxed(cx, obj, id, value(), needsTypeBarrier(), &checkTypeset,
+                             &unboxedOffset, &unboxedType))
+    {
+        return true;
+    }
+
+    *emitted = true;
+
+    MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
+    StubAttacher attacher(*this);
+    GenerateSetUnboxed(cx, masm, attacher, obj, id, unboxedOffset, unboxedType,
+                       object(), value(), checkTypeset);
+    return linkAndAttachStub(cx, masm, attacher, ion, "set_unboxed",
+                             JS::TrackedOutcome::ICSetPropStub_SetUnboxed);
+}
+
+bool
+SetPropertyIC::tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                              HandleObject obj, HandleId id, bool* emitted)
+{
+    MOZ_ASSERT(!*emitted);
+
+    if (!obj->is<ProxyObject>())
+        return true;
+
+    void* returnAddr = GetReturnAddressToIonCode(cx);
+    if (IsCacheableDOMProxy(obj)) {
+        DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
+        if (shadows == ShadowCheckFailed)
+            return false;
+
+        if (DOMProxyIsShadowing(shadows)) {
+            if (!attachDOMProxyShadowed(cx, outerScript, ion, obj, returnAddr))
+                return false;
+            *emitted = true;
+            return true;
+        }
+
+        MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
+        if (shadows == DoesntShadowUnique)
+            reset(Reprotect);
+        if (!attachDOMProxyUnshadowed(cx, outerScript, ion, obj, returnAddr))
+            return false;
+        *emitted = true;
+        return true;
+    }
+
+    if (hasGenericProxyStub())
+        return true;
+
+    if (!attachGenericProxy(cx, outerScript, ion, returnAddr))
+        return false;
+    *emitted = true;
+    return true;
+}
+
+bool
+SetPropertyIC::tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                               HandleObject obj, HandleId id, bool* emitted, bool* tryNativeAddSlot)
+{
+    MOZ_ASSERT(!*emitted);
+    MOZ_ASSERT(!*tryNativeAddSlot);
+
+    RootedShape shape(cx);
+    RootedObject holder(cx);
+    bool checkTypeset;
+    NativeSetPropCacheability canCache = CanAttachNativeSetProp(cx, obj, id, value(), needsTypeBarrier(),
+                                                                &holder, &shape, &checkTypeset);
+    switch (canCache) {
+      case CanAttachNone:
+        return true;
+
+      case CanAttachSetSlot: {
+        RootedNativeObject nobj(cx, &obj->as<NativeObject>());
+        if (!attachSetSlot(cx, outerScript, ion, nobj, shape, checkTypeset))
+            return false;
+        *emitted = true;
+        return true;
+      }
+
+      case CanAttachCallSetter: {
+        void* returnAddr = GetReturnAddressToIonCode(cx);
+        if (!attachCallSetter(cx, outerScript, ion, obj, holder, shape, returnAddr))
+            return false;
+        *emitted = true;
+        return true;
+      }
+
+      case MaybeCanAttachAddSlot:
+        *tryNativeAddSlot = true;
+        return true;
+    }
+
+    MOZ_CRASH("Unreachable");
+}
+
+bool
+SetPropertyIC::tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                       HandleObject obj, HandleId id, bool* emitted)
+{
+    MOZ_ASSERT(!*emitted);
+
+    RootedShape shape(cx);
+    bool checkTypeset = false;
+    if (!CanAttachSetUnboxedExpando(cx, obj, id, value(), needsTypeBarrier(),
+                                    &checkTypeset, shape.address()))
+    {
+        return true;
+    }
+
+    if (!attachSetSlot(cx, outerScript, ion, obj, shape, checkTypeset))
+        return false;
+    *emitted = true;
+    return true;
+}
+
+bool
+SetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                             HandleObject obj, HandleId id, bool* emitted, bool* tryNativeAddSlot)
+{
+    MOZ_ASSERT(!*emitted);
+    MOZ_ASSERT(!*tryNativeAddSlot);
+
+    if (!canAttachStub() || obj->watched())
+        return true;
+
+    if (!*emitted && !tryAttachProxy(cx, outerScript, ion, obj, id, emitted))
+        return false;
+
+    if (!*emitted && !tryAttachNative(cx, outerScript, ion, obj, id, emitted, tryNativeAddSlot))
+        return false;
+
+    if (!*emitted && !tryAttachUnboxed(cx, outerScript, ion, obj, id, emitted))
+        return false;
+
+    if (!*emitted && !tryAttachUnboxedExpando(cx, outerScript, ion, obj, id, emitted))
+        return false;
+
+    return true;
+}
+
+bool
+SetPropertyIC::tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                HandleObject obj, HandleId id, HandleObjectGroup oldGroup,
+                                HandleShape oldShape, bool tryNativeAddSlot, bool* emitted)
+{
+    MOZ_ASSERT(!*emitted);
+
+    // A GC may have caused cache.value() to become stale as it is not traced.
+    // In this case the IonScript will have been invalidated, so check for that.
+    // Assert no further GC is possible past this point.
+    JS::AutoAssertNoAlloc nogc;
+    if (ion->invalidated())
+        return true;
+
+    // The property did not exist before, now we can try to inline the property add.
+    bool checkTypeset = false;
+    if (tryNativeAddSlot &&
+        IsPropertyAddInlineable(cx, &obj->as<NativeObject>(), id, value(), oldShape,
+                                needsTypeBarrier(), &checkTypeset))
+    {
+        if (!attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
+            return false;
+        *emitted = true;
+        return true;
+    }
+
+    checkTypeset = false;
+    if (CanAttachAddUnboxedExpando(cx, obj, oldShape, id, value(), needsTypeBarrier(),
+                                   &checkTypeset))
+    {
+        if (!attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
+            return false;
+        *emitted = true;
+        return true;
+    }
+
+    return true;
+}
+
+bool
 SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
                       HandleValue value)
 {
@@ -3418,93 +3593,25 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
     RootedPropertyName name(cx, cache.name());
     RootedId id(cx, AtomToId(name));
 
-    RootedObjectGroup oldGroup(cx, obj->getGroup(cx));
-    if (!oldGroup)
+    bool emitted = false;
+    bool tryNativeAddSlot = false;
+    if (!cache.tryAttachStub(cx, outerScript, ion, obj, id, &emitted, &tryNativeAddSlot))
         return false;
 
-    // Stop generating new stubs once we hit the stub count limit, see
-    // GetPropertyCache.
-    NativeSetPropCacheability canCache = CanAttachNone;
-    bool addedSetterStub = false;
-    if (cache.canAttachStub() && !obj->watched()) {
-        if (!addedSetterStub && obj->is<ProxyObject>()) {
-            void* returnAddr = GetReturnAddressToIonCode(cx);
-            if (IsCacheableDOMProxy(obj)) {
-                DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
-                if (shadows == ShadowCheckFailed)
-                    return false;
-                if (DOMProxyIsShadowing(shadows)) {
-                    if (!cache.attachDOMProxyShadowed(cx, outerScript, ion, obj, returnAddr))
-                        return false;
-                    addedSetterStub = true;
-                } else {
-                    MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
-                    if (shadows == DoesntShadowUnique)
-                        cache.reset(Reprotect);
-                    if (!cache.attachDOMProxyUnshadowed(cx, outerScript, ion, obj, returnAddr))
-                        return false;
-                    addedSetterStub = true;
-                }
-            }
+    // Remember the old group and shape if we may attach an add-property stub.
+    RootedObjectGroup oldGroup(cx);
+    RootedShape oldShape(cx);
+    if (!emitted) {
+        oldGroup = obj->getGroup(cx);
+        if (!oldGroup)
+            return false;
 
-            if (!addedSetterStub && !cache.hasGenericProxyStub()) {
-                if (!cache.attachGenericProxy(cx, outerScript, ion, returnAddr))
-                    return false;
-                addedSetterStub = true;
-            }
+        oldShape = obj->maybeShape();
+        if (obj->is<UnboxedPlainObject>()) {
+            MOZ_ASSERT(!oldShape);
+            if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
+                oldShape = expando->lastProperty();
         }
-
-        RootedShape shape(cx);
-        RootedObject holder(cx);
-        bool checkTypeset;
-        canCache = CanAttachNativeSetProp(cx, obj, id, cache.value(), cache.needsTypeBarrier(),
-                                          &holder, &shape, &checkTypeset);
-
-        if (!addedSetterStub && canCache == CanAttachSetSlot) {
-            RootedNativeObject nobj(cx, &obj->as<NativeObject>());
-            if (!cache.attachSetSlot(cx, outerScript, ion, nobj, shape, checkTypeset))
-                return false;
-            addedSetterStub = true;
-        }
-
-        if (!addedSetterStub && canCache == CanAttachCallSetter) {
-            void* returnAddr = GetReturnAddressToIonCode(cx);
-            if (!cache.attachCallSetter(cx, outerScript, ion, obj, holder, shape, returnAddr))
-                return false;
-            addedSetterStub = true;
-        }
-
-        checkTypeset = false;
-        uint32_t unboxedOffset;
-        JSValueType unboxedType;
-        if (!addedSetterStub &&
-            CanAttachSetUnboxed(cx, obj, id, cache.value(), cache.needsTypeBarrier(),
-                                &checkTypeset, &unboxedOffset, &unboxedType))
-        {
-            if (!cache.attachSetUnboxed(cx, outerScript, ion, obj, id, unboxedOffset, unboxedType,
-                                        checkTypeset))
-            {
-                return false;
-            }
-            addedSetterStub = true;
-        }
-
-        checkTypeset = false;
-        if (!addedSetterStub &&
-            CanAttachSetUnboxedExpando(cx, obj, id, cache.value(), cache.needsTypeBarrier(),
-                                       &checkTypeset, shape.address()))
-        {
-            if (!cache.attachSetSlot(cx, outerScript, ion, obj, shape, checkTypeset))
-                return false;
-            addedSetterStub = true;
-        }
-    }
-
-    RootedShape oldShape(cx, obj->maybeShape());
-    if (obj->is<UnboxedPlainObject>()) {
-        MOZ_ASSERT(!oldShape);
-        if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
-            oldShape = expando->lastProperty();
     }
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
@@ -3519,34 +3626,14 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
             return false;
     }
 
-    // A GC may have caused cache.value() to become stale as it is not traced.
-    // In this case the IonScript will have been invalidated, so check for that.
-    // Assert no further GC is possible past this point.
-    JS::AutoAssertNoAlloc nogc;
-    if (!ion->invalidated()) {
-        // The property did not exist before, now we can try to inline the property add.
-        bool checkTypeset;
-        if (!addedSetterStub && canCache == MaybeCanAttachAddSlot &&
-            IsPropertyAddInlineable(cx, &obj->as<NativeObject>(), id, cache.value(), oldShape,
-                                    cache.needsTypeBarrier(), &checkTypeset))
-        {
-            if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
-                return false;
-            addedSetterStub = true;
-        }
-
-        checkTypeset = false;
-        if (!addedSetterStub && cache.canAttachStub() &&
-            CanAttachAddUnboxedExpando(cx, obj, oldShape, id, cache.value(),
-                                       cache.needsTypeBarrier(), &checkTypeset))
-        {
-            if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
-                return false;
-            addedSetterStub = true;
-        }
+    if (!emitted &&
+        !cache.tryAttachAddSlot(cx, outerScript, ion, obj, id, oldGroup, oldShape,
+                                tryNativeAddSlot, &emitted))
+    {
+        return false;
     }
 
-    if (!addedSetterStub)
+    if (!emitted)
         JitSpew(JitSpew_IonIC, "Failed to attach SETPROP cache");
 
     return true;
