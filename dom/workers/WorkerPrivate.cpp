@@ -491,7 +491,9 @@ private:
   virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    if (!scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript)) {
+    ErrorResult rv;
+    scriptloader::LoadMainScript(aCx, mScriptURL, WorkerScript, rv);
+    if (NS_WARN_IF(rv.Failed())) {
       return false;
     }
 
@@ -524,8 +526,14 @@ private:
 
     JS::Rooted<JSObject*> global(aCx, globalScope->GetWrapper());
 
+    ErrorResult rv;
     JSAutoCompartment ac(aCx, global);
-    return scriptloader::LoadMainScript(aCx, mScriptURL, DebuggerScript);
+    scriptloader::LoadMainScript(aCx, mScriptURL, DebuggerScript, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return false;
+    }
+
+    return true;
   }
 };
 
@@ -841,6 +849,7 @@ class ReportErrorRunnable final : public WorkerRunnable
   uint32_t mFlags;
   uint32_t mErrorNumber;
   JSExnType mExnType;
+  bool mMutedError;
 
 public:
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
@@ -852,12 +861,12 @@ public:
               const nsString& aMessage, const nsString& aFilename,
               const nsString& aLine, uint32_t aLineNumber,
               uint32_t aColumnNumber, uint32_t aFlags,
-              uint32_t aErrorNumber, JSExnType aExnType, uint64_t aInnerWindowId)
+              uint32_t aErrorNumber, JSExnType aExnType,
+              bool aMutedError, uint64_t aInnerWindowId)
   {
     if (aWorkerPrivate) {
       aWorkerPrivate->AssertIsOnWorkerThread();
-    }
-    else {
+    } else {
       AssertIsOnMainThread();
     }
 
@@ -878,9 +887,15 @@ public:
     if (!JSREPORT_IS_WARNING(aFlags)) {
       // First fire an ErrorEvent at the worker.
       RootedDictionary<ErrorEventInit> init(aCx);
-      init.mMessage = aMessage;
-      init.mFilename = aFilename;
-      init.mLineno = aLineNumber;
+
+      if (aMutedError) {
+        init.mMessage.AssignLiteral("Script error.");
+      } else {
+        init.mMessage = aMessage;
+        init.mFilename = aFilename;
+        init.mLineno = aLineNumber;
+      }
+
       init.mCancelable = true;
       init.mBubbles = false;
 
@@ -957,7 +972,7 @@ public:
       nsRefPtr<ReportErrorRunnable> runnable =
         new ReportErrorRunnable(aWorkerPrivate, aMessage, aFilename, aLine,
                                 aLineNumber, aColumnNumber, aFlags,
-                                aErrorNumber, aExnType);
+                                aErrorNumber, aExnType, aMutedError);
       return runnable->Dispatch(aCx);
     }
 
@@ -972,11 +987,11 @@ private:
                       const nsString& aFilename, const nsString& aLine,
                       uint32_t aLineNumber, uint32_t aColumnNumber,
                       uint32_t aFlags, uint32_t aErrorNumber,
-                      JSExnType aExnType)
+                      JSExnType aExnType, bool aMutedError)
   : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
     mMessage(aMessage), mFilename(aFilename), mLine(aLine),
     mLineNumber(aLineNumber), mColumnNumber(aColumnNumber), mFlags(aFlags),
-    mErrorNumber(aErrorNumber), mExnType(aExnType)
+    mErrorNumber(aErrorNumber), mExnType(aExnType), mMutedError(aMutedError)
   { }
 
   virtual void
@@ -1049,7 +1064,7 @@ private:
 
     return ReportError(aCx, parent, fireAtScope, aWorkerPrivate, mMessage,
                        mFilename, mLine, mLineNumber, mColumnNumber, mFlags,
-                       mErrorNumber, mExnType, innerWindowId);
+                       mErrorNumber, mExnType, mMutedError, innerWindowId);
   }
 };
 
@@ -5647,6 +5662,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
   nsString message, filename, line;
   uint32_t lineNumber, columnNumber, flags, errorNumber;
   JSExnType exnType = JSEXN_ERR;
+  bool mutedError = aReport && aReport->isMuted;
 
   if (aReport) {
     // ErrorEvent objects don't have a |name| field the way ES |Error| objects
@@ -5691,7 +5707,8 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aMessage,
 
   if (!ReportErrorRunnable::ReportError(aCx, this, fireAtScope, nullptr, message,
                                         filename, line, lineNumber,
-                                        columnNumber, flags, errorNumber, exnType, 0)) {
+                                        columnNumber, flags, errorNumber, exnType,
+                                        mutedError, 0)) {
     JS_ReportPendingException(aCx);
   }
 
