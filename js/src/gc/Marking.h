@@ -291,8 +291,8 @@ class GCMarker : public JSTracer
     template <typename T> void markAndTraceChildren(T* thing);
     template <typename T> void markAndPush(StackTag tag, T* thing);
     template <typename T> void markAndScan(T* thing);
-    template <typename T> void markPotentialEphemeronKeyHelper(T oldThing);
-    template <typename T> void markPotentialEphemeronKey(T* oldThing);
+    template <typename T> void markImplicitEdgesHelper(T oldThing);
+    template <typename T> void markImplicitEdges(T* oldThing);
     void eagerlyMarkChildren(JSLinearString* str);
     void eagerlyMarkChildren(JSRope* rope);
     void eagerlyMarkChildren(JSString* str);

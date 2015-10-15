@@ -36,35 +36,6 @@ WeakMapBase::~WeakMapBase()
 }
 
 void
-WeakMapBase::trace(JSTracer* tracer)
-{
-    MOZ_ASSERT(isInList());
-    if (tracer->isMarkingTracer()) {
-        marked = true;
-        if (tracer->weakMapAction() == DoNotTraceWeakMaps) {
-            // Do not trace any WeakMap entries at this time. Just record the
-            // fact that the WeakMap has been marked. Entries are marked in the
-            // iterative marking phase by markAllIteratively(), after as many
-            // keys as possible have been marked already.
-        } else {
-            MOZ_ASSERT(tracer->weakMapAction() == ExpandWeakMaps);
-            markEphemeronEntries(tracer);
-        }
-    } else {
-        // If we're not actually doing garbage collection, the keys won't be marked
-        // nicely as needed by the true ephemeral marking algorithm --- custom tracers
-        // such as the cycle collector must use their own means for cycle detection.
-        // So here we do a conservative approximation: pretend all keys are live.
-        if (tracer->weakMapAction() == DoNotTraceWeakMaps)
-            return;
-
-        nonMarkingTraceValues(tracer);
-        if (tracer->weakMapAction() == TraceWeakMapKeysValues)
-            nonMarkingTraceKeys(tracer);
-    }
-}
-
-void
 WeakMapBase::unmarkZone(JS::Zone* zone)
 {
     for (WeakMapBase* m : zone->gcWeakMapList)
@@ -87,7 +58,7 @@ WeakMapBase::markZoneIteratively(JS::Zone* zone, JSTracer* tracer)
 {
     bool markedAny = false;
     for (WeakMapBase* m : zone->gcWeakMapList) {
-        if (m->marked && m->markIteratively(tracer))
+        if (m->marked && m->traceEntries(tracer))
             markedAny = true;
     }
     return markedAny;
