@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
-Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
+Cu.import("resource://gre/modules/Console.jsm");
 
 const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");
