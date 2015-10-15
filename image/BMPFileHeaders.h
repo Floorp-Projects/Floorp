@@ -10,64 +10,48 @@
 
 namespace mozilla {
 namespace image {
+namespace bmp {
 
-// This is the real BIH size (as contained in the bihsize field of
-// BMPFILEHEADER).
-struct BIH_LENGTH {
+// This length is stored in the |bihsize| field of bmp::FileHeader.
+struct InfoHeaderLength {
   enum {
-    OS2 = 12,
+    WIN_V2 = 12,
     WIN_V3 = 40,
-    WIN_V5 = 124
+    WIN_V4 = 108,
+    WIN_V5 = 124,
+
+    // OS2_V1 is omitted; it's the same as WIN_V2.
+    OS2_V2_MIN = 16,    // Minimum allowed value for OS2v2.
+    OS2_V2_MAX = 64,    // Maximum allowed value for OS2v2.
   };
 };
 
-struct BIH_INTERNAL_LENGTH {
-  enum {
-    OS2 = 8,
-    WIN_V3 = 36,
-    WIN_V5 = 120
-  };
-};
+struct FileHeader {
+  char signature[2];   // String "BM".
+  uint32_t filesize;   // File size; unreliable in practice.
+  int32_t reserved;    // Zero.
+  uint32_t dataoffset; // Offset to raster data.
 
-struct BMPFILEHEADER {
-  char signature[2];   // String "BM"
-  uint32_t filesize;
-  int32_t reserved;    // Zero
-  uint32_t dataoffset; // Offset to raster data
-
-  uint32_t bihsize;
-
-  // The length of the bitmap file header as defined in the BMP spec.
+  // The length of the file header as defined in the BMP spec.
   static const size_t LENGTH = 14;
-
-  // Internally we store the bitmap file header with an additional 4 bytes which
-  // is used to store the bitmap information header size.
-  static const size_t INTERNAL_LENGTH = 18;
 };
 
-struct BMP_HEADER_LENGTH {
-  enum {
-    OS2 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::OS2,
-    WIN_V3 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::WIN_V3,
-    WIN_V5 = BMPFILEHEADER::INTERNAL_LENGTH + BIH_INTERNAL_LENGTH::WIN_V5
-  };
-};
-
-struct xyz {
+struct XYZ {
   int32_t x, y, z;
 };
 
-struct xyzTriple {
-  xyz r, g, b;
+struct XYZTriple {
+  XYZ r, g, b;
 };
 
-struct BITMAPV5HEADER {
+struct V5InfoHeader {
+  uint32_t bihsize;          // Header size
   int32_t width;             // Uint16 in OS/2 BMPs
   int32_t height;            // Uint16 in OS/2 BMPs
   uint16_t planes;           // =1
   uint16_t bpp;              // Bits per pixel.
-  // The rest of the header is not available in OS/2 BMP Files
-  uint32_t compression;      // 0=no compression 1=8bit RLE 2=4bit RLE
+  // The rest of the header is not available in WIN_V2/OS2_V1 BMP Files
+  uint32_t compression;      // See Compression for valid values
   uint32_t image_size;       // (compressed) image size. Can be 0 if
                              // compression==0
   uint32_t xppm;             // Pixels per meter, horizontal
@@ -80,7 +64,7 @@ struct BITMAPV5HEADER {
   uint32_t alpha_mask;       // Bits used for alpha component
   uint32_t color_space;      // 0x73524742=LCS_sRGB ...
   // These members are unused unless color_space == LCS_CALIBRATED_RGB
-  xyzTriple white_point;     // Logical white point
+  XYZTriple white_point;     // Logical white point
   uint32_t gamma_red;        // Red gamma component
   uint32_t gamma_green;      // Green gamma component
   uint32_t gamma_blue;       // Blue gamma component
@@ -93,63 +77,7 @@ struct BITMAPV5HEADER {
   static const uint32_t COLOR_SPACE_LCS_SRGB = 0x73524742;
 };
 
-struct colorTable {
-  uint8_t red;
-  uint8_t green;
-  uint8_t blue;
-};
-
-struct bitFields {
-  uint32_t red;
-  uint32_t green;
-  uint32_t blue;
-  uint8_t redLeftShift;
-  uint8_t redRightShift;
-  uint8_t greenLeftShift;
-  uint8_t greenRightShift;
-  uint8_t blueLeftShift;
-  uint8_t blueRightShift;
-
-  // Length of the bitfields structure in the BMP file.
-  static const size_t LENGTH = 12;
-};
-
-struct BMPINFOHEADER {
-  // BMPINFOHEADER.compression definitions.
-  enum {
-    RGB = 0,
-    RLE8 = 1,
-    RLE4 = 2,
-    BITFIELDS = 3,
-
-    // ALPHABITFIELDS means no compression and specifies alpha bits. Valid only
-    // for 32bpp and 16bpp.
-    ALPHABITFIELDS = 4
-  };
-};
-
-// RLE escape codes.
-struct RLE {
-  enum {
-    ESCAPE = 0,
-    ESCAPE_EOL = 0,
-    ESCAPE_EOF = 1,
-    ESCAPE_DELTA = 2
-  };
-};
-
-/// enums for mState
-enum ERLEState {
-  eRLEStateInitial,
-  eRLEStateNeedSecondEscapeByte,
-  eRLEStateNeedXDelta,
-  eRLEStateNeedYDelta,        ///< mStateData will hold x delta
-  eRLEStateAbsoluteMode,      ///< mStateData will hold count of existing data
-                              ///< to read
-  eRLEStateAbsoluteModePadded ///< As above, but another byte of data has to
-                              ///< be read as padding
-};
-
+} // namespace bmp
 } // namespace image
 } // namespace mozilla
 

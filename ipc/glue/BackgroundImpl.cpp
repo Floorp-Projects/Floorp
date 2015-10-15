@@ -440,6 +440,8 @@ private:
   // This class is reference counted.
   ~ChildImpl()
   {
+    XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+                                     new DeleteTask<Transport>(GetTransport()));
     AssertActorDestroyed();
   }
 

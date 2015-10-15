@@ -348,71 +348,71 @@ MediaDecoder::IsInfinite()
   return mInfiniteStream;
 }
 
-MediaDecoder::MediaDecoder() :
-  mWatchManager(this, AbstractThread::MainThread()),
-  mDormantSupported(false),
-  mLogicalPosition(0.0),
-  mDuration(std::numeric_limits<double>::quiet_NaN()),
+MediaDecoder::MediaDecoder()
+  : mWatchManager(this, AbstractThread::MainThread())
+  , mDormantSupported(false)
+  , mLogicalPosition(0.0)
+  , mDuration(std::numeric_limits<double>::quiet_NaN())
 #ifdef MOZ_EME
-  mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__)),
+  , mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__))
 #endif
-  mIgnoreProgressData(false),
-  mInfiniteStream(false),
-  mOwner(nullptr),
-  mPlaybackStatistics(new MediaChannelStatistics()),
-  mPinnedForSeek(false),
-  mShuttingDown(false),
-  mPausedForPlaybackRateNull(false),
-  mMinimizePreroll(false),
-  mMediaTracksConstructed(false),
-  mFiredMetadataLoaded(false),
-  mIsDormant(false),
-  mWasEndedWhenEnteredDormant(false),
-  mIsHeuristicDormantSupported(
-    Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false)),
-  mHeuristicDormantTimeout(
-    Preferences::GetInt("media.decoder.heuristic.dormant.timeout",
-                        DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS)),
-  mIsHeuristicDormant(false),
-  mStateMachineIsShutdown(AbstractThread::MainThread(), true,
-                          "MediaDecoder::mStateMachineIsShutdown (Mirror)"),
-  mBuffered(AbstractThread::MainThread(), TimeIntervals(),
-            "MediaDecoder::mBuffered (Mirror)"),
-  mNextFrameStatus(AbstractThread::MainThread(),
-                   MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
-                   "MediaDecoder::mNextFrameStatus (Mirror)"),
-  mCurrentPosition(AbstractThread::MainThread(), 0,
-                   "MediaDecoder::mCurrentPosition (Mirror)"),
-  mStateMachineDuration(AbstractThread::MainThread(), NullableTimeUnit(),
-                        "MediaDecoder::mStateMachineDuration (Mirror)"),
-  mPlaybackPosition(AbstractThread::MainThread(), 0,
-                    "MediaDecoder::mPlaybackPosition (Mirror)"),
-  mVolume(AbstractThread::MainThread(), 0.0,
-          "MediaDecoder::mVolume (Canonical)"),
-  mPlaybackRate(AbstractThread::MainThread(), 1.0,
-                "MediaDecoder::mPlaybackRate (Canonical)"),
-  mPreservesPitch(AbstractThread::MainThread(), true,
-                  "MediaDecoder::mPreservesPitch (Canonical)"),
-  mEstimatedDuration(AbstractThread::MainThread(), NullableTimeUnit(),
-                     "MediaDecoder::mEstimatedDuration (Canonical)"),
-  mExplicitDuration(AbstractThread::MainThread(), Maybe<double>(),
-                    "MediaDecoder::mExplicitDuration (Canonical)"),
-  mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
-             "MediaDecoder::mPlayState (Canonical)"),
-  mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
-             "MediaDecoder::mNextState (Canonical)"),
-  mLogicallySeeking(AbstractThread::MainThread(), false,
-                    "MediaDecoder::mLogicallySeeking (Canonical)"),
-  mSameOriginMedia(AbstractThread::MainThread(), false,
-                   "MediaDecoder::mSameOriginMedia (Canonical)"),
-  mPlaybackBytesPerSecond(AbstractThread::MainThread(), 0.0,
-                          "MediaDecoder::mPlaybackBytesPerSecond (Canonical)"),
-  mPlaybackRateReliable(AbstractThread::MainThread(), true,
-                        "MediaDecoder::mPlaybackRateReliable (Canonical)"),
-  mDecoderPosition(AbstractThread::MainThread(), 0,
-                   "MediaDecoder::mDecoderPosition (Canonical)"),
-  mMediaSeekable(AbstractThread::MainThread(), true,
-                 "MediaDecoder::mMediaSeekable (Canonical)")
+  , mIgnoreProgressData(false)
+  , mInfiniteStream(false)
+  , mOwner(nullptr)
+  , mPlaybackStatistics(new MediaChannelStatistics())
+  , mPinnedForSeek(false)
+  , mShuttingDown(false)
+  , mPausedForPlaybackRateNull(false)
+  , mMinimizePreroll(false)
+  , mMediaTracksConstructed(false)
+  , mFiredMetadataLoaded(false)
+  , mIsDormant(false)
+  , mWasEndedWhenEnteredDormant(false)
+  , mIsHeuristicDormantSupported(
+      Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
+  , mHeuristicDormantTimeout(
+      Preferences::GetInt("media.decoder.heuristic.dormant.timeout",
+                          DEFAULT_HEURISTIC_DORMANT_TIMEOUT_MSECS))
+  , mIsHeuristicDormant(false)
+  , mStateMachineIsShutdown(AbstractThread::MainThread(), true,
+                            "MediaDecoder::mStateMachineIsShutdown (Mirror)")
+  , mBuffered(AbstractThread::MainThread(), TimeIntervals(),
+              "MediaDecoder::mBuffered (Mirror)")
+  , mNextFrameStatus(AbstractThread::MainThread(),
+                     MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED,
+                     "MediaDecoder::mNextFrameStatus (Mirror)")
+  , mCurrentPosition(AbstractThread::MainThread(), 0,
+                     "MediaDecoder::mCurrentPosition (Mirror)")
+  , mStateMachineDuration(AbstractThread::MainThread(), NullableTimeUnit(),
+                          "MediaDecoder::mStateMachineDuration (Mirror)")
+  , mPlaybackPosition(AbstractThread::MainThread(), 0,
+                      "MediaDecoder::mPlaybackPosition (Mirror)")
+  , mVolume(AbstractThread::MainThread(), 0.0,
+            "MediaDecoder::mVolume (Canonical)")
+  , mPlaybackRate(AbstractThread::MainThread(), 1.0,
+                  "MediaDecoder::mPlaybackRate (Canonical)")
+  , mPreservesPitch(AbstractThread::MainThread(), true,
+                    "MediaDecoder::mPreservesPitch (Canonical)")
+  , mEstimatedDuration(AbstractThread::MainThread(), NullableTimeUnit(),
+                       "MediaDecoder::mEstimatedDuration (Canonical)")
+  , mExplicitDuration(AbstractThread::MainThread(), Maybe<double>(),
+                      "MediaDecoder::mExplicitDuration (Canonical)")
+  , mPlayState(AbstractThread::MainThread(), PLAY_STATE_LOADING,
+               "MediaDecoder::mPlayState (Canonical)")
+  , mNextState(AbstractThread::MainThread(), PLAY_STATE_PAUSED,
+               "MediaDecoder::mNextState (Canonical)")
+  , mLogicallySeeking(AbstractThread::MainThread(), false,
+                      "MediaDecoder::mLogicallySeeking (Canonical)")
+  , mSameOriginMedia(AbstractThread::MainThread(), false,
+                     "MediaDecoder::mSameOriginMedia (Canonical)")
+  , mPlaybackBytesPerSecond(AbstractThread::MainThread(), 0.0,
+                            "MediaDecoder::mPlaybackBytesPerSecond (Canonical)")
+  , mPlaybackRateReliable(AbstractThread::MainThread(), true,
+                          "MediaDecoder::mPlaybackRateReliable (Canonical)")
+  , mDecoderPosition(AbstractThread::MainThread(), 0,
+                     "MediaDecoder::mDecoderPosition (Canonical)")
+  , mMediaSeekable(AbstractThread::MainThread(), true,
+                   "MediaDecoder::mMediaSeekable (Canonical)")
 {
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1307,6 +1307,13 @@ MediaDecoder::SizeOfAudioQueue() {
   return 0;
 }
 
+void MediaDecoder::AddSizeOfResources(ResourceSizes* aSizes) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (GetResource()) {
+    aSizes->mByteSize += GetResource()->SizeOfIncludingThis(aSizes->mMallocSizeOf);
+  }
+}
+
 void
 MediaDecoder::NotifyDataArrived(uint32_t aLength,
                                 int64_t aOffset,
@@ -1503,16 +1510,40 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
                                    nsISupports* aData, bool aAnonymize)
 {
   int64_t video = 0, audio = 0;
-  size_t resources = 0;
+
+  // NB: When resourceSizes' ref count goes to 0 the promise will report the
+  //     resources memory and finish the asynchronous memory report.
+  nsRefPtr<MediaDecoder::ResourceSizes> resourceSizes =
+      new MediaDecoder::ResourceSizes(MediaMemoryTracker::MallocSizeOf);
+
+  nsCOMPtr<nsIHandleReportCallback> handleReport = aHandleReport;
+  nsCOMPtr<nsISupports> data = aData;
+
+  resourceSizes->Promise()->Then(
+      AbstractThread::MainThread(), __func__,
+      [handleReport, data] (size_t size) {
+        handleReport->Callback(
+            EmptyCString(), NS_LITERAL_CSTRING("explicit/media/resources"),
+            KIND_HEAP, UNITS_BYTES, size,
+            NS_LITERAL_CSTRING("Memory used by media resources including "
+                               "streaming buffers, caches, etc."),
+            data);
+
+        nsCOMPtr<nsIMemoryReporterManager> imgr =
+          do_GetService("@mozilla.org/memory-reporter-manager;1");
+
+        if (imgr) {
+          imgr->EndReport();
+        }
+      },
+      [] (size_t) { /* unused reject function */ });
+
   DecodersArray& decoders = Decoders();
   for (size_t i = 0; i < decoders.Length(); ++i) {
     MediaDecoder* decoder = decoders[i];
     video += decoder->SizeOfVideoQueue();
     audio += decoder->SizeOfAudioQueue();
-
-    if (decoder->GetResource()) {
-      resources += decoder->GetResource()->SizeOfIncludingThis(MallocSizeOf);
-    }
+    decoder->AddSizeOfResources(resourceSizes);
   }
 
 #define REPORT(_path, _amount, _desc)                                         \
@@ -1529,10 +1560,6 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   REPORT("explicit/media/decoded/audio", audio,
          "Memory used by decoded audio chunks.");
-
-  REPORT("explicit/media/resources", resources,
-         "Memory used by media resources including streaming buffers, caches, "
-         "etc.");
 
 #undef REPORT
 
@@ -1620,7 +1647,7 @@ MediaMemoryTracker::MediaMemoryTracker()
 void
 MediaMemoryTracker::InitMemoryReporter()
 {
-  RegisterWeakMemoryReporter(this);
+  RegisterWeakAsyncMemoryReporter(this);
 }
 
 MediaMemoryTracker::~MediaMemoryTracker()

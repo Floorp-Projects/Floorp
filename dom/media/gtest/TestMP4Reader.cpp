@@ -30,7 +30,7 @@ public:
     , reader(new MP4Reader(decoder))
   {
     EXPECT_EQ(NS_OK, Preferences::SetBool(
-                       "media.fragmented-mp4.use-blank-decoder", true));
+                       "media.use-blank-decoder", true));
 
     EXPECT_EQ(NS_OK, resource->Open(nullptr));
     decoder->SetResource(resource);
