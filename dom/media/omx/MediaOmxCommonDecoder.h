@@ -21,7 +21,7 @@ class MediaOmxCommonReader;
 class MediaOmxCommonDecoder : public MediaDecoder
 {
 public:
-  MediaOmxCommonDecoder();
+  explicit MediaOmxCommonDecoder(MediaDecoderOwner* aOwner);
 
   virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
                                 MediaDecoderEventVisibility aEventVisibility) override;

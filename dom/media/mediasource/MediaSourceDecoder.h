@@ -36,7 +36,7 @@ class MediaSourceDecoder : public MediaDecoder
 public:
   explicit MediaSourceDecoder(dom::HTMLMediaElement* aElement);
 
-  virtual MediaDecoder* Clone() override;
+  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
   virtual MediaDecoderStateMachine* CreateStateMachine() override;
   virtual nsresult Load(nsIStreamListener**) override;
   virtual media::TimeIntervals GetSeekable() override;

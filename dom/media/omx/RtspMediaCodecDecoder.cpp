@@ -13,9 +13,9 @@
 namespace mozilla {
 
 MediaDecoder*
-RtspMediaCodecDecoder::Clone()
+RtspMediaCodecDecoder::Clone(MediaDecoderOwner* aOwner)
 {
-  return new RtspMediaCodecDecoder();
+  return new RtspMediaCodecDecoder(aOwner);
 }
 
 MediaOmxCommonReader*

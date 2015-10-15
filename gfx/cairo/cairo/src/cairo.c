@@ -172,6 +172,15 @@ _cairo_error (cairo_status_t status)
     CAIRO_ENSURE_UNIQUE;
     assert (_cairo_status_is_error (status));
 
+#ifdef MOZILLA_VERSION
+    static int abort_on_error = -1;
+    if (abort_on_error < 0) {
+	abort_on_error = (getenv("MOZ_CAIRO_ERROR_ABORT") != NULL) ? 1 : 0;
+    }
+    if (abort_on_error) {
+	*(int*)0x0 = 10;
+    }
+#endif
     return status;
 }
 

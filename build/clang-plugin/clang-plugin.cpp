@@ -279,6 +279,8 @@ public:
   CustomTypeAnnotation(const char *Spelling, const char *Pretty)
       : Spelling(Spelling), Pretty(Pretty){};
 
+  virtual ~CustomTypeAnnotation() {}
+
   // Checks if this custom annotation "effectively affects" the given type.
   bool hasEffectiveAnnotation(QualType T) {
     return directAnnotationReason(T).valid();
@@ -299,6 +301,10 @@ public:
 private:
   bool hasLiteralAnnotation(QualType T) const;
   AnnotationReason directAnnotationReason(QualType T);
+
+protected:
+  // Allow subclasses to apply annotations to external code:
+  virtual bool hasFakeAnnotation(const TagDecl *D) const { return false; }
 };
 
 static CustomTypeAnnotation StackClass =
@@ -313,8 +319,32 @@ static CustomTypeAnnotation NonTemporaryClass =
     CustomTypeAnnotation("moz_non_temporary_class", "non-temporary");
 static CustomTypeAnnotation MustUse =
     CustomTypeAnnotation("moz_must_use", "must-use");
-static CustomTypeAnnotation NonMemMovable =
-  CustomTypeAnnotation("moz_non_memmovable", "non-memmove()able");
+
+class MemMoveAnnotation final : public CustomTypeAnnotation {
+public:
+  MemMoveAnnotation()
+      : CustomTypeAnnotation("moz_non_memmovable", "non-memmove()able") {}
+
+  virtual ~MemMoveAnnotation() {}
+
+protected:
+  bool hasFakeAnnotation(const TagDecl *D) const override {
+    // Annotate everything in ::std, with a few exceptions; see bug
+    // 1201314 for discussion.
+    if (getDeclarationNamespace(D) == "std") {
+      // This doesn't check that it's really ::std::pair and not
+      // ::std::something_else::pair, but should be good enough.
+      StringRef Name = D->getName();
+      if (Name == "pair" || Name == "atomic" || Name == "__atomic_base") {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+};
+
+static MemMoveAnnotation NonMemMovable = MemMoveAnnotation();
 
 class MozChecker : public ASTConsumer, public RecursiveASTVisitor<MozChecker> {
   DiagnosticsEngine &Diag;
@@ -768,7 +798,7 @@ bool CustomTypeAnnotation::hasLiteralAnnotation(QualType T) const {
 #else
   if (const CXXRecordDecl *D = T->getAsCXXRecordDecl()) {
 #endif
-    return MozChecker::hasCustomAnnotation(D, Spelling);
+    return hasFakeAnnotation(D) || MozChecker::hasCustomAnnotation(D, Spelling);
   }
   return false;
 }

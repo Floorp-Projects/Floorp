@@ -248,17 +248,29 @@ class Simulator
     inline void writeB(int32_t addr, uint8_t value);
     inline void writeB(int32_t addr, int8_t value);
 
+    inline uint8_t readExBU(int32_t addr);
+    inline int32_t writeExB(int32_t addr, uint8_t value);
+
     inline uint16_t readHU(int32_t addr, SimInstruction* instr);
     inline int16_t readH(int32_t addr, SimInstruction* instr);
     // Note: Overloaded on the sign of the value.
     inline void writeH(int32_t addr, uint16_t value, SimInstruction* instr);
     inline void writeH(int32_t addr, int16_t value, SimInstruction* instr);
 
+    inline uint16_t readExHU(int32_t addr, SimInstruction* instr);
+    inline int32_t writeExH(int32_t addr, uint16_t value, SimInstruction* instr);
+
     inline int readW(int32_t addr, SimInstruction* instr);
     inline void writeW(int32_t addr, int value, SimInstruction* instr);
 
+    inline int readExW(int32_t addr, SimInstruction* instr);
+    inline int writeExW(int32_t addr, int value, SimInstruction* instr);
+
     int32_t* readDW(int32_t addr);
     void writeDW(int32_t addr, int32_t value1, int32_t value2);
+
+    int32_t readExDW(int32_t addr, int32_t* hibits);
+    int32_t writeExDW(int32_t addr, int32_t value1, int32_t value2);
 
     // Executing is handled based on the instruction type.
     // Both type 0 and type 1 rolled into one.
@@ -432,6 +444,15 @@ class Simulator
         MOZ_ASSERT(cacheLockHolder_);
         redirection_ = redirection;
     }
+
+  private:
+    // Exclusive access monitor
+    void exclusiveMonitorSet(uint64_t value);
+    uint64_t exclusiveMonitorGetAndClear(bool* held);
+    void exclusiveMonitorClear();
+
+    bool exclusiveMonitorHeld_;
+    uint64_t exclusiveMonitor_;
 };
 
 #define JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, extra, onerror)             \

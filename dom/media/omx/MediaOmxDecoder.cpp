@@ -13,9 +13,9 @@ using namespace android;
 namespace mozilla {
 
 MediaDecoder*
-MediaOmxDecoder::Clone()
+MediaOmxDecoder::Clone(MediaDecoderOwner* aOwner)
 {
-  return new MediaOmxDecoder();
+  return new MediaOmxDecoder(aOwner);
 }
 
 MediaOmxCommonReader*

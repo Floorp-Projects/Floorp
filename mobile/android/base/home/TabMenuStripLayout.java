@@ -54,7 +54,7 @@ class TabMenuStripLayout extends LinearLayout
         final int stripResId = a.getResourceId(R.styleable.TabMenuStrip_strip, -1);
 
         titlebarFill = a.getBoolean(R.styleable.TabMenuStrip_titlebarFill, false);
-        tabContentStart = a.getDimensionPixelSize(R.styleable.TabMenuStrip_tabContentStart, 0);
+        tabContentStart = a.getDimensionPixelSize(R.styleable.TabMenuStrip_tabsMarginLeft, 0);
         activeTextColor = a.getColor(R.styleable.TabMenuStrip_activeTextColor, R.color.text_and_tabs_tray_grey);
         inactiveTextColor = a.getColorStateList(R.styleable.TabMenuStrip_inactiveTextColor);
         a.recycle();
