@@ -1323,7 +1323,7 @@
       for (var listener of visibilityListeners) {
         listener({ target: { hidden: false } });
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       uncaughtError = err;
     }

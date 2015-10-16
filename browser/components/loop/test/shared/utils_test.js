@@ -321,7 +321,7 @@ describe("loop.shared.utils", function() {
     beforeEach(function() {
       // fake mozL10n
       sandbox.stub(navigator.mozL10n, "get", function(id) {
-        switch(id) {
+        switch (id) {
           case "share_email_subject6":
             return "subject";
           case "share_email_body6":

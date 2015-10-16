@@ -597,7 +597,7 @@ var MozLoopPushHandler = {
       return;
     }
 
-    switch(aMsg.messageType) {
+    switch (aMsg.messageType) {
       case "hello":
         this._onHello(aMsg);
         break;

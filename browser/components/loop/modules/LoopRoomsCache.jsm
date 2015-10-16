@@ -81,7 +81,7 @@ LoopRoomsCache.prototype = {
 
     try {
       return (this._cache = yield CommonUtils.readJSON(this.path));
-    } catch(error) {
+    } catch (error) {
       if (!error.becauseNoSuchFile) {
         MozLoopService.log.debug("Error reading the cache:", error);
       }

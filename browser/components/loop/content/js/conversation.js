@@ -67,7 +67,7 @@ loop.conversation = (function(mozL10n) {
         return this._renderFeedbackForm();
       }
 
-      switch(this.state.windowType) {
+      switch (this.state.windowType) {
         case "room": {
           return (React.createElement(DesktopRoomConversationView, {
             chatWindowDetached: this.state.chatWindowDetached, 

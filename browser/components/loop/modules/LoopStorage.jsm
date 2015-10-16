@@ -162,7 +162,7 @@ const getTransaction = function(store, callback, mode) {
     let trans;
     try {
       trans = db.transaction(store, mode);
-    } catch(ex) {
+    } catch (ex) {
       callback(ex);
       return;
     }
