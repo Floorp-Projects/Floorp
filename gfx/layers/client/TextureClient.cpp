@@ -102,11 +102,11 @@ public:
 
   TextureChild()
   : mForwarder(nullptr)
-  , mMainThreadOnly(false)
-  , mIPCOpen(false)
   , mMonitor("TextureChild")
   , mTextureClient(nullptr)
   , mDestroyed(false)
+  , mMainThreadOnly(false)
+  , mIPCOpen(false)
   {
   }
 
