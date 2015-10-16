@@ -820,28 +820,26 @@ void nsNSSCertificateDB::DisplayCertificateAlert(nsIInterfaceRequestor *ctx,
     return;
   }
 
-  nsPSMUITracker tracker;
-  if (!tracker.isUIForbidden()) {
+  nsCOMPtr<nsIInterfaceRequestor> my_ctx = ctx;
+  if (!my_ctx) {
+    my_ctx = new PipUIContext();
+  }
 
-    nsCOMPtr<nsIInterfaceRequestor> my_ctx = ctx;
-    if (!my_ctx)
-      my_ctx = new PipUIContext();
+  // This shall be replaced by embedding ovverridable prompts
+  // as discussed in bug 310446, and should make use of certToShow.
 
-    // This shall be replaced by embedding ovverridable prompts
-    // as discussed in bug 310446, and should make use of certToShow.
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString tmpMessage;
+    nssComponent->GetPIPNSSBundleString(stringID, tmpMessage);
 
-    nsresult rv;
-    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString tmpMessage;
-      nssComponent->GetPIPNSSBundleString(stringID, tmpMessage);
-
-      nsCOMPtr<nsIPrompt> prompt (do_GetInterface(my_ctx));
-      if (!prompt)
-        return;
-    
-      prompt->Alert(nullptr, tmpMessage.get());
+    nsCOMPtr<nsIPrompt> prompt (do_GetInterface(my_ctx));
+    if (!prompt) {
+      return;
     }
+
+    prompt->Alert(nullptr, tmpMessage.get());
   }
 }
 

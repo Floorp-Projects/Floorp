@@ -1271,8 +1271,6 @@ static const char* const PROFILE_CHANGE_NET_TEARDOWN_TOPIC
   = "profile-change-net-teardown";
 static const char* const PROFILE_CHANGE_NET_RESTORE_TOPIC
   = "profile-change-net-restore";
-static const char* const PROFILE_CHANGE_TEARDOWN_TOPIC
-  = "profile-change-teardown";
 static const char* const PROFILE_BEFORE_CHANGE_TOPIC = "profile-before-change";
 static const char* const PROFILE_DO_CHANGE_TOPIC = "profile-do-change";
 
@@ -1280,11 +1278,7 @@ NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* someData)
 {
-  if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("in PSM code, receiving change-teardown\n"));
-    DoProfileChangeTeardown(aSubject);
-  }
-  else if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
+  if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("receiving profile change topic\n"));
     DoProfileBeforeChange(aSubject);
   }
@@ -1298,7 +1292,6 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       // profiles. The order of function calls must correspond to the order
       // of notifications sent by Profile Manager (nsProfile).
       DoProfileChangeNetTeardown();
-      DoProfileChangeTeardown(aSubject);
       DoProfileBeforeChange(aSubject);
       DoProfileChangeNetRestore();
     }
@@ -1421,13 +1414,7 @@ nsNSSComponent::ShowAlertWithConstructedString(const nsString& message)
   nsCOMPtr<nsIPrompt> prompter;
   nsresult rv = GetNewPrompter(getter_AddRefs(prompter));
   if (prompter) {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      NS_WARNING("Suppressing alert because PSM UI is forbidden");
-      rv = NS_ERROR_UNEXPECTED;
-    } else {
-      rv = prompter->Alert(nullptr, message.get());
-    }
+    rv = prompter->Alert(nullptr, message.get());
   }
   return rv;
 }
@@ -1482,7 +1469,6 @@ nsNSSComponent::RegisterObservers()
 
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
-    observerService->AddObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC, false);
     observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, false);
     observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC, false);
     observerService->AddObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC, false);
@@ -1505,7 +1491,6 @@ nsNSSComponent::DeregisterObservers()
 
     observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
-    observerService->RemoveObserver(this, PROFILE_CHANGE_TEARDOWN_TOPIC);
     observerService->RemoveObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_DO_CHANGE_TOPIC);
     observerService->RemoveObserver(this, PROFILE_CHANGE_NET_TEARDOWN_TOPIC);
@@ -1520,12 +1505,6 @@ nsNSSComponent::DoProfileChangeNetTeardown()
   if (mCertVerificationThread)
     mCertVerificationThread->requestExit();
   mIsNetworkDown = true;
-}
-
-void
-nsNSSComponent::DoProfileChangeTeardown(nsISupports* aSubject)
-{
-  mShutdownObjectList->ifPossibleDisallowUI();
 }
 
 void
@@ -1549,7 +1528,6 @@ nsNSSComponent::DoProfileBeforeChange(nsISupports* aSubject)
   if (needsCleanup) {
     ShutdownNSS();
   }
-  mShutdownObjectList->allowUI();
 }
 
 void
@@ -1649,9 +1627,9 @@ getNSSDialogs(void** _result, REFNSIID aIID, const char* contract)
 }
 
 nsresult
-setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx)
+setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx,
+            nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  nsNSSShutDownPreventionLock locker;
   nsresult rv = NS_OK;
 
   if (PK11_NeedUserInit(slot)) {
@@ -1665,17 +1643,8 @@ setPassword(PK11SlotInfo* slot, nsIInterfaceRequestor* ctx)
 
     if (NS_FAILED(rv)) goto loser;
 
-    {
-      nsPSMUITracker tracker;
-      if (tracker.isUIForbidden()) {
-        rv = NS_ERROR_NOT_AVAILABLE;
-      }
-      else {
-        rv = dialogs->SetPassword(ctx,
-                                  tokenName.get(),
-                                  &canceled);
-      }
-    }
+    rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
+
     NS_RELEASE(dialogs);
     if (NS_FAILED(rv)) goto loser;
 
