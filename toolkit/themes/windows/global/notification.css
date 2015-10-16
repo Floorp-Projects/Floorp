@@ -8,6 +8,16 @@ notification {
   color: InfoText;
   background-color: InfoBackground;
   text-shadow: none;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+notificationbox[notificationside="top"] > notification {
+  border-top-style: none;
+}
+
+notificationbox[notificationside="bottom"] > notification {
+  border-bottom-style: none;
 }
 
 notification[type="info"] {

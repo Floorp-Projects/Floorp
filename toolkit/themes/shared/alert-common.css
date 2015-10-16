@@ -10,42 +10,39 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.alertImageBox {
-  padding: 8px 0;
-  width: 64px;
-  background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.6));
-  -moz-border-end: 1px solid rgba(0,0,0,.1);
+#alertNotification {
+  padding: 30px;
+  padding-inline-start: 90px;
 }
 
-.alertTextBox {
-  padding: 8px;
-  -moz-padding-start: 16px;
-  width: 255px;
-}
-
-.alertTextBox,
-.alertCloseBox {
-  background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-}
-
-#alertNotification[clickable="true"]:hover .alertTextBox,
-#alertNotification[clickable="true"]:hover .alertCloseBox {
-  background-image: linear-gradient(rgba(255,255,255,0.4), rgba(255,255,255,0.3));
-}
-
-.alertTitle {
-  font-weight: bold;
-  font-size: 110%;
-}
-
-.alertSource {
-  color: gray;
+#alertBox[hasBodyText] > #alertTextBox,
+#alertBox[hasOrigin] > #alertTitleBox {
+  border-bottom: 1px solid ThreeDShadow;
 }
 
 #alertImage {
-  max-width: 48px;
-  max-height: 48px;
-  list-style-image: url(chrome://global/skin/alerts/notification-48.png);
+  margin: 8px 0;
+  width: 64px;
+}
+
+.alertTextBox {
+  padding-top: 8px;
+  padding-inline-start: 8px;
+  /* The text box width is increased to make up for the lack of image when one
+     is not provided. 319px is the text box width when a picture is present,
+     255px, plus the width of the image, 64px. */
+  width: 319px;
+}
+
+#alertBox[hasImage] > box > #alertTextBox {
+  width: 255px;
+}
+
+.alertTitle {
+  -moz-box-flex: 1;
+  font-weight: bold;
+  padding: 6px 8px;
+  width: 255px;
 }
 
 #alertNotification[clickable="true"] {
@@ -54,4 +51,34 @@
 
 label {
   cursor: inherit;
+}
+
+#alertSourceLabel {
+  -moz-box-flex: 1;
+  font-size: 83.334%;
+  color: GrayText;
+}
+
+#alertSettings {
+  -moz-appearance: none;
+  background-color: transparent;
+  border-width: 0;
+  min-width: 0;
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities");
+  visibility: hidden; /* Temporary until bug 1209602 or bug 1205172 is fixed. */
+}
+
+#alertSettings:hover {
+  background-color: rgba(107,107,107,.2);
+  border-radius: 20px;
+}
+
+#alertSettings["open"],
+#alertSettings:hover:active {
+  background-color: rgba(107,107,107,.4);
+}
+
+#alertSettings > .button-box > .button-menu-dropmarker,
+#alertSettings > .button-box > .box-inherit > .button-text {
+  display: none;
 }

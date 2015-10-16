@@ -3,13 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #alertBox[animate] {
-  animation-duration: 4s;
+  animation-duration: 12s;
   animation-fill-mode: both;
   animation-name: alert-animation;
 }
 
-#alertBox[animate]:hover {
+#alertBox[animate]:not([clicked]):not([closing]):hover {
   animation-play-state: paused;
+}
+
+#alertBox:not([hasOrigin]) > box > #alertTextBox > #alertFooter,
+#alertImage:not([src]) {
+  display: none;
 }
 
 .alertText {

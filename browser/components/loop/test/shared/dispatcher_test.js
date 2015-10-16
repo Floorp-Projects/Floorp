@@ -66,16 +66,16 @@ describe("loop.Dispatcher", function () {
   });
 
   describe("#dispatch", function() {
-    var getDataStore1, getDataStore2, cancelStore1, connectStore1;
-    var getDataAction, cancelAction, connectAction, resolveCancelStore1;
+    var getDataStore1, getDataStore2, gotMediaPermissionStore1, mediaConnectedStore1;
+    var getDataAction, gotMediaPermissionAction, mediaConnectedAction;
 
     beforeEach(function() {
       getDataAction = new sharedActions.GetWindowData({
         windowId: "42"
       });
 
-      cancelAction = new sharedActions.CancelCall();
-      connectAction = new sharedActions.ConnectCall({
+      gotMediaPermissionAction = new sharedActions.GotMediaPermission();
+      mediaConnectedAction = new sharedActions.MediaConnected({
         sessionData: {}
       });
 
@@ -85,26 +85,27 @@ describe("loop.Dispatcher", function () {
       getDataStore2 = {
         getWindowData: sinon.stub()
       };
-      cancelStore1 = {
-        cancelCall: sinon.stub()
+      gotMediaPermissionStore1 = {
+        gotMediaPermission: sinon.stub()
       };
-      connectStore1 = {
-        connectCall: function() {}
+      mediaConnectedStore1 = {
+        mediaConnected: function() {}
       };
 
       dispatcher.register(getDataStore1, ["getWindowData"]);
       dispatcher.register(getDataStore2, ["getWindowData"]);
-      dispatcher.register(cancelStore1, ["cancelCall"]);
-      dispatcher.register(connectStore1, ["connectCall"]);
+      dispatcher.register(gotMediaPermissionStore1, ["gotMediaPermission"]);
+      dispatcher.register(mediaConnectedStore1, ["mediaConnected"]);
     });
 
     it("should dispatch an action to the required object", function() {
-      dispatcher.dispatch(cancelAction);
+      dispatcher.dispatch(gotMediaPermissionAction);
 
       sinon.assert.notCalled(getDataStore1.getWindowData);
 
-      sinon.assert.calledOnce(cancelStore1.cancelCall);
-      sinon.assert.calledWithExactly(cancelStore1.cancelCall, cancelAction);
+      sinon.assert.calledOnce(gotMediaPermissionStore1.gotMediaPermission);
+      sinon.assert.calledWithExactly(gotMediaPermissionStore1.gotMediaPermission,
+        gotMediaPermissionAction);
 
       sinon.assert.notCalled(getDataStore2.getWindowData);
     });
@@ -115,17 +116,17 @@ describe("loop.Dispatcher", function () {
       sinon.assert.calledOnce(getDataStore1.getWindowData);
       sinon.assert.calledWithExactly(getDataStore1.getWindowData, getDataAction);
 
-      sinon.assert.notCalled(cancelStore1.cancelCall);
+      sinon.assert.notCalled(gotMediaPermissionStore1.gotMediaPermission);
 
       sinon.assert.calledOnce(getDataStore2.getWindowData);
       sinon.assert.calledWithExactly(getDataStore2.getWindowData, getDataAction);
     });
 
     it("should dispatch multiple actions", function() {
-      dispatcher.dispatch(cancelAction);
+      dispatcher.dispatch(gotMediaPermissionAction);
       dispatcher.dispatch(getDataAction);
 
-      sinon.assert.calledOnce(cancelStore1.cancelCall);
+      sinon.assert.calledOnce(gotMediaPermissionStore1.gotMediaPermission);
       sinon.assert.calledOnce(getDataStore1.getWindowData);
       sinon.assert.calledOnce(getDataStore2.getWindowData);
     });
@@ -139,11 +140,11 @@ describe("loop.Dispatcher", function () {
         getDataStore1.getWindowData.throws("Uncaught Error");
 
         dispatcher.dispatch(getDataAction);
-        dispatcher.dispatch(cancelAction);
+        dispatcher.dispatch(gotMediaPermissionAction);
 
         sinon.assert.calledOnce(getDataStore1.getWindowData);
         sinon.assert.calledOnce(getDataStore2.getWindowData);
-        sinon.assert.calledOnce(cancelStore1.cancelCall);
+        sinon.assert.calledOnce(gotMediaPermissionStore1.gotMediaPermission);
       });
 
       it("should log uncaught exceptions", function() {
@@ -159,7 +160,7 @@ describe("loop.Dispatcher", function () {
       beforeEach(function() {
         // Restore the stub, so that we can easily add a function to be
         // returned. Unfortunately, sinon doesn't make this easy.
-        sandbox.stub(connectStore1, "connectCall", function() {
+        sandbox.stub(mediaConnectedStore1, "mediaConnected", function() {
           dispatcher.dispatch(getDataAction);
 
           sinon.assert.notCalled(getDataStore1.getWindowData);
@@ -170,17 +171,17 @@ describe("loop.Dispatcher", function () {
       it("should not dispatch an action if the previous action hasn't finished", function() {
         // Dispatch the first action. The action handler dispatches the second
         // action - see the beforeEach above.
-        dispatcher.dispatch(connectAction);
+        dispatcher.dispatch(mediaConnectedAction);
 
-        sinon.assert.calledOnce(connectStore1.connectCall);
+        sinon.assert.calledOnce(mediaConnectedStore1.mediaConnected);
       });
 
       it("should dispatch an action when the previous action finishes", function() {
         // Dispatch the first action. The action handler dispatches the second
         // action - see the beforeEach above.
-        dispatcher.dispatch(connectAction);
+        dispatcher.dispatch(mediaConnectedAction);
 
-        sinon.assert.calledOnce(connectStore1.connectCall);
+        sinon.assert.calledOnce(mediaConnectedStore1.mediaConnected);
         // These should be called, because the dispatcher synchronously queues actions.
         sinon.assert.calledOnce(getDataStore1.getWindowData);
         sinon.assert.calledOnce(getDataStore2.getWindowData);
