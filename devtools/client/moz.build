@@ -35,6 +35,7 @@ DIRS += [
     'storage',
     'styleeditor',
     'styleinspector',
+    'themes',
     'tilt',
     'webaudioeditor',
     'webconsole',

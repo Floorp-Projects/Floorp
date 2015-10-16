@@ -4,20 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 DevToolsModules(
-    'dom-tree.css',
-    'general.css',
-    'headers-panel.css',
-    'json-panel.css',
-    'main.css',
-    'read-only-prop.svg',
-    'reps.css',
-    'search-box.css',
-    'search.svg',
-    'tabs.css',
-    'text-panel.css',
-    'toolbar.css',
-    'twisty-closed.svg',
-    'twisty-open.svg'
+    'variables.css',
 )
