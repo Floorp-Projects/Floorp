@@ -65,7 +65,6 @@ label {
   border-width: 0;
   min-width: 0;
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities");
-  visibility: hidden; /* Temporary until bug 1209602 or bug 1205172 is fixed. */
 }
 
 #alertSettings:hover {
@@ -73,7 +72,7 @@ label {
   border-radius: 20px;
 }
 
-#alertSettings["open"],
+#alertSettings[open],
 #alertSettings:hover:active {
   background-color: rgba(107,107,107,.4);
 }
