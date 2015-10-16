@@ -157,7 +157,7 @@ cyphertite.com: could not connect to host
 data-abundance.com: could not connect to host
 datasnitch.co.uk: could not connect to host
 datenkeks.de: did not receive HSTS header
-dateno1.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-periodicupdate-00/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
+dateno1.com: could not connect to host
 daylightcompany.com: did not receive HSTS header
 dccode.gov: could not connect to host
 de.search.yahoo.com: did not receive HSTS header
@@ -178,6 +178,7 @@ do.search.yahoo.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header (error ignored - included regardless)
 dohosting.ru: did not receive HSTS header
 domaris.de: did not receive HSTS header
+dorianmuthig.com: could not connect to host
 dotadata.me: could not connect to host
 download.jitsi.org: did not receive HSTS header
 dragons-of-highlands.cz: could not connect to host
@@ -185,7 +186,7 @@ drbethanybarnes.com: [Exception... "Component returned failure code: 0x80004005 
 drive.google.com: did not receive HSTS header (error ignored - included regardless)
 dropcam.com: did not receive HSTS header
 drtroyhendrickson.com: could not connect to host
-dymersion.com: did not receive HSTS header
+dynamicsnetwork.net: could not connect to host
 dzlibs.io: could not connect to host
 e-aut.net: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-periodicupdate-00/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 e-deca2.org: did not receive HSTS header
@@ -214,7 +215,6 @@ etsysecure.com: could not connect to host
 exiahost.com: did not receive HSTS header
 expoundite.net: did not receive HSTS header
 ezequiel-garzon.com: could not connect to host
-ezequiel-garzon.net: did not receive HSTS header
 ezimoeko.net: could not connect to host
 eztv.ch: did not receive HSTS header
 fabianfischer.de: did not receive HSTS header
@@ -241,6 +241,7 @@ fr.search.yahoo.com: did not receive HSTS header
 frusky.de: could not connect to host
 frusky.net: could not connect to host
 g2g.com: did not receive HSTS header
+g4w.co: could not connect to host
 g4w.co: could not connect to host (error ignored - included regardless)
 gamesdepartment.co.uk: did not receive HSTS header
 gaptek.id: did not receive HSTS header
@@ -613,7 +614,6 @@ suzukikenichi.com: did not receive HSTS header
 sv.search.yahoo.com: did not receive HSTS header
 svager.cz: could not connect to host
 syncer.jp: did not receive HSTS header
-system.is: could not connect to host
 t.facebook.com: did not receive HSTS header
 tablet.facebook.com: did not receive HSTS header
 tageau.com: did not receive HSTS header
