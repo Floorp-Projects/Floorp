@@ -456,6 +456,7 @@ exports.TimeScale = TimeScale;
 function AnimationsTimeline(inspector) {
   this.animations = [];
   this.targetNodes = [];
+  this.timeBlocks = [];
   this.inspector = inspector;
 
   this.onAnimationStateChanged = this.onAnimationStateChanged.bind(this);
@@ -540,6 +541,13 @@ AnimationsTimeline.prototype = {
     this.targetNodes = [];
   },
 
+  destroyTimeBlocks: function() {
+    for (let timeBlock of this.timeBlocks) {
+      timeBlock.destroy();
+    }
+    this.timeBlocks = [];
+  },
+
   unrender: function() {
     for (let animation of this.animations) {
       animation.off("changed", this.onAnimationStateChanged);
@@ -547,6 +555,7 @@ AnimationsTimeline.prototype = {
 
     TimeScale.reset();
     this.destroyTargetNodes();
+    this.destroyTimeBlocks();
     this.animationsEl.innerHTML = "";
   },
 
@@ -638,6 +647,13 @@ AnimationsTimeline.prototype = {
         }
       });
 
+      // Draw the animated node target.
+      let targetNode = new AnimationTargetNode(this.inspector, {compact: true});
+      targetNode.init(animatedNodeEl);
+      targetNode.render(animation);
+      this.targetNodes.push(targetNode);
+
+      // Right-hand part contains the timeline itself (called time-block here).
       let timeBlockEl = createNode({
         parent: animationEl,
         attributes: {
@@ -645,15 +661,11 @@ AnimationsTimeline.prototype = {
         }
       });
 
-      this.drawTimeBlock(animation, timeBlockEl);
-
-      // Draw the animated node target.
-      let targetNode = new AnimationTargetNode(this.inspector, {compact: true});
-      targetNode.init(animatedNodeEl);
-      targetNode.render(animation);
-
-      // Save the targetNode so it can be destroyed later.
-      this.targetNodes.push(targetNode);
+      // Draw the animation time block.
+      let timeBlock = new AnimationTimeBlock();
+      timeBlock.init(timeBlockEl);
+      timeBlock.render(animation);
+      this.timeBlocks.push(timeBlock);
     }
 
     // Use the document's current time to position the scrubber (if the server
@@ -745,30 +757,37 @@ AnimationsTimeline.prototype = {
           TimeScale.distanceToRelativeTime(i, width))
       });
     }
+  }
+};
+
+/**
+ * UI component responsible for displaying a single animation timeline, which
+ * basically looks like a rectangle that shows the delay and iterations.
+ */
+function AnimationTimeBlock() {
+  this.onClick = this.onClick.bind(this);
+}
+
+exports.AnimationTimeBlock = AnimationTimeBlock;
+
+AnimationTimeBlock.prototype = {
+  init: function(containerEl) {
+    this.containerEl = containerEl;
   },
 
-  getAnimationTooltipText: function(state) {
-    let getTime = time => L10N.getFormatStr("player.timeLabel",
-                            L10N.numberWithDecimals(time / 1000, 2));
-
-    // The type isn't always available, older servers don't send it.
-    let title =
-      state.type
-      ? L10N.getFormatStr("timeline." + state.type + ".nameLabel", state.name)
-      : state.name;
-    let delay = L10N.getStr("player.animationDelayLabel") + " " +
-                getTime(state.delay);
-    let duration = L10N.getStr("player.animationDurationLabel") + " " +
-                   getTime(state.duration);
-    let iterations = L10N.getStr("player.animationIterationCountLabel") + " " +
-                     (state.iterationCount ||
-                      L10N.getStr("player.infiniteIterationCountText"));
-
-    return [title, duration, iterations, delay].join("\n");
+  destroy: function() {
+    while (this.containerEl.firstChild) {
+      this.containerEl.firstChild.remove();
+    }
+    this.containerEl = null;
+    this.animation = null;
   },
 
-  drawTimeBlock: function({state}, el) {
-    let width = el.offsetWidth;
+  render: function(animation) {
+    this.animation = animation;
+    let {state} = this.animation;
+
+    let width = this.containerEl.offsetWidth;
 
     // Create a container element to hold the delay and iterations.
     // It is positioned according to its delay (divided by the playbackrate),
@@ -783,7 +802,7 @@ AnimationsTimeline.prototype = {
     let w = TimeScale.durationToDistance(duration / rate, width);
 
     let iterations = createNode({
-      parent: el,
+      parent: this.containerEl,
       attributes: {
         "class": state.type + " iterations" + (count ? "" : " infinite"),
         // Individual iterations are represented by setting the size of the
@@ -801,7 +820,7 @@ AnimationsTimeline.prototype = {
       parent: iterations,
       attributes: {
         "class": "name",
-        "title": this.getAnimationTooltipText(state),
+        "title": this.getTooltipText(state),
         "style": delay < 0
                  ? "margin-left:" +
                    TimeScale.durationToDistance(Math.abs(delay), width) + "px"
@@ -813,16 +832,39 @@ AnimationsTimeline.prototype = {
     // Delay.
     if (delay) {
       // Negative delays need to start at 0.
-      let x = TimeScale.durationToDistance((delay < 0 ? 0 : delay) / rate, width);
-      let w = TimeScale.durationToDistance(Math.abs(delay) / rate, width);
+      let delayX = TimeScale.durationToDistance(
+        (delay < 0 ? 0 : delay) / rate, width);
+      let delayW = TimeScale.durationToDistance(
+        Math.abs(delay) / rate, width);
+
       createNode({
         parent: iterations,
         attributes: {
           "class": "delay" + (delay < 0 ? " negative" : ""),
-          "style": `left:-${x}px;
-                    width:${w}px;`
+          "style": `left:-${delayX}px;
+                    width:${delayW}px;`
         }
       });
     }
+  },
+
+  getTooltipText: function(state) {
+    let getTime = time => L10N.getFormatStr("player.timeLabel",
+                            L10N.numberWithDecimals(time / 1000, 2));
+
+    // The type isn't always available, older servers don't send it.
+    let title =
+      state.type
+      ? L10N.getFormatStr("timeline." + state.type + ".nameLabel", state.name)
+      : state.name;
+    let delay = L10N.getStr("player.animationDelayLabel") + " " +
+                getTime(state.delay);
+    let duration = L10N.getStr("player.animationDurationLabel") + " " +
+                   getTime(state.duration);
+    let iterations = L10N.getStr("player.animationIterationCountLabel") + " " +
+                     (state.iterationCount ||
+                      L10N.getStr("player.infiniteIterationCountText"));
+
+    return [title, duration, iterations, delay].join("\n");
   }
 };
