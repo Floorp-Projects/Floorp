@@ -86,6 +86,32 @@ private:
                    BluetoothSetupResultHandler* aRes);
 };
 
+class BluetoothDaemonSetupInterface final
+  : public BluetoothSetupInterface
+{
+public:
+  BluetoothDaemonSetupInterface(BluetoothDaemonSetupModule* aModule);
+  ~BluetoothDaemonSetupInterface();
+
+  void RegisterModule(uint8_t aId, uint8_t aMode,
+                      uint32_t aMaxNumClients,
+                      BluetoothSetupResultHandler* aRes) override;
+
+  void UnregisterModule(uint8_t aId,
+                        BluetoothSetupResultHandler* aRes) override;
+
+  void Configuration(const BluetoothConfigurationParameter* aParam,
+                     uint8_t aLen,
+                     BluetoothSetupResultHandler* aRes) override;
+
+private:
+  void DispatchError(BluetoothSetupResultHandler* aRes,
+                     BluetoothStatus aStatus);
+  void DispatchError(BluetoothSetupResultHandler* aRes, nsresult aRv);
+
+  BluetoothDaemonSetupModule* mModule;
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif // mozilla_dom_bluetooth_bluedroid_BluetoothDaemonSetupInterface_h

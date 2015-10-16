@@ -39,6 +39,12 @@ void
 BluetoothSetupResultHandler::Configuration()
 { }
 
+// Interface
+//
+
+BluetoothSetupInterface::~BluetoothSetupInterface()
+{ }
+
 //
 // Socket Interface
 //

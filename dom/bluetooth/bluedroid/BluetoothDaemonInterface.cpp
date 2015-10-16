@@ -889,8 +889,20 @@ BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
   DispatchError(aRes, status);
 }
 
-// Profile Interfaces
+// Service Interfaces
 //
+
+BluetoothSetupInterface*
+BluetoothDaemonInterface::GetBluetoothSetupInterface()
+{
+  if (mSetupInterface) {
+    return mSetupInterface;
+  }
+
+  mSetupInterface = new BluetoothDaemonSetupInterface(mProtocol);
+
+  return mSetupInterface;
+}
 
 BluetoothSocketInterface*
 BluetoothDaemonInterface::GetBluetoothSocketInterface()
