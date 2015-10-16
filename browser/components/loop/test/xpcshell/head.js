@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 // Initialize this before the imports, as some of them need it.
 do_get_profile();
@@ -172,8 +172,8 @@ MockWebSocketChannel.prototype = {
     switch(message.messageType) {
       case "hello":
         this.listener.onMessageAvailable(this.context,
-          JSON.stringify({messageType: "hello",
-                          uaid: kUAID}));
+          JSON.stringify({ messageType: "hello",
+                          uaid: kUAID }));
         break;
       case "register":
         this.channelID = message.channelID;
@@ -183,10 +183,10 @@ MockWebSocketChannel.prototype = {
           this.initRegStatus = 0;
         }
         this.listener.onMessageAvailable(this.context,
-          JSON.stringify({messageType: "register",
+          JSON.stringify({ messageType: "register",
                           status: statusCode,
                           channelID: this.channelID,
-                          pushEndpoint: kEndPointUrl}));
+                          pushEndpoint: kEndPointUrl }));
         break;
       default:
         this.defaultMsgHandler && this.defaultMsgHandler(message);

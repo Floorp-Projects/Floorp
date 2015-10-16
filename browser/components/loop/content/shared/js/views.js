@@ -62,7 +62,7 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     getDefaultProps: function() {
-      return {enabled: true, visible: true};
+      return { enabled: true, visible: true };
     },
 
     handleClick: function() {
@@ -389,9 +389,9 @@ loop.shared.views = (function(_, mozL10n) {
   var ConversationToolbar = React.createClass({displayName: "ConversationToolbar",
     getDefaultProps: function() {
       return {
-        video: {enabled: true, visible: true},
-        audio: {enabled: true, visible: true},
-        screenShare: {state: SCREEN_SHARE_STATES.INACTIVE, visible: false},
+        video: { enabled: true, visible: true },
+        audio: { enabled: true, visible: true },
+        screenShare: { state: SCREEN_SHARE_STATES.INACTIVE, visible: false },
         settingsMenuItems: null,
         showHangup: true
       };
@@ -446,7 +446,7 @@ loop.shared.views = (function(_, mozL10n) {
      */
     _onBodyMouseMove: function() {
       if (this.state.idle) {
-        this.setState({idle: false});
+        this.setState({ idle: false });
         this.startIdleCountDown();
       } else {
         this.userActivity = true;
@@ -484,7 +484,7 @@ loop.shared.views = (function(_, mozL10n) {
     startIdleCountDown: function() {
       this.checkUserActivity();
       this.inactivityTimeout = setTimeout(function() {
-        this.setState({idle: true});
+        this.setState({ idle: true });
         clearInterval(this.inactivityPollInterval);
       }.bind(this), 6000);
     },
@@ -583,7 +583,7 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     getDefaultProps: function() {
-      return {clearOnDocumentHidden: false};
+      return { clearOnDocumentHidden: false };
     },
 
     componentDidMount: function() {
@@ -607,7 +607,7 @@ loop.shared.views = (function(_, mozL10n) {
         // Note: The `silent` option prevents the `reset` event to be triggered
         // here, preventing the UI to "jump" a little because of the event
         // callback being processed in another tick (I think).
-        this.props.notifications.reset([], {silent: true});
+        this.props.notifications.reset([], { silent: true });
         this.forceUpdate();
       }
     },

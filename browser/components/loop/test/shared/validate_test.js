@@ -26,61 +26,61 @@ describe("Validator", function() {
 
     it("should check for a single required dependency when no option passed",
       function() {
-        expect(create({x: Number}, {}))
+        expect(create({ x: Number }, {}))
           .to.Throw(TypeError, /missing required x$/);
       });
 
     it("should check for a missing required dependency, undefined passed",
       function() {
-        expect(create({x: Number}, {x: undefined}))
+        expect(create({ x: Number }, { x: undefined }))
           .to.Throw(TypeError, /missing required x$/);
       });
 
     it("should check for multiple missing required dependencies", function() {
-      expect(create({x: Number, y: String}, {}))
+      expect(create({ x: Number, y: String }, {}))
         .to.Throw(TypeError, /missing required x, y$/);
     });
 
     it("should check for required dependency types", function() {
-      expect(create({x: Number}, {x: "woops"})).to.Throw(
+      expect(create({ x: Number }, { x: "woops" })).to.Throw(
         TypeError, /invalid dependency: x; expected Number, got String$/);
     });
 
     it("should check for a dependency to match at least one of passed types",
       function() {
-        expect(create({x: [X, Y]}, {x: 42})).to.Throw(
+        expect(create({ x: [X, Y] }, { x: 42 })).to.Throw(
           TypeError, /invalid dependency: x; expected X, Y, got Number$/);
-        expect(create({x: [X, Y]}, {x: new Y()})).to.not.Throw();
+        expect(create({ x: [X, Y] }, { x: new Y() })).to.not.Throw();
       });
 
     it("should skip type check if required dependency type is undefined",
       function() {
-        expect(create({x: undefined}, {x: /whatever/})).not.to.Throw();
+        expect(create({ x: undefined }, { x: /whatever/ })).not.to.Throw();
       });
 
     it("should check for a String dependency", function() {
-      expect(create({foo: String}, {foo: 42})).to.Throw(
+      expect(create({ foo: String }, { foo: 42 })).to.Throw(
         TypeError, /invalid dependency: foo/);
     });
 
     it("should check for a Number dependency", function() {
-      expect(create({foo: Number}, {foo: "x"})).to.Throw(
+      expect(create({ foo: Number }, { foo: "x" })).to.Throw(
         TypeError, /invalid dependency: foo/);
     });
 
     it("should check for a custom constructor dependency", function() {
-      expect(create({foo: X}, {foo: null})).to.Throw(
+      expect(create({ foo: X }, { foo: null })).to.Throw(
         TypeError, /invalid dependency: foo; expected X, got null$/);
     });
 
     it("should check for a native constructor dependency", function() {
-      expect(create({foo: rtcsd}, {foo: "x"}))
+      expect(create({ foo: rtcsd }, { foo: "x" }))
         .to.Throw(TypeError,
                   /invalid dependency: foo; expected RTCSessionDescription/);
     });
 
     it("should check for a null dependency", function() {
-      expect(create({foo: null}, {foo: "x"})).to.Throw(
+      expect(create({ foo: null }, { foo: "x" })).to.Throw(
         TypeError, /invalid dependency: foo; expected null, got String$/);
     });
   });

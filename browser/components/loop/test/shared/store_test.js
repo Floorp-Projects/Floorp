@@ -40,8 +40,8 @@ describe("loop.store", function () {
 
         it("should call initialize() when constructed, if defined", function() {
           var initialize = sandbox.spy();
-          var TestStore = loop.store.createStore({initialize: initialize});
-          var options = {fake: true};
+          var TestStore = loop.store.createStore({ initialize: initialize });
+          var options = { fake: true };
 
           new TestStore(dispatcher, options);
 
@@ -79,13 +79,13 @@ describe("loop.store", function () {
         it("should set initial store state if provided", function() {
           var TestStore = loop.store.createStore({
             getInitialStoreState: function() {
-              return {foo: "bar"};
+              return { foo: "bar" };
             }
           });
 
           var store = new TestStore(dispatcher);
 
-          expect(store.getStoreState()).eql({foo: "bar"});
+          expect(store.getStoreState()).eql({ foo: "bar" });
         });
       });
 
@@ -110,11 +110,11 @@ describe("loop.store", function () {
 
         beforeEach(function() {
           store = new TestStore(dispatcher);
-          store.setStoreState({foo: "bar", bar: "baz"});
+          store.setStoreState({ foo: "bar", bar: "baz" });
         });
 
         it("should retrieve the whole state by default", function() {
-          expect(store.getStoreState()).eql({foo: "bar", bar: "baz"});
+          expect(store.getStoreState()).eql({ foo: "bar", bar: "baz" });
         });
 
         it("should retrieve a given property state", function() {
@@ -128,11 +128,11 @@ describe("loop.store", function () {
 
         beforeEach(function() {
           store = new TestStore(dispatcher);
-          store.setStoreState({foo: "bar"});
+          store.setStoreState({ foo: "bar" });
         });
 
         it("should update store state data", function() {
-          store.setStoreState({foo: "baz"});
+          store.setStoreState({ foo: "baz" });
 
           expect(store.getStoreState("foo")).eql("baz");
         });
@@ -142,7 +142,7 @@ describe("loop.store", function () {
             done();
           });
 
-          store.setStoreState({foo: "baz"});
+          store.setStoreState({ foo: "baz" });
         });
 
         it("should trigger a `change:<prop>` event", function(done) {
@@ -150,7 +150,7 @@ describe("loop.store", function () {
             done();
           });
 
-          store.setStoreState({foo: "baz"});
+          store.setStoreState({ foo: "baz" });
         });
       });
     });
@@ -164,7 +164,7 @@ describe("loop.store", function () {
 
       store = new storeClass(dispatcher);
 
-      loop.store.StoreMixin.register({store: store});
+      loop.store.StoreMixin.register({ store: store });
 
       testComp = React.createClass({
         mixins: [loop.store.StoreMixin("store")],
@@ -177,16 +177,16 @@ describe("loop.store", function () {
     });
 
     it("should update the state when the store changes", function() {
-      store.setStoreState({test: true});
+      store.setStoreState({ test: true });
 
-      expect(view1.state).eql({test: true});
+      expect(view1.state).eql({ test: true });
     });
 
     it("should stop listening to state changes", function() {
       // There's no easy way in TestUtils to unmount, so simulate it.
       view1.componentWillUnmount();
 
-      store.setStoreState({test2: true});
+      store.setStoreState({ test2: true });
 
       expect(view1.state).eql(null);
     });
@@ -197,9 +197,9 @@ describe("loop.store", function () {
       // There's no easy way in TestUtils to unmount, so simulate it.
       view1.componentWillUnmount();
 
-      store.setStoreState({test3: true});
+      store.setStoreState({ test3: true });
 
-      expect(view2.state).eql({test3: true});
+      expect(view2.state).eql({ test3: true });
     });
   });
 });

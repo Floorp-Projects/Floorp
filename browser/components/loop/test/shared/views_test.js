@@ -314,7 +314,7 @@ describe("loop.shared.views", function() {
 
     it("should render a visible button", function() {
       var settingsMenuItems = [{ id: "help" }];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
 
       var node = comp.getDOMNode().querySelector(".btn-settings");
       expect(node.classList.contains("hide")).eql(false);
@@ -330,7 +330,7 @@ describe("loop.shared.views", function() {
         { id: "not Defined" },
         { id: "help" }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
       var menuItems = comp.getDOMNode().querySelectorAll(".settings-menu > li");
       expect(menuItems).to.have.length.of(1);
     });
@@ -340,13 +340,13 @@ describe("loop.shared.views", function() {
         { id: "not Defined" },
         { id: "another wrong menu item" }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
       expect(comp.getDOMNode()).to.eql(null);
     });
 
     it("should show the settings dropdown on click", function() {
       var settingsMenuItems = [{ id: "help" }];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
 
       expect(comp.state.showMenu).eql(false);
       TestUtils.Simulate.click(comp.getDOMNode().querySelector(".btn-settings"));
@@ -388,7 +388,7 @@ describe("loop.shared.views", function() {
           onClick: function() {}
         }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
 
       var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
       expect(node.classList.contains("hide")).eql(false);
@@ -403,7 +403,7 @@ describe("loop.shared.views", function() {
           onClick: function() {}
         }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
 
       var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
       expect(node.classList.contains("hide")).eql(true);
@@ -419,7 +419,7 @@ describe("loop.shared.views", function() {
           onClick: sandbox.stub()
         }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
 
       TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit"));
       sinon.assert.calledOnce(settingsMenuItems[0].onClick);
@@ -429,7 +429,7 @@ describe("loop.shared.views", function() {
       var settingsMenuItems = [
         { id: "help" }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems} );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
 
       TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li:last-child"));
 
@@ -521,7 +521,7 @@ describe("loop.shared.views", function() {
       var comp = mountTestComponent({
         hangup: hangup,
         publishStream: publishStream,
-        audio: {enabled: true}
+        audio: { enabled: true }
       });
 
       TestUtils.Simulate.click(
@@ -535,7 +535,7 @@ describe("loop.shared.views", function() {
       var comp = mountTestComponent({
         hangup: hangup,
         publishStream: publishStream,
-        audio: {enabled: true}
+        audio: { enabled: true }
       });
 
       TestUtils.Simulate.click(
@@ -549,7 +549,7 @@ describe("loop.shared.views", function() {
       var comp = mountTestComponent({
         hangup: hangup,
         publishStream: publishStream,
-        audio: {enabled: false}
+        audio: { enabled: false }
       });
 
       TestUtils.Simulate.click(
@@ -563,7 +563,7 @@ describe("loop.shared.views", function() {
       var comp = mountTestComponent({
         hangup: hangup,
         publishStream: publishStream,
-        video: {enabled: true}
+        video: { enabled: true }
       });
 
       TestUtils.Simulate.click(
@@ -577,7 +577,7 @@ describe("loop.shared.views", function() {
       var comp = mountTestComponent({
         hangup: hangup,
         publishStream: publishStream,
-        video: {enabled: false}
+        video: { enabled: false }
       });
 
       TestUtils.Simulate.click(
@@ -601,8 +601,8 @@ describe("loop.shared.views", function() {
 
     beforeEach(function() {
       coll = new sharedModels.NotificationCollection();
-      view = mountTestComponent({notifications: coll});
-      testNotif = {level: "warning", message: "foo"};
+      view = mountTestComponent({ notifications: coll });
+      testNotif = { level: "warning", message: "foo" };
       sinon.spy(view, "render");
     });
 
@@ -690,7 +690,7 @@ describe("loop.shared.views", function() {
           checked: true
         });
 
-        view.setProps({checked: false});
+        view.setProps({ checked: false });
 
         var checkbox = view.getDOMNode().querySelector(".checkbox");
         expect(checkbox.classList.contains("checked")).eql(false);
@@ -979,10 +979,10 @@ describe("loop.shared.views", function() {
         sinon.stub(view, "getDOMNode").returns(fakeViewElement);
 
         view.attachVideo({
-          srcObject: {fake: 1}
+          srcObject: { fake: 1 }
         });
 
-        expect(fakeViewElement.srcObject).eql({fake: 1});
+        expect(fakeViewElement.srcObject).eql({ fake: 1 });
       });
 
       it("should attach a video object for Firefox", function() {
@@ -991,10 +991,10 @@ describe("loop.shared.views", function() {
         sinon.stub(view, "getDOMNode").returns(fakeViewElement);
 
         view.attachVideo({
-          mozSrcObject: {fake: 2}
+          mozSrcObject: { fake: 2 }
         });
 
-        expect(fakeViewElement.mozSrcObject).eql({fake: 2});
+        expect(fakeViewElement.mozSrcObject).eql({ fake: 2 });
       });
 
       it("should attach a video object for Chrome", function() {
@@ -1003,10 +1003,10 @@ describe("loop.shared.views", function() {
         sinon.stub(view, "getDOMNode").returns(fakeViewElement);
 
         view.attachVideo({
-          src: {fake: 2}
+          src: { fake: 2 }
         });
 
-        expect(fakeViewElement.src).eql({fake: 2});
+        expect(fakeViewElement.src).eql({ fake: 2 });
       });
     });
   });
@@ -1038,7 +1038,7 @@ describe("loop.shared.views", function() {
         sdkDriver: {}
       });
 
-      loop.store.StoreMixin.register({textChatStore: textChatStore});
+      loop.store.StoreMixin.register({ textChatStore: textChatStore });
     });
 
     it("should mark the remote stream as the focus stream when not displaying screen share", function() {

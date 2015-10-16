@@ -135,7 +135,7 @@ loop.store = loop.store || {};
      * Updates active room store state.
      */
     _onActiveRoomStoreChange: function() {
-      this.setStoreState({activeRoom: this.activeRoomStore.getStoreState()});
+      this.setStoreState({ activeRoom: this.activeRoomStore.getStoreState() });
     },
 
     /**
@@ -277,7 +277,7 @@ loop.store = loop.store || {};
         var buckets = this._mozLoop.ROOM_CREATE;
         if (err) {
           this._mozLoop.telemetryAddValue("LOOP_ROOM_CREATE", buckets.CREATE_FAIL);
-          this.dispatchAction(new sharedActions.CreateRoomError({error: err}));
+          this.dispatchAction(new sharedActions.CreateRoomError({ error: err }));
           return;
         }
 
@@ -301,7 +301,7 @@ loop.store = loop.store || {};
      * Executed when a room has been created
      */
     createdRoom: function(actionData) {
-      this.setStoreState({pendingCreation: false});
+      this.setStoreState({ pendingCreation: false });
 
       // Opens the newly created room
       this.dispatchAction(new sharedActions.OpenRoom({
@@ -406,7 +406,7 @@ loop.store = loop.store || {};
       this._mozLoop.rooms.delete(actionData.roomToken, function(err) {
         var buckets = this._mozLoop.ROOM_DELETE;
         if (err) {
-          this.dispatchAction(new sharedActions.DeleteRoomError({error: err}));
+          this.dispatchAction(new sharedActions.DeleteRoomError({ error: err }));
         }
         this._mozLoop.telemetryAddValue("LOOP_ROOM_DELETE", buckets[err ?
           "DELETE_FAIL" : "DELETE_SUCCESS"]);
@@ -419,7 +419,7 @@ loop.store = loop.store || {};
      * @param {sharedActions.DeleteRoomError} actionData The action data.
      */
     deleteRoomError: function(actionData) {
-      this.setStoreState({error: actionData.error});
+      this.setStoreState({ error: actionData.error });
     },
 
     /**
@@ -429,12 +429,12 @@ loop.store = loop.store || {};
       this._mozLoop.rooms.getAll(null, function(err, rawRoomList) {
         var action;
 
-        this.setStoreState({pendingInitialRetrieval: false});
+        this.setStoreState({ pendingInitialRetrieval: false });
 
         if (err) {
-          action = new sharedActions.GetAllRoomsError({error: err});
+          action = new sharedActions.GetAllRoomsError({ error: err });
         } else {
-          action = new sharedActions.UpdateRoomList({roomList: rawRoomList});
+          action = new sharedActions.UpdateRoomList({ roomList: rawRoomList });
         }
 
         this.dispatchAction(action);
@@ -451,7 +451,7 @@ loop.store = loop.store || {};
      * @param {sharedActions.GetAllRoomsError} actionData The action data.
      */
     getAllRoomsError: function(actionData) {
-      this.setStoreState({error: actionData.error});
+      this.setStoreState({ error: actionData.error });
     },
 
     /**
@@ -541,7 +541,7 @@ loop.store = loop.store || {};
 
         var hadContextBefore = !!oldRoomURL;
 
-        this.setStoreState({error: null});
+        this.setStoreState({ error: null });
         this._mozLoop.rooms.update(actionData.roomToken, roomData,
           function(error, data) {
             var action = error ?

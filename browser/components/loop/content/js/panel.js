@@ -142,7 +142,7 @@ loop.panel = (function(_, mozL10n) {
             mozL10n.get("powered_by_afterLogo")
           ), 
           React.createElement("p", {className: "terms-service", 
-             dangerouslySetInnerHTML: {__html: tosHTML}, 
+             dangerouslySetInnerHTML: { __html: tosHTML}, 
              onClick: this.handleLinkClick})
          )
       );
@@ -161,7 +161,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     getDefaultProps: function() {
-      return {displayed: true};
+      return { displayed: true };
     },
 
     render: function() {
@@ -257,7 +257,7 @@ loop.panel = (function(_, mozL10n) {
              onClick: this.toggleDropdownMenu, 
              ref: "menu-button", 
              title: mozL10n.get("settings_menu_button_tooltip")}), 
-          React.createElement("ul", {className: cx({"dropdown-menu": true, hide: !this.state.showMenu})}, 
+          React.createElement("ul", {className: cx({ "dropdown-menu": true, hide: !this.state.showMenu })}, 
             React.createElement(SettingsDropdownEntry, {
                 extraCSSClass: "entry-settings-notifications entries-divider", 
                 label: mozL10n.get(notificationsLabel), 
@@ -859,9 +859,9 @@ loop.panel = (function(_, mozL10n) {
       var newUid = profile ? profile.uid : null;
       if (currUid === newUid) {
         // Update the state of hasEncryptionKey as this might have changed now.
-        this.setState({hasEncryptionKey: this.props.mozLoop.hasEncryptionKey});
+        this.setState({ hasEncryptionKey: this.props.mozLoop.hasEncryptionKey });
       } else {
-        this.setState({userProfile: profile});
+        this.setState({ userProfile: profile });
       }
       this.updateServiceErrors();
     },

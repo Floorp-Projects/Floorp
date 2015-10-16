@@ -52,7 +52,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         <p
           className="terms-service"
-          dangerouslySetInnerHTML={{__html: this._getContent()}}
+          dangerouslySetInnerHTML={{ __html: this._getContent() }}
           onClick={this.recordClick}></p>
       );
     }
@@ -317,7 +317,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         }
         case ROOM_STATES.MEDIA_WAIT: {
           var msg = mozL10n.get("call_progress_getting_media_description",
-                                {clientShortname: mozL10n.get("clientShortname2")});
+                                { clientShortname: mozL10n.get("clientShortname2") });
           var utils = loop.shared.utils;
           var isChrome = utils.isChrome(navigator.userAgent);
           var isFirefox = utils.isFirefox(navigator.userAgent);
@@ -459,7 +459,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
           nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
-          publisherConfig: this.getDefaultPublisherConfig({publishVideo: true})
+          publisherConfig: this.getDefaultPublisherConfig({ publishVideo: true })
         }));
       }
 
@@ -628,14 +628,14 @@ loop.standaloneRoomViews = (function(mozL10n) {
               roomState={this.state.roomState}
               roomUsed={this.state.used} />
             <sharedViews.ConversationToolbar
-              audio={{enabled: !this.state.audioMuted,
-                      visible: this._roomIsActive()}}
+              audio={{ enabled: !this.state.audioMuted,
+                      visible: this._roomIsActive() }}
               dispatcher={this.props.dispatcher}
               hangup={this.leaveRoom}
               publishStream={this.publishStream}
               show={true}
-              video={{enabled: !this.state.videoMuted,
-                      visible: this._roomIsActive()}} />
+              video={{ enabled: !this.state.videoMuted,
+                      visible: this._roomIsActive() }} />
           </sharedViews.MediaLayoutView>
         </div>
       );

@@ -3,14 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
-const {MozLoopService, LOOP_SESSION_TYPE} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+const { MozLoopService, LOOP_SESSION_TYPE } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
                                   "resource://gre/modules/WebChannel.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
+  const { EventEmitter } = Cu.import("resource://devtools/shared/event-emitter.js", {});
   return new EventEmitter();
 });
 XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
@@ -656,7 +656,7 @@ var LoopRoomsInternal = {
     }
 
     Task.spawn(function* () {
-      let {all, encrypted} = yield this.promiseEncryptRoomData(room);
+      let { all, encrypted } = yield this.promiseEncryptRoomData(room);
 
       // Save both sets of data...
       room = all;
@@ -885,7 +885,7 @@ var LoopRoomsInternal = {
     }
 
     Task.spawn(function* () {
-      let {all, encrypted} = yield this.promiseEncryptRoomData(room);
+      let { all, encrypted } = yield this.promiseEncryptRoomData(room);
 
       // For patch, we only send the context data.
       let sendData = {
