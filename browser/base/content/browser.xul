@@ -711,27 +711,50 @@
                      onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
                      onblur="setTimeout(() => { document.getElementById('identity-box').style.MozUserFocus = ''; }, 0);">
               <box id="notification-popup-box" hidden="true" align="center">
-                <image id="default-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="default-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.defaultNotificationAnchor.label;"/>
+                <!-- NB: the identity-notification-icon is used for persona-based auth and preffed
+                     off by default. It hasn't been updated for some time and liable to being
+                     removed.-->
                 <image id="identity-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="geo-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="addons-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="login-fill-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="password-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="webRTC-sharingScreen-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="translate-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="translated-notification-icon" class="notification-anchor-icon" role="button"/>
-                <image id="eme-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="geo-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.geolocationNotificationAnchor.label;"/>
+                <image id="addons-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.addonsNotificationAnchor.label;"/>
+                <image id="indexedDB-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.indexedDBNotificationAnchor.label;"/>
+                <image id="login-fill-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.loginFillNotificationAnchor.label;"/>
+                <image id="password-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.passwordNotificationAnchor.label;"/>
+                <image id="webapps-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webappsNotificationAnchor.label;"/>
+                <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
+                <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webNotsNotificationAnchor.label;"/>
+                <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
+                <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webRTCSharingDevicesNotificationAnchor.label;"/>
+                <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webRTCShareMicrophoneNotificationAnchor.label;"/>
+                <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webRTCSharingMicrophoneNotificationAnchor.label;"/>
+                <image id="webRTC-shareScreen-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
+                <image id="webRTC-sharingScreen-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.webRTCSharingScreenNotificationAnchor.label;"/>
+                <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
+                <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.servicesNotificationAnchor.label;"/>
+                <image id="translate-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.translateNotificationAnchor.label;"/>
+                <image id="translated-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.translatedNotificationAnchor.label;"/>
+                <image id="eme-notification-icon" class="notification-anchor-icon" role="button"
+                       aria-label="&urlbar.emeNotificationAnchor.label;"/>
               </box>
               <!-- Use onclick instead of normal popup= syntax since the popup
                    code fires onmousedown, and hence eats our favicon drag events.
@@ -739,6 +762,7 @@
                    has focus, otherwise pressing F6 focuses it instead of the location bar -->
               <box id="identity-box" role="button"
                    align="center"
+                   aria-label="&urlbar.viewSiteInfo.label;"
                    onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                    onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
                    ondragstart="gIdentityHandler.onDragStart(event);">
@@ -775,13 +799,16 @@
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"
                              onclick="gURLBar.handleCommand(event);"
+                             aria-label="&goEndCap.tooltip;"
                              tooltiptext="&goEndCap.tooltip;"/>
               <toolbarbutton id="urlbar-reload-button"
                              class="chromeclass-toolbar-additional"
                              command="Browser:ReloadOrDuplicate"
                              onclick="checkForMiddleClick(this, event);"
+                             aria-label="&reloadButton.tooltip;"
                              tooltiptext="&reloadButton.tooltip;"/>
               <toolbarbutton id="urlbar-stop-button"
+                             aria-label="&stopButton.tooltip;"
                              class="chromeclass-toolbar-additional"
                              command="Browser:Stop"
                              tooltiptext="&stopButton.tooltip;"/>
@@ -1092,7 +1119,7 @@
 
       <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
       <vbox id="appcontent" flex="1">
-        <notificationbox id="high-priority-global-notificationbox"/>
+        <notificationbox id="high-priority-global-notificationbox" notificationside="top"/>
         <tabbrowser id="content"
                     flex="1" contenttooltip="aHTMLTooltip"
                     tabcontainer="tabbrowser-tabs"
@@ -1175,7 +1202,7 @@
   </html:div>
 
   <vbox id="browser-bottombox" layer="true">
-    <notificationbox id="global-notificationbox"/>
+    <notificationbox id="global-notificationbox" notificationside="bottom"/>
     <toolbar id="developer-toolbar"
              hidden="true">
 #ifdef XP_MACOSX
