@@ -95,10 +95,6 @@ private:
   // Fixes the ICO width to match that of the BIH.
   // Returns false if invalid information is contained within.
   bool FixBitmapWidth(int8_t* bih);
-  // Extract bitmap info header size count from BMP information header
-  int32_t ReadBIHSize(const char* aBIH);
-  // Extract bit count from BMP information header
-  int32_t ReadBPP(const char* aBIH);
   // Calculates the row size in bytes for the AND mask table
   uint32_t CalcAlphaRowSize();
   // Obtains the number of colors from the BPP, mBPP must be filled in
