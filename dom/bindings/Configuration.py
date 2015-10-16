@@ -360,7 +360,8 @@ class Descriptor(DescriptorProvider):
         if self.interface.isIteratorInterface():
             itrName = self.interface.iterableInterface.identifier.name
             itrDesc = self.getDescriptor(itrName)
-            nativeTypeDefault = iteratorNativeType(itrDesc)
+            nativeTypeDefault = ("mozilla::dom::IterableIterator<%s>"
+                                 % itrDesc.nativeType)
 
         elif self.interface.isExternal():
             assert not self.workers
@@ -889,12 +890,3 @@ def getAllTypes(descriptors, dictionaries, callbacks):
     for callback in callbacks:
         for t in getTypesFromCallback(callback):
             yield (t, None, None)
-
-def iteratorNativeType(descriptor):
-    assert descriptor.interface.isIterable()
-    iterableDecl = descriptor.interface.maplikeOrSetlikeOrIterable
-    if iterableDecl.valueType is None:
-        iterClass = "OneTypeIterableIterator"
-    else:
-        iterClass = "TwoTypeIterableIterator"
-    return "mozilla::dom::%s<%s>" % (iterClass, descriptor.nativeType)
