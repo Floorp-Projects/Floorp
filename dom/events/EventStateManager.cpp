@@ -50,6 +50,7 @@
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
 #include "nsITabChild.h"
+#include "nsPluginFrame.h"
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMKeyEvent.h"
@@ -2346,6 +2347,13 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     // hasn't moved.
     nsIFrame* lastScrollFrame = WheelTransaction::GetTargetFrame();
     if (lastScrollFrame) {
+      if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
+        nsPluginFrame* pluginFrame = do_QueryFrame(lastScrollFrame);
+        if (pluginFrame &&
+            pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
+          return lastScrollFrame;
+        }
+      }
       nsIScrollableFrame* scrollableFrame =
         lastScrollFrame->GetScrollTargetFrame();
       if (scrollableFrame) {
@@ -2375,6 +2383,18 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     // Check whether the frame wants to provide us with a scrollable view.
     nsIScrollableFrame* scrollableFrame = scrollFrame->GetScrollTargetFrame();
     if (!scrollableFrame) {
+      // If the frame is a plugin frame, then, the plugin content may handle
+      // wheel events.  Only when the caller computes the scroll target for
+      // default action handling, we should assume the plugin frame as
+      // scrollable if the plugin wants to handle wheel events as default
+      // action.
+      if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
+        nsPluginFrame* pluginFrame = do_QueryFrame(scrollFrame);
+        if (pluginFrame &&
+            pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
+          return scrollFrame;
+        }
+      }
       continue;
     }
 
@@ -3121,10 +3141,23 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
 
-          nsIScrollableFrame* scrollTarget =
-            do_QueryFrame(ComputeScrollTarget(aTargetFrame, wheelEvent,
-                                              COMPUTE_DEFAULT_ACTION_TARGET));
+          nsIFrame* frameToScroll =
+            ComputeScrollTarget(aTargetFrame, wheelEvent,
+                                COMPUTE_DEFAULT_ACTION_TARGET);
 
+          // XXX Temporarily, we should check if the target is a plugin frame
+          //     here.  In the following patch, this should be checked before
+          //     checking wheel action since if the default action handler is
+          //     a plugin, our pref shouldn't decide the default action.
+          nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
+          if (pluginFrame) {
+            // XXX Needs to work with WheelTransaction, will be fixed in
+            //     the following patch.
+            pluginFrame->HandleWheelEventAsDefaultAction(wheelEvent);
+            break;
+          }
+
+          nsIScrollableFrame* scrollTarget = do_QueryFrame(frameToScroll);
           ScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
           nsIFrame* rootScrollFrame = !aTargetFrame ? nullptr :
