@@ -37,11 +37,11 @@ public:
   // Commands
   //
 
-  nsresult RegisterModuleCmd(uint8_t aId, uint8_t aMode,
+  nsresult RegisterModuleCmd(BluetoothSetupServiceId aId, uint8_t aMode,
                              uint32_t aMaxNumClients,
                              BluetoothSetupResultHandler* aRes);
 
-  nsresult UnregisterModuleCmd(uint8_t aId,
+  nsresult UnregisterModuleCmd(BluetoothSetupServiceId aId,
                                BluetoothSetupResultHandler* aRes);
 
   nsresult ConfigurationCmd(const BluetoothConfigurationParameter* aParam,
@@ -93,11 +93,11 @@ public:
   BluetoothDaemonSetupInterface(BluetoothDaemonSetupModule* aModule);
   ~BluetoothDaemonSetupInterface();
 
-  void RegisterModule(uint8_t aId, uint8_t aMode,
+  void RegisterModule(BluetoothSetupServiceId aId, uint8_t aMode,
                       uint32_t aMaxNumClients,
                       BluetoothSetupResultHandler* aRes) override;
 
-  void UnregisterModule(uint8_t aId,
+  void UnregisterModule(BluetoothSetupServiceId aId,
                         BluetoothSetupResultHandler* aRes) override;
 
   void Configuration(const BluetoothConfigurationParameter* aParam,
