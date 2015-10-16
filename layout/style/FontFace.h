@@ -82,19 +82,12 @@ public:
   void SetUserFontEntry(gfxUserFontEntry* aEntry);
 
   /**
-   * Returns whether this object is in a FontFaceSet.
+   * Returns whether this object is in the specified FontFaceSet.
    */
-  bool IsInFontFaceSet() { return mInFontFaceSet; }
+  bool IsInFontFaceSet(FontFaceSet* aFontFaceSet) const;
 
-  /**
-   * Sets whether this object is in a FontFaceSet.  This is called by the
-   * FontFaceSet when Add, Remove, etc. are called.
-   */
-  void SetIsInFontFaceSet(bool aInFontFaceSet) {
-    MOZ_ASSERT(!(!aInFontFaceSet && HasRule()),
-               "use DisconnectFromRule instead");
-    mInFontFaceSet = aInFontFaceSet;
-  }
+  void AddFontFaceSet(FontFaceSet* aFontFaceSet);
+  void RemoveFontFaceSet(FontFaceSet* aFontFaceSet);
 
   FontFaceSet* GetFontFaceSet() const { return mFontFaceSet; }
 
@@ -243,11 +236,15 @@ private:
   // the descriptors stored in mRule.
   nsAutoPtr<mozilla::CSSFontFaceDescriptors> mDescriptors;
 
-  // The FontFaceSet this FontFace is associated with, regardless of whether
-  // it is currently "in" the set.
+  // The primary FontFaceSet this FontFace is associated with,
+  // regardless of whether it is currently "in" the set.
   nsRefPtr<FontFaceSet> mFontFaceSet;
 
-  // Whether this FontFace appears in the FontFaceSet.
+  // Other FontFaceSets (apart from mFontFaceSet) that this FontFace
+  // appears in.
+  nsTArray<nsRefPtr<FontFaceSet>> mOtherFontFaceSets;
+
+  // Whether this FontFace appears in mFontFaceSet.
   bool mInFontFaceSet;
 };
 
