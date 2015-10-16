@@ -137,6 +137,12 @@ public:
   // ID of the canvas HitRegion
   nsString region;
 
+  bool IsLeftButtonPressed() const { return !!(buttons & eLeftButtonFlag); }
+  bool IsRightButtonPressed() const { return !!(buttons & eRightButtonFlag); }
+  bool IsMiddleButtonPressed() const { return !!(buttons & eMiddleButtonFlag); }
+  bool Is4thButtonPressed() const { return !!(buttons & e4thButtonFlag); }
+  bool Is5thButtonPressed() const { return !!(buttons & e5thButtonFlag); }
+
   void AssignMouseEventBaseData(const WidgetMouseEventBase& aEvent,
                                 bool aCopyTargets)
   {
