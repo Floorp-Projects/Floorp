@@ -6585,6 +6585,11 @@ class Parser(Tokenizer):
                                          isKnownNonPartial=True)
                 itr_iface.addExtendedAttributes([IDLExtendedAttribute(iface.location,
                                                                       ("NoInterfaceObject", ))])
+                # Make sure the exposure set for the iterator interface is the
+                # same as the exposure set for the iterable interface, because
+                # we're going to generate methods on the iterable that return
+                # instances of the iterator.
+                itr_iface._exposureGlobalNames = set(iface._exposureGlobalNames)
                 # Always append generated iterable interfaces and their
                 # matching implements statements after the interface they're a
                 # member of, otherwise nativeType generation won't work
