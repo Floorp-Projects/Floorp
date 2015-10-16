@@ -9,6 +9,7 @@
 
 #include "mozilla/Compiler.h"
 #include "mozilla/Observer.h"
+#include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -325,6 +326,23 @@ enum BluetoothBondState {
   BOND_STATE_BONDED
 };
 
+enum BluetoothSetupServiceId {
+  SETUP_SERVICE_ID_SETUP,
+  SETUP_SERVICE_ID_CORE,
+  SETUP_SERVICE_ID_SOCKET,
+  SETUP_SERVICE_ID_HID,
+  SETUP_SERVICE_ID_PAN,
+  SETUP_SERVICE_ID_HANDSFREE,
+  SETUP_SERVICE_ID_A2DP,
+  SETUP_SERVICE_ID_HEALTH,
+  SETUP_SERVICE_ID_AVRCP,
+  SETUP_SERVICE_ID_GATT,
+  SETUP_SERVICE_ID_HANDSFREE_CLIENT,
+  SETUP_SERVICE_ID_MAP_CLIENT,
+  SETUP_SERVICE_ID_AVRCP_CONTROLLER,
+  SETUP_SERVICE_ID_A2DP_SINK
+};
+
 /* Physical transport for GATT connections to remote dual-mode devices */
 enum BluetoothTransport {
   TRANSPORT_AUTO,   /* No preference of physical transport */
@@ -478,6 +496,12 @@ struct BluetoothAddress {
     mAddr[5] = aNAP >> 8;
   }
 
+};
+
+struct BluetoothConfigurationParameter {
+  uint8_t mType;
+  uint16_t mLength;
+  nsAutoArrayPtr<uint8_t> mValue;
 };
 
 struct BluetoothUuid {

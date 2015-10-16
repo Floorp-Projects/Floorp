@@ -20,6 +20,8 @@ class BluetoothGattManager final : public nsIObserver
                                  , public BluetoothGattNotificationHandler
 {
 public:
+  static const int MAX_NUM_CLIENTS;
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
@@ -165,9 +167,16 @@ public:
 private:
   ~BluetoothGattManager();
 
+#if 0
   class CleanupResultHandler;
   class CleanupResultHandlerRunnable;
   class InitGattResultHandler;
+#endif
+  class DeinitProfileResultHandlerRunnable;
+  class InitProfileResultHandlerRunnable;
+  class RegisterModuleResultHandler;
+  class UnregisterModuleResultHandler;
+
   class RegisterClientResultHandler;
   class UnregisterClientResultHandler;
   class StartLeScanResultHandler;

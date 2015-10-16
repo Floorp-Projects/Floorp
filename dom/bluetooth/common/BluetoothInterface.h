@@ -30,6 +30,25 @@ protected:
   virtual ~BluetoothSetupResultHandler() { }
 };
 
+class BluetoothSetupInterface
+{
+public:
+  virtual void RegisterModule(BluetoothSetupServiceId aId,
+                              uint8_t aMode,
+                              uint32_t aMaxNumClients,
+                              BluetoothSetupResultHandler* aRes) = 0;
+
+  virtual void UnregisterModule(BluetoothSetupServiceId aId,
+                                BluetoothSetupResultHandler* aRes) = 0;
+
+  virtual void Configuration(const BluetoothConfigurationParameter* aParam,
+                             uint8_t aLen,
+                             BluetoothSetupResultHandler* aRes) = 0;
+
+protected:
+  virtual ~BluetoothSetupInterface();
+};
+
 //
 // Socket Interface
 //
@@ -155,9 +174,6 @@ class BluetoothHandsfreeResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
-
   virtual void Connect();
   virtual void Disconnect();
   virtual void ConnectAudio();
@@ -186,10 +202,8 @@ protected:
 class BluetoothHandsfreeInterface
 {
 public:
-  virtual void Init(
-    BluetoothHandsfreeNotificationHandler* aNotificationHandler,
-    int aMaxNumClients, BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothHandsfreeResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothHandsfreeNotificationHandler* aNotificationHandler) = 0;
 
   /* Connect / Disconnect */
 
@@ -295,8 +309,6 @@ class BluetoothA2dpResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
   virtual void Connect();
   virtual void Disconnect();
 
@@ -307,9 +319,8 @@ protected:
 class BluetoothA2dpInterface
 {
 public:
-  virtual void Init(BluetoothA2dpNotificationHandler* aNotificationHandler,
-                    BluetoothA2dpResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothA2dpResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothA2dpNotificationHandler* aNotificationHandler) = 0;
 
   virtual void Connect(const BluetoothAddress& aBdAddr,
                        BluetoothA2dpResultHandler* aRes) = 0;
@@ -382,9 +393,6 @@ class BluetoothAvrcpResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
-
   virtual void GetPlayStatusRsp();
 
   virtual void ListPlayerAppAttrRsp();
@@ -409,9 +417,8 @@ protected:
 class BluetoothAvrcpInterface
 {
 public:
-  virtual void Init(BluetoothAvrcpNotificationHandler* aNotificationHandler,
-                    BluetoothAvrcpResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothAvrcpResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothAvrcpNotificationHandler* aNotificationHandler) = 0;
 
   virtual void GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
                                 uint32_t aSongLen, uint32_t aSongPos,
@@ -663,9 +670,6 @@ class BluetoothGattResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
-
   virtual void RegisterClient();
   virtual void UnregisterClient();
 
@@ -723,9 +727,8 @@ protected:
 class BluetoothGattInterface
 {
 public:
-  virtual void Init(BluetoothGattNotificationHandler* aNotificationHandler,
-                    BluetoothGattResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothGattResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothGattNotificationHandler* aNotificationHandler) = 0;
 
   /* Register / Unregister */
   virtual void RegisterClient(const BluetoothUuid& aUuid,
@@ -1111,6 +1114,7 @@ public:
 
   /* Profile Interfaces */
 
+  virtual BluetoothSetupInterface* GetBluetoothSetupInterface() = 0;
   virtual BluetoothSocketInterface* GetBluetoothSocketInterface() = 0;
   virtual BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface() = 0;
   virtual BluetoothA2dpInterface* GetBluetoothA2dpInterface() = 0;
