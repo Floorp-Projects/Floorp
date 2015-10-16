@@ -173,7 +173,7 @@ class SPSProfiler
      *   - exit: this function has ceased execution, and no further
      *           entries/exits will be made
      */
-    bool enter(JSScript* script, JSFunction* maybeFun);
+    bool enter(JSContext* cx, JSScript* script, JSFunction* maybeFun);
     void exit(JSScript* script, JSFunction* maybeFun);
     void updatePC(JSScript* script, jsbytecode* pc) {
         if (enabled() && *size_ - 1 < max_) {

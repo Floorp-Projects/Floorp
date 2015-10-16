@@ -1065,6 +1065,9 @@ protected:
   // next block of audio samples) preceeding seek target.
   void Seek(double aTime, SeekTarget::Type aSeekType, ErrorResult& aRv);
 
+  // A method to check if we are playing through the AudioChannel.
+  bool IsPlayingThroughTheAudioChannel() const;
+
   // Update the audio channel playing state
   void UpdateAudioChannelPlayingState();
 
