@@ -616,7 +616,7 @@ TCPControlChannel.prototype = {
       return;
     }
     if (!this._listener) {
-      this._pendingOffer = offer;
+      this._pendingOffer = aOffer;
       return;
     }
     DEBUG && log("TCPControlChannel - notify offer: "
