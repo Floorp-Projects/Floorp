@@ -130,6 +130,9 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     bool isArrowFunction() const {
         return sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow();
     }
+    bool isMethod() const {
+        return sc->isFunctionBox() && sc->asFunctionBox()->function()->isMethod();
+    }
 
     uint32_t        blockScopeDepth; /* maximum depth of nested block scopes, in slots */
     Node            blockNode;      /* parse node for a block with let declarations
