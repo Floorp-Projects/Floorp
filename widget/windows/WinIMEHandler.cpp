@@ -28,7 +28,7 @@
 const char* kOskPathPrefName = "ui.osk.on_screen_keyboard_path";
 const char* kOskEnabled = "ui.osk.enabled";
 const char* kOskDetectPhysicalKeyboard = "ui.osk.detect_physical_keyboard";
-const char* kOskRequireTabletMode = "ui.osk.require_tablet_mode";
+const char* kOskRequireWin10 = "ui.osk.require_win10";
 const char* kOskDebugReason = "ui.osk.debug.keyboardDisplayReason";
 
 namespace mozilla {
@@ -533,21 +533,22 @@ void
 IMEHandler::MaybeShowOnScreenKeyboard()
 {
   if (sPluginHasFocus ||
-      !IsWin10OrLater() ||
+      !IsWin8OrLater() ||
       !Preferences::GetBool(kOskEnabled, true) ||
       sShowingOnScreenKeyboard ||
       IMEHandler::IsKeyboardPresentOnSlate()) {
     return;
   }
 
-  // Tablet Mode is only supported on Windows 10 and higher.
-  // When touch-event detection within IME is better supported
-  // this check may be removed, and ShowOnScreenKeyboard can
-  // run on Windows 8 and higher (adjusting the IsWin10OrLater
-  // guard above and within MaybeDismissOnScreenKeyboard).
-  if (!IsInTabletMode() &&
-      Preferences::GetBool(kOskRequireTabletMode, true) &&
-      !AutoInvokeOnScreenKeyboardInDesktopMode()) {
+  // On Windows 10 we require tablet mode, unless the user has set the relevant
+  // Windows setting to enable the on-screen keyboard in desktop mode.
+  // We might be disabled specifically on Win8(.1), so we check that afterwards.
+  if (IsWin10OrLater()) {
+    if (!IsInTabletMode() && !AutoInvokeOnScreenKeyboardInDesktopMode()) {
+      return;
+    }
+  }
+  else if (Preferences::GetBool(kOskRequireWin10, true)) {
     return;
   }
 
@@ -559,7 +560,7 @@ void
 IMEHandler::MaybeDismissOnScreenKeyboard()
 {
   if (sPluginHasFocus ||
-      !IsWin10OrLater() ||
+      !IsWin8OrLater() ||
       !sShowingOnScreenKeyboard) {
     return;
   }
