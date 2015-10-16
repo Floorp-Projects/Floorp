@@ -674,7 +674,7 @@ loop.roomViews = (function(mozL10n) {
      *     that returns an enum
      */
     shouldRenderRemoteVideo: function() {
-      switch(this.state.roomState) {
+      switch (this.state.roomState) {
         case ROOM_STATES.HAS_PARTICIPANTS:
           if (this.state.remoteVideoEnabled) {
             return true;
@@ -768,7 +768,7 @@ loop.roomViews = (function(mozL10n) {
       var shouldRenderEditContextView = this.state.showEditContext;
       var roomData = this.props.roomStore.getStoreState("activeRoom");
 
-      switch(this.state.roomState) {
+      switch (this.state.roomState) {
         case ROOM_STATES.FAILED:
         case ROOM_STATES.FULL: {
           // Note: While rooms are set to hold a maximum of 2 participants, the

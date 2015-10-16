@@ -993,7 +993,7 @@ var MozLoopServiceInternal = {
           }
 
           if (type == "iceconnectionstatechange") {
-            switch(pc.iceConnectionState) {
+            switch (pc.iceConnectionState) {
               case "failed":
               case "disconnected":
                 if (Services.telemetry.canRecordExtended) {

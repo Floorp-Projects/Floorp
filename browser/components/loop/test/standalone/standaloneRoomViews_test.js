@@ -47,7 +47,7 @@ describe("loop.standaloneRoomViews", function() {
 
 
     sandbox.stub(navigator.mozL10n, "get", function(key, args) {
-      switch(key) {
+      switch (key) {
         case "standalone_title_with_room_name":
           return args.roomName + " — " + args.clientShortname;
         case "legal_text_and_links":
