@@ -72,6 +72,9 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL (0x020E)
 #endif
+#ifndef SPI_GETWHEELSCROLLCHARS
+#define SPI_GETWHEELSCROLLCHARS (0x006C)
+#endif
 #endif
 
 #ifdef XP_MACOSX
@@ -2088,25 +2091,71 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
       // generate legacy resolution wheel messages.  I.e., the delta value
       // should be WHEEL_DELTA * n.
       case eWheel: {
-        // XXX Currently assuming that users don't change system settings of
-        //     wheel scroll amount.  This is going to be fixed in following
-        //     patch.
-        static const int32_t kLinesPerWheelDelta = 3;
-        static const int32_t kCharsPerWheelDelta = 3;
-
         const WidgetWheelEvent* wheelEvent = anEvent.AsWheelEvent();
         int32_t delta = 0;
         if (wheelEvent->lineOrPageDeltaY) {
-          pluginEvent.event = WM_MOUSEWHEEL;
-          delta =
-            -WHEEL_DELTA / kLinesPerWheelDelta * wheelEvent->lineOrPageDeltaY;
+          switch (wheelEvent->deltaMode) {
+            case nsIDOMWheelEvent::DOM_DELTA_PAGE:
+              pluginEvent.event = WM_MOUSEWHEEL;
+              delta = -WHEEL_DELTA * wheelEvent->lineOrPageDeltaY;
+              break;
+            case nsIDOMWheelEvent::DOM_DELTA_LINE: {
+              UINT linesPerWheelDelta = 0;
+              if (NS_WARN_IF(!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0,
+                                                     &linesPerWheelDelta, 0))) {
+                // Use system default scroll amount, 3, when
+                // SPI_GETWHEELSCROLLLINES isn't available.
+                linesPerWheelDelta = 3;
+              }
+              if (!linesPerWheelDelta) {
+                break;
+              }
+              pluginEvent.event = WM_MOUSEWHEEL;
+              delta = -WHEEL_DELTA / linesPerWheelDelta *
+                        wheelEvent->lineOrPageDeltaY;
+              break;
+            }
+            case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
+            default:
+              // We don't support WM_GESTURE with this path.
+              MOZ_ASSERT(!pluginEvent.event);
+              break;
+          }
         } else if (wheelEvent->lineOrPageDeltaX) {
-          pluginEvent.event = WM_MOUSEHWHEEL;
-          delta =
-            WHEEL_DELTA / kCharsPerWheelDelta * wheelEvent->lineOrPageDeltaX;
-        } else {
+          switch (wheelEvent->deltaMode) {
+            case nsIDOMWheelEvent::DOM_DELTA_PAGE:
+              pluginEvent.event = WM_MOUSEHWHEEL;
+              delta = -WHEEL_DELTA * wheelEvent->lineOrPageDeltaX;
+              break;
+            case nsIDOMWheelEvent::DOM_DELTA_LINE: {
+              pluginEvent.event = WM_MOUSEHWHEEL;
+              UINT charsPerWheelDelta = 0;
+              // FYI: SPI_GETWHEELSCROLLCHARS is available on Vista or later.
+              if (::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
+                                         &charsPerWheelDelta, 0)) {
+                // Use system default scroll amount, 3, when
+                // SPI_GETWHEELSCROLLCHARS isn't available.
+                charsPerWheelDelta = 3;
+              }
+              if (!charsPerWheelDelta) {
+                break;
+              }
+              delta =
+                WHEEL_DELTA / charsPerWheelDelta * wheelEvent->lineOrPageDeltaX;
+              break;
+            }
+            case nsIDOMWheelEvent::DOM_DELTA_PIXEL:
+            default:
+              // We don't support WM_GESTURE with this path.
+              MOZ_ASSERT(!pluginEvent.event);
+              break;
+          }
+        }
+
+        if (!pluginEvent.event) {
           break;
         }
+
         initWParamWithCurrentState = false;
         int32_t modifiers =
           (wheelEvent->IsControl() ?             MK_CONTROL  : 0) |
