@@ -765,7 +765,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 #forward-button > .toolbarbutton-icon {
   background-clip: padding-box;
-  padding-left: 9px;
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 4px);
   padding-right: 3px;
   border: 1px solid #9a9a9a;
   border-left-style: none;

@@ -103,7 +103,7 @@
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
-  padding-left: 7px;
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 3px);
 }
 
 /* This changes the direction of the main notification box on the url bar. */
