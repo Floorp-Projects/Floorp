@@ -4352,6 +4352,12 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
+  "FX_SESSION_RESTORE_SEND_UPDATE_CAUSED_OOM": {
+    "alert_emails": ["session-restore-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "default",
+    "kind": "count",
+    "description": "Count of messages sent by SessionRestore from child frames to the parent and that cannot be transmitted as they eat up too much memory."
+  },
   "FX_TABLETMODE_PAGE_LOAD": {
     "expires_in_version": "47",
     "kind": "exponential",
