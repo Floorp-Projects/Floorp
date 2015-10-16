@@ -95,6 +95,18 @@ function handlePCRequest(aSubject, aTopic, aData) {
   let { windowID, innerWindowID, callID, isSecure } = aSubject;
   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
 
+  let mm = getMessageManagerForWindow(contentWindow);
+  if (!mm) {
+    // Workaround for Bug 1207784. To use WebRTC, add-ons right now use
+    // hiddenWindow.mozRTCPeerConnection which is only privileged on OSX. Other
+    // platforms end up here without a message manager.
+    // TODO: Remove once there's a better way (1215591).
+
+    // Skip permission check in the absence of a message manager.
+    Services.obs.notifyObservers(null, "PeerConnection:response:allow", callID);
+    return;
+  }
+
   if (!contentWindow.pendingPeerConnectionRequests) {
     setupPendingListsInitially(contentWindow);
   }
@@ -107,8 +119,6 @@ function handlePCRequest(aSubject, aTopic, aData) {
     documentURI: contentWindow.document.documentURI,
     secure: isSecure,
   };
-
-  let mm = getMessageManagerForWindow(contentWindow);
   mm.sendAsyncMessage("rtcpeer:Request", request);
 }
 
