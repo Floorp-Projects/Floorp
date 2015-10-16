@@ -369,6 +369,8 @@ class Graph(object):
             'name': 'task graph local'
         }
 
+        all_routes = {}
+
         for build in job_graph:
             interactive = cmdline_interactive or build["interactive"]
             build_parameters = dict(parameters)
@@ -426,6 +428,15 @@ class Graph(object):
             build_parameters['img_url'] = img_url
 
             define_task = DEFINE_TASK.format(build_task['task']['workerType'])
+
+            for route in build_task['task'].get('routes', []):
+                if route.startswith('index.gecko.v2') and route in all_routes:
+                    raise Exception("Error: route '%s' is in use by multiple tasks: '%s' and '%s'" % (
+                        route,
+                        build_task['task']['metadata']['name'],
+                        all_routes[route],
+                    ))
+                all_routes[route] = build_task['task']['metadata']['name']
 
             graph['scopes'].append(define_task)
             graph['scopes'].extend(build_task['task'].get('scopes', []))

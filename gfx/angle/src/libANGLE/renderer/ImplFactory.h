@@ -25,6 +25,7 @@ class FramebufferImpl;
 class ProgramImpl;
 class QueryImpl;
 class RenderbufferImpl;
+class SamplerImpl;
 class ShaderImpl;
 class TextureImpl;
 class TransformFeedbackImpl;
@@ -63,6 +64,9 @@ class ImplFactory : angle::NonCopyable
 
     // Transform Feedback creation
     virtual TransformFeedbackImpl *createTransformFeedback() = 0;
+
+    // Sampler object creation
+    virtual SamplerImpl *createSampler() = 0;
 };
 
 }

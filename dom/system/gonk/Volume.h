@@ -119,6 +119,8 @@ private:
   void SetMountPoint(const nsCSubstring& aMountPoint);
   void StartCommand(VolumeCommand* aCommand);
 
+  void ResolveAndSetMountPoint(const nsCSubstring& aMountPoint);
+
   bool BoolConfigValue(const nsCString& aConfigValue, bool& aBoolValue);
   void SetConfig(const nsCString& aConfigName, const nsCString& aConfigValue);
 

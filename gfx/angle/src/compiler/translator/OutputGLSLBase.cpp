@@ -1075,8 +1075,12 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
     TInfoSinkBase &out = objSink();
 
     incrementDepth(node);
-    // Loop header.
+
     TLoopType loopType = node->getType();
+
+    // Only for loops can be unrolled
+    ASSERT(!node->getUnrollFlag() || loopType == ELoopFor);
+
     if (loopType == ELoopFor)  // for loop
     {
         if (!node->getUnrollFlag())
@@ -1093,6 +1097,8 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
             if (node->getExpression())
                 node->getExpression()->traverse(this);
             out << ")\n";
+
+            visitCodeBlock(node->getBody());
         }
         else
         {
@@ -1105,6 +1111,16 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
             out << "for (int " << name << " = 0; "
                 << name << " < 1; "
                 << "++" << name << ")\n";
+
+            out << "{\n";
+            mLoopUnrollStack.push(node);
+            while (mLoopUnrollStack.satisfiesLoopCondition())
+            {
+                visitCodeBlock(node->getBody());
+                mLoopUnrollStack.step();
+            }
+            mLoopUnrollStack.pop();
+            out << "}\n";
         }
     }
     else if (loopType == ELoopWhile)  // while loop
@@ -1113,39 +1129,22 @@ bool TOutputGLSLBase::visitLoop(Visit visit, TIntermLoop *node)
         ASSERT(node->getCondition() != NULL);
         node->getCondition()->traverse(this);
         out << ")\n";
+
+        visitCodeBlock(node->getBody());
     }
     else  // do-while loop
     {
         ASSERT(loopType == ELoopDoWhile);
         out << "do\n";
-    }
 
-    // Loop body.
-    if (node->getUnrollFlag())
-    {
-        out << "{\n";
-        mLoopUnrollStack.push(node);
-        while (mLoopUnrollStack.satisfiesLoopCondition())
-        {
-            visitCodeBlock(node->getBody());
-            mLoopUnrollStack.step();
-        }
-        mLoopUnrollStack.pop();
-        out << "}\n";
-    }
-    else
-    {
         visitCodeBlock(node->getBody());
-    }
 
-    // Loop footer.
-    if (loopType == ELoopDoWhile)  // do-while loop
-    {
         out << "while (";
         ASSERT(node->getCondition() != NULL);
         node->getCondition()->traverse(this);
         out << ");\n";
     }
+
     decrementDepth();
 
     // No need to visit children. They have been already processed in

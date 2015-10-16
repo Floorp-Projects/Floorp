@@ -131,6 +131,8 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
 
     CompilerImpl *createCompiler() override;
 
+    SamplerImpl *createSampler() override;
+
     virtual int getMinorShaderModel() const = 0;
     virtual std::string getShaderModelSuffix() const = 0;
 
