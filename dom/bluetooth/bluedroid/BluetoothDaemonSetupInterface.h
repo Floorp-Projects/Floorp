@@ -37,11 +37,11 @@ public:
   // Commands
   //
 
-  nsresult RegisterModuleCmd(uint8_t aId, uint8_t aMode,
+  nsresult RegisterModuleCmd(BluetoothSetupServiceId aId, uint8_t aMode,
                              uint32_t aMaxNumClients,
                              BluetoothSetupResultHandler* aRes);
 
-  nsresult UnregisterModuleCmd(uint8_t aId,
+  nsresult UnregisterModuleCmd(BluetoothSetupServiceId aId,
                                BluetoothSetupResultHandler* aRes);
 
   nsresult ConfigurationCmd(const BluetoothConfigurationParameter* aParam,
@@ -84,6 +84,32 @@ private:
   ConfigurationRsp(const DaemonSocketPDUHeader& aHeader,
                    DaemonSocketPDU& aPDU,
                    BluetoothSetupResultHandler* aRes);
+};
+
+class BluetoothDaemonSetupInterface final
+  : public BluetoothSetupInterface
+{
+public:
+  BluetoothDaemonSetupInterface(BluetoothDaemonSetupModule* aModule);
+  ~BluetoothDaemonSetupInterface();
+
+  void RegisterModule(BluetoothSetupServiceId aId, uint8_t aMode,
+                      uint32_t aMaxNumClients,
+                      BluetoothSetupResultHandler* aRes) override;
+
+  void UnregisterModule(BluetoothSetupServiceId aId,
+                        BluetoothSetupResultHandler* aRes) override;
+
+  void Configuration(const BluetoothConfigurationParameter* aParam,
+                     uint8_t aLen,
+                     BluetoothSetupResultHandler* aRes) override;
+
+private:
+  void DispatchError(BluetoothSetupResultHandler* aRes,
+                     BluetoothStatus aStatus);
+  void DispatchError(BluetoothSetupResultHandler* aRes, nsresult aRv);
+
+  BluetoothDaemonSetupModule* mModule;
 };
 
 END_BLUETOOTH_NAMESPACE

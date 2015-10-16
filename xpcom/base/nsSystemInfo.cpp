@@ -743,6 +743,8 @@ nsSystemInfo::Init()
   if (__system_property_get("ro.build.characteristics", characteristics)) {
     if (!strcmp(characteristics, "tablet")) {
       SetPropertyAsBool(NS_LITERAL_STRING("tablet"), true);
+    } else if (!strcmp(characteristics, "tv")) {
+      SetPropertyAsBool(NS_LITERAL_STRING("tv"), true);
     }
   }
 
