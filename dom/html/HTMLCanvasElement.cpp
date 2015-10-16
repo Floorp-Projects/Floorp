@@ -400,7 +400,9 @@ HTMLCanvasElement::CreateContext(CanvasContextType aContextType)
   // Add Observer for webgl canvas.
   if (aContextType == CanvasContextType::WebGL1 ||
       aContextType == CanvasContextType::WebGL2) {
-    mContextObserver = new HTMLCanvasElementObserver(this);
+    if (!mContextObserver) {
+      mContextObserver = new HTMLCanvasElementObserver(this);
+    }
   }
 
   ret->SetCanvasElement(this);
@@ -779,7 +781,9 @@ HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
                                            sz.height,
                                            GetCompositorBackendType(),
                                            renderer);
-    mContextObserver = new HTMLCanvasElementObserver(this);
+    if (!mContextObserver) {
+      mContextObserver = new HTMLCanvasElementObserver(this);
+    }
   } else {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
