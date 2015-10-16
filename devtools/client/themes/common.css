@@ -15,10 +15,6 @@
 %endif
 }
 
-.theme-body {
-  margin: 0;
-}
-
 .devtools-monospace {
   font-family: var(--monospace-font-family);
 %if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
