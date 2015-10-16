@@ -243,18 +243,10 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   id<FakeNSUserNotification> notification = [[unClass alloc] init];
   notification.title = nsCocoaUtils::ToNSString(aAlertTitle);
 
-  nsCOMPtr<nsIURI> principalURI;
   nsAutoString hostPort;
-  if (NS_SUCCEEDED(aPrincipal->GetURI(getter_AddRefs(principalURI)))) {
-    if (principalURI) {
-      nsAutoCString hostPortTemp;
-      if (NS_SUCCEEDED(principalURI->GetHostPort(hostPortTemp))) {
-        if (!hostPortTemp.IsEmpty()) {
-          CopyUTF8toUTF16(hostPortTemp, hostPort);
-          notification.subtitle = nsCocoaUtils::ToNSString(hostPort);
-        }
-      }
-    }
+  nsAlertsUtils::GetSourceHostPort(aPrincipal, hostPort);
+  if (!hostPort.IsEmpty()) {
+    notification.subtitle = nsCocoaUtils::ToNSString(hostPort);
   }
 
   notification.informativeText = nsCocoaUtils::ToNSString(aAlertText);
@@ -272,13 +264,8 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                 getter_Copies(closeButtonTitle));
       bundle->GetStringFromName(NS_LITERAL_STRING("actionButton.label").get(),
                                 getter_Copies(actionButtonTitle));
-      if (!hostPort.IsEmpty()) {
-        const char16_t* formatStrings[] = { hostPort.get() };
-        bundle->FormatStringFromName(NS_LITERAL_STRING("webActions.disableForOrigin.label").get(),
-                                     formatStrings,
-                                     ArrayLength(formatStrings),
-                                     getter_Copies(disableButtonTitle));
-      }
+      bundle->GetStringFromName(NS_LITERAL_STRING("webActions.disable.label").get(),
+                                getter_Copies(disableButtonTitle));
       bundle->GetStringFromName(NS_LITERAL_STRING("webActions.settings.label").get(),
                                 getter_Copies(settingsButtonTitle));
 
