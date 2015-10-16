@@ -7,6 +7,9 @@
 DevToolsModules(
     'log.js',
     'promise.js',
+    'task.js',
     'thunk.js',
     'wait-service.js',
 )
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']

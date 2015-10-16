@@ -10,23 +10,56 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.alertBox {
-  border: 1px solid threedshadow;
-  border-radius: 3px;
+#alertBox {
+  border: 1px solid ThreeDShadow;
+  border-radius: 1px;
   background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+#alertBox[animate] {
+  animation-timing-function: cubic-bezier(.12,1.23,.48,1.09);
+}
+
+#alertBox[animate][clicked] {
+  animation-duration: .6s;
+  animation-name: alert-zoom-animation;
+}
+
+/* This is used if the close button is clicked
+   before the animation has finished. */
+#alertBox[animate][closing] {
+  animation-duration: .6s;
+  animation-name: alert-fadeout-animation;
 }
 
 @keyframes alert-animation {
   from {
-    opacity: 0;
+    transform: translate(110%, 0) rotate(-20deg);
   }
-  6.25% {
-    opacity: 1;
+  5% {
+    transform: none;
   }
-  93.75% {
+  95% {
+    transform: none;
     opacity: 1;
   }
   to {
+    transform: translate(0, 60px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes alert-zoom-animation {
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes alert-fadeout-animation {
+  to {
+    transform: translate(0, 60px) rotate(15deg);
     opacity: 0;
   }
 }
@@ -35,4 +68,17 @@
   -moz-appearance: none;
   padding: 4px 2px;
   border: none !important;
+}
+
+@media (-moz-windows-default-theme) {
+  #alertBox[hasBodyText] > #alertTextBox,
+  #alertBox[hasOrigin] > #alertTitleBox {
+    border-bottom-color: rgba(107,107,107,.4);
+  }
+
+  #alertBox {
+    border-color: rgba(107,107,107,.4);
+    background-color: rgba(255,255,255,.9);
+    color: rgba(0,0,0,.9);
+  }
 }
