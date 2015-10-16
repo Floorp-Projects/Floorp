@@ -90,7 +90,7 @@ describe("loop.crypto", function() {
         UTF8String: "对话"
       });
 
-      return loop.crypto.generateKey().then(function (key) {
+      return loop.crypto.generateKey().then(function(key) {
         loop.crypto.encryptBytes(key, context).then(function(encryptedContext) {
           loop.crypto.decryptBytes(key, encryptedContext).then(function(decryptedContext) {
             expect(decryptedContext).eql(context);

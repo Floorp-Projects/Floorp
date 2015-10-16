@@ -114,7 +114,7 @@ function shutdown(cb) {
   "use strict";
 
   try {
-    server.close(function () {
+    server.close(function() {
       process.exit(0);
       if (cb !== undefined) {
         cb();

@@ -207,11 +207,11 @@ MockWebSocketChannel.prototype = {
     }));
   },
 
-  stop: function (err) {
+  stop: function(err) {
     this.listener.onStop(this.context, err || -1);
   },
 
-  serverClose: function (err) {
+  serverClose: function(err) {
     this.listener.onServerClose(this.context, err || -1);
   }
 };

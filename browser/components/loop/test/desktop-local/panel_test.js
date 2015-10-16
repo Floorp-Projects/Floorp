@@ -20,7 +20,7 @@ describe("loop.panel", function() {
     fakeXHR = sandbox.useFakeXMLHttpRequest();
     requests = [];
     // https://github.com/cjohansen/Sinon.JS/issues/393
-    fakeXHR.xhr.onCreate = function (xhr) {
+    fakeXHR.xhr.onCreate = function(xhr) {
       requests.push(xhr);
     };
 
@@ -50,7 +50,7 @@ describe("loop.panel", function() {
         return "en-US";
       },
       setLoopPref: sandbox.stub(),
-      getLoopPref: function (prefName) {
+      getLoopPref: function(prefName) {
         return "unseen";
       },
       getPluralForm: function() {
@@ -867,7 +867,7 @@ describe("loop.panel", function() {
        "Start a conversation button", function() {
       fakeMozLoop.userProfile = { email: fakeEmail };
       var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
-      fakeMozLoop.getSelectedTabMetadata = function (callback) {
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
         callback({
           url: "http://invalid.com",
           description: "fakeSite",

@@ -129,7 +129,7 @@ function run_test() {
   MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
   MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
 
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     Services.prefs.clearUserPref(kContextEnabledPref);
     Services.prefs.clearUserPref("loop.key.fxa");
 

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-describe("loop.OTSdkDriver", function () {
+describe("loop.OTSdkDriver", function() {
   "use strict";
 
   var expect = chai.expect;
@@ -340,7 +340,7 @@ describe("loop.OTSdkDriver", function () {
       sinon.assert.calledWithExactly(sdk.initSession, "3216549870");
     });
 
-    it("should connect the session", function () {
+    it("should connect the session", function() {
       driver.connectSession(sessionData);
 
       sinon.assert.calledOnce(session.connect);

@@ -28,14 +28,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-describe("loop.shared.views.LinkifiedTextView", function () {
+describe("loop.shared.views.LinkifiedTextView", function() {
   "use strict";
 
   var expect = chai.expect;
   var LinkifiedTextView = loop.shared.views.LinkifiedTextView;
   var TestUtils = React.addons.TestUtils;
 
-  describe("LinkifiedTextView", function () {
+  describe("LinkifiedTextView", function() {
     function renderToMarkup(string, extraProps) {
       return React.renderToStaticMarkup(
         React.createElement(
@@ -98,7 +98,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
           });
       });
 
-      describe("this.props.linkClickHandler", function () {
+      describe("this.props.linkClickHandler", function() {
         function mountTestComponent(string, extraProps) {
           return TestUtils.renderIntoDocument(
             React.createElement(
@@ -106,7 +106,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
               _.extend({ rawText: string }, extraProps)));
         }
 
-        it("should be called when a generated link is clicked", function () {
+        it("should be called when a generated link is clicked", function() {
           var fakeUrl = "http://example.com";
           var linkClickHandler = sinon.stub();
           var comp = mountTestComponent(fakeUrl, { linkClickHandler: linkClickHandler });
@@ -131,7 +131,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
               '<p><a href="http://example.com">http://example.com</a></p>');
           });
 
-        describe("#_handleClickEvent", function () {
+        describe("#_handleClickEvent", function() {
           var fakeEvent;
           var fakeUrl = "http://example.com";
 
@@ -143,7 +143,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
             };
           });
 
-          it("should call preventDefault on the given event", function () {
+          it("should call preventDefault on the given event", function() {
             function linkClickHandler() {}
             var comp = mountTestComponent(
               fakeUrl, { linkClickHandler: linkClickHandler });
@@ -154,7 +154,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
             sinon.assert.calledWithExactly(fakeEvent.stopPropagation);
           });
 
-          it("should call stopPropagation on the given event", function () {
+          it("should call stopPropagation on the given event", function() {
             function linkClickHandler() {}
             var comp = mountTestComponent(
               fakeUrl, { linkClickHandler: linkClickHandler });
@@ -165,7 +165,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
             sinon.assert.calledWithExactly(fakeEvent.stopPropagation);
           });
 
-          it("should call this.props.linkClickHandler with event.currentTarget.href", function () {
+          it("should call this.props.linkClickHandler with event.currentTarget.href", function() {
             var linkClickHandler = sinon.stub();
             var comp = mountTestComponent(
               fakeUrl, { linkClickHandler: linkClickHandler });
