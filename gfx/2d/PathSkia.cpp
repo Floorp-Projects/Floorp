@@ -173,6 +173,10 @@ SkPathContainsPoint(const SkPath& aPath, const Point& aPoint, const Matrix& aTra
 bool
 PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
 {
+  if (!mPath.isFinite()) {
+    return false;
+  }
+
   return SkPathContainsPoint(mPath, aPoint, aTransform);
 }
 
@@ -181,6 +185,10 @@ PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
                               const Point &aPoint,
                               const Matrix &aTransform) const
 {
+  if (!mPath.isFinite()) {
+    return false;
+  }
+
   SkPaint paint;
   StrokeOptionsToPaint(paint, aStrokeOptions);
 
