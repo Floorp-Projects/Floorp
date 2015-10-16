@@ -188,11 +188,13 @@ SPSProfiler::markEvent(const char* event)
 }
 
 bool
-SPSProfiler::enter(JSScript* script, JSFunction* maybeFun)
+SPSProfiler::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
 {
     const char* str = profileString(script, maybeFun);
-    if (str == nullptr)
+    if (str == nullptr) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
 #ifdef DEBUG
     // In debug builds, assert the JS pseudo frames already on the stack

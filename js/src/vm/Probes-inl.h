@@ -39,7 +39,7 @@ probes::EnterScript(JSContext* cx, JSScript* script, JSFunction* maybeFun,
 
     JSRuntime* rt = cx->runtime();
     if (rt->spsProfiler.enabled()) {
-        if (!rt->spsProfiler.enter(script, maybeFun))
+        if (!rt->spsProfiler.enter(cx, script, maybeFun))
             return false;
         MOZ_ASSERT_IF(!fp->script()->isGenerator(), !fp->hasPushedSPSFrame());
         fp->setPushedSPSFrame();
