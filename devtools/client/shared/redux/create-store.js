@@ -6,6 +6,7 @@
 const { createStore, applyMiddleware } = require("devtools/client/shared/vendor/redux");
 const { thunk } = require("./middleware/thunk");
 const { waitUntilService } = require("./middleware/wait-service");
+const { task } = require("./middleware/task");
 const { log } = require("./middleware/log");
 const { promise } = require("./middleware/promise");
 
@@ -20,6 +21,7 @@ const { promise } = require("./middleware/promise");
  */
 module.exports = (opts={}) => {
   const middleware = [
+    task,
     thunk,
     waitUntilService,
     promise,

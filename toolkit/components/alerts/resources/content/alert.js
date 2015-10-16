@@ -9,7 +9,7 @@ const NS_ALERT_HORIZONTAL = 1;
 const NS_ALERT_LEFT = 2;
 const NS_ALERT_TOP = 4;
 
-const WINDOW_MARGIN = 10;
+const WINDOW_MARGIN = 0;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -37,12 +37,9 @@ function prefillAlertInfo() {
   switch (window.arguments.length) {
     default:
     case 11: {
-      let label = document.getElementById('alertSourceLabel');
       if (window.arguments[10]) {
-        label.hidden = false;
-        label.setAttribute('value', window.arguments[10]);
-      } else {
-        label.hidden = true;
+        document.getElementById('alertBox').setAttribute('hasOrigin', true);
+        document.getElementById('alertSourceLabel').setAttribute('value', window.arguments[10]);
       }
     }
     case 10:
@@ -69,11 +66,15 @@ function prefillAlertInfo() {
         document.getElementById('alertTextLabel').setAttribute('clickable', true);
       }
     case 3:
-      document.getElementById('alertTextLabel').textContent = window.arguments[2];
+      if (window.arguments[2]) {
+        document.getElementById('alertBox').setAttribute('hasBodyText', true);
+        document.getElementById('alertTextLabel').textContent = window.arguments[2];
+      }
     case 2:
-      document.getElementById('alertTitleLabel').setAttribute('value', window.arguments[1]);
+      document.getElementById('alertTitleLabel').textContent = window.arguments[1];
     case 1:
       if (window.arguments[0]) {
+        document.getElementById('alertBox').setAttribute('hasImage', true);
         document.getElementById('alertImage').setAttribute('src', window.arguments[0]);
       }
     case 0:
@@ -82,7 +83,7 @@ function prefillAlertInfo() {
 }
 
 function onAlertLoad() {
-  const ALERT_DURATION_IMMEDIATE = 4000;
+  const ALERT_DURATION_IMMEDIATE = 12000;
   let alertTextBox = document.getElementById("alertTextBox");
   let alertImageBox = document.getElementById("alertImageBox");
   alertImageBox.style.minHeight = alertTextBox.scrollHeight + "px";
@@ -104,7 +105,9 @@ function onAlertLoad() {
   } else {
     let alertBox = document.getElementById("alertBox");
     alertBox.addEventListener("animationend", function hideAlert(event) {
-      if (event.animationName == "alert-animation") {
+      if (event.animationName == "alert-animation" ||
+          event.animationName == "alert-zoom-animation" ||
+          event.animationName == "alert-fadeout-animation") {
         alertBox.removeEventListener("animationend", hideAlert, false);
         window.close();
       }
@@ -205,5 +208,21 @@ function onAlertClick() {
     gAlertListener.observe(null, "alertclickcallback", gAlertCookie);
   }
 
-  window.close();
+  let alertBox = document.getElementById("alertBox");
+  if (alertBox.getAttribute("animate") == "true") {
+    // Closed when the animation ends.
+    alertBox.setAttribute("clicked", "true");
+  } else {
+    window.close();
+  }
+}
+
+function onAlertClose() {
+  let alertBox = document.getElementById("alertBox");
+  if (alertBox.getAttribute("animate") == "true") {
+    // Closed when the animation ends.
+    alertBox.setAttribute("closing", "true");
+  } else {
+    window.close();
+  }
 }

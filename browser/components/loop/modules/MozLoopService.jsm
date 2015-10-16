@@ -153,9 +153,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
 XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
                                   "resource:///modules/loop/LoopStorage.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoopCalls",
-                                  "resource:///modules/loop/LoopCalls.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms",
                                   "resource:///modules/loop/LoopRooms.jsm");
 
@@ -410,7 +407,7 @@ var MozLoopServiceInternal = {
    * @param {String} channelID Unique identifier for the notification channel
    *                 registered with the PushServer.
    * @param {LOOP_SESSION_TYPE} sessionType
-   * @param {String} serviceType Either 'calls' or 'rooms'.
+   * @param {String} serviceType Only 'rooms' is supported.
    * @param {Function} onNotification Callback function that will be associated
    *                   with this channel from the PushServer.
    * @returns {Promise} A promise that is resolved with no params on completion, or
@@ -464,12 +461,8 @@ var MozLoopServiceInternal = {
         roomsPushNotification);
     } else {
       regPromise = this.createNotificationChannel(
-        MozLoopService.channelIDs.callsFxA, sessionType, "calls",
-        LoopCalls.onNotification).then(() => {
-          return this.createNotificationChannel(
-            MozLoopService.channelIDs.roomsFxA, sessionType, "rooms",
-            roomsPushNotification);
-        });
+        MozLoopService.channelIDs.roomsFxA, sessionType, "rooms",
+        roomsPushNotification);
     }
 
     log.debug("assigning to deferredRegistrations for sessionType:", sessionType);
@@ -491,7 +484,7 @@ var MozLoopServiceInternal = {
    *
    * @private
    * @param {LOOP_SESSION_TYPE} sessionType The type of session e.g. guest or FxA
-   * @param {String} serviceType: "rooms" or "calls"
+   * @param {String} serviceType: only "rooms" is currently supported.
    * @param {Boolean} [retry=true] Whether to retry if authentication fails.
    * @return {Promise} resolves to pushURL or rejects with an Error
    */
@@ -505,7 +498,7 @@ var MozLoopServiceInternal = {
 
     // Create a blank URL record set if none exists for this sessionType.
     if (!pushURLs) {
-      pushURLs = { calls: undefined, rooms: undefined };
+      pushURLs = { rooms: undefined };
       this.pushURLs.set(sessionType, pushURLs);
     }
 
@@ -513,8 +506,7 @@ var MozLoopServiceInternal = {
       return Promise.resolve(pushURL);
     }
 
-    let newURLs = {calls: pushURLs.calls,
-                   rooms: pushURLs.rooms};
+    let newURLs = {rooms: pushURLs.rooms};
     newURLs[serviceType] = pushURL;
 
     return this.hawkRequestInternal(sessionType, "/registration", "POST",
@@ -555,7 +547,7 @@ var MozLoopServiceInternal = {
    * guest session with the device.
    *
    * NOTE: It is the responsibiliy of the caller the clear the session token
-   * after all of the notification classes: calls and rooms, for either
+   * after all of the notification classes: rooms, for either
    * Guest or FxA have been unregistered with the LoopServer.
    *
    * @param {LOOP_SESSION_TYPE} sessionType The type of session e.g. guest or FxA
@@ -570,34 +562,29 @@ var MozLoopServiceInternal = {
 
     let error,
         pushURLs = this.pushURLs.get(sessionType),
-        callsPushURL = pushURLs ? pushURLs.calls : null,
         roomsPushURL = pushURLs ? pushURLs.rooms : null;
     this.pushURLs.delete(sessionType);
 
-    let unregister = (sessType, pushURL) => {
-      if (!pushURL) {
-        return Promise.resolve("no pushURL of this type to unregister");
-      }
+    if (!roomsPushURL) {
+      return Promise.resolve("no pushURL of this type to unregister");
+    }
 
-      let unregisterURL = "/registration?simplePushURL=" + encodeURIComponent(pushURL);
-      return this.hawkRequestInternal(sessType, unregisterURL, "DELETE").then(
-        () => {
-          log.debug("Successfully unregistered from server for sessionType = ", sessType);
-          return "unregistered sessionType " + sessType;
-        },
-        err => {
-          if (err.code === 401) {
-            // Authorization failed, invalid token. This is fine since it may mean we already logged out.
-            log.debug("already unregistered - invalid token", sessType);
-            return "already unregistered, sessionType = " + sessType;
-          }
+    let unregisterURL = "/registration?simplePushURL=" + encodeURIComponent(roomsPushURL);
+    return this.hawkRequestInternal(sessionType, unregisterURL, "DELETE").then(
+      () => {
+        log.debug("Successfully unregistered from server for sessionType = ", sessionType);
+        return "unregistered sessionType " + sessionType;
+      },
+      err => {
+        if (err.code === 401) {
+          // Authorization failed, invalid token. This is fine since it may mean we already logged out.
+          log.debug("already unregistered - invalid token", sessionType);
+          return "already unregistered, sessionType = " + sessionType;
+        }
 
-          log.error("Failed to unregister with the loop server. Error: ", error);
-          throw err;
-        });
-    };
-
-    return Promise.all([unregister(sessionType, callsPushURL), unregister(sessionType, roomsPushURL)]);
+        log.error("Failed to unregister with the loop server. Error: ", error);
+        throw err;
+      });
   },
 
   /**
@@ -874,16 +861,13 @@ var MozLoopServiceInternal = {
     }, pc.id);
   },
 
+  /**
+   * Gets an id for the chat window, for now we just use the roomToken.
+   *
+   * @param  {Object} conversationWindowData The conversation window data.
+   */
   getChatWindowID: function(conversationWindowData) {
-    // Try getting a window ID that can (re-)identify this conversation, or resort
-    // to a globally unique one as a last resort.
-    // XXX We can clean this up once rooms and direct contact calling are the only
-    //     two modes left.
-    let windowId = ("contact" in conversationWindowData) ?
-                   conversationWindowData.contact._guid || gLastWindowId++ :
-                   conversationWindowData.roomToken || conversationWindowData.callId ||
-                   gLastWindowId++;
-    return windowId.toString();
+    return conversationWindowData.roomToken;
   },
 
   getChatURL: function(chatWindowId) {
@@ -1203,7 +1187,6 @@ this.MozLoopService = {
   get channelIDs() {
     // Channel ids that will be registered with the PushServer for notifications
     return {
-      callsFxA: "25389583-921f-4169-a426-a4673658944b",
       roomsFxA: "6add272a-d316-477c-8335-f00f73dfde71",
       roomsGuest: "19d3f799-a8f3-4328-9822-b7cd02765832"
     };
@@ -1697,7 +1680,6 @@ this.MozLoopService = {
       MozLoopServiceInternal.deferredRegistrations.delete(LOOP_SESSION_TYPE.FXA);
       // Unregister with PushHandler so these push channels will not get re-registered
       // if the connection is re-established by the PushHandler.
-      MozLoopServiceInternal.pushHandler.unregister(MozLoopService.channelIDs.callsFxA);
       MozLoopServiceInternal.pushHandler.unregister(MozLoopService.channelIDs.roomsFxA);
 
       // Reset the client since the initial promiseFxAOAuthParameters() call is
@@ -1868,8 +1850,8 @@ this.MozLoopService = {
   /**
    * Returns the window data for a specific conversation window id.
    *
-   * This data will be relevant to the type of window, e.g. rooms or calls.
-   * See LoopRooms or LoopCalls for more information.
+   * This data will be relevant to the type of window, e.g. rooms.
+   * See LoopRooms for more information.
    *
    * @param {String} conversationWindowId
    * @returns {Object} The window data or null if error.
