@@ -217,35 +217,6 @@ nsBMPDecoder::~nsBMPDecoder()
 {
 }
 
-// Obtains the bits per pixel from the internal BIH header.
-int32_t
-nsBMPDecoder::GetBitsPerPixel() const
-{
-  return mH.mBpp;
-}
-
-// Obtains the width from the internal BIH header.
-int32_t
-nsBMPDecoder::GetWidth() const
-{
-  return mH.mWidth;
-}
-
-// Obtains the absolute value of the height from the internal BIH header.
-// If it's positive the bitmap is stored bottom to top, otherwise top to bottom.
-int32_t
-nsBMPDecoder::GetHeight() const
-{
-  return abs(mH.mHeight);
-}
-
-// Obtains the internal output image buffer.
-uint32_t*
-nsBMPDecoder::GetImageData()
-{
-  return reinterpret_cast<uint32_t*>(mImageData);
-}
-
 // Obtains the size of the compressed image resource.
 int32_t
 nsBMPDecoder::GetCompressedImageSize() const
@@ -253,7 +224,7 @@ nsBMPDecoder::GetCompressedImageSize() const
   // In the RGB case mImageSize might not be set, so compute it manually.
   MOZ_ASSERT(mPixelRowSize != 0);
   return mH.mCompression == Compression::RGB
-       ? mPixelRowSize * GetHeight()
+       ? mPixelRowSize * AbsoluteHeight()
        : mH.mImageSize;
 }
 
@@ -270,7 +241,7 @@ nsBMPDecoder::FinishInternal()
   if (!IsMetadataDecode() && HasSize()) {
 
     // Invalidate.
-    nsIntRect r(0, 0, mH.mWidth, GetHeight());
+    nsIntRect r(0, 0, mH.mWidth, AbsoluteHeight());
     PostInvalidation(r);
 
     if (mDoesHaveTransparency) {
@@ -597,9 +568,9 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   }
 
   // Post our size to the superclass.
-  uint32_t realHeight = GetHeight();
-  PostSize(mH.mWidth, realHeight);
-  mCurrentRow = realHeight;
+  uint32_t absHeight = AbsoluteHeight();
+  PostSize(mH.mWidth, absHeight);
+  mCurrentRow = absHeight;
 
   // Round it up to the nearest byte count, then pad to 4-byte boundary.
   // Compute this even for a metadate decode because GetCompressedImageSize()

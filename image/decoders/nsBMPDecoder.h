@@ -125,17 +125,10 @@ class nsBMPDecoder : public Decoder
 public:
   ~nsBMPDecoder();
 
-  /// Obtains the bits per pixel from the internal BIH header.
-  int32_t GetBitsPerPixel() const;
-
-  /// Obtains the width from the internal BIH header.
-  int32_t GetWidth() const;
-
-  /// Obtains the abs-value of the height from the internal BIH header.
-  int32_t GetHeight() const;
-
   /// Obtains the internal output image buffer.
-  uint32_t* GetImageData();
+  uint32_t* GetImageData() { return reinterpret_cast<uint32_t*>(mImageData); }
+
+  /// Obtains the length of the internal output image buffer.
   size_t GetImageDataLength() const { return mImageDataLength; }
 
   /// Obtains the size of the compressed image resource.
@@ -189,6 +182,8 @@ private:
 
   // Helper constructor called by the other two.
   nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength);
+
+  int32_t AbsoluteHeight() const { return abs(mH.mHeight); }
 
   uint32_t* RowBuffer();
 
