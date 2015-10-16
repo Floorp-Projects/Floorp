@@ -73,6 +73,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FontFace)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoaded)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOtherFontFaceSets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -81,6 +82,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FontFace)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoaded)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRule)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOtherFontFaceSets)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -448,6 +450,10 @@ FontFace::SetStatus(FontFaceLoadStatus aStatus)
     mFontFaceSet->OnFontFaceStatusChanged(this);
   }
 
+  for (FontFaceSet* otherSet : mOtherFontFaceSets) {
+    otherSet->OnFontFaceStatusChanged(this);
+  }
+
   if (!mLoaded) {
     return;
   }
@@ -684,6 +690,39 @@ FontFace::CreateBufferSource()
 {
   nsRefPtr<FontFaceBufferSource> bufferSource = new FontFaceBufferSource(this);
   return bufferSource.forget();
+}
+
+bool
+FontFace::IsInFontFaceSet(FontFaceSet* aFontFaceSet) const
+{
+  if (mFontFaceSet == aFontFaceSet) {
+    return mInFontFaceSet;
+  }
+  return mOtherFontFaceSets.Contains(aFontFaceSet);
+}
+
+void
+FontFace::AddFontFaceSet(FontFaceSet* aFontFaceSet)
+{
+  MOZ_ASSERT(!IsInFontFaceSet(aFontFaceSet));
+
+  if (mFontFaceSet == aFontFaceSet) {
+    mInFontFaceSet = true;
+  } else {
+    mOtherFontFaceSets.AppendElement(aFontFaceSet);
+  }
+}
+
+void
+FontFace::RemoveFontFaceSet(FontFaceSet* aFontFaceSet)
+{
+  MOZ_ASSERT(IsInFontFaceSet(aFontFaceSet));
+
+  if (mFontFaceSet == aFontFaceSet) {
+    mInFontFaceSet = false;
+  } else {
+    mOtherFontFaceSets.RemoveElement(aFontFaceSet);
+  }
 }
 
 // -- FontFace::Entry --------------------------------------------------------
