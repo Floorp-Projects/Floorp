@@ -1648,7 +1648,7 @@
             // and the URL is "about:newtab". We do not support preloading for
             // custom newtab URLs.
             return Services.prefs.getBoolPref("browser.newtab.preload") &&
-                   !NewTabURL.overridden;
+                   !aboutNewTabService.overridden;
           ]]>
         </body>
       </method>
