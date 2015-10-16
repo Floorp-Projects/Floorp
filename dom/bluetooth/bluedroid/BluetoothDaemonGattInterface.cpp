@@ -15,8 +15,6 @@ using namespace mozilla::ipc;
 // GATT module
 //
 
-const int BluetoothDaemonGattModule::MAX_NUM_CLIENTS = 1;
-
 BluetoothGattNotificationHandler*
   BluetoothDaemonGattModule::sNotificationHandler;
 
@@ -2010,6 +2008,7 @@ BluetoothDaemonGattInterface::BluetoothDaemonGattInterface(
 BluetoothDaemonGattInterface::~BluetoothDaemonGattInterface()
 { }
 
+#if 0
 class BluetoothDaemonGattInterface::InitResultHandler final
   : public BluetoothSetupResultHandler
 {
@@ -2114,6 +2113,16 @@ BluetoothDaemonGattInterface::Cleanup(
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
   }
+}
+#endif
+
+void
+BluetoothDaemonGattInterface::SetNotificationHandler(
+  BluetoothGattNotificationHandler* aNotificationHandler)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->SetNotificationHandler(aNotificationHandler);
 }
 
 /* Register / Unregister */
