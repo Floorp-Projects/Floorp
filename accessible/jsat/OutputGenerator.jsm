@@ -73,7 +73,20 @@ var OutputGenerator = {
       [addOutput(node) for // jshint ignore:line
         (node of aContext.subtreeGenerator(false, ignoreSubtree))]; // jshint ignore:line
       addOutput(aContext.accessible);
+
+      // If there are any documents in new ancestry, find a first one and place
+      // it in the beginning of the utterance.
+      let doc, docIndex = contextStart.findIndex(
+        ancestor => ancestor.role === Roles.DOCUMENT);
+
+      if (docIndex > -1) {
+        doc = contextStart.splice(docIndex, 1)[0];
+      }
+
       contextStart.reverse().forEach(addOutput);
+      if (doc) {
+        output.unshift.apply(output, self.genForObject(doc, aContext));
+      }
     }
 
     return output;

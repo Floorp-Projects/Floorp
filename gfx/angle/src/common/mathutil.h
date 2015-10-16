@@ -69,14 +69,29 @@ inline int clampToInt(unsigned int x)
 template <typename DestT, typename SrcT>
 inline DestT clampCast(SrcT value)
 {
-    SrcT lo = static_cast<SrcT>(std::numeric_limits<DestT>::min());
-    SrcT hi = static_cast<SrcT>(std::numeric_limits<DestT>::max());
+    static const DestT destLo = std::numeric_limits<DestT>::min();
+    static const DestT destHi = std::numeric_limits<DestT>::max();
+    static const SrcT srcLo = static_cast<SrcT>(destLo);
+    static const SrcT srcHi = static_cast<SrcT>(destHi);
 
-    // This assumes SrcT can properly represent DestT::min/max. Checking this is a bit tricky,
-    // especially given floating point representations.
-    ASSERT(lo < hi);
-
-    return static_cast<DestT>(value > lo ? (value > hi ? hi : value) : lo);
+    // When value is outside of or equal to the limits for DestT we use the DestT limit directly.
+    // This avoids undefined behaviors due to loss of precision when converting from floats to
+    // integers:
+    //    destHi for ints is 2147483647 but the closest float number is around 2147483648, so when
+    //  doing a conversion from float to int we run into an UB because the float is outside of the
+    //  range representable by the int.
+    if (value <= srcLo)
+    {
+        return destLo;
+    }
+    else if (value >= srcHi)
+    {
+        return destHi;
+    }
+    else
+    {
+        return static_cast<DestT>(value);
+    }
 }
 
 template<typename T, typename MIN, typename MAX>
@@ -151,7 +166,7 @@ destType bitCast(const sourceType &source)
 
 inline unsigned short float32ToFloat16(float fp32)
 {
-    unsigned int fp32i = (unsigned int&)fp32;
+    unsigned int fp32i = bitCast<unsigned int>(fp32);
     unsigned int sign = (fp32i & 0x80000000) >> 16;
     unsigned int abs = fp32i & 0x7FFFFFFF;
 

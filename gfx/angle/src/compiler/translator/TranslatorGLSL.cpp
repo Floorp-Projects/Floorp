@@ -29,7 +29,8 @@ void TranslatorGLSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu, i
     InitBuiltInFunctionEmulatorForGLSLMissingFunctions(emu, getShaderType(), targetGLSLVersion);
 }
 
-void TranslatorGLSL::translate(TIntermNode *root, int) {
+void TranslatorGLSL::translate(TIntermNode *root, int compileOptions)
+{
     TInfoSinkBase& sink = getInfoSink().obj;
 
     // Write GLSL version.

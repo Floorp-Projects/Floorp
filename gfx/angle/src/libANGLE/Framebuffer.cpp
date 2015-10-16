@@ -611,9 +611,17 @@ Error Framebuffer::readPixels(Context *context,
     return Error(GL_NO_ERROR);
 }
 
-Error Framebuffer::blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,
-                        GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer)
+Error Framebuffer::blit(Context *context,
+                        const gl::Rectangle &sourceArea,
+                        const gl::Rectangle &destArea,
+                        GLbitfield mask,
+                        GLenum filter,
+                        const gl::Framebuffer *sourceFramebuffer)
 {
+    // Sync blit state
+    const State &state = context->getState();
+    context->syncRendererState(state.blitStateBitMask());
+
     return mImpl->blit(state, sourceArea, destArea, mask, filter, sourceFramebuffer);
 }
 

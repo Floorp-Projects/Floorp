@@ -144,8 +144,12 @@ class Framebuffer
                      GLenum type,
                      GLvoid *pixels) const;
 
-    Error blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,
-               GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer);
+    Error blit(Context *context,
+               const gl::Rectangle &sourceArea,
+               const gl::Rectangle &destArea,
+               GLbitfield mask,
+               GLenum filter,
+               const gl::Framebuffer *sourceFramebuffer);
 
   protected:
     void detachResourceById(GLenum resourceType, GLuint resourceId);

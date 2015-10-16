@@ -296,7 +296,7 @@ bool ValidateES3TexImageParameters(Context *context, GLenum target, GLint level,
     }
 
     // Validate image size
-    if (!ValidImageSize(context, target, level, width, height, depth))
+    if (!ValidImageSizeParameters(context, target, level, width, height, depth, isSubImage))
     {
         context->recordError(Error(GL_INVALID_VALUE));
         return false;
@@ -393,15 +393,16 @@ bool ValidateES3TexImageParameters(Context *context, GLenum target, GLint level,
     const gl::InternalFormat &actualFormatInfo = gl::GetInternalFormatInfo(actualInternalFormat);
     if (isCompressed)
     {
-        if (!ValidCompressedImageSize(context, actualInternalFormat, width, height))
+        if (!actualFormatInfo.compressed)
         {
-            context->recordError(Error(GL_INVALID_OPERATION));
+            context->recordError(Error(
+                GL_INVALID_ENUM, "internalformat is not a supported compressed internal format."));
             return false;
         }
 
-        if (!actualFormatInfo.compressed)
+        if (!ValidCompressedImageSize(context, actualInternalFormat, width, height))
         {
-            context->recordError(Error(GL_INVALID_ENUM));
+            context->recordError(Error(GL_INVALID_OPERATION));
             return false;
         }
 
