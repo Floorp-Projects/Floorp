@@ -11,8 +11,6 @@
     <link rel="stylesheet" type="text/css" href="../content/shared/css/conversation.css">
     <link class="fx-embedded-panel" rel="stylesheet" type="text/css"
           href="../content/css/panel.css">
-    <link class="fx-embedded-panel" rel="stylesheet" type="text/css"
-          href="../content/css/contacts.css">
     <link class="standalone" rel="stylesheet" type="text/css"
           href="../content/css/webapp.css">
     <link rel="stylesheet" type="text/css" href="ui-showcase.css">
@@ -50,22 +48,6 @@
     <script src="../content/js/roomViews.js"></script>
     <script src="../standalone/content/js/webapp.js"></script>
     <script src="../standalone/content/js/standaloneRoomViews.js"></script>
-    <script type="text/javascript;version=1.8" src="../content/js/contacts.js"></script>
-    <script>
-      if (!loop.contacts) {
-        // For browsers that don't support ES6 without special flags (all but Fx
-        // at the moment), we shim the contacts namespace with its most barebone
-        // implementation.
-        loop.contacts = {
-          ContactsList: React.createClass({render: function() {
-            return React.DOM.div();
-          }}),
-          ContactDetailsForm: React.createClass({render: function() {
-            return React.DOM.div();
-          }})
-        };
-      }
-    </script>
     <script src="../content/js/panel.js"></script>
     <script src="../content/js/conversation.js"></script>
     <script src="react-frame-component.js"></script>
