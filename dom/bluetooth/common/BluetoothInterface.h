@@ -174,9 +174,6 @@ class BluetoothHandsfreeResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
-
   virtual void Connect();
   virtual void Disconnect();
   virtual void ConnectAudio();
@@ -205,10 +202,8 @@ protected:
 class BluetoothHandsfreeInterface
 {
 public:
-  virtual void Init(
-    BluetoothHandsfreeNotificationHandler* aNotificationHandler,
-    int aMaxNumClients, BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothHandsfreeResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothHandsfreeNotificationHandler* aNotificationHandler) = 0;
 
   /* Connect / Disconnect */
 

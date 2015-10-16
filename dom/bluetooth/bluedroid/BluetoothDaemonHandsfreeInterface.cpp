@@ -1409,110 +1409,12 @@ BluetoothDaemonHandsfreeInterface::BluetoothDaemonHandsfreeInterface(
 BluetoothDaemonHandsfreeInterface::~BluetoothDaemonHandsfreeInterface()
 { }
 
-class BluetoothDaemonHandsfreeInterface::InitResultHandler final
-  : public BluetoothSetupResultHandler
+void BluetoothDaemonHandsfreeInterface::SetNotificationHandler(
+  BluetoothHandsfreeNotificationHandler* aNotificationHandler)
 {
-public:
-  InitResultHandler(BluetoothHandsfreeResultHandler* aRes)
-    : mRes(aRes)
-  {
-    MOZ_ASSERT(mRes);
-  }
+  MOZ_ASSERT(mModule);
 
-  void OnError(BluetoothStatus aStatus) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mRes->OnError(aStatus);
-  }
-
-  void RegisterModule() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mRes->Init();
-  }
-
-private:
-  nsRefPtr<BluetoothHandsfreeResultHandler> mRes;
-};
-
-void
-BluetoothDaemonHandsfreeInterface::Init(
-  BluetoothHandsfreeNotificationHandler* aNotificationHandler,
-  int aMaxNumClients, BluetoothHandsfreeResultHandler* aRes)
-{
-  // Set notification handler _before_ registering the module. It could
-  // happen that we receive notifications, before the result handler runs.
   mModule->SetNotificationHandler(aNotificationHandler);
-
-  InitResultHandler* res;
-
-  if (aRes) {
-    res = new InitResultHandler(aRes);
-  } else {
-    // We don't need a result handler if the caller is not interested.
-    res = nullptr;
-  }
-
-  nsresult rv = mModule->RegisterModule(
-    SETUP_SERVICE_ID_HANDSFREE, MODE_NARROWBAND_SPEECH, aMaxNumClients, res);
-
-  if (NS_FAILED(rv) && aRes) {
-    DispatchError(aRes, rv);
-  }
-}
-
-class BluetoothDaemonHandsfreeInterface::CleanupResultHandler final
-  : public BluetoothSetupResultHandler
-{
-public:
-  CleanupResultHandler(BluetoothDaemonHandsfreeModule* aModule,
-                       BluetoothHandsfreeResultHandler* aRes)
-    : mModule(aModule)
-    , mRes(aRes)
-  {
-    MOZ_ASSERT(mModule);
-  }
-
-  void OnError(BluetoothStatus aStatus) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (mRes) {
-      mRes->OnError(aStatus);
-    }
-  }
-
-  void UnregisterModule() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Clear notification handler _after_ module has been
-    // unregistered. While unregistering the module, we might
-    // still receive notifications.
-    mModule->SetNotificationHandler(nullptr);
-
-    if (mRes) {
-      mRes->Cleanup();
-    }
-  }
-
-private:
-  BluetoothDaemonHandsfreeModule* mModule;
-  nsRefPtr<BluetoothHandsfreeResultHandler> mRes;
-};
-
-void
-BluetoothDaemonHandsfreeInterface::Cleanup(
-  BluetoothHandsfreeResultHandler* aRes)
-{
-  nsresult rv = mModule->UnregisterModule(
-    SETUP_SERVICE_ID_HANDSFREE, new CleanupResultHandler(mModule, aRes));
-
-  if (NS_FAILED(rv)) {
-    DispatchError(aRes, rv);
-  }
 }
 
 /* Connect / Disconnect */
