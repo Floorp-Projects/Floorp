@@ -17,7 +17,6 @@ EXTRA_JS_MODULES.loop += [
     'content/shared/js/utils.js',
     'modules/CardDavImporter.jsm',
     'modules/GoogleImporter.jsm',
-    'modules/LoopCalls.jsm',
     'modules/LoopContacts.jsm',
     'modules/LoopRooms.jsm',
     'modules/LoopRoomsCache.jsm',
