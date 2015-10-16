@@ -17,6 +17,8 @@ class BluetoothAvrcpManager : public BluetoothProfileManagerBase
                             , public BluetoothAvrcpNotificationHandler
 {
 public:
+  static const int MAX_NUM_CLIENTS;
+
   BT_DECL_PROFILE_MGR_BASE
   virtual void GetName(nsACString& aName)
   {
@@ -60,12 +62,12 @@ protected:
   virtual ~BluetoothAvrcpManager();
 
 private:
-  class CleanupResultHandler;
-  class CleanupResultHandlerRunnable;
   class ConnectRunnable;
+  class DeinitProfileResultHandlerRunnable;
   class DisconnectRunnable;
-  class InitResultHandler;
-  class OnErrorProfileResultHandlerRunnable;
+  class InitProfileResultHandlerRunnable;
+  class RegisterModuleResultHandler;
+  class UnregisterModuleResultHandler;
 
   BluetoothAvrcpManager();
 
