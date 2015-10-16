@@ -103,8 +103,8 @@ public:
     override;
   virtual bool RecvCaretOffset(const uint64_t& aID, int32_t* aOffset)
     override;
-  virtual bool RecvSetCaretOffset(const uint64_t& aID, const int32_t& aOffset,
-                                  bool* aValid) override;
+  virtual bool RecvSetCaretOffset(const uint64_t& aID, const int32_t& aOffset)
+    override;
 
   virtual bool RecvCharacterCount(const uint64_t& aID, int32_t* aCount)
      override;

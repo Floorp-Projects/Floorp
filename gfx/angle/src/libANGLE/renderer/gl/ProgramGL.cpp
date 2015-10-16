@@ -34,18 +34,6 @@ ProgramGL::~ProgramGL()
     mProgramID = 0;
 }
 
-int ProgramGL::getShaderVersion() const
-{
-    UNIMPLEMENTED();
-    return int();
-}
-
-GLenum ProgramGL::getBinaryFormat()
-{
-    UNIMPLEMENTED();
-    return GLenum();
-}
-
 LinkResult ProgramGL::load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream)
 {
     UNIMPLEMENTED();
@@ -299,9 +287,31 @@ void ProgramGL::setUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean t
     mFunctions->uniformMatrix4x3fv(uniLoc(location), count, transpose, value);
 }
 
+void ProgramGL::setUniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding)
+{
+    // Lazy init
+    if (mUniformBlockRealLocationMap.empty())
+    {
+        mUniformBlockRealLocationMap.reserve(mData.getUniformBlocks().size());
+        for (const gl::UniformBlock &uniformBlock : mData.getUniformBlocks())
+        {
+            const std::string &nameWithIndex = uniformBlock.nameWithArrayIndex();
+            GLuint blockIndex = mFunctions->getUniformBlockIndex(mProgramID, nameWithIndex.c_str());
+            mUniformBlockRealLocationMap.push_back(blockIndex);
+        }
+    }
+
+    GLuint realBlockIndex = mUniformBlockRealLocationMap[uniformBlockIndex];
+    if (realBlockIndex != GL_INVALID_INDEX)
+    {
+        mFunctions->uniformBlockBinding(mProgramID, realBlockIndex, uniformBlockBinding);
+    }
+}
+
 void ProgramGL::reset()
 {
     mUniformRealLocationMap.clear();
+    mUniformBlockRealLocationMap.clear();
     mSamplerBindings.clear();
     mUniformIndexToSamplerIndex.clear();
 }
@@ -316,9 +326,50 @@ const std::vector<SamplerBindingGL> &ProgramGL::getAppliedSamplerUniforms() cons
     return mSamplerBindings;
 }
 
-void ProgramGL::gatherUniformBlockInfo(std::vector<gl::UniformBlock> * /*uniformBlocks*/,
-                                       std::vector<gl::LinkedUniform> * /*uniforms*/)
+bool ProgramGL::getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const
 {
-    // TODO(jmadill): Gather uniform block layout info, and data sizes.
+    ASSERT(mProgramID != 0u);
+
+    GLuint blockIndex = mFunctions->getUniformBlockIndex(mProgramID, blockName.c_str());
+    if (blockIndex == GL_INVALID_INDEX)
+    {
+        *sizeOut = 0;
+        return false;
+    }
+
+    GLint dataSize = 0;
+    mFunctions->getActiveUniformBlockiv(mProgramID, blockIndex, GL_UNIFORM_BLOCK_DATA_SIZE,
+                                        &dataSize);
+    *sizeOut = static_cast<size_t>(dataSize);
+    return true;
 }
+
+bool ProgramGL::getUniformBlockMemberInfo(const std::string &memberUniformName,
+                                          sh::BlockMemberInfo *memberInfoOut) const
+{
+    GLuint uniformIndex;
+    const GLchar *memberNameGLStr = memberUniformName.c_str();
+    mFunctions->getUniformIndices(mProgramID, 1, &memberNameGLStr, &uniformIndex);
+
+    if (uniformIndex == GL_INVALID_INDEX)
+    {
+        *memberInfoOut = sh::BlockMemberInfo::getDefaultBlockInfo();
+        return false;
+    }
+
+    mFunctions->getActiveUniformsiv(mProgramID, 1, &uniformIndex, GL_UNIFORM_OFFSET,
+                                    &memberInfoOut->offset);
+    mFunctions->getActiveUniformsiv(mProgramID, 1, &uniformIndex, GL_UNIFORM_ARRAY_STRIDE,
+                                    &memberInfoOut->arrayStride);
+    mFunctions->getActiveUniformsiv(mProgramID, 1, &uniformIndex, GL_UNIFORM_MATRIX_STRIDE,
+                                    &memberInfoOut->matrixStride);
+
+    // TODO(jmadill): possibly determine this at the gl::Program level.
+    GLint isRowMajorMatrix = 0;
+    mFunctions->getActiveUniformsiv(mProgramID, 1, &uniformIndex, GL_UNIFORM_IS_ROW_MAJOR,
+                                    &isRowMajorMatrix);
+    memberInfoOut->isRowMajorMatrix = isRowMajorMatrix != GL_FALSE;
+    return true;
 }
+
+}  // namespace rx

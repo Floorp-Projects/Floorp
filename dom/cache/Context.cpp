@@ -1001,7 +1001,15 @@ Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
   MOZ_ASSERT(!mDirectoryLock);
   mDirectoryLock = aDirectoryLock;
 
-  if (mState == STATE_CONTEXT_CANCELED || NS_FAILED(aRv)) {
+  // If we opening the context failed, but we were not explicitly canceled,
+  // still treat the entire context as canceled.  We don't want to allow
+  // new actions to be dispatched.  We also cannot leave the context in
+  // the INIT state after failing to open.
+  if (NS_FAILED(aRv)) {
+    mState = STATE_CONTEXT_CANCELED;
+  }
+
+  if (mState == STATE_CONTEXT_CANCELED) {
     for (uint32_t i = 0; i < mPendingActions.Length(); ++i) {
       mPendingActions[i].mAction->CompleteOnInitiatingThread(aRv);
     }

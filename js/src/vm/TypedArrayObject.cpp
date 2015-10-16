@@ -412,7 +412,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     {
         CallArgs args = CallArgsFromVp(argc, vp);
 
-        if (!WarnIfNotConstructing(cx, args, "typed array"))
+        if (!ThrowIfNotConstructing(cx, args, "typed array"))
             return false;
 
         JSObject* obj = create(cx, args);

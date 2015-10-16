@@ -148,7 +148,7 @@ void dEQPCaseList::initialize()
         if (inString.substr(0, 4) == "TEST")
         {
             std::string dEQPName = inString.substr(6);
-            std::string gTestName = dEQPName.substr(11);
+            std::string gTestName = dEQPName.substr(dEQPName.find('.') + 1);
             std::replace(gTestName.begin(), gTestName.end(), '.', '_');
 
             // Occurs in some luminance tests
@@ -170,6 +170,12 @@ class dEQPTest : public testing::TestWithParam<size_t>
     static testing::internal::ParamGenerator<size_t> GetTestingRange()
     {
         return testing::Range<size_t>(0, GetCaseList().numCases());
+    }
+
+    static std::string GetCaseGTestName(size_t caseIndex)
+    {
+        const auto &caseInfo = GetCaseList().getCaseInfo(caseIndex);
+        return caseInfo.mGTestName;
     }
 
     static const dEQPCaseList &GetCaseList()
@@ -210,32 +216,36 @@ class dEQP_EGL : public dEQPTest<2>
 {
 };
 
-#ifdef ANGLE_DEQP_GLES2_TESTS
 // TODO(jmadill): add different platform configs, or ability to choose platform
-TEST_P(dEQP_GLES2, Default)
-{
-    runTest();
-}
+#if defined(ANGLE_STANDALONE_BUILD)
 
-INSTANTIATE_TEST_CASE_P(, dEQP_GLES2, dEQP_GLES2::GetTestingRange());
+#define ANGLE_INSTANTIATE_DEQP_TEST_CASE(DEQP_TEST)                             \
+    TEST_P(DEQP_TEST, Default) { runTest(); }                                   \
+                                                                                \
+    INSTANTIATE_TEST_CASE_P(, DEQP_TEST, DEQP_TEST::GetTestingRange(),          \
+                            [](const testing::TestParamInfo<size_t> &info)      \
+                            {                                                   \
+                                return DEQP_TEST::GetCaseGTestName(info.param); \
+                            })
+
+#else  // defined(ANGLE_STANDALONE_BUILD)
+
+#define ANGLE_INSTANTIATE_DEQP_TEST_CASE(DEQP_TEST) \
+    TEST_P(DEQP_TEST, Default) { runTest(); }       \
+    INSTANTIATE_TEST_CASE_P(, DEQP_TEST, DEQP_TEST::GetTestingRange())
+
+#endif  // defined(ANGLE_STANDALONE_BUILD)
+
+#ifdef ANGLE_DEQP_GLES2_TESTS
+ANGLE_INSTANTIATE_DEQP_TEST_CASE(dEQP_GLES2);
 #endif
 
 #ifdef ANGLE_DEQP_GLES3_TESTS
-TEST_P(dEQP_GLES3, Default)
-{
-    runTest();
-}
-
-INSTANTIATE_TEST_CASE_P(, dEQP_GLES3, dEQP_GLES3::GetTestingRange());
+ANGLE_INSTANTIATE_DEQP_TEST_CASE(dEQP_GLES3);
 #endif
 
 #ifdef ANGLE_DEQP_EGL_TESTS
-TEST_P(dEQP_EGL, Default)
-{
-    runTest();
-}
-
-INSTANTIATE_TEST_CASE_P(, dEQP_EGL, dEQP_EGL::GetTestingRange());
+ANGLE_INSTANTIATE_DEQP_TEST_CASE(dEQP_EGL);
 #endif
 
 } // anonymous namespace

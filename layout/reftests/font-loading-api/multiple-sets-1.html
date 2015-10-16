@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<body onload=step()>
+<iframe id=a src=multiple-sets-frame.html></iframe>
+<iframe id=b src=multiple-sets-frame.html></iframe>
+<script>
+var events = 2;  // wait for load event and MozReftestInvalidate
+
+function step() {
+  if (--events == 0) {
+    var a = document.getElementById("a");
+    var b = document.getElementById("b");
+    var a_win = a.contentWindow;
+    var b_win = b.contentWindow;
+    var a_doc = a.contentDocument;
+    var b_doc = b.contentDocument;
+    var face = new a_win.FontFace("Ahem", "url(../fonts/Ahem.ttf)");
+    a_doc.fonts.add(face);
+    b_doc.fonts.add(face);
+    face.load().then(function() {
+      document.documentElement.className = "";
+    });
+  }
+}
+
+window.addEventListener("MozReftestInvalidate", step, false);
+</script>

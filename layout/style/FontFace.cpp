@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/FontFace.h"
 
+#include <algorithm>
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Promise.h"
@@ -73,6 +74,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FontFace)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoaded)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRule)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOtherFontFaceSets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -81,6 +83,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FontFace)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoaded)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRule)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOtherFontFaceSets)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -448,6 +451,10 @@ FontFace::SetStatus(FontFaceLoadStatus aStatus)
     mFontFaceSet->OnFontFaceStatusChanged(this);
   }
 
+  for (FontFaceSet* otherSet : mOtherFontFaceSets) {
+    otherSet->OnFontFaceStatusChanged(this);
+  }
+
   if (!mLoaded) {
     return;
   }
@@ -686,6 +693,39 @@ FontFace::CreateBufferSource()
   return bufferSource.forget();
 }
 
+bool
+FontFace::IsInFontFaceSet(FontFaceSet* aFontFaceSet) const
+{
+  if (mFontFaceSet == aFontFaceSet) {
+    return mInFontFaceSet;
+  }
+  return mOtherFontFaceSets.Contains(aFontFaceSet);
+}
+
+void
+FontFace::AddFontFaceSet(FontFaceSet* aFontFaceSet)
+{
+  MOZ_ASSERT(!IsInFontFaceSet(aFontFaceSet));
+
+  if (mFontFaceSet == aFontFaceSet) {
+    mInFontFaceSet = true;
+  } else {
+    mOtherFontFaceSets.AppendElement(aFontFaceSet);
+  }
+}
+
+void
+FontFace::RemoveFontFaceSet(FontFaceSet* aFontFaceSet)
+{
+  MOZ_ASSERT(IsInFontFaceSet(aFontFaceSet));
+
+  if (mFontFaceSet == aFontFaceSet) {
+    mInFontFaceSet = false;
+  } else {
+    mOtherFontFaceSets.RemoveElement(aFontFaceSet);
+  }
+}
+
 // -- FontFace::Entry --------------------------------------------------------
 
 /* virtual */ void
@@ -696,6 +736,26 @@ FontFace::Entry::SetLoadState(UserFontLoadState aLoadState)
   for (size_t i = 0; i < mFontFaces.Length(); i++) {
     mFontFaces[i]->SetStatus(LoadStateToStatus(aLoadState));
   }
+}
+
+/* virtual */ void
+FontFace::Entry::GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult)
+{
+  aResult.Clear();
+
+  for (FontFace* f : mFontFaces) {
+    if (f->mInFontFaceSet) {
+      aResult.AppendElement(f->mFontFaceSet->GetUserFontSet());
+    }
+    for (FontFaceSet* s : f->mOtherFontFaceSets) {
+      aResult.AppendElement(s->GetUserFontSet());
+    }
+  }
+
+  // Remove duplicates.
+  aResult.Sort();
+  auto it = std::unique(aResult.begin(), aResult.end());
+  aResult.TruncateLength(it - aResult.begin());
 }
 
 } // namespace dom

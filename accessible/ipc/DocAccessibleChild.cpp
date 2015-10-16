@@ -390,13 +390,10 @@ DocAccessibleChild::RecvCaretOffset(const uint64_t& aID, int32_t* aOffset)
 
 bool
 DocAccessibleChild::RecvSetCaretOffset(const uint64_t& aID,
-                                       const int32_t& aOffset,
-                                       bool* aRetVal)
+                                       const int32_t& aOffset)
 {
   HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
-  *aRetVal = false;
   if (acc && acc->IsTextRole() && acc->IsValidOffset(aOffset)) {
-    *aRetVal = true;
     acc->SetCaretOffset(aOffset);
   }
   return true;

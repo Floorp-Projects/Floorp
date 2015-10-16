@@ -216,12 +216,10 @@ ProxyAccessible::CaretOffset()
   return offset;
 }
 
-bool
+void
 ProxyAccessible::SetCaretOffset(int32_t aOffset)
 {
-  bool valid = false;
-  unused << mDoc->SendSetCaretOffset(mID, aOffset, &valid);
-  return valid;
+  unused << mDoc->SendSetCaretOffset(mID, aOffset);
 }
 
 int32_t
