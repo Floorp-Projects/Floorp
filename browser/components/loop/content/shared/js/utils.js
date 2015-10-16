@@ -405,7 +405,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
         callUrl: callUrl
       });
     }
-    var bodyFooter =  body + footer;
+    var bodyFooter = body + footer;
     bodyFooter = bodyFooter.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n");
     mozLoop.composeEmail(
       subject,
@@ -507,11 +507,11 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @return {Number} The decoded value.
    */
   function _b64ToUint6 (chr) {
-    return chr > 64 && chr < 91  ? chr - 65 :
+    return chr > 64 && chr < 91 ? chr - 65 :
            chr > 96 && chr < 123 ? chr - 71 :
-           chr > 47 && chr < 58  ? chr + 4  :
-           chr === 43            ? 62       :
-           chr === 47            ? 63       : 0;
+           chr > 47 && chr < 58 ? chr + 4 :
+           chr === 43 ? 62 :
+           chr === 47 ? 63 : 0;
   }
 
   /**
@@ -523,11 +523,11 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @return {Number} The encoded value.
    */
   function _uint6ToB64 (uint6) {
-    return uint6 < 26   ? uint6 + 65 :
-           uint6 < 52   ? uint6 + 71 :
-           uint6 < 62   ? uint6 - 4  :
-           uint6 === 62 ? 43         :
-           uint6 === 63 ? 47         : 65;
+    return uint6 < 26 ? uint6 + 65 :
+           uint6 < 52 ? uint6 + 71 :
+           uint6 < 62 ? uint6 - 4 :
+           uint6 === 62 ? 43 :
+           uint6 === 63 ? 47 : 65;
   }
 
   /**
@@ -546,10 +546,10 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     // Mapping.
     for (var mapIndex = 0; mapIndex < inLength; mapIndex++) {
       chr = inString.charCodeAt(mapIndex);
-      arrayLength += chr < 0x80      ? 1 :
-                     chr < 0x800     ? 2 :
-                     chr < 0x10000   ? 3 :
-                     chr < 0x200000  ? 4 :
+      arrayLength += chr < 0x80 ? 1 :
+                     chr < 0x800 ? 2 :
+                     chr < 0x10000 ? 3 :
+                     chr < 0x200000 ? 4 :
                      chr < 0x4000000 ? 5 : 6;
     }
 

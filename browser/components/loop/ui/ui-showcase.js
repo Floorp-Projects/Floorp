@@ -23,9 +23,9 @@
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
 
   // 2. Standalone webapp
-  var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
-  var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
-  var StandaloneRoomView      = loop.standaloneRoomViews.StandaloneRoomView;
+  var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
+  var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
+  var StandaloneRoomView = loop.standaloneRoomViews.StandaloneRoomView;
   var StandaloneHandleUserAgentView = loop.standaloneRoomViews.StandaloneHandleUserAgentView;
 
   // 3. Shared components

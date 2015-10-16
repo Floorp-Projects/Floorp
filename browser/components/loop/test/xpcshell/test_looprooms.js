@@ -151,7 +151,7 @@ const kRoomUpdates = {
       displayName: "Alexis",
       account: "alexis@example.com",
       roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
-    },  {
+    }, {
       displayName: "Ruharb",
       roomConnectionId: "5de6281c-6568-455f-af08-c0b0a973100e"
     }]

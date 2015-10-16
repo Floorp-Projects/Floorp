@@ -503,7 +503,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @return {Boolean}
      */
     _roomIsActive: function() {
-      return this.state.roomState === ROOM_STATES.JOINED            ||
+      return this.state.roomState === ROOM_STATES.JOINED ||
              this.state.roomState === ROOM_STATES.SESSION_CONNECTED ||
              this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS;
     },
