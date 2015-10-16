@@ -1533,6 +1533,18 @@ NS_TryToMakeImmutable(nsIURI *uri,
     return result.forget();
 }
 
+nsresult
+NS_URIChainHasFlags(nsIURI   *uri,
+                    uint32_t  flags,
+                    bool     *result)
+{
+    nsresult rv;
+    nsCOMPtr<nsINetUtil> util = do_GetNetUtil(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return util->URIChainHasFlags(uri, flags, result);
+}
+
 already_AddRefed<nsIURI>
 NS_GetInnermostURI(nsIURI *aURI)
 {
