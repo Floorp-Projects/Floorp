@@ -90,6 +90,9 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
 void
 MediaDecoderReader::InitializationTask()
 {
+  if (!mDecoder) {
+    return;
+  }
   if (mDecoder->CanonicalDurationOrNull()) {
     mDuration.Connect(mDecoder->CanonicalDurationOrNull());
   }
@@ -101,7 +104,6 @@ MediaDecoderReader::InitializationTask()
 MediaDecoderReader::~MediaDecoderReader()
 {
   MOZ_ASSERT(mShutdown);
-  MOZ_ASSERT(!mDecoder);
   ResetDecode();
   MOZ_COUNT_DTOR(MediaDecoderReader);
 }

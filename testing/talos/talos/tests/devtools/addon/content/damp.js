@@ -1,14 +1,19 @@
-
 Components.utils.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 const {devtools} =
   Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { getActiveTab } = devtools.require("sdk/tabs/utils");
 const { getMostRecentBrowserWindow } = devtools.require("sdk/window/utils");
+const ThreadSafeChromeUtils = devtools.require("ThreadSafeChromeUtils");
 
 const SIMPLE_URL = "chrome://damp/content/pages/simple.html";
 const COMPLICATED_URL = "http://localhost/tests/tp5n/bild.de/www.bild.de/index.html";
 
 function Damp() {
+  // Path to the temp file where the heap snapshot file is saved. Set by
+  // saveHeapSnapshot and read by readHeapSnapshot.
+  this._heapSnapshotFilePath = null;
+  // HeapSnapshot instance. Set by readHeapSnapshot, used by takeCensus.
+  this._snapshot = null;
 }
 
 Damp.prototype = {
@@ -69,6 +74,71 @@ Damp.prototype = {
     });
   },
 
+  saveHeapSnapshot: function(label) {
+    let tab = getActiveTab(getMostRecentBrowserWindow());
+    let target = devtools.TargetFactory.forTab(tab);
+    let toolbox = gDevTools.getToolbox(target);
+    let panel = toolbox.getCurrentPanel();
+    let memoryFront = panel.panelWin.gFront;
+
+    let start = performance.now();
+    return memoryFront.saveHeapSnapshot().then(filePath => {
+      this._heapSnapshotFilePath = filePath;
+      let end = performance.now();
+      this._results.push({
+        name: label + ".saveHeapSnapshot",
+        value: end - start
+      });
+    });
+  },
+
+  readHeapSnapshot: function(label) {
+    let start = performance.now();
+    this._snapshot = ThreadSafeChromeUtils.readHeapSnapshot(this._heapSnapshotFilePath);
+    let end = performance.now();
+    this._results.push({
+      name: label + ".readHeapSnapshot",
+      value: end - start
+    });
+    return Promise.resolve();
+  },
+
+  takeCensus: function(label) {
+    let start = performance.now();
+
+    this._snapshot.takeCensus({
+      breakdown: {
+        by: "coarseType",
+        objects: {
+          by: "objectClass",
+          then: { by: "count", bytes: true, count: true },
+          other: { by: "count", bytes: true, count: true }
+        },
+        strings: {
+          by: "internalType",
+          then: { by: "count", bytes: true, count: true }
+        },
+        scripts: {
+          by: "internalType",
+          then: { by: "count", bytes: true, count: true }
+        },
+        other: {
+          by: "internalType",
+          then: { by: "count", bytes: true, count: true }
+        }
+      }
+    });
+
+    let end = performance.now();
+
+    this._results.push({
+      name: label + ".takeCensus",
+      value: end - start
+    });
+
+    return Promise.resolve();
+  },
+
   _startTest: function() {
 
     var self = this;
@@ -76,6 +146,9 @@ Damp.prototype = {
     var closeToolbox = this.closeToolbox.bind(this);
     var reloadPage = this.reloadPage.bind(this);
     var next = this._nextCommand.bind(this);
+    var saveHeapSnapshot = this.saveHeapSnapshot.bind(this);
+    var readHeapSnapshot = this.readHeapSnapshot.bind(this);
+    var takeCensus = this.takeCensus.bind(this);
     var config = this._config;
     var rest = config.rest; // How long to wait in between opening the tab and starting the test.
 
@@ -135,6 +208,14 @@ Damp.prototype = {
           () => { closeToolbox(label + ".netmonitor").then(next); },
         ],
 
+        saveAndReadHeapSnapshot: [
+          () => { openToolbox(label + ".memory", "memory").then(next); },
+          () => { reloadPage(label + ".memory").then(next); },
+          () => { saveHeapSnapshot(label).then(next); },
+          () => { readHeapSnapshot(label).then(next); },
+          () => { takeCensus(label).then(next); },
+          () => { closeToolbox(label + ".memory").then(next); },
+        ]
       };
 
       // Construct the sequence array: config.repeat times config.subtests,

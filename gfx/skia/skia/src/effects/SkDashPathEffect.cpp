@@ -94,9 +94,11 @@ bool SkDashPathEffect::asPoints(PointData* results,
 
     // TODO: make this test for horizontal & vertical lines more robust
     bool isXAxis = true;
-    if (SK_Scalar1 == tangent.fX || -SK_Scalar1 == tangent.fX) {
+    if (SkScalarNearlyEqual(SK_Scalar1, tangent.fX) ||
+        SkScalarNearlyEqual(-SK_Scalar1, tangent.fX)) {
         results->fSize.set(SkScalarHalf(fIntervals[0]), SkScalarHalf(rec.getWidth()));
-    } else if (SK_Scalar1 == tangent.fY || -SK_Scalar1 == tangent.fY) {
+    } else if (SkScalarNearlyEqual(SK_Scalar1, tangent.fY) ||
+               SkScalarNearlyEqual(-SK_Scalar1, tangent.fY)) {
         results->fSize.set(SkScalarHalf(rec.getWidth()), SkScalarHalf(fIntervals[0]));
         isXAxis = false;
     } else if (SkPaint::kRound_Cap != rec.getCap()) {

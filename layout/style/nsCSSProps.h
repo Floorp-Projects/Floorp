@@ -56,6 +56,17 @@
 // Keyword used iff gfx.font_rendering.opentype_svg.enabled is true:
 #define VARIANT_OPENTYPE_SVG_KEYWORD 0x40000000
 
+// Variants that can consume more than one token
+#define VARIANT_MULTIPLE_TOKENS \
+  (VARIANT_COLOR |            /* rgb(...), hsl(...), etc. */                  \
+   VARIANT_COUNTER |          /* counter(...), counters(...) */               \
+   VARIANT_ATTR |             /* attr(...) */                                 \
+   VARIANT_GRADIENT |         /* linear-gradient(...), etc. */                \
+   VARIANT_TIMING_FUNCTION |  /* cubic-bezier(...), steps(...) */             \
+   VARIANT_IMAGE_RECT |       /* -moz-image-rect(...) */                      \
+   VARIANT_CALC |             /* calc(...) */                                 \
+   VARIANT_ELEMENT)           /* -moz-element(...) */
+
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
 #define VARIANT_LP   (VARIANT_LENGTH | VARIANT_PERCENT)

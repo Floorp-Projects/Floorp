@@ -390,32 +390,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
-  var StandaloneRoomHeader = React.createClass({displayName: "StandaloneRoomHeader",
-    propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
-    },
-
-    recordClick: function() {
-      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
-        linkInfo: "Support link click"
-      }));
-    },
-
-    render: function() {
-      return (
-        React.createElement("header", null, 
-          React.createElement("h1", null, mozL10n.get("clientShortname2")), 
-          React.createElement("a", {href: loop.config.generalSupportUrl, 
-             onClick: this.recordClick, 
-             rel: "noreferrer", 
-             target: "_blank"}, 
-            React.createElement("i", {className: "icon icon-help"})
-          )
-        )
-      );
-    }
-  });
-
   var StandaloneRoomView = React.createClass({displayName: "StandaloneRoomView",
     mixins: [
       Backbone.Events,
@@ -628,8 +602,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         React.createElement("div", {className: "room-conversation-wrapper standalone-room-wrapper"}, 
-          React.createElement("div", {className: "beta-logo"}), 
-          React.createElement(StandaloneRoomHeader, {dispatcher: this.props.dispatcher}), 
           React.createElement(sharedViews.MediaLayoutView, {
             dispatcher: this.props.dispatcher, 
             displayScreenShare: displayScreenShare, 
@@ -647,6 +619,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
             screenSharePosterUrl: this.props.screenSharePosterUrl, 
             showContextRoomName: true, 
             useDesktopPaths: false}, 
+            React.createElement(StandaloneOverlayWrapper, {dispatcher: this.props.dispatcher}), 
             React.createElement(StandaloneRoomInfoArea, {activeRoomStore: this.props.activeRoomStore, 
               dispatcher: this.props.dispatcher, 
               failureReason: this.state.failureReason, 
@@ -662,22 +635,49 @@ loop.standaloneRoomViews = (function(mozL10n) {
               publishStream: this.publishStream, 
               show: true, 
               video: {enabled: !this.state.videoMuted,
-                      visible: this._roomIsActive()}}), 
-            React.createElement(StandaloneMozLogo, {dispatcher: this.props.dispatcher})
+                      visible: this._roomIsActive()}})
           )
         )
       );
     }
   });
 
-  var StandaloneMozLogo = React.createClass({displayName: "StandaloneMozLogo",
+  var StandaloneOverlayWrapper = React.createClass({displayName: "StandaloneOverlayWrapper",
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
     render: function() {
       return (
-        React.createElement("div", {className: "standalone-moz-logo"})
+        React.createElement("div", {className: "standalone-overlay-wrapper"}, 
+          React.createElement("div", {className: "hello-logo"}), 
+          React.createElement(GeneralSupportURL, {dispatcher: this.props.dispatcher}), 
+          React.createElement("div", {className: "standalone-moz-logo"})
+        )
+      );
+    }
+  });
+
+  var GeneralSupportURL = React.createClass({displayName: "GeneralSupportURL",
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    generalSupportUrlClick: function() {
+      this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+        linkInfo: "Support link click"
+      }));
+    },
+
+    render: function() {
+      return (
+        React.createElement("a", {className: "general-support-url", 
+          href: loop.config.generalSupportUrl, 
+          onClick: this.generalSupportUrlClick, 
+          rel: "noreferrer", 
+          target: "_blank"}, 
+          React.createElement("div", {className: "icon icon-help"})
+        )
       );
     }
   });
@@ -722,8 +722,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
     StandaloneHandleUserAgentView: StandaloneHandleUserAgentView,
     StandaloneRoomControllerView: StandaloneRoomControllerView,
     StandaloneRoomFailureView: StandaloneRoomFailureView,
-    StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomInfoArea: StandaloneRoomInfoArea,
+    StandaloneOverlayWrapper: StandaloneOverlayWrapper,
     StandaloneRoomView: StandaloneRoomView,
     ToSView: ToSView
   };
