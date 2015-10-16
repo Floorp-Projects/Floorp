@@ -194,11 +194,16 @@ NS_IMPL_ISUPPORTS(nsKeygenFormProcessor, nsIFormProcessor)
 nsKeygenFormProcessor::nsKeygenFormProcessor()
 { 
    m_ctx = new PipUIContext();
-
 } 
 
 nsKeygenFormProcessor::~nsKeygenFormProcessor()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
+  shutdown(calledFromObject);
 }
 
 nsresult
@@ -246,9 +251,13 @@ nsKeygenFormProcessor::Init()
 nsresult
 nsKeygenFormProcessor::GetSlot(uint32_t aMechanism, PK11SlotInfo** aSlot)
 {
-  return GetSlotWithMechanism(aMechanism,m_ctx,aSlot);
-}
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
+  return GetSlotWithMechanism(aMechanism, m_ctx, aSlot, locker);
+}
 
 uint32_t MapGenMechToAlgoMech(uint32_t mechanism)
 {
@@ -284,11 +293,9 @@ uint32_t MapGenMechToAlgoMech(uint32_t mechanism)
 
 
 nsresult
-GetSlotWithMechanism(uint32_t aMechanism, 
-                     nsIInterfaceRequestor *m_ctx,
-                     PK11SlotInfo** aSlot)
+GetSlotWithMechanism(uint32_t aMechanism, nsIInterfaceRequestor* m_ctx,
+                     PK11SlotInfo** aSlot, nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-    nsNSSShutDownPreventionLock locker;
     PK11SlotList * slotList = nullptr;
     char16_t** tokenNameList = nullptr;
     nsITokenDialogs * dialogs;
@@ -349,17 +356,11 @@ GetSlotWithMechanism(uint32_t aMechanism,
 
 		if (NS_FAILED(rv)) goto loser;
 
-    {
-      nsPSMUITracker tracker;
-      if (!tokenNameList || !*tokenNameList) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-      }
-      else if (tracker.isUIForbidden()) {
-        rv = NS_ERROR_NOT_AVAILABLE;
-      }
-      else {
-        rv = dialogs->ChooseToken(m_ctx, (const char16_t**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
-      }
+    if (!tokenNameList || !*tokenNameList) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        rv = dialogs->ChooseToken(m_ctx, (const char16_t**)tokenNameList,
+                                  numSlots, &unicodeTokenChosen, &canceled);
     }
 		NS_RELEASE(dialogs);
 		if (NS_FAILED(rv)) goto loser;
@@ -452,6 +453,10 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                                     const nsAString& aKeyParams)
 {
     nsNSSShutDownPreventionLock locker;
+    if (isAlreadyShutDown()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     nsresult rv = NS_ERROR_FAILURE;
     char *keystring = nullptr;
     char *keyparamsString = nullptr;
@@ -569,7 +574,7 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
       }
 
     /* Make sure token is initialized. */
-    rv = setPassword(slot, m_ctx);
+    rv = setPassword(slot, m_ctx, locker);
     if (NS_FAILED(rv))
         goto loser;
 
@@ -598,18 +603,10 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
         runnable = do_QueryInterface(KeygenRunnable);
         
         if (runnable) {
-            {
-              nsPSMUITracker tracker;
-              if (tracker.isUIForbidden()) {
-                rv = NS_ERROR_NOT_AVAILABLE;
-              }
-              else {
-                rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
-                // We call join on the thread, 
-                // so we can be sure that no simultaneous access to the passed parameters will happen.
-                KeygenRunnable->Join();
-              }
-            }
+            rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
+            // We call join on the thread so we can be sure that no
+            // simultaneous access to the passed parameters will happen.
+            KeygenRunnable->Join();
 
             NS_RELEASE(dialogs);
             if (NS_SUCCEEDED(rv)) {
