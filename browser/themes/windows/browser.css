@@ -52,13 +52,23 @@
 #nav-bar[brighttext] {
   --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(255,255,255,.5);
-  --toolbarbutton-hover-boxshadow: none;
 
   --toolbarbutton-active-background: rgba(255,255,255,.4);
   --toolbarbutton-active-bordercolor: rgba(255,255,255,.7);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(255,255,255,.4) inset;
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(255,255,255,.3);
+}
+
+#nav-bar:-moz-lwtheme {
+  --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
+  --toolbarbutton-hover-background: rgba(255,255,255,.5);
+
+  --toolbarbutton-active-background: rgba(70%,70%,70%,.25);
+  --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
+  --toolbarbutton-active-boxshadow: 0 0 2px rgba(0,0,0,.6) inset;
+
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(85%,85%,85%,.25);
 }
 
 #menubar-items {
@@ -1127,10 +1137,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #nav-bar:-moz-lwtheme {
-  --urlbar-border-color: rgba(0,0,0,.32);
-}
-
-#nav-bar:-moz-lwtheme-brighttext {
   --urlbar-border-color: var(--toolbarbutton-hover-bordercolor);
 }
 
@@ -1160,11 +1166,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   background-clip: padding-box;
   border: 1px solid;
   border-color: var(--urlbar-border-color);
-}
-
-#urlbar:-moz-lwtheme-brighttext,
-.searchbar-textbox:-moz-lwtheme-brighttext {
-  background-clip: border-box;
 }
 
 #urlbar:hover,
