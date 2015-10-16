@@ -97,12 +97,6 @@ struct BluetoothAvrcpEventParamPair {
   const BluetoothAvrcpNotificationParam& mParam;
 };
 
-struct BluetoothConfigurationParameter {
-  uint8_t mType;
-  uint16_t mLength;
-  nsAutoArrayPtr<uint8_t> mValue;
-};
-
 //
 // Conversion
 //

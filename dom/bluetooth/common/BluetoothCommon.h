@@ -9,6 +9,7 @@
 
 #include "mozilla/Compiler.h"
 #include "mozilla/Observer.h"
+#include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -478,6 +479,12 @@ struct BluetoothAddress {
     mAddr[5] = aNAP >> 8;
   }
 
+};
+
+struct BluetoothConfigurationParameter {
+  uint8_t mType;
+  uint16_t mLength;
+  nsAutoArrayPtr<uint8_t> mValue;
 };
 
 struct BluetoothUuid {
