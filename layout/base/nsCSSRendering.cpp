@@ -5574,8 +5574,8 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
   transformedSkipRect.RoundIn();
 
   for (size_t i = 0; i < 4; i++) {
-    aInnerClipRectRadii[i].width = scale.width * aInnerClipRectRadii[i].width;
-    aInnerClipRectRadii[i].height = scale.height * aInnerClipRectRadii[i].height;
+    aInnerClipRectRadii[i].width = std::floor(scale.width * aInnerClipRectRadii[i].width);
+    aInnerClipRectRadii[i].height = std::floor(scale.height * aInnerClipRectRadii[i].height);
   }
 
   {
