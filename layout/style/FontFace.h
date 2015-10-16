@@ -53,6 +53,7 @@ public:
                          aUnicodeRanges) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
+    virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) override;
     const nsAutoTArray<FontFace*,1>& GetFontFaces() { return mFontFaces; }
 
   protected:
