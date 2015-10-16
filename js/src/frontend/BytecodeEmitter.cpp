@@ -1034,6 +1034,7 @@ BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index)
 bool
 BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op)
 {
+    MOZ_ASSERT(atom);
     MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
     // .generator and .genrval lookups should be emitted as JSOP_GETALIASEDVAR
@@ -7490,7 +7491,7 @@ BytecodeEmitter::emitClass(ParseNode* pn)
                 return false;
         }
     } else {
-        JSAtom *name = names ? names->innerBinding()->pn_atom : nullptr;
+        JSAtom *name = names ? names->innerBinding()->pn_atom : cx->names().empty;
         if (heritageExpression) {
             if (!emitAtomOp(name, JSOP_DERIVEDCONSTRUCTOR))
                 return false;
