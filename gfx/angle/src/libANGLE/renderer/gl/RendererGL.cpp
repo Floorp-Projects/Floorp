@@ -24,6 +24,7 @@
 #include "libANGLE/renderer/gl/ProgramGL.h"
 #include "libANGLE/renderer/gl/QueryGL.h"
 #include "libANGLE/renderer/gl/RenderbufferGL.h"
+#include "libANGLE/renderer/gl/SamplerGL.h"
 #include "libANGLE/renderer/gl/ShaderGL.h"
 #include "libANGLE/renderer/gl/StateManagerGL.h"
 #include "libANGLE/renderer/gl/SurfaceGL.h"
@@ -85,6 +86,7 @@ RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &at
       mFunctions(functions),
       mStateManager(nullptr),
       mBlitter(nullptr),
+      mHasDebugOutput(false),
       mSkipDrawCalls(false)
 {
     ASSERT(mFunctions);
@@ -92,8 +94,12 @@ RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &at
     nativegl_gl::GenerateWorkarounds(mFunctions, &mWorkarounds);
     mBlitter = new BlitGL(functions, mWorkarounds, mStateManager);
 
+    mHasDebugOutput = mFunctions->isAtLeastGL(gl::Version(4, 3)) ||
+                      mFunctions->hasGLExtension("GL_KHR_debug") ||
+                      mFunctions->isAtLeastGLES(gl::Version(3, 2)) ||
+                      mFunctions->hasGLESExtension("GL_KHR_debug");
 #ifndef NDEBUG
-    if (mFunctions->debugMessageControl && mFunctions->debugMessageCallback)
+    if (mHasDebugOutput)
     {
         mFunctions->enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         mFunctions->debugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
@@ -125,7 +131,22 @@ gl::Error RendererGL::flush()
 
 gl::Error RendererGL::finish()
 {
+#ifdef NDEBUG
+    if (mWorkarounds.finishDoesNotCauseQueriesToBeAvailable && mHasDebugOutput)
+    {
+        mFunctions->enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    }
+#endif
+
     mFunctions->finish();
+
+#ifdef NDEBUG
+    if (mWorkarounds.finishDoesNotCauseQueriesToBeAvailable && mHasDebugOutput)
+    {
+        mFunctions->disable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    }
+#endif
+
     return gl::Error(GL_NO_ERROR);
 }
 
@@ -244,7 +265,7 @@ CompilerImpl *RendererGL::createCompiler()
 
 ShaderImpl *RendererGL::createShader(const gl::Shader::Data &data)
 {
-    return new ShaderGL(data, mFunctions);
+    return new ShaderGL(data, mFunctions, mWorkarounds);
 }
 
 ProgramImpl *RendererGL::createProgram(const gl::Program::Data &data)
@@ -254,7 +275,7 @@ ProgramImpl *RendererGL::createProgram(const gl::Program::Data &data)
 
 FramebufferImpl *RendererGL::createFramebuffer(const gl::Framebuffer::Data &data)
 {
-    return new FramebufferGL(data, mFunctions, mStateManager, false);
+    return new FramebufferGL(data, mFunctions, mStateManager, mWorkarounds, false);
 }
 
 TextureImpl *RendererGL::createTexture(GLenum target)
@@ -279,7 +300,7 @@ VertexArrayImpl *RendererGL::createVertexArray(const gl::VertexArray::Data &data
 
 QueryImpl *RendererGL::createQuery(GLenum type)
 {
-    return new QueryGL(type);
+    return new QueryGL(type, mFunctions, mStateManager);
 }
 
 FenceNVImpl *RendererGL::createFenceNV()
@@ -297,19 +318,25 @@ TransformFeedbackImpl *RendererGL::createTransformFeedback()
     return new TransformFeedbackGL();
 }
 
-void RendererGL::insertEventMarker(GLsizei, const char *)
+SamplerImpl *RendererGL::createSampler()
 {
-    UNREACHABLE();
+    return new SamplerGL(mFunctions, mStateManager);
 }
 
-void RendererGL::pushGroupMarker(GLsizei, const char *)
+void RendererGL::insertEventMarker(GLsizei length, const char *marker)
 {
-    UNREACHABLE();
+    mFunctions->debugMessageInsert(GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0,
+                                   GL_DEBUG_SEVERITY_NOTIFICATION, length, marker);
+}
+
+void RendererGL::pushGroupMarker(GLsizei length, const char *marker)
+{
+    mFunctions->pushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, length, marker);
 }
 
 void RendererGL::popGroupMarker()
 {
-    UNREACHABLE();
+    mFunctions->popDebugGroup();
 }
 
 void RendererGL::notifyDeviceLost()

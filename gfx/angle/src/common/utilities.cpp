@@ -639,7 +639,23 @@ std::string ParseUniformName(const std::string &name, size_t *outSubscript)
     return name.substr(0, open);
 }
 
+unsigned int ParseAndStripArrayIndex(std::string *name)
+{
+    unsigned int subscript = GL_INVALID_INDEX;
+
+    // Strip any trailing array operator and retrieve the subscript
+    size_t open  = name->find_last_of('[');
+    size_t close = name->find_last_of(']');
+    if (open != std::string::npos && close == name->length() - 1)
+    {
+        subscript = atoi(name->c_str() + open + 1);
+        name->erase(open);
+    }
+
+    return subscript;
 }
+
+}  // namespace gl
 
 namespace egl
 {

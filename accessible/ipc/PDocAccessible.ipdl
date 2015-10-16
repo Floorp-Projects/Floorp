@@ -92,7 +92,7 @@ child:
   // TextSubstring is getText in IDL.
   prio(high) sync CaretLineNumber(uint64_t aID) returns(int32_t aLineNumber);
   prio(high) sync CaretOffset(uint64_t aID) returns(int32_t aOffset);
-  prio(high) sync SetCaretOffset(uint64_t aID, int32_t aOffset) returns (bool aValid);
+   async SetCaretOffset(uint64_t aID, int32_t aOffset);
   prio(high) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync SelectionCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t

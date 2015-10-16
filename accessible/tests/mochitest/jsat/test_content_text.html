@@ -31,9 +31,9 @@
           // Read-only text tests
           [ContentMessages.simpleMoveFirst,
            new ExpectedCursorChange(
-            ['These are my awards, Mother. From Army. The seal is for ' +
-             'marksmanship, and the gorilla is for sand racing.',
-             'Text content test document'])],
+            ['Text content test document', 'These are my awards, Mother. ' +
+             'From Army. The seal is for marksmanship, and the gorilla is ' +
+             'for sand racing.'])],
           [ContentMessages.moveNextBy('word'),
            new ExpectedCursorTextChange('These', 0, 5)],
           [ContentMessages.moveNextBy('word'),

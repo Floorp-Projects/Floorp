@@ -1,0 +1,112 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test Iterable Interface</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script class="testbody" type="application/javascript">
+     SimpleTest.waitForExplicitFinish();
+     SpecialPowers.pushPrefEnv({set: [['dom.expose_test_interfaces', true]]}, function() {
+
+       base_properties = [["entries", "function", 0],
+                          ["keys", "function", 0],
+                          ["values", "function", 0]]
+       var testExistence = function testExistence(prefix, obj, properties) {
+         for (var [name, type, args] of properties) {
+           // Properties are somewhere up the proto chain, hasOwnProperty won't work
+           isnot(obj[name], undefined,
+                 `${prefix} object has property ${name}`);
+
+           is(typeof obj[name], type,
+              `${prefix} object property ${name} is a ${type}`);
+           // Check function length
+           if (type == "function") {
+             is(obj[name].length, args,
+                `${prefix} object property ${name} is length ${args}`);
+             is(obj[name].name, name,
+                `${prefix} object method name is ${name}`);
+           }
+
+           // Find where property is on proto chain, check for enumerablility there.
+           var owner = obj;
+           while (owner) {
+             var propDesc = Object.getOwnPropertyDescriptor(owner, name);
+             if (propDesc) {
+               ok(propDesc.enumerable,
+                  `${prefix} object property ${name} is enumerable`);
+               break;
+             }
+             owner = Object.getPrototypeOf(owner);
+           }
+         }
+       }
+
+       var itr;
+       // Simple single type iterable creation and functionality test
+       info("IterableSingle: Testing simple iterable creation and functionality");
+       itr = new TestInterfaceIterableSingle();
+       testExistence("IterableSingle: ", itr, base_properties);
+       var key_itr = itr.keys();
+       var value_itr = itr.values();
+       var entries_itr = itr.entries();
+       for (var i = 0; i < 3; ++i) {
+         var key = key_itr.next();
+         var value = value_itr.next();
+         var entry = entries_itr.next();
+         is(key.value, i, "IterableSingle: Key iterator value should be " + i);
+         is(value.value, key.value, "IterableSingle: Value iterator value should be " + key.value);
+         is(entry.value[0], i, "IterableSingle: Entry iterator value 0 should be " + i);
+         is(entry.value[1], i, "IterableSingle: Entry iterator value 1 should be " + i);
+       }
+       var key = key_itr.next();
+       var value = value_itr.next();
+       var entry = entries_itr.next();
+       is(key.value, undefined, "IterableSingle: Key iterator value should be undefined");
+       is(key.done, true, "IterableSingle: Key iterator done should be true");
+       is(value.value, undefined, "IterableSingle: Value iterator value should be undefined");
+       is(value.done, true, "IterableSingle: Value iterator done should be true");
+       is(entry.value, undefined, "IterableDouble: Entry iterator value should be undefined");
+       is(entry.done, true, "IterableSingle: Entry iterator done should be true");
+       is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
+          "[object TestInterfaceIterableSingleIteratorPrototype]",
+          "iterator prototype should have the right brand");
+
+       // Simple dual type iterable creation and functionality test
+       info("IterableDouble: Testing simple iterable creation and functionality");
+       itr = new TestInterfaceIterableDouble();
+       testExistence("IterableDouble: ", itr, base_properties);
+       var elements = [["a", "b"], ["c", "d"], ["e", "f"]]
+       var key_itr = itr.keys();
+       var value_itr = itr.values();
+       var entries_itr = itr.entries();
+       for (var i = 0; i < 3; ++i) {
+         var key = key_itr.next();
+         var value = value_itr.next();
+         var entry = entries_itr.next();
+         is(key.value, elements[i][0], "IterableDouble: Key iterator value should be " + elements[i][0]);
+         is(value.value, elements[i][1], "IterableDouble: Value iterator value should be " + elements[i][1]);
+         is(entry.value[0], elements[i][0], "IterableDouble: Entry iterator value 0 should be " + elements[i][0]);
+         is(entry.value[1], elements[i][1], "IterableDouble: Entry iterator value 1 should be " + elements[i][1]);
+       }
+       var key = key_itr.next();
+       var value = value_itr.next();
+       var entry = entries_itr.next()
+       is(key.value, undefined, "IterableDouble: Key iterator value should be undefined");
+       is(key.done, true, "IterableDouble: Key iterator done should be true");
+       is(value.value, undefined, "IterableDouble: Value iterator value should be undefined");
+       is(value.done, true, "IterableDouble: Value iterator done should be true");
+       is(entry.value, undefined, "IterableDouble: Entry iterator value should be undefined");
+       is(entry.done, true, "IterableDouble: Entry iterator done should be true");
+       is(Object.prototype.toString.call(Object.getPrototypeOf(key_itr)),
+          "[object TestInterfaceIterableDoubleIteratorPrototype]",
+          "iterator prototype should have the right brand");
+
+       SimpleTest.finish();
+     });
+    </script>
+  </body>
+</html>
