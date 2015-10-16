@@ -330,9 +330,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         config = self.config
         replace_dict = self.query_abs_dirs()
 
-        if config.get('en_us_binary_url') and \
-           config.get('release_config_file'):
-            replace_dict['en_us_binary_url'] = config['en_us_binary_url']
+        replace_dict['en_us_binary_url'] = config.get('en_us_binary_url')
         # Override en_us_binary_url if passed as a buildbot property
         self.read_buildbot_config()
         if self.buildbot_config["properties"].get("en_us_binary_url"):
