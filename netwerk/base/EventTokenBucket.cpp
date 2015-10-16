@@ -90,7 +90,6 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
   , mFineGrainResetTimerArmed(false)
 #endif
 {
-  MOZ_COUNT_CTOR(EventTokenBucket);
   mLastUpdate = TimeStamp::Now();
 
   MOZ_ASSERT(NS_IsMainThread());
@@ -112,7 +111,6 @@ EventTokenBucket::~EventTokenBucket()
   SOCKET_LOG(("EventTokenBucket::dtor %p events=%d\n",
               this, mEvents.GetSize()));
 
-  MOZ_COUNT_DTOR(EventTokenBucket);
   if (mTimer && mTimerArmed)
     mTimer->Cancel();
 
