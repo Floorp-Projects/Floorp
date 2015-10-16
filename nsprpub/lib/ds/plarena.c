@@ -93,6 +93,9 @@ PR_IMPLEMENT(void) PL_InitArenaPool(
         pool->mask = PR_BITMASK(PR_CeilingLog2(align));
 
     pool->first.next = NULL;
+    /* Set all three addresses in pool->first to the same dummy value.
+     * These addresses are only compared with each other, but never
+     * dereferenced. */
     pool->first.base = pool->first.avail = pool->first.limit =
         (PRUword)PL_ARENA_ALIGN(pool, &pool->first + 1);
     pool->current = &pool->first;
@@ -144,10 +147,14 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
 {
     PLArena *a;   
     char *rp;     /* returned pointer */
+    PRUint32 nbOld;
 
     PR_ASSERT((nb & pool->mask) == 0);
     
+    nbOld = nb;
     nb = (PRUword)PL_ARENA_ALIGN(pool, nb); /* force alignment */
+    if (nb < nbOld)
+        return NULL;
 
     /* attempt to allocate from arenas at pool->current */
     {
@@ -208,6 +215,7 @@ PR_IMPLEMENT(void *) PL_ArenaAllocate(PLArenaPool *pool, PRUint32 nb)
             PL_MAKE_MEM_NOACCESS((void*)a->avail, a->limit - a->avail);
             rp = (char *)a->avail;
             a->avail += nb;
+            PR_ASSERT(a->avail <= a->limit);
             /* the newly allocated arena is linked after pool->current 
             *  and becomes pool->current */
             a->next = pool->current->next;
@@ -230,6 +238,8 @@ PR_IMPLEMENT(void *) PL_ArenaGrow(
 {
     void *newp;
 
+    if (PR_UINT32_MAX - size < incr)
+        return NULL;
     PL_ARENA_ALLOCATE(newp, pool, size + incr);
     if (newp)
         memcpy(newp, p, size);

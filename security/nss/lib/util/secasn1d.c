@@ -951,6 +951,33 @@ sec_asn1d_parse_more_length (sec_asn1d_state *state,
     return count;
 }
 
+/*
+ * Helper function for sec_asn1d_prepare_for_contents.
+ * Checks that a value representing a number of bytes consumed can be
+ * subtracted from a remaining length. If so, returns PR_TRUE.
+ * Otherwise, sets the error SEC_ERROR_BAD_DER, indicates that there was a
+ * decoding error in the given SEC_ASN1DecoderContext, and returns PR_FALSE.
+ */
+static PRBool
+sec_asn1d_check_and_subtract_length (unsigned long *remaining,
+                                     unsigned long consumed,
+                                     SEC_ASN1DecoderContext *cx)
+{
+    PORT_Assert(remaining);
+    PORT_Assert(cx);
+    if (!remaining || !cx) {
+        PORT_SetError (SEC_ERROR_INVALID_ARGS);
+        cx->status = decodeError;
+        return PR_FALSE;
+    }
+    if (*remaining < consumed) {
+        PORT_SetError (SEC_ERROR_BAD_DER);
+        cx->status = decodeError;
+        return PR_FALSE;
+    }
+    *remaining -= consumed;
+    return PR_TRUE;
+}
 
 static void
 sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
@@ -958,6 +985,7 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
     SECItem *item;
     PLArenaPool *poolp;
     unsigned long alloc_len;
+    sec_asn1d_state *parent;
 
 #ifdef DEBUG_ASN1D_STATES
     {
@@ -965,6 +993,63 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
                state->indefinite ? "indefinite" : "");
     }
 #endif
+
+    /**
+     * The maximum length for a child element should be constrained to the
+     * length remaining in the first definite length element in the ancestor
+     * stack. If there is no definite length element in the ancestor stack,
+     * there's nothing to constrain the length of the child, so there's no
+     * further processing necessary.
+     *
+     * It's necessary to walk the ancestor stack, because it's possible to have
+     * definite length children that are part of an indefinite length element,
+     * which is itself part of an indefinite length element, and which is
+     * ultimately part of a definite length element. A simple example of this
+     * would be the handling of constructed OCTET STRINGs in BER encoding.
+     *
+     * This algorithm finds the first definite length element in the ancestor
+     * stack, if any, and if so, ensures that the length of the child element
+     * is consistent with the number of bytes remaining in the constraining
+     * ancestor element (that is, after accounting for any other sibling
+     * elements that may have been read).
+     *
+     * It's slightly complicated by the need to account both for integer
+     * underflow and overflow, as well as ensure that for indefinite length
+     * encodings, there's also enough space for the End-of-Contents (EOC)
+     * octets (Tag = 0x00, Length = 0x00, or two bytes).
+     */
+
+    /* Determine the maximum length available for this element by finding the
+     * first definite length ancestor, if any. */
+    parent = sec_asn1d_get_enclosing_construct(state);
+    while (parent && parent->indefinite) {
+        parent = sec_asn1d_get_enclosing_construct(parent);
+    }
+    /* If parent is null, state is either the outermost state / at the top of
+     * the stack, or the outermost state uses indefinite length encoding. In
+     * these cases, there's nothing external to constrain this element, so
+     * there's nothing to check. */
+    if (parent) {
+        unsigned long remaining = parent->pending;
+        parent = state;
+        do {
+            if (!sec_asn1d_check_and_subtract_length(
+                     &remaining, parent->consumed, state->top) ||
+                /* If parent->indefinite is true, parent->contents_length is
+                 * zero and this is a no-op. */
+                !sec_asn1d_check_and_subtract_length(
+                     &remaining, parent->contents_length, state->top) ||
+                /* If parent->indefinite is true, then ensure there is enough
+                 * space for an EOC tag of 2 bytes. */
+                (parent->indefinite && !sec_asn1d_check_and_subtract_length(
+                                            &remaining, 2, state->top))) {
+                /* This element is larger than its enclosing element, which is
+                 * invalid. */
+                return;
+            }
+        } while ((parent = sec_asn1d_get_enclosing_construct(parent)) &&
+                 parent->indefinite);
+    }
 
     /*
      * XXX I cannot decide if this allocation should exclude the case
@@ -1006,21 +1091,6 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
      * both contents_length and pending will be zero.
      */
     state->pending = state->contents_length;
-
-    /* If this item has definite length encoding, and 
-    ** is enclosed by a definite length constructed type,
-    ** make sure it isn't longer than the remaining space in that 
-    ** constructed type.  
-    */
-    if (state->contents_length > 0) {
-	sec_asn1d_state *parent = sec_asn1d_get_enclosing_construct(state);
-	if (parent && !parent->indefinite && 
-	    state->consumed + state->contents_length > parent->pending) {
-	    PORT_SetError (SEC_ERROR_BAD_DER);
-	    state->top->status = decodeError;
-	    return;
-	}
-    }
 
     /*
      * An EXPLICIT is nothing but an outer header, which we have
@@ -1720,10 +1790,107 @@ sec_asn1d_next_substring (sec_asn1d_state *state)
 	if (state->pending == 0)
 	    done = PR_TRUE;
     } else {
+	PRBool preallocatedString;
+	sec_asn1d_state *temp_state;
 	PORT_Assert (state->indefinite);
 
 	item = (SECItem *)(child->dest);
-	if (item != NULL && item->data != NULL) {
+
+	/**
+	 * At this point, there's three states at play:
+	 *   child: The element that was just parsed
+	 *   state: The currently processed element
+	 *   'parent' (aka state->parent): The enclosing construct
+	 *      of state, or NULL if this is the top-most element.
+	 *
+	 * This state handles both substrings of a constructed string AND
+	 * child elements of items whose template type was that of
+	 * SEC_ASN1_ANY, SEC_ASN1_SAVE, SEC_ASN1_ANY_CONTENTS, SEC_ASN1_SKIP
+	 * template, as described in sec_asn1d_prepare_for_contents. For
+	 * brevity, these will be referred to as 'string' and 'any' types.
+	 *
+	 * This leads to the following possibilities:
+	 *   1: This element is an indefinite length string, part of a
+	 *      definite length string.
+	 *   2: This element is an indefinite length string, part of an
+	 *      indefinite length string.
+	 *   3: This element is an indefinite length any, part of a
+	 *      definite length any.
+	 *   4: This element is an indefinite length any, part of an
+	 *      indefinite length any.
+	 *   5: This element is an indefinite length any and does not
+	 *      meet any of the above criteria. Note that this would include
+	 *      an indefinite length string type matching an indefinite
+	 *      length any template.
+	 *
+	 * In Cases #1 and #3, the definite length 'parent' element will
+	 * have allocated state->dest based on the parent elements definite
+	 * size. During the processing of 'child', sec_asn1d_parse_leaf will
+	 * have copied the (string, any) data directly into the offset of
+	 * dest, as appropriate, so there's no need for this class to still
+	 * store the child - it's already been processed.
+	 *
+	 * In Cases #2 and #4, dest will be set to the parent element's dest,
+	 * but dest->data will not have been allocated yet, due to the
+	 * indefinite length encoding. In this situation, it's necessary to
+	 * hold onto child (and all other children) until the EOC, at which
+	 * point, it becomes possible to compute 'state's overall length. Once
+	 * 'state' has a computed length, this can then be fed to 'parent' (via
+	 * this state), and then 'parent' can similarly compute the length of
+	 * all of its children up to the EOC, which will ultimately transit to
+	 * sec_asn1d_concat_substrings, determine the overall size needed,
+	 * allocate, and copy the contents (of all of parent's children, which
+	 * would include 'state', just as 'state' will have copied all of its
+	 * children via sec_asn1d_concat_substrings)
+	 *
+	 * The final case, Case #5, will manifest in that item->data and
+	 * item->len will be NULL/0, respectively, since this element was
+	 * indefinite-length encoded. In that case, both the tag and length will
+	 * already exist in state's subitems, via sec_asn1d_record_any_header,
+	 * and so the contents (aka 'child') should be added to that list of
+	 * items to concatenate in sec_asn1d_concat_substrings once the EOC
+	 * is encountered.
+	 *
+	 * To distinguish #2/#4 from #1/#3, it's sufficient to walk the ancestor
+	 * tree. If the current type is a string type, then the enclosing
+	 * construct will be that same type (#1/#2). If the current type is an
+	 * any type, then the enclosing construct is either an any type (#3/#4)
+	 * or some other type (#5). Since this is BER, this nesting relationship
+	 * between 'state' and 'parent' may go through several levels of
+	 * constructed encoding, so continue walking the ancestor chain until a
+	 * clear determination can be made.
+	 *
+	 * The variable preallocatedString is used to indicate Case #1/#3,
+	 * indicating an in-place copy has already occurred, and Cases #2, #4,
+	 * and #5 all have the same behaviour of adding a new substring.
+	 */
+	preallocatedString = PR_FALSE;
+	temp_state = state;
+	while (temp_state && item == temp_state->dest && temp_state->indefinite) {
+	    sec_asn1d_state *parent = sec_asn1d_get_enclosing_construct(temp_state);
+	    if (!parent || parent->underlying_kind != temp_state->underlying_kind) {
+	        /* Case #5 - Either this is a top-level construct or it is part
+	         * of some other element (e.g. a SEQUENCE), in which case, a
+	         * new item should be allocated. */
+	        break;
+	    }
+	    if (!parent->indefinite) {
+	        /* Cases #1 / #3 - A definite length ancestor exists, for which
+	         * this is a substring that has already copied into dest. */
+	        preallocatedString = PR_TRUE;
+	        break;
+	    }
+	    if (!parent->substring) {
+	        /* Cases #2 / #4 - If the parent is not a substring, but is
+	         * indefinite, then there's nothing further up that may have
+	         * preallocated dest, thus child will not have already
+		 * been copied in place, therefore it's necessary to save child
+		 * as a subitem. */
+	        break;
+	    }
+	    temp_state = parent;
+	}
+	if (item != NULL && item->data != NULL && !preallocatedString) {
 	    /*
 	     * Save the string away for later concatenation.
 	     */
