@@ -335,6 +335,10 @@ class RefTest(object):
             xrePath=options.xrePath, debugger=options.debugger)
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
 
+        if mozinfo.info["asan"]:
+            # Disable leak checking for reftests for now
+            browserEnv["ASAN_OPTIONS"] = "detect_leaks=0"
+
         for v in options.environment:
             ix = v.find("=")
             if ix <= 0:
