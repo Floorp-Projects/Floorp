@@ -156,7 +156,13 @@ class ManifestParser(object):
             if '://' not in path: # don't futz with URLs
                 path = normalize_path(path)
                 if here and not os.path.isabs(path):
-                    path = os.path.normpath(os.path.join(here, path))
+                    # Profiling indicates 25% of manifest parsing is spent
+                    # in this call to normpath, but almost all calls return
+                    # their argument unmodified, so we avoid the call if
+                    # '..' if not present in the path.
+                    path = os.path.join(here, path)
+                    if '..' in path:
+                        path = os.path.normpath(path)
 
                 # Microoptimization, because relpath is quite expensive.
                 # We know that rootdir is an absolute path or empty. If path
