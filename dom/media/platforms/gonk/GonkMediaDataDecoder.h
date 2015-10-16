@@ -36,7 +36,7 @@ public:
   nsresult Flush();
 
   // Shutdown decoder and rejects the init promise.
-  nsresult Shutdown();
+  virtual nsresult Shutdown();
 
   // True if sample is queued.
   bool HasQueuedSample();
