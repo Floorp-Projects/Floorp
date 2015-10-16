@@ -132,7 +132,7 @@ public:
 
   int32_t CaretLineNumber();
   int32_t CaretOffset();
-  bool SetCaretOffset(int32_t aOffset);
+  void SetCaretOffset(int32_t aOffset);
 
   int32_t CharacterCount();
   int32_t SelectionCount();

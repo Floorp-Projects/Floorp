@@ -47,6 +47,9 @@ class NullFactory : public ImplFactory
 
     // Transform Feedback creation
     TransformFeedbackImpl *createTransformFeedback() override { return nullptr; }
+
+    // Sampler object creation
+    SamplerImpl *createSampler() override { return nullptr; }
 };
 
 }

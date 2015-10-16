@@ -5,10 +5,6 @@ $inherits:
 task:
   #workerType: ..
 
-  routes:
-    - 'index.buildbot.branches.{{project}}.linux64'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64'
-
   scopes:
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'

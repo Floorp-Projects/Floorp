@@ -50,6 +50,7 @@ class COMPILER_EXPORT BlockLayoutEncoder
 {
   public:
     BlockLayoutEncoder();
+    virtual ~BlockLayoutEncoder() {}
 
     BlockMemberInfo encodeType(GLenum type, unsigned int arraySize, bool isRowMajorMatrix);
 

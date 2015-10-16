@@ -1775,7 +1775,7 @@ GCMarker::enterWeakMarkingMode()
         tag_ = TracerKindTag::WeakMarking;
 
         for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
-            for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
+            for (WeakMapBase* m : zone->gcWeakMapList) {
                 if (m->marked)
                     m->markEphemeronEntries(this);
             }
@@ -2505,8 +2505,10 @@ struct UnmarkGrayTracer : public JS::CallbackTracer
  * The GC and CC are run independently. Consequently, the following sequence of
  * events can occur:
  * 1. GC runs and marks an object gray.
- * 2. Some JS code runs that creates a pointer from a JS root to the gray
- *    object. If we re-ran a GC at this point, the object would now be black.
+ * 2. The mutator runs (specifically, some C++ code with access to gray
+ *    objects) and creates a pointer from a JS root or other black object to
+ *    the gray object. If we re-ran a GC at this point, the object would now be
+ *    black.
  * 3. Now we run the CC. It may think it can collect the gray object, even
  *    though it's reachable from the JS heap.
  *

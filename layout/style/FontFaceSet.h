@@ -149,6 +149,12 @@ public:
 
   void FlushUserFontSet();
 
+  static nsPresContext* GetPresContextFor(gfxUserFontSet* aUserFontSet)
+  {
+    FontFaceSet* set = static_cast<UserFontSet*>(aUserFontSet)->mFontFaceSet;
+    return set ? set->GetPresContext() : nullptr;
+  }
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)

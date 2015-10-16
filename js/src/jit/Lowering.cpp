@@ -3496,22 +3496,15 @@ LIRGenerator::visitDeleteElement(MDeleteElement* ins)
 void
 LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
 {
-    LUse obj = useRegisterAtStart(ins->object());
-    LDefinition slots = tempCopy(ins->object(), 0);
+    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
 
     // Set the performs-call flag so that we don't omit the overrecursed check.
     // This is necessary because the cache can attach a scripted setter stub
     // that calls this script recursively.
     gen->setPerformsCall();
 
-    LInstruction* lir;
-    if (ins->value()->type() == MIRType_Value) {
-        lir = new(alloc()) LSetPropertyCacheV(obj, slots);
-        useBox(lir, LSetPropertyCacheV::Value, ins->value());
-    } else {
-        LAllocation value = useRegisterOrConstant(ins->value());
-        lir = new(alloc()) LSetPropertyCacheT(obj, slots, value, ins->value()->type());
-    }
+    LInstruction* lir = new(alloc()) LSetPropertyCache(useRegister(ins->object()), temp());
+    useBoxOrTypedOrConstant(lir, LSetPropertyCache::Value, ins->value(), /* useConstant = */ true);
 
     add(lir, ins);
     assignSafepoint(lir, ins);
@@ -3525,21 +3518,17 @@ LIRGenerator::visitSetElementCache(MSetElementCache* ins)
 
     gen->setPerformsCall(); // See visitSetPropertyCache.
 
-    // Due to lack of registers on x86, we reuse the object register as a
-    // temporary. This register may be used in a 1-byte store, which on x86
-    // again has constraints; thus the use of |useByteOpRegister| over
-    // |useRegister| below.
     LInstruction* lir;
     if (ins->value()->type() == MIRType_Value) {
         LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LSetElementCacheV(useByteOpRegister(ins->object()), tempToUnbox(),
+        lir = new(alloc()) LSetElementCacheV(useRegister(ins->object()), tempToUnbox(),
                                              temp(), tempDouble(), tempF32);
 
         useBox(lir, LSetElementCacheV::Index, ins->index());
         useBox(lir, LSetElementCacheV::Value, ins->value());
     } else {
         LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LSetElementCacheT(useByteOpRegister(ins->object()),
+        lir = new(alloc()) LSetElementCacheT(useRegister(ins->object()),
                                              useRegisterOrConstant(ins->value()),
                                              tempToUnbox(), temp(), tempDouble(),
                                              tempF32);

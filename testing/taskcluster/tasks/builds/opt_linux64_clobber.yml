@@ -8,6 +8,10 @@ task:
       name: '[TC] Linux64 Opt'
       description: 'Linux64 Opt'
 
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64'
+
   workerType: opt-linux64
 
   extra:

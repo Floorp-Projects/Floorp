@@ -16,6 +16,7 @@ struct PluginTag
   nsCString[] extensions;
   bool isJavaPlugin;
   bool isFlashPlugin;
+  bool supportsAsyncInit;
   nsCString filename;
   nsCString version;
   int64_t lastModifiedTime;
