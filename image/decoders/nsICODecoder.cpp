@@ -390,7 +390,7 @@ nsICODecoder::ReadBIH(const char* aData)
   // Buffer the rest of the bitmap information header.
   memcpy(mBIHraw + PNGSIGNATURESIZE, aData, BITMAPINFOSIZE - PNGSIGNATURESIZE);
 
-  // Extracting the BPP from the BIH header; it should be trusted over the one
+  // Extract the BPP from the BIH header; it should be trusted over the one
   // we have from the ICO header.
   mBPP = ReadBPP(mBIHraw);
 
@@ -436,12 +436,6 @@ nsICODecoder::ReadBIH(const char* aData)
   if (!WriteToContainedDecoder(mBIHraw, sizeof(mBIHraw))) {
     return Transition::Terminate(ICOState::FAILURE);
   }
-
-  // Sometimes the ICO BPP header field is not filled out so we should trust the
-  // contained resource over our own information.
-  // XXX(seth): Is this ever different than the value we obtained from
-  // ReadBPP() above?
-  mBPP = bmpDecoder->GetBitsPerPixel();
 
   // Check to make sure we have valid color settings.
   uint16_t numColors = GetNumColors();
