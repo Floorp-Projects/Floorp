@@ -31,6 +31,18 @@
 // Activate BHR only for one every BHR_BETA_MOD users.
 #define BHR_BETA_MOD 100;
 
+// Maximum depth of the call stack in the reported thread hangs. This value represents
+// the 95th pecentile of the thread hangs stack depths reported by Telemetry.
+static const size_t kMaxThreadHangStackDepth = 11;
+
+// An utility comparator function used by std::unique to collapse "(* script)" entries in
+// a vector representing a call stack.
+bool StackScriptEntriesCollapser(const char* aStackEntry, const char *aAnotherStackEntry)
+{
+  return !strcmp(aStackEntry, aAnotherStackEntry) &&
+         (!strcmp(aStackEntry, "(chrome script)") || !strcmp(aStackEntry, "(content script)"));
+}
+
 namespace mozilla {
 
 /**
@@ -396,6 +408,20 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     if (!mHangStack.IsInBuffer(*f) && !strcmp(*f, "js::RunScript")) {
       mHangStack.erase(f);
     }
+  }
+
+  // Collapse duplicated "(chrome script)" and "(content script)" entries in the stack.
+  auto it = std::unique(mHangStack.begin(), mHangStack.end(), StackScriptEntriesCollapser);
+  mHangStack.erase(it, mHangStack.end());
+
+  // Limit the depth of the reported stack if greater than our limit. Only keep its
+  // last entries, since the most recent frames are at the end of the vector.
+  if (mHangStack.length() > kMaxThreadHangStackDepth) {
+    const int elementsToRemove = mHangStack.length() - kMaxThreadHangStackDepth;
+    // Replace the oldest frame with a known label so that we can tell this stack
+    // was limited.
+    mHangStack[0] = "(reduced stack)";
+    mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
   }
 
   Telemetry::HangHistogram newHistogram(Move(mHangStack));
