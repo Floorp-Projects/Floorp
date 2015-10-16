@@ -147,7 +147,7 @@ LoopContacts.on("add", onContactAdded);
 LoopContacts.on("remove", onContactRemoved);
 LoopContacts.on("update", onContactUpdated);
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   LoopContacts.removeAll(() => {});
   LoopContacts.off("add", onContactAdded);
   LoopContacts.off("remove", onContactRemoved);

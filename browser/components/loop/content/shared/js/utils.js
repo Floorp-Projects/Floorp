@@ -506,7 +506,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @param {Number} chr The character code to decode.
    * @return {Number} The decoded value.
    */
-  function _b64ToUint6 (chr) {
+  function _b64ToUint6(chr) {
     return chr > 64 && chr < 91 ? chr - 65 :
            chr > 96 && chr < 123 ? chr - 71 :
            chr > 47 && chr < 58 ? chr + 4 :
@@ -522,7 +522,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @param {Number} uint6 The number to encode.
    * @return {Number} The encoded value.
    */
-  function _uint6ToB64 (uint6) {
+  function _uint6ToB64(uint6) {
     return uint6 < 26 ? uint6 + 65 :
            uint6 < 52 ? uint6 + 71 :
            uint6 < 62 ? uint6 - 4 :

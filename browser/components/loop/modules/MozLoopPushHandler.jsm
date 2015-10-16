@@ -222,7 +222,7 @@ PushSocket.prototype = {
  * @param {Integer} startDelay The initial delay interval in milliseconds.
  * @param {Integer} maxDelay Maximum time delay value in milliseconds.
  */
-function RetryManager (startDelay, maxDelay) {
+function RetryManager(startDelay, maxDelay) {
   if (!startDelay || !maxDelay) {
     throw new Error("RetryManager: missing required parameters(s)" +
                      (startDelay ? "" : " startDelay") +
@@ -295,7 +295,7 @@ PingMonitor.prototype = {
   /**
    * Function to restart the ping timeout and cancel any current timeout operation.
    */
-  restart: function () {
+  restart: function() {
     consoleLog.info("PushHandler: ping timeout restart");
     this.stop();
     this._pingTimerID = setTimeout(() => { this._pingSend(); }, this._pingInterval);
@@ -311,7 +311,7 @@ PingMonitor.prototype = {
     }
   },
 
-  _pingSend: function () {
+  _pingSend: function() {
     consoleLog.info("PushHandler: ping sent");
     this._pingTimerID = setTimeout(this._onTimeout, this._pingTimeout);
     this._pingFunc();

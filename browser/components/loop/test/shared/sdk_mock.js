@@ -7,7 +7,7 @@
  * an interface that tests can mock out, without needing to maintain a copy of
  * the sdk or load one from the network.
  */
-(function (window) {
+(function(window) {
   "use strict";
 
   if (!window.OT) {

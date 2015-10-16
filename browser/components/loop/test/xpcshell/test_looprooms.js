@@ -652,7 +652,7 @@ function run_test() {
   LoopRooms.on("left", onRoomLeft);
   LoopRooms.on("refresh", onRefresh);
 
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
     Services.prefs.clearUserPref("loop.key");

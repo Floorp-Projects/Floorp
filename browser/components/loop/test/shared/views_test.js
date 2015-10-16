@@ -292,7 +292,7 @@ describe("loop.shared.views", function() {
       fakeMozLoop = {
         openURL: sandbox.stub(),
         setLoopPref: sandbox.stub(),
-        getLoopPref: function (prefName) {
+        getLoopPref: function(prefName) {
           switch (prefName) {
             case "support_url":
               return support_url;

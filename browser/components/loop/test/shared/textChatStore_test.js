@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-describe("loop.store.TextChatStore", function () {
+describe("loop.store.TextChatStore", function() {
   "use strict";
 
   var expect = chai.expect;
