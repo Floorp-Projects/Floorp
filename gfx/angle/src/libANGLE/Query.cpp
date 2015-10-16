@@ -47,4 +47,13 @@ GLenum Query::getType() const
     return mQuery->getType();
 }
 
+rx::QueryImpl *Query::getImplementation()
+{
+    return mQuery;
+}
+
+const rx::QueryImpl *Query::getImplementation() const
+{
+    return mQuery;
+}
 }

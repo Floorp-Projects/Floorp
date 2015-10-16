@@ -199,6 +199,10 @@ typedef enum {
   // This flag works around a bug in NVIDIA 331 series drivers related
   // to pow(x, y) where y is a constant vector.
   SH_REMOVE_POW_WITH_CONSTANT_EXPONENT = 0x200000,
+
+  // This flag works around bugs in Mac drivers related to do-while by
+  // transforming them into an other construct.
+  SH_REWRITE_DO_WHILE_LOOPS = 0x400000,
 } ShCompileOptions;
 
 // Defines alternate strategies for implementing array index clamping.

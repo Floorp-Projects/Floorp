@@ -36,6 +36,8 @@
     #define ANGLE_EGL_LIBRARY_NAME "libEGL.dll"
 #elif (DE_OS == DE_OS_UNIX)
     #define ANGLE_EGL_LIBRARY_NAME "libEGL.so"
+#elif (DE_OS == DE_OS_OSX)
+    #define ANGLE_EGL_LIBRARY_NAME "libEGL.dylib"
 #else
     #error "Unsupported platform"
 #endif

@@ -41,11 +41,11 @@ def WebIDLTest(parser, harness):
                        prefix + " - Interface failed but not as a WebIDLError exception")
 
     iterableMembers = [(x, WebIDL.IDLMethod) for x in ["entries", "keys",
-                                                       "values", "forEach"]]
-    iterableMembers.extend([("size", WebIDL.IDLAttribute)])
-    setROMembers = ([(x, WebIDL.IDLMethod) for x in ["has"]] +
+                                                       "values"]]
+    setROMembers = ([(x, WebIDL.IDLMethod) for x in ["has", "foreach"]] +
                     [("__setlike", WebIDL.IDLMaplikeOrSetlike)] +
                     iterableMembers)
+    setROMembers.extend([("size", WebIDL.IDLAttribute)])
     setRWMembers = ([(x, WebIDL.IDLMethod) for x in ["add",
                                                      "clear",
                                                      "delete"]] +
@@ -58,9 +58,10 @@ def WebIDLTest(parser, harness):
                                                            "__clear",
                                                            "__delete"]] +
                           setRWMembers)
-    mapROMembers = ([(x, WebIDL.IDLMethod) for x in ["get", "has"]] +
+    mapROMembers = ([(x, WebIDL.IDLMethod) for x in ["get", "has", "foreach"]] +
                     [("__maplike", WebIDL.IDLMaplikeOrSetlike)] +
                     iterableMembers)
+    mapROMembers.extend([("size", WebIDL.IDLAttribute)])
     mapRWMembers = ([(x, WebIDL.IDLMethod) for x in ["set",
                                                      "clear",
                                                      "delete"]] + mapROMembers)
@@ -69,8 +70,8 @@ def WebIDLTest(parser, harness):
                                                            "__delete"]] +
                           mapRWMembers)
 
-    disallowedMemberNames = ["keys", "entries", "values", "forEach", "has",
-                             "size"]
+    disallowedIterableNames = ["keys", "entries", "values"]
+    disallowedMemberNames = ["forEach", "has", "size"] + disallowedIterableNames
     mapDisallowedMemberNames = ["get"] + disallowedMemberNames
     disallowedNonMethodNames = ["clear", "delete"]
     mapDisallowedNonMethodNames = ["set"] + disallowedNonMethodNames
@@ -79,6 +80,27 @@ def WebIDLTest(parser, harness):
     #
     # Simple Usage Tests
     #
+
+    shouldPass("Iterable (key only)",
+               """
+               interface Foo1 {
+               iterable<long>;
+               };
+               """, iterableMembers)
+
+    shouldPass("Iterable (key and value)",
+               """
+               interface Foo1 {
+               iterable<long, long>;
+               };
+               """, iterableMembers)
+
+    shouldPass("Maplike (readwrite)",
+               """
+               interface Foo1 {
+               maplike<long, long>;
+               };
+               """, mapRWMembers)
 
     shouldPass("Maplike (readwrite)",
                """
@@ -157,6 +179,22 @@ def WebIDLTest(parser, harness):
                };
                """)
 
+    shouldFail("Two iterable/setlikes on same interface",
+               """
+               interface Foo1 {
+               iterable<long>;
+               maplike<long, long>;
+               };
+               """)
+
+    shouldFail("Two iterables on same interface",
+               """
+               interface Foo1 {
+               iterable<long>;
+               iterable<long, long>;
+               };
+               """)
+
     shouldFail("Two maplike/setlikes in partials",
                """
                interface Foo1 {
@@ -174,6 +212,16 @@ def WebIDLTest(parser, harness):
                };
                interface Foo2 : Foo1 {
                setlike<long>;
+               };
+               """)
+
+    shouldFail("Conflicting maplike/iterable across inheritance",
+               """
+               interface Foo1 {
+               maplike<long, long>;
+               };
+               interface Foo2 : Foo1 {
+               iterable<long>;
                };
                """)
 
@@ -283,6 +331,8 @@ def WebIDLTest(parser, harness):
                    };
                    """ % (likeMember, conflictName))
 
+    for member in disallowedIterableNames:
+        testConflictingMembers("iterable<long, long>", member, iterableMembers, False)
     for member in mapDisallowedMemberNames:
         testConflictingMembers("maplike<long, long>", member, mapRWMembers, False)
     for member in disallowedMemberNames:

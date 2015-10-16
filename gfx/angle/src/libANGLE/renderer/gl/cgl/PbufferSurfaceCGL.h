@@ -17,6 +17,7 @@ namespace rx
 
 class FunctionsGL;
 class StateManagerGL;
+struct WorkaroundsGL;
 
 class PbufferSurfaceCGL : public SurfaceGL
 {
@@ -51,6 +52,7 @@ class PbufferSurfaceCGL : public SurfaceGL
 
     const FunctionsGL *mFunctions;
     StateManagerGL *mStateManager;
+    const WorkaroundsGL &mWorkarounds;
 
     GLuint mFramebuffer;
     GLuint mColorRenderbuffer;
