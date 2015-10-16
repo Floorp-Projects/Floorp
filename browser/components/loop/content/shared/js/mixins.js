@@ -227,7 +227,7 @@ loop.shared.mixins = (function() {
             // amount.
             y += menuNodeRect.height - (boundingRect.height + y);
           }
-          menu.style.marginTop =  y + "px";
+          menu.style.marginTop = y + "px";
         } else if (!menu.style.marginLeft) {
           menu.style.marginTop = "auto";
         }

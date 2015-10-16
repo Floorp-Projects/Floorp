@@ -917,7 +917,7 @@ var LoopRoomsInternal = {
     // See if we received a notification for the channel that's currently active:
     let channelIDs = MozLoopService.channelIDs;
     if ((this.sessionType == LOOP_SESSION_TYPE.GUEST && channelID != channelIDs.roomsGuest) ||
-        (this.sessionType == LOOP_SESSION_TYPE.FXA   && channelID != channelIDs.roomsFxA)) {
+        (this.sessionType == LOOP_SESSION_TYPE.FXA && channelID != channelIDs.roomsFxA)) {
       return;
     }
 

@@ -23,9 +23,9 @@
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
 
   // 2. Standalone webapp
-  var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
-  var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
-  var StandaloneRoomView      = loop.standaloneRoomViews.StandaloneRoomView;
+  var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
+  var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
+  var StandaloneRoomView = loop.standaloneRoomViews.StandaloneRoomView;
   var StandaloneHandleUserAgentView = loop.standaloneRoomViews.StandaloneHandleUserAgentView;
 
   // 3. Shared components
@@ -1290,12 +1290,12 @@
                            width={800}>
               <SVGIcons size="10x10"/>
             </FramedExample>
-            <FramedExample  height={350}
+            <FramedExample height={350}
                             summary="14x14"
                             width={800}>
               <SVGIcons size="14x14" />
             </FramedExample>
-            <FramedExample  height={480}
+            <FramedExample height={480}
                             summary="16x16"
                             width={800}>
               <SVGIcons size="16x16"/>

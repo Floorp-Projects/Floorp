@@ -366,7 +366,7 @@ describe("loop.shared.utils", function() {
       sharedUtils.composeCallUrlEmail("http://invalid", null,
         "Hello, is me you're looking for?", "callfailed");
 
-      sinon.assert.calledOnce(telemetryAddValue, "LOOP_SHARING_ROOM_URL",  2);
+      sinon.assert.calledOnce(telemetryAddValue, "LOOP_SHARING_ROOM_URL", 2);
     });
 
     it("should log an error for invalid URLs", function() {
