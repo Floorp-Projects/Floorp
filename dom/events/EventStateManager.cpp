@@ -3121,13 +3121,27 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
 
+      // Check if the frame to scroll before checking the default action
+      // because if the scroll target is a plugin, the default action should be
+      // chosen by the plugin rather than by our prefs.
+      nsIFrame* frameToScroll = nullptr;
+      nsPluginFrame* pluginFrame = nullptr;
+
       // When APZ is enabled, the actual scroll animation might be handled by
       // the compositor.
       WheelPrefs::Action action;
       if (wheelEvent->mFlags.mHandledByAPZ) {
         action = WheelPrefs::ACTION_NONE;
       } else {
-        action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+        frameToScroll = ComputeScrollTarget(aTargetFrame, wheelEvent,
+                                            COMPUTE_DEFAULT_ACTION_TARGET);
+        pluginFrame = do_QueryFrame(frameToScroll);
+        if (pluginFrame) {
+          MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
+          action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
+        } else {
+          action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+        }
       }
       switch (action) {
         case WheelPrefs::ACTION_SCROLL: {
@@ -3138,22 +3152,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
           if (aEvent->mMessage != eWheel ||
               (!wheelEvent->deltaX && !wheelEvent->deltaY)) {
-            break;
-          }
-
-          nsIFrame* frameToScroll =
-            ComputeScrollTarget(aTargetFrame, wheelEvent,
-                                COMPUTE_DEFAULT_ACTION_TARGET);
-
-          // XXX Temporarily, we should check if the target is a plugin frame
-          //     here.  In the following patch, this should be checked before
-          //     checking wheel action since if the default action handler is
-          //     a plugin, our pref shouldn't decide the default action.
-          nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
-          if (pluginFrame) {
-            // XXX Needs to work with WheelTransaction, will be fixed in
-            //     the following patch.
-            pluginFrame->HandleWheelEventAsDefaultAction(wheelEvent);
             break;
           }
 
@@ -3201,6 +3199,12 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           DoScrollZoom(aTargetFrame, intDelta);
           break;
         }
+        case WheelPrefs::ACTION_SEND_TO_PLUGIN:
+          MOZ_ASSERT(pluginFrame);
+          // XXX Needs to work with WheelTransaction, will be fixed in
+          //     the following patch.
+          pluginFrame->HandleWheelEventAsDefaultAction(wheelEvent);
+          break;
         case WheelPrefs::ACTION_NONE:
         default:
           bool allDeltaOverflown = false;
