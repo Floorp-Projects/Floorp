@@ -17,18 +17,33 @@
     
     let TP = Ci.nsITaskbarProgress;
     
+    function IsWin7OrHigher() {
+      try {
+        var sysInfo = Cc["@mozilla.org/system-info;1"].
+                      getService(Ci.nsIPropertyBag2);
+        var ver = parseFloat(sysInfo.getProperty("version"));
+        if (ver >= 6.1)
+          return true;
+      } catch (ex) { }
+      return false;
+    }
+
     function winProgress() {
       let taskbar = Cc["@mozilla.org/windows-taskbar;1"];
-      if (!taskbar)
+      if (!taskbar) {
+        ok(false, "Taskbar service is always available");
         return null;
+      }
       taskbar = taskbar.getService(Ci.nsIWinTaskbar);
+
+      is(taskbar.available, IsWin7OrHigher(), "Expected availability of taskbar");
       if (!taskbar.available)
         return null;
       
       // HACK from mconnor:
       var wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
       let win = wm.getMostRecentWindow("navigator:browser");
-      let docShell = win.gBrowser.docShell;
+      let docShell = win.document.docShell;
 
       let progress = taskbar.getTaskbarProgress(docShell);
       isnot(progress, null, "Progress is not null");
@@ -45,8 +60,10 @@
     
     function macProgress() {
       let progress = Cc["@mozilla.org/widget/macdocksupport;1"];
-      if (!progress)
+      if (!progress) {
+        ok(false, "Should have gotten Mac progress service.");
         return null;
+      }
       return progress.getService(TP);
     }
 
@@ -54,9 +71,12 @@
 
     function loaded()
     {
-      let progress = winProgress() || macProgress();
-      if (!TP)
+      let isWin = /Win/.test(navigator.platform);
+      let progress = isWin ? winProgress() : macProgress();
+      if (!TP || !progress) {
         SimpleTest.finish();
+        return;
+      }
       
       function shouldThrow(s,c,m) {
         try {

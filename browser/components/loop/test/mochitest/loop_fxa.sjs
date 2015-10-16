@@ -213,7 +213,6 @@ function push_server(request, response) {
 function registration(request, response) {
   let isFxARequest = function(payload) {
     return (payload.simplePushURL == "https://localhost/pushUrl/fxa" ||
-            payload.simplePushURLs.calls == "https://localhost/pushUrl/fxa-calls" ||
             payload.simplePushURLs.rooms == "https://localhost/pushUrl/fxa-rooms");
   };
 
@@ -254,9 +253,9 @@ function delete_registration(request, response) {
   // registering endpoints at the root of the hostname e.g. /registration.
   let url = new URL(request.queryString.replace(/%3F.*/,""), "http://www.example.com");
   let state = getSharedState("/registration");
-  if (state != "") { //Already set to empty value on a successful channel unregsitration.
+  if (state != "") { //Already set to empty value on a successful channel unregistration.
     let registration = JSON.parse(state);
-    if (registration.simplePushURLs.calls == url.searchParams.get("simplePushURL")) {
+    if (registration.simplePushURLs.rooms == url.searchParams.get("simplePushURL")) {
       setSharedState("/registration", "");
     } else {
       response.setStatusLine(request.httpVersion, 400, "Bad Request");
