@@ -127,7 +127,7 @@ add_task(function* test_active() {
 add_task(function* test_room_participants() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
-  let roomsCache = new Map([[ "test_room", {participants: [{displayName: "hugh", id: "008", owner: true}]} ]]);
+  let roomsCache = new Map([["test_room", {participants: [{displayName: "hugh", id: "008", owner: true}]}]]);
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
   // Since we're changing the rooms map directly, we're expecting it to be a synchronous operation.

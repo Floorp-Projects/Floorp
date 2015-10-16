@@ -21,7 +21,7 @@ const LINKCLICKER_URL_PREFNAME = "loop.linkClicker.url";
 
 var openChatOrig = Chat.open;
 
-var fakeRoomList = new Map([[ ROOM_TOKEN, { roomToken: ROOM_TOKEN } ]]);
+var fakeRoomList = new Map([[ROOM_TOKEN, { roomToken: ROOM_TOKEN }]]);
 
 function BackChannel(uri) {
   this.channel = new WebChannel("test-loop-link-clicker-backchannel", uri);
