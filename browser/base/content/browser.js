@@ -6952,6 +6952,7 @@ var gIdentityHandler = {
    *        processed by nsIURIFixup.createExposableURI.
    */
   updateIdentity(state, uri) {
+    let shouldHidePopup = this._uri && (this._uri.spec != uri.spec);
     this._state = state;
     this._uri = uri;
 
@@ -6976,15 +6977,19 @@ var gIdentityHandler = {
     }
 
     // Then, update the user interface with the available data.
-
     if (this._identityBox) {
       this.refreshIdentityBlock();
     }
+    // Handle a location change while the Control Center is focused
+    // by closing the popup (bug 1207542)
+    if (shouldHidePopup) {
+      this._identityPopup.hidePopup();
+    }
 
     // NOTE: We do NOT update the identity popup (the control center) when
-    // we receive a new security state. If the user opened the popup and looks
-    // at the provided information we don't want to suddenly change the panel
-    // contents.
+    // we receive a new security state on the existing page (i.e. from a
+    // subframe). If the user opened the popup and looks at the provided
+    // information we don't want to suddenly change the panel contents.
   },
 
   /**
