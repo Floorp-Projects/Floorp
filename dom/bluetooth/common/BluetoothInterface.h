@@ -30,6 +30,25 @@ protected:
   virtual ~BluetoothSetupResultHandler() { }
 };
 
+class BluetoothSetupInterface
+{
+public:
+  virtual void RegisterModule(uint8_t aId,
+                              uint8_t aMode,
+                              uint32_t aMaxNumClients,
+                              BluetoothSetupResultHandler* aRes) = 0;
+
+  virtual void UnregisterModule(uint8_t aId,
+                                BluetoothSetupResultHandler* aRes) = 0;
+
+  virtual void Configuration(const BluetoothConfigurationParameter* aParam,
+                             uint8_t aLen,
+                             BluetoothSetupResultHandler* aRes) = 0;
+
+protected:
+  virtual ~BluetoothSetupInterface();
+};
+
 //
 // Socket Interface
 //
@@ -1111,6 +1130,7 @@ public:
 
   /* Profile Interfaces */
 
+  virtual BluetoothSetupInterface* GetBluetoothSetupInterface() = 0;
   virtual BluetoothSocketInterface* GetBluetoothSocketInterface() = 0;
   virtual BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface() = 0;
   virtual BluetoothA2dpInterface* GetBluetoothA2dpInterface() = 0;

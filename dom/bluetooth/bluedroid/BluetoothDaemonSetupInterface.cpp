@@ -9,6 +9,8 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+using namespace mozilla::ipc;
+
 //
 // Setup module
 //
@@ -165,6 +167,79 @@ BluetoothDaemonSetupModule::ConfigurationRsp(
   ResultRunnable::Dispatch(
     aRes, &BluetoothSetupResultHandler::Configuration,
     UnpackPDUInitOp(aPDU));
+}
+
+//
+// Setup interface
+//
+
+BluetoothDaemonSetupInterface::BluetoothDaemonSetupInterface(
+  BluetoothDaemonSetupModule* aModule)
+  : mModule(aModule)
+{ }
+
+BluetoothDaemonSetupInterface::~BluetoothDaemonSetupInterface()
+{ }
+
+void
+BluetoothDaemonSetupInterface::RegisterModule(
+  uint8_t aId, uint8_t aMode, uint32_t aMaxNumClients,
+  BluetoothSetupResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  nsresult rv = mModule->RegisterModuleCmd(aId, aMode, aMaxNumClients, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonSetupInterface::UnregisterModule(
+  uint8_t aId,
+  BluetoothSetupResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  nsresult rv = mModule->UnregisterModuleCmd(aId, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonSetupInterface::Configuration(
+  const BluetoothConfigurationParameter* aParam, uint8_t aLen,
+  BluetoothSetupResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  nsresult rv = mModule->ConfigurationCmd(aParam, aLen, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonSetupInterface::DispatchError(
+  BluetoothSetupResultHandler* aRes, BluetoothStatus aStatus)
+{
+  DaemonResultRunnable1<BluetoothSetupResultHandler, void,
+                        BluetoothStatus, BluetoothStatus>::Dispatch(
+    aRes, &BluetoothSetupResultHandler::OnError,
+    ConstantInitOp1<BluetoothStatus>(aStatus));
+}
+
+void
+BluetoothDaemonSetupInterface::DispatchError(
+  BluetoothSetupResultHandler* aRes, nsresult aRv)
+{
+  BluetoothStatus status;
+
+  if (NS_WARN_IF(NS_FAILED(Convert(aRv, status)))) {
+    status = STATUS_FAIL;
+  }
+  DispatchError(aRes, status);
 }
 
 END_BLUETOOTH_NAMESPACE
