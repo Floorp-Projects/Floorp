@@ -1,4 +1,4 @@
-// Copyright 2013, ARM Limited
+// Copyright 2015, ARM Limited
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -33,13 +33,6 @@ namespace vixl {
 
 
 // Assembler
-void Assembler::Reset() {
-#ifdef DEBUG
-    finalized_ = false;
-#endif
-    pc_ = nullptr;
-}
-
 void Assembler::FinalizeCode() {
 #ifdef DEBUG
   finalized_ = true;
@@ -128,6 +121,13 @@ BufferOffset Assembler::b(Label* label) {
 BufferOffset Assembler::b(Label* label, Condition cond) {
   // Encode the relative offset from the inserted branch to the label.
   return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label), cond);
+}
+
+
+void Assembler::blr(Instruction* at, const Register& xn) {
+  VIXL_ASSERT(xn.Is64Bits());
+  // No need for EmitBranch(): no immediate offset needs fixing.
+  Emit(at, BLR | Rn(xn));
 }
 
 
@@ -290,7 +290,7 @@ void Assembler::nop(Instruction* at) {
 
 
 BufferOffset Assembler::Logical(const Register& rd, const Register& rn,
-                                const Operand& operand, LogicalOp op)
+                                const Operand operand, LogicalOp op)
 {
   VIXL_ASSERT(rd.size() == rn.size());
   if (operand.IsImmediate()) {
