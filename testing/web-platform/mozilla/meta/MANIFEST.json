@@ -397,36 +397,6 @@
             "url": "/_mozilla/service-workers/service-worker/resource-timing.https.html"
           }
         ],
-        "service-workers/service-worker/resources/fetch-request-resources-iframe.https.html": [
-          {
-            "path": "service-workers/service-worker/resources/fetch-request-resources-iframe.https.html",
-            "url": "/_mozilla/service-workers/service-worker/resources/fetch-request-resources-iframe.https.html"
-          }
-        ],
-        "service-workers/service-worker/resources/fetch-request-xhr-iframe.https.html": [
-          {
-            "path": "service-workers/service-worker/resources/fetch-request-xhr-iframe.https.html",
-            "url": "/_mozilla/service-workers/service-worker/resources/fetch-request-xhr-iframe.https.html"
-          }
-        ],
-        "service-workers/service-worker/resources/fetch-response-xhr-iframe.https.html": [
-          {
-            "path": "service-workers/service-worker/resources/fetch-response-xhr-iframe.https.html",
-            "url": "/_mozilla/service-workers/service-worker/resources/fetch-response-xhr-iframe.https.html"
-          }
-        ],
-        "service-workers/service-worker/resources/invalid-blobtype-iframe.https.html": [
-          {
-            "path": "service-workers/service-worker/resources/invalid-blobtype-iframe.https.html",
-            "url": "/_mozilla/service-workers/service-worker/resources/invalid-blobtype-iframe.https.html"
-          }
-        ],
-        "service-workers/service-worker/resources/invalid-header-iframe.https.html": [
-          {
-            "path": "service-workers/service-worker/resources/invalid-header-iframe.https.html",
-            "url": "/_mozilla/service-workers/service-worker/resources/invalid-header-iframe.https.html"
-          }
-        ],
         "service-workers/service-worker/service-worker-csp-connect.https.html": [
           {
             "path": "service-workers/service-worker/service-worker-csp-connect.https.html",

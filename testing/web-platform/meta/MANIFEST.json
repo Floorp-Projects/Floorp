@@ -29785,12 +29785,6 @@
             "path": "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html",
             "url": "/dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html"
           }
-        ],
-        "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html": [
-          {
-            "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html",
-            "url": "/webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html"
-          }
         ]
       }
     },
