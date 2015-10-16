@@ -3,10 +3,10 @@
 "clang_version": "r247539"
 }, 
 {
-"size": 106877168,
-"digest": "1c50c6348eaf429ed59bb603cff63bcc1f870f59216dd3c234db5b1156cfd351d5ee7b820ec31be4d2661eb4213b2e0030e2ba2782b42905d1ec19c7f8bd322a",
+"size": 121389802,
+"digest": "2be6b42cfa1e92de4b49a57123f54043fec2d3cf8385276516dc6aaed99c88768ac4aebd7ce2e007ab074163523da29223436a4d1aef82f0f750f08f1b14cd71",
 "algorithm": "sha512",
-"filename": "clang.tar.xz",
+"filename": "clang.tar.bz2",
 "unpack": true
 },
 {
