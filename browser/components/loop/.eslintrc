@@ -44,6 +44,7 @@
     "dot-location": [2, "property"],
     "eol-last": 2,
     "eqeqeq": [2, "smart"],
+    "jsx-quotes": [2, "prefer-double"],
     "key-spacing": [2, {"beforeColon": false, "afterColon": true }],
     "linebreak-style": [2, "unix"],
     "new-cap": 0,                 // TODO: set to 2
@@ -106,7 +107,6 @@
     "yoda": [2, "never"],
     // eslint-plugin-react rules. These are documented at
     // <https://github.com/yannickcr/eslint-plugin-react#list-of-supported-rules>
-    "react/jsx-quotes": [2, "double", "avoid-escape"],
     "react/jsx-no-undef": 2,
     "react/jsx-sort-props": 2,
     "react/jsx-sort-prop-types": 2,
