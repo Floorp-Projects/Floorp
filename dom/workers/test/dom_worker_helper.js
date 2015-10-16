@@ -62,6 +62,7 @@ function waitForRegister(url, dbgUrl) {
   return new Promise(function (resolve) {
     wdm.addListener({
       onRegister: function (dbg) {
+        dump("FAK " + dbg.url + "\n");
         if (dbg.url !== url) {
           return;
         }
@@ -123,28 +124,6 @@ function waitForDebuggerMessage(dbg, message) {
           return;
         }
         ok(true, "Should receive " + message + " message from debugger.");
-        dbg.removeListener(this);
-        resolve();
-      }
-    });
-  });
-}
-
-function waitForDebuggerFreeze(dbg) {
-  return new Promise(function (resolve) {
-    dbg.addListener({
-      onFreeze: function () {
-        dbg.removeListener(this);
-        resolve();
-      }
-    });
-  });
-}
-
-function waitForDebuggerThaw(dbg) {
-  return new Promise(function (resolve) {
-    dbg.addListener({
-      onThaw: function () {
         dbg.removeListener(this);
         resolve();
       }
