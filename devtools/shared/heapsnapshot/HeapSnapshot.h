@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/devtools/DeserializedNode.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Nullable.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefCounted.h"
@@ -139,6 +140,15 @@ public:
 
   void TakeCensus(JSContext* cx, JS::HandleObject options,
                   JS::MutableHandleValue rval, ErrorResult& rv);
+
+  dom::Nullable<uint64_t> GetCreationTime() {
+    static const uint64_t maxTime = uint64_t(1) << 53;
+    if (timestamp.isSome() && timestamp.ref() <= maxTime) {
+      return dom::Nullable<uint64_t>(timestamp.ref());
+    }
+
+    return dom::Nullable<uint64_t>();
+  }
 };
 
 // A `CoreDumpWriter` is given the data we wish to save in a core dump and
