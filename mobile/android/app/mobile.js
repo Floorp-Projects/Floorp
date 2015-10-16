@@ -938,8 +938,8 @@ pref("dom.vr.cardboard.enabled", true);
 
 pref("browser.tabs.showAudioPlayingIcon", true);
 
-// Enable service workers and fetch interception on Nightly Fennec
-#ifdef NIGHTLY_BUILD
+// Enable service workers and fetch interception on non-release Fennec
+#ifndef RELEASE_BUILD
 pref("dom.serviceWorkers.enabled", true);
 pref("dom.serviceWorkers.interception.enabled", true);
 #endif
