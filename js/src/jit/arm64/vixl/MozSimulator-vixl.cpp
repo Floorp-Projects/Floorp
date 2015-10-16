@@ -50,13 +50,33 @@ Simulator::Simulator(Decoder* decoder, FILE* stream)
     this->init(decoder, stream);
 }
 
+
+Simulator::~Simulator() {
+  js_free(stack_);
+  stack_ = nullptr;
+
+  // The decoder may outlive the simulator.
+  if (print_disasm_) {
+    decoder_->RemoveVisitor(print_disasm_);
+    js_delete(print_disasm_);
+    print_disasm_ = nullptr;
+  }
+
+  if (instrumentation_) {
+    decoder_->RemoveVisitor(instrumentation_);
+    js_delete(instrumentation_);
+    instrumentation_ = nullptr;
+  }
+}
+
+
 void Simulator::ResetState() {
   // Reset the system registers.
   nzcv_ = SimSystemRegister::DefaultValueFor(NZCV);
   fpcr_ = SimSystemRegister::DefaultValueFor(FPCR);
 
   // Reset registers to 0.
-  pc_ = NULL;
+  pc_ = nullptr;
   pc_modified_ = false;
   for (unsigned i = 0; i < kNumberOfRegisters; i++) {
     set_xreg(i, 0xbadbeef);
@@ -78,6 +98,8 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   // Ensure that shift operations act as the simulator expects.
   VIXL_ASSERT((static_cast<int32_t>(-1) >> 1) == -1);
   VIXL_ASSERT((static_cast<uint32_t>(-1) >> 1) == 0x7FFFFFFF);
+
+  instruction_stats_ = false;
 
   // Set up the decoder.
   decoder_ = decoder;
