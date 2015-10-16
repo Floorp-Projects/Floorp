@@ -29,7 +29,7 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
         fp = file(fp)
 
     # read the lines
-    for (linenum, line) in enumerate(fp.readlines(), start=1):
+    for (linenum, line) in enumerate(fp.read().splitlines(), start=1):
 
         stripped = line.strip()
 
@@ -120,6 +120,3 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
 
     sections = [(i, interpret_variables(variables, j)) for i, j in sections]
     return sections
-
-
-
