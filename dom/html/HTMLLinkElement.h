@@ -151,6 +151,7 @@ public:
     return nsRefPtr<ImportLoader>(mImportLoader).forget();
   }
 
+  virtual CORSMode GetCORSMode() const override;
 protected:
   virtual ~HTMLLinkElement();
 
@@ -161,7 +162,6 @@ protected:
                                  nsAString& aMedia,
                                  bool* aIsScoped,
                                  bool* aIsAlternate) override;
-  virtual CORSMode GetCORSMode() const override;
 protected:
   // nsGenericHTMLElement
   virtual void GetItemValueText(DOMString& text) override;

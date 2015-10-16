@@ -9,22 +9,25 @@
 #ifndef LIBANGLE_DATA_H_
 #define LIBANGLE_DATA_H_
 
+#include "common/angleutils.h"
 #include "libANGLE/State.h"
 
 namespace gl
 {
 
-struct Data final
+struct Data final : public angle::NonCopyable
 {
   public:
-    Data(GLint clientVersion, const State &state, const Caps &caps,
-         const TextureCapsMap &textureCaps, const Extensions &extensions,
+    Data(uintptr_t context,
+         GLint clientVersion,
+         const State &state,
+         const Caps &caps,
+         const TextureCapsMap &textureCaps,
+         const Extensions &extensions,
          const ResourceManager *resourceManager);
     ~Data();
 
-    Data(const Data &other);
-    Data &operator=(const Data &other);
-
+    uintptr_t context;
     GLint clientVersion;
     const State *state;
     const Caps *caps;

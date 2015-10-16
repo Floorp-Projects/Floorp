@@ -105,6 +105,9 @@ class MachCommands(MachCommandBase):
         #    plugin-container
         #    <and possibly other, non-browser processes>
         #
+        # Also, the WindowServer and kernel coalitions and processes are often
+        # relevant.
+        #
         # We want to print all these but omit uninteresting coalitions. We
         # could do this by properly parsing powermetrics output, but it's
         # simpler and more robust to just grep for a handful of identifying
@@ -129,7 +132,11 @@ class MachCommands(MachCommandBase):
             #   within the terminal, it will show up unnecessarily. This is a
             #   minor disadvantage of this very simple parsing strategy.
             #
-            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal)', line):
+            # - 'WindowServer' is for the WindowServer.
+            #
+            # - 'kernel' is for the kernel.
+            #
+            if re.search(r'(^Name|firefox|plugin-container|Safari\b|WebKit|Chrome|Terminal|WindowServer|kernel)', line):
                 print(line)
 
         return 0

@@ -76,19 +76,6 @@ void InitDefaultPlatformImpl()
     }
 }
 
-void DeinitDefaultPlatformImpl()
-{
-    if (defaultPlatform != nullptr)
-    {
-        if (ANGLEPlatformCurrent() == defaultPlatform)
-        {
-            ANGLEPlatformShutdown();
-        }
-
-        SafeDelete(defaultPlatform);
-    }
-}
-
 typedef std::map<EGLNativeWindowType, Surface*> WindowSurfaceMap;
 // Get a map of all EGL window surfaces to validate that no window has more than one EGL surface
 // associated with it.

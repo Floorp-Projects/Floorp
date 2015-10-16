@@ -204,9 +204,10 @@ var FakeFxAccountsClient = {
     return deferred.promise;
   },
 
-  signIn: function(user, password) {
+  signIn: function(user, password, getKeys) {
     this._signInCalled = true;
     this._password = password;
+    this._keyFetchToken = getKeys ? "token" : null;
     let deferred = Promise.defer();
     this._reject ? deferred.reject()
                  : deferred.resolve({ email: user,
@@ -804,6 +805,50 @@ add_test(function(test_signIn_already_signed_user) {
       run_next_test();
     }
   );
+});
+
+add_test(function(test_signIn_getKeys_true) {
+  do_print("= signIn, getKeys true =");
+  FxAccountsManager.signOut().then(() => {
+    FxAccountsManager.signIn("user@domain.org", "password", true).then(
+      result => {
+        do_check_true(FakeFxAccountsClient._signInCalled);
+        do_check_true(FxAccountsManager._fxAccounts._getSignedInUserCalled);
+        do_check_eq(FxAccountsManager._fxAccounts._signedInUser.email, "user@domain.org");
+        do_check_eq(FakeFxAccountsClient._password, "password");
+        do_check_eq(FakeFxAccountsClient._keyFetchToken, "token");
+        do_check_eq(result.user.email, "user@domain.org");
+        FakeFxAccountsClient._reset();
+        FxAccountsManager._fxAccounts._reset();
+        run_next_test();
+      },
+      error => {
+        do_throw("Unexpected error");
+      }
+    );
+  });
+});
+
+add_test(function(test_signIn_getKeys_false) {
+  do_print("= signIn, getKeys false =");
+  FxAccountsManager.signOut().then(() => {
+    FxAccountsManager.signIn("user@domain.org", "password", false).then(
+      result => {
+        do_check_true(FakeFxAccountsClient._signInCalled);
+        do_check_true(FxAccountsManager._fxAccounts._getSignedInUserCalled);
+        do_check_eq(FxAccountsManager._fxAccounts._signedInUser.email, "user@domain.org");
+        do_check_eq(FakeFxAccountsClient._password, "password");
+        do_check_eq(FakeFxAccountsClient._keyFetchToken, null);
+        do_check_eq(result.user.email, "user@domain.org");
+        FakeFxAccountsClient._reset();
+        FxAccountsManager._fxAccounts._reset();
+        run_next_test();
+      },
+      error => {
+        do_throw("Unexpected error");
+      }
+    );
+  });
 });
 
 add_test(function(test_resendVerificationEmail_error_handling) {

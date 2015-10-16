@@ -91,8 +91,12 @@ class FramebufferD3D : public FramebufferImpl
   private:
     virtual gl::Error clear(const gl::State &state, const ClearParameters &clearParams) = 0;
 
-    virtual gl::Error readPixels(const gl::Rectangle &area, GLenum format, GLenum type, size_t outputPitch,
-                                 const gl::PixelPackState &pack, uint8_t *pixels) const = 0;
+    virtual gl::Error readPixelsImpl(const gl::Rectangle &area,
+                                     GLenum format,
+                                     GLenum type,
+                                     size_t outputPitch,
+                                     const gl::PixelPackState &pack,
+                                     uint8_t *pixels) const = 0;
 
     virtual gl::Error blit(const gl::Rectangle &sourceArea, const gl::Rectangle &destArea, const gl::Rectangle *scissor,
                            bool blitRenderTarget, bool blitDepth, bool blitStencil, GLenum filter,

@@ -22,6 +22,7 @@
 #include "nsIURI.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -316,7 +317,11 @@ private:
   void
   ShutdownScriptLoader(JSContext* aCx,
                        WorkerPrivate* aWorkerPrivate,
-                       bool aResult);
+                       bool aResult,
+                       bool aMutedError);
+
+  void LogExceptionToConsole(JSContext* aCx,
+                             WorkerPrivate* WorkerPrivate);
 };
 
 class CacheScriptLoader;
@@ -499,6 +504,7 @@ class ScriptLoaderRunnable final : public WorkerFeature,
   WorkerScriptType mWorkerScriptType;
   bool mCanceled;
   bool mCanceledMainThread;
+  ErrorResult& mRv;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -507,10 +513,11 @@ public:
                        nsIEventTarget* aSyncLoopTarget,
                        nsTArray<ScriptLoadInfo>& aLoadInfos,
                        bool aIsMainScript,
-                       WorkerScriptType aWorkerScriptType)
+                       WorkerScriptType aWorkerScriptType,
+                       ErrorResult& aRv)
   : mWorkerPrivate(aWorkerPrivate), mSyncLoopTarget(aSyncLoopTarget),
     mIsMainScript(aIsMainScript), mWorkerScriptType(aWorkerScriptType),
-    mCanceled(false), mCanceledMainThread(false)
+    mCanceled(false), mCanceledMainThread(false), mRv(aRv)
   {
     aWorkerPrivate->AssertIsOnWorkerThread();
     MOZ_ASSERT(aSyncLoopTarget);
@@ -969,7 +976,7 @@ private:
       principal = parentWorker->GetPrincipal();
     }
 
-    aLoadInfo.mMutedErrorFlag.emplace(principal->Subsumes(channelPrincipal));
+    aLoadInfo.mMutedErrorFlag.emplace(!principal->Subsumes(channelPrincipal));
 
     // Make sure we're not seeing the result of a 404 or something by checking
     // the 'requestSucceeded' attribute on the http channel.
@@ -1121,7 +1128,7 @@ private:
       principal = parentWorker->GetPrincipal();
     }
 
-    loadInfo.mMutedErrorFlag.emplace(principal->Subsumes(responsePrincipal));
+    loadInfo.mMutedErrorFlag.emplace(!principal->Subsumes(responsePrincipal));
 
     // May be null.
     nsIDocument* parentDoc = mWorkerPrivate->GetDocument();
@@ -1769,14 +1776,16 @@ ScriptExecutorRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   if (mLastIndex == loadInfos.Length() - 1) {
     // All done. If anything failed then return false.
     bool result = true;
+    bool mutedError = false;
     for (uint32_t index = 0; index < loadInfos.Length(); index++) {
       if (!loadInfos[index].mExecutionResult) {
+        mutedError = loadInfos[index].mMutedErrorFlag.valueOr(true);
         result = false;
         break;
       }
     }
 
-    ShutdownScriptLoader(aCx, aWorkerPrivate, result);
+    ShutdownScriptLoader(aCx, aWorkerPrivate, result, mutedError);
   }
 }
 
@@ -1784,7 +1793,8 @@ NS_IMETHODIMP
 ScriptExecutorRunnable::Cancel()
 {
   if (mLastIndex == mScriptLoader.mLoadInfos.Length() - 1) {
-    ShutdownScriptLoader(mWorkerPrivate->GetJSContext(), mWorkerPrivate, false);
+    ShutdownScriptLoader(mWorkerPrivate->GetJSContext(), mWorkerPrivate,
+                         false, false);
   }
   return MainThreadWorkerSyncRunnable::Cancel();
 }
@@ -1792,7 +1802,8 @@ ScriptExecutorRunnable::Cancel()
 void
 ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
                                              WorkerPrivate* aWorkerPrivate,
-                                             bool aResult)
+                                             bool aResult,
+                                             bool aMutedError)
 {
   MOZ_ASSERT(mLastIndex == mScriptLoader.mLoadInfos.Length() - 1);
 
@@ -1800,14 +1811,52 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     aWorkerPrivate->SetLoadingWorkerScript(false);
   }
 
+  if (!aResult) {
+    // If this error has to be muted, we have to clear the pending exception,
+    // if any, and use the ErrorResult object to throw a new exception.
+    if (aMutedError && JS_IsExceptionPending(aCx)) {
+      LogExceptionToConsole(aCx, aWorkerPrivate);
+      mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
+    } else {
+      mScriptLoader.mRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+  }
+
   aWorkerPrivate->RemoveFeature(aCx, &mScriptLoader);
   aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, aResult);
 }
 
-bool
+void
+ScriptExecutorRunnable::LogExceptionToConsole(JSContext* aCx,
+                                              WorkerPrivate* aWorkerPrivate)
+{
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
+  JS::Rooted<JS::Value> exn(aCx);
+  if (!JS_GetPendingException(aCx, &exn)) {
+    return;
+  }
+
+  JS_ClearPendingException(aCx);
+
+  js::ErrorReport report(aCx);
+  if (!report.init(aCx, exn)) {
+    JS_ClearPendingException(aCx);
+    return;
+  }
+
+  nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  xpcReport->Init(report.report(), report.message(),
+                  aWorkerPrivate->IsChromeWorker(), aWorkerPrivate->WindowID());
+
+  nsRefPtr<AsyncErrorReporter> r = new AsyncErrorReporter(xpcReport);
+  NS_DispatchToMainThread(r);
+}
+
+void
 LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                nsTArray<ScriptLoadInfo>& aLoadInfos, bool aIsMainScript,
-               WorkerScriptType aWorkerScriptType)
+               WorkerScriptType aWorkerScriptType, ErrorResult& aRv)
 {
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aLoadInfos.IsEmpty(), "Bad arguments!");
@@ -1816,22 +1865,25 @@ LoadAllScripts(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
 
   nsRefPtr<ScriptLoaderRunnable> loader =
     new ScriptLoaderRunnable(aWorkerPrivate, syncLoop.EventTarget(),
-                             aLoadInfos, aIsMainScript, aWorkerScriptType);
+                             aLoadInfos, aIsMainScript, aWorkerScriptType,
+                             aRv);
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
   if (!aWorkerPrivate->AddFeature(aCx, loader)) {
-    return false;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
   if (NS_FAILED(NS_DispatchToMainThread(loader))) {
     NS_ERROR("Failed to dispatch!");
 
     aWorkerPrivate->RemoveFeature(aCx, loader);
-    return false;
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
   }
 
-  return syncLoop.Run();
+  syncLoop.Run();
 }
 
 } /* anonymous namespace */
@@ -1913,9 +1965,10 @@ void ReportLoadError(JSContext* aCx, nsresult aLoadResult)
   }
 }
 
-bool
+void
 LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
-               WorkerScriptType aWorkerScriptType)
+               WorkerScriptType aWorkerScriptType,
+               ErrorResult& aRv)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   NS_ASSERTION(worker, "This should never be null!");
@@ -1925,7 +1978,7 @@ LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
   ScriptLoadInfo* info = loadInfos.AppendElement();
   info->mURL = aScriptURL;
 
-  return LoadAllScripts(aCx, worker, loadInfos, true, aWorkerScriptType);
+  LoadAllScripts(aCx, worker, loadInfos, true, aWorkerScriptType, aRv);
 }
 
 void
@@ -1951,10 +2004,7 @@ Load(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
     loadInfos[index].mURL = aScriptURLs[index];
   }
 
-  if (!LoadAllScripts(aCx, aWorkerPrivate, loadInfos, false, aWorkerScriptType)) {
-    // LoadAllScripts can fail if we're shutting down.
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
+  LoadAllScripts(aCx, aWorkerPrivate, loadInfos, false, aWorkerScriptType, aRv);
 }
 
 } // namespace scriptloader

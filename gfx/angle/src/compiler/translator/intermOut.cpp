@@ -10,6 +10,12 @@
 namespace
 {
 
+void OutputFunction(TInfoSinkBase &out, const char *str, TIntermAggregate *node)
+{
+    const char *internal = node->getNameObj().isInternal() ? " (internal function)" : "";
+    out << str << internal << ": " << node->getNameObj().getString();
+}
+
 //
 // Two purposes:
 // 1.  Show an example of how to iterate tree.  Functions can
@@ -395,10 +401,10 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
     {
       case EOpSequence:      out << "Sequence\n"; return true;
       case EOpComma:         out << "Comma\n"; return true;
-      case EOpFunction:      out << "Function Definition: " << node->getName(); break;
-      case EOpFunctionCall:  out << "Function Call: " << node->getName(); break;
+      case EOpFunction:      OutputFunction(out, "Function Definition", node); break;
+      case EOpFunctionCall:  OutputFunction(out, "Function Call", node); break;
       case EOpParameters:    out << "Function Parameters: ";              break;
-      case EOpPrototype:     out << "Function Prototype: " << node->getName(); break;
+      case EOpPrototype:     OutputFunction(out, "Function Prototype", node); break;
 
       case EOpConstructFloat: out << "Construct float"; break;
       case EOpConstructVec2:  out << "Construct vec2";  break;

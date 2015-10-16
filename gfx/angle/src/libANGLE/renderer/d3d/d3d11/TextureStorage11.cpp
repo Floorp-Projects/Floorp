@@ -13,17 +13,18 @@
 
 #include "common/MemoryBuffer.h"
 #include "common/utilities.h"
-#include "libANGLE/ImageIndex.h"
 #include "libANGLE/formatutils.h"
+#include "libANGLE/ImageIndex.h"
+#include "libANGLE/renderer/d3d/d3d11/Blit11.h"
+#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
+#include "libANGLE/renderer/d3d/d3d11/Image11.h"
+#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
+#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
+#include "libANGLE/renderer/d3d/d3d11/SwapChain11.h"
+#include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
 #include "libANGLE/renderer/d3d/EGLImageD3D.h"
 #include "libANGLE/renderer/d3d/TextureD3D.h"
-#include "libANGLE/renderer/d3d/d3d11/Blit11.h"
-#include "libANGLE/renderer/d3d/d3d11/Image11.h"
-#include "libANGLE/renderer/d3d/d3d11/RenderTarget11.h"
-#include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
-#include "libANGLE/renderer/d3d/d3d11/SwapChain11.h"
-#include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
-#include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 
 namespace rx
 {
@@ -648,7 +649,10 @@ gl::Error TextureStorage11::setData(const gl::ImageIndex &index, ImageD3D *image
     int height = destBox ? destBox->height : static_cast<int>(image->getHeight());
     int depth = destBox ? destBox->depth : static_cast<int>(image->getDepth());
     UINT srcRowPitch = internalFormatInfo.computeRowPitch(type, width, unpack.alignment, unpack.rowLength);
-    UINT srcDepthPitch = internalFormatInfo.computeDepthPitch(type, width, height, unpack.alignment, unpack.rowLength);
+    UINT srcDepthPitch = internalFormatInfo.computeDepthPitch(type, width, height, unpack.alignment,
+                                                              unpack.rowLength, unpack.imageHeight);
+    GLsizei srcSkipBytes = internalFormatInfo.computeSkipPixels(
+        srcRowPitch, srcDepthPitch, unpack.skipImages, unpack.skipRows, unpack.skipPixels);
 
     const d3d11::TextureFormat &d3d11Format = d3d11::GetTextureFormatInfo(image->getInternalFormat(), mRenderer->getRenderer11DeviceCaps());
     const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(d3d11Format.texFormat);
@@ -668,8 +672,7 @@ gl::Error TextureStorage11::setData(const gl::ImageIndex &index, ImageD3D *image
 
     // TODO: fast path
     LoadImageFunction loadFunction = d3d11Format.loadFunctions.at(type);
-    loadFunction(width, height, depth,
-                 pixelData, srcRowPitch, srcDepthPitch,
+    loadFunction(width, height, depth, pixelData + srcSkipBytes, srcRowPitch, srcDepthPitch,
                  conversionBuffer->data(), bufferRowPitch, bufferDepthPitch);
 
     ID3D11DeviceContext *immediateContext = mRenderer->getDeviceContext();

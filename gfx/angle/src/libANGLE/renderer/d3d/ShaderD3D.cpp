@@ -123,9 +123,9 @@ int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStre
 
     int additionalOptions = 0;
 
-#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
     const std::string &source = mData.getSource();
 
+#if !defined(ANGLE_ENABLE_WINDOWS_STORE)
     if (gl::DebugAnnotationsActive())
     {
         std::string sourcePath = getTempPath();
@@ -134,6 +134,7 @@ int ShaderD3D::prepareSourceAndReturnOptions(std::stringstream *shaderSourceStre
         *shaderSourceStream << sourcePath;
     }
 #endif
+
     *shaderSourceStream << source;
     return additionalOptions;
 }

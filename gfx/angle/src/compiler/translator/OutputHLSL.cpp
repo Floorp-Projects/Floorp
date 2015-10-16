@@ -1386,7 +1386,7 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
             mUsesInstanceID = true;
             out << name;
         }
-        else if (name == "gl_FragDepthEXT")
+        else if (name == "gl_FragDepthEXT" || name == "gl_FragDepth")
         {
             mUsesFragDepth = true;
             out << "gl_Depth";

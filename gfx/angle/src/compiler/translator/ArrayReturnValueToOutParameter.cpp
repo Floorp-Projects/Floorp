@@ -41,7 +41,7 @@ TIntermAggregate *CreateReplacementCall(TIntermAggregate *originalCall, TIntermT
     TIntermAggregate *replacementCall = new TIntermAggregate(EOpFunctionCall);
     replacementCall->setType(TType(EbtVoid));
     replacementCall->setUserDefined();
-    replacementCall->setName(originalCall->getName());
+    replacementCall->setNameObj(originalCall->getNameObj());
     replacementCall->setFunctionId(originalCall->getFunctionId());
     replacementCall->setLine(originalCall->getLine());
     TIntermSequence *replacementParameters = replacementCall->getSequence();
@@ -117,7 +117,7 @@ bool ArrayReturnValueToOutParameterTraverser::visitAggregate(Visit visit, TInter
                 CopyAggregateChildren(node, replacement);
                 replacement->getSequence()->push_back(CreateReturnValueOutSymbol(node->getType()));
                 replacement->setUserDefined();
-                replacement->setName(node->getName());
+                replacement->setNameObj(node->getNameObj());
                 replacement->setFunctionId(node->getFunctionId());
                 replacement->setLine(node->getLine());
                 replacement->setType(TType(EbtVoid));
