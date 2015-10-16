@@ -195,6 +195,7 @@
 #include "mozilla/widget/PuppetBidiKeyboard.h"
 #include "mozilla/RemoteSpellCheckEngineChild.h"
 #include "GMPServiceChild.h"
+#include "GMPDecoderModule.h"
 #include "gfxPlatform.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
 
@@ -1460,6 +1461,13 @@ ContentChild::RecvNotifyPresentationReceiverCleanUp(const nsString& aSessionId)
 
   NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(aSessionId)));
 
+  return true;
+}
+
+bool
+ContentChild::RecvNotifyGMPsChanged()
+{
+  GMPDecoderModule::UpdateUsableCodecs();
   return true;
 }
 
