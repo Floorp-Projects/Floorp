@@ -62,16 +62,10 @@ TestInterfaceIterableSingle::GetIterableLength() const
 }
 
 uint32_t
-TestInterfaceIterableSingle::GetKeyAtIndex(uint32_t index) const
+TestInterfaceIterableSingle::GetValueAtIndex(uint32_t index) const
 {
   MOZ_ASSERT(index < mValues.Length());
   return mValues.ElementAt(index);
-}
-
-uint32_t
-TestInterfaceIterableSingle::GetValueAtIndex(uint32_t index) const
-{
-  return GetKeyAtIndex(index);
 }
 
 } // namespace dom
