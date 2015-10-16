@@ -12,25 +12,23 @@
 %include windowsShared.inc
 %filter substitution
 %define toolbarShadowColor hsla(209,67%,12%,0.35)
-%define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-wrapper
-%define conditionalForwardWithUrlbarWidth 30
 
 :root {
   --space-above-tabbar: 15px;
 
-  --backbutton-urlbar-overlap: 5px;
+  --backbutton-urlbar-overlap: 6px;
 
   --toolbarbutton-vertical-inner-padding: 2px;
   --toolbarbutton-vertical-outer-padding: 8px;
 
   --toolbarbutton-hover-background: rgba(0,0,0,.1);
-  --toolbarbutton-hover-bordercolor: rgba(0,0,0,.1);
+  --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
   --toolbarbutton-hover-boxshadow: none;
 
   --toolbarbutton-active-background: rgba(0,0,0,.15);
-  --toolbarbutton-active-bordercolor: rgba(0,0,0,.15);
+  --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
 
   --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
@@ -49,18 +47,6 @@
   --panel-separator-color: ThreeDLightShadow;
 
   --urlbar-separator-color: hsla(0,0%,16%,.2);
-}
-
-#nav-bar[brighttext] {
-  --toolbarbutton-hover-background: rgba(255,255,255,.15);
-  --toolbarbutton-hover-bordercolor: rgba(255,255,255,.15);
-  --toolbarbutton-hover-boxshadow: none;
-
-  --toolbarbutton-active-background: rgba(255,255,255,.3);
-  --toolbarbutton-active-bordercolor: rgba(255,255,255,.3);
-  --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(255,255,255,.3) inset;
-
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(255,255,255,.2);
 }
 
 #menubar-items {
@@ -727,6 +713,8 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 @conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
   padding: var(--toolbarbutton-vertical-inner-padding) 6px;
+  background-origin: padding-box !important;
+  background-clip: padding-box !important;
   border: 1px solid transparent;
   border-radius: 1px;
   transition-property: background-color, border-color, box-shadow;
@@ -856,10 +844,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   opacity: .3;
 }
 
-@conditionalForwardWithUrlbar@ > .toolbarbutton-1:-moz-any([disabled],:not([open]):not([disabled]):not(:active)) > .toolbarbutton-icon {
-  border-color: hsla(210,4%,10%,.1);
-}
-
 .findbar-button:not(:-moz-any([checked="true"],[disabled="true"])):hover > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]) > .toolbarbutton-menubutton-button[open] + .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
@@ -919,6 +903,15 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 /* unified back/forward button */
 
+:-moz-any(#back-button, #forward-button) > .toolbarbutton-icon {
+  border-color: var(--urlbar-border-color-hover) !important;
+}
+
+:-moz-any(#back-button, #forward-button):not(:hover):not(:active):not([open=true]) > .toolbarbutton-icon,
+:-moz-any(#back-button, #forward-button)[disabled=true] > .toolbarbutton-icon {
+  background-color: rgba(255,255,255,.15) !important;
+}
+
 #forward-button {
   -moz-box-align: stretch; /* let the button shape grow vertically with the location bar */
   padding: 0 !important;
@@ -929,12 +922,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 #forward-button > .toolbarbutton-icon {
-  background-clip: padding-box !important;
   border-left-style: none !important;
   border-radius: 0 !important;
-  padding-left: 9px !important;
+  padding-left: calc(var(--backbutton-urlbar-overlap) + 3px) !important;
   padding-right: 3px !important;
-  width: 31px !important; /* horizontal padding + border + actual icon width */
+% icon width + border + horizontal padding without --backbutton-urlbar-overlap
+%define forwardButtonWidth 25
+  width: calc(@forwardButtonWidth@px + var(--backbutton-urlbar-overlap)) !important;
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
@@ -942,7 +936,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] {
-  margin-left: -@conditionalForwardWithUrlbarWidth@px;
+  margin-left: calc(-@forwardButtonWidth@px - var(--backbutton-urlbar-overlap));
 }
 
 @conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] {
@@ -952,7 +946,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] {
   /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
-  margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
+  margin-left: calc(-@forwardButtonWidth@.01px - var(--backbutton-urlbar-overlap));
 }
 
 #back-button {
@@ -963,8 +957,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   position: relative !important;
   z-index: 1 !important;
   border-radius: 0 10000px 10000px 0 !important;
-  --toolbarbutton-hover-boxshadow: 0 1px 0 0 hsla(210,4%,10%,.25),
-                                   0 0 0 1px hsla(210,4%,10%,.25);
 }
 
 #back-button:-moz-locale-dir(rtl) {
@@ -977,64 +969,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 #back-button > .toolbarbutton-icon {
   border-radius: 10000px !important;
-  background-clip: padding-box !important;
-  background-color: hsla(210,25%,98%,.08) !important;
   padding: 6px !important;
-  border-style: none !important;
-  width: 30px !important; /* horizontal padding + border + actual icon width */
-  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.25),
-              0 0 0 1px hsla(210,4%,10%,.25);
-  transition-property: background-color, box-shadow !important;
-  transition-duration: 250ms !important;
-}
-
-#back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
-  background-color: hsla(210,4%,10%,.08) !important;
-}
-
-#back-button:not([disabled="true"]):hover:active > .toolbarbutton-icon,
-#back-button[open="true"] > .toolbarbutton-icon {
-  background-color: hsla(210,4%,10%,.12) !important;
-  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.25),
-              0 0 0 1px hsla(210,4%,10%,.25),
-              0 1px 0 0 hsla(210,80%,20%,.1) inset !important;
-}
-
-@media (-moz-os-version: windows-xp),
-       (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-  #back-button > .toolbarbutton-icon {
-    background-image: linear-gradient(hsla(0,0%,100%,.6), hsla(0,0%,100%,.1)) !important;
-    box-shadow: 0 1px 0 hsla(0,0%,100%,.3) inset,
-                0 0 0 1px hsla(0,0%,100%,.3) inset,
-                0 0 0 1px hsla(210,54%,20%,.25),
-                0 1px 0 hsla(210,54%,20%,.35) !important;
-  }
-
-  #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
-    background-color: hsla(210,48%,96%,.75) !important;
-    box-shadow: 0 1px 0 hsla(0,0%,100%,.3) inset,
-                0 0 0 1px hsla(0,0%,100%,.3) inset,
-                0 0 0 1px hsla(210,54%,20%,.3),
-                0 1px 0 hsla(210,54%,20%,.4),
-                0 0 4px hsla(210,54%,20%,.2) !important;
-  }
-
-  #back-button:not([disabled="true"]):hover:active > .toolbarbutton-icon,
-  #back-button[open="true"] > .toolbarbutton-icon {
-    background-color: hsla(210,54%,20%,.15) !important;
-    box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
-                0 0 1px hsla(210,54%,20%,.2) inset,
-                0 0 0 1px hsla(210,54%,20%,.4),
-                0 1px 0 hsla(210,54%,20%,.2) !important;
-    transition: none;
-  }
-
-  #main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
-    box-shadow: 0 0 0 1px hsla(210,54%,20%,.55),
-                0 1px 0 hsla(210,54%,20%,.65) !important;
-    transition: none;
-  }
+  width: 32px !important; /* icon width + horizontal padding + border */
 }
 
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
@@ -1173,13 +1109,46 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 
 /* ::::: Location Bar ::::: */
 
+#nav-bar {
+  --urlbar-border-color: ThreeDShadow;
+  --urlbar-border-color-hover: var(--urlbar-border-color);
+}
+
+#nav-bar:-moz-lwtheme {
+  --urlbar-border-color: rgba(0,0,0,.32);
+}
+
+@media (-moz-windows-default-theme) {
+  @media (-moz-os-version: windows-vista),
+         (-moz-os-version: windows-win7),
+         (-moz-os-version: windows-win8) {
+    #nav-bar:not(:-moz-lwtheme) {
+      --urlbar-border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
+      --urlbar-border-color-hover: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
+    }
+  }
+
+  @media (-moz-os-version: windows-win10) {
+    #nav-bar:not(:-moz-lwtheme) {
+      --urlbar-border-color: hsl(0,0%,90%);
+      --urlbar-border-color-hover: hsl(0,0%,80%);
+    }
+  }
+}
+
 #urlbar,
 .searchbar-textbox {
   -moz-appearance: none;
   margin: 0 3px;
   padding: 0;
   background-clip: padding-box;
-  border: 1px solid ThreeDShadow;
+  border: 1px solid;
+  border-color: var(--urlbar-border-color);
+}
+
+#urlbar:hover,
+.searchbar-textbox:hover {
+  border-color: var(--urlbar-border-color-hover);
 }
 
 /* overlap the urlbar's border */
@@ -1190,7 +1159,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 @media (-moz-windows-default-theme) {
   #urlbar,
   .searchbar-textbox {
-    @navbarTextboxCustomBorder@
     border-radius: 1px;
   }
 
@@ -1199,29 +1167,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
          (-moz-os-version: windows-win8) {
     #urlbar:not(:-moz-lwtheme),
     .searchbar-textbox:not(:-moz-lwtheme) {
-      border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
       box-shadow: 0 1px 0 hsla(0,0%,0%,.01) inset,
                   0 1px 0 hsla(0,0%,100%,.1);
-    }
-
-    #urlbar:not(:-moz-lwtheme):hover,
-    .searchbar-textbox:not(:-moz-lwtheme):hover {
-      border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
     }
   }
 
   @media (-moz-os-version: windows-win10) {
     #urlbar:not(:-moz-lwtheme),
     .searchbar-textbox:not(:-moz-lwtheme) {
-      border-color: hsl(0,0%,90%);
       padding: 1px;
       transition-property: border-color, box-shadow;
       transition-duration: .1s;
-    }
-
-    #urlbar:not(:-moz-lwtheme):hover,
-    .searchbar-textbox:not(:-moz-lwtheme):hover {
-      border-color: hsl(0,0%,80%);
     }
 
     #urlbar:not(:-moz-lwtheme)[focused],
@@ -1260,7 +1216,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
 #urlbar:-moz-lwtheme,
 .searchbar-textbox:-moz-lwtheme {
   background-color: rgba(255,255,255,.8);
-  @navbarTextboxCustomBorder@
   color: black;
 }
 
@@ -1301,7 +1256,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="toolbar"] > .toolbarbutton-ba
   }
 
   :root {
-    --backbutton-urlbar-overlap: 8px;
+    --backbutton-urlbar-overlap: 9px;
   }
 }
 
