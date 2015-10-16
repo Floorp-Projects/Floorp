@@ -97,10 +97,10 @@ public:
 
   nsresult RegisterModule(BluetoothSetupServiceId aId,
                           uint8_t aMode, uint32_t aMaxNumClients,
-                          BluetoothSetupResultHandler* aRes) override;
+                          BluetoothSetupResultHandler* aRes);
 
   nsresult UnregisterModule(BluetoothSetupServiceId aId,
-                            BluetoothSetupResultHandler* aRes) override;
+                            BluetoothSetupResultHandler* aRes);
 
   // Outgoing PDUs
   //
