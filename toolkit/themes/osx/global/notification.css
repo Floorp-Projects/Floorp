@@ -56,10 +56,6 @@ notification[type="critical"] {
   list-style-image: url("chrome://global/skin/notification/error-icon.png");
 }
 
-.notification-inner {
-  border: 0 !important;
-}
-
 .messageText {
   margin: 0 3px !important;
   padding: 0;

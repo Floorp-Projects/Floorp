@@ -165,14 +165,6 @@ gl::Error TextureD3D::setImageImpl(const gl::ImageIndex &index,
                                    const uint8_t *pixels,
                                    ptrdiff_t layerOffset)
 {
-    if (unpack.skipRows != 0 || unpack.skipPixels != 0 || unpack.imageHeight != 0 || unpack.skipImages != 0)
-    {
-        // TODO(jmadill): additional unpack parameters
-        // return no error here to work around dEQP-GLES3 failing to state reset.
-        UNIMPLEMENTED();
-        return gl::Error(GL_NO_ERROR);
-    }
-
     ImageD3D *image = getImage(index);
     ASSERT(image);
 
@@ -258,12 +250,6 @@ gl::Error TextureD3D::setCompressedImageImpl(const gl::ImageIndex &index,
                                              const uint8_t *pixels,
                                              ptrdiff_t layerOffset)
 {
-    if (unpack.skipRows != 0 || unpack.skipPixels != 0 || unpack.imageHeight != 0 || unpack.skipImages != 0)
-    {
-        UNIMPLEMENTED();
-        return gl::Error(GL_INVALID_OPERATION, "unimplemented pixel store state");
-    }
-
     // We no longer need the "GLenum format" parameter to TexImage to determine what data format "pixels" contains.
     // From our image internal format we know how many channels to expect, and "type" gives the format of pixel's components.
     const uint8_t *pixelData = NULL;
@@ -295,12 +281,6 @@ gl::Error TextureD3D::subImageCompressed(const gl::ImageIndex &index, const gl::
                                          const gl::PixelUnpackState &unpack, const uint8_t *pixels,
                                          ptrdiff_t layerOffset)
 {
-    if (unpack.skipRows != 0 || unpack.skipPixels != 0 || unpack.imageHeight != 0 || unpack.skipImages != 0)
-    {
-        UNIMPLEMENTED();
-        return gl::Error(GL_INVALID_OPERATION, "unimplemented pixel store state");
-    }
-
     const uint8_t *pixelData = NULL;
     gl::Error error = GetUnpackPointer(unpack, pixels, layerOffset, &pixelData);
     if (error.isError())
@@ -333,6 +313,15 @@ bool TextureD3D::isFastUnpackable(const gl::PixelUnpackState &unpack, GLenum siz
 gl::Error TextureD3D::fastUnpackPixels(const gl::PixelUnpackState &unpack, const uint8_t *pixels, const gl::Box &destArea,
                                        GLenum sizedInternalFormat, GLenum type, RenderTargetD3D *destRenderTarget)
 {
+    if (unpack.skipRows != 0 || unpack.skipPixels != 0 || unpack.imageHeight != 0 ||
+        unpack.skipImages != 0)
+    {
+        // TODO(jmadill): additional unpack parameters
+        UNIMPLEMENTED();
+        return gl::Error(GL_INVALID_OPERATION,
+                         "Unimplemented pixel store parameters in fastUnpackPixels");
+    }
+
     // No-op
     if (destArea.width <= 0 && destArea.height <= 0 && destArea.depth <= 0)
     {
@@ -764,12 +753,6 @@ gl::Error TextureD3D_2D::setSubImage(GLenum target,
                                      const uint8_t *pixels)
 {
     ASSERT(target == GL_TEXTURE_2D && area.depth == 1 && area.z == 0);
-
-    if (unpack.skipRows != 0 || unpack.skipPixels != 0 || unpack.imageHeight != 0 || unpack.skipImages != 0)
-    {
-        UNIMPLEMENTED();
-        return gl::Error(GL_INVALID_OPERATION, "unimplemented pixel store state");
-    }
 
     GLint level          = static_cast<GLint>(imageLevel);
     gl::ImageIndex index = gl::ImageIndex::Make2D(level);
@@ -2563,7 +2546,8 @@ gl::Error TextureD3D_2DArray::setImage(GLenum target,
     redefineImage(level, sizedInternalFormat, size);
 
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(sizedInternalFormat);
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(type, size.width, size.height, unpack.alignment, unpack.rowLength);
+    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(
+        type, size.width, size.height, unpack.alignment, unpack.rowLength, unpack.imageHeight);
 
     for (int i = 0; i < size.depth; i++)
     {
@@ -2590,7 +2574,8 @@ gl::Error TextureD3D_2DArray::setSubImage(GLenum target,
     ASSERT(target == GL_TEXTURE_2D_ARRAY);
     GLint level                          = static_cast<GLint>(imageLevel);
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(getInternalFormat(level));
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(type, area.width, area.height, unpack.alignment, unpack.rowLength);
+    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(
+        type, area.width, area.height, unpack.alignment, unpack.rowLength, unpack.imageHeight);
 
     for (int i = 0; i < area.depth; i++)
     {
@@ -2625,7 +2610,8 @@ gl::Error TextureD3D_2DArray::setCompressedImage(GLenum target,
     redefineImage(level, internalFormat, size);
 
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(internalFormat);
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, size.width, size.height, 1, 0);
+    GLsizei inputDepthPitch =
+        formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, size.width, size.height, 1, 0, 0);
 
     for (int i = 0; i < size.depth; i++)
     {
@@ -2648,7 +2634,8 @@ gl::Error TextureD3D_2DArray::setCompressedSubImage(GLenum target, size_t level,
     ASSERT(target == GL_TEXTURE_2D_ARRAY);
 
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(format);
-    GLsizei inputDepthPitch = formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0);
+    GLsizei inputDepthPitch =
+        formatInfo.computeDepthPitch(GL_UNSIGNED_BYTE, area.width, area.height, 1, 0, 0);
 
     for (int i = 0; i < area.depth; i++)
     {

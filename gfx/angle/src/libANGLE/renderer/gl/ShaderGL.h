@@ -14,11 +14,14 @@
 namespace rx
 {
 class FunctionsGL;
+struct WorkaroundsGL;
 
 class ShaderGL : public ShaderImpl
 {
   public:
-    ShaderGL(const gl::Shader::Data &data, const FunctionsGL *functions);
+    ShaderGL(const gl::Shader::Data &data,
+             const FunctionsGL *functions,
+             const WorkaroundsGL &workarounds);
     ~ShaderGL() override;
 
     // ShaderImpl implementation
@@ -30,6 +33,7 @@ class ShaderGL : public ShaderImpl
 
   private:
     const FunctionsGL *mFunctions;
+    const WorkaroundsGL &mWorkarounds;
 
     GLuint mShaderID;
 };

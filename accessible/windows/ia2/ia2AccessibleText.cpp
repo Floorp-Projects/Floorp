@@ -434,7 +434,8 @@ ia2AccessibleText::setCaretOffset(long aOffset)
   A11Y_TRYBLOCK_BEGIN
 
     if (ProxyAccessible* proxy = HyperTextProxyFor(this)) {
-      return proxy->SetCaretOffset(aOffset) ? S_OK : E_INVALIDARG;
+      proxy->SetCaretOffset(aOffset);
+      return S_OK;
     }
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);

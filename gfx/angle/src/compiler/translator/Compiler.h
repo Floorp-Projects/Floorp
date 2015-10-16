@@ -154,6 +154,7 @@ class TCompiler : public TShHandleBase
     const char *getSourcePath() const;
     const TPragma& getPragma() const { return mPragma; }
     void writePragma();
+    unsigned int *getTemporaryIndex() { return &mTemporaryIndex; }
 
     const ArrayBoundsClamper& getArrayBoundsClamper() const;
     ShArrayIndexClampingStrategy getArrayIndexClampingStrategy() const;
@@ -230,6 +231,8 @@ class TCompiler : public TShHandleBase
     NameMap nameMap;
 
     TPragma mPragma;
+
+    unsigned int mTemporaryIndex;
 };
 
 //

@@ -21,9 +21,6 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, 'Deprecated',
-  'resource://gre/modules/Deprecated.jsm');
-
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryStorage::";
 

@@ -34,7 +34,13 @@ bool ValidFramebufferTarget(GLenum target);
 bool ValidBufferTarget(const Context *context, GLenum target);
 bool ValidBufferParameter(const Context *context, GLenum pname);
 bool ValidMipLevel(const Context *context, GLenum target, GLint level);
-bool ValidImageSize(const Context *context, GLenum target, GLint level, GLsizei width, GLsizei height, GLsizei depth);
+bool ValidImageSizeParameters(const Context *context,
+                              GLenum target,
+                              GLint level,
+                              GLsizei width,
+                              GLsizei height,
+                              GLsizei depth,
+                              bool isSubImage);
 bool ValidCompressedImageSize(const Context *context, GLenum internalFormat, GLsizei width, GLsizei height);
 bool ValidQueryType(const Context *context, GLenum queryType);
 

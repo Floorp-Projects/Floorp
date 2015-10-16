@@ -117,8 +117,9 @@ function importNode06() {
         aNewDocRef = this.aNewDoc;
       }
       aNewDoc = load(aNewDocRef, "aNewDoc", "staffNS");
-      addresses = aNewDoc.getElementsByTagName("emp:address");
-      element = addresses.item(0);
+      // Changed for bug 492933.
+      addresses = aNewDoc.getElementsByTagName("address");
+      element = addresses.item(3);
       assertNotNull("empAddressNotNull",element);
 aNode = doc.importNode(element,true);
       hasChild = aNode.hasChildNodes();

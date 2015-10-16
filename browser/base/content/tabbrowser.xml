@@ -20,7 +20,7 @@
                   flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
-          <xul:notificationbox flex="1">
+          <xul:notificationbox flex="1" notificationside="top">
             <xul:hbox flex="1" class="browserSidebarContainer">
               <xul:vbox flex="1" class="browserContainer">
                 <xul:stack flex="1" class="browserStack" anonid="browserStack">
@@ -1743,6 +1743,7 @@
             var notificationbox = document.createElementNS(NS_XUL,
                                                            "notificationbox");
             notificationbox.setAttribute("flex", "1");
+            notificationbox.setAttribute("notificationside", "top");
             notificationbox.appendChild(browserSidebarContainer);
 
             // Prevent the superfluous initial load of a blank document

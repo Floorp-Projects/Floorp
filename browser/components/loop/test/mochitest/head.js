@@ -9,7 +9,6 @@ const {
   MozLoopServiceInternal,
   MozLoopService
 } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-const {LoopCalls} = Cu.import("resource:///modules/loop/LoopCalls.jsm", {});
 const {LoopRooms} = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 // Cache this value only once, at the beginning of a
@@ -231,12 +230,8 @@ var mockPushHandler = {
     if ("mockWebSocket" in options) {
       this._mockWebSocket = options.mockWebSocket;
     }
-    this.registrationPushURLs[MozLoopService.channelIDs.callsGuest] =
-      "https://localhost/pushUrl/guest-calls";
     this.registrationPushURLs[MozLoopService.channelIDs.roomsGuest] =
       "https://localhost/pushUrl/guest-rooms";
-    this.registrationPushURLs[MozLoopService.channelIDs.callsFxA] =
-      "https://localhost/pushUrl/fxa-calls";
     this.registrationPushURLs[MozLoopService.channelIDs.roomsFxA] =
       "https://localhost/pushUrl/fxa-rooms";
   },
