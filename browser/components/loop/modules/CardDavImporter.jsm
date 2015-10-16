@@ -90,7 +90,7 @@ this.CardDavImporter.prototype = {
       return;
     }
 
-    if (!("host" in options)){
+    if (!("host" in options)) {
       callback(new Error("Missing host for CardDav import"));
       return;
     }

@@ -24,7 +24,7 @@ describe("loop.shared.mixins", function() {
     function createTestComponent(onUrlHashChange) {
       var TestComp = React.createClass({
         mixins: [loop.shared.mixins.UrlHashChangeMixin],
-        onUrlHashChange: onUrlHashChange || function(){},
+        onUrlHashChange: onUrlHashChange || function() {},
         render: function() {
           return React.DOM.div();
         }
