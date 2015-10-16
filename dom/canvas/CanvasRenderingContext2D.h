@@ -465,7 +465,9 @@ public:
   // this rect is in canvas device space
   void Redraw(const mozilla::gfx::Rect &r);
   NS_IMETHOD Redraw(const gfxRect &r) override { Redraw(ToRect(r)); return NS_OK; }
-  NS_IMETHOD SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions) override;
+  NS_IMETHOD SetContextOptions(JSContext* aCx,
+                               JS::Handle<JS::Value> aOptions,
+                               ErrorResult& aRvForDictionaryInit) override;
 
   /**
    * An abstract base class to be implemented by callers wanting to be notified

@@ -449,7 +449,8 @@ HTMLCanvasElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::width || aName == nsGkAtoms::height || aName == nsGkAtoms::moz_opaque))
   {
-    rv = UpdateContext(nullptr, JS::NullHandleValue);
+    ErrorResult dummy;
+    rv = UpdateContext(nullptr, JS::NullHandleValue, dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -465,7 +466,8 @@ HTMLCanvasElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       aNameSpaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::width || aName == nsGkAtoms::height || aName == nsGkAtoms::moz_opaque))
   {
-    rv = UpdateContext(nullptr, JS::NullHandleValue);
+    ErrorResult dummy;
+    rv = UpdateContext(nullptr, JS::NullHandleValue, dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return rv;
@@ -911,7 +913,8 @@ HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
     mCurrentContext->SetIsIPC(true);
     mCurrentContextType = contextType;
 
-    nsresult rv = UpdateContext(nullptr, JS::NullHandleValue);
+    ErrorResult dummy;
+    nsresult rv = UpdateContext(nullptr, JS::NullHandleValue, dummy);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     // We already have a context of some type.
