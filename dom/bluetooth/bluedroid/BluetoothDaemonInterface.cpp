@@ -39,23 +39,13 @@ static const int sRetryInterval = 100; // ms
 //
 // Each |BluetoothDaemon*Module| class implements an individual
 // module of the HAL protocol. Each class contains the abstract
-// methods
+// method
 //
-//  - |Send|,
-//  - |RegisterModule|, and
-//  - |UnregisterModule|.
+//  - |Send|.
 //
 // Module classes use |Send| to send out command PDUs. The socket
 // in |BluetoothDaemonProtocol| is required for sending. The abstract
 // method hides all these internal details from the modules.
-//
-// |RegisterModule| is required during module initialization, when
-// modules must register themselves at the daemon. The register command
-// is not part of the module itself, but contained in the Setup module
-// (id of 0x00). The abstract method |RegisterModule| allows modules to
-// call into the Setup module for generating the register command.
-//
-// |UnregisterModule| works like |RegisterModule|, but for cleanups.
 //
 // |BluetoothDaemonProtocol| also handles PDU receiving. It implements
 // the method |Handle| from |DaemonSocketIOConsumer|. The socket
@@ -66,11 +56,9 @@ static const int sRetryInterval = 100; // ms
 // |HandleSvc|. Further PDU processing is module-dependent.
 //
 // To summarize the interface between |BluetoothDaemonProtocol| and
-// modules; the former implements the abstract methods
+// modules; the former implements the abstract method
 //
 //  - |Send|,
-//  - |RegisterModule|, and
-//  - |UnregisterModule|,
 //
 // which allow modules to send out data. Each module implements the
 // method
@@ -94,13 +82,6 @@ public:
   BluetoothDaemonProtocol();
 
   void SetConnection(DaemonSocket* aConnection);
-
-  nsresult RegisterModule(BluetoothSetupServiceId aId,
-                          uint8_t aMode, uint32_t aMaxNumClients,
-                          BluetoothSetupResultHandler* aRes);
-
-  nsresult UnregisterModule(BluetoothSetupServiceId aId,
-                            BluetoothSetupResultHandler* aRes);
 
   // Outgoing PDUs
   //
@@ -152,22 +133,6 @@ void
 BluetoothDaemonProtocol::SetConnection(DaemonSocket* aConnection)
 {
   mConnection = aConnection;
-}
-
-nsresult
-BluetoothDaemonProtocol::RegisterModule(BluetoothSetupServiceId aId,
-                                        uint8_t aMode, uint32_t aMaxNumClients,
-                                        BluetoothSetupResultHandler* aRes)
-{
-  return BluetoothDaemonSetupModule::RegisterModuleCmd(aId, aMode,
-                                                       aMaxNumClients, aRes);
-}
-
-nsresult
-BluetoothDaemonProtocol::UnregisterModule(BluetoothSetupServiceId aId,
-                                          BluetoothSetupResultHandler* aRes)
-{
-  return BluetoothDaemonSetupModule::UnregisterModuleCmd(aId, aRes);
 }
 
 nsresult
