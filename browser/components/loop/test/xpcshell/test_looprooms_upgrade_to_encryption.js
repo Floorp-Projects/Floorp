@@ -12,7 +12,7 @@ const { LOOP_ROOMS_CACHE_FILENAME } = Cu.import("resource:///modules/loop/LoopRo
 var gTimerArgs = [];
 
 timerHandlers.startTimer = function(callback, delay) {
-  gTimerArgs.push({callback, delay});
+  gTimerArgs.push({ callback, delay });
   return gTimerArgs.length;
 };
 

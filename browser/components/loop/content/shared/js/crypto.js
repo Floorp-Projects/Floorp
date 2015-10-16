@@ -68,7 +68,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
     return new Promise(function(resolve, reject) {
       // First get a crypto key.
-      rootObject.crypto.subtle.generateKey({name: ALGORITHM, length: KEY_LENGTH },
+      rootObject.crypto.subtle.generateKey({ name: ALGORITHM, length: KEY_LENGTH },
         // `true` means that the key can be extracted from the CryptoKey object.
         true,
         // Usages for the key.
@@ -105,7 +105,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     return new Promise(function(resolve, reject) {
       // First import the key to a format we can use.
       rootObject.crypto.subtle.importKey(KEY_FORMAT,
-        {k: key, kty: KEY_TYPE},
+        { k: key, kty: KEY_TYPE },
         ALGORITHM,
         // If the key is extractable.
         true,
@@ -158,7 +158,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     return new Promise(function(resolve, reject) {
       // First import the key to a format we can use.
       rootObject.crypto.subtle.importKey(KEY_FORMAT,
-        {k: key, kty: KEY_TYPE},
+        { k: key, kty: KEY_TYPE },
         ALGORITHM,
         // If the key is extractable.
         true,

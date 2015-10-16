@@ -251,11 +251,11 @@ loop.shared.mixins = (function() {
       },
 
       showDropdownMenu: function() {
-        this.setState({showMenu: true}, this._correctMenuPosition);
+        this.setState({ showMenu: true }, this._correctMenuPosition);
       },
 
       hideDropdownMenu: function() {
-        this.setState({showMenu: false}, function() {
+        this.setState({ showMenu: false }, function() {
           var menu = this.refs.menu && this.refs.menu.getDOMNode();
           if (menu) {
             menu.style.visibility = "hidden";
@@ -399,7 +399,7 @@ loop.shared.mixins = (function() {
         }
 
         var type = request.getResponseHeader("Content-Type");
-        var blob = new Blob([request.response], {type: type});
+        var blob = new Blob([request.response], { type: type });
         callback(null, blob);
       }.bind(this);
 

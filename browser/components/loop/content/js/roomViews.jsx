@@ -52,7 +52,7 @@ loop.roomViews = (function(mozL10n) {
       // stopListening doesn't nuke the active listeners during a event
       // processing.
       if (this.isMounted()) {
-        this.setState({error: this.props.roomStore.getStoreState("error")});
+        this.setState({ error: this.props.roomStore.getStoreState("error") });
       }
     },
 
@@ -61,7 +61,7 @@ loop.roomViews = (function(mozL10n) {
       // stopListening doesn't nuke the active listeners during a event
       // processing.
       if (this.isMounted()) {
-        this.setState({savingContext: this.props.roomStore.getStoreState("savingContext")});
+        this.setState({ savingContext: this.props.roomStore.getStoreState("savingContext") });
       }
     },
 
@@ -284,7 +284,7 @@ loop.roomViews = (function(mozL10n) {
         from: "conversation"
       }));
 
-      this.setState({copiedUrl: true});
+      this.setState({ copiedUrl: true });
       setTimeout(this.resetTriggeredButtons, this.constructor.TRIGGERED_RESET_DELAY);
     },
 
@@ -293,7 +293,7 @@ loop.roomViews = (function(mozL10n) {
      */
     resetTriggeredButtons: function() {
       if (this.state.copiedUrl) {
-        this.setState({copiedUrl: false});
+        this.setState({ copiedUrl: false });
       }
     },
 
@@ -326,7 +326,7 @@ loop.roomViews = (function(mozL10n) {
       return (
         <div className="room-invitation-overlay">
           <div className="room-invitation-content">
-            <p className={cx({hide: this.props.showEditContext})}>
+            <p className={cx({ hide: this.props.showEditContext })}>
               {mozL10n.get("invite_header_text2")}
             </p>
           </div>
@@ -542,8 +542,8 @@ loop.roomViews = (function(mozL10n) {
       var availableContext = this.state.availableContext;
       return (
         <div className="room-context">
-          <p className={cx({"error": !!this.props.error,
-                            "error-display-area": true})}>
+          <p className={cx({ "error": !!this.props.error,
+                            "error-display-area": true })}>
             {mozL10n.get("rooms_change_failed_label")}
           </p>
           <h2 className="room-context-header">{mozL10n.get("context_inroom_header")}</h2>
@@ -815,7 +815,7 @@ loop.roomViews = (function(mozL10n) {
                 showContextRoomName={false}
                 useDesktopPaths={true}>
                 <sharedViews.ConversationToolbar
-                  audio={{enabled: !this.state.audioMuted, visible: true}}
+                  audio={{ enabled: !this.state.audioMuted, visible: true }}
                   dispatcher={this.props.dispatcher}
                   hangup={this.leaveRoom}
                   mozLoop={this.props.mozLoop}
@@ -824,7 +824,7 @@ loop.roomViews = (function(mozL10n) {
                   settingsMenuItems={settingsMenuItems}
                   show={!shouldRenderEditContextView}
                   showHangup={this.props.chatWindowDetached}
-                  video={{enabled: !this.state.videoMuted, visible: true}} />
+                  video={{ enabled: !this.state.videoMuted, visible: true }} />
                 <DesktopRoomInvitationView
                   dispatcher={this.props.dispatcher}
                   error={this.state.error}

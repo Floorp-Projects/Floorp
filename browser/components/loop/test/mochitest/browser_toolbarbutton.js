@@ -8,7 +8,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
-const {LoopRoomsInternal} = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
+const { LoopRoomsInternal } = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
 Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
 
 const fxASampleToken = {
@@ -127,7 +127,7 @@ add_task(function* test_active() {
 add_task(function* test_room_participants() {
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Start a conversation", "Check button has default tooltiptext");
-  let roomsCache = new Map([["test_room", {participants: [{displayName: "hugh", id: "008", owner: true}]}]]);
+  let roomsCache = new Map([["test_room", { participants: [{ displayName: "hugh", id: "008", owner: true }] }]]);
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
   // Since we're changing the rooms map directly, we're expecting it to be a synchronous operation.
@@ -137,13 +137,13 @@ add_task(function* test_room_participants() {
   yield new Promise(resolve => executeSoon(resolve));
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Active conversation", "Check button has active tooltiptext");
-  roomsCache.set("test_room", {participants: [{displayName: "hugh", id: "008", owner: false}]});
+  roomsCache.set("test_room", { participants: [{ displayName: "hugh", id: "008", owner: false }] });
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
   yield new Promise(resolve => executeSoon(resolve));
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("tooltiptext"), "Someone is waiting for you in a conversation", "Check button has participantswaiting tooltiptext");
-  roomsCache.set("test_room", {participants: []});
+  roomsCache.set("test_room", { participants: [] });
   LoopRooms._setRoomsCache(roomsCache);
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");

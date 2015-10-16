@@ -506,7 +506,7 @@ var MozLoopServiceInternal = {
       return Promise.resolve(pushURL);
     }
 
-    let newURLs = {rooms: pushURLs.rooms};
+    let newURLs = { rooms: pushURLs.rooms };
     newURLs[serviceType] = pushURL;
 
     return this.hawkRequestInternal(sessionType, "/registration", "POST",
@@ -1753,7 +1753,7 @@ this.MozLoopService = {
     }
 
     // Find the most recent pageID that has the Loop prefix.
-    let mostRecentLoopPageID = {id: null, lastSeen: null};
+    let mostRecentLoopPageID = { id: null, lastSeen: null };
     for (let pageID of UITour.pageIDsForSession) {
       if (pageID[0] && pageID[0].startsWith("hello-tour_OpenPanel_") &&
           pageID[1] && pageID[1].lastSeen > mostRecentLoopPageID.lastSeen) {

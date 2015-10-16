@@ -426,8 +426,8 @@ var MozLoopPushHandler = {
     // Un-register each active notification channel
     if (this.connectionState === CONNECTION_STATE_OPEN) {
       Object.keys(this.registeredChannels).forEach((id) => {
-        let unRegMsg = {messageType: "unregister",
-                        channelID: id};
+        let unRegMsg = { messageType: "unregister",
+                        channelID: id };
         this._pushSocket.send(unRegMsg);
       });
       this.registeredChannels = {};
@@ -490,13 +490,13 @@ var MozLoopPushHandler = {
         onRegistered(null, this.registeredChannels[channelID], channelID);
       }
       // Update the channel record.
-      this.channels.set(channelID, {onRegistered: onRegistered,
-                        onNotification: onNotification});
+      this.channels.set(channelID, { onRegistered: onRegistered,
+                        onNotification: onNotification });
       return;
     }
 
-    this.channels.set(channelID, {onRegistered: onRegistered,
-                                  onNotification: onNotification});
+    this.channels.set(channelID, { onRegistered: onRegistered,
+                                  onNotification: onNotification });
     this._channelsToRegister.push(channelID);
     this._registerChannels();
   },
@@ -517,8 +517,8 @@ var MozLoopPushHandler = {
     if (this.registeredChannels[channelID]) {
       delete this.registeredChannels[channelID];
       if (this.connectionState === CONNECTION_STATE_OPEN) {
-        this._pushSocket.send({messageType: "unregister",
-                               channelID: channelID});
+        this._pushSocket.send({ messageType: "unregister",
+                               channelID: channelID });
       }
     }
   },
@@ -690,8 +690,8 @@ var MozLoopPushHandler = {
       });
 
       consoleLog.log("PushHandler: PusherServer 'ack': ", ackChannels);
-      this._pushSocket.send({messageType: "ack",
-                             updates: ackChannels});
+      this._pushSocket.send({ messageType: "ack",
+                             updates: ackChannels });
      }
    },
 
@@ -866,8 +866,8 @@ var MozLoopPushHandler = {
    */
   _sendRegistration: function(channelID) {
     if (channelID) {
-      this._pushSocket.send({messageType: "register",
-                             channelID: channelID});
+      this._pushSocket.send({ messageType: "register",
+                             channelID: channelID });
     }
   }
 };

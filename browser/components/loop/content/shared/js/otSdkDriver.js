@@ -69,10 +69,10 @@ loop.OTSdkDriver = (function() {
           var result = [];
           devices.forEach(function(device) {
             if (device.kind === "audioinput") {
-              result.push({kind: "audio"});
+              result.push({ kind: "audio" });
             }
             if (device.kind === "videoinput") {
-              result.push({kind: "video"});
+              result.push({ kind: "video" });
             }
           });
           callback(result);

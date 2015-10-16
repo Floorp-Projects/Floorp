@@ -23,7 +23,7 @@ add_test(function test_initalize_missing_notifycallback() {
 });
 
 add_test(function test_initalize_websocket() {
-  MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
+  MozLoopPushHandler.initialize({ mockWebSocket: mockWebSocket });
   MozLoopPushHandler.register(
     "chan-1",
     function(err, url, id) {
@@ -103,7 +103,7 @@ add_test(function test_retry_registration() {
 add_test(function test_reconnect_no_registration() {
   let regCnt = 0;
   MozLoopPushHandler.shutdown();
-  MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
+  MozLoopPushHandler.initialize({ mockWebSocket: mockWebSocket });
   MozLoopPushHandler.register(
     "test-chan",
     function(err, url, id) {
@@ -130,7 +130,7 @@ add_test(function test_ping_websocket() {
   };
 
   MozLoopPushHandler.shutdown();
-  MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
+  MozLoopPushHandler.initialize({ mockWebSocket: mockWebSocket });
   MozLoopPushHandler.register(
     "test-chan",
     function(err, url) {
@@ -164,7 +164,7 @@ add_test(function test_retry_pushurl() {
     case 2:
       // missing parameter
       response.setStatusLine(null, 200, "OK");
-      response.write(JSON.stringify({pushServerURI: null}));
+      response.write(JSON.stringify({ pushServerURI: null }));
       response.processAsync();
       response.finish();
       break;
@@ -176,7 +176,7 @@ add_test(function test_retry_pushurl() {
       break;
     case 4:
       response.setStatusLine(null, 200, "OK");
-      response.write(JSON.stringify({pushServerURI: kServerPushUrl}));
+      response.write(JSON.stringify({ pushServerURI: kServerPushUrl }));
       response.processAsync();
       response.finish();
 
@@ -185,7 +185,7 @@ add_test(function test_retry_pushurl() {
     }
   });
 
-  MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
+  MozLoopPushHandler.initialize({ mockWebSocket: mockWebSocket });
 });
 
 function run_test() {
@@ -193,7 +193,7 @@ function run_test() {
 
   loopServer.registerPathHandler("/push-server-config", (request, response) => {
     response.setStatusLine(null, 200, "OK");
-    response.write(JSON.stringify({pushServerURI: kServerPushUrl}));
+    response.write(JSON.stringify({ pushServerURI: kServerPushUrl }));
     response.processAsync();
     response.finish();
   });

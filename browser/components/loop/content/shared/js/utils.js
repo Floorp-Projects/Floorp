@@ -42,7 +42,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     this.EXPORTED_SYMBOLS = ["utils"];
     mozL10n = { get: function() {
       throw new Error("mozL10n.get not availabled from chrome!");
-    }};
+    } };
   } else {
     mozL10n = document.mozL10n || navigator.mozL10n;
   }
@@ -116,7 +116,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    */
   function formatDate(timestamp) {
     var date = (new Date(timestamp * 1000));
-    var options = {year: "numeric", month: "long", day: "numeric"};
+    var options = { year: "numeric", month: "long", day: "numeric" };
     return date.toLocaleDateString(navigator.language, options);
   }
 

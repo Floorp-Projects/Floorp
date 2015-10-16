@@ -44,7 +44,7 @@ describe("loop.panel", function() {
       doNotDisturb: true,
       fxAEnabled: true,
       getStrings: function() {
-        return JSON.stringify({textContent: "fakeText"});
+        return JSON.stringify({ textContent: "fakeText" });
       },
       get locale() {
         return "en-US";
@@ -154,7 +154,7 @@ describe("loop.panel", function() {
     }
 
     it("should hide the account entry when FxA is not enabled", function() {
-      navigator.mozLoop.userProfile = {email: "test@example.com"};
+      navigator.mozLoop.userProfile = { email: "test@example.com" };
       navigator.mozLoop.fxAEnabled = false;
 
       var view = TestUtils.renderIntoDocument(
@@ -305,7 +305,7 @@ describe("loop.panel", function() {
       });
 
       it("should show a signout entry when user is authenticated", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
+        navigator.mozLoop.userProfile = { email: "test@example.com" };
 
         var view = mountTestComponent();
 
@@ -316,7 +316,7 @@ describe("loop.panel", function() {
       });
 
       it("should show an account entry when user is authenticated", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
+        navigator.mozLoop.userProfile = { email: "test@example.com" };
 
         var view = mountTestComponent();
 
@@ -326,7 +326,7 @@ describe("loop.panel", function() {
 
       it("should open the FxA settings when the account entry is clicked",
          function() {
-           navigator.mozLoop.userProfile = {email: "test@example.com"};
+           navigator.mozLoop.userProfile = { email: "test@example.com" };
 
            var view = mountTestComponent();
 
@@ -337,7 +337,7 @@ describe("loop.panel", function() {
          });
 
       it("should sign out the user on click when authenticated", function() {
-        navigator.mozLoop.userProfile = {email: "test@example.com"};
+        navigator.mozLoop.userProfile = { email: "test@example.com" };
         var view = mountTestComponent();
 
         TestUtils.Simulate.click(view.getDOMNode()
@@ -575,7 +575,7 @@ describe("loop.panel", function() {
         // the actions we are triggering.
         sandbox.stub(dispatcher, "dispatch");
 
-        view = mountRoomEntry({room: new loop.store.Room(roomData)});
+        view = mountRoomEntry({ room: new loop.store.Room(roomData) });
       });
 
       // XXX Current version of React cannot use TestUtils.Simulate, please
@@ -631,7 +631,7 @@ describe("loop.panel", function() {
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
+            new sharedActions.OpenRoom({ roomToken: roomData.roomToken }));
         });
 
         it("should dispatch an OpenRoom action when callback is called", function() {
@@ -639,7 +639,7 @@ describe("loop.panel", function() {
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
+            new sharedActions.OpenRoom({ roomToken: roomData.roomToken }));
         });
 
         it("should call window.close", function() {
@@ -735,7 +735,7 @@ describe("loop.panel", function() {
           ctime: new Date().getTime()
         }));
 
-        roomEntry.setProps({room: updatedRoom});
+        roomEntry.setProps({ room: updatedRoom });
 
         expect(
           roomEntry.getDOMNode().textContent)
@@ -802,11 +802,11 @@ describe("loop.panel", function() {
     it("should close the panel once a room is created and there is no error", function() {
       var view = createTestComponent();
 
-      roomStore.setStoreState({pendingCreation: true});
+      roomStore.setStoreState({ pendingCreation: true });
 
       sinon.assert.notCalled(fakeWindow.close);
 
-      roomStore.setStoreState({pendingCreation: false});
+      roomStore.setStoreState({ pendingCreation: false });
 
       sinon.assert.calledOnce(fakeWindow.close);
     });
@@ -829,7 +829,7 @@ describe("loop.panel", function() {
 
     it("should display a loading animation when rooms are pending", function() {
       var view = createTestComponent();
-      roomStore.setStoreState({pendingInitialRetrieval: true});
+      roomStore.setStoreState({ pendingInitialRetrieval: true });
 
       expect(view.getDOMNode().querySelectorAll(".room-list-loading").length).to.eql(1);
     });
@@ -865,7 +865,7 @@ describe("loop.panel", function() {
 
     it("should dispatch a CreateRoom action with context when clicking on the " +
        "Start a conversation button", function() {
-      fakeMozLoop.userProfile = {email: fakeEmail};
+      fakeMozLoop.userProfile = { email: fakeEmail };
       var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
       fakeMozLoop.getSelectedTabMetadata = function (callback) {
         callback({
@@ -1014,13 +1014,13 @@ describe("loop.panel", function() {
     });
 
     it("should render ConversationDropdown if state.showMenu=true", function() {
-      view = createTestComponent({showMenu: true});
+      view = createTestComponent({ showMenu: true });
 
       expect(view.refs.menu).to.not.eql(undefined);
     });
 
     it("should not render ConversationDropdown by default", function() {
-      view = createTestComponent({showMenu: false});
+      view = createTestComponent({ showMenu: false });
 
       expect(view.refs.menu).to.eql(undefined);
     });
@@ -1057,7 +1057,7 @@ describe("loop.panel", function() {
       view.handleDeleteButtonClick(fakeEvent);
 
       sinon.assert.calledWithExactly(dispatcher.dispatch,
-        new sharedActions.DeleteRoom({roomToken: roomData.roomToken}));
+        new sharedActions.DeleteRoom({ roomToken: roomData.roomToken }));
     });
 
     it("should trigger handleClickEntry when button is clicked", function() {

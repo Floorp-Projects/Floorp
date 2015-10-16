@@ -3,8 +3,8 @@
 
 "use strict";
 
-const {LoopContacts} = Cu.import("resource:///modules/loop/LoopContacts.jsm", {});
-const {LoopStorage} = Cu.import("resource:///modules/loop/LoopStorage.jsm", {});
+const { LoopContacts } = Cu.import("resource:///modules/loop/LoopContacts.jsm", {});
+const { LoopStorage } = Cu.import("resource:///modules/loop/LoopStorage.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",

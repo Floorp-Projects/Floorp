@@ -22,7 +22,7 @@ loop.webapp = (function(_, OT, mozL10n) {
   var HomeView = React.createClass({
     render: function() {
       return (
-        <p>{mozL10n.get("welcome", {clientShortname: mozL10n.get("clientShortname2")})}</p>
+        <p>{mozL10n.get("welcome", { clientShortname: mozL10n.get("clientShortname2") })}</p>
       );
     }
   });
@@ -63,7 +63,7 @@ loop.webapp = (function(_, OT, mozL10n) {
         platform: mozL10n.get("unsupported_platform_" + this.props.platform)
       };
       var unsupportedLearnMoreText = mozL10n.get("unsupported_platform_learn_more_link",
-        {clientShortname: mozL10n.get("clientShortname2")});
+        { clientShortname: mozL10n.get("clientShortname2") });
 
       return (
         <div className="highlight-issue-box">
@@ -94,7 +94,7 @@ loop.webapp = (function(_, OT, mozL10n) {
       }
       return (
         <div className="promote-firefox">
-          <h3>{mozL10n.get("promote_firefox_hello_heading", {brandShortname: mozL10n.get("brandShortname")})}</h3>
+          <h3>{mozL10n.get("promote_firefox_hello_heading", { brandShortname: mozL10n.get("brandShortname") })}</h3>
           <p>
             <a className="btn btn-large btn-accept"
                href={loop.config.downloadFirefoxUrl}>

@@ -201,7 +201,7 @@ add_task(function* test_get_rooms_saves_unknown_keys() {
 add_task(function* test_get_rooms_saves_different_keys() {
   let roomsCache = {};
   roomsCache[LOOP_SESSION_TYPE.FXA] = {
-    QzBbvGmIZWU: {key: "fakeKey"}
+    QzBbvGmIZWU: { key: "fakeKey" }
   };
   yield saveRoomsCache(roomsCache);
 
@@ -225,7 +225,7 @@ add_task(function* test_get_rooms_uses_saved_key() {
 
   let roomsCache = {};
   roomsCache[LOOP_SESSION_TYPE.FXA] = {
-    "_nxD4V4FflQ": {key: kExpected.roomKey}
+    "_nxD4V4FflQ": { key: kExpected.roomKey }
   };
   yield saveRoomsCache(roomsCache);
 

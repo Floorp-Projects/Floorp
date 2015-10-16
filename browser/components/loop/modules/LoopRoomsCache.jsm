@@ -3,12 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-const {MozLoopService, LOOP_SESSION_TYPE} =
+const { MozLoopService, LOOP_SESSION_TYPE } =
   Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
@@ -63,7 +63,7 @@ LoopRoomsCache.prototype = {
   _setCache: function(contents) {
     this._cache = contents;
 
-    return OS.File.makeDir(this.baseDir, {ignoreExisting: true}).then(() => {
+    return OS.File.makeDir(this.baseDir, { ignoreExisting: true }).then(() => {
         return CommonUtils.writeJSON(contents, this.path);
       });
   },

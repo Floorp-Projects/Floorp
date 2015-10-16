@@ -8,8 +8,8 @@
  */
 "use strict";
 
-var {WebChannel} = Cu.import("resource://gre/modules/WebChannel.jsm", {});
-var {Chat} = Cu.import("resource:///modules/Chat.jsm", {});
+var { WebChannel } = Cu.import("resource://gre/modules/WebChannel.jsm", {});
+var { Chat } = Cu.import("resource:///modules/Chat.jsm", {});
 
 const TEST_URI =
   "example.com/browser/browser/components/loop/test/mochitest/test_loopLinkClicker_channel.html";

@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {CardDavImporter} = Cu.import("resource:///modules/loop/CardDavImporter.jsm", {});
+const { CardDavImporter } = Cu.import("resource:///modules/loop/CardDavImporter.jsm", {});
 
 const kAuth = {
   "method": "basic",
@@ -162,7 +162,7 @@ const monkeyPatchImporter = function(importer) {
           reject(new Error("404 Not Found"));
           return;
       }
-      resolve({"responseXML": responseXML});
+      resolve({ "responseXML": responseXML });
     });
   }.bind(importer);
   return importer;

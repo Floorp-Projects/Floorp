@@ -26,7 +26,7 @@ describe("loop.shared.models", function() {
       sandbox.stub(l10n, "get", function(x, y) {
         return "translated:" + x + (y ? ":" + y : "");
       });
-      notifData = {level: "error", message: "plop"};
+      notifData = { level: "error", message: "plop" };
       testNotif = new sharedModels.NotificationModel(notifData);
     });
 
