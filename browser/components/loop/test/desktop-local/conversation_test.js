@@ -185,7 +185,6 @@ describe("loop.conversation", function() {
 
     it("should display the RoomFailureView for failures", function() {
       conversationAppStore.setStoreState({
-        contact: {},
         outgoing: false,
         windowType: "failed"
       });
