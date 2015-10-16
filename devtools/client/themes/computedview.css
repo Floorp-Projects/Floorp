@@ -20,6 +20,12 @@ body {
   height: 100%;
 }
 
+#browser-style-checkbox {
+  /* Bug 1200073 - extra space before the browser styles checkbox so
+     they aren't squished together in a small window. */
+  -moz-margin-start: 5px;
+}
+
 #propertyContainer {
   -moz-user-select: text;
   overflow: auto;
