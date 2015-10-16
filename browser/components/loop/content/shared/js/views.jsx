@@ -1123,7 +1123,7 @@ loop.shared.views = (function(_, mozL10n) {
                 srcMediaElement={this.props.remoteSrcMediaElement} />
               { this.state.localMediaAboslutelyPositioned ?
                 this.renderLocalVideo() : null }
-              { this.props.children }
+              { this.props.displayScreenShare ? null : this.props.children }
             </div>
             <div className={screenShareStreamClasses}>
               <MediaView displayAvatar={false}
@@ -1131,6 +1131,7 @@ loop.shared.views = (function(_, mozL10n) {
                 mediaType="screen-share"
                 posterUrl={this.props.screenSharePosterUrl}
                 srcMediaElement={this.props.screenShareMediaElement} />
+              { this.props.displayScreenShare ? this.props.children : null }
             </div>
             <loop.shared.views.chat.TextChatView
               dispatcher={this.props.dispatcher}

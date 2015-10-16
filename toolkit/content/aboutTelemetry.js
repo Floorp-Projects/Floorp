@@ -810,11 +810,13 @@ var StackRenderer = {
   }
 };
 
-function SymbolicationRequest(aPrefix, aRenderHeader, aMemoryMap, aStacks) {
+function SymbolicationRequest(aPrefix, aRenderHeader,
+                              aMemoryMap, aStacks, aDurations = null) {
   this.prefix = aPrefix;
   this.renderHeader = aRenderHeader;
   this.memoryMap = aMemoryMap;
   this.stacks = aStacks;
+  this.durations = aDurations;
 }
 /**
  * A callback for onreadystatechange. It replaces the numeric stack with
@@ -848,7 +850,7 @@ function SymbolicationRequest_handleSymbolResponse() {
 
   for (let i = 0; i < jsonResponse.length; ++i) {
     let stack = jsonResponse[i];
-    this.renderHeader(i);
+    this.renderHeader(i, this.durations);
 
     for (let symbol of stack) {
       div.appendChild(document.createTextNode(symbol));
@@ -894,14 +896,14 @@ var ChromeHangs = {
 
     let stacks = hangs.stacks;
     let memoryMap = hangs.memoryMap;
+    let durations = hangs.durations;
 
     StackRenderer.renderStacks("chrome-hangs", stacks, memoryMap,
-			       (index) => this.renderHangHeader(aPing, index));
+                               (index) => this.renderHangHeader(index, durations));
   },
 
-  renderHangHeader: function ChromeHangs_renderHangHeader(aPing, aIndex) {
-    let durations = aPing.payload.chromeHangs.durations;
-    StackRenderer.renderHeader("chrome-hangs", [aIndex + 1, durations[aIndex]]);
+  renderHangHeader: function ChromeHangs_renderHangHeader(aIndex, aDurations) {
+    StackRenderer.renderHeader("chrome-hangs", [aIndex + 1, aDurations[aIndex]]);
   }
 };
 
@@ -1391,7 +1393,9 @@ function setupListeners() {
       let hangs = gPingData.payload.chromeHangs;
       let req = new SymbolicationRequest("chrome-hangs",
                                          ChromeHangs.renderHangHeader,
-                                         hangs.memoryMap, hangs.stacks);
+                                         hangs.memoryMap,
+                                         hangs.stacks,
+                                         hangs.durations);
       req.fetchSymbols();
   }, false);
 
