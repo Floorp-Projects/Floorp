@@ -852,12 +852,17 @@ TextureHostD3D9::UpdatedInternal(const nsIntRegion* aRegion)
     return;
   }
 
+  const nsIntRegion* regionToUpdate = aRegion;
   if (!mTextureSource) {
     mTextureSource = new DataTextureSourceD3D9(mFormat, mSize, mCompositor,
                                                nullptr, mFlags);
+    if (mFlags & TextureFlags::COMPONENT_ALPHA) {
+      // Update the full region the first time for component alpha textures.
+      regionToUpdate = nullptr;
+    }
   }
 
-  if (!mTextureSource->UpdateFromTexture(mTexture, aRegion)) {
+  if (!mTextureSource->UpdateFromTexture(mTexture, regionToUpdate)) {
     gfxCriticalError() << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
   }
 }
