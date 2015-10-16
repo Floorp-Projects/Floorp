@@ -443,7 +443,6 @@ DebuggerClient.prototype = {
       DevToolsUtils.executeSoon(() => aOnResponse({
         from: workerClient.actor,
         type: "attached",
-        isFrozen: workerClient.isFrozen,
         url: workerClient.url
       }, workerClient));
       return;
@@ -1302,16 +1301,11 @@ function WorkerClient(aClient, aForm) {
   this.client = aClient;
   this._actor = aForm.from;
   this._isClosed = false;
-  this._isFrozen = aForm.isFrozen;
   this._url = aForm.url;
 
   this._onClose = this._onClose.bind(this);
-  this._onFreeze = this._onFreeze.bind(this);
-  this._onThaw = this._onThaw.bind(this);
 
   this.addListener("close", this._onClose);
-  this.addListener("freeze", this._onFreeze);
-  this.addListener("thaw", this._onThaw);
 
   this.traits = {};
 }
@@ -1335,10 +1329,6 @@ WorkerClient.prototype = {
 
   get isClosed() {
     return this._isClosed;
-  },
-
-  get isFrozen() {
-    return this._isFrozen;
   },
 
   detach: DebuggerClient.requester({ type: "detach" }, {
@@ -1374,26 +1364,16 @@ WorkerClient.prototype = {
 
   _onClose: function () {
     this.removeListener("close", this._onClose);
-    this.removeListener("freeze", this._onFreeze);
-    this.removeListener("thaw", this._onThaw);
 
     this.client.unregisterClient(this);
-    this._closed = true;
-  },
-
-  _onFreeze: function () {
-    this._isFrozen = true;
-  },
-
-  _onThaw: function () {
-    this._isFrozen = false;
+    this._isClosed = true;
   },
 
   reconfigure: function () {
     return Promise.resolve();
   },
 
-  events: ["close", "freeze", "thaw"]
+  events: ["close"]
 };
 
 eventSource(WorkerClient.prototype);

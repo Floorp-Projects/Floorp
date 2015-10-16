@@ -425,10 +425,8 @@ var DebuggerController = {
 };
 
 function Workers() {
-  this._workerClients = new Map();
+  this._workerForms = Object.create(null);
   this._onWorkerListChanged = this._onWorkerListChanged.bind(this);
-  this._onWorkerFreeze = this._onWorkerFreeze.bind(this);
-  this._onWorkerThaw = this._onWorkerThaw.bind(this);
   this._onWorkerSelect = this._onWorkerSelect.bind(this);
 }
 
@@ -456,29 +454,23 @@ Workers.prototype = {
     }
 
     this._tabClient.listWorkers((response) => {
-      let workerActors = new Set();
+      let workerForms = Object.create(null);
       for (let worker of response.workers) {
-        workerActors.add(worker.actor);
+        workerForms[worker.actor] = worker;
       }
 
-      for (let [workerActor, workerClient] of this._workerClients) {
-        if (!workerActors.has(workerActor)) {
-          workerClient.removeListener("freeze", this._onWorkerFreeze);
-          workerClient.removeListener("thaw", this._onWorkerThaw);
-          this._workerClients.delete(workerActor);
+      for (let workerActor in this._workerForms) {
+        if (!(workerActor in workerForms)) {
+          delete this._workerForms[workerActor];
           DebuggerView.Workers.removeWorker(workerActor);
         }
       }
 
-      for (let actor of workerActors) {
-        let workerActor = actor
-        if (!this._workerClients.has(workerActor)) {
-          this._tabClient.attachWorker(workerActor, (response, workerClient) => {
-            workerClient.addListener("freeze", this._onWorkerFreeze);
-            workerClient.addListener("thaw", this._onWorkerThaw);
-            this._workerClients.set(workerActor, workerClient);
-            DebuggerView.Workers.addWorker(workerActor, workerClient.url);
-          });
+      for (let workerActor in workerForms) {
+        if (!(workerActor in this._workerForms)) {
+          let workerForm = workerForms[workerActor];
+          this._workerForms[workerActor] = workerForm;
+          DebuggerView.Workers.addWorker(workerActor, workerForm.url);
         }
       }
     });
@@ -488,20 +480,11 @@ Workers.prototype = {
     this._updateWorkerList();
   },
 
-  _onWorkerFreeze: function (type, packet) {
-    DebuggerView.Workers.removeWorker(packet.from);
-  },
-
-  _onWorkerThaw: function (type, packet) {
-    let workerClient = this._workerClients.get(packet.from);
-    DebuggerView.Workers.addWorker(packet.from, workerClient.url);
-  },
-
-  _onWorkerSelect: function (workerActor) {
-    let workerClient = this._workerClients.get(workerActor);
-    gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
-                          "jsdebugger",
-                          Toolbox.HostType.WINDOW);
+  _onWorkerSelect: function (type, workerActor) {
+    DebuggerController.client.attachWorker(workerActor, (response, workerClient) => {
+      gDevTools.showToolbox(devtools.TargetFactory.forWorker(workerClient),
+                            "jsdebugger", devtools.Toolbox.HostType.WINDOW);
+    });
   }
 };
 
