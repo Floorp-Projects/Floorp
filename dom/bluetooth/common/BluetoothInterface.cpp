@@ -188,14 +188,6 @@ BluetoothHandsfreeResultHandler::OnError(BluetoothStatus aStatus)
 }
 
 void
-BluetoothHandsfreeResultHandler::Init()
-{ }
-
-void
-BluetoothHandsfreeResultHandler::Cleanup()
-{ }
-
-void
 BluetoothHandsfreeResultHandler::Connect()
 { }
 
