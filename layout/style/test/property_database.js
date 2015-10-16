@@ -99,6 +99,7 @@ var validGradientAndElementValues = [
   "linear-gradient(red -99px, yellow, green, blue 120%)",
   "linear-gradient(#ffff00, #ef3, rgba(10, 20, 30, 0.4))",
   "linear-gradient(rgba(10, 20, 30, 0.4), #ffff00, #ef3)",
+  "linear-gradient(red, green calc(50% + 20px), blue)",
 
   "linear-gradient(to top, red, blue)",
   "linear-gradient(to bottom, red, blue)",
@@ -382,6 +383,10 @@ var invalidGradientAndElementValues = [
   "-moz-linear-gradient(10 10px -45deg, red, blue) repeat",
   "-moz-linear-gradient(10px 10 -45deg, red, blue) repeat",
   "linear-gradient(red -99, yellow, green, blue 120%)",
+  /* Invalid color, calc() or -moz-image-rect() function */
+  "linear-gradient(red, rgb(0, rubbish, 0) 50%, red)",
+  "linear-gradient(red, red calc(50% + rubbish), red)",
+  "linear-gradient(to top calc(50% + rubbish), red, blue)",
   /* Old syntax */
   "-moz-linear-gradient(10px 10px, 20px, 30px 30px, 40px, from(blue), to(red))",
   "-moz-radial-gradient(20px 20px, 10px 10px, from(green), to(#ff00ff))",
@@ -667,7 +672,7 @@ var gCSSProperties = {
     subproperties: [ "animation-name", "animation-duration", "animation-timing-function", "animation-delay", "animation-direction", "animation-fill-mode", "animation-iteration-count", "animation-play-state" ],
     initial_values: [ "none none 0s 0s ease normal running 1.0", "none", "0s", "ease", "normal", "running", "1.0" ],
     other_values: [ "none none 0s 0s cubic-bezier(0.25, 0.1, 0.25, 1.0) normal running 1.0", "bounce 1s linear 2s", "bounce 1s 2s linear", "bounce linear 1s 2s", "linear bounce 1s 2s", "linear 1s bounce 2s", "linear 1s 2s bounce", "1s bounce linear 2s", "1s bounce 2s linear", "1s 2s bounce linear", "1s linear bounce 2s", "1s linear 2s bounce", "1s 2s linear bounce", "bounce linear 1s", "bounce 1s linear", "linear bounce 1s", "linear 1s bounce", "1s bounce linear", "1s linear bounce", "1s 2s bounce", "1s bounce 2s", "bounce 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "bounce 1s", "1s bounce", "linear 1s", "1s linear", "1s 2s", "2s 1s", "bounce", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s bounce, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32bounce linear 2s", "1s -bounce linear 2s", "1s -\\32bounce linear 2s", "1s \\32 0bounce linear 2s", "1s -\\32 0bounce linear 2s", "1s \\2bounce linear 2s", "1s -\\2bounce linear 2s", "2s, 1s bounce", "1s bounce, 2s", "2s all, 1s bounce", "1s bounce, 2s all", "1s bounce, 2s none", "2s none, 1s bounce", "2s bounce, 1s all", "2s all, 1s bounce" ],
-    invalid_values: [  "2s inherit", "inherit 2s", "2s bounce, 1s inherit", "2s inherit, 1s bounce", "2s initial", "2s all,, 1s bounce", "2s all, , 1s bounce" ]
+    invalid_values: [ "2s inherit", "inherit 2s", "2s bounce, 1s inherit", "2s inherit, 1s bounce", "2s initial", "2s all,, 1s bounce", "2s all, , 1s bounce", "bounce 1s cubic-bezier(0, rubbish) 2s", "bounce 1s steps(rubbish) 2s" ]
   },
   "animation-delay": {
     domProp: "animationDelay",
@@ -921,7 +926,7 @@ var gCSSProperties = {
       "2px 2px calc(2px + 1%) 2px",
       "1px 2px 2px 2px / 2px 2px calc(2px + 1%) 2px",
             ],
-    invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px", "2", "2 2", "2px 2px 2px 2px / 2px 2px 2 2px" ]
+    invalid_values: [ "2px -2px", "inherit 2px", "inherit / 2px", "2px inherit", "2px / inherit", "2px 2px 2px 2px 2px", "1px / 2px 2px 2px 2px 2px", "2", "2 2", "2px 2px 2px 2px / 2px 2px 2 2px", "2px calc(0px + rubbish)" ]
   },
   "border-bottom-left-radius": {
     domProp: "borderBottomLeftRadius",
@@ -940,7 +945,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
   },
   "border-bottom-right-radius": {
     domProp: "borderBottomRightRadius",
@@ -959,7 +964,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
   },
   "border-top-left-radius": {
     domProp: "borderTopLeftRadius",
@@ -978,7 +983,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
   },
   "border-top-right-radius": {
     domProp: "borderTopRightRadius",
@@ -997,7 +1002,7 @@ var gCSSProperties = {
       "calc(25px*3)",
       "calc(3*25px + 50%)",
             ],
-    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px" ]
+    invalid_values: [ "-1px", "4px -2px", "inherit 2px", "2px inherit", "2", "2px 2", "2 2px", "2px calc(0px + rubbish)" ]
   },
   "-moz-border-right-colors": {
     domProp: "MozBorderRightColors",
@@ -1136,7 +1141,7 @@ var gCSSProperties = {
     initial_values: [ "auto", "auto auto" ],
     other_values: [ "3", "20px", "2 10px", "10px 2", "2 auto", "auto 2", "auto 50px", "50px auto" ],
     invalid_values: [ "5%", "-1px", "-1", "3 5", "10px 4px", "10 2px 5in", "30px -1",
-                      "auto 3 5px", "5 auto 20px", "auto auto auto" ]
+                      "auto 3 5px", "5 auto 20px", "auto auto auto", "calc(50px + rubbish) 2" ]
   },
   "-moz-column-count": {
     domProp: "MozColumnCount",
@@ -1802,7 +1807,8 @@ var gCSSProperties = {
     ],
     invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
              "border", "center red", "right diagonal",
-             "#00ffff bottom"]
+             "#00ffff bottom", "0px calc(0px + rubbish)",
+             "0px 0px calc(0px + rubbish)"]
   },
   "perspective-origin": {
     domProp: "perspectiveOrigin",
@@ -1977,6 +1983,9 @@ var gCSSProperties = {
       "url(404.png) padding-box green padding-box",
       "transparent padding-box url(404.png) border-box",
       "transparent padding-box url(404.png) padding-box",
+      /* error inside functions */
+      "-moz-image-rect(url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), rubbish, 50%, 30%, 0) transparent",
+      "-moz-element(#a rubbish) black",
     ]
   },
   "background-attachment": {
@@ -2073,7 +2082,8 @@ var gCSSProperties = {
                       "top 20%", "bottom 20%", "50% left", "top 50%",
                       "50% bottom 10%", "right 10% 50%", "left right",
                       "top bottom", "left 10% right",
-                      "top 20px bottom 20px", "left left" ],
+                      "top 20px bottom 20px", "left left",
+                      "0px calc(0px + rubbish)"],
     quirks_values: {
       "20 20": "20px 20px",
       "10 5px": "10px 5px",
@@ -2119,7 +2129,7 @@ var gCSSProperties = {
       "calc(-20px) calc(-50%)",
       "calc(-20%) calc(-50%)"
     ],
-    invalid_values: [ "contain contain", "cover cover", "cover auto", "auto cover", "contain cover", "cover contain", "-5px 3px", "3px -5px", "auto -5px", "-5px auto", "5 3" ]
+    invalid_values: [ "contain contain", "cover cover", "cover auto", "auto cover", "contain cover", "cover contain", "-5px 3px", "3px -5px", "auto -5px", "-5px auto", "5 3", "10px calc(10px + rubbish)" ]
   },
   "border": {
     domProp: "border",
@@ -2203,7 +2213,7 @@ var gCSSProperties = {
     subproperties: [ "border-left-color", "border-left-style", "border-left-width" ],
     initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor" ],
     other_values: [ "solid", "green", "medium solid", "green solid", "10px solid", "thick solid", "5px green none" ],
-    invalid_values: [ "5%", "5", "5 solid green" ]
+    invalid_values: [ "5%", "5", "5 solid green", "calc(5px + rubbish) green solid", "5px rgb(0, rubbish, 0) solid" ]
   },
   "border-left-color": {
     domProp: "borderLeftColor",
@@ -2296,7 +2306,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "0", "0 0", "0px", "0 0px", "calc(0px)", "calc(0px) calc(0em)", "calc(2em - 2em) calc(3px + 7px - 10px)", "calc(-5px)", "calc(-5px) calc(-5px)" ],
     other_values: [ "3px", "4em 2px", "4em 0", "0px 2px", "calc(7px)", "0 calc(7px)", "calc(7px) 0", "calc(0px) calc(7px)", "calc(7px) calc(0px)", "7px calc(0px)", "calc(0px) 7px", "7px calc(0px)", "3px calc(2em)" ],
-    invalid_values: [ "0%", "0 0%", "-5px", "-5px -5px", "0 -5px", "-5px 0" ],
+    invalid_values: [ "0%", "0 0%", "-5px", "-5px -5px", "0 -5px", "-5px 0", "0 calc(0px + rubbish)" ],
     quirks_values: {
       "2px 5": "2px 5px",
       "7": "7px",
@@ -2411,7 +2421,7 @@ var gCSSProperties = {
       "calc(2px) calc(2px) calc(2px)",
       "calc(2px) calc(2px) calc(2px) calc(2px)"
     ],
-    invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none", "3 3", "3px 3", "3 3px", "3px 3px 3", "3px 3px 3px 3" ]
+    invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none", "3 3", "3px 3", "3 3px", "3px 3px 3", "3px 3px 3px 3", "3px calc(3px + rubbish)", "3px 3px calc(3px + rubbish)", "3px 3px 3px calc(3px + rubbish)", "3px 3px 3px 3px rgb(0, rubbish, 0)" ]
   },
   "caption-side": {
     domProp: "captionSide",
@@ -2455,7 +2465,7 @@ var gCSSProperties = {
     /* XXX needs to be on pseudo-elements */
     initial_values: [ "normal", "none" ],
     other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)", "attr(\\32)", "attr(\\2)", "attr(-\\2)", "attr(-\\32)", "counter(\\2)", "counters(\\32, '.')", "counter(-\\32, upper-roman)", "counters(-\\2, '-', lower-greek)", "counter(\\()", "counters(a\\+b, '.')", "counter(\\}, upper-alpha)", "-moz-alt-content", "counter(foo, symbols('*'))", "counter(foo, symbols(numeric '0' '1'))", "counters(foo, '.', symbols('*'))", "counters(foo, '.', symbols(numeric '0' '1'))" ],
-    invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')", "attr(2)", "attr(-2)", "counter(2)", "counters(-2, '.')", "-moz-alt-content 'foo'", "'foo' -moz-alt-content" ]
+    invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')", "attr(2)", "attr(-2)", "counter(2)", "counters(-2, '.')", "-moz-alt-content 'foo'", "'foo' -moz-alt-content", "counter(one, two, three) 'foo'" ]
   },
   "counter-increment": {
     domProp: "counterIncrement",
@@ -3393,7 +3403,7 @@ var gCSSProperties = {
     initial_values: [ "none" ],
     other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration",
                     "underline red solid", "underline #ff0000", "solid underline", "red underline", "#ff0000 underline", "dotted underline" ],
-    invalid_values: [ "none none", "underline none", "none underline", "blink none", "none blink", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
+    invalid_values: [ "none none", "underline none", "none underline", "blink none", "none blink", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink", "rgb(0, rubbish, 0) underline" ]
   },
   "text-decoration-color": {
     domProp: "textDecorationColor",
@@ -3464,7 +3474,7 @@ var gCSSProperties = {
       "calc(2px) calc(2px) calc(2px)",
     ],
     invalid_values: [ "3% 3%", "2px 2px -5px", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit", "2 2px", "2px 2", "2px 2px 2", "2px 2px 2px 2",
-      "calc(2px) calc(2px) calc(2px) calc(2px)"
+      "calc(2px) calc(2px) calc(2px) calc(2px)", "3px 3px calc(3px + rubbish)"
     ]
   },
   "text-transform": {
@@ -3501,7 +3511,7 @@ var gCSSProperties = {
     subproperties: [ "transition-property", "transition-duration", "transition-timing-function", "transition-delay" ],
     initial_values: [ "all 0s ease 0s", "all", "0s", "0s 0s", "ease" ],
     other_values: [ "all 0s cubic-bezier(0.25, 0.1, 0.25, 1.0) 0s", "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32width linear 2s", "1s -width linear 2s", "1s -\\32width linear 2s", "1s \\32 0width linear 2s", "1s -\\32 0width linear 2s", "1s \\2width linear 2s", "1s -\\2width linear 2s", "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "2s all, 1s width", "2s width, 1s all" ],
-    invalid_values: [ "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "1s width,,2s color", "1s width, ,2s color" ]
+    invalid_values: [ "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "1s width,,2s color", "1s width, ,2s color", "bounce 1s cubic-bezier(0, rubbish) 2s", "bounce 1s steps(rubbish) 2s" ]
   },
   "transition-delay": {
     domProp: "transitionDelay",
@@ -3798,7 +3808,7 @@ var gCSSProperties = {
     prerequisites: { "color": "blue" },
     initial_values: [ "black", "#000", "#000000", "rgb(0,0,0)", "rgba(0,0,0,1)" ],
     other_values: [ "green", "#fc3", "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green', "none", "currentColor", "context-fill", "context-stroke" ],
-    invalid_values: [ "000000", "ff00ff" ]
+    invalid_values: [ "000000", "ff00ff", "url('#myserver') rgb(0, rubbish, 0)" ]
   },
   "fill-opacity": {
     domProp: "fillOpacity",
@@ -4088,7 +4098,8 @@ var gCSSProperties = {
       "1px 2 3px",
       "1px 2 3 4px",
       "-1",
-      "1 -1"
+      "1 -1",
+      "0 1 calc(0px + rubbish)",
     ]
   },
   "flex-basis": {
@@ -5313,6 +5324,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-shapes.enabled")) {
       "circle(farthest-side closest-side)",
       "circle(20% 20%)",
       "circle(at farthest-side)",
+      "circle(calc(20px + rubbish))",
 
       "ellipse(at)",
       "ellipse(at 20% 20% 30%)",
@@ -5324,6 +5336,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-shapes.enabled")) {
       "ellipse(farthest-side)",
       "ellipse(20%)",
       "ellipse(at farthest-side farthest-side)",
+      "ellipse(at top left calc(20px + rubbish))",
 
       "polygon(at)",
       "polygon(at 20% 20% 30%)",
@@ -5345,6 +5358,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.clip-path-shapes.enabled")) {
       "inset(1px at 3px)",
       "inset(1px round 1px // 2px)",
       "inset(1px round)",
+      "inset(1px calc(2px + rubbish))",
+      "inset(1px round 2px calc(3px + rubbish))",
     ],
     unbalanced_values: [
       "polygon(30% 30%",
@@ -5787,6 +5802,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid repeat(1, )",
       "subgrid repeat(2, (40px))",
       "subgrid repeat(2, foo)",
+      "40px calc(0px + rubbish)",
     ],
     unbalanced_values: [
       "(foo] 40px",
