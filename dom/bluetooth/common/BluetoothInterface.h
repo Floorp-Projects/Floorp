@@ -675,9 +675,6 @@ class BluetoothGattResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
-
   virtual void RegisterClient();
   virtual void UnregisterClient();
 
@@ -735,9 +732,8 @@ protected:
 class BluetoothGattInterface
 {
 public:
-  virtual void Init(BluetoothGattNotificationHandler* aNotificationHandler,
-                    BluetoothGattResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothGattResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothGattNotificationHandler* aNotificationHandler) = 0;
 
   /* Register / Unregister */
   virtual void RegisterClient(const BluetoothUuid& aUuid,
