@@ -56,7 +56,7 @@ BluetoothDaemonSetupModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
 
 nsresult
 BluetoothDaemonSetupModule::RegisterModuleCmd(
-  uint8_t aId, uint8_t aMode, uint32_t aMaxNumClients,
+  BluetoothSetupServiceId aId, uint8_t aMode, uint32_t aMaxNumClients,
   BluetoothSetupResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -83,7 +83,7 @@ BluetoothDaemonSetupModule::RegisterModuleCmd(
 
 nsresult
 BluetoothDaemonSetupModule::UnregisterModuleCmd(
-  uint8_t aId, BluetoothSetupResultHandler* aRes)
+  BluetoothSetupServiceId aId, BluetoothSetupResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -183,7 +183,7 @@ BluetoothDaemonSetupInterface::~BluetoothDaemonSetupInterface()
 
 void
 BluetoothDaemonSetupInterface::RegisterModule(
-  uint8_t aId, uint8_t aMode, uint32_t aMaxNumClients,
+  BluetoothSetupServiceId aId, uint8_t aMode, uint32_t aMaxNumClients,
   BluetoothSetupResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
@@ -196,7 +196,7 @@ BluetoothDaemonSetupInterface::RegisterModule(
 
 void
 BluetoothDaemonSetupInterface::UnregisterModule(
-  uint8_t aId,
+  BluetoothSetupServiceId aId,
   BluetoothSetupResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);

@@ -281,8 +281,9 @@ BluetoothDaemonA2dpInterface::Init(
     res = nullptr;
   }
 
-  nsresult rv = mModule->RegisterModule(BluetoothDaemonA2dpModule::SERVICE_ID,
-    0x00, BluetoothDaemonA2dpModule::MAX_NUM_CLIENTS, res);
+  nsresult rv = mModule->RegisterModule(
+    SETUP_SERVICE_ID_A2DP, 0x00, BluetoothDaemonA2dpModule::MAX_NUM_CLIENTS,
+    res);
   if (NS_FAILED(rv) && aRes) {
     DispatchError(aRes, rv);
   }
@@ -333,7 +334,7 @@ BluetoothDaemonA2dpInterface::Cleanup(
   BluetoothA2dpResultHandler* aRes)
 {
   nsresult rv = mModule->UnregisterModule(
-    BluetoothDaemonA2dpModule::SERVICE_ID,
+    SETUP_SERVICE_ID_A2DP,
     new CleanupResultHandler(mModule, aRes));
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);

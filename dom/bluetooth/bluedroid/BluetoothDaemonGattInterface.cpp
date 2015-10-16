@@ -2057,8 +2057,8 @@ BluetoothDaemonGattInterface::Init(
   }
 
   nsresult rv = mModule->RegisterModule(
-    BluetoothDaemonGattModule::SERVICE_ID, 0x00,
-    BluetoothDaemonGattModule::MAX_NUM_CLIENTS, res);
+    SETUP_SERVICE_ID_GATT, 0x00, BluetoothDaemonGattModule::MAX_NUM_CLIENTS,
+    res);
 
   if (NS_FAILED(rv) && aRes) {
     DispatchError(aRes, rv);
@@ -2110,8 +2110,7 @@ BluetoothDaemonGattInterface::Cleanup(
   BluetoothGattResultHandler* aRes)
 {
   nsresult rv = mModule->UnregisterModule(
-    BluetoothDaemonGattModule::SERVICE_ID,
-    new CleanupResultHandler(mModule, aRes));
+    SETUP_SERVICE_ID_GATT, new CleanupResultHandler(mModule, aRes));
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
   }
