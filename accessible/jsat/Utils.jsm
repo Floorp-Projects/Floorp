@@ -345,6 +345,21 @@ this.Utils = { // jshint ignore:line
 
   isInSubtree: function isInSubtree(aAccessible, aSubTreeRoot) {
     let acc = aAccessible;
+
+    // If aSubTreeRoot is an accessible document, we will only walk up the
+    // ancestry of documents and skip everything else.
+    if (aSubTreeRoot instanceof Ci.nsIAccessibleDocument) {
+      while (acc) {
+        let parentDoc = acc instanceof Ci.nsIAccessibleDocument ?
+          acc.parentDocument : acc.document;
+        if (parentDoc === aSubTreeRoot) {
+          return true;
+        }
+        acc = parentDoc;
+      }
+      return false;
+    }
+
     while (acc) {
       if (acc == aSubTreeRoot) {
         return true;

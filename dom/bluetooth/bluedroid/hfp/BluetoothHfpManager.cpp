@@ -276,12 +276,12 @@ BluetoothHfpManager::Init()
   return true;
 }
 
-class BluetoothHfpManager::CleanupInitResultHandler final
-  : public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::RegisterModuleResultHandler final
+  : public BluetoothSetupResultHandler
 {
 public:
-  CleanupInitResultHandler(BluetoothHandsfreeInterface* aInterface,
-                           BluetoothProfileResultHandler* aRes)
+  RegisterModuleResultHandler(BluetoothHandsfreeInterface* aInterface,
+                              BluetoothProfileResultHandler* aRes)
     : mInterface(aInterface)
     , mRes(aRes)
   {
@@ -290,35 +290,27 @@ public:
 
   void OnError(BluetoothStatus aStatus) override
   {
-    BT_WARNING("BluetoothHandsfreeInterface::Init failed: %d", (int)aStatus);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_WARNING("BluetoothSetupInterface::RegisterModule failed for HFP: %d",
+               (int)aStatus);
+
+    mInterface->SetNotificationHandler(nullptr);
+
     if (mRes) {
       mRes->OnError(NS_ERROR_FAILURE);
     }
   }
 
-  void Init() override
+  void RegisterModule() override
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
     sBluetoothHfpInterface = mInterface;
+
     if (mRes) {
       mRes->Init();
     }
-  }
-
-  void Cleanup() override
-  {
-    sBluetoothHfpInterface = nullptr;
-    /* During re-initialization, a previouly initialized
-     * |BluetoothHandsfreeInterface| has now been cleaned
-     * up, so we start initialization.
-     */
-    RunInit();
-  }
-
-  void RunInit()
-  {
-    BluetoothHfpManager* hfpManager = BluetoothHfpManager::Get();
-
-    mInterface->Init(hfpManager, BluetoothHfpManager::MAX_NUM_CLIENTS, this);
   }
 
 private:
@@ -326,32 +318,12 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothHfpManager::InitResultHandlerRunnable final
+class BluetoothHfpManager::InitProfileResultHandlerRunnable final
   : public nsRunnable
 {
 public:
-  InitResultHandlerRunnable(CleanupInitResultHandler* aRes)
-    : mRes(aRes)
-  {
-    MOZ_ASSERT(mRes);
-  }
-
-  NS_IMETHOD Run() override
-  {
-    mRes->RunInit();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<CleanupInitResultHandler> mRes;
-};
-
-class BluetoothHfpManager::OnErrorProfileResultHandlerRunnable final
-  : public nsRunnable
-{
-public:
-  OnErrorProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
-                                      nsresult aRv)
+  InitProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
+                                   nsresult aRv)
     : mRes(aRes)
     , mRv(aRv)
   {
@@ -360,7 +332,13 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mRes->OnError(mRv);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (NS_SUCCEEDED(mRv)) {
+      mRes->Init();
+    } else {
+      mRes->OnError(mRv);
+    }
     return NS_OK;
   }
 
@@ -373,45 +351,64 @@ private:
 void
 BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
 {
-  BluetoothInterface* btInf = BluetoothInterface::GetInstance();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sBluetoothHfpInterface) {
+    BT_LOGR("Bluetooth Handsfree interface is already initalized.");
+    nsRefPtr<nsRunnable> r =
+      new InitProfileResultHandlerRunnable(aRes, NS_OK);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch HFP Init runnable");
+    }
+    return;
+  }
+
+  auto btInf = BluetoothInterface::GetInstance();
+
   if (NS_WARN_IF(!btInf)) {
     // If there's no backend interface, we dispatch a runnable
     // that calls the profile result handler.
     nsRefPtr<nsRunnable> r =
-      new OnErrorProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+      new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
     }
     return;
   }
 
-  BluetoothHandsfreeInterface *interface =
-    btInf->GetBluetoothHandsfreeInterface();
+  auto setupInterface = btInf->GetBluetoothSetupInterface();
+
+  if (NS_WARN_IF(!setupInterface)) {
+    // If there's no Setup interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch HFP OnError runnable");
+    }
+    return;
+  }
+
+  auto interface = btInf->GetBluetoothHandsfreeInterface();
+
   if (NS_WARN_IF(!interface)) {
     // If there's no HFP interface, we dispatch a runnable
     // that calls the profile result handler.
     nsRefPtr<nsRunnable> r =
-      new OnErrorProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+      new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
     }
     return;
   }
 
-  nsRefPtr<CleanupInitResultHandler> res =
-    new CleanupInitResultHandler(interface, aRes);
+  // Set notification handler _before_ registering the module. It could
+  // happen that we receive notifications, before the result handler runs.
+  interface->SetNotificationHandler(BluetoothHfpManager::Get());
 
-  if (sBluetoothHfpInterface) {
-    // Cleanup an initialized HFP before initializing again.
-    sBluetoothHfpInterface->Cleanup(res);
-  } else {
-    // If there's no HFP interface to cleanup first, we dispatch
-    // a runnable that calls the profile result handler.
-    nsRefPtr<nsRunnable> r = new InitResultHandlerRunnable(res);
-    if (NS_FAILED(NS_DispatchToMainThread(r))) {
-      BT_LOGR("Failed to dispatch HFP init runnable");
-    }
-  }
+  setupInterface->RegisterModule(
+    SETUP_SERVICE_ID_HANDSFREE, MODE_NARROWBAND_SPEECH, MAX_NUM_CLIENTS,
+    new RegisterModuleResultHandler(interface, aRes));
 }
 
 BluetoothHfpManager::~BluetoothHfpManager()
@@ -432,18 +429,22 @@ BluetoothHfpManager::~BluetoothHfpManager()
   hal::UnregisterBatteryObserver(this);
 }
 
-class BluetoothHfpManager::CleanupResultHandler final
-  : public BluetoothHandsfreeResultHandler
+class BluetoothHfpManager::UnregisterModuleResultHandler final
+  : public BluetoothSetupResultHandler
 {
 public:
-  CleanupResultHandler(BluetoothProfileResultHandler* aRes)
+  UnregisterModuleResultHandler(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
   void OnError(BluetoothStatus aStatus) override
   {
-    BT_WARNING("BluetoothHandsfreeInterface::Cleanup failed: %d", (int)aStatus);
+    MOZ_ASSERT(NS_IsMainThread());
 
+    BT_WARNING("BluetoothSetupInterface::UnregisterModule failed for HFP: %d",
+               (int)aStatus);
+
+    sBluetoothHfpInterface->SetNotificationHandler(nullptr);
     sBluetoothHfpInterface = nullptr;
 
     if (mRes) {
@@ -451,9 +452,13 @@ public:
     }
   }
 
-  void Cleanup() override
+  void UnregisterModule() override
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    sBluetoothHfpInterface->SetNotificationHandler(nullptr);
     sBluetoothHfpInterface = nullptr;
+
     if (mRes) {
       mRes->Deinit();
     }
@@ -463,40 +468,80 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothHfpManager::DeinitResultHandlerRunnable final
+class BluetoothHfpManager::DeinitProfileResultHandlerRunnable final
   : public nsRunnable
 {
 public:
-  DeinitResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
+  DeinitProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
+                                     nsresult aRv)
     : mRes(aRes)
+    , mRv(aRv)
   {
     MOZ_ASSERT(mRes);
   }
 
   NS_IMETHOD Run() override
   {
-    mRes->Deinit();
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (NS_SUCCEEDED(mRv)) {
+      mRes->Deinit();
+    } else {
+      mRes->OnError(mRv);
+    }
     return NS_OK;
   }
 
 private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
+  nsresult mRv;
 };
 
 // static
 void
 BluetoothHfpManager::DeinitHfpInterface(BluetoothProfileResultHandler* aRes)
 {
-  if (sBluetoothHfpInterface) {
-    sBluetoothHfpInterface->Cleanup(new CleanupResultHandler(aRes));
-  } else if (aRes) {
-    // We dispatch a runnable here to make the profile resource handler
-    // behave as if HFP was initialized.
-    nsRefPtr<nsRunnable> r = new DeinitResultHandlerRunnable(aRes);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sBluetoothHfpInterface) {
+    BT_LOGR("Bluetooth Handsfree interface has not been initialized.");
+    nsRefPtr<nsRunnable> r =
+      new DeinitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
-      BT_LOGR("Failed to dispatch cleanup-result-handler runnable");
+      BT_LOGR("Failed to dispatch HFP Deinit runnable");
     }
+    return;
   }
+
+  auto btInf = BluetoothInterface::GetInstance();
+
+  if (NS_WARN_IF(!btInf)) {
+    // If there's no backend interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch HFP OnError runnable");
+    }
+    return;
+  }
+
+  auto setupInterface = btInf->GetBluetoothSetupInterface();
+
+  if (NS_WARN_IF(!setupInterface)) {
+    // If there's no Setup interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch HFP OnError runnable");
+    }
+    return;
+  }
+
+  setupInterface->UnregisterModule(
+    SETUP_SERVICE_ID_HANDSFREE,
+    new UnregisterModuleResultHandler(aRes));
 }
 
 //static

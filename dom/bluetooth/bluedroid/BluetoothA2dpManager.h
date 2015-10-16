@@ -17,6 +17,8 @@ class BluetoothA2dpManager : public BluetoothProfileManagerBase
                            , public BluetoothA2dpNotificationHandler
 {
 public:
+  static const int MAX_NUM_CLIENTS;
+
   BT_DECL_PROFILE_MGR_BASE
   virtual void GetName(nsACString& aName)
   {
@@ -47,12 +49,12 @@ protected:
   virtual ~BluetoothA2dpManager();
 
 private:
-  class CleanupResultHandler;
-  class CleanupResultHandlerRunnable;
   class ConnectResultHandler;
+  class DeinitProfileResultHandlerRunnable;
   class DisconnectResultHandler;
-  class InitResultHandler;
-  class OnErrorProfileResultHandlerRunnable;
+  class InitProfileResultHandlerRunnable;
+  class RegisterModuleResultHandler;
+  class UnregisterModuleResultHandler;
 
   BluetoothA2dpManager();
 

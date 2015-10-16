@@ -73,6 +73,12 @@ class BluetoothHfpManager : public BluetoothHfpManagerBase
                           , public BluetoothHandsfreeNotificationHandler
                           , public BatteryObserver
 {
+  enum {
+    MODE_HEADSET = 0x00,
+    MODE_NARROWBAND_SPEECH = 0x01,
+    MODE_NARRAWBAND_WIDEBAND_SPEECH = 0x02
+  };
+
 public:
   BT_DECL_HFP_MGR_BASE
 
@@ -151,21 +157,20 @@ private:
   class ConnectResultHandler;
   class CopsResponseResultHandler;
   class ClccResponseResultHandler;
-  class CleanupInitResultHandler;
-  class CleanupResultHandler;
   class CloseScoRunnable;
   class CloseScoTask;
-  class DeinitResultHandlerRunnable;
+  class DeinitProfileResultHandlerRunnable;
   class DeviceStatusNotificationResultHandler;
   class DisconnectAudioResultHandler;
   class DisconnectResultHandler;
   class FormattedAtResponseResultHandler;
   class GetVolumeTask;
-  class InitResultHandlerRunnable;
+  class InitProfileResultHandlerRunnable;
   class MainThreadTask;
-  class OnErrorProfileResultHandlerRunnable;
   class PhoneStateChangeResultHandler;
+  class RegisterModuleResultHandler;
   class RespondToBLDNTask;
+  class UnregisterModuleResultHandler;
   class VolumeControlResultHandler;
 
   friend class BluetoothHfpManagerObserver;

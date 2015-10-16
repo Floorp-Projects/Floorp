@@ -15,8 +15,6 @@ using namespace mozilla::ipc;
 // AVRCP module
 //
 
-const int BluetoothDaemonAvrcpModule::MAX_NUM_CLIENTS = 1;
-
 BluetoothAvrcpNotificationHandler*
   BluetoothDaemonAvrcpModule::sNotificationHandler;
 
@@ -805,115 +803,13 @@ BluetoothDaemonAvrcpInterface::BluetoothDaemonAvrcpInterface(
 BluetoothDaemonAvrcpInterface::~BluetoothDaemonAvrcpInterface()
 { }
 
-class BluetoothDaemonAvrcpInterface::InitResultHandler final
-  : public BluetoothSetupResultHandler
-{
-public:
-  InitResultHandler(BluetoothAvrcpResultHandler* aRes)
-    : mRes(aRes)
-  {
-    MOZ_ASSERT(mRes);
-  }
-
-  void OnError(BluetoothStatus aStatus) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mRes->OnError(aStatus);
-  }
-
-  void RegisterModule() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    mRes->Init();
-  }
-
-private:
-  nsRefPtr<BluetoothAvrcpResultHandler> mRes;
-};
-
 void
-BluetoothDaemonAvrcpInterface::Init(
-  BluetoothAvrcpNotificationHandler* aNotificationHandler,
-  BluetoothAvrcpResultHandler* aRes)
+BluetoothDaemonAvrcpInterface::SetNotificationHandler(
+  BluetoothAvrcpNotificationHandler* aNotificationHandler)
 {
   MOZ_ASSERT(mModule);
 
-  // Set notification handler _before_ registering the module. It could
-  // happen that we receive notifications, before the result handler runs.
   mModule->SetNotificationHandler(aNotificationHandler);
-
-  InitResultHandler* res;
-
-  if (aRes) {
-    res = new InitResultHandler(aRes);
-  } else {
-    // We don't need a result handler if the caller is not interested.
-    res = nullptr;
-  }
-
-  nsresult rv = mModule->RegisterModule(
-    BluetoothDaemonAvrcpModule::SERVICE_ID,
-    BluetoothDaemonAvrcpModule::MAX_NUM_CLIENTS, 0x00, res);
-
-  if (NS_FAILED(rv) && aRes) {
-    DispatchError(aRes, rv);
-  }
-}
-
-class BluetoothDaemonAvrcpInterface::CleanupResultHandler final
-  : public BluetoothSetupResultHandler
-{
-public:
-  CleanupResultHandler(BluetoothDaemonAvrcpModule* aModule,
-                       BluetoothAvrcpResultHandler* aRes)
-    : mModule(aModule)
-    , mRes(aRes)
-  {
-    MOZ_ASSERT(mModule);
-  }
-
-  void OnError(BluetoothStatus aStatus) override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (mRes) {
-      mRes->OnError(aStatus);
-    }
-  }
-
-  void UnregisterModule() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Clear notification handler _after_ module has been
-    // unregistered. While unregistering the module, we might
-    // still receive notifications.
-    mModule->SetNotificationHandler(nullptr);
-
-    if (mRes) {
-      mRes->Cleanup();
-    }
-  }
-
-private:
-  BluetoothDaemonAvrcpModule* mModule;
-  nsRefPtr<BluetoothAvrcpResultHandler> mRes;
-};
-
-void
-BluetoothDaemonAvrcpInterface::Cleanup(
-  BluetoothAvrcpResultHandler* aRes)
-{
-  MOZ_ASSERT(mModule);
-
-  nsresult rv = mModule->UnregisterModule(
-    BluetoothDaemonAvrcpModule::SERVICE_ID,
-    new CleanupResultHandler(mModule, aRes));
-  if (NS_FAILED(rv)) {
-    DispatchError(aRes, rv);
-  }
 }
 
 void
