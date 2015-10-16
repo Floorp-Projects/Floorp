@@ -231,6 +231,9 @@ nsresult
 Convert(BluetoothScanMode aIn, uint8_t& aOut);
 
 nsresult
+Convert(BluetoothSetupServiceId aIn, uint8_t& aOut);
+
+nsresult
 Convert(BluetoothSocketType aIn, uint8_t& aOut);
 
 nsresult
@@ -328,6 +331,9 @@ PackPDU(BluetoothPropertyType aIn, DaemonSocketPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothServiceName& aIn, DaemonSocketPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothSetupServiceId aIn, DaemonSocketPDU& aPDU);
 
 nsresult
 PackPDU(BluetoothSocketType aIn, DaemonSocketPDU& aPDU);

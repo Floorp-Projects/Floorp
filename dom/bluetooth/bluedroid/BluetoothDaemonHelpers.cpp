@@ -842,6 +842,35 @@ Convert(BluetoothScanMode aIn, int32_t& aOut)
 }
 
 nsresult
+Convert(BluetoothSetupServiceId aIn, uint8_t& aOut)
+{
+  static const uint8_t sServiceId[] = {
+    [SETUP_SERVICE_ID_SETUP] = 0x00,
+    [SETUP_SERVICE_ID_CORE] = 0x01,
+    [SETUP_SERVICE_ID_SOCKET] = 0x02,
+    [SETUP_SERVICE_ID_HID] = 0x03,
+    [SETUP_SERVICE_ID_PAN] = 0x04,
+    [SETUP_SERVICE_ID_HANDSFREE] = 0x05,
+    [SETUP_SERVICE_ID_A2DP] = 0x06,
+    [SETUP_SERVICE_ID_HEALTH] = 0x07,
+    [SETUP_SERVICE_ID_AVRCP] = 0x08,
+    [SETUP_SERVICE_ID_GATT] = 0x09,
+    [SETUP_SERVICE_ID_HANDSFREE_CLIENT] = 0x0a,
+    [SETUP_SERVICE_ID_MAP_CLIENT] = 0x0b,
+    [SETUP_SERVICE_ID_AVRCP_CONTROLLER] = 0x0c,
+    [SETUP_SERVICE_ID_A2DP_SINK] = 0x0d
+  };
+  if (MOZ_HAL_IPC_CONVERT_WARN_IF(
+        aIn >= MOZ_ARRAY_LENGTH(sServiceId),
+        BluetoothServiceSetupId, uint8_t)) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sServiceId[aIn];
+  return NS_OK;
+}
+
+nsresult
 Convert(BluetoothSspVariant aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
@@ -1265,6 +1294,12 @@ nsresult
 PackPDU(BluetoothScanMode aIn, DaemonSocketPDU& aPDU)
 {
   return PackPDU(PackConversion<BluetoothScanMode, int32_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(BluetoothSetupServiceId aIn, DaemonSocketPDU& aPDU)
+{
+  return PackPDU(PackConversion<BluetoothSetupServiceId, uint8_t>(aIn), aPDU);
 }
 
 nsresult

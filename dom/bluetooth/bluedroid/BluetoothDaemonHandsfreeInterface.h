@@ -46,11 +46,11 @@ public:
   virtual nsresult Send(DaemonSocketPDU* aPDU,
                         DaemonSocketResultHandler* aRes) = 0;
 
-  virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
-                                  uint32_t aMaxNumClients,
+  virtual nsresult RegisterModule(BluetoothSetupServiceId aId,
+                                  uint8_t aMode, uint32_t aMaxNumClients,
                                   BluetoothSetupResultHandler* aRes) = 0;
 
-  virtual nsresult UnregisterModule(uint8_t aId,
+  virtual nsresult UnregisterModule(BluetoothSetupServiceId aId,
                                     BluetoothSetupResultHandler* aRes) = 0;
 
   void SetNotificationHandler(

@@ -33,12 +33,12 @@ protected:
 class BluetoothSetupInterface
 {
 public:
-  virtual void RegisterModule(uint8_t aId,
+  virtual void RegisterModule(BluetoothSetupServiceId aId,
                               uint8_t aMode,
                               uint32_t aMaxNumClients,
                               BluetoothSetupResultHandler* aRes) = 0;
 
-  virtual void UnregisterModule(uint8_t aId,
+  virtual void UnregisterModule(BluetoothSetupServiceId aId,
                                 BluetoothSetupResultHandler* aRes) = 0;
 
   virtual void Configuration(const BluetoothConfigurationParameter* aParam,
