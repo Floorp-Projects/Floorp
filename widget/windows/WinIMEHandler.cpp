@@ -46,6 +46,9 @@ bool IMEHandler::sShowingOnScreenKeyboard = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
 
+static POWER_PLATFORM_ROLE sPowerPlatformRole = PlatformRoleUnspecified;
+static bool sDeterminedPowerPlatformRole = false;
+
 // static
 void
 IMEHandler::Initialize()
@@ -655,21 +658,31 @@ IMEHandler::IsKeyboardPresentOnSlate()
   // checked by first checking the role of the device and then the
   // corresponding system metric (SM_CONVERTIBLESLATEMODE). If it is being
   // used as a tablet then we want the OSK to show up.
-  typedef POWER_PLATFORM_ROLE (WINAPI* PowerDeterminePlatformRole)();
-  PowerDeterminePlatformRole power_determine_platform_role =
-    reinterpret_cast<PowerDeterminePlatformRole>(::GetProcAddress(
-      ::LoadLibraryW(L"PowrProf.dll"), "PowerDeterminePlatformRole"));
-  if (power_determine_platform_role) {
-    POWER_PLATFORM_ROLE role = power_determine_platform_role();
-    if (((role == PlatformRoleMobile) || (role == PlatformRoleSlate)) &&
-         (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0)) {
-      if (role == PlatformRoleMobile) {
-        Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRoleMobile.");
-      } else if (role == PlatformRoleSlate) {
-        Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRoleSlate.");
-      }
-      return false;
+  typedef POWER_PLATFORM_ROLE (WINAPI* PowerDeterminePlatformRoleEx)(ULONG Version);
+  if (!sDeterminedPowerPlatformRole) {
+    sDeterminedPowerPlatformRole = true;
+    PowerDeterminePlatformRoleEx power_determine_platform_role =
+      reinterpret_cast<PowerDeterminePlatformRoleEx>(::GetProcAddress(
+        ::LoadLibraryW(L"PowrProf.dll"), "PowerDeterminePlatformRoleEx"));
+    if (power_determine_platform_role) {
+      sPowerPlatformRole = power_determine_platform_role(POWER_PLATFORM_ROLE_V2);
+    } else {
+      sPowerPlatformRole = PlatformRoleUnspecified;
     }
+  }
+
+  // If this is not a mobile or slate (tablet) device, we don't need to
+  // do anything here.
+  if (sPowerPlatformRole != PlatformRoleMobile &&
+      sPowerPlatformRole != PlatformRoleSlate) {
+    Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRole is neither Mobile nor Slate.");
+    return true;
+  }
+
+  // Likewise, if the tablet/mobile isn't in "slate" mode, we should bail:
+  if (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0) {
+    Preferences::SetString(kOskDebugReason, L"IKPOS: ConvertibleSlateMode is non-zero");
+    return true;
   }
 
   const GUID KEYBOARD_CLASS_GUID =
