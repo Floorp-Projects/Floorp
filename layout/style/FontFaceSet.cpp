@@ -408,14 +408,14 @@ FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
     return nullptr;
   }
 
-  if (aFontFace.IsInFontFaceSet()) {
+  if (aFontFace.IsInFontFaceSet(this)) {
     return this;
   }
 
   MOZ_ASSERT(!aFontFace.HasRule(),
              "rule-backed FontFaces should always be in the FontFaceSet");
 
-  aFontFace.SetIsInFontFaceSet(true);
+  aFontFace.AddFontFaceSet(this);
 
 #ifdef DEBUG
   for (const FontFaceRecord& rec : mNonRuleFaces) {
@@ -449,7 +449,7 @@ FontFaceSet::Clear()
 
   for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
     FontFace* f = mNonRuleFaces[i].mFontFace;
-    f->SetIsInFontFaceSet(false);
+    f->RemoveFontFaceSet(this);
   }
 
   mNonRuleFaces.Clear();
@@ -480,7 +480,7 @@ FontFaceSet::Delete(FontFace& aFontFace)
     return false;
   }
 
-  aFontFace.SetIsInFontFaceSet(false);
+  aFontFace.RemoveFontFaceSet(this);
 
   mNonRuleFacesDirty = true;
   RebuildUserFontSet();
@@ -492,8 +492,7 @@ FontFaceSet::Delete(FontFace& aFontFace)
 bool
 FontFaceSet::HasAvailableFontFace(FontFace* aFontFace)
 {
-  return aFontFace->GetFontFaceSet() == this &&
-         aFontFace->IsInFontFaceSet();
+  return aFontFace->IsInFontFaceSet(this);
 }
 
 bool
