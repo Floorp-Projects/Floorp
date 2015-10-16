@@ -625,6 +625,15 @@ protected:
                            uint32_t           aMetaOrigLen,
                            uint8_t            aCompression);
 
+    // Clears and then adds to aResult all of the user font sets that this user
+    // font entry has been added to.  This will at least include mFontSet, the
+    // owner of this user font entry.
+    virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult);
+
+    // Calls IncrementGeneration() on all user font sets that contain this
+    // user font entry.
+    void IncrementGeneration();
+
     // general load state
     UserFontLoadState        mUserFontLoadState;
 
@@ -650,7 +659,7 @@ protected:
     // This field is managed by the nsFontFaceLoader. In the destructor and Cancel()
     // methods of nsFontFaceLoader this reference is nulled out.
     nsFontFaceLoader* MOZ_NON_OWNING_REF mLoader; // current loader for this entry, if any
-    gfxUserFontSet*          mFontSet; // font-set to which the userfont entry belongs
+    gfxUserFontSet*          mFontSet; // font-set which owns this userfont entry
     nsCOMPtr<nsIPrincipal>   mPrincipal;
 };
 
