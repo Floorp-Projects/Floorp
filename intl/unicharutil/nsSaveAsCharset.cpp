@@ -6,7 +6,7 @@
 
 
 #include "prmem.h"
-#include "prprf.h"
+#include "mozilla/Snprintf.h"
 #include "nsSaveAsCharset.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIUnicodeEncoder.h"
@@ -304,15 +304,15 @@ nsSaveAsCharset::DoConversionFallBack(uint32_t inUCS4, char *outString, int32_t 
     break;
   case attr_FallbackEscapeU:
     if (inUCS4 & 0xff0000)
-      rv = (PR_snprintf(outString, bufferLength, "\\u%.6x", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
+      rv = (snprintf(outString, bufferLength, "\\u%.6x", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     else
-      rv = (PR_snprintf(outString, bufferLength, "\\u%.4x", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
+      rv = (snprintf(outString, bufferLength, "\\u%.4x", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     break;
   case attr_FallbackDecimalNCR:
-    rv = ( PR_snprintf(outString, bufferLength, "&#%u;", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
+    rv = (snprintf(outString, bufferLength, "&#%u;", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     break;
   case attr_FallbackHexNCR:
-    rv = (PR_snprintf(outString, bufferLength, "&#x%x;", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
+    rv = (snprintf(outString, bufferLength, "&#x%x;", inUCS4) > 0) ? NS_OK : NS_ERROR_FAILURE;
     break;
   case attr_FallbackNone:
     rv = NS_OK;
