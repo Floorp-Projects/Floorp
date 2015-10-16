@@ -456,7 +456,6 @@ exports.TimeScale = TimeScale;
 function AnimationsTimeline(inspector) {
   this.animations = [];
   this.targetNodes = [];
-  this.timeBlocks = [];
   this.inspector = inspector;
 
   this.onAnimationStateChanged = this.onAnimationStateChanged.bind(this);
@@ -541,13 +540,6 @@ AnimationsTimeline.prototype = {
     this.targetNodes = [];
   },
 
-  destroyTimeBlocks: function() {
-    for (let timeBlock of this.timeBlocks) {
-      timeBlock.destroy();
-    }
-    this.timeBlocks = [];
-  },
-
   unrender: function() {
     for (let animation of this.animations) {
       animation.off("changed", this.onAnimationStateChanged);
@@ -555,7 +547,6 @@ AnimationsTimeline.prototype = {
 
     TimeScale.reset();
     this.destroyTargetNodes();
-    this.destroyTimeBlocks();
     this.animationsEl.innerHTML = "";
   },
 
@@ -647,13 +638,6 @@ AnimationsTimeline.prototype = {
         }
       });
 
-      // Draw the animated node target.
-      let targetNode = new AnimationTargetNode(this.inspector, {compact: true});
-      targetNode.init(animatedNodeEl);
-      targetNode.render(animation);
-      this.targetNodes.push(targetNode);
-
-      // Right-hand part contains the timeline itself (called time-block here).
       let timeBlockEl = createNode({
         parent: animationEl,
         attributes: {
@@ -661,11 +645,15 @@ AnimationsTimeline.prototype = {
         }
       });
 
-      // Draw the animation time block.
-      let timeBlock = new AnimationTimeBlock();
-      timeBlock.init(timeBlockEl);
-      timeBlock.render(animation);
-      this.timeBlocks.push(timeBlock);
+      this.drawTimeBlock(animation, timeBlockEl);
+
+      // Draw the animated node target.
+      let targetNode = new AnimationTargetNode(this.inspector, {compact: true});
+      targetNode.init(animatedNodeEl);
+      targetNode.render(animation);
+
+      // Save the targetNode so it can be destroyed later.
+      this.targetNodes.push(targetNode);
     }
 
     // Use the document's current time to position the scrubber (if the server
@@ -757,98 +745,9 @@ AnimationsTimeline.prototype = {
           TimeScale.distanceToRelativeTime(i, width))
       });
     }
-  }
-};
-
-/**
- * UI component responsible for displaying a single animation timeline, which
- * basically looks like a rectangle that shows the delay and iterations.
- */
-function AnimationTimeBlock() {
-  this.onClick = this.onClick.bind(this);
-}
-
-exports.AnimationTimeBlock = AnimationTimeBlock;
-
-AnimationTimeBlock.prototype = {
-  init: function(containerEl) {
-    this.containerEl = containerEl;
   },
 
-  destroy: function() {
-    while (this.containerEl.firstChild) {
-      this.containerEl.firstChild.remove();
-    }
-    this.containerEl = null;
-    this.animation = null;
-  },
-
-  render: function(animation) {
-    this.animation = animation;
-    let {state} = this.animation;
-
-    let width = this.containerEl.offsetWidth;
-
-    // Create a container element to hold the delay and iterations.
-    // It is positioned according to its delay (divided by the playbackrate),
-    // and its width is according to its duration (divided by the playbackrate).
-    let start = state.previousStartTime || 0;
-    let duration = state.duration;
-    let rate = state.playbackRate;
-    let count = state.iterationCount;
-    let delay = state.delay || 0;
-
-    let x = TimeScale.startTimeToDistance(start + (delay / rate), width);
-    let w = TimeScale.durationToDistance(duration / rate, width);
-
-    let iterations = createNode({
-      parent: this.containerEl,
-      attributes: {
-        "class": state.type + " iterations" + (count ? "" : " infinite"),
-        // Individual iterations are represented by setting the size of the
-        // repeating linear-gradient.
-        "style": `left:${x}px;
-                  width:${w * (count || 1)}px;
-                  background-size:${Math.max(w, 2)}px 100%;`
-      }
-    });
-
-    // The animation name is displayed over the iterations.
-    // Note that in case of negative delay, we push the name towards the right
-    // so the delay can be shown.
-    createNode({
-      parent: iterations,
-      attributes: {
-        "class": "name",
-        "title": this.getTooltipText(state),
-        "style": delay < 0
-                 ? "margin-left:" +
-                   TimeScale.durationToDistance(Math.abs(delay), width) + "px"
-                 : ""
-      },
-      textContent: state.name
-    });
-
-    // Delay.
-    if (delay) {
-      // Negative delays need to start at 0.
-      let delayX = TimeScale.durationToDistance(
-        (delay < 0 ? 0 : delay) / rate, width);
-      let delayW = TimeScale.durationToDistance(
-        Math.abs(delay) / rate, width);
-
-      createNode({
-        parent: iterations,
-        attributes: {
-          "class": "delay" + (delay < 0 ? " negative" : ""),
-          "style": `left:-${delayX}px;
-                    width:${delayW}px;`
-        }
-      });
-    }
-  },
-
-  getTooltipText: function(state) {
+  getAnimationTooltipText: function(state) {
     let getTime = time => L10N.getFormatStr("player.timeLabel",
                             L10N.numberWithDecimals(time / 1000, 2));
 
@@ -866,5 +765,64 @@ AnimationTimeBlock.prototype = {
                       L10N.getStr("player.infiniteIterationCountText"));
 
     return [title, duration, iterations, delay].join("\n");
+  },
+
+  drawTimeBlock: function({state}, el) {
+    let width = el.offsetWidth;
+
+    // Create a container element to hold the delay and iterations.
+    // It is positioned according to its delay (divided by the playbackrate),
+    // and its width is according to its duration (divided by the playbackrate).
+    let start = state.previousStartTime || 0;
+    let duration = state.duration;
+    let rate = state.playbackRate;
+    let count = state.iterationCount;
+    let delay = state.delay || 0;
+
+    let x = TimeScale.startTimeToDistance(start + (delay / rate), width);
+    let w = TimeScale.durationToDistance(duration / rate, width);
+
+    let iterations = createNode({
+      parent: el,
+      attributes: {
+        "class": state.type + " iterations" + (count ? "" : " infinite"),
+        // Individual iterations are represented by setting the size of the
+        // repeating linear-gradient.
+        "style": `left:${x}px;
+                  width:${w * (count || 1)}px;
+                  background-size:${Math.max(w, 2)}px 100%;`
+      }
+    });
+
+    // The animation name is displayed over the iterations.
+    // Note that in case of negative delay, we push the name towards the right
+    // so the delay can be shown.
+    createNode({
+      parent: iterations,
+      attributes: {
+        "class": "name",
+        "title": this.getAnimationTooltipText(state),
+        "style": delay < 0
+                 ? "margin-left:" +
+                   TimeScale.durationToDistance(Math.abs(delay), width) + "px"
+                 : ""
+      },
+      textContent: state.name
+    });
+
+    // Delay.
+    if (delay) {
+      // Negative delays need to start at 0.
+      let x = TimeScale.durationToDistance((delay < 0 ? 0 : delay) / rate, width);
+      let w = TimeScale.durationToDistance(Math.abs(delay) / rate, width);
+      createNode({
+        parent: iterations,
+        attributes: {
+          "class": "delay" + (delay < 0 ? " negative" : ""),
+          "style": `left:-${x}px;
+                    width:${w}px;`
+        }
+      });
+    }
   }
 };

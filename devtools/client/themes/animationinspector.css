@@ -243,7 +243,7 @@ body {
 /* Animation block widgets */
 
 .animation-timeline .animation {
-  padding: 2px 0;
+  margin: 4px 0;
   height: var(--timeline-animation-height);
   position: relative;
 }
@@ -264,11 +264,10 @@ body {
 
 .animation-timeline .animation .time-block {
   position: absolute;
-  top: 2px;
+  top: 0;
   left: var(--timeline-sidebar-width);
   right: 0;
-  height: var(--timeline-animation-height);
-  cursor: pointer;
+  height: 100%;
 }
 
 /* Animation iterations */
