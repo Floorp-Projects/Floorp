@@ -461,7 +461,10 @@ protected:
       ACTION_SCROLL,
       ACTION_HISTORY,
       ACTION_ZOOM,
-      ACTION_LAST = ACTION_ZOOM
+      ACTION_LAST = ACTION_ZOOM,
+      // Following actions are used only by internal processing.  So, cannot
+      // specified by prefs.
+      ACTION_SEND_TO_PLUGIN
     };
     Action ComputeActionFor(WidgetWheelEvent* aEvent);
 
