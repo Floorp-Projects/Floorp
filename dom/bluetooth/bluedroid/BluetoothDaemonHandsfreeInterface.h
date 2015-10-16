@@ -46,13 +46,6 @@ public:
   virtual nsresult Send(DaemonSocketPDU* aPDU,
                         DaemonSocketResultHandler* aRes) = 0;
 
-  virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
-                                  uint32_t aMaxNumClients,
-                                  BluetoothSetupResultHandler* aRes) = 0;
-
-  virtual nsresult UnregisterModule(uint8_t aId,
-                                    BluetoothSetupResultHandler* aRes) = 0;
-
   void SetNotificationHandler(
     BluetoothHandsfreeNotificationHandler* aNotificationHandler);
 
@@ -400,23 +393,12 @@ protected:
 class BluetoothDaemonHandsfreeInterface final
   : public BluetoothHandsfreeInterface
 {
-  class CleanupResultHandler;
-  class InitResultHandler;
-
-  enum {
-    MODE_HEADSET = 0x00,
-    MODE_NARROWBAND_SPEECH = 0x01,
-    MODE_NARRAWBAND_WIDEBAND_SPEECH = 0x02
-  };
-
 public:
   BluetoothDaemonHandsfreeInterface(BluetoothDaemonHandsfreeModule* aModule);
   ~BluetoothDaemonHandsfreeInterface();
 
-  void Init(
-    BluetoothHandsfreeNotificationHandler* aNotificationHandler,
-    int aMaxNumClients, BluetoothHandsfreeResultHandler* aRes) override;
-  void Cleanup(BluetoothHandsfreeResultHandler* aRes) override;
+  void SetNotificationHandler(
+    BluetoothHandsfreeNotificationHandler* aNotificationHandler) override;
 
   /* Connect / Disconnect */
 

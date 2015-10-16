@@ -62,17 +62,8 @@ public:
 #endif
   };
 
-  static const int MAX_NUM_CLIENTS;
-
   virtual nsresult Send(DaemonSocketPDU* aPDU,
                         DaemonSocketResultHandler* aRes) = 0;
-
-  virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
-                                  uint32_t aMaxNumClients,
-                                  BluetoothSetupResultHandler* aRes) = 0;
-
-  virtual nsresult UnregisterModule(uint8_t aId,
-                                    BluetoothSetupResultHandler* aRes) = 0;
 
   void SetNotificationHandler(
     BluetoothAvrcpNotificationHandler* aNotificationHandler);
@@ -305,10 +296,8 @@ public:
   BluetoothDaemonAvrcpInterface(BluetoothDaemonAvrcpModule* aModule);
   ~BluetoothDaemonAvrcpInterface();
 
-  void Init(BluetoothAvrcpNotificationHandler* aNotificationHandler,
-            BluetoothAvrcpResultHandler* aRes) override;
-
-  void Cleanup(BluetoothAvrcpResultHandler* aRes) override;
+  void SetNotificationHandler(
+    BluetoothAvrcpNotificationHandler* aNotificationHandler) override;
 
   void GetPlayStatusRsp(ControlPlayStatus aPlayStatus,
                         uint32_t aSongLen, uint32_t aSongPos,

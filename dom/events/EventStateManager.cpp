@@ -50,6 +50,7 @@
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
 #include "nsITabChild.h"
+#include "nsPluginFrame.h"
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMKeyEvent.h"
@@ -2125,11 +2126,11 @@ EventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
 
   // Ignore mouse wheel transaction for computing legacy mouse wheel
   // events' delta value.
-  nsIScrollableFrame* scrollTarget =
+  nsIFrame* scrollFrame =
     ComputeScrollTarget(aTargetFrame, aEvent,
                         COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
 
-  nsIFrame* scrollFrame = do_QueryFrame(scrollTarget);
+  nsIScrollableFrame* scrollTarget = do_QueryFrame(scrollFrame);
   nsPresContext* pc =
     scrollFrame ? scrollFrame->PresContext() : aTargetFrame->PresContext();
 
@@ -2315,7 +2316,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   aState.mDefaultPreventedByContent = event.mFlags.mDefaultPreventedByContent;
 }
 
-nsIScrollableFrame*
+nsIFrame*
 EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
                                        WidgetWheelEvent* aEvent,
                                        ComputeScrollTargetOptions aOptions)
@@ -2327,7 +2328,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 // Overload ComputeScrollTarget method to allow passing "test" dx and dy when looking
 // for which scrollbarmediators to activate when two finger down on trackpad
 // and before any actual motion
-nsIScrollableFrame*
+nsIFrame*
 EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
                                        double aDirectionX,
                                        double aDirectionY,
@@ -2346,9 +2347,18 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
     // hasn't moved.
     nsIFrame* lastScrollFrame = WheelTransaction::GetTargetFrame();
     if (lastScrollFrame) {
-      nsIScrollableFrame* frameToScroll =
+      if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
+        nsPluginFrame* pluginFrame = do_QueryFrame(lastScrollFrame);
+        if (pluginFrame &&
+            pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
+          return lastScrollFrame;
+        }
+      }
+      nsIScrollableFrame* scrollableFrame =
         lastScrollFrame->GetScrollTargetFrame();
-      if (frameToScroll) {
+      if (scrollableFrame) {
+        nsIFrame* frameToScroll = do_QueryFrame(scrollableFrame);
+        MOZ_ASSERT(frameToScroll);
         return frameToScroll;
       }
     }
@@ -2366,16 +2376,30 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
   bool checkIfScrollableY =
     aDirectionY && (aOptions & PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS);
 
-  nsIScrollableFrame* frameToScroll = nullptr;
   nsIFrame* scrollFrame =
     !(aOptions & START_FROM_PARENT) ? aTargetFrame :
                                       GetParentFrameToScroll(aTargetFrame);
   for (; scrollFrame; scrollFrame = GetParentFrameToScroll(scrollFrame)) {
     // Check whether the frame wants to provide us with a scrollable view.
-    frameToScroll = scrollFrame->GetScrollTargetFrame();
-    if (!frameToScroll) {
+    nsIScrollableFrame* scrollableFrame = scrollFrame->GetScrollTargetFrame();
+    if (!scrollableFrame) {
+      // If the frame is a plugin frame, then, the plugin content may handle
+      // wheel events.  Only when the caller computes the scroll target for
+      // default action handling, we should assume the plugin frame as
+      // scrollable if the plugin wants to handle wheel events as default
+      // action.
+      if (aOptions & INCLUDE_PLUGIN_AS_TARGET) {
+        nsPluginFrame* pluginFrame = do_QueryFrame(scrollFrame);
+        if (pluginFrame &&
+            pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
+          return scrollFrame;
+        }
+      }
       continue;
     }
+
+    nsIFrame* frameToScroll = do_QueryFrame(scrollableFrame);
+    MOZ_ASSERT(frameToScroll);
 
     // Don't scroll vertically by mouse-wheel on a single-line text control.
     if (checkIfScrollableY) {
@@ -2388,7 +2412,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
       return frameToScroll;
     }
 
-    ScrollbarStyles ss = frameToScroll->GetScrollbarStyles();
+    ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
     bool hiddenForV = (NS_STYLE_OVERFLOW_HIDDEN == ss.mVertical);
     bool hiddenForH = (NS_STYLE_OVERFLOW_HIDDEN == ss.mHorizontal);
     if ((hiddenForV && hiddenForH) ||
@@ -2399,8 +2423,8 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 
     // For default action, we should climb up the tree if cannot scroll it
     // by the event actually.
-    bool canScroll =
-      WheelHandlingUtils::CanScrollOn(frameToScroll, aDirectionX, aDirectionY);
+    bool canScroll = WheelHandlingUtils::CanScrollOn(scrollableFrame,
+                                                     aDirectionX, aDirectionY);
     // Comboboxes need special care.
     nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
     if (comboBox) {
@@ -2464,24 +2488,9 @@ EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
 
   nsIFrame* scrollFrame = do_QueryFrame(aScrollableFrame);
   MOZ_ASSERT(scrollFrame);
+
   nsWeakFrame scrollFrameWeak(scrollFrame);
-
-  nsIFrame* lastScrollFrame = WheelTransaction::GetTargetFrame();
-  if (!lastScrollFrame) {
-    WheelTransaction::BeginTransaction(scrollFrame, aEvent);
-  } else if (lastScrollFrame != scrollFrame) {
-    WheelTransaction::EndTransaction();
-    WheelTransaction::BeginTransaction(scrollFrame, aEvent);
-  } else {
-    WheelTransaction::UpdateTransaction(aEvent);
-  }
-
-  // When the scroll event will not scroll any views, UpdateTransaction
-  // fired MozMouseScrollFailed event which is for automated testing.
-  // In the event handler, the target frame might be destroyed.  Then,
-  // we should not try scrolling anything.
-  if (!scrollFrameWeak.IsAlive()) {
-    WheelTransaction::EndTransaction();
+  if (!WheelTransaction::WillHandleDefaultAction(aEvent, scrollFrameWeak)) {
     return;
   }
 
@@ -3078,8 +3087,8 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ScrollbarsForWheel::MayInactivate();
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
       nsIScrollableFrame* scrollTarget =
-        ComputeScrollTarget(aTargetFrame, wheelEvent,
-                            COMPUTE_DEFAULT_ACTION_TARGET);
+        do_QueryFrame(ComputeScrollTarget(aTargetFrame, wheelEvent,
+                                          COMPUTE_DEFAULT_ACTION_TARGET));
       if (scrollTarget) {
         scrollTarget->ScrollSnap();
       }
@@ -3097,13 +3106,27 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
       WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
 
+      // Check if the frame to scroll before checking the default action
+      // because if the scroll target is a plugin, the default action should be
+      // chosen by the plugin rather than by our prefs.
+      nsIFrame* frameToScroll = nullptr;
+      nsPluginFrame* pluginFrame = nullptr;
+
       // When APZ is enabled, the actual scroll animation might be handled by
       // the compositor.
       WheelPrefs::Action action;
       if (wheelEvent->mFlags.mHandledByAPZ) {
         action = WheelPrefs::ACTION_NONE;
       } else {
-        action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+        frameToScroll = ComputeScrollTarget(aTargetFrame, wheelEvent,
+                                            COMPUTE_DEFAULT_ACTION_TARGET);
+        pluginFrame = do_QueryFrame(frameToScroll);
+        if (pluginFrame) {
+          MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
+          action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
+        } else {
+          action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
+        }
       }
       switch (action) {
         case WheelPrefs::ACTION_SCROLL: {
@@ -3117,10 +3140,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
           }
 
-          nsIScrollableFrame* scrollTarget =
-            ComputeScrollTarget(aTargetFrame, wheelEvent,
-                                COMPUTE_DEFAULT_ACTION_TARGET);
-
+          nsIScrollableFrame* scrollTarget = do_QueryFrame(frameToScroll);
           ScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
           nsIFrame* rootScrollFrame = !aTargetFrame ? nullptr :
@@ -3164,6 +3184,23 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           DoScrollZoom(aTargetFrame, intDelta);
           break;
         }
+        case WheelPrefs::ACTION_SEND_TO_PLUGIN:
+          MOZ_ASSERT(pluginFrame);
+
+          if (wheelEvent->mMessage != eWheel ||
+              (!wheelEvent->deltaX && !wheelEvent->deltaY)) {
+            break;
+          }
+
+          MOZ_ASSERT(static_cast<void*>(frameToScroll) ==
+                       static_cast<void*>(pluginFrame));
+          if (!WheelTransaction::WillHandleDefaultAction(wheelEvent,
+                                                         frameToScroll)) {
+            break;
+          }
+
+          pluginFrame->HandleWheelEventAsDefaultAction(wheelEvent);
+          break;
         case WheelPrefs::ACTION_NONE:
         default:
           bool allDeltaOverflown = false;
@@ -5312,12 +5349,12 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
     // eMouseScrollEventClass (DOMMouseScroll) but not be used for scrolling
     // of default action.  The transaction should be used only for the default
     // action.
-    nsIScrollableFrame* scrollTarget =
+    nsIFrame* frame =
       aESM->ComputeScrollTarget(aTargetFrame, aEvent,
                                 COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
-    nsIFrame* frame = do_QueryFrame(scrollTarget);
     nsPresContext* pc =
       frame ? frame->PresContext() : aTargetFrame->PresContext();
+    nsIScrollableFrame* scrollTarget = do_QueryFrame(frame);
     nsSize scrollAmount = aESM->GetScrollAmount(pc, aEvent, scrollTarget);
     nsIntSize scrollAmountInCSSPixels(
       nsPresContext::AppUnitsToIntCSSPixels(scrollAmount.width),
