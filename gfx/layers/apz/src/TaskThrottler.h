@@ -18,8 +18,6 @@
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
 #include "nsTArray.h"                   // for nsTArray
 
-class nsITimer;
-
 namespace tracked_objects {
 class Location;
 } // namespace tracked_objects
@@ -102,7 +100,8 @@ private:
   TimeStamp mStartTime;
   TimeDuration mMaxWait;
   RollingMean<TimeDuration, TimeDuration> mMean;
-  nsCOMPtr<nsITimer> mTimer;
+  CancelableTask* mTimeoutTask;  // not owned because it's posted to a MessageLoop
+                                 // which deletes it
 
   ~TaskThrottler();
   void RunQueuedTask(const TimeStamp& aTimeStamp,
@@ -110,6 +109,8 @@ private:
   void CancelPendingTask(const MonitorAutoLock& aProofOfLock);
   TimeDuration TimeSinceLastRequest(const TimeStamp& aTimeStamp,
                                     const MonitorAutoLock& aProofOfLock);
+  void OnTimeout();
+  void CancelTimeoutTask(const MonitorAutoLock& aProofOfLock);
 };
 
 } // namespace layers
