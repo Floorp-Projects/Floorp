@@ -1414,8 +1414,6 @@ pref("loop.oauth.google.scope", "https://www.google.com/m8/feeds");
 pref("loop.fxa_oauth.tokendata", "");
 pref("loop.fxa_oauth.profile", "");
 pref("loop.support_url", "https://support.mozilla.org/kb/group-conversations-firefox-hello-webrtc");
-pref("loop.contacts.gravatars.show", false);
-pref("loop.contacts.gravatars.promo", true);
 pref("loop.browserSharing.showInfoBar", true);
 
 pref("social.sidebar.unload_timeout_ms", 10000);

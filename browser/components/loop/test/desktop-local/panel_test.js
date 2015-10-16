@@ -56,12 +56,6 @@ describe("loop.panel", function() {
       getPluralForm: function() {
         return "fakeText";
       },
-      contacts: {
-        getAll: function(callback) {
-          callback(null, []);
-        },
-        on: sandbox.stub()
-      },
       rooms: {
         getAll: function(version, callback) {
           callback(null, []);

@@ -38,8 +38,7 @@ module.exports = function(config) {
 
   // List of files to exclude.
   baseConfig.exclude = baseConfig.exclude.concat([
-    "test/desktop-local/panel_test.js",
-    "test/desktop-local/contacts_test.js"
+    "test/desktop-local/panel_test.js"
   ]);
 
   // Preprocess matching files before serving them to the browser.
