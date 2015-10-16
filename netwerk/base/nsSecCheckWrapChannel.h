@@ -88,6 +88,8 @@ public:
   NS_IMETHOD Open2(nsIInputStream** aStream);
 
   nsSecCheckWrapChannel(nsIChannel* aChannel, nsILoadInfo* aLoadInfo);
+  static already_AddRefed<nsIChannel> MaybeWrap(nsIChannel* aChannel,
+                                                nsILoadInfo* aLoadInfo);
 
 protected:
   virtual ~nsSecCheckWrapChannel();
