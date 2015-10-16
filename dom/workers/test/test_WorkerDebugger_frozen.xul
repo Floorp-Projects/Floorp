@@ -3,7 +3,7 @@
   Any copyright is dedicated to the Public Domain.
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<window title="Test for WorkerDebugger.isFrozen"
+<window title="Test for WorkerDebugger with frozen workers"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="test();">
 
@@ -19,11 +19,11 @@
     const CACHE_SUBFRAMES = "browser.sessionhistory.cache_subframes";
     const MAX_TOTAL_VIEWERS = "browser.sessionhistory.max_total_viewers";
 
-    const IFRAME1_URL = "WorkerDebugger.isFrozen_iframe1.html";
-    const IFRAME2_URL = "WorkerDebugger.isFrozen_iframe2.html";
+    const IFRAME1_URL = "WorkerDebugger_frozen_iframe1.html";
+    const IFRAME2_URL = "WorkerDebugger_frozen_iframe2.html";
 
-    const WORKER1_URL = "WorkerDebugger.isFrozen_worker1.js";
-    const WORKER2_URL = "WorkerDebugger.isFrozen_worker2.js";
+    const WORKER1_URL = "WorkerDebugger_frozen_worker1.js";
+    const WORKER2_URL = "WorkerDebugger_frozen_worker2.js";
 
     function test() {
       Task.spawn(function* () {
@@ -44,39 +44,31 @@
         let [dbg1] = yield promise;
         is(dbg1.isClosed, false,
            "debugger for worker on page 1 should not be closed");
-        is(dbg1.isFrozen, false,
-           "debugger for worker on page 1 should not be frozen");
 
         promise = waitForMultiple([
-          waitForDebuggerFreeze(dbg1),
+          waitForUnregister(WORKER1_URL),
+          waitForDebuggerClose(dbg1),
           waitForRegister(WORKER2_URL),
           waitForWindowMessage(window, "ready"),
         ]);
         iframe.src = IFRAME2_URL;
-        let [_, dbg2] = yield promise;
-        is(dbg1.isClosed, false,
-           "debugger for worker on page 1 should not be closed");
-        is(dbg1.isFrozen, true,
-           "debugger for worker on page 1 should be frozen");
+        let [,, dbg2] = yield promise;
+        is(dbg1.isClosed, true,
+           "debugger for worker on page 1 should be closed");
         is(dbg2.isClosed, false,
            "debugger for worker on page 2 should not be closed");
-        is(dbg2.isFrozen, false,
-           "debugger for worker on page 2 should not be frozen");
 
         promise = Promise.all([
-          waitForDebuggerFreeze(dbg2),
-          waitForDebuggerThaw(dbg1),
+          waitForUnregister(WORKER2_URL),
+          waitForDebuggerClose(dbg2),
+          waitForRegister(WORKER1_URL)
         ]);
         iframe.contentWindow.history.back();
-        yield promise;
+        [,, dbg1] = yield promise;
         is(dbg1.isClosed, false,
-           "debugger for worker on page 1 should not be closed")
-        is(dbg1.isFrozen, false,
-           "debugger for worker on page 1 should not be frozen");
-        is(dbg2.isClosed, false,
-           "debugger for worker on page 2 should not be closed");
-        is(dbg2.isFrozen, true,
-           "debugger for worker on page 2 should be frozen");
+           "debugger for worker on page 1 should not be closed");
+        is(dbg2.isClosed, true,
+           "debugger for worker on page 2 should be closed");
 
         SpecialPowers.clearUserPref(CACHE_SUBFRAMES);
         SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);

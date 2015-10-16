@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <script>
-      var worker = new Worker("WorkerDebugger.isFrozen_worker2.js");
+      var worker = new Worker("WorkerDebugger_frozen_worker1.js");
       worker.onmessage = function () {
         parent.postMessage("ready", "*");
       };
     </script>
   </head>
   <body>
-    This is page 2.
+    This is page 1.
   </body>
 <html>
