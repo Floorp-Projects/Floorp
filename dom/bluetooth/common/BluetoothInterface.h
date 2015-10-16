@@ -314,8 +314,6 @@ class BluetoothA2dpResultHandler
 public:
   virtual void OnError(BluetoothStatus aStatus);
 
-  virtual void Init();
-  virtual void Cleanup();
   virtual void Connect();
   virtual void Disconnect();
 
@@ -326,9 +324,8 @@ protected:
 class BluetoothA2dpInterface
 {
 public:
-  virtual void Init(BluetoothA2dpNotificationHandler* aNotificationHandler,
-                    BluetoothA2dpResultHandler* aRes) = 0;
-  virtual void Cleanup(BluetoothA2dpResultHandler* aRes) = 0;
+  virtual void SetNotificationHandler(
+    BluetoothA2dpNotificationHandler* aNotificationHandler) = 0;
 
   virtual void Connect(const BluetoothAddress& aBdAddr,
                        BluetoothA2dpResultHandler* aRes) = 0;
