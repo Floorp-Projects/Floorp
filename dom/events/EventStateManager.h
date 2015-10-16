@@ -617,10 +617,11 @@ protected:
   // COMPUTE_*.
   enum
   {
-    PREFER_MOUSE_WHEEL_TRANSACTION               = 1,
-    PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS = 2,
-    PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS = 4,
-    START_FROM_PARENT                            = 8
+    PREFER_MOUSE_WHEEL_TRANSACTION               = 0x00000001,
+    PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS = 0x00000002,
+    PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS = 0x00000004,
+    START_FROM_PARENT                            = 0x00000008,
+    INCLUDE_PLUGIN_AS_TARGET                     = 0x00000010
   };
   enum ComputeScrollTargetOptions
   {
@@ -630,10 +631,13 @@ protected:
     // Default action prefers the scrolled element immediately before if it's
     // still under the mouse cursor.  Otherwise, it prefers the nearest
     // scrollable ancestor which will be scrolled actually.
+    // When this is specified, the result may be nsPluginFrame.  In such case,
+    // the frame doesn't have nsIScrollableFrame interface.
     COMPUTE_DEFAULT_ACTION_TARGET                =
       (PREFER_MOUSE_WHEEL_TRANSACTION |
        PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS |
-       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS),
+       PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS |
+       INCLUDE_PLUGIN_AS_TARGET),
     // Look for the nearest scrollable ancestor which can be scrollable with
     // aEvent.
     COMPUTE_SCROLLABLE_ANCESTOR_ALONG_X_AXIS     =
