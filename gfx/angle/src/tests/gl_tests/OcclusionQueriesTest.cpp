@@ -6,6 +6,7 @@
 
 #include "system_utils.h"
 #include "test_utils/ANGLETest.h"
+#include "random_utils.h"
 
 using namespace angle;
 
@@ -66,6 +67,13 @@ class OcclusionQueriesTest : public ANGLETest
 
 TEST_P(OcclusionQueriesTest, IsOccluded)
 {
+    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    {
+        std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
+                  << std::endl;
+        return;
+    }
+
     glDepthMask(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -106,6 +114,13 @@ TEST_P(OcclusionQueriesTest, IsOccluded)
 
 TEST_P(OcclusionQueriesTest, IsNotOccluded)
 {
+    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    {
+        std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
+                  << std::endl;
+        return;
+    }
+
     glDepthMask(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -133,6 +148,13 @@ TEST_P(OcclusionQueriesTest, IsNotOccluded)
 
 TEST_P(OcclusionQueriesTest, Errors)
 {
+    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    {
+        std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
+                  << std::endl;
+        return;
+    }
+
     glDepthMask(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -186,5 +208,161 @@ TEST_P(OcclusionQueriesTest, Errors)
     EXPECT_GL_NO_ERROR();
 }
 
+// Test that running multiple simultaneous queries from multiple EGL contexts returns the correct
+// result for each query.  Helps expose bugs in ANGLE's virtual contexts.
+TEST_P(OcclusionQueriesTest, MultiContext)
+{
+    if (getClientVersion() < 3 && !extensionEnabled("GL_EXT_occlusion_query_boolean"))
+    {
+        std::cout << "Test skipped because ES3 or GL_EXT_occlusion_query_boolean are not available."
+                  << std::endl;
+        return;
+    }
+
+    if (GetParam() == ES2_D3D9() || GetParam() == ES2_D3D11() || GetParam() == ES3_D3D11())
+    {
+        std::cout << "Test skipped because the D3D backends cannot support simultaneous queries on "
+                     "multiple contexts yet."
+                  << std::endl;
+        return;
+    }
+
+    glDepthMask(GL_TRUE);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    // draw a quad at depth 0.5
+    glEnable(GL_DEPTH_TEST);
+    drawQuad(mProgram, "position", 0.5f);
+
+    EGLWindow *window = getEGLWindow();
+
+    EGLDisplay display = window->getDisplay();
+    EGLConfig config   = window->getConfig();
+    EGLSurface surface = window->getSurface();
+
+    EGLint contextAttributes[] = {
+        EGL_CONTEXT_MAJOR_VERSION_KHR,
+        GetParam().majorVersion,
+        EGL_CONTEXT_MINOR_VERSION_KHR,
+        GetParam().minorVersion,
+        EGL_NONE,
+    };
+
+    const size_t passCount = 5;
+    struct ContextInfo
+    {
+        EGLContext context;
+        GLuint program;
+        GLuint query;
+        bool visiblePasses[passCount];
+        bool shouldPass;
+    };
+
+    ContextInfo contexts[] = {
+        {
+            EGL_NO_CONTEXT, 0, 0, {false, false, false, false, false}, false,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {false, true, false, true, false}, true,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {false, false, false, false, false}, false,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {true, true, false, true, true}, true,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {false, true, true, true, true}, true,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {true, false, false, true, false}, true,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {false, false, false, false, false}, false,
+        },
+        {
+            EGL_NO_CONTEXT, 0, 0, {false, false, false, false, false}, false,
+        },
+    };
+
+    for (auto &context : contexts)
+    {
+        context.context = eglCreateContext(display, config, EGL_NO_CONTEXT, contextAttributes);
+        ASSERT_NE(context.context, EGL_NO_CONTEXT);
+
+        eglMakeCurrent(display, surface, surface, context.context);
+
+        const std::string passthroughVS = SHADER_SOURCE
+        (
+            attribute highp vec4 position;
+            void main(void)
+            {
+                gl_Position = position;
+            }
+        );
+
+        const std::string passthroughPS = SHADER_SOURCE
+        (
+            precision highp float;
+            void main(void)
+            {
+               gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        );
+
+        context.program = CompileProgram(passthroughVS, passthroughPS);
+        ASSERT_NE(context.program, 0u);
+
+        glDepthMask(GL_FALSE);
+        glEnable(GL_DEPTH_TEST);
+
+        glGenQueriesEXT(1, &context.query);
+        glBeginQueryEXT(GL_ANY_SAMPLES_PASSED_EXT, context.query);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    for (size_t pass = 0; pass < passCount; pass++)
+    {
+        for (const auto &context : contexts)
+        {
+            eglMakeCurrent(display, surface, surface, context.context);
+
+            float depth =
+                context.visiblePasses[pass] ? RandomBetween(0.0f, 0.4f) : RandomBetween(0.6f, 1.0f);
+            drawQuad(context.program, "position", depth);
+
+            EXPECT_GL_NO_ERROR();
+        }
+    }
+
+    for (const auto &context : contexts)
+    {
+        eglMakeCurrent(display, surface, surface, context.context);
+        glEndQueryEXT(GL_ANY_SAMPLES_PASSED_EXT);
+
+        GLuint result = GL_TRUE;
+        glGetQueryObjectuivEXT(context.query, GL_QUERY_RESULT_EXT, &result);
+
+        EXPECT_GL_NO_ERROR();
+
+        GLuint expectation = context.shouldPass ? GL_TRUE : GL_FALSE;
+        EXPECT_EQ(expectation, result);
+    }
+
+    eglMakeCurrent(display, surface, surface, window->getContext());
+
+    for (auto &context : contexts)
+    {
+        eglDestroyContext(display, context.context);
+        context.context = EGL_NO_CONTEXT;
+    }
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(OcclusionQueriesTest, ES2_D3D9(), ES2_D3D11());
+ANGLE_INSTANTIATE_TEST(OcclusionQueriesTest,
+                       ES2_D3D9(),
+                       ES2_D3D11(),
+                       ES3_D3D11(),
+                       ES2_OPENGL(),
+                       ES3_OPENGL());

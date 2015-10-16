@@ -294,10 +294,58 @@ TEST_P(InvalidLineTest, Identified)
 static const LineTestParam kParams[] = {
     {"#line\n", pp::Diagnostics::PP_INVALID_LINE_DIRECTIVE},
     {"#line foo\n", pp::Diagnostics::PP_INVALID_LINE_NUMBER},
+    {"#line defined(foo)\n", pp::Diagnostics::PP_INVALID_LINE_NUMBER},
     {"#line 10 foo\n", pp::Diagnostics::PP_INVALID_FILE_NUMBER},
     {"#line 10 20 foo\n", pp::Diagnostics::PP_UNEXPECTED_TOKEN},
     {"#line 0xffffffff\n", pp::Diagnostics::PP_INTEGER_OVERFLOW},
-    {"#line 10 0xffffffff\n", pp::Diagnostics::PP_INTEGER_OVERFLOW}
-};
+    {"#line 10 0xffffffff\n", pp::Diagnostics::PP_INTEGER_OVERFLOW}};
 
 INSTANTIATE_TEST_CASE_P(All, InvalidLineTest, testing::ValuesIn(kParams));
+
+struct LineExpressionTestParam
+{
+    const char *expression;
+    int expectedLine;
+};
+
+class LineExpressionTest : public LocationTest,
+                           public testing::WithParamInterface<LineExpressionTestParam>
+{
+};
+
+TEST_P(LineExpressionTest, ExpressionEvaluation)
+{
+    LineExpressionTestParam param = GetParam();
+    const char *strs[3] = {"#line ", param.expression, "\nfoo"};
+
+    pp::SourceLocation loc(2, param.expectedLine);
+
+    expectLocation(3, strs, NULL, loc);
+}
+
+static const LineExpressionTestParam kParamsLineExpressionTest[] = {
+    {"1 + 2", 3},
+    {"5 - 3", 2},
+    {"7 * 11", 77},
+    {"20 / 10", 2},
+    {"10 % 5", 0},
+    {"7 && 3", 1},
+    {"7 || 0", 1},
+    {"11 == 11", 1},
+    {"11 != 11", 0},
+    {"11 > 7", 1},
+    {"11 < 7", 0},
+    {"11 >= 7", 1},
+    {"11 <= 7", 0},
+    {"!11", 0},
+    {"-1", -1},
+    {"+9", 9},
+    {"(1 + 2) * 4", 12},
+    {"3 | 5", 7},
+    {"3 ^ 5", 6},
+    {"3 & 5", 1},
+    {"~5", ~5},
+    {"2 << 3", 16},
+    {"16 >> 2", 4}};
+
+INSTANTIATE_TEST_CASE_P(All, LineExpressionTest, testing::ValuesIn(kParamsLineExpressionTest));

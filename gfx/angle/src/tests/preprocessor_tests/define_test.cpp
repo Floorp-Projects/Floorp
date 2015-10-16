@@ -70,12 +70,10 @@ TEST_F(DefineTest, ReservedUnderScore1)
     const char* input = "#define __foo bar\n"
                         "__foo\n";
     const char* expected = "\n"
-                           "__foo\n";
+                           "bar\n";
 
-    EXPECT_CALL(mDiagnostics,
-                print(pp::Diagnostics::PP_MACRO_NAME_RESERVED,
-                      pp::SourceLocation(0, 1),
-                      "__foo"));
+    EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_WARNING_MACRO_NAME_RESERVED,
+                                    pp::SourceLocation(0, 1), "__foo"));
 
     preprocess(input, expected);
 }
@@ -85,12 +83,10 @@ TEST_F(DefineTest, ReservedUnderScore2)
     const char* input = "#define foo__bar baz\n"
                         "foo__bar\n";
     const char* expected = "\n"
-                           "foo__bar\n";
+                           "baz\n";
 
-    EXPECT_CALL(mDiagnostics,
-                print(pp::Diagnostics::PP_MACRO_NAME_RESERVED,
-                      pp::SourceLocation(0, 1),
-                      "foo__bar"));
+    EXPECT_CALL(mDiagnostics, print(pp::Diagnostics::PP_WARNING_MACRO_NAME_RESERVED,
+                                    pp::SourceLocation(0, 1), "foo__bar"));
 
     preprocess(input, expected);
 }

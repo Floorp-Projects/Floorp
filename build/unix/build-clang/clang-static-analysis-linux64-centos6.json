@@ -13,8 +13,20 @@
     "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
     "cxx": "/home/worker/workspace/build/src/gcc/bin/g++",
     "patches": {
-        "macosx64": ["llvm-debug-frame.patch"],
-        "linux64": ["llvm-debug-frame.patch"],
-        "linux32": ["llvm-debug-frame.patch"]
+        "macosx64": [
+          "llvm-debug-frame.patch",
+          "query-selector-visibility.patch",
+          "return-empty-string-non-mangled.patch"
+        ],
+        "linux64": [
+          "llvm-debug-frame.patch",
+          "query-selector-visibility.patch",
+          "return-empty-string-non-mangled.patch"
+        ],
+        "linux32": [
+          "llvm-debug-frame.patch",
+          "query-selector-visibility.patch",
+          "return-empty-string-non-mangled.patch"
+        ]
     }
 }

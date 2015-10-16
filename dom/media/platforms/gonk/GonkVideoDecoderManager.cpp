@@ -59,14 +59,20 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   nsIntSize frameSize(mVideoWidth, mVideoHeight);
   mPicture = pictureRect;
   mInitialFrame = frameSize;
-  mVideoListener = new VideoResourceListener(this);
+  mVideoListener = new VideoResourceListener();
 
 }
 
 GonkVideoDecoderManager::~GonkVideoDecoderManager()
 {
-  mVideoListener->NotifyManagerRelease();
   MOZ_COUNT_DTOR(GonkVideoDecoderManager);
+}
+
+nsresult
+GonkVideoDecoderManager::Shutdown()
+{
+  mVideoCodecRequest.DisconnectIfExists();
+  return GonkDecoderManager::Shutdown();
 }
 
 nsRefPtr<MediaDataDecoder::InitPromise>
@@ -107,6 +113,16 @@ GonkVideoDecoderManager::Init()
   }
 
   nsRefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
+  android::sp<GonkVideoDecoderManager> self = this;
+  mVideoCodecRequest.Begin(mVideoListener->Init()
+    ->Then(mReaderTaskQueue, __func__,
+      [self] (bool) -> void {
+        self->mVideoCodecRequest.Complete();
+        self->codecReserved();
+      }, [self] (bool) -> void {
+        self->mVideoCodecRequest.Complete();
+        self->codecCanceled();
+      }));
   mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false, mVideoListener);
   mDecoder->AsyncAskMediaCodec();
 
@@ -399,6 +415,9 @@ void GonkVideoDecoderManager::ReleaseVideoBuffer() {
 void
 GonkVideoDecoderManager::codecReserved()
 {
+  if (mInitPromise.IsEmpty()) {
+    return;
+  }
   GVDM_LOG("codecReserved");
   sp<AMessage> format = new AMessage;
   sp<Surface> surface;
@@ -427,7 +446,7 @@ GonkVideoDecoderManager::codecReserved()
     return;
   }
 
-  mInitPromise.ResolveIfExists(TrackType::kVideoTrack, __func__);
+  mInitPromise.Resolve(TrackType::kVideoTrack, __func__);
 }
 
 void
@@ -456,66 +475,24 @@ GonkVideoDecoderManager::onMessageReceived(const sp<AMessage> &aMessage)
   }
 }
 
-GonkVideoDecoderManager::VideoResourceListener::VideoResourceListener(GonkVideoDecoderManager *aManager)
-  : mManager(aManager)
+GonkVideoDecoderManager::VideoResourceListener::VideoResourceListener()
 {
 }
 
 GonkVideoDecoderManager::VideoResourceListener::~VideoResourceListener()
 {
-  mManager = nullptr;
 }
 
 void
 GonkVideoDecoderManager::VideoResourceListener::codecReserved()
 {
-  // This class holds VideoResourceListener reference to prevent it's destroyed.
-  class CodecListenerHolder : public nsRunnable {
-  public:
-    CodecListenerHolder(VideoResourceListener* aListener)
-      : mVideoListener(aListener) {}
-
-    NS_IMETHOD Run()
-    {
-      mVideoListener->NotifyCodecReserved();
-      mVideoListener = nullptr;
-      return NS_OK;
-    }
-
-    android::sp<VideoResourceListener> mVideoListener;
-  };
-
-  if (mManager) {
-    nsRefPtr<CodecListenerHolder> runner = new CodecListenerHolder(this);
-    mManager->mReaderTaskQueue->Dispatch(runner.forget());
-  }
+  mVideoCodecPromise.Resolve(true, __func__);
 }
 
 void
 GonkVideoDecoderManager::VideoResourceListener::codecCanceled()
 {
-  if (mManager) {
-    MOZ_ASSERT(mManager->mReaderTaskQueue->IsCurrentThreadIn());
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewNonOwningRunnableMethod(mManager, &GonkVideoDecoderManager::codecCanceled);
-    mManager->mReaderTaskQueue->Dispatch(r.forget());
-  }
-}
-
-void
-GonkVideoDecoderManager::VideoResourceListener::NotifyManagerRelease()
-{
-  MOZ_ASSERT_IF(mManager, mManager->mReaderTaskQueue->IsCurrentThreadIn());
-  mManager = nullptr;
-}
-
-void
-GonkVideoDecoderManager::VideoResourceListener::NotifyCodecReserved()
-{
-  if (mManager) {
-    MOZ_ASSERT(mManager->mReaderTaskQueue->IsCurrentThreadIn());
-    mManager->codecReserved();
-  }
+  mVideoCodecPromise.Reject(true, __func__);
 }
 
 uint8_t *

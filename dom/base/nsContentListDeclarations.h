@@ -9,12 +9,14 @@
 
 #include <stdint.h>
 #include "nsCOMPtr.h"
-#include "nsStringFwd.h"
 
 class nsContentList;
 class nsIAtom;
 class nsIContent;
 class nsINode;
+// Can't use nsStringFwd.h because that's internal-API-only.
+class nsString;
+class nsAString;
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
@@ -42,8 +44,9 @@ typedef void* (*nsFuncStringContentListDataAllocator)(nsINode* aRootNode,
 // If aMatchNameSpaceId is kNameSpaceID_Unknown, this will return a
 // content list which matches ASCIIToLower(aTagname) against HTML
 // elements in HTML documents and aTagname against everything else.
-// For any other value of aMatchNameSpaceId, the list will match
-// aTagname against all elements.
+// The comparison is done to the element's localName.  For any
+// other value of aMatchNameSpaceId, the list will match aTagname
+// against all elements, again comparing to the localName.
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode,
                   int32_t aMatchNameSpaceId,

@@ -191,6 +191,7 @@ private:
 class TDependencyGraphTraverser : angle::NonCopyable {
 public:
     TDependencyGraphTraverser() : mDepth(0) {}
+    virtual ~TDependencyGraphTraverser() {}
 
     virtual void visitSymbol(TGraphSymbol* symbol) {};
     virtual void visitArgument(TGraphArgument* selection) {};

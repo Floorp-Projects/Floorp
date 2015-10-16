@@ -32,7 +32,7 @@ function test_getElementsByTagName()
   do_check_eq(doc.getElementById("test2").getElementsByTagName("*").length,
               8);
   do_check_eq(doc.getElementById("test2").getElementsByTagName("test").length,
-              3);
+              7);
 
   // Check that the first element of getElementsByTagName on the document is
   // the right thing.
@@ -40,7 +40,7 @@ function test_getElementsByTagName()
 
   // Check that we get the right things in the right order
   var numTests = doc.getElementsByTagName("test").length;
-  do_check_eq(numTests, 5);
+  do_check_eq(numTests, 14);
 
   for (var i = 1; i <= numTests; ++i) {
     do_check_true(doc.getElementById("test" + i) instanceof nsIDOMElement);
@@ -51,15 +51,15 @@ function test_getElementsByTagName()
   // Check that we handle tagnames containing ':' correctly
   do_check_true(doc.getElementsByTagName("foo:test")
                 instanceof nsIDOMNodeList);
-  do_check_eq(doc.getElementsByTagName("foo:test").length, 2);
+  do_check_eq(doc.getElementsByTagName("foo:test").length, 0);
 
   do_check_true(doc.getElementsByTagName("foo2:test")
                 instanceof nsIDOMNodeList);
-  do_check_eq(doc.getElementsByTagName("foo2:test").length, 3);
+  do_check_eq(doc.getElementsByTagName("foo2:test").length, 0);
 
   do_check_true(doc.getElementsByTagName("bar:test")
                 instanceof nsIDOMNodeList);
-  do_check_eq(doc.getElementsByTagName("bar:test").length, 4);
+  do_check_eq(doc.getElementsByTagName("bar:test").length, 0);
 }
 
 function test_getElementsByTagNameNS()
