@@ -8,7 +8,6 @@
 #include "mozilla/Preferences.h"
 #include "nsPrintfCString.h"
 #include "nsSize.h"
-#include "ImageContainer.h"
 #include "Layers.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
@@ -60,19 +59,22 @@ TrackTypeToStr(TrackInfo::TrackType aTrack)
 }
 
 MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
-                                     MediaDataDemuxer* aDemuxer)
+                                     MediaDataDemuxer* aDemuxer,
+                                     VideoFrameContainer* aVideoFrameContainer,
+                                     layers::LayersBackend aLayersBackend)
   : MediaDecoderReader(aDecoder)
   , mAudio(this, MediaData::AUDIO_DATA, Preferences::GetUint("media.audio-decode-ahead", 2))
   , mVideo(this, MediaData::VIDEO_DATA, Preferences::GetUint("media.video-decode-ahead", 2))
   , mDemuxer(aDemuxer)
   , mDemuxerInitDone(false)
   , mLastReportedNumDecodedFrames(0)
-  , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
+  , mLayersBackendType(aLayersBackend)
   , mInitDone(false)
   , mSeekable(false)
   , mIsEncrypted(false)
   , mTrackDemuxersMayBlock(false)
   , mHardwareAccelerationDisabled(false)
+  , mVideoFrameContainer(aVideoFrameContainer)
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
@@ -147,6 +149,9 @@ MediaFormatReader::InitLayersBackendType()
   // Extract the layer manager backend type so that platform decoders
   // can determine whether it's worthwhile using hardware accelerated
   // video decoding.
+  if (!mDecoder) {
+    return;
+  }
   MediaDecoderOwner* owner = mDecoder->GetOwner();
   if (!owner) {
     NS_WARNING("MediaFormatReader without a decoder owner, can't get HWAccel");
@@ -277,7 +282,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 
   // To decode, we need valid video and a place to put it.
   bool videoActive = !!mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack) &&
-    mDecoder->GetImageContainer();
+    GetImageContainer();
 
   if (videoActive) {
     // We currently only handle the first video track.
@@ -309,7 +314,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 
   mIsEncrypted = crypto && crypto->IsEncrypted();
 
-  if (crypto && crypto->IsEncrypted()) {
+  if (mDecoder && crypto && crypto->IsEncrypted()) {
 #ifdef MOZ_EME
     // Try and dispatch 'encrypted'. Won't go if ready state still HAVE_NOTHING.
     for (uint32_t i = 0; i < crypto->mInitDatas.Length(); i++) {
@@ -404,7 +409,7 @@ MediaFormatReader::EnsureDecodersCreated()
                                mVideo.mCallback,
                                mHardwareAccelerationDisabled ? LayersBackend::LAYERS_NONE :
                                                                mLayersBackendType,
-                               mDecoder->GetImageContainer());
+                               GetImageContainer());
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, false);
   }
 
@@ -1337,7 +1342,9 @@ MediaFormatReader::OnVideoSkipCompleted(uint32_t aSkipped)
   MOZ_ASSERT(OnTaskQueue());
   LOG("Skipping succeeded, skipped %u frames", aSkipped);
   mSkipRequest.Complete();
-  mDecoder->NotifyDecodedFrames(aSkipped, 0, aSkipped);
+  if (mDecoder) {
+    mDecoder->NotifyDecodedFrames(aSkipped, 0, aSkipped);
+  }
   MOZ_ASSERT(!mVideo.mError); // We have flushed the decoder, no frame could
                               // have been decoded (and as such errored)
   NotifyDecodingRequested(TrackInfo::kVideoTrack);
@@ -1349,7 +1356,9 @@ MediaFormatReader::OnVideoSkipFailed(MediaTrackDemuxer::SkipFailureHolder aFailu
   MOZ_ASSERT(OnTaskQueue());
   LOG("Skipping failed, skipped %u frames", aFailure.mSkipped);
   mSkipRequest.Complete();
-  mDecoder->NotifyDecodedFrames(aFailure.mSkipped, 0, aFailure.mSkipped);
+  if (mDecoder) {
+    mDecoder->NotifyDecodedFrames(aFailure.mSkipped, 0, aFailure.mSkipped);
+  }
   MOZ_ASSERT(mVideo.HasPromise());
   switch (aFailure.mFailure) {
     case DemuxerFailureReason::END_OF_STREAM:
@@ -1574,10 +1583,8 @@ void MediaFormatReader::ReleaseMediaResourcesInternal()
   MOZ_ASSERT(OnTaskQueue());
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
-  VideoFrameContainer* container =
-    mDecoder ? mDecoder->GetVideoFrameContainer() : nullptr;
-  if (container) {
-    container->ClearCurrentFrame();
+  if (mVideoFrameContainer) {
+    mVideoFrameContainer->ClearCurrentFrame();
   }
   if (mVideo.mDecoder) {
     mVideo.mDecoder->Shutdown();
@@ -1641,6 +1648,13 @@ bool
 MediaFormatReader::ForceZeroStartTime() const
 {
   return !mDemuxer->ShouldComputeStartTime();
+}
+
+layers::ImageContainer*
+MediaFormatReader::GetImageContainer()
+{
+  return mVideoFrameContainer
+    ? mVideoFrameContainer->GetImageContainer() : nullptr;
 }
 
 } // namespace mozilla
