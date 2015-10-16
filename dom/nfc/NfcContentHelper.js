@@ -97,8 +97,8 @@ NfcContentHelper.prototype = {
     return cpmm.sendSyncMessage("NFC:QueryInfo")[0].rfState;
   },
 
-  setFocusApp: function setFocusApp(tabId, isFocus) {
-    cpmm.sendAsyncMessage("NFC:SetFocusApp", {
+  setFocusTab: function setFocusTab(tabId, isFocus) {
+    cpmm.sendAsyncMessage("NFC:SetFocusTab", {
       tabId: tabId,
       isFocus: isFocus
     });

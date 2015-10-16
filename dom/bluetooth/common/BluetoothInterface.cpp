@@ -39,6 +39,12 @@ void
 BluetoothSetupResultHandler::Configuration()
 { }
 
+// Interface
+//
+
+BluetoothSetupInterface::~BluetoothSetupInterface()
+{ }
+
 //
 // Socket Interface
 //
@@ -182,14 +188,6 @@ BluetoothHandsfreeResultHandler::OnError(BluetoothStatus aStatus)
 }
 
 void
-BluetoothHandsfreeResultHandler::Init()
-{ }
-
-void
-BluetoothHandsfreeResultHandler::Cleanup()
-{ }
-
-void
 BluetoothHandsfreeResultHandler::Connect()
 { }
 
@@ -296,14 +294,6 @@ BluetoothA2dpResultHandler::OnError(BluetoothStatus aStatus)
 }
 
 void
-BluetoothA2dpResultHandler::Init()
-{ }
-
-void
-BluetoothA2dpResultHandler::Cleanup()
-{ }
-
-void
 BluetoothA2dpResultHandler::Connect()
 { }
 
@@ -399,14 +389,6 @@ BluetoothAvrcpResultHandler::OnError(BluetoothStatus aStatus)
 {
   BT_WARNING("Received error code %d", (int)aStatus);
 }
-
-void
-BluetoothAvrcpResultHandler::Init()
-{ }
-
-void
-BluetoothAvrcpResultHandler::Cleanup()
-{ }
 
 void
 BluetoothAvrcpResultHandler::GetPlayStatusRsp()
@@ -678,14 +660,6 @@ BluetoothGattResultHandler::OnError(BluetoothStatus aStatus)
 {
   BT_WARNING("Received error code %d", (int)aStatus);
 }
-
-void
-BluetoothGattResultHandler::Init()
-{ }
-
-void
-BluetoothGattResultHandler::Cleanup()
-{ }
 
 void
 BluetoothGattResultHandler::RegisterClient()

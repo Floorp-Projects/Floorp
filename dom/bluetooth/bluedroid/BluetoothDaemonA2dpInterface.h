@@ -30,17 +30,8 @@ public:
     OPCODE_DISCONNECT = 0x02
   };
 
-  static const int MAX_NUM_CLIENTS;
-
   virtual nsresult Send(DaemonSocketPDU* aPDU,
                         DaemonSocketResultHandler* aRes) = 0;
-
-  virtual nsresult RegisterModule(uint8_t aId, uint8_t aMode,
-                                  uint32_t aMaxNumClients,
-                                  BluetoothSetupResultHandler* aRes) = 0;
-
-  virtual nsresult UnregisterModule(uint8_t aId,
-                                    BluetoothSetupResultHandler* aRes) = 0;
 
   void SetNotificationHandler(
     BluetoothA2dpNotificationHandler* aNotificationHandler);
@@ -129,17 +120,12 @@ protected:
 class BluetoothDaemonA2dpInterface final
   : public BluetoothA2dpInterface
 {
-  class CleanupResultHandler;
-  class InitResultHandler;
-
 public:
   BluetoothDaemonA2dpInterface(BluetoothDaemonA2dpModule* aModule);
   ~BluetoothDaemonA2dpInterface();
 
-  void Init(
-    BluetoothA2dpNotificationHandler* aNotificationHandler,
-    BluetoothA2dpResultHandler* aRes) override;
-  void Cleanup(BluetoothA2dpResultHandler* aRes) override;
+  void SetNotificationHandler(
+    BluetoothA2dpNotificationHandler* aNotificationHandler) override;
 
   /* Connect / Disconnect */
 
