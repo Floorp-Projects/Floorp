@@ -60,7 +60,7 @@ describe("loop.shared.views", function() {
         React.createElement(sharedViews.MediaControlButton, {
           scope: "local",
           type: "audio",
-          action: function(){},
+          action: function() {},
           enabled: true
         }));
 
@@ -72,7 +72,7 @@ describe("loop.shared.views", function() {
           React.createElement(sharedViews.MediaControlButton, {
           scope: "local",
           type: "audio",
-          action: function(){},
+          action: function() {},
           enabled: false
         }));
 
@@ -84,7 +84,7 @@ describe("loop.shared.views", function() {
           React.createElement(sharedViews.MediaControlButton, {
           scope: "local",
           type: "video",
-          action: function(){},
+          action: function() {},
           enabled: true
         }));
 
@@ -96,7 +96,7 @@ describe("loop.shared.views", function() {
         React.createElement(sharedViews.MediaControlButton, {
           scope: "local",
           type: "video",
-          action: function(){},
+          action: function() {},
           enabled: false
         }));
 

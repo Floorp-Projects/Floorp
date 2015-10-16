@@ -305,7 +305,7 @@ PingMonitor.prototype = {
    * Function to stop the PingMonitor.
    */
   stop: function() {
-    if (this._pingTimerID){
+    if (this._pingTimerID) {
       clearTimeout(this._pingTimerID);
       this._pingTimerID = undefined;
     }

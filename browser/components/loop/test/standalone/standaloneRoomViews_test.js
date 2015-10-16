@@ -39,7 +39,7 @@ describe("loop.standaloneRoomViews", function() {
     fakeWindow = {
       close: sandbox.stub(),
       addEventListener: function() {},
-      document: { addEventListener: function(){} },
+      document: { addEventListener: function() {} },
       removeEventListener: function() {},
       setTimeout: function(callback) { callback(); }
     };
