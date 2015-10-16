@@ -210,15 +210,8 @@ class FasterMakeBackend(CommonBackend):
 
         for jarinfo in pp.out:
             install_target = obj.install_target
-            # Bug 1150417 added some gross hacks, which we don't try to
-            # support generically. Fortunately, the hacks don't define more
-            # than chrome manifest entries, so just assume we don't get
-            # any installation entries.
-            if jarinfo.name.startswith('../'):
-                assert not jarinfo.entries
-
-            base = mozpath.join('chrome', jarinfo.name)
-
+            if jarinfo.base:
+                install_target = mozpath.join(install_target, jarinfo.base)
             for e in jarinfo.entries:
                 if e.is_locale:
                     src = mozpath.join(
@@ -241,11 +234,11 @@ class FasterMakeBackend(CommonBackend):
                                 yield p + '/'
                     prefix = ''.join(_prefix(src))
 
-                    self._install_manifests[obj.install_target] \
+                    self._install_manifests[install_target] \
                         .add_pattern_symlink(
                         prefix,
                         src[len(prefix):],
-                        mozpath.join(base, e.output))
+                        mozpath.join(jarinfo.name, e.output))
                     continue
 
                 if not os.path.exists(src):
@@ -261,7 +254,7 @@ class FasterMakeBackend(CommonBackend):
                         # it, but it's how it works in the recursive make,
                         # not that anything relies on that, but it's simpler.
                         src = mozpath.join(obj.objdir, e.source)
-                    self._dependencies['install-%s' % obj.install_target] \
+                    self._dependencies['install-%s' % install_target] \
                         .append(mozpath.relpath(
                         src, self.environment.topobjdir))
 
@@ -272,26 +265,26 @@ class FasterMakeBackend(CommonBackend):
                     self._add_preprocess(
                         obj,
                         src,
-                        mozpath.join(base, mozpath.dirname(e.output)),
+                        mozpath.join(jarinfo.name, mozpath.dirname(e.output)),
                         mozpath.basename(e.output),
                         defines=defines,
                         **kwargs)
                 else:
-                    self._install_manifests[obj.install_target].add_symlink(
+                    self._install_manifests[install_target].add_symlink(
                         src,
-                        mozpath.join(base, e.output))
+                        mozpath.join(jarinfo.name, e.output))
 
-            manifest = mozpath.normpath(mozpath.join(obj.install_target, base))
+            manifest = mozpath.normpath(mozpath.join(install_target,
+                                                     jarinfo.name))
             manifest += '.manifest'
             for m in jarinfo.chrome_manifests:
                 self._manifest_entries[manifest].append(
-                    m.replace('%', jarinfo.name + '/'))
+                    m.replace('%', mozpath.basename(jarinfo.name) + '/'))
 
-            # ../ special cased for bug 1150417 again.
-            if not jarinfo.name.startswith('../'):
-                manifest = mozpath.normpath(mozpath.join(obj.install_target,
+            if jarinfo.name != 'chrome':
+                manifest = mozpath.normpath(mozpath.join(install_target,
                                                          'chrome.manifest'))
-                entry = 'manifest %s.manifest' % base
+                entry = 'manifest %s.manifest' % jarinfo.name
                 if entry not in self._manifest_entries[manifest]:
                     self._manifest_entries[manifest].append(entry)
 
