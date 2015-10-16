@@ -61,8 +61,8 @@
 }
 
 #nav-bar:-moz-lwtheme {
+  --toolbarbutton-hover-background: rgba(255,255,255,.25);
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,.2);
-  --toolbarbutton-hover-background: rgba(255,255,255,.5);
 
   --toolbarbutton-active-background: rgba(70%,70%,70%,.25);
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.3);
