@@ -137,34 +137,39 @@ void __asan_unpoison_memory_region(void const volatile *addr, size_t size);
 #define PL_ARENA_ALLOCATE(p, pool, nb) \
     PR_BEGIN_MACRO \
         PLArena *_a = (pool)->current; \
-        PRUint32 _nb = PL_ARENA_ALIGN(pool, nb); \
+        PRUint32 _nb = PL_ARENA_ALIGN(pool, (PRUint32)nb); \
         PRUword _p = _a->avail; \
-        PRUword _q = _p + _nb; \
-        if (_q > _a->limit) { \
+        if (_nb < (PRUint32)nb) { \
+            _p = 0; \
+        } else if (_nb > (_a->limit - _a->avail)) { \
             _p = (PRUword)PL_ArenaAllocate(pool, _nb); \
         } else { \
-            _a->avail = _q; \
+            _a->avail += _nb; \
         } \
         p = (void *)_p; \
-        PL_MAKE_MEM_UNDEFINED(p, nb); \
-        PL_ArenaCountAllocation(pool, nb); \
+        if (p) { \
+            PL_MAKE_MEM_UNDEFINED(p, (PRUint32)nb); \
+            PL_ArenaCountAllocation(pool, (PRUint32)nb); \
+        } \
     PR_END_MACRO
 
 #define PL_ARENA_GROW(p, pool, size, incr) \
     PR_BEGIN_MACRO \
         PLArena *_a = (pool)->current; \
-        PRUint32 _incr = PL_ARENA_ALIGN(pool, incr); \
-        PRUword _p = _a->avail; \
-        PRUword _q = _p + _incr; \
-        if (_p == (PRUword)(p) + PL_ARENA_ALIGN(pool, size) && \
-            _q <= _a->limit) { \
-            PL_MAKE_MEM_UNDEFINED((unsigned char *)(p) + size, incr); \
-            _a->avail = _q; \
-            PL_ArenaCountInplaceGrowth(pool, size, incr); \
+        PRUint32 _incr = PL_ARENA_ALIGN(pool, (PRUint32)incr); \
+        if (_incr < (PRUint32)incr) { \
+            p = NULL; \
+        } else if (_a->avail == (PRUword)(p) + PL_ARENA_ALIGN(pool, size) && \
+            _incr <= (_a->limit - _a->avail)) { \
+            PL_MAKE_MEM_UNDEFINED((unsigned char *)(p) + size, (PRUint32)incr); \
+            _a->avail += _incr; \
+            PL_ArenaCountInplaceGrowth(pool, size, (PRUint32)incr); \
         } else { \
-            p = PL_ArenaGrow(pool, p, size, incr); \
+            p = PL_ArenaGrow(pool, p, size, (PRUint32)incr); \
         } \
-        PL_ArenaCountGrowth(pool, size, incr); \
+        if (p) {\
+            PL_ArenaCountGrowth(pool, size, (PRUint32)incr); \
+        } \
     PR_END_MACRO
 
 #define PL_ARENA_MARK(pool) ((void *) (pool)->current->avail)
