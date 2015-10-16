@@ -2457,6 +2457,22 @@ bool
 nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
                                                      nsIFrame* aFrame)
 {
+  switch (aMessage) {
+    case eMouseMove:
+    case eMouseOver:
+    case eMouseOut:
+    case eMouseEnter:
+    case eMouseLeave:
+    case ePointerMove:
+    case ePointerOver:
+    case ePointerOut:
+    case ePointerEnter:
+    case ePointerLeave:
+      return false;
+    default:
+      break;
+  }
+
   bool disabled = IsDisabled();
   if (!disabled && aFrame) {
     const nsStyleUserInterface* uiStyle = aFrame->StyleUserInterface();
@@ -2464,7 +2480,7 @@ nsGenericHTMLFormElement::IsElementDisabledForEvents(EventMessage aMessage,
       uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED;
 
   }
-  return disabled && aMessage != eMouseMove;
+  return disabled;
 }
 
 void
