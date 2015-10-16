@@ -19,7 +19,6 @@ var gAlertListener = null;
 var gAlertTextClickable = false;
 var gAlertCookie = "";
 var gIsReplaced = false;
-var gPrincipal = null;
 
 function prefillAlertInfo() {
   // unwrap all the args....
@@ -33,39 +32,14 @@ function prefillAlertInfo() {
   // arguments[7] --> lang
   // arguments[8] --> replaced alert window (nsIDOMWindow)
   // arguments[9] --> an optional callback listener (nsIObserver)
-  // arguments[10] -> the nsIPrincipal of the site that requested the notification, optional
+  // arguments[10] -> the localized alert source string
 
   switch (window.arguments.length) {
     default:
     case 11: {
-      let principal = window.arguments[10] &&
-                      window.arguments[10].QueryInterface(Ci.nsIPrincipal);
-      let uri = principal.URI;
-      let scheme;
-      let hostPort;
-      try {
-        scheme = uri.scheme;
-        hostPort = uri.hostPort;
-      } catch (ex) {}
-      // `scheme` is checked here to require a valid scheme (ftp, http,
-      // https, for example) to be present on the nsIURI.
-      if (scheme && hostPort) {
-        const ALERT_BUNDLE = Services.strings.createBundle(
-          "chrome://alerts/locale/alert.properties");
-
-        let label = document.getElementById("alertSourceLabel");
-        let alertBox = document.getElementById("alertBox");
-        alertBox.setAttribute("hasOrigin", true);
-        label.setAttribute("value",
-          ALERT_BUNDLE.formatStringFromName("source.label",
-                                            [hostPort],
-                                            1));
-        let disableForOrigin = document.getElementById("disableForOriginMenuItem");
-        disableForOrigin.setAttribute("label",
-          ALERT_BUNDLE.formatStringFromName("webActions.disableForOrigin.label",
-                                            [hostPort],
-                                            1));
-        gPrincipal = principal;
+      if (window.arguments[10]) {
+        document.getElementById('alertBox').setAttribute('hasOrigin', true);
+        document.getElementById('alertSourceLabel').setAttribute('value', window.arguments[10]);
       }
     }
     case 10:
@@ -241,12 +215,6 @@ function onAlertClick() {
   } else {
     window.close();
   }
-}
-
-function disableForOrigin() {
-  Services.perms.removeFromPrincipal(gPrincipal,
-                                     "desktop-notification");
-  onAlertClose();
 }
 
 function onAlertClose() {
