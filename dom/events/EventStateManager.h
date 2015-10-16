@@ -641,15 +641,15 @@ protected:
     COMPUTE_SCROLLABLE_ANCESTOR_ALONG_Y_AXIS     =
       (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT)
   };
-  nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          WidgetWheelEvent* aEvent,
-                                          ComputeScrollTargetOptions aOptions);
+  nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
+                                WidgetWheelEvent* aEvent,
+                                ComputeScrollTargetOptions aOptions);
 
-  nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          double aDirectionX,
-                                          double aDirectionY,
-                                          WidgetWheelEvent* aEvent,
-                                          ComputeScrollTargetOptions aOptions);
+  nsIFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
+                                double aDirectionX,
+                                double aDirectionY,
+                                WidgetWheelEvent* aEvent,
+                                ComputeScrollTargetOptions aOptions);
 
   /**
    * GetScrollAmount() returns the scroll amount in app uints of one line or
