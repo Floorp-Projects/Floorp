@@ -1,6 +1,5 @@
-XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
-                                   "@mozilla.org/browser/aboutnewtab-service;1",
-                                   "nsIAboutNewTabService");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabURL",
+                                  "resource:///modules/NewTabURL.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
@@ -247,7 +246,7 @@ extensions.registerAPI((extension, context) => {
           createProperties = {};
         }
 
-        let url = createProperties.url || aboutNewTabService.newTabURL;
+        let url = createProperties.url || NewTabURL.get();
         url = extension.baseURI.resolve(url);
 
         function createInWindow(window) {
