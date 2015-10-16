@@ -752,8 +752,11 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
             rv = pph->NewProxiedChannel(aURI, nullptr, aProxyFlags, aProxyURI,
                                         getter_AddRefs(channel));
             NS_ENSURE_SUCCESS(rv, rv);
-            // we have to wrap that channel
-            channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
+
+            // The protocol handler does not implement NewProxiedChannel2, so
+            // maybe we need to wrap the channel (see comment in MaybeWrap
+            // function).
+            channel = nsSecCheckWrapChannel::MaybeWrap(channel, aLoadInfo);
         }
     }
     else {
@@ -763,8 +766,10 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
         if (NS_FAILED(rv)) {
             rv = handler->NewChannel(aURI, getter_AddRefs(channel));
             NS_ENSURE_SUCCESS(rv, rv);
-            // we have to wrap that channel
-            channel = new nsSecCheckWrapChannel(channel, aLoadInfo);
+            // The protocol handler does not implement NewChannel2, so
+            // maybe we need to wrap the channel (see comment in MaybeWrap
+            // function).
+            channel = nsSecCheckWrapChannel::MaybeWrap(channel, aLoadInfo);
         }
     }
 
