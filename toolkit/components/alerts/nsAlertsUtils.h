@@ -23,13 +23,6 @@ public:
   IsActionablePrincipal(nsIPrincipal* aPrincipal);
 
   /**
-   * Sets |aSource| to the localized notification source string, or an empty
-   * string if |aPrincipal| is not actionable.
-   */
-  static void
-  GetSource(nsIPrincipal* aPrincipal, nsAString& aSource);
-
-  /**
    * Sets |aHostPort| to the host and port from |aPrincipal|'s URI, or an
    * empty string if |aPrincipal| is not actionable.
    */
