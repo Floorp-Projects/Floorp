@@ -60,7 +60,7 @@ function onAlertShowing() {
 
   let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
   if (!alertWindow) {
-    ok(true, "Notifications don't use XUL windows on all platforms.");
+    todo(false, "Notifications don't use XUL windows on all platforms.");
     notification.close();
     newWindowOpenedFromTab.close();
     finish();

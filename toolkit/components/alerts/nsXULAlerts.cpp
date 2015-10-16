@@ -136,12 +136,15 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
   rv = argsArray->AppendElement(ifptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // aPrincipal contains the scheme and hostPort of the
-  // website that requested the notification. Optional.
-  if (nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
-    rv = argsArray->AppendElement(aPrincipal);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  // The source contains the host and port of the site that sent the
+  // notification. It is empty for system alerts.
+  nsCOMPtr<nsISupportsString> scriptableAlertSource (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  NS_ENSURE_TRUE(scriptableAlertSource, NS_ERROR_FAILURE);
+  nsAutoString source;
+  nsAlertsUtils::GetSource(aPrincipal, source);
+  scriptableAlertSource->SetData(source);
+  rv = argsArray->AppendElement(scriptableAlertSource);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMWindow> newWindow;
   nsAutoCString features("chrome,dialog=yes,titlebar=no,popup=yes");
