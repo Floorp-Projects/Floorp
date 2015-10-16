@@ -108,7 +108,7 @@ function run_test() {
   LoopRooms.on("add", onRoomAdded);
   LoopRooms.on("update", onRoomUpdated);
 
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     Services.prefs.clearUserPref("loop.key");
 
     LoopRooms.off("add", onRoomAdded);

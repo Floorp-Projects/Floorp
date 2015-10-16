@@ -14,7 +14,7 @@ describe("loop.StandaloneMozLoop", function() {
     fakeXHR = sandbox.useFakeXMLHttpRequest();
     requests = [];
     // https://github.com/cjohansen/Sinon.JS/issues/393
-    fakeXHR.xhr.onCreate = function (xhr) {
+    fakeXHR.xhr.onCreate = function(xhr) {
       requests.push(xhr);
     };
     fakeBaseServerUrl = "http://fake.api";

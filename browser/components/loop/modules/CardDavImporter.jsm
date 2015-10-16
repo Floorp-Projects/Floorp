@@ -220,7 +220,7 @@ this.CardDavImporter.prototype = {
     let contact = {};
     let nickname;
     vcard.split(/[\r\n]+(?! )/).forEach(
-      function (contentline) {
+      function(contentline) {
         contentline = contentline.replace(/[\r\n]+ /g, "");
         let match = /^(.*?[^\\]):(.*)$/.exec(contentline);
         if (match) {

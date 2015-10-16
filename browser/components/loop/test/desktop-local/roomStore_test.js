@@ -3,7 +3,7 @@
 
 var expect = chai.expect;
 
-describe("loop.store.Room", function () {
+describe("loop.store.Room", function() {
   "use strict";
 
   describe("#constructor", function() {
@@ -15,7 +15,7 @@ describe("loop.store.Room", function () {
   });
 });
 
-describe("loop.store.RoomStore", function () {
+describe("loop.store.RoomStore", function() {
   "use strict";
 
   var sharedActions = loop.shared.actions;
