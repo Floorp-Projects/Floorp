@@ -114,7 +114,7 @@ var fakeRooms = [
     ensureRegistered: function() {},
     getAudioBlob: function(){},
     getLoopPref: function(pref) {
-      switch(pref) {
+      switch (pref) {
         // Ensure we skip FTE completely.
         case "gettingStarted.seen":
           return true;

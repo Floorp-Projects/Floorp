@@ -169,7 +169,7 @@ MockWebSocketChannel.prototype = {
   sendMsg: function(aMsg) {
     var message = JSON.parse(aMsg);
 
-    switch(message.messageType) {
+    switch (message.messageType) {
       case "hello":
         this.listener.onMessageAvailable(this.context,
           JSON.stringify({ messageType: "hello",
