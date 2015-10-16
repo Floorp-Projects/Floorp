@@ -593,13 +593,8 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     }
   } else {
     // non-YCbCr case
-    const nsIntRegion* regionToUpdate = aRegion;
     if (!mFirstSource) {
       mFirstSource = mCompositor->CreateDataTextureSource();
-      if (mFlags & TextureFlags::COMPONENT_ALPHA) {
-        // Update the full region the first time for component alpha textures.
-        regionToUpdate = nullptr;
-      }
     }
     ImageDataDeserializer deserializer(GetBuffer(), GetBufferSize());
     if (!deserializer.IsValid()) {
@@ -612,7 +607,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       return false;
     }
 
-    if (!mFirstSource->Update(surf.get(), regionToUpdate)) {
+    if (!mFirstSource->Update(surf.get(), aRegion)) {
       NS_WARNING("failed to update the DataTextureSource");
       return false;
     }
