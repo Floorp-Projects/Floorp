@@ -31,6 +31,13 @@ To ship chrome files in a JAR, an indented line indicates a file to be packaged:
    <jarfile>.jar:
      path/in/jar/file_name.xul     (source/tree/location/file_name.xul)
 
+The JAR location may be preceded with a base path between square brackets::
+   [base/path] <jarfile>.jar:
+     path/in/jar/file_name.xul     (source/tree/location/file_name.xul)
+
+In this case, the jar will be directly located under the given ``base/bath``,
+while without a base path, it will be under a ``chrome`` directory.
+
 If the JAR manifest and packaged file live in the same directory, the path and
 parenthesis can be omitted. In other words, the following two lines are
 equivalent::
