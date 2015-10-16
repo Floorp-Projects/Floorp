@@ -36,6 +36,7 @@ import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.animation.AnimationSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
@@ -447,16 +448,13 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
             check.setVisibility(View.VISIBLE);
             final Animation checkEntryAnim = AnimationUtils.loadAnimation(this, R.anim.overlay_check_entry);
             final Animation checkExitAnim = AnimationUtils.loadAnimation(this, R.anim.overlay_check_exit);
+            checkExitAnim.setStartOffset(checkEntryAnim.getDuration() + 500);
 
-            check.startAnimation(checkEntryAnim);
-            final long exitWaitMillis = checkEntryAnim.getDuration() + 750;
-            ThreadUtils.postDelayedToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    check.startAnimation(checkExitAnim);
-                }
-            }, exitWaitMillis);
+            final AnimationSet checkAnimationSet = new AnimationSet(this, null);
+            checkAnimationSet.addAnimation(checkEntryAnim);
+            checkAnimationSet.addAnimation(checkExitAnim);
 
+            check.startAnimation(checkAnimationSet);
             animationToFinishActivity = checkExitAnim;
         }
 
