@@ -249,6 +249,7 @@ EXTRA_JS_MODULES.commonjs.sdk.content += [
     'source/lib/sdk/content/loader.js',
     'source/lib/sdk/content/mod.js',
     'source/lib/sdk/content/page-mod.js',
+    'source/lib/sdk/content/page-worker.js',
     'source/lib/sdk/content/sandbox.js',
     'source/lib/sdk/content/tab-events.js',
     'source/lib/sdk/content/thumbnail.js',
