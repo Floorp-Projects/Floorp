@@ -65,7 +65,7 @@ describe("loop.shared.utils", function() {
       sinon.assert.calledOnce(Date.prototype.toLocaleDateString);
       sinon.assert.calledWithExactly(Date.prototype.toLocaleDateString,
         navigator.language,
-        {year: "numeric", month: "long", day: "numeric"}
+        { year: "numeric", month: "long", day: "numeric" }
       );
     });
 

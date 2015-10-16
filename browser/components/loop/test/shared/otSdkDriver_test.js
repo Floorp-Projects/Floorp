@@ -110,7 +110,7 @@ describe("loop.OTSdkDriver", function () {
 
     it("should throw an error if the sdk is missing", function() {
       expect(function() {
-        new loop.OTSdkDriver({dispatcher: dispatcher});
+        new loop.OTSdkDriver({ dispatcher: dispatcher });
       }).to.Throw(/sdk/);
     });
 
@@ -350,7 +350,7 @@ describe("loop.OTSdkDriver", function () {
     it("should set the two-way media start time to 'uninitialized' " +
        "when sessionData.sendTwoWayMediaTelemetry is true'", function() {
       driver.connectSession(_.extend(sessionData,
-                                     {sendTwoWayMediaTelemetry: true}));
+                                     { sendTwoWayMediaTelemetry: true }));
 
       expect(driver._getTwoWayMediaStartTime()).to.eql(
         driver.CONNECTION_START_TIME_UNINITIALIZED);
@@ -702,7 +702,7 @@ describe("loop.OTSdkDriver", function () {
         id: "localUser"
       };
       session.trigger("connectionCreated", {
-        connection: {id: "remoteUser"}
+        connection: { id: "remoteUser" }
       });
       expect(driver.connections).to.include.keys("remoteUser");
 
@@ -711,7 +711,7 @@ describe("loop.OTSdkDriver", function () {
 
       // Add another remote connection.
       session.trigger("connectionCreated", {
-        connection: {id: "remoteUser2"}
+        connection: { id: "remoteUser2" }
       });
       expect(driver.connections).to.include.keys("remoteUser", "remoteUser2");
 
@@ -748,7 +748,7 @@ describe("loop.OTSdkDriver", function () {
       fakeStream = {
         hasVideo: true,
         videoType: "camera",
-        videoDimensions: {width: 1, height: 2}
+        videoDimensions: { width: 1, height: 2 }
       };
 
       fakeSubscriberObject = _.extend({
@@ -907,7 +907,7 @@ describe("loop.OTSdkDriver", function () {
         stream = {
           hasVideo: true,
           videoType: "camera",
-          videoDimensions: {width: 1, height: 2}
+          videoDimensions: { width: 1, height: 2 }
         };
       });
 
@@ -919,7 +919,7 @@ describe("loop.OTSdkDriver", function () {
           new sharedActions.VideoDimensionsChanged({
             isLocal: true,
             videoType: "camera",
-            dimensions: {width: 1, height: 2}
+            dimensions: { width: 1, height: 2 }
           }));
       });
 
@@ -952,7 +952,7 @@ describe("loop.OTSdkDriver", function () {
         driver._metrics.recvStreams = 1;
         driver._metrics.connections = 2;
 
-        publisher.trigger("streamCreated", {stream: stream});
+        publisher.trigger("streamCreated", { stream: stream });
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -1132,10 +1132,10 @@ describe("loop.OTSdkDriver", function () {
 
       it("should not dispatch a ReceivingScreenShare action for camera streams",
         function() {
-          session.trigger("streamCreated", {stream: fakeStream});
+          session.trigger("streamCreated", { stream: fakeStream });
 
           sinon.assert.neverCalledWithMatch(dispatcher.dispatch,
-            new sharedActions.ReceivingScreenShare({receiving: true}));
+            new sharedActions.ReceivingScreenShare({ receiving: true }));
         });
 
       it("should dispatch a ReceivingScreenShare action for screen" +
@@ -1215,7 +1215,7 @@ describe("loop.OTSdkDriver", function () {
         driver._metrics.sendStreams = 1;
         driver._metrics.recvStreams = 1;
 
-        session.trigger("streamDestroyed", {stream: stream});
+        session.trigger("streamDestroyed", { stream: stream });
 
         sinon.assert.called(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -1448,7 +1448,7 @@ describe("loop.OTSdkDriver", function () {
       it("should dispatch a RemoteVideoStatus action", function() {
         session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
           videoElement).returns(this.fakeSubscriberObject);
-        session.trigger("streamCreated", {stream: fakeSubscriberObject.stream});
+        session.trigger("streamCreated", { stream: fakeSubscriberObject.stream });
         driver._mockSubscribeEl.appendChild(videoElement);
 
         fakeSubscriberObject.trigger("videoEnabled");
@@ -1465,7 +1465,7 @@ describe("loop.OTSdkDriver", function () {
       it("should dispatch a RemoteVideoStatus action", function() {
         session.subscribe.yieldsOn(driver, null, fakeSubscriberObject,
           videoElement).returns(this.fakeSubscriberObject);
-        session.trigger("streamCreated", {stream: fakeSubscriberObject.stream});
+        session.trigger("streamCreated", { stream: fakeSubscriberObject.stream });
 
 
         fakeSubscriberObject.trigger("videoDisabled");

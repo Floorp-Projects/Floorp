@@ -100,7 +100,7 @@
     "no-use-before-define": 0,    // TODO: Set to 2
     "no-useless-call": 2,
     "no-with": 2,
-    "object-curly-spacing": 0,    // [2, "always"],
+    "object-curly-spacing": [2, "always"],
     "quotes": [2, "double", "avoid-escape"],
     "semi": 2,
     "semi-spacing": [2, {"before": false, "after": true}],

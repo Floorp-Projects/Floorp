@@ -40,14 +40,14 @@ describe("loop.shared.views.LinkifiedTextView", function () {
       return React.renderToStaticMarkup(
         React.createElement(
           LinkifiedTextView,
-          _.extend({rawText: string}, extraProps)));
+          _.extend({ rawText: string }, extraProps)));
     }
 
     describe("#render", function() {
       function testRender(testData) {
         it(testData.desc, function() {
           var markup = renderToMarkup(testData.rawText,
-            {suppressTarget: true, sendReferrer: true});
+            { suppressTarget: true, sendReferrer: true });
 
           expect(markup).to.equal(testData.markup);
         });
@@ -56,7 +56,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
       function testSkip(testData) {
         it.skip(testData.desc, function() {
           var markup = renderToMarkup(testData.rawText,
-            {suppressTarget: true, sendReferrer: true});
+            { suppressTarget: true, sendReferrer: true });
 
           expect(markup).to.equal(testData.markup);
         });
@@ -65,7 +65,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
       describe("this.props.suppressTarget", function() {
         it("should make links w/o a target attr if suppressTarget is true",
           function() {
-            var markup = renderToMarkup("http://example.com", {suppressTarget: true});
+            var markup = renderToMarkup("http://example.com", { suppressTarget: true });
 
             expect(markup).to.equal(
               '<p><a href="http://example.com" rel="noreferrer">http://example.com</a></p>');
@@ -83,7 +83,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
       describe("this.props.sendReferrer", function() {
         it("should make links w/o rel=noreferrer if sendReferrer is true",
           function() {
-            var markup = renderToMarkup("http://example.com", {sendReferrer: true});
+            var markup = renderToMarkup("http://example.com", { sendReferrer: true });
 
             expect(markup).to.equal(
               '<p><a href="http://example.com" target="_blank">http://example.com</a></p>');
@@ -103,13 +103,13 @@ describe("loop.shared.views.LinkifiedTextView", function () {
           return TestUtils.renderIntoDocument(
             React.createElement(
               LinkifiedTextView,
-              _.extend({rawText: string}, extraProps)));
+              _.extend({ rawText: string }, extraProps)));
         }
 
         it("should be called when a generated link is clicked", function () {
           var fakeUrl = "http://example.com";
           var linkClickHandler = sinon.stub();
-          var comp = mountTestComponent(fakeUrl, {linkClickHandler: linkClickHandler});
+          var comp = mountTestComponent(fakeUrl, { linkClickHandler: linkClickHandler });
 
           TestUtils.Simulate.click(comp.getDOMNode().querySelector("a"));
 
@@ -146,7 +146,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
           it("should call preventDefault on the given event", function () {
             function linkClickHandler() {}
             var comp = mountTestComponent(
-              fakeUrl, {linkClickHandler: linkClickHandler});
+              fakeUrl, { linkClickHandler: linkClickHandler });
 
             comp._handleClickEvent(fakeEvent);
 
@@ -157,7 +157,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
           it("should call stopPropagation on the given event", function () {
             function linkClickHandler() {}
             var comp = mountTestComponent(
-              fakeUrl, {linkClickHandler: linkClickHandler});
+              fakeUrl, { linkClickHandler: linkClickHandler });
 
             comp._handleClickEvent(fakeEvent);
 
@@ -168,7 +168,7 @@ describe("loop.shared.views.LinkifiedTextView", function () {
           it("should call this.props.linkClickHandler with event.currentTarget.href", function () {
             var linkClickHandler = sinon.stub();
             var comp = mountTestComponent(
-              fakeUrl, {linkClickHandler: linkClickHandler});
+              fakeUrl, { linkClickHandler: linkClickHandler });
 
             comp._handleClickEvent(fakeEvent);
 

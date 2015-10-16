@@ -173,7 +173,7 @@ describe("loop.shared.mixins", function() {
 
     it("should call onDocumentVisible when document visibility changes to visible",
       function() {
-        setupFakeVisibilityEventDispatcher({target: {hidden: false}});
+        setupFakeVisibilityEventDispatcher({ target: { hidden: false } });
 
         comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
@@ -183,7 +183,7 @@ describe("loop.shared.mixins", function() {
 
     it("should call onDocumentVisible when document visibility changes to hidden",
       function() {
-        setupFakeVisibilityEventDispatcher({target: {hidden: true}});
+        setupFakeVisibilityEventDispatcher({ target: { hidden: true } });
 
         comp = TestUtils.renderIntoDocument(React.createElement(TestComp));
 
@@ -227,7 +227,7 @@ describe("loop.shared.mixins", function() {
       navigator.mozLoop = {
         doNotDisturb: true,
         getAudioBlob: sinon.spy(function(name, callback) {
-          callback(null, new Blob([new ArrayBuffer(10)], {type: "audio/ogg"}));
+          callback(null, new Blob([new ArrayBuffer(10)], { type: "audio/ogg" }));
         }),
         getLoopPref: sandbox.stub()
       };
@@ -279,7 +279,7 @@ describe("loop.shared.mixins", function() {
         },
 
         getInitialState: function() {
-          return { roomState: initialState};
+          return { roomState: initialState };
         }
       });
 
@@ -295,7 +295,7 @@ describe("loop.shared.mixins", function() {
     it("should play a sound when the local user joins the room", function() {
       comp = createTestComponent(ROOM_STATES.INIT);
 
-      comp.setState({roomState: ROOM_STATES.SESSION_CONNECTED});
+      comp.setState({ roomState: ROOM_STATES.SESSION_CONNECTED });
 
       sinon.assert.calledOnce(comp.play);
       sinon.assert.calledWithExactly(comp.play, "room-joined");
@@ -304,7 +304,7 @@ describe("loop.shared.mixins", function() {
     it("should play a sound when another user joins the room", function() {
       comp = createTestComponent(ROOM_STATES.SESSION_CONNECTED);
 
-      comp.setState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+      comp.setState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
 
       sinon.assert.calledOnce(comp.play);
       sinon.assert.calledWithExactly(comp.play, "room-joined-in");
@@ -313,7 +313,7 @@ describe("loop.shared.mixins", function() {
     it("should play a sound when another user leaves the room", function() {
       comp = createTestComponent(ROOM_STATES.HAS_PARTICIPANTS);
 
-      comp.setState({roomState: ROOM_STATES.SESSION_CONNECTED});
+      comp.setState({ roomState: ROOM_STATES.SESSION_CONNECTED });
 
       sinon.assert.calledOnce(comp.play);
       sinon.assert.calledWithExactly(comp.play, "room-left");
@@ -322,7 +322,7 @@ describe("loop.shared.mixins", function() {
     it("should play a sound when the local user leaves the room", function() {
       comp = createTestComponent(ROOM_STATES.HAS_PARTICIPANTS);
 
-      comp.setState({roomState: ROOM_STATES.READY});
+      comp.setState({ roomState: ROOM_STATES.READY });
 
       sinon.assert.calledOnce(comp.play);
       sinon.assert.calledWithExactly(comp.play, "room-left");
@@ -331,7 +331,7 @@ describe("loop.shared.mixins", function() {
     it("should play a sound when if there is a failure", function() {
       comp = createTestComponent(ROOM_STATES.HAS_PARTICIPANTS);
 
-      comp.setState({roomState: ROOM_STATES.FAILED});
+      comp.setState({ roomState: ROOM_STATES.FAILED });
 
       sinon.assert.calledOnce(comp.play);
       sinon.assert.calledWithExactly(comp.play, "failure");
@@ -340,7 +340,7 @@ describe("loop.shared.mixins", function() {
     it("should play a sound when if the room is full", function() {
       comp = createTestComponent(ROOM_STATES.READY);
 
-      comp.setState({roomState: ROOM_STATES.FULL});
+      comp.setState({ roomState: ROOM_STATES.FULL });
 
       sinon.assert.calledOnce(comp.play);
       sinon.assert.calledWithExactly(comp.play, "failure");

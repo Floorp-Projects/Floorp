@@ -596,7 +596,7 @@ loop.store.ActiveRoomStore = (function() {
         if (hasDevices) {
           // MEDIA_WAIT causes the views to dispatch sharedActions.SetupStreamElements,
           // which in turn starts the sdk obtaining the device permission.
-          this.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+          this.setStoreState({ roomState: ROOM_STATES.MEDIA_WAIT });
         } else {
           this.dispatchAction(new sharedActions.ConnectionFailure({
             reason: FAILURE_DETAILS.NO_MEDIA
@@ -687,7 +687,7 @@ loop.store.ActiveRoomStore = (function() {
      * granted and starts joining the room.
      */
     gotMediaPermission: function() {
-      this.setStoreState({roomState: ROOM_STATES.JOINING});
+      this.setStoreState({ roomState: ROOM_STATES.JOINING });
 
       this._mozLoop.rooms.join(this._storeState.roomToken,
         function(error, responseData) {
@@ -841,14 +841,14 @@ loop.store.ActiveRoomStore = (function() {
      * Records when the remote media has been connected.
      */
     mediaConnected: function() {
-      this.setStoreState({mediaConnected: true});
+      this.setStoreState({ mediaConnected: true });
     },
 
     /**
      * Used to note the current screensharing state.
      */
     screenSharingState: function(actionData) {
-      this.setStoreState({screenSharingState: actionData.state});
+      this.setStoreState({ screenSharingState: actionData.state });
 
       this._mozLoop.setScreenShareState(
         this.getStoreState().windowId,
@@ -1119,7 +1119,7 @@ loop.store.ActiveRoomStore = (function() {
           this._storeState.sessionToken);
       }
 
-      this.setStoreState({roomState: nextState});
+      this.setStoreState({ roomState: nextState });
     },
 
     /**

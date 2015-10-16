@@ -55,7 +55,7 @@ describe("loop.crypto", function() {
 
     it("should encrypt an object with a specific key", function() {
       return expect(loop.crypto.encryptBytes("Wt2-bZKeHO2wnaq00ZM6Nw",
-        JSON.stringify({test: true}))).to.eventually.be.a("string");
+        JSON.stringify({ test: true }))).to.eventually.be.a("string");
     });
   });
 
@@ -72,7 +72,7 @@ describe("loop.crypto", function() {
       var key = "Wt2-bZKeHO2wnaq00ZM6Nw";
       var encryptedContext = "XvN9FDEm/GtE/5Bx5ezpn7JVDeZrtwOJy2CBjTGgJ4L33HhHOqEW+5k=";
 
-      return expect(loop.crypto.decryptBytes(key, encryptedContext)).to.eventually.eql(JSON.stringify({test: true}));
+      return expect(loop.crypto.decryptBytes(key, encryptedContext)).to.eventually.eql(JSON.stringify({ test: true }));
     });
 
     it("should fail if the key didn't work", function() {

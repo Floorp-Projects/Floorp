@@ -24,7 +24,7 @@ describe("loop.roomViews", function () {
 
     fakeMozLoop = {
       getAudioBlob: sinon.spy(function(name, callback) {
-        callback(null, new Blob([new ArrayBuffer(10)], {type: "audio/ogg"}));
+        callback(null, new Blob([new ArrayBuffer(10)], { type: "audio/ogg" }));
       }),
       getLoopPref: sinon.stub(),
       getSelectedTabMetadata: sinon.stub().callsArgWith(0, {
@@ -104,7 +104,7 @@ describe("loop.roomViews", function () {
       var TestView = React.createClass({
         mixins: [loop.roomViews.ActiveRoomStoreMixin],
         getInitialState: function() {
-          return {foo: "bar"};
+          return { foo: "bar" };
         },
         render: function() { return React.DOM.div(); }
       });
@@ -114,7 +114,7 @@ describe("loop.roomViews", function () {
           roomStore: roomStore
         }));
 
-      var expectedState = _.extend({foo: "bar", savingContext: false},
+      var expectedState = _.extend({ foo: "bar", savingContext: false },
         activeRoomStore.getInitialStoreState());
 
       expect(testView.state).eql(expectedState);
@@ -130,7 +130,7 @@ describe("loop.roomViews", function () {
           roomStore: roomStore
         }));
 
-      activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+      activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
       expect(testView.state.roomState).eql(ROOM_STATES.READY);
     });
@@ -346,7 +346,7 @@ describe("loop.roomViews", function () {
       function() {
         view = mountTestComponent();
 
-        view.setState({audioMuted: true});
+        view.setState({ audioMuted: true });
 
         var muteBtn = view.getDOMNode().querySelector(".btn-mute-audio");
 
@@ -364,7 +364,7 @@ describe("loop.roomViews", function () {
       function() {
         view = mountTestComponent();
 
-        view.setState({videoMuted: false});
+        view.setState({ videoMuted: false });
 
         var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
@@ -381,7 +381,7 @@ describe("loop.roomViews", function () {
     it("should set the mute button as mute off", function() {
       view = mountTestComponent();
 
-      view.setState({videoMuted: false});
+      view.setState({ videoMuted: false });
 
       var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
@@ -391,7 +391,7 @@ describe("loop.roomViews", function () {
     it("should set the mute button as mute on", function() {
       view = mountTestComponent();
 
-      view.setState({audioMuted: true});
+      view.setState({ audioMuted: true });
 
       var muteBtn = view.getDOMNode().querySelector(".btn-mute-audio");
 
@@ -401,7 +401,7 @@ describe("loop.roomViews", function () {
     it("should dispatch a `StartScreenShare` action when sharing is not active and the screen share button is pressed", function() {
       view = mountTestComponent();
 
-      view.setState({screenSharingState: SCREEN_SHARE_STATES.INACTIVE});
+      view.setState({ screenSharingState: SCREEN_SHARE_STATES.INACTIVE });
 
       var muteBtn = view.getDOMNode().querySelector(".btn-mute-video");
 
@@ -419,19 +419,19 @@ describe("loop.roomViews", function () {
       }
 
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state is entered", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
           var component = mountTestComponent();
 
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.MEDIA_WAIT });
 
           expectActionDispatched(component);
         });
 
       it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is re-entered", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.ENDED });
           var component = mountTestComponent();
 
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.MEDIA_WAIT });
 
           expectActionDispatched(component);
         });
@@ -441,7 +441,7 @@ describe("loop.roomViews", function () {
       it("should set document.title to store.serverData.roomName", function() {
         mountTestComponent();
 
-        activeRoomStore.setStoreState({roomName: "fakeName"});
+        activeRoomStore.setStoreState({ roomName: "fakeName" });
 
         expect(fakeWindow.document.title).to.equal("fakeName");
       });
@@ -474,7 +474,7 @@ describe("loop.roomViews", function () {
 
       it("should render the DesktopRoomInvitationView if roomState is `JOINED`",
         function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
 
           view = mountTestComponent();
 
@@ -485,7 +485,7 @@ describe("loop.roomViews", function () {
       it("should render the DesktopRoomInvitationView if roomState is `JOINED` with just owner",
         function() {
           activeRoomStore.setStoreState({
-            participants: [{owner: true}],
+            participants: [{ owner: true }],
             roomState: ROOM_STATES.JOINED
           });
 
@@ -513,7 +513,7 @@ describe("loop.roomViews", function () {
       it("should render the DesktopRoomConversationView if roomState is `JOINED` with participants",
         function() {
           activeRoomStore.setStoreState({
-            participants: [{owner: true}, {}],
+            participants: [{ owner: true }, {}],
             roomState: ROOM_STATES.JOINED
           });
 
@@ -527,7 +527,7 @@ describe("loop.roomViews", function () {
 
       it("should render the DesktopRoomConversationView if roomState is `HAS_PARTICIPANTS`",
         function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
 
           view = mountTestComponent();
 
@@ -841,7 +841,7 @@ describe("loop.roomViews", function () {
         function() {
           React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
             value: "reallyFake"
-          }});
+          } });
 
           React.addons.TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-accept"));
 
@@ -860,9 +860,9 @@ describe("loop.roomViews", function () {
         function() {
           React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
             value: "reallyFake"
-          }});
+          } });
 
-          TestUtils.Simulate.keyDown(roomNameBox, {key: "Enter", which: 13});
+          TestUtils.Simulate.keyDown(roomNameBox, { key: "Enter", which: 13 });
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,

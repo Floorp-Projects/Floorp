@@ -366,37 +366,37 @@ describe("loop.standaloneRoomViews", function() {
 
     describe("#componentWillUpdate", function() {
       it("should set document.title to roomName and brand name when the READY state is dispatched", function() {
-        activeRoomStore.setStoreState({roomName: "fakeName", roomState: ROOM_STATES.INIT});
+        activeRoomStore.setStoreState({ roomName: "fakeName", roomState: ROOM_STATES.INIT });
         view = mountTestComponent();
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
         expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
       });
 
       it("should set document.title brand name when there is no context available", function() {
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.INIT});
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.INIT });
         view = mountTestComponent();
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
         expect(fakeWindow.document.title).to.equal("clientShortname2");
       });
 
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
         "is entered", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
           view = mountTestComponent();
 
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.MEDIA_WAIT });
 
           expectActionDispatched(view);
         });
 
       it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is " +
         "re-entered", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.ENDED });
           view = mountTestComponent();
 
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.MEDIA_WAIT });
 
           expectActionDispatched(view);
         });
@@ -405,8 +405,8 @@ describe("loop.standaloneRoomViews", function() {
     describe("#componentDidUpdate", function() {
       beforeEach(function() {
         view = mountTestComponent();
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
       });
 
       it("should not dispatch a `TileShown` action immediately in the JOINED state",
@@ -424,7 +424,7 @@ describe("loop.standaloneRoomViews", function() {
 
       it("should dispatch a single `TileShown` action after a wait when going through multiple waiting states",
         function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
           clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
           sinon.assert.calledOnce(dispatch);
@@ -433,7 +433,7 @@ describe("loop.standaloneRoomViews", function() {
 
       it("should not dispatch a `TileShown` action after a wait when in the HAS_PARTICIPANTS state",
         function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
           clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
           sinon.assert.notCalled(dispatch);
@@ -441,7 +441,7 @@ describe("loop.standaloneRoomViews", function() {
 
       it("should dispatch a `TileShown` action after a wait when a participant leaves",
         function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
           clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
           activeRoomStore.remotePeerDisconnected();
           clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
@@ -456,7 +456,7 @@ describe("loop.standaloneRoomViews", function() {
         view = mountTestComponent();
 
         // Pretend the user waited a little bit
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
         clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY - 1);
       });
 
@@ -473,8 +473,8 @@ describe("loop.standaloneRoomViews", function() {
           function() {
             // Trigger the first message then rejoin and wait
             clock.tick(1);
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.ENDED });
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
             clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
             sinon.assert.calledTwice(dispatch);
@@ -485,8 +485,8 @@ describe("loop.standaloneRoomViews", function() {
       describe("Handle leaving quickly", function() {
         beforeEach(function() {
           // The user left and rejoined
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.ENDED });
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
         });
 
         it("should not dispatch an old `TileShown` action after leaving and rejoining",
@@ -541,13 +541,13 @@ describe("loop.standaloneRoomViews", function() {
     describe("#render", function() {
       beforeEach(function() {
         view = mountTestComponent();
-        activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
       });
 
       describe("Empty room message", function() {
         it("should not display an message immediately in the JOINED state",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
 
             expect(view.getDOMNode().querySelector(".empty-room-message"))
               .eql(null);
@@ -555,7 +555,7 @@ describe("loop.standaloneRoomViews", function() {
 
         it("should display an empty room message after a wait when in the JOINED state",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
             clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
             expect(view.getDOMNode().querySelector(".empty-room-message"))
@@ -564,7 +564,7 @@ describe("loop.standaloneRoomViews", function() {
 
         it("should not display an message immediately in the SESSION_CONNECTED state",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
 
             expect(view.getDOMNode().querySelector(".empty-room-message"))
               .eql(null);
@@ -572,7 +572,7 @@ describe("loop.standaloneRoomViews", function() {
 
         it("should display an empty room message after a wait when in the SESSION_CONNECTED state",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
             clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
             expect(view.getDOMNode().querySelector(".empty-room-message"))
@@ -581,7 +581,7 @@ describe("loop.standaloneRoomViews", function() {
 
         it("should not display an message immediately in the HAS_PARTICIPANTS state",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
 
             expect(view.getDOMNode().querySelector(".empty-room-message"))
               .eql(null);
@@ -589,7 +589,7 @@ describe("loop.standaloneRoomViews", function() {
 
         it("should not display an empty room message even after a wait when in the HAS_PARTICIPANTS state",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
             clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
             expect(view.getDOMNode().querySelector(".empty-room-message"))
@@ -601,7 +601,7 @@ describe("loop.standaloneRoomViews", function() {
         it("should display a waiting room message and tile iframe on JOINED", function() {
           var DUMMY_TILE_URL = "http://tile/";
           loop.config.tilesIframeUrl = DUMMY_TILE_URL;
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
           clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
           expect(view.getDOMNode().querySelector(".room-waiting-area")).not.eql(null);
@@ -612,7 +612,7 @@ describe("loop.standaloneRoomViews", function() {
         });
 
         it("should dispatch a RecordClick action when the tile support link is clicked", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
           clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY);
 
           TestUtils.Simulate.click(view.getDOMNode().querySelector(".room-waiting-area a"));
@@ -629,7 +629,7 @@ describe("loop.standaloneRoomViews", function() {
       describe("Prompt media message", function() {
         it("should display a prompt for user media on MEDIA_WAIT",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.MEDIA_WAIT });
 
             expect(view.getDOMNode().querySelector(".prompt-media-message"))
               .not.eql(null);
@@ -639,7 +639,7 @@ describe("loop.standaloneRoomViews", function() {
       describe("Full room message", function() {
         it("should display a full room message on FULL",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.FULL});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.FULL });
 
             expect(view.getDOMNode().querySelector(".full-room-message"))
               .not.eql(null);
@@ -672,20 +672,20 @@ describe("loop.standaloneRoomViews", function() {
         }
 
         it("should render the Join button when room isn't active", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
           expect(getJoinButton(view)).not.eql(null);
         });
 
         it("should not render the Join button when room is active",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
 
             expect(getJoinButton(view)).eql(null);
           });
 
         it("should join the room when clicking the Join button", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
           TestUtils.Simulate.click(getJoinButton(view));
 
@@ -889,48 +889,48 @@ describe("loop.standaloneRoomViews", function() {
 
         it("should remove the Leave button when the room state is READY",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
             expect(getLeaveButton(view)).eql(null);
           });
 
         it("should remove the Leave button when the room state is FAILED",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.FAILED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.FAILED });
 
             expect(getLeaveButton(view)).eql(null);
           });
 
         it("should remove the Leave button when the room state is FULL",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.FULL});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.FULL });
 
             expect(getLeaveButton(view)).eql(null);
           });
 
         it("should display the Leave button when the room state is SESSION_CONNECTED",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.SESSION_CONNECTED });
 
             expect(getLeaveButton(view)).not.eql(null);
           });
 
         it("should display the Leave button when the room state is JOINED",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINED });
 
             expect(getLeaveButton(view)).not.eql(null);
           });
 
         it("should display the Leave button when the room state is HAS_PARTICIPANTS",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+            activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
 
             expect(getLeaveButton(view)).not.eql(null);
           });
 
         it("should leave the room when clicking the Leave button", function() {
-          activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+          activeRoomStore.setStoreState({ roomState: ROOM_STATES.HAS_PARTICIPANTS });
 
           TestUtils.Simulate.click(getLeaveButton(view));
 

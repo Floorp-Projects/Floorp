@@ -86,7 +86,7 @@ describe("loop.StandaloneMozLoop", function() {
         roomUrl: "http://invalid"
       };
 
-      requests[0].respond(200, {"Content-Type": "application/json"},
+      requests[0].respond(200, { "Content-Type": "application/json" },
         JSON.stringify(roomDetails));
 
       sinon.assert.calledOnce(callback);
@@ -96,7 +96,7 @@ describe("loop.StandaloneMozLoop", function() {
     it("should call the callback with failure parameters", function() {
       mozLoop.rooms.get("fakeToken", callback);
 
-      requests[0].respond(401, {"Content-Type": "application/json"},
+      requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrorDescription));
       sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
         return /HTTP 401 Unauthorized/.test(err.message);
@@ -126,7 +126,7 @@ describe("loop.StandaloneMozLoop", function() {
         expires: 20
       };
 
-      requests[0].respond(200, {"Content-Type": "application/json"},
+      requests[0].respond(200, { "Content-Type": "application/json" },
         JSON.stringify(sessionData));
 
       sinon.assert.calledOnce(callback);
@@ -136,7 +136,7 @@ describe("loop.StandaloneMozLoop", function() {
     it("should call the callback with failure parameters", function() {
       mozLoop.rooms.join("fakeToken", callback);
 
-      requests[0].respond(401, {"Content-Type": "application/json"},
+      requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrorDescription));
       sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
         return /HTTP 401 Unauthorized/.test(err.message);
@@ -184,7 +184,7 @@ describe("loop.StandaloneMozLoop", function() {
         expires: 20
       };
 
-      requests[0].respond(200, {"Content-Type": "application/json"},
+      requests[0].respond(200, { "Content-Type": "application/json" },
         JSON.stringify(responseData));
 
       sinon.assert.calledOnce(callback);
@@ -195,7 +195,7 @@ describe("loop.StandaloneMozLoop", function() {
       standaloneMozLoop.rooms.refreshMembership("fakeToken", "fakeSessionToken",
                                                 callback);
 
-      requests[0].respond(401, {"Content-Type": "application/json"},
+      requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrDescription));
       sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
         return /HTTP 401 Unauthorized/.test(err.message);
@@ -230,7 +230,7 @@ describe("loop.StandaloneMozLoop", function() {
     it("should call the callback with failure parameters", function() {
       mozLoop.rooms.leave("fakeToken", "fakeSessionToken", callback);
 
-      requests[0].respond(401, {"Content-Type": "application/json"},
+      requests[0].respond(401, { "Content-Type": "application/json" },
                           JSON.stringify(fakeServerErrorDescription));
       sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
         return /HTTP 401 Unauthorized/.test(err.message);
