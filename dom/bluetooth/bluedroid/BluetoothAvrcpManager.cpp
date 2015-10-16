@@ -35,6 +35,8 @@ namespace {
   static BluetoothAvrcpInterface* sBtAvrcpInterface;
 } // namespace
 
+const int BluetoothAvrcpManager::MAX_NUM_CLIENTS = 1;
+
 /*
  * This function maps attribute id and returns corresponding values
  */
@@ -118,18 +120,27 @@ BluetoothAvrcpManager::Reset()
   mPlayStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
 }
 
-class BluetoothAvrcpManager::InitResultHandler final
-  : public BluetoothAvrcpResultHandler
+class BluetoothAvrcpManager::RegisterModuleResultHandler final
+  : public BluetoothSetupResultHandler
 {
 public:
-  InitResultHandler(BluetoothProfileResultHandler* aRes)
-    : mRes(aRes)
-  { }
+  RegisterModuleResultHandler(BluetoothAvrcpInterface* aInterface,
+                              BluetoothProfileResultHandler* aRes)
+    : mInterface(aInterface)
+    , mRes(aRes)
+  {
+    MOZ_ASSERT(mInterface);
+  }
 
   void OnError(BluetoothStatus aStatus) override
   {
-    BT_WARNING("BluetoothAvrcpInterface::Init failed: %d",
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_WARNING("BluetoothSetupInterface::RegisterModule failed for AVRCP: %d",
                (int)aStatus);
+
+    mInterface->SetNotificationHandler(nullptr);
+
     if (mRes) {
       if (aStatus == STATUS_UNSUPPORTED) {
         /* Not all versions of Bluedroid support AVRCP. So if the
@@ -143,23 +154,28 @@ public:
     }
   }
 
-  void Init() override
+  void RegisterModule() override
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    sBtAvrcpInterface = mInterface;
+
     if (mRes) {
       mRes->Init();
     }
   }
 
 private:
+  BluetoothAvrcpInterface* mInterface;
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothAvrcpManager::OnErrorProfileResultHandlerRunnable final
+class BluetoothAvrcpManager::InitProfileResultHandlerRunnable final
   : public nsRunnable
 {
 public:
-  OnErrorProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
-                                      nsresult aRv)
+  InitProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
+                                   nsresult aRv)
     : mRes(aRes)
     , mRv(aRv)
   {
@@ -168,7 +184,13 @@ public:
 
   NS_IMETHOD Run() override
   {
-    mRes->OnError(mRv);
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (NS_SUCCEEDED(mRv)) {
+      mRes->Init();
+    } else {
+      mRes->OnError(mRv);
+    }
     return NS_OK;
   }
 
@@ -184,32 +206,64 @@ private:
 void
 BluetoothAvrcpManager::InitAvrcpInterface(BluetoothProfileResultHandler* aRes)
 {
-  BluetoothInterface* btInf = BluetoothInterface::GetInstance();
-  if (NS_WARN_IF(!btInf)) {
-    // If there's no HFP interface, we dispatch a runnable
-    // that calls the profile result handler.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sBtAvrcpInterface) {
+    BT_LOGR("Bluetooth AVRCP interface is already initalized.");
     nsRefPtr<nsRunnable> r =
-      new OnErrorProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+      new InitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
-      BT_LOGR("Failed to dispatch HFP OnError runnable");
+      BT_LOGR("Failed to dispatch AVRCP Init runnable");
     }
     return;
   }
 
-  sBtAvrcpInterface = btInf->GetBluetoothAvrcpInterface();
-  if (NS_WARN_IF(!sBtAvrcpInterface)) {
+  auto btInf = BluetoothInterface::GetInstance();
+
+  if (NS_WARN_IF(!btInf)) {
+    // If there's no Bluetooth interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch AVRCP OnError runnable");
+    }
+    return;
+  }
+
+  auto setupInterface = btInf->GetBluetoothSetupInterface();
+
+  if (NS_WARN_IF(!setupInterface)) {
+    // If there's no Setup interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch AVRCP OnError runnable");
+    }
+    return;
+  }
+
+  auto avrcpInterface = btInf->GetBluetoothAvrcpInterface();
+
+  if (NS_WARN_IF(!avrcpInterface)) {
     // If there's no AVRCP interface, we dispatch a runnable
     // that calls the profile result handler.
     nsRefPtr<nsRunnable> r =
-      new OnErrorProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+      new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
-      BT_LOGR("Failed to dispatch HFP OnError runnable");
+      BT_LOGR("Failed to dispatch AVRCP OnError runnable");
     }
     return;
   }
 
-  BluetoothAvrcpManager* avrcpManager = BluetoothAvrcpManager::Get();
-  sBtAvrcpInterface->Init(avrcpManager, new InitResultHandler(aRes));
+  // Set notification handler _before_ registering the module. It could
+  // happen that we receive notifications, before the result handler runs.
+  avrcpInterface->SetNotificationHandler(BluetoothAvrcpManager::Get());
+
+  setupInterface->RegisterModule(
+    SETUP_SERVICE_ID_AVRCP, 0, MAX_NUM_CLIENTS,
+    new RegisterModuleResultHandler(avrcpInterface, aRes));
 }
 
 BluetoothAvrcpManager::~BluetoothAvrcpManager()
@@ -245,37 +299,36 @@ BluetoothAvrcpManager::Get()
   return sBluetoothAvrcpManager;
 }
 
-class BluetoothAvrcpManager::CleanupResultHandler final
-  : public BluetoothAvrcpResultHandler
+class BluetoothAvrcpManager::UnregisterModuleResultHandler final
+  : public BluetoothSetupResultHandler
 {
 public:
-  CleanupResultHandler(BluetoothProfileResultHandler* aRes)
+  UnregisterModuleResultHandler(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
   void OnError(BluetoothStatus aStatus) override
   {
-    BT_WARNING("BluetoothAvrcpInterface::Cleanup failed: %d",
+    MOZ_ASSERT(NS_IsMainThread());
+
+    BT_WARNING("BluetoothSetupInterface::UnregisterModule failed for AVRCP: %d",
                (int)aStatus);
 
+    sBtAvrcpInterface->SetNotificationHandler(nullptr);
     sBtAvrcpInterface = nullptr;
 
     if (mRes) {
-      if (aStatus == STATUS_UNSUPPORTED) {
-        /* Not all versions of Bluedroid support AVRCP. So if the
-         * cleanup fails with STATUS_UNSUPPORTED, we still signal
-         * success.
-         */
-        mRes->Deinit();
-      } else {
-        mRes->OnError(NS_ERROR_FAILURE);
-      }
+      mRes->OnError(NS_ERROR_FAILURE);
     }
   }
 
-  void Cleanup() override
+  void UnregisterModule() override
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    sBtAvrcpInterface->SetNotificationHandler(nullptr);
     sBtAvrcpInterface = nullptr;
+
     if (mRes) {
       mRes->Deinit();
     }
@@ -285,25 +338,33 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothAvrcpManager::CleanupResultHandlerRunnable final
+class BluetoothAvrcpManager::DeinitProfileResultHandlerRunnable final
   : public nsRunnable
 {
 public:
-  CleanupResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
+  DeinitProfileResultHandlerRunnable(BluetoothProfileResultHandler* aRes,
+                                     nsresult aRv)
     : mRes(aRes)
+    , mRv(aRv)
   {
     MOZ_ASSERT(mRes);
   }
 
   NS_IMETHOD Run() override
   {
-    mRes->Deinit();
+    MOZ_ASSERT(NS_IsMainThread());
 
+    if (NS_SUCCEEDED(mRv)) {
+      mRes->Deinit();
+    } else {
+      mRes->OnError(mRv);
+    }
     return NS_OK;
   }
 
 private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
+  nsresult mRv;
 };
 
 // static
@@ -312,16 +373,45 @@ BluetoothAvrcpManager::DeinitAvrcpInterface(BluetoothProfileResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (sBtAvrcpInterface) {
-    sBtAvrcpInterface->Cleanup(new CleanupResultHandler(aRes));
-  } else if (aRes) {
-    // We dispatch a runnable here to make the profile resource handler
-    // behave as if AVRCP was initialized.
-    nsRefPtr<nsRunnable> r = new CleanupResultHandlerRunnable(aRes);
+  if (!sBtAvrcpInterface) {
+    BT_LOGR("Bluetooth AVRCP interface has not been initalized.");
+    nsRefPtr<nsRunnable> r =
+      new DeinitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
-      BT_LOGR("Failed to dispatch cleanup-result-handler runnable");
+      BT_LOGR("Failed to dispatch AVRCP Deinit runnable");
     }
+    return;
   }
+
+  auto btInf = BluetoothInterface::GetInstance();
+
+  if (NS_WARN_IF(!btInf)) {
+    // If there's no backend interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch AVRCP OnError runnable");
+    }
+    return;
+  }
+
+  auto setupInterface = btInf->GetBluetoothSetupInterface();
+
+  if (NS_WARN_IF(!setupInterface)) {
+    // If there's no Setup interface, we dispatch a runnable
+    // that calls the profile result handler.
+    nsRefPtr<nsRunnable> r =
+      new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
+    if (NS_FAILED(NS_DispatchToMainThread(r))) {
+      BT_LOGR("Failed to dispatch AVRCP OnError runnable");
+    }
+    return;
+  }
+
+  setupInterface->UnregisterModule(
+    SETUP_SERVICE_ID_AVRCP,
+    new UnregisterModuleResultHandler(aRes));
 }
 
 void
