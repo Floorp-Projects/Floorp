@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/FontFace.h"
 
+#include <algorithm>
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Promise.h"
@@ -735,6 +736,26 @@ FontFace::Entry::SetLoadState(UserFontLoadState aLoadState)
   for (size_t i = 0; i < mFontFaces.Length(); i++) {
     mFontFaces[i]->SetStatus(LoadStateToStatus(aLoadState));
   }
+}
+
+/* virtual */ void
+FontFace::Entry::GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult)
+{
+  aResult.Clear();
+
+  for (FontFace* f : mFontFaces) {
+    if (f->mInFontFaceSet) {
+      aResult.AppendElement(f->mFontFaceSet->GetUserFontSet());
+    }
+    for (FontFaceSet* s : f->mOtherFontFaceSets) {
+      aResult.AppendElement(s->GetUserFontSet());
+    }
+  }
+
+  // Remove duplicates.
+  aResult.Sort();
+  auto it = std::unique(aResult.begin(), aResult.end());
+  aResult.TruncateLength(it - aResult.begin());
 }
 
 } // namespace dom
