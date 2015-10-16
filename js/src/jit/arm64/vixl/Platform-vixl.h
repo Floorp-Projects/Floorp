@@ -1,4 +1,4 @@
-// Copyright 2013, ARM Limited
+// Copyright 2014, ARM Limited
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,15 +28,12 @@
 #define VIXL_PLATFORM_H
 
 // Define platform specific functionalities.
-// TODO: Remove used of signal.h.
 #include <signal.h>
 
 #include "js-config.h"
 
 namespace vixl {
-
 inline void HostBreakpoint(int64_t code = 0) { raise(SIGINT); }
-
 } // namespace vixl
 
-#endif // VIXL_PLATFORM_H
+#endif
