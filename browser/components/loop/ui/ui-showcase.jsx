@@ -49,7 +49,7 @@
     return false;
   }
 
-  function noop(){}
+  function noop() {}
 
   // We save the visibility change listeners so that we can fake an event
   // to the panel once we've loaded all the views.
@@ -392,7 +392,7 @@
   };
 
   var mockMozLoopNoRoomsNoContext = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopNoRoomsNoContext.getSelectedTabMetadata = function(){};
+  mockMozLoopNoRoomsNoContext.getSelectedTabMetadata = function() {};
   mockMozLoopNoRoomsNoContext.rooms.getAll = function(version, callback) {
     callback(null, []);
   };
@@ -425,7 +425,7 @@
   };
 
   var mockMozLoopLoggedInNoContext = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedInNoContext.getSelectedTabMetadata = function(){};
+  mockMozLoopLoggedInNoContext.getSelectedTabMetadata = function() {};
   mockMozLoopLoggedInNoContext.userProfile = _.cloneDeep(mockMozLoopLoggedIn.userProfile);
 
   var mockMozLoopLoggedInLongEmail = _.cloneDeep(navigator.mozLoop);
@@ -883,7 +883,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   roomState={ROOM_STATES.INIT}
                   roomStore={invitationRoomStore} />
               </div>
@@ -898,7 +898,7 @@
                   dispatcher={dispatcher}
                   error={{}}
                   mozLoop={navigator.mozLoop}
-                  onClose={function(){}}
+                  onClose={function() {}}
                   roomData={{}}
                   savingContext={false}
                   show={true}
@@ -919,7 +919,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomState={ROOM_STATES.HAS_PARTICIPANTS}
                   roomStore={desktopRoomStoreLoading} />
@@ -937,7 +937,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomState={ROOM_STATES.HAS_PARTICIPANTS}
                   roomStore={roomStore} />
@@ -955,7 +955,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomState={ROOM_STATES.HAS_PARTICIPANTS}
                   roomStore={desktopRoomStoreMedium} />
@@ -973,7 +973,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomState={ROOM_STATES.HAS_PARTICIPANTS}
                   roomStore={desktopRoomStoreLarge} />
@@ -990,7 +990,7 @@
                   chatWindowDetached={false}
                   dispatcher={dispatcher}
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomStore={desktopLocalFaceMuteRoomStore} />
               </div>
@@ -1007,7 +1007,7 @@
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
-                  onCallTerminated={function(){}}
+                  onCallTerminated={function() {}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomStore={desktopRemoteFaceMuteRoomStore} />
               </div>

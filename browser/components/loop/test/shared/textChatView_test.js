@@ -376,7 +376,7 @@ describe("loop.shared.views.TextChatView", function () {
 
     // note that this is really an integration test to be sure that we don't
     // inadvertently regress using LinkifiedTextView.
-    it("should linkify a URL starting with http", function (){
+    it("should linkify a URL starting with http", function () {
       view = mountTestComponent({
         showTimestamp: true,
         timestamp: "2015-06-23T22:48:39.738Z",

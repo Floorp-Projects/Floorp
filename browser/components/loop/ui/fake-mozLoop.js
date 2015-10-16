@@ -112,7 +112,7 @@ var fakeRooms = [
    */
   navigator.mozLoop = {
     ensureRegistered: function() {},
-    getAudioBlob: function(){},
+    getAudioBlob: function() {},
     getLoopPref: function(pref) {
       switch (pref) {
         // Ensure we skip FTE completely.
@@ -122,7 +122,7 @@ var fakeRooms = [
       return null;
     },
     hasEncryptionKey: true,
-    setLoopPref: function(){},
+    setLoopPref: function() {},
     releaseCallData: function() {},
     copyString: function() {},
     getUserAvatar: function(emailAddress) {
