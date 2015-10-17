@@ -3719,15 +3719,11 @@ JSObject::traceChildren(JSTracer* trc)
             GetObjectSlotNameFunctor func(nobj);
             JS::AutoTracingDetails ctx(trc, func);
             JS::AutoTracingIndex index(trc);
-            // Tracing can mutate the target but cannot change the slot count,
-            // but the compiler has no way of knowing this.
-            const uint32_t nslots = nobj->slotSpan();
-            for (uint32_t i = 0; i < nslots; ++i) {
+            for (uint32_t i = 0; i < nobj->slotSpan(); ++i) {
                 TraceManuallyBarrieredEdge(trc, nobj->getSlotRef(i).unsafeUnbarrieredForTracing(),
                                            "object slot");
                 ++index;
             }
-            MOZ_ASSERT(nslots == nobj->slotSpan());
         }
 
         do {
