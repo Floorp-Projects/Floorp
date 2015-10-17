@@ -4381,7 +4381,8 @@ void
 nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
   MOZ_ASSERT_IF(msg != WM_GETOBJECT,
-                !mozilla::ipc::MessageChannel::IsPumpingMessages());
+                !mozilla::ipc::MessageChannel::IsPumpingMessages() ||
+                mozilla::ipc::SuppressedNeuteringRegion::IsNeuteringSuppressed());
 
   // Modal UI being displayed in windowless plugins.
   if (mozilla::ipc::MessageChannel::IsSpinLoopActive() &&
