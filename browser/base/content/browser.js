@@ -2748,6 +2748,7 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:SendSSLErrorReport", this);
     mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
+    mm.addMessageListener("Browser:OverrideWeakCrypto", this);
   },
 
   uninit: function () {
@@ -2758,6 +2759,7 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:SendSSLErrorReport", this);
     mm.removeMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
+    mm.removeMessageListener("Browser:OverrideWeakCrypto", this);
   },
 
   handleEvent: function (event) {
@@ -2814,6 +2816,14 @@ var BrowserOnClick = {
         let reportStatus = msg.data.reportStatus;
         Services.telemetry.getHistogramById("TLS_ERROR_REPORT_UI")
           .add(reportStatus);
+      break;
+      case "Browser:OverrideWeakCrypto":
+        let weakCryptoOverride = Cc["@mozilla.org/security/weakcryptooverride;1"]
+                                   .getService(Ci.nsIWeakCryptoOverride);
+        weakCryptoOverride.addWeakCryptoOverride(
+          msg.data.location.hostname,
+          PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser),
+          true /* temporary */);
       break;
     }
   },
