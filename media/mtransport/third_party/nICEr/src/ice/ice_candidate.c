@@ -934,8 +934,9 @@ int nr_ice_format_candidate_attribute(nr_ice_candidate *cand, char *attr, int ma
     len=strlen(attr); attr+=len; maxlen-=len;
 
     /* raddr, rport */
-    raddr = (cand->stream->ctx->flags & NR_ICE_CTX_FLAGS_RELAY_ONLY |
-             NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS) ?
+    raddr = (cand->stream->ctx->flags &
+             (NR_ICE_CTX_FLAGS_RELAY_ONLY |
+              NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS)) ?
       &cand->addr : &cand->base;
 
     switch(cand->type){
