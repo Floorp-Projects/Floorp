@@ -3580,6 +3580,16 @@ BaselineCompiler::emit_JSOP_ENDITER()
 }
 
 bool
+BaselineCompiler::emit_JSOP_GETRVAL()
+{
+    frame.syncStack(0);
+
+    masm.loadValue(frame.addressOfReturnValue(), R0);
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_SETRVAL()
 {
     // Store to the frame's return value slot.
