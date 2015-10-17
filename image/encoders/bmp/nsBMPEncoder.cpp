@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,7 +10,6 @@
 #include "nsString.h"
 #include "nsStreamUtils.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::image;
@@ -187,9 +187,9 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsAutoArrayPtr<uint8_t> row(new (fallible)
-                              uint8_t[mBMPInfoHeader.width *
-                              BytesPerPixel(mBMPInfoHeader.bpp)]);
+  UniquePtr<uint8_t[]> row(new (fallible)
+                           uint8_t[mBMPInfoHeader.width *
+                                   BytesPerPixel(mBMPInfoHeader.bpp)]);
   if (!row) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -201,18 +201,18 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
     for (int32_t y = mBMPInfoHeader.height - 1; y >= 0 ; y --) {
       ConvertHostARGBRow(&aData[y * aStride], row, mBMPInfoHeader.width);
       if(mBMPInfoHeader.bpp == 24) {
-        EncodeImageDataRow24(row);
+        EncodeImageDataRow24(row.get());
       } else {
-        EncodeImageDataRow32(row);
+        EncodeImageDataRow32(row.get());
       }
     }
   } else if (aInputFormat == INPUT_FORMAT_RGBA) {
     // simple RGBA, no conversion needed
     for (int32_t y = 0; y < mBMPInfoHeader.height; y++) {
       if (mBMPInfoHeader.bpp == 24) {
-        EncodeImageDataRow24(row);
+        EncodeImageDataRow24(row.get());
       } else {
-        EncodeImageDataRow32(row);
+        EncodeImageDataRow32(row.get());
       }
     }
   } else if (aInputFormat == INPUT_FORMAT_RGB) {
@@ -425,7 +425,8 @@ nsBMPEncoder::CloseWithStatus(nsresult aStatus)
 //    an output with no alpha in machine-independent byte order.
 //
 void
-nsBMPEncoder::ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
+nsBMPEncoder::ConvertHostARGBRow(const uint8_t* aSrc,
+                                 const UniquePtr<uint8_t[]>& aDest,
                                  uint32_t aPixelWidth)
 {
   int bytes = BytesPerPixel(mBMPInfoHeader.bpp);
