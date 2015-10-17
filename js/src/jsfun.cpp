@@ -487,6 +487,18 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
             if (fun->hasResolvedName())
                 return true;
 
+            if (fun->isClassConstructor()) {
+                // It's impossible to have an empty named class expression. We
+                // use empty as a sentinel when creating default class
+                // constructors.
+                MOZ_ASSERT(fun->atom() != cx->names().empty);
+
+                // Unnamed class expressions should not get a .name property
+                // at all.
+                if (fun->atom() == nullptr)
+                    return true;
+            }
+
             v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
         }
 
