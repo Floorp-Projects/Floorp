@@ -15,8 +15,6 @@
 
 #include "Decoder.h"
 
-#include "nsAutoPtr.h"
-
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "qcms.h"
