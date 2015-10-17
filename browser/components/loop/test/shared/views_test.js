@@ -314,7 +314,7 @@ describe("loop.shared.views", function() {
 
     it("should render a visible button", function() {
       var settingsMenuItems = [{ id: "help" }];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
 
       var node = comp.getDOMNode().querySelector(".btn-settings");
       expect(node.classList.contains("hide")).eql(false);
@@ -330,7 +330,7 @@ describe("loop.shared.views", function() {
         { id: "not Defined" },
         { id: "help" }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
       var menuItems = comp.getDOMNode().querySelectorAll(".settings-menu > li");
       expect(menuItems).to.have.length.of(1);
     });
@@ -340,13 +340,13 @@ describe("loop.shared.views", function() {
         { id: "not Defined" },
         { id: "another wrong menu item" }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
       expect(comp.getDOMNode()).to.eql(null);
     });
 
     it("should show the settings dropdown on click", function() {
       var settingsMenuItems = [{ id: "help" }];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
 
       expect(comp.state.showMenu).eql(false);
       TestUtils.Simulate.click(comp.getDOMNode().querySelector(".btn-settings"));
@@ -388,7 +388,7 @@ describe("loop.shared.views", function() {
           onClick: function() {}
         }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
 
       var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
       expect(node.classList.contains("hide")).eql(false);
@@ -403,7 +403,7 @@ describe("loop.shared.views", function() {
           onClick: function() {}
         }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
 
       var node = comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
       expect(node.classList.contains("hide")).eql(true);
@@ -419,7 +419,7 @@ describe("loop.shared.views", function() {
           onClick: sandbox.stub()
         }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
 
       TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit"));
       sinon.assert.calledOnce(settingsMenuItems[0].onClick);
@@ -429,7 +429,7 @@ describe("loop.shared.views", function() {
       var settingsMenuItems = [
         { id: "help" }
       ];
-      var comp = mountTestComponent({ menuItems: settingsMenuItems } );
+      var comp = mountTestComponent({ menuItems: settingsMenuItems });
 
       TestUtils.Simulate.click(comp.getDOMNode().querySelector(".settings-menu > li:last-child"));
 
