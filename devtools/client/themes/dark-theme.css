@@ -5,6 +5,10 @@
 
 @import url(variables.css);
 
+body {
+  margin: 0;
+}
+
 .theme-body {
   background: var(--theme-body-background);
   color: var(--theme-body-color);

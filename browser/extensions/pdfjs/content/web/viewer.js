@@ -142,22 +142,26 @@ function getOutputScale(ctx) {
 
 /**
  * Scrolls specified element into view of its parent.
- * element {Object} The element to be visible.
- * spot {Object} An object with optional top and left properties,
- *               specifying the offset from the top left edge.
+ * @param {Object} element - The element to be visible.
+ * @param {Object} spot - An object with optional top and left properties,
+ *   specifying the offset from the top left edge.
+ * @param {boolean} skipOverflowHiddenElements - Ignore elements that have
+ *   the CSS rule `overflow: hidden;` set. The default is false.
  */
-function scrollIntoView(element, spot) {
+function scrollIntoView(element, spot, skipOverflowHiddenElements) {
   // Assuming offsetParent is available (it's not available when viewer is in
   // hidden iframe or object). We have to scroll: if the offsetParent is not set
   // producing the error. See also animationStartedClosure.
   var parent = element.offsetParent;
-  var offsetY = element.offsetTop + element.clientTop;
-  var offsetX = element.offsetLeft + element.clientLeft;
   if (!parent) {
     console.error('offsetParent is not set -- cannot scroll');
     return;
   }
-  while (parent.clientHeight === parent.scrollHeight) {
+  var checkOverflow = skipOverflowHiddenElements || false;
+  var offsetY = element.offsetTop + element.clientTop;
+  var offsetX = element.offsetLeft + element.clientLeft;
+  while (parent.clientHeight === parent.scrollHeight ||
+         (checkOverflow && getComputedStyle(parent).overflow === 'hidden')) {
     if (parent.dataset._scaleY) {
       offsetY /= parent.dataset._scaleY;
       offsetX /= parent.dataset._scaleX;
@@ -458,7 +462,8 @@ var DEFAULT_PREFERENCES = {
   disableAutoFetch: false,
   disableFontFace: false,
   disableTextLayer: false,
-  useOnlyCssZoom: false
+  useOnlyCssZoom: false,
+  externalLinkTarget: 0,
 };
 
 
@@ -1272,10 +1277,12 @@ var PDFFindController = (function PDFFindControllerClosure() {
         pageIndex, index, elements, beginIdx, endIdx) {
       if (this.selected.matchIdx === index &&
           this.selected.pageIdx === pageIndex) {
-        scrollIntoView(elements[beginIdx], {
+        var spot = {
           top: FIND_SCROLL_OFFSET_TOP,
           left: FIND_SCROLL_OFFSET_LEFT
-        });
+        };
+        scrollIntoView(elements[beginIdx], spot,
+                       /* skipOverflowHiddenElements = */ true);
       }
     },
 
@@ -1691,37 +1698,73 @@ var PDFHistory = (function () {
 
       var self = this;
       window.addEventListener('popstate', function pdfHistoryPopstate(evt) {
-        evt.preventDefault();
-        evt.stopPropagation();
-
         if (!self.historyUnlocked) {
           return;
         }
         if (evt.state) {
           // Move back/forward in the history.
           self._goTo(evt.state);
-        } else {
-          // Handle the user modifying the hash of a loaded document.
-          self.previousHash = window.location.hash.substring(1);
+          return;
+        }
 
-          // If the history is empty when the hash changes,
-          // update the previous entry in the browser history.
-          if (self.uid === 0) {
-            var previousParams = (self.previousHash && self.currentBookmark &&
+        // If the state is not set, then the user tried to navigate to a
+        // different hash by manually editing the URL and pressing Enter, or by
+        // clicking on an in-page link (e.g. the "current view" link).
+        // Save the current view state to the browser history.
+
+        // Note: In Firefox, history.null could also be null after an in-page
+        // navigation to the same URL, and without dispatching the popstate
+        // event: https://bugzilla.mozilla.org/show_bug.cgi?id=1183881
+
+        if (self.uid === 0) {
+          // Replace the previous state if it was not explicitly set.
+          var previousParams = (self.previousHash && self.currentBookmark &&
             self.previousHash !== self.currentBookmark) ?
             {hash: self.currentBookmark, page: self.currentPage} :
             {page: 1};
-            self.historyUnlocked = false;
-            self.allowHashChange = false;
-            window.history.back();
-            self._pushToHistory(previousParams, false, true);
-            window.history.forward();
-            self.historyUnlocked = true;
-          }
-          self._pushToHistory({hash: self.previousHash}, false, true);
-          self._updatePreviousBookmark();
+          replacePreviousHistoryState(previousParams, function() {
+            updateHistoryWithCurrentHash();
+          });
+        } else {
+          updateHistoryWithCurrentHash();
         }
       }, false);
+
+
+      function updateHistoryWithCurrentHash() {
+        self.previousHash = window.location.hash.slice(1);
+        self._pushToHistory({hash: self.previousHash}, false, true);
+        self._updatePreviousBookmark();
+      }
+
+      function replacePreviousHistoryState(params, callback) {
+        // To modify the previous history entry, the following happens:
+        // 1. history.back()
+        // 2. _pushToHistory, which calls history.replaceState( ... )
+        // 3. history.forward()
+        // Because a navigation via the history API does not immediately update
+        // the history state, the popstate event is used for synchronization.
+        self.historyUnlocked = false;
+
+        // Suppress the hashchange event to avoid side effects caused by
+        // navigating back and forward.
+        self.allowHashChange = false;
+        window.addEventListener('popstate', rewriteHistoryAfterBack);
+        history.back();
+
+        function rewriteHistoryAfterBack() {
+          window.removeEventListener('popstate', rewriteHistoryAfterBack);
+          window.addEventListener('popstate', rewriteHistoryAfterForward);
+          self._pushToHistory(params, false, true);
+          history.forward();
+        }
+        function rewriteHistoryAfterForward() {
+          window.removeEventListener('popstate', rewriteHistoryAfterForward);
+          self.allowHashChange = true;
+          self.historyUnlocked = true;
+          callback();
+        }
+      }
 
       function pdfHistoryBeforeUnload() {
         var previousParams = self._getPreviousParams(null, true);
@@ -1774,19 +1817,7 @@ var PDFHistory = (function () {
       if (!this.initialized) {
         return true;
       }
-      // If the current hash changes when moving back/forward in the history,
-      // this will trigger a 'popstate' event *as well* as a 'hashchange' event.
-      // Since the hash generally won't correspond to the exact the position
-      // stored in the history's state object, triggering the 'hashchange' event
-      // can thus corrupt the browser history.
-      //
-      // When the hash changes during a 'popstate' event, we *only* prevent the
-      // first 'hashchange' event and immediately reset allowHashChange.
-      // If it is not reset, the user would not be able to change the hash.
-
-      var temp = this.allowHashChange;
-      this.allowHashChange = true;
-      return temp;
+      return this.allowHashChange;
     },
 
     _updatePreviousBookmark: function pdfHistory_updatePreviousBookmark() {
@@ -3464,7 +3495,7 @@ var PDFPageView = (function PDFPageViewClosure() {
       }
     },
 
-    reset: function PDFPageView_reset(keepAnnotations) {
+    reset: function PDFPageView_reset(keepZoomLayer, keepAnnotations) {
       if (this.renderTask) {
         this.renderTask.cancel();
       }
@@ -3476,29 +3507,27 @@ var PDFPageView = (function PDFPageViewClosure() {
       div.style.height = Math.floor(this.viewport.height) + 'px';
 
       var childNodes = div.childNodes;
-      var currentZoomLayer = this.zoomLayer || null;
+      var currentZoomLayerNode = (keepZoomLayer && this.zoomLayer) || null;
       var currentAnnotationNode = (keepAnnotations && this.annotationLayer &&
                                    this.annotationLayer.div) || null;
       for (var i = childNodes.length - 1; i >= 0; i--) {
         var node = childNodes[i];
-        if (currentZoomLayer === node || currentAnnotationNode === node) {
+        if (currentZoomLayerNode === node || currentAnnotationNode === node) {
           continue;
         }
         div.removeChild(node);
       }
       div.removeAttribute('data-loaded');
 
-      if (keepAnnotations) {
-        if (this.annotationLayer) {
-          // Hide annotationLayer until all elements are resized
-          // so they are not displayed on the already-resized page
-          this.annotationLayer.hide();
-        }
+      if (currentAnnotationNode) {
+        // Hide annotationLayer until all elements are resized
+        // so they are not displayed on the already-resized page
+        this.annotationLayer.hide();
       } else {
         this.annotationLayer = null;
       }
 
-      if (this.canvas) {
+      if (this.canvas && !currentZoomLayerNode) {
         // Zeroing the width and height causes Firefox to release graphics
         // resources immediately, which can greatly reduce memory consumption.
         this.canvas.width = 0;
@@ -3537,19 +3566,21 @@ var PDFPageView = (function PDFPageViewClosure() {
         }
       }
 
-      if (this.canvas &&
-          (PDFJS.useOnlyCssZoom ||
-            (this.hasRestrictedScaling && isScalingRestricted))) {
-        this.cssTransform(this.canvas, true);
-        return;
-      } else if (this.canvas && !this.zoomLayer) {
-        this.zoomLayer = this.canvas.parentNode;
-        this.zoomLayer.style.position = 'absolute';
+      if (this.canvas) {
+        if (PDFJS.useOnlyCssZoom ||
+            (this.hasRestrictedScaling && isScalingRestricted)) {
+          this.cssTransform(this.canvas, true);
+          return;
+        }
+        if (!this.zoomLayer) {
+          this.zoomLayer = this.canvas.parentNode;
+          this.zoomLayer.style.position = 'absolute';
+        }
       }
       if (this.zoomLayer) {
         this.cssTransform(this.zoomLayer.firstChild);
       }
-      this.reset(true);
+      this.reset(/* keepZoomLayer = */ true, /* keepAnnotations = */ true);
     },
 
     /**
@@ -3662,7 +3693,7 @@ var PDFPageView = (function PDFPageViewClosure() {
       var canvas = document.createElement('canvas');
       canvas.id = 'page' + this.id;
       canvasWrapper.appendChild(canvas);
-      if (this.annotationLayer) {
+      if (this.annotationLayer && this.annotationLayer.div) {
         // annotationLayer needs to stay on top
         div.insertBefore(canvasWrapper, this.annotationLayer.div);
       } else {
@@ -3709,7 +3740,7 @@ var PDFPageView = (function PDFPageViewClosure() {
         textLayerDiv.className = 'textLayer';
         textLayerDiv.style.width = canvas.style.width;
         textLayerDiv.style.height = canvas.style.height;
-        if (this.annotationLayer) {
+        if (this.annotationLayer && this.annotationLayer.div) {
           // annotationLayer needs to stay on top
           div.insertBefore(textLayerDiv, this.annotationLayer.div);
         } else {
@@ -3756,6 +3787,12 @@ var PDFPageView = (function PDFPageViewClosure() {
         }
 
         if (self.zoomLayer) {
+          // Zeroing the width and height causes Firefox to release graphics
+          // resources immediately, which can greatly reduce memory consumption.
+          var zoomLayerCanvas = self.zoomLayer.firstChild;
+          zoomLayerCanvas.width = 0;
+          zoomLayerCanvas.height = 0;
+
           div.removeChild(self.zoomLayer);
           self.zoomLayer = null;
         }
@@ -6195,12 +6232,24 @@ var PDFViewerApplication = {
       }),
       Preferences.get('useOnlyCssZoom').then(function resolved(value) {
         PDFJS.useOnlyCssZoom = value;
-      })
+      }),
+      Preferences.get('externalLinkTarget').then(function resolved(value) {
+        if (PDFJS.isExternalLinkTargetSet()) {
+          return;
+        }
+        PDFJS.externalLinkTarget = value;
+      }),
       // TODO move more preferences and other async stuff here
     ]).catch(function (reason) { });
 
     return initializedPromise.then(function () {
-      PDFViewerApplication.initialized = true;
+      if (self.isViewerEmbedded && !PDFJS.isExternalLinkTargetSet()) {
+        // Prevent external links from "replacing" the viewer,
+        // when it's embedded in e.g. an iframe or an object.
+        PDFJS.externalLinkTarget = PDFJS.LinkTarget.TOP;
+      }
+
+      self.initialized = true;
     });
   },
 

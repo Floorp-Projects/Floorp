@@ -2008,7 +2008,6 @@ nsProtocolProxyService::PruneProxyInfo(const nsProtocolInfo &info,
 
     if (allDisabled) {
         LOG(("All proxies are disabled, try a DIRECT rule!"));
-        NS_RELEASE(head);
         *list = nullptr;
         return;
     }

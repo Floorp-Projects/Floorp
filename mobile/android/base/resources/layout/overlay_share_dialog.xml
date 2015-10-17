@@ -75,4 +75,20 @@
             gecko:disabledText="@string/overlay_share_bookmark_btn_label_already"/>
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/check"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:src="@drawable/overlay_check"
+        android:visibility="invisible"/>
+
+    <!-- This transparent View is used to overlay the
+         entire Activity with an onClickListener. -->
+    <View
+        android:id="@+id/fullscreen_click_target"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:visibility="gone"/>
 </merge>

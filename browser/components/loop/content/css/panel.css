@@ -130,29 +130,22 @@ body {
   border: 0.1rem solid #5cccee;
 }
 
-/* Rooms and contacts shared CSS */
+/* Rooms CSS */
 
-.contact-list-empty,
-.contact-search-list-empty,
 .no-conversations-message {
-  background-repeat: no-repeat;
-  background-position: top center;
+  /* example of vertical aligning a container in an element see:
+     http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/ */
   text-align: center;
   color: #4a4a4a;
   font-weight: lighter;
-}
-
-
-
-.no-conversations-message {
-  /* example of vertical aligning a container in an element
-    see: http://zerosixthree.se/vertical-align-anything-with-just-3-lines-of-css/ */
   position: relative;
   top: 50%;
   transform: translateY(-50%);
   padding-top: 11rem;
   padding-bottom: 1rem;
   background-image: url("../shared/img/empty_conversations.svg");
+  background-repeat: no-repeat;
+  background-position: top center;
 }
 
 .panel-text-medium,
