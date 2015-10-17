@@ -231,8 +231,9 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     static void addWeakEntry(JSTracer* trc, JS::GCCellPtr key, gc::WeakMarkable markable)
     {
         GCMarker& marker = *static_cast<GCMarker*>(trc);
+        Zone* zone = key.asCell()->asTenured().zone();
 
-        auto p = marker.weakKeys.get(key);
+        auto p = zone->gcWeakKeys.get(key);
         if (p) {
             gc::WeakEntryVector& weakEntries = p->value;
             if (!weakEntries.append(Move(markable)))
@@ -240,7 +241,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         } else {
             gc::WeakEntryVector weakEntries;
             MOZ_ALWAYS_TRUE(weakEntries.append(Move(markable)));
-            if (!marker.weakKeys.put(JS::GCCellPtr(key), Move(weakEntries)))
+            if (!zone->gcWeakKeys.put(JS::GCCellPtr(key), Move(weakEntries)))
                 marker.abortLinearWeakMarking();
         }
     }
