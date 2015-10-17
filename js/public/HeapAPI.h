@@ -149,11 +149,13 @@ struct Zone
 
 } /* namespace shadow */
 
-// A GC pointer, tagged with the trace kind.
-//
-// In general, a GC pointer should be stored with an exact type. This class
-// is for use when that is not possible because a single pointer must point
-// to several kinds of GC thing.
+/**
+ * A GC pointer, tagged with the trace kind.
+ *
+ * In general, a GC pointer should be stored with an exact type. This class
+ * is for use when that is not possible because a single pointer must point
+ * to several kinds of GC thing.
+ */
 class JS_FRIEND_API(GCCellPtr)
 {
   public:
@@ -405,7 +407,7 @@ IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime* rt, const JS::GC
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 }
 
-/*
+/**
  * Create an object providing access to the garbage collector's internal notion
  * of the current state of memory (both GC heap memory and GCthing-controlled
  * malloc memory.
