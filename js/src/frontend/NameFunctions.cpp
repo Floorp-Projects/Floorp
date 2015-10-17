@@ -501,18 +501,11 @@ class NameResolver
             break;
 
           case PNK_RETURN:
-            MOZ_ASSERT(cur->isArity(PN_BINARY));
-            if (ParseNode* returnValue = cur->pn_left) {
+            MOZ_ASSERT(cur->isArity(PN_UNARY));
+            if (ParseNode* returnValue = cur->pn_kid) {
                 if (!resolve(returnValue, prefix))
                     return false;
             }
-#ifdef DEBUG
-            if (ParseNode* internalAssignForGenerators = cur->pn_right) {
-                MOZ_ASSERT(internalAssignForGenerators->isKind(PNK_NAME));
-                MOZ_ASSERT(internalAssignForGenerators->pn_atom == cx->names().dotGenRVal);
-                MOZ_ASSERT(internalAssignForGenerators->isAssigned());
-            }
-#endif
             break;
 
           case PNK_IMPORT:
