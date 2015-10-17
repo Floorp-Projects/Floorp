@@ -3109,24 +3109,21 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // Check if the frame to scroll before checking the default action
       // because if the scroll target is a plugin, the default action should be
       // chosen by the plugin rather than by our prefs.
-      nsIFrame* frameToScroll = nullptr;
-      nsPluginFrame* pluginFrame = nullptr;
+      nsIFrame* frameToScroll =
+        ComputeScrollTarget(aTargetFrame, wheelEvent,
+                            COMPUTE_DEFAULT_ACTION_TARGET);
+      nsPluginFrame* pluginFrame = do_QueryFrame(frameToScroll);
 
       // When APZ is enabled, the actual scroll animation might be handled by
       // the compositor.
       WheelPrefs::Action action;
-      if (wheelEvent->mFlags.mHandledByAPZ) {
+      if (pluginFrame) {
+        MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
+        action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
+      } else if (wheelEvent->mFlags.mHandledByAPZ) {
         action = WheelPrefs::ACTION_NONE;
       } else {
-        frameToScroll = ComputeScrollTarget(aTargetFrame, wheelEvent,
-                                            COMPUTE_DEFAULT_ACTION_TARGET);
-        pluginFrame = do_QueryFrame(frameToScroll);
-        if (pluginFrame) {
-          MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
-          action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
-        } else {
-          action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
-        }
+        action = WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent);
       }
       switch (action) {
         case WheelPrefs::ACTION_SCROLL: {

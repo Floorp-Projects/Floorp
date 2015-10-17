@@ -274,6 +274,12 @@ public:
     originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
   }
 
+  void PreventDefault()
+  {
+    mFlags.mDefaultPrevented = true;
+    mFlags.mDefaultPreventedByChrome = true;
+  }
+
   /**
    * Utils for checking event types
    */

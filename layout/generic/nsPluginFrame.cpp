@@ -1870,6 +1870,8 @@ nsPluginFrame::HandleWheelEventAsDefaultAction(WidgetWheelEvent* aWheelEvent)
   aWheelEvent->mViewPortIsOverscrolled = false;
   aWheelEvent->overflowDeltaX = 0;
   aWheelEvent->overflowDeltaY = 0;
+  // Consume the event explicitly.
+  aWheelEvent->PreventDefault();
 }
 
 bool
