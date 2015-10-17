@@ -1727,8 +1727,26 @@
      *   Stack: => constructor
      */ \
     macro(JSOP_DERIVEDCONSTRUCTOR, 168,"derivedconstructor", NULL, 5,  1,  1,  JOF_ATOM) \
-    macro(JSOP_UNUSED169,     169,"unused169",  NULL,     1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED170,     170,"unused170",  NULL,     1,  0,  0,  JOF_BYTE) \
+    /*
+     * Throws a runtime TypeError for invalid assignment to 'const'. The
+     * localno is used for better error messages.
+     *
+     *   Category: Variables and Scopes
+     *   Type: Local Variables
+     *   Operands: uint32_t localno
+     *   Stack: =>
+     */ \
+    macro(JSOP_THROWSETCONST,        169, "throwsetconst",        NULL, 4,  1,  1, JOF_LOCAL|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    /*
+     * Throws a runtime TypeError for invalid assignment to 'const'. The
+     * scope coordinate is used for better error messages.
+     *
+     *   Category: Variables and Scopes
+     *   Type: Aliased Variables
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: =>
+     */ \
+    macro(JSOP_THROWSETALIASEDCONST, 170, "throwsetaliasedconst", NULL, 5,  1,  1, JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
     macro(JSOP_UNUSED171,     171,"unused171",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED172,     172,"unused172",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED173,     173,"unused173",  NULL,     1,  0,  0,  JOF_BYTE) \

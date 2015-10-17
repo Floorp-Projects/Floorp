@@ -1242,6 +1242,21 @@ UnaliasedVarOpToAliasedVarOp(JSOp op)
     }
 }
 
+static inline JSOp
+CheckSetConstOp(JSOp op, ParseNode* pn)
+{
+    if (pn->resolve()->isConst()) {
+        switch (op) {
+          case JSOP_GETLOCAL: case JSOP_GETALIASEDVAR: break;
+          case JSOP_INITLEXICAL: case JSOP_INITALIASEDLEXICAL: break;
+          case JSOP_SETLOCAL: return JSOP_THROWSETCONST;
+          case JSOP_SETALIASEDVAR: return JSOP_THROWSETALIASEDCONST;
+          default: MOZ_CRASH("unexpected set var op");
+        }
+    }
+    return op;
+}
+
 bool
 BytecodeEmitter::emitVarOp(ParseNode* pn, JSOp op)
 {
@@ -1288,7 +1303,7 @@ BytecodeEmitter::emitVarOp(ParseNode* pn, JSOp op)
         ScopeCoordinate sc;
         sc.setHops(pn->pn_scopecoord.hops());
         sc.setSlot(pn->pn_scopecoord.slot());
-        return emitAliasedVarOp(op, sc, NodeNeedsCheckLexical(pn));
+        return emitAliasedVarOp(CheckSetConstOp(op, pn), sc, NodeNeedsCheckLexical(pn));
     }
 
 #ifdef DEBUG
@@ -1299,7 +1314,8 @@ BytecodeEmitter::emitVarOp(ParseNode* pn, JSOp op)
 #endif
     MOZ_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
     MOZ_ASSERT(pn->isUsed() || pn->isDefn());
-    return emitUnaliasedVarOp(op, pn->pn_scopecoord.slot(), NodeNeedsCheckLexical(pn));
+    return emitUnaliasedVarOp(CheckSetConstOp(op, pn), pn->pn_scopecoord.slot(),
+                              NodeNeedsCheckLexical(pn));
 }
 
 static JSOp
@@ -1703,20 +1719,6 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
         dn = (Definition*) pn;
     } else {
         return true;
-    }
-
-    // Throw an error on attempts to mutate const-declared bindings.
-    switch (op) {
-      case JSOP_GETNAME:
-        break;
-      default:
-        if (pn->isConst()) {
-            JSAutoByteString name;
-            if (!AtomToPrintableString(cx, pn->pn_atom, &name))
-                return false;
-            reportError(pn, JSMSG_BAD_CONST_ASSIGN, name.ptr());
-            return false;
-        }
     }
 
     if (dn->pn_scopecoord.isFree()) {
@@ -4406,18 +4408,16 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (lhs->pn_scopecoord.isFree()) {
             if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
                 return false;
-            if (!lhs->isConst()) {
-                JSOp bindOp;
-                if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME))
-                    bindOp = JSOP_BINDNAME;
-                else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME))
-                    bindOp = JSOP_BINDGNAME;
-                else
-                    bindOp = JSOP_BINDINTRINSIC;
-                if (!emitIndex32(bindOp, atomIndex))
-                    return false;
-                offset++;
-            }
+            JSOp bindOp;
+            if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME))
+                bindOp = JSOP_BINDNAME;
+            else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME))
+                bindOp = JSOP_BINDGNAME;
+            else
+                bindOp = JSOP_BINDINTRINSIC;
+            if (!emitIndex32(bindOp, atomIndex))
+                return false;
+            offset++;
         }
         break;
       case PNK_DOT:
@@ -4465,18 +4465,12 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         MOZ_ASSERT(rhs);
         switch (lhs->getKind()) {
           case PNK_NAME:
-            if (lhs->isConst()) {
-                if (lhs->isOp(JSOP_CALLEE)) {
-                    if (!emit1(JSOP_CALLEE))
-                        return false;
-                } else if (lhs->isOp(JSOP_GETNAME) || lhs->isOp(JSOP_GETGNAME)) {
-                    if (!emitIndex32(lhs->getOp(), atomIndex))
-                        return false;
-                } else {
-                    MOZ_ASSERT(JOF_OPTYPE(lhs->getOp()) != JOF_ATOM);
-                    if (!emitVarOp(lhs, lhs->getOp()))
-                        return false;
-                }
+            if (lhs->isConst() && lhs->isOp(JSOP_CALLEE)) {
+                if (!emit1(JSOP_CALLEE))
+                    return false;
+            } else if (lhs->isConst() && (lhs->isOp(JSOP_GETNAME) || lhs->isOp(JSOP_GETGNAME))) {
+                if (!emitIndex32(lhs->getOp(), atomIndex))
+                    return false;
             } else if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME)) {
                 if (!emit1(JSOP_DUP))
                     return false;
@@ -4569,12 +4563,7 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
 
     /* If += etc., emit the binary operator with a source note. */
     if (op != JSOP_NOP) {
-        /*
-         * Take care to avoid SRC_ASSIGNOP if the left-hand side is a const
-         * declared in the current compilation unit, as in this case (just
-         * a bit further below) we will avoid emitting the assignment op.
-         */
-        if (!lhs->isKind(PNK_NAME) || !lhs->isConst()) {
+        if (!lhs->isKind(PNK_NAME)) {
             if (!newSrcNote(SRC_ASSIGNOP))
                 return false;
         }
