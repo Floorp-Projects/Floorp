@@ -337,19 +337,12 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
         return PushResult::Recyclable;
       }
 
-      // A return node's left half is what you'd expect: the return expression,
-      // if any.  The right half is non-null only for returns inside generator
-      // functions, with the structure described in the assertions.
+      // A return node's child is what you'd expect: the return expression,
+      // if any.
       case PNK_RETURN: {
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        if (pn->pn_left)
-            stack->push(pn->pn_left);
-        if (pn->pn_right) {
-            MOZ_ASSERT(pn->pn_right->isKind(PNK_NAME));
-            MOZ_ASSERT(pn->pn_right->pn_atom->equals(".genrval"));
-            MOZ_ASSERT(pn->pn_right->isAssigned());
-            stack->push(pn->pn_right);
-        }
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        if (pn->pn_kid)
+            stack->push(pn->pn_kid);
         return PushResult::Recyclable;
       }
 

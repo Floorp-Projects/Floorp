@@ -114,11 +114,11 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       // Statements containing only an expression have no declarations.
       case PNK_SEMI:
       case PNK_THROW:
+      case PNK_RETURN:
         MOZ_ASSERT(node->isArity(PN_UNARY));
         *result = false;
         return true;
 
-      case PNK_RETURN:
       // These two aren't statements in the spec, but we sometimes insert them
       // in statement lists anyway.
       case PNK_YIELD_STAR:
@@ -1262,20 +1262,12 @@ FoldReturn(ExclusiveContext* cx, ParseNode* node, Parser<FullParseHandler>& pars
            bool inGenexpLambda)
 {
     MOZ_ASSERT(node->isKind(PNK_RETURN));
-    MOZ_ASSERT(node->isArity(PN_BINARY));
+    MOZ_ASSERT(node->isArity(PN_UNARY));
 
-    if (ParseNode*& expr = node->pn_left) {
+    if (ParseNode*& expr = node->pn_kid) {
         if (!Fold(cx, &expr, parser, inGenexpLambda))
             return false;
     }
-
-#ifdef DEBUG
-    if (ParseNode* generatorSpecific = node->pn_right) {
-        MOZ_ASSERT(generatorSpecific->isKind(PNK_NAME));
-        MOZ_ASSERT(generatorSpecific->pn_atom->equals(".genrval"));
-        MOZ_ASSERT(generatorSpecific->isAssigned());
-    }
-#endif
 
     return true;
 }

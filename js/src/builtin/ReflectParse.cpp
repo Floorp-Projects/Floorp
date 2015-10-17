@@ -2706,11 +2706,11 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
 
       case PNK_RETURN:
       {
-        MOZ_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
+        MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
         RootedValue arg(cx);
 
-        return optExpression(pn->pn_left, &arg) &&
+        return optExpression(pn->pn_kid, &arg) &&
                builder.returnStatement(arg, &pn->pn_pos, dst);
       }
 
@@ -3615,7 +3615,7 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
     switch (pnbody->getKind()) {
       case PNK_RETURN: /* expression closure, no destructured args */
         return functionArgs(pn, pnargs, pnbody, args, defaults, rest) &&
-               expression(pnbody->pn_left, body);
+               expression(pnbody->pn_kid, body);
 
       case PNK_STATEMENTLIST:     /* statement closure */
       {
