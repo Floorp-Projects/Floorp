@@ -1358,7 +1358,7 @@
 
         if (warningsMismatch) {
           liTestFail.className = "test";
-          liTestFail.className = liTestFail.className + " fail";
+          liTestFail.className += " fail";
           h2Node.innerHTML = "Unexpected number of warnings detected in UI-Showcase";
           preErrorNode.className = "error";
           preErrorNode.innerHTML = "Got: " + caughtWarnings.length + "\n" + "Expected: " + expectedWarningsCount;
@@ -1368,7 +1368,7 @@
         }
         if (uncaughtError) {
           liTestFail.className = "test";
-          liTestFail.className = liTestFail.className + " fail";
+          liTestFail.className += " fail";
           h2Node.innerHTML = "Errors rendering UI-Showcase";
           preErrorNode.className = "error";
           preErrorNode.innerHTML = uncaughtError + "\n" + uncaughtError.stack;
