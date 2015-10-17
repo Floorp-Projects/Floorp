@@ -10,13 +10,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
+
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.overlays.service.sharemethods.AddBookmark;
 import org.mozilla.gecko.overlays.service.sharemethods.AddToReadingList;
 import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
 import org.mozilla.gecko.overlays.service.sharemethods.ShareMethod;
-import org.mozilla.gecko.overlays.ui.OverlayToastHelper;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.EnumMap;
@@ -115,14 +114,12 @@ public class OverlayActionService extends Service {
                 // Dispatch the share to the targeted ShareMethod.
                 switch (result) {
                     case SUCCESS:
-                        // \o/
-                        OverlayToastHelper.showSuccessToast(getApplicationContext(), shareMethod.getSuccessMessage());
+                        Log.d(LOGTAG, "Share was successful");
                         break;
                     case TRANSIENT_FAILURE:
                         // Fall-through
                     case PERMANENT_FAILURE:
-                        // Show a failure toast without a retry button.
-                        OverlayToastHelper.showFailureToast(getApplicationContext(), shareMethod.getFailureMessage());
+                        Log.e(LOGTAG, "Share failed: " + result);
                         break;
                     default:
                         Assert.fail("Unknown share method result code: " + result);

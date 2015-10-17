@@ -6,6 +6,7 @@
  */
 
 let actions = require("devtools/client/memory/actions/snapshot");
+let { snapshotState: states } = require("devtools/client/memory/constants");
 
 function run_test() {
   run_next_test();
@@ -22,9 +23,7 @@ add_task(function *() {
 
   yield waitUntilState(store, ({ snapshots }) => snapshots.length === 5 && snapshots.every(isDone));
 
-  ok(store.getState().snapshots[0].selected, "snapshot[0] selected by default");
-
-  for (let i = 1; i < 5; i++) {
+  for (let i = 0; i < 5; i++) {
     do_print(`Selecting snapshot[${i}]`);
     store.dispatch(actions.selectSnapshot(store.getState().snapshots[i]));
     yield waitUntilState(store, ({ snapshots }) => snapshots[i].selected);
@@ -35,4 +34,4 @@ add_task(function *() {
   }
 });
 
-function isDone (s) { return s.status === "done"; }
+function isDone (s) { return s.state === states.SAVED; }

@@ -165,7 +165,6 @@ body {
 }
 
 /* Force dropdown menus to display. */
-.force-menu-show .icons,
 .force-menu-show .dropdown-menu {
   display: inline-block !important;
 }

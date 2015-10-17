@@ -20,6 +20,11 @@
   --row-hover-background-color: rgba(76,158,217,0.2);
 }
 
+#memory-tool-container {
+  display: flex;
+  flex-direction: row;
+}
+
 /**
  * TODO bug 1213100
  * should generalize toolbar buttons with images in them
@@ -103,6 +108,35 @@
   color: var(--theme-selection-color);
 }
 
+.snapshot-list-item span {
+  display: block;
+}
+
+.snapshot-list-item .snapshot-state {
+  font-size: 90%;
+  color: var(--theme-body-color-alt);
+}
+
+.snapshot-list-item.selected .snapshot-state {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}
+
+/**
+ * Main panel
+ */
+
+#heap-view {
+  flex: 1 1 auto;
+}
+
+#heap-view .heap-view-panel {
+  width: 100%;
+  height: 100%;
+}
+
+#heap-view .take-snapshot {
+}
 
 /**
  * Heap View

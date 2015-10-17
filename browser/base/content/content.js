@@ -213,6 +213,7 @@ var AboutNetErrorListener = {
     chromeGlobal.addEventListener('AboutNetErrorSetAutomatic', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorSendReport', this, false, true);
     chromeGlobal.addEventListener('AboutNetErrorUIExpanded', this, false, true);
+    chromeGlobal.addEventListener('AboutNetErrorOverride', this, false, true);
   },
 
   get isAboutNetError() {
@@ -237,6 +238,9 @@ var AboutNetErrorListener = {
     case "AboutNetErrorUIExpanded":
       sendAsyncMessage("Browser:SSLErrorReportTelemetry",
                        {reportStatus: TLS_ERROR_REPORT_TELEMETRY_EXPANDED});
+      break;
+    case "AboutNetErrorOverride":
+      this.onOverride(aEvent);
       break;
     }
   },
@@ -330,6 +334,16 @@ var AboutNetErrorListener = {
         location: {hostname: contentDoc.location.hostname, port: contentDoc.location.port},
         securityInfo: serializedSecurityInfo
       });
+  },
+
+  onOverride: function(evt) {
+    let contentDoc = content.document;
+    let location = contentDoc.location;
+
+    sendAsyncMessage("Browser:OverrideWeakCrypto", {
+      documentURI: contentDoc.documentURI,
+      location: {hostname: location.hostname, port: location.port}
+    });
   }
 }
 
