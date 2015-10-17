@@ -105,7 +105,9 @@ loop.shared.views.LinkifiedTextView = (function(mozL10n) {
     },
 
     render: function() {
-      return ( React.createElement("p", null,  this.parseStringToElements(this.props.rawText) ) );
+      return (
+        React.createElement("p", null, this.parseStringToElements(this.props.rawText))
+      );
     }
   });
 
