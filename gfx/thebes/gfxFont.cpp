@@ -467,9 +467,14 @@ gfxFontShaper::MergeFontFeatures(
     // petite caps cases can fallback to appropriate smallcaps
     uint32_t variantCaps = aStyle->variantCaps;
     switch (variantCaps) {
+        case NS_FONT_VARIANT_CAPS_NORMAL:
+            break;
+
         case NS_FONT_VARIANT_CAPS_ALLSMALL:
             mergedFeatures.Put(HB_TAG('c','2','s','c'), 1);
             // fall through to the small-caps case
+            MOZ_FALLTHROUGH;
+
         case NS_FONT_VARIANT_CAPS_SMALLCAPS:
             mergedFeatures.Put(HB_TAG('s','m','c','p'), 1);
             break;
@@ -477,11 +482,13 @@ gfxFontShaper::MergeFontFeatures(
         case NS_FONT_VARIANT_CAPS_ALLPETITE:
             mergedFeatures.Put(aAddSmallCaps ? HB_TAG('c','2','s','c') :
                                                HB_TAG('c','2','p','c'), 1);
-        // fall through to the petite-caps case
+            // fall through to the petite-caps case
+            MOZ_FALLTHROUGH;
+
         case NS_FONT_VARIANT_CAPS_PETITECAPS:
             mergedFeatures.Put(aAddSmallCaps ? HB_TAG('s','m','c','p') :
                                                HB_TAG('p','c','a','p'), 1);
-        break;
+            break;
 
         case NS_FONT_VARIANT_CAPS_TITLING:
             mergedFeatures.Put(HB_TAG('t','i','t','l'), 1);
@@ -492,11 +499,14 @@ gfxFontShaper::MergeFontFeatures(
             break;
 
         default:
+            MOZ_ASSERT_UNREACHABLE("Unexpected variantCaps");
             break;
     }
 
     // font-variant-position - handled here due to the need for fallback
     switch (aStyle->variantSubSuper) {
+        case NS_FONT_VARIANT_POSITION_NORMAL:
+            break;
         case NS_FONT_VARIANT_POSITION_SUPER:
             mergedFeatures.Put(HB_TAG('s','u','p','s'), 1);
             break;
@@ -504,6 +514,7 @@ gfxFontShaper::MergeFontFeatures(
             mergedFeatures.Put(HB_TAG('s','u','b','s'), 1);
             break;
         default:
+            MOZ_ASSERT_UNREACHABLE("Unexpected variantSubSuper");
             break;
     }
 
@@ -3004,6 +3015,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
             case kUppercaseReduce:
                 // use reduced-size font, then fall through to uppercase the text
                 f = smallCapsFont;
+                MOZ_FALLTHROUGH;
 
             case kUppercase:
                 // apply uppercase transform to the string

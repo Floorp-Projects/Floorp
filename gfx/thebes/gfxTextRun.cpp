@@ -1717,6 +1717,7 @@ gfxFontGroup::FamilyFace::CheckState(bool& aSkipDrawing)
             case gfxUserFontEntry::STATUS_FAILED:
                 SetInvalid();
                 // fall-thru to the default case
+                MOZ_FALLTHROUGH;
             default:
                 SetLoading(false);
         }
