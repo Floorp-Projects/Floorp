@@ -296,9 +296,9 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
 
     // Cache the resulting surface.
     mCachedSurface =
-      new ClippedImageCachedSurface(target->Snapshot(), aSize, aSVGContext,
-                                    frameToDraw, aFlags,
-                                    drawTileCallback->GetDrawResult());
+      MakeUnique<ClippedImageCachedSurface>(target->Snapshot(), aSize, aSVGContext,
+                                            frameToDraw, aFlags,
+                                            drawTileCallback->GetDrawResult());
   }
 
   MOZ_ASSERT(mCachedSurface, "Should have a cached surface now");
