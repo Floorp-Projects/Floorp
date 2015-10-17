@@ -37,7 +37,6 @@ public:
     Constructor(const GlobalObject& aGlobal, ErrorResult& rv);
 
   size_t GetIterableLength() const;
-  uint32_t GetKeyAtIndex(uint32_t aIndex) const;
   uint32_t GetValueAtIndex(uint32_t aIndex) const;
 private:
   virtual ~TestInterfaceIterableSingle() {}

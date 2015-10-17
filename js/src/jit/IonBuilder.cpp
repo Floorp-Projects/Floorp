@@ -1772,6 +1772,10 @@ IonBuilder::inspectOpcode(JSOp op)
         current->setLocal(GET_LOCALNO(pc));
         return true;
 
+      case JSOP_THROWSETCONST:
+      case JSOP_THROWSETALIASEDCONST:
+        return jsop_throwsetconst();
+
       case JSOP_CHECKLEXICAL:
         return jsop_checklexical();
 
@@ -1892,10 +1896,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_STRICTSETGNAME:
       {
         PropertyName* name = info().getAtom(pc)->asPropertyName();
-        if (script()->hasNonSyntacticScope())
-            return jsop_setprop(name);
-        JSObject* obj = testGlobalLexicalBinding(name);
-        return setStaticName(obj, name);
+        JSObject* obj = nullptr;
+        if (!script()->hasNonSyntacticScope())
+            obj = testGlobalLexicalBinding(name);
+        if (obj)
+            return setStaticName(obj, name);
+        return jsop_setprop(name);
       }
 
       case JSOP_GETNAME:
@@ -1912,8 +1918,8 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_BINDGNAME:
         if (!script()->hasNonSyntacticScope()) {
-            JSObject* scope = testGlobalLexicalBinding(info().getName(pc));
-            return pushConstant(ObjectValue(*scope));
+            if (JSObject* scope = testGlobalLexicalBinding(info().getName(pc)))
+                return pushConstant(ObjectValue(*scope));
         }
         // Fall through to JSOP_BINDNAME
       case JSOP_BINDNAME:
@@ -8198,8 +8204,15 @@ IonBuilder::testGlobalLexicalBinding(PropertyName* name)
         // In the case that it is found on the global but is non-configurable,
         // the binding cannot be shadowed by a global lexical binding.
         HeapTypeSetKey lexicalProperty = lexicalKey->property(id);
-        if (!obj->containsPure(name)) {
-            Shape* shape = script()->global().lookupPure(name);
+        Shape* shape = obj->lookupPure(name);
+        if (shape) {
+            if ((JSOp(*pc) != JSOP_GETGNAME && !shape->writable()) ||
+                obj->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
+            {
+                return nullptr;
+            }
+        } else {
+            shape = script()->global().lookupPure(name);
             if (!shape || shape->configurable())
                 MOZ_ALWAYS_FALSE(lexicalProperty.isOwnProperty(constraints()));
             obj = &script()->global();
@@ -8212,16 +8225,17 @@ IonBuilder::testGlobalLexicalBinding(PropertyName* name)
 bool
 IonBuilder::jsop_getgname(PropertyName* name)
 {
-    JSObject* obj = testGlobalLexicalBinding(name);
-    bool emitted = false;
-    if (!getStaticName(obj, name, &emitted) || emitted)
-        return emitted;
-
-    if (!forceInlineCaches() && obj->is<GlobalObject>()) {
-        TemporaryTypeSet* types = bytecodeTypes(pc);
-        MDefinition* globalObj = constant(ObjectValue(*obj));
-        if (!getPropTryCommonGetter(&emitted, globalObj, name, types) || emitted)
+    if (JSObject* obj = testGlobalLexicalBinding(name)) {
+        bool emitted = false;
+        if (!getStaticName(obj, name, &emitted) || emitted)
             return emitted;
+
+        if (!forceInlineCaches() && obj->is<GlobalObject>()) {
+            TemporaryTypeSet* types = bytecodeTypes(pc);
+            MDefinition* globalObj = constant(ObjectValue(*obj));
+            if (!getPropTryCommonGetter(&emitted, globalObj, name, types) || emitted)
+                return emitted;
+        }
     }
 
     return jsop_getname(name);
@@ -8287,9 +8301,15 @@ IonBuilder::jsop_intrinsic(PropertyName* name)
 bool
 IonBuilder::jsop_bindname(PropertyName* name)
 {
-    MOZ_ASSERT(analysis().usesScopeChain());
-
-    MDefinition* scopeChain = current->scopeChain();
+    MDefinition* scopeChain;
+    if (analysis().usesScopeChain()) {
+        scopeChain = current->scopeChain();
+    } else {
+        // We take the slow path when trying to BINDGNAME a name that resolves
+        // to a 'const' or an uninitialized binding.
+        MOZ_ASSERT(JSOp(*pc) == JSOP_BINDGNAME);
+        scopeChain = constant(ObjectValue(script()->global().lexicalScope()));
+    }
     MBindNameCache* ins = MBindNameCache::New(alloc(), scopeChain, name, script(), pc);
 
     current->add(ins);
@@ -12717,6 +12737,15 @@ IonBuilder::jsop_deffun(uint32_t index)
 }
 
 bool
+IonBuilder::jsop_throwsetconst()
+{
+    current->peek(-1)->setImplicitlyUsedUnchecked();
+    MInstruction* lexicalError = MThrowRuntimeLexicalError::New(alloc(), JSMSG_BAD_CONST_ASSIGN);
+    current->add(lexicalError);
+    return resumeAfter(lexicalError);
+}
+
+bool
 IonBuilder::jsop_checklexical()
 {
     uint32_t slot = info().localSlot(GET_LOCALNO(pc));
@@ -12735,7 +12764,9 @@ IonBuilder::jsop_checkaliasedlet(ScopeCoordinate sc)
         return false;
 
     jsbytecode* nextPc = pc + JSOP_CHECKALIASEDLEXICAL_LENGTH;
-    MOZ_ASSERT(JSOp(*nextPc) == JSOP_GETALIASEDVAR || JSOp(*nextPc) == JSOP_SETALIASEDVAR);
+    MOZ_ASSERT(JSOp(*nextPc) == JSOP_GETALIASEDVAR ||
+               JSOp(*nextPc) == JSOP_SETALIASEDVAR ||
+               JSOp(*nextPc) == JSOP_THROWSETALIASEDCONST);
     MOZ_ASSERT(sc == ScopeCoordinate(nextPc));
 
     // If we are checking for a load, push the checked let so that the load
@@ -13806,7 +13837,7 @@ IonBuilder::addLexicalCheck(MDefinition* input)
         // Mark the input as implicitly used so the JS_UNINITIALIZED_LEXICAL
         // magic value will be preserved on bailout.
         input->setImplicitlyUsedUnchecked();
-        lexicalCheck = MThrowUninitializedLexical::New(alloc());
+        lexicalCheck = MThrowRuntimeLexicalError::New(alloc(), JSMSG_UNINITIALIZED_LEXICAL);
         current->add(lexicalCheck);
         if (!resumeAfter(lexicalCheck))
             return nullptr;

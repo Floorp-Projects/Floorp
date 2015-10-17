@@ -11121,8 +11121,11 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel, nsISupports* aOwner,
                           aLoadType == LOAD_ERROR_PAGE ||
                           aLoadType & LOAD_CMD_HISTORY);
 
-  // We don't update session history on reload.
-  bool updateSHistory = updateGHistory && (!(aLoadType & LOAD_CMD_RELOAD));
+  // We don't update session history on reload unless we're loading
+  // an iframe in shift-reload case.
+  bool updateSHistory = updateGHistory &&
+                        (!(aLoadType & LOAD_CMD_RELOAD) ||
+                         (IsForceReloadType(aLoadType) && IsFrame()));
 
   // Create SH Entry (mLSHE) only if there is a SessionHistory object in the
   // current frame or in the root docshell.
@@ -11195,9 +11198,9 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel, nsISupports* aOwner,
    * see bug 90098
    */
   if (aChannel && IsForceReloadType(aLoadType)) {
-    NS_ASSERTION(!updateSHistory,
-                 "We shouldn't be updating session history for forced"
-                 " reloads!");
+    MOZ_ASSERT(!updateSHistory || IsFrame(),
+               "We shouldn't be updating session history for forced"
+               " reloads unless we're in a newly created iframe!");
 
     nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aChannel));
     nsCOMPtr<nsISupports> cacheKey;

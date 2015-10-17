@@ -7273,18 +7273,26 @@ class MLexicalCheck
 };
 
 // Unconditionally throw an uninitialized let error.
-class MThrowUninitializedLexical : public MNullaryInstruction
+class MThrowRuntimeLexicalError : public MNullaryInstruction
 {
-    MThrowUninitializedLexical() {
+    unsigned errorNumber_;
+
+    explicit MThrowRuntimeLexicalError(unsigned errorNumber)
+      : errorNumber_(errorNumber)
+    {
         setGuard();
         setResultType(MIRType_None);
     }
 
   public:
-    INSTRUCTION_HEADER(ThrowUninitializedLexical)
+    INSTRUCTION_HEADER(ThrowRuntimeLexicalError)
 
-    static MThrowUninitializedLexical* New(TempAllocator& alloc) {
-        return new(alloc) MThrowUninitializedLexical();
+    static MThrowRuntimeLexicalError* New(TempAllocator& alloc, unsigned errorNumber) {
+        return new(alloc) MThrowRuntimeLexicalError(errorNumber);
+    }
+
+    unsigned errorNumber() const {
+        return errorNumber_;
     }
 
     AliasSet getAliasSet() const override {

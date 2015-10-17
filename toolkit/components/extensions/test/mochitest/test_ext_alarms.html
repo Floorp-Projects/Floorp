@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* test_alarm_fires() {
+  function backgroundScript() {
+    var ALARM_NAME = "test_ext_alarms";
+    browser.test.log("running alarm script");
+
+    chrome.alarms.onAlarm.addListener(function (alarm) {
+      browser.test.assertEq(alarm.name, ALARM_NAME, "alarm should have the correct name");
+      browser.test.notifyPass("alarms");
+    });
+    chrome.alarms.create(ALARM_NAME, {delayInMinutes: 0.02});
+    setTimeout(() => {
+      browser.test.notifyFail("alarms test failed, took too long");
+    }, 10000);
+  }
+
+  let extensionData = {
+    background: "(" + backgroundScript.toString() + ")()",
+    manifest: {
+      permissions: ["alarms"]
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("alarms");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+
+add_task(function* test_periodic_alarm_fires() {
+  function backgroundScript() {
+    var ALARM_NAME = "test_ext_alarms";
+    browser.test.log("running alarm script");
+
+    var count = 0;
+    chrome.alarms.onAlarm.addListener(function (alarm) {
+      browser.test.assertEq(alarm.name, ALARM_NAME, "alarm should have the correct name");
+      if (count++ === 3) {
+        chrome.alarms.clear(ALARM_NAME, (wasCleared) => {
+          browser.test.assertTrue(wasCleared, "alarm should be cleared");
+          browser.test.notifyPass("alarms");
+        });
+      }
+    });
+    chrome.alarms.create(ALARM_NAME, {periodInMinutes: 0.02});
+    setTimeout(() => {
+      browser.test.notifyFail("alarms test failed, took too long");
+      chrome.alarms.clear(ALARM_NAME, (wasCleared) => {
+        browser.test.assertTrue(wasCleared, "alarm should be cleared");
+      });
+    }, 30000);
+  }
+
+  let extensionData = {
+    background: "(" + backgroundScript.toString() + ")()",
+    manifest: {
+      permissions: ["alarms"]
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("alarms");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+</script>
+
+</body>
+</html>

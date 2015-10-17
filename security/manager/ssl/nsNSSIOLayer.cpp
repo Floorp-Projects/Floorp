@@ -930,8 +930,6 @@ PRStatus
 nsNSSSocketInfo::CloseSocketAndDestroy(
     const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  nsNSSShutDownList::trackSSLSocketClose();
-
   PRFileDesc* popped = PR_PopIOLayer(mFd, PR_TOP_IO_LAYER);
   NS_ASSERTION(popped &&
                popped->identity == nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
@@ -2713,8 +2711,6 @@ nsSSLIOLayerAddToSocket(int32_t family,
   if (stat == PR_FAILURE) {
     goto loser;
   }
-
-  nsNSSShutDownList::trackSSLSocketCreate();
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Socket set up\n", (void*) sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));

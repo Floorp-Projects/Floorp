@@ -4244,9 +4244,9 @@ LIRGenerator::visitLexicalCheck(MLexicalCheck* ins)
 }
 
 void
-LIRGenerator::visitThrowUninitializedLexical(MThrowUninitializedLexical* ins)
+LIRGenerator::visitThrowRuntimeLexicalError(MThrowRuntimeLexicalError* ins)
 {
-    LThrowUninitializedLexical* lir = new(alloc()) LThrowUninitializedLexical();
+    LThrowRuntimeLexicalError* lir = new(alloc()) LThrowRuntimeLexicalError();
     add(lir, ins);
     assignSafepoint(lir, ins);
 }

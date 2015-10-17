@@ -1,6 +1,7 @@
-<script src="/resources/testharness.js"></script>
+<script src="../resources/get-host-info.sub.js"></script>
 <script src="test-helpers.sub.js?pipe=sub"></script>
 <script>
+var host_info = get_host_info();
 
 function xhr_send(method, data) {
   return new Promise(function(resolve, reject) {
@@ -20,7 +21,8 @@ function xhr_send(method, data) {
 function coalesce_headers_test() {
   return xhr_send('POST', 'test string')
   .then(function(xhr) {
-      assert_equals(xhr.getResponseHeader('foo'), 'foo, bar');
+      window.parent.postMessage({results: xhr.getResponseHeader('foo')},
+                                host_info['HTTPS_ORIGIN']);
     });
 }
 

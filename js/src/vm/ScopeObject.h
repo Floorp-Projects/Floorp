@@ -915,7 +915,7 @@ class ClonedBlockObject : public BlockObject
 };
 
 // Internal scope object used by JSOP_BINDNAME upon encountering an
-// uninitialized lexical slot.
+// uninitialized lexical slot or an assignment to a 'const' binding.
 //
 // ES6 lexical bindings cannot be accessed in any way (throwing
 // ReferenceErrors) until initialized. Normally, NAME operations
@@ -930,13 +930,23 @@ class ClonedBlockObject : public BlockObject
 // assignments. Instead, this sentinel scope object is pushed on the stack.
 // Attempting to access anything on this scope throws the appropriate
 // ReferenceError.
-class UninitializedLexicalObject : public ScopeObject
+//
+// ES6 'const' bindings induce a runtime assignment when assigned to outside
+// of initialization, regardless of strictness.
+class RuntimeLexicalErrorObject : public ScopeObject
 {
+    static const unsigned ERROR_SLOT = 1;
+
   public:
-    static const unsigned RESERVED_SLOTS = 1;
+    static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
 
-    static UninitializedLexicalObject* create(JSContext* cx, HandleObject enclosing);
+    static RuntimeLexicalErrorObject* create(JSContext* cx, HandleObject enclosing,
+                                             unsigned errorNumber);
+
+    unsigned errorNumber() {
+        return getReservedSlot(ERROR_SLOT).toInt32();
+    }
 };
 
 template<XDRMode mode>
@@ -1256,7 +1266,7 @@ JSObject::is<js::ScopeObject>() const
     return is<js::CallObject>() ||
            is<js::DeclEnvObject>() ||
            is<js::NestedScopeObject>() ||
-           is<js::UninitializedLexicalObject>() ||
+           is<js::RuntimeLexicalErrorObject>() ||
            is<js::NonSyntacticVariablesObject>();
 }
 
