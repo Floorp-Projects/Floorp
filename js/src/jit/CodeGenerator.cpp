@@ -10212,14 +10212,15 @@ CodeGenerator::visitLexicalCheck(LLexicalCheck* ins)
     bailoutFrom(&bail, ins->snapshot());
 }
 
-typedef bool (*ThrowUninitializedLexicalFn)(JSContext*);
-static const VMFunction ThrowUninitializedLexicalInfo =
-    FunctionInfo<ThrowUninitializedLexicalFn>(ThrowUninitializedLexical);
+typedef bool (*ThrowRuntimeLexicalErrorFn)(JSContext*, unsigned);
+static const VMFunction ThrowRuntimeLexicalErrorInfo =
+    FunctionInfo<ThrowRuntimeLexicalErrorFn>(ThrowRuntimeLexicalError);
 
 void
-CodeGenerator::visitThrowUninitializedLexical(LThrowUninitializedLexical* ins)
+CodeGenerator::visitThrowRuntimeLexicalError(LThrowRuntimeLexicalError* ins)
 {
-    callVM(ThrowUninitializedLexicalInfo, ins);
+    pushArg(Imm32(ins->mir()->errorNumber()));
+    callVM(ThrowRuntimeLexicalErrorInfo, ins);
 }
 
 typedef bool (*GlobalNameConflictsCheckFromIonFn)(JSContext*, HandleScript);

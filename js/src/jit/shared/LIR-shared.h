@@ -7063,13 +7063,13 @@ class LLexicalCheck : public LInstructionHelper<0, BOX_PIECES, 0>
     static const size_t Input = 0;
 };
 
-class LThrowUninitializedLexical : public LCallInstructionHelper<0, 0, 0>
+class LThrowRuntimeLexicalError : public LCallInstructionHelper<0, 0, 0>
 {
   public:
-    LIR_HEADER(ThrowUninitializedLexical)
+    LIR_HEADER(ThrowRuntimeLexicalError)
 
-    MLexicalCheck* mir() {
-        return mir_->toLexicalCheck();
+    MThrowRuntimeLexicalError* mir() {
+        return mir_->toThrowRuntimeLexicalError();
     }
 };
 
