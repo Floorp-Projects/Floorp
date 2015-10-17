@@ -347,17 +347,13 @@ WebGLContext::OnMemoryPressure()
 //
 
 NS_IMETHODIMP
-WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
-                                ErrorResult& aRvForDictionaryInit)
+WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options)
 {
     if (options.isNullOrUndefined() && mOptionsFrozen)
         return NS_OK;
 
     WebGLContextAttributes attributes;
-    if (!attributes.Init(cx, options)) {
-      aRvForDictionaryInit.Throw(NS_ERROR_UNEXPECTED);
-      return NS_ERROR_UNEXPECTED;
-    }
+    NS_ENSURE_TRUE(attributes.Init(cx, options), NS_ERROR_UNEXPECTED);
 
     WebGLContextOptions newOpts;
 

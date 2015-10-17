@@ -44,8 +44,7 @@ public:
 
 protected:
   virtual nsresult UpdateContext(JSContext* aCx,
-                                 JS::Handle<JS::Value> aNewContextOptions,
-                                 ErrorResult& aRvForDictionaryInit);
+                                 JS::Handle<JS::Value> aNewContextOptions);
 
   virtual nsresult ParseParams(JSContext* aCx,
                                const nsAString& aType,
