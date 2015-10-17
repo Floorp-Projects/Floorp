@@ -10,7 +10,6 @@
 #include "BMPFileHeaders.h"
 #include "Decoder.h"
 #include "gfxColor.h"
-#include "nsAutoPtr.h"
 #include "StreamingLexer.h"
 
 namespace mozilla {

@@ -28,7 +28,6 @@
 #include "imgFrame.h"
 #include "Image.h"
 #include "LookupResult.h"
-#include "nsAutoPtr.h"
 #include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"

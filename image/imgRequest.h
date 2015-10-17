@@ -13,7 +13,6 @@
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsIPrincipal.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 #include "nsStringGlue.h"
