@@ -9,7 +9,6 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Monitor.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
