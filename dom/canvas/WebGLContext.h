@@ -249,8 +249,7 @@ public:
     NS_IMETHOD SetIsOpaque(bool) override { return NS_OK; };
     bool GetIsOpaque() override { return false; }
     NS_IMETHOD SetContextOptions(JSContext* cx,
-                                 JS::Handle<JS::Value> options,
-                                 ErrorResult& aRvForDictionaryInit) override;
+                                 JS::Handle<JS::Value> options) override;
 
     NS_IMETHOD SetIsIPC(bool) override {
         return NS_ERROR_NOT_IMPLEMENTED;
