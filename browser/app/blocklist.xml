@@ -731,12 +731,6 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i890" id="551f2920-3c19-11e1-b86c-0800200c9a66@jetpack">
-                        <versionRange  minVersion="2.3" maxVersion="*" severity="3">
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i688" id="firefox-extension@mozilla.org">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>

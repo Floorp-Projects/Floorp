@@ -4809,6 +4809,9 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       if (securityState & nsIWebProgressListener::STATE_USES_SSL_3) {
         error.AssignLiteral("sslv3Used");
         addHostPort = true;
+      } else if (securityState & nsIWebProgressListener::STATE_USES_WEAK_CRYPTO) {
+        error.AssignLiteral("weakCryptoUsed");
+        addHostPort = true;
       } else {
         // Usually we should have aFailedChannel and get a detailed message
         tsi->GetErrorMessage(getter_Copies(messageStr));
