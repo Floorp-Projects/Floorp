@@ -641,10 +641,10 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE* toStmt)
 
           case StmtType::SUBROUTINE:
             /*
-             * There's a [exception or hole, retsub pc-index] pair on the
-             * stack that we need to pop.
+             * There's a [exception or hole, retsub pc-index] pair and the
+             * possible return value on the stack that we need to pop.
              */
-            npops += 2;
+            npops += 3;
             break;
 
           default:;
@@ -1037,8 +1037,8 @@ BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op)
     MOZ_ASSERT(atom);
     MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
 
-    // .generator and .genrval lookups should be emitted as JSOP_GETALIASEDVAR
-    // instead of JSOP_GETNAME etc, to bypass |with| objects on the scope chain.
+    // .generator lookups should be emitted as JSOP_GETALIASEDVAR instead of
+    // JSOP_GETNAME etc, to bypass |with| objects on the scope chain.
     MOZ_ASSERT_IF(op == JSOP_GETNAME || op == JSOP_GETGNAME, !sc->isDotVariable(atom));
 
     if (op == JSOP_GETPROP && atom == cx->names().length) {
@@ -5035,7 +5035,9 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         if (!updateSourceCoordNotes(pn->pn_kid3->pn_pos.begin))
             return false;
         if (!emit1(JSOP_FINALLY) ||
+            !emit1(JSOP_GETRVAL) ||
             !emitTree(pn->pn_kid3) ||
+            !emit1(JSOP_SETRVAL) ||
             !emit1(JSOP_RETSUB))
         {
             return false;
@@ -6068,16 +6070,6 @@ BytecodeEmitter::emitContinue(PropertyName* label)
 }
 
 bool
-BytecodeEmitter::inTryBlockWithFinally()
-{
-    for (StmtInfoBCE* stmt = innermostStmt(); stmt; stmt = stmt->enclosing) {
-        if (stmt->type == StmtType::FINALLY)
-            return true;
-    }
-    return false;
-}
-
-bool
 BytecodeEmitter::emitReturn(ParseNode* pn)
 {
     if (!updateSourceCoordNotes(pn->pn_pos.begin))
@@ -6089,7 +6081,7 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     }
 
     /* Push a return value */
-    if (ParseNode* pn2 = pn->pn_left) {
+    if (ParseNode* pn2 = pn->pn_kid) {
         if (!emitTree(pn2))
             return false;
     } else {
@@ -6117,25 +6109,8 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     ptrdiff_t top = offset();
 
     bool isGenerator = sc->isFunctionBox() && sc->asFunctionBox()->isGenerator();
-    bool useGenRVal = false;
-    if (isGenerator) {
-        if (sc->asFunctionBox()->isStarGenerator() && inTryBlockWithFinally()) {
-            // Emit JSOP_SETALIASEDVAR .genrval to store the return value on the
-            // scope chain, so it's not lost when we yield in a finally block.
-            useGenRVal = true;
-            MOZ_ASSERT(pn->pn_right);
-            if (!emitTree(pn->pn_right))
-                return false;
-            if (!emit1(JSOP_POP))
-                return false;
-        } else {
-            if (!emit1(JSOP_SETRVAL))
-                return false;
-        }
-    } else {
-        if (!emit1(JSOP_RETURN))
-            return false;
-    }
+    if (!emit1(isGenerator ? JSOP_SETRVAL : JSOP_RETURN))
+        return false;
 
     NonLocalExitScope nle(this);
 
@@ -6144,17 +6119,9 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
 
     if (isGenerator) {
         ScopeCoordinate sc;
-        // We know that .generator and .genrval are on the top scope chain node,
-        // as we just exited nested scopes.
+        // We know that .generator is on the top scope chain node, as we just
+        // exited nested scopes.
         sc.setHops(0);
-        if (useGenRVal) {
-            MOZ_ALWAYS_TRUE(lookupAliasedNameSlot(cx->names().dotGenRVal, &sc));
-            if (!emitAliasedVarOp(JSOP_GETALIASEDVAR, sc, DontCheckLexical))
-                return false;
-            if (!emit1(JSOP_SETRVAL))
-                return false;
-        }
-
         MOZ_ALWAYS_TRUE(lookupAliasedNameSlot(cx->names().dotGenerator, &sc));
         if (!emitAliasedVarOp(JSOP_GETALIASEDVAR, sc, DontCheckLexical))
             return false;

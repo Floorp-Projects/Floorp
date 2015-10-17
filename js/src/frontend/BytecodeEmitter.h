@@ -304,8 +304,6 @@ struct BytecodeEmitter
     // will be discarded by a pop bytecode.
     bool checkSideEffects(ParseNode* pn, bool* answer);
 
-    bool inTryBlockWithFinally();
-
 #ifdef DEBUG
     bool checkStrictOrSloppy(JSOp op);
 #endif

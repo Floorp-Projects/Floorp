@@ -356,8 +356,7 @@ IsDeleteKind(ParseNodeKind kind)
  *                                     pn_left: PNK_NAME with pn_used true and
  *                                              pn_lexdef (NOT pn_expr) set
  *                                     pn_right: initializer
- * PNK_RETURN   binary      pn_left: return expr or null
- *                          pn_right: .genrval name or null
+ * PNK_RETURN   unary       pn_kid: return expr or null
  * PNK_SEMI     unary       pn_kid: expr or null statement
  *                          pn_prologue: true if Directive Prologue member
  *                              in original source, not introduced via
