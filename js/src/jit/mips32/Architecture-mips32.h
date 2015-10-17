@@ -71,8 +71,18 @@ class FloatRegisters : public FloatRegistersMIPSShared
 
     static const uint32_t Total = 64;
     static const uint32_t TotalDouble = 16;
+    static const uint32_t RegisterIdLimit = 32;
+    // Workarounds: On Loongson CPU-s the odd FP registers behave differently
+    // in fp-32 mode than standard MIPS.
+#if defined(_MIPS_ARCH_LOONGSON3A)
+    static const uint32_t TotalSingle = 16;
+    static const uint32_t Allocatable = 28;
+    static const SetType AllSingleMask = 0x55555555ULL;
+#else
     static const uint32_t TotalSingle = 32;
     static const uint32_t Allocatable = 42;
+    static const SetType AllSingleMask = (1ULL << 32) - 1;
+#endif
     // When saving all registers we only need to do is save double registers.
     static const uint32_t TotalPhys = 16;
 
@@ -80,7 +90,7 @@ class FloatRegisters : public FloatRegistersMIPSShared
                   "SetType should be large enough to enumerate all registers.");
 
     static const SetType AllDoubleMask = 0x55555555ULL << 32;
-    static const SetType AllMask = AllDoubleMask | ((1ULL << 32) - 1);
+    static const SetType AllMask = AllDoubleMask | AllSingleMask;
 
     static const SetType NonVolatileDoubleMask =
         ((1ULL << FloatRegisters::f20) |
@@ -195,10 +205,15 @@ class FloatRegister : public FloatRegisterMIPSShared
     // This is similar to FromCode except for double registers on O32.
     static FloatRegister FromIndex(uint32_t index, RegType kind) {
 #if defined(USES_O32_ABI)
+        // Only even FP registers are avaiable for Loongson on O32.
+# if defined(_MIPS_ARCH_LOONGSON3A)
+        return FloatRegister(index * 2, kind);
+# else
         if (kind == Double)
-            return FloatRegister(index * 2, RegType(kind));
+            return FloatRegister(index * 2, kind);
+# endif
 #endif
-        return FloatRegister(index, RegType(kind));
+        return FloatRegister(index, kind);
     }
 
     bool volatile_() const {
