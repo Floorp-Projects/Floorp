@@ -15,13 +15,11 @@ browser.jar:
   content/browser/loop/js/conversationAppStore.js   (content/js/conversationAppStore.js)
   content/browser/loop/js/otconfig.js               (content/js/otconfig.js)
   content/browser/loop/js/panel.js                  (content/js/panel.js)
-  content/browser/loop/js/contacts.js               (content/js/contacts.js)
   content/browser/loop/js/roomStore.js              (content/js/roomStore.js)
   content/browser/loop/js/roomViews.js              (content/js/roomViews.js)
   content/browser/loop/js/feedbackViews.js          (content/js/feedbackViews.js)
 
   # Desktop styles
-  content/browser/loop/css/contacts.css             (content/css/contacts.css)
   content/browser/loop/css/panel.css                (content/css/panel.css)
 
   # Shared styles
@@ -86,7 +84,6 @@ browser.jar:
   content/browser/loop/shared/img/hello_logo.svg                (content/shared/img/hello_logo.svg)
   content/browser/loop/shared/img/telefonica@2x.png             (content/shared/img/telefonica@2x.png)
   content/browser/loop/shared/img/ellipsis-v.svg                (content/shared/img/ellipsis-v.svg)
-  content/browser/loop/shared/img/empty_contacts.svg            (content/shared/img/empty_contacts.svg)
   content/browser/loop/shared/img/empty_conversations.svg       (content/shared/img/empty_conversations.svg)
   content/browser/loop/shared/img/empty_search.svg              (content/shared/img/empty_search.svg)
   content/browser/loop/shared/img/animated-spinner.svg          (content/shared/img/animated-spinner.svg)

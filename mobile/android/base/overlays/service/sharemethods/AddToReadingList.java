@@ -38,17 +38,6 @@ public class AddToReadingList extends ShareMethod {
         return Result.SUCCESS;
     }
 
-    @Override
-    public String getSuccessMessage() {
-        return context.getResources().getString(R.string.reading_list_added);
-    }
-
-    // Unused.
-    @Override
-    public String getFailureMessage() {
-        return null;
-    }
-
     public AddToReadingList(Context context) {
         super(context);
     }
