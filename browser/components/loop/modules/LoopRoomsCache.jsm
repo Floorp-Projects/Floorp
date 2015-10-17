@@ -131,7 +131,7 @@ LoopRoomsCache.prototype = {
    */
   setKey: Task.async(function* (sessionType, roomToken, roomKey) {
     if (sessionType != LOOP_SESSION_TYPE.FXA) {
-      return;
+      return Promise.resolve();
     }
 
     let cache = yield this._getCache();
