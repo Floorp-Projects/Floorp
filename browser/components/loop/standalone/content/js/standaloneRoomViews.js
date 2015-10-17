@@ -97,7 +97,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     _renderFailureText: function() {
       return (
-        React.createElement("p", {className: "failure"},  mozL10n.get("rooms_already_joined") )
+        React.createElement("p", {className: "failure"}, mozL10n.get("rooms_already_joined"))
       );
     },
 
@@ -109,8 +109,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.createElement("div", {className: "handle-user-agent-view-scroller"}, 
           React.createElement("div", {className: "handle-user-agent-view"}, 
             React.createElement("div", {className: "info-panel"}, 
-              React.createElement("p", {className: "loop-logo-text", title:  mozL10n.get("clientShortname2") }), 
-              React.createElement("p", {className: "roomName"},  this.state.roomName), 
+              React.createElement("p", {className: "loop-logo-text", title: mozL10n.get("clientShortname2")}), 
+              React.createElement("p", {className: "roomName"}, this.state.roomName), 
               React.createElement("p", {className: "loop-logo"}), 
               
                 this.state.failureReason ?

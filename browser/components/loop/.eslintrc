@@ -129,8 +129,7 @@
     "react/prop-types": 2,
     "react/self-closing-comp": 2,
     "react/wrap-multilines": 2,
-    // We would probably want to go with a variant of never.
-    "react/jsx-curly-spacing": 0,
+    "react/jsx-curly-spacing": [2, "never"],
     // Not worth it: React is defined globally
     "react/jsx-uses-react": 0,
     "react/react-in-jsx-scope": 0,
