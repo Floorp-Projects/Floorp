@@ -19888,7 +19888,7 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
   MOZ_ASSERT(!aPermissionString.IsEmpty());
 
 #ifdef MOZ_CHILD_PERMISSIONS
-  const nsTArray<PBrowserParent*>& browsers =
+  const ManagedContainer<PBrowserParent>& browsers =
     aContentParent->ManagedPBrowserParent();
 
   if (!browsers.IsEmpty()) {
@@ -19912,11 +19912,9 @@ FactoryOp::CheckAtLeastOneAppHasPermission(ContentParent* aContentParent,
     const nsPromiseFlatCString permissionString =
       PromiseFlatCString(aPermissionString);
 
-    for (uint32_t index = 0, count = browsers.Length();
-         index < count;
-         index++) {
+    for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
       uint32_t appId =
-        TabParent::GetFrom(browsers[index])->OwnOrContainingAppId();
+        TabParent::GetFrom(iter.Get()->GetKey())->OwnOrContainingAppId();
       MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID &&
                  appId != nsIScriptSecurityManager::NO_APP_ID);
 

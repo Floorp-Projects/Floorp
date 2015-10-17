@@ -441,7 +441,7 @@ exports.testPageReload = function (assert, done) {
 
   let item = loader.cm.Item({
     label: "Item",
-    contentScript: "var doc = document; self.on('context', function(node) doc.body.getAttribute('showItem') == 'true');"
+    contentScript: "var doc = document; self.on('context', node => doc.body.getAttribute('showItem') == 'true');"
   });
 
   test.withTestDoc(function (window, doc) {
@@ -525,7 +525,7 @@ exports.testContentContextMatch = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () true);'
+    contentScript: 'self.on("context", () => true);'
   });
 
   test.showMenu(null, function (popup) {
@@ -543,7 +543,7 @@ exports.testContentContextNoMatch = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () false);'
+    contentScript: 'self.on("context", () => false);'
   });
 
   test.showMenu(null, function (popup) {
@@ -579,7 +579,7 @@ exports.testContentContextEmptyString = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () "");'
+    contentScript: 'self.on("context", () => "");'
   });
 
   test.showMenu(null, function (popup) {
@@ -598,8 +598,8 @@ exports.testMultipleContentContextMatch1 = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () true); ' +
-                   'self.on("context", function () false);',
+    contentScript: 'self.on("context", () => true); ' +
+                   'self.on("context", () => false);',
     onMessage: function() {
       test.fail("Should not have called the second context listener");
     }
@@ -620,8 +620,8 @@ exports.testMultipleContentContextMatch2 = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () false); ' +
-                   'self.on("context", function () true);'
+    contentScript: 'self.on("context", () => false); ' +
+                   'self.on("context", () => true);'
   });
 
   test.showMenu(null, function (popup) {
@@ -639,8 +639,8 @@ exports.testMultipleContentContextString1 = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () "new label"); ' +
-                   'self.on("context", function () false);'
+    contentScript: 'self.on("context", () => "new label"); ' +
+                   'self.on("context", () => false);'
   });
 
   test.showMenu(null, function (popup) {
@@ -659,8 +659,8 @@ exports.testMultipleContentContextString2 = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () false); ' +
-                   'self.on("context", function () "new label");'
+    contentScript: 'self.on("context", () => false); ' +
+                   'self.on("context", () => "new label");'
   });
 
   test.showMenu(null, function (popup) {
@@ -678,8 +678,8 @@ exports.testMultipleContentContextString3 = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "item",
-    contentScript: 'self.on("context", function () "new label 1"); ' +
-                   'self.on("context", function () "new label 2");'
+    contentScript: 'self.on("context", () => "new label 1"); ' +
+                   'self.on("context", () => "new label 2");'
   });
 
   test.showMenu(null, function (popup) {
@@ -699,23 +699,23 @@ exports.testContentContextMatchActiveElement = function (assert, done) {
   let items = [
     new loader.cm.Item({
       label: "item 1",
-      contentScript: 'self.on("context", function () true);'
+      contentScript: 'self.on("context", () => true);'
     }),
     new loader.cm.Item({
       label: "item 2",
       context: undefined,
-      contentScript: 'self.on("context", function () true);'
+      contentScript: 'self.on("context", () => true);'
     }),
     // These items will always be hidden by the declarative usage of PageContext
     new loader.cm.Item({
       label: "item 3",
       context: loader.cm.PageContext(),
-      contentScript: 'self.on("context", function () true);'
+      contentScript: 'self.on("context", () => true);'
     }),
     new loader.cm.Item({
       label: "item 4",
       context: [loader.cm.PageContext()],
-      contentScript: 'self.on("context", function () true);'
+      contentScript: 'self.on("context", () => true);'
     })
   ];
 
@@ -737,23 +737,23 @@ exports.testContentContextNoMatchActiveElement = function (assert, done) {
   let items = [
     new loader.cm.Item({
       label: "item 1",
-      contentScript: 'self.on("context", function () false);'
+      contentScript: 'self.on("context", () => false);'
     }),
     new loader.cm.Item({
       label: "item 2",
       context: undefined,
-      contentScript: 'self.on("context", function () false);'
+      contentScript: 'self.on("context", () => false);'
     }),
     // These items will always be hidden by the declarative usage of PageContext
     new loader.cm.Item({
       label: "item 3",
       context: loader.cm.PageContext(),
-      contentScript: 'self.on("context", function () false);'
+      contentScript: 'self.on("context", () => false);'
     }),
     new loader.cm.Item({
       label: "item 4",
       context: [loader.cm.PageContext()],
-      contentScript: 'self.on("context", function () false);'
+      contentScript: 'self.on("context", () => false);'
     })
   ];
 
@@ -775,23 +775,23 @@ exports.testContentContextNoMatchActiveElement = function (assert, done) {
   let items = [
     new loader.cm.Item({
       label: "item 1",
-      contentScript: 'self.on("context", function () {});'
+      contentScript: 'self.on("context", () => {});'
     }),
     new loader.cm.Item({
       label: "item 2",
       context: undefined,
-      contentScript: 'self.on("context", function () {});'
+      contentScript: 'self.on("context", () => {});'
     }),
     // These items will always be hidden by the declarative usage of PageContext
     new loader.cm.Item({
       label: "item 3",
       context: loader.cm.PageContext(),
-      contentScript: 'self.on("context", function () {});'
+      contentScript: 'self.on("context", () => {});'
     }),
     new loader.cm.Item({
       label: "item 4",
       context: [loader.cm.PageContext()],
-      contentScript: 'self.on("context", function () {});'
+      contentScript: 'self.on("context", () => {});'
     })
   ];
 
@@ -812,7 +812,7 @@ exports.testContentContextMatchString = function (assert, done) {
 
   let item = new loader.cm.Item({
     label: "first label",
-    contentScript: 'self.on("context", function () "second label");'
+    contentScript: 'self.on("context", () => "second label");'
   });
 
   test.showMenu(null, function (popup) {
@@ -2213,7 +2213,7 @@ exports.testLoadWithOpenTab = function (assert, done) {
     let item = new loader.cm.Item({
       label: "item",
       contentScript:
-        'self.on("click", function () self.postMessage("click"));',
+        'self.on("click", () => self.postMessage("click"));',
       onMessage: function (msg) {
         if (msg === "click")
           test.done();
@@ -2643,19 +2643,19 @@ exports.testItemNoData = function (assert, done) {
 
   let item1 = new loader.cm.Item({
     label: "item 1",
-    contentScript: 'self.on("click", function(node, data) self.postMessage(data))',
+    contentScript: 'self.on("click", (node, data) => self.postMessage(data))',
     onMessage: checkData
   });
   let item2 = new loader.cm.Item({
     label: "item 2",
     data: null,
-    contentScript: 'self.on("click", function(node, data) self.postMessage(data))',
+    contentScript: 'self.on("click", (node, data) => self.postMessage(data))',
     onMessage: checkData
   });
   let item3 = new loader.cm.Item({
     label: "item 3",
     data: undefined,
-    contentScript: 'self.on("click", function(node, data) self.postMessage(data))',
+    contentScript: 'self.on("click", (node, data) => self.postMessage(data))',
     onMessage: checkData
   });
 
@@ -2892,7 +2892,7 @@ exports.testSubItemContextNoMatchHideMenu = function (assert, done) {
       items: [
         loader.cm.Item({
           label: "subitem 2",
-          contentScript: 'self.on("context", function () false);'
+          contentScript: 'self.on("context", () => false);'
         })
       ]
     }),
@@ -2905,7 +2905,7 @@ exports.testSubItemContextNoMatchHideMenu = function (assert, done) {
         }),
         loader.cm.Item({
           label: "subitem 4",
-          contentScript: 'self.on("context", function () false);'
+          contentScript: 'self.on("context", () => false);'
         })
       ]
     })
@@ -2931,7 +2931,7 @@ exports.testSubItemContextMatch = function (assert, done) {
     }),
     loader.cm.Item({
       label: "subitem 6",
-      contentScript: 'self.on("context", function () false);'
+      contentScript: 'self.on("context", () => false);'
     })
   ];
 
@@ -2950,7 +2950,7 @@ exports.testSubItemContextMatch = function (assert, done) {
       items: [
         loader.cm.Item({
           label: "subitem 2",
-          contentScript: 'self.on("context", function () true);'
+          contentScript: 'self.on("context", () => true);'
         })
       ]
     }),
@@ -2960,7 +2960,7 @@ exports.testSubItemContextMatch = function (assert, done) {
         hiddenItems[0],
         loader.cm.Item({
           label: "subitem 4",
-          contentScript: 'self.on("context", function () true);'
+          contentScript: 'self.on("context", () => true);'
         })
       ]
     }),
@@ -2983,7 +2983,7 @@ exports.testSubItemContextMatch = function (assert, done) {
         }),
         loader.cm.Item({
           label: "subitem 8",
-          contentScript: 'self.on("context", function () true);'
+          contentScript: 'self.on("context", () => true);'
         })
       ]
     })

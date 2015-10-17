@@ -60,7 +60,7 @@ function getURLsByTag (message) {
   };
 
   resData.data = taggingService
-    .getURIsForTag(data.tag).map(function (uri) uri.spec);
+    .getURIsForTag(data.tag).map(uri => uri.spec);
   respond(resData);
 }
 

@@ -181,7 +181,9 @@ const InputStream = Class({
     this.inputStreamPump = inputStreamPump;
     this.binaryInputStream = binaryInputStream;
   },
-  get status() nsIInputStreamPump(this).status,
+  get status() {
+    return nsIInputStreamPump(this).status;
+  },
   read: function() {
     nsIInputStreamPump(this).asyncRead(nsIStreamListener(this), null);
   },

@@ -44,7 +44,28 @@ def denormalize_path(path):
 class ManifestParser(object):
     """read .ini manifests"""
 
-    def __init__(self, manifests=(), defaults=None, strict=True, rootdir=None):
+    def __init__(self, manifests=(), defaults=None, strict=True, rootdir=None,
+                 finder=None):
+        """Creates a ManifestParser from the given manifest files.
+
+        :param manifests: An iterable of file paths or file objects corresponding
+                          to manifests. If a file path refers to a manifest file that
+                          does not exist, an IOError is raised.
+        :param defaults: Variables to pre-define in the environment for evaluating
+                         expressions in manifests.
+        :param strict: If False, the provided manifests may contain references to
+                       listed (test) files that do not exist without raising an
+                       IOError during reading, and certain errors in manifests
+                       are not considered fatal. Those errors include duplicate
+                       section names, redefining variables, and defining empty
+                       variables.
+        :param rootdir: The directory used as the basis for conversion to and from
+                        relative paths during manifest reading.
+        :param finder: If provided, this finder object will be used for filesystem
+                       interactions. Finder objects are part of the mozpack package,
+                       documented at
+                       http://gecko.readthedocs.org/en/latest/python/mozpack.html#module-mozpack.files
+        """
         self._defaults = defaults or {}
         self._ancestor_defaults = {}
         self.tests = []
@@ -52,11 +73,14 @@ class ManifestParser(object):
         self.strict = strict
         self.rootdir = rootdir
         self.relativeRoot = None
+        self.finder = finder
         if manifests:
             self.read(*manifests)
 
-    def getRelativeRoot(self, root):
-        return root
+    def path_exists(self, path):
+        if self.finder:
+            return self.finder.get(path) is not None
+        return os.path.exists(path)
 
     ### methods for reading manifests
 
@@ -76,8 +100,8 @@ class ManifestParser(object):
             include_file = section.split(type, 1)[-1]
             include_file = normalize_path(include_file)
             if not os.path.isabs(include_file):
-                include_file = os.path.join(self.getRelativeRoot(here), include_file)
-            if not os.path.exists(include_file):
+                include_file = os.path.join(here, include_file)
+            if not self.path_exists(include_file):
                 message = "Included file '%s' does not exist" % include_file
                 if self.strict:
                     raise IOError(message)
@@ -88,8 +112,17 @@ class ManifestParser(object):
 
         # get directory of this file if not file-like object
         if isinstance(filename, string):
+            # If we're using mercurial as our filesystem via a finder
+            # during manifest reading, the getcwd() calls that happen
+            # with abspath calls will not be meaningful, so absolute
+            # paths are required.
+            if self.finder:
+                assert os.path.isabs(filename)
             filename = os.path.abspath(filename)
-            fp = open(filename)
+            if self.finder:
+                fp = self.finder.get(filename)
+            else:
+                fp = open(filename)
             here = os.path.dirname(filename)
         else:
             fp = filename
@@ -156,7 +189,13 @@ class ManifestParser(object):
             if '://' not in path: # don't futz with URLs
                 path = normalize_path(path)
                 if here and not os.path.isabs(path):
-                    path = os.path.normpath(os.path.join(here, path))
+                    # Profiling indicates 25% of manifest parsing is spent
+                    # in this call to normpath, but almost all calls return
+                    # their argument unmodified, so we avoid the call if
+                    # '..' if not present in the path.
+                    path = os.path.join(here, path)
+                    if '..' in path:
+                        path = os.path.normpath(path)
 
                 # Microoptimization, because relpath is quite expensive.
                 # We know that rootdir is an absolute path or empty. If path
@@ -206,7 +245,7 @@ class ManifestParser(object):
 
         # ensure all files exist
         missing = [filename for filename in filenames
-                   if isinstance(filename, string) and not os.path.exists(filename) ]
+                   if isinstance(filename, string) and not self.path_exists(filename)]
         if missing:
             raise IOError('Missing files: %s' % ', '.join(missing))
 

@@ -936,13 +936,13 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   mRemoteBrowser->SetBrowserDOMWindow(otherBrowserDOMWindow);
 
   // Native plugin windows used by this remote content need to be reparented.
-  const nsTArray<mozilla::plugins::PPluginWidgetParent*>& plugins =
-    aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
   nsPIDOMWindow* newWin = ourDoc->GetWindow();
   if (newWin) {
     nsRefPtr<nsIWidget> newParent = ((nsGlobalWindow*)newWin)->GetMainWidget();
-    for (uint32_t idx = 0; idx < plugins.Length(); ++idx) {
-      static_cast<mozilla::plugins::PluginWidgetParent*>(plugins[idx])->SetParent(newParent);
+    const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
+      aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
+    for (auto iter = plugins.ConstIter(); !iter.Done(); iter.Next()) {
+      static_cast<mozilla::plugins::PluginWidgetParent*>(iter.Get()->GetKey())->SetParent(newParent);
     }
   }
 

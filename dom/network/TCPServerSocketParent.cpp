@@ -65,27 +65,25 @@ TCPServerSocketParent::Init()
 uint32_t
 TCPServerSocketParent::GetAppId()
 {
-  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
   const PContentParent *content = Manager()->Manager();
-  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
-  if (browsers.Length() > 0) {
-    TabParent *tab = TabParent::GetFrom(browsers[0]);
-    appId = tab->OwnAppId();
+  if (PBrowserParent* browser = LoneManagedOrNull(content->ManagedPBrowserParent())) {
+    TabParent *tab = TabParent::GetFrom(browser);
+    return tab->OwnAppId();
+  } else {
+    return nsIScriptSecurityManager::UNKNOWN_APP_ID;
   }
-  return appId;
 };
 
 bool
 TCPServerSocketParent::GetInBrowser()
 {
-  bool inBrowser = false;
   const PContentParent *content = Manager()->Manager();
-  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
-  if (browsers.Length() > 0) {
-    TabParent *tab = TabParent::GetFrom(browsers[0]);
-    inBrowser = tab->IsBrowserElement();
+  if (PBrowserParent* browser = LoneManagedOrNull(content->ManagedPBrowserParent())) {
+    TabParent *tab = TabParent::GetFrom(browser);
+    return tab->IsBrowserElement();
+  } else {
+    return false;
   }
-  return inBrowser;
 }
 
 nsresult

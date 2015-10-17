@@ -164,15 +164,16 @@ public:
 
 protected:
     already_AddRefed<mozilla::gfx::SourceSurface>
-                   GetInsetBlur(mozilla::gfx::Rect& aOuterRect,
-                                mozilla::gfx::Rect& aInnerRect,
-                                const mozilla::gfx::IntSize& aBlurRadius,
-                                const mozilla::gfx::IntSize& aSpreadRadius,
-                                const RectCornerRadii& aInnerClipRadii,
-                                const mozilla::gfx::Color& aShadowColor,
-                                const bool& aHasBorderRadius,
-                                mozilla::gfx::IntPoint& aOutTopLeft,
-                                gfxContext* aDestinationCtx);
+    GetInsetBlur(mozilla::gfx::IntMargin& aExtendDestBy,
+                 mozilla::gfx::IntMargin& aSlice,
+                 const mozilla::gfx::Rect aDestinationRect,
+                 const mozilla::gfx::Rect aShadowClipRect,
+                 const mozilla::gfx::IntSize& aBlurRadius,
+                 const mozilla::gfx::IntSize& aSpreadRadius,
+                 const RectCornerRadii& aInnerClipRadii,
+                 const mozilla::gfx::Color& aShadowColor,
+                 const bool& aHasBorderRadius,
+                 gfxContext* aDestinationCtx);
 
     /**
      * The context of the temporary alpha surface.

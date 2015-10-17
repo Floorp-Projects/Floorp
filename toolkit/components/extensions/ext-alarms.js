@@ -28,6 +28,9 @@ function Alarm(extension, name, alarmInfo)
     scheduledTime = this.when;
     delay = this.when - Date.now();
   } else {
+    if (!this.delayInMinutes) {
+      this.delayInMinutes = this.periodInMinutes;
+    }
     delay = this.delayInMinutes * 60 * 1000;
     scheduledTime = Date.now() + delay;
   }
@@ -47,7 +50,7 @@ Alarm.prototype = {
   },
 
   observe(subject, topic, data) {
-    for (let callback in alarmCallbacksMap.get(this.extension)) {
+    for (let callback of alarmCallbacksMap.get(this.extension)) {
       callback(this);
     }
     if (this.canceled) {

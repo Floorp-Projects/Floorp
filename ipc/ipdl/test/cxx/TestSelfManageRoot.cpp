@@ -22,21 +22,21 @@ TestSelfManageRootParent::Main()
     if (!a)
         fail("constructing PTestSelfManage");
 
-    ASSERT(1 == ManagedPTestSelfManageParent().Length());
+    ASSERT(1 == ManagedPTestSelfManageParent().Count());
 
     TestSelfManageParent* aa =
         static_cast<TestSelfManageParent*>(a->SendPTestSelfManageConstructor());
     if (!aa)
         fail("constructing PTestSelfManage");
 
-    ASSERT(1 == ManagedPTestSelfManageParent().Length() &&
-           1 == a->ManagedPTestSelfManageParent().Length());
+    ASSERT(1 == ManagedPTestSelfManageParent().Count() &&
+           1 == a->ManagedPTestSelfManageParent().Count());
 
     if (!PTestSelfManageParent::Send__delete__(aa))
         fail("destroying PTestSelfManage");
     ASSERT(Deletion == aa->mWhy &&
-           1 == ManagedPTestSelfManageParent().Length() &&
-           0 == a->ManagedPTestSelfManageParent().Length());
+           1 == ManagedPTestSelfManageParent().Count() &&
+           0 == a->ManagedPTestSelfManageParent().Count());
     delete aa;
 
     aa =
@@ -44,15 +44,15 @@ TestSelfManageRootParent::Main()
     if (!aa)
         fail("constructing PTestSelfManage");
 
-    ASSERT(1 == ManagedPTestSelfManageParent().Length() &&
-           1 == a->ManagedPTestSelfManageParent().Length());
+    ASSERT(1 == ManagedPTestSelfManageParent().Count() &&
+           1 == a->ManagedPTestSelfManageParent().Count());
 
     if (!PTestSelfManageParent::Send__delete__(a))
         fail("destroying PTestSelfManage");
     ASSERT(Deletion == a->mWhy &&
            AncestorDeletion == aa->mWhy &&
-           0 == ManagedPTestSelfManageParent().Length() &&
-           0 == a->ManagedPTestSelfManageParent().Length());
+           0 == ManagedPTestSelfManageParent().Count() &&
+           0 == a->ManagedPTestSelfManageParent().Count());
     delete a;
     delete aa;
 

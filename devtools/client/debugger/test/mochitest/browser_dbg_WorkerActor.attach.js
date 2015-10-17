@@ -30,30 +30,30 @@ function test() {
     let { workers } = yield listWorkers(tabClient);
     let [, workerClient1] = yield attachWorker(tabClient,
                                                findWorker(workers, WORKER1_URL));
-    is(workerClient1.isFrozen, false);
+    is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
 
     executeSoon(() => {
       tab.linkedBrowser.loadURI(TAB2_URL);
     });
-    yield waitForWorkerFreeze(workerClient1);
-    is(workerClient1.isFrozen, true, "worker should be frozen");
+    yield waitForWorkerClose(workerClient1);
+    is(workerClient1.isClosed, true, "worker in tab 1 should be closed");
 
     yield createWorkerInTab(tab, WORKER2_URL);
     ({ workers } = yield listWorkers(tabClient));
     let [, workerClient2] = yield attachWorker(tabClient,
                                                findWorker(workers, WORKER2_URL));
-    is(workerClient2.isFrozen, false);
+    is(workerClient2.isClosed, false, "worker in tab 2 should not be closed");
 
     executeSoon(() => {
       tab.linkedBrowser.contentWindow.history.back();
     });
-    yield Promise.all([
-      waitForWorkerFreeze(workerClient2),
-      waitForWorkerThaw(workerClient1)
-    ]);
+    yield waitForWorkerClose(workerClient2);
+    is(workerClient2.isClosed, true, "worker in tab 2 should be closed");
 
-    terminateWorkerInTab(tab, WORKER1_URL);
-    yield waitForWorkerClose(workerClient1);
+    ({ workers } = yield listWorkers(tabClient));
+    [, workerClient1] = yield attachWorker(tabClient,
+                                           findWorker(workers, WORKER1_URL));
+    is(workerClient1.isClosed, false, "worker in tab 1 should not be closed");
 
     yield close(client);
     SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);

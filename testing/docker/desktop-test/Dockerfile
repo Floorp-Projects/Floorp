@@ -5,8 +5,6 @@ MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 COPY           dot-config                    /home/worker/.config
 COPY           dot-pulse                     /home/worker/.pulse
 COPY           bin                           /home/worker/bin
-# TODO: remove these (they should be in-tree)
-COPY           mozharness_configs            /home/worker/mozharness_configs
 # TODO: remove this when buildbot is gone
 COPY           buildprops.json               /home/worker/buildprops.json
 COPY           tc-vcs-config.yml /etc/taskcluster-vcs.yml
