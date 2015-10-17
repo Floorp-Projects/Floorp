@@ -350,7 +350,7 @@ loop.store.ActiveRoomStore = (function() {
     fetchServerData: function(actionData) {
       if (actionData.windowType !== "room") {
         // Nothing for us to do here, leave it to other stores.
-        return;
+        return Promise.resolve();
       }
 
       this.setStoreState({
