@@ -105,7 +105,9 @@ loop.shared.views.LinkifiedTextView = (function(mozL10n) {
     },
 
     render: function() {
-      return ( <p>{ this.parseStringToElements(this.props.rawText) }</p> );
+      return (
+        <p>{this.parseStringToElements(this.props.rawText)}</p>
+      );
     }
   });
 
