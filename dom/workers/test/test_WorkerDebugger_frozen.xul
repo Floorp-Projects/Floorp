@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebugger with frozen workers"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const CACHE_SUBFRAMES = "browser.sessionhistory.cache_subframes";
+    const MAX_TOTAL_VIEWERS = "browser.sessionhistory.max_total_viewers";
+
+    const IFRAME1_URL = "WorkerDebugger_frozen_iframe1.html";
+    const IFRAME2_URL = "WorkerDebugger_frozen_iframe2.html";
+
+    const WORKER1_URL = "WorkerDebugger_frozen_worker1.js";
+    const WORKER2_URL = "WorkerDebugger_frozen_worker2.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        var oldMaxTotalViewers = SpecialPowers.getIntPref(MAX_TOTAL_VIEWERS);
+
+        SpecialPowers.setBoolPref(CACHE_SUBFRAMES, true);
+        SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, 10);
+
+        let iframe = $("iframe");
+
+        let promise = waitForMultiple([
+          waitForRegister(WORKER1_URL),
+          waitForWindowMessage(window, "ready"),
+        ]);
+        iframe.src = IFRAME1_URL;
+        let [dbg1] = yield promise;
+        is(dbg1.isClosed, false,
+           "debugger for worker on page 1 should not be closed");
+
+        promise = waitForMultiple([
+          waitForUnregister(WORKER1_URL),
+          waitForDebuggerClose(dbg1),
+          waitForRegister(WORKER2_URL),
+          waitForWindowMessage(window, "ready"),
+        ]);
+        iframe.src = IFRAME2_URL;
+        let [,, dbg2] = yield promise;
+        is(dbg1.isClosed, true,
+           "debugger for worker on page 1 should be closed");
+        is(dbg2.isClosed, false,
+           "debugger for worker on page 2 should not be closed");
+
+        promise = Promise.all([
+          waitForUnregister(WORKER2_URL),
+          waitForDebuggerClose(dbg2),
+          waitForRegister(WORKER1_URL)
+        ]);
+        iframe.contentWindow.history.back();
+        [,, dbg1] = yield promise;
+        is(dbg1.isClosed, false,
+           "debugger for worker on page 1 should not be closed");
+        is(dbg2.isClosed, true,
+           "debugger for worker on page 2 should be closed");
+
+        SpecialPowers.clearUserPref(CACHE_SUBFRAMES);
+        SpecialPowers.setIntPref(MAX_TOTAL_VIEWERS, oldMaxTotalViewers);
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+    <iframe id="iframe"></iframe>
+  </body>
+  <label id="test-result"/>
+</window>

@@ -4,38 +4,16 @@
 
 if (classesEnabled()) {
 
-// XXXefaust Because we currently try to do assignment to const as an early
-// error, sometimes, maybe, this is almost sometimes a syntax error.
-// It is specced to be a TypeError
-
-function statementWrapper() {
-    eval("class Foo { constructor() { } tryBreak() { Foo = 4; } }");
-}
-
-function expressionWrapper() { 
-    // Mmmmm. Lazy parseing means we don't see this as an error until later.
-    eval(`var x = class Foo { constructor() { }; tryBreak() { Foo = 4; } };
-          new x().tryBreak();`);
-}
-
-assertThrowsInstanceOf(statementWrapper, SyntaxError);
-assertThrowsInstanceOf(expressionWrapper, TypeError);
-
-/*
 var test = `
-class Foo { constructor() { }; tryBreak() { Foo = 4; } }
-for (let result of [Foo, class Bar { constructor() { }; tryBreak() { Bar = 4; } }])
+class Foof { constructor() { }; tryBreak() { Foof = 4; } }
+for (let result of [Foof, class Bar { constructor() { }; tryBreak() { Bar = 4; } }])
     assertThrowsInstanceOf(() => new result().tryBreak(), TypeError);
 
 {
     class foo { constructor() { }; tryBreak() { foo = 4; } }
-    for (let result of [foo, class Bar { constructor() { }; tryBreak() { Bar = 4 }])
+    for (let result of [foo, class Bar { constructor() { }; tryBreak() { Bar = 4 } }])
         assertThrowsInstanceOf(() => new result().tryBreak(), TypeError);
 }
-`;
-*/
-
-var test = `
 
 // TDZ applies to inner bindings
 assertThrowsInstanceOf(()=>eval(\`class Bar {

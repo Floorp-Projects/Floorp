@@ -733,7 +733,7 @@ IonMarkFunction(MIRType type)
 
 bool ObjectIsCallable(JSObject* obj);
 
-bool ThrowUninitializedLexical(JSContext* cx);
+bool ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber);
 bool BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);
 bool ThrowBadDerivedReturn(JSContext* cx, HandleValue v);
 

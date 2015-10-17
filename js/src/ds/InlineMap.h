@@ -45,6 +45,13 @@ class InlineMap
     static_assert(ZeroIsReserved<K>::result,
                   "zero as tombstone requires that zero keys be invalid");
 
+#ifdef DEBUG
+    bool keyNonZero(const K& key) {
+        // Zero as tombstone means zero keys are invalid.
+        return !!key;
+    }
+#endif
+
     bool usingMap() const {
         return inlNext > InlineElems;
     }
@@ -209,6 +216,8 @@ class InlineMap
 
     MOZ_ALWAYS_INLINE
     Ptr lookup(const K& key) {
+        MOZ_ASSERT(keyNonZero(key));
+
         if (usingMap())
             return Ptr(map.lookup(key));
 
@@ -223,6 +232,8 @@ class InlineMap
 
     MOZ_ALWAYS_INLINE
     AddPtr lookupForAdd(const K& key) {
+        MOZ_ASSERT(keyNonZero(key));
+
         if (usingMap())
             return AddPtr(map.lookupForAdd(key));
 
@@ -243,6 +254,7 @@ class InlineMap
     MOZ_ALWAYS_INLINE
     bool add(AddPtr& p, const K& key, const V& value) {
         MOZ_ASSERT(!p);
+        MOZ_ASSERT(keyNonZero(key));
 
         if (p.isInlinePtr) {
             InlineElem* addPtr = p.inlAddPtr;

@@ -8,7 +8,7 @@ var SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
 function newSVGDocument() {
-  return document.implementation.createDocument(SVG_NAMESPACE, "svg");
+  return document.implementation.createDocument(SVG_NAMESPACE, "svg", null);
 }
 
 function assertIsSVGTitle(element, expectedText) {

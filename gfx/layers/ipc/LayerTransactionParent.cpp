@@ -175,9 +175,10 @@ void
 LayerTransactionParent::Destroy()
 {
   mDestroyed = true;
-  for (size_t i = 0; i < ManagedPLayerParent().Length(); ++i) {
+  const ManagedContainer<PLayerParent>& layers = ManagedPLayerParent();
+  for (auto iter = layers.ConstIter(); !iter.Done(); iter.Next()) {
     ShadowLayerParent* slp =
-      static_cast<ShadowLayerParent*>(ManagedPLayerParent()[i]);
+      static_cast<ShadowLayerParent*>(iter.Get()->GetKey());
     slp->Destroy();
   }
 }

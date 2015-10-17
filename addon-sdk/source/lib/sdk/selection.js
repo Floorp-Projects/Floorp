@@ -80,7 +80,7 @@ const Selection = Class({
 
 const selectionListener = {
   notifySelectionChanged: function (document, selection, reason) {
-    if (!["SELECTALL", "KEYPRESS", "MOUSEUP"].some(function(type) reason &
+    if (!["SELECTALL", "KEYPRESS", "MOUSEUP"].some(type => reason &
       Ci.nsISelectionListener[type + "_REASON"]) || selection.toString() == "")
         return;
 

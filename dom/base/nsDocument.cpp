@@ -8351,7 +8351,9 @@ nsDocument::IsScriptEnabled()
   if (!globalObject && mMasterDocument) {
     globalObject = do_QueryInterface(mMasterDocument->GetInnerWindow());
   }
-  NS_ENSURE_TRUE(globalObject && globalObject->GetGlobalJSObject(), false);
+  if (!globalObject || !globalObject->GetGlobalJSObject()) {
+    return false;
+  }
 
   return sm->ScriptAllowed(globalObject->GetGlobalJSObject());
 }

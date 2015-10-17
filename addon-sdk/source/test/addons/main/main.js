@@ -30,6 +30,6 @@ setTimeout(function() {
 
   // main didn't start, fail..
   require("sdk/test/runner").runTestsFromModule({exports: {
-  	testFail: function(assert) assert.fail('Main did not start..')
+  	testFail: assert => assert.fail('Main did not start..')
   }});
 }, 500);

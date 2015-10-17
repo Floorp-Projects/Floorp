@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <script>
+      function test() {
+        try {
+          frames[0].history.pushState({}, "state", "?pushed");
+        } catch(ex) {
+          opener.ok(false, "history.pushState shouldn't throw");
+        }
+
+        if (!opener.shiftReloadPushStateFirstRound) {
+          opener.shiftReloadPushStateFirstRound = true;
+          window.location.reload(true);
+        } else {
+          opener.ok(true, "Did run history.push");
+          opener.nextTest();
+          window.close();
+        }
+      }
+
+      window.addEventListener("load", function() { setTimeout(test, 0); });
+    </script>
+  </head>
+  <body>
+  <iframe src="frame0.html"></iframe>
+  <script>
+  </script>
+  </body>
+</html>

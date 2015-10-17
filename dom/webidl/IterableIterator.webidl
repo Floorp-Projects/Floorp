@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[NoInterfaceObject]
+[NoInterfaceObject,
+ Exposed=(Window,Worker,System)]
 interface IterableIterator
 {
   [Throws]

@@ -1,23 +1,23 @@
-// Can't assign to const
+// Can't assign to const is a runtime TypeError
 
 load(libdir + 'asserts.js');
 
-function assertSyntaxError(str) {
-  assertThrowsInstanceOf(function () { eval(str); }, SyntaxError);
+function assertTypeError(str) {
+  assertThrowsInstanceOf(function () { eval(str); }, TypeError);
 }
 
-assertSyntaxError("(function() { const x = 3; (function() x++)(); return x })");
-assertSyntaxError("(function() { const x = 3; (function() x++)(); return x++ })");
-assertSyntaxError("(function() { const x = 2; (function() x++)(); return ++x })");
-assertSyntaxError("(function() { const x = 2; (function() x++)(); return x += 1 })");
+assertTypeError("(function() { const x = 3; (() => x++)(); return x })()");
+assertTypeError("(function() { const x = 3; (() => x++)(); return x++ })()");
+assertTypeError("(function() { const x = 2; (() => x++)(); return ++x })()");
+assertTypeError("(function() { const x = 2; (() => x++)(); return x += 1 })()");
 
-assertSyntaxError("(function() { const x = 3; x = 1; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; x = 1; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; x++; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; ++x; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; x--; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; --x; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; x += 1; return (function() { return x})() })");
-assertSyntaxError("(function() { const x = 3; x -= 1; return (function() { return x})() })");
+assertTypeError("(function() { const x = 3; x = 1; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; x = 1; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; x++; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; ++x; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; x--; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; --x; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; x += 1; return (function() { return x})() })()");
+assertTypeError("(function() { const x = 3; x -= 1; return (function() { return x})() })()");
 
-assertSyntaxError("(function() { const x = 3; [x] = [1]; })");
+assertTypeError("(function() { const x = 3; [x] = [1]; })()");

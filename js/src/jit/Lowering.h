@@ -299,7 +299,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitArrayState(MArrayState* ins);
     void visitUnknownValue(MUnknownValue* ins);
     void visitLexicalCheck(MLexicalCheck* ins);
-    void visitThrowUninitializedLexical(MThrowUninitializedLexical* ins);
+    void visitThrowRuntimeLexicalError(MThrowRuntimeLexicalError* ins);
     void visitGlobalNameConflictsCheck(MGlobalNameConflictsCheck* ins);
     void visitDebugger(MDebugger* ins);
     void visitNewTarget(MNewTarget* ins);

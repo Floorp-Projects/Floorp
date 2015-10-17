@@ -240,7 +240,7 @@ class FastBernoulliTrial {
        * we say something "equals 1", that means it's exactly equal to 1. We
        * treat approximation using intervals with open boundaries: saying a
        * value is in (0,1) doesn't specify how close to 0 or 1 the value gets.
-       * When we use closed boundaries like [1, 2**-53], we're careful to ensure
+       * When we use closed boundaries like [2**-53, 1], we're careful to ensure
        * the boundary values are actually representable.)
        *
        * - After the comparison above, we know mProbability is in (0,1).

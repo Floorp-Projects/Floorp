@@ -48,7 +48,7 @@ function testPageMod(assert, done, testURL, pageModOptions,
     setTimeout(testCallback, timeout,
       b.contentWindow.wrappedJSObject,  // TODO: remove this CPOW
       function () {
-        pageMods.forEach(function(mod) mod.destroy());
+        pageMods.forEach(mod => mod.destroy());
         // XXX leaks reported if we don't close the tab?
         closeTab(newTab);
         loader.unload();
