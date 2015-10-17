@@ -14,9 +14,9 @@
 #include "nsISupportsPriority.h"
 #include "nsITimedChannel.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/Rect.h"
 
 #include "imgRequest.h"
@@ -191,7 +191,7 @@ public:
   NS_FORWARD_SAFE_NSITIMEDCHANNEL(TimedChannel())
 
 protected:
-  nsAutoPtr<ProxyBehaviour> mBehaviour;
+  mozilla::UniquePtr<ProxyBehaviour> mBehaviour;
 
 private:
   friend class imgCacheValidator;
