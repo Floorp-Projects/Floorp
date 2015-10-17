@@ -97,7 +97,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     _renderFailureText: function() {
       return (
-        <p className="failure">{ mozL10n.get("rooms_already_joined") }</p>
+        <p className="failure">{mozL10n.get("rooms_already_joined")}</p>
       );
     },
 
@@ -109,8 +109,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
         <div className="handle-user-agent-view-scroller">
           <div className="handle-user-agent-view">
             <div className="info-panel">
-              <p className="loop-logo-text" title={ mozL10n.get("clientShortname2") }></p>
-              <p className="roomName">{ this.state.roomName }</p>
+              <p className="loop-logo-text" title={mozL10n.get("clientShortname2")}></p>
+              <p className="roomName">{this.state.roomName}</p>
               <p className="loop-logo" />
               {
                 this.state.failureReason ?
