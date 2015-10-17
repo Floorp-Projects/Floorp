@@ -75,7 +75,7 @@ namespace JS {
 namespace detail {
 
 #ifdef JS_DEBUG
-/*
+/**
  * Assert that we're not doing GC on cx, that we're in a request as
  * needed, and that the compartments for cx and v are correct.
  * Also check that GC would be safe at this point.
@@ -89,7 +89,7 @@ inline void AssertArgumentsAreSane(JSContext* cx, HandleValue v)
 
 } // namespace detail
 
-/*
+/**
  * ES6 draft 20141224, 7.1.1, second algorithm.
  *
  * Most users shouldn't call this -- use JS::ToBoolean, ToNumber, or ToString
