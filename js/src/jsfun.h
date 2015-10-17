@@ -78,6 +78,7 @@ class JSFunction : public js::NativeObject
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
         NATIVE_CTOR = NATIVE_FUN | CONSTRUCTOR,
+        NATIVE_CLASS_CTOR = NATIVE_FUN | CONSTRUCTOR | CLASSCONSTRUCTOR_KIND,
         ASMJS_CTOR = ASMJS_KIND | NATIVE_CTOR,
         ASMJS_LAMBDA_CTOR = ASMJS_KIND | NATIVE_CTOR | LAMBDA,
         INTERPRETED_METHOD = INTERPRETED | METHOD_KIND,
