@@ -455,10 +455,11 @@ SpdyStream31::GenerateSynFrame()
     ToLowerCase(name);
 
     // exclusions.. mostly from 3.2.1
+    // we send accept-encoding here because we often include brotli
+    // in that list which is greater than the implied accept-encoding: gzip
     if (name.EqualsLiteral("connection") ||
         name.EqualsLiteral("keep-alive") ||
         name.EqualsLiteral("host") ||
-        name.EqualsLiteral("accept-encoding") ||
         name.EqualsLiteral("te") ||
         name.EqualsLiteral("transfer-encoding"))
       continue;
