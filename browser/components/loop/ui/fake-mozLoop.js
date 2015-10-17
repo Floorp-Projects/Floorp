@@ -103,103 +103,6 @@ var fakeRooms = [
   }
 ];
 
-var fakeManyContacts = [{
-  id: 1,
-  _guid: 1,
-  name: ["Ally Avocado"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "ally@mail.com"
-  }],
-  tel: [{
-    "pref": true,
-    "type": ["mobile"],
-    "value": "+31-6-12345678"
-  }],
-  category: ["google"],
-  published: 1406798311748,
-  updated: 1406798311748
-}, {
-  id: 2,
-  _guid: 2,
-  name: ["Bob Banana"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "bob@gmail.com"
-  }],
-  tel: [{
-    "pref": true,
-    "type": ["mobile"],
-    "value": "+1-214-5551234"
-  }],
-  category: ["local"],
-  published: 1406798311748,
-  updated: 1406798311748
-}, {
-  id: 3,
-  _guid: 3,
-  name: ["Caitlin Cantaloupe"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "caitlin.cant@hotmail.com"
-  }],
-  category: ["local"],
-  published: 1406798311748,
-  updated: 1406798311748
-}, {
-  id: 4,
-  _guid: 4,
-  name: ["Dave Dragonfruit"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "dd@dragons.net"
-  }],
-  category: ["google"],
-  published: 1406798311748,
-  updated: 1406798311748
-}, {
-  id: 5,
-  _guid: 5,
-  name: ["Erin J. Bazile"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "erinjbazile@armyspy.com"
-  }],
-  category: ["google"],
-  published: 1406798311748,
-  updated: 1406798311748
-}, {
-  id: 6,
-  _guid: 6,
-  name: ["Kelly F. Maldanado"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "kellyfmaldonado@jourrapide.com"
-  }],
-  category: ["google"],
-  published: 1406798311748,
-  updated: 1406798311748
-}, {
-  id: 7,
-  _guid: 7,
-  name: ["John J. Brown"],
-  email: [{
-    "pref": true,
-    "type": ["work"],
-    "value": "johnjbrow@johndoe.com"
-  }],
-  category: ["google"],
-  published: 1406798311748,
-  updated: 1406798311748
-}];
-var fakeFewerContacts = fakeManyContacts.slice(0, 4);
-
 (function() {
   "use strict";
 
@@ -214,10 +117,6 @@ var fakeFewerContacts = fakeManyContacts.slice(0, 4);
       switch(pref) {
         // Ensure we skip FTE completely.
         case "gettingStarted.seen":
-        case "contacts.gravatars.promo":
-          return true;
-        case "contacts.gravatars.show":
-          return false;
       }
     },
     hasEncryptionKey: true,
@@ -234,12 +133,6 @@ var fakeFewerContacts = fakeManyContacts.slice(0, 4);
         description: "sample webpage description",
         url: "https://www.example.com"
       });
-    },
-    contacts: {
-      getAll: function(callback) {
-        callback(null, [].concat(fakeManyContacts));
-      },
-      on: function() {}
     },
     rooms: {
       getAll: function(version, callback) {

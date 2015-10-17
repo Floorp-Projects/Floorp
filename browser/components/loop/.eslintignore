@@ -15,7 +15,6 @@ test/shared/vendor
 test/coverage
 test/node_modules
 # These are generated react files that we don't need to check
-content/js/contacts.js
 content/js/conversation.js
 content/js/conversationViews.js
 content/js/panel.js
