@@ -304,7 +304,7 @@ class SyntaxParseHandler
     Node newCaseOrDefault(uint32_t begin, Node expr, Node body) { return NodeGeneric; }
     Node newContinueStatement(PropertyName* label, const TokenPos& pos) { return NodeGeneric; }
     Node newBreakStatement(PropertyName* label, const TokenPos& pos) { return NodeBreak; }
-    Node newReturnStatement(Node expr, Node genrval, const TokenPos& pos) { return NodeReturn; }
+    Node newReturnStatement(Node expr, const TokenPos& pos) { return NodeReturn; }
 
     Node newLabeledStatement(PropertyName* label, Node stmt, uint32_t begin) {
         return NodeGeneric;

@@ -593,9 +593,9 @@ class FullParseHandler
         return new_<BreakStatement>(label, pos);
     }
 
-    ParseNode* newReturnStatement(ParseNode* expr, ParseNode* genrval, const TokenPos& pos) {
+    ParseNode* newReturnStatement(ParseNode* expr, const TokenPos& pos) {
         MOZ_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
-        return new_<BinaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr, genrval);
+        return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr);
     }
 
     ParseNode* newWithStatement(uint32_t begin, ParseNode* expr, ParseNode* body,
