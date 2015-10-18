@@ -295,7 +295,7 @@ Qihoo360seProfileMigrator.prototype.getResources = function(aProfile) {
   let resources = [
     new Bookmarks(profileFolder)
   ];
-  return [r for each (r in resources) if (r.exists)];
+  return resources.filter(r => r.exists);
 };
 
 Qihoo360seProfileMigrator.prototype.classDescription = "360 Secure Browser Profile Migrator";

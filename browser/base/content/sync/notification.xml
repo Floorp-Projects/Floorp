@@ -30,7 +30,7 @@
         temp.Observers.add("weave:notification:added", this.onNotificationAdded, this);
         temp.Observers.add("weave:notification:removed", this.onNotificationRemoved, this);
 
-        for each (var notification in Weave.Notifications.notifications)
+        for (var notification of Weave.Notifications.notifications)
           this._appendNotification(notification);
       ]]></constructor>
 
@@ -55,7 +55,7 @@
         <body><![CDATA[
           // If the view of the notification hasn't been removed yet, remove it.
           var notifications = this.allNotifications;
-          for each (var notification in notifications) {
+          for (var notification of notifications) {
             if (notification.notification == subject) {
               notification.close();
               break;

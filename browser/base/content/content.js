@@ -970,7 +970,7 @@ var PageInfoListener = {
       let rels = {};
 
       if (rel) {
-        for each (let relVal in rel.split(/\s+/)) {
+        for (let relVal of rel.split(/\s+/)) {
           rels[relVal] = true;
         }
       }

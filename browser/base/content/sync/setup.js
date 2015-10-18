@@ -934,12 +934,7 @@ var gSyncSetup = {
         let addonsEngine = Weave.Service.engineManager.get("addons");
         if (addonsEngine.enabled) {
           let ids = addonsEngine._store.getAllIDs();
-          let blessedcount = 0;
-          for each (let i in ids) {
-            if (i) {
-              blessedcount++;
-            }
-          }
+          let blessedcount = Object.keys(ids).filter(id => ids[id]).length;
           // bug 600141 does not apply, as this does not have to support existing strings
           document.getElementById("addonCount").value =
             PluralForm.get(blessedcount,
@@ -963,7 +958,7 @@ var gSyncSetup = {
           box.appendChild(node);
         }
 
-        for each (let name in Weave.Service.clientsEngine.stats.names) {
+        for (let name of Weave.Service.clientsEngine.stats.names) {
           // Don't list the current client
           if (name == Weave.Service.clientsEngine.localName)
             continue;

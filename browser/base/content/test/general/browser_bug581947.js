@@ -73,7 +73,7 @@ function test () {
       [ 'object',   true,   null],
     ];
 
-    for each (let data in testData) {
+    for (let data of testData) {
       check(data[0], data[1], data[2]);
     }
 
@@ -81,7 +81,7 @@ function test () {
       [ 'keygen', 'false' ],
     ];
 
-    for each(let data in todo_testData) {
+    for (let data of todo_testData) {
       todo_check(data[0], data[1]);
     }
 
