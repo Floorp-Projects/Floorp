@@ -18,5 +18,10 @@ XPIDL_SOURCES += [
     'nsITCPPresentationServer.idl',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    XPIDL_SOURCES += [
+        'nsIPresentationNetworkHelper.idl',
+    ]
+
 XPIDL_MODULE = 'dom_presentation'
 
