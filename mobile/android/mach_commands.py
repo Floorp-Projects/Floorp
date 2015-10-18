@@ -80,9 +80,6 @@ class MachCommands(MachCommandBase):
         def srcdir(dst, src):
             m.add_symlink(os.path.join(self.topsrcdir, src), dst)
 
-        def objdir(dst, src):
-            m.add_symlink(os.path.join(self.topobjdir, src), dst)
-
         srcdir('build.gradle', 'mobile/android/gradle/build.gradle')
         srcdir('settings.gradle', 'mobile/android/gradle/settings.gradle')
 
@@ -118,8 +115,6 @@ class MachCommands(MachCommandBase):
         srcdir('omnijar/src/main/java/themes', 'mobile/android/themes')
 
         srcdir('app/build.gradle', 'mobile/android/gradle/app/build.gradle')
-        objdir('app/src/main/AndroidManifest.xml', 'mobile/android/base/AndroidManifest.xml')
-        objdir('app/src/androidTest/AndroidManifest.xml', 'build/mobile/robocop/AndroidManifest.xml')
         srcdir('app/src/androidTest/res', 'build/mobile/robocop/res')
         srcdir('app/src/androidTest/assets', 'mobile/android/tests/browser/robocop/assets')
         # Test code.
