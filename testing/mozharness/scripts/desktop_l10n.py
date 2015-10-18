@@ -206,7 +206,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.version = None
         self.upload_urls = {}
         self.locales_property = {}
-        self.l10n_dir = None
         self.package_urls = {}
         self.pushdate = None
         # upload_files is a dictionary of files to upload, keyed by locale.
@@ -730,7 +729,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         """wrapper for make installers-(locale)"""
         env = self.query_l10n_env()
         self._copy_mozconfig()
-        env['L10NBASEDIR'] = self.l10n_dir
         dirs = self.query_abs_dirs()
         cwd = os.path.join(dirs['abs_locales_dir'])
         target = ["installers-%s" % locale,
