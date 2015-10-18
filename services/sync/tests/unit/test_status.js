@@ -18,9 +18,9 @@ function run_test() {
 
 
   // Check login status
-  for each (let code in [LOGIN_FAILED_NO_USERNAME,
-                         LOGIN_FAILED_NO_PASSWORD,
-                         LOGIN_FAILED_NO_PASSPHRASE]) {
+  for (let code of [LOGIN_FAILED_NO_USERNAME,
+                    LOGIN_FAILED_NO_PASSWORD,
+                    LOGIN_FAILED_NO_PASSPHRASE]) {
     Status.login = code;
     do_check_eq(Status.login, code);
     do_check_eq(Status.service, CLIENT_NOT_CONFIGURED);

@@ -87,7 +87,7 @@ class SyncTestCommands(MachCommandBase):
             '-e', 'const SERVER_PORT = "%s";' % port,
             '-e', 'const INCLUDE_FILES = [%s];' % ', '.join(head_paths),
             '-e', '_register_protocol_handlers();',
-            '-e', 'for each (let name in INCLUDE_FILES) load(name);',
+            '-e', 'for (let name of INCLUDE_FILES) load(name);',
             '-e', '_fakeIdleService.activate();',
             '-f', js_file
             ]
