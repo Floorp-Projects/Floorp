@@ -218,11 +218,12 @@ AddonsReconciler.prototype = {
       }
 
       this._addons = json.addons;
-      for each (let record in this._addons) {
+      for (let id in this._addons) {
+        let record = this._addons[id];
         record.modified = new Date(record.modified);
       }
 
-      for each (let [time, change, id] in json.changes) {
+      for (let [time, change, id] of json.changes) {
         this._changes.push([new Date(time), change, id]);
       }
 
@@ -258,7 +259,7 @@ AddonsReconciler.prototype = {
       }
     }
 
-    for each (let [time, change, id] in this._changes) {
+    for (let [time, change, id] of this._changes) {
       state.changes.push([time.getTime(), change, id]);
     }
 
@@ -350,7 +351,7 @@ AddonsReconciler.prototype = {
     AddonManager.getAllAddons(function (addons) {
       let ids = {};
 
-      for each (let addon in addons) {
+      for (let addon of addons) {
         ids[addon.id] = true;
         this.rectifyStateFromAddon(addon);
       }
@@ -373,7 +374,7 @@ AddonsReconciler.prototype = {
         }
 
         let installFound = false;
-        for each (let install in installs) {
+        for (let install of installs) {
           if (install.addon && install.addon.id == id &&
               install.state == AddonManager.STATE_INSTALLED) {
 
@@ -483,7 +484,7 @@ AddonsReconciler.prototype = {
     this._log.info("Change recorded for " + state.id);
     this._changes.push([date, change, state.id]);
 
-    for each (let listener in this._listeners) {
+    for (let listener of this._listeners) {
       try {
         listener.changeListener.call(listener, date, change, state);
       } catch (ex) {
@@ -554,7 +555,8 @@ AddonsReconciler.prototype = {
    * @return Object on success on null on failure.
    */
   getAddonStateFromSyncGUID: function getAddonStateFromSyncGUID(guid) {
-    for each (let addon in this.addons) {
+    for (let id in this.addons) {
+      let addon = this.addons[id];
       if (addon.guid == guid) {
         return addon;
       }

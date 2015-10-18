@@ -328,7 +328,7 @@ add_test(function test_command_validation() {
     ["__UNKNOWN__", [],       false]
   ];
 
-  for each (let [action, args, expectedResult] in testCommands) {
+  for (let [action, args, expectedResult] of testCommands) {
     let remoteId = Utils.makeGUID();
     let rec = new ClientsRec("clients", remoteId);
 

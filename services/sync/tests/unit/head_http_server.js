@@ -309,7 +309,8 @@ ServerCollection.prototype = {
 
     // This will count records where we have an existing ServerWBO
     // registered with us as successful and all other records as failed.
-    for each (let record in input) {
+    for (let key in input) {
+      let record = input[key];
       let wbo = this.wbo(record.id);
       if (!wbo && this.acceptNew) {
         this._log.debug("Creating WBO " + JSON.stringify(record.id) +
@@ -354,7 +355,7 @@ ServerCollection.prototype = {
 
       // Parse queryString
       let options = {};
-      for each (let chunk in request.queryString.split("&")) {
+      for (let chunk of request.queryString.split("&")) {
         if (!chunk) {
           continue;
         }
@@ -704,7 +705,8 @@ SyncServer.prototype = {
       throw new Error("Unknown user.");
     }
     let userCollections = this.users[username].collections;
-    for each (let [name, coll] in Iterator(userCollections)) {
+    for (let name in userCollections) {
+      let coll = userCollections[name];
       this._log.trace("Bulk deleting " + name + " for " + username + "...");
       coll.delete({});
     }
@@ -768,7 +770,10 @@ SyncServer.prototype = {
    */
   respond: function respond(req, resp, code, status, body, headers) {
     resp.setStatusLine(req.httpVersion, code, status);
-    for each (let [header, value] in Iterator(headers || this.defaultHeaders)) {
+    if (!headers)
+      headers = this.defaultHeaders;
+    for (let header in headers) {
+      let value = headers[header];
       resp.setHeader(header, value);
     }
     resp.setHeader("X-Weave-Timestamp", "" + this.timestamp(), false);

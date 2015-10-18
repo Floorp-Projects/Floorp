@@ -369,7 +369,7 @@ add_test(function test_wrongPIN() {
     displayPIN: function displayPIN(pin) {
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
       let secret = pin.slice(0, JPAKE_LENGTH_SECRET);
-      secret = [char for each (char in secret)].reverse().join("");
+      secret = Array.prototype.slice.call(secret).reverse().join("");
       let new_pin = secret + this.cid;
       _("Received PIN " + pin + ", but I'm entering " + new_pin);
 
