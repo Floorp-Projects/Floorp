@@ -39,7 +39,7 @@ function test() {
     is(Hidden(), true, "Bookmark All Tabs should be hidden on a pinned tab");
 
     // Show all tabs
-    let allTabs = [tab for each (tab in gBrowser.tabs)];
+    let allTabs = Array.from(gBrowser.tabs);
     gBrowser.showOnlyTheseTabs(allTabs);
 
     // reset the environment  
