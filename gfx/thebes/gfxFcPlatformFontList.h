@@ -99,7 +99,7 @@ public:
     explicit gfxFontconfigFontEntry(const nsAString& aFaceName,
                                     uint16_t aWeight,
                                     int16_t aStretch,
-                                    uint8_t aStyle,
+                                    bool aItalic,
                                     const uint8_t *aData,
                                     FT_Face aFace);
 
@@ -108,7 +108,7 @@ public:
                                     FcPattern* aFontPattern,
                                     uint16_t aWeight,
                                     int16_t aStretch,
-                                    uint8_t aStyle);
+                                    bool aItalic);
 
     FcPattern* GetPattern() { return mFontPattern; }
 
@@ -209,12 +209,11 @@ public:
 
     gfxFontEntry*
     LookupLocalFont(const nsAString& aFontName, uint16_t aWeight,
-                    int16_t aStretch, uint8_t aStyle) override;
+                    int16_t aStretch, bool aItalic) override;
 
     gfxFontEntry*
     MakePlatformFont(const nsAString& aFontName, uint16_t aWeight,
-                     int16_t aStretch,
-                     uint8_t aStyle,
+                     int16_t aStretch, bool aItalic,
                      const uint8_t* aFontData,
                      uint32_t aLength) override;
 

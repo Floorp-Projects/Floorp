@@ -169,7 +169,7 @@ FontFaceSet::ParseFontShorthandForMatching(
                             RefPtr<FontFamilyListRefCnt>& aFamilyList,
                             uint32_t& aWeight,
                             int32_t& aStretch,
-                            uint8_t& aStyle,
+                            uint32_t& aItalicStyle,
                             ErrorResult& aRv)
 {
   // Parse aFont as a 'font' property value.
@@ -224,7 +224,7 @@ FontFaceSet::ParseFontShorthandForMatching(
   aWeight = weight;
 
   aStretch = data->ValueFor(eCSSProperty_font_stretch)->GetIntValue();
-  aStyle = data->ValueFor(eCSSProperty_font_style)->GetIntValue();
+  aItalicStyle = data->ValueFor(eCSSProperty_font_style)->GetIntValue();
 }
 
 static bool
@@ -252,7 +252,7 @@ FontFaceSet::FindMatchingFontFaces(const nsAString& aFont,
   RefPtr<FontFamilyListRefCnt> familyList;
   uint32_t weight;
   int32_t stretch;
-  uint8_t italicStyle;
+  uint32_t italicStyle;
   ParseFontShorthandForMatching(aFont, familyList, weight, stretch, italicStyle,
                                 aRv);
   if (aRv.Failed()) {
@@ -964,7 +964,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
 
   uint32_t weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
-  uint8_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
+  uint32_t italicStyle = NS_STYLE_FONT_STYLE_NORMAL;
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
 
   // set up weight
@@ -1772,13 +1772,13 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                uint32_t aWeight,
                                int32_t aStretch,
-                               uint8_t aStyle,
+                               uint32_t aItalicStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
                                gfxSparseBitSet* aUnicodeRanges)
 {
   RefPtr<gfxUserFontEntry> entry =
-    new FontFace::Entry(this, aFontFaceSrcList, aWeight, aStretch, aStyle,
+    new FontFace::Entry(this, aFontFaceSrcList, aWeight, aStretch, aItalicStyle,
                         aFeatureSettings, aLanguageOverride, aUnicodeRanges);
   return entry.forget();
 }

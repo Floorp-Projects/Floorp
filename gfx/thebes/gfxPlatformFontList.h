@@ -153,14 +153,14 @@ public:
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
-                                          uint8_t aStyle) = 0;
+                                          bool aItalic) = 0;
 
     // create a new platform font from downloaded data (@font-face)
     // this method is responsible to ensure aFontData is free()'d
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,
-                                           uint8_t aStyle,
+                                           bool aItalic,
                                            const uint8_t* aFontData,
                                            uint32_t aLength) = 0;
 

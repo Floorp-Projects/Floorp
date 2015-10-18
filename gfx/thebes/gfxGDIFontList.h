@@ -236,7 +236,7 @@ public:
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,
-                                         uint8_t aStyle,
+                                         bool aItalic,
                                          uint16_t aWeight, int16_t aStretch,
                                          gfxUserFontData* aUserFontData,
                                          bool aFamilyHasItalicFace);
@@ -245,7 +245,7 @@ public:
     static GDIFontEntry* LoadLocalFont(const nsAString& aFontName,
                                        uint16_t aWeight,
                                        int16_t aStretch,
-                                       uint8_t aStyle);
+                                       bool aItalic);
 
     uint8_t mWindowsFamily;
     uint8_t mWindowsPitch;
@@ -266,7 +266,7 @@ protected:
     friend class gfxWindowsFont;
 
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
-                 uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
+                 bool aItalic, uint16_t aWeight, int16_t aStretch,
                  gfxUserFontData *aUserFontData, bool aFamilyHasItalicFace);
 
     void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
@@ -311,12 +311,12 @@ public:
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
-                                          uint8_t aStyle);
+                                          bool aItalic);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,
-                                           uint8_t aStyle,
+                                           bool aItalic,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 
