@@ -212,7 +212,7 @@ exports.testWindowIteratorPrivateDefault = function(assert, done) {
   // there should only be one window open here, if not give us the
   // the urls
   if (browserWindows.length > 1) {
-    for each (let tab in tabs) {
+    for (let tab of tabs) {
       assert.fail("TAB URL: " + tab.url);
     }
   }
