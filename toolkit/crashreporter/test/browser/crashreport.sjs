@@ -128,7 +128,7 @@ function handleRequest(request, response)
 {
   if (request.method == "GET") {
     let id = null;
-    for each(p in request.queryString.split('&')) {
+    for (let p of request.queryString.split('&')) {
       let [key, value] = p.split('=');
       if (key == 'id')
         id = value;

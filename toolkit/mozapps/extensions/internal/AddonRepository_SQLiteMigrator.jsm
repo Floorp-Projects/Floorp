@@ -141,8 +141,10 @@ this.AddonRepository_SQLiteMigrator = {
   },
 
   _closeConnection: function() {
-    for each (let stmt in this.asyncStatementsCache)
+    for (let key in this.asyncStatementsCache) {
+      let stmt = this.asyncStatementsCache[key];
       stmt.finalize();
+    }
     this.asyncStatementsCache = {};
 
     if (this.connection)
@@ -315,8 +317,10 @@ this.AddonRepository_SQLiteMigrator = {
           }
 
           let returnedAddons = {};
-          for each (let addon in addons)
+          for (let id in addons) {
+            let addon = addons[id];
             returnedAddons[addon.id] = addon;
+          }
           aCallback(returnedAddons);
         }
       });

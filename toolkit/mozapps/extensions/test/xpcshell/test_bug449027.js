@@ -317,7 +317,7 @@ function create_addon(addon) {
  * the newly blocked items compared to the previous test.
  */
 function check_state(test, lastTest, callback) {
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(addons) {
     for (var i = 0; i < ADDONS.length; i++) {
       var blocked = addons[i].blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED;
       if (blocked != ADDONS[i][test])
@@ -386,7 +386,7 @@ function run_test() {
 function check_test_pt1() {
   dump("Checking pt 1\n");
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(addons) {
     for (var i = 0; i < ADDONS.length; i++) {
       if (!addons[i])
         do_throw("Addon " + (i + 1) + " did not get installed correctly");

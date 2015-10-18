@@ -449,7 +449,7 @@ this.LightweightThemeManager = {
       return;
     }
 
-    aCallback([new AddonWrapper(a) for each (a in this.usedThemes)]);
+    aCallback(this.usedThemes.map(a => new AddonWrapper(a)));
   },
 };
 

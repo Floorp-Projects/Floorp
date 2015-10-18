@@ -58,7 +58,7 @@ nsContentDispatchChooser.prototype =
     let SupportsString = Components.Constructor(
                            "@mozilla.org/supports-string;1",
                            "nsISupportsString");
-    for each (let text in arr) {
+    for (let text of arr) {
       let string = new SupportsString;
       string.data = text;
       params.appendElement(string, false);

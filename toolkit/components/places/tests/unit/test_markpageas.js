@@ -39,7 +39,7 @@ add_task(function test_execute()
 
   PlacesUtils.history.addObserver(observer, false);
 
-  for each (var visit in gVisits) {
+  for (var visit of gVisits) {
     if (visit.transition == TRANSITION_TYPED)
       PlacesUtils.history.markPageAsTyped(uri(visit.url));
     else if (visit.transition == TRANSITION_BOOKMARK)

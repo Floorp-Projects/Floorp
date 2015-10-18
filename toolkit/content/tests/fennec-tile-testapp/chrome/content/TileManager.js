@@ -20,7 +20,7 @@ function bind(f, thisObj) {
 }
 
 function bindSome(instance, methodNames) {
-  for each (let methodName in methodNames)
+  for (let methodName of methodNames)
     if (methodName in instance)
       instance[methodName] = bind(instance[methodName], instance);
 }
@@ -124,7 +124,7 @@ TileManager.prototype = {
     let criticalIsDirty = false;
     let criticalRect = this._criticalRect;
 
-    for each (let rect in rects) {
+    for (let rect of rects) {
       this._tileCache.forEachIntersectingRect(rect, false, this._dirtyTile, this);
 
       if (criticalRect && rect.intersects(criticalRect))
@@ -909,7 +909,7 @@ TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
       outOfBounds = true;
 
       // top, bottom borders
-      for each (let y in [rect.top, rect.bottom]) {
+      for (let y of [rect.top, rect.bottom]) {
         for (let x = rect.left; x <= rect.right - dx; x += kTileWidth) {
           let i = x >> kTileExponentWidth;
           let j = y >> kTileExponentHeight;
@@ -921,7 +921,7 @@ TileManager.CrawlIterator = function CrawlIterator(tileCache, startRect) {
       }
 
       // left, right borders
-      for each (let x in [rect.left, rect.right]) {
+      for (let x of [rect.left, rect.right]) {
         for (let y = rect.top; y <= rect.bottom - dy; y += kTileHeight) {
           let i = x >> kTileExponentWidth;
           let j = y >> kTileExponentHeight;
