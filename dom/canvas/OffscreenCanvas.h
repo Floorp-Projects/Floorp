@@ -9,7 +9,7 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "CanvasRenderingContextHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -38,7 +38,7 @@ struct OffscreenCanvasCloneData final
                            bool aNeutered);
   ~OffscreenCanvasCloneData();
 
-  nsRefPtr<layers::AsyncCanvasRenderer> mRenderer;
+  RefPtr<layers::AsyncCanvasRenderer> mRenderer;
   uint32_t mWidth;
   uint32_t mHeight;
   layers::LayersBackend mCompositorBackendType;
@@ -170,7 +170,7 @@ private:
   layers::LayersBackend mCompositorBackendType;
 
   layers::CanvasClient* mCanvasClient;
-  nsRefPtr<layers::AsyncCanvasRenderer> mCanvasRenderer;
+  RefPtr<layers::AsyncCanvasRenderer> mCanvasRenderer;
 };
 
 } // namespace dom

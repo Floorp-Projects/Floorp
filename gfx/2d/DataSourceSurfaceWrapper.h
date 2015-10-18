@@ -30,7 +30,7 @@ public:
   virtual bool IsValid() const override { return mSurface->IsValid(); }
 
 private:
-  nsRefPtr<DataSourceSurface> mSurface;
+  RefPtr<DataSourceSurface> mSurface;
 };
 
 } // namespace gfx

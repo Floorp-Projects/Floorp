@@ -25,7 +25,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Create as a file
-  MultipartBlobImpl(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls,
+  MultipartBlobImpl(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
                     const nsAString& aName,
                     const nsAString& aContentType)
     : BlobImplBase(aName, aContentType, UINT64_MAX),
@@ -36,7 +36,7 @@ public:
   }
 
   // Create as a blob
-  MultipartBlobImpl(const nsTArray<nsRefPtr<BlobImpl>>& aBlobImpls,
+  MultipartBlobImpl(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls,
                     const nsAString& aContentType)
     : BlobImplBase(aContentType, UINT64_MAX),
       mBlobImpls(aBlobImpls),
@@ -96,7 +96,7 @@ public:
   virtual void GetInternalStream(nsIInputStream** aInputStream,
                                  ErrorResult& aRv) override;
 
-  virtual const nsTArray<nsRefPtr<BlobImpl>>* GetSubBlobImpls() const override
+  virtual const nsTArray<RefPtr<BlobImpl>>* GetSubBlobImpls() const override
   {
     return mBlobImpls.Length() ? &mBlobImpls : nullptr;
   }
@@ -124,7 +124,7 @@ protected:
 
   void SetLengthAndModifiedDate();
 
-  nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+  nsTArray<RefPtr<BlobImpl>> mBlobImpls;
   bool mIsFromNsIFile;
 };
 

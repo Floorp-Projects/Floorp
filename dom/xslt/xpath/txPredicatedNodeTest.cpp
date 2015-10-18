@@ -25,7 +25,7 @@ txPredicatedNodeTest::matches(const txXPathNode& aNode,
     }
 
     txSingleNodeContext context(aNode, aContext);
-    nsRefPtr<txAExprResult> res;
+    RefPtr<txAExprResult> res;
     nsresult rv = mPredicate->evaluate(&context, getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv, false);
 

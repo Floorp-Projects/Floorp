@@ -57,7 +57,7 @@ DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 already_AddRefed<DOMRect>
 DOMRect::Constructor(const GlobalObject& aGlobal, ErrorResult& aRV)
 {
-  nsRefPtr<DOMRect> obj =
+  RefPtr<DOMRect> obj =
     new DOMRect(aGlobal.GetAsSupports(), 0.0, 0.0, 0.0, 0.0);
   return obj.forget();
 }
@@ -66,7 +66,7 @@ already_AddRefed<DOMRect>
 DOMRect::Constructor(const GlobalObject& aGlobal, double aX, double aY,
                      double aWidth, double aHeight, ErrorResult& aRV)
 {
-  nsRefPtr<DOMRect> obj =
+  RefPtr<DOMRect> obj =
     new DOMRect(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
   return obj.forget();
 }

@@ -87,7 +87,7 @@ MobileConnectionChild::UnregisterListener(nsIMobileConnectionListener* aListener
 NS_IMETHODIMP
 MobileConnectionChild::GetVoice(nsIMobileConnectionInfo** aVoice)
 {
-  nsRefPtr<nsIMobileConnectionInfo> voice(mVoice);
+  RefPtr<nsIMobileConnectionInfo> voice(mVoice);
   voice.forget(aVoice);
   return NS_OK;
 }
@@ -95,7 +95,7 @@ MobileConnectionChild::GetVoice(nsIMobileConnectionInfo** aVoice)
 NS_IMETHODIMP
 MobileConnectionChild::GetData(nsIMobileConnectionInfo** aData)
 {
-  nsRefPtr<nsIMobileConnectionInfo> data(mData);
+  RefPtr<nsIMobileConnectionInfo> data(mData);
   data.forget(aData);
   return NS_OK;
 }

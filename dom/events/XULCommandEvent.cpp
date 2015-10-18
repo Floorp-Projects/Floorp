@@ -135,7 +135,7 @@ NS_NewDOMXULCommandEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
                          WidgetInputEvent* aEvent) 
 {
-  nsRefPtr<XULCommandEvent> it =
+  RefPtr<XULCommandEvent> it =
     new XULCommandEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

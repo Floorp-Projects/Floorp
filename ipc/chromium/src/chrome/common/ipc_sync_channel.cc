@@ -95,7 +95,7 @@ class SyncChannel::ReceivedSyncMsgQueue {
   void DispatchMessages() {
     while (true) {
       Message* message;
-      nsRefPtr<SyncChannel::SyncContext> context;
+      RefPtr<SyncChannel::SyncContext> context;
       {
         AutoLock auto_lock(message_lock_);
         if (message_queue_.empty())
@@ -164,7 +164,7 @@ class SyncChannel::ReceivedSyncMsgQueue {
   struct QueuedMessage {
     QueuedMessage(Message* m, SyncContext* c) : message(m), context(c) { }
     Message* message;
-    nsRefPtr<SyncChannel::SyncContext> context;
+    RefPtr<SyncChannel::SyncContext> context;
   };
 
   typedef std::deque<QueuedMessage> SyncMessageQueue;
@@ -367,7 +367,7 @@ bool SyncChannel::SendWithTimeout(Message* message, int timeout_ms) {
   }
 
   // *this* might get deleted in WaitForReply.
-  nsRefPtr<SyncContext> context(sync_context());
+  RefPtr<SyncContext> context(sync_context());
   if (context->shutdown_event()->IsSignaled()) {
     delete message;
     return false;

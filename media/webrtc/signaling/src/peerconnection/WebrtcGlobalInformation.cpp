@@ -28,7 +28,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "rlogringbuffer.h"
 #include "runnable_utils.h"
@@ -84,13 +84,13 @@ public:
   }
 
   Result mResult;
-  std::queue<nsRefPtr<WebrtcGlobalParent>> mContactList;
+  std::queue<RefPtr<WebrtcGlobalParent>> mContactList;
   const int mRequestId;
 
-  nsRefPtr<WebrtcGlobalParent> GetNextParent()
+  RefPtr<WebrtcGlobalParent> GetNextParent()
   {
     while (!mContactList.empty()) {
-      nsRefPtr<WebrtcGlobalParent> next = mContactList.front();
+      RefPtr<WebrtcGlobalParent> next = mContactList.front();
       mContactList.pop();
       if (next->IsActive()) {
         return next;
@@ -193,22 +193,22 @@ public:
   {
     return sContentParents.empty();
   }
-  static const std::vector<nsRefPtr<WebrtcGlobalParent>>& GetAll()
+  static const std::vector<RefPtr<WebrtcGlobalParent>>& GetAll()
   {
     return sContentParents;
   }
 private:
-  static std::vector<nsRefPtr<WebrtcGlobalParent>> sContentParents;
+  static std::vector<RefPtr<WebrtcGlobalParent>> sContentParents;
   WebrtcContentParents() = delete;
   WebrtcContentParents(const WebrtcContentParents&) = delete;
   WebrtcContentParents& operator=(const WebrtcContentParents&) = delete;
 };
 
-std::vector<nsRefPtr<WebrtcGlobalParent>> WebrtcContentParents::sContentParents;
+std::vector<RefPtr<WebrtcGlobalParent>> WebrtcContentParents::sContentParents;
 
 WebrtcGlobalParent* WebrtcContentParents::Alloc()
 {
-  nsRefPtr<WebrtcGlobalParent> cp = new WebrtcGlobalParent;
+  RefPtr<WebrtcGlobalParent> cp = new WebrtcGlobalParent;
   sContentParents.push_back(cp);
   return cp.get();
 }

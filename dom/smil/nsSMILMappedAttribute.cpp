@@ -44,7 +44,7 @@ nsSMILValue
 nsSMILMappedAttribute::GetBaseValue() const
 {
   nsAutoString baseStringValue;
-  nsRefPtr<nsIAtom> attrName = GetAttrNameAtom();
+  RefPtr<nsIAtom> attrName = GetAttrNameAtom();
   bool success = mElement->GetAttr(kNameSpaceID_None, attrName,
                                      baseStringValue);
   nsSMILValue baseValue;
@@ -92,7 +92,7 @@ nsSMILMappedAttribute::SetAnimValue(const nsSMILValue& aValue)
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<nsIAtom> attrName = GetAttrNameAtom();
+  RefPtr<nsIAtom> attrName = GetAttrNameAtom();
   nsStringBuffer* oldValStrBuf = static_cast<nsStringBuffer*>
     (mElement->GetProperty(SMIL_MAPPED_ATTR_ANIMVAL, attrName));
   if (oldValStrBuf) {
@@ -121,7 +121,7 @@ nsSMILMappedAttribute::SetAnimValue(const nsSMILValue& aValue)
 void
 nsSMILMappedAttribute::ClearAnimValue()
 {
-  nsRefPtr<nsIAtom> attrName = GetAttrNameAtom();
+  RefPtr<nsIAtom> attrName = GetAttrNameAtom();
   mElement->DeleteProperty(SMIL_MAPPED_ATTR_ANIMVAL, attrName);
   FlushChangesToTargetAttr();
 }

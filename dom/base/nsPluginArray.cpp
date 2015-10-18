@@ -69,8 +69,8 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPluginArray,
                                       mPlugins)
 
 static void
-GetPluginMimeTypes(const nsTArray<nsRefPtr<nsPluginElement> >& aPlugins,
-                   nsTArray<nsRefPtr<nsMimeType> >& aMimeTypes)
+GetPluginMimeTypes(const nsTArray<RefPtr<nsPluginElement> >& aPlugins,
+                   nsTArray<RefPtr<nsMimeType> >& aMimeTypes)
 {
   for (uint32_t i = 0; i < aPlugins.Length(); ++i) {
     nsPluginElement *plugin = aPlugins[i];
@@ -79,14 +79,14 @@ GetPluginMimeTypes(const nsTArray<nsRefPtr<nsPluginElement> >& aPlugins,
 }
 
 static bool
-operator<(const nsRefPtr<nsMimeType>& lhs, const nsRefPtr<nsMimeType>& rhs)
+operator<(const RefPtr<nsMimeType>& lhs, const RefPtr<nsMimeType>& rhs)
 {
   // Sort MIME types alphabetically by type name.
   return lhs->Type() < rhs->Type();
 }
 
 void
-nsPluginArray::GetMimeTypes(nsTArray<nsRefPtr<nsMimeType>>& aMimeTypes)
+nsPluginArray::GetMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes)
 {
   aMimeTypes.Clear();
 
@@ -120,7 +120,7 @@ nsPluginArray::NamedItem(const nsAString& aName)
 void
 nsPluginArray::Refresh(bool aReloadDocuments)
 {
-  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   if(!AllowPlugins() || !pluginHost) {
     return;
@@ -193,7 +193,7 @@ nsPluginArray::Invalidate()
 }
 
 static nsPluginElement*
-FindPlugin(const nsTArray<nsRefPtr<nsPluginElement> >& aPlugins,
+FindPlugin(const nsTArray<RefPtr<nsPluginElement> >& aPlugins,
            const nsAString& aName)
 {
   for (uint32_t i = 0; i < aPlugins.Length(); ++i) {
@@ -279,8 +279,8 @@ nsPluginArray::AllowPlugins() const
 }
 
 static bool
-operator<(const nsRefPtr<nsPluginElement>& lhs,
-          const nsRefPtr<nsPluginElement>& rhs)
+operator<(const RefPtr<nsPluginElement>& lhs,
+          const RefPtr<nsPluginElement>& rhs)
 {
   // Sort plugins alphabetically by name.
   return lhs->PluginTag()->Name() < rhs->PluginTag()->Name();
@@ -294,7 +294,7 @@ nsPluginArray::EnsurePlugins()
     return;
   }
 
-  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   if (!pluginHost) {
     // We have no plugin host.
     return;
@@ -444,7 +444,7 @@ nsPluginElement::GetSupportedNames(unsigned, nsTArray<nsString>& retval)
   }
 }
 
-nsTArray<nsRefPtr<nsMimeType> >&
+nsTArray<RefPtr<nsMimeType> >&
 nsPluginElement::MimeTypes()
 {
   EnsurePluginMimeTypes();

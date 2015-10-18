@@ -21,7 +21,7 @@ public:
                   MediaDataDecoderCallback* aCallback);
   ~OpusDataDecoder();
 
-  nsRefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -38,7 +38,7 @@ private:
   void DoDrain ();
 
   const AudioInfo& mInfo;
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   // Opus decoder state

@@ -143,7 +143,7 @@ public:
   }
 
 private:
-  nsRefPtr<SourceSurface> mSurface;
+  RefPtr<SourceSurface> mSurface;
   Rect mDest;
   Rect mSource;
   DrawSurfaceOptions mSurfOptions;
@@ -167,7 +167,7 @@ public:
   }
 
 private:
-  nsRefPtr<FilterNode> mFilter;
+  RefPtr<FilterNode> mFilter;
   Rect mSourceRect;
   Point mDestPoint;
   DrawOptions mOptions;
@@ -215,7 +215,7 @@ public:
   }
 
 private:
-  nsRefPtr<SourceSurface> mSurface;
+  RefPtr<SourceSurface> mSurface;
   IntRect mSourceRect;
   IntPoint mDestination;
 };
@@ -338,7 +338,7 @@ public:
   }
 
 private:
-  nsRefPtr<Path> mPath;
+  RefPtr<Path> mPath;
   StoredPattern mPattern;
   DrawOptions mOptions;
 };
@@ -410,7 +410,7 @@ public:
   }
 
 private:
-  nsRefPtr<Path> mPath;
+  RefPtr<Path> mPath;
   StoredPattern mPattern;
   StrokeOptions mStrokeOptions;
   DrawOptions mOptions;
@@ -444,11 +444,11 @@ public:
   }
 
 private:
-  nsRefPtr<ScaledFont> mFont;
+  RefPtr<ScaledFont> mFont;
   std::vector<Glyph> mGlyphs;
   StoredPattern mPattern;
   DrawOptions mOptions;
-  nsRefPtr<GlyphRenderingOptions> mRenderingOptions;
+  RefPtr<GlyphRenderingOptions> mRenderingOptions;
 };
 
 class MaskCommand : public DrawingCommand
@@ -497,7 +497,7 @@ public:
 
 private:
   StoredPattern mSource;
-  nsRefPtr<SourceSurface> mMask;
+  RefPtr<SourceSurface> mMask;
   Point mOffset;
   DrawOptions mOptions;
 };
@@ -517,7 +517,7 @@ public:
   }
 
 private:
-  nsRefPtr<Path> mPath;
+  RefPtr<Path> mPath;
 };
 
 class PushClipRectCommand : public DrawingCommand

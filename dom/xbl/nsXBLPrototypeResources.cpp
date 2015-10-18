@@ -80,7 +80,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // encounter.  (If they aren't skin sheets, it doesn't matter, since
   // they'll still be in the chrome cache.
 
-  nsTArray<nsRefPtr<CSSStyleSheet>> oldSheets;
+  nsTArray<RefPtr<CSSStyleSheet>> oldSheets;
 
   oldSheets.SwapElements(mStyleSheetList);
 
@@ -91,7 +91,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
     nsIURI* uri = oldSheet->GetSheetURI();
 
-    nsRefPtr<CSSStyleSheet> newSheet;
+    RefPtr<CSSStyleSheet> newSheet;
     if (IsChromeURI(uri)) {
       if (NS_FAILED(cssLoader->LoadSheetSync(uri, getter_AddRefs(newSheet))))
         continue;

@@ -27,7 +27,7 @@ namespace image {
 /* static */ already_AddRefed<Image>
 ImageOps::Freeze(Image* aImage)
 {
-  nsRefPtr<Image> frozenImage = new FrozenImage(aImage);
+  RefPtr<Image> frozenImage = new FrozenImage(aImage);
   return frozenImage.forget();
 }
 
@@ -42,7 +42,7 @@ ImageOps::Freeze(imgIContainer* aImage)
 /* static */ already_AddRefed<Image>
 ImageOps::Clip(Image* aImage, nsIntRect aClip)
 {
-  nsRefPtr<Image> clippedImage = new ClippedImage(aImage, aClip);
+  RefPtr<Image> clippedImage = new ClippedImage(aImage, aClip);
   return clippedImage.forget();
 }
 
@@ -57,7 +57,7 @@ ImageOps::Clip(imgIContainer* aImage, nsIntRect aClip)
 /* static */ already_AddRefed<Image>
 ImageOps::Orient(Image* aImage, Orientation aOrientation)
 {
-  nsRefPtr<Image> orientedImage = new OrientedImage(aImage, aOrientation);
+  RefPtr<Image> orientedImage = new OrientedImage(aImage, aOrientation);
   return orientedImage.forget();
 }
 
@@ -104,7 +104,7 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   }
 
   // Write the data into a SourceBuffer.
-  nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
   if (NS_FAILED(rv)) {
@@ -115,7 +115,7 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   // Create a decoder.
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
-  nsRefPtr<Decoder> decoder =
+  RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType,
                                            sourceBuffer,
                                            ToSurfaceFlags(aFlags));
@@ -135,7 +135,7 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
     return nullptr;
   }
 
-  nsRefPtr<SourceSurface> surface = frame->GetSurface();
+  RefPtr<SourceSurface> surface = frame->GetSurface();
   if (!surface) {
     return nullptr;
   }

@@ -33,7 +33,7 @@ public:
 
     static already_AddRefed<nsIdleServiceQt> GetInstance()
     {
-        nsRefPtr<nsIdleServiceQt> idleService =
+        RefPtr<nsIdleServiceQt> idleService =
             nsIdleService::GetInstance().downcast<nsIdleServiceQt>();
         if (!idleService) {
             idleService = new nsIdleServiceQt();

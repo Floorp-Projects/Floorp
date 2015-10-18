@@ -143,7 +143,7 @@ HTMLLegendElement::GetForm()
 {
   Element* form = GetFormElement();
   MOZ_ASSERT_IF(form, form->IsHTMLElement(nsGkAtoms::form));
-  nsRefPtr<HTMLFormElement> ret = static_cast<HTMLFormElement*>(form);
+  RefPtr<HTMLFormElement> ret = static_cast<HTMLFormElement*>(form);
   return ret.forget();
 }
 

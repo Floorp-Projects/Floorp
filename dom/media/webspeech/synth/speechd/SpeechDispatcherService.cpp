@@ -165,7 +165,7 @@ private:
 
   // By holding a strong reference to the service we guarantee that it won't be
   // destroyed before this runnable.
-  nsRefPtr<SpeechDispatcherService> mService;
+  RefPtr<SpeechDispatcherService> mService;
 
   TimeStamp mStartTime;
 };
@@ -411,7 +411,7 @@ struct VoiceTraverserData
 
 static PLDHashOperator
 AddVoiceTraverser(const nsAString& aUri,
-                  nsRefPtr<SpeechDispatcherVoice>& aVoice,
+                  RefPtr<SpeechDispatcherVoice>& aVoice,
                   void* aUserArg)
 {
   VoiceTraverserData* data = static_cast<VoiceTraverserData*>(aUserArg);
@@ -450,7 +450,7 @@ SpeechDispatcherService::Speak(const nsAString& aText, const nsAString& aUri,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<SpeechDispatcherCallback> callback =
+  RefPtr<SpeechDispatcherCallback> callback =
     new SpeechDispatcherCallback(aTask, this);
 
   bool found = false;
@@ -527,7 +527,7 @@ already_AddRefed<SpeechDispatcherService>
 SpeechDispatcherService::GetInstanceForService()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsRefPtr<SpeechDispatcherService> sapiService = GetInstance();
+  RefPtr<SpeechDispatcherService> sapiService = GetInstance();
   return sapiService.forget();
 }
 

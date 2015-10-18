@@ -50,7 +50,7 @@ public:
 
 private:
   ~DataStoreCursor() {}
-  nsRefPtr<DataStoreCursorImpl> mCursor;
+  RefPtr<DataStoreCursorImpl> mCursor;
 };
 
 } //namespace dom

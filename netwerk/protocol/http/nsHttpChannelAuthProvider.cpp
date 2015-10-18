@@ -1061,7 +1061,7 @@ nsHttpChannelAuthProvider::PromptForIdentity(uint32_t            level,
     if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
         promptFlags |= nsIAuthInformation::NEED_DOMAIN;
 
-    nsRefPtr<nsHTTPAuthInformation> holder =
+    RefPtr<nsHTTPAuthInformation> holder =
         new nsHTTPAuthInformation(promptFlags, realmU,
                                   nsDependentCString(authType));
     if (!holder)

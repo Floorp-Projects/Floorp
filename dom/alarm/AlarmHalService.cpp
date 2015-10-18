@@ -45,7 +45,7 @@ AlarmHalService::GetInstance()
     ClearOnShutdown(&sSingleton);
   }
 
-  nsRefPtr<AlarmHalService> service = sSingleton.get();
+  RefPtr<AlarmHalService> service = sSingleton.get();
   return service.forget();
 }
 

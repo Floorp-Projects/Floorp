@@ -311,7 +311,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     bool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
 
     if (accessible->NeedsDOMUIEvent()) {
-      nsRefPtr<AccEvent> accEvent =
+      RefPtr<AccEvent> accEvent =
         new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
       nsEventShell::FireEvent(accEvent);
     }
@@ -332,7 +332,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
       uint64_t state = accessible->State();
       bool isEnabled = !!(state & states::CHECKED);
 
-      nsRefPtr<AccEvent> accEvent =
+      RefPtr<AccEvent> accEvent =
         new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
       nsEventShell::FireEvent(accEvent);
     }
@@ -352,7 +352,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
     uint64_t state = accessible->State();
     bool isEnabled = (state & states::EXPANDED) != 0;
 
-    nsRefPtr<AccEvent> accEvent =
+    RefPtr<AccEvent> accEvent =
       new AccStateChangeEvent(accessible, states::EXPANDED, isEnabled);
     nsEventShell::FireEvent(accEvent);
     return;
@@ -378,7 +378,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
         return;
       }
 
-      nsRefPtr<AccSelChangeEvent> selChangeEvent =
+      RefPtr<AccSelChangeEvent> selChangeEvent =
         new AccSelChangeEvent(treeAcc, treeItemAcc,
                               AccSelChangeEvent::eSelectionAdd);
       nsEventShell::FireEvent(selChangeEvent);
@@ -536,7 +536,7 @@ RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
     roles::Role comboboxRole = combobox->Role();
     if (comboboxRole == roles::COMBOBOX || 
 	comboboxRole == roles::AUTOCOMPLETE) {
-      nsRefPtr<AccEvent> event =
+      RefPtr<AccEvent> event =
         new AccStateChangeEvent(combobox, states::EXPANDED, true);
       if (event)
         nsEventShell::FireEvent(event);
@@ -645,7 +645,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
 
   // Fire expanded state change event.
   if (notifyOf & kNotifyOfState) {
-    nsRefPtr<AccEvent> event =
+    RefPtr<AccEvent> event =
       new AccStateChangeEvent(widget, states::EXPANDED, false);
     document->FireDelayedEvent(event);
   }

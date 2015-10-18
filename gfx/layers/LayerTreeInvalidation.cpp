@@ -221,7 +221,7 @@ struct LayerPropertiesBase : public LayerProperties
     return IntRect();
   }
 
-  nsRefPtr<Layer> mLayer;
+  RefPtr<Layer> mLayer;
   UniquePtr<LayerPropertiesBase> mMaskLayer;
   nsTArray<UniquePtr<LayerPropertiesBase>> mAncestorMaskLayers;
   nsIntRegion mVisibleRegion;
@@ -454,8 +454,8 @@ struct ImageLayerProperties : public LayerPropertiesBase
     return IntRect();
   }
 
-  nsRefPtr<ImageContainer> mContainer;
-  nsRefPtr<ImageHost> mImageHost;
+  RefPtr<ImageContainer> mContainer;
+  RefPtr<ImageHost> mImageHost;
   Filter mFilter;
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;
@@ -488,7 +488,7 @@ struct CanvasLayerProperties : public LayerPropertiesBase
     return IntRect();
   }
 
-  nsRefPtr<ImageHost> mImageHost;
+  RefPtr<ImageHost> mImageHost;
   int32_t mFrameID;
 };
 

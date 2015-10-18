@@ -652,9 +652,9 @@ void CircleArea::Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
       if (diameter <= 0) {
         return;
       }
-      nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+      RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
       AppendEllipseToPath(builder, center, Size(diameter, diameter));
-      nsRefPtr<Path> circle = builder->Finish();
+      RefPtr<Path> circle = builder->Finish();
       aDrawTarget.Stroke(circle, aColor, aStrokeOptions);
     }
   }

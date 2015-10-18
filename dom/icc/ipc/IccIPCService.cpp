@@ -37,7 +37,7 @@ IccIPCService::GetIccByServiceId(uint32_t aServiceId, nsIIcc** aIcc)
   NS_ENSURE_TRUE(aServiceId < mIccs.Length(), NS_ERROR_INVALID_ARG);
 
   if (!mIccs[aServiceId]) {
-    nsRefPtr<IccChild> child = new IccChild();
+    RefPtr<IccChild> child = new IccChild();
 
     // |SendPIccConstructor| adds another reference to the child
     // actor and removes in |DeallocPIccChild|.

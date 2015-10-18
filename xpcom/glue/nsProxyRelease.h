@@ -40,7 +40,7 @@ NS_ProxyRelease(nsIEventTarget* aTarget, nsCOMPtr<T>& aDoomed,
  */
 template<class T>
 inline NS_HIDDEN_(nsresult)
-NS_ProxyRelease(nsIEventTarget* aTarget, nsRefPtr<T>& aDoomed,
+NS_ProxyRelease(nsIEventTarget* aTarget, RefPtr<T>& aDoomed,
                 bool aAlwaysProxy = false)
 {
   T* raw = nullptr;
@@ -87,7 +87,7 @@ NS_ReleaseOnMainThread(nsCOMPtr<T>& aDoomed,
  */
 template<class T>
 inline NS_HIDDEN_(nsresult)
-NS_ReleaseOnMainThread(nsRefPtr<T>& aDoomed,
+NS_ReleaseOnMainThread(RefPtr<T>& aDoomed,
                        bool aAlwaysProxy = false)
 {
   T* raw = nullptr;
@@ -144,7 +144,7 @@ NS_ReleaseOnMainThread(nsISupports* aDoomed,
  * to the holder anywhere they please. These references are meant to be opaque
  * when accessed off-main-thread (assertions enforce this).
  *
- * The semantics of nsRefPtr<nsMainThreadPtrHolder<T> > would be cumbersome, so
+ * The semantics of RefPtr<nsMainThreadPtrHolder<T> > would be cumbersome, so
  * we also introduce nsMainThreadPtrHandle<T>, which is conceptually identical
  * to the above (though it includes various convenience methods). The basic
  * pattern is as follows.
@@ -233,7 +233,7 @@ private:
 template<class T>
 class nsMainThreadPtrHandle
 {
-  nsRefPtr<nsMainThreadPtrHolder<T>> mPtr;
+  RefPtr<nsMainThreadPtrHolder<T>> mPtr;
 
 public:
   nsMainThreadPtrHandle() : mPtr(nullptr) {}

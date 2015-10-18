@@ -151,7 +151,7 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
 
   // Verify that we have a PDM that supports the whitelisted types.
   PDMFactory::Init();
-  nsRefPtr<PDMFactory> platform = new PDMFactory();
+  RefPtr<PDMFactory> platform = new PDMFactory();
   for (const nsCString& codecMime : codecMimes) {
     if (!platform->SupportsMimeType(codecMime)) {
       return false;
@@ -206,8 +206,8 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 
   PDMFactory::Init();
 
-  nsRefPtr<PDMFactory> platform = new PDMFactory();
-  nsRefPtr<MediaDataDecoder> decoder(
+  RefPtr<PDMFactory> platform = new PDMFactory();
+  RefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr, aBackend, nullptr));
 
   return decoder.forget();
@@ -217,7 +217,7 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
 MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFailureReason)
 {
   VideoInfo config;
-  nsRefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
+  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aBackend, config));
   if (!decoder) {
     aFailureReason.AssignLiteral("Failed to create H264 decoder");
     return false;

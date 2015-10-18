@@ -105,8 +105,8 @@ private:
   uint32_t mServiceId;
   bool mLive;
   nsCOMArray<nsIMobileConnectionListener> mListeners;
-  nsRefPtr<MobileConnectionInfo> mVoice;
-  nsRefPtr<MobileConnectionInfo> mData;
+  RefPtr<MobileConnectionInfo> mVoice;
+  RefPtr<MobileConnectionInfo> mData;
   int32_t mRadioState;
   nsString mLastNetwork;
   nsString mLastHomeNetwork;

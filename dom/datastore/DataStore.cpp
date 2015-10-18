@@ -44,7 +44,7 @@ DataStore::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<DataStore> store = new DataStore(window);
+  RefPtr<DataStore> store = new DataStore(window);
   return store.forget();
 }
 

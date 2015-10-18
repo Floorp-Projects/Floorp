@@ -64,7 +64,7 @@ gfxQuartzNativeDrawing::EndNativeDrawing()
 
   mBorrowedContext.Finish();
   if (mTempDrawTarget) {
-    nsRefPtr<SourceSurface> source = mTempDrawTarget->Snapshot();
+    RefPtr<SourceSurface> source = mTempDrawTarget->Snapshot();
 
     AutoRestoreTransform autoRestore(mDrawTarget);
     mDrawTarget->SetTransform(Matrix());

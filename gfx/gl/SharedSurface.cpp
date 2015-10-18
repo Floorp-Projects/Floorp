@@ -303,7 +303,7 @@ ChooseBufferBits(const SurfaceCaps& caps,
 
 SurfaceFactory::SurfaceFactory(SharedSurfaceType type, GLContext* gl,
                                const SurfaceCaps& caps,
-                               const nsRefPtr<layers::ISurfaceAllocator>& allocator,
+                               const RefPtr<layers::ISurfaceAllocator>& allocator,
                                const layers::TextureFlags& flags)
     : mType(type)
     , mGL(gl)
@@ -333,7 +333,7 @@ already_AddRefed<layers::SharedSurfaceTextureClient>
 SurfaceFactory::NewTexClient(const gfx::IntSize& size)
 {
     while (!mRecycleFreePool.empty()) {
-        nsRefPtr<layers::SharedSurfaceTextureClient> cur = mRecycleFreePool.front();
+        RefPtr<layers::SharedSurfaceTextureClient> cur = mRecycleFreePool.front();
         mRecycleFreePool.pop();
 
         if (cur->Surf()->mSize == size) {
@@ -348,7 +348,7 @@ SurfaceFactory::NewTexClient(const gfx::IntSize& size)
     if (!surf)
         return nullptr;
 
-    nsRefPtr<layers::SharedSurfaceTextureClient> ret;
+    RefPtr<layers::SharedSurfaceTextureClient> ret;
     ret = new layers::SharedSurfaceTextureClient(mAllocator, mFlags, Move(surf), this);
 
     StartRecycling(ret);
@@ -381,7 +381,7 @@ SurfaceFactory::StopRecycling(layers::SharedSurfaceTextureClient* tc)
 /*static*/ void
 SurfaceFactory::RecycleCallback(layers::TextureClient* rawTC, void* rawFactory)
 {
-    nsRefPtr<layers::SharedSurfaceTextureClient> tc;
+    RefPtr<layers::SharedSurfaceTextureClient> tc;
     tc = static_cast<layers::SharedSurfaceTextureClient*>(rawTC);
     SurfaceFactory* factory = static_cast<SurfaceFactory*>(rawFactory);
 
@@ -404,7 +404,7 @@ SurfaceFactory::Recycle(layers::SharedSurfaceTextureClient* texClient)
         return false;
     }
 
-    nsRefPtr<layers::SharedSurfaceTextureClient> texClientRef = texClient;
+    RefPtr<layers::SharedSurfaceTextureClient> texClientRef = texClient;
     mRecycleFreePool.push(texClientRef);
     return true;
 }

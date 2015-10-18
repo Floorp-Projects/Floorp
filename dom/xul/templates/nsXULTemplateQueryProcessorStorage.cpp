@@ -110,7 +110,7 @@ nsXULTemplateResultSetStorage::FillColumnValues(nsCOMArray<nsIVariant>& aArray)
     int32_t count = mColumnNames.Count();
 
     for (int32_t c = 0; c < count; c++) {
-        nsRefPtr<nsVariant> value = new nsVariant();
+        RefPtr<nsVariant> value = new nsVariant();
 
         int32_t type;
         mStatement->GetTypeOfIndex(c, &type);

@@ -149,14 +149,14 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
         GetSystemPrincipal(getter_AddRefs(sysPrincipal));
 
     // Load the bindings.
-    nsRefPtr<nsXBLBinding> unused;
+    RefPtr<nsXBLBinding> unused;
     bool ignored;
     rv = xblService->LoadBindings(rootCont, bindingUri, sysPrincipal,
                                   getter_AddRefs(unused), &ignored);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Fire an event at the bound element to pass it |resultFragment|.
-    nsRefPtr<CustomEvent> event =
+    RefPtr<CustomEvent> event =
       NS_NewDOMCustomEvent(rootCont, nullptr, nullptr);
     MOZ_ASSERT(event);
     nsCOMPtr<nsIWritableVariant> resultFragmentVariant = new nsVariant();

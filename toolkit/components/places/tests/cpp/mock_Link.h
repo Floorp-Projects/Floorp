@@ -59,7 +59,7 @@ protected:
 private:
   void (*mHandler)(nsLinkState);
   bool mRunNextTest;
-  nsRefPtr<Link> mDeathGrip;
+  RefPtr<Link> mDeathGrip;
 };
 
 NS_IMPL_ISUPPORTS(

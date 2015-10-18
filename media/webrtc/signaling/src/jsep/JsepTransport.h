@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include <mozilla/nsRefPtr.h>
+#include <mozilla/RefPtr.h>
 #include <mozilla/UniquePtr.h>
 #include "nsISupportsImpl.h"
 

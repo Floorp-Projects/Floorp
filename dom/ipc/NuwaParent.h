@@ -10,7 +10,7 @@
 #include "base/message_loop.h"
 #include "mozilla/dom/PNuwaParent.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -64,7 +64,7 @@ private:
   UniquePtr<nsTArray<ProtocolFdMapping>> mNewProcessFds;
 
   // The mutual reference will be broken on the main thread.
-  nsRefPtr<ContentParent> mContentParent;
+  RefPtr<ContentParent> mContentParent;
 };
 
 } // namespace dom

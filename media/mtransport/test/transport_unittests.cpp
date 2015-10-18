@@ -611,7 +611,7 @@ class TransportTestPeer : public sigslot::has_slots<> {
              (int)streams_.size());
 
     // Create the media stream
-    nsRefPtr<NrIceMediaStream> stream =
+    RefPtr<NrIceMediaStream> stream =
         ice_ctx_->CreateStream(static_cast<char *>(name), 1);
 
     ASSERT_TRUE(stream != nullptr);
@@ -799,15 +799,15 @@ class TransportTestPeer : public sigslot::has_slots<> {
   std::string name_;
   nsCOMPtr<nsIEventTarget> target_;
   size_t received_;
-    nsRefPtr<TransportFlow> flow_;
+    RefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
   TransportLayerLogging *logging_;
   TransportLayerLossy *lossy_;
   TransportLayerDtls *dtls_;
   TransportLayerIce *ice_;
-  nsRefPtr<DtlsIdentity> identity_;
-  nsRefPtr<NrIceCtx> ice_ctx_;
-  std::vector<nsRefPtr<NrIceMediaStream> > streams_;
+  RefPtr<DtlsIdentity> identity_;
+  RefPtr<NrIceCtx> ice_ctx_;
+  std::vector<RefPtr<NrIceMediaStream> > streams_;
   std::map<std::string, std::vector<std::string> > candidates_;
   TransportTestPeer *peer_;
   bool gathering_complete_;
@@ -1221,7 +1221,7 @@ TEST_F(TransportTest, TestDheOnlyFails) {
 }
 
 TEST(PushTests, LayerFail) {
-  nsRefPtr<TransportFlow> flow = new TransportFlow();
+  RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
   bool destroyed1, destroyed2;
 
@@ -1241,7 +1241,7 @@ TEST(PushTests, LayerFail) {
 }
 
 TEST(PushTests, LayersFail) {
-  nsRefPtr<TransportFlow> flow = new TransportFlow();
+  RefPtr<TransportFlow> flow = new TransportFlow();
   nsresult rv;
   bool destroyed1, destroyed2, destroyed3;
 

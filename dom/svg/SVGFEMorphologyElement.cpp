@@ -116,7 +116,7 @@ FilterPrimitiveDescription
 SVGFEMorphologyElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                 const IntRect& aFilterSubregion,
                                                 const nsTArray<bool>& aInputsAreTainted,
-                                                nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                                nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   int32_t rx, ry;
   GetRXY(&rx, &ry, *aInstance);

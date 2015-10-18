@@ -45,7 +45,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
 
   if (!XRE_IsParentProcess()) {
     // Re-direct to the clipboard proxy.
-    nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
+    RefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
     return clipboardProxy->SetData(aTransferable, anOwner, aWhichClipboard);
   }
 
@@ -144,14 +144,14 @@ nsClipboard::SetData(nsITransferable *aTransferable,
           continue;
         }
 
-        nsRefPtr<gfx::SourceSurface> surface =
+        RefPtr<gfx::SourceSurface> surface =
           image->GetFrame(imgIContainer::FRAME_CURRENT,
                           imgIContainer::FLAG_SYNC_DECODE);
         if (!surface) {
           continue;
         }
 
-        nsRefPtr<gfx::DataSourceSurface> dataSurface;
+        RefPtr<gfx::DataSourceSurface> dataSurface;
         if (surface->GetFormat() == gfx::SurfaceFormat::B8G8R8A8) {
           dataSurface = surface->GetDataSurface();
         } else {
@@ -178,7 +178,7 @@ nsClipboard::GetData(nsITransferable *aTransferable,
 
   if (!XRE_IsParentProcess()) {
     // Re-direct to the clipboard proxy.
-    nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
+    RefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
     return clipboardProxy->GetData(aTransferable, aWhichClipboard);
   }
 
@@ -266,10 +266,10 @@ nsClipboard::GetData(nsITransferable *aTransferable,
            flavorStr.EqualsLiteral(kGIFImageMime)) &&
           mClipboard->HasImage() ) {
         // Get image buffer from clipboard.
-        nsRefPtr<gfx::DataSourceSurface> image = mClipboard->GetImage();
+        RefPtr<gfx::DataSourceSurface> image = mClipboard->GetImage();
 
         // Encode according to MIME type.
-        nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, image->GetSize());
+        RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, image->GetSize());
         nsCOMPtr<imgIContainer> imageContainer(image::ImageOps::CreateFromDrawable(drawable));
         nsCOMPtr<imgITools> imgTool = do_GetService(NS_IMGTOOLS_CID);
 
@@ -338,7 +338,7 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
       }
     }
   } else {
-    nsRefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
+    RefPtr<nsClipboardProxy> clipboardProxy = new nsClipboardProxy();
     return clipboardProxy->HasDataMatchingFlavors(aFlavorList, aLength, aWhichClipboard, aHasType);
   }
   return NS_OK;

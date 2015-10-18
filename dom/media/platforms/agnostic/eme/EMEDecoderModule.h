@@ -48,11 +48,11 @@ protected:
   SupportsMimeType(const nsACString& aMimeType) override;
 
 private:
-  nsRefPtr<CDMProxy> mProxy;
+  RefPtr<CDMProxy> mProxy;
   // Will be null if CDM has decoding capability.
-  nsRefPtr<PDMFactory> mPDM;
+  RefPtr<PDMFactory> mPDM;
   // We run the PDM on its own task queue.
-  nsRefPtr<TaskQueue> mTaskQueue;
+  RefPtr<TaskQueue> mTaskQueue;
   bool mCDMDecodesAudio;
   bool mCDMDecodesVideo;
 };

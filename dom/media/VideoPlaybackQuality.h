@@ -52,7 +52,7 @@ public:
 private:
   ~VideoPlaybackQuality() {}
 
-  nsRefPtr<HTMLMediaElement> mElement;
+  RefPtr<HTMLMediaElement> mElement;
   DOMHighResTimeStamp mCreationTime;
   uint64_t mTotalFrames;
   uint64_t mDroppedFrames;

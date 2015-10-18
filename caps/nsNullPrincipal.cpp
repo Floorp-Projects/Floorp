@@ -38,7 +38,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsNullPrincipal,
 /* static */ already_AddRefed<nsNullPrincipal>
 nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 {
-  nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
+  RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
   nsresult rv = nullPrin->Init(Cast(aInheritFrom)->OriginAttributesRef());
   return NS_SUCCEEDED(rv) ? nullPrin.forget() : nullptr;
 }
@@ -46,7 +46,7 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 /* static */ already_AddRefed<nsNullPrincipal>
 nsNullPrincipal::Create(const OriginAttributes& aOriginAttributes)
 {
-  nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
+  RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
   nsresult rv = nullPrin->Init(aOriginAttributes);
   NS_ENSURE_SUCCESS(rv, nullptr);
 

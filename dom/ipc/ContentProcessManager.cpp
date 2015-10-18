@@ -292,7 +292,7 @@ ContentProcessManager::GetTabParentByProcessAndTabId(const ContentParentId& aChi
 
   const ManagedContainer<PBrowserParent>& browsers = iter->second.mCp->ManagedPBrowserParent();
   for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-    nsRefPtr<TabParent> tab = TabParent::GetFrom(iter.Get()->GetKey());
+    RefPtr<TabParent> tab = TabParent::GetFrom(iter.Get()->GetKey());
     if (tab->GetTabId() == aChildTabId) {
       return tab.forget();
     }

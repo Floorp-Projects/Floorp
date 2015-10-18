@@ -91,8 +91,8 @@ TransportLayerIce::~TransportLayerIce() {
   // No need to do anything here, since we use smart pointers
 }
 
-void TransportLayerIce::SetParameters(nsRefPtr<NrIceCtx> ctx,
-                                      nsRefPtr<NrIceMediaStream> stream,
+void TransportLayerIce::SetParameters(RefPtr<NrIceCtx> ctx,
+                                      RefPtr<NrIceMediaStream> stream,
                                       int component) {
   ctx_ = ctx;
   stream_ = stream;

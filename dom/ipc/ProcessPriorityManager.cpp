@@ -233,7 +233,7 @@ private:
   void ObserveContentParentDestroyed(nsISupports* aSubject);
   void ObserveScreenStateChanged(const char16_t* aData);
 
-  nsDataHashtable<nsUint64HashKey, nsRefPtr<ParticularProcessPriorityManager> >
+  nsDataHashtable<nsUint64HashKey, RefPtr<ParticularProcessPriorityManager> >
     mParticularManagers;
 
   /** True if the main process is holding a high-priority wakelock */
@@ -535,7 +535,7 @@ ProcessPriorityManagerImpl::GetParticularProcessPriorityManager(
   }
 #endif
 
-  nsRefPtr<ParticularProcessPriorityManager> pppm;
+  RefPtr<ParticularProcessPriorityManager> pppm;
   uint64_t cpId = aContentParent->ChildID();
   mParticularManagers.Get(cpId, &pppm);
   if (!pppm) {
@@ -556,7 +556,7 @@ ProcessPriorityManagerImpl::SetProcessPriority(ContentParent* aContentParent,
                                                uint32_t aLRU)
 {
   MOZ_ASSERT(aContentParent);
-  nsRefPtr<ParticularProcessPriorityManager> pppm =
+  RefPtr<ParticularProcessPriorityManager> pppm =
     GetParticularProcessPriorityManager(aContentParent);
   if (pppm) {
     pppm->SetPriorityNow(aPriority, aLRU);
@@ -570,7 +570,7 @@ ProcessPriorityManagerImpl::ObserveContentParentCreated(
   // Do nothing; it's sufficient to get the PPPM.  But assign to nsRefPtr so we
   // don't leak the already_AddRefed object.
   nsCOMPtr<nsIContentParent> cp = do_QueryInterface(aContentParent);
-  nsRefPtr<ParticularProcessPriorityManager> pppm =
+  RefPtr<ParticularProcessPriorityManager> pppm =
     GetParticularProcessPriorityManager(cp->AsContentParent());
 }
 
@@ -584,7 +584,7 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
   props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"), &childID);
   NS_ENSURE_TRUE_VOID(childID != CONTENT_PROCESS_ID_UNKNOWN);
 
-  nsRefPtr<ParticularProcessPriorityManager> pppm;
+  RefPtr<ParticularProcessPriorityManager> pppm;
   mParticularManagers.Get(childID, &pppm);
   if (pppm) {
     // Unconditionally remove the manager from the pools
@@ -602,7 +602,7 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
 static PLDHashOperator
 FreezeParticularProcessPriorityManagers(
   const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  RefPtr<ParticularProcessPriorityManager> aValue,
   void* aUserData)
 {
   aValue->Freeze();
@@ -612,7 +612,7 @@ FreezeParticularProcessPriorityManagers(
 static PLDHashOperator
 UnfreezeParticularProcessPriorityManagers(
   const uint64_t& aKey,
-  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  RefPtr<ParticularProcessPriorityManager> aValue,
   void* aUserData)
 {
   aValue->Unfreeze();
@@ -1109,7 +1109,7 @@ ParticularProcessPriorityManager::ComputePriority()
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
-  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service->ProcessContentOrNormalChannelIsActive(ChildID())) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }

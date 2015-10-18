@@ -95,7 +95,7 @@ MessageLoopIdleTask::Init(uint32_t aEnsureRunsAfterMS)
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsRefPtr<MessageLoopTimerCallback> callback =
+  RefPtr<MessageLoopTimerCallback> callback =
     new MessageLoopTimerCallback(this);
 
   return mTimer->InitWithCallback(callback, aEnsureRunsAfterMS,

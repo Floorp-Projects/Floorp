@@ -51,10 +51,10 @@ SamplesWaitingForKey::NotifyUsable(const CencKeyId& aKeyId)
   size_t i = 0;
   while (i < mSamples.Length()) {
     if (aKeyId == mSamples[i]->mCrypto.mKeyId) {
-      nsRefPtr<nsIRunnable> task;
-      task = NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(mDecoder,
+      RefPtr<nsIRunnable> task;
+      task = NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(mDecoder,
                                                      &MediaDataDecoder::Input,
-                                                     nsRefPtr<MediaRawData>(mSamples[i]));
+                                                     RefPtr<MediaRawData>(mSamples[i]));
       mSamples.RemoveElementAt(i);
       mTaskQueue->Dispatch(task.forget());
     } else {

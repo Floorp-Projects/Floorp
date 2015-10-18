@@ -112,7 +112,7 @@ SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
   }
 
   MOZ_ASSERT(pool);
-  nsRefPtr<SharedThreadPool> instance(pool);
+  RefPtr<SharedThreadPool> instance(pool);
   return instance.forget();
 }
 

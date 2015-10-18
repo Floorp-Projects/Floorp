@@ -194,7 +194,7 @@ private:
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our base/animVal and all of their items.
-  nsRefPtr<nsSVGElement> mElement;
+  RefPtr<nsSVGElement> mElement;
 
   uint8_t mAttrEnum;
   uint8_t mAxis;

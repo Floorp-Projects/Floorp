@@ -48,7 +48,7 @@ private:
 
   // This pointer is used to dispatch events
   nsCOMPtr<nsISpeechTask> mTask;
-  nsRefPtr<ISpVoice> mSapiClient;
+  RefPtr<ISpVoice> mSapiClient;
 
   uint32_t mTextOffset;
   uint32_t mSpeakTextLen;
@@ -148,12 +148,12 @@ SapiCallback::OnSpeechEvent(const SPEVENT& speechEvent)
 void __stdcall
 SapiService::SpeechEventCallback(WPARAM aWParam, LPARAM aLParam)
 {
-  nsRefPtr<SapiService> service = (SapiService*) aWParam;
+  RefPtr<SapiService> service = (SapiService*) aWParam;
 
   SPEVENT speechEvent;
   while (service->mSapiClient->GetEvents(1, &speechEvent, nullptr) == S_OK) {
     for (size_t i = 0; i < service->mCallbacks.Length(); i++) {
-      nsRefPtr<SapiCallback> callback = service->mCallbacks[i];
+      RefPtr<SapiCallback> callback = service->mCallbacks[i];
       if (callback->GetStreamNum() == speechEvent.ulStreamNum) {
         callback->OnSpeechEvent(speechEvent);
         if (speechEvent.eEventId == SPEI_END_INPUT_STREAM) {
@@ -233,7 +233,7 @@ SapiService::RegisterVoices()
     return false;
   }
 
-  nsRefPtr<ISpObjectTokenCategory> category;
+  RefPtr<ISpObjectTokenCategory> category;
   if (FAILED(CoCreateInstance(CLSID_SpObjectTokenCategory, nullptr, CLSCTX_ALL,
                               IID_ISpObjectTokenCategory,
                               getter_AddRefs(category)))) {
@@ -243,19 +243,19 @@ SapiService::RegisterVoices()
     return false;
   }
 
-  nsRefPtr<IEnumSpObjectTokens> voiceTokens;
+  RefPtr<IEnumSpObjectTokens> voiceTokens;
   if (FAILED(category->EnumTokens(nullptr, nullptr,
                                   getter_AddRefs(voiceTokens)))) {
     return false;
   }
 
   while (true) {
-    nsRefPtr<ISpObjectToken> voiceToken;
+    RefPtr<ISpObjectToken> voiceToken;
     if (voiceTokens->Next(1, getter_AddRefs(voiceToken), nullptr) != S_OK) {
       break;
     }
 
-    nsRefPtr<ISpDataKey> attributes;
+    RefPtr<ISpDataKey> attributes;
     if (FAILED(voiceToken->OpenKey(L"Attributes",
                                    getter_AddRefs(attributes)))) {
       continue;
@@ -308,7 +308,7 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
 {
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<ISpObjectToken> voiceToken;
+  RefPtr<ISpObjectToken> voiceToken;
   if (!mVoices.Get(aUri, getter_AddRefs(voiceToken))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -333,7 +333,7 @@ SapiService::Speak(const nsAString& aText, const nsAString& aUri,
   xml.Append(aText);
   xml.AppendLiteral("</pitch>");
 
-  nsRefPtr<SapiCallback> callback =
+  RefPtr<SapiCallback> callback =
     new SapiCallback(aTask, mSapiClient, textOffset, aText.Length());
 
   // The last three parameters doesn't matter for an indirect service
@@ -375,7 +375,7 @@ SapiService::GetInstance()
   }
 
   if (!sSingleton) {
-    nsRefPtr<SapiService> service = new SapiService();
+    RefPtr<SapiService> service = new SapiService();
     if (service->Init()) {
       sSingleton = service;
     }
@@ -386,7 +386,7 @@ SapiService::GetInstance()
 already_AddRefed<SapiService>
 SapiService::GetInstanceForService()
 {
-  nsRefPtr<SapiService> sapiService = GetInstance();
+  RefPtr<SapiService> sapiService = GetInstance();
   return sapiService.forget();
 }
 

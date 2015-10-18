@@ -334,7 +334,7 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
                              const nsAString& aInit,
                              ErrorResult& aRv)
 {
-  nsRefPtr<URLSearchParams> sp =
+  RefPtr<URLSearchParams> sp =
     new URLSearchParams(aGlobal.GetAsSupports(), nullptr);
   sp->ParseInput(NS_ConvertUTF16toUTF8(aInit));
 
@@ -346,7 +346,7 @@ URLSearchParams::Constructor(const GlobalObject& aGlobal,
                              URLSearchParams& aInit,
                              ErrorResult& aRv)
 {
-  nsRefPtr<URLSearchParams> sp =
+  RefPtr<URLSearchParams> sp =
     new URLSearchParams(aGlobal.GetAsSupports(), aInit);
 
   return sp.forget();

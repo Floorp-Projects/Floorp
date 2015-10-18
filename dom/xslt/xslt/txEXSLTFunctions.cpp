@@ -110,7 +110,7 @@ createDocFragment(txIEvalContext *aContext)
 
     const txXPathNode& document = es->getSourceDocument();
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
-    nsRefPtr<DocumentFragment> fragment =
+    RefPtr<DocumentFragment> fragment =
       new DocumentFragment(doc->NodeInfoManager());
 
     return fragment.forget();
@@ -129,7 +129,7 @@ createAndAddToResult(nsIAtom* aName, const nsSubstring& aValue,
                                              nullptr, kNameSpaceID_None);
     NS_ENSURE_TRUE(elem, NS_ERROR_NULL_POINTER);
 
-    nsRefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
+    RefPtr<nsTextNode> text = new nsTextNode(doc->NodeInfoManager());
 
     nsresult rv = text->SetText(aValue, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -253,7 +253,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
     switch (mType) {
         case NODE_SET:
         {
-            nsRefPtr<txAExprResult> exprResult;
+            RefPtr<txAExprResult> exprResult;
             rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -261,7 +261,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                 exprResult.swap(*aResult);
             }
             else {
-                nsRefPtr<txNodeSet> resultSet;
+                RefPtr<txNodeSet> resultSet;
                 rv = aContext->recycler()->
                     getNodeSet(getter_AddRefs(resultSet));
                 NS_ENSURE_SUCCESS(rv, rv);
@@ -301,12 +301,12 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         }
         case OBJECT_TYPE:
         {
-            nsRefPtr<txAExprResult> exprResult;
+            RefPtr<txAExprResult> exprResult;
             nsresult rv = mParams[0]->evaluate(aContext,
                                                getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<StringResult> strRes;
+            RefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -320,17 +320,17 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         case DIFFERENCE:
         case INTERSECTION:
         {
-            nsRefPtr<txNodeSet> nodes1;
+            RefPtr<txNodeSet> nodes1;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes1));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<txNodeSet> nodes2;
+            RefPtr<txNodeSet> nodes2;
             rv = evaluateToNodeSet(mParams[1], aContext,
                                    getter_AddRefs(nodes2));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<txNodeSet> resultSet;
+            RefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -357,12 +357,12 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         }
         case DISTINCT:
         {
-            nsRefPtr<txNodeSet> nodes;
+            RefPtr<txNodeSet> nodes;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<txNodeSet> resultSet;
+            RefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -386,12 +386,12 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         }
         case HAS_SAME_NODE:
         {
-            nsRefPtr<txNodeSet> nodes1;
+            RefPtr<txNodeSet> nodes1;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes1));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<txNodeSet> nodes2;
+            RefPtr<txNodeSet> nodes2;
             rv = evaluateToNodeSet(mParams[1], aContext,
                                    getter_AddRefs(nodes2));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -412,12 +412,12 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         case LEADING:
         case TRAILING:
         {
-            nsRefPtr<txNodeSet> nodes1;
+            RefPtr<txNodeSet> nodes1;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes1));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            nsRefPtr<txNodeSet> nodes2;
+            RefPtr<txNodeSet> nodes2;
             rv = evaluateToNodeSet(mParams[1], aContext,
                                    getter_AddRefs(nodes2));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -429,7 +429,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                 return NS_OK;
             }
 
-            nsRefPtr<txNodeSet> resultSet;
+            RefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -452,7 +452,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         }
         case CONCAT:
         {
-            nsRefPtr<txNodeSet> nodes;
+            RefPtr<txNodeSet> nodes;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -486,10 +486,10 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             }
 
             // Set up holders for the result
-            nsRefPtr<DocumentFragment> docFrag = createDocFragment(aContext);
+            RefPtr<DocumentFragment> docFrag = createDocFragment(aContext);
             NS_ENSURE_STATE(docFrag);
 
-            nsRefPtr<txNodeSet> resultSet;
+            RefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -559,7 +559,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         case MAX:
         case MIN:
         {
-            nsRefPtr<txNodeSet> nodes;
+            RefPtr<txNodeSet> nodes;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -593,7 +593,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
         case HIGHEST:
         case LOWEST:
         {
-            nsRefPtr<txNodeSet> nodes;
+            RefPtr<txNodeSet> nodes;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -604,7 +604,7 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
                 return NS_OK;
             }
 
-            nsRefPtr<txNodeSet> resultSet;
+            RefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 

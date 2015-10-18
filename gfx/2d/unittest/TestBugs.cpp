@@ -19,14 +19,14 @@ TestBugs::TestBugs()
 void
 TestBugs::CairoClip918671()
 {
-  nsRefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BackendType::CAIRO,
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BackendType::CAIRO,
                                                     IntSize(100, 100),
                                                     SurfaceFormat::B8G8R8A8);
-  nsRefPtr<DrawTarget> ref = Factory::CreateDrawTarget(BackendType::CAIRO,
+  RefPtr<DrawTarget> ref = Factory::CreateDrawTarget(BackendType::CAIRO,
                                                      IntSize(100, 100),
                                                      SurfaceFormat::B8G8R8A8);
   // Create a path that extends around the center rect but doesn't intersect it.
-  nsRefPtr<PathBuilder> pb1 = dt->CreatePathBuilder();
+  RefPtr<PathBuilder> pb1 = dt->CreatePathBuilder();
   pb1->MoveTo(Point(10, 10));
   pb1->LineTo(Point(90, 10));
   pb1->LineTo(Point(90, 20));
@@ -38,27 +38,27 @@ TestBugs::CairoClip918671()
   pb1->LineTo(Point(91, 90));
   pb1->Close();
 
-  nsRefPtr<Path> path1 = pb1->Finish();
+  RefPtr<Path> path1 = pb1->Finish();
   dt->PushClip(path1);
 
   // This center rect must NOT be rectilinear!
-  nsRefPtr<PathBuilder> pb2 = dt->CreatePathBuilder();
+  RefPtr<PathBuilder> pb2 = dt->CreatePathBuilder();
   pb2->MoveTo(Point(50, 50));
   pb2->LineTo(Point(55, 51));
   pb2->LineTo(Point(54, 55));
   pb2->LineTo(Point(50, 56));
   pb2->Close();
 
-  nsRefPtr<Path> path2 = pb2->Finish();
+  RefPtr<Path> path2 = pb2->Finish();
   dt->PushClip(path2);
 
   dt->FillRect(Rect(0, 0, 100, 100), ColorPattern(Color(1,0,0)));
 
-  nsRefPtr<SourceSurface> surf1 = dt->Snapshot();
-  nsRefPtr<SourceSurface> surf2 = ref->Snapshot();
+  RefPtr<SourceSurface> surf1 = dt->Snapshot();
+  RefPtr<SourceSurface> surf2 = ref->Snapshot();
 
-  nsRefPtr<DataSourceSurface> dataSurf1 = surf1->GetDataSurface();
-  nsRefPtr<DataSourceSurface> dataSurf2 = surf2->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurf1 = surf1->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurf2 = surf2->GetDataSurface();
 
   for (int y = 0; y < dt->GetSize().height; y++) {
     VERIFY(memcmp(dataSurf1->GetData() + y * dataSurf1->Stride(),
@@ -71,7 +71,7 @@ TestBugs::CairoClip918671()
 void
 TestBugs::PushPopClip950550()
 {
-  nsRefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BackendType::CAIRO,
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BackendType::CAIRO,
                                                     IntSize(500, 500),
                                                     SurfaceFormat::B8G8R8A8);
   dt->PushClipRect(Rect(0, 0, 100, 100));

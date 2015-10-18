@@ -31,7 +31,7 @@ AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aGraph->GraphRate() == ctx->SampleRate());
 
-  nsRefPtr<AudioNodeExternalInputStream> stream =
+  RefPtr<AudioNodeExternalInputStream> stream =
     new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate());
   aGraph->AddStream(stream,
     ctx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);

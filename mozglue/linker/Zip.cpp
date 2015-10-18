@@ -44,7 +44,7 @@ Zip::Create(const char *filename)
 already_AddRefed<Zip>
 Zip::Create(const char *filename, void *mapped, size_t size)
 {
-  nsRefPtr<Zip> zip = new Zip(filename, mapped, size);
+  RefPtr<Zip> zip = new Zip(filename, mapped, size);
 
   // If neither the first Local File entry nor central directory entries
   // have been found, the zip was invalid.
@@ -188,7 +188,7 @@ ZipCollection::GetZip(const char *path)
   for (std::vector<Zip *>::iterator it = Singleton.zips.begin();
        it < Singleton.zips.end(); ++it) {
     if ((*it)->GetName() && (strcmp((*it)->GetName(), path) == 0)) {
-      nsRefPtr<Zip> zip = *it;
+      RefPtr<Zip> zip = *it;
       return zip.forget();
     }
   }

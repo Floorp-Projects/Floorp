@@ -8,7 +8,7 @@
 #define mozilla_dom_ipc_StructuredCloneData_h
 
 #include <algorithm>
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsISupportsImpl.h"
 
@@ -38,7 +38,7 @@ public:
     }
 
     memcpy(data, aData, aDataLength);
-    nsRefPtr<SharedJSAllocatedData> sharedData =
+    RefPtr<SharedJSAllocatedData> sharedData =
       new SharedJSAllocatedData(data, aDataLength);
     return sharedData.forget();
   }
@@ -86,12 +86,12 @@ public:
   StructuredCloneData&
   operator=(const StructuredCloneData& aOther) = delete;
 
-  const nsTArray<nsRefPtr<BlobImpl>>& BlobImpls() const
+  const nsTArray<RefPtr<BlobImpl>>& BlobImpls() const
   {
     return mBlobImplArray;
   }
 
-  nsTArray<nsRefPtr<BlobImpl>>& BlobImpls()
+  nsTArray<RefPtr<BlobImpl>>& BlobImpls()
   {
     return mBlobImplArray;
   }
@@ -138,7 +138,7 @@ private:
   uint64_t* MOZ_NON_OWNING_REF mExternalData;
   size_t mExternalDataLength;
 
-  nsRefPtr<SharedJSAllocatedData> mSharedData;
+  RefPtr<SharedJSAllocatedData> mSharedData;
 };
 
 } // namespace ipc

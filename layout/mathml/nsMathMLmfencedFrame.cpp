@@ -224,7 +224,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   int32_t i;
   const nsStyleFont* font = StyleFont();
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         fontSizeInflation);
   nscoord axisHeight, em;
@@ -612,7 +612,7 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingCon
   nsPresContext* presContext = PresContext();
   const nsStyleFont* font = StyleFont();
   float fontSizeInflation = nsLayoutUtils:: FontSizeInflationFor(this);
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         fontSizeInflation);
   nscoord em;

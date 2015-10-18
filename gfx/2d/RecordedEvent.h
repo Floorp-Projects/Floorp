@@ -36,7 +36,7 @@ struct ReferencePtr
   {}
 
   template <typename T>
-  MOZ_IMPLICIT ReferencePtr(const nsRefPtr<T>& aPtr)
+  MOZ_IMPLICIT ReferencePtr(const RefPtr<T>& aPtr)
     : mLongPtr(uint64_t(aPtr.get()))
   {}
 
@@ -46,7 +46,7 @@ struct ReferencePtr
   }
 
   template <typename T>
-  ReferencePtr &operator =(const nsRefPtr<T>& aPtr) {
+  ReferencePtr &operator =(const RefPtr<T>& aPtr) {
     mLongPtr = uint64_t(aPtr.get());
     return *this;
   }
@@ -250,7 +250,7 @@ public:
   IntSize mSize;
   SurfaceFormat mFormat;
   bool mHasExistingData;
-  nsRefPtr<SourceSurface> mExistingData;
+  RefPtr<SourceSurface> mExistingData;
   
 private:
   friend class RecordedEvent;

@@ -190,7 +190,7 @@ EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
         return NS_ERROR_FAILURE;    
     }
 
-    nsRefPtr<xptiInterfaceInfo> info = entry->InterfaceInfo();
+    RefPtr<xptiInterfaceInfo> info = entry->InterfaceInfo();
     info.forget(_retval);
     return NS_OK;    
 }

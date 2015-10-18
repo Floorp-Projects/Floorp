@@ -180,7 +180,7 @@ private:
   /**
    * Object keeping track of the daily idle thingy.
    */
-  nsRefPtr<nsIdleServiceDaily> mDailyIdle;
+  RefPtr<nsIdleServiceDaily> mDailyIdle;
 
   /**
    * Number of observers currently in idle mode.

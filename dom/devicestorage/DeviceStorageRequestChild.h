@@ -34,7 +34,7 @@ public:
   virtual bool Recv__delete__(const DeviceStorageResponseValue& value);
 
 private:
-  nsRefPtr<DeviceStorageRequest> mRequest;
+  RefPtr<DeviceStorageRequest> mRequest;
 };
 
 } // namespace devicestorage

@@ -81,7 +81,7 @@ SampleSink::Receive(IMediaSample* aSample)
 }
 
 HRESULT
-SampleSink::Extract(nsRefPtr<IMediaSample>& aOutSample)
+SampleSink::Extract(RefPtr<IMediaSample>& aOutSample)
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
   // Loop until we have a sample, or we should abort.

@@ -226,7 +226,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   nsRuleNode* ruleNode = nullptr;
   nsCOMPtr<Element> element = do_QueryInterface(aElement);
   NS_ENSURE_STATE(element);
-  nsRefPtr<nsStyleContext> styleContext;
+  RefPtr<nsStyleContext> styleContext;
   GetRuleNodeForElement(element, pseudoElt, getter_AddRefs(styleContext), &ruleNode);
   if (!ruleNode) {
     // This can fail for elements that are not in the document or
@@ -238,7 +238,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   NS_NewISupportsArray(getter_AddRefs(rules));
   if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsRefPtr<mozilla::css::StyleRule> cssRule;
+  RefPtr<mozilla::css::StyleRule> cssRule;
   for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
     cssRule = do_QueryObject(ruleNode->GetRule());
     if (cssRule) {
@@ -262,7 +262,7 @@ GetRuleFromDOMRule(nsIDOMCSSStyleRule *aRule, ErrorResult& rv)
     return nullptr;
   }
 
-  nsRefPtr<StyleRule> cssrule;
+  RefPtr<StyleRule> cssrule;
   rv = rule->GetCSSStyleRule(getter_AddRefs(cssrule));
   if (rv.Failed()) {
     return nullptr;
@@ -346,7 +346,7 @@ NS_IMETHODIMP
 inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
 {
   ErrorResult rv;
-  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  RefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
@@ -362,7 +362,7 @@ inDOMUtils::GetSelectorCount(nsIDOMCSSStyleRule* aRule, uint32_t *aCount)
 static nsCSSSelectorList*
 GetSelectorAtIndex(nsIDOMCSSStyleRule* aRule, uint32_t aIndex, ErrorResult& rv)
 {
-  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  RefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -390,7 +390,7 @@ inDOMUtils::GetSelectorText(nsIDOMCSSStyleRule* aRule,
     return rv.StealNSResult();
   }
 
-  nsRefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
+  RefPtr<StyleRule> rule = GetRuleFromDOMRule(aRule, rv);
   MOZ_ASSERT(!rv.Failed(), "How could we get a selector but not a rule?");
 
   sel->mSelectors->ToString(aText, rule->GetStyleSheet(), false);
@@ -1086,7 +1086,7 @@ inDOMUtils::SetContentState(nsIDOMElement* aElement,
 {
   NS_ENSURE_ARG_POINTER(aElement);
 
-  nsRefPtr<EventStateManager> esm =
+  RefPtr<EventStateManager> esm =
     inLayoutUtils::GetEventStateManagerFor(aElement);
   if (esm) {
     nsCOMPtr<nsIContent> content;
@@ -1135,7 +1135,7 @@ inDOMUtils::GetRuleNodeForElement(dom::Element* aElement,
 
   presContext->EnsureSafeToHandOutCSSRules();
 
-  nsRefPtr<nsStyleContext> sContext =
+  RefPtr<nsStyleContext> sContext =
     nsComputedDOMStyle::GetStyleContextForElement(aElement, aPseudo, presShell);
   if (sContext) {
     *aRuleNode = sContext->RuleNode();
@@ -1256,7 +1256,7 @@ NS_IMETHODIMP
 inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
                             const nsAString& aInput)
 {
-  nsRefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
+  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
   NS_ENSURE_ARG_POINTER(sheet);
 
   return sheet->ReparseSheet(aInput);

@@ -62,7 +62,7 @@ SpeechRecognitionResult::Length() const
 already_AddRefed<SpeechRecognitionAlternative>
 SpeechRecognitionResult::Item(uint32_t aIndex)
 {
-  nsRefPtr<SpeechRecognitionAlternative> alternative = mItems.ElementAt(aIndex);
+  RefPtr<SpeechRecognitionAlternative> alternative = mItems.ElementAt(aIndex);
   return alternative.forget();
 }
 

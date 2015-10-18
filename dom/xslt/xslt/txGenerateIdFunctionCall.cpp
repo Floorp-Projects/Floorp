@@ -60,7 +60,7 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
         return NS_OK;
     }
 
-    nsRefPtr<txNodeSet> nodes;
+    RefPtr<txNodeSet> nodes;
     rv = evaluateToNodeSet(mParams[0], aContext,
                            getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);

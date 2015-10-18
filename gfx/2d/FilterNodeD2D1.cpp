@@ -565,7 +565,7 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
     return MakeAndAddRef<FilterNodeConvolveD2D1>(aDC);
   }
 
-  nsRefPtr<ID2D1Effect> effect;
+  RefPtr<ID2D1Effect> effect;
   HRESULT hr;
 
   hr = aDC->CreateEffect(GetCLDIDForFilterType(aType), getter_AddRefs(effect));
@@ -575,7 +575,7 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
     return nullptr;
   }
 
-  nsRefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
+  RefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
 
   if (HasUnboundedOutputRegion(aType)) {
     // These filters can produce non-transparent output from transparent
@@ -685,13 +685,13 @@ FilterNodeD2D1::WillDraw(DrawTarget *aDT)
   for (size_t inputIndex = 0; inputIndex < mInputSurfaces.size(); inputIndex++) {
     if (mInputSurfaces[inputIndex]) {
       ID2D1Effect* effect = InputEffect();
-      nsRefPtr<ID2D1Image> image = GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
+      RefPtr<ID2D1Image> image = GetImageForSourceSurface(aDT, mInputSurfaces[inputIndex]);
       effect->SetInput(inputIndex, image);
     }
   }
 
   // Call WillDraw() on our input filters.
-  for (std::vector<nsRefPtr<FilterNodeD2D1>>::iterator it = mInputFilters.begin();
+  for (std::vector<RefPtr<FilterNodeD2D1>>::iterator it = mInputFilters.begin();
        it != mInputFilters.end(); it++) {
     if (*it) {
       (*it)->WillDraw(aDT);
@@ -950,7 +950,7 @@ FilterNodeConvolveD2D1::UpdateChain()
     mEffect->SetInputEffect(0, mBorderEffect.get());
   }
 
-  nsRefPtr<ID2D1Effect> inputEffect;
+  RefPtr<ID2D1Effect> inputEffect;
   if (mInputFilters.size() > 0 && mInputFilters[0]) {
     inputEffect = mInputFilters[0]->OutputEffect();
   }

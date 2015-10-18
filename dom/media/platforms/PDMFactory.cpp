@@ -134,13 +134,13 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
                           layers::LayersBackend aLayersBackend,
                           layers::ImageContainer* aImageContainer)
 {
-  nsRefPtr<PlatformDecoderModule> current = (mEMEPDM && aConfig.mCrypto.mValid)
+  RefPtr<PlatformDecoderModule> current = (mEMEPDM && aConfig.mCrypto.mValid)
     ? mEMEPDM : GetDecoder(aConfig.mMimeType);
 
   if (!current) {
     return nullptr;
   }
-  nsRefPtr<MediaDataDecoder> m;
+  RefPtr<MediaDataDecoder> m;
 
   if (aConfig.GetAsAudioInfo()) {
     m = current->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
@@ -154,7 +154,7 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
   }
 
   MediaDataDecoderCallback* callback = aCallback;
-  nsRefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
+  RefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
   if (sEnableFuzzingWrapper) {
     callbackWrapper = new DecoderCallbackFuzzingWrapper(aCallback);
     callbackWrapper->SetVideoOutputMinimumInterval(
@@ -164,7 +164,7 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
   }
 
   if (H264Converter::IsH264(aConfig)) {
-    nsRefPtr<H264Converter> h
+    RefPtr<H264Converter> h
       = new H264Converter(current,
                           *aConfig.GetAsVideoInfo(),
                           aLayersBackend,
@@ -199,14 +199,14 @@ PDMFactory::SupportsMimeType(const nsACString& aMimeType)
   if (mEMEPDM) {
     return mEMEPDM->SupportsMimeType(aMimeType);
   }
-  nsRefPtr<PlatformDecoderModule> current = GetDecoder(aMimeType);
+  RefPtr<PlatformDecoderModule> current = GetDecoder(aMimeType);
   return !!current;
 }
 
 void
 PDMFactory::CreatePDMs()
 {
-  nsRefPtr<PlatformDecoderModule> m;
+  RefPtr<PlatformDecoderModule> m;
 
   if (sGMPDecoderEnabled) {
     m = new GMPDecoderModule();
@@ -269,7 +269,7 @@ PDMFactory::StartupPDM(PlatformDecoderModule* aPDM)
 already_AddRefed<PlatformDecoderModule>
 PDMFactory::GetDecoder(const nsACString& aMimeType)
 {
-  nsRefPtr<PlatformDecoderModule> pdm;
+  RefPtr<PlatformDecoderModule> pdm;
   for (auto& current : mCurrentPDMs) {
     if (current->SupportsMimeType(aMimeType)) {
       pdm = current;
@@ -291,7 +291,7 @@ PDMFactory::SetCDMProxy(CDMProxy* aProxy)
     cdmDecodesVideo = caps.CanDecryptAndDecodeVideo();
   }
 
-  nsRefPtr<PDMFactory> m = new PDMFactory();
+  RefPtr<PDMFactory> m = new PDMFactory();
   mEMEPDM = new EMEDecoderModule(aProxy, m, cdmDecodesAudio, cdmDecodesVideo);
 }
 #endif

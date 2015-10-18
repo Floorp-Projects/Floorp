@@ -60,7 +60,7 @@ class nsDataObjCollection final : public nsIDataObjCollection, public nsDataObj
     void AddDataObject(IDataObject * aDataObj);
     int32_t GetNumDataObjects() { return mDataObjects.Length(); }
     nsDataObj* GetDataObjectAt(uint32_t aItem)
-            { return mDataObjects.SafeElementAt(aItem, nsRefPtr<nsDataObj>()); }
+            { return mDataObjects.SafeElementAt(aItem, RefPtr<nsDataObj>()); }
 
     // Return the registered OLE class ID of this object's CfDataObj.
     CLSID GetClassID() const;
@@ -89,7 +89,7 @@ class nsDataObjCollection final : public nsIDataObjCollection, public nsDataObj
   protected:
     ULONG m_cRef;              // the reference count
 
-    nsTArray<nsRefPtr<nsDataObj> > mDataObjects;
+    nsTArray<RefPtr<nsDataObj> > mDataObjects;
 };
 
 #endif  //

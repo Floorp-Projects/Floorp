@@ -45,7 +45,7 @@ public:
     return mImageSize;
   }
 
-  void Generate(nsTArray<nsRefPtr<Image> > &aImages)
+  void Generate(nsTArray<RefPtr<Image> > &aImages)
   {
     aImages.AppendElement(CreateI420Image());
     aImages.AppendElement(CreateNV12Image());
@@ -239,8 +239,8 @@ TEST(VP8VideoTrackEncoder, FetchMetaData)
     TestVP8TrackEncoder encoder;
     EXPECT_TRUE(encoder.TestInit(params[i]));
 
-    nsRefPtr<TrackMetadataBase> meta = encoder.GetMetadata();
-    nsRefPtr<VP8Metadata> vp8Meta(static_cast<VP8Metadata*>(meta.get()));
+    RefPtr<TrackMetadataBase> meta = encoder.GetMetadata();
+    RefPtr<VP8Metadata> vp8Meta(static_cast<VP8Metadata*>(meta.get()));
 
     // METADATA should be depend on how to initiate encoder.
     EXPECT_TRUE(vp8Meta->mWidth == params[i].mWidth);
@@ -260,7 +260,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   encoder.TestInit(param);
 
   // Create YUV images as source.
-  nsTArray<nsRefPtr<Image>> images;
+  nsTArray<RefPtr<Image>> images;
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
   generator.Generate(images);
@@ -268,9 +268,9 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   // Put generated YUV frame into video segment.
   // Duration of each frame is 1 second.
   VideoSegment segment;
-  for (nsTArray<nsRefPtr<Image>>::size_type i = 0; i < images.Length(); i++)
+  for (nsTArray<RefPtr<Image>>::size_type i = 0; i < images.Length(); i++)
   {
-    nsRefPtr<Image> image = images[i];
+    RefPtr<Image> image = images[i];
     segment.AppendFrame(image.forget(), mozilla::StreamTime(90000), generator.GetSize());
   }
 

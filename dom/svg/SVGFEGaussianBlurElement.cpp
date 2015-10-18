@@ -68,7 +68,7 @@ FilterPrimitiveDescription
 SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                   const IntRect& aFilterSubregion,
                                                   const nsTArray<bool>& aInputsAreTainted,
-                                                  nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                                  nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,
                                              &mNumberPairAttributes[STD_DEV],

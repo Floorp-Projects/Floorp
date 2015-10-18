@@ -457,7 +457,7 @@ private:
 #endif
     CGColorSpaceRef               mShColorSpace;
     CGContextRef                  mShContext;
-    nsRefPtr<nsCARenderer> mCARenderer;
+    RefPtr<nsCARenderer> mCARenderer;
     void                         *mCGLayer;
 
     // Core Animation drawing model requires a refresh timer.
@@ -564,11 +564,11 @@ private:
     bool mLayersRendering;
 
     // Current surface available for rendering
-    nsRefPtr<gfxASurface> mCurrentSurface;
+    RefPtr<gfxASurface> mCurrentSurface;
 
     // Back surface, just keeping reference to
     // surface which is on ParentProcess side
-    nsRefPtr<gfxASurface> mBackSurface;
+    RefPtr<gfxASurface> mBackSurface;
 
 #ifdef XP_MACOSX
     // Current IOSurface available for rendering
@@ -581,7 +581,7 @@ private:
     // |mIsTransparent|.  We ask the plugin render directly onto a
     // copy of the background pixels if available, and fall back on
     // alpha recovery otherwise.
-    nsRefPtr<gfxASurface> mBackground;
+    RefPtr<gfxASurface> mBackground;
 
 #ifdef XP_WIN
     // These actors mirror mCurrentSurface/mBackSurface
@@ -615,7 +615,7 @@ private:
     // alpha, or not support rendering to an image surface.
     // In those cases we need to draw to a temporary platform surface; we cache
     // that surface here.
-    nsRefPtr<gfxASurface> mHelperSurface;
+    RefPtr<gfxASurface> mHelperSurface;
 
     // true when plugin does not support painting to ARGB32
     // surface this is false if plugin supports

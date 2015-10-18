@@ -113,7 +113,7 @@ SVGMatrix::SetF(float aF, ErrorResult& rv)
 already_AddRefed<SVGMatrix>
 SVGMatrix::Multiply(SVGMatrix& aMatrix)
 {
-  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(aMatrix.GetMatrix() * GetMatrix());
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(aMatrix.GetMatrix() * GetMatrix());
   return matrix.forget();
 }
 
@@ -125,14 +125,14 @@ SVGMatrix::Inverse(ErrorResult& rv)
     rv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(mat);
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(mat);
   return matrix.forget();
 }
 
 already_AddRefed<SVGMatrix>
 SVGMatrix::Translate(float x, float y)
 {
-  nsRefPtr<SVGMatrix> matrix =
+  RefPtr<SVGMatrix> matrix =
     new SVGMatrix(gfxMatrix(GetMatrix()).Translate(gfxPoint(x, y)));
   return matrix.forget();
 }
@@ -147,7 +147,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::ScaleNonUniform(float scaleFactorX,
                            float scaleFactorY)
 {
-  nsRefPtr<SVGMatrix> matrix =
+  RefPtr<SVGMatrix> matrix =
     new SVGMatrix(gfxMatrix(GetMatrix()).Scale(scaleFactorX, scaleFactorY));
   return matrix.forget();
 }
@@ -155,7 +155,7 @@ SVGMatrix::ScaleNonUniform(float scaleFactorX,
 already_AddRefed<SVGMatrix>
 SVGMatrix::Rotate(float angle)
 {
-  nsRefPtr<SVGMatrix> matrix =
+  RefPtr<SVGMatrix> matrix =
     new SVGMatrix(gfxMatrix(GetMatrix()).Rotate(angle*radPerDegree));
   return matrix.forget();
 }
@@ -168,7 +168,7 @@ SVGMatrix::RotateFromVector(float x, float y, ErrorResult& rv)
     return nullptr;
   }
 
-  nsRefPtr<SVGMatrix> matrix =
+  RefPtr<SVGMatrix> matrix =
     new SVGMatrix(gfxMatrix(GetMatrix()).Rotate(atan2(y, x)));
   return matrix.forget();
 }
@@ -177,7 +177,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::FlipX()
 {
   const gfxMatrix& mx = GetMatrix();
-  nsRefPtr<SVGMatrix> matrix =
+  RefPtr<SVGMatrix> matrix =
     new SVGMatrix(gfxMatrix(-mx._11, -mx._12, mx._21, mx._22, mx._31, mx._32));
   return matrix.forget();
 }
@@ -186,7 +186,7 @@ already_AddRefed<SVGMatrix>
 SVGMatrix::FlipY()
 {
   const gfxMatrix& mx = GetMatrix();
-  nsRefPtr<SVGMatrix> matrix =
+  RefPtr<SVGMatrix> matrix =
     new SVGMatrix(gfxMatrix(mx._11, mx._12, -mx._21, -mx._22, mx._31, mx._32));
   return matrix.forget();
 }
@@ -204,7 +204,7 @@ SVGMatrix::SkewX(float angle, ErrorResult& rv)
   gfxMatrix skewMx(mx._11, mx._12,
                    (float) (mx._21 + mx._11*ta), (float) (mx._22 + mx._12*ta),
                    mx._31, mx._32);
-  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
   return matrix.forget();
 }
 
@@ -222,7 +222,7 @@ SVGMatrix::SkewY(float angle, ErrorResult& rv)
                    mx._21, mx._22,
                    mx._31, mx._32);
 
-  nsRefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
+  RefPtr<SVGMatrix> matrix = new SVGMatrix(skewMx);
   return matrix.forget();
 }
 

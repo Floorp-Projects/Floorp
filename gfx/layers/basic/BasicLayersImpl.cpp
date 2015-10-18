@@ -24,7 +24,7 @@ GetMaskData(Layer* aMaskLayer,
             AutoMoz2DMaskData* aMaskData)
 {
   if (aMaskLayer) {
-    nsRefPtr<SourceSurface> surface =
+    RefPtr<SourceSurface> surface =
       static_cast<BasicImplData*>(aMaskLayer->ImplData())->GetAsSourceSurface();
     if (surface) {
       Matrix transform;

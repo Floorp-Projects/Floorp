@@ -146,7 +146,7 @@ nsHostObjectURI::CloneInternal(nsSimpleURI::RefHandlingEnum aRefHandlingMode,
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
-  nsRefPtr<nsHostObjectURI> uriCheck;
+  RefPtr<nsHostObjectURI> uriCheck;
   rv = simpleClone->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(uriCheck));
   MOZ_ASSERT(NS_SUCCEEDED(rv) && uriCheck);
 #endif
@@ -169,7 +169,7 @@ nsHostObjectURI::EqualsInternal(nsIURI* aOther,
     return NS_OK;
   }
   
-  nsRefPtr<nsHostObjectURI> otherUri;
+  RefPtr<nsHostObjectURI> otherUri;
   aOther->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(otherUri));
   if (!otherUri) {
     *aResult = false;

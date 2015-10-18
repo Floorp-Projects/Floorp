@@ -17,7 +17,7 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/File.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"
@@ -586,8 +586,8 @@ BluetoothMapSmsManager::ReplyToMessagesListing(BlobParent* aActor,
                                                   const nsAString& aTimestamp,
                                                   int aSize)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToMessagesListing(blob.get(), aMasId, aNewMessage, aTimestamp,
                                 aSize);
@@ -606,8 +606,8 @@ BluetoothMapSmsManager::ReplyToMessagesListing(Blob* aBlob, long aMasId,
 bool
 BluetoothMapSmsManager::ReplyToGetMessage(BlobParent* aActor, long aMasId)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToGetMessage(blob.get(), aMasId);
 }
@@ -1143,7 +1143,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   aHeader.GetBody(&bodyPtr, &mBodySegmentLength);
   mBodySegment = bodyPtr;
 
-  nsRefPtr<BluetoothMapBMessage> bmsg =
+  RefPtr<BluetoothMapBMessage> bmsg =
     new BluetoothMapBMessage(bodyPtr, mBodySegmentLength);
 
   /* If FolderName is outbox:
@@ -1158,7 +1158,7 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   // It's possible that subject is empty, send it anyway
   AppendNamedValue(data, "subject", subject);
 
-  nsTArray<nsRefPtr<VCard>> recipients;
+  nsTArray<RefPtr<VCard>> recipients;
   bmsg->GetRecipients(recipients);
 
   // Get the topmost level, only one recipient for SMS case

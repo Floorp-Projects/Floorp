@@ -26,7 +26,7 @@ SVGAnimatedLength::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 already_AddRefed<DOMSVGLength>
 SVGAnimatedLength::BaseVal()
 {
-  nsRefPtr<DOMSVGLength> angle;
+  RefPtr<DOMSVGLength> angle;
   mVal->ToDOMBaseVal(getter_AddRefs(angle), mSVGElement);
   return angle.forget();
 }
@@ -34,7 +34,7 @@ SVGAnimatedLength::BaseVal()
 already_AddRefed<DOMSVGLength>
 SVGAnimatedLength::AnimVal()
 {
-  nsRefPtr<DOMSVGLength> angle;
+  RefPtr<DOMSVGLength> angle;
   mVal->ToDOMAnimVal(getter_AddRefs(angle), mSVGElement);
   return angle.forget();
 }

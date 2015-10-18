@@ -59,7 +59,7 @@ private:
   static void HandshakeCallback(PRFileDesc* aFD, void* aArg);
   nsresult HandshakeCallback(PRFileDesc* aFD);
 
-  nsRefPtr<TLSServerSocket>              mServerSocket;
+  RefPtr<TLSServerSocket>              mServerSocket;
   // Weak ref to the transport, to avoid cycles since the transport holds a
   // reference to the TLSServerConnectionInfo object.  This is not handed out to
   // anyone, and is only used in HandshakeCallback to close the transport in

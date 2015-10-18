@@ -40,7 +40,7 @@ public:
     return mConnectionState;
   }
 
-  void GetServices(nsTArray<nsRefPtr<BluetoothGattService>>& aServices) const
+  void GetServices(nsTArray<RefPtr<BluetoothGattService>>& aServices) const
   {
     aServices = mServices;
   }
@@ -181,7 +181,7 @@ private:
   /**
    * Array of discovered services from the remote GATT server.
    */
-  nsTArray<nsRefPtr<BluetoothGattService>> mServices;
+  nsTArray<RefPtr<BluetoothGattService>> mServices;
 
   /**
    * Indicate whether there is ongoing discoverServices request or not.

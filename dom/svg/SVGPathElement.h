@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGPathElement_h
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGPathGeometryElement.h"
 #include "SVGAnimatedPathSegList.h"

@@ -22,7 +22,7 @@
 // This RefPtr class isn't ideal for usage in Azure, as it doesn't allow T**
 // outparams using the &-operator. But it will have to do as there's no easy
 // solution.
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "mozilla/DebugOnly.h"
 
@@ -231,7 +231,7 @@ public:
   Point mEnd;                   /**< End of the linear gradient - NOTE: In the case
                                      of a zero length gradient it will act as the
                                      color of the last stop. */
-  nsRefPtr<GradientStops> mStops; /**< GradientStops object for this gradient, this
+  RefPtr<GradientStops> mStops; /**< GradientStops object for this gradient, this
                                      should match the backend type of the draw
                                      target this pattern will be used with. */
   Matrix mMatrix;               /**< A matrix that transforms the pattern into
@@ -271,7 +271,7 @@ public:
   Point mCenter2; //!< Center of the outer circle.
   Float mRadius1; //!< Radius of the inner (focal) circle.
   Float mRadius2; //!< Radius of the outer circle.
-  nsRefPtr<GradientStops> mStops; /**< GradientStops object for this gradient, this
+  RefPtr<GradientStops> mStops; /**< GradientStops object for this gradient, this
                                      should match the backend type of the draw target
                                      this pattern will be used with. */
   Matrix mMatrix; //!< A matrix that transforms the pattern into user space
@@ -300,7 +300,7 @@ public:
     return PatternType::SURFACE;
   }
 
-  nsRefPtr<SourceSurface> mSurface; //!< Surface to use for drawing
+  RefPtr<SourceSurface> mSurface; //!< Surface to use for drawing
   ExtendMode mExtendMode;         /**< This determines how the image is extended
                                        outside the bounds of the image */
   Filter mFilter;                 //!< Resampling filter for resampling the image.
@@ -436,7 +436,7 @@ public:
     bool IsMapped() { return mIsMapped; }
 
   private:
-    nsRefPtr<DataSourceSurface> mSurface;
+    RefPtr<DataSourceSurface> mSurface;
     MappedSurface mMap;
     bool mIsMapped;
   };
@@ -585,7 +585,7 @@ protected:
   Path();
   void EnsureFlattenedPath();
 
-  nsRefPtr<FlattenedPath> mFlattenedPath;
+  RefPtr<FlattenedPath> mFlattenedPath;
 };
 
 /** The PathBuilder class allows path creation. Once finish is called on the
@@ -810,7 +810,7 @@ public:
   virtual void CopyRect(const IntRect &aSourceRect,
                         const IntPoint &aDestination)
   {
-    nsRefPtr<SourceSurface> source = Snapshot();
+    RefPtr<SourceSurface> source = Snapshot();
     CopySurface(source, aSourceRect, aDestination);
   }
 
@@ -1118,7 +1118,7 @@ public:
 
 struct Tile
 {
-  nsRefPtr<DrawTarget> mDrawTarget;
+  RefPtr<DrawTarget> mDrawTarget;
   IntPoint mTileOrigin;
 };
 

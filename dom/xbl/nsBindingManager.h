@@ -28,7 +28,7 @@ class nsXBLDocumentInfo;
 class nsIStreamListener;
 class nsXBLBinding;
 template<class E> class nsRefPtr;
-typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
+typedef nsTArray<RefPtr<nsXBLBinding> > nsBindingList;
 class nsIPrincipal;
 class nsITimer;
 
@@ -199,7 +199,7 @@ protected:
 
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;
-  nsRefPtr< nsRunnableMethod<nsBindingManager> > mProcessAttachedQueueEvent;
+  RefPtr< nsRunnableMethod<nsBindingManager> > mProcessAttachedQueueEvent;
 
   // Our document.  This is a weak ref; the document owns us
   nsIDocument* mDocument;

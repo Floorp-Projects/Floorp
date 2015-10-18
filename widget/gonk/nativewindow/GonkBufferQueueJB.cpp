@@ -137,7 +137,7 @@ GonkBufferQueue::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
         if (mSlots[i].mGraphicBuffer != NULL && mSlots[i].mGraphicBuffer->handle == buffer->handle) {
-            nsRefPtr<TextureClient> client(mSlots[i].mTextureClient);
+            RefPtr<TextureClient> client(mSlots[i].mTextureClient);
             return client.forget();
         }
     }
@@ -421,7 +421,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence,
 
     sp<GraphicBuffer> graphicBuffer;
     if (returnFlags & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
-        nsRefPtr<GrallocTextureClientOGL> textureClient =
+        RefPtr<GrallocTextureClientOGL> textureClient =
             new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
                                         gfx::SurfaceFormat::UNKNOWN,
                                         gfx::BackendType::NONE,

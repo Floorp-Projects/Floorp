@@ -41,11 +41,11 @@ public:
 
   already_AddRefed<SpeechRecognitionResult> IndexedGetter(uint32_t aIndex, bool& aPresent);
 
-  nsTArray<nsRefPtr<SpeechRecognitionResult>> mItems;
+  nsTArray<RefPtr<SpeechRecognitionResult>> mItems;
 private:
   ~SpeechRecognitionResultList();
 
-  nsRefPtr<SpeechRecognition> mParent;
+  RefPtr<SpeechRecognition> mParent;
 };
 
 } // namespace dom

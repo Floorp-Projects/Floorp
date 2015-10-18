@@ -31,7 +31,7 @@ SharedSurface_GLXDrawable::Create(GLContext* prodGL,
     Screen* screen = XDefaultScreenOfDisplay(display);
     Visual* visual = gfxXlibSurface::FindVisual(screen, gfxImageFormat::ARGB32);
 
-    nsRefPtr<gfxXlibSurface> surf = gfxXlibSurface::Create(screen, visual, size);
+    RefPtr<gfxXlibSurface> surf = gfxXlibSurface::Create(screen, visual, size);
     if (!deallocateClient)
         surf->ReleasePixmap();
 
@@ -43,7 +43,7 @@ SharedSurface_GLXDrawable::Create(GLContext* prodGL,
 SharedSurface_GLXDrawable::SharedSurface_GLXDrawable(GLContext* gl,
                                                      const gfx::IntSize& size,
                                                      bool inSameProcess,
-                                                     const nsRefPtr<gfxXlibSurface>& xlibSurface)
+                                                     const RefPtr<gfxXlibSurface>& xlibSurface)
     : SharedSurface(SharedSurfaceType::GLXDrawable,
                     AttachmentType::Screen,
                     gl,
@@ -88,7 +88,7 @@ bool
 SharedSurface_GLXDrawable::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
 {
     MOZ_ASSERT(out_surface);
-    nsRefPtr<gfx::DataSourceSurface> dataSurf =
+    RefPtr<gfx::DataSourceSurface> dataSurf =
         new gfx::DataSourceSurfaceCairo(mXlibSurface->CairoSurface());
 
     gfx::DataSourceSurface::ScopedMap mapSrc(dataSurf, gfx::DataSourceSurface::READ);
@@ -120,7 +120,7 @@ SharedSurface_GLXDrawable::ReadbackBySharedHandle(gfx::DataSourceSurface* out_su
 UniquePtr<SurfaceFactory_GLXDrawable>
 SurfaceFactory_GLXDrawable::Create(GLContext* prodGL,
                                    const SurfaceCaps& caps,
-                                   const nsRefPtr<layers::ISurfaceAllocator>& allocator,
+                                   const RefPtr<layers::ISurfaceAllocator>& allocator,
                                    const layers::TextureFlags& flags)
 {
     MOZ_ASSERT(caps.alpha, "GLX surfaces require an alpha channel!");

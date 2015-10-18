@@ -157,8 +157,8 @@ public:
   }
      
 private:
-  nsRefPtr<DrawTarget> mA;
-  nsRefPtr<DrawTarget> mB;
+  RefPtr<DrawTarget> mA;
+  RefPtr<DrawTarget> mB;
 };
      
 } // namespace gfx

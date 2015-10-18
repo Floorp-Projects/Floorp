@@ -314,7 +314,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache, nsJARInputThunk **resu
     if (NS_FAILED(rv))
         return rv;
 
-    nsRefPtr<nsJARInputThunk> input = new nsJARInputThunk(reader,
+    RefPtr<nsJARInputThunk> input = new nsJARInputThunk(reader,
                                                           mJarURI,
                                                           mJarEntry,
                                                           jarCache != nullptr
@@ -367,7 +367,7 @@ nsJARChannel::LookupFile(bool aAllowAsync)
         nsAutoCString scheme;
         rv = mJarBaseURI->GetScheme(scheme);
         if (NS_SUCCEEDED(rv) && scheme.EqualsLiteral("remoteopenfile")) {
-            nsRefPtr<RemoteOpenFileChild> remoteFile = new RemoteOpenFileChild();
+            RefPtr<RemoteOpenFileChild> remoteFile = new RemoteOpenFileChild();
             rv = remoteFile->Init(mJarBaseURI, mAppURI);
             NS_ENSURE_SUCCESS(rv, rv);
             mJarFile = remoteFile;
@@ -447,7 +447,7 @@ nsJARChannel::OpenLocalFile()
     // Local files are always considered safe.
     mIsUnsafe = false;
 
-    nsRefPtr<nsJARInputThunk> input;
+    RefPtr<nsJARInputThunk> input;
     nsresult rv = CreateJarInput(gJarHandler->JarCache(),
                                  getter_AddRefs(input));
     if (NS_SUCCEEDED(rv)) {
@@ -841,7 +841,7 @@ nsJARChannel::Open(nsIInputStream **stream)
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    nsRefPtr<nsJARInputThunk> input;
+    RefPtr<nsJARInputThunk> input;
     rv = CreateJarInput(gJarHandler->JarCache(), getter_AddRefs(input));
     if (NS_FAILED(rv))
         return rv;
@@ -968,7 +968,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
                                     NS_GET_IID(nsINetworkInterceptController),
                                     getter_AddRefs(controller));
 
-      nsRefPtr<InterceptedJARChannel> intercepted =
+      RefPtr<InterceptedJARChannel> intercepted =
         new InterceptedJARChannel(this, controller);
       intercepted->NotifyController();
 
@@ -1215,7 +1215,7 @@ nsJARChannel::OnDownloadComplete(MemoryDownloader* aDownloader,
     if (NS_SUCCEEDED(status)) {
         mTempMem = Move(aData);
 
-        nsRefPtr<nsJARInputThunk> input;
+        RefPtr<nsJARInputThunk> input;
         rv = CreateJarInput(nullptr, getter_AddRefs(input));
         if (NS_SUCCEEDED(rv)) {
             // create input stream pump

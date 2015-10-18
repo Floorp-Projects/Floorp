@@ -165,9 +165,9 @@ private:
   nsString mIccId;
   nsCOMPtr<nsIMobileConnection> mMobileConnection;
   nsCOMPtr<nsIIcc> mIccHandler;
-  nsRefPtr<Listener> mListener;
-  nsRefPtr<MobileConnectionInfo> mVoice;
-  nsRefPtr<MobileConnectionInfo> mData;
+  RefPtr<Listener> mListener;
+  RefPtr<MobileConnectionInfo> mVoice;
+  RefPtr<MobileConnectionInfo> mData;
 
   bool
   CheckPermission(const char* aType) const;

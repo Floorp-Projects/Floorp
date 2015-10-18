@@ -26,7 +26,7 @@ public:
 
   virtual ~GonkDecoderManager() {}
 
-  virtual nsRefPtr<InitPromise> Init() = 0;
+  virtual RefPtr<InitPromise> Init() = 0;
 
   // Asynchronously send sample into mDecoder. If out of input buffer, aSample
   // will be queued for later re-send.
@@ -66,7 +66,7 @@ protected:
   // If this returns a failure code other than NS_ERROR_NOT_AVAILABLE, an error
   // will be reported through mDecodeCallback.
   virtual nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) = 0;
+                          RefPtr<MediaData>& aOutput) = 0;
 
   // Send queued samples to OMX. It returns how many samples are still in
   // queue after processing, or negtive error code if failed.
@@ -76,7 +76,7 @@ protected:
   void ProcessFlush();
   void ProcessToDo(bool aEndOfStream);
 
-  nsRefPtr<MediaByteBuffer> mCodecSpecificData;
+  RefPtr<MediaByteBuffer> mCodecSpecificData;
 
   nsAutoCString mMimeType;
 
@@ -103,7 +103,7 @@ protected:
   // A queue that stores the samples waiting to be sent to mDecoder.
   // Empty element means EOS and there shouldn't be any sample be queued after it.
   // Samples are queued in caller's thread and dequeued in mTaskLooper.
-  nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
+  nsTArray<RefPtr<MediaRawData>> mQueuedSamples;
 
   int64_t mLastTime;  // The last decoded frame presentation time.
 
@@ -134,7 +134,7 @@ public:
 
   ~GonkMediaDataDecoder();
 
-  nsRefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
 
   nsresult Input(MediaRawData* aSample) override;
 
@@ -145,7 +145,7 @@ public:
   nsresult Shutdown() override;
 
 private:
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
 
   android::sp<GonkDecoderManager> mManager;
 };

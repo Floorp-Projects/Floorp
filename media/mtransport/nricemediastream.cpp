@@ -179,11 +179,11 @@ static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
 }
 
 // NrIceMediaStream
-nsRefPtr<NrIceMediaStream>
+RefPtr<NrIceMediaStream>
 NrIceMediaStream::Create(NrIceCtx *ctx,
                          const std::string& name,
                          int components) {
-  nsRefPtr<NrIceMediaStream> stream =
+  RefPtr<NrIceMediaStream> stream =
     new NrIceMediaStream(ctx, name, components);
 
   int r = nr_ice_add_media_stream(ctx->ctx(),

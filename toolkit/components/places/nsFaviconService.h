@@ -126,7 +126,7 @@ public:
 private:
   ~nsFaviconService();
 
-  nsRefPtr<mozilla::places::Database> mDB;
+  RefPtr<mozilla::places::Database> mDB;
 
   nsCOMPtr<nsITimer> mExpireUnassociatedIconsTimer;
 

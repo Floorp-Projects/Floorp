@@ -159,7 +159,7 @@ nsHtml5TreeOperation::AppendText(const char16_t* aBuffer,
   }
 
   nsNodeInfoManager* nodeInfoManager = aParent->OwnerDoc()->NodeInfoManager();
-  nsRefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
+  RefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
   NS_ASSERTION(text, "Infallible malloc failed?");
   rv = text->SetText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -345,7 +345,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
   }
 
   nsCOMPtr<dom::Element> newElement;
-  nsRefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->
+  RefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->
     GetNodeInfo(aName, nullptr, aNs, nsIDOMNode::ELEMENT_NODE);
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
   NS_NewElement(getter_AddRefs(newElement),
@@ -384,7 +384,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                         theAttribute,
                         false);
 
-    nsRefPtr<dom::NodeInfo> optionNodeInfo =
+    RefPtr<dom::NodeInfo> optionNodeInfo =
       aNodeInfoManager->GetNodeInfo(nsHtml5Atoms::option,
                                     nullptr,
                                     kNameSpaceID_XHTML,
@@ -392,11 +392,11 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
 
     for (uint32_t i = 0; i < theContent.Length(); ++i) {
       nsCOMPtr<dom::Element> optionElt;
-      nsRefPtr<dom::NodeInfo> ni = optionNodeInfo;
+      RefPtr<dom::NodeInfo> ni = optionNodeInfo;
       NS_NewElement(getter_AddRefs(optionElt),
                     ni.forget(),
                     aFromParser);
-      nsRefPtr<nsTextNode> optionText = new nsTextNode(aNodeInfoManager);
+      RefPtr<nsTextNode> optionText = new nsTextNode(aNodeInfoManager);
       (void) optionText->SetText(theContent[i], false);
       optionElt->AppendChildTo(optionText, false);
       newContent->AppendChildTo(optionElt, false);
@@ -464,7 +464,7 @@ nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
       !aNode->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
     formControl->SetForm(formElement);
   } else if (domImageElement) {
-    nsRefPtr<dom::HTMLImageElement> imageElement =
+    RefPtr<dom::HTMLImageElement> imageElement =
       static_cast<dom::HTMLImageElement*>(domImageElement.get());
     MOZ_ASSERT(imageElement);
     imageElement->SetForm(formElement);
@@ -516,7 +516,7 @@ nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
     }
 
     nsNodeInfoManager* nodeInfoManager = aStackParent->OwnerDoc()->NodeInfoManager();
-    nsRefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
+    RefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
     NS_ASSERTION(text, "Infallible malloc failed?");
     rv = text->SetText(aBuffer, aLength, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -537,7 +537,7 @@ nsHtml5TreeOperation::AppendComment(nsIContent* aParent,
                                     nsHtml5DocumentBuilder* aBuilder)
 {
   nsNodeInfoManager* nodeInfoManager = aParent->OwnerDoc()->NodeInfoManager();
-  nsRefPtr<dom::Comment> comment = new dom::Comment(nodeInfoManager);
+  RefPtr<dom::Comment> comment = new dom::Comment(nodeInfoManager);
   NS_ASSERTION(comment, "Infallible malloc failed?");
   nsresult rv = comment->SetText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -550,7 +550,7 @@ nsHtml5TreeOperation::AppendCommentToDocument(char16_t* aBuffer,
                                               int32_t aLength,
                                               nsHtml5DocumentBuilder* aBuilder)
 {
-  nsRefPtr<dom::Comment> comment =
+  RefPtr<dom::Comment> comment =
     new dom::Comment(aBuilder->GetNodeInfoManager());
   NS_ASSERTION(comment, "Infallible malloc failed?");
   nsresult rv = comment->SetText(aBuffer, aLength, false);
@@ -586,7 +586,7 @@ nsHtml5TreeOperation::GetDocumentFragmentForTemplate(nsIContent* aNode)
 {
   dom::HTMLTemplateElement* tempElem =
     static_cast<dom::HTMLTemplateElement*>(aNode);
-  nsRefPtr<dom::DocumentFragment> frag = tempElem->Content();
+  RefPtr<dom::DocumentFragment> frag = tempElem->Content();
   return frag;
 }
 

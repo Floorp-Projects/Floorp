@@ -39,7 +39,7 @@ typedef dom::OwningTextOrElementOrDocument OwningGeometryNode;
  */
 void GetBoxQuads(nsINode* aNode,
                  const dom::BoxQuadOptions& aOptions,
-                 nsTArray<nsRefPtr<dom::DOMQuad> >& aResult,
+                 nsTArray<RefPtr<dom::DOMQuad> >& aResult,
                  ErrorResult& aRv);
 
 already_AddRefed<dom::DOMQuad>

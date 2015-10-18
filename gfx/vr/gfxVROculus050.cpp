@@ -518,7 +518,7 @@ VRHMDManagerOculus050::Init()
   for (int i = 0; i < count; ++i) {
     ovrHmd hmd = ovrHmd_Create(i);
     if (hmd) {
-      nsRefPtr<HMDInfoOculus050> oc = new HMDInfoOculus050(hmd);
+      RefPtr<HMDInfoOculus050> oc = new HMDInfoOculus050(hmd);
       mOculusHMDs.AppendElement(oc);
     }
   }
@@ -530,7 +530,7 @@ VRHMDManagerOculus050::Init()
   {
     ovrHmd hmd = ovrHmd_CreateDebug(ovrHmd_DK2);
     if (hmd) {
-      nsRefPtr<HMDInfoOculus050> oc = new HMDInfoOculus050(hmd);
+      RefPtr<HMDInfoOculus050> oc = new HMDInfoOculus050(hmd);
       mOculusHMDs.AppendElement(oc);
     }
   }
@@ -556,7 +556,7 @@ VRHMDManagerOculus050::Destroy()
 }
 
 void
-VRHMDManagerOculus050::GetHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
+VRHMDManagerOculus050::GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult)
 {
   Init();
   for (size_t i = 0; i < mOculusHMDs.Length(); ++i) {

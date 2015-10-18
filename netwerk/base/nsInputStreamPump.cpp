@@ -63,7 +63,7 @@ nsInputStreamPump::Create(nsInputStreamPump  **result,
                           bool                 closeWhenDone)
 {
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
-    nsRefPtr<nsInputStreamPump> pump = new nsInputStreamPump();
+    RefPtr<nsInputStreamPump> pump = new nsInputStreamPump();
     if (pump) {
         rv = pump->Init(stream, streamPos, streamLen,
                         segsize, segcount, closeWhenDone);

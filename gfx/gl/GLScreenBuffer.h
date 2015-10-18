@@ -137,7 +137,7 @@ public:
     static UniquePtr<SurfaceFactory>
     CreateFactory(GLContext* gl,
                   const SurfaceCaps& caps,
-                  const nsRefPtr<layers::CompositableForwarder>& forwarder,
+                  const RefPtr<layers::CompositableForwarder>& forwarder,
                   const layers::TextureFlags& flags);
 
 protected:
@@ -147,8 +147,8 @@ public:
 protected:
     UniquePtr<SurfaceFactory> mFactory;
 
-    nsRefPtr<layers::SharedSurfaceTextureClient> mBack;
-    nsRefPtr<layers::SharedSurfaceTextureClient> mFront;
+    RefPtr<layers::SharedSurfaceTextureClient> mBack;
+    RefPtr<layers::SharedSurfaceTextureClient> mFront;
 
     UniquePtr<DrawBuffer> mDraw;
     UniquePtr<ReadBuffer> mRead;
@@ -180,7 +180,7 @@ public:
         return mFactory.get();
     }
 
-    const nsRefPtr<layers::SharedSurfaceTextureClient>& Front() const {
+    const RefPtr<layers::SharedSurfaceTextureClient>& Front() const {
         return mFront;
     }
 

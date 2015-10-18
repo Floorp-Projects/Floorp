@@ -9,7 +9,7 @@
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include <sys/types.h>                  // for int32_t
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
@@ -105,7 +105,7 @@ public:
 
 protected:
   struct Buffer {
-    nsRefPtr<TextureClient> mTextureClient;
+    RefPtr<TextureClient> mTextureClient;
     int32_t mImageSerial;
   };
   nsTArray<Buffer> mBuffers;

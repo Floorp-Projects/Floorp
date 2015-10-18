@@ -143,7 +143,7 @@ AudioSinkFilter::GetSampleSink()
   if (!mInputPin) { \
     return E_NOTIMPL; \
   } \
-  nsRefPtr<IMediaSeeking> pinSeeking = mInputPin->GetConnectedPinSeeking(); \
+  RefPtr<IMediaSeeking> pinSeeking = mInputPin->GetConnectedPinSeeking(); \
   if (!pinSeeking) { \
     return E_NOTIMPL; \
   }

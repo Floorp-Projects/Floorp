@@ -63,8 +63,8 @@ public:
 
 private:
   virtual ~BufferDecoder();
-  nsRefPtr<TaskQueue> mTaskQueueIdentity;
-  nsRefPtr<MediaResource> mResource;
+  RefPtr<TaskQueue> mTaskQueueIdentity;
+  RefPtr<MediaResource> mResource;
 };
 
 } // namespace mozilla

@@ -302,7 +302,7 @@ XPathResult::GetExprResult(txAExprResult** aExprResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
+    RefPtr<txNodeSet> nodeSet = new txNodeSet(nullptr);
     if (!nodeSet) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

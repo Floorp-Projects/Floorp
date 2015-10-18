@@ -85,7 +85,7 @@ protected:
   // Non-addreffed pointer to the element. The element calls ForgetElement
   // to clear this reference when the element is destroyed.
   dom::HTMLMediaElement* mElement;
-  nsRefPtr<ImageContainer> mImageContainer;
+  RefPtr<ImageContainer> mImageContainer;
 
   // mMutex protects all the fields below.
   Mutex mMutex;

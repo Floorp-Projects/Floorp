@@ -11,7 +11,7 @@
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "gfxPoint.h"                   // for gfxPoint
-#include "mozilla/nsRefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/layers/ContentClient.h"  // for ContentClientBasic
 #include "mozilla/mozalloc.h"           // for operator delete
@@ -123,7 +123,7 @@ protected:
     mValidRegion.Or(mValidRegion, tmp);
   }
 
-  nsRefPtr<ContentClientBasic> mContentClient;
+  RefPtr<ContentClientBasic> mContentClient;
 };
 
 } // namespace layers

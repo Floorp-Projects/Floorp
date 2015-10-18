@@ -21,7 +21,7 @@ public:
 private:
   virtual ~nsApplicationCache();
 
-  nsRefPtr<nsOfflineCacheDevice> mDevice;
+  RefPtr<nsOfflineCacheDevice> mDevice;
   nsCString mGroup;
   nsCString mClientID;
   bool mValid;

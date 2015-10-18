@@ -167,8 +167,8 @@ private:
     // or Helvetica Neue. For OSX 10.11, Apple uses pair of families
     // for the UI, one for text sizes and another for display sizes
     bool mUseSizeSensitiveSystemFont;
-    nsRefPtr<gfxFontFamily> mSystemTextFontFamily;
-    nsRefPtr<gfxFontFamily> mSystemDisplayFontFamily; // only used on OSX 10.11
+    RefPtr<gfxFontFamily> mSystemTextFontFamily;
+    RefPtr<gfxFontFamily> mSystemDisplayFontFamily; // only used on OSX 10.11
 };
 
 #endif /* gfxMacPlatformFontList_H_ */

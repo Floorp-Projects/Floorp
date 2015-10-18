@@ -92,7 +92,7 @@ protected:
   public:
     explicit TimeReferenceElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
     void ResetWithElement(Element* aTo) {
-      nsRefPtr<Element> from = get();
+      RefPtr<Element> from = get();
       Unlink();
       ElementChanged(from, aTo);
     }
@@ -126,7 +126,7 @@ protected:
   private:
     nsSMILTimeValueSpec* mSpec;
   };
-  nsRefPtr<EventListener> mEventListener;
+  RefPtr<EventListener> mEventListener;
 };
 
 #endif // NS_SMILTIMEVALUESPEC_H_

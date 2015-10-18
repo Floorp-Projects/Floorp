@@ -92,7 +92,7 @@ class TextureChild final : public PTextureChild
   ~TextureChild()
   {
     if (mKeep && mMainThreadOnly && !NS_IsMainThread()) {
-      nsRefPtr<ReleaseKeepAlive> release = new ReleaseKeepAlive();
+      RefPtr<ReleaseKeepAlive> release = new ReleaseKeepAlive();
       release->mKeep = Move(mKeep);
       NS_DispatchToMainThread(release);
     }
@@ -159,8 +159,8 @@ private:
     mTextureClient = aTextureClient;
   }
 
-  nsRefPtr<CompositableForwarder> mForwarder;
-  nsRefPtr<TextureClient> mWaitForRecycle;
+  RefPtr<CompositableForwarder> mForwarder;
+  RefPtr<TextureClient> mWaitForRecycle;
 
   // Monitor protecting mTextureClient.
   Monitor mMonitor;
@@ -347,12 +347,12 @@ CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
                           gfx::BackendType aMoz2DBackend)
 {
   if (aAllocator->IsSameProcess()) {
-    nsRefPtr<BufferTextureClient> result = new MemoryTextureClient(aAllocator, aFormat,
+    RefPtr<BufferTextureClient> result = new MemoryTextureClient(aAllocator, aFormat,
                                                                  aMoz2DBackend,
                                                                  aTextureFlags);
     return result.forget();
   }
-  nsRefPtr<BufferTextureClient> result = new ShmemTextureClient(aAllocator, aFormat,
+  RefPtr<BufferTextureClient> result = new ShmemTextureClient(aAllocator, aFormat,
                                                               aMoz2DBackend,
                                                               aTextureFlags);
   return result.forget();
@@ -384,7 +384,7 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
   LayersBackend parentBackend = aAllocator->GetCompositorBackendType();
   gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(parentBackend, aSelector);
 
-  nsRefPtr<TextureClient> texture;
+  RefPtr<TextureClient> texture;
 
 #if defined(MOZ_WIDGET_GONK) || defined(XP_WIN)
   int32_t maxTextureSize = aAllocator->GetMaxTextureSize();
@@ -487,7 +487,7 @@ TextureClient::CreateForRawBufferAccess(ISurfaceAllocator* aAllocator,
                                         TextureFlags aTextureFlags,
                                         TextureAllocationFlags aAllocFlags)
 {
-  nsRefPtr<BufferTextureClient> texture =
+  RefPtr<BufferTextureClient> texture =
     CreateBufferTextureClient(aAllocator, aFormat,
                               aTextureFlags, aMoz2DBackend);
   if (texture) {
@@ -506,7 +506,7 @@ TextureClient::CreateForYCbCr(ISurfaceAllocator* aAllocator,
                               StereoMode aStereoMode,
                               TextureFlags aTextureFlags)
 {
-  nsRefPtr<BufferTextureClient> texture;
+  RefPtr<BufferTextureClient> texture;
   if (aAllocator->IsSameProcess()) {
     texture = new MemoryTextureClient(aAllocator, gfx::SurfaceFormat::YUV,
                                       gfx::BackendType::NONE,
@@ -531,7 +531,7 @@ TextureClient::CreateWithBufferSize(ISurfaceAllocator* aAllocator,
                      size_t aSize,
                      TextureFlags aTextureFlags)
 {
-  nsRefPtr<BufferTextureClient> texture;
+  RefPtr<BufferTextureClient> texture;
   if (aAllocator->IsSameProcess()) {
     texture = new MemoryTextureClient(aAllocator, gfx::SurfaceFormat::YUV,
                                       gfx::BackendType::NONE,
@@ -608,19 +608,19 @@ bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
     return false;
   }
 
-  nsRefPtr<DrawTarget> destinationTarget = aTarget->BorrowDrawTarget();
+  RefPtr<DrawTarget> destinationTarget = aTarget->BorrowDrawTarget();
   if (!destinationTarget) {
       gfxWarning() << "TextureClient::CopyToTextureClient (dest) failed in BorrowDrawTarget";
     return false;
   }
 
-  nsRefPtr<DrawTarget> sourceTarget = BorrowDrawTarget();
+  RefPtr<DrawTarget> sourceTarget = BorrowDrawTarget();
   if (!sourceTarget) {
     gfxWarning() << "TextureClient::CopyToTextureClient (src) failed in BorrowDrawTarget";
     return false;
   }
 
-  nsRefPtr<gfx::SourceSurface> source = sourceTarget->Snapshot();
+  RefPtr<gfx::SourceSurface> source = sourceTarget->Snapshot();
   destinationTarget->CopySurface(source,
                                  aRect ? *aRect : gfx::IntRect(gfx::IntPoint(0, 0), GetSize()),
                                  aPoint ? *aPoint : gfx::IntPoint(0, 0));
@@ -634,7 +634,7 @@ TextureClient::Finalize()
 
   // Always make a temporary strong reference to the actor before we use it,
   // in case TextureChild::ActorDestroy might null mActor concurrently.
-  nsRefPtr<TextureChild> actor = mActor;
+  RefPtr<TextureChild> actor = mActor;
 
   if (actor) {
     if (actor->mDestroyed) {
@@ -685,7 +685,7 @@ TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     pfx += "  ";
 
     aStream << "\n" << pfx.get() << "Surface: ";
-    nsRefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
+    RefPtr<gfx::DataSourceSurface> dSurf = GetAsSurface();
     if (dSurf) {
       aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
     }
@@ -820,7 +820,7 @@ BufferTextureClient::CreateSimilar(TextureFlags aFlags,
                                    TextureAllocationFlags aAllocFlags) const
 {
   // This may return null
-  nsRefPtr<BufferTextureClient> newBufferTex = TextureClient::CreateForRawBufferAccess(
+  RefPtr<BufferTextureClient> newBufferTex = TextureClient::CreateForRawBufferAccess(
     mAllocator, mFormat, mSize, mBackend, mFlags | aFlags, aAllocFlags
   );
 
@@ -896,14 +896,14 @@ BufferTextureClient::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
 
-  nsRefPtr<DataSourceSurface> surface = serializer.GetAsSurface();
+  RefPtr<DataSourceSurface> surface = serializer.GetAsSurface();
 
   if (!surface) {
     gfxCriticalError() << "Failed to get serializer as surface!";
     return;
   }
 
-  nsRefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
     gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
@@ -964,8 +964,8 @@ BufferTextureClient::Unlock()
   MOZ_ASSERT(mDrawTarget->refCount() == 1);
 
   if (mReadbackSink) {
-    nsRefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
-    nsRefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
+    RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
+    RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
     mReadbackSink->ProcessReadback(dataSurf);
   }
 

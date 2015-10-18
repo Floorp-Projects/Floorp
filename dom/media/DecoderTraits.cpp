@@ -582,7 +582,7 @@ already_AddRefed<MediaDecoder>
 InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsRefPtr<MediaDecoder> decoder;
+  RefPtr<MediaDecoder> decoder;
 
 #ifdef MOZ_FMP4
   if (IsMP4SupportedType(aType)) {

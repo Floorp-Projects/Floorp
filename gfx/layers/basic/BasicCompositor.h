@@ -33,7 +33,7 @@ public:
                        : gfx::SurfaceFormat(gfx::SurfaceFormat::UNKNOWN);
   }
 
-  nsRefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
 };
 
@@ -127,9 +127,9 @@ private:
   gfx::IntSize mWidgetSize;
 
   // The final destination surface
-  nsRefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   // The current render target for drawing
-  nsRefPtr<BasicCompositingRenderTarget> mRenderTarget;
+  RefPtr<BasicCompositingRenderTarget> mRenderTarget;
 
   gfx::IntRect mInvalidRect;
   nsIntRegion mInvalidRegion;

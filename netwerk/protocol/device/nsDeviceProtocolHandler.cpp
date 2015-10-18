@@ -45,7 +45,7 @@ nsDeviceProtocolHandler::NewURI(const nsACString &spec,
                                 nsIURI *baseURI,
                                 nsIURI **result)
 {
-  nsRefPtr<nsSimpleURI> uri = new nsSimpleURI();
+  RefPtr<nsSimpleURI> uri = new nsSimpleURI();
 
   nsresult rv = uri->SetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -59,7 +59,7 @@ nsDeviceProtocolHandler::NewChannel2(nsIURI* aURI,
                                      nsILoadInfo* aLoadInfo,
                                      nsIChannel** aResult)
 {
-  nsRefPtr<nsDeviceChannel> channel = new nsDeviceChannel();
+  RefPtr<nsDeviceChannel> channel = new nsDeviceChannel();
   nsresult rv = channel->Init(aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 

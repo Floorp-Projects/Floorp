@@ -101,8 +101,8 @@ private:
   nsresult DispatchEITBroadcastedEvent(const Sequence<OwningNonNull<TVProgram>>& aPrograms);
 
   nsCOMPtr<nsITVService> mTVService;
-  nsRefPtr<TVTuner> mTuner;
-  nsRefPtr<TVChannel> mCurrentChannel;
+  RefPtr<TVTuner> mTuner;
+  RefPtr<TVChannel> mCurrentChannel;
   TVSourceType mType;
   bool mIsScanning;
 };

@@ -39,7 +39,7 @@ public:
 
     template <class T>
     inline
-    qsObjectHelper(nsRefPtr<T>& aObject, nsWrapperCache* aCache)
+    qsObjectHelper(RefPtr<T>& aObject, nsWrapperCache* aCache)
         : xpcObjectHelper(ToSupports(aObject.get()),
                           ToCanonicalSupports(aObject.get()), aCache)
     {

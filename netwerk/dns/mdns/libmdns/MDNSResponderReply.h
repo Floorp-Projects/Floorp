@@ -10,7 +10,7 @@
 #include "MDNSResponderOperator.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIThread.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -119,7 +119,7 @@ private:
   uint16_t mPort;
   uint16_t mTxtLen;
   UniquePtr<unsigned char> mTxtRecord;
-  nsRefPtr<ResolveOperator> mContext;
+  RefPtr<ResolveOperator> mContext;
 };
 
 } // namespace net
