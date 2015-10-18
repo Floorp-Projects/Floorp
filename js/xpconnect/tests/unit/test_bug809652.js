@@ -21,7 +21,7 @@ function run_test() {
   for (var i = 0; i < 8; ++i)
     new Uint8Array(sb.ab)[i] = i * 10;
   sb.ta = [];
-  TypedArrays.forEach(function(f) sb.ta.push(new f(sb.ab)));
+  TypedArrays.forEach(f => sb.ta.push(new f(sb.ab)));
   sb.dv = new DataView(sb.ab);
 
   /* Things that should throw. */
