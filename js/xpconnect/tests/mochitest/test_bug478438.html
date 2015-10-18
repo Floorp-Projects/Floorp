@@ -24,19 +24,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478438
         catch (e) { onAllow.opposite("unable " + infinitive, ": " + e) }
       }
 
-      testOne(function() iwin.focus, pass,
+      testOne(() => iwin.focus, pass,
               "to resolve/get allAccess property iwin.focus");
 
-      testOne(function() iwin.focus(), pass,
+      testOne(() => iwin.focus(), pass,
               "to call allAccess method iwin.focus");
 
-      testOne(function() iwin.alert, fail,
+      testOne(() => iwin.alert, fail,
               "to resolve/get restricted property iwin.alert");
 
-      testOne(function() iwin.alert(), fail,
+      testOne(() => iwin.alert(), fail,
               "to call restricted method iwin.alert");
 
-      testOne(function() iwin.location.toString(), fail,
+      testOne(() => iwin.location.toString(), fail,
               "to call restricted method iwin.location.toString");
 
       testOne(function() { iwin.location = "http://example.org" }, pass,
