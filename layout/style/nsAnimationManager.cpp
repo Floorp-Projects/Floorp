@@ -198,7 +198,7 @@ CSSAnimation::QueueEvents()
 
   ComputedTiming computedTiming = mEffect->GetComputedTiming();
 
-  if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Null) {
+  if (computedTiming.mPhase == ComputedTiming::AnimationPhase::Null) {
     return; // do nothing
   }
 
@@ -212,23 +212,23 @@ CSSAnimation::QueueEvents()
   bool wasActive = mPreviousPhaseOrIteration != PREVIOUS_PHASE_BEFORE &&
                    mPreviousPhaseOrIteration != PREVIOUS_PHASE_AFTER;
   bool isActive =
-         computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
+         computedTiming.mPhase == ComputedTiming::AnimationPhase::Active;
   bool isSameIteration =
          computedTiming.mCurrentIteration == mPreviousPhaseOrIteration;
   bool skippedActivePhase =
     (mPreviousPhaseOrIteration == PREVIOUS_PHASE_BEFORE &&
-     computedTiming.mPhase == ComputedTiming::AnimationPhase_After) ||
+     computedTiming.mPhase == ComputedTiming::AnimationPhase::After) ||
     (mPreviousPhaseOrIteration == PREVIOUS_PHASE_AFTER &&
-     computedTiming.mPhase == ComputedTiming::AnimationPhase_Before);
+     computedTiming.mPhase == ComputedTiming::AnimationPhase::Before);
 
   MOZ_ASSERT(!skippedActivePhase || (!isActive && !wasActive),
              "skippedActivePhase only makes sense if we were & are inactive");
 
-  if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Before) {
+  if (computedTiming.mPhase == ComputedTiming::AnimationPhase::Before) {
     mPreviousPhaseOrIteration = PREVIOUS_PHASE_BEFORE;
-  } else if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
+  } else if (computedTiming.mPhase == ComputedTiming::AnimationPhase::Active) {
     mPreviousPhaseOrIteration = computedTiming.mCurrentIteration;
-  } else if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
+  } else if (computedTiming.mPhase == ComputedTiming::AnimationPhase::After) {
     mPreviousPhaseOrIteration = PREVIOUS_PHASE_AFTER;
   }
 
