@@ -85,13 +85,15 @@ message LayersPacket {
       HORIZONTAL = 2;
     }
     enum Filter {
-      FILTER_FAST = 0;
+      FILTER_FAST = 0; // deprecated
       FILTER_GOOD = 1;
-      FILTER_BEST = 2;
-      FILTER_NEAREST = 3;
-      FILTER_BILINEAR = 4;
-      FILTER_GAUSSIAN = 5;
-      FILTER_SENTINEL = 6;
+      FILTER_BEST = 2; // deprecated
+      FILTER_NEAREST = 3; //deprecated
+      FILTER_BILINEAR = 4; //deprecated
+      FILTER_GAUSSIAN = 5; //deprecated
+      FILTER_SENTINEL = 6; //deprecated
+      FILTER_LINEAR = 7;
+      FILTER_POINT = 8;
     }
     message Size {
       optional int32 w = 1;
