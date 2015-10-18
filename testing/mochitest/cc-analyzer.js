@@ -105,7 +105,8 @@ CCAnalyzer.prototype = {
 
   find: function (aText) {
     let result = [];
-    for each (let o in this.graph) {
+    for (let address in this.graph) {
+      let o = this.graph[address];
       if (!o.garbage && o.name.indexOf(aText) >= 0)
         result.push(o);
     }
