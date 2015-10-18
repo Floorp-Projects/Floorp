@@ -236,7 +236,8 @@ NetworkManager.prototype = {
         let excludeFota = aMsg.json.excludeFota;
         let interfaces = [];
 
-        for each (let network in this.networkInterfaces) {
+        for (let key in this.networkInterfaces) {
+          let network = this.networkInterfaces[key];
           let i = network.info;
           if ((i.type == Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_MMS && excludeMms) ||
               (i.type == Ci.nsINetworkInfo.NETWORK_TYPE_MOBILE_SUPL && excludeSupl) ||
@@ -825,7 +826,8 @@ NetworkManager.prototype = {
     this._activeNetwork = null;
     let anyConnected = false;
 
-    for each (let network in this.networkInterfaces) {
+    for (let key in this.networkInterfaces) {
+      let network = this.networkInterfaces[key];
       if (network.info.state != Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED) {
         continue;
       }

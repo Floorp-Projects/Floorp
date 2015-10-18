@@ -2608,7 +2608,8 @@ WifiWorker.prototype = {
   // connect to which ever network it thinks is best, so when we select the
   // proper network (or fail to), we need to re-enable the rest.
   _enableAllNetworks: function() {
-    for each (let net in this.configuredNetworks) {
+    for (let key in this.configuredNetworks) {
+      let net = this.configuredNetworks[key];
       WifiManager.enableNetwork(net.netId, false, function(ok) {
         net.disabled = ok ? 1 : 0;
       });

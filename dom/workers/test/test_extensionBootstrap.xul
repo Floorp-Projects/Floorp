@@ -31,8 +31,8 @@
             const stages = [ "install", "startup", "shutdown", "uninstall" ];
             const symbols = [ "Worker", "ChromeWorker" ];
 
-            for each (var stage in stages) {
-              for each (var symbol in symbols) {
+            for (var stage of stages) {
+              for (var symbol of symbols) {
                 is(Services.prefs.getBoolPref("workertest.bootstrap." + stage +
                                               "." + symbol),
                    true,
