@@ -96,11 +96,13 @@ enum LayersPacket_Layer_Filter {
   LayersPacket_Layer_Filter_FILTER_NEAREST = 3,
   LayersPacket_Layer_Filter_FILTER_BILINEAR = 4,
   LayersPacket_Layer_Filter_FILTER_GAUSSIAN = 5,
-  LayersPacket_Layer_Filter_FILTER_SENTINEL = 6
+  LayersPacket_Layer_Filter_FILTER_SENTINEL = 6,
+  LayersPacket_Layer_Filter_FILTER_LINEAR = 7,
+  LayersPacket_Layer_Filter_FILTER_POINT = 8
 };
 bool LayersPacket_Layer_Filter_IsValid(int value);
 const LayersPacket_Layer_Filter LayersPacket_Layer_Filter_Filter_MIN = LayersPacket_Layer_Filter_FILTER_FAST;
-const LayersPacket_Layer_Filter LayersPacket_Layer_Filter_Filter_MAX = LayersPacket_Layer_Filter_FILTER_SENTINEL;
+const LayersPacket_Layer_Filter LayersPacket_Layer_Filter_Filter_MAX = LayersPacket_Layer_Filter_FILTER_POINT;
 const int LayersPacket_Layer_Filter_Filter_ARRAYSIZE = LayersPacket_Layer_Filter_Filter_MAX + 1;
 
 enum Packet_DataType {
@@ -1704,6 +1706,8 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   static const Filter FILTER_BILINEAR = LayersPacket_Layer_Filter_FILTER_BILINEAR;
   static const Filter FILTER_GAUSSIAN = LayersPacket_Layer_Filter_FILTER_GAUSSIAN;
   static const Filter FILTER_SENTINEL = LayersPacket_Layer_Filter_FILTER_SENTINEL;
+  static const Filter FILTER_LINEAR = LayersPacket_Layer_Filter_FILTER_LINEAR;
+  static const Filter FILTER_POINT = LayersPacket_Layer_Filter_FILTER_POINT;
   static inline bool Filter_IsValid(int value) {
     return LayersPacket_Layer_Filter_IsValid(value);
   }

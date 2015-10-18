@@ -2477,6 +2477,8 @@ bool LayersPacket_Layer_Filter_IsValid(int value) {
     case 4:
     case 5:
     case 6:
+    case 7:
+    case 8:
       return true;
     default:
       return false;
@@ -2491,6 +2493,8 @@ const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_NEAREST;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_BILINEAR;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_GAUSSIAN;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_SENTINEL;
+const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_LINEAR;
+const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_POINT;
 const LayersPacket_Layer_Filter LayersPacket_Layer::Filter_MIN;
 const LayersPacket_Layer_Filter LayersPacket_Layer::Filter_MAX;
 const int LayersPacket_Layer::Filter_ARRAYSIZE;
