@@ -32,7 +32,7 @@ var WindowsRegistry = {
           case kRegMultiSz:
             // nsIWindowsRegKey doesn't support REG_MULTI_SZ type out of the box.
             let str = registry.readStringValue(aKey);
-            return [v for each (v in str.split("\0")) if (v)];
+            return str.split("\0").filter(v => v);
           case Ci.nsIWindowsRegKey.TYPE_STRING:
             return registry.readStringValue(aKey);
           case Ci.nsIWindowsRegKey.TYPE_INT:

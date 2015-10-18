@@ -75,7 +75,7 @@ function test()
 
   function continueTest(win) {
     // Now we can run our tests
-    for each (let t in testFuncs)
+    for (let t of testFuncs)
       t(win);
 
     win.close();

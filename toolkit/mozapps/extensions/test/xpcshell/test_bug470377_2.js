@@ -28,7 +28,7 @@ function run_test() {
   startupManager();
   AddonManager.checkCompatibility = false;
 
-  installAllFiles([do_get_addon(a) for each (a in ADDONS)], function() {
+  installAllFiles(ADDONS.map(a => do_get_addon(a)), function() {
     restartManager();
 
     AddonManager.getAddonsByIDs(["bug470377_1@tests.mozilla.org",

@@ -239,7 +239,7 @@ function run_test() {
 
 // Before every main test this is the state the add-ons are meant to be in
 function check_initial_state(callback) {
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(addons) {
     do_check_eq(check_addon_state(addons[0]), "true,false,false");
     do_check_eq(check_addon_state(addons[1]), "false,false,false");
     do_check_eq(check_addon_state(addons[2]), "false,false,false");
@@ -263,7 +263,7 @@ function check_initial_state(callback) {
 function check_test_pt1() {
   dump("Checking pt 1\n");
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], callback_soon(function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), callback_soon(function(addons) {
     for (var i = 0; i < ADDONS.length; i++) {
       if (!addons[i])
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
@@ -335,7 +335,7 @@ function check_test_pt2() {
   restartManager();
   dump("Checking results pt 2\n");
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], callback_soon(function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), callback_soon(function(addons) {
     // Should have disabled this add-on as requested
     do_check_eq(check_addon_state(addons[2]), "true,true,false");
     do_check_eq(check_plugin_state(PLUGINS[2]), "true,false");
@@ -421,7 +421,7 @@ function check_test_pt3() {
   let blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                   getService(Ci.nsIBlocklistService);
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(addons) {
     // All should have gained the blocklist state, user disabled as previously
     do_check_eq(check_addon_state(addons[0]), "true,false,true");
     do_check_eq(check_addon_state(addons[1]), "false,false,true");
@@ -488,7 +488,7 @@ function check_test_pt4() {
   restartManager();
   dump("Checking results pt 4\n");
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(addons) {
     // This should have become unblocked
     do_check_eq(check_addon_state(addons[5]), "false,false,false");
     do_check_eq(check_plugin_state(PLUGINS[5]), "false,false");

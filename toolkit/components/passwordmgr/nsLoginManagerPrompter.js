@@ -120,7 +120,7 @@ LoginManagerPromptFactory.prototype = {
         prompt.inProgress = false;
         self._asyncPromptInProgress = false;
 
-        for each (var consumer in prompt.consumers) {
+        for (var consumer of prompt.consumers) {
           if (!consumer.callback)
             // Not having a callback means that consumer didn't provide it
             // or canceled the notification
@@ -148,7 +148,8 @@ LoginManagerPromptFactory.prototype = {
     var asyncPrompts = this._asyncPrompts;
     this.__proto__._asyncPrompts = {};
 
-    for each (var prompt in asyncPrompts) {
+    for (var hashKey in asyncPrompts) {
+      let prompt = asyncPrompts[hashKey];
       // Watch out! If this prompt is currently prompting, let it handle
       // notifying the callbacks of success/failure, since it's already
       // asking the user for input. Reusing a callback can be crashy.
@@ -157,7 +158,7 @@ LoginManagerPromptFactory.prototype = {
         continue;
       }
 
-      for each (var consumer in prompt.consumers) {
+      for (var consumer of prompt.consumers) {
         if (!consumer.callback)
           continue;
 

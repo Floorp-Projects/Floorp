@@ -1101,7 +1101,7 @@ Blocklist.prototype = {
     if (!toolkitVersion)
       toolkitVersion = gApp.platformVersion;
 
-    for each (var blockEntry in pluginEntries) {
+    for (var blockEntry of pluginEntries) {
       var matchFailed = false;
       for (var name in blockEntry.matches) {
         if (!(name in plugin) ||

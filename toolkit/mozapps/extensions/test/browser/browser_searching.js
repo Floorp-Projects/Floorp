@@ -286,7 +286,7 @@ function check_results(aQuery, aSortBy, aReverseOrder, aShowLocal) {
 
   // Get actual order of results
   var actualResults = get_actual_results();
-  var actualOrder = [result.name for each(result in actualResults)];
+  var actualOrder = actualResults.map(result => result.name);
 
   // Reverse array of actual results if supposed to be in reverse order.
   // Reverse actualOrder instead of expectedOrder so can always check

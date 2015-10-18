@@ -440,7 +440,7 @@ this.LoginManagerStorage_json.prototype = {
       httpRealm: httpRealm
     };
     let matchData = { };
-    for each (let field in ["hostname", "formSubmitURL", "httpRealm"])
+    for (let field of ["hostname", "formSubmitURL", "httpRealm"])
       if (loginData[field] != '')
         matchData[field] = loginData[field];
     let [logins, ids] = this._searchLogins(matchData);
@@ -461,7 +461,7 @@ this.LoginManagerStorage_json.prototype = {
       httpRealm: httpRealm
     };
     let matchData = { };
-    for each (let field in ["hostname", "formSubmitURL", "httpRealm"])
+    for (let field of ["hostname", "formSubmitURL", "httpRealm"])
       if (loginData[field] != '')
         matchData[field] = loginData[field];
     let [logins, ids] = this._searchLogins(matchData);
@@ -504,7 +504,7 @@ this.LoginManagerStorage_json.prototype = {
    */
   _getIdForLogin(login) {
     let matchData = { };
-    for each (let field in ["hostname", "formSubmitURL", "httpRealm"])
+    for (let field of ["hostname", "formSubmitURL", "httpRealm"])
       if (login[field] != '')
         matchData[field] = login[field];
     let [logins, ids] = this._searchLogins(matchData);
@@ -566,7 +566,7 @@ this.LoginManagerStorage_json.prototype = {
   _decryptLogins(logins) {
     let result = [];
 
-    for each (let login in logins) {
+    for (let login of logins) {
       try {
         login.username = this._crypto.decrypt(login.username);
         login.password = this._crypto.decrypt(login.password);
