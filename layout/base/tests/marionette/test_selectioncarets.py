@@ -299,11 +299,17 @@ class CommonCaretsTestCase(object):
         # draggable.
         (caret3_x, caret3_y), (caret4_x, caret4_y) = sel.selection_carets_location()
 
-        # The following values are from ua.css.
-        caret_width = 44
-        caret_margin_left = -23
-        tilt_right_margin_left = 18
-        tilt_left_margin_left = -17
+        # The following values are from ua.css and all.js
+        if self.carets_tested_pref == 'selectioncaret.enabled':
+            caret_width = 44
+            caret_margin_left = -23
+            tilt_right_margin_left = 18
+            tilt_left_margin_left = -17
+        elif self.carets_tested_pref == 'layout.accessiblecaret.enabled':
+            caret_width = float(self.marionette.get_pref('layout.accessiblecaret.width'))
+            caret_margin_left = float(self.marionette.get_pref('layout.accessiblecaret.margin-left'))
+            tilt_right_margin_left = 0.41 * caret_width;
+            tilt_left_margin_left = -0.39 * caret_width;
 
         left_caret_left_edge_x = caret3_x + caret_margin_left + tilt_left_margin_left
         el.tap(left_caret_left_edge_x + 2, caret3_y)
