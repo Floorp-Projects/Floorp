@@ -256,35 +256,34 @@ gfxFontEntry*
 gfxPlatformGtk::LookupLocalFont(const nsAString& aFontName,
                                 uint16_t aWeight,
                                 int16_t aStretch,
-                                uint8_t aStyle)
+                                bool aItalic)
 {
     if (sUseFcFontList) {
         gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-        return pfl->LookupLocalFont(aFontName, aWeight, aStretch,
-                                    aStyle);
+        return pfl->LookupLocalFont(aFontName, aWeight, aStretch, aItalic);
     }
 
     return gfxPangoFontGroup::NewFontEntry(aFontName, aWeight,
-                                           aStretch, aStyle);
+                                           aStretch, aItalic);
 }
 
 gfxFontEntry* 
 gfxPlatformGtk::MakePlatformFont(const nsAString& aFontName,
                                  uint16_t aWeight,
                                  int16_t aStretch,
-                                 uint8_t aStyle,
+                                 bool aItalic,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)
 {
     if (sUseFcFontList) {
         gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-        return pfl->MakePlatformFont(aFontName, aWeight, aStretch,
-                                     aStyle, aFontData, aLength);
+        return pfl->MakePlatformFont(aFontName, aWeight, aStretch, aItalic,
+                                     aFontData, aLength);
     }
 
     // passing ownership of the font data to the new font entry
     return gfxPangoFontGroup::NewFontEntry(aFontName, aWeight,
-                                           aStretch, aStyle,
+                                           aStretch, aItalic,
                                            aFontData, aLength);
 }
 

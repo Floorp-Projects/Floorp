@@ -80,11 +80,8 @@ public:
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mForceGDIClassic(false)
     {
-        DWRITE_FONT_STYLE dwriteStyle = aFont->GetStyle();
-        mStyle = (dwriteStyle == DWRITE_FONT_STYLE_ITALIC ?
-                  NS_FONT_STYLE_ITALIC :
-                  (dwriteStyle == DWRITE_FONT_STYLE_OBLIQUE ?
-                   NS_FONT_STYLE_OBLIQUE : NS_FONT_STYLE_NORMAL));
+        mItalic = (aFont->GetStyle() == DWRITE_FONT_STYLE_ITALIC ||
+                   aFont->GetStyle() == DWRITE_FONT_STYLE_OBLIQUE);
         mStretch = FontStretchFromDWriteStretch(aFont->GetStretch());
         uint16_t weight = NS_ROUNDUP(aFont->GetWeight() - 50, 100);
 
@@ -104,19 +101,19 @@ public:
      * \param aFont DirectWrite font object
      * \param aWeight Weight of the font
      * \param aStretch Stretch of the font
-     * \param aStyle italic or oblique of font
+     * \param aItalic True if italic
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFont *aFont,
                               uint16_t aWeight,
                               int16_t aStretch,
-                              uint8_t aStyle)
+                              bool aItalic)
       : gfxFontEntry(aFaceName), mFont(aFont), mFontFile(nullptr),
         mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
-        mStyle = aStyle;
+        mItalic = aItalic;
         mIsLocalUserFont = true;
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -128,19 +125,19 @@ public:
      * \param aFontFile DirectWrite fontfile object
      * \param aWeight Weight of the font
      * \param aStretch Stretch of the font
-     * \param aStyle italic or oblique of font
+     * \param aItalic True if italic
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFontFile *aFontFile,
                               uint16_t aWeight,
                               int16_t aStretch,
-                              uint8_t aStyle)
+                              bool aItalic)
       : gfxFontEntry(aFaceName), mFont(nullptr), mFontFile(aFontFile),
         mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
-        mStyle = aStyle;
+        mItalic = aItalic;
         mIsDataUserFont = true;
         mIsCJK = UNINITIALIZED_VALUE;
     }
@@ -352,12 +349,12 @@ public:
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
-                                          uint8_t aStyle);
+                                          bool aItalic);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,
-                                           uint8_t aStyle,
+                                           bool aItalic,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
     

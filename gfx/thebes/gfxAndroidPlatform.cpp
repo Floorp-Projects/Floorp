@@ -328,26 +328,26 @@ gfxFontEntry*
 gfxAndroidPlatform::LookupLocalFont(const nsAString& aFontName,
                                     uint16_t aWeight,
                                     int16_t aStretch,
-                                    uint8_t aStyle)
+                                    bool aItalic)
 {
     return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aFontName,
                                                                     aWeight,
                                                                     aStretch,
-                                                                    aStyle);
+                                                                    aItalic);
 }
 
 gfxFontEntry* 
 gfxAndroidPlatform::MakePlatformFont(const nsAString& aFontName,
                                      uint16_t aWeight,
                                      int16_t aStretch,
-                                     uint8_t aStyle,
+                                     bool aItalic,
                                      const uint8_t* aFontData,
                                      uint32_t aLength)
 {
     return gfxPlatformFontList::PlatformFontList()->MakePlatformFont(aFontName,
                                                                      aWeight,
                                                                      aStretch,
-                                                                     aStyle,
+                                                                     aItalic,
                                                                      aFontData,
                                                                      aLength);
 }

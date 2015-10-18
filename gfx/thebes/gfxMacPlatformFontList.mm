@@ -268,7 +268,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
 MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
                                CGFontRef aFontRef,
                                uint16_t aWeight, uint16_t aStretch,
-                               uint8_t aStyle,
+                               uint32_t aItalicStyle,
                                bool aIsDataUserFont,
                                bool aIsLocalUserFont)
     : gfxFontEntry(aPostscriptName, false),
@@ -285,7 +285,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     mWeight = aWeight;
     mStretch = aStretch;
     mFixedPitch = false; // xxx - do we need this for downloaded fonts?
-    mStyle = aStyle;
+    mItalic = (aItalicStyle & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
 
     NS_ASSERTION(!(aIsDataUserFont && aIsLocalUserFont),
                  "userfont is either a data font or a local font");
@@ -523,7 +523,7 @@ gfxMacFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
             [facename hasSuffix:@"Italic"] ||
             [facename hasSuffix:@"Oblique"])
         {
-            fontEntry->mStyle = NS_FONT_STYLE_ITALIC;
+            fontEntry->mItalic = true;
         }
         if (macTraits & NSFixedPitchFontMask) {
             fontEntry->mFixedPitch = true;
@@ -1009,7 +1009,7 @@ gfxFontEntry*
 gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                                         uint16_t aWeight,
                                         int16_t aStretch,
-                                        uint8_t aStyle)
+                                        bool aItalic)
 {
     nsAutoreleasePool localPool;
 
@@ -1026,7 +1026,10 @@ gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                  "bogus font weight value!");
 
     newFontEntry =
-        new MacOSFontEntry(aFontName, fontRef, aWeight, aStretch, aStyle,
+        new MacOSFontEntry(aFontName, fontRef,
+                           aWeight, aStretch,
+                           aItalic ?
+                               NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
                            false, true);
     ::CFRelease(fontRef);
 
@@ -1042,7 +1045,7 @@ gfxFontEntry*
 gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                          uint16_t aWeight,
                                          int16_t aStretch,
-                                         uint8_t aStyle,
+                                         bool aItalic,
                                          const uint8_t* aFontData,
                                          uint32_t aLength)
 {
@@ -1070,7 +1073,11 @@ gfxMacPlatformFontList::MakePlatformFont(const nsAString& aFontName,
 
     nsAutoPtr<MacOSFontEntry>
         newFontEntry(new MacOSFontEntry(uniqueName, fontRef, aWeight,
-                                        aStretch, aStyle, true, false));
+                                        aStretch,
+                                        aItalic ?
+                                            NS_FONT_STYLE_ITALIC :
+                                            NS_FONT_STYLE_NORMAL,
+                                        true, false));
     ::CFRelease(fontRef);
 
     // if succeeded and font cmap is good, return the new font
