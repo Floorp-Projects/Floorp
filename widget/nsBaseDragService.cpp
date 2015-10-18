@@ -460,7 +460,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
                             nsIScriptableRegion* aRegion,
                             int32_t aScreenX, int32_t aScreenY,
                             nsIntRect* aScreenDragRect,
-                            nsRefPtr<SourceSurface>* aSurface,
+                            RefPtr<SourceSurface>* aSurface,
                             nsPresContext** aPresContext)
 {
   *aSurface = nullptr;
@@ -487,7 +487,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(dragNode);
   if (flo) {
-    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {
       mozilla::dom::TabParent* tp =
         static_cast<mozilla::dom::TabParent*>(fl->GetRemoteBrowser());
@@ -622,7 +622,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     HTMLCanvasElement* aCanvas,
                                     int32_t aScreenX, int32_t aScreenY,
                                     nsIntRect* aScreenDragRect,
-                                    nsRefPtr<SourceSurface>* aSurface)
+                                    RefPtr<SourceSurface>* aSurface)
 {
   nsCOMPtr<imgIContainer> imgContainer;
   if (aImageLoader) {
@@ -657,14 +657,14 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
   nsresult result = NS_OK;
   if (aImageLoader) {
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
       gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(destSize,
                                          SurfaceFormat::B8G8R8A8);
     if (!dt)
       return NS_ERROR_FAILURE;
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     if (!ctx)
       return NS_ERROR_FAILURE;
 

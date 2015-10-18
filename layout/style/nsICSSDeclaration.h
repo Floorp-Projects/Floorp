@@ -76,7 +76,7 @@ public:
   NS_IMETHOD GetPropertyCSSValue(const nsAString& aProp, nsIDOMCSSValue** aVal) override
   {
     mozilla::ErrorResult error;
-    nsRefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
+    RefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
     if (error.Failed()) {
       return error.StealNSResult();
     }

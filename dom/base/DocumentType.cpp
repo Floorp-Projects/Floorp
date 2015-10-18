@@ -52,7 +52,7 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
                                   nsIDOMNode::DOCUMENT_TYPE_NODE,
                                   aName);
 
-  nsRefPtr<mozilla::dom::DocumentType> docType =
+  RefPtr<mozilla::dom::DocumentType> docType =
     new mozilla::dom::DocumentType(ni, aPublicId, aSystemId, aInternalSubset);
   return docType.forget();
 }
@@ -142,7 +142,7 @@ DocumentType::MozRemove()
 nsGenericDOMDataNode*
 DocumentType::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
-  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   return new DocumentType(ni, mPublicId, mSystemId, mInternalSubset);
 }
 

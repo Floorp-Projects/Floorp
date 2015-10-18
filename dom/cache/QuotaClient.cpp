@@ -224,7 +224,7 @@ namespace cache {
 
 already_AddRefed<quota::Client> CreateQuotaClient()
 {
-  nsRefPtr<CacheQuotaClient> ref = new CacheQuotaClient();
+  RefPtr<CacheQuotaClient> ref = new CacheQuotaClient();
   return ref.forget();
 }
 

@@ -126,8 +126,8 @@ public:
   }
 
 private:
-  nsRefPtr<MediaInputPort> mInputPort;
-  nsRefPtr<MediaStreamTrack> mTrack;
+  RefPtr<MediaInputPort> mInputPort;
+  RefPtr<MediaStreamTrack> mTrack;
 
   // Defines if we've been given ownership of the input port or if it's owned
   // externally. The owner is responsible for destroying the port.
@@ -180,7 +180,7 @@ public:
       return;
     }
 
-    nsRefPtr<MediaStreamTrack> track =
+    RefPtr<MediaStreamTrack> track =
       mStream->FindOwnedDOMTrack(mStream->GetOwnedStream(), aTrackId);
     NS_ASSERTION(track, "Owned MediaStreamTracks must be known by the DOMMediaStream");
     if (track) {
@@ -244,7 +244,7 @@ public:
     LOG(LogLevel::Debug, ("DOMMediaStream %p Track %u of stream %p ended",
                           mStream, aInputTrackID, aInputStream));
 
-    nsRefPtr<MediaStreamTrack> track =
+    RefPtr<MediaStreamTrack> track =
       mStream->FindPlaybackDOMTrack(aInputStream, aInputTrackID);
     if (!track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p Not a playback track.", mStream));
@@ -255,7 +255,7 @@ public:
                            mStream));
     mStream->NotifyTrackRemoved(track);
 
-    nsRefPtr<TrackPort> endedPort = mStream->FindPlaybackTrackPort(*track);
+    RefPtr<TrackPort> endedPort = mStream->FindPlaybackTrackPort(*track);
     NS_ASSERTION(endedPort, "Playback track should have a TrackPort");
     if (endedPort &&
         endedPort->GetSourceTrackId() != TRACK_ANY &&
@@ -434,7 +434,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
                             const DOMMediaStream& aStream,
                             ErrorResult& aRv)
 {
-  nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+  nsTArray<RefPtr<MediaStreamTrack>> tracks;
   aStream.GetTracks(tracks);
 
   Sequence<OwningNonNull<MediaStreamTrack>> nonNullTrackSeq;
@@ -462,7 +462,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<DOMMediaStream> newStream = new DOMMediaStream();
+  RefPtr<DOMMediaStream> newStream = new DOMMediaStream();
   newStream->mWindow = ownerWindow;
 
   for (MediaStreamTrack& track : aTracks) {
@@ -504,9 +504,9 @@ DOMMediaStream::GetId(nsAString& aID) const
 }
 
 void
-DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks) const
+DOMMediaStream::GetAudioTracks(nsTArray<RefPtr<AudioStreamTrack> >& aTracks) const
 {
-  for (const nsRefPtr<TrackPort>& info : mTracks) {
+  for (const RefPtr<TrackPort>& info : mTracks) {
     AudioStreamTrack* t = info->GetTrack()->AsAudioStreamTrack();
     if (t) {
       aTracks.AppendElement(t);
@@ -515,9 +515,9 @@ DOMMediaStream::GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks) c
 }
 
 void
-DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks) const
+DOMMediaStream::GetVideoTracks(nsTArray<RefPtr<VideoStreamTrack> >& aTracks) const
 {
-  for (const nsRefPtr<TrackPort>& info : mTracks) {
+  for (const RefPtr<TrackPort>& info : mTracks) {
     VideoStreamTrack* t = info->GetTrack()->AsVideoStreamTrack();
     if (t) {
       aTracks.AppendElement(t);
@@ -526,9 +526,9 @@ DOMMediaStream::GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks) c
 }
 
 void
-DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks) const
+DOMMediaStream::GetTracks(nsTArray<RefPtr<MediaStreamTrack> >& aTracks) const
 {
-  for (const nsRefPtr<TrackPort>& info : mTracks) {
+  for (const RefPtr<TrackPort>& info : mTracks) {
     aTracks.AppendElement(info->GetTrack());
   }
 }
@@ -538,7 +538,7 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
 {
   MOZ_RELEASE_ASSERT(mPlaybackStream);
 
-  nsRefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
+  RefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
   MOZ_ASSERT(dest);
   if (!dest) {
     return;
@@ -573,18 +573,18 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
     return;
   }
 
-  nsRefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
+  RefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
   MOZ_RELEASE_ASSERT(addedDOMStream);
 
-  nsRefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
+  RefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
   MOZ_RELEASE_ASSERT(owningStream);
 
   CombineWithPrincipal(addedDOMStream->mPrincipal);
 
   // Hook up the underlying track with our underlying playback stream.
-  nsRefPtr<MediaInputPort> inputPort =
+  RefPtr<MediaInputPort> inputPort =
     GetPlaybackStream()->AllocateInputPort(owningStream, aTrack.GetTrackID());
-  nsRefPtr<TrackPort> trackPort =
+  RefPtr<TrackPort> trackPort =
     new TrackPort(inputPort, &aTrack, TrackPort::InputPortOwnership::OWNED);
   mTracks.AppendElement(trackPort.forget());
   NotifyTrackAdded(&aTrack);
@@ -598,7 +598,7 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
   LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from stream %p with ID %d)",
                        this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
 
-  nsRefPtr<TrackPort> toRemove = FindPlaybackTrackPort(aTrack);
+  RefPtr<TrackPort> toRemove = FindPlaybackTrackPort(aTrack);
   if (!toRemove) {
     LOG(LogLevel::Debug, ("DOMMediaStream %p does not contain track %p", this, &aTrack));
     return;
@@ -714,7 +714,7 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
                                    MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
+  RefPtr<DOMMediaStream> stream = new DOMMediaStream();
   stream->InitSourceStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -723,7 +723,7 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                        MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
+  RefPtr<DOMMediaStream> stream = new DOMMediaStream();
   stream->InitTrackUnionStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -732,7 +732,7 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateAudioCaptureStream(nsIDOMWindow* aWindow,
                                          MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMMediaStream> stream = new DOMMediaStream();
+  RefPtr<DOMMediaStream> stream = new DOMMediaStream();
   stream->InitAudioCaptureStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -836,11 +836,11 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
 
   LOG(LogLevel::Debug, ("DOMMediaStream %p Created new track %p with ID %u", this, track, aTrackID));
 
-  nsRefPtr<TrackPort> ownedTrackPort =
+  RefPtr<TrackPort> ownedTrackPort =
     new TrackPort(mOwnedPort, track, TrackPort::InputPortOwnership::EXTERNAL);
   mOwnedTracks.AppendElement(ownedTrackPort.forget());
 
-  nsRefPtr<TrackPort> playbackTrackPort =
+  RefPtr<TrackPort> playbackTrackPort =
     new TrackPort(mPlaybackPort, track, TrackPort::InputPortOwnership::EXTERNAL);
   mTracks.AppendElement(playbackTrackPort.forget());
 
@@ -857,7 +857,7 @@ DOMMediaStream::FindOwnedDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) 
     return nullptr;
   }
 
-  for (const nsRefPtr<TrackPort>& info : mOwnedTracks) {
+  for (const RefPtr<TrackPort>& info : mOwnedTracks) {
     if (info->GetTrack()->GetTrackID() == aTrackID) {
       return info->GetTrack();
     }
@@ -870,7 +870,7 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
 {
   MOZ_RELEASE_ASSERT(mPlaybackStream);
 
-  for (const nsRefPtr<TrackPort>& info : mTracks) {
+  for (const RefPtr<TrackPort>& info : mTracks) {
     if (info->GetInputPort() == mPlaybackPort &&
         aInputStream == mOwnedStream &&
         aInputTrackID == info->GetTrack()->GetTrackID()) {
@@ -893,7 +893,7 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
 DOMMediaStream::TrackPort*
 DOMMediaStream::FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const
 {
-  for (const nsRefPtr<TrackPort>& info : mTracks) {
+  for (const RefPtr<TrackPort>& info : mTracks) {
     if (info->GetTrack() == &aTrack) {
       return info;
     }
@@ -973,24 +973,24 @@ DOMMediaStream::UnregisterTrackListener(TrackListener* aListener)
 
 void
 DOMMediaStream::NotifyTrackAdded(
-    const nsRefPtr<MediaStreamTrack>& aTrack)
+    const RefPtr<MediaStreamTrack>& aTrack)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    const nsRefPtr<TrackListener>& listener = mTrackListeners[i];
+    const RefPtr<TrackListener>& listener = mTrackListeners[i];
     listener->NotifyTrackAdded(aTrack);
   }
 }
 
 void
 DOMMediaStream::NotifyTrackRemoved(
-    const nsRefPtr<MediaStreamTrack>& aTrack)
+    const RefPtr<MediaStreamTrack>& aTrack)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    const nsRefPtr<TrackListener>& listener = mTrackListeners[i];
+    const RefPtr<TrackListener>& listener = mTrackListeners[i];
     listener->NotifyTrackRemoved(aTrack);
   }
 }
@@ -1043,7 +1043,7 @@ already_AddRefed<DOMLocalMediaStream>
 DOMLocalMediaStream::CreateSourceStream(nsIDOMWindow* aWindow,
                                         MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
+  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
   stream->InitSourceStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -1052,7 +1052,7 @@ already_AddRefed<DOMLocalMediaStream>
 DOMLocalMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                             MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
+  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
   stream->InitTrackUnionStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -1061,7 +1061,7 @@ already_AddRefed<DOMLocalMediaStream>
 DOMLocalMediaStream::CreateAudioCaptureStream(nsIDOMWindow* aWindow,
                                               MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
+  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
   stream->InitAudioCaptureStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -1080,7 +1080,7 @@ DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                                 AudioNode* aNode,
                                                 MediaStreamGraph* aGraph)
 {
-  nsRefPtr<DOMAudioNodeMediaStream> stream = new DOMAudioNodeMediaStream(aNode);
+  RefPtr<DOMAudioNodeMediaStream> stream = new DOMAudioNodeMediaStream(aNode);
   stream->InitTrackUnionStream(aWindow, aGraph);
   return stream.forget();
 }
@@ -1089,7 +1089,7 @@ DOMHwMediaStream::DOMHwMediaStream()
 {
 #ifdef MOZ_WIDGET_GONK
   mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS_OVERLAY);
-  nsRefPtr<Image> img = mImageContainer->CreateImage(ImageFormat::OVERLAY_IMAGE);
+  RefPtr<Image> img = mImageContainer->CreateImage(ImageFormat::OVERLAY_IMAGE);
   mOverlayImage = static_cast<layers::OverlayImage*>(img.get());
   nsAutoTArray<ImageContainer::NonOwningImage,1> images;
   images.AppendElement(ImageContainer::NonOwningImage(img));
@@ -1104,7 +1104,7 @@ DOMHwMediaStream::~DOMHwMediaStream()
 already_AddRefed<DOMHwMediaStream>
 DOMHwMediaStream::CreateHwStream(nsIDOMWindow* aWindow)
 {
-  nsRefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
+  RefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
 
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
@@ -1130,7 +1130,7 @@ DOMHwMediaStream::Init(MediaStream* stream)
     mImageData.mSize.height = DEFAULT_IMAGE_HEIGHT;
     mOverlayImage->SetData(mImageData);
 
-    nsRefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
+    RefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
     mozilla::gfx::IntSize size = image->GetSize();
 
     segment.AppendFrame(image.forget(), delta, size);
@@ -1180,7 +1180,7 @@ DOMHwMediaStream::SetImageSize(uint32_t width, uint32_t height)
 
   // Change the image size.
   const StreamTime delta = STREAM_TIME_MAX;
-  nsRefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
+  RefPtr<Image> image = static_cast<Image*>(mOverlayImage.get());
   mozilla::gfx::IntSize size = image->GetSize();
   VideoSegment segment;
 

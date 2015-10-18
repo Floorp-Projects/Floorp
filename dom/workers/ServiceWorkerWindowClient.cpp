@@ -31,7 +31,7 @@ namespace {
 // Passing a null clientInfo will reject the promise with InvalidAccessError.
 class ResolveOrRejectPromiseRunnable final : public WorkerRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
   UniquePtr<ServiceWorkerClientInfo> mClientInfo;
 
 public:
@@ -51,11 +51,11 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    nsRefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
+    RefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
     MOZ_ASSERT(promise);
 
     if (mClientInfo) {
-      nsRefPtr<ServiceWorkerWindowClient> client =
+      RefPtr<ServiceWorkerWindowClient> client =
         new ServiceWorkerWindowClient(promise->GetParentObject(), *mClientInfo);
       promise->MaybeResolve(client);
     } else {
@@ -72,7 +72,7 @@ public:
 class ClientFocusRunnable final : public nsRunnable
 {
   uint64_t mWindowId;
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
 
 public:
   ClientFocusRunnable(uint64_t aWindowId, PromiseWorkerProxy* aPromiseProxy)
@@ -114,7 +114,7 @@ private:
       return;
     }
 
-    nsRefPtr<ResolveOrRejectPromiseRunnable> resolveRunnable =
+    RefPtr<ResolveOrRejectPromiseRunnable> resolveRunnable =
       new ResolveOrRejectPromiseRunnable(mPromiseProxy->GetWorkerPrivate(),
                                          mPromiseProxy, Move(aClientInfo));
 
@@ -136,16 +136,16 @@ ServiceWorkerWindowClient::Focus(ErrorResult& aRv) const
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   if (workerPrivate->GlobalScope()->WindowInteractionAllowed()) {
-    nsRefPtr<PromiseWorkerProxy> promiseProxy =
+    RefPtr<PromiseWorkerProxy> promiseProxy =
       PromiseWorkerProxy::Create(workerPrivate, promise);
     if (promiseProxy) {
-      nsRefPtr<ClientFocusRunnable> r = new ClientFocusRunnable(mWindowId,
+      RefPtr<ClientFocusRunnable> r = new ClientFocusRunnable(mWindowId,
                                                                 promiseProxy);
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
     } else {

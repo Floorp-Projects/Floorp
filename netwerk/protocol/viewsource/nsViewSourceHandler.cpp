@@ -70,7 +70,7 @@ nsViewSourceHandler::NewURI(const nsACString &aSpec,
 
     asciiSpec.Insert(VIEW_SOURCE ":", 0);
 
-    // We can't swap() from an nsRefPtr<nsSimpleNestedURI> to an nsIURI**,
+    // We can't swap() from an RefPtr<nsSimpleNestedURI> to an nsIURI**,
     // sadly.
     nsSimpleNestedURI* ourURI = new nsSimpleNestedURI(innerURI);
     nsCOMPtr<nsIURI> uri = ourURI;

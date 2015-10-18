@@ -59,7 +59,7 @@ AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
   if (aSample->mKeyframe) {
-    nsRefPtr<MediaByteBuffer> annexB =
+    RefPtr<MediaByteBuffer> annexB =
       ConvertExtraDataToAnnexB(aSample->mExtraData);
     if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
       return false;
@@ -87,7 +87,7 @@ AnnexB::ConvertExtraDataToAnnexB(const mozilla::MediaByteBuffer* aExtraData)
   // [5] | unused             | numSps                           |
   //     +------+------+------+------+------+------+------+------+
 
-  nsRefPtr<mozilla::MediaByteBuffer> annexB = new mozilla::MediaByteBuffer;
+  RefPtr<mozilla::MediaByteBuffer> annexB = new mozilla::MediaByteBuffer;
 
   ByteReader reader(*aExtraData);
   const uint8_t* ptr = reader.Read(5);
@@ -236,7 +236,7 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
 already_AddRefed<mozilla::MediaByteBuffer>
 AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
 {
-  nsRefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
+  RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
   if (IsAVCC(aSample) && HasSPS(aSample->mExtraData)) {
     // We already have an explicit extradata, re-use it.
     extradata = aSample->mExtraData;

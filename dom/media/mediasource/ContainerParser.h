@@ -7,7 +7,7 @@
 #ifndef MOZILLA_CONTAINERPARSER_H_
 #define MOZILLA_CONTAINERPARSER_H_
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "MediaResource.h"
 
@@ -68,8 +68,8 @@ public:
   static ContainerParser* CreateForMIMEType(const nsACString& aType);
 
 protected:
-  nsRefPtr<MediaByteBuffer> mInitData;
-  nsRefPtr<SourceBufferResource> mResource;
+  RefPtr<MediaByteBuffer> mInitData;
+  RefPtr<SourceBufferResource> mResource;
   bool mHasInitData;
   MediaByteRange mCompleteInitSegmentRange;
   MediaByteRange mCompleteMediaHeaderRange;

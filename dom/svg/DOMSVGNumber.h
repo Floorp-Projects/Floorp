@@ -162,7 +162,7 @@ private:
   bool IndexIsValid();
 #endif
 
-  nsRefPtr<DOMSVGNumberList> mList;
+  RefPtr<DOMSVGNumberList> mList;
   nsCOMPtr<nsISupports> mParent;
 
   // Bounds for the following are checked in the ctor, so be sure to update

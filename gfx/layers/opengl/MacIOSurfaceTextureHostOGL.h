@@ -50,8 +50,8 @@ public:
   gl::GLContext* gl() const;
 
 protected:
-  nsRefPtr<CompositorOGL> mCompositor;
-  nsRefPtr<MacIOSurface> mSurface;
+  RefPtr<CompositorOGL> mCompositor;
+  RefPtr<MacIOSurface> mSurface;
 };
 
 /**
@@ -97,9 +97,9 @@ public:
 protected:
   GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);
 
-  nsRefPtr<CompositorOGL> mCompositor;
-  nsRefPtr<GLTextureSource> mTextureSource;
-  nsRefPtr<MacIOSurface> mSurface;
+  RefPtr<CompositorOGL> mCompositor;
+  RefPtr<GLTextureSource> mTextureSource;
+  RefPtr<MacIOSurface> mSurface;
 };
 
 } // namespace layers

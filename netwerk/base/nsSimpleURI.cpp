@@ -428,7 +428,7 @@ nsSimpleURI::EqualsInternal(nsIURI* other,
     NS_ENSURE_ARG_POINTER(other);
     NS_PRECONDITION(result, "null pointer");
 
-    nsRefPtr<nsSimpleURI> otherUri;
+    RefPtr<nsSimpleURI> otherUri;
     nsresult rv = other->QueryInterface(kThisSimpleURIImplementationCID,
                                         getter_AddRefs(otherUri));
     if (NS_FAILED(rv)) {
@@ -494,7 +494,7 @@ nsresult
 nsSimpleURI::CloneInternal(nsSimpleURI::RefHandlingEnum refHandlingMode,
                            nsIURI** result)
 {
-    nsRefPtr<nsSimpleURI> url = StartClone(refHandlingMode);
+    RefPtr<nsSimpleURI> url = StartClone(refHandlingMode);
     if (!url)
         return NS_ERROR_OUT_OF_MEMORY;
 

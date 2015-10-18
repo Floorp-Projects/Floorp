@@ -123,7 +123,7 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed(const nsAString& a
   data->mStatus = Failed;
   UpdateTrialCreateState(aKeySystem, Failed);
 
-  for (nsRefPtr<AbstractPromiseLike>& promise: data->mPending) {
+  for (RefPtr<AbstractPromiseLike>& promise: data->mPending) {
     promise->Reject(NS_ERROR_DOM_NOT_SUPPORTED_ERR, aReason);
   }
   data->mPending.Clear();
@@ -145,7 +145,7 @@ GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderSucceeded(const nsAString
   data->mStatus = Succeeded;
   UpdateTrialCreateState(aKeySystem, Succeeded);
 
-  for (nsRefPtr<AbstractPromiseLike>& promise : data->mPending) {
+  for (RefPtr<AbstractPromiseLike>& promise : data->mPending) {
     promise->Resolve();
   }
   data->mPending.Clear();
@@ -166,7 +166,7 @@ TestGMPVideoDecoder::Start()
   if (!thread) {
     return NS_ERROR_FAILURE;
   }
-  nsRefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &TestGMPVideoDecoder::CreateGMPVideoDecoder));
+  RefPtr<nsIRunnable> task(NS_NewRunnableMethod(this, &TestGMPVideoDecoder::CreateGMPVideoDecoder));
   return thread->Dispatch(task, NS_DISPATCH_NORMAL);
 }
 
@@ -285,7 +285,7 @@ TestGMPVideoDecoder::ReportFailure(const nsACString& aReason)
     mGMP = nullptr;
   }
 
-  nsRefPtr<nsIRunnable> task;
+  RefPtr<nsIRunnable> task;
   task = NS_NewRunnableMethodWithArgs<nsString, nsCString>(mInstance,
     &GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderFailed,
     mKeySystem,
@@ -303,7 +303,7 @@ TestGMPVideoDecoder::ReportSuccess()
     mGMP = nullptr;
   }
 
-  nsRefPtr<nsIRunnable> task;
+  RefPtr<nsIRunnable> task;
   task = NS_NewRunnableMethodWithArg<nsString>(mInstance,
     &GMPVideoDecoderTrialCreator::TrialCreateGMPVideoDecoderSucceeded,
     mKeySystem);
@@ -411,7 +411,7 @@ TestGMPVideoDecoder::Callback::Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aH
     return;
   }
 
-  nsRefPtr<nsIRunnable> task;
+  RefPtr<nsIRunnable> task;
   task = NS_NewRunnableMethodWithArgs<GMPVideoDecoderProxy*, GMPVideoHost*>(mInstance,
     &TestGMPVideoDecoder::ActorCreated,
     aGMP, aHost);
@@ -426,7 +426,7 @@ TestGMPVideoDecoder::ActorCreated(GMPVideoDecoderProxy* aGMP,
   MOZ_ASSERT(aHost && aGMP);
 
   // Add crash handler.
-  nsRefPtr<gmp::GeckoMediaPluginService> service =
+  RefPtr<gmp::GeckoMediaPluginService> service =
     gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
   service->AddPluginCrashedEventTarget(aGMP->GetPluginId(), mWindow);
 
@@ -437,7 +437,7 @@ TestGMPVideoDecoder::ActorCreated(GMPVideoDecoderProxy* aGMP,
     return;
   }
 
-  nsRefPtr<nsIRunnable> task;
+  RefPtr<nsIRunnable> task;
   task = NS_NewRunnableMethodWithArgs<GMPVideoDecoderProxy*, GMPVideoHost*>(this,
     &TestGMPVideoDecoder::InitGMPDone,
     aGMP, aHost);

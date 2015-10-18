@@ -47,16 +47,16 @@ D3D11ShareHandleImage::GetTextureClient(CompositableClient* aClient)
 already_AddRefed<gfx::SourceSurface>
 D3D11ShareHandleImage::GetAsSourceSurface()
 {
-  nsRefPtr<ID3D11Texture2D> texture = GetTexture();
+  RefPtr<ID3D11Texture2D> texture = GetTexture();
   if (!texture) {
     NS_WARNING("Cannot readback from shared texture because no texture is available.");
     return nullptr;
   }
 
-  nsRefPtr<ID3D11Device> device;
+  RefPtr<ID3D11Device> device;
   texture->GetDevice(getter_AddRefs(device));
 
-  nsRefPtr<IDXGIKeyedMutex> keyedMutex;
+  RefPtr<IDXGIKeyedMutex> keyedMutex;
   if (FAILED(texture->QueryInterface(static_cast<IDXGIKeyedMutex**>(getter_AddRefs(keyedMutex))))) {
     NS_WARNING("Failed to QueryInterface for IDXGIKeyedMutex, strange.");
     return nullptr;
@@ -77,7 +77,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   softDesc.MipLevels = 1;
   softDesc.Usage = D3D11_USAGE_STAGING;
 
-  nsRefPtr<ID3D11Texture2D> softTexture;
+  RefPtr<ID3D11Texture2D> softTexture;
   HRESULT hr = device->CreateTexture2D(&softDesc,
                                        NULL,
                                        static_cast<ID3D11Texture2D**>(getter_AddRefs(softTexture)));
@@ -88,7 +88,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  nsRefPtr<ID3D11DeviceContext> context;
+  RefPtr<ID3D11DeviceContext> context;
   device->GetImmediateContext(getter_AddRefs(context));
   if (!context) {
     keyedMutex->ReleaseSync(0);
@@ -98,7 +98,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   context->CopyResource(softTexture, texture);
   keyedMutex->ReleaseSync(0);
 
-  nsRefPtr<gfx::DataSourceSurface> surface =
+  RefPtr<gfx::DataSourceSurface> surface =
     gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
@@ -151,7 +151,7 @@ already_AddRefed<TextureClientD3D11>
 D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                                              const gfx::IntSize& aSize)
 {
-  nsRefPtr<TextureClient> textureClient =
+  RefPtr<TextureClient> textureClient =
     CreateOrRecycle(aFormat,
                     aSize,
                     BackendSelector::Content,
@@ -160,7 +160,7 @@ D3D11RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  nsRefPtr<TextureClientD3D11> textureD3D11 = static_cast<TextureClientD3D11*>(textureClient.get());
+  RefPtr<TextureClientD3D11> textureD3D11 = static_cast<TextureClientD3D11*>(textureClient.get());
   return textureD3D11.forget();
 }
 

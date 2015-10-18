@@ -27,7 +27,7 @@ MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
 already_AddRefed<SourceSurface>
 MacIOSurfaceImage::GetAsSourceSurface()
 {
-  nsRefPtr<DataSourceSurface> dataSurface;
+  RefPtr<DataSourceSurface> dataSurface;
   mSurface->Lock();
   size_t bytesPerRow = mSurface->GetBytesPerRow();
   size_t ioWidth = mSurface->GetDevicePixelWidth();

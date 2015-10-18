@@ -389,7 +389,7 @@ static void DrawDigits(unsigned int aValue,
     unsigned int digit = aValue % (divisor * 10) / divisor;
     divisor /= 10;
 
-    nsRefPtr<TexturedEffect> texturedEffect = static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
+    RefPtr<TexturedEffect> texturedEffect = static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
     texturedEffect->mTextureCoords = Rect(float(digit * FontWidth) / textureWidth, 0, FontWidth / textureWidth, 1.0f);
 
     Rect drawRect = Rect(aOffsetX + n * FontWidth, aOffsetY, FontWidth, FontHeight);
@@ -427,7 +427,7 @@ void FPSState::DrawFPS(TimeStamp aNow,
     }
 
    int bytesPerPixel = 4;
-    nsRefPtr<DataSourceSurface> fpsSurface = Factory::CreateWrappingDataSourceSurface(
+    RefPtr<DataSourceSurface> fpsSurface = Factory::CreateWrappingDataSourceSurface(
       reinterpret_cast<uint8_t*>(buf), w * bytesPerPixel, IntSize(w, h), SurfaceFormat::B8G8R8A8);
     mFPSTextureSource = aCompositor->CreateDataTextureSource();
     mFPSTextureSource->Update(fpsSurface);

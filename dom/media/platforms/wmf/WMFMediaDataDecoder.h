@@ -10,7 +10,7 @@
 
 #include "WMF.h"
 #include "MFTDecoder.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
@@ -34,7 +34,7 @@ public:
   // than MF_E_TRANSFORM_NEED_MORE_INPUT, an error will be reported to the
   // MP4Reader.
   virtual HRESULT Output(int64_t aStreamOffset,
-                         nsRefPtr<MediaData>& aOutput) = 0;
+                         RefPtr<MediaData>& aOutput) = 0;
 
   void Flush() { mDecoder->Flush(); }
 
@@ -54,7 +54,7 @@ public:
 
 protected:
   // IMFTransform wrapper that performs the decoding.
-  nsRefPtr<MFTDecoder> mDecoder;
+  RefPtr<MFTDecoder> mDecoder;
 };
 
 // Decodes audio and video using Windows Media Foundation. Samples are decoded
@@ -69,7 +69,7 @@ public:
                       MediaDataDecoderCallback* aCallback);
   ~WMFMediaDataDecoder();
 
-  nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
+  RefPtr<MediaDataDecoder::InitPromise> Init() override;
 
   nsresult Input(MediaRawData* aSample);
 
@@ -101,7 +101,7 @@ private:
 
   void ProcessShutdown();
 
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
   nsAutoPtr<MFTManager> mMFTManager;

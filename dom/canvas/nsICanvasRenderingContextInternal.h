@@ -13,7 +13,7 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
 { 0xb84f2fed, 0x9d4b, 0x430b, \
@@ -172,9 +172,9 @@ public:
   NS_IMETHOD SetIsIPC(bool isIPC) = 0;
 
 protected:
-  nsRefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
-  nsRefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
-  nsRefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
+  RefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
+  RefPtr<nsRefreshDriver> mRefreshDriver;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

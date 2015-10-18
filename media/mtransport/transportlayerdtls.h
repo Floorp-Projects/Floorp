@@ -14,7 +14,7 @@
 
 #include "sigslot.h"
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Scoped.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
@@ -68,7 +68,7 @@ class TransportLayerDtls final : public TransportLayer {
   void SetRole(Role role) { role_ = role;}
   Role role() { return role_; }
 
-  void SetIdentity(const nsRefPtr<DtlsIdentity>& identity) {
+  void SetIdentity(const RefPtr<DtlsIdentity>& identity) {
     identity_ = identity;
   }
   nsresult SetAlpn(const std::set<std::string>& allowedAlpn,
@@ -158,10 +158,10 @@ class TransportLayerDtls final : public TransportLayer {
 
   static void TimerCallback(nsITimer *timer, void *arg);
 
-  SECStatus CheckDigest(const nsRefPtr<VerificationDigest>& digest,
+  SECStatus CheckDigest(const RefPtr<VerificationDigest>& digest,
                         CERTCertificate *cert);
 
-  nsRefPtr<DtlsIdentity> identity_;
+  RefPtr<DtlsIdentity> identity_;
   // What ALPN identifiers are permitted.
   std::set<std::string> alpn_allowed_;
   // What ALPN identifier is used if ALPN is not supported.
@@ -173,7 +173,7 @@ class TransportLayerDtls final : public TransportLayer {
 
   Role role_;
   Verification verification_mode_;
-  std::vector<nsRefPtr<VerificationDigest> > digests_;
+  std::vector<RefPtr<VerificationDigest> > digests_;
 
   // Must delete nspr_io_adapter after ssl_fd_ b/c ssl_fd_ causes an alert
   // (ssl_fd_ contains an un-owning pointer to nspr_io_adapter_)

@@ -1374,7 +1374,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   }
 
   // Set up listener which will start the original channel
-  nsRefPtr<nsCORSPreflightListener> preflightListener =
+  RefPtr<nsCORSPreflightListener> preflightListener =
     new nsCORSPreflightListener(aPrincipal, aCallback, aWithCredentials,
                                 method, preflightHeaders);
 
@@ -1386,7 +1386,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
     rv = preflightChannel->AsyncOpen2(preflightListener);
   }
   else {
-    nsRefPtr<nsCORSListenerProxy> corsListener =
+    RefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(preflightListener, aPrincipal,
                               aWithCredentials);
     rv = corsListener->Init(preflightChannel, DataURIHandling::Disallow);

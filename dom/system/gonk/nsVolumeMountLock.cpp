@@ -35,7 +35,7 @@ nsVolumeMountLock::Create(const nsAString& aVolumeName)
 {
   DBG("nsVolumeMountLock::Create called");
 
-  nsRefPtr<nsVolumeMountLock> mountLock = new nsVolumeMountLock(aVolumeName);
+  RefPtr<nsVolumeMountLock> mountLock = new nsVolumeMountLock(aVolumeName);
   nsresult rv = mountLock->Init();
   NS_ENSURE_SUCCESS(rv, nullptr);
 
@@ -149,7 +149,7 @@ NS_IMETHODIMP nsVolumeMountLock::Observe(nsISupports* aSubject, const char* aTop
 nsresult
 nsVolumeMountLock::Lock(nsIVolume* aVolume)
 {
-  nsRefPtr<power::PowerManagerService> pmService =
+  RefPtr<power::PowerManagerService> pmService =
     power::PowerManagerService::GetInstance();
   NS_ENSURE_TRUE(pmService, NS_ERROR_FAILURE);
 

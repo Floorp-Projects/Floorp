@@ -106,7 +106,7 @@ private:
   static nsresult ParseLine(nsDependentCSubstring& aLine, nsCString& aKeyOut,
                             Entry& aEntryOut);
 
-  nsRefPtr<DataStorage> mDataStorage;
+  RefPtr<DataStorage> mDataStorage;
 };
 
 DataStorage::Reader::~Reader()
@@ -321,7 +321,7 @@ DataStorage::AsyncReadData(bool& aHaveProfileDir,
   // Allocate a Reader so that even if it isn't dispatched,
   // the data-storage-ready notification will be fired and Get
   // will be able to proceed (this happens in its destructor).
-  nsRefPtr<Reader> job(new Reader(this));
+  RefPtr<Reader> job(new Reader(this));
   nsresult rv;
   // If we don't have a profile directory, this will fail.
   // That's okay - it just means there is no persistent state.
@@ -518,7 +518,7 @@ private:
   NS_DECL_NSIRUNNABLE
 
   nsCString mData;
-  nsRefPtr<DataStorage> mDataStorage;
+  RefPtr<DataStorage> mDataStorage;
 };
 
 NS_IMETHODIMP
@@ -600,7 +600,7 @@ DataStorage::AsyncWriteData(const MutexAutoLock& /*aProofOfLock*/)
   nsCString output;
   mPersistentDataTable.EnumerateRead(WriteDataCallback, (void*)&output);
 
-  nsRefPtr<Writer> job(new Writer(output, this));
+  RefPtr<Writer> job(new Writer(output, this));
   nsresult rv = mWorkerThread->Dispatch(job, NS_DISPATCH_NORMAL);
   mPendingWrite = false;
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -633,7 +633,7 @@ DataStorage::Clear()
 void
 DataStorage::TimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsRefPtr<DataStorage> aDataStorage = (DataStorage*)aClosure;
+  RefPtr<DataStorage> aDataStorage = (DataStorage*)aClosure;
   MutexAutoLock lock(aDataStorage->mMutex);
   unused << aDataStorage->AsyncWriteData(lock);
 }

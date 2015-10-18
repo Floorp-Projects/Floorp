@@ -49,7 +49,7 @@ StreamControl::CloseReadStreams(const nsID& aId)
 
   ReadStreamList::ForwardIterator iter(mReadStreamList);
   while (iter.HasMore()) {
-    nsRefPtr<ReadStream::Controllable> stream = iter.GetNext();
+    RefPtr<ReadStream::Controllable> stream = iter.GetNext();
     if (stream->MatchId(aId)) {
       stream->CloseStream();
       closedCount += 1;
@@ -77,7 +77,7 @@ StreamControl::CloseAllReadStreamsWithoutReporting()
 
   ReadStreamList::ForwardIterator iter(mReadStreamList);
   while (iter.HasMore()) {
-    nsRefPtr<ReadStream::Controllable> stream = iter.GetNext();
+    RefPtr<ReadStream::Controllable> stream = iter.GetNext();
     // Note, we cannot trigger IPC traffic here.  So use
     // CloseStreamWithoutReporting().
     stream->CloseStreamWithoutReporting();

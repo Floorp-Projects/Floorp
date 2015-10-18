@@ -142,7 +142,7 @@ public:
 private:
   ~NoteClosedRunnable() { }
 
-  nsRefPtr<ReadStream::Inner> mStream;
+  RefPtr<ReadStream::Inner> mStream;
 };
 
 // ----------------------------------------------------------------------------
@@ -177,7 +177,7 @@ public:
 private:
   ~ForgetRunnable() { }
 
-  nsRefPtr<ReadStream::Inner> mStream;
+  RefPtr<ReadStream::Inner> mStream;
 };
 
 // ----------------------------------------------------------------------------
@@ -464,8 +464,8 @@ ReadStream::Create(const CacheReadStream& aReadStream)
   MOZ_ASSERT(!asyncStream);
 #endif
 
-  nsRefPtr<Inner> inner = new Inner(control, aReadStream.id(), stream);
-  nsRefPtr<ReadStream> ref = new ReadStream(inner);
+  RefPtr<Inner> inner = new Inner(control, aReadStream.id(), stream);
+  RefPtr<ReadStream> ref = new ReadStream(inner);
   return ref.forget();
 }
 
@@ -476,8 +476,8 @@ ReadStream::Create(PCacheStreamControlParent* aControl, const nsID& aId,
 {
   MOZ_ASSERT(aControl);
   auto actor = static_cast<CacheStreamControlParent*>(aControl);
-  nsRefPtr<Inner> inner = new Inner(actor, aId, aStream);
-  nsRefPtr<ReadStream> ref = new ReadStream(inner);
+  RefPtr<Inner> inner = new Inner(actor, aId, aStream);
+  RefPtr<ReadStream> ref = new ReadStream(inner);
   return ref.forget();
 }
 

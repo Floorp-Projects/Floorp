@@ -127,7 +127,7 @@ protected:
   }
 
   // Binding Implementation object that we're iterating over.
-  nsRefPtr<T> mIterableObj;
+  RefPtr<T> mIterableObj;
 };
 
 template<typename T>

@@ -163,7 +163,7 @@ test_step_locked_does_not_block_main_thread()
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  nsRefPtr<DatabaseLocker> locker(new DatabaseLocker("SELECT * FROM test"));
+  RefPtr<DatabaseLocker> locker(new DatabaseLocker("SELECT * FROM test"));
   do_check_true(locker);
   mozilla::ReentrantMonitorAutoEnter lock(locker->monitor);
   locker->RunInBackground();
@@ -191,7 +191,7 @@ test_drop_index_does_not_loop()
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  nsRefPtr<DatabaseTester> tester =
+  RefPtr<DatabaseTester> tester =
     new DatabaseTester(db, "DROP INDEX unique_data");
   do_check_true(tester);
   mozilla::ReentrantMonitorAutoEnter lock(tester->monitor);
@@ -221,7 +221,7 @@ test_drop_table_does_not_loop()
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 
-  nsRefPtr<DatabaseTester> tester(new DatabaseTester(db, "DROP TABLE test"));
+  RefPtr<DatabaseTester> tester(new DatabaseTester(db, "DROP TABLE test"));
   do_check_true(tester);
   mozilla::ReentrantMonitorAutoEnter lock(tester->monitor);
   tester->RunInBackground();

@@ -51,7 +51,7 @@ private:
                                                     int32_t aIndex) const;
   nsAutoPtr<StageFrightPrivate> mPrivate;
   CryptoFile mCrypto;
-  nsRefPtr<Stream> mSource;
+  RefPtr<Stream> mSource;
 };
 
 } // namespace mp4_demuxer

@@ -727,7 +727,7 @@ nsFtpState::S_user() {
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
 
-            nsRefPtr<nsAuthInformationHolder> info =
+            RefPtr<nsAuthInformationHolder> info =
                 new nsAuthInformationHolder(nsIAuthInformation::AUTH_HOST,
                                             EmptyString(),
                                             EmptyCString());
@@ -816,7 +816,7 @@ nsFtpState::S_pass() {
             if (!prompter)
                 return NS_ERROR_NOT_INITIALIZED;
 
-            nsRefPtr<nsAuthInformationHolder> info =
+            RefPtr<nsAuthInformationHolder> info =
                 new nsAuthInformationHolder(nsIAuthInformation::AUTH_HOST |
                                             nsIAuthInformation::ONLY_PASSWORD,
                                             EmptyString(),
@@ -2123,7 +2123,7 @@ nsFtpState::SaveNetworkStats(bool enforce)
 
     // Create the event to save the network statistics.
     // the event is then dispathed to the main thread.
-    nsRefPtr<nsRunnable> event =
+    RefPtr<nsRunnable> event =
         new SaveNetworkStatsEvent(appId, isInBrowser, mActiveNetworkInfo,
                                   mCountRecv, 0, false);
     NS_DispatchToMainThread(event);

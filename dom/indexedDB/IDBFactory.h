@@ -65,7 +65,7 @@ class IDBFactory final
 
   // This will only be set if the factory belongs to a window in a child
   // process.
-  nsRefPtr<TabChild> mTabChild;
+  RefPtr<TabChild> mTabChild;
 
   nsTArray<nsAutoPtr<PendingRequestInfo>> mPendingRequests;
 

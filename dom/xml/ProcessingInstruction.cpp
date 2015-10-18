@@ -26,18 +26,18 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
   MOZ_ASSERT(target);
 
   if (target == nsGkAtoms::xml_stylesheet) {
-    nsRefPtr<XMLStylesheetProcessingInstruction> pi =
+    RefPtr<XMLStylesheetProcessingInstruction> pi =
       new XMLStylesheetProcessingInstruction(aNodeInfoManager, aData);
     return pi.forget();
   }
 
-  nsRefPtr<mozilla::dom::NodeInfo> ni;
+  RefPtr<mozilla::dom::NodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                      nullptr, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
                                      target);
 
-  nsRefPtr<ProcessingInstruction> instance =
+  RefPtr<ProcessingInstruction> instance =
     new ProcessingInstruction(ni.forget(), aData);
 
   return instance.forget();
@@ -101,7 +101,7 @@ ProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
-  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   return new ProcessingInstruction(ni.forget(), data);
 }
 

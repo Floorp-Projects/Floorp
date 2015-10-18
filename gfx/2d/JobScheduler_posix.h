@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/RefCounted.h"

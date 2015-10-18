@@ -197,7 +197,7 @@ NS_GetContentList(nsINode* aRootNode,
 {
   NS_ASSERTION(aRootNode, "content list has to have a root");
 
-  nsRefPtr<nsContentList> list;
+  RefPtr<nsContentList> list;
   nsContentListKey hashKey(aRootNode, aMatchNameSpaceId, aTagname,
                            aRootNode->OwnerDoc()->IsHTMLDocument());
   uint32_t recentlyUsedCacheIndex = RecentlyUsedCacheIndex(hashKey);
@@ -308,7 +308,7 @@ GetFuncStringContentList(nsINode* aRootNode,
 {
   NS_ASSERTION(aRootNode, "content list has to have a root");
 
-  nsRefPtr<nsCacheableFuncStringContentList> list;
+  RefPtr<nsCacheableFuncStringContentList> list;
 
   static const PLDHashTableOps hash_table_ops =
   {

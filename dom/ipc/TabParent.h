@@ -15,7 +15,7 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -450,7 +450,7 @@ public:
 
     void AddInitialDnDDataTo(DataTransfer* aDataTransfer);
 
-    void TakeDragVisualization(nsRefPtr<mozilla::gfx::SourceSurface>& aSurface,
+    void TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
                                int32_t& aDragAreaX, int32_t& aDragAreaY);
     layout::RenderFrameParent* GetRenderFrame();
 
@@ -515,7 +515,7 @@ protected:
 private:
     void DestroyInternal();
     already_AddRefed<nsFrameLoader> GetFrameLoader(bool aUseCachedFrameLoaderAfterDestroy = false) const;
-    nsRefPtr<nsIContentParent> mManager;
+    RefPtr<nsIContentParent> mManager;
     void TryCacheDPIAndScale();
 
     nsresult UpdatePosition();
@@ -556,7 +556,7 @@ private:
     {
       nsCString mFlavor;
       nsString mStringData;
-      nsRefPtr<mozilla::dom::BlobImpl> mBlobData;
+      RefPtr<mozilla::dom::BlobImpl> mBlobData;
       enum DataType
       {
         eString,
@@ -566,7 +566,7 @@ private:
     };
     nsTArray<nsTArray<DataTransferItem>> mInitialDataTransferItems;
 
-    nsRefPtr<gfx::DataSourceSurface> mDnDVisualization;
+    RefPtr<gfx::DataSourceSurface> mDnDVisualization;
     int32_t mDragAreaX;
     int32_t mDragAreaY;
 
@@ -579,7 +579,7 @@ private:
     // We keep a strong reference to the frameloader after we've sent the
     // Destroy message and before we've received __delete__. This allows us to
     // dispatch message manager messages during this time.
-    nsRefPtr<nsFrameLoader> mFrameLoader;
+    RefPtr<nsFrameLoader> mFrameLoader;
 
     TabId mTabId;
 
@@ -636,7 +636,7 @@ private:
     // cursor.  This happens whenever the cursor is in the tab's region.
     bool mTabSetsCursor;
 
-    nsRefPtr<nsIPresShell> mPresShellWithRefreshListener;
+    RefPtr<nsIPresShell> mPresShellWithRefreshListener;
 
     bool mHasContentOpener;
 

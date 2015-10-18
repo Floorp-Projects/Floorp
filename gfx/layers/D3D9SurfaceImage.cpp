@@ -31,13 +31,13 @@ D3D9SurfaceImage::SetData(const Data& aData)
 {
   NS_ENSURE_TRUE(aData.mSurface, E_POINTER);
   HRESULT hr;
-  nsRefPtr<IDirect3DSurface9> surface = aData.mSurface;
+  RefPtr<IDirect3DSurface9> surface = aData.mSurface;
 
-  nsRefPtr<IDirect3DDevice9> device;
+  RefPtr<IDirect3DDevice9> device;
   hr = surface->GetDevice(getter_AddRefs(device));
   NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
 
-  nsRefPtr<IDirect3D9> d3d9;
+  RefPtr<IDirect3D9> d3d9;
   hr = device->GetDirect3D(getter_AddRefs(d3d9));
   NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
 
@@ -55,7 +55,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // to a sharable texture to that it's accessible to the layer manager's
   // device.
   const gfx::IntRect& region = aData.mRegion;
-  nsRefPtr<SharedTextureClientD3D9> textureClient =
+  RefPtr<SharedTextureClientD3D9> textureClient =
     aData.mAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8X8,
                                             region.Size());
   if (!textureClient) {
@@ -63,7 +63,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
   }
 
   // Copy the image onto the texture, preforming YUV -> RGB conversion if necessary.
-  nsRefPtr<IDirect3DSurface9> textureSurface = textureClient->GetD3D9Surface();
+  RefPtr<IDirect3DSurface9> textureSurface = textureClient->GetD3D9Surface();
   if (!textureSurface) {
     return E_FAIL;
   }
@@ -75,7 +75,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // Flush the draw command now, so that by the time we come to draw this
   // image, we're less likely to need to wait for the draw operation to
   // complete.
-  nsRefPtr<IDirect3DQuery9> query;
+  RefPtr<IDirect3DQuery9> query;
   hr = device->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   hr = query->Issue(D3DISSUE_END);
@@ -99,7 +99,7 @@ D3D9SurfaceImage::IsValid()
 void
 D3D9SurfaceImage::EnsureSynchronized()
 {
-  nsRefPtr<IDirect3DQuery9> query = mQuery;
+  RefPtr<IDirect3DQuery9> query = mQuery;
   if (!query) {
     // Not setup, or already synchronized.
     return;
@@ -147,7 +147,7 @@ D3D9SurfaceImage::GetAsSourceSurface()
   NS_ENSURE_TRUE(mTextureClient, nullptr);
 
   HRESULT hr;
-  nsRefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
+  RefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateDataSourceSurface(mSize, gfx::SurfaceFormat::B8G8R8X8);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
@@ -157,17 +157,17 @@ D3D9SurfaceImage::GetAsSourceSurface()
 
   // Readback the texture from GPU memory into system memory, so that
   // we can copy it into the Cairo image. This is expensive.
-  nsRefPtr<IDirect3DSurface9> textureSurface = mTextureClient->GetD3D9Surface();
+  RefPtr<IDirect3DSurface9> textureSurface = mTextureClient->GetD3D9Surface();
   if (!textureSurface) {
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DDevice9> device = mTextureClient->GetD3D9Device();
+  RefPtr<IDirect3DDevice9> device = mTextureClient->GetD3D9Device();
   if (!device) {
     return nullptr;
   }
 
-  nsRefPtr<IDirect3DSurface9> systemMemorySurface;
+  RefPtr<IDirect3DSurface9> systemMemorySurface;
   hr = device->CreateOffscreenPlainSurface(mSize.width,
                                            mSize.height,
                                            D3DFMT_X8R8G8B8,
@@ -221,7 +221,7 @@ already_AddRefed<SharedTextureClientD3D9>
 D3D9RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
                                             const gfx::IntSize& aSize)
 {
-  nsRefPtr<TextureClient> textureClient =
+  RefPtr<TextureClient> textureClient =
     CreateOrRecycle(aFormat,
                     aSize,
                     BackendSelector::Content,
@@ -230,7 +230,7 @@ D3D9RecycleAllocator::CreateOrRecycleClient(gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  nsRefPtr<SharedTextureClientD3D9> textureD3D9 = static_cast<SharedTextureClientD3D9*>(textureClient.get());
+  RefPtr<SharedTextureClientD3D9> textureD3D9 = static_cast<SharedTextureClientD3D9*>(textureClient.get());
   return textureD3D9.forget();
 }
 

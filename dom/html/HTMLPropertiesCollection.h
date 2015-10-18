@@ -45,7 +45,7 @@ protected:
 
   virtual void EnsureFresh() override;
 
-  nsRefPtr<HTMLPropertiesCollection> mCollection;
+  RefPtr<HTMLPropertiesCollection> mCollection;
 };
 
 class HTMLPropertiesCollection final : public nsIHTMLCollection,
@@ -131,16 +131,16 @@ protected:
   }
 
   // the items that make up this collection
-  nsTArray<nsRefPtr<nsGenericHTMLElement> > mProperties;
+  nsTArray<RefPtr<nsGenericHTMLElement> > mProperties;
 
   // the itemprop attribute of the properties
-  nsRefPtr<PropertyStringList> mNames;
+  RefPtr<PropertyStringList> mNames;
 
   // The cached PropertyNodeLists that are NamedItems of this collection
   nsRefPtrHashtable<nsStringHashKey, PropertyNodeList> mNamedItemEntries;
 
   // The element this collection is rooted at
-  nsRefPtr<nsGenericHTMLElement> mRoot;
+  RefPtr<nsGenericHTMLElement> mRoot;
 
   // The document mRoot is in, if any
   nsCOMPtr<nsIDocument> mDoc;
@@ -205,13 +205,13 @@ protected:
   nsCOMPtr<nsIDocument> mDoc;
 
   // the collection that this list is a named item of
-  nsRefPtr<HTMLPropertiesCollection> mCollection;
+  RefPtr<HTMLPropertiesCollection> mCollection;
 
   // the node this list is rooted at
   nsCOMPtr<nsINode> mParent;
 
   // the properties that make up this list
-  nsTArray<nsRefPtr<nsGenericHTMLElement> > mElements;
+  nsTArray<RefPtr<nsGenericHTMLElement> > mElements;
 
   // True if there have been DOM modifications since the last EnsureFresh call. 
   bool mIsDirty;

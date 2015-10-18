@@ -146,8 +146,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   nsIntRegion tileDirtyRegion = paintRegion.MovedBy(-mTilingOrigin);
 
   nsIntRegion extraPainted;
-  nsRefPtr<TextureClient> backBufferOnWhite;
-  nsRefPtr<TextureClient> backBuffer =
+  RefPtr<TextureClient> backBufferOnWhite;
+  RefPtr<TextureClient> backBuffer =
     mTile.GetBackBuffer(tileDirtyRegion,
                         content, mode,
                         extraPainted,
@@ -164,8 +164,8 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     return;
   }
 
-  nsRefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
-  nsRefPtr<DrawTarget> dtOnWhite;
+  RefPtr<DrawTarget> dt = backBuffer->BorrowDrawTarget();
+  RefPtr<DrawTarget> dtOnWhite;
   if (backBufferOnWhite) {
     dtOnWhite = backBufferOnWhite->BorrowDrawTarget();
   }
@@ -191,7 +191,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   }
 
   {
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     ctx->SetMatrix(ctx->CurrentMatrix().Translate(-mTilingOrigin.x, -mTilingOrigin.y));
 
     aCallback(mPaintedLayer, ctx, paintRegion, paintRegion, DrawRegionClip::DRAW, nsIntRegion(), aCallbackData);

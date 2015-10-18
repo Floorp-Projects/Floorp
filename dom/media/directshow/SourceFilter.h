@@ -14,7 +14,7 @@
 #include "nsDeque.h"
 #include "nsAutoPtr.h"
 #include "DirectShowUtils.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 

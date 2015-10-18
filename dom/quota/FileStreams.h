@@ -40,7 +40,7 @@ protected:
   PersistenceType mPersistenceType;
   nsCString mGroup;
   nsCString mOrigin;
-  nsRefPtr<QuotaObject> mQuotaObject;
+  RefPtr<QuotaObject> mQuotaObject;
 };
 
 template <class FileStreamBase>

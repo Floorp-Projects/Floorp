@@ -199,15 +199,15 @@ private:
 
   // A Promise that is fulfilled once the font represented by this FontFace
   // is loaded, and is rejected if the load fails.
-  nsRefPtr<mozilla::dom::Promise> mLoaded;
+  RefPtr<mozilla::dom::Promise> mLoaded;
 
   // The @font-face rule this FontFace object is reflecting, if it is a
   // rule backed FontFace.
-  nsRefPtr<nsCSSFontFaceRule> mRule;
+  RefPtr<nsCSSFontFaceRule> mRule;
 
   // The FontFace object's user font entry.  This is initially null, but is set
   // during FontFaceSet::UpdateRules and when a FontFace is explicitly loaded.
-  nsRefPtr<Entry> mUserFontEntry;
+  RefPtr<Entry> mUserFontEntry;
 
   // The current load status of the font represented by this FontFace.
   // Note that we can't just reflect the value of the gfxUserFontEntry's
@@ -237,11 +237,11 @@ private:
 
   // The primary FontFaceSet this FontFace is associated with,
   // regardless of whether it is currently "in" the set.
-  nsRefPtr<FontFaceSet> mFontFaceSet;
+  RefPtr<FontFaceSet> mFontFaceSet;
 
   // Other FontFaceSets (apart from mFontFaceSet) that this FontFace
   // appears in.
-  nsTArray<nsRefPtr<FontFaceSet>> mOtherFontFaceSets;
+  nsTArray<RefPtr<FontFaceSet>> mOtherFontFaceSets;
 
   // Whether this FontFace appears in mFontFaceSet.
   bool mInFontFaceSet;

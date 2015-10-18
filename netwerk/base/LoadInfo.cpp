@@ -135,7 +135,7 @@ NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
 already_AddRefed<nsILoadInfo>
 LoadInfo::Clone() const
 {
-  nsRefPtr<LoadInfo> copy(new LoadInfo(*this));
+  RefPtr<LoadInfo> copy(new LoadInfo(*this));
   return copy.forget();
 }
 

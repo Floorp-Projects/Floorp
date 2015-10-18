@@ -163,7 +163,7 @@ nsDOMWindowUtils::GetPresContext()
   nsIDocShell *docShell = window->GetDocShell();
   if (!docShell)
     return nullptr;
-  nsRefPtr<nsPresContext> presContext;
+  RefPtr<nsPresContext> presContext;
   docShell->GetPresContext(getter_AddRefs(presContext));
   return presContext;
 }
@@ -277,7 +277,7 @@ nsDOMWindowUtils::UpdateLayerTree()
 {
   if (nsIPresShell* presShell = GetPresShell()) {
     presShell->FlushPendingNotifications(Flush_Display);
-    nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
+    RefPtr<nsViewManager> vm = presShell->GetViewManager();
     nsView* view = vm->GetRootView();
     if (view) {
       presShell->Paint(view, view->GetBounds(),
@@ -951,7 +951,7 @@ nsDOMWindowUtils::SendTouchEventCommon(const nsAString& aType,
   for (uint32_t i = 0; i < aCount; ++i) {
     LayoutDeviceIntPoint pt =
       nsContentUtils::ToWidgetPoint(CSSPoint(aXs[i], aYs[i]), offset, presContext);
-    nsRefPtr<Touch> t = new Touch(aIdentifiers[i],
+    RefPtr<Touch> t = new Touch(aIdentifiers[i],
                                   pt,
                                   nsIntPoint(aRxs[i], aRys[i]),
                                   aRotationAngles[i],
@@ -1334,7 +1334,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsIDOMNode* aRoot,
   }
 
   nsTHashtable<nsPtrHashKey<nsIContent>> translationNodesHash(500);
-  nsRefPtr<nsTranslationNodeList> list = new nsTranslationNodeList;
+  RefPtr<nsTranslationNodeList> list = new nsTranslationNodeList;
 
   uint32_t limit = 15000;
 
@@ -1425,8 +1425,8 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
       retVal == nullptr)
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(aCanvas1);
-  nsRefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(aCanvas2);
+  RefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(aCanvas1);
+  RefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(aCanvas2);
 
   DataSourceSurface::ScopedMap map1(img1, DataSourceSurface::READ);
   DataSourceSurface::ScopedMap map2(img2, DataSourceSurface::READ);
@@ -1618,7 +1618,7 @@ nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<DOMRect> rect = new DOMRect(window);
+  RefPtr<DOMRect> rect = new DOMRect(window);
   nsIFrame* frame = content->GetPrimaryFrame();
 
   if (frame) {
@@ -1652,7 +1652,7 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
   }
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  nsRefPtr<DOMRect> rect = new DOMRect(window);
+  RefPtr<DOMRect> rect = new DOMRect(window);
   rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.x),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.y),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.width),
@@ -1716,7 +1716,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::FindElementWithViewId(nsViewID aID,
                                         nsIDOMElement** aResult)
 {
-  nsRefPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aID);
+  RefPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aID);
   return content ? CallQueryInterface(content, aResult) : NS_OK;
 }
 
@@ -1771,7 +1771,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
   }
   nsCOMPtr<nsIDocument> targetDoc = content->GetCurrentDoc();
   NS_ENSURE_STATE(targetDoc);
-  nsRefPtr<nsIPresShell> targetShell = targetDoc->GetShell();
+  RefPtr<nsIPresShell> targetShell = targetDoc->GetShell();
   NS_ENSURE_STATE(targetShell);
 
   targetDoc->FlushPendingNotifications(Flush_Layout);
@@ -2268,7 +2268,7 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
     nsRefreshDriver* driver = presContext->RefreshDriver();
     driver->AdvanceTimeAndRefresh(aMilliseconds);
 
-    nsRefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
+    RefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
     if (transaction && transaction->IPCOpen()) {
       transaction->SendSetTestSampleTime(driver->MostRecentRefresh());
     }
@@ -2283,7 +2283,7 @@ nsDOMWindowUtils::RestoreNormalRefresh()
   // Kick the compositor out of test mode before the refresh driver, so that
   // the refresh driver doesn't send an update that gets ignored by the
   // compositor.
-  nsRefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
+  RefPtr<LayerTransactionChild> transaction = GetLayerTransaction();
   if (transaction && transaction->IPCOpen()) {
     transaction->SendLeaveTestMode();
   }
@@ -2816,7 +2816,7 @@ nsDOMWindowUtils::GetFileReferences(const nsAString& aDatabaseName, int64_t aId,
   quota::PersistenceType persistenceType =
     quota::PersistenceTypeFromStorage(options.mStorage);
 
-  nsRefPtr<indexedDB::IndexedDatabaseManager> mgr =
+  RefPtr<indexedDB::IndexedDatabaseManager> mgr =
     indexedDB::IndexedDatabaseManager::Get();
 
   if (mgr) {
@@ -2838,7 +2838,7 @@ nsDOMWindowUtils::FlushPendingFileDeletions()
 {
   using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
-  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
+  RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
   if (mgr) {
     nsresult rv = mgr->FlushPendingFileDeletions();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -3409,7 +3409,7 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRefPtr<nsROCSSPrimitiveValue> cssValue = nullptr;
+  RefPtr<nsROCSSPrimitiveValue> cssValue = nullptr;
   nsIFrame* frame = element->GetPrimaryFrame();
   if (frame && !aPseudoElement.IsEmpty()) {
     if (aPseudoElement.EqualsLiteral("::before")) {
@@ -3529,7 +3529,7 @@ nsDOMWindowUtils::SetHandlingUserInput(bool aHandlingUserInput,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsRefPtr<HandlingUserInputHelper> helper(
+  RefPtr<HandlingUserInputHelper> helper(
     new HandlingUserInputHelper(aHandlingUserInput));
   helper.forget(aHelper);
   return NS_OK;
@@ -3540,7 +3540,7 @@ nsDOMWindowUtils::GetContentAPZTestData(JSContext* aContext,
                                         JS::MutableHandleValue aOutContentTestData)
 {
   if (nsIWidget* widget = GetWidget()) {
-    nsRefPtr<LayerManager> lm = widget->GetLayerManager();
+    RefPtr<LayerManager> lm = widget->GetLayerManager();
     if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
       ClientLayerManager* clm = static_cast<ClientLayerManager*>(lm.get());
       if (!clm->GetAPZTestData().ToJS(aOutContentTestData, aContext)) {
@@ -3557,7 +3557,7 @@ nsDOMWindowUtils::GetCompositorAPZTestData(JSContext* aContext,
                                            JS::MutableHandleValue aOutCompositorTestData)
 {
   if (nsIWidget* widget = GetWidget()) {
-    nsRefPtr<LayerManager> lm = widget->GetLayerManager();
+    RefPtr<LayerManager> lm = widget->GetLayerManager();
     if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
       ClientLayerManager* clm = static_cast<ClientLayerManager*>(lm.get());
       APZTestData compositorSideData;
@@ -3653,7 +3653,7 @@ nsDOMWindowUtils::GetFrameUniformityTestData(JSContext* aContext,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<LayerManager> manager = widget->GetLayerManager();
+  RefPtr<LayerManager> manager = widget->GetLayerManager();
   if (!manager) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -3778,7 +3778,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::SetNextPaintSyncId(int32_t aSyncId)
 {
   if (nsIWidget* widget = GetWidget()) {
-    nsRefPtr<LayerManager> lm = widget->GetLayerManager();
+    RefPtr<LayerManager> lm = widget->GetLayerManager();
     if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
       ClientLayerManager* clm = static_cast<ClientLayerManager*>(lm.get());
       clm->SetNextPaintSyncId(aSyncId);

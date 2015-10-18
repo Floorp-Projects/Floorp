@@ -2760,7 +2760,7 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
     CloseCacheEntry(true);
 
     // Create a new channel to load the fallback entry.
-    nsRefPtr<nsIChannel> newChannel;
+    RefPtr<nsIChannel> newChannel;
     rv = gHttpHandler->NewChannel2(mURI,
                                    mLoadInfo,
                                    getter_AddRefs(newChannel));
@@ -2933,7 +2933,7 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         }
     }
 
-    nsRefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
+    RefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
     if (!info) {
         return NS_ERROR_FAILURE;
     }
@@ -3012,7 +3012,7 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
         nsCOMPtr<nsINetworkInterceptController> controller;
         GetCallback(controller);
 
-        nsRefPtr<InterceptedChannelChrome> intercepted =
+        RefPtr<InterceptedChannelChrome> intercepted =
                 new InterceptedChannelChrome(this, controller, entry);
         intercepted->NotifyController();
     } else {
@@ -5085,7 +5085,7 @@ nsHttpChannel::BeginConnect()
     mRequestHead.SetHTTPS(isHttps);
     mRequestHead.SetOrigin(scheme, host, port);
 
-    nsRefPtr<AltSvcMapping> mapping;
+    RefPtr<AltSvcMapping> mapping;
     if (mAllowAltSvc && // per channel
         (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
          scheme.Equals(NS_LITERAL_CSTRING("https"))) &&
@@ -5163,7 +5163,7 @@ nsHttpChannel::BeginConnect()
         return AsyncCall(&nsHttpChannel::HandleAsyncAPIRedirect);
     }
     // Check to see if this principal exists on local blocklists.
-    nsRefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier();
+    RefPtr<nsChannelClassifier> channelClassifier = new nsChannelClassifier();
     if (mLoadFlags & LOAD_CLASSIFY_URI) {
         nsCOMPtr<nsIURIClassifier> classifier = do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID);
         bool tpEnabled = false;
@@ -5816,7 +5816,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // tests for NS_HTTP_STICKY_CONNECTION to determine whether or not to
         // keep the connection around after the transaction is finished.
         //
-        nsRefPtr<nsAHttpConnection> conn;
+        RefPtr<nsAHttpConnection> conn;
         if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION)) {
             conn = mTransaction->GetConnectionReference();
             // This is so far a workaround to fix leak when reusing unpersistent
@@ -5826,7 +5826,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 conn = nullptr;
         }
 
-        nsRefPtr<nsAHttpConnection> stickyConn;
+        RefPtr<nsAHttpConnection> stickyConn;
         if (mCaps & NS_HTTP_STICKY_CONNECTION)
             stickyConn = mTransaction->GetConnectionReference();
 
@@ -6830,7 +6830,7 @@ nsHttpChannel::DoInvalidateCacheEntry(nsIURI* aURI)
 
     nsCOMPtr<nsICacheStorage> cacheStorage;
     if (NS_SUCCEEDED(rv)) {
-        nsRefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
+        RefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
         rv = cacheStorageService->DiskCacheStorage(info, false, getter_AddRefs(cacheStorage));
     }
 
@@ -6962,7 +6962,7 @@ nsHttpChannel::OnPush(const nsACString &url, Http2PushedStream *pushedStream)
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsRefPtr<nsHttpChannel> channel;
+    RefPtr<nsHttpChannel> channel;
     CallQueryInterface(pushHttpChannel, channel.StartAssignment());
     MOZ_ASSERT(channel);
     if (!channel) {

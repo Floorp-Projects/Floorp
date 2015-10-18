@@ -11,7 +11,7 @@
 #include "gfxTypes.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed, etc
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed, etc
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface
 #include "mozilla/gfx/Point.h"          // for IntSize, IntPoint
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
@@ -153,12 +153,12 @@ public:
 
 protected:
 
-  nsRefPtr<TextureSource> mNextSibling;
+  RefPtr<TextureSource> mNextSibling;
   int mCompositableCount;
 };
 
 /**
- * equivalent of a nsRefPtr<TextureSource>, that calls AddCompositableRef and
+ * equivalent of a RefPtr<TextureSource>, that calls AddCompositableRef and
  * ReleaseCompositableRef in addition to the usual AddRef and Release.
  */
 template<typename T>
@@ -213,7 +213,7 @@ public:
   T& operator*() const { return *mRef; }
 
 private:
-  nsRefPtr<T> mRef;
+  RefPtr<T> mRef;
 };
 
 typedef CompositableTextureRef<TextureSource> CompositableTextureSourceRef;
@@ -609,8 +609,8 @@ protected:
 
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
-  nsRefPtr<Compositor> mCompositor;
-  nsRefPtr<DataTextureSource> mFirstSource;
+  RefPtr<Compositor> mCompositor;
+  RefPtr<DataTextureSource> mFirstSource;
   nsIntRegion mMaybeUpdatedRegion;
   gfx::IntSize mSize;
   // format of the data that is shared with the content process.
@@ -651,7 +651,7 @@ public:
 
 protected:
   UniquePtr<mozilla::ipc::Shmem> mShmem;
-  nsRefPtr<ISurfaceAllocator> mDeallocator;
+  RefPtr<ISurfaceAllocator> mDeallocator;
 };
 
 /**
@@ -704,7 +704,7 @@ public:
   bool Failed() { return mTexture && !mLocked; }
 
 private:
-  nsRefPtr<TextureHost> mTexture;
+  RefPtr<TextureHost> mTexture;
   bool mLocked;
 };
 

@@ -62,7 +62,7 @@ nsObserverList::RemoveObserver(nsIObserver* anObserver)
 nsresult
 nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 {
-  nsRefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(this));
+  RefPtr<nsObserverEnumerator> e(new nsObserverEnumerator(this));
   e.forget(anEnumerator);
   return NS_OK;
 }

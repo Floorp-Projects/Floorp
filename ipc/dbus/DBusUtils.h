@@ -19,7 +19,7 @@
 #ifndef mozilla_ipc_dbus_dbusutils_h__
 #define mozilla_ipc_dbus_dbusutils_h__
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 // LOGE and free a D-Bus error
 // Using #define so that __FUNCTION__ resolves usefully

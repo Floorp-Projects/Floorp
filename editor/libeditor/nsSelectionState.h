@@ -66,7 +66,7 @@ class nsSelectionState
     void     MakeEmpty();
     bool     IsEmpty();
   protected:
-    nsTArray<nsRefPtr<nsRangeStore> > mArray;
+    nsTArray<RefPtr<nsRangeStore> > mArray;
 
     friend class nsRangeUpdater;
 };
@@ -121,7 +121,7 @@ class nsRangeUpdater
     void DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
                      nsINode* aNewParent, int32_t aNewOffset);
   protected:
-    nsTArray<nsRefPtr<nsRangeStore> > mArray;
+    nsTArray<RefPtr<nsRangeStore> > mArray;
     bool mLock;
 };
 
@@ -139,7 +139,7 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
     nsCOMPtr<nsINode>* mNode;
     nsCOMPtr<nsIDOMNode>* mDOMNode;
     int32_t* mOffset;
-    nsRefPtr<nsRangeStore> mRangeItem;
+    RefPtr<nsRangeStore> mRangeItem;
   public:
     nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater,
                         nsCOMPtr<nsINode>* aNode, int32_t* aOffset)

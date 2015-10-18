@@ -156,7 +156,7 @@ private:
 public:
   already_AddRefed<LoadContextInfo> Parse()
   {
-    nsRefPtr<LoadContextInfo> info;
+    RefPtr<LoadContextInfo> info;
     if (ParseTags()) {
       info = GetLoadContextInfo(isPrivate, isAnonymous, originAttribs);
     }
@@ -183,7 +183,7 @@ ParseKey(const nsCSubstring &aKey,
          nsCSubstring *aURISpec)
 {
   KeyParser parser(aKey);
-  nsRefPtr<LoadContextInfo> info = parser.Parse();
+  RefPtr<LoadContextInfo> info = parser.Parse();
 
   if (info) {
     if (aIdEnhance)

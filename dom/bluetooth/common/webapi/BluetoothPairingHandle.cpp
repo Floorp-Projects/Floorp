@@ -57,7 +57,7 @@ BluetoothPairingHandle::Create(nsPIDOMWindow* aOwner,
 {
   MOZ_ASSERT(aOwner && !aDeviceAddress.IsEmpty() && !aType.IsEmpty());
 
-  nsRefPtr<BluetoothPairingHandle> handle =
+  RefPtr<BluetoothPairingHandle> handle =
     new BluetoothPairingHandle(aOwner, aDeviceAddress, aType, aPasskey);
 
   return handle.forget();
@@ -72,7 +72,7 @@ BluetoothPairingHandle::SetPinCode(const nsAString& aPinCode, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral(PAIRING_REQ_TYPE_ENTERPINCODE),
@@ -97,7 +97,7 @@ BluetoothPairingHandle::Accept(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral(PAIRING_REQ_TYPE_CONFIRMATION) ||
@@ -128,7 +128,7 @@ BluetoothPairingHandle::Reject(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();

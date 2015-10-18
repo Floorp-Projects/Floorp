@@ -8,7 +8,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -69,8 +69,8 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
 
   // Create a new image container to hold the decoded data.
   nsAutoCString mimeType(aMimeType);
-  nsRefPtr<image::Image> image = ImageFactory::CreateAnonymousImage(mimeType);
-  nsRefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  RefPtr<image::Image> image = ImageFactory::CreateAnonymousImage(mimeType);
+  RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
 
   if (image->HasError()) {
     return NS_ERROR_FAILURE;
@@ -161,12 +161,12 @@ imgTools::EncodeImage(imgIContainer* aContainer,
                       nsIInputStream** aStream)
 {
   // Use frame 0 from the image container.
-  nsRefPtr<SourceSurface> frame =
+  RefPtr<SourceSurface> frame =
     aContainer->GetFrame(imgIContainer::FRAME_FIRST,
                          imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsRefPtr<DataSourceSurface> dataSurface;
+  RefPtr<DataSourceSurface> dataSurface;
 
   if (frame->GetFormat() == SurfaceFormat::B8G8R8A8) {
     dataSurface = frame->GetDataSurface();
@@ -210,14 +210,14 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
                      aScaledHeight == 0 ? imageHeight : aScaledHeight);
 
   // Use frame 0 from the image container.
-  nsRefPtr<SourceSurface> frame =
+  RefPtr<SourceSurface> frame =
     aContainer->GetFrameAtSize(scaledSize,
                                imgIContainer::FRAME_FIRST,
                                imgIContainer::FLAG_HIGH_QUALITY_SCALING |
                                imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsRefPtr<DataSourceSurface> dataSurface =
+  RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(scaledSize, SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
@@ -228,7 +228,7 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      map.mData,
                                      dataSurface->GetSize(),
@@ -274,7 +274,7 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
   }
 
   // Use frame 0 from the image container.
-  nsRefPtr<SourceSurface> frame =
+  RefPtr<SourceSurface> frame =
     aContainer->GetFrame(imgIContainer::FRAME_FIRST,
                          imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
@@ -294,7 +294,7 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
   NS_ENSURE_ARG(frameWidth >= aOffsetX + aWidth &&
                 frameHeight >= aOffsetY + aHeight);
 
-  nsRefPtr<DataSourceSurface> dataSurface =
+  RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(aWidth, aHeight),
                                      SurfaceFormat::B8G8R8A8,
                                      /* aZero = */ true);
@@ -307,7 +307,7 @@ imgTools::EncodeCroppedImage(imgIContainer* aContainer,
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<DrawTarget> dt =
+  RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      map.mData,
                                      dataSurface->GetSize(),

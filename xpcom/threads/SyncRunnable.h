@@ -21,7 +21,7 @@ namespace mozilla {
  * on this thread, or else you will deadlock.
  *
  * Typical usage:
- * nsRefPtr<SyncRunnable> sr = new SyncRunnable(new myrunnable...());
+ * RefPtr<SyncRunnable> sr = new SyncRunnable(new myrunnable...());
  * sr->DispatchToThread(t);
  *
  * We also provide a convenience wrapper:
@@ -65,7 +65,7 @@ public:
                                nsIRunnable* aRunnable,
                                bool aForceDispatch = false)
   {
-    nsRefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
+    RefPtr<SyncRunnable> s(new SyncRunnable(aRunnable));
     s->DispatchToThread(aThread, aForceDispatch);
   }
 

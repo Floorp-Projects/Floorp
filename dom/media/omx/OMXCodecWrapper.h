@@ -16,7 +16,7 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "mozilla/media/MediaSystemResourceClient.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include <speex/speex_resampler.h>
 
@@ -46,7 +46,7 @@ public:
 private:
   mozilla::MediaSystemResourceType mType;
 
-  nsRefPtr<mozilla::MediaSystemResourceClient> mClient;
+  RefPtr<mozilla::MediaSystemResourceClient> mClient;
 };
 
 

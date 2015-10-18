@@ -40,7 +40,7 @@ VideoCallbackAdapter::Decoded(GMPVideoi420Frame* aDecodedFrame)
   }
 
   gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(), decodedFrame->Height());
-  nsRefPtr<VideoData> v = VideoData::Create(mVideoInfo,
+  RefPtr<VideoData> v = VideoData::Create(mVideoInfo,
                                             mImageContainer,
                                             mLastStreamOffset,
                                             decodedFrame->Timestamp(),
@@ -213,7 +213,7 @@ GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
   mInitPromise.Resolve(TrackInfo::kVideoTrack, __func__);
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 GMPVideoDecoder::Init()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -221,7 +221,7 @@ GMPVideoDecoder::Init()
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  nsRefPtr<InitPromise> promise(mInitPromise.Ensure(__func__));
+  RefPtr<InitPromise> promise(mInitPromise.Ensure(__func__));
 
   nsTArray<nsCString> tags;
   InitTags(tags);
@@ -238,7 +238,7 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  nsRefPtr<MediaRawData> sample(aSample);
+  RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error();
     return NS_ERROR_FAILURE;

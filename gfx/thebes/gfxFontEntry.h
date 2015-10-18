@@ -424,7 +424,7 @@ public:
     uint16_t         mWeight;
     int16_t          mStretch;
 
-    nsRefPtr<gfxCharacterMap> mCharacterMap;
+    RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;
     nsAutoArrayPtr<uint8_t> mUVSData;
     nsAutoPtr<gfxUserFontData> mUserFontData;
@@ -641,8 +641,8 @@ struct GlobalFontMatch {
     int32_t                mRunScript;   // Unicode script for the codepoint
     const gfxFontStyle*    mStyle;       // style to match
     int32_t                mMatchRank;   // metric indicating closest match
-    nsRefPtr<gfxFontEntry> mBestMatch;   // current best match
-    nsRefPtr<gfxFontFamily> mMatchedFamily; // the family it belongs to
+    RefPtr<gfxFontEntry> mBestMatch;   // current best match
+    RefPtr<gfxFontFamily> mMatchedFamily; // the family it belongs to
     uint32_t               mCount;       // number of fonts matched
     uint32_t               mCmapsTested; // number of cmaps tested
 };
@@ -668,9 +668,9 @@ public:
     virtual void LocalizedName(nsAString& aLocalizedName);
     virtual bool HasOtherFamilyNames();
     
-    nsTArray<nsRefPtr<gfxFontEntry> >& GetFontList() { return mAvailableFonts; }
+    nsTArray<RefPtr<gfxFontEntry> >& GetFontList() { return mAvailableFonts; }
     
-    void AddFontEntry(nsRefPtr<gfxFontEntry> aFontEntry) {
+    void AddFontEntry(RefPtr<gfxFontEntry> aFontEntry) {
         // bug 589682 - set the IgnoreGDEF flag on entries for Italic faces
         // of Times New Roman, because of buggy table in those fonts
         if (aFontEntry->IsItalic() && !aFontEntry->IsUserFont() &&
@@ -809,7 +809,7 @@ protected:
     }
 
     nsString mName;
-    nsTArray<nsRefPtr<gfxFontEntry> >  mAvailableFonts;
+    nsTArray<RefPtr<gfxFontEntry> >  mAvailableFonts;
     gfxSparseBitSet mFamilyCharacterMap;
     bool mOtherFamilyNamesInitialized : 1;
     bool mHasOtherFamilyNames : 1;

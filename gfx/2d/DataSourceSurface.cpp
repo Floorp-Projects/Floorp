@@ -12,7 +12,7 @@ namespace gfx {
 already_AddRefed<DataSourceSurface>
 DataSourceSurface::GetDataSurface()
 {
-  nsRefPtr<DataSourceSurface> surface =
+  RefPtr<DataSourceSurface> surface =
     (GetType() == SurfaceType::DATA) ? this : new DataSourceSurfaceWrapper(this);
   return surface.forget();
 }

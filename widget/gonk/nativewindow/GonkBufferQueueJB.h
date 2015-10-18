@@ -445,7 +445,7 @@ private:
         sp<GraphicBuffer> mGraphicBuffer;
 
         // mTextureClient is a thin abstraction over remotely allocated GraphicBuffer.
-        nsRefPtr<TextureClient> mTextureClient;
+        RefPtr<TextureClient> mTextureClient;
 
         // BufferState represents the different states in which a buffer slot
         // can be.  All slots are initially FREE.

@@ -32,7 +32,7 @@ public:
   virtual ~RtspMediaCodecReader();
 
   // Implement a time-based seek instead of byte-based.
-  virtual nsRefPtr<SeekPromise>
+  virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
   // Override GetBuffered() to do nothing for below reasons:
@@ -51,14 +51,14 @@ public:
   virtual void SetIdle() override;
 
   // Disptach a DecodeVideoFrameTask to decode video data.
-  virtual nsRefPtr<VideoDataPromise>
+  virtual RefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe,
                    int64_t aTimeThreshold) override;
 
   // Disptach a DecodeAudioDataTask to decode audio data.
-  virtual nsRefPtr<AudioDataPromise> RequestAudioData() override;
+  virtual RefPtr<AudioDataPromise> RequestAudioData() override;
 
-  virtual nsRefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata()
+  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata()
     override;
 
   virtual void HandleResourceAllocated() override;

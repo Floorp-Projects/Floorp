@@ -64,7 +64,7 @@ protected:
   virtual void CacheChildren() override;
 
 private:
-  nsRefPtr<HTMLListBulletAccessible> mBullet;
+  RefPtr<HTMLListBulletAccessible> mBullet;
 };
 
 

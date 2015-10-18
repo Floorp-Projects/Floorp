@@ -148,8 +148,8 @@ private:
   protected:
     virtual ~ChangeNotification() {}
 
-    nsRefPtr<Element> mFrom;
-    nsRefPtr<Element> mTo;
+    RefPtr<Element> mFrom;
+    RefPtr<Element> mTo;
   };
   friend class ChangeNotification;
 
@@ -179,8 +179,8 @@ private:
   
   nsCOMPtr<nsIAtom>      mWatchID;
   nsCOMPtr<nsIDocument>  mWatchDocument;
-  nsRefPtr<Element> mElement;
-  nsRefPtr<Notification> mPendingNotification;
+  RefPtr<Element> mElement;
+  RefPtr<Notification> mPendingNotification;
   bool                   mReferencingImage;
 };
 

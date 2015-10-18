@@ -69,7 +69,7 @@ nsWindow::nsWindow()
     : mFramebuffer(nullptr)
     , mMappedBuffer(nullptr)
 {
-    nsRefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
+    RefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
     screenManager->Initialize();
 
     // This is a hack to force initialization of the compositor
@@ -99,7 +99,7 @@ nsWindow::DoDraw(void)
         return;
     }
 
-    nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+    RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
     const nsTArray<nsWindow*>& windows = screen->GetTopWindows();
 
     if (windows.IsEmpty()) {
@@ -342,7 +342,7 @@ nsWindow::Create(nsIWidget *aParent,
     uint32_t screenId = aParent ? ((nsWindow*)aParent)->mScreen->GetId() :
                                   aInitData->mScreenId;
 
-    nsRefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
+    RefPtr<nsScreenManagerGonk> screenManager = nsScreenManagerGonk::GetInstance();
     screenManager->ScreenForId(screenId, getter_AddRefs(screen));
 
     mScreen = static_cast<nsScreenGonk*>(screen.get());
@@ -698,7 +698,7 @@ nsWindow::StartRemoteDrawing()
         mBackBuffer = mFramebufferTarget->CreateSimilarDrawTarget(
             mFramebufferTarget->GetSize(), mFramebufferTarget->GetFormat());
     }
-    nsRefPtr<DrawTarget> buffer(mBackBuffer);
+    RefPtr<DrawTarget> buffer(mBackBuffer);
     return buffer.forget();
 }
 
@@ -708,7 +708,7 @@ nsWindow::EndRemoteDrawing()
     if (mFramebufferTarget && mFramebuffer) {
         IntSize size = mFramebufferTarget->GetSize();
         Rect rect(0, 0, size.width, size.height);
-        nsRefPtr<SourceSurface> source = mBackBuffer->Snapshot();
+        RefPtr<SourceSurface> source = mBackBuffer->Snapshot();
         mFramebufferTarget->DrawSurface(source, rect, rect);
 
         // Convert from BGR to RGB

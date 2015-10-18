@@ -213,7 +213,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
 
     // Construct the wrapper, which takes over the strong reference to the
     // native object.
-    nsRefPtr<XPCWrappedNative> wrapper =
+    RefPtr<XPCWrappedNative> wrapper =
         new XPCWrappedNative(nativeHelper.forgetCanonical(), proto);
 
     //
@@ -311,7 +311,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
         return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<XPCWrappedNative> wrapper;
+    RefPtr<XPCWrappedNative> wrapper;
 
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
     // Some things are nsWrapperCache subclasses but never use the cache, so go
@@ -474,7 +474,7 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
 
-    nsRefPtr<XPCWrappedNative> wrapper;
+    RefPtr<XPCWrappedNative> wrapper;
     // Deal with the case where the wrapper got created as a side effect
     // of one of our calls out of this code. Add() returns the (possibly
     // pre-existing) wrapper that ultimately ends up in the map, which is
@@ -510,7 +510,7 @@ XPCWrappedNative::GetUsedOnly(nsISupports* Object,
     MOZ_ASSERT(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
     MOZ_ASSERT(Interface);
 
-    nsRefPtr<XPCWrappedNative> wrapper;
+    RefPtr<XPCWrappedNative> wrapper;
     nsWrapperCache* cache = nullptr;
     CallQueryInterface(Object, &cache);
     if (cache) {
@@ -910,7 +910,7 @@ XPCWrappedNative::FlatJSObjectFinalized()
         }
 
         // We also need to release any native pointers held...
-        nsRefPtr<nsISupports> native = to->TakeNative();
+        RefPtr<nsISupports> native = to->TakeNative();
         if (native && GetRuntime()) {
             DeferredFinalize(native.forget().take());
         }
@@ -1131,7 +1131,7 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
 
     // This is an nsRefPtr instead of an nsCOMPtr because it may not be the
     // canonical nsISupports for this object.
-    nsRefPtr<nsISupports> qiResult;
+    RefPtr<nsISupports> qiResult;
 
     // If the scriptable helper forbids us from reflecting additional
     // interfaces, then don't even try the QI, just fail.
@@ -1209,7 +1209,7 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
         // nsIPropertyBag - xpconnect will do that work.
 
         if (iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso) {
-            nsRefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, *iid);
+            RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, *iid);
             if (clasp) {
                 RootedObject answer(cx, clasp->CallQueryInterfaceOnJSObject(cx, jso, *iid));
 

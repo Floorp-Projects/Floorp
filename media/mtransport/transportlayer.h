@@ -12,7 +12,7 @@
 #include "sigslot.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
 

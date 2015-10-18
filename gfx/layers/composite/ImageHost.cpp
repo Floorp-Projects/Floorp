@@ -304,7 +304,7 @@ ImageHost::Composite(LayerComposite* aLayer,
 
     bool isAlphaPremultiplied =
         !(img->mFrontBuffer->GetFlags() & TextureFlags::NON_PREMULTIPLIED);
-    nsRefPtr<TexturedEffect> effect =
+    RefPtr<TexturedEffect> effect =
         CreateTexturedEffect(img->mFrontBuffer->GetFormat(),
             img->mTextureSource.get(), aFilter, isAlphaPremultiplied,
             GetRenderState());

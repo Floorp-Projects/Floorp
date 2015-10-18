@@ -189,8 +189,8 @@ protected:
    * mInputSurfaces / mInputFilters: For each input index, either a surface or
    * a filter is set, and the other is null.
    */
-  std::vector<nsRefPtr<SourceSurface> > mInputSurfaces;
-  std::vector<nsRefPtr<FilterNodeSoftware> > mInputFilters;
+  std::vector<RefPtr<SourceSurface> > mInputSurfaces;
+  std::vector<RefPtr<FilterNodeSoftware> > mInputFilters;
 
   /**
    * Weak pointers to our invalidation listeners, i.e. to those filters who
@@ -210,7 +210,7 @@ protected:
    * Stores our cached output.
    */
   IntRect mCachedRect;
-  nsRefPtr<DataSourceSurface> mCachedOutput;
+  RefPtr<DataSourceSurface> mCachedOutput;
 };
 
 // Subclasses for specific filters.

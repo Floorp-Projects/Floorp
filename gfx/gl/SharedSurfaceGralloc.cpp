@@ -35,7 +35,7 @@ using namespace mozilla::layers;
 using namespace android;
 
 SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL, const SurfaceCaps& caps,
-                                               const nsRefPtr<layers::ISurfaceAllocator>& allocator,
+                                               const RefPtr<layers::ISurfaceAllocator>& allocator,
                                                const layers::TextureFlags& flags)
     : SurfaceFactory(SharedSurfaceType::Gralloc, prodGL, caps, allocator, flags)
 {
@@ -64,7 +64,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
                                    : gfxContentType::COLOR;
 
     typedef GrallocTextureClientOGL ptrT;
-    nsRefPtr<ptrT> grallocTC = new ptrT(allocator,
+    RefPtr<ptrT> grallocTC = new ptrT(allocator,
                                       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(type),
                                       gfx::BackendType::NONE, // we don't need to use it with a DrawTarget
                                       flags);

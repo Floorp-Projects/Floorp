@@ -60,7 +60,7 @@ private:
   android::sp<android::OMXCodecReservation> mReservation;
 
   webrtc::EncodedImageCallback* mCallback;
-  nsRefPtr<OMXOutputDrain> mOutputDrain;
+  RefPtr<OMXOutputDrain> mOutputDrain;
   uint32_t mWidth;
   uint32_t mHeight;
   uint32_t mFrameRate;
@@ -99,7 +99,7 @@ public:
 
 private:
   webrtc::DecodedImageCallback* mCallback;
-  nsRefPtr<WebrtcOMXDecoder> mOMX;
+  RefPtr<WebrtcOMXDecoder> mOMX;
   android::sp<android::OMXCodecReservation> mReservation;
 };
 

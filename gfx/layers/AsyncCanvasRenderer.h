@@ -10,7 +10,7 @@
 #include "LayersTypes.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/Mutex.h"
-#include "mozilla/nsRefPtr.h"             // for nsAutoPtr, nsRefPtr, etc
+#include "mozilla/RefPtr.h"             // for nsAutoPtr, nsRefPtr, etc
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 
 class nsICanvasRenderingContextInternal;
@@ -129,7 +129,7 @@ public:
   // We need to keep a reference to the context around here, otherwise the
   // canvas' surface texture destructor will deref and destroy it too early
   // Only accessed in active thread.
-  nsRefPtr<gl::GLContext> mGLContext;
+  RefPtr<gl::GLContext> mGLContext;
 private:
 
   virtual ~AsyncCanvasRenderer();
@@ -154,7 +154,7 @@ private:
   // in order to send frame to compositor. To avoid readback again,
   // we copy from this TextureClient to this mSurfaceForBasic directly
   // by calling CopyFromTextureClient().
-  nsRefPtr<gfx::DataSourceSurface> mSurfaceForBasic;
+  RefPtr<gfx::DataSourceSurface> mSurfaceForBasic;
 
   // Protect non thread-safe objects.
   Mutex mMutex;

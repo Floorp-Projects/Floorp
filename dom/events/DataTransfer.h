@@ -289,7 +289,7 @@ protected:
   nsTArray<nsTArray<TransferItem> > mItems;
 
   // array of files, containing only the files present in the dataTransfer
-  nsRefPtr<FileList> mFiles;
+  RefPtr<FileList> mFiles;
 
   // the target of the drag. The drag and dragend events will fire at this.
   nsCOMPtr<mozilla::dom::Element> mDragTarget;

@@ -70,7 +70,7 @@ AudioCallbackAdapter::Decoded(const nsTArray<int16_t>& aPCM, uint64_t aTimeStamp
     return;
   }
 
-  nsRefPtr<AudioData> audio(new AudioData(mLastStreamOffset,
+  RefPtr<AudioData> audio(new AudioData(mLastStreamOffset,
                                           timestamp.value(),
                                           duration.value(),
                                           numFrames,
@@ -166,7 +166,7 @@ GMPAudioDecoder::GMPInitDone(GMPAudioDecoderProxy* aGMP)
   mInitPromise.Resolve(TrackInfo::kAudioTrack, __func__);
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 GMPAudioDecoder::Init()
 {
   MOZ_ASSERT(IsOnGMPThread());
@@ -174,7 +174,7 @@ GMPAudioDecoder::Init()
   mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   MOZ_ASSERT(mMPS);
 
-  nsRefPtr<InitPromise> promise(mInitPromise.Ensure(__func__));
+  RefPtr<InitPromise> promise(mInitPromise.Ensure(__func__));
 
   nsTArray<nsCString> tags;
   InitTags(tags);
@@ -191,7 +191,7 @@ GMPAudioDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  nsRefPtr<MediaRawData> sample(aSample);
+  RefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error();
     return NS_ERROR_FAILURE;

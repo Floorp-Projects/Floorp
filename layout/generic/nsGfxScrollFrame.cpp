@@ -3606,7 +3606,7 @@ ScrollFrameHelper::ScrollSnap(const nsPoint &aDestination,
 nsSize
 ScrollFrameHelper::GetLineScrollAmount() const
 {
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mOuter, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(mOuter));
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
@@ -3926,14 +3926,14 @@ ScrollFrameHelper::CreateAnonymousContent(
 
   nsNodeInfoManager *nodeInfoManager =
     presContext->Document()->NodeInfoManager();
-  nsRefPtr<NodeInfo> nodeInfo;
+  RefPtr<NodeInfo> nodeInfo;
   nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::scrollbar, nullptr,
                                           kNameSpaceID_XUL,
                                           nsIDOMNode::ELEMENT_NODE);
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   if (canHaveHorizontal) {
-    nsRefPtr<NodeInfo> ni = nodeInfo;
+    RefPtr<NodeInfo> ni = nodeInfo;
     NS_TrustedNewXULElement(getter_AddRefs(mHScrollbarContent), ni.forget());
 #ifdef DEBUG
     // Scrollbars can get restyled by theme changes.  Whether such a restyle
@@ -3956,7 +3956,7 @@ ScrollFrameHelper::CreateAnonymousContent(
   }
 
   if (canHaveVertical) {
-    nsRefPtr<NodeInfo> ni = nodeInfo;
+    RefPtr<NodeInfo> ni = nodeInfo;
     NS_TrustedNewXULElement(getter_AddRefs(mVScrollbarContent), ni.forget());
 #ifdef DEBUG
     // Scrollbars can get restyled by theme changes.  Whether such a restyle
@@ -3979,7 +3979,7 @@ ScrollFrameHelper::CreateAnonymousContent(
   }
 
   if (isResizable) {
-    nsRefPtr<NodeInfo> nodeInfo;
+    RefPtr<NodeInfo> nodeInfo;
     nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::resizer, nullptr,
                                             kNameSpaceID_XUL,
                                             nsIDOMNode::ELEMENT_NODE);
@@ -4149,7 +4149,7 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent)
   }
 
   if (mScrollbarActivity) {
-    nsRefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
+    RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
 
@@ -5143,7 +5143,7 @@ ScrollFrameHelper::SetCoordAttribute(nsIContent* aContent, nsIAtom* aAtom,
   }
 
   if (mScrollbarActivity) {
-    nsRefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
+    RefPtr<ScrollbarActivity> scrollbarActivity(mScrollbarActivity);
     scrollbarActivity->ActivityOccurred();
   }
 }

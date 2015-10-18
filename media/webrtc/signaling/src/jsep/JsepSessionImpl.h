@@ -46,7 +46,7 @@ public:
   // Implement JsepSession methods.
   virtual nsresult Init() override;
 
-  virtual nsresult AddTrack(const nsRefPtr<JsepTrack>& track) override;
+  virtual nsresult AddTrack(const RefPtr<JsepTrack>& track) override;
 
   virtual nsresult RemoveTrack(const std::string& streamId,
                                const std::string& trackId) override;
@@ -87,14 +87,14 @@ public:
                                 const std::string& newStreamId,
                                 const std::string& newTrackId) override;
 
-  virtual std::vector<nsRefPtr<JsepTrack>> GetLocalTracks() const override;
+  virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const override;
 
-  virtual std::vector<nsRefPtr<JsepTrack>> GetRemoteTracks() const override;
+  virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracks() const override;
 
-  virtual std::vector<nsRefPtr<JsepTrack>>
+  virtual std::vector<RefPtr<JsepTrack>>
     GetRemoteTracksAdded() const override;
 
-  virtual std::vector<nsRefPtr<JsepTrack>>
+  virtual std::vector<RefPtr<JsepTrack>>
     GetRemoteTracksRemoved() const override;
 
   virtual nsresult CreateOffer(const JsepOfferOptions& options,
@@ -145,7 +145,7 @@ public:
   }
 
   // Access transports.
-  virtual std::vector<nsRefPtr<JsepTransport>>
+  virtual std::vector<RefPtr<JsepTransport>>
   GetTransports() const override
   {
     return mTransports;
@@ -166,12 +166,12 @@ private:
   };
 
   struct JsepSendingTrack {
-    nsRefPtr<JsepTrack> mTrack;
+    RefPtr<JsepTrack> mTrack;
     Maybe<size_t> mAssignedMLine;
   };
 
   struct JsepReceivingTrack {
-    nsRefPtr<JsepTrack> mTrack;
+    RefPtr<JsepTrack> mTrack;
     Maybe<size_t> mAssignedMLine;
   };
 
@@ -203,7 +203,7 @@ private:
   nsresult CreateReceivingTrack(size_t mline,
                                 const Sdp& sdp,
                                 const SdpMediaSection& msection,
-                                nsRefPtr<JsepTrack>* track);
+                                RefPtr<JsepTrack>* track);
   nsresult HandleNegotiatedSession(const UniquePtr<Sdp>& local,
                                    const UniquePtr<Sdp>& remote);
   nsresult AddTransportAttributes(SdpMediaSection* msection,
@@ -254,7 +254,7 @@ private:
                                       SdpSetupAttribute::Role* rolep);
   nsresult MakeNegotiatedTrackPair(const SdpMediaSection& remote,
                                    const SdpMediaSection& local,
-                                   const nsRefPtr<JsepTransport>& transport,
+                                   const RefPtr<JsepTransport>& transport,
                                    bool usingBundle,
                                    size_t transportLevel,
                                    JsepTrackPair* trackPairOut);
@@ -263,7 +263,7 @@ private:
 
   nsresult FinalizeTransport(const SdpAttributeList& remote,
                              const SdpAttributeList& answer,
-                             const nsRefPtr<JsepTransport>& transport);
+                             const RefPtr<JsepTransport>& transport);
 
   nsresult GetNegotiatedBundledMids(SdpHelper::BundledMids* bundledMids);
 
@@ -276,9 +276,9 @@ private:
   // By the most recent SetRemoteDescription
   std::vector<JsepReceivingTrack> mRemoteTracksAdded;
   std::vector<JsepReceivingTrack> mRemoteTracksRemoved;
-  std::vector<nsRefPtr<JsepTransport> > mTransports;
+  std::vector<RefPtr<JsepTransport> > mTransports;
   // So we can rollback
-  std::vector<nsRefPtr<JsepTransport> > mOldTransports;
+  std::vector<RefPtr<JsepTransport> > mOldTransports;
   std::vector<JsepTrackPair> mNegotiatedTrackPairs;
 
   bool mIsOfferer;

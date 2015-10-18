@@ -445,7 +445,7 @@ public:
 
     void
     GetAttachedShaders(WebGLProgram* prog,
-                       dom::Nullable<nsTArray<nsRefPtr<WebGLShader>>>& retval);
+                       dom::Nullable<nsTArray<RefPtr<WebGLShader>>>& retval);
 
     GLint GetAttribLocation(WebGLProgram* prog, const nsAString& name);
     JS::Value GetBufferParameter(GLenum target, GLenum pname);
@@ -1144,7 +1144,7 @@ protected:
     // -------------------------------------------------------------------------
     // WebGL extensions (implemented in WebGLContextExtensions.cpp)
     typedef EnumeratedArray<WebGLExtensionID, WebGLExtensionID::Max,
-                            nsRefPtr<WebGLExtensionBase>> ExtensionsArrayType;
+                            RefPtr<WebGLExtensionBase>> ExtensionsArrayType;
 
     ExtensionsArrayType mExtensions;
 
@@ -1290,7 +1290,7 @@ protected:
 
     nsresult
     SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                           nsRefPtr<gfx::DataSourceSurface>& imageOut,
+                                           RefPtr<gfx::DataSourceSurface>& imageOut,
                                            WebGLTexelFormat* format);
 
     // Returns false if `object` is null or not valid.
@@ -1360,7 +1360,7 @@ protected:
     void ResolveTexturesForDraw() const;
 
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
-    nsRefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
+    RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
     GLenum LastColorAttachment() const {
         return LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments - 1;
@@ -1453,7 +1453,7 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
-    nsRefPtr<WebGLContextLossHandler> mContextLossHandler;
+    RefPtr<WebGLContextLossHandler> mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
     ContextStatus mContextStatus;

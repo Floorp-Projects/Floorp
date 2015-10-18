@@ -60,7 +60,7 @@ already_AddRefed<gfx::DataSourceSurface>
 GonkClipboardData::GetImage() const
 {
   // Return cloned DataSourceSurface.
-  nsRefPtr<gfx::DataSourceSurface> cloned = gfx::CreateDataSourceSurfaceByCloning(mImage);
+  RefPtr<gfx::DataSourceSurface> cloned = gfx::CreateDataSourceSurfaceByCloning(mImage);
   return cloned.forget();
 }
 

@@ -1749,7 +1749,7 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
                 name_struct->mType == nsGlobalNameStruct::eTypeClassProto),
                "Wrong type or missing ci_data!");
 
-  nsRefPtr<nsDOMConstructor> constructor;
+  RefPtr<nsDOMConstructor> constructor;
   nsresult rv = nsDOMConstructor::Create(name, ci_data, name_struct, aWin,
                                          getter_AddRefs(constructor));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2119,7 +2119,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeInterface) {
     // We're resolving a name of a DOM interface for which there is no
     // direct DOM class, create a constructor object...
-    nsRefPtr<nsDOMConstructor> constructor;
+    RefPtr<nsDOMConstructor> constructor;
     rv = nsDOMConstructor::Create(class_name,
                                   nullptr,
                                   name_struct,
@@ -2228,7 +2228,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-    nsRefPtr<nsDOMConstructor> constructor;
+    RefPtr<nsDOMConstructor> constructor;
     rv = nsDOMConstructor::Create(class_name, nullptr, name_struct,
                                   static_cast<nsPIDOMWindow*>(aWin),
                                   getter_AddRefs(constructor));

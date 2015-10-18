@@ -135,7 +135,7 @@ private:
   }
 
   /* List of dependent libraries */
-  std::vector<nsRefPtr<LibHandle> > dependencies;
+  std::vector<RefPtr<LibHandle> > dependencies;
 
   /* List of .rel.dyn/.rela.dyn relocations */
   Array<Elf::Reloc> relocations;

@@ -288,7 +288,7 @@ EventSource::Constructor(const GlobalObject& aGlobal,
   }
   MOZ_ASSERT(ownerWindow->IsInnerWindow());
 
-  nsRefPtr<EventSource> eventSource = new EventSource(ownerWindow);
+  RefPtr<EventSource> eventSource = new EventSource(ownerWindow);
   aRv = eventSource->Init(aGlobal.GetAsSupports(), aURL,
                           aEventSourceInitDict.mWithCredentials);
   return eventSource.forget();
@@ -754,7 +754,7 @@ EventSource::AnnounceConnection()
     return;
   }
 
-  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
   rv = event->InitEvent(NS_LITERAL_STRING("open"), false, false);
@@ -810,7 +810,7 @@ EventSource::ReestablishConnection()
     return;
   }
 
-  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
   rv = event->InitEvent(NS_LITERAL_STRING("error"), false, false);
@@ -961,7 +961,7 @@ EventSource::FailConnection()
     return;
   }
 
-  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
   rv = event->InitEvent(NS_LITERAL_STRING("error"), false, false);
@@ -983,7 +983,7 @@ EventSource::FailConnection()
 void
 EventSource::TimerCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsRefPtr<EventSource> thisObject = static_cast<EventSource*>(aClosure);
+  RefPtr<EventSource> thisObject = static_cast<EventSource*>(aClosure);
 
   if (thisObject->mReadyState == CLOSED) {
     return;
@@ -1124,7 +1124,7 @@ EventSource::DispatchAllMessageEvents()
     // create an event that uses the MessageEvent interface,
     // which does not bubble, is not cancelable, and has no default action
 
-    nsRefPtr<MessageEvent> event =
+    RefPtr<MessageEvent> event =
       NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
     rv = event->InitMessageEvent(message->mEventName, false, false, jsData,

@@ -284,7 +284,7 @@ int main(int argc, char** argv)
     do_CreateInstance("@mozilla.org/scriptablebase64encoder;1");
   NS_ENSURE_TRUE(encoder, 1);
 
-  nsRefPtr<FakeInputStream> stream = new FakeInputStream();
+  RefPtr<FakeInputStream> stream = new FakeInputStream();
   do {
     nsString wideString;
     nsCString string;

@@ -106,7 +106,7 @@ private:
   RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive,
                  ErrorResult& aRv);
 
-  nsRefPtr<FileSystemBase> mFileSystem;
+  RefPtr<FileSystemBase> mFileSystem;
   nsString mPath;
 };
 

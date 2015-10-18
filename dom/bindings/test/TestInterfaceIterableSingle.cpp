@@ -39,7 +39,7 @@ TestInterfaceIterableSingle::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<TestInterfaceIterableSingle> r = new TestInterfaceIterableSingle(window);
+  RefPtr<TestInterfaceIterableSingle> r = new TestInterfaceIterableSingle(window);
   return r.forget();
 }
 

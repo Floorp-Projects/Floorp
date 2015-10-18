@@ -45,7 +45,7 @@ private:
 
   static nsTArray<nsAutoPtr<RilWorker>> sRilWorkers;
 
-  nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
+  RefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
 };
 
 } // namespace ipc

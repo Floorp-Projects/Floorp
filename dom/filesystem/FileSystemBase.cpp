@@ -34,11 +34,11 @@ FileSystemBase::FromString(const nsAString& aString)
       storageName = tokenizer.nextToken();
     }
 
-    nsRefPtr<DeviceStorageFileSystem> f =
+    RefPtr<DeviceStorageFileSystem> f =
       new DeviceStorageFileSystem(storageType, storageName);
     return f.forget();
   }
-  return nsRefPtr<OSFileSystem>(new OSFileSystem(aString)).forget();
+  return RefPtr<OSFileSystem>(new OSFileSystem(aString)).forget();
 }
 
 FileSystemBase::FileSystemBase()

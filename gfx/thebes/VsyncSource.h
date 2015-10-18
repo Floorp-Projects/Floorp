@@ -7,7 +7,7 @@
 #define GFX_VSYNCSOURCE_H
 
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
@@ -45,7 +45,7 @@ public:
       // Large parts of Gecko assume TimeStamps should not be in the future such as animations
       virtual void NotifyVsync(TimeStamp aVsyncTimestamp);
 
-      nsRefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
+      RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
 
       void AddCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
       void RemoveCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
@@ -61,14 +61,14 @@ public:
 
       Mutex mDispatcherLock;
       bool mRefreshTimerNeedsVsync;
-      nsTArray<nsRefPtr<CompositorVsyncDispatcher>> mCompositorVsyncDispatchers;
-      nsRefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
+      nsTArray<RefPtr<CompositorVsyncDispatcher>> mCompositorVsyncDispatchers;
+      RefPtr<RefreshTimerVsyncDispatcher> mRefreshTimerVsyncDispatcher;
   };
 
   void AddCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
   void RemoveCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher);
 
-  nsRefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
+  RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
   virtual Display& GetGlobalDisplay() = 0; // Works across all displays
 
 protected:

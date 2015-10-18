@@ -127,8 +127,8 @@ public:
 
   void DispatchError(EventType aErrorType, SpeechRecognitionErrorCode aErrorCode, const nsAString& aMessage);
   uint32_t FillSamplesBuffer(const int16_t* aSamples, uint32_t aSampleCount);
-  uint32_t SplitSamplesBuffer(const int16_t* aSamplesBuffer, uint32_t aSampleCount, nsTArray<nsRefPtr<SharedBuffer>>& aResult);
-  AudioSegment* CreateAudioSegment(nsTArray<nsRefPtr<SharedBuffer>>& aChunks);
+  uint32_t SplitSamplesBuffer(const int16_t* aSamplesBuffer, uint32_t aSampleCount, nsTArray<RefPtr<SharedBuffer>>& aResult);
+  AudioSegment* CreateAudioSegment(nsTArray<RefPtr<SharedBuffer>>& aChunks);
   void FeedAudioData(already_AddRefed<SharedBuffer> aSamples, uint32_t aDuration, MediaStreamListener* aProvider, TrackRate aTrackRate);
 
   static struct TestConfig
@@ -191,7 +191,7 @@ private:
   private:
     virtual ~GetUserMediaSuccessCallback() {}
 
-    nsRefPtr<SpeechRecognition> mRecognition;
+    RefPtr<SpeechRecognition> mRecognition;
   };
 
   class GetUserMediaErrorCallback : public nsIDOMGetUserMediaErrorCallback
@@ -207,7 +207,7 @@ private:
   private:
     virtual ~GetUserMediaErrorCallback() {}
 
-    nsRefPtr<SpeechRecognition> mRecognition;
+    RefPtr<SpeechRecognition> mRecognition;
   };
 
   NS_IMETHOD StartRecording(DOMMediaStream* aDOMStream);
@@ -232,8 +232,8 @@ private:
   void AbortSilently(SpeechEvent* aEvent);
   void AbortError(SpeechEvent* aEvent);
 
-  nsRefPtr<DOMMediaStream> mDOMStream;
-  nsRefPtr<SpeechStreamListener> mSpeechListener;
+  RefPtr<DOMMediaStream> mDOMStream;
+  RefPtr<SpeechStreamListener> mSpeechListener;
   nsCOMPtr<nsISpeechRecognitionService> mRecognitionService;
 
   FSMState mCurrentState;
@@ -245,7 +245,7 @@ private:
 
   // buffer holds one chunk of mAudioSamplesPerChunk
   // samples before feeding it to mEndpointer
-  nsRefPtr<SharedBuffer> mAudioSamplesBuffer;
+  RefPtr<SharedBuffer> mAudioSamplesBuffer;
   uint32_t mBufferedSamples;
 
   nsCOMPtr<nsITimer> mSpeechDetectionTimer;
@@ -253,7 +253,7 @@ private:
 
   nsString mLang;
 
-  nsRefPtr<SpeechGrammarList> mSpeechGrammarList;
+  RefPtr<SpeechGrammarList> mSpeechGrammarList;
 
   // WebSpeechAPI (http://bit.ly/1gIl7DC) states:
   //
@@ -300,8 +300,8 @@ public:
 
   NS_IMETHOD Run() override;
   AudioSegment* mAudioSegment;
-  nsRefPtr<SpeechRecognitionResultList> mRecognitionResultList; // TODO: make this a session being passed which also has index and stuff
-  nsRefPtr<SpeechRecognitionError> mError;
+  RefPtr<SpeechRecognitionResultList> mRecognitionResultList; // TODO: make this a session being passed which also has index and stuff
+  RefPtr<SpeechRecognitionError> mError;
 
   friend class SpeechRecognition;
 private:
@@ -311,7 +311,7 @@ private:
   // of the data (i.e., the SpeechStreamListener) to ensure it
   // is kept alive (and keeps SpeechRecognition alive) until this
   // event gets processed.
-  nsRefPtr<MediaStreamListener> mProvider;
+  RefPtr<MediaStreamListener> mProvider;
   SpeechRecognition::EventType mType;
   TrackRate mTrackRate;
 };

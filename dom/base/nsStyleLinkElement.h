@@ -128,7 +128,7 @@ private:
                               bool* aIsAlternate,
                               bool aForceUpdate);
 
-  nsRefPtr<mozilla::CSSStyleSheet> mStyleSheet;
+  RefPtr<mozilla::CSSStyleSheet> mStyleSheet;
 protected:
   bool mDontLoadStyle;
   bool mUpdatesEnabled;

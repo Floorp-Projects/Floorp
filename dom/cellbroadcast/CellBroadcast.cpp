@@ -72,7 +72,7 @@ CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, service);
+  RefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, service);
   return cb.forget();
 }
 
@@ -142,7 +142,7 @@ CellBroadcast::NotifyMessageReceived(uint32_t aServiceId,
                                            aEtwsEmergencyUserAlert,
                                            aEtwsPopup);
 
-  nsRefPtr<MozCellBroadcastEvent> event =
+  RefPtr<MozCellBroadcastEvent> event =
     MozCellBroadcastEvent::Constructor(this, NS_LITERAL_STRING("received"), init);
   return DispatchTrustedEvent(event);
 }

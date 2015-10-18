@@ -6,7 +6,7 @@
 #ifndef GFX_D3DSURFACEIMAGE_H
 #define GFX_D3DSURFACEIMAGE_H
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "ImageContainer.h"
 #include "nsAutoPtr.h"
 #include "d3d9.h"
@@ -38,7 +38,7 @@ protected:
            TextureFlags aTextureFlags,
            TextureAllocationFlags aAllocFlags) override;
 
-  nsRefPtr<IDirect3DDevice9> mDevice;
+  RefPtr<IDirect3DDevice9> mDevice;
 };
 
 // Image class that wraps a IDirect3DSurface9. This class copies the image
@@ -59,9 +59,9 @@ public:
       , mIsFirstFrame(aIsFirstFrame)
     {}
 
-    nsRefPtr<IDirect3DSurface9> mSurface;
+    RefPtr<IDirect3DSurface9> mSurface;
     gfx::IntRect mRegion;
-    nsRefPtr<D3D9RecycleAllocator> mAllocator;
+    RefPtr<D3D9RecycleAllocator> mAllocator;
     bool mIsFirstFrame;
   };
 
@@ -90,8 +90,8 @@ private:
   void EnsureSynchronized();
 
   gfx::IntSize mSize;
-  nsRefPtr<IDirect3DQuery9> mQuery;
-  nsRefPtr<SharedTextureClientD3D9> mTextureClient;
+  RefPtr<IDirect3DQuery9> mQuery;
+  RefPtr<SharedTextureClientD3D9> mTextureClient;
   bool mValid;
   bool mIsFirstFrame;
 };

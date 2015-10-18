@@ -26,7 +26,7 @@ AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                           FlushableTaskQueue* aVideoTaskQueue,
                                           MediaDataDecoderCallback* aCallback)
 {
-  nsRefPtr<MediaDataDecoder> m;
+  RefPtr<MediaDataDecoder> m;
 
   if (VPXDecoder::IsVPX(aConfig.mMimeType)) {
     m = new VPXDecoder(*aConfig.GetAsVideoInfo(),
@@ -43,7 +43,7 @@ AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                           FlushableTaskQueue* aAudioTaskQueue,
                                           MediaDataDecoderCallback* aCallback)
 {
-  nsRefPtr<MediaDataDecoder> m;
+  RefPtr<MediaDataDecoder> m;
 
   if (VorbisDataDecoder::IsVorbis(aConfig.mMimeType)) {
     m = new VorbisDataDecoder(*aConfig.GetAsAudioInfo(),

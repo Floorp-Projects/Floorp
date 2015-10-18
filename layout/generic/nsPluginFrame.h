@@ -321,7 +321,7 @@ private:
   // plugins we register on the root PresContext.
   // This is only non-null while we have a plugin registered for geometry
   // updates.
-  nsRefPtr<nsRootPresContext> mRootPresContextRegisteredWith;
+  RefPtr<nsRootPresContext> mRootPresContextRegisteredWith;
 
   // Tracks windowed plugin visibility during scroll operations. See
   // SetScrollVisibility.

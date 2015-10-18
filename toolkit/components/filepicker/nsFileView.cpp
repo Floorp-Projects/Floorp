@@ -202,7 +202,7 @@ nsFileComplete::StartSearch(const nsAString& aSearchString,
                             nsIAutoCompleteObserver *aListener)
 {
   NS_ENSURE_ARG_POINTER(aListener);
-  nsRefPtr<nsFileResult> result = new nsFileResult(aSearchString, aSearchParam);
+  RefPtr<nsFileResult> result = new nsFileResult(aSearchString, aSearchParam);
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
   return aListener->OnSearchResult(this, result);
 }

@@ -264,7 +264,7 @@ private:
             nsresult rv = mPPS->ConfigureFromPAC(mPACURL, false);
             if (NS_SUCCEEDED(rv)) {
                 // now that the load is triggered, we can resubmit the query
-                nsRefPtr<nsAsyncResolveRequest> newRequest =
+                RefPtr<nsAsyncResolveRequest> newRequest =
                     new nsAsyncResolveRequest(mPPS, mChannel, mAppId,
                                               mIsInBrowser, mResolveFlags,
                                               mCallback);
@@ -1187,7 +1187,7 @@ nsProtocolProxyService::DeprecatedBlockingResolve(nsIChannel *aChannel,
 
     // Use the PAC thread to do the work, so we don't have to reimplement that
     // code, but block this thread on that completion.
-    nsRefPtr<nsAsyncBridgeRequest> ctx = new nsAsyncBridgeRequest();
+    RefPtr<nsAsyncBridgeRequest> ctx = new nsAsyncBridgeRequest();
     ctx->Lock();
     if (NS_SUCCEEDED(mPACMan->AsyncGetProxyForURI(uri, NECKO_NO_APP_ID, false,
                                                   ctx, false))) {
@@ -1247,7 +1247,7 @@ nsProtocolProxyService::AsyncResolveInternal(nsIChannel *channel, uint32_t flags
     NS_GetAppInfo(channel, &appId, &isInBrowser);
 
     *result = nullptr;
-    nsRefPtr<nsAsyncResolveRequest> ctx =
+    RefPtr<nsAsyncResolveRequest> ctx =
         new nsAsyncResolveRequest(this, channel, appId, isInBrowser, flags,
                                   callback);
 

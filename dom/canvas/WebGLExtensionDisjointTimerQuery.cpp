@@ -32,7 +32,7 @@ WebGLExtensionDisjointTimerQuery::CreateQueryEXT()
   if (mIsLost)
     return nullptr;
 
-  nsRefPtr<WebGLTimerQuery> query = WebGLTimerQuery::Create(mContext);
+  RefPtr<WebGLTimerQuery> query = WebGLTimerQuery::Create(mContext);
   return query.forget();
 }
 

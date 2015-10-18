@@ -138,7 +138,7 @@ WorkerGlobalScope::GetCaches(ErrorResult& aRv)
                                                  mWorkerPrivate, aRv);
   }
 
-  nsRefPtr<CacheStorage> ref = mCacheStorage;
+  RefPtr<CacheStorage> ref = mCacheStorage;
   return ref.forget();
 }
 
@@ -154,7 +154,7 @@ WorkerGlobalScope::Location()
     MOZ_ASSERT(mLocation);
   }
 
-  nsRefPtr<WorkerLocation> location = mLocation;
+  RefPtr<WorkerLocation> location = mLocation;
   return location.forget();
 }
 
@@ -168,7 +168,7 @@ WorkerGlobalScope::Navigator()
     MOZ_ASSERT(mNavigator);
   }
 
-  nsRefPtr<WorkerNavigator> navigator = mNavigator;
+  RefPtr<WorkerNavigator> navigator = mNavigator;
   return navigator.forget();
 }
 
@@ -177,7 +177,7 @@ WorkerGlobalScope::GetExistingNavigator() const
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<WorkerNavigator> navigator = mNavigator;
+  RefPtr<WorkerNavigator> navigator = mNavigator;
   return navigator.forget();
 }
 
@@ -355,7 +355,7 @@ WorkerGlobalScope::GetIndexedDB(ErrorResult& aErrorResult)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  nsRefPtr<IDBFactory> indexedDB = mIndexedDB;
+  RefPtr<IDBFactory> indexedDB = mIndexedDB;
 
   if (!indexedDB) {
     if (!mWorkerPrivate->IsStorageAllowed()) {
@@ -529,7 +529,7 @@ namespace {
 
 class SkipWaitingResultRunnable final : public WorkerRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
 
 public:
   SkipWaitingResultRunnable(WorkerPrivate* aWorkerPrivate,
@@ -546,7 +546,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    nsRefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
+    RefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
     promise->MaybeResolve(JS::UndefinedHandleValue);
 
     // Release the reference on the worker thread.
@@ -558,7 +558,7 @@ public:
 
 class WorkerScopeSkipWaitingRunnable final : public nsRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsCString mScope;
 
 public:
@@ -574,7 +574,7 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
     MutexAutoLock lock(mPromiseProxy->Lock());
@@ -586,7 +586,7 @@ public:
     swm->SetSkipWaitingFlag(workerPrivate->GetPrincipal(), mScope,
                             workerPrivate->ServiceWorkerID());
 
-    nsRefPtr<SkipWaitingResultRunnable> runnable =
+    RefPtr<SkipWaitingResultRunnable> runnable =
       new SkipWaitingResultRunnable(workerPrivate, mPromiseProxy);
 
     AutoJSAPI jsapi;
@@ -604,19 +604,19 @@ ServiceWorkerGlobalScope::SkipWaiting(ErrorResult& aRv)
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mWorkerPrivate->IsServiceWorker());
 
-  nsRefPtr<Promise> promise = Promise::Create(this, aRv);
+  RefPtr<Promise> promise = Promise::Create(this, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<PromiseWorkerProxy> promiseProxy =
+  RefPtr<PromiseWorkerProxy> promiseProxy =
     PromiseWorkerProxy::Create(mWorkerPrivate, promise);
   if (!promiseProxy) {
     promise->MaybeResolve(JS::UndefinedHandleValue);
     return promise.forget();
   }
 
-  nsRefPtr<WorkerScopeSkipWaitingRunnable> runnable =
+  RefPtr<WorkerScopeSkipWaitingRunnable> runnable =
     new WorkerScopeSkipWaitingRunnable(promiseProxy,
                                        NS_ConvertUTF16toUTF8(mScope));
 

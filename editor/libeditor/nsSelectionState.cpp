@@ -89,7 +89,7 @@ nsSelectionState::RestoreSelection(Selection* aSel)
   // set the selection ranges anew
   for (i=0; i<arrayCount; i++)
   {
-    nsRefPtr<nsRange> range = mArray[i]->GetRange();
+    RefPtr<nsRange> range = mArray[i]->GetRange();
     NS_ENSURE_TRUE(range, NS_ERROR_UNEXPECTED);
 
     res = aSel->AddRange(range);
@@ -103,7 +103,7 @@ bool
 nsSelectionState::IsCollapsed()
 {
   if (1 != mArray.Length()) return false;
-  nsRefPtr<nsRange> range = mArray[0]->GetRange();
+  RefPtr<nsRange> range = mArray[0]->GetRange();
   NS_ENSURE_TRUE(range, false);
   bool bIsCollapsed = false;
   range->GetCollapsed(&bIsCollapsed);
@@ -120,8 +120,8 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
 
   for (i=0; i<myCount; i++)
   {
-    nsRefPtr<nsRange> myRange = mArray[i]->GetRange();
-    nsRefPtr<nsRange> itsRange = aSelState->mArray[i]->GetRange();
+    RefPtr<nsRange> myRange = mArray[i]->GetRange();
+    RefPtr<nsRange> itsRange = aSelState->mArray[i]->GetRange();
     NS_ENSURE_TRUE(myRange && itsRange, false);
 
     int16_t compResult;
@@ -665,7 +665,7 @@ nsRangeStore::StoreRange(nsRange* aRange)
 already_AddRefed<nsRange>
 nsRangeStore::GetRange()
 {
-  nsRefPtr<nsRange> range = new nsRange(startNode);
+  RefPtr<nsRange> range = new nsRange(startNode);
   nsresult res = range->Set(startNode, startOffset, endNode, endOffset);
   NS_ENSURE_SUCCESS(res, nullptr);
   return range.forget();

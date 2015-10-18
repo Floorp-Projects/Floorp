@@ -28,7 +28,7 @@ gfxQtNativeRenderer::Draw(gfxContext* ctx, mozilla::gfx::IntSize size,
         visual = vinfo.visual;
     }
 
-    nsRefPtr<gfxXlibSurface> xsurf =
+    RefPtr<gfxXlibSurface> xsurf =
         gfxXlibSurface::Create(screen, visual,
                                mozilla::gfx::IntSize(size.width, size.height));
 

@@ -7,7 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -40,10 +40,10 @@ MakeContext ()
 {
     const int size = 200;
 
-    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(IntSize(size, size),
                                          SurfaceFormat::B8G8R8X8);
-    nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
 
     return ctx.forget();
 }
@@ -52,7 +52,7 @@ const char* lastFamilies = nullptr;
 
 static void
 RunTest (TestEntry *test, gfxContext *ctx) {
-    nsRefPtr<gfxFontGroup> fontGroup;
+    RefPtr<gfxFontGroup> fontGroup;
     if (!lastFamilies || strcmp(lastFamilies, test->mFamilies)) {
         gfxFontStyle style_western_normal_16 (mozilla::gfx::FontStyle::NORMAL,
                                               400,
@@ -101,7 +101,7 @@ RunTest (TestEntry *test, gfxContext *ctx) {
 uint32_t iterations = 1;
 
 TEST(Gfx, TextRunPref) {
-    nsRefPtr<gfxContext> context = MakeContext();
+    RefPtr<gfxContext> context = MakeContext();
 
     // Start timing
     PRIntervalTime start = PR_IntervalNow();

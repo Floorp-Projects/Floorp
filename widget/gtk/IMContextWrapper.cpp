@@ -561,8 +561,8 @@ IMContextWrapper::ResetIME()
         return;
     }
 
-    nsRefPtr<IMContextWrapper> kungFuDeathGrip(this);
-    nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
+    RefPtr<IMContextWrapper> kungFuDeathGrip(this);
+    RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
     gtk_im_context_reset(activeContext);
 
@@ -1356,7 +1356,7 @@ IMContextWrapper::DispatchCompositionChangeEvent(
     }
 
     nsEventStatus status;
-    nsRefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
+    RefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
 
     // Store the selected string which will be removed by following
     // compositionchange event.
@@ -1443,7 +1443,7 @@ IMContextWrapper::DispatchCompositionCommitEvent(
         }
     }
 
-    nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
+    RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
     EventMessage message = aCommitString ? eCompositionCommit :
                                            eCompositionCommitAsIs;
@@ -1485,7 +1485,7 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
          this, aContext, NS_ConvertUTF16toUTF8(aCompositionString).get(),
          aCompositionString.Length()));
 
-    nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
+    RefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
     gchar *preedit_string;
     gint cursor_pos_in_chars;
@@ -1983,7 +1983,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
         return NS_ERROR_INVALID_ARG;
     }
 
-    nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
+    RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
     nsEventStatus status;
 
     // First, we should cancel current composition because editor cannot

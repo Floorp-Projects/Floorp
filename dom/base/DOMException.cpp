@@ -688,7 +688,7 @@ DOMException::Constructor(GlobalObject& /* unused */,
     }
   }
 
-  nsRefPtr<DOMException> retval =
+  RefPtr<DOMException> retval =
     new DOMException(exceptionResult,
                      NS_ConvertUTF16toUTF8(aMessage),
                      name,
@@ -709,7 +709,7 @@ DOMException::Create(nsresult aRv)
   nsCString message;
   uint16_t code;
   NSResultToNameAndMessage(aRv, name, message, &code);
-  nsRefPtr<DOMException> inst =
+  RefPtr<DOMException> inst =
     new DOMException(aRv, message, name, code);
   return inst.forget();
 }
@@ -721,7 +721,7 @@ DOMException::Create(nsresult aRv, const nsACString& aMessage)
   nsCString message;
   uint16_t code;
   NSResultToNameAndMessage(aRv, name, message, &code);
-  nsRefPtr<DOMException> inst =
+  RefPtr<DOMException> inst =
     new DOMException(aRv, aMessage, name, code);
   return inst.forget();
 }

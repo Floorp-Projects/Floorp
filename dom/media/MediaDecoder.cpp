@@ -1384,7 +1384,7 @@ MediaDecoder::CanPlayThrough()
 }
 
 #ifdef MOZ_EME
-nsRefPtr<MediaDecoder::CDMProxyPromise>
+RefPtr<MediaDecoder::CDMProxyPromise>
 MediaDecoder::RequestCDMProxy() const
 {
   return mCDMProxyPromise;
@@ -1395,11 +1395,11 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<CDMProxy> proxy = aProxy;
+  RefPtr<CDMProxy> proxy = aProxy;
   {
     CDMCaps::AutoLock caps(aProxy->Capabilites());
     if (!caps.AreCapsKnown()) {
-      nsRefPtr<MediaDecoder> self = this;
+      RefPtr<MediaDecoder> self = this;
       nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
         self->mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
       });
@@ -1506,7 +1506,7 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   // NB: When resourceSizes' ref count goes to 0 the promise will report the
   //     resources memory and finish the asynchronous memory report.
-  nsRefPtr<MediaDecoder::ResourceSizes> resourceSizes =
+  RefPtr<MediaDecoder::ResourceSizes> resourceSizes =
       new MediaDecoder::ResourceSizes(MediaMemoryTracker::MallocSizeOf);
 
   nsCOMPtr<nsIHandleReportCallback> handleReport = aHandleReport;
@@ -1589,7 +1589,7 @@ MediaDecoder::ConstructMediaTracks()
   AudioTrackList* audioList = element->AudioTracks();
   if (audioList && mInfo->HasAudio()) {
     const TrackInfo& info = mInfo->mAudio;
-    nsRefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
+    RefPtr<AudioTrack> track = MediaTrackList::CreateAudioTrack(
     info.mId, info.mKind, info.mLabel, info.mLanguage, info.mEnabled);
 
     audioList->AddTrack(track);
@@ -1598,7 +1598,7 @@ MediaDecoder::ConstructMediaTracks()
   VideoTrackList* videoList = element->VideoTracks();
   if (videoList && mInfo->HasVideo()) {
     const TrackInfo& info = mInfo->mVideo;
-    nsRefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
+    RefPtr<VideoTrack> track = MediaTrackList::CreateVideoTrack(
     info.mId, info.mKind, info.mLabel, info.mLanguage);
 
     videoList->AddTrack(track);

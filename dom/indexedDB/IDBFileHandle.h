@@ -34,7 +34,7 @@ class IDBFileHandle final
   , public FileHandleBase
   , public nsSupportsWeakReference
 {
-  nsRefPtr<IDBMutableFile> mMutableFile;
+  RefPtr<IDBMutableFile> mMutableFile;
 
 public:
   static already_AddRefed<IDBFileHandle>

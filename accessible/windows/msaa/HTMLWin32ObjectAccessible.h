@@ -37,7 +37,7 @@ protected:
   virtual void CacheChildren();
 
   void* mHwnd;
-  nsRefPtr<Accessible> mNativeAccessible;
+  RefPtr<Accessible> mNativeAccessible;
 };
 
 /**

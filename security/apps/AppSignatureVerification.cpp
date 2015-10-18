@@ -10,7 +10,7 @@
 #include "base64.h"
 #include "certdb.h"
 #include "CryptoTask.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -999,7 +999,7 @@ nsNSSCertificateDB::OpenSignedAppFileAsync(
 {
   NS_ENSURE_ARG_POINTER(aJarFile);
   NS_ENSURE_ARG_POINTER(aCallback);
-  nsRefPtr<OpenSignedAppFileTask> task(new OpenSignedAppFileTask(aTrustedRoot,
+  RefPtr<OpenSignedAppFileTask> task(new OpenSignedAppFileTask(aTrustedRoot,
                                                                aJarFile,
                                                                aCallback));
   return task->Dispatch("SignedJAR");
@@ -1014,7 +1014,7 @@ nsNSSCertificateDB::VerifySignedManifestAsync(
   NS_ENSURE_ARG_POINTER(aSignatureStream);
   NS_ENSURE_ARG_POINTER(aCallback);
 
-  nsRefPtr<VerifySignedmanifestTask> task(
+  RefPtr<VerifySignedmanifestTask> task(
     new VerifySignedmanifestTask(aTrustedRoot, aManifestStream,
                                  aSignatureStream, aCallback));
   return task->Dispatch("SignedManifest");
@@ -1508,7 +1508,7 @@ nsNSSCertificateDB::VerifySignedDirectoryAsync(
 {
   NS_ENSURE_ARG_POINTER(aUnpackedJar);
   NS_ENSURE_ARG_POINTER(aCallback);
-  nsRefPtr<VerifySignedDirectoryTask> task(new VerifySignedDirectoryTask(aTrustedRoot,
+  RefPtr<VerifySignedDirectoryTask> task(new VerifySignedDirectoryTask(aTrustedRoot,
                                                                        aUnpackedJar,
                                                                        aCallback));
   return task->Dispatch("UnpackedJar");

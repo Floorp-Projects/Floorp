@@ -66,7 +66,7 @@ already_AddRefed<CanvasLayer>
 BasicLayerManager::CreateCanvasLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<CanvasLayer> layer = new BasicCanvasLayer(this);
+  RefPtr<CanvasLayer> layer = new BasicCanvasLayer(this);
   return layer.forget();
 }
 

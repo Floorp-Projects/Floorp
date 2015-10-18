@@ -220,12 +220,12 @@ public:
 
   void GetDisplayFileName(nsAString& aFileName) const;
 
-  const nsTArray<nsRefPtr<File>>& GetFilesInternal() const
+  const nsTArray<RefPtr<File>>& GetFilesInternal() const
   {
     return mFiles;
   }
 
-  void SetFiles(const nsTArray<nsRefPtr<File>>& aFiles, bool aSetValueChanged);
+  void SetFiles(const nsTArray<RefPtr<File>>& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
 
   // Called when a nsIFilePicker or a nsIColorPicker terminate.
@@ -1275,7 +1275,7 @@ protected:
    * the frame. Whenever the frame wants to change the filename it has to call
    * SetFileNames to update this member.
    */
-  nsTArray<nsRefPtr<File>> mFiles;
+  nsTArray<RefPtr<File>> mFiles;
 
 #ifndef MOZ_CHILD_PERMISSIONS
   /**
@@ -1284,8 +1284,8 @@ protected:
   nsString mFirstFilePath;
 #endif
 
-  nsRefPtr<FileList>  mFileList;
-  nsRefPtr<Promise> mFilesAndDirectoriesPromise;
+  RefPtr<FileList>  mFileList;
+  RefPtr<Promise> mFilesAndDirectoriesPromise;
 
   nsString mStaticDocFileList;
   
@@ -1428,7 +1428,7 @@ private:
 
   private:
     nsCOMPtr<nsIFilePicker> mFilePicker;
-    nsRefPtr<HTMLInputElement> mInput;
+    RefPtr<HTMLInputElement> mInput;
   };
 };
 

@@ -269,7 +269,7 @@ BluetoothHfpManager::Init()
   nsresult rv = settings->CreateLock(nullptr, getter_AddRefs(settingsLock));
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsRefPtr<GetVolumeTask> callback = new GetVolumeTask();
+  RefPtr<GetVolumeTask> callback = new GetVolumeTask();
   rv = settingsLock->Get(AUDIO_VOLUME_BT_SCO_ID, callback);
   NS_ENSURE_SUCCESS(rv, false);
 
@@ -315,7 +315,7 @@ public:
 
 private:
   BluetoothHandsfreeInterface* mInterface;
-  nsRefPtr<BluetoothProfileResultHandler> mRes;
+  RefPtr<BluetoothProfileResultHandler> mRes;
 };
 
 class BluetoothHfpManager::InitProfileResultHandlerRunnable final
@@ -343,7 +343,7 @@ public:
   }
 
 private:
-  nsRefPtr<BluetoothProfileResultHandler> mRes;
+  RefPtr<BluetoothProfileResultHandler> mRes;
   nsresult mRv;
 };
 
@@ -355,7 +355,7 @@ BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
 
   if (sBluetoothHfpInterface) {
     BT_LOGR("Bluetooth Handsfree interface is already initalized.");
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP Init runnable");
@@ -368,7 +368,7 @@ BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!btInf)) {
     // If there's no backend interface, we dispatch a runnable
     // that calls the profile result handler.
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
@@ -381,7 +381,7 @@ BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!setupInterface)) {
     // If there's no Setup interface, we dispatch a runnable
     // that calls the profile result handler.
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
@@ -394,7 +394,7 @@ BluetoothHfpManager::InitHfpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!interface)) {
     // If there's no HFP interface, we dispatch a runnable
     // that calls the profile result handler.
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new InitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
@@ -465,7 +465,7 @@ public:
   }
 
 private:
-  nsRefPtr<BluetoothProfileResultHandler> mRes;
+  RefPtr<BluetoothProfileResultHandler> mRes;
 };
 
 class BluetoothHfpManager::DeinitProfileResultHandlerRunnable final
@@ -493,7 +493,7 @@ public:
   }
 
 private:
-  nsRefPtr<BluetoothProfileResultHandler> mRes;
+  RefPtr<BluetoothProfileResultHandler> mRes;
   nsresult mRv;
 };
 
@@ -505,7 +505,7 @@ BluetoothHfpManager::DeinitHfpInterface(BluetoothProfileResultHandler* aRes)
 
   if (!sBluetoothHfpInterface) {
     BT_LOGR("Bluetooth Handsfree interface has not been initialized.");
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new DeinitProfileResultHandlerRunnable(aRes, NS_OK);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP Deinit runnable");
@@ -518,7 +518,7 @@ BluetoothHfpManager::DeinitHfpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!btInf)) {
     // If there's no backend interface, we dispatch a runnable
     // that calls the profile result handler.
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");
@@ -531,7 +531,7 @@ BluetoothHfpManager::DeinitHfpInterface(BluetoothProfileResultHandler* aRes)
   if (NS_WARN_IF(!setupInterface)) {
     // If there's no Setup interface, we dispatch a runnable
     // that calls the profile result handler.
-    nsRefPtr<nsRunnable> r =
+    RefPtr<nsRunnable> r =
       new DeinitProfileResultHandlerRunnable(aRes, NS_ERROR_FAILURE);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch HFP OnError runnable");

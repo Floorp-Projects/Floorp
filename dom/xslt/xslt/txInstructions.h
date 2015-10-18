@@ -79,7 +79,7 @@ public:
 
     nsAutoPtr<Expr> mName;
     nsAutoPtr<Expr> mNamespace;
-    nsRefPtr<txNamespaceMap> mMappings;
+    RefPtr<txNamespaceMap> mMappings;
 };
 
 class txCallTemplate : public txInstruction
@@ -352,7 +352,7 @@ public:
 
     nsAutoPtr<Expr> mName;
     nsAutoPtr<Expr> mNamespace;
-    nsRefPtr<txNamespaceMap> mMappings;
+    RefPtr<txNamespaceMap> mMappings;
 };
 
 class txStartLREElement : public txInstruction

@@ -131,8 +131,8 @@ protected:
 
 private:
   bool mActorDestroyed;
-  nsRefPtr<Callback> mCallback;
-  nsRefPtr<DialCallback> mDialCallback;
+  RefPtr<Callback> mCallback;
+  RefPtr<DialCallback> mDialCallback;
 };
 
 END_TELEPHONY_NAMESPACE

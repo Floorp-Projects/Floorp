@@ -127,7 +127,7 @@ test_wait_checkpoint()
   nsCOMPtr<mozIStorageAsyncStatement> stmt;
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("SELECT 1"),
                            getter_AddRefs(stmt));
-  nsRefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
+  RefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
   nsCOMPtr<mozIStoragePendingStatement> pending;
   (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pending));
   spinner->SpinUntilCompleted();
@@ -140,7 +140,7 @@ test_wait_checkpoint()
 // sets the nsCOMPtr's to nullptr, freeing the reference.
 namespace test_unvisited_does_not_notify {
   nsCOMPtr<nsIURI> testURI;
-  nsRefPtr<Link> testLink;
+  RefPtr<Link> testLink;
 } // namespace test_unvisited_does_not_notify
 void
 test_unvisited_does_not_notify_part1()
@@ -177,7 +177,7 @@ test_visited_notifies()
 
   // Create our test Link.  The callback function will release the reference we
   // have on the Link.
-  nsRefPtr<Link> link = new mock_Link(expect_visit);
+  RefPtr<Link> link = new mock_Link(expect_visit);
 
   // Now, register our Link to be notified.
   nsCOMPtr<IHistory> history = do_get_IHistory();
@@ -216,8 +216,8 @@ test_same_uri_notifies_both()
   // Create our two test Links.  The callback function will release the
   // reference we have on the Links.  Only the second Link should run the next
   // test!
-  nsRefPtr<Link> link1 = new mock_Link(expect_visit, false);
-  nsRefPtr<Link> link2 = new mock_Link(expect_visit);
+  RefPtr<Link> link1 = new mock_Link(expect_visit, false);
+  RefPtr<Link> link2 = new mock_Link(expect_visit);
 
   // Now, register our Link to be notified.
   nsCOMPtr<IHistory> history = do_get_IHistory();
@@ -237,7 +237,7 @@ test_unregistered_visited_does_not_notify()
   // unregistered Links (due to request serialization).
 
   nsCOMPtr<nsIURI> testURI = new_test_uri();
-  nsRefPtr<Link> link = new mock_Link(expect_no_visit);
+  RefPtr<Link> link = new mock_Link(expect_no_visit);
 
   // Now, register our Link to be notified.
   nsCOMPtr<IHistory> history(do_get_IHistory());
@@ -265,7 +265,7 @@ test_new_visit_notifies_waiting_Link()
 {
   // Create our test Link.  The callback function will release the reference we
   // have on the link.
-  nsRefPtr<Link> link = new mock_Link(expect_visit);
+  RefPtr<Link> link = new mock_Link(expect_visit);
 
   // Now, register our content node to be notified.
   nsCOMPtr<nsIURI> testURI = new_test_uri();
@@ -287,7 +287,7 @@ test_RegisterVisitedCallback_returns_before_notifying()
   addURI(testURI);
 
   // Create our test Link.
-  nsRefPtr<Link> link = new mock_Link(expect_no_visit);
+  RefPtr<Link> link = new mock_Link(expect_no_visit);
 
   // Now, register our content node to be notified.  It should not be notified.
   nsCOMPtr<IHistory> history = do_get_IHistory();
@@ -389,9 +389,9 @@ test_observer_topic_dispatched()
   addURI(visitedURI);
 
   // Need two Link objects as well - one for each URI.
-  nsRefPtr<Link> visitedLink = new mock_Link(expect_visit, false);
-  nsRefPtr<Link> visitedLinkCopy = visitedLink;
-  nsRefPtr<Link> notVisitedLink = new mock_Link(expect_no_visit);
+  RefPtr<Link> visitedLink = new mock_Link(expect_visit, false);
+  RefPtr<Link> visitedLinkCopy = visitedLink;
+  RefPtr<Link> notVisitedLink = new mock_Link(expect_no_visit);
 
   // Add the right observers for the URIs to check results.
   bool visitedNotified = false;
@@ -429,7 +429,7 @@ test_visituri_inserts()
 
   history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
 
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
   PlaceRecord place;
@@ -449,7 +449,7 @@ test_visituri_updates()
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsCOMPtr<nsIURI> lastURI = new_test_uri();
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
-  nsRefPtr<VisitURIObserver> finisher;
+  RefPtr<VisitURIObserver> finisher;
 
   history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
   finisher = new VisitURIObserver();
@@ -479,7 +479,7 @@ test_visituri_preserves_shown_and_typed()
   // transitions would be hidden unless it was previously loaded top-level
   history->VisitURI(visitedURI, lastURI, 0);
 
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver(2);
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver(2);
   finisher->WaitForNotification();
 
   PlaceRecord place;
@@ -497,7 +497,7 @@ test_visituri_creates_visit()
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
   history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
   PlaceRecord place;
@@ -522,7 +522,7 @@ test_visituri_transition_typed()
 
   navHistory->MarkPageAsTyped(visitedURI);
   history->VisitURI(visitedURI, lastURI, mozilla::IHistory::TOP_LEVEL);
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
   PlaceRecord place;
@@ -543,7 +543,7 @@ test_visituri_transition_embed()
   nsCOMPtr<nsIURI> visitedURI = new_test_uri();
 
   history->VisitURI(visitedURI, lastURI, 0);
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
   PlaceRecord place;
@@ -566,7 +566,7 @@ test_new_visit_adds_place_guid()
   nsresult rv = history->VisitURI(visitedURI, nullptr,
                                   mozilla::IHistory::TOP_LEVEL);
   do_check_success(rv);
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
   // Check that we have a guid for our visit.
@@ -598,7 +598,7 @@ test_two_null_links_same_uri()
   rv = history->VisitURI(testURI, nullptr, mozilla::IHistory::TOP_LEVEL);
   do_check_success(rv);
 
-  nsRefPtr<VisitURIObserver> finisher = new VisitURIObserver();
+  RefPtr<VisitURIObserver> finisher = new VisitURIObserver();
   finisher->WaitForNotification();
 
   run_next_test();

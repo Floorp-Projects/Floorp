@@ -34,7 +34,7 @@ nsresult
 UploadStumbleRunnable::Upload()
 {
   nsresult rv;
-  nsRefPtr<nsVariant> variant = new nsVariant();
+  RefPtr<nsVariant> variant = new nsVariant();
 
   rv = variant->SetAsISupports(mUploadInputStream);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -69,7 +69,7 @@ UploadStumbleRunnable::Upload()
   xhr->SetTimeout(60 * 1000);
 
   nsCOMPtr<EventTarget> target(do_QueryInterface(xhr));
-  nsRefPtr<nsIDOMEventListener> listener = new UploadEventListener(xhr);
+  RefPtr<nsIDOMEventListener> listener = new UploadEventListener(xhr);
 
   const char* const sEventStrings[] = {
     // nsIXMLHttpRequestEventTarget event types

@@ -44,7 +44,7 @@ private:
 static gfxTextRun*
 GetEllipsisTextRun(nsIFrame* aFrame)
 {
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(aFrame));
   LazyReferenceRenderingContextGetterFromFrame lazyRefContextGetter(aFrame);
@@ -251,7 +251,7 @@ nsDisplayTextOverflowMarker::PaintTextToContext(nsRenderingContext* aCtx,
                     0, textRun->GetLength(), nullptr, nullptr, nullptr);
     }
   } else {
-    nsRefPtr<nsFontMetrics> fm;
+    RefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(mFrame));
     nsLayoutUtils::DrawString(mFrame, *fm, aCtx, mStyle->mString.get(),
@@ -734,7 +734,7 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
   }
 
   // Inhibit the markers if a descendant content owns the caret.
-  nsRefPtr<nsCaret> caret = aBlockFrame->PresContext()->PresShell()->GetCaret();
+  RefPtr<nsCaret> caret = aBlockFrame->PresContext()->PresShell()->GetCaret();
   if (caret && caret->IsVisible()) {
     nsCOMPtr<nsISelection> domSelection = caret->GetSelection();
     if (domSelection) {
@@ -807,7 +807,7 @@ TextOverflow::Marker::SetupString(nsIFrame* aFrame)
   } else {
     nsRenderingContext rc(
       aFrame->PresContext()->PresShell()->CreateReferenceRenderingContext());
-    nsRefPtr<nsFontMetrics> fm;
+    RefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));
     mISize = nsLayoutUtils::AppUnitWidthOfStringBidi(mStyle->mString, aFrame,

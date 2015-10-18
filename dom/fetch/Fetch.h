@@ -213,7 +213,7 @@ private:
 
   // Only touched on target thread.
   ConsumeType mConsumeType;
-  nsRefPtr<Promise> mConsumePromise;
+  RefPtr<Promise> mConsumePromise;
   DebugOnly<bool> mReadDone;
 
   nsMainThreadPtrHandle<nsIInputStreamPump> mConsumeBodyPump;

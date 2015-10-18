@@ -1376,7 +1376,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       {
         // Clip out the interior of the frame's border edge so that the shadow
         // is only painted outside that area.
-        nsRefPtr<PathBuilder> builder =
+        RefPtr<PathBuilder> builder =
           aDrawTarget.CreatePathBuilder(FillRule::FILL_EVEN_ODD);
         AppendRectToPath(builder, shadowGfxRectPlusBlur);
         if (hasBorderRadius) {
@@ -1384,7 +1384,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
         } else {
           AppendRectToPath(builder, frameGfxRect);
         }
-        nsRefPtr<Path> path = builder->Finish();
+        RefPtr<Path> path = builder->Finish();
         renderContext->Clip(path);
       }
 
@@ -1596,7 +1596,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     // This clips the outside border radius.
     // clipRectRadii is the border radius inside the inset shadow.
     if (hasBorderRadius) {
-      nsRefPtr<Path> roundedRect =
+      RefPtr<Path> roundedRect =
         MakePathForRoundedRect(*drawTarget, shadowGfxRect, innerRadii);
       renderContext->Clip(roundedRect);
     } else {
@@ -1881,7 +1881,7 @@ SetupBackgroundClip(nsCSSRendering::BackgroundClipState& aClipState,
 
     aAutoSR->EnsureSaved(aCtx);
 
-    nsRefPtr<Path> roundedRect =
+    RefPtr<Path> roundedRect =
       MakePathForRoundedRect(*drawTarget, bgAreaGfx, aClipState.mClippedRadii);
     aCtx->Clip(roundedRect);
   }
@@ -1937,7 +1937,7 @@ DrawBackgroundColor(nsCSSRendering::BackgroundClipState& aClipState,
     aCtx->Clip();
   }
 
-  nsRefPtr<Path> roundedRect =
+  RefPtr<Path> roundedRect =
     MakePathForRoundedRect(*drawTarget, bgAreaGfx, aClipState.mClippedRadii);
   aCtx->SetPath(roundedRect);
   aCtx->Fill();
@@ -2625,7 +2625,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   stopScale = 1.0/(stopEnd - stopOrigin);
 
   // Create the gradient pattern.
-  nsRefPtr<gfxPattern> gradientPattern;
+  RefPtr<gfxPattern> gradientPattern;
   bool forceRepeatToCoverTiles = false;
   gfxMatrix matrix;
   gfxPoint gradientStart;
@@ -2732,7 +2732,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     rawStops[i].color = stops[i].mColor;
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
-  nsRefPtr<mozilla::gfx::GradientStops> gs =
+  RefPtr<mozilla::gfx::GradientStops> gs =
     gfxGradientCache::GetOrCreateGradientStops(ctx->GetDrawTarget(),
                                                rawStops,
                                                isRepeat ? gfx::ExtendMode::REPEAT : gfx::ExtendMode::CLAMP);
@@ -3781,13 +3781,13 @@ DrawSolidBorderSegment(nsRenderingContext& aContext,
       poly[3].y -= endBevelOffset;
     }
 
-    nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+    RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
     builder->MoveTo(poly[0]);
     builder->LineTo(poly[1]);
     builder->LineTo(poly[2]);
     builder->LineTo(poly[3]);
     builder->Close();
-    nsRefPtr<Path> path = builder->Finish();
+    RefPtr<Path> path = builder->Finish();
     drawTarget->Fill(path, color, drawOptions);
   }
 }
@@ -4343,8 +4343,8 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
         iCoordLimit -= skipCycles * cycleLength;
       }
 
-      nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-      nsRefPtr<Path> path;
+      RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+      RefPtr<Path> path;
 
       ptICoord -= lineThickness;
       builder->MoveTo(pt); // 1
@@ -5011,7 +5011,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Element:
     {
-      nsRefPtr<gfxDrawable> drawable = DrawableForElement(aDest,
+      RefPtr<gfxDrawable> drawable = DrawableForElement(aDest,
                                                           aRenderingContext);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
@@ -5061,7 +5061,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     nsRect destRect = aImageRect - aImageRect.TopLeft();
     nsIntSize roundedOut = destRect.ToOutsidePixels(appUnitsPerDevPixel).Size();
     IntSize imageSize(roundedOut.width, roundedOut.height);
-    nsRefPtr<gfxDrawable> drawable =
+    RefPtr<gfxDrawable> drawable =
       nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame, mForFrame, mSize, imageSize,
         aRenderingContext.GetDrawTarget(),
@@ -5071,7 +5071,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     return drawable.forget();
   }
   NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
-  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
+  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
                                 mImageElementSurface.mSourceSurface,
                                 mImageElementSurface.mSize);
   return drawable.forget();
@@ -5210,7 +5210,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       // invalidate that cache, and it's not clear that it's worth the trouble
       // since using border-image with -moz-element is rare.
 
-      nsRefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
+      RefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
                                                           aRenderingContext);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
@@ -5447,7 +5447,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   if (aBlurRadius <= 0) {
     ColorPattern color(ToDeviceColor(aShadowColor));
     if (aCornerRadii) {
-      nsRefPtr<Path> roundedRect = MakePathForRoundedRect(aDestDrawTarget,
+      RefPtr<Path> roundedRect = MakePathForRoundedRect(aDestDrawTarget,
                                                         shadowGfxRect,
                                                         *aCornerRadii);
       aDestDrawTarget.Fill(roundedRect, color);

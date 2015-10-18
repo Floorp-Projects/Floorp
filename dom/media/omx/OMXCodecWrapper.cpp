@@ -384,7 +384,7 @@ ConvertGrallocImageToNV12(GrallocImage* aSource, uint8_t* aDestination)
 }
 
 static nsresult
-ConvertSourceSurfaceToNV12(const nsRefPtr<SourceSurface>& aSurface, uint8_t* aDestination)
+ConvertSourceSurfaceToNV12(const RefPtr<SourceSurface>& aSurface, uint8_t* aDestination)
 {
   uint32_t width = aSurface->GetSize().width;
   uint32_t height = aSurface->GetSize().height;
@@ -402,7 +402,7 @@ ConvertSourceSurfaceToNV12(const nsRefPtr<SourceSurface>& aSurface, uint8_t* aDe
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
   if (!data) {
     CODEC_ERROR("Getting data surface from %s image with %s (%s) surface failed",
                 Stringify(format).c_str(), Stringify(aSurface->GetType()).c_str(),
@@ -474,7 +474,7 @@ OMXVideoEncoder::Encode(const Image* aImage, int aWidth, int aHeight,
                      halFormat == GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS,
                      NS_ERROR_INVALID_ARG);
     } else {
-      nsRefPtr<SourceSurface> surface = img->GetAsSourceSurface();
+      RefPtr<SourceSurface> surface = img->GetAsSourceSurface();
       NS_ENSURE_TRUE(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                      surface->GetFormat() == SurfaceFormat::B8G8R8X8,
                      NS_ERROR_INVALID_ARG);
@@ -516,7 +516,7 @@ OMXVideoEncoder::Encode(const Image* aImage, int aWidth, int aHeight,
       ConvertPlanarYCbCrToNV12(static_cast<PlanarYCbCrImage*>(img)->GetData(),
                                dst);
     } else {
-      nsRefPtr<SourceSurface> surface = img->GetAsSourceSurface();
+      RefPtr<SourceSurface> surface = img->GetAsSourceSurface();
       nsresult rv = ConvertSourceSurfaceToNV12(surface, dst);
 
       if (rv != NS_OK) {
@@ -1058,7 +1058,7 @@ OMXCodecWrapper::GetNextEncodedFrame(nsTArray<uint8_t>* aOutputBuf,
       }
     } else if ((mCodecType == AMR_NB_ENC) && !mAMRCSDProvided){
       // OMX AMR codec won't provide csd data, need to generate a fake one.
-      nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
+      RefPtr<EncodedFrame> audiodata = new EncodedFrame();
       // Decoder config descriptor
       const uint8_t decConfig[] = {
         0x0, 0x0, 0x0, 0x0, // vendor: 4 bytes

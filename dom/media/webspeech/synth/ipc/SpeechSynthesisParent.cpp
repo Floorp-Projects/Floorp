@@ -42,7 +42,7 @@ SpeechSynthesisParent::AllocPSpeechSynthesisRequestParent(const nsString& aText,
                                                           const float& aRate,
                                                           const float& aPitch)
 {
-  nsRefPtr<SpeechTaskParent> task = new SpeechTaskParent(aVolume, aText);
+  RefPtr<SpeechTaskParent> task = new SpeechTaskParent(aVolume, aText);
   SpeechSynthesisRequestParent* actor = new SpeechSynthesisRequestParent(task);
   return actor;
 }

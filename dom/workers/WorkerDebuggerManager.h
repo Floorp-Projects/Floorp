@@ -70,7 +70,7 @@ private:
 inline nsresult
 ClearWorkerDebuggerManagerListeners()
 {
-  nsRefPtr<WorkerDebuggerManager> manager =
+  RefPtr<WorkerDebuggerManager> manager =
     WorkerDebuggerManager::GetOrCreateService();
   if (!manager) {
     return NS_ERROR_FAILURE;
@@ -83,7 +83,7 @@ ClearWorkerDebuggerManagerListeners()
 inline nsresult
 RegisterWorkerDebugger(WorkerDebugger* aDebugger)
 {
-  nsRefPtr<WorkerDebuggerManager> manager =
+  RefPtr<WorkerDebuggerManager> manager =
     WorkerDebuggerManager::GetOrCreateService();
   if (!manager) {
     return NS_ERROR_FAILURE;
@@ -96,7 +96,7 @@ RegisterWorkerDebugger(WorkerDebugger* aDebugger)
 inline nsresult
 UnregisterWorkerDebugger(WorkerDebugger* aDebugger)
 {
-  nsRefPtr<WorkerDebuggerManager> manager =
+  RefPtr<WorkerDebuggerManager> manager =
     WorkerDebuggerManager::GetOrCreateService();
   if (!manager) {
     return NS_ERROR_FAILURE;

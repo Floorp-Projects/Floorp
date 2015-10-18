@@ -538,7 +538,7 @@ class OutputDrain : public MediaCodecOutputDrain
   jobjectArray mInputBuffers;
   jobjectArray mOutputBuffers;
 
-  nsRefPtr<OutputDrain> mOutputDrain;
+  RefPtr<OutputDrain> mOutputDrain;
   uint32_t mWidth;
   uint32_t mHeight;
   bool isStarted;

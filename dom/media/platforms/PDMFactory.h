@@ -74,8 +74,8 @@ private:
   static uint32_t sVideoOutputMinimumInterval_ms;
   static bool sDontDelayInputExhausted;
 
-  nsTArray<nsRefPtr<PlatformDecoderModule>> mCurrentPDMs;
-  nsRefPtr<PlatformDecoderModule> mEMEPDM;
+  nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
+  RefPtr<PlatformDecoderModule> mEMEPDM;
 };
 
 } // namespace mozilla

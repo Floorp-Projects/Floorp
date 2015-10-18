@@ -421,7 +421,7 @@ nsComponentManagerImpl::Init()
   cl->type = NS_APP_LOCATION;
   cl->location.Init(lf);
 
-  nsRefPtr<nsZipArchive> greOmnijar =
+  RefPtr<nsZipArchive> greOmnijar =
     mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
   if (greOmnijar) {
     cl = sModuleLocations->AppendElement();
@@ -438,7 +438,7 @@ nsComponentManagerImpl::Init()
     cl->location.Init(lf);
   }
 
-  nsRefPtr<nsZipArchive> appOmnijar =
+  RefPtr<nsZipArchive> appOmnijar =
     mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
   if (appOmnijar) {
     cl = sModuleLocations->AppendElement();

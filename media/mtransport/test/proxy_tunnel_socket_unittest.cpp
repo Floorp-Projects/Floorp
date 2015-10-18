@@ -144,7 +144,7 @@ class ProxyTunnelSocketTest : public ::testing::Test {
       EXPECT_EQ(nullptr, nr_socket_);
     }
 
-    nsRefPtr<DummySocket> dummy(new DummySocket());
+    RefPtr<DummySocket> dummy(new DummySocket());
     int r = nr_socket_proxy_tunnel_create(
         config_,
         dummy->get_nr_socket(),
@@ -167,7 +167,7 @@ class ProxyTunnelSocketTest : public ::testing::Test {
   nr_socket *socket() { return nr_socket_; }
 
  protected:
-  nsRefPtr<DummySocket> socket_impl_;
+  RefPtr<DummySocket> socket_impl_;
   DummyResolver resolver_impl_;
   nr_socket *nr_socket_;
   nr_resolver *nr_resolver_;

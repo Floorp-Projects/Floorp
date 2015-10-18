@@ -39,7 +39,7 @@ public:
 private:
   ~BufferStream();
   int64_t mStartOffset;
-  nsRefPtr<mozilla::MediaByteBuffer> mData;
+  RefPtr<mozilla::MediaByteBuffer> mData;
 };
 }
 

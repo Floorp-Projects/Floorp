@@ -27,7 +27,7 @@ private:
   ~ProfileGatherer() {};
   void Finish();
 
-  nsRefPtr<mozilla::dom::Promise> mPromise;
+  RefPtr<mozilla::dom::Promise> mPromise;
   GeckoSampler* mTicker;
   double mSinceTime;
   uint32_t mPendingProfiles;

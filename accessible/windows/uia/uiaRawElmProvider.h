@@ -66,7 +66,7 @@ private:
   uiaRawElmProvider(const uiaRawElmProvider&) = delete;
 
 protected:
-  nsRefPtr<AccessibleWrap> mAcc;
+  RefPtr<AccessibleWrap> mAcc;
 };
 
 } // a11y namespace

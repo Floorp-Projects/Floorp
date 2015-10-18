@@ -16,7 +16,7 @@ namespace mozilla {
 
 GType moz_gfx_memory_allocator_get_type();
 void moz_gfx_memory_allocator_set_reader(GstAllocator *aAllocator, GStreamerReader* aReader);
-nsRefPtr<layers::PlanarYCbCrImage> moz_gfx_memory_get_image(GstMemory *aMemory);
+RefPtr<layers::PlanarYCbCrImage> moz_gfx_memory_get_image(GstMemory *aMemory);
 
 GType moz_gfx_buffer_pool_get_type();
 

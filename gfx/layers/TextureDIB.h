@@ -45,8 +45,8 @@ protected:
     , mIsLocked(false)
   { }
 
-  nsRefPtr<gfxWindowsSurface> mSurface;
-  nsRefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
@@ -146,8 +146,8 @@ public:
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
 protected:
-  nsRefPtr<DataTextureSource> mTextureSource;
-  nsRefPtr<Compositor> mCompositor;
+  RefPtr<DataTextureSource> mTextureSource;
+  RefPtr<Compositor> mCompositor;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
   bool mIsLocked;
@@ -167,7 +167,7 @@ public:
 protected:
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
-  nsRefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<gfxWindowsSurface> mSurface;
 };
 
 class TextureHostFileMapping : public TextureHostDirectUpload

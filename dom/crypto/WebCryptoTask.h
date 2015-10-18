@@ -161,7 +161,7 @@ public:
                           const Sequence<nsString>& aKeyUsages);
 
 protected:
-  nsRefPtr<Promise> mResultPromise;
+  RefPtr<Promise> mResultPromise;
   nsresult mEarlyRv;
   bool mEarlyComplete;
 

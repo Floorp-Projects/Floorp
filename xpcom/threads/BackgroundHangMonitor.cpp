@@ -144,7 +144,7 @@ private:
 
   /* Keep a reference to the manager, so we can keep going even
      after BackgroundHangManager::Shutdown is called. */
-  const nsRefPtr<BackgroundHangManager> mManager;
+  const RefPtr<BackgroundHangManager> mManager;
   // Unique thread ID for identification
   const PRThread* mThreadID;
 
@@ -490,7 +490,7 @@ BackgroundHangThread::FindThread()
     return sTlsKey.get();
   }
   // If TLS is unavailable, we can search through the thread list
-  nsRefPtr<BackgroundHangManager> manager(BackgroundHangManager::sInstance);
+  RefPtr<BackgroundHangManager> manager(BackgroundHangManager::sInstance);
   MOZ_ASSERT(manager, "Creating BackgroundHangMonitor after shutdown");
 
   PRThread* threadID = PR_GetCurrentThread();

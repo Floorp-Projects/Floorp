@@ -246,7 +246,7 @@ KeyboardEvent::Constructor(const GlobalObject& aGlobal,
                            ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<KeyboardEvent> newEvent =
+  RefPtr<KeyboardEvent> newEvent =
     new KeyboardEvent(target, nullptr, nullptr);
   newEvent->InitWithKeyboardEventInit(target, aType, aParam, aRv);
 
@@ -319,6 +319,6 @@ NS_NewDOMKeyboardEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        WidgetKeyboardEvent* aEvent)
 {
-  nsRefPtr<KeyboardEvent> it = new KeyboardEvent(aOwner, aPresContext, aEvent);
+  RefPtr<KeyboardEvent> it = new KeyboardEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

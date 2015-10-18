@@ -341,7 +341,7 @@ status_t GonkBufferQueueProducer::dequeueBuffer(int *outSlot,
     } // Autolock scope
 
     if (returnFlags & BUFFER_NEEDS_REALLOCATION) {
-        nsRefPtr<GrallocTextureClientOGL> textureClient =
+        RefPtr<GrallocTextureClientOGL> textureClient =
             new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
                                         gfx::SurfaceFormat::UNKNOWN,
                                         gfx::BackendType::NONE,

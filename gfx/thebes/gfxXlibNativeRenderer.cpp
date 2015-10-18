@@ -451,7 +451,7 @@ CopyXlibSurfaceToImage(cairo_surface_t *tempXlibSurface,
                        IntSize size,
                        gfxImageFormat format)
 {
-    nsRefPtr<gfxImageSurface> result = new gfxImageSurface(size, format);
+    RefPtr<gfxImageSurface> result = new gfxImageSurface(size, format);
 
     cairo_t* copyCtx = cairo_create(result->CairoSurface());
     cairo_set_source_surface(copyCtx, tempXlibSurface, 0, 0);
@@ -574,7 +574,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
             native.mType = NativeSurfaceType::CAIRO_SURFACE;
             native.mSurface = tempXlibSurface;
             native.mSize = size;
-            nsRefPtr<SourceSurface> sourceSurface =
+            RefPtr<SourceSurface> sourceSurface =
                 drawTarget->CreateSourceSurfaceFromNativeSurface(native);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,
@@ -582,7 +582,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
                     Rect(0, 0, size.width, size.height));
             }
         } else {
-            nsRefPtr<gfxASurface> tmpSurf = gfxASurface::Wrap(tempXlibSurface);
+            RefPtr<gfxASurface> tmpSurf = gfxASurface::Wrap(tempXlibSurface);
             ctx->SetSource(tmpSurf, offset);
             ctx->Paint();
         }
@@ -590,7 +590,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
         return;
     }
     
-    nsRefPtr<gfxImageSurface> blackImage =
+    RefPtr<gfxImageSurface> blackImage =
         CopyXlibSurfaceToImage(tempXlibSurface, size, gfxImageFormat::ARGB32);
     
     cairo_t* tmpCtx = cairo_create(tempXlibSurface);
@@ -599,7 +599,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     cairo_paint(tmpCtx);
     cairo_destroy(tmpCtx);
     DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft());
-    nsRefPtr<gfxImageSurface> whiteImage =
+    RefPtr<gfxImageSurface> whiteImage =
         CopyXlibSurfaceToImage(tempXlibSurface, size, gfxImageFormat::RGB24);
   
     if (blackImage->CairoStatus() == CAIRO_STATUS_SUCCESS &&
@@ -616,7 +616,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
             native.mType = NativeSurfaceType::CAIRO_SURFACE;
             native.mSurface = paintSurface->CairoSurface();
             native.mSize = size;
-            nsRefPtr<SourceSurface> sourceSurface =
+            RefPtr<SourceSurface> sourceSurface =
                 drawTarget->CreateSourceSurfaceFromNativeSurface(native);
             if (sourceSurface) {
                 drawTarget->DrawSurface(sourceSurface,

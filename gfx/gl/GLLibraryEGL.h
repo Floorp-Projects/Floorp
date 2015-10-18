@@ -613,7 +613,7 @@ private:
     bool mInitialized;
     PRLibrary* mEGLLibrary;
     EGLDisplay mEGLDisplay;
-    nsRefPtr<GLContext> mReadbackGL;
+    RefPtr<GLContext> mReadbackGL;
 
     bool mIsANGLE;
     bool mIsWARP;

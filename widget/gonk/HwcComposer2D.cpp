@@ -215,7 +215,7 @@ public:
 
     NS_IMETHOD Run()
     {
-        nsRefPtr<nsScreenManagerGonk> screenManager =
+        RefPtr<nsScreenManagerGonk> screenManager =
             nsScreenManagerGonk::GetInstance();
         if (mConnected) {
             screenManager->AddScreen(mType);
@@ -814,7 +814,7 @@ HwcComposer2D::Commit(nsScreenGonk* aScreen)
         }
         FenceHandle fence = state.mTexture->GetAndResetAcquireFenceHandle();
         if (fence.IsValid()) {
-            nsRefPtr<FenceHandle::FdObj> fdObj = fence.GetAndResetFdObj();
+            RefPtr<FenceHandle::FdObj> fdObj = fence.GetAndResetFdObj();
             mList->hwLayers[j].acquireFenceFd = fdObj->GetAndResetFd();
         }
     }
@@ -827,7 +827,7 @@ HwcComposer2D::Commit(nsScreenGonk* aScreen)
         if (mList->hwLayers[j].releaseFenceFd >= 0) {
             int fd = mList->hwLayers[j].releaseFenceFd;
             mList->hwLayers[j].releaseFenceFd = -1;
-            nsRefPtr<FenceHandle::FdObj> fdObj = new FenceHandle::FdObj(fd);
+            RefPtr<FenceHandle::FdObj> fdObj = new FenceHandle::FdObj(fd);
             FenceHandle fence(fdObj);
 
             LayerRenderState state = mHwcLayerMap[j]->GetLayer()->GetRenderState();

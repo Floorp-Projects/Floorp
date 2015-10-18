@@ -9,7 +9,7 @@
 #include "gfxTypes.h"
 #include <stdint.h>                     // for uint32_t
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/2D.h"             // for DrawTarget, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -146,8 +146,8 @@ public:
   virtual bool HaveBufferOnWhite() const { return !!mSourceOnWhite; }
 
 private:
-  nsRefPtr<gfx::SourceSurface> mSource;
-  nsRefPtr<gfx::SourceSurface> mSourceOnWhite;
+  RefPtr<gfx::SourceSurface> mSource;
+  RefPtr<gfx::SourceSurface> mSourceOnWhite;
 };
 
 // Mixin class for classes which need logic for loaning out a draw target.
@@ -160,7 +160,7 @@ protected:
   // The draw target loaned by BorrowDrawTargetForQuadrantUpdate. It should not
   // be used, we just keep a reference to ensure it is kept alive and so we can
   // correctly restore state when it is returned.
-  nsRefPtr<gfx::DrawTarget> mLoanedDrawTarget;
+  RefPtr<gfx::DrawTarget> mLoanedDrawTarget;
   gfx::Matrix mLoanedTransform;
 };
 
@@ -309,7 +309,7 @@ public:
    */
   virtual void
   CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
-               nsRefPtr<gfx::DrawTarget>* aBlackDT, nsRefPtr<gfx::DrawTarget>* aWhiteDT) = 0;
+               RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) = 0;
 
   /**
    * Get the underlying buffer, if any. This is useful because we can pass
@@ -411,8 +411,8 @@ protected:
    */
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
 
-  nsRefPtr<gfx::DrawTarget> mDTBuffer;
-  nsRefPtr<gfx::DrawTarget> mDTBufferOnWhite;
+  RefPtr<gfx::DrawTarget> mDTBuffer;
+  RefPtr<gfx::DrawTarget> mDTBufferOnWhite;
 
   /**
    * These members are only set transiently.  They're used to map mDTBuffer
