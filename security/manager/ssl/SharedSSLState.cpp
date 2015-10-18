@@ -76,7 +76,7 @@ void ClearPrivateSSLState()
   MOZ_ASSERT(NS_SUCCEEDED(rv) && onSTSThread);
 #endif
 
-  RefPtr<MainThreadClearer> runnable = new MainThreadClearer;
+  nsRefPtr<MainThreadClearer> runnable = new MainThreadClearer;
   runnable->DispatchToMainThreadAndWait();
 
   // If NSS isn't initialized, this throws an assertion. We guard it by checking if

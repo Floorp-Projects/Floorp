@@ -56,8 +56,8 @@ class TextureClientX11 : public TextureClient
  private:
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
-  RefPtr<gfxXlibSurface> mSurface;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
+  nsRefPtr<gfxXlibSurface> mSurface;
+  nsRefPtr<gfx::DrawTarget> mDrawTarget;
   bool mLocked;
 };
 

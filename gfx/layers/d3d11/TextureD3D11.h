@@ -91,9 +91,9 @@ protected:
   virtual void FinalizeOnIPDLThread() override;
 
   gfx::IntSize mSize;
-  RefPtr<ID3D10Texture2D> mTexture10;
-  RefPtr<ID3D11Texture2D> mTexture;
-  RefPtr<gfx::DrawTarget> mDrawTarget;
+  nsRefPtr<ID3D10Texture2D> mTexture10;
+  nsRefPtr<ID3D11Texture2D> mTexture;
+  nsRefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
   bool mNeedsClear;
@@ -161,7 +161,7 @@ public:
 private:
   virtual void FinalizeOnIPDLThread() override;
 
-  RefPtr<IUnknown> mHoldRefs[3];
+  nsRefPtr<IUnknown> mHoldRefs[3];
   HANDLE mHandles[3];
   gfx::IntSize mSize;
   gfx::IntSize mSizeY;
@@ -186,8 +186,8 @@ protected:
   virtual gfx::IntSize GetSize() const { return mSize; }
 
   gfx::IntSize mSize;
-  RefPtr<ID3D11Texture2D> mTexture;
-  RefPtr<ID3D11ShaderResourceView> mSRV;
+  nsRefPtr<ID3D11Texture2D> mTexture;
+  nsRefPtr<ID3D11ShaderResourceView> mSRV;
 };
 
 /**
@@ -256,9 +256,9 @@ protected:
 
   void Reset();
 
-  std::vector< RefPtr<ID3D11Texture2D> > mTileTextures;
-  std::vector< RefPtr<ID3D11ShaderResourceView> > mTileSRVs;
-  RefPtr<CompositorD3D11> mCompositor;
+  std::vector< nsRefPtr<ID3D11Texture2D> > mTileTextures;
+  std::vector< nsRefPtr<ID3D11ShaderResourceView> > mTileSRVs;
+  nsRefPtr<CompositorD3D11> mCompositor;
   gfx::SurfaceFormat mFormat;
   TextureFlags mFlags;
   uint32_t mCurrentTile;
@@ -300,9 +300,9 @@ protected:
 
   bool OpenSharedHandle();
 
-  RefPtr<ID3D11Texture2D> mTexture;
-  RefPtr<DataTextureSourceD3D11> mTextureSource;
-  RefPtr<CompositorD3D11> mCompositor;
+  nsRefPtr<ID3D11Texture2D> mTexture;
+  nsRefPtr<DataTextureSourceD3D11> mTextureSource;
+  nsRefPtr<CompositorD3D11> mCompositor;
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
@@ -339,10 +339,10 @@ protected:
 
   bool OpenSharedHandle();
 
-  RefPtr<ID3D11Texture2D> mTextures[3];
-  RefPtr<DataTextureSourceD3D11> mTextureSources[3];
+  nsRefPtr<ID3D11Texture2D> mTextures[3];
+  nsRefPtr<DataTextureSourceD3D11> mTextureSources[3];
 
-  RefPtr<CompositorD3D11> mCompositor;
+  nsRefPtr<CompositorD3D11> mCompositor;
   gfx::IntSize mSize;
   WindowsHandle mHandles[3];
   bool mIsLocked;
@@ -366,7 +366,7 @@ public:
 private:
   friend class CompositorD3D11;
 
-  RefPtr<ID3D11RenderTargetView> mRTView;
+  nsRefPtr<ID3D11RenderTargetView> mRTView;
 };
 
 class SyncObjectD3D11 : public SyncObject
@@ -381,8 +381,8 @@ public:
   void RegisterTexture(ID3D10Texture2D* aTexture);
 
 private:
-  RefPtr<ID3D11Texture2D> mD3D11Texture;
-  RefPtr<ID3D10Texture2D> mD3D10Texture;
+  nsRefPtr<ID3D11Texture2D> mD3D11Texture;
+  nsRefPtr<ID3D10Texture2D> mD3D10Texture;
   std::vector<ID3D10Texture2D*> mD3D10SyncedTextures;
   std::vector<ID3D11Texture2D*> mD3D11SyncedTextures;
   SyncHandle mHandle;

@@ -17,7 +17,7 @@
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/File.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsAutoPtr.h"

@@ -15,7 +15,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Atomics.h"
 #include "InputData.h"

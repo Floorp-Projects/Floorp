@@ -13,7 +13,7 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
 { 0xb84f2fed, 0x9d4b, 0x430b, \

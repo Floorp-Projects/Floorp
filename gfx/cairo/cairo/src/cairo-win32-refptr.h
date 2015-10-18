@@ -41,7 +41,7 @@ template<typename T> class TemporaryRef;
 /**
  * RefPtr points to a refcounted thing that has AddRef and Release
  * methods to increase/decrease the refcount, respectively.  After a
- * RefPtr<T> is assigned a T*, the T* can be used through the RefPtr
+ * nsRefPtr<T> is assigned a T*, the T* can be used through the RefPtr
  * as if it were a T*.
  *
  * A RefPtr can forget its underlying T*, which results in the T*
@@ -63,7 +63,7 @@ public:
     RefPtr(T* t) : ptr(ref(t)) {}
 
     template<typename U>
-    RefPtr(const RefPtr<U>& o) : ptr(ref(o.get())) {}
+    RefPtr(const nsRefPtr<U>& o) : ptr(ref(o.get())) {}
 
     ~RefPtr() { unref(ptr); }
 
@@ -81,7 +81,7 @@ public:
     }
 
     template<typename U>
-    RefPtr& operator=(const RefPtr<U>& o) {
+    RefPtr& operator=(const nsRefPtr<U>& o) {
         assign(ref(o.get()));
         return *this;
     }
@@ -147,18 +147,18 @@ template<typename T>
 class TemporaryRef
 {
     // To allow it to construct TemporaryRef from a bare T*
-    friend class RefPtr<T>;
+    friend class nsRefPtr<T>;
 
-    typedef typename RefPtr<T>::dontRef dontRef;
+    typedef typename nsRefPtr<T>::dontRef dontRef;
 
 public:
-    TemporaryRef(T* t) : ptr(RefPtr<T>::ref(t)) {}
+    TemporaryRef(T* t) : ptr(nsRefPtr<T>::ref(t)) {}
     TemporaryRef(const TemporaryRef& o) : ptr(o.drop()) {}
 
     template<typename U>
     TemporaryRef(const TemporaryRef<U>& o) : ptr(o.drop()) {}
 
-    ~TemporaryRef() { RefPtr<T>::unref(ptr); }
+    ~TemporaryRef() { nsRefPtr<T>::unref(ptr); }
 
     T* drop() const {
         T* tmp = ptr;

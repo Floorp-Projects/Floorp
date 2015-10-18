@@ -15,7 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 

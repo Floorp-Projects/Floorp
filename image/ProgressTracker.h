@@ -9,7 +9,7 @@
 
 #include "CopyOnWrite.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsDataHashtable.h"
 #include "nsCOMPtr.h"

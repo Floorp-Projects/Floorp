@@ -12,7 +12,7 @@
 #include "Units.h"                      // for ParentLayerIntRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Rect.h"           // for Rect
@@ -22,7 +22,7 @@
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
 #include "mozilla/Maybe.h"              // for Maybe
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAString.h"
 #include "mozilla/nsRefPtr.h"                   // for nsRefPtr
@@ -311,8 +311,8 @@ private:
   void RenderDebugOverlay(const gfx::Rect& aBounds);
 
 
-  RefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
-  void PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
+  nsRefPtr<CompositingRenderTarget> PushGroupForLayerEffects();
+  void PopGroupForLayerEffects(nsRefPtr<CompositingRenderTarget> aPreviousTarget,
                                gfx::IntRect aClipRect,
                                bool aGrayscaleEffect,
                                bool aInvertEffect,
@@ -321,7 +321,7 @@ private:
   float mWarningLevel;
   mozilla::TimeStamp mWarnTime;
   bool mUnusedApzTransformWarning;
-  RefPtr<Compositor> mCompositor;
+  nsRefPtr<Compositor> mCompositor;
   UniquePtr<LayerProperties> mClonedLayerTreeProperties;
 
   nsTArray<ImageCompositeNotification> mImageCompositeNotifications;
@@ -329,7 +329,7 @@ private:
   /**
    * Context target, nullptr when drawing directly to our swap chain.
    */
-  RefPtr<gfx::DrawTarget> mTarget;
+  nsRefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
 
   nsIntRegion mInvalidRegion;
@@ -339,8 +339,8 @@ private:
   bool mIsCompositorReady;
   bool mDebugOverlayWantsNextFrame;
 
-  RefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
-  RefPtr<TextRenderer> mTextRenderer;
+  nsRefPtr<CompositingRenderTarget> mTwoPassTmpTarget;
+  nsRefPtr<TextRenderer> mTextRenderer;
   bool mGeometryChanged;
 
   // Testing property. If hardware composer is supported, this will return
@@ -478,7 +478,7 @@ protected:
   nsIntRegion mShadowVisibleRegion;
   Maybe<ParentLayerIntRect> mShadowClipRect;
   LayerManagerComposite* mCompositeManager;
-  RefPtr<Compositor> mCompositor;
+  nsRefPtr<Compositor> mCompositor;
   float mShadowOpacity;
   bool mShadowTransformSetByAnimation;
   bool mDestroyed;
@@ -559,10 +559,10 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
     return;
   }
 
-  RefPtr<CompositingRenderTarget> originalTarget =
+  nsRefPtr<CompositingRenderTarget> originalTarget =
     aCompositor->GetCurrentRenderTarget();
 
-  RefPtr<CompositingRenderTarget> firstTarget =
+  nsRefPtr<CompositingRenderTarget> firstTarget =
     aCompositor->CreateRenderTarget(surfaceRect, INIT_MODE_CLEAR);
   if (!firstTarget) {
     return;
@@ -581,10 +581,10 @@ RenderWithAllMasks(Layer* aLayer, Compositor* aCompositor,
 
   // Apply the intermediate masks.
   gfx::Rect intermediateClip(surfaceRect - surfaceRect.TopLeft());
-  RefPtr<CompositingRenderTarget> previousTarget = firstTarget;
+  nsRefPtr<CompositingRenderTarget> previousTarget = firstTarget;
   for (size_t i = nextAncestorMaskLayer; i < ancestorMaskLayerCount - 1; i++) {
     Layer* intermediateMask = aLayer->GetAncestorMaskLayerAt(i);
-    RefPtr<CompositingRenderTarget> intermediateTarget =
+    nsRefPtr<CompositingRenderTarget> intermediateTarget =
       aCompositor->CreateRenderTarget(surfaceRect, INIT_MODE_CLEAR);
     if (!intermediateTarget) {
       break;

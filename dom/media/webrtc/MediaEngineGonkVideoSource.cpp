@@ -757,14 +757,14 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
 
   layers::GrallocImage* videoImage = static_cast<layers::GrallocImage*>(image.get());
   MOZ_ASSERT(mTextureClientAllocator);
-  RefPtr<layers::TextureClient> textureClient
+  nsRefPtr<layers::TextureClient> textureClient
     = mTextureClientAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV,
                                                gfx::IntSize(dstWidth, dstHeight),
                                                layers::BackendSelector::Content,
                                                layers::TextureFlags::DEFAULT,
                                                layers::ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
   if (textureClient) {
-    RefPtr<layers::GrallocTextureClientOGL> grallocTextureClient =
+    nsRefPtr<layers::GrallocTextureClientOGL> grallocTextureClient =
       static_cast<layers::GrallocTextureClientOGL*>(textureClient.get());
 
     android::sp<android::GraphicBuffer> destBuffer = grallocTextureClient->GetGraphicBuffer();

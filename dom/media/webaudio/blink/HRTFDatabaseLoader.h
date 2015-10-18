@@ -30,7 +30,7 @@
 #define HRTFDatabaseLoader_h
 
 #include "nsHashKeys.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "HRTFDatabase.h"

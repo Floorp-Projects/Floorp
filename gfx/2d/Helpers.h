@@ -41,7 +41,7 @@ class AutoRestoreTransform
   }
 
  private:
-  RefPtr<DrawTarget> mDrawTarget;
+  nsRefPtr<DrawTarget> mDrawTarget;
   Matrix mOldTransform;
 };
 
@@ -87,7 +87,7 @@ public:
   }
 
 private:
-  RefPtr<DrawTarget> mDrawTarget;
+  nsRefPtr<DrawTarget> mDrawTarget;
   int32_t mPushCount;
 };
 

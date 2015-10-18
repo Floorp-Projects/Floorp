@@ -197,7 +197,7 @@ DrawTargetCG::Snapshot()
     mSnapshot = new SourceSurfaceCGBitmapContext(this);
   }
 
-  RefPtr<SourceSurface> snapshot(mSnapshot);
+  nsRefPtr<SourceSurface> snapshot(mSnapshot);
   return snapshot.forget();
 }
 
@@ -206,7 +206,7 @@ DrawTargetCG::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aForma
 {
   // XXX: in thebes we use CGLayers to do this kind of thing. It probably makes sense
   // to add that in somehow, but at a higher level
-  RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
+  nsRefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
   if (newTarget->Init(GetBackendType(), aSize, aFormat)) {
     return newTarget.forget();
   }
@@ -219,7 +219,7 @@ DrawTargetCG::CreateSourceSurfaceFromData(unsigned char *aData,
                                            int32_t aStride,
                                            SurfaceFormat aFormat) const
 {
-  RefPtr<SourceSurfaceCG> newSurf = new SourceSurfaceCG();
+  nsRefPtr<SourceSurfaceCG> newSurf = new SourceSurfaceCG();
 
   if (!newSurf->InitFromData(aData, aSize, aStride, aFormat)) {
     return nullptr;
@@ -248,7 +248,7 @@ GetRetainedImageFromSourceSurface(SourceSurface *aSurface)
 
     default:
     {
-      RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+      nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
       if (!data) {
         MOZ_CRASH("unsupported source surface");
       }
@@ -263,7 +263,7 @@ GetRetainedImageFromSourceSurface(SourceSurface *aSurface)
 already_AddRefed<SourceSurface>
 DrawTargetCG::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
-  RefPtr<SourceSurface> surface(aSurface);
+  nsRefPtr<SourceSurface> surface(aSurface);
   return surface.forget();
 }
 
@@ -1718,7 +1718,7 @@ DrawTargetCG::Init(BackendType aType,
   mSize = aSize;
 
   if (aType == BackendType::COREGRAPHICS_ACCELERATED) {
-    RefPtr<MacIOSurface> ioSurface = MacIOSurface::CreateIOSurface(aSize.width, aSize.height);
+    nsRefPtr<MacIOSurface> ioSurface = MacIOSurface::CreateIOSurface(aSize.width, aSize.height);
     mCg = ioSurface->CreateIOSurfaceContext();
     // If we don't have the symbol for 'CreateIOSurfaceContext' mCg will be null
     // and we will fallback to software below

@@ -43,7 +43,7 @@ public:
   }
 #endif
 
-  RefPtr<IDWriteFontFace> mFontFace;
+  nsRefPtr<IDWriteFontFace> mFontFace;
 };
 
 class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions
@@ -61,7 +61,7 @@ private:
   friend class DrawTargetD2D;
   friend class DrawTargetD2D1;
 
-  RefPtr<IDWriteRenderingParams> mParams;
+  nsRefPtr<IDWriteRenderingParams> mParams;
 };
 
 }

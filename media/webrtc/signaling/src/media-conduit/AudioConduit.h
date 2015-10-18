@@ -99,9 +99,9 @@ public:
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
    * shall be passed to the registered transport for transporting externally.
    */
-  virtual MediaConduitErrorCode SetTransmitterTransport(mozilla::RefPtr<TransportInterface> aTransport) override;
+  virtual MediaConduitErrorCode SetTransmitterTransport(nsRefPtr<TransportInterface> aTransport) override;
 
-  virtual MediaConduitErrorCode SetReceiverTransport(mozilla::RefPtr<TransportInterface> aTransport) override;
+  virtual MediaConduitErrorCode SetReceiverTransport(nsRefPtr<TransportInterface> aTransport) override;
 
   /**
    * Function to deliver externally captured audio sample for encoding and transport
@@ -252,8 +252,8 @@ private:
 
   webrtc::VoiceEngine* mVoiceEngine;
   mozilla::ReentrantMonitor mTransportMonitor;
-  mozilla::RefPtr<TransportInterface> mTransmitterTransport;
-  mozilla::RefPtr<TransportInterface> mReceiverTransport;
+  nsRefPtr<TransportInterface> mTransmitterTransport;
+  nsRefPtr<TransportInterface> mReceiverTransport;
   ScopedCustomReleasePtr<webrtc::VoENetwork>   mPtrVoENetwork;
   ScopedCustomReleasePtr<webrtc::VoEBase>      mPtrVoEBase;
   ScopedCustomReleasePtr<webrtc::VoECodec>     mPtrVoECodec;

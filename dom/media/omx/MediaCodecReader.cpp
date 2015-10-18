@@ -314,7 +314,7 @@ void
 MediaCodecReader::DispatchAudioTask()
 {
   if (mAudioTrack.mTaskQueue) {
-    RefPtr<nsIRunnable> task =
+    nsRefPtr<nsIRunnable> task =
       NS_NewRunnableMethod(this,
                            &MediaCodecReader::DecodeAudioDataTask);
     mAudioTrack.mTaskQueue->Dispatch(task.forget());
@@ -325,7 +325,7 @@ void
 MediaCodecReader::DispatchVideoTask(int64_t aTimeThreshold)
 {
   if (mVideoTrack.mTaskQueue) {
-    RefPtr<nsIRunnable> task =
+    nsRefPtr<nsIRunnable> task =
       NS_NewRunnableMethodWithArg<int64_t>(this,
                                            &MediaCodecReader::DecodeVideoFrameTask,
                                            aTimeThreshold);
@@ -813,7 +813,7 @@ MediaCodecReader::TextureClientRecycleCallback(TextureClient* aClient)
   }
 
   if (mVideoTrack.mReleaseBufferTaskQueue->IsEmpty()) {
-    RefPtr<nsIRunnable> task =
+    nsRefPtr<nsIRunnable> task =
       NS_NewRunnableMethod(this,
                            &MediaCodecReader::WaitFenceAndReleaseOutputBuffer);
     mVideoTrack.mReleaseBufferTaskQueue->Dispatch(task.forget());
@@ -916,7 +916,7 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
   }
 
   nsRefPtr<VideoData> v;
-  RefPtr<TextureClient> textureClient;
+  nsRefPtr<TextureClient> textureClient;
   sp<GraphicBuffer> graphicBuffer;
   if (bufferInfo.mBuffer != nullptr) {
     MOZ_ASSERT(mStreamSource);

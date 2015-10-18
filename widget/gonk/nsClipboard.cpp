@@ -144,14 +144,14 @@ nsClipboard::SetData(nsITransferable *aTransferable,
           continue;
         }
 
-        RefPtr<gfx::SourceSurface> surface =
+        nsRefPtr<gfx::SourceSurface> surface =
           image->GetFrame(imgIContainer::FRAME_CURRENT,
                           imgIContainer::FLAG_SYNC_DECODE);
         if (!surface) {
           continue;
         }
 
-        RefPtr<gfx::DataSourceSurface> dataSurface;
+        nsRefPtr<gfx::DataSourceSurface> dataSurface;
         if (surface->GetFormat() == gfx::SurfaceFormat::B8G8R8A8) {
           dataSurface = surface->GetDataSurface();
         } else {
@@ -266,7 +266,7 @@ nsClipboard::GetData(nsITransferable *aTransferable,
            flavorStr.EqualsLiteral(kGIFImageMime)) &&
           mClipboard->HasImage() ) {
         // Get image buffer from clipboard.
-        RefPtr<gfx::DataSourceSurface> image = mClipboard->GetImage();
+        nsRefPtr<gfx::DataSourceSurface> image = mClipboard->GetImage();
 
         // Encode according to MIME type.
         nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(image, image->GetSize());

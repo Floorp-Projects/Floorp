@@ -10,7 +10,7 @@
 #include "BaseFilter.h"
 #include "DirectShowUtils.h"
 #include "nsAutoPtr.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
@@ -35,7 +35,7 @@ public:
 
   // Retrieves a sample from the sample queue, blocking until one becomes
   // available, or until an error occurs. Returns S_FALSE on EOS.
-  HRESULT Extract(RefPtr<IMediaSample>& aOutSample);
+  HRESULT Extract(nsRefPtr<IMediaSample>& aOutSample);
 
   // Unblocks any threads waiting in GetSample().
   // Clears mSample, which unblocks upstream stream.
@@ -54,7 +54,7 @@ public:
 private:
   // All data in this class is syncronized by mMonitor.
   ReentrantMonitor mMonitor;
-  RefPtr<IMediaSample> mSample;
+  nsRefPtr<IMediaSample> mSample;
 
   // Format of the audio stream we're receiving.
   WAVEFORMATEX mAudioFormat;

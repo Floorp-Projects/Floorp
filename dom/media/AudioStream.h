@@ -12,7 +12,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "CubebUtils.h"

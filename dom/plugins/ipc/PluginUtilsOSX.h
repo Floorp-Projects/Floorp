@@ -80,9 +80,9 @@ public:
 
 private:
   void *mCALayer;
-  RefPtr<nsCARenderer> mCARenderer;
-  RefPtr<MacIOSurface> mFrontSurface;
-  RefPtr<MacIOSurface> mBackSurface;
+  nsRefPtr<nsCARenderer> mCARenderer;
+  nsRefPtr<MacIOSurface> mFrontSurface;
+  nsRefPtr<MacIOSurface> mBackSurface;
   double mContentsScaleFactor;
 };
 

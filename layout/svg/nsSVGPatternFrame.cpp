@@ -370,7 +370,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
                             patternHeight / surfaceSize.height);
   }
 
-  RefPtr<DrawTarget> dt =
+  nsRefPtr<DrawTarget> dt =
     aDrawTarget->CreateSimilarDrawTarget(surfaceSize, SurfaceFormat::B8G8R8A8);
   if (!dt) {
     return nullptr;
@@ -710,7 +710,7 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
 
   // Paint it!
   Matrix pMatrix;
-  RefPtr<SourceSurface> surface =
+  nsRefPtr<SourceSurface> surface =
     PaintPattern(aDrawTarget, &pMatrix, ToMatrix(aContextMatrix), aSource,
                  aFillOrStroke, aGraphicOpacity, aOverrideBounds);
 

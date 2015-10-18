@@ -12,7 +12,7 @@
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositableForwarder.h"
@@ -159,7 +159,7 @@ public:
   }
 
   virtual void CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
-                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) override;
+                            nsRefPtr<gfx::DrawTarget>* aBlackDT, nsRefPtr<gfx::DrawTarget>* aWhiteDT) override;
 
   virtual TextureInfo GetTextureInfo() const override
   {
@@ -255,7 +255,7 @@ public:
   }
 
   virtual void CreateBuffer(ContentType aType, const gfx::IntRect& aRect, uint32_t aFlags,
-                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) override;
+                            nsRefPtr<gfx::DrawTarget>* aBlackDT, nsRefPtr<gfx::DrawTarget>* aWhiteDT) override;
 
   virtual TextureFlags ExtraTextureFlags() const
   {
@@ -290,12 +290,12 @@ protected:
     mIsNewBuffer = false;
   }
 
-  RefPtr<TextureClient> mTextureClient;
-  RefPtr<TextureClient> mTextureClientOnWhite;
+  nsRefPtr<TextureClient> mTextureClient;
+  nsRefPtr<TextureClient> mTextureClientOnWhite;
   // keep a record of texture clients we have created and need to keep around
   // (for RotatedBuffer to access), then unlock and remove them when we are done
   // painting.
-  nsTArray<RefPtr<TextureClient> > mOldTextures;
+  nsTArray<nsRefPtr<TextureClient> > mOldTextures;
 
   bool mIsNewBuffer;
   bool mFrontAndBackBufferDiffer;
@@ -366,8 +366,8 @@ private:
     mFrontClientOnWhite = nullptr;
   }
 
-  RefPtr<TextureClient> mFrontClient;
-  RefPtr<TextureClient> mFrontClientOnWhite;
+  nsRefPtr<TextureClient> mFrontClient;
+  nsRefPtr<TextureClient> mFrontClientOnWhite;
   nsIntRegion mFrontUpdatedRegion;
   gfx::IntRect mFrontBufferRect;
   nsIntPoint mFrontBufferRotation;

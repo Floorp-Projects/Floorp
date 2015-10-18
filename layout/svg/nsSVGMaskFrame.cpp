@@ -10,7 +10,7 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsSVGEffects.h"
 #include "mozilla/dom/SVGMaskElement.h"
 #ifdef BUILD_ARM_NEON
@@ -249,7 +249,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
     return nullptr;
   }
 
-  RefPtr<DrawTarget> maskDT =
+  nsRefPtr<DrawTarget> maskDT =
     Factory::CreateDrawTarget(BackendType::CAIRO, maskSurfaceSize,
                               SurfaceFormat::B8G8R8A8);
   if (!maskDT) {
@@ -279,28 +279,28 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
     nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m);
   }
 
-  RefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
+  nsRefPtr<SourceSurface> maskSnapshot = maskDT->Snapshot();
   if (!maskSnapshot) {
     return nullptr;
   }
-  RefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
+  nsRefPtr<DataSourceSurface> maskSurface = maskSnapshot->GetDataSurface();
   DataSourceSurface::MappedSurface map;
   if (!maskSurface->Map(DataSourceSurface::MapType::READ, &map)) {
     return nullptr;
   }
 
   // Create alpha channel mask for output
-  RefPtr<DrawTarget> destMaskDT =
+  nsRefPtr<DrawTarget> destMaskDT =
     Factory::CreateDrawTarget(BackendType::CAIRO, maskSurfaceSize,
                               SurfaceFormat::A8);
   if (!destMaskDT) {
     return nullptr;
   }
-  RefPtr<SourceSurface> destMaskSnapshot = destMaskDT->Snapshot();
+  nsRefPtr<SourceSurface> destMaskSnapshot = destMaskDT->Snapshot();
   if (!destMaskSnapshot) {
     return nullptr;
   }
-  RefPtr<DataSourceSurface> destMaskSurface = destMaskSnapshot->GetDataSurface();
+  nsRefPtr<DataSourceSurface> destMaskSurface = destMaskSnapshot->GetDataSurface();
   DataSourceSurface::MappedSurface destMap;
   if (!destMaskSurface->Map(DataSourceSurface::MapType::READ_WRITE, &destMap)) {
     return nullptr;

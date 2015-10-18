@@ -14,7 +14,7 @@
 #include "nsXPCOM.h"
 #include "nsXPCOMGlue.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIIOService.h"
@@ -77,7 +77,7 @@ class TargetClass {
   void destructor_target(Destructor*) {
   }
 
-  void destructor_target_ref(RefPtr<Destructor> destructor) {
+  void destructor_target_ref(nsRefPtr<Destructor> destructor) {
   }
 
   int *ran_;
@@ -203,7 +203,7 @@ TEST_F(DispatchTest, TestNonMethodRet) {
 
 TEST_F(DispatchTest, TestDestructor) {
   bool destroyed = false;
-  RefPtr<Destructor> destructor = new Destructor(&destroyed);
+  nsRefPtr<Destructor> destructor = new Destructor(&destroyed);
   target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target,
                                  destructor),
                     NS_DISPATCH_SYNC);
@@ -214,7 +214,7 @@ TEST_F(DispatchTest, TestDestructor) {
 
 TEST_F(DispatchTest, TestDestructorRef) {
   bool destroyed = false;
-  RefPtr<Destructor> destructor = new Destructor(&destroyed);
+  nsRefPtr<Destructor> destructor = new Destructor(&destroyed);
   target_->Dispatch(WrapRunnable(&cl_, &TargetClass::destructor_target_ref,
                                  destructor),
                     NS_DISPATCH_SYNC);

@@ -536,7 +536,7 @@ class LoadInfoCollectRunner : public nsRunnable
 {
 public:
   LoadInfoCollectRunner(nsRefPtr<LoadMonitor> loadMonitor,
-                        RefPtr<RTCLoadInfo> loadInfo,
+                        nsRefPtr<RTCLoadInfo> loadInfo,
                         nsIThread *loadInfoThread)
     : mThread(loadInfoThread),
       mLoadUpdateInterval(loadMonitor->mLoadUpdateInterval),
@@ -585,7 +585,7 @@ public:
 
 private:
   nsCOMPtr<nsIThread> mThread;
-  RefPtr<RTCLoadInfo> mLoadInfo;
+  nsRefPtr<RTCLoadInfo> mLoadInfo;
   nsRefPtr<LoadMonitor> mLoadMonitor;
   int mLoadUpdateInterval;
   int mLoadNoiseCounter;
@@ -629,7 +629,7 @@ LoadMonitor::Init(nsRefPtr<LoadMonitor> &self)
 {
   LOG(("Initializing LoadMonitor"));
 
-  RefPtr<RTCLoadInfo> load_info = new RTCLoadInfo();
+  nsRefPtr<RTCLoadInfo> load_info = new RTCLoadInfo();
   nsresult rv = load_info->Init(mLoadUpdateInterval);
 
   if (NS_FAILED(rv)) {

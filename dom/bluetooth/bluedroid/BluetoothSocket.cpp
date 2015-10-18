@@ -12,7 +12,7 @@
 #include "BluetoothUtils.h"
 #include "mozilla/ipc/UnixSocketWatcher.h"
 #include "mozilla/FileUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
 

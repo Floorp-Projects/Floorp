@@ -38,7 +38,7 @@ FilterPrimitiveDescription
 SVGFEFloodElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const IntRect& aFilterSubregion,
                                            const nsTArray<bool>& aInputsAreTainted,
-                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
+                                           nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
 {
   FilterPrimitiveDescription descr(PrimitiveType::Flood);
   nsIFrame* frame = GetPrimaryFrame();

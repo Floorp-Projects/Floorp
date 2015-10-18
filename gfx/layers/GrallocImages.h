@@ -124,7 +124,7 @@ public:
   }
 
 private:
-  RefPtr<GrallocTextureClientOGL> mTextureClient;
+  nsRefPtr<GrallocTextureClientOGL> mTextureClient;
 };
 
 } // namespace layers

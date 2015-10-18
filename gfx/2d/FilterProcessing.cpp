@@ -13,7 +13,7 @@ already_AddRefed<DataSourceSurface>
 FilterProcessing::ExtractAlpha(DataSourceSurface* aSource)
 {
   IntSize size = aSource->GetSize();
-  RefPtr<DataSourceSurface> alpha = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
+  nsRefPtr<DataSourceSurface> alpha = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
   if (MOZ2D_WARN_IF(!alpha)) {
     return nullptr;
   }
@@ -123,10 +123,10 @@ FilterProcessing::ApplyComposition(DataSourceSurface* aSource, DataSourceSurface
 
 void
 FilterProcessing::SeparateColorChannels(DataSourceSurface* aSource,
-                                        RefPtr<DataSourceSurface>& aChannel0,
-                                        RefPtr<DataSourceSurface>& aChannel1,
-                                        RefPtr<DataSourceSurface>& aChannel2,
-                                        RefPtr<DataSourceSurface>& aChannel3)
+                                        nsRefPtr<DataSourceSurface>& aChannel0,
+                                        nsRefPtr<DataSourceSurface>& aChannel1,
+                                        nsRefPtr<DataSourceSurface>& aChannel2,
+                                        nsRefPtr<DataSourceSurface>& aChannel3)
 {
   IntSize size = aSource->GetSize();
   aChannel0 = Factory::CreateDataSourceSurface(size, SurfaceFormat::A8);
@@ -169,7 +169,7 @@ FilterProcessing::CombineColorChannels(DataSourceSurface* aChannel0, DataSourceS
                                        DataSourceSurface* aChannel2, DataSourceSurface* aChannel3)
 {
   IntSize size = aChannel0->GetSize();
-  RefPtr<DataSourceSurface> result =
+  nsRefPtr<DataSourceSurface> result =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (MOZ2D_WARN_IF(!result)) {
     return nullptr;

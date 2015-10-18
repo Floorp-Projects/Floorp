@@ -17,7 +17,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/CryptoKey.h"
 #include "mtransport/dtlsidentity.h"
@@ -61,7 +61,7 @@ public:
   }
 
   // Accessors for use by PeerConnectionImpl.
-  RefPtr<DtlsIdentity> CreateDtlsIdentity() const;
+  nsRefPtr<DtlsIdentity> CreateDtlsIdentity() const;
   CERTCertificate* Certificate() const { return mCertificate; }
 
   // For nsNSSShutDownObject

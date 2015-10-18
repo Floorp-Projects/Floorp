@@ -160,8 +160,8 @@ public:
   {}
 
   uint32_t* mBuf;
-  RefPtr<DataSourceSurface> mSurface;
-  RefPtr<DataTextureSource> mTexture;
+  nsRefPtr<DataSourceSurface> mSurface;
+  nsRefPtr<DataTextureSource> mTexture;
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {
     int bytesPerPixel = 4;
@@ -194,8 +194,8 @@ public:
   {}
 
   uint32_t* mBuf;
-  RefPtr<DataSourceSurface> mSurface;
-  RefPtr<DataTextureSource> mTexture;
+  nsRefPtr<DataSourceSurface> mSurface;
+  nsRefPtr<DataTextureSource> mTexture;
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {
     int bytesPerPixel = 4;
@@ -237,8 +237,8 @@ public:
   {}
 
   uint32_t* mBuf;
-  RefPtr<DataSourceSurface> mSurface;
-  RefPtr<DataTextureSource> mTexture;
+  nsRefPtr<DataSourceSurface> mSurface;
+  nsRefPtr<DataTextureSource> mTexture;
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {
     int bytesPerPixel = 4;
@@ -282,7 +282,7 @@ public:
 
   uint32_t* mBuf;
   android::sp<android::GraphicBuffer> mGralloc;
-  RefPtr<TextureSource> mTexture;
+  nsRefPtr<TextureSource> mTexture;
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {
     mBuf = nullptr;
@@ -323,7 +323,7 @@ public:
 
   uint32_t* mBuf;
   android::sp<android::GraphicBuffer> mGralloc;
-  RefPtr<TextureSource> mTexture;
+  nsRefPtr<TextureSource> mTexture;
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {
     mBuf = nullptr;

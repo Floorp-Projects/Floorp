@@ -16,7 +16,7 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Snprintf.h"
 
 #define NETD_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
@@ -26,8 +26,8 @@
 
 namespace {
 
-mozilla::RefPtr<mozilla::ipc::NetdClient> gNetdClient;
-mozilla::RefPtr<mozilla::ipc::NetdConsumer> gNetdConsumer;
+nsRefPtr<mozilla::ipc::NetdClient> gNetdClient;
+nsRefPtr<mozilla::ipc::NetdConsumer> gNetdConsumer;
 
 class StopNetdConsumer : public nsRunnable {
 public:

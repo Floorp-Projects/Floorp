@@ -8,7 +8,7 @@
 #include <OpenGL/gl.h>
 #include <QuartzCore/QuartzCore.h>
 #include <dlfcn.h>
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Assertions.h"
 
 using namespace mozilla;
@@ -332,7 +332,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(int aWidth, int aHe
   if (!surfaceRef)
     return nullptr;
 
-  RefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
+  nsRefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
   if (!ioSurface) {
     ::CFRelease(surfaceRef);
     return nullptr;
@@ -354,7 +354,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(IOSurfaceID aIOSurfac
   if (!surfaceRef)
     return nullptr;
 
-  RefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
+  nsRefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
   if (!ioSurface) {
     ::CFRelease(surfaceRef);
     return nullptr;
@@ -464,7 +464,7 @@ MacIOSurface::GetAsSurface() {
   SurfaceFormat format = HasAlpha() ? mozilla::gfx::SurfaceFormat::B8G8R8A8 :
                                       mozilla::gfx::SurfaceFormat::B8G8R8X8;
 
-  RefPtr<SourceSurfaceRawData> surf = new SourceSurfaceRawData();
+  nsRefPtr<SourceSurfaceRawData> surf = new SourceSurfaceRawData();
   surf->InitWrappingData(dataCpy, IntSize(ioWidth, ioHeight), bytesPerRow, format, true);
 
   return surf.forget();
@@ -554,7 +554,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(CGContex
   if (!surfaceRef)
     return nullptr;
 
-  RefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
+  nsRefPtr<MacIOSurface> ioSurface = new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
   if (!ioSurface) {
     ::CFRelease(surfaceRef);
     return nullptr;

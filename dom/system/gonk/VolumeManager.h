@@ -80,7 +80,7 @@ class VolumeManager final : public MessageLoopForIO::LineWatcher
 public:
   NS_INLINE_DECL_REFCOUNTING(VolumeManager)
 
-  typedef nsTArray<RefPtr<Volume>> VolumeArray;
+  typedef nsTArray<nsRefPtr<Volume>> VolumeArray;
 
   VolumeManager();
 
@@ -152,7 +152,7 @@ private:
   void WriteCommandData();
   void HandleBroadcast(int aResponseCode, nsCString& aResponseLine);
 
-  typedef std::queue<RefPtr<VolumeCommand> > CommandQueue;
+  typedef std::queue<nsRefPtr<VolumeCommand> > CommandQueue;
 
   static STATE              mState;
   static StateObserverList  mStateObserverList;
@@ -164,7 +164,7 @@ private:
   bool                mCommandPending;
   MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
   MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
-  RefPtr<VolumeResponseCallback>          mBroadcastCallback;
+  nsRefPtr<VolumeResponseCallback>          mBroadcastCallback;
 };
 
 /***************************************************************************

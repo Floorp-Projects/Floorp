@@ -8,7 +8,7 @@
 
 #include "FrameAnimator.h"
 #include "RasterImage.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "DecodePool.h"
 #include "DecoderFlags.h"
 #include "Downscaler.h"

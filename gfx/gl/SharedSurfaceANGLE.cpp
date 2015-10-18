@@ -70,7 +70,7 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl, EGLConfig config,
                                    pbuffer,
                                    LOCAL_EGL_DXGI_KEYED_MUTEX_ANGLE,
                                    &opaqueKeyedMutex);
-    RefPtr<IDXGIKeyedMutex> keyedMutex = static_cast<IDXGIKeyedMutex*>(opaqueKeyedMutex);
+    nsRefPtr<IDXGIKeyedMutex> keyedMutex = static_cast<IDXGIKeyedMutex*>(opaqueKeyedMutex);
 
     GLuint fence = 0;
     if (gl->IsExtensionSupported(GLContext::NV_fence)) {
@@ -96,7 +96,7 @@ SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(GLContext* gl,
                                                                bool hasAlpha,
                                                                EGLSurface pbuffer,
                                                                HANDLE shareHandle,
-                                                               const RefPtr<IDXGIKeyedMutex>& keyedMutex,
+                                                               const nsRefPtr<IDXGIKeyedMutex>& keyedMutex,
                                                                GLuint fence)
     : SharedSurface(SharedSurfaceType::EGLSurfaceANGLE,
                     AttachmentType::Screen,
@@ -196,14 +196,14 @@ void
 SharedSurface_ANGLEShareHandle::ConsumerAcquireImpl()
 {
     if (!mConsumerTexture) {
-        RefPtr<ID3D11Texture2D> tex;
+        nsRefPtr<ID3D11Texture2D> tex;
         HRESULT hr = gfxWindowsPlatform::GetPlatform()->GetD3D11Device()->OpenSharedResource(mShareHandle,
                                                                                              __uuidof(ID3D11Texture2D),
-                                                                                             (void**)(ID3D11Texture2D**)byRef(tex));
+                                                                                             (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
         if (SUCCEEDED(hr)) {
             mConsumerTexture = tex;
-            RefPtr<IDXGIKeyedMutex> mutex;
-            hr = tex->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
+            nsRefPtr<IDXGIKeyedMutex> mutex;
+            hr = tex->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
             if (SUCCEEDED(hr)) {
                 mConsumerKeyedMutex = mutex;
@@ -285,7 +285,7 @@ public:
         *succeeded = false;
 
         HRESULT hr;
-        mTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mMutex));
+        mTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mMutex));
         if (mMutex) {
             hr = mMutex->AcquireSync(0, 10000);
             if (hr == WAIT_TIMEOUT) {
@@ -299,7 +299,7 @@ public:
         }
 
         ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
-        device->GetImmediateContext(byRef(mDeviceContext));
+        device->GetImmediateContext(getter_AddRefs(mDeviceContext));
 
         mTexture->GetDesc(&mDesc);
         mDesc.BindFlags = 0;
@@ -307,7 +307,7 @@ public:
         mDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
         mDesc.MiscFlags = 0;
 
-        hr = device->CreateTexture2D(&mDesc, nullptr, byRef(mCopiedTexture));
+        hr = device->CreateTexture2D(&mDesc, nullptr, getter_AddRefs(mCopiedTexture));
 
         if (FAILED(hr)) {
             return;
@@ -337,10 +337,10 @@ public:
     }
 
     bool mIsLocked;
-    RefPtr<ID3D11Texture2D> mTexture;
-    RefPtr<ID3D11Texture2D> mCopiedTexture;
-    RefPtr<IDXGIKeyedMutex> mMutex;
-    RefPtr<ID3D11DeviceContext> mDeviceContext;
+    nsRefPtr<ID3D11Texture2D> mTexture;
+    nsRefPtr<ID3D11Texture2D> mCopiedTexture;
+    nsRefPtr<IDXGIKeyedMutex> mMutex;
+    nsRefPtr<ID3D11DeviceContext> mDeviceContext;
     D3D11_TEXTURE2D_DESC mDesc;
     D3D11_MAPPED_SUBRESOURCE mSubresource;
 };
@@ -349,11 +349,11 @@ bool
 SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
 {
     MOZ_ASSERT(out_surface);
-    RefPtr<ID3D11Texture2D> tex;
+    nsRefPtr<ID3D11Texture2D> tex;
     ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
     HRESULT hr = device->OpenSharedResource(mShareHandle,
                                             __uuidof(ID3D11Texture2D),
-                                            (void**)(ID3D11Texture2D**)byRef(tex));
+                                            (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
 
     if (FAILED(hr)) {
         return false;
@@ -410,7 +410,7 @@ SharedSurface_ANGLEShareHandle::ReadbackBySharedHandle(gfx::DataSourceSurface* o
 
 /*static*/ UniquePtr<SurfaceFactory_ANGLEShareHandle>
 SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
-                                        const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                        const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                         const layers::TextureFlags& flags)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
@@ -430,7 +430,7 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
 
 SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
                                                                  const SurfaceCaps& caps,
-                                                                 const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                                 const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                                                  const layers::TextureFlags& flags,
                                                                  GLLibraryEGL* egl,
                                                                  EGLConfig config)

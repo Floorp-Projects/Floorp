@@ -29,7 +29,7 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for frame color util
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
@@ -533,7 +533,7 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
   }
 }
 
-RefPtr<CompositingRenderTarget>
+nsRefPtr<CompositingRenderTarget>
 LayerManagerComposite::PushGroupForLayerEffects()
 {
   // This is currently true, so just making sure that any new use of this
@@ -542,7 +542,7 @@ LayerManagerComposite::PushGroupForLayerEffects()
              gfxPrefs::LayersEffectGrayscale() ||
              gfxPrefs::LayersEffectContrast() != 0.0);
 
-  RefPtr<CompositingRenderTarget> previousTarget = mCompositor->GetCurrentRenderTarget();
+  nsRefPtr<CompositingRenderTarget> previousTarget = mCompositor->GetCurrentRenderTarget();
   // make our render target the same size as the destination target
   // so that we don't have to change size if the drawing area changes.
   IntRect rect(previousTarget->GetOrigin(), previousTarget->GetSize());
@@ -557,7 +557,7 @@ LayerManagerComposite::PushGroupForLayerEffects()
   return previousTarget;
 }
 void
-LayerManagerComposite::PopGroupForLayerEffects(RefPtr<CompositingRenderTarget> aPreviousTarget,
+LayerManagerComposite::PopGroupForLayerEffects(nsRefPtr<CompositingRenderTarget> aPreviousTarget,
                                                IntRect aClipRect,
                                                bool aGrayscaleEffect,
                                                bool aInvertEffect,
@@ -735,7 +735,7 @@ LayerManagerComposite::Render()
                                                                actualBounds.width,
                                                                actualBounds.height));
 
-  RefPtr<CompositingRenderTarget> previousTarget;
+  nsRefPtr<CompositingRenderTarget> previousTarget;
   if (haveLayerEffects) {
     previousTarget = PushGroupForLayerEffects();
   } else {

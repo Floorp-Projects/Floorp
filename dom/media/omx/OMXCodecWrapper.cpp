@@ -402,7 +402,7 @@ ConvertSourceSurfaceToNV12(const nsRefPtr<SourceSurface>& aSurface, uint8_t* aDe
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
   if (!data) {
     CODEC_ERROR("Getting data surface from %s image with %s (%s) surface failed",
                 Stringify(format).c_str(), Stringify(aSurface->GetType()).c_str(),

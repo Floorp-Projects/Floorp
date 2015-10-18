@@ -320,7 +320,7 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
 
     sp<GraphicBuffer> graphicBuffer;
     if (alloc) {
-        RefPtr<GrallocTextureClientOGL> textureClient =
+        nsRefPtr<GrallocTextureClientOGL> textureClient =
             new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
                                         gfx::SurfaceFormat::UNKNOWN,
                                         gfx::BackendType::NONE,
@@ -410,7 +410,7 @@ GonkNativeWindow::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
     return nullptr;
   }
 
-  RefPtr<TextureClient> client(mSlots[buf].mTextureClient);
+  nsRefPtr<TextureClient> client(mSlots[buf].mTextureClient);
   return client.forget();
 }
 
@@ -489,7 +489,7 @@ GonkNativeWindow::getCurrentBuffer() {
   mDequeueCondition.signal();
 
   mSlots[buf].mTextureClient->SetRecycleCallback(GonkNativeWindow::RecycleCallback, this);
-  RefPtr<TextureClient> client(mSlots[buf].mTextureClient);
+  nsRefPtr<TextureClient> client(mSlots[buf].mTextureClient);
   return client.forget();
 }
 

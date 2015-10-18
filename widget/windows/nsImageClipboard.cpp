@@ -8,7 +8,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsITransferable.h"
 #include "nsGfxCIID.h"
 #include "nsMemory.h"
@@ -123,7 +123,7 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     nsresult rv;
     *outBitmap = nullptr;
 
-    RefPtr<SourceSurface> surface =
+    nsRefPtr<SourceSurface> surface =
       inImage->GetFrame(imgIContainer::FRAME_CURRENT,
                         imgIContainer::FLAG_SYNC_DECODE);
     NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
@@ -131,7 +131,7 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                surface->GetFormat() == SurfaceFormat::B8G8R8X8);
 
-    RefPtr<DataSourceSurface> dataSurface;
+    nsRefPtr<DataSourceSurface> dataSurface;
     if (surface->GetFormat() == SurfaceFormat::B8G8R8A8) {
       dataSurface = surface->GetDataSurface();
     } else {

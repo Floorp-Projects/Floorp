@@ -9,7 +9,7 @@
 
 #include "nsRect.h"
 #include "GonkMediaDataDecoder.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "I420ColorConverterHelper.h"
 #include "MediaCodecProxy.h"
 #include "GonkNativeWindow.h"

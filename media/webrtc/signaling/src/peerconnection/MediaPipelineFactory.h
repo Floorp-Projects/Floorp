@@ -9,7 +9,7 @@
 #include "transportflow.h"
 
 #include "signaling/src/jsep/JsepTrack.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -30,27 +30,27 @@ private:
       const JsepTrackPair& aTrackPair,
       const JsepTrack& aTrack,
       size_t level,
-      RefPtr<TransportFlow> aRtpFlow,
-      RefPtr<TransportFlow> aRtcpFlow,
+      nsRefPtr<TransportFlow> aRtpFlow,
+      nsRefPtr<TransportFlow> aRtcpFlow,
       nsAutoPtr<MediaPipelineFilter> filter,
-      const RefPtr<MediaSessionConduit>& aConduit);
+      const nsRefPtr<MediaSessionConduit>& aConduit);
 
   nsresult CreateMediaPipelineSending(
       const JsepTrackPair& aTrackPair,
       const JsepTrack& aTrack,
       size_t level,
-      RefPtr<TransportFlow> aRtpFlow,
-      RefPtr<TransportFlow> aRtcpFlow,
+      nsRefPtr<TransportFlow> aRtpFlow,
+      nsRefPtr<TransportFlow> aRtcpFlow,
       nsAutoPtr<MediaPipelineFilter> filter,
-      const RefPtr<MediaSessionConduit>& aConduit);
+      const nsRefPtr<MediaSessionConduit>& aConduit);
 
   nsresult GetOrCreateAudioConduit(const JsepTrackPair& aTrackPair,
                                    const JsepTrack& aTrack,
-                                   RefPtr<MediaSessionConduit>* aConduitp);
+                                   nsRefPtr<MediaSessionConduit>* aConduitp);
 
   nsresult GetOrCreateVideoConduit(const JsepTrackPair& aTrackPair,
                                    const JsepTrack& aTrack,
-                                   RefPtr<MediaSessionConduit>* aConduitp);
+                                   nsRefPtr<MediaSessionConduit>* aConduitp);
 
   MediaConduitErrorCode EnsureExternalCodec(VideoSessionConduit& aConduit,
                                             VideoCodecConfig* aConfig,
@@ -58,13 +58,13 @@ private:
 
   nsresult CreateOrGetTransportFlow(size_t aLevel, bool aIsRtcp,
                                     const JsepTransport& transport,
-                                    RefPtr<TransportFlow>* out);
+                                    nsRefPtr<TransportFlow>* out);
 
   nsresult GetTransportParameters(const JsepTrackPair& aTrackPair,
                                   const JsepTrack& aTrack,
                                   size_t* aLevelOut,
-                                  RefPtr<TransportFlow>* aRtpOut,
-                                  RefPtr<TransportFlow>* aRtcpOut,
+                                  nsRefPtr<TransportFlow>* aRtpOut,
+                                  nsRefPtr<TransportFlow>* aRtcpOut,
                                   nsAutoPtr<MediaPipelineFilter>* aFilterOut);
 
   nsresult ConfigureVideoCodecMode(const JsepTrack& aTrack,

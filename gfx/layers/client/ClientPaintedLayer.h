@@ -10,7 +10,7 @@
 #include "Layers.h"                     // for PaintedLayer, etc
 #include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/layers/ContentClient.h"  // for ContentClient
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsDebug.h"                    // for NS_ASSERTION
@@ -112,7 +112,7 @@ protected:
     mContentClient = nullptr;
   }
 
-  RefPtr<ContentClient> mContentClient;
+  nsRefPtr<ContentClient> mContentClient;
 };
 
 } // namespace layers

@@ -61,7 +61,7 @@ SourceSurfaceCairo::GetFormat() const
 already_AddRefed<DataSourceSurface>
 SourceSurfaceCairo::GetDataSurface()
 {
-  RefPtr<DataSourceSurface> dataSurf;
+  nsRefPtr<DataSourceSurface> dataSurf;
 
   if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_IMAGE) {
     dataSurf = new DataSourceSurfaceCairo(mSurface);

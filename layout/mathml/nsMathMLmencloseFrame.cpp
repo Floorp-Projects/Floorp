@@ -788,7 +788,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
   switch(mType)
   {
     case NOTATION_CIRCLE: {
-      RefPtr<Path> ellipse =
+      nsRefPtr<Path> ellipse =
         MakePathForEllipse(aDrawTarget, rect.Center(), rect.Size());
       aDrawTarget.Stroke(ellipse, color, strokeOptions);
       return;
@@ -796,7 +796,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
     case NOTATION_ROUNDEDBOX: {
       Float radius = 3 * strokeWidth;
       RectCornerRadii radii(radius, radius);
-      RefPtr<Path> roundedRect =
+      nsRefPtr<Path> roundedRect =
         MakePathForRoundedRect(aDrawTarget, rect, radii, true);
       aDrawTarget.Stroke(roundedRect, color, strokeOptions);
       return;
@@ -825,13 +825,13 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
                              color, strokeOptions);
 
       // Draw the arrow head
-      RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+      nsRefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
       builder->MoveTo(rect.TopRight());
       builder->LineTo(rect.TopRight() + Point(-w -.4*h, std::max(-strokeWidth / 2.0, h - .4*w)));
       builder->LineTo(rect.TopRight() + Point(-.7*w, .7*h));
       builder->LineTo(rect.TopRight() + Point(std::min(strokeWidth / 2.0, -w + .4*h), h + .4*w));
       builder->Close();
-      RefPtr<Path> path = builder->Finish();
+      nsRefPtr<Path> path = builder->Finish();
       aDrawTarget.Fill(path, color);
       return;
     }

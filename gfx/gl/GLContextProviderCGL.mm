@@ -320,7 +320,7 @@ GLContextProviderCGL::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags)
 {
-    RefPtr<GLContext> gl = CreateHeadless(flags);
+    nsRefPtr<GLContext> gl = CreateHeadless(flags);
     if (!gl)
         return nullptr;
 
