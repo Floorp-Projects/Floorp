@@ -464,6 +464,8 @@
 @BINPATH@/components/PresentationDeviceInfoManager.js
 @BINPATH@/components/BuiltinProviders.manifest
 @BINPATH@/components/TCPPresentationServer.js
+@BINPATH@/components/PresentationNetworkHelper.js
+@BINPATH@/components/PresentationNetworkHelper.manifest
 
 @BINPATH@/components/PACGenerator.js
 @BINPATH@/components/PACGenerator.manifest
