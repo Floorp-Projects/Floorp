@@ -684,7 +684,7 @@ this.Presentation = { // jshint ignore:line
       'b2g': [VisualPresenter, B2GPresenter],
       'browser': [VisualPresenter, B2GPresenter, AndroidPresenter]
     };
-    this.presenters = [new P() for (P of presenterMap[Utils.MozBuildApp])]; // jshint ignore:line
+    this.presenters = presenterMap[Utils.MozBuildApp].map(P => new P());
     return this.presenters;
   },
 
@@ -700,61 +700,58 @@ this.Presentation = { // jshint ignore:line
       aPosition, aOldPosition, aStartOffset, aEndOffset);
     this.displayedAccessibles.set(context.accessible.document.window, context);
 
-    return [p.pivotChanged(context, aReason, aIsUserInput)
-      for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.pivotChanged(context, aReason, aIsUserInput));
   },
 
   actionInvoked: function Presentation_actionInvoked(aObject, aActionName) {
-    return [p.actionInvoked(aObject, aActionName) // jshint ignore:line
-      for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.actionInvoked(aObject, aActionName));
   },
 
   textChanged: function Presentation_textChanged(aAccessible, aIsInserted,
                                     aStartOffset, aLength, aText,
                                     aModifiedText) {
-    return [p.textChanged(aAccessible, aIsInserted, aStartOffset, aLength, // jshint ignore:line
-      aText, aModifiedText) for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.textChanged(aAccessible, aIsInserted,
+                                                  aStartOffset, aLength,
+                                                  aText, aModifiedText));
   },
 
   textSelectionChanged: function textSelectionChanged(aText, aStart, aEnd,
                                                       aOldStart, aOldEnd,
                                                       aIsFromUserInput) {
-    return [p.textSelectionChanged(aText, aStart, aEnd, aOldStart, aOldEnd, // jshint ignore:line
-      aIsFromUserInput) for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.textSelectionChanged(aText, aStart, aEnd,
+                                                           aOldStart, aOldEnd,
+                                                           aIsFromUserInput));
   },
 
   nameChanged: function nameChanged(aAccessible) {
-    return [ p.nameChanged(aAccessible) for (p of this.presenters) ]; // jshint ignore:line
+    return this.presenters.map(p => p.nameChanged(aAccessible));
   },
 
   valueChanged: function valueChanged(aAccessible) {
-    return [ p.valueChanged(aAccessible) for (p of this.presenters) ]; // jshint ignore:line
+    return this.presenters.map(p => p.valueChanged(aAccessible));
   },
 
   tabStateChanged: function Presentation_tabStateChanged(aDocObj, aPageState) {
-    return [p.tabStateChanged(aDocObj, aPageState) // jshint ignore:line
-      for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.tabStateChanged(aDocObj, aPageState));
   },
 
   viewportChanged: function Presentation_viewportChanged(aWindow) {
     let context = this.displayedAccessibles.get(aWindow);
-    return [p.viewportChanged(aWindow, context) // jshint ignore:line
-      for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.viewportChanged(aWindow, context));
   },
 
   editingModeChanged: function Presentation_editingModeChanged(aIsEditing) {
-    return [p.editingModeChanged(aIsEditing) for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.editingModeChanged(aIsEditing));
   },
 
   announce: function Presentation_announce(aAnnouncement) {
     // XXX: Typically each presenter uses the UtteranceGenerator,
     // but there really isn't a point here.
-    return [p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)) // jshint ignore:line
-      for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.announce(UtteranceGenerator.genForAnnouncement(aAnnouncement)));
   },
 
   noMove: function Presentation_noMove(aMoveMethod) {
-    return [p.noMove(aMoveMethod) for each (p in this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.noMove(aMoveMethod));
   },
 
   liveRegion: function Presentation_liveRegion(aAccessible, aIsPolite, aIsHide,
@@ -764,7 +761,7 @@ this.Presentation = { // jshint ignore:line
       context = new PivotContext(aAccessible, null, -1, -1, true,
         aIsHide ? true : false);
     }
-    return [p.liveRegion(context, aIsPolite, aIsHide, aModifiedText) // jshint ignore:line
-      for (p of this.presenters)]; // jshint ignore:line
+    return this.presenters.map(p => p.liveRegion(context, aIsPolite, aIsHide,
+                                                 aModifiedText));
   }
 };

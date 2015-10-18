@@ -67,11 +67,13 @@ var OutputGenerator = {
     if (this.outputOrder === OUTPUT_DESC_FIRST) {
       contextStart.forEach(addOutput);
       addOutput(aContext.accessible);
-      [addOutput(node) for // jshint ignore:line
-        (node of aContext.subtreeGenerator(true, ignoreSubtree))]; // jshint ignore:line
+      for (let node of aContext.subtreeGenerator(true, ignoreSubtree)) {
+        addOutput(node);
+      }
     } else {
-      [addOutput(node) for // jshint ignore:line
-        (node of aContext.subtreeGenerator(false, ignoreSubtree))]; // jshint ignore:line
+      for (let node of aContext.subtreeGenerator(false, ignoreSubtree)) {
+        addOutput(node);
+      }
       addOutput(aContext.accessible);
 
       // If there are any documents in new ancestry, find a first one and place

@@ -65,7 +65,7 @@
         }
       },
       action: function action() {
-        [hide(id) for (id of ["to_hide1", "to_hide2", "to_hide3", "to_hide4"])];
+        ["to_hide1", "to_hide2", "to_hide3", "to_hide4"].forEach(id => hide(id));
       }
     }, {
       expected: {
@@ -76,8 +76,8 @@
         }
       },
       action: function action() {
-        [hide(id) for (id of ["to_hide_descendant1", "to_hide_descendant2",
-          "to_hide_descendant3", "to_hide_descendant4"])];
+        ["to_hide_descendant1", "to_hide_descendant2",
+         "to_hide_descendant3", "to_hide_descendant4"].forEach(id => hide(id));
       }
     }, {
       expected: {
@@ -88,7 +88,7 @@
         }
       },
       action: function action() {
-        [show(id) for (id of ["to_show1", "to_show2", "to_show3", "to_show4"])];
+        ["to_show1", "to_show2", "to_show3", "to_show4"].forEach(id => show(id));
       }
     }, {
       expected: {
@@ -99,8 +99,8 @@
         }
       },
       action: function action() {
-        [show(id) for (id of ["to_show_descendant1", "to_show_descendant2",
-          "to_show_descendant3", "to_show_descendant4"])];
+        ["to_show_descendant1", "to_show_descendant2",
+         "to_show_descendant3", "to_show_descendant4"].forEach(id => show(id));
       }
     }, {
       expected: {
@@ -111,8 +111,7 @@
         }
       },
       action: function action() {
-        [ariaHide(id) for (id of ["to_hide5", "to_hide6", "to_hide7",
-          "to_hide8", "to_hide9"])];
+        ["to_hide5", "to_hide6", "to_hide7", "to_hide8", "to_hide9"].forEach(id => ariaHide(id));
       }
     }, {
       expected: {
@@ -123,8 +122,8 @@
         }
       },
       action: function action() {
-        [ariaHide(id) for (id of ["to_hide_descendant5", "to_hide_descendant6",
-          "to_hide_descendant7", "to_hide_descendant8"])];
+        ["to_hide_descendant5", "to_hide_descendant6",
+         "to_hide_descendant7", "to_hide_descendant8"].forEach(id => ariaHide(id));
       }
     }, {
       expected: {
@@ -135,8 +134,7 @@
         }
       },
       action: function action() {
-        [ariaShow(id) for (id of ["to_show5", "to_show6", "to_show7",
-          "to_show8", "to_show9"])];
+        ["to_show5", "to_show6", "to_show7", "to_show8", "to_show9"].forEach(id => ariaShow(id));
       }
     }, {
       expected: {
@@ -147,8 +145,8 @@
         }
       },
       action: function action() {
-        [ariaShow(id) for (id of ["to_show_descendant5", "to_show_descendant6",
-          "to_show_descendant7", "to_show_descendant8"])];
+        ["to_show_descendant5", "to_show_descendant6",
+         "to_show_descendant7", "to_show_descendant8"].forEach(id => ariaShow(id));
       }
     }, {
       expected: {
@@ -181,7 +179,7 @@
         }
       },
       action: function action() {
-        [show(id) for (id of ["to_show_live_off", "to_show_live_assertive"])];
+        ["to_show_live_off", "to_show_live_assertive"].forEach(id => show(id));
       }
     }, {
       expected: {
@@ -192,8 +190,7 @@
         }
       },
       action: function action() {
-        [ariaShow(id) for (id of ["to_show_live_off2",
-          "to_show_live_assertive2"])];
+        ["to_show_live_off2", "to_show_live_assertive2"].forEach(id => ariaShow(id));
       }
     }, {
       expected: {
