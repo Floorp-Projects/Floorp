@@ -16,7 +16,6 @@
 #include "nsIScriptError.h"
 #include "nsURIHashKey.h"
 #include "mozilla/net/ReferrerPolicy.h"
-#include "gfxFontConstants.h"
 
 class nsFontFaceLoader;
 
@@ -211,7 +210,7 @@ public:
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                               uint32_t aWeight,
                               int32_t aStretch,
-                              uint8_t aStyle,
+                              uint32_t aItalicStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               uint32_t aLanguageOverride,
                               gfxSparseBitSet* aUnicodeRanges) = 0;
@@ -223,7 +222,7 @@ public:
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                uint32_t aWeight,
                                int32_t aStretch,
-                               uint8_t aStyle,
+                               uint32_t aItalicStyle,
                                const nsTArray<gfxFontFeature>& aFeatureSettings,
                                uint32_t aLanguageOverride,
                                gfxSparseBitSet* aUnicodeRanges);
@@ -417,9 +416,9 @@ public:
                                             nsURIHashKey::HashKey(aKey->mURI),
                                             HashFeatures(aKey->mFontEntry->mFeatureSettings),
                                             mozilla::HashString(aKey->mFontEntry->mFamilyName),
-                                            (aKey->mFontEntry->mStyle |
-                                             (aKey->mFontEntry->mWeight << 2) |
-                                             (aKey->mFontEntry->mStretch << 11) ) ^
+                                            ((uint32_t)aKey->mFontEntry->mItalic |
+                                             (aKey->mFontEntry->mWeight << 1) |
+                                             (aKey->mFontEntry->mStretch << 10) ) ^
                                              aKey->mFontEntry->mLanguageOverride);
             }
 
@@ -496,7 +495,7 @@ protected:
                                    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                    uint32_t aWeight,
                                    int32_t aStretch,
-                                   uint8_t aStyle,
+                                   uint32_t aItalicStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    uint32_t aLanguageOverride,
                                    gfxSparseBitSet* aUnicodeRanges);
@@ -535,7 +534,7 @@ public:
                      const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                      uint32_t aWeight,
                      int32_t aStretch,
-                     uint8_t aStyle,
+                     uint32_t aItalicStyle,
                      const nsTArray<gfxFontFeature>& aFeatureSettings,
                      uint32_t aLanguageOverride,
                      gfxSparseBitSet* aUnicodeRanges);
@@ -546,7 +545,7 @@ public:
     bool Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                  uint32_t aWeight,
                  int32_t aStretch,
-                 uint8_t aStyle,
+                 uint32_t aItalicStyle,
                  const nsTArray<gfxFontFeature>& aFeatureSettings,
                  uint32_t aLanguageOverride,
                  gfxSparseBitSet* aUnicodeRanges);

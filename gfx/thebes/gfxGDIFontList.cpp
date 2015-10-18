@@ -118,8 +118,7 @@ FontTypeToOutPrecision(uint8_t fontType)
 
 GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
                            gfxWindowsFontType aFontType,
-                           uint8_t aStyle, uint16_t aWeight,
-                           int16_t aStretch,
+                           bool aItalic, uint16_t aWeight, int16_t aStretch,
                            gfxUserFontData *aUserFontData,
                            bool aFamilyHasItalicFace)
     : gfxFontEntry(aFaceName),
@@ -130,7 +129,7 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName,
       mCharset(), mUnicodeRanges()
 {
     mUserFontData = aUserFontData;
-    mStyle = aStyle;
+    mItalic = aItalic;
     mWeight = aWeight;
     mStretch = aStretch;
     if (IsType1())
@@ -307,10 +306,9 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
             return false;
 
         // previous code was using the group style
-        gfxFontStyle fakeStyle;
-        if (!IsUpright()) {
+        gfxFontStyle fakeStyle;  
+        if (mItalic)
             fakeStyle.style = NS_FONT_STYLE_ITALIC;
-        }
         fakeStyle.weight = mWeight * 100;
 
         RefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, false);
@@ -389,7 +387,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
     // do its best to give us an italic font entry, but if no face exists
     // it may give us a regular one based on weight.  Windows should
     // do fake italic for us in that case.
-    mLogFont.lfItalic         = !IsUpright();
+    mLogFont.lfItalic         = mItalic;
     mLogFont.lfWeight         = mWeight;
 
     int len = std::min<int>(aName.Length(), LF_FACESIZE - 1);
@@ -399,15 +397,14 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
 
 GDIFontEntry* 
 GDIFontEntry::CreateFontEntry(const nsAString& aName,
-                              gfxWindowsFontType aFontType,
-                              uint8_t aStyle,
+                              gfxWindowsFontType aFontType, bool aItalic,
                               uint16_t aWeight, int16_t aStretch,
                               gfxUserFontData* aUserFontData,
                               bool aFamilyHasItalicFace)
 {
     // jtdfix - need to set charset, unicode ranges, pitch/family
 
-    GDIFontEntry *fe = new GDIFontEntry(aName, aFontType, aStyle,
+    GDIFontEntry *fe = new GDIFontEntry(aName, aFontType, aItalic,
                                         aWeight, aStretch, aUserFontData,
                                         aFamilyHasItalicFace);
 
@@ -459,7 +456,7 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
         fe = static_cast<GDIFontEntry*>(ff->mAvailableFonts[i].get());
         // check if we already know about this face
         if (fe->mWeight == logFont.lfWeight &&
-            fe->IsItalic() == (logFont.lfItalic == 0xFF)) {
+            fe->mItalic == (logFont.lfItalic == 0xFF)) {
             // update the charset bit here since this could be different
             fe->mCharset.set(metrics.tmCharSet);
             return 1; 
@@ -469,10 +466,8 @@ GDIFontFamily::FamilyAddStylesProc(const ENUMLOGFONTEXW *lpelfe,
     // We can't set the hasItalicFace flag correctly here,
     // because we might not have seen the family's italic face(s) yet.
     // So we'll set that flag for all members after loading all the faces.
-    uint8_t italicStyle = (logFont.lfItalic == 0xFF ?
-                           NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
     fe = GDIFontEntry::CreateFontEntry(nsDependentString(lpelfe->elfFullName),
-                                       feType, italicStyle,
+                                       feType, (logFont.lfItalic == 0xFF),
                                        (uint16_t) (logFont.lfWeight), 0,
                                        nullptr, false);
     if (!fe)
@@ -717,7 +712,7 @@ gfxFontEntry*
 gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
                                 uint16_t aWeight,
                                 int16_t aStretch,
-                                uint8_t aStyle)
+                                bool aItalic)
 {
     gfxFontEntry *lookup;
 
@@ -734,9 +729,10 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
     // 'Arial Vet' which can be used as a key in GDI font lookups).
     GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
-        lookup->mStyle, lookup->mWeight, aStretch, nullptr,
+        lookup->mItalic ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
+        lookup->mWeight, aStretch, nullptr,
         static_cast<GDIFontEntry*>(lookup)->mFamilyHasItalicFace);
-
+        
     if (!fe)
         return nullptr;
 
@@ -744,7 +740,7 @@ gfxGDIFontList::LookupLocalFont(const nsAString& aFontName,
 
     // make the new font entry match the userfont entry style characteristics
     fe->mWeight = (aWeight == 0 ? 400 : aWeight);
-    fe->mStyle = aStyle;
+    fe->mItalic = aItalic;
 
     return fe;
 }
@@ -753,7 +749,7 @@ gfxFontEntry*
 gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
                                  uint16_t aWeight,
                                  int16_t aStretch,
-                                 uint8_t aStyle,
+                                 bool aItalic,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)
 {
@@ -812,16 +808,17 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
     WinUserFontData *winUserFontData = new WinUserFontData(fontRef);
     uint16_t w = (aWeight == 0 ? 400 : aWeight);
 
-    GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName,
-        gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/,
-        aStyle, w, aStretch, winUserFontData, false);
+    GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(uniqueName, 
+        gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
+        uint32_t(aItalic ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL),
+        w, aStretch, winUserFontData, false);
 
     if (!fe)
         return fe;
 
     fe->mIsDataUserFont = true;
 
-    // Uniscribe doesn't place CFF fonts loaded privately
+    // Uniscribe doesn't place CFF fonts loaded privately 
     // via AddFontMemResourceEx on XP/Vista
     if (isCFF && !IsWin7OrLater()) {
         fe->mForceGDI = true;

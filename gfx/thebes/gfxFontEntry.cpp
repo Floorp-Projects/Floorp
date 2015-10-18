@@ -68,7 +68,7 @@ gfxCharacterMap::NotifyReleased()
 }
 
 gfxFontEntry::gfxFontEntry() :
-    mStyle(NS_FONT_STYLE_NORMAL), mFixedPitch(false),
+    mItalic(false), mFixedPitch(false),
     mIsValid(true),
     mIsBadUnderlineFont(false),
     mIsUserFontContainer(false),
@@ -108,7 +108,7 @@ gfxFontEntry::gfxFontEntry() :
 }
 
 gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
-    mName(aName), mStyle(NS_FONT_STYLE_NORMAL), mFixedPitch(false),
+    mName(aName), mItalic(false), mFixedPitch(false),
     mIsValid(true),
     mIsBadUnderlineFont(false),
     mIsUserFontContainer(false),
@@ -1155,69 +1155,57 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
     return nullptr;
 }
 
-#define STYLE_SHIFT 2 // number of bits to contain style distance
-
-// style distance ==> [0,2]
 static inline uint32_t
-StyleDistance(uint32_t aFontStyle, uint32_t aTargetStyle)
+StyleStretchDistance(gfxFontEntry *aFontEntry, bool aTargetItalic,
+                     int16_t aTargetStretch)
 {
-    if (aFontStyle == aTargetStyle) {
-        return 0; // styles match exactly ==> 0
-    }
-    if (aFontStyle == NS_FONT_STYLE_NORMAL ||
-        aTargetStyle == NS_FONT_STYLE_NORMAL) {
-        return 2; // one is normal (but not the other) ==> 2
-    }
-    return 1; // neither is normal; must be italic vs oblique ==> 1
-}
+    // Compute a measure of the "distance" between the requested style
+    // and the given fontEntry,
+    // considering italicness and font-stretch but not weight.
 
-#define REVERSE_STRETCH_DISTANCE 5
-
-// stretch distance ==> [0,13]
-static inline uint32_t
-StretchDistance(int16_t aFontStretch, int16_t aTargetStretch)
-{
     int32_t distance = 0;
-    if (aTargetStretch != aFontStretch) {
+    if (aTargetStretch != aFontEntry->mStretch) {
         // stretch values are in the range -4 .. +4
         // if aTargetStretch is positive, we prefer more-positive values;
         // if zero or negative, prefer more-negative
         if (aTargetStretch > 0) {
-            distance = (aFontStretch - aTargetStretch);
+            distance = (aFontEntry->mStretch - aTargetStretch) * 2;
         } else {
-            distance = (aTargetStretch - aFontStretch);
+            distance = (aTargetStretch - aFontEntry->mStretch) * 2;
         }
         // if the computed "distance" here is negative, it means that
         // aFontEntry lies in the "non-preferred" direction from aTargetStretch,
         // so we treat that as larger than any preferred-direction distance
-        // (max possible is 4) by adding an extra 5 to the absolute value
+        // (max possible is 8) by adding an extra 10 to the absolute value
         if (distance < 0) {
-            distance = -distance + REVERSE_STRETCH_DISTANCE;
+            distance = -distance + 10;
         }
+    }
+    if (aFontEntry->IsItalic() != aTargetItalic) {
+        distance += 1;
     }
     return uint32_t(distance);
 }
 
+#define NON_DESIRED_DIRECTION_DISTANCE 1000
+#define MAX_WEIGHT_DISTANCE            2000
+
 // CSS currently limits font weights to multiples of 100 but the weight
 // matching code below does not assume this.
 //
-// Calculate weight distance with values in the range (0..1000). In general,
-// heavier weights match towards even heavier weights while lighter weights
-// match towards even lighter weights. Target weight values in the range
-// [400..500] are special, since they will first match up to 500, then down
-// towards 0, then up again towards 999.
+// Calculate weight values with range (0..1000). In general, heavier weights
+// match towards even heavier weights while lighter weights match towards even
+// lighter weights. Target weight values in the range [400..500] are special,
+// since they will first match up to 500, then down to 0, then up again
+// towards 999.
 //
 // Example: with target 600 and font weight 800, distance will be 200. With
-// target 300 and font weight 600, distance will be 900, since heavier
-// weights are farther away than lighter weights. If the target is 5 and the
-// font weight 995, the distance would be 1590 for the same reason.
+// target 300 and font weight 600, distance will be 1300, since heavier weights
+// are farther away than lighter weights. If the target is 5 and the font weight
+// 995, the distance would be 1990 for the same reason.
 
-#define REVERSE_WEIGHT_DISTANCE 600
-#define WEIGHT_SHIFT             11 // number of bits to contain weight distance
-
-// weight distance ==> [0,1598]
 static inline uint32_t
-WeightDistance(uint32_t aFontWeight, uint32_t aTargetWeight)
+WeightDistance(uint32_t aTargetWeight, uint32_t aFontWeight)
 {
     // Compute a measure of the "distance" between the requested
     // weight and the given fontEntry
@@ -1247,32 +1235,11 @@ WeightDistance(uint32_t aFontWeight, uint32_t aTargetWeight)
             }
         }
         if (distance < 0) {
-            distance = -distance + REVERSE_WEIGHT_DISTANCE;
+            distance = -distance + NON_DESIRED_DIRECTION_DISTANCE;
         }
         distance += addedDistance;
     }
     return uint32_t(distance);
-}
-
-#define MAX_DISTANCE 0xffffffff
-
-static inline uint32_t
-WeightStyleStretchDistance(gfxFontEntry* aFontEntry,
-                           const gfxFontStyle& aTargetStyle)
-{
-    // weight/style/stretch priority: stretch >> style >> weight
-    uint32_t stretchDist =
-        StretchDistance(aFontEntry->mStretch, aTargetStyle.stretch);
-    uint32_t styleDist = StyleDistance(aFontEntry->mStyle, aTargetStyle.style);
-    uint32_t weightDist =
-        WeightDistance(aFontEntry->Weight(), aTargetStyle.weight);
-
-    NS_ASSERTION(weightDist < (1 << WEIGHT_SHIFT), "weight value out of bounds");
-    NS_ASSERTION(styleDist < (1 << STYLE_SHIFT), "slope value out of bounds");
-
-    return (stretchDist << (STYLE_SHIFT + WEIGHT_SHIFT)) |
-           (styleDist << WEIGHT_SHIFT) |
-           weightDist;
 }
 
 void
@@ -1304,6 +1271,9 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
         return;
     }
 
+    bool wantItalic = (aFontStyle.style &
+                       (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
+
     // Most families are "simple", having just Regular/Bold/Italic/BoldItalic,
     // or some subset of these. In this case, we have exactly 4 entries in mAvailableFonts,
     // stored in the above order; note that some of the entries may be nullptr.
@@ -1315,7 +1285,6 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
         // Family has no more than the "standard" 4 faces, at fixed indexes;
         // calculate which one we want.
         // Note that we cannot simply return it as not all 4 faces are necessarily present.
-        bool wantItalic = (aFontStyle.style != NS_FONT_STYLE_NORMAL);
         uint8_t faceIndex = (wantItalic ? kItalicMask : 0) |
                             (wantBold ? kBoldMask : 0);
 
@@ -1363,14 +1332,16 @@ gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
     // weight/style/stretch combination, only the last matched font entry will
     // be added.
 
-    uint32_t minDistance = MAX_DISTANCE;
+    uint32_t minDistance = 0xffffffff;
     gfxFontEntry* matched = nullptr;
     // iterate in forward order so that faces like 'Bold' are matched before
     // matching style distance faces such as 'Bold Outline' (see bug 1185812)
     for (uint32_t i = 0; i < count; i++) {
         fe = mAvailableFonts[i];
-        // weight/style/stretch priority: stretch >> style >> weight
-        uint32_t distance = WeightStyleStretchDistance(fe, aFontStyle);
+        uint32_t distance =
+            WeightDistance(aFontStyle.weight, fe->Weight()) +
+            (StyleStretchDistance(fe, wantItalic, aFontStyle.stretch) *
+             MAX_WEIGHT_DISTANCE);
         if (distance < minDistance) {
             matched = fe;
             if (!aFontEntryList.IsEmpty()) {
@@ -1420,9 +1391,8 @@ gfxFontFamily::CheckForSimpleFamily()
     gfxFontEntry *faces[4] = { 0 };
     for (uint8_t i = 0; i < count; ++i) {
         gfxFontEntry *fe = mAvailableFonts[i];
-        if (fe->Stretch() != firstStretch || fe->IsOblique()) {
-            // simple families don't have varying font-stretch or oblique
-            return;
+        if (fe->Stretch() != firstStretch) {
+            return; // font-stretch doesn't match, don't treat as simple family
         }
         uint8_t faceIndex = (fe->IsItalic() ? kItalicMask : 0) |
                             (fe->Weight() >= 600 ? kBoldMask : 0);
@@ -1478,8 +1448,9 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
     int32_t rank = 0;
     if (aStyle) {
          // italics
-         bool wantUpright = (aStyle->style == NS_FONT_STYLE_NORMAL);
-         if (aFontEntry->IsUpright() == wantUpright) {
+         bool wantItalic =
+             (aStyle->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) != 0;
+         if (aFontEntry->IsItalic() == wantItalic) {
              rank += 10;
          }
 
@@ -1487,7 +1458,7 @@ CalcStyleMatch(gfxFontEntry *aFontEntry, const gfxFontStyle *aStyle)
         rank += 9 - DeprecatedAbs(aFontEntry->Weight() / 100 - aStyle->ComputeWeight());
     } else {
         // if no font to match, prefer non-bold, non-italic fonts
-        if (aFontEntry->IsUpright()) {
+        if (!aFontEntry->IsItalic()) {
             rank += 3;
         }
         if (!aFontEntry->IsBold()) {

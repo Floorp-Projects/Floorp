@@ -42,7 +42,7 @@ public:
     CreateFontEntry(const nsAString& aFontName,
                     uint16_t aWeight,
                     int16_t aStretch,
-                    uint8_t aStyle,
+                    bool aItalic,
                     const uint8_t* aFontData,
                     uint32_t aLength);
 
@@ -125,12 +125,12 @@ public:
     virtual gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                           uint16_t aWeight,
                                           int16_t aStretch,
-                                          uint8_t aStyle);
+                                          bool aItalic);
 
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,
-                                           uint8_t aStyle,
+                                           bool aItalic,
                                            const uint8_t* aFontData,
                                            uint32_t aLength);
 

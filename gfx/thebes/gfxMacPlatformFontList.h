@@ -33,7 +33,7 @@ public:
 
     // for use with data fonts
     MacOSFontEntry(const nsAString& aPostscriptName, CGFontRef aFontRef,
-                   uint16_t aWeight, uint16_t aStretch, uint8_t aStyle,
+                   uint16_t aWeight, uint16_t aStretch, uint32_t aItalicStyle,
                    bool aIsDataUserFont, bool aIsLocal);
 
     virtual ~MacOSFontEntry() {
@@ -86,12 +86,12 @@ public:
     gfxFontEntry* LookupLocalFont(const nsAString& aFontName,
                                   uint16_t aWeight,
                                   int16_t aStretch,
-                                  uint8_t aStyle) override;
-
+                                  bool aItalic) override;
+    
     gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                    uint16_t aWeight,
                                    int16_t aStretch,
-                                   uint8_t aStyle,
+                                   bool aItalic,
                                    const uint8_t* aFontData,
                                    uint32_t aLength) override;
 
