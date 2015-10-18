@@ -132,7 +132,7 @@ RadialGradientEffectD2D1::PrepareForRender(D2D1_CHANGE_TYPE changeType)
     return hr;
   }
 
-  RefPtr<ID2D1ResourceTexture> tex = CreateGradientTexture();
+  nsRefPtr<ID2D1ResourceTexture> tex = CreateGradientTexture();
   hr = mDrawInfo->SetResourceTexture(1, tex);
 
   if (FAILED(hr)) {
@@ -302,7 +302,7 @@ RadialGradientEffectD2D1::CreateEffect(IUnknown **aEffectImpl)
 HRESULT
 RadialGradientEffectD2D1::SetStopCollection(IUnknown *aStopCollection)
 {
-  if (SUCCEEDED(aStopCollection->QueryInterface((ID2D1GradientStopCollection**)byRef(mStopCollection)))) {
+  if (SUCCEEDED(aStopCollection->QueryInterface((ID2D1GradientStopCollection**)getter_AddRefs(mStopCollection)))) {
     return S_OK;
   }
 
@@ -370,7 +370,7 @@ RadialGradientEffectD2D1::CreateGradientTexture()
     texData[i * 4 + 3] = (char)(255.0f * newColor.a);
   }
 
-  RefPtr<ID2D1ResourceTexture> tex;
+  nsRefPtr<ID2D1ResourceTexture> tex;
 
   UINT32 width = 4096;
   UINT32 stride = 4096 * 4;
@@ -385,7 +385,7 @@ RadialGradientEffectD2D1::CreateGradientTexture()
   D2D1_EXTEND_MODE extendMode[] = { mStopCollection->GetExtendMode(), mStopCollection->GetExtendMode() };
   props.extendModes = extendMode;
 
-  HRESULT hr = mEffectContext->CreateResourceTexture(nullptr, &props, &textureData.front(), &stride, 4096 * 4, byRef(tex));
+  HRESULT hr = mEffectContext->CreateResourceTexture(nullptr, &props, &textureData.front(), &stride, 4096 * 4, getter_AddRefs(tex));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create resource texture: " << hexa(hr);

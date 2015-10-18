@@ -33,8 +33,8 @@ public:
   virtual SurfaceFormat GetFormat() const { return mFinalSurface->GetFormat(); }
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() { return mFinalSurface->GetDataSurface(); }
 
-  RefPtr<SourceSurface> mFinalSurface;
-  RefPtr<DrawEventRecorderPrivate> mRecorder;
+  nsRefPtr<SourceSurface> mFinalSurface;
+  nsRefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
 class GradientStopsRecording : public GradientStops
@@ -53,8 +53,8 @@ public:
 
   virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
 
-  RefPtr<GradientStops> mFinalGradientStops;
-  RefPtr<DrawEventRecorderPrivate> mRecorder;
+  nsRefPtr<GradientStops> mFinalGradientStops;
+  nsRefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
 static SourceSurface *
@@ -140,8 +140,8 @@ public:
 
   virtual FilterBackend GetBackendType() override { return FILTER_BACKEND_RECORDING; }
 
-  RefPtr<FilterNode> mFinalFilterNode;
-  RefPtr<DrawEventRecorderPrivate> mRecorder;
+  nsRefPtr<FilterNode> mFinalFilterNode;
+  nsRefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
 static FilterNode*
@@ -224,7 +224,7 @@ DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarge
   : mRecorder(static_cast<DrawEventRecorderPrivate*>(aRecorder))
   , mFinalDT(aDT)
 {
-  RefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
+  nsRefPtr<SourceSurface> snapshot = aHasData ? mFinalDT->Snapshot() : nullptr;
   mRecorder->RecordEvent(RecordedDrawTargetCreation(this,
                                                     mFinalDT->GetBackendType(),
                                                     mFinalDT->GetSize(),
@@ -292,7 +292,7 @@ DrawTargetRecording::Fill(const Path *aPath,
 struct RecordingFontUserData
 {
   void *refPtr;
-  RefPtr<DrawEventRecorderPrivate> recorder;
+  nsRefPtr<DrawEventRecorderPrivate> recorder;
 };
 
 void RecordingFontUserDataDestroyFunc(void *aUserData)
@@ -368,9 +368,9 @@ DrawTargetRecording::Stroke(const Path *aPath,
 already_AddRefed<SourceSurface>
 DrawTargetRecording::Snapshot()
 {
-  RefPtr<SourceSurface> surf = mFinalDT->Snapshot();
+  nsRefPtr<SourceSurface> surf = mFinalDT->Snapshot();
 
-  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
+  nsRefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
 
   mRecorder->RecordEvent(RecordedSnapshot(retSurf, this));
 
@@ -413,9 +413,9 @@ DrawTargetRecording::DrawFilter(FilterNode *aNode,
 already_AddRefed<FilterNode>
 DrawTargetRecording::CreateFilter(FilterType aType)
 {
-  RefPtr<FilterNode> node = mFinalDT->CreateFilter(aType);
+  nsRefPtr<FilterNode> node = mFinalDT->CreateFilter(aType);
 
-  RefPtr<FilterNode> retNode = new FilterNodeRecording(node, mRecorder);
+  nsRefPtr<FilterNode> retNode = new FilterNodeRecording(node, mRecorder);
 
   mRecorder->RecordEvent(RecordedFilterNodeCreation(retNode, aType));
 
@@ -467,9 +467,9 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
                                                  int32_t aStride,
                                                  SurfaceFormat aFormat) const
 {
-  RefPtr<SourceSurface> surf = mFinalDT->CreateSourceSurfaceFromData(aData, aSize, aStride, aFormat);
+  nsRefPtr<SourceSurface> surf = mFinalDT->CreateSourceSurfaceFromData(aData, aSize, aStride, aFormat);
 
-  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
+  nsRefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
 
   mRecorder->RecordEvent(RecordedSourceSurfaceCreation(retSurf, aData, aStride, aSize, aFormat));
 
@@ -479,11 +479,11 @@ DrawTargetRecording::CreateSourceSurfaceFromData(unsigned char *aData,
 already_AddRefed<SourceSurface>
 DrawTargetRecording::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
-  RefPtr<SourceSurface> surf = mFinalDT->OptimizeSourceSurface(aSurface);
+  nsRefPtr<SourceSurface> surf = mFinalDT->OptimizeSourceSurface(aSurface);
 
-  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
+  nsRefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
 
-  RefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
+  nsRefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
 
   if (!dataSurf) {
     // Let's try get it off the original surface.
@@ -512,11 +512,11 @@ DrawTargetRecording::OptimizeSourceSurface(SourceSurface *aSurface) const
 already_AddRefed<SourceSurface>
 DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-  RefPtr<SourceSurface> surf = mFinalDT->CreateSourceSurfaceFromNativeSurface(aSurface);
+  nsRefPtr<SourceSurface> surf = mFinalDT->CreateSourceSurfaceFromNativeSurface(aSurface);
 
-  RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
+  nsRefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
 
-  RefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
+  nsRefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
 
   if (!dataSurf) {
     gfxWarning() << "Recording failed to record SourceSurface created from OptimizeSourceSurface";
@@ -540,14 +540,14 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &a
 already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  RefPtr<DrawTarget> dt = mFinalDT->CreateSimilarDrawTarget(aSize, aFormat);
+  nsRefPtr<DrawTarget> dt = mFinalDT->CreateSimilarDrawTarget(aSize, aFormat);
   return MakeAndAddRef<DrawTargetRecording>(mRecorder.get(), dt);
 }
 
 already_AddRefed<PathBuilder>
 DrawTargetRecording::CreatePathBuilder(FillRule aFillRule) const
 {
-  RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(aFillRule);
+  nsRefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(aFillRule);
   return MakeAndAddRef<PathBuilderRecording>(builder, aFillRule);
 }
 
@@ -556,9 +556,9 @@ DrawTargetRecording::CreateGradientStops(GradientStop *aStops,
                                          uint32_t aNumStops,
                                          ExtendMode aExtendMode) const
 {
-  RefPtr<GradientStops> stops = mFinalDT->CreateGradientStops(aStops, aNumStops, aExtendMode);
+  nsRefPtr<GradientStops> stops = mFinalDT->CreateGradientStops(aStops, aNumStops, aExtendMode);
 
-  RefPtr<GradientStops> retStops = new GradientStopsRecording(stops, mRecorder);
+  nsRefPtr<GradientStops> retStops = new GradientStopsRecording(stops, mRecorder);
 
   mRecorder->RecordEvent(RecordedGradientStopsCreation(retStops, aStops, aNumStops, aExtendMode));
 

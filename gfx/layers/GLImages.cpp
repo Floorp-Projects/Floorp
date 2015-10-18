@@ -71,7 +71,7 @@ GLImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  RefPtr<gfx::DataSourceSurface> source =
+  nsRefPtr<gfx::DataSourceSurface> source =
         gfx::Factory::CreateDataSourceSurface(size, gfx::SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!source)) {
     return nullptr;

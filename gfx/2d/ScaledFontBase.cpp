@@ -112,7 +112,7 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
 
     cairo_glyph_path(ctx, &glyphs[0], aBuffer.mNumGlyphs);
 
-    RefPtr<PathCairo> newPath = new PathCairo(ctx);
+    nsRefPtr<PathCairo> newPath = new PathCairo(ctx);
     if (isNewContext) {
       cairo_destroy(ctx);
     }
@@ -157,7 +157,7 @@ ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBu
     cairo_set_scaled_font(ctx, mScaledFont);
     cairo_glyph_path(ctx, &glyphs[0], aBuffer.mNumGlyphs);
 
-    RefPtr<PathCairo> cairoPath = new PathCairo(ctx);
+    nsRefPtr<PathCairo> cairoPath = new PathCairo(ctx);
     cairo_destroy(ctx);
 
     cairoPath->AppendPathToBuilder(builder);

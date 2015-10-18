@@ -295,8 +295,8 @@ private:
 #ifdef XP_MACOSX
   NP_CGContext                              mCGPluginPortCopy;
   int32_t                                   mInCGPaintLevel;
-  mozilla::RefPtr<MacIOSurface>             mIOSurface;
-  mozilla::RefPtr<nsCARenderer>             mCARenderer;
+  nsRefPtr<MacIOSurface>             mIOSurface;
+  nsRefPtr<nsCARenderer>             mCARenderer;
   CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;

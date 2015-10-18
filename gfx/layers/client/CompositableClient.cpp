@@ -64,7 +64,7 @@ RemoveTextureFromCompositableTracker::ReleaseTextureClient()
       !mTextureClient->GetAllocator()->IsImageBridgeChild())
   {
     TextureClientReleaseTask* task = new TextureClientReleaseTask(mTextureClient);
-    RefPtr<ISurfaceAllocator> allocator = mTextureClient->GetAllocator();
+    nsRefPtr<ISurfaceAllocator> allocator = mTextureClient->GetAllocator();
     mTextureClient = nullptr;
     allocator->GetMessageLoop()->PostTask(FROM_HERE, task);
   } else {
@@ -265,7 +265,7 @@ CompositableClient::DumpTextureClient(std::stringstream& aStream,
   if (!aTexture) {
     return;
   }
-  RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  nsRefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
   if (!dSurf) {
     return;
   }
@@ -281,8 +281,8 @@ AutoRemoveTexture::~AutoRemoveTexture()
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   if (mCompositable && mTexture && mCompositable->GetForwarder()) {
     // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
+    nsRefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+    nsRefPtr<AsyncTransactionTracker> tracker =
         new RemoveTextureFromCompositableTracker(waiter);
     // Hold TextureClient until transaction complete.
     tracker->SetTextureClient(mTexture);

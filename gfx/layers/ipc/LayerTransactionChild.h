@@ -13,7 +13,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/PLayerTransactionChild.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 

@@ -7,7 +7,7 @@
 #include "MediaDecoderReader.h"
 #include "PlatformDecoderModule.h"
 #include "nsRect.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
@@ -72,7 +72,7 @@ public:
     // The MediaDataDecoder must delete the sample when we're finished
     // with it, so the OutputEvent stores it in an nsAutoPtr and deletes
     // it once it's run.
-    RefPtr<nsIRunnable> r(new OutputEvent(aSample, mCallback, mCreator));
+    nsRefPtr<nsIRunnable> r(new OutputEvent(aSample, mCallback, mCreator));
     mTaskQueue->Dispatch(r.forget());
     return NS_OK;
   }
@@ -89,7 +89,7 @@ public:
 
 private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   TrackInfo::TrackType mType;
 };
@@ -158,7 +158,7 @@ private:
   gfx::IntRect mPicture;
   uint32_t mFrameWidth;
   uint32_t mFrameHeight;
-  RefPtr<layers::ImageContainer> mImageContainer;
+  nsRefPtr<layers::ImageContainer> mImageContainer;
 };
 
 

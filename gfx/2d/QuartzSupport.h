@@ -12,7 +12,7 @@
 #import <OpenGL/gl.h>
 #import "ApplicationServices/ApplicationServices.h"
 #include "gfxTypes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "nsError.h"
 
@@ -84,7 +84,7 @@ private:
   _CGLContextObject        *mOpenGLContext;
   CGImageRef                mCGImage;
   void                     *mCGData;
-  mozilla::RefPtr<MacIOSurface> mIOSurface;
+  nsRefPtr<MacIOSurface> mIOSurface;
   uint32_t                  mFBO;
   uint32_t                  mIOTexture;
   int                       mUnsupportedWidth;

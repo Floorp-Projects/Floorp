@@ -55,7 +55,7 @@ VolumeManager::Dump(const char* aLabel)
   VolumeArray::size_type  numVolumes = NumVolumes();
   VolumeArray::index_type volIndex;
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume> vol = GetVolume(volIndex);
+    nsRefPtr<Volume> vol = GetVolume(volIndex);
     vol->Dump(aLabel);
   }
 }
@@ -75,7 +75,7 @@ already_AddRefed<Volume>
 VolumeManager::GetVolume(size_t aIndex)
 {
   MOZ_ASSERT(aIndex < NumVolumes());
-  RefPtr<Volume> vol = sVolumeManager->mVolumeArray[aIndex];
+  nsRefPtr<Volume> vol = sVolumeManager->mVolumeArray[aIndex];
   return vol.forget();
 }
 
@@ -134,7 +134,7 @@ VolumeManager::FindVolumeByName(const nsCSubstring& aName)
   VolumeArray::size_type  numVolumes = NumVolumes();
   VolumeArray::index_type volIndex;
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume> vol = GetVolume(volIndex);
+    nsRefPtr<Volume> vol = GetVolume(volIndex);
     if (vol->Name().Equals(aName)) {
       return vol.forget();
     }
@@ -146,7 +146,7 @@ VolumeManager::FindVolumeByName(const nsCSubstring& aName)
 already_AddRefed<Volume>
 VolumeManager::FindAddVolumeByName(const nsCSubstring& aName)
 {
-  RefPtr<Volume> vol = FindVolumeByName(aName);
+  nsRefPtr<Volume> vol = FindVolumeByName(aName);
   if (vol) {
     return vol.forget();
   }
@@ -166,7 +166,7 @@ VolumeManager::RemoveVolumeByName(const nsCSubstring& aName)
   VolumeArray::size_type  numVolumes = NumVolumes();
   VolumeArray::index_type volIndex;
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume> vol = GetVolume(volIndex);
+    nsRefPtr<Volume> vol = GetVolume(volIndex);
     if (vol->Name().Equals(aName)) {
       sVolumeManager->mVolumeArray.RemoveElementAt(volIndex);
       return true;
@@ -227,7 +227,7 @@ void VolumeManager::InitConfig()
         continue;
       }
       nsCString mountPoint(tokenizer.nextToken());
-      RefPtr<Volume> vol = FindAddVolumeByName(volName);
+      nsRefPtr<Volume> vol = FindAddVolumeByName(volName);
       vol->SetFakeVolume(mountPoint);
       continue;
     }
@@ -249,7 +249,7 @@ void VolumeManager::InitConfig()
         continue;
       }
       nsCString configValue(tokenizer.nextToken());
-      RefPtr<Volume> vol = FindVolumeByName(volName);
+      nsRefPtr<Volume> vol = FindVolumeByName(volName);
       if (vol) {
         vol->SetConfig(configName, configValue);
       } else {
@@ -287,14 +287,14 @@ VolumeManager::DefaultConfig()
     // Phones line the nexus-4 which only have an internal
     // storage area will need to have a volume.cfg file with
     // removable set to false.
-    RefPtr<Volume> vol = VolumeManager::GetVolume(0);
+    nsRefPtr<Volume> vol = VolumeManager::GetVolume(0);
     vol->SetIsRemovable(true);
     vol->SetIsHotSwappable(true);
     return;
   }
   VolumeManager::VolumeArray::index_type volIndex;
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
     if (!vol->Name().EqualsLiteral("sdcard")) {
       vol->SetIsRemovable(true);
       vol->SetIsHotSwappable(true);
@@ -316,7 +316,7 @@ class VolumeListCallback : public VolumeResponseCallback
         // we have of the same name, or add new ones if they don't exist.
         nsCWhitespaceTokenizer tokenizer(ResponseStr());
         nsDependentCSubstring volName(tokenizer.nextToken());
-        RefPtr<Volume> vol = VolumeManager::FindAddVolumeByName(volName);
+        nsRefPtr<Volume> vol = VolumeManager::FindAddVolumeByName(volName);
         vol->HandleVoldResponse(ResponseCode(), tokenizer);
         break;
       }
@@ -494,7 +494,7 @@ VolumeManager::HandleBroadcast(int aResponseCode, nsCString& aResponseLine)
   tokenizer.nextToken();  // The word "Volume"
   nsDependentCSubstring volName(tokenizer.nextToken());
 
-  RefPtr<Volume> vol = FindVolumeByName(volName);
+  nsRefPtr<Volume> vol = FindVolumeByName(volName);
   if (!vol) {
     return;
   }

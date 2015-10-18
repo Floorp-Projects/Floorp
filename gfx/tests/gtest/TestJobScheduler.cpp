@@ -120,9 +120,9 @@ void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
 {
   JoinTestSanityCheck check(aNumCmdBuffers);
 
-  RefPtr<SyncObject> beforeFilter = new SyncObject(aNumCmdBuffers);
-  RefPtr<SyncObject> afterFilter = new SyncObject();
-  RefPtr<SyncObject> completion = new SyncObject(aNumCmdBuffers);
+  nsRefPtr<SyncObject> beforeFilter = new SyncObject(aNumCmdBuffers);
+  nsRefPtr<SyncObject> afterFilter = new SyncObject();
+  nsRefPtr<SyncObject> completion = new SyncObject(aNumCmdBuffers);
 
 
   for (uint32_t i = 0; i < aNumCmdBuffers; ++i) {
@@ -145,7 +145,7 @@ void TestSchedulerJoin(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
   }
   completion->FreezePrerequisites();
 
-  RefPtr<EventObject> waitForCompletion = new EventObject();
+  nsRefPtr<EventObject> waitForCompletion = new EventObject();
   auto evtJob = new SetEventJob(waitForCompletion, completion);
   JobScheduler::SubmitJob(evtJob);
 
@@ -168,13 +168,13 @@ void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
 {
   SanityChecker check(aNumCmdBuffers);
 
-  RefPtr<SyncObject> completion = new SyncObject(aNumCmdBuffers);
+  nsRefPtr<SyncObject> completion = new SyncObject(aNumCmdBuffers);
 
   uint32_t numJobs = 10;
 
   for (uint32_t i = 0; i < aNumCmdBuffers; ++i) {
 
-    std::vector<RefPtr<SyncObject>> syncs;
+    std::vector<nsRefPtr<SyncObject>> syncs;
     std::vector<Job*> tasks;
     syncs.reserve(numJobs);
     tasks.reserve(numJobs);
@@ -205,7 +205,7 @@ void TestSchedulerChain(uint32_t aNumThreads, uint32_t aNumCmdBuffers)
   }
   completion->FreezePrerequisites();
 
-  RefPtr<EventObject> waitForCompletion = new EventObject();
+  nsRefPtr<EventObject> waitForCompletion = new EventObject();
   auto evtJob = new SetEventJob(waitForCompletion, completion);
   JobScheduler::SubmitJob(evtJob);
 

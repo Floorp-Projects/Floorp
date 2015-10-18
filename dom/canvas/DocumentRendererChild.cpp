@@ -9,7 +9,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPattern.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
@@ -74,7 +74,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     // Draw directly into the output array.
     data.SetLength(renderSize.width * renderSize.height * 4);
 
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
         Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                          reinterpret_cast<uint8_t*>(data.BeginWriting()),
                                          IntSize(renderSize.width, renderSize.height),

@@ -145,7 +145,7 @@ public:
   nsresult Shutdown() override;
 
 private:
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
 
   android::sp<GonkDecoderManager> mManager;
 };

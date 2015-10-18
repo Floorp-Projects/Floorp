@@ -6,7 +6,7 @@
 #define CanvasPath_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsWrapperCache.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -75,8 +75,8 @@ private:
   nsCOMPtr<nsISupports> mParent;
   static gfx::Float ToFloat(double aValue) { return gfx::Float(aValue); }
 
-  mutable RefPtr<gfx::Path> mPath;
-  mutable RefPtr<gfx::PathBuilder> mPathBuilder;
+  mutable nsRefPtr<gfx::Path> mPath;
+  mutable nsRefPtr<gfx::PathBuilder> mPathBuilder;
 
   void EnsurePathBuilder() const;
 };

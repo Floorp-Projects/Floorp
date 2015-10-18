@@ -7,7 +7,7 @@
 #define MOZILLA_GFX_FILTERS_H_
 
 #include "Types.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "Point.h"
 #include "Matrix.h"

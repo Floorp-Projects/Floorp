@@ -8,7 +8,7 @@
 #define mozilla_dom_ipc_StructuredCloneData_h
 
 #include <algorithm>
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsISupportsImpl.h"
 
@@ -138,7 +138,7 @@ private:
   uint64_t* MOZ_NON_OWNING_REF mExternalData;
   size_t mExternalDataLength;
 
-  RefPtr<SharedJSAllocatedData> mSharedData;
+  nsRefPtr<SharedJSAllocatedData> mSharedData;
 };
 
 } // namespace ipc

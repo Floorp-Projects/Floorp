@@ -29,7 +29,7 @@
 #include <media/stagefright/foundation/AMessage.h>
 #endif
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "GonkCameraHwMgr.h"
 
 namespace android {

@@ -78,7 +78,7 @@ BasicImageLayer::Paint(DrawTarget* aDT,
     mContainer->SetImageFactory(originalIF);
     return;
   }
-  RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
+  nsRefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
   if (!surface || !surface->IsValid()) {
     mContainer->SetImageFactory(originalIF);
     return;

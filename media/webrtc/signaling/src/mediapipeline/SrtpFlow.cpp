@@ -11,7 +11,7 @@
 #include "ssl.h"
 #include "sslproto.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 // Logging context
 using namespace mozilla;
@@ -27,7 +27,7 @@ SrtpFlow::~SrtpFlow() {
   }
 }
 
-RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
+nsRefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
                                            bool inbound,
                                            const void *key,
                                            size_t key_len) {
@@ -35,7 +35,7 @@ RefPtr<SrtpFlow> SrtpFlow::Create(int cipher_suite,
   if (!NS_SUCCEEDED(res))
     return nullptr;
 
-  RefPtr<SrtpFlow> flow = new SrtpFlow();
+  nsRefPtr<SrtpFlow> flow = new SrtpFlow();
 
   if (!key) {
     MOZ_MTLOG(ML_ERROR, "Null SRTP key specified");

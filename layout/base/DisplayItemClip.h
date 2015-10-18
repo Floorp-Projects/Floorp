@@ -6,7 +6,7 @@
 #ifndef DISPLAYITEMCLIP_H_
 #define DISPLAYITEMCLIP_H_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsRect.h"
 #include "nsTArray.h"
 #include "nsStyleConsts.h"

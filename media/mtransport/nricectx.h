@@ -57,7 +57,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "prnetdb.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
@@ -215,7 +215,7 @@ class NrIceCtx {
   };
 
   // TODO(ekr@rtfm.com): Too many bools here. Bug 1193437.
-  static RefPtr<NrIceCtx> Create(const std::string& name,
+  static nsRefPtr<NrIceCtx> Create(const std::string& name,
                                  bool offerer,
                                  bool allow_loopback = false,
                                  bool tcp_enabled = true,
@@ -234,12 +234,12 @@ class NrIceCtx {
   void destroy_peer_ctx();
 
   // Create a media stream
-  RefPtr<NrIceMediaStream> CreateStream(const std::string& name,
+  nsRefPtr<NrIceMediaStream> CreateStream(const std::string& name,
                                         int components);
 
   void SetStream(size_t index, NrIceMediaStream* stream);
 
-  RefPtr<NrIceMediaStream> GetStream(size_t index) {
+  nsRefPtr<NrIceMediaStream> GetStream(size_t index) {
     if (index < streams_.size()) {
       return streams_[index];
     }
@@ -370,7 +370,7 @@ class NrIceCtx {
                          int component_id, nr_ice_candidate *candidate);
 
   // Find a media stream by stream ptr. Gross
-  RefPtr<NrIceMediaStream> FindStream(nr_ice_media_stream *stream);
+  nsRefPtr<NrIceMediaStream> FindStream(nr_ice_media_stream *stream);
 
   // Set the state
   void SetConnectionState(ConnectionState state);
@@ -382,7 +382,7 @@ class NrIceCtx {
   GatheringState gathering_state_;
   const std::string name_;
   bool offerer_;
-  std::vector<RefPtr<NrIceMediaStream> > streams_;
+  std::vector<nsRefPtr<NrIceMediaStream> > streams_;
   nr_ice_ctx *ctx_;
   nr_ice_peer_ctx *peer_;
   nr_ice_handler_vtbl* ice_handler_vtbl_;  // Must be pointer

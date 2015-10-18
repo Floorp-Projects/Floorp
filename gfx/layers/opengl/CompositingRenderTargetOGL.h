@@ -10,7 +10,7 @@
 #include "GLDefs.h"                     // for GLenum, LOCAL_GL_FRAMEBUFFER, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
+#include "mozilla/nsRefPtr.h"             // for RefPtr, already_AddRefed
 #include "mozilla/gfx/Point.h"          // for IntSize, IntSizeTyped
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, etc
@@ -85,7 +85,7 @@ public:
   RenderTargetForWindow(CompositorOGL* aCompositor,
                         const gfx::IntSize& aSize)
   {
-    RefPtr<CompositingRenderTargetOGL> result
+    nsRefPtr<CompositingRenderTargetOGL> result
       = new CompositingRenderTargetOGL(aCompositor, gfx::IntPoint(), 0, 0);
     result->mInitParams = InitParams(aSize, 0, INIT_MODE_NONE);
     result->mInitParams.mStatus = InitParams::INITIALIZED;
@@ -168,7 +168,7 @@ private:
    * each having a strong ref to the other. The compositor's reference to
    * the target is always cleared at the end of a frame.
    */
-  RefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<CompositorOGL> mCompositor;
   GLContext* mGL;
   GLuint mTextureHandle;
   GLuint mFBO;

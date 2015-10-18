@@ -1216,7 +1216,7 @@ CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps)
     GLXPixmap pixmap;
 
     gfx::IntSize dummySize(16, 16);
-    RefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
+    nsRefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
                                                             visual,
                                                             dummySize);
     if (surface->CairoStatus() != 0) {
@@ -1269,7 +1269,7 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
         minBackbufferCaps.stencil = false;
     }
 
-    RefPtr<GLContext> gl;
+    nsRefPtr<GLContext> gl;
     gl = CreateOffscreenPixmapContext(size, minBackbufferCaps);
     if (!gl)
         return nullptr;
@@ -1305,7 +1305,7 @@ GLContextProviderGLX::GetGlobalContext()
         // StaticPtr doesn't support assignments from already_AddRefed,
         // so use a temporary nsRefPtr to make the reference counting
         // fall out correctly.
-        RefPtr<GLContext> holder;
+        nsRefPtr<GLContext> holder;
         holder = CreateOffscreenPixmapContext(dummySize, dummyCaps);
         gGlobalContext = holder;
     }

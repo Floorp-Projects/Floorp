@@ -68,7 +68,7 @@ GLScreenBuffer::Create(GLContext* gl,
 /* static */ UniquePtr<SurfaceFactory>
 GLScreenBuffer::CreateFactory(GLContext* gl,
                               const SurfaceCaps& caps,
-                              const RefPtr<layers::CompositableForwarder>& forwarder,
+                              const nsRefPtr<layers::CompositableForwarder>& forwarder,
                               const layers::TextureFlags& flags)
 {
     UniquePtr<SurfaceFactory> factory = nullptr;
@@ -521,7 +521,7 @@ GLScreenBuffer::Attach(SharedSurface* surf, const gfx::IntSize& size)
 bool
 GLScreenBuffer::Swap(const gfx::IntSize& size)
 {
-    RefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
+    nsRefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
     if (!newBack)
         return false;
 
@@ -585,7 +585,7 @@ GLScreenBuffer::PublishFrame(const gfx::IntSize& size)
 bool
 GLScreenBuffer::Resize(const gfx::IntSize& size)
 {
-    RefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
+    nsRefPtr<SharedSurfaceTextureClient> newBack = mFactory->NewTexClient(size);
     if (!newBack)
         return false;
 

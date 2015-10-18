@@ -195,8 +195,8 @@ public:
 
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
-  nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
-  RefPtr<SyncObject> mSyncObject;
+  nsTArray<nsRefPtr<TextureClient> > mTexturesToRemove;
+  nsRefPtr<SyncObject> mSyncObject;
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
 };

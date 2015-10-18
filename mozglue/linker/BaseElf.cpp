@@ -5,7 +5,7 @@
 #include "BaseElf.h"
 #include "Elfxx.h"
 #include "Logging.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 using namespace Elf;
 using namespace mozilla;
@@ -97,7 +97,7 @@ LoadedElf::Create(const char *path, void *base_addr)
   if (mincore(const_cast<void*>(base_addr), PageSize(), &mapped))
     return nullptr;
 
-  RefPtr<LoadedElf> elf = new LoadedElf(path);
+  nsRefPtr<LoadedElf> elf = new LoadedElf(path);
 
   const Ehdr *ehdr = Ehdr::validate(base_addr);
   if (!ehdr)

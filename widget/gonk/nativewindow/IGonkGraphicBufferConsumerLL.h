@@ -27,7 +27,7 @@
 #include <binder/IInterface.h>
 #include <ui/Rect.h>
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class ANativeWindowBuffer;
 

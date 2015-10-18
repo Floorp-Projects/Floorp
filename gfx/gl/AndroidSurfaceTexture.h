@@ -105,7 +105,7 @@ private:
   GLContext* mAttachedContext;
   bool mCanDetach;
 
-  RefPtr<AndroidNativeWindow> mNativeWindow;
+  nsRefPtr<AndroidNativeWindow> mNativeWindow;
   int mID;
   nsCOMPtr<nsIRunnable> mFrameAvailableCallback;
 };

@@ -477,7 +477,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
     return;
   }
 
-  RefPtr<TexturedEffect> effect =
+  nsRefPtr<TexturedEffect> effect =
     CreateTexturedEffect(aTile.mTextureSource,
                          aTile.mTextureSourceOnWhite,
                          aFilter,

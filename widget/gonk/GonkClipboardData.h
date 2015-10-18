@@ -5,7 +5,7 @@
 #ifndef mozilla_GonkClipboardData
 #define mozilla_GonkClipboardData
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -41,7 +41,7 @@ public:
 private:
   nsAutoString mPlain;
   nsAutoString mHTML;
-  RefPtr<gfx::DataSourceSurface> mImage;
+  nsRefPtr<gfx::DataSourceSurface> mImage;
 };
 
 } // namespace mozilla

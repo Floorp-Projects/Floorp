@@ -50,7 +50,7 @@ TestDrawTargetBase::FillRect()
 void
 TestDrawTargetBase::RefreshSnapshot()
 {
-  RefPtr<SourceSurface> snapshot = mDT->Snapshot();
+  nsRefPtr<SourceSurface> snapshot = mDT->Snapshot();
   mDataSnapshot = snapshot->GetDataSurface();
 }
 

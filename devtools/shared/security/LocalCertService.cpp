@@ -5,7 +5,7 @@
 #include "LocalCertService.h"
 
 #include "mozilla/ModuleUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "cert.h"
 #include "CryptoTask.h"
 #include "nsIPK11Token.h"
@@ -419,7 +419,7 @@ LocalCertService::GetOrCreateCert(const nsACString& aNickname,
     return NS_OK;
   }
 
-  RefPtr<LocalCertGetTask> task(new LocalCertGetTask(aNickname, aCallback));
+  nsRefPtr<LocalCertGetTask> task(new LocalCertGetTask(aNickname, aCallback));
   return task->Dispatch("LocalCertGet");
 }
 
@@ -441,7 +441,7 @@ LocalCertService::RemoveCert(const nsACString& aNickname,
     return NS_OK;
   }
 
-  RefPtr<LocalCertRemoveTask> task(
+  nsRefPtr<LocalCertRemoveTask> task(
     new LocalCertRemoveTask(aNickname, aCallback));
   return task->Dispatch("LocalCertRm");
 }

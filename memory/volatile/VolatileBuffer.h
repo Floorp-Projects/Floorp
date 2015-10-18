@@ -7,7 +7,7 @@
 
 #include "mozilla/mozalloc.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefCounted.h"
 
@@ -101,7 +101,7 @@ public:
   }
 
 protected:
-  RefPtr<VolatileBuffer> mVBuf;
+  nsRefPtr<VolatileBuffer> mVBuf;
   void* mMapping;
 
   void Set(VolatileBuffer* vbuf) {

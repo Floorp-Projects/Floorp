@@ -13,7 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsDebug.h"
 #include "nsSMILParserUtils.h"
 #include "nsTArray.h"
@@ -38,7 +38,7 @@ public:
       : mSVGElement(aSVGElement),
         mHaveReceivedCommands(false)
     {
-      RefPtr<DrawTarget> drawTarget =
+      nsRefPtr<DrawTarget> drawTarget =
         gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
       NS_ASSERTION(gfxPlatform::GetPlatform()->
                      SupportsAzureContentForDrawTarget(drawTarget),
@@ -71,7 +71,7 @@ public:
 
     // Member data
     const nsSVGElement* mSVGElement; // context for converting to user units
-    RefPtr<PathBuilder> mPathBuilder;
+    nsRefPtr<PathBuilder> mPathBuilder;
     bool          mHaveReceivedCommands;
   };
 

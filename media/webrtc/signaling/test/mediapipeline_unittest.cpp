@@ -16,7 +16,7 @@
 #include "sslproto.h"
 
 #include "dtlsidentity.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "FakeMediaStreams.h"
 #include "FakeMediaStreamsImpl.h"
 #include "MediaConduitErrors.h"
@@ -123,7 +123,7 @@ class TransportInfo {
     flow_ = nullptr;
   }
 
-  mozilla::RefPtr<TransportFlow> flow_;
+  nsRefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
   TransportLayerDtls *dtls_;
 };
@@ -228,12 +228,12 @@ class TestAgent {
 
  protected:
   mozilla::AudioCodecConfig audio_config_;
-  mozilla::RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
+  nsRefPtr<mozilla::MediaSessionConduit> audio_conduit_;
   nsRefPtr<DOMMediaStream> audio_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in
   // both directions; only the sender's RTCP is sent, but the receiver should
   // be sending it too.
-  mozilla::RefPtr<mozilla::MediaPipeline> audio_pipeline_;
+  nsRefPtr<mozilla::MediaPipeline> audio_pipeline_;
   TransportInfo audio_rtp_transport_;
   TransportInfo audio_rtcp_transport_;
   TransportInfo bundle_transport_;
@@ -257,8 +257,8 @@ class TestAgentSend : public TestAgent {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
     }
 
-    RefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
-    RefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
+    nsRefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
+    nsRefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
 
     if (use_bundle_) {
       rtp = bundle_transport_.flow_;
