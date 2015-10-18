@@ -35,7 +35,7 @@ function check_for_exception(spec)
 }
 
 function run_test() {
-  for each (spec in specs) {
+  for (var spec of specs) {
     check_for_exception(spec);
   }
 }

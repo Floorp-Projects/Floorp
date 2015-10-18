@@ -43,7 +43,7 @@ function run_test() {
   // Make sure our prefs are set such that this test actually means something
   var prefs = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
-  for each (var pref in prefData) {
+  for (var pref of prefData) {
     try {
       pref.oldVal = prefs.getBoolPref(pref.name);
     } catch(e) {
@@ -63,7 +63,7 @@ function run_test() {
     do_check_eq(uri4.host, uri5.host);
     do_check_eq(uri4.asciiHost, uri5.asciiHost);
   } finally {
-    for each (var pref in prefData) {
+    for (var pref of prefData) {
       if (prefs.prefHasUserValue(pref.name))
         prefs.clearUserPref(pref.name);
     }
