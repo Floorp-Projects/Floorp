@@ -299,7 +299,7 @@ Store.prototype = {
    */
   applyIncomingBatch: function (records) {
     let failed = [];
-    for each (let record in records) {
+    for (let record of records) {
       try {
         this.applyIncoming(record);
       } catch (ex if (ex.code == Engine.prototype.eEngineAbortApplyIncoming)) {
@@ -497,7 +497,7 @@ EngineManager.prototype = {
   },
 
   get enabledEngineNames() {
-    return [e.name for each (e in this.getEnabled())];
+    return this.getEnabled().map(e => e.name);
   },
 
   persistDeclined: function () {
@@ -1464,14 +1464,15 @@ SyncEngine.prototype = {
                           + failed_ids.join(", "));
 
         // Clear successfully uploaded objects.
-        for each (let id in resp.obj.success) {
+        for (let key in resp.obj.success) {
+          let id = resp.obj.success[key];
           delete this._modified[id];
         }
 
         up.clearRecords();
       });
 
-      for each (let id in modifiedIDs) {
+      for (let id of modifiedIDs) {
         try {
           let out = this._createRecord(id);
           if (this._log.level <= Log.Level.Trace)

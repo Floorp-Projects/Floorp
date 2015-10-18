@@ -24,7 +24,7 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
  *     new StringBundle("chrome://example/locale/strings.properties");
  *   let foo = strings.get("foo");
  *   let barFormatted = strings.get("bar", [arg1, arg2]);
- *   for each (let string in strings.getAll())
+ *   for (let string of strings.getAll())
  *     dump (string.key + " = " + string.value + "\n");
  *
  * @param url {String}

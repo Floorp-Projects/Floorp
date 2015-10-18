@@ -34,7 +34,7 @@ const non_android_healthreport_test_modules = [
 ];
 
 function expectImportsToSucceed(mm, base=MODULE_BASE) {
-  for each (let m in mm) {
+  for (let m of mm) {
     let resource = base + m;
     let succeeded = false;
     try {
@@ -49,7 +49,7 @@ function expectImportsToSucceed(mm, base=MODULE_BASE) {
 }
 
 function expectImportsToFail(mm, base=MODULE_BASE) {
-  for each (let m in mm) {
+  for (let m of mm) {
     let resource = base + m;
     let succeeded = false;
     try {
