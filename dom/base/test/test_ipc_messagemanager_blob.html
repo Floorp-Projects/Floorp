@@ -119,7 +119,7 @@
         mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
                            false);
 
-        for each (let message in messages) {
+        for (let message of messages) {
           mm.sendAsyncMessage("test:ipcClonedMessage", message);
         }
       });
