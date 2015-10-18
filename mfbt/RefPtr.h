@@ -31,7 +31,7 @@
 namespace mozilla {
 
 template<typename T> class OutParamRef;
-template<typename T> OutParamRef<T> byRef(RefPtr<T>&);
+template<typename T> OutParamRef<T> getter_AddRefs(RefPtr<T>&);
 
 /**
  * RefPtr points to a refcounted thing that has AddRef and Release
@@ -159,7 +159,7 @@ private:
 template<typename T>
 class OutParamRef
 {
-  friend OutParamRef byRef<T>(RefPtr<T>&);
+  friend OutParamRef getter_AddRefs<T>(RefPtr<T>&);
 
 public:
   ~OutParamRef()
@@ -181,11 +181,11 @@ private:
 };
 
 /**
- * byRef cooperates with OutParamRef to implement COM outparam semantics.
+ * getter_AddRefs cooperates with OutParamRef to implement COM outparam semantics.
  */
 template<typename T>
 OutParamRef<T>
-byRef(RefPtr<T>& aPtr)
+getter_AddRefs(RefPtr<T>& aPtr)
 {
   return OutParamRef<T>(aPtr);
 }

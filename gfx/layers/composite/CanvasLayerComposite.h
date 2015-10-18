@@ -8,7 +8,7 @@
 
 #include "Layers.h"                     // for CanvasLayer, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -72,7 +72,7 @@ private:
   gfx::Filter GetEffectFilter();
 
 private:
-  RefPtr<CompositableHost> mCompositableHost;
+  nsRefPtr<CompositableHost> mCompositableHost;
 };
 
 } // namespace layers

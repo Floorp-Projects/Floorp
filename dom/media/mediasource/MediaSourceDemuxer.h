@@ -70,7 +70,7 @@ private:
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }
 
-  RefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
   nsTArray<nsRefPtr<MediaSourceTrackDemuxer>> mDemuxers;
 
   nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;

@@ -425,18 +425,18 @@ DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, Au
 static inline already_AddRefed<ID2D1Geometry>
 ConvertRectToGeometry(const D2D1_RECT_F& aRect)
 {
-  RefPtr<ID2D1RectangleGeometry> rectGeom;
-  D2DFactory()->CreateRectangleGeometry(&aRect, byRef(rectGeom));
+  nsRefPtr<ID2D1RectangleGeometry> rectGeom;
+  D2DFactory()->CreateRectangleGeometry(&aRect, getter_AddRefs(rectGeom));
   return rectGeom.forget();
 }
 
 static inline already_AddRefed<ID2D1Geometry>
 GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform)
 {
-  RefPtr<ID2D1PathGeometry> tmpGeometry;
-  D2DFactory()->CreatePathGeometry(byRef(tmpGeometry));
-  RefPtr<ID2D1GeometrySink> currentSink;
-  tmpGeometry->Open(byRef(currentSink));
+  nsRefPtr<ID2D1PathGeometry> tmpGeometry;
+  D2DFactory()->CreatePathGeometry(getter_AddRefs(tmpGeometry));
+  nsRefPtr<ID2D1GeometrySink> currentSink;
+  tmpGeometry->Open(getter_AddRefs(currentSink));
   aGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
                       aTransform, currentSink);
   currentSink->Close();
@@ -446,10 +446,10 @@ GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTrans
 static inline already_AddRefed<ID2D1Geometry>
 IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
 {
-  RefPtr<ID2D1PathGeometry> pathGeom;
-  D2DFactory()->CreatePathGeometry(byRef(pathGeom));
-  RefPtr<ID2D1GeometrySink> sink;
-  pathGeom->Open(byRef(sink));
+  nsRefPtr<ID2D1PathGeometry> pathGeom;
+  D2DFactory()->CreatePathGeometry(getter_AddRefs(pathGeom));
+  nsRefPtr<ID2D1GeometrySink> sink;
+  pathGeom->Open(getter_AddRefs(sink));
   aGeometryA->CombineWithGeometry(aGeometryB, D2D1_COMBINE_MODE_INTERSECT, nullptr, sink);
   sink->Close();
 
@@ -459,7 +459,7 @@ IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
 static inline already_AddRefed<ID2D1StrokeStyle>
 CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
 {
-  RefPtr<ID2D1StrokeStyle> style;
+  nsRefPtr<ID2D1StrokeStyle> style;
 
   D2D1_CAP_STYLE capStyle;
   D2D1_LINE_JOIN joinStyle;
@@ -517,13 +517,13 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
       &dash[0], // data() is not C++98, although it's in recent gcc
                 // and VC10's STL
       dash.size(),
-      byRef(style));
+      getter_AddRefs(style));
   } else {
     hr = D2DFactory()->CreateStrokeStyle(
       D2D1::StrokeStyleProperties(capStyle, capStyle,
                                   capStyle, joinStyle,
                                   aStrokeOptions.mMiterLimit),
-      nullptr, 0, byRef(style));
+      nullptr, 0, getter_AddRefs(style));
   }
 
   if (FAILED(hr)) {
@@ -542,7 +542,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
                               Matrix &aSourceTransform, ID2D1RenderTarget *aRT,
                               const IntRect* aSourceRect = nullptr)
 {
-  RefPtr<ID2D1Bitmap> bitmap;
+  nsRefPtr<ID2D1Bitmap> bitmap;
 
   // This is where things get complicated. The source surface was
   // created for a surface that was too large to fit in a texture.
@@ -616,7 +616,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
                         mapping.GetData() + int(uploadRect.x) * 4 + int(uploadRect.y) * mapping.GetStride(),
                         mapping.GetStride(),
                         D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
-                        byRef(bitmap));
+                        getter_AddRefs(bitmap));
     }
 
     aSourceTransform.PreTranslate(uploadRect.x, uploadRect.y);
@@ -673,7 +673,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
       aRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
                         scaler.GetScaledData(), scaler.GetStride(),
                         D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
-                        byRef(bitmap));
+                        getter_AddRefs(bitmap));
 
       aSourceTransform.PreScale(Float(size.width) / newSize.width,
                                 Float(size.height) / newSize.height);

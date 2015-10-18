@@ -1581,7 +1581,7 @@ nsNSSComponent::GetDefaultCertVerifier()
 {
   MutexAutoLock lock(mutex);
   MOZ_ASSERT(mNSSInitialized);
-  RefPtr<SharedCertVerifier> certVerifier(mDefaultCertVerifier);
+  nsRefPtr<SharedCertVerifier> certVerifier(mDefaultCertVerifier);
   return certVerifier.forget();
 }
 
@@ -1593,7 +1593,7 @@ GetDefaultCertVerifier()
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID));
-  RefPtr<SharedCertVerifier> certVerifier;
+  nsRefPtr<SharedCertVerifier> certVerifier;
   if (nssComponent) {
     return nssComponent->GetDefaultCertVerifier();
   }

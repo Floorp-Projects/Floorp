@@ -147,7 +147,7 @@ void
 AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
 {
   MutexAutoLock lock(mMutex);
-  RefPtr<BufferTextureClient> buffer = static_cast<BufferTextureClient*>(aTextureClient);
+  nsRefPtr<BufferTextureClient> buffer = static_cast<BufferTextureClient*>(aTextureClient);
   if (!buffer->Lock(layers::OpenMode::OPEN_READ)) {
     return;
   }
@@ -209,7 +209,7 @@ AsyncCanvasRenderer::UpdateTarget()
   // B8G8R8A8 format here.
   const gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
   uint32_t stride = gfx::GetAlignedStride<8>(size.width * BytesPerPixel(format));
-  RefPtr<gfx::DataSourceSurface> surface =
+  nsRefPtr<gfx::DataSourceSurface> surface =
     gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
 
 
@@ -236,7 +236,7 @@ AsyncCanvasRenderer::GetSurface()
   MutexAutoLock lock(mMutex);
   if (mSurfaceForBasic) {
     // Since SourceSurface isn't thread-safe, we need copy to a new SourceSurface.
-    RefPtr<gfx::DataSourceSurface> result =
+    nsRefPtr<gfx::DataSourceSurface> result =
       gfx::Factory::CreateDataSourceSurfaceWithStride(mSurfaceForBasic->GetSize(),
                                                       mSurfaceForBasic->GetFormat(),
                                                       mSurfaceForBasic->Stride());
@@ -264,13 +264,13 @@ AsyncCanvasRenderer::GetInputStream(const char *aMimeType,
                                     nsIInputStream **aStream)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RefPtr<gfx::DataSourceSurface> surface = GetSurface();
+  nsRefPtr<gfx::DataSourceSurface> surface = GetSurface();
   if (!surface) {
     return NS_ERROR_FAILURE;
   }
 
   // Handle y flip.
-  RefPtr<gfx::DataSourceSurface> dataSurf = gl::YInvertImageSurface(surface);
+  nsRefPtr<gfx::DataSourceSurface> dataSurf = gl::YInvertImageSurface(surface);
 
   return gfxUtils::GetInputStream(dataSurf, false, aMimeType, aEncoderOptions, aStream);
 }

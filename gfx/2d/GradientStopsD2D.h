@@ -30,8 +30,8 @@ private:
   friend class DrawTargetD2D;
   friend class DrawTargetD2D1;
 
-  mutable RefPtr<ID2D1GradientStopCollection> mStopCollection;
-  RefPtr<ID3D11Device> mDevice;
+  mutable nsRefPtr<ID2D1GradientStopCollection> mStopCollection;
+  nsRefPtr<ID3D11Device> mDevice;
 };
 
 }

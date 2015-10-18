@@ -130,7 +130,7 @@ protected:
   bool mBackCamera;
   bool mOrientationChanged; // True when screen rotates.
 
-  RefPtr<layers::TextureClientRecycleAllocator> mTextureClientAllocator;
+  nsRefPtr<layers::TextureClientRecycleAllocator> mTextureClientAllocator;
 };
 
 } // namespace mozilla

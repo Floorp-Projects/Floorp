@@ -136,7 +136,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     SurfaceFormat destFormat;
     if (aDestTarget->LockBits(&destData, &destSize, &destStride, &destFormat)) {
       if (destSize == readSize && destFormat == format) {
-        RefPtr<DataSourceSurface> data =
+        nsRefPtr<DataSourceSurface> data =
           Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
         mGLContext->Readback(frontbuffer, data);
         if (needsPremult) {
@@ -149,7 +149,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     }
   }
 
-  RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
+  nsRefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
   // There will already be a warning from inside of GetTempSurface, but
   // it doesn't hurt to complain:
   if (NS_WARN_IF(!resultSurf)) {

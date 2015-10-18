@@ -9,7 +9,7 @@
 #include <map>
 #include <stack>
 #include "mozilla/gfx/Types.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "TextureClient.h"
 #include "mozilla/Mutex.h"
 
@@ -57,7 +57,7 @@ protected:
            TextureFlags aTextureFlags,
            TextureAllocationFlags aAllocFlags);
 
-  RefPtr<CompositableForwarder> mSurfaceAllocator;
+  nsRefPtr<CompositableForwarder> mSurfaceAllocator;
 
 private:
   friend class TextureClient;
@@ -66,13 +66,13 @@ private:
   static const uint32_t kMaxPooledSized = 2;
   uint32_t mMaxPooledSize;
 
-  std::map<TextureClient*, RefPtr<TextureClientHolder> > mInUseClients;
+  std::map<TextureClient*, nsRefPtr<TextureClientHolder> > mInUseClients;
 
   // On b2g gonk, std::queue might be a better choice.
   // On ICS, fence wait happens implicitly before drawing.
   // Since JB, fence wait happens explicitly when fetching a client from the pool.
   // stack is good from Graphics cache usage point of view.
-  std::stack<RefPtr<TextureClientHolder> > mPooledClients;
+  std::stack<nsRefPtr<TextureClientHolder> > mPooledClients;
   Mutex mLock;
 };
 

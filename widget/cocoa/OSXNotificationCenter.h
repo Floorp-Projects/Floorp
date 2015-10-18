@@ -11,7 +11,7 @@
 #include "imgINotificationObserver.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 @class mozNotificationCenterDelegate;
 

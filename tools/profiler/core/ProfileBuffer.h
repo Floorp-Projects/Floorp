@@ -9,7 +9,7 @@
 #include "ProfileEntry.h"
 #include "platform.h"
 #include "ProfileJSONWriter.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/RefCounted.h"
 
 class ProfileBuffer : public mozilla::RefCounted<ProfileBuffer> {

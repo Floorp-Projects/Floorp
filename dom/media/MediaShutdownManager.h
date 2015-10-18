@@ -9,7 +9,7 @@
 
 #include "nsIObserver.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIThread.h"
 #include "nsCOMPtr.h"

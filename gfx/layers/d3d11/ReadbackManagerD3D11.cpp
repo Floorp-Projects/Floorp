@@ -26,7 +26,7 @@ struct ReadbackTask {
   // The texture that we copied the contents of the paintedlayer to.
   nsRefPtr<ID3D10Texture2D> mReadbackTexture;
   // The sink that we're trying to read back to.
-  RefPtr<TextureReadbackSink> mSink;
+  nsRefPtr<TextureReadbackSink> mSink;
 };
 
 // This class is created and dispatched from the Readback thread but it must be
@@ -54,7 +54,7 @@ public:
     }
 
     {
-      RefPtr<DataSourceSurface> surf =
+      nsRefPtr<DataSourceSurface> surf =
         Factory::CreateWrappingDataSourceSurface((uint8_t*)mappedTex.pData, mappedTex.RowPitch,
                                                  IntSize(desc.Width, desc.Height),
                                                  SurfaceFormat::B8G8R8X8);

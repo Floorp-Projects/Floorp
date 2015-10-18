@@ -95,7 +95,7 @@ CompositorChild::Destroy()
   nsAutoTArray<PLayerTransactionChild*, 16> transactions;
   ManagedPLayerTransactionChild(transactions);
   for (int i = transactions.Length() - 1; i >= 0; --i) {
-    RefPtr<LayerTransactionChild> layers =
+    nsRefPtr<LayerTransactionChild> layers =
       static_cast<LayerTransactionChild*>(transactions[i]);
     layers->Destroy();
   }

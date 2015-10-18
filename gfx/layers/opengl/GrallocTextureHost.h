@@ -64,8 +64,8 @@ private:
   void DestroyEGLImage();
 
   NewSurfaceDescriptorGralloc mGrallocHandle;
-  RefPtr<GLTextureSource> mGLTextureSource;
-  RefPtr<CompositorOGL> mCompositor;
+  nsRefPtr<GLTextureSource> mGLTextureSource;
+  nsRefPtr<CompositorOGL> mCompositor;
   // Size reported by the GraphicBuffer
   gfx::IntSize mSize;
   // Size reported by TextureClient, can be different in some cases (video?),

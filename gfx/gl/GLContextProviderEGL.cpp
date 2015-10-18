@@ -953,7 +953,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const mozilla::gfx::IntSize& size
     }
 
 
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(configCaps, nullptr, true,
+    nsRefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(configCaps, nullptr, true,
                                                             config, surface);
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
@@ -1039,7 +1039,7 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
         canOffscreenUseHeadless = false;
     }
 
-    RefPtr<GLContext> gl;
+    nsRefPtr<GLContext> gl;
     SurfaceCaps minOffscreenCaps = minCaps;
 
     if (canOffscreenUseHeadless) {

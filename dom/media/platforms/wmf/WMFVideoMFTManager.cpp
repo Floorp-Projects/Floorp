@@ -205,12 +205,12 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
   bool useDxva = InitializeDXVA(aForceD3D9);
 
-  RefPtr<MFTDecoder> decoder(new MFTDecoder());
+  nsRefPtr<MFTDecoder> decoder(new MFTDecoder());
 
   HRESULT hr = decoder->Create(GetMFTGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
 
-  RefPtr<IMFAttributes> attr(decoder->GetAttributes());
+  nsRefPtr<IMFAttributes> attr(decoder->GetAttributes());
   UINT32 aware = 0;
   if (attr) {
     attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
@@ -265,8 +265,8 @@ HRESULT
 WMFVideoMFTManager::SetDecoderMediaTypes()
 {
   // Setup the input/output media types.
-  RefPtr<IMFMediaType> inputType;
-  HRESULT hr = wmf::MFCreateMediaType(byRef(inputType));
+  nsRefPtr<IMFMediaType> inputType;
+  HRESULT hr = wmf::MFCreateMediaType(getter_AddRefs(inputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
@@ -278,8 +278,8 @@ WMFVideoMFTManager::SetDecoderMediaTypes()
   hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFMediaType> outputType;
-  hr = wmf::MFCreateMediaType(byRef(outputType));
+  nsRefPtr<IMFMediaType> outputType;
+  hr = wmf::MFCreateMediaType(getter_AddRefs(outputType));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = outputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
@@ -342,7 +342,7 @@ WMFVideoMFTManager::CanUseDXVA(IMFMediaType* aType)
 HRESULT
 WMFVideoMFTManager::ConfigureVideoFrameGeometry()
 {
-  RefPtr<IMFMediaType> mediaType;
+  nsRefPtr<IMFMediaType> mediaType;
   HRESULT hr = mDecoder->GetOutputMediaType(mediaType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -429,10 +429,10 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   *aOutVideoData = nullptr;
 
   HRESULT hr;
-  RefPtr<IMFMediaBuffer> buffer;
+  nsRefPtr<IMFMediaBuffer> buffer;
 
   // Must convert to contiguous buffer to use IMD2DBuffer interface.
-  hr = aSample->ConvertToContiguousBuffer(byRef(buffer));
+  hr = aSample->ConvertToContiguousBuffer(getter_AddRefs(buffer));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   // Try and use the IMF2DBuffer interface if available, otherwise fallback
@@ -440,8 +440,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   // but only some systems (Windows 8?) support it.
   BYTE* data = nullptr;
   LONG stride = 0;
-  RefPtr<IMF2DBuffer> twoDBuffer;
-  hr = buffer->QueryInterface(static_cast<IMF2DBuffer**>(byRef(twoDBuffer)));
+  nsRefPtr<IMF2DBuffer> twoDBuffer;
+  hr = buffer->QueryInterface(static_cast<IMF2DBuffer**>(getter_AddRefs(twoDBuffer)));
   if (SUCCEEDED(hr)) {
     hr = twoDBuffer->Lock2D(&data, &stride);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -566,7 +566,7 @@ HRESULT
 WMFVideoMFTManager::Output(int64_t aStreamOffset,
                            nsRefPtr<MediaData>& aOutData)
 {
-  RefPtr<IMFSample> sample;
+  nsRefPtr<IMFSample> sample;
   HRESULT hr;
   aOutData = nullptr;
   int typeChangeCount = 0;

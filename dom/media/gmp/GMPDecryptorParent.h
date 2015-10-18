@@ -7,7 +7,7 @@
 #define GMPDecryptorParent_h_
 
 #include "mozilla/gmp/PGMPDecryptorParent.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "gmp-decryption.h"
 #include "GMPDecryptorProxy.h"
 

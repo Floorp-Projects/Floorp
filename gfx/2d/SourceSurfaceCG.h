@@ -127,7 +127,7 @@ public:
     //
     // For more information see bug 925448.
     DrawTargetWillChange();
-    RefPtr<DataSourceSurface> copy(this);
+    nsRefPtr<DataSourceSurface> copy(this);
     return copy.forget();
   }
 

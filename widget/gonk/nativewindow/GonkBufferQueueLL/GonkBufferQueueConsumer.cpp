@@ -531,7 +531,7 @@ GonkBufferQueueConsumer::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 
     for (int i = 0; i < GonkBufferQueueDefs::NUM_BUFFER_SLOTS; i++) {
         if (mSlots[i].mGraphicBuffer != NULL && mSlots[i].mGraphicBuffer->handle == buffer->handle) {
-            RefPtr<TextureClient> client(mSlots[i].mTextureClient);
+            nsRefPtr<TextureClient> client(mSlots[i].mTextureClient);
             return client.forget();
         }
     }

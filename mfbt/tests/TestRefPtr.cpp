@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/RefCounted.h"
 
 using mozilla::RefCounted;
-using mozilla::RefPtr;
 
 class Foo : public RefCounted<Foo>
 {
@@ -36,14 +35,14 @@ struct Bar : public Foo {};
 already_AddRefed<Foo>
 NewFoo()
 {
-  RefPtr<Foo> f(new Foo());
+  nsRefPtr<Foo> f(new Foo());
   return f.forget();
 }
 
 already_AddRefed<Foo>
 NewBar()
 {
-  RefPtr<Bar> bar = new Bar();
+  nsRefPtr<Bar> bar = new Bar();
   return bar.forget();
 }
 
@@ -56,7 +55,7 @@ GetNewFoo(Foo** aFoo)
 }
 
 void
-GetNewFoo(RefPtr<Foo>* aFoo)
+GetNewFoo(nsRefPtr<Foo>* aFoo)
 {
   *aFoo = new Bar();
 }
@@ -72,30 +71,30 @@ main()
 {
   MOZ_RELEASE_ASSERT(0 == Foo::sNumDestroyed);
   {
-    RefPtr<Foo> f = new Foo();
+    nsRefPtr<Foo> f = new Foo();
     MOZ_RELEASE_ASSERT(f->refCount() == 1);
   }
   MOZ_RELEASE_ASSERT(1 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> f1 = NewFoo();
-    RefPtr<Foo> f2(NewFoo());
+    nsRefPtr<Foo> f1 = NewFoo();
+    nsRefPtr<Foo> f2(NewFoo());
     MOZ_RELEASE_ASSERT(1 == Foo::sNumDestroyed);
   }
   MOZ_RELEASE_ASSERT(3 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> b = NewBar();
+    nsRefPtr<Foo> b = NewBar();
     MOZ_RELEASE_ASSERT(3 == Foo::sNumDestroyed);
   }
   MOZ_RELEASE_ASSERT(4 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> f1;
+    nsRefPtr<Foo> f1;
     {
       f1 = new Foo();
-      RefPtr<Foo> f2(f1);
-      RefPtr<Foo> f3 = f2;
+      nsRefPtr<Foo> f2(f1);
+      nsRefPtr<Foo> f3 = f2;
       MOZ_RELEASE_ASSERT(4 == Foo::sNumDestroyed);
     }
     MOZ_RELEASE_ASSERT(4 == Foo::sNumDestroyed);
@@ -104,33 +103,33 @@ main()
 
   {
     {
-      RefPtr<Foo> f = new Foo();
-      RefPtr<Foo> g = f.forget();
+      nsRefPtr<Foo> f = new Foo();
+      nsRefPtr<Foo> g = f.forget();
     }
     MOZ_RELEASE_ASSERT(6 == Foo::sNumDestroyed);
   }
 
   {
-    RefPtr<Foo> f = new Foo();
-    GetNewFoo(byRef(f));
+    nsRefPtr<Foo> f = new Foo();
+    GetNewFoo(getter_AddRefs(f));
     MOZ_RELEASE_ASSERT(7 == Foo::sNumDestroyed);
   }
   MOZ_RELEASE_ASSERT(8 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> f = new Foo();
+    nsRefPtr<Foo> f = new Foo();
     GetNewFoo(&f);
     MOZ_RELEASE_ASSERT(9 == Foo::sNumDestroyed);
   }
   MOZ_RELEASE_ASSERT(10 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> f1 = new Bar();
+    nsRefPtr<Foo> f1 = new Bar();
   }
   MOZ_RELEASE_ASSERT(11 == Foo::sNumDestroyed);
 
   {
-    RefPtr<Foo> f = GetNullFoo();
+    nsRefPtr<Foo> f = GetNullFoo();
     MOZ_RELEASE_ASSERT(11 == Foo::sNumDestroyed);
   }
   MOZ_RELEASE_ASSERT(11 == Foo::sNumDestroyed);

@@ -6,7 +6,7 @@
 #include <stdint.h>                     // for uint8_t, uint32_t
 #include "ImageContainer.h"             // for PlanarYCbCrImage, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
@@ -54,8 +54,8 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 private:
-  RefPtr<BufferTextureClient> mTextureClient;
-  RefPtr<ImageClient> mCompositable;
+  nsRefPtr<BufferTextureClient> mTextureClient;
+  nsRefPtr<ImageClient> mCompositable;
 };
 
 } // namespace layers

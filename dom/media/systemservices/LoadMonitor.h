@@ -8,7 +8,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Atomics.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
