@@ -211,11 +211,10 @@ this.Utils = { // jshint ignore:line
   localize: function localize(aOutput) {
     let outputArray = Array.isArray(aOutput) ? aOutput : [aOutput];
     let localized =
-      [this.stringBundle.get(details) for (details of outputArray)]; // jshint ignore:line
+      outputArray.map(details => this.stringBundle.get(details));
     // Clean up the white space.
-    let trimmed;
-    return [trimmed for (word of localized) if (word && // jshint ignore:line
-      (trimmed = word.trim()))]; // jshint ignore:line
+    return localized.filter(word => word).map(word => word.trim()).
+      filter(trimmed => trimmed);
   },
 
   get stringBundle() {
@@ -834,9 +833,9 @@ PivotContext.prototype = {
    */
   get newAncestry() {
     if (!this._newAncestry) {
-      this._newAncestry = this._ignoreAncestry ? [] : [currentAncestor for ( // jshint ignore:line
-        [index, currentAncestor] of Iterator(this.currentAncestry)) if ( // jshint ignore:line
-          currentAncestor !== this.oldAncestry[index])]; // jshint ignore:line
+      this._newAncestry = this._ignoreAncestry ? [] :
+        this.currentAncestry.filter(
+          (currentAncestor, i) => currentAncestor !== this.oldAncestry[i]);
     }
     return this._newAncestry;
   },
@@ -862,9 +861,13 @@ PivotContext.prototype = {
       if (include) {
         if (aPreorder) {
           yield child;
-          [yield node for (node of this._traverse(child, aPreorder, aStop))]; // jshint ignore:line
+          for (let node of this._traverse(child, aPreorder, aStop)) {
+            yield node;
+          }
         } else {
-          [yield node for (node of this._traverse(child, aPreorder, aStop))]; // jshint ignore:line
+          for (let node of this._traverse(child, aPreorder, aStop)) {
+            yield node;
+          }
           yield child;
         }
       }
@@ -986,15 +989,13 @@ PivotContext.prototype = {
     cellInfo.columnHeaders = [];
     if (cellInfo.columnChanged && cellInfo.current.role !==
       Roles.COLUMNHEADER) {
-      cellInfo.columnHeaders = [headers for (headers of getHeaders( // jshint ignore:line
-        cellInfo.current.columnHeaderCells))];
+      cellInfo.columnHeaders = [...getHeaders(cellInfo.current.columnHeaderCells)];
     }
     cellInfo.rowHeaders = [];
     if (cellInfo.rowChanged &&
         (cellInfo.current.role === Roles.CELL ||
          cellInfo.current.role === Roles.MATHML_CELL)) {
-      cellInfo.rowHeaders = [headers for (headers of getHeaders( // jshint ignore:line
-        cellInfo.current.rowHeaderCells))];
+      cellInfo.rowHeaders = [...getHeaders(cellInfo.current.rowHeaderCells)];
     }
 
     this._cells.set(domNode, cellInfo);
