@@ -188,9 +188,9 @@ FT2FontEntry::CreateScaledFont(const gfxFontStyle *aStyle)
     cairo_matrix_init_identity(&identityMatrix);
 
     // synthetic oblique by skewing via the font matrix
-    bool needsOblique = !IsItalic() &&
-            (aStyle->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) &&
-            aStyle->allowSyntheticStyle;
+    bool needsOblique = IsUpright() &&
+                        aStyle->style != NS_FONT_STYLE_NORMAL &&
+                        aStyle->allowSyntheticStyle;
 
     if (needsOblique) {
         cairo_matrix_t style;
@@ -251,7 +251,7 @@ FT2FontEntry*
 FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
                               uint16_t aWeight,
                               int16_t aStretch,
-                              bool aItalic,
+                              uint8_t aStyle,
                               const uint8_t* aFontData,
                               uint32_t aLength)
 {
@@ -277,7 +277,7 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
         FT2FontEntry::CreateFontEntry(face, nullptr, 0, aFontName,
                                       aFontData);
     if (fe) {
-        fe->mItalic = aItalic;
+        fe->mStyle = aStyle;
         fe->mWeight = aWeight;
         fe->mStretch = aStretch;
         fe->mIsDataUserFont = true;
@@ -323,7 +323,7 @@ FT2FontEntry::CreateFontEntry(const FontListEntry& aFLE)
     fe->mFTFontIndex = aFLE.index();
     fe->mWeight = aFLE.weight();
     fe->mStretch = aFLE.stretch();
-    fe->mItalic = aFLE.italic();
+    fe->mStyle = (aFLE.italic() ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
     return fe;
 }
 
@@ -380,7 +380,8 @@ FT2FontEntry::CreateFontEntry(FT_Face aFace,
                               const uint8_t* aFontData)
 {
     FT2FontEntry *fe = new FT2FontEntry(aName);
-    fe->mItalic = FTFaceIsItalic(aFace);
+    fe->mStyle = (FTFaceIsItalic(aFace) ?
+                  NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL);
     fe->mWeight = FTFaceGetWeight(aFace);
     fe->mFilename = aFilename;
     fe->mFTFontIndex = aIndex;
@@ -596,7 +597,7 @@ FT2FontFamily::AddFacesToFontList(InfallibleTArray<FontListEntry>* aFontList,
         aFontList->AppendElement(FontListEntry(Name(), fe->Name(),
                                                fe->mFilename,
                                                fe->Weight(), fe->Stretch(),
-                                               fe->IsItalic(),
+                                               fe->mStyle,
                                                fe->mFTFontIndex,
                                                aVisibility == kHidden));
     }
@@ -1452,7 +1453,7 @@ gfxFontEntry*
 gfxFT2FontList::LookupLocalFont(const nsAString& aFontName,
                                 uint16_t aWeight,
                                 int16_t aStretch,
-                                bool aItalic)
+                                uint8_t aStyle)
 {
     // walk over list of names
     FT2FontEntry* fontEntry = nullptr;
@@ -1509,7 +1510,7 @@ searchDone:
                                       fontEntry->mFTFontIndex,
                                       fontEntry->Name(), nullptr);
     if (fe) {
-        fe->mItalic = aItalic;
+        fe->mStyle = aStyle;
         fe->mWeight = aWeight;
         fe->mStretch = aStretch;
         fe->mIsLocalUserFont = true;
@@ -1538,7 +1539,7 @@ gfxFontEntry*
 gfxFT2FontList::MakePlatformFont(const nsAString& aFontName,
                                  uint16_t aWeight,
                                  int16_t aStretch,
-                                 bool aItalic,
+                                 uint8_t aStyle,
                                  const uint8_t* aFontData,
                                  uint32_t aLength)
 {
@@ -1546,7 +1547,7 @@ gfxFT2FontList::MakePlatformFont(const nsAString& aFontName,
     // but instead pass ownership to the font entry.
     // Deallocation will happen later, when the font face is destroyed.
     return FT2FontEntry::CreateFontEntry(aFontName, aWeight, aStretch,
-                                         aItalic, aFontData, aLength);
+                                         aStyle, aFontData, aLength);
 }
 
 void
