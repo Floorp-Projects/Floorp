@@ -71,7 +71,7 @@ gfxQPainterSurface::GetAsImageSurface()
 
     assert(cairo_surface_get_type(isurf) == CAIRO_SURFACE_TYPE_IMAGE);
 
-    nsRefPtr<gfxImageSurface> asurf = new gfxImageSurface(isurf);
+    RefPtr<gfxImageSurface> asurf = new gfxImageSurface(isurf);
     asurf->SetOpaqueRect(GetOpaqueRect());
     return asurf.forget();
 }

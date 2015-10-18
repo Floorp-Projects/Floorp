@@ -43,7 +43,7 @@ ToJSValue(JSContext* aCx,
           nsresult aArgument,
           JS::MutableHandle<JS::Value> aValue)
 {
-  nsRefPtr<Exception> exception = CreateException(aCx, aArgument);
+  RefPtr<Exception> exception = CreateException(aCx, aArgument);
   return ToJSValue(aCx, exception, aValue);
 }
 

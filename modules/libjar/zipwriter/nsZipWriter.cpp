@@ -484,7 +484,7 @@ nsresult nsZipWriter::AddEntryStream(const nsACString & aZipEntry,
     if (mEntryHash.Get(aZipEntry, nullptr))
         return NS_ERROR_FILE_ALREADY_EXISTS;
 
-    nsRefPtr<nsZipHeader> header = new nsZipHeader();
+    RefPtr<nsZipHeader> header = new nsZipHeader();
     NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
     header->Init(aZipEntry, aModTime, ZIP_ATTRS(aPermissions, ZIP_ATTRS_FILE),
                  mCDSOffset);
@@ -494,7 +494,7 @@ nsresult nsZipWriter::AddEntryStream(const nsACString & aZipEntry,
         return rv;
     }
 
-    nsRefPtr<nsZipDataStream> stream = new nsZipDataStream();
+    RefPtr<nsZipDataStream> stream = new nsZipDataStream();
     if (!stream) {
         SeekCDS();
         return NS_ERROR_OUT_OF_MEMORY;
@@ -864,7 +864,7 @@ nsresult nsZipWriter::InternalAddEntryDirectory(const nsACString & aZipEntry,
                                                 PRTime aModTime,
                                                 uint32_t aPermissions)
 {
-    nsRefPtr<nsZipHeader> header = new nsZipHeader();
+    RefPtr<nsZipHeader> header = new nsZipHeader();
     NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t zipAttributes = ZIP_ATTRS(aPermissions, ZIP_ATTRS_DIRECTORY);
@@ -992,7 +992,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
     uint32_t zipAttributes = ZIP_ATTRS(aItem->mPermissions, ZIP_ATTRS_FILE);
 
     if (aItem->mStream || aItem->mChannel) {
-        nsRefPtr<nsZipHeader> header = new nsZipHeader();
+        RefPtr<nsZipHeader> header = new nsZipHeader();
         NS_ENSURE_TRUE(header, NS_ERROR_OUT_OF_MEMORY);
 
         header->Init(aItem->mZipEntry, aItem->mModTime, zipAttributes,
@@ -1000,7 +1000,7 @@ inline nsresult nsZipWriter::BeginProcessingAddition(nsZipQueueItem* aItem,
         nsresult rv = header->WriteFileHeader(mStream);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsRefPtr<nsZipDataStream> stream = new nsZipDataStream();
+        RefPtr<nsZipDataStream> stream = new nsZipDataStream();
         NS_ENSURE_TRUE(stream, NS_ERROR_OUT_OF_MEMORY);
         rv = stream->Init(this, mStream, header, aItem->mCompression);
         NS_ENSURE_SUCCESS(rv, rv);

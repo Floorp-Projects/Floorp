@@ -60,7 +60,7 @@ private:
   bool mActorDestroyed;
   bool mIsAwaitingResetComplete;
   bool mIsAwaitingDrainComplete;
-  nsRefPtr<GMPContentParent> mPlugin;
+  RefPtr<GMPContentParent> mPlugin;
   GMPAudioDecoderCallbackProxy* mCallback;
 };
 

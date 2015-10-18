@@ -368,7 +368,7 @@ protected:
   friend class nsStorageStream;
 
 private:
-  nsRefPtr<nsStorageStream> mStorageStream;
+  RefPtr<nsStorageStream> mStorageStream;
   uint32_t         mReadCursor;    // Next memory location to read byte, or 0
   uint32_t         mSegmentEnd;    // One byte past end of current buffer segment
   uint32_t         mSegmentNum;    // Segment number containing read cursor
@@ -400,7 +400,7 @@ nsStorageStream::NewInputStream(int32_t aStartingOffset,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsRefPtr<nsStorageInputStream> inputStream =
+  RefPtr<nsStorageInputStream> inputStream =
     new nsStorageInputStream(this, mSegmentSize);
 
   nsresult rv = inputStream->Seek(aStartingOffset);
@@ -631,7 +631,7 @@ nsresult
 NS_NewStorageStream(uint32_t aSegmentSize, uint32_t aMaxSize,
                     nsIStorageStream** aResult)
 {
-  nsRefPtr<nsStorageStream> storageStream = new nsStorageStream();
+  RefPtr<nsStorageStream> storageStream = new nsStorageStream();
   nsresult rv = storageStream->Init(aSegmentSize, aMaxSize);
   if (NS_FAILED(rv)) {
     return rv;

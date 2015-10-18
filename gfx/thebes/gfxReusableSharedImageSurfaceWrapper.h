@@ -56,8 +56,8 @@ public:
   Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem);
 
 private:
-  mozilla::RefPtr<mozilla::layers::ISurfaceAllocator> mAllocator;
-  nsRefPtr<gfxSharedImageSurface>         mSurface;
+  RefPtr<mozilla::layers::ISurfaceAllocator> mAllocator;
+  RefPtr<gfxSharedImageSurface>         mSurface;
 };
 
 #endif // GFXSHMCOWSURFACEWRAPPER

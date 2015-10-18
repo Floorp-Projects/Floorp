@@ -1387,7 +1387,7 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
     // Get the DOM window associated with the running script. If the script is
     // running in a non-DOM scope, we have to just let it keep running.
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    nsRefPtr<nsGlobalWindow> win = WindowOrNull(global);
+    RefPtr<nsGlobalWindow> win = WindowOrNull(global);
     if (!win && IsSandbox(global)) {
         // If this is a sandbox associated with a DOMWindow via a
         // sandboxPrototype, use that DOMWindow. This supports GreaseMonkey
@@ -3293,7 +3293,7 @@ GetCurrentPerfGroupCallback(JSContext* cx) {
     // If the compartment belongs to a webpage, use the address of the
     // topmost scriptable window, hence regrouping all frames of a
     // window.
-    nsRefPtr<nsGlobalWindow> win = WindowOrNull(global);
+    RefPtr<nsGlobalWindow> win = WindowOrNull(global);
     if (win) {
         nsCOMPtr<nsIDOMWindow> top;
         nsresult rv = win->GetScriptableTop(getter_AddRefs(top));

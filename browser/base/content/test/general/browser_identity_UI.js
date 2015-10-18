@@ -1,14 +1,15 @@
 /* Tests for correct behaviour of getEffectiveHost on identity handler */
+
 function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
 
   ok(gIdentityHandler, "gIdentityHandler should exist");
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", checkResult, true);
-
-  nextTest();
+  BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank", true).then(() => {
+    gBrowser.selectedBrowser.addEventListener("load", checkResult, true);
+    nextTest();
+  });
 }
 
 // Greek IDN for 'example.test'.
@@ -59,7 +60,7 @@ var tests = [
   },
 ]
 
-var gCurrentTest, gCurrentTestIndex = -1, gTestDesc;
+var gCurrentTest, gCurrentTestIndex = -1, gTestDesc, gPopupHidden;
 // Go through the tests in both directions, to add additional coverage for
 // transitions between different states.
 var gForward = true;
@@ -91,7 +92,25 @@ function nextTest() {
     if (gCurrentTest.isHTTPS) {
       gCheckETLD = true;
     }
-    content.location = gCurrentTest.location;
+
+    // Navigate to the next page, which will cause checkResult to fire.
+    let spec = gBrowser.selectedBrowser.currentURI.spec;
+    if (spec == "about:blank" || spec == gCurrentTest.location) {
+      BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gCurrentTest.location);
+    } else {
+      // Open the Control Center and make sure it closes after nav (Bug 1207542).
+      let popupShown = promisePopupShown(gIdentityHandler._identityPopup);
+      gPopupHidden = promisePopupHidden(gIdentityHandler._identityPopup);
+      gIdentityHandler._identityBox.click();
+      info("Waiting for the Control Center to be shown");
+      popupShown.then(() => {
+        is_element_visible(gIdentityHandler._identityPopup, "Control Center is visible");
+        // Show the subview, which is an easy way in automation to reproduce
+        // Bug 1207542, where the CC wouldn't close on navigation.
+        gBrowser.ownerDocument.querySelector("#identity-popup-security-expander").click();
+        BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gCurrentTest.location);
+      });
+    }
   } else {
     gCheckETLD = false;
     gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + " without eTLD in identity icon label)";
@@ -113,5 +132,14 @@ function checkResult() {
     is(gIdentityHandler.getEffectiveHost(), gCurrentTest.effectiveHost, "effectiveHost matches for test " + gTestDesc);
   }
 
-  executeSoon(nextTest);
+  if (gPopupHidden) {
+    info("Waiting for the Control Center to hide");
+    gPopupHidden.then(() => {
+      gPopupHidden = null;
+      is_element_hidden(gIdentityHandler._identityPopup, "control center is hidden");
+      executeSoon(nextTest);
+    });
+  } else {
+    executeSoon(nextTest);
+  }
 }

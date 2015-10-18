@@ -102,7 +102,7 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
     return;
   }
 
-  nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
   AutoTreeMutation mut(this);
 
   DocAccessible* document = Document();
@@ -111,11 +111,11 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
     document->BindToDocument(mBullet, nullptr);
     InsertChildAt(0, mBullet);
 
-    nsRefPtr<AccShowEvent> event = new AccShowEvent(mBullet, mBullet->GetContent());
+    RefPtr<AccShowEvent> event = new AccShowEvent(mBullet, mBullet->GetContent());
     mDoc->FireDelayedEvent(event);
     reorderEvent->AddSubMutationEvent(event);
   } else {
-    nsRefPtr<AccHideEvent> event = new AccHideEvent(mBullet, mBullet->GetContent());
+    RefPtr<AccHideEvent> event = new AccHideEvent(mBullet, mBullet->GetContent());
     mDoc->FireDelayedEvent(event);
     reorderEvent->AddSubMutationEvent(event);
 

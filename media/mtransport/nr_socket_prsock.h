@@ -284,7 +284,7 @@ private:
 
   std::queue<RefPtr<nr_udp_message>> received_msgs_;
 
-  nsRefPtr<nsIUDPSocketChild> socket_child_; // only accessed from the io_thread
+  RefPtr<nsIUDPSocketChild> socket_child_; // only accessed from the io_thread
 };
 
 // The socket child holds onto one of these, which just passes callbacks
@@ -294,12 +294,12 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETINTERNAL
 
-  nsresult Init(const nsRefPtr<NrUdpSocketIpc>& socket);
+  nsresult Init(const RefPtr<NrUdpSocketIpc>& socket);
 
 private:
   virtual ~NrUdpSocketIpcProxy();
 
-  nsRefPtr<NrUdpSocketIpc> socket_;
+  RefPtr<NrUdpSocketIpc> socket_;
   nsCOMPtr<nsIEventTarget> sts_thread_;
 };
 
@@ -386,7 +386,7 @@ private:
   std::deque<size_t> writes_in_flight_;
 
   // main thread.
-  nsRefPtr<dom::TCPSocketChild> socket_child_;
+  RefPtr<dom::TCPSocketChild> socket_child_;
 };
 #endif
 

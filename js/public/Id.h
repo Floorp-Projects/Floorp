@@ -58,7 +58,7 @@ JSID_TO_STRING(jsid id)
     return (JSString*)JSID_BITS(id);
 }
 
-/*
+/**
  * Only JSStrings that have been interned via the JSAPI can be turned into
  * jsids by API clients.
  *

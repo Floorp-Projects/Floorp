@@ -134,9 +134,9 @@ private:
   ~Response();
 
   nsCOMPtr<nsIGlobalObject> mOwner;
-  nsRefPtr<InternalResponse> mInternalResponse;
+  RefPtr<InternalResponse> mInternalResponse;
   // Lazily created
-  nsRefPtr<Headers> mHeaders;
+  RefPtr<Headers> mHeaders;
 };
 
 } // namespace dom

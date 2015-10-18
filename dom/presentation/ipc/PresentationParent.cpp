@@ -92,7 +92,7 @@ PresentationParent::AllocPPresentationRequestParent(
   const PresentationIPCRequest& aRequest)
 {
   MOZ_ASSERT(mService);
-  nsRefPtr<PresentationRequestParent> actor = new PresentationRequestParent(mService);
+  RefPtr<PresentationRequestParent> actor = new PresentationRequestParent(mService);
   return actor.forget().take();
 }
 
@@ -100,7 +100,7 @@ bool
 PresentationParent::DeallocPPresentationRequestParent(
   PPresentationRequestParent* aActor)
 {
-  nsRefPtr<PresentationRequestParent> actor =
+  RefPtr<PresentationRequestParent> actor =
     dont_AddRef(static_cast<PresentationRequestParent*>(aActor));
   return true;
 }

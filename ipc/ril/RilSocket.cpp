@@ -70,7 +70,7 @@ private:
   /**
    * Cross-thread dispatcher for the RIL worker
    */
-  nsRefPtr<WorkerCrossThreadDispatcher> mDispatcher;
+  RefPtr<WorkerCrossThreadDispatcher> mDispatcher;
 
   /**
    * Consumer pointer. Non-thread safe RefPtr, so should only be manipulated
@@ -218,7 +218,7 @@ private:
 void
 RilSocketIO::ConsumeBuffer()
 {
-  nsRefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.forget());
+  RefPtr<ReceiveTask> task = new ReceiveTask(this, mBuffer.forget());
   NS_WARN_IF(!mDispatcher->PostTask(task));
 }
 

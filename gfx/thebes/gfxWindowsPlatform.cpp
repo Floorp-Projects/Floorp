@@ -456,7 +456,7 @@ gfxWindowsPlatform::InitDWriteSupport()
   HRESULT hr = createDWriteFactory(
       DWRITE_FACTORY_TYPE_SHARED,
       __uuidof(IDWriteFactory),
-      (IUnknown **)((IDWriteFactory **)byRef(factory)));
+      (IUnknown **)((IDWriteFactory **)getter_AddRefs(factory)));
   if (FAILED(hr) || !factory) {
     return false;
   }
@@ -567,7 +567,7 @@ gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 HRESULT
-gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
+gfxWindowsPlatform::CreateDevice(RefPtr<IDXGIAdapter1> &adapter1,
                                  int featureLevelIndex)
 {
   nsModuleHandle d3d10module(LoadLibrarySystem32(L"d3d10_1.dll"));
@@ -633,7 +633,7 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 
     int supportedFeatureLevelsCount = ArrayLength(kSupportedFeatureLevels);
 
-    nsRefPtr<IDXGIAdapter1> adapter1 = GetDXGIAdapter();
+    RefPtr<IDXGIAdapter1> adapter1 = GetDXGIAdapter();
 
     if (!adapter1) {
       // Unable to create adapter, abort acceleration.
@@ -734,7 +734,7 @@ already_AddRefed<gfxASurface>
 gfxWindowsPlatform::CreateOffscreenSurface(const IntSize& aSize,
                                            gfxImageFormat aFormat)
 {
-    nsRefPtr<gfxASurface> surf = nullptr;
+    RefPtr<gfxASurface> surf = nullptr;
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
     if (mRenderMode == RENDER_GDI || mRenderMode == RENDER_DIRECT2D)
@@ -1470,7 +1470,7 @@ gfxWindowsPlatform::SetupClearTypeParams()
             break;
         }
 
-        nsRefPtr<IDWriteRenderingParams> defaultRenderingParams;
+        RefPtr<IDWriteRenderingParams> defaultRenderingParams;
         GetDWriteFactory()->CreateRenderingParams(getter_AddRefs(defaultRenderingParams));
         // For EnhancedContrast, we override the default if the user has not set it
         // in the registry (by using the ClearType Tuner).
@@ -1628,7 +1628,7 @@ gfxWindowsPlatform::GetDXGIAdapter()
   // Try to use a DXGI 1.1 adapter in order to share resources
   // across processes.
   if (createDXGIFactory1) {
-    nsRefPtr<IDXGIFactory1> factory1;
+    RefPtr<IDXGIFactory1> factory1;
     HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
                                     getter_AddRefs(factory1));
 
@@ -1638,7 +1638,7 @@ gfxWindowsPlatform::GetDXGIAdapter()
       return nullptr;
     }
 
-    hr = factory1->EnumAdapters1(0, byRef(mAdapter));
+    hr = factory1->EnumAdapters1(0, getter_AddRefs(mAdapter));
     if (FAILED(hr)) {
       // We should return and not accelerate if we can't obtain
       // an adapter.
@@ -1700,13 +1700,13 @@ bool DoesD3D11DeviceWork()
 static bool
 GetDxgiDesc(ID3D11Device* device, DXGI_ADAPTER_DESC* out)
 {
-  nsRefPtr<IDXGIDevice> dxgiDevice;
+  RefPtr<IDXGIDevice> dxgiDevice;
   HRESULT hr = device->QueryInterface(__uuidof(IDXGIDevice), getter_AddRefs(dxgiDevice));
   if (FAILED(hr)) {
     return false;
   }
 
-  nsRefPtr<IDXGIAdapter> dxgiAdapter;
+  RefPtr<IDXGIAdapter> dxgiAdapter;
   if (FAILED(dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter)))) {
     return false;
   }
@@ -1740,11 +1740,11 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
         return true;
     }
 
-    nsRefPtr<ID3D11DeviceContext> deviceContext;
+    RefPtr<ID3D11DeviceContext> deviceContext;
     device->GetImmediateContext(getter_AddRefs(deviceContext));
     int backbufferWidth = 32; int backbufferHeight = 32;
-    nsRefPtr<ID3D11Texture2D> offscreenTexture;
-    nsRefPtr<IDXGIKeyedMutex> keyedMutex;
+    RefPtr<ID3D11Texture2D> offscreenTexture;
+    RefPtr<IDXGIKeyedMutex> keyedMutex;
 
     D3D11_TEXTURE2D_DESC offscreenTextureDesc = { 0 };
     offscreenTextureDesc.Width = backbufferWidth;
@@ -1776,7 +1776,7 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
     offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
     offscreenRTVDesc.Texture2D.MipSlice = 0;
 
-    nsRefPtr<ID3D11RenderTargetView> offscreenRTView;
+    RefPtr<ID3D11RenderTargetView> offscreenRTView;
     hr = device->CreateRenderTargetView(offscreenTexture, &offscreenRTVDesc, getter_AddRefs(offscreenRTView));
     if (FAILED(hr)) {
         gfxCriticalNote << "DoesRecreatingCreateRenderTargetViewFailed";
@@ -1877,12 +1877,12 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   desc.CPUAccessFlags = 0;
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
   desc.BindFlags = bindflags;
-  if (FAILED(device->CreateTexture2D(&desc, NULL, byRef(texture)))) {
+  if (FAILED(device->CreateTexture2D(&desc, NULL, getter_AddRefs(texture)))) {
     return false;
   }
 
   HANDLE shareHandle;
-  nsRefPtr<IDXGIResource> otherResource;
+  RefPtr<IDXGIResource> otherResource;
   if (FAILED(texture->QueryInterface(__uuidof(IDXGIResource),
                                      getter_AddRefs(otherResource))))
   {
@@ -1893,8 +1893,8 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
     return false;
   }
 
-  nsRefPtr<ID3D11Resource> sharedResource;
-  nsRefPtr<ID3D11Texture2D> sharedTexture;
+  RefPtr<ID3D11Resource> sharedResource;
+  RefPtr<ID3D11Texture2D> sharedTexture;
   if (FAILED(device->OpenSharedResource(shareHandle, __uuidof(ID3D11Resource),
                                         getter_AddRefs(sharedResource))))
   {
@@ -1911,7 +1911,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   RefPtr<ID3D11ShaderResourceView> sharedView;
 
   // This if(FAILED()) is the one that actually fails on systems affected by bug 1083071.
-  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, byRef(sharedView)))) {
+  if (FAILED(device->CreateShaderResourceView(sharedTexture, NULL, getter_AddRefs(sharedView)))) {
     gfxCriticalError(CriticalLog::DefaultOptions(false)) << "CreateShaderResourceView failed for format" << format;
     return false;
   }
@@ -2012,7 +2012,7 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreationHelper(
         // to prevent bug 1092260. IE 11 also uses this flag.
         D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
+        D3D11_SDK_VERSION, getter_AddRefs(mD3D11Device), nullptr, nullptr);
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
   }
@@ -2071,7 +2071,7 @@ gfxWindowsPlatform::AttemptWARPDeviceCreationHelper(
         // to prevent bug 1092260. IE 11 also uses this flag.
         D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
+        D3D11_SDK_VERSION, getter_AddRefs(mD3D11Device), nullptr, nullptr);
 
     aReporterWARP.SetSuccessful();
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
@@ -2140,7 +2140,7 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
         aAdapter, mIsWARP ? D3D_DRIVER_TYPE_WARP : D3D_DRIVER_TYPE_UNKNOWN,
         nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, byRef(mD3D11ContentDevice), nullptr, nullptr);
+        D3D11_SDK_VERSION, getter_AddRefs(mD3D11ContentDevice), nullptr, nullptr);
 
   } MOZ_SEH_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
     return false;
@@ -2185,7 +2185,7 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
 
   mD3D11ContentDevice->SetExceptionMode(0);
 
-  nsRefPtr<ID3D10Multithread> multi;
+  RefPtr<ID3D10Multithread> multi;
   mD3D11ContentDevice->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
   multi->SetMultithreadProtected(TRUE);
 
@@ -2202,7 +2202,7 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
       sD3D11CreateDeviceFn(GetDXGIAdapter(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                            D3D11_CREATE_DEVICE_BGRA_SUPPORT,
                            mFeatureLevels.Elements(), mFeatureLevels.Length(),
-                           D3D11_SDK_VERSION, byRef(mD3D11ImageBridgeDevice), nullptr, nullptr);
+                           D3D11_SDK_VERSION, getter_AddRefs(mD3D11ImageBridgeDevice), nullptr, nullptr);
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     return FeatureStatus::Crashed;
   }
@@ -2540,7 +2540,7 @@ gfxWindowsPlatform::CreateD3D11DecoderDeviceHelper(
         aAdapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
         D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
         mFeatureLevels.Elements(), mFeatureLevels.Length(),
-        D3D11_SDK_VERSION, byRef(aDevice), nullptr, nullptr);
+        D3D11_SDK_VERSION, getter_AddRefs(aDevice), nullptr, nullptr);
 
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     return false;
@@ -2573,7 +2573,7 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
     return nullptr;
   }
 
-  nsRefPtr<ID3D10Multithread> multi;
+  RefPtr<ID3D10Multithread> multi;
   device->QueryInterface(__uuidof(ID3D10Multithread), getter_AddRefs(multi));
 
   multi->SetMultithreadProtected(TRUE);
@@ -2786,7 +2786,7 @@ private:
   virtual ~D3DVsyncSource()
   {
   }
-  nsRefPtr<D3DVsyncDisplay> mPrimaryDisplay;
+  RefPtr<D3DVsyncDisplay> mPrimaryDisplay;
 }; // end D3DVsyncSource
 
 already_AddRefed<mozilla::gfx::VsyncSource>
@@ -2805,7 +2805,7 @@ gfxWindowsPlatform::CreateHardwareVsyncSource()
     return gfxPlatform::CreateHardwareVsyncSource();
   }
 
-  nsRefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();
+  RefPtr<VsyncSource> d3dVsyncSource = new D3DVsyncSource();
   return d3dVsyncSource.forget();
 }
 

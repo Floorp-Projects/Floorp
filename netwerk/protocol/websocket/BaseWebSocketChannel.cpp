@@ -247,7 +247,7 @@ BaseWebSocketChannel::NewURI(const nsACString & aSpec, const char *aOriginCharse
   if (NS_FAILED(rv))
     return rv;
 
-  nsRefPtr<nsStandardURL> url = new nsStandardURL();
+  RefPtr<nsStandardURL> url = new nsStandardURL();
   rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, port, aSpec,
                 aOriginCharset, aBaseURI);
   if (NS_FAILED(rv))

@@ -109,7 +109,7 @@ DOMStorageCache::Release(void)
     return;
   }
 
-  nsRefPtr<nsRunnableMethod<DOMStorageCacheBridge, void, false> > event =
+  RefPtr<nsRunnableMethod<DOMStorageCacheBridge, void, false> > event =
     NS_NewNonOwningRunnableMethod(static_cast<DOMStorageCacheBridge*>(this),
                                   &DOMStorageCacheBridge::Release);
 
@@ -254,7 +254,7 @@ class DOMStorageCacheHolder : public nsITimerCallback
     return NS_OK;
   }
 
-  nsRefPtr<DOMStorageCache> mCache;
+  RefPtr<DOMStorageCache> mCache;
 
 public:
   explicit DOMStorageCacheHolder(DOMStorageCache* aCache) : mCache(aCache) {}
@@ -275,7 +275,7 @@ DOMStorageCache::KeepAlive()
 
   if (!NS_IsMainThread()) {
     // Timer and the holder must be initialized on the main thread.
-    nsRefPtr<nsRunnableMethod<DOMStorageCache> > event =
+    RefPtr<nsRunnableMethod<DOMStorageCache> > event =
       NS_NewRunnableMethod(this, &DOMStorageCache::KeepAlive);
 
     NS_DispatchToMainThread(event);
@@ -287,7 +287,7 @@ DOMStorageCache::KeepAlive()
     return;
   }
 
-  nsRefPtr<DOMStorageCacheHolder> holder = new DOMStorageCacheHolder(this);
+  RefPtr<DOMStorageCacheHolder> holder = new DOMStorageCacheHolder(this);
   timer->InitWithCallback(holder, DOM_STORAGE_CACHE_KEEP_ALIVE_TIME_MS,
                           nsITimer::TYPE_ONE_SHOT);
 
@@ -733,7 +733,7 @@ DOMStorageUsage::LoadUsage(const int64_t aUsage)
   // stored in the database we have just loaded usage for.
   if (!NS_IsMainThread()) {
     // In single process scenario we get this call from the DB thread
-    nsRefPtr<LoadUsageRunnable> r =
+    RefPtr<LoadUsageRunnable> r =
       new LoadUsageRunnable(mUsage + kDefaultSet, aUsage);
     NS_DispatchToMainThread(r);
   } else {
@@ -781,7 +781,7 @@ DOMStorageCache::StartDatabase()
     // Use DOMLocalStorageManager::Ensure in case we're called from
     // DOMSessionStorageManager's initializer and we haven't yet initialized the
     // local storage manager.
-    nsRefPtr<DOMStorageDBChild> db = new DOMStorageDBChild(
+    RefPtr<DOMStorageDBChild> db = new DOMStorageDBChild(
         DOMLocalStorageManager::Ensure());
 
     nsresult rv = db->Init();

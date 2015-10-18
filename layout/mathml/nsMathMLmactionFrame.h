@@ -66,7 +66,7 @@ private:
   int32_t         mActionType;
   int32_t         mChildCount;
   int32_t         mSelection;
-  nsRefPtr<MouseListener> mListener;
+  RefPtr<MouseListener> mListener;
 
   // helper to return the frame for the attribute selection="number"
   nsIFrame* 

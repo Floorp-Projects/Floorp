@@ -121,7 +121,7 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
     }
   }
 
-  nsRefPtr<Exception> finalException = CreateException(aCx, aRv, aMessage);
+  RefPtr<Exception> finalException = CreateException(aCx, aRv, aMessage);
 
   MOZ_ASSERT(finalException);
   if (!ThrowExceptionObject(aCx, finalException)) {
@@ -167,7 +167,7 @@ CreateException(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
   }
 
   // If not, use the default.
-  nsRefPtr<Exception> exception =
+  RefPtr<Exception> exception =
     new Exception(aMessage, aRv, EmptyCString(), nullptr, nullptr);
   return exception.forget();
 }

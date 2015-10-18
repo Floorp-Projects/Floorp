@@ -146,13 +146,13 @@ nsresult MediaDecoderReader::ResetDecode()
   return NS_OK;
 }
 
-nsRefPtr<MediaDecoderReader::VideoDataPromise>
+RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaDecoderReader::DecodeToFirstVideoData()
 {
   MOZ_ASSERT(OnTaskQueue());
   typedef MediaDecoderReader::VideoDataPromise PromiseType;
-  nsRefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
-  nsRefPtr<MediaDecoderReader> self = this;
+  RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
+  RefPtr<MediaDecoderReader> self = this;
   InvokeUntil([self] () -> bool {
     MOZ_ASSERT(self->OnTaskQueue());
     NS_ENSURE_TRUE(!self->mShutdown, false);
@@ -205,7 +205,7 @@ MediaDecoderReader::ThrottledNotifyDataArrived(const Interval<int64_t>& aInterva
     DoThrottledNotify();
   } else if (!mThrottledNotify.Exists()) {
     // Otherwise, schedule an update if one isn't scheduled already.
-    nsRefPtr<MediaDecoderReader> self = this;
+    RefPtr<MediaDecoderReader> self = this;
     mThrottledNotify.Begin(
       mTimer->WaitUntil(mLastThrottledNotify + mThrottleDuration, __func__)
       ->Then(OwnerThread(), __func__,
@@ -249,7 +249,7 @@ MediaDecoderReader::GetBuffered()
   return GetEstimatedBufferedTimeRanges(stream, mDuration.Ref().ref().ToMicroseconds());
 }
 
-nsRefPtr<MediaDecoderReader::MetadataPromise>
+RefPtr<MediaDecoderReader::MetadataPromise>
 MediaDecoderReader::AsyncReadMetadata()
 {
   typedef ReadMetadataFailureReason Reason;
@@ -258,7 +258,7 @@ MediaDecoderReader::AsyncReadMetadata()
   DECODER_LOG("MediaDecoderReader::AsyncReadMetadata");
 
   // Attempt to read the metadata.
-  nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
+  RefPtr<MetadataHolder> metadata = new MetadataHolder();
   nsresult rv = ReadMetadata(&metadata->mInfo, getter_Transfers(metadata->mTags));
 
   // We're not waiting for anything. If we didn't get the metadata, that's an
@@ -295,7 +295,7 @@ public:
   }
 
 private:
-  nsRefPtr<MediaDecoderReader> mReader;
+  RefPtr<MediaDecoderReader> mReader;
   const int64_t mTimeThreshold;
 };
 
@@ -320,14 +320,14 @@ public:
   }
 
 private:
-  nsRefPtr<MediaDecoderReader> mReader;
+  RefPtr<MediaDecoderReader> mReader;
 };
 
-nsRefPtr<MediaDecoderReader::VideoDataPromise>
+RefPtr<MediaDecoderReader::VideoDataPromise>
 MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
                                      int64_t aTimeThreshold)
 {
-  nsRefPtr<VideoDataPromise> p = mBaseVideoPromise.Ensure(__func__);
+  RefPtr<VideoDataPromise> p = mBaseVideoPromise.Ensure(__func__);
   bool skip = aSkipToNextKeyframe;
   while (VideoQueue().GetSize() == 0 &&
          !VideoQueue().IsFinished()) {
@@ -344,7 +344,7 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
     }
   }
   if (VideoQueue().GetSize() > 0) {
-    nsRefPtr<VideoData> v = VideoQueue().PopFront();
+    RefPtr<VideoData> v = VideoQueue().PopFront();
     if (v && mVideoDiscontinuity) {
       v->mDiscontinuity = true;
       mVideoDiscontinuity = false;
@@ -359,10 +359,10 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
   return p;
 }
 
-nsRefPtr<MediaDecoderReader::AudioDataPromise>
+RefPtr<MediaDecoderReader::AudioDataPromise>
 MediaDecoderReader::RequestAudioData()
 {
-  nsRefPtr<AudioDataPromise> p = mBaseAudioPromise.Ensure(__func__);
+  RefPtr<AudioDataPromise> p = mBaseAudioPromise.Ensure(__func__);
   while (AudioQueue().GetSize() == 0 &&
          !AudioQueue().IsFinished()) {
     if (!DecodeAudioData()) {
@@ -380,7 +380,7 @@ MediaDecoderReader::RequestAudioData()
     }
   }
   if (AudioQueue().GetSize() > 0) {
-    nsRefPtr<AudioData> a = AudioQueue().PopFront();
+    RefPtr<AudioData> a = AudioQueue().PopFront();
     if (mAudioDiscontinuity) {
       a->mDiscontinuity = true;
       mAudioDiscontinuity = false;
@@ -404,7 +404,7 @@ MediaDecoderReader::BreakCycles()
   // the superclass method again.
 }
 
-nsRefPtr<ShutdownPromise>
+RefPtr<ShutdownPromise>
 MediaDecoderReader::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -422,7 +422,7 @@ MediaDecoderReader::Shutdown()
   // Shut down the watch manager before shutting down our task queue.
   mWatchManager.Shutdown();
 
-  nsRefPtr<ShutdownPromise> p;
+  RefPtr<ShutdownPromise> p;
 
   mTimer = nullptr;
   mDecoder = nullptr;

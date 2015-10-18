@@ -361,7 +361,7 @@
     _(AssertResultV)                \
     _(AssertResultT)                \
     _(LexicalCheck)                 \
-    _(ThrowUninitializedLexical)    \
+    _(ThrowRuntimeLexicalError)     \
     _(GlobalNameConflictsCheck)     \
     _(Debugger)                     \
     _(NewTarget)                    \

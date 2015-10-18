@@ -50,7 +50,7 @@ class FontInfoLoadCompleteEvent : public nsRunnable {
 
     NS_IMETHOD Run() override;
 
-    nsRefPtr<FontInfoData> mFontInfo;
+    RefPtr<FontInfoData> mFontInfo;
 };
 
 class AsyncFontInfoLoader : public nsRunnable {
@@ -66,8 +66,8 @@ class AsyncFontInfoLoader : public nsRunnable {
 
     NS_IMETHOD Run() override;
 
-    nsRefPtr<FontInfoData> mFontInfo;
-    nsRefPtr<FontInfoLoadCompleteEvent> mCompleteEvent;
+    RefPtr<FontInfoData> mFontInfo;
+    RefPtr<FontInfoLoadCompleteEvent> mCompleteEvent;
 };
 
 class ShutdownThreadEvent : public nsRunnable {

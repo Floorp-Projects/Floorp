@@ -529,7 +529,7 @@ GLContextEGL::CreateGLContext(const SurfaceCaps& caps,
         return nullptr;
     }
 
-    nsRefPtr<GLContextEGL> glContext = new GLContextEGL(caps,
+    RefPtr<GLContextEGL> glContext = new GLContextEGL(caps,
                                                         shareContext,
                                                         isOffscreen,
                                                         config,
@@ -744,7 +744,7 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
     if (aContext && aSurface) {
         SurfaceCaps caps = SurfaceCaps::Any();
         EGLConfig config = EGL_NO_CONFIG;
-        nsRefPtr<GLContextEGL> glContext =
+        RefPtr<GLContextEGL> glContext =
             new GLContextEGL(caps,
                              nullptr, false,
                              config, (EGLSurface)aSurface, (EGLContext)aContext);
@@ -781,7 +781,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
     }
 
     SurfaceCaps caps = SurfaceCaps::Any();
-    nsRefPtr<GLContextEGL> glContext =
+    RefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(caps,
                                       nullptr, false,
                                       config, surface);
@@ -989,7 +989,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const mozilla::gfx::IntSize& size)
     MOZ_ASSERT(surface);
 
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    nsRefPtr<GLContextEGL> glContext =
+    RefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(dummyCaps,
                                       nullptr, true,
                                       config, surface);

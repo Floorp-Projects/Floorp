@@ -50,7 +50,7 @@ GetDirectShowGuidName(const GUID& aGuid)
 void
 RemoveGraphFromRunningObjectTable(DWORD aRotRegister)
 {
-  nsRefPtr<IRunningObjectTable> runningObjectTable;
+  RefPtr<IRunningObjectTable> runningObjectTable;
   if (SUCCEEDED(GetRunningObjectTable(0, getter_AddRefs(runningObjectTable)))) {
     runningObjectTable->Revoke(aRotRegister);
   }
@@ -61,8 +61,8 @@ AddGraphToRunningObjectTable(IUnknown *aUnkGraph, DWORD *aOutRotRegister)
 {
   HRESULT hr;
 
-  nsRefPtr<IMoniker> moniker;
-  nsRefPtr<IRunningObjectTable> runningObjectTable;
+  RefPtr<IMoniker> moniker;
+  RefPtr<IRunningObjectTable> runningObjectTable;
 
   hr = GetRunningObjectTable(0, getter_AddRefs(runningObjectTable));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -184,7 +184,7 @@ CreateAndAddFilter(IGraphBuilder* aGraph,
   NS_ENSURE_TRUE(aOutFilter, E_POINTER);
   HRESULT hr;
 
-  nsRefPtr<IBaseFilter> filter;
+  RefPtr<IBaseFilter> filter;
   hr = CoCreateInstance(aFilterClsId,
                         nullptr,
                         CLSCTX_INPROC_SERVER,
@@ -214,7 +214,7 @@ CreateMP3DMOWrapperFilter(IBaseFilter **aOutFilter)
   HRESULT hr;
 
   // Create the wrapper filter.
-  nsRefPtr<IBaseFilter> filter;
+  RefPtr<IBaseFilter> filter;
   hr = CoCreateInstance(CLSID_DMOWrapperFilter,
                         nullptr,
                         CLSCTX_INPROC_SERVER,
@@ -226,7 +226,7 @@ CreateMP3DMOWrapperFilter(IBaseFilter **aOutFilter)
   }
 
   // Query for IDMOWrapperFilter.
-  nsRefPtr<IDMOWrapperFilter> dmoWrapper;
+  RefPtr<IDMOWrapperFilter> dmoWrapper;
   hr = filter->QueryInterface(IID_IDMOWrapperFilter,
                               getter_AddRefs(dmoWrapper));
   if (FAILED(hr)) {
@@ -257,7 +257,7 @@ AddMP3DMOWrapperFilter(IGraphBuilder* aGraph,
   HRESULT hr;
 
   // Create the wrapper filter.
-  nsRefPtr<IBaseFilter> filter;
+  RefPtr<IBaseFilter> filter;
   hr = CreateMP3DMOWrapperFilter(getter_AddRefs(filter));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -276,7 +276,7 @@ AddMP3DMOWrapperFilter(IGraphBuilder* aGraph,
 bool
 CanDecodeMP3UsingDirectShow()
 {
-  nsRefPtr<IBaseFilter> filter;
+  RefPtr<IBaseFilter> filter;
 
   // Can we create the MP3 demuxer filter?
   if (FAILED(CoCreateInstance(CLSID_MPEG1Splitter,
@@ -313,7 +313,7 @@ MatchUnconnectedPin(IPin* aPin,
 
   // Ensure the pin is unconnected.
   RefPtr<IPin> peer;
-  HRESULT hr = aPin->ConnectedTo(byRef(peer));
+  HRESULT hr = aPin->ConnectedTo(getter_AddRefs(peer));
   if (hr != VFW_E_NOT_CONNECTED) {
     *aOutMatches = false;
     return hr;
@@ -334,12 +334,12 @@ GetUnconnectedPin(IBaseFilter* aFilter, PIN_DIRECTION aPinDir)
 {
   RefPtr<IEnumPins> enumPins;
 
-  HRESULT hr = aFilter->EnumPins(byRef(enumPins));
+  HRESULT hr = aFilter->EnumPins(getter_AddRefs(enumPins));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   // Test each pin to see if it matches the direction we're looking for.
   RefPtr<IPin> pin;
-  while (S_OK == enumPins->Next(1, byRef(pin), nullptr)) {
+  while (S_OK == enumPins->Next(1, getter_AddRefs(pin), nullptr)) {
     bool matches = FALSE;
     if (SUCCEEDED(MatchUnconnectedPin(pin, aPinDir, &matches)) &&
         matches) {

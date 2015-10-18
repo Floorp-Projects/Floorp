@@ -47,9 +47,9 @@ struct ImageCacheEntryData {
   size_t SizeInBytes() { return mSize.width * mSize.height * 4; }
 
   // Key
-  nsRefPtr<Element> mImage;
+  RefPtr<Element> mImage;
   nsIImageLoadingContent* mILC;
-  nsRefPtr<HTMLCanvasElement> mCanvas;
+  RefPtr<HTMLCanvasElement> mCanvas;
   // Value
   nsCOMPtr<imgIRequest> mRequest;
   RefPtr<SourceSurface> mSourceSurface;
@@ -137,7 +137,7 @@ public:
   nsTHashtable<ImageCacheEntry> mCache;
   nsTHashtable<SimpleImageCacheEntry> mSimpleCache;
   size_t mTotal;
-  nsRefPtr<ImageCacheObserver> mImageCacheObserver;
+  RefPtr<ImageCacheObserver> mImageCacheObserver;
 };
 
 static ImageCache* gImageCache = nullptr;

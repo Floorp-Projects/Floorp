@@ -82,21 +82,21 @@ const Register ABIArgGenerator::NonReturn_VolatileReg1 = a1;
 uint32_t
 js::jit::RT(FloatRegister r)
 {
-    MOZ_ASSERT(r.id() < FloatRegisters::TotalSingle);
+    MOZ_ASSERT(r.id() < FloatRegisters::RegisterIdLimit);
     return r.id() << RTShift;
 }
 
 uint32_t
 js::jit::RD(FloatRegister r)
 {
-    MOZ_ASSERT(r.id() < FloatRegisters::TotalSingle);
+    MOZ_ASSERT(r.id() < FloatRegisters::RegisterIdLimit);
     return r.id() << RDShift;
 }
 
 uint32_t
 js::jit::SA(FloatRegister r)
 {
-    MOZ_ASSERT(r.id() < FloatRegisters::TotalSingle);
+    MOZ_ASSERT(r.id() < FloatRegisters::RegisterIdLimit);
     return r.id() << SAShift;
 }
 

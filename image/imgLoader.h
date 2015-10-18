@@ -113,7 +113,7 @@ public:
 
   already_AddRefed<imgRequest> GetRequest() const
   {
-    nsRefPtr<imgRequest> req = mRequest;
+    RefPtr<imgRequest> req = mRequest;
     return req.forget();
   }
 
@@ -161,7 +161,7 @@ private: // data
   NS_DECL_OWNINGTHREAD
 
   imgLoader* mLoader;
-  nsRefPtr<imgRequest> mRequest;
+  RefPtr<imgRequest> mRequest;
   uint32_t mDataSize;
   int32_t mTouchedTime;
   int32_t mExpiryTime;
@@ -195,7 +195,7 @@ public:
   uint32_t GetSize() const;
   void UpdateSize(int32_t diff);
   uint32_t GetNumElements() const;
-  typedef std::vector<nsRefPtr<imgCacheEntry> > queueContainer;
+  typedef std::vector<RefPtr<imgCacheEntry> > queueContainer;
   typedef queueContainer::iterator iterator;
   typedef queueContainer::const_iterator const_iterator;
 
@@ -323,8 +323,8 @@ public:
   // Returns true if we should prefer evicting cache entry |two| over cache
   // entry |one|.
   // This mixes units in the worst way, but provides reasonable results.
-  inline static bool CompareCacheEntries(const nsRefPtr<imgCacheEntry>& one,
-                                         const nsRefPtr<imgCacheEntry>& two)
+  inline static bool CompareCacheEntries(const RefPtr<imgCacheEntry>& one,
+                                         const RefPtr<imgCacheEntry>& two)
   {
     if (!one) {
       return false;
@@ -524,15 +524,15 @@ private:
   virtual ~imgCacheValidator();
 
   nsCOMPtr<nsIStreamListener> mDestListener;
-  nsRefPtr<nsProgressNotificationProxy> mProgressProxy;
+  RefPtr<nsProgressNotificationProxy> mProgressProxy;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mRedirectChannel;
 
-  nsRefPtr<imgRequest> mRequest;
+  RefPtr<imgRequest> mRequest;
   nsCOMArray<imgIRequest> mProxies;
 
-  nsRefPtr<imgRequest> mNewRequest;
-  nsRefPtr<imgCacheEntry> mNewEntry;
+  RefPtr<imgRequest> mNewRequest;
+  RefPtr<imgCacheEntry> mNewEntry;
 
   nsCOMPtr<nsISupports> mContext;
 

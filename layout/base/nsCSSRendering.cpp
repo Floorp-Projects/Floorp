@@ -2625,7 +2625,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   stopScale = 1.0/(stopEnd - stopOrigin);
 
   // Create the gradient pattern.
-  nsRefPtr<gfxPattern> gradientPattern;
+  RefPtr<gfxPattern> gradientPattern;
   bool forceRepeatToCoverTiles = false;
   gfxMatrix matrix;
   gfxPoint gradientStart;
@@ -2732,7 +2732,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     rawStops[i].color = stops[i].mColor;
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
-  mozilla::RefPtr<mozilla::gfx::GradientStops> gs =
+  RefPtr<mozilla::gfx::GradientStops> gs =
     gfxGradientCache::GetOrCreateGradientStops(ctx->GetDrawTarget(),
                                                rawStops,
                                                isRepeat ? gfx::ExtendMode::REPEAT : gfx::ExtendMode::CLAMP);
@@ -5011,7 +5011,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     }
     case eStyleImageType_Element:
     {
-      nsRefPtr<gfxDrawable> drawable = DrawableForElement(aDest,
+      RefPtr<gfxDrawable> drawable = DrawableForElement(aDest,
                                                           aRenderingContext);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
@@ -5061,7 +5061,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     nsRect destRect = aImageRect - aImageRect.TopLeft();
     nsIntSize roundedOut = destRect.ToOutsidePixels(appUnitsPerDevPixel).Size();
     IntSize imageSize(roundedOut.width, roundedOut.height);
-    nsRefPtr<gfxDrawable> drawable =
+    RefPtr<gfxDrawable> drawable =
       nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame, mForFrame, mSize, imageSize,
         aRenderingContext.GetDrawTarget(),
@@ -5071,7 +5071,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     return drawable.forget();
   }
   NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
-  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
+  RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(
                                 mImageElementSurface.mSourceSurface,
                                 mImageElementSurface.mSize);
   return drawable.forget();
@@ -5210,7 +5210,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       // invalidate that cache, and it's not clear that it's worth the trouble
       // since using border-image with -moz-element is rare.
 
-      nsRefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
+      RefPtr<gfxDrawable> drawable = DrawableForElement(nsRect(nsPoint(), mSize),
                                                           aRenderingContext);
       if (!drawable) {
         NS_WARNING("Could not create drawable for element");
@@ -5574,8 +5574,8 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
   transformedSkipRect.RoundIn();
 
   for (size_t i = 0; i < 4; i++) {
-    aInnerClipRectRadii[i].width = scale.width * aInnerClipRectRadii[i].width;
-    aInnerClipRectRadii[i].height = scale.height * aInnerClipRectRadii[i].height;
+    aInnerClipRectRadii[i].width = std::floor(scale.width * aInnerClipRectRadii[i].width);
+    aInnerClipRectRadii[i].height = std::floor(scale.height * aInnerClipRectRadii[i].height);
   }
 
   {

@@ -26,10 +26,10 @@ nsHtml5OwningUTF16Buffer::~nsHtml5OwningUTF16Buffer()
   DeleteBuffer();
 
   // This is to avoid dtor recursion on 'next', bug 706932.
-  nsRefPtr<nsHtml5OwningUTF16Buffer> tail;
+  RefPtr<nsHtml5OwningUTF16Buffer> tail;
   tail.swap(next);
   while (tail && tail->mRefCnt == 1) {
-    nsRefPtr<nsHtml5OwningUTF16Buffer> tmp;
+    RefPtr<nsHtml5OwningUTF16Buffer> tmp;
     tmp.swap(tail->next);
     tail.swap(tmp);
   }
@@ -43,7 +43,7 @@ nsHtml5OwningUTF16Buffer::FalliblyCreate(int32_t aLength)
   if (!newBuf) {
     return nullptr;
   }
-  nsRefPtr<nsHtml5OwningUTF16Buffer> newObj =
+  RefPtr<nsHtml5OwningUTF16Buffer> newObj =
     new (mozilla::fallible) nsHtml5OwningUTF16Buffer(newBuf);
   if (!newObj) {
     delete[] newBuf;

@@ -165,7 +165,7 @@ public:
   bool HasRefCntOne();
 
   // Window for which this timeout fires
-  nsRefPtr<nsGlobalWindow> mWindow;
+  RefPtr<nsGlobalWindow> mWindow;
 
   // The actual timer object
   nsCOMPtr<nsITimer> mTimer;
@@ -765,7 +765,7 @@ public:
   // Inner windows only.
   void AddGamepad(uint32_t aIndex, mozilla::dom::Gamepad* aGamepad);
   void RemoveGamepad(uint32_t aIndex);
-  void GetGamepads(nsTArray<nsRefPtr<mozilla::dom::Gamepad> >& aGamepads);
+  void GetGamepads(nsTArray<RefPtr<mozilla::dom::Gamepad> >& aGamepads);
   already_AddRefed<mozilla::dom::Gamepad> GetGamepad(uint32_t aIndex);
   void SetHasSeenGamepadInput(bool aHasSeen);
   bool HasSeenGamepadInput();
@@ -784,7 +784,7 @@ public:
   void DisableGamepadUpdates();
 
   // Get the VR devices for this window, initializing if necessary
-  bool GetVRDevices(nsTArray<nsRefPtr<mozilla::dom::VRDevice>>& aDevices);
+  bool GetVRDevices(nsTArray<RefPtr<mozilla::dom::VRDevice>>& aDevices);
 
 #define EVENT(name_, id_, type_, struct_)                                     \
   mozilla::dom::EventHandlerNonNull* GetOn##name_()                           \
@@ -983,14 +983,14 @@ public:
   already_AddRefed<mozilla::dom::MediaQueryList> MatchMedia(const nsAString& aQuery,
                                                             mozilla::ErrorResult& aError);
   nsScreen* GetScreen(mozilla::ErrorResult& aError);
-  void MoveToOuter(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError);
+  void MoveToOuter(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void MoveTo(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError);
-  void MoveByOuter(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);
+  void MoveByOuter(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void MoveBy(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);
-  void ResizeToOuter(int32_t aWidth, int32_t aHeight, mozilla::ErrorResult& aError);
+  void ResizeToOuter(int32_t aWidth, int32_t aHeight, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void ResizeTo(int32_t aWidth, int32_t aHeight,
                 mozilla::ErrorResult& aError);
-  void ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif, mozilla::ErrorResult& aError);
+  void ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif, mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void ResizeBy(int32_t aWidthDif, int32_t aHeightDif,
                 mozilla::ErrorResult& aError);
   void Scroll(double aXScroll, double aYScroll);
@@ -1052,7 +1052,7 @@ public:
     GetDefaultComputedStyle(mozilla::dom::Element& aElt,
                             const nsAString& aPseudoElt,
                             mozilla::ErrorResult& aError);
-  void SizeToContentOuter(mozilla::ErrorResult& aError);
+  void SizeToContentOuter(mozilla::ErrorResult& aError, bool aCallerIsChrome);
   void SizeToContent(mozilla::ErrorResult& aError);
   mozilla::dom::Crypto* GetCrypto(mozilla::ErrorResult& aError);
   nsIControllers* GetControllersOuter(mozilla::ErrorResult& aError);
@@ -1253,7 +1253,7 @@ protected:
 
   nsCOMPtr <nsIIdleService> mIdleService;
 
-  nsRefPtr<mozilla::dom::WakeLock> mWakeLock;
+  RefPtr<mozilla::dom::WakeLock> mWakeLock;
 
   static bool sIdleObserversAPIFuzzTimeDisabled;
 
@@ -1471,7 +1471,7 @@ public:
   static void MakeScriptDialogTitle(nsAString &aOutTitle);
 
   // Outer windows only.
-  bool CanMoveResizeWindows();
+  bool CanMoveResizeWindows(bool aCallerIsChrome);
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.
@@ -1567,7 +1567,7 @@ protected:
   // Inner windows only.
   already_AddRefed<mozilla::dom::StorageEvent>
   CloneStorageEvent(const nsAString& aType,
-                    const nsRefPtr<mozilla::dom::StorageEvent>& aEvent,
+                    const RefPtr<mozilla::dom::StorageEvent>& aEvent,
                     mozilla::ErrorResult& aRv);
 
   // Outer windows only.
@@ -1714,41 +1714,41 @@ protected:
   nsCOMPtr<nsIArray>            mArguments;
 
   // For |window.dialogArguments|, via |showModalDialog|.
-  nsRefPtr<DialogValueHolder> mDialogArguments;
+  RefPtr<DialogValueHolder> mDialogArguments;
 
   // Only used in the outer.
-  nsRefPtr<DialogValueHolder> mReturnValue;
+  RefPtr<DialogValueHolder> mReturnValue;
 
-  nsRefPtr<mozilla::dom::Navigator> mNavigator;
-  nsRefPtr<nsScreen>            mScreen;
-  nsRefPtr<nsDOMWindowList>     mFrames;
+  RefPtr<mozilla::dom::Navigator> mNavigator;
+  RefPtr<nsScreen>            mScreen;
+  RefPtr<nsDOMWindowList>     mFrames;
   // All BarProps are inner window only.
-  nsRefPtr<mozilla::dom::BarProp> mMenubar;
-  nsRefPtr<mozilla::dom::BarProp> mToolbar;
-  nsRefPtr<mozilla::dom::BarProp> mLocationbar;
-  nsRefPtr<mozilla::dom::BarProp> mPersonalbar;
-  nsRefPtr<mozilla::dom::BarProp> mStatusbar;
-  nsRefPtr<mozilla::dom::BarProp> mScrollbars;
-  nsRefPtr<nsDOMWindowUtils>    mWindowUtils;
+  RefPtr<mozilla::dom::BarProp> mMenubar;
+  RefPtr<mozilla::dom::BarProp> mToolbar;
+  RefPtr<mozilla::dom::BarProp> mLocationbar;
+  RefPtr<mozilla::dom::BarProp> mPersonalbar;
+  RefPtr<mozilla::dom::BarProp> mStatusbar;
+  RefPtr<mozilla::dom::BarProp> mScrollbars;
+  RefPtr<nsDOMWindowUtils>    mWindowUtils;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
-  nsRefPtr<nsGlobalWindowObserver> mObserver; // Inner windows only.
-  nsRefPtr<mozilla::dom::Crypto>  mCrypto;
-  nsRefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
-  nsRefPtr<mozilla::dom::Console> mConsole;
+  RefPtr<nsGlobalWindowObserver> mObserver; // Inner windows only.
+  RefPtr<mozilla::dom::Crypto>  mCrypto;
+  RefPtr<mozilla::dom::cache::CacheStorage> mCacheStorage;
+  RefPtr<mozilla::dom::Console> mConsole;
   // We need to store an nsISupports pointer to this object because the
   // mozilla::dom::External class doesn't exist on b2g and using the type
   // forward declared here means that ~nsGlobalWindow wouldn't compile because
   // it wouldn't see the ~External function's declaration.
   nsCOMPtr<nsISupports>         mExternal;
 
-  nsRefPtr<mozilla::dom::MozSelfSupport> mMozSelfSupport;
+  RefPtr<mozilla::dom::MozSelfSupport> mMozSelfSupport;
 
-  nsRefPtr<mozilla::dom::DOMStorage> mLocalStorage;
-  nsRefPtr<mozilla::dom::DOMStorage> mSessionStorage;
+  RefPtr<mozilla::dom::DOMStorage> mLocalStorage;
+  RefPtr<mozilla::dom::DOMStorage> mSessionStorage;
 
   // These member variable are used only on inner windows.
-  nsRefPtr<mozilla::EventListenerManager> mListenerManager;
+  RefPtr<mozilla::EventListenerManager> mListenerManager;
   // mTimeouts is generally sorted by mWhen, unless mTimeoutInsertionPoint is
   // non-null.  In that case, the dummy timeout pointed to by
   // mTimeoutInsertionPoint may have a later mWhen than some of the timeouts
@@ -1760,13 +1760,13 @@ protected:
   nsTimeout*                    mTimeoutInsertionPoint;
   uint32_t                      mTimeoutPublicIdCounter;
   uint32_t                      mTimeoutFiringDepth;
-  nsRefPtr<nsLocation>          mLocation;
-  nsRefPtr<nsHistory>           mHistory;
+  RefPtr<nsLocation>          mLocation;
+  RefPtr<nsHistory>           mHistory;
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
 
-  typedef nsTArray<nsRefPtr<mozilla::dom::StorageEvent>> nsDOMStorageEventArray;
+  typedef nsTArray<RefPtr<mozilla::dom::StorageEvent>> nsDOMStorageEventArray;
   nsDOMStorageEventArray mPendingStorageEvents;
 
   uint32_t mTimeoutsSuspendDepth;
@@ -1800,7 +1800,7 @@ protected:
   // unsuspending it.
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 
-  nsRefPtr<mozilla::dom::indexedDB::IDBFactory> mIndexedDB;
+  RefPtr<mozilla::dom::indexedDB::IDBFactory> mIndexedDB;
 
   // This counts the number of windows that have been opened in rapid succession
   // (i.e. within dom.successive_dialog_time_limit of each other). It is reset
@@ -1824,7 +1824,7 @@ protected:
 
 #ifdef MOZ_WEBSPEECH
   // mSpeechSynthesis is only used on inner windows.
-  nsRefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
+  RefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
 #endif
 
   // This is the CC generation the last time we called CanSkip.
@@ -1833,9 +1833,9 @@ protected:
   // Did VR get initialized for this window?
   bool                                       mVRDevicesInitialized;
   // The VRDevies for this window
-  nsTArray<nsRefPtr<mozilla::dom::VRDevice>> mVRDevices;
+  nsTArray<RefPtr<mozilla::dom::VRDevice>> mVRDevices;
   // Any attached HMD when fullscreen
-  nsRefPtr<mozilla::gfx::VRHMDInfo>          mVRHMDInfo;
+  RefPtr<mozilla::gfx::VRHMDInfo>          mVRHMDInfo;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
@@ -1960,7 +1960,7 @@ protected:
 inline already_AddRefed<nsGlobalWindow>
 NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow)
 {
-  nsRefPtr<nsGlobalWindow> global;
+  RefPtr<nsGlobalWindow> global;
 
   if (aIsChrome) {
     global = nsGlobalChromeWindow::Create(nullptr);

@@ -176,7 +176,7 @@ static nsresult GetIconURLVariant(nsIFile* aApplication, nsIVariant* *_retval)
   NS_GetURLSpecFromFile(aApplication, fileURLSpec);
   nsAutoCString iconURLSpec; iconURLSpec.AssignLiteral("moz-icon://");
   iconURLSpec += fileURLSpec;
-  nsRefPtr<nsVariant> writable(new nsVariant());
+  RefPtr<nsVariant> writable(new nsVariant());
   writable->SetAsAUTF8String(iconURLSpec);
   writable.forget(_retval);
   return NS_OK;

@@ -161,7 +161,7 @@ protected:
       mEventVisibility(aEventVisibility)
   {}
 
-  nsRefPtr<AbstractMediaDecoder> mDecoder;
+  RefPtr<AbstractMediaDecoder> mDecoder;
   nsAutoPtr<MediaInfo>  mInfo;
   nsAutoPtr<MetadataTags> mTags;
   MediaDecoderEventVisibility mEventVisibility;

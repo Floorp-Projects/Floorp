@@ -270,7 +270,7 @@ protected:
     }
 
     nsAutoPtr<const MaskLayerImageKey> mKey;
-    nsRefPtr<ImageContainer> mContainer;
+    RefPtr<ImageContainer> mContainer;
   };
 
   nsTHashtable<MaskLayerImageEntry> mMaskImageContainers;

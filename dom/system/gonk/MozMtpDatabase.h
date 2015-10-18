@@ -210,8 +210,8 @@ private:
   private:
     mozilla::Mutex& mMutex;
   };
-  typedef nsTArray<mozilla::RefPtr<DbEntry> > UnprotectedDbArray;
-  typedef ProtectedTArray<mozilla::RefPtr<DbEntry> > ProtectedDbArray;
+  typedef nsTArray<RefPtr<DbEntry> > UnprotectedDbArray;
+  typedef ProtectedTArray<RefPtr<DbEntry> > ProtectedDbArray;
 
   struct StorageEntry final
   {
@@ -224,7 +224,7 @@ private:
   protected:
     ~StorageEntry() {}
   };
-  typedef ProtectedTArray<mozilla::RefPtr<StorageEntry> > StorageArray;
+  typedef ProtectedTArray<RefPtr<StorageEntry> > StorageArray;
 
   enum MatchType
   {

@@ -185,19 +185,19 @@ public:
   class Private;
 
   template<typename ResolveValueType_>
-  static nsRefPtr<MozPromise>
+  static RefPtr<MozPromise>
   CreateAndResolve(ResolveValueType_&& aResolveValue, const char* aResolveSite)
   {
-    nsRefPtr<typename MozPromise::Private> p = new MozPromise::Private(aResolveSite);
+    RefPtr<typename MozPromise::Private> p = new MozPromise::Private(aResolveSite);
     p->Resolve(Forward<ResolveValueType_>(aResolveValue), aResolveSite);
     return p.forget();
   }
 
   template<typename RejectValueType_>
-  static nsRefPtr<MozPromise>
+  static RefPtr<MozPromise>
   CreateAndReject(RejectValueType_&& aRejectValue, const char* aRejectSite)
   {
-    nsRefPtr<typename MozPromise::Private> p = new MozPromise::Private(aRejectSite);
+    RefPtr<typename MozPromise::Private> p = new MozPromise::Private(aRejectSite);
     p->Reject(Forward<RejectValueType_>(aRejectValue), aRejectSite);
     return p.forget();
   }
@@ -251,14 +251,14 @@ private:
 
   private:
     nsTArray<Maybe<ResolveValueType>> mResolveValues;
-    nsRefPtr<typename AllPromiseType::Private> mPromise;
+    RefPtr<typename AllPromiseType::Private> mPromise;
     size_t mOutstandingPromises;
   };
 public:
 
-  static nsRefPtr<AllPromiseType> All(AbstractThread* aProcessingThread, nsTArray<nsRefPtr<MozPromise>>& aPromises)
+  static RefPtr<AllPromiseType> All(AbstractThread* aProcessingThread, nsTArray<RefPtr<MozPromise>>& aPromises)
   {
-    nsRefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
+    RefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
     for (size_t i = 0; i < aPromises.Length(); ++i) {
       aPromises[i]->Then(aProcessingThread, __func__,
         [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, aResolveValue); },
@@ -323,8 +323,8 @@ protected:
       }
 
     private:
-      nsRefPtr<ThenValueBase> mThenValue;
-      nsRefPtr<MozPromise> mPromise;
+      RefPtr<ThenValueBase> mThenValue;
+      RefPtr<MozPromise> mPromise;
     };
 
     explicit ThenValueBase(AbstractThread* aResponseTarget, const char* aCallSite)
@@ -345,7 +345,7 @@ protected:
       aPromise->mMutex.AssertCurrentThreadOwns();
       MOZ_ASSERT(!aPromise->IsPending());
 
-      nsRefPtr<nsRunnable> runnable =
+      RefPtr<nsRunnable> runnable =
         static_cast<nsRunnable*>(new (typename ThenValueBase::ResolveOrRejectRunnable)(this, aPromise));
       PROMISE_LOG("%s Then() call made from %s [Runnable=%p, Promise=%p, ThenValue=%p]",
                   aPromise->mValue.IsResolve() ? "Resolving" : "Rejecting", ThenValueBase::mCallSite,
@@ -383,7 +383,7 @@ protected:
       }
 
       // Invoke the resolve or reject method.
-      nsRefPtr<MozPromise> p = DoResolveOrRejectInternal(aValue);
+      RefPtr<MozPromise> p = DoResolveOrRejectInternal(aValue);
 
       // If there's a completion promise, resolve it appropriately with the
       // result of the method.
@@ -391,7 +391,7 @@ protected:
       // We jump through some hoops to cast to MozPromise::Private here. This
       // can go away when we can just declare mCompletionPromise as
       // MozPromise::Private. See the declaration below.
-      nsRefPtr<MozPromise::Private> completionPromise =
+      RefPtr<MozPromise::Private> completionPromise =
         dont_AddRef(static_cast<MozPromise::Private*>(mCompletionPromise.forget().take()));
       if (completionPromise) {
         if (p) {
@@ -402,13 +402,13 @@ protected:
       }
     }
 
-    nsRefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
+    RefPtr<AbstractThread> mResponseTarget; // May be released on any thread.
 
-    // Declaring nsRefPtr<MozPromise::Private> here causes build failures
+    // Declaring RefPtr<MozPromise::Private> here causes build failures
     // on MSVC because MozPromise::Private is only forward-declared at this
     // point. This hack can go away when we inline-declare MozPromise::Private,
     // which is blocked on the B2G ICS compiler being too old.
-    nsRefPtr<MozPromise> mCompletionPromise;
+    RefPtr<MozPromise> mCompletionPromise;
 
     const char* mCallSite;
   };
@@ -419,7 +419,7 @@ protected:
    */
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MozPromise>>::value &&
+  static typename EnableIf<ReturnTypeIs<MethodType, RefPtr<MozPromise>>::value &&
                            TakesArgument<MethodType>::value,
                            already_AddRefed<MozPromise>>::Type
   InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
@@ -438,7 +438,7 @@ protected:
   }
 
   template<typename ThisType, typename MethodType, typename ValueType>
-  static typename EnableIf<ReturnTypeIs<MethodType, nsRefPtr<MozPromise>>::value &&
+  static typename EnableIf<ReturnTypeIs<MethodType, RefPtr<MozPromise>>::value &&
                            !TakesArgument<MethodType>::value,
                            already_AddRefed<MozPromise>>::Type
   InvokeCallbackMethod(ThisType* aThisVal, MethodType aMethod, ValueType&& aValue)
@@ -481,7 +481,7 @@ protected:
   protected:
     virtual already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
     {
-      nsRefPtr<MozPromise> completion;
+      RefPtr<MozPromise> completion;
       if (aValue.IsResolve()) {
         completion = InvokeCallbackMethod(mThisVal.get(), mResolveMethod, aValue.ResolveValue());
       } else {
@@ -498,7 +498,7 @@ protected:
     }
 
   private:
-    nsRefPtr<ThisType> mThisVal; // Only accessed and refcounted on dispatch thread.
+    RefPtr<ThisType> mThisVal; // Only accessed and refcounted on dispatch thread.
     ResolveMethodType mResolveMethod;
     RejectMethodType mRejectMethod;
   };
@@ -538,7 +538,7 @@ protected:
       // classes with ::operator()), since it allows us to share code more easily.
       // We could fix this if need be, though it's quite easy to work around by
       // just capturing something.
-      nsRefPtr<MozPromise> completion;
+      RefPtr<MozPromise> completion;
       if (aValue.IsResolve()) {
         completion = InvokeCallbackMethod(mResolveFunction.ptr(), &ResolveFunction::operator(), aValue.ResolveValue());
       } else {
@@ -580,23 +580,23 @@ public:
 public:
 
   template<typename ThisType, typename ResolveMethodType, typename RejectMethodType>
-  nsRefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
+  RefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite, ThisType* aThisVal,
                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod)
   {
-    nsRefPtr<ThenValueBase> thenValue = new MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>(
+    RefPtr<ThenValueBase> thenValue = new MethodThenValue<ThisType, ResolveMethodType, RejectMethodType>(
                                               aResponseThread, aThisVal, aResolveMethod, aRejectMethod, aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to nsRefPtr<Request>.
+    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to RefPtr<Request>.
   }
 
   template<typename ResolveFunction, typename RejectFunction>
-  nsRefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite,
+  RefPtr<Request> Then(AbstractThread* aResponseThread, const char* aCallSite,
                          ResolveFunction&& aResolveFunction, RejectFunction&& aRejectFunction)
   {
-    nsRefPtr<ThenValueBase> thenValue = new FunctionThenValue<ResolveFunction, RejectFunction>(aResponseThread,
+    RefPtr<ThenValueBase> thenValue = new FunctionThenValue<ResolveFunction, RejectFunction>(aResponseThread,
                                               Move(aResolveFunction), Move(aRejectFunction), aCallSite);
     ThenInternal(aResponseThread, thenValue, aCallSite);
-    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to nsRefPtr<Request>.
+    return thenValue.forget(); // Implicit conversion from already_AddRefed<ThenValueBase> to RefPtr<Request>.
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise, const char* aCallSite)
@@ -604,7 +604,7 @@ public:
     MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveRequest);
     mHaveRequest = true;
-    nsRefPtr<Private> chainedPromise = aChainedPromise;
+    RefPtr<Private> chainedPromise = aChainedPromise;
     PROMISE_LOG("%s invoking Chain() [this=%p, chainedPromise=%p, isPending=%d]",
                 aCallSite, this, chainedPromise.get(), (int) IsPending());
     if (!IsPending()) {
@@ -659,8 +659,8 @@ protected:
   const char* mCreationSite; // For logging
   Mutex mMutex;
   ResolveOrRejectValue mValue;
-  nsTArray<nsRefPtr<ThenValueBase>> mThenValues;
-  nsTArray<nsRefPtr<Private>> mChainedPromises;
+  nsTArray<RefPtr<ThenValueBase>> mThenValues;
+  nsTArray<RefPtr<Private>> mChainedPromises;
   bool mHaveRequest;
 };
 
@@ -735,7 +735,7 @@ public:
     if (!mPromise) {
       mPromise = new (typename PromiseType::Private)(aMethodName);
     }
-    nsRefPtr<PromiseType> p = mPromise.get();
+    RefPtr<PromiseType> p = mPromise.get();
     return p.forget();
   }
 
@@ -756,7 +756,7 @@ public:
       mMonitor->AssertCurrentThreadOwns();
     }
 
-    nsRefPtr<typename PromiseType::Private> p = mPromise;
+    RefPtr<typename PromiseType::Private> p = mPromise;
     mPromise = nullptr;
     return p.forget();
   }
@@ -803,7 +803,7 @@ public:
 
 private:
   Monitor* mMonitor;
-  nsRefPtr<typename PromiseType::Private> mPromise;
+  RefPtr<typename PromiseType::Private> mPromise;
 };
 
 /*
@@ -817,7 +817,7 @@ public:
   MozPromiseRequestHolder() {}
   ~MozPromiseRequestHolder() { MOZ_ASSERT(!mRequest); }
 
-  void Begin(nsRefPtr<typename PromiseType::Request>&& aRequest)
+  void Begin(RefPtr<typename PromiseType::Request>&& aRequest)
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
     mRequest = Move(aRequest);
@@ -852,7 +852,7 @@ public:
   bool Exists() { return !!mRequest; }
 
 private:
-  nsRefPtr<typename PromiseType::Request> mRequest;
+  RefPtr<typename PromiseType::Request> mRequest;
 };
 
 // Asynchronous Potentially-Cross-Thread Method Calls.
@@ -887,21 +887,21 @@ template<typename PromiseType, typename ThisType, typename... ArgTypes>
 class MethodCall : public MethodCallBase
 {
 public:
-  typedef nsRefPtr<PromiseType>(ThisType::*MethodType)(ArgTypes...);
+  typedef RefPtr<PromiseType>(ThisType::*MethodType)(ArgTypes...);
   MethodCall(MethodType aMethod, ThisType* aThisVal, ArgTypes... aArgs)
     : mMethod(aMethod)
     , mThisVal(aThisVal)
     , mArgs(Forward<ArgTypes>(aArgs)...)
   {}
 
-  nsRefPtr<PromiseType> Invoke()
+  RefPtr<PromiseType> Invoke()
   {
     return MethodCallInvokeHelper(mMethod, mThisVal.get(), mArgs, typename IndexSequenceFor<ArgTypes...>::Type());
   }
 
 private:
   MethodType mMethod;
-  nsRefPtr<ThisType> mThisVal;
+  RefPtr<ThisType> mThisVal;
   Tuple<ArgTypes...> mArgs;
 };
 
@@ -914,30 +914,30 @@ public:
 
   NS_IMETHODIMP Run()
   {
-    nsRefPtr<PromiseType> p = mMethodCall->Invoke();
+    RefPtr<PromiseType> p = mMethodCall->Invoke();
     mMethodCall = nullptr;
     p->ChainTo(mProxyPromise.forget(), "<Proxy Promise>");
     return NS_OK;
   }
 
 private:
-  nsRefPtr<typename PromiseType::Private> mProxyPromise;
+  RefPtr<typename PromiseType::Private> mProxyPromise;
   nsAutoPtr<MethodCall<PromiseType, ThisType, ArgTypes...>> mMethodCall;
 };
 
 } // namespace detail
 
 template<typename PromiseType, typename ThisType, typename ...ArgTypes, typename ...ActualArgTypes>
-static nsRefPtr<PromiseType>
+static RefPtr<PromiseType>
 InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-            nsRefPtr<PromiseType>(ThisType::*aMethod)(ArgTypes...), ActualArgTypes&&... aArgs)
+            RefPtr<PromiseType>(ThisType::*aMethod)(ArgTypes...), ActualArgTypes&&... aArgs)
 {
   typedef detail::MethodCall<PromiseType, ThisType, ArgTypes...> MethodCallType;
   typedef detail::ProxyRunnable<PromiseType, ThisType, ArgTypes...> ProxyRunnableType;
 
   MethodCallType* methodCall = new MethodCallType(aMethod, aThisVal, Forward<ActualArgTypes>(aArgs)...);
-  nsRefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
-  nsRefPtr<ProxyRunnableType> r = new ProxyRunnableType(p, methodCall);
+  RefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
+  RefPtr<ProxyRunnableType> r = new ProxyRunnableType(p, methodCall);
   MOZ_ASSERT(aTarget->IsDispatchReliable());
   aTarget->Dispatch(r.forget());
   return p.forget();

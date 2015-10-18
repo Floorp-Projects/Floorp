@@ -188,7 +188,7 @@ class ChannelProxy : public Message::Sender {
     Channel::Listener* listener_;
 
     // List of filters.  This is only accessed on the IPC thread.
-    std::vector<nsRefPtr<MessageFilter> > filters_;
+    std::vector<RefPtr<MessageFilter> > filters_;
     MessageLoop* ipc_message_loop_;
     Channel* channel_;
     std::wstring channel_id_;
@@ -205,7 +205,7 @@ class ChannelProxy : public Message::Sender {
   // By maintaining this indirection (ref-counted) to our internal state, we
   // can safely be destroyed while the background thread continues to do stuff
   // that involves this data.
-  nsRefPtr<Context> context_;
+  RefPtr<Context> context_;
 };
 
 }  // namespace IPC

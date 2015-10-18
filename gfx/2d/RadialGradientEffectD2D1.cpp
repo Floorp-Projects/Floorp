@@ -302,7 +302,7 @@ RadialGradientEffectD2D1::CreateEffect(IUnknown **aEffectImpl)
 HRESULT
 RadialGradientEffectD2D1::SetStopCollection(IUnknown *aStopCollection)
 {
-  if (SUCCEEDED(aStopCollection->QueryInterface((ID2D1GradientStopCollection**)byRef(mStopCollection)))) {
+  if (SUCCEEDED(aStopCollection->QueryInterface((ID2D1GradientStopCollection**)getter_AddRefs(mStopCollection)))) {
     return S_OK;
   }
 
@@ -385,7 +385,7 @@ RadialGradientEffectD2D1::CreateGradientTexture()
   D2D1_EXTEND_MODE extendMode[] = { mStopCollection->GetExtendMode(), mStopCollection->GetExtendMode() };
   props.extendModes = extendMode;
 
-  HRESULT hr = mEffectContext->CreateResourceTexture(nullptr, &props, &textureData.front(), &stride, 4096 * 4, byRef(tex));
+  HRESULT hr = mEffectContext->CreateResourceTexture(nullptr, &props, &textureData.front(), &stride, 4096 * 4, getter_AddRefs(tex));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create resource texture: " << hexa(hr);

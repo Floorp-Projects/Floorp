@@ -66,7 +66,7 @@ protected:
   virtual ~ConvolverNode();
 
 private:
-  nsRefPtr<AudioBuffer> mBuffer;
+  RefPtr<AudioBuffer> mBuffer;
   bool mNormalize;
 };
 

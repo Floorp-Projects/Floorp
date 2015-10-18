@@ -311,13 +311,13 @@ private:
   TabChild* mTabChild;
   // The "widget" to which we delegate events if we don't have an
   // event handler.
-  nsRefPtr<PuppetWidget> mChild;
+  RefPtr<PuppetWidget> mChild;
   nsIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
-  nsRefPtr<MemoryPressureObserver> mMemoryPressureObserver;
+  RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
-  mozilla::RefPtr<DrawTarget> mDrawTarget;
+  RefPtr<DrawTarget> mDrawTarget;
   // IME
   nsIMEUpdatePreference mIMEPreferenceOfParent;
   InputContext mInputContext;

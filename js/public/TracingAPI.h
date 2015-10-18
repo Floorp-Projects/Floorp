@@ -20,27 +20,33 @@ class JS_PUBLIC_API(CallbackTracer);
 template <typename T> class Heap;
 template <typename T> class TenuredHeap;
 
-// Returns a static string equivalent of |kind|.
+/** Returns a static string equivalent of |kind|. */
 JS_FRIEND_API(const char*)
 GCTraceKindToAscii(JS::TraceKind kind);
 
 } // namespace JS
 
 enum WeakMapTraceKind {
-    // Do true ephemeron marking with an iterative weak marking phase.
+    /** Do true ephemeron marking with an iterative weak marking phase. */
     DoNotTraceWeakMaps,
 
-    // Do true ephemeron marking with a weak key lookup marking phase. This is
-    // expected to be constant for the lifetime of a JSTracer; it does not
-    // change when switching from "plain" marking to weak marking.
+    /**
+     * Do true ephemeron marking with a weak key lookup marking phase. This is
+     * expected to be constant for the lifetime of a JSTracer; it does not
+     * change when switching from "plain" marking to weak marking.
+     */
     ExpandWeakMaps,
 
-    // Trace through to all values, irrespective of whether the keys are live
-    // or not. Used for non-marking tracers.
+    /**
+     * Trace through to all values, irrespective of whether the keys are live
+     * or not. Used for non-marking tracers.
+     */
     TraceWeakMapValues,
 
-    // Trace through to all keys and values, irrespective of whether the keys
-    // are live or not. Used for non-marking tracers.
+    /**
+     * Trace through to all keys and values, irrespective of whether the keys
+     * are live or not. Used for non-marking tracers.
+     */
     TraceWeakMapKeysValues
 };
 
@@ -333,8 +339,10 @@ JS_CallHashSetObjectTracer(JSTracer* trc, HashSetEnum& e, JSObject* const& key, 
         e.rekeyFront(updated);
 }
 
-// Trace an object that is known to always be tenured.  No post barriers are
-// required in this case.
+/**
+ * Trace an object that is known to always be tenured.  No post barriers are
+ * required in this case.
+ */
 extern JS_PUBLIC_API(void)
 JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, const char* name);
 
@@ -348,8 +356,10 @@ TraceChildren(JSTracer* trc, GCCellPtr thing);
 typedef js::HashSet<Zone*, js::DefaultHasher<Zone*>, js::SystemAllocPolicy> ZoneSet;
 } // namespace JS
 
-// Trace every value within |zones| that is wrapped by a cross-compartment
-// wrapper from a zone that is not an element of |zones|.
+/**
+ * Trace every value within |zones| that is wrapped by a cross-compartment
+ * wrapper from a zone that is not an element of |zones|.
+ */
 extern JS_PUBLIC_API(void)
 JS_TraceIncomingCCWs(JSTracer* trc, const JS::ZoneSet& zones);
 

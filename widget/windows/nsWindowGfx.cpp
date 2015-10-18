@@ -312,7 +312,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     switch (GetLayerManager()->GetBackendType()) {
       case LayersBackend::LAYERS_BASIC:
         {
-          nsRefPtr<gfxASurface> targetSurface;
+          RefPtr<gfxASurface> targetSurface;
 
 #if defined(MOZ_XUL)
           // don't support transparency for non-GDI rendering, for now
@@ -325,7 +325,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
 #endif
 
-          nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
+          RefPtr<gfxWindowsSurface> targetSurfaceWin;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
                IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)))
@@ -336,7 +336,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             targetSurface = targetSurfaceWin;
           }
 
-          nsRefPtr<gfxImageSurface> targetSurfaceImage;
+          RefPtr<gfxImageSurface> targetSurfaceImage;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
                IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
@@ -402,7 +402,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #endif
           }
 
-          nsRefPtr<gfxContext> thebesContext = new gfxContext(dt);
+          RefPtr<gfxContext> thebesContext = new gfxContext(dt);
 
           {
             AutoLayerManagerSetup

@@ -234,7 +234,7 @@ assembleCmdLine(char* const* aArgv, wchar_t** aWideCmdLine, UINT aCodePage)
 void
 nsProcess::Monitor(void* aArg)
 {
-  nsRefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(aArg));
+  RefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(aArg));
 
   if (!process->mBlocking) {
     PR_SetCurrentThreadName("RunProcess");

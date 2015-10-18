@@ -29,7 +29,7 @@ GetRefreshDriver(nsIWidget& aWidget)
   nsIWidgetListener* widgetListener = aWidget.GetWidgetListener();
   nsIPresShell* presShell = widgetListener ? widgetListener->GetPresShell() : nullptr;
   nsPresContext* presContext = presShell ? presShell->GetPresContext() : nullptr;
-  nsRefPtr<nsRefreshDriver> refreshDriver = presContext ? presContext->RefreshDriver() : nullptr;
+  RefPtr<nsRefreshDriver> refreshDriver = presContext ? presContext->RefreshDriver() : nullptr;
   return refreshDriver.forget();
 }
 

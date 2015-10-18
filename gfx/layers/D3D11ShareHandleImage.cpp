@@ -54,10 +54,10 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   }
 
   RefPtr<ID3D11Device> device;
-  texture->GetDevice(byRef(device));
+  texture->GetDevice(getter_AddRefs(device));
 
   RefPtr<IDXGIKeyedMutex> keyedMutex;
-  if (FAILED(texture->QueryInterface(static_cast<IDXGIKeyedMutex**>(byRef(keyedMutex))))) {
+  if (FAILED(texture->QueryInterface(static_cast<IDXGIKeyedMutex**>(getter_AddRefs(keyedMutex))))) {
     NS_WARNING("Failed to QueryInterface for IDXGIKeyedMutex, strange.");
     return nullptr;
   }
@@ -80,7 +80,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   RefPtr<ID3D11Texture2D> softTexture;
   HRESULT hr = device->CreateTexture2D(&softDesc,
                                        NULL,
-                                       static_cast<ID3D11Texture2D**>(byRef(softTexture)));
+                                       static_cast<ID3D11Texture2D**>(getter_AddRefs(softTexture)));
 
   if (FAILED(hr)) {
     NS_WARNING("Failed to create 2D staging texture.");
@@ -89,7 +89,7 @@ D3D11ShareHandleImage::GetAsSourceSurface()
   }
 
   RefPtr<ID3D11DeviceContext> context;
-  device->GetImmediateContext(byRef(context));
+  device->GetImmediateContext(getter_AddRefs(context));
   if (!context) {
     keyedMutex->ReleaseSync(0);
     return nullptr;

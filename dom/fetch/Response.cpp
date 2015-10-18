@@ -50,8 +50,8 @@ Response::~Response()
 Response::Error(const GlobalObject& aGlobal)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<InternalResponse> error = InternalResponse::NetworkError();
-  nsRefPtr<Response> r = new Response(global, error);
+  RefPtr<InternalResponse> error = InternalResponse::NetworkError();
+  RefPtr<Response> r = new Response(global, error);
   return r.forget();
 }
 
@@ -86,7 +86,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
     worker->AssertIsOnWorkerThread();
 
     NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-    nsRefPtr<workers::URL> url =
+    RefPtr<workers::URL> url =
       workers::URL::Constructor(aGlobal, aUrl, baseURL, aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -107,7 +107,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
   Optional<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams> body;
   ResponseInit init;
   init.mStatus = aStatus;
-  nsRefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
+  RefPtr<Response> r = Response::Constructor(aGlobal, body, init, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -156,7 +156,7 @@ Response::Constructor(const GlobalObject& aGlobal,
     statusText = NS_LITERAL_CSTRING("OK");
   }
 
-  nsRefPtr<InternalResponse> internalResponse =
+  RefPtr<InternalResponse> internalResponse =
     new InternalResponse(aInit.mStatus, statusText);
 
   // Grab a valid channel info from the global so this response is 'valid' for
@@ -178,14 +178,14 @@ Response::Constructor(const GlobalObject& aGlobal,
     internalResponse->InitChannelInfo(worker->GetChannelInfo());
   }
 
-  nsRefPtr<Response> r = new Response(global, internalResponse);
+  RefPtr<Response> r = new Response(global, internalResponse);
 
   if (aInit.mHeaders.WasPassed()) {
     internalResponse->Headers()->Clear();
 
     // Instead of using Fill, create an object to allow the constructor to
     // unwrap the HeadersInit.
-    nsRefPtr<Headers> headers =
+    RefPtr<Headers> headers =
       Headers::Create(global, aInit.mHeaders.Value(), aRv);
     if (aRv.Failed()) {
       return nullptr;
@@ -230,8 +230,8 @@ Response::Clone(ErrorResult& aRv) const
     return nullptr;
   }
 
-  nsRefPtr<InternalResponse> ir = mInternalResponse->Clone();
-  nsRefPtr<Response> response = new Response(mOwner, ir);
+  RefPtr<InternalResponse> ir = mInternalResponse->Clone();
+  RefPtr<Response> response = new Response(mOwner, ir);
   return response.forget();
 }
 
@@ -245,7 +245,7 @@ Response::SetBody(nsIInputStream* aBody)
 already_AddRefed<InternalResponse>
 Response::GetInternalResponse() const
 {
-  nsRefPtr<InternalResponse> ref = mInternalResponse;
+  RefPtr<InternalResponse> ref = mInternalResponse;
   return ref.forget();
 }
 

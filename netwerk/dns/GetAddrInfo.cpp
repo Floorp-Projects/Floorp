@@ -209,7 +209,7 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult, uint16_t aAddressFamil
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsRefPtr<DnsapiInfo> dnsapi = nullptr;
+  RefPtr<DnsapiInfo> dnsapi = nullptr;
   {
     OffTheBooksMutexAutoLock lock(*gDnsapiInfoLock);
     dnsapi = gDnsapiInfo;

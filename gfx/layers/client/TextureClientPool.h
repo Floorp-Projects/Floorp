@@ -137,7 +137,7 @@ private:
   // Since JB, fence wait happens explicitly when fetching a client from the pool.
   std::stack<RefPtr<TextureClient> > mTextureClients;
   std::stack<RefPtr<TextureClient> > mTextureClientsDeferred;
-  nsRefPtr<nsITimer> mTimer;
+  RefPtr<nsITimer> mTimer;
   RefPtr<CompositableForwarder> mSurfaceAllocator;
 };
 

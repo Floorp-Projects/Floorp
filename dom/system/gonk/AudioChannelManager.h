@@ -67,7 +67,7 @@ public:
   IMPL_EVENT_HANDLER(headphoneschange)
 
   void GetAllowedAudioChannels(
-            nsTArray<nsRefPtr<mozilla::dom::BrowserElementAudioChannel>>& aAudioChannels,
+            nsTArray<RefPtr<mozilla::dom::BrowserElementAudioChannel>>& aAudioChannels,
             mozilla::ErrorResult& aRv);
 
 protected:

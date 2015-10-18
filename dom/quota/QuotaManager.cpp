@@ -144,14 +144,14 @@ enum AppId {
 class DirectoryLockImpl final
   : public DirectoryLock
 {
-  nsRefPtr<QuotaManager> mQuotaManager;
+  RefPtr<QuotaManager> mQuotaManager;
 
   const Nullable<PersistenceType> mPersistenceType;
   const nsCString mGroup;
   const OriginScope mOriginScope;
   const Nullable<bool> mIsApp;
   const Nullable<Client::Type> mClientType;
-  nsRefPtr<OpenDirectoryListener> mOpenListener;
+  RefPtr<OpenDirectoryListener> mOpenListener;
 
   nsTArray<DirectoryLockImpl*> mBlocking;
   nsTArray<DirectoryLockImpl*> mBlockedOn;
@@ -400,7 +400,7 @@ private:
     return !mOriginInfos.IsEmpty();
   }
 
-  nsTArray<nsRefPtr<OriginInfo> > mOriginInfos;
+  nsTArray<RefPtr<OriginInfo> > mOriginInfos;
 
   GroupInfoPair* mGroupInfoPair;
   PersistenceType mPersistenceType;
@@ -431,7 +431,7 @@ private:
     AssertCurrentThreadOwnsQuotaMutex();
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-    nsRefPtr<GroupInfo> groupInfo =
+    RefPtr<GroupInfo> groupInfo =
       GetGroupInfoForPersistenceType(aPersistenceType);
     return groupInfo.forget();
   }
@@ -442,7 +442,7 @@ private:
     AssertCurrentThreadOwnsQuotaMutex();
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-    nsRefPtr<GroupInfo>& groupInfo =
+    RefPtr<GroupInfo>& groupInfo =
       GetGroupInfoForPersistenceType(aPersistenceType);
     groupInfo = aGroupInfo;
   }
@@ -453,7 +453,7 @@ private:
     AssertCurrentThreadOwnsQuotaMutex();
     MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-    nsRefPtr<GroupInfo>& groupInfo =
+    RefPtr<GroupInfo>& groupInfo =
       GetGroupInfoForPersistenceType(aPersistenceType);
     groupInfo = nullptr;
   }
@@ -466,11 +466,11 @@ private:
     return mTemporaryStorageGroupInfo || mDefaultStorageGroupInfo;
   }
 
-  nsRefPtr<GroupInfo>&
+  RefPtr<GroupInfo>&
   GetGroupInfoForPersistenceType(PersistenceType aPersistenceType);
 
-  nsRefPtr<GroupInfo> mTemporaryStorageGroupInfo;
-  nsRefPtr<GroupInfo> mDefaultStorageGroupInfo;
+  RefPtr<GroupInfo> mTemporaryStorageGroupInfo;
+  RefPtr<GroupInfo> mDefaultStorageGroupInfo;
 };
 
 namespace {
@@ -484,7 +484,7 @@ class CollectOriginsHelper final
   CondVar mCondVar;
 
   // The members below are protected by mMutex.
-  nsTArray<nsRefPtr<DirectoryLockImpl>> mLocks;
+  nsTArray<RefPtr<DirectoryLockImpl>> mLocks;
   uint64_t mSizeToBeFreed;
   bool mWaiting;
 
@@ -496,7 +496,7 @@ public:
   // The returned value contains an aggregate size of those origins.
   int64_t
   BlockAndReturnOriginsForEviction(
-                                 nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks);
+                                 nsTArray<RefPtr<DirectoryLockImpl>>& aLocks);
 
 private:
   ~CollectOriginsHelper()
@@ -589,7 +589,7 @@ class NormalOriginOperationBase
   : public OriginOperationBase
   , public OpenDirectoryListener
 {
-  nsRefPtr<DirectoryLock> mDirectoryLock;
+  RefPtr<DirectoryLock> mDirectoryLock;
 
 protected:
   Nullable<PersistenceType> mPersistenceType;
@@ -767,11 +767,11 @@ private:
 class FinalizeOriginEvictionOp
   : public OriginOperationBase
 {
-  nsTArray<nsRefPtr<DirectoryLockImpl>> mLocks;
+  nsTArray<RefPtr<DirectoryLockImpl>> mLocks;
 
 public:
   explicit FinalizeOriginEvictionOp(
-                                  nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks)
+                                  nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
@@ -1374,7 +1374,7 @@ CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
 nsresult
 RestoreDirectoryMetadata(nsIFile* aDirectory, bool aPersistent)
 {
-  nsRefPtr<StorageDirectoryHelper> helper =
+  RefPtr<StorageDirectoryHelper> helper =
     new StorageDirectoryHelper(aDirectory, aPersistent);
 
   nsresult rv = helper->RestoreMetadataFile();
@@ -1829,7 +1829,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
 
   MOZ_ASSERT(mSize < aSize);
 
-  nsRefPtr<GroupInfo> complementaryGroupInfo =
+  RefPtr<GroupInfo> complementaryGroupInfo =
     groupInfo->mGroupInfoPair->LockedGetGroupInfo(
       ComplementaryPersistenceType(groupInfo->mPersistenceType));
 
@@ -1864,7 +1864,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   if (newTemporaryStorageUsage > quotaManager->mTemporaryStorageLimit) {
     // This will block the thread without holding the lock while waitting.
 
-    nsAutoTArray<nsRefPtr<DirectoryLockImpl>, 10> locks;
+    nsAutoTArray<RefPtr<DirectoryLockImpl>, 10> locks;
 
     uint64_t sizeToBeFreed =
       quotaManager->LockedCollectOriginsForEviction(delta, locks);
@@ -1878,7 +1878,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     {
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-      for (nsRefPtr<DirectoryLockImpl>& lock : locks) {
+      for (RefPtr<DirectoryLockImpl>& lock : locks) {
         MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
         MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
         MOZ_ASSERT(!lock->GetOriginScope().IsEmpty());
@@ -2006,7 +2006,7 @@ QuotaManager::GetOrCreate()
   }
 
   if (!gInstance) {
-    nsRefPtr<QuotaManager> instance(new QuotaManager());
+    RefPtr<QuotaManager> instance(new QuotaManager());
 
     nsresult rv = instance->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
@@ -2075,7 +2075,7 @@ QuotaManager::CreateDirectoryLock(Nullable<PersistenceType> aPersistenceType,
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() != Client::TYPE_MAX);
   MOZ_ASSERT_IF(!aInternal, aOpenListener);
 
-  nsRefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(this,
+  RefPtr<DirectoryLockImpl> lock = new DirectoryLockImpl(this,
                                                            aPersistenceType,
                                                            aGroup,
                                                            aOriginScope,
@@ -2119,7 +2119,7 @@ QuotaManager::CreateDirectoryLockForEviction(PersistenceType aPersistenceType,
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_INVALID);
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
-  nsRefPtr<DirectoryLockImpl> lock =
+  RefPtr<DirectoryLockImpl> lock =
     new DirectoryLockImpl(this,
                           Nullable<PersistenceType>(aPersistenceType),
                           aGroup,
@@ -2226,7 +2226,7 @@ QuotaManager::RemovePendingDirectoryLock(DirectoryLockImpl* aLock)
 uint64_t
 QuotaManager::CollectOriginsForEviction(
                                   uint64_t aMinSizeToBeFreed,
-                                  nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks)
+                                  nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLocks.IsEmpty());
@@ -2257,7 +2257,7 @@ QuotaManager::CollectOriginsForEviction(
 
       auto* closure = static_cast<Closure*>(aUserArg);
 
-      nsRefPtr<GroupInfo> groupInfo =
+      RefPtr<GroupInfo> groupInfo =
         aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
       if (groupInfo) {
         GetInactiveOriginInfos(groupInfo->mOriginInfos,
@@ -2277,7 +2277,7 @@ QuotaManager::CollectOriginsForEviction(
 
   private:
     static void
-    GetInactiveOriginInfos(nsTArray<nsRefPtr<OriginInfo>>& aOriginInfos,
+    GetInactiveOriginInfos(nsTArray<RefPtr<OriginInfo>>& aOriginInfos,
                            nsTArray<DirectoryLockImpl*>& aLocks,
                            nsTArray<OriginInfo*>& aInactiveOriginInfos)
     {
@@ -2367,7 +2367,7 @@ QuotaManager::CollectOriginsForEviction(
     // operations for them will be delayed (until origin eviction is finalized).
 
     for (OriginInfo* originInfo : inactiveOrigins) {
-      nsRefPtr<DirectoryLockImpl> lock =
+      RefPtr<DirectoryLockImpl> lock =
         CreateDirectoryLockForEviction(originInfo->mGroupInfo->mPersistenceType,
                                        originInfo->mGroupInfo->mGroup,
                                        originInfo->mOrigin,
@@ -2480,13 +2480,13 @@ QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
     // The hashtable is now responsible to delete the GroupInfoPair.
   }
 
-  nsRefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {
     groupInfo = new GroupInfo(pair, aPersistenceType, aGroup);
     pair->LockedSetGroupInfo(aPersistenceType, groupInfo);
   }
 
-  nsRefPtr<OriginInfo> originInfo =
+  RefPtr<OriginInfo> originInfo =
     new OriginInfo(groupInfo, aOrigin, aIsApp, aUsageBytes, aAccessTime);
   groupInfo->LockedAddOriginInfo(originInfo);
 }
@@ -2507,12 +2507,12 @@ QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
     return;
   }
 
-  nsRefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {
     return;
   }
 
-  nsRefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
+  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
   if (originInfo) {
     originInfo->LockedDecreaseUsage(aSize);
   }
@@ -2533,19 +2533,19 @@ QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
     return;
   }
 
-  nsRefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (!groupInfo) {
     return;
   }
 
-  nsRefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
+  RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(aOrigin);
   if (originInfo) {
     int64_t timestamp = PR_Now();
     originInfo->LockedUpdateAccessTime(timestamp);
 
     MutexAutoUnlock autoUnlock(mQuotaMutex);
 
-    nsRefPtr<SaveOriginAccessTimeOp> op =
+    RefPtr<SaveOriginAccessTimeOp> op =
       new SaveOriginAccessTimeOp(aPersistenceType, aOrigin, timestamp);
 
     op->RunImmediately();
@@ -2561,7 +2561,7 @@ QuotaManager::RemoveQuotaCallback(const nsACString& aKey,
   NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
   NS_ASSERTION(aValue, "Null pointer!");
 
-  nsRefPtr<GroupInfo> groupInfo =
+  RefPtr<GroupInfo> groupInfo =
     aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
   if (groupInfo) {
     groupInfo->LockedRemoveOriginInfos();
@@ -2622,7 +2622,7 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
   nsAutoCString tempStorage2;
   const nsCSubstring& origin = NS_EscapeURL(aOrigin, esc_Query, tempStorage2);
 
-  nsRefPtr<QuotaObject> result;
+  RefPtr<QuotaObject> result;
   {
     MutexAutoLock lock(mQuotaMutex);
 
@@ -2631,14 +2631,14 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
       return nullptr;
     }
 
-    nsRefPtr<GroupInfo> groupInfo =
+    RefPtr<GroupInfo> groupInfo =
       pair->LockedGetGroupInfo(aPersistenceType);
 
     if (!groupInfo) {
       return nullptr;
     }
 
-    nsRefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(origin);
+    RefPtr<OriginInfo> originInfo = groupInfo->LockedGetOriginInfo(origin);
 
     if (!originInfo) {
       return nullptr;
@@ -2688,7 +2688,7 @@ QuotaManager::AbortOperationsForProcess(ContentParentId aContentParentId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  for (nsRefPtr<Client>& client : mClients) {
+  for (RefPtr<Client>& client : mClients) {
     client->AbortOperationsForProcess(aContentParentId);
   }
 }
@@ -3057,7 +3057,7 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
   }
 
   // Create real metadata files for origin directories in persistent storage.
-  nsRefPtr<StorageDirectoryHelper> helper =
+  RefPtr<StorageDirectoryHelper> helper =
     new StorageDirectoryHelper(persistentStorageDir, /* aPersistent */ true);
 
   rv = helper->CreateOrUpgradeMetadataFiles(/* aCreate */ true);
@@ -3146,7 +3146,7 @@ QuotaManager::OpenDirectory(PersistenceType aPersistenceType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<DirectoryLockImpl> lock =
+  RefPtr<DirectoryLockImpl> lock =
     CreateDirectoryLock(Nullable<PersistenceType>(aPersistenceType),
                         aGroup,
                         OriginScope::FromOrigin(aOrigin),
@@ -3166,7 +3166,7 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<DirectoryLockImpl> lock =
+  RefPtr<DirectoryLockImpl> lock =
     CreateDirectoryLock(aPersistenceType,
                         EmptyCString(),
                         aOriginScope,
@@ -3700,7 +3700,7 @@ QuotaManager::GetUsageForPrincipal(nsIPrincipal* aPrincipal,
   nsresult rv = GetInfoFromPrincipal(aPrincipal, &group, &origin, &isApp);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<GetUsageOp> op =
+  RefPtr<GetUsageOp> op =
     new GetUsageOp(group, origin, isApp, aPrincipal, aCallback);
 
   op->RunImmediately();
@@ -3719,7 +3719,7 @@ QuotaManager::Clear()
     return NS_OK;
   }
 
-  nsRefPtr<ResetOrClearOp> op = new ResetOrClearOp(/* aClear */ true);
+  RefPtr<ResetOrClearOp> op = new ResetOrClearOp(/* aClear */ true);
 
   op->RunImmediately();
 
@@ -3755,7 +3755,7 @@ QuotaManager::ClearStoragesForPrincipal(nsIPrincipal* aPrincipal,
   nsAutoCString pattern;
   GetOriginPatternString(attrs.mAppId, attrs.mInBrowser, origin, pattern);
 
-  nsRefPtr<OriginClearOp> op =
+  RefPtr<OriginClearOp> op =
     new OriginClearOp(persistenceType, OriginScope::FromPattern(pattern));
 
   op->RunImmediately();
@@ -3773,7 +3773,7 @@ QuotaManager::Reset()
     return NS_OK;
   }
 
-  nsRefPtr<ResetOrClearOp> op = new ResetOrClearOp(/* aClear */ false);
+  RefPtr<ResetOrClearOp> op = new ResetOrClearOp(/* aClear */ false);
 
   op->RunImmediately();
 
@@ -3828,7 +3828,7 @@ QuotaManager::Observe(nsISupports* aSubject,
         NS_WARNING("Failed to shutdown IO thread!");
       }
 
-      for (nsRefPtr<DirectoryLockImpl>& lock : mPendingDirectoryLocks) {
+      for (RefPtr<DirectoryLockImpl>& lock : mPendingDirectoryLocks) {
         lock->Invalidate();
       }
     }
@@ -3843,7 +3843,7 @@ QuotaManager::Observe(nsISupports* aSubject,
                "during shutdown and will be aborted!");
 
     // Abort all operations.
-    for (nsRefPtr<Client>& client : mClients) {
+    for (RefPtr<Client>& client : mClients) {
       client->AbortOperations(NullCString());
     }
 
@@ -3883,11 +3883,11 @@ QuotaManager::Observe(nsISupports* aSubject,
 uint64_t
 QuotaManager::LockedCollectOriginsForEviction(
                                   uint64_t aMinSizeToBeFreed,
-                                  nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks)
+                                  nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
 {
   mQuotaMutex.AssertCurrentThreadOwns();
 
-  nsRefPtr<CollectOriginsHelper> helper =
+  RefPtr<CollectOriginsHelper> helper =
     new CollectOriginsHelper(mQuotaMutex, aMinSizeToBeFreed);
 
   // Unlock while calling out to XPCOM (code behind the dispatch method needs
@@ -3918,7 +3918,7 @@ QuotaManager::LockedRemoveQuotaForOrigin(PersistenceType aPersistenceType,
     return;
   }
 
-  nsRefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
   if (groupInfo) {
     groupInfo->LockedRemoveOriginInfo(aOrigin);
 
@@ -3944,7 +3944,7 @@ QuotaManager::ClearStoragesForApp(uint32_t aAppId, bool aBrowserOnly)
   nsAutoCString pattern;
   GetOriginPatternStringMaybeIgnoreBrowser(aAppId, aBrowserOnly, pattern);
 
-  nsRefPtr<OriginClearOp> op =
+  RefPtr<OriginClearOp> op =
     new OriginClearOp(Nullable<PersistenceType>(),
                       OriginScope::FromPattern(pattern));
 
@@ -3964,13 +3964,13 @@ QuotaManager::GetOriginsExceedingGroupLimit(const nsACString& aKey,
 
   uint64_t groupUsage = 0;
 
-  nsRefPtr<GroupInfo> temporaryGroupInfo =
+  RefPtr<GroupInfo> temporaryGroupInfo =
     aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
   if (temporaryGroupInfo) {
     groupUsage += temporaryGroupInfo->mUsage;
   }
 
-  nsRefPtr<GroupInfo> defaultGroupInfo =
+  RefPtr<GroupInfo> defaultGroupInfo =
     aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
   if (defaultGroupInfo) {
     groupUsage += defaultGroupInfo->mUsage;
@@ -4021,7 +4021,7 @@ QuotaManager::GetAllTemporaryStorageOrigins(const nsACString& aKey,
   nsTArray<OriginInfo*>* originInfos =
     static_cast<nsTArray<OriginInfo*>*>(aUserArg);
 
-  nsRefPtr<GroupInfo> groupInfo =
+  RefPtr<GroupInfo> groupInfo =
     aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
   if (groupInfo) {
     originInfos->AppendElements(groupInfo->mOriginInfos);
@@ -4135,11 +4135,11 @@ QuotaManager::DeleteFilesForOrigin(PersistenceType aPersistenceType,
 
 void
 QuotaManager::FinalizeOriginEviction(
-                                  nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks)
+                                  nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<FinalizeOriginEvictionOp> op =
+  RefPtr<FinalizeOriginEvictionOp> op =
     new FinalizeOriginEvictionOp(aLocks);
 
   if (IsOnIOThread()) {
@@ -4235,9 +4235,9 @@ GroupInfo::LockedGetOriginInfo(const nsACString& aOrigin)
 {
   AssertCurrentThreadOwnsQuotaMutex();
 
-  for (nsRefPtr<OriginInfo>& originInfo : mOriginInfos) {
+  for (RefPtr<OriginInfo>& originInfo : mOriginInfos) {
     if (originInfo->mOrigin == aOrigin) {
-      nsRefPtr<OriginInfo> result = originInfo;
+      RefPtr<OriginInfo> result = originInfo;
       return result.forget();
     }
   }
@@ -4309,7 +4309,7 @@ GroupInfo::LockedRemoveOriginInfos()
   }
 }
 
-nsRefPtr<GroupInfo>&
+RefPtr<GroupInfo>&
 GroupInfoPair::GetGroupInfoForPersistenceType(PersistenceType aPersistenceType)
 {
   switch (aPersistenceType) {
@@ -4339,7 +4339,7 @@ CollectOriginsHelper::CollectOriginsHelper(mozilla::Mutex& aMutex,
 
 int64_t
 CollectOriginsHelper::BlockAndReturnOriginsForEviction(
-                                  nsTArray<nsRefPtr<DirectoryLockImpl>>& aLocks)
+                                  nsTArray<RefPtr<DirectoryLockImpl>>& aLocks)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Wrong thread!");
   mMutex.AssertCurrentThreadOwns();
@@ -4362,7 +4362,7 @@ CollectOriginsHelper::Run()
 
   // We use extra stack vars here to avoid race detector warnings (the same
   // memory accessed with and without the lock held).
-  nsTArray<nsRefPtr<DirectoryLockImpl>> locks;
+  nsTArray<RefPtr<DirectoryLockImpl>> locks;
   uint64_t sizeToBeFreed =
     quotaManager->CollectOriginsForEviction(mMinSizeToBeFreed, locks);
 
@@ -4953,7 +4953,7 @@ FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   PROFILER_LABEL("Quota", "FinalizeOriginEvictionOp::DoDirectoryWork",
                  js::ProfileEntry::Category::OTHER);
 
-  for (nsRefPtr<DirectoryLockImpl>& lock : mLocks) {
+  for (RefPtr<DirectoryLockImpl>& lock : mLocks) {
     aQuotaManager->OriginClearCompleted(lock->GetPersistenceType().Value(),
                                         lock->GetOriginScope(),
                                         lock->GetIsApp().Value());

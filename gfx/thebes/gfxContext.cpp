@@ -89,7 +89,7 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
 gfxContext::ContextForDrawTarget(DrawTarget* aTarget)
 {
   Matrix transform = aTarget->GetTransform();
-  nsRefPtr<gfxContext> result = new gfxContext(aTarget);
+  RefPtr<gfxContext> result = new gfxContext(aTarget);
   result->SetMatrix(ThebesMatrix(transform));
   return result.forget();
 }
@@ -763,7 +763,7 @@ gfxContext::SetPattern(gfxPattern *pattern)
 already_AddRefed<gfxPattern>
 gfxContext::GetPattern()
 {
-  nsRefPtr<gfxPattern> pat;
+  RefPtr<gfxPattern> pat;
 
   AzureState &state = CurrentState();
   if (state.pattern) {
@@ -962,7 +962,7 @@ gfxContext::PopGroup()
   mat.Invert();
   mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
-  nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat);
+  RefPtr<gfxPattern> pat = new gfxPattern(src, mat);
 
   return pat.forget();
 }

@@ -14,7 +14,6 @@
 
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SurfaceFormat;
-using mozilla::RefPtr;
 
 NS_IMPL_ISUPPORTS(nsImageToPixbuf, nsIImageToPixbuf)
 

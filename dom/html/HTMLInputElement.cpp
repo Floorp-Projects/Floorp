@@ -251,12 +251,12 @@ class HTMLInputElementState final : public nsISupports
       mValue = aValue;
     }
 
-    const nsTArray<nsRefPtr<BlobImpl>>& GetBlobImpls()
+    const nsTArray<RefPtr<BlobImpl>>& GetBlobImpls()
     {
       return mBlobImpls;
     }
 
-    void SetBlobImpls(const nsTArray<nsRefPtr<File>>& aFile)
+    void SetBlobImpls(const nsTArray<RefPtr<File>>& aFile)
     {
       mBlobImpls.Clear();
       for (uint32_t i = 0, len = aFile.Length(); i < len; ++i) {
@@ -274,7 +274,7 @@ class HTMLInputElementState final : public nsISupports
     ~HTMLInputElementState() {}
 
     nsString mValue;
-    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
+    nsTArray<RefPtr<BlobImpl>> mBlobImpls;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -378,7 +378,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   mFilePicker->GetMode(&mode);
 
   // Collect new selected filenames
-  nsTArray<nsRefPtr<File>> newFiles;
+  nsTArray<RefPtr<File>> newFiles;
   if (mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
@@ -409,7 +409,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 
     nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(tmp);
     if (blob) {
-      nsRefPtr<File> file = static_cast<Blob*>(blob.get())->ToFile();
+      RefPtr<File> file = static_cast<Blob*>(blob.get())->ToFile();
       newFiles.AppendElement(file);
     }
   }
@@ -466,7 +466,7 @@ private:
    */
   nsresult UpdateInternal(const nsAString& aColor, bool aTrustedUpdate);
 
-  nsRefPtr<HTMLInputElement> mInput;
+  RefPtr<HTMLInputElement> mInput;
   nsCOMPtr<nsIColorPicker>   mColorPicker;
   bool                       mValueChanged;
 };
@@ -666,7 +666,7 @@ HTMLInputElement::InitFilePicker(FilePickerType aType)
   // Set default directry and filename
   nsAutoString defaultName;
 
-  const nsTArray<nsRefPtr<File>>& oldFiles = GetFilesInternal();
+  const nsTArray<RefPtr<File>>& oldFiles = GetFilesInternal();
 
   nsCOMPtr<nsIFilePickerShownCallback> callback =
     new HTMLInputElement::nsFilePickerShownCallback(this, filePicker);
@@ -808,7 +808,7 @@ UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir)
   aDir->GetPath(unicodePath);
   if (unicodePath.IsEmpty()) // nothing to do
     return NS_OK;
-  nsRefPtr<nsVariantCC> prefValue = new nsVariantCC();
+  RefPtr<nsVariantCC> prefValue = new nsVariantCC();
   prefValue->SetAsAString(unicodePath);
 
   // Use the document's current load context to ensure that the content pref
@@ -971,8 +971,8 @@ HTMLInputElement::Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) co
 {
   *aResult = nullptr;
 
-  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
-  nsRefPtr<HTMLInputElement> it = new HTMLInputElement(ni, NOT_FROM_PARSER);
+  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+  RefPtr<HTMLInputElement> it = new HTMLInputElement(ni, NOT_FROM_PARSER);
 
   nsresult rv = const_cast<HTMLInputElement*>(this)->CopyInnerTo(it);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1474,7 +1474,7 @@ HTMLInputElement::IsValueEmpty() const
 void
 HTMLInputElement::ClearFiles(bool aSetValueChanged)
 {
-  nsTArray<nsRefPtr<File>> files;
+  nsTArray<RefPtr<File>> files;
   SetFiles(files, aSetValueChanged);
 }
 
@@ -1644,7 +1644,7 @@ HTMLInputElement::GetList(nsIDOMHTMLElement** aValue)
 {
   *aValue = nullptr;
 
-  nsRefPtr<nsGenericHTMLElement> element = GetList();
+  RefPtr<nsGenericHTMLElement> element = GetList();
   if (!element) {
     return NS_OK;
   }
@@ -2097,9 +2097,9 @@ HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
   if (!global) {
     return;
   }
-  nsTArray<nsRefPtr<File>> files;
+  nsTArray<RefPtr<File>> files;
   for (uint32_t i = 0; i < aFiles.Length(); ++i) {
-    nsRefPtr<File> file = File::Create(global, aFiles[i].get()->Impl());
+    RefPtr<File> file = File::Create(global, aFiles[i].get()->Impl());
     MOZ_ASSERT(file);
 
     files.AppendElement(file);
@@ -2115,7 +2115,7 @@ HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames, Er
     return;
   }
 
-  nsTArray<nsRefPtr<File>> files;
+  nsTArray<RefPtr<File>> files;
   for (uint32_t i = 0; i < aFileNames.Length(); ++i) {
     nsCOMPtr<nsIFile> file;
 
@@ -2134,7 +2134,7 @@ HTMLInputElement::MozSetFileNameArray(const Sequence< nsString >& aFileNames, Er
 
     if (file) {
       nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
-      nsRefPtr<File> domFile = File::CreateFromFile(global, file);
+      RefPtr<File> domFile = File::CreateFromFile(global, file);
       files.AppendElement(domFile);
     } else {
       continue; // Not much we can do if the file doesn't exist
@@ -2384,7 +2384,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 }
 
 void
-HTMLInputElement::SetFiles(const nsTArray<nsRefPtr<File>>& aFiles,
+HTMLInputElement::SetFiles(const nsTArray<RefPtr<File>>& aFiles,
                            bool aSetValueChanged)
 {
   mFiles.Clear();
@@ -2397,14 +2397,14 @@ void
 HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
                            bool aSetValueChanged)
 {
-  nsRefPtr<FileList> files = static_cast<FileList*>(aFiles);
+  RefPtr<FileList> files = static_cast<FileList*>(aFiles);
   mFiles.Clear();
 
   if (aFiles) {
     uint32_t listLength;
     aFiles->GetLength(&listLength);
     for (uint32_t i = 0; i < listLength; i++) {
-      nsRefPtr<File> file = files->Item(i);
+      RefPtr<File> file = files->Item(i);
       mFiles.AppendElement(file);
     }
   }
@@ -2514,7 +2514,7 @@ HTMLInputElement::UpdateFileList()
   if (mFileList) {
     mFileList->Clear();
 
-    const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
+    const nsTArray<RefPtr<File>>& files = GetFilesInternal();
     for (uint32_t i = 0; i < files.Length(); ++i) {
       if (!mFileList->Append(files[i])) {
         return NS_ERROR_FAILURE;
@@ -2818,7 +2818,7 @@ HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     // bug 592124.
     // If there's only one text control, just submit the form
     // Hold strong ref across the event
-    nsRefPtr<mozilla::dom::HTMLFormElement> form = mForm;
+    RefPtr<mozilla::dom::HTMLFormElement> form = mForm;
     InternalFormEvent event(true, eFormSubmit);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(mForm, &event, &status);
@@ -2959,7 +2959,7 @@ HTMLInputElement::Select()
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  nsRefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
+  RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
   if (state == eInactiveWindow) {
     if (fm)
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
@@ -3378,7 +3378,7 @@ HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent)
     if (frame) {
       frame->UpdateForValueChange();
     }
-    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    RefPtr<AsyncEventDispatcher> asyncDispatcher =
       new AsyncEventDispatcher(this, NS_LITERAL_STRING("input"), true, false);
     asyncDispatcher->RunDOMEventWhenSafe();
   }
@@ -3762,7 +3762,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);
               if (lastFocusMethod &
                   (nsIFocusManager::FLAG_BYKEY | nsIFocusManager::FLAG_BYMOVEFOCUS)) {
-                nsRefPtr<nsPresContext> presContext =
+                RefPtr<nsPresContext> presContext =
                   GetPresContext(eForComposedDoc);
                 if (DispatchSelectEvent(presContext)) {
                   SelectAll(presContext);
@@ -3830,7 +3830,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
               if (container) {
                 nsAutoString name;
                 GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
-                nsRefPtr<HTMLInputElement> selectedRadioButton;
+                RefPtr<HTMLInputElement> selectedRadioButton;
                 container->GetNextRadioButton(name, isMovingBack, this,
                                               getter_AddRefs(selectedRadioButton));
                 if (selectedRadioButton) {
@@ -4034,7 +4034,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                               HasAttr(kNameSpaceID_None, nsGkAtoms::formnovalidate) ||
                               mForm->CheckValidFormSubmission())) {
               // Hold a strong ref while dispatching
-              nsRefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+              RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
               presShell->HandleDOMEventWithTarget(mForm, &event, &status);
               aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
             }
@@ -4865,7 +4865,7 @@ MakeOrReuseFileSystem(const nsAString& aNewLocalRootPath,
 {
   MOZ_ASSERT(aWindow);
 
-  nsRefPtr<OSFileSystem> fs;
+  RefPtr<OSFileSystem> fs;
   if (aFS) {
     const nsAString& prevLocalRootPath = aFS->GetLocalRootPath();
     if (aNewLocalRootPath == prevLocalRootPath) {
@@ -4888,7 +4888,7 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   if (mFilesAndDirectoriesPromise) {
-    return nsRefPtr<Promise>(mFilesAndDirectoriesPromise).forget();
+    return RefPtr<Promise>(mFilesAndDirectoriesPromise).forget();
   }
 
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
@@ -4897,12 +4897,12 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> p = Promise::Create(global, aRv);
+  RefPtr<Promise> p = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  const nsTArray<nsRefPtr<File>>& filesAndDirs = GetFilesInternal();
+  const nsTArray<RefPtr<File>>& filesAndDirs = GetFilesInternal();
 
   Sequence<OwningFileOrDirectory> filesAndDirsSeq;
 
@@ -4912,7 +4912,7 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
-  nsRefPtr<OSFileSystem> fs;
+  RefPtr<OSFileSystem> fs;
   for (uint32_t i = 0; i < filesAndDirs.Length(); ++i) {
     if (filesAndDirs[i]->IsDirectory()) {
 #if defined(ANDROID) || defined(MOZ_B2G)
@@ -4995,7 +4995,7 @@ HTMLInputElement::GetControllers(nsIControllers** aResult)
   NS_ENSURE_ARG_POINTER(aResult);
 
   ErrorResult rv;
-  nsRefPtr<nsIControllers> controller = GetControllers(rv);
+  RefPtr<nsIControllers> controller = GetControllers(rv);
   controller.forget(aResult);
   return rv.StealNSResult();
 }
@@ -5036,7 +5036,7 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
     aRv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
     if (!aRv.Failed()) {
       aRv = textControlFrame->ScrollSelectionIntoView();
-      nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
                                  true, false);
       asyncDispatcher->PostDOMEvent();
@@ -5304,7 +5304,7 @@ HTMLInputElement::SetSelectionEnd(int32_t aSelectionEnd)
 NS_IMETHODIMP
 HTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
 {
-  nsRefPtr<FileList> list = GetFiles();
+  RefPtr<FileList> list = GetFiles();
   list.forget(aFileList);
   return NS_OK;
 }
@@ -5421,7 +5421,7 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
                           const nsAString& aEventType)
 {
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aTarget);
-  nsRefPtr<Event> event = NS_NewDOMEvent(element, aPresContext, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(element, aPresContext, nullptr);
   event->InitEvent(aEventType, true, true);
   event->SetTrusted(true);
 
@@ -5567,7 +5567,7 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   if (mType == NS_FORM_INPUT_FILE) {
     // Submit files
 
-    const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
+    const nsTArray<RefPtr<File>>& files = GetFilesInternal();
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
       aFormSubmission->AddNameFilePair(name, files[i]);
@@ -5601,7 +5601,7 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 NS_IMETHODIMP
 HTMLInputElement::SaveState()
 {
-  nsRefPtr<HTMLInputElementState> inputState;
+  RefPtr<HTMLInputElementState> inputState;
   switch (GetValueMode()) {
     case VALUE_MODE_DEFAULT_ON:
       if (mCheckedChanged) {
@@ -5818,14 +5818,14 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = inputState->GetBlobImpls();
+          const nsTArray<RefPtr<BlobImpl>>& blobImpls = inputState->GetBlobImpls();
 
           nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
           MOZ_ASSERT(global);
 
-          nsTArray<nsRefPtr<File>> files;
+          nsTArray<RefPtr<File>> files;
           for (uint32_t i = 0, len = blobImpls.Length(); i < len; ++i) {
-            nsRefPtr<File> file = File::Create(global, blobImpls[i]);
+            RefPtr<File> file = File::Create(global, blobImpls[i]);
             MOZ_ASSERT(file);
 
             files.AppendElement(file);
@@ -6343,7 +6343,7 @@ HTMLInputElement::IsValueMissing() const
       return IsValueEmpty();
     case VALUE_MODE_FILENAME:
     {
-      const nsTArray<nsRefPtr<File>>& files = GetFilesInternal();
+      const nsTArray<RefPtr<File>>& files = GetFilesInternal();
       return files.IsEmpty();
     }
     case VALUE_MODE_DEFAULT_ON:

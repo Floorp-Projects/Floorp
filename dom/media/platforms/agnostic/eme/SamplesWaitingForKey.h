@@ -45,10 +45,10 @@ protected:
 
 private:
   Mutex mMutex;
-  nsRefPtr<MediaDataDecoder> mDecoder;
-  nsRefPtr<TaskQueue> mTaskQueue;
-  nsRefPtr<CDMProxy> mProxy;
-  nsTArray<nsRefPtr<MediaRawData>> mSamples;
+  RefPtr<MediaDataDecoder> mDecoder;
+  RefPtr<TaskQueue> mTaskQueue;
+  RefPtr<CDMProxy> mProxy;
+  nsTArray<RefPtr<MediaRawData>> mSamples;
 };
 
 } // namespace mozilla

@@ -14,7 +14,7 @@
 #include "nsIInputStream.h"
 #include "nsIProperties.h"
 #include "nsNetUtil.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 
@@ -87,7 +87,7 @@ LoadFile(const char* aRelativePath)
 bool
 IsSolidColor(SourceSurface* aSurface, BGRAColor aColor, bool aFuzzy)
 {
-  nsRefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
   ASSERT_TRUE_OR_RETURN(dataSurface != nullptr, false);
 
   ASSERT_EQ_OR_RETURN(dataSurface->Stride(), aSurface->GetSize().width * 4,

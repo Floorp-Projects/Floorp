@@ -76,7 +76,7 @@ BluetoothGattAttributeEvent::Constructor(
   bool aBubbles,
   bool aCancelable)
 {
-  nsRefPtr<BluetoothGattAttributeEvent> e =
+  RefPtr<BluetoothGattAttributeEvent> e =
     new BluetoothGattAttributeEvent(aOwner);
   bool trusted = e->Init(aOwner);
 
@@ -105,7 +105,7 @@ BluetoothGattAttributeEvent::Constructor(
 {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
 
-  nsRefPtr<BluetoothGattAttributeEvent> e =
+  RefPtr<BluetoothGattAttributeEvent> e =
     Constructor(owner, aType, aEventInitDict.mAddress,
                 aEventInitDict.mRequestId, aEventInitDict.mCharacteristic,
                 aEventInitDict.mDescriptor, nullptr,

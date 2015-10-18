@@ -190,7 +190,7 @@ protected:
 
   virtual void GetItemValueText(DOMString& text) override;
   virtual void SetItemValueText(const nsAString& text) override;
-  nsRefPtr<nsDOMTokenList > mRelList;
+  RefPtr<nsDOMTokenList > mRelList;
 };
 
 } // namespace dom

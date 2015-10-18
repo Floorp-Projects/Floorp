@@ -42,7 +42,7 @@ TestInterfaceIterableDouble::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<TestInterfaceIterableDouble> r = new TestInterfaceIterableDouble(window);
+  RefPtr<TestInterfaceIterableDouble> r = new TestInterfaceIterableDouble(window);
   return r.forget();
 }
 

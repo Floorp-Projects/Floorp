@@ -76,13 +76,13 @@ MediaTimer::OnMediaTimerThread()
   return rv;
 }
 
-nsRefPtr<MediaTimerPromise>
+RefPtr<MediaTimerPromise>
 MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
 {
   MonitorAutoLock mon(mMonitor);
   TIMER_LOG("MediaTimer::WaitUntil %lld", RelativeMicroseconds(aTimeStamp));
   Entry e(aTimeStamp, aCallSite);
-  nsRefPtr<MediaTimerPromise> p = e.mPromise.get();
+  RefPtr<MediaTimerPromise> p = e.mPromise.get();
   mEntries.push(e);
   ScheduleUpdate();
   return p;

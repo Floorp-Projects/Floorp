@@ -349,7 +349,7 @@ NS_PurgeAtomTable()
 AtomImpl::AtomImpl(const nsAString& aString, uint32_t aHash)
 {
   mLength = aString.Length();
-  nsRefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
+  RefPtr<nsStringBuffer> buf = nsStringBuffer::FromString(aString);
   if (buf) {
     mString = static_cast<char16_t*>(buf->Data());
   } else {
@@ -638,7 +638,7 @@ NS_NewAtom(const nsACString& aUTF8String)
   // Actually, now there is, sort of: ForgetSharedBuffer.
   nsString str;
   CopyUTF8toUTF16(aUTF8String, str);
-  nsRefPtr<AtomImpl> atom = new AtomImpl(str, hash);
+  RefPtr<AtomImpl> atom = new AtomImpl(str, hash);
 
   he->mAtom = atom;
 
@@ -665,7 +665,7 @@ NS_NewAtom(const nsAString& aUTF16String)
     return atom.forget();
   }
 
-  nsRefPtr<AtomImpl> atom = new AtomImpl(aUTF16String, hash);
+  RefPtr<AtomImpl> atom = new AtomImpl(aUTF16String, hash);
   he->mAtom = atom;
 
   return atom.forget();

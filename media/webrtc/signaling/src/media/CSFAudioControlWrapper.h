@@ -37,6 +37,6 @@ namespace CSF
 	private:
 		virtual ~AudioControlWrapper();
 
-		mozilla::RefPtr<AudioControl> _realAudioControl;
+		RefPtr<AudioControl> _realAudioControl;
 	};
 };

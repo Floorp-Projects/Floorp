@@ -719,7 +719,7 @@ nsEditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsRefPtr<Selection> selection = mEditor->GetSelection();
+  RefPtr<Selection> selection = mEditor->GetSelection();
   if (selection) {
     selection->Collapse(parent, offset);
   }
@@ -955,7 +955,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
   NS_ENSURE_TRUE(dataTransfer, false);
 
-  nsRefPtr<DOMStringList> types = dataTransfer->Types();
+  RefPtr<DOMStringList> types = dataTransfer->Types();
 
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
@@ -999,7 +999,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return true;
   }
 
-  nsRefPtr<Selection> selection = mEditor->GetSelection();
+  RefPtr<Selection> selection = mEditor->GetSelection();
   if (!selection) {
     return false;
   }
@@ -1024,7 +1024,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, false);
 
   for (int32_t i = 0; i < rangeCount; i++) {
-    nsRefPtr<nsRange> range = selection->GetRangeAt(i);
+    RefPtr<nsRange> range = selection->GetRangeAt(i);
     if (!range) {
       // Don't bail yet, iterate through them all
       continue;

@@ -120,7 +120,7 @@ main(int aArgc,
     }
 #endif
 
-  nsRefPtr<WaitForConnectionClosed> spinClose = new WaitForConnectionClosed();
+  RefPtr<WaitForConnectionClosed> spinClose = new WaitForConnectionClosed();
 
   // Tinderboxes are constantly on idle.  Since idle tasks can interact with
   // tests, causing random failures, disable the idle service.

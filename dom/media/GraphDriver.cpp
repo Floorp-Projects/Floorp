@@ -123,7 +123,7 @@ public:
     // blocking.
     if (mDriver->AsAudioCallbackDriver()) {
       LIFECYCLE_LOG("Releasing audio driver off main thread.");
-      nsRefPtr<AsyncCubebTask> releaseEvent =
+      RefPtr<AsyncCubebTask> releaseEvent =
         new AsyncCubebTask(mDriver->AsAudioCallbackDriver(),
                            AsyncCubebOperation::SHUTDOWN);
       mDriver = nullptr;
@@ -135,14 +135,14 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<GraphDriver> mDriver;
+  RefPtr<GraphDriver> mDriver;
 };
 
 void GraphDriver::Shutdown()
 {
   if (AsAudioCallbackDriver()) {
     LIFECYCLE_LOG("Releasing audio driver off main thread (GraphDriver::Shutdown).\n");
-    nsRefPtr<AsyncCubebTask> releaseEvent =
+    RefPtr<AsyncCubebTask> releaseEvent =
       new AsyncCubebTask(AsAudioCallbackDriver(), AsyncCubebOperation::SHUTDOWN);
     releaseEvent->Dispatch();
   } else {
@@ -183,7 +183,7 @@ public:
       // not in the situation where we've fallen back to a system clock driver
       // because the osx audio stack is currently switching output device.
       if (!mDriver->mPreviousDriver->AsAudioCallbackDriver()->IsSwitchingDevice()) {
-        nsRefPtr<AsyncCubebTask> releaseEvent =
+        RefPtr<AsyncCubebTask> releaseEvent =
           new AsyncCubebTask(mDriver->mPreviousDriver->AsAudioCallbackDriver(), AsyncCubebOperation::SHUTDOWN);
         mDriver->mPreviousDriver = nullptr;
         releaseEvent->Dispatch();
@@ -606,7 +606,7 @@ AudioCallbackDriver::Start()
   // because it is a blocking operation.
   if (NS_IsMainThread()) {
     STREAM_LOG(LogLevel::Debug, ("Starting audio threads for MediaStreamGraph %p from a new thread.", mGraphImpl));
-    nsRefPtr<AsyncCubebTask> initEvent =
+    RefPtr<AsyncCubebTask> initEvent =
       new AsyncCubebTask(this, AsyncCubebOperation::INIT);
     initEvent->Dispatch();
   } else {
@@ -664,7 +664,7 @@ AudioCallbackDriver::Revive()
     mNextDriver->Start();
   } else {
     STREAM_LOG(LogLevel::Debug, ("Starting audio threads for MediaStreamGraph %p from a new thread.", mGraphImpl));
-    nsRefPtr<AsyncCubebTask> initEvent =
+    RefPtr<AsyncCubebTask> initEvent =
       new AsyncCubebTask(this, AsyncCubebOperation::INIT);
     initEvent->Dispatch();
   }

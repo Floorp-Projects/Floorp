@@ -320,7 +320,7 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 already_AddRefed<Image>
 ImageClientSingle::CreateImage(ImageFormat aFormat)
 {
-  nsRefPtr<Image> img;
+  RefPtr<Image> img;
   switch (aFormat) {
     case ImageFormat::PLANAR_YCBCR:
       img = new SharedPlanarYCbCrImage(this);
@@ -376,7 +376,7 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
 already_AddRefed<Image>
 ImageClientOverlay::CreateImage(ImageFormat aFormat)
 {
-  nsRefPtr<Image> img;
+  RefPtr<Image> img;
   switch (aFormat) {
     case ImageFormat::OVERLAY_IMAGE:
       img = new OverlayImage();

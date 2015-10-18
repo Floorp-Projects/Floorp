@@ -91,6 +91,12 @@
         buttonEl.disabled = true;
       }
 
+      function doOverride(buttonEl) {
+        var event = new CustomEvent("AboutNetErrorOverride", {bubbles:true});
+        document.dispatchEvent(event);
+        retryThis(buttonEl);
+      }
+
       function toggleDisplay(node) {
         toggle = {
           '': 'block',
@@ -121,6 +127,23 @@
         });
       }
 
+      function showWeakCryptoAdvanced() {
+        // Display weak crypto advanced UI
+        document.getElementById("weakCryptoAdvanced").style.display = "block";
+
+        // Get the hostname and add it to the panel
+        var panel = document.getElementById("weakCryptoAdvancedPanel");
+        for (var span of panel.querySelectorAll("span.hostname")) {
+          span.textContent = document.location.hostname;
+        }
+
+        // Register click handler for the weakCryptoAdvancedPanel
+        document.getElementById("showWeakCryptoAdvancedPanel")
+                .addEventListener("click", () => toggleDisplay(panel));
+
+        var overrideLink = document.getElementById("overrideWeakCrypto");
+        overrideLink.addEventListener("click", () => doOverride(overrideLink), false);
+      }
 
       function sendErrorReport() {
         var event = new CustomEvent("AboutNetErrorSendReport", {bubbles:true});
@@ -170,6 +193,16 @@
           var retryBtn = document.getElementById("errorTryAgain");
           retryBtn.textContent = learnMoreText.textContent;
           retryBtn.setAttribute("onclick", "learnMoreSSLV3()");
+        }
+
+        if (err == "weakCryptoUsed") {
+          var learnMoreText = document.getElementById("learn_more_weak_crypto");
+
+          document.getElementById("errorTitle").setAttribute("weakCrypto", "true");
+
+          var retryBtn = document.getElementById("errorTryAgain");
+          retryBtn.textContent = learnMoreText.textContent;
+          retryBtn.setAttribute("onclick", "learnMoreWeakCrypto()");
         }
 
         // remove undisplayed errors to avoid bug 39098
@@ -239,6 +272,9 @@
               reportBtn.addEventListener('click', sendErrorReport, false);
               retryBtn.addEventListener('click', sendErrorReport, false);
             }
+          }
+          if (getErrorCode() == "weakCryptoUsed") {
+            showWeakCryptoAdvanced();
           }
         }.bind(this), true, true);
 
@@ -351,6 +387,12 @@
         // Ensure users don't re-click the button:
         e.target.disabled = true;
       }
+
+      function learnMoreWeakCrypto() {
+        location.href = "https://support.mozilla.org/kb/how-resolve-weak-crypto-error-messages-firefox";
+        // Ensure users don't re-click the button:
+        e.target.disabled = true;
+      }
     ]]></script>
   </head>
 
@@ -385,6 +427,7 @@
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
         <h1 id="et_sslv3Used">&sslv3Used.title;</h1>
+        <h1 id="et_weakCryptoUsed">&weakCryptoUsed.title;</h1>
       </div>
       <div id="errorDescriptionsContainer">
         <div id="ed_generic">&generic.longDesc;</div>
@@ -414,6 +457,8 @@
         <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
         <div id="ed_sslv3Used">&sslv3Used.longDesc;</div>
         <div id="learn_more_ssl3">&sslv3Used.learnMore;</div>
+        <div id="ed_weakCryptoUsed">&weakCryptoUsed.longDesc;</div>
+        <div id="learn_more_weak_crypto">&weakCryptoUsed.learnMore;</div>
       </div>
     </div>
 
@@ -485,6 +530,21 @@
             <span id="reportSendingMessage">&errorReporting.sending;</span>
             <span id="reportSentMessage">&errorReporting.sent;</span>
           </span>
+        </div>
+      </div>
+
+      <!-- UI for option to override weak crypto errors. Removed on
+           init for other error types .-->
+      <div id="weakCryptoAdvanced">
+        <a id="showWeakCryptoAdvancedPanel" href="#">&weakCryptoAdvanced.title;<span class="downArrow"> &#x25bc;</span></a>
+      </div>
+
+      <div id="weakCryptoAdvancedPanel">
+        <div id="weakCryptoAdvancedDescription">
+          <p>&weakCryptoAdvanced.longDesc;</p>
+        </div>
+        <div id="overrideWeakCryptoPanel">
+          <a id="overrideWeakCrypto" href="#">&weakCryptoAdvanced.override;</a>
         </div>
       </div>
 

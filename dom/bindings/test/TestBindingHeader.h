@@ -325,10 +325,10 @@ public:
 
   already_AddRefed<TestNonWrapperCacheInterface> ReceiveNonWrapperCacheInterface();
   already_AddRefed<TestNonWrapperCacheInterface> ReceiveNullableNonWrapperCacheInterface();
-  void ReceiveNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&);
-  void ReceiveNullableNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&);
-  void ReceiveNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&);
-  void ReceiveNullableNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&);
+  void ReceiveNonWrapperCacheInterfaceSequence(nsTArray<RefPtr<TestNonWrapperCacheInterface> >&);
+  void ReceiveNullableNonWrapperCacheInterfaceSequence(nsTArray<RefPtr<TestNonWrapperCacheInterface> >&);
+  void ReceiveNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<RefPtr<TestNonWrapperCacheInterface> > >&);
+  void ReceiveNullableNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<RefPtr<TestNonWrapperCacheInterface> > >&);
 
   already_AddRefed<IndirectlyImplementedInterface> ReceiveOther();
   already_AddRefed<IndirectlyImplementedInterface> ReceiveNullableOther();
@@ -368,7 +368,7 @@ public:
   void SetNonNullCallbackInterface(TestCallbackInterface&);
   already_AddRefed<TestCallbackInterface> GetNullableCallbackInterface();
   void SetNullableCallbackInterface(TestCallbackInterface*);
-  void PassOptionalCallbackInterface(const Optional<nsRefPtr<TestCallbackInterface> >&);
+  void PassOptionalCallbackInterface(const Optional<RefPtr<TestCallbackInterface> >&);
   void PassOptionalNonNullCallbackInterface(const Optional<OwningNonNull<TestCallbackInterface> >&);
   void PassOptionalCallbackInterfaceWithDefault(TestCallbackInterface*);
 
@@ -390,28 +390,28 @@ public:
   void PassSequenceOfNullableInts(const Sequence<Nullable<int32_t> >&);
   void PassOptionalSequenceOfNullableInts(const Optional<Sequence<Nullable<int32_t> > > &);
   void PassOptionalNullableSequenceOfNullableInts(const Optional<Nullable<Sequence<Nullable<int32_t> > > > &);
-  void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
-  void ReceiveCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
-  void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &);
-  void ReceiveNullableCallbackObjectSequence(nsTArray< nsRefPtr<TestCallbackInterface> > &);
-  void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
-  void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< nsRefPtr<TestInterface> > >&);
-  void ReceiveWeakCastableObjectSequence(nsTArray<nsRefPtr<TestInterface>> &);
-  void ReceiveWeakNullableCastableObjectSequence(nsTArray<nsRefPtr<TestInterface>> &);
-  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<nsRefPtr<TestInterface>> >&);
-  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<nsRefPtr<TestInterface>> >&);
+  void ReceiveCastableObjectSequence(nsTArray< RefPtr<TestInterface> > &);
+  void ReceiveCallbackObjectSequence(nsTArray< RefPtr<TestCallbackInterface> > &);
+  void ReceiveNullableCastableObjectSequence(nsTArray< RefPtr<TestInterface> > &);
+  void ReceiveNullableCallbackObjectSequence(nsTArray< RefPtr<TestCallbackInterface> > &);
+  void ReceiveCastableObjectNullableSequence(Nullable< nsTArray< RefPtr<TestInterface> > >&);
+  void ReceiveNullableCastableObjectNullableSequence(Nullable< nsTArray< RefPtr<TestInterface> > >&);
+  void ReceiveWeakCastableObjectSequence(nsTArray<RefPtr<TestInterface>> &);
+  void ReceiveWeakNullableCastableObjectSequence(nsTArray<RefPtr<TestInterface>> &);
+  void ReceiveWeakCastableObjectNullableSequence(Nullable< nsTArray<RefPtr<TestInterface>> >&);
+  void ReceiveWeakNullableCastableObjectNullableSequence(Nullable< nsTArray<RefPtr<TestInterface>> >&);
   void PassCastableObjectSequence(const Sequence< OwningNonNull<TestInterface> >&);
-  void PassNullableCastableObjectSequence(const Sequence< nsRefPtr<TestInterface> > &);
+  void PassNullableCastableObjectSequence(const Sequence< RefPtr<TestInterface> > &);
   void PassCastableObjectNullableSequence(const Nullable< Sequence< OwningNonNull<TestInterface> > >&);
-  void PassNullableCastableObjectNullableSequence(const Nullable< Sequence< nsRefPtr<TestInterface> > >&);
+  void PassNullableCastableObjectNullableSequence(const Nullable< Sequence< RefPtr<TestInterface> > >&);
   void PassOptionalSequence(const Optional<Sequence<int32_t> >&);
   void PassOptionalSequenceWithDefaultValue(const Sequence<int32_t> &);
   void PassOptionalNullableSequence(const Optional<Nullable<Sequence<int32_t> > >&);
   void PassOptionalNullableSequenceWithDefaultValue(const Nullable< Sequence<int32_t> >&);
   void PassOptionalNullableSequenceWithDefaultValue2(const Nullable< Sequence<int32_t> >&);
   void PassOptionalObjectSequence(const Optional<Sequence<OwningNonNull<TestInterface> > >&);
-  void PassExternalInterfaceSequence(const Sequence<nsRefPtr<TestExternalInterface> >&);
-  void PassNullableExternalInterfaceSequence(const Sequence<nsRefPtr<TestExternalInterface> >&);
+  void PassExternalInterfaceSequence(const Sequence<RefPtr<TestExternalInterface> >&);
+  void PassNullableExternalInterfaceSequence(const Sequence<RefPtr<TestExternalInterface> >&);
 
   void ReceiveStringSequence(nsTArray<nsString>&);
   void PassStringSequence(const Sequence<nsString>&);
@@ -438,15 +438,15 @@ public:
   void PassOptionalMozMapOfNullableInts(const Optional<MozMap<Nullable<int32_t> > > &);
   void PassOptionalNullableMozMapOfNullableInts(const Optional<Nullable<MozMap<Nullable<int32_t> > > > &);
   void PassCastableObjectMozMap(const MozMap< OwningNonNull<TestInterface> >&);
-  void PassNullableCastableObjectMozMap(const MozMap< nsRefPtr<TestInterface> > &);
+  void PassNullableCastableObjectMozMap(const MozMap< RefPtr<TestInterface> > &);
   void PassCastableObjectNullableMozMap(const Nullable< MozMap< OwningNonNull<TestInterface> > >&);
-  void PassNullableCastableObjectNullableMozMap(const Nullable< MozMap< nsRefPtr<TestInterface> > >&);
+  void PassNullableCastableObjectNullableMozMap(const Nullable< MozMap< RefPtr<TestInterface> > >&);
   void PassOptionalMozMap(const Optional<MozMap<int32_t> >&);
   void PassOptionalNullableMozMap(const Optional<Nullable<MozMap<int32_t> > >&);
   void PassOptionalNullableMozMapWithDefaultValue(const Nullable< MozMap<int32_t> >&);
   void PassOptionalObjectMozMap(const Optional<MozMap<OwningNonNull<TestInterface> > >&);
-  void PassExternalInterfaceMozMap(const MozMap<nsRefPtr<TestExternalInterface> >&);
-  void PassNullableExternalInterfaceMozMap(const MozMap<nsRefPtr<TestExternalInterface> >&);
+  void PassExternalInterfaceMozMap(const MozMap<RefPtr<TestExternalInterface> >&);
+  void PassNullableExternalInterfaceMozMap(const MozMap<RefPtr<TestExternalInterface> >&);
   void PassStringMozMap(const MozMap<nsString>&);
   void PassByteStringMozMap(const MozMap<nsCString>&);
   void PassMozMapOfMozMaps(const MozMap< MozMap<int32_t> >&);
@@ -528,12 +528,12 @@ public:
   void PassCallback(TestCallback&);
   void PassNullableCallback(TestCallback*);
   void PassOptionalCallback(const Optional<OwningNonNull<TestCallback> >&);
-  void PassOptionalNullableCallback(const Optional<nsRefPtr<TestCallback> >&);
+  void PassOptionalNullableCallback(const Optional<RefPtr<TestCallback> >&);
   void PassOptionalNullableCallbackWithDefaultValue(TestCallback*);
   already_AddRefed<TestCallback> ReceiveCallback();
   already_AddRefed<TestCallback> ReceiveNullableCallback();
   void PassNullableTreatAsNullCallback(TestTreatAsNullCallback*);
-  void PassOptionalNullableTreatAsNullCallback(const Optional<nsRefPtr<TestTreatAsNullCallback> >&);
+  void PassOptionalNullableTreatAsNullCallback(const Optional<RefPtr<TestTreatAsNullCallback> >&);
   void PassOptionalNullableTreatAsNullCallbackWithDefaultValue(TestTreatAsNullCallback*);
   void SetTreatAsNullCallback(TestTreatAsNullCallback&);
   already_AddRefed<TestTreatAsNullCallback> TreatAsNullCallback();
@@ -712,11 +712,11 @@ public:
   void PassPromise(Promise&);
   void PassNullablePromise(Promise*);
   void PassOptionalPromise(const Optional<OwningNonNull<Promise>>&);
-  void PassOptionalNullablePromise(const Optional<nsRefPtr<Promise>>&);
+  void PassOptionalNullablePromise(const Optional<RefPtr<Promise>>&);
   void PassOptionalNullablePromiseWithDefaultValue(Promise*);
   void PassPromiseSequence(const Sequence<OwningNonNull<Promise>>&);
-  void PassPromiseMozMap(const MozMap<nsRefPtr<Promise>>&);
-  void PassNullablePromiseSequence(const Sequence<nsRefPtr<Promise>> &);
+  void PassPromiseMozMap(const MozMap<RefPtr<Promise>>&);
+  void PassNullablePromiseSequence(const Sequence<RefPtr<Promise>> &);
   Promise* ReceivePromise();
   already_AddRefed<Promise> ReceiveAddrefedPromise();
 
@@ -1036,7 +1036,7 @@ private:
   void PassOptionalNullableArrayBuffer(Optional<ArrayBuffer*>&) = delete;
   void PassOptionalEnum(Optional<TestEnum>&) = delete;
   void PassOptionalCallback(JSContext*, Optional<OwningNonNull<TestCallback> >&) = delete;
-  void PassOptionalNullableCallback(JSContext*, Optional<nsRefPtr<TestCallback> >&) = delete;
+  void PassOptionalNullableCallback(JSContext*, Optional<RefPtr<TestCallback> >&) = delete;
   void PassOptionalAny(Optional<JS::Handle<JS::Value> >&) = delete;
 
   // And test that string stuff is always const

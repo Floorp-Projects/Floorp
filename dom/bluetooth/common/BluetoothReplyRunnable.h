@@ -69,7 +69,7 @@ private:
    * TODO: remove mDOMRequest once all methods adopt Promise.
    */
   nsCOMPtr<nsIDOMDOMRequest> mDOMRequest;
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
 
   BluetoothStatus mErrorStatus;
   nsString mErrorString;
@@ -110,7 +110,7 @@ public:
     virtual void OnSuccessFired() override;
     virtual void OnErrorFired() override;
 
-    nsRefPtr<BluetoothReplyTaskQueue> mRootQueue;
+    RefPtr<BluetoothReplyTaskQueue> mRootQueue;
   };
   friend class BluetoothReplyTaskQueue::SubReplyRunnable;
 
@@ -165,8 +165,8 @@ public:
     virtual ~SubTask();
 
   private:
-    nsRefPtr<BluetoothReplyTaskQueue> mRootQueue;
-    nsRefPtr<SubReplyRunnable> mReply;
+    RefPtr<BluetoothReplyTaskQueue> mRootQueue;
+    RefPtr<SubReplyRunnable> mReply;
   };
 
   BluetoothReplyTaskQueue(BluetoothReplyRunnable* aReply);
@@ -188,8 +188,8 @@ private:
   virtual void OnSuccessFired();
   virtual void OnErrorFired();
 
-  nsRefPtr<BluetoothReplyRunnable> mReply;
-  nsTArray<nsRefPtr<SubTask>> mTasks;
+  RefPtr<BluetoothReplyRunnable> mReply;
+  nsTArray<RefPtr<SubTask>> mTasks;
 };
 
 END_BLUETOOTH_NAMESPACE

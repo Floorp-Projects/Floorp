@@ -148,7 +148,7 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
   // stop scripts
-  nsRefPtr<nsScriptLoader> loader;
+  RefPtr<nsScriptLoader> loader;
   bool scripts_enabled = false;
   if (document) {
     loader = document->ScriptLoader();

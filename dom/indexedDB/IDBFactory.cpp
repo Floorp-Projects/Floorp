@@ -57,7 +57,7 @@ const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
 class IDBFactory::BackgroundCreateCallback final
   : public nsIIPCBackgroundChildCreateCallback
 {
-  nsRefPtr<IDBFactory> mFactory;
+  RefPtr<IDBFactory> mFactory;
   LoggingInfo mLoggingInfo;
 
 public:
@@ -81,7 +81,7 @@ private:
 
 struct IDBFactory::PendingRequestInfo
 {
-  nsRefPtr<IDBOpenDBRequest> mRequest;
+  RefPtr<IDBOpenDBRequest> mRequest;
   FactoryRequestParams mParams;
 
   PendingRequestInfo(IDBOpenDBRequest* aRequest,
@@ -166,7 +166,7 @@ IDBFactory::CreateForWindow(nsPIDOMWindow* aWindow,
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
 
-  nsRefPtr<IDBFactory> factory = new IDBFactory();
+  RefPtr<IDBFactory> factory = new IDBFactory();
   factory->mPrincipalInfo = Move(principalInfo);
   factory->mWindow = aWindow;
   factory->mTabChild = TabChild::GetFrom(aWindow);
@@ -322,7 +322,7 @@ IDBFactory::CreateForJSInternal(JSContext* aCx,
     return NS_OK;
   }
 
-  nsRefPtr<IDBFactory> factory = new IDBFactory();
+  RefPtr<IDBFactory> factory = new IDBFactory();
   factory->mPrincipalInfo = aPrincipalInfo.forget();
   factory->mOwningObject = aOwningObject;
   mozilla::HoldJSObjects(factory.get());
@@ -715,7 +715,7 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
       newIDBThreadLocal = idbThreadLocal = new ThreadLocal(id);
     }
 
-    nsRefPtr<BackgroundCreateCallback> cb =
+    RefPtr<BackgroundCreateCallback> cb =
       new BackgroundCreateCallback(this, idbThreadLocal->GetLoggingInfo());
     if (NS_WARN_IF(!BackgroundChild::GetOrCreateForCurrentThread(cb))) {
       IDB_REPORT_INTERNAL_ERR();
@@ -735,7 +735,7 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
   }
 
   AutoJSAPI autoJS;
-  nsRefPtr<IDBOpenDBRequest> request;
+  RefPtr<IDBOpenDBRequest> request;
 
   if (mWindow) {
     AutoJSContext cx;
@@ -947,7 +947,7 @@ IDBFactory::BackgroundCreateCallback::ActorCreated(PBackgroundChild* aActor)
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(mFactory);
 
-  nsRefPtr<IDBFactory> factory;
+  RefPtr<IDBFactory> factory;
   mFactory.swap(factory);
 
   factory->BackgroundActorCreated(aActor, mLoggingInfo);
@@ -958,7 +958,7 @@ IDBFactory::BackgroundCreateCallback::ActorFailed()
 {
   MOZ_ASSERT(mFactory);
 
-  nsRefPtr<IDBFactory> factory;
+  RefPtr<IDBFactory> factory;
   mFactory.swap(factory);
 
   factory->BackgroundActorFailed();

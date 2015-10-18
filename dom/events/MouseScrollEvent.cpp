@@ -94,7 +94,7 @@ NS_NewDOMMouseScrollEvent(EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetMouseScrollEvent* aEvent)
 {
-  nsRefPtr<MouseScrollEvent> it =
+  RefPtr<MouseScrollEvent> it =
     new MouseScrollEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

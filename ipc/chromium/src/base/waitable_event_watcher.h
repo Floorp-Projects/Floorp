@@ -142,10 +142,10 @@ class WaitableEventWatcher
   void WillDestroyCurrentMessageLoop();
 
   MessageLoop* message_loop_;
-  nsRefPtr<Flag> cancel_flag_;
+  RefPtr<Flag> cancel_flag_;
   AsyncWaiter* waiter_;
   AsyncCallbackTask* callback_task_;
-  nsRefPtr<WaitableEvent::WaitableEventKernel> kernel_;
+  RefPtr<WaitableEvent::WaitableEventKernel> kernel_;
 #endif
 };
 

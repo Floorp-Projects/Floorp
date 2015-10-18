@@ -113,7 +113,7 @@ public:
 
       NS_IMETHOD Run() override
       {
-        nsRefPtr<DeviceStorageUsedSpaceCache::CacheEntry> cacheEntry;
+        RefPtr<DeviceStorageUsedSpaceCache::CacheEntry> cacheEntry;
         cacheEntry = mCache->GetCacheEntry(mStorageName);
         if (cacheEntry) {
           cacheEntry->mDirty = true;
@@ -130,7 +130,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mIOThread);
 
-    nsRefPtr<InvalidateRunnable> r = new InvalidateRunnable(this, aStorageName);
+    RefPtr<InvalidateRunnable> r = new InvalidateRunnable(this, aStorageName);
     mIOThread->Dispatch(r, NS_DISPATCH_NORMAL);
   }
 
@@ -173,7 +173,7 @@ private:
   };
   already_AddRefed<CacheEntry> GetCacheEntry(const nsAString& aStorageName);
 
-  nsTArray<nsRefPtr<CacheEntry>> mCacheEntries;
+  nsTArray<RefPtr<CacheEntry>> mCacheEntries;
 
   nsCOMPtr<nsIThread> mIOThread;
 
@@ -232,7 +232,7 @@ private:
   virtual ~nsDOMDeviceStorageCursor();
 
   bool mOkToCallContinue;
-  nsRefPtr<DeviceStorageCursorRequest> mRequest;
+  RefPtr<DeviceStorageCursorRequest> mRequest;
 };
 
 class DeviceStorageRequestManager final
@@ -278,7 +278,7 @@ private:
   DeviceStorageRequestManager& operator=(const DeviceStorageRequestManager&) = delete;
 
   struct ListEntry {
-    nsRefPtr<mozilla::dom::DOMRequest> mRequest;
+    RefPtr<mozilla::dom::DOMRequest> mRequest;
     uint32_t mId;
     bool mCursor;
   };
@@ -383,11 +383,11 @@ protected:
   nsresult AllowInternal();
   nsresult SendToParentProcess();
 
-  nsRefPtr<DeviceStorageRequestManager> mManager;
-  nsRefPtr<DeviceStorageFile> mFile;
+  RefPtr<DeviceStorageRequestManager> mManager;
+  RefPtr<DeviceStorageFile> mFile;
   uint32_t mId;
-  nsRefPtr<mozilla::dom::BlobImpl> mBlob;
-  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
+  RefPtr<mozilla::dom::BlobImpl> mBlob;
+  RefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   DeviceStorageAccessType mAccess;
   bool mSendToParent;
   bool mUseMainThread;
@@ -430,7 +430,7 @@ protected:
   size_t mIndex;
   PRTime mSince;
   nsString mStorageType;
-  nsTArray<nsRefPtr<DeviceStorageFile> > mFiles;
+  nsTArray<RefPtr<DeviceStorageFile> > mFiles;
 };
 
 #endif

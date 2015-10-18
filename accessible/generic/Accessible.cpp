@@ -107,9 +107,10 @@ Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc),
   mParent(nullptr), mIndexInParent(-1), mChildrenFlags(eChildrenUninitialized),
   mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0),
-  mIndexOfEmbeddedChild(-1), mRoleMapEntry(nullptr)
+  mRoleMapEntry(nullptr)
 {
   mBits.groupInfo = nullptr;
+  mInt.mIndexOfEmbeddedChild = -1;
 }
 
 Accessible::~Accessible()
@@ -1786,7 +1787,7 @@ Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
     }
 
   private:
-    nsRefPtr<Accessible> mAcc;
+    RefPtr<Accessible> mAcc;
     nsCOMPtr<nsIContent> mContent;
     uint32_t mIdx;
   };
@@ -1822,7 +1823,7 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
 
   nsSize size = frame->GetSize();
 
-  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   int32_t x = presContext->AppUnitsToDevPixels(point.x + size.width / 2);
   int32_t y = presContext->AppUnitsToDevPixels(point.y + size.height / 2);
 
@@ -2001,7 +2002,7 @@ Accessible::UnbindFromParent()
 #endif
   mParent = nullptr;
   mIndexInParent = -1;
-  mIndexOfEmbeddedChild = -1;
+  mInt.mIndexOfEmbeddedChild = -1;
   if (IsProxy())
     MOZ_CRASH("this should never be called on proxy wrappers");
 

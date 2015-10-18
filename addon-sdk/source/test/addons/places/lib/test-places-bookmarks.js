@@ -799,7 +799,9 @@ exports.testCaching = function (assert, done) {
     off(stream, 'data', handle);
   }).then(done).catch(assert.fail);
 
-  function handle ({data}) count++
+  function handle ({data}) {
+    return count++;
+  }
 };
 
 /*

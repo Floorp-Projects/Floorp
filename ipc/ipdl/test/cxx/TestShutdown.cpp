@@ -26,7 +26,7 @@ TestShutdownParent::ActorDestroy(ActorDestroyReason why)
 void
 TestShutdownSubParent::ActorDestroy(ActorDestroyReason why)
 {
-    if (Manager()->ManagedPTestShutdownSubParent().Length() == 0)
+    if (Manager()->ManagedPTestShutdownSubParent().Count() == 0)
         fail("manager should still have managees!");
 
     if (mExpectCrash && AbnormalShutdown != why)
@@ -34,14 +34,14 @@ TestShutdownSubParent::ActorDestroy(ActorDestroyReason why)
     else if (!mExpectCrash && AbnormalShutdown == why)
         fail("wasn't expecting crash!");
 
-    if (mExpectCrash && 0 == ManagedPTestShutdownSubsubParent().Length())
+    if (mExpectCrash && 0 == ManagedPTestShutdownSubsubParent().Count())
         fail("expected to *still* have kids");
 }
 
 void
 TestShutdownSubsubParent::ActorDestroy(ActorDestroyReason why)
 {
-    if (Manager()->ManagedPTestShutdownSubsubParent().Length() == 0)
+    if (Manager()->ManagedPTestShutdownSubsubParent().Count() == 0)
         fail("manager should still have managees!");
 
     if (mExpectParentDeleted && AncestorDeletion != why)
@@ -206,7 +206,7 @@ TestShutdownSubChild::AnswerStackFrame()
 void
 TestShutdownSubChild::ActorDestroy(ActorDestroyReason why)
 {
-    if (Manager()->ManagedPTestShutdownSubChild().Length() == 0)
+    if (Manager()->ManagedPTestShutdownSubChild().Count() == 0)
         fail("manager should still have managees!");
 
     if (mExpectCrash && AbnormalShutdown != why)
@@ -214,14 +214,14 @@ TestShutdownSubChild::ActorDestroy(ActorDestroyReason why)
     else if (!mExpectCrash && AbnormalShutdown == why)
         fail("wasn't expecting crash!");
 
-    if (mExpectCrash && 0 == ManagedPTestShutdownSubsubChild().Length())
+    if (mExpectCrash && 0 == ManagedPTestShutdownSubsubChild().Count())
         fail("expected to *still* have kids");
 }
 
 void
 TestShutdownSubsubChild::ActorDestroy(ActorDestroyReason why)
 {
-    if (Manager()->ManagedPTestShutdownSubsubChild().Length() == 0)
+    if (Manager()->ManagedPTestShutdownSubsubChild().Count() == 0)
         fail("manager should still have managees!");
 
     if (mExpectParentDeleted && AncestorDeletion != why)

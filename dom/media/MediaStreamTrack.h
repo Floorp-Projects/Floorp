@@ -72,7 +72,7 @@ public:
 protected:
   virtual ~MediaStreamTrack();
 
-  nsRefPtr<DOMMediaStream> mOwningStream;
+  RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
   nsString mID;
   bool mEnded;

@@ -54,7 +54,7 @@ public:
 
 
   ePrintDataType               mType;            // the type of data this is (Printing or Print Preview)
-  nsRefPtr<nsDeviceContext>   mPrintDC;
+  RefPtr<nsDeviceContext>   mPrintDC;
   FILE                        *mDebugFilePtr;    // a file where information can go to when printing
 
   nsPrintObject *                mPrintObject;

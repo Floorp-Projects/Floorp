@@ -30,7 +30,7 @@
 #include "nsIAppsService.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
@@ -266,7 +266,7 @@ BackgroundParentImpl::AllocPVsyncParent()
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  nsRefPtr<mozilla::layout::VsyncParent> actor =
+  RefPtr<mozilla::layout::VsyncParent> actor =
       mozilla::layout::VsyncParent::Create();
   // There still has one ref-count after return, and it will be released in
   // DeallocPVsyncParent().
@@ -281,7 +281,7 @@ BackgroundParentImpl::DeallocPVsyncParent(PVsyncParent* aActor)
   MOZ_ASSERT(aActor);
 
   // This actor already has one ref-count. Please check AllocPVsyncParent().
-  nsRefPtr<mozilla::layout::VsyncParent> actor =
+  RefPtr<mozilla::layout::VsyncParent> actor =
       dont_AddRef(static_cast<mozilla::layout::VsyncParent*>(aActor));
   return true;
 }
@@ -293,7 +293,7 @@ BackgroundParentImpl::AllocPCamerasParent()
   AssertIsOnBackgroundThread();
 
 #ifdef MOZ_WEBRTC
-  nsRefPtr<mozilla::camera::CamerasParent> actor =
+  RefPtr<mozilla::camera::CamerasParent> actor =
       mozilla::camera::CamerasParent::Create();
   return actor.forget().take();
 #else
@@ -309,7 +309,7 @@ BackgroundParentImpl::DeallocPCamerasParent(camera::PCamerasParent *aActor)
   MOZ_ASSERT(aActor);
 
 #ifdef MOZ_WEBRTC
-  nsRefPtr<mozilla::camera::CamerasParent> actor =
+  RefPtr<mozilla::camera::CamerasParent> actor =
       dont_AddRef(static_cast<mozilla::camera::CamerasParent*>(aActor));
 #endif
   return true;
@@ -344,7 +344,7 @@ public:
 private:
   ~InitUDPSocketParentCallback() {};
 
-  nsRefPtr<UDPSocketParent> mActor;
+  RefPtr<UDPSocketParent> mActor;
   nsCString mFilter;
 };
 
@@ -355,7 +355,7 @@ BackgroundParentImpl::AllocPUDPSocketParent(const OptionalPrincipalInfo& /* unus
                                             const nsCString& /* unused */)
   -> PUDPSocketParent*
 {
-  nsRefPtr<UDPSocketParent> p = new UDPSocketParent(this);
+  RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
 
   return p.forget().take();
 }
@@ -440,7 +440,7 @@ public:
 
     struct MOZ_STACK_CLASS RunRAII
     {
-      explicit RunRAII(nsRefPtr<ContentParent>& aContentParent)
+      explicit RunRAII(RefPtr<ContentParent>& aContentParent)
         : mContentParent(aContentParent)
       {}
 
@@ -449,7 +449,7 @@ public:
         mContentParent = nullptr;
       }
 
-      nsRefPtr<ContentParent>& mContentParent;
+      RefPtr<ContentParent>& mContentParent;
     };
 
     RunRAII raii(mContentParent);
@@ -480,7 +480,7 @@ public:
   }
 
 private:
-  nsRefPtr<ContentParent> mContentParent;
+  RefPtr<ContentParent> mContentParent;
   PrincipalInfo mPrincipalInfo;
   nsCString mOrigin;
   nsCOMPtr<nsIThread> mBackgroundThread;
@@ -499,7 +499,7 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
 
-  nsRefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
+  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
 
   // If the ContentParent is null we are dealing with a same-process actor.
   if (!parent) {
@@ -507,7 +507,7 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
     return true;
   }
 
-  nsRefPtr<CheckPrincipalRunnable> runnable =
+  RefPtr<CheckPrincipalRunnable> runnable =
     new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
   nsresult rv = NS_DispatchToMainThread(runnable);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));
@@ -558,7 +558,7 @@ BackgroundParentImpl::RecvShutdownServiceWorkerRegistrar()
     return false;
   }
 
-  nsRefPtr<dom::ServiceWorkerRegistrar> service =
+  RefPtr<dom::ServiceWorkerRegistrar> service =
     dom::ServiceWorkerRegistrar::Get();
   MOZ_ASSERT(service);
 

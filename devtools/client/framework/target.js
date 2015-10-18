@@ -713,17 +713,13 @@ function WorkerTarget(workerClient) {
  * for remote tabs (from which a TabClient can then be lazily obtained),
  * WorkerTarget is constructed with a WorkerClient directly.
  *
- * The reason for this is that in order to get notifications when a worker
- * closes/freezes/thaws, the UI needs to attach to each worker anyway, so by
- * the time a WorkerTarget for a given worker is created, a WorkerClient for
- * that worker will already be available. Consequently, there is no need to
- * obtain a WorkerClient lazily.
- *
  * WorkerClient is designed to mimic the interface of TabClient as closely as
  * possible. This allows us to debug workers as if they were ordinary tabs,
  * requiring only minimal changes to the rest of the frontend.
  */
 WorkerTarget.prototype = {
+  destroy: function () {},
+
   get isRemote() {
     return true;
   },
@@ -737,12 +733,7 @@ WorkerTarget.prototype = {
   },
 
   get form() {
-    return {
-      from: this._workerClient.actor,
-      type: "attached",
-      isFrozen: this._workerClient.isFrozen,
-      url: this._workerClient.url
-    };
+    return {};
   },
 
   get activeTab() {
@@ -755,7 +746,7 @@ WorkerTarget.prototype = {
 
   destroy: function() {},
 
-  hasActor: function() {
+  hasActor: function (name) {
     return false;
   },
 
@@ -763,5 +754,7 @@ WorkerTarget.prototype = {
     return undefined;
   },
 
-  makeRemote: function() {}
+  makeRemote: function () {
+    return Promise.resolve();
+  }
 };

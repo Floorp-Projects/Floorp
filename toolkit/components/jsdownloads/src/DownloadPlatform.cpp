@@ -153,7 +153,7 @@ nsresult DownloadPlatform::MapUrlToZone(const nsAString& aURL,
                                         uint32_t* aZone)
 {
 #ifdef XP_WIN
-  nsRefPtr<IInternetSecurityManager> inetSecMgr;
+  RefPtr<IInternetSecurityManager> inetSecMgr;
   if (FAILED(CoCreateInstance(CLSID_InternetSecurityManager, NULL,
                               CLSCTX_ALL, IID_IInternetSecurityManager,
                               getter_AddRefs(inetSecMgr)))) {

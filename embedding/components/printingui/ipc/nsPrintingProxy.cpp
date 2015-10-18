@@ -50,7 +50,7 @@ nsPrintingProxy::GetInstance()
     ClearOnShutdown(&sPrintingProxyInstance);
   }
 
-  nsRefPtr<nsPrintingProxy> inst = sPrintingProxyInstance.get();
+  RefPtr<nsPrintingProxy> inst = sPrintingProxyInstance.get();
   return inst.forget();
 }
 
@@ -100,7 +100,7 @@ nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
   // nested event loop while we wait for the results of the dialog
   // to be returned to us.
 
-  nsRefPtr<PrintSettingsDialogChild> dialog = new PrintSettingsDialogChild();
+  RefPtr<PrintSettingsDialogChild> dialog = new PrintSettingsDialogChild();
   SendPPrintSettingsDialogConstructor(dialog);
 
   mozilla::unused << SendShowPrintDialog(dialog, pBrowser, inSettings);
@@ -144,7 +144,7 @@ nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
   nsCOMPtr<nsITabChild> tabchild = do_GetInterface(owner);
   TabChild* pBrowser = static_cast<TabChild*>(tabchild.get());
 
-  nsRefPtr<PrintProgressDialogChild> dialogChild =
+  RefPtr<PrintProgressDialogChild> dialogChild =
     new PrintProgressDialogChild(openDialogObserver);
 
   SendPPrintProgressDialogConstructor(dialogChild);

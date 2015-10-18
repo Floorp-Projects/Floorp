@@ -13,38 +13,40 @@ const { isPrivate } = require('sdk/private-browsing');
 const { isTabPBSupported, isWindowPBSupported } = require('sdk/private-browsing/utils');
 const { cleanUI } = require('sdk/test/utils');
 
-function openWebpage(url, enablePrivate) new Promise((resolve, reject) => {
-  if (xulApp.is("Fennec")) {
-    let chromeWindow = getMostRecentBrowserWindow();
-    let rawTab = openTab(chromeWindow, url, {
-      isPrivate: enablePrivate
-    });
+function openWebpage(url, enablePrivate) {
+  return new Promise((resolve, reject) => {
+    if (xulApp.is("Fennec")) {
+      let chromeWindow = getMostRecentBrowserWindow();
+      let rawTab = openTab(chromeWindow, url, {
+        isPrivate: enablePrivate
+      });
 
-    resolve(() => new Promise(resolve => {
-      closeTab(rawTab);
-      resolve();
-    }));
-  }
-  else {
-    windowHelpers.open("", {
-      features: {
-        toolbar: true,
-        private: enablePrivate
-      }
-    }).
-    then((chromeWindow) => {
-      if (isPrivate(chromeWindow) !== !!enablePrivate) {
-        reject(new Error("Window should have Private set to " + !!enablePrivate));
-      }
+      resolve(() => new Promise(resolve => {
+        closeTab(rawTab);
+        resolve();
+      }));
+    }
+    else {
+      windowHelpers.open("", {
+        features: {
+          toolbar: true,
+          private: enablePrivate
+        }
+      }).
+        then((chromeWindow) => {
+          if (isPrivate(chromeWindow) !== !!enablePrivate) {
+            reject(new Error("Window should have Private set to " + !!enablePrivate));
+          }
 
-      let tab = getActiveTab(chromeWindow);
-      setTabURL(tab, url);
+          let tab = getActiveTab(chromeWindow);
+          setTabURL(tab, url);
 
-      resolve(() => windowHelpers.close(chromeWindow));
-    }).
-    catch(reject);
-  }
-})
+          resolve(() => windowHelpers.close(chromeWindow));
+        }).
+        catch(reject);
+    }
+  });
+}
 
 exports["test page-mod on private tab"] = function*(assert) {
   // Only set private mode when explicitely supported.

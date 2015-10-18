@@ -612,7 +612,7 @@ CompositorParent::~CompositorParent()
 void
 CompositorParent::Destroy()
 {
-  MOZ_ASSERT(ManagedPLayerTransactionParent().Length() == 0,
+  MOZ_ASSERT(ManagedPLayerTransactionParent().Count() == 0,
              "CompositorParent destroyed before managed PLayerTransactionParent");
 
   MOZ_ASSERT(mPaused); // Ensure RecvWillStop was called
@@ -1381,7 +1381,7 @@ CompositorParent::GetAPZTestData(const LayerTransactionParent* aLayerTree,
 class NotifyAPZConfirmedTargetTask : public Task
 {
 public:
-  explicit NotifyAPZConfirmedTargetTask(const nsRefPtr<APZCTreeManager>& aAPZCTM,
+  explicit NotifyAPZConfirmedTargetTask(const RefPtr<APZCTreeManager>& aAPZCTM,
                                         const uint64_t& aInputBlockId,
                                         const nsTArray<ScrollableLayerGuid>& aTargets)
    : mAPZCTM(aAPZCTM),
@@ -1395,7 +1395,7 @@ public:
   }
 
 private:
-  nsRefPtr<APZCTreeManager> mAPZCTM;
+  RefPtr<APZCTreeManager> mAPZCTM;
   uint64_t mInputBlockId;
   nsTArray<ScrollableLayerGuid> mTargets;
 };
@@ -1821,10 +1821,10 @@ private:
   // There can be many CPCPs, and IPDL-generated code doesn't hold a
   // reference to top-level actors.  So we hold a reference to
   // ourself.  This is released (deferred) in ActorDestroy().
-  nsRefPtr<CrossProcessCompositorParent> mSelfRef;
+  RefPtr<CrossProcessCompositorParent> mSelfRef;
   Transport* mTransport;
 
-  nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
+  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
   // If true, we should send a RemotePaintIsReady message when the layer transaction
   // is received
   bool mNotifyAfterRemotePaint;
@@ -1871,7 +1871,7 @@ CompositorParent::Create(Transport* aTransport, ProcessId aOtherPid)
 {
   gfxPlatform::InitLayersIPC();
 
-  nsRefPtr<CrossProcessCompositorParent> cpcp =
+  RefPtr<CrossProcessCompositorParent> cpcp =
     new CrossProcessCompositorParent(aTransport);
 
   cpcp->mSelfRef = cpcp;
@@ -1927,7 +1927,7 @@ CompositorParent::GetIndirectShadowTree(uint64_t aId)
 bool
 CrossProcessCompositorParent::RecvNotifyHidden(const uint64_t& id)
 {
-  nsRefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
+  RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
   lru->Add(this, id);
   return true;
 }
@@ -1935,7 +1935,7 @@ CrossProcessCompositorParent::RecvNotifyHidden(const uint64_t& id)
 bool
 CrossProcessCompositorParent::RecvNotifyVisible(const uint64_t& id)
 {
-  nsRefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
+  RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
   lru->Remove(this, id);
   return true;
 }
@@ -1950,7 +1950,7 @@ CrossProcessCompositorParent::RecvRequestNotifyAfterRemotePaint()
 void
 CrossProcessCompositorParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  nsRefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
+  RefPtr<CompositorLRU> lru = CompositorLRU::GetSingleton();
   lru->Remove(this);
 
   MessageLoop::current()->PostTask(
@@ -2061,7 +2061,7 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   }
 
   if (state->mLayerTreeReadyObserver) {
-    nsRefPtr<CompositorUpdateObserver> observer = state->mLayerTreeReadyObserver;
+    RefPtr<CompositorUpdateObserver> observer = state->mLayerTreeReadyObserver;
     state->mLayerTreeReadyObserver = nullptr;
     observer->ObserveUpdate(id, true);
   }
@@ -2196,7 +2196,7 @@ CrossProcessCompositorParent::NotifyClearCachedResources(LayerTransactionParent*
   uint64_t id = aLayerTree->GetId();
   MOZ_ASSERT(id != 0);
 
-  nsRefPtr<CompositorUpdateObserver> observer;
+  RefPtr<CompositorUpdateObserver> observer;
   { // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     observer = sIndirectLayerTrees[id].mLayerTreeClearedObserver;

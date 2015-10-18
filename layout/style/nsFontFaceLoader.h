@@ -50,9 +50,9 @@ protected:
   virtual ~nsFontFaceLoader();
 
 private:
-  nsRefPtr<gfxUserFontEntry>  mUserFontEntry;
+  RefPtr<gfxUserFontEntry>  mUserFontEntry;
   nsCOMPtr<nsIURI>        mFontURI;
-  nsRefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
+  RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
   nsCOMPtr<nsIChannel>    mChannel;
   nsCOMPtr<nsITimer>      mLoadTimer;
 

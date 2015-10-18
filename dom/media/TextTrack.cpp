@@ -187,7 +187,7 @@ TextTrack::GetActiveCues() {
 }
 
 void
-TextTrack::GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
+TextTrack::GetActiveCueArray(nsTArray<RefPtr<TextTrackCue> >& aCues)
 {
   if (mMode != TextTrackMode::Disabled) {
     UpdateActiveCueList();

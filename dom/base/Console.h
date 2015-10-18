@@ -203,7 +203,7 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
-  nsRefPtr<JSObjectHolder> mSandbox;
+  RefPtr<JSObjectHolder> mSandbox;
 
   nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
   nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;

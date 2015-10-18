@@ -112,7 +112,7 @@ private:
   bool mIsOpen;
   bool mShuttingDown;
   bool mActorDestroyed;
-  nsRefPtr<GMPContentParent> mPlugin;
+  RefPtr<GMPContentParent> mPlugin;
   uint32_t mPluginId;
   GMPDecryptorProxyCallback* mCallback;
 #ifdef DEBUG

@@ -75,7 +75,7 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
   MediaStreamGraph* graph = aGraph ? aGraph : aCtx->Graph();
   MOZ_ASSERT(graph->GraphRate() == aCtx->SampleRate());
 
-  nsRefPtr<AudioNodeStream> stream =
+  RefPtr<AudioNodeStream> stream =
     new AudioNodeStream(aEngine, aFlags, graph->GraphRate());
   if (node) {
     stream->SetChannelMixingParametersImpl(node->ChannelCount(),
@@ -264,7 +264,7 @@ AudioNodeStream::SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& 
       static_cast<AudioNodeStream*>(mStream)->Engine()->
           SetBuffer(mBuffer.forget());
     }
-    nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
+    RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   };
 
   GraphImpl()->AppendMessage(new Message(this, aBuffer));

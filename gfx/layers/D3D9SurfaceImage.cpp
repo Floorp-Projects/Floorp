@@ -34,11 +34,11 @@ D3D9SurfaceImage::SetData(const Data& aData)
   RefPtr<IDirect3DSurface9> surface = aData.mSurface;
 
   RefPtr<IDirect3DDevice9> device;
-  hr = surface->GetDevice(byRef(device));
+  hr = surface->GetDevice(getter_AddRefs(device));
   NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
 
   RefPtr<IDirect3D9> d3d9;
-  hr = device->GetDirect3D(byRef(d3d9));
+  hr = device->GetDirect3D(getter_AddRefs(d3d9));
   NS_ENSURE_TRUE(SUCCEEDED(hr), E_FAIL);
 
   D3DSURFACE_DESC desc;
@@ -76,7 +76,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // image, we're less likely to need to wait for the draw operation to
   // complete.
   RefPtr<IDirect3DQuery9> query;
-  hr = device->CreateQuery(D3DQUERYTYPE_EVENT, byRef(query));
+  hr = device->CreateQuery(D3DQUERYTYPE_EVENT, getter_AddRefs(query));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   hr = query->Issue(D3DISSUE_END);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -172,7 +172,7 @@ D3D9SurfaceImage::GetAsSourceSurface()
                                            mSize.height,
                                            D3DFMT_X8R8G8B8,
                                            D3DPOOL_SYSTEMMEM,
-                                           byRef(systemMemorySurface),
+                                           getter_AddRefs(systemMemorySurface),
                                            0);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 

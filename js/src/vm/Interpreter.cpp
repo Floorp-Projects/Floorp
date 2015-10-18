@@ -325,9 +325,9 @@ MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
     bool derived = op == JSOP_DERIVEDCONSTRUCTOR;
     MOZ_ASSERT(derived == !!proto);
 
-    RootedAtom name(cx, atom);
+    RootedAtom name(cx, atom == cx->names().empty ? nullptr : atom);
     JSNative native = derived ? DefaultDerivedClassConstructor : DefaultClassConstructor;
-    return NewFunctionWithProto(cx, native, 0, JSFunction::NATIVE_CTOR, nullptr, name, proto);
+    return NewFunctionWithProto(cx, native, 0, JSFunction::NATIVE_CLASS_CTOR, nullptr, name, proto);
 }
 
 bool
@@ -441,16 +441,16 @@ class MOZ_RAII AutoStopwatch final
     // The performance group shared by this compartment and possibly
     // others, or `nullptr` if another AutoStopwatch is already in
     // charge of monitoring that group.
-    mozilla::RefPtr<js::PerformanceGroup> sharedGroup_;
+    RefPtr<js::PerformanceGroup> sharedGroup_;
 
     // The toplevel group, representing the entire process, or `nullptr`
     // if another AutoStopwatch is already in charge of monitoring that group.
-    mozilla::RefPtr<js::PerformanceGroup> topGroup_;
+    RefPtr<js::PerformanceGroup> topGroup_;
 
     // The performance group specific to this compartment, or
     // `nullptr` if another AutoStopwatch is already in charge of
     // monitoring that group.
-    mozilla::RefPtr<js::PerformanceGroup> ownGroup_;
+    RefPtr<js::PerformanceGroup> ownGroup_;
 
  public:
     // If the stopwatch is active, constructing an instance of
@@ -2098,8 +2098,6 @@ CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
 CASE(JSOP_UNUSED14)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED169)
-CASE(JSOP_UNUSED170)
 CASE(JSOP_UNUSED171)
 CASE(JSOP_UNUSED172)
 CASE(JSOP_UNUSED173)
@@ -3440,6 +3438,14 @@ CASE(JSOP_SETALIASEDVAR)
     SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], CheckLexical);
 }
 END_CASE(JSOP_SETALIASEDVAR)
+
+CASE(JSOP_THROWSETCONST)
+CASE(JSOP_THROWSETALIASEDCONST)
+{
+    ReportRuntimeConstAssignment(cx, script, REGS.pc);
+    goto error;
+}
+END_CASE(JSOP_THROWSETCONST)
 
 CASE(JSOP_CHECKLEXICAL)
 {
@@ -5008,21 +5014,28 @@ js::NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject)
 }
 
 void
-js::ReportUninitializedLexical(JSContext* cx, HandlePropertyName name)
+js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandlePropertyName name)
 {
+    MOZ_ASSERT(errorNumber == JSMSG_UNINITIALIZED_LEXICAL ||
+               errorNumber == JSMSG_BAD_CONST_ASSIGN);
     JSAutoByteString printable;
-    if (AtomToPrintableString(cx, name, &printable)) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_LEXICAL,
-                             printable.ptr());
-    }
+    if (AtomToPrintableString(cx, name, &printable))
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
 }
 
 void
-js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* pc)
+js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
+                              HandleScript script, jsbytecode* pc)
 {
+    JSOp op = JSOp(*pc);
+    MOZ_ASSERT(op == JSOP_CHECKLEXICAL ||
+               op == JSOP_CHECKALIASEDLEXICAL ||
+               op == JSOP_THROWSETCONST ||
+               op == JSOP_THROWSETALIASEDCONST);
+
     RootedPropertyName name(cx);
 
-    if (JSOp(*pc) == JSOP_CHECKLEXICAL) {
+    if (IsLocalOp(op)) {
         uint32_t slot = GET_LOCALNO(pc);
 
         // First search for a name among body-level lets.
@@ -5054,11 +5067,11 @@ js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* p
             name = JSID_TO_ATOM(id)->asPropertyName();
         }
     } else {
-        MOZ_ASSERT(JSOp(*pc) == JSOP_CHECKALIASEDLEXICAL);
+        MOZ_ASSERT(IsAliasedVarOp(op));
         name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
     }
 
-    ReportUninitializedLexical(cx, name);
+    ReportRuntimeLexicalError(cx, errorNumber, name);
 }
 
 bool

@@ -22,7 +22,7 @@ X11TextureHost::X11TextureHost(TextureFlags aFlags,
                                const SurfaceDescriptorX11& aDescriptor)
  : TextureHost(aFlags)
 {
-  nsRefPtr<gfxXlibSurface> surface = aDescriptor.OpenForeign();
+  RefPtr<gfxXlibSurface> surface = aDescriptor.OpenForeign();
   mSurface = surface.get();
 
   if (!(aFlags & TextureFlags::DEALLOCATE_CLIENT)) {

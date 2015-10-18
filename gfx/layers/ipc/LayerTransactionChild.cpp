@@ -33,11 +33,12 @@ LayerTransactionChild::Destroy()
   // When it happens, IPCOpen() is still true.
   // See bug 1004191.
   mDestroyed = true;
-  MOZ_ASSERT(0 == ManagedPLayerChild().Length(),
+  MOZ_ASSERT(0 == ManagedPLayerChild().Count(),
              "layers should have been cleaned up by now");
 
-  for (size_t i = 0; i < ManagedPTextureChild().Length(); ++i) {
-    TextureClient* texture = TextureClient::AsTextureClient(ManagedPTextureChild()[i]);
+  const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
+  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
+    TextureClient* texture = TextureClient::AsTextureClient(iter.Get()->GetKey());
     if (texture) {
       texture->ForceRemove();
     }

@@ -153,8 +153,8 @@ GetLibrarySaveToPath(int aFallbackFolderId, REFKNOWNFOLDERID aFolderId,
     return GetWindowsFolder(aFallbackFolderId, aFile);
   }
 
-  nsRefPtr<IShellLibrary> shellLib;
-  nsRefPtr<IShellItem> savePath;
+  RefPtr<IShellLibrary> shellLib;
+  RefPtr<IShellItem> savePath;
   HRESULT hr =
     SHLoadLibraryFromKnownFolder(aFolderId, STGM_READ,
                                  IID_IShellLibrary, getter_AddRefs(shellLib));

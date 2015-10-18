@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/cache/Context.h"
 #include "mozilla/dom/cache/Types.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
 class nsIInputStream;
@@ -50,8 +50,8 @@ private:
     nsID mId;
     nsCOMPtr<nsIInputStream> mStream;
   };
-  nsRefPtr<Manager> mManager;
-  nsRefPtr<Context> mContext;
+  RefPtr<Manager> mManager;
+  RefPtr<Context> mContext;
   CacheId mCacheId;
   CacheStreamControlParent* mStreamControl;
   nsTArray<Entry> mList;

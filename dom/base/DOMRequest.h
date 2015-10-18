@@ -29,8 +29,8 @@ class DOMRequest : public DOMEventTargetHelper,
 {
 protected:
   JS::Heap<JS::Value> mResult;
-  nsRefPtr<DOMError> mError;
-  nsRefPtr<Promise> mPromise;
+  RefPtr<DOMError> mError;
+  RefPtr<Promise> mPromise;
   bool mDone;
 
 public:

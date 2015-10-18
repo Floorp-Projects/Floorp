@@ -33,7 +33,7 @@ DataStoreRevision::AddRevision(JSContext* aCx,
   MOZ_ASSERT(aStore);
   MOZ_ASSERT(aCallback);
 
-  nsRefPtr<DataStoreService> service = DataStoreService::Get();
+  RefPtr<DataStoreService> service = DataStoreService::Get();
   if (!service) {
     return NS_ERROR_FAILURE;
   }

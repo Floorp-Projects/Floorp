@@ -3085,7 +3085,7 @@ SVGTextContextPaint::Paint::GetPattern(const DrawTarget* aDrawTarget,
                                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                        const gfxMatrix& aCTM)
 {
-  nsRefPtr<gfxPattern> pattern;
+  RefPtr<gfxPattern> pattern;
   if (mPatternCache.Get(aOpacity, getter_AddRefs(pattern))) {
     // Set the pattern matrix just in case it was messed with by a previous
     // caller. We should get the same matrix each time a pattern is constructed
@@ -3738,7 +3738,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   aContext.Multiply(canvasTMForChildren);
   gfxMatrix currentMatrix = aContext.CurrentMatrix();
 
-  nsRefPtr<nsCaret> caret = presContext->PresShell()->GetCaret();
+  RefPtr<nsCaret> caret = presContext->PresShell()->GetCaret();
   nsRect caretRect;
   nsIFrame* caretFrame = caret->GetPaintGeometry(&caretRect);
 
@@ -4162,7 +4162,7 @@ SVGTextFrame::SelectSubString(nsIContent* aContent,
   chit.NextWithinSubtree(nchars);
   nchars = chit.TextElementCharIndex() - charnum;
 
-  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
   frameSelection->HandleClick(content, charnum, charnum + nchars,
                               false, false, CARET_ASSOCIATE_BEFORE);
@@ -5204,7 +5204,7 @@ SVGTextFrame::DoGlyphPositioning()
     float actualTextLength =
       static_cast<float>(presContext->AppUnitsToGfxUnits(frameLength) * factor);
 
-    nsRefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
+    RefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
     uint16_t lengthAdjust = lengthAdjustEnum->AnimVal();
     switch (lengthAdjust) {
       case SVG_LENGTHADJUST_SPACINGANDGLYPHS:
@@ -5771,7 +5771,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
     nsSVGEffects::GetPaintServer(aFrame, &(style->*aFillOrStroke), aProperty);
 
   if (ps) {
-    nsRefPtr<gfxPattern> pattern =
+    RefPtr<gfxPattern> pattern =
       ps->GetPaintServerPattern(aFrame, aDrawTarget, aContextMatrix,
                                 aFillOrStroke, aOpacity);
     if (pattern) {
@@ -5780,7 +5780,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
     }
   }
   if (aOuterContextPaint) {
-    nsRefPtr<gfxPattern> pattern;
+    RefPtr<gfxPattern> pattern;
     switch ((style->*aFillOrStroke).mType) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aOuterContextPaint->GetFillPattern(aDrawTarget, aOpacity,

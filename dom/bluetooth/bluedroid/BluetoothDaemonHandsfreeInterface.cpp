@@ -702,7 +702,7 @@ BluetoothDaemonHandsfreeModule::HandleRsp(
     return;
   }
 
-  nsRefPtr<BluetoothHandsfreeResultHandler> res =
+  RefPtr<BluetoothHandsfreeResultHandler> res =
     static_cast<BluetoothHandsfreeResultHandler*>(aRes);
 
   if (!res) {

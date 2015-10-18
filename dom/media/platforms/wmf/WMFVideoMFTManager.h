@@ -29,7 +29,7 @@ public:
 
   HRESULT Input(MediaRawData* aSample) override;
 
-  HRESULT Output(int64_t aStreamOffset, nsRefPtr<MediaData>& aOutput) override;
+  HRESULT Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutput) override;
 
   void Shutdown() override;
 

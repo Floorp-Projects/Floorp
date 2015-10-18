@@ -62,31 +62,33 @@ function definePseudo(loader, id, exports) {
   loader.modules[uri] = { exports: exports };
 }
 
-function startup(reason, options) Startup.onceInitialized.then(() => {
-  // Inject globals ASAP in order to have console API working ASAP
-  Object.defineProperties(options.loader.globals, descriptor(globals));
+function startup(reason, options) {
+  return Startup.onceInitialized.then(() => {
+    // Inject globals ASAP in order to have console API working ASAP
+    Object.defineProperties(options.loader.globals, descriptor(globals));
 
-  // NOTE: Module is intentionally required only now because it relies
-  // on existence of hidden window, which does not exists until startup.
-  let { ready } = require('../addon/window');
-  // Load localization manifest and .properties files.
-  // Run the addon even in case of error (best effort approach)
-  require('../l10n/loader').
-    load(rootURI).
-    then(null, function failure(error) {
-      if (!isNative)
-        console.info("Error while loading localization: " + error.message);
-    }).
-    then(function onLocalizationReady(data) {
-      // Exports data to a pseudo module so that api-utils/l10n/core
-      // can get access to it
-      definePseudo(options.loader, '@l10n/data', data ? data : null);
-      return ready;
-    }).then(function() {
-      run(options);
-    }).then(null, console.exception);
+    // NOTE: Module is intentionally required only now because it relies
+    // on existence of hidden window, which does not exists until startup.
+    let { ready } = require('../addon/window');
+    // Load localization manifest and .properties files.
+    // Run the addon even in case of error (best effort approach)
+    require('../l10n/loader').
+      load(rootURI).
+      then(null, function failure(error) {
+        if (!isNative)
+          console.info("Error while loading localization: " + error.message);
+      }).
+      then(function onLocalizationReady(data) {
+        // Exports data to a pseudo module so that api-utils/l10n/core
+        // can get access to it
+        definePseudo(options.loader, '@l10n/data', data ? data : null);
+        return ready;
+      }).then(function() {
+        run(options);
+      }).then(null, console.exception);
     return void 0; // otherwise we raise a warning, see bug 910304
-});
+  });
+}
 
 function run(options) {
   try {

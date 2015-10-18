@@ -142,7 +142,7 @@ void SourceStreamInfo::DetachMedia_m()
 already_AddRefed<PeerConnectionImpl>
 PeerConnectionImpl::Constructor(const dom::GlobalObject& aGlobal, ErrorResult& rv)
 {
-  nsRefPtr<PeerConnectionImpl> pc = new PeerConnectionImpl(&aGlobal);
+  RefPtr<PeerConnectionImpl> pc = new PeerConnectionImpl(&aGlobal);
 
   CSFLogDebug(logTag, "Created PeerConnection: %p", pc.get());
 
@@ -297,7 +297,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<ProtocolProxyQueryHandler> handler = new ProtocolProxyQueryHandler(this);
+  RefPtr<ProtocolProxyQueryHandler> handler = new ProtocolProxyQueryHandler(this);
   rv = pps->AsyncResolve(channel,
                          nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
                          nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
@@ -701,7 +701,7 @@ PeerConnectionMedia::AddTrack(DOMMediaStream* aMediaStream,
 
   CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, aMediaStream);
 
-  nsRefPtr<LocalSourceStreamInfo> localSourceStream =
+  RefPtr<LocalSourceStreamInfo> localSourceStream =
     GetLocalStreamById(streamId);
 
   if (!localSourceStream) {
@@ -722,7 +722,7 @@ PeerConnectionMedia::RemoveLocalTrack(const std::string& streamId,
   CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
-  nsRefPtr<LocalSourceStreamInfo> localSourceStream =
+  RefPtr<LocalSourceStreamInfo> localSourceStream =
     GetLocalStreamById(streamId);
   if (!localSourceStream) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -744,7 +744,7 @@ PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
   CSFLogDebug(logTag, "%s: stream: %s track: %s", __FUNCTION__,
                       streamId.c_str(), trackId.c_str());
 
-  nsRefPtr<RemoteSourceStreamInfo> remoteSourceStream =
+  RefPtr<RemoteSourceStreamInfo> remoteSourceStream =
     GetRemoteStreamById(streamId);
   if (!remoteSourceStream) {
     return NS_ERROR_ILLEGAL_VALUE;
@@ -891,7 +891,7 @@ PeerConnectionMedia::GetRemoteStreamById(const std::string& id)
 }
 
 nsresult
-PeerConnectionMedia::AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo)
+PeerConnectionMedia::AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo)
 {
   ASSERT_ON_THREAD(mMainThread);
 
@@ -1233,10 +1233,10 @@ SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-nsRefPtr<mozilla::dom::VideoStreamTrack>
+RefPtr<mozilla::dom::VideoStreamTrack>
 SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
 {
-  nsTArray<nsRefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
+  nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
 
   mMediaStream->GetVideoTracks(videoTracks);
 
@@ -1255,7 +1255,7 @@ SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
 nsresult
 SourceStreamInfo::StorePipeline(
     const std::string& trackId,
-    const mozilla::RefPtr<mozilla::MediaPipeline>& aPipeline)
+    const RefPtr<mozilla::MediaPipeline>& aPipeline)
 {
   MOZ_ASSERT(mPipelines.find(trackId) == mPipelines.end());
   if (mPipelines.find(trackId) != mPipelines.end()) {

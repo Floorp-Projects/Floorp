@@ -44,7 +44,7 @@ ContentBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 /*static*/ ContentBridgeParent*
 ContentBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid)
 {
-  nsRefPtr<ContentBridgeParent> bridge =
+  RefPtr<ContentBridgeParent> bridge =
     new ContentBridgeParent(aTransport);
   bridge->mSelfRef = bridge;
 
@@ -166,7 +166,7 @@ ContentBridgeParent::DeallocPBrowserParent(PBrowserParent* aParent)
 void
 ContentBridgeParent::NotifyTabDestroyed()
 {
-  int32_t numLiveTabs = ManagedPBrowserParent().Length();
+  int32_t numLiveTabs = ManagedPBrowserParent().Count();
   if (numLiveTabs == 1) {
     MessageLoop::current()->PostTask(
       FROM_HERE,
@@ -180,8 +180,8 @@ ContentBridgeParent::NotifyTabDestroyed()
 jsipc::CPOWManager*
 ContentBridgeParent::GetCPOWManager()
 {
-  if (ManagedPJavaScriptParent().Length()) {
-    return CPOWManagerFor(ManagedPJavaScriptParent()[0]);
+  if (PJavaScriptParent* p = LoneManagedOrNull(ManagedPJavaScriptParent())) {
+    return CPOWManagerFor(p);
   }
   return nullptr;
 }

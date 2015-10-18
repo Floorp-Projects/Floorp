@@ -1124,24 +1124,6 @@ function waitForWorkerClose(workerClient) {
   });
 }
 
-function waitForWorkerFreeze(workerClient) {
-  info("Waiting for worker to freeze.");
-  return new Promise(function (resolve) {
-    workerClient.addOneTimeListener("freeze", function () {
-      resolve();
-    });
-  });
-}
-
-function waitForWorkerThaw(workerClient) {
-  info("Waiting for worker to thaw.");
-  return new Promise(function (resolve) {
-    workerClient.addOneTimeListener("thaw", function () {
-      resolve();
-    });
-  });
-}
-
 function resume(threadClient) {
   info("Resuming thread.");
   return rdpInvoke(threadClient, threadClient.resume);

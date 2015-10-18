@@ -429,7 +429,9 @@ var getContentFrame = panel =>
     panel.backgroundFrame
 exports.getContentFrame = getContentFrame;
 
-function getContentDocument(panel) getContentFrame(panel).contentDocument
+function getContentDocument(panel) {
+  return getContentFrame(panel).contentDocument;
+}
 exports.getContentDocument = getContentDocument;
 
 function setURL(panel, url) {

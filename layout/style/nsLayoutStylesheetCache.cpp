@@ -441,7 +441,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 
 /* static */ void
 nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
-                                      nsRefPtr<CSSStyleSheet>& aSheet,
+                                      RefPtr<CSSStyleSheet>& aSheet,
                                       SheetParsingMode aParsingMode)
 {
   nsCOMPtr<nsIURI> uri;
@@ -454,7 +454,7 @@ nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
 
 void
 nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile,
-                                       nsRefPtr<CSSStyleSheet>& aSheet,
+                                       RefPtr<CSSStyleSheet>& aSheet,
                                        SheetParsingMode aParsingMode)
 {
   bool exists = false;
@@ -656,7 +656,7 @@ AnnotateCrashReport(nsIURI* aURI)
     annotation.Append('\n');
   }
 
-  nsRefPtr<nsZipArchive> zip = Omnijar::GetReader(Omnijar::GRE);
+  RefPtr<nsZipArchive> zip = Omnijar::GetReader(Omnijar::GRE);
   if (zip) {
     // List interesting files in the GRE omnijar.
     annotation.AppendLiteral("Interesting files in the GRE omnijar:\n");
@@ -721,7 +721,7 @@ ErrorLoadingBuiltinSheet(nsIURI* aURI, const char* aMsg)
 
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
-                                   nsRefPtr<CSSStyleSheet>& aSheet,
+                                   RefPtr<CSSStyleSheet>& aSheet,
                                    SheetParsingMode aParsingMode)
 {
   if (!aURI) {
@@ -748,7 +748,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
 }
 
 /* static */ void
-nsLayoutStylesheetCache::InvalidateSheet(nsRefPtr<CSSStyleSheet>& aSheet)
+nsLayoutStylesheetCache::InvalidateSheet(RefPtr<CSSStyleSheet>& aSheet)
 {
   MOZ_ASSERT(gCSSLoader, "pref changed before we loaded a sheet?");
 
@@ -804,7 +804,7 @@ nsLayoutStylesheetCache::AppendPreferenceColorRule(CSSStyleSheet* aSheet,
 }
 
 void
-nsLayoutStylesheetCache::BuildPreferenceSheet(nsRefPtr<CSSStyleSheet>& aSheet,
+nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
                                               nsPresContext* aPresContext)
 {
   aSheet = new CSSStyleSheet(CORS_NONE, mozilla::net::RP_Default);

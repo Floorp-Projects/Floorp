@@ -191,7 +191,7 @@ MakeContext ()
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
         CreateOffscreenContentDrawTarget(IntSize(size, size),
                                          SurfaceFormat::B8G8R8X8);
-    nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
 
     return ctx.forget();
 }
@@ -247,7 +247,7 @@ void SetupTests(nsTArray<TestEntry>& testList);
 
 static bool
 RunTest (TestEntry *test, gfxContext *ctx) {
-    nsRefPtr<gfxFontGroup> fontGroup;
+    RefPtr<gfxFontGroup> fontGroup;
 
     fontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(NS_ConvertUTF8toUTF16(test->utf8FamilyString), &test->fontStyle, nullptr, nullptr);
 
@@ -295,7 +295,7 @@ TEST(Gfx, FontSelection) {
     nsTArray<TestEntry> testList;
     SetupTests(testList);
 
-    nsRefPtr<gfxContext> context = MakeContext();
+    RefPtr<gfxContext> context = MakeContext();
 
     for (uint32_t test = 0;
          test < testList.Length();

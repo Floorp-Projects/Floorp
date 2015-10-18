@@ -75,7 +75,7 @@ GonkVideoDecoderManager::Shutdown()
   return GonkDecoderManager::Shutdown();
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 GonkVideoDecoderManager::Init()
 {
   nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
@@ -112,7 +112,7 @@ GonkVideoDecoderManager::Init()
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
-  nsRefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
+  RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
   android::sp<GonkVideoDecoderManager> self = this;
   mVideoCodecRequest.Begin(mVideoListener->Init()
     ->Then(mReaderTaskQueue, __func__,
@@ -139,7 +139,7 @@ nsresult
 GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
 {
   *v = nullptr;
-  nsRefPtr<VideoData> data;
+  RefPtr<VideoData> data;
   int64_t timeUs;
   int32_t keyFrame;
 
@@ -327,7 +327,7 @@ GonkVideoDecoderManager::SetVideoFormat()
 // Blocks until decoded sample is produced by the deoder.
 nsresult
 GonkVideoDecoderManager::Output(int64_t aStreamOffset,
-                                nsRefPtr<MediaData>& aOutData)
+                                RefPtr<MediaData>& aOutData)
 {
   aOutData = nullptr;
   status_t err;
@@ -340,7 +340,7 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
   switch (err) {
     case OK:
     {
-      nsRefPtr<VideoData> data;
+      RefPtr<VideoData> data;
       nsresult rv = CreateVideoData(aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // Decoder outputs a empty video buffer, try again
@@ -377,7 +377,7 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     case android::ERROR_END_OF_STREAM:
     {
       GVDM_LOG("Got the EOS frame!");
-      nsRefPtr<VideoData> data;
+      RefPtr<VideoData> data;
       nsresult rv = CreateVideoData(aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // For EOS, no need to do any thing.
@@ -554,7 +554,7 @@ void GonkVideoDecoderManager::ReleaseAllPendingVideoBuffers()
   // Free all pending video buffers without holding mPendingReleaseItemsLock.
   size_t size = releasingItems.Length();
   for (size_t i = 0; i < size; i++) {
-    nsRefPtr<FenceHandle::FdObj> fdObj = releasingItems[i].mReleaseFence.GetAndResetFdObj();
+    RefPtr<FenceHandle::FdObj> fdObj = releasingItems[i].mReleaseFence.GetAndResetFdObj();
     sp<Fence> fence = new Fence(fdObj->GetAndResetFd());
     fence->waitForever("GonkVideoDecoderManager");
     mDecoder->ReleaseMediaBuffer(releasingItems[i].mBuffer);

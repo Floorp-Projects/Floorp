@@ -142,7 +142,9 @@ function getToplevelWindow(window) {
 }
 exports.getToplevelWindow = getToplevelWindow;
 
-function getWindowDocShell(window) window.gBrowser.docShell;
+function getWindowDocShell(window) {
+  return window.gBrowser.docShell;
+}
 exports.getWindowDocShell = getWindowDocShell;
 
 function getWindowLoadingContext(window) {

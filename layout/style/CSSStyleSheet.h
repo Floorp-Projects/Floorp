@@ -93,7 +93,7 @@ private:
   // currently this is the case) that any time page JS can get ts hands on a
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
-  nsRefPtr<CSSStyleSheet> mFirstChild;
+  RefPtr<CSSStyleSheet> mFirstChild;
   CORSMode               mCORSMode;
   // The Referrer Policy of a stylesheet is used for its child sheets, so it is
   // stored here.
@@ -357,18 +357,18 @@ protected:
 
 protected:
   nsString              mTitle;
-  nsRefPtr<nsMediaList> mMedia;
-  nsRefPtr<CSSStyleSheet> mNext;
+  RefPtr<nsMediaList> mMedia;
+  RefPtr<CSSStyleSheet> mNext;
   CSSStyleSheet*        mParent;    // weak ref
   css::ImportRule*      mOwnerRule; // weak ref
 
-  nsRefPtr<CSSRuleListImpl> mRuleCollection;
+  RefPtr<CSSRuleListImpl> mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
   bool                  mDisabled;
   bool                  mDirty; // has been modified 
   bool                  mInRuleProcessorCache;
-  nsRefPtr<dom::Element> mScopeElement;
+  RefPtr<dom::Element> mScopeElement;
 
   CSSStyleSheetInner*   mInner;
 

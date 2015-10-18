@@ -18,7 +18,7 @@ SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image *aImage, ID2D1DeviceContext *aDC
   , mDrawTarget(aDT)
   , mDevice(Factory::GetD2D1Device())
 {
-  aImage->QueryInterface((ID2D1Bitmap1**)byRef(mRealizedBitmap));
+  aImage->QueryInterface((ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 
   mFormat = aFormat;
   mSize = aSize;
@@ -52,7 +52,7 @@ SourceSurfaceD2D1::GetDataSurface()
   props.colorContext = nullptr;
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_CANNOT_DRAW |
                         D2D1_BITMAP_OPTIONS_CPU_READ;
-  hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(softwareBitmap));
+  hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)getter_AddRefs(softwareBitmap));
 
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to create software bitmap: " << mSize << " Code: " << hexa(hr);
@@ -86,7 +86,7 @@ SourceSurfaceD2D1::EnsureRealizedBitmap()
   }
 
   RefPtr<ID2D1DeviceContext> dc;
-  device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, byRef(dc));
+  device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, getter_AddRefs(dc));
 
   D2D1_BITMAP_PROPERTIES1 props;
   props.dpiX = 96;
@@ -94,7 +94,7 @@ SourceSurfaceD2D1::EnsureRealizedBitmap()
   props.pixelFormat = D2DPixelFormat(mFormat);
   props.colorContext = nullptr;
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
-  dc->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mRealizedBitmap));
+  dc->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 
   dc->SetTarget(mRealizedBitmap);
 
@@ -119,7 +119,7 @@ SourceSurfaceD2D1::DrawTargetWillChange()
   props.pixelFormat = D2DPixelFormat(mFormat);
   props.colorContext = nullptr;
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
-  HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mRealizedBitmap));
+  HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to create bitmap to make DrawTarget copy. Size: " << mSize << " Code: " << hexa(hr);

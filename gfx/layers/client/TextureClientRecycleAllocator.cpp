@@ -68,7 +68,7 @@ public:
   }
 
 private:
-  mozilla::RefPtr<TextureClient> mTextureClient;
+  RefPtr<TextureClient> mTextureClient;
   TextureFlags mFlags;
 };
 

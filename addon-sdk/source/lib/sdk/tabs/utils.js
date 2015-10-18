@@ -17,7 +17,9 @@ const { windows, isBrowser } = require('../window/utils');
 const { isPrivateBrowsingSupported } = require('../self');
 
 // Bug 834961: ignore private windows when they are not supported
-function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported });
+function getWindows() {
+  return windows(null, { includePrivate: isPrivateBrowsingSupported });
+}
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -91,7 +93,7 @@ function getTabs(window) {
     return window.BrowserApp.tabs;
 
   // firefox - default
-  return Array.filter(getTabContainer(window).children, function(t) !t.closing);
+  return Array.filter(getTabContainer(window).children, t => !t.closing);
 }
 exports.getTabs = getTabs;
 
@@ -321,7 +323,9 @@ function unpin(tab) {
 }
 exports.unpin = unpin;
 
-function isPinned(tab) !!tab.pinned
+function isPinned(tab) {
+  return !!tab.pinned;
+}
 exports.isPinned = isPinned;
 
 function reload(tab) {

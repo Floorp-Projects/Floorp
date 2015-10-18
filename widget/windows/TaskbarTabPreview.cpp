@@ -134,7 +134,7 @@ TaskbarTabPreview::UpdateTaskbarProperties() {
 
 LRESULT
 TaskbarTabPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
-  nsRefPtr<TaskbarTabPreview> kungFuDeathGrip(this);
+  RefPtr<TaskbarTabPreview> kungFuDeathGrip(this);
   switch (nMsg) {
     case WM_CREATE:
       TaskbarPreview::EnableCustomDrawing(mProxyWindow, true);

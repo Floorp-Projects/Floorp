@@ -284,16 +284,16 @@ protected:
 
   void *GenerateParserKey(void);
 
-  nsRefPtr<nsContentList> mImages;
-  nsRefPtr<nsContentList> mApplets;
-  nsRefPtr<nsContentList> mEmbeds;
-  nsRefPtr<nsContentList> mLinks;
-  nsRefPtr<nsContentList> mAnchors;
-  nsRefPtr<nsContentList> mScripts;
-  nsRefPtr<nsContentList> mForms;
-  nsRefPtr<nsContentList> mFormControls;
+  RefPtr<nsContentList> mImages;
+  RefPtr<nsContentList> mApplets;
+  RefPtr<nsContentList> mEmbeds;
+  RefPtr<nsContentList> mLinks;
+  RefPtr<nsContentList> mAnchors;
+  RefPtr<nsContentList> mScripts;
+  RefPtr<nsContentList> mForms;
+  RefPtr<nsContentList> mFormControls;
 
-  nsRefPtr<mozilla::dom::HTMLAllCollection> mAll;
+  RefPtr<mozilla::dom::HTMLAllCollection> mAll;
 
   /** # of forms in the document, synchronously set */
   int32_t mNumForms;

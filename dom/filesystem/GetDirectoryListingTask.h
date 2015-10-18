@@ -53,12 +53,12 @@ protected:
   HandlerCallback() override;
 
 private:
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
   nsString mTargetRealPath;
 
   // We cannot store File or Directory objects bacause this object is created
   // on a different thread and File and Directory are not thread-safe.
-  nsTArray<nsRefPtr<BlobImpl>> mTargetBlobImpls;
+  nsTArray<RefPtr<BlobImpl>> mTargetBlobImpls;
 };
 
 } // namespace dom

@@ -109,11 +109,11 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   RefPtr<SourceSurface> innerSurface =
     InnerImage()->GetFrame(aWhichFrame, aFlags);
   NS_ENSURE_TRUE(innerSurface, nullptr);
-  nsRefPtr<gfxDrawable> drawable =
+  RefPtr<gfxDrawable> drawable =
     new gfxSurfaceDrawable(innerSurface, size);
 
   // Draw.
-  nsRefPtr<gfxContext> ctx = new gfxContext(target);
+  RefPtr<gfxContext> ctx = new gfxContext(target);
   ctx->Multiply(OrientationMatrix(size));
   gfxUtils::DrawPixelSnapped(ctx, drawable, size, ImageRegion::Create(size),
                              surfaceFormat, Filter::LINEAR);

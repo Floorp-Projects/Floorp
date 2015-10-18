@@ -750,8 +750,8 @@ bool
 BluetoothPbapManager::ReplyToPullPhonebook(BlobParent* aActor,
                                            uint16_t aPhonebookSize)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToPullPhonebook(blob.get(), aPhonebookSize);
 }
@@ -781,8 +781,8 @@ bool
 BluetoothPbapManager::ReplyToPullvCardListing(BlobParent* aActor,
                                               uint16_t aPhonebookSize)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToPullvCardListing(blob.get(), aPhonebookSize);
 }
@@ -811,8 +811,8 @@ BluetoothPbapManager::ReplyToPullvCardListing(Blob* aBlob,
 bool
 BluetoothPbapManager::ReplyToPullvCardEntry(BlobParent* aActor)
 {
-  nsRefPtr<BlobImpl> impl = aActor->GetBlobImpl();
-  nsRefPtr<Blob> blob = Blob::Create(nullptr, impl);
+  RefPtr<BlobImpl> impl = aActor->GetBlobImpl();
+  RefPtr<Blob> blob = Blob::Create(nullptr, impl);
 
   return ReplyToPullvCardEntry(blob.get());
 }

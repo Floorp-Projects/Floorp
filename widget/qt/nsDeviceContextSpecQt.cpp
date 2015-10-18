@@ -104,7 +104,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
     int16_t format;
     mPrintSettings->GetOutputFormat(&format);
 
-    nsRefPtr<gfxASurface> surface;
+    RefPtr<gfxASurface> surface;
     gfxSize surfaceSize(width, height);
 
     if (format == nsIPrintSettings::kOutputFormatNative) {

@@ -42,7 +42,7 @@ private:
   ~DeviceRotationRate();
 
 protected:
-  nsRefPtr<DeviceMotionEvent> mOwner;
+  RefPtr<DeviceMotionEvent> mOwner;
   Nullable<double> mAlpha, mBeta, mGamma;
 };
 
@@ -74,7 +74,7 @@ private:
   ~DeviceAcceleration();
 
 protected:
-  nsRefPtr<DeviceMotionEvent> mOwner;
+  RefPtr<DeviceMotionEvent> mOwner;
   Nullable<double> mX, mY, mZ;
 };
 
@@ -140,9 +140,9 @@ public:
 protected:
   ~DeviceMotionEvent() {}
 
-  nsRefPtr<DeviceAcceleration> mAcceleration;
-  nsRefPtr<DeviceAcceleration> mAccelerationIncludingGravity;
-  nsRefPtr<DeviceRotationRate> mRotationRate;
+  RefPtr<DeviceAcceleration> mAcceleration;
+  RefPtr<DeviceAcceleration> mAccelerationIncludingGravity;
+  RefPtr<DeviceRotationRate> mRotationRate;
   Nullable<double> mInterval;
 };
 

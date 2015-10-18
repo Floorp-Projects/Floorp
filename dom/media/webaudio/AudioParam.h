@@ -211,13 +211,13 @@ private:
 
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
-  nsRefPtr<AudioNode> mNode;
+  RefPtr<AudioNode> mNode;
   // For every InputNode, there is a corresponding entry in mOutputParams of the
   // InputNode's mInputNode.
   nsTArray<AudioNode::InputNode> mInputNodes;
   const char* mName;
   // The input port used to connect the AudioParam's stream to its node's stream
-  nsRefPtr<MediaInputPort> mNodeStreamPort;
+  RefPtr<MediaInputPort> mNodeStreamPort;
   const uint32_t mIndex;
   const float mDefaultValue;
 };

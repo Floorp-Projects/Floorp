@@ -215,7 +215,7 @@ public:
 
 private:
   RefPtr<IDirect3DTexture9> mTexture;
-  nsRefPtr<IDirect3DSurface9> mD3D9Surface;
+  RefPtr<IDirect3DSurface9> mD3D9Surface;
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
@@ -439,7 +439,7 @@ public:
 private:
   friend class CompositorD3D9;
 
-  nsRefPtr<IDirect3DSurface9> mSurface;
+  RefPtr<IDirect3DSurface9> mSurface;
   SurfaceInitMode mInitMode;
   bool mInitialized;
 };

@@ -23,7 +23,7 @@ FileSystemPermissionRequest::RequestForTask(FileSystemTaskBase* aTask)
 {
   MOZ_ASSERT(aTask, "aTask should not be null!");
   MOZ_ASSERT(NS_IsMainThread());
-  nsRefPtr<FileSystemPermissionRequest> request =
+  RefPtr<FileSystemPermissionRequest> request =
     new FileSystemPermissionRequest(aTask);
   NS_DispatchToCurrentThread(request);
 }
@@ -37,7 +37,7 @@ FileSystemPermissionRequest::FileSystemPermissionRequest(
 
   mTask->GetPermissionAccessType(mPermissionAccess);
 
-  nsRefPtr<FileSystemBase> filesystem = mTask->GetFileSystem();
+  RefPtr<FileSystemBase> filesystem = mTask->GetFileSystem();
   if (!filesystem) {
     return;
   }
@@ -116,7 +116,7 @@ FileSystemPermissionRequest::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<FileSystemBase> filesystem = mTask->GetFileSystem();
+  RefPtr<FileSystemBase> filesystem = mTask->GetFileSystem();
   if (!filesystem) {
     Cancel();
     return NS_OK;

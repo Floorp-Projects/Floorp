@@ -1,3 +1,5 @@
+// |jit-test| allow-oom
+
 if (!('oomAtAllocation' in this && 'resetOOMFailure' in this))
     quit();
 

@@ -60,7 +60,7 @@ public:
   uint16_t GetReflowDepth() { return mReflowDepth; }
   
 private:
-  nsRefPtr<nsPresContext> mPresContext;
+  RefPtr<nsPresContext> mPresContext;
   nsRenderingContext *mRenderingContext;
   const nsHTMLReflowState *mOuterReflowState;
   uint32_t mLayoutFlags;

@@ -93,12 +93,12 @@ inCSSValueSearch::SearchSync()
 
   nsCOMPtr<nsIURI> baseURI = document->GetBaseURI();
 
-  nsRefPtr<dom::StyleSheetList> sheets = document->StyleSheets();
+  RefPtr<dom::StyleSheetList> sheets = document->StyleSheets();
   MOZ_ASSERT(sheets);
 
   uint32_t length = sheets->Length();
   for (uint32_t i = 0; i < length; ++i) {
-    nsRefPtr<CSSStyleSheet> sheet = sheets->Item(i);
+    RefPtr<CSSStyleSheet> sheet = sheets->Item(i);
     SearchStyleSheet(sheet, baseURI);
   }
 

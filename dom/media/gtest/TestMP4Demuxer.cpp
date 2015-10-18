@@ -26,13 +26,13 @@ class MP4DemuxerBinding
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MP4DemuxerBinding);
 
-  nsRefPtr<MockMediaResource> resource;
-  nsRefPtr<MP4Demuxer> mDemuxer;
-  nsRefPtr<TaskQueue> mTaskQueue;
-  nsRefPtr<MediaTrackDemuxer> mAudioTrack;
-  nsRefPtr<MediaTrackDemuxer> mVideoTrack;
+  RefPtr<MockMediaResource> resource;
+  RefPtr<MP4Demuxer> mDemuxer;
+  RefPtr<TaskQueue> mTaskQueue;
+  RefPtr<MediaTrackDemuxer> mAudioTrack;
+  RefPtr<MediaTrackDemuxer> mVideoTrack;
   uint32_t mIndex;
-  nsTArray<nsRefPtr<MediaRawData>> mSamples;
+  nsTArray<RefPtr<MediaRawData>> mSamples;
   nsTArray<int64_t> mKeyFrameTimecodes;
   MozPromiseHolder<GenericPromise> mCheckTrackKeyFramePromise;
   MozPromiseHolder<GenericPromise> mCheckTrackSamples;
@@ -54,13 +54,13 @@ public:
     mTaskQueue->AwaitShutdownAndIdle();
   }
 
-  nsRefPtr<GenericPromise>
+  RefPtr<GenericPromise>
   CheckTrackKeyFrame(MediaTrackDemuxer* aTrackDemuxer)
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
-    nsRefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
-    nsRefPtr<MP4DemuxerBinding> self = this;
+    RefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
+    RefPtr<MP4DemuxerBinding> self = this;
 
     int64_t time = -1;
     while (mIndex < mSamples.Length()) {
@@ -71,7 +71,7 @@ public:
       }
     }
 
-    nsRefPtr<GenericPromise> p = mCheckTrackKeyFramePromise.Ensure(__func__);
+    RefPtr<GenericPromise> p = mCheckTrackKeyFramePromise.Ensure(__func__);
 
     if (time == -1) {
       mCheckTrackKeyFramePromise.Resolve(true, __func__);
@@ -84,7 +84,7 @@ public:
         track->Seek(media::TimeUnit::FromMicroseconds(time))->Then(self->mTaskQueue, __func__,
           [track, time, self] () {
             track->GetSamples()->Then(self->mTaskQueue, __func__,
-              [track, time, self] (nsRefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
+              [track, time, self] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
                 EXPECT_EQ(time, aSamples->mSamples[0]->mTime);
                 self->CheckTrackKeyFrame(track);
               },
@@ -99,20 +99,20 @@ public:
     return p;
   }
 
-  nsRefPtr<GenericPromise>
+  RefPtr<GenericPromise>
   CheckTrackSamples(MediaTrackDemuxer* aTrackDemuxer)
   {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
-    nsRefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
-    nsRefPtr<MP4DemuxerBinding> self = this;
+    RefPtr<MediaTrackDemuxer> track = aTrackDemuxer;
+    RefPtr<MP4DemuxerBinding> self = this;
 
-    nsRefPtr<GenericPromise> p = mCheckTrackSamples.Ensure(__func__);
+    RefPtr<GenericPromise> p = mCheckTrackSamples.Ensure(__func__);
 
     DispatchTask(
       [track, self] () {
         track->GetSamples()->Then(self->mTaskQueue, __func__,
-          [track, self] (nsRefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
+          [track, self] (RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
             if (aSamples->mSamples.Length()) {
               self->mSamples.AppendElements(aSamples->mSamples);
               self->CheckTrackSamples(track);
@@ -146,7 +146,7 @@ private:
   void
   DispatchTask(FunctionType aFun)
   {
-    nsRefPtr<nsRunnable> r = NS_NewRunnableFunction(aFun);
+    RefPtr<nsRunnable> r = NS_NewRunnableFunction(aFun);
     mTaskQueue->Dispatch(r.forget());
   }
 
@@ -157,7 +157,7 @@ private:
 
 TEST(MP4Demuxer, Seek)
 {
-  nsRefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding();
+  RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding();
 
   binding->RunTestAndWait([binding] () {
     binding->mVideoTrack = binding->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
@@ -264,7 +264,7 @@ TEST(MP4Demuxer, CENCFrag)
     "1 16 7e571d037e571d037e571d037e571d03 000000000000000000000000000019cd 5,2392",
   };
 
-  nsRefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("gizmo-frag.mp4");
+  RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("gizmo-frag.mp4");
 
   binding->RunTestAndWait([binding, video] () {
     // grab all video samples.
@@ -377,7 +377,7 @@ TEST(MP4Demuxer, CENCFrag)
     "1 16 7e571d047e571d047e571d047e571d04 000000000000000000000000000008cd 0,433",
     "1 16 7e571d047e571d047e571d047e571d04 000000000000000000000000000008e9 0,481",
   };
-  nsRefPtr<MP4DemuxerBinding> audiobinding = new MP4DemuxerBinding("gizmo-frag.mp4");
+  RefPtr<MP4DemuxerBinding> audiobinding = new MP4DemuxerBinding("gizmo-frag.mp4");
 
   audiobinding->RunTestAndWait([audiobinding, audio] () {
     // grab all audio samples.
@@ -400,7 +400,7 @@ TEST(MP4Demuxer, CENCFrag)
 
 TEST(MP4Demuxer, GetNextKeyframe)
 {
-  nsRefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("gizmo-frag.mp4");
+  RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("gizmo-frag.mp4");
 
   binding->RunTestAndWait([binding] () {
     // Insert a [0,end] buffered range, to simulate Moof's being buffered
@@ -429,7 +429,7 @@ TEST(MP4Demuxer, GetNextKeyframe)
 
 TEST(MP4Demuxer, ZeroInMoov)
 {
-  nsRefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("short-zero-in-moov.mp4");
+  RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("short-zero-in-moov.mp4");
   binding->RunTestAndWait([binding] () {
     // It demuxes without error. That is sufficient.
     binding->mTaskQueue->BeginShutdown();

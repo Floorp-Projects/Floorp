@@ -929,7 +929,7 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   NS_ASSERTION(!aPaintRegion.GetBounds().IsEmpty(), "Empty paint region\n");
 
   if (!gfxPrefs::TiledDrawTargetEnabled()) {
-    nsRefPtr<gfxContext> ctxt;
+    RefPtr<gfxContext> ctxt;
 
     const IntRect bounds = aPaintRegion.GetBounds();
     {

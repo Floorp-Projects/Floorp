@@ -43,10 +43,10 @@ public:
 
   virtual ~GonkVideoDecoderManager();
 
-  nsRefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
 
   nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) override;
+                          RefPtr<MediaData>& aOutput) override;
 
   nsresult Shutdown() override;
 
@@ -74,9 +74,9 @@ private:
     VideoResourceListener();
     ~VideoResourceListener();
 
-    nsRefPtr<MediaResourcePromise> Init()
+    RefPtr<MediaResourcePromise> Init()
     {
-      nsRefPtr<MediaResourcePromise> p = mVideoCodecPromise.Ensure(__func__);
+      RefPtr<MediaResourcePromise> p = mVideoCodecPromise.Ensure(__func__);
       return p.forget();
     }
 
@@ -112,7 +112,7 @@ private:
   nsIntRect mPicture;
   nsIntSize mInitialFrame;
 
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
 
   android::MediaBuffer* mVideoBuffer;
 
@@ -145,7 +145,7 @@ private:
 
   // This TaskQueue should be the same one in mDecodeCallback->OnReaderTaskQueue().
   // It is for codec resource mangement, decoding task should not dispatch to it.
-  nsRefPtr<TaskQueue> mReaderTaskQueue;
+  RefPtr<TaskQueue> mReaderTaskQueue;
 };
 
 } // namespace mozilla

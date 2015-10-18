@@ -88,12 +88,12 @@ private:
   bool mActorDestroyed;
   bool mIsAwaitingResetComplete;
   bool mIsAwaitingDrainComplete;
-  nsRefPtr<GMPContentParent> mPlugin;
+  RefPtr<GMPContentParent> mPlugin;
   GMPVideoDecoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
   const uint32_t mPluginId;
   int32_t mFrameCount;
-  nsRefPtr<SimpleTimer> mResetCompleteTimeout;
+  RefPtr<SimpleTimer> mResetCompleteTimeout;
 };
 
 } // namespace gmp

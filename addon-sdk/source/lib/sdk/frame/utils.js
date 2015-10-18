@@ -95,6 +95,7 @@ function create(target, options) {
 }
 exports.create = create;
 
-function swapFrameLoaders(from, to)
-  from.QueryInterface(Ci.nsIFrameLoaderOwner).swapFrameLoaders(to)
+function swapFrameLoaders(from, to) {
+  return from.QueryInterface(Ci.nsIFrameLoaderOwner).swapFrameLoaders(to);
+}
 exports.swapFrameLoaders = swapFrameLoaders;

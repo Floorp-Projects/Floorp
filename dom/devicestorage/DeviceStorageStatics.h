@@ -88,7 +88,7 @@ private:
     nsCOMPtr<nsIThread> mOwningThread;
   };
 
-  nsTArray<nsRefPtr<ListenerWrapper> > mListeners;
+  nsTArray<RefPtr<ListenerWrapper> > mListeners;
   nsCOMPtr<nsIFile> mDirs[TYPE_COUNT];
 
   bool mInitialized;
