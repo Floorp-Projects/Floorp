@@ -78,7 +78,11 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
   [NSPrintOperation setCurrentOperation:printOperation];
 
   NSPrintPanel* panel = [NSPrintPanel printPanel];
-  [panel setOptions:NSPrintPanelShowsPaperSize];
+  [panel setOptions:NSPrintPanelShowsCopies
+    | NSPrintPanelShowsPageRange
+    | NSPrintPanelShowsPaperSize
+    | NSPrintPanelShowsOrientation
+    | NSPrintPanelShowsScaling ];
   PrintPanelAccessoryController* viewController =
     [[PrintPanelAccessoryController alloc] initWithSettings:aSettings];
   [panel addAccessoryController:viewController];
