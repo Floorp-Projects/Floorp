@@ -34,7 +34,7 @@ function launchConnection(socks_vers, socks_port, dest_host, dest_port, dns)
   output.close();
 }
 
-for each (var arg in arguments) {
+for (var arg of arguments) {
   print('client: running test', arg);
   test = arg.split('|');
   launchConnection(test[0], parseInt(test[1]), test[2],
