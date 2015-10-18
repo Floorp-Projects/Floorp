@@ -75,7 +75,7 @@ public:
 private:
 
   /* Nv3DVStreaming interface pointer */
-  nsRefPtr<INv3DVStreaming> m3DVStreaming;
+  RefPtr<INv3DVStreaming> m3DVStreaming;
 
 };
 

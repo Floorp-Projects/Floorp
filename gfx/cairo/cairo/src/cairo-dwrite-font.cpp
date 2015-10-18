@@ -1542,7 +1542,7 @@ _cairo_dwrite_scaled_font_create_win32_scaled_font (cairo_scaled_font_t *scaled_
     cairo_font_face_t *face = cairo_scaled_font_get_font_face (scaled_font);
     cairo_dwrite_font_face_t *dwface = reinterpret_cast<cairo_dwrite_font_face_t*>(face);
 
-    nsRefPtr<IDWriteGdiInterop> gdiInterop;
+    RefPtr<IDWriteGdiInterop> gdiInterop;
     DWriteFactory::Instance()->GetGdiInterop(&gdiInterop);
     if (!gdiInterop) {
         return CAIRO_INT_STATUS_UNSUPPORTED;

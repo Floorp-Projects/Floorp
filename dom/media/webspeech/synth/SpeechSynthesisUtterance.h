@@ -115,7 +115,7 @@ private:
 
   bool mPaused;
 
-  nsRefPtr<SpeechSynthesisVoice> mVoice;
+  RefPtr<SpeechSynthesisVoice> mVoice;
 };
 
 } // namespace dom

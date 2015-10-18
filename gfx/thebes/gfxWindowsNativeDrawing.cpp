@@ -42,7 +42,7 @@ HDC
 gfxWindowsNativeDrawing::BeginNativeDrawing()
 {
     if (mRenderState == RENDER_STATE_INIT) {
-        nsRefPtr<gfxASurface> surf;
+        RefPtr<gfxASurface> surf;
         
         if (mContext->GetCairo()) {
           surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
@@ -192,7 +192,7 @@ gfxWindowsNativeDrawing::IsDoublePass()
       return true;
     }
 
-    nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
+    RefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
     if (!surf || surf->CairoStatus())
         return false;
     if (surf->GetType() != gfxSurfaceType::Win32 &&
@@ -263,13 +263,13 @@ gfxWindowsNativeDrawing::PaintToContext()
         // nothing to do, it already went to the context
         mRenderState = RENDER_STATE_DONE;
     } else if (mRenderState == RENDER_STATE_ALPHA_RECOVERY_WHITE_DONE) {
-        nsRefPtr<gfxImageSurface> black = mBlackSurface->GetAsImageSurface();
-        nsRefPtr<gfxImageSurface> white = mWhiteSurface->GetAsImageSurface();
+        RefPtr<gfxImageSurface> black = mBlackSurface->GetAsImageSurface();
+        RefPtr<gfxImageSurface> white = mWhiteSurface->GetAsImageSurface();
         if (!gfxAlphaRecovery::RecoverAlpha(black, white)) {
             NS_ERROR("Alpha recovery failure");
             return;
         }
-        nsRefPtr<DataSourceSurface> source =
+        RefPtr<DataSourceSurface> source =
             Factory::CreateWrappingDataSourceSurface(black->Data(),
                                                      black->Stride(),
                                                      black->GetSize(),
@@ -281,7 +281,7 @@ gfxWindowsNativeDrawing::PaintToContext()
         mContext->NewPath();
         mContext->Rectangle(gfxRect(gfxPoint(0.0, 0.0), mNativeRect.Size()));
 
-        nsRefPtr<gfxPattern> pat = new gfxPattern(source, Matrix());
+        RefPtr<gfxPattern> pat = new gfxPattern(source, Matrix());
 
         gfxMatrix m;
         m.Scale(mScale.width, mScale.height);

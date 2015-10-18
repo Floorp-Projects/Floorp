@@ -73,7 +73,7 @@ ContextLossWorkerEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aEvent,
                                        uint32_t aFlags)
 {
     nsCOMPtr<nsIRunnable> eventRef(aEvent);
-    nsRefPtr<ContextLossWorkerRunnable> wrappedEvent =
+    RefPtr<ContextLossWorkerRunnable> wrappedEvent =
         new ContextLossWorkerRunnable(eventRef);
     return mEventTarget->Dispatch(wrappedEvent, aFlags);
 }

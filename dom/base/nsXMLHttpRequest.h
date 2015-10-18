@@ -220,7 +220,7 @@ public:
       return nullptr;
     }
 
-    nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
+    RefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
     req->Construct(principal->GetPrincipal(), global);
     req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
@@ -707,10 +707,10 @@ protected:
 
   // It is either a cached blob-response from the last call to GetResponse,
   // but is also explicitly set in OnStopRequest.
-  nsRefPtr<mozilla::dom::Blob> mResponseBlob;
+  RefPtr<mozilla::dom::Blob> mResponseBlob;
   // Non-null only when we are able to get a os-file representation of the
   // response, i.e. when loading from a file.
-  nsRefPtr<mozilla::dom::Blob> mDOMBlob;
+  RefPtr<mozilla::dom::Blob> mDOMBlob;
   // We stream data to mBlobSet when response type is "blob" or "moz-blob"
   // and mDOMBlob is null.
   nsAutoPtr<mozilla::dom::BlobSet> mBlobSet;
@@ -737,7 +737,7 @@ protected:
 
   uint32_t mState;
 
-  nsRefPtr<nsXMLHttpRequestUpload> mUpload;
+  RefPtr<nsXMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
   int64_t mUploadTotal;
   bool mUploadLengthComputable;
@@ -870,7 +870,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
-  nsRefPtr<nsXMLHttpRequest> mXHR;
+  RefPtr<nsXMLHttpRequest> mXHR;
 };
 
 class nsXHRParseEndListener : public nsIDOMEventListener

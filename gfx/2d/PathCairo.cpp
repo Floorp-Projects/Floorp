@@ -162,7 +162,7 @@ PathCairo::~PathCairo()
 already_AddRefed<PathBuilder>
 PathCairo::CopyToBuilder(FillRule aFillRule) const
 {
-  nsRefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
+  RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
 
   builder->mPathData = mPathData;
   builder->mCurrentPoint = mCurrentPoint;
@@ -173,7 +173,7 @@ PathCairo::CopyToBuilder(FillRule aFillRule) const
 already_AddRefed<PathBuilder>
 PathCairo::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
-  nsRefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
+  RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
 
   AppendPathToBuilder(builder, &aTransform);
   builder->mCurrentPoint = aTransform * mCurrentPoint;

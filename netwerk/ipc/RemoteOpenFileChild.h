@@ -110,7 +110,7 @@ protected:
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mAppURI;
   nsCOMPtr<nsIRemoteOpenFileListener> mListener;
-  nsRefPtr<TabChild> mTabChild;
+  RefPtr<TabChild> mTabChild;
   PRFileDesc* mNSPRFileDesc;
   bool mAsyncOpenCalled;
   bool mNSPROpenCalled;

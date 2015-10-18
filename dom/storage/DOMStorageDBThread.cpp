@@ -403,7 +403,7 @@ nsReverseStringSQLFunction::OnFunctionCall(
   nsAutoCString result;
   ReverseString(stringToReverse, result);
 
-  nsRefPtr<nsVariant> outVar(new nsVariant());
+  RefPtr<nsVariant> outVar(new nsVariant());
   rv = outVar->SetAsAUTF8String(result);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -725,7 +725,7 @@ DOMStorageDBThread::NotifyFlushCompletion()
 {
 #ifdef DOM_STORAGE_TESTS
   if (!NS_IsMainThread()) {
-    nsRefPtr<nsRunnableMethod<DOMStorageDBThread, void, false> > event =
+    RefPtr<nsRunnableMethod<DOMStorageDBThread, void, false> > event =
       NS_NewNonOwningRunnableMethod(this, &DOMStorageDBThread::NotifyFlushCompletion);
     NS_DispatchToMainThread(event);
     return;

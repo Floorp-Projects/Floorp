@@ -26,19 +26,19 @@ FilterExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nullptr;
 
-    nsRefPtr<txAExprResult> exprRes;
+    RefPtr<txAExprResult> exprRes;
     nsresult rv = expr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(exprRes->getResultType() == txAExprResult::NODESET,
                    NS_ERROR_XSLT_NODESET_EXPECTED);
 
-    nsRefPtr<txNodeSet> nodes =
+    RefPtr<txNodeSet> nodes =
         static_cast<txNodeSet*>(static_cast<txAExprResult*>(exprRes));
     // null out exprRes so that we can test for shared-ness
     exprRes = nullptr;
 
-    nsRefPtr<txNodeSet> nonShared;
+    RefPtr<txNodeSet> nonShared;
     rv = aContext->recycler()->getNonSharedNodeSet(nodes,
                                                    getter_AddRefs(nonShared));
     NS_ENSURE_SUCCESS(rv, rv);

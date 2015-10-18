@@ -146,7 +146,7 @@ nsTransactionItem::GetChild(int32_t aIndex, nsTransactionItem **aChild)
   if (numItems > 0 && aIndex < numItems) {
     NS_ENSURE_TRUE(mUndoStack, NS_ERROR_FAILURE);
 
-    nsRefPtr<nsTransactionItem> child = mUndoStack->GetItem(aIndex);
+    RefPtr<nsTransactionItem> child = mUndoStack->GetItem(aIndex);
     child.forget(aChild);
     return *aChild ? NS_OK : NS_ERROR_FAILURE;
   }
@@ -161,7 +161,7 @@ nsTransactionItem::GetChild(int32_t aIndex, nsTransactionItem **aChild)
 
   NS_ENSURE_TRUE(mRedoStack && numItems != 0 && aIndex < numItems, NS_ERROR_FAILURE);
 
-  nsRefPtr<nsTransactionItem> child = mRedoStack->GetItem(aIndex);
+  RefPtr<nsTransactionItem> child = mRedoStack->GetItem(aIndex);
   child.forget(aChild);
   return *aChild ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -200,7 +200,7 @@ nsTransactionItem::UndoTransaction(nsTransactionManager *aTxMgr)
 nsresult
 nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
 {
-  nsRefPtr<nsTransactionItem> item;
+  RefPtr<nsTransactionItem> item;
   nsresult result = NS_OK;
   int32_t sz = 0;
 
@@ -276,7 +276,7 @@ nsTransactionItem::RedoTransaction(nsTransactionManager *aTxMgr)
 nsresult
 nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
 {
-  nsRefPtr<nsTransactionItem> item;
+  RefPtr<nsTransactionItem> item;
   nsresult result = NS_OK;
 
   if (!mRedoStack)

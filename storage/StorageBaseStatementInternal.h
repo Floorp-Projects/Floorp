@@ -96,7 +96,7 @@ public:
 protected: // mix-in bits are protected
   StorageBaseStatementInternal();
 
-  nsRefPtr<Connection> mDBConnection;
+  RefPtr<Connection> mDBConnection;
   sqlite3 *mNativeConnection;
 
   /**

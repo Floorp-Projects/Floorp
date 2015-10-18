@@ -289,7 +289,7 @@ protected:
   bool mDisconnected;
   mozilla::dom::ipc::MessageManagerCallback* mCallback;
   nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
-  nsRefPtr<nsFrameMessageManager> mParentManager;
+  RefPtr<nsFrameMessageManager> mParentManager;
   nsTArray<nsString> mPendingScripts;
   nsTArray<bool> mPendingScriptsGlobalStates;
   JS::Heap<JS::Value> mInitialProcessData;
@@ -324,7 +324,7 @@ private:
    };
 
 
-   nsRefPtr<nsSameProcessAsyncMessageBase> ev = new MyAsyncMessage();
+   RefPtr<nsSameProcessAsyncMessageBase> ev = new MyAsyncMessage();
    nsresult rv = ev->Init(...);
    if (NS_SUCCEEDED(rv)) {
      NS_DispatchToMainThread(ev);

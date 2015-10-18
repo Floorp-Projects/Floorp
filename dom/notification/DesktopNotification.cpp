@@ -50,7 +50,7 @@ public:
     return NS_OK;
   }
 
-  nsRefPtr<DesktopNotification> mDesktopNotification;
+  RefPtr<DesktopNotification> mDesktopNotification;
 };
 
 /* ------------------------------------------------------------------------ */
@@ -154,7 +154,7 @@ DesktopNotification::DesktopNotification(const nsAString & title,
 void
 DesktopNotification::Init()
 {
-  nsRefPtr<DesktopNotificationRequest> request = new DesktopNotificationRequest(this);
+  RefPtr<DesktopNotificationRequest> request = new DesktopNotificationRequest(this);
 
   NS_DispatchToMainThread(request);
 }
@@ -173,7 +173,7 @@ DesktopNotification::DispatchNotificationEvent(const nsString& aName)
     return;
   }
 
-  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   // it doesn't bubble, and it isn't cancelable
   nsresult rv = event->InitEvent(aName, false, false);
   if (NS_FAILED(rv)) {
@@ -247,7 +247,7 @@ DesktopNotificationCenter::CreateNotification(const nsAString& aTitle,
 {
   MOZ_ASSERT(mOwner);
 
-  nsRefPtr<DesktopNotification> notification =
+  RefPtr<DesktopNotification> notification =
     new DesktopNotification(aTitle,
                             aDescription,
                             aIconURL,

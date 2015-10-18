@@ -155,7 +155,7 @@ OffscreenCanvas::GetContext(JSContext* aCx,
 already_AddRefed<nsICanvasRenderingContextInternal>
 OffscreenCanvas::CreateContext(CanvasContextType aContextType)
 {
-  nsRefPtr<nsICanvasRenderingContextInternal> ret =
+  RefPtr<nsICanvasRenderingContextInternal> ret =
     CanvasRenderingContextHelper::CreateContext(aContextType);
 
   ret->SetOffscreenCanvas(this);
@@ -198,7 +198,7 @@ OffscreenCanvas::ToCloneData()
 OffscreenCanvas::CreateFromCloneData(OffscreenCanvasCloneData* aData)
 {
   MOZ_ASSERT(aData);
-  nsRefPtr<OffscreenCanvas> wc =
+  RefPtr<OffscreenCanvas> wc =
     new OffscreenCanvas(aData->mWidth, aData->mHeight,
                         aData->mCompositorBackendType, aData->mRenderer);
   if (aData->mNeutered) {

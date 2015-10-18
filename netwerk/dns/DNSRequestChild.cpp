@@ -178,7 +178,7 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<DNSRequestChild> mDnsRequest;
+  RefPtr<DNSRequestChild> mDnsRequest;
   nsresult mReasonForCancel;
 };
 
@@ -273,7 +273,7 @@ void
 DNSRequestChild::ReleaseIPDLReference()
 {
   // Request is done or destroyed. Remove it from the hash table.
-  nsRefPtr<ChildDNSService> dnsServiceChild =
+  RefPtr<ChildDNSService> dnsServiceChild =
     dont_AddRef(ChildDNSService::GetSingleton());
   dnsServiceChild->NotifyRequestDone(this);
 

@@ -31,7 +31,7 @@ public:
 
     static already_AddRefed<nsIdleServiceGTK> GetInstance()
     {
-        nsRefPtr<nsIdleServiceGTK> idleService =
+        RefPtr<nsIdleServiceGTK> idleService =
             nsIdleService::GetInstance().downcast<nsIdleServiceGTK>();
         if (!idleService) {
             idleService = new nsIdleServiceGTK();

@@ -34,7 +34,7 @@ public:
 class AMRSampleEntry : public AudioSampleEntry {
 public:
   // 3GPP members
-  nsRefPtr<AMRSpecificBox> amr_special_box;
+  RefPtr<AMRSpecificBox> amr_special_box;
 
   // MuxerOperation methods
   nsresult Generate(uint32_t* aBoxSize) override;

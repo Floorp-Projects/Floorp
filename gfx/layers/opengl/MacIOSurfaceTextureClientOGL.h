@@ -52,7 +52,7 @@ public:
 protected:
   virtual void FinalizeOnIPDLThread() override;
 
-  nsRefPtr<MacIOSurface> mSurface;
+  RefPtr<MacIOSurface> mSurface;
   bool mIsLocked;
 };
 

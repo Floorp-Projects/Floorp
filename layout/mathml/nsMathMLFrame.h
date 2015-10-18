@@ -199,7 +199,7 @@ public:
                       nscoord&        aSubDrop,
                       float           aFontSizeInflation) 
   {
-    nsRefPtr<nsFontMetrics> fm;
+    RefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aChild, getter_AddRefs(fm),
                                           aFontSizeInflation);
     GetSubDrop(fm, aSubDrop);
@@ -210,7 +210,7 @@ public:
                       nscoord&        aSupDrop,
                       float           aFontSizeInflation) 
   {
-    nsRefPtr<nsFontMetrics> fm;
+    RefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aChild, getter_AddRefs(fm),
                                           aFontSizeInflation);
     GetSupDrop(fm, aSupDrop);

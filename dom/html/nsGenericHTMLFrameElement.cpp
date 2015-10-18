@@ -187,7 +187,7 @@ nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
 NS_IMETHODIMP_(already_AddRefed<nsFrameLoader>)
 nsGenericHTMLFrameElement::GetFrameLoader()
 {
-  nsRefPtr<nsFrameLoader> loader = mFrameLoader;
+  RefPtr<nsFrameLoader> loader = mFrameLoader;
   return loader.forget();
 }
 
@@ -351,7 +351,7 @@ nsGenericHTMLFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
         if (cur != val) {
           scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, val);
           scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, val);
-          nsRefPtr<nsPresContext> presContext;
+          RefPtr<nsPresContext> presContext;
           docshell->GetPresContext(getter_AddRefs(presContext));
           nsIPresShell* shell = presContext ? presContext->GetPresShell() : nullptr;
           nsIFrame* rootScroll = shell ? shell->GetRootScrollFrame() : nullptr;

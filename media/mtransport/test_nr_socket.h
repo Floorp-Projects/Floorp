@@ -215,7 +215,7 @@ class TestNrSocket : public NrSocket {
     class PortMapping {
       public:
         PortMapping(const nr_transport_addr &remote_address,
-                    const nsRefPtr<NrSocket> &external_socket);
+                    const RefPtr<NrSocket> &external_socket);
 
         int sendto(const void *msg, size_t len, const nr_transport_addr &to);
         int async_wait(int how, NR_async_cb cb, void *cb_arg,
@@ -225,7 +225,7 @@ class TestNrSocket : public NrSocket {
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PortMapping);
 
         PRIntervalTime last_used_;
-        nsRefPtr<NrSocket> external_socket_;
+        RefPtr<NrSocket> external_socket_;
         // For non-symmetric, most of the data here doesn't matter
         nr_transport_addr remote_address_;
 
@@ -235,7 +235,7 @@ class TestNrSocket : public NrSocket {
         // If external_socket_ returns E_WOULDBLOCK, we don't want to propagate
         // that to the code using the TestNrSocket. We can also perhaps use this
         // to help simulate things like latency.
-        std::list<nsRefPtr<UdpPacket>> send_queue_;
+        std::list<RefPtr<UdpPacket>> send_queue_;
     };
 
     bool is_port_mapping_stale(const PortMapping &port_mapping) const;
@@ -264,17 +264,17 @@ class TestNrSocket : public NrSocket {
                                   TestNat::NatBehavior filter) const;
     PortMapping* create_port_mapping(
         const nr_transport_addr &remote_addr,
-        const nsRefPtr<NrSocket> &external_socket) const;
-    nsRefPtr<NrSocket> create_external_socket(
+        const RefPtr<NrSocket> &external_socket) const;
+    RefPtr<NrSocket> create_external_socket(
         const nr_transport_addr &remote_addr) const;
 
-    nsRefPtr<NrSocket> readable_socket_;
-    nsRefPtr<TestNat> nat_;
+    RefPtr<NrSocket> readable_socket_;
+    RefPtr<TestNat> nat_;
     // Since our comparison logic is different depending on what kind of NAT
     // we simulate, and the STL does not make it very easy to switch out the
     // comparison function at runtime, and these lists are going to be very
     // small anyway, we just brute-force it.
-    std::list<nsRefPtr<PortMapping>> port_mappings_;
+    std::list<RefPtr<PortMapping>> port_mappings_;
 };
 
 } // namespace mozilla

@@ -176,7 +176,7 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 
   if (aOptions.IsEmpty() ||
       MediaKeySystemAccess::IsSupported(keySystem, aOptions)) {
-    nsRefPtr<MediaKeySystemAccess> access(
+    RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion)));
    if (ShouldTrialCreateGMP(keySystem)) {
       // Ensure we have tried creating a GMPVideoDecoder for this

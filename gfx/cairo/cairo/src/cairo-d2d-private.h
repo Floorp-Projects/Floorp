@@ -61,15 +61,15 @@ struct _cairo_d2d_device
     cairo_device_t base;
 
     HMODULE mD3D10_1;
-    nsRefPtr<ID3D10Device1> mD3D10Device;
-    nsRefPtr<ID3D10Effect> mSampleEffect;
-    nsRefPtr<ID3D10InputLayout> mInputLayout;
-    nsRefPtr<ID3D10Buffer> mQuadBuffer;
-    nsRefPtr<ID3D10RasterizerState> mRasterizerState;
-    nsRefPtr<ID3D10BlendState> mBlendStates[MAX_OPERATORS];
+    RefPtr<ID3D10Device1> mD3D10Device;
+    RefPtr<ID3D10Effect> mSampleEffect;
+    RefPtr<ID3D10InputLayout> mInputLayout;
+    RefPtr<ID3D10Buffer> mQuadBuffer;
+    RefPtr<ID3D10RasterizerState> mRasterizerState;
+    RefPtr<ID3D10BlendState> mBlendStates[MAX_OPERATORS];
     /** Texture used for manual glyph rendering */
-    nsRefPtr<ID3D10Texture2D> mTextTexture;
-    nsRefPtr<ID3D10ShaderResourceView> mTextTextureView;
+    RefPtr<ID3D10Texture2D> mTextTexture;
+    RefPtr<ID3D10ShaderResourceView> mTextTextureView;
     int mVRAMUsage;
 };
 
@@ -94,20 +94,20 @@ struct _cairo_d2d_surface {
     cairo_d2d_device_t *device;
 
     /** Render target of the texture we render to */
-    nsRefPtr<ID2D1RenderTarget> rt;
+    RefPtr<ID2D1RenderTarget> rt;
     /** Surface containing our backstore */
-    nsRefPtr<ID3D10Resource> surface;
+    RefPtr<ID3D10Resource> surface;
     /** 
      * Surface used to temporarily store our surface if a bitmap isn't available
      * straight from our render target surface.
      */
-    nsRefPtr<ID3D10Texture2D> bufferTexture;
+    RefPtr<ID3D10Texture2D> bufferTexture;
     /** Backbuffer surface hwndrt renders to (NULL if not a window surface) */
-    nsRefPtr<IDXGISurface> backBuf;
+    RefPtr<IDXGISurface> backBuf;
     /** Bitmap shared with texture and rendered to by rt */
-    nsRefPtr<ID2D1Bitmap> surfaceBitmap;
+    RefPtr<ID2D1Bitmap> surfaceBitmap;
     /** Swap chain holding our backbuffer (NULL if not a window surface) */
-    nsRefPtr<IDXGISwapChain> dxgiChain;
+    RefPtr<IDXGISwapChain> dxgiChain;
     /** Window handle of the window we belong to */
     HWND hwnd;
     /** Format of the surface */
@@ -118,18 +118,18 @@ struct _cairo_d2d_surface {
 
 
     /** Mask layer used by surface_mask to push opacity masks */
-    nsRefPtr<ID2D1Layer> maskLayer;
+    RefPtr<ID2D1Layer> maskLayer;
     /**
      * Layer used for clipping when tiling, and also for clearing out geometries
      * - lazily initialized 
      */
-    nsRefPtr<ID2D1Layer> helperLayer;
+    RefPtr<ID2D1Layer> helperLayer;
     /** If this layer currently is clipping, used to prevent excessive push/pops */
     bool clipping;
     /** Brush used for bitmaps */
-    nsRefPtr<ID2D1BitmapBrush> bitmapBrush;
+    RefPtr<ID2D1BitmapBrush> bitmapBrush;
     /** Brush used for solid colors */
-    nsRefPtr<ID2D1SolidColorBrush> solidColorBrush;
+    RefPtr<ID2D1SolidColorBrush> solidColorBrush;
     /** Indicates if our render target is currently in drawing mode */
     bool isDrawing;
     /** Indicates if text rendering is initialized */
@@ -141,8 +141,8 @@ struct _cairo_d2d_surface {
     };
     TextRenderingState textRenderingState;
 
-    nsRefPtr<ID3D10RenderTargetView> buffer_rt_view;
-    nsRefPtr<ID3D10ShaderResourceView> buffer_sr_view;
+    RefPtr<ID3D10RenderTargetView> buffer_rt_view;
+    RefPtr<ID3D10ShaderResourceView> buffer_sr_view;
 
     // Other d2d surfaces which depend on this one and need to be flushed if
     // it is drawn to. This is required for situations where this surface is

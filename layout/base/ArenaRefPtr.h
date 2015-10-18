@@ -9,7 +9,7 @@
    that might be held onto until the arena's destruction */
 
 #include "mozilla/Assertions.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #ifndef mozilla_ArenaRefPtr_h
 #define mozilla_ArenaRefPtr_h
@@ -128,14 +128,14 @@ private:
   template<typename I>
   void assign(already_AddRefed<I>& aSmartPtr)
   {
-    nsRefPtr<T> newPtr(aSmartPtr);
+    RefPtr<T> newPtr(aSmartPtr);
     assignFrom(newPtr);
   }
 
   template<typename I>
   void assign(already_AddRefed<I>&& aSmartPtr)
   {
-    nsRefPtr<T> newPtr(aSmartPtr);
+    RefPtr<T> newPtr(aSmartPtr);
     assignFrom(newPtr);
   }
 
@@ -159,7 +159,7 @@ private:
     }
   }
 
-  nsRefPtr<T> mPtr;
+  RefPtr<T> mPtr;
 };
 
 } // namespace mozilla

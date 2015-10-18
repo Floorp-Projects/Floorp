@@ -83,7 +83,7 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
 {
     LOG(("OfflineCacheUpdateParent::RecvSchedule [%p]", this));
 
-    nsRefPtr<nsOfflineCacheUpdate> update;
+    RefPtr<nsOfflineCacheUpdate> update;
     nsCOMPtr<nsIURI> manifestURI = DeserializeURI(aManifestURI);
     if (!manifestURI)
         return NS_ERROR_FAILURE;

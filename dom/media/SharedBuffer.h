@@ -61,7 +61,7 @@ public:
       MOZ_CRASH();
     }
     void* m = moz_xmalloc(size.value());
-    nsRefPtr<SharedBuffer> p = new (m) SharedBuffer();
+    RefPtr<SharedBuffer> p = new (m) SharedBuffer();
     NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
                  "SharedBuffers should be at least 4-byte aligned");
     return p.forget();

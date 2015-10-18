@@ -256,7 +256,7 @@ nsCertTree::GetThreadDescAtIndex(int32_t index)
 already_AddRefed<nsIX509Cert>
 nsCertTree::GetCertAtIndex(int32_t index, int32_t *outAbsoluteCertOffset)
 {
-  nsRefPtr<nsCertTreeDispInfo> certdi(
+  RefPtr<nsCertTreeDispInfo> certdi(
     GetDispInfoAtIndex(index, outAbsoluteCertOffset));
   if (!certdi)
     return nullptr;
@@ -286,7 +286,7 @@ nsCertTree::GetDispInfoAtIndex(int32_t index,
       int32_t certIndex = cIndex + index - idx;
       if (outAbsoluteCertOffset)
         *outAbsoluteCertOffset = certIndex;
-      nsRefPtr<nsCertTreeDispInfo> certdi(mDispInfo.SafeElementAt(certIndex,
+      RefPtr<nsCertTreeDispInfo> certdi(mDispInfo.SafeElementAt(certIndex,
                                                                 nullptr));
       if (certdi) {
         return certdi.forget();
@@ -320,8 +320,8 @@ nsCertTree::GetCompareFuncFromCertType(uint32_t aType)
 
 struct nsCertAndArrayAndPositionAndCounterAndTracker
 {
-  nsRefPtr<nsCertAddonInfo> certai;
-  nsTArray< nsRefPtr<nsCertTreeDispInfo> > *array;
+  RefPtr<nsCertAddonInfo> certai;
+  nsTArray< RefPtr<nsCertTreeDispInfo> > *array;
   int position;
   int counter;
   nsTHashtable<nsCStringHashKey> *tracker;
@@ -384,7 +384,7 @@ CollectAllHostPortOverridesCallback(const nsCertOverride &aSettings,
 
 struct nsArrayAndPositionAndCounterAndTracker
 {
-  nsTArray< nsRefPtr<nsCertTreeDispInfo> > *array;
+  nsTArray< RefPtr<nsCertTreeDispInfo> > *array;
   int position;
   int counter;
   nsTHashtable<nsCStringHashKey> *tracker;
@@ -549,7 +549,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
       }
     }
 
-    nsRefPtr<nsCertAddonInfo> certai(new nsCertAddonInfo);
+    RefPtr<nsCertAddonInfo> certai(new nsCertAddonInfo);
     certai->mCert = pipCert;
     certai->mUsageCount = 0;
 
@@ -557,7 +557,7 @@ nsCertTree::GetCertsByTypeFromCertList(CERTCertList *aCertList,
       int InsertPosition = 0;
       for (; InsertPosition < count; ++InsertPosition) {
         nsCOMPtr<nsIX509Cert> cert = nullptr;
-        nsRefPtr<nsCertTreeDispInfo> elem(
+        RefPtr<nsCertTreeDispInfo> elem(
           mDispInfo.SafeElementAt(InsertPosition, nullptr));
         if (elem && elem->mAddonInfo) {
           cert = elem->mAddonInfo->mCert;
@@ -761,7 +761,7 @@ nsCertTree::DeleteEntryObject(uint32_t index)
       int32_t certIndex = cIndex + index - idx;
 
       bool canRemoveEntry = false;
-      nsRefPtr<nsCertTreeDispInfo> certdi(mDispInfo.SafeElementAt(certIndex,
+      RefPtr<nsCertTreeDispInfo> certdi(mDispInfo.SafeElementAt(certIndex,
                                                                 nullptr));
       
       // We will remove the element from the visual tree.
@@ -850,7 +850,7 @@ nsCertTree::GetTreeItem(uint32_t aIndex, nsICertTreeItem **_treeitem)
 {
   NS_ENSURE_ARG(_treeitem);
 
-  nsRefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(aIndex));
+  RefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(aIndex));
   if (!certdi)
     return NS_ERROR_FAILURE;
 
@@ -864,7 +864,7 @@ nsCertTree::IsHostPortOverride(uint32_t aIndex, bool *_retval)
 {
   NS_ENSURE_ARG(_retval);
 
-  nsRefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(aIndex));
+  RefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(aIndex));
   if (!certdi)
     return NS_ERROR_FAILURE;
 
@@ -1062,7 +1062,7 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
   }
 
   int32_t absoluteCertOffset;
-  nsRefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(row, &absoluteCertOffset));
+  RefPtr<nsCertTreeDispInfo> certdi(GetDispInfoAtIndex(row, &absoluteCertOffset));
   if (!certdi)
     return NS_ERROR_FAILURE;
 

@@ -10,7 +10,7 @@
 #ifndef MOZILLA_GENERICREFCOUNTED_H_
 #define MOZILLA_GENERICREFCOUNTED_H_
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 
 namespace mozilla {

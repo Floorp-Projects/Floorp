@@ -85,7 +85,7 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   ErrorResult er;
   // We won't create touch caret element if preference is not enabled.
   if (PresShell::TouchCaretPrefEnabled()) {
-    nsRefPtr<NodeInfo> nodeInfo;
+    RefPtr<NodeInfo> nodeInfo;
 
     // Create and append touch caret frame.
     nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
@@ -230,7 +230,7 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
     nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
     ErrorResult rv;
 
-    nsTArray<nsRefPtr<mozilla::dom::AnonymousContent>>& docAnonContents =
+    nsTArray<RefPtr<mozilla::dom::AnonymousContent>>& docAnonContents =
       doc->GetAnonymousContents();
     for (size_t i = 0, len = docAnonContents.Length(); i < len; ++i) {
       AnonymousContent* content = docAnonContents[i];
@@ -363,7 +363,7 @@ nsDisplayCanvasBackgroundColor::WriteDebugInfo(std::stringstream& aStream)
 
 static void BlitSurface(DrawTarget* aDest, const gfxRect& aRect, DrawTarget* aSource)
 {
-  nsRefPtr<SourceSurface> source = aSource->Snapshot();
+  RefPtr<SourceSurface> source = aSource->Snapshot();
   aDest->DrawSurface(source,
                      Rect(aRect.x, aRect.y, aRect.width, aRect.height),
                      Rect(0, 0, aRect.width, aRect.height));
@@ -378,8 +378,8 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
   nsRenderingContext context;
-  nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
-  nsRefPtr<DrawTarget> dt;
+  RefPtr<gfxContext> dest = aCtx->ThebesContext();
+  RefPtr<DrawTarget> dt;
   gfxRect destRect;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
   if (IsSingleFixedPositionImage(aBuilder, bgClipRect, &destRect) &&
@@ -396,7 +396,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
     }
     dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width), ceil(destRect.height)), SurfaceFormat::B8G8R8A8);
     if (dt) {
-      nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+      RefPtr<gfxContext> ctx = new gfxContext(dt);
       ctx->SetMatrix(
         ctx->CurrentMatrix().Translate(-destRect.x, -destRect.y));
       context.Init(ctx);

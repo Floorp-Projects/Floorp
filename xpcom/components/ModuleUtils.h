@@ -14,7 +14,7 @@ static nsresult                                                               \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                             void **aResult)                                   \
 {                                                                             \
-    nsRefPtr<_InstanceClass> inst;                                            \
+    RefPtr<_InstanceClass> inst;                                            \
                                                                               \
     *aResult = nullptr;                                                       \
     if (nullptr != aOuter) {                                                  \
@@ -32,7 +32,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 {                                                                             \
     nsresult rv;                                                              \
                                                                               \
-    nsRefPtr<_InstanceClass> inst;                                            \
+    RefPtr<_InstanceClass> inst;                                            \
                                                                               \
     *aResult = nullptr;                                                       \
     if (nullptr != aOuter) {                                                  \
@@ -55,7 +55,7 @@ static nsresult                                                               \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                             void **aResult)                                   \
 {                                                                             \
-    nsRefPtr<_InstanceClass> inst;                                            \
+    RefPtr<_InstanceClass> inst;                                            \
                                                                               \
     *aResult = nullptr;                                                       \
     if (nullptr != aOuter) {                                                  \

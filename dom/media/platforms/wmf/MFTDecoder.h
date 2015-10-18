@@ -8,7 +8,7 @@
 #define MFTDecoder_h_
 
 #include "WMF.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIThread.h"
 
@@ -47,7 +47,7 @@ public:
 
   // Retrieves the media type being output. This may not be valid until
   //  the first sample is decoded.
-  HRESULT GetOutputMediaType(nsRefPtr<IMFMediaType>& aMediaType);
+  HRESULT GetOutputMediaType(RefPtr<IMFMediaType>& aMediaType);
 
   // Submits data into the MFT for processing.
   //
@@ -62,7 +62,7 @@ public:
   HRESULT CreateInputSample(const uint8_t* aData,
                             uint32_t aDataSize,
                             int64_t aTimestampUsecs,
-                            nsRefPtr<IMFSample>* aOutSample);
+                            RefPtr<IMFSample>* aOutSample);
 
   // Retrieves output from the MFT. Call this once Input() returns
   // MF_E_NOTACCEPTING. Some MFTs with hardware acceleration (the H.264
@@ -76,7 +76,7 @@ public:
   //  - MF_E_TRANSFORM_NEED_MORE_INPUT if no output can be produced
   //    due to lack of input.
   //  - S_OK if an output frame is produced.
-  HRESULT Output(nsRefPtr<IMFSample>* aOutput);
+  HRESULT Output(RefPtr<IMFSample>* aOutput);
 
   // Sends a flush message to the MFT. This causes it to discard all
   // input data. Use before seeking.
@@ -90,14 +90,14 @@ public:
 private:
 
 
-  HRESULT CreateOutputSample(nsRefPtr<IMFSample>* aOutSample);
+  HRESULT CreateOutputSample(RefPtr<IMFSample>* aOutSample);
 
   MFT_INPUT_STREAM_INFO mInputStreamInfo;
   MFT_OUTPUT_STREAM_INFO mOutputStreamInfo;
 
-  nsRefPtr<IMFTransform> mDecoder;
+  RefPtr<IMFTransform> mDecoder;
 
-  nsRefPtr<IMFMediaType> mOutputType;
+  RefPtr<IMFMediaType> mOutputType;
 
   // True if the IMFTransform allocates the samples that it returns.
   bool mMFTProvidesOutputSamples;

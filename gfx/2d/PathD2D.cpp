@@ -356,7 +356,7 @@ PathD2D::CopyToBuilder(FillRule aFillRule) const
 already_AddRefed<PathBuilder>
 PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
-  nsRefPtr<ID2D1PathGeometry> path;
+  RefPtr<ID2D1PathGeometry> path;
   HRESULT hr = DrawTargetD2D::factory()->CreatePathGeometry(getter_AddRefs(path));
 
   if (FAILED(hr)) {
@@ -364,7 +364,7 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
     return nullptr;
   }
 
-  nsRefPtr<ID2D1GeometrySink> sink;
+  RefPtr<ID2D1GeometrySink> sink;
   hr = path->Open(getter_AddRefs(sink));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to open Geometry for writing. Code: " << hexa(hr);
@@ -386,7 +386,7 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
                         sink);
   }
 
-  nsRefPtr<PathBuilderD2D> pathBuilder = new PathBuilderD2D(sink, path, aFillRule, mBackendType);
+  RefPtr<PathBuilderD2D> pathBuilder = new PathBuilderD2D(sink, path, aFillRule, mBackendType);
   
   pathBuilder->mCurrentPoint = aTransform * mEndPoint;
   
@@ -435,7 +435,7 @@ PathD2D::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 {
   BOOL result;
 
-  nsRefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
+  RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
   HRESULT hr = mGeometry->StrokeContainsPoint(D2DPoint(aPoint),
                                               aStrokeOptions.mLineWidth,
                                               strokeStyle,
@@ -472,7 +472,7 @@ PathD2D::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
 {
   D2D1_RECT_F d2dBounds;
 
-  nsRefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
+  RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
   HRESULT hr =
     mGeometry->GetWidenedBounds(aStrokeOptions.mLineWidth, strokeStyle,
                                 D2DMatrix(aTransform), &d2dBounds);

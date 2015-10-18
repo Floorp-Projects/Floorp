@@ -362,7 +362,7 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface,
     return nullptr;
   }
 
-  nsRefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+  RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
   if (!data) {
     return nullptr;
   }
@@ -679,7 +679,7 @@ already_AddRefed<SourceSurface>
 DrawTargetCairo::Snapshot()
 {
   if (mSnapshot) {
-    nsRefPtr<SourceSurface> snapshot(mSnapshot);
+    RefPtr<SourceSurface> snapshot(mSnapshot);
     return snapshot.forget();
   }
 
@@ -689,7 +689,7 @@ DrawTargetCairo::Snapshot()
                                      size,
                                      GfxFormatForCairoSurface(mSurface),
                                      this);
-  nsRefPtr<SourceSurface> snapshot(mSnapshot);
+  RefPtr<SourceSurface> snapshot(mSnapshot);
   return snapshot.forget();
 }
 
@@ -1415,7 +1415,7 @@ DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
     return nullptr;
   }
 
-  nsRefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
+  RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
   cairo_surface_destroy(surf);
 
   return source_surf.forget();
@@ -1443,7 +1443,7 @@ DestroyPixmap(void *data)
 already_AddRefed<SourceSurface>
 DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
-  nsRefPtr<SourceSurface> surface(aSurface);
+  RefPtr<SourceSurface> surface(aSurface);
 #ifdef CAIRO_HAS_XLIB_SURFACE
   cairo_surface_type_t ctype = cairo_surface_get_type(mSurface);
   if (aSurface->GetType() == SurfaceType::CAIRO &&
@@ -1513,7 +1513,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
   cairo_surface_set_user_data(csurf, &gDestroyPixmapKey,
                               closure.forget(), DestroyPixmap);
 
-  nsRefPtr<DrawTargetCairo> dt = new DrawTargetCairo();
+  RefPtr<DrawTargetCairo> dt = new DrawTargetCairo();
   if (!dt->Init(csurf, size, &format)) {
     return surface.forget();
   }
@@ -1553,7 +1553,7 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
                                                           aSize.width, aSize.height);
 
   if (!cairo_surface_status(similar)) {
-    nsRefPtr<DrawTargetCairo> target = new DrawTargetCairo();
+    RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
     if (target->InitAlreadyReferenced(similar, aSize)) {
       return target.forget();
     }
@@ -1612,7 +1612,7 @@ DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   // If we don't have a blur then we can use the RGBA mask and keep all the
   // operations in graphics memory.
   if (aSigma == 0.0F) {
-    nsRefPtr<DrawTargetCairo> target = new DrawTargetCairo();
+    RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
     if (target->InitAlreadyReferenced(similar, aSize)) {
       return target.forget();
     } else {
@@ -1638,7 +1638,7 @@ DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   cairo_tee_surface_add(tee, similar);
   cairo_surface_destroy(similar);
 
-  nsRefPtr<DrawTargetCairo> target = new DrawTargetCairo();
+  RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
   if (target->InitAlreadyReferenced(tee, aSize)) {
     return target.forget();
   }

@@ -44,7 +44,7 @@ TestNewSurface () {
     int failures = 0;
     int destroyed = 0;
 
-    nsRefPtr<gfxASurface> s = new gfxImageSurface (mozilla::gfx::IntSize(10, 10), gfxImageFormat::ARGB32);
+    RefPtr<gfxASurface> s = new gfxImageSurface (mozilla::gfx::IntSize(10, 10), gfxImageFormat::ARGB32);
     cairo_surface_t *cs = s->CairoSurface();
 
     cairo_surface_set_user_data (cs, &destruction_key, &destroyed, SurfaceDestroyNotifier);
@@ -98,7 +98,7 @@ TestExistingSurface () {
     failures += CheckInt (cairo_surface_get_reference_count(cs), 1);
     failures += CheckInt (destroyed, 0);
 
-    nsRefPtr<gfxASurface> s = gfxASurface::Wrap(cs);
+    RefPtr<gfxASurface> s = gfxASurface::Wrap(cs);
 
     failures += CheckInt (GetASurfaceRefCount(s.get()), 2);
 

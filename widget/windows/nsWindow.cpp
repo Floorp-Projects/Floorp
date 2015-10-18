@@ -3701,7 +3701,7 @@ nsWindow::StartRemoteDrawing()
                "Unexpected render mode for remote drawing");
 
   HDC dc = (HDC)GetNativeData(NS_NATIVE_GRAPHIC);
-  nsRefPtr<gfxASurface> surf;
+  RefPtr<gfxASurface> surf;
 
   if (mTransparencyMode == eTransparencyTransparent) {
     if (!mTransparentSurface) {
@@ -3752,7 +3752,7 @@ nsWindow::EndRemoteDrawing()
 void
 nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
 {
-  nsRefPtr<LayerManager> layerManager = GetLayerManager();
+  RefPtr<LayerManager> layerManager = GetLayerManager();
   if (!layerManager) {
     return;
   }
@@ -6975,7 +6975,7 @@ void nsWindow::ResizeTranslucentWindow(int32_t aNewWidth, int32_t aNewHeight, bo
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-  nsRefPtr<gfxWindowsSurface> newSurface =
+  RefPtr<gfxWindowsSurface> newSurface =
     new gfxWindowsSurface(IntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
   mTransparentSurface = newSurface;
   mMemoryDC = newSurface->GetDC();
@@ -7050,7 +7050,7 @@ void nsWindow::ClearTranslucentWindow()
 {
   if (mTransparentSurface) {
     IntSize size = mTransparentSurface->GetSize();
-    nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(mTransparentSurface, size);
     drawTarget->ClearRect(Rect(0, 0, size.width, size.height));
     UpdateTranslucentWindow();
@@ -7721,7 +7721,7 @@ void nsWindow::PickerClosed()
   }
 }
 
-bool nsWindow::CaptureWidgetOnScreen(nsRefPtr<DrawTarget> aDT)
+bool nsWindow::CaptureWidgetOnScreen(RefPtr<DrawTarget> aDT)
 {
   BOOL dwmEnabled = false;
   if (WinUtils::dwmIsCompositionEnabledPtr &&
@@ -7737,19 +7737,19 @@ bool nsWindow::CaptureWidgetOnScreen(nsRefPtr<DrawTarget> aDT)
                    ? 0
                    : gfxWindowsSurface::FLAG_IS_TRANSPARENT;
 
-  nsRefPtr<gfxASurface> surf = new gfxWindowsSurface(dc, flags);
+  RefPtr<gfxASurface> surf = new gfxWindowsSurface(dc, flags);
   IntSize size(surf->GetSize().width, surf->GetSize().height);
   if (size.width <= 0 || size.height <= 0) {
     ::ReleaseDC(mWnd, dc);
     return false;
   }
 
-  nsRefPtr<DrawTarget> source = Factory::CreateDrawTargetForCairoSurface(surf->CairoSurface(), size);
+  RefPtr<DrawTarget> source = Factory::CreateDrawTargetForCairoSurface(surf->CairoSurface(), size);
   if (!source) {
     ::ReleaseDC(mWnd, dc);
     return false;
   }
-  nsRefPtr<SourceSurface> snapshot = source->Snapshot();
+  RefPtr<SourceSurface> snapshot = source->Snapshot();
   if (!snapshot) {
     ::ReleaseDC(mWnd, dc);
     return false;

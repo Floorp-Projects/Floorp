@@ -63,9 +63,9 @@ PaintCheckedRadioButton(nsIFrame* aFrame,
   ColorPattern color(ToDeviceColor(aFrame->StyleColor()->mColor));
 
   DrawTarget* drawTarget = aCtx->GetDrawTarget();
-  nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+  RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
   AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
-  nsRefPtr<Path> ellipse = builder->Finish();
+  RefPtr<Path> ellipse = builder->Finish();
   drawTarget->Fill(ellipse, color);
 }
 

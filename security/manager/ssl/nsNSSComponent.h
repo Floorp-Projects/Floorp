@@ -8,7 +8,7 @@
 #define _nsNSSComponent_h_
 
 #include "mozilla/Mutex.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIEntropyCollector.h"
 #include "nsIStringBundle.h"
@@ -206,7 +206,7 @@ private:
   nsCertVerificationThread* mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
-  nsRefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
+  RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
 
   static PRStatus IdentityInfoInit(void);
 };

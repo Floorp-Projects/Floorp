@@ -33,7 +33,7 @@ MacIOSurfaceTextureClientOGL::Create(ISurfaceAllocator* aAllocator,
                                      TextureFlags aFlags,
                                      MacIOSurface* aSurface)
 {
-  nsRefPtr<MacIOSurfaceTextureClientOGL> texture =
+  RefPtr<MacIOSurfaceTextureClientOGL> texture =
       new MacIOSurfaceTextureClientOGL(aAllocator, aFlags);
   MOZ_ASSERT(texture->IsValid());
   MOZ_ASSERT(!texture->IsAllocated());
@@ -84,7 +84,7 @@ MacIOSurfaceTextureClientOGL::GetSize() const
 already_AddRefed<gfx::DataSourceSurface>
 MacIOSurfaceTextureClientOGL::GetAsSurface()
 {
-  nsRefPtr<gfx::SourceSurface> surf = mSurface->GetAsSurface();
+  RefPtr<gfx::SourceSurface> surf = mSurface->GetAsSurface();
   return surf->GetDataSurface();
 }
 

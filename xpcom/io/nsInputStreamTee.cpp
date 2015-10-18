@@ -135,7 +135,7 @@ private:
   uint32_t mCount;
   nsCOMPtr<nsIOutputStream> mSink;
   // back pointer to the tee that created this runnable
-  nsRefPtr<nsInputStreamTee> mTee;
+  RefPtr<nsInputStreamTee> mTee;
 };
 
 nsInputStreamTee::nsInputStreamTee(): mLock(nullptr)

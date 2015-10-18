@@ -220,7 +220,7 @@ nsFtpProtocolHandler::NewProxiedChannel2(nsIURI* uri, nsIProxyInfo* proxyInfo,
                                          nsIChannel* *result)
 {
     NS_ENSURE_ARG_POINTER(uri);
-    nsRefPtr<nsBaseChannel> channel;
+    RefPtr<nsBaseChannel> channel;
     if (IsNeckoChild())
         channel = new FTPChannelChild(uri);
     else

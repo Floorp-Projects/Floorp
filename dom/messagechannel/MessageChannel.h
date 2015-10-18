@@ -61,8 +61,8 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
-  nsRefPtr<MessagePort> mPort1;
-  nsRefPtr<MessagePort> mPort2;
+  RefPtr<MessagePort> mPort1;
+  RefPtr<MessagePort> mPort2;
 };
 
 } // namespace dom

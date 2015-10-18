@@ -83,7 +83,7 @@ GMPVideoDecoderParent::Close()
   // Let Shutdown mark us as dead so it knows if we had been alive
 
   // In case this is the last reference
-  nsRefPtr<GMPVideoDecoderParent> kungfudeathgrip(this);
+  RefPtr<GMPVideoDecoderParent> kungfudeathgrip(this);
   Release();
   Shutdown();
 }
@@ -182,7 +182,7 @@ GMPVideoDecoderParent::Reset()
 
   mIsAwaitingResetComplete = true;
 
-  nsRefPtr<GMPVideoDecoderParent> self(this);
+  RefPtr<GMPVideoDecoderParent> self(this);
   nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self]() -> void
   {
     LOGD(("GMPVideoDecoderParent[%p]::ResetCompleteTimeout() timed out waiting for ResetComplete", self.get()));

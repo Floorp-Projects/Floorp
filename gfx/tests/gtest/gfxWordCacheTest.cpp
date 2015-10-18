@@ -7,7 +7,7 @@
 #include "gtest/gtest.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -86,10 +86,10 @@ MakeContext ()
 {
   const int size = 200;
 
-  nsRefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+  RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(size, size),
                                        SurfaceFormat::B8G8R8X8);
-  nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+  RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
 
   return ctx.forget();
 }
@@ -97,7 +97,7 @@ MakeContext ()
 TEST(Gfx, WordCache) {
   gTextRuns = new FrameTextRunCache();
 
-  nsRefPtr<gfxContext> ctx = MakeContext();
+  RefPtr<gfxContext> ctx = MakeContext();
   {
     gfxFontStyle style(mozilla::gfx::FontStyle::NORMAL,
                        139,
@@ -108,7 +108,7 @@ TEST(Gfx, WordCache) {
                        false, false,
                        NS_LITERAL_STRING(""));
 
-    nsRefPtr<gfxFontGroup> fontGroup =
+    RefPtr<gfxFontGroup> fontGroup =
       gfxPlatform::GetPlatform()->CreateFontGroup(
         NS_LITERAL_STRING("Geneva, MS Sans Serif, Helvetica,serif"), &style,
         nullptr, nullptr);

@@ -81,7 +81,7 @@ struct gfxFontStyle {
     // the language (may be an internal langGroup code rather than an actual
     // language code) specified in the document or element's lang property,
     // or inferred from the charset
-    nsRefPtr<nsIAtom> language;
+    RefPtr<nsIAtom> language;
 
     // Features are composed of (1) features from style rules (2) features
     // from feature setttings rules and (3) family-specific features.  (1) and
@@ -98,7 +98,7 @@ struct gfxFontStyle {
     nsTArray<gfxAlternateValue> alternateValues;
 
     // -- object used to look these up once the font is matched
-    nsRefPtr<gfxFontFeatureValueSet> featureValueLookup;
+    RefPtr<gfxFontFeatureValueSet> featureValueLookup;
 
     // The logical size of the font, in pixels
     gfxFloat size;
@@ -232,7 +232,7 @@ struct gfxTextRange {
     { }
     uint32_t Length() const { return end - start; }
     uint32_t start, end;
-    nsRefPtr<gfxFont> font;
+    RefPtr<gfxFont> font;
     uint8_t matchType;
     uint16_t orientation;
 };
@@ -1945,7 +1945,7 @@ protected:
     static nsDataHashtable<nsUint32HashKey, int32_t> *sScriptTagToCode;
     static nsTHashtable<nsUint32HashKey>             *sDefaultFeatures;
 
-    nsRefPtr<gfxFontEntry> mFontEntry;
+    RefPtr<gfxFontEntry> mFontEntry;
 
     struct CacheHashKey {
         union {
@@ -2062,9 +2062,9 @@ protected:
 
     // if a userfont with unicode-range specified, contains map of *possible*
     // ranges supported by font
-    nsRefPtr<gfxCharacterMap> mUnicodeRangeMap;
+    RefPtr<gfxCharacterMap> mUnicodeRangeMap;
 
-    nsRefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
+    RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
     // For vertical metrics, created on demand.
     nsAutoPtr<const Metrics> mVerticalMetrics;
@@ -2119,7 +2119,7 @@ protected:
 // are dependent on the specific font, so they are set per GlyphRun.
 
 struct TextRunDrawParams {
-    nsRefPtr<mozilla::gfx::DrawTarget> dt;
+    RefPtr<mozilla::gfx::DrawTarget> dt;
     gfxContext              *context;
     gfxFont::Spacing        *spacing;
     gfxTextRunDrawCallbacks *callbacks;
@@ -2134,8 +2134,8 @@ struct TextRunDrawParams {
 };
 
 struct FontDrawParams {
-    nsRefPtr<mozilla::gfx::ScaledFont>            scaledFont;
-    nsRefPtr<mozilla::gfx::GlyphRenderingOptions> renderingOptions;
+    RefPtr<mozilla::gfx::ScaledFont>            scaledFont;
+    RefPtr<mozilla::gfx::GlyphRenderingOptions> renderingOptions;
     gfxTextContextPaint      *contextPaint;
     mozilla::gfx::Matrix     *passedInvMatrix;
     mozilla::gfx::Matrix      matInv;

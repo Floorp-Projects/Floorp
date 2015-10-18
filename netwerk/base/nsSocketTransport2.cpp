@@ -86,7 +86,7 @@ public:
     }
 
 private:
-    nsRefPtr<nsSocketTransport> mTransport;
+    RefPtr<nsSocketTransport> mTransport;
 
     uint32_t              mType;
     nsresult              mStatus;
@@ -1242,7 +1242,7 @@ nsSocketTransport::InitiateSocket()
             crashOnNonLocalConnections &&
             !(IsIPAddrAny(&mNetAddr) || IsIPAddrLocal(&mNetAddr))) {
             nsAutoCString ipaddr;
-            nsRefPtr<nsNetAddr> netaddr = new nsNetAddr(&mNetAddr);
+            RefPtr<nsNetAddr> netaddr = new nsNetAddr(&mNetAddr);
             netaddr->GetAddress(ipaddr);
             fprintf_stderr(stderr,
                            "FATAL ERROR: Non-local network connections are disabled and a connection "

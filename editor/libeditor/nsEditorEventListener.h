@@ -85,7 +85,7 @@ protected:
   nsresult HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent);
 
   nsEditor* mEditor; // weak
-  nsRefPtr<nsCaret> mCaret;
+  RefPtr<nsCaret> mCaret;
   bool mCommitText;
   bool mInTransaction;
   bool mMouseDownOrUpConsumedByIME;

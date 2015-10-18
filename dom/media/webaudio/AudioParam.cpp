@@ -65,7 +65,7 @@ AudioParam::DisconnectFromGraphAndDestroyStream()
 
   while (!mInputNodes.IsEmpty()) {
     uint32_t i = mInputNodes.Length() - 1;
-    nsRefPtr<AudioNode> input = mInputNodes[i].mInputNode;
+    RefPtr<AudioNode> input = mInputNodes[i].mInputNode;
     mInputNodes.RemoveElementAt(i);
     input->RemoveOutputParam(this);
   }
@@ -89,7 +89,7 @@ AudioParam::Stream()
   }
 
   AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
-  nsRefPtr<AudioNodeStream> stream =
+  RefPtr<AudioNodeStream> stream =
     AudioNodeStream::Create(mNode->Context(), engine,
                             AudioNodeStream::NO_STREAM_FLAGS);
 

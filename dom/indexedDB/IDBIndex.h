@@ -38,7 +38,7 @@ class IDBIndex final
   : public nsISupports
   , public nsWrapperCache
 {
-  nsRefPtr<IDBObjectStore> mObjectStore;
+  RefPtr<IDBObjectStore> mObjectStore;
 
   JS::Heap<JS::Value> mCachedKeyPath;
 

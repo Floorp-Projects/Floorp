@@ -118,7 +118,7 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& a
 {
   NS_ASSERTION(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
 
-  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   nsIAtom* name = ni->NameAtom();
 
   NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),

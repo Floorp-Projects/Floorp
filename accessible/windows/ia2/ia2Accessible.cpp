@@ -118,12 +118,12 @@ ia2Accessible::get_relation(long aRelationIndex,
         continue;
 
       if (static_cast<size_t>(aRelationIndex) == i) {
-        nsTArray<nsRefPtr<Accessible>> targets;
+        nsTArray<RefPtr<Accessible>> targets;
         size_t targetCount = targetSets[i].Length();
         for (size_t j = 0; j < targetCount; j++)
           targets.AppendElement(WrapperFor(targetSets[i][j]));
 
-        nsRefPtr<ia2AccessibleRelation> rel =
+        RefPtr<ia2AccessibleRelation> rel =
           new ia2AccessibleRelation(types[i], Move(targets));
         rel.forget(aRelation);
         return S_OK;
@@ -140,7 +140,7 @@ ia2Accessible::get_relation(long aRelationIndex,
 
     RelationType relationType = sRelationTypePairs[idx].first;
     Relation rel = acc->RelationByType(relationType);
-    nsRefPtr<ia2AccessibleRelation> ia2Relation =
+    RefPtr<ia2AccessibleRelation> ia2Relation =
       new ia2AccessibleRelation(relationType, &rel);
     if (ia2Relation->HasTargets()) {
       if (relIdx == aRelationIndex) {
@@ -186,11 +186,11 @@ ia2Accessible::get_relations(long aMaxRelations,
         continue;
 
       size_t targetCount = targetSets[i].Length();
-      nsTArray<nsRefPtr<Accessible>> targets(targetCount);
+      nsTArray<RefPtr<Accessible>> targets(targetCount);
       for (size_t j = 0; j < targetCount; j++)
         targets.AppendElement(WrapperFor(targetSets[i][j]));
 
-      nsRefPtr<ia2AccessibleRelation> rel =
+      RefPtr<ia2AccessibleRelation> rel =
         new ia2AccessibleRelation(types[i], Move(targets));
       rel.forget(aRelation + i);
       i++;
@@ -207,7 +207,7 @@ ia2Accessible::get_relations(long aMaxRelations,
 
     RelationType relationType = sRelationTypePairs[idx].first;
     Relation rel = acc->RelationByType(relationType);
-    nsRefPtr<ia2AccessibleRelation> ia2Rel =
+    RefPtr<ia2AccessibleRelation> ia2Rel =
       new ia2AccessibleRelation(relationType, &rel);
     if (ia2Rel->HasTargets()) {
       ia2Rel.forget(aRelation + (*aNRelations));

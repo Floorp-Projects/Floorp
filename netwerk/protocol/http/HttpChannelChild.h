@@ -178,8 +178,8 @@ private:
 
   RequestHeaderTuples mClientSetRequestHeaders;
   nsCOMPtr<nsIChildChannel> mRedirectChannelChild;
-  nsRefPtr<InterceptStreamListener> mInterceptListener;
-  nsRefPtr<nsInputStreamPump> mSynthesizedResponsePump;
+  RefPtr<InterceptStreamListener> mInterceptListener;
+  RefPtr<nsInputStreamPump> mSynthesizedResponsePump;
   int64_t mSynthesizedStreamLength;
 
   bool mIsFromCache;
@@ -193,7 +193,7 @@ private:
 
   bool mIPCOpen;
   bool mKeptAlive;            // IPC kept open, but only for security info
-  nsRefPtr<ChannelEventQueue> mEventQ;
+  RefPtr<ChannelEventQueue> mEventQ;
 
   // If nsUnknownDecoder is involved OnStartRequest call will be delayed and
   // this queue keeps OnDataAvailable data until OnStartRequest is finally

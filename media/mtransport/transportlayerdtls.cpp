@@ -1116,7 +1116,7 @@ SECStatus TransportLayerDtls::AuthCertificateHook(void *arg,
 }
 
 SECStatus
-TransportLayerDtls::CheckDigest(const nsRefPtr<VerificationDigest>&
+TransportLayerDtls::CheckDigest(const RefPtr<VerificationDigest>&
                                 digest,
                                 CERTCertificate *peer_cert) {
   unsigned char computed_digest[kMaxDigestLength];
@@ -1195,7 +1195,7 @@ SECStatus TransportLayerDtls::AuthCertificateHook(PRFileDesc *fd,
         // Checking functions call PR_SetError()
         SECStatus rv = SECFailure;
         for (size_t i = 0; i < digests_.size(); i++) {
-          nsRefPtr<VerificationDigest> digest = digests_[i];
+          RefPtr<VerificationDigest> digest = digests_[i];
           rv = CheckDigest(digest, peer_cert);
 
           // Matches a digest, we are good to go

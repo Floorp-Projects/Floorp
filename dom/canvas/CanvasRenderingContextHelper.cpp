@@ -66,7 +66,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
     // This is called on main thread.
     nsresult ReceiveBlob(already_AddRefed<Blob> aBlob)
     {
-      nsRefPtr<Blob> blob = aBlob;
+      RefPtr<Blob> blob = aBlob;
 
       ErrorResult rv;
       uint64_t size = blob->GetSize(rv);
@@ -79,7 +79,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
         }
       }
 
-      nsRefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
+      RefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
 
       mFileCallback->Call(*newBlob, rv);
 
@@ -90,10 +90,10 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
     }
 
     nsCOMPtr<nsIGlobalObject> mGlobal;
-    nsRefPtr<FileCallback> mFileCallback;
+    RefPtr<FileCallback> mFileCallback;
   };
 
-  nsRefPtr<EncodeCompleteCallback> callback =
+  RefPtr<EncodeCompleteCallback> callback =
     new EncodeCallback(aGlobal, &aCallback);
 
   aRv = ImageEncoder::ExtractDataAsync(type,
@@ -109,7 +109,7 @@ already_AddRefed<nsICanvasRenderingContextInternal>
 CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
 {
   MOZ_ASSERT(aContextType != CanvasContextType::NoContext);
-  nsRefPtr<nsICanvasRenderingContextInternal> ret;
+  RefPtr<nsICanvasRenderingContextInternal> ret;
 
   switch (aContextType) {
   case CanvasContextType::NoContext:
@@ -155,7 +155,7 @@ CanvasRenderingContextHelper::GetContext(JSContext* aCx,
 
   if (!mCurrentContext) {
     // This canvas doesn't have a context yet.
-    nsRefPtr<nsICanvasRenderingContextInternal> context;
+    RefPtr<nsICanvasRenderingContextInternal> context;
     context = CreateContext(contextType);
     if (!context) {
       return nullptr;

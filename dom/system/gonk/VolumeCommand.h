@@ -7,7 +7,7 @@
 
 #include "nsString.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include <algorithm>
 #include <vold/ResponseCode.h>
 
@@ -179,7 +179,7 @@ private:
   size_t    mBytesConsumed; // How many bytes have been sent
 
   // Called when a response to the command is received.
-  nsRefPtr<VolumeResponseCallback>  mCallback;
+  RefPtr<VolumeResponseCallback>  mCallback;
 };
 
 class VolumeActionCommand : public VolumeCommand
@@ -189,7 +189,7 @@ public:
                       const char* aExtraArgs, VolumeResponseCallback* aCallback);
 
 private:
-  nsRefPtr<Volume>  mVolume;
+  RefPtr<Volume>  mVolume;
 };
 
 class VolumeListCommand : public VolumeCommand

@@ -332,7 +332,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aScriptGlobal));
   nsIDocShell *docShell = win ? win->GetDocShell() : nullptr;
   if (docShell) {
-    nsRefPtr<nsPresContext> presContext;
+    RefPtr<nsPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));
 
     static int32_t errorDepth; // Recursion prevention
@@ -341,7 +341,7 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
     if (errorDepth < 2) {
       // Dispatch() must be synchronous for the recursion block
       // (errorDepth) to work.
-      nsRefPtr<ErrorEvent> event =
+      RefPtr<ErrorEvent> event =
         ErrorEvent::Constructor(static_cast<nsGlobalWindow*>(win.get()),
                                 NS_LITERAL_STRING("error"),
                                 aErrorEventInit);
@@ -379,7 +379,7 @@ public:
       AutoRestore<bool> recursionGuard(sHandlingScriptError);
       sHandlingScriptError = true;
 
-      nsRefPtr<nsPresContext> presContext;
+      RefPtr<nsPresContext> presContext;
       win->GetDocShell()->GetPresContext(getter_AddRefs(presContext));
 
       ThreadsafeAutoJSContext cx;
@@ -400,7 +400,7 @@ public:
         init.mLineno = 0;
       }
 
-      nsRefPtr<ErrorEvent> event =
+      RefPtr<ErrorEvent> event =
         ErrorEvent::Constructor(static_cast<nsGlobalWindow*>(win),
                                 NS_LITERAL_STRING("error"), init);
       event->SetTrusted(true);
@@ -431,7 +431,7 @@ public:
 
 private:
   nsCOMPtr<nsPIDOMWindow>         mWindow;
-  nsRefPtr<xpc::ErrorReport>      mReport;
+  RefPtr<xpc::ErrorReport>      mReport;
   JS::PersistentRootedValue       mError;
 
   static bool sHandlingScriptError;
@@ -490,7 +490,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
   }
 
   if (globalObject) {
-    nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+    RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
     bool isChrome = nsContentUtils::IsSystemPrincipal(globalObject->PrincipalOrNull());
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
     xpcReport->Init(report, message, isChrome, win ? win->WindowID() : 0);
@@ -2247,7 +2247,7 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       if (sPostGCEventsToObserver) {
         nsString json;
         json.Adopt(aDesc.formatJSON(aRt, PR_Now()));
-        nsRefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
+        RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
         NS_DispatchToMainThread(notify);
       }
 

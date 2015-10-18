@@ -423,7 +423,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 
       if (IsChromeURI(uri)) {
         // Reload the sheet.
-        nsRefPtr<CSSStyleSheet> newSheet;
+        RefPtr<CSSStyleSheet> newSheet;
         rv = document->LoadChromeSheetSync(uri, true,
                                            getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
@@ -462,12 +462,12 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a chrome URL.
   for (i = 0; i < count; i++) {
-    nsRefPtr<CSSStyleSheet> sheet = do_QueryObject(oldSheets[i]);
+    RefPtr<CSSStyleSheet> sheet = do_QueryObject(oldSheets[i]);
     nsIURI* uri = sheet ? sheet->GetOriginalURI() : nullptr;
 
     if (uri && IsChromeURI(uri)) {
       // Reload the sheet.
-      nsRefPtr<CSSStyleSheet> newSheet;
+      RefPtr<CSSStyleSheet> newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
       document->LoadChromeSheetSync(uri, false, getter_AddRefs(newSheet));
@@ -711,11 +711,11 @@ already_AddRefed<nsChromeRegistry>
 nsChromeRegistry::GetSingleton()
 {
   if (gChromeRegistry) {
-    nsRefPtr<nsChromeRegistry> registry = gChromeRegistry;
+    RefPtr<nsChromeRegistry> registry = gChromeRegistry;
     return registry.forget();
   }
 
-  nsRefPtr<nsChromeRegistry> cr;
+  RefPtr<nsChromeRegistry> cr;
   if (GeckoProcessType_Content == XRE_GetProcessType())
     cr = new nsChromeRegistryContent();
   else

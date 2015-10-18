@@ -128,7 +128,7 @@ HTMLTextAreaElement::Select()
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
 
-  nsRefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
+  RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
   if (state == eInactiveWindow) {
     if (fm)
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
@@ -903,7 +903,7 @@ HTMLTextAreaElement::SetSelectionRange(uint32_t aSelectionStart,
     rv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
     if (NS_SUCCEEDED(rv)) {
       rv = textControlFrame->ScrollSelectionIntoView();
-      nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
         new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
                                  true, false);
       asyncDispatcher->PostDOMEvent();

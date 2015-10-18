@@ -83,7 +83,7 @@ public:
 
 private:
     nsAutoRefCnt mRefCnt;
-    nsRefPtr<txResultRecycler> mRecycler;
+    RefPtr<txResultRecycler> mRecycler;
 };
 
 #define TX_DECL_EXPRRESULT                                        \

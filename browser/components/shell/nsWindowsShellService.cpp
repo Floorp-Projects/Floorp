@@ -8,7 +8,7 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
@@ -355,7 +355,7 @@ nsWindowsShellService::ShortcutMaintenance()
 }
 
 static bool
-IsAARDefault(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+IsAARDefault(const RefPtr<IApplicationAssociationRegistration>& pAAR,
              LPCWSTR aClassName)
 {
   // Make sure the Prog ID matches what we have
@@ -395,7 +395,7 @@ GetHashPrefName(LPCWSTR aClassName, nsACString& aPrefName)
 }
 
 static bool
-SaveWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+SaveWin8RegistryHash(const RefPtr<IApplicationAssociationRegistration>& pAAR,
                      LPCWSTR aClassName)
 {
   bool isProtocol = *aClassName != L'.';
@@ -434,7 +434,7 @@ SaveWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
 }
 
 static bool
-RestoreWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+RestoreWin8RegistryHash(const RefPtr<IApplicationAssociationRegistration>& pAAR,
                         LPCWSTR aClassName)
 {
   nsAutoCString prefName;
@@ -516,7 +516,7 @@ RestoreWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAA
 static void
 SaveWin8RegistryHashes(bool aCheckAllTypes, bool* aIsDefaultBrowser)
 {
-  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,
@@ -545,7 +545,7 @@ SaveWin8RegistryHashes(bool aCheckAllTypes, bool* aIsDefaultBrowser)
 static bool
 RestoreWin8RegistryHashes(bool aClaimAllTypes)
 {
-  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,
@@ -580,7 +580,7 @@ bool
 nsWindowsShellService::IsDefaultBrowserVista(bool aCheckAllTypes,
                                              bool* aIsDefaultBrowser)
 {
-  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,
@@ -1075,7 +1075,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsresult rv;
 
-  nsRefPtr<SourceSurface> surface =
+  RefPtr<SourceSurface> surface =
     aImage->GetFrame(imgIContainer::FRAME_FIRST,
                      imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
@@ -1087,7 +1087,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
   MOZ_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
              surface->GetFormat() == SurfaceFormat::B8G8R8X8);
 
-  nsRefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
 
   int32_t width = dataSurface->GetSize().width;

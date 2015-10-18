@@ -26,7 +26,7 @@ public:
 
   MozMtpStorage(Volume* aVolume, MozMtpServer* aMozMtpServer);
 
-  typedef nsTArray<nsRefPtr<MozMtpStorage> > Array;
+  typedef nsTArray<RefPtr<MozMtpStorage> > Array;
 
 private:
   virtual ~MozMtpStorage();
@@ -35,9 +35,9 @@ private:
   void StorageAvailable();
   void StorageUnavailable();
 
-  nsRefPtr<MozMtpServer>  mMozMtpServer;
+  RefPtr<MozMtpServer>  mMozMtpServer;
   UniquePtr<MtpStorage>   mMtpStorage;
-  nsRefPtr<Volume>          mVolume;
+  RefPtr<Volume>          mVolume;
   MtpStorageID            mStorageID;
 };
 

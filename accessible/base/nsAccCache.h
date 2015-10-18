@@ -17,7 +17,7 @@
  */
 template <class T>
 static PLDHashOperator
-ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
+ClearCacheEntry(const void* aKey, RefPtr<T>& aAccessible, void* aUserArg)
 {
   NS_ASSERTION(aAccessible, "Calling ClearCacheEntry with a nullptr pointer!");
   if (aAccessible && !aAccessible->IsDefunct())
@@ -28,7 +28,7 @@ ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
 
 template <class T>
 static PLDHashOperator
-UnbindCacheEntryFromDocument(const void* aKey, nsRefPtr<T>& aAccessible,
+UnbindCacheEntryFromDocument(const void* aKey, RefPtr<T>& aAccessible,
                              void* aUserArg)
 {
   MOZ_ASSERT(aAccessible && !aAccessible->IsDefunct());

@@ -86,7 +86,7 @@ nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
   for (nsIContent* child = mContent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    nsRefPtr<nsSVGFE> primitive;
+    RefPtr<nsSVGFE> primitive;
     CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
     if (primitive) {
       return static_cast<SVGFilterElement *>(mContent);

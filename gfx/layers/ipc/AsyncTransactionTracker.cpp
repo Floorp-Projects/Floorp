@@ -138,7 +138,7 @@ AsyncTransactionTrackersHolder::TransactionCompleteted(uint64_t aTransactionId)
 void
 AsyncTransactionTrackersHolder::TransactionCompletetedInternal(uint64_t aTransactionId)
 {
-  std::map<uint64_t, nsRefPtr<AsyncTransactionTracker> >::iterator it
+  std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it
     = mAsyncTransactionTrackers.find(aTransactionId);
   if (it != mAsyncTransactionTrackers.end()) {
     it->second->NotifyComplete();
@@ -150,7 +150,7 @@ void
 AsyncTransactionTrackersHolder::SetReleaseFenceHandle(FenceHandle& aReleaseFenceHandle,
                                                       uint64_t aTransactionId)
 {
-  std::map<uint64_t, nsRefPtr<AsyncTransactionTracker> >::iterator it
+  std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it
     = mAsyncTransactionTrackers.find(aTransactionId);
   if (it != mAsyncTransactionTrackers.end()) {
     it->second->SetReleaseFenceHandle(aReleaseFenceHandle);
@@ -187,7 +187,7 @@ AsyncTransactionTrackersHolder::ClearAllAsyncTransactionTrackers()
   if (sHolderLock) {
     sHolderLock->Lock();
   }
-  std::map<uint64_t, nsRefPtr<AsyncTransactionTracker> >::iterator it;
+  std::map<uint64_t, RefPtr<AsyncTransactionTracker> >::iterator it;
   for (it = mAsyncTransactionTrackers.begin();
        it != mAsyncTransactionTrackers.end(); it++) {
     it->second->NotifyCancel();

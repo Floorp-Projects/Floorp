@@ -151,7 +151,7 @@ already_AddRefed<DrawTarget>
 ImageDataSerializerBase::GetAsDrawTarget(gfx::BackendType aBackend)
 {
   MOZ_ASSERT(IsValid());
-  nsRefPtr<DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(aBackend,
+  RefPtr<DrawTarget> dt = gfx::Factory::CreateDrawTargetForData(aBackend,
                                                GetData(), GetSize(),
                                                GetStride(), GetFormat());
   if (!dt) {

@@ -18,7 +18,7 @@
 #include "nsStringStream.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 
 #include "imgIContainer.h"
@@ -996,7 +996,7 @@ clipboard_contents_received(GtkClipboard     *clipboard,
 static GtkSelectionData *
 wait_for_contents(GtkClipboard *clipboard, GdkAtom target)
 {
-    nsRefPtr<RetrievalContext> context = new RetrievalContext();
+    RefPtr<RetrievalContext> context = new RetrievalContext();
     // Balanced by Release in clipboard_contents_received
     context.get()->AddRef();
     gtk_clipboard_request_contents(clipboard, target,
@@ -1018,7 +1018,7 @@ clipboard_text_received(GtkClipboard *clipboard,
 static gchar *
 wait_for_text(GtkClipboard *clipboard)
 {
-    nsRefPtr<RetrievalContext> context = new RetrievalContext();
+    RefPtr<RetrievalContext> context = new RetrievalContext();
     // Balanced by Release in clipboard_text_received
     context.get()->AddRef();
     gtk_clipboard_request_text(clipboard, clipboard_text_received, context.get());

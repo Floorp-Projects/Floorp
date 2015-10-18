@@ -214,7 +214,7 @@ private: // data
 
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.
-  nsRefPtr<SourceSurfaceCairo> mSnapshot;
+  RefPtr<SourceSurfaceCairo> mSnapshot;
   static cairo_surface_t *mDummySurface;
 };
 

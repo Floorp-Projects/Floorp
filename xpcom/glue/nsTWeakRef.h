@@ -170,7 +170,7 @@ private:
     }
   };
 
-  nsRefPtr<Inner> mRef;
+  RefPtr<Inner> mRef;
 };
 
 #endif  // nsTWeakRef_h__

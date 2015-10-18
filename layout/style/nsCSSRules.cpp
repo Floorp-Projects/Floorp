@@ -194,7 +194,7 @@ GroupRuleRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
   aFound = false;
 
   if (mGroupRule) {
-    nsRefPtr<Rule> rule = mGroupRule->GetStyleRuleAt(aIndex);
+    RefPtr<Rule> rule = mGroupRule->GetStyleRuleAt(aIndex);
     if (rule) {
       aFound = true;
       return rule->GetDOMRule();
@@ -227,7 +227,7 @@ ImportRule::ImportRule(const ImportRule& aCopy)
   // property of that @import rule, since it is null only if the target
   // sheet failed security checks.
   if (aCopy.mChildSheet) {
-    nsRefPtr<CSSStyleSheet> sheet =
+    RefPtr<CSSStyleSheet> sheet =
       aCopy.mChildSheet->Clone(nullptr, this, nullptr, nullptr);
     SetSheet(sheet);
     // SetSheet sets mMedia appropriately
@@ -288,7 +288,7 @@ ImportRule::GetType() const
 /* virtual */ already_AddRefed<Rule>
 ImportRule::Clone() const
 {
-  nsRefPtr<Rule> clone = new ImportRule(*this);
+  RefPtr<Rule> clone = new ImportRule(*this);
   return clone.forget();
 }
 
@@ -719,7 +719,7 @@ MediaRule::GetType() const
 /* virtual */ already_AddRefed<Rule>
 MediaRule::Clone() const
 {
-  nsRefPtr<Rule> clone = new MediaRule(*this);
+  RefPtr<Rule> clone = new MediaRule(*this);
   return clone.forget();
 }
 
@@ -805,7 +805,7 @@ NS_IMETHODIMP
 MediaRule::SetConditionText(const nsAString& aConditionText)
 {
   if (!mMedia) {
-    nsRefPtr<nsMediaList> media = new nsMediaList();
+    RefPtr<nsMediaList> media = new nsMediaList();
     media->SetStyleSheet(GetStyleSheet());
     nsresult rv = media->SetMediaText(aConditionText);
     if (NS_SUCCEEDED(rv)) {
@@ -938,7 +938,7 @@ DocumentRule::GetType() const
 /* virtual */ already_AddRefed<Rule>
 DocumentRule::Clone() const
 {
-  nsRefPtr<Rule> clone = new DocumentRule(*this);
+  RefPtr<Rule> clone = new DocumentRule(*this);
   return clone.forget();
 }
 
@@ -1192,7 +1192,7 @@ NameSpaceRule::GetType() const
 /* virtual */ already_AddRefed<Rule>
 NameSpaceRule::Clone() const
 {
-  nsRefPtr<Rule> clone = new NameSpaceRule(*this);
+  RefPtr<Rule> clone = new NameSpaceRule(*this);
   return clone.forget();
 }
 
@@ -1560,7 +1560,7 @@ nsCSSFontFaceStyleDecl::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenPr
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSFontFaceRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new nsCSSFontFaceRule(*this);
+  RefPtr<css::Rule> clone = new nsCSSFontFaceRule(*this);
   return clone.forget();
 }
 
@@ -1727,7 +1727,7 @@ nsCSSFontFaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSFontFeatureValuesRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new nsCSSFontFeatureValuesRule(*this);
+  RefPtr<css::Rule> clone = new nsCSSFontFeatureValuesRule(*this);
   return clone.forget();
 }
 
@@ -2050,7 +2050,7 @@ nsCSSKeyframeRule::~nsCSSKeyframeRule()
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSKeyframeRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new nsCSSKeyframeRule(*this);
+  RefPtr<css::Rule> clone = new nsCSSKeyframeRule(*this);
   return clone.forget();
 }
 
@@ -2284,7 +2284,7 @@ nsCSSKeyframesRule::~nsCSSKeyframesRule()
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSKeyframesRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new nsCSSKeyframesRule(*this);
+  RefPtr<css::Rule> clone = new nsCSSKeyframesRule(*this);
   return clone.forget();
 }
 
@@ -2418,7 +2418,7 @@ nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
   nsCSSParser parser;
 
   // FIXME: pass filename and line number
-  nsRefPtr<nsCSSKeyframeRule> rule =
+  RefPtr<nsCSSKeyframeRule> rule =
     parser.ParseKeyframeRule(aRule, nullptr, 0);
   if (rule) {
     nsIDocument* doc = GetDocument();
@@ -2610,7 +2610,7 @@ nsCSSPageRule::~nsCSSPageRule()
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSPageRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new nsCSSPageRule(*this);
+  RefPtr<css::Rule> clone = new nsCSSPageRule(*this);
   return clone.forget();
 }
 
@@ -2806,7 +2806,7 @@ CSSSupportsRule::GetType() const
 /* virtual */ already_AddRefed<mozilla::css::Rule>
 CSSSupportsRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new CSSSupportsRule(*this);
+  RefPtr<css::Rule> clone = new CSSSupportsRule(*this);
   return clone.forget();
 }
 
@@ -2937,7 +2937,7 @@ nsCSSCounterStyleRule::~nsCSSCounterStyleRule()
 /* virtual */ already_AddRefed<css::Rule>
 nsCSSCounterStyleRule::Clone() const
 {
-  nsRefPtr<css::Rule> clone = new nsCSSCounterStyleRule(*this);
+  RefPtr<css::Rule> clone = new nsCSSCounterStyleRule(*this);
   return clone.forget();
 }
 

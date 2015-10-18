@@ -9,7 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/unused.h"
 #include "gfxUtils.h"
@@ -53,8 +53,8 @@ public:
   }
 
 private:
-  nsRefPtr<layers::Image> mImage;
-  nsRefPtr<gfx::DataSourceSurface> mDataSourceSurface;
+  RefPtr<layers::Image> mImage;
+  RefPtr<gfx::DataSourceSurface> mDataSourceSurface;
 };
 
 // This function returns a DataSourceSurface in B8G8R8A8 format.
@@ -65,7 +65,7 @@ private:
 already_AddRefed<DataSourceSurface>
 GetBRGADataSourceSurfaceSync(already_AddRefed<layers::Image> aImage)
 {
-  nsRefPtr<SurfaceHelper> helper = new SurfaceHelper(Move(aImage));
+  RefPtr<SurfaceHelper> helper = new SurfaceHelper(Move(aImage));
   return helper->GetDataSurfaceSafe();
 }
 
@@ -93,7 +93,7 @@ public:
 
     if (!mFailed) {
       // The correct parentObject has to be set by the mEncodeCompleteCallback.
-      nsRefPtr<Blob> blob =
+      RefPtr<Blob> blob =
         Blob::CreateMemoryBlob(nullptr, mImgData, mImgSize, mType);
       MOZ_ASSERT(blob);
 
@@ -123,7 +123,7 @@ private:
   nsAutoString mType;
   void* mImgData;
   nsCOMPtr<nsIThread> mEncoderThread;
-  nsRefPtr<EncodeCompleteCallback> mEncodeCompleteCallback;
+  RefPtr<EncodeCompleteCallback> mEncodeCompleteCallback;
   bool mFailed;
 };
 
@@ -221,9 +221,9 @@ private:
   nsAutoString mType;
   nsAutoString mOptions;
   nsAutoArrayPtr<uint8_t> mImageBuffer;
-  nsRefPtr<layers::Image> mImage;
+  RefPtr<layers::Image> mImage;
   nsCOMPtr<imgIEncoder> mEncoder;
-  nsRefPtr<EncodingCompleteEvent> mEncodingCompleteEvent;
+  RefPtr<EncodingCompleteEvent> mEncodingCompleteEvent;
   int32_t mFormat;
   const nsIntSize mSize;
   bool mUsingCustomOptions;
@@ -266,7 +266,7 @@ ImageEncoder::ExtractDataFromLayersImageAsync(nsAString& aType,
   nsresult rv = NS_NewThread(getter_AddRefs(encoderThread), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<EncodingCompleteEvent> completeEvent =
+  RefPtr<EncodingCompleteEvent> completeEvent =
     new EncodingCompleteEvent(encoderThread, aEncodeCallback);
 
   nsIntSize size(aImage->GetSize().width, aImage->GetSize().height);
@@ -301,7 +301,7 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
   nsresult rv = NS_NewThread(getter_AddRefs(encoderThread), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<EncodingCompleteEvent> completeEvent =
+  RefPtr<EncodingCompleteEvent> completeEvent =
     new EncodingCompleteEvent(encoderThread, aEncodeCallback);
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(aType,
@@ -402,8 +402,8 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
                                   imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                   aOptions);
     } else {
-      nsRefPtr<gfx::DataSourceSurface> dataSurface;
-      nsRefPtr<layers::Image> image(aImage);
+      RefPtr<gfx::DataSourceSurface> dataSurface;
+      RefPtr<layers::Image> image(aImage);
       dataSurface = GetBRGADataSourceSurfaceSync(image.forget());
 
       DataSourceSurface::MappedSurface map;
@@ -428,7 +428,7 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
     // note that if we didn't have a current context, the spec says we're
     // supposed to just return transparent black pixels of the canvas
     // dimensions.
-    nsRefPtr<DataSourceSurface> emptyCanvas =
+    RefPtr<DataSourceSurface> emptyCanvas =
       Factory::CreateDataSourceSurfaceWithStride(IntSize(aSize.width, aSize.height),
                                                  SurfaceFormat::B8G8R8A8,
                                                  4 * aSize.width, true);

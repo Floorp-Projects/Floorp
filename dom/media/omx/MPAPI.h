@@ -41,7 +41,7 @@ struct VideoFrame {
   VideoPlane Y;
   VideoPlane Cb;
   VideoPlane Cr;
-  nsRefPtr<mozilla::layers::TextureClient> mGraphicBuffer;
+  RefPtr<mozilla::layers::TextureClient> mGraphicBuffer;
 
   VideoFrame() :
     mTimeUs(0),

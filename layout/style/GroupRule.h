@@ -79,7 +79,7 @@ public:
   static bool
   CloneRuleInto(Rule* aRule, void* aArray)
   {
-    nsRefPtr<Rule> clone = aRule->Clone();
+    RefPtr<Rule> clone = aRule->Clone();
     static_cast<IncrementalClearCOMRuleArray*>(aArray)->AppendObject(clone);
     return true;
   }
@@ -96,7 +96,7 @@ protected:
   nsresult DeleteRule(uint32_t aIndex);
 
   IncrementalClearCOMRuleArray mRules;
-  nsRefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
+  RefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
 };
 
 } // namespace css

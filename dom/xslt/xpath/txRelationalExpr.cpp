@@ -27,7 +27,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         }
 
         txNodeSet* nodeSet = static_cast<txNodeSet*>(aLeft);
-        nsRefPtr<StringResult> strResult;
+        RefPtr<StringResult> strResult;
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
         NS_ENSURE_SUCCESS(rv, false);
 
@@ -52,7 +52,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         }
 
         txNodeSet* nodeSet = static_cast<txNodeSet*>(aRight);
-        nsRefPtr<StringResult> strResult;
+        RefPtr<StringResult> strResult;
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
         NS_ENSURE_SUCCESS(rv, false);
 
@@ -147,11 +147,11 @@ nsresult
 RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nullptr;
-    nsRefPtr<txAExprResult> lResult;
+    RefPtr<txAExprResult> lResult;
     nsresult rv = mLeftExpr->evaluate(aContext, getter_AddRefs(lResult));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<txAExprResult> rResult;
+    RefPtr<txAExprResult> rResult;
     rv = mRightExpr->evaluate(aContext, getter_AddRefs(rResult));
     NS_ENSURE_SUCCESS(rv, rv);
     

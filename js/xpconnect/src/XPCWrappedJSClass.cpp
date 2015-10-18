@@ -107,7 +107,7 @@ nsXPCWrappedJSClass::GetNewOrUsed(JSContext* cx, REFNSIID aIID, bool allowNonScr
 {
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     IID2WrappedJSClassMap* map = rt->GetWrappedJSClassMap();
-    nsRefPtr<nsXPCWrappedJSClass> clasp = map->Find(aIID);
+    RefPtr<nsXPCWrappedJSClass> clasp = map->Find(aIID);
 
     if (!clasp) {
         nsCOMPtr<nsIInterfaceInfo> info;
@@ -566,7 +566,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         // Instead, simply do the nsXPCWrappedJS part of
         // XPConvert::JSObject2NativeInterface() here to make sure we
         // get a new (or used) nsXPCWrappedJS.
-        nsRefPtr<nsXPCWrappedJS> wrapper;
+        RefPtr<nsXPCWrappedJS> wrapper;
         nsresult rv = nsXPCWrappedJS::GetNewOrUsed(jsobj, aIID, getter_AddRefs(wrapper));
         if (NS_SUCCEEDED(rv) && wrapper) {
             // We need to go through the QueryInterface logic to make

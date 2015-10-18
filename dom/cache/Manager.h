@@ -10,7 +10,7 @@
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -212,7 +212,7 @@ private:
 
   void MaybeAllowContextToClose();
 
-  nsRefPtr<ManagerId> mManagerId;
+  RefPtr<ManagerId> mManagerId;
   nsCOMPtr<nsIThread> mIOThread;
 
   // Weak reference cleared by RemoveContext() in Context destructor.

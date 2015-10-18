@@ -147,7 +147,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCClassInfo, NS_XPCCLASSINFO_IID)
 inline
 nsresult
 CallQueryInterface(nsISupports* aSourcePtr,
-                   nsRefPtrGetterAddRefs<nsXPCClassInfo> aDestPtr)
+                   RefPtrGetterAddRefs<nsXPCClassInfo> aDestPtr)
 {
   return CallQueryInterface(aSourcePtr,
                             static_cast<nsXPCClassInfo**>(aDestPtr));

@@ -7,7 +7,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsICanvasRenderingContextInternal.h"
 
 using namespace mozilla;
@@ -36,7 +36,7 @@ void DocumentRendererParent::DrawToCanvas(const nsIntSize& aSize,
     DrawTarget* drawTarget = mCanvasContext->GetDrawTarget();
     Rect rect(0, 0, aSize.width, aSize.height);
     MaybeSnapToDevicePixels(rect, *drawTarget, true);
-    nsRefPtr<DataSourceSurface> dataSurface =
+    RefPtr<DataSourceSurface> dataSurface =
         Factory::CreateWrappingDataSourceSurface(reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aData).BeginWriting()),
                                                  aSize.width * 4,
                                                  IntSize(aSize.width, aSize.height),

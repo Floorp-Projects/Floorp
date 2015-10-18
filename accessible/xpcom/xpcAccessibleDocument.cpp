@@ -196,7 +196,7 @@ xpcAccessibleDocument::GetAccessible(Accessible* aAccessible)
 }
 
 static PLDHashOperator
-ShutdownAndRemove(const Accessible* aKey, nsRefPtr<xpcAccessibleGeneric>& aValue,
+ShutdownAndRemove(const Accessible* aKey, RefPtr<xpcAccessibleGeneric>& aValue,
                   void* aUnused)
 {
   aValue->Shutdown();

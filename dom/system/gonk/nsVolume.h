@@ -77,7 +77,7 @@ public:
   bool IsRemovable() const            { return mIsRemovable; }
   bool IsHotSwappable() const         { return mIsHotSwappable; }
 
-  typedef nsTArray<nsRefPtr<nsVolume> > Array;
+  typedef nsTArray<RefPtr<nsVolume> > Array;
 
 private:
   virtual ~nsVolume() {}  // MozExternalRefCountType complains if this is non-virtual

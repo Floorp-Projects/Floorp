@@ -202,7 +202,7 @@ GetIsResourceDocument(nsPresContext* aPresContext, const nsMediaFeature*,
 static nsresult
 MakeArray(const nsSize& aSize, nsCSSValue& aResult)
 {
-    nsRefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
+    RefPtr<nsCSSValue::Array> a = nsCSSValue::Array::Create(2);
 
     a->Item(0).SetIntValue(aSize.width, eCSSUnit_Integer);
     a->Item(1).SetIntValue(aSize.height, eCSSUnit_Integer);

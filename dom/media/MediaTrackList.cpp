@@ -74,7 +74,7 @@ MediaTrackList::AddTrack(MediaTrack* aTrack)
 }
 
 void
-MediaTrackList::RemoveTrack(const nsRefPtr<MediaTrack>& aTrack)
+MediaTrackList::RemoveTrack(const RefPtr<MediaTrack>& aTrack)
 {
   mTracks.RemoveElement(aTrack);
   aTrack->SetTrackList(nullptr);
@@ -85,7 +85,7 @@ void
 MediaTrackList::RemoveTracks()
 {
   while (!mTracks.IsEmpty()) {
-    nsRefPtr<MediaTrack> track = mTracks.LastElement();
+    RefPtr<MediaTrack> track = mTracks.LastElement();
     RemoveTrack(track);
   }
 }
@@ -97,7 +97,7 @@ MediaTrackList::CreateAudioTrack(const nsAString& aId,
                                  const nsAString& aLanguage,
                                  bool aEnabled)
 {
-  nsRefPtr<AudioTrack> track = new AudioTrack(aId, aKind, aLabel, aLanguage,
+  RefPtr<AudioTrack> track = new AudioTrack(aId, aKind, aLabel, aLanguage,
                                               aEnabled);
   return track.forget();
 }
@@ -108,7 +108,7 @@ MediaTrackList::CreateVideoTrack(const nsAString& aId,
                                  const nsAString& aLabel,
                                  const nsAString& aLanguage)
 {
-  nsRefPtr<VideoTrack> track = new VideoTrack(aId, aKind, aLabel, aLanguage);
+  RefPtr<VideoTrack> track = new VideoTrack(aId, aKind, aLabel, aLanguage);
   return track.forget();
 }
 
@@ -124,7 +124,7 @@ MediaTrackList::EmptyTracks()
 void
 MediaTrackList::CreateAndDispatchChangeEvent()
 {
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, NS_LITERAL_STRING("change"), false);
   asyncDispatcher->PostDOMEvent();
 }
@@ -141,10 +141,10 @@ MediaTrackList::CreateAndDispatchTrackEventRunner(MediaTrack* aTrack,
     eventInit.mTrack.SetValue().SetAsVideoTrack() = aTrack->AsVideoTrack();
   }
 
-  nsRefPtr<TrackEvent> event =
+  RefPtr<TrackEvent> event =
     TrackEvent::Constructor(this, aEventName, eventInit);
 
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();
 }

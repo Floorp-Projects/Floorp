@@ -123,7 +123,7 @@ private:
                      DaemonSocketResultHandler* aRes);
 
   DaemonSocket* mConnection;
-  nsTArray<nsRefPtr<DaemonSocketResultHandler>> mResQ;
+  nsTArray<RefPtr<DaemonSocketResultHandler>> mResQ;
 };
 
 BluetoothDaemonProtocol::BluetoothDaemonProtocol()
@@ -245,7 +245,7 @@ BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
     return;
   }
 
-  nsRefPtr<DaemonSocketResultHandler> res = FetchResultHandler(header);
+  RefPtr<DaemonSocketResultHandler> res = FetchResultHandler(header);
 
   (this->*(HandleSvc[header.mService]))(header, aPDU, res);
 }
@@ -268,7 +268,7 @@ BluetoothDaemonProtocol::FetchResultHandler(
     return nullptr; // Ignore notifications
   }
 
-  nsRefPtr<DaemonSocketResultHandler> userData = mResQ.ElementAt(0);
+  RefPtr<DaemonSocketResultHandler> userData = mResQ.ElementAt(0);
   mResQ.RemoveElementAt(0);
 
   return userData.forget();
@@ -400,7 +400,7 @@ public:
 
 private:
   BluetoothDaemonInterface* mInterface;
-  nsRefPtr<BluetoothResultHandler> mRes;
+  RefPtr<BluetoothResultHandler> mRes;
   bool mRegisteredSocketModule;
 };
 
@@ -977,7 +977,7 @@ BluetoothDaemonInterface::OnConnectSuccess(int aIndex)
       }
       break;
     case NTF_CHANNEL: {
-        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
+        RefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
         mResultHandlerQ.RemoveElementAt(0);
 
         // Init, step 4: Register Core module
@@ -1011,7 +1011,7 @@ BluetoothDaemonInterface::OnConnectError(int aIndex)
     case LISTEN_SOCKET:
       if (!mResultHandlerQ.IsEmpty()) {
         // Signal error to caller
-        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
+        RefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
         mResultHandlerQ.RemoveElementAt(0);
 
         if (res) {
@@ -1054,7 +1054,7 @@ BluetoothDaemonInterface::OnDisconnect(int aIndex)
       break;
     case LISTEN_SOCKET:
       if (!mResultHandlerQ.IsEmpty()) {
-        nsRefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
+        RefPtr<BluetoothResultHandler> res = mResultHandlerQ.ElementAt(0);
         mResultHandlerQ.RemoveElementAt(0);
         // Cleanup, step 5: Signal success to caller
         if (res) {

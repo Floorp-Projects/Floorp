@@ -17,7 +17,7 @@ using namespace mozilla;
  */
 TEST(MediaEventSource, SingleListener)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<int> source;
@@ -41,7 +41,7 @@ TEST(MediaEventSource, SingleListener)
 
 TEST(MediaEventSource, MultiListener)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<int> source;
@@ -72,7 +72,7 @@ TEST(MediaEventSource, MultiListener)
  */
 TEST(MediaEventSource, DisconnectAfterNotification)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<int> source;
@@ -96,7 +96,7 @@ TEST(MediaEventSource, DisconnectAfterNotification)
 
 TEST(MediaEventSource, DisconnectBeforeNotification)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<int> source;
@@ -127,7 +127,7 @@ TEST(MediaEventSource, DisconnectBeforeNotification)
  */
 TEST(MediaEventSource, VoidEventType)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<void> source;
@@ -166,7 +166,7 @@ TEST(MediaEventSource, VoidEventType)
  */
 TEST(MediaEventSource, ListenerType1)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<int> source;
@@ -194,7 +194,7 @@ TEST(MediaEventSource, ListenerType1)
 
 TEST(MediaEventSource, ListenerType2)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<int> source;
@@ -245,7 +245,7 @@ struct SomeEvent {
  */
 TEST(MediaEventSource, CopyEvent1)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<SomeEvent> source;
@@ -272,7 +272,7 @@ TEST(MediaEventSource, CopyEvent1)
 
 TEST(MediaEventSource, CopyEvent2)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<SomeEvent> source;
@@ -301,7 +301,7 @@ TEST(MediaEventSource, CopyEvent2)
  */
 TEST(MediaEventSource, MoveOnly)
 {
-  nsRefPtr<TaskQueue> queue = new TaskQueue(
+  RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
   MediaEventProducer<UniquePtr<int>, ListenerMode::Exclusive> source;

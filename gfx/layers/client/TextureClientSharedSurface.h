@@ -11,7 +11,7 @@
 #include "GLContextTypes.h"             // for GLContext (ptr only), etc
 #include "TextureClient.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/nsRefPtr.h"             // for RefPtr, RefCounted
+#include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc

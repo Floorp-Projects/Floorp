@@ -66,7 +66,7 @@ protected:
   static void EnableCustomDrawing(HWND aHWND, bool aEnable);
 
   // MSCOM Taskbar interface
-  nsRefPtr<ITaskbarList4> mTaskbar;
+  RefPtr<ITaskbarList4> mTaskbar;
   // Controller for this preview
   nsCOMPtr<nsITaskbarPreviewController> mController;
   // The HWND to the nsWindow that this object previews

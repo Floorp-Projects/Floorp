@@ -98,7 +98,7 @@ public:
 private:
   ~FileList() {}
 
-  nsTArray<nsRefPtr<File>> mFiles;
+  nsTArray<RefPtr<File>> mFiles;
   nsCOMPtr<nsISupports> mParent;
 };
 

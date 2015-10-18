@@ -12,7 +12,7 @@
 #include "nsCoord.h"
 #include "nsIFrame.h"
 #include "nsISelectionListener.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsWeakReference.h"
 #include "mozilla/dom/CaretStateChangedEvent.h"
 #include "mozilla/EventForwards.h"

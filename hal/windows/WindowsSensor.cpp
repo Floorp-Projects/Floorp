@@ -16,7 +16,7 @@ using namespace mozilla::hal;
 namespace mozilla {
 namespace hal_impl {
 
-static nsRefPtr<ISensor> sAccelerometer;
+static RefPtr<ISensor> sAccelerometer;
 
 class SensorEvent final : public ISensorEvents {
 public:
@@ -114,7 +114,7 @@ EnableSensorNotifications(SensorType aSensor)
     return;
   }
 
-  nsRefPtr<ISensorManager> manager;
+  RefPtr<ISensorManager> manager;
   if (FAILED(CoCreateInstance(CLSID_SensorManager, nullptr,
                               CLSCTX_INPROC_SERVER,
                               IID_ISensorManager, 
@@ -124,7 +124,7 @@ EnableSensorNotifications(SensorType aSensor)
 
   // accelerometer event
 
-  nsRefPtr<ISensorCollection> collection;
+  RefPtr<ISensorCollection> collection;
   if (FAILED(manager->GetSensorsByType(SENSOR_TYPE_ACCELEROMETER_3D,
                                        getter_AddRefs(collection)))) {
     return;
@@ -136,7 +136,7 @@ EnableSensorNotifications(SensorType aSensor)
     return;
   }
 
-  nsRefPtr<ISensor> sensor;
+  RefPtr<ISensor> sensor;
   collection->GetAt(0, getter_AddRefs(sensor));
   if (!sensor) {
     return;
@@ -144,7 +144,7 @@ EnableSensorNotifications(SensorType aSensor)
 
   // Set report interval to 100ms if possible. 
   // Default value depends on drivers.
-  nsRefPtr<IPortableDeviceValues> values;
+  RefPtr<IPortableDeviceValues> values;
   if (SUCCEEDED(CoCreateInstance(CLSID_PortableDeviceValues, nullptr,
                                  CLSCTX_INPROC_SERVER,
                                  IID_IPortableDeviceValues,
@@ -152,13 +152,13 @@ EnableSensorNotifications(SensorType aSensor)
     if (SUCCEEDED(values->SetUnsignedIntegerValue(
                     SENSOR_PROPERTY_CURRENT_REPORT_INTERVAL,
                     DEFAULT_SENSOR_POLL))) {
-      nsRefPtr<IPortableDeviceValues> returns;
+      RefPtr<IPortableDeviceValues> returns;
       sensor->SetProperties(values, getter_AddRefs(returns));
     }
   }
 
-  nsRefPtr<SensorEvent> event = new SensorEvent();
-  nsRefPtr<ISensorEvents> sensorEvents;
+  RefPtr<SensorEvent> event = new SensorEvent();
+  RefPtr<ISensorEvents> sensorEvents;
   if (FAILED(event->QueryInterface(IID_ISensorEvents,
                                    getter_AddRefs(sensorEvents)))) {
     return;

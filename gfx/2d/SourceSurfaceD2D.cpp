@@ -43,7 +43,7 @@ SourceSurfaceD2D::IsValid() const
 already_AddRefed<DataSourceSurface>
 SourceSurfaceD2D::GetDataSurface()
 {
-  nsRefPtr<DataSourceSurfaceD2D> result = new DataSourceSurfaceD2D(this);
+  RefPtr<DataSourceSurfaceD2D> result = new DataSourceSurfaceD2D(this);
   if (result->IsValid()) {
     return result.forget();
   }
@@ -96,7 +96,7 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
 {
   HRESULT hr;
 
-  nsRefPtr<IDXGISurface> surf;
+  RefPtr<IDXGISurface> surf;
 
   hr = aTexture->QueryInterface((IDXGISurface**)&surf);
 
@@ -146,7 +146,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
   desc.MipLevels = 1;
   desc.Usage = D3D10_USAGE_DEFAULT;
   desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
-  nsRefPtr<ID3D10Texture2D> sourceTexture;
+  RefPtr<ID3D10Texture2D> sourceTexture;
   HRESULT hr = aSourceSurface->mDevice->CreateTexture2D(&desc, nullptr,
                                                         getter_AddRefs(sourceTexture));
   if (FAILED(hr)) {
@@ -154,7 +154,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
     return;
   }
 
-  nsRefPtr<IDXGISurface> dxgiSurface;
+  RefPtr<IDXGISurface> dxgiSurface;
   hr = sourceTexture->QueryInterface((IDXGISurface**)getter_AddRefs(dxgiSurface));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create DXGI surface. Code: " << hexa(hr);
@@ -165,7 +165,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
             D2D1_RENDER_TARGET_TYPE_DEFAULT,
             D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED));
 
-  nsRefPtr<ID2D1RenderTarget> renderTarget;
+  RefPtr<ID2D1RenderTarget> renderTarget;
   hr = DrawTargetD2D::factory()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
                                                                &rtProps,
                                                                getter_AddRefs(renderTarget));
@@ -182,7 +182,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
                              Float(mSize.width),
                              Float(mSize.height)));
   } else {
-    nsRefPtr<ID2D1SolidColorBrush> brush;
+    RefPtr<ID2D1SolidColorBrush> brush;
     renderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), getter_AddRefs(brush));
     renderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
     renderTarget->FillOpacityMask(aSourceSurface->mBitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS);

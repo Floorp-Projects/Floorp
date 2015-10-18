@@ -175,7 +175,7 @@ ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
 ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId)
 {
   MessageLoop* loop = CompositorParent::CompositorLoop();
-  nsRefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
+  RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
   bridge->mSelfRef = bridge;
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,
@@ -192,7 +192,7 @@ bool ImageBridgeParent::RecvWillStop()
   InfallibleTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
   for (unsigned int i = 0; i < textures.Length(); ++i) {
-    nsRefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
+    RefPtr<TextureHost> tex = TextureHost::AsTextureHost(textures[i]);
     tex->DeallocateDeviceData();
   }
   return true;
@@ -409,7 +409,7 @@ void
 ImageBridgeParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
                                             CompositableHost* aCompositableHost)
 {
-  nsRefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
     return;
   }
@@ -437,7 +437,7 @@ ImageBridgeParent::AppendDeliverFenceMessage(uint64_t aDestHolderId,
                                              PTextureParent* aTexture,
                                              CompositableHost* aCompositableHost)
 {
-  nsRefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
     return;
   }

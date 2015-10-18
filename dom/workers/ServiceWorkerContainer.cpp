@@ -220,7 +220,7 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     return nullptr;
   }
 
-  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  RefPtr<Promise> ret = static_cast<Promise*>(promise.get());
   MOZ_ASSERT(ret);
   return ret.forget();
 }
@@ -249,7 +249,7 @@ ServiceWorkerContainer::GetController()
       static_cast<workers::ServiceWorker*>(serviceWorker.get());
   }
 
-  nsRefPtr<workers::ServiceWorker> ref = mControllerWorker;
+  RefPtr<workers::ServiceWorker> ref = mControllerWorker;
   return ref.forget();
 }
 
@@ -269,7 +269,7 @@ ServiceWorkerContainer::GetRegistrations(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  RefPtr<Promise> ret = static_cast<Promise*>(promise.get());
   MOZ_ASSERT(ret);
   return ret.forget();
 }
@@ -291,7 +291,7 @@ ServiceWorkerContainer::GetRegistration(const nsAString& aDocumentURL,
     return nullptr;
   }
 
-  nsRefPtr<Promise> ret = static_cast<Promise*>(promise.get());
+  RefPtr<Promise> ret = static_cast<Promise*>(promise.get());
   MOZ_ASSERT(ret);
   return ret.forget();
 }

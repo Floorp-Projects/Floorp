@@ -64,7 +64,7 @@ private:
                     nsTArray<nsString>& aLanguageList);
 
   nsCOMPtr<nsISupports> mOwner;
-  nsRefPtr<TVChannel> mChannel;
+  RefPtr<TVChannel> mChannel;
   nsString mEventId;
   nsString mTitle;
   uint64_t mStartTime;

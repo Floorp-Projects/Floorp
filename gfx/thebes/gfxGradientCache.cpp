@@ -100,7 +100,7 @@ struct GradientCacheData {
   }
 
   nsExpirationState mExpirationState;
-  const nsRefPtr<GradientStops> mStops;
+  const RefPtr<GradientStops> mStops;
   GradientCacheKey mKey;
 };
 
@@ -200,7 +200,7 @@ gfxGradientCache::GetGradientStops(const DrawTarget *aDT, nsTArray<GradientStop>
 GradientStops *
 gfxGradientCache::GetOrCreateGradientStops(const DrawTarget *aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend)
 {
-  nsRefPtr<GradientStops> gs = GetGradientStops(aDT, aStops, aExtend);
+  RefPtr<GradientStops> gs = GetGradientStops(aDT, aStops, aExtend);
   if (!gs) {
     gs = aDT->CreateGradientStops(aStops.Elements(), aStops.Length(), aExtend);
     if (!gs) {

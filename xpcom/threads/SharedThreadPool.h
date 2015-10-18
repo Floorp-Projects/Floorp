@@ -8,7 +8,7 @@
 #define SharedThreadPool_h_
 
 #include <queue>
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 #include "nsIThreadManager.h"
 #include "nsIThreadPool.h"

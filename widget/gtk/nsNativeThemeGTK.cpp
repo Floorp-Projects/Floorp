@@ -879,7 +879,7 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
       if (!NS_WARN_IF(!surf)) {
         cairo_t* cr = cairo_create(surf);
         if (!NS_WARN_IF(!cr)) {
-          nsRefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);
+          RefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);
           aContext->ExportClip(*clipper);
 
           cairo_set_matrix(cr, &mat);
@@ -909,7 +909,7 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
     if (!NS_WARN_IF(!surf)) {
       cairo_t* cr = cairo_create(surf);
       if (!NS_WARN_IF(!cr)) {
-        nsRefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);
+        RefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);
         aContext->ExportClip(*clipper);
 
         cairo_set_matrix(cr, &mat);
@@ -925,7 +925,7 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
     // If the widget has any transparency, make sure to choose an alpha format.
     format = aTransparency != nsITheme::eOpaque ? SurfaceFormat::B8G8R8A8 : aDrawTarget->GetFormat();
     // Create a temporary data surface to render the widget into.
-    nsRefPtr<DataSourceSurface> dataSurface =
+    RefPtr<DataSourceSurface> dataSurface =
       Factory::CreateDataSourceSurface(aDrawSize, format, aTransparency != nsITheme::eOpaque);
     DataSourceSurface::MappedSurface map;
     if (!NS_WARN_IF(!(dataSurface && dataSurface->Map(DataSourceSurface::MapType::WRITE, &map)))) {
