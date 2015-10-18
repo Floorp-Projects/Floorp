@@ -589,19 +589,20 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
       dom::KeyframeEffectReadOnly::GetComputedTimingAt(
         Nullable<TimeDuration>(elapsedDuration), timing);
 
-    MOZ_ASSERT(0.0 <= computedTiming.mProgress &&
-               computedTiming.mProgress <= 1.0,
+    MOZ_ASSERT(!computedTiming.mProgress.IsNull() &&
+               0.0 <= computedTiming.mProgress.Value() &&
+               computedTiming.mProgress.Value() <= 1.0,
                "iteration progress should be in [0-1]");
 
     int segmentIndex = 0;
     AnimationSegment* segment = animation.segments().Elements();
-    while (segment->endPortion() < computedTiming.mProgress) {
+    while (segment->endPortion() < computedTiming.mProgress.Value()) {
       ++segment;
       ++segmentIndex;
     }
 
     double positionInSegment =
-      (computedTiming.mProgress - segment->startPortion()) /
+      (computedTiming.mProgress.Value() - segment->startPortion()) /
       (segment->endPortion() - segment->startPortion());
 
     double portion =
