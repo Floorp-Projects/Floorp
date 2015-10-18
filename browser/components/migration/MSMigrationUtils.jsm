@@ -99,7 +99,8 @@ CtypesKernelHelpers.prototype = {
   finalize() {
     this._structs = {};
     this._functions = {};
-    for each (let lib in this._libs) {
+    for (let key in this._libs) {
+      let lib = this._libs[key];
       try {
         lib.close();
       } catch (ex) {}

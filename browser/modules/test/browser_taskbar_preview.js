@@ -31,18 +31,18 @@ function test() {
 
   checkPreviews(4, "Correct number of previews after adding");
 
-  for each (let preview in AeroPeek.previews)
+  for (let preview of AeroPeek.previews)
     ok(preview.visible, "Preview is shown as expected");
 
   gPrefService.setBoolPref(ENABLE_PREF_NAME, false);
   checkPreviews(4, "Previews are unchanged when disabling");
 
-  for each (let preview in AeroPeek.previews)
+  for (let preview of AeroPeek.previews)
     ok(!preview.visible, "Preview is not shown as expected after disabling");
 
   gPrefService.setBoolPref(ENABLE_PREF_NAME, true);
   checkPreviews(4, "Previews are unchanged when re-enabling");
-  for each (let preview in AeroPeek.previews)
+  for (let preview of AeroPeek.previews)
     ok(preview.visible, "Preview is shown as expected after re-enabling");
 
   [1,2,3,4].forEach(function (idx) {
@@ -51,7 +51,7 @@ function test() {
   });
 
   let currentSelectedTab = gBrowser.selectedTab;
-  for each (let idx in [1,2,3,4]) {
+  for (let idx of [1,2,3,4]) {
     let preview = getPreviewForTab(gBrowser.tabs[0]);
     let canvas = createThumbnailSurface(preview);
     let ctx = canvas.getContext("2d");
