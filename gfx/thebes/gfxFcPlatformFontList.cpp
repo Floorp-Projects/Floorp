@@ -256,8 +256,10 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     if (FcPatternGetInteger(aFontPattern, FC_SLANT, 0, &slant) != FcResultMatch) {
         slant = FC_SLANT_ROMAN;
     }
-    if (slant > 0) {
-        mItalic = true;
+    if (slant == FC_SLANT_OBLIQUE) {
+        mStyle = NS_FONT_STYLE_OBLIQUE;
+    } else if (slant > 0) {
+        mStyle = NS_FONT_STYLE_ITALIC;
     }
 
     // weight
@@ -278,7 +280,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                uint16_t aWeight,
                                                int16_t aStretch,
-                                               bool aItalic,
+                                               uint8_t aStyle,
                                                const uint8_t *aData,
                                                FT_Face aFace)
     : gfxFontEntry(aFaceName),
@@ -286,7 +288,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
       mAspect(0.0), mFontData(aData)
 {
     mWeight = aWeight;
-    mItalic = aItalic;
+    mStyle = aStyle;
     mStretch = aStretch;
     mIsDataUserFont = true;
 
@@ -319,13 +321,13 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                FcPattern* aFontPattern,
                                                uint16_t aWeight,
                                                int16_t aStretch,
-                                               bool aItalic)
+                                               uint8_t aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
           mAspect(0.0), mFontData(nullptr)
 {
     mWeight = aWeight;
-    mItalic = aItalic;
+    mStyle = aStyle;
     mStretch = aStretch;
     mIsLocalUserFont = true;
 }
@@ -670,9 +672,9 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
     }
 
     // synthetic oblique by skewing via the font matrix
-    bool needsOblique = !IsItalic() &&
-            (aStyle->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) &&
-            aStyle->allowSyntheticStyle;
+    bool needsOblique = IsUpright() &&
+                        aStyle->style != NS_FONT_STYLE_NORMAL &&
+                        aStyle->allowSyntheticStyle;
 
     if (needsOblique) {
         // disable embedded bitmaps (mimics behavior in 90-synthetic.conf)
@@ -863,7 +865,8 @@ gfxFontconfigFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
                  " psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fontEntry->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
-                 fontEntry->IsItalic() ? "italic" : "normal",
+                 (fontEntry->IsItalic()) ?
+                  "italic" : (fontEntry->IsOblique() ? "oblique" : "normal"),
                  fontEntry->Weight(), fontEntry->Stretch(),
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
@@ -1172,7 +1175,7 @@ gfxFontEntry*
 gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
                                        uint16_t aWeight,
                                        int16_t aStretch,
-                                       bool aItalic)
+                                       uint8_t aStyle)
 {
     nsAutoString keyName(aFontName);
     ToLowerCase(keyName);
@@ -1185,14 +1188,14 @@ gfxFcPlatformFontList::LookupLocalFont(const nsAString& aFontName,
 
     return new gfxFontconfigFontEntry(aFontName,
                                       fontPattern,
-                                      aWeight, aStretch, aItalic);
+                                      aWeight, aStretch, aStyle);
 }
 
 gfxFontEntry*
 gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
                                         uint16_t aWeight,
                                         int16_t aStretch,
-                                        bool aItalic,
+                                        uint8_t aStyle,
                                         const uint8_t* aFontData,
                                         uint32_t aLength)
 {
@@ -1210,8 +1213,8 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
         return nullptr;
     }
 
-    return new gfxFontconfigFontEntry(aFontName, aWeight, aStretch, aItalic,
-                                      aFontData, face);
+    return new gfxFontconfigFontEntry(aFontName, aWeight, aStretch,
+                                      aStyle, aFontData, face);
 }
 
 gfxFontFamily*
