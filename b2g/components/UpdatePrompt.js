@@ -431,7 +431,7 @@ UpdatePrompt.prototype = {
 
   sendUpdateEvent: function UP_sendUpdateEvent(aType, aUpdate) {
     let detail = {};
-    for each (let property in this._copyProperties) {
+    for (let property of this._copyProperties) {
       detail[property] = aUpdate[property];
     }
 
