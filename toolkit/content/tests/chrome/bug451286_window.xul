@@ -31,7 +31,7 @@
 
     var imports = ["SimpleTest", "ok", "snapshotWindow", "compareSnapshots",
                    "parentFinish"];
-    for each (var name in imports) {
+    for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
 

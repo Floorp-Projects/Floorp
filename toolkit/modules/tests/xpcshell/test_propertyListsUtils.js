@@ -67,7 +67,7 @@ function checkMainPropertyList(aPropertyListRoot) {
 
   // Data
   checkLazyGetterValue(array, 6, PropertyListUtils.TYPE_UINT8_ARRAY);
-  let dataAsString = [String.fromCharCode(b) for each (b in array[6])].join("");
+  let dataAsString = Array.from(array[6]).map(b => String.fromCharCode(b)).join("");
   do_check_eq(dataAsString, "2011-12-31T11:15:33Z");
 
   // Dict

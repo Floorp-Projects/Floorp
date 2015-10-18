@@ -43,7 +43,7 @@ this.readCertPrefs =
       break;
 
     let certAttrs = {};
-    for each (let prefCertAttr in prefCertAttrs)
+    for (let prefCertAttr of prefCertAttrs)
       certAttrs[prefCertAttr] = prefBranchCert.getCharPref(prefCertAttr);
 
     certs.push(certAttrs);

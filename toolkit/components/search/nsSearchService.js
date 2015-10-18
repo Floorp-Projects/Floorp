@@ -3078,7 +3078,8 @@ SearchService.prototype = {
       return null;
     };
 
-    for each (let engine in this._engines) {
+    for (let name in this._engines) {
+      let engine = this._engines[name];
       let parent = getParent(engine);
       if (!parent) {
         LOG("Error: no parent for engine " + engine._location + ", failing to cache it");
@@ -3191,8 +3192,10 @@ SearchService.prototype = {
     }
 
     LOG("_loadEngines: loading from cache directories");
-    for each (let dir in cache.directories)
+    for (let cacheKey in cache.directories) {
+      let dir = cache.directories[cacheKey];
       this._loadEnginesFromCache(dir);
+    }
 
     LOG("_loadEngines: done");
   },
@@ -3327,8 +3330,10 @@ SearchService.prototype = {
       }
 
       LOG("_asyncLoadEngines: loading from cache directories");
-      for each (let dir in cache.directories)
+      for (let cacheKey in cache.directories) {
+        let dir = cache.directories[cacheKey];
         this._loadEnginesFromCache(dir);
+      }
 
       LOG("_asyncLoadEngines: done");
     }.bind(this));
@@ -3818,7 +3823,8 @@ SearchService.prototype = {
       // Flag to keep track of whether or not we need to call _saveSortedEngineList.
       let needToSaveEngineList = false;
 
-      for each (engine in this._engines) {
+      for (let name in this._engines) {
+        let engine = this._engines[name];
         var orderNumber = engineMetadataService.getAttr(engine, "order");
 
         // Since the DB isn't regularly cleared, and engine files may disappear
@@ -3852,7 +3858,7 @@ SearchService.prototype = {
         var extras =
           Services.prefs.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
 
-        for each (prefName in extras) {
+        for (prefName of extras) {
           engineName = Services.prefs.getCharPref(prefName);
 
           engine = this._engines[engineName];
@@ -3884,7 +3890,8 @@ SearchService.prototype = {
     // Array for the remaining engines, alphabetically sorted.
     let alphaEngines = [];
 
-    for each (engine in this._engines) {
+    for (let name in this._engines) {
+      let engine = this._engines[name];
       if (!(engine.name in addedEngines))
         alphaEngines.push(this._engines[engine.name]);
     }
@@ -3993,7 +4000,7 @@ SearchService.prototype = {
     try {
       var extras = Services.prefs.getChildList(BROWSER_SEARCH_PREF + "order.extra.");
 
-      for each (var prefName in extras) {
+      for (var prefName of extras) {
         engineName = Services.prefs.getCharPref(prefName);
 
         if (!(engineName in engineOrder))
@@ -4209,7 +4216,8 @@ SearchService.prototype = {
 
   restoreDefaultEngines: function SRCH_SVC_resetDefaultEngines() {
     this._ensureInitialized();
-    for each (var e in this._engines) {
+    for (let name in this._engines) {
+      let e = this._engines[name];
       // Unhide all default engines
       if (e.hidden && e._isDefault)
         e.hidden = false;
@@ -4601,8 +4609,8 @@ SearchService.prototype = {
     // Therefore, we need to walk our engine-list, looking for expired engines
     var currentTime = Date.now();
     LOG("currentTime: " + currentTime);
-    for each (let engine in this._engines) {
-      engine = engine.wrappedJSObject;
+    for (let name in this._engines) {
+      let engine = this._engines[name].wrappedJSObject;
       if (!engine._hasUpdates)
         continue;
 

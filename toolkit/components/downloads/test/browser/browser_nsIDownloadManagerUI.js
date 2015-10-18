@@ -95,7 +95,7 @@ function test()
     var win = Services.wm.getMostRecentWindow("Download:Manager");
 
     // Now we can run our tests
-    for each (var t in testFuncs)
+    for (var t of testFuncs)
       t(win);
 
     finish();

@@ -71,7 +71,7 @@ Point.prototype = {
     };
   }
 
-  for each (let f in ['add', 'subtract', 'equals', 'set'])
+  for (let f of ['add', 'subtract', 'equals', 'set'])
     Point.prototype[f] = takePointOrArgs(Point.prototype[f]);
 })();
 

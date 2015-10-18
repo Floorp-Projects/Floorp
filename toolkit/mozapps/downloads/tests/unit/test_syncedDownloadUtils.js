@@ -15,7 +15,7 @@ function run_test()
 {
   // Simulate having multiple downloads requesting time left
   let downloadTimes = {};
-  for each (let time in [1, 30, 60, 3456, 9999])
+  for (let time of [1, 30, 60, 3456, 9999])
     downloadTimes[time] = DownloadUtils.getTimeLeft(time)[0];
 
   // Pretend we're a download status bar also asking for a time left, but we're

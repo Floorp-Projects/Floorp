@@ -525,7 +525,7 @@ ContentPrefService.prototype = {
    * Notify all observers about the removal of a preference.
    */
   _notifyPrefRemoved: function ContentPrefService__notifyPrefRemoved(aGroup, aName) {
-    for each (var observer in this._getObservers(aName)) {
+    for (var observer of this._getObservers(aName)) {
       try {
         observer.onContentPrefRemoved(aGroup, aName);
       }
@@ -539,7 +539,7 @@ ContentPrefService.prototype = {
    * Notify all observers about a preference change.
    */
   _notifyPrefSet: function ContentPrefService__notifyPrefSet(aGroup, aName, aValue) {
-    for each (var observer in this._getObservers(aName)) {
+    for (var observer of this._getObservers(aName)) {
       try {
         observer.onContentPrefSet(aGroup, aName, aValue);
       }

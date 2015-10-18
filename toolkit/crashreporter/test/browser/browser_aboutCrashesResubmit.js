@@ -105,7 +105,7 @@ function check_submit_pending(tab, crashes) {
   }
 
   // try submitting the pending report
-  for each(let crash in crashes) {
+  for (let crash of crashes) {
     if (crash.pending) {
       SubmittedCrash = crash;
       break;

@@ -695,10 +695,10 @@
                         clearInterval(this.statsInterval);
                         this.statsInterval = null;
                     }
-                    for each (let event in this.videoEvents)
+                    for (let event of this.videoEvents)
                         this.video.removeEventListener(event, this, false);
 
-                    for each(let element in this.controlListeners)
+                    for (let element of this.controlListeners)
                         element.item.removeEventListener(element.event, element.func, false);
 
                     delete this.controlListeners;
@@ -1492,7 +1492,7 @@
                     // Use the handleEvent() callback for all media events.
                     // The "error" event listener must capture, so that it can trap error events
                     // from the <source> children, which don't bubble.
-                    for each (let event in this.videoEvents)
+                    for (let event of this.videoEvents)
                         this.video.addEventListener(event, this, (event == "error") ? true : false);
 
                     var self = this;
@@ -1690,7 +1690,7 @@
             },
 
             terminateEventListeners : function () {
-              for each (var event in this.videoEvents)
+              for (var event of this.videoEvents)
                 this.Utils.video.removeEventListener(event, this, false);
             },
 
@@ -1831,10 +1831,10 @@
                            "playing"],
             controlListeners: [],
             terminateEventListeners : function () {
-              for each (let event in this.videoEvents)
+              for (let event of this.videoEvents)
                 this.video.removeEventListener(event, this, false);
 
-              for each(let element in this.controlListeners)
+              for (let element of this.controlListeners)
                 element.item.removeEventListener(element.event, element.func, false);
 
               delete this.controlListeners;
@@ -1904,7 +1904,7 @@
               addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
               addListener(this.video, "MozNoControlsBlockedVideo", this.blockedVideoHandler);
 
-              for each (let event in this.videoEvents) {
+              for (let event of this.videoEvents) {
                 this.video.addEventListener(event, this, false);
               }
 
