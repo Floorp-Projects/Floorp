@@ -35,7 +35,7 @@ function testPageMod(assert, done, testURL, pageModOptions,
                      testCallback, timeout) {
   let loader = createLoader();
   let { PageMod } = loader.require("sdk/page-mod");
-  let pageMods = [new PageMod(opts) for each (opts in pageModOptions)];
+  let pageMods = pageModOptions.map(opts => new PageMod(opts));
   let newTab = openNewTab(testURL);
   let b = getBrowserForTab(newTab);
 

@@ -15,7 +15,7 @@ const { defer } = require("sdk/lang/functional");
 function tabExistenceInTabs(assert, found, tab, tabs) {
   let tabFound = false;
 
-  for each (let t in tabs) {
+  for (let t of tabs) {
     assert.notEqual(t.title, undefined, 'tab title is not undefined');
     assert.notEqual(t.url, undefined, 'tab url is not undefined');
     assert.notEqual(t.index, undefined, 'tab index is not undefined');
