@@ -165,7 +165,7 @@ already_AddRefed<ImageLayer>
 ClientLayerManager::CreateImageLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<ClientImageLayer> layer =
+  RefPtr<ClientImageLayer> layer =
     new ClientImageLayer(this);
   CREATE_SHADOW(Image);
   return layer.forget();

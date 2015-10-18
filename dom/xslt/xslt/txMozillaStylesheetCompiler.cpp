@@ -89,7 +89,7 @@ public:
     virtual nsISupports *GetTarget() override { return nullptr; }
 
 private:
-    nsRefPtr<txStylesheetCompiler> mCompiler;
+    RefPtr<txStylesheetCompiler> mCompiler;
     nsCOMPtr<nsIStreamListener>    mListener;
     nsCOMPtr<nsIParser>            mParser;
     bool mCheckedForXML;
@@ -379,7 +379,7 @@ public:
                        ReferrerPolicy aReferrerPolicy);
 
 private:
-    nsRefPtr<txMozillaXSLTProcessor> mProcessor;
+    RefPtr<txMozillaXSLTProcessor> mProcessor;
     nsCOMPtr<nsIDocument> mLoaderDocument;
 
     // This exists solely to suppress a warning from nsDerivedSafe
@@ -479,7 +479,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler, parser);
+    RefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler, parser);
     NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
 
     channel->SetNotificationCallbacks(sink);
@@ -501,11 +501,11 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
     aUri->GetSpec(spec);
     MOZ_LOG(txLog::xslt, LogLevel::Info, ("TX_LoadSheet: %s\n", spec.get()));
 
-    nsRefPtr<txCompileObserver> observer =
+    RefPtr<txCompileObserver> observer =
         new txCompileObserver(aProcessor, aLoaderDocument);
     NS_ENSURE_TRUE(observer, NS_ERROR_OUT_OF_MEMORY);
 
-    nsRefPtr<txStylesheetCompiler> compiler =
+    RefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(NS_ConvertUTF8toUTF16(spec), aReferrerPolicy,
                                  observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
@@ -597,7 +597,7 @@ private:
     {
     }
 
-    nsRefPtr<txMozillaXSLTProcessor> mProcessor;
+    RefPtr<txMozillaXSLTProcessor> mProcessor;
 };
 
 txSyncCompileObserver::txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor)
@@ -709,11 +709,11 @@ TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
     uri->GetSpec(spec);
     NS_ConvertUTF8toUTF16 stylesheetURI(spec);
 
-    nsRefPtr<txSyncCompileObserver> obs =
+    RefPtr<txSyncCompileObserver> obs =
         new txSyncCompileObserver(aProcessor);
     NS_ENSURE_TRUE(obs, NS_ERROR_OUT_OF_MEMORY);
 
-    nsRefPtr<txStylesheetCompiler> compiler =
+    RefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(stylesheetURI, doc->GetReferrerPolicy(), obs);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 

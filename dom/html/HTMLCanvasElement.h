@@ -365,14 +365,14 @@ protected:
   AsyncCanvasRenderer* GetAsyncCanvasRenderer();
 
   bool mResetLayer;
-  nsRefPtr<HTMLCanvasElement> mOriginalCanvas;
-  nsRefPtr<PrintCallback> mPrintCallback;
-  nsRefPtr<HTMLCanvasPrintState> mPrintState;
+  RefPtr<HTMLCanvasElement> mOriginalCanvas;
+  RefPtr<PrintCallback> mPrintCallback;
+  RefPtr<HTMLCanvasPrintState> mPrintState;
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
-  nsRefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
-  nsRefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
-  nsRefPtr<OffscreenCanvas> mOffscreenCanvas;
-  nsRefPtr<HTMLCanvasElementObserver> mContextObserver;
+  RefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
+  RefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
+  RefPtr<OffscreenCanvas> mOffscreenCanvas;
+  RefPtr<HTMLCanvasElementObserver> mContextObserver;
 
 public:
   // Record whether this canvas should be write-only or not.
@@ -426,7 +426,7 @@ private:
   bool mPendingNotify;
 
 protected:
-  nsRefPtr<HTMLCanvasElement> mCanvas;
+  RefPtr<HTMLCanvasElement> mCanvas;
   nsCOMPtr<nsICanvasRenderingContextInternal> mContext;
   nsCOMPtr<nsITimerCallback> mCallback;
 };

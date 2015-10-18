@@ -107,7 +107,7 @@ MatchPattern.prototype = {
     return false;
   },
 
-  toString: function () '[object MatchPattern]'
+  toString: () => '[object MatchPattern]'
 };
 
 exports.MatchPattern = MatchPattern;

@@ -22,7 +22,7 @@ already_AddRefed<DOMPoint>
 DOMPoint::Constructor(const GlobalObject& aGlobal, const DOMPointInit& aParams,
                       ErrorResult& aRV)
 {
-  nsRefPtr<DOMPoint> obj =
+  RefPtr<DOMPoint> obj =
     new DOMPoint(aGlobal.GetAsSupports(), aParams.mX, aParams.mY,
                  aParams.mZ, aParams.mW);
   return obj.forget();
@@ -32,7 +32,7 @@ already_AddRefed<DOMPoint>
 DOMPoint::Constructor(const GlobalObject& aGlobal, double aX, double aY,
                       double aZ, double aW, ErrorResult& aRV)
 {
-  nsRefPtr<DOMPoint> obj =
+  RefPtr<DOMPoint> obj =
     new DOMPoint(aGlobal.GetAsSupports(), aX, aY, aZ, aW);
   return obj.forget();
 }

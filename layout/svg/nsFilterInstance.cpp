@@ -34,7 +34,7 @@ nsFilterInstance::GetFilterDescription(nsIContent* aFilteredElement,
                                        const nsTArray<nsStyleFilter>& aFilterChain,
                                        const UserSpaceMetrics& aMetrics,
                                        const gfxRect& aBBox,
-                                       nsTArray<mozilla::RefPtr<SourceSurface>>& aOutAdditionalImages)
+                                       nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
 {
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
   nsFilterInstance instance(nullptr, aFilteredElement, aMetrics,
@@ -364,7 +364,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   }
 
   if (!mPaintTransform.IsSingular()) {
-    nsRefPtr<gfxContext> gfx = new gfxContext(offscreenDT);
+    RefPtr<gfxContext> gfx = new gfxContext(offscreenDT);
     gfx->Save();
     gfx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
@@ -443,7 +443,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   if (!deviceToFilterSpace.Invert()) {
     return NS_ERROR_FAILURE;
   }
-  nsRefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
+  RefPtr<gfxContext> ctx = new gfxContext(offscreenDT);
   ctx->SetMatrix(
     ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).
                          PreMultiply(deviceToFilterSpace));

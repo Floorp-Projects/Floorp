@@ -111,7 +111,7 @@ FFmpegRuntimeLinker::CreateDecoderModule()
   if (!Link()) {
     return nullptr;
   }
-  nsRefPtr<PlatformDecoderModule> module = sLib->Factory();
+  RefPtr<PlatformDecoderModule> module = sLib->Factory();
   return module.forget();
 }
 

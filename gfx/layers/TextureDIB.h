@@ -45,7 +45,7 @@ protected:
     , mIsLocked(false)
   { }
 
-  nsRefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<gfxWindowsSurface> mSurface;
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
@@ -167,7 +167,7 @@ public:
 protected:
   virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
-  nsRefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<gfxWindowsSurface> mSurface;
 };
 
 class TextureHostFileMapping : public TextureHostDirectUpload

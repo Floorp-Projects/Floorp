@@ -355,7 +355,7 @@ nsWindowsShellService::ShortcutMaintenance()
 }
 
 static bool
-IsAARDefault(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+IsAARDefault(const RefPtr<IApplicationAssociationRegistration>& pAAR,
              LPCWSTR aClassName)
 {
   // Make sure the Prog ID matches what we have
@@ -395,7 +395,7 @@ GetHashPrefName(LPCWSTR aClassName, nsACString& aPrefName)
 }
 
 static bool
-SaveWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+SaveWin8RegistryHash(const RefPtr<IApplicationAssociationRegistration>& pAAR,
                      LPCWSTR aClassName)
 {
   bool isProtocol = *aClassName != L'.';
@@ -434,7 +434,7 @@ SaveWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
 }
 
 static bool
-RestoreWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAAR,
+RestoreWin8RegistryHash(const RefPtr<IApplicationAssociationRegistration>& pAAR,
                         LPCWSTR aClassName)
 {
   nsAutoCString prefName;
@@ -516,7 +516,7 @@ RestoreWin8RegistryHash(const nsRefPtr<IApplicationAssociationRegistration>& pAA
 static void
 SaveWin8RegistryHashes(bool aCheckAllTypes, bool* aIsDefaultBrowser)
 {
-  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,
@@ -545,7 +545,7 @@ SaveWin8RegistryHashes(bool aCheckAllTypes, bool* aIsDefaultBrowser)
 static bool
 RestoreWin8RegistryHashes(bool aClaimAllTypes)
 {
-  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,
@@ -580,7 +580,7 @@ bool
 nsWindowsShellService::IsDefaultBrowserVista(bool aCheckAllTypes,
                                              bool* aIsDefaultBrowser)
 {
-  nsRefPtr<IApplicationAssociationRegistration> pAAR;
+  RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
                                 CLSCTX_INPROC,

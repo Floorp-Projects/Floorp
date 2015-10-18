@@ -36,7 +36,7 @@ protected:
   ~SVGAnimatedBoolean();
 
   nsSVGBoolean* mVal; // kept alive because it belongs to content
-  nsRefPtr<nsSVGElement> mSVGElement;
+  RefPtr<nsSVGElement> mSVGElement;
 };
 
 } //namespace dom

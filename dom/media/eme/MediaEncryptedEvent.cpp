@@ -55,7 +55,7 @@ MediaEncryptedEvent::WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aG
 already_AddRefed<MediaEncryptedEvent>
 MediaEncryptedEvent::Constructor(EventTarget* aOwner)
 {
-  nsRefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
+  RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("encrypted"), false, false);
   e->SetTrusted(true);
   return e.forget();
@@ -66,7 +66,7 @@ MediaEncryptedEvent::Constructor(EventTarget* aOwner,
                                  const nsAString& aInitDataType,
                                  const nsTArray<uint8_t>& aInitData)
 {
-  nsRefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
+  RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("encrypted"), false, false);
   e->mInitDataType = aInitDataType;
   e->mRawInitData = aInitData;
@@ -81,7 +81,7 @@ MediaEncryptedEvent::Constructor(const GlobalObject& aGlobal,
                                  ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(owner);
+  RefPtr<MediaEncryptedEvent> e = new MediaEncryptedEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   e->mInitDataType = aEventInitDict.mInitDataType;

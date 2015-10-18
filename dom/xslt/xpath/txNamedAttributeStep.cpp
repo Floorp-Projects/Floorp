@@ -24,7 +24,7 @@ txNamedAttributeStep::evaluate(txIEvalContext* aContext,
 {
     *aResult = nullptr;
 
-    nsRefPtr<txNodeSet> nodes;
+    RefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 

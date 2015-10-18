@@ -387,7 +387,7 @@ public:
     * return: Concrete AudioSessionConduitObject or nullptr in the case
     *         of failure
     */
-  static mozilla::RefPtr<AudioSessionConduit> Create();
+  static RefPtr<AudioSessionConduit> Create();
 
   virtual ~AudioSessionConduit() {}
 

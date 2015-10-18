@@ -14,6 +14,7 @@ var promise = require("promise");
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { expectState } = require("devtools/server/actors/common");
 var HeapSnapshotFileUtils = require("devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
+var HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 var { addDebuggerToGlobal } = require("resource://gre/modules/jsdebugger.jsm");
 var Store = require("devtools/client/memory/store");
 var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
@@ -39,8 +40,7 @@ StubbedMemoryFront.prototype.detach = Task.async(function *() {
 });
 
 StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached", Task.async(function *() {
-  let path = ThreadSafeChromeUtils.saveHeapSnapshot({ debugger: this.dbg });
-  return HeapSnapshotFileUtils.getSnapshotIdFromPath(path);
+  return ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
 }), "saveHeapSnapshot");
 
 function waitUntilState (store, predicate) {

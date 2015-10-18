@@ -593,7 +593,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
   } else {
 
     // hasn't been cached, so insert it into the hash table
-    nsRefPtr<nsStringBundle> bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
+    RefPtr<nsStringBundle> bundle = new nsStringBundle(aURLSpec, mOverrideStrings);
     cacheEntry = insertIntoCache(bundle.forget(), key);
   }
 
@@ -655,7 +655,7 @@ nsStringBundleService::CreateExtensibleBundle(const char* aCategory,
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nullptr;
 
-  nsRefPtr<nsExtensibleStringBundle> bundle = new nsExtensibleStringBundle();
+  RefPtr<nsExtensibleStringBundle> bundle = new nsExtensibleStringBundle();
 
   nsresult res = bundle->Init(aCategory, this);
   if (NS_FAILED(res)) {

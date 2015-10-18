@@ -1478,7 +1478,7 @@ BluetoothDaemonGattModule::HandleRsp(
     return;
   }
 
-  nsRefPtr<BluetoothGattResultHandler> res =
+  RefPtr<BluetoothGattResultHandler> res =
     static_cast<BluetoothGattResultHandler*>(aRes);
 
   if (!res) {
@@ -2034,7 +2034,7 @@ public:
   }
 
 private:
-  nsRefPtr<BluetoothGattResultHandler> mRes;
+  RefPtr<BluetoothGattResultHandler> mRes;
 };
 
 void
@@ -2101,7 +2101,7 @@ public:
 
 private:
   BluetoothDaemonGattModule* mModule;
-  nsRefPtr<BluetoothGattResultHandler> mRes;
+  RefPtr<BluetoothGattResultHandler> mRes;
 };
 
 void

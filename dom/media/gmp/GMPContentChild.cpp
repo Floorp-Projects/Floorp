@@ -181,28 +181,28 @@ void
 GMPContentChild::CloseActive()
 {
   // Invalidate and remove any remaining API objects.
-  const nsTArray<PGMPAudioDecoderChild*>& audioDecoders =
+  const ManagedContainer<PGMPAudioDecoderChild>& audioDecoders =
     ManagedPGMPAudioDecoderChild();
-  for (uint32_t i = audioDecoders.Length(); i > 0; i--) {
-    audioDecoders[i - 1]->SendShutdown();
+  for (auto iter = audioDecoders.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->SendShutdown();
   }
 
-  const nsTArray<PGMPDecryptorChild*>& decryptors =
+  const ManagedContainer<PGMPDecryptorChild>& decryptors =
     ManagedPGMPDecryptorChild();
-  for (uint32_t i = decryptors.Length(); i > 0; i--) {
-    decryptors[i - 1]->SendShutdown();
+  for (auto iter = decryptors.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->SendShutdown();
   }
 
-  const nsTArray<PGMPVideoDecoderChild*>& videoDecoders =
+  const ManagedContainer<PGMPVideoDecoderChild>& videoDecoders =
     ManagedPGMPVideoDecoderChild();
-  for (uint32_t i = videoDecoders.Length(); i > 0; i--) {
-    videoDecoders[i - 1]->SendShutdown();
+  for (auto iter = videoDecoders.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->SendShutdown();
   }
 
-  const nsTArray<PGMPVideoEncoderChild*>& videoEncoders =
+  const ManagedContainer<PGMPVideoEncoderChild>& videoEncoders =
     ManagedPGMPVideoEncoderChild();
-  for (uint32_t i = videoEncoders.Length(); i > 0; i--) {
-    videoEncoders[i - 1]->SendShutdown();
+  for (auto iter = videoEncoders.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Get()->GetKey()->SendShutdown();
   }
 }
 

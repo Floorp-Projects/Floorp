@@ -389,7 +389,7 @@ GMPDecryptorParent::Close()
   // Let Shutdown mark us as dead so it knows if we had been alive
 
   // In case this is the last reference
-  nsRefPtr<GMPDecryptorParent> kungfudeathgrip(this);
+  RefPtr<GMPDecryptorParent> kungfudeathgrip(this);
   this->Release();
   Shutdown();
 }

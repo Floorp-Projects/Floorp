@@ -78,7 +78,7 @@ private:
   bool mIsOpen;
   bool mShuttingDown;
   bool mActorDestroyed;
-  nsRefPtr<GMPContentParent> mPlugin;
+  RefPtr<GMPContentParent> mPlugin;
   GMPVideoEncoderCallbackProxy* mCallback;
   GMPVideoHostImpl mVideoHost;
   nsCOMPtr<nsIThread> mEncodedThread;

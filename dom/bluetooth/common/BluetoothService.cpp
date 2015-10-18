@@ -391,7 +391,7 @@ BluetoothService::StartBluetooth(bool aIsStartup,
     }
   } else {
     BT_WARNING("Bluetooth has already been enabled before.");
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
+    RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
@@ -422,7 +422,7 @@ BluetoothService::StopBluetooth(bool aIsStartup,
     }
   } else {
     BT_WARNING("Bluetooth has already been enabled/disabled before.");
-    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+    RefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
@@ -483,7 +483,7 @@ BluetoothService::HandleStartup()
   nsresult rv = settings->CreateLock(nullptr, getter_AddRefs(settingsLock));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<StartupTask> callback = new StartupTask();
+  RefPtr<StartupTask> callback = new StartupTask();
   rv = settingsLock->Get(BLUETOOTH_ENABLED_SETTING, callback);
   NS_ENSURE_SUCCESS(rv, rv);
 

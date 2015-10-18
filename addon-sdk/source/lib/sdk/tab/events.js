@@ -35,14 +35,14 @@ function tabEventsFor(window) {
   // Map supported event types to a streams of those events on the given
   // `window` and than merge these streams into single form stream off
   // all events.
-  let channels = TYPES.map(function(type) open(window, type));
+  let channels = TYPES.map(type => open(window, type));
   return merge(channels);
 }
 
 // Filter DOMContentLoaded events from all the browser events.
-var readyEvents = filter(events, function(e) e.type === "DOMContentLoaded");
+var readyEvents = filter(events, e => e.type === "DOMContentLoaded");
 // Map DOMContentLoaded events to it's target browser windows.
-var futureWindows = map(readyEvents, function(e) e.target);
+var futureWindows = map(readyEvents, e => e.target);
 // Expand all browsers that will become interactive to supported tab events
 // on these windows. Result will be a tab events from all tabs of all windows
 // that will become interactive.

@@ -664,7 +664,7 @@ void TiledTextureImage::Resize(const gfx::IntSize& aSize)
             }
 
             // Create a new tile.
-            nsRefPtr<TextureImage> teximg =
+            RefPtr<TextureImage> teximg =
                 TileGenFunc(mGL, size, mContentType, mFlags, mImageFormat);
             if (replace)
                 mImages.ReplaceElementAt(i, teximg);
@@ -723,7 +723,7 @@ CreateBasicTextureImage(GLContext* aGL,
     aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
     aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
 
-    nsRefPtr<BasicTextureImage> texImage =
+    RefPtr<BasicTextureImage> texImage =
         new BasicTextureImage(texture, aSize, aWrapMode, aContentType,
                               aGL, aFlags, aImageFormat);
     return texImage.forget();

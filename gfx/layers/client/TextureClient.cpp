@@ -92,7 +92,7 @@ class TextureChild final : public PTextureChild
   ~TextureChild()
   {
     if (mKeep && mMainThreadOnly && !NS_IsMainThread()) {
-      nsRefPtr<ReleaseKeepAlive> release = new ReleaseKeepAlive();
+      RefPtr<ReleaseKeepAlive> release = new ReleaseKeepAlive();
       release->mKeep = Move(mKeep);
       NS_DispatchToMainThread(release);
     }

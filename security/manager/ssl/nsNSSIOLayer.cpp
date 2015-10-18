@@ -930,8 +930,6 @@ PRStatus
 nsNSSSocketInfo::CloseSocketAndDestroy(
     const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  nsNSSShutDownList::trackSSLSocketClose();
-
   PRFileDesc* popped = PR_PopIOLayer(mFd, PR_TOP_IO_LAYER);
   NS_ASSERTION(popped &&
                popped->identity == nsSSLIOLayerHelpers::nsSSLIOLayerIdentity,
@@ -1111,15 +1109,21 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
   if ((err == SSL_ERROR_NO_CYPHER_OVERLAP || err == PR_END_OF_FILE_ERROR ||
        err == PR_CONNECT_RESET_ERROR) &&
-      (!fallbackLimitReached || helpers.mUnrestrictedRC4Fallback) &&
-      nsNSSComponent::AreAnyWeakCiphersEnabled()) {
-    if (helpers.rememberStrongCiphersFailed(socketInfo->GetHostName(),
-                                            socketInfo->GetPort(), err)) {
-      Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK,
-                            tlsIntoleranceTelemetryBucket(err));
-      return true;
+       nsNSSComponent::AreAnyWeakCiphersEnabled()) {
+    if (!fallbackLimitReached || helpers.mUnrestrictedRC4Fallback) {
+      if (helpers.rememberStrongCiphersFailed(socketInfo->GetHostName(),
+                                              socketInfo->GetPort(), err)) {
+        Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK,
+                              tlsIntoleranceTelemetryBucket(err));
+        return true;
+      }
+      Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK, 0);
+    } else if (err == SSL_ERROR_NO_CYPHER_OVERLAP) {
+      // Indicate that the override UI should be shown.
+      socketInfo->SetSecurityState(
+        nsIWebProgressListener::STATE_IS_INSECURE |
+        nsIWebProgressListener::STATE_USES_WEAK_CRYPTO);
     }
-    Telemetry::Accumulate(Telemetry::SSL_WEAK_CIPHERS_FALLBACK, 0);
   }
 
   // When not using a proxy we'll see a connection reset error.
@@ -2713,8 +2717,6 @@ nsSSLIOLayerAddToSocket(int32_t family,
   if (stat == PR_FAILURE) {
     goto loser;
   }
-
-  nsNSSShutDownList::trackSSLSocketCreate();
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("[%p] Socket set up\n", (void*) sslSock));
   infoObject->QueryInterface(NS_GET_IID(nsISupports), (void**) (info));

@@ -180,7 +180,7 @@ JS_FRIEND_API(bool) isGCEnabled();
 JS_FRIEND_API(void) HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next);
 
 #ifdef JS_DEBUG
-/*
+/**
  * For generational GC, assert that an object is in the tenured generation as
  * opposed to being in the nursery.
  */
@@ -195,7 +195,7 @@ inline void
 AssertGCThingIsNotAnObjectSubclass(js::gc::Cell* cell) {}
 #endif
 
-/*
+/**
  * The Heap<T> class is a heap-stored reference to a JS GC thing. All members of
  * heap classes that refer to GC things should use Heap<T> (or possibly
  * TenuredHeap<T>, described below).
@@ -278,7 +278,7 @@ class Heap : public js::HeapBase<T>
     T ptr;
 };
 
-/*
+/**
  * The TenuredHeap<T> class is similar to the Heap<T> class above in that it
  * encapsulates the GC concerns of an on-heap reference to a JS object. However,
  * it has two important differences:
@@ -368,7 +368,7 @@ class TenuredHeap : public js::HeapBase<T>
     uintptr_t bits;
 };
 
-/*
+/**
  * Reference to a T that has been rooted elsewhere. This is most useful
  * as a parameter type, which guarantees that the T lvalue is properly
  * rooted. See "Move GC Stack Rooting" above.
@@ -457,7 +457,7 @@ class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
     const T* ptr;
 };
 
-/*
+/**
  * Similar to a handle, but the underlying storage can be changed. This is
  * useful for outparams.
  *
@@ -509,7 +509,7 @@ class MOZ_STACK_CLASS MutableHandle : public js::MutableHandleBase<T>
 
 namespace js {
 
-/*
+/**
  * By default, things should use the inheritance hierarchy to find their
  * ThingRootKind. Some pointer types are explicitly set in jspubtd.h so that
  * Rooted<T> may be used without the class definition being available.
@@ -645,7 +645,7 @@ RootListsForRootingContext(js::PerThreadDataFriendFields* pt)
 
 namespace JS {
 
-/*
+/**
  * Local variable of type T whose value is always rooted. This is typically
  * used for local variables, or for non-rooted values being passed to a
  * function that requires a handle, e.g. Foo(Root<T>(cx, x)).
@@ -733,7 +733,7 @@ class MOZ_RAII Rooted : public js::RootedBase<T>
 
 namespace js {
 
-/*
+/**
  * Augment the generic Rooted<T> interface when T = JSObject* with
  * class-querying and downcasting operations.
  *
@@ -751,7 +751,7 @@ class RootedBase<JSObject*>
     JS::Handle<U*> as() const;
 };
 
-/*
+/**
  * Augment the generic Handle<T> interface when T = JSObject* with
  * downcasting operations.
  *
@@ -769,7 +769,7 @@ class HandleBase<JSObject*>
     JS::Handle<U*> as() const;
 };
 
-/* Interface substitute for Rooted<T> which does not root the variable's memory. */
+/** Interface substitute for Rooted<T> which does not root the variable's memory. */
 template <typename T>
 class MOZ_RAII FakeRooted : public RootedBase<T>
 {
@@ -796,7 +796,7 @@ class MOZ_RAII FakeRooted : public RootedBase<T>
     FakeRooted(const FakeRooted&) = delete;
 };
 
-/* Interface substitute for MutableHandle<T> which is not required to point to rooted memory. */
+/** Interface substitute for MutableHandle<T> which is not required to point to rooted memory. */
 template <typename T>
 class FakeMutableHandle : public js::MutableHandleBase<T>
 {
@@ -824,7 +824,7 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
     T* ptr;
 };
 
-/*
+/**
  * Types for a variable that either should or shouldn't be rooted, depending on
  * the template parameter allowGC. Used for implementing functions that can
  * operate on either rooted or unrooted data.
@@ -930,7 +930,7 @@ MutableHandle<T>::MutableHandle(PersistentRooted<T>* root)
     ptr = root->address();
 }
 
-/*
+/**
  * A copyable, assignable global GC root type with arbitrary lifetime, an
  * infallible constructor, and automatic unrooting on destruction.
  *

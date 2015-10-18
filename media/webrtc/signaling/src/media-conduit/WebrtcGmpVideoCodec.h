@@ -169,11 +169,11 @@ public:
 private:
   virtual ~WebrtcGmpVideoEncoder();
 
-  static void InitEncode_g(const nsRefPtr<WebrtcGmpVideoEncoder>& aThis,
+  static void InitEncode_g(const RefPtr<WebrtcGmpVideoEncoder>& aThis,
                            const GMPVideoCodec& aCodecParams,
                            int32_t aNumberOfCores,
                            uint32_t aMaxPayloadSize,
-                           const nsRefPtr<GmpInitDoneRunnable>& aInitDone);
+                           const RefPtr<GmpInitDoneRunnable>& aInitDone);
   int32_t GmpInitDone(GMPVideoEncoderProxy* aGMP, GMPVideoHost* aHost,
                       const GMPVideoCodec& aCodecParams,
                       uint32_t aMaxPayloadSize,
@@ -184,14 +184,14 @@ private:
   int32_t InitEncoderForSize(unsigned short aWidth,
                              unsigned short aHeight,
                              std::string* aErrorOut);
-  static void ReleaseGmp_g(nsRefPtr<WebrtcGmpVideoEncoder>& aEncoder);
+  static void ReleaseGmp_g(RefPtr<WebrtcGmpVideoEncoder>& aEncoder);
   void Close_g();
 
   class InitDoneCallback : public GetGMPVideoEncoderCallback
   {
   public:
-    InitDoneCallback(const nsRefPtr<WebrtcGmpVideoEncoder>& aEncoder,
-                     const nsRefPtr<GmpInitDoneRunnable>& aInitDone,
+    InitDoneCallback(const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
+                     const RefPtr<GmpInitDoneRunnable>& aInitDone,
                      const GMPVideoCodec& aCodecParams,
                      uint32_t aMaxPayloadSize)
       : mEncoder(aEncoder),
@@ -214,8 +214,8 @@ private:
     }
 
   private:
-    nsRefPtr<WebrtcGmpVideoEncoder> mEncoder;
-    nsRefPtr<GmpInitDoneRunnable> mInitDone;
+    RefPtr<WebrtcGmpVideoEncoder> mEncoder;
+    RefPtr<GmpInitDoneRunnable> mInitDone;
     GMPVideoCodec mCodecParams;
     uint32_t mMaxPayloadSize;
   };
@@ -226,14 +226,14 @@ private:
   void RegetEncoderForResolutionChange(
       uint32_t aWidth,
       uint32_t aHeight,
-      const nsRefPtr<GmpInitDoneRunnable>& aInitDone);
+      const RefPtr<GmpInitDoneRunnable>& aInitDone);
 
   class InitDoneForResolutionChangeCallback : public GetGMPVideoEncoderCallback
   {
   public:
     InitDoneForResolutionChangeCallback(
-        const nsRefPtr<WebrtcGmpVideoEncoder>& aEncoder,
-        const nsRefPtr<GmpInitDoneRunnable>& aInitDone,
+        const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
+        const RefPtr<GmpInitDoneRunnable>& aInitDone,
         uint32_t aWidth,
         uint32_t aHeight)
       : mEncoder(aEncoder),
@@ -257,13 +257,13 @@ private:
     }
 
   private:
-    nsRefPtr<WebrtcGmpVideoEncoder> mEncoder;
-    nsRefPtr<GmpInitDoneRunnable> mInitDone;
+    RefPtr<WebrtcGmpVideoEncoder> mEncoder;
+    RefPtr<GmpInitDoneRunnable> mInitDone;
     uint32_t mWidth;
     uint32_t mHeight;
   };
 
-  static int32_t SetRates_g(nsRefPtr<WebrtcGmpVideoEncoder> aThis,
+  static int32_t SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
                              uint32_t aNewBitRate,
                              uint32_t aFrameRate);
 
@@ -348,7 +348,7 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder
     }
 
   private:
-    nsRefPtr<WebrtcGmpVideoEncoder> mEncoderImpl;
+    RefPtr<WebrtcGmpVideoEncoder> mEncoderImpl;
 };
 
 class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy
@@ -407,21 +407,21 @@ private:
   virtual ~WebrtcGmpVideoDecoder();
 
   static void InitDecode_g(
-      const nsRefPtr<WebrtcGmpVideoDecoder>& aThis,
+      const RefPtr<WebrtcGmpVideoDecoder>& aThis,
       const webrtc::VideoCodec* aCodecSettings,
       int32_t aNumberOfCores,
-      const nsRefPtr<GmpInitDoneRunnable>& aInitDone);
+      const RefPtr<GmpInitDoneRunnable>& aInitDone);
   int32_t GmpInitDone(GMPVideoDecoderProxy* aGMP,
                       GMPVideoHost* aHost,
                       std::string* aErrorOut);
-  static void ReleaseGmp_g(nsRefPtr<WebrtcGmpVideoDecoder>& aDecoder);
+  static void ReleaseGmp_g(RefPtr<WebrtcGmpVideoDecoder>& aDecoder);
   void Close_g();
 
   class InitDoneCallback : public GetGMPVideoDecoderCallback
   {
   public:
     explicit InitDoneCallback(WebrtcGmpVideoDecoder* aDecoder,
-                              const nsRefPtr<GmpInitDoneRunnable>& aInitDone)
+                              const RefPtr<GmpInitDoneRunnable>& aInitDone)
       : mDecoder(aDecoder),
         mInitDone(aInitDone)
     {
@@ -437,7 +437,7 @@ private:
 
   private:
     WebrtcGmpVideoDecoder* mDecoder;
-    nsRefPtr<GmpInitDoneRunnable> mInitDone;
+    RefPtr<GmpInitDoneRunnable> mInitDone;
   };
 
   virtual int32_t Decode_g(const webrtc::EncodedImage& aInputImage,
@@ -519,7 +519,7 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder
     }
 
   private:
-    nsRefPtr<WebrtcGmpVideoDecoder> mDecoderImpl;
+    RefPtr<WebrtcGmpVideoDecoder> mDecoderImpl;
 };
 
 }

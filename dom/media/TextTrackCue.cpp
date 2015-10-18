@@ -133,7 +133,7 @@ TextTrackCue::GetCueAsHTML()
   if (!div) {
     return mDocument->CreateDocumentFragment();
   }
-  nsRefPtr<DocumentFragment> docFrag = mDocument->CreateDocumentFragment();
+  RefPtr<DocumentFragment> docFrag = mDocument->CreateDocumentFragment();
   nsCOMPtr<nsIDOMNode> throwAway;
   docFrag->AppendChild(div, getter_AddRefs(throwAway));
 

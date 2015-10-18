@@ -18,7 +18,7 @@ UnaryExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nullptr;
 
-    nsRefPtr<txAExprResult> exprRes;
+    RefPtr<txAExprResult> exprRes;
     nsresult rv = expr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 

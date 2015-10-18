@@ -492,7 +492,7 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
     NewRunnableFunction<
       void (*)(ImageClient*, ImageContainer*),
       ImageClient*,
-      nsRefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
+      RefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
 }
 
 static void UpdateAsyncCanvasRendererSync(AsyncCanvasRenderer* aWrapper,

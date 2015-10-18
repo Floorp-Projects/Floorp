@@ -330,7 +330,7 @@ class GLPresenter : public GLManager
 public:
   static GLPresenter* CreateForWindow(nsIWidget* aWindow)
   {
-    nsRefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow);
+    RefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow);
     return context ? new GLPresenter(context) : nullptr;
   }
 
@@ -365,7 +365,7 @@ public:
   }
 
 protected:
-  nsRefPtr<mozilla::gl::GLContext> mGLContext;
+  RefPtr<mozilla::gl::GLContext> mGLContext;
   nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
   gfx::Matrix4x4 mProjMatrix;
   GLuint mQuadVBO;
@@ -2870,7 +2870,7 @@ nsChildView::GetDocumentAccessible()
     return nullptr;
 
   if (mAccessible) {
-    nsRefPtr<a11y::Accessible> ret;
+    RefPtr<a11y::Accessible> ret;
     CallQueryReferent(mAccessible.get(),
                       static_cast<a11y::Accessible**>(getter_AddRefs(ret)));
     return ret.forget();
@@ -2878,7 +2878,7 @@ nsChildView::GetDocumentAccessible()
 
   // need to fetch the accessible anew, because it has gone away.
   // cache the accessible in our weak ptr
-  nsRefPtr<a11y::Accessible> acc = GetRootAccessible();
+  RefPtr<a11y::Accessible> acc = GetRootAccessible();
   mAccessible = do_GetWeakReference(acc.get());
 
   return acc.forget();
@@ -3722,7 +3722,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsIntRegion region = [self nativeDirtyRegionWithBoundingRect:aRect];
 
   // Create Cairo objects.
-  nsRefPtr<gfxQuartzSurface> targetSurface;
+  RefPtr<gfxQuartzSurface> targetSurface;
 
   RefPtr<gfx::DrawTarget> dt =
     gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
@@ -3730,7 +3730,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                                                  backingSize.height));
   MOZ_ASSERT(dt); // see implementation
   dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-  nsRefPtr<gfxContext> targetContext = new gfxContext(dt);
+  RefPtr<gfxContext> targetContext = new gfxContext(dt);
 
   // Set up the clip region.
   nsIntRegionRectIterator iter(region);
@@ -6192,7 +6192,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
-  nsRefPtr<a11y::Accessible> accessible = mGeckoChild->GetDocumentAccessible();
+  RefPtr<a11y::Accessible> accessible = mGeckoChild->GetDocumentAccessible();
   if (!accessible)
     return nil;
 

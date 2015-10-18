@@ -29,8 +29,8 @@ protected:
 
   nsString mAddress;
   int32_t mRequestId;
-  nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
-  nsRefPtr<BluetoothGattDescriptor> mDescriptor;
+  RefPtr<BluetoothGattCharacteristic> mCharacteristic;
+  RefPtr<BluetoothGattDescriptor> mDescriptor;
   JS::Heap<JSObject*> mValue;
   bool mNeedResponse;
 

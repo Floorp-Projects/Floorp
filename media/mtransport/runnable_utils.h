@@ -244,7 +244,7 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<T> ref_;
+  RefPtr<T> ref_;
 };
 
 template <typename T>

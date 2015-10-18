@@ -90,7 +90,7 @@ exports.testSettingActiveWindowDoesNotIgnorePrivateWindow = function(assert, don
   makeEmptyBrowserWindow({
     private: true
   }).then(function(window) {
-    let continueAfterFocus = function(window) onFocus(window).then(nextTest);
+    let continueAfterFocus = window => onFocus(window).then(nextTest);
 
     // PWPB case
     if (isWindowPBSupported) {

@@ -260,7 +260,7 @@ public:
         if (mFillPattern) {
             mFillPattern->SetMatrix(aCTM * mFillMatrix);
         }
-        nsRefPtr<gfxPattern> fillPattern = mFillPattern;
+        RefPtr<gfxPattern> fillPattern = mFillPattern;
         return fillPattern.forget();
     }
 
@@ -270,7 +270,7 @@ public:
         if (mStrokePattern) {
             mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);
         }
-        nsRefPtr<gfxPattern> strokePattern = mStrokePattern;
+        RefPtr<gfxPattern> strokePattern = mStrokePattern;
         return strokePattern.forget();
     }
 
@@ -283,8 +283,8 @@ public:
     }
 
 private:
-    nsRefPtr<gfxPattern> mFillPattern;
-    nsRefPtr<gfxPattern> mStrokePattern;
+    RefPtr<gfxPattern> mFillPattern;
+    RefPtr<gfxPattern> mStrokePattern;
 
     // Device space to pattern space transforms
     gfxMatrix mFillMatrix;

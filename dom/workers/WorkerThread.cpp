@@ -86,7 +86,7 @@ WorkerThread::Create(const WorkerThreadFriendKey& /* aKey */)
 {
   MOZ_ASSERT(nsThreadManager::get());
 
-  nsRefPtr<WorkerThread> thread = new WorkerThread();
+  RefPtr<WorkerThread> thread = new WorkerThread();
   if (NS_FAILED(thread->Init())) {
     NS_WARNING("Failed to create new thread!");
     return nullptr;
@@ -258,7 +258,7 @@ WorkerThread::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable, uint32_t aFlag
 
   nsresult rv;
   if (runnable && onWorkerThread) {
-    nsRefPtr<WorkerRunnable> workerRunnable = workerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
+    RefPtr<WorkerRunnable> workerRunnable = workerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
     rv = nsThread::Dispatch(workerRunnable.forget(), NS_DISPATCH_NORMAL);
   } else {
     rv = nsThread::Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);

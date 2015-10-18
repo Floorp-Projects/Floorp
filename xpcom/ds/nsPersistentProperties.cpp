@@ -477,7 +477,7 @@ nsPersistentProperties::Create(nsISupports* aOuter, REFNSIID aIID,
   if (aOuter) {
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsRefPtr<nsPersistentProperties> props = new nsPersistentProperties();
+  RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   return props->QueryInterface(aIID, aResult);
 }
 
@@ -573,7 +573,7 @@ nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
   for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
     auto entry = static_cast<PropertyTableEntry*>(iter.Get());
 
-    nsRefPtr<nsPropertyElement> element =
+    RefPtr<nsPropertyElement> element =
       new nsPropertyElement(nsDependentCString(entry->mKey),
                             nsDependentString(entry->mValue));
 
@@ -630,7 +630,7 @@ nsPropertyElement::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter) {
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsRefPtr<nsPropertyElement> propElem = new nsPropertyElement();
+  RefPtr<nsPropertyElement> propElem = new nsPropertyElement();
   return propElem->QueryInterface(aIID, aResult);
 }
 

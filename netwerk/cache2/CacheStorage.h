@@ -60,7 +60,7 @@ protected:
 
   nsresult ChooseApplicationCache(nsIURI* aURI, nsIApplicationCache** aCache);
 
-  nsRefPtr<LoadContextInfo> mLoadContextInfo;
+  RefPtr<LoadContextInfo> mLoadContextInfo;
   bool mWriteToDisk : 1;
   bool mLookupAppCache : 1;
   bool mSkipSizeCheck: 1;

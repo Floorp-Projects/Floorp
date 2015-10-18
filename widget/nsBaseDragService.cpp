@@ -487,7 +487,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(dragNode);
   if (flo) {
-    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    RefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
     if (fl) {
       mozilla::dom::TabParent* tp =
         static_cast<mozilla::dom::TabParent*>(fl->GetRemoteBrowser());
@@ -664,7 +664,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     if (!dt)
       return NS_ERROR_FAILURE;
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     if (!ctx)
       return NS_ERROR_FAILURE;
 

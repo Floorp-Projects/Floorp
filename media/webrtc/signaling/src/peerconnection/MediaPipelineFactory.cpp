@@ -443,7 +443,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
     const RefPtr<MediaSessionConduit>& aConduit)
 {
   // We will error out earlier if this isn't here.
-  nsRefPtr<RemoteSourceStreamInfo> stream =
+  RefPtr<RemoteSourceStreamInfo> stream =
       mPCMedia->GetRemoteStreamById(aTrack.GetStreamId());
 
   RefPtr<MediaPipelineReceive> pipeline;
@@ -522,7 +522,7 @@ MediaPipelineFactory::CreateMediaPipelineSending(
   nsresult rv;
 
   // This is checked earlier
-  nsRefPtr<LocalSourceStreamInfo> stream =
+  RefPtr<LocalSourceStreamInfo> stream =
       mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
   // Now we have all the pieces, create the pipeline
@@ -816,11 +816,11 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
                                               VideoSessionConduit& aConduit)
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  nsRefPtr<LocalSourceStreamInfo> stream =
+  RefPtr<LocalSourceStreamInfo> stream =
     mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
   //get video track
-  nsRefPtr<mozilla::dom::VideoStreamTrack> videotrack =
+  RefPtr<mozilla::dom::VideoStreamTrack> videotrack =
     stream->GetVideoTrackByTrackId(aTrack.GetTrackId());
 
   if (!videotrack) {
@@ -829,7 +829,7 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
   }
 
   //get video source type
-  nsRefPtr<DOMMediaStream> mediastream =
+  RefPtr<DOMMediaStream> mediastream =
     mPCMedia->GetLocalStreamById(aTrack.GetStreamId())->GetMediaStream();
 
   DOMLocalMediaStream* domLocalStream = mediastream->AsDOMLocalMediaStream();

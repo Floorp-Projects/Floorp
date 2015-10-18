@@ -517,7 +517,7 @@ nsCategoryManager::NotifyObservers(const char* aTopic,
     return;
   }
 
-  nsRefPtr<CategoryNotificationRunnable> r;
+  RefPtr<CategoryNotificationRunnable> r;
 
   if (aEntryName) {
     nsCOMPtr<nsISupportsCString> entry =

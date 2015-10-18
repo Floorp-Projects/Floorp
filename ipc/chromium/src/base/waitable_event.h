@@ -159,7 +159,7 @@ class WaitableEvent {
     ~WaitableEventKernel() {}
   };
 
-  nsRefPtr<WaitableEventKernel> kernel_;
+  RefPtr<WaitableEventKernel> kernel_;
 
   bool SignalAll();
   bool SignalOne();

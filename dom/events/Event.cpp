@@ -412,7 +412,7 @@ Event::Constructor(const GlobalObject& aGlobal,
                    ErrorResult& aRv)
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<Event> e = new Event(t, nullptr, nullptr);
+  RefPtr<Event> e = new Event(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
@@ -1276,6 +1276,6 @@ NS_NewDOMEvent(EventTarget* aOwner,
                nsPresContext* aPresContext,
                WidgetEvent* aEvent) 
 {
-  nsRefPtr<Event> it = new Event(aOwner, aPresContext, aEvent);
+  RefPtr<Event> it = new Event(aOwner, aPresContext, aEvent);
   return it.forget();
 }

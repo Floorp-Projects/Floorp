@@ -58,7 +58,7 @@ class WebSocketChannelParent : public PWebSocketParent,
 
   void OfflineDisconnect() override;
   uint32_t GetAppId() override;
-  nsRefPtr<OfflineObserver> mObserver;
+  RefPtr<OfflineObserver> mObserver;
 
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
   nsCOMPtr<nsIWebSocketChannel> mChannel;

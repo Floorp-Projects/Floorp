@@ -129,7 +129,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
   if (!mMediaElement || !mTextTracks) {
     return nullptr;
   }
-  nsRefPtr<TextTrack> ttrack =
+  RefPtr<TextTrack> ttrack =
     mTextTracks->AddTextTrack(aKind, aLabel, aLanguage, aMode, aReadyState,
                               aTextTrackSource, CompareTextTracks(mMediaElement));
   AddCues(ttrack);
@@ -211,11 +211,11 @@ TextTrackManager::UpdateCueDisplay()
     return;
   }
 
-  nsTArray<nsRefPtr<TextTrackCue> > activeCues;
+  nsTArray<RefPtr<TextTrackCue> > activeCues;
   mTextTracks->UpdateAndGetShowingCues(activeCues);
 
   if (activeCues.Length() > 0) {
-    nsRefPtr<nsVariantCC> jsCues = new nsVariantCC();
+    RefPtr<nsVariantCC> jsCues = new nsVariantCC();
 
     jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE,
                        &NS_GET_IID(nsIDOMEventTarget),

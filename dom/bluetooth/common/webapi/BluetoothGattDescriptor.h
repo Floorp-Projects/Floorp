@@ -154,7 +154,7 @@ private:
   /**
    * Characteristic that this descriptor belongs to.
    */
-  nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
+  RefPtr<BluetoothGattCharacteristic> mCharacteristic;
 
   /**
    * GattId of this GATT descriptor which contains
@@ -216,16 +216,16 @@ END_BLUETOOTH_NAMESPACE
  *
  * Allows customizing the template code for a given set of template arguments.
  * With this function template, nsTArray can handle comparison between
- * 'nsRefPtr<BluetoothGattDescriptor>' and 'BluetoothUuid' properly,
+ * 'RefPtr<BluetoothGattDescriptor>' and 'BluetoothUuid' properly,
  * including IndexOf() and Contains();
  */
 template <>
 class nsDefaultComparator <
-  nsRefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>,
+  RefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>,
   mozilla::dom::bluetooth::BluetoothUuid> {
 public:
   bool Equals(
-    const nsRefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>& aDesc,
+    const RefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>& aDesc,
     const mozilla::dom::bluetooth::BluetoothUuid& aUuid) const
   {
     mozilla::dom::bluetooth::BluetoothUuid uuid;
@@ -239,16 +239,16 @@ public:
  *
  * Allows customizing the template code for a given set of template arguments.
  * With this function template, nsTArray can handle comparison between
- * 'nsRefPtr<BluetoothGattDescriptor>' and 'BluetoothAttributeHandle'
+ * 'RefPtr<BluetoothGattDescriptor>' and 'BluetoothAttributeHandle'
  * properly, including IndexOf() and Contains();
  */
 template <>
 class nsDefaultComparator <
-  nsRefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>,
+  RefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>,
   mozilla::dom::bluetooth::BluetoothAttributeHandle> {
 public:
   bool Equals(
-    const nsRefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>& aDesc,
+    const RefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>& aDesc,
     const mozilla::dom::bluetooth::BluetoothAttributeHandle& aHandle) const
   {
     return aDesc->GetDescriptorHandle() == aHandle;

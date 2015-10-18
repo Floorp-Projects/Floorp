@@ -64,7 +64,7 @@ private:
    * URI, not the original URI. Since we want to ignore the original URI, we
    * need to cache the pending visit and make sure it doesn't redirect.
    */
-  nsRefPtr<nsITimer> mTimer;
+  RefPtr<nsITimer> mTimer;
   typedef nsAutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE> PendingVisitArray;
   PendingVisitArray mPendingVisitURIs;
 

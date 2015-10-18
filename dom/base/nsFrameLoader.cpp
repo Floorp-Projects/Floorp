@@ -250,7 +250,7 @@ nsFrameLoader::FireErrorEvent()
   if (!mOwnerContent) {
     return;
   }
-  nsRefPtr<AsyncEventDispatcher > loadBlockingAsyncDispatcher =
+  RefPtr<AsyncEventDispatcher > loadBlockingAsyncDispatcher =
     new LoadBlockingAsyncEventDispatcher(mOwnerContent,
                                          NS_LITERAL_STRING("error"),
                                          false, false);
@@ -281,7 +281,7 @@ NS_IMETHODIMP
 nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI)
 {
   nsCOMPtr<nsIURI> URIToLoad = aURI;
-  nsRefPtr<TabParent> tp = nullptr;
+  RefPtr<TabParent> tp = nullptr;
 
   MutableTabContext context;
   nsresult rv = GetNewTabContext(&context);
@@ -770,7 +770,7 @@ nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
 
   // Trigger a restyle if there's a prescontext
   // FIXME: This could do something much less expensive.
-  nsRefPtr<nsPresContext> presContext;
+  RefPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext)
     presContext->RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
@@ -796,7 +796,7 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    nsRefPtr<layers::LayerManager> layerManager =
+    RefPtr<layers::LayerManager> layerManager =
       nsContentUtils::LayerManagerForDocument(mOwnerContent->GetComposedDoc());
     if (!layerManager) {
       // This is just not going to work.
@@ -862,8 +862,8 @@ nsFrameLoader::Hide()
 
 nsresult
 nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
-                                         nsRefPtr<nsFrameLoader>& aFirstToSwap,
-                                         nsRefPtr<nsFrameLoader>& aSecondToSwap)
+                                         RefPtr<nsFrameLoader>& aFirstToSwap,
+                                         RefPtr<nsFrameLoader>& aSecondToSwap)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -936,13 +936,13 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   mRemoteBrowser->SetBrowserDOMWindow(otherBrowserDOMWindow);
 
   // Native plugin windows used by this remote content need to be reparented.
-  const nsTArray<mozilla::plugins::PPluginWidgetParent*>& plugins =
-    aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
   nsPIDOMWindow* newWin = ourDoc->GetWindow();
   if (newWin) {
-    nsRefPtr<nsIWidget> newParent = ((nsGlobalWindow*)newWin)->GetMainWidget();
-    for (uint32_t idx = 0; idx < plugins.Length(); ++idx) {
-      static_cast<mozilla::plugins::PluginWidgetParent*>(plugins[idx])->SetParent(newParent);
+    RefPtr<nsIWidget> newParent = ((nsGlobalWindow*)newWin)->GetMainWidget();
+    const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
+      aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
+    for (auto iter = plugins.ConstIter(); !iter.Done(); iter.Next()) {
+      static_cast<mozilla::plugins::PluginWidgetParent*>(iter.Get()->GetKey())->SetParent(newParent);
     }
   }
 
@@ -958,8 +958,8 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
   aOther->MaybeUpdatePrimaryTabParent(eTabParentChanged);
 
-  nsRefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
-  nsRefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
+  RefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
+  RefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
   // Swap and setup things in parent message managers.
   if (mMessageManager) {
     mMessageManager->SetCallback(aOther);
@@ -1031,10 +1031,10 @@ public:
   }
 
 private:
-  nsRefPtr<nsFrameLoader> mThisFrameLoader;
-  nsRefPtr<nsFrameLoader> mOtherFrameLoader;
-  nsRefPtr<nsDocShell> mThisDocShell;
-  nsRefPtr<nsDocShell> mOtherDocShell;
+  RefPtr<nsFrameLoader> mThisFrameLoader;
+  RefPtr<nsFrameLoader> mOtherFrameLoader;
+  RefPtr<nsDocShell> mThisDocShell;
+  RefPtr<nsDocShell> mOtherDocShell;
   nsCOMPtr<EventTarget> mThisEventTarget;
   nsCOMPtr<EventTarget> mOtherEventTarget;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -1042,8 +1042,8 @@ private:
 
 nsresult
 nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
-                                   nsRefPtr<nsFrameLoader>& aFirstToSwap,
-                                   nsRefPtr<nsFrameLoader>& aSecondToSwap)
+                                   RefPtr<nsFrameLoader>& aFirstToSwap,
+                                   RefPtr<nsFrameLoader>& aSecondToSwap)
 {
   NS_PRECONDITION((aFirstToSwap == this && aSecondToSwap == aOther) ||
                   (aFirstToSwap == aOther && aSecondToSwap == this),
@@ -1076,8 +1076,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsRefPtr<nsDocShell> ourDocshell = static_cast<nsDocShell*>(GetExistingDocShell());
-  nsRefPtr<nsDocShell> otherDocshell = static_cast<nsDocShell*>(aOther->GetExistingDocShell());
+  RefPtr<nsDocShell> ourDocshell = static_cast<nsDocShell*>(GetExistingDocShell());
+  RefPtr<nsDocShell> otherDocshell = static_cast<nsDocShell*>(aOther->GetExistingDocShell());
   if (!ourDocshell || !otherDocshell) {
     // How odd
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1272,8 +1272,8 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   ourWindow->SetFrameElementInternal(otherFrameElement);
   otherWindow->SetFrameElementInternal(ourFrameElement);
 
-  nsRefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
-  nsRefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
+  RefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
+  RefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
   // Swap pointers in child message managers.
   if (mChildMessageManager) {
     nsInProcessTabChildGlobal* tabChild =
@@ -1347,7 +1347,7 @@ class nsFrameLoaderDestroyRunnable : public nsRunnable
     eDestroyComplete
   };
 
-  nsRefPtr<nsFrameLoader> mFrameLoader;
+  RefPtr<nsFrameLoader> mFrameLoader;
   DestroyPhase mPhase;
 
 public:
@@ -2420,7 +2420,7 @@ nsFrameLoader::DoLoadMessageManagerScript(const nsAString& aURL, bool aRunInGlob
   if (tabParent) {
     return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
   }
-  nsRefPtr<nsInProcessTabChildGlobal> tabChild =
+  RefPtr<nsInProcessTabChildGlobal> tabChild =
     static_cast<nsInProcessTabChildGlobal*>(GetTabChildGlobalAsEventTarget());
   if (tabChild) {
     tabChild->LoadFrameScript(aURL, aRunInGlobalScope);
@@ -2449,7 +2449,7 @@ public:
     }
     return NS_OK;
   }
-  nsRefPtr<nsFrameLoader> mFrameLoader;
+  RefPtr<nsFrameLoader> mFrameLoader;
 };
 
 nsresult
@@ -2481,7 +2481,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   }
 
   if (mChildMessageManager) {
-    nsRefPtr<nsAsyncMessageToChild> ev = new nsAsyncMessageToChild(aCx, aCpows, this);
+    RefPtr<nsAsyncMessageToChild> ev = new nsAsyncMessageToChild(aCx, aCpows, this);
     nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
     if (NS_FAILED(rv)) {
       return rv;
@@ -2523,7 +2523,7 @@ nsFrameLoader::GetMessageManager(nsIMessageSender** aManager)
 {
   EnsureMessageManager();
   if (mMessageManager) {
-    nsRefPtr<nsFrameMessageManager> mm(mMessageManager);
+    RefPtr<nsFrameMessageManager> mm(mMessageManager);
     mm.forget(aManager);
     return NS_OK;
   }
@@ -2636,7 +2636,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
 nsresult
 nsFrameLoader::SwapRemoteBrowser(nsITabParent* aTabParent)
 {
-  nsRefPtr<TabParent> newParent = TabParent::GetFrom(aTabParent);
+  RefPtr<TabParent> newParent = TabParent::GetFrom(aTabParent);
   if (!newParent || !mRemoteBrowser) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
@@ -2865,7 +2865,7 @@ nsFrameLoader::RequestNotifyLayerTreeReady()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<AsyncEventDispatcher> event =
+  RefPtr<AsyncEventDispatcher> event =
     new AsyncEventDispatcher(mOwnerContent,
                              NS_LITERAL_STRING("MozLayerTreeReady"),
                              true, false);
@@ -2885,7 +2885,7 @@ nsFrameLoader::RequestNotifyLayerTreeCleared()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<AsyncEventDispatcher> event =
+  RefPtr<AsyncEventDispatcher> event =
     new AsyncEventDispatcher(mOwnerContent,
                              NS_LITERAL_STRING("MozLayerTreeCleared"),
                              true, false);

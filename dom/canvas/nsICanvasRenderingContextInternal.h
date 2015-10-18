@@ -172,9 +172,9 @@ public:
   NS_IMETHOD SetIsIPC(bool isIPC) = 0;
 
 protected:
-  nsRefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
-  nsRefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
-  nsRefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
+  RefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
+  RefPtr<nsRefreshDriver> mRefreshDriver;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

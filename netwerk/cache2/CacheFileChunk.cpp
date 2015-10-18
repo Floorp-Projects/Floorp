@@ -44,7 +44,7 @@ public:
 
 protected:
   nsCOMPtr<CacheFileChunkListener> mCallback;
-  nsRefPtr<CacheFileChunk>         mChunk;
+  RefPtr<CacheFileChunk>         mChunk;
 };
 
 bool
@@ -54,7 +54,7 @@ CacheFileChunk::DispatchRelease()
     return false;
   }
 
-  nsRefPtr<nsRunnableMethod<CacheFileChunk, MozExternalRefCountType, false> > event =
+  RefPtr<nsRunnableMethod<CacheFileChunk, MozExternalRefCountType, false> > event =
     NS_NewNonOwningRunnableMethod(this, &CacheFileChunk::Release);
   NS_DispatchToMainThread(event);
 
@@ -327,7 +327,7 @@ CacheFileChunk::NotifyUpdateListeners()
     LOG(("CacheFileChunk::NotifyUpdateListeners() - Notifying listener %p "
          "[this=%p]", item->mCallback.get(), this));
 
-    nsRefPtr<NotifyUpdateListenerEvent> ev;
+    RefPtr<NotifyUpdateListenerEvent> ev;
     ev = new NotifyUpdateListenerEvent(item->mCallback, this);
     rv2 = item->mTarget->Dispatch(ev, NS_DISPATCH_NORMAL);
     if (NS_FAILED(rv2) && NS_SUCCEEDED(rv))

@@ -24,7 +24,7 @@ MP3Decoder::Clone(MediaDecoderOwner* aOwner) {
 
 MediaDecoderStateMachine*
 MP3Decoder::CreateStateMachine() {
-  nsRefPtr<MediaDecoderReader> reader =
+  RefPtr<MediaDecoderReader> reader =
       new MediaFormatReader(this, new mp3::MP3Demuxer(GetResource()));
   return new MediaDecoderStateMachine(this, reader);
 }
@@ -33,7 +33,7 @@ MP3Decoder::CreateStateMachine() {
 bool
 MP3Decoder::IsEnabled() {
   PDMFactory::Init();
-  nsRefPtr<PDMFactory> platform = new PDMFactory();
+  RefPtr<PDMFactory> platform = new PDMFactory();
   return platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mpeg"));
 }
 

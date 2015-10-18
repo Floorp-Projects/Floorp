@@ -177,7 +177,7 @@ private:
 
   UniquePtr<URLParams> mParams;
   nsCOMPtr<nsISupports> mParent;
-  nsRefPtr<URLSearchParamsObserver> mObserver;
+  RefPtr<URLSearchParamsObserver> mObserver;
 };
 
 } // namespace dom

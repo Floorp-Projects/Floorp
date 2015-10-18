@@ -46,7 +46,7 @@ public:
 protected:
     GLContext* mCurConsGL;
     GLuint mConsTex;
-    nsRefPtr<TextureGarbageBin> mGarbageBin;
+    RefPtr<TextureGarbageBin> mGarbageBin;
     EGLSync mSync;
 
     SharedSurface_EGLImage(GLContext* gl,

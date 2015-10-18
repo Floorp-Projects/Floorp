@@ -34,7 +34,7 @@ public:
   virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
 
 private:
-  nsRefPtr<FontFace> mFontFace;
+  RefPtr<FontFace> mFontFace;
 };
 
 void
@@ -162,7 +162,7 @@ FontFace::CreateForRule(nsISupports* aGlobal,
 {
   nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aGlobal);
 
-  nsRefPtr<FontFace> obj = new FontFace(aGlobal, aFontFaceSet);
+  RefPtr<FontFace> obj = new FontFace(aGlobal, aFontFaceSet);
   obj->mRule = aRule;
   obj->mSourceType = eSourceType_FontFaceRule;
   obj->mInFontFaceSet = true;
@@ -184,7 +184,7 @@ FontFace::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<FontFace> obj = new FontFace(global, doc->Fonts());
+  RefPtr<FontFace> obj = new FontFace(global, doc->Fonts());
   if (!obj->SetDescriptors(aFamily, aDescriptors)) {
     return obj.forget();
   }
@@ -397,7 +397,7 @@ FontFace::CreateUserFontEntry()
                "Rule backed FontFace objects should already have a user font "
                "entry by the time Load() can be called on them");
 
-    nsRefPtr<gfxUserFontEntry> newEntry =
+    RefPtr<gfxUserFontEntry> newEntry =
       mFontFaceSet->FindOrCreateUserFontEntryFromFontFace(this);
     if (newEntry) {
       SetUserFontEntry(newEntry);
@@ -689,7 +689,7 @@ FontFace::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength)
 already_AddRefed<gfxFontFaceBufferSource>
 FontFace::CreateBufferSource()
 {
-  nsRefPtr<FontFaceBufferSource> bufferSource = new FontFaceBufferSource(this);
+  RefPtr<FontFaceBufferSource> bufferSource = new FontFaceBufferSource(this);
   return bufferSource.forget();
 }
 

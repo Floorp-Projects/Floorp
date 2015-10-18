@@ -101,7 +101,7 @@ CompositorOGL::~CompositorOGL()
 already_AddRefed<mozilla::gl::GLContext>
 CompositorOGL::CreateContext()
 {
-  nsRefPtr<GLContext> context;
+  RefPtr<GLContext> context;
 
   // Used by mock widget to create an offscreen context
   void* widgetOpenGLContext = mWidget->GetNativeData(NS_NATIVE_OPENGL_CONTEXT);
@@ -168,7 +168,7 @@ CompositorOGL::CleanupResources()
                          reinterpret_cast<uintptr_t>(nullptr));
 #endif
 
-  nsRefPtr<GLContext> ctx = mGLContext->GetSharedContext();
+  RefPtr<GLContext> ctx = mGLContext->GetSharedContext();
   if (!ctx) {
     ctx = mGLContext;
   }
@@ -1485,7 +1485,7 @@ CompositorOGL::GetReleaseFence()
     return FenceHandle();
   }
 
-  nsRefPtr<FenceHandle::FdObj> fdObj = mReleaseFenceHandle.GetDupFdObj();
+  RefPtr<FenceHandle::FdObj> fdObj = mReleaseFenceHandle.GetDupFdObj();
   return FenceHandle(fdObj);
 }
 

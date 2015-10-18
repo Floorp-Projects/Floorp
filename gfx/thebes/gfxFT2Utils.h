@@ -87,7 +87,7 @@ protected:
                                            FT_ULong variantSelector);
     CharVariantFunction FindCharVariantFunction();
 
-    nsRefPtr<gfxFT2FontBase> mGfxFont;
+    RefPtr<gfxFT2FontBase> mGfxFont;
     FT_Face mFace;
 };
 

@@ -51,4 +51,6 @@ exports.send = send;
  * Implement internal structured cloning algorithm in the future?
  * http://www.whatwg.org/specs/web-apps/current-work/multipage/common-dom-interfaces.html#internal-structured-cloning-algorithm
  */
-function clone (obj) JSON.parse(JSON.stringify(obj || {}))
+function clone (obj) {
+  return JSON.parse(JSON.stringify(obj || {}));
+}

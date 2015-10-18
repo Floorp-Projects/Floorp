@@ -45,7 +45,7 @@ PresentationRequest::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<PresentationRequest> request = new PresentationRequest(window, aUrl);
+  RefPtr<PresentationRequest> request = new PresentationRequest(window, aUrl);
   return NS_WARN_IF(!request->Init()) ? nullptr : request.forget();
 }
 
@@ -95,7 +95,7 @@ PresentationRequest::Start(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -141,7 +141,7 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -156,7 +156,7 @@ PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aC
   PresentationConnectionAvailableEventInit init;
   init.mConnection = aConnection;
 
-  nsRefPtr<PresentationConnectionAvailableEvent> event =
+  RefPtr<PresentationConnectionAvailableEvent> event =
     PresentationConnectionAvailableEvent::Constructor(this,
                                                       NS_LITERAL_STRING("connectionavailable"),
                                                       init);
@@ -165,7 +165,7 @@ PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aC
   }
   event->SetTrusted(true);
 
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   return asyncDispatcher->PostDOMEvent();
 }

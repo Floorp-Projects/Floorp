@@ -95,7 +95,7 @@ GrallocTextureClientOGL::WaitForBufferOwnership(bool aWaitReleaseFence)
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
    if (mReleaseFenceHandle.IsValid()) {
-     nsRefPtr<FenceHandle::FdObj> fdObj = mReleaseFenceHandle.GetAndResetFdObj();
+     RefPtr<FenceHandle::FdObj> fdObj = mReleaseFenceHandle.GetAndResetFdObj();
      android::sp<Fence> fence = new Fence(fdObj->GetAndResetFd());
 #if ANDROID_VERSION == 17
      fence->waitForever(1000, "GrallocTextureClientOGL::Lock");
@@ -135,7 +135,7 @@ GrallocTextureClientOGL::Lock(OpenMode aMode)
     usage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
   }
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
-  nsRefPtr<FenceHandle::FdObj> fdObj = mReleaseFenceHandle.GetAndResetFdObj();
+  RefPtr<FenceHandle::FdObj> fdObj = mReleaseFenceHandle.GetAndResetFdObj();
   int32_t rv = mGraphicBuffer->lockAsync(usage,
                                          reinterpret_cast<void**>(&mMappedBuffer),
                                          fdObj->GetAndResetFd());

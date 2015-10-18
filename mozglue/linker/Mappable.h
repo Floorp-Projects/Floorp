@@ -174,7 +174,7 @@ private:
   MappableDeflate(_MappableBuffer *buf, Zip *zip, Zip::Stream *stream);
 
   /* Zip reference */
-  mozilla::RefPtr<Zip> zip;
+  RefPtr<Zip> zip;
 
   /* Decompression buffer */
   mozilla::UniquePtr<_MappableBuffer> buffer;
@@ -214,7 +214,7 @@ private:
   MappableSeekableZStream(Zip *zip);
 
   /* Zip reference */
-  mozilla::RefPtr<Zip> zip;
+  RefPtr<Zip> zip;
 
   /* Decompression buffer */
   mozilla::UniquePtr<_MappableBuffer> buffer;

@@ -39,7 +39,7 @@ public:
     {}
 
     nsIContent* mContent;
-    nsRefPtr<nsStyleContext> mStyleContext;
+    RefPtr<nsStyleContext> mStyleContext;
     nsTArray<ContentInfo> mChildren;
   };
 

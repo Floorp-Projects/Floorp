@@ -41,7 +41,7 @@ exports.testRemove = function (test, done) {
       else done();
     }
   });
-  urls.forEach(function (url) rules.add(url));
+  urls.forEach(url => rules.add(url));
   rules.remove(urls[0]);
 };
 

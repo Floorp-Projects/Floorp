@@ -57,7 +57,9 @@ exports["test browser events ignore other wins"] = function(assert, done) {
   let actualBrowser = [];
   let actualWindow = [];
 
-  function browserEventHandler(e) actualBrowser.push(e)
+  function browserEventHandler(e) {
+    return actualBrowser.push(e);
+  }
   on(browserEvents, "data", browserEventHandler);
   on(windowEvents, "data", function handler(e) {
     actualWindow.push(e);

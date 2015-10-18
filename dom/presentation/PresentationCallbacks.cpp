@@ -48,7 +48,7 @@ PresentationRequesterCallback::NotifySuccess()
 
   // At the sender side, this function must get called after the transport
   // channel is ready. So we simply set the connection state as connected.
-  nsRefPtr<PresentationConnection> connection =
+  RefPtr<PresentationConnection> connection =
     PresentationConnection::Create(mRequest->GetOwner(), mSessionId,
                                    PresentationConnectionState::Connected);
   if (NS_WARN_IF(!connection)) {

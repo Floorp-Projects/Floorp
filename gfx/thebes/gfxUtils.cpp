@@ -455,13 +455,13 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       return nullptr;
     }
 
-    nsRefPtr<gfxContext> tmpCtx = new gfxContext(target);
+    RefPtr<gfxContext> tmpCtx = new gfxContext(target);
     tmpCtx->SetOp(OptimalFillOp());
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true, Filter::LINEAR,
                     1.0, gfxMatrix::Translation(needed.TopLeft()));
     RefPtr<SourceSurface> surface = target->Snapshot();
 
-    nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, size, gfxMatrix::Translation(-needed.TopLeft()));
+    RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, size, gfxMatrix::Translation(-needed.TopLeft()));
     return drawable.forget();
 }
 #endif // !MOZ_GFX_OPTIMIZE_MOBILE
@@ -534,7 +534,7 @@ static gfxMatrix
 DeviceToImageTransform(gfxContext* aContext)
 {
     gfxFloat deviceX, deviceY;
-    nsRefPtr<gfxASurface> currentTarget =
+    RefPtr<gfxASurface> currentTarget =
         aContext->CurrentSurface(&deviceX, &deviceY);
     gfxMatrix deviceToUser = aContext->CurrentMatrix();
     if (!deviceToUser.Invert()) {
@@ -679,7 +679,7 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
     return false;
   }
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(scaledDT);
+  RefPtr<gfxContext> tmpCtx = new gfxContext(scaledDT);
   scaledDT->SetTransform(ToMatrix(scaleMatrix));
   gfxRect gfxImageRect(aImageRect.x, aImageRect.y, aImageRect.width, aImageRect.height);
   aDrawable->Draw(tmpCtx, gfxImageRect, true, aFilter, 1.0, gfxMatrix());
@@ -725,7 +725,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
     bool doTile = !imageRect.Contains(region) &&
                   !(aImageFlags & imgIContainer::FLAG_CLAMP);
 
-    nsRefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
+    RefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
     gfxMatrix deviceSpaceToImageSpace = DeviceToImageTransform(aContext);
 
     AutoCairoPixmanBugWorkaround workaround(aContext, deviceSpaceToImageSpace,
@@ -733,7 +733,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
     if (!workaround.Succeeded())
         return;
 
-    nsRefPtr<gfxDrawable> drawable = aDrawable;
+    RefPtr<gfxDrawable> drawable = aDrawable;
 
     aFilter = ReduceResamplingFilter(aFilter,
                                      imageRect.Width(), imageRect.Height(),
@@ -763,7 +763,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
             // allocating very large temporary surfaces, especially since we'll
             // do full-page snapshots often (see bug 749426).
 #if !defined(MOZ_GFX_OPTIMIZE_MOBILE)
-            nsRefPtr<gfxDrawable> restrictedDrawable =
+            RefPtr<gfxDrawable> restrictedDrawable =
               CreateSamplingRestrictedDrawable(aDrawable, aContext,
                                                aRegion, aFormat);
             if (restrictedDrawable) {
@@ -1462,7 +1462,7 @@ gfxUtils::WriteAsPNG(nsIPresShell* aShell, const char* aFile)
                                      SurfaceFormat::B8G8R8A8);
   NS_ENSURE_TRUE(dt, /*void*/);
 
-  nsRefPtr<gfxContext> context = new gfxContext(dt);
+  RefPtr<gfxContext> context = new gfxContext(dt);
   aShell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
   WriteAsPNG(dt.get(), aFile);
 }
@@ -1655,7 +1655,7 @@ gfxUtils::ThreadSafeGetFeatureStatus(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
   if (!NS_IsMainThread()) {
     dom::workers::WorkerPrivate* workerPrivate =
       dom::workers::GetCurrentThreadWorkerPrivate();
-    nsRefPtr<GetFeatureStatusRunnable> runnable =
+    RefPtr<GetFeatureStatusRunnable> runnable =
       new GetFeatureStatusRunnable(workerPrivate, gfxInfo, feature, status);
 
     runnable->Dispatch(workerPrivate->GetJSContext());

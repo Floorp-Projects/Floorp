@@ -209,8 +209,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   
   // Gripping the other objects just in case, since the other old grip
   // required grips to these, too.
-  nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(GetStreamParser());
-  nsRefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
+  RefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(GetStreamParser());
+  RefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
 
   if (!mExecutor->HasStarted()) {
     NS_ASSERTION(!GetStreamParser(),
@@ -313,8 +313,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
   // and a flaw would lead to worse problems with plain pointers. If this
   // turns out to be a perf problem, it's worthwhile to consider making
   // prevSearchbuf a plain pointer again.
-  nsRefPtr<nsHtml5OwningUTF16Buffer> prevSearchBuf;
-  nsRefPtr<nsHtml5OwningUTF16Buffer> firstLevelMarker;
+  RefPtr<nsHtml5OwningUTF16Buffer> prevSearchBuf;
+  RefPtr<nsHtml5OwningUTF16Buffer> firstLevelMarker;
 
   if (aKey) {
     if (mFirstBuffer == mLastBuffer) {
@@ -398,7 +398,7 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
     }
   }
 
-  nsRefPtr<nsHtml5OwningUTF16Buffer> heapBuffer;
+  RefPtr<nsHtml5OwningUTF16Buffer> heapBuffer;
   if (stackBuffer.hasMore()) {
     // The buffer wasn't tokenized to completion. Create a copy of the tail
     // on the heap.
@@ -514,8 +514,8 @@ nsHtml5Parser::Terminate()
   // XXX - [ until we figure out a way to break parser-sink circularity ]
   // Hack - Hold a reference until we are completely done...
   nsCOMPtr<nsIParser> kungFuDeathGrip(this);
-  nsRefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(GetStreamParser());
-  nsRefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
+  RefPtr<nsHtml5StreamParser> streamKungFuDeathGrip(GetStreamParser());
+  RefPtr<nsHtml5TreeOpExecutor> treeOpKungFuDeathGrip(mExecutor);
   if (GetStreamParser()) {
     GetStreamParser()->Terminate();
   }

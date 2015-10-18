@@ -754,10 +754,10 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     int width_;
     int height_;
 #if defined(MOZILLA_XPCOMRT_API)
-    nsRefPtr<mozilla::SimpleImageBuffer> image_;
+    RefPtr<mozilla::SimpleImageBuffer> image_;
 #elif defined(MOZILLA_INTERNAL_API)
-    nsRefPtr<layers::ImageContainer> image_container_;
-    nsRefPtr<layers::Image> image_;
+    RefPtr<layers::ImageContainer> image_container_;
+    RefPtr<layers::Image> image_;
 #endif
     mozilla::ReentrantMonitor monitor_; // Monitor for processing WebRTC frames.
                                         // Protects image_ against:

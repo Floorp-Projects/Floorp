@@ -189,7 +189,7 @@ nsresult
 SVGSVGElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nullptr;
-  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
+  already_AddRefed<mozilla::dom::NodeInfo> ni = RefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   SVGSVGElement *it = new SVGSVGElement(ni, NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
@@ -373,7 +373,7 @@ SVGSVGElement::DeselectAll()
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {
-    nsRefPtr<nsFrameSelection> frameSelection = frame->GetFrameSelection();
+    RefPtr<nsFrameSelection> frameSelection = frame->GetFrameSelection();
     frameSelection->ClearNormalSelection();
   }
 }
@@ -381,7 +381,7 @@ SVGSVGElement::DeselectAll()
 already_AddRefed<DOMSVGNumber>
 SVGSVGElement::CreateSVGNumber()
 {
-  nsRefPtr<DOMSVGNumber> number = new DOMSVGNumber(ToSupports(this));
+  RefPtr<DOMSVGNumber> number = new DOMSVGNumber(ToSupports(this));
   return number.forget();
 }
 
@@ -397,7 +397,7 @@ SVGSVGElement::CreateSVGAngle()
 {
   nsSVGAngle* angle = new nsSVGAngle();
   angle->Init();
-  nsRefPtr<SVGAngle> svgangle = new SVGAngle(angle, this, SVGAngle::CreatedValue);
+  RefPtr<SVGAngle> svgangle = new SVGAngle(angle, this, SVGAngle::CreatedValue);
   return svgangle.forget();
 }
 
@@ -411,7 +411,7 @@ SVGSVGElement::CreateSVGPoint()
 already_AddRefed<SVGMatrix>
 SVGSVGElement::CreateSVGMatrix()
 {
-  nsRefPtr<SVGMatrix> matrix = new SVGMatrix();
+  RefPtr<SVGMatrix> matrix = new SVGMatrix();
   return matrix.forget();
 }
 
@@ -424,14 +424,14 @@ SVGSVGElement::CreateSVGRect()
 already_AddRefed<SVGTransform>
 SVGSVGElement::CreateSVGTransform()
 {
-  nsRefPtr<SVGTransform> transform = new SVGTransform();
+  RefPtr<SVGTransform> transform = new SVGTransform();
   return transform.forget();
 }
 
 already_AddRefed<SVGTransform>
 SVGSVGElement::CreateSVGTransformFromMatrix(SVGMatrix& matrix)
 {
-  nsRefPtr<SVGTransform> transform = new SVGTransform(matrix.GetMatrix());
+  RefPtr<SVGTransform> transform = new SVGTransform(matrix.GetMatrix());
   return transform.forget();
 }
 

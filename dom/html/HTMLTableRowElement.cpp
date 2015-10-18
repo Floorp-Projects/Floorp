@@ -174,11 +174,11 @@ HTMLTableRowElement::InsertCell(int32_t aIndex,
   }
 
   // create the cell
-  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::td,
                               getter_AddRefs(nodeInfo));
 
-  nsRefPtr<nsGenericHTMLElement> cell =
+  RefPtr<nsGenericHTMLElement> cell =
     NS_NewHTMLTableCellElement(nodeInfo.forget());
   if (!cell) {
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);

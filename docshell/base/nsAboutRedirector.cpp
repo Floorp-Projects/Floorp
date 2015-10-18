@@ -191,6 +191,6 @@ nsAboutRedirector::GetIndexedDBOriginPostfix(nsIURI* aURI, nsAString& aResult)
 nsresult
 nsAboutRedirector::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
-  nsRefPtr<nsAboutRedirector> about = new nsAboutRedirector();
+  RefPtr<nsAboutRedirector> about = new nsAboutRedirector();
   return about->QueryInterface(aIID, aResult);
 }

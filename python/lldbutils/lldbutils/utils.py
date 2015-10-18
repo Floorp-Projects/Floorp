@@ -57,13 +57,13 @@ def format_string(lldb_value, length=100):
         s += "..."
     return s
 
-# Dereferences a raw pointer, nsCOMPtr, nsRefPtr, nsAutoPtr, already_AddRefed or
+# Dereferences a raw pointer, nsCOMPtr, RefPtr, nsAutoPtr, already_AddRefed or
 # mozilla::RefPtr; otherwise returns the value unchanged.
 def dereference(lldb_value):
     if lldb_value.TypeIsPointerType():
         return lldb_value.Dereference()
     name = lldb_value.GetType().GetUnqualifiedType().GetName()
-    if name.startswith("nsCOMPtr<") or name.startswith("nsRefPtr<") or name.startswith("nsAutoPtr<") or name.startswith("already_AddRefed<"):
+    if name.startswith("nsCOMPtr<") or name.startswith("RefPtr<") or name.startswith("nsAutoPtr<") or name.startswith("already_AddRefed<"):
         return lldb_value.GetChildMemberWithName("mRawPtr")
     if name.startswith("mozilla::RefPtr<"):
         return lldb_value.GetChildMemberWithName("ptr")

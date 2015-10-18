@@ -65,10 +65,10 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
     }
 
   private:
-    nsRefPtr<AsyncCanvasRenderer> mRenderer;
+    RefPtr<AsyncCanvasRenderer> mRenderer;
   };
 
-  nsRefPtr<nsRunnable> runnable = new Runnable(this);
+  RefPtr<nsRunnable> runnable = new Runnable(this);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch a runnable to the main-thread.");
@@ -100,10 +100,10 @@ AsyncCanvasRenderer::NotifyElementAboutInvalidation()
     }
 
   private:
-    nsRefPtr<AsyncCanvasRenderer> mRenderer;
+    RefPtr<AsyncCanvasRenderer> mRenderer;
   };
 
-  nsRefPtr<nsRunnable> runnable = new Runnable(this);
+  RefPtr<nsRunnable> runnable = new Runnable(this);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch a runnable to the main-thread.");

@@ -126,7 +126,7 @@ IDBMutableFile::AbortFileHandles()
         return;
       }
 
-      nsTArray<nsRefPtr<IDBFileHandle>> fileHandlesToAbort;
+      nsTArray<RefPtr<IDBFileHandle>> fileHandlesToAbort;
       fileHandlesToAbort.SetCapacity(aTable.Count());
 
       for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
@@ -145,7 +145,7 @@ IDBMutableFile::AbortFileHandles()
         return;
       }
 
-      for (nsRefPtr<IDBFileHandle>& fileHandle : fileHandlesToAbort) {
+      for (RefPtr<IDBFileHandle>& fileHandle : fileHandlesToAbort) {
         MOZ_ASSERT(fileHandle);
 
         fileHandle->Abort();
@@ -176,7 +176,7 @@ IDBMutableFile::Open(FileMode aMode, ErrorResult& aError)
     return nullptr;
   }
 
-  nsRefPtr<IDBFileHandle> fileHandle =
+  RefPtr<IDBFileHandle> fileHandle =
     IDBFileHandle::Create(this, aMode);
   if (NS_WARN_IF(!fileHandle)) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
@@ -198,14 +198,14 @@ IDBMutableFile::Open(FileMode aMode, ErrorResult& aError)
 already_AddRefed<DOMRequest>
 IDBMutableFile::GetFile(ErrorResult& aError)
 {
-  nsRefPtr<IDBFileHandle> fileHandle = Open(FileMode::Readonly, aError);
+  RefPtr<IDBFileHandle> fileHandle = Open(FileMode::Readonly, aError);
   if (NS_WARN_IF(aError.Failed())) {
     return nullptr;
   }
 
   FileRequestGetFileParams params;
 
-  nsRefPtr<IDBFileRequest> request =
+  RefPtr<IDBFileRequest> request =
     IDBFileRequest::Create(GetOwner(),
                            fileHandle,
                            /* aWrapAsDOMRequest */ true);
@@ -272,10 +272,10 @@ IDBMutableFile::CreateFileFor(BlobImpl* aBlobImpl,
 {
   AssertIsOnOwningThread();
 
-  nsRefPtr<BlobImpl> blobImplSnapshot =
+  RefPtr<BlobImpl> blobImplSnapshot =
     new BlobImplSnapshot(aBlobImpl, static_cast<IDBFileHandle*>(aFileHandle));
 
-  nsRefPtr<File> file = File::Create(GetOwner(), blobImplSnapshot);
+  RefPtr<File> file = File::Create(GetOwner(), blobImplSnapshot);
   return file.forget();
 }
 

@@ -175,7 +175,7 @@ private:
   nsresult EnsureBuffer(uint32_t aSize);
   nsresult ParseKey(const nsACString &aKey);
 
-  nsRefPtr<CacheFileHandle>           mHandle;
+  RefPtr<CacheFileHandle>           mHandle;
   nsCString                           mKey;
   CacheHash::Hash16_t                *mHashArray;
   uint32_t                            mHashArraySize;

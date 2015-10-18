@@ -35,7 +35,7 @@ BluetoothPairingListener::Create(nsPIDOMWindow* aWindow)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  nsRefPtr<BluetoothPairingListener> handle =
+  RefPtr<BluetoothPairingListener> handle =
     new BluetoothPairingListener(aWindow);
 
   return handle.forget();
@@ -55,7 +55,7 @@ BluetoothPairingListener::DispatchPairingEvent(const nsAString& aName,
 {
   MOZ_ASSERT(!aName.IsEmpty() && !aAddress.IsEmpty() && !aType.IsEmpty());
 
-  nsRefPtr<BluetoothPairingHandle> handle =
+  RefPtr<BluetoothPairingHandle> handle =
     BluetoothPairingHandle::Create(GetOwner(),
                                    aAddress,
                                    aType,
@@ -65,7 +65,7 @@ BluetoothPairingListener::DispatchPairingEvent(const nsAString& aName,
   init.mDeviceName = aName;
   init.mHandle = handle;
 
-  nsRefPtr<BluetoothPairingEvent> event =
+  RefPtr<BluetoothPairingEvent> event =
     BluetoothPairingEvent::Constructor(this,
                                        aType,
                                        init);

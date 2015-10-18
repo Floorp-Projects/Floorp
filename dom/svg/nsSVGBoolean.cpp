@@ -114,7 +114,7 @@ nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement *aSVGElement)
 already_AddRefed<SVGAnimatedBoolean>
 nsSVGBoolean::ToDOMAnimatedBoolean(nsSVGElement* aSVGElement)
 {
-  nsRefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
+  RefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
     SVGAnimatedBooleanTearoffTable().GetTearoff(this);
   if (!domAnimatedBoolean) {
     domAnimatedBoolean = new SVGAnimatedBoolean(this, aSVGElement);

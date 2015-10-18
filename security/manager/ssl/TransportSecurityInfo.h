@@ -102,7 +102,7 @@ private:
   nsXPIDLCString mHostName;
 
   /* SSL Status */
-  mozilla::RefPtr<nsSSLStatus> mSSLStatus;
+  RefPtr<nsSSLStatus> mSSLStatus;
 
   /* Peer cert chain for failed connections (for error reporting) */
   nsCOMPtr<nsIX509CertList> mFailedCertChain;

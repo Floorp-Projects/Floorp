@@ -399,10 +399,10 @@ nsresult ClearStorage(bool const aPrivate,
 {
   nsresult rv;
 
-  nsRefPtr<LoadContextInfo> info = GetLoadContextInfo(aPrivate, aAnonymous, aOa);
+  RefPtr<LoadContextInfo> info = GetLoadContextInfo(aPrivate, aAnonymous, aOa);
 
   nsCOMPtr<nsICacheStorage> storage;
-  nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
+  RefPtr<CacheStorageService> service = CacheStorageService::Self();
   NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
 
   // Clear disk storage
@@ -490,7 +490,7 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "profile-before-change")) {
-    nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
+    RefPtr<CacheStorageService> service = CacheStorageService::Self();
     if (service)
       service->Shutdown();
 
@@ -498,7 +498,7 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "xpcom-shutdown")) {
-    nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
+    RefPtr<CacheStorageService> service = CacheStorageService::Self();
     if (service)
       service->Shutdown();
 
@@ -507,7 +507,7 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "last-pb-context-exited")) {
-    nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
+    RefPtr<CacheStorageService> service = CacheStorageService::Self();
     if (service)
       service->DropPrivateBrowsingEntries();
 
@@ -528,7 +528,7 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "memory-pressure")) {
-    nsRefPtr<CacheStorageService> service = CacheStorageService::Self();
+    RefPtr<CacheStorageService> service = CacheStorageService::Self();
     if (service)
       service->PurgeFromMemory(nsICacheStorageService::PURGE_EVERYTHING);
 

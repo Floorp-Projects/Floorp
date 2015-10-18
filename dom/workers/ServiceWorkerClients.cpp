@@ -45,7 +45,7 @@ namespace {
 
 class ResolvePromiseWorkerRunnable final : public WorkerRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsTArray<ServiceWorkerClientInfo> mValue;
 
 public:
@@ -68,9 +68,9 @@ public:
     Promise* promise = mPromiseProxy->WorkerPromise();
     MOZ_ASSERT(promise);
 
-    nsTArray<nsRefPtr<ServiceWorkerClient>> ret;
+    nsTArray<RefPtr<ServiceWorkerClient>> ret;
     for (size_t i = 0; i < mValue.Length(); i++) {
-      ret.AppendElement(nsRefPtr<ServiceWorkerClient>(
+      ret.AppendElement(RefPtr<ServiceWorkerClient>(
             new ServiceWorkerWindowClient(promise->GetParentObject(),
                                           mValue.ElementAt(i))));
     }
@@ -83,7 +83,7 @@ public:
 
 class MatchAllRunnable final : public nsRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsCString mScope;
 public:
   MatchAllRunnable(PromiseWorkerProxy* aPromiseProxy,
@@ -104,11 +104,11 @@ public:
       return NS_OK;
     }
 
-    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     nsTArray<ServiceWorkerClientInfo> result;
 
     swm->GetAllClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope, result);
-    nsRefPtr<ResolvePromiseWorkerRunnable> r =
+    RefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
                                        mPromiseProxy, result);
 
@@ -121,7 +121,7 @@ public:
 
 class ResolveClaimRunnable final : public WorkerRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsresult mResult;
 
 public:
@@ -141,7 +141,7 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    nsRefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
+    RefPtr<Promise> promise = mPromiseProxy->WorkerPromise();
     MOZ_ASSERT(promise);
 
     if (NS_SUCCEEDED(mResult)) {
@@ -157,7 +157,7 @@ public:
 
 class ClaimRunnable final : public nsRunnable
 {
-  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  RefPtr<PromiseWorkerProxy> mPromiseProxy;
   nsCString mScope;
   uint64_t mServiceWorkerID;
 
@@ -183,13 +183,13 @@ public:
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
     nsresult rv = swm->ClaimClients(workerPrivate->GetPrincipal(),
                                     mScope, mServiceWorkerID);
 
-    nsRefPtr<ResolveClaimRunnable> r =
+    RefPtr<ResolveClaimRunnable> r =
       new ResolveClaimRunnable(workerPrivate, mPromiseProxy, rv);
 
     AutoJSAPI jsapi;
@@ -217,19 +217,19 @@ ServiceWorkerClients::MatchAll(const ClientQueryOptions& aOptions,
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(mWorkerScope, aRv);
+  RefPtr<Promise> promise = Promise::Create(mWorkerScope, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<PromiseWorkerProxy> promiseProxy =
+  RefPtr<PromiseWorkerProxy> promiseProxy =
     PromiseWorkerProxy::Create(workerPrivate, promise);
   if (!promiseProxy) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     return promise.forget();
   }
 
-  nsRefPtr<MatchAllRunnable> r =
+  RefPtr<MatchAllRunnable> r =
     new MatchAllRunnable(promiseProxy,
                          NS_ConvertUTF16toUTF8(scope));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
@@ -240,7 +240,7 @@ already_AddRefed<Promise>
 ServiceWorkerClients::OpenWindow(const nsAString& aUrl)
 {
   ErrorResult result;
-  nsRefPtr<Promise> promise = Promise::Create(mWorkerScope, result);
+  RefPtr<Promise> promise = Promise::Create(mWorkerScope, result);
   if (NS_WARN_IF(result.Failed())) {
     return nullptr;
   }
@@ -255,12 +255,12 @@ ServiceWorkerClients::Claim(ErrorResult& aRv)
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 
-  nsRefPtr<Promise> promise = Promise::Create(mWorkerScope, aRv);
+  RefPtr<Promise> promise = Promise::Create(mWorkerScope, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<PromiseWorkerProxy> promiseProxy =
+  RefPtr<PromiseWorkerProxy> promiseProxy =
     PromiseWorkerProxy::Create(workerPrivate, promise);
   if (!promiseProxy) {
     promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -270,7 +270,7 @@ ServiceWorkerClients::Claim(ErrorResult& aRv)
   nsString scope;
   mWorkerScope->GetScope(scope);
 
-  nsRefPtr<ClaimRunnable> runnable =
+  RefPtr<ClaimRunnable> runnable =
     new ClaimRunnable(promiseProxy, NS_ConvertUTF16toUTF8(scope));
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));

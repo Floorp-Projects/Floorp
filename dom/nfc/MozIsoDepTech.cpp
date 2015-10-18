@@ -62,7 +62,7 @@ MozIsoDepTech::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<MozIsoDepTech> isoDep = new MozIsoDepTech(win, aNFCTag);
+  RefPtr<MozIsoDepTech> isoDep = new MozIsoDepTech(win, aNFCTag);
 
   return isoDep.forget();
 }
@@ -83,7 +83,7 @@ MozIsoDepTech::Transceive(const Uint8Array& aCommand, ErrorResult& aRv)
   ErrorResult rv;
 
   aCommand.ComputeLengthAndData();
-  nsRefPtr<Promise> promise = mTag->Transceive(mTechnology, aCommand, rv);
+  RefPtr<Promise> promise = mTag->Transceive(mTechnology, aCommand, rv);
   if (rv.Failed()) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;

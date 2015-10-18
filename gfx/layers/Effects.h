@@ -119,7 +119,7 @@ struct EffectVRDistortion : public Effect
   virtual const char* Name() { return "EffectVRDistortion"; }
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-  nsRefPtr<gfx::VRHMDInfo> mHMD;
+  RefPtr<gfx::VRHMDInfo> mHMD;
   RefPtr<CompositingRenderTarget> mRenderTarget;
   TextureSource* mTexture;
 

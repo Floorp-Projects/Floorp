@@ -1516,7 +1516,7 @@ nsMemoryReporterManager::DispatchReporter(
   MOZ_ASSERT(mPendingReportersState);
 
   // Grab refs to everything used in the lambda function.
-  nsRefPtr<nsMemoryReporterManager> self = this;
+  RefPtr<nsMemoryReporterManager> self = this;
   nsCOMPtr<nsIMemoryReporter> reporter = aReporter;
   nsCOMPtr<nsIHandleReportCallback> handleReport = aHandleReport;
   nsCOMPtr<nsISupports> handleReportData = aHandleReportData;
@@ -1728,7 +1728,7 @@ nsMemoryReporterManager::EndProcessReport(uint32_t aGeneration, bool aSuccess)
   while (s->mNumProcessesRunning < s->mConcurrencyLimit &&
          !s->mChildrenPending.IsEmpty()) {
     // Pop last element from s->mChildrenPending
-    nsRefPtr<ContentParent> nextChild;
+    RefPtr<ContentParent> nextChild;
     nextChild.swap(s->mChildrenPending.LastElement());
     s->mChildrenPending.TruncateLength(s->mChildrenPending.Length() - 1);
     // Start report (if the child is still alive and not Nuwa).
@@ -2316,7 +2316,7 @@ private:
 NS_IMETHODIMP
 nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback)
 {
-  nsRefPtr<MinimizeMemoryUsageRunnable> runnable =
+  RefPtr<MinimizeMemoryUsageRunnable> runnable =
     new MinimizeMemoryUsageRunnable(aCallback);
 
   return NS_DispatchToMainThread(runnable);
@@ -2379,7 +2379,7 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
 namespace mozilla {
 
 #define GET_MEMORY_REPORTER_MANAGER(mgr)                                      \
-  nsRefPtr<nsMemoryReporterManager> mgr =                                     \
+  RefPtr<nsMemoryReporterManager> mgr =                                     \
     nsMemoryReporterManager::GetOrCreate();                                   \
   if (!mgr) {                                                                 \
     return NS_ERROR_FAILURE;                                                  \

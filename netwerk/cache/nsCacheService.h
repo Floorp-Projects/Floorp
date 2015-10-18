@@ -313,7 +313,7 @@ private:
 
     static
     PLDHashOperator  ShutdownCustomCacheDeviceEnum(const nsAString& aProfileDir,
-                                                   nsRefPtr<nsOfflineCacheDevice>& aDevice,
+                                                   RefPtr<nsOfflineCacheDevice>& aDevice,
                                                    void* aUserArg);
     void LogCacheStatistics();
 

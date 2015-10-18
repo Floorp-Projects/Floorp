@@ -69,8 +69,8 @@ imgTools::DecodeImage(nsIInputStream* aInStr,
 
   // Create a new image container to hold the decoded data.
   nsAutoCString mimeType(aMimeType);
-  nsRefPtr<image::Image> image = ImageFactory::CreateAnonymousImage(mimeType);
-  nsRefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  RefPtr<image::Image> image = ImageFactory::CreateAnonymousImage(mimeType);
+  RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
 
   if (image->HasError()) {
     return NS_ERROR_FAILURE;

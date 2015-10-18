@@ -67,7 +67,7 @@ private:
 
   bool                        mReadonly;    // Are we read-only?
 
-  InfallibleTArray<nsRefPtr<CSSValue> > mCSSValues;
+  InfallibleTArray<RefPtr<CSSValue> > mCSSValues;
 };
 
 #endif /* nsDOMCSSValueList_h___ */

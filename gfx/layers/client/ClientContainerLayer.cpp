@@ -17,7 +17,7 @@ already_AddRefed<ContainerLayer>
 ClientLayerManager::CreateContainerLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<ClientContainerLayer> layer =
+  RefPtr<ClientContainerLayer> layer =
     new ClientContainerLayer(this);
   CREATE_SHADOW(Container);
   return layer.forget();
@@ -27,7 +27,7 @@ already_AddRefed<RefLayer>
 ClientLayerManager::CreateRefLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  nsRefPtr<ClientRefLayer> layer =
+  RefPtr<ClientRefLayer> layer =
     new ClientRefLayer(this);
   CREATE_SHADOW(Ref);
   return layer.forget();

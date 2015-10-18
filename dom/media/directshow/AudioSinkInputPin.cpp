@@ -138,7 +138,7 @@ AudioSinkInputPin::GetConnectedPinSeeking()
   if (!peer)
     return nullptr;
   RefPtr<IMediaSeeking> seeking;
-  peer->QueryInterface(static_cast<IMediaSeeking**>(byRef(seeking)));
+  peer->QueryInterface(static_cast<IMediaSeeking**>(getter_AddRefs(seeking)));
   return seeking.forget();
 }
 

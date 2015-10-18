@@ -92,7 +92,7 @@ private:
   };
 
   // Implementation of SetLink/VisitedLink/ActiveLinkColor
-  nsresult ImplLinkColorSetter(nsRefPtr<HTMLColorRule>& aRule, nscolor aColor);
+  nsresult ImplLinkColorSetter(RefPtr<HTMLColorRule>& aRule, nscolor aColor);
 
   class GenericTableRule;
   friend class GenericTableRule;
@@ -154,11 +154,11 @@ public: // for mLangRuleTable structures only
 
 private:
   nsIDocument*            mDocument;
-  nsRefPtr<HTMLColorRule> mLinkRule;
-  nsRefPtr<HTMLColorRule> mVisitedRule;
-  nsRefPtr<HTMLColorRule> mActiveRule;
-  nsRefPtr<TableQuirkColorRule> mTableQuirkColorRule;
-  nsRefPtr<TableTHRule>   mTableTHRule;
+  RefPtr<HTMLColorRule> mLinkRule;
+  RefPtr<HTMLColorRule> mVisitedRule;
+  RefPtr<HTMLColorRule> mActiveRule;
+  RefPtr<TableQuirkColorRule> mTableQuirkColorRule;
+  RefPtr<TableTHRule>   mTableTHRule;
 
   PLDHashTable            mMappedAttrTable;
   PLDHashTable            mLangRuleTable;

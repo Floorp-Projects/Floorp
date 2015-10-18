@@ -8,7 +8,7 @@
 #define mozilla_dom_SameProcessMessageQueue_h
 
 #include "nsIRunnable.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -47,7 +47,7 @@ public:
 private:
   friend class CancelableRunnable;
 
-  nsTArray<nsRefPtr<Runnable>> mQueue;
+  nsTArray<RefPtr<Runnable>> mQueue;
   static SameProcessMessageQueue* sSingleton;
 };
 

@@ -790,7 +790,7 @@ CipherSuiteChangeObserver::StartObserve()
 {
   NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::StartObserve() can only be accessed in main thread");
   if (!sObserver) {
-    nsRefPtr<CipherSuiteChangeObserver> observer = new CipherSuiteChangeObserver();
+    RefPtr<CipherSuiteChangeObserver> observer = new CipherSuiteChangeObserver();
     nsresult rv = Preferences::AddStrongObserver(observer.get(), "security.");
     if (NS_FAILED(rv)) {
       sObserver = nullptr;

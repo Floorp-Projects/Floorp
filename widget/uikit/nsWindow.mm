@@ -180,7 +180,7 @@ private:
             continue;
         }
         int id = reinterpret_cast<int>(value);
-        nsRefPtr<Touch> t = new Touch(id,
+        RefPtr<Touch> t = new Touch(id,
                                       loc,
                                       nsIntPoint([touch majorRadius], [touch majorRadius]),
                                       0.0f,
@@ -353,9 +353,9 @@ private:
                                  NSToIntRound(aRect.size.height * scale));
 
   // Create Cairo objects.
-  nsRefPtr<gfxQuartzSurface> targetSurface;
+  RefPtr<gfxQuartzSurface> targetSurface;
 
-  nsRefPtr<gfxContext> targetContext;
+  RefPtr<gfxContext> targetContext;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::COREGRAPHICS)) {
     RefPtr<gfx::DrawTarget> dt =
       gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,

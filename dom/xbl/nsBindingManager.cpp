@@ -217,7 +217,7 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
 {
   NS_PRECONDITION(aOldDocument != nullptr, "no old document");
 
-  nsRefPtr<nsXBLBinding> binding = aContent->GetXBLBinding();
+  RefPtr<nsXBLBinding> binding = aContent->GetXBLBinding();
   if (binding) {
     // The binding manager may have been destroyed before a runnable
     // has had a chance to reach this point. If so, we bail out on calling
@@ -272,7 +272,7 @@ nsresult
 nsBindingManager::ClearBinding(nsIContent* aContent)
 {
   // Hold a ref to the binding so it won't die when we remove it from our table
-  nsRefPtr<nsXBLBinding> binding =
+  RefPtr<nsXBLBinding> binding =
     aContent ? aContent->GetXBLBinding() : nullptr;
 
   if (!binding) {
@@ -320,7 +320,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
     return NS_ERROR_FAILURE;
 
   // Load the binding doc.
-  nsRefPtr<nsXBLDocumentInfo> info;
+  RefPtr<nsXBLDocumentInfo> info;
   xblService->LoadBindingDocumentInfo(nullptr, aBoundDoc, aURL,
                                       aOriginPrincipal, true,
                                       getter_AddRefs(info));
@@ -374,7 +374,7 @@ nsBindingManager::PostProcessAttachedQueueEvent()
 void
 nsBindingManager::PostPAQEventCallback(nsITimer* aTimer, void* aClosure)
 {
-  nsRefPtr<nsBindingManager> mgr = 
+  RefPtr<nsBindingManager> mgr = 
     already_AddRefed<nsBindingManager>(static_cast<nsBindingManager*>(aClosure));
   mgr->PostProcessAttachedQueueEvent();
   NS_RELEASE(aTimer);
@@ -431,7 +431,7 @@ nsBindingManager::ProcessAttachedQueue(uint32_t aSkipSize)
   // Excute constructors. Do this from high index to low
   while (mAttachedStack.Length() > aSkipSize) {
     uint32_t lastItem = mAttachedStack.Length() - 1;
-    nsRefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(lastItem);
+    RefPtr<nsXBLBinding> binding = mAttachedStack.ElementAt(lastItem);
     mAttachedStack.RemoveElementAt(lastItem);
     if (binding) {
       binding->ExecuteAttachedHandler();

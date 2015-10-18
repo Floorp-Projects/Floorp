@@ -8,7 +8,7 @@
 
 #include "nsIDNSServiceDiscovery.h"
 #include "nsCOMPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {

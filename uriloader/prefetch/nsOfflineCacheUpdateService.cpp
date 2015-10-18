@@ -145,7 +145,7 @@ public:
 private:
     ~nsOfflineCachePendingUpdate() {}
 
-    nsRefPtr<nsOfflineCacheUpdateService> mService;
+    RefPtr<nsOfflineCacheUpdateService> mService;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
     nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
@@ -388,7 +388,7 @@ nsOfflineCacheUpdateService::ScheduleOnDocumentStop(nsIURI *aManifestURI,
     NS_ENSURE_TRUE(progress, NS_ERROR_INVALID_ARG);
 
     // Proceed with cache update
-    nsRefPtr<nsOfflineCachePendingUpdate> update =
+    RefPtr<nsOfflineCachePendingUpdate> update =
         new nsOfflineCachePendingUpdate(this, aManifestURI, aDocumentURI,
                                         aLoadingPrincipal, aDocument);
     NS_ENSURE_TRUE(update, NS_ERROR_OUT_OF_MEMORY);
@@ -413,7 +413,7 @@ nsOfflineCacheUpdateService::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
                  mUpdates[0] == aUpdate, "Unknown update completed");
 
     // keep this item alive until we're done notifying observers
-    nsRefPtr<nsOfflineCacheUpdate> update = mUpdates[0];
+    RefPtr<nsOfflineCacheUpdate> update = mUpdates[0];
     mUpdates.RemoveElementAt(0);
     mUpdateRunning = false;
 
@@ -498,7 +498,7 @@ nsOfflineCacheUpdateService::FindUpdate(nsIURI *aManifestURI,
                                           groupID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<nsOfflineCacheUpdate> update;
+    RefPtr<nsOfflineCacheUpdate> update;
     for (uint32_t i = 0; i < mUpdates.Length(); i++) {
         update = mUpdates[i];
 

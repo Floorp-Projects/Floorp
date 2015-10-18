@@ -30,7 +30,7 @@ public:
   // presumably they're the preroll samples, and we strip them. We may return
   // a null aOutput in this case.
   HRESULT Output(int64_t aStreamOffset,
-                         nsRefPtr<MediaData>& aOutput) override;
+                         RefPtr<MediaData>& aOutput) override;
 
   void Shutdown() override;
 

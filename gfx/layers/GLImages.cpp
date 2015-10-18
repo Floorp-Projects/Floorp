@@ -14,7 +14,7 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-static nsRefPtr<GLContext> sSnapshotContext;
+static RefPtr<GLContext> sSnapshotContext;
 
 EGLImageImage::~EGLImageImage()
 {

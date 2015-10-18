@@ -17,7 +17,7 @@
 #include "nsIInputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
@@ -71,7 +71,7 @@ CheckDecoderResults(const ImageTestCase& aTestCase, Decoder* aDecoder)
   // Get the current frame, which is always the first frame of the image
   // because CreateAnonymousDecoder() forces a first-frame-only decode.
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-  nsRefPtr<SourceSurface> surface = currentFrame->GetSurface();
+  RefPtr<SourceSurface> surface = currentFrame->GetSurface();
 
   // Verify that the resulting surfaces matches our expectations.
   EXPECT_EQ(SurfaceType::DATA, surface->GetType());
@@ -94,7 +94,7 @@ CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Write the data into a SourceBuffer.
-  nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -103,7 +103,7 @@ CheckDecoderSingleChunk(const ImageTestCase& aTestCase)
   // Create a decoder.
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  nsRefPtr<Decoder> decoder =
+  RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
@@ -136,11 +136,11 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Create a SourceBuffer and a decoder.
-  nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
   sourceBuffer->ExpectLength(length);
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
-  nsRefPtr<Decoder> decoder =
+  RefPtr<Decoder> decoder =
     DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
@@ -148,7 +148,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
   // Decode synchronously, using a |NoResume| IResumable so the Decoder doesn't
   // attempt to schedule itself on a nonexistent DecodePool when we write more
   // data into the SourceBuffer.
-  nsRefPtr<NoResume> noResume = new NoResume();
+  RefPtr<NoResume> noResume = new NoResume();
   for (uint64_t read = 0; read < length ; ++read) {
     uint64_t available = 0;
     rv = inputStream->Available(&available);

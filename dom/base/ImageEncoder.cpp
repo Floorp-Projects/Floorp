@@ -65,7 +65,7 @@ private:
 already_AddRefed<DataSourceSurface>
 GetBRGADataSourceSurfaceSync(already_AddRefed<layers::Image> aImage)
 {
-  nsRefPtr<SurfaceHelper> helper = new SurfaceHelper(Move(aImage));
+  RefPtr<SurfaceHelper> helper = new SurfaceHelper(Move(aImage));
   return helper->GetDataSurfaceSafe();
 }
 
@@ -93,7 +93,7 @@ public:
 
     if (!mFailed) {
       // The correct parentObject has to be set by the mEncodeCompleteCallback.
-      nsRefPtr<Blob> blob =
+      RefPtr<Blob> blob =
         Blob::CreateMemoryBlob(nullptr, mImgData, mImgSize, mType);
       MOZ_ASSERT(blob);
 
@@ -123,7 +123,7 @@ private:
   nsAutoString mType;
   void* mImgData;
   nsCOMPtr<nsIThread> mEncoderThread;
-  nsRefPtr<EncodeCompleteCallback> mEncodeCompleteCallback;
+  RefPtr<EncodeCompleteCallback> mEncodeCompleteCallback;
   bool mFailed;
 };
 
@@ -221,9 +221,9 @@ private:
   nsAutoString mType;
   nsAutoString mOptions;
   nsAutoArrayPtr<uint8_t> mImageBuffer;
-  nsRefPtr<layers::Image> mImage;
+  RefPtr<layers::Image> mImage;
   nsCOMPtr<imgIEncoder> mEncoder;
-  nsRefPtr<EncodingCompleteEvent> mEncodingCompleteEvent;
+  RefPtr<EncodingCompleteEvent> mEncodingCompleteEvent;
   int32_t mFormat;
   const nsIntSize mSize;
   bool mUsingCustomOptions;
@@ -266,7 +266,7 @@ ImageEncoder::ExtractDataFromLayersImageAsync(nsAString& aType,
   nsresult rv = NS_NewThread(getter_AddRefs(encoderThread), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<EncodingCompleteEvent> completeEvent =
+  RefPtr<EncodingCompleteEvent> completeEvent =
     new EncodingCompleteEvent(encoderThread, aEncodeCallback);
 
   nsIntSize size(aImage->GetSize().width, aImage->GetSize().height);
@@ -301,7 +301,7 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
   nsresult rv = NS_NewThread(getter_AddRefs(encoderThread), nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<EncodingCompleteEvent> completeEvent =
+  RefPtr<EncodingCompleteEvent> completeEvent =
     new EncodingCompleteEvent(encoderThread, aEncodeCallback);
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(aType,

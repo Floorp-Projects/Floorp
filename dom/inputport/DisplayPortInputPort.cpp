@@ -25,7 +25,7 @@ DisplayPortInputPort::Create(nsPIDOMWindow* aWindow,
                              nsIInputPortData* aData,
                              ErrorResult& aRv)
 {
-  nsRefPtr<DisplayPortInputPort> inputport = new DisplayPortInputPort(aWindow);
+  RefPtr<DisplayPortInputPort> inputport = new DisplayPortInputPort(aWindow);
   inputport->Init(aData, aListener, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

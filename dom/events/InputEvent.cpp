@@ -48,7 +48,7 @@ InputEvent::Constructor(const GlobalObject& aGlobal,
                         ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<InputEvent> e = new InputEvent(t, nullptr, nullptr);
+  RefPtr<InputEvent> e = new InputEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitUIEvent(aType, aParam.mBubbles, aParam.mCancelable,
                        aParam.mView, aParam.mDetail);
@@ -69,6 +69,6 @@ NS_NewDOMInputEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     InternalEditorInputEvent* aEvent)
 {
-  nsRefPtr<InputEvent> it = new InputEvent(aOwner, aPresContext, aEvent);
+  RefPtr<InputEvent> it = new InputEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

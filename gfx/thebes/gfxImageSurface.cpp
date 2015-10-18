@@ -257,7 +257,7 @@ FormatsAreCompatible(gfxImageFormat a1, gfxImageFormat a2)
 bool
 gfxImageSurface::CopyFrom (SourceSurface *aSurface)
 {
-    mozilla::RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
     if (!data) {
         return false;
@@ -297,7 +297,7 @@ gfxImageSurface::CopyFrom(gfxImageSurface *other)
 
 bool
 gfxImageSurface::CopyTo(SourceSurface *aSurface) {
-    mozilla::RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
 
     if (!data) {
         return false;
@@ -348,7 +348,7 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
         format = gfxImageFormat::RGB24;
     }
 
-    nsRefPtr<gfxSubimageSurface> image =
+    RefPtr<gfxSubimageSurface> image =
         new gfxSubimageSurface(this, subData,
                                IntSize((int)r.Width(), (int)r.Height()),
                                format);
@@ -368,6 +368,6 @@ gfxSubimageSurface::gfxSubimageSurface(gfxImageSurface* aParent,
 already_AddRefed<gfxImageSurface>
 gfxImageSurface::GetAsImageSurface()
 {
-  nsRefPtr<gfxImageSurface> surface = this;
+  RefPtr<gfxImageSurface> surface = this;
   return surface.forget();
 }

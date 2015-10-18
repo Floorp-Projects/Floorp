@@ -32,7 +32,7 @@ private:
   already_AddRefed<TVSource> GetSource(const nsAString& aTunerId,
                                        const nsAString& aSourceType);
 
-  nsTArray<nsRefPtr<TVSource>> mSources;
+  nsTArray<RefPtr<TVSource>> mSources;
 };
 
 } // namespace dom

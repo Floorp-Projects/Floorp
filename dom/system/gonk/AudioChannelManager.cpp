@@ -130,7 +130,7 @@ AudioChannelManager::NotifyVolumeControlChannelChanged()
   bool isActive = false;
   docshell->GetIsActive(&isActive);
 
-  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (isActive) {
     service->SetDefaultVolumeControlChannel(mVolumeChannel, isActive);
   } else {
@@ -152,7 +152,7 @@ AudioChannelManager::HandleEvent(nsIDOMEvent* aEvent)
 
 void
 AudioChannelManager::GetAllowedAudioChannels(
-                 nsTArray<nsRefPtr<BrowserElementAudioChannel>>& aAudioChannels,
+                 nsTArray<RefPtr<BrowserElementAudioChannel>>& aAudioChannels,
                  ErrorResult& aRv)
 {
   MOZ_ASSERT(aAudioChannels.IsEmpty());

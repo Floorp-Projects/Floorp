@@ -538,7 +538,7 @@ class RefcountedObject {
 static bool test_refptr_array() {
   bool rv = true;
 
-  nsTArray< nsRefPtr<RefcountedObject> > objArray;
+  nsTArray< RefPtr<RefcountedObject> > objArray;
 
   RefcountedObject *a = new RefcountedObject(); a->AddRef();
   RefcountedObject *b = new RefcountedObject(); b->AddRef();

@@ -368,7 +368,7 @@ private:
   nsPresContext *mPresContext; // weak; pres context passed in constructor
                                // and unset in Disconnect
 
-  nsRefPtr<nsRefreshDriver> mRootRefresh;
+  RefPtr<nsRefreshDriver> mRootRefresh;
 
   // The most recently allocated transaction id.
   uint64_t mPendingTransaction;

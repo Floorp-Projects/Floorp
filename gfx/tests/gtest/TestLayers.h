@@ -28,8 +28,8 @@ already_AddRefed<mozilla::layers::Layer> CreateLayerTree(
     const char* aLayerTreeDescription,
     nsIntRegion* aVisibleRegions,
     const mozilla::gfx::Matrix4x4* aTransforms,
-    nsRefPtr<mozilla::layers::LayerManager>& aLayerManager,
-    nsTArray<nsRefPtr<mozilla::layers::Layer> >& aLayersOut);
+    RefPtr<mozilla::layers::LayerManager>& aLayerManager,
+    nsTArray<RefPtr<mozilla::layers::Layer> >& aLayersOut);
 
 
 #endif

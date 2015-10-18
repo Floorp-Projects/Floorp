@@ -160,7 +160,7 @@ var URLContext = Class({
     patterns = Array.isArray(patterns) ? patterns : [patterns];
 
     try {
-      internal(this).patterns = patterns.map(function (p) new MatchPattern(p));
+      internal(this).patterns = patterns.map(p => new MatchPattern(p));
     }
     catch (err) {
       throw new Error("Patterns must be a string, regexp or an array of " +
@@ -169,7 +169,7 @@ var URLContext = Class({
   },
 
   isCurrent: function isCurrent(url) {
-    return internal(this).patterns.some(function (p) p.test(url));
+    return internal(this).patterns.some(p => p.test(url));
   },
 
   serialize: function() {
@@ -212,11 +212,13 @@ var PredicateContext = Class({
 exports.PredicateContext = PredicateContext;
 
 function removeItemFromArray(array, item) {
-  return array.filter(function(i) i !== item);
+  return array.filter(i => i !== item);
 }
 
 // Converts anything that isn't false, null or undefined into a string
-function stringOrNull(val) val ? String(val) : val;
+function stringOrNull(val) {
+  return val ? String(val) : val;
+}
 
 // Shared option validation rules for Item, Menu, and Separator
 var baseItemRules = {
@@ -235,7 +237,7 @@ var baseItemRules = {
       if (!v)
         return true;
       let arr = Array.isArray(v) ? v : [v];
-      return arr.every(function (o) o instanceof Context);
+      return arr.every(o => o instanceof Context);
     },
     msg: "The 'context' option must be a Context object or an array of " +
          "Context objects."
@@ -251,7 +253,7 @@ var labelledItemRules =  mix(baseItemRules, {
   label: {
     map: stringOrNull,
     is: ["string"],
-    ok: function (v) !!v,
+    ok: v => !!v,
     msg: "The item must have a non-empty string label."
   },
   accesskey: {

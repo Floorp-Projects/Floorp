@@ -80,7 +80,7 @@ public:
   }
 
 private:
-  nsRefPtr<mozPersonalDictionary> mDict;
+  RefPtr<mozPersonalDictionary> mDict;
 };
 
 class mozPersonalDictionarySave final : public nsRunnable
@@ -161,7 +161,7 @@ public:
 private:
   nsTArray<nsString> mDictWords;
   nsCOMPtr<nsIFile> mFile;
-  nsRefPtr<mozPersonalDictionary> mDict;
+  RefPtr<mozPersonalDictionary> mDict;
 };
 
 mozPersonalDictionary::mozPersonalDictionary()

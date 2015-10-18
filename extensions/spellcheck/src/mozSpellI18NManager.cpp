@@ -6,7 +6,7 @@
 #include "mozSpellI18NManager.h"
 #include "mozEnglishWordUtils.h"
 #include "nsString.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 NS_IMPL_ISUPPORTS(mozSpellI18NManager, mozISpellI18NManager)
 
@@ -25,7 +25,7 @@ NS_IMETHODIMP mozSpellI18NManager::GetUtil(const char16_t *aLanguage, mozISpellI
  }
 
  // XXX TODO Actually handle multiple languages.
- nsRefPtr<mozEnglishWordUtils> utils = new mozEnglishWordUtils;
+ RefPtr<mozEnglishWordUtils> utils = new mozEnglishWordUtils;
  utils.forget(_retval);
 
  return NS_OK;

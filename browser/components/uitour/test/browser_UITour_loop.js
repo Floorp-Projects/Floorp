@@ -251,6 +251,7 @@ var tests = [
         chatWin.document.querySelector(".btn-email").click();
       });
     });
+    setupFakeRoom();
     LoopRooms.open("fakeTourRoom");
   }),
   taskify(function* test_arrow_panel_position() {
@@ -349,6 +350,7 @@ function setupFakeRoom() {
   for (let prop of ["roomToken", "roomOwner", "roomUrl", "participants"])
     room[prop] = "fakeTourRoom";
   room.decryptedContext = {roomName: "fakeTourRoom"};
+  room.participants = [];
   let roomsMap = new Map([
     [room.roomToken, room]
   ]);

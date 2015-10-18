@@ -39,7 +39,7 @@ class TextureClientPool;
 
 class ClientLayerManager final : public LayerManager
 {
-  typedef nsTArray<nsRefPtr<Layer> > LayerRefArray;
+  typedef nsTArray<RefPtr<Layer> > LayerRefArray;
 
 public:
   explicit ClientLayerManager(nsIWidget* aWidget);
@@ -321,9 +321,9 @@ private:
   // we send a message to our remote side to capture the actual pixels
   // being drawn to the default target, and then copy those pixels
   // back to mShadowTarget.
-  nsRefPtr<gfxContext> mShadowTarget;
+  RefPtr<gfxContext> mShadowTarget;
 
-  nsRefPtr<TransactionIdAllocator> mTransactionIdAllocator;
+  RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   uint64_t mLatestTransactionId;
 
   // Sometimes we draw to targets that don't natively support
@@ -351,7 +351,7 @@ private:
   nsAutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;
   mozilla::TimeStamp mTransactionStart;
 
-  nsRefPtr<MemoryPressureObserver> mMemoryPressureObserver;
+  RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
 };
 
 class ClientLayer : public ShadowableLayer

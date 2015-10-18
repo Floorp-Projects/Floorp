@@ -54,7 +54,7 @@ protected:
                                  const uint16_t& aNotification) override;
 
 private:
-  nsRefPtr<TelephonyIPCService> mService;
+  RefPtr<TelephonyIPCService> mService;
 };
 
 class TelephonyRequestChild : public PTelephonyRequestChild

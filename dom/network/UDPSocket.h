@@ -202,12 +202,12 @@ private:
   bool mAddressReuse;
   bool mLoopback;
   SocketReadyState mReadyState;
-  nsRefPtr<Promise> mOpened;
-  nsRefPtr<Promise> mClosed;
+  RefPtr<Promise> mOpened;
+  RefPtr<Promise> mClosed;
 
   nsCOMPtr<nsIUDPSocket> mSocket;
   nsCOMPtr<nsIUDPSocketChild> mSocketChild;
-  nsRefPtr<ListenerProxy> mListenerProxy;
+  RefPtr<ListenerProxy> mListenerProxy;
 
   struct MulticastCommand {
     enum CommandType { Join, Leave };

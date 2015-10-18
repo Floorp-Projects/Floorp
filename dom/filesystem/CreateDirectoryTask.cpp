@@ -55,7 +55,7 @@ already_AddRefed<Promise>
 CreateDirectoryTask::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return nsRefPtr<Promise>(mPromise).forget();
+  return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
@@ -124,7 +124,7 @@ CreateDirectoryTask::HandlerCallback()
     mPromise = nullptr;
     return;
   }
-  nsRefPtr<Directory> dir = new Directory(mFileSystem, mTargetRealPath);
+  RefPtr<Directory> dir = new Directory(mFileSystem, mTargetRealPath);
   mPromise->MaybeResolve(dir);
   mPromise = nullptr;
 }

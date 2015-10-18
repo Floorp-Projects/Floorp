@@ -397,7 +397,7 @@ public:
 
   struct OwningImage {
     OwningImage() : mFrameID(0), mProducerID(0), mComposited(false) {}
-    nsRefPtr<Image> mImage;
+    RefPtr<Image> mImage;
     TimeStamp mTimeStamp;
     FrameID mFrameID;
     ProducerID mProducerID;
@@ -528,11 +528,11 @@ private:
   // This is the image factory used by this container, layer managers using
   // this container can set an alternative image factory that will be used to
   // create images for this container.
-  nsRefPtr<ImageFactory> mImageFactory;
+  RefPtr<ImageFactory> mImageFactory;
 
   gfx::IntSize mScaleHint;
 
-  nsRefPtr<BufferRecycleBin> mRecycleBin;
+  RefPtr<BufferRecycleBin> mRecycleBin;
 
   // This member points to an ImageClient if this ImageContainer was
   // sucessfully created with ENABLE_ASYNC, or points to null otherwise.
@@ -729,7 +729,7 @@ protected:
   gfx::IntSize mSize;
   gfxImageFormat mOffscreenFormat;
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
-  nsRefPtr<BufferRecycleBin> mRecycleBin;
+  RefPtr<BufferRecycleBin> mRecycleBin;
 };
 
 /**

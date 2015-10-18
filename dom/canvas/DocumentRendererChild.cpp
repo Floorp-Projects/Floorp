@@ -49,7 +49,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     if (flushLayout)
         nsContentUtils::FlushLayoutForTree(window);
 
-    nsRefPtr<nsPresContext> presContext;
+    RefPtr<nsPresContext> presContext;
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
     if (win) {
         nsIDocShell* docshell = win->GetDocShell();
@@ -84,7 +84,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
         gfxWarning() << "DocumentRendererChild::RenderDocument failed to Factory::CreateDrawTargetForData";
         return false;
     }
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     ctx->SetMatrix(mozilla::gfx::ThebesMatrix(transform));
 
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();

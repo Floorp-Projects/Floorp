@@ -146,7 +146,7 @@ already_AddRefed<SVGAnimatedNumber>
 nsSVGNumberPair::ToDOMAnimatedNumber(PairIndex aIndex,
                                      nsSVGElement* aSVGElement)
 {
-  nsRefPtr<DOMAnimatedNumber> domAnimatedNumber =
+  RefPtr<DOMAnimatedNumber> domAnimatedNumber =
     aIndex == eFirst ? sSVGFirstAnimatedNumberTearoffTable.GetTearoff(this) :
                        sSVGSecondAnimatedNumberTearoffTable.GetTearoff(this);
   if (!domAnimatedNumber) {
