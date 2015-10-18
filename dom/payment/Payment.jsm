@@ -45,7 +45,7 @@ var PaymentManager =  {
       }
     } catch(e) {}
 
-    for each (let msgname in PAYMENT_IPC_MSG_NAMES) {
+    for (let msgname of PAYMENT_IPC_MSG_NAMES) {
       ppmm.addMessageListener(msgname, this);
     }
 
@@ -401,7 +401,7 @@ var PaymentManager =  {
 
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
-      for each (let msgname in PAYMENT_IPC_MSG_NAMES) {
+      for (let msgname of PAYMENT_IPC_MSG_NAMES) {
         ppmm.removeMessageListener(msgname, this);
       }
       this.registeredProviders = null;

@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function testForExpectedSymbols(stage, data) {
   const expectedSymbols = [ "Worker", "ChromeWorker" ];
-  for each (var symbol in expectedSymbols) {
+  for (var symbol of expectedSymbols) {
     Services.prefs.setBoolPref("workertest.bootstrap." + stage + "." + symbol,
                                symbol in this);
   }
