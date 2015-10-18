@@ -335,10 +335,10 @@ protected:
     explicit gfxUserFcFontEntry(const nsAString& aFontName,
                        uint16_t aWeight,
                        int16_t aStretch,
-                       bool aItalic)
+                       uint8_t aStyle)
         : gfxFcFontEntry(aFontName)
     {
-        mItalic = aItalic;
+        mStyle = aStyle;
         mWeight = aWeight;
         mStretch = aStretch;
     }
@@ -421,9 +421,9 @@ public:
     gfxLocalFcFontEntry(const nsAString& aFontName,
                         uint16_t aWeight,
                         int16_t aStretch,
-                        bool aItalic,
+                        uint8_t aStyle,
                         const nsTArray< nsCountedRef<FcPattern> >& aPatterns)
-        : gfxUserFcFontEntry(aFontName, aWeight, aStretch, aItalic)
+        : gfxUserFcFontEntry(aFontName, aWeight, aStretch, aStyle)
     {
         if (!mPatterns.SetCapacity(aPatterns.Length(), fallible))
             return; // OOM
@@ -458,9 +458,9 @@ public:
     gfxDownloadedFcFontEntry(const nsAString& aFontName,
                              uint16_t aWeight,
                              int16_t aStretch,
-                             bool aItalic,
+                             uint8_t aStyle,
                              const uint8_t *aData, FT_Face aFace)
-        : gfxUserFcFontEntry(aFontName, aWeight, aStretch, aItalic),
+        : gfxUserFcFontEntry(aFontName, aWeight, aStretch, aStyle),
           mFontData(aData), mFace(aFace)
     {
         NS_PRECONDITION(aFace != nullptr, "aFace is NULL!");
@@ -1748,7 +1748,7 @@ gfxPangoFontGroup::Shutdown()
 gfxPangoFontGroup::NewFontEntry(const nsAString& aFontName,
                                 uint16_t aWeight,
                                 int16_t aStretch,
-                                bool aItalic)
+                                uint8_t aStyle)
 {
     gfxFontconfigUtils *utils = gfxFontconfigUtils::GetFontconfigUtils();
     if (!utils)
@@ -1791,7 +1791,7 @@ gfxPangoFontGroup::NewFontEntry(const nsAString& aFontName,
             return new gfxLocalFcFontEntry(aFontName,
                                            aWeight,
                                            aStretch,
-                                           aItalic,
+                                           aStyle,
                                            fonts);
     }
 
@@ -1833,7 +1833,7 @@ gfxPangoFontGroup::GetFTLibrary()
 gfxPangoFontGroup::NewFontEntry(const nsAString& aFontName,
                                 uint16_t aWeight,
                                 int16_t aStretch,
-                                bool aItalic,
+                                uint8_t aStyle,
                                 const uint8_t* aFontData,
                                 uint32_t aLength)
 {
@@ -1851,7 +1851,7 @@ gfxPangoFontGroup::NewFontEntry(const nsAString& aFontName,
     }
 
     return new gfxDownloadedFcFontEntry(aFontName, aWeight,
-                                        aStretch, aItalic,
+                                        aStretch, aStyle,
                                         aFontData, face);
 }
 
