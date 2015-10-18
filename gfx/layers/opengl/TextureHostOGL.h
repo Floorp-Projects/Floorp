@@ -211,7 +211,7 @@ public:
   }
 
 protected:
-  nsRefPtr<gl::TextureImage> mTexImage;
+  RefPtr<gl::TextureImage> mTexImage;
   RefPtr<CompositorOGL> mCompositor;
   TextureFlags mFlags;
   bool mIterating;

@@ -397,7 +397,7 @@ GrallocTextureHostOGL::WaitAcquireFenceHandleSyncComplete()
     return;
   }
 
-  nsRefPtr<FenceHandle::FdObj> fence = mAcquireFenceHandle.GetAndResetFdObj();
+  RefPtr<FenceHandle::FdObj> fence = mAcquireFenceHandle.GetAndResetFdObj();
   int fenceFd = fence->GetAndResetFd();
 
   EGLint attribs[] = {

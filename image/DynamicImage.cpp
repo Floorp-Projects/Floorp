@@ -185,7 +185,7 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize,
       "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
     return nullptr;
   }
-  nsRefPtr<gfxContext> context = new gfxContext(dt);
+  RefPtr<gfxContext> context = new gfxContext(dt);
 
   auto result = Draw(context, aSize, ImageRegion::Create(aSize),
                      aWhichFrame, Filter::POINT, Nothing(), aFlags);

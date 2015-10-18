@@ -54,7 +54,7 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
       // even if we don't get a TaskComplete() until then.
       TimeDuration timeout = mMaxWait - TimeSinceLastRequest(aTimeStamp, lock);
       TimeStamp timeoutTime = mStartTime + mMaxWait;
-      nsRefPtr<TaskThrottler> refPtrThis = this;
+      RefPtr<TaskThrottler> refPtrThis = this;
       mTimer->InitWithCallback(NewTimerCallback(
           [refPtrThis, timeoutTime]()
           {

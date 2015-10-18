@@ -835,7 +835,7 @@ UserDataKey kThebesSurface;
 
 struct DependentSourceSurfaceUserData
 {
-  nsRefPtr<gfxASurface> mSurface;
+  RefPtr<gfxASurface> mSurface;
 };
 
 void SourceSurfaceDestroyed(void *aData)
@@ -986,7 +986,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 already_AddRefed<DataSourceSurface>
 gfxPlatform::GetWrappedDataSourceSurface(gfxASurface* aSurface)
 {
-  nsRefPtr<gfxImageSurface> image = aSurface->GetAsImageSurface();
+  RefPtr<gfxImageSurface> image = aSurface->GetAsImageSurface();
   if (!image) {
     return nullptr;
   }
@@ -1163,7 +1163,7 @@ gfxPlatform::GetSkiaGLGlue()
      * FIXME: This should be stored in TLS or something, since there needs to be one for each thread using it. As it
      * stands, this only works on the main thread.
      */
-    nsRefPtr<GLContext> glContext;
+    RefPtr<GLContext> glContext;
     glContext = GLContextProvider::CreateHeadless(CreateContextFlags::REQUIRE_COMPAT_PROFILE |
                                                   CreateContextFlags::ALLOW_OFFLINE_RENDERER);
     if (!glContext) {
@@ -1216,7 +1216,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
   // backends).
   if (aBackend == BackendType::CAIRO) {
-    nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(aSize, SurfaceFormatToImageFormat(aFormat));
+    RefPtr<gfxASurface> surf = CreateOffscreenSurface(aSize, SurfaceFormatToImageFormat(aFormat));
     if (!surf || surf->CairoStatus()) {
       return nullptr;
     }
@@ -2090,7 +2090,7 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxPlatform::CreateHardwareVsyncSource()
 {
   NS_WARNING("Hardware Vsync support not yet implemented. Falling back to software timers");
-  nsRefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
+  RefPtr<mozilla::gfx::VsyncSource> softwareVsync = new SoftwareVsyncSource();
   return softwareVsync.forget();
 }
 

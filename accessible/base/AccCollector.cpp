@@ -102,8 +102,9 @@ EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible)
   if (aAccessible->mParent != mRoot)
     return -1;
 
-  if (aAccessible->mIndexOfEmbeddedChild != -1)
-    return aAccessible->mIndexOfEmbeddedChild;
+  MOZ_ASSERT(!aAccessible->IsProxy());
+  if (aAccessible->mInt.mIndexOfEmbeddedChild != -1)
+    return aAccessible->mInt.mIndexOfEmbeddedChild;
 
   return mFilterFunc(aAccessible) & filters::eMatch ?
     EnsureNGetIndex(aAccessible) : -1;
@@ -112,6 +113,7 @@ EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible)
 void
 EmbeddedObjCollector::AppendObject(Accessible* aAccessible)
 {
-  aAccessible->mIndexOfEmbeddedChild = mObjects.Length();
+  MOZ_ASSERT(!aAccessible->IsProxy());
+  aAccessible->mInt.mIndexOfEmbeddedChild = mObjects.Length();
   mObjects.AppendElement(aAccessible);
 }

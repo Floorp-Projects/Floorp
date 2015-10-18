@@ -109,10 +109,10 @@ struct DeviceAttachmentsD3D11
 
 private:
   void InitVertexShader(const ShaderBytes& aShader, VertexShaderArray& aArray, MaskType aMaskType) {
-    InitVertexShader(aShader, byRef(aArray[aMaskType]));
+    InitVertexShader(aShader, getter_AddRefs(aArray[aMaskType]));
   }
   void InitPixelShader(const ShaderBytes& aShader, PixelShaderArray& aArray, MaskType aMaskType) {
-    InitPixelShader(aShader, byRef(aArray[aMaskType]));
+    InitPixelShader(aShader, getter_AddRefs(aArray[aMaskType]));
   }
   void InitVertexShader(const ShaderBytes& aShader, ID3D11VertexShader** aOut) {
     if (!mInitOkay) {
@@ -195,7 +195,7 @@ CompositorD3D11::Initialize()
     return false;
   }
 
-  mDevice->GetImmediateContext(byRef(mContext));
+  mDevice->GetImmediateContext(getter_AddRefs(mContext));
 
   if (!mContext) {
     gfxCriticalError(CriticalLog::DefaultOptions(false))
@@ -236,7 +236,7 @@ CompositorD3D11::Initialize()
                                     sizeof(layout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
                                     LayerQuadVS,
                                     sizeof(LayerQuadVS),
-                                    byRef(mAttachments->mInputLayout));
+                                    getter_AddRefs(mAttachments->mInputLayout));
 
     if (Failed(hr, "CreateInputLayout")) {
       return false;
@@ -247,7 +247,7 @@ CompositorD3D11::Initialize()
     D3D11_SUBRESOURCE_DATA data;
     data.pSysMem = (void*)vertices;
 
-    hr = mDevice->CreateBuffer(&bufferDesc, &data, byRef(mAttachments->mVertexBuffer));
+    hr = mDevice->CreateBuffer(&bufferDesc, &data, getter_AddRefs(mAttachments->mVertexBuffer));
 
     if (Failed(hr, "create vertex buffer")) {
       return false;
@@ -262,13 +262,13 @@ CompositorD3D11::Initialize()
                                    D3D11_USAGE_DYNAMIC,
                                    D3D11_CPU_ACCESS_WRITE);
 
-    hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mVSConstantBuffer));
+    hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mAttachments->mVSConstantBuffer));
     if (Failed(hr, "create vs buffer")) {
       return false;
     }
 
     cBufferDesc.ByteWidth = sizeof(PixelShaderConstants);
-    hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mPSConstantBuffer));
+    hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mAttachments->mPSConstantBuffer));
     if (Failed(hr, "create ps buffer")) {
       return false;
     }
@@ -277,19 +277,19 @@ CompositorD3D11::Initialize()
     rastDesc.CullMode = D3D11_CULL_NONE;
     rastDesc.ScissorEnable = TRUE;
 
-    hr = mDevice->CreateRasterizerState(&rastDesc, byRef(mAttachments->mRasterizerState));
+    hr = mDevice->CreateRasterizerState(&rastDesc, getter_AddRefs(mAttachments->mRasterizerState));
     if (Failed(hr, "create rasterizer")) {
       return false;
     }
 
     CD3D11_SAMPLER_DESC samplerDesc(D3D11_DEFAULT);
-    hr = mDevice->CreateSamplerState(&samplerDesc, byRef(mAttachments->mLinearSamplerState));
+    hr = mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mAttachments->mLinearSamplerState));
     if (Failed(hr, "create linear sampler")) {
       return false;
     }
 
     samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-    hr = mDevice->CreateSamplerState(&samplerDesc, byRef(mAttachments->mPointSamplerState));
+    hr = mDevice->CreateSamplerState(&samplerDesc, getter_AddRefs(mAttachments->mPointSamplerState));
     if (Failed(hr, "create point sampler")) {
       return false;
     }
@@ -302,7 +302,7 @@ CompositorD3D11::Initialize()
       D3D11_COLOR_WRITE_ENABLE_ALL
     };
     blendDesc.RenderTarget[0] = rtBlendPremul;
-    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mPremulBlendState));
+    hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mPremulBlendState));
     if (Failed(hr, "create pm blender")) {
       return false;
     }
@@ -314,7 +314,7 @@ CompositorD3D11::Initialize()
       D3D11_COLOR_WRITE_ENABLE_ALL
     };
     blendDesc.RenderTarget[0] = rtBlendNonPremul;
-    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mNonPremulBlendState));
+    hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mNonPremulBlendState));
     if (Failed(hr, "create npm blender")) {
       return false;
     }
@@ -331,7 +331,7 @@ CompositorD3D11::Initialize()
         D3D11_COLOR_WRITE_ENABLE_ALL
       };
       blendDesc.RenderTarget[0] = rtBlendComponent;
-      hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mComponentBlendState));
+      hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mComponentBlendState));
       if (Failed(hr, "create component blender")) {
         return false;
       }
@@ -344,7 +344,7 @@ CompositorD3D11::Initialize()
       D3D11_COLOR_WRITE_ENABLE_ALL
     };
     blendDesc.RenderTarget[0] = rtBlendDisabled;
-    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mDisabledBlendState));
+    hr = mDevice->CreateBlendState(&blendDesc, getter_AddRefs(mAttachments->mDisabledBlendState));
     if (Failed(hr, "create null blender")) {
       return false;
     }
@@ -369,27 +369,27 @@ CompositorD3D11::Initialize()
                                     sizeof(vrlayout) / sizeof(D3D11_INPUT_ELEMENT_DESC),
                                     Oculus050VRDistortionVS,
                                     sizeof(Oculus050VRDistortionVS),
-                                    byRef(mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus050]));
+                                    getter_AddRefs(mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus050]));
 
     // XXX shared for now, rename
     mAttachments->mVRDistortionInputLayout[VRHMDType::Cardboard] =
       mAttachments->mVRDistortionInputLayout[VRHMDType::Oculus050];
 
     cBufferDesc.ByteWidth = sizeof(gfx::VRDistortionConstants);
-    hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mVRDistortionConstants));
+    hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, getter_AddRefs(mAttachments->mVRDistortionConstants));
     if (Failed(hr, "create vr buffer ")) {
       return false;
     }
   }
 
-  nsRefPtr<IDXGIDevice> dxgiDevice;
-  nsRefPtr<IDXGIAdapter> dxgiAdapter;
+  RefPtr<IDXGIDevice> dxgiDevice;
+  RefPtr<IDXGIAdapter> dxgiAdapter;
 
   mDevice->QueryInterface(dxgiDevice.StartAssignment());
   dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter));
 
   {
-    nsRefPtr<IDXGIFactory> dxgiFactory;
+    RefPtr<IDXGIFactory> dxgiFactory;
     dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.StartAssignment()));
 
     DXGI_SWAP_CHAIN_DESC swapDesc;
@@ -414,7 +414,7 @@ CompositorD3D11::Initialize()
      * the window we draw to. The front buffer is the full screen front
      * buffer.
      */
-    hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, byRef(mSwapChain));
+    hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, getter_AddRefs(mSwapChain));
     if (Failed(hr, "create swap chain")) {
      return false;
     }
@@ -483,7 +483,7 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
   RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (Failed(hr) || !texture) {
     gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed in CreateRenderTarget";
     return nullptr;
@@ -516,7 +516,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
   RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   NS_ASSERTION(texture, "Could not create texture");
   if (Failed(hr) || !texture) {
     gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed in CreateRenderTargetFromSource";
@@ -695,7 +695,7 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
       desc.ByteWidth = mesh.mVertices.Length() * sizeof(gfx::VRDistortionVertex);
       sdata.pSysMem = mesh.mVertices.Elements();
       
-      hr = mDevice->CreateBuffer(&desc, &sdata, byRef(mAttachments->mVRDistortionVertices[eye]));
+      hr = mDevice->CreateBuffer(&desc, &sdata, getter_AddRefs(mAttachments->mVRDistortionVertices[eye]));
       if (FAILED(hr)) {
         NS_WARNING("CreateBuffer failed");
         return;
@@ -705,7 +705,7 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
       desc.ByteWidth = mesh.mIndices.Length() * sizeof(uint16_t);
       sdata.pSysMem = mesh.mIndices.Elements();
 
-      hr = mDevice->CreateBuffer(&desc, &sdata, byRef(mAttachments->mVRDistortionIndices[eye]));
+      hr = mDevice->CreateBuffer(&desc, &sdata, getter_AddRefs(mAttachments->mVRDistortionIndices[eye]));
       if (FAILED(hr)) {
         NS_WARNING("CreateBuffer failed");
         return;
@@ -1079,7 +1079,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   if (mAttachments->mSyncTexture) {
     RefPtr<IDXGIKeyedMutex> mutex;
-    mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
+    mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
     MOZ_ASSERT(mutex);
     HRESULT hr = mutex->AcquireSync(0, 10000);
@@ -1115,7 +1115,7 @@ CompositorD3D11::EndFrame()
 
   if (oldSize == mSize) {
     RefPtr<IDXGISwapChain1> chain;
-    HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)byRef(chain));
+    HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)getter_AddRefs(chain));
     nsString vendorID;
     nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     gfxInfo->GetAdapterVendorID(vendorID);
@@ -1250,7 +1250,7 @@ CompositorD3D11::UpdateRenderTarget()
 
   HRESULT hr;
 
-  nsRefPtr<ID3D11Texture2D> backBuf;
+  RefPtr<ID3D11Texture2D> backBuf;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
   if (hr == DXGI_ERROR_INVALID_CALL) {
@@ -1285,12 +1285,12 @@ DeviceAttachmentsD3D11::InitSyncObject()
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
   RefPtr<ID3D11Texture2D> texture;
-  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (Failed(hr, "create sync texture")) {
     return false;
   }
 
-  hr = texture->QueryInterface((IDXGIResource**)byRef(mSyncTexture));
+  hr = texture->QueryInterface((IDXGIResource**)getter_AddRefs(mSyncTexture));
   if (Failed(hr, "QI sync texture")) {
     return false;
   }
@@ -1329,8 +1329,8 @@ DeviceAttachmentsD3D11::CreateShaders()
     InitPixelShader(sComponentAlphaShaderMask, mComponentAlphaShader, MaskType::Mask2d);
   }
 
-  InitVertexShader(sOculus050VRDistortionVS, byRef(mVRDistortionVS[VRHMDType::Oculus050]));
-  InitPixelShader(sOculus050VRDistortionPS, byRef(mVRDistortionPS[VRHMDType::Oculus050]));
+  InitVertexShader(sOculus050VRDistortionVS, getter_AddRefs(mVRDistortionVS[VRHMDType::Oculus050]));
+  InitPixelShader(sOculus050VRDistortionPS, getter_AddRefs(mVRDistortionPS[VRHMDType::Oculus050]));
 
   // These are shared
   // XXX rename Oculus050 shaders to something more generic
@@ -1392,7 +1392,7 @@ CompositorD3D11::SetSamplerForFilter(Filter aFilter)
 void
 CompositorD3D11::PaintToTarget()
 {
-  nsRefPtr<ID3D11Texture2D> backBuf;
+  RefPtr<ID3D11Texture2D> backBuf;
   HRESULT hr;
 
   hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)backBuf.StartAssignment());
@@ -1410,7 +1410,7 @@ CompositorD3D11::PaintToTarget()
   softDesc.Usage = D3D11_USAGE_STAGING;
   softDesc.BindFlags = 0;
 
-  nsRefPtr<ID3D11Texture2D> readTexture;
+  RefPtr<ID3D11Texture2D> readTexture;
 
   hr = mDevice->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
   if (Failed(hr)) {

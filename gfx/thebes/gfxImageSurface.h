@@ -164,7 +164,7 @@ protected:
                        const mozilla::gfx::IntSize& aSize,
                        gfxImageFormat aFormat);
 private:
-    nsRefPtr<gfxImageSurface> mParent;
+    RefPtr<gfxImageSurface> mParent;
 };
 
 #endif /* GFX_IMAGESURFACE_H */

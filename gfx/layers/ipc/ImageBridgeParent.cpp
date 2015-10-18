@@ -175,7 +175,7 @@ ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
 ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId)
 {
   MessageLoop* loop = CompositorParent::CompositorLoop();
-  nsRefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
+  RefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
   bridge->mSelfRef = bridge;
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,

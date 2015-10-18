@@ -115,7 +115,7 @@ private:
 
         MutexAutoLock lock(mHandlerMutex);
 
-        nsRefPtr<SocketHandler> temp = new SocketHandler();
+        RefPtr<SocketHandler> temp = new SocketHandler();
         temp->OpenStream(aTransport);
         mHandlers.AppendElement(temp.get());
     }
@@ -199,9 +199,9 @@ private:
         bool                          mConnected;
     };
 
-    nsTArray<nsRefPtr<SocketHandler> > mHandlers;
+    nsTArray<RefPtr<SocketHandler> > mHandlers;
     nsCOMPtr<nsIThread>                   mDebugSenderThread;
-    nsRefPtr<DebugDataSender>             mCurrentSender;
+    RefPtr<DebugDataSender>             mCurrentSender;
     nsCOMPtr<nsIServerSocket>             mServerSocket;
 
     // Keep mHandlers accessing thread safe.
@@ -781,7 +781,7 @@ public:
         // Keep a strong reference to DebugDataSender to prevent this object
         // accessing mHost on mThread, when it's been destroyed on the main
         // thread.
-        nsRefPtr<DebugDataSender> mHost;
+        RefPtr<DebugDataSender> mHost;
     };
 
     // Clear all DebugData in mList on mThead.
@@ -801,7 +801,7 @@ public:
     private:
         virtual ~ClearTask() { }
 
-        nsRefPtr<DebugDataSender> mHost;
+        RefPtr<DebugDataSender> mHost;
     };
 
     // Send all DebugData in mList via websocket, and then, clean up
@@ -833,7 +833,7 @@ public:
     private:
         virtual ~SendTask() { }
 
-        nsRefPtr<DebugDataSender> mHost;
+        RefPtr<DebugDataSender> mHost;
     };
 
     explicit DebugDataSender(nsIThread *thread)

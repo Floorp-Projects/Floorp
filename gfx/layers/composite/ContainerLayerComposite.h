@@ -182,7 +182,7 @@ public:
   virtual const char* Name() const override { return "RefLayerComposite"; }
   UniquePtr<PreparedData> mPrepared;
   RefPtr<CompositingRenderTarget> mLastIntermediateSurface;
-  nsRefPtr<gfx::VRHMDRenderingSupport::RenderTargetSet> mVRRenderTargetSet;
+  RefPtr<gfx::VRHMDRenderingSupport::RenderTargetSet> mVRRenderTargetSet;
 };
 
 } // namespace layers

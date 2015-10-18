@@ -74,7 +74,7 @@ OmxVideoTrackEncoder::GetMetadata()
     return nullptr;
   }
 
-  nsRefPtr<AVCTrackMetadata> meta = new AVCTrackMetadata();
+  RefPtr<AVCTrackMetadata> meta = new AVCTrackMetadata();
   meta->mWidth = mFrameWidth;
   meta->mHeight = mFrameHeight;
   meta->mDisplayWidth = mDisplayWidth;
@@ -146,7 +146,7 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
                                      GET_ENCODED_VIDEO_FRAME_TIMEOUT);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!buffer.IsEmpty()) {
-    nsRefPtr<EncodedFrame> videoData = new EncodedFrame();
+    RefPtr<EncodedFrame> videoData = new EncodedFrame();
     if (outFlags & OMXCodecWrapper::BUFFER_CODEC_CONFIG) {
       videoData->SetFrameType(EncodedFrame::AVC_CSD);
     } else {
@@ -192,7 +192,7 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
       mEncodingComplete = true;
     }
 
-    nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
+    RefPtr<EncodedFrame> audiodata = new EncodedFrame();
     if (mEncoder->GetCodecType() == OMXCodecWrapper::AAC_ENC) {
       audiodata->SetFrameType(isCSD ?
         EncodedFrame::AAC_CSD : EncodedFrame::AAC_AUDIO_FRAME);
@@ -296,7 +296,7 @@ OmxAACAudioTrackEncoder::GetMetadata()
   if (mCanceled || mEncodingComplete) {
     return nullptr;
   }
-  nsRefPtr<AACTrackMetadata> meta = new AACTrackMetadata();
+  RefPtr<AACTrackMetadata> meta = new AACTrackMetadata();
   meta->mChannels = mChannels;
   meta->mSampleRate = mSamplingRate;
   meta->mFrameSize = OMXCodecWrapper::kAACFrameSize;
@@ -339,7 +339,7 @@ OmxAMRAudioTrackEncoder::GetMetadata()
     return nullptr;
   }
 
-  nsRefPtr<AMRTrackMetadata> meta = new AMRTrackMetadata();
+  RefPtr<AMRTrackMetadata> meta = new AMRTrackMetadata();
   return meta.forget();
 }
 

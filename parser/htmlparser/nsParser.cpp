@@ -111,7 +111,7 @@ For more details @see bugzilla bug 76722
 class nsParserContinueEvent : public nsRunnable
 {
 public:
-  nsRefPtr<nsParser> mParser;
+  RefPtr<nsParser> mParser;
 
   explicit nsParserContinueEvent(nsParser* aParser)
     : mParser(aParser)

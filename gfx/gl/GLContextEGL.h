@@ -122,7 +122,7 @@ public:
     const EGLContext mContext;
 protected:
     EGLSurface mSurfaceOverride;
-    nsRefPtr<gfxASurface> mThebesSurface;
+    RefPtr<gfxASurface> mThebesSurface;
     bool mBound;
 
     bool mIsPBuffer;

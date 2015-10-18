@@ -37,7 +37,7 @@ public:
   }
 
   // Get all the current active cues.
-  void UpdateAndGetShowingCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
+  void UpdateAndGetShowingCues(nsTArray<RefPtr<TextTrackCue> >& aCues);
 
   TextTrack* IndexedGetter(uint32_t aIndex, bool& aFound);
   TextTrack* operator[](uint32_t aIndex);
@@ -69,8 +69,8 @@ public:
 private:
   ~TextTrackList();
 
-  nsTArray< nsRefPtr<TextTrack> > mTextTracks;
-  nsRefPtr<TextTrackManager> mTextTrackManager;
+  nsTArray< RefPtr<TextTrack> > mTextTracks;
+  RefPtr<TextTrackManager> mTextTrackManager;
 
   void CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
                                          const nsAString& aEventName);

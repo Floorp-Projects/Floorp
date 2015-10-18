@@ -41,7 +41,7 @@ public:
   // Run MSE Buffer Append Algorithm
   // 3.5.5 Buffer Append Algorithm.
   // http://w3c.github.io/media-source/index.html#sourcebuffer-buffer-append
-  virtual nsRefPtr<AppendPromise> BufferAppend() = 0;
+  virtual RefPtr<AppendPromise> BufferAppend() = 0;
 
   // Abort any pending AppendData.
   virtual void AbortAppendData() = 0;
@@ -53,7 +53,7 @@ public:
 
   // Runs MSE range removal algorithm.
   // http://w3c.github.io/media-source/#sourcebuffer-coded-frame-removal
-  virtual nsRefPtr<RangeRemovalPromise> RangeRemoval(media::TimeUnit aStart,
+  virtual RefPtr<RangeRemovalPromise> RangeRemoval(media::TimeUnit aStart,
                                                      media::TimeUnit aEnd) = 0;
 
   enum class EvictDataResult : int8_t

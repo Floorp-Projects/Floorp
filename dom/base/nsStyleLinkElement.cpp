@@ -291,7 +291,7 @@ UpdateIsElementInStyleScopeFlagOnSubtree(Element* aElement)
 static Element*
 GetScopeElement(nsIStyleSheet* aSheet)
 {
-  nsRefPtr<CSSStyleSheet> cssStyleSheet = do_QueryObject(aSheet);
+  RefPtr<CSSStyleSheet> cssStyleSheet = do_QueryObject(aSheet);
   if (!cssStyleSheet) {
     return nullptr;
   }

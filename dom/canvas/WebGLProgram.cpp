@@ -9,7 +9,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLContext.h"
 #include "WebGLShader.h"
@@ -425,7 +425,7 @@ already_AddRefed<WebGLActiveInfo>
 WebGLProgram::GetActiveAttrib(GLuint index) const
 {
     if (!mMostRecentLinkInfo) {
-        nsRefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
+        RefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
         return ret.forget();
     }
 
@@ -446,7 +446,7 @@ WebGLProgram::GetActiveUniform(GLuint index) const
 {
     if (!mMostRecentLinkInfo) {
         // According to the spec, this can return null.
-        nsRefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
+        RefPtr<WebGLActiveInfo> ret = WebGLActiveInfo::CreateInvalid(mContext);
         return ret.forget();
     }
 
@@ -463,7 +463,7 @@ WebGLProgram::GetActiveUniform(GLuint index) const
 }
 
 void
-WebGLProgram::GetAttachedShaders(nsTArray<nsRefPtr<WebGLShader>>* const out) const
+WebGLProgram::GetAttachedShaders(nsTArray<RefPtr<WebGLShader>>* const out) const
 {
     out->TruncateLength(0);
 
@@ -753,7 +753,7 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
     if (loc == -1)
         return nullptr;
 
-    nsRefPtr<WebGLUniformLocation> locObj = new WebGLUniformLocation(mContext, LinkInfo(),
+    RefPtr<WebGLUniformLocation> locObj = new WebGLUniformLocation(mContext, LinkInfo(),
                                                                      loc, activeInfo);
     return locObj.forget();
 }

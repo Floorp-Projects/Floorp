@@ -191,7 +191,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
          ++i, node = CERT_LIST_NEXT(node)) {
 
       if (i == selectedIndex) {
-        nsRefPtr<nsNSSCertificate> cert = nsNSSCertificate::Create(node->cert);
+        RefPtr<nsNSSCertificate> cert = nsNSSCertificate::Create(node->cert);
         if (!cert) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;

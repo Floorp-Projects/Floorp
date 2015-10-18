@@ -329,7 +329,7 @@ private:
   /** Widget associated with this compositor */
   nsIWidget *mWidget;
   gfx::IntSize mWidgetSize;
-  nsRefPtr<GLContext> mGLContext;
+  RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
 

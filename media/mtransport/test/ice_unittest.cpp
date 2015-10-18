@@ -313,7 +313,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     snprintf(name, sizeof(name), "%s:stream%d", name_.c_str(),
              (int)streams_.size());
 
-    mozilla::RefPtr<NrIceMediaStream> stream =
+    RefPtr<NrIceMediaStream> stream =
         ice_ctx_->CreateStream(static_cast<char *>(name), components);
     ice_ctx_->SetStream(streams_.size(), stream);
 
@@ -823,7 +823,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     // If we are connected, then try to trickle to the
     // other side.
     if (remote_ && remote_->remote_ && (trickle_mode_ != TRICKLE_SIMULATE)) {
-      std::vector<mozilla::RefPtr<NrIceMediaStream> >::iterator it =
+      std::vector<RefPtr<NrIceMediaStream> >::iterator it =
           std::find(streams_.begin(), streams_.end(), stream);
       ASSERT_NE(streams_.end(), it);
       size_t index = it - streams_.begin();
@@ -1104,8 +1104,8 @@ class IceTestPeer : public sigslot::has_slots<> {
 
  private:
   std::string name_;
-  nsRefPtr<NrIceCtx> ice_ctx_;
-  std::vector<mozilla::RefPtr<NrIceMediaStream> > streams_;
+  RefPtr<NrIceCtx> ice_ctx_;
+  std::vector<RefPtr<NrIceMediaStream> > streams_;
   std::map<std::string, std::vector<std::string> > candidates_;
   // Maps from stream id to list of remote trickle candidates
   std::map<size_t, std::vector<SchedulableTrickleCandidate*> >
@@ -1117,7 +1117,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   size_t received_;
   size_t sent_;
   NrIceResolverFake fake_resolver_;
-  nsRefPtr<NrIceResolver> dns_resolver_;
+  RefPtr<NrIceResolver> dns_resolver_;
   IceTestPeer *remote_;
   CandidateFilter candidate_filter_;
   NrIceCandidate::Type expected_local_type_;
@@ -1127,7 +1127,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   TrickleMode trickle_mode_;
   int trickled_;
   bool simulate_ice_lite_;
-  nsRefPtr<mozilla::TestNat> nat_;
+  RefPtr<mozilla::TestNat> nat_;
 };
 
 void SchedulableTrickleCandidate::Trickle() {

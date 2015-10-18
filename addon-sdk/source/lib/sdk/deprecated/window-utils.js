@@ -21,7 +21,9 @@ const appShellService = Cc['@mozilla.org/appshell/appShellService;1'].
                         getService(Ci.nsIAppShellService);
 
 // Bug 834961: ignore private windows when they are not supported
-function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported });
+function getWindows() {
+  return windows(null, { includePrivate: isPrivateBrowsingSupported });
+}
 
 /**
  * An iterator for XUL windows currently in the application.

@@ -1261,7 +1261,7 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity** aValidity)
     return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG(aValidity);
-  nsRefPtr<nsX509CertValidity> validity = new nsX509CertValidity(mCert.get());
+  RefPtr<nsX509CertValidity> validity = new nsX509CertValidity(mCert.get());
 
   validity.forget(aValidity);
   return NS_OK;

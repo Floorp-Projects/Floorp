@@ -32,7 +32,7 @@ class SrtpFlow {
  public:
 
 
-  static mozilla::RefPtr<SrtpFlow> Create(int cipher_suite,
+  static RefPtr<SrtpFlow> Create(int cipher_suite,
                                           bool inbound,
                                           const void *key,
                                           size_t key_len);

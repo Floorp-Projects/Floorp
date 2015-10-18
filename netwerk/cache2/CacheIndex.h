@@ -969,21 +969,21 @@ private:
   char                     *mRWBuf;
   uint32_t                  mRWBufSize;
   uint32_t                  mRWBufPos;
-  nsRefPtr<CacheHash>       mRWHash;
+  RefPtr<CacheHash>       mRWHash;
 
   // Reading of journal succeeded if true.
   bool                      mJournalReadSuccessfully;
 
   // Handle used for writing and reading index file.
-  nsRefPtr<CacheFileHandle> mIndexHandle;
+  RefPtr<CacheFileHandle> mIndexHandle;
   // Handle used for reading journal file.
-  nsRefPtr<CacheFileHandle> mJournalHandle;
+  RefPtr<CacheFileHandle> mJournalHandle;
   // Used to check the existence of the file during reading process.
-  nsRefPtr<CacheFileHandle> mTmpHandle;
+  RefPtr<CacheFileHandle> mTmpHandle;
 
-  nsRefPtr<FileOpenHelper>  mIndexFileOpener;
-  nsRefPtr<FileOpenHelper>  mJournalFileOpener;
-  nsRefPtr<FileOpenHelper>  mTmpFileOpener;
+  RefPtr<FileOpenHelper>  mIndexFileOpener;
+  RefPtr<FileOpenHelper>  mJournalFileOpener;
+  RefPtr<FileOpenHelper>  mTmpFileOpener;
 
   // Directory enumerator used when building and updating index.
   nsCOMPtr<nsIDirectoryEnumerator> mDirEnumerator;
@@ -1069,7 +1069,7 @@ private:
   };
 
   // List of async observers that want to get disk consumption information
-  nsTArray<nsRefPtr<DiskConsumptionObserver> > mDiskConsumptionObservers;
+  nsTArray<RefPtr<DiskConsumptionObserver> > mDiskConsumptionObservers;
 };
 
 class CacheIndexAutoLock {
@@ -1100,7 +1100,7 @@ public:
   }
 
 private:
-  nsRefPtr<CacheIndex> mIndex;
+  RefPtr<CacheIndex> mIndex;
   bool mLocked;
 };
 
@@ -1132,7 +1132,7 @@ public:
   }
 
 private:
-  nsRefPtr<CacheIndex> mIndex;
+  RefPtr<CacheIndex> mIndex;
   bool mLocked;
 };
 

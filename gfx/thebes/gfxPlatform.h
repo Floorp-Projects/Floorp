@@ -716,9 +716,9 @@ protected:
     uint32_t mTotalSystemMemory;
 
     // Hardware vsync source. Only valid on parent process
-    nsRefPtr<mozilla::gfx::VsyncSource> mVsyncSource;
+    RefPtr<mozilla::gfx::VsyncSource> mVsyncSource;
 
-    mozilla::RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
+    RefPtr<mozilla::gfx::DrawTarget> mScreenReferenceDrawTarget;
 
 private:
     /**
@@ -746,7 +746,7 @@ private:
      */
     void PopulateScreenInfo();
 
-    nsRefPtr<gfxASurface> mScreenReferenceSurface;
+    RefPtr<gfxASurface> mScreenReferenceSurface;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
     nsCOMPtr<nsIObserver> mMemoryPressureObserver;
@@ -766,8 +766,8 @@ private:
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
     mozilla::widget::GfxInfoCollector<gfxPlatform> mApzSupportCollector;
 
-    mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
-    mozilla::RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
+    RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
+    RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
 
     // Backend that we are compositing with. NONE, if no compositor has been
     // created yet.

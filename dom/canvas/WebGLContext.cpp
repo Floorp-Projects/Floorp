@@ -1143,7 +1143,7 @@ public:
     }
 
 private:
-    nsRefPtr<HTMLCanvasElement> mCanvas;
+    RefPtr<HTMLCanvasElement> mCanvas;
 };
 
 already_AddRefed<layers::CanvasLayer>
@@ -1156,11 +1156,11 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
 
     if (!mResetLayer && oldLayer &&
         oldLayer->HasUserData(&gWebGLLayerUserData)) {
-        nsRefPtr<layers::CanvasLayer> ret = oldLayer;
+        RefPtr<layers::CanvasLayer> ret = oldLayer;
         return ret.forget();
     }
 
-    nsRefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
+    RefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
     if (!canvasLayer) {
         NS_WARNING("CreateCanvasLayer returned null!");
         return nullptr;
@@ -1548,7 +1548,7 @@ WebGLContext::RunContextLossTimer()
 
 class UpdateContextLossStatusTask : public nsCancelableRunnable
 {
-    nsRefPtr<WebGLContext> mWebGL;
+    RefPtr<WebGLContext> mWebGL;
 
 public:
     explicit UpdateContextLossStatusTask(WebGLContext* webgl)
@@ -1632,7 +1632,7 @@ WebGLContext::UpdateContextLossStatus()
                 &useDefaultHandler);
         } else {
             // OffscreenCanvas case
-            nsRefPtr<Event> event = new Event(mOffscreenCanvas, nullptr, nullptr);
+            RefPtr<Event> event = new Event(mOffscreenCanvas, nullptr, nullptr);
             event->InitEvent(NS_LITERAL_STRING("webglcontextlost"), true, true);
             event->SetTrusted(true);
             mOffscreenCanvas->DispatchEvent(event, &useDefaultHandler);
@@ -1698,7 +1698,7 @@ WebGLContext::UpdateContextLossStatus()
                 true,
                 true);
         } else {
-            nsRefPtr<Event> event = new Event(mOffscreenCanvas, nullptr, nullptr);
+            RefPtr<Event> event = new Event(mOffscreenCanvas, nullptr, nullptr);
             event->InitEvent(NS_LITERAL_STRING("webglcontextrestored"), true, true);
             event->SetTrusted(true);
             bool unused;

@@ -39,7 +39,7 @@ namespace {
  *        Page that should be fetched.
  */
 nsresult
-FetchPageInfo(nsRefPtr<Database>& aDB,
+FetchPageInfo(RefPtr<Database>& aDB,
               PageData& _page)
 {
   NS_PRECONDITION(_page.spec.Length(), "Must have a non-empty spec!");
@@ -138,7 +138,7 @@ FetchPageInfo(nsRefPtr<Database>& aDB,
  *        Icon that should be stored.
  */
 nsresult
-SetIconInfo(nsRefPtr<Database>& aDB,
+SetIconInfo(RefPtr<Database>& aDB,
             IconData& aIcon)
 {
   NS_PRECONDITION(!NS_IsMainThread(),
@@ -177,7 +177,7 @@ SetIconInfo(nsRefPtr<Database>& aDB,
  *        Icon that should be fetched.
  */
 nsresult
-FetchIconInfo(nsRefPtr<Database>& aDB,
+FetchIconInfo(RefPtr<Database>& aDB,
               IconData& _icon)
 {
   NS_PRECONDITION(_icon.spec.Length(), "Must have a non-empty spec!");
@@ -237,7 +237,7 @@ FetchIconInfo(nsRefPtr<Database>& aDB,
 }
 
 nsresult
-FetchIconURL(nsRefPtr<Database>& aDB,
+FetchIconURL(RefPtr<Database>& aDB,
              const nsACString& aPageSpec,
              nsACString& aIconSpec)
 {
@@ -417,11 +417,11 @@ AsyncFetchAndSetIconForPage::start(nsIURI* aFaviconURI,
 
   // The event will swap owning pointers, thus we need a new pointer.
   nsCOMPtr<nsIFaviconDataCallback> callback(aCallback);
-  nsRefPtr<AsyncFetchAndSetIconForPage> event =
+  RefPtr<AsyncFetchAndSetIconForPage> event =
     new AsyncFetchAndSetIconForPage(icon, page, aFaviconLoadType, callback);
 
   // Get the target thread and start the work.
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   DB->DispatchToAsyncThread(event);
 
@@ -451,7 +451,7 @@ AsyncFetchAndSetIconForPage::Run()
                   "This should not be called on the main thread");
 
   // Try to fetch the icon from the database.
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   nsresult rv = FetchIconInfo(DB, mIcon);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -464,7 +464,7 @@ AsyncFetchAndSetIconForPage::Run()
   if (!fetchIconFromNetwork) {
     // There is already a valid icon or we don't want to fetch a new one,
     // directly proceed with association.
-    nsRefPtr<AsyncAssociateIconToPage> event =
+    RefPtr<AsyncAssociateIconToPage> event =
         new AsyncAssociateIconToPage(mIcon, mPage, mCallback);
     DB->DispatchToAsyncThread(event);
 
@@ -473,7 +473,7 @@ AsyncFetchAndSetIconForPage::Run()
   else {
     // Fetch the icon from network.  When done this will associate the
     // icon to the page and notify.
-    nsRefPtr<AsyncFetchAndSetIconFromNetwork> event =
+    RefPtr<AsyncFetchAndSetIconFromNetwork> event =
       new AsyncFetchAndSetIconFromNetwork(mIcon, mPage, mFaviconLoadPrivate, mCallback);
 
     // Start the work on the main thread.
@@ -697,9 +697,9 @@ AsyncFetchAndSetIconFromNetwork::OnStopRequest(nsIRequest* aRequest,
 
   mIcon.status = ICON_STATUS_CHANGED;
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
-  nsRefPtr<AsyncAssociateIconToPage> event =
+  RefPtr<AsyncAssociateIconToPage> event =
     new AsyncAssociateIconToPage(mIcon, mPage, mCallback);
   DB->DispatchToAsyncThread(event);
 
@@ -729,7 +729,7 @@ AsyncAssociateIconToPage::Run()
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   nsresult rv = FetchPageInfo(DB, mPage);
   if (rv == NS_ERROR_NOT_AVAILABLE){
@@ -824,10 +824,10 @@ AsyncGetFaviconURLForPage::start(nsIURI* aPageURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFaviconDataCallback> callback = aCallback;
-  nsRefPtr<AsyncGetFaviconURLForPage> event =
+  RefPtr<AsyncGetFaviconURLForPage> event =
     new AsyncGetFaviconURLForPage(pageSpec, callback);
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   DB->DispatchToAsyncThread(event);
 
@@ -852,7 +852,7 @@ AsyncGetFaviconURLForPage::Run()
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread.");
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   nsAutoCString iconSpec;
   nsresult rv = FetchIconURL(DB, mPageSpec, iconSpec);
@@ -891,10 +891,10 @@ AsyncGetFaviconDataForPage::start(nsIURI* aPageURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIFaviconDataCallback> callback = aCallback;
-  nsRefPtr<AsyncGetFaviconDataForPage> event =
+  RefPtr<AsyncGetFaviconDataForPage> event =
     new AsyncGetFaviconDataForPage(pageSpec, callback);
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   DB->DispatchToAsyncThread(event);
 
@@ -919,7 +919,7 @@ AsyncGetFaviconDataForPage::Run()
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread.");
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   nsAutoCString iconSpec;
   nsresult rv = FetchIconURL(DB, mPageSpec, iconSpec);
@@ -957,10 +957,10 @@ AsyncReplaceFaviconData::start(IconData *aIcon)
                   "This should be called on the main thread.");
 
   nsCOMPtr<nsIFaviconDataCallback> callback;
-  nsRefPtr<AsyncReplaceFaviconData> event =
+  RefPtr<AsyncReplaceFaviconData> event =
     new AsyncReplaceFaviconData(*aIcon, callback);
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   DB->DispatchToAsyncThread(event);
 
@@ -985,7 +985,7 @@ AsyncReplaceFaviconData::Run()
   NS_PRECONDITION(!NS_IsMainThread(),
                   "This should not be called on the main thread");
 
-  nsRefPtr<Database> DB = Database::GetDatabase();
+  RefPtr<Database> DB = Database::GetDatabase();
   NS_ENSURE_STATE(DB);
   IconData dbIcon;
   dbIcon.spec.Assign(mIcon.spec);
@@ -1108,12 +1108,12 @@ NotifyIconObservers::SendGlobalNotifications(nsIURI* aIconURI)
     PageData bookmarkedPage;
     bookmarkedPage.spec = mPage.bookmarkedSpec;
 
-    nsRefPtr<Database> DB = Database::GetDatabase();
+    RefPtr<Database> DB = Database::GetDatabase();
     if (!DB)
       return;
     // This will be silent, so be sure to not pass in the current callback.
     nsCOMPtr<nsIFaviconDataCallback> nullCallback;
-    nsRefPtr<AsyncAssociateIconToPage> event =
+    RefPtr<AsyncAssociateIconToPage> event =
         new AsyncAssociateIconToPage(mIcon, bookmarkedPage, nullCallback);
     DB->DispatchToAsyncThread(event);
   }

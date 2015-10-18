@@ -174,7 +174,7 @@ exports['test window watcher without untracker'] = function(assert, done) {
 
 exports['test active window'] = function(assert, done) {
   let browserWindow = WM.getMostRecentWindow("navigator:browser");
-  let continueAfterFocus = function(window) onFocus(window).then(nextTest);
+  let continueAfterFocus = window => onFocus(window).then(nextTest);
 
   assert.equal(windowUtils.activeBrowserWindow, browserWindow,
                "Browser window is the active browser window.");

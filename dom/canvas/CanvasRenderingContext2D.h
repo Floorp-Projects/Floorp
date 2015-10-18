@@ -729,9 +729,9 @@ protected:
   // This is created lazily so it is necessary to call EnsureTarget before
   // accessing it. In the event of an error it will be equal to
   // sErrorTarget.
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> mTarget;
+  RefPtr<mozilla::gfx::DrawTarget> mTarget;
 
-  mozilla::RefPtr<mozilla::layers::PersistentBufferProvider> mBufferProvider;
+  RefPtr<mozilla::layers::PersistentBufferProvider> mBufferProvider;
 
   uint32_t SkiaGLTex() const;
 
@@ -762,7 +762,7 @@ protected:
 
   // This is stored after GetThebesSurface has been called once to avoid
   // excessive ThebesSurface initialization overhead.
-  nsRefPtr<gfxASurface> mThebesSurface;
+  RefPtr<gfxASurface> mThebesSurface;
 
   /**
     * We also have a device space pathbuilder. The reason for this is as
@@ -788,9 +788,9 @@ protected:
     *
     * mPath is always in user-space.
     */
-  mozilla::RefPtr<mozilla::gfx::Path> mPath;
-  mozilla::RefPtr<mozilla::gfx::PathBuilder> mDSPathBuilder;
-  mozilla::RefPtr<mozilla::gfx::PathBuilder> mPathBuilder;
+  RefPtr<mozilla::gfx::Path> mPath;
+  RefPtr<mozilla::gfx::PathBuilder> mDSPathBuilder;
+  RefPtr<mozilla::gfx::PathBuilder> mPathBuilder;
   bool mPathTransformWillUpdate;
   mozilla::gfx::Matrix mPathToDS;
 
@@ -807,7 +807,7 @@ protected:
   {
     nsString          mId;
     // fallback element for a11y
-    nsRefPtr<Element> mElement;
+    RefPtr<Element> mElement;
     // Path of the hit region in the 2d context coordinate space (not user space)
     RefPtr<gfx::Path> mPath;
   };
@@ -984,14 +984,14 @@ protected:
       return std::min(SIGMA_MAX, shadowBlur / 2.0f);
     }
 
-    nsTArray<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
+    nsTArray<RefPtr<mozilla::gfx::Path> > clipsPushed;
 
-    nsRefPtr<gfxFontGroup> fontGroup;
+    RefPtr<gfxFontGroup> fontGroup;
     nsCOMPtr<nsIAtom> fontLanguage;
     nsFont fontFont;
 
-    EnumeratedArray<Style, Style::MAX, nsRefPtr<CanvasGradient>> gradientStyles;
-    EnumeratedArray<Style, Style::MAX, nsRefPtr<CanvasPattern>> patternStyles;
+    EnumeratedArray<Style, Style::MAX, RefPtr<CanvasGradient>> gradientStyles;
+    EnumeratedArray<Style, Style::MAX, RefPtr<CanvasPattern>> patternStyles;
     EnumeratedArray<Style, Style::MAX, nscolor> colorStyles;
 
     nsString font;
@@ -1016,9 +1016,9 @@ protected:
 
     nsString filterString;
     nsTArray<nsStyleFilter> filterChain;
-    nsRefPtr<nsSVGFilterChainObserver> filterChainObserver;
+    RefPtr<nsSVGFilterChainObserver> filterChainObserver;
     mozilla::gfx::FilterDescription filter;
-    nsTArray<mozilla::RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
+    nsTArray<RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
 
     bool imageSmoothingEnabled;
     bool fontExplicitLanguage;

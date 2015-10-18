@@ -51,7 +51,7 @@ public:
 
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
   {
-    return nsRefPtr<nsIPrincipal>(mPrincipal).forget();
+    return RefPtr<nsIPrincipal>(mPrincipal).forget();
   }
 
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override
@@ -95,7 +95,7 @@ private:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  nsRefPtr<nsIPrincipal> mPrincipal;
+  RefPtr<nsIPrincipal> mPrincipal;
   const nsCString mType;
   Monitor mMonitor;
   bool mEnded; // protected by mMonitor

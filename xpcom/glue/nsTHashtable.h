@@ -120,6 +120,11 @@ public:
   uint32_t Count() const { return mTable.EntryCount(); }
 
   /**
+   * Return true if the hashtable is empty.
+   */
+  bool IsEmpty() const { return Count() == 0; }
+
+  /**
    * Get the entry associated with a key.
    * @param     aKey the key to retrieve
    * @return    pointer to the entry class, if the key exists; nullptr if the

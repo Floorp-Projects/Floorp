@@ -302,7 +302,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
 
   // Draw using the drawable the caller provided.
   nsIntRect imageRect(0, 0, mSize.width, mSize.height);
-  nsRefPtr<gfxContext> ctx = new gfxContext(target);
+  RefPtr<gfxContext> ctx = new gfxContext(target);
   gfxUtils::DrawPixelSnapped(ctx, aDrawable, mSize,
                              ImageRegion::Create(imageRect),
                              mFormat, aFilter, aImageFlags);
@@ -820,7 +820,7 @@ public:
   NS_IMETHOD Run() { return mTarget->UnlockImageData(); }
 
 private:
-  nsRefPtr<imgFrame> mTarget;
+  RefPtr<imgFrame> mTarget;
 };
 
 nsresult

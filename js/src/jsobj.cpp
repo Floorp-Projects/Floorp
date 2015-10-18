@@ -2229,11 +2229,17 @@ js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name, HandleObject s
             break;
     }
 
-    // See note above UninitializedLexicalObject.
-    if (pobj == scope && IsUninitializedLexicalSlot(scope, shape)) {
-        scope = UninitializedLexicalObject::create(cx, scope);
-        if (!scope)
-            return false;
+    // See note above RuntimeLexicalErrorObject.
+    if (pobj == scope) {
+        if (IsUninitializedLexicalSlot(scope, shape)) {
+            scope = RuntimeLexicalErrorObject::create(cx, scope, JSMSG_UNINITIALIZED_LEXICAL);
+            if (!scope)
+                return false;
+        } else if (scope->is<ScopeObject>() && !scope->is<DeclEnvObject>() && !shape->writable()) {
+            scope = RuntimeLexicalErrorObject::create(cx, scope, JSMSG_BAD_CONST_ASSIGN);
+            if (!scope)
+                return false;
+        }
     }
 
     objp.set(scope);

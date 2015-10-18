@@ -71,7 +71,7 @@ protected:
 
 private: // Data
   ZipCentral mCentral;
-  nsRefPtr<BlobImpl> mBlobImpl;
+  RefPtr<BlobImpl> mBlobImpl;
 
   nsString mFilename;
 };

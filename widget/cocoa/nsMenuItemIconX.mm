@@ -43,7 +43,6 @@
 #include "nsIContentPolicy.h"
 
 using mozilla::gfx::SourceSurface;
-using mozilla::RefPtr;
 
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
@@ -282,7 +281,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
   if (!loadGroup) return NS_ERROR_FAILURE;
 
-  nsRefPtr<imgLoader> loader = nsContentUtils::GetImgLoaderForDocument(document);
+  RefPtr<imgLoader> loader = nsContentUtils::GetImgLoaderForDocument(document);
   if (!loader) return NS_ERROR_FAILURE;
 
   if (!mSetIcon) {

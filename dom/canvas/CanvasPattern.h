@@ -65,7 +65,7 @@ public:
   // WebIDL
   void SetTransform(SVGMatrix& matrix);
 
-  nsRefPtr<CanvasRenderingContext2D> mContext;
+  RefPtr<CanvasRenderingContext2D> mContext;
   RefPtr<gfx::SourceSurface> mSurface;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   mozilla::gfx::Matrix mTransform;

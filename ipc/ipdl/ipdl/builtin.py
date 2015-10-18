@@ -46,10 +46,11 @@ HeaderIncludes = (
     'prtime.h',
     'IPCMessageStart.h',
     'ipc/IPCMessageUtils.h',
-    'mozilla/nsRefPtr.h',
+    'mozilla/RefPtr.h',
     'nsStringGlue.h',
     'nsTArray.h',
     'mozilla/ipc/ProtocolUtils.h',
+    'nsTHashtable.h',
 )
 
 CppIncludes = (

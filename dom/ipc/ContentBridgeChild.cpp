@@ -41,7 +41,7 @@ ContentBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 /*static*/ ContentBridgeChild*
 ContentBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
 {
-  nsRefPtr<ContentBridgeChild> bridge =
+  RefPtr<ContentBridgeChild> bridge =
     new ContentBridgeChild(aTransport);
   bridge->mSelfRef = bridge;
 
@@ -98,8 +98,8 @@ ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
 jsipc::CPOWManager*
 ContentBridgeChild::GetCPOWManager()
 {
-  if (ManagedPJavaScriptChild().Length()) {
-    return CPOWManagerFor(ManagedPJavaScriptChild()[0]);
+  if (PJavaScriptChild* c = LoneManagedOrNull(ManagedPJavaScriptChild())) {
+    return CPOWManagerFor(c);
   }
   return CPOWManagerFor(SendPJavaScriptConstructor());
 }

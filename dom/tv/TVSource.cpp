@@ -65,7 +65,7 @@ TVSource::Create(nsPIDOMWindow* aWindow,
                  TVSourceType aType,
                  TVTuner* aTuner)
 {
-  nsRefPtr<TVSource> source = new TVSource(aWindow, aType, aTuner);
+  RefPtr<TVSource> source = new TVSource(aWindow, aType, aTuner);
   return (source->Init()) ? source.forget() : nullptr;
 }
 
@@ -133,7 +133,7 @@ TVSource::SetCurrentChannel(nsITVChannelData* aChannelData)
   mCurrentChannel = TVChannel::Create(GetOwner(), this, aChannelData);
   NS_ENSURE_TRUE(mCurrentChannel, NS_ERROR_DOM_ABORT_ERR);
 
-  nsRefPtr<TVSource> currentSource = mTuner->GetCurrentSource();
+  RefPtr<TVSource> currentSource = mTuner->GetCurrentSource();
   if (currentSource && mType == currentSource->Type()) {
     rv = mTuner->ReloadMediaStream();
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -169,7 +169,7 @@ TVSource::GetChannels(ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -201,7 +201,7 @@ TVSource::SetCurrentChannel(const nsAString& aChannelNumber,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -233,7 +233,7 @@ TVSource::StartScanning(const TVStartScanningOptions& aOptions,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -277,7 +277,7 @@ TVSource::StopScanning(ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -301,7 +301,7 @@ TVSource::StopScanning(ErrorResult& aRv)
 already_AddRefed<TVTuner>
 TVSource::Tuner() const
 {
-  nsRefPtr<TVTuner> tuner = mTuner;
+  RefPtr<TVTuner> tuner = mTuner;
   return tuner.forget();
 }
 
@@ -320,14 +320,14 @@ TVSource::IsScanning() const
 already_AddRefed<TVChannel>
 TVSource::GetCurrentChannel() const
 {
-  nsRefPtr<TVChannel> currentChannel = mCurrentChannel;
+  RefPtr<TVChannel> currentChannel = mCurrentChannel;
   return currentChannel.forget();
 }
 
 nsresult
 TVSource::NotifyChannelScanned(nsITVChannelData* aChannelData)
 {
-  nsRefPtr<TVChannel> channel = TVChannel::Create(GetOwner(), this, aChannelData);
+  RefPtr<TVChannel> channel = TVChannel::Create(GetOwner(), this, aChannelData);
   NS_ENSURE_TRUE(channel, NS_ERROR_DOM_ABORT_ERR);
 
   return DispatchScanningStateChangedEvent(TVScanningState::Scanned, channel);
@@ -352,10 +352,10 @@ TVSource::NotifyEITBroadcasted(nsITVChannelData* aChannelData,
                                nsITVProgramData** aProgramDataList,
                                uint32_t aCount)
 {
-  nsRefPtr<TVChannel> channel = TVChannel::Create(GetOwner(), this, aChannelData);
+  RefPtr<TVChannel> channel = TVChannel::Create(GetOwner(), this, aChannelData);
   Sequence<OwningNonNull<TVProgram>> programs;
   for (uint32_t i = 0; i < aCount; i++) {
-    nsRefPtr<TVProgram> program =
+    RefPtr<TVProgram> program =
       new TVProgram(GetOwner(), channel, aProgramDataList[i]);
     *programs.AppendElement(fallible) = program;
   }

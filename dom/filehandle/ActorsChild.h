@@ -29,7 +29,7 @@ class BackgroundMutableFileChildBase
 protected:
   friend class MutableFileBase;
 
-  nsRefPtr<MutableFileBase> mTemporaryStrongMutableFile;
+  RefPtr<MutableFileBase> mTemporaryStrongMutableFile;
   MutableFileBase* mMutableFile;
 
 public:
@@ -82,7 +82,7 @@ class BackgroundFileHandleChild
   // mTemporaryStrongFileHandle is strong and is only valid until the end of
   // NoteComplete() member function or until the NoteActorDestroyed() member
   // function is called.
-  nsRefPtr<FileHandleBase> mTemporaryStrongFileHandle;
+  RefPtr<FileHandleBase> mTemporaryStrongFileHandle;
 
   // mFileHandle is weak and is valid until the NoteActorDestroyed() member
   // function is called.
@@ -130,8 +130,8 @@ class BackgroundFileRequestChild final
   friend class BackgroundFileHandleChild;
   friend class FileHandleBase;
 
-  nsRefPtr<FileRequestBase> mFileRequest;
-  nsRefPtr<FileHandleBase> mFileHandle;
+  RefPtr<FileRequestBase> mFileRequest;
+  RefPtr<FileHandleBase> mFileHandle;
   bool mActorDestroyed;
 
 private:

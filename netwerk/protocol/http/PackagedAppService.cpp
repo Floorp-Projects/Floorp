@@ -60,7 +60,7 @@ PackagedAppService::CacheEntryWriter::Create(nsIURI *aURI,
                                              nsICacheStorage *aStorage,
                                              CacheEntryWriter **aResult)
 {
-  nsRefPtr<CacheEntryWriter> writer = new CacheEntryWriter();
+  RefPtr<CacheEntryWriter> writer = new CacheEntryWriter();
   nsresult rv = aStorage->OpenTruncate(aURI, EmptyCString(),
                                        getter_AddRefs(writer->mEntry));
   if (NS_FAILED(rv)) {
@@ -251,7 +251,7 @@ PackagedAppService::CacheEntryWriter::CopyHeadersFromChannel(nsIChannel *aChanne
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<HeaderCopier> headerCopier = new HeaderCopier(aHead);
+  RefPtr<HeaderCopier> headerCopier = new HeaderCopier(aHead);
   return httpChan->VisitResponseHeaders(headerCopier);
 }
 
@@ -583,7 +583,7 @@ PackagedAppService::PackagedAppDownloader::FinalizeDownload(nsresult aStatusCode
     aStatusCode = NS_ERROR_FILE_NOT_FOUND;
   }
 
-  nsRefPtr<PackagedAppDownloader> kungFuDeathGrip(this);
+  RefPtr<PackagedAppDownloader> kungFuDeathGrip(this);
   // NotifyPackageDownloaded removes the ref from the array. Keep a temp ref
   if (gPackagedAppService) {
     gPackagedAppService->NotifyPackageDownloaded(mPackageKey);
@@ -679,7 +679,7 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
 
   // The downloader only needs to focus on PackagedAppVerifierListener callback.
   // The PackagedAppVerifier would handle the manifest/resource verification.
-  nsRefPtr<ResourceCacheInfo> info =
+  RefPtr<ResourceCacheInfo> info =
     new ResourceCacheInfo(uri, entry, aStatusCode, lastPart);
 
   if (!mVerifier->WouldVerify()) {
@@ -1138,7 +1138,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
     key += spec;
   }
 
-  nsRefPtr<PackagedAppDownloader> downloader;
+  RefPtr<PackagedAppDownloader> downloader;
   if (mDownloadingPackages.Get(key, getter_AddRefs(downloader))) {
     // We have determined that the file is not in the cache.
     // If we find that the package that the file belongs to is currently being
@@ -1192,7 +1192,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
   // Add the package to the hashtable.
   mDownloadingPackages.Put(key, downloader);
 
-  nsRefPtr<PackagedAppChannelListener> listener =
+  RefPtr<PackagedAppChannelListener> listener =
     new PackagedAppChannelListener(downloader, mimeConverter);
 
   nsCOMPtr<nsIInterfaceRequestor> loadContext;

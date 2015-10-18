@@ -121,7 +121,7 @@ private:
   nsCOMPtr<nsIInputStream> mUploadStream;
 
   bool mIPCOpen;
-  nsRefPtr<ChannelEventQueue> mEventQ;
+  RefPtr<ChannelEventQueue> mEventQ;
 
   // If nsUnknownDecoder is involved we queue onDataAvailable (and possibly
   // OnStopRequest) so that we can divert them if needed when the listener's

@@ -232,14 +232,14 @@ public:
     mPromise = mPromiseHolder.Ensure(__func__);
   }
 
-  nsRefPtr<VolumeInitPromise> GetPromise() const
+  RefPtr<VolumeInitPromise> GetPromise() const
   {
     return mPromise;
   }
 
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
-    nsRefPtr<AudioManager> audioManager = AudioManager::GetInstance();
+    RefPtr<AudioManager> audioManager = AudioManager::GetInstance();
     MOZ_ASSERT(audioManager);
     for (uint32_t idx = 0; idx < VOLUME_TOTAL_NUMBER; ++idx) {
       NS_ConvertASCIItoUTF16 volumeType(gVolumeData[idx].mChannelName);
@@ -287,7 +287,7 @@ protected:
     return DEVICE_ERROR;
   }
 
-  nsRefPtr<VolumeInitPromise> mPromise;
+  RefPtr<VolumeInitPromise> mPromise;
   MozPromiseHolder<VolumeInitPromise> mPromiseHolder;
   uint32_t mInitCounter;
 };
@@ -304,7 +304,7 @@ BinderDeadCallback(status_t aErr)
   nsCOMPtr<nsIRunnable> runnable =
     NS_NewRunnableFunction([]() {
       MOZ_ASSERT(NS_IsMainThread());
-      nsRefPtr<AudioManager> audioManager = AudioManager::GetInstance();
+      RefPtr<AudioManager> audioManager = AudioManager::GetInstance();
       NS_ENSURE_TRUE(audioManager.get(), );
       audioManager->HandleAudioFlingerDied();
     });
@@ -392,7 +392,7 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
     }
   } else if (!strcmp(aTopic, BLUETOOTH_A2DP_STATUS_CHANGED_ID)) {
     if (audioState == AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE && mA2dpSwitchDone) {
-      nsRefPtr<AudioManager> self = this;
+      RefPtr<AudioManager> self = this;
       nsCOMPtr<nsIRunnable> runnable =
         NS_NewRunnableFunction([self, audioState, aAddress]() {
           if (self->mA2dpSwitchDone) {
@@ -466,7 +466,7 @@ AudioManager::HandleAudioChannelProcessChanged()
     return;
   }
 
-  nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   MOZ_ASSERT(service);
 
   bool telephonyChannelIsActive = service->TelephonyChannelIsActive();
@@ -552,7 +552,7 @@ class HeadphoneSwitchObserver : public hal::SwitchObserver
 {
 public:
   void Notify(const hal::SwitchEvent& aEvent) {
-    nsRefPtr<AudioManager> audioManager = AudioManager::GetInstance();
+    RefPtr<AudioManager> audioManager = AudioManager::GetInstance();
     MOZ_ASSERT(audioManager);
     audioManager->HandleHeadphoneSwitchEvent(aEvent);
   }
@@ -565,7 +565,7 @@ AudioManager::HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent)
   // When user pulled out the headset, a delay of routing here can avoid the leakage of audio from speaker.
   if (aEvent.status() == hal::SWITCH_STATE_OFF && mSwitchDone) {
 
-    nsRefPtr<AudioManager> self = this;
+    RefPtr<AudioManager> self = this;
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewRunnableFunction([self]() {
         if (self->mSwitchDone) {
@@ -704,7 +704,7 @@ AudioManager::GetInstance()
     ClearOnShutdown(&sAudioManager);
   }
 
-  nsRefPtr<AudioManager> audioMgr = sAudioManager.get();
+  RefPtr<AudioManager> audioMgr = sAudioManager.get();
   return audioMgr.forget();
 }
 
@@ -1136,7 +1136,7 @@ AudioManager::InitVolumeFromDatabase()
     return;
   }
 
-  nsRefPtr<VolumeInitCallback> callback = new VolumeInitCallback();
+  RefPtr<VolumeInitCallback> callback = new VolumeInitCallback();
   MOZ_ASSERT(callback);
   callback->GetPromise()->Then(AbstractThread::MainThread(), __func__, this,
                                &AudioManager::InitProfileVolumeSucceeded,

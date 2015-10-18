@@ -132,7 +132,7 @@ txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
 
     *aResult = nullptr;
 
-    nsRefPtr<txNodeSet> sortedNodes;
+    RefPtr<txNodeSet> sortedNodes;
     nsresult rv = aEs->recycler()->getNodeSet(getter_AddRefs(sortedNodes));
     NS_ENSURE_SUCCESS(rv, rv);
 

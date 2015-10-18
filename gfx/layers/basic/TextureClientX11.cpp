@@ -119,7 +119,7 @@ TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aText
     return false;
   }
   gfxImageFormat imageFormat = SurfaceFormatToImageFormat(mFormat);
-  nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, imageFormat);
+  RefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, imageFormat);
   if (!surface || surface->GetType() != gfxSurfaceType::Xlib) {
     NS_ERROR("creating Xlib surface failed!");
     return false;

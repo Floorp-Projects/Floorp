@@ -357,7 +357,7 @@ already_AddRefed<PathBuilder>
 PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
   RefPtr<ID2D1PathGeometry> path;
-  HRESULT hr = DrawTargetD2D::factory()->CreatePathGeometry(byRef(path));
+  HRESULT hr = DrawTargetD2D::factory()->CreatePathGeometry(getter_AddRefs(path));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create PathGeometry. Code: " << hexa(hr);
@@ -365,7 +365,7 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
   }
 
   RefPtr<ID2D1GeometrySink> sink;
-  hr = path->Open(byRef(sink));
+  hr = path->Open(getter_AddRefs(sink));
   if (FAILED(hr)) {
     gfxWarning() << "Failed to open Geometry for writing. Code: " << hexa(hr);
     return nullptr;

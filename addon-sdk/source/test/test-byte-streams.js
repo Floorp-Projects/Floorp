@@ -22,7 +22,7 @@ exports.testWriteRead = function (assert) {
   stream.write(str);
   stream.close();
   assert.ok(stream.closed, "Stream should be closed after stream.close");
-  assert.throws(function () stream.write("This shouldn't be written!"),
+  assert.throws(() => stream.write("This shouldn't be written!"),
     STREAM_CLOSED_ERROR,
     "stream.write after close should raise error");
 
@@ -34,7 +34,7 @@ exports.testWriteRead = function (assert) {
     "stream.read at EOS should return empty string");
   stream.close();
   assert.ok(stream.closed, "Stream should be closed after stream.close");
-  assert.throws(function () stream.read(),
+  assert.throws(() => stream.read(),
     STREAM_CLOSED_ERROR,
     "stream.read after close should raise error");
 

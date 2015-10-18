@@ -357,7 +357,7 @@ private:
   // This is here for two reasons: 1) It's used to make sure that the
   // connections do not outlive the service.  2) Our custom collating functions
   // call its localeCompareStrings() method.
-  nsRefPtr<Service> mStorageService;
+  RefPtr<Service> mStorageService;
 
   /**
    * If |false|, this instance supports synchronous operations
@@ -402,10 +402,10 @@ public:
 private:
   nsresult mStatus;
   nsCOMPtr<nsISupports> mValue;
-  // This is a nsRefPtr<T> and not a nsCOMPtr<T> because
+  // This is a RefPtr<T> and not a nsCOMPtr<T> because
   // nsCOMP<T> would cause an off-main thread QI, which
   // is not a good idea (and crashes XPConnect).
-  nsRefPtr<mozIStorageCompletionCallback> mCallback;
+  RefPtr<mozIStorageCompletionCallback> mCallback;
 };
 
 } // namespace storage

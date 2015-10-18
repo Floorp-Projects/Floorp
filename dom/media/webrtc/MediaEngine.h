@@ -63,12 +63,12 @@ public:
   /* Populate an array of video sources in the nsTArray. Also include devices
    * that are currently unavailable. */
   virtual void EnumerateVideoDevices(dom::MediaSourceEnum,
-                                     nsTArray<nsRefPtr<MediaEngineVideoSource> >*) = 0;
+                                     nsTArray<RefPtr<MediaEngineVideoSource> >*) = 0;
 
   /* Populate an array of audio sources in the nsTArray. Also include devices
    * that are currently unavailable. */
   virtual void EnumerateAudioDevices(dom::MediaSourceEnum,
-                                     nsTArray<nsRefPtr<MediaEngineAudioSource> >*) = 0;
+                                     nsTArray<RefPtr<MediaEngineAudioSource> >*) = 0;
 
   virtual void Shutdown() = 0;
 

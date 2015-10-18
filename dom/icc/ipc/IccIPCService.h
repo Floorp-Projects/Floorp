@@ -27,7 +27,7 @@ public:
 private:
   ~IccIPCService();
 
-  nsTArray<nsRefPtr<IccChild>> mIccs;
+  nsTArray<RefPtr<IccChild>> mIccs;
 };
 
 } // namespace icc

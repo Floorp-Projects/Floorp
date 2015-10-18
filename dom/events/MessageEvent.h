@@ -102,9 +102,9 @@ private:
   nsString mOrigin;
   nsString mLastEventId;
   nsCOMPtr<nsIDOMWindow> mWindowSource;
-  nsRefPtr<MessagePort> mPortSource;
-  nsRefPtr<workers::ServiceWorkerClient> mClientSource;
-  nsRefPtr<MessagePortList> mPorts;
+  RefPtr<MessagePort> mPortSource;
+  RefPtr<workers::ServiceWorkerClient> mClientSource;
+  RefPtr<MessagePortList> mPorts;
 };
 
 } // namespace dom

@@ -192,7 +192,7 @@ private:
                                           section.
                                           mHeaderCounter[1] for <h1> etc. */
 
-  nsRefPtr<mozilla::dom::Element> mElement;
+  RefPtr<mozilla::dom::Element> mElement;
 
   // For handling table rows
   nsAutoTArray<bool, 8> mHasWrittenCellsForRow;

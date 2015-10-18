@@ -156,7 +156,7 @@ CreateImageFromSurface(SourceSurface* aSurface, ErrorResult& aRv)
   cairoData.mSize = aSurface->GetSize();
   cairoData.mSourceSurface = aSurface;
 
-  nsRefPtr<layers::CairoImage> image = new layers::CairoImage();
+  RefPtr<layers::CairoImage> image = new layers::CairoImage();
 
   image->SetData(cairoData);
 
@@ -249,7 +249,7 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
   bgraDataSurface->Unmap();
 
   // Create an Image from the BGRA SourceSurface.
-  nsRefPtr<layers::Image> image = CreateImageFromSurface(bgraDataSurface, aRv);
+  RefPtr<layers::Image> image = CreateImageFromSurface(bgraDataSurface, aRv);
 
   return image.forget();
 }
@@ -290,7 +290,7 @@ public:
 
   bool MainThreadRun() override
   {
-    nsRefPtr<layers::Image> image =
+    RefPtr<layers::Image> image =
       CreateImageFromRawData(mSize, mStride, mFormat,
                              mBuffer, mBufferLength,
                              mCropRect,
@@ -526,13 +526,13 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
   }
 
   // Create ImageBitmap.
-  nsRefPtr<layers::Image> data = CreateImageFromSurface(surface, aRv);
+  RefPtr<layers::Image> data = CreateImageFromSurface(surface, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -577,7 +577,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLVideoElement& aVideoEl
 
   AutoLockImage lockImage(container);
   layers::Image* data = lockImage.GetImage();
-  nsRefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -630,13 +630,13 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
   }
 
   // Create an Image from the SourceSurface.
-  nsRefPtr<layers::Image> data = CreateImageFromSurface(croppedSurface, aRv);
+  RefPtr<layers::Image> data = CreateImageFromSurface(croppedSurface, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -672,13 +672,13 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   }
 
   // Create and Crop the raw data into a layers::Image
-  nsRefPtr<layers::Image> data;
+  RefPtr<layers::Image> data;
   if (NS_IsMainThread()) {
     data = CreateImageFromRawData(imageSize, imageStride, FORMAT,
                                   array.Data(), dataLength,
                                   aCropRect, aRv);
   } else {
-    nsRefPtr<CreateImageFromRawDataInMainThreadSyncTask> task
+    RefPtr<CreateImageFromRawDataInMainThreadSyncTask> task
       = new CreateImageFromRawDataInMainThreadSyncTask(array.Data(),
                                                        dataLength,
                                                        imageStride,
@@ -695,7 +695,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   }
 
   // Create an ImageBimtap.
-  nsRefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
 
   // The cropping information has been handled in the CreateImageFromRawData()
   // function.
@@ -726,13 +726,13 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
     return nullptr;
   }
 
-  nsRefPtr<layers::Image> data = CreateImageFromSurface(surface, aRv);
+  RefPtr<layers::Image> data = CreateImageFromSurface(surface, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  nsRefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -751,8 +751,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
     return nullptr;
   }
 
-  nsRefPtr<layers::Image> data = aImageBitmap.mData;
-  nsRefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<layers::Image> data = aImageBitmap.mData;
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
 
   // Set the picture rectangle.
   if (ret && aCropRect.isSome()) {
@@ -778,8 +778,8 @@ protected:
   }
 
 private:
-  nsRefPtr<Promise> mPromise;
-  nsRefPtr<ImageBitmap> mImageBitmap;
+  RefPtr<Promise> mPromise;
+  RefPtr<ImageBitmap> mImageBitmap;
 };
 
 class FulfillImageBitmapPromiseTask final : public nsRunnable,
@@ -823,7 +823,7 @@ AsyncFulfillImageBitmapPromise(Promise* aPromise, ImageBitmap* aImageBitmap)
       new FulfillImageBitmapPromiseTask(aPromise, aImageBitmap);
     NS_DispatchToCurrentThread(task); // Actually, to the main-thread.
   } else {
-    nsRefPtr<FulfillImageBitmapPromiseWorkerTask> task =
+    RefPtr<FulfillImageBitmapPromiseWorkerTask> task =
       new FulfillImageBitmapPromiseWorkerTask(aPromise, aImageBitmap);
     task->Dispatch(GetCurrentThreadWorkerPrivate()->GetJSContext()); // Actually, to the current worker-thread.
   }
@@ -910,7 +910,7 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
   }
 
   // Create an Image from the source surface.
-  nsRefPtr<layers::Image> image = CreateImageFromSurface(croppedSurface, aRv);
+  RefPtr<layers::Image> image = CreateImageFromSurface(croppedSurface, aRv);
 
   return image.forget();
 }
@@ -935,7 +935,7 @@ protected:
 
   void DoCreateImageBitmapFromBlob(ErrorResult& aRv)
   {
-    nsRefPtr<ImageBitmap> imageBitmap = CreateImageBitmap(aRv);
+    RefPtr<ImageBitmap> imageBitmap = CreateImageBitmap(aRv);
 
     // handle errors while creating ImageBitmap
     // (1) error occurs during reading of the object
@@ -962,7 +962,7 @@ protected:
 
   virtual already_AddRefed<ImageBitmap> CreateImageBitmap(ErrorResult& aRv) = 0;
 
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
   RefPtr<mozilla::dom::Blob> mBlob;
   Maybe<IntRect> mCropRect;
@@ -990,14 +990,14 @@ public:
 private:
   already_AddRefed<ImageBitmap> CreateImageBitmap(ErrorResult& aRv) override
   {
-    nsRefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect, aRv);
+    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect, aRv);
 
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
     // Create ImageBitmap object.
-    nsRefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, data);
+    RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, data);
     return imageBitmap.forget();
   }
 };
@@ -1024,7 +1024,7 @@ class CreateImageBitmapFromBlobWorkerTask final : public WorkerSameThreadRunnabl
 
     bool MainThreadRun() override
     {
-      nsRefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect, mError);
+      RefPtr<layers::Image> image = DecodeAndCropBlob(mBlob, mCropRect, mError);
 
       if (NS_WARN_IF(mError.Failed())) {
         return false;
@@ -1062,9 +1062,9 @@ public:
 private:
   already_AddRefed<ImageBitmap> CreateImageBitmap(ErrorResult& aRv) override
   {
-    nsRefPtr<layers::Image> data;
+    RefPtr<layers::Image> data;
 
-    nsRefPtr<DecodeBlobInMainThreadSyncTask> task =
+    RefPtr<DecodeBlobInMainThreadSyncTask> task =
       new DecodeBlobInMainThreadSyncTask(mWorkerPrivate, *mBlob, mCropRect,
                                          aRv, getter_AddRefs(data));
     task->Dispatch(mWorkerPrivate->GetJSContext()); // This is a synchronous call.
@@ -1075,7 +1075,7 @@ private:
     }
 
     // Create ImageBitmap object.
-    nsRefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, data);
+    RefPtr<ImageBitmap> imageBitmap = new ImageBitmap(mGlobalObject, data);
     return imageBitmap.forget();
   }
 
@@ -1090,7 +1090,7 @@ AsyncCreateImageBitmapFromBlob(Promise* aPromise, nsIGlobalObject* aGlobal,
       new CreateImageBitmapFromBlobTask(aPromise, aGlobal, aBlob, aCropRect);
     NS_DispatchToCurrentThread(task); // Actually, to the main-thread.
   } else {
-    nsRefPtr<CreateImageBitmapFromBlobWorkerTask> task =
+    RefPtr<CreateImageBitmapFromBlobWorkerTask> task =
       new CreateImageBitmapFromBlobWorkerTask(aPromise, aGlobal, aBlob, aCropRect);
     task->Dispatch(GetCurrentThreadWorkerPrivate()->GetJSContext()); // Actually, to the current worker-thread.
   }
@@ -1102,7 +1102,7 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
 {
   MOZ_ASSERT(aGlobal);
 
-  nsRefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
+  RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -1113,7 +1113,7 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
     return promise.forget();
   }
 
-  nsRefPtr<ImageBitmap> imageBitmap;
+  RefPtr<ImageBitmap> imageBitmap;
 
   if (aSrc.IsHTMLImageElement()) {
     MOZ_ASSERT(NS_IsMainThread(),
@@ -1153,7 +1153,7 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
 ImageBitmap::ReadStructuredClone(JSContext* aCx,
                                  JSStructuredCloneReader* aReader,
                                  nsIGlobalObject* aParent,
-                                 const nsTArray<nsRefPtr<layers::Image>>& aClonedImages,
+                                 const nsTArray<RefPtr<layers::Image>>& aClonedImages,
                                  uint32_t aIndex)
 {
   MOZ_ASSERT(aCx);
@@ -1179,14 +1179,14 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   MOZ_ASSERT(!aClonedImages.IsEmpty());
   MOZ_ASSERT(aIndex < aClonedImages.Length());
 
-  // nsRefPtr<ImageBitmap> needs to go out of scope before toObjectOrNull() is
+  // RefPtr<ImageBitmap> needs to go out of scope before toObjectOrNull() is
   // called because the static analysis thinks dereferencing XPCOM objects
   // can GC (because in some cases it can!), and a return statement with a
   // JSObject* type means that JSObject* is on the stack as a raw pointer
   // while destructors are running.
   JS::Rooted<JS::Value> value(aCx);
   {
-    nsRefPtr<ImageBitmap> imageBitmap =
+    RefPtr<ImageBitmap> imageBitmap =
       new ImageBitmap(aParent, aClonedImages[aIndex]);
 
     ErrorResult error;
@@ -1207,7 +1207,7 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
 
 /*static*/ bool
 ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
-                                  nsTArray<nsRefPtr<layers::Image>>& aClonedImages,
+                                  nsTArray<RefPtr<layers::Image>>& aClonedImages,
                                   ImageBitmap* aImageBitmap)
 {
   MOZ_ASSERT(aWriter);

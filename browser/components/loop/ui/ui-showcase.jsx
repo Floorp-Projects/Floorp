@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global Frame:false uncaughtError:true fakeManyContacts:true fakeFewerContacts:true */
+/* global Frame:false uncaughtError:true */
 
 (function() {
   "use strict";
@@ -17,17 +17,12 @@
   // 1.1 Panel
   var PanelView = loop.panel.PanelView;
   var SignInRequestView = loop.panel.SignInRequestView;
-  var ContactDetailsForm = loop.contacts.ContactDetailsForm;
-  var ContactDropdown = loop.contacts.ContactDropdown;
-  var ContactDetail = loop.contacts.ContactDetail;
-  var GettingStartedView = loop.panel.GettingStartedView;
   // 1.2. Conversation Window
   var DesktopRoomEditContextView = loop.roomViews.DesktopRoomEditContextView;
   var RoomFailureView = loop.roomViews.RoomFailureView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
 
   // 2. Standalone webapp
-  var HomeView = loop.webapp.HomeView;
   var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
   var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
   var StandaloneRoomView      = loop.standaloneRoomViews.StandaloneRoomView;
@@ -441,27 +436,6 @@
 
   var mockMozLoopRooms = _.extend({}, navigator.mozLoop);
 
-  var mozLoopNoContacts = _.cloneDeep(navigator.mozLoop);
-  mozLoopNoContacts.contacts.getAll = function(callback) {
-    callback(null, []);
-  };
-  mozLoopNoContacts.userProfile = {
-    email: "reallyreallylongtext@example.com",
-    uid: "0354b278a381d3cb408bb46ffc01266"
-  };
-  mozLoopNoContacts.contacts.getAll = function(callback) {
-    callback(null, []);
-  };
-
-  var mozLoopNoContactsFilter = _.cloneDeep(navigator.mozLoop);
-  mozLoopNoContactsFilter.userProfile = {
-    email: "reallyreallylongtext@example.com",
-    uid: "0354b278a381d3cb408bb46ffc01266"
-  };
-  mozLoopNoContactsFilter.contacts.getAll = function(callback) {
-    callback(null, fakeFewerContacts); // Defined in fake-mozLoop.js.
-  };
-
   var firstTimeUseMozLoop = _.cloneDeep(navigator.mozLoop);
   firstTimeUseMozLoop.getLoopPref = function(prop) {
     if (prop === "gettingStarted.seen") {
@@ -469,13 +443,6 @@
     }
 
     return true;
-  };
-
-  var mockContact = {
-    name: ["Mr Smith"],
-    email: [{
-      value: "smith@invalid.com"
-    }]
   };
 
   var mockClient = {
@@ -530,8 +497,7 @@
         "volume-disabled", "clear", "magnifier"
       ],
       "16x16": ["add", "add-hover", "add-active", "audio", "audio-hover", "audio-active",
-        "block", "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
-        "contacts-active", "copy", "checkmark", "delete", "globe", "google", "google-hover",
+        "block", "block-red", "block-hover", "block-active", "copy", "checkmark", "delete", "globe", "google", "google-hover",
         "google-active", "history", "history-hover", "history-active", "leave",
         "screen-white", "screenmute-white", "settings", "settings-hover", "settings-active",
         "share-darkgrey", "tag", "tag-hover", "tag-active", "trash", "unblock",
@@ -755,62 +721,6 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
-                           summary="Contact list tab"
-                           width={330}>
-              <div className="panel">
-                <PanelView client={mockClient}
-                           dispatcher={dispatcher}
-                           mozLoop={mockMozLoopLoggedIn}
-                           notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="contacts" />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact list tab (no search filter)"
-                           width={332}>
-              <div className="panel">
-                <PanelView client={mockClient}
-                           dispatcher={dispatcher}
-                           mozLoop={mozLoopNoContactsFilter}
-                           notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="contacts" />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact list tab long email"
-                           width={330}>
-              <div className="panel">
-                <PanelView client={mockClient}
-                           dispatcher={dispatcher}
-                           mozLoop={mockMozLoopLoggedInLongEmail}
-                           notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="contacts" />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact list tab (no contacts)"
-                           width={330}>
-              <div className="panel">
-                <PanelView client={mockClient}
-                           dispatcher={dispatcher}
-                           mozLoop={mozLoopNoContacts}
-                           notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="contacts" />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
                            summary="Error Notification"
                            width={330}>
               <div className="panel">
@@ -833,107 +743,6 @@
                            notifications={errNotifications}
                            roomStore={roomStore} />
               </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact import success"
-                           width={330}>
-              <div className="panel">
-                <PanelView dispatcher={dispatcher}
-                           mozLoop={mockMozLoopLoggedIn}
-                           notifications={new loop.shared.models.NotificationCollection([{level: "success", message: "Import success"}])}
-                           roomStore={roomStore}
-                           selectedTab="contacts" />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact import error"
-                           width={330}>
-              <div className="panel">
-                <PanelView dispatcher={dispatcher}
-                           mozLoop={mockMozLoopLoggedIn}
-                           notifications={new loop.shared.models.NotificationCollection([{level: "error", message: "Import error"}])}
-                           roomStore={roomStore}
-                           selectedTab="contacts" />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact Form - Add"
-                           width={330}>
-              <div className="panel">
-                <PanelView client={mockClient}
-                           dispatcher={dispatcher}
-                           initialSelectedTabComponent="contactAdd"
-                           mozLoop={mockMozLoopLoggedIn}
-                           notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="contacts"
-                           userProfile={{email: "test@example.com"}} />
-              </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={410}
-                           summary="Contact Form - Edit"
-                           width={330}>
-              <div className="panel">
-                <PanelView client={mockClient}
-                           dispatcher={dispatcher}
-                           initialSelectedTabComponent="contactEdit"
-                           mozLoop={mockMozLoopLoggedIn}
-                           notifications={notifications}
-                           roomStore={roomStore}
-                           selectedTab="contacts"
-                           userProfile={{email: "test@example.com"}} />
-              </div>
-            </FramedExample>
-          </Section>
-
-          <Section name="ContactDetail">
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={50}
-                           summary="ContactDetail"
-                           width={334}>
-              <div className="panel force-menu-show">
-                <ContactDetail contact={fakeManyContacts[0]}
-                               getContainerCoordinates={function() { return {"top": 0, "height": 0 }; }}
-                               handleContactAction={function() {}} />
-              </div>
-            </FramedExample>
-          </Section>
-
-          <Section name="ContactDropdown">
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={272}
-                           summary="ContactDropdown not blocked can edit"
-                           width={300}>
-             <div className="panel">
-               <ContactDropdown blocked={false}
-                                canEdit={true}
-                                eventPosY={0}
-                                getContainerCoordinates={function() { return {"top": 0, "height": 0 }; }}
-                                handleAction={function () {}} />
-             </div>
-            </FramedExample>
-            <FramedExample cssClass="fx-embedded-panel"
-                           dashed={true}
-                           height={272}
-                           summary="ContactDropdown blocked can't edit"
-                           width={300}>
-             <div className="panel">
-               <ContactDropdown blocked={true}
-                                canEdit={false}
-                                eventPosY={0}
-                                getContainerCoordinates={function() { return {"top": 0, "height": 0 }; }}
-                                handleAction={function () {}} />
-             </div>
             </FramedExample>
           </Section>
 

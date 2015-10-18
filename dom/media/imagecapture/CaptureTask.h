@@ -79,7 +79,7 @@ protected:
   // The ImageCapture associates with this task. This reference count should not
   // change in this class unless it clears this reference after a blob or error
   // event to script.
-  nsRefPtr<dom::ImageCapture> mImageCapture;
+  RefPtr<dom::ImageCapture> mImageCapture;
 
   TrackID mTrackID;
 

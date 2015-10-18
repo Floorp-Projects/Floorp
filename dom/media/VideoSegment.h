@@ -60,7 +60,7 @@ public:
 protected:
   // mImage can be null to indicate "no video" (aka "empty frame"). It can
   // still have an intrinsic size in this case.
-  nsRefPtr<Image> mImage;
+  RefPtr<Image> mImage;
   // The desired size to render the video frame at.
   gfx::IntSize mIntrinsicSize;
   bool mForceBlack;

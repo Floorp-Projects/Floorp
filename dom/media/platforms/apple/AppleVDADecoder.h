@@ -71,7 +71,7 @@ public:
                   MediaDataDecoderCallback* aCallback,
                   layers::ImageContainer* aImageContainer);
   virtual ~AppleVDADecoder();
-  nsRefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -97,10 +97,10 @@ protected:
   void ClearReorderedFrames();
   CFDictionaryRef CreateOutputConfiguration();
 
-  nsRefPtr<MediaByteBuffer> mExtraData;
-  nsRefPtr<FlushableTaskQueue> mTaskQueue;
+  RefPtr<MediaByteBuffer> mExtraData;
+  RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
   uint32_t mPictureWidth;
   uint32_t mPictureHeight;
   uint32_t mDisplayWidth;

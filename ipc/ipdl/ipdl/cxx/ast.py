@@ -337,6 +337,7 @@ Type.UINT32PTR = Type('uint32_t', ptr=1)
 Type.SIZE = Type('size_t')
 Type.VOID = Type('void')
 Type.VOIDPTR = Type('void', ptr=1)
+Type.AUTO = Type('auto')
 
 class TypeArray(Node):
     def __init__(self, basetype, nmemb):

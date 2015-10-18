@@ -79,7 +79,7 @@ protected:
 
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsRefPtr<nsContentList> mRows;
+  RefPtr<nsContentList> mRows;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

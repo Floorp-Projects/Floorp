@@ -97,7 +97,7 @@ private:
     mappable->munmap(buf, length);
   }
 
-  mozilla::RefPtr<Mappable> mappable;
+  RefPtr<Mappable> mappable;
 };
 
 

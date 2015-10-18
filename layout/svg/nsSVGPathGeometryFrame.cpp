@@ -526,7 +526,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
     // calculations. To avoid that and meet the expectations of web content we
     // have to use a CAIRO DrawTarget. The most efficient way to do that is to
     // wrap the cached cairo_surface_t from ScreenReferenceSurface():
-    nsRefPtr<gfxASurface> refSurf =
+    RefPtr<gfxASurface> refSurf =
       gfxPlatform::GetPlatform()->ScreenReferenceSurface();
     tmpDT = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(refSurf, IntSize(1, 1));

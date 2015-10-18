@@ -225,7 +225,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   ////////////
   // Prepare the radical symbol and the overline bar
 
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         fontSizeInflation);
@@ -381,7 +381,7 @@ nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingConte
                                           fontSizeInflation);
 
   nscoord dxSqr;
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         fontSizeInflation);
   GetRadicalXOffsets(indexWidth, sqrWidth, fm, nullptr, &dxSqr);

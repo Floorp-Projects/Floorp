@@ -102,7 +102,7 @@ public:
   nsPluginNativeWindowWin();
   virtual ~nsPluginNativeWindowWin();
 
-  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance);
+  virtual nsresult CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance);
 
 private:
   nsresult SubclassAndAssociateWindow();
@@ -122,7 +122,7 @@ private:
   WNDPROC mPluginWinProc;
   WNDPROC mPrevWinProc;
   PluginWindowWeakRef mWeakRef;
-  nsRefPtr<PluginWindowEvent> mCachedPluginWindowEvent;
+  RefPtr<PluginWindowEvent> mCachedPluginWindowEvent;
 
   HWND mParentWnd;
   LONG_PTR mParentProc;
@@ -169,7 +169,7 @@ public:
   NS_DECL_NSIRUNNABLE
 
 private:
-  nsRefPtr<nsNPAPIPluginInstance> mInst;
+  RefPtr<nsNPAPIPluginInstance> mInst;
 };
 
 NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
@@ -199,7 +199,7 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   // The DispatchEvent(ePluginActivate) below can trigger a reentrant focus
   // event which might destroy us.  Hold a strong ref on the plugin instance
   // to prevent that, bug 374229.
-  nsRefPtr<nsNPAPIPluginInstance> inst;
+  RefPtr<nsNPAPIPluginInstance> inst;
   win->GetPluginInstance(inst);
 
   // Real may go into a state where it recursivly dispatches the same event
@@ -536,7 +536,7 @@ NS_IMETHODIMP PluginWindowEvent::Run()
   if (!hWnd)
     return NS_OK;
 
-  nsRefPtr<nsNPAPIPluginInstance> inst;
+  RefPtr<nsNPAPIPluginInstance> inst;
   win->GetPluginInstance(inst);
 
   if (GetMsg() == WM_USER_FLASH) {
@@ -592,7 +592,7 @@ nsPluginNativeWindowWin::GetPluginWindowEvent(HWND aWnd, UINT aMsg, WPARAM aWPar
   return event;
 }
 
-nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance)
+nsresult nsPluginNativeWindowWin::CallSetWindow(RefPtr<nsNPAPIPluginInstance> &aPluginInstance)
 {
   // Note, 'window' can be null
 

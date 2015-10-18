@@ -272,7 +272,7 @@ namespace jit {
     _(AsmJSAtomicBinopHeap)                                                 \
     _(UnknownValue)                                                         \
     _(LexicalCheck)                                                         \
-    _(ThrowUninitializedLexical)                                            \
+    _(ThrowRuntimeLexicalError)                                             \
     _(GlobalNameConflictsCheck)                                             \
     _(Debugger)                                                             \
     _(NewTarget)                                                            \

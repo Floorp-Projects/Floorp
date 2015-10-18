@@ -123,7 +123,7 @@ class TransportInfo {
     flow_ = nullptr;
   }
 
-  mozilla::RefPtr<TransportFlow> flow_;
+  RefPtr<TransportFlow> flow_;
   TransportLayerLoopback *loopback_;
   TransportLayerDtls *dtls_;
 };
@@ -228,12 +228,12 @@ class TestAgent {
 
  protected:
   mozilla::AudioCodecConfig audio_config_;
-  mozilla::RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
-  nsRefPtr<DOMMediaStream> audio_;
+  RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
+  RefPtr<DOMMediaStream> audio_;
   // TODO(bcampen@mozilla.com): Right now this does not let us test RTCP in
   // both directions; only the sender's RTCP is sent, but the receiver should
   // be sending it too.
-  mozilla::RefPtr<mozilla::MediaPipeline> audio_pipeline_;
+  RefPtr<mozilla::MediaPipeline> audio_pipeline_;
   TransportInfo audio_rtp_transport_;
   TransportInfo audio_rtcp_transport_;
   TransportInfo bundle_transport_;

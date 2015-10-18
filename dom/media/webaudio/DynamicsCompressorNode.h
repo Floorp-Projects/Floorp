@@ -74,12 +74,12 @@ protected:
   virtual ~DynamicsCompressorNode();
 
 private:
-  nsRefPtr<AudioParam> mThreshold;
-  nsRefPtr<AudioParam> mKnee;
-  nsRefPtr<AudioParam> mRatio;
+  RefPtr<AudioParam> mThreshold;
+  RefPtr<AudioParam> mKnee;
+  RefPtr<AudioParam> mRatio;
   float mReduction;
-  nsRefPtr<AudioParam> mAttack;
-  nsRefPtr<AudioParam> mRelease;
+  RefPtr<AudioParam> mAttack;
+  RefPtr<AudioParam> mRelease;
 };
 
 } // namespace dom

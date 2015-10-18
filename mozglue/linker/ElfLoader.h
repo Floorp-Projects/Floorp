@@ -235,7 +235,7 @@ private:
   char *path;
 
   /* Mappable object keeping the result of GetMappable() */
-  mutable mozilla::RefPtr<Mappable> mappable;
+  mutable RefPtr<Mappable> mappable;
 };
 
 /**
@@ -469,14 +469,14 @@ private:
 
   /* System loader handle for the library/program containing our code. This
    * is used to resolve wrapped functions. */
-  mozilla::RefPtr<LibHandle> self_elf;
+  RefPtr<LibHandle> self_elf;
 
 #if defined(ANDROID)
   /* System loader handle for the libc. This is used to resolve weak symbols
    * that some libcs contain that the Android linker won't dlsym(). Normally,
    * we wouldn't treat non-Android differently, but glibc uses versioned
    * symbols which this linker doesn't support. */
-  mozilla::RefPtr<LibHandle> libc;
+  RefPtr<LibHandle> libc;
 #endif
 
   /* Bookkeeping */

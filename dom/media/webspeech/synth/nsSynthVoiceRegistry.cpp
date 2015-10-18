@@ -117,9 +117,9 @@ public:
 
   NS_INLINE_DECL_REFCOUNTING(GlobalQueueItem)
 
-  nsRefPtr<VoiceData> mVoice;
+  RefPtr<VoiceData> mVoice;
 
-  nsRefPtr<nsSpeechTask> mTask;
+  RefPtr<nsSpeechTask> mTask;
 
   nsString mText;
 
@@ -197,7 +197,7 @@ nsSynthVoiceRegistry::GetInstance()
 already_AddRefed<nsSynthVoiceRegistry>
 nsSynthVoiceRegistry::GetInstanceForService()
 {
-  nsRefPtr<nsSynthVoiceRegistry> registry = GetInstance();
+  RefPtr<nsSynthVoiceRegistry> registry = GetInstance();
 
   return registry.forget();
 }
@@ -216,7 +216,7 @@ nsSynthVoiceRegistry::SendVoicesAndState(InfallibleTArray<RemoteVoice>* aVoices,
                                          bool* aIsSpeaking)
 {
   for (uint32_t i=0; i < mVoices.Length(); ++i) {
-    nsRefPtr<VoiceData> voice = mVoices[i];
+    RefPtr<VoiceData> voice = mVoices[i];
 
     aVoices->AppendElement(RemoteVoice(voice->mUri, voice->mName, voice->mLang,
                                        voice->mIsLocal, voice->mIsQueued));
@@ -476,7 +476,7 @@ nsSynthVoiceRegistry::AddVoiceImpl(nsISpeechService* aService,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRefPtr<VoiceData> voice = new VoiceData(aService, aUri, aName, aLang,
+  RefPtr<VoiceData> voice = new VoiceData(aService, aUri, aName, aLang,
                                             aLocalService, aQueuesUtterances);
 
   mVoices.AppendElement(voice);
@@ -619,7 +619,7 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
     aUtterance.mVoice->GetVoiceURI(uri);
   }
 
-  nsRefPtr<nsSpeechTask> task;
+  RefPtr<nsSpeechTask> task;
   if (XRE_IsContentProcess()) {
     task = new SpeechTaskChild(&aUtterance);
     SpeechSynthesisRequestChild* actor =
@@ -666,7 +666,7 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
         ("nsSynthVoiceRegistry::Speak queueing text='%s' lang='%s' uri='%s' rate=%f pitch=%f",
          NS_ConvertUTF16toUTF8(aText).get(), NS_ConvertUTF16toUTF8(aLang).get(),
          NS_ConvertUTF16toUTF8(aUri).get(), aRate, aPitch));
-    nsRefPtr<GlobalQueueItem> item = new GlobalQueueItem(voice, aTask, aText,
+    RefPtr<GlobalQueueItem> item = new GlobalQueueItem(voice, aTask, aText,
                                                          aVolume, aRate, aPitch);
     mGlobalQueue.AppendElement(item);
 
@@ -696,7 +696,7 @@ nsSynthVoiceRegistry::SpeakNext()
   mGlobalQueue.RemoveElementAt(0);
 
   while (!mGlobalQueue.IsEmpty()) {
-    nsRefPtr<GlobalQueueItem> item = mGlobalQueue.ElementAt(0);
+    RefPtr<GlobalQueueItem> item = mGlobalQueue.ElementAt(0);
     if (item->mTask->IsPreCanceled()) {
       mGlobalQueue.RemoveElementAt(0);
       continue;
@@ -720,7 +720,7 @@ nsSynthVoiceRegistry::ResumeQueue()
     return;
   }
 
-  nsRefPtr<GlobalQueueItem> item = mGlobalQueue.ElementAt(0);
+  RefPtr<GlobalQueueItem> item = mGlobalQueue.ElementAt(0);
   if (!item->mTask->IsPrePaused()) {
     SpeakImpl(item->mVoice, item->mTask, item->mText, item->mVolume,
               item->mRate, item->mPitch);

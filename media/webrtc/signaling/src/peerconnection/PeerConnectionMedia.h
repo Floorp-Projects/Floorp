@@ -108,10 +108,10 @@ public:
   void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  nsRefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
+  RefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
 #endif
 protected:
-  nsRefPtr<DOMMediaStream> mMediaStream;
+  RefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
   const std::string mId;
   // These get set up before we generate our local description, the pipelines
@@ -292,7 +292,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   RemoteSourceStreamInfo* GetRemoteStreamById(const std::string& id);
 
   // Add a remote stream.
-  nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo);
+  nsresult AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo);
 
   nsresult ReplaceTrack(const std::string& oldStreamId,
                         const std::string& oldTrackId,
@@ -481,11 +481,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // A list of streams returned from GetUserMedia
   // This is only accessed on the main thread (with one special exception)
-  nsTArray<nsRefPtr<LocalSourceStreamInfo> > mLocalSourceStreams;
+  nsTArray<RefPtr<LocalSourceStreamInfo> > mLocalSourceStreams;
 
   // A list of streams provided by the other side
   // This is only accessed on the main thread (with one special exception)
-  nsTArray<nsRefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
+  nsTArray<RefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
 
   std::map<size_t, std::pair<bool, RefPtr<MediaSessionConduit>>> mConduits;
 
@@ -493,7 +493,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   RefPtr<NrIceCtx> mIceCtx;
 
   // DNS
-  nsRefPtr<NrIceResolver> mDNSResolver;
+  RefPtr<NrIceResolver> mDNSResolver;
 
   // Transport flows: even is RTP, odd is RTCP
   std::map<int, RefPtr<TransportFlow> > mTransportFlows;

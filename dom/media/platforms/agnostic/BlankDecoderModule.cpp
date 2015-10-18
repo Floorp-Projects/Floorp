@@ -34,7 +34,7 @@ public:
   {
   }
 
-  nsRefPtr<InitPromise> Init() override {
+  RefPtr<InitPromise> Init() override {
     return InitPromise::CreateAndResolve(mType, __func__);
   }
 
@@ -54,7 +54,7 @@ public:
     }
     NS_IMETHOD Run() override
     {
-      nsRefPtr<MediaData> data =
+      RefPtr<MediaData> data =
         mCreator->Create(media::TimeUnit::FromMicroseconds(mSample->mTime),
                          media::TimeUnit::FromMicroseconds(mSample->mDuration),
                          mSample->mOffset);
@@ -62,7 +62,7 @@ public:
       return NS_OK;
     }
   private:
-    nsRefPtr<MediaRawData> mSample;
+    RefPtr<MediaRawData> mSample;
     BlankMediaDataCreator* mCreator;
     MediaDataDecoderCallback* mCallback;
   };
@@ -221,7 +221,7 @@ public:
                      MediaDataDecoderCallback* aCallback) override {
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
       aConfig.mDisplay.width, aConfig.mDisplay.height, aImageContainer);
-    nsRefPtr<MediaDataDecoder> decoder =
+    RefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankVideoDataCreator>(creator,
                                                        aVideoTaskQueue,
                                                        aCallback,
@@ -237,7 +237,7 @@ public:
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
       aConfig.mChannels, aConfig.mRate);
 
-    nsRefPtr<MediaDataDecoder> decoder =
+    RefPtr<MediaDataDecoder> decoder =
       new BlankMediaDataDecoder<BlankAudioDataCreator>(creator,
                                                        aAudioTaskQueue,
                                                        aCallback,
@@ -261,7 +261,7 @@ public:
 
 already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule()
 {
-  nsRefPtr<PlatformDecoderModule> pdm = new BlankDecoderModule();
+  RefPtr<PlatformDecoderModule> pdm = new BlankDecoderModule();
   return pdm.forget();
 }
 

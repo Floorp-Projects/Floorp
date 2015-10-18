@@ -18,7 +18,7 @@
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsAString.h"
-#include "mozilla/nsRefPtr.h"                   // for nsRefPtr
+#include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "mozilla/layers/PTextureParent.h"
 #include "mozilla/unused.h"
@@ -176,7 +176,7 @@ TextureHost::SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle)
 FenceHandle
 TextureHost::GetAndResetAcquireFenceHandle()
 {
-  nsRefPtr<FenceHandle::FdObj> fdObj = mAcquireFenceHandle.GetAndResetFdObj();
+  RefPtr<FenceHandle::FdObj> fdObj = mAcquireFenceHandle.GetAndResetFdObj();
   return FenceHandle(fdObj);
 }
 

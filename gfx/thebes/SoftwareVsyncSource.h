@@ -57,7 +57,7 @@ public:
   }
 
 private:
-  nsRefPtr<SoftwareDisplay> mGlobalDisplay;
+  RefPtr<SoftwareDisplay> mGlobalDisplay;
 };
 
 #endif /* GFX_SOFTWARE_VSYNC_SOURCE_H */

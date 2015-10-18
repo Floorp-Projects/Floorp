@@ -191,7 +191,7 @@ TextureSourceD3D9::InitTextures(DeviceManagerD3D9* aDeviceManager,
     return nullptr;
   }
 
-  tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
+  tmpTexture->GetSurfaceLevel(0, getter_AddRefs(aSurface));
   
   HRESULT hr = aSurface->LockRect(&aLockedRect, nullptr, 0);
   if (FAILED(hr) || !aLockedRect.pBits) {
@@ -215,7 +215,7 @@ FinishTextures(DeviceManagerD3D9* aDeviceManager,
   }
 
   aSurface->UnlockRect();
-  nsRefPtr<IDirect3DSurface9> dstSurface;
+  RefPtr<IDirect3DSurface9> dstSurface;
   aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
   aDeviceManager->device()->UpdateSurface(aSurface, nullptr, dstSurface,
                                           nullptr);
@@ -550,7 +550,7 @@ TextureClientD3D9::BorrowDrawTarget()
   }
 
   if (ContentForFormat(mFormat) == gfxContentType::COLOR) {
-    nsRefPtr<gfxASurface> surface = new gfxWindowsSurface(mD3D9Surface);
+    RefPtr<gfxASurface> surface = new gfxWindowsSurface(mD3D9Surface);
     if (!surface || surface->CairoStatus()) {
       NS_WARNING("Could not create surface for d3d9 surface");
       gfxCriticalNote << "Failed creation on D3D9";
@@ -701,7 +701,7 @@ SharedTextureClientD3D9::Create(ISurfaceAllocator* aAllocator,
                                       D3DUSAGE_RENDERTARGET,
                                       D3DFMT_X8R8G8B8,
                                       D3DPOOL_DEFAULT,
-                                      byRef(texture),
+                                      getter_AddRefs(texture),
                                       &shareHandle);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && shareHandle, nullptr);
 
@@ -723,7 +723,7 @@ already_AddRefed<IDirect3DSurface9>
 SharedTextureClientD3D9::GetD3D9Surface() const
 {
   RefPtr<IDirect3DSurface9> textureSurface;
-  HRESULT hr = mTexture->GetSurfaceLevel(0, byRef(textureSurface));
+  HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(textureSurface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   return textureSurface.forget();
@@ -813,11 +813,11 @@ DataTextureSourceD3D9::UpdateFromTexture(IDirect3DTexture9* aTexture,
   RefPtr<IDirect3DSurface9> srcSurface;
   RefPtr<IDirect3DSurface9> dstSurface;
 
-  hr = aTexture->GetSurfaceLevel(0, byRef(srcSurface));
+  hr = aTexture->GetSurfaceLevel(0, getter_AddRefs(srcSurface));
   if (FAILED(hr)) {
     return false;
   }
-  hr = mTexture->GetSurfaceLevel(0, byRef(dstSurface));
+  hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
   if (FAILED(hr)) {
     return false;
   }
@@ -950,7 +950,7 @@ DXGITextureHostD3D9::OpenSharedHandle()
     return;
   }
 
-  nsRefPtr<IDirect3DTexture9> texture;
+  RefPtr<IDirect3DTexture9> texture;
   HRESULT hr = GetDevice()->CreateTexture(mSize.width, mSize.height, 1,
                                           D3DUSAGE_RENDERTARGET,
                                           SurfaceFormatToD3D9Format(mFormat),
@@ -1052,19 +1052,19 @@ DXGIYCbCrTextureHostD3D9::Lock()
 
     if (FAILED(GetDevice()->CreateTexture(mSizeY.width, mSizeY.height,
                                           1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
-                                          byRef(mTextures[0]), &mHandles[0]))) {
+                                          getter_AddRefs(mTextures[0]), &mHandles[0]))) {
       return false;
     }
 
     if (FAILED(GetDevice()->CreateTexture(mSizeCbCr.width, mSizeCbCr.height,
                                           1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
-                                          byRef(mTextures[1]), &mHandles[1]))) {
+                                          getter_AddRefs(mTextures[1]), &mHandles[1]))) {
       return false;
     }
 
     if (FAILED(GetDevice()->CreateTexture(mSizeCbCr.width, mSizeCbCr.height,
                                           1, 0, D3DFMT_A8, D3DPOOL_DEFAULT,
-                                          byRef(mTextures[2]), &mHandles[2]))) {
+                                          getter_AddRefs(mTextures[2]), &mHandles[2]))) {
       return false;
     }
 

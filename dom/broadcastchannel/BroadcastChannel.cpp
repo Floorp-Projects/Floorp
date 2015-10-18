@@ -170,7 +170,7 @@ public:
     PBackgroundChild* backgroundManager = mActor->Manager();
     MOZ_ASSERT(backgroundManager);
 
-    const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = mData->BlobImpls();
+    const nsTArray<RefPtr<BlobImpl>>& blobImpls = mData->BlobImpls();
 
     if (!blobImpls.IsEmpty()) {
       message.blobsChild().SetCapacity(blobImpls.Length());
@@ -198,8 +198,8 @@ public:
 private:
   ~BCPostMessageRunnable() {}
 
-  nsRefPtr<BroadcastChannelChild> mActor;
-  nsRefPtr<BroadcastChannelMessage> mData;
+  RefPtr<BroadcastChannelChild> mActor;
+  RefPtr<BroadcastChannelMessage> mData;
 };
 
 NS_IMPL_ISUPPORTS(BCPostMessageRunnable, nsICancelableRunnable, nsIRunnable)
@@ -230,7 +230,7 @@ public:
 private:
   ~CloseRunnable() {}
 
-  nsRefPtr<BroadcastChannel> mBC;
+  RefPtr<BroadcastChannel> mBC;
 };
 
 NS_IMPL_ISUPPORTS(CloseRunnable, nsICancelableRunnable, nsIRunnable)
@@ -264,7 +264,7 @@ public:
 private:
   ~TeardownRunnable() {}
 
-  nsRefPtr<BroadcastChannelChild> mActor;
+  RefPtr<BroadcastChannelChild> mActor;
 };
 
 NS_IMPL_ISUPPORTS(TeardownRunnable, nsICancelableRunnable, nsIRunnable)
@@ -385,7 +385,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     workerPrivate = GetWorkerPrivateFromContext(cx);
     MOZ_ASSERT(workerPrivate);
 
-    nsRefPtr<InitializeRunnable> runnable =
+    RefPtr<InitializeRunnable> runnable =
       new InitializeRunnable(workerPrivate, origin, principalInfo,
                              privateBrowsing, aRv);
     runnable->Dispatch(cx);
@@ -395,7 +395,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<BroadcastChannel> bc =
+  RefPtr<BroadcastChannel> bc =
     new BroadcastChannel(window, principalInfo, origin, aChannel,
                          privateBrowsing);
 
@@ -448,7 +448,7 @@ BroadcastChannel::PostMessageInternal(JSContext* aCx,
                                       JS::Handle<JS::Value> aMessage,
                                       ErrorResult& aRv)
 {
-  nsRefPtr<BroadcastChannelMessage> data = new BroadcastChannelMessage();
+  RefPtr<BroadcastChannelMessage> data = new BroadcastChannelMessage();
 
   data->Write(aCx, aMessage, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -464,7 +464,7 @@ BroadcastChannel::PostMessageData(BroadcastChannelMessage* aData)
   RemoveDocFromBFCache();
 
   if (mActor) {
-    nsRefPtr<BCPostMessageRunnable> runnable =
+    RefPtr<BCPostMessageRunnable> runnable =
       new BCPostMessageRunnable(mActor, aData);
 
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
@@ -490,7 +490,7 @@ BroadcastChannel::Close()
     // StateClosed and we shutdown the actor asynchrounsly.
 
     mState = StateClosed;
-    nsRefPtr<CloseRunnable> runnable = new CloseRunnable(this);
+    RefPtr<CloseRunnable> runnable = new CloseRunnable(this);
 
     if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to dispatch to the current thread!");
@@ -551,7 +551,7 @@ BroadcastChannel::Shutdown()
   if (mActor) {
     mActor->SetParent(nullptr);
 
-    nsRefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
+    RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
     NS_DispatchToCurrentThread(runnable);
 
     mActor = nullptr;

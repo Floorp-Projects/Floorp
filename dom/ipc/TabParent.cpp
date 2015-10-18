@@ -123,7 +123,7 @@ using namespace mozilla::jsipc;
 class OpenFileAndSendFDRunnable : public nsRunnable
 {
     const nsString mPath;
-    nsRefPtr<TabParent> mTabParent;
+    RefPtr<TabParent> mTabParent;
     nsCOMPtr<nsIEventTarget> mEventTarget;
     PRFileDesc* mFD;
 
@@ -174,7 +174,7 @@ private:
         MOZ_ASSERT(mTabParent);
         MOZ_ASSERT(mEventTarget);
 
-        nsRefPtr<TabParent> tabParent;
+        RefPtr<TabParent> tabParent;
         mTabParent.swap(tabParent);
 
         using mozilla::ipc::FileDescriptor;
@@ -354,7 +354,7 @@ TabParent::SetOwnerElement(Element* aElement)
 
   // If we change top-level documents then we need to change our
   // registration with them.
-  nsRefPtr<nsPIWindowRoot> curTopLevelWin, newTopLevelWin;
+  RefPtr<nsPIWindowRoot> curTopLevelWin, newTopLevelWin;
   if (mFrameElement) {
     curTopLevelWin = nsContentUtils::GetWindowRoot(mFrameElement->OwnerDoc());
   }
@@ -435,7 +435,7 @@ TabParent::GetAppType(nsAString& aOut)
 bool
 TabParent::IsVisible()
 {
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
     return false;
   }
@@ -534,7 +534,7 @@ TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel)
   LOG("We decide to switch process. Call nsFrameLoader::SwitchProcessAndLoadURIs: %s\n",
        uriString.get());
 
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
 
   nsresult rv = frameLoader->SwitchProcessAndLoadURI(uri);
@@ -563,9 +563,11 @@ TabParent::DestroyInternal()
   // Let all PluginWidgets know we are tearing down. Prevents
   // these objects from sending async events after the child side
   // is shut down.
-  const nsTArray<PPluginWidgetParent*>& kids = ManagedPPluginWidgetParent();
-  for (uint32_t idx = 0; idx < kids.Length(); ++idx) {
-      static_cast<mozilla::plugins::PluginWidgetParent*>(kids[idx])->ParentDestroy();
+  const ManagedContainer<PPluginWidgetParent>& kids =
+    ManagedPPluginWidgetParent();
+  for (auto iter = kids.ConstIter(); !iter.Done(); iter.Next()) {
+    static_cast<mozilla::plugins::PluginWidgetParent*>(
+       iter.Get()->GetKey())->ParentDestroy();
   }
 }
 
@@ -659,7 +661,7 @@ TabParent::ActorDestroy(ActorDestroyReason why)
     mIsDestroyed = true;
   }
 
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (frameLoader) {
     nsCOMPtr<Element> frameElement(mFrameElement);
@@ -1077,7 +1079,7 @@ TabParent::LoadURL(nsIURI* aURI)
                 } else
 #endif
                 {
-                    nsRefPtr<OpenFileAndSendFDRunnable> openFileRunnable =
+                    RefPtr<OpenFileAndSendFDRunnable> openFileRunnable =
                         new OpenFileAndSendFDRunnable(path, this);
                     openFileRunnable->Dispatch();
                 }
@@ -1103,7 +1105,7 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
     // child side will create RenderFrame.
     MOZ_ASSERT(!GetRenderFrame());
     if (IsInitedByParent()) {
-        nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+        RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
         if (frameLoader) {
           renderFrame =
               new RenderFrameParent(frameLoader,
@@ -1173,7 +1175,7 @@ TabParent::RecvSetDimensions(const uint32_t& aFlags,
 nsresult
 TabParent::UpdatePosition()
 {
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
     return NS_OK;
   }
@@ -1446,17 +1448,16 @@ TabParent::GetTopLevelDocAccessible() const
 #ifdef ACCESSIBILITY
   // XXX Consider managing non top level PDocAccessibles with their parent
   // document accessible.
-  const nsTArray<PDocAccessibleParent*>& docs = ManagedPDocAccessibleParent();
-  size_t docCount = docs.Length();
-  for (size_t i = 0; i < docCount; i++) {
-    auto doc = static_cast<a11y::DocAccessibleParent*>(docs[i]);
+  const ManagedContainer<PDocAccessibleParent>& docs = ManagedPDocAccessibleParent();
+  for (auto iter = docs.ConstIter(); !iter.Done(); iter.Next()) {
+    auto doc = static_cast<a11y::DocAccessibleParent*>(iter.Get()->GetKey());
     if (!doc->ParentDoc()) {
       return doc;
     }
   }
 
-  MOZ_ASSERT(docCount == 0, "If there isn't a top level accessible doc "
-                             "there shouldn't be an accessible doc at all!");
+  MOZ_ASSERT(docs.Count() == 0, "If there isn't a top level accessible doc "
+                                "there shouldn't be an accessible doc at all!");
 #endif
   return nullptr;
 }
@@ -1796,7 +1797,7 @@ public:
 private:
   virtual ~SynthesizedEventObserver() { }
 
-  nsRefPtr<TabParent> mTabParent;
+  RefPtr<TabParent> mTabParent;
   uint64_t mObserverId;
 };
 
@@ -2113,14 +2114,14 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
     if (mTabSetsCursor) {
       const gfx::IntSize size(aWidth, aHeight);
 
-      mozilla::RefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
+      RefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
       mozilla::gfx::SourceSurfaceRawData* raw = static_cast<mozilla::gfx::SourceSurfaceRawData*>(customCursor.get());
       raw->InitWrappingData(
         reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aCursorData).BeginWriting()),
         size, aStride, static_cast<mozilla::gfx::SurfaceFormat>(aFormat), false);
       raw->GuaranteePersistance();
 
-      nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(customCursor, size);
+      RefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(customCursor, size);
       nsCOMPtr<imgIContainer> cursorImage(image::ImageOps::CreateFromDrawable(drawable));
       widget->SetCursor(cursorImage, aHotspotX, aHotspotY);
       mCustomCursor = cursorImage;
@@ -2328,7 +2329,7 @@ TabParent::RecvOnEventNeedingAckHandled(const EventMessage& aMessage)
 
   // While calling OnEventNeedingAckHandled(), TabParent *might* be destroyed
   // since it may send notifications to IME.
-  nsRefPtr<TabParent> kungFuDeathGrip(this);
+  RefPtr<TabParent> kungFuDeathGrip(this);
   mContentCache.OnEventNeedingAckHandled(widget, aMessage);
   return true;
 }
@@ -2405,7 +2406,7 @@ TabParent::GetChildProcessOffset()
   // 0,0.  Map the event coordinates to match that.
 
   LayoutDeviceIntPoint offset(0, 0);
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
     return offset;
   }
@@ -2562,7 +2563,7 @@ TabParent::GetFrom(nsIContent* aContent)
   if (!loaderOwner) {
     return nullptr;
   }
-  nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
   return GetFrom(frameLoader);
 }
 
@@ -2579,10 +2580,8 @@ TabParent::GetTabIdFrom(nsIDocShell *docShell)
 RenderFrameParent*
 TabParent::GetRenderFrame()
 {
-  if (ManagedPRenderFrameParent().IsEmpty()) {
-    return nullptr;
-  }
-  return static_cast<RenderFrameParent*>(ManagedPRenderFrameParent()[0]);
+  PRenderFrameParent* p = LoneManagedOrNull(ManagedPRenderFrameParent());
+  return static_cast<RenderFrameParent*>(p);
 }
 
 bool
@@ -2782,9 +2781,9 @@ TabParent::ReceiveMessage(const nsString& aMessage,
                           nsIPrincipal* aPrincipal,
                           nsTArray<StructuredCloneData>* aRetVal)
 {
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
-    nsRefPtr<nsFrameMessageManager> manager =
+    RefPtr<nsFrameMessageManager> manager =
       frameLoader->GetFrameMessageManager();
 
     manager->ReceiveMessage(mFrameElement,
@@ -2851,7 +2850,7 @@ PRenderFrameParent*
 TabParent::AllocPRenderFrameParent()
 {
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   TextureFactoryIdentifier textureFactoryIdentifier;
   uint64_t layersId = 0;
   bool success = false;
@@ -2901,7 +2900,7 @@ TabParent::RecvAudioChannelActivityNotification(const uint32_t& aAudioChannel,
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    nsRefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+    RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
     nsAutoCString topic;
     topic.Assign("audiochannel-activity-");
     topic.Append(AudioChannelService::GetAudioChannelTable()[aAudioChannel].tag);
@@ -2922,7 +2921,7 @@ TabParent::GetFrameLoader(bool aUseCachedFrameLoaderAfterDestroy) const
   }
 
   if (mFrameLoader) {
-    nsRefPtr<nsFrameLoader> fl = mFrameLoader;
+    RefPtr<nsFrameLoader> fl = mFrameLoader;
     return fl.forget();
   }
   nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
@@ -3145,7 +3144,7 @@ TabParent::InjectTouchEvent(const nsAString& aType,
         CSSPoint::ToAppUnits(CSSPoint(aXs[i], aYs[i])),
         presContext->AppUnitsPerDevPixel());
 
-    nsRefPtr<Touch> t = new Touch(aIdentifiers[i],
+    RefPtr<Touch> t = new Touch(aIdentifiers[i],
                                   pt,
                                   nsIntPoint(aRxs[i], aRys[i]),
                                   aRotationAngles[i],
@@ -3257,7 +3256,7 @@ private:
 class LayerTreeUpdateObserver : public CompositorUpdateObserver
 {
   virtual void ObserveUpdate(uint64_t aLayersId, bool aActive) {
-    nsRefPtr<LayerTreeUpdateRunnable> runnable = new LayerTreeUpdateRunnable(aLayersId, aActive);
+    RefPtr<LayerTreeUpdateRunnable> runnable = new LayerTreeUpdateRunnable(aLayersId, aActive);
     NS_DispatchToMainThread(runnable);
   }
 };
@@ -3297,7 +3296,7 @@ TabParent::LayerTreeUpdate(bool aActive)
     return true;
   }
 
-  nsRefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   if (aActive) {
     event->InitEvent(NS_LITERAL_STRING("MozLayerTreeReady"), true, false);
   } else {
@@ -3336,7 +3335,7 @@ TabParent::RecvRemotePaintIsReady()
     return true;
   }
 
-  nsRefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
+  RefPtr<Event> event = NS_NewDOMEvent(mFrameElement, nullptr, nullptr);
   event->InitEvent(NS_LITERAL_STRING("MozAfterRemotePaint"), false, false);
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
@@ -3488,10 +3487,10 @@ TabParent::RecvAsyncAuthPrompt(const nsCString& aUri,
   GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL,
                 NS_GET_IID(nsIAuthPrompt2),
                 getter_AddRefs(authPrompt));
-  nsRefPtr<FakeChannel> channel = new FakeChannel(aUri, aCallbackId, mFrameElement);
+  RefPtr<FakeChannel> channel = new FakeChannel(aUri, aCallbackId, mFrameElement);
   uint32_t promptFlags = nsIAuthInformation::AUTH_HOST;
 
-  nsRefPtr<nsAuthInformationHolder> holder =
+  RefPtr<nsAuthInformationHolder> holder =
     new nsAuthInformationHolder(promptFlags, aRealm,
                                 EmptyCString());
 
@@ -3579,11 +3578,11 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
     nsTArray<DataTransferItem>& itemArray = mInitialDataTransferItems[i];
     for (uint32_t j = 0; j < itemArray.Length(); ++j) {
       DataTransferItem& item = itemArray[j];
-      nsRefPtr<nsVariantCC> variant = new nsVariantCC();
+      RefPtr<nsVariantCC> variant = new nsVariantCC();
       // Special case kFilePromiseMime so that we get the right
       // nsIFlavorDataProvider for it.
       if (item.mFlavor.EqualsLiteral(kFilePromiseMime)) {
-        nsRefPtr<nsISupports> flavorDataProvider =
+        RefPtr<nsISupports> flavorDataProvider =
           new nsContentAreaDragDropDataProvider();
         variant->SetAsISupports(flavorDataProvider);
       } else if (item.mType == DataTransferItem::DataType::eString) {

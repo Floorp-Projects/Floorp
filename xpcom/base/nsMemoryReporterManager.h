@@ -219,7 +219,7 @@ private:
     bool                                 mAnonymize;
     bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
-    nsTArray<nsRefPtr<mozilla::dom::ContentParent>> mChildrenPending;
+    nsTArray<RefPtr<mozilla::dom::ContentParent>> mChildrenPending;
     uint32_t                             mNumProcessesRunning;
     uint32_t                             mNumProcessesCompleted;
     uint32_t                             mConcurrencyLimit;

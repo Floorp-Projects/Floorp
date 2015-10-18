@@ -385,7 +385,7 @@ nsComposerCommandsUpdater::Notify(nsITimer *timer)
 nsresult
 NS_NewComposerCommandsUpdater(nsISelectionListener** aInstancePtrResult)
 {
-  nsRefPtr<nsComposerCommandsUpdater> newThang = new nsComposerCommandsUpdater;
+  RefPtr<nsComposerCommandsUpdater> newThang = new nsComposerCommandsUpdater;
   newThang.forget(aInstancePtrResult);
   return NS_OK;
 }

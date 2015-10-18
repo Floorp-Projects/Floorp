@@ -282,7 +282,7 @@ class MOZ_STACK_CLASS nsWSRunObject
     // stored in the struct.
     struct MOZ_STACK_CLASS WSPoint
     {
-      nsRefPtr<mozilla::dom::Text> mTextNode;
+      RefPtr<mozilla::dom::Text> mTextNode;
       uint32_t mOffset;
       char16_t mChar;
 
@@ -361,14 +361,14 @@ class MOZ_STACK_CLASS nsWSRunObject
     WSType mEndReason;                 // reason why ws ends (eText, eOtherBlock, etc)
     nsCOMPtr<nsINode> mEndReasonNode;  // the node that implicated by end reason
 
-    nsRefPtr<mozilla::dom::Text> mFirstNBSPNode; // location of first nbsp in ws run, if any
+    RefPtr<mozilla::dom::Text> mFirstNBSPNode; // location of first nbsp in ws run, if any
     int32_t mFirstNBSPOffset;          // ...
 
-    nsRefPtr<mozilla::dom::Text> mLastNBSPNode; // location of last nbsp in ws run, if any
+    RefPtr<mozilla::dom::Text> mLastNBSPNode; // location of last nbsp in ws run, if any
     int32_t mLastNBSPOffset;           // ...
 
     // the list of nodes containing ws in this run
-    nsTArray<nsRefPtr<mozilla::dom::Text>> mNodeArray;
+    nsTArray<RefPtr<mozilla::dom::Text>> mNodeArray;
 
     WSFragment *mStartRun;             // the first WSFragment in the run
     WSFragment *mEndRun;               // the last WSFragment in the run, may be same as first

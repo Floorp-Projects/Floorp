@@ -59,7 +59,6 @@ WorkerActor.prototype = {
 
     return {
       type: "attached",
-      isFrozen: this._dbg.isFrozen,
       url: this._dbg.url
     };
   },
@@ -111,14 +110,6 @@ WorkerActor.prototype = {
 
   onError: function (filename, lineno, message) {
     reportError("ERROR:" + filename + ":" + lineno + ":" + message + "\n");
-  },
-
-  onFreeze: function () {
-    this.conn.sendActorEvent(this.actorID, "freeze");
-  },
-
-  onThaw: function () {
-    this.conn.sendActorEvent(this.actorID, "thaw");
   },
 
   _detach: function () {

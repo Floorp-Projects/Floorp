@@ -108,7 +108,7 @@ protected:
   ValueModeFlag                     mValueModeFlag;
   bool                              mIsDoneAddingChildren;
   nsString                          mDefaultValue;
-  nsRefPtr<nsDOMSettableTokenList>  mTokenList;
+  RefPtr<nsDOMSettableTokenList>  mTokenList;
 };
 
 } // namespace dom

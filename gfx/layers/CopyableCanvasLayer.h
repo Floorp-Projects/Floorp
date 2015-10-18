@@ -51,7 +51,7 @@ protected:
   void UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr);
 
   RefPtr<gfx::SourceSurface> mSurface;
-  nsRefPtr<gl::GLContext> mGLContext;
+  RefPtr<gl::GLContext> mGLContext;
   GLuint mCanvasFrontbufferTexID;
   RefPtr<PersistentBufferProvider> mBufferProvider;
 

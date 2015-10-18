@@ -1000,7 +1000,7 @@ abort:
 NS_IMPL_ISUPPORTS(NrUdpSocketIpcProxy, nsIUDPSocketInternal)
 
 nsresult
-NrUdpSocketIpcProxy::Init(const nsRefPtr<NrUdpSocketIpc>& socket)
+NrUdpSocketIpcProxy::Init(const RefPtr<NrUdpSocketIpc>& socket)
 {
   nsresult rv;
   sts_thread_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
@@ -1118,7 +1118,7 @@ NS_IMETHODIMP NrUdpSocketIpc::CallListenerReceivedData(const nsACString &host,
   RefPtr<nr_udp_message> msg(new nr_udp_message(addr, buf));
 
   RUN_ON_THREAD(sts_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrUdpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
                                       &NrUdpSocketIpc::recv_callback_s,
                                       msg),
                 NS_DISPATCH_NORMAL);
@@ -1226,7 +1226,7 @@ int NrUdpSocketIpc::create(nr_transport_addr *addr) {
   state_ = NR_CONNECTING;
 
   RUN_ON_THREAD(io_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrUdpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
                                       &NrUdpSocketIpc::create_i,
                                       host, static_cast<uint16_t>(port)),
                 NS_DISPATCH_NORMAL);
@@ -1269,7 +1269,7 @@ int NrUdpSocketIpc::sendto(const void *msg, size_t len, int flags,
   nsAutoPtr<DataBuffer> buf(new DataBuffer(static_cast<const uint8_t*>(msg), len));
 
   RUN_ON_THREAD(io_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrUdpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
                                       &NrUdpSocketIpc::sendto_i,
                                       addr, buf),
                 NS_DISPATCH_NORMAL);
@@ -1283,7 +1283,7 @@ void NrUdpSocketIpc::close() {
   state_ = NR_CLOSING;
 
   RUN_ON_THREAD(io_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrUdpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrUdpSocketIpc>(this),
                                       &NrUdpSocketIpc::close_i),
                 NS_DISPATCH_NORMAL);
 
@@ -1397,7 +1397,7 @@ void NrUdpSocketIpc::create_i(const nsACString &host, const uint16_t port) {
     socketChild = nullptr;
   }
 
-  nsRefPtr<NrUdpSocketIpcProxy> proxy(new NrUdpSocketIpcProxy);
+  RefPtr<NrUdpSocketIpcProxy> proxy(new NrUdpSocketIpcProxy);
   rv = proxy->Init(this);
   if (NS_FAILED(rv)) {
     err_ = true;
@@ -1447,7 +1447,7 @@ void NrUdpSocketIpc::close_i() {
 // static
 void NrUdpSocketIpc::release_child_i(nsIUDPSocketChild* aChild,
                                      nsCOMPtr<nsIEventTarget> sts_thread) {
-  nsRefPtr<nsIUDPSocketChild> socket_child_ref =
+  RefPtr<nsIUDPSocketChild> socket_child_ref =
     already_AddRefed<nsIUDPSocketChild>(aChild);
   if (socket_child_ref) {
     socket_child_ref->Close();
@@ -1495,7 +1495,7 @@ public:
   }
 
 private:
-  nsRefPtr<NrTcpSocketIpc> socket_;
+  RefPtr<NrTcpSocketIpc> socket_;
 };
 
 
@@ -1547,7 +1547,7 @@ NS_IMETHODIMP NrTcpSocketIpc::UpdateReadyState(uint32_t aReadyState) {
   if (mirror_state_ != temp) {
     mirror_state_ = temp;
     RUN_ON_THREAD(sts_thread_,
-                  mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                  mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                                         &NrTcpSocketIpc::update_state_s,
                                         temp),
                   NS_DISPATCH_NORMAL);
@@ -1558,7 +1558,7 @@ NS_IMETHODIMP NrTcpSocketIpc::UpdateReadyState(uint32_t aReadyState) {
 NS_IMETHODIMP NrTcpSocketIpc::UpdateBufferedAmount(uint32_t buffered_amount,
                                                    uint32_t tracking_number) {
   RUN_ON_THREAD(sts_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                                       &NrTcpSocketIpc::message_sent_s,
                                       buffered_amount,
                                       tracking_number),
@@ -1573,10 +1573,10 @@ NS_IMETHODIMP NrTcpSocketIpc::FireDataArrayEvent(const nsAString& aType,
   uint8_t *buf = const_cast<uint8_t*>(buffer.Elements());
 
   nsAutoPtr<DataBuffer> data_buf(new DataBuffer(buf, buffer.Length()));
-  nsRefPtr<nr_tcp_message> msg = new nr_tcp_message(data_buf);
+  RefPtr<nr_tcp_message> msg = new nr_tcp_message(data_buf);
 
   RUN_ON_THREAD(sts_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                                       &NrTcpSocketIpc::recv_message_s,
                                       msg),
                 NS_DISPATCH_NORMAL);
@@ -1592,7 +1592,7 @@ NS_IMETHODIMP NrTcpSocketIpc::FireErrorEvent(const nsAString &type,
 
   mirror_state_ = NR_CLOSED;
   RUN_ON_THREAD(sts_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                                       &NrTcpSocketIpc::update_state_s,
                                       NR_CLOSED),
                 NS_DISPATCH_NORMAL);
@@ -1679,7 +1679,7 @@ void NrTcpSocketIpc::close() {
   state_ = NR_CLOSING;
 
   RUN_ON_THREAD(io_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                                       &NrTcpSocketIpc::close_i),
                 NS_DISPATCH_NORMAL);
 
@@ -1707,7 +1707,7 @@ int NrTcpSocketIpc::connect(nr_transport_addr *addr) {
 
   state_ = mirror_state_ = NR_CONNECTING;
   RUN_ON_THREAD(io_thread_,
-                mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                              &NrTcpSocketIpc::connect_i,
                              remote_addr,
                              static_cast<uint16_t>(remote_port),
@@ -1739,7 +1739,7 @@ int NrTcpSocketIpc::write(const void *msg, size_t len, size_t *written) {
     // keep track of un-acknowleged writes by tracking number.
     writes_in_flight_.push_back(len);
     RUN_ON_THREAD(io_thread_,
-                  mozilla::WrapRunnable(nsRefPtr<NrTcpSocketIpc>(this),
+                  mozilla::WrapRunnable(RefPtr<NrTcpSocketIpc>(this),
                                         &NrTcpSocketIpc::write_i,
                                         nsAutoPtr<InfallibleTArray<uint8_t>>(arr),
                                         ++tracking_number_),
@@ -1761,7 +1761,7 @@ int NrTcpSocketIpc::read(void* buf, size_t maxlen, size_t *len) {
   }
 
   {
-    nsRefPtr<nr_tcp_message> msg(msg_queue_.front());
+    RefPtr<nr_tcp_message> msg(msg_queue_.front());
     size_t consumed_len = std::min(maxlen, msg->unread_bytes());
     memcpy(buf, msg->reading_pointer(), consumed_len);
     if (consumed_len < msg->unread_bytes()) {
@@ -1826,7 +1826,7 @@ void NrTcpSocketIpc::close_i() {
 // static
 void NrTcpSocketIpc::release_child_i(dom::TCPSocketChild* aChild,
                                      nsCOMPtr<nsIEventTarget> sts_thread) {
-  nsRefPtr<dom::TCPSocketChild> socket_child_ref =
+  RefPtr<dom::TCPSocketChild> socket_child_ref =
     already_AddRefed<dom::TCPSocketChild>(aChild);
   if (socket_child_ref) {
     socket_child_ref->SendClose();
@@ -1917,7 +1917,7 @@ void NrTcpSocketIpc::maybe_post_socket_ready() {
   // If any event has been posted, we post a runnable to see
   // if the events have to be posted again.
   if (has_event) {
-    nsRefPtr<TcpSocketReadyRunner> runnable = new TcpSocketReadyRunner(this);
+    RefPtr<TcpSocketReadyRunner> runnable = new TcpSocketReadyRunner(this);
     NS_DispatchToCurrentThread(runnable);
   }
 }

@@ -399,7 +399,7 @@ protected:
   uint32_t mColormapSize;
 
 private:
-  nsRefPtr<RasterImage> mImage;
+  RefPtr<RasterImage> mImage;
   Maybe<SourceBufferIterator> mIterator;
   RawAccessFrameRef mCurrentFrame;
   ImageMetadata mImageMetadata;

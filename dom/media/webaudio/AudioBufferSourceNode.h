@@ -135,9 +135,9 @@ private:
   double mLoopEnd;
   double mOffset;
   double mDuration;
-  nsRefPtr<AudioBuffer> mBuffer;
-  nsRefPtr<AudioParam> mPlaybackRate;
-  nsRefPtr<AudioParam> mDetune;
+  RefPtr<AudioBuffer> mBuffer;
+  RefPtr<AudioParam> mPlaybackRate;
+  RefPtr<AudioParam> mDetune;
   bool mLoop;
   bool mStartCalled;
 };

@@ -173,7 +173,7 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
 
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
 
-  nsRefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(uriString);
+  RefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(uriString);
   NS_ADDREF(*aInfo = info);
 
   nsCOMPtr<nsIIOService> ioService =
@@ -441,7 +441,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
                                 nsIInputStream** aPostData,
                                 nsIURIFixupInfo** aInfo)
 {
-  nsRefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(aKeyword);
+  RefPtr<nsDefaultURIFixupInfo> info = new nsDefaultURIFixupInfo(aKeyword);
   NS_ADDREF(*aInfo = info);
 
   if (aPostData) {

@@ -52,7 +52,7 @@ ChannelEventQueue::Resume()
   }
 
   if (!--mSuspendCount) {
-    nsRefPtr<nsRunnableMethod<ChannelEventQueue> > event =
+    RefPtr<nsRunnableMethod<ChannelEventQueue> > event =
       NS_NewRunnableMethod(this, &ChannelEventQueue::CompleteResume);
     if (mTargetThread) {
       mTargetThread->Dispatch(event, NS_DISPATCH_NORMAL);

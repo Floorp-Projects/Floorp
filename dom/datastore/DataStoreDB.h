@@ -59,12 +59,12 @@ private:
 
   nsString mDatabaseName;
 
-  nsRefPtr<indexedDB::IDBFactory> mFactory;
-  nsRefPtr<indexedDB::IDBOpenDBRequest> mRequest;
-  nsRefPtr<indexedDB::IDBDatabase> mDatabase;
-  nsRefPtr<indexedDB::IDBTransaction> mTransaction;
+  RefPtr<indexedDB::IDBFactory> mFactory;
+  RefPtr<indexedDB::IDBOpenDBRequest> mRequest;
+  RefPtr<indexedDB::IDBDatabase> mDatabase;
+  RefPtr<indexedDB::IDBTransaction> mTransaction;
 
-  nsRefPtr<DataStoreDBCallback> mCallback;
+  RefPtr<DataStoreDBCallback> mCallback;
 
   // Internal state to avoid strange use of this class.
   enum StateType {

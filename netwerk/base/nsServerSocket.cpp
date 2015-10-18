@@ -158,7 +158,7 @@ void
 nsServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
                                       const NetAddr& aClientAddr)
 {
-  nsRefPtr<nsSocketTransport> trans = new nsSocketTransport;
+  RefPtr<nsSocketTransport> trans = new nsSocketTransport;
   if (NS_WARN_IF(!trans)) {
     mCondition = NS_ERROR_OUT_OF_MEMORY;
     return;
@@ -483,7 +483,7 @@ NS_IMETHODIMP
 ServerSocketListenerProxy::OnSocketAccepted(nsIServerSocket* aServ,
                                             nsISocketTransport* aTransport)
 {
-  nsRefPtr<OnSocketAcceptedRunnable> r =
+  RefPtr<OnSocketAcceptedRunnable> r =
     new OnSocketAcceptedRunnable(mListener, aServ, aTransport);
   return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }
@@ -492,7 +492,7 @@ NS_IMETHODIMP
 ServerSocketListenerProxy::OnStopListening(nsIServerSocket* aServ,
                                            nsresult aStatus)
 {
-  nsRefPtr<OnStopListeningRunnable> r =
+  RefPtr<OnStopListeningRunnable> r =
     new OnStopListeningRunnable(mListener, aServ, aStatus);
   return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }

@@ -266,9 +266,9 @@ private:
         mozilla::DropJSObjects(this);
     }
 
-    nsRefPtr<nsIChannel>      mChannel;
+    RefPtr<nsIChannel>      mChannel;
     Heap<JSObject*>           mTargetObj;
-    nsRefPtr<Promise>         mPromise;
+    RefPtr<Promise>         mPromise;
     nsString                  mCharset;
     bool                      mReuseGlobal;
     bool                      mCache;
@@ -321,7 +321,7 @@ class MOZ_STACK_CLASS AutoRejectPromise
 
   private:
     JSContext*                mCx;
-    nsRefPtr<Promise>         mPromise;
+    RefPtr<Promise>         mPromise;
     nsCOMPtr<nsIGlobalObject> mGlobalObject;
 };
 
@@ -395,7 +395,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
       return NS_ERROR_UNEXPECTED;
     }
 
-    nsRefPtr<Promise> promise = Promise::Create(globalObject, result);
+    RefPtr<Promise> promise = Promise::Create(globalObject, result);
     if (result.Failed()) {
       promise = nullptr;
     }
@@ -423,7 +423,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
 
     channel->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
 
-    nsRefPtr<AsyncScriptLoader> loadObserver =
+    RefPtr<AsyncScriptLoader> loadObserver =
         new AsyncScriptLoader(channel,
                               reuseGlobal,
                               target_obj,
@@ -702,9 +702,9 @@ private:
       }
     }
 
-    nsRefPtr<nsIObserver> mObserver;
-    nsRefPtr<nsIPrincipal> mPrincipal;
-    nsRefPtr<nsIChannel> mChannel;
+    RefPtr<nsIObserver> mObserver;
+    RefPtr<nsIPrincipal> mPrincipal;
+    RefPtr<nsIChannel> mChannel;
     char16_t* mScriptBuf;
     size_t mScriptLength;
 };
@@ -727,7 +727,7 @@ public:
     }
 
 protected:
-    nsRefPtr<ScriptPrecompiler> mPrecompiler;
+    RefPtr<ScriptPrecompiler> mPrecompiler;
     void* mToken;
 };
 
@@ -820,7 +820,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
         return NS_OK;
     }
 
-    nsRefPtr<NotifyPrecompilationCompleteRunnable> runnable =
+    RefPtr<NotifyPrecompilationCompleteRunnable> runnable =
         new NotifyPrecompilationCompleteRunnable(this);
 
     if (!JS::CompileOffThread(cx, options,
@@ -841,7 +841,7 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
 void
 ScriptPrecompiler::OffThreadCallback(void* aToken, void* aData)
 {
-    nsRefPtr<NotifyPrecompilationCompleteRunnable> runnable =
+    RefPtr<NotifyPrecompilationCompleteRunnable> runnable =
         dont_AddRef(static_cast<NotifyPrecompilationCompleteRunnable*>(aData));
     runnable->SetToken(aToken);
 
@@ -873,7 +873,7 @@ mozJSSubScriptLoader::PrecompileScript(nsIURI* aURI,
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<ScriptPrecompiler> loadObserver =
+    RefPtr<ScriptPrecompiler> loadObserver =
         new ScriptPrecompiler(aObserver, aPrincipal, channel);
 
     nsCOMPtr<nsIStreamLoader> loader;

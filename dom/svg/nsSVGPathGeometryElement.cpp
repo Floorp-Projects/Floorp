@@ -112,7 +112,7 @@ nsSVGPathGeometryElement::GetFillRule()
 {
   FillRule fillRule = FillRule::FILL_WINDING; // Equivalent to NS_STYLE_FILL_RULE_NONZERO
 
-  nsRefPtr<nsStyleContext> styleContext =
+  RefPtr<nsStyleContext> styleContext =
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr,
                                                          nullptr);
   

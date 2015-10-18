@@ -162,9 +162,15 @@ const WorkerSandbox = Class({
     let parent = window.parent === window ? content : content.parent;
     merge(content, {
       // We need 'this === window === top' to be true in toplevel scope:
-      get window() content,
-      get top() top,
-      get parent() parent
+      get window() {
+        return content;
+      },
+      get top() {
+        return top;
+      },
+      get parent() {
+        return parent;
+      }
     });
 
     // Use the Greasemonkey naming convention to provide access to the

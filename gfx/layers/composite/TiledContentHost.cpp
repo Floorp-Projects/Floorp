@@ -141,7 +141,7 @@ bool
 GetCopyOnWriteLock(const TileLock& ipcLock, TileHost& aTile, ISurfaceAllocator* aAllocator) {
   MOZ_ASSERT(aAllocator);
 
-  nsRefPtr<gfxSharedReadLock> sharedLock;
+  RefPtr<gfxSharedReadLock> sharedLock;
   if (ipcLock.type() == TileLock::TShmemSection) {
     sharedLock = gfxShmSharedReadLock::Open(aAllocator, ipcLock.get_ShmemSection());
   } else {

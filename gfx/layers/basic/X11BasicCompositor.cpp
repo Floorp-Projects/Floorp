@@ -26,7 +26,7 @@ X11DataTextureSourceBasic::Update(gfx::DataSourceSurface* aSurface,
       (aSurface->GetSize() != mBufferDrawTarget->GetSize()) ||
       (aSurface->GetFormat() != mBufferDrawTarget->GetFormat())) {
 
-    nsRefPtr<gfxASurface> surf;
+    RefPtr<gfxASurface> surf;
     gfxImageFormat imageFormat = SurfaceFormatToImageFormat(aSurface->GetFormat());
     Display *display = DefaultXDisplay();
     Screen *screen = DefaultScreenOfDisplay(display);

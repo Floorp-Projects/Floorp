@@ -380,7 +380,7 @@ OutputPin::RequestAllocator(IMemAllocator* aPreferred,
 
   // Just create a default allocator. It's highly unlikely that we'll use
   // this anyway, as most parsers insist on using their own allocators.
-  nsRefPtr<IMemAllocator> allocator;
+  RefPtr<IMemAllocator> allocator;
   hr = CoCreateInstance(CLSID_MemoryAllocator,
                         0,
                         CLSCTX_INPROC_SERVER,

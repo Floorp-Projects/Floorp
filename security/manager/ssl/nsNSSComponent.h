@@ -206,7 +206,7 @@ private:
   nsCertVerificationThread* mCertVerificationThread;
 
   nsNSSHttpInterface mHttpForNSS;
-  mozilla::RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
+  RefPtr<mozilla::psm::SharedCertVerifier> mDefaultCertVerifier;
 
   static PRStatus IdentityInfoInit(void);
 };

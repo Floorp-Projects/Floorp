@@ -61,7 +61,7 @@ protected:
 
   // Those rows that are not in table sections
   HTMLTableElement* mParent;
-  nsRefPtr<nsContentList> mOrphanRows;  
+  RefPtr<nsContentList> mOrphanRows;  
 };
 
 
@@ -366,10 +366,10 @@ HTMLTableElement::TBodies()
 already_AddRefed<nsGenericHTMLElement>
 HTMLTableElement::CreateTHead()
 {
-  nsRefPtr<nsGenericHTMLElement> head = GetTHead();
+  RefPtr<nsGenericHTMLElement> head = GetTHead();
   if (!head) {
     // Create a new head rowgroup.
-    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::thead,
                                 getter_AddRefs(nodeInfo));
 
@@ -398,10 +398,10 @@ HTMLTableElement::DeleteTHead()
 already_AddRefed<nsGenericHTMLElement>
 HTMLTableElement::CreateTFoot()
 {
-  nsRefPtr<nsGenericHTMLElement> foot = GetTFoot();
+  RefPtr<nsGenericHTMLElement> foot = GetTFoot();
   if (!foot) {
     // create a new foot rowgroup
-    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tfoot,
                                 getter_AddRefs(nodeInfo));
 
@@ -429,10 +429,10 @@ HTMLTableElement::DeleteTFoot()
 already_AddRefed<nsGenericHTMLElement>
 HTMLTableElement::CreateCaption()
 {
-  nsRefPtr<nsGenericHTMLElement> caption = GetCaption();
+  RefPtr<nsGenericHTMLElement> caption = GetCaption();
   if (!caption) {
     // Create a new caption.
-    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::caption,
                                 getter_AddRefs(nodeInfo));
 
@@ -460,13 +460,13 @@ HTMLTableElement::DeleteCaption()
 already_AddRefed<nsGenericHTMLElement>
 HTMLTableElement::CreateTBody()
 {
-  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo =
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo =
     OwnerDoc()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::tbody, nullptr,
                                                kNameSpaceID_XHTML,
                                                nsIDOMNode::ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo);
 
-  nsRefPtr<nsGenericHTMLElement> newBody =
+  RefPtr<nsGenericHTMLElement> newBody =
     NS_NewHTMLTableSectionElement(nodeInfo.forget());
   MOZ_ASSERT(newBody);
 
@@ -512,7 +512,7 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
   // use local variable refIndex so we can remember original aIndex
   uint32_t refIndex = (uint32_t)aIndex;
 
-  nsRefPtr<nsGenericHTMLElement> newRow;
+  RefPtr<nsGenericHTMLElement> newRow;
   if (rowCount > 0) {
     if (refIndex == rowCount || aIndex == -1) {
       // we set refIndex to the last row so we can get the last row's
@@ -525,7 +525,7 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
     nsINode* parent = refRow->GetParentNode();
 
     // create the row
-    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                                 getter_AddRefs(nodeInfo));
 
@@ -559,7 +559,7 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
     }
 
     if (!rowGroup) { // need to create a TBODY
-      nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+      RefPtr<mozilla::dom::NodeInfo> nodeInfo;
       nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tbody,
                                   getter_AddRefs(nodeInfo));
 
@@ -573,7 +573,7 @@ HTMLTableElement::InsertRow(int32_t aIndex, ErrorResult& aError)
     }
 
     if (rowGroup) {
-      nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+      RefPtr<mozilla::dom::NodeInfo> nodeInfo;
       nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::tr,
                                   getter_AddRefs(nodeInfo));
 
@@ -897,11 +897,11 @@ HTMLTableElement::BuildInheritedAttributes()
   nsIDocument *document = GetComposedDoc();
   nsHTMLStyleSheet* sheet = document ?
                               document->GetAttributeStyleSheet() : nullptr;
-  nsRefPtr<nsMappedAttributes> newAttrs;
+  RefPtr<nsMappedAttributes> newAttrs;
   if (sheet) {
     const nsAttrValue* value = mAttrsAndChildren.GetAttr(nsGkAtoms::cellpadding);
     if (value) {
-      nsRefPtr<nsMappedAttributes> modifiableMapped = new
+      RefPtr<nsMappedAttributes> modifiableMapped = new
       nsMappedAttributes(sheet, MapInheritedTableAttributesIntoRule);
 
       if (modifiableMapped) {

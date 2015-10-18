@@ -37,7 +37,7 @@ PaintRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 already_AddRefed<DOMRect>
 PaintRequest::ClientRect()
 {
-  nsRefPtr<DOMRect> clientRect = new DOMRect(this);
+  RefPtr<DOMRect> clientRect = new DOMRect(this);
   clientRect->SetLayoutRect(mRequest.mRect);
   return clientRect.forget();
 }
@@ -45,7 +45,7 @@ PaintRequest::ClientRect()
 NS_IMETHODIMP
 PaintRequest::GetClientRect(nsIDOMClientRect** aResult)
 {
-  nsRefPtr<DOMRect> clientRect = ClientRect();
+  RefPtr<DOMRect> clientRect = ClientRect();
   clientRect.forget(aResult);
   return NS_OK;
 }

@@ -66,7 +66,7 @@ class nsHtml5StringParser : public nsParserBase
     /**
      * The tree operation executor
      */
-    nsRefPtr<nsHtml5OplessBuilder>      mBuilder;
+    RefPtr<nsHtml5OplessBuilder>      mBuilder;
 
     /**
      * The HTML5 tree builder

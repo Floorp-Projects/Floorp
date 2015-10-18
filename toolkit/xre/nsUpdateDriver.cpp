@@ -691,7 +691,7 @@ SetOSApplyToDir(nsIUpdate* update, const nsACString& osApplyToDir)
     return;
   }
 
-  nsRefPtr<nsVariant> variant = new nsVariant();
+  RefPtr<nsVariant> variant = new nsVariant();
   rv = variant->SetAsACString(osApplyToDir);
   if (NS_FAILED(rv)) {
     return;

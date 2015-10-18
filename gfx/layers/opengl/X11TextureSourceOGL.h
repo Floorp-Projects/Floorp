@@ -51,7 +51,7 @@ public:
 
 protected:
   RefPtr<CompositorOGL> mCompositor;
-  nsRefPtr<gfxXlibSurface> mSurface;
+  RefPtr<gfxXlibSurface> mSurface;
   RefPtr<gfx::SourceSurface> mSourceSurface;
   GLuint mTexture;
   bool mUpdated;

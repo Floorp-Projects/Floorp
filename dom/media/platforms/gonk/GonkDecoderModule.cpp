@@ -33,7 +33,7 @@ GonkDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
                                      FlushableTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  nsRefPtr<MediaDataDecoder> decoder =
+  RefPtr<MediaDataDecoder> decoder =
   new GonkMediaDataDecoder(new GonkVideoDecoderManager(aImageContainer, aConfig),
                            aVideoTaskQueue, aCallback);
   return decoder.forget();
@@ -44,7 +44,7 @@ GonkDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
                                       FlushableTaskQueue* aAudioTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
-  nsRefPtr<MediaDataDecoder> decoder =
+  RefPtr<MediaDataDecoder> decoder =
   new GonkMediaDataDecoder(new GonkAudioDecoderManager(aConfig),
                            aAudioTaskQueue, aCallback);
   return decoder.forget();

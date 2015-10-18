@@ -398,7 +398,7 @@ private:
   nsCString mMethod;
   // mURL always stores the url with the ref stripped
   nsCString mURL;
-  nsRefPtr<InternalHeaders> mHeaders;
+  RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBodyStream;
 
   nsContentPolicyType mContentPolicyType;

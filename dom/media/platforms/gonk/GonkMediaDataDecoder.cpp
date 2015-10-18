@@ -47,7 +47,7 @@ GonkDecoderManager::InitLoopers(MediaData::Type aType)
 nsresult
 GonkDecoderManager::Input(MediaRawData* aSample)
 {
-  nsRefPtr<MediaRawData> sample;
+  RefPtr<MediaRawData> sample;
 
   if (aSample) {
     sample = aSample;
@@ -74,7 +74,7 @@ GonkDecoderManager::ProcessQueuedSamples()
   MutexAutoLock lock(mMutex);
   status_t rv;
   while (mQueuedSamples.Length()) {
-    nsRefPtr<MediaRawData> data = mQueuedSamples.ElementAt(0);
+    RefPtr<MediaRawData> data = mQueuedSamples.ElementAt(0);
     {
       rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->Data()),
                            data->Size(),
@@ -195,7 +195,7 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
 
   nsresult rv = NS_OK;
   while (mWaitOutput.Length() > 0) {
-    nsRefPtr<MediaData> output;
+    RefPtr<MediaData> output;
     int64_t offset = mWaitOutput.ElementAt(0);
     rv = Output(offset, output);
     if (rv == NS_OK) {
@@ -270,7 +270,7 @@ GonkMediaDataDecoder::~GonkMediaDataDecoder()
   MOZ_COUNT_DTOR(GonkMediaDataDecoder);
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 GonkMediaDataDecoder::Init()
 {
   return mManager->Init();

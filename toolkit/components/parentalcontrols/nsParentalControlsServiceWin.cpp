@@ -40,7 +40,7 @@ nsParentalControlsService::nsParentalControlsService() :
   if (FAILED(hr))
     return;
 
-  nsRefPtr<IWPCSettings> wpcs;
+  RefPtr<IWPCSettings> wpcs;
   if (FAILED(mPC->GetUserSettings(nullptr, getter_AddRefs(wpcs)))) {
     // Not available on this os or not enabled for this user account or we're running as admin
     mPC->Release();
@@ -101,7 +101,7 @@ nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult)
   if (!mEnabled)
     return NS_ERROR_NOT_AVAILABLE;
 
-  nsRefPtr<IWPCWebSettings> wpcws;
+  RefPtr<IWPCWebSettings> wpcws;
   if (SUCCEEDED(mPC->GetWebSettings(nullptr, getter_AddRefs(wpcws)))) {
     DWORD settings = 0;
     wpcws->GetSettings(&settings);
@@ -121,7 +121,7 @@ nsParentalControlsService::GetLoggingEnabled(bool *aResult)
     return NS_ERROR_NOT_AVAILABLE;
 
   // Check the general purpose logging flag
-  nsRefPtr<IWPCSettings> wpcs;
+  RefPtr<IWPCSettings> wpcs;
   if (SUCCEEDED(mPC->GetUserSettings(nullptr, getter_AddRefs(wpcs)))) {
     BOOL enabled = FALSE;
     wpcs->IsLoggingRequired(&enabled);
@@ -194,7 +194,7 @@ nsParentalControlsService::RequestURIOverride(nsIURI *aTarget, nsIInterfaceReque
     hWnd = GetDesktopWindow();
 
   BOOL ret;
-  nsRefPtr<IWPCWebSettings> wpcws;
+  RefPtr<IWPCWebSettings> wpcws;
   if (SUCCEEDED(mPC->GetWebSettings(nullptr, getter_AddRefs(wpcws)))) {
     wpcws->RequestURLOverride(hWnd, NS_ConvertUTF8toUTF16(spec).get(),
                               0, nullptr, &ret);
@@ -274,7 +274,7 @@ nsParentalControlsService::RequestURIOverrides(nsIArray *aTargets, nsIInterfaceR
     return NS_ERROR_INVALID_ARG;
 
   BOOL ret; 
-  nsRefPtr<IWPCWebSettings> wpcws;
+  RefPtr<IWPCWebSettings> wpcws;
   if (SUCCEEDED(mPC->GetWebSettings(nullptr, getter_AddRefs(wpcws)))) {
     wpcws->RequestURLOverride(hWnd, NS_ConvertUTF8toUTF16(rootSpec).get(),
                              uriIdx, (LPCWSTR*)arrUrls.get(), &ret);

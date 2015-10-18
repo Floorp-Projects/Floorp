@@ -19,7 +19,7 @@ function eventsFor(window) {
   let interactive = open(window, "DOMContentLoaded", { capture: true });
   let complete = open(window, "load", { capture: true });
   let states = merge([interactive, complete]);
-  let changes = filter(states, function({target}) target === window.document);
+  let changes = filter(states, ({target}) => target === window.document);
   return map(changes, function({type, target}) {
     return { type: type, target: target.defaultView }
   });
@@ -39,7 +39,7 @@ rename.domwindowclosed = "close";
 
 var openEvents = map(observe("domwindowopened"), rename);
 var closeEvents = map(observe("domwindowclosed"), rename);
-var futureEvents = expand(openEvents, function({target}) eventsFor(target));
+var futureEvents = expand(openEvents, ({target}) => eventsFor(target));
 
 var channel = merge([currentEvents, futureEvents,
                      openEvents, closeEvents]);

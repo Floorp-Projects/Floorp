@@ -167,17 +167,17 @@ private:
   private:
     // Pointer to the class that allows access to the shared memory that contains
     // the shared FrameMetrics
-    nsRefPtr<mozilla::ipc::SharedMemoryBasic> mBuffer;
+    RefPtr<mozilla::ipc::SharedMemoryBasic> mBuffer;
     CrossProcessMutex* mMutex;
     uint64_t mLayersId;
     // Unique ID of the APZC that is sharing the FrameMetrics
     uint32_t mAPZCId;
   };
 
-  nsRefPtr<ClientLayerManager> mLayerManager;
+  RefPtr<ClientLayerManager> mLayerManager;
   // When not multi-process, hold a reference to the CompositorParent to keep it
   // alive. This reference should be null in multi-process.
-  nsRefPtr<CompositorParent> mCompositorParent;
+  RefPtr<CompositorParent> mCompositorParent;
 
   // The ViewID of the FrameMetrics is used as the key for this hash table.
   // While this should be safe to use since the ViewID is unique

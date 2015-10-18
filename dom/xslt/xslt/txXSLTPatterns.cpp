@@ -326,7 +326,7 @@ bool txKeyPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     nsAutoPtr<txXPathNode> contextDoc(txXPathNodeUtils::getOwnerDocument(aNode));
     NS_ENSURE_TRUE(contextDoc, false);
 
-    nsRefPtr<txNodeSet> nodes;
+    RefPtr<txNodeSet> nodes;
     nsresult rv = es->getKeyNodes(mName, *contextDoc, mValue, true,
                                   getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, false);
@@ -409,7 +409,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
      */
 
     // Create the context node set for evaluating the predicates
-    nsRefPtr<txNodeSet> nodes;
+    RefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, false);
 
@@ -424,7 +424,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     }
 
     Expr* predicate = mPredicates[0];
-    nsRefPtr<txNodeSet> newNodes;
+    RefPtr<txNodeSet> newNodes;
     rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
     NS_ENSURE_SUCCESS(rv, false);
 
@@ -435,7 +435,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
         txNodeSetContext predContext(nodes, aContext);
         while (predContext.hasNext()) {
             predContext.next();
-            nsRefPtr<txAExprResult> exprResult;
+            RefPtr<txAExprResult> exprResult;
             rv = predicate->evaluate(&predContext, getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, false);
 
@@ -469,7 +469,7 @@ bool txStepPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
         predicate = mPredicates[i];
     }
     txForwardContext evalContext(aContext, aNode, nodes);
-    nsRefPtr<txAExprResult> exprResult;
+    RefPtr<txAExprResult> exprResult;
     rv = predicate->evaluate(&evalContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, false);
 

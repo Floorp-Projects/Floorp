@@ -287,7 +287,7 @@ SandboxFetch(JSContext* cx, JS::HandleObject scope, const CallArgs& args)
         return false;
     }
     ErrorResult rv;
-    nsRefPtr<dom::Promise> response =
+    RefPtr<dom::Promise> response =
         FetchRequest(global, Constify(request), Constify(options), rv);
     rv.WouldReportJSException();
     if (rv.Failed()) {
@@ -979,7 +979,7 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         if (sop) {
             principal = sop->GetPrincipal();
         } else {
-            nsRefPtr<nsNullPrincipal> nullPrin = nsNullPrincipal::Create();
+            RefPtr<nsNullPrincipal> nullPrin = nsNullPrincipal::Create();
             NS_ENSURE_TRUE(nullPrin, NS_ERROR_FAILURE);
             principal = nullPrin;
         }

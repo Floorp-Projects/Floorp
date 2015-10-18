@@ -54,7 +54,7 @@ private:
                                uint32_t        count,
                                uint32_t       *writeCount);
 
-  nsRefPtr<IObserver> mObserver;
+  RefPtr<IObserver> mObserver;
   Data mData;
   nsresult mStatus;
 };

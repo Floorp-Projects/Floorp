@@ -12,7 +12,7 @@
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 class nsPIDOMWindow;
 
@@ -112,8 +112,8 @@ private:
 
   void RemoveDocFromBFCache();
 
-  nsRefPtr<BroadcastChannelChild> mActor;
-  nsTArray<nsRefPtr<BroadcastChannelMessage>> mPendingMessages;
+  RefPtr<BroadcastChannelChild> mActor;
+  nsTArray<RefPtr<BroadcastChannelMessage>> mPendingMessages;
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 

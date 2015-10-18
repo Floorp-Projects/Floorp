@@ -128,7 +128,7 @@ test_async_Commit()
   // -- wedge the thread
   nsCOMPtr<nsIThread> target(get_conn_async_thread(db));
   do_check_true(target);
-  nsRefPtr<ThreadWedger> wedger (new ThreadWedger(target));
+  RefPtr<ThreadWedger> wedger (new ThreadWedger(target));
 
   {
     mozStorageTransaction transaction(db, false,

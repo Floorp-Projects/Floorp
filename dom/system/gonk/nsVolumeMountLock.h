@@ -45,7 +45,7 @@ private:
   nsresult Init();
   nsresult Lock(nsIVolume* aVolume);
 
-  nsRefPtr<dom::WakeLock>  mWakeLock;
+  RefPtr<dom::WakeLock>  mWakeLock;
   nsString                 mVolumeName;
   int32_t                  mVolumeGeneration;
   bool                     mUnlocked;

@@ -79,7 +79,7 @@ nsresult MediaPipeline::Init() {
 
   RUN_ON_THREAD(sts_thread_,
                 WrapRunnable(
-                    nsRefPtr<MediaPipeline>(this),
+                    RefPtr<MediaPipeline>(this),
                     &MediaPipeline::Init_s),
                 NS_DISPATCH_NORMAL);
 
@@ -846,7 +846,7 @@ UnsetTrackId(MediaStreamGraphImpl* graph) {
     {
       listener_->UnsetTrackIdImpl();
     }
-    nsRefPtr<PipelineListener> listener_;
+    RefPtr<PipelineListener> listener_;
   };
   graph->AppendMessage(new Message(this));
 #else
@@ -1298,7 +1298,7 @@ static void AddTrackAndListener(MediaStream* source,
     TrackID track_id_;
     TrackRate track_rate_;
     nsAutoPtr<MediaSegment> segment_;
-    nsRefPtr<MediaStreamListener> listener_;
+    RefPtr<MediaStreamListener> listener_;
     const RefPtr<TrackAddedCallback> completed_;
   };
 
@@ -1385,7 +1385,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     MOZ_MTLOG(ML_DEBUG, "Audio conduit returned buffer of length "
               << samples_length);
 
-    nsRefPtr<SharedBuffer> samples = SharedBuffer::Create(samples_length * sizeof(uint16_t));
+    RefPtr<SharedBuffer> samples = SharedBuffer::Create(samples_length * sizeof(uint16_t));
     int16_t *samples_data = static_cast<int16_t *>(samples->Data());
     AudioSegment segment;
     // We derive the number of channels of the stream from the number of samples
@@ -1484,7 +1484,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
 #else
     ImageFormat format = ImageFormat::PLANAR_YCBCR;
 #endif
-    nsRefPtr<Image> image = image_container_->CreateImage(format);
+    RefPtr<Image> image = image_container_->CreateImage(format);
     PlanarYCbCrImage* yuvImage = static_cast<PlanarYCbCrImage*>(image.get());
     uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
 
@@ -1520,9 +1520,9 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   ReentrantMonitorAutoEnter enter(monitor_);
 
 #if defined(MOZILLA_XPCOMRT_API)
-  nsRefPtr<SimpleImageBuffer> image = image_;
+  RefPtr<SimpleImageBuffer> image = image_;
 #elif defined(MOZILLA_INTERNAL_API)
-  nsRefPtr<Image> image = image_;
+  RefPtr<Image> image = image_;
   // our constructor sets track_rate_ to the graph rate
   MOZ_ASSERT(track_rate_ == source_->GraphRate());
 #endif

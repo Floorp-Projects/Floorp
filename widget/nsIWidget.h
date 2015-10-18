@@ -1676,7 +1676,7 @@ class nsIWidget : public nsISupports {
      * compositor for SnapshotWidgetOnScreen(), and should not be called
      * otherwise.
      */
-    virtual bool CaptureWidgetOnScreen(mozilla::RefPtr<mozilla::gfx::DrawTarget> aDT) = 0;
+    virtual bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT) = 0;
 
     virtual void StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) = 0;
 

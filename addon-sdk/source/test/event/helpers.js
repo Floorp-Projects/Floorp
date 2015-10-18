@@ -63,7 +63,7 @@ function scenario(setup) {
       unit(input, function(output, events, expected, message) {
         let result = setup(output, expected, actual);
 
-        events.forEach(function(event) emit(input, "data", event));
+        events.forEach(event => emit(input, "data", event));
 
         assert.deepEqual(actual, result, message);
       });
@@ -72,13 +72,17 @@ function scenario(setup) {
 }
 
 exports.emits = scenario(function(output, expected, actual) {
-  on(output, "data", function(data) actual.push(this, data));
+  on(output, "data", function(data) {
+    return actual.push(this, data);
+  });
 
-  return expected.reduce(function($$, $) $$.concat(output, $), []);
+  return expected.reduce(($$, $) => $$.concat(output, $), []);
 });
 
 exports.registerOnce = scenario(function(output, expected, actual) {
-  function listener(data) actual.push(data);
+  function listener(data) {
+    return actual.push(data);
+  }
   on(output, "data", listener);
   on(output, "data", listener);
   on(output, "data", listener);
@@ -94,13 +98,13 @@ exports.ignoreNew = scenario(function(output, expected, actual) {
     });
   });
 
-  return expected.map(function($) $ + "#1");
+  return expected.map($ => $ + "#1");
 });
 
 exports.FIFO = scenario(function(target, expected, actual) {
-  on(target, "data", function($) actual.push($ + "#1"));
-  on(target, "data", function($) actual.push($ + "#2"));
-  on(target, "data", function($) actual.push($ + "#3"));
+  on(target, "data", $ => actual.push($ + "#1"));
+  on(target, "data", $ => actual.push($ + "#2"));
+  on(target, "data", $ => actual.push($ + "#3"));
 
   return expected.reduce(function(result, value) {
     return result.concat(value + "#1", value + "#2", value + "#3");

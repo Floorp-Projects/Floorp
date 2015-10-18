@@ -162,8 +162,8 @@ private:
   bool mNeedsComposite;
   bool mIsObservingVsync;
   int32_t mVsyncNotificationsSkipped;
-  nsRefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
-  nsRefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
+  RefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
+  RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
 
@@ -357,8 +357,8 @@ public:
   struct LayerTreeState {
     LayerTreeState();
     ~LayerTreeState();
-    nsRefPtr<Layer> mRoot;
-    nsRefPtr<GeckoContentController> mController;
+    RefPtr<Layer> mRoot;
+    RefPtr<GeckoContentController> mController;
     CompositorParent* mParent;
     LayerManagerComposite* mLayerManager;
     // Pointer to the CrossProcessCompositorParent. Used by APZCs to share
@@ -370,8 +370,8 @@ public:
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
     bool mUpdatedPluginDataAvailable;
-    nsRefPtr<CompositorUpdateObserver> mLayerTreeReadyObserver;
-    nsRefPtr<CompositorUpdateObserver> mLayerTreeClearedObserver;
+    RefPtr<CompositorUpdateObserver> mLayerTreeReadyObserver;
+    RefPtr<CompositorUpdateObserver> mLayerTreeClearedObserver;
   };
 
   /**
@@ -456,8 +456,8 @@ protected:
 
   void DidComposite(TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
-  nsRefPtr<LayerManagerComposite> mLayerManager;
-  nsRefPtr<Compositor> mCompositor;
+  RefPtr<LayerManagerComposite> mLayerManager;
+  RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
   nsIWidget* mWidget;
   TimeStamp mTestTime;
@@ -479,10 +479,10 @@ protected:
   bool mOverrideComposeReadiness;
   CancelableTask* mForceCompositionTask;
 
-  nsRefPtr<APZCTreeManager> mApzcTreeManager;
+  RefPtr<APZCTreeManager> mApzcTreeManager;
 
-  nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-  nsRefPtr<CompositorVsyncScheduler> mCompositorScheduler;
+  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
+  RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   // cached plugin data used to reduce the number of updates we request.

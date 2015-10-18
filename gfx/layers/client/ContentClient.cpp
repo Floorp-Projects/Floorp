@@ -184,7 +184,7 @@ public:
         continue;
       }
 
-      nsRefPtr<gfxContext> ctx =
+      RefPtr<gfxContext> ctx =
         sink->BeginUpdate(update.mUpdateRect + offset, update.mSequenceCounter);
 
       if (!ctx) {

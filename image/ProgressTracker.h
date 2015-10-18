@@ -119,7 +119,7 @@ public:
   already_AddRefed<Image> GetImage() const
   {
     MutexAutoLock lock(mImageMutex);
-    nsRefPtr<Image> image = mImage;
+    RefPtr<Image> image = mImage;
     return image.forget();
   }
 

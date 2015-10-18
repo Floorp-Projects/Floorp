@@ -290,7 +290,7 @@ private:
       MOZ_ASSERT(mIMEContentObserver);
     }
 
-    nsRefPtr<IMEContentObserver> mIMEContentObserver;
+    RefPtr<IMEContentObserver> mIMEContentObserver;
 
     /**
      * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.

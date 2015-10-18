@@ -150,7 +150,7 @@ public:
     void DetachShader(WebGLShader* shader);
     already_AddRefed<WebGLActiveInfo> GetActiveAttrib(GLuint index) const;
     already_AddRefed<WebGLActiveInfo> GetActiveUniform(GLuint index) const;
-    void GetAttachedShaders(nsTArray<nsRefPtr<WebGLShader>>* const out) const;
+    void GetAttachedShaders(nsTArray<RefPtr<WebGLShader>>* const out) const;
     GLint GetAttribLocation(const nsAString& name) const;
     GLint GetFragDataLocation(const nsAString& name) const;
     void GetProgramInfoLog(nsAString* const out) const;

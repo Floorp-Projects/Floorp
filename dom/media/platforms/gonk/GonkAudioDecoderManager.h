@@ -25,10 +25,10 @@ public:
 
   virtual ~GonkAudioDecoderManager();
 
-  nsRefPtr<InitPromise> Init() override;
+  RefPtr<InitPromise> Init() override;
 
   nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) override;
+                          RefPtr<MediaData>& aOutput) override;
 
 private:
   bool InitMediaCodecProxy();
