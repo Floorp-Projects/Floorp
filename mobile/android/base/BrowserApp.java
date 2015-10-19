@@ -104,6 +104,7 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
@@ -3229,16 +3230,7 @@ public class BrowserApp extends GeckoApp
         if (itemId == R.id.send_to_device) {
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-                String url = tab.getURL();
-                if (url != null) {
-                    if (AboutPages.isAboutReader(url)) {
-                        url = ReaderModeUtils.getUrlFromAboutReader(url);
-                    }
-                    Intent sendToDeviceIntent = GeckoAppShell.getShareIntent(getContext(), url,
-                            "text/plain", tab.getDisplayTitle());
-                    sendToDeviceIntent.setClass(getContext(), ShareDialog.class);
-                    startActivity(sendToDeviceIntent);
-                }
+                handleSendToDevice(tab);
             }
             return true;
         }
@@ -3366,6 +3358,19 @@ public class BrowserApp extends GeckoApp
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void handleSendToDevice(@NonNull final Tab selectedTab) {
+        String url = selectedTab.getURL();
+        if (url != null) {
+            if (AboutPages.isAboutReader(url)) {
+                url = ReaderModeUtils.getUrlFromAboutReader(url);
+            }
+            Intent sendToDeviceIntent = GeckoAppShell.getShareIntent(getContext(), url,
+                    "text/plain", selectedTab.getDisplayTitle());
+            sendToDeviceIntent.setClass(getContext(), ShareDialog.class);
+            startActivity(sendToDeviceIntent);
+        }
     }
 
     @Override
