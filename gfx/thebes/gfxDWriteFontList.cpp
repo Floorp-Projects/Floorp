@@ -217,7 +217,8 @@ gfxDWriteFontFamily::FindStyleVariations(FontInfoData *aFontInfoData)
                  " with style: %s weight: %d stretch: %d psname: %s fullname: %s",
                  NS_ConvertUTF16toUTF8(fe->Name()).get(),
                  NS_ConvertUTF16toUTF8(Name()).get(),
-                 (fe->IsItalic()) ? "italic" : "normal",
+                 (fe->IsItalic()) ?
+                  "italic" : (fe->IsOblique() ? "oblique" : "normal"),
                  fe->Weight(), fe->Stretch(),
                  NS_ConvertUTF16toUTF8(psname).get(),
                  NS_ConvertUTF16toUTF8(fullname).get()));
@@ -388,7 +389,7 @@ gfxDWriteFontEntry::CopyFontTable(uint32_t aTableTag,
     // potential cmap discrepancies, see bug 629386.
     // Ditto for Hebrew, bug 837498.
     if (mFont && pFontList->UseGDIFontTableAccess() &&
-        !(mItalic && UsingArabicOrHebrewScriptSystemLocale()) &&
+        !(mStyle && UsingArabicOrHebrewScriptSystemLocale()) &&
         !mFont->IsSymbolFont())
     {
         LOGFONTW logfont = { 0 };
@@ -743,7 +744,7 @@ gfxFontEntry *
 gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
                                    uint16_t aWeight,
                                    int16_t aStretch,
-                                   bool aItalic)
+                                   uint8_t aStyle)
 {
     gfxFontEntry *lookup;
 
@@ -758,7 +759,7 @@ gfxDWriteFontList::LookupLocalFont(const nsAString& aFontName,
                                dwriteLookup->mFont,
                                aWeight,
                                aStretch,
-                               aItalic);
+                               aStyle);
     fe->SetForceGDIClassic(dwriteLookup->GetForceGDIClassic());
     return fe;
 }
@@ -767,7 +768,7 @@ gfxFontEntry *
 gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
                                     uint16_t aWeight,
                                     int16_t aStretch,
-                                    bool aItalic,
+                                    uint8_t aStyle,
                                     const uint8_t* aFontData,
                                     uint32_t aLength)
 {
@@ -832,7 +833,7 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
                                fontFile,
                                aWeight,
                                aStretch,
-                               aItalic);
+                               aStyle);
 
     fontFile->Analyze(&isSupported, &fileType, &entry->mFaceType, &numFaces);
     if (!isSupported || numFaces > 1) {
@@ -974,7 +975,8 @@ gfxDWriteFontList::InitFontList()
                          " with style: %s weight: %d stretch: %d",
                          NS_ConvertUTF16toUTF8(fe->Name()).get(),
                          NS_ConvertUTF16toUTF8(gillSansMTFamily->Name()).get(),
-                         (fe->IsItalic()) ? "italic" : "normal",
+                         (fe->IsItalic()) ?
+                          "italic" : (fe->IsOblique() ? "oblique" : "normal"),
                          fe->Weight(), fe->Stretch()));
                 }
             }

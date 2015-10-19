@@ -389,8 +389,10 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
                 GLint texUnitLoc = mGL->fGetUniformLocation(program, "uTexUnit");
                 MOZ_ASSERT(texUnitLoc != -1, "uniform uTexUnit not found");
                 mGL->fUniform1i(texUnitLoc, 0);
-                break;
+#else
+                MOZ_ASSERT_UNREACHABLE("gralloc not support on non-android");
 #endif
+                break;
             }
             case ConvertPlanarYCbCr: {
                 GLint texY = mGL->fGetUniformLocation(program, "uYTexture");
