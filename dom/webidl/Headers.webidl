@@ -27,6 +27,7 @@ interface Headers {
   [Throws] sequence<ByteString> getAll(ByteString name);
   [Throws] boolean has(ByteString name);
   [Throws] void set(ByteString name, ByteString value);
+  iterable<ByteString, ByteString>;
 
   // Used to test different guard states from mochitest.
   // Note: Must be set prior to populating headers or will throw.
