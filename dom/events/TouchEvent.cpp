@@ -186,10 +186,10 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
   int32_t flag = 0;
   if (NS_SUCCEEDED(Preferences::GetInt("dom.w3c_touch_events.enabled", &flag))) {
     if (flag == 2) {
-#if defined(XP_WIN) || MOZ_WIDGET_GTK == 3
+#ifdef XP_WIN
       static bool sDidCheckTouchDeviceSupport = false;
       static bool sIsTouchDeviceSupportPresent = false;
-      // On Windows and GTK3 we auto-detect based on device support.
+      // On Windows we auto-detect based on device support.
       if (!sDidCheckTouchDeviceSupport) {
         sDidCheckTouchDeviceSupport = true;
         sIsTouchDeviceSupportPresent = WidgetUtils::IsTouchDeviceSupportPresent();

@@ -1329,10 +1329,25 @@ void nsWindow::SetThemeRegion()
  *
  **************************************************************/
 
+void nsWindow::ConfigureAPZCTreeManager()
+{
+  nsBaseWidget::ConfigureAPZCTreeManager();
+
+  // When APZ is enabled, we can actually enable raw touch events because we
+  // have code that can deal with them properly. If APZ is not enabled, this
+  // function doesn't get called, and |mGesture| will take care of touch-based
+  // scrolling. Note that RegisterTouchWindow may still do nothing depending
+  // on touch events prefs, and so it is possible to enable APZ without
+  // also enabling touch support.
+  RegisterTouchWindow();
+}
+
 void nsWindow::RegisterTouchWindow() {
-  mTouchWindow = true;
-  mGesture.RegisterTouchWindow(mWnd);
-  ::EnumChildWindows(mWnd, nsWindow::RegisterTouchForDescendants, 0);
+  if (Preferences::GetInt("dom.w3c_touch_events.enabled", 0)) {
+    mTouchWindow = true;
+    mGesture.RegisterTouchWindow(mWnd);
+    ::EnumChildWindows(mWnd, nsWindow::RegisterTouchForDescendants, 0);
+  }
 }
 
 BOOL CALLBACK nsWindow::RegisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {

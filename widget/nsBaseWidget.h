@@ -473,7 +473,6 @@ protected:
    * Notify the widget that this window is being used with OMTC.
    */
   virtual void WindowUsesOMTC() {}
-  virtual void RegisterTouchWindow() {}
 
   nsIDocument* GetDocument() const;
 

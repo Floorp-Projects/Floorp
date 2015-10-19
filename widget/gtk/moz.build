@@ -13,10 +13,6 @@ EXPORTS += [
     'nsIImageToPixbuf.h',
 ]
 
-EXPORTS.mozilla += [
-    'WidgetUtilsGtk.h'
-]
-
 UNIFIED_SOURCES += [
     'IMContextWrapper.cpp',
     'mozcontainer.c',
@@ -36,7 +32,6 @@ UNIFIED_SOURCES += [
     'nsWidgetFactory.cpp',
     'WakeLockListener.cpp',
     'WidgetTraceEvent.cpp',
-    'WidgetUtilsGtk.cpp',
 ]
 
 SOURCES += [

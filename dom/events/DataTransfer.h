@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/Promise.h"
 
 class nsINode;
 class nsITransferable;
@@ -35,7 +36,6 @@ namespace dom {
 class DOMStringList;
 class Element;
 class FileList;
-class Promise;
 template<typename T> class Optional;
 
 /**
