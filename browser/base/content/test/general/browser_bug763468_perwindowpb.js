@@ -6,9 +6,6 @@
 function test() {
   // initialization
   waitForExplicitFinish();
-  let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
-                                     .getService(Components.interfaces.nsIAboutNewTabService);
-
   let windowsToClose = [];
   let newTab;
   let newTabURL;
@@ -21,7 +18,7 @@ function test() {
         newTabURL = "about:privatebrowsing";
       } else {
         mode = "normal";
-        newTabURL = aboutNewTabService.newTabURL;
+        newTabURL = NewTabURL.get();
       }
 
       is(aWindow.gBrowser.currentURI.spec, newTabURL,

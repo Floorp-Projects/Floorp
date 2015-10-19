@@ -2,12 +2,10 @@
 // -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+Cu.import("resource:///modules/NewTabURL.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-let aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
-                           .getService(Ci.nsIAboutNewTabService);
 
 var aboutBlankTab = null;
 var Profiler = null;
@@ -15,7 +13,7 @@ var Profiler = null;
 var windowListener = {
   onOpenWindow: function(aWindow) {
     // Ensure we don't get tiles which contact the network
-    aboutNewTabService.newTabURL = "about:blank";
+    NewTabURL.override("about:blank")
 
     // Wait for the window to finish loading
     let window = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
@@ -27,7 +25,7 @@ var windowListener = {
   },
 
   onCloseWindow: function(aWindow) {
-    aboutNewTabService.resetNewTabURL();
+    NewTabURL.reset()
   },
 
   onWindowTitleChange: function(aWindow, aTitle) {

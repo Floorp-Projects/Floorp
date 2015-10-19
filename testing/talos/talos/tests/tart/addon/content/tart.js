@@ -27,9 +27,6 @@
 //   X - tab drag
 //   X - tab remove from the middle
 //   X - Without add-tab button -> can be hidden while testing manually. in talos always with the button
-let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
-                                   .getService(Components.interfaces.nsIAboutNewTabService);
-
 function Tart() {
 }
 
@@ -474,7 +471,7 @@ Tart.prototype = {
 
     var subtests = {
       init: [ // This is called before each subtest, so it's safe to assume the following prefs:
-        function(){aboutNewTabService.newTabURL = "about:blank";
+        function(){NewTabURL.override("about:blank");
                    Services.prefs.setBoolPref("browser.newtabpage.enabled", true); // preview images if using about:newtab
                    Services.prefs.setBoolPref("browser.newtab.preload", false);
                    //Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
@@ -486,7 +483,7 @@ Tart.prototype = {
 
       restore: [
         // Restore prefs which were modified during the test
-        function(){aboutNewTabService.resetNewTabURL();
+        function(){NewTabURL.reset();
                    Services.prefs.setBoolPref("browser.newtabpage.enabled", origNewtabEnabled);
                    Services.prefs.setBoolPref("browser.newtab.preload", origPreload);
                    Services.prefs.setCharPref("layout.css.devPixelsPerPx", origDpi);
@@ -507,7 +504,7 @@ Tart.prototype = {
 
       iconDpi1: [
         function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){NewTabURL.override("chrome://tart/content/blank.icon.html"); next();},
 
         function(){animate(0, addTab, next);},
         function(){animate(0, closeCurrentTab, next);},
@@ -517,7 +514,7 @@ Tart.prototype = {
 
       iconDpi2: [
         function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){NewTabURL.override("chrome://tart/content/blank.icon.html"); next();},
 
         function(){animate(0, addTab, next);},
         function(){animate(0, closeCurrentTab, next);},
@@ -526,7 +523,7 @@ Tart.prototype = {
       ],
 
       newtabNoPreload: [
-        function(){aboutNewTabService.newTabURL = "about:newtab";
+        function(){NewTabURL.override("about:newtab");
                    Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
                    Services.prefs.setBoolPref("browser.newtab.preload", false);
                    next();
@@ -538,7 +535,7 @@ Tart.prototype = {
       ],
 
       newtabYesPreload: [
-        function(){aboutNewTabService.newTabURL = "about:newtab";
+        function(){NewTabURL.override("about:newtab");
                    Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
                    Services.prefs.setBoolPref("browser.newtab.preload", true);
                    next();
@@ -564,7 +561,7 @@ Tart.prototype = {
 
       multi: [
         function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "1.0"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){NewTabURL.override("chrome://tart/content/blank.icon.html"); next();},
 
         function(){animate(0, addTab, next);},
         function(){animate(0, addTab, next);},
@@ -593,7 +590,7 @@ Tart.prototype = {
       ],
 
       simpleFadeDpiCurrent: [
-        function(){aboutNewTabService.newTabURL = "about:blank"; next();},
+        function(){NewTabURL.override("about:blank"); next();},
 
         function(){animate(0, addTab, next);},
         function(){animate(rest, fadeout, next, true, "simpleFade-close-DPIcurrent", tabRefDuration);},
@@ -602,7 +599,7 @@ Tart.prototype = {
       ],
 
       iconFadeDpiCurrent: [
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){NewTabURL.override("chrome://tart/content/blank.icon.html"); next();},
 
         function(){animate(0, addTab, next);},
         function(){animate(rest, fadeout, next, true, "iconFade-close-DPIcurrent", tabRefDuration);},
@@ -612,7 +609,7 @@ Tart.prototype = {
 
       iconFadeDpi2: [
         function(){Services.prefs.setCharPref("layout.css.devPixelsPerPx", "2"); next();},
-        function(){aboutNewTabService.newTabURL = "chrome://tart/content/blank.icon.html"; next();},
+        function(){NewTabURL.override("chrome://tart/content/blank.icon.html"); next();},
 
         function(){animate(0, addTab, next);},
         function(){animate(rest, fadeout, next, true, "iconFade-close-DPI2", tabRefDuration);},
