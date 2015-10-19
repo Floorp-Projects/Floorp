@@ -1375,6 +1375,12 @@ class Marionette(object):
         """Switch the current context to page's default content."""
         return self.switch_to_frame()
 
+    def switch_to_parent_frame(self):
+        """
+           Switch to the Parent Frame
+        """
+        self._send_message("switchToParentFrame")
+
     def switch_to_frame(self, frame=None, focus=True):
         """Switch the current context to the specified frame. Subsequent
         commands will operate in the context of the specified frame,
