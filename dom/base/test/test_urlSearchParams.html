@@ -237,6 +237,58 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testIterable() {
+    var u = new URLSearchParams();
+    u.set('1','2');
+    u.set('2','4');
+    u.set('3','6');
+    u.set('4','8');
+    u.set('5','10');
+
+    var key_iter = u.keys();
+    var value_iter = u.values();
+    var entries_iter = u.entries();
+    for (var i = 0; i < 5; ++i) {
+      var v = i + 1;
+      var key = key_iter.next();
+      var value = value_iter.next();
+      var entry = entries_iter.next();
+      is(key.value, v.toString(), "Correct Key iterator: " + v.toString());
+      ok(!key.done, "Key.done is false");
+      is(value.value, (v * 2).toString(), "Correct Value iterator: " + (v * 2).toString());
+      ok(!value.done, "Value.done is false");
+      is(entry.value[0], v.toString(), "Correct Entry 0 iterator: " + v.toString());
+      is(entry.value[1], (v * 2).toString(), "Correct Entry 1 iterator: " + (v * 2).toString());
+      ok(!entry.done, "Entry.done is false");
+    }
+
+    var last = key_iter.next();
+    ok(last.done, "Nothing more to read.");
+    is(last.value, undefined, "Undefined is the last key");
+
+    last = value_iter.next();
+    ok(last.done, "Nothing more to read.");
+    is(last.value, undefined, "Undefined is the last value");
+
+    last = entries_iter.next();
+    ok(last.done, "Nothing more to read.");
+
+    key_iter = u.keys();
+    key_iter.next();
+    key_iter.next();
+    u.delete('1');
+    u.delete('2');
+    u.delete('3');
+    u.delete('4');
+    u.delete('5');
+
+    last = key_iter.next();
+    ok(last.done, "Nothing more to read.");
+    is(last.value, undefined, "Undefined is the last key");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
@@ -248,7 +300,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testOrdering,
     testDelete,
     testGetNULL,
-    testSet
+    testSet,
+    testIterable
   ];
 
   function runTest() {
