@@ -45,9 +45,11 @@ Thread::Thread(const char *name)
       message_loop_(NULL),
       thread_id_(0),
       name_(name) {
+  MOZ_COUNT_CTOR(base::Thread);
 }
 
 Thread::~Thread() {
+  MOZ_COUNT_DTOR(base::Thread);
   Stop();
 }
 

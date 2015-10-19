@@ -158,7 +158,8 @@ private:
   void CanvasAttrChanged()
   {
     mAttrDirty = true;
-    UpdateContext(nullptr, JS::NullHandleValue);
+    ErrorResult dummy;
+    UpdateContext(nullptr, JS::NullHandleValue, dummy);
   }
 
   bool mAttrDirty;
