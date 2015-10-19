@@ -8,6 +8,7 @@ import org.mozilla.gecko.R;
 
 import com.jayway.android.robotium.solo.Condition;
 import android.view.View;
+import android.widget.ImageButton;
 
 /**
  * This patch tests the clear private data options:
@@ -63,14 +64,12 @@ public class testClearPrivateData extends PixelTest {
     }
 
     public void clearSiteSettings() {
-        String shareStrings[] = {"Share your location with", "Share", "Don't share", "There are no settings to clear"};
         String titleGeolocation = mStringHelper.ROBOCOP_GEOLOCATION_TITLE;
         String url = getAbsoluteUrl(mStringHelper.ROBOCOP_GEOLOCATION_URL);
-        loadCheckDismiss(shareStrings[1], url, shareStrings[0]);
-        checkOption(shareStrings[1], "Clear");
-        checkOption(shareStrings[3], "Cancel");
-        loadCheckDismiss(shareStrings[2], url, shareStrings[0]);
-        checkOption(shareStrings[2], "Cancel");
+        loadCheckDismiss(mStringHelper.GEO_ALLOW, url, mStringHelper.GEO_MESSAGE);
+        checkOption(mStringHelper.GEO_ALLOW, mStringHelper.CLEAR);
+        loadCheckDismiss(mStringHelper.GEO_DENY, url, mStringHelper.GEO_MESSAGE);
+        checkOption(mStringHelper.GEO_DENY, mStringHelper.CANCEL);
         checkDevice(titleGeolocation, url);
     }
 
@@ -80,7 +79,7 @@ public class testClearPrivateData extends PixelTest {
         String loginUrl = getAbsoluteUrl(mStringHelper.ROBOCOP_LOGIN_01_URL);
 
         loadCheckDismiss(passwordStrings[1], loginUrl, passwordStrings[0]);
-        checkOption(mStringHelper.CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD, "Clear");
+        checkOption(mStringHelper.CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD, mStringHelper.CLEAR);
         loadCheckDismiss(passwordStrings[2], loginUrl, passwordStrings[0]);
         checkDevice(title, getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL));
     }
@@ -114,12 +113,23 @@ public class testClearPrivateData extends PixelTest {
             mAsserter.ok(waitForText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the pop-up to open", "Pop up was opened");
         } else {
             // Use the Page menu in 11+
-            selectMenuItem(mStringHelper.PAGE_LABEL);
-            mAsserter.ok(waitForText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the submenu to open", "Submenu was opened");
+            openSiteSecurityDoorHanger();
+            mAsserter.ok(waitForText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the submenu to open for " + option + " on " + button, "Submenu was opened");
         }
 
-	mSolo.clickOnText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]);
+        mSolo.clickOnText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]);
         mAsserter.ok(waitForText(option), "Verify that the option: " + option + " is in the list", "The option is in the list. There are settings to clear");
         mSolo.clickOnButton(button);
+    }
+
+    private void openSiteSecurityDoorHanger() {
+        mSolo.waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                ImageButton btn = (ImageButton) mSolo.getView(R.id.favicon);
+                mSolo.clickOnView(btn);
+                return true;
+            }
+        }, TEST_WAIT_MS);
     }
 }

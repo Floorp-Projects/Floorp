@@ -159,6 +159,8 @@ function SignonSelected() {
   var selections = GetTreeSelections(signonsTree);
   if (selections.length) {
     document.getElementById("removeSignon").removeAttribute("disabled");
+  } else {
+    document.getElementById("removeSignon").setAttribute("disabled", true);
   }
 }
 

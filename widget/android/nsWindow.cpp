@@ -1495,9 +1495,6 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
         case AKEYCODE_RO:                 // Japanese Ro key
             return KEY_NAME_INDEX_USE_STRING;
 
-        case AKEYCODE_SOFT_LEFT:
-        case AKEYCODE_SOFT_RIGHT:
-        case AKEYCODE_CALL:
         case AKEYCODE_ENDCALL:
         case AKEYCODE_NUM:                // XXX Not sure
         case AKEYCODE_HEADSETHOOK:
