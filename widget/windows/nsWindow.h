@@ -297,7 +297,8 @@ protected:
   virtual ~nsWindow();
 
   virtual void WindowUsesOMTC() override;
-  virtual void RegisterTouchWindow() override;
+  virtual void ConfigureAPZCTreeManager() override;
+  void RegisterTouchWindow();
 
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;
