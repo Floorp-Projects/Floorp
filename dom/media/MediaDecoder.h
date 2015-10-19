@@ -750,7 +750,8 @@ private:
 
   void UpdateReadyState()
   {
-    if (mOwner) {
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!mShuttingDown) {
       mOwner->UpdateReadyState();
     }
   }
