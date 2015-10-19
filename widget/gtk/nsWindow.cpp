@@ -6,9 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 #include <algorithm>
 
 #include "GeckoProfiler.h"
@@ -142,9 +144,8 @@ const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                      GDK_VISIBILITY_NOTIFY_MASK |
                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-#if GTK_CHECK_VERSION(3,4,0)
                      GDK_SMOOTH_SCROLL_MASK |
-#endif
+                     GDK_TOUCH_MASK |
                      GDK_SCROLL_MASK |
                      GDK_POINTER_MOTION_MASK |
                      GDK_PROPERTY_CHANGE_MASK;
@@ -214,6 +215,8 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static void     theme_changed_cb          (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
+static gboolean touch_event_cb            (GtkWidget* aWidget,
+                                           GdkEventTouch* aEvent);
 static nsWindow* GetFirstNSWindowForGDKWindow (GdkWindow *aGdkWindow);
 
 #ifdef __cplusplus
@@ -408,6 +411,7 @@ nsWindow::nsWindow()
     mNeedsShow           = false;
     mEnabled             = true;
     mCreated             = false;
+    mHandleTouchEvent    = false;
 
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
@@ -450,9 +454,8 @@ nsWindow::nsWindow()
     mTransparencyBitmapWidth  = 0;
     mTransparencyBitmapHeight = 0;
 
-#if GTK_CHECK_VERSION(3,4,0)
     mLastScrollEventTime = GDK_CURRENT_TIME;
-#endif
+    mTouchCounter = 0;
 }
 
 nsWindow::~nsWindow()
@@ -918,6 +921,13 @@ bool
 nsWindow::IsVisible() const
 {
     return mIsShown;
+}
+
+void
+nsWindow::RegisterTouchWindow()
+{
+    mHandleTouchEvent = true;
+    mTouches.Clear();
 }
 
 NS_IMETHODIMP
@@ -3125,16 +3135,13 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
     // check to see if we should rollup
     if (CheckForRollup(aEvent->x_root, aEvent->y_root, true, false))
         return;
-#if GTK_CHECK_VERSION(3,4,0)
     // check for duplicate legacy scroll event, see GNOME bug 726878
     if (aEvent->direction != GDK_SCROLL_SMOOTH &&
         mLastScrollEventTime == aEvent->time)
         return; 
-#endif
     WidgetWheelEvent wheelEvent(true, eWheel, this);
     wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
     switch (aEvent->direction) {
-#if GTK_CHECK_VERSION(3,4,0)
     case GDK_SCROLL_SMOOTH:
     {
         // As of GTK 3.4, all directional scroll events are provided by
@@ -3156,7 +3163,6 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         }
         break;
     }
-#endif
     case GDK_SCROLL_UP:
         wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = -3;
         break;
@@ -3351,6 +3357,78 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
     nsDragService::GetInstance()->
         TargetDataReceived(aWidget, aDragContext, aX, aY,
                            aSelectionData, aInfo, aTime);
+}
+
+static
+PLDHashOperator
+EnumTouchToAppend(GdkEventSequence* aKey, RefPtr<dom::Touch> aData, void* aArg)
+{
+  WidgetTouchEvent* event = reinterpret_cast<WidgetTouchEvent*>(aArg);
+  event->touches.AppendElement(aData);
+
+  return PL_DHASH_NEXT;
+}
+
+gboolean
+nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
+{
+    if (!mHandleTouchEvent) {
+        return FALSE;
+    }
+
+    EventMessage msg;
+
+    switch (aEvent->type) {
+    case GDK_TOUCH_BEGIN:
+        msg = eTouchStart;
+        break;
+    case GDK_TOUCH_UPDATE:
+        msg = eTouchMove;
+        break;
+    case GDK_TOUCH_END:
+        msg = eTouchEnd;
+        break;
+    case GDK_TOUCH_CANCEL:
+        msg = eTouchCancel;
+        break;
+    default:
+        return FALSE;
+    }
+
+    LayoutDeviceIntPoint touchPoint;
+    if (aEvent->window == mGdkWindow) {
+        touchPoint = LayoutDeviceIntPoint(aEvent->x, aEvent->y);
+    } else {
+        touchPoint = LayoutDeviceIntPoint(aEvent->x_root, aEvent->y_root) -
+                     WidgetToScreenOffset();
+    }
+
+    RefPtr<dom::Touch> touch;
+    int32_t id;
+    if (mTouches.Get(aEvent->sequence, &touch)) {
+        id = touch->mIdentifier;
+        mTouches.Remove(aEvent->sequence);
+    } else {
+        id = ++mTouchCounter & 0x7FFFFFFF;
+    }
+
+    touch = new dom::Touch(id, touchPoint, nsIntPoint(1,1), 0.0f, 0.0f);
+    WidgetTouchEvent event(true, msg, this);
+    KeymapWrapper::InitInputEvent(event, aEvent->state);
+    event.time = aEvent->time;
+
+    if (aEvent->type == GDK_TOUCH_BEGIN || aEvent->type == GDK_TOUCH_UPDATE) {
+        mTouches.Put(aEvent->sequence, touch);
+        // add all touch points to event object
+        mTouches.EnumerateRead(EnumTouchToAppend, &event);
+    } else if (aEvent->type == GDK_TOUCH_END ||
+               aEvent->type == GDK_TOUCH_CANCEL) {
+        event.touches.AppendElement(touch);
+    }
+
+    nsEventStatus status;
+    DispatchEvent(&event, status);
+    return TRUE;
 }
 
 static void
@@ -3819,6 +3897,8 @@ nsWindow::Create(nsIWidget        *aParent,
                          G_CALLBACK(property_notify_event_cb), nullptr);
         g_signal_connect(eventWidget, "scroll-event",
                          G_CALLBACK(scroll_event_cb), nullptr);
+        g_signal_connect(eventWidget, "touch-event",
+                         G_CALLBACK(touch_event_cb), nullptr);
     }
 
     LOG(("nsWindow [%p]\n", (void *)this));
@@ -5844,6 +5924,19 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
     window->ThemeChanged();
 }
 
+static gboolean
+touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent)
+{
+    UpdateLastInputEventTime(aEvent);
+
+    nsWindow* window = GetFirstNSWindowForGDKWindow(aEvent->window);
+    if (!window) {
+        return FALSE;
+    }
+
+    return window->OnTouchEvent(aEvent);
+}
+
 //////////////////////////////////////////////////////////////////////
 // These are all of our drag and drop operations
 
@@ -6695,12 +6788,9 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
 
   // The delta values are backwards on Linux compared to Windows and Cocoa,
   // hence the negation.
-#if GTK_CHECK_VERSION(3,4,0)
-  // TODO: is this correct? I don't have GTK 3.4+ so I can't check
   event.scroll.direction = GDK_SCROLL_SMOOTH;
   event.scroll.delta_x = -aDeltaX;
   event.scroll.delta_y = -aDeltaY;
-#else
   if (aDeltaX < 0) {
     event.scroll.direction = GDK_SCROLL_RIGHT;
   } else if (aDeltaX > 0) {
@@ -6712,7 +6802,6 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
   } else {
     return NS_OK;
   }
-#endif
 
   gdk_event_put(&event);
 
