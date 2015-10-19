@@ -81,7 +81,7 @@ private:
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
   nsWeakPtr                        mLoadingContext;
   nsSecurityFlags                  mSecurityFlags;
-  nsContentPolicyType              mContentPolicyType;
+  nsContentPolicyType              mInternalContentPolicyType;
   bool                             mUpgradeInsecureRequests;
   uint64_t                         mInnerWindowID;
   uint64_t                         mOuterWindowID;
