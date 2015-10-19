@@ -220,6 +220,12 @@ SharedSurface::SharedSurface(SharedSurfaceType type,
 #endif
 { }
 
+layers::TextureFlags
+SharedSurface::GetTextureFlags() const
+{
+    return layers::TextureFlags::NO_FLAGS;
+}
+
 void
 SharedSurface::LockProd()
 {
