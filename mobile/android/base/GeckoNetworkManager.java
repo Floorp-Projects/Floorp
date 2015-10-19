@@ -17,8 +17,10 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.telephony.TelephonyManager;
+import android.text.format.Formatter;
 import android.util.Log;
 
 /*
@@ -68,11 +70,15 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     }
 
     private GeckoNetworkManager() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "Wifi:Enable");
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+                "Wifi:Enable",
+                "Wifi:GetIPAddress");
     }
 
     private void onDestroy() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "Wifi:Enable");
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+                "Wifi:Enable",
+                "Wifi:GetIPAddress");
     }
 
     private volatile ConnectionType mConnectionType = ConnectionType.NONE;
@@ -149,18 +155,48 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
     @Override
     public void handleMessage(final String event, final NativeJSObject message,
                               final EventCallback callback) {
-        if (event.equals("Wifi:Enable")) {
-            final WifiManager mgr = (WifiManager) mApplicationContext.getSystemService(Context.WIFI_SERVICE);
+        switch (event) {
+            case "Wifi:Enable": {
+                final WifiManager mgr = (WifiManager) mApplicationContext.getSystemService(Context.WIFI_SERVICE);
 
-            if (!mgr.isWifiEnabled()) {
-                mgr.setWifiEnabled(true);
-            } else {
-                // If Wifi is enabled, maybe you need to select a network
-                Intent intent = new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                mApplicationContext.startActivity(intent);
+                if (!mgr.isWifiEnabled()) {
+                    mgr.setWifiEnabled(true);
+                } else {
+                    // If Wifi is enabled, maybe you need to select a network
+                    Intent intent = new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mApplicationContext.startActivity(intent);
+                }
+                break;
+            }
+            case "Wifi:GetIPAddress": {
+                getWifiIPAddress(callback);
+                break;
             }
         }
+    }
+
+    // This function only works for IPv4
+    private void getWifiIPAddress(final EventCallback callback) {
+        final WifiManager mgr = (WifiManager) mApplicationContext.getSystemService(Context.WIFI_SERVICE);
+
+        if (mgr == null) {
+            callback.sendError("Cannot get WifiManager");
+            return;
+        }
+
+        final WifiInfo info = mgr.getConnectionInfo();
+        if (info == null) {
+            callback.sendError("Cannot get connection info");
+            return;
+        }
+
+        int ip = info.getIpAddress();
+        if (ip == 0) {
+            callback.sendError("Cannot get IPv4 address");
+            return;
+        }
+        callback.sendSuccess(Formatter.formatIpAddress(ip));
     }
 
     private void stopListening() {
