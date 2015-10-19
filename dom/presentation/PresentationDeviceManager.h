@@ -19,7 +19,6 @@ namespace dom {
 
 class PresentationDeviceManager final : public nsIPresentationDeviceManager
                                       , public nsIPresentationDeviceListener
-                                      , public nsIPresentationDeviceEventListener
                                       , public nsIObserver
                                       , public nsSupportsWeakReference
 {
@@ -27,7 +26,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONDEVICEMANAGER
   NS_DECL_NSIPRESENTATIONDEVICELISTENER
-  NS_DECL_NSIPRESENTATIONDEVICEEVENTLISTENER
   NS_DECL_NSIOBSERVER
 
   PresentationDeviceManager();
