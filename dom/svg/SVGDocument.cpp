@@ -102,6 +102,14 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     return;
   }
 
+  if (IsStaticDocument()) {
+    // If we're a static clone of a document, then
+    // nsIDocument::CreateStaticClone will handle cloning the original
+    // document's sheets, including the on-demand non-SVG UA sheets,
+    // for us.
+    return;
+  }
+
   mHasLoadedNonSVGUserAgentStyleSheets = true;
 
   BeginUpdate(UPDATE_STYLE);
