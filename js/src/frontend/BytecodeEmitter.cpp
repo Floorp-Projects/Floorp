@@ -4355,6 +4355,9 @@ BytecodeEmitter::emitSingleVariable(ParseNode* pn, ParseNode* binding, ParseNode
         MOZ_ASSERT(emitOption != DefineVars);
         if (!emit1(JSOP_UNDEFINED))
             return false;
+    } else {
+        // The declaration is like `var x;`. Nothing to do.
+        return true;
     }
 
     // If we are not initializing, nothing to pop. If we are initializing
