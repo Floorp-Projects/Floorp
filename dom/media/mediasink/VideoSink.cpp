@@ -118,6 +118,22 @@ VideoSink::SetPlaybackRate(double aPlaybackRate)
 }
 
 void
+VideoSink::SetVolume(double aVolume)
+{
+  AssertOwnerThread();
+
+  mAudioSink->SetVolume(aVolume);
+}
+
+void
+VideoSink::SetPreservesPitch(bool aPreservesPitch)
+{
+  AssertOwnerThread();
+
+  mAudioSink->SetPreservesPitch(aPreservesPitch);
+}
+
+void
 VideoSink::SetPlaying(bool aPlaying)
 {
   AssertOwnerThread();
