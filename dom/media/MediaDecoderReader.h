@@ -94,6 +94,14 @@ public:
   // on failure.
   virtual nsresult Init() { return NS_OK; }
 
+  RefPtr<MetadataPromise> AsyncReadMetadata()
+  {
+    return OnTaskQueue() ?
+           AsyncReadMetadataInternal() :
+           InvokeAsync(OwnerThread(), this, __func__,
+                       &MediaDecoderReader::AsyncReadMetadataInternal);
+  }
+
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
   void ReleaseMediaResources()
@@ -176,11 +184,6 @@ public:
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
-
-  // The default implementation of AsyncReadMetadata is implemented in terms of
-  // synchronous ReadMetadata() calls. Implementations may also
-  // override AsyncReadMetadata to create a more proper async implementation.
-  virtual RefPtr<MetadataPromise> AsyncReadMetadata();
 
   // Fills aInfo with the latest cached data required to present the media,
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
