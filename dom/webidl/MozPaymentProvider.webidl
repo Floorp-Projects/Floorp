@@ -4,14 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-callback SilentSmsCallback = void (optional MozSmsMessage message);
-
 dictionary PaymentIccInfo {
   DOMString mcc;
   DOMString mnc;
   DOMString iccId;
   boolean dataPrimary;
 };
+
+dictionary PaymentSmsMessage {
+  DOMString iccId;
+  DOMString sender;
+  DOMString body;
+  DOMTimeStamp timestamp;
+  DOMTimeStamp sentTimestamp;
+};
+
+callback SilentSmsCallback = void (optional PaymentSmsMessage message);
 
 [NavigatorProperty="mozPaymentProvider",
  NoInterfaceObject,
