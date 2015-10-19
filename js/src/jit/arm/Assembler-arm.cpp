@@ -2185,7 +2185,7 @@ Assembler::as_BranchPool(uint32_t value, RepatchLabel* label, ARMBuffer::PoolEnt
     if (label->bound()) {
         BufferOffset dest(label);
         as_b(dest.diffB<BOffImm>(ret), c, ret);
-    } else {
+    } else if (!oom()) {
         label->use(ret.getOffset());
     }
 #ifdef JS_DISASM_ARM
@@ -2385,20 +2385,21 @@ Assembler::as_b(BOffImm off, Condition c, Label* documentation)
 BufferOffset
 Assembler::as_b(Label* l, Condition c)
 {
-    if (m_buffer.oom()) {
-        BufferOffset ret;
-        return ret;
-    }
-
     if (l->bound()) {
         // Note only one instruction is emitted here, the NOP is overwritten.
         BufferOffset ret = allocBranchInst();
+        if (oom())
+            return BufferOffset();
+
         as_b(BufferOffset(l).diffB<BOffImm>(ret), c, ret);
 #ifdef JS_DISASM_ARM
         spewBranch(m_buffer.getInstOrNull(ret), l);
 #endif
         return ret;
     }
+
+    if (oom())
+        return BufferOffset();
 
     int32_t old;
     BufferOffset ret;
@@ -2416,8 +2417,11 @@ Assembler::as_b(Label* l, Condition c)
         BOffImm inv;
         ret = as_b(inv, c, l);
     }
-    DebugOnly<int32_t> check = l->use(ret.getOffset());
-    MOZ_ASSERT(check == old);
+
+    if (oom())
+        return BufferOffset();
+
+    MOZ_ASSERT(l->use(ret.getOffset() == old);
     return ret;
 }
 
@@ -2452,20 +2456,21 @@ Assembler::as_bl(BOffImm off, Condition c, Label* documentation)
 BufferOffset
 Assembler::as_bl(Label* l, Condition c)
 {
-    if (m_buffer.oom()) {
-        BufferOffset ret;
-        return ret;
-    }
-
     if (l->bound()) {
         // Note only one instruction is emitted here, the NOP is overwritten.
         BufferOffset ret = allocBranchInst();
+        if (oom())
+            return BufferOffset();
+
         as_bl(BufferOffset(l).diffB<BOffImm>(ret), c, ret);
 #ifdef JS_DISASM_ARM
         spewBranch(m_buffer.getInstOrNull(ret), l);
 #endif
         return ret;
     }
+
+    if (oom())
+        return BufferOffset();
 
     int32_t old;
     BufferOffset ret;
@@ -2484,8 +2489,11 @@ Assembler::as_bl(Label* l, Condition c)
         BOffImm inv;
         ret = as_bl(inv, c, l);
     }
-    DebugOnly<int32_t> check = l->use(ret.getOffset());
-    MOZ_ASSERT(check == old);
+
+    if (oom())
+        return BufferOffset();
+
+    MOZ_ASSERT(l->use(ret.getOffset() == old);
     return ret;
 }
 
