@@ -9,6 +9,7 @@ onmessage = function(e) {
 
 onfetch = function(e) {
   var headers = {};
+  var errorNameWhileAppendingHeader;
   for (var header of e.request.headers) {
     var key = header[0], value = header[1];
     headers[key] = value;
