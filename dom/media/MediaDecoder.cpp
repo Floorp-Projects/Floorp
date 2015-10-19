@@ -141,8 +141,7 @@ MediaDecoder::NotifyOwnerActivityChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mOwner) {
-    NS_WARNING("MediaDecoder without a decoder owner, can't update dormant");
+  if (mShuttingDown) {
     return;
   }
 
@@ -170,7 +169,8 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mDecoderStateMachine ||
+  if (mShuttingDown ||
+      !mDecoderStateMachine ||
       mPlayState == PLAY_STATE_SHUTDOWN ||
       !mOwner->GetVideoFrameContainer() ||
       (mOwner->GetMediaElement() && mOwner->GetMediaElement()->IsBeingDestroyed()) ||
@@ -256,7 +256,6 @@ MediaDecoder::StartDormantTimer()
 
   if (mIsHeuristicDormant ||
       mShuttingDown ||
-      !mOwner ||
       !mOwner->IsHidden() ||
       (mPlayState != PLAY_STATE_PAUSED &&
        !IsEnded()))
@@ -597,12 +596,8 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   CallSeek(target);
 
   if (mPlayState == PLAY_STATE_ENDED) {
-    bool paused = false;
-    if (mOwner) {
-      paused = mOwner->GetPaused();
-    }
     PinForSeek();
-    ChangeState(paused ? PLAY_STATE_PAUSED : PLAY_STATE_PLAYING);
+    ChangeState(mOwner->GetPaused() ? PLAY_STATE_PAUSED : PLAY_STATE_PLAYING);
   }
   return NS_OK;
 }
@@ -662,14 +657,12 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
   mInfo = aInfo.forget();
   ConstructMediaTracks();
 
-  if (mOwner) {
-    // Make sure the element and the frame (if any) are told about
-    // our new size.
-    Invalidate();
-    if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-      mFiredMetadataLoaded = true;
-      mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
-    }
+  // Make sure the element and the frame (if any) are told about
+  // our new size.
+  Invalidate();
+  if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+    mFiredMetadataLoaded = true;
+    mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
   }
 }
 
@@ -704,11 +697,9 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   mInfo = aInfo.forget();
 
-  if (mOwner) {
-    Invalidate();
-    if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-      mOwner->FirstFrameLoaded();
-    }
+  Invalidate();
+  if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+    mOwner->FirstFrameLoaded();
   }
 
   // This can run cache callbacks.
@@ -734,10 +725,8 @@ MediaDecoder::ResetConnectionState()
   if (mShuttingDown)
     return;
 
-  if (mOwner) {
-    // Notify the media element that connection gets lost.
-    mOwner->ResetConnectionState();
-  }
+  // Notify the media element that connection gets lost.
+  mOwner->ResetConnectionState();
 
   // Since we have notified the media element the connection
   // lost event, the decoder will be reloaded when user tries
@@ -752,9 +741,7 @@ MediaDecoder::NetworkError()
   if (mShuttingDown)
     return;
 
-  if (mOwner)
-    mOwner->NetworkError();
-
+  mOwner->NetworkError();
   Shutdown();
 }
 
@@ -765,9 +752,7 @@ MediaDecoder::DecodeError()
   if (mShuttingDown)
     return;
 
-  if (mOwner)
-    mOwner->DecodeError();
-
+  mOwner->DecodeError();
   Shutdown();
 }
 
@@ -813,10 +798,7 @@ MediaDecoder::PlaybackEnded()
 
   ChangeState(PLAY_STATE_ENDED);
   InvalidateWithFlags(VideoFrameContainer::INVALIDATE_FORCE);
-
-  if (mOwner)  {
-    mOwner->PlaybackEnded();
-  }
+  mOwner->PlaybackEnded();
 
   // This must be called after |mOwner->PlaybackEnded()| call above, in order
   // to fire the required durationchange.
@@ -885,7 +867,10 @@ void
 MediaDecoder::NotifySuspendedStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mResource && mOwner) {
+  if (mShuttingDown) {
+    return;
+  }
+  if (mResource) {
     bool suspended = mResource->IsSuspendedByCache();
     mOwner->NotifySuspendedByCache(suspended);
   }
@@ -895,10 +880,11 @@ void
 MediaDecoder::NotifyBytesDownloaded()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  UpdatePlaybackRate();
-  if (mOwner) {
-    mOwner->DownloadProgressed();
+  if (mShuttingDown) {
+    return;
   }
+  UpdatePlaybackRate();
+  mOwner->DownloadProgressed();
 }
 
 void
@@ -906,13 +892,15 @@ MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mShuttingDown) {
+    return;
+  }
+
   DECODER_LOG("NotifyDownloadEnded, status=%x", aStatus);
 
   if (aStatus == NS_BINDING_ABORTED) {
     // Download has been cancelled by user.
-    if (mOwner) {
-      mOwner->LoadAborted();
-    }
+    mOwner->LoadAborted();
     return;
   }
 
@@ -932,9 +920,10 @@ void
 MediaDecoder::NotifyPrincipalChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mOwner) {
-    mOwner->NotifyDecoderPrincipalChanged();
+  if (mShuttingDown) {
+    return;
   }
+  mOwner->NotifyDecoderPrincipalChanged();
 }
 
 void
@@ -976,12 +965,10 @@ MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
 
   UpdateLogicalPosition(aVal.mEventVisibility);
 
-  if (mOwner) {
-    if (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-      mOwner->SeekCompleted();
-      if (fireEnded) {
-        mOwner->PlaybackEnded();
-      }
+  if (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+    mOwner->SeekCompleted();
+    if (fireEnded) {
+      mOwner->PlaybackEnded();
     }
   }
 }
@@ -993,10 +980,8 @@ MediaDecoder::SeekingStarted(MediaDecoderEventVisibility aEventVisibility)
   if (mShuttingDown)
     return;
 
-  if (mOwner) {
-    if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-      mOwner->SeekStarted();
-    }
+  if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+    mOwner->SeekStarted();
   }
 }
 
@@ -1050,7 +1035,7 @@ MediaDecoder::UpdateLogicalPosition(MediaDecoderEventVisibility aEventVisibility
   // frame has reflowed and the size updated beforehand.
   Invalidate();
 
-  if (mOwner && logicalPositionChanged &&
+  if (logicalPositionChanged &&
       aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     FireTimeUpdate();
   }
@@ -1060,6 +1045,10 @@ void
 MediaDecoder::DurationChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShuttingDown) {
+    return;
+  }
 
   double oldDuration = mDuration;
   if (IsInfinite()) {
@@ -1081,7 +1070,7 @@ MediaDecoder::DurationChanged()
 
   // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=28822 for a discussion
   // of whether we should fire durationchange on explicit infinity.
-  if (mOwner && mFiredMetadataLoaded &&
+  if (mFiredMetadataLoaded &&
       (!mozilla::IsInfinite<double>(mDuration) || mExplicitDuration.Ref().isSome())) {
     mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
   }
@@ -1213,7 +1202,7 @@ MediaDecoder::SetPlaybackRate(double aPlaybackRate)
     mPausedForPlaybackRateNull = false;
     // If the playbackRate is no longer null, restart the playback, iff the
     // media was playing.
-    if (mOwner && !mOwner->GetPaused()) {
+    if (!mOwner->GetPaused()) {
       Play();
     }
   }
@@ -1344,8 +1333,9 @@ void
 MediaDecoder::FireTimeUpdate()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mOwner)
+  if (mShuttingDown) {
     return;
+  }
   mOwner->FireTimeUpdate(true);
 }
 
@@ -1569,11 +1559,7 @@ MediaDecoder::ConstructMediaTracks()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mMediaTracksConstructed) {
-    return;
-  }
-
-  if (!mOwner || !mInfo) {
+  if (mShuttingDown || mMediaTracksConstructed || !mInfo) {
     return;
   }
 
@@ -1609,7 +1595,7 @@ MediaDecoder::RemoveMediaTracks()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mOwner) {
+  if (mShuttingDown) {
     return;
   }
 
