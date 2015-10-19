@@ -1466,11 +1466,11 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
 nsRuleNode* nsRuleNode::CreateRootNode(nsPresContext* aPresContext)
 {
   return new (aPresContext)
-    nsRuleNode(aPresContext, nullptr, nullptr, 0xff, false);
+    nsRuleNode(aPresContext, nullptr, nullptr, SheetType::Unknown, false);
 }
 
 nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
-                       nsIStyleRule* aRule, uint8_t aLevel,
+                       nsIStyleRule* aRule, SheetType aLevel,
                        bool aIsImportant)
   : mPresContext(aContext),
     mParent(aParent),
@@ -1505,9 +1505,9 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
 
   // nsStyleSet::GetContext depends on there being only one animation
   // rule.
-  MOZ_ASSERT(IsRoot() || GetLevel() != nsStyleSet::eAnimationSheet ||
+  MOZ_ASSERT(IsRoot() || GetLevel() != SheetType::Animation ||
              mParent->IsRoot() ||
-             mParent->GetLevel() != nsStyleSet::eAnimationSheet,
+             mParent->GetLevel() != SheetType::Animation,
              "must be only one rule at animation level");
 }
 
@@ -1522,7 +1522,7 @@ nsRuleNode::~nsRuleNode()
 }
 
 nsRuleNode*
-nsRuleNode::Transition(nsIStyleRule* aRule, uint8_t aLevel,
+nsRuleNode::Transition(nsIStyleRule* aRule, SheetType aLevel,
                        bool aIsImportantRule)
 {
   nsRuleNode* next = nullptr;
@@ -2180,10 +2180,10 @@ nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,
       &aContext->StyleVariables()->mVariables;
     nsCSSValueTokenStream* tokenStream = value->GetTokenStreamValue();
 
-    MOZ_ASSERT(tokenStream->mLevel != nsStyleSet::eSheetTypeCount,
+    MOZ_ASSERT(tokenStream->mLevel != SheetType::Count,
                "Token stream should have a defined level");
 
-    AutoRestore<uint16_t> saveLevel(aRuleData->mLevel);
+    AutoRestore<SheetType> saveLevel(aRuleData->mLevel);
     aRuleData->mLevel = tokenStream->mLevel;
 
     // Note that ParsePropertyWithVariableReferences relies on the fact
@@ -9692,8 +9692,8 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
 
         rule->MapRuleInfoInto(&ruleData);
 
-        if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
-            ruleData.mLevel == nsStyleSet::eUserSheet) {
+        if (ruleData.mLevel == SheetType::Agent ||
+            ruleData.mLevel == SheetType::User) {
           // This is a rule whose effect we want to ignore, so if any of
           // the properties we care about were set, set them to the dummy
           // value that they'll never otherwise get.
@@ -9815,7 +9815,7 @@ nsRuleNode::ComputePropertiesOverridingAnimation(
       // property) for transitions yet (which will make their
       // MapRuleInfoInto skip the properties that are currently
       // animating), we should skip them explicitly.
-      if (ruleData.mLevel == nsStyleSet::eTransitionSheet) {
+      if (ruleData.mLevel == SheetType::Transition) {
         continue;
       }
 

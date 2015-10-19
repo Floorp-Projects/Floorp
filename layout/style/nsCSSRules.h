@@ -9,12 +9,19 @@
 #ifndef nsCSSRules_h_
 #define nsCSSRules_h_
 
+#include "Declaration.h"
+#include "StyleRule.h"
+#include "gfxFontFeatures.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Move.h"
-
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
+#include "mozilla/SheetType.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/dom/FontFace.h"
+#include "nsAutoPtr.h"
+#include "nsCSSProperty.h"
+#include "nsCSSValue.h"
+#include "nsDOMCSSDeclaration.h"
 #include "nsIDOMCSSConditionRule.h"
 #include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
@@ -22,18 +29,11 @@
 #include "nsIDOMCSSGroupingRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
+#include "nsIDOMCSSPageRule.h"
 #include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMMozCSSKeyframeRule.h"
 #include "nsIDOMMozCSSKeyframesRule.h"
-#include "nsAutoPtr.h"
-#include "nsCSSProperty.h"
-#include "nsCSSValue.h"
 #include "nsTArray.h"
-#include "nsDOMCSSDeclaration.h"
-#include "Declaration.h"
-#include "nsIDOMCSSPageRule.h"
-#include "StyleRule.h"
-#include "gfxFontFeatures.h"
 
 class nsMediaList;
 
@@ -287,7 +287,7 @@ protected:
 // specific @font-face rules
 struct nsFontFaceRuleContainer {
   RefPtr<nsCSSFontFaceRule> mRule;
-  uint8_t mSheetType;
+  mozilla::SheetType mSheetType;
 };
 
 inline nsCSSFontFaceRule*

@@ -13,6 +13,7 @@
 
 #include "mozilla/CSSVariableDeclarations.h"
 #include "mozilla/RuleNodeCacheConditions.h"
+#include "mozilla/SheetType.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleStructFwd.h"
@@ -28,7 +29,7 @@ struct nsRuleData
   const uint32_t mSIDs;
   mozilla::RuleNodeCacheConditions mConditions;
   bool mIsImportantRule;
-  uint16_t mLevel; // an nsStyleSet::sheetType
+  mozilla::SheetType mLevel;
   nsPresContext* const mPresContext;
   nsStyleContext* const mStyleContext;
 
