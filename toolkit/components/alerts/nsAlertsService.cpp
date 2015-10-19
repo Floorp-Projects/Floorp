@@ -153,6 +153,9 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
 // nsIAlertsDoNotDisturb
 NS_IMETHODIMP nsAlertsService::GetManualDoNotDisturb(bool* aRetVal)
 {
+#ifdef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   // Try the system notification service.
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
   if (sysAlerts) {
@@ -164,10 +167,14 @@ NS_IMETHODIMP nsAlertsService::GetManualDoNotDisturb(bool* aRetVal)
   }
 
   return mXULAlerts.GetManualDoNotDisturb(aRetVal);
+#endif
 }
 
 NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
 {
+#ifdef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
   // Try the system notification service.
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
   if (sysAlerts) {
@@ -179,6 +186,7 @@ NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
   }
 
   return mXULAlerts.SetManualDoNotDisturb(aDoNotDisturb);
+#endif
 }
 
 NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
