@@ -14,7 +14,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CSSStyleSheet.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/SheetType.h"
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsBindingManager.h"
@@ -304,46 +306,28 @@ class nsStyleSet final
     mBindingManager = aBindingManager;
   }
 
-  // The "origins" of the CSS cascade, from lowest precedence to
-  // highest (for non-!important rules).
-  enum sheetType {
-    eAgentSheet, // CSS
-    eUserSheet, // CSS
-    ePresHintSheet,
-    eSVGAttrAnimationSheet,
-    eDocSheet, // CSS
-    eScopedDocSheet,
-    eStyleAttrSheet,
-    eOverrideSheet, // CSS
-    eAnimationSheet,
-    eTransitionSheet,
-    eSheetTypeCount
-    // be sure to keep the number of bits in |mDirty| below and in
-    // NS_RULE_NODE_LEVEL_MASK updated when changing the number of sheet
-    // types
-  };
-
   // APIs to manipulate the style sheet lists.  The sheets in each
   // list are stored with the most significant sheet last.
-  nsresult AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
-  nsresult PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
-  nsresult RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet);
-  nsresult ReplaceSheets(sheetType aType,
+  nsresult AppendStyleSheet(mozilla::SheetType aType, nsIStyleSheet *aSheet);
+  nsresult PrependStyleSheet(mozilla::SheetType aType, nsIStyleSheet *aSheet);
+  nsresult RemoveStyleSheet(mozilla::SheetType aType, nsIStyleSheet *aSheet);
+  nsresult ReplaceSheets(mozilla::SheetType aType,
                          const nsCOMArray<nsIStyleSheet> &aNewSheets);
-  nsresult InsertStyleSheetBefore(sheetType aType, nsIStyleSheet *aNewSheet,
+  nsresult InsertStyleSheetBefore(mozilla::SheetType aType,
+                                  nsIStyleSheet *aNewSheet,
                                   nsIStyleSheet *aReferenceSheet);
 
-  nsresult DirtyRuleProcessors(sheetType aType);
+  nsresult DirtyRuleProcessors(mozilla::SheetType aType);
 
   // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
   bool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
 
-  int32_t SheetCount(sheetType aType) const {
+  int32_t SheetCount(mozilla::SheetType aType) const {
     return mSheets[aType].Count();
   }
 
-  nsIStyleSheet* StyleSheetAt(sheetType aType, int32_t aIndex) const {
+  nsIStyleSheet* StyleSheetAt(mozilla::SheetType aType, int32_t aIndex) const {
     return mSheets[aType].ObjectAt(aIndex);
   }
 
@@ -403,7 +387,7 @@ class nsStyleSet final
 
   nsIStyleRule* InitialStyleRule();
 
-  bool HasRuleProcessorUsedByMultipleStyleSets(sheetType aSheetType);
+  bool HasRuleProcessorUsedByMultipleStyleSets(mozilla::SheetType aSheetType);
 
   // Tells the RestyleManager for the document using this style set
   // to drop any nsCSSSelector pointers it has.
@@ -417,7 +401,7 @@ class nsStyleSet final
   void GCRuleTrees();
 
   // Update the rule processor list after a change to the style sheet list.
-  nsresult GatherRuleProcessors(sheetType aType);
+  nsresult GatherRuleProcessors(mozilla::SheetType aType);
 
   void AddImportantRules(nsRuleNode* aCurrLevelNode,
                          nsRuleNode* aLastPrevLevelNode,
@@ -485,11 +469,13 @@ class nsStyleSet final
   // The arrays for ePresHintSheet, eStyleAttrSheet, eTransitionSheet,
   // eAnimationSheet and eSVGAttrAnimationSheet are always empty.
   // (FIXME:  We should reduce the storage needed for them.)
-  nsCOMArray<nsIStyleSheet> mSheets[eSheetTypeCount];
+  mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
+                           nsCOMArray<nsIStyleSheet>> mSheets;
 
   // mRuleProcessors[eScopedDocSheet] is always null; rule processors
   // for scoped style sheets are stored in mScopedDocSheetRuleProcessors.
-  nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessors[eSheetTypeCount];
+  mozilla::EnumeratedArray<mozilla::SheetType, mozilla::SheetType::Count,
+                           nsCOMPtr<nsIStyleRuleProcessor>> mRuleProcessors;
 
   // Rule processors for HTML5 scoped style sheets, one per scope.
   nsTArray<nsCOMPtr<nsIStyleRuleProcessor> > mScopedDocSheetRuleProcessors;
@@ -507,7 +493,7 @@ class nsStyleSet final
   unsigned mInReconstruct : 1;
   unsigned mInitFontFeatureValuesLookup : 1;
   unsigned mNeedsRestyleAfterEnsureUniqueInner : 1;
-  unsigned mDirty : 10;  // one dirty bit is used per sheet type
+  unsigned mDirty : int(mozilla::SheetType::Count);  // one bit per sheet type
 
   uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
