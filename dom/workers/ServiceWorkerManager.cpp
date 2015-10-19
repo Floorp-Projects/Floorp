@@ -49,6 +49,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/EnumSet.h"
 
+#include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsNetUtil.h"
@@ -1436,6 +1437,21 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
+
+  // Check content policy.
+  int16_t decision = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
+                                 aScriptURI,
+                                 documentPrincipal,
+                                 doc,
+                                 EmptyCString(),
+                                 nullptr,
+                                 &decision);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(decision != nsIContentPolicy::ACCEPT)) {
+    return NS_ERROR_CONTENT_BLOCKED;
+  }
+
 
   rv = documentPrincipal->CheckMayLoad(aScopeURI, true /* report */,
                                        false /* allowIfInheritsPrinciple */);
