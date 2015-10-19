@@ -478,8 +478,6 @@ MediaDecoder::Shutdown()
 
   ChangeState(PLAY_STATE_SHUTDOWN);
 
-  mOwner = nullptr;
-
   MediaShutdownManager::Instance().Unregister(this);
 }
 
