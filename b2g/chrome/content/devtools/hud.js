@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, 'MemoryFront', function() {
 
 Cu.import('resource://gre/modules/Frames.jsm');
 
-var _telemetryDebug = true;
+var _telemetryDebug = false;
 
 function telemetryDebug(...args) {
   if (_telemetryDebug) {
@@ -108,8 +108,8 @@ var developerHUD = {
       this._logging = enabled;
     });
 
-    SettingsListener.observe('debug.performance_data.advanced_telemetry', this._telemetry, enabled => {
-      this._telemetry = enabled;
+    SettingsListener.observe('metrics.selectedMetrics.level', "", level => {
+      this._telemetry = (level === 'Enhanced');
     });
   },
 
