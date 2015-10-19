@@ -52,6 +52,10 @@ public:
 
   void SetPlaybackRate(double aPlaybackRate) override;
 
+  void SetVolume(double aVolume) override;
+
+  void SetPreservesPitch(bool aPreservesPitch) override;
+
   void SetPlaying(bool aPlaying) override;
 
   void Redraw() override;
