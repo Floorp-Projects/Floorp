@@ -2453,6 +2453,7 @@ NetworkDetailsView.prototype = {
       }));
     this._params = new VariablesView($("#request-params"),
       Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        onlyEnumVisible: true,
         emptyText: L10N.getStr("paramsEmptyText"),
         searchPlaceholder: L10N.getStr("paramsFilterText")
       }));
@@ -2841,29 +2842,33 @@ NetworkDetailsView.prototype = {
         this._addParams(this._paramsFormData, section);
       });
     }
-    // Handle actual forms ("multipart/form-data" content type).
+    // Handle JSON and actual forms ("multipart/form-data" content type).
     else {
-      // This is really awkward, but hey, it works. Let's show an empty
-      // scope in the params view and place the source editor containing
-      // the raw post data directly underneath.
-      $("#request-params-box").removeAttribute("flex");
-      let paramsScope = this._params.addScope(this._paramsPostPayload);
-      paramsScope.expanded = true;
-      paramsScope.locked = true;
-
-      $("#request-post-data-textarea-box").hidden = false;
-      let editor = yield NetMonitorView.editor("#request-post-data-textarea");
       let postDataLongString = aPostData.postData.text;
       let postData = yield gNetwork.getString(postDataLongString);
-
-      // Most POST bodies are usually JSON, so they can be neatly
-      // syntax highlighted as JS. Otheriwse, fall back to plain text.
+      let jsonVal = null;
       try {
-        JSON.parse(postData);
-        editor.setMode(Editor.modes.js);
-      } catch (e) {
+        jsonVal = JSON.parse(postData);
+      } catch (ex) { }
+      if (jsonVal) {
+        let jsonScopeName = L10N.getStr("jsonScopeName");
+        let jsonVar = { label: jsonScopeName, rawObject: jsonVal };
+        let jsonScope = this._params.addScope(jsonScopeName);
+        jsonScope.expanded = true;
+        let jsonItem = jsonScope.addItem("", { enumerable: true });
+        jsonItem.populate(jsonVal, { sorted: true });
+      } else {
+        // This is really awkward, but hey, it works. Let's show an empty
+        // scope in the params view and place the source editor containing
+        // the raw post data directly underneath.
+        $("#request-params-box").removeAttribute("flex");
+        let paramsScope = this._params.addScope(this._paramsPostPayload);
+        paramsScope.expanded = true;
+        paramsScope.locked = true;
+
+        $("#request-post-data-textarea-box").hidden = false;
+        let editor = yield NetMonitorView.editor("#request-post-data-textarea");
         editor.setMode(Editor.modes.text);
-      } finally {
         editor.setText(postData);
       }
     }
