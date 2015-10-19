@@ -28,10 +28,12 @@ typedef HRESULT (__stdcall *SHQueryUserNotificationStatePtr)(MOZ_QUERY_USER_NOTI
 #endif // defined(XP_WIN)
 
 class nsAlertsService : public nsIAlertsService,
+                        public nsIAlertsDoNotDisturb,
                         public nsIAlertsProgressListener
 {
 public:
   NS_DECL_NSIALERTSPROGRESSLISTENER
+  NS_DECL_NSIALERTSDONOTDISTURB
   NS_DECL_NSIALERTSSERVICE
   NS_DECL_ISUPPORTS
 
