@@ -8187,6 +8187,12 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
 
             entry.firstStub()->toFallbackStub()->fixupICEntry(&entry);
         }
+
+        // for generating inline caches during the execution.
+        if (runtimeData_.length())
+            ionScript->copyRuntimeData(&runtimeData_[0]);
+        if (cacheList_.length())
+            ionScript->copyCacheEntries(&cacheList_[0], masm);
     }
 
     JitSpew(JitSpew_Codegen, "Created IonScript %p (raw %p)",
@@ -8204,12 +8210,6 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     if (PerfEnabled())
         perfSpewer_.writeProfile(script, code, masm);
 #endif
-
-    // for generating inline caches during the execution.
-    if (runtimeData_.length())
-        ionScript->copyRuntimeData(&runtimeData_[0]);
-    if (cacheList_.length())
-        ionScript->copyCacheEntries(&cacheList_[0], masm);
 
     // for marking during GC.
     if (safepointIndices_.length())
