@@ -13,16 +13,27 @@ function shouldThrow(func, expected, msg) {
   }
 }
 
+function recursiveArrayCompare(actual, expected) {
+  is(Array.isArray(actual), Array.isArray(expected), "Both should either be arrays, or not");
+  if (Array.isArray(actual) && Array.isArray(expected)) {
+    var diff = actual.length !== expected.length;
+
+    for (var i = 0, n = actual.length; !diff && i < n; ++i) {
+      diff = recursiveArrayCompare(actual[i], expected[i]);
+    }
+
+    return diff;
+  } else {
+    return actual !== expected;
+  }
+}
+
 function arrayEquals(actual, expected, msg) {
   if (actual === expected) {
     return;
   }
 
-  var diff = actual.length !== expected.length;
-
-  for (var i = 0, n = actual.length; !diff && i < n; ++i) {
-    diff = actual[i] !== expected[i];
-  }
+  var diff = recursiveArrayCompare(actual, expected);
 
   ok(!diff, msg);
   if (diff) {
@@ -169,8 +180,60 @@ function TestFilledHeaders() {
   }, TypeError, "Fill with non-tuple sequence should throw TypeError.");
 }
 
+function iterate(iter) {
+  var result = [];
+  for (var val = iter.next(); !val.done;) {
+    result.push(val.value);
+    val = iter.next();
+  }
+  return result;
+}
+
+function iterateForOf(iter) {
+  var result = [];
+  for (var value of iter) {
+    result.push(value);
+  }
+  return result;
+}
+
+function byteInflate(str) {
+  var encoder = new TextEncoder("utf-8");
+  var encoded = encoder.encode(str);
+  var result = "";
+  for (var i = 0; i < encoded.length; ++i) {
+    result += String.fromCharCode(encoded[i]);
+  }
+  return result
+}
+
+function TestHeadersIterator() {
+  var ehsanInflated = byteInflate("احسان");
+  var headers = new Headers();
+  headers.set("foo0", "bar0");
+  headers.append("foo", "bar");
+  headers.append("foo", ehsanInflated);
+  headers.append("Foo2", "bar2");
+  headers.set("Foo2", "baz2");
+  headers.set("foo3", "bar3");
+  headers.delete("foo0");
+  headers.delete("foo3");
+
+  var key_iter = headers.keys();
+  var value_iter = headers.values();
+  var entries_iter = headers.entries();
+
+  arrayEquals(iterate(key_iter), ["foo", "foo", "foo2"], "Correct key iterator");
+  arrayEquals(iterate(value_iter), ["bar", ehsanInflated, "baz2"], "Correct value iterator");
+  arrayEquals(iterate(entries_iter), [["foo", "bar"], ["foo", ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+
+  arrayEquals(iterateForOf(headers), [["foo", "bar"], ["foo", ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+  arrayEquals(iterateForOf(new Headers(headers)), [["foo", "bar"], ["foo", ehsanInflated], ["foo2", "baz2"]], "Correct entries iterator");
+}
+
 function runTest() {
   TestEmptyHeaders();
   TestFilledHeaders();
+  TestHeadersIterator();
   return Promise.resolve();
 }
