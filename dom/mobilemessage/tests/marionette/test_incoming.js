@@ -12,7 +12,7 @@ const LONG_BODY = new Array(17).join(SHORT_BODY);
 ok(LONG_BODY.length > 160, "LONG_BODY.length");
 
 function checkMessage(aMessage, aBody) {
-  ok(aMessage instanceof MozSmsMessage, "Message is instanceof MozSmsMessage");
+  ok(aMessage instanceof SmsMessage, "Message is instanceof SmsMessage");
 
   is(aMessage.type, "sms", "message.type");
   ok(aMessage.id, "message.id");
