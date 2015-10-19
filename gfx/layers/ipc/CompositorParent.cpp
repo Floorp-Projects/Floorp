@@ -1884,27 +1884,6 @@ CompositorParent::Create(Transport* aTransport, ProcessId aOtherPid)
   return cpcp.get();
 }
 
-IToplevelProtocol*
-CompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
-                                base::ProcessHandle aPeerProcess,
-                                mozilla::ipc::ProtocolCloneContext* aCtx)
-{
-  for (unsigned int i = 0; i < aFds.Length(); i++) {
-    if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
-      Transport* transport = OpenDescriptor(aFds[i].fd(),
-                                            Transport::MODE_SERVER);
-      PCompositorParent* compositor = Create(transport, base::GetProcId(aPeerProcess));
-      compositor->CloneManagees(this, aCtx);
-      compositor->IToplevelProtocol::SetTransport(transport);
-      // The reference to the compositor thread is held in OnChannelConnected().
-      // We need to do this for cloned actors, too.
-      compositor->OnChannelConnected(base::GetProcId(aPeerProcess));
-      return compositor;
-    }
-  }
-  return nullptr;
-}
-
 static void
 UpdateIndirectTree(uint64_t aId, Layer* aRoot, const TargetConfig& aTargetConfig)
 {
@@ -2335,6 +2314,9 @@ CrossProcessCompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc:
         CompositorParent::Create(transport, base::GetProcId(aPeerProcess));
       compositor->CloneManagees(this, aCtx);
       compositor->IToplevelProtocol::SetTransport(transport);
+      // The reference to the compositor thread is held in OnChannelConnected().
+      // We need to do this for cloned actors, too.
+      compositor->OnChannelConnected(base::GetProcId(aPeerProcess));
       return compositor;
     }
   }
