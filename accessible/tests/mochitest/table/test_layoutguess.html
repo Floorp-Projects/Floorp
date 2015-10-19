@@ -116,9 +116,6 @@
       // layout table having datatable="0" attribute and containing data table structure (tfoot element)
       testAttrs("table22", attr, true);
 
-      // css table with non-table tag
-      testAttrs("table23", attr, true);
-
       SimpleTest.finish();
     }
 
@@ -137,11 +134,6 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=690222"
      title="Data table elements used to determine layout-guess attribute shouldn't be picked from nested tables">
     Mozilla Bug 690222
-  </a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=693948"
-     title="Expose layout-guess: true object attribute on CSS table accessible">
-    Mozilla Bug 693948
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=696975"
@@ -344,28 +336,28 @@
   <!-- table with a bordered cell -->
   <table id="table13" border="1" width="100%" bordercolor="#0000FF">
     <tr>
-      <td bordercolor="#000000"> </td>
-      <td bordercolor="#000000"> </td>
-      <td bordercolor="#000000"> </td>
+      <td bordercolor="#000000">Â </td>
+      <td bordercolor="#000000">Â </td>
+      <td bordercolor="#000000">Â </td>
     </tr>
     <tr>
-      <td bordercolor="#000000"> </td>
-      <td bordercolor="#000000"> </td>
-      <td bordercolor="#000000"> </td>
+      <td bordercolor="#000000">Â </td>
+      <td bordercolor="#000000">Â </td>
+      <td bordercolor="#000000">Â </td>
     </tr>
   </table> 
 
   <!-- table with alternating row background colors -->
   <table id="table14" width="100%">
     <tr style="background-color: #0000FF;">
-      <td> </td>
-      <td> </td>
-      <td> </td>
+      <td>Â </td>
+      <td>Â </td>
+      <td>Â </td>
     </tr>
     <tr style="background-color: #00FF00;">
-      <td> </td>
-      <td> </td>
-      <td> </td>
+      <td>Â </td>
+      <td>Â </td>
+      <td>Â </td>
     </tr>
   </table> 
 
@@ -510,13 +502,5 @@
     </tfoot>
   </table>
 
-  <!-- css table with noon-table tag -->
-  <div id="table23" style="display:table;">
-    <div style="display:table-row;">
-      <div style="display:table-cell;">Row 1, column 1</div>
-      <div style="display:table-cell;">Row 1, column 2</div>
-      <div style="display:table-cell;">Row 1, column 3</div>
-    </div>
-  </div>
 </body>
 </html>

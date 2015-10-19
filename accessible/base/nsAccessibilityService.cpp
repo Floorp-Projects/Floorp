@@ -1662,7 +1662,10 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLSpinnerAccessible(aContent, document);
       break;
     case eHTMLTableType:
-      newAcc = new HTMLTableAccessibleWrap(aContent, document);
+      if (aContent->IsHTMLElement(nsGkAtoms::table))
+        newAcc = new HTMLTableAccessibleWrap(aContent, document);
+      else
+        newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
     case eHTMLTableCellType:
       // Accessible HTML table cell should be a child of accessible HTML table
