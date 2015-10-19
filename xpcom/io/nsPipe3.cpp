@@ -31,16 +31,8 @@ using namespace mozilla;
 //
 // set NSPR_LOG_MODULES=nsPipe:5
 //
-static PRLogModuleInfo*
-GetPipeLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsPipe");
-  }
-  return sLog;
-}
-#define LOG(args) MOZ_LOG(GetPipeLog(), mozilla::LogLevel::Debug, args)
+static LazyLogModule sPipeLog("nsPipe");
+#define LOG(args) MOZ_LOG(sPipeLog, mozilla::LogLevel::Debug, args)
 
 #define DEFAULT_SEGMENT_SIZE  4096
 #define DEFAULT_SEGMENT_COUNT 16

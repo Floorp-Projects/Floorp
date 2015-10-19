@@ -22,16 +22,9 @@ using namespace mozilla;
 #ifdef LOG
 #undef LOG
 #endif
-static PRLogModuleInfo*
-GetTeeLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsInputStreamTee");
-  }
-  return sLog;
-}
-#define LOG(args) MOZ_LOG(GetTeeLog(), mozilla::LogLevel::Debug, args)
+
+static LazyLogModule sTeeLog("nsInputStreamTee");
+#define LOG(args) MOZ_LOG(sTeeLog, mozilla::LogLevel::Debug, args)
 
 class nsInputStreamTee final : public nsIInputStreamTee
 {
