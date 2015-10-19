@@ -5,17 +5,18 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SmsParent.h"
+
 #include "nsISmsService.h"
 #include "nsIMmsService.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "nsIDOMMozSmsMessage.h"
-#include "nsIDOMMozMmsMessage.h"
+#include "nsISmsMessage.h"
+#include "nsIMmsMessage.h"
 #include "mozilla/unused.h"
-#include "SmsMessage.h"
-#include "MmsMessage.h"
+#include "SmsMessageInternal.h"
+#include "MmsMessageInternal.h"
 #include "nsIMobileMessageDatabaseService.h"
-#include "MobileMessageThread.h"
+#include "MobileMessageThreadInternal.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/File.h"
@@ -144,23 +145,23 @@ GetMobileMessageDataFromMessage(ContentParent* aParent,
     return false;
   }
 
-  nsCOMPtr<nsIDOMMozMmsMessage> mmsMsg = do_QueryInterface(aMsg);
+  nsCOMPtr<nsIMmsMessage> mmsMsg = do_QueryInterface(aMsg);
   if (mmsMsg) {
     if (!aParent) {
       NS_ERROR("Invalid ContentParent to convert MMS Message!");
       return false;
     }
     MmsMessageData data;
-    if (!static_cast<MmsMessage*>(mmsMsg.get())->GetData(aParent, data)) {
+    if (!static_cast<MmsMessageInternal*>(mmsMsg.get())->GetData(aParent, data)) {
       return false;
     }
     aData = data;
     return true;
   }
 
-  nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aMsg);
+  nsCOMPtr<nsISmsMessage> smsMsg = do_QueryInterface(aMsg);
   if (smsMsg) {
-    aData = static_cast<SmsMessage*>(smsMsg.get())->GetData();
+    aData = static_cast<SmsMessageInternal*>(smsMsg.get())->GetData();
     return true;
   }
 
@@ -296,7 +297,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
   }
 
   if (!strcmp(aTopic, kSilentSmsReceivedObserverTopic)) {
-    nsCOMPtr<nsIDOMMozSmsMessage> smsMsg = do_QueryInterface(aSubject);
+    nsCOMPtr<nsISmsMessage> smsMsg = do_QueryInterface(aSubject);
     if (!smsMsg) {
       return NS_OK;
     }
@@ -308,7 +309,7 @@ SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     MobileMessageData msgData =
-      static_cast<SmsMessage*>(smsMsg.get())->GetData();
+      static_cast<SmsMessageInternal*>(smsMsg.get())->GetData();
     Unused << SendNotifyReceivedSilentMessage(msgData);
     return NS_OK;
   }
@@ -906,18 +907,18 @@ MobileMessageCursorParent::NotifyCursorResult(nsISupports** aResults,
   // error here to avoid sending a message to the dead process.
   NS_ENSURE_TRUE(mContinueCallback, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMMozMobileMessageThread> iThread =
+  nsCOMPtr<nsIMobileMessageThread> iThread =
     do_QueryInterface(aResults[0]);
   if (iThread) {
     nsTArray<ThreadData> threads;
 
     for (uint32_t i = 0; i < aSize; i++) {
-      nsCOMPtr<nsIDOMMozMobileMessageThread> iThread =
+      nsCOMPtr<nsIMobileMessageThread> iThread =
         do_QueryInterface(aResults[i]);
       NS_ENSURE_TRUE(iThread, NS_ERROR_FAILURE);
 
-      MobileMessageThread* thread =
-        static_cast<MobileMessageThread*>(iThread.get());
+      MobileMessageThreadInternal* thread =
+        static_cast<MobileMessageThreadInternal*>(iThread.get());
       threads.AppendElement(thread->GetData());
     }
 
@@ -928,18 +929,20 @@ MobileMessageCursorParent::NotifyCursorResult(nsISupports** aResults,
   ContentParent* parent = static_cast<ContentParent*>(Manager()->Manager());
   nsTArray<MobileMessageData> messages;
   for (uint32_t i = 0; i < aSize; i++) {
-    nsCOMPtr<nsIDOMMozSmsMessage> iSms = do_QueryInterface(aResults[i]);
-    if (iSms) {
-      SmsMessage* sms = static_cast<SmsMessage*>(iSms.get());
-      messages.AppendElement(sms->GetData());
+    nsCOMPtr<nsISmsMessage> sms = do_QueryInterface(aResults[i]);
+    if (sms) {
+      messages.AppendElement(
+        static_cast<SmsMessageInternal*>(sms.get())->GetData());
       continue;
     }
 
-    nsCOMPtr<nsIDOMMozMmsMessage> iMms = do_QueryInterface(aResults[i]);
-    if (iMms) {
-      MmsMessage* mms = static_cast<MmsMessage*>(iMms.get());
+    nsCOMPtr<nsIMmsMessage> mms = do_QueryInterface(aResults[i]);
+    if (mms) {
       MmsMessageData mmsData;
-      NS_ENSURE_TRUE(mms->GetData(parent, mmsData), NS_ERROR_FAILURE);
+      NS_ENSURE_TRUE(
+        static_cast<MmsMessageInternal*>(mms.get())->GetData(parent, mmsData),
+        NS_ERROR_FAILURE
+      );
       messages.AppendElement(mmsData);
       continue;
     }
