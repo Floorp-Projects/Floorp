@@ -74,6 +74,14 @@
         if (this.findbar._isIMEComposing) {
           return;
         }
+
+        if (this._hadValue && !this.value) {
+          this._willfullyDeleted = true;
+          this._hadValue = false;
+        } else if (this.value.trim()) {
+          this._hadValue = true;
+          this._willfullyDeleted = false;
+        }
         this.findbar._find(this.value);
       ]]></handler>
 
@@ -1101,8 +1109,10 @@
             return;
 
           let clipboardSearchString = this._browser.finder.clipboardSearchString;
-          if (clipboardSearchString && this._findField.value != clipboardSearchString) {
+          if (clipboardSearchString && this._findField.value != clipboardSearchString &&
+              !this._findField._willfullyDeleted) {
             this._findField.value = clipboardSearchString;
+            this._findField._hadValue = true;
             // Changing the search string makes the previous status invalid, so
             // we better clear it here.
             this._updateStatusUI();
