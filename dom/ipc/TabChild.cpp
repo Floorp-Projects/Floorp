@@ -510,16 +510,8 @@ private:
             content->GetIPCChannel()->Unblock();
         }
 
-        nsTArray<IToplevelProtocol*> actors;
-        content->GetOpenedActors(actors);
-        for (size_t j = 0; j < actors.Length(); j++) {
-            IToplevelProtocol* actor = actors[j];
-            if (aBlock) {
-                actor->GetIPCChannel()->Block();
-            } else {
-                actor->GetIPCChannel()->Unblock();
-            }
-        }
+        // Other IPC channels do not perform the checks through Block() and
+        // Unblock().
     }
 };
 #endif
