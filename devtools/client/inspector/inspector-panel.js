@@ -654,6 +654,9 @@ InspectorPanel.prototype = {
                              !this.selection.isPseudoElementNode();
     let isEditableElement = isSelectionElement &&
                             !this.selection.isAnonymousNode();
+    let isDuplicatableElement = isSelectionElement &&
+                                !this.selection.isAnonymousNode() &&
+                                !this.selection.isRoot();
     let isScreenshotable = isSelectionElement &&
                            this.canGetUniqueSelector &&
                            this.selection.nodeFront.isTreeDisplayed;
@@ -683,6 +686,7 @@ InspectorPanel.prototype = {
     // "Copy outer HTML", "Scroll Into View" & "Screenshot Node" as appropriate
     let unique = this.panelDoc.getElementById("node-menu-copyuniqueselector");
     let screenshot = this.panelDoc.getElementById("node-menu-screenshotnode");
+    let duplicateNode = this.panelDoc.getElementById("node-menu-duplicatenode");
     let copyInnerHTML = this.panelDoc.getElementById("node-menu-copyinner");
     let copyOuterHTML = this.panelDoc.getElementById("node-menu-copyouter");
     let scrollIntoView = this.panelDoc.getElementById("node-menu-scrollnodeintoview");
@@ -700,9 +704,19 @@ InspectorPanel.prototype = {
       expandAll.removeAttribute("disabled");
     }
 
+    this._target.actorHasMethod("domwalker", "duplicateNode").then(value => {
+      duplicateNode.hidden = !value;
+    });
     this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
       scrollIntoView.hidden = !value;
     });
+
+    if (isDuplicatableElement) {
+      duplicateNode.removeAttribute("disabled");
+    }
+    else {
+      duplicateNode.setAttribute("disabled", "true");
+    }
 
     if (isSelectionElement) {
       unique.removeAttribute("disabled");
@@ -1175,6 +1189,20 @@ InspectorPanel.prototype = {
     }
 
     this.selection.nodeFront.scrollIntoView();
+  },
+
+  /**
+   * Duplicate the selected node
+   */
+  duplicateNode: function() {
+    let selection = this.selection;
+    if (!selection.isElementNode() ||
+        selection.isRoot() ||
+        selection.isAnonymousNode() ||
+        selection.isPseudoElementNode()) {
+      return;
+    }
+    this.walker.duplicateNode(selection.nodeFront).catch(e => console.error(e));
   },
 
   /**
