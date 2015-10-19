@@ -25,7 +25,7 @@ using namespace mozilla;
 
 using mozilla::dom::ContentChild;
 
-NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsProgressListener)
+NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsProgressListener)
 
 nsAlertsService::nsAlertsService()
 {
@@ -149,6 +149,45 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
 #endif // !MOZ_WIDGET_ANDROID
 }
 
+
+// nsIAlertsDoNotDisturb
+NS_IMETHODIMP nsAlertsService::GetManualDoNotDisturb(bool* aRetVal)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  // Try the system notification service.
+  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+  if (sysAlerts) {
+    nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+    if (!alertsDND) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    return alertsDND->GetManualDoNotDisturb(aRetVal);
+  }
+
+  return mXULAlerts.GetManualDoNotDisturb(aRetVal);
+#endif
+}
+
+NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  // Try the system notification service.
+  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+  if (sysAlerts) {
+    nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+    if (!alertsDND) {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+    return alertsDND->SetManualDoNotDisturb(aDoNotDisturb);
+  }
+
+  return mXULAlerts.SetManualDoNotDisturb(aDoNotDisturb);
+#endif
+}
 
 NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
                                           int64_t aProgress,

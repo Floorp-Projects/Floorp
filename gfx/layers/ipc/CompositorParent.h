@@ -193,12 +193,6 @@ public:
                             bool aUseExternalSurfaceSize = false,
                             int aSurfaceWidth = -1, int aSurfaceHeight = -1);
 
-  // IToplevelProtocol::CloneToplevel()
-  virtual IToplevelProtocol*
-  CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
-                base::ProcessHandle aPeerProcess,
-                mozilla::ipc::ProtocolCloneContext* aCtx) override;
-
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual bool RecvRequestOverfill() override;
   virtual bool RecvWillStop() override;

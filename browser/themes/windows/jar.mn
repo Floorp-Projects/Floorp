@@ -64,8 +64,8 @@ browser.jar:
   skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
   skin/classic/browser/reload-stop-go.png
   skin/classic/browser/reload-stop-go@2x.png
-  skin/classic/browser/reload-stop-go-preWin10.png
-  skin/classic/browser/reload-stop-go-preWin10@2x.png
+  skin/classic/browser/reload-stop-go-XPVista7.png
+  skin/classic/browser/reload-stop-go-XPVista7@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
@@ -85,8 +85,8 @@ browser.jar:
   skin/classic/browser/urlbar-popup-blocked.png
   skin/classic/browser/urlbar-history-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker@2x.png
-  skin/classic/browser/urlbar-history-dropmarker-preWin10.png
-  skin/classic/browser/urlbar-history-dropmarker-preWin10@2x.png
+  skin/classic/browser/urlbar-history-dropmarker-XPVista7.png
+  skin/classic/browser/urlbar-history-dropmarker-XPVista7@2x.png
   skin/classic/browser/webRTC-indicator.css
   skin/classic/browser/loop/menuPanel.png                      (loop/menuPanel.png)
   skin/classic/browser/loop/menuPanel@2x.png                   (loop/menuPanel@2x.png)
@@ -323,6 +323,8 @@ browser.jar:
 % override chrome://browser/skin/preferences/saveFile.png             chrome://browser/skin/preferences/saveFile-XP.png                 os=WINNT osversion<6
 
 % override chrome://browser/skin/actionicon-tab.png                   chrome://browser/skin/actionicon-tab-XPVista7.png                 os=WINNT osversion<=6.1
+% override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-XPVista7.png                 os=WINNT osversion<=6.1
+% override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-XPVista7@2x.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1
 % override chrome://browser/skin/sync-horizontalbar@2x.png            chrome://browser/skin/sync-horizontalbar-XPVista7@2x.png          os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png     os=WINNT osversion<=6.1
@@ -330,6 +332,8 @@ browser.jar:
 % override chrome://browser/skin/syncProgress-toolbar.png             chrome://browser/skin/syncProgress-toolbar-XPVista7.png           os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-toolbar@2x.png          chrome://browser/skin/syncProgress-toolbar-XPVista7@2x.png        os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
+% override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-XPVista7.png      os=WINNT osversion<=6.1
+% override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-XPVista7@2x.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/places/autocomplete-star.png         chrome://browser/skin/places/autocomplete-star-XPVista7.png       os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
@@ -383,11 +387,6 @@ browser.jar:
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-aero.png               os=WINNT osversion=6.1
 % override chrome://browser/skin/preferences/checkbox.png             chrome://browser/skin/preferences/checkbox-xp.png                 os=WINNT osversion<6
-
-% override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-preWin10.png                 os=WINNT osversion<=6.3
-% override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-preWin10@2x.png              os=WINNT osversion<=6.3
-% override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-preWin10.png      os=WINNT osversion<=6.3
-% override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-preWin10@2x.png   os=WINNT osversion<=6.3
 
 % override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3
 % override chrome://browser/skin/tabbrowser/tab-background-start@2x.png  chrome://browser/skin/tabbrowser/tab-background-start-preWin10@2x.png  os=WINNT osversion<=6.3
