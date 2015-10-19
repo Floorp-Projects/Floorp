@@ -275,8 +275,12 @@ WebGL2Context::GetQuery(GLenum target, GLenum pname)
     }
 
     WebGLRefPtr<WebGLQuery>& targetSlot = GetQuerySlotByTarget(target);
-
     RefPtr<WebGLQuery> tmp = targetSlot.get();
+    if (tmp && tmp->mType != target) {
+        // Query in slot doesn't match target
+        return nullptr;
+    }
+
     return tmp.forget();
 }
 

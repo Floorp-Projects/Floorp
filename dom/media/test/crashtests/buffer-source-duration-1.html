@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+const rate = 44100;
+var context = new window.OfflineAudioContext(1, 512, rate);
+var buffer = context.createBuffer(1, 128, rate);
+var source = context.createBufferSource();
+source.buffer = buffer;
+source.start(0, 0, 86400);
+context.startRendering().
+  then(function() {
+    document.documentElement.removeAttribute("class");
+  });
+</script>

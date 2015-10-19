@@ -144,7 +144,9 @@ this.XPCOMUtils = {
         countRef.value = _interfaces.length;
         return _interfaces;
       },
-      getScriptableHelper: function XPCU_getScriptableHelper() null,
+      getScriptableHelper: function XPCU_getScriptableHelper() {
+        return null;
+      },
       contractID: classInfo.contractID,
       classDescription: classInfo.classDescription,
       classID: classInfo.classID,
