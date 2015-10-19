@@ -37,12 +37,13 @@ private:
 
   typedef mozilla::dom::Blob Blob;
   typedef mozilla::dom::File File;
-  typedef mozilla::dom::OwningFileOrUSVString OwningFileOrUSVString;
 
   struct FormDataTuple
   {
     nsString name;
-    OwningFileOrUSVString value;
+    nsString stringValue;
+    RefPtr<File> fileValue;
+    bool valueIsFile;
   };
 
   // Returns the FormDataTuple to modify. This may be null, in which case
@@ -56,7 +57,8 @@ private:
   {
     MOZ_ASSERT(aData);
     aData->name = aName;
-    aData->value.SetAsUSVString() = aValue;
+    aData->stringValue = aValue;
+    aData->valueIsFile = false;
   }
 
   void SetNameFilePair(FormDataTuple* aData,
@@ -65,9 +67,12 @@ private:
   {
     MOZ_ASSERT(aData);
     aData->name = aName;
-    aData->value.SetAsFile() = aFile;
+    aData->fileValue = aFile;
+    aData->valueIsFile = true;
   }
 
+  void ExtractValue(const FormDataTuple& aTuple,
+                    mozilla::dom::OwningFileOrUSVString* aOutValue);
 public:
   explicit nsFormData(nsISupports* aOwner = nullptr);
 
@@ -95,16 +100,12 @@ public:
   void Append(const nsAString& aName, Blob& aBlob,
               const mozilla::dom::Optional<nsAString>& aFilename);
   void Delete(const nsAString& aName);
-  void Get(const nsAString& aName, mozilla::dom::Nullable<OwningFileOrUSVString>& aOutValue);
-  void GetAll(const nsAString& aName, nsTArray<OwningFileOrUSVString>& aValues);
+  void Get(const nsAString& aName, mozilla::dom::Nullable<mozilla::dom::OwningFileOrUSVString>& aOutValue);
+  void GetAll(const nsAString& aName, nsTArray<mozilla::dom::OwningFileOrUSVString>& aValues);
   bool Has(const nsAString& aName);
   void Set(const nsAString& aName, Blob& aBlob,
            const mozilla::dom::Optional<nsAString>& aFilename);
   void Set(const nsAString& aName, const nsAString& aValue);
-
-  uint32_t GetIterableLength() const;
-  const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
-  const OwningFileOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
 
   // nsFormSubmission
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
@@ -119,9 +120,9 @@ public:
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    File* aFile) override;
 
-  typedef bool (*FormDataEntryCallback)(const nsString& aName,
-                                        const OwningFileOrUSVString& aValue,
-                                        void* aClosure);
+  typedef bool (*FormDataEntryCallback)(const nsString& aName, bool aIsFile,
+                                        const nsString& aValue,
+                                        File* aFile, void* aClosure);
 
   uint32_t
   Length() const
@@ -136,7 +137,8 @@ public:
   {
     for (uint32_t i = 0; i < mFormData.Length(); ++i) {
       FormDataTuple& tuple = mFormData[i];
-      if (!aFunc(tuple.name, tuple.value, aClosure)) {
+      if (!aFunc(tuple.name, tuple.valueIsFile, tuple.stringValue,
+                 tuple.fileValue, aClosure)) {
         return false;
       }
     }
