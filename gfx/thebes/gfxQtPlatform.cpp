@@ -132,23 +132,23 @@ gfxFontEntry*
 gfxQtPlatform::LookupLocalFont(const nsAString& aFontName,
                                uint16_t aWeight,
                                int16_t aStretch,
-                               bool aItalic)
+                               uint8_t aStyle)
 {
     return gfxPangoFontGroup::NewFontEntry(aFontName, aWeight,
-                                           aStretch, aItalic);
+                                           aStretch, aStyle);
 }
 
 gfxFontEntry*
 gfxQtPlatform::MakePlatformFont(const nsAString& aFontName,
                                 uint16_t aWeight,
                                 int16_t aStretch,
-                                bool aItalic,
+                                uint8_t aStyle,
                                 const uint8_t* aFontData,
                                 uint32_t aLength)
 {
     // passing ownership of the font data to the new font entry
     return gfxPangoFontGroup::NewFontEntry(aFontName, aWeight,
-                                           aStretch, aItalic,
+                                           aStretch, aStyle,
                                            aFontData, aLength);
 }
 
