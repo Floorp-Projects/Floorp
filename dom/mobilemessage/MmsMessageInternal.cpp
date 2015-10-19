@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MmsMessage.h"
+#include "MmsMessageInternal.h"
+
 #include "nsIDOMClassInfo.h"
 #include "jsapi.h" // For JS_IsArrayObject, JS_GetElement, etc.
 #include "nsJSUtils.h"
@@ -19,35 +20,48 @@
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 
-using namespace mozilla::dom::mobilemessage;
 
 namespace mozilla {
 namespace dom {
+namespace mobilemessage {
 
-NS_INTERFACE_MAP_BEGIN(MmsMessage)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozMmsMessage)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MmsMessageInternal)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MmsMessageInternal)
+  for (uint32_t i = 0; i < tmp->mAttachments.Length(); i++) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAttachments[i].mContent)
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MmsMessageInternal)
+  for (uint32_t i = 0; i < tmp->mAttachments.Length(); i++) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mAttachments[i].mContent)
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MmsMessageInternal)
+  NS_INTERFACE_MAP_ENTRY(nsIMmsMessage)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozMmsMessage)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(MmsMessage)
-NS_IMPL_RELEASE(MmsMessage)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(MmsMessageInternal)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(MmsMessageInternal)
 
-MmsMessage::MmsMessage(int32_t                          aId,
-                       uint64_t                         aThreadId,
-                       const nsAString&                 aIccId,
-                       DeliveryState                    aDelivery,
-                       const nsTArray<MmsDeliveryInfo>& aDeliveryInfo,
-                       const nsAString&                 aSender,
-                       const nsTArray<nsString>&        aReceivers,
-                       uint64_t                         aTimestamp,
-                       uint64_t                         aSentTimestamp,
-                       bool                             aRead,
-                       const nsAString&                 aSubject,
-                       const nsAString&                 aSmil,
-                       const nsTArray<Attachment>&      aAttachments,
-                       uint64_t                         aExpiryDate,
-                       bool                             aReadReportRequested)
+MmsMessageInternal::MmsMessageInternal(int32_t                          aId,
+                                       uint64_t                         aThreadId,
+                                       const nsAString&                 aIccId,
+                                       DeliveryState                    aDelivery,
+                                       const nsTArray<MmsDeliveryInfo>& aDeliveryInfo,
+                                       const nsAString&                 aSender,
+                                       const nsTArray<nsString>&        aReceivers,
+                                       uint64_t                         aTimestamp,
+                                       uint64_t                         aSentTimestamp,
+                                       bool                             aRead,
+                                       const nsAString&                 aSubject,
+                                       const nsAString&                 aSmil,
+                                       const nsTArray<MmsAttachment>&   aAttachments,
+                                       uint64_t                         aExpiryDate,
+                                       bool                             aReadReportRequested)
   : mId(aId),
     mThreadId(aThreadId),
     mIccId(aIccId),
@@ -66,7 +80,7 @@ MmsMessage::MmsMessage(int32_t                          aId,
 {
 }
 
-MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
+MmsMessageInternal::MmsMessageInternal(const MmsMessageData& aData)
   : mId(aData.id())
   , mThreadId(aData.threadId())
   , mIccId(aData.iccId())
@@ -171,23 +185,23 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
 }
 
 /* static */ nsresult
-MmsMessage::Create(int32_t aId,
-                   uint64_t aThreadId,
-                   const nsAString& aIccId,
-                   const nsAString& aDelivery,
-                   const JS::Value& aDeliveryInfo,
-                   const nsAString& aSender,
-                   const JS::Value& aReceivers,
-                   uint64_t aTimestamp,
-                   uint64_t aSentTimestamp,
-                   bool aRead,
-                   const nsAString& aSubject,
-                   const nsAString& aSmil,
-                   const JS::Value& aAttachments,
-                   uint64_t aExpiryDate,
-                   bool aIsReadReportRequested,
-                   JSContext* aCx,
-                   nsIDOMMozMmsMessage** aMessage)
+MmsMessageInternal::Create(int32_t aId,
+                           uint64_t aThreadId,
+                           const nsAString& aIccId,
+                           const nsAString& aDelivery,
+                           const JS::Value& aDeliveryInfo,
+                           const nsAString& aSender,
+                           const JS::Value& aReceivers,
+                           uint64_t aTimestamp,
+                           uint64_t aSentTimestamp,
+                           bool aRead,
+                           const nsAString& aSubject,
+                           const nsAString& aSmil,
+                           const JS::Value& aAttachments,
+                           uint64_t aExpiryDate,
+                           bool aIsReadReportRequested,
+                           JSContext* aCx,
+                           nsIMmsMessage** aMessage)
 {
   *aMessage = nullptr;
 
@@ -281,7 +295,7 @@ MmsMessage::Create(int32_t aId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsTArray<Attachment> attachments;
+  nsTArray<MmsAttachment> attachments;
   MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, attachmentsObj, &length));
 
   JS::Rooted<JS::Value> attachmentJsVal(aCx);
@@ -295,31 +309,34 @@ MmsMessage::Create(int32_t aId,
       return NS_ERROR_TYPE_ERR;
     }
 
+    NS_ENSURE_TRUE(attachment.mContent, NS_ERROR_TYPE_ERR);
+
     attachments.AppendElement(attachment);
   }
 
-  nsCOMPtr<nsIDOMMozMmsMessage> message = new MmsMessage(aId,
-                                                         aThreadId,
-                                                         aIccId,
-                                                         delivery,
-                                                         deliveryInfo,
-                                                         aSender,
-                                                         receivers,
-                                                         aTimestamp,
-                                                         aSentTimestamp,
-                                                         aRead,
-                                                         aSubject,
-                                                         aSmil,
-                                                         attachments,
-                                                         aExpiryDate,
-                                                         aIsReadReportRequested);
+  nsCOMPtr<nsIMmsMessage> message =
+    new MmsMessageInternal(aId,
+                           aThreadId,
+                           aIccId,
+                           delivery,
+                           deliveryInfo,
+                           aSender,
+                           receivers,
+                           aTimestamp,
+                           aSentTimestamp,
+                           aRead,
+                           aSubject,
+                           aSmil,
+                           attachments,
+                           aExpiryDate,
+                           aIsReadReportRequested);
   message.forget(aMessage);
   return NS_OK;
 }
 
 bool
-MmsMessage::GetData(ContentParent* aParent,
-                    mobilemessage::MmsMessageData& aData)
+MmsMessageInternal::GetData(ContentParent* aParent,
+                            MmsMessageData& aData)
 {
   NS_ASSERTION(aParent, "aParent is null");
 
@@ -391,15 +408,15 @@ MmsMessage::GetData(ContentParent* aParent,
   aData.attachments().SetCapacity(mAttachments.Length());
   for (uint32_t i = 0; i < mAttachments.Length(); i++) {
     MmsAttachmentData mma;
-    const Attachment &element = mAttachments[i];
-    mma.id().Assign(element.id);
-    mma.location().Assign(element.location);
+    const MmsAttachment &element = mAttachments[i];
+    mma.id().Assign(element.mId);
+    mma.location().Assign(element.mLocation);
 
     // This is a workaround. Sometimes the blob we get from the database
     // doesn't have a valid last modified date, making the ContentParent
     // send a "Mystery Blob" to the ContentChild. Attempting to get the
     // last modified date of blob can force that value to be initialized.
-    RefPtr<BlobImpl> impl = element.content->Impl();
+    RefPtr<BlobImpl> impl = element.mContent->Impl();
     if (impl && impl->IsDateUnknown()) {
       ErrorResult rv;
       impl->GetLastModified(rv);
@@ -409,7 +426,7 @@ MmsMessage::GetData(ContentParent* aParent,
       }
     }
 
-    mma.contentParent() = aParent->GetOrCreateActorForBlob(element.content);
+    mma.contentParent() = aParent->GetOrCreateActorForBlob(element.mContent);
     if (!mma.contentParent()) {
       return false;
     }
@@ -420,35 +437,35 @@ MmsMessage::GetData(ContentParent* aParent,
 }
 
 NS_IMETHODIMP
-MmsMessage::GetType(nsAString& aType)
+MmsMessageInternal::GetType(nsAString& aType)
 {
   aType = NS_LITERAL_STRING("mms");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetId(int32_t* aId)
+MmsMessageInternal::GetId(int32_t* aId)
 {
   *aId = mId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetThreadId(uint64_t* aThreadId)
+MmsMessageInternal::GetThreadId(uint64_t* aThreadId)
 {
   *aThreadId = mThreadId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetIccId(nsAString& aIccId)
+MmsMessageInternal::GetIccId(nsAString& aIccId)
 {
   aIccId = mIccId;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetDelivery(nsAString& aDelivery)
+MmsMessageInternal::GetDelivery(nsAString& aDelivery)
 {
   switch (mDelivery) {
     case eDeliveryState_Received:
@@ -476,7 +493,7 @@ MmsMessage::GetDelivery(nsAString& aDelivery)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDeliveryInfo)
+MmsMessageInternal::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDeliveryInfo)
 {
   // TODO Bug 850525 It'd be better to depend on the delivery of MmsMessage
   // to return a more correct value. Ex, if .delivery = 'received', we should
@@ -495,14 +512,14 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDelive
 }
 
 NS_IMETHODIMP
-MmsMessage::GetSender(nsAString& aSender)
+MmsMessageInternal::GetSender(nsAString& aSender)
 {
   aSender = mSender;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetReceivers(JSContext* aCx, JS::MutableHandle<JS::Value> aReceivers)
+MmsMessageInternal::GetReceivers(JSContext* aCx, JS::MutableHandle<JS::Value> aReceivers)
 {
   JS::Rooted<JSObject*> receiversObj(aCx);
   nsresult rv = nsTArrayToJSArray(aCx, mReceivers, &receiversObj);
@@ -513,116 +530,85 @@ MmsMessage::GetReceivers(JSContext* aCx, JS::MutableHandle<JS::Value> aReceivers
 }
 
 NS_IMETHODIMP
-MmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
+MmsMessageInternal::GetTimestamp(DOMTimeStamp* aTimestamp)
 {
   *aTimestamp = mTimestamp;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+MmsMessageInternal::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
 {
   *aSentTimestamp = mSentTimestamp;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetRead(bool* aRead)
+MmsMessageInternal::GetRead(bool* aRead)
 {
   *aRead = mRead;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetSubject(nsAString& aSubject)
+MmsMessageInternal::GetSubject(nsAString& aSubject)
 {
   aSubject = mSubject;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetSmil(nsAString& aSmil)
+MmsMessageInternal::GetSmil(nsAString& aSmil)
 {
   aSmil = mSmil;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachments)
+MmsMessageInternal::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachments)
 {
   uint32_t length = mAttachments.Length();
 
-  JS::Rooted<JSObject*> attachments(
-    aCx, JS_NewArrayObject(aCx, length));
-  NS_ENSURE_TRUE(attachments, NS_ERROR_OUT_OF_MEMORY);
-
-  for (uint32_t i = 0; i < length; ++i) {
-    const Attachment &attachment = mAttachments[i];
-
-    JS::Rooted<JSObject*> attachmentObj(aCx, JS_NewPlainObject(aCx));
-    NS_ENSURE_TRUE(attachmentObj, NS_ERROR_OUT_OF_MEMORY);
-
-    JS::Rooted<JSString*> tmpJsStr(aCx);
-
-    // Get |attachment.mId|.
-    tmpJsStr = JS_NewUCStringCopyN(aCx,
-                                   attachment.id.get(),
-                                   attachment.id.Length());
-    NS_ENSURE_TRUE(tmpJsStr, NS_ERROR_OUT_OF_MEMORY);
-
-    if (!JS_DefineProperty(aCx, attachmentObj, "id", tmpJsStr, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Get |attachment.mLocation|.
-    tmpJsStr = JS_NewUCStringCopyN(aCx,
-                                   attachment.location.get(),
-                                   attachment.location.Length());
-    NS_ENSURE_TRUE(tmpJsStr, NS_ERROR_OUT_OF_MEMORY);
-
-    if (!JS_DefineProperty(aCx, attachmentObj, "location", tmpJsStr, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Get |attachment.mContent|.
-
-    // Duplicating the File with the correct parent object.
-    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
-    MOZ_ASSERT(global);
-    RefPtr<Blob> newBlob = Blob::Create(global, attachment.content->Impl());
-
-    JS::Rooted<JS::Value> val(aCx);
-    if (!ToJSValue(aCx, newBlob, &val)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!JS_DefineProperty(aCx, attachmentObj, "content", val, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!JS_DefineElement(aCx, attachments, i, attachmentObj, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (length == 0) {
+    aAttachments.setNull();
+    return NS_OK;
   }
 
-  aAttachments.setObject(*attachments);
+  // Duplicating the Blob with the correct parent object.
+  nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+  MOZ_ASSERT(global);
+  nsTArray<MmsAttachment> result;
+  for (uint32_t i = 0; i < length; i++) {
+    MmsAttachment attachment;
+    const MmsAttachment &element = mAttachments[i];
+    attachment.mId = element.mId;
+    attachment.mLocation = element.mLocation;
+    attachment.mContent = Blob::Create(global, element.mContent->Impl());
+    result.AppendElement(attachment);
+  }
+
+ if (!ToJSValue(aCx, result, aAttachments)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_TYPE_ERR;
+ }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetExpiryDate(DOMTimeStamp* aExpiryDate)
+MmsMessageInternal::GetExpiryDate(DOMTimeStamp* aExpiryDate)
 {
   *aExpiryDate = mExpiryDate;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MmsMessage::GetReadReportRequested(bool* aReadReportRequested)
+MmsMessageInternal::GetReadReportRequested(bool* aReadReportRequested)
 {
   *aReadReportRequested = mReadReportRequested;
   return NS_OK;
 }
 
-
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla

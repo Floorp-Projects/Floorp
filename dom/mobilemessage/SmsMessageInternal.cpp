@@ -4,64 +4,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SmsMessage.h"
+#include "SmsMessageInternal.h"
 #include "nsIDOMClassInfo.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 
-using namespace mozilla::dom::mobilemessage;
-
 namespace mozilla {
 namespace dom {
+namespace mobilemessage {
 
-NS_INTERFACE_MAP_BEGIN(SmsMessage)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozSmsMessage)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsMessage)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS(SmsMessageInternal, nsISmsMessage)
 
-NS_IMPL_ADDREF(SmsMessage)
-NS_IMPL_RELEASE(SmsMessage)
-
-SmsMessage::SmsMessage(int32_t aId,
-                       uint64_t aThreadId,
-                       const nsString& aIccId,
-                       DeliveryState aDelivery,
-                       DeliveryStatus aDeliveryStatus,
-                       const nsString& aSender,
-                       const nsString& aReceiver,
-                       const nsString& aBody,
-                       MessageClass aMessageClass,
-                       uint64_t aTimestamp,
-                       uint64_t aSentTimestamp,
-                       uint64_t aDeliveryTimestamp,
-                       bool aRead)
+SmsMessageInternal::SmsMessageInternal(int32_t aId,
+                                       uint64_t aThreadId,
+                                       const nsString& aIccId,
+                                       DeliveryState aDelivery,
+                                       DeliveryStatus aDeliveryStatus,
+                                       const nsString& aSender,
+                                       const nsString& aReceiver,
+                                       const nsString& aBody,
+                                       MessageClass aMessageClass,
+                                       uint64_t aTimestamp,
+                                       uint64_t aSentTimestamp,
+                                       uint64_t aDeliveryTimestamp,
+                                       bool aRead)
   : mData(aId, aThreadId, aIccId, aDelivery, aDeliveryStatus,
           aSender, aReceiver, aBody, aMessageClass, aTimestamp, aSentTimestamp,
           aDeliveryTimestamp, aRead)
 {
 }
 
-SmsMessage::SmsMessage(const SmsMessageData& aData)
+SmsMessageInternal::SmsMessageInternal(const SmsMessageData& aData)
   : mData(aData)
 {
 }
 
 /* static */ nsresult
-SmsMessage::Create(int32_t aId,
-                   uint64_t aThreadId,
-                   const nsAString& aIccId,
-                   const nsAString& aDelivery,
-                   const nsAString& aDeliveryStatus,
-                   const nsAString& aSender,
-                   const nsAString& aReceiver,
-                   const nsAString& aBody,
-                   const nsAString& aMessageClass,
-                   uint64_t aTimestamp,
-                   uint64_t aSentTimestamp,
-                   uint64_t aDeliveryTimestamp,
-                   bool aRead,
-                   JSContext* aCx,
-                   nsIDOMMozSmsMessage** aMessage)
+SmsMessageInternal::Create(int32_t aId,
+                           uint64_t aThreadId,
+                           const nsAString& aIccId,
+                           const nsAString& aDelivery,
+                           const nsAString& aDeliveryStatus,
+                           const nsAString& aSender,
+                           const nsAString& aReceiver,
+                           const nsAString& aBody,
+                           const nsAString& aMessageClass,
+                           uint64_t aTimestamp,
+                           uint64_t aSentTimestamp,
+                           uint64_t aDeliveryTimestamp,
+                           bool aRead,
+                           JSContext* aCx,
+                           nsISmsMessage** aMessage)
 {
   *aMessage = nullptr;
 
@@ -123,47 +115,47 @@ SmsMessage::Create(int32_t aId,
   // Set |deliveryTimestamp|.
   data.deliveryTimestamp() = aDeliveryTimestamp;
 
-  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(data);
+  nsCOMPtr<nsISmsMessage> message = new SmsMessageInternal(data);
   message.swap(*aMessage);
   return NS_OK;
 }
 
 const SmsMessageData&
-SmsMessage::GetData() const
+SmsMessageInternal::GetData() const
 {
   return mData;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetType(nsAString& aType)
+SmsMessageInternal::GetType(nsAString& aType)
 {
   aType = NS_LITERAL_STRING("sms");
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetId(int32_t* aId)
+SmsMessageInternal::GetId(int32_t* aId)
 {
   *aId = mData.id();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetThreadId(uint64_t* aThreadId)
+SmsMessageInternal::GetThreadId(uint64_t* aThreadId)
 {
   *aThreadId = mData.threadId();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetIccId(nsAString& aIccId)
+SmsMessageInternal::GetIccId(nsAString& aIccId)
 {
   aIccId = mData.iccId();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetDelivery(nsAString& aDelivery)
+SmsMessageInternal::GetDelivery(nsAString& aDelivery)
 {
   switch (mData.delivery()) {
     case eDeliveryState_Received:
@@ -188,7 +180,7 @@ SmsMessage::GetDelivery(nsAString& aDelivery)
 }
 
 NS_IMETHODIMP
-SmsMessage::GetDeliveryStatus(nsAString& aDeliveryStatus)
+SmsMessageInternal::GetDeliveryStatus(nsAString& aDeliveryStatus)
 {
   switch (mData.deliveryStatus()) {
     case eDeliveryStatus_NotApplicable:
@@ -212,28 +204,28 @@ SmsMessage::GetDeliveryStatus(nsAString& aDeliveryStatus)
 }
 
 NS_IMETHODIMP
-SmsMessage::GetSender(nsAString& aSender)
+SmsMessageInternal::GetSender(nsAString& aSender)
 {
   aSender = mData.sender();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetReceiver(nsAString& aReceiver)
+SmsMessageInternal::GetReceiver(nsAString& aReceiver)
 {
   aReceiver = mData.receiver();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetBody(nsAString& aBody)
+SmsMessageInternal::GetBody(nsAString& aBody)
 {
   aBody = mData.body();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetMessageClass(nsAString& aMessageClass)
+SmsMessageInternal::GetMessageClass(nsAString& aMessageClass)
 {
   switch (mData.messageClass()) {
     case eMessageClass_Normal:
@@ -259,32 +251,33 @@ SmsMessage::GetMessageClass(nsAString& aMessageClass)
 }
 
 NS_IMETHODIMP
-SmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
+SmsMessageInternal::GetTimestamp(DOMTimeStamp* aTimestamp)
 {
   *aTimestamp = mData.timestamp();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+SmsMessageInternal::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
 {
   *aSentTimestamp = mData.sentTimestamp();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetDeliveryTimestamp(DOMTimeStamp* aDate)
+SmsMessageInternal::GetDeliveryTimestamp(DOMTimeStamp* aDate)
 {
   *aDate = mData.deliveryTimestamp();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsMessage::GetRead(bool* aRead)
+SmsMessageInternal::GetRead(bool* aRead)
 {
   *aRead = mData.read();
   return NS_OK;
 }
 
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
