@@ -1520,6 +1520,7 @@ class MOZ_STACK_CLASS ModuleValidator
             if (!module().addFunctionCounts(compileResults_->functionCount(i)))
                 return false;
         }
+
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
         for (size_t i = 0; i < compileResults_->numProfiledFunctions(); ++i) {
             if (!module().addProfiledFunction(Move(compileResults_->profiledFunction(i))))
@@ -1527,7 +1528,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 #endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
 
-        // Hand in code ranges, script counts and perf profiling data to the AsmJSModule
+        // Hand in code ranges to the AsmJSModule
         for (size_t i = 0; i < compileResults_->numCodeRanges(); ++i) {
             AsmJSModule::FunctionCodeRange& codeRange = compileResults_->codeRange(i);
             if (!module().addFunctionCodeRange(codeRange.name(), Move(codeRange)))
