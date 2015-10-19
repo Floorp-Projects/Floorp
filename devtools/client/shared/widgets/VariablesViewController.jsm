@@ -694,7 +694,7 @@ VariablesViewController.prototype = {
 
     let scope = this.view.addScope(aOptions.label);
     scope.expanded = true; // Expand the scope by default.
-    scope.locked = true; // Prevent collpasing the scope.
+    scope.locked = true; // Prevent collapsing the scope.
 
     let variable = scope.addItem("", { enumerable: true });
     let populated;
