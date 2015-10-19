@@ -582,7 +582,10 @@ TextureClient::CreateForDrawing(CompositableForwarder* aAllocator,
       aSize.height <= maxTextureSize &&
       NS_IsMainThread()) {
     if (gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
-      texture = new TextureClientD3D9(aAllocator, aFormat, aTextureFlags);
+      TextureData* data = D3D9TextureData::Create(aSize, aFormat, aAllocFlags);
+      if (data) {
+        return MakeAndAddRef<ClientTexture>(data, aTextureFlags, aAllocator);
+      }
     }
   }
 
