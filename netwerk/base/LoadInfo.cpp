@@ -190,6 +190,14 @@ LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult)
   return NS_OK;
 }
 
+void
+LoadInfo::SetWithCredentialsSecFlag()
+{
+  MOZ_ASSERT(!mEnforceSecurity,
+             "Request should not have been opened yet");
+  mSecurityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+}
+
 NS_IMETHODIMP
 LoadInfo::GetSecurityMode(uint32_t *aFlags)
 {
