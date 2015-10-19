@@ -20,6 +20,7 @@ namespace dom {
 class ContentParent;
 class Blob;
 struct MmsAttachment;
+class MmsMessage;
 
 namespace mobilemessage {
 
@@ -27,6 +28,10 @@ class MmsMessageData;
 
 class MmsMessageInternal final : public nsIMmsMessage
 {
+  // This allows the MmsMessage class to access jsval data members
+  // like |deliveryInfo|, |receivers|, and |attachments| without JS API.
+  friend class mozilla::dom::MmsMessage;
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(MmsMessageInternal)
