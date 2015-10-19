@@ -146,8 +146,8 @@ class ModuleCompiler
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
         // Perf and profiling information
-        unsigned begin = labels.begin.offset();
-        unsigned end = labels.end.offset();
+        unsigned begin = labels.nonProfilingEntry.offset();
+        unsigned end = labels.endAfterOOL.offset();
         AsmJSModule::ProfiledFunction profiledFunc(funcName, begin, end, line, column);
         if (!compileResults_->addProfiledFunction(profiledFunc))
             return false;

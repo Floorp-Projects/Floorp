@@ -102,14 +102,14 @@ enum AsmJSSimdOperation
 struct MOZ_STACK_CLASS AsmJSFunctionLabels
 {
     AsmJSFunctionLabels(jit::Label& entry, jit::Label& overflowExit)
-      : entry(entry), overflowExit(overflowExit) {}
+      : nonProfilingEntry(entry), overflowExit(overflowExit) {}
 
-    jit::Label begin;
-    jit::Label& entry;
-    jit::Label profilingJump;
-    jit::Label profilingEpilogue;
-    jit::Label profilingReturn;
-    jit::Label end;
+    jit::Label  profilingEntry;
+    jit::Label& nonProfilingEntry;
+    jit::Label  profilingJump;
+    jit::Label  profilingEpilogue;
+    jit::Label  profilingReturn;
+    jit::Label  endAfterOOL;
     mozilla::Maybe<jit::Label> overflowThunk;
     jit::Label& overflowExit;
 };
