@@ -704,8 +704,6 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         // Mark and emit the guard branch.
         markNextAsBranch();
         this->putBytes(guardSize_ * InstSize, nullptr);
-        if (this->oom())
-            return;
         BufferOffset afterPool = this->nextOffset();
         Asm::WritePoolGuard(branch, this->getInst(branch), afterPool);
 
@@ -866,7 +864,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
 
         inhibitNops_ = true;
-        while ((sizeExcludingCurrentPool() & (alignment - 1)) && !this->oom())
+        while (sizeExcludingCurrentPool() & (alignment - 1))
             putInt(alignFillInst_);
         inhibitNops_ = false;
     }
