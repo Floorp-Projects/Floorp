@@ -503,8 +503,8 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
     for (nsRuleNode* ruleNode = sc->RuleNode();
          !ruleNode->IsRoot();
          ruleNode = ruleNode->GetParent()) {
-      if (ruleNode->GetLevel() == nsStyleSet::eAgentSheet ||
-          ruleNode->GetLevel() == nsStyleSet::eUserSheet) {
+      if (ruleNode->GetLevel() == SheetType::Agent ||
+          ruleNode->GetLevel() == SheetType::User) {
         rules.AppendElement(ruleNode->GetRule());
       }
     }

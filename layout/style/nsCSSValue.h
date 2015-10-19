@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/SheetType.h"
 
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
@@ -1542,7 +1543,7 @@ public:
   // mozilla::CSSStyleSheet* mSheet;
   uint32_t mLineNumber;
   uint32_t mLineOffset;
-  uint16_t mLevel; // an nsStyleSet::sheetType
+  mozilla::SheetType mLevel;
 
 private:
   nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) = delete;

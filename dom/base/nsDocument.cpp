@@ -2413,7 +2413,7 @@ nsDocument::RemoveDocStyleSheetsFromStyleSets()
 }
 
 void
-nsDocument::RemoveStyleSheetsFromStyleSets(nsCOMArray<nsIStyleSheet>& aSheets, nsStyleSet::sheetType aType)
+nsDocument::RemoveStyleSheetsFromStyleSets(nsCOMArray<nsIStyleSheet>& aSheets, SheetType aType)
 {
   // The stylesheets should forget us
   int32_t indx = aSheets.Count();
@@ -2440,16 +2440,17 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   mozAutoDocUpdate upd(this, UPDATE_STYLE, true);
   RemoveDocStyleSheetsFromStyleSets();
-  RemoveStyleSheetsFromStyleSets(mOnDemandBuiltInUASheets, nsStyleSet::eAgentSheet);
-  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], nsStyleSet::eAgentSheet);
-  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], nsStyleSet::eUserSheet);
-  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], nsStyleSet::eDocSheet);
+  RemoveStyleSheetsFromStyleSets(mOnDemandBuiltInUASheets, SheetType::Agent);
+  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAgentSheet], SheetType::Agent);
+  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eUserSheet], SheetType::User);
+  RemoveStyleSheetsFromStyleSets(mAdditionalSheets[eAuthorSheet], SheetType::Doc);
 
   // Release all the sheets
   mStyleSheets.Clear();
   mOnDemandBuiltInUASheets.Clear();
-  for (uint32_t i = 0; i < SheetTypeCount; ++i)
-    mAdditionalSheets[i].Clear();
+  for (auto& sheets : mAdditionalSheets) {
+    sheets.Clear();
+  }
 
   // NOTE:  We don't release the catalog sheets.  It doesn't really matter
   // now, but it could in the future -- in which case not releasing them
@@ -2483,14 +2484,14 @@ static bool
 AppendAuthorSheet(nsIStyleSheet *aSheet, void *aData)
 {
   nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
-  styleSet->AppendStyleSheet(nsStyleSet::eDocSheet, aSheet);
+  styleSet->AppendStyleSheet(SheetType::Doc, aSheet);
   return true;
 }
 
 static void
 AppendSheetsToStyleSet(nsStyleSet* aStyleSet,
                        const nsCOMArray<nsIStyleSheet>& aSheets,
-                       nsStyleSet::sheetType aType)
+                       SheetType aType)
 {
   for (int32_t i = aSheets.Count() - 1; i >= 0; --i) {
     aStyleSet->AppendStyleSheet(aType, aSheets[i]);
@@ -2502,13 +2503,13 @@ void
 nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
 {
   NS_PRECONDITION(aStyleSet, "Must have a style set");
-  NS_PRECONDITION(aStyleSet->SheetCount(nsStyleSet::eDocSheet) == 0,
+  NS_PRECONDITION(aStyleSet->SheetCount(SheetType::Doc) == 0,
                   "Style set already has document sheets?");
 
   // We could consider moving this to nsStyleSet::Init, to match its
   // handling of the eAnimationSheet and eTransitionSheet levels.
-  aStyleSet->DirtyRuleProcessors(nsStyleSet::ePresHintSheet);
-  aStyleSet->DirtyRuleProcessors(nsStyleSet::eStyleAttrSheet);
+  aStyleSet->DirtyRuleProcessors(SheetType::PresHint);
+  aStyleSet->DirtyRuleProcessors(SheetType::StyleAttr);
 
   int32_t i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
@@ -2528,16 +2529,16 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
   for (i = mOnDemandBuiltInUASheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = mOnDemandBuiltInUASheets[i];
     if (sheet->IsApplicable()) {
-      aStyleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+      aStyleSet->PrependStyleSheet(SheetType::Agent, sheet);
     }
   }
 
   AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAgentSheet],
-                         nsStyleSet::eAgentSheet);
+                         SheetType::Agent);
   AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eUserSheet],
-                         nsStyleSet::eUserSheet);
+                         SheetType::User);
   AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAuthorSheet],
-                         nsStyleSet::eDocSheet);
+                         SheetType::Doc);
 }
 
 static void
@@ -4141,7 +4142,7 @@ nsDocument::AddOnDemandBuiltInUASheet(CSSStyleSheet* aSheet)
       // do not override Firefox OS/Mobile's content.css sheet. Maybe we should
       // have an insertion point to match the order of
       // nsDocumentViewer::CreateStyleSet though?
-      shell->StyleSet()->PrependStyleSheet(nsStyleSet::eAgentSheet, aSheet);
+      shell->StyleSet()->PrependStyleSheet(SheetType::Agent, aSheet);
     }
   }
 
@@ -4373,20 +4374,20 @@ nsDocument::NotifyStyleSheetApplicableStateChanged()
   }
 }
 
-static nsStyleSet::sheetType
+static SheetType
 ConvertAdditionalSheetType(nsIDocument::additionalSheetType aType)
 {
   switch(aType) {
     case nsIDocument::eAgentSheet:
-      return nsStyleSet::eAgentSheet;
+      return SheetType::Agent;
     case nsIDocument::eUserSheet:
-      return nsStyleSet::eUserSheet;
+      return SheetType::User;
     case nsIDocument::eAuthorSheet:
-      return nsStyleSet::eDocSheet;
+      return SheetType::Doc;
     default:
-      NS_ASSERTION(false, "wrong type");
+      MOZ_ASSERT(false, "wrong type");
       // we must return something although this should never happen
-      return nsStyleSet::eSheetTypeCount;
+      return SheetType::Count;
   }
 }
 
@@ -4460,7 +4461,7 @@ nsDocument::AddAdditionalStyleSheet(additionalSheetType aType, nsIStyleSheet* aS
   BeginUpdate(UPDATE_STYLE);
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
-    nsStyleSet::sheetType type = ConvertAdditionalSheetType(aType);
+    SheetType type = ConvertAdditionalSheetType(aType);
     shell->StyleSet()->AppendStyleSheet(type, aSheet);
   }
 
@@ -4488,7 +4489,7 @@ nsDocument::RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheet
       MOZ_ASSERT(sheetRef->IsApplicable());
       nsCOMPtr<nsIPresShell> shell = GetShell();
       if (shell) {
-        nsStyleSet::sheetType type = ConvertAdditionalSheetType(aType);
+        SheetType type = ConvertAdditionalSheetType(aType);
         shell->StyleSet()->RemoveStyleSheet(type, sheetRef);
       }
     }
