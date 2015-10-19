@@ -266,7 +266,8 @@ fn recurse<T: Read>(f: &mut T, h: &BoxHeader, context: &mut MediaContext) -> byt
 }
 
 /// Read the contents of a box, including sub boxes.
-/// Metadata is accumulated in the passed-through MediaContext struct.
+/// Right now it just prints the box value rather than
+/// returning anything.
 pub fn read_box<T: BufRead>(f: &mut T, context: &mut MediaContext) -> byteorder::Result<()> {
     read_box_header(f).and_then(|h| {
         let mut content = limit(f, &h);
@@ -328,12 +329,11 @@ pub fn read_box<T: BufRead>(f: &mut T, context: &mut MediaContext) -> byteorder:
                     "soun" => Some(TrackType::Audio),
                     _ => None
                 };
-                // Save track types with recognized types.
-                match track_type {
-                    Some(track_type) =>
-                         context.tracks.push(Track { track_type: track_type }),
-                    None => println!("unknown track type!"),
-                };
+                // Ignore unrecognized track types.
+                track_type.map(|track_type|
+                               context.tracks.push(Track { track_type: track_type }))
+                    .or_else(|| { println!("unknown track type!"); None } );
+                println!("  {}", hdlr);
             },
             "stsd" => {
                 let track = &context.tracks[context.tracks.len() - 1];
@@ -343,11 +343,11 @@ pub fn read_box<T: BufRead>(f: &mut T, context: &mut MediaContext) -> byteorder:
             _ => {
                 // Skip the contents of unknown chunks.
                 println!("{} (skipped)", h);
-                try!(skip_box_content(&mut content, &h));
+                try!(skip_box_content(&mut content, &h).and(Ok(())));
             },
         };
         assert!(content.limit() == 0);
-        println!("read_box context: {}", context);
+        println!("Parse result: {}", context);
         Ok(()) // and_then needs a Result to return.
     })
 }
@@ -373,13 +373,14 @@ pub extern fn read_box_from_buffer(buffer: *const u8, size: usize) -> i32 {
     // Parse in a subthread.
     let task = thread::spawn(move || {
         let mut context = MediaContext { tracks: Vec::new() };
-        loop {
-            match read_box(&mut c, &mut context) {
-                Ok(_) => {},
-                Err(byteorder::Error::UnexpectedEOF) => { break },
-                Err(e) => { panic!(e) },
-            }
-        }
+        read_box(&mut c, &mut context)
+        .or_else(|e| { match e {
+            // TODO: Catch EOF earlier so we can get the return value.
+            // Catch EOF. We naturally hit it at end-of-input.
+            byteorder::Error::UnexpectedEOF => { Ok(()) },
+            e => { Err(e) },
+        }})
+        .unwrap();
         // Make sure the track count fits in an i32 so we can use
         // negative values for failure.
         assert!(context.tracks.len() < i32::MAX as usize);
