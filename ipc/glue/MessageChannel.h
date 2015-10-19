@@ -177,10 +177,12 @@ class MessageChannel : HasResultCodes
 
 #ifdef MOZ_NUWA_PROCESS
     void Block() {
+        MOZ_ASSERT(mLink);
         mLink->Block();
     }
 
     void Unblock() {
+        MOZ_ASSERT(mLink);
         mLink->Unblock();
     }
 #endif
