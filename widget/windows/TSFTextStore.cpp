@@ -923,6 +923,30 @@ public:
     return mActiveTIPGUID == kGUID;
   }
 
+  /****************************************************************************
+   * Other languages
+   ****************************************************************************/
+
+  bool IsTavultesoftKeyman90Active() const
+  {
+    // {487EB753-DB93-48C5-9E6A-4398E777C61D}
+    static const CLSID kCLSID = {
+      0x487EB753, 0xDB93, 0x48C5,
+        { 0x9E, 0x6A, 0x43, 0x98, 0xE7, 0x77, 0xC6, 0x1D }
+    };
+    return mActiveTextServiceCLSID == kCLSID;
+  }
+
+  bool IsTavultesoftKeyman80Active() const
+  {
+    // {7BA04432-8609-4FE6-BFF7-971091DE0933}
+    static const CLSID kCLSID = {
+      0x7BA04432, 0x8609, 0x4FE6,
+        { 0xBF, 0xF7, 0x97, 0x10, 0x91, 0xDE, 0x09, 0x33 }
+    };
+    return mActiveTextServiceCLSID == kCLSID;
+  }
+
 public: // ITfActiveLanguageProfileNotifySink
   STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
                            BOOL fActivated);
@@ -961,6 +985,8 @@ private:
 
   // Active TIP's GUID
   GUID mActiveTIPGUID;
+  // Active Text Service's CLSID
+  CLSID mActiveTextServiceCLSID;
 
   static StaticRefPtr<TSFStaticSink> sInstance;
 };
@@ -973,6 +999,7 @@ TSFStaticSink::TSFStaticSink()
   , mIsIMM_IME(false)
   , mOnActivatedCalled(false)
   , mActiveTIPGUID(GUID_NULL)
+  , mActiveTextServiceCLSID(CLSID_NULL)
 {
 }
 
@@ -1088,6 +1115,7 @@ TSFStaticSink::OnActivated(REFCLSID clsid, REFGUID guidProfile,
     // TODO: We should check if the profile's category is keyboard or not.
     mOnActivatedCalled = true;
     mActiveTIPGUID = guidProfile;
+    mActiveTextServiceCLSID = clsid;
     mIsIMM_IME = IsIMM_IME(::GetKeyboardLayout(0));
 
     LANGID langID;
@@ -1132,6 +1160,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
        catid == GUID_TFCAT_TIP_KEYBOARD)) {
     mOnActivatedCalled = true;
     mActiveTIPGUID = guidProfile;
+    mActiveTextServiceCLSID = rclsid;
     mIsIMM_IME = IsIMM_IME(hkl);
     GetTIPDescription(rclsid, langid, guidProfile,
                       mActiveTIPKeyboardDescription);
@@ -4056,12 +4085,15 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
   // compositionstart occurred same range as this composition, it was the
   // start of this composition.  In such case, we should cancel the pending
   // compositionend and start composition normally.
-  // FYI: This fix is restricted to MS-IME for Korean at least in 42.
+  // FYI: This fix is restricted to MS-IME for Korean and TavultesoftKeyman
+  //      at least in 42.
   const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
   if (!aPreserveSelection &&
       (kSink->IsMSKoreanIMEActive() ||
        kSink->IsMSKoreanIME2010Active() ||
-       kSink->IsMSOldHangulActive()) &&
+       kSink->IsMSOldHangulActive() ||
+       kSink->IsTavultesoftKeyman90Active() ||
+       kSink->IsTavultesoftKeyman80Active()) &&
       WasTextInsertedWithoutCompositionAt(aStart, aLength)) {
     const PendingAction& pendingCompositionEnd = mPendingActions.LastElement();
     const PendingAction& pendingCompositionStart =
