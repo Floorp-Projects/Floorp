@@ -2057,7 +2057,13 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 bool
 CompositorParent::UpdatePluginWindowState(uint64_t aId)
 {
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorParent::LayerTreeState& lts = sIndirectLayerTrees[aId];
+  if (!lts.mParent) {
+    PLUGINS_LOG("[%" PRIu64 "] layer tree compositor parent pointer is null", aId);
+    return false;
+  }
+
   // Check if this layer tree has received any shadow layer updates
   if (!lts.mUpdatedPluginDataAvailable) {
     PLUGINS_LOG("[%" PRIu64 "] no plugin data", aId);
