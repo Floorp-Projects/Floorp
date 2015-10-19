@@ -17,6 +17,7 @@
 
 #include "mediasink/DecodedAudioDataSink.h"
 #include "mediasink/AudioSinkWrapper.h"
+#include "mediasink/VideoSink.h"
 #include "mediasink/DecodedStream.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
@@ -305,7 +306,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
 
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
 
-  mMediaSink = CreateAudioSink();
+  mMediaSink = CreateMediaSink(mAudioCaptured);
 
 #ifdef MOZ_EME
   mCDMProxyPromise.Begin(mDecoder->RequestCDMProxy()->Then(
@@ -379,6 +380,23 @@ MediaDecoderStateMachine::CreateAudioSink()
       self->mInfo.mAudio, self->mDecoder->GetAudioChannel());
   };
   return new AudioSinkWrapper(mTaskQueue, audioSinkCreator);
+}
+
+already_AddRefed<media::MediaSink>
+MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
+{
+  // TODO: We can't really create a new DecodedStream until OutputStreamManager
+  //       is extracted. It is tricky that the implementation of DecodedStream
+  //       happens to allow reuse after shutdown without creating a new one.
+  RefPtr<media::MediaSink> audioSink = aAudioCaptured ?
+    mStreamSink : CreateAudioSink();
+
+  RefPtr<media::MediaSink> mediaSink = new VideoSink(mTaskQueue,
+                                                       audioSink,
+                                                       mVideoQueue,
+                                                       mDecoder->GetVideoFrameContainer(),
+                                                       mRealTime);
+  return mediaSink.forget();
 }
 
 bool MediaDecoderStateMachine::HasFutureAudio()
@@ -1489,7 +1507,8 @@ void MediaDecoderStateMachine::StopMediaSink()
   if (mMediaSink->IsStarted()) {
     DECODER_LOG("Stop MediaSink");
     mMediaSink->Stop();
-    mMediaSinkPromise.DisconnectIfExists();
+    mMediaSinkAudioPromise.DisconnectIfExists();
+    mMediaSinkVideoPromise.DisconnectIfExists();
   }
 }
 
@@ -1764,12 +1783,20 @@ MediaDecoderStateMachine::StartMediaSink()
     mAudioCompleted = false;
     mMediaSink->Start(GetMediaTime(), mInfo);
 
-    auto promise = mMediaSink->OnEnded(TrackInfo::kAudioTrack);
-    if (promise) {
-      mMediaSinkPromise.Begin(promise->Then(
+    auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
+    auto audioPromise = mMediaSink->OnEnded(TrackInfo::kAudioTrack);
+
+    if (audioPromise) {
+      mMediaSinkAudioPromise.Begin(audioPromise->Then(
         OwnerThread(), __func__, this,
-        &MediaDecoderStateMachine::OnMediaSinkComplete,
-        &MediaDecoderStateMachine::OnMediaSinkError));
+        &MediaDecoderStateMachine::OnMediaSinkAudioComplete,
+        &MediaDecoderStateMachine::OnMediaSinkAudioError));
+    }
+    if (videoPromise) {
+      mMediaSinkVideoPromise.Begin(videoPromise->Then(
+        OwnerThread(), __func__, this,
+        &MediaDecoderStateMachine::OnMediaSinkVideoComplete,
+        &MediaDecoderStateMachine::OnMediaSinkVideoError));
     }
   }
 }
@@ -2907,22 +2934,43 @@ MediaDecoderStateMachine::AudioEndTime() const
   return -1;
 }
 
-void MediaDecoderStateMachine::OnMediaSinkComplete()
+void
+MediaDecoderStateMachine::OnMediaSinkVideoComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  mMediaSinkPromise.Complete();
+  mMediaSinkVideoPromise.Complete();
+  ScheduleStateMachine();
+}
+
+void
+MediaDecoderStateMachine::OnMediaSinkVideoError()
+{
+  MOZ_ASSERT(OnTaskQueue());
+
+  mMediaSinkVideoPromise.Complete();
+  if (HasAudio()) {
+    return;
+  }
+  DecodeError();
+}
+
+void MediaDecoderStateMachine::OnMediaSinkAudioComplete()
+{
+  MOZ_ASSERT(OnTaskQueue());
+
+  mMediaSinkAudioPromise.Complete();
   // Set true only when we have audio.
   mAudioCompleted = mInfo.HasAudio();
   // To notify PlaybackEnded as soon as possible.
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::OnMediaSinkError()
+void MediaDecoderStateMachine::OnMediaSinkAudioError()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  mMediaSinkPromise.Complete();
+  mMediaSinkAudioPromise.Complete();
   // Set true only when we have audio.
   mAudioCompleted = mInfo.HasAudio();
 
@@ -2974,10 +3022,7 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
   mMediaSink->Shutdown();
 
   // Create a new sink according to whether audio is captured.
-  // TODO: We can't really create a new DecodedStream until OutputStreamManager
-  //       is extracted. It is tricky that the implementation of DecodedStream
-  //       happens to allow reuse after shutdown without creating a new one.
-  mMediaSink = aCaptured ? mStreamSink : CreateAudioSink();
+  mMediaSink = CreateMediaSink(aCaptured);
 
   // Restore playback parameters.
   mMediaSink->SetPlaybackParams(params);
