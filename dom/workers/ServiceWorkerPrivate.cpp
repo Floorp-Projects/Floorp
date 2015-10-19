@@ -1037,6 +1037,12 @@ private:
 
     request->SetContentPolicyType(mContentPolicyType);
 
+    request->GetInternalHeaders()->SetGuard(HeadersGuardEnum::Immutable, result);
+    if (NS_WARN_IF(result.Failed())) {
+      result.SuppressException();
+      return false;
+    }
+
     // TODO: remove conditional on http here once app protocol support is
     //       removed from service worker interception
     MOZ_ASSERT_IF(mIsHttpChannel && internalReq->IsNavigationRequest(),
