@@ -59,13 +59,13 @@ UNIFIED_SOURCES += [
     'ipc/SmsChild.cpp',
     'ipc/SmsIPCService.cpp',
     'ipc/SmsParent.cpp',
-    'MmsMessage.cpp',
+    'MmsMessageInternal.cpp',
     'MobileMessageCallback.cpp',
     'MobileMessageCursorCallback.cpp',
     'MobileMessageManager.cpp',
     'MobileMessageService.cpp',
-    'MobileMessageThread.cpp',
-    'SmsMessage.cpp',
+    'MobileMessageThreadInternal.cpp',
+    'SmsMessageInternal.cpp',
 ]
 
 IPDL_SOURCES += [

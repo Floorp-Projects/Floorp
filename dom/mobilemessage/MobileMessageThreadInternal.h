@@ -4,35 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mobilemessage_MobileMessageThread_h
-#define mozilla_dom_mobilemessage_MobileMessageThread_h
+#ifndef mozilla_dom_mobilemessage_MobileMessageThreadInternal_h
+#define mozilla_dom_mobilemessage_MobileMessageThreadInternal_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
-#include "nsIDOMMozMobileMessageThread.h"
+#include "nsIMobileMessageThread.h"
 #include "nsString.h"
 
 namespace mozilla {
 namespace dom {
+namespace mobilemessage {
 
-class MobileMessageThread final : public nsIDOMMozMobileMessageThread
+class ThreadData;
+
+class MobileMessageThreadInternal final : public nsIMobileMessageThread
 {
-private:
-  typedef mobilemessage::ThreadData ThreadData;
 
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZMOBILEMESSAGETHREAD
+  NS_DECL_NSIMOBILEMESSAGETHREAD
 
-  MobileMessageThread(uint64_t aId,
-                      const nsTArray<nsString>& aParticipants,
-                      uint64_t aTimestamp,
-                      const nsString& aLastMessageSubject,
-                      const nsString& aBody,
-                      uint64_t aUnreadCount,
-                      mobilemessage::MessageType aLastMessageType);
+  MobileMessageThreadInternal(uint64_t aId,
+                              const nsTArray<nsString>& aParticipants,
+                              uint64_t aTimestamp,
+                              const nsString& aLastMessageSubject,
+                              const nsString& aBody,
+                              uint64_t aUnreadCount,
+                              mobilemessage::MessageType aLastMessageType);
 
-  explicit MobileMessageThread(const ThreadData& aData);
+  explicit MobileMessageThreadInternal(const ThreadData& aData);
 
   static nsresult Create(uint64_t aId,
                          const JS::Value& aParticipants,
@@ -42,20 +43,21 @@ public:
                          uint64_t aUnreadCount,
                          const nsAString& aLastMessageType,
                          JSContext* aCx,
-                         nsIDOMMozMobileMessageThread** aThread);
+                         nsIMobileMessageThread** aThread);
 
   const ThreadData& GetData() const { return mData; }
 
 private:
-  ~MobileMessageThread() {}
+  ~MobileMessageThreadInternal() {}
 
   // Don't try to use the default constructor.
-  MobileMessageThread() = delete;
+  MobileMessageThreadInternal() = delete;
 
   ThreadData mData;
 };
 
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_mobilemessage_MobileMessageThread_h
+#endif // mozilla_dom_mobilemessage_MobileMessageThreadInternal_h

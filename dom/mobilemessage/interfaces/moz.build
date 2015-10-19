@@ -6,14 +6,14 @@
 
 XPIDL_SOURCES += [
     'nsIDeletedMessageInfo.idl',
-    'nsIDOMMozMmsMessage.idl',
-    'nsIDOMMozMobileMessageThread.idl',
-    'nsIDOMMozSmsMessage.idl',
+    'nsIMmsMessage.idl',
     'nsIMmsService.idl',
     'nsIMobileMessageCallback.idl',
     'nsIMobileMessageCursorCallback.idl',
     'nsIMobileMessageDatabaseService.idl',
     'nsIMobileMessageService.idl',
+    'nsIMobileMessageThread.idl',
+    'nsISmsMessage.idl',
     'nsISmsService.idl',
     'nsIWapPushApplication.idl',
 ]

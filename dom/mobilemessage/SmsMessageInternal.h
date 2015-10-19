@@ -4,39 +4,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mobilemessage_SmsMessage_h
-#define mozilla_dom_mobilemessage_SmsMessage_h
+#ifndef mozilla_dom_mobilemessage_SmsMessageInternal_h
+#define mozilla_dom_mobilemessage_SmsMessageInternal_h
 
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
-#include "nsIDOMMozSmsMessage.h"
+#include "nsISmsMessage.h"
 #include "nsString.h"
 #include "mozilla/dom/mobilemessage/Types.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace dom {
+namespace mobilemessage {
 
-class SmsMessage final : public nsIDOMMozSmsMessage
+class SmsMessageData;
+
+class SmsMessageInternal final : public nsISmsMessage
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZSMSMESSAGE
+  NS_DECL_NSISMSMESSAGE
 
-  SmsMessage(int32_t aId,
-             uint64_t aThreadId,
-             const nsString& aIccId,
-             mobilemessage::DeliveryState aDelivery,
-             mobilemessage::DeliveryStatus aDeliveryStatus,
-             const nsString& aSender,
-             const nsString& aReceiver,
-             const nsString& aBody,
-             mobilemessage::MessageClass aMessageClass,
-             uint64_t aTimestamp,
-             uint64_t aSentTimestamp,
-             uint64_t aDeliveryTimestamp,
-             bool aRead);
+  SmsMessageInternal(int32_t aId,
+                     uint64_t aThreadId,
+                     const nsString& aIccId,
+                     mobilemessage::DeliveryState aDelivery,
+                     mobilemessage::DeliveryStatus aDeliveryStatus,
+                     const nsString& aSender,
+                     const nsString& aReceiver,
+                     const nsString& aBody,
+                     mobilemessage::MessageClass aMessageClass,
+                     uint64_t aTimestamp,
+                     uint64_t aSentTimestamp,
+                     uint64_t aDeliveryTimestamp,
+                     bool aRead);
 
-  explicit SmsMessage(const mobilemessage::SmsMessageData& aData);
+  explicit SmsMessageInternal(const SmsMessageData& aData);
 
   static nsresult Create(int32_t aId,
                          uint64_t aThreadId,
@@ -52,19 +55,20 @@ public:
                          uint64_t aDeliveryTimestamp,
                          bool aRead,
                          JSContext* aCx,
-                         nsIDOMMozSmsMessage** aMessage);
-  const mobilemessage::SmsMessageData& GetData() const;
+                         nsISmsMessage** aMessage);
+  const SmsMessageData& GetData() const;
 
 private:
-  ~SmsMessage() {}
+  ~SmsMessageInternal() {}
 
   // Don't try to use the default constructor.
-  SmsMessage();
+  SmsMessageInternal();
 
-  mobilemessage::SmsMessageData mData;
+  SmsMessageData mData;
 };
 
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_mobilemessage_SmsMessage_h
+#endif // mozilla_dom_mobilemessage_SmsMessageInternal_h

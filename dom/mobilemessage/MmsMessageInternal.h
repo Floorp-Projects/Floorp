@@ -4,64 +4,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mobilemessage_MmsMessage_h
-#define mozilla_dom_mobilemessage_MmsMessage_h
+#ifndef mozilla_dom_mobilemessage_MmsMessageInternal_h
+#define mozilla_dom_mobilemessage_MmsMessageInternal_h
 
-#include "nsIDOMMozMmsMessage.h"
+#include "nsIMmsMessage.h"
 #include "nsString.h"
 #include "mozilla/dom/mobilemessage/Types.h"
-#include "mozilla/dom/MozMmsMessageBinding.h"
+#include "mozilla/dom/MmsMessageBinding.h"
 #include "mozilla/dom/MozMobileMessageManagerBinding.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace dom {
 
+class ContentParent;
 class Blob;
+struct MmsAttachment;
 
 namespace mobilemessage {
+
 class MmsMessageData;
-} // namespace mobilemessage
 
-class ContentParent;
-
-class MmsMessage final : public nsIDOMMozMmsMessage
+class MmsMessageInternal final : public nsIMmsMessage
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZMMSMESSAGE
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(MmsMessageInternal)
+  NS_DECL_NSIMMSMESSAGE
 
-  // If this is changed, change the WebIDL dictionary as well.
-  struct Attachment final
-  {
-    RefPtr<Blob> content;
-    nsString id;
-    nsString location;
+  MmsMessageInternal(int32_t aId,
+                     uint64_t aThreadId,
+                     const nsAString& aIccId,
+                     mobilemessage::DeliveryState aDelivery,
+                     const nsTArray<MmsDeliveryInfo>& aDeliveryInfo,
+                     const nsAString& aSender,
+                     const nsTArray<nsString>& aReceivers,
+                     uint64_t aTimestamp,
+                     uint64_t aSentTimestamp,
+                     bool aRead,
+                     const nsAString& aSubject,
+                     const nsAString& aSmil,
+                     const nsTArray<MmsAttachment>& aAttachments,
+                     uint64_t aExpiryDate,
+                     bool aReadReportRequested);
 
-    explicit Attachment(const MmsAttachment& aAttachment) :
-      content(aAttachment.mContent),
-      id(aAttachment.mId),
-      location(aAttachment.mLocation)
-    {}
-  };
-
-  MmsMessage(int32_t aId,
-             uint64_t aThreadId,
-             const nsAString& aIccId,
-             mobilemessage::DeliveryState aDelivery,
-             const nsTArray<MmsDeliveryInfo>& aDeliveryInfo,
-             const nsAString& aSender,
-             const nsTArray<nsString>& aReceivers,
-             uint64_t aTimestamp,
-             uint64_t aSentTimestamp,
-             bool aRead,
-             const nsAString& aSubject,
-             const nsAString& aSmil,
-             const nsTArray<Attachment>& aAttachments,
-             uint64_t aExpiryDate,
-             bool aReadReportRequested);
-
-  explicit MmsMessage(const mobilemessage::MmsMessageData& aData);
+  explicit MmsMessageInternal(const MmsMessageData& aData);
 
   static nsresult Create(int32_t aId,
                          uint64_t aThreadId,
@@ -79,14 +66,14 @@ public:
                          uint64_t aExpiryDate,
                          bool aReadReportRequested,
                          JSContext* aCx,
-                         nsIDOMMozMmsMessage** aMessage);
+                         nsIMmsMessage** aMessage);
 
   bool GetData(ContentParent* aParent,
-               mobilemessage::MmsMessageData& aData);
+               MmsMessageData& aData);
 
 private:
 
-  ~MmsMessage() {}
+  ~MmsMessageInternal() {}
 
   int32_t mId;
   uint64_t mThreadId;
@@ -100,12 +87,13 @@ private:
   bool mRead;
   nsString mSubject;
   nsString mSmil;
-  nsTArray<Attachment> mAttachments;
+  nsTArray<MmsAttachment> mAttachments;
   uint64_t mExpiryDate;
   bool mReadReportRequested;
 };
 
+} // namespace mobilemessage
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_mobilemessage_MmsMessage_h
+#endif // mozilla_dom_mobilemessage_MmsMessageInternal_h
