@@ -65,22 +65,14 @@ function loopOfferAnser() {
 function testPresentationServer() {
   let yayFuncs = makeJointSuccess(['controllerControlChannelClose',
                                    'presenterControlChannelClose']);
-  let controllerDevice, controllerControlChannel;
-  let presenterDevice, presenterControlChannel;
+  let controllerControlChannel;
 
+  tps.listener = {
 
-  controllerDevice = tps.createTCPDevice('controllerID',
-                                         'controllerName',
-                                         'testType',
-                                         '127.0.0.1',
-                                         CONTROLLER_CONTROL_CHANNEL_PORT)
-                        .QueryInterface(Ci.nsIPresentationDevice);
-
-  controllerDevice.listener = {
-
-    onSessionRequest: function(device, url, presentationId, controlChannel) {
+    onSessionRequest: function(deviceInfo, url, presentationId, controlChannel) {
       controllerControlChannel = controlChannel;
-      Assert.strictEqual(device, controllerDevice, 'expected device object');
+      Assert.equal(deviceInfo.id, tps.id, 'expected device id');
+      Assert.equal(deviceInfo.host, '127.0.0.1', 'expected device host');
       Assert.equal(url, 'http://example.com', 'expected url');
       Assert.equal(presentationId, 'testPresentationId', 'expected presentation id');
 
@@ -116,28 +108,23 @@ function testPresentationServer() {
           this.status = 'closed';
           yayFuncs.controllerControlChannelClose();
         },
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDeviceEventListener]),
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
       };
     },
 
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannelListener]),
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServerListener]),
   };
 
-  presenterDevice = tps.createTCPDevice('presentatorID',
-                                        'presentatorName',
-                                        'testType',
-                                        '127.0.0.1',
-                                        PRESENTER_CONTROL_CHANNEL_PORT)
-                       .QueryInterface(Ci.nsIPresentationDevice);
+  let presenterDeviceInfo = {
+    id: 'presentatorID',
+    host: '127.0.0.1',
+    port: PRESENTER_CONTROL_CHANNEL_PORT,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
+  };
 
-  presenterDevice.listener = {
-    onSessionRequest: function(device, url, presentationId, controlChannel) {
-      Assert.ok(false, 'presenterDevice.listener.onSessionRequest should not be called');
-    },
-  }
-
-  presenterControlChannel =
-  presenterDevice.establishControlChannel('http://example.com', 'testPresentationId');
+  let presenterControlChannel = tps.requestSession(presenterDeviceInfo,
+                                                   'http://example.com',
+                                                   'testPresentationId');
 
   presenterControlChannel.listener = {
     status: 'created',
@@ -211,23 +198,17 @@ function shutdown()
   tps.close();
 }
 
-function setPref() {
-  Services.prefs.setBoolPref("dom.presentation.tcp_server.debug", true);
-  run_next_test();
-}
-
-function clearPref() {
-  Services.prefs.clearUserPref("dom.presentation.tcp_server.debug");
-  run_next_test();
-}
-
-add_test(setPref);
 add_test(loopOfferAnser);
 add_test(setOffline);
 add_test(oneMoreLoop);
 add_test(shutdown);
-add_test(clearPref);
 
 function run_test() {
+  Services.prefs.setBoolPref("dom.presentation.tcp_server.debug", true);
+
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("dom.presentation.tcp_server.debug");
+  });
+
   run_next_test();
 }

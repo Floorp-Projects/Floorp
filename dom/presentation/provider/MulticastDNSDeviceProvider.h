@@ -11,6 +11,7 @@
 #include "nsICancelable.h"
 #include "nsIDNSServiceDiscovery.h"
 #include "nsIObserver.h"
+#include "nsIPresentationDevice.h"
 #include "nsIPresentationDeviceProvider.h"
 #include "nsITCPPresentationServer.h"
 #include "nsITimer.h"
@@ -52,19 +53,86 @@ private:
     eActive
   };
 
-  struct Device final {
-    explicit Device(const nsACString& aId, DeviceState aState)
-      : id(aId), state(aState)
+  class Device final : public nsIPresentationDevice
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPRESENTATIONDEVICE
+
+    explicit Device(const nsACString& aId,
+                    const nsACString& aName,
+                    const nsACString& aType,
+                    const nsACString& aHost,
+                    const uint16_t aPort,
+                    DeviceState aState,
+                    MulticastDNSDeviceProvider* aProvider)
+      : mId(aId)
+      , mName(aName)
+      , mType(aType)
+      , mHost(aHost)
+      , mPort(aPort)
+      , mState(aState)
+      , mProvider(aProvider)
     {
     }
 
-    nsCString id;
-    DeviceState state;
+    const nsCString& Id() const
+    {
+      return mId;
+    }
+
+    const nsCString& Host() const
+    {
+      return mHost;
+    }
+
+    const uint16_t Port() const
+    {
+      return mPort;
+    }
+
+    const DeviceState State() const
+    {
+      return mState;
+    }
+
+    void ChangeState(DeviceState aState)
+    {
+      mState = aState;
+    }
+
+    void Update(const nsACString& aName,
+                const nsACString& aType,
+                const nsACString& aHost,
+                const uint16_t aPort)
+    {
+      mName = aName;
+      mType = aType;
+      mHost = aHost;
+      mPort = aPort;
+    }
+
+  private:
+    virtual ~Device() = default;
+
+    nsCString mId;
+    nsCString mName;
+    nsCString mType;
+    nsCString mHost;
+    uint16_t mPort;
+    DeviceState mState;
+    MulticastDNSDeviceProvider* mProvider;
   };
 
   struct DeviceIdComparator {
-    bool Equals(const Device& aA, const Device& aB) const {
-      return aA.id == aB.id;
+    bool Equals(const RefPtr<Device>& aA, const RefPtr<Device>& aB) const {
+      return aA->Id() == aB->Id();
+    }
+  };
+
+  struct DeviceHostComparator {
+    bool Equals(const RefPtr<Device>& aA, const RefPtr<Device>& aB) const {
+      return aA->Host() == aB->Host();
     }
   };
 
@@ -72,6 +140,10 @@ private:
   nsresult RegisterService();
   nsresult UnregisterService(nsresult aReason);
   nsresult StopDiscovery(nsresult aReason);
+  nsresult RequestSession(Device* aDevice,
+                          const nsAString& aUrl,
+                          const nsAString& aPresentationId,
+                          nsIPresentationControlChannel** aRetVal);
 
   // device manipulation
   nsresult AddDevice(const nsACString& aServiceName,
@@ -84,8 +156,11 @@ private:
                         const nsACString& aHost,
                         const uint16_t aPort);
   nsresult RemoveDevice(const uint32_t aIndex);
-  bool FindDevice(const nsACString& aId,
+  bool FindDeviceById(const nsACString& aId,
                       uint32_t& aIndex);
+
+  bool FindDeviceByHost(const nsACString& aHost,
+                        uint32_t& aIndex);
 
   void MarkAllDevicesUnknown();
   void ClearUnknownDevices();
@@ -106,7 +181,7 @@ private:
   nsCOMPtr<nsICancelable> mDiscoveryRequest;
   nsCOMPtr<nsICancelable> mRegisterRequest;
 
-  nsTArray<Device> mDevices;
+  nsTArray<RefPtr<Device>> mDevices;
 
   bool mDiscoveryEnabled = false;
   bool mIsDiscovering = false;
