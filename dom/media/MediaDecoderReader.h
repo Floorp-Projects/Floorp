@@ -267,6 +267,12 @@ private:
   // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
   virtual nsresult ReadMetadata(MediaInfo*, MetadataTags**) { MOZ_CRASH(); }
 
+  // The default implementation of AsyncReadMetadataInternal is implemented in
+  // terms of synchronous ReadMetadata() calls. Implementations may also
+  // override AsyncReadMetadataInternal to create a more proper async
+  // implementation.
+  virtual RefPtr<MetadataPromise> AsyncReadMetadataInternal();
+
 protected:
   friend class TrackBuffer;
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) { }
