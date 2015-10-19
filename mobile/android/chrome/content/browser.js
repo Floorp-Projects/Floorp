@@ -685,7 +685,7 @@ var BrowserApp = {
       NativeWindow.contextmenus.add(stringGetter("contextmenu.openInPrivateTab"),
         NativeWindow.contextmenus.linkOpenableContext,
         function (aTarget) {
-          UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_private_tab");
+          UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_new_tab");
           UITelemetry.addEvent("loadurl.1", "contextmenu", null);
 
           let url = NativeWindow.contextmenus._getLinkURL(aTarget);
