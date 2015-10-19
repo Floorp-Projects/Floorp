@@ -2593,6 +2593,21 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   /**
+   * Duplicate a specified node
+   *
+   * @param {NodeActor} node The node to duplicate.
+   */
+  duplicateNode: method(function({rawNode}) {
+    let clonedNode = rawNode.cloneNode(true);
+    rawNode.parentNode.insertBefore(clonedNode, rawNode.nextSibling);
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    },
+    response: {}
+  }),
+
+  /**
    * Test whether a node is a document or a document element.
    *
    * @param {NodeActor} node The node to remove.
