@@ -234,7 +234,6 @@ ProtocolParser::ProcessChunkControl(const nsCString& aLine)
     mChunkState.type = (command == 'a') ? CHUNK_ADD : CHUNK_SUB;
   } else if (StringEndsWith(mTableUpdate->TableName(),
     NS_LITERAL_CSTRING("-digest256"))) {
-    PARSER_LOG(("Processing digest256 data"));
     mChunkState.type = (command == 'a') ? CHUNK_ADD_DIGEST : CHUNK_SUB_DIGEST;
   }
   nsresult rv;
@@ -313,7 +312,6 @@ ProtocolParser::ProcessChunk(bool* aDone)
   *aDone = false;
   mState = PROTOCOL_STATE_CONTROL;
 
-  PARSER_LOG(("Handling a %d-byte chunk", chunk.Length()));
   if (StringEndsWith(mTableUpdate->TableName(),
                      NS_LITERAL_CSTRING("-shavar"))) {
     return ProcessShaChunk(chunk);
@@ -335,6 +333,8 @@ ProtocolParser::ProcessPlaintextChunk(const nsACString& aChunk)
     NS_WARNING("Chunk received with no table.");
     return NS_ERROR_FAILURE;
   }
+
+  PARSER_LOG(("Handling a %d-byte simple chunk", aChunk.Length()));
 
   nsTArray<nsCString> lines;
   ParseString(PromiseFlatCString(aChunk), '\n', lines);
@@ -409,6 +409,10 @@ ProtocolParser::ProcessShaChunk(const nsACString& aChunk)
     uint8_t numEntries = static_cast<uint8_t>(aChunk[start]);
     start++;
 
+    PARSER_LOG(("Handling a %d-byte shavar chunk containing %u entries"
+                " for domain %X", aChunk.Length(), numEntries,
+                domain.ToUint32()));
+
     nsresult rv;
     if (mChunkState.type == CHUNK_ADD && mChunkState.hashSize == PREFIX_SIZE) {
       rv = ProcessHostAdd(domain, numEntries, aChunk, &start);
@@ -434,6 +438,8 @@ ProtocolParser::ProcessShaChunk(const nsACString& aChunk)
 nsresult
 ProtocolParser::ProcessDigestChunk(const nsACString& aChunk)
 {
+  PARSER_LOG(("Handling a %d-byte digest256 chunk", aChunk.Length()));
+
   if (mChunkState.type == CHUNK_ADD_DIGEST) {
     return ProcessDigestAdd(aChunk);
   }
@@ -515,6 +521,7 @@ ProtocolParser::ProcessHostAdd(const Prefix& aDomain, uint8_t aNumEntries,
   for (uint8_t i = 0; i < aNumEntries; i++) {
     Prefix hash;
     hash.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
+    PARSER_LOG(("Add prefix %X", hash.ToUint32()));
     nsresult rv = mTableUpdate->NewAddPrefix(mChunkState.num, hash);
     if (NS_FAILED(rv)) {
       return rv;
@@ -545,6 +552,7 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
     memcpy(&addChunk, addChunkStr.BeginReading(), 4);
     addChunk = PR_ntohl(addChunk);
 
+    PARSER_LOG(("Sub prefix (addchunk=%u)", addChunk));
     nsresult rv = mTableUpdate->NewSubPrefix(addChunk, aDomain, mChunkState.num);
     if (NS_FAILED(rv)) {
       return rv;
@@ -569,6 +577,7 @@ ProtocolParser::ProcessHostSub(const Prefix& aDomain, uint8_t aNumEntries,
     prefix.Assign(Substring(aChunk, *aStart, PREFIX_SIZE));
     *aStart += PREFIX_SIZE;
 
+    PARSER_LOG(("Sub prefix %X (addchunk=%u)", prefix.ToUint32(), addChunk));
     nsresult rv = mTableUpdate->NewSubPrefix(addChunk, prefix, mChunkState.num);
     if (NS_FAILED(rv)) {
       return rv;
