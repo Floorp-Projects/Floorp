@@ -868,7 +868,7 @@ protected:
   // This should only ever be accessed from the main thread.
   // It is set in Init and cleared in Shutdown when the element goes away.
   // The decoder does not add a reference the element.
-  MediaDecoderOwner* mOwner;
+  MediaDecoderOwner* const mOwner;
 
   // Counters related to decode and presentation of frames.
   FrameStatistics mFrameStats;
