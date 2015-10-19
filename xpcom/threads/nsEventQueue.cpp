@@ -13,19 +13,11 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo*
-GetLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsEventQueue");
-  }
-  return sLog;
-}
+static LazyLogModule sEventQueueLog("nsEventQueue");
 #ifdef LOG
 #undef LOG
 #endif
-#define LOG(args) MOZ_LOG(GetLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(sEventQueueLog, mozilla::LogLevel::Debug, args)
 
 nsEventQueue::nsEventQueue(Mutex& aLock)
   : mHead(nullptr)
