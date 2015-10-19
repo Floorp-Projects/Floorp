@@ -177,9 +177,8 @@ gfxGDIFont::Initialize()
 
     // Figure out if we want to do synthetic oblique styling.
     GDIFontEntry* fe = static_cast<GDIFontEntry*>(GetFontEntry());
-    bool wantFakeItalic =
-        (mStyle.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) &&
-        !fe->IsItalic() && mStyle.allowSyntheticStyle;
+    bool wantFakeItalic = mStyle.style != NS_FONT_STYLE_NORMAL &&
+                          fe->IsUpright() && mStyle.allowSyntheticStyle;
 
     // If the font's family has an actual italic face (but font matching
     // didn't choose it), we have to use a cairo transform instead of asking
