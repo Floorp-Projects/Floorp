@@ -4736,6 +4736,12 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return false;
   }
 
+  // We should consider any bfcached page or inactive document/channel as
+  // non-playing.
+  if (mPausedForInactiveDocumentOrChannel) {
+    return false;
+  }
+
   // A loop always is playing
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
     return true;
