@@ -1237,19 +1237,30 @@ var Impl = {
     this._log.trace("assemblePayloadWithMeasurements - reason: " + reason +
                     ", submitting subsession data: " + isSubsession);
 
+    // This allows wrapping data retrieval calls in a try-catch block so that
+    // failures don't break the rest of the ping assembly.
+    const protect = (fn) => {
+      try {
+        return fn();
+      } catch (ex) {
+        this.log.error("assemblePayloadWithMeasurements - caught exception", ex);
+        return null;
+      }
+    };
+
     // Payload common to chrome and content processes.
     let payloadObj = {
       ver: PAYLOAD_VERSION,
       simpleMeasurements: simpleMeasurements,
-      histograms: this.getHistograms(isSubsession, clearSubsession),
-      keyedHistograms: this.getKeyedHistograms(isSubsession, clearSubsession),
+      histograms: protect(() => this.getHistograms(isSubsession, clearSubsession)),
+      keyedHistograms: protect(() => this.getKeyedHistograms(isSubsession, clearSubsession)),
     };
 
     // Add extended set measurements common to chrome & content processes
     if (Telemetry.canRecordExtended) {
-      payloadObj.chromeHangs = Telemetry.chromeHangs;
-      payloadObj.threadHangStats = this.getThreadHangStats(Telemetry.threadHangStats);
-      payloadObj.log = TelemetryLog.entries();
+      payloadObj.chromeHangs = protect(() => Telemetry.chromeHangs);
+      payloadObj.threadHangStats = protect(() => this.getThreadHangStats(Telemetry.threadHangStats));
+      payloadObj.log = protect(() => TelemetryLog.entries());
     }
 
     if (Utils.isContentProcess) {
@@ -1261,20 +1272,21 @@ var Impl = {
 
     // Add extended set measurements for chrome process.
     if (Telemetry.canRecordExtended) {
-      payloadObj.slowSQL = Telemetry.slowSQL;
-      payloadObj.fileIOReports = Telemetry.fileIOReports;
-      payloadObj.lateWrites = Telemetry.lateWrites;
+      payloadObj.slowSQL = protect(() => Telemetry.slowSQL);
+      payloadObj.fileIOReports = protect(() => Telemetry.fileIOReports);
+      payloadObj.lateWrites = protect(() => Telemetry.lateWrites);
 
       // Add the addon histograms if they are present
-      let addonHistograms = this.getAddonHistograms();
-      if (Object.keys(addonHistograms).length > 0) {
+      let addonHistograms = protect(() => this.getAddonHistograms());
+      if (addonHistograms && Object.keys(addonHistograms).length > 0) {
         payloadObj.addonHistograms = addonHistograms;
       }
 
-      payloadObj.addonDetails = AddonManagerPrivate.getTelemetryDetails();
-      payloadObj.UIMeasurements = UITelemetry.getUIMeasurements();
+      payloadObj.addonDetails = protect(() => AddonManagerPrivate.getTelemetryDetails());
+      payloadObj.UIMeasurements = protect(() => UITelemetry.getUIMeasurements());
 
-      if (Object.keys(this._slowSQLStartup).length != 0 &&
+      if (this._slowSQLStartup &&
+          Object.keys(this._slowSQLStartup).length != 0 &&
           (Object.keys(this._slowSQLStartup.mainThread).length ||
            Object.keys(this._slowSQLStartup.otherThreads).length)) {
         payloadObj.slowSQLStartup = this._slowSQLStartup;
@@ -1282,7 +1294,7 @@ var Impl = {
     }
 
     if (this._childTelemetry.length) {
-      payloadObj.childPayloads = this.getChildPayloads();
+      payloadObj.childPayloads = protect(() => this.getChildPayloads());
     }
 
     return payloadObj;
