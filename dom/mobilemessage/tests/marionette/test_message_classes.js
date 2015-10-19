@@ -34,7 +34,7 @@ function sendSmsPduToEmulator(pdu) {
 }
 
 function checkMessage(message, id, threadId, messageClass) {
-  ok(message instanceof MozSmsMessage,
+  ok(message instanceof SmsMessage,
      "message is instanceof " + message.constructor);
   if (id == null) {
     ok(message.id > 0, "message.id");
