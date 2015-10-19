@@ -31,9 +31,6 @@ public:
   virtual bool HasAudio() override;
   virtual bool HasVideo() override;
 
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) override;
-
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
@@ -50,10 +47,11 @@ protected:
   virtual void NotifyDataArrivedInternal(uint32_t aLength,
                                          int64_t aOffset) override;
 public:
-
   virtual bool IsMediaSeekable() override;
 
 private:
+  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
+
   void SetupDecoder();
   nsresult Read(uint32_t *aNumBytes, char *aData);
 
