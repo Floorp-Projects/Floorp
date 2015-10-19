@@ -102,7 +102,9 @@ this.RequestSyncService = {
       aStore.openCursor().onsuccess = function(event) {
         let cursor = event.target.result;
         if (cursor) {
-          this.addRegistration(cursor.value, cursor.continue);
+          this.addRegistration(cursor.value, function() {
+            cursor.continue();
+          });
         }
       }
     }.bind(this),
