@@ -45,16 +45,6 @@ var testDevice = {
   establishControlChannel: function(url, presentationId) {
     return null;
   },
-  set listener(listener) {
-    this._listener = listener;
-  },
-  get listener() {
-    return this._listener;
-  },
-
-  simulateSessionRequest: function(url, presentationId, controlChannel) {
-    this._listener.onSessionRequest(this, url, presentationId, controlChannel);
-  },
 };
 
 function addProvider() {
@@ -144,7 +134,8 @@ function sessionRequest() {
 
     run_next_test();
   }, 'presentation-session-request', false);
-  testDevice.simulateSessionRequest(testUrl, testPresentationId, testControlChannel);
+  manager.QueryInterface(Ci.nsIPresentationDeviceListener)
+         .onSessionRequest(testDevice, testUrl, testPresentationId, testControlChannel);
 }
 
 function removeDevice() {
