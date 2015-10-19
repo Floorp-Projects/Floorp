@@ -936,6 +936,24 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   //channel does.
   mRequest->UnsetSameOriginDataURL();
 
+  // Requests that require preflight are not permitted to redirect.
+  // Fetch spec section 4.2 "HTTP Fetch", step 4.9 just uses the manual
+  // redirect flag to decide whether to execute step 4.10 or not. We do not
+  // represent it in our implementation.
+  // The only thing we do is to check if the request requires a preflight (part
+  // of step 4.9), in which case we abort. This part cannot be done by
+  // nsCORSListenerProxy since it does not have access to mRequest.
+  // which case. Step 4.10.3 is handled by OnRedirectVerifyCallback(), and all
+  // the other steps are handled by nsCORSListenerProxy.
+  if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
+    nsresult rv = DoesNotRequirePreflight(aNewChannel);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("FetchDriver::OnChannelRedirect: "
+                 "DoesNotRequirePreflight returned failure");
+      return rv;
+    }
+  }
+
   // HTTP Fetch step 5, "redirect status", step 10 requires us to halt the
   // redirect, but successfully return an opaqueredirect Response to the
   // initiating Fetch.
