@@ -711,6 +711,8 @@ protected:
     nsCOMPtr<nsITimer> mTimer;
   };
 
+  nsresult PlayInternal(bool aCallerIsChrome);
+
   /** Use this method to change the mReadyState member, so required
    * events can be fired.
    */
