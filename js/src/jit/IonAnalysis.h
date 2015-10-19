@@ -18,7 +18,7 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
-void
+bool
 FoldTests(MIRGraph& graph);
 
 bool
