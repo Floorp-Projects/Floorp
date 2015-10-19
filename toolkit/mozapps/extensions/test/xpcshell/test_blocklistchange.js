@@ -41,8 +41,7 @@ Cu.import("resource://testing-common/MockRegistrar.jsm");
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false)
 
 Cu.import("resource://testing-common/httpd.js");
-var testserver = new HttpServer();
-testserver.start(-1);
+var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 
 // register static files with server and interpolate port numbers in them
@@ -1304,10 +1303,4 @@ add_task(function* run_local_install_test() {
   check_addon(s3, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-});
-
-add_task(function* shutdown_httpserver() {
-  yield new Promise((resolve, reject) => {
-    testserver.stop(resolve);
-  });
 });

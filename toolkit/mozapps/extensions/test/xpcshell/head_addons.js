@@ -1920,18 +1920,48 @@ function promiseAddonByID(aId) {
  */
 function promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIODIC_UPDATE) {
   return new Promise((resolve, reject) => {
+    let result = {};
     addon.findUpdates({
-      install: null,
-
-      onUpdateAvailable: function(addon, install) {
-        this.install = install;
+      onNoCompatibilityUpdateAvailable: function(addon2) {
+        if ("compatibilityUpdate" in result) {
+          do_throw("Saw multiple compatibility update events");
+        }
+        equal(addon, addon2);
+        addon.compatibilityUpdate = false;
       },
 
-      onUpdateFinished: function(addon, error) {
-        if (error == AddonManager.UPDATE_STATUS_NO_ERROR)
-          resolve(this.install);
-        else
-          reject(error);
+      onCompatibilityUpdateAvailable: function(addon2) {
+        if ("compatibilityUpdate" in result) {
+          do_throw("Saw multiple compatibility update events");
+        }
+        equal(addon, addon2);
+        addon.compatibilityUpdate = true;
+      },
+
+      onNoUpdateAvailable: function(addon2) {
+        if ("updateAvailable" in result) {
+          do_throw("Saw multiple update available events");
+        }
+        equal(addon, addon2);
+        result.updateAvailable = false;
+      },
+
+      onUpdateAvailable: function(addon2, install) {
+        if ("updateAvailable" in result) {
+          do_throw("Saw multiple update available events");
+        }
+        equal(addon, addon2);
+        result.updateAvailable = install;
+      },
+
+      onUpdateFinished: function(addon2, error) {
+        equal(addon, addon2);
+        if (error == AddonManager.UPDATE_STATUS_NO_ERROR) {
+          resolve(result);
+        } else {
+          result.error = error;
+          reject(result);
+        }
       }
     }, reason);
   });
