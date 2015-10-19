@@ -97,3 +97,6 @@ idea {
         languageLevel = '1.7'
     }
 }
+
+task wrapper(type: Wrapper) {
+}
