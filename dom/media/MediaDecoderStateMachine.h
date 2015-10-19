@@ -484,6 +484,9 @@ protected:
 
   media::MediaSink* CreateAudioSink();
 
+  // Always create mediasink which contains an AudioSink or StreamSink inside.
+  already_AddRefed<media::MediaSink> CreateMediaSink(bool aAudioCaptured);
+
   // Stops the media sink and shut it down.
   // The decoder monitor must be held with exactly one lock count.
   // Called on the state machine thread.
@@ -638,12 +641,14 @@ protected:
   bool IsVideoDecoding();
 
 private:
-  // Resolved by the MediaSink to signal that all outstanding work is complete
-  // and the sink is shutting down.
-  void OnMediaSinkComplete();
+  // Resolved by the MediaSink to signal that all audio/video outstanding
+  // work is complete and identify which part(a/v) of the sink is shutting down.
+  void OnMediaSinkAudioComplete();
+  void OnMediaSinkVideoComplete();
 
-  // Rejected by the MediaSink to signal errors.
-  void OnMediaSinkError();
+  // Rejected by the MediaSink to signal errors for audio/video.
+  void OnMediaSinkAudioError();
+  void OnMediaSinkVideoError();
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
@@ -1192,7 +1197,9 @@ private:
   // Media data resource from the decoder.
   RefPtr<MediaResource> mResource;
 
-  MozPromiseRequestHolder<GenericPromise> mMediaSinkPromise;
+  // Track the complete & error for audio/video separately
+  MozPromiseRequestHolder<GenericPromise> mMediaSinkAudioPromise;
+  MozPromiseRequestHolder<GenericPromise> mMediaSinkVideoPromise;
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
