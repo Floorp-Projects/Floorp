@@ -70,6 +70,21 @@ public:
   bool Has(const nsACString& aName, ErrorResult& aRv) const;
   void Set(const nsACString& aName, const nsACString& aValue, ErrorResult& aRv);
 
+  uint32_t GetIterableLength() const
+  {
+    return mList.Length();
+  }
+  const NS_ConvertASCIItoUTF16 GetKeyAtIndex(unsigned aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mList.Length());
+    return NS_ConvertASCIItoUTF16(mList[aIndex].mName);
+  }
+  const NS_ConvertASCIItoUTF16 GetValueAtIndex(unsigned aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mList.Length());
+    return NS_ConvertASCIItoUTF16(mList[aIndex].mValue);
+  }
+
   void Clear();
 
   HeadersGuardEnum Guard() const { return mGuard; }
