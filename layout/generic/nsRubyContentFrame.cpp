@@ -13,6 +13,18 @@
 
 using namespace mozilla;
 
+//----------------------------------------------------------------------
+
+// Frame class boilerplate
+// =======================
+
+NS_IMPL_FRAMEARENA_HELPERS(nsRubyContentFrame)
+
+//----------------------------------------------------------------------
+
+// nsRubyContentFrame Method Implementations
+// ======================================
+
 /* virtual */ bool
 nsRubyContentFrame::IsFrameOfType(uint32_t aFlags) const
 {
