@@ -44,12 +44,12 @@ public:
           const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
           uint32_t aWeight,
           int32_t aStretch,
-          uint32_t aItalicStyle,
+          uint8_t aStyle,
           const nsTArray<gfxFontFeature>& aFeatureSettings,
           uint32_t aLanguageOverride,
           gfxSparseBitSet* aUnicodeRanges)
       : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
-                         aItalicStyle, aFeatureSettings, aLanguageOverride,
+                         aStyle, aFeatureSettings, aLanguageOverride,
                          aUnicodeRanges) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
