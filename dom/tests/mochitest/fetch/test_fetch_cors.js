@@ -1249,7 +1249,7 @@ function testRedirects() {
                     },
                     ],
            },
-           { pass: 1,
+           { pass: 0,
              method: "POST",
              body: "hi there",
              headers: { "Content-Type": "text/plain",
@@ -1281,7 +1281,7 @@ function testRedirects() {
                     }
                     ],
            },
-           { pass: 1,
+           { pass: 0,
              method: "DELETE",
              hops: [{ server: "http://mochi.test:8888",
                     },
