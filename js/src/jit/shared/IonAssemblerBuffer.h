@@ -152,13 +152,8 @@ class AssemblerBuffer
 
     bool ensureSpace(int size) {
         // Space can exist in the most recent Slice.
-        if (tail && tail->length() + size <= tail->Capacity()) {
-            // Simulate allocation failure even when we don't need a new slice.
-            if (js::oom::ShouldFailWithOOM())
-                return fail_oom();
-
+        if (tail && tail->length() + size <= tail->Capacity())
             return true;
-        }
 
         // Otherwise, a new Slice must be added.
         Slice* slice = newSlice(lifoAlloc_);
