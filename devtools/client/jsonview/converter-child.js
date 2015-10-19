@@ -196,18 +196,18 @@ var Converter = Class({
 
   toHTML: function(json, headers, title) {
     var themeClassName = "theme-" + JsonViewUtils.getCurrentTheme();
-    var baseUrl = "resource:///modules/devtools/client/jsonview/";
-    var theme = (themeClassName == "theme-light") ? "light" : "dark";
-    var themeUrl = '<link rel="stylesheet" type="text/css" ' +
-      'href="css/' + theme + '-theme.css">';
+    var clientBaseUrl = "resource:///modules/devtools/client/";
+    var baseUrl = clientBaseUrl + "jsonview/";
+    var themeVarsUrl = clientBaseUrl + "themes/variables.css";
 
     return '<!DOCTYPE html>\n' +
-      '<html><head><title>' + this.htmlEncode(title) + '</title>' +
+      '<html class="' + themeClassName + '">' +
+      '<head><title>' + this.htmlEncode(title) + '</title>' +
       '<base href="' + this.htmlEncode(baseUrl) + '">' +
+      '<link rel="stylesheet" type="text/css" href="' + themeVarsUrl + '">' +
       '<link rel="stylesheet" type="text/css" href="css/main.css">' +
-      themeUrl +
       '<script data-main="viewer-config" src="lib/require.js"></script>' +
-      '</head><body class="' + themeClassName + '">' +
+      '</head><body>' +
       '<div id="content"></div>' +
       '<div id="json">' + this.htmlEncode(json) + '</div>' +
       '<div id="headers">' + this.htmlEncode(headers) + '</div>' +

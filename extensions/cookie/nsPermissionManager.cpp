@@ -910,6 +910,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       }
 
       // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // TODO: we want to make default version as version 2 in order to fix bug 784875.
     case 0:
@@ -929,6 +930,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       }
 
       // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // Version 3->4 is the creation of the modificationTime field.
     case 3:
@@ -946,6 +948,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       }
 
       // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // In version 5, host appId, and isInBrowserElement were merged into a
     // single origin entry
@@ -1031,6 +1034,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       }
 
       // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // At this point, the version 5 table has been migrated to a version 6 table
     // We are guaranteed to have at least one of moz_hosts and moz_perms. If
@@ -1228,6 +1232,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       }
 
       // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // The version 7-8 migration is the re-migration of localhost and ip-address
     // entries due to errors in the previous version 7 migration which caused
@@ -1329,6 +1334,7 @@ nsPermissionManager::InitDB(bool aRemoveFile)
       }
 
       // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // The version 8-9 migration removes the unnecessary backup moz-hosts database contents.
     // as the data no longer needs to be migrated
@@ -1354,6 +1360,9 @@ nsPermissionManager::InitDB(bool aRemoveFile)
         rv = mDBConn->SetSchemaVersion(9);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+
+      // fall through to the next upgrade
+      MOZ_FALLTHROUGH;
 
     // current version.
     case HOSTS_SCHEMA_VERSION:

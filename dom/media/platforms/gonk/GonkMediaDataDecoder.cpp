@@ -103,6 +103,11 @@ GonkDecoderManager::Flush()
     GMDD_LOG("Decoder is not initialized");
     return NS_ERROR_UNEXPECTED;
   }
+
+  if (!mInitPromise.IsEmpty()) {
+    return NS_OK;
+  }
+
   {
     MutexAutoLock lock(mMutex);
     mQueuedSamples.Clear();

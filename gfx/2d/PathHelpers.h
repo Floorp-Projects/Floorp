@@ -352,9 +352,14 @@ extern UserDataKey sDisablePixelSnapping;
  * boundaries.)  If on the other hand you stroking the rect with an odd valued
  * stroke width then the edges of the stroke will be antialiased (assuming an
  * AntialiasMode that does antialiasing).
+ *
+ * Empty snaps are those which result in a rectangle of 0 area.  If they are
+ * disallowed, an axis is left unsnapped if the rounding process results in a
+ * length of 0.
  */
 inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
-                                     bool aAllowScaleOr90DegreeRotate = false)
+                                     bool aAllowScaleOr90DegreeRotate = false,
+                                     bool aAllowEmptySnaps = true)
 {
   if (aDrawTarget.GetUserData(&sDisablePixelSnapping)) {
     return false;
@@ -383,8 +388,18 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
   // We actually only need to check one of p2 and p4, since an affine
   // transform maps parallelograms to parallelograms.
   if (p2 == Point(p1.x, p3.y) || p2 == Point(p3.x, p1.y)) {
-      p1.Round();
-      p3.Round();
+      Point p1r = p1;
+      Point p3r = p3;
+      p1r.Round();
+      p3r.Round();
+      if (aAllowEmptySnaps || p1r.x != p3r.x) {
+          p1.x = p1r.x;
+          p3.x = p3r.x;
+      }
+      if (aAllowEmptySnaps || p1r.y != p3r.y) {
+          p1.y = p1r.y;
+          p3.y = p3r.y;
+      }
 
       aRect.MoveTo(Point(std::min(p1.x, p3.x), std::min(p1.y, p3.y)));
       aRect.SizeTo(Size(std::max(p1.x, p3.x) - aRect.X(),
@@ -400,10 +415,11 @@ inline bool UserToDevicePixelSnapped(Rect& aRect, const DrawTarget& aDrawTarget,
  * aRect is not transformed to device space.
  */
 inline bool MaybeSnapToDevicePixels(Rect& aRect, const DrawTarget& aDrawTarget,
-                                    bool aAllowScaleOr90DegreeRotate = false)
+                                    bool aAllowScaleOr90DegreeRotate = false,
+                                    bool aAllowEmptySnaps = true)
 {
   if (UserToDevicePixelSnapped(aRect, aDrawTarget,
-                               aAllowScaleOr90DegreeRotate)) {
+                               aAllowScaleOr90DegreeRotate, aAllowEmptySnaps)) {
     // Since UserToDevicePixelSnapped returned true we know there is no
     // rotation/skew in 'mat', so we can just use TransformBounds() here.
     Matrix mat = aDrawTarget.GetTransform();

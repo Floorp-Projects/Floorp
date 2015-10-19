@@ -9,6 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "nsIAsyncShutdown.h"
 
 namespace mozilla {
 namespace media {
@@ -355,6 +356,35 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Refcountable<T>)
 private:
   ~Refcountable<ScopedDeletePtr<T>>() {}
+};
+
+/* media::ShutdownBlocker - Async shutdown helper.
+ */
+
+class ShutdownBlocker : public nsIAsyncShutdownBlocker
+{
+public:
+  ShutdownBlocker(const nsString& aName) : mName(aName) {}
+
+  NS_IMETHOD
+  BlockShutdown(nsIAsyncShutdownClient* aProfileBeforeChange) override = 0;
+
+  NS_IMETHOD GetName(nsAString& aName) override
+  {
+    aName = mName;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetState(nsIPropertyBag**) override
+  {
+    return NS_OK;
+  }
+
+  NS_DECL_ISUPPORTS
+protected:
+  virtual ~ShutdownBlocker() {}
+private:
+  const nsString mName;
 };
 
 } // namespace media
