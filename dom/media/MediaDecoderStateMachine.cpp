@@ -203,7 +203,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                            /* aSupportsTailDispatch = */ true)),
   mWatchManager(this, mTaskQueue),
-  mProducerID(ImageContainer::AllocateProducerID()),
   mRealTime(aRealTime),
   mDispatchedStateMachine(false),
   mDelayedScheduler(mTaskQueue),
@@ -213,7 +212,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mFragmentEndTime(-1),
   mReader(aReader),
   mDecodedAudioEndTime(-1),
-  mVideoFrameEndTime(-1),
   mDecodedVideoEndTime(-1),
   mPlaybackRate(1.0),
   mLowAudioThresholdUsecs(detail::LOW_AUDIO_USECS),
@@ -391,11 +389,11 @@ MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
   RefPtr<media::MediaSink> audioSink = aAudioCaptured ?
     mStreamSink : CreateAudioSink();
 
-  RefPtr<media::MediaSink> mediaSink = new VideoSink(mTaskQueue,
-                                                       audioSink,
-                                                       mVideoQueue,
-                                                       mDecoder->GetVideoFrameContainer(),
-                                                       mRealTime);
+  RefPtr<media::MediaSink> mediaSink =
+    new VideoSink(mTaskQueue, audioSink, mVideoQueue,
+                  mDecoder->GetVideoFrameContainer(), mRealTime,
+                  mDecoder->GetFrameStatistics(), AUDIO_DURATION_USECS,
+                  sVideoQueueSendToCompositorSize);
   return mediaSink.forget();
 }
 
@@ -1068,7 +1066,6 @@ void MediaDecoderStateMachine::StopPlayback()
   mDecoder->DispatchPlaybackStopped();
 
   if (IsPlaying()) {
-    RenderVideoFrames(1);
     mMediaSink->SetPlaying(false);
     MOZ_ASSERT(!IsPlaying());
   }
@@ -1859,7 +1856,7 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
 
   int64_t endOfDecodedVideoData = INT64_MAX;
   if (HasVideo() && !VideoQueue().AtEndOfStream()) {
-    endOfDecodedVideoData = VideoQueue().Peek() ? VideoQueue().Peek()->GetEndTime() : mVideoFrameEndTime;
+    endOfDecodedVideoData = VideoQueue().Peek() ? VideoQueue().Peek()->GetEndTime() : VideoEndTime();
   }
   int64_t endOfDecodedAudioData = INT64_MAX;
   if (HasAudio() && !AudioQueue().AtEndOfStream()) {
@@ -2059,7 +2056,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   DECODER_LOG("FinishDecodeFirstFrame");
 
   if (!IsRealTime() && !mSentFirstFrameLoadedEvent) {
-    RenderVideoFrames(1);
+    mMediaSink->Redraw();
   }
 
   // If we don't know the duration by this point, we assume infinity, per spec.
@@ -2156,7 +2153,7 @@ MediaDecoderStateMachine::SeekCompleted()
   ScheduleStateMachine();
 
   if (video) {
-    RenderVideoFrames(1);
+    mMediaSink->Redraw();
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::Invalidate);
     AbstractThread::MainThread()->Dispatch(event.forget());
@@ -2311,7 +2308,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // Start playback if necessary so that the clock can be properly queried.
       MaybeStartPlayback();
 
-      UpdateRenderedVideoFrames();
+      UpdatePlaybackPositionPeriodically();
       NS_ASSERTION(!IsPlaying() ||
                    mLogicallySeeking ||
                    IsStateMachineScheduled(),
@@ -2382,7 +2379,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       {
         // Start playback if necessary to play the remaining media.
         MaybeStartPlayback();
-        UpdateRenderedVideoFrames();
+        UpdatePlaybackPositionPeriodically();
         NS_ASSERTION(!IsPlaying() ||
                      mLogicallySeeking ||
                      IsStateMachineScheduled(),
@@ -2404,7 +2401,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
           !mSentPlaybackEndedEvent)
       {
-        int64_t clockTime = std::max(AudioEndTime(), mVideoFrameEndTime);
+        int64_t clockTime = std::max(AudioEndTime(), VideoEndTime());
         clockTime = std::max(int64_t(0), std::max(clockTime, Duration().ToMicroseconds()));
         UpdatePlaybackPosition(clockTime);
 
@@ -2445,7 +2442,6 @@ MediaDecoderStateMachine::Reset()
   // crash for no samples to be popped.
   StopMediaSink();
 
-  mVideoFrameEndTime = -1;
   mDecodedVideoEndTime = -1;
   mDecodedAudioEndTime = -1;
   mAudioCompleted = false;
@@ -2495,69 +2491,6 @@ MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
   }
 }
 
-void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
-                                                 int64_t aClockTime,
-                                                 const TimeStamp& aClockTimeStamp)
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
-  nsAutoTArray<RefPtr<MediaData>,16> frames;
-  VideoQueue().GetFirstElements(aMaxFrames, &frames);
-  if (frames.IsEmpty() || !container) {
-    return;
-  }
-
-  nsAutoTArray<ImageContainer::NonOwningImage,16> images;
-  TimeStamp lastFrameTime;
-  for (uint32_t i = 0; i < frames.Length(); ++i) {
-    VideoData* frame = frames[i]->As<VideoData>();
-
-    bool valid = !frame->mImage || frame->mImage->IsValid();
-    frame->mSentToCompositor = true;
-
-    if (!valid) {
-      continue;
-    }
-
-    int64_t frameTime = frame->mTime;
-    if (frameTime < 0) {
-      // Frame times before the start time are invalid; drop such frames
-      continue;
-    }
-
-
-    TimeStamp t;
-    if (aMaxFrames > 1) {
-      MOZ_ASSERT(!aClockTimeStamp.IsNull());
-      int64_t delta = frame->mTime - aClockTime;
-      t = aClockTimeStamp +
-          TimeDuration::FromMicroseconds(delta / mPlaybackRate);
-      if (!lastFrameTime.IsNull() && t <= lastFrameTime) {
-        // Timestamps out of order; drop the new frame. In theory we should
-        // probably replace the previous frame with the new frame if the
-        // timestamps are equal, but this is a corrupt video file already so
-        // never mind.
-        continue;
-      }
-      lastFrameTime = t;
-    }
-
-    ImageContainer::NonOwningImage* img = images.AppendElement();
-    img->mTimeStamp = t;
-    img->mImage = frame->mImage;
-    img->mFrameID = frame->mFrameID;
-    img->mProducerID = mProducerID;
-
-    VERBOSE_LOG("playing video frame %lld (id=%x) (queued=%i, state-machine=%i, decoder-queued=%i)",
-                frame->mTime, frame->mFrameID,
-                VideoQueue().GetSize() + mReader->SizeOfVideoQueueInFrames(),
-                VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames());
-  }
-
-  container->SetCurrentFrames(frames[0]->As<VideoData>()->mDisplay, images);
-}
-
 int64_t
 MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
 {
@@ -2567,7 +2500,8 @@ MediaDecoderStateMachine::GetClock(TimeStamp* aTimeStamp) const
   return clockTime;
 }
 
-void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
+void
+MediaDecoderStateMachine::UpdatePlaybackPositionPeriodically()
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -2579,47 +2513,19 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     DiscardStreamData();
   }
 
-  TimeStamp nowTime;
-  const int64_t clockTime = GetClock(&nowTime);
-  // Skip frames up to the frame at the playback position, and figure out
-  // the time remaining until it's time to display the next frame and drop
-  // the current frame.
-  NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
-  int64_t remainingTime = AUDIO_DURATION_USECS;
-  if (VideoQueue().GetSize() > 0) {
-    RefPtr<MediaData> currentFrame = VideoQueue().PopFront();
-    int32_t framesRemoved = 0;
-    while (VideoQueue().GetSize() > 0) {
-      MediaData* nextFrame = VideoQueue().PeekFront();
-      if (!IsRealTime() && nextFrame->mTime > clockTime) {
-        remainingTime = nextFrame->mTime - clockTime;
-        break;
-      }
-      ++framesRemoved;
-      if (!currentFrame->As<VideoData>()->mSentToCompositor) {
-        mDecoder->NotifyDecodedFrames(0, 0, 1);
-        VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld",
-                    currentFrame->mTime, clockTime);
-      }
-      currentFrame = VideoQueue().PopFront();
-
-    }
-    VideoQueue().PushFront(currentFrame);
-    if (framesRemoved > 0) {
-      mVideoFrameEndTime = currentFrame->GetEndTime();
-      FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
-      frameStats.NotifyPresentedFrame();
-    }
-  }
-
-  RenderVideoFrames(sVideoQueueSendToCompositorSize, clockTime, nowTime);
-
   // Cap the current time to the larger of the audio and video end time.
   // This ensures that if we're running off the system clock, we don't
   // advance the clock to after the media end time.
-  if (mVideoFrameEndTime != -1 || AudioEndTime() != -1) {
+  if (VideoEndTime() != -1 || AudioEndTime() != -1) {
+
+    const int64_t clockTime = GetClock();
+    // Skip frames up to the frame at the playback position, and figure out
+    // the time remaining until it's time to display the next frame and drop
+    // the current frame.
+    NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
+
     // These will be non -1 if we've displayed a video frame, or played an audio frame.
-    int64_t t = std::min(clockTime, std::max(mVideoFrameEndTime, AudioEndTime()));
+    int64_t t = std::min(clockTime, std::max(VideoEndTime(), AudioEndTime()));
     // FIXME: Bug 1091422 - chained ogg files hit this assertion.
     //MOZ_ASSERT(t >= GetMediaTime());
     if (t > GetMediaTime()) {
@@ -2631,7 +2537,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   // the monitor and get a staled value from GetCurrentTimeUs() which hits the
   // assertion in GetClock().
 
-  int64_t delay = std::max<int64_t>(1, remainingTime / mPlaybackRate);
+  int64_t delay = std::max<int64_t>(1, AUDIO_DURATION_USECS / mPlaybackRate);
   ScheduleStateMachineIn(delay);
 }
 
@@ -2934,10 +2840,21 @@ MediaDecoderStateMachine::AudioEndTime() const
   return -1;
 }
 
+int64_t
+MediaDecoderStateMachine::VideoEndTime() const
+{
+  MOZ_ASSERT(OnTaskQueue());
+  if (mMediaSink->IsStarted()) {
+    return mMediaSink->GetEndTime(TrackInfo::kVideoTrack);
+  }
+  return -1;
+}
+
 void
 MediaDecoderStateMachine::OnMediaSinkVideoComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
+  VERBOSE_LOG("[%s]", __func__);
 
   mMediaSinkVideoPromise.Complete();
   ScheduleStateMachine();
@@ -2947,6 +2864,7 @@ void
 MediaDecoderStateMachine::OnMediaSinkVideoError()
 {
   MOZ_ASSERT(OnTaskQueue());
+  VERBOSE_LOG("[%s]", __func__);
 
   mMediaSinkVideoPromise.Complete();
   if (HasAudio()) {
@@ -2958,6 +2876,7 @@ MediaDecoderStateMachine::OnMediaSinkVideoError()
 void MediaDecoderStateMachine::OnMediaSinkAudioComplete()
 {
   MOZ_ASSERT(OnTaskQueue());
+  VERBOSE_LOG("[%s]", __func__);
 
   mMediaSinkAudioPromise.Complete();
   // Set true only when we have audio.
@@ -2969,6 +2888,7 @@ void MediaDecoderStateMachine::OnMediaSinkAudioComplete()
 void MediaDecoderStateMachine::OnMediaSinkAudioError()
 {
   MOZ_ASSERT(OnTaskQueue());
+  VERBOSE_LOG("[%s]", __func__);
 
   mMediaSinkAudioPromise.Complete();
   // Set true only when we have audio.

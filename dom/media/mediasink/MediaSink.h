@@ -93,6 +93,11 @@ public:
   // Pause/resume the playback. Only work after playback starts.
   virtual void SetPlaying(bool aPlaying) = 0;
 
+  // Single frame rendering operation may need to be done before playback
+  // started (1st frame) or right after seek completed or playback stopped.
+  // Do nothing if this sink has no video track. Can be called in any state.
+  virtual void Redraw() {};
+
   // Begin a playback session with the provided start time and media info.
   // Must be called when playback is stopped.
   virtual void Start(int64_t aStartTime, const MediaInfo& aInfo) = 0;
