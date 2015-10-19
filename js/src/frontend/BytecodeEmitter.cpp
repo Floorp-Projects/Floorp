@@ -4326,17 +4326,14 @@ BytecodeEmitter::emitSingleVariable(ParseNode* pn, ParseNode* binding, ParseNode
         if (op == JSOP_SETNAME ||
             op == JSOP_STRICTSETNAME ||
             op == JSOP_SETGNAME ||
-            op == JSOP_STRICTSETGNAME ||
-            op == JSOP_SETINTRINSIC)
+            op == JSOP_STRICTSETGNAME)
         {
             MOZ_ASSERT(emitOption != PushInitialValues);
             JSOp bindOp;
             if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
                 bindOp = JSOP_BINDNAME;
-            else if (op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
-                bindOp = JSOP_BINDGNAME;
             else
-                bindOp = JSOP_BINDINTRINSIC;
+                bindOp = JSOP_BINDGNAME;
             if (!emitIndex32(bindOp, atomIndex))
                 return false;
         }
@@ -4396,13 +4393,16 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (lhs->pn_scopecoord.isFree()) {
             if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
                 return false;
+
             JSOp bindOp;
-            if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME))
+            if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME)) {
                 bindOp = JSOP_BINDNAME;
-            else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME))
+            } else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME)) {
                 bindOp = JSOP_BINDGNAME;
-            else
-                bindOp = JSOP_BINDINTRINSIC;
+            } else {
+                MOZ_ASSERT(lhs->isOp(JSOP_SETINTRINSIC));
+                break;
+            }
             if (!emitIndex32(bindOp, atomIndex))
                 return false;
             offset++;
