@@ -103,6 +103,9 @@
       <menuitem id="node-menu-screenshotnode"
         label="&inspectorScreenshotNode.label;"
         oncommand="inspector.screenshotNode()" />
+      <menuitem id="node-menu-duplicatenode"
+        label="&inspectorDuplicateNode.label;"
+        oncommand="inspector.duplicateNode()"/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"
         accesskey="&inspectorHTMLDelete.accesskey;"
