@@ -63,6 +63,8 @@ protected:
 public:
     virtual ~SharedSurface_EGLImage();
 
+    virtual layers::TextureFlags GetTextureFlags() const override;
+
     virtual void LockProdImpl() override {}
     virtual void UnlockProdImpl() override {}
 
