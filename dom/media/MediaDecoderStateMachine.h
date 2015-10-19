@@ -128,7 +128,6 @@ public:
   typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
   typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
-  typedef mozilla::layers::ImageContainer::ProducerID ProducerID;
   typedef mozilla::layers::ImageContainer::FrameID FrameID;
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
                            MediaDecoderReader* aReader,
@@ -465,22 +464,9 @@ protected:
   // acceleration.
   void CheckFrameValidity(VideoData* aData);
 
-  // Sets VideoQueue images into the VideoFrameContainer. Called on the shared
-  // state machine thread. Decode monitor must be held. The first aMaxFrames
-  // (at most) are set.
-  // aClockTime and aClockTimeStamp are used as the baseline for deriving
-  // timestamps for the frames; when omitted, aMaxFrames must be 1 and
-  // a null timestamp is passed to the VideoFrameContainer.
-  // If the VideoQueue is empty, this does nothing.
-  void RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime = 0,
-                         const TimeStamp& aClickTimeStamp = TimeStamp());
-
-  // If we have video, display a video frame if it's time for display has
-  // arrived, otherwise sleep until it's time for the next frame. Update the
-  // current frame time as appropriate, and trigger ready state update.  The
-  // decoder monitor must be held with exactly one lock count. Called on the
-  // state machine thread.
-  void UpdateRenderedVideoFrames();
+  // Update playback position and trigger next update by default time period.
+  // Called on the state machine thread.
+  void UpdatePlaybackPositionPeriodically();
 
   media::MediaSink* CreateAudioSink();
 
@@ -672,10 +658,6 @@ private:
 
   // State-watching manager.
   WatchManager<MediaDecoderStateMachine> mWatchManager;
-
-  // Producer ID to help ImageContainer distinguish different streams of
-  // FrameIDs. A unique and immutable value per MDSM.
-  const ProducerID mProducerID;
 
   // True is we are decoding a realtime stream, like a camera stream.
   const bool mRealTime;
@@ -927,13 +909,13 @@ private:
   // of the audio stream, unless another frame is pushed to the hardware.
   int64_t AudioEndTime() const;
 
+  // The end time of the last rendered video frame that's been sent to
+  // compositor.
+  int64_t VideoEndTime() const;
+
   // The end time of the last decoded audio frame. This signifies the end of
   // decoded audio data. Used to check if we are low in decoded data.
   int64_t mDecodedAudioEndTime;
-
-  // The presentation end time of the last video frame which has been displayed
-  // in microseconds. Accessed from the state machine thread.
-  int64_t mVideoFrameEndTime;
 
   // The end time of the last decoded video frame. Used to check if we are low
   // on decoded video data.
