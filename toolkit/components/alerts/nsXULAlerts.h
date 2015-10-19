@@ -29,8 +29,13 @@ public:
                                  bool aInPrivateBrowsing);
 
   nsresult CloseAlert(const nsAString& aAlertName);
+
+  nsresult GetManualDoNotDisturb(bool* aRetVal);
+  nsresult SetManualDoNotDisturb(bool aDoNotDisturb);
+
 protected:
   nsInterfaceHashtable<nsStringHashKey, nsIDOMWindow> mNamedWindows;
+  bool mDoNotDisturb = false;
 };
 
 /**
