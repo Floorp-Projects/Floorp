@@ -1,7 +1,12 @@
 <script src="../resources/get-host-info.sub.js"></script>
 <script src="test-helpers.sub.js?pipe=sub"></script>
 <script>
+var port;
 var host_info = get_host_info();
+
+function assert_equals(a, b) {
+  port.postMessage({results: 'equals', got: a, expected: b});
+}
 
 function get_boundary(headers) {
   var reg = new RegExp('multipart\/form-data; boundary=(.*)');
@@ -57,7 +62,6 @@ function xhr_send(url_base, method, data, with_credentials) {
 function string_test() {
   return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', 'test string', false)
     .then(function(response) {
-        assert_equals(response.context, 'xmlhttprequest');
         assert_equals(response.method, 'POST');
         assert_equals(response.body, 'test string');
       });
@@ -67,7 +71,6 @@ function blob_test() {
   return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', new Blob(['test blob']),
                   false)
     .then(function(response) {
-        assert_equals(response.context, 'xmlhttprequest');
         assert_equals(response.method, 'POST');
         assert_equals(response.body, 'test blob');
       });
@@ -90,15 +93,11 @@ function options_method_test() {
 }
 
 function form_data_test() {
-  return create_file_system_file('fsfile.txt', 'fs file content')
-    .then(function(file_system_file) {
-        var formData = new FormData();
-        formData.append('sample string', '1234567890');
-        formData.append('sample blob', new Blob(['blob content']));
-        formData.append('sample file', new File(['file content'], 'file.dat'));
-        formData.append('sample fs file', file_system_file);
-        return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', formData, false);
-      })
+    var formData = new FormData();
+    formData.append('sample string', '1234567890');
+    formData.append('sample blob', new Blob(['blob content']));
+    formData.append('sample file', new File(['file content'], 'file.dat'));
+    return xhr_send(host_info['HTTPS_ORIGIN'], 'POST', formData, false)
     .then(function(response) {
         assert_equals(response.method, 'POST');
         var boundary = get_boundary(response.headers);
@@ -119,12 +118,6 @@ function form_data_test() {
           'Content-Type: application/octet-stream\r\n' +
           '\r\n' +
           'file content\r\n' +
-          '--' + boundary + '\r\n' +
-          'Content-Disposition: form-data; name="sample fs file"; ' +
-          'filename="fsfile.txt"\r\n' +
-          'Content-Type: text/plain\r\n' +
-          '\r\n' +
-          'fs file content\r\n' +
           '--' + boundary + '--\r\n';
         assert_equals(response.body, expected_body);
       });
@@ -144,7 +137,7 @@ function mode_credentials_test() {
       })
     .then(function(response){
         assert_equals(response.mode, 'cors');
-        assert_equals(response.credentials, 'same-origin');
+        assert_equals(response.credentials, 'omit');
         return xhr_send(host_info['HTTPS_REMOTE_ORIGIN'], 'GET', '', true);
       })
     .then(function(response){
@@ -172,7 +165,7 @@ function data_url_test() {
 }
 
 window.addEventListener('message', function(evt) {
-    var port = evt.ports[0];
+    port = evt.ports[0];
     string_test()
       .then(blob_test)
       .then(custom_method_test)
