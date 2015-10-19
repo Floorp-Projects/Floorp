@@ -614,8 +614,6 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMSIVPROC) (GLuint program, GLsizei uniformCount, const GLuint* uniformIndices,
                                                              GLenum pname, GLint* params);
     PFNGLGETACTIVEUNIFORMSIVPROC fGetActiveUniformsiv;
-    typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMNAMEPROC) (GLuint program, GLuint uniformIdex, GLsizei bufSize, GLsizei* length, GLchar* uniformName);
-    PFNGLGETACTIVEUNIFORMNAMEPROC fGetActiveUniformName;
     typedef GLuint (GLAPIENTRY * PFNGLGETUNIFORMBLOCKINDEXPROC) (GLuint program, const GLchar* uniformBlockName);
     PFNGLGETUNIFORMBLOCKINDEXPROC fGetUniformBlockIndex;
     typedef void (GLAPIENTRY * PFNGLGETACTIVEUNIFORMBLOCKIVPROC) (GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint* params);

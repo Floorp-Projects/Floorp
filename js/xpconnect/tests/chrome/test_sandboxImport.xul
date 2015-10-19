@@ -24,8 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       }
 
       var sandbox = new Components.utils.Sandbox("about:blank");
-      sandbox.importFunction(function() "PASS", "foo");
-      sandbox.importFunction(function bar() "PASS");
+      sandbox.importFunction(function() { return "PASS"; }, "foo");
+      sandbox.importFunction(function bar() { return "PASS"; });
       sandbox.importFunction(checkWrapped);
       is(Components.utils.evalInSandbox("foo()", sandbox), "PASS", "importFunction works");
       is(Components.utils.evalInSandbox("bar()", sandbox), "PASS", "importFunction works");
