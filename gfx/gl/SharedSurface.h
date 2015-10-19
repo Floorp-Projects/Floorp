@@ -79,6 +79,10 @@ public:
     virtual ~SharedSurface() {
     }
 
+    // Specifies to the TextureClient any flags which
+    // are required by the SharedSurface backend.
+    virtual layers::TextureFlags GetTextureFlags() const;
+
     bool IsLocked() const {
         return mIsLocked;
     }
