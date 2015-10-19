@@ -179,15 +179,15 @@ var AnimationsPanel = {
 
   onTimelineDataChanged: function(e, data) {
     this.timelineData = data;
-    let {isPaused, isMoving, time} = data;
+    let {isMoving, isUserDrag, time} = data;
 
     this.playTimelineButtonEl.classList.toggle("paused", !isMoving);
 
-    // Pause all animations and set their currentTimes (but only do this after
-    // the previous currentTime setting is done, as this gets called many times
-    // when users drag the scrubber with the mouse, and we want the server-side
-    // requests to be sequenced).
-    if (isPaused && !this.setCurrentTimeAllPromise) {
+    // If the timeline data changed as a result of the user dragging the
+    // scrubber, then pause all animations and set their currentTimes.
+    // (Note that we want server-side requests to be sequenced, so we only do
+    // this after the previous currentTime setting was done).
+    if (isUserDrag && !this.setCurrentTimeAllPromise) {
       this.setCurrentTimeAllPromise =
         AnimationsController.setCurrentTimeAll(time, true)
                             .catch(error => console.error(error))
