@@ -515,6 +515,7 @@ private:
   MediaManager();
 
   ~MediaManager() {}
+  void Shutdown();
 
   void StopScreensharing(uint64_t aWindowID);
   void IterateWindowListeners(nsPIDOMWindow *aWindow,
@@ -530,6 +531,7 @@ private:
 
   // Always exists
   nsAutoPtr<base::Thread> mMediaThread;
+  nsCOMPtr<nsIAsyncShutdownBlocker> mShutdownBlocker;
 
   Mutex mMutex;
   // protected with mMutex:

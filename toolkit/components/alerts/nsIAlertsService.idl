@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
@@ -12,99 +11,117 @@ interface nsIPrincipal;
 [scriptable, uuid(9d0284bf-db40-42da-8f0d-c2769dbde7aa)]
 interface nsIAlertsService : nsISupports
 {
-   /**
-    * Displays a sliding notification window.
-    *
-    * @param imageUrl       A URL identifying the image to put in the alert.
-    *                       The OS X implemenation limits the amount of time it
-    *                       will wait for an icon to load to six seconds. After
-    *                       that time the alert will show with no icon.
-    * @param title          The title for the alert.
-    * @param text           The contents of the alert.
-    * @param textClickable  If true, causes the alert text to look like a link
-    *                       and notifies the listener when user attempts to 
-    *                       click the alert text.
-    * @param cookie         A blind cookie the alert will pass back to the 
-    *                       consumer during the alert listener callbacks.
-    * @param alertListener  Used for callbacks. May be null if the caller 
-    *                       doesn't care about callbacks.
-    * @param name           The name of the notification. This is currently only
-    *                       used on Android and OS X. On Android the name is
-    *                       hashed and used as a notification ID. Notifications
-    *                       will replace previous notifications with the same name.
-    * @param dir            Bidi override for the title. Valid values are
-    *                       "auto", "ltr" or "rtl". Only available on supported
-    *                       platforms.
-    * @param lang           Language of title and text of the alert. Only available
-    *                       on supported platforms.
-    * @param inPrivateBrowsing If set to true, imageUrl will be loaded in private
-    *                          browsing mode.
-    * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
-    *
-    * The following arguments will be passed to the alertListener's observe() 
-    * method:
-    *   subject - null
-    *   topic   - "alertfinished" when the alert goes away
-    *             "alertclickcallback" when the text is clicked
-    *             "alertshow" when the alert is shown
-    *   data    - the value of the cookie parameter passed to showAlertNotification.
-    *
-    * @note Depending on current circumstances (if the user's in a fullscreen
-    *       application, for instance), the alert might not be displayed at all.
-    *       In that case, if an alert listener is passed in it will receive the
-    *       "alertfinished" notification immediately.
-    */
-   void showAlertNotification(in AString  imageUrl,
-                              in AString  title,
-                              in AString  text,
-                              [optional] in boolean textClickable,
-                              [optional] in AString cookie,
-                              [optional] in nsIObserver alertListener,
-                              [optional] in AString name,
-                              [optional] in AString dir,
-                              [optional] in AString lang,
-                              [optional] in AString data,
-                              [optional] in nsIPrincipal principal,
-                              [optional] in boolean inPrivateBrowsing);
+  /**
+   * Displays a sliding notification window.
+   *
+   * @param imageUrl       A URL identifying the image to put in the alert.
+   *                       The OS X implemenation limits the amount of time it
+   *                       will wait for an icon to load to six seconds. After
+   *                       that time the alert will show with no icon.
+   * @param title          The title for the alert.
+   * @param text           The contents of the alert.
+   * @param textClickable  If true, causes the alert text to look like a link
+   *                       and notifies the listener when user attempts to
+   *                       click the alert text.
+   * @param cookie         A blind cookie the alert will pass back to the
+   *                       consumer during the alert listener callbacks.
+   * @param alertListener  Used for callbacks. May be null if the caller
+   *                       doesn't care about callbacks.
+   * @param name           The name of the notification. This is currently only
+   *                       used on Android and OS X. On Android the name is
+   *                       hashed and used as a notification ID. Notifications
+   *                       will replace previous notifications with the same name.
+   * @param dir            Bidi override for the title. Valid values are
+   *                       "auto", "ltr" or "rtl". Only available on supported
+   *                       platforms.
+   * @param lang           Language of title and text of the alert. Only available
+   *                       on supported platforms.
+   * @param inPrivateBrowsing If set to true, imageUrl will be loaded in private
+   *                          browsing mode.
+   * @throws NS_ERROR_NOT_AVAILABLE If the notification cannot be displayed.
+   *
+   * The following arguments will be passed to the alertListener's observe()
+   * method:
+   *   subject - null
+   *   topic   - "alertfinished" when the alert goes away
+   *             "alertdisablecallback" when alerts should be disabled for the principal
+   *             "alertsettingscallback" when alert settings should be opened
+   *             "alertclickcallback" when the text is clicked
+   *             "alertshow" when the alert is shown
+   *   data    - the value of the cookie parameter passed to showAlertNotification.
+   *
+   * @note Depending on current circumstances (if the user's in a fullscreen
+   *       application, for instance), the alert might not be displayed at all.
+   *       In that case, if an alert listener is passed in it will receive the
+   *       "alertfinished" notification immediately.
+   */
+  void showAlertNotification(in AString  imageUrl,
+                             in AString  title,
+                             in AString  text,
+                             [optional] in boolean textClickable,
+                             [optional] in AString cookie,
+                             [optional] in nsIObserver alertListener,
+                             [optional] in AString name,
+                             [optional] in AString dir,
+                             [optional] in AString lang,
+                             [optional] in AString data,
+                             [optional] in nsIPrincipal principal,
+                             [optional] in boolean inPrivateBrowsing);
 
-   /**
-    * Close alerts created by the service.
-    *
-    * @param name           The name of the notification to close. If no name
-    *                       is provided then only a notification created with
-    *                       no name (if any) will be closed.
-    */
-   void closeAlert([optional] in AString name,
-                   [optional] in nsIPrincipal principal);
+  /**
+   * Close alerts created by the service.
+   *
+   * @param name           The name of the notification to close. If no name
+   *                       is provided then only a notification created with
+   *                       no name (if any) will be closed.
+   */
+  void closeAlert([optional] in AString name,
+                  [optional] in nsIPrincipal principal);
+
+};
+
+[scriptable, uuid(c5d63e3a-259d-45a8-b964-8377967cb4d2)]
+interface nsIAlertsDoNotDisturb : nsISupports
+{
+  /**
+   * Toggles a manual Do Not Disturb mode for the service to reduce the amount
+   * of disruption that alerts cause the user.
+   * This may mean only displaying them in a notification tray/center or not
+   * displaying them at all. If a system backend already supports a similar
+   * feature controlled by the user, enabling this may not have any impact on
+   * code to show an alert. e.g. on OS X, the system will take care not
+   * disrupting a user if we simply create a notification like usual.
+   */
+  attribute bool manualDoNotDisturb;
 };
 
 [scriptable, uuid(df1bd4b0-3a8c-40e6-806a-203f38b0bd9f)]
 interface nsIAlertsProgressListener : nsISupports
 {
-    /**
-     * Called to notify the alert service that progress has occurred for the
-     * given notification previously displayed with showAlertNotification().
-     *
-     * @param name         The name of the notification displaying the
-     *                     progress. On Android the name is hashed and used
-     *                     as a notification ID.
-     * @param progress     Numeric value in the range 0 to progressMax
-     *                     indicating the current progress.
-     * @param progressMax  Numeric value indicating the maximum progress.
-     * @param text         The contents of the alert. If not provided,
-     *                     the percentage will be displayed.
-     */
-    void onProgress(in AString name,
-                    in long long progress,
-                    in long long progressMax,
-                    [optional] in AString text);
+  /**
+   * Called to notify the alert service that progress has occurred for the
+   * given notification previously displayed with showAlertNotification().
+   *
+   * @param name         The name of the notification displaying the
+   *                     progress. On Android the name is hashed and used
+   *                     as a notification ID.
+   * @param progress     Numeric value in the range 0 to progressMax
+   *                     indicating the current progress.
+   * @param progressMax  Numeric value indicating the maximum progress.
+   * @param text         The contents of the alert. If not provided,
+   *                     the percentage will be displayed.
+   */
+  void onProgress(in AString name,
+                  in long long progress,
+                  in long long progressMax,
+                  [optional] in AString text);
 
-    /**
-     * Called to cancel and hide the given notification previously displayed
-     * with showAlertNotification().
-     *
-     * @param name         The name of the notification.
-     */
-    void onCancel(in AString name);
+  /**
+   * Called to cancel and hide the given notification previously displayed
+   * with showAlertNotification().
+   *
+   * @param name         The name of the notification.
+   */
+  void onCancel(in AString name);
 };
 

@@ -48,6 +48,10 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
                                    const nsAString& aLang, nsIPrincipal* aPrincipal,
                                    bool aInPrivateBrowsing)
 {
+  if (mDoNotDisturb) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
 
   nsCOMPtr<nsISupportsArray> argsArray;
@@ -158,6 +162,20 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
   mNamedWindows.Put(aAlertName, newWindow);
   alertObserver->SetAlertWindow(newWindow);
 
+  return NS_OK;
+}
+
+nsresult
+nsXULAlerts::SetManualDoNotDisturb(bool aDoNotDisturb)
+{
+  mDoNotDisturb = aDoNotDisturb;
+  return NS_OK;
+}
+
+nsresult
+nsXULAlerts::GetManualDoNotDisturb(bool* aRetVal)
+{
+  *aRetVal = mDoNotDisturb;
   return NS_OK;
 }
 
