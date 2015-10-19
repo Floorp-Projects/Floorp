@@ -115,8 +115,8 @@ public:
     // worker.
     rv = NS_NewChannel(getter_AddRefs(mChannel),
                        uri, aPrincipal,
-                       nsILoadInfo::SEC_NORMAL,
-                       nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
+                       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+                       nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER,
                        loadGroup,
                        nullptr, // aCallbacks
                        nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
@@ -148,7 +148,7 @@ public:
       return rv;
     }
 
-    rv = mChannel->AsyncOpen(loader, nullptr);
+    rv = mChannel->AsyncOpen2(loader);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
