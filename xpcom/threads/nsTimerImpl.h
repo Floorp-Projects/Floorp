@@ -22,7 +22,7 @@
 #include "TracedTaskCommon.h"
 #endif
 
-extern PRLogModuleInfo* GetTimerLog();
+extern mozilla::LogModule* GetTimerLog();
 
 #define NS_TIMER_CID \
 { /* 5ff24248-1dd2-11b2-8427-fbab44f29bc8 */         \
