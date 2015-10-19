@@ -124,7 +124,12 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       break;
     }
 
-    case nsIContentPolicy::TYPE_SCRIPT:
+    case nsIContentPolicy::TYPE_SCRIPT: {
+      mimeTypeGuess = NS_LITERAL_CSTRING("application/javascript");
+      requestingContext = aLoadInfo->LoadingNode();
+      break;
+    }
+
     case nsIContentPolicy::TYPE_IMAGE:
     case nsIContentPolicy::TYPE_STYLESHEET:
     case nsIContentPolicy::TYPE_OBJECT:
