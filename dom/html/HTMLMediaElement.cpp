@@ -1521,7 +1521,7 @@ HTMLMediaElement::Seek(double aTime,
   }
 
   // Clamp the seek target to inside the seekable ranges.
-  RefPtr<dom::TimeRanges> seekable = new dom::TimeRanges();
+  RefPtr<dom::TimeRanges> seekable = new dom::TimeRanges(ToSupports(OwnerDoc()));
   media::TimeIntervals seekableIntervals = mDecoder->GetSeekable();
   if (seekableIntervals.IsInvalid()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1638,7 +1638,7 @@ NS_IMETHODIMP HTMLMediaElement::GetDuration(double* aDuration)
 already_AddRefed<TimeRanges>
 HTMLMediaElement::Seekable() const
 {
-  RefPtr<TimeRanges> ranges = new TimeRanges();
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()));
   if (mDecoder && mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     mDecoder->GetSeekable().ToTimeRanges(ranges);
   }
@@ -1662,7 +1662,7 @@ NS_IMETHODIMP HTMLMediaElement::GetPaused(bool* aPaused)
 already_AddRefed<TimeRanges>
 HTMLMediaElement::Played()
 {
-  RefPtr<TimeRanges> ranges = new TimeRanges();
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()));
 
   uint32_t timeRangeCount = 0;
   if (mPlayed) {
@@ -2067,7 +2067,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mDefaultPlaybackRate(1.0),
     mPlaybackRate(1.0),
     mPreservesPitch(true),
-    mPlayed(new TimeRanges),
+    mPlayed(new TimeRanges(ToSupports(OwnerDoc()))),
     mCurrentPlayRangeStart(-1.0),
     mBegun(false),
     mLoadedDataFired(false),
@@ -4477,7 +4477,7 @@ HTMLMediaElement::CopyInnerTo(Element* aDest)
 already_AddRefed<TimeRanges>
 HTMLMediaElement::Buffered() const
 {
-  RefPtr<TimeRanges> ranges = new TimeRanges();
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()));
   if (mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     if (mDecoder) {
       media::TimeIntervals buffered = mDecoder->GetBuffered();
