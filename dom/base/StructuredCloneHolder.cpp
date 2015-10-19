@@ -862,16 +862,16 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
     { }
 
     static bool
-    Write(const nsString& aName, const OwningFileOrUSVString& aValue,
-          void* aClosure)
+    Write(const nsString& aName, bool isFile, const nsString& aValue,
+          File* aFile, void* aClosure)
     {
       Closure* closure = static_cast<Closure*>(aClosure);
       if (!WriteString(closure->mWriter, aName)) {
         return false;
       }
 
-      if (aValue.IsFile()) {
-        BlobImpl* blobImpl = aValue.GetAsFile()->Impl();
+      if (isFile) {
+        BlobImpl* blobImpl = aFile->Impl();
         if (!JS_WriteUint32Pair(closure->mWriter, SCTAG_DOM_BLOB,
                                 closure->mHolder->BlobImpls().Length())) {
           return false;
@@ -882,10 +882,9 @@ WriteFormData(JSStructuredCloneWriter* aWriter,
       }
 
       size_t charSize = sizeof(nsString::char_type);
-      if (!JS_WriteUint32Pair(closure->mWriter, 0,
-                              aValue.GetAsUSVString().Length()) ||
-          !JS_WriteBytes(closure->mWriter, aValue.GetAsUSVString().get(),
-                         aValue.GetAsUSVString().Length() * charSize)) {
+      if (!JS_WriteUint32Pair(closure->mWriter, 0, aValue.Length()) ||
+          !JS_WriteBytes(closure->mWriter, aValue.get(),
+                         aValue.Length() * charSize)) {
         return false;
       }
 
