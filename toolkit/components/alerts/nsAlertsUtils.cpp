@@ -10,8 +10,6 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-#define ALERTS_BUNDLE "chrome://alerts/locale/alert.properties"
-
 /* static */
 bool
 nsAlertsUtils::IsActionablePrincipal(nsIPrincipal* aPrincipal)
@@ -19,35 +17,6 @@ nsAlertsUtils::IsActionablePrincipal(nsIPrincipal* aPrincipal)
   return aPrincipal &&
          !nsContentUtils::IsSystemOrExpandedPrincipal(aPrincipal) &&
          !aPrincipal->GetIsNullPrincipal();
-}
-
-/* static */
-void
-nsAlertsUtils::GetSource(nsIPrincipal* aPrincipal, nsAString& aSource)
-{
-  nsAutoString hostPort;
-  GetSourceHostPort(aPrincipal, hostPort);
-  if (hostPort.IsEmpty()) {
-    return;
-  }
-  nsCOMPtr<nsIStringBundleService> stringService(
-    mozilla::services::GetStringBundleService());
-  if (!stringService) {
-    return;
-  }
-  nsCOMPtr<nsIStringBundle> alertsBundle;
-  if (NS_WARN_IF(NS_FAILED(stringService->CreateBundle(ALERTS_BUNDLE,
-      getter_AddRefs(alertsBundle))))) {
-    return;
-  }
-  const char16_t* params[1] = { hostPort.get() };
-  nsXPIDLString result;
-  if (NS_WARN_IF(NS_FAILED(
-      alertsBundle->FormatStringFromName(MOZ_UTF16("source.label"), params, 1,
-      getter_Copies(result))))) {
-    return;
-  }
-  aSource = result;
 }
 
 /* static */

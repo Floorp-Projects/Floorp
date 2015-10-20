@@ -96,9 +96,7 @@ public class TabsLayoutItemView extends LinearLayout
         mCloseButton = (ImageView) findViewById(R.id.close);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
-        if (HardwareUtils.isTablet() || AppConstants.NIGHTLY_BUILD) {
-            growCloseButtonHitArea();
-        }
+        growCloseButtonHitArea();
     }
 
     private void growCloseButtonHitArea() {
