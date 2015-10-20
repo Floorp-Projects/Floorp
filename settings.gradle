@@ -17,6 +17,10 @@ import groovy.json.JsonSlurper
 def slurper = new JsonSlurper()
 def json = slurper.parseText(standardOutput.toString())
 
+if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
+    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.");
+}
+
 include ':app'
 include ':base'
 include ':omnijar'
