@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "NativeCrypto.h"
+#include "APKOpen.h"
 
 #include <jni.h>
 
@@ -17,7 +18,7 @@
  * Helper function to invoke native PBKDF2 function with JNI
  * arguments.
  */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256
+extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_pbkdf2SHA256
     (JNIEnv *env, jclass jc, jbyteArray jpassword, jbyteArray jsalt, jint c, jint dkLen) {
   if (dkLen < 0) {
     env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"),
@@ -52,7 +53,7 @@ using namespace mozilla;
 /**
  * Helper function to invoke native SHA-1 function with JNI arguments.
  */
-extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1
+extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1
     (JNIEnv *env, jclass jc, jbyteArray jstr) {
   jbyte *str = env->GetByteArrayElements(jstr, nullptr);
   size_t strLen = env->GetArrayLength(jstr);
