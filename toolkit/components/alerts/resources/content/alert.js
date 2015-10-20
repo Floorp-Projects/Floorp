@@ -70,12 +70,12 @@ function prefillAlertInfo() {
       gReplacedWindow = window.arguments[8];
     case 8:
       if (window.arguments[7]) {
-        document.getElementById('alertTitleLabel').setAttribute('lang', window.arguments[7]);
-        document.getElementById('alertTextLabel').setAttribute('lang', window.arguments[7]);
+        document.getElementById("alertTitleLabel").setAttribute("lang", window.arguments[7]);
+        document.getElementById("alertTextLabel").setAttribute("lang", window.arguments[7]);
       }
     case 7:
       if (window.arguments[6]) {
-        document.getElementById('alertNotification').style.direction = window.arguments[6];
+        document.getElementById("alertNotification").style.direction = window.arguments[6];
       }
     case 6:
       gOrigin = window.arguments[5];
@@ -84,20 +84,20 @@ function prefillAlertInfo() {
     case 4:
       gAlertTextClickable = window.arguments[3];
       if (gAlertTextClickable) {
-        document.getElementById('alertNotification').setAttribute('clickable', true);
-        document.getElementById('alertTextLabel').setAttribute('clickable', true);
+        document.getElementById("alertNotification").setAttribute("clickable", true);
+        document.getElementById("alertTextLabel").setAttribute("clickable", true);
       }
     case 3:
       if (window.arguments[2]) {
-        document.getElementById('alertBox').setAttribute('hasBodyText', true);
-        document.getElementById('alertTextLabel').textContent = window.arguments[2];
+        document.getElementById("alertBox").setAttribute("hasBodyText", true);
+        document.getElementById("alertTextLabel").textContent = window.arguments[2];
       }
     case 2:
-      document.getElementById('alertTitleLabel').textContent = window.arguments[1];
+      document.getElementById("alertTitleLabel").textContent = window.arguments[1];
     case 1:
       if (window.arguments[0]) {
-        document.getElementById('alertBox').setAttribute('hasImage', true);
-        document.getElementById('alertImage').setAttribute('src', window.arguments[0]);
+        document.getElementById("alertBox").setAttribute("hasImage", true);
+        document.getElementById("alertImage").setAttribute("src", window.arguments[0]);
       }
     case 0:
       break;
@@ -150,7 +150,7 @@ function moveWindowToReplace(aReplacedAlert) {
 
   // Move windows that come after the replaced alert if the height is different.
   if (heightDelta != 0) {
-    let windows = Services.wm.getEnumerator('alert:alert');
+    let windows = Services.wm.getEnumerator("alert:alert");
     while (windows.hasMoreElements()) {
       let alertWindow = windows.getNext();
       // boolean to determine if the alert window is after the replaced alert.
@@ -180,7 +180,7 @@ function moveWindowToEnd() {
           screen.availTop + screen.availHeight - window.outerHeight;
 
   // Position the window at the end of all alerts.
-  let windows = Services.wm.getEnumerator('alert:alert');
+  let windows = Services.wm.getEnumerator("alert:alert");
   while (windows.hasMoreElements()) {
     let alertWindow = windows.getNext();
     if (alertWindow != window) {
@@ -203,7 +203,7 @@ function onAlertBeforeUnload() {
   if (!gIsReplaced) {
     // Move other alert windows to fill the gap left by closing alert.
     let heightDelta = window.outerHeight + WINDOW_MARGIN;
-    let windows = Services.wm.getEnumerator('alert:alert');
+    let windows = Services.wm.getEnumerator("alert:alert");
     while (windows.hasMoreElements()) {
       let alertWindow = windows.getNext();
       if (alertWindow != window) {
