@@ -13,6 +13,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Endian.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 
 #include "zlib.h"
 #include <algorithm>
@@ -786,7 +787,7 @@ public:
 
     static nsresult
     ReadCMAPTableFormat14(const uint8_t *aBuf, uint32_t aLength, 
-                          uint8_t*& aTable);
+                          mozilla::UniquePtr<uint8_t[]>& aTable);
 
     static uint32_t
     FindPreferredSubtable(const uint8_t *aBuf, uint32_t aBufLength,
