@@ -21,6 +21,39 @@ actions.TAKE_CENSUS_END = "take-census-end";
 // Fired by UI to select a snapshot to view.
 actions.SELECT_SNAPSHOT = "select-snapshot";
 
+const COUNT = { by: "count", count: true, bytes: true };
+const INTERNAL_TYPE = { by: "internalType", then: COUNT };
+const ALLOCATION_STACK = { by: "allocationStack", then: COUNT, noStack: COUNT };
+const OBJECT_CLASS = { by: "objectClass", then: COUNT, other: COUNT };
+
+const breakdowns = exports.breakdowns = {
+  coarseType: {
+    displayName: "Coarse Type",
+    breakdown: {
+      by: "coarseType",
+      objects: ALLOCATION_STACK,
+      strings: ALLOCATION_STACK,
+      scripts: INTERNAL_TYPE,
+      other: INTERNAL_TYPE,
+    }
+  },
+
+  allocationStack: {
+    displayName: "Allocation Site",
+    breakdown: ALLOCATION_STACK,
+  },
+
+  objectClass: {
+    displayName: "Object Class",
+    breakdown: OBJECT_CLASS,
+  },
+
+  internalType: {
+    displayName: "Internal Type",
+    breakdown: INTERNAL_TYPE,
+  },
+};
+
 const snapshotState = exports.snapshotState = {};
 
 /**

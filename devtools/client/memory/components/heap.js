@@ -1,6 +1,7 @@
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 const { getSnapshotStatusText } = require("../utils");
 const { snapshotState: states } = require("../constants");
+const { snapshot: snapshotModel } = require("../models");
 const TAKE_SNAPSHOT_TEXT = "Take snapshot";
 
 /**
@@ -14,7 +15,7 @@ const Heap = module.exports = createClass({
 
   propTypes: {
     onSnapshotClick: PropTypes.func.isRequired,
-    snapshot: PropTypes.any,
+    snapshot: snapshotModel,
   },
 
   render() {
@@ -22,7 +23,6 @@ const Heap = module.exports = createClass({
     let pane;
     let census = snapshot ? snapshot.census : null;
     let state = snapshot ? snapshot.state : "initial";
-    let statusText = getSnapshotStatusText(snapshot);
 
     switch (state) {
       case "initial":
@@ -35,7 +35,8 @@ const Heap = module.exports = createClass({
       case states.READING:
       case states.READ:
       case states.SAVING_CENSUS:
-        pane = dom.div({ className: "heap-view-panel", "data-state": state }, statusText);
+        pane = dom.div({ className: "heap-view-panel", "data-state": state },
+          getSnapshotStatusText(snapshot));
         break;
       case states.SAVED_CENSUS:
         pane = dom.div({ className: "heap-view-panel", "data-state": "loaded" }, JSON.stringify(census || {}));

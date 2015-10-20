@@ -1,15 +1,16 @@
-const { actions } = require("../constants");
+const { actions, breakdowns } = require("../constants");
+const DEFAULT_BREAKDOWN = breakdowns.coarseType.breakdown;
 
-// Hardcoded breakdown for now
-const DEFAULT_BREAKDOWN = {
-  by: "internalType",
-  then: { by: "count", count: true, bytes: true }
+let handlers = Object.create(null);
+
+handlers[actions.SET_BREAKDOWN] = function (_, action) {
+  return Object.assign({}, action.breakdown);
 };
 
-/**
- * Not much to do here yet until we can change breakdowns,
- * but this gets it in our store.
- */
 module.exports = function (state=DEFAULT_BREAKDOWN, action) {
-  return Object.assign({}, DEFAULT_BREAKDOWN);
+  let handle = handlers[action.type];
+  if (handle) {
+    return handle(state, action);
+  }
+  return state;
 };
