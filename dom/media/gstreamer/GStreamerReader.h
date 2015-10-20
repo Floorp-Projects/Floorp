@@ -93,8 +93,8 @@ private:
 
   /*
    * We attach this callback to playbin so that when uridecodebin is
-   * constructed, we can then list for its autoplug-sort signal to blacklist
-   * the elements it can construct.
+   * constructed, we can then list for its autoplug-sort signal to block
+   * list the elements it can construct.
    */
   static void ElementAddedCb(GstBin *aPlayBin,
                              GstElement *aElement,
@@ -194,7 +194,7 @@ private:
   static bool ShouldAutoplugFactory(GstElementFactory* aFactory, GstCaps* aCaps);
 
   /* Called by decodebin during autoplugging. We use it to apply our
-   * container/codec blacklist.
+   * container/codec block list.
    */
   static GValueArray* AutoplugSortCb(GstElement* aElement,
                                      GstPad* aPad, GstCaps* aCaps,
