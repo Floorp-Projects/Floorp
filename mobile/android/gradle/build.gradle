@@ -82,10 +82,10 @@ afterEvaluate {
             return
         }
         android.applicationVariants.all {
-            checkManifest.dependsOn rootProject.generateCodeAndResources
+            preBuild.dependsOn rootProject.generateCodeAndResources
         }
         android.libraryVariants.all {
-            checkManifest.dependsOn rootProject.generateCodeAndResources
+            preBuild.dependsOn rootProject.generateCodeAndResources
         }
     }
 }

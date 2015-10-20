@@ -107,10 +107,6 @@ class MachCommands(MachCommandBase):
         srcdir('preprocessed_code/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_code/AndroidManifest.xml')
         srcdir('preprocessed_code/src/adjust/java/org/mozilla/gecko/adjust', 'mobile/android/base/adjust')
 
-        srcdir('preprocessed_resources/build.gradle', 'mobile/android/gradle/preprocessed_resources/build.gradle')
-        srcdir('preprocessed_resources/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_resources/AndroidManifest.xml')
-        srcdir('preprocessed_resources/src/branding/res', os.path.join(self.substs['MOZ_BRANDING_DIRECTORY'], 'res'))
-
         srcdir('thirdparty/build.gradle', 'mobile/android/gradle/thirdparty/build.gradle')
         srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
         srcdir('thirdparty/src/main/java', 'mobile/android/thirdparty')
@@ -152,6 +148,7 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/main/res', 'mobile/android/base/resources')
         srcdir('base/src/main/assets', 'mobile/android/app/assets')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
+        srcdir('base/src/branding/res', os.path.join(self.substs['MOZ_BRANDING_DIRECTORY'], 'res'))
         # JUnit 4 test code.
         srcdir('base/src/background_junit4', 'mobile/android/tests/background/junit4/src')
         srcdir('base/resources/background_junit4', 'mobile/android/tests/background/junit4/resources')
