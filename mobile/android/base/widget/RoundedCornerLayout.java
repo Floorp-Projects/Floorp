@@ -54,6 +54,10 @@ public class RoundedCornerLayout extends LinearLayout {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        if (cannotClipPath) {
+            return;
+        }
+
         final RectF r = new RectF(0, 0, w, h);
         path = new Path();
         path.addRoundRect(r, cornerRadius, cornerRadius, Path.Direction.CW);
