@@ -104,7 +104,7 @@ public:
         return;
 
       nsresult rv = observerService->AddObserver(this,
-                                                 "profile-change-net-teardown",
+                                                 "xpcom-will-shutdown",
                                                  false);
       MOZ_ASSERT(rv == NS_OK);
       (void) rv;
@@ -116,13 +116,13 @@ private:
       nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
       if (observerService)
-        observerService->RemoveObserver(this, "profile-change-net-teardown");
+        observerService->RemoveObserver(this, "xpcom-will-shutdown");
     }
 
 public:
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* aData) override {
-    if (strcmp(aTopic, "profile-change-net-teardown") == 0) {
+    if (strcmp(aTopic, "xpcom-will-shutdown") == 0) {
       LOG(("Shutting down SCTP"));
       if (sctp_initialized) {
         usrsctp_finish();
@@ -134,7 +134,7 @@ public:
         return NS_ERROR_FAILURE;
 
       nsresult rv = observerService->RemoveObserver(this,
-                                                    "profile-change-net-teardown");
+                                                    "xpcom-will-shutdown");
       MOZ_ASSERT(rv == NS_OK);
       (void) rv;
 
