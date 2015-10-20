@@ -125,7 +125,6 @@ private:
   BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI);
   // Utility since not all cases need to do any post processing of the filtered
   // response.
-  void BeginResponse(InternalResponse* aResponse);
   nsresult FailWithNetworkError();
   nsresult SucceedWithResponse();
   nsresult DoesNotRequirePreflight(nsIChannel* aChannel);

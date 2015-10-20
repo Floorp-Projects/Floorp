@@ -160,11 +160,6 @@ FetchDriver::SetTaintingAndGetNextOp(bool aCORSFlag)
     return MainFetchOp(BASIC_FETCH);
   }
 
-  // request's current url's scheme is not one of "http" and "https"
-  if (!scheme.EqualsLiteral("http") && !scheme.EqualsLiteral("https")) {
-    return MainFetchOp(NETWORK_ERROR);
-  }
-
   // request's mode is "cors-with-forced-preflight"
   // request's unsafe-request flag is set and either request's method is not
   // a simple method or a header in request's header list is not a simple header
@@ -215,153 +210,7 @@ FetchDriver::ContinueFetch(bool aCORSFlag)
 nsresult
 FetchDriver::BasicFetch()
 {
-  nsAutoCString url;
-  mRequest->GetURL(url);
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                 url,
-                 nullptr,
-                 nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
-    return rv;
-  }
-
-  nsAutoCString scheme;
-  rv = uri->GetScheme(scheme);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    FailWithNetworkError();
-    return rv;
-  }
-
-  if (scheme.LowerCaseEqualsLiteral("about")) {
-    if (url.EqualsLiteral("about:blank")) {
-      RefPtr<InternalResponse> response =
-        new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-      ErrorResult result;
-      response->Headers()->Append(NS_LITERAL_CSTRING("content-type"),
-                                  NS_LITERAL_CSTRING("text/html;charset=utf-8"),
-                                  result);
-      MOZ_ASSERT(!result.Failed());
-      nsCOMPtr<nsIInputStream> body;
-      rv = NS_NewCStringInputStream(getter_AddRefs(body), EmptyCString());
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        FailWithNetworkError();
-        return rv;
-      }
-
-      response->SetBody(body);
-      BeginResponse(response);
-      return SucceedWithResponse();
-    }
-    return FailWithNetworkError();
-  }
-
-  if (scheme.LowerCaseEqualsLiteral("blob")) {
-    RefPtr<BlobImpl> blobImpl;
-    rv = NS_GetBlobForBlobURI(uri, getter_AddRefs(blobImpl));
-    BlobImpl* blob = static_cast<BlobImpl*>(blobImpl.get());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      FailWithNetworkError();
-      return rv;
-    }
-
-    RefPtr<InternalResponse> response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-    ErrorResult result;
-    uint64_t size = blob->GetSize(result);
-    if (NS_WARN_IF(result.Failed())) {
-      FailWithNetworkError();
-      return result.StealNSResult();
-    }
-
-    nsAutoString sizeStr;
-    sizeStr.AppendInt(size);
-    response->Headers()->Append(NS_LITERAL_CSTRING("Content-Length"), NS_ConvertUTF16toUTF8(sizeStr), result);
-    if (NS_WARN_IF(result.Failed())) {
-      FailWithNetworkError();
-      return result.StealNSResult();
-    }
-
-    nsAutoString type;
-    blob->GetType(type);
-    response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), NS_ConvertUTF16toUTF8(type), result);
-    if (NS_WARN_IF(result.Failed())) {
-      FailWithNetworkError();
-      return result.StealNSResult();
-    }
-
-    nsCOMPtr<nsIInputStream> stream;
-    blob->GetInternalStream(getter_AddRefs(stream), result);
-    if (NS_WARN_IF(result.Failed())) {
-      FailWithNetworkError();
-      return result.StealNSResult();
-    }
-
-    response->SetBody(stream);
-    BeginResponse(response);
-    return SucceedWithResponse();
-  }
-
-  if (scheme.LowerCaseEqualsLiteral("data")) {
-    nsAutoCString method;
-    mRequest->GetMethod(method);
-    if (method.LowerCaseEqualsASCII("get")) {
-      nsresult rv;
-      nsCOMPtr<nsIProtocolHandler> dataHandler =
-        do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", &rv);
-
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return FailWithNetworkError();
-      }
-
-      nsCOMPtr<nsIChannel> channel;
-      rv = dataHandler->NewChannel(uri, getter_AddRefs(channel));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return FailWithNetworkError();
-      }
-
-      nsCOMPtr<nsIInputStream> stream;
-      rv = channel->Open(getter_AddRefs(stream));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return FailWithNetworkError();
-      }
-
-      // nsDataChannel will parse the data URI when it is Open()ed and set the
-      // correct content type and charset.
-      nsAutoCString contentType;
-      if (NS_SUCCEEDED(channel->GetContentType(contentType))) {
-        nsAutoCString charset;
-        if (NS_SUCCEEDED(channel->GetContentCharset(charset)) && !charset.IsEmpty()) {
-          contentType.AppendLiteral(";charset=");
-          contentType.Append(charset);
-        }
-      } else {
-        NS_WARNING("Could not get content type from data channel");
-      }
-
-      RefPtr<InternalResponse> response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-      ErrorResult result;
-      response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), contentType, result);
-      if (NS_WARN_IF(result.Failed())) {
-        FailWithNetworkError();
-        return result.StealNSResult();
-      }
-
-      response->SetBody(stream);
-      BeginResponse(response);
-      return SucceedWithResponse();
-    }
-
-    return FailWithNetworkError();
-  }
-
-  if (scheme.LowerCaseEqualsLiteral("http") ||
-      scheme.LowerCaseEqualsLiteral("https") ||
-      scheme.LowerCaseEqualsLiteral("app")) {
-    return HttpFetch();
-  }
-
-  return FailWithNetworkError();
+  return HttpFetch();
 }
 
 // This function implements the "HTTP Fetch" algorithm from the Fetch spec.
@@ -446,7 +295,8 @@ FetchDriver::HttpFetch(bool aCORSFlag, bool aCORSPreflightFlag, bool aAuthentica
   rv = NS_NewChannel(getter_AddRefs(chan),
                      uri,
                      mPrincipal,
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_NORMAL |
+                       nsILoadInfo::SEC_ABOUT_BLANK_INHERITS,
                      mRequest->ContentPolicyType(),
                      mLoadGroup,
                      nullptr, /* aCallbacks */
@@ -699,13 +549,6 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
   return filteredResponse.forget();
 }
 
-void
-FetchDriver::BeginResponse(InternalResponse* aResponse)
-{
-  RefPtr<InternalResponse> r = BeginAndGetFilteredResponse(aResponse, nullptr);
-  // Release the ref.
-}
-
 nsresult
 FetchDriver::SucceedWithResponse()
 {
@@ -785,7 +628,10 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   MOZ_ASSERT(mObserver);
 
   RefPtr<InternalResponse> response;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aRequest);
+
   if (httpChannel) {
     uint32_t responseStatus;
     httpChannel->GetResponseStatus(&responseStatus);
@@ -800,11 +646,7 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       NS_WARNING("Failed to visit all headers.");
     }
-  } else {
-    nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(aRequest);
-    // If it is not an http channel, it has to be a jar one.
-    MOZ_ASSERT(jarChannel);
-
+  } else if (jarChannel) {
     // We simulate the http protocol for jar/app requests
     uint32_t responseStatus = 200;
     nsAutoCString statusText;
@@ -816,6 +658,35 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
                                 contentType,
                                 result);
     MOZ_ASSERT(!result.Failed());
+  } else {
+    response = new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
+
+    ErrorResult result;
+    nsAutoCString contentType;
+    rv = channel->GetContentType(contentType);
+    if (NS_SUCCEEDED(rv) && !contentType.IsEmpty()) {
+      nsAutoCString contentCharset;
+      channel->GetContentCharset(contentCharset);
+      if (NS_SUCCEEDED(rv) && !contentCharset.IsEmpty()) {
+        contentType += NS_LITERAL_CSTRING(";charset=") + contentCharset;
+      }
+
+      response->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"),
+                                  contentType,
+                                  result);
+      MOZ_ASSERT(!result.Failed());
+    }
+
+    int64_t contentLength;
+    rv = channel->GetContentLength(&contentLength);
+    if (NS_SUCCEEDED(rv) && contentLength) {
+      nsAutoCString contentLenStr;
+      contentLenStr.AppendInt(contentLength);
+      response->Headers()->Append(NS_LITERAL_CSTRING("Content-Length"),
+                                  contentLenStr,
+                                  result);
+      MOZ_ASSERT(!result.Failed());
+    }
   }
 
   // We open a pipe so that we can immediately set the pipe's read end as the
@@ -838,7 +709,6 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
   }
   response->SetBody(pipeInputStream);
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   response->InitChannelInfo(channel);
 
   nsCOMPtr<nsIURI> channelURI;
