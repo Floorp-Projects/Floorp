@@ -83,9 +83,8 @@ Protocol.prototype = {
    * @return The newly created channel.
    */
   newChannel2: function Proto_newChannel2(aURI, aLoadInfo) {
-    let {url} = parseURI(aURI);
-    let file = PageThumbsStorage.getFilePathForURL(url);
-    let fileuri = Services.io.newFileURI(new FileUtils.File(file));
+    let {file} = aURI.QueryInterface(Ci.nsIFileURL);
+    let fileuri = Services.io.newFileURI(file);
     let channel = Services.io.newChannelFromURIWithLoadInfo(fileuri, aLoadInfo);
     channel.originalURI = aURI;
     return channel;
