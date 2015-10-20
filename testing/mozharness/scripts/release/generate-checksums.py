@@ -62,7 +62,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
         }],
         [["--upload-host"], {
             "dest": "upload_host",
-            "help": "Host to upload big checksums file to, eg: stage.mozilla.org",
+            "help": "Host to upload big checksums file to, eg: upload.ffxbld.productdelivery.prod.mozaws.net",
         }],
         [["--upload-user"], {
             "dest": "upload_user",

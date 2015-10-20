@@ -2,7 +2,7 @@ BRANCH = "mozilla-beta"
 MOZ_UPDATE_CHANNEL = "beta"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
-EN_US_BINARY_URL = "http://ftp.mozilla.org/pub/mozilla.org/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-11/en-US"
+EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-11/en-US"
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
