@@ -14,6 +14,7 @@ EXPORTS.opus += [
     'include/opus_types.h',
 ]
 
+# We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
 
 FINAL_LIBRARY = 'gkmedias'
