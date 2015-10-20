@@ -121,6 +121,7 @@ const kIsWin = (navigator.platform.indexOf("Win") == 0);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
 const kLFLen = kIsWin ? 2 : 1;
+const kLF = kIsWin ? "\r\n" : "\n";
 
 function checkQueryContentResult(aResult, aMessage)
 {
@@ -134,27 +135,33 @@ function checkQueryContentResult(aResult, aMessage)
 
 function checkContent(aExpectedText, aMessage, aID)
 {
+  if (!aID) {
+    aID = "";
+  }
   var textContent = synthesizeQueryTextContent(0, 100);
   if (!checkQueryContentResult(textContent, aMessage +
                                ": synthesizeQueryTextContent " + aID)) {
     return false;
   }
   is(textContent.text, aExpectedText,
-     aMessage + ": composition string is wrong" + aID);
+     aMessage + ": composition string is wrong " + aID);
   return textContent.text == aExpectedText;
 }
 
 function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
 {
+  if (!aID) {
+    aID = "";
+  }
   var selectedText = synthesizeQuerySelectedText();
   if (!checkQueryContentResult(selectedText, aMessage +
                                ": synthesizeQuerySelectedText " + aID)) {
     return false;
   }
   is(selectedText.offset, aExpectedOffset,
-     aMessage + ": selection offset is wrong" + aID);
+     aMessage + ": selection offset is wrong " + aID);
   is(selectedText.text, aExpectedText,
-     aMessage + ": selected text is wrong" + aID);
+     aMessage + ": selected text is wrong " + aID);
   return selectedText.offset == aExpectedOffset &&
          selectedText.text == aExpectedText;
 }
@@ -2800,6 +2807,154 @@ function runSetSelectionEventTest()
      "runSetSelectionEventTest #8 (kLFLen*2, 0): selection focus offset should be the count of the <p>'s children");
 }
 
+function runQueryTextContentEventTest()
+{
+  contenteditable.focus();
+
+  var result;
+
+  // #1
+  contenteditable.innerHTML = "abc<br>def";
+
+  result = synthesizeQueryTextContent(0, 6 + kLFLen);
+  is(result.text, "abc" + kLF + "def", "runQueryTextContentEventTest #1 (0, 6+kLFLen)");
+
+  result = synthesizeQueryTextContent(0, 100);
+  is(result.text, "abc" + kLF + "def", "runQueryTextContentEventTest #1 (0, 100)");
+
+  result = synthesizeQueryTextContent(2, 2 + kLFLen);
+  is(result.text, "c" + kLF + "d", "runQueryTextContentEventTest #1 (2, 2+kLFLen)");
+
+  result = synthesizeQueryTextContent(1, 2);
+  is(result.text, "bc", "runQueryTextContentEventTest #1 (1, 2)");
+
+  result = synthesizeQueryTextContent(3, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #1 (3, kLFLen)");
+
+  result = synthesizeQueryTextContent(6 + kLFLen, 1);
+  is(result.text, "", "runQueryTextContentEventTest #1 (6 + kLFLen, 0)");
+
+  // #2
+  contenteditable.innerHTML = "<p>a<b>b</b>c</p><p>def</p>";
+
+  result = synthesizeQueryTextContent(0, 4);
+  is(result.text, "abcd", "runQueryTextContentEventTest #2 (0, 4)");
+
+  result = synthesizeQueryTextContent(0, 2);
+  is(result.text, "ab", "runQueryTextContentEventTest #2 (0, 2)");
+
+  result = synthesizeQueryTextContent(1, 2);
+  is(result.text, "bc", "runQueryTextContentEventTest #2 (1, 2)");
+
+  result = synthesizeQueryTextContent(2, 2);
+  is(result.text, "cd", "runQueryTextContentEventTest #2 (2, 2)");
+
+  result = synthesizeQueryTextContent(3, 1);
+  is(result.text, "d", "runQueryTextContentEventTest #2 (3, 1)");
+
+  // #3
+  contenteditable.innerHTML = "<div>abc<p>def</p></div>";
+
+  result = synthesizeQueryTextContent(1, 2);
+  is(result.text, "bc", "runQueryTextContentEventTest #3 (1, 2)");
+
+  result = synthesizeQueryTextContent(1, 3);
+  is(result.text, "bcd", "runQueryTextContentEventTest #3 (1, 3)");
+
+  result = synthesizeQueryTextContent(3, 1);
+  is(result.text, "d", "runQueryTextContentEventTest #3 (3, 1)");
+
+  result = synthesizeQueryTextContent(0, 6);
+  is(result.text, "abcdef", "runQueryTextContentEventTest #3 (0, 6)");
+
+  result = synthesizeQueryTextContent(0, 100);
+  is(result.text, "abcdef", "runQueryTextContentEventTest #3 (0, 100)");
+
+  result = synthesizeQueryTextContent(4, 2);
+  is(result.text, "ef", "runQueryTextContentEventTest #3 (4, 2)");
+
+  result = synthesizeQueryTextContent(4, 100);
+  is(result.text, "ef", "runQueryTextContentEventTest #3 (4, 100)");
+
+  result = synthesizeQueryTextContent(6, 1);
+  is(result.text, "", "runQueryTextContentEventTest #3 (6, 1)");
+
+  // #4
+  contenteditable.innerHTML = "<div><p>abc</p>def</div>";
+
+  result = synthesizeQueryTextContent(1, 2);
+  is(result.text, "bc", "runQueryTextContentEventTest #4 (1, 2)");
+
+  result = synthesizeQueryTextContent(1, 3);
+  is(result.text, "bcd", "runQueryTextContentEventTest #4 (1, 3)");
+
+  result = synthesizeQueryTextContent(3, 1);
+  is(result.text, "d", "runQueryTextContentEventTest #4 (3, 1)");
+
+  result = synthesizeQueryTextContent(0, 6);
+  is(result.text, "abcdef", "runQueryTextContentEventTest #4 (0, 6)");
+
+  result = synthesizeQueryTextContent(0, 100);
+  is(result.text, "abcdef", "runQueryTextContentEventTest #4 (0, 100)");
+
+  result = synthesizeQueryTextContent(4, 2);
+  is(result.text, "ef", "runQueryTextContentEventTest #4 (4, 2)");
+
+  result = synthesizeQueryTextContent(4, 100);
+  is(result.text, "ef", "runQueryTextContentEventTest #4 (4, 100)");
+
+  result = synthesizeQueryTextContent(6, 1);
+  is(result.text, "", "runQueryTextContentEventTest #4 (6, 1)");
+
+  // #5
+  contenteditable.innerHTML = "<br>";
+
+  result = synthesizeQueryTextContent(0, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #5 (0, kLFLen)");
+
+  result = synthesizeQueryTextContent(kLFLen, 1);
+  is(result.text, "", "runQueryTextContentEventTest #5 (kLFLen, 1)");
+
+  // #6
+  contenteditable.innerHTML = "<p><br></p>";
+
+  result = synthesizeQueryTextContent(0, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #6 (0, kLFLen)");
+
+  result = synthesizeQueryTextContent(kLFLen, 1);
+  is(result.text, "", "runQueryTextContentEventTest #5 (kLFLen, 1)");
+
+  // #7
+  contenteditable.innerHTML = "<br><br>";
+
+  result = synthesizeQueryTextContent(0, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #7 (0, kLFLen)");
+
+  result = synthesizeQueryTextContent(0, kLFLen * 2);
+  is(result.text, kLF + kLF, "runQueryTextContentEventTest #7 (0, kLFLen*2)");
+
+  result = synthesizeQueryTextContent(kLFLen, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #7 (kLFLen, kLFLen)");
+
+  result = synthesizeQueryTextContent(kLFLen * 2, 1);
+  is(result.text, "", "runQueryTextContentEventTest #7 (kLFLen*2, 1)");
+
+  // #8
+  contenteditable.innerHTML = "<p><br><br></p>";
+
+  result = synthesizeQueryTextContent(0, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #8 (0, kLFLen)");
+
+  result = synthesizeQueryTextContent(0, kLFLen * 2);
+  is(result.text, kLF + kLF, "runQueryTextContentEventTest #8 (0, kLFLen*2)");
+
+  result = synthesizeQueryTextContent(kLFLen, kLFLen);
+  is(result.text, kLF, "runQueryTextContentEventTest #8 (kLFLen, kLFLen)");
+
+  result = synthesizeQueryTextContent(kLFLen * 2, 1);
+  is(result.text, "", "runQueryTextContentEventTest #8 (kLFLen*2, 1)");
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -5094,6 +5249,7 @@ function runTest()
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();
   runSetSelectionEventTest();
+  runQueryTextContentEventTest();
   runCSSTransformTest();
   runBug722639Test();
   runForceCommitTest();
