@@ -75,12 +75,10 @@
 namespace js {
 namespace jit {
 
-typedef Vector<BufferOffset, 512, OldJitAllocPolicy> LoadOffsets;
-
 // The allocation unit size for pools.
 typedef int32_t PoolAllocUnit;
 
-struct Pool : public OldJitAllocPolicy
+struct Pool
 {
   private:
     // The maximum program-counter relative offset below which the instruction
@@ -92,14 +90,10 @@ struct Pool : public OldJitAllocPolicy
     // bias of 8.
     const unsigned bias_;
 
-    // The number of PoolAllocUnit sized entires used from the poolData vector.
-    unsigned numEntries_;
-    // The available size of the poolData vector, in PoolAllocUnits.
-    unsigned buffSize;
-    // The content of the pool entries.  Invariant: If poolData_ is nullptr then
-    // buffSize will be zero and oom_ will return true.
-    PoolAllocUnit* poolData_;
-    // Flag that tracks OOM conditions.
+    // The content of the pool entries.
+    Vector<PoolAllocUnit, 8, LifoAllocPolicy<Fallible>> poolData_;
+
+    // Flag that tracks OOM conditions. This is set after any append failed.
     bool oom_;
 
     // The limiting instruction and pool-entry pair. The instruction program
@@ -119,41 +113,31 @@ struct Pool : public OldJitAllocPolicy
     // entries. These instructions need to be patched when the actual position
     // of the instructions and pools are known, and for the code below this
     // occurs when each pool is finished, see finishPool().
-    LoadOffsets loadOffsets;
+    Vector<BufferOffset, 8, LifoAllocPolicy<Fallible>> loadOffsets;
 
+    // Create a Pool. Don't allocate anything from lifoAloc, just capture its reference.
     explicit Pool(size_t maxOffset, unsigned bias, LifoAlloc& lifoAlloc)
       : maxOffset_(maxOffset),
         bias_(bias),
-        numEntries_(0),
-        buffSize(8),
-        poolData_(lifoAlloc.newArrayUninitialized<PoolAllocUnit>(buffSize)),
+        poolData_(lifoAlloc),
         oom_(false),
         limitingUser(),
         limitingUsee(INT_MIN),
-        loadOffsets()
+        loadOffsets(lifoAlloc)
     {
-        if (poolData_ == nullptr) {
-            buffSize = 0;
-            oom_ = true;
-        }
     }
 
-    static const unsigned Garbage = 0xa5a5a5a5;
-    Pool()
-      : maxOffset_(Garbage), bias_(Garbage)
-    { }
-
     // If poolData() returns nullptr then oom_ will also be true.
-    PoolAllocUnit* poolData() const {
-        return poolData_;
+    const PoolAllocUnit* poolData() const {
+        return poolData_.begin();
     }
 
     unsigned numEntries() const {
-        return numEntries_;
+        return poolData_.length();
     }
 
     size_t getPoolSize() const {
-        return numEntries_ * sizeof(PoolAllocUnit);
+        return numEntries() * sizeof(PoolAllocUnit);
     }
 
     bool oom() const {
@@ -170,11 +154,11 @@ struct Pool : public OldJitAllocPolicy
     // does not depend on where the pool is placed.
     void updateLimiter(BufferOffset nextInst) {
         ptrdiff_t oldRange = limitingUsee * sizeof(PoolAllocUnit) - limitingUser.getOffset();
-        ptrdiff_t newRange = numEntries_ * sizeof(PoolAllocUnit) - nextInst.getOffset();
+        ptrdiff_t newRange = getPoolSize() - nextInst.getOffset();
         if (!limitingUser.assigned() || newRange > oldRange) {
             // We have a new largest range!
             limitingUser = nextInst;
-            limitingUsee = numEntries_;
+            limitingUsee = numEntries();
         }
     }
 
@@ -197,40 +181,20 @@ struct Pool : public OldJitAllocPolicy
     unsigned insertEntry(unsigned num, uint8_t* data, BufferOffset off, LifoAlloc& lifoAlloc) {
         if (oom_)
             return OOM_FAIL;
-        if (numEntries_ + num >= buffSize) {
-            // Grow the poolData_ vector.
-            unsigned newSize = buffSize*2;
-            PoolAllocUnit* tmp = lifoAlloc.newArrayUninitialized<PoolAllocUnit>(newSize);
-            if (tmp == nullptr) {
-                oom_ = true;
-                return OOM_FAIL;
-            }
-            mozilla::PodCopy(tmp, poolData_, numEntries_);
-            poolData_ = tmp;
-            buffSize = newSize;
+        unsigned ret = numEntries();
+        if (!poolData_.append((PoolAllocUnit*)data, num) || !loadOffsets.append(off)) {
+            oom_ = true;
+            return OOM_FAIL;
         }
-        mozilla::PodCopy(&poolData_[numEntries_], (PoolAllocUnit*)data, num);
-        loadOffsets.append(off.getOffset());
-        unsigned ret = numEntries_;
-        numEntries_ += num;
         return ret;
     }
 
-    bool reset(LifoAlloc& a) {
-        numEntries_ = 0;
-        buffSize = 8;
-        poolData_ = static_cast<PoolAllocUnit*>(a.alloc(buffSize * sizeof(PoolAllocUnit)));
-        if (poolData_ == nullptr) {
-            oom_ = true;
-            buffSize = 0;
-            return false;
-        }
-
-        new (&loadOffsets) LoadOffsets;
+    void reset() {
+        poolData_.clear();
+        loadOffsets.clear();
 
         limitingUser = BufferOffset();
         limitingUsee = -1;
-        return true;
     }
 };
 
@@ -363,9 +327,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         headerSize_(headerSize),
         poolMaxOffset_(poolMaxOffset),
         pcBias_(pcBias),
-        pool_(),
+        pool_(poolMaxOffset, pcBias, this->lifoAlloc_),
         instBufferAlign_(instBufferAlign),
-        poolInfo_(this->lifoAlloc_),  // OK: Vector() doesn't allocate, append() does.
+        poolInfo_(this->lifoAlloc_),
         canNotPlacePool_(false),
 #ifdef DEBUG
         canNotPlacePoolStartOffset_(0),
@@ -384,10 +348,6 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         // We hand out references to lifoAlloc_ in the constructor.
         // Check that no allocations were made then.
         MOZ_ASSERT(this->lifoAlloc_.isEmpty(), "Illegal LIFO allocations before AutoJitContextAlloc");
-
-        new (&pool_) Pool (poolMaxOffset_, pcBias_, this->lifoAlloc_);
-        if (pool_.poolData() == nullptr)
-            this->fail_oom();
     }
 
   private:
@@ -593,10 +553,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
 
         // Reset everything to the state that it was in when we started.
-        if (!pool_.reset(this->lifoAlloc_)) {
-            this->fail_oom();
-            return;
-        }
+        pool_.reset();
     }
 
   public:
