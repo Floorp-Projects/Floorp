@@ -404,16 +404,18 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
 
     if (OffThreadParsingMustWaitForGC(cx->runtime())) {
         AutoLockHelperThreadState lock;
-        if (!HelperThreadState().parseWaitingOnGC().append(task.get()))
+        if (!HelperThreadState().parseWaitingOnGC().append(task.get())) {
+            ReportOutOfMemory(cx);
             return false;
+        }
     } else {
-        task->activate(cx->runtime());
-
         AutoLockHelperThreadState lock;
-
-        if (!HelperThreadState().parseWorklist().append(task.get()))
+        if (!HelperThreadState().parseWorklist().append(task.get())) {
+            ReportOutOfMemory(cx);
             return false;
+        }
 
+        task->activate(cx->runtime());
         HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER);
     }
 
@@ -1066,15 +1068,20 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     if (cx->isExceptionPending())
         return nullptr;
 
-    if (script) {
-        // The Debugger only needs to be told about the topmost script that was compiled.
-        Debugger::onNewScript(cx, script);
-
-        // Update the compressed source table with the result. This is normally
-        // called by setCompressedSource when compilation occurs on the main thread.
-        if (script->scriptSource()->hasCompressedSource())
-            script->scriptSource()->updateCompressedSourceSet(rt);
+    if (!script) {
+        // No error was reported, but no script produced. Assume we hit out of
+        // memory.
+        ReportOutOfMemory(cx);
+        return nullptr;
     }
+
+    // The Debugger only needs to be told about the topmost script that was compiled.
+    Debugger::onNewScript(cx, script);
+
+    // Update the compressed source table with the result. This is normally
+    // called by setCompressedSource when compilation occurs on the main thread.
+    if (script->scriptSource()->hasCompressedSource())
+        script->scriptSource()->updateCompressedSourceSet(rt);
 
     return script;
 }

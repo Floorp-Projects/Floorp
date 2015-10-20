@@ -241,12 +241,6 @@ TelephonyListener::EnumerateCallState(nsITelephonyCallInfo* aInfo)
 }
 
 NS_IMETHODIMP
-TelephonyListener::ConferenceCallStateChanged(uint16_t aCallState)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 TelephonyListener::EnumerateCallStateComplete()
 {
   return NS_OK;
