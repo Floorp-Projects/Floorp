@@ -787,7 +787,7 @@ NetworkMonitor.prototype = {
     // associated with a load group. Bug 1160837 will hopefully introduce a
     // platform fix that will render the following code entirely useless.
     if (aChannel.loadInfo &&
-        aChannel.loadInfo.contentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
+        aChannel.loadInfo.externalContentPolicyType == Ci.nsIContentPolicy.TYPE_BEACON) {
       let nonE10sMatch = this.window &&
                          aChannel.loadInfo.loadingDocument === this.window.document;
       let e10sMatch = this.topFrame &&
@@ -838,7 +838,7 @@ NetworkMonitor.prototype = {
 
     // Determine if this is an XHR request.
     httpActivity.isXHR = event.isXHR =
-        (aChannel.loadInfo.contentPolicyType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST);
+        (aChannel.loadInfo.externalContentPolicyType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST);
 
     // Determine the HTTP version.
     let httpVersionMaj = {};

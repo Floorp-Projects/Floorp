@@ -70,8 +70,11 @@ protected:
   // all contents have been continuously parsed. (ex. total duration of some
   // variable-bit-rate MP3 files.)
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
-public:
 
+  virtual RefPtr<MediaDecoderReader::MetadataPromise>
+  AsyncReadMetadataInternal() override;
+
+public:
   // Flush the TaskQueue, flush MediaCodec and raise the mDiscontinuity.
   virtual nsresult ResetDecode() override;
 
@@ -85,8 +88,6 @@ public:
 
   virtual bool HasAudio();
   virtual bool HasVideo();
-
-  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime

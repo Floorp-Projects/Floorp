@@ -23,6 +23,7 @@
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
 #include "gfxFontConstants.h"
+#include "WidgetUtils.h"
 
 #include <dlfcn.h>
 
@@ -634,8 +635,13 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
     case eIntID_TouchEnabled:
+#if MOZ_WIDGET_GTK == 3
+        aResult = mozilla::widget::WidgetUtils::IsTouchDeviceSupportPresent();
+        break;
+#else
         aResult = 0;
         res = NS_ERROR_NOT_IMPLEMENTED;
+#endif
         break;
     case eIntID_MacGraphiteTheme:
     case eIntID_MacLionTheme:

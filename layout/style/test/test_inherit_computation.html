@@ -47,8 +47,6 @@ function get_computed_value_node(node, property)
 function test_property(property)
 {
   var info = gCSSProperties[property];
-  if (info.backend_only)
-    return;
 
   var keywords = ["inherit"];
   if (info.inherited && gTestUnset)

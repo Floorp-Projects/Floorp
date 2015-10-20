@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1208559 - ServiceWorker registration not governed by CSP</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/* Description of the test:
+ * Spawning a worker from https://example.com but script-src is 'test1.example.com'
+ * CSP is not consulted
+ */
+SimpleTest.waitForExplicitFinish();
+
+var tests = [
+  {
+    policy: "default-src 'self'; script-src test1.example.com 'unsafe-inline'",
+    expected: "blocked"
+  },
+];
+
+var counter = 0;
+var curTest;
+
+window.addEventListener("message", receiveMessage, false);
+function receiveMessage(event) {
+  is(event.data.result, curTest.expected, "Should be (" + curTest.expected + ") in Test " + counter + "!");
+  loadNextTest();
+}
+
+onload = function() {
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.interception.enabled", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.caches.enabled", true]
+  ]}, loadNextTest);
+}
+
+function loadNextTest() {
+  if (counter == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  curTest = tests[counter++];
+  var src = "https://example.com/tests/dom/security/test/csp/file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape("tests/dom/security/test/csp/file_service_worker.html");
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(curTest.policy);
+  document.getElementById("testframe").src = src;
+}
+
+</script>
+</body>
+</html>

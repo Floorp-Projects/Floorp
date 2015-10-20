@@ -160,7 +160,8 @@ public:
                       const mozilla::gfx::Color& aShadowColor,
                       const bool aHasBorderRadius,
                       const RectCornerRadii& aInnerClipRadii,
-                      const mozilla::gfx::Rect aSkipRect);
+                      const mozilla::gfx::Rect aSkipRect,
+                      const mozilla::gfx::Point aShadowOffset);
 
 protected:
     already_AddRefed<mozilla::gfx::SourceSurface>

@@ -59,6 +59,7 @@ public:
     kPtimeAttribute,
     kRecvonlyAttribute,
     kRemoteCandidatesAttribute,
+    kRidAttribute,
     kRtcpAttribute,
     kRtcpFbAttribute,
     kRtcpMuxAttribute,
@@ -769,6 +770,114 @@ public:
   virtual void Serialize(std::ostream& os) const override;
 
   std::vector<Candidate> mCandidates;
+};
+
+/*
+a=rid, draft-pthatcher-mmusic-rid-01
+
+   rid-syntax        = "a=rid:" rid-identifier SP rid-dir
+                       [ rid-pt-param-list / rid-param-list ]
+
+   rid-identifier    = 1*(alpha-numeric / "-" / "_")
+
+   rid-dir           = "send" / "recv"
+
+   rid-pt-param-list = SP rid-fmt-list *(";" rid-param)
+
+   rid-param-list    = SP rid-param *(";" rid-param)
+
+   rid-fmt-list      = "pt=" fmt *( "," fmt )
+                        ; fmt defined in {{RFC4566}}
+
+   rid-param         = rid-width-param
+                       / rid-height-param
+                       / rid-fps-param
+                       / rid-fs-param
+                       / rid-br-param
+                       / rid-pps-param
+                       / rid-depend-param
+                       / rid-param-other
+
+   rid-width-param   = "max-width" [ "=" int-param-val ]
+
+   rid-height-param  = "max-height" [ "=" int-param-val ]
+
+   rid-fps-param     = "max-fps" [ "=" int-param-val ]
+
+   rid-fs-param      = "max-fs" [ "=" int-param-val ]
+
+   rid-br-param      = "max-br" [ "=" int-param-val ]
+
+   rid-pps-param     = "max-pps" [ "=" int-param-val ]
+
+   rid-depend-param  = "depend=" rid-list
+
+   rid-param-other   = 1*(alpha-numeric / "-") [ "=" param-val ]
+
+   rid-list          = rid-identifier *( "," rid-identifier )
+
+   int-param-val     = 1*DIGIT
+
+   param-val         = *( %x20-58 / %x60-7E )
+                       ; Any printable character except semicolon
+*/
+class SdpRidAttributeList : public SdpAttribute
+{
+public:
+  explicit SdpRidAttributeList()
+    : SdpAttribute(kRidAttribute)
+  {}
+
+  struct Constraints
+  {
+    Constraints() :
+      maxWidth(0),
+      maxHeight(0),
+      maxFps(0),
+      maxFs(0),
+      maxBr(0),
+      maxPps(0)
+    {}
+
+    bool Parse(std::istream& is, std::string* error);
+    bool ParseDepend(std::istream& is, std::string* error);
+    bool ParseFormats(std::istream& is, std::string* error);
+    void Serialize(std::ostream& os) const;
+    bool IsSet() const
+    {
+      return !formats.empty() || maxWidth || maxHeight || maxFps || maxFs ||
+             maxBr || maxPps || !dependIds.empty();
+    }
+
+    std::vector<uint16_t> formats; // Empty implies all
+    uint32_t maxWidth;
+    uint32_t maxHeight;
+    uint32_t maxFps;
+    uint32_t maxFs;
+    uint32_t maxBr;
+    uint32_t maxPps;
+    std::vector<std::string> dependIds;
+    // We do not bother trying to store constraints we don't understand.
+  };
+
+  struct Rid
+  {
+    Rid() :
+      direction(sdp::kSend)
+    {}
+
+    bool Parse(std::istream& is, std::string* error);
+    void Serialize(std::ostream& os) const;
+
+    std::string id;
+    sdp::Direction direction;
+    Constraints constraints;
+  };
+
+  virtual void Serialize(std::ostream& os) const override;
+  bool PushEntry(const std::string& raw, std::string* error, size_t* errorPos);
+
+  std::vector<Rid> mRids;
 };
 
 ///////////////////////////////////////////////////////////////////////////
