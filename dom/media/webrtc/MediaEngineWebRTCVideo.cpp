@@ -129,7 +129,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // though.
 
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
-  LOGFRAME(("NotifyPull, desired = %ld, delta = %ld %s", (int64_t) aDesiredTime,
+  LOGFRAME(("NotifyPull, desired = %lld, delta = %lld %s", (int64_t) aDesiredTime,
             (int64_t) delta, mImage.get() ? "" : "<null>"));
 
   // Bug 846188 We may want to limit incoming frames to the requested frame rate
