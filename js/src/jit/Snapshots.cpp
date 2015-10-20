@@ -323,8 +323,7 @@ RValueAllocation::read(CompactBufferReader& reader)
 }
 
 void
-RValueAllocation::writePayload(CompactBufferWriter& writer, PayloadType type,
-                               Payload p)
+RValueAllocation::writePayload(CompactBufferWriter& writer, PayloadType type, Payload p)
 {
     switch (type) {
       case PAYLOAD_NONE:
@@ -348,10 +347,12 @@ RValueAllocation::writePayload(CompactBufferWriter& writer, PayloadType type,
       case PAYLOAD_PACKED_TAG: {
         // This code assumes that the PACKED_TAG payload is following the
         // writeByte of the mode.
-        MOZ_ASSERT(writer.length());
-        uint8_t* mode = writer.buffer() + (writer.length() - 1);
-        MOZ_ASSERT((*mode & PACKED_TAG_MASK) == 0 && (p.type & ~PACKED_TAG_MASK) == 0);
-        *mode = *mode | p.type;
+        if (!writer.oom()) {
+            MOZ_ASSERT(writer.length());
+            uint8_t* mode = writer.buffer() + (writer.length() - 1);
+            MOZ_ASSERT((*mode & PACKED_TAG_MASK) == 0 && (p.type & ~PACKED_TAG_MASK) == 0);
+            *mode = *mode | p.type;
+        }
         break;
       }
     }

@@ -125,7 +125,8 @@ class CompactBufferWriter
     }
     void writeByteAt(uint32_t pos, uint32_t byte) {
         MOZ_ASSERT(byte <= 0xFF);
-        buffer_[pos] = byte;
+        if (!oom())
+            buffer_[pos] = byte;
     }
     void writeUnsigned(uint32_t value) {
         do {
@@ -178,9 +179,11 @@ class CompactBufferWriter
         return buffer_.length();
     }
     uint8_t* buffer() {
+        MOZ_ASSERT(!oom());
         return &buffer_[0];
     }
     const uint8_t* buffer() const {
+        MOZ_ASSERT(!oom());
         return &buffer_[0];
     }
     bool oom() const {
