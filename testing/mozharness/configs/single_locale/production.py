@@ -5,7 +5,7 @@ config = {
         # except when mock is in use, in this case, ssh_key_dir is
         # /home/mock_mozilla/.ssh
         "UPLOAD_SSH_KEY": "%(ssh_key_dir)s/ffxbld_rsa",
-        "UPLOAD_HOST": "stage.mozilla.org",
+        "UPLOAD_HOST": "upload.ffxbld.productdelivery.prod.mozaws.net",
         "POST_UPLOAD_CMD": "post_upload.py -b %(branch)s-l10n -p %(stage_product)s -i %(buildid)s --release-to-latest --release-to-dated",
         "UPLOAD_TO_TEMP": "1"
     },
