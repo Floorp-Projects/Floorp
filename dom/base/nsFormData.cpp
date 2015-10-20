@@ -61,7 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormData)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
 
   for (uint32_t i = 0, len = tmp->mFormData.Length(); i < len; ++i) {
-    ImplCycleCollectionUnlink(tmp->mFormData[i].fileValue);
+    ImplCycleCollectionUnlink(tmp->mFormData[i].value);
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -71,8 +71,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormData)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
 
   for (uint32_t i = 0, len = tmp->mFormData.Length(); i < len; ++i) {
-   ImplCycleCollectionTraverse(cb,tmp->mFormData[i].fileValue,
-                               "mFormData[i].fileValue", 0);
+    ImplCycleCollectionTraverse(cb, tmp->mFormData[i].value,
+                                "mFormData[i].GetAsFile()", 0);
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -127,23 +127,12 @@ nsFormData::Delete(const nsAString& aName)
 }
 
 void
-nsFormData::ExtractValue(const FormDataTuple& aTuple,
-                         OwningFileOrUSVString* aOutValue)
-{
-  if (aTuple.valueIsFile) {
-    aOutValue->SetAsFile() = aTuple.fileValue;
-  } else {
-    aOutValue->SetAsUSVString() = aTuple.stringValue;
-  }
-}
-
-void
 nsFormData::Get(const nsAString& aName,
                 Nullable<OwningFileOrUSVString>& aOutValue)
 {
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
-      ExtractValue(mFormData[i], &aOutValue.SetValue());
+      aOutValue.SetValue() = mFormData[i].value;
       return;
     }
   }
@@ -158,7 +147,7 @@ nsFormData::GetAll(const nsAString& aName,
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
       OwningFileOrUSVString* element = aValues.AppendElement();
-      ExtractValue(mFormData[i], element);
+      *element = mFormData[i].value;
     }
   }
 }
@@ -229,6 +218,26 @@ nsFormData::Set(const nsAString& aName, const nsAString& aValue)
   }
 }
 
+uint32_t
+nsFormData::GetIterableLength() const
+{
+  return mFormData.Length();
+}
+
+const nsAString&
+nsFormData::GetKeyAtIndex(uint32_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < mFormData.Length());
+  return mFormData[aIndex].name;
+}
+
+const OwningFileOrUSVString&
+nsFormData::GetValueAtIndex(uint32_t aIndex) const
+{
+  MOZ_ASSERT(aIndex < mFormData.Length());
+  return mFormData[aIndex].value;
+}
+
 // -------------------------------------------------------------------------
 // nsIDOMFormData
 
@@ -297,11 +306,13 @@ nsFormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
 
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
-    if (mFormData[i].valueIsFile) {
-      fs.AddNameFilePair(mFormData[i].name, mFormData[i].fileValue);
-    }
-    else {
-      fs.AddNameValuePair(mFormData[i].name, mFormData[i].stringValue);
+    if (mFormData[i].value.IsFile()) {
+      fs.AddNameFilePair(mFormData[i].name, mFormData[i].value.GetAsFile());
+    } else if (mFormData[i].value.IsUSVString()) {
+      fs.AddNameValuePair(mFormData[i].name,
+                          mFormData[i].value.GetAsUSVString());
+    } else {
+      fs.AddNameFilePair(mFormData[i].name, nullptr);
     }
   }
 
