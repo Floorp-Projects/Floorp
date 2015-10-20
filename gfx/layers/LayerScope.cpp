@@ -367,6 +367,38 @@ private:
 LayerScopeManager gLayerScopeManager;
 
 /*
+ * The static helper functions that set data into the packet
+ * 1. DumpRect
+ * 2. DumpFilter
+ */
+template<typename T>
+static void DumpRect(T* aPacketRect, const Rect& aRect)
+{
+    aPacketRect->set_x(aRect.x);
+    aPacketRect->set_y(aRect.y);
+    aPacketRect->set_w(aRect.width);
+    aPacketRect->set_h(aRect.height);
+}
+
+static void DumpFilter(TexturePacket* aTexturePacket, const Filter& aFilter)
+{
+    switch (aFilter) {
+        case Filter::GOOD:
+            aTexturePacket->set_mfilter(TexturePacket::GOOD);
+            break;
+        case Filter::LINEAR:
+            aTexturePacket->set_mfilter(TexturePacket::LINEAR);
+            break;
+        case Filter::POINT:
+            aTexturePacket->set_mfilter(TexturePacket::POINT);
+            break;
+        default:
+            MOZ_ASSERT(false, "Can't dump unexpected mFilter to texture packet!");
+            break;
+    }
+}
+
+/*
  * DebugGLData is the base class of
  * 1. DebugGLFrameStatusData (Frame start/end packet)
  * 2. DebugGLColorData (Color data packet)
@@ -436,26 +468,28 @@ public:
                          GLenum target,
                          GLuint name,
                          const LayerRenderState &aState,
-                         bool aIsMask)
+                         bool aIsMask,
+                         UniquePtr<Packet> aPacket)
         : DebugGLData(Packet::TEXTURE),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
           mTarget(target),
           mName(name),
           mState(aState),
-          mIsMask(aIsMask)
+          mIsMask(aIsMask),
+          mPacket(Move(aPacket))
     {
     }
 
     virtual bool Write() override {
-        return WriteToStream(mPacket);
+        return WriteToStream(*mPacket);
     }
 
     bool TryPack(bool packData) {
         android::sp<android::GraphicBuffer> buffer = mState.mSurface;
         MOZ_ASSERT(buffer.get());
 
-        mPacket.set_type(mDataType);
-        TexturePacket* tp = mPacket.mutable_texture();
+        mPacket->set_type(mDataType);
+        TexturePacket* tp = mPacket->mutable_texture();
         tp->set_layerref(mLayerRef);
         tp->set_name(mName);
         tp->set_target(mTarget);
@@ -517,7 +551,7 @@ private:
     GLuint mName;
     const LayerRenderState &mState;
     bool mIsMask;
-    Packet mPacket;
+    UniquePtr<Packet> mPacket;
 };
 #endif
 
@@ -528,14 +562,16 @@ public:
                        GLenum target,
                        GLuint name,
                        DataSourceSurface* img,
-                       bool aIsMask)
+                       bool aIsMask,
+                       UniquePtr<Packet> aPacket)
         : DebugGLData(Packet::TEXTURE),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
           mTarget(target),
           mName(name),
           mContextAddress(reinterpret_cast<intptr_t>(cx)),
           mDatasize(0),
-          mIsMask(aIsMask)
+          mIsMask(aIsMask),
+          mPacket(Move(aPacket))
     {
         // pre-packing
         // DataSourceSurface may have locked buffer,
@@ -545,14 +581,14 @@ public:
     }
 
     virtual bool Write() override {
-        return WriteToStream(mPacket);
+        return WriteToStream(*mPacket);
     }
 
 private:
     void pack(DataSourceSurface* aImage) {
-        mPacket.set_type(mDataType);
+        mPacket->set_type(mDataType);
 
-        TexturePacket* tp = mPacket.mutable_texture();
+        TexturePacket* tp = mPacket->mutable_texture();
         tp->set_layerref(mLayerRef);
         tp->set_name(mName);
         tp->set_target(mTarget);
@@ -600,7 +636,7 @@ protected:
     bool mIsMask;
 
     // Packet data
-    Packet mPacket;
+    UniquePtr<Packet> mPacket;
 };
 
 class DebugGLColorData final: public DebugGLData {
@@ -721,18 +757,9 @@ public:
         MOZ_ASSERT(mRects > 0 && mRects < 4);
         for (size_t i = 0; i < mRects; i++) {
             // Vertex
-            layerscope::DrawPacket::Rect* pRect = dp->add_layerrect();
-            pRect->set_x(mLayerRects[i].x);
-            pRect->set_y(mLayerRects[i].y);
-            pRect->set_w(mLayerRects[i].width);
-            pRect->set_h(mLayerRects[i].height);
-
+            DumpRect(dp->add_layerrect(), mLayerRects[i]);
             // UV
-            pRect = dp->add_texturerect();
-            pRect->set_x(mTextureRects[i].x);
-            pRect->set_y(mTextureRects[i].y);
-            pRect->set_w(mTextureRects[i].width);
-            pRect->set_h(mTextureRects[i].height);
+            DumpRect(dp->add_texturerect(), mTextureRects[i]);
         }
 
         for (GLuint texId: mTexIDs) {
@@ -907,7 +934,6 @@ public:
 
     static void ClearSentTextureIds();
 
-
 // Sender private functions
 private:
     static void SendColor(void* aLayerRef,
@@ -918,7 +944,8 @@ private:
                                   void* aLayerRef,
                                   TextureSourceOGL* aSource,
                                   bool aFlipY,
-                                  bool aIsMask);
+                                  bool aIsMask,
+                                  UniquePtr<Packet> aPacket);
 #ifdef MOZ_WIDGET_GONK
     static bool SendGraphicBuffer(GLContext* aGLContext,
                                   void* aLayerRef,
@@ -926,6 +953,10 @@ private:
                                   const TexturedEffect* aEffect,
                                   bool aIsMask);
 #endif
+    static void SetAndSendTexture(GLContext* aGLContext,
+                                  void* aLayerRef,
+                                  TextureSourceOGL* aSource,
+                                  const TexturedEffect* aEffect);
     static void SendTexturedEffect(GLContext* aGLContext,
                                    void* aLayerRef,
                                    const TexturedEffect* aEffect);
@@ -1044,7 +1075,8 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
                                 void* aLayerRef,
                                 TextureSourceOGL* aSource,
                                 bool aFlipY,
-                                bool aIsMask)
+                                bool aIsMask,
+                                UniquePtr<Packet> aPacket)
 {
     MOZ_ASSERT(aGLContext);
     if (!aGLContext) {
@@ -1070,7 +1102,7 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
                                                          shaderConfig, aFlipY);
     gLayerScopeManager.GetSocketManager()->AppendDebugData(
         new DebugGLTextureData(aGLContext, aLayerRef, textureTarget,
-                               texID, img, aIsMask));
+                               texID, img, aIsMask, Move(aPacket)));
 
     sSentTextureIds.push_back(texID);
     gLayerScopeManager.CurrentSession().mTexIDs.push_back(texID);
@@ -1092,9 +1124,16 @@ SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
         return false;
     }
 
+    // Expose packet creation here, so we could dump primary texture effect attributes.
+    auto packet = MakeUnique<layerscope::Packet>();
+    layerscope::TexturePacket* texturePacket = packet->mutable_texture();
+    texturePacket->set_mpremultiplied(aEffect->mPremultiplied);
+    DumpFilter(texturePacket, aEffect->mFilter);
+    DumpRect(texturePacket->mutable_mtexturecoords(), aEffect->mTextureCoords);
+
     GLenum target = aSource->GetTextureTarget();
     mozilla::UniquePtr<DebugGLGraphicBuffer> package =
-        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, texID, aEffect->mState, aIsMask);
+        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, texID, aEffect->mState, aIsMask, Move(packet));
 
     // The texure content in this TexureHost is not altered,
     // we don't need to send it again.
@@ -1116,6 +1155,21 @@ SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
 #endif
 
 void
+SenderHelper::SetAndSendTexture(GLContext* aGLContext,
+                                void* aLayerRef,
+                                TextureSourceOGL* aSource,
+                                const TexturedEffect* aEffect)
+{
+    // Expose packet creation here, so we could dump primary texture effect attributes.
+    auto packet = MakeUnique<layerscope::Packet>();
+    layerscope::TexturePacket* texturePacket = packet->mutable_texture();
+    texturePacket->set_mpremultiplied(aEffect->mPremultiplied);
+    DumpFilter(texturePacket, aEffect->mFilter);
+    DumpRect(texturePacket->mutable_mtexturecoords(), aEffect->mTextureCoords);
+    SendTextureSource(aGLContext, aLayerRef, aSource, false, false, Move(packet));
+}
+
+void
 SenderHelper::SendTexturedEffect(GLContext* aGLContext,
                                  void* aLayerRef,
                                  const TexturedEffect* aEffect)
@@ -1130,9 +1184,9 @@ SenderHelper::SendTexturedEffect(GLContext* aGLContext,
         return;
     }
 #endif
+
     // Fallback texture sending path.
-    // Render to texture and read pixels back.
-    SendTextureSource(aGLContext, aLayerRef, source, false, false);
+    SetAndSendTexture(aGLContext, aLayerRef, source, aEffect);
 }
 
 void
@@ -1145,7 +1199,18 @@ SenderHelper::SendMaskEffect(GLContext* aGLContext,
         return;
     }
 
-    SendTextureSource(aGLContext, aLayerRef, source, false, true);
+    // Expose packet creation here, so we could dump secondary mask effect attributes.
+    auto packet = MakeUnique<layerscope::Packet>();
+    TexturePacket::EffectMask* mask = packet->mutable_texture()->mutable_mask();
+    mask->set_mis3d(aEffect->mIs3D);
+    mask->mutable_msize()->set_w(aEffect->mSize.width);
+    mask->mutable_msize()->set_h(aEffect->mSize.height);
+    auto element = reinterpret_cast<const Float *>(&(aEffect->mMaskTransform));
+    for (int i = 0; i < 16; i++) {
+        mask->mutable_mmasktransform()->add_m(*element++);
+    }
+
+    SendTextureSource(aGLContext, aLayerRef, source, false, true, Move(packet));
 }
 
 void
@@ -1158,13 +1223,15 @@ SenderHelper::SendYCbCrEffect(GLContext* aGLContext,
         return;
 
     const int Y = 0, Cb = 1, Cr = 2;
-    TextureSourceOGL* sourceY =  sourceYCbCr->GetSubSource(Y)->AsSourceOGL();
-    TextureSourceOGL* sourceCb = sourceYCbCr->GetSubSource(Cb)->AsSourceOGL();
-    TextureSourceOGL* sourceCr = sourceYCbCr->GetSubSource(Cr)->AsSourceOGL();
+    TextureSourceOGL *sources[] = {
+        sourceYCbCr->GetSubSource(Y)->AsSourceOGL(),
+        sourceYCbCr->GetSubSource(Cb)->AsSourceOGL(),
+        sourceYCbCr->GetSubSource(Cr)->AsSourceOGL()
+    };
 
-    SendTextureSource(aGLContext, aLayerRef, sourceY, false, false);
-    SendTextureSource(aGLContext, aLayerRef, sourceCb, false, false);
-    SendTextureSource(aGLContext, aLayerRef, sourceCr, false, false);
+    for (auto source: sources) {
+        SetAndSendTexture(aGLContext, aLayerRef, source, aEffect);
+    }
 }
 
 void
