@@ -166,8 +166,8 @@ function base_path() {
 function test_login(test, origin, username, password, cookie) {
   return new Promise(function(resolve, reject) {
       with_iframe(
-        origin + base_path() +
-        'resources/fetch-access-control-login.html')
+        origin +
+        '/service-worker/resources/fetch-access-control-login.html')
         .then(test.step_func(function(frame) {
             var channel = new MessageChannel();
             channel.port1.onmessage = test.step_func(function() {
