@@ -26,7 +26,7 @@ a {
 .message > .prefix,
 .message > .timestamp {
   flex: none;
-  color: GrayText;
+  color: var(--theme-comment);
   margin: 3px 6px 0 0;
 }
 
@@ -129,11 +129,6 @@ a {
 
 .message-flex-body > .message-location {
   margin-top: 0;
-}
-
-.jsterm-input-container {
-  border-top-width: 1px;
-  border-top-style: solid;
 }
 
 #output-wrapper {
@@ -253,11 +248,11 @@ a {
 }
 
 .message[category=network].mixed-content .url {
-  color: #FF0000;
+  color: var(--theme-highlight-red);
 }
 
 .message .learn-more-link {
-  color: -moz-nativehyperlinktext;
+  color: var(--theme-highlight-blue);
   margin: 0 6px;
 }
 
@@ -360,6 +355,18 @@ a {
 }
 
 /* JSTerm Styles */
+.jsterm-input-container {
+  background-color: var(--theme-tab-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+.theme-light .jsterm-input-container {
+  /* For light theme use a white background for the input - it looks better
+     than off-white */
+  background-color: #fff;
+  border-top-color: #e0e0e0;
+}
+
 .jsterm-input-node,
 .jsterm-complete-node {
   border: none;
@@ -368,10 +375,15 @@ a {
   background-color: transparent;
 }
 
+.jsterm-complete-node {
+  color: var(--theme-comment);
+}
+
 .jsterm-input-node {
   background-image: -moz-image-rect(url("chrome://devtools/skin/themes/images/commandline-icon.png"), 0, 32, 16, 16);
   background-repeat: no-repeat;
   background-size: 16px 16px;
+  color: var(--theme-content-color1);
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -398,7 +410,7 @@ a {
   margin-top: 5px;
   margin-bottom: 15px;
   -moz-margin-end: 15px;
-  border: 1px solid rgba(128, 128, 128, .5);
+  border: 1px solid var(--theme-splitter-color);
   border-radius: 3px;
 }
 
@@ -442,6 +454,11 @@ a {
 .navigation-marker .url {
   -moz-padding-end: 9px;
   text-decoration: none;
+  background: var(--theme-body-background);
+}
+
+.theme-light .navigation-marker .url {
+  background: #fff;
 }
 
 .stacktrace {
@@ -451,7 +468,7 @@ a {
   margin: 5px 0 0 0;
   max-height: 10em;
   overflow-y: auto;
-  border: 1px solid rgb(200,200,200);
+  border: 1px solid var(--theme-splitter-color);
   border-radius: 3px;
 }
 
@@ -512,49 +529,6 @@ a {
 
 .open-inspector:active {
   background-position: -16px 0;
-}
-
-.jsterm-input-container {
-  background-color: var(--theme-tab-toolbar-background);
-  border-color: var(--theme-body-background);
-}
-
-.jsterm-input-node {
-  color: var(--theme-content-color1);
-}
-
-.jsterm-complete-node {
-  color: var(--theme-comment);
-}
-
-.navigation-marker .url {
-  background: var(--theme-body-background);
-}
-
-.theme-dark .inlined-variables-view iframe {
-  border-color: #333;
-}
-
-.theme-dark .stacktrace {
-  border-color: #333;
-}
-
-.theme-light .jsterm-input-container {
-  /* For light theme use a white background for the input - it looks better
-     than off-white */
-  background-color: #fff;
-  border-color: ThreeDShadow;
-}
-.theme-light .navigation-marker .url {
-  background: #fff;
-}
-
-.theme-light .inlined-variables-view iframe {
-  border-color: #ccc;
-}
-
-.theme-light .stacktrace {
-  border-color: #ccc;
 }
 
 @media (max-width: 500px) {

@@ -125,3 +125,8 @@
      shown in the inspector contextual-menu for the item that lets users take
      a screenshot of the currently selected node. -->
 <!ENTITY inspectorScreenshotNode.label       "Screenshot Node">
+
+<!-- LOCALIZATION NOTE (inspectorDuplicateNode.label): This is the label
+     shown in the inspector contextual-menu for the item that lets users
+     duplicate the currently selected node. -->
+<!ENTITY inspectorDuplicateNode.label       "Duplicate Node">
