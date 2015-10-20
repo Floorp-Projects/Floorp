@@ -7,6 +7,7 @@
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
+#include "mozilla/UniquePtr.h"
 #include "YCbCrUtils.h"
 
 using namespace mozilla;
@@ -55,12 +56,12 @@ MacIOSurfaceImage::GetAsSourceSurface()
     size_t cbCrWidth = mSurface->GetDevicePixelWidth(1);
     size_t cbCrHeight = mSurface->GetDevicePixelHeight(1);
 
-    nsAutoArrayPtr<uint8_t> cbPlane(new uint8_t[cbCrWidth * cbCrHeight]);
-    nsAutoArrayPtr<uint8_t> crPlane(new uint8_t[cbCrWidth * cbCrHeight]);
+    auto cbPlane = MakeUnique<uint8_t[]>(cbCrWidth * cbCrHeight);
+    auto crPlane = MakeUnique<uint8_t[]>(cbCrWidth * cbCrHeight);
 
     uint8_t* src = (uint8_t*)mSurface->GetBaseAddressOfPlane(1);
-    uint8_t* cbDest = cbPlane;
-    uint8_t* crDest = crPlane;
+    uint8_t* cbDest = cbPlane.get();
+    uint8_t* crDest = crPlane.get();
 
     for (size_t i = 0; i < cbCrHeight; i++) {
       uint8_t* rowSrc = src + cbCrStride * i;
@@ -79,8 +80,8 @@ MacIOSurfaceImage::GetAsSourceSurface()
     data.mYChannel = (uint8_t*)mSurface->GetBaseAddressOfPlane(0);
     data.mYStride = mSurface->GetBytesPerRow(0);
     data.mYSize = IntSize(mSurface->GetDevicePixelWidth(0), mSurface->GetDevicePixelHeight(0));
-    data.mCbChannel = cbPlane;
-    data.mCrChannel = crPlane;
+    data.mCbChannel = cbPlane.get();
+    data.mCrChannel = crPlane.get();
     data.mCbCrStride = cbCrWidth;
     data.mCbCrSize = IntSize(cbCrWidth, cbCrHeight);
     data.mPicSize = data.mYSize;
