@@ -80,9 +80,6 @@ class MachCommands(MachCommandBase):
         def srcdir(dst, src):
             m.add_symlink(os.path.join(self.topsrcdir, src), dst)
 
-        def objdir(dst, src):
-            m.add_symlink(os.path.join(self.topobjdir, src), dst)
-
         srcdir('build.gradle', 'mobile/android/gradle/build.gradle')
         srcdir('settings.gradle', 'mobile/android/gradle/settings.gradle')
 
@@ -103,17 +100,6 @@ class MachCommands(MachCommandBase):
             defines=defines,
             deps=os.path.join(self.topobjdir, 'mobile/android/gradle/.deps/local.properties.pp'))
 
-        srcdir('branding/build.gradle', 'mobile/android/gradle/branding/build.gradle')
-        srcdir('branding/src/main/AndroidManifest.xml', 'mobile/android/gradle/branding/AndroidManifest.xml')
-        srcdir('branding/src/main/res', os.path.join(self.substs['MOZ_BRANDING_DIRECTORY'], 'res'))
-
-        srcdir('preprocessed_code/build.gradle', 'mobile/android/gradle/preprocessed_code/build.gradle')
-        srcdir('preprocessed_code/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_code/AndroidManifest.xml')
-        srcdir('preprocessed_code/src/adjust/java/org/mozilla/gecko/adjust', 'mobile/android/base/adjust')
-
-        srcdir('preprocessed_resources/build.gradle', 'mobile/android/gradle/preprocessed_resources/build.gradle')
-        srcdir('preprocessed_resources/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_resources/AndroidManifest.xml')
-
         srcdir('thirdparty/build.gradle', 'mobile/android/gradle/thirdparty/build.gradle')
         srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
         srcdir('thirdparty/src/main/java', 'mobile/android/thirdparty')
@@ -129,8 +115,6 @@ class MachCommands(MachCommandBase):
         srcdir('omnijar/src/main/java/themes', 'mobile/android/themes')
 
         srcdir('app/build.gradle', 'mobile/android/gradle/app/build.gradle')
-        objdir('app/src/main/AndroidManifest.xml', 'mobile/android/base/AndroidManifest.xml')
-        objdir('app/src/androidTest/AndroidManifest.xml', 'build/mobile/robocop/AndroidManifest.xml')
         srcdir('app/src/androidTest/res', 'build/mobile/robocop/res')
         srcdir('app/src/androidTest/assets', 'mobile/android/tests/browser/robocop/assets')
         # Test code.
@@ -155,6 +139,7 @@ class MachCommands(MachCommandBase):
         srcdir('base/src/main/res', 'mobile/android/base/resources')
         srcdir('base/src/main/assets', 'mobile/android/app/assets')
         srcdir('base/src/crashreporter/res', 'mobile/android/base/crashreporter/res')
+        srcdir('base/src/branding/res', os.path.join(self.substs['MOZ_BRANDING_DIRECTORY'], 'res'))
         # JUnit 4 test code.
         srcdir('base/src/background_junit4', 'mobile/android/tests/background/junit4/src')
         srcdir('base/resources/background_junit4', 'mobile/android/tests/background/junit4/resources')
