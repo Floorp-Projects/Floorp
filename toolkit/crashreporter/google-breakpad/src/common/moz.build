@@ -67,6 +67,10 @@ if CONFIG['OS_ARCH'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
         'string_conversion.cc',
         'unique_string.cc',
     ]
+    HOST_CXXFLAGS += [
+        '-O2',
+        '-g',
+    ]
     HostLibrary('host_breakpad_common_s')
 
 if CONFIG['OS_ARCH'] == 'Darwin':
