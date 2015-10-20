@@ -245,8 +245,18 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
 
   nsAutoString hostPort;
   nsAlertsUtils::GetSourceHostPort(aPrincipal, hostPort);
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  nsresult rv = sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
+
   if (!hostPort.IsEmpty()) {
-    notification.subtitle = nsCocoaUtils::ToNSString(hostPort);
+    const char16_t* formatStrings[] = { hostPort.get() };
+    nsXPIDLString notificationSource;
+    bundle->FormatStringFromName(NS_LITERAL_STRING("source.label").get(),
+                                 formatStrings,
+                                 ArrayLength(formatStrings),
+                                 getter_Copies(notificationSource));
+    notification.subtitle = nsCocoaUtils::ToNSString(notificationSource);
   }
 
   notification.informativeText = nsCocoaUtils::ToNSString(aAlertText);
@@ -255,17 +265,19 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
   if (nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
-    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    nsCOMPtr<nsIStringBundle> bundle;
-    nsresult rv = sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
     if (NS_SUCCEEDED(rv)) {
       nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
       bundle->GetStringFromName(NS_LITERAL_STRING("closeButton.title").get(),
                                 getter_Copies(closeButtonTitle));
       bundle->GetStringFromName(NS_LITERAL_STRING("actionButton.label").get(),
                                 getter_Copies(actionButtonTitle));
-      bundle->GetStringFromName(NS_LITERAL_STRING("webActions.disable.label").get(),
-                                getter_Copies(disableButtonTitle));
+      if (!hostPort.IsEmpty()) {
+        const char16_t* formatStrings[] = { hostPort.get() };
+        bundle->FormatStringFromName(NS_LITERAL_STRING("webActions.disableForOrigin.label").get(),
+                                     formatStrings,
+                                     ArrayLength(formatStrings),
+                                     getter_Copies(disableButtonTitle));
+      }
       bundle->GetStringFromName(NS_LITERAL_STRING("webActions.settings.label").get(),
                                 getter_Copies(settingsButtonTitle));
 

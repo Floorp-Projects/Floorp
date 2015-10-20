@@ -463,7 +463,9 @@ $(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
 
 # Targets built very early during a Gradle build.
-gradle-targets: .aapt.deps
+gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
+gradle-targets: $(abspath AndroidManifest.xml)
+gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
 gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
 
