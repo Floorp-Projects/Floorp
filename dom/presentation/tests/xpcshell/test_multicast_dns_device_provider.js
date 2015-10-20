@@ -18,6 +18,7 @@ const SERVER_CONTRACT_ID = "@mozilla.org/presentation-device/tcp-presentation-se
 
 const PREF_DISCOVERY = "dom.presentation.discovery.enabled";
 const PREF_DISCOVERABLE = "dom.presentation.discoverable";
+const PREF_DEVICENAME= "dom.presentation.device.name";
 
 var registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
@@ -381,9 +382,13 @@ function addDevice() {
 
 function handleSessionRequest() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, false);
 
   const testUrl = "http://example.com";
   const testPresentationId = "test-presentation-id";
+  const testDeviceName = "test-device-name";
+
+  Services.prefs.setCharPref(PREF_DEVICENAME, testDeviceName);
 
   let mockDevice = createDevice("device.local",
                                 12345,
@@ -423,6 +428,7 @@ function handleSessionRequest() {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
       };
     },
+    id: "",
   };
 
   let contractHookSD = new ContractHook(SD_CONTRACT_ID, mockSDObj);
@@ -445,6 +451,7 @@ function handleSessionRequest() {
   Assert.equal(mockServerObj.request.deviceInfo.port, mockDevice.port);
   Assert.equal(mockServerObj.request.url, testUrl);
   Assert.equal(mockServerObj.request.presentationId, testPresentationId);
+  Assert.equal(mockServerObj.id, testDeviceName);
 
   provider.listener = null;
 
@@ -453,6 +460,7 @@ function handleSessionRequest() {
 
 function handleOnSessionRequest() {
   Services.prefs.setBoolPref(PREF_DISCOVERY, true);
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
 
   let mockDevice = createDevice("device.local",
                                 12345,
@@ -482,7 +490,7 @@ function handleOnSessionRequest() {
 
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
-    init: function() {},
+    startService: function() {},
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -536,6 +544,9 @@ function handleOnSessionRequest() {
 }
 
 function handleOnSessionRequestFromUnknownDevice() {
+  Services.prefs.setBoolPref(PREF_DISCOVERY, false);
+  Services.prefs.setBoolPref(PREF_DISCOVERABLE, true);
+
   let mockSDObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDNSServiceDiscovery]),
     startDiscovery: function(serviceType, listener) {},
@@ -545,7 +556,7 @@ function handleOnSessionRequestFromUnknownDevice() {
 
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
-    init: function() {},
+    startService: function() {},
     sessionRequest: function() {},
     close: function() {},
     id: '',
@@ -677,7 +688,7 @@ function ignoreSelfDevice() {
 
   let mockServerObj = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPPresentationServer]),
-    init: function() {},
+    startService: function() {},
     sessionRequest: function() {},
     close: function() {},
     id: '',
