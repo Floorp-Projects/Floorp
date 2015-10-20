@@ -30,8 +30,8 @@ this.SessionStorage = Object.freeze({
    * @param frameTree
    *        The docShell's FrameTree instance.
    * @return Returns a nested object that will have hosts as keys and per-host
-   *         session storage data as values. For example:
-   *         {"example.com": {"key": "value", "my_number": 123}}
+   *         session storage data as strings. For example:
+   *         {"example.com": {"key": "value", "my_number": "123"}}
    */
   collect: function (docShell, frameTree) {
     return SessionStorageInternal.collect(docShell, frameTree);
@@ -43,12 +43,12 @@ this.SessionStorage = Object.freeze({
    *        A tab's docshell (containing the sessionStorage)
    * @param aStorageData
    *        A nested object with storage data to be restored that has hosts as
-   *        keys and per-host session storage data as values. For example:
-   *        {"example.com": {"key": "value", "my_number": 123}}
+   *        keys and per-host session storage data as strings. For example:
+   *        {"example.com": {"key": "value", "my_number": "123"}}
    */
   restore: function (aDocShell, aStorageData) {
     SessionStorageInternal.restore(aDocShell, aStorageData);
-  }
+  },
 });
 
 var SessionStorageInternal = {
@@ -59,8 +59,8 @@ var SessionStorageInternal = {
    * @param frameTree
    *        The docShell's FrameTree instance.
    * @return Returns a nested object that will have hosts as keys and per-host
-   *         session storage data as values. For example:
-   *         {"example.com": {"key": "value", "my_number": 123}}
+   *         session storage data as strings. For example:
+   *         {"example.com": {"key": "value", "my_number": "123"}}
    */
   collect: function (docShell, frameTree) {
     let data = {};
@@ -98,8 +98,8 @@ var SessionStorageInternal = {
    *        A tab's docshell (containing the sessionStorage)
    * @param aStorageData
    *        A nested object with storage data to be restored that has hosts as
-   *        keys and per-host session storage data as values. For example:
-   *        {"example.com": {"key": "value", "my_number": 123}}
+   *        keys and per-host session storage data as strings. For example:
+   *        {"example.com": {"key": "value", "my_number": "123"}}
    */
   restore: function (aDocShell, aStorageData) {
     for (let origin of Object.keys(aStorageData)) {
