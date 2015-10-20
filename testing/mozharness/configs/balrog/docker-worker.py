@@ -4,7 +4,7 @@ config = {
             'balrog_api_root': 'http://balrog/api',
             'ignore_failures': False,
             'url_replacements': [
-                ('http://ftp.mozilla.org/pub/mozilla.org', 'http://download.cdn.mozilla.net/pub/mozilla.org'),
+                ('http://archive.mozilla.org/pub', 'http://download.cdn.mozilla.net/pub'),
             ],
             'balrog_usernames': {
                 'b2g': 'b2gbld',
