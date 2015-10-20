@@ -44,10 +44,18 @@ function prefillAlertInfo() {
         let hostPort = window.arguments[10];
         const ALERT_BUNDLE = Services.strings.createBundle(
           "chrome://alerts/locale/alert.properties");
+        const BRAND_BUNDLE = Services.strings.createBundle(
+          "chrome://branding/locale/brand.properties");
+        const BRAND_NAME = BRAND_BUNDLE.GetStringFromName("brandShortName");
         let label = document.getElementById("alertSourceLabel");
         label.setAttribute("value",
           ALERT_BUNDLE.formatStringFromName("source.label",
                                             [hostPort],
+                                            1));
+        let doNotDisturbMenuItem = document.getElementById("doNotDisturbMenuItem");
+        doNotDisturbMenuItem.setAttribute("label",
+          ALERT_BUNDLE.formatStringFromName("doNotDisturb.label",
+                                            [BRAND_NAME],
                                             1));
         let disableForOrigin = document.getElementById("disableForOriginMenuItem");
         disableForOrigin.setAttribute("label",
@@ -229,6 +237,14 @@ function onAlertClick() {
   } else {
     window.close();
   }
+}
+
+function doNotDisturb() {
+  const alertService = Cc["@mozilla.org/alerts-service;1"]
+                         .getService(Ci.nsIAlertsService)
+                         .QueryInterface(Ci.nsIAlertsDoNotDisturb);
+  alertService.manualDoNotDisturb = true;
+  onAlertClose();
 }
 
 function disableForOrigin() {
