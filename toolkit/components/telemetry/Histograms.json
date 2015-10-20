@@ -4352,10 +4352,13 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
-  "FX_TABLET_MODE_USED_DURING_SESSION": {
-    "expires_in_version": "46",
-    "kind": "count",
-    "description": "Windows 10+ only: The number of times tablet-mode is used during a session"
+  "FX_TABLETMODE_PAGE_LOAD": {
+    "expires_in_version": "47",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "keyed": true,
+    "description": "Number of toplevel location changes in tablet and desktop mode (only used on win10 where tablet mode is available)"
   },
   "FX_TOUCH_USED": {
     "expires_in_version": "46",
