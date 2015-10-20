@@ -110,6 +110,23 @@
         label="&inspectorHTMLDelete.label;"
         accesskey="&inspectorHTMLDelete.accesskey;"
         oncommand="inspector.deleteNode()"/>
+      <menu label="&inspectorAttributeSubmenu.label;"
+        accesskey="&inspectorAttributeSubmenu.accesskey;">
+        <menupopup>
+          <menuitem id="node-menu-add-attribute"
+            label="&inspectorAddAttribute.label;"
+            accesskey="&inspectorAddAttribute.accesskey;"
+            oncommand="inspector.onAddAttribute()"/>
+          <menuitem id="node-menu-edit-attribute"
+            label="&inspectorEditAttribute.label;"
+            accesskey="&inspectorEditAttribute.accesskey;"
+            oncommand="inspector.onEditAttribute()"/>
+          <menuitem id="node-menu-remove-attribute"
+            label="&inspectorRemoveAttribute.label;"
+            accesskey="&inspectorRemoveAttribute.accesskey;"
+            oncommand="inspector.onRemoveAttribute()"/>
+        </menupopup>
+      </menu>
       <menuseparator id="node-menu-link-separator"/>
       <menuitem id="node-menu-link-follow"
         oncommand="inspector.onFollowLink()"/>
