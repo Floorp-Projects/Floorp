@@ -889,6 +889,8 @@ public:
                  "if we ever call this on rule nodes that aren't used "       \
                  "directly, we should adjust handling of mDependentBits "     \
                  "in some way.");                                             \
+    MOZ_ASSERT(!ContextHasCachedData(aContext, eStyleStruct_##name_),         \
+               "style context should not have cached data for struct");       \
                                                                               \
     const nsStyle##name_ *data;                                               \
                                                                               \
@@ -919,6 +921,8 @@ public:
                  "if we ever call this on rule nodes that aren't used "       \
                  "directly, we should adjust handling of mDependentBits "     \
                  "in some way.");                                             \
+    MOZ_ASSERT(!ContextHasCachedData(aContext, eStyleStruct_##name_),         \
+               "style context should not have cached data for struct");       \
                                                                               \
     const nsStyle##name_ *data;                                               \
                                                                               \
@@ -1054,6 +1058,14 @@ public:
                            nscolor& aResult);
 
   static bool ParentHasPseudoElementData(nsStyleContext* aContext);
+
+private:
+#ifdef DEBUG
+  // non-inline helper function to allow assertions without incomplete
+  // type errors
+  bool ContextHasCachedData(nsStyleContext* aContext, nsStyleStructID aSID);
+#endif
+
 };
 
 #endif
