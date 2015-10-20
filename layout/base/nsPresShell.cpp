@@ -1409,7 +1409,7 @@ PresShell::UpdatePreferenceStyles()
 
   RemovePreferenceStyles();
 
-  mStyleSet->AppendStyleSheet(nsStyleSet::eUserSheet, newPrefSheet);
+  mStyleSet->AppendStyleSheet(SheetType::User, newPrefSheet);
   mPrefStyleSheet = newPrefSheet;
 
   mStyleSet->EndUpdate();
@@ -1419,7 +1419,7 @@ void
 PresShell::RemovePreferenceStyles()
 {
   if (mPrefStyleSheet) {
-    mStyleSet->RemoveStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
+    mStyleSet->RemoveStyleSheet(SheetType::User, mPrefStyleSheet);
     mPrefStyleSheet = nullptr;
   }
 }
@@ -1443,13 +1443,13 @@ PresShell::AddUserSheet(nsISupports* aSheet)
   // Iterate forwards when removing so the searches for RemoveStyleSheet are as
   // short as possible.
   for (i = 0; i < userSheets.Count(); ++i) {
-    mStyleSet->RemoveStyleSheet(nsStyleSet::eUserSheet, userSheets[i]);
+    mStyleSet->RemoveStyleSheet(SheetType::User, userSheets[i]);
   }
 
   // Now iterate backwards, so that the order of userSheets will be the same as
   // the order of sheets from it in the style set.
   for (i = userSheets.Count() - 1; i >= 0; --i) {
-    mStyleSet->PrependStyleSheet(nsStyleSet::eUserSheet, userSheets[i]);
+    mStyleSet->PrependStyleSheet(SheetType::User, userSheets[i]);
   }
 
   mStyleSet->EndUpdate();
@@ -1467,7 +1467,7 @@ PresShell::AddAgentSheet(nsISupports* aSheet)
     return;
   }
 
-  mStyleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
+  mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
   ReconstructStyleData();
 }
 
@@ -1483,16 +1483,16 @@ PresShell::AddAuthorSheet(nsISupports* aSheet)
   // added with the StyleSheetService.
   nsIStyleSheet* firstAuthorSheet = mDocument->FirstAdditionalAuthorSheet();
   if (firstAuthorSheet) {
-    mStyleSet->InsertStyleSheetBefore(nsStyleSet::eDocSheet, sheet, firstAuthorSheet);
+    mStyleSet->InsertStyleSheetBefore(SheetType::Doc, sheet, firstAuthorSheet);
   } else {
-    mStyleSet->AppendStyleSheet(nsStyleSet::eDocSheet, sheet);
+    mStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
   }
 
   ReconstructStyleData();
 }
 
 void
-PresShell::RemoveSheet(nsStyleSet::sheetType aType, nsISupports* aSheet)
+PresShell::RemoveSheet(SheetType aType, nsISupports* aSheet)
 {
   nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
   if (!sheet) {
@@ -8665,10 +8665,10 @@ nsresult
 PresShell::GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets)
 {
   aSheets.Clear();
-  int32_t sheetCount = mStyleSet->SheetCount(nsStyleSet::eAgentSheet);
+  int32_t sheetCount = mStyleSet->SheetCount(SheetType::Agent);
 
   for (int32_t i = 0; i < sheetCount; ++i) {
-    nsIStyleSheet *sheet = mStyleSet->StyleSheetAt(nsStyleSet::eAgentSheet, i);
+    nsIStyleSheet *sheet = mStyleSet->StyleSheetAt(SheetType::Agent, i);
     if (!aSheets.AppendObject(sheet))
       return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -8679,19 +8679,19 @@ PresShell::GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets)
 nsresult
 PresShell::SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets)
 {
-  return mStyleSet->ReplaceSheets(nsStyleSet::eAgentSheet, aSheets);
+  return mStyleSet->ReplaceSheets(SheetType::Agent, aSheets);
 }
 
 nsresult
 PresShell::AddOverrideStyleSheet(nsIStyleSheet *aSheet)
 {
-  return mStyleSet->PrependStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
+  return mStyleSet->PrependStyleSheet(SheetType::Override, aSheet);
 }
 
 nsresult
 PresShell::RemoveOverrideStyleSheet(nsIStyleSheet *aSheet)
 {
-  return mStyleSet->RemoveStyleSheet(nsStyleSet::eOverrideSheet, aSheet);
+  return mStyleSet->RemoveStyleSheet(SheetType::Override, aSheet);
 }
 
 static void
@@ -9437,17 +9437,17 @@ PresShell::Observe(nsISupports* aSubject,
   }
 
   if (!nsCRT::strcmp(aTopic, "agent-sheet-removed") && mStyleSet) {
-    RemoveSheet(nsStyleSet::eAgentSheet, aSubject);
+    RemoveSheet(SheetType::Agent, aSubject);
     return NS_OK;
   }
 
   if (!nsCRT::strcmp(aTopic, "user-sheet-removed") && mStyleSet) {
-    RemoveSheet(nsStyleSet::eUserSheet, aSubject);
+    RemoveSheet(SheetType::User, aSubject);
     return NS_OK;
   }
 
   if (!nsCRT::strcmp(aTopic, "author-sheet-removed") && mStyleSet) {
-    RemoveSheet(nsStyleSet::eDocSheet, aSubject);
+    RemoveSheet(SheetType::Doc, aSubject);
     return NS_OK;
   }
 
@@ -9790,35 +9790,35 @@ PresShell::CloneStyleSet(nsStyleSet* aSet)
 {
   nsStyleSet *clone = new nsStyleSet();
 
-  int32_t i, n = aSet->SheetCount(nsStyleSet::eOverrideSheet);
+  int32_t i, n = aSet->SheetCount(SheetType::Override);
   for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eOverrideSheet, i);
+    nsIStyleSheet* ss = aSet->StyleSheetAt(SheetType::Override, i);
     if (ss)
-      clone->AppendStyleSheet(nsStyleSet::eOverrideSheet, ss);
+      clone->AppendStyleSheet(SheetType::Override, ss);
   }
 
   // The document expects to insert document stylesheets itself
 #if 0
-  n = aSet->SheetCount(nsStyleSet::eDocSheet);
+  n = aSet->SheetCount(SheetType::Doc);
   for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eDocSheet, i);
+    nsIStyleSheet* ss = aSet->StyleSheetAt(SheetType::Doc, i);
     if (ss)
       clone->AddDocStyleSheet(ss, mDocument);
   }
 #endif
 
-  n = aSet->SheetCount(nsStyleSet::eUserSheet);
+  n = aSet->SheetCount(SheetType::User);
   for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eUserSheet, i);
+    nsIStyleSheet* ss = aSet->StyleSheetAt(SheetType::User, i);
     if (ss)
-      clone->AppendStyleSheet(nsStyleSet::eUserSheet, ss);
+      clone->AppendStyleSheet(SheetType::User, ss);
   }
 
-  n = aSet->SheetCount(nsStyleSet::eAgentSheet);
+  n = aSet->SheetCount(SheetType::Agent);
   for (i = 0; i < n; i++) {
-    nsIStyleSheet* ss = aSet->StyleSheetAt(nsStyleSet::eAgentSheet, i);
+    nsIStyleSheet* ss = aSet->StyleSheetAt(SheetType::Agent, i);
     if (ss)
-      clone->AppendStyleSheet(nsStyleSet::eAgentSheet, ss);
+      clone->AppendStyleSheet(SheetType::Agent, ss);
   }
   return clone;
 }
@@ -9947,9 +9947,9 @@ PresShell::ListStyleContexts(nsIFrame *aRootFrame, FILE *out, int32_t aIndent)
 void
 PresShell::ListStyleSheets(FILE *out, int32_t aIndent)
 {
-  int32_t sheetCount = mStyleSet->SheetCount(nsStyleSet::eDocSheet);
+  int32_t sheetCount = mStyleSet->SheetCount(SheetType::Doc);
   for (int32_t i = 0; i < sheetCount; ++i) {
-    mStyleSet->StyleSheetAt(nsStyleSet::eDocSheet, i)->List(out, aIndent);
+    mStyleSet->StyleSheetAt(SheetType::Doc, i)->List(out, aIndent);
     fputs("\n", out);
   }
 }
@@ -10930,16 +10930,16 @@ nsresult
 nsIPresShell::HasRuleProcessorUsedByMultipleStyleSets(uint32_t aSheetType,
                                                       bool* aRetVal)
 {
-  nsStyleSet::sheetType type;
+  SheetType type;
   switch (aSheetType) {
     case nsIStyleSheetService::AGENT_SHEET:
-      type = nsStyleSet::eAgentSheet;
+      type = SheetType::Agent;
       break;
     case nsIStyleSheetService::USER_SHEET:
-      type = nsStyleSet::eUserSheet;
+      type = SheetType::User;
       break;
     case nsIStyleSheetService::AUTHOR_SHEET:
-      type = nsStyleSet::eDocSheet;
+      type = SheetType::Doc;
       break;
     default:
       MOZ_ASSERT(false, "unexpected aSheetType value");

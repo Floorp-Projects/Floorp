@@ -71,6 +71,11 @@ public:
                          GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                          GLbitfield mask, GLenum filter);
     void FramebufferTextureLayer(GLenum target, GLenum attachment, WebGLTexture* texture, GLint level, GLint layer);
+
+    virtual JS::Value GetFramebufferAttachmentParameter(JSContext* cx, GLenum target,
+                                                        GLenum attachment, GLenum pname,
+                                                        ErrorResult& rv) override;
+
     void InvalidateFramebuffer(GLenum target, const dom::Sequence<GLenum>& attachments,
                                ErrorResult& rv);
     void InvalidateSubFramebuffer (GLenum target, const dom::Sequence<GLenum>& attachments, GLint x, GLint y,

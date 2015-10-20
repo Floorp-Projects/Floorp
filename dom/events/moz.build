@@ -78,6 +78,7 @@ UNIFIED_SOURCES += [
     'CommandEvent.cpp',
     'CompositionEvent.cpp',
     'ContentEventHandler.cpp',
+    'CustomEvent.cpp',
     'DataContainerEvent.cpp',
     'DataTransfer.cpp',
     'DeviceMotionEvent.cpp',
@@ -117,7 +118,6 @@ UNIFIED_SOURCES += [
 
 # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
-    'CustomEvent.cpp',
     'EventStateManager.cpp',
 ]
 

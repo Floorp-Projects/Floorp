@@ -696,7 +696,7 @@ var BrowserApp = {
       NativeWindow.contextmenus.add(stringGetter("contextmenu.openInPrivateTab"),
         NativeWindow.contextmenus.linkOpenableContext,
         function (aTarget) {
-          UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_private_tab");
+          UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_new_tab");
           UITelemetry.addEvent("loadurl.1", "contextmenu", null);
 
           let url = NativeWindow.contextmenus._getLinkURL(aTarget);
@@ -1805,8 +1805,8 @@ var BrowserApp = {
                 PrivateBrowsingUtils.addToTrackingAllowlist(normalizedUrl);
               } else {
                 Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
+                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
               }
-              Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
             } else {
               // Remove the current host from the 'trackingprotection' consumer
               // of the permission manager. This effectively removes this host
@@ -1815,8 +1815,8 @@ var BrowserApp = {
                 PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
               } else {
                 Services.perms.remove(normalizedUrl, "trackingprotection");
+                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
               }
-              Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
             }
           }
         }
@@ -6549,7 +6549,7 @@ var IdentityHandler = {
 
   getTrackingMode: function getTrackingMode(aState, aBrowser) {
     if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
-      Telemetry.addData("TRACKING_PROTECTION_SHIELD", 2);
+      this.shieldHistogramAdd(aBrowser, 2);
       return this.TRACKING_MODE_CONTENT_BLOCKED;
     }
 
@@ -6559,12 +6559,19 @@ var IdentityHandler = {
                      PrivateBrowsingUtils.isBrowserPrivate(aBrowser));
 
     if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) && tpEnabled) {
-      Telemetry.addData("TRACKING_PROTECTION_SHIELD", 1);
+      this.shieldHistogramAdd(aBrowser, 1);
       return this.TRACKING_MODE_CONTENT_LOADED;
     }
 
-    Telemetry.addData("TRACKING_PROTECTION_SHIELD", 0);
+    this.shieldHistogramAdd(aBrowser, 0);
     return this.TRACKING_MODE_UNKNOWN;
+  },
+
+  shieldHistogramAdd: function(browser, value) {
+    if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+      return;
+    }
+    Telemetry.addData("TRACKING_PROTECTION_SHIELD", value);
   },
 
   /**

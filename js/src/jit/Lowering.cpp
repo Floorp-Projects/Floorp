@@ -479,8 +479,6 @@ LIRGenerator::visitCall(MCall* call)
     } else if (target) {
         // Call known functions.
         if (target->isNative()) {
-            MOZ_ASSERT(!target->isClassConstructor());
-
             Register cxReg, numReg, vpReg, tmpReg;
             GetTempRegForIntArg(0, 0, &cxReg);
             GetTempRegForIntArg(1, 0, &numReg);

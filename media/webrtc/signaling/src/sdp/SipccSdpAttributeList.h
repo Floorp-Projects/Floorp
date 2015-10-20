@@ -58,6 +58,9 @@ public:
   virtual const SdpImageattrAttributeList& GetImageattr() const override;
   const SdpSimulcastAttribute& GetSimulcast() const override;
   virtual const SdpMsidAttributeList& GetMsid() const override;
+  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic()
+    const override;
+  const SdpRidAttributeList& GetRid() const override;
   virtual const SdpRtcpFbAttributeList& GetRtcpFb() const override;
   virtual const SdpRtpmapAttributeList& GetRtpmap() const override;
   virtual const SdpSctpmapAttributeList& GetSctpmap() const override;
@@ -70,8 +73,6 @@ public:
   virtual const std::string& GetLabel() const override;
   virtual unsigned int GetMaxptime() const override;
   virtual const std::string& GetMid() const override;
-  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic()
-    const override;
   virtual unsigned int GetPtime() const override;
 
   virtual SdpDirectionAttribute::Direction GetDirection() const override;
@@ -114,6 +115,7 @@ private:
                          SdpErrorHolder& errorHolder);
   void LoadFmtp(sdp_t* sdp, uint16_t level);
   void LoadMsids(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
+  bool LoadRid(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void LoadExtmap(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void LoadRtcpFb(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void LoadRtcp(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);

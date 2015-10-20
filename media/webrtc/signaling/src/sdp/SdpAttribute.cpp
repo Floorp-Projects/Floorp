@@ -147,6 +147,34 @@ void SdpIdentityAttribute::Serialize(std::ostream& os) const
 }
 #endif
 
+// Class to help with omitting a leading delimiter for the first item in a list
+class SkipFirstDelimiter
+{
+  public:
+    explicit SkipFirstDelimiter(const std::string& delim) :
+      mDelim(delim),
+      mFirst(true)
+    {}
+
+    std::ostream& print(std::ostream& os)
+    {
+      if (!mFirst) {
+        os << mDelim;
+      }
+      mFirst = false;
+      return os;
+    }
+
+  private:
+    std::string mDelim;
+    bool mFirst;
+};
+
+static std::ostream& operator<<(std::ostream& os, SkipFirstDelimiter& delim)
+{
+  return delim.print(os);
+}
+
 void
 SdpImageattrAttributeList::XYRange::Serialize(std::ostream& os) const
 {
@@ -160,13 +188,9 @@ SdpImageattrAttributeList::XYRange::Serialize(std::ostream& os) const
     os << discreteValues.front();
   } else {
     os << "[";
-    bool first = true;
+    SkipFirstDelimiter comma(",");
     for (auto value : discreteValues) {
-      if (!first) {
-        os << ",";
-      }
-      first = false;
-      os << value;
+      os << comma << value;
     }
     os << "]";
   }
@@ -442,13 +466,9 @@ SdpImageattrAttributeList::SRange::Serialize(std::ostream& os) const
     os << discreteValues.front();
   } else {
     os << "[";
-    bool first = true;
+    SkipFirstDelimiter comma(",");
     for (auto value : discreteValues) {
-      if (!first) {
-        os << ",";
-      }
-      first = false;
-      os << value;
+      os << comma << value;
     }
     os << "]";
   }
@@ -461,19 +481,29 @@ SdpImageattrAttributeList::PRange::Serialize(std::ostream& os) const
   os << "[" << min << "-" << max << "]";
 }
 
-static std::string ParseKey(std::istream& is, std::string* error)
+static std::string ParseToken(std::istream& is,
+                              const std::string& delims,
+                              std::string* error)
 {
   is >> std::ws;
-  std::string key;
-  while (is && PeekChar(is, error) != '=') {
-    key.push_back(std::tolower(is.get()));
+  std::string token;
+  while (is) {
+    unsigned char c = PeekChar(is, error);
+    if (!c || (delims.find(c) != std::string::npos)) {
+      break;
+    }
+    token.push_back(std::tolower(is.get()));
   }
+  return token;
+}
 
+static std::string ParseKey(std::istream& is, std::string* error)
+{
+  std::string token = ParseToken(is, "=", error);
   if (!SkipChar(is, '=', error)) {
     return "";
   }
-
-  return key;
+  return token;
 }
 
 static bool SkipBraces(std::istream& is, std::string* error)
@@ -630,31 +660,11 @@ SdpImageattrAttributeList::Set::Serialize(std::ostream& os) const
   os << "]";
 }
 
-static std::string
-GetLowercaseToken(std::istream& is, std::string* error)
-{
-  is >> std::ws;
-  std::string token;
-  while (true) {
-    switch (PeekChar(is, error)) {
-      case '\0':
-      case ' ':
-      case '\t':
-        return token;
-      default:
-        token.push_back(std::tolower(is.get()));
-    }
-  }
-
-  MOZ_ASSERT_UNREACHABLE("Unexpected break in loop");
-  return "";
-}
-
 bool
 SdpImageattrAttributeList::Imageattr::ParseSets(std::istream& is,
                                                 std::string* error)
 {
-  std::string type = GetLowercaseToken(is, error);
+  std::string type = ParseToken(is, " \t", error);
 
   bool* isAll = nullptr;
   std::vector<Set>* sets = nullptr;
@@ -827,6 +837,201 @@ SdpRemoteCandidatesAttribute::Serialize(std::ostream& os) const
   os << CRLF;
 }
 
+bool
+SdpRidAttributeList::Constraints::Parse(std::istream& is, std::string* error)
+{
+  if (!PeekChar(is, error)) {
+    // No constraints
+    return true;
+  }
+
+  do {
+    std::string key = ParseKey(is, error);
+    if (key.empty()) {
+      return false; // Illegal trailing cruft
+    }
+
+    // This allows pt= to appear anywhere, instead of only at the beginning, but
+    // this ends up being significantly less code.
+    if (key == "pt") {
+      if (!ParseFormats(is, error)) {
+        return false;
+      }
+    } else if (key == "max-width") {
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxWidth, error)) {
+        return false;
+      }
+    } else if (key == "max-height") {
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxHeight, error)) {
+        return false;
+      }
+    } else if (key == "max-fps") {
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxFps, error)) {
+        return false;
+      }
+    } else if (key == "max-fs") {
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxFs, error)) {
+        return false;
+      }
+    } else if (key == "max-br") {
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxBr, error)) {
+        return false;
+      }
+    } else if (key == "max-pps") {
+      if (!GetUnsigned<uint32_t>(is, 0, UINT32_MAX, &maxPps, error)) {
+        return false;
+      }
+    } else if (key == "depend") {
+      if (!ParseDepend(is, error)) {
+        return false;
+      }
+    } else {
+      (void) ParseToken(is, ";", error);
+    }
+  } while (SkipChar(is, ';', error));
+  return true;
+}
+
+bool
+SdpRidAttributeList::Constraints::ParseDepend(
+    std::istream& is,
+    std::string* error)
+{
+  do {
+    std::string id = ParseToken(is, ",;", error);
+    if (id.empty()) {
+      return false;
+    }
+    dependIds.push_back(id);
+  } while(SkipChar(is, ',', error));
+
+  return true;
+}
+
+bool
+SdpRidAttributeList::Constraints::ParseFormats(
+    std::istream& is,
+    std::string* error)
+{
+  do {
+    uint16_t fmt;
+    if (!GetUnsigned<uint16_t>(is, 0, 127, &fmt, error)) {
+      return false;
+    }
+    formats.push_back(fmt);
+  } while (SkipChar(is, ',', error));
+
+  return true;
+}
+
+void
+SdpRidAttributeList::Constraints::Serialize(std::ostream& os) const
+{
+  if (!IsSet()) {
+    return;
+  }
+
+  os << " ";
+
+  SkipFirstDelimiter semic(";");
+
+  if (!formats.empty()) {
+    os << semic << "pt=";
+    SkipFirstDelimiter comma(",");
+    for (uint16_t fmt : formats) {
+      os << comma << fmt;
+    }
+  }
+
+  if (maxWidth) {
+    os << semic << "max-width=" << maxWidth;
+  }
+
+  if (maxHeight) {
+    os << semic << "max-height=" << maxHeight;
+  }
+
+  if (maxFps) {
+    os << semic << "max-fps=" << maxFps;
+  }
+
+  if (maxFs) {
+    os << semic << "max-fs=" << maxFs;
+  }
+
+  if (maxBr) {
+    os << semic << "max-br=" << maxBr;
+  }
+
+  if (maxPps) {
+    os << semic << "max-pps=" << maxPps;
+  }
+
+  if (!dependIds.empty()) {
+    os << semic << "depend=";
+    SkipFirstDelimiter comma(",");
+    for (const std::string& id : dependIds) {
+      os << comma << id;
+    }
+  }
+}
+
+bool
+SdpRidAttributeList::Rid::Parse(std::istream& is, std::string* error)
+{
+  id = ParseToken(is, " ", error);
+  if (id.empty()) {
+    return false;
+  }
+
+  std::string directionToken = ParseToken(is, " ", error);
+  if (directionToken == "send") {
+    direction = sdp::kSend;
+  } else if (directionToken == "recv") {
+    direction = sdp::kRecv;
+  } else {
+    *error = "Invalid direction, must be either send or recv";
+    return false;
+  }
+
+  return constraints.Parse(is, error);
+}
+
+void
+SdpRidAttributeList::Rid::Serialize(std::ostream& os) const
+{
+  os << id << " " << direction;
+  constraints.Serialize(os);
+}
+
+void
+SdpRidAttributeList::Serialize(std::ostream& os) const
+{
+  for (const Rid& rid : mRids) {
+    os << "a=" << mType << ":";
+    rid.Serialize(os);
+    os << CRLF;
+  }
+}
+
+bool
+SdpRidAttributeList::PushEntry(const std::string& raw,
+                               std::string* error,
+                               size_t* errorPos)
+{
+  std::istringstream is(raw);
+
+  Rid rid;
+  if (!rid.Parse(is, error)) {
+    is.clear();
+    *errorPos = is.tellg();
+    return false;
+  }
+
+  mRids.push_back(rid);
+  return true;
+}
+
 void
 SdpRtcpAttribute::Serialize(std::ostream& os) const
 {
@@ -913,15 +1118,9 @@ SdpSetupAttribute::Serialize(std::ostream& os) const
 void
 SdpSimulcastAttribute::Version::Serialize(std::ostream& os) const
 {
-  bool first = true;
+  SkipFirstDelimiter comma(",");
   for (uint16_t format : choices) {
-    if (first) {
-      first = false;
-    } else {
-      os << ",";
-    }
-
-    os << format;
+    os << comma << format;
   }
 }
 
@@ -965,18 +1164,12 @@ SdpSimulcastAttribute::Version::AddChoice(const std::string& pt)
 void
 SdpSimulcastAttribute::Versions::Serialize(std::ostream& os) const
 {
-  bool first = true;
+  SkipFirstDelimiter semic(";");
   for (const Version& version : *this) {
     if (!version.IsSet()) {
       continue;
     }
-
-    if (first) {
-      first = false;
-    } else {
-      os << ";";
-    }
-
+    os << semic;
     version.Serialize(os);
   }
 }
@@ -1030,7 +1223,7 @@ SdpSimulcastAttribute::Parse(std::istream& is, std::string* error)
   bool gotSendrecv = false;
 
   while (true) {
-    std::string token = GetLowercaseToken(is, error);
+    std::string token = ParseToken(is, " \t", error);
     if (token.empty()) {
       break;
     }
@@ -1216,6 +1409,8 @@ SdpAttribute::IsAllowedAtMediaLevel(AttributeType type)
       return true;
     case kRemoteCandidatesAttribute:
       return true;
+    case kRidAttribute:
+      return true;
     case kRtcpAttribute:
       return true;
     case kRtcpFbAttribute:
@@ -1298,6 +1493,8 @@ SdpAttribute::IsAllowedAtSessionLevel(AttributeType type)
       return true;
     case kRemoteCandidatesAttribute:
       return false;
+    case kRidAttribute:
+      return false;
     case kRtcpAttribute:
       return false;
     case kRtcpFbAttribute:
@@ -1378,6 +1575,8 @@ SdpAttribute::GetAttributeTypeString(AttributeType type)
       return "recvonly";
     case kRemoteCandidatesAttribute:
       return "remote-candidates";
+    case kRidAttribute:
+      return "rid";
     case kRtcpAttribute:
       return "rtcp";
     case kRtcpFbAttribute:

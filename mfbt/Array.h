@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ReverseIterator.h"
 
 #include <stddef.h>
 
@@ -33,6 +34,27 @@ public:
     MOZ_ASSERT(aIndex < Length);
     return mArr[aIndex];
   }
+
+  typedef T*                        iterator;
+  typedef const T*                  const_iterator;
+  typedef ReverseIterator<T*>       reverse_iterator;
+  typedef ReverseIterator<const T*> const_reverse_iterator;
+
+  // Methods for range-based for loops.
+  iterator begin() { return mArr; }
+  const_iterator begin() const { return mArr; }
+  const_iterator cbegin() const { return begin(); }
+  iterator end() { return mArr + Length; }
+  const_iterator end() const { return mArr + Length; }
+  const_iterator cend() const { return end(); }
+
+  // Methods for reverse iterating.
+  reverse_iterator rbegin() { return reverse_iterator(end()); }
+  const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+  const_reverse_iterator crbegin() const { return rbegin(); }
+  reverse_iterator rend() { return reverse_iterator(begin()); }
+  const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
+  const_reverse_iterator crend() const { return rend(); }
 };
 
 template<typename T>

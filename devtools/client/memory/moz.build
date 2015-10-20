@@ -14,6 +14,7 @@ DevToolsModules(
     'app.js',
     'constants.js',
     'initializer.js',
+    'models.js',
     'panel.js',
     'reducers.js',
     'store.js',

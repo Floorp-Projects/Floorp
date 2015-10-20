@@ -31,6 +31,7 @@
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
+#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {

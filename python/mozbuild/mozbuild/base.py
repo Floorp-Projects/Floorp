@@ -278,8 +278,8 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @property
     def bindir(self):
-        from . import mozinfo
-        if mozinfo.os == "mac":
+        import mozinfo
+        if mozinfo.isMac:
             return os.path.join(self.topobjdir, 'dist', self.substs['MOZ_MACBUNDLE_NAME'], 'Contents', 'Resources')
         return os.path.join(self.topobjdir, 'dist', 'bin')
 

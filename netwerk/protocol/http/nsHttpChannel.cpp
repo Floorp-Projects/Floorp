@@ -343,7 +343,7 @@ nsHttpChannel::Connect()
             nsContentUtils::GetSecurityManager()->
                 GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
             bool crossOriginNavigation =
-                (mLoadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
+                (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
                 (!resultPrincipal->Equals(mLoadInfo->LoadingPrincipal()));
 
             if (!crossOriginNavigation) {
@@ -2007,14 +2007,16 @@ nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI, uint32_t flags)
     // Inform consumers about this fake redirect
     mRedirectChannel = newChannel;
 
-    // Ensure that internally-redirected channels cannot be intercepted, which would look
-    // like two separate requests to the nsINetworkInterceptController.
-    nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-    rv = mRedirectChannel->GetLoadFlags(&loadFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-    rv = mRedirectChannel->SetLoadFlags(loadFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!(flags & nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
+        // Ensure that internally-redirected channels cannot be intercepted, which would look
+        // like two separate requests to the nsINetworkInterceptController.
+        nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+        rv = mRedirectChannel->GetLoadFlags(&loadFlags);
+        NS_ENSURE_SUCCESS(rv, rv);
+        loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+        rv = mRedirectChannel->SetLoadFlags(loadFlags);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     PushRedirectAsyncFunc(
         &nsHttpChannel::ContinueAsyncRedirectChannelToURI);

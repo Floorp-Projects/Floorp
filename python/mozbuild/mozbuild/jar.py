@@ -79,8 +79,19 @@ class JarManifestEntry(object):
 
 
 class JarInfo(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, base_or_jarinfo, name=None):
+        if name is None:
+            assert isinstance(base_or_jarinfo, JarInfo)
+            self.base = base_or_jarinfo.base
+            self.name = base_or_jarinfo.name
+        else:
+            assert not isinstance(base_or_jarinfo, JarInfo)
+            self.base = base_or_jarinfo or ''
+            self.name = name
+            # For compatibility with existing jar.mn files, if there is no
+            # base, the jar name is under chrome/
+            if not self.base:
+                self.name = mozpath.join('chrome', self.name)
         self.relativesrcdir = None
         self.chrome_manifests = []
         self.entries = []
@@ -89,7 +100,14 @@ class JarInfo(object):
 class JarManifestParser(object):
 
     ignore = re.compile('\s*(\#.*)?$')
-    jarline = re.compile('(?:(?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:)|(?:\s*(\#.*)?)\s*$')
+    jarline = re.compile('''
+        (?:
+            (?:\[(?P<base>[\w\d.\-\_\\\/{}]+)\]\s*)? # optional [base/path]
+            (?P<jarfile>[\w\d.\-\_\\\/{}]+).jar\:    # filename.jar:
+        |
+            (?:\s*(\#.*)?)                           # comment
+        )\s*$                                        # whitespaces
+        ''', re.VERBOSE)
     relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
     regline = re.compile('\%\s+(.*)$')
     entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
@@ -110,13 +128,18 @@ class JarManifestParser(object):
 
         # A jar manifest file can declare several different sections, each of
         # which applies to a given "jar file". Each of those sections starts
-        # with "<name>.jar:".
+        # with "<name>.jar:", in which case the path is assumed relative to
+        # a "chrome" directory, or "[<base/path>] <subpath/name>.jar:", where
+        # a base directory is given (usually pointing at the root of the
+        # application or addon) and the jar path is given relative to the base
+        # directory.
         if self._current_jar is None:
             m = self.jarline.match(line)
             if not m:
                 raise RuntimeError(line)
             if m.group('jarfile'):
-                self._current_jar = JarInfo(m.group('jarfile'))
+                self._current_jar = JarInfo(m.group('base'),
+                                            m.group('jarfile'))
                 self._jars.append(self._current_jar)
             return
 
@@ -128,7 +151,7 @@ class JarManifestParser(object):
         m = self.relsrcline.match(line)
         if m:
             if self._current_jar.chrome_manifests or self._current_jar.entries:
-                self._current_jar = JarInfo(self._current_jar.name)
+                self._current_jar = JarInfo(self._current_jar)
                 self._jars.append(self._current_jar)
             self._current_jar.relativesrcdir = m.group('relativesrcdir')
             return
@@ -229,7 +252,7 @@ class JarMaker(object):
                      )
         p.add_option('--relativesrcdir', type='string',
                      help='relativesrcdir to be used for localization')
-        p.add_option('-j', type='string', help='jarfile directory')
+        p.add_option('-d', type='string', help='base directory')
         p.add_option('--root-manifest-entry-appid', type='string',
                      help='add an app id specific root chrome manifest entry.'
                      )
@@ -250,7 +273,7 @@ class JarMaker(object):
             logging.info('WARNING: Includes produce non-empty output')
         self.pp.out = None
 
-    def finalizeJar(self, jarPath, chromebasepath, register, doZip=True):
+    def finalizeJar(self, jardir, jarbase, jarname, chromebasepath, register, doZip=True):
         '''Helper method to write out the chrome registration entries to
          jarfile.manifest or chrome.manifest, or both.
 
@@ -261,18 +284,19 @@ class JarMaker(object):
         if not register:
             return
 
-        chromeManifest = os.path.join(os.path.dirname(jarPath), '..',
-                'chrome.manifest')
+        chromeManifest = os.path.join(jardir, jarbase, 'chrome.manifest')
 
         if self.useJarfileManifest:
-            self.updateManifest(jarPath + '.manifest',
+            self.updateManifest(os.path.join(jardir, jarbase,
+                                             jarname + '.manifest'),
                                 chromebasepath.format(''), register)
-            addEntriesToListFile(chromeManifest,
-                                 ['manifest chrome/{0}.manifest'.format(os.path.basename(jarPath))])
+            if jarname != 'chrome':
+                addEntriesToListFile(chromeManifest,
+                                     ['manifest {0}.manifest'.format(jarname)])
         if self.useChromeManifest:
+            chromebase = os.path.dirname(jarname) + '/'
             self.updateManifest(chromeManifest,
-                                chromebasepath.format('chrome/'),
-                                register)
+                                chromebasepath.format(chromebase), register)
 
         # If requested, add a root chrome manifest entry (assumed to be in the parent directory
         # of chromeManifest) with the application specific id. In cases where we're building
@@ -378,7 +402,7 @@ class JarMaker(object):
             chromebasepath = 'jar:' + chromebasepath + '.jar!'
         chromebasepath += '/'
 
-        jarfile = os.path.join(jardir, jarinfo.name)
+        jarfile = os.path.join(jardir, jarinfo.base, jarinfo.name)
         jf = None
         if self.outputFormat == 'jar':
             # jar
@@ -400,7 +424,8 @@ class JarMaker(object):
         for e in jarinfo.entries:
             self._processEntryLine(e, outHelper, jf)
 
-        self.finalizeJar(jarfile, chromebasepath, jarinfo.chrome_manifests)
+        self.finalizeJar(jardir, jarinfo.base, jarinfo.name, chromebasepath,
+                         jarinfo.chrome_manifests)
         if jf is not None:
             jf.close()
 
@@ -596,4 +621,4 @@ def main(args=None):
         infile = sys.stdin
     else:
         (infile, ) = args
-    jm.makeJar(infile, options.j)
+    jm.makeJar(infile, options.d)

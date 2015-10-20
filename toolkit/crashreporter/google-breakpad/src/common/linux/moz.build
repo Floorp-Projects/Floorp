@@ -33,6 +33,10 @@ if CONFIG['MOZ_CRASHREPORTER']:
         'linux_libc_support.cc',
         'memory_mapped_file.cc',
     ]
+    HOST_CXXFLAGS += [
+        '-O2',
+        '-g',
+    ]
 
 Library('breakpad_linux_common_s')
 

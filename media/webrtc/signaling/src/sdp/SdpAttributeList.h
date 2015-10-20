@@ -58,6 +58,8 @@ public:
   virtual const SdpImageattrAttributeList& GetImageattr() const = 0;
   virtual const SdpSimulcastAttribute& GetSimulcast() const = 0;
   virtual const SdpMsidAttributeList& GetMsid() const = 0;
+  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic() const = 0;
+  virtual const SdpRidAttributeList& GetRid() const = 0;
   virtual const SdpRtcpFbAttributeList& GetRtcpFb() const = 0;
   virtual const SdpRtpmapAttributeList& GetRtpmap() const = 0;
   virtual const SdpSctpmapAttributeList& GetSctpmap() const = 0;
@@ -72,7 +74,6 @@ public:
   virtual const std::string& GetLabel() const = 0;
   virtual unsigned int GetMaxptime() const = 0;
   virtual const std::string& GetMid() const = 0;
-  virtual const SdpMsidSemanticAttributeList& GetMsidSemantic() const = 0;
   virtual unsigned int GetPtime() const = 0;
 
   // This is "special", because it's multiple things

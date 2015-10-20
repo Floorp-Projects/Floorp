@@ -28,7 +28,7 @@
 const char* kOskPathPrefName = "ui.osk.on_screen_keyboard_path";
 const char* kOskEnabled = "ui.osk.enabled";
 const char* kOskDetectPhysicalKeyboard = "ui.osk.detect_physical_keyboard";
-const char* kOskRequireTabletMode = "ui.osk.require_tablet_mode";
+const char* kOskRequireWin10 = "ui.osk.require_win10";
 const char* kOskDebugReason = "ui.osk.debug.keyboardDisplayReason";
 
 namespace mozilla {
@@ -45,6 +45,9 @@ bool IMEHandler::sIsIMMEnabled = true;
 bool IMEHandler::sShowingOnScreenKeyboard = false;
 decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
+
+static POWER_PLATFORM_ROLE sPowerPlatformRole = PlatformRoleUnspecified;
+static bool sDeterminedPowerPlatformRole = false;
 
 // static
 void
@@ -536,21 +539,22 @@ void
 IMEHandler::MaybeShowOnScreenKeyboard()
 {
   if (sPluginHasFocus ||
-      !IsWin10OrLater() ||
+      !IsWin8OrLater() ||
       !Preferences::GetBool(kOskEnabled, true) ||
       sShowingOnScreenKeyboard ||
       IMEHandler::IsKeyboardPresentOnSlate()) {
     return;
   }
 
-  // Tablet Mode is only supported on Windows 10 and higher.
-  // When touch-event detection within IME is better supported
-  // this check may be removed, and ShowOnScreenKeyboard can
-  // run on Windows 8 and higher (adjusting the IsWin10OrLater
-  // guard above and within MaybeDismissOnScreenKeyboard).
-  if (!IsInTabletMode() &&
-      Preferences::GetBool(kOskRequireTabletMode, true) &&
-      !AutoInvokeOnScreenKeyboardInDesktopMode()) {
+  // On Windows 10 we require tablet mode, unless the user has set the relevant
+  // Windows setting to enable the on-screen keyboard in desktop mode.
+  // We might be disabled specifically on Win8(.1), so we check that afterwards.
+  if (IsWin10OrLater()) {
+    if (!IsInTabletMode() && !AutoInvokeOnScreenKeyboardInDesktopMode()) {
+      return;
+    }
+  }
+  else if (Preferences::GetBool(kOskRequireWin10, true)) {
     return;
   }
 
@@ -562,7 +566,7 @@ void
 IMEHandler::MaybeDismissOnScreenKeyboard()
 {
   if (sPluginHasFocus ||
-      !IsWin10OrLater() ||
+      !IsWin8OrLater() ||
       !sShowingOnScreenKeyboard) {
     return;
   }
@@ -661,21 +665,31 @@ IMEHandler::IsKeyboardPresentOnSlate()
   // checked by first checking the role of the device and then the
   // corresponding system metric (SM_CONVERTIBLESLATEMODE). If it is being
   // used as a tablet then we want the OSK to show up.
-  typedef POWER_PLATFORM_ROLE (WINAPI* PowerDeterminePlatformRole)();
-  PowerDeterminePlatformRole power_determine_platform_role =
-    reinterpret_cast<PowerDeterminePlatformRole>(::GetProcAddress(
-      ::LoadLibraryW(L"PowrProf.dll"), "PowerDeterminePlatformRole"));
-  if (power_determine_platform_role) {
-    POWER_PLATFORM_ROLE role = power_determine_platform_role();
-    if (((role == PlatformRoleMobile) || (role == PlatformRoleSlate)) &&
-         (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0)) {
-      if (role == PlatformRoleMobile) {
-        Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRoleMobile.");
-      } else if (role == PlatformRoleSlate) {
-        Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRoleSlate.");
-      }
-      return false;
+  typedef POWER_PLATFORM_ROLE (WINAPI* PowerDeterminePlatformRoleEx)(ULONG Version);
+  if (!sDeterminedPowerPlatformRole) {
+    sDeterminedPowerPlatformRole = true;
+    PowerDeterminePlatformRoleEx power_determine_platform_role =
+      reinterpret_cast<PowerDeterminePlatformRoleEx>(::GetProcAddress(
+        ::LoadLibraryW(L"PowrProf.dll"), "PowerDeterminePlatformRoleEx"));
+    if (power_determine_platform_role) {
+      sPowerPlatformRole = power_determine_platform_role(POWER_PLATFORM_ROLE_V2);
+    } else {
+      sPowerPlatformRole = PlatformRoleUnspecified;
     }
+  }
+
+  // If this is not a mobile or slate (tablet) device, we don't need to
+  // do anything here.
+  if (sPowerPlatformRole != PlatformRoleMobile &&
+      sPowerPlatformRole != PlatformRoleSlate) {
+    Preferences::SetString(kOskDebugReason, L"IKPOS: PlatformRole is neither Mobile nor Slate.");
+    return true;
+  }
+
+  // Likewise, if the tablet/mobile isn't in "slate" mode, we should bail:
+  if (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0) {
+    Preferences::SetString(kOskDebugReason, L"IKPOS: ConvertibleSlateMode is non-zero");
+    return true;
   }
 
   const GUID KEYBOARD_CLASS_GUID =

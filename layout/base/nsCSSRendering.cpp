@@ -872,8 +872,8 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   RectCornerRadii outlineRadii;
   ComputePixelRadii(twipsRadii, twipsPerPixel, &outlineRadii);
 
-  if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
-    if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO) {
+  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO) {
+    if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
       nsITheme* theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
                                               NS_THEME_FOCUS_OUTLINE)) {
@@ -881,13 +881,14 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                                     NS_THEME_FOCUS_OUTLINE, innerRect,
                                     aDirtyRect);
         return;
-      } else if (width == 0) {
-        return; // empty outline
       }
-      // http://dev.w3.org/csswg/css-ui/#outline
-      // "User agents may treat 'auto' as 'solid'."
-      outlineStyle = NS_STYLE_BORDER_STYLE_SOLID;
     }
+    if (width == 0) {
+      return; // empty outline
+    }
+    // http://dev.w3.org/csswg/css-ui/#outline
+    // "User agents may treat 'auto' as 'solid'."
+    outlineStyle = NS_STYLE_BORDER_STYLE_SOLID;
   }
 
   uint8_t outlineStyles[4] = { outlineStyle, outlineStyle,
@@ -1605,11 +1606,15 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
     nsContextBoxBlur insetBoxBlur;
     gfxRect destRect = nsLayoutUtils::RectToGfxRect(shadowPaintRect, twipsPerPixel);
+    Point shadowOffset(shadowItem->mXOffset / twipsPerPixel,
+                       shadowItem->mYOffset / twipsPerPixel);
+
     insetBoxBlur.InsetBoxBlur(renderContext, ToRect(destRect),
                               shadowClipGfxRect, shadowColor,
                               blurRadius, spreadDistanceAppUnits,
                               twipsPerPixel, hasBorderRadius,
-                              clipRectRadii, ToRect(skipGfxRect));
+                              clipRectRadii, ToRect(skipGfxRect),
+                              shadowOffset);
     renderContext->Restore();
   }
 }
@@ -5543,7 +5548,7 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
                                int32_t aAppUnitsPerDevPixel,
                                bool aHasBorderRadius,
                                RectCornerRadii& aInnerClipRectRadii,
-                               Rect aSkipRect)
+                               Rect aSkipRect, Point aShadowOffset)
 {
   if (aDestinationRect.IsEmpty()) {
     mContext = nullptr;
@@ -5585,9 +5590,9 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
     mAlphaBoxBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
                                transformedShadowClipRect,
                                blurRadius, spreadRadius,
-                               aShadowColor,
-                               aHasBorderRadius,
-                               aInnerClipRectRadii, transformedSkipRect);
+                               aShadowColor, aHasBorderRadius,
+                               aInnerClipRectRadii, transformedSkipRect,
+                               aShadowOffset);
   }
   return true;
 }
