@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -54,21 +55,21 @@ WakeLockInfoFromLockCount(const nsAString& aTopic, const LockCount& aLockCount)
   return info;
 }
 
-PLDHashOperator
-CountWakeLocks(const uint64_t& aKey, LockCount aCount, void* aUserArg)
+static void
+CountWakeLocks(ProcessLockTable* aTable, LockCount* aTotalCount)
 {
-  MOZ_ASSERT(aUserArg);
+  for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
+    const uint64_t& key = iter.Key();
+    LockCount count = iter.UserData();
 
-  LockCount* totalCount = static_cast<LockCount*>(aUserArg);
-  totalCount->numLocks += aCount.numLocks;
-  totalCount->numHidden += aCount.numHidden;
+    aTotalCount->numLocks += count.numLocks;
+    aTotalCount->numHidden += count.numHidden;
 
-  // This is linear in the number of processes, but that should be small.
-  if (!totalCount->processes.Contains(aKey)) {
-    totalCount->processes.AppendElement(aKey);
+    // This is linear in the number of processes, but that should be small.
+    if (!aTotalCount->processes.Contains(key)) {
+      aTotalCount->processes.AppendElement(key);
+    }
   }
-
-  return PL_DHASH_NEXT;
 }
 
 static PLDHashOperator
@@ -83,7 +84,7 @@ RemoveChildFromList(const nsAString& aKey, nsAutoPtr<ProcessLockTable>& aTable,
     aTable->Remove(childID);
 
     LockCount totalCount;
-    aTable->EnumerateRead(CountWakeLocks, &totalCount);
+    CountWakeLocks(aTable, &totalCount);
     if (!totalCount.numLocks) {
       op = PL_DHASH_REMOVE;
     }
@@ -222,7 +223,7 @@ ModifyWakeLock(const nsAString& aTopic,
     sLockTable->Put(aTopic, table);
   } else {
     table->Get(aProcessID, &processCount);
-    table->EnumerateRead(CountWakeLocks, &totalCount);
+    CountWakeLocks(table, &totalCount);
   }
 
   MOZ_ASSERT(processCount.numLocks >= processCount.numHidden);
@@ -279,7 +280,7 @@ GetWakeLockInfo(const nsAString& aTopic, WakeLockInformation* aWakeLockInfo)
     return;
   }
   LockCount totalCount;
-  table->EnumerateRead(CountWakeLocks, &totalCount);
+  CountWakeLocks(table, &totalCount);
   *aWakeLockInfo = WakeLockInfoFromLockCount(aTopic, totalCount);
 }
 
