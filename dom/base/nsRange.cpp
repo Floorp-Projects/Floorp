@@ -35,6 +35,9 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Likely.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsStyleStruct.h"
+#include "nsStyleStructInlines.h"
+#include "nsComputedDOMStyle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3192,4 +3195,237 @@ nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges)
       }
     }
   }
+}
+
+struct InnerTextAccumulator {
+  nsString& mString;
+  int8_t mRequiredLineBreakCount;
+  InnerTextAccumulator(mozilla::dom::DOMString& aValue)
+    : mString(aValue.AsAString()), mRequiredLineBreakCount(0) {}
+  void FlushLineBreaks()
+  {
+    while (mRequiredLineBreakCount > 0) {
+      // Required line breaks at the start of the text are suppressed.
+      if (!mString.IsEmpty()) {
+        mString.Append('\n');
+      }
+      --mRequiredLineBreakCount;
+    }
+  }
+  void Append(char ch)
+  {
+    Append(nsAutoString(ch));
+  }
+  void Append(const nsAString& aString)
+  {
+    if (aString.IsEmpty()) {
+      return;
+    }
+    FlushLineBreaks();
+    mString.Append(aString);
+  }
+  void AddRequiredLineBreakCount(int8_t aCount)
+  {
+    mRequiredLineBreakCount = std::max(mRequiredLineBreakCount, aCount);
+  }
+};
+
+static bool
+IsVisibleAndNotInReplacedElement(nsIFrame* aFrame)
+{
+  if (!aFrame || !aFrame->StyleVisibility()->IsVisible()) {
+    return false;
+  }
+  for (nsIFrame* f = aFrame->GetParent(); f; f = f->GetParent()) {
+    if (f->GetContent() && f->GetContent()->IsHTMLElement(nsGkAtoms::button)) {
+      continue;
+    }
+    if (f->IsFrameOfType(nsIFrame::eReplaced)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool
+ElementIsVisible(nsIContent* aContent)
+{
+  Element* elem = aContent->AsElement();
+  if (!elem) {
+    return false;
+  }
+  RefPtr<nsStyleContext> sc = nsComputedDOMStyle::GetStyleContextForElement(
+      elem, nullptr, nullptr);
+  return sc && sc->StyleVisibility()->IsVisible();
+}
+
+static void
+AppendTransformedText(InnerTextAccumulator& aResult,
+                      nsGenericDOMDataNode* aTextNode,
+                      int32_t aStart, int32_t aEnd)
+{
+  nsIFrame* frame = aTextNode->GetPrimaryFrame();
+  if (!IsVisibleAndNotInReplacedElement(frame)) {
+    return;
+  }
+  nsIFrame::RenderedText text = frame->GetRenderedText(aStart, aEnd);
+  aResult.Append(text.mString);
+}
+
+enum TreeTraversalState {
+  AT_NODE,
+  AFTER_NODE
+};
+
+static int8_t
+GetRequiredInnerTextLineBreakCount(nsIFrame* aFrame)
+{
+  if (aFrame->GetContent()->IsHTMLElement(nsGkAtoms::p)) {
+    return 2;
+  }
+  const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
+  if (styleDisplay->IsBlockOutside(aFrame) ||
+      styleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION) {
+    return 1;
+  }
+  return 0;
+}
+
+static bool
+IsLastCellOfRow(nsIFrame* aFrame)
+{
+  nsIAtom* type = aFrame->GetType();
+  if (type != nsGkAtoms::tableCellFrame &&
+      type != nsGkAtoms::bcTableCellFrame) {
+    return true;
+  }
+  for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
+    if (c->GetNextSibling()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool
+IsLastRowOfRowGroup(nsIFrame* aFrame)
+{
+  if (aFrame->GetType() != nsGkAtoms::tableRowFrame) {
+    return true;
+  }
+  for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
+    if (c->GetNextSibling()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool
+IsLastNonemptyRowGroupOfTable(nsIFrame* aFrame)
+{
+  if (aFrame->GetType() != nsGkAtoms::tableRowGroupFrame) {
+    return true;
+  }
+  for (nsIFrame* c = aFrame; c; c = c->GetNextContinuation()) {
+    for (nsIFrame* next = c->GetNextSibling(); next; next = next->GetNextSibling()) {
+      if (next->GetFirstPrincipalChild()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+void
+nsRange::GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
+                             mozilla::ErrorResult& aError)
+{
+  InnerTextAccumulator result(aValue);
+  nsIContent* currentNode = mStartParent->AsContent();
+  TreeTraversalState currentState = AFTER_NODE;
+  if (mStartParent->IsNodeOfType(nsINode::eTEXT)) {
+    auto t = static_cast<nsGenericDOMDataNode*>(mStartParent.get());
+    if (mStartParent == mEndParent) {
+      AppendTransformedText(result, t, mStartOffset, mEndOffset);
+      return;
+    }
+    AppendTransformedText(result, t, mStartOffset, t->TextLength());
+  } else {
+    if (uint32_t(mStartOffset) < mStartParent->GetChildCount()) {
+      currentNode = mStartParent->GetChildAt(mStartOffset);
+      currentState = AT_NODE;
+    }
+  }
+
+  nsIContent* endNode = mEndParent->AsContent();
+  TreeTraversalState endState = AFTER_NODE;
+  if (mEndParent->IsNodeOfType(nsINode::eTEXT)) {
+    endState = AT_NODE;
+  } else {
+    if (uint32_t(mEndOffset) < mEndParent->GetChildCount()) {
+      endNode = mEndParent->GetChildAt(mEndOffset);
+      endState = AT_NODE;
+    }
+  }
+
+  while (currentNode != endNode || currentState != endState) {
+    nsIFrame* f = currentNode->GetPrimaryFrame();
+    bool isVisibleAndNotReplaced = IsVisibleAndNotInReplacedElement(f);
+    if (currentState == AT_NODE) {
+      bool isText = currentNode->IsNodeOfType(nsINode::eTEXT);
+      if (isText && currentNode->GetParent()->IsHTMLElement(nsGkAtoms::rp) &&
+          ElementIsVisible(currentNode->GetParent())) {
+        nsAutoString str;
+        currentNode->GetTextContent(str, aError);
+        result.Append(str);
+      } else if (isVisibleAndNotReplaced) {
+        result.AddRequiredLineBreakCount(GetRequiredInnerTextLineBreakCount(f));
+        if (isText) {
+          nsIFrame::RenderedText text = f->GetRenderedText();
+          result.Append(text.mString);
+        }
+      }
+      nsIContent* child = currentNode->GetFirstChild();
+      if (child) {
+        currentNode = child;
+      } else {
+        currentState = AFTER_NODE;
+      }
+    } else {
+      if (isVisibleAndNotReplaced) {
+        if (currentNode->IsHTMLElement(nsGkAtoms::br)) {
+          result.Append('\n');
+        }
+        switch (f->StyleDisplay()->mDisplay) {
+        case NS_STYLE_DISPLAY_TABLE_CELL:
+          if (!IsLastCellOfRow(f)) {
+            result.Append('\t');
+          }
+          break;
+        case NS_STYLE_DISPLAY_TABLE_ROW:
+          if (!IsLastRowOfRowGroup(f) ||
+              !IsLastNonemptyRowGroupOfTable(f->GetParent())) {
+            result.Append('\n');
+          }
+          break;
+        }
+        result.AddRequiredLineBreakCount(GetRequiredInnerTextLineBreakCount(f));
+      }
+      nsIContent* next = currentNode->GetNextSibling();
+      if (next) {
+        currentNode = next;
+        currentState = AT_NODE;
+      } else {
+        currentNode = currentNode->GetParent();
+      }
+    }
+  }
+
+  if (mEndParent->IsNodeOfType(nsINode::eTEXT)) {
+    nsGenericDOMDataNode* t = static_cast<nsGenericDOMDataNode*>(mEndParent.get());
+    AppendTransformedText(result, t, 0, mEndOffset);
+  }
+  // Do not flush trailing line breaks! Required breaks at the end of the text
+  // are suppressed.
 }
