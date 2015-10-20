@@ -7,8 +7,8 @@ config = {
     "test_manifest": "unit-tests.ini",
 
     # XXX: replace these with something appropriate to your system
-    "installer_url": "http://stage.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds/mozilla-central-linux-debug/1344372927/firefox-17.0a1.en-US.linux-i686.tar.bz2",
-    "test_url": "http://stage.mozilla.org/pub/mozilla.org/firefox/tinderbox-builds/mozilla-central-linux-debug/1344372927/firefox-17.0a1.en-US.linux-i686.tests.zip",
+    "installer_url": "http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-central-linux-debug/1344372927/firefox-17.0a1.en-US.linux-i686.tar.bz2",
+    "test_url": "http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-central-linux-debug/1344372927/firefox-17.0a1.en-US.linux-i686.tests.zip",
 
     "default_actions": [
         'clobber',

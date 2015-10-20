@@ -1,11 +1,12 @@
-BRANCH = "mozilla-release"
-MOZ_UPDATE_CHANNEL = "release"
+BRANCH = "ash"
+MOZ_UPDATE_CHANNEL = "nightly"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
-EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/candidates/%(version)s-candidates/build%(buildnum)d/android-api-9/en-US"
+EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-11/en-US" % BRANCH
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
+    "branch": BRANCH,
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
@@ -13,13 +14,12 @@ config = {
     "purge_minsize": 10,
     "force_clobber": True,
     "clobberer_url": "https://api.pub.build.mozilla.org/clobberer/lastclobber",
-    "locales_file": "buildbot-configs/mozilla/l10n-changesets_mobile-release.json",
+    "locales_file": "%s/mobile/android/locales/all-locales" % MOZILLA_DIR,
     "locales_dir": "mobile/android/locales",
-    "locales_platform": "android",
     "ignore_locales": ["en-US"],
-    "balrog_credentials_file": "oauth.txt",
+    "nightly_build": True,
+    'balrog_credentials_file': 'oauth.txt',
     "tools_repo": "https://hg.mozilla.org/build/tools",
-    "is_release": True,
     "tooltool_config": {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/" + MOZILLA_DIR,
@@ -28,7 +28,7 @@ config = {
         'tooltool.py': '/tools/tooltool.py',
     },
     "repos": [{
-        "repo": "https://hg.mozilla.org/releases/mozilla-release",
+        "repo": "https://hg.mozilla.org/projects/ash",
         "revision": "default",
         "dest": MOZILLA_DIR,
     }, {
@@ -43,30 +43,33 @@ config = {
         "repo": "https://hg.mozilla.org/build/compare-locales",
         "revision": "RELEASE_AUTOMATION"
     }],
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/%s" % BRANCH,
+    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': HG_SHARE_BASE_DIR,
-    "l10n_dir": MOZILLA_DIR,
 
-    "release_config_file": "buildbot-configs/mozilla/release-fennec-mozilla-release.py",
+    "l10n_dir": "l10n-central",
     "repack_env": {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
-        "MOZ_PKG_VERSION": "%(version)s",
         "MOZ_OBJDIR": OBJDIR,
+        "EN_US_BINARY_URL": EN_US_BINARY_URL,
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },
-    "base_en_us_binary_url": EN_US_BINARY_URL,
-    "upload_branch": "%s-android-api-9" % BRANCH,
+    "upload_branch": "%s-android-api-11" % BRANCH,
     "ssh_key_dir": "~/.ssh",
-    "base_post_upload_cmd": "post_upload.py -p mobile -n %(buildnum)s -v %(version)s --builddir android-api-9/%(locale)s --release-to-mobile-candidates-dir --nightly-dir=candidates",
     "merge_locales": True,
     "make_dirs": ['config'],
     "mozilla_dir": MOZILLA_DIR,
-    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-9-10-constrained/l10n-release" % MOZILLA_DIR,
+    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-11/l10n-nightly" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
-    "key_alias": "release",
+    "stage_product": "mobile",
+    "platform": "android",
+    "build_type": "api-11-opt",
+
+    # Balrog
+    "build_target": "Android_arm-eabi-gcc3",
+
     # Mock
     "mock_target": "mozilla-centos6-x86_64-android",
     "mock_packages": ['autoconf213', 'python', 'zip', 'mozilla-python27-mercurial', 'git', 'ccache',
@@ -91,6 +94,5 @@ config = {
                       ],
     "mock_files": [
         ("/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"),
-        ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
 }
