@@ -132,20 +132,19 @@ FetchDriver::SetTaintingAndGetNextOp()
   // Begin Step 8 of the Main Fetch algorithm
   // https://fetch.spec.whatwg.org/#fetching
 
-  nsAutoCString scheme;
-  rv = requestURI->GetScheme(scheme);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return MainFetchOp(NETWORK_ERROR);
-  }
+  MOZ_ASSERT_IF(mRequest->Mode() == RequestMode::Same_origin ||
+                mRequest->Mode() == RequestMode::No_cors, !mCORSFlagEverSet);
 
   // request's current url's origin is request's origin and the CORS flag is unset
   // request's current url's scheme is "data" and request's same-origin data-URL flag is set
   // request's current url's scheme is "about"
-  rv = mPrincipal->CheckMayLoad(requestURI, false /* report */,
-                                false /* allowIfInheritsPrincipal */);
-  if ((!mCORSFlagEverSet && NS_SUCCEEDED(rv)) ||
-      (scheme.EqualsLiteral("data") && mRequest->SameOriginDataURL()) ||
-      scheme.EqualsLiteral("about")) {
+
+  // We have to manually check about:blank here since it's not treated as
+  // an inheriting URL by CheckMayLoad.
+  if (!mCORSFlagEverSet &&
+      (NS_IsAboutBlank(requestURI) ||
+       NS_SUCCEEDED(mPrincipal->CheckMayLoad(requestURI, false /* report */,
+                                             true /*allowIfInheritsPrincipal*/)))) {
     return MainFetchOp(BASIC_FETCH);
   }
 
