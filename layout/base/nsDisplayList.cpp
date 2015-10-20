@@ -624,6 +624,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarFlags(0),
+      mCurrentScrollbarWillHaveLayer(false),
       mBuildCaret(aBuildCaret),
       mIgnoreSuppression(false),
       mHadToIgnoreSuppression(false),
@@ -3214,7 +3215,15 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
   } else {
     mHitRegion.Or(mHitRegion, borderBox);
   }
-  if (aBuilder->GetAncestorHasApzAwareEventHandler()) {
+
+  if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
+      aBuilder->GetAncestorHasApzAwareEventHandler())
+  {
+    // Scrollbars may be painted into a layer below the actual layer they will
+    // scroll, and therefore wheel events may be dispatched to the outer frame
+    // instead of the intended scrollframe. To address this, we force a d-t-c
+    // region on scrollbar frames that won't be placed in their own layer. See
+    // bug 1213324 for details.
     mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
   } else if (aFrame->GetType() == nsGkAtoms::objectFrame) {
     // If the frame is a plugin frame and wants to handle wheel events as
