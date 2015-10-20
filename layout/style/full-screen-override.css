@@ -21,6 +21,7 @@
   clip: initial !important;
   transform: initial !important;
   transform-style: initial !important;
+  perspective: initial !important;
   /* FIXME: do we need to worry about 'overflow'? */
   will-change: initial !important;
 }
