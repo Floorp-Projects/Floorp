@@ -117,8 +117,6 @@ FetchDriver::SetTaintingAndGetNextOp()
                                  requestURI,
                                  mPrincipal,
                                  mDocument,
-                                 // FIXME(nsm): Should MIME be extracted from
-                                 // Content-Type header?
                                  EmptyCString(), /* mime guess */
                                  nullptr, /* extra */
                                  &shouldLoad,
@@ -145,7 +143,7 @@ FetchDriver::SetTaintingAndGetNextOp()
       (NS_IsAboutBlank(requestURI) ||
        NS_SUCCEEDED(mPrincipal->CheckMayLoad(requestURI, false /* report */,
                                              true /*allowIfInheritsPrincipal*/)))) {
-    return MainFetchOp(BASIC_FETCH);
+    return MainFetchOp(HTTP_FETCH, false /* cors */, false /* preflight */);
   }
 
   // request's mode is "same-origin"
@@ -156,7 +154,7 @@ FetchDriver::SetTaintingAndGetNextOp()
   // request's mode is "no-cors"
   if (mRequest->Mode() == RequestMode::No_cors) {
     mRequest->SetResponseTainting(InternalRequest::RESPONSETAINT_OPAQUE);
-    return MainFetchOp(BASIC_FETCH);
+    return MainFetchOp(HTTP_FETCH, false /* cors */, false /* preflight */);
   }
 
   // request's mode is "cors-with-forced-preflight"
@@ -194,10 +192,6 @@ FetchDriver::ContinueFetch()
     return FailWithNetworkError();
   }
 
-  if (nextOp.mType == BASIC_FETCH) {
-    return BasicFetch();
-  }
-
   if (nextOp.mType == HTTP_FETCH) {
     return HttpFetch(nextOp.mCORSFlag, nextOp.mCORSPreflightFlag);
   }
@@ -205,12 +199,6 @@ FetchDriver::ContinueFetch()
   MOZ_ASSERT_UNREACHABLE("Unexpected main fetch operation!");
   return FailWithNetworkError();
  }
-
-nsresult
-FetchDriver::BasicFetch()
-{
-  return HttpFetch();
-}
 
 // This function implements the "HTTP Fetch" algorithm from the Fetch spec.
 // Functionality is often split between here, the CORS listener proxy and the
@@ -890,10 +878,9 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   }
 
   // Otherwise, we rely on necko and the CORS proxy to do the right thing
-  // as the redirect is followed.  In general this means basic or http
+  // as the redirect is followed.  In general this means http
   // fetch.  If we've ever been CORS, we need to stay CORS.
-  MOZ_ASSERT(nextOp.mType == BASIC_FETCH || nextOp.mType == HTTP_FETCH);
-  MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mType == HTTP_FETCH);
+  MOZ_ASSERT(nextOp.mType == HTTP_FETCH);
   MOZ_ASSERT_IF(mCORSFlagEverSet, nextOp.mCORSFlag);
 
   // Examine and possibly set the LOAD_ANONYMOUS flag on the channel.
