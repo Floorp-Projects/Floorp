@@ -19,7 +19,6 @@ import time
 import uuid
 import copy
 import glob
-import logging
 import shlex
 from itertools import chain
 
@@ -31,9 +30,17 @@ from mozharness.base.config import BaseConfig, parse_config_file
 from mozharness.base.log import ERROR, OutputParser, FATAL
 from mozharness.base.script import PostScriptRun
 from mozharness.base.vcs.vcsbase import MercurialScript
-from mozharness.mozilla.buildbot import BuildbotMixin, TBPL_STATUS_DICT, \
-    TBPL_EXCEPTION, TBPL_RETRY, EXIT_STATUS_DICT, TBPL_WARNING, TBPL_SUCCESS, \
-    TBPL_WORST_LEVEL_TUPLE, TBPL_FAILURE
+from mozharness.mozilla.buildbot import (
+    BuildbotMixin,
+    EXIT_STATUS_DICT,
+    TBPL_STATUS_DICT,
+    TBPL_EXCEPTION,
+    TBPL_FAILURE,
+    TBPL_RETRY,
+    TBPL_WARNING,
+    TBPL_SUCCESS,
+    TBPL_WORST_LEVEL_TUPLE,
+)
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.signing import SigningMixin
@@ -79,6 +86,7 @@ TBPL_UPLOAD_ERRORS = [
         'level': TBPL_RETRY,
     }
 ]
+
 
 class MakeUploadOutputParser(OutputParser):
     tbpl_error_list = TBPL_UPLOAD_ERRORS
@@ -157,6 +165,7 @@ class MakeUploadOutputParser(OutputParser):
         else:
             self.info(line)
 
+
 class CheckTestCompleteParser(OutputParser):
     tbpl_error_list = TBPL_UPLOAD_ERRORS
 
@@ -167,6 +176,7 @@ class CheckTestCompleteParser(OutputParser):
         self.fail_count = 0
         self.leaked = False
         self.harness_err_re = TinderBoxPrintRe['harness_error']['full_regex']
+        self.tbpl_status = TBPL_SUCCESS
 
     def parse_single_line(self, line):
         # Counts and flags.
@@ -184,17 +194,38 @@ class CheckTestCompleteParser(OutputParser):
                     self.leaked = None
                 else:
                     self.leaked = True
-            else:
-                self.fail_count += 1
+            self.fail_count += 1
             return self.warning(line)
         self.info(line)  # else
 
-    def evaluate_parser(self):
-        # Return the summary.
+    def evaluate_parser(self, return_code,  success_codes=None):
+        success_codes = success_codes or [0]
+
+        if self.num_errors:  # ran into a script error
+            self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
+
+        if self.fail_count > 0:
+            self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
+
+        # Account for the possibility that no test summary was output.
+        if self.pass_count == 0 and self.fail_count == 0:
+            self.error('No tests run or test summary not found')
+            self.tbpl_status = self.worst_level(TBPL_WARNING, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
+
+        if return_code not in success_codes:
+            self.tbpl_status = self.worst_level(TBPL_FAILURE, self.tbpl_status,
+                                                levels=TBPL_WORST_LEVEL_TUPLE)
+
+        # Print the summary.
         summary = tbox_print_summary(self.pass_count,
                                      self.fail_count,
                                      self.leaked)
         self.info("TinderboxPrint: check<br/>%s\n" % summary)
+
+        return self.tbpl_status
 
 
 class BuildingConfig(BaseConfig):
@@ -1542,8 +1573,8 @@ or run without that action (ie: --no-{action})"
         # Find a stripped version of libxul if possible
         def find_file(rootPath, fileName):
             for root, dirs, files in os.walk(rootPath):
-               for file in files:
-                   if file == fileName:
+                for file in files:
+                    if file == fileName:
                         return (fileName, os.path.join(root, file))
             return None
 
@@ -1817,10 +1848,12 @@ or run without that action (ie: --no-{action})"
                                          cwd=dirs['abs_obj_dir'],
                                          env=env,
                                          output_parser=parser)
-        parser.evaluate_parser()
+        tbpl_status = parser.evaluate_parser(return_code)
+        return_code = EXIT_STATUS_DICT[tbpl_status]
+
         if return_code:
             self.return_code = self.worst_level(
-                EXIT_STATUS_DICT[TBPL_WARNING], self.return_code,
+                return_code,  self.return_code,
                 AUTOMATION_EXIT_CODES[::-1]
             )
             self.error("'make -k check' did not run successfully. Please check "
