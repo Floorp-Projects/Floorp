@@ -249,7 +249,12 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       break;
     }
 
-    case nsIContentPolicy::TYPE_FETCH:
+    case nsIContentPolicy::TYPE_FETCH: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
+      break;
+    }
+
     case nsIContentPolicy::TYPE_IMAGESET: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
       break;

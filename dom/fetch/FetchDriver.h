@@ -83,7 +83,7 @@ private:
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
   uint32_t mFetchRecursionCount;
-  bool mCORSFlagEverSet;
+  bool mHasBeenCrossSite;
 
   DebugOnly<bool> mResponseAvailableCalled;
 
@@ -92,30 +92,11 @@ private:
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
-  enum MainFetchOpType
-  {
-    NETWORK_ERROR,
-    HTTP_FETCH,
-    NUM_MAIN_FETCH_OPS
-  };
-
-  struct MainFetchOp
-  {
-    explicit MainFetchOp(MainFetchOpType aType, bool aCORSFlag = false,
-                         bool aCORSPreflightFlag = false)
-      : mType(aType), mCORSFlag(aCORSFlag),
-        mCORSPreflightFlag(aCORSPreflightFlag)
-    { }
-
-    MainFetchOpType mType;
-    bool mCORSFlag;
-    bool mCORSPreflightFlag;
-  };
-
   nsresult Fetch();
-  MainFetchOp SetTaintingAndGetNextOp();
+  nsresult SetTainting();
   nsresult ContinueFetch();
-  nsresult HttpFetch(bool aCORSFlag = false, bool aCORSPreflightFlag = false, bool aAuthenticationFlag = false);
+  nsresult HttpFetch();
+  bool IsUnsafeRequest();
   nsresult ContinueHttpFetchAfterNetworkFetch();
   // Returns the filtered response sent to the observer.
   // Callers who don't have access to a channel can pass null for aFinalURI.
@@ -125,7 +106,6 @@ private:
   // response.
   nsresult FailWithNetworkError();
   nsresult SucceedWithResponse();
-  nsresult DoesNotRequirePreflight(nsIChannel* aChannel);
 };
 
 } // namespace dom
