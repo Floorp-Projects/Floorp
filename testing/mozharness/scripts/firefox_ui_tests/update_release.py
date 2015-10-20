@@ -157,7 +157,7 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
             locales="ach af ... zh-TW"
             channel="beta-localtest"
             from="/firefox/releases/38.0b9/linux-x86_64/%locale%/firefox-38.0b9.tar.bz2"
-            ftp_server_from="http://stage.mozilla.org/pub/mozilla.org"
+            ftp_server_from="http://archive.mozilla.org/pub"
 
         We will store this information in self.releases as a list of releases.
 
