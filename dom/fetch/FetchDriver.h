@@ -82,22 +82,20 @@ private:
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
-  uint32_t mFetchRecursionCount;
   bool mHasBeenCrossSite;
 
   DebugOnly<bool> mResponseAvailableCalled;
+  DebugOnly<bool> mFetchCalled;
 
   FetchDriver() = delete;
   FetchDriver(const FetchDriver&) = delete;
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
-  nsresult Fetch();
   nsresult SetTainting();
   nsresult ContinueFetch();
   nsresult HttpFetch();
   bool IsUnsafeRequest();
-  nsresult ContinueHttpFetchAfterNetworkFetch();
   // Returns the filtered response sent to the observer.
   // Callers who don't have access to a channel can pass null for aFinalURI.
   already_AddRefed<InternalResponse>
@@ -105,7 +103,6 @@ private:
   // Utility since not all cases need to do any post processing of the filtered
   // response.
   nsresult FailWithNetworkError();
-  nsresult SucceedWithResponse();
 };
 
 } // namespace dom
