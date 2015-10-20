@@ -168,6 +168,7 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
     }
   }
 
+  // NB: sTitlebarInfoPopulatedThemed is always true pre-vista.
   if (sTitlebarInfoPopulatedThemed || IsWin8OrLater())
     return;
 
@@ -197,7 +198,15 @@ nsUXThemeData::UpdateTitlebarInfo(HWND aWnd)
                               nsToolkit::mDllInstance, nullptr);
   NS_ASSERTION(hWnd, "UpdateTitlebarInfo window creation failed.");
 
-  ShowWindow(hWnd, SW_SHOW);
+  int showType = SW_SHOWNA;
+  // We try to avoid activating this window, but on Aero basic (aero without
+  // compositor) and aero lite (special theme for win server 2012/2013) we may
+  // get the wrong information if the window isn't activated, so we have to:
+  if (sThemeId == LookAndFeel::eWindowsTheme_AeroLite ||
+      (sThemeId == LookAndFeel::eWindowsTheme_Aero && !nsUXThemeData::CheckForCompositor())) {
+    showType = SW_SHOW;
+  }
+  ShowWindow(hWnd, showType);
   TITLEBARINFOEX info = {0};
   info.cbSize = sizeof(TITLEBARINFOEX);
   SendMessage(hWnd, WM_GETTITLEBARINFOEX, 0, (LPARAM)&info); 
