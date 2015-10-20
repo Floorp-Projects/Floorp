@@ -374,7 +374,6 @@ class NameResolver
           case PNK_CONTINUE:
           case PNK_DEBUGGER:
           case PNK_EXPORT_BATCH_SPEC:
-          case PNK_FRESHENBLOCK:
           case PNK_OBJECT_PROPERTY_NAME:
           case PNK_POSHOLDER:
             MOZ_ASSERT(cur->isArity(PN_NULLARY));
