@@ -239,12 +239,13 @@ class Assembler : public vixl::Assembler
     void processCodeLabels(uint8_t* rawCode) {
         for (size_t i = 0; i < codeLabels_.length(); i++) {
             CodeLabel label = codeLabels_[i];
-            Bind(rawCode, label.dest(), rawCode + label.src()->offset());
+            Bind(rawCode, label.dest(), rawCode + actualOffset(label.src()->offset()));
         }
     }
 
     void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address) {
-        *reinterpret_cast<const void**>(rawCode + label->offset()) = address;
+        uint32_t off = actualOffset(label->offset());
+        *reinterpret_cast<const void**>(rawCode + off) = address;
     }
     bool nextLink(BufferOffset cur, BufferOffset* next) {
         Instruction* link = getInstructionAt(cur);
@@ -262,11 +263,14 @@ class Assembler : public vixl::Assembler
         armbuffer_.flushPool();
     }
 
+    int actualOffset(int curOffset) { return curOffset; }
     int actualIndex(int curOffset) {
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);
     }
-    size_t labelOffsetToPatchOffset(size_t labelOff) { return labelOff; }
+    int labelOffsetToPatchOffset(int labelOff) {
+        return actualOffset(labelOff);
+    }
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index) {
         return code->raw() + index;
     }

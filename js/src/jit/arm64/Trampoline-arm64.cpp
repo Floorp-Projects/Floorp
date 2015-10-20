@@ -422,8 +422,11 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     Linker linker(masm);
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
-    if (returnAddrOut)
-        *returnAddrOut = (void*) (code->raw() + returnOffset);
+    if (returnAddrOut) {
+        CodeOffsetLabel returnLabel(returnOffset);
+        returnLabel.fixup(&masm);
+        *returnAddrOut = (void*) (code->raw() + returnLabel.offset());
+    }
 
     return code;
 }
