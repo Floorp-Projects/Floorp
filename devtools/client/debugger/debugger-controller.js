@@ -480,10 +480,10 @@ Workers.prototype = {
     this._updateWorkerList();
   },
 
-  _onWorkerSelect: function (type, workerActor) {
+  _onWorkerSelect: function (workerActor) {
     DebuggerController.client.attachWorker(workerActor, (response, workerClient) => {
-      gDevTools.showToolbox(devtools.TargetFactory.forWorker(workerClient),
-                            "jsdebugger", devtools.Toolbox.HostType.WINDOW);
+      gDevTools.showToolbox(TargetFactory.forWorker(workerClient),
+                            "jsdebugger", Toolbox.HostType.WINDOW);
     });
   }
 };

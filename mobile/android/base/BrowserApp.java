@@ -3362,7 +3362,12 @@ public class BrowserApp extends GeckoApp
 
         // Track the menu action. We don't know much about the context, but we can use this to determine
         // the frequency of use for various actions.
-        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, getResources().getResourceEntryName(itemId));
+        String extras = getResources().getResourceEntryName(itemId);
+        if (TextUtils.equals(extras, "new_private_tab")) {
+            // Mask private browsing
+            extras = "new_tab";
+        }
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, extras);
 
         mBrowserToolbar.cancelEdit();
 

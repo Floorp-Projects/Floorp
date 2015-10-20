@@ -63,7 +63,7 @@ CensusTreeNodeBreakdowns.internalType = function (node, breakdown, report) {
   for (let key of Object.keys(report)) {
     node.children.push(new CensusTreeNode(breakdown.then, report[key], key));
   }
-}
+};
 
 CensusTreeNodeBreakdowns.objectClass = function (node, breakdown, report) {
   node.children = [];
@@ -71,14 +71,18 @@ CensusTreeNodeBreakdowns.objectClass = function (node, breakdown, report) {
     let bd = key === "other" ? breakdown.other : breakdown.then;
     node.children.push(new CensusTreeNode(bd, report[key], key));
   }
-}
+};
 
 CensusTreeNodeBreakdowns.coarseType = function (node, breakdown, report) {
   node.children = [];
   for (let type of Object.keys(breakdown).filter(type => COARSE_TYPES.has(type))) {
     node.children.push(new CensusTreeNode(breakdown[type], report[type], type));
   }
-}
+};
+
+CensusTreeNodeBreakdowns.allocationStack = function (node, breakdown, report) {
+  node.children = [];
+};
 
 function sortByBytes (a, b) {
   return (b.bytes || 0) - (a.bytes || 0);
