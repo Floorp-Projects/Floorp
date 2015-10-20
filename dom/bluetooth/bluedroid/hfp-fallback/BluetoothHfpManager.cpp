@@ -91,7 +91,7 @@ BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
 }
 
 void
-BluetoothHfpManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
+BluetoothHfpManager::OnUpdateSdpRecords(const BluetoothAddress& aDeviceAddress)
 {
   MOZ_ASSERT(false);
 }
