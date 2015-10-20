@@ -17,12 +17,9 @@ async_test(function(t) {
       .then(function(frame) {
           var channel = new MessageChannel();
           channel.port1.onmessage = t.step_func(function(e) {
-              if (e.data.results === 'finish') {
-                frame.remove();
-                service_worker_unregister_and_done(t, SCOPE);
-              } else if (e.data.results == 'equals') {
-                assert_equals(e.data.got, e.data.expected);
-              }
+              assert_equals(e.data.results, 'finish');
+              frame.remove();
+              service_worker_unregister_and_done(t, SCOPE);
             });
           frame.contentWindow.postMessage({},
                                           host_info['HTTPS_ORIGIN'],

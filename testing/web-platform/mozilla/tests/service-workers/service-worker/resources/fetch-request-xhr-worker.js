@@ -12,6 +12,7 @@ self.addEventListener('fetch', function(event) {
           .then(function(result) {
               resolve(new Response(JSON.stringify({
                   method: event.request.method,
+                  context: event.request.context,
                   mode: event.request.mode,
                   credentials: event.request.credentials,
                   headers: headers,
