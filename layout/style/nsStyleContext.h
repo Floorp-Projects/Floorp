@@ -453,6 +453,28 @@ public:
   int32_t& LoggingDepth();
 #endif
 
+  /**
+   * Return style data that is currently cached on the style context.
+   * Only returns the structs we cache ourselves; never consults the
+   * rule tree.
+   *
+   * For "internal" use only in nsStyleContext and nsRuleNode.
+   */
+  const void* GetCachedStyleData(nsStyleStructID aSID)
+  {
+    const void* cachedData;
+    if (nsCachedStyleData::IsReset(aSID)) {
+      if (mCachedResetData) {
+        cachedData = mCachedResetData->mStyleStructs[aSID];
+      } else {
+        cachedData = nullptr;
+      }
+    } else {
+      cachedData = mCachedInheritedData.mStyleStructs[aSID];
+    }
+    return cachedData;
+  }
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~nsStyleContext();
@@ -468,10 +490,6 @@ private:
   // Helper function for HasChildThatUsesGrandancestorStyle.
   static bool ListContainsStyleContextThatUsesGrandancestorStyle(
                                                    const nsStyleContext* aHead);
-
-  // Helper function that GetStyleData and GetUniqueStyleData use.  Only
-  // returns the structs we cache ourselves; never consults the ruletree.
-  inline const void* GetCachedStyleData(nsStyleStructID aSID);
 
 #ifdef DEBUG
   struct AutoCheckDependency {
