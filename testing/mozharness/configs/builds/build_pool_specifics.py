@@ -31,7 +31,7 @@ config = {
             'https://ftp-ssl.mozilla.org/pub/mozilla.org/firefox/bundles'
         ],
         'symbol_server_host': "symbolpush.mozilla.org",
-        'stage_server': 'stage.mozilla.org',
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         "sendchange_masters": ["buildbot-master81.build.mozilla.org:9301"],
         'taskcluster_index': 'index',
     },
