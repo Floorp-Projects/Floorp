@@ -39,8 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(5f019a6f-6f6f-4b5c-8994-70cdbc40258e)]
-
+[scriptable, uuid(99767aaf-937d-4f2f-8990-bc79bd7c0ece)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -235,7 +234,6 @@ interface nsIHttpChannelInternal : nsISupports
     const unsigned long CORS_MODE_SAME_ORIGIN = 0;
     const unsigned long CORS_MODE_NO_CORS = 1;
     const unsigned long CORS_MODE_CORS = 2;
-    const unsigned long CORS_MODE_CORS_WITH_FORCED_PREFLIGHT = 3;
     /**
      * Set by nsCORSListenerProxy to indicate CORS load type. Defaults to CORS_MODE_NO_CORS.
      */
