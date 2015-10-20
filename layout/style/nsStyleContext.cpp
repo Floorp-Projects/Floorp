@@ -1486,7 +1486,7 @@ nsStyleContext::GetCachedStyleDataAsString(uint32_t aStructs)
         structs.Append(' ');
       }
       structs.AppendPrintf("%s=%p", StructName(i), data);
-      if (HasCachedInheritedStyleData(i)) {
+      if (HasCachedDependentStyleData(i)) {
         structs.AppendLiteral("(dependent)");
       } else {
         structs.AppendLiteral("(owned)");
