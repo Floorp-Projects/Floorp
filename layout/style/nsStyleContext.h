@@ -287,7 +287,7 @@ public:
    * happen because it was inherited from the parent style context, or
    * because it was stored conditionally on the rule node.
    */
-  bool HasCachedInheritedStyleData(nsStyleStructID aSID) {
+  bool HasCachedDependentStyleData(nsStyleStructID aSID) {
     return (mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
            GetCachedStyleData(aSID);
   }
