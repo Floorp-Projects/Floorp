@@ -32,12 +32,24 @@ const ALL_MENU_ITEMS = [
   "node-menu-pseudo-active",
   "node-menu-pseudo-focus",
   "node-menu-scrollnodeintoview",
-  "node-menu-screenshotnode"
+  "node-menu-screenshotnode",
+  "node-menu-add-attribute",
+  "node-menu-edit-attribute",
+  "node-menu-remove-attribute"
 ].concat(PASTE_MENU_ITEMS, ACTIVE_ON_DOCTYPE_ITEMS);
 
 const INACTIVE_ON_DOCTYPE_ITEMS =
   ALL_MENU_ITEMS.filter(item => ACTIVE_ON_DOCTYPE_ITEMS.indexOf(item) === -1);
 
+/**
+ * Test cases, each item of this array may define the following properties:
+ *   desc: string that will be logged
+ *   selector: selector of the node to be selected
+ *   disabled: items that should have disabled state
+ *   clipboardData: clipboard content
+ *   clipboardDataType: clipboard content type
+ *   attributeTrigger: attribute that will be used as context menu trigger
+ */
 const TEST_CASES = [
   {
     desc: "doctype node with empty clipboard",
@@ -55,7 +67,11 @@ const TEST_CASES = [
     desc: "element node HTML on the clipboard",
     clipboardData: "<p>some text</p>",
     clipboardDataType: "html",
-    disabled: ["node-menu-copyimagedatauri"],
+    disabled: [
+      "node-menu-copyimagedatauri",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
+    ],
     selector: "#sensitivity",
   },
   {
@@ -69,6 +85,8 @@ const TEST_CASES = [
       "node-menu-pasteafter",
       "node-menu-pastefirstchild",
       "node-menu-pastelastchild",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
     ],
   },
   {
@@ -80,6 +98,8 @@ const TEST_CASES = [
       "node-menu-copyimagedatauri",
       "node-menu-pastebefore",
       "node-menu-pasteafter",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
     ]
   },
   {
@@ -87,7 +107,10 @@ const TEST_CASES = [
     clipboardData: "<p>some text</p>",
     clipboardDataType: "html",
     selector: "img",
-    disabled: []
+    disabled: [
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
+    ]
   },
   {
     desc: "<head> with HTML on clipboard",
@@ -99,6 +122,8 @@ const TEST_CASES = [
       "node-menu-pastebefore",
       "node-menu-pasteafter",
       "node-menu-screenshotnode",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
     ],
   },
   {
@@ -107,6 +132,8 @@ const TEST_CASES = [
     disabled: PASTE_MENU_ITEMS.concat([
       "node-menu-copyimagedatauri",
       "node-menu-screenshotnode",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
     ]),
   },
   {
@@ -114,7 +141,11 @@ const TEST_CASES = [
     clipboardData: "some text",
     clipboardDataType: undefined,
     selector: "#paste-area",
-    disabled: ["node-menu-copyimagedatauri"],
+    disabled: [
+      "node-menu-copyimagedatauri",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
+    ]
   },
   {
     desc: "<element> with base64 encoded image data uri on clipboard",
@@ -123,21 +154,33 @@ const TEST_CASES = [
       "AAAAAA6fptVAAAACklEQVQYV2P4DwABAQEAWk1v8QAAAABJRU5ErkJggg==",
     clipboardDataType: undefined,
     selector: "#paste-area",
-    disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
+    disabled: PASTE_MENU_ITEMS.concat([
+      "node-menu-copyimagedatauri",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
+    ]),
   },
   {
     desc: "<element> with empty string on clipboard",
     clipboardData: "",
     clipboardDataType: undefined,
     selector: "#paste-area",
-    disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
+    disabled: PASTE_MENU_ITEMS.concat([
+      "node-menu-copyimagedatauri",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
+    ]),
   },
   {
     desc: "<element> with whitespace only on clipboard",
     clipboardData: " \n\n\t\n\n  \n",
     clipboardDataType: undefined,
     selector: "#paste-area",
-    disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
+    disabled: PASTE_MENU_ITEMS.concat([
+      "node-menu-copyimagedatauri",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
+    ]),
   },
   {
     desc: "<element> that isn't visible on the page, empty clipboard",
@@ -145,6 +188,8 @@ const TEST_CASES = [
     disabled: PASTE_MENU_ITEMS.concat([
       "node-menu-copyimagedatauri",
       "node-menu-screenshotnode",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
     ]),
   },
   {
@@ -153,7 +198,15 @@ const TEST_CASES = [
     disabled: PASTE_MENU_ITEMS.concat([
       "node-menu-copyimagedatauri",
       "node-menu-screenshotnode",
+      "node-menu-edit-attribute",
+      "node-menu-remove-attribute"
     ]),
+  },
+  {
+    desc: "<element> with context menu triggered on attribute, empty clipboard",
+    selector: "#attributes",
+    disabled: PASTE_MENU_ITEMS.concat(["node-menu-copyimagedatauri"]),
+    attributeTrigger: "data-edit"
   }
 ];
 
@@ -165,7 +218,7 @@ registerCleanupFunction(() => {
 add_task(function *() {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   for (let test of TEST_CASES) {
-    let { desc, disabled, selector } = test;
+    let { desc, disabled, selector, attributeTrigger } = test;
 
     info(`Test ${desc}`);
     setupClipboard(test.clipboardData, test.clipboardDataType);
@@ -176,7 +229,11 @@ add_task(function *() {
     yield selectNode(front, inspector);
 
     info("Simulating context menu click on the selected node container.");
-    contextMenuClick(getContainerForNodeFront(front, inspector).tagLine);
+    let nodeFrontContainer = getContainerForNodeFront(front, inspector);
+    let contextMenuTrigger = attributeTrigger
+      ? nodeFrontContainer.tagLine.querySelector(`[data-attr="${attributeTrigger}"]`)
+      : nodeFrontContainer.tagLine;
+    contextMenuClick(contextMenuTrigger);
 
     for (let menuitem of ALL_MENU_ITEMS) {
       let elt = inspector.panelDoc.getElementById(menuitem);
