@@ -12,7 +12,8 @@
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/mozalloc.h"           // for operator delete[], etc
-#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoArrayPtr
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoRef.h"                  // for nsCountedRef
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ERROR, NS_ASSERTION
@@ -44,7 +45,7 @@ public:
     if (mDecodedBuffer) {
       // Right now this only happens if the Image was never drawn, otherwise
       // this will have been tossed away at surface destruction.
-      mRecycleBin->RecycleBuffer(mDecodedBuffer.forget(), mSize.height * mStride);
+      mRecycleBin->RecycleBuffer(Move(mDecodedBuffer), mSize.height * mStride);
     }
   }
 
@@ -61,12 +62,12 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = RecyclingPlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
-    size += mDecodedBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    size += aMallocSizeOf(mDecodedBuffer.get());
     return size;
   }
 
 private:
-  nsAutoArrayPtr<uint8_t> mDecodedBuffer;
+  UniquePtr<uint8_t[]> mDecodedBuffer;
   gfx::IntSize mScaleHint;
   int mStride;
   bool mDelayedConversion;
@@ -125,7 +126,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     return false;
   }
 
-  gfx::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer, mStride);
+  gfx::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer.get(), mStride);
   SetOffscreenFormat(iFormat);
   mSize = size;
 
@@ -154,7 +155,7 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
     // We create the target out of mDecodedBuffer, and get a snapshot from it.
     // The draw target is destroyed on scope exit and the surface owns the data.
     RefPtr<gfx::DrawTarget> drawTarget
-      = gfxPlatform::GetPlatform()->CreateDrawTargetForData(mDecodedBuffer,
+      = gfxPlatform::GetPlatform()->CreateDrawTargetForData(mDecodedBuffer.get(),
                                                             mSize,
                                                             mStride,
                                                             gfx::ImageFormatToSurfaceFormat(format));
@@ -165,7 +166,7 @@ BasicPlanarYCbCrImage::GetAsSourceSurface()
     surface = drawTarget->Snapshot();
   }
 
-  mRecycleBin->RecycleBuffer(mDecodedBuffer.forget(), mSize.height * mStride);
+  mRecycleBin->RecycleBuffer(Move(mDecodedBuffer), mSize.height * mStride);
 
   mSourceSurface = surface;
   return surface.forget();
