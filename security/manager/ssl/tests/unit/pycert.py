@@ -329,6 +329,10 @@ class Certificate(object):
         hasher.update(str(self.notBefore))
         hasher.update(str(self.notAfter))
         hasher.update(self.subject)
+        # Bug 1194419: This is duplicated so as to not have to
+        # re-generate the EV testing root certificates. At some point
+        # we should clean this up and re-generate them.
+        hasher.update(self.signature)
         if self.extensions:
             for extension in self.extensions:
                 hasher.update(str(extension))
