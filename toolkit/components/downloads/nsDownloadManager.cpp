@@ -1274,17 +1274,17 @@ nsDownloadManager::GetDownloadFromDB(mozIStorageConnection* aDBConn,
   if (dl->mGUID.IsEmpty()) {
     rv = GenerateGUID(dl->mGUID);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<mozIStorageStatement> stmt;
+    nsCOMPtr<mozIStorageStatement> updateStmt;
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
                                     "UPDATE moz_downloads SET guid = :guid "
                                     "WHERE id = :id"),
-                                  getter_AddRefs(stmt));
+                                  getter_AddRefs(updateStmt));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), dl->mGUID);
+    rv = updateStmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), dl->mGUID);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), dl->mID);
+    rv = updateStmt->BindInt64ByName(NS_LITERAL_CSTRING("id"), dl->mID);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->Execute();
+    rv = updateStmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1489,9 +1489,6 @@ nsDownloadManager::GetUserDownloadsDirectory(nsIFile **aResult)
     case 0: // Desktop
       {
         nsCOMPtr<nsIFile> downloadDir;
-        nsCOMPtr<nsIProperties> dirService =
-           do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
         rv = dirService->Get(NS_OS_DESKTOP_DIR,
                              NS_GET_IID(nsIFile),
                              getter_AddRefs(downloadDir));
