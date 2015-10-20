@@ -227,8 +227,10 @@ void WebMReader::Cleanup()
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-WebMReader::AsyncReadMetadata()
+WebMReader::AsyncReadMetadataInternal()
 {
+  MOZ_ASSERT(OnTaskQueue());
+
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
 
   if (NS_FAILED(RetrieveWebMMetadata(&metadata->mInfo)) ||

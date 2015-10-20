@@ -422,15 +422,18 @@ struct AbsoluteLabel : public LabelBase
     }
 };
 
-// A code label contains an absolute reference to a point in the code
-// Thus, it cannot be patched until after linking
+// A code label contains an absolute reference to a point in the code. Thus, it
+// cannot be patched until after linking.
+// When the source label is resolved into a memory address, this address is
+// patched into the destination address.
 class CodeLabel
 {
-    // The destination position, where the absolute reference should get patched into
+    // The destination position, where the absolute reference should get
+    // patched into.
     AbsoluteLabel dest_;
 
-    // The source label (relative) in the code to where the
-    // the destination should get patched to.
+    // The source label (relative) in the code to where the destination should
+    // get patched to.
     Label src_;
 
   public:
@@ -923,6 +926,8 @@ class AssemblerShared
     Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
 
   protected:
+    Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
+
     bool enoughMemory_;
     bool embedsNurseryPointers_;
 
@@ -968,6 +973,16 @@ class AssemblerShared
     AsmJSAbsoluteLink asmJSAbsoluteLink(size_t i) const { return asmJSAbsoluteLinks_[i]; }
 
     static bool canUseInSingleByteInstruction(Register reg) { return true; }
+
+    void addCodeLabel(CodeLabel label) {
+        propagateOOM(codeLabels_.append(label));
+    }
+    size_t numCodeLabels() const {
+        return codeLabels_.length();
+    }
+    CodeLabel codeLabel(size_t i) {
+        return codeLabels_[i];
+    }
 };
 
 } // namespace jit

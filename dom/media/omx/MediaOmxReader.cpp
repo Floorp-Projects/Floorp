@@ -212,7 +212,7 @@ nsresult MediaOmxReader::InitOmxDecoder()
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaOmxReader::AsyncReadMetadata()
+MediaOmxReader::AsyncReadMetadataInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
   EnsureActive();

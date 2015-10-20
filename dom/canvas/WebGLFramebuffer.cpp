@@ -433,6 +433,66 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl,
     MOZ_CRASH();
 }
 
+JS::Value
+WebGLFBAttachPoint::GetParameter(WebGLContext* context, GLenum pname)
+{
+    // TODO: WebGLTexture and WebGLRenderbuffer should store FormatInfo instead of doing
+    // this dance every time.
+    const GLenum internalFormat = EffectiveInternalFormat().get();
+    const webgl::FormatInfo* info = webgl::GetInfoBySizedFormat(internalFormat);
+    MOZ_ASSERT(info);
+
+    WebGLTexture* tex = Texture();
+
+    switch (pname) {
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+        return JS::Int32Value(webgl::GetComponentSize(info->effectiveFormat, pname));
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+        return JS::Int32Value(webgl::GetComponentType(info->effectiveFormat));
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
+        return JS::Int32Value(webgl::GetColorEncoding(info->effectiveFormat));
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+        if (tex) {
+            return JS::Int32Value(MipLevel());
+        }
+        break;
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        if (tex) {
+            int32_t face = 0;
+            if (tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP) {
+                face = ImageTarget().get();
+            }
+            return JS::Int32Value(face);
+        }
+        break;
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
+        if (tex) {
+            int32_t layer = 0;
+            if (tex->Target() == LOCAL_GL_TEXTURE_2D_ARRAY ||
+                tex->Target() == LOCAL_GL_TEXTURE_3D)
+            {
+                layer = Layer();
+            }
+            return JS::Int32Value(layer);
+        }
+        break;
+    }
+
+    context->ErrorInvalidEnum("getFramebufferParameter: Invalid combination of "
+                              "attachment and pname.");
+    return JS::NullValue();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // WebGLFramebuffer
 
@@ -985,6 +1045,110 @@ WebGLFramebuffer::ValidateForRead(const char* info, TexInternalFormat* const out
 
     *out_format = attachPoint.EffectiveInternalFormat();
     return true;
+}
+
+static bool
+AttachmentsDontMatch(const WebGLFBAttachPoint& a, const WebGLFBAttachPoint& b)
+{
+    if (a.Texture()) {
+        return (a.Texture() != b.Texture());
+    }
+
+    if (a.Renderbuffer()) {
+        return (a.Renderbuffer() != b.Renderbuffer());
+    }
+
+    return false;
+}
+
+JS::Value
+WebGLFramebuffer::GetAttachmentParameter(JSContext* cx,
+                                         GLenum attachment,
+                                         GLenum pname,
+                                         ErrorResult& rv)
+{
+    // "If a framebuffer object is bound to target, then attachment must be one of the
+    // attachment points of the framebuffer listed in table 4.6."
+    switch (attachment) {
+    case LOCAL_GL_DEPTH_ATTACHMENT:
+    case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
+        break;
+
+    case LOCAL_GL_STENCIL_ATTACHMENT:
+        // "If attachment is DEPTH_STENCIL_ATTACHMENT, and different objects are bound to
+        //  the depth and stencil attachment points of target, the query will fail and
+        //  generate an INVALID_OPERATION error. If the same object is bound to both
+        //  attachment points, information about that object will be returned."
+
+        // Does this mean it has to be the same level or layer? Because the queries are
+        // independent of level or layer.
+        if (AttachmentsDontMatch(DepthAttachment(), StencilAttachment())) {
+            mContext->ErrorInvalidOperation("getFramebufferAttachmentParameter: "
+                                            "DEPTH_ATTACHMENT and STENCIL_ATTACHMENT "
+                                            "have different objects bound.");
+            return JS::NullValue();
+        }
+        break;
+
+    default:
+        if (attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
+            attachment > mContext->LastColorAttachment())
+        {
+            mContext->ErrorInvalidEnum("getFramebufferAttachmentParameter: Can only "
+                                       "query COLOR_ATTACHMENTi, DEPTH_ATTACHMENT, "
+                                       "DEPTH_STENCIL_ATTACHMENT, or STENCIL_ATTACHMENT "
+                                       "on framebuffer.");
+            return JS::NullValue();
+        }
+    }
+
+    if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT &&
+        pname == LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE)
+    {
+        mContext->ErrorInvalidOperation("getFramebufferAttachmentParameter: Querying "
+                                        "FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE against "
+                                        "DEPTH_STENCIL_ATTACHMENT is an error.");
+        return JS::NullValue();
+    }
+
+    GLenum objectType = LOCAL_GL_NONE;
+    auto& fba = GetAttachPoint(attachment);
+    if (fba.Texture()) {
+        objectType = LOCAL_GL_TEXTURE;
+    } else if (fba.Renderbuffer()) {
+        objectType = LOCAL_GL_RENDERBUFFER;
+    }
+
+    switch (pname) {
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+        return JS::Int32Value(objectType);
+
+    case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+        if (objectType == LOCAL_GL_NONE) {
+            return JS::NullValue();
+        }
+
+        if (objectType == LOCAL_GL_RENDERBUFFER) {
+            const WebGLRenderbuffer* rb = fba.Renderbuffer();
+            return mContext->WebGLObjectAsJSValue(cx, rb, rv);
+        }
+
+        /* If the value of FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is TEXTURE, then */
+        if (objectType == LOCAL_GL_TEXTURE) {
+            const WebGLTexture* tex = fba.Texture();
+            return mContext->WebGLObjectAsJSValue(cx, tex, rv);
+        }
+        break;
+    }
+
+    if (objectType == LOCAL_GL_NONE) {
+        mContext->ErrorInvalidOperation("getFramebufferAttachmentParameter: No "
+                                        "attachment at %s",
+                                        mContext->EnumName(attachment));
+        return JS::NullValue();
+    }
+
+    return fba.GetParameter(mContext, pname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -376,7 +376,6 @@ IonCache::linkAndAttachStub(JSContext* cx, MacroAssembler& masm, StubAttacher& a
 void
 IonCache::updateBaseAddress(JitCode* code, MacroAssembler& masm)
 {
-    AutoWritableJitCode awjc(code);
     fallbackLabel_.repoint(code, &masm);
     initialJump_.repoint(code, &masm);
     lastJump_.repoint(code, &masm);
