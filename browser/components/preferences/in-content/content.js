@@ -2,13 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-XPCOMUtils.defineLazyGetter(this, "AlertsService", function () {
+XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function () {
   try {
-    return Cc["@mozilla.org/alerts-service;1"]
-             .getService(Ci.nsIAlertsService)
-             .QueryInterface(Ci.nsIAlertsDoNotDisturb);
+    let alertsService = Cc["@mozilla.org/alerts-service;1"]
+                          .getService(Ci.nsIAlertsService)
+                          .QueryInterface(Ci.nsIAlertsDoNotDisturb);
+    // This will throw if manualDoNotDisturb isn't implemented.
+    alertsService.manualDoNotDisturb;
+    return alertsService;
   } catch (ex) {
-    return;
+    return undefined;
   }
 });
 
@@ -41,11 +44,11 @@ var gContentPane = {
     }
 
     let doNotDisturbAlertsEnabled = false;
-    if (AlertsService) {
+    if (AlertsServiceDND) {
       let notificationsDoNotDisturbRow =
         document.getElementById("notificationsDoNotDisturbRow");
       notificationsDoNotDisturbRow.removeAttribute("hidden");
-      if (AlertsService.manualDoNotDisturb) {
+      if (AlertsServiceDND.manualDoNotDisturb) {
         let notificationsDoNotDisturb =
           document.getElementById("notificationsDoNotDisturb");
         notificationsDoNotDisturb.setAttribute("checked", true);
@@ -281,6 +284,6 @@ var gContentPane = {
 
   toggleDoNotDisturbNotifications: function (event)
   {
-    AlertsService.manualDoNotDisturb = event.target.checked;
+    AlertsServiceDND.manualDoNotDisturb = event.target.checked;
   },
 };
