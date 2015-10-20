@@ -1,8 +1,8 @@
-BRANCH = "mozilla-aurora"
-MOZ_UPDATE_CHANNEL = "aurora"
+BRANCH = "ash"
+MOZ_UPDATE_CHANNEL = "nightly"
 MOZILLA_DIR = BRANCH
 OBJDIR = "obj-l10n"
-EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-9/en-US" % BRANCH
+EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/nightly/latest-%s-android-api-11/en-US" % BRANCH
 STAGE_SERVER = "upload.ffxbld.productdelivery.prod.mozaws.net"
 STAGE_USER = "ffxbld"
 STAGE_SSH_KEY = "~/.ssh/ffxbld_rsa"
@@ -31,7 +31,7 @@ config = {
         'tooltool.py': '/tools/tooltool.py',
     },
     "repos": [{
-        "repo": "https://hg.mozilla.org/releases/mozilla-aurora",
+        "repo": "https://hg.mozilla.org/projects/ash",
         "revision": "default",
         "dest": MOZILLA_DIR,
     }, {
@@ -46,11 +46,11 @@ config = {
         "repo": "https://hg.mozilla.org/build/compare-locales",
         "revision": "RELEASE_AUTOMATION"
     }],
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/%s" % BRANCH,
+    "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
     'vcs_share_base': HG_SHARE_BASE_DIR,
 
-    "l10n_dir": MOZILLA_DIR,
+    "l10n_dir": "l10n-central",
     "repack_env": {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
@@ -65,13 +65,13 @@ config = {
         "UPLOAD_USER": STAGE_USER,
         "UPLOAD_SSH_KEY": STAGE_SSH_KEY,
         "UPLOAD_HOST": STAGE_SERVER,
-        "POST_UPLOAD_CMD": "post_upload.py -b mozilla-aurora-android-api-9-l10n -p mobile -i %(buildid)s --release-to-latest --release-to-dated",
+        "POST_UPLOAD_CMD": "post_upload.py -b ash-android-api-11-l10n -p mobile -i %(buildid)s --release-to-latest --release-to-dated",
         "UPLOAD_TO_TEMP": "1",
     },
     "merge_locales": True,
     "make_dirs": ['config'],
     "mozilla_dir": MOZILLA_DIR,
-    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-9-10-constrained/l10n-nightly" % MOZILLA_DIR,
+    "mozconfig": "%s/mobile/android/config/mozconfigs/android-api-11/l10n-nightly" % MOZILLA_DIR,
     "signature_verification_script": "tools/release/signing/verify-android-signature.sh",
 
     # Balrog
