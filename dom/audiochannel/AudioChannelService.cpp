@@ -184,12 +184,14 @@ void
 AudioChannelService::Shutdown()
 {
   if (gAudioChannelService) {
-    if (IsParentProcess()) {
-      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-      if (obs) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(gAudioChannelService, "xpcom-shutdown");
+      obs->RemoveObserver(gAudioChannelService, "outer-window-destroyed");
+
+      if (IsParentProcess()) {
         obs->RemoveObserver(gAudioChannelService, "ipc:content-shutdown");
-        obs->RemoveObserver(gAudioChannelService, "xpcom-shutdown");
-        obs->RemoveObserver(gAudioChannelService, "outer-window-destroyed");
+
 #ifdef MOZ_WIDGET_GONK
         // To monitor the volume settings based on audio channel.
         obs->RemoveObserver(gAudioChannelService, "mozsettings-changed");
@@ -216,12 +218,13 @@ AudioChannelService::AudioChannelService()
   , mContentOrNormalChannel(false)
   , mAnyChannel(false)
 {
-  if (IsParentProcess()) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "xpcom-shutdown", false);
+    obs->AddObserver(this, "outer-window-destroyed", false);
+    if (IsParentProcess()) {
       obs->AddObserver(this, "ipc:content-shutdown", false);
-      obs->AddObserver(this, "xpcom-shutdown", false);
-      obs->AddObserver(this, "outer-window-destroyed", false);
+
 #ifdef MOZ_WIDGET_GONK
       // To monitor the volume settings based on audio channel.
       obs->AddObserver(this, "mozsettings-changed", false);
