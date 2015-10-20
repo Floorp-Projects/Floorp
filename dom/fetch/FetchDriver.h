@@ -95,7 +95,6 @@ private:
   enum MainFetchOpType
   {
     NETWORK_ERROR,
-    BASIC_FETCH,
     HTTP_FETCH,
     NUM_MAIN_FETCH_OPS
   };
@@ -116,7 +115,6 @@ private:
   nsresult Fetch();
   MainFetchOp SetTaintingAndGetNextOp();
   nsresult ContinueFetch();
-  nsresult BasicFetch();
   nsresult HttpFetch(bool aCORSFlag = false, bool aCORSPreflightFlag = false, bool aAuthenticationFlag = false);
   nsresult ContinueHttpFetchAfterNetworkFetch();
   // Returns the filtered response sent to the observer.
