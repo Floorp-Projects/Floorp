@@ -3,7 +3,7 @@
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread_t f_Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -22,7 +22,7 @@ Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread(JNIEnv * arg0, jclass 
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onResume_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoAppShell_onResume_t f_Java_org_mozilla_gecko_GeckoAppShell_onResume;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_onResume) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -41,7 +41,7 @@ Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv * arg0, jclass arg1) {
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable_t)(JNIEnv *, jclass, jobject, jint);
 static Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable_t f_Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv * arg0, jclass arg1, jobject arg2, jint arg3) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -60,7 +60,7 @@ Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv * arg
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure_t f_Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -79,7 +79,7 @@ Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv * arg0, jclas
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash_t)(JNIEnv *, jclass, jstring);
 static Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash_t f_Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv * arg0, jclass arg1, jstring arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -98,7 +98,7 @@ Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv * arg0, jclass arg1,
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent_t)(JNIEnv *, jclass, jboolean);
 static Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent_t f_Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv * arg0, jclass arg1, jboolean arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -117,7 +117,7 @@ Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv * arg0, jclas
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange_t)(JNIEnv *, jclass, jdouble, jboolean, jdouble);
 static Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv * arg0, jclass arg1, jdouble arg2, jboolean arg3, jdouble arg4) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -136,7 +136,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyBatteryChange(JNIEnv * arg0, jclass a
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite_t f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -155,7 +155,7 @@ Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv * arg
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition_t)(JNIEnv *, jclass, jint, jint);
 static Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition_t f_Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv * arg0, jclass arg1, jint arg2, jint arg3) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -174,7 +174,7 @@ Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv * arg0, jc
 
 typedef jfloat (*Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity_t f_Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity;
-extern "C" NS_EXPORT jfloat JNICALL
+extern "C" NS_EXPORT jfloat MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -193,7 +193,7 @@ Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity(JNIEnv * arg0, jclas
 
 typedef jobject (*Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits_t f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits;
-extern "C" NS_EXPORT jobject JNICALL
+extern "C" NS_EXPORT jobject MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv * arg0, jclass arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -212,7 +212,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv * arg0, jclass arg1, 
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface_t f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface(JNIEnv * arg0, jclass arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -231,7 +231,7 @@ Java_org_mozilla_gecko_GeckoAppShell_addPresentationSurface(JNIEnv * arg0, jclas
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface_t f_Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(JNIEnv * arg0, jclass arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -250,7 +250,7 @@ Java_org_mozilla_gecko_GeckoAppShell_removePresentationSurface(JNIEnv * arg0, jc
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden_t f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv * arg0, jclass arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -269,7 +269,7 @@ Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv * arg0, jcl
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent_t)(JNIEnv *, jclass, jobject);
 static Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv * arg0, jclass arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -288,7 +288,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv * arg0, jclass ar
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers_t)(JNIEnv *, jclass, jstring, jstring);
 static Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers_t f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers(JNIEnv * arg0, jclass arg1, jstring arg2, jstring arg3) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -307,7 +307,7 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers(JNIEnv * arg0, jclass 
 
 typedef jlong (*Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback_t f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback;
-extern "C" NS_EXPORT jlong JNICALL
+extern "C" NS_EXPORT jlong MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -326,7 +326,7 @@ Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv * arg0, jclass a
 
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge_t)(JNIEnv *, jclass, jbyteArray);
 static Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge_t f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge(JNIEnv * arg0, jclass arg1, jbyteArray arg2) {
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -345,7 +345,7 @@ Java_org_mozilla_gecko_GeckoAppShell_cameraCallbackBridge(JNIEnv * arg0, jclass 
 
 typedef jdouble (*Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime_t)(JNIEnv *, jclass);
 static Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime_t f_Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime;
-extern "C" NS_EXPORT jdouble JNICALL
+extern "C" NS_EXPORT jdouble MOZ_JNICALL
 Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -364,7 +364,7 @@ Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv * arg0, jclass ar
 
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(JNIEnv * arg0, jobject arg1) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -383,7 +383,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_abortAnimation(JNIEnv * arg0,
 
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_init_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_init_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv * arg0, jobject arg1) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_init) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -402,7 +402,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv * arg0, jobject a
 
 typedef jboolean (*Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent_t)(JNIEnv *, jobject, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent;
-extern "C" NS_EXPORT jboolean JNICALL
+extern "C" NS_EXPORT jboolean MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv * arg0, jobject arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -421,7 +421,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv * arg
 
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent_t)(JNIEnv *, jobject, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent(JNIEnv * arg0, jobject arg1, jobject arg2) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -440,7 +440,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleMotionEvent(JNIEnv * ar
 
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv * arg0, jobject arg1) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -459,7 +459,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv * arg0, jobjec
 
 typedef jboolean (*Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint;
-extern "C" NS_EXPORT jboolean JNICALL
+extern "C" NS_EXPORT jboolean MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint(JNIEnv * arg0, jobject arg1) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -478,7 +478,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getRedrawHint(JNIEnv * arg0, 
 
 typedef void (*Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode_t)(JNIEnv *, jobject, jint);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode;
-extern "C" NS_EXPORT void JNICALL
+extern "C" NS_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(JNIEnv * arg0, jobject arg1, jint arg2) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
@@ -497,7 +497,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_setOverScrollMode(JNIEnv * ar
 
 typedef jint (*Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode_t f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode;
-extern "C" NS_EXPORT jint JNICALL
+extern "C" NS_EXPORT jint MOZ_JNICALL
 Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv * arg0, jobject arg1) {
     if (!f_Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
