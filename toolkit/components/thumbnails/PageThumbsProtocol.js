@@ -120,9 +120,6 @@ Protocol.prototype = {
   },
 
   resolveURI(resURI) {
-    if (resURI.host != PageThumbs.staticHost)
-      throw Cr.NS_ERROR_NOT_AVAILABLE;
-
     let {url} = parseURI(resURI);
     let path = PageThumbsStorage.getFilePathForURL(url);
     return OS.Path.toFileURI(path);
@@ -142,9 +139,10 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Protocol]);
  * @return The parsed parameters.
  */
 function parseURI(aURI) {
-  let {scheme, staticHost} = PageThumbs;
-  let re = new RegExp("^" + scheme + "://" + staticHost + ".*?\\?");
-  let query = aURI.spec.replace(re, "");
+  if (aURI.host != PageThumbs.staticHost)
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
+
+  let {query} = aURI.QueryInterface(Ci.nsIURL);
   let params = {};
 
   query.split("&").forEach(function (aParam) {
