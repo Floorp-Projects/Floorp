@@ -51,7 +51,7 @@ CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm)
 #ifdef JS_CODEGEN_X64
         MOZ_ASSERT((uint64_t)raw_ <= UINT32_MAX);
 #endif
-        new_off = (uintptr_t)raw_;
+        new_off = masm->actualOffset((uintptr_t)raw_);
 #ifdef JS_SMALL_BRANCH
         jumpTableEntryOffset = masm->actualIndex(jumpTableEntryOffset);
 #endif
@@ -72,7 +72,7 @@ CodeLocationLabel::repoint(JitCode* code, MacroAssembler* masm)
 #ifdef JS_CODEGEN_X64
         MOZ_ASSERT((uint64_t)raw_ <= UINT32_MAX);
 #endif
-        new_off = (uintptr_t)raw_;
+        new_off = masm->actualOffset((uintptr_t)raw_);
      }
      MOZ_ASSERT(new_off < code->instructionsSize());
 
@@ -81,8 +81,15 @@ CodeLocationLabel::repoint(JitCode* code, MacroAssembler* masm)
 }
 
 void
+CodeOffsetLabel::fixup(MacroAssembler* masm)
+{
+     offset_ = masm->actualOffset(offset_);
+}
+
+void
 CodeOffsetJump::fixup(MacroAssembler* masm)
 {
+     offset_ = masm->actualOffset(offset_);
 #ifdef JS_SMALL_BRANCH
      jumpTableIndex_ = masm->actualIndex(jumpTableIndex_);
 #endif
@@ -244,9 +251,10 @@ class IonCache::StubAttacher
         PatchJump(rejoinJump, rejoinLabel_);
     }
 
-    void patchStubCodePointer(JitCode* code) {
+    void patchStubCodePointer(MacroAssembler& masm, JitCode* code) {
         if (hasStubCodePatchOffset_) {
             AutoWritableJitCode awjc(code);
+            stubCodePatchOffset_.fixup(&masm);
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, stubCodePatchOffset_),
                                                ImmPtr(code), STUB_ADDR);
         }
@@ -297,7 +305,7 @@ IonCache::attachStub(MacroAssembler& masm, StubAttacher& attacher, Handle<JitCod
     // Replace the STUB_ADDR constant by the address of the generated stub, such
     // as it can be kept alive even if the cache is flushed (see
     // MarkJitExitFrame).
-    attacher.patchStubCodePointer(code);
+    attacher.patchStubCodePointer(masm, code);
 
     // Update the failure path.
     attacher.patchNextStubJump(masm, code);

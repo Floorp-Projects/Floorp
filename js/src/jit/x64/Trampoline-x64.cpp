@@ -543,8 +543,10 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     writePerfSpewerJitCodeProfile(code, "ArgumentsRectifier");
 #endif
 
+    CodeOffsetLabel returnLabel(returnOffset);
+    returnLabel.fixup(&masm);
     if (returnAddrOut)
-        *returnAddrOut = (void*)(code->raw() + returnOffset);
+        *returnAddrOut = (void*) (code->raw() + returnLabel.offset());
     return code;
 }
 

@@ -1271,6 +1271,7 @@ class Assembler : public AssemblerShared
 
   public:
     void resetCounter();
+    uint32_t actualOffset(uint32_t off) const { return off; }
     uint32_t actualIndex(uint32_t) const;
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index);
     static uint32_t NopFill;
@@ -1714,7 +1715,7 @@ class Assembler : public AssemblerShared
 
     // See Bind
     size_t labelOffsetToPatchOffset(size_t offset) {
-        return offset;
+        return actualOffset(offset);
     }
 
     void as_bkpt();

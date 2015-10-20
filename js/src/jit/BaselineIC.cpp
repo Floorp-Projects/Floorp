@@ -6260,7 +6260,9 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 void
 ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
-    cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(code->raw() + returnOffset_);
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(code->raw() + offset.offset());
 }
 
 bool
@@ -7757,7 +7759,9 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 void
 ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
-    cx->compartment()->jitCompartment()->initBaselineSetPropReturnAddr(code->raw() + returnOffset_);
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->jitCompartment()->initBaselineSetPropReturnAddr(code->raw() + offset.offset());
 }
 
 static void
@@ -9533,7 +9537,9 @@ ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<Jit
     if (MOZ_UNLIKELY(isSpread_))
         return;
 
-    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + returnOffset_,
+    CodeOffsetLabel offset(returnOffset_);
+    offset.fixup(&masm);
+    cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset(),
                                                                     isConstructing_);
 }
 
