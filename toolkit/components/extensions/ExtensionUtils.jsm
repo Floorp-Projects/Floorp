@@ -45,7 +45,8 @@ function runSafeSync(context, f, ...args)
   try {
     args = Cu.cloneInto(args, context.cloneScope);
   } catch (e) {
-    dump(`runSafe failure\n${context.cloneScope}\n${Error().stack}`);
+    Cu.reportError(e);
+    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${Error().stack}`);
   }
   return runSafeSyncWithoutClone(f, ...args);
 }
@@ -57,7 +58,8 @@ function runSafe(context, f, ...args)
   try {
     args = Cu.cloneInto(args, context.cloneScope);
   } catch (e) {
-    dump(`runSafe failure\n${context.cloneScope}\n${Error().stack}`);
+    Cu.reportError(e);
+    dump(`runSafe failure: cloning into ${context.cloneScope}: ${e}\n\n${Error().stack}`);
   }
   return runSafeWithoutClone(f, ...args);
 }
