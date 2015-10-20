@@ -415,6 +415,13 @@ namespace detail {
 template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
 class NativeStubImpl;
 
+// Bug 1207642 - Work around Dalvik bug by realigning stack on JNI entry
+#ifdef __i386__
+#define MOZ_JNICALL JNICALL __attribute__((force_align_arg_pointer))
+#else
+#define MOZ_JNICALL JNICALL
+#endif
+
 // Specialization for instance methods with non-void return type
 template<class Traits, class Impl, typename... Args>
 class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
@@ -427,8 +434,8 @@ class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
 public:
     // Instance method
     template<ReturnType (Impl::*Method) (Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jobject instance,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
                       "Native call proxy only supports void return type");
@@ -443,8 +450,8 @@ public:
 
     // Instance method with instance reference
     template<ReturnType (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jobject instance,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
                       "Native call proxy only supports void return type");
@@ -471,8 +478,8 @@ class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
 public:
     // Instance method
     template<void (Impl::*Method) (Args...)>
-    static void Wrap(JNIEnv* env, jobject instance,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
             Dispatch(ProxyNativeCall<
@@ -489,8 +496,8 @@ public:
 
     // Instance method with instance reference
     template<void (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static void Wrap(JNIEnv* env, jobject instance,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
             Dispatch(ProxyNativeCall<
@@ -509,7 +516,7 @@ public:
 
     // Overload for DisposeNative
     template<void (NativeImpl<Owner, Impl>::*Method) (const typename Owner::LocalRef&)>
-    static void Wrap(JNIEnv* env, jobject instance)
+    static MOZ_JNICALL void Wrap(JNIEnv* env, jobject instance)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
             Dispatch(ProxyNativeCall<Impl, Owner, /* IsStatic */ false,
@@ -537,8 +544,8 @@ class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
 public:
     // Static method
     template<ReturnType (*Method) (Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jclass,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jclass, typename TypeAdapter<Args>::JNIType... args)
     {
         static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
                       "Native call proxy only supports void return type");
@@ -549,8 +556,8 @@ public:
 
     // Static method with class reference
     template<ReturnType (*Method) (const ClassObject::LocalRef&, Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jclass cls,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         static_assert(!mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value,
                       "Native call proxy only supports void return type");
@@ -573,8 +580,8 @@ class NativeStubImpl<Traits, Impl, jni::Args<Args...>,
 public:
     // Static method
     template<void (*Method) (Args...)>
-    static void Wrap(JNIEnv* env, jclass cls,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
             Dispatch(ProxyNativeCall<
@@ -587,8 +594,8 @@ public:
 
     // Static method with class reference
     template<void (*Method) (const ClassObject::LocalRef&, Args...)>
-    static void Wrap(JNIEnv* env, jclass cls,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
             Dispatch(ProxyNativeCall<

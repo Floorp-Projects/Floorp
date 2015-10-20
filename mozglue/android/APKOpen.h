@@ -25,4 +25,13 @@ static const int SUCCESS = 0;
 static const int FAILURE = 1;
 void JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg);
 
+// Bug 1207642 - Work around Dalvik bug by realigning stack on JNI entry
+#ifndef MOZ_JNICALL
+# ifdef __i386__
+#  define MOZ_JNICALL JNICALL __attribute__((force_align_arg_pointer))
+# else
+#  define MOZ_JNICALL JNICALL
+# endif
+#endif
+
 #endif /* APKOpen_h */
