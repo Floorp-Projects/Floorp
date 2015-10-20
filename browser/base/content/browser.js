@@ -257,6 +257,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
   "resource:///modules/ReaderParent.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
+  "resource://gre/modules/LoginManagerParent.jsm");
+
 var gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -1193,6 +1196,10 @@ var gBrowserInit = {
         break;
       }
     }, false, true);
+
+    gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
+      gIdentityHandler.refreshForInsecureLoginForms();
+    });
 
     let uriToLoad = this._getUriToLoad();
     if (uriToLoad && uriToLoad != "about:blank") {
@@ -7056,9 +7063,7 @@ var gIdentityHandler = {
     }
 
     // Then, update the user interface with the available data.
-    if (this._identityBox) {
-      this.refreshIdentityBlock();
-    }
+    this.refreshIdentityBlock();
     // Handle a location change while the Control Center is focused
     // by closing the popup (bug 1207542)
     if (shouldHidePopup) {
@@ -7069,6 +7074,20 @@ var gIdentityHandler = {
     // we receive a new security state on the existing page (i.e. from a
     // subframe). If the user opened the popup and looks at the provided
     // information we don't want to suddenly change the panel contents.
+  },
+
+  /**
+   * This is called asynchronously when requested by the Logins module, after
+   * the insecure login forms state for the page has been updated.
+   */
+  refreshForInsecureLoginForms() {
+    // Check this._uri because we don't want to refresh the user interface if
+    // this is called before the first page load in the window for any reason.
+    if (!this._uri) {
+      Cu.reportError("Unexpected early call to refreshForInsecureLoginForms.");
+      return;
+    }
+    this.refreshIdentityBlock();
   },
 
   /**
@@ -7107,6 +7126,10 @@ var gIdentityHandler = {
    * Updates the identity block user interface with the data from this object.
    */
   refreshIdentityBlock() {
+    if (!this._identityBox) {
+      return;
+    }
+
     let icon_label = "";
     let tooltip = "";
     let icon_country_label = "";
@@ -7175,6 +7198,11 @@ var gIdentityHandler = {
           this._identityBox.classList.add("weakCipher");
         }
       }
+      if (LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser)) {
+        // Insecure login forms can only be present on "unknown identity"
+        // pages, either already insecure or with mixed active content loaded.
+        this._identityBox.classList.add("insecureLoginForms");
+      }
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
     }
 
@@ -7210,6 +7238,12 @@ var gIdentityHandler = {
       connection = "secure-ev";
     } else if (this._isSecure) {
       connection = "secure";
+    }
+
+    // Determine if there are insecure login forms.
+    let loginforms = "secure";
+    if (LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser)) {
+      loginforms = "insecure";
     }
 
     // Determine the mixed content state.
@@ -7249,6 +7283,7 @@ var gIdentityHandler = {
     for (let id of elementIDs) {
       let element = document.getElementById(id);
       updateAttribute(element, "connection", connection);
+      updateAttribute(element, "loginforms", loginforms);
       updateAttribute(element, "ciphers", ciphers);
       updateAttribute(element, "mixedcontent", mixedcontent);
       updateAttribute(element, "isbroken", this._isBroken);

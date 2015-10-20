@@ -25,6 +25,8 @@ Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Locale",
                                   "resource://gre/modules/Locale.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+                                  "resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MatchPattern",
                                   "resource://gre/modules/MatchPattern.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -58,6 +60,8 @@ var {
   injectAPI,
   flushJarCache,
 } = ExtensionUtils;
+
+const LOGGER_ID_BASE = "addons.webextension.";
 
 var scriptScope = this;
 
@@ -336,8 +340,11 @@ this.Extension = function(addonData)
   this.addonData = addonData;
   this.id = addonData.id;
   this.baseURI = Services.io.newURI("moz-extension://" + uuid, null, null);
+  this.baseURI.QueryInterface(Ci.nsIURL);
   this.manifest = null;
   this.localeMessages = null;
+  this.logger = Log.repository.getLogger(LOGGER_ID_BASE + this.id.replace(/\./g, "-"));
+  this.principal = this.createPrincipal();
 
   this.views = new Set();
 
@@ -433,12 +440,10 @@ this.Extension.generate = function(id, data)
     let components = filename.split("/");
     let path = "";
     for (let component of components.slice(0, -1)) {
-      path += component;
+      path += component + "/";
       if (!zipW.hasEntry(path)) {
         zipW.addEntryDirectory(path, time, false);
       }
-
-      path += "/";
     }
   }
 
@@ -485,6 +490,24 @@ Extension.prototype = {
 
   testMessage(...args) {
     Management.emit("test-message", this, ...args);
+  },
+
+  createPrincipal(uri = this.baseURI) {
+    return Services.scriptSecurityManager.createCodebasePrincipal(
+      uri, {addonId: this.id});
+  },
+
+  // Checks that the given URL is a child of our baseURI.
+  isExtensionURL(url) {
+    let uri = Services.io.newURI(url, null, null);
+
+    let common = this.baseURI.getCommonBaseSpec(uri);
+    return common == this.baseURI.spec;
+  },
+
+  // Report an error about the extension's manifest file.
+  manifestError(message) {
+    this.logger.error(`Loading extension '${this.id}': ${message}`);
   },
 
   // Representation of the extension to send to content

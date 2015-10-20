@@ -1325,6 +1325,9 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 .urlbar-icon {
   padding: 0 3px;
+  /* 16x16 icon with border-box sizing */
+  width: 22px;
+  height: 16px;
 }
 
 .search-go-container {
@@ -2802,7 +2805,7 @@ notification[value="loop-sharing-notification"] .messageImage {
 %include browser-aero.css
 }
 
-.browser-action-panel > .panel-arrowcontainer > .panel-arrowcontent {
+.browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
 
