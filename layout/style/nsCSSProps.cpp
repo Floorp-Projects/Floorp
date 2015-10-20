@@ -2278,9 +2278,6 @@ bool nsCSSProps::GetColorName(int32_t aPropValue, nsCString &aStr)
 }
 
 const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
-    // Note that this uses the special BackendOnly style struct ID
-    // (which does need to be valid for storing in the
-    // nsCSSCompressedDataBlock::mStyleBits bitfield).
     #define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_,     \
                      kwtable_, stylestruct_, stylestructoffset_, animtype_) \
         eStyleStruct_##stylestruct_,
@@ -2971,9 +2968,6 @@ nsCSSProps::gPropertyCountInStruct[nsStyleStructID_Length] = {
 /* static */ const size_t
 nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
 
-  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, pref_, \
-                               parsevariant_, kwtable_)            \
-      size_t(-1),
   #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, \
                            kwtable_, group_, stylestruct_,                    \
                            stylestructoffset_, animtype_)                     \
@@ -2984,7 +2978,6 @@ nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
   #include "nsCSSPropList.h"
   #undef CSS_PROP
   #undef CSS_PROP_LOGICAL
-  #undef CSS_PROP_BACKENDONLY
 
 };
 

@@ -61,13 +61,12 @@
   CSS_PROP_*] gives the name of the style struct.  Can be used to make
   nsStyle##stylestruct_ and eStyleStruct_##stylestruct_
 
-  -. 'stylestructoffset_' [not used for CSS_PROP_BACKENDONLY] gives the
-  result of offsetof(nsStyle*, member).  Ignored (and generally
-  CSS_PROP_NO_OFFSET, or -1) for properties whose animtype_ is
-  eStyleAnimType_None.
+  -. 'stylestructoffset_' gives the result of offsetof(nsStyle*,
+  member).  Ignored (and generally CSS_PROP_NO_OFFSET, or -1) for
+  properties whose animtype_ is eStyleAnimType_None.
 
-  -. 'animtype_' [not used for CSS_PROP_BACKENDONLY] gives the
-  animation type (see nsStyleAnimType) of this property.
+  -. 'animtype_' gives the animation type (see nsStyleAnimType) of this
+  property.
 
   CSS_PROP_SHORTHAND only takes 1-5.
 
@@ -158,14 +157,6 @@
 #define CSS_PROP_SVG(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, SVG, stylestructoffset_, animtype_)
 #define CSS_PROP_SVGRESET(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, SVGReset, stylestructoffset_, animtype_)
 #define CSS_PROP_VARIABLES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Variables, stylestructoffset_, animtype_)
-
-// For properties that are stored in the CSS backend but are not
-// computed.  An includer may define this in addition to CSS_PROP, but
-// otherwise we treat it as the same.
-#ifndef CSS_PROP_BACKENDONLY
-#define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, BackendOnly, CSS_PROP_NO_OFFSET, eStyleAnimType_None)
-#define DEFINED_CSS_PROP_BACKENDONLY
-#endif
 
 // And similarly for logical properties.  An includer can define
 // CSS_PROP_LOGICAL to capture all logical properties, but otherwise they
@@ -294,10 +285,6 @@
 #define DEFINED_CSS_PROP_VARIABLES
 #endif
 
-#ifndef CSS_PROP_BACKENDONLY
-#define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_) /* nothing */
-#define DEFINED_CSS_PROP_BACKENDONLY
-#endif
 #ifndef CSS_PROP_LOGICAL
 #define CSS_PROP_LOGICAL(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, group_, struct_, stylestructoffset_, animtype_) /* nothing */
 #define DEFINED_CSS_PROP_LOGICAL
@@ -4240,10 +4227,6 @@ CSS_PROP_FONT(
 #undef CSS_PROP_SVG
 #undef CSS_PROP_SVGRESET
 #undef CSS_PROP_VARIABLES
-#ifdef DEFINED_CSS_PROP_BACKENDONLY
-#undef CSS_PROP_BACKENDONLY
-#undef DEFINED_CSS_PROP_BACKENDONLY
-#endif
 
 #else /* !defined(USED_CSS_PROP) */
 
@@ -4342,10 +4325,6 @@ CSS_PROP_FONT(
 #ifdef DEFINED_CSS_PROP_VARIABLES
 #undef CSS_PROP_VARIABLES
 #undef DEFINED_CSS_PROP_VARIABLES
-#endif
-#ifdef DEFINED_CSS_PROP_BACKENDONLY
-#undef CSS_PROP_BACKENDONLY
-#undef DEFINED_CSS_PROP_BACKENDONLY
 #endif
 
 #endif /* !defined(USED_CSS_PROP) */
