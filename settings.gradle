@@ -30,12 +30,7 @@ def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
 project(':app').projectDir = new File(gradleRoot, 'app')
 project(':base').projectDir = new File(gradleRoot, 'base')
 project(':omnijar').projectDir = new File(gradleRoot, 'omnijar')
-project(':thirdparty').projectDir = new File(gradleRoot, 'thirdparty')
-
-if (json.substs.MOZ_INSTALL_TRACKING) {
-    include ':thirdparty_adjust_sdk'
-    project(':thirdparty_adjust_sdk').projectDir = new File(gradleRoot, 'thirdparty_adjust_sdk')
-}
+project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
 // The Gradle instance is shared between settings.gradle and all the
 // other build.gradle files (see
