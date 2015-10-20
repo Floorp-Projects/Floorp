@@ -535,7 +535,13 @@ private:
         return cachedData;                                              \
       /* Have the rulenode deal */                                      \
       AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
-      return mRuleNode->GetStyle##name_<aComputeData>(this);            \
+      const nsStyle##name_ * newData =                                  \
+        mRuleNode->GetStyle##name_<aComputeData>(this, mBits);          \
+      /* always cache inherited data on the style context; the rule */  \
+      /* node set the bit in mBits for us if needed. */                 \
+      mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] =        \
+        const_cast<nsStyle##name_ *>(newData);                          \
+      return newData;                                                   \
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                      \
     template<bool aComputeData>                                         \
