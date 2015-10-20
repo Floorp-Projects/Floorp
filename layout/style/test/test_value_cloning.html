@@ -128,16 +128,11 @@ function iframe_loaded(event)
     }
     start_ser.push(cur_ser);
 
-    var cur_compute;
-    if (!("backend_only" in info)) {
-      cur_compute = get_computed_value(cur_cs, current_item.prop);
-      if (cur_compute == "") {
-	isnot(cur_compute, "",
-	      "computed value should be nonempty for " +
-	      current_item.prop + ": " + current_item.value);
-      }
-    } else {
-      cur_compute = undefined;
+    var cur_compute = get_computed_value(cur_cs, current_item.prop);
+    if (cur_compute == "") {
+      isnot(cur_compute, "",
+            "computed value should be nonempty for " +
+            current_item.prop + ": " + current_item.value);
     }
     start_compute.push(cur_compute);
   }
@@ -164,19 +159,17 @@ function iframe_loaded(event)
        "serialization should match when cloning " +
        current_item.prop + ": " + current_item.value);
 
-    if (!("backend_only" in info)) {
-      var end_compute = get_computed_value(test_cs[idx], current_item.prop);
-      // Output computed values only when the test failed.
-      // Computed values may be very long.
-      if (end_compute == start_compute[idx]) {
-        ok(true,
-           "computed values should match when cloning " +
-           current_item.prop + ": " + current_item.value);
-      } else {
-        is(end_compute, start_compute[idx],
-           "computed values should match when cloning " +
-           current_item.prop + ": " + current_item.value);
-      }
+    var end_compute = get_computed_value(test_cs[idx], current_item.prop);
+    // Output computed values only when the test failed.
+    // Computed values may be very long.
+    if (end_compute == start_compute[idx]) {
+      ok(true,
+         "computed values should match when cloning " +
+         current_item.prop + ": " + current_item.value);
+    } else {
+      is(end_compute, start_compute[idx],
+         "computed values should match when cloning " +
+         current_item.prop + ": " + current_item.value);
     }
   }
 
