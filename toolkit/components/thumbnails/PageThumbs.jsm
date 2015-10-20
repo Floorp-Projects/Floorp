@@ -158,7 +158,7 @@ this.PageThumbs = {
    */
   getThumbnailURL: function PageThumbs_getThumbnailURL(aUrl) {
     return this.scheme + "://" + this.staticHost +
-           "?url=" + encodeURIComponent(aUrl);
+           "/?url=" + encodeURIComponent(aUrl);
   },
 
    /**

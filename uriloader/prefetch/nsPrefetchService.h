@@ -40,10 +40,7 @@ public:
     nsPrefetchService();
 
     nsresult Init();
-    void     ProcessNextURI();
-
-    nsPrefetchNode *GetCurrentNode() { return mCurrentNode.get(); }
-    nsPrefetchNode *GetQueueHead() { return mQueueHead; }
+    void     ProcessNextURI(nsPrefetchNode *aFinished);
 
     void NotifyLoadRequested(nsPrefetchNode *node);
     void NotifyLoadCompleted(nsPrefetchNode *node);
@@ -69,7 +66,8 @@ private:
 
     nsPrefetchNode                   *mQueueHead;
     nsPrefetchNode                   *mQueueTail;
-    RefPtr<nsPrefetchNode>          mCurrentNode;
+    nsTArray<RefPtr<nsPrefetchNode>> mCurrentNodes;
+    int32_t                           mMaxParallelism;
     int32_t                           mStopCount;
     // true if pending document loads have ever reached zero.
     int32_t                           mHaveProcessed;

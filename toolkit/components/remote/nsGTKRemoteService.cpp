@@ -43,21 +43,11 @@ nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName)
   gtk_widget_realize(mServerWindow);
   HandleCommandsFor(mServerWindow, nullptr);
 
-  mWindows.EnumerateRead(StartupHandler, this);
+  for (auto iter = mWindows.Iter(); !iter.Done(); iter.Next()) {
+    HandleCommandsFor(iter.Key(), iter.UserData());
+  }
 
   return NS_OK;
-}
-
-PLDHashOperator
-nsGTKRemoteService::StartupHandler(GtkWidget* aKey,
-                                   nsIWeakReference* aData,
-                                   void* aClosure)
-{
-  GtkWidget* widget = (GtkWidget*) aKey;
-  nsGTKRemoteService* aThis = (nsGTKRemoteService*) aClosure;
-
-  aThis->HandleCommandsFor(widget, aData);
-  return PL_DHASH_NEXT;
 }
 
 static nsIWidget* GetMainWidget(nsIDOMWindow* aWindow)
