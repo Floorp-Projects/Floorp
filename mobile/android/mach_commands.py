@@ -103,10 +103,6 @@ class MachCommands(MachCommandBase):
             defines=defines,
             deps=os.path.join(self.topobjdir, 'mobile/android/gradle/.deps/local.properties.pp'))
 
-        srcdir('preprocessed_code/build.gradle', 'mobile/android/gradle/preprocessed_code/build.gradle')
-        srcdir('preprocessed_code/src/main/AndroidManifest.xml', 'mobile/android/gradle/preprocessed_code/AndroidManifest.xml')
-        srcdir('preprocessed_code/src/adjust/java/org/mozilla/gecko/adjust', 'mobile/android/base/adjust')
-
         srcdir('thirdparty/build.gradle', 'mobile/android/gradle/thirdparty/build.gradle')
         srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
         srcdir('thirdparty/src/main/java', 'mobile/android/thirdparty')
