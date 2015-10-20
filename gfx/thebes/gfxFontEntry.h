@@ -20,6 +20,7 @@
 #include "nsDataHashtable.h"
 #include "harfbuzz/hb.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/UniquePtr.h"
 
 typedef struct gr_face gr_face;
 
@@ -429,7 +430,7 @@ public:
 
     RefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t         mUVSOffset;
-    nsAutoArrayPtr<uint8_t> mUVSData;
+    mozilla::UniquePtr<uint8_t[]> mUVSData;
     nsAutoPtr<gfxUserFontData> mUserFontData;
     nsAutoPtr<gfxSVGGlyphs> mSVGGlyphs;
     // list of gfxFonts that are using SVG glyphs
