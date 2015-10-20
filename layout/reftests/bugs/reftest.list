@@ -1936,4 +1936,4 @@ fuzzy(1,74) fuzzy-if(gtkWidget,6,79) == 1174332-1.html 1174332-1-ref.html
 == 1202512-1.html 1202512-1-ref.html
 == 1202512-2.html 1202512-2-ref.html
 != 1207326-1.html about:blank
-fails == 1209603-1.html 1209603-1-ref.html # bug 1209603
+== 1209603-1.html 1209603-1-ref.html
