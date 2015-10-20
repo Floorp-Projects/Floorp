@@ -187,6 +187,13 @@ template<bool IsStatic, typename ReturnType,
          class Traits, class Impl, class Args>
 class NativeStubImpl;
 
+// Bug 1207642 - Work around Dalvik bug by realigning stack on JNI entry
+#ifdef __i386__
+#define MOZ_JNICALL JNICALL __attribute__((force_align_arg_pointer))
+#else
+#define MOZ_JNICALL JNICALL
+#endif
+
 // Specialization for instance methods with non-void return type
 template<typename ReturnType, class Traits, class Impl, typename... Args>
 class NativeStubImpl<false, ReturnType, Traits, Impl, jni::Args<Args...>>
@@ -197,8 +204,8 @@ class NativeStubImpl<false, ReturnType, Traits, Impl, jni::Args<Args...>>
 public:
     // Instance method
     template<ReturnType (Impl::*Method) (Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jobject instance,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
@@ -210,8 +217,8 @@ public:
 
     // Instance method with instance reference
     template<ReturnType (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jobject instance,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
@@ -234,8 +241,8 @@ class NativeStubImpl<false, void, Traits, Impl, jni::Args<Args...>>
 public:
     // Instance method
     template<void (Impl::*Method) (Args...)>
-    static void Wrap(JNIEnv* env, jobject instance,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
@@ -246,8 +253,8 @@ public:
 
     // Instance method with instance reference
     template<void (Impl::*Method) (const typename Owner::LocalRef&, Args...)>
-    static void Wrap(JNIEnv* env, jobject instance,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jobject instance, typename TypeAdapter<Args>::JNIType... args)
     {
         Impl* const impl = NativePtr<Impl>::Get(env, instance);
         if (!impl) {
@@ -268,8 +275,8 @@ class NativeStubImpl<true, ReturnType, Traits, Impl, jni::Args<Args...>>
 public:
     // Static method
     template<ReturnType (*Method) (Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jclass,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jclass, typename TypeAdapter<Args>::JNIType... args)
     {
         return TypeAdapter<ReturnType>::FromNative(env,
                 (*Method)(TypeAdapter<Args>::ToNative(env, args)...));
@@ -277,8 +284,8 @@ public:
 
     // Static method with class reference
     template<ReturnType (*Method) (const ClassObject::LocalRef&, Args...)>
-    static ReturnJNIType Wrap(JNIEnv* env, jclass cls,
-                              typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL ReturnJNIType Wrap(JNIEnv* env,
+            jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         auto clazz = ClassObject::LocalRef::Adopt(env, cls);
         const auto res = TypeAdapter<ReturnType>::FromNative(env,
@@ -295,16 +302,16 @@ class NativeStubImpl<true, void, Traits, Impl, jni::Args<Args...>>
 public:
     // Static method
     template<void (*Method) (Args...)>
-    static void Wrap(JNIEnv* env, jclass,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jclass, typename TypeAdapter<Args>::JNIType... args)
     {
         (*Method)(TypeAdapter<Args>::ToNative(env, args)...);
     }
 
     // Static method with class reference
     template<void (*Method) (const ClassObject::LocalRef&, Args...)>
-    static void Wrap(JNIEnv* env, jclass cls,
-                     typename TypeAdapter<Args>::JNIType... args)
+    static MOZ_JNICALL void Wrap(JNIEnv* env,
+            jclass cls, typename TypeAdapter<Args>::JNIType... args)
     {
         auto clazz = ClassObject::LocalRef::Adopt(env, cls);
         (*Method)(clazz, TypeAdapter<Args>::ToNative(env, args)...);
