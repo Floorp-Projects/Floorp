@@ -8,7 +8,7 @@ import re
 STUB_TEMPLATE = '''
 typedef %(returnType)s (*%(functionName)s_t)(%(paramTypes)s);
 static %(functionName)s_t f_%(functionName)s;
-extern "C" NS_EXPORT %(returnType)s JNICALL
+extern "C" NS_EXPORT %(returnType)s MOZ_JNICALL
 %(functionName)s(%(parameterList)s) {
     if (!f_%(functionName)s) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
