@@ -46,8 +46,13 @@ android {
                     srcDir 'src/webrtc_video_render'
                 }
 
-                // Adjust helpers are included in the preprocessed_code project.
-                exclude 'org/mozilla/gecko/adjust/**'
+                if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
+                    exclude 'org/mozilla/gecko/adjust/StubAdjustHelper.java'
+                } else {
+                    exclude 'org/mozilla/gecko/adjust/AdjustHelper.java'
+                }
+
+                srcDir "${project.buildDir}/generated/source/preprocessed_code" // See syncPreprocessedCode.
             }
 
             res {
@@ -71,12 +76,19 @@ android {
     }
 }
 
+
+task syncPreprocessedCode(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
+    into("${project.buildDir}/generated/source/preprocessed_code")
+    from("${topobjdir}/mobile/android/base/generated/preprocessed")
+}
+
 task syncPreprocessedResources(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
     into("${project.buildDir}/generated/source/preprocessed_resources")
     from("${topobjdir}/mobile/android/base/res")
 }
 
 android.libraryVariants.all { variant ->
+    variant.preBuild.dependsOn syncPreprocessedCode
     variant.preBuild.dependsOn syncPreprocessedResources
 }
 
@@ -92,8 +104,11 @@ dependencies {
         compile 'com.google.android.gms:play-services-cast:8.1.0'
     }
 
-    compile project(':preprocessed_code')
     compile project(':thirdparty')
+
+    if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
+        compile project(':thirdparty_adjust_sdk')
+    }
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
