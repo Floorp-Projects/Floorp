@@ -282,11 +282,15 @@ public:
   #undef STYLE_STRUCT_INHERITED
 
   /**
-   * Returns whether this style context has cached, inherited style data for a
-   * given style struct.
+   * Returns whether this style context has cached style data for a
+   * given style struct and it does NOT own that struct.  This can
+   * happen because it was inherited from the parent style context, or
+   * because it was stored conditionally on the rule node.
    */
-  bool HasCachedInheritedStyleData(nsStyleStructID aSID)
-    { return mBits & nsCachedStyleData::GetBitForSID(aSID); }
+  bool HasCachedInheritedStyleData(nsStyleStructID aSID) {
+    return (mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
+           GetCachedStyleData(aSID);
+  }
 
   nsRuleNode* RuleNode() { return mRuleNode; }
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
@@ -602,15 +606,23 @@ private:
   // are owned by this style context and structs that are owned by one of
   // this style context's ancestors (which are indirectly owned since this
   // style context owns a reference to its parent).  If the bit in |mBits|
-  // is set for a struct, that means that the pointer for that struct is
-  // owned by an ancestor or by mRuleNode rather than by this style context.
-  // Since style contexts typically have some inherited data but only sometimes
-  // have reset data, we always allocate the mCachedInheritedData, but only
-  // sometimes allocate the mCachedResetData.
+  // is set for a non-null struct, that means that the pointer for that
+  // struct is owned by an ancestor or by mRuleNode rather than by this
+  // style context.  Since style contexts typically have some inherited
+  // data but only sometimes have reset data, we always allocate the
+  // mCachedInheritedData, but only sometimes allocate the
+  // mCachedResetData.
   nsResetStyleData*       mCachedResetData; // Cached reset style data.
   nsInheritedStyleData    mCachedInheritedData; // Cached inherited style data
-  uint64_t                mBits; // Which structs are inherited from the
-                                 // parent context or owned by mRuleNode.
+
+  // mBits stores a number of things:
+  //  - For all structs, when they are non-null in the style context's
+  //    storage, it records (using the style struct bits) which structs
+  //    are inherited from the parent context or owned by mRuleNode.
+  //  - It also stores the additional bits listed at the top of
+  //    nsStyleStruct.h.
+  uint64_t                mBits;
+
   uint32_t                mRefCnt;
 
 #ifdef DEBUG
