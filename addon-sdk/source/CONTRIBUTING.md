@@ -37,7 +37,6 @@ All changes need a review by someone on the Jetpack review crew:
 - [@mossop]
 - [@gozala]
 - [@ZER0]
-- [@erikvold]
 - [@jsantell]
 - [@zombie]
 
@@ -61,6 +60,5 @@ For API and developer ergonomics review, ask [@gozala].
 [@mossop]:https://github.com/mossop/
 [@gozala]:https://github.com/Gozala/
 [@ZER0]:https://github.com/ZER0/
-[@erikvold]:https://github.com/erikvold/
 [@jsantell]:https://github.com/jsantell
 [@zombie]:https://github.com/zombie
