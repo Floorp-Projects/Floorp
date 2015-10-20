@@ -33,7 +33,4 @@ include('../common.build')
 # nr_socket_short_term_violation_time.
 SOURCES += mtransport_cppsrcs
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
-
 FINAL_LIBRARY = 'xul'

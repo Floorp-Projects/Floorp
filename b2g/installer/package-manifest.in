@@ -44,9 +44,6 @@
 
 [xpcom]
 @RESPATH@/dependentlibs.list
-#ifdef GKMEDIAS_SHARED_LIBRARY
-@BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
-#endif
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
