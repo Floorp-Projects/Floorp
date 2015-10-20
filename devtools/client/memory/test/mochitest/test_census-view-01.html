@@ -19,7 +19,7 @@ Bug 1067491 - Test taking a census over the RDP.
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script>
 window.onload = function() {
-  var { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
+  var { censusReportToCensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
   var { INDENTATION, CensusView } = require("devtools/client/memory/modules/census-view");
   SimpleTest.waitForExplicitFinish();
   const countBreakdown = { by: "count", count: true, bytes: true };
@@ -52,7 +52,7 @@ window.onload = function() {
         { level: 1, name: "js::Shape2", bytes: 40, count: 4, },
         { level: 1, name: "js::Shape", bytes: 30, count: 3, },
   ];
-  var censusTreeNode = new CensusTreeNode(BREAKDOWN, REPORT);
+  var censusTreeNode = censusReportToCensusTreeNode(BREAKDOWN, REPORT);
 
   var view = new CensusView({
     censusTreeNode: censusTreeNode,
