@@ -246,39 +246,12 @@ public class TabsPanel extends LinearLayout
     }
 
     private static int getTabContainerHeight(TabsLayoutContainer tabsContainer) {
-        Resources resources = tabsContainer.getContext().getResources();
+        final Resources resources = tabsContainer.getContext().getResources();
 
-        int screenHeight = resources.getDisplayMetrics().heightPixels;
+        final int screenHeight = resources.getDisplayMetrics().heightPixels;
+        final int actionBarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
 
-        int actionBarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
-
-        if (HardwareUtils.isTablet() || AppConstants.NIGHTLY_BUILD) {
-            return screenHeight - actionBarHeight;
-        }
-
-        PanelView panelView = tabsContainer.getCurrentPanelView();
-        if (panelView != null && !panelView.shouldExpand()) {
-
-            // This allows us to accommodate varying height tab previews across different devices.
-            // We should be able to remove once we remove the list view and remove the chrome again
-            return resources.getDimensionPixelSize(R.dimen.tab_thumbnail_height)
-                 + resources.getDimensionPixelSize(R.dimen.tab_title_height)
-                 + 2 * (resources.getDimensionPixelSize(R.dimen.tab_highlight_stroke_width)
-                      + resources.getDimensionPixelSize(R.dimen.tab_vertical_padding)
-                      + resources.getDimensionPixelSize(R.dimen.tab_thumbnail_padding)
-                      + resources.getDimensionPixelSize(R.dimen.tab_thumbnail_margin));
-        }
-
-        Rect windowRect = new Rect();
-        tabsContainer.getWindowVisibleDisplayFrame(windowRect);
-        int windowHeight = windowRect.bottom - windowRect.top;
-
-        // The web content area should have at least 1.5x the height of the action bar.
-        // The tabs panel shouldn't take less than 50% of the screen height and can take
-        // up to 80% of the window height.
-        return (int) Math.max(screenHeight * 0.5f,
-                Math.min(windowHeight - 2.5f * actionBarHeight, windowHeight * 0.8f) - actionBarHeight);
-
+        return screenHeight - actionBarHeight;
     }
 
     @Override
