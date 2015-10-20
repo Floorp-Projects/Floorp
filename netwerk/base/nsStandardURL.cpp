@@ -424,7 +424,8 @@ nsStandardURL::NormalizeIDN(const nsCSubstring &host, nsCString &result)
 bool
 nsStandardURL::ValidIPv6orHostname(const char *host, uint32_t length)
 {
-    if (!host) {
+    if (!host || !*host) {
+        // Should not be NULL or empty string
         return false;
     }
 
