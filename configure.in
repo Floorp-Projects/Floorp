@@ -7992,13 +7992,8 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-if test -n "$GKMEDIAS_SHARED_LIBRARY"; then
-  AC_DEFINE(GKMEDIAS_SHARED_LIBRARY)
-fi
-AC_SUBST(GKMEDIAS_SHARED_LIBRARY)
-
 if test -z "$MOZ_NATIVE_ZLIB"; then
-if test -n "$JS_SHARED_LIBRARY" -o "$GKMEDIAS_SHARED_LIBRARY"; then
+if test -n "$JS_SHARED_LIBRARY"; then
   ZLIB_IN_MOZGLUE=1
   AC_DEFINE(ZLIB_IN_MOZGLUE)
 fi

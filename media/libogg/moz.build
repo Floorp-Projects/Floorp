@@ -19,7 +19,4 @@ UNIFIED_SOURCES += [
     'src/ogg_framing.c',
 ]
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
-
 FINAL_LIBRARY = 'gkmedias'

@@ -152,14 +152,6 @@ EXPORTS.angle.KHR += [ 'include/KHR/khrplatform.h' ]
 
 LOCAL_INCLUDES += [ 'include', 'src' ]
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
-
-# This tells ANGLE to build the translator with declspec(dllexport) on Windows
-# which we need to get these symbols exported from gkmedias
-DEFINES['COMPONENT_BUILD'] = True
-DEFINES['ANGLE_TRANSLATOR_IMPLEMENTATION'] = True
-
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
 
