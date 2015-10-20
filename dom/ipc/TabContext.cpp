@@ -285,10 +285,15 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     }
   }
 
-  nsCOMPtr<mozIApplication> ownApp = GetAppForId(originAttributes.mAppId);
-  if ((ownApp == nullptr) != (originAttributes.mAppId == NO_APP_ID)) {
-    mInvalidReason = "Got an ownAppId that didn't correspond to an app.";
-    return;
+  nsCOMPtr<mozIApplication> ownApp;
+  if (!originAttributes.mInBrowser) {
+    // mAppId corresponds to OwnOrContainingAppId; if mInBrowser is
+    // false then it's ownApp otherwise it's containingApp
+    ownApp = GetAppForId(originAttributes.mAppId);
+    if ((ownApp == nullptr) != (originAttributes.mAppId == NO_APP_ID)) {
+      mInvalidReason = "Got an ownAppId that didn't correspond to an app.";
+      return;
+    }
   }
 
   nsCOMPtr<mozIApplication> containingApp = GetAppForId(containingAppId);

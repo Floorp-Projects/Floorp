@@ -103,6 +103,8 @@ pref("devtools.debugger.ui.variables-searchbox-visible", false);
 // Enable the Memory tools
 pref("devtools.memory.enabled", false);
 
+pref("devtools.memory.custom-breakdowns", "{}");
+
 // Enable the Performance tools
 pref("devtools.performance.enabled", true);
 
