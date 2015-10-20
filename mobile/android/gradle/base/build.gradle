@@ -51,6 +51,8 @@ android {
             }
 
             res {
+                srcDir "src/branding/res"
+                srcDir "${project.buildDir}/generated/source/preprocessed_resources" // See syncPreprocessedResources.
                 if (mozconfig.substs.MOZ_CRASHREPORTER) {
                     srcDir "src/crashreporter/res"
                 }
@@ -69,6 +71,15 @@ android {
     }
 }
 
+task syncPreprocessedResources(type: Sync, dependsOn: rootProject.generateCodeAndResources) {
+    into("${project.buildDir}/generated/source/preprocessed_resources")
+    from("${topobjdir}/mobile/android/base/res")
+}
+
+android.libraryVariants.all { variant ->
+    variant.preBuild.dependsOn syncPreprocessedResources
+}
+
 dependencies {
     compile 'com.android.support:support-v4:23.0.1'
     compile 'com.android.support:appcompat-v7:23.0.1'
@@ -82,7 +93,6 @@ dependencies {
     }
 
     compile project(':preprocessed_code')
-    compile project(':preprocessed_resources')
     compile project(':thirdparty')
 
     testCompile 'junit:junit:4.12'
