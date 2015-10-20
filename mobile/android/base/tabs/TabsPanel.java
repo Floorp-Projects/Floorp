@@ -164,16 +164,14 @@ public class TabsPanel extends LinearLayout
             }
         });
 
-        if (AppConstants.NIGHTLY_BUILD || HardwareUtils.isTablet()) {
-            ViewStub backButtonStub = (ViewStub) findViewById(R.id.nav_back_stub);
-            mNavBackButton = (ImageButton) backButtonStub.inflate( );
-            mNavBackButton.setOnClickListener(new Button.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mActivity.onBackPressed();
-                }
-            });
-        }
+        ViewStub backButtonStub = (ViewStub) findViewById(R.id.nav_back_stub);
+        mNavBackButton = (ImageButton) backButtonStub.inflate( );
+        mNavBackButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mActivity.onBackPressed();
+            }
+        });
     }
 
     public void showMenu() {
