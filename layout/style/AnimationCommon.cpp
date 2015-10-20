@@ -455,14 +455,6 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
   return propertyAllowed;
 }
 
-/* static */ bool
-AnimationCollection::IsCompositorAnimationDisabledForFrame(
-  nsIFrame* aFrame)
-{
-  void* prop = aFrame->Properties().Get(nsIFrame::RefusedAsyncAnimation());
-  return bool(reinterpret_cast<intptr_t>(prop));
-}
-
 bool
 AnimationCollection::CanPerformOnCompositorThread(
   CanAnimateFlags aFlags) const
@@ -485,7 +477,7 @@ AnimationCollection::CanPerformOnCompositorThread(
     return false;
   }
 
-  if (IsCompositorAnimationDisabledForFrame(frame)) {
+  if (frame->RefusedAsyncAnimation()) {
     return false;
   }
 
