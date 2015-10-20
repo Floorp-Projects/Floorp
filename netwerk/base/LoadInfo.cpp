@@ -30,7 +30,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                            aTriggeringPrincipal : mLoadingPrincipal.get())
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
-  , mContentPolicyType(aContentPolicyType)
+  , mInternalContentPolicyType(aContentPolicyType)
   , mUpgradeInsecureRequests(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -88,7 +88,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mTriggeringPrincipal(rhs.mTriggeringPrincipal)
   , mLoadingContext(rhs.mLoadingContext)
   , mSecurityFlags(rhs.mSecurityFlags)
-  , mContentPolicyType(rhs.mContentPolicyType)
+  , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
   , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
   , mInnerWindowID(rhs.mInnerWindowID)
   , mOuterWindowID(rhs.mOuterWindowID)
@@ -112,7 +112,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
   , mSecurityFlags(aSecurityFlags)
-  , mContentPolicyType(aContentPolicyType)
+  , mInternalContentPolicyType(aContentPolicyType)
   , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
   , mInnerWindowID(aInnerWindowID)
   , mOuterWindowID(aOuterWindowID)
@@ -190,6 +190,14 @@ LoadInfo::GetSecurityFlags(nsSecurityFlags* aResult)
   return NS_OK;
 }
 
+void
+LoadInfo::SetWithCredentialsSecFlag()
+{
+  MOZ_ASSERT(!mEnforceSecurity,
+             "Request should not have been opened yet");
+  mSecurityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+}
+
 NS_IMETHODIMP
 LoadInfo::GetSecurityMode(uint32_t *aFlags)
 {
@@ -242,16 +250,16 @@ LoadInfo::GetAllowChrome(bool* aResult)
 }
 
 NS_IMETHODIMP
-LoadInfo::GetContentPolicyType(nsContentPolicyType* aResult)
+LoadInfo::GetExternalContentPolicyType(nsContentPolicyType* aResult)
 {
-  *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(mContentPolicyType);
+  *aResult = nsContentUtils::InternalContentPolicyTypeToExternal(mInternalContentPolicyType);
   return NS_OK;
 }
 
 nsContentPolicyType
 LoadInfo::InternalContentPolicyType()
 {
-  return mContentPolicyType;
+  return mInternalContentPolicyType;
 }
 
 NS_IMETHODIMP

@@ -427,9 +427,9 @@ code), the call throws a [`Debugger.DebuggeeWouldRun`][wouldrun] exception.
 
 `asEnvironment()`
 :   If the referent is a global object, return the [`Debugger.Environment`][environment]
-    instance representing the referent as a variable environment for
-    evaluating code. If the referent is not a global object, throw a
-    `TypeError`.
+    instance representing the referent's global lexical scope. The global
+    lexical scope's enclosing scope is the global object. If the referent is
+    not a global object, throw a `TypeError`.
 
 <code>setObjectWatchpoint(<i>handler</i>)</code> <i>(future plan)</i>
 :   Set a watchpoint on all the referent's own properties, reporting events

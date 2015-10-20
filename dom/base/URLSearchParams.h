@@ -91,6 +91,23 @@ public:
     mParams.Clear();
   }
 
+  uint32_t Length() const
+  {
+    return mParams.Length();
+  }
+
+  const nsAString& GetKeyAtIndex(uint32_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mParams.Length());
+    return mParams[aIndex].mKey;
+  }
+
+  const nsAString& GetValueAtIndex(uint32_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mParams.Length());
+    return mParams[aIndex].mValue;
+  }
+
 private:
   void DecodeString(const nsACString& aInput, nsAString& aOutput);
   void ConvertString(const nsACString& aInput, nsAString& aOutput);
@@ -152,6 +169,10 @@ public:
   bool Has(const nsAString& aName);
 
   void Delete(const nsAString& aName);
+
+  uint32_t GetIterableLength() const;
+  const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
+  const nsAString& GetValueAtIndex(uint32_t aIndex) const;
 
   void Stringify(nsString& aRetval) const
   {

@@ -243,7 +243,7 @@ MediaFormatReader::IsWaitingOnCDMResource() {
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaFormatReader::AsyncReadMetadata()
+MediaFormatReader::AsyncReadMetadataInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -1047,7 +1047,7 @@ MediaFormatReader::Update(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (mShutdown || !mInitDone) {
+  if (mShutdown) {
     return;
   }
 
@@ -1057,6 +1057,10 @@ MediaFormatReader::Update(TrackType aTrack)
   bool needOutput = false;
   auto& decoder = GetDecoderData(aTrack);
   decoder.mUpdateScheduled = false;
+
+  if (!mInitDone) {
+    return;
+  }
 
   if (UpdateReceivedNewData(aTrack)) {
     LOGV("Nothing more to do");

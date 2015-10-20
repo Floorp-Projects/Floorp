@@ -79,7 +79,7 @@
 #endif
 
 // Frame allocation boilerplate macros.  Every subclass of nsFrame
-// must define its own operator new and GetAllocatedSize.  If they do
+// must define its own operator new and GetFrameId.  If they do
 // not, the per-frame recycler lists in nsPresArena will not work
 // correctly, with potentially catastrophic consequences (not enough
 // memory is allocated for a frame object).

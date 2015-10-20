@@ -5,64 +5,91 @@
 
   Test DOM tree in full screen
   -->
-  <head>
-    <title>Bug 633602 - file_DOMtree.html</title>
-    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js">
-    </script>
-    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
-    </script>
-    <script type="application/javascript" src="pointerlock_utils.js"></script>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-    <style>
-    </style>
-  </head>
-  <body>
-    <a target="_blank"
-       href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
-      Mozilla Bug 633602
-    </a>
-    <div id="div"></div>
-    <pre id="test">
-      <script type="text/javascript">
-        /*
-         * Test for Bug 633602
-         * Checks if pointer is unlocked when element is removed from
-         * the DOM Tree
-         */
+<head>
+<title>Bug 633602 - file_DOMtree.html</title>
+<script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="pointerlock_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=633602">
+  Mozilla Bug 633602
+</a>
+<div id="div"></div>
+<div id="outer"><div id="inner"></div></div>
+<pre id="test">
+<script type="text/javascript">
+/*
+  * Test for Bug 633602
+  * Checks if pointer is unlocked when element is removed from
+  * the DOM Tree
+  */
 
-        SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForExplicitFinish();
 
-        var div = document.getElementById("div")
-          , removedDOM = false;
+var div = document.getElementById("div");
+var outer = document.getElementById("outer");
+var inner = document.getElementById("inner");
 
-        function runTests() {
-          ok(removedDOM, "Pointer should be unlocked when " +
-            "an element is removed the DOM Tree");
-        }
+function listenOneDocEvent(type, handler) {
+  function callback(event) {
+    document.removeEventListener(type, callback);
+    SimpleTest.executeSoon(() => handler(event));
+  }
+  document.addEventListener(type, callback);
+}
 
-        document.addEventListener("mozpointerlockchange", function (e) {
-          if (document.mozPointerLockElement === div) {
-            document.body.removeChild(div);
-            removedDOM = !document.mozPointerLockElement;
-            document.mozCancelFullScreen();
-          }
+function checkPointerLockElement(elem) {
+  if (elem) {
+    is(document.mozPointerLockElement, elem,
+       `#${elem.id} should have locked the pointer`);
+  } else {
+    ok(!document.mozPointerLockElement, "Pointer should have been unlocked");
+  }
+}
 
-        }, false);
+function start() {
+  listenOneDocEvent("mozfullscreenchange", enteredFullscreen);
+  document.documentElement.mozRequestFullScreen();
+}
 
-        document.addEventListener("mozfullscreenchange", function (e) {
-          if (document.mozFullScreenElement === div) {
-              div.mozRequestPointerLock();
-          }
-          else {
-            runTests();
-            SimpleTest.finish();
-          }
-        }, false);
+function enteredFullscreen() {
+  is(document.mozFullScreenElement, document.documentElement,
+     "Root element should have entered fullscreen");
+  listenOneDocEvent("mozpointerlockchange", lockedPointerOnDiv);
+  div.mozRequestPointerLock();
+}
 
-        function start() {
-          div.mozRequestFullScreen();
-        }
-      </script>
-    </pre>
-  </body>
+function lockedPointerOnDiv() {
+  checkPointerLockElement(div);
+  listenOneDocEvent("mozpointerlockchange", unlockedPointerFromDiv);
+  document.body.removeChild(div);
+}
+
+function unlockedPointerFromDiv() {
+  checkPointerLockElement(null);
+  listenOneDocEvent("mozpointerlockchange", lockedPointerOnInner);
+  inner.mozRequestPointerLock();
+}
+
+function lockedPointerOnInner() {
+  checkPointerLockElement(inner);
+  listenOneDocEvent("mozpointerlockchange", unlockedPointerFromInner);
+  document.body.removeChild(outer);
+}
+
+function unlockedPointerFromInner() {
+  checkPointerLockElement(null);
+  listenOneDocEvent("mozfullscreenchange", exitedFullscreen);
+  document.mozCancelFullScreen();
+}
+
+function exitedFullscreen() {
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
 </html>

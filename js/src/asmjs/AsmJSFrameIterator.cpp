@@ -280,13 +280,13 @@ js::GenerateAsmJSFunctionPrologue(MacroAssembler& masm, unsigned framePushed,
 
     masm.haltingAlign(CodeAlignment);
 
-    GenerateProfilingPrologue(masm, framePushed, AsmJSExit::None, &labels->begin);
+    GenerateProfilingPrologue(masm, framePushed, AsmJSExit::None, &labels->profilingEntry);
     Label body;
     masm.jump(&body);
 
     // Generate normal prologue:
     masm.haltingAlign(CodeAlignment);
-    masm.bind(&labels->entry);
+    masm.bind(&labels->nonProfilingEntry);
     PushRetAddr(masm);
     masm.subFromStackPtr(Imm32(framePushed + AsmJSFrameBytesAfterReturnAddress));
 

@@ -1256,7 +1256,7 @@ endif
 
 libs realchrome:: $(FINAL_TARGET)/chrome
 	$(call py_action,jar_maker,\
-	  $(QUIET) -j $(FINAL_TARGET)/chrome \
+	  $(QUIET) -d $(FINAL_TARGET) \
 	  $(MAKE_JARS_FLAGS) $(DEFINES) $(ACDEFINES) $(MOZ_DEBUG_DEFINES) \
 	  $(JAR_MANIFEST))
 

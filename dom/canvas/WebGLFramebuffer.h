@@ -62,7 +62,7 @@ public:
     void SetTexImageLayer(WebGLTexture* tex, TexImageTarget target, GLint level,
                           GLint layer);
     void SetRenderbuffer(WebGLRenderbuffer* rb);
-    
+
     const WebGLTexture* Texture() const {
         return mTexturePtr;
     }
@@ -95,6 +95,8 @@ public:
 
     void FinalizeAttachment(gl::GLContext* gl,
                             FBAttachment attachmentLoc) const;
+
+    JS::Value GetParameter(WebGLContext* context, GLenum pname);
 };
 
 class WebGLFramebuffer final
@@ -225,6 +227,9 @@ public:
     }
 
     bool ValidateForRead(const char* info, TexInternalFormat* const out_format);
+
+    JS::Value GetAttachmentParameter(JSContext* cx, GLenum attachment, GLenum pname,
+                                     ErrorResult& rv);
 };
 
 } // namespace mozilla

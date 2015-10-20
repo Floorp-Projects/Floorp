@@ -82,53 +82,27 @@ private:
   nsCOMPtr<nsIOutputStream> mPipeOutputStream;
   RefPtr<FetchDriverObserver> mObserver;
   nsCOMPtr<nsIDocument> mDocument;
-  uint32_t mFetchRecursionCount;
-  bool mCORSFlagEverSet;
+  bool mHasBeenCrossSite;
 
   DebugOnly<bool> mResponseAvailableCalled;
+  DebugOnly<bool> mFetchCalled;
 
   FetchDriver() = delete;
   FetchDriver(const FetchDriver&) = delete;
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
-  enum MainFetchOpType
-  {
-    NETWORK_ERROR,
-    BASIC_FETCH,
-    HTTP_FETCH,
-    NUM_MAIN_FETCH_OPS
-  };
-
-  struct MainFetchOp
-  {
-    explicit MainFetchOp(MainFetchOpType aType, bool aCORSFlag = false,
-                         bool aCORSPreflightFlag = false)
-      : mType(aType), mCORSFlag(aCORSFlag),
-        mCORSPreflightFlag(aCORSPreflightFlag)
-    { }
-
-    MainFetchOpType mType;
-    bool mCORSFlag;
-    bool mCORSPreflightFlag;
-  };
-
-  nsresult Fetch(bool aCORSFlag);
-  MainFetchOp SetTaintingAndGetNextOp(bool aCORSFlag);
-  nsresult ContinueFetch(bool aCORSFlag);
-  nsresult BasicFetch();
-  nsresult HttpFetch(bool aCORSFlag = false, bool aCORSPreflightFlag = false, bool aAuthenticationFlag = false);
-  nsresult ContinueHttpFetchAfterNetworkFetch();
+  nsresult SetTainting();
+  nsresult ContinueFetch();
+  nsresult HttpFetch();
+  bool IsUnsafeRequest();
   // Returns the filtered response sent to the observer.
   // Callers who don't have access to a channel can pass null for aFinalURI.
   already_AddRefed<InternalResponse>
   BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI);
   // Utility since not all cases need to do any post processing of the filtered
   // response.
-  void BeginResponse(InternalResponse* aResponse);
   nsresult FailWithNetworkError();
-  nsresult SucceedWithResponse();
-  nsresult DoesNotRequirePreflight(nsIChannel* aChannel);
 };
 
 } // namespace dom

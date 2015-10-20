@@ -21,6 +21,10 @@ HOST_SOURCES += [
     'file_id.cc',
     'guid_creator.cc',
 ]
+HOST_CXXFLAGS += [
+    '-O2',
+    '-g',
+]
 
 FINAL_LIBRARY = 'xul'
 

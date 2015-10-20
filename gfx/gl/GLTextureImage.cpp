@@ -291,15 +291,15 @@ BasicTextureImage::BasicTextureImage(GLuint aTexture,
 static bool
 WantsSmallTiles(GLContext* gl)
 {
-    // We must use small tiles for good performance if we can't use
-    // glTexSubImage2D() for some reason.
-    if (!CanUploadSubTextures(gl))
-        return true;
-
     // We can't use small tiles on the SGX 540, because of races in texture upload.
     if (gl->WorkAroundDriverBugs() &&
         gl->Renderer() == GLRenderer::SGX540)
         return false;
+
+    // We should use small tiles for good performance if we can't use
+    // glTexSubImage2D() for some reason.
+    if (!CanUploadSubTextures(gl))
+        return true;
 
     // Don't use small tiles otherwise. (If we implement incremental texture upload,
     // then we will want to revisit this.)

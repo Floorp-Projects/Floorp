@@ -42,8 +42,8 @@ MoveValue(nsCSSValue* aSource, nsCSSValue* aDest)
 static bool
 ShouldIgnoreColors(nsRuleData *aRuleData)
 {
-    return aRuleData->mLevel != nsStyleSet::eAgentSheet &&
-           aRuleData->mLevel != nsStyleSet::eUserSheet &&
+    return aRuleData->mLevel != SheetType::Agent &&
+           aRuleData->mLevel != SheetType::User &&
            !aRuleData->mPresContext->UseDocumentColors();
 }
 

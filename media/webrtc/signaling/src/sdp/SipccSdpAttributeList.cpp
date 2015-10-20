@@ -513,8 +513,8 @@ SipccSdpAttributeList::LoadImageattr(sdp_t* sdp,
     std::string error;
     size_t errorPos;
     if (!imageattrs->PushEntry(imageattrRaw, &error, &errorPos)) {
-      std::ostringstream fullError(error + " at column ");
-      fullError << errorPos;
+      std::ostringstream fullError;
+      fullError << error << " at column " << errorPos;
       errorHolder.AddParseError(
         sdp_attr_line_number(sdp, SDP_ATTR_IMAGEATTR, level, 0, i),
         fullError.str());
@@ -548,9 +548,8 @@ SipccSdpAttributeList::LoadSimulcast(sdp_t* sdp,
   std::istringstream is(simulcastRaw);
   std::string error;
   if (!simulcast->Parse(is, &error)) {
-    is.clear();
-    std::ostringstream fullError(error + " at column ");
-    fullError << is.tellg();
+    std::ostringstream fullError;
+    fullError << error << " at column " << is.tellg();
     errorHolder.AddParseError(
       sdp_attr_line_number(sdp, SDP_ATTR_SIMULCAST, level, 0, 1),
       fullError.str());
@@ -783,6 +782,41 @@ SipccSdpAttributeList::LoadMsids(sdp_t* sdp, uint16_t level,
   }
 }
 
+bool
+SipccSdpAttributeList::LoadRid(sdp_t* sdp,
+                                     uint16_t level,
+                                     SdpErrorHolder& errorHolder)
+{
+  UniquePtr<SdpRidAttributeList> rids(new SdpRidAttributeList);
+
+  for (uint16_t i = 1; i < UINT16_MAX; ++i) {
+    const char* ridRaw = sdp_attr_get_simple_string(sdp,
+                                                    SDP_ATTR_RID,
+                                                    level,
+                                                    0,
+                                                    i);
+    if (!ridRaw) {
+      break;
+    }
+
+    std::string error;
+    size_t errorPos;
+    if (!rids->PushEntry(ridRaw, &error, &errorPos)) {
+      std::ostringstream fullError;
+      fullError << error << " at column " << errorPos;
+      errorHolder.AddParseError(
+        sdp_attr_line_number(sdp, SDP_ATTR_RID, level, 0, i),
+        fullError.str());
+      return false;
+    }
+  }
+
+  if (!rids->mRids.empty()) {
+    SetAttribute(rids.release());
+  }
+  return true;
+}
+
 void
 SipccSdpAttributeList::LoadExtmap(sdp_t* sdp, uint16_t level,
                                   SdpErrorHolder& errorHolder)
@@ -998,6 +1032,9 @@ SipccSdpAttributeList::Load(sdp_t* sdp, uint16_t level,
       return false;
     }
     if (!LoadSimulcast(sdp, level, errorHolder)) {
+      return false;
+    }
+    if (!LoadRid(sdp, level, errorHolder)) {
       return false;
     }
   }
@@ -1222,6 +1259,16 @@ SipccSdpAttributeList::GetMsidSemantic() const
   }
   const SdpAttribute* attr = GetAttribute(SdpAttribute::kMsidSemanticAttribute);
   return *static_cast<const SdpMsidSemanticAttributeList*>(attr);
+}
+
+const SdpRidAttributeList&
+SipccSdpAttributeList::GetRid() const
+{
+  if (!HasAttribute(SdpAttribute::kRidAttribute)) {
+    MOZ_CRASH();
+  }
+  const SdpAttribute* attr = GetAttribute(SdpAttribute::kRidAttribute);
+  return *static_cast<const SdpRidAttributeList*>(attr);
 }
 
 uint32_t

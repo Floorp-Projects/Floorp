@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<script>
+onload=function(){
+  var img = new Image();
+  img.src = "http://example.com/tests/dom/workers/test/serviceworkers/fetch/hsts/image-20px.png";
+  img.onload = function() {
+    window.parent.postMessage({status: "image", data: img.width}, "*");
+  };
+  img.onerror = function() {
+    window.parent.postMessage({status: "image", data: "error"}, "*");
+  };
+};
+</script>

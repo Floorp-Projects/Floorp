@@ -10,7 +10,7 @@
  *
  * URL structure:
  *
- * moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F
+ * moz-page-thumb://thumbnail/?url=http%3A%2F%2Fwww.mozilla.org%2F
  *
  * This URL requests an image for 'http://www.mozilla.org/'.
  */
@@ -24,14 +24,17 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
 
+const SUBSTITUTING_URL_CID = "{dea9657c-18cf-4984-bde9-ccef5d8ab473}";
+
 /**
- * Implements the thumbnail protocol handler responsible for moz-page-thumb: URIs.
+ * Implements the thumbnail protocol handler responsible for moz-page-thumb: URLs.
  */
 function Protocol() {
 }
@@ -68,7 +71,7 @@ Protocol.prototype = {
    * @return The newly created URI.
    */
   newURI: function Proto_newURI(aSpec, aOriginCharset) {
-    let uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);
+    let uri = Components.classesByID[SUBSTITUTING_URL_CID].createInstance(Ci.nsIURL);
     uri.spec = aSpec;
     return uri;
   },
@@ -80,9 +83,8 @@ Protocol.prototype = {
    * @return The newly created channel.
    */
   newChannel2: function Proto_newChannel2(aURI, aLoadInfo) {
-    let {url} = parseURI(aURI);
-    let file = PageThumbsStorage.getFilePathForURL(url);
-    let fileuri = Services.io.newFileURI(new FileUtils.File(file));
+    let {file} = aURI.QueryInterface(Ci.nsIFileURL);
+    let fileuri = Services.io.newFileURI(file);
     let channel = Services.io.newChannelFromURIWithLoadInfo(fileuri, aLoadInfo);
     channel.originalURI = aURI;
     return channel;
@@ -98,8 +100,34 @@ Protocol.prototype = {
    */
   allowPort: () => false,
 
+  // nsISubstitutingProtocolHandler methods
+
+  /*
+   * Substituting the scheme and host isn't enough, we also transform the path.
+   * So declare no-op implementations for (get|set|has)Substitution methods and
+   * do all the work in resolveURI.
+   */
+
+  setSubstitution(root, baseURI) {},
+
+  getSubstitution(root) {
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
+  },
+
+  hasSubstitution(root) {
+    return false;
+  },
+
+  resolveURI(resURI) {
+    let {url} = parseURI(resURI);
+    let path = PageThumbsStorage.getFilePathForURL(url);
+    return OS.Path.toFileURI(path);
+  },
+
+  // xpcom machinery
   classID: Components.ID("{5a4ae9b5-f475-48ae-9dce-0b4c1d347884}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler,
+                                         Ci.nsISubstitutingProtocolHandler])
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Protocol]);
@@ -110,9 +138,10 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Protocol]);
  * @return The parsed parameters.
  */
 function parseURI(aURI) {
-  let {scheme, staticHost} = PageThumbs;
-  let re = new RegExp("^" + scheme + "://" + staticHost + ".*?\\?");
-  let query = aURI.spec.replace(re, "");
+  if (aURI.host != PageThumbs.staticHost)
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
+
+  let {query} = aURI.QueryInterface(Ci.nsIURL);
   let params = {};
 
   query.split("&").forEach(function (aParam) {

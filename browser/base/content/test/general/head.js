@@ -890,6 +890,13 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
     }
   }
 
+  if (activeLoaded || activeBlocked || passiveLoaded) {
+    doc.getElementById("identity-popup-security-expander").click();
+    is(Array.filter(doc.querySelectorAll("[observes=identity-popup-mcb-learn-more]"),
+                    element => !is_hidden(element)).length, 1,
+       "The 'Learn more' link should be visible once.");
+  }
+
   gIdentityHandler._identityPopup.hidden = true;
 }
 

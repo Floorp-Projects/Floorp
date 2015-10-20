@@ -6,9 +6,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 #include <algorithm>
 
 #include "GeckoProfiler.h"
@@ -144,6 +146,7 @@ const gint kEvents = GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
                      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
 #if GTK_CHECK_VERSION(3,4,0)
                      GDK_SMOOTH_SCROLL_MASK |
+                     GDK_TOUCH_MASK |
 #endif
                      GDK_SCROLL_MASK |
                      GDK_POINTER_MOTION_MASK |
@@ -214,6 +217,10 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static void     theme_changed_cb          (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
+#if GTK_CHECK_VERSION(3,4,0)
+static gboolean touch_event_cb            (GtkWidget* aWidget,
+                                           GdkEventTouch* aEvent);
+#endif
 static nsWindow* GetFirstNSWindowForGDKWindow (GdkWindow *aGdkWindow);
 
 #ifdef __cplusplus
@@ -343,6 +350,9 @@ static bool              gGlobalsInitialized   = false;
 static bool              gRaiseWindows         = true;
 static nsWindow         *gPluginFocusWindow    = nullptr;
 
+#if GTK_CHECK_VERSION(3,4,0)
+static uint32_t          gLastTouchID = 0;
+#endif
 
 #define NS_WINDOW_TITLE_MAX_LENGTH 4095
 
@@ -408,6 +418,9 @@ nsWindow::nsWindow()
     mNeedsShow           = false;
     mEnabled             = true;
     mCreated             = false;
+#if GTK_CHECK_VERSION(3,4,0)
+    mHandleTouchEvent    = false;
+#endif
 
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
@@ -918,6 +931,15 @@ bool
 nsWindow::IsVisible() const
 {
     return mIsShown;
+}
+
+void
+nsWindow::RegisterTouchWindow()
+{
+#if GTK_CHECK_VERSION(3,4,0)
+    mHandleTouchEvent = true;
+    mTouches.Clear();
+#endif
 }
 
 NS_IMETHODIMP
@@ -3353,6 +3375,78 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
                            aSelectionData, aInfo, aTime);
 }
 
+#if GTK_CHECK_VERSION(3,4,0)
+static PLDHashOperator AppendTouchToEvent(GdkEventSequence* aKey,
+                                          dom::Touch* aData,
+                                          void* aArg)
+{
+  WidgetTouchEvent* event = reinterpret_cast<WidgetTouchEvent*>(aArg);
+  event->touches.AppendElement(new dom::Touch(*aData));
+
+  return PL_DHASH_NEXT;
+}
+
+gboolean
+nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
+{
+    if (!mHandleTouchEvent) {
+        return FALSE;
+    }
+
+    EventMessage msg;
+    switch (aEvent->type) {
+    case GDK_TOUCH_BEGIN:
+        msg = eTouchStart;
+        break;
+    case GDK_TOUCH_UPDATE:
+        msg = eTouchMove;
+        break;
+    case GDK_TOUCH_END:
+        msg = eTouchEnd;
+        break;
+    case GDK_TOUCH_CANCEL:
+        msg = eTouchCancel;
+        break;
+    default:
+        return FALSE;
+    }
+
+    LayoutDeviceIntPoint touchPoint;
+    if (aEvent->window == mGdkWindow) {
+        touchPoint = LayoutDeviceIntPoint(aEvent->x, aEvent->y);
+    } else {
+        touchPoint = LayoutDeviceIntPoint(aEvent->x_root, aEvent->y_root) -
+                     WidgetToScreenOffset();
+    }
+
+    int32_t id;
+    RefPtr<dom::Touch> touch;
+    if (mTouches.Remove(aEvent->sequence, getter_AddRefs(touch))) {
+        id = touch->mIdentifier;
+    } else {
+        id = ++gLastTouchID & 0x7FFFFFFF;
+    }
+
+    touch = new dom::Touch(id, touchPoint, nsIntPoint(1,1), 0.0f, 0.0f);
+
+    WidgetTouchEvent event(true, msg, this);
+    KeymapWrapper::InitInputEvent(event, aEvent->state);
+    event.time = aEvent->time;
+
+    if (aEvent->type == GDK_TOUCH_BEGIN || aEvent->type == GDK_TOUCH_UPDATE) {
+        mTouches.Put(aEvent->sequence, touch.forget());
+        // add all touch points to event object
+        mTouches.EnumerateRead(AppendTouchToEvent, &event);
+    } else if (aEvent->type == GDK_TOUCH_END ||
+               aEvent->type == GDK_TOUCH_CANCEL) {
+        *event.touches.AppendElement() = touch.forget();
+    }
+
+    DispatchAPZAwareEvent(&event);
+    return TRUE;
+}
+#endif
+
 static void
 GetBrandName(nsXPIDLString& brandName)
 {
@@ -3819,6 +3913,10 @@ nsWindow::Create(nsIWidget        *aParent,
                          G_CALLBACK(property_notify_event_cb), nullptr);
         g_signal_connect(eventWidget, "scroll-event",
                          G_CALLBACK(scroll_event_cb), nullptr);
+#if GTK_CHECK_VERSION(3,4,0)
+        g_signal_connect(eventWidget, "touch-event",
+                         G_CALLBACK(touch_event_cb), nullptr);
+#endif
     }
 
     LOG(("nsWindow [%p]\n", (void *)this));
@@ -5843,6 +5941,21 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
     RefPtr<nsWindow> window = data;
     window->ThemeChanged();
 }
+
+#if GTK_CHECK_VERSION(3,4,0)
+static gboolean
+touch_event_cb(GtkWidget* aWidget, GdkEventTouch* aEvent)
+{
+    UpdateLastInputEventTime(aEvent);
+
+    nsWindow* window = GetFirstNSWindowForGDKWindow(aEvent->window);
+    if (!window) {
+        return FALSE;
+    }
+
+    return window->OnTouchEvent(aEvent);
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // These are all of our drag and drop operations

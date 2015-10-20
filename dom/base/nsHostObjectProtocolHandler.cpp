@@ -571,11 +571,14 @@ nsHostObjectProtocolHandler::NewChannel2(nsIURI* uri,
     return rv.StealNSResult();
   }
 
+  nsAutoString contentType;
+  blob->GetType(contentType);
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewInputStreamChannelInternal(getter_AddRefs(channel),
                                         uri,
                                         stream,
-                                        EmptyCString(), // aContentType
+                                        NS_ConvertUTF16toUTF8(contentType),
                                         EmptyCString(), // aContentCharset
                                         aLoadInfo);
   if (NS_WARN_IF(rv.Failed())) {

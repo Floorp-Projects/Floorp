@@ -4051,7 +4051,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       for (nsStyleStructID sid = nsStyleStructID(0);
            sid < nsStyleStructID_Length;
            sid = nsStyleStructID(sid + 1)) {
-        if (oldContext->HasCachedInheritedStyleData(sid) &&
+        if (oldContext->HasCachedDependentStyleData(sid) &&
             !(samePointerStructs & nsCachedStyleData::GetBitForSID(sid))) {
           LOG_RESTYLE_CONTINUE("there are different struct pointers");
           result = eRestyleResult_Continue;

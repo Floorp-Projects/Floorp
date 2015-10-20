@@ -458,9 +458,9 @@ public:
     }
 
     GLenum GetError();
-    JS::Value GetFramebufferAttachmentParameter(JSContext* cx, GLenum target,
-                                                GLenum attachment, GLenum pname,
-                                                ErrorResult& rv);
+    virtual JS::Value GetFramebufferAttachmentParameter(JSContext* cx, GLenum target,
+                                                        GLenum attachment, GLenum pname,
+                                                        ErrorResult& rv);
 
     void GetFramebufferAttachmentParameter(JSContext* cx, GLenum target,
                                            GLenum attachment, GLenum pname,
