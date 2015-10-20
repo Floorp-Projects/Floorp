@@ -586,7 +586,7 @@ struct BytecodeEmitter
     bool emitFor(ParseNode* pn, ptrdiff_t top);
     bool emitForIn(ParseNode* pn, ptrdiff_t top);
     bool emitForInOrOfVariables(ParseNode* pn, bool* letDecl);
-    bool emitNormalFor(ParseNode* pn, ptrdiff_t top);
+    bool emitCStyleFor(ParseNode* pn, ptrdiff_t top);
     bool emitWhile(ParseNode* pn, ptrdiff_t top);
 
     bool emitBreak(PropertyName* label);

@@ -571,10 +571,6 @@ class FullParseHandler
         return new_<TernaryNode>(kind, JSOP_NOP, pn1, pn2, pn3, pos);
     }
 
-    ParseNode* newFreshenBlock(const TokenPos& pos) {
-        return new_<NullaryNode>(PNK_FRESHENBLOCK, pos);
-    }
-
     ParseNode* newSwitchStatement(uint32_t begin, ParseNode* discriminant, ParseNode* caseList) {
         TokenPos pos(begin, caseList->pn_pos.end);
         return new_<BinaryNode>(PNK_SWITCH, JSOP_NOP, pos, discriminant, caseList);
