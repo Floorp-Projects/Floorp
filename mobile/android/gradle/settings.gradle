@@ -27,7 +27,6 @@ include ':app'
 include ':base'
 include ':omnijar'
 include ':preprocessed_code'
-include ':preprocessed_resources'
 include ':thirdparty'
 
 def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
@@ -35,7 +34,6 @@ project(':app').projectDir = new File(gradleRoot, 'app')
 project(':base').projectDir = new File(gradleRoot, 'base')
 project(':omnijar').projectDir = new File(gradleRoot, 'omnijar')
 project(':preprocessed_code').projectDir = new File(gradleRoot, 'preprocessed_code')
-project(':preprocessed_resources').projectDir = new File(gradleRoot, 'preprocessed_resources')
 project(':thirdparty').projectDir = new File(gradleRoot, 'thirdparty')
 
 if (json.substs.MOZ_INSTALL_TRACKING) {
