@@ -85,10 +85,8 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
     // Based on our "Set" implementation instead of the more general ES6 steps.
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION, "WeakSet");
+    if (!ThrowIfNotConstructing(cx, args, "WeakSet"))
         return false;
-    }
 
     if (!args.get(0).isNullOrUndefined()) {
         RootedObject map(cx, &obj->getReservedSlot(WEAKSET_MAP_SLOT).toObject());
