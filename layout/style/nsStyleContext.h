@@ -549,7 +549,7 @@ private:
       }                                                                 \
       /* Have the rulenode deal */                                      \
       AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
-      return mRuleNode->GetStyle##name_<aComputeData>(this);            \
+      return mRuleNode->GetStyle##name_<aComputeData>(this, mBits);     \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
@@ -619,6 +619,10 @@ private:
   //  - For all structs, when they are non-null in the style context's
   //    storage, it records (using the style struct bits) which structs
   //    are inherited from the parent context or owned by mRuleNode.
+  //  - For reset (non-inherited) style structs, when they are null in
+  //    the style context's storage, it records that we have been asked
+  //    for that struct.  (We don't need this for inherited structs
+  //    since we always cache them in mCachedInheritedData.)
   //  - It also stores the additional bits listed at the top of
   //    nsStyleStruct.h.
   uint64_t                mBits;
