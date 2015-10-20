@@ -15,6 +15,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedArray.h"
 #include "mozilla/RuleNodeCacheConditions.h"
+#include "mozilla/SheetType.h"
 #include "nsPresContext.h"
 #include "nsStyleStruct.h"
 
@@ -418,10 +419,10 @@ private:
 
   struct Key {
     nsIStyleRule* mRule;
-    uint8_t mLevel;
+    mozilla::SheetType mLevel;
     bool mIsImportantRule;
 
-    Key(nsIStyleRule* aRule, uint8_t aLevel, bool aIsImportantRule)
+    Key(nsIStyleRule* aRule, mozilla::SheetType aLevel, bool aIsImportantRule)
       : mRule(aRule), mLevel(aLevel), mIsImportantRule(aIsImportantRule)
     {}
 
@@ -800,7 +801,7 @@ protected:
 
 private:
   nsRuleNode(nsPresContext* aPresContext, nsRuleNode* aParent,
-             nsIStyleRule* aRule, uint8_t aLevel, bool aIsImportant);
+             nsIStyleRule* aRule, mozilla::SheetType aLevel, bool aIsImportant);
   ~nsRuleNode();
 
 public:
@@ -812,7 +813,7 @@ public:
   static void EnsureInlineDisplay(uint8_t& display);
 
   // Transition never returns null; on out of memory it'll just return |this|.
-  nsRuleNode* Transition(nsIStyleRule* aRule, uint8_t aLevel,
+  nsRuleNode* Transition(nsIStyleRule* aRule, mozilla::SheetType aLevel,
                          bool aIsImportantRule);
   nsRuleNode* GetParent() const { return mParent; }
   bool IsRoot() const { return mParent == nullptr; }
@@ -823,11 +824,11 @@ public:
     return const_cast<nsRuleNode*>(this)->RuleTree();
   }
 
-  // These uint8_ts are really nsStyleSet::sheetType values.
-  uint8_t GetLevel() const {
+  mozilla::SheetType GetLevel() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");
-    return (mDependentBits & NS_RULE_NODE_LEVEL_MASK) >>
-             NS_RULE_NODE_LEVEL_SHIFT;
+    return mozilla::SheetType(
+        (mDependentBits & NS_RULE_NODE_LEVEL_MASK) >>
+          NS_RULE_NODE_LEVEL_SHIFT);
   }
   bool IsImportantRule() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");
@@ -882,12 +883,14 @@ public:
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                        \
   template<bool aComputeData>                                                 \
   const nsStyle##name_*                                                       \
-  GetStyle##name_(nsStyleContext* aContext)                                   \
+  GetStyle##name_(nsStyleContext* aContext, uint64_t& aContextStyleBits)      \
   {                                                                           \
     NS_ASSERTION(IsUsedDirectly(),                                            \
                  "if we ever call this on rule nodes that aren't used "       \
                  "directly, we should adjust handling of mDependentBits "     \
                  "in some way.");                                             \
+    MOZ_ASSERT(!ContextHasCachedData(aContext, eStyleStruct_##name_),         \
+               "style context should not have cached data for struct");       \
                                                                               \
     const nsStyle##name_ *data;                                               \
                                                                               \
@@ -895,8 +898,15 @@ public:
     /* see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto */ \
     if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
       data = mStyleData.GetStyle##name_();                                    \
-      if (MOZ_LIKELY(data != nullptr))                                        \
+      if (data != nullptr) {                                                  \
+        /* For inherited structs, mark the struct (which will be set on */    \
+        /* the context by our caller) as not being owned by the context. */   \
+        /* Normally this would be aContext->AddStyleBit(), but aContext is */ \
+        /* an incomplete type here, so we work around that with a param. */   \
+        aContextStyleBits |= NS_STYLE_INHERIT_BIT(name_);                     \
+        /* Our caller will cache the data on the style context. */            \
         return data;                                                          \
+      }                                                                       \
     }                                                                         \
                                                                               \
     if (!aComputeData)                                                        \
@@ -912,12 +922,14 @@ public:
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                            \
   template<bool aComputeData>                                                 \
   const nsStyle##name_*                                                       \
-  GetStyle##name_(nsStyleContext* aContext)                                   \
+  GetStyle##name_(nsStyleContext* aContext, uint64_t& aContextStyleBits)      \
   {                                                                           \
     NS_ASSERTION(IsUsedDirectly(),                                            \
                  "if we ever call this on rule nodes that aren't used "       \
                  "directly, we should adjust handling of mDependentBits "     \
                  "in some way.");                                             \
+    MOZ_ASSERT(!ContextHasCachedData(aContext, eStyleStruct_##name_),         \
+               "style context should not have cached data for struct");       \
                                                                               \
     const nsStyle##name_ *data;                                               \
                                                                               \
@@ -925,8 +937,13 @@ public:
     /* see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto */ \
     if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
       data = mStyleData.GetStyle##name_(aContext);                            \
-      if (MOZ_LIKELY(data != nullptr))                                        \
+      if (MOZ_LIKELY(data != nullptr)) {                                      \
+        /* Mark the struct as having been retrieved for this context. */      \
+        /* Normally this would be aContext->AddStyleBit(), but aContext is */ \
+        /* an incomplete type here, so we work around that with a param. */   \
+        aContextStyleBits |= NS_STYLE_INHERIT_BIT(name_);                     \
         return data;                                                          \
+      }                                                                       \
     }                                                                         \
                                                                               \
     if (!aComputeData)                                                        \
@@ -1053,6 +1070,14 @@ public:
                            nscolor& aResult);
 
   static bool ParentHasPseudoElementData(nsStyleContext* aContext);
+
+private:
+#ifdef DEBUG
+  // non-inline helper function to allow assertions without incomplete
+  // type errors
+  bool ContextHasCachedData(nsStyleContext* aContext, nsStyleStructID aSID);
+#endif
+
 };
 
 #endif

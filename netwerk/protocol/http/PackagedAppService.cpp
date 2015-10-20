@@ -362,19 +362,19 @@ PackagedAppService::PackagedAppChannelListener::OnStartRequest(nsIRequest *aRequ
   // to know if it's a signed package. Notify requesters if it's signed.
   if (isFromCache) {
     bool isPackageSigned = false;
-    nsCString signedPackageOrigin;
+    nsCString signedPackageId;
     nsCOMPtr<nsICacheEntry> packageCacheEntry = GetPackageCacheEntry(aRequest);
     if (packageCacheEntry) {
-      const char* key = PackagedAppVerifier::kSignedPakOriginMetadataKey;
+      const char* key = PackagedAppVerifier::kSignedPakIdMetadataKey;
       nsXPIDLCString value;
       nsresult rv = packageCacheEntry->GetMetaDataElement(key,
                                                           getter_Copies(value));
       isPackageSigned = (NS_SUCCEEDED(rv) && !value.IsEmpty());
-      signedPackageOrigin = value;
+      signedPackageId = value;
     }
     if (isPackageSigned) {
       LOG(("The cached package is signed. Notify the requesters."));
-      mDownloader->NotifyOnStartSignedPackageRequest(signedPackageOrigin);
+      mDownloader->NotifyOnStartSignedPackageRequest(signedPackageId);
     }
   }
 
@@ -447,7 +447,6 @@ PackagedAppService::PackagedAppDownloader::EnsureVerifier(nsIRequest *aRequest)
   nsCOMPtr<nsICacheEntry> packageCacheEntry = GetPackageCacheEntry(aRequest);
 
   mVerifier = new PackagedAppVerifier(this,
-                                      mPackageOrigin,
                                       signature,
                                       packageCacheEntry);
 }
@@ -769,7 +768,7 @@ PackagedAppService::PackagedAppDownloader::AddCallback(nsIURI *aURI,
       if (mVerifier && mVerifier->GetIsPackageSigned()) {
         // TODO: Bug 1178526 will deal with the package identifier things.
         //       For now we just use the origin as the identifier.
-        listener->OnStartSignedPackageRequest(mVerifier->GetPackageOrigin());
+        listener->OnStartSignedPackageRequest(mVerifier->GetPackageIdentifier());
         listener = nullptr; // So that the request will not be added to the queue.
       }
       mCacheStorage->AsyncOpenURI(aURI, EmptyCString(),
@@ -903,7 +902,24 @@ PackagedAppService::PackagedAppDownloader::NotifyOnStartSignedPackageRequest(con
   mRequesters.Clear();
 }
 
-void PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp(const ResourceCacheInfo* aInfo)
+static bool
+AddPackageIdToOrigin(nsACString& aOrigin, const nsACString& aPackageId)
+{
+  nsAutoCString originNoSuffix;
+  mozilla::OriginAttributes attrs;
+  if (!attrs.PopulateFromOrigin(aOrigin, originNoSuffix)) {
+    return false;
+  }
+
+  attrs.mSignedPkg = NS_ConvertUTF8toUTF16(aPackageId);
+  nsAutoCString suffixWithPackageId;
+  attrs.CreateSuffix(suffixWithPackageId);
+  aOrigin = originNoSuffix + suffixWithPackageId;
+  return true;
+}
+
+void
+PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp(const ResourceCacheInfo* aInfo)
 {
   // TODO: Bug 1178533 to register permissions, system messages etc on navigation to
   //       signed packages.
@@ -921,13 +937,14 @@ void PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp(const R
   nsCString manifestURL;
   aInfo->mURI->GetAsciiSpec(manifestURL);
 
-  // Use the origin stored in the verifier since the signed packaged app would
-  // have a specifi package identifer defined in the manifest file.
-  nsCString packageOrigin;
-  mVerifier->GetPackageOrigin(packageOrigin);
+
+  nsCString originWithPackageId = mPackageOrigin;
+  if (!AddPackageIdToOrigin(originWithPackageId, mVerifier->GetPackageIdentifier())) {
+    NS_WARNING("mPackageOrigin is malformed.");
+  }
 
   installer->InstallPackagedWebapp(mManifestContent.get(),
-                                   packageOrigin.get(),
+                                   originWithPackageId.get(),
                                    manifestURL.get(),
                                    &isSuccess);
   if (!isSuccess) {
@@ -990,9 +1007,7 @@ PackagedAppService::PackagedAppDownloader::OnManifestVerified(const ResourceCach
     return;
   }
 
-  nsCString packageOrigin;
-  mVerifier->GetPackageOrigin(packageOrigin);
-  NotifyOnStartSignedPackageRequest(packageOrigin);
+  NotifyOnStartSignedPackageRequest(mVerifier->GetPackageIdentifier());
   InstallSignedPackagedApp(aInfo);
 }
 
@@ -1010,7 +1025,7 @@ PackagedAppService::PackagedAppDownloader::OnResourceVerified(const ResourceCach
   if (mVerifier->GetIsPackageSigned()) {
     // TODO: Bug 1178526 will deal with the package identifier things.
     //       For now we just use the origin as the identifier.
-    NotifyOnStartSignedPackageRequest(mVerifier->GetPackageOrigin());
+    NotifyOnStartSignedPackageRequest(mVerifier->GetPackageIdentifier());
   }
 
   // Serve this resource to all listeners.

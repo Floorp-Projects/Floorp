@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 1209603</title>
+<style>
+
+p {
+  font-size: 2em;
+
+  /* ensure font-size dependency in the margin struct; this is also in
+     the UA style sheet, but repeated here for clarity */
+  margin: 1em 0;
+}
+
+</style>
+
+<div style="font-size: 20px"><p id="a">Should be 40px font size.</p></div>
+
+<script>
+
+var a = document.getElementById("a");
+
+// force computation of the margin struct on A (caching in rule tree)
+getComputedStyle(a, "").marginTop;
+
+</script>
+
+<!-- will dynamically change font-size to 10px later;
+     also needs to be different from 20px now to avoid sibling-sharing -->
+<div style="font-size: 30px"><p id="b">Should be 20px font size.</p></div>
+
+<script>
+// Note that A and B share rule nodes, and note that the margin struct
+// has been conditionally (on font size) cached on their shared rule node.
+var b = document.getElementById("b");
+
+// force style context construction and computation of the font struct on
+// B's parent
+getComputedStyle(b.parentNode, "").fontSize;
+
+// force style context construction (and computation of the color
+// struct) on B, but not the margin struct or font struct
+getComputedStyle(b, "").color;
+
+// restyle B and flush
+b.parentNode.style.fontSize = "10px";
+getComputedStyle(b, "").marginTop;
+// This flush will call CalcStyleDifference on B, which will find no
+// cached font struct on the old context, but which will find a
+// cached margin struct on the rule node.
+
+</script>

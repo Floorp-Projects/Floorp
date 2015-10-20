@@ -8,7 +8,7 @@ interface nsIURI;
 interface nsIDOMNode;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(bc4dbb34-b148-11e2-b82c-08002734a811)]
+[scriptable, uuid(2df8b475-f536-4a1a-afea-b39843df8005)]
 interface nsIPrefetchService : nsISupports
 {
     /**
@@ -26,9 +26,9 @@ interface nsIPrefetchService : nsISupports
                      in boolean aExplicit);
 
     /**
-     * Enumerate the items in the prefetch queue.
+     * Find out if there are any prefetches running or queued
      */
-    nsISimpleEnumerator enumerateQueue();
+    boolean hasMoreElements();
 
     // XXX do we need a way to cancel prefetch requests?
 };

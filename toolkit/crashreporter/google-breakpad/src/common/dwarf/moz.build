@@ -12,6 +12,10 @@ if CONFIG['MOZ_CRASHREPORTER']:
         'dwarf2reader.cc',
         'functioninfo.cc',
     ]
+    HOST_CXXFLAGS += [
+        '-O2',
+        '-g',
+    ]
     LOCAL_INCLUDES += [
         '../..',
     ]

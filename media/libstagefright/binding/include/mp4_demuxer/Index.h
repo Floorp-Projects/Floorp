@@ -12,7 +12,6 @@
 #include "mp4_demuxer/Stream.h"
 #include "nsISupportsImpl.h"
 
-template<class T> class nsRefPtr;
 template<class T> class nsAutoPtr;
 
 namespace mp4_demuxer

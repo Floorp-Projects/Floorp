@@ -19,6 +19,12 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
+// If setting selection with eSetSelection event whose range is larger than
+// the actual range, hits "Can only call this on frames that have been reflowed:
+// '!(GetStateBits() & NS_FRAME_FIRST_REFLOW) || (GetParent()->GetStateBits() &
+// NS_FRAME_TOO_DEEP_IN_FRAME_TREE)'" in nsTextFrame.cpp.
+// Strangely, this doesn't occur with RDP on Windows.
+SimpleTest.expectAssertions(0, 2);
 SimpleTest.waitForExplicitFinish();
 window.open("window_composition_text_querycontent.xul", "_blank", 
             "chrome,width=600,height=600");

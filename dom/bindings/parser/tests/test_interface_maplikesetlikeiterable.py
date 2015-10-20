@@ -10,20 +10,24 @@ def WebIDLTest(parser, harness):
                       "%s - Should have production count %d" % (prefix, numProductions))
         harness.ok(isinstance(results[0], WebIDL.IDLInterface),
                    "%s - Should be an IDLInterface" % (prefix))
-        harness.check(len(results[0].members), len(expectedMembers),
-                      "%s - Should be %d members" % (prefix,
-                                                     len(expectedMembers)))
+        # Make a copy, since we plan to modify it
+        expectedMembers = list(expectedMembers)
         for m in results[0].members:
             name = m.identifier.name
             if (name, type(m)) in expectedMembers:
                 harness.ok(True, "%s - %s - Should be a %s" % (prefix, name,
                                                                type(m)))
-            elif isinstance(m, WebIDL.IDLMaplikeOrSetlike):
-                harness.ok(True, "%s - %s - Should be a MaplikeOrSetlike" %
-                           (prefix, name))
+                expectedMembers.remove((name, type(m)))
             else:
                 harness.ok(False, "%s - %s - Unknown symbol of type %s" %
                            (prefix, name, type(m)))
+        # A bit of a hoop because we can't generate the error string if we pass
+        if len(expectedMembers) == 0:
+            harness.ok(True, "Found all the members")
+        else:
+            harness.ok(False,
+                       "Expected member not found: %s of type %s" %
+                       (expectedMembers[0][0], expectedMembers[0][1]))
         return results
 
     def shouldFail(prefix, iface):
@@ -38,11 +42,11 @@ def WebIDLTest(parser, harness):
                        prefix + " - Interface failed as expected")
         except Exception, e:
             harness.ok(False,
-                       prefix + " - Interface failed but not as a WebIDLError exception")
+                       prefix + " - Interface failed but not as a WebIDLError exception: %s" % e)
 
     iterableMembers = [(x, WebIDL.IDLMethod) for x in ["entries", "keys",
                                                        "values"]]
-    setROMembers = ([(x, WebIDL.IDLMethod) for x in ["has", "foreach"]] +
+    setROMembers = ([(x, WebIDL.IDLMethod) for x in ["has", "forEach"]] +
                     [("__setlike", WebIDL.IDLMaplikeOrSetlike)] +
                     iterableMembers)
     setROMembers.extend([("size", WebIDL.IDLAttribute)])
@@ -58,7 +62,7 @@ def WebIDLTest(parser, harness):
                                                            "__clear",
                                                            "__delete"]] +
                           setRWMembers)
-    mapROMembers = ([(x, WebIDL.IDLMethod) for x in ["get", "has", "foreach"]] +
+    mapROMembers = ([(x, WebIDL.IDLMethod) for x in ["get", "has", "forEach"]] +
                     [("__maplike", WebIDL.IDLMaplikeOrSetlike)] +
                     iterableMembers)
     mapROMembers.extend([("size", WebIDL.IDLAttribute)])
@@ -69,6 +73,10 @@ def WebIDLTest(parser, harness):
                                                            "__clear",
                                                            "__delete"]] +
                           mapRWMembers)
+
+    # OK, now that we've used iterableMembers to set up the above, append
+    # __iterable to it for the iterable<> case.
+    iterableMembers.append(("__iterable", WebIDL.IDLIterable))
 
     disallowedIterableNames = ["keys", "entries", "values"]
     disallowedMemberNames = ["forEach", "has", "size"] + disallowedIterableNames
@@ -86,14 +94,18 @@ def WebIDLTest(parser, harness):
                interface Foo1 {
                iterable<long>;
                };
-               """, iterableMembers)
+               """, iterableMembers,
+               # numProductions == 2 because of the generated iterator iface,
+               numProductions=2)
 
     shouldPass("Iterable (key and value)",
                """
                interface Foo1 {
                iterable<long, long>;
                };
-               """, iterableMembers)
+               """, iterableMembers,
+               # numProductions == 2 because of the generated iterator iface,
+               numProductions=2)
 
     shouldPass("Maplike (readwrite)",
                """
@@ -574,5 +586,5 @@ def WebIDLTest(parser, harness):
         if m.identifier.name in ["clear", "set", "delete"]:
             harness.ok(m.isMethod(), "%s should be a method" % m.identifier.name)
             harness.check(m.maxArgCount, 4, "%s should have 4 arguments" % m.identifier.name)
-            harness.ok(not m.isMaplikeOrSetlikeMethod(),
+            harness.ok(not m.isMaplikeOrSetlikeOrIterableMethod(),
                        "%s should not be a maplike/setlike function" % m.identifier.name)

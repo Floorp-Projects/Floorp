@@ -15,6 +15,7 @@
 #include "mozilla/Services.h"
 #include "nsIMobileMessageDatabaseService.h"
 #include "nsIObserverService.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;

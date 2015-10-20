@@ -159,6 +159,7 @@ imgRequest::Init(nsIURI *aURI,
   mChannel->SetNotificationCallbacks(this);
 
   mCacheEntry = aCacheEntry;
+  mCacheEntry->UpdateLoadTime();
 
   SetLoadId(aCX);
 
