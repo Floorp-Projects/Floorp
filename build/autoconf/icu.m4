@@ -99,13 +99,7 @@ if test -n "$USE_ICU"; then
                     MOZ_ICU_DBG_SUFFIX=d
                 fi
                 ;;
-            Android)
-                if test -z "$gonkdir"; then
-                    AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-                fi
-                ICU_LIB_NAMES="icui18n icuuc icudata"
-                ;;
-            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|GNU/kFreeBSD|SunOS)
+            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|GNU/kFreeBSD|SunOS|Android)
                 ICU_LIB_NAMES="icui18n icuuc icudata"
                 ;;
             *)
@@ -279,6 +273,8 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
 
         if test -n "$gonkdir"; then
             ICU_CXXFLAGS="-I$gonkdir/abi/cpp/include $ICU_CXXFLAGS"
+        elif test "$OS_TARGET" = Android -a "$MOZ_ANDROID_CXX_STL" = mozstlport; then
+            ICU_CXXFLAGS="-I$_topsrcdir/build/gabi++/include $ICU_CXXFLAGS"
         fi
 
         if test -z "$MOZ_SHARED_ICU"; then
