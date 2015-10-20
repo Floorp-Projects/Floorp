@@ -81,7 +81,6 @@ dependencies {
         compile 'com.google.android.gms:play-services-cast:8.1.0'
     }
 
-    compile project(':branding')
     compile project(':preprocessed_code')
     compile project(':preprocessed_resources')
     compile project(':thirdparty')

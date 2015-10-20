@@ -22,6 +22,7 @@ android {
         main {
             res {
                 srcDir "${project.buildDir}/generated/source/preprocessed_resources"
+                srcDir "src/branding/res"
             }
         }
     }
@@ -37,8 +38,4 @@ android.libraryVariants.all { variant ->
     def name = variant.buildType.name
     def generateResValuesTask = tasks.findByName("generate${name.capitalize()}ResValues")
     generateResValuesTask.dependsOn syncPreprocessedResources
-}
-
-dependencies {
-    compile project(':branding')
 }
