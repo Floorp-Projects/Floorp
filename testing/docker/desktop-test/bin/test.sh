@@ -12,7 +12,7 @@ set -x -e
 if [ $(id -u) = 0 ]; then
     chown -R worker:worker /home/worker
     # drop privileges by re-running this script
-    exec su worker /home/worker/bin/test.sh -- "${@}"
+    exec sudo -E -u worker bash /home/worker/bin/test.sh "${@}"
 fi
 
 ####
