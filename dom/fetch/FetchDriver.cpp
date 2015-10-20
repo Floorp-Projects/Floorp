@@ -72,11 +72,11 @@ FetchDriver::Fetch(FetchDriverObserver* aObserver)
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REQUEST_PASSTHROUGH,
                         mRequest->WasCreatedByFetchEvent());
 
-  return Fetch(false /* CORS flag */);
+  return Fetch();
 }
 
 nsresult
-FetchDriver::Fetch(bool aCORSFlag)
+FetchDriver::Fetch()
 {
   // We do not currently implement parts of the spec that lead to recursion.
   MOZ_ASSERT(mFetchRecursionCount == 0);
@@ -86,7 +86,7 @@ FetchDriver::Fetch(bool aCORSFlag)
 
   if (!mRequest->IsSynchronous() && mFetchRecursionCount <= 1) {
     nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableMethodWithArg<bool>(this, &FetchDriver::ContinueFetch, aCORSFlag);
+      NS_NewRunnableMethod(this, &FetchDriver::ContinueFetch);
     nsresult rv = NS_DispatchToCurrentThread(r);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       FailWithNetworkError();
@@ -98,7 +98,7 @@ FetchDriver::Fetch(bool aCORSFlag)
 }
 
 FetchDriver::MainFetchOp
-FetchDriver::SetTaintingAndGetNextOp(bool aCORSFlag)
+FetchDriver::SetTaintingAndGetNextOp()
 {
   workers::AssertIsOnMainThread();
 
@@ -143,7 +143,7 @@ FetchDriver::SetTaintingAndGetNextOp(bool aCORSFlag)
   // request's current url's scheme is "about"
   rv = mPrincipal->CheckMayLoad(requestURI, false /* report */,
                                 false /* allowIfInheritsPrincipal */);
-  if ((!aCORSFlag && NS_SUCCEEDED(rv)) ||
+  if ((!mCORSFlagEverSet && NS_SUCCEEDED(rv)) ||
       (scheme.EqualsLiteral("data") && mRequest->SameOriginDataURL()) ||
       scheme.EqualsLiteral("about")) {
     return MainFetchOp(BASIC_FETCH);
@@ -185,11 +185,11 @@ FetchDriver::SetTaintingAndGetNextOp(bool aCORSFlag)
 }
 
 nsresult
-FetchDriver::ContinueFetch(bool aCORSFlag)
+FetchDriver::ContinueFetch()
 {
   workers::AssertIsOnMainThread();
 
-  MainFetchOp nextOp = SetTaintingAndGetNextOp(aCORSFlag);
+  MainFetchOp nextOp = SetTaintingAndGetNextOp();
 
   if (nextOp.mType == NETWORK_ERROR) {
     return FailWithNetworkError();
@@ -882,7 +882,7 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   mRequest->SetURL(newUrl);
 
   // Implement Main Fetch step 8 again on redirect.
-  MainFetchOp nextOp = SetTaintingAndGetNextOp(mCORSFlagEverSet);
+  MainFetchOp nextOp = SetTaintingAndGetNextOp();
 
   if (nextOp.mType == NETWORK_ERROR) {
     // Cancel the channel if Main Fetch blocks the redirect from continuing.
