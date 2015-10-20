@@ -50,9 +50,9 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   : mPrincipal(aPrincipal)
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
-  , mFetchRecursionCount(0)
   , mHasBeenCrossSite(false)
   , mResponseAvailableCalled(false)
+  , mFetchCalled(false)
 {
 }
 
@@ -67,34 +67,22 @@ nsresult
 FetchDriver::Fetch(FetchDriverObserver* aObserver)
 {
   workers::AssertIsOnMainThread();
+  MOZ_ASSERT(!mFetchCalled);
+  mFetchCalled = true;
+
   mObserver = aObserver;
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REQUEST_PASSTHROUGH,
                         mRequest->WasCreatedByFetchEvent());
 
-  return Fetch();
-}
-
-nsresult
-FetchDriver::Fetch()
-{
-  // We do not currently implement parts of the spec that lead to recursion.
-  MOZ_ASSERT(mFetchRecursionCount == 0);
-  mFetchRecursionCount++;
-
   // FIXME(nsm): Deal with HSTS.
 
-  if (!mRequest->IsSynchronous() && mFetchRecursionCount <= 1) {
-    nsCOMPtr<nsIRunnable> r =
-      NS_NewRunnableMethod(this, &FetchDriver::ContinueFetch);
-    nsresult rv = NS_DispatchToCurrentThread(r);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      FailWithNetworkError();
-    }
-    return rv;
-  }
+  MOZ_RELEASE_ASSERT(!mRequest->IsSynchronous(),
+                     "Synchronous fetch not supported");
 
-  MOZ_CRASH("Synchronous fetch not supported");
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &FetchDriver::ContinueFetch);
+  return NS_DispatchToCurrentThread(r);
 }
 
 nsresult
@@ -444,16 +432,6 @@ FetchDriver::IsUnsafeRequest()
             !mRequest->Headers()->HasOnlySimpleHeaders())));
 }
 
-nsresult
-FetchDriver::ContinueHttpFetchAfterNetworkFetch()
-{
-  workers::AssertIsOnMainThread();
-  MOZ_ASSERT(mResponse);
-  MOZ_ASSERT(!mResponse->IsError());
-
-  return SucceedWithResponse();
-}
-
 already_AddRefed<InternalResponse>
 FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aFinalURI)
 {
@@ -492,17 +470,6 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
   mObserver->OnResponseAvailable(filteredResponse);
   mResponseAvailableCalled = true;
   return filteredResponse.forget();
-}
-
-nsresult
-FetchDriver::SucceedWithResponse()
-{
-  workers::AssertIsOnMainThread();
-  if (mObserver) {
-    mObserver->OnResponseEnd();
-    mObserver = nullptr;
-  }
-  return NS_OK;
 }
 
 nsresult
@@ -714,17 +681,23 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
     if (outputStream) {
       outputStream->CloseWithStatus(NS_BINDING_FAILED);
     }
+
     // We proceed as usual here, since we've already created a successful response
     // from OnStartRequest.
-    SucceedWithResponse();
-    return aStatusCode;
+  } else {
+    MOZ_ASSERT(mResponse);
+    MOZ_ASSERT(!mResponse->IsError());
+
+    if (mPipeOutputStream) {
+      mPipeOutputStream->Close();
+    }
   }
 
-  if (mPipeOutputStream) {
-    mPipeOutputStream->Close();
+  if (mObserver) {
+    mObserver->OnResponseEnd();
+    mObserver = nullptr;
   }
 
-  ContinueHttpFetchAfterNetworkFetch();
   return NS_OK;
 }
 
@@ -914,7 +887,7 @@ void
 FetchDriver::SetDocument(nsIDocument* aDocument)
 {
   // Cannot set document after Fetch() has been called.
-  MOZ_ASSERT(mFetchRecursionCount == 0);
+  MOZ_ASSERT(!mFetchCalled);
   mDocument = aDocument;
 }
 
