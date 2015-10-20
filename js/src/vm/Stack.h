@@ -2040,6 +2040,9 @@ class FrameIter
     // This can only be called when isPhysicalIonFrame():
     inline jit::CommonFrameLayout* physicalIonFrame() const;
 
+    // This is used to provide a raw interface for debugging.
+    void* rawFramePtr() const;
+
   private:
     Data data_;
     jit::InlineFrameIterator ionInlineFrames_;

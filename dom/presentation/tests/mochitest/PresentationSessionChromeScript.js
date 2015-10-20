@@ -167,15 +167,6 @@ const mockedDevice = {
     sendAsyncMessage('control-channel-established');
     return mockedControlChannel;
   },
-  set listener(listener) {
-    this._listener = listener;
-  },
-  get listener() {
-    return this._listener;
-  },
-  simulateSessionRequest: function(url, presentationId, controlChannel) {
-    this._listener.onSessionRequest(this, url, presentationId, controlChannel);
-  },
 };
 
 const mockedDevicePrompt = {
@@ -358,7 +349,10 @@ addMessageListener('trigger-device-prompt-cancel', function() {
 });
 
 addMessageListener('trigger-incoming-session-request', function(url) {
-  mockedDevice.simulateSessionRequest(url, sessionId, mockedControlChannel);
+  var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+                      .getService(Ci.nsIPresentationDeviceManager);
+  deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
+	       .onSessionRequest(mockedDevice, url, sessionId, mockedControlChannel);
 });
 
 addMessageListener('trigger-incoming-offer', function() {

@@ -67,7 +67,7 @@
 #define _MD_DEFAULT_STACK_SIZE	65536L
 #define _MD_MMAP_FLAGS          MAP_PRIVATE
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(__mips__)
 #define _MD_MINIMUM_STACK_SIZE  0x20000
 #endif
 
