@@ -275,8 +275,6 @@ private:
   bool CanThrottleTransformChanges(TimeStamp aTime);
 
 public:
-  static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
-
   // True if this animation can be performed on the compositor thread.
   //
   // If aFlags contains CanAnimate_AllowPartial, returns whether the
