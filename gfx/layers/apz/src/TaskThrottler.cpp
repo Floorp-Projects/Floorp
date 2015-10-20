@@ -6,9 +6,7 @@
 
 #include "TaskThrottler.h"
 
-#include "mozilla/layers/APZThreadUtils.h"  // for NewTimerCallback
-#include "nsComponentManagerUtils.h"        // for do_CreateInstance
-#include "nsITimer.h"
+#include "base/message_loop.h"
 
 #define TASK_LOG(...)
 // #define TASK_LOG(...) printf_stderr("TASK: " __VA_ARGS__)
@@ -23,17 +21,14 @@ TaskThrottler::TaskThrottler(const TimeStamp& aTimeStamp, const TimeDuration& aM
   , mStartTime(aTimeStamp)
   , mMaxWait(aMaxWait)
   , mMean(1)
-  , mTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
+  , mTimeoutTask(nullptr)
 {
-  // The TaskThrottler must be created on the main thread (or some nsITimer-
-  // compatible thread) for the nsITimer to work properly. In particular,
-  // creating it on the Compositor thread doesn't work.
-  MOZ_ASSERT(NS_IsMainThread());
 }
 
 TaskThrottler::~TaskThrottler()
 {
-  mTimer->Cancel();
+  // The timeout task holds a strong reference to the TaskThrottler, so if the
+  // TaskThrottler is being destroyed, there's no need to cancel the task.
 }
 
 void
@@ -53,17 +48,9 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
       // Make sure the queued task is sent after mMaxWait time elapses,
       // even if we don't get a TaskComplete() until then.
       TimeDuration timeout = mMaxWait - TimeSinceLastRequest(aTimeStamp, lock);
-      TimeStamp timeoutTime = mStartTime + mMaxWait;
-      RefPtr<TaskThrottler> refPtrThis = this;
-      mTimer->InitWithCallback(NewTimerCallback(
-          [refPtrThis, timeoutTime]()
-          {
-            MonitorAutoLock lock(refPtrThis->mMonitor);
-            if (refPtrThis->mQueuedTask) {
-              refPtrThis->RunQueuedTask(timeoutTime, lock);
-            }
-          }),
-          timeout.ToMilliseconds(), nsITimer::TYPE_ONE_SHOT);
+      mTimeoutTask = NewRunnableMethod(this, &TaskThrottler::OnTimeout);
+      MessageLoop::current()->PostDelayedTask(FROM_HERE, mTimeoutTask,
+          timeout.ToMilliseconds());
       return;
     }
     // we've been waiting for more than the max-wait limit, so just fall through
@@ -73,6 +60,18 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
   mStartTime = aTimeStamp;
   aTask->Run();
   mOutstanding = true;
+}
+
+void
+TaskThrottler::OnTimeout()
+{
+  MonitorAutoLock lock(mMonitor);
+  if (mQueuedTask) {
+    RunQueuedTask(TimeStamp::Now(), lock);
+  }
+  // The message loop will delete the posted timeout task. Make sure we don't
+  // keep a dangling pointer to it.
+  mTimeoutTask = nullptr;
 }
 
 void
@@ -88,7 +87,7 @@ TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
 
   if (mQueuedTask) {
     RunQueuedTask(aTimeStamp, lock);
-    mTimer->Cancel();
+    CancelTimeoutTask(lock);
   } else {
     mOutstanding = false;
   }
@@ -126,7 +125,16 @@ TaskThrottler::CancelPendingTask(const MonitorAutoLock& aProofOfLock)
     TASK_LOG("%p cancelling task %p\n", this, mQueuedTask.get());
     mQueuedTask->Cancel();
     mQueuedTask = nullptr;
-    mTimer->Cancel();
+    CancelTimeoutTask(aProofOfLock);
+  }
+}
+
+void
+TaskThrottler::CancelTimeoutTask(const MonitorAutoLock& aProofOfLock)
+{
+  if (mTimeoutTask) {
+    mTimeoutTask->Cancel();
+    mTimeoutTask = nullptr;  // the MessageLoop will destroy it
   }
 }
 

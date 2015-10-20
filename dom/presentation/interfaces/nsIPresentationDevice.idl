@@ -5,30 +5,11 @@
 #include "nsISupports.idl"
 
 interface nsIPresentationControlChannel;
-interface nsIPresentationDevice;
-
-/*
- * Event callbacks from remote presentation device.
- */
-[scriptable, uuid(81984458-b9d1-4731-a26a-ba62ab339aac)]
-interface nsIPresentationDeviceEventListener : nsISupports
-{
-  /*
-   * Callback while the remote device is requesting to start a presentation session.
-   * @param url The URL requested to open by remote device.
-   * @param presentationId The Id for representing this session.
-   * @param controlChannel The control channel for this session.
-   */
-  void onSessionRequest(in nsIPresentationDevice device,
-                        in DOMString url,
-                        in DOMString presentationId,
-                        in nsIPresentationControlChannel controlChannel);
-};
 
 /*
  * Remote device.
  */
-[scriptable, uuid(7fac99d4-9b19-4b8d-b5cd-5da8adbe58f1)]
+[scriptable, uuid(b1e0a7af-5936-4066-8f2e-f789fb9a7e8f)]
 interface nsIPresentationDevice : nsISupports
 {
   // The unique Id for the device. UUID is recommanded.
@@ -40,9 +21,6 @@ interface nsIPresentationDevice : nsISupports
   //TODO expose more info in order to fulfill UX spec
   // The category of this device, could be "wifi", "bluetooth", "hdmi", etc.
   readonly attribute AUTF8String type;
-
-  // The listener for handling remote session request.
-  attribute nsIPresentationDeviceEventListener listener;
 
   /*
    * Establish a control channel to this device.

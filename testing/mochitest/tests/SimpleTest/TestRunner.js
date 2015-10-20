@@ -99,6 +99,7 @@ TestRunner.slowestTestURL = "";
 TestRunner.interactiveDebugger = false;
 
 TestRunner._expectingProcessCrash = false;
+TestRunner._structuredFormatter = new StructuredFormatter();
 
 /**
  * Make sure the tests don't hang indefinitely.
@@ -210,23 +211,19 @@ TestRunner.generateFailureList = function () {
  * If logEnabled is true, this is the logger that will be used.
  **/
 
+// This delimiter is used to avoid interleaving Mochitest/Gecko logs.
+var LOG_DELIMITER = String.fromCharCode(0xe175) + String.fromCharCode(0xee31) + String.fromCharCode(0x2c32) + String.fromCharCode(0xacbf);
+
 // A log callback for StructuredLog.jsm
 TestRunner._dumpMessage = function(message) {
-  // This delimiter is used to avoid interleaving Mochitest/Gecko logs.
-  var LOG_DELIMITER = String.fromCharCode(0xe175) + String.fromCharCode(0xee31) + String.fromCharCode(0x2c32) + String.fromCharCode(0xacbf);
-  var _structuredFormatter;
   var str;
 
   // This is a directive to python to format these messages
   // for compatibility with mozharness. This can be removed
   // with the MochitestFormatter (see bug 1045525).
   message.js_source = 'TestRunner.js'
-
-  if (TestRunner.interactiveDebugger) {
-    if (!_structuredFormatter) {
-      _structuredFormatter = new StructuredFormatter();
-    }
-    str = _structuredFormatter[message.action](message);
+  if (TestRunner.interactiveDebugger && message.action in TestRunner._structuredFormatter) {
+    str = TestRunner._structuredFormatter[message.action](message);
   } else {
     str = LOG_DELIMITER + JSON.stringify(message) + LOG_DELIMITER;
   }

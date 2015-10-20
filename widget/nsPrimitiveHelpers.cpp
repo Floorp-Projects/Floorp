@@ -29,17 +29,6 @@
 #include "nsLinebreakConverter.h"
 #include "nsReadableUtils.h"
 
-#include "nsIServiceManager.h"
-// unicode conversion
-#include "nsIPlatformCharset.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsISaveAsCharset.h"
-#include "nsAutoPtr.h"
-#include "mozilla/Likely.h"
-#include "mozilla/dom/EncodingUtils.h"
-
-using mozilla::dom::EncodingUtils;
-
 
 //
 // CreatePrimitiveForData
@@ -125,106 +114,6 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
   }
 
 }
-
-
-//
-// ConvertUnicodeToPlatformPlainText
-//
-// Given a unicode buffer (flavor text/unicode), this converts it to plain text using
-// the appropriate platform charset encoding. |inUnicodeLen| is the length of the input
-// string, not the # of bytes in the buffer. The |outPlainTextData| is null terminated,
-// but its length parameter, |outPlainTextLen|, does not reflect that.
-//
-nsresult
-nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( char16_t* inUnicode, int32_t inUnicodeLen,
-                                                            char** outPlainTextData, int32_t* outPlainTextLen )
-{
-  if ( !outPlainTextData || !outPlainTextLen )
-    return NS_ERROR_INVALID_ARG;
-
-  // get the charset
-  nsresult rv;
-  nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-
-  nsAutoCString platformCharset;
-  if (NS_SUCCEEDED(rv))
-    rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
-  if (NS_FAILED(rv))
-    platformCharset.AssignLiteral("ISO-8859-1");
-
-  // use transliterate to convert things like smart quotes to normal quotes for plain text
-
-  nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = converter->Init(platformCharset.get(),
-                  nsISaveAsCharset::attr_EntityAfterCharsetConv +
-                  nsISaveAsCharset::attr_FallbackQuestionMark,
-                  0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = converter->Convert(inUnicode, outPlainTextData);
-  *outPlainTextLen = *outPlainTextData ? strlen(*outPlainTextData) : 0;
-
-  NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting unicode to plain text" );
-
-  return rv;
-} // ConvertUnicodeToPlatformPlainText
-
-
-//
-// ConvertPlatformPlainTextToUnicode
-//
-// Given a char buffer (flavor text/plaikn), this converts it to unicode using
-// the appropriate platform charset encoding. |outUnicode| is null terminated,
-// but its length parameter, |outUnicodeLen|, does not reflect that. |outUnicodeLen| is
-// the length of the string in characters, not bytes.
-//
-nsresult
-nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, int32_t inTextLen,
-                                                            char16_t** outUnicode, int32_t* outUnicodeLen )
-{
-  if ( !outUnicode || !outUnicodeLen )
-    return NS_ERROR_INVALID_ARG;
-
-  // Get the appropriate unicode decoder. We're guaranteed that this won't change
-  // through the life of the app so we can cache it.
-  nsresult rv = NS_OK;
-  static nsCOMPtr<nsIUnicodeDecoder> decoder;
-  static bool hasConverter = false;
-  if ( !hasConverter ) {
-    // get the charset
-    nsAutoCString platformCharset;
-    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
-    if (NS_FAILED(rv))
-      platformCharset.AssignLiteral("windows-1252");
-
-    decoder = EncodingUtils::DecoderForEncoding(platformCharset);
-
-    hasConverter = true;
-  }
-
-  // Estimate out length and allocate the buffer based on a worst-case estimate, then do
-  // the conversion.
-  rv = decoder->GetMaxLength(inText, inTextLen, outUnicodeLen);   // |outUnicodeLen| is number of chars
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if ( *outUnicodeLen ) {
-    *outUnicode = reinterpret_cast<char16_t*>(moz_xmalloc((*outUnicodeLen + 1) * sizeof(char16_t)));
-    if ( *outUnicode ) {
-      rv = decoder->Convert(inText, &inTextLen, *outUnicode, outUnicodeLen);
-      (*outUnicode)[*outUnicodeLen] = '\0';                   // null terminate. Convert() doesn't do it for us
-    }
-  } // if valid length
-
-  NS_ASSERTION ( NS_SUCCEEDED(rv), "Error converting plain text to unicode" );
-
-  return rv;
-} // ConvertPlatformPlainTextToUnicode
 
 
 //

@@ -5598,6 +5598,8 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
       data.mGLContext = glue->GetGLContext();
       data.mFrontbufferGLTex = skiaGLTex;
+      PersistentBufferProvider *provider = GetBufferProvider(aManager);
+      data.mBufferProvider = provider;
     } else {
       PersistentBufferProvider *provider = GetBufferProvider(aManager);
       data.mBufferProvider = provider;
@@ -5648,6 +5650,8 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
     data.mGLContext = glue->GetGLContext();
     data.mFrontbufferGLTex = skiaGLTex;
+    PersistentBufferProvider *provider = GetBufferProvider(aManager);
+    data.mBufferProvider = provider;
   } else {
     PersistentBufferProvider *provider = GetBufferProvider(aManager);
     data.mBufferProvider = provider;

@@ -46,8 +46,8 @@ t.step(function() {
                       'request.method should be passed to onfetch event.');
         assert_equals(event.data.referrer, location.href,
                       'request.referrer should be passed to onfetch event.');
-        assert_equals(event.data.headers['user-agent'], navigator.userAgent,
-                      'User-Agent header should be passed to onfetch event.')
+        assert_equals(event.data.headers['user-agent'], undefined,
+                      'Default User-Agent header should not be passed to onfetch event.')
         assert_equals(event.data.errorNameWhileAppendingHeader, 'TypeError',
                       'Appending a new header to the request must throw a ' +
                       'TypeError.')

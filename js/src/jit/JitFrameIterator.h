@@ -338,6 +338,9 @@ class RInstructionResults
 
     bool init(JSContext* cx, uint32_t numResults);
     bool isInitialized() const;
+#ifdef DEBUG
+    size_t length() const;
+#endif
 
     JitFrameLayout* frame() const;
 
