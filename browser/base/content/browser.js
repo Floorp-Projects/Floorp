@@ -52,6 +52,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
+XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
+                                   "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
@@ -1073,6 +1075,7 @@ var gBrowserInit = {
     }
 
     // Misc. inits.
+    TabletModeUpdater.init();
     CombinedStopReload.init();
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
@@ -1560,6 +1563,8 @@ var gBrowserInit = {
     TabsInTitlebar.uninit();
 
     ToolbarIconColor.uninit();
+
+    TabletModeUpdater.uninit();
 
     BrowserOnClick.uninit();
 
@@ -5405,6 +5410,34 @@ var TabsInTitlebar = {
     CustomizableUI.removeListener(this);
 #endif
   }
+};
+
+var TabletModeUpdater = {
+  init() {
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+      this.update(WindowsUIUtils.inTabletMode);
+      Services.obs.addObserver(this, "tablet-mode-change", false);
+    }
+  },
+
+  uninit() {
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+      Services.obs.removeObserver(this, "tablet-mode-change");
+    }
+  },
+
+  observe(subject, topic, data) {
+    this.update(data == "tablet-mode");
+  },
+
+  update(isInTabletMode) {
+    if (isInTabletMode) {
+      document.documentElement.setAttribute("tabletmode", "true");
+    } else {
+      document.documentElement.removeAttribute("tabletmode");
+    }
+    TabsInTitlebar.updateAppearance(true);
+  },
 };
 
 #ifdef CAN_DRAW_IN_TITLEBAR
