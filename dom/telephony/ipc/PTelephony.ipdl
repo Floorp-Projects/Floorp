@@ -129,8 +129,6 @@ child:
 
   NotifyCdmaCallWaiting(uint32_t aClientId, IPCCdmaWaitingCallData aData);
 
-  NotifyConferenceCallStateChanged(uint16_t aCallState);
-
   NotifyConferenceError(nsString aName, nsString aMessage);
 
   NotifySupplementaryService(uint32_t aClientId, int32_t aCallIndex,

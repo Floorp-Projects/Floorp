@@ -32,14 +32,28 @@ function prefillAlertInfo() {
   // arguments[7] --> lang
   // arguments[8] --> replaced alert window (nsIDOMWindow)
   // arguments[9] --> an optional callback listener (nsIObserver)
-  // arguments[10] -> the localized alert source string
+  // arguments[10] -> the nsIURI.hostPort of the origin, optional
 
   switch (window.arguments.length) {
     default:
     case 11: {
       if (window.arguments[10]) {
-        document.getElementById('alertBox').setAttribute('hasOrigin', true);
-        document.getElementById('alertSourceLabel').setAttribute('value', window.arguments[10]);
+        let alertBox = document.getElementById("alertBox");
+        alertBox.setAttribute("hasOrigin", true);
+
+        let hostPort = window.arguments[10];
+        const ALERT_BUNDLE = Services.strings.createBundle(
+          "chrome://alerts/locale/alert.properties");
+        let label = document.getElementById("alertSourceLabel");
+        label.setAttribute("value",
+          ALERT_BUNDLE.formatStringFromName("source.label",
+                                            [hostPort],
+                                            1));
+        let disableForOrigin = document.getElementById("disableForOriginMenuItem");
+        disableForOrigin.setAttribute("label",
+          ALERT_BUNDLE.formatStringFromName("webActions.disableForOrigin.label",
+                                            [hostPort],
+                                            1));
       }
     }
     case 10:
@@ -215,6 +229,11 @@ function onAlertClick() {
   } else {
     window.close();
   }
+}
+
+function disableForOrigin() {
+  gAlertListener.observe(null, "alertdisablecallback", gAlertCookie);
+  onAlertClose();
 }
 
 function onAlertClose() {

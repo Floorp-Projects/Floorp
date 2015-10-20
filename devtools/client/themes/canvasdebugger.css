@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%define darkCheckerboardBackground #000
-%define lightCheckerboardBackground #fff
-%define checkerboardCell rgba(128,128,128,0.2)
-%define checkerboardPattern linear-gradient(45deg, @checkerboardCell@ 25%, transparent 25%, transparent 75%, @checkerboardCell@ 75%, @checkerboardCell@), linear-gradient(45deg, @checkerboardCell@ 25%, transparent 25%, transparent 75%, @checkerboardCell@ 75%, @checkerboardCell@)
-%define gutterWidth 3em
-%define gutterPaddingStart 22px
-
+:root {
+  --gutter-width: 3em;
+  --gutter-padding-start: 22px;
+  --checkerboard-pattern: linear-gradient(45deg, rgba(128,128,128,0.2) 25%, transparent 25%, transparent 75%, rgba(128,128,128,0.2) 75%, rgba(128,128,128,0.2)),
+                          linear-gradient(45deg, rgba(128,128,128,0.2) 25%, transparent 25%, transparent 75%, rgba(128,128,128,0.2) 75%, rgba(128,128,128,0.2));
+}
 /* Reload and waiting notices */
 
 .notice-container {
@@ -35,22 +33,9 @@
 
 /* Snapshots pane */
 
-#snapshots-pane > tabs {
-  -moz-border-end: 1px solid;
-}
-
+#snapshots-pane > tabs,
 #snapshots-pane .devtools-toolbar {
-  -moz-border-end: 1px solid;
-}
-
-.theme-dark #snapshots-pane > tabs,
-.theme-dark #snapshots-pane .devtools-toolbar {
-  -moz-border-end-color: black; /* Match the splitter color. */
-}
-
-.theme-light #snapshots-pane > tabs,
-.theme-light #snapshots-pane .devtools-toolbar {
-  -moz-border-end-color: #aaa; /* Match the splitter color. */
+  -moz-border-end: 1px solid var(--theme-splitter-color);
 }
 
 #record-snapshot {
@@ -65,7 +50,7 @@
 
 .snapshot-item-thumbnail {
   image-rendering: -moz-crisp-edges;
-  background-image: @checkerboardPattern@;
+  background-image: var(--checkerboard-pattern);
   background-size: 12px 12px, 12px 12px;
   background-position: 0px 0px, 6px 6px;
   background-repeat: repeat, repeat;
@@ -75,12 +60,8 @@
   transform: scaleY(-1);
 }
 
-.theme-dark .snapshot-item-thumbnail {
-  background-color: @darkCheckerboardBackground@;
-}
-
-.theme-light .snapshot-item-thumbnail {
-  background-color: @lightCheckerboardBackground@;
+.snapshot-item-thumbnail {
+  background-color: var(--theme-body-background);
 }
 
 .snapshot-item-details {
@@ -234,9 +215,9 @@
 }
 
 .call-item-gutter {
-  width: calc(@gutterWidth@ + @gutterPaddingStart@);
-  -moz-padding-start: @gutterPaddingStart@;
-  -moz-padding-end: 4px;
+  width: calc(var(--gutter-width) + var(--gutter-padding-start));
+  padding-inline-start: var(--gutter-padding-start);
+  padding-inline-end: 4px;
   padding-top: 2px;
   padding-bottom: 2px;
   -moz-border-end: 1px solid;
@@ -300,7 +281,7 @@
 }
 
 .call-item-stack {
-  -moz-padding-start: calc(@gutterWidth@ + @gutterPaddingStart@);
+  -moz-padding-start: calc(var(--gutter-width) + var(--gutter-padding-start));
   padding-bottom: 10px;
 }
 
@@ -345,18 +326,11 @@
 /* Rendering preview */
 
 #screenshot-container {
-  background-image: @checkerboardPattern@;
+  background-color: var(--theme-body-background);
+  background-image: var(--checkerboard-pattern);
   background-size: 30px 30px, 30px 30px;
   background-position: 0px 0px, 15px 15px;
   background-repeat: repeat, repeat;
-}
-
-.theme-dark #screenshot-container {
-  background-color: @darkCheckerboardBackground@;
-}
-
-.theme-light #screenshot-container {
-  background-color: @lightCheckerboardBackground@;
 }
 
 @media (min-width: 701px) {
@@ -403,22 +377,22 @@
 /* Snapshot filmstrip */
 
 #snapshot-filmstrip {
+  border-top: 1px solid var(--theme-splitter-color);
   overflow: hidden;
 }
 
 .theme-dark #snapshot-filmstrip {
-  border-top: 1px solid #000;
   color: var(--theme-selection-color);
 }
 
 .theme-light #snapshot-filmstrip {
-  border-top: 1px solid #aaa;
   color: var(--theme-body-color-alt);
 }
 
 .filmstrip-thumbnail {
   image-rendering: -moz-crisp-edges;
-  background-image: @checkerboardPattern@;
+  background-color: var(--theme-body-background);
+  background-image: var(--checkerboard-pattern);
   background-size: 12px 12px, 12px 12px;
   background-position: 0px -1px, 6px 5px;
   background-repeat: repeat, repeat;
@@ -426,23 +400,12 @@
   cursor: pointer;
   padding-top: 1px;
   padding-bottom: 1px;
+  border-inline-end: 1px solid var(--theme-splitter-color);
   transition: opacity 0.1s ease-in-out;
 }
 
 .filmstrip-thumbnail[flipped=true] {
   transform: scaleY(-1);
-}
-
-.theme-dark .filmstrip-thumbnail {
-  background-color: @darkCheckerboardBackground@;
-}
-
-.theme-light .filmstrip-thumbnail {
-  background-color: @lightCheckerboardBackground@;
-}
-
-.filmstrip-thumbnail {
-  -moz-border-end: 1px solid var(--theme-splitter-color)
 }
 
 #snapshot-filmstrip > .filmstrip-thumbnail:hover,

@@ -4,7 +4,7 @@
 
 %filter substitution
 
-%define toolbarHighlight rgba(255,255,255,.3)
+%define toolbarHighlight rgba(255,255,255,.4)
 %define fgTabTexture linear-gradient(transparent 2px, @toolbarHighlight@ 2px, @toolbarHighlight@)
 %define fgTabTextureLWT @fgTabTexture@
 %define fgTabBackgroundColor -moz-dialog

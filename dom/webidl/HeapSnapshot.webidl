@@ -10,6 +10,12 @@
 [ChromeOnly, Exposed=(Window,System,Worker)]
 interface HeapSnapshot {
   /**
+   * A time stamp of when the heap snapshot was taken, if available. Units are
+   * microseconds since midnight (00:00:00) 1 January 1970 UTC.
+   */
+  readonly attribute unsigned long long? creationTime;
+
+  /**
    * Take a census of the heap snapshot.
    *
    * This is the same as |Debugger.Memory.prototype.takeCensus|, but operates on
