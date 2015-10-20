@@ -432,8 +432,10 @@ js::ReportErrorVA(JSContext* cx, unsigned flags, const char* format, va_list ap)
         return true;
 
     message = JS_vsmprintf(format, ap);
-    if (!message)
+    if (!message) {
+        ReportOutOfMemory(cx);
         return false;
+    }
     messagelen = strlen(message);
 
     report.flags = flags;
