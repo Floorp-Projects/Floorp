@@ -873,6 +873,8 @@ int64_t nsZipArchive::SizeOfMapping()
 
 nsZipArchive::nsZipArchive()
   : mRefCnt(0)
+  , mCommentPtr(nullptr)
+  , mCommentLen(0)
   , mBuiltSynthetics(false)
 {
   zipLog.AddRef();
@@ -900,12 +902,12 @@ nsZipArchive::~nsZipArchive()
 // nsZipFind constructor and destructor
 //------------------------------------------
 
-nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, bool aRegExp) : 
-  mArchive(aZip),
-  mPattern(aPattern),
-  mItem(0),
-  mSlot(0),
-  mRegExp(aRegExp)
+nsZipFind::nsZipFind(nsZipArchive* aZip, char* aPattern, bool aRegExp)
+  : mArchive(aZip)
+  , mPattern(aPattern)
+  , mItem(nullptr)
+  , mSlot(0)
+  , mRegExp(aRegExp)
 {
   MOZ_COUNT_CTOR(nsZipFind);
 }
@@ -996,6 +998,13 @@ static PRTime GetModTime(uint16_t aDate, uint16_t aTime)
 
   return PR_ImplodeTime(&time);
 }
+
+nsZipItem::nsZipItem()
+  : next(nullptr)
+  , central(nullptr)
+  , nameLength(0)
+  , isSynthetic(false)
+{}
 
 uint32_t nsZipItem::LocalOffset()
 {
@@ -1092,11 +1101,13 @@ bool nsZipItem::IsSymlink()
 }
 #endif
 
-nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf, uint32_t aBufSize, bool doCRC) :
-  mItem(item),
-  mBuf(aBuf),
-  mBufSize(aBufSize),
-  mDoCRC(doCRC)
+nsZipCursor::nsZipCursor(nsZipItem *item, nsZipArchive *aZip, uint8_t* aBuf,
+                         uint32_t aBufSize, bool doCRC)
+  : mItem(item)
+  , mBuf(aBuf)
+  , mBufSize(aBufSize)
+  , mCRC(0)
+  , mDoCRC(doCRC)
 {
   if (mItem->Compression() == DEFLATED) {
 #ifdef DEBUG
@@ -1168,8 +1179,10 @@ MOZ_WIN_MEM_TRY_CATCH(return nullptr)
   return buf;
 }
 
-nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip, const char * aEntryName, bool doCRC) :
-  mReturnBuf(nullptr)
+nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip,
+                                     const char * aEntryName, bool doCRC)
+  : mReturnBuf(nullptr)
+  , mReadlen(0)
 {
   // make sure the ziparchive hangs around
   mZipHandle = aZip->GetFD();
