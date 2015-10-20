@@ -412,21 +412,6 @@ nsStyleContext::HasChildThatUsesGrandancestorStyle() const
          ListContainsStyleContextThatUsesGrandancestorStyle(mChild);
 }
 
-const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
-{
-  const void* cachedData;
-  if (nsCachedStyleData::IsReset(aSID)) {
-    if (mCachedResetData) {
-      cachedData = mCachedResetData->mStyleStructs[aSID];
-    } else {
-      cachedData = nullptr;
-    }
-  } else {
-    cachedData = mCachedInheritedData.mStyleStructs[aSID];
-  }
-  return cachedData;
-}
-
 const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 {
   const void* cachedData = GetCachedStyleData(aSID);
