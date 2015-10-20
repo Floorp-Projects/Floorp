@@ -426,10 +426,9 @@ bool
 FetchDriver::IsUnsafeRequest()
 {
   return mHasBeenCrossSite &&
-         (mRequest->Mode() == RequestMode::Cors_with_forced_preflight ||
-          (mRequest->UnsafeRequest() &&
-           (!mRequest->HasSimpleMethod() ||
-            !mRequest->Headers()->HasOnlySimpleHeaders())));
+         (mRequest->UnsafeRequest() &&
+          (!mRequest->HasSimpleMethod() ||
+           !mRequest->Headers()->HasOnlySimpleHeaders()));
 }
 
 already_AddRefed<InternalResponse>
