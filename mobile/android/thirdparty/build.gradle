@@ -1,0 +1,49 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/thirdparty"
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        targetSdkVersion 22
+        minSdkVersion 9
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'AndroidManifest.xml'
+            java {
+                srcDir '.'
+                if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
+                    exclude 'com/adjust/**'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:23.0.1'
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+        // This is cosmetic.  See the excludes in the root project.
+        if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
+            excludeDirs += file('com/adjust/sdk')
+        }
+    }
+}
