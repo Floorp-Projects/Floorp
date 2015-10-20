@@ -1064,11 +1064,11 @@ FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap);
 class RecompileInfo;
 
 // Allocate a CompilerOutput for a finished compilation and generate the type
-// constraints for the compilation. Returns whether the type constraints
-// still hold.
+// constraints for the compilation. Sets |isValidOut| based on whether the type
+// constraints still hold.
 bool
 FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList* constraints,
-                  RecompileInfo* precompileInfo);
+                  RecompileInfo* precompileInfo, bool* isValidOut);
 
 // Reset any CompilerOutput present for a script.
 void
