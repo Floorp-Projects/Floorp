@@ -145,7 +145,7 @@ function handleRequest(request, response)
       response.setHeader("Access-Control-Expose-Headers", query.exposeHeaders);
   }
 
-  if (query.hop && query.hop < hops.length) {
+  if (!isPreflight && query.hop && query.hop < hops.length) {
     newURL = hops[query.hop].server +
              "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?" +
              "hop=" + (query.hop + 1) + "&hops=" + escape(query.hops);

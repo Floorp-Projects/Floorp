@@ -1,4 +1,5 @@
-//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -2152,19 +2153,6 @@ nsNavHistory::ConstructQueryString(
   return NS_OK;
 }
 
-PLDHashOperator BindAdditionalParameter(nsNavHistory::StringHash::KeyType aParamName,
-                                        nsCString aParamValue,
-                                        void* aStatement)
-{
-  mozIStorageStatement* stmt = static_cast<mozIStorageStatement*>(aStatement);
-
-  nsresult rv = stmt->BindUTF8StringByName(aParamName, aParamValue);
-  if (NS_FAILED(rv))
-    return PL_DHASH_STOP;
-
-  return PL_DHASH_NEXT;
-}
-
 // nsNavHistory::GetQueryResults
 //
 //    Call this to get the results from a complex query. This is used by
@@ -2221,7 +2209,12 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     }
   }
 
-  addParams.EnumerateRead(BindAdditionalParameter, statement.get());
+  for (auto iter = addParams.Iter(); !iter.Done(); iter.Next()) {
+    nsresult rv = statement->BindUTF8StringByName(iter.Key(), iter.Data());
+    if (NS_FAILED(rv)) {
+      break;
+    }
+  }
 
   // Optimize the case where there is no need for any post-query filtering.
   if (NeedToFilterResultSet(aQueries, aOptions)) {
@@ -3047,7 +3040,13 @@ nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  addParams.EnumerateRead(BindAdditionalParameter, statement.get());
+
+  for (auto iter = addParams.Iter(); !iter.Done(); iter.Next()) {
+    nsresult rv = statement->BindUTF8StringByName(iter.Key(), iter.Data());
+    if (NS_FAILED(rv)) {
+      break;
+    }
+  }
 
   rv = statement->ExecuteAsync(aCallback, _stmt);
   NS_ENSURE_SUCCESS(rv, rv);

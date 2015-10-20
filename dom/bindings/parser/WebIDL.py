@@ -740,7 +740,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                                       "interface that already has %s "
                                       "declaration" %
                                       (member.maplikeOrSetlikeOrIterableType,
-                                       self.maplikeOrSetlike.maplikeOrSetlikeOrIterableType),
+                                       self.maplikeOrSetlikeOrIterable.maplikeOrSetlikeOrIterableType),
                                       [self.maplikeOrSetlikeOrIterable.location,
                                        member.location])
                 self.maplikeOrSetlikeOrIterable = member
@@ -6567,6 +6567,7 @@ class Parser(Tokenizer):
         interfaceStatements = [p for p in self._productions if
                                isinstance(p, IDLInterface)]
 
+        iterableIteratorIface = None
         for iface in interfaceStatements:
             iterable = None
             # We haven't run finish() on the interface yet, so we don't know
@@ -6578,33 +6579,30 @@ class Parser(Tokenizer):
                     iterable = m
                     break
             if iterable:
+                def simpleExtendedAttr(str):
+                    return IDLExtendedAttribute(iface.location, (str, ))
+                nextMethod = IDLMethod(
+                    iface.location,
+                    IDLUnresolvedIdentifier(iface.location, "next"),
+                    BuiltinTypes[IDLBuiltinType.Types.object], [])
+                nextMethod.addExtendedAttributes([simpleExtendedAttr("Throws")])
                 itr_ident = IDLUnresolvedIdentifier(iface.location,
                                                     iface.identifier.name + "Iterator")
                 itr_iface = IDLInterface(iface.location, self.globalScope(),
-                                         itr_ident, None, [],
+                                         itr_ident, None, [nextMethod],
                                          isKnownNonPartial=True)
-                itr_iface.addExtendedAttributes([IDLExtendedAttribute(iface.location,
-                                                                      ("NoInterfaceObject", ))])
+                itr_iface.addExtendedAttributes([simpleExtendedAttr("NoInterfaceObject")])
                 # Make sure the exposure set for the iterator interface is the
                 # same as the exposure set for the iterable interface, because
                 # we're going to generate methods on the iterable that return
                 # instances of the iterator.
                 itr_iface._exposureGlobalNames = set(iface._exposureGlobalNames)
-                # Always append generated iterable interfaces and their
-                # matching implements statements after the interface they're a
-                # member of, otherwise nativeType generation won't work
-                # correctly.
+                # Always append generated iterable interfaces after the
+                # interface they're a member of, otherwise nativeType generation
+                # won't work correctly.
                 itr_iface.iterableInterface = iface
                 self._productions.append(itr_iface)
                 iterable.iteratorType = IDLWrapperType(iface.location, itr_iface)
-                itrPlaceholder = IDLIdentifierPlaceholder(iface.location,
-                                                          IDLUnresolvedIdentifier(iface.location,
-                                                                                  "IterableIterator"))
-                implements = IDLImplementsStatement(iface.location,
-                                                    IDLIdentifierPlaceholder(iface.location,
-                                                                             itr_ident),
-                                                    itrPlaceholder)
-                self._productions.append(implements)
 
         # Then, finish all the IDLImplementsStatements.  In particular, we
         # have to make sure we do those before we do the IDLInterfaces.

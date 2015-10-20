@@ -17,6 +17,7 @@
 #include "nsIDragService.h"
 #include "nsITimer.h"
 #include "nsGkAtoms.h"
+#include "nsRefPtrHashtable.h"
 
 #include "nsBaseWidget.h"
 #include <gdk/gdk.h>
@@ -30,6 +31,7 @@
 #include "mozilla/a11y/Accessible.h"
 #endif
 #include "mozilla/EventForwards.h"
+#include "mozilla/TouchEvents.h"
 
 #include "IMContextWrapper.h"
 
@@ -207,6 +209,9 @@ public:
                                                gpointer         aData);
     gboolean           OnPropertyNotifyEvent(GtkWidget *aWidget,
                                              GdkEventProperty *aEvent);
+#if GTK_CHECK_VERSION(3,4,0)
+    gboolean           OnTouchEvent(GdkEventTouch* aEvent);
+#endif
 
     virtual already_AddRefed<mozilla::gfx::DrawTarget>
                        StartRemoteDrawingInRegion(nsIntRegion& aInvalidRegion) override;
@@ -347,6 +352,8 @@ protected:
     virtual nsresult NotifyIMEInternal(
                          const IMENotification& aIMENotification) override;
 
+    virtual void RegisterTouchWindow() override;
+
     nsCOMPtr<nsIWidget> mParent;
     // Is this a toplevel window?
     bool                mIsTopLevel;
@@ -362,6 +369,10 @@ protected:
     bool                mEnabled;
     // has the native window for this been created yet?
     bool                mCreated;
+#if GTK_CHECK_VERSION(3,4,0)
+    // whether we handle touch event
+    bool                mHandleTouchEvent;
+#endif
 
 private:
     void               DestroyChildWindows();
@@ -399,6 +410,9 @@ private:
 #if GTK_CHECK_VERSION(3,4,0)
     // This field omits duplicate scroll events caused by GNOME bug 726878.
     guint32             mLastScrollEventTime;
+
+    // for touch event handling
+    nsRefPtrHashtable<nsPtrHashKey<GdkEventSequence>, mozilla::dom::Touch> mTouches;
 #endif
 
 #ifdef MOZ_X11

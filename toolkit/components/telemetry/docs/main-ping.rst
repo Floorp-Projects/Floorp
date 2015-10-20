@@ -43,17 +43,18 @@ Structure::
         subsessionLength: <number>, // the subsession length in seconds, monotonic
       },
 
-      childPayloads: {...}, // only present with e10s; a reduced payload from content processes
+      childPayloads: {...}, // only present with e10s; a reduced payload from content processes, null on failure
+      simpleMeasurements: {...},
 
-      simpleMeasurements: { ... },
-      histograms: {},
-      keyedHistograms: {},
-      chromeHangs: {},
-      threadHangStats: {},
-      log: [],
+      // The following properties may all be null if we fail to collect them.
+      histograms: {...},
+      keyedHistograms: {...},
+      chromeHangs: {...},
+      threadHangStats: {...},
+      log: [...],
       fileIOReports: {...},
       lateWrites: {...},
-      addonDetails: { ... },
+      addonDetails: {...},
       addonHistograms: {...},
       UIMeasurements: {...},
       slowSQL: {...},

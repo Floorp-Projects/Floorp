@@ -412,27 +412,19 @@ nsStyleContext::HasChildThatUsesGrandancestorStyle() const
          ListContainsStyleContextThatUsesGrandancestorStyle(mChild);
 }
 
-const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
-{
-  const void* cachedData;
-  if (nsCachedStyleData::IsReset(aSID)) {
-    if (mCachedResetData) {
-      cachedData = mCachedResetData->mStyleStructs[aSID];
-    } else {
-      cachedData = nullptr;
-    }
-  } else {
-    cachedData = mCachedInheritedData.mStyleStructs[aSID];
-  }
-  return cachedData;
-}
-
 const void* nsStyleContext::StyleData(nsStyleStructID aSID)
 {
   const void* cachedData = GetCachedStyleData(aSID);
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
-  return mRuleNode->GetStyleData(aSID, this, true); // Our rule node will take care of it for us.
+  // Our rule node will take care of it for us.
+  const void* newData = mRuleNode->GetStyleData(aSID, this, true);
+  if (!nsCachedStyleData::IsReset(aSID)) {
+    // always cache inherited data on the style context; the rule
+    // node set the bit in mBits for us if needed.
+    mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+  }
+  return newData;
 }
 
 // This is an evil evil function, since it forces you to alloc your own separate copy of
@@ -844,19 +836,22 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   // we worry about 'inherit' values.)
   bool compare = mRuleNode != aOther->mRuleNode;
 
+  DebugOnly<uint32_t> structsFound = 0;
+
   // If we had any change in variable values, then we'll need to examine
   // all of the other style structs too, even if the new style context has
   // the same rule node as the old one.
   const nsStyleVariables* thisVariables = PeekStyleVariables();
   if (thisVariables) {
+    structsFound |= NS_STYLE_INHERIT_BIT(Variables);
     const nsStyleVariables* otherVariables = aOther->StyleVariables();
     if (thisVariables->mVariables == otherVariables->mVariables) {
-      *aEqualStructs |= nsCachedStyleData::GetBitForSID(eStyleStruct_Variables);
+      *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
     } else {
       compare = true;
     }
   } else {
-    *aEqualStructs |= nsCachedStyleData::GetBitForSID(eStyleStruct_Variables);
+    *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
   }
 
   DebugOnly<int> styleStructCount = 1;  // count Variables already
@@ -865,6 +860,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   PR_BEGIN_MACRO                                                              \
     const nsStyle##struct_* this##struct_ = PeekStyle##struct_();             \
     if (this##struct_) {                                                      \
+      structsFound |= NS_STYLE_INHERIT_BIT(struct_);                          \
       const nsStyle##struct_* other##struct_ = aOther->Style##struct_();      \
       nsChangeHint maxDifference = nsStyle##struct_::MaxDifference();         \
       nsChangeHint differenceAlwaysHandledForDescendants =                    \
@@ -943,6 +939,16 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
 
   MOZ_ASSERT(styleStructCount == nsStyleStructID_Length,
              "missing a call to DO_STRUCT_DIFFERENCE");
+
+#ifdef DEBUG
+  #define STYLE_STRUCT(name_, callback_)                                      \
+    MOZ_ASSERT(!!(structsFound & NS_STYLE_INHERIT_BIT(name_)) ==              \
+               !!PeekStyle##name_(),                                          \
+               "PeekStyleData results must not change in the middle of "      \
+               "difference calculation.");
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+#endif
 
   // We check for struct pointer equality here rather than as part of the
   // DO_STRUCT_DIFFERENCE calls, since those calls can result in structs
@@ -1371,7 +1377,7 @@ nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
     }
     void*& thisData = mCachedInheritedData.mStyleStructs[i];
     void*& otherData = aNewContext->mCachedInheritedData.mStyleStructs[i];
-    if (mBits & bit) {
+    if ((mBits & bit) && thisData) {
       if (thisData == otherData) {
         thisData = nullptr;
       }
@@ -1396,7 +1402,7 @@ nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
     }
     void*& thisData = mCachedResetData->mStyleStructs[i];
     void*& otherData = aNewContext->mCachedResetData->mStyleStructs[i];
-    if (mBits & bit) {
+    if ((mBits & bit) && thisData) {
       if (thisData == otherData) {
         thisData = nullptr;
       }
@@ -1501,7 +1507,7 @@ nsStyleContext::GetCachedStyleDataAsString(uint32_t aStructs)
         structs.Append(' ');
       }
       structs.AppendPrintf("%s=%p", StructName(i), data);
-      if (HasCachedInheritedStyleData(i)) {
+      if (HasCachedDependentStyleData(i)) {
         structs.AppendLiteral("(dependent)");
       } else {
         structs.AppendLiteral("(owned)");

@@ -54,7 +54,7 @@ public:
 
   bool AtRoot() { return mCurrent == mRoot; }
 
-  void SetLevel(uint8_t aLevel, bool aImportance,
+  void SetLevel(mozilla::SheetType aLevel, bool aImportance,
                 bool aCheckForImportantRules) {
     NS_ASSERTION(!aCheckForImportantRules || !aImportance,
                  "Shouldn't be checking for important rules while walking "
@@ -63,7 +63,7 @@ public:
     mImportance = aImportance;
     mCheckForImportantRules = aCheckForImportantRules;
   }
-  uint8_t GetLevel() const { return mLevel; }
+  mozilla::SheetType GetLevel() const { return mLevel; }
   bool GetImportance() const { return mImportance; }
   bool GetCheckForImportantRules() const { return mCheckForImportantRules; }
 
@@ -86,7 +86,7 @@ public:
 private:
   nsRuleNode* mCurrent; // Our current position.  Never null.
   nsRuleNode* mRoot; // The root of the tree we're walking.
-  uint8_t mLevel; // an nsStyleSet::sheetType
+  mozilla::SheetType mLevel;
   bool mImportance;
   bool mCheckForImportantRules; // If true, check for important rules as
                                 // we walk and set to false if we find

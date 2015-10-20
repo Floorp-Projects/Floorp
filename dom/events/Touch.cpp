@@ -67,6 +67,23 @@ Touch::Touch(int32_t aIdentifier,
   nsJSContext::LikelyShortLivingObjectCreated();
 }
 
+Touch::Touch(const Touch& aOther)
+  : mTarget(aOther.mTarget)
+  , mRefPoint(aOther.mRefPoint)
+  , mChanged(aOther.mChanged)
+  , mMessage(aOther.mMessage)
+  , mIdentifier(aOther.mIdentifier)
+  , mPagePoint(aOther.mPagePoint)
+  , mClientPoint(aOther.mClientPoint)
+  , mScreenPoint(aOther.mScreenPoint)
+  , mRadius(aOther.mRadius)
+  , mRotationAngle(aOther.mRotationAngle)
+  , mForce(aOther.mForce)
+  , mPointsInitialized(aOther.mPointsInitialized)
+{
+  nsJSContext::LikelyShortLivingObjectCreated();
+}
+
 Touch::~Touch()
 {
 }

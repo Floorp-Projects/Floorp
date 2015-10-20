@@ -52,6 +52,17 @@ enum Direction {
   kRecv = 2
 };
 
+inline std::ostream& operator<<(std::ostream& os, sdp::Direction d)
+{
+  switch (d) {
+    case sdp::kSend:
+      return os << "send";
+    case sdp::kRecv:
+      return os << "recv";
+  }
+  MOZ_CRASH("Unknown Direction");
+}
+
 } // namespace sdp
 
 } // namespace mozilla

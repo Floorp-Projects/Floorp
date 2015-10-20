@@ -83,11 +83,11 @@ inDOMUtils::GetAllStyleSheets(nsIDOMDocument *aDocument, uint32_t *aLength,
   nsIPresShell* presShell = document->GetShell();
   if (presShell) {
     nsStyleSet* styleSet = presShell->StyleSet();
-    nsStyleSet::sheetType sheetType = nsStyleSet::eAgentSheet;
+    SheetType sheetType = SheetType::Agent;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }
-    sheetType = nsStyleSet::eUserSheet;
+    sheetType = SheetType::User;
     for (int32_t i = 0; i < styleSet->SheetCount(sheetType); i++) {
       sheets.AppendElement(styleSet->StyleSheetAt(sheetType, i));
     }

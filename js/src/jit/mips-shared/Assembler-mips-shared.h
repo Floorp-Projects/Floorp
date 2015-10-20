@@ -755,7 +755,6 @@ class AssemblerMIPSShared : public AssemblerShared
         { }
     };
 
-    js::Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     js::Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
     js::Vector<uint32_t, 8, SystemAllocPolicy> longJumps_;
 
@@ -809,14 +808,6 @@ class AssemblerMIPSShared : public AssemblerShared
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);
     void copyPreBarrierTable(uint8_t* dest);
-
-    void addCodeLabel(CodeLabel label);
-    size_t numCodeLabels() const {
-        return codeLabels_.length();
-    }
-    CodeLabel codeLabel(size_t i) {
-        return codeLabels_[i];
-    }
 
     // Size of the instruction stream, in bytes.
     size_t size() const;

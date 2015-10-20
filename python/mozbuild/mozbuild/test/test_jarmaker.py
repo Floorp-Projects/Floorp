@@ -166,13 +166,12 @@ class TestJarMaker(unittest.TestCase):
 
     def _jar_and_compare(self, infile, **kwargs):
         jm = JarMaker(outputFormat='jar')
-        jardir = os.path.join(self.builddir, 'chrome')
         if 'topsourcedir' not in kwargs:
             kwargs['topsourcedir'] = self.srcdir
         for attr in ('topsourcedir', 'sourcedirs'):
             if attr in kwargs:
                 setattr(jm, attr, kwargs[attr])
-        jm.makeJar(infile, jardir)
+        jm.makeJar(infile, self.builddir)
         cwd = os.getcwd()
         os.chdir(self.builddir)
         try:
@@ -239,8 +238,7 @@ class TestJarMaker(unittest.TestCase):
         jm = JarMaker(outputFormat='symlink')
         jm.sourcedirs = [self.srcdir]
         jm.topsourcedir = self.srcdir
-        jardir = os.path.join(self.builddir, 'chrome')
-        jm.makeJar(os.path.join(self.srcdir,'jar.mn'), jardir)
+        jm.makeJar(os.path.join(self.srcdir,'jar.mn'), self.builddir)
         # All we do is check that srcdir/bar points to builddir/chrome/test/dir/foo
         srcbar = os.path.join(self.srcdir, 'bar')
         destfoo = os.path.join(self.builddir, 'chrome', 'test', 'dir', 'foo')
@@ -288,8 +286,7 @@ class TestJarMaker(unittest.TestCase):
         jm = JarMaker(outputFormat='symlink')
         jm.sourcedirs = [self.srcdir]
         jm.topsourcedir = self.srcdir
-        jardir = os.path.join(self.builddir, 'chrome')
-        jm.makeJar(os.path.join(self.srcdir,'jar.mn'), jardir)
+        jm.makeJar(os.path.join(self.srcdir,'jar.mn'), self.builddir)
 
         expected_symlinks = {
             ('bar', 'foo.js'): ('foo.js',),

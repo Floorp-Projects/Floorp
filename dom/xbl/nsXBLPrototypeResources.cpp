@@ -143,7 +143,7 @@ void
 nsXBLPrototypeResources::GatherRuleProcessor()
 {
   mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList,
-                                          nsStyleSet::eDocSheet,
+                                          SheetType::Doc,
                                           nullptr,
                                           mRuleProcessor);
 }

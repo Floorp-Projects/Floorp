@@ -91,6 +91,13 @@ public:
     Touch(/* updateTime = */ false);
   }
 
+  uint32_t GetLoadTime() const
+  {
+    return mLoadTime;
+  }
+
+  void UpdateLoadTime();
+
   int32_t GetExpiryTime() const
   {
     return mExpiryTime;
@@ -164,6 +171,7 @@ private: // data
   RefPtr<imgRequest> mRequest;
   uint32_t mDataSize;
   int32_t mTouchedTime;
+  uint32_t mLoadTime;
   int32_t mExpiryTime;
   nsExpirationState mExpirationState;
   bool mMustValidate : 1;

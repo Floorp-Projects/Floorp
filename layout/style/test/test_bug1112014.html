@@ -92,10 +92,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
 
   for (let propertyName in gCSSProperties) {
     let prop = gCSSProperties[propertyName];
-    if (prop.backend_only) {
-      // These aren't interesting to us.
-      continue;
-    }
 
     for (let iter in testValues) {
       let testValue = testValues[iter];

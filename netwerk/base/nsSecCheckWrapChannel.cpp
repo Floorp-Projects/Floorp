@@ -5,7 +5,7 @@
 
 #include "nsContentSecurityManager.h"
 #include "nsSecCheckWrapChannel.h"
-#include "nsHttpChannel.h"
+#include "nsIForcePendingChannel.h"
 #include "nsCOMPtr.h"
 
 static PRLogModuleInfo*
@@ -82,6 +82,31 @@ nsSecCheckWrapChannel::nsSecCheckWrapChannel(nsIChannel* aChannel,
     }
     CHANNELWRAPPERLOG(("nsSecCheckWrapChannel::nsSecCheckWrapChannel [%p] (%s)",this, spec.get()));
   }
+}
+
+// static
+already_AddRefed<nsIChannel>
+nsSecCheckWrapChannel::MaybeWrap(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
+{
+  // Maybe a custom protocol handler actually returns a gecko
+  // http/ftpChannel - To check this we will check whether the channel
+  // implements a gecko non-scriptable interface e.g. nsIForcePendingChannel.
+  nsCOMPtr<nsIForcePendingChannel> isGeckoChannel = do_QueryInterface(aChannel);
+
+  nsCOMPtr<nsIChannel> channel = aChannel;
+  if (isGeckoChannel) {
+    // If it is a gecko channel (ftp or http) we do not need to wrap it.
+    channel->SetLoadInfo(aLoadInfo);
+  } else {
+    nsCOMPtr<nsIHttpChannel> httpChannel =
+      do_QueryInterface(aChannel);
+    // we can only wrap http channel.
+    if (httpChannel) {
+      // we have to wrap that channel
+      channel = new nsSecCheckWrapChannel(aChannel, aLoadInfo);
+    }
+  }
+  return channel.forget();
 }
 
 nsSecCheckWrapChannel::~nsSecCheckWrapChannel()

@@ -89,8 +89,6 @@ public:
     return mHasVideo;
   }
 
-  virtual RefPtr<MetadataPromise> AsyncReadMetadata() override;
-
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
@@ -144,6 +142,8 @@ protected:
   bool ShouldSkipVideoFrame(int64_t aTimeThreshold);
 
 private:
+  virtual RefPtr<MetadataPromise> AsyncReadMetadataInternal() override;
+
   nsresult RetrieveWebMMetadata(MediaInfo* aInfo);
 
   // Get the timestamp of keyframe greater than aTimeThreshold.

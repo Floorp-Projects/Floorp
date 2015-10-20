@@ -419,7 +419,7 @@ FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
 
   FontFaceRecord* rec = mNonRuleFaces.AppendElement();
   rec->mFontFace = &aFontFace;
-  rec->mSheetType = 0;  // unused for mNonRuleFaces
+  rec->mSheetType = SheetType::Unknown;  // unused for mNonRuleFaces
   rec->mLoadEventShouldFire =
     aFontFace.Status() == FontFaceLoadStatus::Unloaded ||
     aFontFace.Status() == FontFaceLoadStatus::Loading;
@@ -828,7 +828,7 @@ FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
     // InsertRuleFontFace does?
     RefPtr<gfxUserFontEntry> entry =
       FindOrCreateUserFontEntryFromFontFace(fontfamily, aFontFace,
-                                            nsStyleSet::eDocSheet);
+                                            SheetType::Doc);
     if (!entry) {
       return;
     }
@@ -840,7 +840,7 @@ FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
 }
 
 void
-FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, uint8_t aSheetType,
+FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
                                 nsTArray<FontFaceRecord>& aOldRecords,
                                 bool& aFontSetModified)
 {
@@ -951,13 +951,13 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace)
   }
 
   return FindOrCreateUserFontEntryFromFontFace(fontfamily, aFontFace,
-                                               nsStyleSet::eDocSheet);
+                                               SheetType::Doc);
 }
 
 already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                                    FontFace* aFontFace,
-                                                   uint8_t aSheetType)
+                                                   SheetType aSheetType)
 {
   nsCSSValue val;
   nsCSSUnit unit;
@@ -1094,8 +1094,8 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
           // the same-site origin check and access control headers are
           // enforced against the sheet principal rather than the document
           // principal to allow user stylesheets to include @font-face rules
-          face->mUseOriginPrincipal = (aSheetType == nsStyleSet::eUserSheet ||
-                                       aSheetType == nsStyleSet::eAgentSheet);
+          face->mUseOriginPrincipal = (aSheetType == SheetType::User ||
+                                       aSheetType == SheetType::Agent);
 
           face->mLocalName.Truncate();
           face->mFormatFlags = 0;

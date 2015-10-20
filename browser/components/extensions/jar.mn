@@ -7,6 +7,7 @@ browser.jar:
     content/browser/ext-utils.js
     content/browser/ext-contextMenus.js
     content/browser/ext-browserAction.js
+    content/browser/ext-pageAction.js
     content/browser/ext-tabs.js
     content/browser/ext-windows.js
     content/browser/ext-bookmarks.js
