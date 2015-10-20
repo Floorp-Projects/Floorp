@@ -658,11 +658,6 @@ protected:
    */
   DependentIDsHashtable mDependentIDsHash;
 
-  static PLDHashOperator
-    CycleCollectorTraverseDepIDsEntry(const nsAString& aKey,
-                                      AttrRelProviderArray* aProviders,
-                                      void* aUserArg);
-
   friend class RelatedAccIterator;
 
   /**
