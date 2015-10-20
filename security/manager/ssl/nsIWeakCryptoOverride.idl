@@ -17,7 +17,7 @@
 [scriptable, uuid(27b4d3df-8f15-4eb4-a35f-474e911b61e7)]
 interface nsIWeakCryptoOverride : nsISupports {
   /**
-   *  Add a weak crypto override for the given hostname:port.
+   *  Add a weak crypto override for the given hostname.
    *  Main thread only.
    *
    *  @param aHostName The host (punycode) this mapping belongs to
