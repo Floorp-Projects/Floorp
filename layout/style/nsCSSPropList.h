@@ -2409,15 +2409,6 @@ CSS_PROP_CONTENT(
     nullptr,
     offsetof(nsStyleContent, mMarkerOffset),
     eStyleAnimType_Coord)
-CSS_PROP_BACKENDONLY(
-    marks,
-    marks,
-    Marks,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
-    "",
-    0,
-    kPageMarksKTable)
 CSS_PROP_LOGICAL(
     max-block-size,
     max_block_size,
@@ -2698,15 +2689,6 @@ CSS_PROP_DISPLAY(
     kOrientKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_BACKENDONLY(
-    orphans,
-    orphans,
-    Orphans,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
-    "",
-    VARIANT_HI,
-    nullptr)
 CSS_PROP_SHORTHAND(
     outline,
     outline,
@@ -2954,14 +2936,6 @@ CSS_PROP_PADDING(
     nullptr,
     offsetof(nsStylePadding, mPadding),
     eStyleAnimType_Sides_Top)
-CSS_PROP_BACKENDONLY(
-    page,
-    page,
-    Page,
-    CSS_PROPERTY_PARSE_VALUE,
-    "",
-    VARIANT_AUTO | VARIANT_IDENTIFIER,
-    nullptr)
 CSS_PROP_DISPLAY(
     page-break-after,
     page_break_after,
@@ -3167,14 +3141,6 @@ CSS_PROP_DISPLAY(
     kScrollSnapTypeKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_BACKENDONLY(
-    size,
-    size,
-    Size,
-    CSS_PROPERTY_PARSE_FUNCTION,
-    "",
-    0,
-    kPageSizeKTable)
 CSS_PROP_TABLE(
     table-layout,
     table_layout,
@@ -3595,15 +3561,6 @@ CSS_PROP_TEXT(
     kWhitespaceKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_BACKENDONLY(
-    widows,
-    widows,
-    Widows,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
-    "",
-    VARIANT_HI,
-    nullptr)
 CSS_PROP_POSITION(
     width,
     width,
