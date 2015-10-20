@@ -2309,6 +2309,497 @@ function runCharAtPointAtOutsideTest()
   }
 }
 
+function runSetSelectionEventTest()
+{
+  contenteditable.focus();
+
+  var selection = windowOfContenteditable.getSelection();
+
+  // #1
+  contenteditable.innerHTML = "abc<br>def";
+
+  synthesizeSelectionSet(0, 6 + kLFLen);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #1 (0, 6+kLFLen): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #1 (0, 6+kLFLen): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #1 (0, 6+kLFLen): selection focus node should be the root node of the editor");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #1 (0, 6+kLFLen): selection focus offset should be the count of children");
+
+  synthesizeSelectionSet(0, 100);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #1 (0, 100): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #1 (0, 100): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #1 (0, 100): selection focus node should be the root node of the editor");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #1 (0, 100): selection focus offset should be the count of children");
+
+  synthesizeSelectionSet(2, 2 + kLFLen);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #1 (2, 2+kLFLen): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 2,
+     "runSetSelectionEventTest #1 (2, 2+kLFLen): selection anchor offset should be 2");
+  is(selection.focusNode, contenteditable.lastChild,
+     "runSetSelectionEventTest #1 (2, 2+kLFLen): selection focus node should be the last text node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #1 (2, 2+kLFLen): selection focus offset should be 1");
+
+  synthesizeSelectionSet(1, 2);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #1 (1, 2): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #1 (1, 2): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #1 (1, 2): selection focus node should be the root node of the editor");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #1 (1, 2): selection focus offset should be 1");
+
+  synthesizeSelectionSet(3, kLFLen);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #1 (3, kLFLen): selection anchor node should be the root node of the editor");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #1 (3, kLFLen): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.lastChild,
+     "runSetSelectionEventTest #1 (3, kLFLen): selection focus node should be the last text node");
+  is(selection.focusOffset, 0,
+     "runSetSelectionEventTest #1 (3, kLFLen): selection focus offset should be 0");
+
+  synthesizeSelectionSet(6+kLFLen, 0);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #1 (6+kLFLen, 0): selection anchor node should be the root node of the editor");
+  is(selection.anchorOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #1 (6+kLFLen, 0): selection anchor offset should be the count of children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #1 (6+kLFLen, 0): selection focus node should be the root node of the editor");
+  is(selection.anchorOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #1 (6+kLFLen, 0): selection focus offset should be the count of children");
+
+  synthesizeSelectionSet(100, 0);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #1 (100, 0): selection anchor node should be the root node of the editor");
+  is(selection.anchorOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #1 (100, 0): selection anchor offset should be the count of children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #1 (100, 0): selection focus node should be the root node of the editor");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #1 (100, 0): selection focus offset should be the count of children");
+
+  // #2
+  contenteditable.innerHTML = "<p>a<b>b</b>c</p><p>def</p>";
+
+  synthesizeSelectionSet(0, 4);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #2 (0, 4): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #2 (0, 4): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.lastChild.firstChild,
+     "runSetSelectionEventTest #2 (0, 4): selection focus node should be the text node in the second <p> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #2 (0, 4): selection focus offset should be 1");
+
+  synthesizeSelectionSet(0, 2);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #2 (0, 2): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #2 (0, 2): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.firstChild.childNodes.item(1),
+     "runSetSelectionEventTest #2 (0, 2): selection focus node should be the <b> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.item(1).childNodes.length,
+     "runSetSelectionEventTest #2 (0, 2): selection focus offset should be the count of the <b>'s children");
+
+  synthesizeSelectionSet(1, 2);
+  is(selection.anchorNode, contenteditable.firstChild.childNodes.item(1).firstChild,
+     "runSetSelectionEventTest #2 (1, 2): selection anchor node should be the text node in the <b> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #2 (1, 2): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #2 (1, 2): selection focus node should be the first <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #2 (1, 2): selection focus offset should be the count of last <p>'s children");
+
+  synthesizeSelectionSet(2, 2);
+  is(selection.anchorNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #2 (2, 2): selection anchor node should be the last text node in the first <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #2 (2, 2): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.lastChild.firstChild,
+     "runSetSelectionEventTest #2 (2, 2): selection focus node should be the text node in the last <p> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #2 (2, 2): selection focus offset should be 1");
+
+  synthesizeSelectionSet(3, 1);
+  is(selection.anchorNode, contenteditable.lastChild.firstChild,
+     "runSetSelectionEventTest #2 (3, 1): selection anchor node should be the text node in the second <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #2 (3, 1): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.lastChild.firstChild,
+     "runSetSelectionEventTest #2 (3, 1): selection focus node should be the text node in the second <p> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #2 (3, 1): selection focus offset should be 1");
+
+  // #3
+  contenteditable.innerHTML = "<div>abc<p>def</p></div>";
+
+  synthesizeSelectionSet(1, 2);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #3 (1, 2): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #3 (1, 2): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #3 (1, 2): selection focus node should be the <div> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #3 (1, 2): selection focus offset should be 1");
+
+  synthesizeSelectionSet(1, 3);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #3 (1, 3): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #3 (1, 3): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild.lastChild.firstChild,
+     "runSetSelectionEventTest #3 (1, 3): selection focus node should be the text node in the <p> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #3 (1, 3): selection focus offset should be 1");
+
+  synthesizeSelectionSet(3, 0);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #3 (3, 0): selection anchor node should be the <div> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #3 (3, 0): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #3 (3, 0): selection focus node should be the <div> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #3 (3, 0): selection focus offset should be 1");
+
+  synthesizeSelectionSet(0, 6);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #3 (0, 6): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #3 (0, 6): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #3 (0, 6): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.lastChild.childNodes.length,
+     "runSetSelectionEventTest #3 (0, 6): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(0, 100);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #3 (0, 100): selection anchor node should be the first text node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #3 (0, 100): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #3 (0, 100): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #3 (0, 100): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(4, 2);
+  is(selection.anchorNode, contenteditable.firstChild.lastChild.firstChild,
+     "runSetSelectionEventTest #3 (4, 2): selection anchor node should be the text node in the <p> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #3 (4, 2): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #3 (4, 2): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.lastChild.childNodes.length,
+     "runSetSelectionEventTest #3 (4, 2): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(4, 100);
+  is(selection.anchorNode, contenteditable.firstChild.lastChild.firstChild,
+     "runSetSelectionEventTest #3 (4, 100): selection anchor node should be the text node in the <p> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #3 (4, 100): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #3 (4, 100): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #3 (4, 100): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(6, 0);
+  is(selection.anchorNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #3 (6, 0): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, contenteditable.firstChild.lastChild.childNodes.length,
+     "runSetSelectionEventTest #3 (6, 0): selection anchor offset should be the count of the <p>'s children");
+  is(selection.focusNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #3 (6, 0): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.lastChild.childNodes.length,
+     "runSetSelectionEventTest #3 (6, 0): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(6, 1);
+  todo_is(selection.anchorNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #3 (6, 1): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, contenteditable.firstChild.lastChild.childNodes.length,
+     "runSetSelectionEventTest #3 (6, 1): selection anchor offset should be the count of the <p>'s children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #3 (6, 1): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #3 (6, 1): selection focus offset should be the count of the root's children");
+
+  // #4
+  contenteditable.innerHTML = "<div><p>abc</p>def</div>";
+
+  synthesizeSelectionSet(1, 2);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (1, 2): selection anchor node should be the text node in the <p> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #4 (1, 2): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (1, 2): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (1, 2): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(1, 3);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (1, 3): selection anchor node should be the text node in the <p> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #4 (1, 3): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #4 (1, 3): selection focus node should be the last text node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #4 (1, 3): selection focus offset should be 1");
+
+  synthesizeSelectionSet(3, 0);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (3, 0): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, contenteditable.firstChild.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (3, 0): selection anchor offset should be the count of <p>'s children");
+  is(selection.focusNode, contenteditable.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (3, 0): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (3, 0): selection focus offset should be the count of <p>'s children");
+
+  synthesizeSelectionSet(0, 6);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (0, 6): selection anchor node should be the text node in the <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #4 (0, 6): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #4 (0, 6): selection focus node should be the <div> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (0, 6): selection focus offset should be the count of the <div>'s children");
+
+  synthesizeSelectionSet(0, 100);
+  is(selection.anchorNode, contenteditable.firstChild.firstChild.firstChild,
+     "runSetSelectionEventTest #4 (0, 100): selection anchor node should be the text node in the <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #4 (0, 100): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #4 (0, 100): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #4 (0, 100): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(4, 2);
+  is(selection.anchorNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #4 (4, 2): selection anchor node should be the last text node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #4 (4, 2): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #4 (4, 2): selection focus node should be the <div> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (4, 2): selection focus offset should be the count of the <div>'s children");
+
+  synthesizeSelectionSet(4, 100);
+  is(selection.anchorNode, contenteditable.firstChild.lastChild,
+     "runSetSelectionEventTest #4 (4, 100): selection anchor node should be the last text node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #4 (4, 100): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #4 (4, 100): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #4 (4, 100): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(6, 0);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #4 (6, 0): selection anchor node should be the <div> node");
+  is(selection.anchorOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (6, 0): selection anchor offset should be the count of the <div>'s children");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #4 (6, 0): selection focus node should be the <div> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (6, 0): selection focus offset should be the count of the <div>'s children");
+
+  synthesizeSelectionSet(6, 1);
+  todo_is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #4 (6, 1): selection anchor node should be the <div> node");
+  todo_is(selection.anchorOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #4 (6, 1): selection anchor offset should be the count of the <div>'s children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #4 (6, 1): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #4 (6, 1): selection focus offset should be the count of the root's children");
+
+  // #5
+  contenteditable.innerHTML = "<br>";
+
+  synthesizeSelectionSet(0, kLFLen);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #5 (0, kLFLen): selection anchor node should be the root node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #5 (0, kLFLen): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #5 (0, kLFLen): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #5 (0, kLFLen): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(kLFLen, 0);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #5 (kLFLen, 0): selection anchor node should be the root node");
+  todo_is(selection.anchorOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #5 (kLFLen, 0): selection anchor offset should be the count of the root's children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #5 (kLFLen, 0): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #5 (kLFLen, 0): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(kLFLen, 1);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #5 (kLFLen, 1): selection anchor node should be the root node");
+  is(selection.anchorOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #5 (kLFLen, 1): selection anchor offset should be the count of the root's children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #5 (kLFLen, 1): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #5 (kLFLen, 1): selection focus offset should be the count of the root's children");
+
+  // #6
+  contenteditable.innerHTML = "<p><br></p>";
+
+  synthesizeSelectionSet(0, kLFLen);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #6 (0, kLFLen): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #6 (0, kLFLen): selection anchor offset should be 1");
+  todo_is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #6 (0, kLFLen): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #6 (0, kLFLen): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(kLFLen, 0);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #6 (kLFLen, 0): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #6 (kLFLen, 0): selection anchor offset should be the count of the root's children");
+  todo_is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #6 (kLFLen, 0): selection focus node should be the <p> node");
+  is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #6 (kLFLen, 0): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(kLFLen, 1);
+  todo_is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #6 (kLFLen, 1): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #6 (kLFLen, 1): selection anchor offset should be the count of the root's children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #6 (kLFLen, 1): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #6 (kLFLen, 1): selection focus offset should be the count of the root's children");
+
+  // #7
+  contenteditable.innerHTML = "<br><br>";
+
+  synthesizeSelectionSet(0, kLFLen);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #7 (0, kLFLen): selection anchor node should be the root node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #7 (0, kLFLen): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #7 (0, kLFLen): selection focus node should be the root node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #7 (0, kLFLen): selection focus offset should be 1");
+
+  synthesizeSelectionSet(0, kLFLen * 2);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #7 (0, kLFLen*2): selection anchor node should be the root node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #7 (0, kLFLen*2): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #7 (0, kLFLen*2): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #7 (0, kLFLen*2): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(kLFLen, 0);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #7 (kLFLen, 0): selection anchor node should be the root node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #7 (kLFLen, 0): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #7 (kLFLen, 0): selection focus node should be the root node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #7 (kLFLen, 0): selection focus offset should be 1");
+
+  synthesizeSelectionSet(kLFLen, kLFLen);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #7 (kLFLen, kLFLen): selection anchor node should be the root node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #7 (kLFLen, kLFLen): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #7 (kLFLen, kLFLen) selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #7 (kLFLen, kLFLen): selection focus offset should be the count of the root's children");
+
+  synthesizeSelectionSet(kLFLen * 2, 0);
+  is(selection.anchorNode, contenteditable,
+     "runSetSelectionEventTest #7 (kLFLen*2, 0): selection anchor node should be the root node");
+  todo_is(selection.anchorOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #7 (kLFLen*2, 0): selection anchor offset should be the count of the root's children");
+  is(selection.focusNode, contenteditable,
+     "runSetSelectionEventTest #7 (kLFLen*2, 0): selection focus node should be the root node");
+  is(selection.focusOffset, contenteditable.childNodes.length,
+     "runSetSelectionEventTest #7 (kLFLen*2, 0): selection focus offset should be the count of the root's children");
+
+  // #8
+  contenteditable.innerHTML = "<p><br><br></p>";
+
+  synthesizeSelectionSet(0, kLFLen);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (0, kLFLen): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #8 (0, kLFLen): selection anchor offset should be 0");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (0, kLFLen): selection focus node should be the <p> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #8 (0, kLFLen): selection focus offset should be 1");
+
+  synthesizeSelectionSet(0, kLFLen * 2);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (0, kLFLen*2): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, 0,
+     "runSetSelectionEventTest #8 (0, kLFLen*2): selection anchor offset should be 0");
+  todo_is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (0, kLFLen*2): selection focus node should be the <p> node");
+  todo_is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #8 (0, kLFLen*2): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(kLFLen, 0);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (kLFLen, 0): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #8 (kLFLen, 0): selection anchor offset should be 1");
+  is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (kLFLen, 0): selection focus node should be the <p> node");
+  is(selection.focusOffset, 1,
+     "runSetSelectionEventTest #8 (kLFLen, 0): selection focus offset should be 1");
+
+  synthesizeSelectionSet(kLFLen, kLFLen);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (kLFLen, kLFLen): selection anchor node should be the <p> node");
+  is(selection.anchorOffset, 1,
+     "runSetSelectionEventTest #8 (kLFLen, kLFLen): selection anchor offset should be 1");
+  todo_is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (kLFLen, kLFLen) selection focus node should be the <p> node");
+  todo_is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #8 (kLFLen, kLFLen): selection focus offset should be the count of the <p>'s children");
+
+  synthesizeSelectionSet(kLFLen * 2, 0);
+  is(selection.anchorNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (kLFLen*2, 0): selection anchor node should be the <p> node");
+  todo_is(selection.anchorOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #8 (kLFLen*2, 0): selection anchor offset should be the count of the <p>'s children");
+  todo_is(selection.focusNode, contenteditable.firstChild,
+     "runSetSelectionEventTest #8 (kLFLen*2, 0): selection focus node should be the <p> node");
+  todo_is(selection.focusOffset, contenteditable.firstChild.childNodes.length,
+     "runSetSelectionEventTest #8 (kLFLen*2, 0): selection focus offset should be the count of the <p>'s children");
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -4602,6 +5093,7 @@ function runTest()
   runCompositionEventTest();
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();
+  runSetSelectionEventTest();
   runCSSTransformTest();
   runBug722639Test();
   runForceCommitTest();
