@@ -4359,6 +4359,14 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Time spent blocking the main thread while restoring a window state (ms)"
   },
+  "FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "30000000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Number of characters in DOM Storage for a tab. Pages without DOM Storage or with an empty DOM Storage are ignored."
+  },
   "FX_TABLETMODE_PAGE_LOAD": {
     "expires_in_version": "47",
     "kind": "exponential",
