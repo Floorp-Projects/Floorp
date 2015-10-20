@@ -97,7 +97,6 @@ this.TelephonyUtils = {
             resolve();
           }
         },
-        conferenceCallStateChanged: function() {},
         supplementaryServiceNotification: function() {},
         notifyError: function() {},
         notifyCdmaCallWaiting: function() {},
