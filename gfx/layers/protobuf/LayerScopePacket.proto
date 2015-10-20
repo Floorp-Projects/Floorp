@@ -20,32 +20,6 @@ message ColorPacket {
 }
 
 message TexturePacket {
-  enum Filter {
-    GOOD = 0;
-    LINEAR = 1;
-    POINT = 2;
-  }
-  message Rect {
-    optional float x = 1;
-    optional float y = 2;
-    optional float w = 3;
-    optional float h = 4;
-  }
-  message Size {
-    optional int32 w = 1;
-    optional int32 h = 2;
-  }
-  message Matrix {
-    optional bool is2D = 1;
-    optional bool isId = 2;
-    repeated float m = 3;
-  }
-  message EffectMask {
-    optional bool mIs3D = 1;
-    optional Size mSize = 2;
-    optional Matrix mMaskTransform = 3;
-  }
-
   // Basic info
   required uint64 layerref = 1;
   optional uint32 width = 2;
@@ -57,14 +31,12 @@ message TexturePacket {
   optional uint64 glcontext = 8;
   optional bytes data = 9;
 
-  // TextureEffect attributes
-  optional Rect mTextureCoords = 10;
-  optional bool mPremultiplied = 11;
-  optional Filter mFilter = 12;
+  // Texture effect attributes (10 to 19)
+  // TODO: reserved for primary textured effect attributes, see Bug 1205521
 
-  // Mask attributes
+  // Mask effect attributes (20 to 29)
   optional bool isMask = 20;
-  optional EffectMask mask = 21;
+  // TODO: reserved for secondary mask effect attributes, see Bug 1205521
 }
 
 message LayersPacket {
@@ -85,15 +57,13 @@ message LayersPacket {
       HORIZONTAL = 2;
     }
     enum Filter {
-      FILTER_FAST = 0; // deprecated
+      FILTER_FAST = 0;
       FILTER_GOOD = 1;
-      FILTER_BEST = 2; // deprecated
-      FILTER_NEAREST = 3; //deprecated
-      FILTER_BILINEAR = 4; //deprecated
-      FILTER_GAUSSIAN = 5; //deprecated
-      FILTER_SENTINEL = 6; //deprecated
-      FILTER_LINEAR = 7;
-      FILTER_POINT = 8;
+      FILTER_BEST = 2;
+      FILTER_NEAREST = 3;
+      FILTER_BILINEAR = 4;
+      FILTER_GAUSSIAN = 5;
+      FILTER_SENTINEL = 6;
     }
     message Size {
       optional int32 w = 1;
