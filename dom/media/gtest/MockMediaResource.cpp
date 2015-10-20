@@ -11,7 +11,8 @@ namespace mozilla
 {
 
 MockMediaResource::MockMediaResource(const char* aFileName)
-  : mFileName(aFileName)
+  : mFileHandle(nullptr)
+  , mFileName(aFileName)
   , mContentType(NS_LITERAL_CSTRING("video/mp4"))
 {
 }
