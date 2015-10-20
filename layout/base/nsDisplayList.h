@@ -1113,7 +1113,7 @@ private:
     }
 
     PLDHashNumber Hash() const {
-      return mozilla::HashBytes(this, sizeof(this));
+      return mozilla::HashBytes(this, sizeof(*this));
     }
 
     bool operator==(const AnimatedGeometryRootLookup& aOther) const {
