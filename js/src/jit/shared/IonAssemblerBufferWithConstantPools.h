@@ -575,13 +575,6 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         Asm::WritePoolGuard(guard, this->getInst(guard), afterPool);
         Asm::WritePoolHeader((uint8_t*)this->getInst(header), &pool_, false);
 
-        // Perforate the buffer which finishes the current slice and allocates a
-        // new slice. This is necessary because Pools are always placed after
-        // the end of a slice.
-        BufferOffset perforation = this->nextOffset();
-        Parent::perforate();
-        JitSpew(JitSpew_Pools, "[%d] Adding a perforation at offset %d", id, perforation.getOffset());
-
         // With the pool's final position determined it is now possible to patch
         // the instructions that reference entries in this pool, and this is
         // done incrementally as each pool is finished.
