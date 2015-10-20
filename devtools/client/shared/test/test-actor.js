@@ -82,6 +82,21 @@ var TestActor = exports.TestActor = protocol.ActorClass({
     }
     return node;
   },
+  /**
+   * Helper to get the number of elements matching a selector
+   * @param {string} CSS selector.
+   */
+  getNumberOfElementMatches: protocol.method(function (selector,
+                                                       root=this.content.document) {
+    return root.querySelectorAll(selector).length;
+  }, {
+    request: {
+      selector: Arg(0, "string"),
+    },
+    response: {
+      value: RetVal("number")
+    }
+  }),
 
   /**
    * Get a value for a given attribute name, on one of the elements of the box

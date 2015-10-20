@@ -30,10 +30,10 @@ svg {
 }
 
 .theme-dark .edgePath path {
-  stroke: #b6babf; /* Grey foreground text */
+  stroke: var(--theme-body-color-alt);
 }
 .theme-light .edgePath path {
-  stroke: #aaaaaa; /* Splitters */
+  stroke: var(--theme-splitter-color);
 }
 
 /* AudioParam connection edges */
@@ -42,26 +42,20 @@ g.edgePath.param-connection {
 }
 
 .theme-dark .edgePath.param-connection path {
-  stroke: #b6babf; /* Grey foreground text */
+  stroke: var(--theme-body-color-alt);
 }
 .theme-light .edgePath.param-connection path {
-  stroke: #aaaaaa; /* Splitters */
+  stroke: var(--theme-splitter-color);
 }
 
 /* Labels in AudioParam connection should have background that match
  * the main background so there's whitespace around the label, on top of the
  * dotted lines. */
-.theme-dark g.edgeLabel rect {
-  fill: #14171a;
+g.edgeLabel rect {
+  fill: var(--theme-body-background);
 }
-.theme-light g.edgeLabel rect {
-  fill: #fcfcfc; /* Background - Editor */
-}
-.theme-dark g.edgeLabel tspan {
+g.edgeLabel tspan {
   fill: var(--theme-body-color-alt);
-}
-.theme-light g.edgeLabel tspan {
-  fill: #585959; /* Grey foreground text */
 }
 
 /* Audio Nodes */
@@ -219,11 +213,8 @@ text {
   background-color: transparent;
 }
 
-.theme-dark #audio-node-toolbar toolbarbutton[checked] {
-  background-color: #1d4f73; /* Select Highlight Blue */
-}
-.theme-light #audio-node-toolbar toolbarbutton[checked] {
-  background-color: #4c9ed9; /* Select Highlight Blue */
+#audio-node-toolbar toolbarbutton[checked] {
+  background-color: var(--theme-selection-background);
 }
 
 /* don't invert checked buttons so we can have white icons on light theme */

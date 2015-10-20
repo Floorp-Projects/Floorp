@@ -292,6 +292,9 @@ class Graph(object):
     @CommandArgument('--print-names-only',
         action='store_true', default=False,
         help="Only print the names of each scheduled task, one per line.")
+    @CommandArgument('--dry-run',
+        action='store_true', default=False,
+        help="Stub out taskIds and date fields from the task definitions.")
     def create_graph(self, **params):
         from taskcluster_graph.commit_parser import parse_commit
         from slugid import nice as slugid
@@ -301,6 +304,13 @@ class Graph(object):
         )
         from taskcluster_graph.templates import Templates
         import taskcluster_graph.build_task
+
+        if params['dry_run']:
+            from taskcluster_graph.dry_run import (
+                json_time_from_now,
+                current_json_time,
+                slugid,
+            )
 
         project = params['project']
         message = params.get('message', '') if project == 'try' else DEFAULT_TRY

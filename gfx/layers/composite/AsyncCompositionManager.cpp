@@ -817,6 +817,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
         mPaintSyncId = 0;
       }
     }
+#else
+    // Non-Android platforms still care about this flag being cleared after
+    // the first call to TransformShadowTree().
+    mIsFirstPaint = false;
 #endif
 
     // Transform the current local clip by this APZC's async transform. If we're

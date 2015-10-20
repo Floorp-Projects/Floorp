@@ -160,8 +160,8 @@ CodeGeneratorARM::bailoutFrom(Label* label, LSnapshot* snapshot)
     if (masm.bailed())
         return;
 
-    MOZ_ASSERT(label->used());
-    MOZ_ASSERT(!label->bound());
+    MOZ_ASSERT_IF(!masm.oom(), label->used());
+    MOZ_ASSERT_IF(!masm.oom(), !label->bound());
 
     encode(snapshot);
 
