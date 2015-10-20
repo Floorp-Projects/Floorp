@@ -698,7 +698,7 @@ nsPresContext::GetDocumentColorPreferences()
   // 0 = default: always, except in high contrast mode
   // 1 = always
   // 2 = never
-  if (sDocumentColorsSetting == 1) {
+  if (sDocumentColorsSetting == 1 || mDocument->IsBeingUsedAsImage()) {
     mUseDocumentColors = true;
   } else if (sDocumentColorsSetting == 2) {
     mUseDocumentColors = isChromeDocShell || mIsChromeOriginImage;
