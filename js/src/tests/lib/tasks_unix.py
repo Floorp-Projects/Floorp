@@ -5,7 +5,7 @@
 import errno, os, select
 from datetime import datetime, timedelta
 from progressbar import ProgressBar
-from results import NullTestOutput, TestOutput
+from results import NullTestOutput, TestOutput, escape_cmdline
 
 class Task(object):
     def __init__(self, test, prefix, pid, stdout, stderr):
@@ -197,6 +197,8 @@ def run_all_tests(tests, prefix, pb, options):
             if not test.enable and not options.run_skipped:
                 yield NullTestOutput(test)
             else:
+                if options.show_cmd:
+                    print(escape_cmdline(test.get_command(prefix)))
                 tasks.append(spawn_test(test, prefix, options.passthrough))
 
         timeout = get_max_wait(tasks, options.timeout)
