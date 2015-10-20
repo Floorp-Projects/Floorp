@@ -714,7 +714,6 @@ BaselineScript::copyICEntries(JSScript* script, const ICEntry* entries, MacroAss
     for (uint32_t i = 0; i < numICEntries(); i++) {
         ICEntry& realEntry = icEntry(i);
         realEntry = entries[i];
-        realEntry.fixupReturnOffset(masm);
 
         if (!realEntry.hasStub()) {
             // VM call without any stubs.

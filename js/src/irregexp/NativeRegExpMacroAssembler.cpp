@@ -470,10 +470,8 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     for (size_t i = 0; i < labelPatches.length(); i++) {
         LabelPatch& v = labelPatches[i];
         MOZ_ASSERT(!v.label);
-        v.patchOffset.fixup(&masm);
-        uintptr_t offset = masm.actualOffset(v.labelOffset);
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, v.patchOffset),
-                                           ImmPtr(code->raw() + offset),
+                                           ImmPtr(code->raw() + v.labelOffset),
                                            ImmPtr(0));
     }
 
