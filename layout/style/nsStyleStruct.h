@@ -14,6 +14,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CSSVariableValues.h"
+#include "mozilla/SheetType.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"
@@ -88,6 +89,10 @@ class imgIContainer;
 
 // Additional bits for nsRuleNode's mNoneBits:
 #define NS_RULE_NODE_HAS_ANIMATION_DATA     0x80000000
+
+static_assert(int(mozilla::SheetType::Count) - 1 <=
+                (NS_RULE_NODE_LEVEL_MASK >> NS_RULE_NODE_LEVEL_SHIFT),
+              "NS_RULE_NODE_LEVEL_MASK cannot fit SheetType");
 
 // The lifetime of these objects is managed by the presshell's arena.
 

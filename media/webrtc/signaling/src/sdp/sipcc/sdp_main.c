@@ -198,6 +198,8 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
     {"simulcast", sizeof("simulcast"),
       sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
+    {"rid", sizeof("rid"),
+      sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
 };
 
 /* Note: These *must* be in the same order as the enum types. */

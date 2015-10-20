@@ -27,7 +27,6 @@ class nsIURI;
 class nsXBLDocumentInfo;
 class nsIStreamListener;
 class nsXBLBinding;
-template<class E> class nsRefPtr;
 typedef nsTArray<RefPtr<nsXBLBinding> > nsBindingList;
 class nsIPrincipal;
 class nsITimer;

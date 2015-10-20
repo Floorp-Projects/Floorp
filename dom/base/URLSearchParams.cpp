@@ -418,5 +418,23 @@ URLSearchParams::NotifyObserver()
   }
 }
 
+uint32_t
+URLSearchParams::GetIterableLength() const
+{
+  return mParams->Length();
+}
+
+const nsAString&
+URLSearchParams::GetKeyAtIndex(uint32_t aIndex) const
+{
+  return mParams->GetKeyAtIndex(aIndex);
+}
+
+const nsAString&
+URLSearchParams::GetValueAtIndex(uint32_t aIndex) const
+{
+  return mParams->GetValueAtIndex(aIndex);
+}
+
 } // namespace dom
 } // namespace mozilla

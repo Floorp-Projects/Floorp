@@ -298,6 +298,10 @@ LayerManagerComposite::EndTransaction(const TimeStamp& aTimeStamp,
     return;
   }
 
+  // We don't want our debug overlay to cause more frames to happen
+  // so we will invalidate after we've decided if something changed.
+  InvalidateDebugOverlay(mRenderBounds);
+
  if (mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     MOZ_ASSERT(!aTimeStamp.IsNull());
     // The results of our drawing always go directly into a pixel buffer,
@@ -393,6 +397,26 @@ LayerManagerComposite::RootLayer() const
 #include "qrcode_table.h"
 #endif
 
+void
+LayerManagerComposite::InvalidateDebugOverlay(const IntRect& aBounds)
+{
+  bool drawFps = gfxPrefs::LayersDrawFPS();
+  bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
+  bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
+
+  if (drawFps || drawFrameCounter) {
+    AddInvalidRegion(nsIntRect(0, 0, 256, 256));
+  }
+  if (drawFrameColorBars) {
+    AddInvalidRegion(nsIntRect(0, 0, 10, aBounds.height));
+  }
+
+  if (drawFrameColorBars) {
+    AddInvalidRegion(nsIntRect(0, 0, 10, aBounds.height));
+  }
+
+}
+
 static uint16_t sFrameCount = 0;
 void
 LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
@@ -461,7 +485,6 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
     }
 
     // Each frame is invalidate by the previous frame for simplicity
-    AddInvalidRegion(nsIntRect(0, 0, 256, 256));
   } else {
     mFPS = nullptr;
   }
@@ -477,8 +500,6 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
                           1.0,
                           gfx::Matrix4x4());
 
-    // Each frame is invalidate by the previous frame for simplicity
-    AddInvalidRegion(nsIntRect(0, 0, sideRect.width, sideRect.height));
   }
 
 #ifdef MOZ_PROFILING
@@ -522,8 +543,6 @@ LayerManagerComposite::RenderDebugOverlay(const Rect& aBounds)
       }
     }
 
-    // Each frame is invalidate by the previous frame for simplicity
-    AddInvalidRegion(nsIntRect(0, 0, 256, 256));
   }
 #endif
 

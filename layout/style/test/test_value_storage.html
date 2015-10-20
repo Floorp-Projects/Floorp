@@ -111,8 +111,6 @@ function test_property(property)
 {
   var info = gCSSProperties[property];
 
-  var test_computed = !("backend_only" in info);
-
   // can all properties be removed from the style?
   function test_remove_all_properties(property, value) {
     var i, p = [];
@@ -151,9 +149,9 @@ function test_property(property)
         step1vals.push(gDeclaration.getPropertyValue(info.subproperties[idx]));
     var step1comp;
     var step1comps = [];
-    if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND)
+    if (info.type != CSS_TYPE_TRUE_SHORTHAND)
       step1comp = gComputedStyle.getPropertyValue(property);
-    if (test_computed && "subproperties" in info)
+    if ("subproperties" in info)
       for (idx in info.subproperties)
         step1comps.push(gComputedStyle.getPropertyValue(info.subproperties[idx]));
 
@@ -191,7 +189,7 @@ function test_property(property)
     is(gDeclaration.getPropertyValue(property), step1val,
        "parse+serialize should be idempotent for '" +
          property + ": " + value + "'");
-    if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
+    if (info.type != CSS_TYPE_TRUE_SHORTHAND) {
       is(gComputedStyle.getPropertyValue(property), step1comp,
          "serialize+parse should be identity transform for '" +
          property + ": " + value + "'");
@@ -215,18 +213,16 @@ function test_property(property)
       // the computed values of other parts.
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
-        if (test_computed && !("backend_only" in gCSSProperties[subprop])) {
-          is(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
-             "serialize(" + subprop + ")+parse should be the identity " +
-             "transform for '" + property + ": " + value + "'");
-        }
+        is(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
+           "serialize(" + subprop + ")+parse should be the identity " +
+           "transform for '" + property + ": " + value + "'");
       }
       is(gDeclaration.getPropertyValue(property), step1val,
          "parse+split+serialize should be idempotent for '" +
          property + ": " + value + "'");
     }
 
-    if (test_computed && info.type != CSS_TYPE_TRUE_SHORTHAND) {
+    if (info.type != CSS_TYPE_TRUE_SHORTHAND) {
       gDeclaration.removeProperty(property);
       gDeclaration.setProperty(property, step1comp, "");
       var func = xfail_compute(property, value) ? todo_is : is;
@@ -234,12 +230,10 @@ function test_property(property)
            "parse+compute+serialize should be idempotent for '" +
            property + ": " + value + "'");
     }
-    if (test_computed && "subproperties" in info) {
+    if ("subproperties" in info) {
       gDeclaration.removeProperty(property);
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
-        if ("backend_only" in gCSSProperties[subprop])
-          continue;
         gDeclaration.setProperty(subprop, step1comps[idx], "");
       }
 
@@ -248,8 +242,6 @@ function test_property(property)
       // the computed values of other parts.
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];
-        if ("backend_only" in gCSSProperties[subprop])
-          continue;
         is(gComputedStyle.getPropertyValue(subprop), step1comps[idx],
            "parse+compute+serialize(" + subprop + ") should be idempotent for '" +
            property + ": " + value + "'");

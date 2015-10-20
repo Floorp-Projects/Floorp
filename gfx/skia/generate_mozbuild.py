@@ -139,18 +139,23 @@ DEFINES['GR_IMPLEMENTATION'] = 1
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
-        '-Wno-overloaded-virtual',
-        '-Wno-unused-function',
         '-Wno-deprecated-declarations',
+        '-Wno-overloaded-virtual',
+        '-Wno-sign-compare',
+        '-Wno-unused-function',
     ]
     if CONFIG['CLANG_CXX']:
         CXXFLAGS += [
+            '-Wno-implicit-fallthrough',
             '-Wno-inconsistent-missing-override',
             '-Wno-macro-redefined',
             '-Wno-unused-private-field',
         ]
     else:
-        CXXFLAGS += ['-Wno-logical-op']
+        CXXFLAGS += [
+            '-Wno-logical-op',
+            '-Wno-maybe-uninitialized',
+        ]
     if CONFIG['CPU_ARCH'] == 'arm':
         SOURCES['skia/src/opts/SkBlitRow_opts_arm.cpp'].flags += ['-fomit-frame-pointer']
 

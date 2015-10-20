@@ -3001,16 +3001,6 @@ var gCSSProperties = {
     other_values: [ "6em", "-1px", "calc(0px)", "calc(3em + 2px - 4px)", "calc(-2em)" ],
     invalid_values: []
   },
-  "marks": {
-    /* XXX not a real property; applies only to page context */
-    domProp: "marks",
-    inherited: false,
-    backend_only: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [ "crop", "cross", "crop cross", "cross crop" ],
-    invalid_values: [ "none none", "crop none", "none crop", "cross none", "none cross" ]
-  },
   "max-height": {
     domProp: "maxHeight",
     inherited: false,
@@ -3111,16 +3101,6 @@ var gCSSProperties = {
     initial_values: [ "inline" ],
     other_values: [ "horizontal", "vertical", "block" ],
     invalid_values: [ "none" ]
-  },
-  "orphans": {
-    domProp: "orphans",
-    inherited: true,
-    backend_only: true,
-    type: CSS_TYPE_LONGHAND,
-    // XXX requires display:block
-    initial_values: [ "2" ],
-    other_values: [ "1", "7" ],
-    invalid_values: [ "0", "-1", "0px", "3px", "3e1" ]
   },
   "outline": {
     domProp: "outline",
@@ -3279,15 +3259,6 @@ var gCSSProperties = {
     invalid_values: [ ],
     quirks_values: { "5": "5px" },
   },
-  "page": {
-    domProp: "page",
-    inherited: true,
-    backend_only: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "foo", "bar" ],
-    invalid_values: [ "3px" ]
-  },
   "page-break-after": {
     domProp: "pageBreakAfter",
     inherited: false,
@@ -3356,19 +3327,6 @@ var gCSSProperties = {
     ],
     invalid_values: [],
     quirks_values: { "5": "5px" },
-  },
-  "size": {
-    /* XXX not a real property; applies only to page context */
-    domProp: "size",
-    inherited: false,
-    backend_only: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [ "landscape", "portrait", "8.5in 11in", "14in 11in", "297mm 210mm", "21cm 29.7cm", "100mm" ],
-    invalid_values: [
-      // XXX spec unclear on 0s and negatives
-      "100mm 100mm 100mm"
-    ]
   },
   "table-layout": {
     domProp: "tableLayout",
@@ -3584,16 +3542,6 @@ var gCSSProperties = {
     initial_values: [ "normal" ],
     other_values: [ "pre", "nowrap", "pre-wrap", "pre-line", "-moz-pre-space" ],
     invalid_values: []
-  },
-  "widows": {
-    domProp: "widows",
-    inherited: true,
-    backend_only: true,
-    type: CSS_TYPE_LONGHAND,
-    // XXX requires display:block
-    initial_values: [ "2" ],
-    other_values: [ "1", "7" ],
-    invalid_values: [ "0", "-1", "0px", "3px", "3e1" ]
   },
   "width": {
     domProp: "width",

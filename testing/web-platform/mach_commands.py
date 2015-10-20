@@ -118,11 +118,11 @@ class WebPlatformTestsReduce(WebPlatformTestsRunner):
 
 class WebPlatformTestsCreator(MozbuildObject):
     template_prefix = """<!doctype html>
-<meta charset=utf-8>
+%(documentElement)s<meta charset=utf-8>
 """
     template_long_timeout = "<meta name=timeout content=long>\n"
 
-    template_body = """<title></title>
+    template_body_th = """<title></title>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script>
@@ -130,27 +130,78 @@ class WebPlatformTestsCreator(MozbuildObject):
 </script>
 """
 
+    template_body_reftest = """<title></title>
+<link rel=%(match)s href=%(ref)s>
+"""
+
+    template_body_reftest_wait = """<script src="/common/reftest-wait.js"></script>
+"""
+
+    def rel_path(self, path):
+        if path is None:
+            return
+
+        abs_path = os.path.normpath(os.path.abspath(path))
+        return os.path.relpath(abs_path, self.topsrcdir)
+
+    def rel_url(self, rel_path):
+        upstream_path = os.path.join("testing", "web-platform", "tests")
+        local_path = os.path.join("testing", "web-platform", "mozilla", "tests")
+
+        if rel_path.startswith(upstream_path):
+            return rel_path[len(upstream_path):].replace(os.path.sep, "/")
+        elif rel_path.startswith(local_path):
+            return "/_mozilla" + rel_path[len(local_path):].replace(os.path.sep, "/")
+        else:
+            return None
+
     def run_create(self, context, **kwargs):
         import subprocess
 
-        path = os.path.normpath(os.path.abspath(kwargs["path"]))
+        path = self.rel_path(kwargs["path"])
+        ref_path = self.rel_path(kwargs["ref"])
 
-        rel_path = os.path.relpath(path, self.topsrcdir)
-        if not (rel_path.startswith("testing/web-platform/tests") or
-                rel_path.startswith("testing/web-platform/mozilla/tests")):
-            print("""Test path is not in wpt directories:
+        if kwargs["ref"]:
+            kwargs["reftest"] = True
+
+        if self.rel_url(path) is None:
+            print("""Test path %s is not in wpt directories:
 testing/web-platform/tests for tests that may be shared
-testing/web-platform/mozilla/tests for Gecko only tests""")
+testing/web-platform/mozilla/tests for Gecko-only tests""" % path)
             return 1
+
+        if ref_path and self.rel_url(ref_path) is None:
+            print("""Reference path %s is not in wpt directories:
+testing/web-platform/tests for tests that may be shared
+            testing/web-platform/mozilla/tests for Gecko-only tests""" % ref_path)
+            return 1
+
 
         if os.path.exists(path) and not kwargs["overwrite"]:
             print("Test path already exists, pass --overwrite to replace")
             return 1
 
-        template = self.template_prefix
+        if kwargs["mismatch"] and not kwargs["reftest"]:
+            print("--mismatch only makes sense for a reftest")
+            return 1
+
+        if kwargs["wait"] and not kwargs["reftest"]:
+            print("--wait only makes sense for a reftest")
+            return 1
+
+        args = {"documentElement": "<html class=reftest-wait>\n" if kwargs["wait"] else ""}
+        template = self.template_prefix % args
         if kwargs["long_timeout"]:
             template += self.template_long_timeout
-        template += self.template_body
+
+        if kwargs["reftest"]:
+            args = {"match": "match" if not kwargs["mismatch"] else "mismatch",
+                    "ref": self.rel_url(ref_path) if kwargs["ref"] else '""'}
+            template += self.template_body_reftest % args
+            if kwargs["wait"]:
+                template += self.template_body_reftest_wait
+        else:
+            template += self.template_body_th
         with open(path, "w") as f:
             f.write(template)
 
@@ -199,6 +250,13 @@ def create_parser_create():
                    help="Test should be given a long timeout (typically 60s rather than 10s, but varies depending on environment)")
     p.add_argument("--overwrite", action="store_true",
                    help="Allow overwriting an existing test file")
+    p.add_argument("-r", "--reftest", action="store_true",
+                   help="Create a reftest rather than a testharness (js) test"),
+    p.add_argument("-ref", "--reference", dest="ref", help="Path to the reference file")
+    p.add_argument("--mismatch", action="store_true",
+                   help="Create a mismatch reftest")
+    p.add_argument("--wait", action="store_true",
+                   help="Create a reftest that waits until takeScreenshot() is called")
     p.add_argument("path", action="store", help="Path to the test file")
     return p
 

@@ -1992,6 +1992,13 @@ NotifyPluginFramesCallback(nsISupports* aSupports, void* aFlag)
     }
   }
 }
+static bool
+NotifyPluginSubframesCallback(nsIDocument* aDocument, void* aFlag)
+{
+  aDocument->EnumerateActivityObservers(NotifyPluginFramesCallback,
+                                        aFlag);
+  return true;
+}
 #endif
 
 void
@@ -2011,6 +2018,9 @@ ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
       bool begin = (aEvent == BEGIN_APZ || aEvent == BEGIN_DOM);
       presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
                                                           (void*)begin);
+      presContext->Document()->EnumerateSubDocuments(NotifyPluginSubframesCallback,
+                                                     (void*)begin);
+
       mAsyncScrollEvent = aEvent;
     }
   }

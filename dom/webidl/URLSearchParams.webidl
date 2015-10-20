@@ -23,6 +23,6 @@ interface URLSearchParams {
   sequence<USVString> getAll(USVString name);
   boolean has(USVString name);
   void set(USVString name, USVString value);
-  // iterable<USVString, USVString>; - Bug 1085284
+  iterable<USVString, USVString>;
   stringifier;
 };

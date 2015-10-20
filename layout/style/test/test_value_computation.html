@@ -148,8 +148,6 @@ function setup_initial_values(id, ivalprop, prereqprop) {
 function test_value(property, val, is_initial)
 {
   var info = gCSSProperties[property];
-  if (info.backend_only)
-    return;
 
   if ("prerequisites" in info) {
     var prereqs = info.prerequisites;

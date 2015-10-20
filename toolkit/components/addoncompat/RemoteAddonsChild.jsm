@@ -222,7 +222,7 @@ function AboutProtocolChannel(uri, contractID, loadInfo)
   this._contractID = contractID;
   this._loadingPrincipal = loadInfo.loadingPrincipal;
   this._securityFlags = loadInfo.securityFlags;
-  this._contentPolicyType = loadInfo.contentPolicyType;
+  this._contentPolicyType = loadInfo.externalContentPolicyType;
 }
 
 AboutProtocolChannel.prototype = {

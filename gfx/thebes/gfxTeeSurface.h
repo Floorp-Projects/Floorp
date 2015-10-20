@@ -10,8 +10,6 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsSize.h"
 
-template<class T> class nsRefPtr;
-
 /**
  * Wraps a cairo_tee_surface. The first surface in the surface list is the
  * primary surface, which answers all surface queries (including size).
