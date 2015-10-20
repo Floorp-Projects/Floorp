@@ -817,6 +817,7 @@ ANDROID_RES_DIRS += [
 ]
 
 ANDROID_GENERATED_RESFILES += [
+    'res/raw/browsersearch.json',
     'res/raw/suggestedsites.json',
     'res/values/strings.xml',
 ]

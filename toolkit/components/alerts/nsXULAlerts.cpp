@@ -145,7 +145,7 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
   nsCOMPtr<nsISupportsString> scriptableAlertSource (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertSource, NS_ERROR_FAILURE);
   nsAutoString source;
-  nsAlertsUtils::GetSource(aPrincipal, source);
+  nsAlertsUtils::GetSourceHostPort(aPrincipal, source);
   scriptableAlertSource->SetData(source);
   rv = argsArray->AppendElement(scriptableAlertSource);
   NS_ENSURE_SUCCESS(rv, rv);

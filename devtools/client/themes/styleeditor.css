@@ -67,14 +67,7 @@
 .stylesheet-sidebar {
   max-width: 400px;
   min-width: 100px;
-}
-
-.theme-light .stylesheet-sidebar {
-  border-color: #aaa; /* Splitters */
-}
-
-.theme-dark .stylesheet-sidebar {
-  border-color: #000;  /* Splitters */
+  border-color: var(--theme-splitter-color);
 }
 
 .theme-light .media-rule-label {

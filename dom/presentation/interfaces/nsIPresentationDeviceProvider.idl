@@ -5,20 +5,33 @@
 #include "nsISupports.idl"
 
 interface nsIPresentationDevice;
+interface nsIPresentationControlChannel;
 
 %{C++
 #define PRESENTATION_DEVICE_PROVIDER_CATEGORY "presentation-device-provider"
 %}
 
 /*
- * The callbacks for any device updates.
+ * The callbacks for any device updates and session request.
  */
-[scriptable, uuid(7f9f0514-d957-485a-90e8-57cc3acbf15b)]
+[scriptable, uuid(46fd372b-2e40-4179-9b36-0478d141e440)]
 interface nsIPresentationDeviceListener: nsISupports
 {
   void addDevice(in nsIPresentationDevice device);
   void removeDevice(in nsIPresentationDevice device);
   void updateDevice(in nsIPresentationDevice device);
+
+  /*
+   * Callback while the remote device is requesting to start a presentation session.
+   * @param device The remote device that sent session request.
+   * @param url The URL requested to open by remote device.
+   * @param presentationId The Id for representing this session.
+   * @param controlChannel The control channel for this session.
+   */
+  void onSessionRequest(in nsIPresentationDevice device,
+                        in DOMString url,
+                        in DOMString presentationId,
+                        in nsIPresentationControlChannel controlChannel);
 };
 
 /*

@@ -102,6 +102,19 @@ public:
     mInternalHeaders->Set(aName, aValue, aRv);
   }
 
+  uint32_t GetIterableLength() const
+  {
+    return mInternalHeaders->GetIterableLength();
+  }
+  const nsString GetKeyAtIndex(unsigned aIndex) const
+  {
+    return mInternalHeaders->GetKeyAtIndex(aIndex);
+  }
+  const nsString GetValueAtIndex(unsigned aIndex) const
+  {
+    return mInternalHeaders->GetValueAtIndex(aIndex);
+  }
+
   // ChromeOnly
   HeadersGuardEnum Guard() const
   {

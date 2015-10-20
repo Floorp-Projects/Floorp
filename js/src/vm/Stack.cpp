@@ -853,6 +853,21 @@ FrameIter::copyDataAsAbstractFramePtr() const
     return frame;
 }
 
+void*
+FrameIter::rawFramePtr() const
+{
+    switch (data_.state_) {
+      case DONE:
+      case ASMJS:
+        return nullptr;
+      case JIT:
+        return data_.jitFrames_.fp();
+      case INTERP:
+        return interpFrame();
+    }
+    MOZ_CRASH("Unexpected state");
+}
+
 JSCompartment*
 FrameIter::compartment() const
 {
