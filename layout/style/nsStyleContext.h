@@ -533,6 +533,11 @@ private:
           mCachedInheritedData.mStyleStructs[eStyleStruct_##name_]);    \
       if (cachedData) /* Have it cached already, yay */                 \
         return cachedData;                                              \
+      if (!aComputeData) {                                              \
+        /* We always cache inherited structs on the context when we */  \
+        /* compute them. */                                             \
+        return nullptr;                                                 \
+      }                                                                 \
       /* Have the rulenode deal */                                      \
       AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
       const nsStyle##name_ * newData =                                  \
@@ -552,6 +557,11 @@ private:
             mCachedResetData->mStyleStructs[eStyleStruct_##name_]);     \
         if (cachedData) /* Have it cached already, yay */               \
           return cachedData;                                            \
+      }                                                                 \
+      if (!aComputeData && !(mBits & NS_STYLE_INHERIT_BIT(name_))) {    \
+        /* When we compute reset structs, we either cache them on */    \
+        /* the style context or set the bit in mBits. */                \
+        return nullptr;                                                 \
       }                                                                 \
       /* Have the rulenode deal */                                      \
       AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
