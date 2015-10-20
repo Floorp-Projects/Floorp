@@ -883,7 +883,7 @@ public:
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                        \
   template<bool aComputeData>                                                 \
   const nsStyle##name_*                                                       \
-  GetStyle##name_(nsStyleContext* aContext)                                   \
+  GetStyle##name_(nsStyleContext* aContext, uint64_t& aContextStyleBits)      \
   {                                                                           \
     NS_ASSERTION(IsUsedDirectly(),                                            \
                  "if we ever call this on rule nodes that aren't used "       \
@@ -898,8 +898,15 @@ public:
     /* see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto */ \
     if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
       data = mStyleData.GetStyle##name_();                                    \
-      if (MOZ_LIKELY(data != nullptr))                                        \
+      if (data != nullptr) {                                                  \
+        /* For inherited structs, mark the struct (which will be set on */    \
+        /* the context by our caller) as not being owned by the context. */   \
+        /* Normally this would be aContext->AddStyleBit(), but aContext is */ \
+        /* an incomplete type here, so we work around that with a param. */   \
+        aContextStyleBits |= NS_STYLE_INHERIT_BIT(name_);                     \
+        /* Our caller will cache the data on the style context. */            \
         return data;                                                          \
+      }                                                                       \
     }                                                                         \
                                                                               \
     if (!aComputeData)                                                        \
