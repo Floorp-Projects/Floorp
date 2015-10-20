@@ -275,30 +275,41 @@ nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
   return NS_OK;
 }
 
+class ContextMediator : public nsIStreamLoaderObserver
+{
+public:
+  explicit ContextMediator(nsScriptLoader *aScriptLoader, nsISupports *aContext)
+  : mScriptLoader(aScriptLoader)
+  , mContext(aContext) {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMLOADEROBSERVER
+
+private:
+  virtual ~ContextMediator() {}
+  RefPtr<nsScriptLoader> mScriptLoader;
+  nsCOMPtr<nsISupports>  mContext;
+};
+
+NS_IMPL_ISUPPORTS(ContextMediator, nsIStreamLoaderObserver)
+
+NS_IMETHODIMP
+ContextMediator::OnStreamComplete(nsIStreamLoader* aLoader,
+                                  nsISupports* aContext,
+                                  nsresult aStatus,
+                                  uint32_t aStringLen,
+                                  const uint8_t* aString)
+{
+  // pass arguments through except for the aContext,
+  // we have to mediate and use mContext instead.
+  return mScriptLoader->OnStreamComplete(aLoader, mContext, aStatus,
+                                         aStringLen, aString);
+}
+
 nsresult
 nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
                           bool aScriptFromHead)
 {
-  nsISupports *context = aRequest->mElement.get()
-                         ? static_cast<nsISupports *>(aRequest->mElement.get())
-                         : static_cast<nsISupports *>(mDocument);
-  nsresult rv = ShouldLoadScript(mDocument, context, aRequest->mURI, aType, aRequest->IsPreload());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
-
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->MasterDocument()->GetWindow()));
-
-  if (!window) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsIDocShell *docshell = window->GetDocShell();
-
-  nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
-
   // If this document is sandboxed without 'allow-scripts', abort.
   if (mDocument->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
     return NS_OK;
@@ -307,17 +318,39 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
   nsContentPolicyType contentPolicyType = aRequest->IsPreload()
                                           ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
                                           : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
+  nsCOMPtr<nsINode> context;
+  if (aRequest->mElement) {
+    context = do_QueryInterface(aRequest->mElement);
+  }
+  else {
+    context = mDocument;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mDocument->MasterDocument()->GetWindow()));
+  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
+  nsIDocShell *docshell = window->GetDocShell();
+  nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
+
+  nsSecurityFlags securityFlags =
+    aRequest->mCORSMode == CORS_NONE
+    ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+    : nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
+  if (aRequest->mCORSMode == CORS_USE_CREDENTIALS) {
+    securityFlags |= nsILoadInfo::SEC_REQUIRE_CORS_WITH_CREDENTIALS;
+  }
+  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     aRequest->mURI,
-                     mDocument,
-                     nsILoadInfo::SEC_NORMAL,
-                     contentPolicyType,
-                     loadGroup,
-                     prompter,
-                     nsIRequest::LOAD_NORMAL |
-                     nsIChannel::LOAD_CLASSIFY_URI);
+  nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                              aRequest->mURI,
+                              context,
+                              securityFlags,
+                              contentPolicyType,
+                              loadGroup,
+                              prompter,
+                              nsIRequest::LOAD_NORMAL |
+                              nsIChannel::LOAD_CLASSIFY_URI);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -356,26 +389,13 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     timedChannel->SetInitiatorType(NS_LITERAL_STRING("script"));
   }
 
+  RefPtr<ContextMediator> mediator = new ContextMediator(this, aRequest);
+
   nsCOMPtr<nsIStreamLoader> loader;
-  rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
+  rv = NS_NewStreamLoader(getter_AddRefs(loader), mediator);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIStreamListener> listener = loader.get();
-
-  if (aRequest->mCORSMode != CORS_NONE) {
-    bool withCredentials = (aRequest->mCORSMode == CORS_USE_CREDENTIALS);
-    RefPtr<nsCORSListenerProxy> corsListener =
-      new nsCORSListenerProxy(listener, mDocument->NodePrincipal(),
-                              withCredentials);
-    rv = corsListener->Init(channel, DataURIHandling::Allow);
-    NS_ENSURE_SUCCESS(rv, rv);
-    listener = corsListener;
-  }
-
-  rv = channel->AsyncOpen(listener, aRequest);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return channel->AsyncOpen2(loader);
 }
 
 bool

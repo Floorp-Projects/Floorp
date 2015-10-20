@@ -266,7 +266,7 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   }
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
+  nsresult rv = NS_CheckContentLoadPolicy(internalContentPolicyType,
                                           aURI,
                                           aLoadInfo->LoadingPrincipal(),
                                           requestingContext,
