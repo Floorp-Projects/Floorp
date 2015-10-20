@@ -273,53 +273,32 @@ NS_IMETHODIMP mozHunspell::SetPersonalDictionary(mozIPersonalDictionary * aPerso
   return NS_OK;
 }
 
-struct AppendNewStruct
-{
-  char16_t **dics;
-  uint32_t count;
-  bool failed;
-};
-
-static PLDHashOperator
-AppendNewString(const nsAString& aString, nsIFile* aFile, void* aClosure)
-{
-  AppendNewStruct *ans = (AppendNewStruct*) aClosure;
-  ans->dics[ans->count] = ToNewUnicode(aString);
-  if (!ans->dics[ans->count]) {
-    ans->failed = true;
-    return PL_DHASH_STOP;
-  }
-
-  ++ans->count;
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP mozHunspell::GetDictionaryList(char16_t ***aDictionaries,
                                             uint32_t *aCount)
 {
   if (!aDictionaries || !aCount)
     return NS_ERROR_NULL_POINTER;
 
-  AppendNewStruct ans = {
-    (char16_t**) moz_xmalloc(sizeof(char16_t*) * mDictionaries.Count()),
-    0,
-    false
-  };
+  uint32_t count = 0;
+  char16_t** dicts =
+    (char16_t**) moz_xmalloc(sizeof(char16_t*) * mDictionaries.Count());
 
-  // This pointer is used during enumeration
-  mDictionaries.EnumerateRead(AppendNewString, &ans);
-
-  if (ans.failed) {
-    while (ans.count) {
-      --ans.count;
-      free(ans.dics[ans.count]);
+  for (auto iter = mDictionaries.Iter(); !iter.Done(); iter.Next()) {
+    dicts[count] = ToNewUnicode(iter.Key());
+    if (!dicts[count]) {
+      while (count) {
+        --count;
+        free(dicts[count]);
+      }
+      free(dicts);
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    free(ans.dics);
-    return NS_ERROR_OUT_OF_MEMORY;
+
+    ++count;
   }
 
-  *aDictionaries = ans.dics;
-  *aCount = ans.count;
+  *aDictionaries = dicts;
+  *aCount = count;
 
   return NS_OK;
 }
