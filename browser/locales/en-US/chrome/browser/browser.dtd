@@ -218,8 +218,6 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 
 <!ENTITY urlbar.toggleAutocomplete.label                "Toggle the autocomplete popup">
 
-
-<!ENTITY locationItem.title           "Location">
 <!ENTITY searchItem.title             "Search">
 
 <!-- Toolbar items --> 
