@@ -1728,6 +1728,9 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 .urlbar-icon {
   padding: 0 3px;
+  /* 16x16 icon with border-box sizing */
+  width: 22px;
+  height: 16px;
 }
 
 #urlbar-search-footer {
@@ -2015,7 +2018,6 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
   #page-report-button {
     list-style-image: url("chrome://browser/skin/urlbar-popup-blocked@2x.png");
     -moz-image-region: rect(0, 32px, 32px, 0);
-    width: 22px;
   }
 
   #page-report-button:hover:active,
@@ -3617,7 +3619,7 @@ notification[value="loop-sharing-notification"] .messageImage {
   padding-right: 0;
 }
 
-.browser-action-panel > .panel-arrowcontainer > .panel-arrowcontent {
+.browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
 

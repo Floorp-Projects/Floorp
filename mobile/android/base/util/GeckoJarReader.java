@@ -52,6 +52,9 @@ public final class GeckoJarReader {
             inputStream = getStream(zip, jarUrls, url);
             if (inputStream != null) {
                 bitmap = new BitmapDrawable(resources, inputStream);
+                // BitmapDrawable created from a stream does not set the correct target density from resources.
+                // In fact it discards the resources https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/graphics/java/android/graphics/drawable/BitmapDrawable.java#191
+                bitmap.setTargetDensity(resources.getDisplayMetrics());
             }
         } catch (IOException | URISyntaxException ex) {
             Log.e(LOGTAG, "Exception ", ex);

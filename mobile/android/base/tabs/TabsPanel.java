@@ -26,6 +26,7 @@ import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -74,7 +75,9 @@ public class TabsPanel extends LinearLayout
 
 
     public static View createTabsLayout(final Context context, final AttributeSet attrs) {
-        if (HardwareUtils.isTablet() || AppConstants.NIGHTLY_BUILD) {
+        final boolean isLandscape = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+
+        if (HardwareUtils.isTablet() || isLandscape) {
             return new TabsGridLayout(context, attrs);
         } else {
             return new TabsListLayout(context, attrs);
@@ -189,11 +192,11 @@ public class TabsPanel extends LinearLayout
     }
 
     private void addTab() {
+        Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_tab");
+
         if (mCurrentPanel == Panel.NORMAL_TABS) {
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_tab");
             mActivity.addTab();
         } else {
-            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_private_tab");
             mActivity.addPrivateTab();
         }
 
@@ -215,8 +218,7 @@ public class TabsPanel extends LinearLayout
 
         if (itemId == R.id.close_all_tabs) {
             if (mCurrentPanel == Panel.NORMAL_TABS) {
-                final String extras = getResources().getResourceEntryName(itemId);
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, extras);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "close_all_tabs");
 
                 // Disable the menu button so that the menu won't interfere with the tab close animation.
                 mMenuButton.setEnabled(false);
@@ -229,8 +231,8 @@ public class TabsPanel extends LinearLayout
 
         if (itemId == R.id.close_private_tabs) {
             if (mCurrentPanel == Panel.PRIVATE_TABS) {
-                final String extras = getResources().getResourceEntryName(itemId);
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, extras);
+                // Mask private browsing
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "close_all_tabs");
 
                 ((CloseAllPanelView) mPanelPrivate).closeAll();
             } else {
