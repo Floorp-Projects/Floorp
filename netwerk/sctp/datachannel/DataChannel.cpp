@@ -80,9 +80,6 @@ static bool sctp_initialized;
 
 namespace mozilla {
 
-class DataChannelShutdown;
-StaticRefPtr<DataChannelShutdown> gDataChannelShutdown;
-
 class DataChannelShutdown : public nsIObserver
 {
 public:
@@ -90,7 +87,8 @@ public:
   // around (singleton likely) unless we want to shutdown sctp whenever
   // we're not using it (and in which case we'd keep a refcnt'd object
   // ref'd by each DataChannelConnection to release the SCTP usrlib via
-  // sctp_finish)
+  // sctp_finish). Right now, the single instance of this class is
+  // owned by the observer service.
 
   NS_DECL_ISUPPORTS
 
@@ -111,13 +109,9 @@ public:
     }
 
 private:
-  virtual ~DataChannelShutdown()
-    {
-      nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-      if (observerService)
-        observerService->RemoveObserver(this, "xpcom-will-shutdown");
-    }
+  // The only instance of DataChannelShutdown is owned by the observer
+  // service, so there is no need to call RemoveObserver here.
+  virtual ~DataChannelShutdown() {}
 
 public:
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
@@ -137,9 +131,6 @@ public:
                                                     "xpcom-will-shutdown");
       MOZ_ASSERT(rv == NS_OK);
       (void) rv;
-
-      RefPtr<DataChannelShutdown> kungFuDeathGrip(this);
-      gDataChannelShutdown = nullptr;
     }
     return NS_OK;
   }
@@ -345,8 +336,8 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
       usrsctp_sysctl_set_sctp_ecn_enable(0);
       sctp_initialized = true;
 
-      gDataChannelShutdown = new DataChannelShutdown();
-      gDataChannelShutdown->Init();
+      RefPtr<DataChannelShutdown> shutdown = new DataChannelShutdown();
+      shutdown->Init();
     }
   }
 
