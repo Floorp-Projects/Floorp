@@ -2112,6 +2112,7 @@ SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, StreamTime aSt
   TrackData* data = track_data->AppendElement();
   data->mID = aID;
   data->mInputRate = aRate;
+  data->mResamplerChannelCount = 0;
   data->mStart = aStart;
   data->mEndOfFlushedData = aStart;
   data->mCommands = TRACK_CREATE;

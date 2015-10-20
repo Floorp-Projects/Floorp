@@ -105,6 +105,56 @@ function testFilename() {
   is(f.get("file3").name, "", "File's filename is returned even if empty.");
 }
 
+function testIterable() {
+  var fd = new FormData();
+  fd.set('1','2');
+  fd.set('2','4');
+  fd.set('3','6');
+  fd.set('4','8');
+  fd.set('5','10');
+
+  var key_iter = fd.keys();
+  var value_iter = fd.values();
+  var entries_iter = fd.entries();
+  for (var i = 0; i < 5; ++i) {
+    var v = i + 1;
+    var key = key_iter.next();
+    var value = value_iter.next();
+    var entry = entries_iter.next();
+    is(key.value, v.toString(), "Correct Key iterator: " + v.toString());
+    ok(!key.done, "key.done is false");
+    is(value.value, (v * 2).toString(), "Correct Value iterator: " + (v * 2).toString());
+    ok(!value.done, "value.done is false");
+    is(entry.value[0], v.toString(), "Correct Entry 0 iterator: " + v.toString());
+    is(entry.value[1], (v * 2).toString(), "Correct Entry 1 iterator: " + (v * 2).toString());
+    ok(!entry.done, "entry.done is false");
+  }
+
+  var last = key_iter.next();
+  ok(last.done, "Nothing more to read.");
+  is(last.value, undefined, "Undefined is the last key");
+
+  last = value_iter.next();
+  ok(last.done, "Nothing more to read.");
+  is(last.value, undefined, "Undefined is the last value");
+
+  last = entries_iter.next();
+  ok(last.done, "Nothing more to read.");
+
+  key_iter = fd.keys();
+  key_iter.next();
+  key_iter.next();
+  fd.delete('1');
+  fd.delete('2');
+  fd.delete('3');
+  fd.delete('4');
+  fd.delete('5');
+
+  last = key_iter.next();
+  ok(last.done, "Nothing more to read.");
+  is(last.value, undefined, "Undefined is the last key");
+}
+
 function testSend(doneCb) {
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "form_submit_server.sjs");
@@ -161,6 +211,7 @@ function runTest(doneCb) {
   testSet();
   testIterate();
   testFilename();
+  testIterable();
   // Finally, send an XHR and verify the response matches.
   testSend(doneCb);
 }
