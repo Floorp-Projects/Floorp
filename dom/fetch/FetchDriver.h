@@ -113,9 +113,9 @@ private:
     bool mCORSPreflightFlag;
   };
 
-  nsresult Fetch(bool aCORSFlag);
-  MainFetchOp SetTaintingAndGetNextOp(bool aCORSFlag);
-  nsresult ContinueFetch(bool aCORSFlag);
+  nsresult Fetch();
+  MainFetchOp SetTaintingAndGetNextOp();
+  nsresult ContinueFetch();
   nsresult BasicFetch();
   nsresult HttpFetch(bool aCORSFlag = false, bool aCORSPreflightFlag = false, bool aAuthenticationFlag = false);
   nsresult ContinueHttpFetchAfterNetworkFetch();
