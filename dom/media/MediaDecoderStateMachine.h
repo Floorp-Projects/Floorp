@@ -354,6 +354,8 @@ private:
   // be held.
   bool IsPlaying() const;
 
+  // TODO: Those callback function may receive demuxed-only data.
+  // Need to figure out a suitable API name for this case.
   void OnAudioDecoded(MediaData* aAudioSample);
   void OnVideoDecoded(MediaData* aVideoSample);
   void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
