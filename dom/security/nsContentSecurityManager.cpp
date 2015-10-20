@@ -84,6 +84,13 @@ DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   nsIPrincipal* loadingPrincipal = aLoadInfo->LoadingPrincipal();
   bool sameOriginDataInherits =
     aLoadInfo->GetSecurityMode() == nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
+
+  if (sameOriginDataInherits &&
+      aLoadInfo->GetAboutBlankInherits() &&
+      NS_IsAboutBlank(aURI)) {
+    return NS_OK;
+  }
+
   return loadingPrincipal->CheckMayLoad(aURI,
                                         true, // report to console
                                         sameOriginDataInherits);
