@@ -499,7 +499,6 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
     return NS_OK;
 }
 
-
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdateItem::nsIRunnable
 //-----------------------------------------------------------------------------
@@ -752,7 +751,7 @@ nsOfflineManifestItem::ReadManifest(nsIInputStream *aInputStream,
 
     for (iter = begin; iter != end; iter++) {
         if (*iter == '\r' || *iter == '\n') {
-            nsresult rv = manifest->HandleManifestLine(begin, iter);
+            rv = manifest->HandleManifestLine(begin, iter);
 
             if (NS_FAILED(rv)) {
                 LOG(("HandleManifestLine failed with 0x%08x", rv));
@@ -923,7 +922,6 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
         rv = namespaceURI->GetAsciiSpec(namespaceSpec);
         if (NS_FAILED(rv))
             break;
-
 
         nsCOMPtr<nsIURI> fallbackURI;
         rv = NS_NewURI(getter_AddRefs(fallbackURI), fallbackSpec, nullptr, mURI);
