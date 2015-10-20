@@ -115,7 +115,7 @@ search-preqs =\
 .PHONY: searchplugins
 searchplugins: $(search-preqs)
 	$(call py_action,jar_maker,\
-          $(QUIET) -j $(FINAL_TARGET)/chrome \
+          $(QUIET) -d $(FINAL_TARGET) \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
           -s $(LOCALE_SRCDIR)/searchplugins \
           $(MAKE_JARS_FLAGS) $(search-jar))

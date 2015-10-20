@@ -64,8 +64,6 @@ public:
     return true;
   }
 
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags);
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
@@ -87,6 +85,8 @@ public:
     RefPtr<Image> mImage;
   };
 
+private:
+  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags);
 };
 
 } // namespace mozilla

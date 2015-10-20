@@ -20,6 +20,22 @@ class nsStyleContext;
 
 namespace mozilla {
 
+/**
+ * nsRuleNodeCacheConditions is used to store information about whether
+ * we can store a style struct that we're computing in the rule tree.
+ *
+ * For inherited structs (i.e., structs with inherited properties), we
+ * cache the struct in the rule tree if it does not depend on any data
+ * in the style context tree, and otherwise store it in the style
+ * context tree.  This means that for inherited structs, setting any
+ * conditions is equivalent to making the struct uncacheable.
+ *
+ * For reset structs (i.e., structs with non-inherited properties), we
+ * are also able to cache structs in the rule tree conditionally on
+ * certain common conditions.  For these structs, setting conditions
+ * (SetFontSizeDependency, SetWritingModeDependency) instead causes the
+ * struct to be stored, with the condition, in the rule tree.
+ */
 class RuleNodeCacheConditions
 {
 public:
@@ -45,6 +61,15 @@ public:
 
   bool Matches(nsStyleContext* aStyleContext) const;
 
+  /**
+   * Record that the data being computed depend on the font-size
+   * property of the element for which they are being computed.
+   *
+   * Note that we sometimes actually call this when there is a
+   * dependency on the font-size property of the parent element, but we
+   * only do so while computing inherited structs (nsStyleFont), and we
+   * only store reset structs conditionally.
+   */
   void SetFontSizeDependency(nscoord aCoord)
   {
     MOZ_ASSERT(!(mBits & eHaveFontSize) || mFontSize == aCoord);
@@ -52,6 +77,12 @@ public:
     mBits |= eHaveFontSize;
   }
 
+  /**
+   * Record that the data being computed depend on the writing mode of
+   * the element for which they are being computed, which in turn
+   * depends on its 'writing-mode', 'direction', and 'text-orientation'
+   * properties.
+   */
   void SetWritingModeDependency(uint8_t aWritingMode)
   {
     MOZ_ASSERT(!(mBits & eHaveWritingMode) || GetWritingMode() == aWritingMode);

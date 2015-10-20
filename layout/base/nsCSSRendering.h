@@ -982,7 +982,8 @@ public:
                     int32_t aAppUnitsPerDevPixel,
                     bool aHasBorderRadius,
                     RectCornerRadii& aInnerClipRectRadii,
-                    mozilla::gfx::Rect aSkipRect);
+                    mozilla::gfx::Rect aSkipRect,
+                    mozilla::gfx::Point aShadowOffset);
 
 protected:
   static void GetBlurAndSpreadRadius(gfxContext* aContext,

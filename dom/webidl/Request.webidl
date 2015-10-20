@@ -54,13 +54,7 @@ enum RequestContext {
   "xslt"
 };
 
-// cors-with-forced-preflight is internal to the Fetch spec, but adding it here
-// allows us to use the various conversion conveniences offered by the WebIDL
-// codegen. The Request constructor has explicit checks to prevent it being
-// passed as a valid value, while Request.mode never returns it. Since enums
-// are only exposed as strings to client JS, this has the same effect as not
-// exposing it at all.
-enum RequestMode { "same-origin", "no-cors", "cors", "cors-with-forced-preflight" };
+enum RequestMode { "same-origin", "no-cors", "cors" };
 enum RequestCredentials { "omit", "same-origin", "include" };
 enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached" };
 enum RequestRedirect { "follow", "error", "manual" };
