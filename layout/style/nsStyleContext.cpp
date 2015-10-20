@@ -417,7 +417,14 @@ const void* nsStyleContext::StyleData(nsStyleStructID aSID)
   const void* cachedData = GetCachedStyleData(aSID);
   if (cachedData)
     return cachedData; // We have computed data stored on this node in the context tree.
-  return mRuleNode->GetStyleData(aSID, this, true); // Our rule node will take care of it for us.
+  // Our rule node will take care of it for us.
+  const void* newData = mRuleNode->GetStyleData(aSID, this, true);
+  if (!nsCachedStyleData::IsReset(aSID)) {
+    // always cache inherited data on the style context; the rule
+    // node set the bit in mBits for us if needed.
+    mCachedInheritedData.mStyleStructs[aSID] = const_cast<void*>(newData);
+  }
+  return newData;
 }
 
 // This is an evil evil function, since it forces you to alloc your own separate copy of
