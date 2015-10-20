@@ -829,6 +829,12 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
     if (dataScheme) {
       return NS_OK;
     }
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+    if (loadInfo && loadInfo->GetAboutBlankInherits() &&
+        NS_IsAboutBlank(uri)) {
+      return NS_OK;
+    }
   }
 
   // Set CORS attributes on channel so that intercepted requests get correct

@@ -3,6 +3,8 @@ function testAboutURL() {
     is(res.status, 200, "about:blank should load a valid Response");
     is(res.headers.get('content-type'), 'text/html;charset=utf-8',
        "about:blank content-type should be text/html;charset=utf-8");
+    is(res.headers.get('content-length'), '0',
+       "about:blank content-type should be text/html;charset=utf-8");
     return res.text().then(function(v) {
       is(v, "", "about:blank body should be empty");
     });
