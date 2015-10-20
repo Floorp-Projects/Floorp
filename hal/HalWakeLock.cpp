@@ -72,31 +72,6 @@ CountWakeLocks(ProcessLockTable* aTable, LockCount* aTotalCount)
   }
 }
 
-static PLDHashOperator
-RemoveChildFromList(const nsAString& aKey, nsAutoPtr<ProcessLockTable>& aTable,
-                    void* aUserArg)
-{
-  MOZ_ASSERT(aUserArg);
-
-  PLDHashOperator op = PL_DHASH_NEXT;
-  uint64_t childID = *static_cast<uint64_t*>(aUserArg);
-  if (aTable->Get(childID, nullptr)) {
-    aTable->Remove(childID);
-
-    LockCount totalCount;
-    CountWakeLocks(aTable, &totalCount);
-    if (!totalCount.numLocks) {
-      op = PL_DHASH_REMOVE;
-    }
-
-    if (sActiveListeners) {
-      NotifyWakeLockChange(WakeLockInfoFromLockCount(aKey, totalCount));
-    }
-  }
-
-  return op;
-}
-
 class ClearHashtableOnShutdown final : public nsIObserver {
   ~ClearHashtableOnShutdown() {}
 public:
@@ -145,7 +120,25 @@ CleanupOnContentShutdown::Observe(nsISupports* aSubject, const char* aTopic, con
   nsresult rv = props->GetPropertyAsUint64(NS_LITERAL_STRING("childID"),
                                            &childID);
   if (NS_SUCCEEDED(rv)) {
-    sLockTable->Enumerate(RemoveChildFromList, &childID);
+    for (auto iter = sLockTable->Iter(); !iter.Done(); iter.Next()) {
+      nsAutoPtr<ProcessLockTable>& table = iter.Data();
+
+      if (table->Get(childID, nullptr)) {
+        table->Remove(childID);
+
+        LockCount totalCount;
+        CountWakeLocks(table, &totalCount);
+
+        if (sActiveListeners) {
+          NotifyWakeLockChange(WakeLockInfoFromLockCount(iter.Key(),
+                                                         totalCount));
+        }
+
+        if (totalCount.numLocks == 0) {
+          iter.Remove();
+        }
+      }
+    }
   } else {
     NS_WARNING("ipc:content-shutdown message without childID property");
   }
