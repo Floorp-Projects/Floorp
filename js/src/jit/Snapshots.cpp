@@ -314,7 +314,7 @@ RValueAllocation
 RValueAllocation::read(CompactBufferReader& reader)
 {
     uint8_t mode = reader.readByte();
-    const Layout& layout = layoutFromMode(Mode(mode & MODE_MASK));
+    const Layout& layout = layoutFromMode(Mode(mode & MODE_BITS_MASK));
     Payload arg1, arg2;
 
     readPayload(reader, layout.type1, &mode, &arg1);

@@ -4864,9 +4864,9 @@ pref("caret.manages-android-actionbar", false);
 pref("layout.accessiblecaret.enabled", false);
 
 // CSS attributes of the AccessibleCaret in CSS pixels.
-pref("layout.accessiblecaret.width", "44.0");
-pref("layout.accessiblecaret.height", "47.0");
-pref("layout.accessiblecaret.margin-left", "-23.5");
+pref("layout.accessiblecaret.width", "34.0");
+pref("layout.accessiblecaret.height", "36.0");
+pref("layout.accessiblecaret.margin-left", "-18.5");
 pref("layout.accessiblecaret.bar.width", "2.0");
 
 // Timeout in milliseconds to hide the accessiblecaret under cursor mode while
