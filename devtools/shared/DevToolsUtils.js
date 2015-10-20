@@ -458,6 +458,25 @@ exports.dbg_assert = function dbg_assert(cond, e) {
   }
 };
 
+exports.defineLazyGetter(this, "AppConstants", () => {
+  const scope = {};
+  Cu.import("resource://gre/modules/AppConstants.jsm", scope);
+  return scope.AppConstants;
+});
+
+/**
+ * No operation. The empty function.
+ */
+exports.noop = function () { };
+
+function reallyAssert(condition, message) {
+  if (!condition) {
+    const err = new Error("Assertion failure: " + message);
+    exports.reportException("DevToolsUtils.assert", err);
+    throw err;
+  }
+}
+
 /**
  * DevToolsUtils.assert(condition, message)
  *
@@ -477,23 +496,11 @@ exports.dbg_assert = function dbg_assert(cond, e) {
  * This is an improvement over `dbg_assert`, which doesn't actually cause any
  * fatal behavior, and is therefore much easier to accidentally ignore.
  */
-exports.defineLazyGetter(exports, "assert", () => {
-  function noop(condition, msg) { }
-
-  function assert(condition, message) {
-    if (!condition) {
-      const err = new Error("Assertion failure: " + message);
-      exports.reportException("DevToolsUtils.assert", err);
-      throw err;
-    }
-  }
-
-  const scope = {};
-  Cu.import("resource://gre/modules/AppConstants.jsm", scope);
-  const { DEBUG, DEBUG_JS_MODULES } = scope.AppConstants;
-
-  return (DEBUG || DEBUG_JS_MODULES || exports.testing) ? assert : noop;
-});
+Object.defineProperty(exports, "assert", {
+  get: () => (AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES || this.testing)
+    ? reallyAssert
+    : exports.noop,
+})
 
 /**
  * Defines a getter on a specified object for a module.  The module will not
