@@ -128,7 +128,7 @@ global.openPanel = (node, popupURL, extension) => {
   panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
   panel.setAttribute("class", "browser-extension-panel");
   panel.setAttribute("type", "arrow");
-  panel.setAttribute("flip", "slide");
+  panel.setAttribute("role", "group");
 
   let anchor;
   if (node.localName == "toolbarbutton") {
@@ -143,17 +143,22 @@ global.openPanel = (node, popupURL, extension) => {
     anchor = node;
   }
 
-  let context;
-  panel.addEventListener("popuphidden", () => {
-    context.unload();
-    panel.remove();
-  });
-
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   let browser = document.createElementNS(XUL_NS, "browser");
   browser.setAttribute("type", "content");
   browser.setAttribute("disableglobalhistory", "true");
   panel.appendChild(browser);
+
+  let titleChangedListener = () => {
+    panel.setAttribute("aria-label", browser.contentTitle);
+  }
+
+  let context;
+  panel.addEventListener("popuphidden", () => {
+    browser.removeEventListener("DOMTitleChanged", titleChangedListener, true);
+    context.unload();
+    panel.remove();
+  });
 
   let loadListener = () => {
     panel.removeEventListener("load", loadListener);
@@ -192,6 +197,8 @@ global.openPanel = (node, popupURL, extension) => {
       panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
     };
     browser.addEventListener("load", contentLoadListener, true);
+
+    browser.addEventListener("DOMTitleChanged", titleChangedListener, true);
   };
   panel.addEventListener("load", loadListener);
 
