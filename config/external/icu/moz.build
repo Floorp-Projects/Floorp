@@ -21,3 +21,7 @@ else:
         OS_LIBS += [
             'gabi++',
         ]
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android' and CONFIG['MOZ_ANDROID_CXX_STL'] == 'mozstlport':
+        USE_LIBS += [
+            'gabi++'
+        ]

@@ -45,7 +45,6 @@ function waitForStateChanged(aPredicate) {
         }
       },
 
-      conferenceCallStateChanged: function() {},
       supplementaryServiceNotification: function() {},
       notifyError: function() {},
       notifyCdmaCallWaiting: function() {},

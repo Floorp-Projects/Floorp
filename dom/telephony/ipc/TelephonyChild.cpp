@@ -81,15 +81,6 @@ TelephonyChild::RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,
 }
 
 bool
-TelephonyChild::RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState)
-{
-  MOZ_ASSERT(mService);
-
-  mService->ConferenceCallStateChanged(aCallState);
-  return true;
-}
-
-bool
 TelephonyChild::RecvNotifyConferenceError(const nsString& aName,
                                           const nsString& aMessage)
 {
