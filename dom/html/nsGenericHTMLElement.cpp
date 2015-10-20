@@ -84,6 +84,8 @@
 #include "nsITextControlElement.h"
 #include "mozilla/dom/Element.h"
 #include "HTMLFieldSetElement.h"
+#include "nsTextNode.h"
+#include "HTMLBRElement.h"
 #include "HTMLMenuElement.h"
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
@@ -104,6 +106,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
+#include "nsComputedDOMStyle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3293,4 +3296,106 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
   }
 
   return NS_OK;
+}
+
+void
+nsGenericHTMLElement::GetInnerText(mozilla::dom::DOMString& aValue,
+                                   mozilla::ErrorResult& aError)
+{
+  if (!GetPrimaryFrame(Flush_Layout)) {
+    RefPtr<nsStyleContext> sc =
+        nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr, nullptr);
+    if (!sc || sc->StyleDisplay()->mDisplay == NS_STYLE_DISPLAY_NONE ||
+        !GetCurrentDoc()) {
+      GetTextContentInternal(aValue, aError);
+      return;
+    }
+  }
+
+  RefPtr<nsRange> range;
+  nsresult rv = nsRange::CreateRange(static_cast<nsINode*>(this), 0, this,
+      GetChildCount(), getter_AddRefs(range));
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  range->GetInnerTextNoFlush(aValue, aError);
+}
+
+void
+nsGenericHTMLElement::SetInnerText(const nsAString& aValue)
+{
+  // Fire DOMNodeRemoved mutation events before we do anything else.
+  nsCOMPtr<nsIContent> kungFuDeathGrip;
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(nullptr, nullptr);
+
+  // Scope firing mutation events so that we don't carry any state that
+  // might be stale
+  {
+    // We're relying on mozAutoSubtreeModified to keep a strong reference if
+    // needed.
+    nsIDocument* doc = OwnerDoc();
+
+    // Optimize the common case of there being no observers
+    if (nsContentUtils::HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+      subtree.UpdateTarget(doc, nullptr);
+      // Keep "this" alive during mutation listener firing
+      kungFuDeathGrip = this;
+      nsCOMPtr<nsINode> child;
+      for (child = nsINode::GetFirstChild();
+           child && child->GetParentNode() == this;
+           child = child->GetNextSibling()) {
+        nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
+      }
+    }
+  }
+
+  // Might as well stick a batch around this since we're performing several
+  // mutations.
+  mozAutoDocUpdate updateBatch(GetComposedDoc(),
+    UPDATE_CONTENT_MODEL, true);
+  nsAutoMutationBatch mb;
+
+  uint32_t childCount = GetChildCount();
+
+  mb.Init(this, true, false);
+  for (uint32_t i = 0; i < childCount; ++i) {
+    RemoveChildAt(0, true);
+  }
+  mb.RemovalDone();
+
+  nsString str;
+  const char16_t* s = aValue.BeginReading();
+  const char16_t* end = aValue.EndReading();
+  while (true) {
+    if (s != end && *s == '\r' && s + 1 != end && s[1] == '\n') {
+      // a \r\n pair should only generate one <br>, so just skip the \r
+      ++s;
+    }
+    if (s == end || *s == '\r' || *s == '\n') {
+      if (!str.IsEmpty()) {
+        RefPtr<nsTextNode> textContent =
+            new nsTextNode(NodeInfo()->NodeInfoManager());
+        textContent->SetText(str, true);
+        AppendChildTo(textContent, true);
+      }
+      if (s == end) {
+        break;
+      }
+      str.SetLength(0);
+      already_AddRefed<mozilla::dom::NodeInfo> ni =
+          NodeInfo()->NodeInfoManager()->GetNodeInfo(nsGkAtoms::br,
+                      nullptr, kNameSpaceID_XHTML, nsIDOMNode::ELEMENT_NODE);
+      RefPtr<HTMLBRElement> br = new HTMLBRElement(ni);
+      AppendChildTo(br, true);
+    } else {
+      str.Append(*s);
+    }
+    ++s;
+  }
+
+  mb.NodesAdded();
 }
