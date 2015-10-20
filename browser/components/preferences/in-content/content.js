@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XPCOMUtils.defineLazyGetter(this, "AlertsService", function () {
+  try {
+    return Cc["@mozilla.org/alerts-service;1"]
+             .getService(Ci.nsIAlertsService)
+             .QueryInterface(Ci.nsIAlertsDoNotDisturb);
+  } catch (ex) {
+    return;
+  }
+});
+
 var gContentPane = {
   init: function ()
   {
@@ -30,6 +40,18 @@ var gContentPane = {
       }
     }
 
+    let doNotDisturbAlertsEnabled = false;
+    if (AlertsService) {
+      let notificationsDoNotDisturbRow =
+        document.getElementById("notificationsDoNotDisturbRow");
+      notificationsDoNotDisturbRow.removeAttribute("hidden");
+      if (AlertsService.manualDoNotDisturb) {
+        let notificationsDoNotDisturb =
+          document.getElementById("notificationsDoNotDisturb");
+        notificationsDoNotDisturb.setAttribute("checked", true);
+      }
+    }
+
     setEventListener("font.language.group", "change",
       gContentPane._rebuildFonts);
     setEventListener("notificationsPolicyButton", "command",
@@ -46,6 +68,8 @@ var gContentPane = {
       gContentPane.openTranslationProviderAttribution);
     setEventListener("translateButton", "command",
       gContentPane.showTranslationExceptions);
+    setEventListener("notificationsDoNotDisturb", "command",
+      gContentPane.toggleDoNotDisturbNotifications);
 
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
@@ -253,5 +277,10 @@ var gContentPane = {
   {
     Components.utils.import("resource:///modules/translation/Translation.jsm");
     Translation.openProviderAttribution();
-  }
+  },
+
+  toggleDoNotDisturbNotifications: function (event)
+  {
+    AlertsService.manualDoNotDisturb = event.target.checked;
+  },
 };
