@@ -73,8 +73,6 @@ function setup_initial_values(id, ivalprop, prereqprop) {
 function test_property(property)
 {
   var info = gCSSProperties[property];
-  if (info.backend_only)
-    return;
 
   var keywords = ["initial"];
   if (!info.inherited && gTestUnset)

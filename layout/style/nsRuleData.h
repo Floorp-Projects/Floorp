@@ -77,8 +77,8 @@ struct nsRuleData
     // include that here since it includes us.
     MOZ_ASSERT(mSIDs & (1 << sid),
                "calling nsRuleData::ValueFor on property not in mSIDs");
-    MOZ_ASSERT(sid != eStyleStruct_BackendOnly && indexInStruct != size_t(-1),
-               "backend-only or logical property");
+    MOZ_ASSERT(indexInStruct != size_t(-1),
+               "logical property");
 
     return mValueStorage + mValueOffsets[sid] + indexInStruct;
   }
@@ -106,23 +106,18 @@ struct nsRuleData
       nsStyleStructID sid = eStyleStruct_##stylestruct_;                     \
       size_t indexInStruct =                                                 \
         nsCSSProps::PropertyIndexInStruct(eCSSProperty_##id_);               \
-      MOZ_ASSERT(sid != eStyleStruct_BackendOnly &&                          \
-                 indexInStruct != size_t(-1),                                \
-                 "backend-only property");                                   \
+      MOZ_ASSERT(indexInStruct != size_t(-1),                                \
+                 "logical property");                                        \
       return mValueStorage + mValueOffsets[sid] + indexInStruct;             \
     }                                                                        \
     const nsCSSValue* ValueFor##method_() const {                            \
       return const_cast<nsRuleData*>(this)->ValueFor##method_();             \
     }
-  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, pref_,           \
-                             parsevariant_, kwtable_)                        \
-    /* empty; backend-only structs are not in nsRuleData  */
   #define CSS_PROP_LIST_EXCLUDE_LOGICAL
   #include "nsCSSPropList.h"
   #undef CSS_PROP_LIST_EXCLUDE_LOGICAL
   #undef CSS_PROP
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
-  #undef CSS_PROP_BACKENDONLY
 
 private:
   inline size_t GetPoisonOffset();
