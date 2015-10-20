@@ -1858,6 +1858,9 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
       gfxInfo->GetAdapterVendorID(vendorID);
       gfxInfo->GetAdapterVendorID2(vendorID2);
       if (vendorID.EqualsLiteral("0x8086") && vendorID2.IsEmpty()) {
+        if (!gfxPrefs::LayersAMDSwitchableGfxEnabled()) {
+          return false;
+        }
         gfxCriticalError(CriticalLog::DefaultOptions(false)) << "PossiblyBrokenSurfaceSharing_UnexpectedAMDGPU";
       }
     }
@@ -1887,7 +1890,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   data.pSysMem = color;
   data.SysMemPitch = texture_size * 4;
   data.SysMemSlicePitch = 0;
-  if (FAILED(device->CreateTexture2D(&desc, &data, byRef(texture)))) {
+  if (FAILED(device->CreateTexture2D(&desc, &data, getter_AddRefs(texture)))) {
     return false;
   }
 
@@ -1924,12 +1927,12 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
   desc.MiscFlags = 0;
   desc.BindFlags = 0;
-  if (FAILED(device->CreateTexture2D(&desc, nullptr, byRef(cpuTexture)))) {
+  if (FAILED(device->CreateTexture2D(&desc, nullptr, getter_AddRefs(cpuTexture)))) {
     return false;
   }
 
-  nsRefPtr<IDXGIKeyedMutex> sharedMutex;
-  nsRefPtr<ID3D11DeviceContext> deviceContext;
+  RefPtr<IDXGIKeyedMutex> sharedMutex;
+  RefPtr<ID3D11DeviceContext> deviceContext;
   sharedResource->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sharedMutex));
   device->GetImmediateContext(getter_AddRefs(deviceContext));
   if (FAILED(sharedMutex->AcquireSync(0, 30*1000))) {
