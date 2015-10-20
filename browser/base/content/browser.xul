@@ -676,7 +676,7 @@
 
       <hbox id="nav-bar-customization-target" flex="1">
         <toolbaritem id="urlbar-container" flex="400" persist="width"
-                     title="&locationItem.title;" removable="false"
+                     removable="false"
                      class="chromeclass-location" overflows="false">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
@@ -799,16 +799,13 @@
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"
                              onclick="gURLBar.handleCommand(event);"
-                             aria-label="&goEndCap.tooltip;"
                              tooltiptext="&goEndCap.tooltip;"/>
               <toolbarbutton id="urlbar-reload-button"
                              class="chromeclass-toolbar-additional"
                              command="Browser:ReloadOrDuplicate"
                              onclick="checkForMiddleClick(this, event);"
-                             aria-label="&reloadButton.tooltip;"
                              tooltiptext="&reloadButton.tooltip;"/>
               <toolbarbutton id="urlbar-stop-button"
-                             aria-label="&stopButton.tooltip;"
                              class="chromeclass-toolbar-additional"
                              command="Browser:Stop"
                              tooltiptext="&stopButton.tooltip;"/>
