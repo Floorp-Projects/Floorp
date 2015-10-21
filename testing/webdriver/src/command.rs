@@ -704,9 +704,15 @@ pub struct AddCookieParameters {
 
 impl Parameters for AddCookieParameters {
     fn from_json(body: &Json) -> WebDriverResult<AddCookieParameters> {
-        let data = try_opt!(body.as_object(),
-                            ErrorStatus::InvalidArgument,
-                            "Message body was not an object");
+        if !body.is_object() {
+            return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                           "Message body was not an object"));
+        }
+
+        let data = try_opt!(body.find("cookie").and_then(|x| x.as_object()),
+                            ErrorStatus::UnableToSetCookie,
+                            "Cookie parameter not found or not an object");
+
         let name = try_opt!(
             try_opt!(data.get("name"),
                      ErrorStatus::InvalidArgument,
