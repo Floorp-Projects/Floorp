@@ -1697,7 +1697,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   transition: opacity 0.15s ease;
 }
 
-#navigator-toolbox:not(:hover) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#navigator-toolbox:not(:hover) .urlbar-history-dropmarker {
   opacity: 0;
 }
 
