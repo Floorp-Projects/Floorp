@@ -81,6 +81,8 @@ public:
 
   bool VideoIsHardwareAccelerated() const override;
 
+  void DisableHardwareAcceleration() override;
+
   bool IsWaitForDataSupported() override { return true; }
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
 
@@ -441,7 +443,6 @@ private:
 private:
   // For Media Resource Management
   void ReleaseMediaResourcesInternal() override;
-  void DisableHardwareAccelerationInternal() override;
 };
 
 } // namespace mozilla
