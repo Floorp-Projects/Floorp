@@ -8,7 +8,7 @@
                   android:enabled="false">
 
     <PreferenceScreen
-                      android:key="android.not_a_preference.customize_home"
+                      android:key="android.not_a_preference.general_home"
                       android:title="@string/pref_category_home"
                       android:summary="@string/pref_category_home_summary" >
         <intent android:action="android.intent.action.VIEW"

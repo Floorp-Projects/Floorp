@@ -191,7 +191,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
             boolean isMultiPane = Versions.feature11Plus &&
                                   ((PreferenceActivity) activity).isMultiPane();
-            resid = isMultiPane ? R.xml.preferences_customize_tablet : R.xml.preferences;
+            resid = isMultiPane ? R.xml.preferences_general_tablet : R.xml.preferences;
         }
 
         return resid;

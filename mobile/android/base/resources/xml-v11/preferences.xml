@@ -16,12 +16,12 @@
                                                   android:summary="@string/pref_sync_summary"
                                                   android:persistent="false" />
 
-    <PreferenceScreen android:title="@string/pref_category_customize"
-                      android:summary="@string/pref_category_customize_summary"
-                      android:key="android.not_a_preference.customize_screen"
+    <PreferenceScreen android:title="@string/pref_category_general"
+                      android:summary="@string/pref_category_general_summary"
+                      android:key="android.not_a_preference.general_screen"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
-               android:value="preferences_customize"/>
+               android:value="preferences_general"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_display"

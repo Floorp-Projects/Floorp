@@ -78,7 +78,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -154,7 +153,6 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
     public static final String PREFS_SUGGESTED_SITES = NON_PREF_PREFIX + "home_suggested_sites";
     public static final String PREFS_TAB_QUEUE = NON_PREF_PREFIX + "tab_queue";
-    public static final String PREFS_CUSTOMIZE_SCREEN = NON_PREF_PREFIX + "customize_screen";
     public static final String PREFS_TAB_QUEUE_LAST_SITE = NON_PREF_PREFIX + "last_site";
     public static final String PREFS_TAB_QUEUE_LAST_TIME = NON_PREF_PREFIX + "last_time";
 
@@ -247,8 +245,8 @@ OnSharedPreferenceChangeListener
             title = R.string.pref_category_language;
         } else if (res == R.xml.preferences_vendor) {
             title = R.string.pref_category_vendor;
-        } else if (res == R.xml.preferences_customize) {
-            title = R.string.pref_category_customize;
+        } else if (res == R.xml.preferences_general) {
+            title = R.string.pref_category_general;
         } else if (res == R.xml.preferences_search) {
             title = R.string.pref_category_search;
         }
@@ -344,7 +342,7 @@ OnSharedPreferenceChangeListener
 
                 // This is the default header, because it's the first one.
                 // I know, this is an affront to all human decency. And yet.
-                updateTitle(getString(R.string.pref_header_customize));
+                updateTitle(getString(R.string.pref_header_general));
             }
 
             if (onIsMultiPane()) {
@@ -472,7 +470,7 @@ OnSharedPreferenceChangeListener
             if (!onIsMultiPane()) {
                 fragmentArgs.putString(INTENT_EXTRA_RESOURCES, "preferences");
             } else {
-                fragmentArgs.putString(INTENT_EXTRA_RESOURCES, "preferences_customize_tablet");
+                fragmentArgs.putString(INTENT_EXTRA_RESOURCES, "preferences_general_tablet");
             }
         }
 
@@ -702,9 +700,6 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (pref instanceof PanelsPreferenceCategory) {
                     mPanelsPreferenceCategory = (PanelsPreferenceCategory) pref;
-                }
-                if(TabQueueHelper.TAB_QUEUE_ENABLED && PREFS_CUSTOMIZE_SCREEN.equals(key)) {
-                    pref.setSummary(getString(R.string.pref_category_customize_alt_summary));
                 }
                 if (getResources().getString(R.string.pref_category_input_options).equals(key)) {
                     if (!InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt)) &&
