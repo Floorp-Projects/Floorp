@@ -35,6 +35,7 @@ config = {
         "update_channel": "nightly",
         "graph_server_branch_name": "Firefox",
         'use_branch_in_symbols_extra_buildid': False,
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'mozilla-release': {
         'repo_path': 'releases/mozilla-release',
@@ -43,6 +44,7 @@ config = {
         'update_channel': 'release',
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'mozilla-beta': {
         'repo_path': 'releases/mozilla-beta',
@@ -51,18 +53,14 @@ config = {
         'update_channel': 'beta',
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'mozilla-aurora': {
         'repo_path': 'releases/mozilla-aurora',
         'update_channel': 'aurora',
         'branch_uses_per_checkin_strategy': True,
         'use_branch_in_symbols_extra_buildid': False,
-    },
-    'mozilla-esr31': {
-        'repo_path': 'releases/mozilla-esr31',
-        'update_channel': 'nightly-esr31',
-        'branch_uses_per_checkin_strategy': True,
-        'use_branch_in_symbols_extra_buildid': False,
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'try': {
         'repo_path': 'try',
@@ -73,6 +71,7 @@ config = {
         'include_post_upload_builddir': True,
         'release_to_try_builds': True,
         'use_branch_in_symbols_extra_buildid': False,
+        'stage_server': 'upload.trybld.productdelivery.prod.mozaws.net',
         'stage_username': 'trybld',
         'stage_ssh_key': 'trybld_dsa',
         'branch_supports_uploadsymbols': False,
@@ -82,21 +81,27 @@ config = {
     ### project branches
     'b2g-inbound': {
         'repo_path': 'integration/b2g-inbound',
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'fx-team': {
         'repo_path': 'integration/fx-team',
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'gum': {
         'branch_uses_per_checkin_strategy': True,
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'mozilla-inbound': {
         'repo_path': 'integration/mozilla-inbound',
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'services-central': {
         'repo_path': 'services/services-central',
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'ux': {
         "graph_server_branch_name": "UX",
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     # When build promotion goes live the mozconfig changes are probably better
     # expressed once in files like configs/builds/releng_base_windows_32_builds.py
@@ -119,25 +124,45 @@ config = {
                 'src_mozconfig': 'browser/config/mozconfigs/win64/beta',
             },
         },
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'cypress': {
         # bug 1164935
         'branch_uses_per_checkin_strategy': True,
-    }
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
 
     ### other branches that do not require anything special:
-    # 'alder': {},
-    # 'ash': {},
-    # 'birch': {},
+    'alder': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
+    'ash': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
+    'birch': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
     # 'build-system': {}
-    # 'cedar': {},
-    # 'elm': {},
-    # 'fig': {},
+    'cedar': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
+    'elm': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
+    'fig': {},
     # 'graphics': {}
     # 'holly': {},
-    # 'jamun': {},
-    # 'larch': {},
+    'jamun': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
+    'larch': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
     # 'maple': {},
-    # 'oak': {},
-    # 'pine': {}
+    'oak': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
+    'pine': {
+        'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+    },
 }
