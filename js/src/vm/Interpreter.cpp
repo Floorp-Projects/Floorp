@@ -84,8 +84,8 @@ LooseEqualityOp(JSContext* cx, InterpreterRegs& regs)
     return true;
 }
 
-JSObject*
-js::BoxNonStrictThis(JSContext* cx, HandleValue thisv)
+bool
+js::BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp)
 {
     /*
      * Check for SynthesizeFrame poisoning and fast constructors which
@@ -95,13 +95,16 @@ js::BoxNonStrictThis(JSContext* cx, HandleValue thisv)
 
     if (thisv.isNullOrUndefined()) {
         Rooted<GlobalObject*> global(cx, cx->global());
-        return GetThisObject(cx, global);
+        return GetThisValue(cx, global, vp);
     }
 
-    if (thisv.isObject())
-        return &thisv.toObject();
+    if (thisv.isObject()) {
+        vp.set(thisv);
+        return true;
+    }
 
-    return PrimitiveToObject(cx, thisv);
+    vp.setObject(*PrimitiveToObject(cx, thisv));
+    return true;
 }
 
 /*
@@ -133,12 +136,7 @@ js::BoxNonStrictThis(JSContext* cx, const CallReceiver& call)
     MOZ_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
 #endif
 
-    JSObject* thisObj = BoxNonStrictThis(cx, call.thisv());
-    if (!thisObj)
-        return false;
-
-    call.setThis(ObjectValue(*thisObj));
-    return true;
+    return BoxNonStrictThis(cx, call.thisv(), call.mutableThisv());
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -829,10 +827,8 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
             fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
             RootedObject thisObj(cx, &args.thisv().toObject());
-            JSObject* thisp = GetThisObject(cx, thisObj);
-            if (!thisp)
+            if (!GetThisValue(cx, thisObj, args.mutableThisv()))
                 return false;
-            args.setThis(ObjectValue(*thisp));
         }
     }
 
@@ -1029,20 +1025,11 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     } while ((s = s->enclosingScope()));
 #endif
 
-    ExecuteType type;
-    Value thisv;
-    if (script->module()) {
-        type = EXECUTE_MODULE;
-        thisv = UndefinedValue();
-    } else {
-        type = EXECUTE_GLOBAL;
+    ExecuteType type = script->module() ? EXECUTE_MODULE : EXECUTE_GLOBAL;
 
-        /* Use the scope chain as 'this', modulo outerization. */
-        JSObject* thisObj = GetThisObject(cx, scopeChain);
-        if (!thisObj)
-            return false;
-        thisv = ObjectValue(*thisObj);
-    }
+    RootedValue thisv(cx);
+    if (!GetThisValue(cx, scopeChain, &thisv))
+        return false;
 
     return ExecuteKernel(cx, script, *scopeChain, thisv, NullValue(), type,
                          NullFramePtr() /* evalInFrame */, rval);
@@ -1609,7 +1596,7 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  *    is what IsCacheableNonGlobalScope tests). Such objects-as-scopes must be
  *    censored with undefined.
  *
- * Otherwise, we bind |this| to GetThisObject(cx, obj). Only names inside
+ * Otherwise, we bind |this| to the result of GetThisValue(). Only names inside
  * |with| statements and embedding-specific scope objects fall into this
  * category.
  *
@@ -1632,12 +1619,7 @@ ComputeImplicitThis(JSContext* cx, HandleObject obj, MutableHandleValue vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    JSObject* nobj = GetThisObject(cx, obj);
-    if (!nobj)
-        return false;
-
-    vp.setObject(*nobj);
-    return true;
+    return GetThisValue(cx, obj, vp);
 }
 
 static MOZ_ALWAYS_INLINE bool

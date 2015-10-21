@@ -403,6 +403,7 @@ class ModuleEnvironmentObject : public CallObject
                                ObjectOpResult& result);
     static bool enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
                           bool enumerableOnly);
+    static bool thisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp);
 };
 
 typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
@@ -676,8 +677,10 @@ class DynamicWithObject : public NestedScopeObject
     }
 
     /* Return object for the 'this' class hook. */
-    JSObject& withThis() const {
-        return getReservedSlot(THIS_SLOT).toObject();
+    Value withThis() const {
+        Value thisValue = getReservedSlot(THIS_SLOT);
+        MOZ_ASSERT(thisValue.isObject());
+        return thisValue;
     }
 
     /*
