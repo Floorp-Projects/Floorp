@@ -451,7 +451,7 @@ RTCPeerConnection.prototype = {
           "RTCPeerConnection does not currently support multiple certificates",
           "NotSupportedError");
       }
-      let cert = certificates.find(c => c.expires.getTime() > Date.now());
+      let cert = certificates.find(c => c.expires > Date.now());
       if (!cert) {
         throw new this._win.DOMException(
           "Unable to create RTCPeerConnection with an expired certificate",
