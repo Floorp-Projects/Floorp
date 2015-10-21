@@ -189,6 +189,7 @@
   <string name="home_homepage_use_current_tab">&home_homepage_use_current_tab;</string>
 
   <string name="pref_header_general">&pref_header_general;</string>
+  <string name="pref_header_search">&pref_header_search;</string>
   <string name="pref_header_display">&pref_header_display;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
   <string name="pref_header_language">&pref_header_language;</string>
