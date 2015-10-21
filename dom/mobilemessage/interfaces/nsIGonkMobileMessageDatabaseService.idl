@@ -10,7 +10,7 @@
 interface nsIGonkMobileMessageDatabaseCallback : nsISupports
 {
   /**
-   * |aDomMessage|: the nsIDOMMoz{Mms,Sms}Message
+   * |aDomMessage|: the nsI{Mms,Sms}Message
    */
   void notify(in nsresult aRv, in nsISupports aDomMessage);
 };
@@ -20,7 +20,7 @@ interface nsIGonkMobileMessageDatabaseRecordCallback : nsISupports
 {
   /**
    * |aMessageRecord| Object: the mobile-message database record
-   * |aDomMessage|: the nsIDOMMoz{Mms,Sms}Message. Noted, this value might be null.
+   * |aDomMessage|: the nsI{Mms,Sms}Message. Noted, this value might be null.
    */
   void notify(in nsresult aRv, in jsval aMessageRecord, in nsISupports aDomMessage);
 };
