@@ -7,9 +7,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/Function.h"
-#include "mozilla/Logging.h"
-#include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsIDocShell.h"
@@ -24,10 +21,6 @@
 #include "PresentationService.h"
 #include "PresentationSessionInfo.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "nsIPresentationNetworkHelper.h"
-#endif // MOZ_WIDGET_ANDROID
-
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkInterface.h"
 #include "nsINetworkManager.h"
@@ -37,16 +30,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::services;
 
-inline static PRLogModuleInfo*
-GetPresentationSessionInfoLog()
-{
-  static PRLogModuleInfo* log = PR_NewLogModule("PresentationSessionInfo");
-  return log;
-}
-#undef LOG
-#define LOG(...) MOZ_LOG(GetPresentationSessionInfoLog(), mozilla::LogLevel::Error, (__VA_ARGS__))
-
-
 /*
  * Implementation of PresentationChannelDescription
  */
@@ -54,88 +37,13 @@ GetPresentationSessionInfoLog()
 namespace mozilla {
 namespace dom {
 
-#ifdef MOZ_WIDGET_ANDROID
-
-namespace {
-
-class PresentationNetworkHelper final : public nsIPresentationNetworkHelperListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPRESENTATIONNETWORKHELPERLISTENER
-
-  using Function = nsresult(PresentationControllingInfo::*)(const nsACString&);
-
-  explicit PresentationNetworkHelper(PresentationControllingInfo* aInfo,
-                                     const Function& aFunc);
-
-  nsresult GetWifiIPAddress();
-
-private:
-  ~PresentationNetworkHelper() = default;
-
-  RefPtr<PresentationControllingInfo> mInfo;
-  Function mFunc;
-};
-
-NS_IMPL_ISUPPORTS(PresentationNetworkHelper,
-                  nsIPresentationNetworkHelperListener)
-
-PresentationNetworkHelper::PresentationNetworkHelper(PresentationControllingInfo* aInfo,
-                                                     const Function& aFunc)
-  : mInfo(aInfo)
-  , mFunc(aFunc)
-{
-  MOZ_ASSERT(aInfo);
-  MOZ_ASSERT(aFunc);
-}
-
-nsresult
-PresentationNetworkHelper::GetWifiIPAddress()
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIPresentationNetworkHelper> networkHelper =
-    do_GetService(PRESENTATION_NETWORK_HELPER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return networkHelper->GetWifiIPAddress(this);
-}
-
-NS_IMETHODIMP
-PresentationNetworkHelper::OnError(const nsACString & aReason)
-{
-  LOG("PresentationNetworkHelper::OnError: %s",
-    nsPromiseFlatCString(aReason).get());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresentationNetworkHelper::OnGetWifiIPAddress(const nsACString& aIPAddress)
-{
-  MOZ_ASSERT(mInfo);
-  MOZ_ASSERT(mFunc);
-
-  NS_DispatchToMainThread(
-    NS_NewRunnableMethodWithArg<nsCString>(mInfo,
-                                           mFunc,
-                                           aIPAddress));
-  return NS_OK;
-}
-
-} // anonymous namespace
-
-#endif // MOZ_WIDGET_ANDROID
-
 class PresentationChannelDescription final : public nsIPresentationChannelDescription
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONCHANNELDESCRIPTION
 
-  PresentationChannelDescription(const nsACString& aAddress,
+  PresentationChannelDescription(nsACString& aAddress,
                                  uint16_t aPort)
     : mAddress(aAddress)
     , mPort(aPort)
@@ -479,9 +387,9 @@ PresentationControllingInfo::Shutdown(nsresult aReason)
 }
 
 nsresult
-PresentationControllingInfo::GetAddress()
+PresentationControllingInfo::GetAddress(nsACString& aAddress)
 {
-#if defined(MOZ_WIDGET_GONK)
+#ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsINetworkManager> networkManager =
     do_GetService("@mozilla.org/network/manager;1");
   if (NS_WARN_IF(!networkManager)) {
@@ -511,50 +419,16 @@ PresentationControllingInfo::GetAddress()
   // scenarios.
   nsAutoString ip;
   ip.Assign(ips[0]);
-
-  // On Android platform, the IP address is retrieved from a callback function.
-  // To make consistent code sequence, following function call is dispatched
-  // into main thread instead of calling it directly.
-  NS_DispatchToMainThread(
-    NS_NewRunnableMethodWithArg<nsCString>(
-      this,
-      &PresentationControllingInfo::OnGetAddress,
-      NS_ConvertUTF16toUTF8(ip)));
+  aAddress = NS_ConvertUTF16toUTF8(ip);
 
   NS_Free(prefixes);
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, ips);
-
-#elif defined(MOZ_WIDGET_ANDROID)
-  RefPtr<PresentationNetworkHelper> networkHelper =
-    new PresentationNetworkHelper(this,
-                                  &PresentationControllingInfo::OnGetAddress);
-  nsresult rv = networkHelper->GetWifiIPAddress();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
 #else
   // TODO Get host IP via other platforms.
+  aAddress.Truncate();
 #endif
 
   return NS_OK;
-}
-
-nsresult
-PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Prepare and send the offer.
-  int32_t port;
-  nsresult rv = mServerSocket->GetPort(&port);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  RefPtr<PresentationChannelDescription> description =
-    new PresentationChannelDescription(aAddress, static_cast<uint16_t>(port));
-  return mControlChannel->SendOffer(description);
 }
 
 // nsIPresentationControlChannelListener
@@ -588,8 +462,22 @@ PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescri
 NS_IMETHODIMP
 PresentationControllingInfo::NotifyOpened()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  return GetAddress();
+  // Prepare and send the offer.
+  int32_t port;
+  nsresult rv = mServerSocket->GetPort(&port);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString address;
+  rv = GetAddress(address);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  RefPtr<PresentationChannelDescription> description =
+    new PresentationChannelDescription(address, static_cast<uint16_t>(port));
+  return mControlChannel->SendOffer(description);
 }
 
 NS_IMETHODIMP
