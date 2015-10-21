@@ -278,5 +278,7 @@
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
     macro(Symbol_toStringTag, Symbol_toStringTag, "Symbol.toStringTag") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
+    /* Function names for properties named by symbols. */ \
+    macro(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]") \
 
 #endif /* vm_CommonPropertyNames_h */

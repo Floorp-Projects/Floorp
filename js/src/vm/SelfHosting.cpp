@@ -524,6 +524,48 @@ intrinsic_IsStringIterator(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_NewListIterator(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    RootedObject proto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, cx->global()));
+    if (!proto)
+        return false;
+
+    RootedObject iterator(cx);
+    iterator = NewObjectWithGivenProto(cx, &ListIteratorObject::class_, proto);
+    if (!iterator)
+        return false;
+
+    args.rval().setObject(*iterator);
+    return true;
+}
+
+static bool
+intrinsic_ActiveFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    ScriptFrameIter iter(cx);
+    MOZ_ASSERT(iter.isFunctionFrame());
+    args.rval().setObject(*iter.callee(cx));
+    return true;
+}
+
+static bool
+intrinsic_IsListIterator(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    args.rval().setBoolean(args[0].toObject().is<ListIteratorObject>());
+    return true;
+}
+
+static bool
 intrinsic_IsStarGeneratorObject(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1338,6 +1380,22 @@ intrinsic_CreateImportBinding(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 3);
+    RootedObject environment(cx, &args[0].toObject());
+    RootedId name(cx, AtomToId(&args[1].toString()->asAtom()));
+    MOZ_ASSERT(args[2].toObject().is<ModuleNamespaceObject>());
+    const unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+    if (!DefineProperty(cx, environment, name, args[2], nullptr, nullptr, attrs))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 intrinsic_SetModuleEvaluated(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1355,6 +1413,58 @@ intrinsic_EvaluateModule(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 1);
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
     return ModuleObject::evaluate(cx, module, args.rval());
+}
+
+static bool
+intrinsic_IsModuleNamespace(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    args.rval().setBoolean(args[0].toObject().is<ModuleNamespaceObject>());
+    return true;
+}
+
+static bool
+intrinsic_NewModuleNamespace(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    RootedArrayObject exports(cx, &args[1].toObject().as<ArrayObject>());
+    RootedObject namespace_(cx, ModuleObject::createNamespace(cx, module, exports));
+    if (!namespace_)
+        return false;
+
+    args.rval().setObject(*namespace_);
+    return true;
+}
+
+static bool
+intrinsic_AddModuleNamespaceBinding(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 4);
+    RootedModuleNamespaceObject namespace_(cx, &args[0].toObject().as<ModuleNamespaceObject>());
+    RootedAtom exportedName(cx, &args[1].toString()->asAtom());
+    RootedModuleObject targetModule(cx, &args[2].toObject().as<ModuleObject>());
+    RootedAtom localName(cx, &args[3].toString()->asAtom());
+    if (!namespace_->addBinding(cx, exportedName, targetModule, localName))
+        return false;
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+intrinsic_ModuleNamespaceExports(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedModuleNamespaceObject namespace_(cx, &args[0].toObject().as<ModuleNamespaceObject>());
+    args.rval().setObject(namespace_->exports());
+    return true;
 }
 
 // The self-hosting global isn't initialized with the normal set of builtins.
@@ -1477,12 +1587,19 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallArrayIteratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<ArrayIteratorObject>>,      2,0),
 
+    JS_FN("NewListIterator",         intrinsic_NewListIterator,         0,0),
+    JS_FN("CallListIteratorMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<ListIteratorObject>>,       2,0),
+    JS_FN("ActiveFunction",          intrinsic_ActiveFunction,          0,0),
+
     JS_INLINABLE_FN("IsArrayIterator", intrinsic_IsArrayIterator,       1,0,
                     IntrinsicIsArrayIterator),
     JS_INLINABLE_FN("IsMapIterator",   intrinsic_IsMapIterator,         1,0,
                     IntrinsicIsMapIterator),
     JS_INLINABLE_FN("IsStringIterator",intrinsic_IsStringIterator,      1,0,
                     IntrinsicIsStringIterator),
+    JS_INLINABLE_FN("IsListIterator",intrinsic_IsListIterator,          1,0,
+                    IntrinsicIsListIterator),
 
     JS_FN("_GetNextMapEntryForIterator", intrinsic_GetNextMapEntryForIterator, 3,0),
     JS_FN("CallMapIteratorMethodIfWrapped",
@@ -1606,8 +1723,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("GetModuleEnvironment", intrinsic_GetModuleEnvironment, 1, 0),
     JS_FN("CreateModuleEnvironment", intrinsic_CreateModuleEnvironment, 1, 0),
     JS_FN("CreateImportBinding", intrinsic_CreateImportBinding, 4, 0),
+    JS_FN("CreateNamespaceBinding", intrinsic_CreateNamespaceBinding, 3, 0),
     JS_FN("SetModuleEvaluated", intrinsic_SetModuleEvaluated, 1, 0),
     JS_FN("EvaluateModule", intrinsic_EvaluateModule, 1, 0),
+    JS_FN("IsModuleNamespace", intrinsic_IsModuleNamespace, 1, 0),
+    JS_FN("NewModuleNamespace", intrinsic_NewModuleNamespace, 2, 0),
+    JS_FN("AddModuleNamespaceBinding", intrinsic_AddModuleNamespaceBinding, 4, 0),
+    JS_FN("ModuleNamespaceExports", intrinsic_ModuleNamespaceExports, 1, 0),
 
     JS_FS_END
 };

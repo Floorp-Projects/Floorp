@@ -105,6 +105,7 @@
     _(IntrinsicIsArrayIterator)     \
     _(IntrinsicIsMapIterator)       \
     _(IntrinsicIsStringIterator)    \
+    _(IntrinsicIsListIterator)      \
                                     \
     _(IntrinsicIsTypedArray)        \
     _(IntrinsicIsPossiblyWrappedTypedArray) \

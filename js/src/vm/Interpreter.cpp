@@ -5019,13 +5019,20 @@ js::NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject)
 }
 
 void
-js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandlePropertyName name)
+js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id)
 {
     MOZ_ASSERT(errorNumber == JSMSG_UNINITIALIZED_LEXICAL ||
                errorNumber == JSMSG_BAD_CONST_ASSIGN);
     JSAutoByteString printable;
-    if (AtomToPrintableString(cx, name, &printable))
+    if (ValueToPrintable(cx, IdToValue(id), &printable))
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, errorNumber, printable.ptr());
+}
+
+void
+js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandlePropertyName name)
+{
+    RootedId id(cx, NameToId(name));
+    ReportRuntimeLexicalError(cx, errorNumber, id);
 }
 
 void
