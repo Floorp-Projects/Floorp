@@ -396,6 +396,9 @@ class BaselineFrame
     bool isFunctionFrame() const {
         return CalleeTokenIsFunction(calleeToken());
     }
+    bool isModuleFrame() const {
+        return CalleeTokenIsModuleScript(calleeToken());
+    }
     bool isGlobalFrame() const {
         return !CalleeTokenIsFunction(calleeToken());
     }

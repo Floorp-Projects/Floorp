@@ -40,6 +40,11 @@ ComputeThis(JSContext* cx, AbstractFramePtr frame)
         return true;
     }
 
+    if (frame.isModuleFrame()) {
+        MOZ_ASSERT(frame.thisValue().isUndefined());
+        return true;
+    }
+
     if (frame.thisValue().isObject())
         return true;
     RootedValue thisv(cx, frame.thisValue());
