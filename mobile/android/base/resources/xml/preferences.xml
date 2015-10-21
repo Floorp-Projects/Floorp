@@ -28,6 +28,18 @@
         </intent>
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_search"
+                      android:summary="@string/pref_category_search_summary"
+                      android:key="android.not_a_preference.search_screen">
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@string/android_package_name"
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                android:name="resource"
+                android:value="preferences_search" />
+        </intent>
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_display"
                       android:summary="@string/pref_category_display_summary" >
         <intent android:action="android.intent.action.VIEW"
