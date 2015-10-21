@@ -83,13 +83,22 @@ Assembler::finish()
 
     // The jump relocation table starts with a fixed-width integer pointing
     // to the start of the extended jump table.
-    // Space for this integer is allocated by Assembler::addJumpRelocation()
-    // before writing the first entry.
-    // Don't touch memory if we saw an OOM error.
-    if (jumpRelocations_.length() && !oom()) {
-        MOZ_ASSERT(jumpRelocations_.length() >= sizeof(uint32_t));
-        *(uint32_t*)jumpRelocations_.buffer() = ExtendedJumpTable_.getOffset();
+    if (tmpJumpRelocations_.length())
+        jumpRelocations_.writeFixedUint32_t(toFinalOffset(ExtendedJumpTable_));
+
+    for (unsigned int i = 0; i < tmpJumpRelocations_.length(); i++) {
+        JumpRelocation& reloc = tmpJumpRelocations_[i];
+
+        // Each entry in the relocations table is an (offset, extendedTableIndex) pair.
+        jumpRelocations_.writeUnsigned(toFinalOffset(reloc.jump));
+        jumpRelocations_.writeUnsigned(reloc.extendedTableIndex);
     }
+
+    for (unsigned int i = 0; i < tmpDataRelocations_.length(); i++)
+        dataRelocations_.writeUnsigned(toFinalOffset(tmpDataRelocations_[i]));
+
+    for (unsigned int i = 0; i < tmpPreBarriers_.length(); i++)
+        preBarriers_.writeUnsigned(toFinalOffset(tmpPreBarriers_[i]));
 }
 
 BufferOffset
@@ -147,9 +156,9 @@ Assembler::executableCopy(uint8_t* buffer)
         }
 
         Instruction* target = (Instruction*)rp.target;
-        Instruction* branch = (Instruction*)(buffer + rp.offset.getOffset());
+        Instruction* branch = (Instruction*)(buffer + toFinalOffset(rp.offset));
         JumpTableEntry* extendedJumpTable =
-            reinterpret_cast<JumpTableEntry*>(buffer + ExtendedJumpTable_.getOffset());
+            reinterpret_cast<JumpTableEntry*>(buffer + toFinalOffset(ExtendedJumpTable_));
         if (branch->BranchType() != vixl::UnknownBranchType) {
             if (branch->IsTargetReachable(target)) {
                 branch->SetImmPCOffsetTarget(target);
@@ -212,10 +221,7 @@ void
 Assembler::bind(Label* label, BufferOffset targetOffset)
 {
     // Nothing has seen the label yet: just mark the location.
-    // If we've run out of memory, don't attempt to modify the buffer which may
-    // not be there. Just mark the label as bound to the (possibly bogus)
-    // targetOffset.
-    if (!label->used() || oom()) {
+    if (!label->used()) {
         label->bind(targetOffset.getOffset());
         return;
     }
@@ -253,9 +259,7 @@ void
 Assembler::bind(RepatchLabel* label)
 {
     // Nothing has seen the label yet: just mark the location.
-    // If we've run out of memory, don't attempt to modify the buffer which may
-    // not be there. Just mark the label as bound to nextOffset().
-    if (!label->used() || oom()) {
+    if (!label->used()) {
         label->bind(nextOffset().getOffset());
         return;
     }
@@ -289,16 +293,8 @@ Assembler::addJumpRelocation(BufferOffset src, Relocation::Kind reloc)
     // Only JITCODE relocations are patchable at runtime.
     MOZ_ASSERT(reloc == Relocation::JITCODE);
 
-    // The jump relocation table starts with a fixed-width integer pointing
-    // to the start of the extended jump table. But, we don't know the
-    // actual extended jump table offset yet, so write a 0 which we'll
-    // patch later in Assembler::finish().
-    if (!jumpRelocations_.length())
-        jumpRelocations_.writeFixedUint32_t(0);
-
-    // Each entry in the table is an (offset, extendedTableIndex) pair.
-    jumpRelocations_.writeUnsigned(src.getOffset());
-    jumpRelocations_.writeUnsigned(pendingJumps_.length());
+    // Each relocation requires an entry in the extended jump table.
+    tmpJumpRelocations_.append(JumpRelocation(src, pendingJumps_.length()));
 }
 
 void
