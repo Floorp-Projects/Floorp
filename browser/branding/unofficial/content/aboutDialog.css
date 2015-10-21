@@ -9,6 +9,16 @@
   color: #fff;
 }
 
+/* Use inverted spinner icon on the dark background */
+.update-throbber {
+  list-style-image: url("chrome://global/skin/icons/loading-inverted.png");
+}
+@media (min-resolution: 1.1dppx) {
+  .update-throbber {
+    list-style-image: url("chrome://global/skin/icons/loading-inverted@2x.png");
+  }
+}
+
 .text-link {
   color: #fff !important;
   text-decoration: underline;
