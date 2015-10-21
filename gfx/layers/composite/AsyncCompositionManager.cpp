@@ -134,13 +134,19 @@ AsyncCompositionManager::ResolveRefLayers(CompositorParent* aCompositor,
     *aHasRemoteContent = false;
   }
 
+  // If valid *aResolvePlugins indicates if we need to update plugin geometry
+  // when we walk the tree.
+  bool willResolvePlugins = (aResolvePlugins && *aResolvePlugins);
   if (!mLayerManager->GetRoot()) {
+    // Updated the return value since this result controls completing composition.
+    if (aResolvePlugins) {
+      *aResolvePlugins = false;
+    }
     return;
   }
 
   mReadyForCompose = true;
   bool hasRemoteContent = false;
-  bool willResolvePlugins = (aResolvePlugins && *aResolvePlugins);
   bool didResolvePlugins = false;
   WalkTheTree<Resolve>(mLayerManager->GetRoot(),
                        mReadyForCompose,
