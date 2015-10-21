@@ -47,9 +47,6 @@ UNIFIED_SOURCES += [
     'woff2.cc',
 ]
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
-
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
 
@@ -57,10 +54,6 @@ FINAL_LIBRARY = 'gkmedias'
 
 DEFINES['PACKAGE_VERSION'] = '"moz"'
 DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
-
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    DEFINES['OTS_DLL'] = True
-    DEFINES['OTS_DLL_EXPORTS'] = True
 
 USE_LIBS += [
     'brotli',

@@ -5,6 +5,8 @@
 function test() {
   //initialization
   waitForExplicitFinish();
+  let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
+                                     .getService(Components.interfaces.nsIAboutNewTabService);
   let newTabURL;
   let testURL = "http://example.com/";
   let mode;
@@ -16,15 +18,15 @@ function test() {
         newTabURL = "about:privatebrowsing";
       } else {
         mode = "normal";
-        newTabURL = NewTabURL.get();
+        newTabURL = aboutNewTabService.newTabURL;
       }
 
       // Check the new tab opened while in normal/private mode
       is(aWindow.gBrowser.selectedBrowser.currentURI.spec, newTabURL,
         "URL of NewTab should be " + newTabURL + " in " + mode +  " mode");
       // Set the custom newtab url
-      NewTabURL.override(testURL);
-      is(NewTabURL.get(), testURL, "Custom newtab url is set");
+      aboutNewTabService.newTabURL = testURL;
+      is(aboutNewTabService.newTabURL, testURL, "Custom newtab url is set");
 
       // Open a newtab after setting the custom newtab url
       openNewTab(aWindow, function () {
@@ -32,8 +34,8 @@ function test() {
            "URL of NewTab should be the custom url");
 
         // Clear the custom url.
-        NewTabURL.reset();
-        is(NewTabURL.get(), "about:newtab", "No custom newtab url is set");
+        aboutNewTabService.resetNewTabURL();
+        is(aboutNewTabService.newTabURL, "about:newtab", "No custom newtab url is set");
 
         aWindow.gBrowser.removeTab(aWindow.gBrowser.selectedTab);
         aWindow.gBrowser.removeTab(aWindow.gBrowser.selectedTab);
@@ -50,7 +52,7 @@ function test() {
   }
 
   // check whether any custom new tab url has been configured
-  ok(!NewTabURL.overridden, "No custom newtab url is set");
+  ok(!aboutNewTabService.overridden, "No custom newtab url is set");
 
   // test normal mode
   testOnWindow(false, function(aWindow) {

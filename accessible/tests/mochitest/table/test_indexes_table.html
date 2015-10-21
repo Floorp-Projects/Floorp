@@ -128,14 +128,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       ];
       testTableIndexes("tableinsane6", idxes);
 
-      //////////////////////////////////////////////////////////////////////////
-      // csstablecrazy1 (no rows)
-      idxes = [
-        [0,  1]
-      ];
-
-      testTableIndexes("csstablecrazy1", idxes);
-
       SimpleTest.finish();
     }
 
@@ -149,11 +141,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
      title="GetIndexAt and GetRowAtIndex and GetColumnAtIndex on HTML tables are inconsistent"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">
    Bug 410052
-  </a>
-  <a target="_blank"
-     title="Table cell accessibles not exposed for CSS table without table-row "
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=834120">
-   Bug 834120
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -418,12 +405,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410052
       </tr>
     </tbody>
   </table>
-
-  <div id="csstablecrazy1"
-       style="width: 100%; border: 1px solid red; display:table;">
-    <div style="display:table-cell;">cell1</div>
-    <div style="display:table-cell;">cell2</div>
-  </div>
 
 </body>
 </html>

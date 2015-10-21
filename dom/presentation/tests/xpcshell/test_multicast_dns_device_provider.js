@@ -119,6 +119,14 @@ MockDNSServiceInfo.prototype = {
     return this._host;
   },
 
+  set address(aAddress) {
+    this._address = aAddress;
+  },
+
+  get address() {
+    return this._address;
+  },
+
   set port(aPort) {
     this._port = aPort;
   },
@@ -187,6 +195,7 @@ function createDevice(host, port, serviceName, serviceType, domainName, attribut
   let device = new MockDNSServiceInfo();
   device.host = host || "";
   device.port = port || 0;
+  device.address = host || "";
   device.serviceName = serviceName || "";
   device.serviceType = serviceType || "";
   device.domainName = domainName || "";
@@ -432,7 +441,7 @@ function handleSessionRequest() {
   let controlChannel = listener.device.establishControlChannel(testUrl, testPresentationId);
 
   Assert.equal(mockServerObj.request.deviceInfo.id, mockDevice.host);
-  Assert.equal(mockServerObj.request.deviceInfo.host, mockDevice.host);
+  Assert.equal(mockServerObj.request.deviceInfo.address, mockDevice.host);
   Assert.equal(mockServerObj.request.deviceInfo.port, mockDevice.port);
   Assert.equal(mockServerObj.request.url, testUrl);
   Assert.equal(mockServerObj.request.presentationId, testPresentationId);
@@ -505,7 +514,7 @@ function handleOnSessionRequest() {
   const deviceInfo = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
     id: mockDevice.host,
-    host: mockDevice.host,
+    address: mockDevice.host,
     port: 54321,
   };
 
@@ -574,7 +583,7 @@ function handleOnSessionRequestFromUnknownDevice() {
   const deviceInfo = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
     id: "unknown-device.local",
-    host: "unknown-device.local",
+    address: "unknown-device.local",
     port: 12345,
   };
 

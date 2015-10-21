@@ -7,20 +7,16 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Video/Audio')
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    GeckoSharedLibrary('gkmedias', linkage=None)
-    USE_LIBS += [
-        'nspr',
-    ]
-else:
-    Library('gkmedias')
-
+# media/webrtc/signaling/test/common.build uses the gkmedias library,
+# expecting at least some of what it contains to be linked, but not libxul,
+# so we need to keep an independent pseudo-library, as well as the OS_LIBS
+# on Windows for them to propagate there.
+Library('gkmedias')
 
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['webrtc']
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFFILE = 'symbols.def'
     OS_LIBS += [
         'usp10',
         'ole32',

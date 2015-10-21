@@ -25,13 +25,16 @@ namespace dom {
 
 // Implements media TimeRanges:
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
-class TimeRanges final : public nsIDOMTimeRanges
+class TimeRanges final : public nsIDOMTimeRanges,
+                         public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TimeRanges)
   NS_DECL_NSIDOMTIMERANGES
 
   TimeRanges();
+  explicit TimeRanges(nsISupports* aParent);
 
   void Add(double aStart, double aEnd);
 
@@ -50,7 +53,9 @@ public:
   // Mutate this TimeRange to be the intersection of this and aOtherRanges.
   void Intersection(const TimeRanges* aOtherRanges);
 
-  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandle<JSObject*> aReflector);
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  nsISupports* GetParentObject() const;
 
   uint32_t Length() const
   {
@@ -89,6 +94,8 @@ private:
   };
 
   nsAutoTArray<TimeRange,4> mRanges;
+
+  nsCOMPtr<nsISupports> mParent;
 
 public:
   typedef nsTArray<TimeRange>::index_type index_type;

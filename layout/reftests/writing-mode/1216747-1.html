@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<style>
+
+div {
+  width: -moz-min-content;
+}
+
+</style>
+
+<!-- If you delete this div, the bug goes away, because we don't cache
+     vertical-specific data in the rule tree.  -->
+<div style="writing-mode: vertical-rl"></div>
+
+<div>This should have min-content width (i.e., many line breaks).</div>

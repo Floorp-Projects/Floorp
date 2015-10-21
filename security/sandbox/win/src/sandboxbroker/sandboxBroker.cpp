@@ -297,13 +297,9 @@ SandboxBroker::SetSecurityLevelForGMPlugin()
 
   auto result = mPolicy->SetJobLevel(sandbox::JOB_LOCKDOWN, 0);
   bool ret = (sandbox::SBOX_ALL_OK == result);
-  if (base::win::GetVersion() < base::win::VERSION_VISTA) {
-    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                    sandbox::USER_LOCKDOWN);
-  } else {
-    result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                                    sandbox::USER_RESTRICTED);
-  }
+
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                  sandbox::USER_LOCKDOWN);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   result = mPolicy->SetAlternateDesktop(true);

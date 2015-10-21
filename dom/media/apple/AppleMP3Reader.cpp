@@ -351,7 +351,8 @@ GetProperty(AudioFileStreamID aAudioFileStream,
 
 
 nsresult
-AppleMP3Reader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+AppleMP3Reader::ReadMetadata(MediaInfo* aInfo,
+                             MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
 

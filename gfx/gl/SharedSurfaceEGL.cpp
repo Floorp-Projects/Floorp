@@ -106,6 +106,12 @@ SharedSurface_EGLImage::~SharedSurface_EGLImage()
     }
 }
 
+layers::TextureFlags
+SharedSurface_EGLImage::GetTextureFlags() const
+{
+    return layers::TextureFlags::DEALLOCATE_CLIENT;
+}
+
 void
 SharedSurface_EGLImage::Fence()
 {

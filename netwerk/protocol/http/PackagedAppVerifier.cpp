@@ -128,7 +128,7 @@ PackagedAppVerifier::WriteManifest(nsIInputStream* aStream,
                                    uint32_t* aWriteCount)
 {
   LOG(("WriteManifest: length %u", aCount));
-  LOG(("%s", aFromRawSegment));
+  LOG(("%s", nsCString(aFromRawSegment, aCount).get()));
   nsCString* manifest = static_cast<nsCString*>(aManifest);
   manifest->AppendASCII(aFromRawSegment, aCount);
   *aWriteCount = aCount;
@@ -277,7 +277,8 @@ PackagedAppVerifier::VerifyManifest(const ResourceCacheInfo* aInfo)
 
   LOG(("Signature: length = %u\n%s", mSignature.Length(), mSignature.get()));
   LOG(("Manifest: length = %u\n%s", mManifest.Length(), mManifest.get()));
-  nsresult rv = mPackagedAppUtils->VerifyManifest(mSignature, mManifest, this);
+  nsresult rv = mPackagedAppUtils->VerifyManifest(mSignature, mManifest,
+                                                  this, gDeveloperMode);
   if (NS_FAILED(rv)) {
     LOG(("VerifyManifest FAILED rv = %u", (unsigned)rv));
   }
@@ -302,12 +303,6 @@ PackagedAppVerifier::VerifyResource(const ResourceCacheInfo* aInfo)
   if (!resourceHash) {
     LOG(("Hash value for %s is not computed. ERROR!", uriAsAscii.get()));
     MOZ_CRASH();
-  }
-
-  if (gDeveloperMode) {
-    LOG(("Developer mode! Bypass integrity check."));
-    FireVerifiedEvent(false, true);
-    return;
   }
 
   if (mSignature.IsEmpty()) {

@@ -754,6 +754,7 @@ struct JSCompartment
         DeprecatedNoSuchMethod = 6,         // JS 1.7+
         DeprecatedFlagsArgument = 7,        // JS 1.3 or older
         // NO LONGER USING 8
+        DeprecatedRestoredRegExpStatics = 9,// Unknown
         DeprecatedLanguageExtensionCount
     };
 

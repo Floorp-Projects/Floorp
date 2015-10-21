@@ -3098,6 +3098,9 @@ static bool
 IsPropertySetInlineable(NativeObject* obj, HandleId id, MutableHandleShape pshape,
                         ConstantOrRegister val, bool needsTypeBarrier, bool* checkTypeset)
 {
+    // CanInlineSetPropTypeCheck assumes obj has a non-lazy group.
+    MOZ_ASSERT(!obj->hasLazyGroup());
+
     // Do a pure non-proto chain climbing lookup. See note in
     // CanAttachNativeGetProp.
     pshape.set(obj->lookupPure(id));
@@ -3533,15 +3536,12 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
     RootedPropertyName name(cx, cache.name());
     RootedId id(cx, AtomToId(name));
 
-    bool emitted = false;
-    bool tryNativeAddSlot = false;
-    if (!cache.tryAttachStub(cx, outerScript, ion, obj, id, &emitted, &tryNativeAddSlot))
-        return false;
-
     // Remember the old group and shape if we may attach an add-property stub.
+    // Also, some code under tryAttachStub depends on obj having a non-lazy
+    // group, see for instance CanInlineSetPropTypeCheck.
     RootedObjectGroup oldGroup(cx);
     RootedShape oldShape(cx);
-    if (!emitted) {
+    if (cache.canAttachStub()) {
         oldGroup = obj->getGroup(cx);
         if (!oldGroup)
             return false;
@@ -3553,6 +3553,11 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
                 oldShape = expando->lastProperty();
         }
     }
+
+    bool emitted = false;
+    bool tryNativeAddSlot = false;
+    if (!cache.tryAttachStub(cx, outerScript, ion, obj, id, &emitted, &tryNativeAddSlot))
+        return false;
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
     if (JSOp(*cache.pc()) == JSOP_INITGLEXICAL) {
