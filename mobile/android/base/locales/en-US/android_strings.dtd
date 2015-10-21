@@ -208,7 +208,6 @@
 <!ENTITY pref_header_accessibility "Accessibility">
 <!ENTITY pref_header_advanced "Advanced">
 <!ENTITY pref_header_help "Help">
-<!ENTITY pref_header_language "Language">
 <!ENTITY pref_header_vendor "&vendorShortName;">
 
 <!ENTITY pref_cookies_menu "Cookies">
