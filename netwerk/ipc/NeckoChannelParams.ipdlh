@@ -26,17 +26,18 @@ namespace net {
 
 struct LoadInfoArgs
 {
-  PrincipalInfo   requestingPrincipalInfo;
-  PrincipalInfo   triggeringPrincipalInfo;
-  uint32_t        securityFlags;
-  uint32_t        contentPolicyType;
-  bool            upgradeInsecureRequests;
-  uint64_t        innerWindowID;
-  uint64_t        outerWindowID;
-  uint64_t        parentOuterWindowID;
-  bool            enforceSecurity;
-  bool            initialSecurityCheckDone;
-  PrincipalInfo[] redirectChain;
+  PrincipalInfo    requestingPrincipalInfo;
+  PrincipalInfo    triggeringPrincipalInfo;
+  uint32_t         securityFlags;
+  uint32_t         contentPolicyType;
+  bool             upgradeInsecureRequests;
+  uint64_t         innerWindowID;
+  uint64_t         outerWindowID;
+  uint64_t         parentOuterWindowID;
+  bool             enforceSecurity;
+  bool             initialSecurityCheckDone;
+  OriginAttributes originAttributes;
+  PrincipalInfo[]  redirectChain;
 };
 
 /**
