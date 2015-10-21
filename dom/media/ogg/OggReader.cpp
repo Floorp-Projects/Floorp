@@ -371,8 +371,8 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
   }
 }
 
-nsresult
-OggReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
+                                 MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
 
