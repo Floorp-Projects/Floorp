@@ -2305,6 +2305,36 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
   clearSingleTextChild: function() {
     this.singleTextChild = undefined;
     this.editor.updateTextEditor();
+  },
+
+  /**
+   * Trigger new attribute field for input.
+   */
+  addAttribute: function() {
+    this.editor.newAttr.editMode();
+  },
+
+  /**
+   * Trigger attribute field for editing.
+   */
+  editAttribute: function(attrName) {
+    this.editor.attrElements.get(attrName).editMode();
+  },
+
+  /**
+   * Remove attribute from container.
+   * This is an undoable action.
+   */
+  removeAttribute: function(attrName) {
+    let doMods = this.editor._startModifyingAttributes();
+    let undoMods = this.editor._startModifyingAttributes();
+    this.editor._saveAttribute(attrName, undoMods);
+    doMods.removeAttribute(attrName);
+    this.undo.do(() => {
+      doMods.apply();
+    }, () => {
+      undoMods.apply();
+    });
   }
 });
 
@@ -2361,6 +2391,13 @@ function GenericEditor(aContainer, aNode) {
 GenericEditor.prototype = {
   destroy: function() {
     this.elt.remove();
+  },
+
+  /**
+   * Stub method for consistency with ElementEditor.
+   */
+  getInfoAtNode: function() {
+    return null;
   }
 };
 
@@ -2443,7 +2480,14 @@ TextEditor.prototype = {
     }
   },
 
-  destroy: function() {}
+  destroy: function() {},
+
+  /**
+   * Stub method for consistency with ElementEditor.
+   */
+  getInfoAtNode: function() {
+    return null;
+  }
 };
 
 /**
@@ -2497,18 +2541,14 @@ function ElementEditor(aContainer, aNode) {
         return;
       }
 
-      try {
-        let doMods = this._startModifyingAttributes();
-        let undoMods = this._startModifyingAttributes();
-        this._applyAttributes(aVal, null, doMods, undoMods);
-        this.container.undo.do(() => {
-          doMods.apply();
-        }, function() {
-          undoMods.apply();
-        });
-      } catch(x) {
-        console.error(x);
-      }
+      let doMods = this._startModifyingAttributes();
+      let undoMods = this._startModifyingAttributes();
+      this._applyAttributes(aVal, null, doMods, undoMods);
+      this.container.undo.do(() => {
+        doMods.apply();
+      }, function() {
+        undoMods.apply();
+      });
     }
   });
 
@@ -2539,6 +2579,35 @@ ElementEditor.prototype = {
     this.animationTimers[attrName] = setTimeout(() => {
       flashElementOff(this.getAttributeElement(attrName));
     }, this.markup.CONTAINER_FLASHING_DURATION);
+  },
+  /**
+   * Returns information about node in the editor.
+   *
+   * @param {DOMNode} node
+   *        The node to get information from.
+   *
+   * @return {Object}
+   *         An object literal with the following information:
+   *         {type: "attribute", name: "rel", value: "index", el: node}
+   */
+  getInfoAtNode: function(node) {
+    if (!node) {
+      return null;
+    }
+
+    let type = null;
+    let name = null;
+    let value = null;
+
+    // Attribute
+    let attribute = node.closest('.attreditor');
+    if (attribute) {
+      type = "attribute";
+      name = attribute.querySelector('.attr-name').textContent;
+      value = attribute.querySelector('.attr-value').textContent;
+    }
+
+    return {type, name, value, el: node};
   },
 
   /**
@@ -2697,19 +2766,15 @@ ElementEditor.prototype = {
         // Remove the attribute stored in this editor and re-add any attributes
         // parsed out of the input element. Restore original attribute if
         // parsing fails.
-        try {
-          this.refocusOnEdit(aAttr.name, attr, direction);
-          this._saveAttribute(aAttr.name, undoMods);
-          doMods.removeAttribute(aAttr.name);
-          this._applyAttributes(aVal, attr, doMods, undoMods);
-          this.container.undo.do(() => {
-            doMods.apply();
-          }, () => {
-            undoMods.apply();
-          });
-        } catch(ex) {
-          console.error(ex);
-        }
+        this.refocusOnEdit(aAttr.name, attr, direction);
+        this._saveAttribute(aAttr.name, undoMods);
+        doMods.removeAttribute(aAttr.name);
+        this._applyAttributes(aVal, attr, doMods, undoMods);
+        this.container.undo.do(() => {
+          doMods.apply();
+        }, () => {
+          undoMods.apply();
+        });
       }
     });
 
