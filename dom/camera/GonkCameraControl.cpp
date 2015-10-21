@@ -87,6 +87,7 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
   , mCapturePoster(false)
   , mAutoFocusPending(false)
   , mAutoFocusCompleteExpired(0)
+  , mPrevFacesDetected(0)
   , mReentrantMonitor("GonkCameraControl::OnTakePicture.Monitor")
 {
   // Constructor runs on the main thread...
@@ -1557,6 +1558,11 @@ nsGonkCameraControl::OnFacesDetected(camera_frame_metadata_t* aMetaData)
 
   nsTArray<Face> faces;
   uint32_t numFaces = aMetaData->number_of_faces;
+  if (numFaces == 0 && mPrevFacesDetected == 0) {
+    return;
+  }
+  mPrevFacesDetected = numFaces;
+
   DOM_CAMERA_LOGI("Camera detected %d face(s)", numFaces);
 
   faces.SetCapacity(numFaces);
