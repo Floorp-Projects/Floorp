@@ -47,8 +47,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1060896
   }
 
   var videos = getPlayableVideos(gSmallTests);
-
-  manager.runTests(videos, initTest);
+  // Bug 1216012, skip the test on emulator-kk.
+  if (getAndroidVersion() == 19) {
+    todo(false, "Test disabled on emulator-kk.");
+  } else {
+    manager.runTests(videos, initTest);
+  }
 
   </script>
 </head>
