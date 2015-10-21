@@ -913,7 +913,7 @@ double
 _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
 					     double radius)
 {
-    double major;
+    double major = 0.0;
 
     _cairo_matrix_transformed_circle_axes (matrix, radius, &major, NULL);
 
