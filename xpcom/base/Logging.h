@@ -10,6 +10,8 @@
 #include "prlog.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Likely.h"
 
 // This file is a placeholder for a replacement to the NSPR logging framework
 // that is defined in prlog.h. Currently it is just a pass through, but as
@@ -43,11 +45,97 @@ enum class LogLevel {
   Verbose,
 };
 
+class LogModule
+{
+public:
+  /**
+   * Retrieves the module with the given name. If it does not already exist
+   * it will be created.
+   *
+   * @param aName The name of the module.
+   * @return A log module for the given name. This may be shared.
+   */
+#if !defined(MOZILLA_XPCOMRT_API)
+  static LogModule* Get(const char* aName);
+#else
+  // For simplicity, libxpcomrt doesn't supoort logging.
+  static LogModule* Get(const char* aName) { return nullptr; }
+#endif
+
+  static void Init();
+
+  /**
+   * Indicates whether or not the given log level is enabled.
+   */
+  bool ShouldLog(LogLevel aLevel) const { return mLevel >= aLevel; }
+
+  /**
+   * Retrieves the log module's current level.
+   */
+  LogLevel Level() const { return mLevel; }
+
+private:
+  friend class LogModuleManager;
+
+  explicit LogModule(LogLevel aLevel) : mLevel(aLevel) {}
+
+  LogModule(LogModule&) = delete;
+  LogModule& operator=(const LogModule&) = delete;
+
+  Atomic<LogLevel, Relaxed> mLevel;
+};
+
+/**
+ * Helper class that lazy loads the given log module. This is safe to use for
+ * declaring static references to log modules and can be used as a replacement
+ * for accessing a LogModule directly.
+ *
+ * Example usage:
+ *   static LazyLogModule sLayoutLog("layout");
+ *
+ *   void Foo() {
+ *     MOZ_LOG(sLayoutLog, LogLevel::Verbose, ("Entering foo"));
+ *   }
+ */
+class LazyLogModule final
+{
+public:
+  explicit MOZ_CONSTEXPR LazyLogModule(const char* aLogName)
+    : mLogName(aLogName)
+    , mLog(nullptr)
+  {
+  }
+
+  operator LogModule*()
+  {
+    // NB: The use of an atomic makes the reading and assignment of mLog
+    //     thread-safe. There is a small chance that mLog will be set more
+    //     than once, but that's okay as it will be set to the same LogModule
+    //     instance each time. Also note LogModule::Get is thread-safe.
+    LogModule* tmp = mLog;
+    if (MOZ_UNLIKELY(!tmp)) {
+      tmp = LogModule::Get(mLogName);
+      mLog = tmp;
+    }
+
+    return tmp;
+  }
+
+private:
+  const char* const mLogName;
+  Atomic<LogModule*, ReleaseAcquire> mLog;
+};
+
 namespace detail {
 
 inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
   MOZ_ASSERT(level != LogLevel::Disabled);
   return module && module->level >= static_cast<int>(level);
+}
+
+inline bool log_test(const LogModule* module, LogLevel level) {
+  MOZ_ASSERT(level != LogLevel::Disabled);
+  return module && module->ShouldLog(level);
 }
 
 } // namespace detail

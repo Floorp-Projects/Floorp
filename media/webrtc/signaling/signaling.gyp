@@ -72,7 +72,6 @@
         './src/mediapipeline',
         './src/peerconnection',
         './src/sdp/sipcc',
-        '../../../xpcom/base',
         '../../../dom/base',
         '../../../dom/media',
         '../../../media/mtransport',

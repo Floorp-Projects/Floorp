@@ -350,6 +350,8 @@ XRE_InitChildProcess(int aArgc,
   // NB: This must be called before profiler_init
   NS_LogInit();
 
+  mozilla::LogModule::Init();
+
   char aLocal;
   profiler_init(&aLocal);
 

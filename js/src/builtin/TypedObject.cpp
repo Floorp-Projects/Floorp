@@ -641,11 +641,8 @@ ArrayMetaTypeDescr::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_NOT_FUNCTION, "ArrayType");
+    if (!ThrowIfNotConstructing(cx, args, "ArrayType"))
         return false;
-    }
 
     RootedObject arrayTypeGlobal(cx, &args.callee());
 
@@ -998,11 +995,8 @@ StructMetaTypeDescr::construct(JSContext* cx, unsigned int argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_NOT_FUNCTION, "StructType");
+    if (!ThrowIfNotConstructing(cx, args, "StructType"))
         return false;
-    }
 
     if (args.length() >= 1 && args[0].isObject()) {
         RootedObject metaTypeDescr(cx, &args.callee());
