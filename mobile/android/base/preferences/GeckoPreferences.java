@@ -287,8 +287,8 @@ OnSharedPreferenceChangeListener
                 updateActionBarTitle(R.string.settings_title);
             }
 
-            updateTitle(R.string.pref_header_language);
-            updateBreadcrumbTitle(R.string.pref_header_language);
+            // Update the title to for the preference pane that we're currently showing.
+            updateTitle(R.string.pref_header_general);
 
             // Don't finish the activity -- we just reloaded all of the
             // individual parts! -- but when it returns, make sure that the
@@ -494,12 +494,7 @@ OnSharedPreferenceChangeListener
             while (iterator.hasNext()) {
                 Header header = iterator.next();
 
-                if (header.id == R.id.pref_header_language && !localeSwitchingIsEnabled) {
-                    // If locale switching is disabled, remove the section
-                    // entirely. This logic will need to be extended when
-                    // content language selection (Bug 881510) is implemented.
-                    iterator.remove();
-                } else if (header.id == R.id.pref_header_advanced && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
+                if (header.id == R.id.pref_header_advanced && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     iterator.remove();
                 } else if (header.id == R.id.pref_header_accessibility && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
                     iterator.remove();
