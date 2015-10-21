@@ -400,7 +400,18 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
   if (endIsData || !endNode->HasChildren() || endIndx == 0) {
     if (mPre) {
       if (endNode->IsContent()) {
-        mLast = endNode->AsContent();
+        // If the end node is an empty element and the end offset is 0,
+        // the last element should be the previous node (i.e., shouldn't
+        // include the end node in the range).
+        if (!endIsData && !endNode->HasChildren() && !endIndx) {
+          mLast = GetPrevSibling(endNode);
+          if (!NodeIsInTraversalRange(mLast, mPre, startNode, startIndx,
+                                      endNode, endIndx)) {
+            mLast = nullptr;
+          }
+        } else {
+          mLast = endNode->AsContent();
+        }
       } else {
         // Not much else to do here...
         mLast = nullptr;
