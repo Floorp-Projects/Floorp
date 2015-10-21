@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,35 +27,22 @@ NS_IMPL_ISUPPORTS(nsFontFaceList, nsIDOMFontFaceList)
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMFontFaceList
 
-struct FindByIndexData {
-  uint32_t mTarget;
-  uint32_t mCurrent;
-  nsIDOMFontFace* mResult;
-};
-
-static PLDHashOperator
-FindByIndex(gfxFontEntry* aKey, nsIDOMFontFace* aData, void* aUserData)
-{
-  FindByIndexData* data = static_cast<FindByIndexData*>(aUserData);
-  if (data->mCurrent == data->mTarget) {
-    data->mResult = aData;
-    return PL_DHASH_STOP;
-  }
-  data->mCurrent++;
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 nsFontFaceList::Item(uint32_t index, nsIDOMFontFace **_retval)
 {
   NS_ENSURE_TRUE(index < mFontFaces.Count(), NS_ERROR_INVALID_ARG);
-  FindByIndexData userData;
-  userData.mTarget = index;
-  userData.mCurrent = 0;
-  userData.mResult = nullptr;
-  mFontFaces.EnumerateRead(FindByIndex, &userData);
-  NS_ASSERTION(userData.mResult != nullptr, "null entry in nsFontFaceList?");
-  NS_IF_ADDREF(*_retval = userData.mResult);
+
+  uint32_t current = 0;
+  nsIDOMFontFace* result = nullptr;
+  for (auto iter = mFontFaces.Iter(); !iter.Done(); iter.Next()) {
+    if (current == index) {
+      result = iter.UserData();
+      break;
+    }
+    current++;
+  }
+  NS_ASSERTION(result != nullptr, "null entry in nsFontFaceList?");
+  NS_IF_ADDREF(*_retval = result);
   return NS_OK;
 }
 
