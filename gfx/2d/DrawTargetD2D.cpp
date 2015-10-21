@@ -140,7 +140,7 @@ public:
     RefPtr<ID2D1BitmapBrush> brush;
     HRESULT hr = rt->CreateBitmapBrush(mOldSurfBitmap, D2D1::BitmapBrushProperties(), D2D1::BrushProperties(), getter_AddRefs(brush));
     if (FAILED(hr)) {
-      gfxCriticalError(CriticalLog::DefaultOptions(false)) << "[D2D] CreateBitmapBrush failure " << hexa(hr);
+      gfxCriticalNote << "[D2D] CreateBitmapBrush failure " << hexa(hr);
       return;
     }
 
