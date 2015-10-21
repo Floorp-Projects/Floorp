@@ -13,7 +13,10 @@ from __future__ import with_statement
 import sys
 import os
 import re
+import subprocess
 import bisect
+
+here = os.path.dirname(__file__)
 
 def prettyFileName(name):
   if name.startswith("../") or name.startswith("..\\"):
@@ -77,9 +80,21 @@ class SymbolFile:
     else:
       return ""
 
-def guessSymbolFile(fn, symbolsDir):
+def findIdForPath(path):
+  """Finds the breakpad id for the object file at the given path."""
+  # We should always be packaged with a "fileid" executable.
+  fileid_exe = os.path.join(here, 'fileid')
+  if not os.path.isfile(fileid_exe):
+    raise Exception("Could not find fileid executable in %s" % here)
+  try:
+    return subprocess.check_output([fileid_exe, path]).rstrip()
+  except subprocess.CalledProcessError as e:
+    raise Exception("Error getting fileid for %s: %s" %
+                    (path, e.output))
+
+def guessSymbolFile(full_path, symbolsDir):
   """Guess a symbol file based on an object file's basename, ignoring the path and UUID."""
-  fn = os.path.basename(fn)
+  fn = os.path.basename(full_path)
   d1 = os.path.join(symbolsDir, fn)
   if not os.path.exists(d1):
     fn = fn + ".pdb"
@@ -90,10 +105,12 @@ def guessSymbolFile(fn, symbolsDir):
   if len(uuids) == 0:
     raise Exception("Missing symbol file for " + fn)
   if len(uuids) > 1:
-    raise Exception("Ambiguous symbol file for " + fn)
+    uuid = findIdForPath(full_path)
+  else:
+    uuid = uuids[0]
   if fn.endswith(".pdb"):
     fn = fn[:-4]
-  return os.path.join(d1, uuids[0], fn + ".sym")
+  return os.path.join(d1, uuid, fn + ".sym")
 
 parsedSymbolFiles = {}
 def getSymbolFile(file, symbolsDir):
