@@ -79,6 +79,32 @@
      current node -->
 <!ENTITY inspectorHTMLDelete.label          "Delete Node">
 <!ENTITY inspectorHTMLDelete.accesskey      "D">
+<!-- LOCALIZATION NOTE (inspectorAttributeSubmenu.label): This is the label
+     shown in the inspector contextual-menu for the sub-menu of the other
+     attribute items, which allow to:
+     - add new attribute
+     - edit attribute
+     - remove attribute -->
+<!ENTITY inspectorAttributeSubmenu.label      "Attribute">
+<!ENTITY inspectorAttributeSubmenu.accesskey  "A">
+
+<!-- LOCALIZATION NOTE (inspectorAddAttribute.label): This is the label shown in
+     the inspector contextual-menu for the item that lets users add attribute
+     to current node -->
+<!ENTITY inspectorAddAttribute.label        "Add Attribute">
+<!ENTITY inspectorAddAttribute.accesskey    "A">
+
+<!-- LOCALIZATION NOTE (inspectorEditAttribute.label): This is the label shown in
+     the inspector contextual-menu for the item that lets users edit attribute
+     for current node -->
+<!ENTITY inspectorEditAttribute.label        "Edit Attribute">
+<!ENTITY inspectorEditAttribute.accesskey    "E">
+
+<!-- LOCALIZATION NOTE (inspectorRemoveAttribute.label): This is the label shown in
+     the inspector contextual-menu for the item that lets users delete attribute
+     from current node -->
+<!ENTITY inspectorRemoveAttribute.label        "Remove Attribute">
+<!ENTITY inspectorRemoveAttribute.accesskey    "R">
 
 <!ENTITY inspector.selectButton.tooltip     "Select element with mouse">
 
