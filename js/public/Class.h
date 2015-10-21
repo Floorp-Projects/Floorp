@@ -427,6 +427,9 @@ typedef bool
 typedef bool
 (* UnwatchOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id);
 
+typedef bool
+(* ThisValueOp)(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp);
+
 class JS_FRIEND_API(ElementAdder)
 {
   public:
@@ -646,7 +649,7 @@ struct ObjectOps
     UnwatchOp           unwatch;
     GetElementsOp       getElements;
     JSNewEnumerateOp    enumerate;
-    ObjectOp            thisObject;
+    ThisValueOp         thisValue;
 };
 
 #define JS_NULL_OBJECT_OPS                                                    \

@@ -6715,10 +6715,8 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
          * object, it should have a thisObject hook that returns the
          * appropriate outer object.
          */
-        JSObject* thisObj = GetThisObject(cx, scope);
-        if (!thisObj)
+        if (!GetThisValue(cx, scope, &thisv))
             return false;
-        thisv = ObjectValue(*thisObj);
         env = scope;
     }
 
