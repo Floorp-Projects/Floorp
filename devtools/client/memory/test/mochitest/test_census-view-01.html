@@ -19,7 +19,7 @@ Bug 1067491 - Test taking a census over the RDP.
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script>
 window.onload = function() {
-  var { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
+  var { censusReportToCensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
   var { INDENTATION, CensusView } = require("devtools/client/memory/modules/census-view");
   SimpleTest.waitForExplicitFinish();
   const countBreakdown = { by: "count", count: true, bytes: true };
@@ -28,6 +28,7 @@ window.onload = function() {
     by: "coarseType",
     objects: { by: "objectClass", then: countBreakdown },
     strings: countBreakdown,
+    scripts: countBreakdown,
     other: { by: "internalType", then: countBreakdown },
   };
 
@@ -37,6 +38,7 @@ window.onload = function() {
       "Array": { bytes: 20, count: 2 },
     },
     "strings": { bytes: 10, count: 1 },
+    "scripts": { bytes: 20, count: 2 },
     "other": {
       "js::Shape": { bytes: 30, count: 3 },
       "js::Shape2": { bytes: 40, count: 4 }
@@ -44,6 +46,7 @@ window.onload = function() {
   };
 
   const EXPECTED_ROWS = [
+    { level: 0, name: "scripts", bytes: 20, count: 2, },
     { level: 0, name: "strings", bytes: 10, count: 1, },
     { level: 0, name: "objects" },
         { level: 1, name: "Array", bytes: 20, count: 2, },
@@ -52,7 +55,7 @@ window.onload = function() {
         { level: 1, name: "js::Shape2", bytes: 40, count: 4, },
         { level: 1, name: "js::Shape", bytes: 30, count: 3, },
   ];
-  var censusTreeNode = new CensusTreeNode(BREAKDOWN, REPORT);
+  var censusTreeNode = censusReportToCensusTreeNode(BREAKDOWN, REPORT);
 
   var view = new CensusView({
     censusTreeNode: censusTreeNode,

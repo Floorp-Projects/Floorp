@@ -12,7 +12,7 @@
 
 importScripts("resource://gre/modules/workers/require.js");
 importScripts("resource://devtools/shared/worker/helper.js");
-const { CensusTreeNode } = require("resource://devtools/shared/heapsnapshot/census-tree-node.js");
+const { censusReportToCensusTreeNode } = require("resource://devtools/shared/heapsnapshot/census-tree-node.js");
 const CensusUtils = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
 
 // The set of HeapSnapshot instances this worker has read into memory. Keyed by
@@ -38,7 +38,7 @@ workerHelper.createTask(self, "takeCensus", ({ snapshotFilePath, censusOptions, 
 
   let report = snapshots[snapshotFilePath].takeCensus(censusOptions);
   return requestOptions.asTreeNode
-    ? new CensusTreeNode(censusOptions.breakdown, report)
+    ? censusReportToCensusTreeNode(censusOptions.breakdown, report)
     : report;
 });
 
@@ -66,6 +66,6 @@ workerHelper.createTask(self, "takeCensusDiff", request => {
   const delta = CensusUtils.diff(censusOptions.breakdown, first, second);
 
   return requestOptions.asTreeNode
-    ? new CensusTreeNode(censusOptions.breakdown, delta)
+    ? censusReportToCensusTreeNode(censusOptions.breakdown, delta)
     : delta;
 });
