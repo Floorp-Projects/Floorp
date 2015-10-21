@@ -3855,7 +3855,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         if (!pn)
             return false;
     } else {
-        Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
+        Rooted<ModuleObject*> module(cx, ModuleObject::create(cx, nullptr));
         if (!module)
             return false;
 

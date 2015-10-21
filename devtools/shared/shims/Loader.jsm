@@ -17,7 +17,7 @@ const WARNING_PREF = "devtools.migration.warnings";
 if (Services.prefs.getBoolPref(WARNING_PREF)) {
   const { Deprecated } = Cu.import("resource://gre/modules/Deprecated.jsm", {});
   Deprecated.warning("This path to Loader.jsm is deprecated.  Please use " +
-                     "Cu.import(\"resource://gre/modules/devtools/shared/" +
+                     "Cu.import(\"resource://devtools/shared/" +
                      "Loader.jsm\") to load this module.",
                      "https://bugzil.la/912121");
 }
@@ -32,7 +32,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const module =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 for (let symbol of this.EXPORTED_SYMBOLS) {
   this[symbol] = module[symbol];

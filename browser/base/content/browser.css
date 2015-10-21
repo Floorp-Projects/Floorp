@@ -291,6 +291,12 @@ toolbar[customizing] > .overflow-button {
 #main-window[sizemode="maximized"] #titlebar-buttonbox {
   -moz-appearance: -moz-window-button-box-maximized;
 }
+
+#main-window[tabletmode] #titlebar-min,
+#main-window[tabletmode] #titlebar-max {
+  display: none !important;
+}
+
 %endif
 
 %endif

@@ -8,6 +8,10 @@
 # because these files are here for add-on compatibility, and so they must be
 # installed to previously defined locations.
 
+# These shims for legacy paths expect to be installed as if they were part of
+# /toolkit modules.  Disable any DIST_SUBDIR from parent files here.
+DIST_SUBDIR = ''
+
 EXTRA_JS_MODULES.devtools += [
     'dbg-server.jsm',
 ]

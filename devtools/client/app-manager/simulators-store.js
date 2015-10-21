@@ -4,7 +4,7 @@
 
 const {Cu} = require("chrome");
 const ObservableObject = require("devtools/client/shared/observable-object");
-const {Simulator} = Cu.import("resource://gre/modules/devtools/shared/apps/Simulator.jsm");
+const {Simulator} = Cu.import("resource://devtools/shared/apps/Simulator.jsm");
 
 var store = new ObservableObject({versions:[]});
 

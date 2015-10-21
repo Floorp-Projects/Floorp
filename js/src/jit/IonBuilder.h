@@ -263,6 +263,7 @@ class IonBuilder
     ControlStatus processTryEnd(CFGState& state);
     ControlStatus processReturn(JSOp op);
     ControlStatus processThrow();
+    ControlStatus processThrowSetConst();
     ControlStatus processContinue(JSOp op);
     ControlStatus processBreak(JSOp op, jssrcnote* sn);
     ControlStatus maybeLoop(JSOp op, jssrcnote* sn);
@@ -658,7 +659,6 @@ class IonBuilder
     bool jsop_deflexical(uint32_t index);
     bool jsop_deffun(uint32_t index);
     bool jsop_notearg();
-    bool jsop_throwsetconst();
     bool jsop_checklexical();
     bool jsop_checkaliasedlet(ScopeCoordinate sc);
     bool jsop_funcall(uint32_t argc);

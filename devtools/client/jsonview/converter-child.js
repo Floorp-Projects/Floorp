@@ -196,7 +196,7 @@ var Converter = Class({
 
   toHTML: function(json, headers, title) {
     var themeClassName = "theme-" + JsonViewUtils.getCurrentTheme();
-    var clientBaseUrl = "resource:///modules/devtools/client/";
+    var clientBaseUrl = "resource://devtools/client/";
     var baseUrl = clientBaseUrl + "jsonview/";
     var themeVarsUrl = clientBaseUrl + "themes/variables.css";
 

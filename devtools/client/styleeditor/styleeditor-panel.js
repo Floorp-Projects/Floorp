@@ -12,8 +12,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 
-Cu.import("resource:///modules/devtools/client/styleeditor/StyleEditorUI.jsm");
-Cu.import("resource:///modules/devtools/client/styleeditor/StyleEditorUtil.jsm");
+Cu.import("resource://devtools/client/styleeditor/StyleEditorUI.jsm");
+Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 
 loader.lazyGetter(this, "StyleSheetsFront",
   () => require("devtools/server/actors/stylesheets").StyleSheetsFront);

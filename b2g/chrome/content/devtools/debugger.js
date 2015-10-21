@@ -8,7 +8,7 @@
 
 XPCOMUtils.defineLazyGetter(this, "devtools", function() {
   const { devtools } =
-    Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+    Cu.import("resource://devtools/shared/Loader.jsm", {});
   return devtools;
 });
 

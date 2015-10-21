@@ -13,7 +13,7 @@
 
 extern "C"
 __attribute__ ((visibility("default")))
-void JNICALL
+void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv *jenv, jclass, jstring map)
 {
     const char* str;
@@ -28,7 +28,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_putenv(JNIEnv *jenv, jclass, jstring 
 
 extern "C"
 __attribute__ ((visibility("default")))
-jobject JNICALL
+jobject MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(JNIEnv *jenv, jclass, jlong size)
 {
     jobject buffer = nullptr;
@@ -43,7 +43,7 @@ Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeAllocateDirectBuffer(
 
 extern "C"
 __attribute__ ((visibility("default")))
-void JNICALL
+void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeFreeDirectBuffer(JNIEnv *jenv, jclass, jobject buf)
 {
     free(jenv->GetDirectBufferAddress(buf));
@@ -51,7 +51,7 @@ Java_org_mozilla_gecko_mozglue_DirectBufferAllocator_nativeFreeDirectBuffer(JNIE
 
 extern "C"
 __attribute__ ((visibility("default")))
-jlong JNICALL
+jlong MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass, jstring path)
 {
     const char* str;
@@ -74,7 +74,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass, jstring pa
 
 extern "C"
 __attribute__ ((visibility("default")))
-jlong JNICALL
+jlong MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv *jenv, jclass, jobject buffer)
 {
     void *buf = jenv->GetDirectBufferAddress(buffer);
@@ -90,7 +90,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv *jenv, jcla
 
  extern "C"
 __attribute__ ((visibility("default")))
-void JNICALL
+void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_NativeZip__1release(JNIEnv *jenv, jclass, jlong obj)
 {
     Zip *zip = (Zip *)obj;
@@ -99,7 +99,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip__1release(JNIEnv *jenv, jclass, jlong o
 
 extern "C"
 __attribute__ ((visibility("default")))
-jobject JNICALL
+jobject MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_NativeZip__1getInputStream(JNIEnv *jenv, jobject jzip, jlong obj, jstring path)
 {
     Zip *zip = (Zip *)obj;

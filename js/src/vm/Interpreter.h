@@ -31,8 +31,8 @@ class ScopeIter;
 extern bool
 BoxNonStrictThis(JSContext* cx, const CallReceiver& call);
 
-extern JSObject*
-BoxNonStrictThis(JSContext* cx, HandleValue thisv);
+extern bool
+BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp);
 
 /*
  * Ensure that fp->thisValue() is the correct value of |this| for the scripted
@@ -472,6 +472,9 @@ NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc, uint32_t l
 
 JSObject*
 NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject);
+
+void
+ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandleId id);
 
 void
 ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber, HandlePropertyName name);

@@ -101,13 +101,13 @@ this.PushService = {
 
   // When serverURI changes (this is used for testing), db is cleaned up and a
   // a new db is started. This events must be sequential.
-  _serverURIProcessQueue: null,
-  _serverURIProcessEnqueue: function(op) {
-    if (!this._serverURIProcessQueue) {
-      this._serverURIProcessQueue = Promise.resolve();
+  _stateChangeProcessQueue: null,
+  _stateChangeProcessEnqueue: function(op) {
+    if (!this._stateChangeProcessQueue) {
+      this._stateChangeProcessQueue = Promise.resolve();
     }
 
-    this._serverURIProcessQueue = this._serverURIProcessQueue
+    this._stateChangeProcessQueue = this._stateChangeProcessQueue
                                     .then(op)
                                     .catch(_ => {});
   },
@@ -237,20 +237,24 @@ this.PushService = {
         break;
       case "network-active-changed":         /* On B2G. */
       case "network:offline-status-changed": /* On desktop. */
-        this._changeStateOfflineEvent(aData === "offline", false);
+        this._stateChangeProcessEnqueue(_ =>
+          this._changeStateOfflineEvent(aData === "offline", false)
+        );
         break;
 
       case "nsPref:changed":
         if (aData == "dom.push.serverURL") {
           debug("dom.push.serverURL changed! websocket. new value " +
                 prefs.get("serverURL"));
-          this._serverURIProcessEnqueue(_ =>
+          this._stateChangeProcessEnqueue(_ =>
             this._changeServerURL(prefs.get("serverURL"),
                                   CHANGING_SERVICE_EVENT)
           );
 
         } else if (aData == "dom.push.connection.enabled") {
-          this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"));
+          this._stateChangeProcessEnqueue(_ =>
+            this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
+          );
 
         } else if (aData == "dom.push.debug") {
           gDebuggingEnabled = prefs.get("debug");
@@ -352,8 +356,8 @@ this.PushService = {
           return Promise.resolve();
         }
         return this._startService(service, uri, event)
-          .then(_ =>
-            this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
+          .then(_ => this._stateChangeProcessEnqueue(_ =>
+            this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
           );
       }
       case CHANGING_SERVICE_EVENT:
@@ -363,8 +367,8 @@ this.PushService = {
             this._setState(PUSH_SERVICE_ACTIVATING);
             // The service has not been running - start it.
             return this._startService(service, uri, STARTING_SERVICE_EVENT)
-              .then(_ =>
-                this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
+              .then(_ => this._stateChangeProcessEnqueue(_ =>
+                this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
               );
 
           } else {
@@ -376,8 +380,8 @@ this.PushService = {
               .then(_ =>
                  this._startService(service, uri, CHANGING_SERVICE_EVENT)
               )
-              .then(_ =>
-                this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled"))
+              .then(_ => this._stateChangeProcessEnqueue(_ =>
+                this._changeStateConnectionEnabledEvent(prefs.get("connection.enabled")))
               );
 
           }
@@ -459,7 +463,7 @@ this.PushService = {
       // slightly different URLs.
       prefs.observe("serverURL", this);
 
-      this._serverURIProcessEnqueue(_ =>
+      this._stateChangeProcessEnqueue(_ =>
         this._changeServerURL(prefs.get("serverURL"), STARTING_SERVICE_EVENT));
     }
   },
@@ -618,7 +622,7 @@ this.PushService = {
     prefs.ignore("serverURL", this);
     Services.obs.removeObserver(this, "xpcom-shutdown");
 
-    this._serverURIProcessEnqueue(_ =>
+    this._stateChangeProcessEnqueue(_ =>
             this._changeServerURL("", UNINIT_EVENT));
     debug("shutdown complete!");
   },

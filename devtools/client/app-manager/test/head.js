@@ -5,9 +5,9 @@
 var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 const {Promise: promise} =
-  Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {});
+  Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {});
 const {require} =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const {AppProjects} = require("devtools/client/app-manager/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

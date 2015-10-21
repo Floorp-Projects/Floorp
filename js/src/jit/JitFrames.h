@@ -68,6 +68,12 @@ CalleeTokenToScript(CalleeToken token)
     MOZ_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
     return (JSScript*)(uintptr_t(token) & CalleeTokenMask);
 }
+static inline bool
+CalleeTokenIsModuleScript(CalleeToken token)
+{
+    CalleeTokenTag tag = GetCalleeTokenTag(token);
+    return tag == CalleeToken_Script && CalleeTokenToScript(token)->module();
+}
 
 static inline JSScript*
 ScriptFromCalleeToken(CalleeToken token)

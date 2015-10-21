@@ -69,6 +69,7 @@ background_junit3_sources = [
     'src/sync/helpers/ExpectInvalidTypeStoreDelegate.java',
     'src/sync/helpers/ExpectManyStoredDelegate.java',
     'src/sync/helpers/ExpectNoGUIDsSinceDelegate.java',
+    'src/sync/helpers/ExpectNoStoreDelegate.java',
     'src/sync/helpers/ExpectStoreCompletedDelegate.java',
     'src/sync/helpers/ExpectStoredDelegate.java',
     'src/sync/helpers/HistoryHelpers.java',

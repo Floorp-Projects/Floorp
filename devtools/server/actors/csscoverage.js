@@ -14,7 +14,7 @@ const protocol = require("devtools/server/protocol");
 const { method, custom, RetVal, Arg } = protocol;
 
 loader.lazyGetter(this, "gDevTools", () => {
-  return require("resource:///modules/devtools/client/framework/gDevTools.jsm").gDevTools;
+  return require("resource://devtools/client/framework/gDevTools.jsm").gDevTools;
 });
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)

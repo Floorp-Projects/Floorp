@@ -8,7 +8,7 @@
 
 function test() {
   let { Parser, ParserHelpers, SyntaxTreeVisitor } =
-    Cu.import("resource:///modules/devtools/client/shared/Parser.jsm", {});
+    Cu.import("resource://devtools/shared/Parser.jsm", {});
 
   function verify(source, predicate, details) {
     let { name, chain } = details;

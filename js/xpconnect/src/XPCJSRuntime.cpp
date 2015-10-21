@@ -3119,6 +3119,9 @@ AccumulateTelemetryCallback(int id, uint32_t sample, const char* key)
       case JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT:
         Telemetry::Accumulate(Telemetry::JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, sample);
         break;
+      case JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS:
+        Telemetry::Accumulate(Telemetry::JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS, sample);
+        break;
       case JS_TELEMETRY_ADDON_EXCEPTIONS:
         Telemetry::Accumulate(Telemetry::JS_TELEMETRY_ADDON_EXCEPTIONS, nsDependentCString(key), sample);
         break;
@@ -3264,47 +3267,6 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     xpc::WrapperFactory::Rewrap,
     xpc::WrapperFactory::PrepareForWrapping
 };
-
-/**
- * Group JSCompartments into PerformanceGroups.
- *
- * - All JSCompartments from the same add-on belong to the same
- *   PerformanceGroup.
- * - All JSCompartments from the same same webpage (including
- *   frames) belong to the same PerformanceGroup.
- * - All other JSCompartments (normally, system add-ons)
- *   belong to to a big uncategorized PerformanceGroup.
- */
-static void*
-GetCurrentPerfGroupCallback(JSContext* cx) {
-    RootedObject global(cx, CurrentGlobalOrNull(cx));
-    if (!global) {
-        // This can happen for the atom compartments, which is system
-        // code.
-        return nullptr;
-    }
-
-    JSAddonId* addonId = AddonIdOfObject(global);
-    if (addonId) {
-        // If this is an add-on, use the id as key.
-        return addonId;
-    }
-
-    // If the compartment belongs to a webpage, use the address of the
-    // topmost scriptable window, hence regrouping all frames of a
-    // window.
-    RefPtr<nsGlobalWindow> win = WindowOrNull(global);
-    if (win) {
-        nsCOMPtr<nsIDOMWindow> top;
-        nsresult rv = win->GetScriptableTop(getter_AddRefs(top));
-        NS_ENSURE_SUCCESS(rv, nullptr);
-
-        return top.get();
-    }
-
-    // Otherwise, this is platform code, use `nullptr` as key.
-    return nullptr;
-}
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryBytes),
@@ -3485,8 +3447,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // Watch for the JS boolean options.
     ReloadPrefsCallback(nullptr, this);
     Preferences::RegisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
-
-    JS_SetCurrentPerfGroupCallback(runtime, ::GetCurrentPerfGroupCallback);
 }
 
 // static
