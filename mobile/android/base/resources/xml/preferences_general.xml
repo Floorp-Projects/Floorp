@@ -20,18 +20,6 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_search"
-                      android:summary="@string/pref_category_search_summary" >
-
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_search" />
-        </intent>
-    </PreferenceScreen>
-
     <ListPreference android:key="android.not_a_preference.restoreSession3"
                     android:title="@string/pref_restore"
                     android:defaultValue="quit"

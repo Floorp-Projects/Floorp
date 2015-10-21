@@ -8,6 +8,9 @@
 
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+            android:id="@+id/pref_header_search">
+    </header>
+    <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
             android:id="@+id/pref_header_language">
     </header>
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
