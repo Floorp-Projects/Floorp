@@ -1086,6 +1086,9 @@ private:
   // been written to the MediaStream.
   Watchable<bool> mAudioCompleted;
 
+  // Set if MDSM receives dormant request during reading metadata.
+  Maybe<bool> mPendingDormant;
+
   // Flag whether we notify metadata before decoding the first frame or after.
   //
   // Note that the odd semantics here are designed to replicate the current
