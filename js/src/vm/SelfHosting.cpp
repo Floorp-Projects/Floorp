@@ -1354,7 +1354,7 @@ intrinsic_EvaluateModule(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
-    return module->evaluate(cx, args.rval());
+    return ModuleObject::evaluate(cx, module, args.rval());
 }
 
 // The self-hosting global isn't initialized with the normal set of builtins.
