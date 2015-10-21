@@ -65,6 +65,9 @@ PROT_XMLFetcher.prototype = {
     this._request = PROT_NewXMLHttpRequest();
     this._callback = callback;
     var asynchronous = true;
+    this._request.loadInfo.originAttributes = { appId: this.appId,
+                                                inBrowser: this.isInBrowserElement
+                                              }
     this._request.open("GET", page, asynchronous);
     this._request.channel.notificationCallbacks = this;
 
