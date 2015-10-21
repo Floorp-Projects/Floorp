@@ -8,8 +8,8 @@ var host_info = get_host_info();
 test(function() {
     var import_script_failed = false;
     try {
-      importScripts(host_info.HTTPS_REMOTE_ORIGIN +
-        base_path() + 'empty.js');
+      importScripts(host_info.HTTP_REMOTE_ORIGIN +
+        '/serviceworker/resources/empty.js');
     } catch(e) {
       import_script_failed = true;
     }
@@ -18,8 +18,8 @@ test(function() {
   }, 'importScripts test for default-src');
 
 async_test(function(t) {
-    fetch(host_info.HTTPS_REMOTE_ORIGIN +
-          base_path() + 'fetch-access-control.py?ACAOrigin=*',
+    fetch(host_info.HTTP_REMOTE_ORIGIN +
+          '/serviceworker/resources/fetch-access-control.php?ACAOrigin=*',
           {mode: 'cors'})
       .then(function(response){
           assert_unreached('fetch should fail.');
@@ -30,10 +30,10 @@ async_test(function(t) {
   }, 'Fetch test for default-src');
 
 async_test(function(t) {
-    var REDIRECT_URL = host_info.HTTPS_ORIGIN +
-      base_path() + 'redirect.py?Redirect=';
-    var OTHER_BASE_URL = host_info.HTTPS_REMOTE_ORIGIN +
-      base_path() + 'fetch-access-control.py?'
+    var REDIRECT_URL = host_info.HTTP_ORIGIN +
+      '/serviceworker/resources/redirect.php?Redirect=';
+    var OTHER_BASE_URL = host_info.HTTP_REMOTE_ORIGIN +
+      '/serviceworker/resources/fetch-access-control.php?'
     fetch(REDIRECT_URL + encodeURIComponent(OTHER_BASE_URL + 'ACAOrigin=*'),
           {mode: 'cors'})
       .then(function(response){
@@ -54,8 +54,8 @@ var host_info = get_host_info();
 test(function() {
     var import_script_failed = false;
     try {
-      importScripts(host_info.HTTPS_REMOTE_ORIGIN +
-        base_path() + 'empty.js');
+      importScripts(host_info.HTTP_REMOTE_ORIGIN +
+        '/serviceworker/resources/empty.js');
     } catch(e) {
       import_script_failed = true;
     }
@@ -64,8 +64,8 @@ test(function() {
   }, 'importScripts test for script-src');
 
 async_test(function(t) {
-    fetch(host_info.HTTPS_REMOTE_ORIGIN +
-          base_path() + 'fetch-access-control.py?ACAOrigin=*',
+    fetch(host_info.HTTP_REMOTE_ORIGIN +
+          '/serviceworker/resources/fetch-access-control.php?ACAOrigin=*',
           {mode: 'cors'})
       .then(function(response){
           t.done();
@@ -76,10 +76,10 @@ async_test(function(t) {
   }, 'Fetch test for script-src');
 
 async_test(function(t) {
-    var REDIRECT_URL = host_info.HTTPS_ORIGIN +
-      base_path() + 'redirect.py?Redirect=';
-    var OTHER_BASE_URL = host_info.HTTPS_REMOTE_ORIGIN +
-      base_path() + 'fetch-access-control.py?'
+    var REDIRECT_URL = host_info.HTTP_ORIGIN +
+      '/serviceworker/resources/redirect.php?Redirect=';
+    var OTHER_BASE_URL = host_info.HTTP_REMOTE_ORIGIN +
+      '/serviceworker/resources/fetch-access-control.php?'
     fetch(REDIRECT_URL + encodeURIComponent(OTHER_BASE_URL + 'ACAOrigin=*'),
           {mode: 'cors'})
       .then(function(response){
@@ -100,8 +100,8 @@ var host_info = get_host_info();
 test(function() {
     var import_script_failed = false;
     try {
-      importScripts(host_info.HTTPS_REMOTE_ORIGIN +
-        base_path() + 'empty.js');
+      importScripts(host_info.HTTP_REMOTE_ORIGIN +
+        '/serviceworker/resources/empty.js');
     } catch(e) {
       import_script_failed = true;
     }
@@ -110,8 +110,8 @@ test(function() {
   }, 'importScripts test for connect-src');
 
 async_test(function(t) {
-    fetch(host_info.HTTPS_REMOTE_ORIGIN +
-          base_path() + 'fetch-access-control.py?ACAOrigin=*',
+    fetch(host_info.HTTP_REMOTE_ORIGIN +
+          '/serviceworker/resources/fetch-access-control.php?ACAOrigin=*',
           {mode: 'cors'})
       .then(function(response){
           assert_unreached('fetch should fail.');
@@ -122,10 +122,10 @@ async_test(function(t) {
   }, 'Fetch test for connect-src');
 
 async_test(function(t) {
-    var REDIRECT_URL = host_info.HTTPS_ORIGIN +
-      base_path() + 'redirect.py?Redirect=';
-    var OTHER_BASE_URL = host_info.HTTPS_REMOTE_ORIGIN +
-      base_path() + 'fetch-access-control.py?'
+    var REDIRECT_URL = host_info.HTTP_ORIGIN +
+      '/serviceworker/resources/redirect.php?Redirect=';
+    var OTHER_BASE_URL = host_info.HTTP_REMOTE_ORIGIN +
+      '/serviceworker/resources/fetch-access-control.php?'
     fetch(REDIRECT_URL + encodeURIComponent(OTHER_BASE_URL + 'ACAOrigin=*'),
           {mode: 'cors'})
       .then(function(response){
