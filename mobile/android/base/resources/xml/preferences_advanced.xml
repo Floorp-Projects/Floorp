@@ -5,7 +5,7 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
-                  android:title="@string/pref_category_devtools"
+                  android:title="@string/pref_category_advanced"
                   android:enabled="false">
 
        <CheckBoxPreference android:key="devtools.remote.usb.enabled"
