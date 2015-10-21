@@ -133,7 +133,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
     private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
-    private static final String PREFS_DISPLAY = NON_PREF_PREFIX + "display.enabled";
+    private static final String PREFS_ACCESSIBILITY = NON_PREF_PREFIX + "accessibility.enabled";
     private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
     private static final String PREFS_CUSTOMIZE_IMAGE_BLOCKING = "browser.image_blocking.enabled";
     private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
@@ -501,7 +501,7 @@ OnSharedPreferenceChangeListener
                     iterator.remove();
                 } else if (header.id == R.id.pref_header_devtools && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     iterator.remove();
-                } else if (header.id == R.id.pref_header_display && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
+                } else if (header.id == R.id.pref_header_accessibility && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
                     iterator.remove();
                 }
             }
@@ -715,7 +715,7 @@ OnSharedPreferenceChangeListener
                     i--;
                     continue;
                 }
-                if (PREFS_DISPLAY.equals(key) && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
+                if (PREFS_ACCESSIBILITY.equals(key) && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
                     preferences.removePreference(pref);
                     i--;
                     continue;

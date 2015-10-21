@@ -152,8 +152,8 @@
 
 <!ENTITY pref_category_search3 "Search">
 <!ENTITY pref_category_search_summary "Customize your search providers">
-<!ENTITY pref_category_display "Display">
-<!ENTITY pref_category_display_summary "Text, title bar, full-screen browsing">
+<!ENTITY pref_category_accessibility "Accessibility">
+<!ENTITY pref_category_accessibility_summary "Text size, voice input">
 <!ENTITY pref_category_privacy_short "Privacy">
 <!ENTITY pref_category_privacy_summary2 "Control logins, cookies, tracking, data">
 <!ENTITY pref_category_vendor "&vendorShortName;">
@@ -204,8 +204,8 @@
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_general "General">
 <!ENTITY pref_header_search "Search">
-<!ENTITY pref_header_display "Display">
 <!ENTITY pref_header_privacy_short "Privacy">
+<!ENTITY pref_header_accessibility "Accessibility">
 <!ENTITY pref_header_help "Help">
 <!ENTITY pref_header_language "Language">
 <!ENTITY pref_header_vendor "&vendorShortName;">
