@@ -1011,9 +1011,14 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     RootedObject scopeChain(cx, &scopeChainArg);
     MOZ_ASSERT(scopeChain == GetInnerObject(scopeChain));
 
-    MOZ_RELEASE_ASSERT(IsGlobalLexicalScope(scopeChain) || script->hasNonSyntacticScope(),
-                       "Only scripts with non-syntactic scopes can be executed with "
-                       "interesting scopechains");
+    if (script->module()) {
+        MOZ_RELEASE_ASSERT(scopeChain == script->module()->environment(),
+                           "Module scripts can only be executed in the module's environment");
+    } else {
+        MOZ_RELEASE_ASSERT(IsGlobalLexicalScope(scopeChain) || script->hasNonSyntacticScope(),
+                           "Only global scripts with non-syntactic scopes can be executed with "
+                           "interesting scopechains");
+    }
 
     /* Ensure the scope chain is all same-compartment and terminates in a global. */
 #ifdef DEBUG
