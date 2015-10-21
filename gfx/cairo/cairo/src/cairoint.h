@@ -2120,6 +2120,12 @@ _cairo_matrix_has_unity_scale (const cairo_matrix_t *matrix);
 cairo_private cairo_bool_t
 _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix) cairo_pure;
 
+cairo_private void
+_cairo_matrix_transformed_circle_axes (const cairo_matrix_t *matrix,
+				       double radius,
+				       double *major,
+				       double *minor);
+
 cairo_private double
 _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
 					     double radius) cairo_pure;

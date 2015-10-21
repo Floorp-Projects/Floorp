@@ -615,6 +615,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     cairo_image_info_t mime_info;
     cairo_bool_t use_mime;
     DWORD mime_type;
+    cairo_bool_t axis_swap;
 
     /* If we can't use StretchDIBits with this surface, we can't do anything
      * here.
@@ -663,29 +664,55 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 
     use_mime = (status == CAIRO_STATUS_SUCCESS);
 
-    if (!use_mime && image->format != CAIRO_FORMAT_RGB24) {
+    m = pattern->base.matrix;
+    status = cairo_matrix_invert (&m);
+    /* _cairo_pattern_set_matrix guarantees invertibility */
+    assert (status == CAIRO_STATUS_SUCCESS);
+    cairo_matrix_multiply (&m, &m, &surface->ctm);
+    cairo_matrix_multiply (&m, &m, &surface->gdi_ctm);
+    /* Check if the matrix swaps the X and Y axes by checking if the diagonal
+     * is effectively zero. This can happen, for example, if it was composed
+     * with a rotation such as a landscape transform. Some printing devices
+     * don't support such transforms in StretchDIBits.
+     */
+    axis_swap = fabs (m.xx*image->width) < 1 && fabs (m.yy*image->height) < 1;
+
+    if (!use_mime && (image->format != CAIRO_FORMAT_RGB24 || axis_swap)) {
 	cairo_surface_t *opaque_surface;
 	cairo_surface_pattern_t image_pattern;
 	cairo_solid_pattern_t background_pattern;
+	int width = image->width, height = image->height;
 
+	if (axis_swap) {
+	    width = image->height;
+	    height = image->width;
+	}
 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
-						     image->width,
-						     image->height);
+						     width,
+						     height);
 	if (opaque_surface->status) {
 	    status = opaque_surface->status;
 	    goto CLEANUP_OPAQUE_IMAGE;
 	}
 
-	_cairo_pattern_init_solid (&background_pattern,
-				   background_color);
-	status = _cairo_surface_paint (opaque_surface,
-				       CAIRO_OPERATOR_SOURCE,
-				       &background_pattern.base,
-				       NULL);
-	if (status)
-	    goto CLEANUP_OPAQUE_IMAGE;
+	if (image->format != CAIRO_FORMAT_RGB24) {
+	    _cairo_pattern_init_solid (&background_pattern,
+				       background_color);
+	    status = _cairo_surface_paint (opaque_surface,
+					   CAIRO_OPERATOR_SOURCE,
+					   &background_pattern.base,
+					   NULL);
+	    if (status)
+		goto CLEANUP_OPAQUE_IMAGE;
+	}
 
 	_cairo_pattern_init_for_surface (&image_pattern, &image->base);
+	if (axis_swap) {
+	    /* swap the X and Y axes to undo the axis swap in the matrix */
+	    cairo_matrix_t swap_xy = { 0, 1, 1, 0, 0, 0 };
+	    cairo_pattern_set_matrix (&image_pattern.base, &swap_xy);
+	    cairo_matrix_multiply (&m, &swap_xy, &m);
+	}
 	status = _cairo_surface_paint (opaque_surface,
 				       CAIRO_OPERATOR_OVER,
 				       &image_pattern.base,
@@ -711,13 +738,6 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     bi.bmiHeader.biClrUsed = 0;
     bi.bmiHeader.biClrImportant = 0;
 
-    m = pattern->base.matrix;
-    status = cairo_matrix_invert (&m);
-    /* _cairo_pattern_set_matrix guarantees invertibility */
-    assert (status == CAIRO_STATUS_SUCCESS);
-
-    cairo_matrix_multiply (&m, &m, &surface->gdi_ctm);
-    cairo_matrix_multiply(&m, &m, &surface->ctm);
     SaveDC (surface->dc);
     _cairo_matrix_to_win32_xform (&m, &xform);
 
@@ -1265,6 +1285,7 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
     cairo_matrix_t mat;
     double scale;
     double scaled_width;
+    double major, minor;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (status)
@@ -1355,12 +1376,30 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
      */
     SaveDC (surface->dc);
 
-    _cairo_matrix_to_win32_xform (&mat, &xform);
-    xform.eDx = 0.0f;
-    xform.eDy = 0.0f;
+    /* Some printers don't handle transformed strokes. Avoid the transform
+     * if not required for the pen shape. Use the SVD here to find the major
+     * and minor scales then check if they differ by more than 1 device unit.
+     * If the difference is smaller, then just treat the scaling as uniform.
+     * This check ignores rotations as the pen shape is symmetric before
+     * transformation.
+     */
+    _cairo_matrix_transformed_circle_axes (&mat, scale, &major, &minor);
+    if (fabs (major - minor) > 1) {
+	/* Check if the matrix swaps the X and Y axes such that the diagonal
+	 * is nearly zero. This was observed to cause problems with XPS export.
+	 */
+	if (fabs (mat.xx) < 1e-6 && fabs (mat.yy) < 1e-6) {
+	    /* swap the X and Y axes to undo the axis swap in the matrix */
+	    cairo_matrix_t swap_xy = { 0, 1, 1, 0, 0, 0 };
+	    cairo_matrix_multiply (&mat, &swap_xy, &mat);
+	}
+	_cairo_matrix_to_win32_xform (&mat, &xform);
+	xform.eDx = 0.0f;
+	xform.eDy = 0.0f;
 
-    if (!ModifyWorldTransform (surface->dc, &xform, MWT_LEFTMULTIPLY))
-	return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SetWorldTransform");
+	if (!ModifyWorldTransform (surface->dc, &xform, MWT_LEFTMULTIPLY))
+	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SetWorldTransform");
+    }
 
     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
 	StrokePath (surface->dc);
