@@ -1,8 +1,8 @@
 #include "vm/Stopwatch.h"
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/IntegerTypeTraits.h"
-#include "mozilla/unused.h"
+#include <mozilla/ArrayUtils.h>
+#include <mozilla/IntegerTypeTraits.h>
+#include <mozilla/unused.h>
 
 namespace js {
 
@@ -338,7 +338,6 @@ AutoStopwatch::addToGroups(uint64_t cyclesDelta, uint64_t CPOWTimeDelta)
       if (!addToGroup(runtime, cyclesDelta, CPOWTimeDelta, *group))
         return false;
     }
-    return true;
 }
 
 bool
@@ -352,7 +351,6 @@ AutoStopwatch::addToGroup(JSRuntime* runtime, uint64_t cyclesDelta, uint64_t CPO
     group->addRecentTicks(iteration_, 1);
     group->addRecentCycles(iteration_, cyclesDelta);
     group->addRecentCPOW(iteration_, CPOWTimeDelta);
-    return true;
 }
 
 uint64_t
