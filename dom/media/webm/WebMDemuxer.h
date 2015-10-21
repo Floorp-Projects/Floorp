@@ -9,6 +9,7 @@
 #include "nsTArray.h"
 #include "MediaDataDemuxer.h"
 #include "NesteggPacketHolder.h"
+#include "mozilla/Move.h"
 
 typedef struct nestegg nestegg;
 
@@ -27,16 +28,22 @@ class MediaRawDataQueue {
     mQueue.push_back(aItem);
   }
 
-  void Push(const MediaRawDataQueue& aOther) {
-    mQueue.insert(mQueue.end(), aOther.mQueue.begin(), aOther.mQueue.end());
+  void Push(already_AddRefed<MediaRawData>&& aItem) {
+    mQueue.push_back(Move(aItem));
   }
 
   void PushFront(MediaRawData* aItem) {
     mQueue.push_front(aItem);
   }
 
-  void PushFront(const MediaRawDataQueue& aOther) {
-    mQueue.insert(mQueue.begin(), aOther.mQueue.begin(), aOther.mQueue.end());
+  void PushFront(already_AddRefed<MediaRawData>&& aItem) {
+    mQueue.push_front(Move(aItem));
+  }
+
+  void PushFront(MediaRawDataQueue&& aOther) {
+    while (!aOther.mQueue.empty()) {
+      Push(aOther.PopFront());
+    }
   }
 
   already_AddRefed<MediaRawData> PopFront() {

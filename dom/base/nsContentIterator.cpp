@@ -48,11 +48,21 @@ NodeIsInTraversalRange(nsINode* aNode, bool aIsPreMode,
     return false;
   }
 
-  // If a chardata node contains an end point of the traversal range, it is
+  // If a leaf node contains an end point of the traversal range, it is
   // always in the traversal range.
-  if (aNode->IsNodeOfType(nsINode::eDATA_NODE) &&
-      (aNode == aStartNode || aNode == aEndNode)) {
-    return true;
+  if (aNode == aStartNode || aNode == aEndNode) {
+    if (aNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+      return true; // text node or something
+    }
+    if (!aNode->HasChildren()) {
+      MOZ_ASSERT(aNode != aStartNode || !aStartOffset,
+        "aStartNode doesn't have children and not a data node, "
+        "aStartOffset should be 0");
+      MOZ_ASSERT(aNode != aEndNode || !aEndOffset,
+        "aStartNode doesn't have children and not a data node, "
+        "aStartOffset should be 0");
+      return true;
+    }
   }
 
   nsINode* parent = aNode->GetParentNode();
@@ -341,12 +351,14 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       //      character in the cdata node, should we set mFirst to
       //      the next sibling?
 
-      if (!startIsData) {
+      // If the node has no child, the child may be <br> or something.
+      // So, we shouldn't skip the empty node if the start offset is 0.
+      // In other words, if the offset is 1, the node should be ignored.
+      if (!startIsData && startIndx) {
         mFirst = GetNextSibling(startNode);
 
         // Does mFirst node really intersect the range?  The range could be
         // 'degenerate', i.e., not collapsed but still contain no content.
-
         if (mFirst && !NodeIsInTraversalRange(mFirst, mPre, startNode,
                                               startIndx, endNode, endIndx)) {
           mFirst = nullptr;

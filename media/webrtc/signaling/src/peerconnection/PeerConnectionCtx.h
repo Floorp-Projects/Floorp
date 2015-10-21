@@ -12,7 +12,7 @@
 #endif
 
 #include "mozilla/Attributes.h"
-#include "StaticPtr.h"
+#include "mozilla/StaticPtr.h"
 #include "PeerConnectionImpl.h"
 #include "mozIGeckoMediaPluginService.h"
 #include "nsIRunnable.h"

@@ -16,19 +16,11 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo*
-GetThreadPoolLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsThreadPool");
-  }
-  return sLog;
-}
+static LazyLogModule sThreadPoolLog("nsThreadPool");
 #ifdef LOG
 #undef LOG
 #endif
-#define LOG(args) MOZ_LOG(GetThreadPoolLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(sThreadPoolLog, mozilla::LogLevel::Debug, args)
 
 // DESIGN:
 //  o  Allocate anonymous threads.

@@ -40,14 +40,12 @@ static Atomic<int32_t>  gGenerator;
 static TimerThread*     gThread = nullptr;
 
 // This module prints info about the precision of timers.
-PRLogModuleInfo*
+static mozilla::LazyLogModule sTimerLog("nsTimerImpl");
+
+mozilla::LogModule*
 GetTimerLog()
 {
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsTimerImpl");
-  }
-  return sLog;
+  return sTimerLog;
 }
 
 // This module prints info about which timers are firing, which is useful for
@@ -83,14 +81,12 @@ GetTimerLog()
 // More detailed docs are here:
 // https://developer.mozilla.org/en-US/docs/Mozilla/Performance/TimerFirings_logging
 //
-PRLogModuleInfo*
+static mozilla::LazyLogModule sTimerFiringsLog("TimerFirings");
+
+mozilla::LogModule*
 GetTimerFiringsLog()
 {
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("TimerFirings");
-  }
-  return sLog;
+  return sTimerFiringsLog;
 }
 
 #include <math.h>
