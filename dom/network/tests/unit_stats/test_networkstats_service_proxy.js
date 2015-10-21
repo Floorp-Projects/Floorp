@@ -61,16 +61,14 @@ add_test(function test_saveAppStats() {
       do_check_eq(cachedStats[key1].serviceType.length, 0);
       do_check_eq(cachedStats[key1].networkId, wifi.id);
       do_check_eq(cachedStats[key1].networkType, wifi.type);
-      do_check_eq(new Date(cachedStats[key1].date).getTime() / 1000,
-                  Math.floor(timestamp / 1000));
+      do_check_eq(cachedStats[key1].date.getTime(), timestamp);
       do_check_eq(cachedStats[key1].rxBytes, 10);
       do_check_eq(cachedStats[key1].txBytes, 20);
       do_check_eq(cachedStats[key2].appId, 1);
       do_check_eq(cachedStats[key1].serviceType.length, 0);
       do_check_eq(cachedStats[key2].networkId, mobile.id);
       do_check_eq(cachedStats[key2].networkType, mobile.type);
-      do_check_eq(new Date(cachedStats[key2].date).getTime() / 1000,
-                  Math.floor(timestamp / 1000));
+      do_check_eq(cachedStats[key2].date.getTime(), timestamp);
       do_check_eq(cachedStats[key2].rxBytes, 10);
       do_check_eq(cachedStats[key2].txBytes, 20);
 
@@ -113,16 +111,14 @@ add_test(function test_saveServiceStats() {
         do_check_eq(cachedStats[key1].serviceType, serviceType);
         do_check_eq(cachedStats[key1].networkId, wifi.id);
         do_check_eq(cachedStats[key1].networkType, wifi.type);
-        do_check_eq(new Date(cachedStats[key1].date).getTime() / 1000,
-                    Math.floor(timestamp / 1000));
+        do_check_eq(cachedStats[key1].date.getTime(), timestamp);
         do_check_eq(cachedStats[key1].rxBytes, 10);
         do_check_eq(cachedStats[key1].txBytes, 20);
         do_check_eq(cachedStats[key2].appId, 0);
         do_check_eq(cachedStats[key1].serviceType, serviceType);
         do_check_eq(cachedStats[key2].networkId, mobile.id);
         do_check_eq(cachedStats[key2].networkType, mobile.type);
-        do_check_eq(new Date(cachedStats[key2].date).getTime() / 1000,
-                    Math.floor(timestamp / 1000));
+        do_check_eq(cachedStats[key2].date.getTime(), timestamp);
         do_check_eq(cachedStats[key2].rxBytes, 10);
         do_check_eq(cachedStats[key2].txBytes, 20);
 
@@ -157,8 +153,7 @@ add_test(function test_saveStatsWithDifferentDates() {
         do_check_eq(cachedStats[key].isInBrowser, false);
         do_check_eq(cachedStats[key].networkId, mobile.id);
         do_check_eq(cachedStats[key].networkType, mobile.type);
-        do_check_eq(new Date(cachedStats[key].date).getTime() / 1000,
-                    Math.floor(tomorrow.getTime() / 1000));
+        do_check_eq(cachedStats[key].date.getTime(), tomorrow.getTime());
         do_check_eq(cachedStats[key].rxBytes, 30);
         do_check_eq(cachedStats[key].txBytes, 40);
 
