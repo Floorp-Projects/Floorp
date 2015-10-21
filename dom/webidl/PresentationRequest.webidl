@@ -6,7 +6,7 @@
 
 [Constructor(DOMString url),
  Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation"]
+ Func="Navigator::HasPresentationSupport"]
 interface PresentationRequest : EventTarget {
   /*
    * A requesting page use start() to start a new connection, and it will be
