@@ -1615,6 +1615,11 @@ class DebugScopeProxy : public BaseProxyHandler
         *accessResult = ACCESS_GENERIC;
         LiveScopeVal* maybeLiveScope = DebugScopes::hasLiveScope(*scope);
 
+        if (scope->is<ModuleEnvironmentObject>()) {
+            /* Everything is aliased and stored in the environment object. */
+            return true;
+        }
+
         /* Handle unaliased formals, vars, lets, and consts at function scope. */
         if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
             CallObject& callobj = scope->as<CallObject>();
@@ -1748,9 +1753,11 @@ class DebugScopeProxy : public BaseProxyHandler
         return id == NameToId(cx->names().arguments);
     }
 
-    static bool isFunctionScope(ScopeObject& scope)
+    static bool isFunctionScope(const JSObject& scope)
     {
-        return scope.is<CallObject>() && !scope.as<CallObject>().isForEval();
+        return scope.is<CallObject>() &&
+               !scope.is<ModuleEnvironmentObject>() &&
+               !scope.as<CallObject>().isForEval();
     }
 
     /*
@@ -2051,7 +2058,7 @@ class DebugScopeProxy : public BaseProxyHandler
          * Function scopes are optimized to not contain unaliased variables so
          * they must be manually appended here.
          */
-        if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
+        if (isFunctionScope(*scope)) {
             RootedScript script(cx, scope->as<CallObject>().callee().nonLazyScript());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && !props.append(NameToId(bi->name())))
@@ -2086,7 +2093,7 @@ class DebugScopeProxy : public BaseProxyHandler
          * Function scopes are optimized to not contain unaliased variables so
          * a manual search is necessary.
          */
-        if (!found && scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
+        if (!found && isFunctionScope(*scope)) {
             RootedScript script(cx, scope->as<CallObject>().callee().nonLazyScript());
             for (BindingIter bi(script); bi; bi++) {
                 if (!bi->aliased() && NameToId(bi->name()) == id) {
@@ -2183,7 +2190,7 @@ DebugScopeObject::isOptimizedOut() const
     if (s.is<ClonedBlockObject>())
         return !s.as<ClonedBlockObject>().staticBlock().needsClone();
 
-    if (s.is<CallObject>()) {
+    if (s.is<CallObject>() && !s.is<ModuleEnvironmentObject>()) {
         return !s.as<CallObject>().isForEval() &&
                !s.as<CallObject>().callee().needsCallObject() &&
                !maybeSnapshot();

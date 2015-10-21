@@ -145,7 +145,7 @@ class RematerializedFrame
         return !!script_->module();
     }
     bool isGlobalFrame() const {
-        return !isFunctionFrame();
+        return !isFunctionFrame() && !isModuleFrame();
     }
     bool isNonEvalFunctionFrame() const {
         // Ion doesn't support eval frames.

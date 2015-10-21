@@ -400,7 +400,7 @@ class BaselineFrame
         return CalleeTokenIsModuleScript(calleeToken());
     }
     bool isGlobalFrame() const {
-        return !CalleeTokenIsFunction(calleeToken());
+        return !isFunctionFrame() && !isModuleFrame();
     }
      bool isEvalFrame() const {
         return flags_ & EVAL;
