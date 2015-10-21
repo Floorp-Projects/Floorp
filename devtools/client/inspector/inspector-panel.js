@@ -77,6 +77,7 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this.panelWin.inspector = this;
 
+  this.nodeMenuTriggerInfo = null;
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
   this._target.on("will-navigate", this._onBeforeNavigate);
 
@@ -647,9 +648,14 @@ InspectorPanel.prototype = {
   },
 
   /**
-   * Disable the delete item if needed. Update the pseudo classes.
+   * Update, enable, disable, hide, show any menu item depending on the current
+   * element.
    */
-  _setupNodeMenu: function() {
+  _setupNodeMenu: function(event) {
+    let markupContainer = this.markup.getContainer(this.selection.nodeFront);
+    this.nodeMenuTriggerInfo =
+      markupContainer.editor.getInfoAtNode(event.target.triggerNode);
+
     let isSelectionElement = this.selection.isElementNode() &&
                              !this.selection.isPseudoElementNode();
     let isEditableElement = isSelectionElement &&
@@ -696,9 +702,8 @@ InspectorPanel.prototype = {
     expandAll.setAttribute("disabled", "true");
     collapse.setAttribute("disabled", "true");
 
-    let markUpContainer = this.markup.importNode(this.selection.nodeFront, false);
-    if (this.selection.isNode() && markUpContainer.hasChildren) {
-      if (markUpContainer.expanded) {
+    if (this.selection.isNode() && markupContainer.hasChildren) {
+      if (markupContainer.expanded) {
         collapse.removeAttribute("disabled");
       }
       expandAll.removeAttribute("disabled");
@@ -784,11 +789,51 @@ InspectorPanel.prototype = {
     // Enable the "copy image data-uri" item if the selection is previewable
     // which essentially checks if it's an image or canvas tag
     let copyImageData = this.panelDoc.getElementById("node-menu-copyimagedatauri");
-    let markupContainer = this.markup.getContainer(this.selection.nodeFront);
     if (isSelectionElement && markupContainer && markupContainer.isPreviewable()) {
       copyImageData.removeAttribute("disabled");
     } else {
       copyImageData.setAttribute("disabled", "true");
+    }
+
+    // Enable / disable "Add Attribute", "Edit Attribute"
+    // and "Remove Attribute" items
+    this._setupAttributeMenu(isEditableElement);
+  },
+
+  _setupAttributeMenu: function(isEditableElement) {
+    let addAttribute = this.panelDoc.getElementById("node-menu-add-attribute");
+    let editAttribute = this.panelDoc.getElementById("node-menu-edit-attribute");
+    let removeAttribute = this.panelDoc.getElementById("node-menu-remove-attribute");
+    let nodeInfo = this.nodeMenuTriggerInfo;
+
+    // Enable "Add Attribute" for all editable elements
+    if (isEditableElement) {
+      addAttribute.removeAttribute("disabled");
+    } else {
+      addAttribute.setAttribute("disabled", "true");
+    }
+
+    // Enable "Edit Attribute" and "Remove Attribute" only on attribute click
+    if (isEditableElement && nodeInfo && nodeInfo.type === "attribute") {
+      editAttribute.removeAttribute("disabled");
+      editAttribute.setAttribute("label",
+        strings.formatStringFromName(
+          "inspector.menu.editAttribute.label", [`"${nodeInfo.name}"`], 1));
+
+      removeAttribute.removeAttribute("disabled");
+      removeAttribute.setAttribute("label",
+        strings.formatStringFromName(
+          "inspector.menu.removeAttribute.label", [`"${nodeInfo.name}"`], 1));
+    } else {
+      editAttribute.setAttribute("disabled", "true");
+      editAttribute.setAttribute("label",
+        strings.formatStringFromName(
+          "inspector.menu.editAttribute.label", [''], 1));
+
+      removeAttribute.setAttribute("disabled", "true");
+      removeAttribute.setAttribute("label",
+        strings.formatStringFromName(
+          "inspector.menu.removeAttribute.label", [''], 1));
     }
   },
 
@@ -1222,6 +1267,33 @@ InspectorPanel.prototype = {
       // remove the node from content
       this.walker.removeNode(this.selection.nodeFront);
     }
+  },
+
+  /**
+   * Add attribute to node.
+   * Used for node context menu and shouldn't be called directly.
+   */
+  onAddAttribute: function() {
+    let container = this.markup.getContainer(this.selection.nodeFront);
+    container.addAttribute();
+  },
+
+  /**
+   * Edit attribute for node.
+   * Used for node context menu and shouldn't be called directly.
+   */
+  onEditAttribute: function() {
+    let container = this.markup.getContainer(this.selection.nodeFront);
+    container.editAttribute(this.nodeMenuTriggerInfo.name);
+  },
+
+  /**
+   * Remove attribute from node.
+   * Used for node context menu and shouldn't be called directly.
+   */
+  onRemoveAttribute: function() {
+    let container = this.markup.getContainer(this.selection.nodeFront);
+    container.removeAttribute(this.nodeMenuTriggerInfo.name);
   },
 
   expandNode: function() {

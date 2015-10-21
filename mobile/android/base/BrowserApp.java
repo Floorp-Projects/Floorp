@@ -209,7 +209,6 @@ public class BrowserApp extends GeckoApp
     private static class MenuItemInfo {
         public int id;
         public String label;
-        public String icon;
         public boolean checkable;
         public boolean checked;
         public boolean enabled = true;
@@ -1763,7 +1762,6 @@ public class BrowserApp extends GeckoApp
             final MenuItemInfo info = new MenuItemInfo();
             info.label = message.getString("name");
             info.id = message.getInt("id") + ADDON_MENU_OFFSET;
-            info.icon = message.optString("icon", null);
             info.checked = message.optBoolean("checked", false);
             info.enabled = message.optBoolean("enabled", true);
             info.visible = message.optBoolean("visible", true);
