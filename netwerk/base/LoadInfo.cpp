@@ -81,6 +81,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 
     mUpgradeInsecureRequests = aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests();
   }
+
+  mOriginAttributes = BasePrincipal::Cast(mLoadingPrincipal)->OriginAttributesRef();
 }
 
 LoadInfo::LoadInfo(const LoadInfo& rhs)
@@ -108,6 +110,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    uint64_t aParentOuterWindowID,
                    bool aEnforceSecurity,
                    bool aInitialSecurityCheckDone,
+                   const OriginAttributes& aOriginAttributes,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
@@ -119,6 +122,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mParentOuterWindowID(aParentOuterWindowID)
   , mEnforceSecurity(aEnforceSecurity)
   , mInitialSecurityCheckDone(aInitialSecurityCheckDone)
+  , mOriginAttributes(aOriginAttributes)
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -287,6 +291,44 @@ NS_IMETHODIMP
 LoadInfo::GetParentOuterWindowID(uint64_t* aResult)
 {
   *aResult = mParentOuterWindowID;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetScriptableOriginAttributes(JSContext* aCx,
+  JS::MutableHandle<JS::Value> aOriginAttributes)
+{
+  if (NS_WARN_IF(!ToJSValue(aCx, mOriginAttributes, aOriginAttributes))) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetScriptableOriginAttributes(JSContext* aCx,
+  JS::Handle<JS::Value> aOriginAttributes)
+{
+  OriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mOriginAttributes = attrs;
+  return NS_OK;
+}
+
+nsresult
+LoadInfo::GetOriginAttributes(mozilla::OriginAttributes* aOriginAttributes)
+{
+  NS_ENSURE_ARG(aOriginAttributes);
+  *aOriginAttributes = mOriginAttributes;
+  return NS_OK;
+}
+
+nsresult
+LoadInfo::SetOriginAttributes(const mozilla::OriginAttributes& aOriginAttributes)
+{
+  mOriginAttributes = aOriginAttributes;
   return NS_OK;
 }
 

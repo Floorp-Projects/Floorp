@@ -14,6 +14,8 @@
 #include "nsIURI.h"
 #include "nsTArray.h"
 
+#include "mozilla/BasePrincipal.h"
+
 class nsINode;
 class nsXMLHttpRequest;
 
@@ -68,6 +70,7 @@ private:
            uint64_t aParentOuterWindowID,
            bool aEnforceSecurity,
            bool aInitialSecurityCheckDone,
+           const OriginAttributes& aOriginAttributes,
            nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain);
   LoadInfo(const LoadInfo& rhs);
 
@@ -95,6 +98,7 @@ private:
   uint64_t                         mParentOuterWindowID;
   bool                             mEnforceSecurity;
   bool                             mInitialSecurityCheckDone;
+  OriginAttributes                 mOriginAttributes;
   nsTArray<nsCOMPtr<nsIPrincipal>> mRedirectChain;
 };
 
