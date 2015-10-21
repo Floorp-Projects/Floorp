@@ -110,7 +110,7 @@ struct LayerPropertiesBase : public LayerProperties
     , mPostXScale(aLayer->GetPostXScale())
     , mPostYScale(aLayer->GetPostYScale())
     , mOpacity(aLayer->GetLocalOpacity())
-    , mUseClipRect(!!aLayer->GetClipRect())
+    , mUseClipRect(!!aLayer->GetEffectiveClipRect())
   {
     MOZ_COUNT_CTOR(LayerPropertiesBase);
     if (aLayer->GetMaskLayer()) {
@@ -121,7 +121,7 @@ struct LayerPropertiesBase : public LayerProperties
       mAncestorMaskLayers.AppendElement(CloneLayerTreePropertiesInternal(maskLayer, true));
     }
     if (mUseClipRect) {
-      mClipRect = *aLayer->GetClipRect();
+      mClipRect = *aLayer->GetEffectiveClipRect();
     }
     mTransform = aLayer->GetLocalTransform();
   }
@@ -148,7 +148,7 @@ struct LayerPropertiesBase : public LayerProperties
     bool transformChanged = !mTransform.FuzzyEqualsMultiplicative(mLayer->GetLocalTransform()) ||
                             mLayer->GetPostXScale() != mPostXScale ||
                             mLayer->GetPostYScale() != mPostYScale;
-    const Maybe<ParentLayerIntRect>& otherClip = mLayer->GetClipRect();
+    const Maybe<ParentLayerIntRect>& otherClip = mLayer->GetEffectiveClipRect();
     nsIntRegion result;
 
     bool ancestorMaskChanged = mAncestorMaskLayers.Length() != mLayer->GetAncestorMaskLayerCount();

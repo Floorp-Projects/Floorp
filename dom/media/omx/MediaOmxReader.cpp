@@ -170,10 +170,8 @@ MediaOmxReader::Shutdown()
   return p;
 }
 
-void MediaOmxReader::ReleaseMediaResourcesInternal()
+void MediaOmxReader::ReleaseMediaResources()
 {
-  MOZ_ASSERT(OnTaskQueue());
-
   mMediaResourceRequest.DisconnectIfExists();
   mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
 
@@ -212,7 +210,7 @@ nsresult MediaOmxReader::InitOmxDecoder()
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaOmxReader::AsyncReadMetadataInternal()
+MediaOmxReader::AsyncReadMetadata()
 {
   MOZ_ASSERT(OnTaskQueue());
   EnsureActive();

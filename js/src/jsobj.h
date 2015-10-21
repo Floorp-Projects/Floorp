@@ -1038,7 +1038,7 @@ GetObjectClassName(JSContext* cx, HandleObject obj);
 /*
  * Inner and outer objects
  *
- * GetInnerObject and GetOuterObject (and also GetThisObject, somewhat) have to
+ * GetInnerObject and GetOuterObject (and also GetThisValue, somewhat) have to
  * do with Windows and WindowProxies. There's a screwy invariant that actual
  * Window objects (the global objects of web pages) are never directly exposed
  * to script. Instead we often substitute a WindowProxy.
@@ -1078,7 +1078,7 @@ GetInnerObject(JSObject* obj)
  *
  * This must be called before passing an object to script, if the object might
  * be a Window. (But usually those cases involve scope objects, and for those,
- * it is better to call GetThisObject instead.)
+ * it is better to call GetThisValue instead.)
  */
 inline JSObject*
 GetOuterObject(JSContext* cx, HandleObject obj)
@@ -1095,16 +1095,18 @@ GetOuterObject(JSContext* cx, HandleObject obj)
  * Some JSObjects shouldn't be exposed directly to script. This includes (at
  * least) DynamicWithObjects and Window objects. However, since both of those
  * can be on scope chains, we sometimes would expose those as `this` if we
- * were not so vigilant about calling GetThisObject where appropriate.
+ * were not so vigilant about calling GetThisValue where appropriate.
  *
  * See comments at ComputeImplicitThis.
  */
-inline JSObject*
-GetThisObject(JSContext* cx, HandleObject obj)
+inline bool
+GetThisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp)
 {
-    if (ObjectOp op = obj->getOps()->thisObject)
-        return op(cx, obj);
-    return obj;
+    if (ThisValueOp op = obj->getOps()->thisValue)
+        return op(cx, obj, vp);
+
+    vp.setObject(*obj);
+    return true;
 }
 
 

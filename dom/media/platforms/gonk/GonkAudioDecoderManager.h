@@ -7,6 +7,7 @@
 #if !defined(GonkAudioDecoderManager_h_)
 #define GonkAudioDecoderManager_h_
 
+#include "AudioCompactor.h"
 #include "mozilla/RefPtr.h"
 #include "GonkMediaDataDecoder.h"
 
@@ -30,19 +31,21 @@ public:
   nsresult Output(int64_t aStreamOffset,
                           RefPtr<MediaData>& aOutput) override;
 
+  virtual nsresult Flush() override;
+
 private:
   bool InitMediaCodecProxy();
 
-  nsresult CreateAudioData(int64_t aStreamOffset,
-                              AudioData** aOutData);
-
-  void ReleaseAudioBuffer();
+  nsresult CreateAudioData(MediaBuffer* aBuffer, int64_t aStreamOffset);
 
   uint32_t mAudioChannels;
   uint32_t mAudioRate;
   const uint32_t mAudioProfile;
 
-  android::MediaBuffer* mAudioBuffer;
+  MediaQueue<AudioData> mAudioQueue;
+
+  AudioCompactor mAudioCompactor;
+
 };
 
 } // namespace mozilla

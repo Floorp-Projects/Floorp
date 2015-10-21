@@ -204,6 +204,7 @@ class AbstractFramePtr
 
     inline bool hasCallObj() const;
     inline bool isFunctionFrame() const;
+    inline bool isModuleFrame() const;
     inline bool isGlobalFrame() const;
     inline bool isEvalFrame() const;
     inline bool isDebuggerEvalFrame() const;
@@ -736,7 +737,7 @@ class InterpreterFrame
     }
 
     Value& thisValue() const {
-        if (flags_ & (EVAL | GLOBAL))
+        if (flags_ & (EVAL | GLOBAL | MODULE))
             return ((Value*)this)[-1];
         return argv()[-1];
     }

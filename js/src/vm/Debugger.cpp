@@ -6169,11 +6169,18 @@ DebuggerFrame_getType(JSContext* cx, unsigned argc, Value* vp)
      * Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
      * order of checks here is significant.
      */
-    args.rval().setString(frame.isEvalFrame()
-                          ? cx->names().eval
-                          : frame.isGlobalFrame()
-                          ? cx->names().global
-                          : cx->names().call);
+    JSString* type;
+    if (frame.isEvalFrame())
+        type = cx->names().eval;
+    else if (frame.isGlobalFrame())
+        type = cx->names().global;
+    else if (frame.isFunctionFrame())
+        type = cx->names().call;
+    else if (frame.isModuleFrame())
+        type = cx->names().module;
+    else
+        MOZ_CRASH("Unknown frame type");
+    args.rval().setString(type);
     return true;
 }
 
@@ -6715,10 +6722,8 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
          * object, it should have a thisObject hook that returns the
          * appropriate outer object.
          */
-        JSObject* thisObj = GetThisObject(cx, scope);
-        if (!thisObj)
+        if (!GetThisValue(cx, scope, &thisv))
             return false;
-        thisv = ObjectValue(*thisObj);
         env = scope;
     }
 
@@ -7962,7 +7967,7 @@ DebuggerEnv_getCallee(JSContext* cx, unsigned argc, Value* vp)
         return true;
 
     JSObject& scope = env->as<DebugScopeObject>().scope();
-    if (!scope.is<CallObject>())
+    if (!scope.is<CallObject>() || scope.is<ModuleEnvironmentObject>())
         return true;
 
     CallObject& callobj = scope.as<CallObject>();

@@ -166,8 +166,8 @@ function base_path() {
 function test_login(test, origin, username, password, cookie) {
   return new Promise(function(resolve, reject) {
       with_iframe(
-        origin +
-        '/service-worker/resources/fetch-access-control-login.html')
+        origin + base_path() +
+        'resources/fetch-access-control-login.html')
         .then(test.step_func(function(frame) {
             var channel = new MessageChannel();
             channel.port1.onmessage = test.step_func(function() {
@@ -182,7 +182,7 @@ function test_login(test, origin, username, password, cookie) {
 }
 
 function login(test) {
-  return test_login(test, 'http://{{domains[www]}}:{{ports[http][0]}}',
+  return test_login(test, 'http://{{domains[www1]}}:{{ports[http][0]}}',
                     'username1', 'password1', 'cookie1')
     .then(function() {
         return test_login(test, 'http://{{host}}:{{ports[http][0]}}',
@@ -191,10 +191,10 @@ function login(test) {
 }
 
 function login_https(test) {
-  return test_login(test, 'https://{{domains[www]}}:8443',
+  return test_login(test, 'https://{{domains[www1]}}:{{ports[https][0]}}',
                     'username1s', 'password1s', 'cookie1')
     .then(function() {
-        return test_login(test, 'https://{{host}}:8443',
+        return test_login(test, 'https://{{host}}:{{ports[https][0]}}',
                           'username2s', 'password2s', 'cookie2');
       });
 }
