@@ -42,66 +42,86 @@ function run_test() {
 
   const EXPECTED = {
     name: null,
-    bytes: undefined,
-    count: undefined,
+    bytes: 0,
+    totalBytes: 210,
+    count: 0,
+    totalCount: 21,
     children: [
       {
-        name: "noStack",
-        bytes: 60,
-        count: 6,
-        children: undefined
-      },
-      {
-        name: stack5,
-        bytes: 50,
-        count: 5,
-        children: undefined
-      },
-      {
         name: stack4.parent,
-        bytes: undefined,
-        count: undefined,
+        bytes: 0,
+        totalBytes: 100,
+        count: 0,
+        totalCount: 10,
         children: [
           {
-            name: stack4,
-            bytes: 40,
-            count: 4,
-            children: undefined
-          },
-          {
-            name: stack1.parent,
-            bytes: undefined,
-            count: undefined,
-            children: [
-              {
-                name: stack1,
-                bytes: 10,
-                count: 1,
-                children: undefined
-              },
-            ]
-          },
-          {
             name: stack3.parent,
-            bytes: undefined,
-            count: undefined,
+            bytes: 0,
+            totalBytes: 50,
+            count: 0,
+            totalCount: 5,
             children: [
               {
                 name: stack3,
                 bytes: 30,
+                totalBytes: 30,
                 count: 3,
+                totalCount: 3,
                 children: undefined
               },
               {
                 name: stack2,
                 bytes: 20,
+                totalBytes: 20,
                 count: 2,
+                totalCount: 2,
                 children: undefined
               }
             ]
-          }
+          },
+          {
+            name: stack4,
+            bytes: 40,
+            totalBytes: 40,
+            count: 4,
+            totalCount: 4,
+            children: undefined
+          },
+          {
+            name: stack1.parent,
+            bytes: 0,
+            totalBytes: 10,
+            count: 0,
+            totalCount: 1,
+            children: [
+              {
+                name: stack1,
+                bytes: 10,
+                totalBytes: 10,
+                count: 1,
+                totalCount: 1,
+                children: undefined
+              },
+            ]
+          },
         ]
-      }
+      },
+      {
+        name: "noStack",
+        bytes: 60,
+        totalBytes: 60,
+        count: 6,
+        totalCount: 6,
+        children: undefined
+      },
+      {
+        name: stack5,
+        bytes: 50,
+        totalBytes: 50,
+        count: 5,
+        totalCount: 5,
+        children: undefined
+      },
     ]
   };
 
