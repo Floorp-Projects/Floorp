@@ -95,6 +95,8 @@ public:
     return mHasVideo;
   }
 
+  virtual void ReleaseMediaResources() override;
+
   virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
   virtual RefPtr<SeekPromise>
@@ -115,8 +117,6 @@ public:
 private:
   class ProcessCachedDataTask;
   class NotifyDataArrivedRunnable;
-
-  virtual void ReleaseMediaResourcesInternal() override;
 
   bool IsShutdown() {
     MutexAutoLock lock(mShutdownMutex);
