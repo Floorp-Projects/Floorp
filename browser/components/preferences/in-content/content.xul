@@ -77,6 +77,15 @@
                   accesskey="&notificationsPolicyButton.accesskey;"/>
         </hbox>
       </row>
+      <row id="notificationsDoNotDisturbRow" hidden="true">
+        <vbox align="start">
+          <checkbox id="notificationsDoNotDisturb" label="&notificationsDoNotDisturb.label;"
+                    accesskey="&notificationsDoNotDisturb.accesskey;"/>
+          <label id="notificationsDoNotDisturbDetails"
+                 class="indent"
+                 value="&notificationsDoNotDisturbDetails.value;"/>
+        </vbox>
+      </row>
     </rows>
   </grid>
 </groupbox>

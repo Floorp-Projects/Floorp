@@ -20,10 +20,9 @@
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gMozPromiseLog;
+extern LazyLogModule gMozPromiseLog;
 
 #define PROMISE_LOG(x, ...) \
-  MOZ_ASSERT(gMozPromiseLog); \
   MOZ_LOG(gMozPromiseLog, mozilla::LogLevel::Debug, (x, ##__VA_ARGS__))
 
 namespace detail {

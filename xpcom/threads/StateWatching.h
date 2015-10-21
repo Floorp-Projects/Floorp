@@ -56,10 +56,9 @@
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gStateWatchingLog;
+extern LazyLogModule gStateWatchingLog;
 
 #define WATCH_LOG(x, ...) \
-  MOZ_ASSERT(gStateWatchingLog); \
   MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 /*

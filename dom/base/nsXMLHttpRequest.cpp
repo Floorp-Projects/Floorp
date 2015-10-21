@@ -2311,16 +2311,11 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
                uint64_t* aContentLength, nsACString& aContentType,
                nsACString& aCharset)
 {
-  aContentType.AssignLiteral("application/xml");
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
   NS_ENSURE_STATE(doc);
   aCharset.AssignLiteral("UTF-8");
 
   nsresult rv;
-  nsCOMPtr<nsIDOMSerializer> serializer =
-    do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIStorageStream> storStream;
   rv = NS_NewStorageStream(4096, UINT32_MAX, getter_AddRefs(storStream));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2329,9 +2324,32 @@ GetRequestBody(nsIDOMDocument* aDoc, nsIInputStream** aResult,
   rv = storStream->GetOutputStream(0, getter_AddRefs(output));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Make sure to use the encoding we'll send
-  rv = serializer->SerializeToStream(aDoc, output, aCharset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (doc->IsHTMLDocument()) {
+    aContentType.AssignLiteral("text/html");
+
+    nsString serialized;
+    if (!nsContentUtils::SerializeNodeToMarkup(doc, true, serialized)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ConvertUTF16toUTF8 utf8Serialized(serialized);
+
+    uint32_t written;
+    rv = output->Write(utf8Serialized.get(), utf8Serialized.Length(), &written);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    MOZ_ASSERT(written == utf8Serialized.Length());
+  } else {
+    aContentType.AssignLiteral("application/xml");
+
+    nsCOMPtr<nsIDOMSerializer> serializer =
+      do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Make sure to use the encoding we'll send
+    rv = serializer->SerializeToStream(aDoc, output, aCharset);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+  }
 
   output->Close();
 

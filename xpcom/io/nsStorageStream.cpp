@@ -41,19 +41,11 @@ using mozilla::ipc::StringInputStreamParams;
 // this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 //
-static PRLogModuleInfo*
-GetStorageStreamLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsStorageStream");
-  }
-  return sLog;
-}
+static LazyLogModule sStorageStreamLog("nsStorageStream");
 #ifdef LOG
 #undef LOG
 #endif
-#define LOG(args) MOZ_LOG(GetStorageStreamLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(sStorageStreamLog, mozilla::LogLevel::Debug, args)
 
 nsStorageStream::nsStorageStream()
   : mSegmentedBuffer(0), mSegmentSize(0), mWriteInProgress(false),

@@ -271,7 +271,9 @@ description > html|a {
 }
 
 .indent {
-  -moz-margin-start: 33px;
+  /* !important needed to override -moz-margin-start:0 !important; rule
+     define in common.css for labels */
+  -moz-margin-start: 33px !important;
 }
 
 .text-link {
