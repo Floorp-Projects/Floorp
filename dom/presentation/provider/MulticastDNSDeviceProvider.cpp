@@ -616,11 +616,6 @@ MulticastDNSDeviceProvider::OnServiceFound(nsIDNSServiceInfo* aServiceInfo)
 
   LOG_I("OnServiceFound: %s", serviceName.get());
 
-  if (mRegisteredName == serviceName) {
-    LOG_I("ignore self");
-    return NS_OK;
-  }
-
   if (mMulticastDNS) {
     if (NS_WARN_IF(NS_FAILED(rv = mMulticastDNS->ResolveService(
         aServiceInfo, mWrappedListener)))) {
@@ -706,8 +701,11 @@ MulticastDNSDeviceProvider::OnServiceRegistered(nsIDNSServiceInfo* aServiceInfo)
   LOG_I("OnServiceRegistered (%s)",  name.get());
   mRegisteredName = name;
 
-  if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->SetId(name)))) {
-    return rv;
+  if (mMulticastDNS) {
+    if (NS_WARN_IF(NS_FAILED(rv = mMulticastDNS->ResolveService(
+        aServiceInfo, mWrappedListener)))) {
+      return rv;
+    }
   }
 
   return NS_OK;
@@ -774,6 +772,16 @@ MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo)
   nsAutoCString host;
   if (NS_WARN_IF(NS_FAILED(rv = aServiceInfo->GetHost(host)))) {
     return rv;
+  }
+
+  if (mRegisteredName == serviceName) {
+    LOG_I("ignore self");
+
+    if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->SetId(host)))) {
+      return rv;
+    }
+
+    return NS_OK;
   }
 
   nsAutoCString address;
