@@ -453,7 +453,7 @@ class CGDOMJSClass(CGThing):
                       nullptr, /* unwatch */
                       nullptr, /* getElements */
                       nullptr, /* enumerate */
-                      JS_ObjectToOuterObject /* thisObject */
+                      mozilla::dom::ObjectToOuterObjectValue /* thisValue */
                     }
                     """,
                     objectMoved=objectMovedHook)

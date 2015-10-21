@@ -665,7 +665,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, nullptr, // watch/unwatch
         nullptr, // getElements
         nullptr, // enumerate
-        XPC_WN_JSOp_ThisObject,
+        XPC_WN_JSOp_ThisValue,
     }
   }
 };
@@ -927,10 +927,10 @@ XPC_WN_JSOp_Enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
     return retval;
 }
 
-JSObject*
-XPC_WN_JSOp_ThisObject(JSContext* cx, HandleObject obj)
+bool
+XPC_WN_JSOp_ThisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp)
 {
-    return JS_ObjectToOuterObject(cx, obj);
+    return mozilla::dom::ObjectToOuterObjectValue(cx, obj, vp);
 }
 
 /***************************************************************************/
@@ -1036,7 +1036,7 @@ XPCNativeScriptableShared::PopulateJSClass()
     js::ObjectOps* ops = &mJSClass.base.ops;
     if (mFlags.WantNewEnumerate())
         ops->enumerate = XPC_WN_JSOp_Enumerate;
-    ops->thisObject = XPC_WN_JSOp_ThisObject;
+    ops->thisValue = XPC_WN_JSOp_ThisValue;
 
 
     if (mFlags.WantCall())

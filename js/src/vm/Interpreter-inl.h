@@ -63,11 +63,11 @@ ComputeThis(JSContext* cx, AbstractFramePtr frame)
         MOZ_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
     }
 
-    JSObject* thisObj = BoxNonStrictThis(cx, thisv);
-    if (!thisObj)
+    RootedValue result(cx);
+    if (!BoxNonStrictThis(cx, thisv, &result))
         return false;
 
-    frame.thisValue().setObject(*thisObj);
+    frame.thisValue() = result;
     return true;
 }
 
