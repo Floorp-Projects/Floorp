@@ -1,19 +1,10 @@
 // |jit-test| allow-oom
 
-if (!('oomAtAllocation' in this && 'resetOOMFailure' in this))
+if (!('oomTest' in this))
     quit();
 
 function f() {
-    var i = 1;
-    do {
-        try {
-            oomAtAllocation(i);
-            (function() y)();
-        } catch (e) {
-            x = resetOOMFailure();
-        }
-        i++;
-    } while (x);
+    eval("(function() y)()");
 }
-f();
+oomTest(f);
 fullcompartmentchecks(true);

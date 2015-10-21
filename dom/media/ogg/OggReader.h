@@ -69,6 +69,8 @@ public:
     return mTheoraState != 0 && mTheoraState->mActive;
   }
 
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) override;
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
   virtual media::TimeIntervals GetBuffered() override;
@@ -76,8 +78,6 @@ public:
   virtual bool IsMediaSeekable() override;
 
 private:
-  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
-
   // TODO: DEPRECATED. This uses synchronous decoding.
   // Stores the presentation time of the first frame we'd be able to play if
   // we started playback at the current position. Returns the first video

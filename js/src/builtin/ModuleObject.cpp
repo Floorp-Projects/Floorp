@@ -6,6 +6,7 @@
 
 #include "builtin/ModuleObject.h"
 
+#include "builtin/SelfHostingDefines.h"
 #include "frontend/ParseNode.h"
 #include "frontend/SharedContext.h"
 #include "gc/Tracer.h"
@@ -219,6 +220,290 @@ IndirectBinding::IndirectBinding(Handle<ModuleEnvironmentObject*> environment, H
 {}
 
 ///////////////////////////////////////////////////////////////////////////
+// ModuleNamespaceObject
+
+/* static */ const ModuleNamespaceObject::ProxyHandler ModuleNamespaceObject::proxyHandler;
+
+/* static */ bool
+ModuleNamespaceObject::isInstance(HandleValue value)
+{
+    return value.isObject() && value.toObject().is<ModuleNamespaceObject>();
+}
+
+/* static */ ModuleNamespaceObject*
+ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module)
+{
+    RootedValue priv(cx, ObjectValue(*module));
+    ProxyOptions options;
+    options.setLazyProto(true);
+    RootedObject object(cx, NewProxyObject(cx, &proxyHandler, priv, nullptr, options));
+    if (!object)
+        return nullptr;
+
+    RootedId funName(cx, INTERNED_STRING_TO_JSID(cx, cx->names().Symbol_iterator_fun));
+    RootedFunction enumerateFun(cx);
+    enumerateFun = JS::GetSelfHostedFunction(cx, "ModuleNamespaceEnumerate", funName, 0);
+    if (!enumerateFun)
+        return nullptr;
+
+    SetProxyExtra(object, ProxyHandler::EnumerateFunctionSlot, ObjectValue(*enumerateFun));
+
+    return &object->as<ModuleNamespaceObject>();
+}
+
+ModuleObject&
+ModuleNamespaceObject::module()
+{
+    return GetProxyPrivate(this).toObject().as<ModuleObject>();
+}
+
+ArrayObject&
+ModuleNamespaceObject::exports()
+{
+    ArrayObject* exports = module().namespaceExports();
+    MOZ_ASSERT(exports);
+    return *exports;
+}
+
+IndirectBindingMap&
+ModuleNamespaceObject::bindings()
+{
+    IndirectBindingMap* bindings = module().namespaceBindings();
+    MOZ_ASSERT(bindings);
+    return *bindings;
+}
+
+bool
+ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
+                                  HandleModuleObject targetModule, HandleAtom localName)
+{
+    IndirectBindingMap* bindings(this->module().namespaceBindings());
+    MOZ_ASSERT(bindings);
+
+    RootedModuleEnvironmentObject environment(cx, &targetModule->initialEnvironment());
+    RootedId exportedNameId(cx, AtomToId(exportedName));
+    RootedId localNameId(cx, AtomToId(localName));
+    IndirectBinding binding(environment, localNameId);
+    return bindings->putNew(exportedNameId, binding);
+}
+
+const char ModuleNamespaceObject::ProxyHandler::family = 0;
+
+ModuleNamespaceObject::ProxyHandler::ProxyHandler()
+  : BaseProxyHandler(&family, true)
+{}
+
+JS::Value ModuleNamespaceObject::ProxyHandler::getEnumerateFunction(HandleObject proxy) const
+{
+    return GetProxyExtra(proxy, EnumerateFunctionSlot);
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
+                                                  MutableHandleObject protop) const
+{
+    protop.set(nullptr);
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::setPrototype(JSContext* cx, HandleObject proxy,
+                                                  HandleObject proto, ObjectOpResult& result) const
+{
+    return result.failCantSetProto();
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy,
+                                                           bool* succeeded) const
+{
+    *succeeded = true;
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::isExtensible(JSContext* cx, HandleObject proxy,
+                                                  bool* extensible) const
+{
+    *extensible = false;
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::preventExtensions(JSContext* cx, HandleObject proxy,
+                                                 ObjectOpResult& result) const
+{
+    result.succeed();
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy,
+                                                              HandleId id,
+                                                              MutableHandle<JSPropertyDescriptor> desc) const
+{
+    Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
+    if (JSID_IS_SYMBOL(id)) {
+        Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
+        if (symbol == cx->wellKnownSymbols().iterator) {
+            RootedValue enumerateFun(cx, getEnumerateFunction(proxy));
+            desc.object().set(proxy);
+            desc.setConfigurable(false);
+            desc.setEnumerable(false);
+            desc.setValue(enumerateFun);
+            return true;
+        }
+
+        // TODO: Implement @@toStringTag here and in has() and get() methods.
+
+        return true;
+    }
+
+    const IndirectBindingMap& bindings = ns->bindings();
+    auto ptr = bindings.lookup(id);
+    if (!ptr)
+        return true;
+
+    const IndirectBinding& binding = ptr->value();
+    RootedModuleEnvironmentObject env(cx, binding.environment);
+    MOZ_ASSERT(env->module().environment());
+
+    RootedId localName(cx, binding.localName);
+    RootedValue value(cx);
+    if (!GetProperty(cx, env, env, localName, &value))
+        return false;
+
+    if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
+        return false;
+    }
+
+    desc.object().set(env);
+    desc.setConfigurable(false);
+    desc.setEnumerable(true);
+    desc.setValue(value);
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
+                                                    Handle<JSPropertyDescriptor> desc,
+                                                    ObjectOpResult& result) const
+{
+    return result.failReadOnly();
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id,
+                                         bool* bp) const
+{
+    Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
+    if (JSID_IS_SYMBOL(id)) {
+        Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
+        if (symbol == cx->wellKnownSymbols().iterator)
+            return true;
+
+        return false;
+    }
+
+    *bp = ns->bindings().has(id);
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
+                                         HandleId id, MutableHandleValue vp) const
+{
+    Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
+    if (JSID_IS_SYMBOL(id)) {
+        Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
+        if (symbol == cx->wellKnownSymbols().iterator) {
+            vp.set(getEnumerateFunction(proxy));
+            return true;
+        }
+
+        return false;
+    }
+
+    auto ptr = ns->bindings().lookup(id);
+    if (!ptr)
+        return false;
+
+    const IndirectBinding& binding = ptr->value();
+    RootedModuleEnvironmentObject env(cx, binding.environment);
+    MOZ_ASSERT(env->module().environment());
+
+    RootedId localName(cx, binding.localName);
+    RootedValue value(cx);
+    if (!GetProperty(cx, env, env, localName, &value))
+        return false;
+
+    if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
+        return false;
+    }
+
+    vp.set(value);
+    return true;
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                                         HandleValue receiver, ObjectOpResult& result) const
+{
+    return result.failReadOnly();
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::delete_(JSContext* cx, HandleObject proxy, HandleId id,
+                                             ObjectOpResult& result) const
+{
+    Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
+    if (ns->bindings().has(id))
+        return result.failReadOnly();
+
+    return result.succeed();
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
+                                               MutableHandleObject objp) const
+{
+    return BaseProxyHandler::enumerate(cx, proxy, objp);
+}
+
+bool
+ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
+                                                     AutoIdVector& props) const
+{
+    Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
+    RootedArrayObject exports(cx, &ns->exports());
+    uint32_t count = exports->length();
+    if (!props.reserve(props.length() + count))
+        return false;
+
+    for (uint32_t i = 0; i < count; i++) {
+        Value value = exports->getDenseElement(i);
+        props.infallibleAppend(AtomToId(&value.toString()->asAtom()));
+    }
+
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// FunctionDeclaration
+
+FunctionDeclaration::FunctionDeclaration(HandleAtom name, HandleFunction fun)
+  : name(name), fun(fun)
+{}
+
+void FunctionDeclaration::trace(JSTracer* trc)
+{
+    TraceEdge(trc, &name, "FunctionDeclaration name");
+    TraceEdge(trc, &fun, "FunctionDeclaration fun");
+}
+
+///////////////////////////////////////////////////////////////////////////
 // ModuleObject
 
 /* static */ const Class
@@ -261,11 +546,13 @@ ModuleObject::isInstance(HandleValue value)
 }
 
 /* static */ ModuleObject*
-ModuleObject::create(ExclusiveContext* cx)
+ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
 {
     Rooted<ModuleObject*> self(cx, NewBuiltinClassInstance<ModuleObject>(cx, TenuredObject));
     if (!self)
         return nullptr;
+
+    self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(enclosingStaticScope));
 
     IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
     if (!bindings || !bindings->init()) {
@@ -273,8 +560,13 @@ ModuleObject::create(ExclusiveContext* cx)
         return nullptr;
     }
 
-    self->setReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
+    self->initReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
 
+    FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>(cx);
+    if (!funDecls)
+        return nullptr;
+
+    self->initReservedSlot(FunctionDeclarationsSlot, PrivateValue(funDecls));
     return self;
 }
 
@@ -284,6 +576,10 @@ ModuleObject::finalize(js::FreeOp* fop, JSObject* obj)
     ModuleObject* self = &obj->as<ModuleObject>();
     if (!self->getReservedSlot(ImportBindingsSlot).isUndefined())
         fop->delete_(&self->importBindings());
+    if (IndirectBindingMap* bindings = self->namespaceBindings())
+        fop->delete_(bindings);
+    if (FunctionDeclarationVector* funDecls = self->functionDeclarations())
+        fop->delete_(funDecls);
 }
 
 ModuleEnvironmentObject*
@@ -302,10 +598,48 @@ ModuleObject::importBindings()
     return *static_cast<IndirectBindingMap*>(getReservedSlot(ImportBindingsSlot).toPrivate());
 }
 
+ArrayObject*
+ModuleObject::namespaceExports()
+{
+    Value value = getReservedSlot(NamespaceExportsSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return &value.toObject().as<ArrayObject>();
+}
+
+IndirectBindingMap*
+ModuleObject::namespaceBindings()
+{
+    Value value = getReservedSlot(NamespaceBindingsSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return static_cast<IndirectBindingMap*>(value.toPrivate());
+}
+
+ModuleNamespaceObject*
+ModuleObject::namespace_()
+{
+    Value value = getReservedSlot(NamespaceSlot);
+    if (value.isUndefined())
+        return nullptr;
+    return &value.toObject().as<ModuleNamespaceObject>();
+}
+
+FunctionDeclarationVector*
+ModuleObject::functionDeclarations()
+{
+    Value value = getReservedSlot(FunctionDeclarationsSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return static_cast<FunctionDeclarationVector*>(value.toPrivate());
+}
+
 void
 ModuleObject::init(HandleScript script)
 {
-    MOZ_ASSERT(!script->enclosingStaticScope());
     initReservedSlot(ScriptSlot, PrivateValue(script));
     initReservedSlot(EvaluatedSlot, BooleanValue(false));
 }
@@ -359,10 +693,20 @@ ModuleObject::initialEnvironment() const
 JSObject*
 ModuleObject::enclosingStaticScope() const
 {
-    // A ModuleObject is always the last thing on the scope chain before the global.
-    // TODO: This may no longer be true when we get top-level lexical scopes.
-    MOZ_ASSERT_IF(hasScript(), !script()->enclosingStaticScope());
-    return nullptr;
+    return getReservedSlot(StaticScopeSlot).toObjectOrNull();
+}
+
+static void
+TraceBindings(JSTracer* trc, IndirectBindingMap& bindings)
+{
+    for (IndirectBindingMap::Enum e(bindings); !e.empty(); e.popFront()) {
+        IndirectBinding& b = e.front().value();
+        TraceEdge(trc, &b.environment, "module bindings environment");
+        TraceEdge(trc, &b.localName, "module bindings local name");
+        jsid bindingName = e.front().key();
+        TraceManuallyBarrieredEdge(trc, &bindingName, "module bindings binding name");
+        MOZ_ASSERT(bindingName == e.front().key());
+    }
 }
 
 /* static */ void
@@ -375,15 +719,12 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
         module.setReservedSlot(ScriptSlot, PrivateValue(script));
     }
 
-    IndirectBindingMap& bindings = module.importBindings();
-    for (IndirectBindingMap::Enum e(bindings); !e.empty(); e.popFront()) {
-        IndirectBinding& b = e.front().value();
-        TraceEdge(trc, &b.environment, "module import environment");
-        TraceEdge(trc, &b.localName, "module import local name");
-        jsid bindingName = e.front().key();
-        TraceManuallyBarrieredEdge(trc, &bindingName, "module import binding name");
-        MOZ_ASSERT(bindingName == e.front().key());
-    }
+    TraceBindings(trc, module.importBindings());
+    if (IndirectBindingMap* bindings = module.namespaceBindings())
+        TraceBindings(trc, *bindings);
+
+    if (FunctionDeclarationVector* funDecls = module.functionDeclarations())
+        funDecls->trace(trc);
 }
 
 void
@@ -396,6 +737,42 @@ ModuleObject::createEnvironment()
     setReservedSlot(EnvironmentSlot, getReservedSlot(InitialEnvironmentSlot));
 }
 
+bool
+ModuleObject::noteFunctionDeclaration(ExclusiveContext* cx, HandleAtom name, HandleFunction fun)
+{
+    FunctionDeclarationVector* funDecls = functionDeclarations();
+    return funDecls->emplaceBack(name, fun);
+}
+
+/* static */ bool
+ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self)
+{
+    FunctionDeclarationVector* funDecls = self->functionDeclarations();
+    if (!funDecls) {
+        JS_ReportError(cx, "Module function declarations have already been instantiated");
+        return false;
+    }
+
+    RootedModuleEnvironmentObject env(cx, &self->initialEnvironment());
+    RootedFunction fun(cx);
+    RootedValue value(cx);
+
+    for (const auto& funDecl : *funDecls) {
+        fun = funDecl.fun;
+        RootedObject obj(cx, Lambda(cx, fun, env));
+        if (!obj)
+            return false;
+
+        value = ObjectValue(*fun);
+        if (!SetProperty(cx, env, funDecl.name->asPropertyName(), value))
+            return false;
+    }
+
+    js_delete(funDecls);
+    self->setReservedSlot(FunctionDeclarationsSlot, UndefinedValue());
+    return true;
+}
+
 void
 ModuleObject::setEvaluated()
 {
@@ -403,13 +780,38 @@ ModuleObject::setEvaluated()
     setReservedSlot(EvaluatedSlot, TrueHandleValue);
 }
 
-bool
-ModuleObject::evaluate(JSContext* cx, MutableHandleValue rval)
+/* static */ bool
+ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
-    RootedScript script(cx, this->script());
-    return JS_ExecuteScript(cx, script, rval);
+    RootedScript script(cx, self->script());
+    RootedModuleEnvironmentObject scope(cx, self->environment());
+    MOZ_ASSERT(scope);
+
+    return Execute(cx, script, *scope, rval.address());
 }
 
+/* static */ ModuleNamespaceObject*
+ModuleObject::createNamespace(JSContext* cx, HandleModuleObject self, HandleArrayObject exports)
+{
+    MOZ_ASSERT(!self->namespace_());
+
+    RootedModuleNamespaceObject ns(cx, ModuleNamespaceObject::create(cx, self));
+    if (!ns)
+        return nullptr;
+
+    IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
+    if (!bindings || !bindings->init()) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    self->initReservedSlot(NamespaceSlot, ObjectValue(*ns));
+    self->initReservedSlot(NamespaceExportsSlot, ObjectValue(*exports));
+    self->initReservedSlot(NamespaceBindingsSlot, PrivateValue(bindings));
+    return ns;
+}
+
+DEFINE_GETTER_FUNCTIONS(ModuleObject, namespace_, NamespaceSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluated, EvaluatedSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
@@ -421,6 +823,7 @@ JSObject*
 js::InitModuleClass(JSContext* cx, HandleObject obj)
 {
     static const JSPropertySpec protoAccessors[] = {
+        JS_PSG("namespace", ModuleObject_namespace_Getter, 0),
         JS_PSG("evaluated", ModuleObject_evaluatedGetter, 0),
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
         JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
@@ -431,6 +834,7 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
     };
 
     static const JSFunctionSpec protoFunctions[] = {
+        JS_SELF_HOSTED_FN("getExportedNames", "ModuleGetExportedNames", 1, 0),
         JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 3, 0),
         JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleDeclarationInstantiation", 0, 0),
         JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluation", 0, 0),

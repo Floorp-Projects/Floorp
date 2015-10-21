@@ -40,7 +40,4 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
 
 Library('mozpng')
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
-
 FINAL_LIBRARY = 'gkmedias'

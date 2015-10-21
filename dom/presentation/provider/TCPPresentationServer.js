@@ -14,8 +14,8 @@ function log(aMsg) {
   dump("-*- TCPPresentationServer.js: " + aMsg + "\n");
 }
 
-function TCPDeviceInfo(aHost, aPort, aId) {
-  this.host = aHost;
+function TCPDeviceInfo(aAddress, aPort, aId) {
+  this.address = aAddress;
   this.port = aPort;
   this.id = aId;
 }
@@ -125,7 +125,7 @@ TCPPresentationServer.prototype = {
     try {
       socketTransport = sts.createTransport(null,
                                             0,
-                                            aDeviceInfo.host,
+                                            aDeviceInfo.address,
                                             aDeviceInfo.port,
                                             null);
     } catch (e) {
@@ -160,7 +160,7 @@ TCPPresentationServer.prototype = {
   // Triggered by TCPControlChannel
   onSessionRequest: function(aDeviceInfo, aUrl, aPresentationId, aControlChannel) {
     DEBUG && log("TCPPresentationServer - onSessionRequest: "
-                 + aDeviceInfo.host + ":" + aDeviceInfo.port);
+                 + aDeviceInfo.address + ":" + aDeviceInfo.port);
     this.listener.onSessionRequest(aDeviceInfo,
                                    aUrl,
                                    aPresentationId,

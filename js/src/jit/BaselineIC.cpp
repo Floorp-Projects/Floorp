@@ -943,13 +943,7 @@ static bool
 DoThisFallback(JSContext* cx, ICThis_Fallback* stub, HandleValue thisv, MutableHandleValue ret)
 {
     FallbackICSpew(cx, stub, "This");
-
-    JSObject* thisObj = BoxNonStrictThis(cx, thisv);
-    if (!thisObj)
-        return false;
-
-    ret.setObject(*thisObj);
-    return true;
+    return BoxNonStrictThis(cx, thisv, ret);
 }
 
 typedef bool (*DoThisFallbackFn)(JSContext*, ICThis_Fallback*, HandleValue, MutableHandleValue);

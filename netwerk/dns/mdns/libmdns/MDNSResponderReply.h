@@ -10,6 +10,7 @@
 #include "MDNSResponderOperator.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIThread.h"
+#include "mozilla/net/DNS.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
 
@@ -120,6 +121,41 @@ private:
   uint16_t mTxtLen;
   UniquePtr<unsigned char> mTxtRecord;
   RefPtr<ResolveOperator> mContext;
+};
+
+class GetAddrInfoReplyRunnable final : public nsRunnable
+{
+public:
+  GetAddrInfoReplyRunnable(DNSServiceRef aSdRef,
+                           DNSServiceFlags aFlags,
+                           uint32_t aInterfaceIndex,
+                           DNSServiceErrorType aErrorCode,
+                           const nsACString& aHostName,
+                           const mozilla::net::NetAddr& aAddress,
+                           uint32_t aTTL,
+                           GetAddrInfoOperator* aContext);
+  ~GetAddrInfoReplyRunnable();
+
+  NS_IMETHODIMP Run() override;
+
+  static void Reply(DNSServiceRef aSdRef,
+                    DNSServiceFlags aFlags,
+                    uint32_t aInterfaceIndex,
+                    DNSServiceErrorType aErrorCode,
+                    const char* aHostName,
+                    const struct sockaddr* aAddress,
+                    uint32_t aTTL,
+                    void* aContext);
+
+private:
+  DNSServiceRef mSdRef;
+  DNSServiceFlags mFlags;
+  uint32_t mInterfaceIndex;
+  DNSServiceErrorType mErrorCode;
+  nsCString mHostName;
+  mozilla::net::NetAddr mAddress;
+  uint32_t mTTL;
+  RefPtr<GetAddrInfoOperator> mContext;
 };
 
 } // namespace net
