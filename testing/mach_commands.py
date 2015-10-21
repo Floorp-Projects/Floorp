@@ -603,8 +603,12 @@ class PushToTry(MachCommandBase):
 
         print("mach try is under development, please file bugs blocking 1149670.")
 
-        resolver = self._spawn(TestResolver)
-        at = AutoTry(self.topsrcdir, resolver, self._mach_context)
+        resolver_func = lambda: self._spawn(TestResolver)
+        at = AutoTry(self.topsrcdir, resolver_func, self._mach_context)
+
+        if kwargs["list"]:
+            at.list_presets()
+            sys.exit()
 
         if kwargs["load"] is not None:
             defaults = at.load_config(kwargs["load"])
