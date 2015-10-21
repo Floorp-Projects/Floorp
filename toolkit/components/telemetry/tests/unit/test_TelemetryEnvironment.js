@@ -210,13 +210,7 @@ function checkNullOrString(aValue) {
  *         boolean.
  */
 function checkNullOrBool(aValue) {
-  if (aValue) {
-    return (typeof aValue == "boolean");
-  } else if (aValue === null) {
-    return true;
-  }
-
-  return false;
+  return aValue === null || (typeof aValue == "boolean");
 }
 
 function checkBuildSection(data) {
@@ -564,9 +558,12 @@ function checkTheme(data) {
 }
 
 function checkActiveGMPlugin(data) {
-  Assert.equal(typeof data.version, "string");
+  // GMP plugin version defaults to null until GMPDownloader runs to update it.
+  if (data.version) {
+    Assert.equal(typeof data.version, "string");
+  }
   Assert.equal(typeof data.userDisabled, "boolean");
-  Assert.equal(typeof data.applyBackgroundUpdates, "boolean");
+  Assert.equal(typeof data.applyBackgroundUpdates, "number");
 }
 
 function checkAddonsSection(data) {
@@ -599,12 +596,8 @@ function checkAddonsSection(data) {
 
   // Check active GMPlugins
   let activeGMPlugins = data.addons.activeGMPlugins;
-  if (!gIsAndroid) {
-    // We don't check for data validity on Android here since XPCSHELL tests on Android
-    // report one valid (plugin.isValid == true) GMPlugin with a "null" version field.
-    for (let gmPlugin in activeGMPlugins) {
-      checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
-    }
+  for (let gmPlugin in activeGMPlugins) {
+    checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
   }
 
   // Check the active Experiment

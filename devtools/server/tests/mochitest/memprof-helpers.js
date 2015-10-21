@@ -12,7 +12,7 @@ SimpleTest.registerCleanupFunction(function() {
 
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { require } =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");

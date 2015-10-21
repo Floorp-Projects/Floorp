@@ -231,8 +231,8 @@ function computeIsContentAndCategory(frame) {
     for (let j = schemeStartIndex; j < location.length; j++) {
       if (location.charCodeAt(j) === CHAR_CODE_R &&
           isChromeScheme(location, j) &&
-          (location.indexOf("resource://gre/modules/devtools") !== -1 ||
-           location.indexOf("resource:///modules/devtools") !== -1)) {
+          (location.indexOf("resource://devtools") !== -1 ||
+           location.indexOf("resource://devtools") !== -1)) {
         frame.category = global.CATEGORY_DEVTOOLS;
         return;
       }

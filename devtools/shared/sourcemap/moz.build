@@ -6,6 +6,6 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools.sourcemap += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.sourcemap += [
     'source-map.js',
 ]

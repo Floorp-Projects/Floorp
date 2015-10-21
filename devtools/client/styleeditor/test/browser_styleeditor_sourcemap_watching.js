@@ -5,7 +5,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Task.jsm");
-var {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 var promise = require("promise");
 
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "sourcemaps-watching.html";

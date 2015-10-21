@@ -66,3 +66,6 @@ MOZ_WEBM_ENCODER=1
 
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=1
+
+# Include the DevTools client, not just the server (which is the default)
+MOZ_DEVTOOLS=all

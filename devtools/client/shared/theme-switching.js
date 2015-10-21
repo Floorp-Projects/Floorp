@@ -103,8 +103,8 @@
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
   Cu.import("resource://gre/modules/Services.jsm");
-  Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
-  const {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+  const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
   const StylesheetUtils = require("sdk/stylesheet/utils");
 
   if (documentElement.hasAttribute("force-theme")) {

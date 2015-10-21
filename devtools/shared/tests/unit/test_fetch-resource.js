@@ -5,8 +5,8 @@
 
 // Tests for DevToolsUtils.fetch on resource:// URI's.
 
-const URL_FOUND = "resource://gre/modules/devtools/shared/DevToolsUtils.js";
-const URL_NOT_FOUND = "resource://gre/modules/devtools/this/is/not/here.js";
+const URL_FOUND = "resource://devtools/shared/DevToolsUtils.js";
+const URL_NOT_FOUND = "resource://devtools/this/is/not/here.js";
 
 /**
  * Test that non-existent files are handled correctly.

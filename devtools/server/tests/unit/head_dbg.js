@@ -8,8 +8,8 @@ var Cu = Components.utils;
 var Cr = Components.results;
 var CC = Components.Constructor;
 
-const { require, loader } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
-const { worker } = Cu.import("resource://gre/modules/devtools/shared/worker/loader.js", {})
+const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { worker } = Cu.import("resource://devtools/shared/worker/loader.js", {})
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { promiseInvoke } = require("devtools/shared/async-utils");
@@ -184,7 +184,7 @@ function tryImport(url) {
   }
 }
 
-tryImport("resource://gre/modules/devtools/shared/Loader.jsm");
+tryImport("resource://devtools/shared/Loader.jsm");
 tryImport("resource://gre/modules/Console.jsm");
 
 function testExceptionHook(ex) {

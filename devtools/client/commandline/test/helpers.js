@@ -22,7 +22,7 @@ var { helpers, assert } = (function() {
 
 var helpers = {};
 
-var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { TargetFactory } = require("devtools/client/framework/target");
 
 var assert = { ok: ok, is: is, log: info };

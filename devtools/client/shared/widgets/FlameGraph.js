@@ -4,8 +4,8 @@
 "use strict";
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { ViewHelpers } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
-const { setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { setNamedTimeout, clearNamedTimeout } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",

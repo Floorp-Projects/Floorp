@@ -12,7 +12,7 @@ var chromeGlobal = this;
 // more than once.
 (function () {
   let Cu = Components.utils;
-  let { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const DevToolsUtils = require("devtools/shared/DevToolsUtils");
   const { dumpn } = DevToolsUtils;
   const { DebuggerServer, ActorPool } = require("devtools/server/main");

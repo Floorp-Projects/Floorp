@@ -7,7 +7,7 @@ const TEST_BASE_HTTP = "http://example.com/browser/devtools/client/styleeditor/t
 const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/styleeditor/test/";
 const TEST_HOST = 'mochi.test:8888';
 
-var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
 var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
 var promise = require("promise");

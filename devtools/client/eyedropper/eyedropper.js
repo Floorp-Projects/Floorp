@@ -5,7 +5,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const {rgbToHsl} = require("devtools/shared/css-color").colorUtils;
 const Telemetry = require("devtools/client/shared/telemetry");
-const {EventEmitter} = Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
+const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js");
 const promise = require("promise");
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 
@@ -133,7 +133,7 @@ function Eyedropper(chromeWindow, opts = { copyOnSelect: true, context: "other" 
   };
 
   let mm = this._contentTab.linkedBrowser.messageManager;
-  mm.loadFrameScript("resource:///modules/devtools/client/eyedropper/eyedropper-child.js", true);
+  mm.loadFrameScript("resource://devtools/client/eyedropper/eyedropper-child.js", true);
 
   // record if this was opened via the picker or standalone
   var telemetry = new Telemetry();

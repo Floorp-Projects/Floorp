@@ -745,6 +745,9 @@
 #endif
 #endif
 
+; DevTools
+@RESPATH@/chrome/devtools@JAREXT@
+@RESPATH@/chrome/devtools.manifest
 
 ; shell icons
 #ifdef XP_UNIX

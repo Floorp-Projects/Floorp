@@ -11,6 +11,6 @@
 
 this.EXPORTED_SYMBOLS = [ "jsBeautify" ];
 
-const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const { beautify } = require("devtools/shared/jsbeautify/beautify");
 const jsBeautify = beautify.js;

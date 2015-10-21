@@ -8,7 +8,7 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "React",
-  "resource:///modules/devtools/client/shared/vendor/react.js");
+  "resource://devtools/client/shared/vendor/react.js");
 loader.lazyRequireGetter(this, "TargetFactory",
   "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "Toolbox",
@@ -16,9 +16,9 @@ loader.lazyRequireGetter(this, "Toolbox",
 loader.lazyRequireGetter(this, "Services");
 
 loader.lazyImporter(this, "BrowserToolboxProcess",
-  "resource:///modules/devtools/client/framework/ToolboxProcess.jsm");
+  "resource://devtools/client/framework/ToolboxProcess.jsm");
 loader.lazyImporter(this, "gDevTools",
-  "resource:///modules/devtools/client/framework/gDevTools.jsm");
+  "resource://devtools/client/framework/gDevTools.jsm");
 
 const Strings = Services.strings.createBundle(
   "chrome://browser/locale/devtools/aboutdebugging.properties");

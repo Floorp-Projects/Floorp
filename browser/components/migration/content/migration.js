@@ -9,6 +9,7 @@ var Cu = Components.utils;
 const kIMig = Ci.nsIBrowserProfileMigrator;
 const kIPStartup = Ci.nsIProfileStartup;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
 var MigrationWizard = {
@@ -21,8 +22,7 @@ var MigrationWizard = {
 
   init: function ()
   {
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
+    let os = Services.obs;
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
     os.addObserver(this, "Migration:ItemAfterMigrate", false);
@@ -31,18 +31,20 @@ var MigrationWizard = {
 
     this._wiz = document.documentElement;
 
-    if ("arguments" in window && window.arguments.length > 1) {
-      this._source = window.arguments[0];
-      this._migrator = window.arguments[1] instanceof kIMig ?
-                       window.arguments[1] : null;
-      this._autoMigrate = window.arguments[2].QueryInterface(kIPStartup);
-      this._skipImportSourcePage = window.arguments[3];
+    let args = (window.arguments && window.arguments[0]) || [];
+    let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINT_UNKNOWN;
+    Services.telemetry.getHistogramById("FX_MIGRATION_ENTRY_POINT").add(entryPointId);
+
+    if (args.length > 1) {
+      this._source = args[1];
+      this._migrator = args[2] instanceof kIMig ?  args[2] : null;
+      this._autoMigrate = args[3].QueryInterface(kIPStartup);
+      this._skipImportSourcePage = args[4];
 
       if (this._autoMigrate) {
         // Show the "nothing" option in the automigrate case to provide an
         // easily identifiable way to avoid migration and create a new profile.
-        var nothing = document.getElementById("nothing");
-        nothing.hidden = false;
+        document.getElementById("nothing").hidden = false;
       }
     }
 
@@ -122,6 +124,11 @@ var MigrationWizard = {
     var newSource = document.getElementById("importSourceGroup").selectedItem.id;
     
     if (newSource == "nothing") {
+      // Need to do telemetry here because we're closing the dialog before we get to
+      // do actual migration. For actual migration, this doesn't happen until after
+      // migration takes place.
+      Services.telemetry.getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
+                        .add(MigrationUtils.getSourceIdForTelemetry("nothing"));
       document.documentElement.cancel();
       return false;
     }
@@ -357,12 +364,27 @@ var MigrationWizard = {
       this._itemsFlags = this._migrator.getMigrateData(this._selectedProfile, this._autoMigrate);
 
     this._listItems("migratingItems");
-    setTimeout(this.onMigratingMigrate, 0, this);
+    setTimeout(() => this.onMigratingMigrate(), 0);
   },
 
-  onMigratingMigrate: function (aOuter)
+  onMigratingMigrate: function ()
   {
-    aOuter._migrator.migrate(aOuter._itemsFlags, aOuter._autoMigrate, aOuter._selectedProfile);
+    this._migrator.migrate(this._itemsFlags, this._autoMigrate, this._selectedProfile);
+
+    Services.telemetry.getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
+                      .add(MigrationUtils.getSourceIdForTelemetry(this._source));
+    if (!this._autoMigrate) {
+      let hist = Services.telemetry.getKeyedHistogramById("FX_MIGRATION_USAGE");
+      let exp = 0;
+      let items = this._itemsFlags;
+      while (items) {
+        if (items & 1) {
+          hist.add(this._source, exp);
+        }
+        items = items >> 1;
+        exp++
+      }
+    }
   },
   
   _listItems: function (aID)
@@ -409,6 +431,8 @@ var MigrationWizard = {
       break;
     case "Migration:Ended":
       if (this._autoMigrate) {
+        Services.telemetry.getKeyedHistogramById("FX_MIGRATION_HOMEPAGE_IMPORTED")
+                          .add(this._source, !!this._newHomePage);
         if (this._newHomePage) {
           try {
             // set homepage properly
@@ -451,8 +475,9 @@ var MigrationWizard = {
       }
       break;
     case "Migration:ItemError":
-      var type = "undefined";
-      switch (parseInt(aData)) {
+      let type = "undefined";
+      let numericType = parseInt(aData);
+      switch (numericType) {
       case Ci.nsIBrowserProfileMigrator.SETTINGS:
         type = "settings";
         break;
@@ -478,6 +503,8 @@ var MigrationWizard = {
       Cc["@mozilla.org/consoleservice;1"]
         .getService(Ci.nsIConsoleService)
         .logStringMessage("some " + type + " did not successfully migrate.");
+      Services.telemetry.getKeyedHistogramById("FX_MIGRATION_ERRORS")
+                        .add(this._source, Math.log2(numericType));
       break;
     }
   },

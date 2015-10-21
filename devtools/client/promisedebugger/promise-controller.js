@@ -10,7 +10,7 @@
 
 var { utils: Cu } = Components;
 const { loader, require } =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
 

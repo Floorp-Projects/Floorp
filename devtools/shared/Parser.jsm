@@ -9,7 +9,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 XPCOMUtils.defineLazyModuleGetter(this,
@@ -151,6 +151,14 @@ SyntaxTreesPool.prototype = {
    */
   getNamedFunctionDefinitions: function(aSubstring) {
     return this._call("getNamedFunctionDefinitions", -1, aSubstring);
+  },
+
+  /**
+   * @return SyntaxTree
+   *         The last tree in this._trees
+   */
+  getLastSyntaxTree: function() {
+    return this._trees[this._trees.length - 1];
   },
 
   /**

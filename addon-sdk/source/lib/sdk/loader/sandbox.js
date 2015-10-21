@@ -15,7 +15,7 @@ const self = require('sdk/self');
 const { getTabId, getTabForContentWindow } = require('../tabs/utils');
 const { getInnerId } = require('../window/utils');
 
-const { devtools } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { require: devtoolsRequire } = devtools;
 const { addContentGlobal, removeContentGlobal } = devtoolsRequire("devtools/server/content-globals");
 

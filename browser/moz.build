@@ -17,7 +17,7 @@ DIRS += [
     'modules',
     'themes',
     'extensions',
-    '/devtools/client',
+    '/devtools',
 ]
 
 DIRS += [

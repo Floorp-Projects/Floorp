@@ -14,4 +14,5 @@ if CONFIG['MOZ_EXTENSIONS']:
 DIRS += [
     '/%s' % CONFIG['MOZ_BRANDING_DIRECTORY'],
     '/mobile/android',
+    '/devtools',
 ]
