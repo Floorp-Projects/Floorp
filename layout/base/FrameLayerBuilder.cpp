@@ -5919,11 +5919,11 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
 
   if (presContext && presContext->GetDocShell() && isActiveLayerManager) {
     nsDocShell* docShell = static_cast<nsDocShell*>(presContext->GetDocShell());
-    bool isRecording;
-    docShell->GetRecordProfileTimelineMarkers(&isRecording);
-    if (isRecording) {
-      UniquePtr<TimelineMarker> marker = MakeUnique<LayerTimelineMarker>(aRegionToDraw);
-      TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+
+    if (timelines && timelines->HasConsumer(docShell)) {
+      timelines->AddMarkerForDocShell(docShell, Move(
+        MakeUnique<LayerTimelineMarker>(aRegionToDraw)));
     }
   }
 

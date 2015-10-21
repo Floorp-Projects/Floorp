@@ -12,19 +12,21 @@ EXPORTS.mozilla += [
     'EventTimelineMarker.h',
     'JavascriptTimelineMarker.h',
     'LayerTimelineMarker.h',
+    'MarkersStorage.h',
     'ObservedDocShell.h',
-    'OTMTMarkerReceiver.h',
     'RestyleTimelineMarker.h',
     'TimelineConsumers.h',
     'TimelineMarker.h',
     'TimelineMarkerEnums.h',
     'TimestampTimelineMarker.h',
+    'WorkerTimelineMarker.h',
 ]
 
 UNIFIED_SOURCES += [
     'AbstractTimelineMarker.cpp',
     'AutoGlobalTimelineMarker.cpp',
     'AutoTimelineMarker.cpp',
+    'MarkersStorage.cpp',
     'ObservedDocShell.cpp',
     'TimelineConsumers.cpp',
     'TimelineMarker.cpp',

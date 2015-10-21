@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 
 class nsIDocShell;
-class nsDocShell;
 
 namespace mozilla {
 
@@ -36,7 +35,7 @@ class MOZ_RAII AutoTimelineMarker
   const char* mName;
 
   // The docshell that is associated with this marker.
-  RefPtr<nsDocShell> mDocShell;
+  RefPtr<nsIDocShell> mDocShell;
 
 public:
   explicit AutoTimelineMarker(nsIDocShell* aDocShell, const char* aName
