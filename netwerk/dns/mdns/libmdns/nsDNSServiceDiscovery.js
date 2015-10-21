@@ -41,7 +41,7 @@ ListenerWrapper.prototype = {
   makeServiceInfo: function (aServiceInfo) {
     let serviceInfo = Cc[DNSSERVICEINFO_CONTRACT_ID].createInstance(Ci.nsIDNSServiceInfo);
 
-    for (let name of ['host', 'port', 'serviceName', 'serviceType']) {
+    for (let name of ['host', 'address', 'port', 'serviceName', 'serviceType']) {
       try {
         serviceInfo[name] = aServiceInfo[name];
       } catch (e) {
