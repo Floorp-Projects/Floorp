@@ -9,16 +9,17 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Components.utils.import("resource:///modules/RecentWindow.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabURL",
-  "resource:///modules/NewTabURL.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
+                                   "@mozilla.org/browser/aboutnewtab-service;1",
+                                   "nsIAboutNewTabService");
 
 this.__defineGetter__("BROWSER_NEW_TAB_URL", () => {
   if (PrivateBrowsingUtils.isWindowPrivate(window) &&
       !PrivateBrowsingUtils.permanentPrivateBrowsing &&
-      !NewTabURL.overridden) {
+      !aboutNewTabService.overridden) {
     return "about:privatebrowsing";
   }
-  return NewTabURL.get();
+  return aboutNewTabService.newTabURL;
 });
 
 var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";

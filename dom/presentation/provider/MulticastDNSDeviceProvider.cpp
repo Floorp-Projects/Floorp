@@ -53,10 +53,10 @@ public:
   NS_DECL_NSITCPDEVICEINFO
 
   explicit TCPDeviceInfo(const nsACString& aId,
-                         const nsACString& aHost,
+                         const nsACString& aAddress,
                          const uint16_t aPort)
     : mId(aId)
-    , mHost(aHost)
+    , mAddress(aAddress)
     , mPort(aPort)
   {
   }
@@ -65,7 +65,7 @@ private:
   virtual ~TCPDeviceInfo() {}
 
   nsCString mId;
-  nsCString mHost;
+  nsCString mAddress;
   uint16_t mPort;
 };
 
@@ -81,9 +81,9 @@ TCPDeviceInfo::GetId(nsACString& aId)
 }
 
 NS_IMETHODIMP
-TCPDeviceInfo::GetHost(nsACString& aHost)
+TCPDeviceInfo::GetAddress(nsACString& aAddress)
 {
-  aHost = mHost;
+  aAddress = mAddress;
   return NS_OK;
 }
 
@@ -319,25 +319,26 @@ MulticastDNSDeviceProvider::RequestSession(Device* aDevice,
   MOZ_ASSERT(mPresentationServer);
 
   RefPtr<TCPDeviceInfo> deviceInfo = new TCPDeviceInfo(aDevice->Id(),
-                                                       aDevice->Host(),
+                                                       aDevice->Address(),
                                                        aDevice->Port());
 
   return mPresentationServer->RequestSession(deviceInfo, aUrl, aPresentationId, aRetVal);
 }
 
 nsresult
-MulticastDNSDeviceProvider::AddDevice(const nsACString& aServiceName,
+MulticastDNSDeviceProvider::AddDevice(const nsACString& aId,
+                                      const nsACString& aServiceName,
                                       const nsACString& aServiceType,
-                                      const nsACString& aHost,
+                                      const nsACString& aAddress,
                                       const uint16_t aPort)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresentationServer);
 
-  RefPtr<Device> device = new Device(aHost, /* ID */
+  RefPtr<Device> device = new Device(aId, /* ID */
                                      aServiceName,
                                      aServiceType,
-                                     aHost,
+                                     aAddress,
                                      aPort,
                                      DeviceState::eActive,
                                      this);
@@ -356,7 +357,7 @@ nsresult
 MulticastDNSDeviceProvider::UpdateDevice(const uint32_t aIndex,
                                          const nsACString& aServiceName,
                                          const nsACString& aServiceType,
-                                         const nsACString& aHost,
+                                         const nsACString& aAddress,
                                          const uint16_t aPort)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -367,7 +368,7 @@ MulticastDNSDeviceProvider::UpdateDevice(const uint32_t aIndex,
   }
 
   RefPtr<Device> device = mDevices[aIndex];
-  device->Update(aServiceName, aServiceType, aHost, aPort);
+  device->Update(aServiceName, aServiceType, aAddress, aPort);
   device->ChangeState(DeviceState::eActive);
 
   nsCOMPtr<nsIPresentationDeviceListener> listener;
@@ -425,19 +426,19 @@ MulticastDNSDeviceProvider::FindDeviceById(const nsACString& aId,
 }
 
 bool
-MulticastDNSDeviceProvider::FindDeviceByHost(const nsACString& aHost,
-                                             uint32_t& aIndex)
+MulticastDNSDeviceProvider::FindDeviceByAddress(const nsACString& aAddress,
+                                                uint32_t& aIndex)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Device> device = new Device(/* aId = */ EmptyCString(),
                                      /* aName = */ EmptyCString(),
                                      /* aType = */ EmptyCString(),
-                                     aHost,
+                                     aAddress,
                                      /* aPort = */ 0,
                                      /* aState = */ DeviceState::eUnknown,
                                      /* aProvider = */ nullptr);
-  size_t index = mDevices.IndexOf(device, 0, DeviceHostComparator());
+  size_t index = mDevices.IndexOf(device, 0, DeviceAddressComparator());
 
   if (index == mDevices.NoIndex) {
     return false;
@@ -775,6 +776,11 @@ MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo)
     return rv;
   }
 
+  nsAutoCString address;
+  if (NS_WARN_IF(NS_FAILED(rv = aServiceInfo->GetAddress(address)))) {
+    return rv;
+  }
+
   uint16_t port;
   if (NS_WARN_IF(NS_FAILED(rv = aServiceInfo->GetPort(&port)))) {
     return rv;
@@ -790,12 +796,13 @@ MulticastDNSDeviceProvider::OnServiceResolved(nsIDNSServiceInfo* aServiceInfo)
     return UpdateDevice(index,
                         serviceName,
                         serviceType,
-                        host,
+                        address,
                         port);
   } else {
-    return AddDevice(serviceName,
+    return AddDevice(host,
+                     serviceName,
                      serviceType,
-                     host,
+                     address,
                      port);
   }
 
@@ -838,14 +845,14 @@ MulticastDNSDeviceProvider::OnSessionRequest(nsITCPDeviceInfo* aDeviceInfo,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoCString host;
-  unused << aDeviceInfo->GetHost(host);
+  nsAutoCString address;
+  unused << aDeviceInfo->GetAddress(address);
 
-  LOG_I("OnSessionRequest: %s", host.get());
+  LOG_I("OnSessionRequest: %s", address.get());
 
   RefPtr<Device> device;
   uint32_t index;
-  if (FindDeviceByHost(host, index)) {
+  if (FindDeviceByAddress(address, index)) {
     device = mDevices[index];
   } else {
     // create a one-time device object for non-discoverable controller
@@ -859,7 +866,7 @@ MulticastDNSDeviceProvider::OnSessionRequest(nsITCPDeviceInfo* aDeviceInfo,
     device = new Device(id,
                         /* aName = */ id,
                         /* aType = */ EmptyCString(),
-                        host,
+                        address,
                         port,
                         DeviceState::eActive,
                         /* aProvider = */ nullptr);

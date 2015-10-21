@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include "BluetoothInterface.h"
+#include "mozilla/Endian.h"
 #include "nsClassHashtable.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -243,18 +244,14 @@ int16_t
 SocketMessageWatcher::ReadInt16(unsigned long aOffset) const
 {
   /* little-endian buffer */
-  return (static_cast<int16_t>(mBuf[aOffset + 1]) << 8) |
-          static_cast<int16_t>(mBuf[aOffset]);
+  return LittleEndian::readInt16(&mBuf[aOffset]);
 }
 
 int32_t
 SocketMessageWatcher::ReadInt32(unsigned long aOffset) const
 {
   /* little-endian buffer */
-  return (static_cast<int32_t>(mBuf[aOffset + 3]) << 24) |
-         (static_cast<int32_t>(mBuf[aOffset + 2]) << 16) |
-         (static_cast<int32_t>(mBuf[aOffset + 1]) << 8) |
-          static_cast<int32_t>(mBuf[aOffset]);
+  return LittleEndian::readInt32(&mBuf[aOffset]);
 }
 
 void

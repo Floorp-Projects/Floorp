@@ -164,32 +164,6 @@ DeviceStorageRequestParent::Dispatch()
       break;
     }
 
-    case DeviceStorageParams::TDeviceStorageAvailableParams:
-    {
-      DeviceStorageAvailableParams p = mParams;
-
-      RefPtr<DeviceStorageFile> dsf =
-        new DeviceStorageFile(p.type(), p.storageName());
-      RefPtr<PostAvailableResultEvent> r
-        = new PostAvailableResultEvent(this, dsf);
-      DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      break;
-    }
-
-    case DeviceStorageParams::TDeviceStorageStatusParams:
-    {
-      DeviceStorageStatusParams p = mParams;
-
-      RefPtr<DeviceStorageFile> dsf =
-        new DeviceStorageFile(p.type(), p.storageName());
-      RefPtr<PostStatusResultEvent> r
-        = new PostStatusResultEvent(this, dsf);
-      DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      break;
-    }
-
     case DeviceStorageParams::TDeviceStorageFormatParams:
     {
       DeviceStorageFormatParams p = mParams;
@@ -916,62 +890,6 @@ DeviceStorageRequestParent::PostFileDescriptorResultEvent::CancelableRun()
   MOZ_ASSERT(NS_IsMainThread());
 
   FileDescriptorResponse response(mFileDescriptor);
-  unused << mParent->Send__delete__(mParent, response);
-  return NS_OK;
-}
-
-DeviceStorageRequestParent::PostAvailableResultEvent::
-  PostAvailableResultEvent(DeviceStorageRequestParent* aParent,
-                           DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::PostAvailableResultEvent::
-  ~PostAvailableResultEvent()
-{
-}
-
-nsresult
-DeviceStorageRequestParent::PostAvailableResultEvent::CancelableRun()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsString state = NS_LITERAL_STRING("unavailable");
-  if (mFile) {
-    mFile->GetStatus(state);
-  }
-
-  AvailableStorageResponse response(state);
-  unused << mParent->Send__delete__(mParent, response);
-  return NS_OK;
-}
-
-DeviceStorageRequestParent::PostStatusResultEvent::
-  PostStatusResultEvent(DeviceStorageRequestParent* aParent,
-                           DeviceStorageFile* aFile)
-  : CancelableRunnable(aParent)
-  , mFile(aFile)
-{
-}
-
-DeviceStorageRequestParent::PostStatusResultEvent::
-  ~PostStatusResultEvent()
-{
-}
-
-nsresult
-DeviceStorageRequestParent::PostStatusResultEvent::CancelableRun()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsString state = NS_LITERAL_STRING("undefined");
-  if (mFile) {
-    mFile->GetStorageStatus(state);
-  }
-
-  StorageStatusResponse response(state);
   unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
 }

@@ -37,6 +37,8 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
                                    const Value& thisv, const Value& newTargetValue, HandleObject scopeChain,
                                    ExecuteType type)
 {
+    MOZ_ASSERT_IF(type & MODULE, thisv.isUndefined());
+
     /*
      * See encoding of ExecuteType. When GLOBAL isn't set, we are executing a
      * script in the context of another frame and the frame type is determined
@@ -247,12 +249,8 @@ InterpreterFrame::prologue(JSContext* cx)
 
     AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
-    if (isModuleFrame()) {
-        RootedModuleEnvironmentObject scope(cx, &script->module()->initialEnvironment());
-        MOZ_ASSERT(&scope->enclosingScope() == scopeChain());
-        pushOnScopeChain(*scope);
+    if (isModuleFrame())
         return probes::EnterScript(cx, script, nullptr, this);
-    }
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
     if (fun()->needsCallObject() && !initFunctionScopeObjects(cx))

@@ -258,7 +258,7 @@ GValueArray *GStreamerReader::ElementFilter(GstURIDecodeBin *aBin,
     GValue *value = &aFactories->values[i];
     GstPluginFeature *factory = GST_PLUGIN_FEATURE(g_value_peek_pointer(value));
 
-    if (!GStreamerFormatHelper::IsPluginFeatureBlacklisted(factory)) {
+    if (!GStreamerFormatHelper::IsPluginFeatureBlocked(factory)) {
       g_value_array_append(filtered, value);
     }
   }
@@ -360,8 +360,8 @@ GStreamerReader::GetDataLength()
   return streamLen - mDataOffset;
 }
 
-nsresult
-GStreamerReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
+                                       MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
   nsresult ret = NS_OK;
@@ -1206,7 +1206,7 @@ void GStreamerReader::Eos(GstAppSink* aSink)
  * This callback is called while the pipeline is automatically built, after a
  * new element has been added to the pipeline. We use it to find the
  * uridecodebin instance used by playbin and connect to it to apply our
- * blacklist.
+ * block list.
  */
 void
 GStreamerReader::PlayElementAddedCb(GstBin *aBin, GstElement *aElement,
@@ -1243,7 +1243,7 @@ GStreamerReader::ShouldAutoplugFactory(GstElementFactory* aFactory, GstCaps* aCa
 
 /**
  * This is called by uridecodebin (running inside playbin), after it has found
- * candidate factories to continue decoding the stream. We apply the blacklist
+ * candidate factories to continue decoding the stream. We apply the block list
  * here, disallowing known-crashy plugins.
  */
 GValueArray*

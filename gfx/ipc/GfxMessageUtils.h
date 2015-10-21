@@ -961,6 +961,7 @@ struct ParamTraits<mozilla::gfx::AttributeMap>
             return false;                                              \
           }                                                            \
           aResult->Set(name, value);                                   \
+          break;                                                       \
         }
 
         HANDLE_TYPE(bool, Bool)

@@ -94,38 +94,9 @@ public:
   // on failure.
   virtual nsresult Init() { return NS_OK; }
 
-  RefPtr<MetadataPromise> AsyncReadMetadata()
-  {
-    return OnTaskQueue() ?
-           AsyncReadMetadataInternal() :
-           InvokeAsync(OwnerThread(), this, __func__,
-                       &MediaDecoderReader::AsyncReadMetadataInternal);
-  }
-
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
-  void ReleaseMediaResources()
-  {
-    if (OnTaskQueue()) {
-      ReleaseMediaResourcesInternal();
-      return;
-    }
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
-      this, &MediaDecoderReader::ReleaseMediaResourcesInternal);
-    OwnerThread()->Dispatch(r.forget());
-  }
-
-  void DisableHardwareAcceleration()
-  {
-    if (OnTaskQueue()) {
-      DisableHardwareAccelerationInternal();
-      return;
-    }
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
-      this, &MediaDecoderReader::DisableHardwareAccelerationInternal);
-    OwnerThread()->Dispatch(r.forget());
-  }
-
+  virtual void ReleaseMediaResources() {};
   // Breaks reference-counted cycles. Called during shutdown.
   // WARNING: If you override this, you must call the base implementation
   // in your override.
@@ -184,6 +155,18 @@ public:
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
+
+  // The default implementation of AsyncReadMetadata is implemented in terms of
+  // synchronous ReadMetadata() calls. Implementations may also
+  // override AsyncReadMetadata to create a more proper async implementation.
+  virtual RefPtr<MetadataPromise> AsyncReadMetadata();
+
+  // Read header data for all bitstreams in the file. Fills aInfo with
+  // the data required to present the media, and optionally fills *aTags
+  // with tag metadata from the file.
+  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) { MOZ_CRASH(); }
 
   // Fills aInfo with the latest cached data required to present the media,
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
@@ -259,22 +242,6 @@ public:
 
   virtual size_t SizeOfVideoQueueInFrames();
   virtual size_t SizeOfAudioQueueInFrames();
-
-private:
-  virtual void ReleaseMediaResourcesInternal() {}
-  virtual void DisableHardwareAccelerationInternal() {}
-
-  // Read header data for all bitstreams in the file. Fills aInfo with
-  // the data required to present the media, and optionally fills *aTags
-  // with tag metadata from the file.
-  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(MediaInfo*, MetadataTags**) { MOZ_CRASH(); }
-
-  // The default implementation of AsyncReadMetadataInternal is implemented in
-  // terms of synchronous ReadMetadata() calls. Implementations may also
-  // override AsyncReadMetadataInternal to create a more proper async
-  // implementation.
-  virtual RefPtr<MetadataPromise> AsyncReadMetadataInternal();
 
 protected:
   friend class TrackBuffer;
@@ -354,6 +321,8 @@ public:
   // Returns true if this decoder reader uses hardware accelerated video
   // decoding.
   virtual bool VideoIsHardwareAccelerated() const { return false; }
+
+  virtual void DisableHardwareAcceleration() {}
 
   TimedMetadataEventSource& TimedMetadataEvent() {
     return mTimedMetadataEvent;

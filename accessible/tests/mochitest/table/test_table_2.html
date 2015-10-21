@@ -49,11 +49,6 @@ function doTest()
     is(accTable4.getCellAt(1,1).firstChild.name, "cell3", "wrong cell");
   }
 
-  // test crazy table
-  var table6 = getAccessible("table6", [nsIAccessibleTable]);
-  ok(!table6.getCellAt(0, 0),
-     "We don't expect cell accessible for crazy table 6!");
-
   SimpleTest.finish();
 }
 SimpleTest.waitForExplicitFinish();
@@ -88,11 +83,6 @@ addA11yLoadEvent(doTest);
      <td>cell3</td>
     </tr>
    </table>
-
-  <div style="display:table;" id="table6">
-    <input type="checkbox">
-    <a href="bar">Bad checkbox</a>
-  </div>
 
   </center>
  </body>

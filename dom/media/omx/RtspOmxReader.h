@@ -66,12 +66,12 @@ public:
 
   virtual void SetIdle() override;
 
+  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata()
+    override;
+
   virtual void HandleResourceAllocated() override;
 
 private:
-  virtual RefPtr<MediaDecoderReader::MetadataPromise>
-  AsyncReadMetadataInternal() override;
-
   // A pointer to RtspMediaResource for calling the Rtsp specific function.
   // The lifetime of mRtspResource is controlled by MediaDecoder. MediaDecoder
   // holds the MediaDecoderStateMachine and RtspMediaResource.

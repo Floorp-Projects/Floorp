@@ -98,7 +98,7 @@ function test_verify_manifest(aHeader, aManifest, aShouldSucceed) {
         run_next_test();
       }
     };
-    packagedAppUtils.verifyManifest(aHeader, aManifest, fakeVerifier);
+    packagedAppUtils.verifyManifest(aHeader, aManifest, fakeVerifier, false);
   }
 }
 
