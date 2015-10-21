@@ -115,7 +115,8 @@ class SpidermonkeyBuild(MockMixin,
                                 'setup-analysis',
                                 'run-analysis',
                                 'collect-analysis-output',
-                                'upload-analysis',
+                                # Temporary - see bug 1211402
+                                #'upload-analysis',
                                 'check-expectations',
                             ],
                             config={
