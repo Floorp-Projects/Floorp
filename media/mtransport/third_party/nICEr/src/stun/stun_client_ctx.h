@@ -170,7 +170,7 @@ struct nr_stun_client_ctx_ {
   UINT4 rto_ms;    /* retransmission time out */
   double retransmission_backoff_factor;
   UINT4 maximum_transmits;
-  UINT4 final_retransmit_backoff_ms;
+  UINT4 maximum_transmits_timeout_ms;
   UINT4 mapped_addr_check_mask;  /* What checks to run on mapped addresses */
   int timeout_ms;
   struct timeval timer_set;
