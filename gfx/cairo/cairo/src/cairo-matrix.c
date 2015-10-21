@@ -878,15 +878,13 @@ _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
   see doc/tutorial/src/singular.c.
 */
 
-/* determine the length of the major and minor axes of a circle of the given
-   radius after applying the transformation matrix. */
-void
-_cairo_matrix_transformed_circle_axes (const cairo_matrix_t *matrix,
-				       double radius,
-				       double *major,
-				       double *minor)
+/* determine the length of the major axis of a circle of the given radius
+   after applying the transformation matrix. */
+double
+_cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
+					     double radius)
 {
-    double  a, b, c, d, f, g, h, i, j, k;
+    double  a, b, c, d, f, g, h, i, j;
 
     _cairo_matrix_get_affine (matrix,
                               &a, &b,
@@ -895,29 +893,17 @@ _cairo_matrix_transformed_circle_axes (const cairo_matrix_t *matrix,
 
     i = a*a + b*b;
     j = c*c + d*d;
-    k = a*c + b*d;
 
     f = 0.5 * (i + j);
     g = 0.5 * (i - j);
-    h = hypot (g, k);
+    h = a*c + b*d;
 
-    if (major)
-	*major = radius * sqrt (f + h);
-    if (minor)
-	*minor = radius * sqrt (f - h);
-}
+    return radius * sqrt (f + hypot (g, h));
 
-/* determine the length of the major axis of a circle of the given radius
-   after applying the transformation matrix. */
-double
-_cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
-					     double radius)
-{
-    double major = 0.0;
-
-    _cairo_matrix_transformed_circle_axes (matrix, radius, &major, NULL);
-
-    return major;
+    /*
+     * we don't need the minor axis length, which is
+     * double min = radius * sqrt (f - sqrt (g*g+h*h));
+     */
 }
 
 void
