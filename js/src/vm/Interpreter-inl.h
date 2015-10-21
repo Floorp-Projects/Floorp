@@ -798,6 +798,11 @@ InitArrayElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, uint32_t
 
     MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>());
 
+    if (op == JSOP_INITELEM_INC && index == INT32_MAX) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SPREAD_TOO_LARGE);
+        return false;
+    }
+
     /*
      * If val is a hole, do not call DefineElement.
      *
@@ -818,11 +823,6 @@ InitArrayElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, uint32_t
     } else {
         if (!DefineElement(cx, obj, index, val, nullptr, nullptr, JSPROP_ENUMERATE))
             return false;
-    }
-
-    if (op == JSOP_INITELEM_INC && index == INT32_MAX) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SPREAD_TOO_LARGE);
-        return false;
     }
 
     return true;
