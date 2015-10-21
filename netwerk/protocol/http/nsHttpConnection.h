@@ -14,6 +14,7 @@
 #include "prinrval.h"
 #include "TunnelUtils.h"
 #include "mozilla/Mutex.h"
+#include "ARefBase.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -43,6 +44,7 @@ class nsHttpConnection final : public nsAHttpSegmentReader
                              , public nsITransportEventSink
                              , public nsIInterfaceRequestor
                              , public NudgeTunnelCallback
+                             , public ARefBase
 {
     virtual ~nsHttpConnection();
 

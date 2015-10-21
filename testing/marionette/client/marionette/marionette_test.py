@@ -56,9 +56,7 @@ class _UnexpectedSuccess(Exception):
     pass
 
 def skip(reason):
-    """
-    Unconditionally skip a test.
-    """
+    """Unconditionally skip a test."""
     def decorator(test_item):
         if not isinstance(test_item, (type, types.ClassType)):
             @functools.wraps(test_item)
@@ -81,12 +79,18 @@ def expectedFailure(func):
         raise _UnexpectedSuccess
     return wrapper
 
+def skip_if_desktop(target):
+    def wrapper(self, *args, **kwargs):
+        if self.marionette.session_capabilities.get('b2g') is None:
+            raise SkipTest('skipping due to desktop')
+        return target(self, *args, **kwargs)
+    return wrapper
+
 def skip_if_b2g(target):
     def wrapper(self, *args, **kwargs):
         if self.marionette.session_capabilities.get('b2g') == True:
             raise SkipTest('skipping due to b2g')
         return target(self, *args, **kwargs)
-
     return wrapper
 
 def skip_if_e10s(target):
@@ -103,6 +107,19 @@ def skip_if_e10s(target):
             raise SkipTest('skipping due to e10s')
         return target(self, *args, **kwargs)
     return wrapper
+
+def skip_unless_protocol(predicate):
+    """Given a predicate passed the current protocol level, skip the
+    test if the predicate does not match."""
+    def decorator(test_item):
+        @functools.wraps(test_item)
+        def skip_wrapper(self):
+            level = self.marionette.client.protocol
+            if not predicate(level):
+                raise SkipTest('skipping because protocol level is %s' % level)
+            return self
+        return skip_wrapper
+    return decorator
 
 def parameterized(func_suffix, *args, **kwargs):
     """
