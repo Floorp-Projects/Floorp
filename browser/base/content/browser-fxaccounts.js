@@ -10,6 +10,11 @@ var gFxAccounts = {
 
   _initialized: false,
   _inCustomizationMode: false,
+  // _expectingNotifyClose is a hack that helps us determine if the
+  // migration notification was closed due to being "dismissed" vs closed
+  // due to one of the migration buttons being clicked.  It's ugly and somewhat
+  // fragile, so bug 1119020 exists to help us do this better.
+  _expectingNotifyClose: false,
 
   get weave() {
     delete this.weave;
@@ -31,6 +36,7 @@ var gFxAccounts = {
       this.FxAccountsCommon.ONLOGIN_NOTIFICATION,
       this.FxAccountsCommon.ONVERIFIED_NOTIFICATION,
       this.FxAccountsCommon.ONLOGOUT_NOTIFICATION,
+      "weave:notification:removed",
       this.FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION,
     ];
   },
@@ -101,6 +107,10 @@ var gFxAccounts = {
     gNavToolbox.addEventListener("customizationstarting", this);
     gNavToolbox.addEventListener("customizationending", this);
 
+    // Request the current Legacy-Sync-to-FxA migration status.  We'll be
+    // notified of fxa-migration:state-changed in response if necessary.
+    Services.obs.notifyObservers(null, "fxa-migration:state-request", null);
+
     EnsureFxAccountsWebChannel();
     this._initialized = true;
 
@@ -130,6 +140,16 @@ var gFxAccounts = {
       case "fxa-migration:state-changed":
         this.onMigrationStateChanged(data, subject);
         break;
+      case "weave:notification:removed":
+        // this exists just so we can tell the difference between "box was
+        // closed due to button press" vs "was closed due to click on [x]"
+        let notif = subject.wrappedJSObject.object;
+        if (notif.title == this.SYNC_MIGRATION_NOTIFICATION_TITLE &&
+            !this._expectingNotifyClose) {
+          // it's an [x] on our notification, so record telemetry.
+          this.fxaMigrator.recordTelemetry(this.fxaMigrator.TELEMETRY_DECLINED);
+        }
+        break;
       case this.FxAccountsCommon.ONPROFILE_IMAGE_CHANGE_NOTIFICATION:
         this.updateUI();
         break;
@@ -156,25 +176,12 @@ var gFxAccounts = {
     }
   },
 
-  onMigrationStateChanged: function () {
-    // Since we nuked most of the migration code, this notification will fire
-    // once after legacy Sync has been disconnected (and should never fire
-    // again)
-    let msg = this.strings.GetStringFromName("autoDisconnectDescription")
-    let signInLabel = this.strings.GetStringFromName("autoDisconnectSignIn.label");
-    let signInAccessKey = this.strings.GetStringFromName("autoDisconnectSignIn.accessKey");
-    let learnMoreLink = this.fxaMigrator.learnMoreLink;
-    let note = new Weave.Notification(
-          undefined, msg, undefined, Weave.Notifications.PRIORITY_WARNING, [
-            new Weave.NotificationButton(signInLabel, signInAccessKey, () => {
-              this.openPreferences();
-            }),
-          ], learnMoreLink
-        );
-    note.title = this.SYNC_MIGRATION_NOTIFICATION_TITLE;
-    Weave.Notifications.replaceTitle(note);
-    // ensure the hamburger menu reflects the newly disconnected state.
-    this.updateAppMenuItem();
+  onMigrationStateChanged: function (newState, email) {
+    this._migrationInfo = !newState ? null : {
+      state: newState,
+      email: email ? email.QueryInterface(Ci.nsISupportsString).data : null,
+    };
+    this.updateUI();
   },
 
   handleEvent: function (event) {
@@ -208,15 +215,17 @@ var gFxAccounts = {
   },
 
   updateUI: function () {
-    // It's possible someone signed in to FxA after seeing our notification
-    // about "Legacy Sync migration" (which now is actually "Legacy Sync
-    // auto-disconnect") so kill that notification if it still exists.
-    Weave.Notifications.removeAll(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
     this.updateAppMenuItem();
+    this.updateMigrationNotification();
   },
 
   // Note that updateAppMenuItem() returns a Promise that's only used by tests.
   updateAppMenuItem: function () {
+    if (this._migrationInfo) {
+      this.updateAppMenuItemForMigration();
+      return Promise.resolve();
+    }
+
     let profileInfoEnabled = false;
     try {
       profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled");
@@ -224,6 +233,12 @@ var gFxAccounts = {
 
     // Bail out if FxA is disabled.
     if (!this.weave.fxAccountsEnabled) {
+      // When migration transitions from needs-verification to the null state,
+      // fxAccountsEnabled is false because migration has not yet finished.  In
+      // that case, hide the button.  We'll get another notification with a null
+      // state once migration is complete.
+      this.panelUIFooter.hidden = true;
+      this.panelUIFooter.removeAttribute("fxastatus");
       return Promise.resolve();
     }
 
@@ -343,6 +358,90 @@ var gFxAccounts = {
     });
   },
 
+  updateAppMenuItemForMigration: Task.async(function* () {
+    let status = null;
+    let label = null;
+    switch (this._migrationInfo.state) {
+      case this.fxaMigrator.STATE_USER_FXA:
+        status = "migrate-signup";
+        label = this.strings.formatStringFromName("needUserShort",
+          [this.panelUILabel.getAttribute("fxabrandname")], 1);
+        break;
+      case this.fxaMigrator.STATE_USER_FXA_VERIFIED:
+        status = "migrate-verify";
+        label = this.strings.formatStringFromName("needVerifiedUserShort",
+                                                  [this._migrationInfo.email],
+                                                  1);
+        break;
+    }
+    this.panelUILabel.label = label;
+    this.panelUIFooter.setAttribute("fxastatus", status);
+  }),
+
+  updateMigrationNotification: Task.async(function* () {
+    if (!this._migrationInfo) {
+      this._expectingNotifyClose = true;
+      Weave.Notifications.removeAll(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
+      // because this is called even when there is no such notification, we
+      // set _expectingNotifyClose back to false as we may yet create a new
+      // notification (but in general, once we've created a migration
+      // notification once in a session, we don't create one again)
+      this._expectingNotifyClose = false;
+      return;
+    }
+    let note = null;
+    switch (this._migrationInfo.state) {
+      case this.fxaMigrator.STATE_USER_FXA: {
+        // There are 2 cases here - no email address means it is an offer on
+        // the first device (so the user is prompted to create an account).
+        // If there is an email address it is the "join the party" flow, so the
+        // user is prompted to sign in with the address they previously used.
+        let msg, upgradeLabel, upgradeAccessKey, learnMoreLink;
+        if (this._migrationInfo.email) {
+          msg = this.strings.formatStringFromName("signInAfterUpgradeOnOtherDevice.description",
+                                                  [this._migrationInfo.email],
+                                                  1);
+          upgradeLabel = this.strings.GetStringFromName("signInAfterUpgradeOnOtherDevice.label");
+          upgradeAccessKey = this.strings.GetStringFromName("signInAfterUpgradeOnOtherDevice.accessKey");
+        } else {
+          msg = this.strings.GetStringFromName("needUserLong");
+          upgradeLabel = this.strings.GetStringFromName("upgradeToFxA.label");
+          upgradeAccessKey = this.strings.GetStringFromName("upgradeToFxA.accessKey");
+          learnMoreLink = this.fxaMigrator.learnMoreLink;
+        }
+        note = new Weave.Notification(
+          undefined, msg, undefined, Weave.Notifications.PRIORITY_WARNING, [
+            new Weave.NotificationButton(upgradeLabel, upgradeAccessKey, () => {
+              this._expectingNotifyClose = true;
+              this.fxaMigrator.createFxAccount(window);
+            }),
+          ], learnMoreLink
+        );
+        break;
+      }
+      case this.fxaMigrator.STATE_USER_FXA_VERIFIED: {
+        let msg =
+          this.strings.formatStringFromName("needVerifiedUserLong",
+                                            [this._migrationInfo.email], 1);
+        let resendLabel =
+          this.strings.GetStringFromName("resendVerificationEmail.label");
+        let resendAccessKey =
+          this.strings.GetStringFromName("resendVerificationEmail.accessKey");
+        note = new Weave.Notification(
+          undefined, msg, undefined, Weave.Notifications.PRIORITY_INFO, [
+            new Weave.NotificationButton(resendLabel, resendAccessKey, () => {
+              this._expectingNotifyClose = true;
+              this.fxaMigrator.resendVerificationMail();
+            }),
+          ]
+        );
+        break;
+      }
+    }
+    note.title = this.SYNC_MIGRATION_NOTIFICATION_TITLE;
+    Weave.Notifications.replaceTitle(note);
+  }),
+
   onMenuPanelCommand: function () {
 
     switch (this.panelUIFooter.getAttribute("fxastatus")) {
@@ -355,6 +454,12 @@ var gFxAccounts = {
       } else {
         this.openSignInAgainPage("menupanel");
       }
+      break;
+    case "migrate-signup":
+    case "migrate-verify":
+      // The migration flow calls for the menu item to open sync prefs rather
+      // than requesting migration start immediately.
+      this.openPreferences();
       break;
     default:
       this.openPreferences();
