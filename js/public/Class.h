@@ -179,6 +179,7 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failCantDeleteWindowElement();
     JS_PUBLIC_API(bool) failCantDeleteWindowNamedProperty();
     JS_PUBLIC_API(bool) failCantPreventExtensions();
+    JS_PUBLIC_API(bool) failCantSetProto();
     JS_PUBLIC_API(bool) failNoNamedSetter();
     JS_PUBLIC_API(bool) failNoIndexedSetter();
 
