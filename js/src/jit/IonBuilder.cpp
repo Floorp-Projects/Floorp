@@ -1586,6 +1586,10 @@ IonBuilder::snoopControlFlow(JSOp op)
       case JSOP_THROW:
         return processThrow();
 
+      case JSOP_THROWSETCONST:
+      case JSOP_THROWSETALIASEDCONST:
+        return processThrowSetConst();
+
       case JSOP_GOTO:
       {
         jssrcnote* sn = info().getNote(gsn, pc);
@@ -1630,6 +1634,8 @@ IonBuilder::snoopControlFlow(JSOp op)
 bool
 IonBuilder::inspectOpcode(JSOp op)
 {
+    MOZ_ASSERT(analysis_.maybeInfo(pc), "Compiling unreachable op");
+
     switch (op) {
       case JSOP_NOP:
       case JSOP_LINENO:
@@ -1771,10 +1777,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETLOCAL:
         current->setLocal(GET_LOCALNO(pc));
         return true;
-
-      case JSOP_THROWSETCONST:
-      case JSOP_THROWSETALIASEDCONST:
-        return jsop_throwsetconst();
 
       case JSOP_CHECKLEXICAL:
         return jsop_checklexical();
@@ -12736,13 +12738,20 @@ IonBuilder::jsop_deffun(uint32_t index)
     return resumeAfter(deffun);
 }
 
-bool
-IonBuilder::jsop_throwsetconst()
+IonBuilder::ControlStatus
+IonBuilder::processThrowSetConst()
 {
     current->peek(-1)->setImplicitlyUsedUnchecked();
     MInstruction* lexicalError = MThrowRuntimeLexicalError::New(alloc(), JSMSG_BAD_CONST_ASSIGN);
     current->add(lexicalError);
-    return resumeAfter(lexicalError);
+    if (!resumeAfter(lexicalError))
+        return ControlStatus_Error;
+
+    current->end(MUnreachable::New(alloc()));
+
+    // Make sure no one tries to use this block now.
+    setCurrent(nullptr);
+    return processControlEnd();
 }
 
 bool
