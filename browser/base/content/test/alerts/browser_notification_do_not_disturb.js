@@ -12,6 +12,17 @@ const ALERT_SERVICE = Cc["@mozilla.org/alerts-service;1"]
 function test () {
   waitForExplicitFinish();
 
+  try {
+    // Only run the test if the do-not-disturb
+    // interface has been implemented.
+    ALERT_SERVICE.manualDoNotDisturb;
+    ok(true, "Alert service implements do-not-disturb interface");
+  } catch (e) {
+    ok(true, "Alert service doesn't implement do-not-disturb interface, exiting test");
+    finish();
+    return;
+  }
+
   let pm = Services.perms;
   registerCleanupFunction(function() {
     ALERT_SERVICE.manualDoNotDisturb = false;
