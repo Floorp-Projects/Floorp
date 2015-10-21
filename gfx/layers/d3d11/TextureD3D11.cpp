@@ -75,7 +75,7 @@ TextureSourceD3D11::GetShaderResourceView()
     mTexture->GetDevice(getter_AddRefs(device));
     HRESULT hr = device->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRV));
     if (FAILED(hr)) {
-      gfxCriticalError(CriticalLog::DefaultOptions(false)) << "[D3D11] TextureSourceD3D11:GetShaderResourceView CreateSRV failure " << gfx::hexa(hr);
+      gfxCriticalNote << "[D3D11] TextureSourceD3D11:GetShaderResourceView CreateSRV failure " << gfx::hexa(hr);
       return nullptr;
     }
   }
@@ -1129,7 +1129,7 @@ DataTextureSourceD3D11::GetShaderResourceView()
       mTileTextures[mCurrentTile]->GetDevice(getter_AddRefs(device));
       HRESULT hr = device->CreateShaderResourceView(mTileTextures[mCurrentTile], nullptr, getter_AddRefs(mTileSRVs[mCurrentTile]));
       if (FAILED(hr)) {
-        gfxCriticalError(CriticalLog::DefaultOptions(false)) << "[D3D11] DataTextureSourceD3D11:GetShaderResourceView CreateSRV failure " << gfx::hexa(hr);
+        gfxCriticalNote << "[D3D11] DataTextureSourceD3D11:GetShaderResourceView CreateSRV failure " << gfx::hexa(hr);
         return nullptr;
       }
     }

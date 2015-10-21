@@ -31,7 +31,7 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags) :
         Init(cairo_win32_printing_surface_create(mDC));
         mForPrinting = true;
         if (!mSurfaceValid) {
-            gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Invalid printing surface";
+            gfxCriticalNote << "Invalid printing surface";
         }
     } else
 #endif
