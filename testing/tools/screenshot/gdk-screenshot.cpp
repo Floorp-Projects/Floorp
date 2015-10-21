@@ -159,3 +159,11 @@ int main(int argc, char** argv)
 
   return 0;
 }
+
+// These options are copied from mozglue/build/AsanOptions.cpp
+#ifdef MOZ_ASAN
+extern "C"
+const char* __asan_default_options() {
+  return "allow_user_segv_handler=1:alloc_dealloc_mismatch=0:detect_leaks=0";
+}
+#endif
