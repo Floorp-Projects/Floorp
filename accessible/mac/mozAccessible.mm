@@ -19,7 +19,6 @@
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "mozilla/a11y/PDocAccessible.h"
-#include "OuterDocAccessible.h"
 
 #include "mozilla/Services.h"
 #include "nsRect.h"
@@ -646,7 +645,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 
     Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
     nativeParent = outerDoc ?
-      GetNativeFromGeckoAccessible(outerDoc) : nil;
+      GetNativeFromGeckoAccessible(outerDoc->RootAccessible()) : nil;
   } else {
     return nil;
   }
@@ -688,19 +687,6 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     nsAutoTArray<Accessible*, 10> childrenArray;
     accWrap->GetUnignoredChildren(&childrenArray);
     mChildren = ConvertToNSArray(childrenArray);
-
-    OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
-    if (docOwner) {
-      ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc();
-      if (proxyDoc) {
-        mozAccessible* nativeRemoteChild = GetNativeFromProxy(proxyDoc);
-          if (nativeRemoteChild) {
-            [mChildren insertObject:nativeRemoteChild atIndex:0];
-          } else {
-            NSLog (@"%@ found a child remote doc missing a native\n", self);
-          }
-      }
-    }
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
     nsAutoTArray<ProxyAccessible*, 10> childrenArray;
     GetProxyUnignoredChildren(proxy, &childrenArray);
