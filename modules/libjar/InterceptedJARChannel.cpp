@@ -78,10 +78,16 @@ InterceptedJARChannel::SynthesizeHeader(const nsACString& aName,
 }
 
 NS_IMETHODIMP
-InterceptedJARChannel::FinishSynthesizedResponse()
+InterceptedJARChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
 {
   if (NS_WARN_IF(!mChannel)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (!aFinalURLSpec.IsEmpty()) {
+    // We don't support rewriting responses for JAR channels where the principal
+    // needs to be modified.
+    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   mChannel->OverrideWithSynthesizedResponse(mSynthesizedInput, mContentType);

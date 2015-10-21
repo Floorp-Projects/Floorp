@@ -2444,6 +2444,12 @@ HttpChannelChild::ForceIntercepted()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpChannelChild::ForceIntercepted(uint64_t aInterceptionID)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 bool
 HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
                                               const bool& asError)
