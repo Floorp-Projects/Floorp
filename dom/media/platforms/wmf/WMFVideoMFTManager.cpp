@@ -204,15 +204,17 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
   UINT32 aware = 0;
   if (attr) {
-      attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
-      attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
-                      WMFDecoderModule::GetNumDecoderThreads());
+    attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
+    attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
+      WMFDecoderModule::GetNumDecoderThreads());
+    if (WMFDecoderModule::LowLatencyMFTEnabled()) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
         LOG("Enabling Low Latency Mode");
       } else {
         LOG("Couldn't enable Low Latency Mode");
       }
+    }
   }
 
   if (useDxva) {
