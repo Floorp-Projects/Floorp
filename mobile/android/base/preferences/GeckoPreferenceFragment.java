@@ -85,17 +85,13 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
      * Return the title to use for this preference fragment. This allows
      * for us to redisplay this fragment in a different locale.
      *
-     * We only return titles for the preference screens that are in the
-     * flow for selecting a locale, and thus might need to be redisplayed.
+     * We only return titles for the preference screens that are
+     * launched directly, and thus might need to be redisplayed.
      *
      * This method sets the title that you see on non-multi-pane devices.
      */
     private String getTitle() {
         final int res = getResource();
-        if (res == R.xml.preferences_locale) {
-            return getString(R.string.pref_category_language);
-        }
-
         if (res == R.xml.preferences) {
             return getString(R.string.settings_title);
         }
