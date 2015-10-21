@@ -3,10 +3,25 @@
 <script>
 var image_path = base_path() + 'fetch-access-control.py?PNGIMAGE';
 var host_info = get_host_info();
+var params = get_query_params(location.href);
 
 var NOT_TAINTED = 'NOT_TAINTED';
 var TAINTED = 'TAINTED';
 var LOAD_ERROR = 'LOAD_ERROR';
+
+function get_query_params(url) {
+  var search = (new URL(url)).search;
+  if (!search) {
+    return {};
+  }
+  var ret = {};
+  var params = search.substring(1).split('&');
+  params.forEach(function(param) {
+      var element = param.split('=');
+      ret[decodeURIComponent(element[0])] = decodeURIComponent(element[1]);
+    });
+  return ret;
+}
 
 function create_test_case_promise(url, cross_origin) {
   return new Promise(function(resolve) {
@@ -35,6 +50,10 @@ function create_test_case_promise(url, cross_origin) {
 }
 
 function create_test_promise(url, cross_origin, expected_result) {
+  if (params['cache']) {
+    url += "&cache";
+  }
+
   return new Promise(function(resolve, reject) {
       create_test_case_promise(url, cross_origin)
         .then(function(result) {
@@ -140,7 +159,7 @@ window.addEventListener('message', function(evt) {
             remote_image_url +
             '&mode=same-origin&url=' + encodeURIComponent(image_url),
             '',
-            NOT_TAINTED),
+            TAINTED),
         create_test_promise(
             remote_image_url +
             '&mode=same-origin&url=' + encodeURIComponent(image_url),
@@ -191,9 +210,7 @@ window.addEventListener('message', function(evt) {
             encodeURIComponent(remote_image_url +
                                '&ACAOrigin=' + host_info['HTTPS_ORIGIN']),
             '',
-            TAINTED), // We expect TAINTED since the default origin behavior here
-                      // is taint, and it doesn't matter what kind of fetch the
-                      // SW performs.
+            NOT_TAINTED),
         create_test_promise(
             image_url +
             '&mode=cors&url=' +

@@ -80,7 +80,25 @@ self.addEventListener('fetch', function(event) {
                       expectedType
             })));
           }
-          resolve(response);
+
+          if (params['cache']) {
+            var cacheName = "cached-fetches-" + Date.now();
+            var cache;
+            var cachedResponse;
+            return self.caches.open(cacheName).then(function(opened) {
+              cache = opened;
+              return cache.put(request, response);
+            }).then(function() {
+              return cache.match(request);
+            }).then(function(cached) {
+              cachedResponse = cached;
+              return self.caches.delete(cacheName);
+            }).then(function() {
+               resolve(cachedResponse);
+            });
+          } else {
+            resolve(response);
+          }
         }, reject)
       }));
   });
