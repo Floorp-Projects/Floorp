@@ -20,7 +20,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const HeapAnalysesClient =
   require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const Services = require("Services");
-const { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
+const { censusReportToCensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
 const CensusUtils = require("devtools/shared/heapsnapshot/CensusUtils");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
@@ -150,6 +150,18 @@ function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined) {
   return snapshot.takeCensus(censusOptions);
 }
 
+function isSavedFrame(obj) {
+  return Object.prototype.toString.call(obj) === "[object SavedFrame]";
+}
+
+function savedFrameReplacer(key, val) {
+  if (isSavedFrame(val)) {
+    return `<SavedFrame '${val.toString().split(/\n/g).shift()}'>`;
+  } else {
+    return val;
+  }
+}
+
 /**
  * Assert that creating a CensusTreeNode from the given `report` with the
  * specified `breakdown` creates the given `expected` CensusTreeNode.
@@ -162,18 +174,27 @@ function saveHeapSnapshotAndTakeCensus(dbg=null, censusOptions=undefined) {
  *
  * @param {Object} expected
  *        The expected CensusTreeNode result.
- *
- * @param {String} assertion
- *        The assertion message.
  */
-function compareCensusViewData (breakdown, report, expected, assertion) {
-  let data = new CensusTreeNode(breakdown, report);
-  equal(JSON.stringify(data), JSON.stringify(expected), assertion);
+function compareCensusViewData (breakdown, report, expected) {
+  dumpn("Generating CensusTreeNode from report:");
+  dumpn("breakdown: " + JSON.stringify(breakdown, null, 4));
+  dumpn("report: " + JSON.stringify(report, null, 4));
+  dumpn("expected: " + JSON.stringify(expected, savedFrameReplacer, 4));
+
+  const actual = censusReportToCensusTreeNode(breakdown, report);
+  dumpn("actual: " + JSON.stringify(actual, savedFrameReplacer, 4));
+
+  assertStructurallyEquivalent(actual, expected);
 }
 
 // Deep structural equivalence that can handle Map objects in addition to plain
 // objects.
 function assertStructurallyEquivalent(actual, expected, path="root") {
+  if (actual === expected) {
+    equal(actual, expected, "actual and expected are the same");
+    return;
+  }
+
   equal(typeof actual, typeof expected, `${path}: typeof should be the same`);
 
   if (actual && typeof actual === "object") {
@@ -195,7 +216,7 @@ function assertStructurallyEquivalent(actual, expected, path="root") {
       }
 
       equal(expectedKeys.size, 0,
-            `${path}: every key in expected should also exist in actual`);
+            `${path}: every key in expected should also exist in actual, did not see ${[...expectedKeys]}`);
     } else {
       const expectedKeys = new Set(Object.keys(expected));
 
@@ -208,7 +229,7 @@ function assertStructurallyEquivalent(actual, expected, path="root") {
       }
 
       equal(expectedKeys.size, 0,
-            `${path}: every key in expected should also exist in actual`);
+            `${path}: every key in expected should also exist in actual, did not see ${[...expectedKeys]}`);
     }
   } else {
     equal(actual, expected, `${path}: primitives should be equal`);
