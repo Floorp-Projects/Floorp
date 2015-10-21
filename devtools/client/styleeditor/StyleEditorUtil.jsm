@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const PROPERTIES_URL = "chrome://browser/locale/devtools/styleeditor.properties";
 
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const console = require("resource://gre/modules/Console.jsm").console;
 const gStringBundle = Services.strings.createBundle(PROPERTIES_URL);
 

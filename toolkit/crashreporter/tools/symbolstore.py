@@ -618,7 +618,8 @@ class Dumper:
             try:
                 cmd = [self.dump_syms] + arch.split() + [file]
                 self.output_pid(sys.stderr, ' '.join(cmd))
-                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                        stderr=open(os.devnull, 'wb'))
                 module_line = proc.stdout.next()
                 if module_line.startswith("MODULE"):
                     # MODULE os cpu guid debug_file

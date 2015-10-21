@@ -286,6 +286,19 @@ nsAttrSelector::~nsAttrSelector(void)
   NS_CSS_DELETE_LIST_MEMBER(nsAttrSelector, this, mNext);
 }
 
+size_t
+nsAttrSelector::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  const nsAttrSelector* p = this;
+  while (p) {
+    n += aMallocSizeOf(p);
+    n += p->mValue.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    p = p->mNext;
+  }
+  return n;
+}
+
 // -- nsCSSSelector -------------------------------
 
 nsCSSSelector::nsCSSSelector(void)
@@ -924,11 +937,8 @@ nsCSSSelector::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     MEASURE(s->mClassList);
     MEASURE(s->mPseudoClassList);
     MEASURE(s->mNegations);
+    MEASURE(s->mAttrList);
 
-    // Measurement of the following members may be added later if DMD finds it is
-    // worthwhile:
-    // - s->mAttrList
-    //
     // The following members aren't measured:
     // - s->mLowercaseTag, because it's an atom and therefore shared
     // - s->mCasedTag, because it's an atom and therefore shared

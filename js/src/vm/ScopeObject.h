@@ -330,6 +330,8 @@ class CallObject : public ScopeObject
 
     /* True if this is for a strict mode eval frame. */
     bool isForEval() const {
+        if (is<ModuleEnvironmentObject>())
+            return false;
         MOZ_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
         MOZ_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
                       getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
@@ -341,6 +343,7 @@ class CallObject : public ScopeObject
      * only be called if !isForEval.)
      */
     JSFunction& callee() const {
+        MOZ_ASSERT(!is<ModuleEnvironmentObject>());
         return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
     }
 
@@ -403,6 +406,7 @@ class ModuleEnvironmentObject : public CallObject
                                ObjectOpResult& result);
     static bool enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
                           bool enumerableOnly);
+    static bool thisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp);
 };
 
 typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
@@ -676,8 +680,10 @@ class DynamicWithObject : public NestedScopeObject
     }
 
     /* Return object for the 'this' class hook. */
-    JSObject& withThis() const {
-        return getReservedSlot(THIS_SLOT).toObject();
+    Value withThis() const {
+        Value thisValue = getReservedSlot(THIS_SLOT);
+        MOZ_ASSERT(thisValue.isObject());
+        return thisValue;
     }
 
     /*

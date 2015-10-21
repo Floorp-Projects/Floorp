@@ -62,14 +62,14 @@ private:
     explicit Device(const nsACString& aId,
                     const nsACString& aName,
                     const nsACString& aType,
-                    const nsACString& aHost,
+                    const nsACString& aAddress,
                     const uint16_t aPort,
                     DeviceState aState,
                     MulticastDNSDeviceProvider* aProvider)
       : mId(aId)
       , mName(aName)
       , mType(aType)
-      , mHost(aHost)
+      , mAddress(aAddress)
       , mPort(aPort)
       , mState(aState)
       , mProvider(aProvider)
@@ -81,9 +81,9 @@ private:
       return mId;
     }
 
-    const nsCString& Host() const
+    const nsCString& Address() const
     {
-      return mHost;
+      return mAddress;
     }
 
     const uint16_t Port() const
@@ -103,12 +103,12 @@ private:
 
     void Update(const nsACString& aName,
                 const nsACString& aType,
-                const nsACString& aHost,
+                const nsACString& aAddress,
                 const uint16_t aPort)
     {
       mName = aName;
       mType = aType;
-      mHost = aHost;
+      mAddress = aAddress;
       mPort = aPort;
     }
 
@@ -118,7 +118,7 @@ private:
     nsCString mId;
     nsCString mName;
     nsCString mType;
-    nsCString mHost;
+    nsCString mAddress;
     uint16_t mPort;
     DeviceState mState;
     MulticastDNSDeviceProvider* mProvider;
@@ -130,9 +130,9 @@ private:
     }
   };
 
-  struct DeviceHostComparator {
+  struct DeviceAddressComparator {
     bool Equals(const RefPtr<Device>& aA, const RefPtr<Device>& aB) const {
-      return aA->Host() == aB->Host();
+      return aA->Address() == aB->Address();
     }
   };
 
@@ -146,21 +146,22 @@ private:
                           nsIPresentationControlChannel** aRetVal);
 
   // device manipulation
-  nsresult AddDevice(const nsACString& aServiceName,
+  nsresult AddDevice(const nsACString& aId,
+                     const nsACString& aServiceName,
                      const nsACString& aServiceType,
-                     const nsACString& aHost,
+                     const nsACString& aAddress,
                      const uint16_t aPort);
   nsresult UpdateDevice(const uint32_t aIndex,
                         const nsACString& aServiceName,
                         const nsACString& aServiceType,
-                        const nsACString& aHost,
+                        const nsACString& aAddress,
                         const uint16_t aPort);
   nsresult RemoveDevice(const uint32_t aIndex);
   bool FindDeviceById(const nsACString& aId,
                       uint32_t& aIndex);
 
-  bool FindDeviceByHost(const nsACString& aHost,
-                        uint32_t& aIndex);
+  bool FindDeviceByAddress(const nsACString& aAddress,
+                           uint32_t& aIndex);
 
   void MarkAllDevicesUnknown();
   void ClearUnknownDevices();

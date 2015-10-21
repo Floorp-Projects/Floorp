@@ -770,8 +770,36 @@ nsProtocolProxyService::CanUseProxy(nsIURI *aURI, int32_t defaultPort)
                 // compare last |filter_host_len| bytes of target hostname.
                 //
                 const char *host_tail = host.get() + host_len - filter_host_len;
-                if (!PL_strncasecmp(host_tail, hinfo->name.host, filter_host_len))
-                    return false; // proxy disallowed
+                if (!PL_strncasecmp(host_tail, hinfo->name.host, filter_host_len)) {
+                    // If the tail of the host string matches the filter
+
+                    if (filter_host_len > 0 && hinfo->name.host[0] == '.') {
+                        // If the filter was of the form .foo.bar.tld, all such
+                        // matches are correct
+                        return false; // proxy disallowed
+                    }
+
+                    // abc-def.example.org should not match def.example.org
+                    // however, *.def.example.org should match .def.example.org
+                    // We check that the filter doesn't start with a `.`. If it does,
+                    // then the strncasecmp above should suffice. If it doesn't,
+                    // then we should only consider it a match if the strncasecmp happened
+                    // at a subdomain boundary
+                    if (host_len > filter_host_len && *(host_tail - 1) == '.') {
+                            // If the host was something.foo.bar.tld and the filter
+                            // was foo.bar.tld, it's still a match.
+                            // the character right before the tail must be a
+                            // `.` for this to work
+                            return false; // proxy disallowed
+                    }
+
+                    if (host_len == filter_host_len) {
+                        // If the host and filter are of the same length,
+                        // they should match
+                        return false; // proxy disallowed
+                    }
+                }
+
             }
         }
     }

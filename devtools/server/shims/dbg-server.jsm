@@ -29,7 +29,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const { require } =
-  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  Cu.import("resource://devtools/shared/Loader.jsm", {});
 const module = require("devtools/server/main");
 
 for (let symbol of this.EXPORTED_SYMBOLS) {

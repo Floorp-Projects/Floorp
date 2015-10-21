@@ -34,7 +34,7 @@ exports.getCSSStyleRules = (...args) =>
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const STYLESHEET_URI = "resource://gre/modules/devtools/server/actors/" +
+const STYLESHEET_URI = "resource://devtools/server/actors/" +
                        "highlighters.css";
 
 /**

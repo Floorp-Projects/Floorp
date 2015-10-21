@@ -13,14 +13,19 @@
 #include "js/TraceableVector.h"
 
 #include "vm/NativeObject.h"
+#include "vm/ProxyObject.h"
 
 namespace js {
 
 class ModuleEnvironmentObject;
+class ModuleObject;
 
 namespace frontend {
 class ParseNode;
 } /* namespace frontend */
+
+typedef Rooted<ModuleObject*> RootedModuleObject;
+typedef Handle<ModuleObject*> HandleModuleObject;
 
 class ImportEntryObject : public NativeObject
 {
@@ -80,14 +85,87 @@ struct IndirectBinding
 
 typedef HashMap<jsid, IndirectBinding, JsidHasher, SystemAllocPolicy> IndirectBindingMap;
 
+class ModuleNamespaceObject : public ProxyObject
+{
+  public:
+    static bool isInstance(HandleValue value);
+    static ModuleNamespaceObject* create(JSContext* cx, HandleModuleObject module);
+
+    ModuleObject& module();
+    ArrayObject& exports();
+    IndirectBindingMap& bindings();
+
+    bool addBinding(JSContext* cx, HandleAtom exportedName, HandleModuleObject targetModule,
+                    HandleAtom localName);
+
+  private:
+    struct ProxyHandler : public BaseProxyHandler
+    {
+        enum
+        {
+            EnumerateFunctionSlot = 0
+        };
+
+        ProxyHandler();
+
+        JS::Value getEnumerateFunction(HandleObject proxy) const;
+
+        bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
+                                      MutableHandle<JSPropertyDescriptor> desc) const override;
+        bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
+                            Handle<JSPropertyDescriptor> desc,
+                            ObjectOpResult& result) const override;
+        bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
+                             AutoIdVector& props) const override;
+        bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
+                     ObjectOpResult& result) const override;
+        bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const override;
+        bool getPrototype(JSContext* cx, HandleObject proxy,
+                          MutableHandleObject protop) const override;
+        bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
+                          ObjectOpResult& result) const override;
+        bool setImmutablePrototype(JSContext* cx, HandleObject proxy,
+                                   bool* succeeded) const override;
+
+        bool preventExtensions(JSContext* cx, HandleObject proxy,
+                               ObjectOpResult& result) const override;
+        bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const override;
+        bool has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override;
+        bool get(JSContext* cx, HandleObject proxy, HandleValue receiver,
+                 HandleId id, MutableHandleValue vp) const override;
+        bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                 HandleValue receiver, ObjectOpResult& result) const override;
+
+        static const char family;
+    };
+
+    static const ProxyHandler proxyHandler;
+};
+
+typedef Rooted<ModuleNamespaceObject*> RootedModuleNamespaceObject;
+typedef Handle<ModuleNamespaceObject*> HandleModuleNamespaceObject;
+
+struct FunctionDeclaration
+{
+    FunctionDeclaration(HandleAtom name, HandleFunction fun);
+    void trace(JSTracer* trc);
+
+    RelocatablePtrAtom name;
+    RelocatablePtrFunction fun;
+};
+
+using FunctionDeclarationVector = TraceableVector<FunctionDeclaration>;
+
 class ModuleObject : public NativeObject
 {
   public:
     enum
     {
         ScriptSlot = 0,
+        StaticScopeSlot,
         InitialEnvironmentSlot,
         EnvironmentSlot,
+        NamespaceSlot,
         EvaluatedSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
@@ -95,6 +173,9 @@ class ModuleObject : public NativeObject
         IndirectExportEntriesSlot,
         StarExportEntriesSlot,
         ImportBindingsSlot,
+        NamespaceExportsSlot,
+        NamespaceBindingsSlot,
+        FunctionDeclarationsSlot,
         SlotCount
     };
 
@@ -102,7 +183,7 @@ class ModuleObject : public NativeObject
 
     static bool isInstance(HandleValue value);
 
-    static ModuleObject* create(ExclusiveContext* cx);
+    static ModuleObject* create(ExclusiveContext* cx, HandleObject enclosingStaticScope);
     void init(HandleScript script);
     void setInitialEnvironment(Handle<ModuleEnvironmentObject*> initialEnvironment);
     void initImportExportData(HandleArrayObject requestedModules,
@@ -112,31 +193,38 @@ class ModuleObject : public NativeObject
                               HandleArrayObject starExportEntries);
 
     JSScript* script() const;
+    JSObject* enclosingStaticScope() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
+    ModuleNamespaceObject* namespace_();
     bool evaluated() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
     ArrayObject& localExportEntries() const;
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
-    JSObject* enclosingStaticScope() const;
     IndirectBindingMap& importBindings();
+    ArrayObject* namespaceExports();
+    IndirectBindingMap* namespaceBindings();
 
     void createEnvironment();
 
+    bool noteFunctionDeclaration(ExclusiveContext* cx, HandleAtom name, HandleFunction fun);
+    static bool instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self);
+
     void setEvaluated();
-    bool evaluate(JSContext*cx, MutableHandleValue rval);
+    static bool evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval);
+
+    static ModuleNamespaceObject* createNamespace(JSContext* cx, HandleModuleObject self,
+                                                  HandleArrayObject exports);
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(js::FreeOp* fop, JSObject* obj);
 
     bool hasScript() const;
+    FunctionDeclarationVector* functionDeclarations();
 };
-
-typedef Rooted<ModuleObject*> RootedModuleObject;
-typedef Handle<ModuleObject*> HandleModuleObject;
 
 // Process a module's parse tree to collate the import and export data used when
 // creating a ModuleObject.

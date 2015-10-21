@@ -584,6 +584,16 @@ AbstractFramePtr::isFunctionFrame() const
 }
 
 inline bool
+AbstractFramePtr::isModuleFrame() const
+{
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->isModuleFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->isModuleFrame();
+    return asRematerializedFrame()->isModuleFrame();
+}
+
+inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
     if (isInterpreterFrame())

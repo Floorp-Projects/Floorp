@@ -18,7 +18,7 @@
     const Cc = Components.classes;
     const Ci = Components.interfaces;
     Cu.import("resource://testing-common/httpd.js");
-    const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+    const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
     const {AppValidator} = require("devtools/client/app-manager/app-validator");
     const {Services} = Cu.import("resource://gre/modules/Services.jsm");

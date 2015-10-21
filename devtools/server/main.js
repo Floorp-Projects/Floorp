@@ -435,7 +435,7 @@ var DebuggerServer = {
       this.registerModule("devtools/server/actors/webbrowser");
     }
     if (!("ContentActor" in this)) {
-      this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
+      this.addActors("resource://devtools/server/actors/childtab.js");
     }
   },
 
@@ -778,7 +778,7 @@ var DebuggerServer = {
     return new Promise((resolve, reject) => {
       // Step 1: Ensure the worker debugger is initialized.
       if (!aDbg.isInitialized) {
-        aDbg.initialize("resource://gre/modules/devtools/server/worker.js");
+        aDbg.initialize("resource://devtools/server/worker.js");
 
         // Create a listener for rpc requests from the worker debugger. Only do
         // this once, when the worker debugger is first initialized, rather than
@@ -954,7 +954,7 @@ var DebuggerServer = {
 
     let mm = aFrame.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader
              .messageManager;
-    mm.loadFrameScript("resource://gre/modules/devtools/server/child.js", false);
+    mm.loadFrameScript("resource://devtools/server/child.js", false);
     this._childMessageManagers.add(mm);
 
     let actor, childTransport;

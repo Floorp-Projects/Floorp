@@ -32,8 +32,8 @@ nsresult RawReader::ResetDecode()
   return MediaDecoderReader::ResetDecode();
 }
 
-nsresult
-RawReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+nsresult RawReader::ReadMetadata(MediaInfo* aInfo,
+                                 MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
 

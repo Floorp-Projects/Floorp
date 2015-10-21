@@ -10,7 +10,7 @@ interface nsIPropertyBag2;
 /**
  * Service information
  */
-[scriptable, uuid(112bfa89-1b57-4acf-8287-48e5466c1b39)]
+[scriptable, uuid(670ed0f9-2fa5-4544-bf1e-ea58ac179374)]
 interface nsIDNSServiceInfo : nsISupports
 {
   /**
@@ -18,6 +18,12 @@ interface nsIDNSServiceInfo : nsISupports
    * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
    */
   attribute AUTF8String host;
+
+  /**
+   * The IP address of the service.
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute AUTF8String address;
 
   /**
    * The port number of the service. (E.g. 80)

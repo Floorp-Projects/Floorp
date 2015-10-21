@@ -5,7 +5,7 @@
 
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const WORKER_URL =
-  "resource:///modules/devtools/client/shared/widgets/GraphsWorker.js";
+  "resource://devtools/client/shared/widgets/GraphsWorker.js";
 
 add_task(function*() {
   try {

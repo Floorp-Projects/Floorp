@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <title>CSS display:table is not a table</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // elements with display:table
+
+      // only display:table
+      var accTree =
+        { SECTION: [
+          { TEXT_LEAF: [ ] }
+        ] };
+      testAccessibleTree("table1", accTree);
+
+      // only display:table and display:table-cell
+      accTree =
+        { SECTION: [
+          { SECTION: [
+            { TEXT_LEAF: [ ] }
+	        ] }
+      ] };
+      testAccessibleTree("table2", accTree);
+
+      // display:table, display:table-row, and display:table-cell
+      accTree =
+        { SECTION: [
+          { SECTION: [
+            { TEXT_LEAF: [ ] }
+          ] }
+      ] };
+      testAccessibleTree("table3", accTree);
+
+      // display:table, display:table-row-group, display:table-row, and display:table-cell
+      accTree =
+        { SECTION: [
+          { SECTION: [
+            { TEXT_LEAF: [ ] }
+          ] }
+        ] };
+      testAccessibleTree("table4", accTree);
+
+      // display:inline-table
+      accTree =
+        { TEXT_CONTAINER: [
+          { TEXT_CONTAINER: [
+            { TEXT_LEAF: [ ] }
+          ] }
+        ] };
+      testAccessibleTree("table5", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+
+<body>
+  <a target="_blank"
+     title=" div with display:table exposes table semantics"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1007975">Mozilla Bug 1007975</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="table1" style="display:table">
+    table1
+  </div>
+
+  <div id="table2" style="display:table">
+    <div style="display:table-cell">table2</div>
+  </div>
+
+  <div id="table3" style="display:table">
+    <div style="display:table-row">
+      <div style="display:table-cell">table3</div>
+    </div>
+  </div>
+
+  <div id="table4" style="display:table">
+    <div style="display:table-row-group">
+      <div style="display:table-row">
+        <div style="display:table-cell">table4</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <span id="table5" style="display:inline-table">
+      <span style="display:table-row">
+        <span style="display:table-cell">table5</div>
+      </span>
+    </span>
+  </div>
+      
+</body>
+</html>

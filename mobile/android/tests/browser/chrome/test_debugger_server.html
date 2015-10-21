@@ -20,7 +20,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   Cu.import("resource://gre/modules/Services.jsm");
   const { require } =
-    Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+    Cu.import("resource://devtools/shared/Loader.jsm", {});
   const { DebuggerServer } = require("devtools/server/main");
 
   let win = Services.wm.getMostRecentWindow("navigator:browser");

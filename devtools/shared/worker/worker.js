@@ -10,7 +10,7 @@
     factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
   } else { // Cu.import
     const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-    const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+    const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     this.isWorker = false;
     this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
     this.console = Cu.import("resource://gre/modules/Console.jsm", {}).console;
@@ -160,7 +160,7 @@ exports.workerify = workerify;
  */
 function createWorkerString (fn) {
   return `importScripts("resource://gre/modules/workers/require.js");
-    const { createTask } = require("resource://gre/modules/devtools/shared/worker/helper.js");
+    const { createTask } = require("resource://devtools/shared/worker/helper.js");
     createTask(self, "workerifiedTask", ${fn.toString()});
   `;
 }

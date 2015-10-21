@@ -85,19 +85,19 @@ BuiltinProvider.prototype = {
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "": "resource://gre/modules/commonjs/",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "devtools": "resource://gre/modules/devtools",
+        "devtools": "resource://devtools",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "devtools/client": "resource:///modules/devtools/client",
+        "devtools/client": "resource://devtools/client",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "gcli": "resource://gre/modules/devtools/gcli",
+        "gcli": "resource://devtools/gcli",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "promise": "resource://gre/modules/Promise-backend.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "acorn": "resource://gre/modules/devtools/acorn",
+        "acorn": "resource://devtools/acorn",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
+        "acorn/util/walk": "resource://devtools/acorn/walk.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
+        "source-map": "resource://devtools/sourcemap/source-map.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
@@ -433,7 +433,7 @@ DevToolsLoader.prototype = {
     if (showToolbox) {
       let { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
       let target = this.TargetFactory.forTab(gBrowser.selectedTab);
-      const { gDevTools } = this.require("resource:///modules/devtools/client/framework/gDevTools.jsm");
+      const { gDevTools } = this.require("resource://devtools/client/framework/gDevTools.jsm");
       gDevTools.showToolbox(target);
     }
   },

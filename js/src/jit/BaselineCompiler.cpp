@@ -1312,6 +1312,12 @@ BaselineCompiler::emitCheckThis()
 bool
 BaselineCompiler::emit_JSOP_THIS()
 {
+    // |this| is undefined in modules.
+    if (module()) {
+        frame.push(UndefinedValue());
+        return true;
+    }
+
     if (function() && function()->isArrow()) {
         // Arrow functions store their (lexical) |this| value in an
         // extended slot.

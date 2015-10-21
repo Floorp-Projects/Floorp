@@ -202,8 +202,6 @@ private:
     // is outside the integer range is undefined.
     // Then we do an implicit cast to Time (typically an unsigned 32-bit
     // integer) which wraps times outside that range.
-    MOZ_ASSERT(mReferenceTimeStamp <= aTimeStamp,
-               "Got a negative timestamp delta");
     Time timeStampDelta =
       static_cast<int64_t>((aTimeStamp - mReferenceTimeStamp).ToMilliseconds());
 

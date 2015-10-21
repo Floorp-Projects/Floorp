@@ -63,7 +63,7 @@ module.exports = {
    * e.g. Cu.import("path/to/someName") will return "someName."
    *
    * Some valid input strings:
-   *  - Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+   *  - Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
    *  - loader.lazyImporter(this, "name1");
    *  - loader.lazyRequireGetter(this, "name2"
    *  - loader.lazyServiceGetter(this, "name3"

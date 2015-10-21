@@ -25,7 +25,11 @@ def DevToolsModules(*modules):
             error('DevToolsModules must be used from the same directory as ' +
                   'the files to be installed.')
 
-    base = EXTRA_JS_MODULES
+    # jar.mn manifest files are typically used to install files to chrome
+    # locations.  Instead of doing this, use this DevToolsModules syntax via
+    # moz.build files to do the installation so that we can enforce correct
+    # paths based on source tree location.
+    base = FINAL_TARGET_FILES.chrome.devtools.modules
     for dir in RELATIVEDIR.split('/'):
         base = base[dir]
     base += [m for m in modules]
