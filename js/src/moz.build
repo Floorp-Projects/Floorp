@@ -323,7 +323,6 @@ UNIFIED_SOURCES += [
     'vm/SharedTypedArrayObject.cpp',
     'vm/SPSProfiler.cpp',
     'vm/Stack.cpp',
-    'vm/Stopwatch.cpp',
     'vm/String.cpp',
     'vm/StringBuffer.cpp',
     'vm/StructuredClone.cpp',
