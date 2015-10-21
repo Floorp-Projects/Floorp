@@ -819,9 +819,8 @@ WebMTrackDemuxer::Seek(media::TimeUnit aTime)
 
   // Check what time we actually seeked to.
   if (mSamples.GetSize() > 0) {
-    RefPtr<MediaRawData> sample(mSamples.PopFront());
+    const RefPtr<MediaRawData>& sample = mSamples.First();
     seekTime = media::TimeUnit::FromMicroseconds(sample->mTime);
-    mSamples.PushFront(sample);
   }
   SetNextKeyFrameTime();
 
@@ -876,40 +875,40 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
   mNextKeyframeTime.reset();
 
   MediaRawDataQueue skipSamplesQueue;
-  RefPtr<MediaRawData> sample;
   bool foundKeyframe = false;
   while (!foundKeyframe && mSamples.GetSize()) {
-    sample = mSamples.PopFront();
+    RefPtr<MediaRawData> sample = mSamples.PopFront();
     if (sample->mKeyframe) {
       frameTime = sample->mTime;
       foundKeyframe = true;
     }
-    skipSamplesQueue.Push(sample);
+    skipSamplesQueue.Push(sample.forget());
   }
   Maybe<int64_t> startTime;
   if (skipSamplesQueue.GetSize()) {
-    sample = skipSamplesQueue.PopFront();
+    const RefPtr<MediaRawData>& sample = skipSamplesQueue.First();
     startTime.emplace(sample->mTimecode);
-    skipSamplesQueue.PushFront(sample);
   }
   // Demux and buffer frames until we find a keyframe.
+  RefPtr<MediaRawData> sample;
   while (!foundKeyframe && (sample = NextSample())) {
     if (sample->mKeyframe) {
       frameTime = sample->mTime;
       foundKeyframe = true;
     }
-    skipSamplesQueue.Push(sample);
+    int64_t sampleTimecode = sample->mTimecode;
+    skipSamplesQueue.Push(sample.forget());
     if (!startTime) {
-      startTime.emplace(sample->mTimecode);
+      startTime.emplace(sampleTimecode);
     } else if (!foundKeyframe &&
-               sample->mTimecode > startTime.ref() + MAX_LOOK_AHEAD) {
+               sampleTimecode > startTime.ref() + MAX_LOOK_AHEAD) {
       WEBM_DEBUG("Couldn't find keyframe in a reasonable time, aborting");
       break;
     }
   }
   // We may have demuxed more than intended, so ensure that all frames are kept
   // in the right order.
-  mSamples.PushFront(skipSamplesQueue);
+  mSamples.PushFront(Move(skipSamplesQueue));
 
   if (frameTime != -1) {
     mNextKeyframeTime.emplace(media::TimeUnit::FromMicroseconds(frameTime));
@@ -972,7 +971,7 @@ WebMTrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
     if (sample->mKeyframe && sample->mTime >= aTimeThreshold.ToMicroseconds()) {
       found = true;
       mSamples.Reset();
-      mSamples.PushFront(sample);
+      mSamples.PushFront(sample.forget());
     }
   }
   SetNextKeyFrameTime();

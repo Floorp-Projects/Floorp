@@ -110,6 +110,7 @@ function buildOptionListForChildren(node) {
         tagName: tagName,
         textContent: textContent,
         disabled: child.disabled,
+        display: child.style.display,
         // We need to do this for every option element as each one can have
         // an individual style set for direction
         textDirection: getComputedDirection(child),
