@@ -261,7 +261,16 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   aDragEvent->GetScreenY(&mScreenY);
   aDragEvent->GetMozInputSource(&mInputSource);
 
-  return InvokeDragSession(aDOMNode, aTransferableArray, aRegion, aActionType);
+  nsresult rv = InvokeDragSession(aDOMNode, aTransferableArray,
+                                  aRegion, aActionType);
+
+  if (NS_FAILED(rv)) {
+    mImage = nullptr;
+    mHasImage = false;
+    mDataTransfer = nullptr;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -292,7 +301,16 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   nsCOMPtr<nsIDOMNode> node;
   aSelection->GetFocusNode(getter_AddRefs(node));
 
-  return InvokeDragSession(node, aTransferableArray, nullptr, aActionType);
+  nsresult rv = InvokeDragSession(node, aTransferableArray,
+                                  nullptr, aActionType);
+
+  if (NS_FAILED(rv)) {
+    mHasImage = false;
+    mSelection = nullptr;
+    mDataTransfer = nullptr;
+  }
+
+  return rv;
 }
 
 //-------------------------------------------------------------------------
