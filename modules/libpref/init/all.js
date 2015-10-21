@@ -309,6 +309,7 @@ pref("media.decoder.heuristic.dormant.timeout", 60000);
 
 #ifdef MOZ_WMF
 pref("media.wmf.decoder.thread-count", -1);
+pref("media.wmf.low-latency.enabled", false);
 #endif
 #ifdef MOZ_DIRECTSHOW
 pref("media.directshow.enabled", true);
