@@ -25,6 +25,8 @@ def main(argv):
                         help='The method of the script to invoke')
     parser.add_argument('output_file', metavar='output-file', type=str,
                         help='The file to generate')
+    parser.add_argument('dep_file', metavar='dep-file', type=str,
+                        help='File to write any additional make dependencies to')
     parser.add_argument('additional_arguments', metavar='arg', nargs='*',
                         help="Additional arguments to the script's main() method")
 
