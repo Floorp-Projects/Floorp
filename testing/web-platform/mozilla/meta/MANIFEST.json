@@ -469,12 +469,6 @@
             "url": "/_mozilla/service-workers/service-worker/state.https.html"
           }
         ],
-        "service-workers/service-worker/sync-xhr-doesnt-deadlock.https.html": [
-          {
-            "path": "service-workers/service-worker/sync-xhr-doesnt-deadlock.https.html",
-            "url": "/_mozilla/service-workers/service-worker/sync-xhr-doesnt-deadlock.https.html"
-          }
-        ],
         "service-workers/service-worker/synced-state.https.html": [
           {
             "path": "service-workers/service-worker/synced-state.https.html",
@@ -527,6 +521,12 @@
           {
             "path": "service-workers/service-worker/worker-interception.https.html",
             "url": "/_mozilla/service-workers/service-worker/worker-interception.https.html"
+          }
+        ],
+        "service-workers/service-worker/xhr.https.html": [
+          {
+            "path": "service-workers/service-worker/xhr.https.html",
+            "url": "/_mozilla/service-workers/service-worker/xhr.https.html"
           }
         ]
       }

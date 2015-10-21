@@ -1254,6 +1254,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
 
     NS_LogInit();
 
+    mozilla::LogModule::Init();
+
     // A initializer to initialize histogram collection
     // used by telemetry.
     UniquePtr<base::StatisticsRecorder> telStats =
