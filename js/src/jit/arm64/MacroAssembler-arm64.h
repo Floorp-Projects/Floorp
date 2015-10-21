@@ -2532,19 +2532,19 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     // load: offset to the load instruction obtained by movePatchablePtr().
     void writeDataRelocation(ImmGCPtr ptr, BufferOffset load) {
         if (ptr.value)
-            dataRelocations_.writeUnsigned(load.getOffset());
+            tmpDataRelocations_.append(load);
     }
     void writeDataRelocation(const Value& val, BufferOffset load) {
         if (val.isMarkable()) {
             gc::Cell* cell = reinterpret_cast<gc::Cell*>(val.toGCThing());
             if (cell && gc::IsInsideNursery(cell))
                 embedsNurseryPointers_ = true;
-            dataRelocations_.writeUnsigned(load.getOffset());
+            tmpDataRelocations_.append(load);
         }
     }
 
     void writePrebarrierOffset(CodeOffsetLabel label) {
-        preBarriers_.writeUnsigned(label.offset());
+        tmpPreBarriers_.append(BufferOffset(label.offset()));
     }
 
     void computeEffectiveAddress(const Address& address, Register dest) {
