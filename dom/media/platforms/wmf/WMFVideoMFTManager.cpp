@@ -216,12 +216,13 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
     attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
       WMFDecoderModule::GetNumDecoderThreads());
-    hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
-    if (SUCCEEDED(hr)) {
-      LOG("Enabling Low Latency Mode");
-    }
-    else {
-      LOG("Couldn't enable Low Latency Mode");
+    if (WMFDecoderModule::LowLatencyMFTEnabled()) {
+      hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
+      if (SUCCEEDED(hr)) {
+        LOG("Enabling Low Latency Mode");
+      } else {
+        LOG("Couldn't enable Low Latency Mode");
+      }
     }
   }
 
