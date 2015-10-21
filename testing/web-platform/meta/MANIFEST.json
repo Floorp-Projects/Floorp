@@ -13282,10 +13282,6 @@
         "url": "/dom/collections/HTMLCollection-supported-property-names.html"
       },
       {
-        "path": "dom/collections/storage-supported-property-names.html",
-        "url": "/dom/collections/storage-supported-property-names.html"
-      },
-      {
         "path": "dom/events/Event-constants.html",
         "url": "/dom/events/Event-constants.html"
       },
@@ -13710,6 +13706,10 @@
         "url": "/dom/nodes/Element-getElementsByClassName.html"
       },
       {
+        "path": "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html",
+        "url": "/dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html"
+      },
+      {
         "path": "dom/nodes/Element-getElementsByTagName.html",
         "url": "/dom/nodes/Element-getElementsByTagName.html"
       },
@@ -13836,6 +13836,10 @@
       {
         "path": "dom/nodes/Node-contains.html",
         "url": "/dom/nodes/Node-contains.html"
+      },
+      {
+        "path": "dom/nodes/Node-contains.xml",
+        "url": "/dom/nodes/Node-contains.xml"
       },
       {
         "path": "dom/nodes/Node-insertBefore.html",
@@ -13972,6 +13976,14 @@
       {
         "path": "dom/nodes/getElementsByClassName-09.htm",
         "url": "/dom/nodes/getElementsByClassName-09.htm"
+      },
+      {
+        "path": "dom/nodes/getElementsByClassName-10.xml",
+        "url": "/dom/nodes/getElementsByClassName-10.xml"
+      },
+      {
+        "path": "dom/nodes/getElementsByClassName-11.xml",
+        "url": "/dom/nodes/getElementsByClassName-11.xml"
       },
       {
         "path": "dom/nodes/getElementsByClassName-12.htm",
@@ -26134,10 +26146,6 @@
         "url": "/shadow-dom/untriaged/user-interaction/ranges-and-selections/test-002.html"
       },
       {
-        "path": "subresource-integrity/subresource-integrity.html",
-        "url": "/subresource-integrity/subresource-integrity.html"
-      },
-      {
         "path": "touch-events/create-touch-touchlist.html",
         "url": "/touch-events/create-touch-touchlist.html"
       },
@@ -27604,6 +27612,10 @@
       {
         "path": "webstorage/storage_string_conversion.html",
         "url": "/webstorage/storage_string_conversion.html"
+      },
+      {
+        "path": "webstorage/storage_supported_property_names.html",
+        "url": "/webstorage/storage_supported_property_names.html"
       },
       {
         "path": "webvtt/interfaces.html",
@@ -29782,16 +29794,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html": [
-          {
-            "path": "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html",
-            "url": "/dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -31521,6 +31524,18 @@
           ]
         ],
         "url": "/html/rendering/bindings/the-textarea-element-0/rows-zero.html"
+      }
+    ],
+    "html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html"
       }
     ],
     "html/rendering/non-replaced-elements/flow-content-0/figure.html": [
@@ -35316,7 +35331,7 @@
       }
     ]
   },
-  "rev": "886dea2c3dbb79925360319a6a0f662ce196ab3c",
+  "rev": "9a49a8ea7405280364a8aa27d47bfb19af119bb4",
   "url_base": "/",
   "version": 2
 }
