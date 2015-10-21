@@ -24,29 +24,13 @@ function test() {
     return testOnePreset(instance.menulist.firstChild.childNodes.length - 4);
   }
 
-  function synthesizeKeyFromKeyTag(aKeyId) {
-    let key = document.getElementById(aKeyId);
-    isnot(key, null, "Successfully retrieved the <key> node");
-
-    let name = null;
-
-    if (key.getAttribute("keycode"))
-      name = key.getAttribute("keycode");
-    else if (key.getAttribute("key"))
-      name = key.getAttribute("key");
-
-    isnot(name, null, "Successfully retrieved keycode/key");
-
-    key.doCommand();
-  }
-
   Task.spawn(function*() {
 
     yield addTab("data:text/html;charset=utf8,test custom presets in responsive mode");
 
     let mgr = ResponsiveUI.ResponsiveUIManager;
 
-    synthesizeKeyFromKeyTag("key_responsiveUI");
+    synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
 
     yield once(mgr, "on");
 
@@ -107,7 +91,7 @@ function test() {
     // Let's wait next loop to stop it.
     yield nextTick();
 
-    synthesizeKeyFromKeyTag("key_responsiveUI");
+    synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
 
     yield once(mgr, "on");
 
@@ -140,7 +124,7 @@ function test() {
     instance.close();
     yield once(mgr, "off");
 
-    synthesizeKeyFromKeyTag("key_responsiveUI");
+    synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
 
     info("waiting for responsive mode to turn on");
     yield once(mgr, "on");
