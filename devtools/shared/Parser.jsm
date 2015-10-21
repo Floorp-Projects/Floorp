@@ -154,6 +154,14 @@ SyntaxTreesPool.prototype = {
   },
 
   /**
+   * @return SyntaxTree
+   *         The last tree in this._trees
+   */
+  getLastSyntaxTree: function() {
+    return this._trees[this._trees.length - 1];
+  },
+
+  /**
    * Gets the total number of scripts in the parent source.
    * @return number
    */
