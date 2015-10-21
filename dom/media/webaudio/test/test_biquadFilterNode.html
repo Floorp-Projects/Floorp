@@ -58,6 +58,18 @@ addLoadEvent(function() {
     filter.type = types[i];
   }
 
+  // Make sure getFrequencyResponse handles invalid frequencies properly
+  var frequencies = new Float32Array([-1.0, context.sampleRate*0.5 - 1.0, context.sampleRate]);
+  var magResults = new Float32Array(3);
+  var phaseResults = new Float32Array(3);
+  filter.getFrequencyResponse(frequencies, magResults, phaseResults);
+  ok(isNaN(magResults[0]), "Invalid input frequency should give NaN magnitude response");
+  ok(!isNaN(magResults[1]), "Valid input frequency should not give NaN magnitude response");
+  ok(isNaN(magResults[2]), "Invalid input frequency should give NaN magnitude response");
+  ok(isNaN(phaseResults[0]), "Invalid input frquency should give NaN phase response");
+  ok(!isNaN(phaseResults[1]), "Valid input frquency should not give NaN phase response");
+  ok(isNaN(phaseResults[2]), "Invalid input frquency should give NaN phase response");
+
   source.start(0);
   SimpleTest.executeSoon(function() {
     source.stop(0);
