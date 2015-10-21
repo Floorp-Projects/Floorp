@@ -55,6 +55,16 @@
                android:value="preferences_advanced"/>
     </PreferenceScreen>
 
+    <org.mozilla.gecko.preferences.PrivateDataPreference
+            android:key="android.not_a_preference.privacy.clear"
+            android:title="@string/pref_clear_private_data_now"
+            android:persistent="true"
+            android:positiveButtonText="@string/button_clear_data"
+            gecko:entries="@array/pref_private_data_entries"
+            gecko:entryValues="@array/pref_private_data_values"
+            gecko:entryKeys="@array/pref_private_data_keys"
+            gecko:initialValues="@array/pref_private_data_defaults" />
+
     <PreferenceScreen android:title="@string/pref_category_vendor"
                       android:summary="@string/pref_category_vendor_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
