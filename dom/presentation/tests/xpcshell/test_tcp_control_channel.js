@@ -72,7 +72,7 @@ function testPresentationServer() {
     onSessionRequest: function(deviceInfo, url, presentationId, controlChannel) {
       controllerControlChannel = controlChannel;
       Assert.equal(deviceInfo.id, tps.id, 'expected device id');
-      Assert.equal(deviceInfo.host, '127.0.0.1', 'expected device host');
+      Assert.equal(deviceInfo.address, '127.0.0.1', 'expected device address');
       Assert.equal(url, 'http://example.com', 'expected url');
       Assert.equal(presentationId, 'testPresentationId', 'expected presentation id');
 
@@ -117,7 +117,7 @@ function testPresentationServer() {
 
   let presenterDeviceInfo = {
     id: 'presentatorID',
-    host: '127.0.0.1',
+    address: '127.0.0.1',
     port: PRESENTER_CONTROL_CHANNEL_PORT,
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITCPDeviceInfo]),
   };

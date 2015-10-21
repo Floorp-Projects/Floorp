@@ -9,7 +9,7 @@
 "use strict";
 
 const { loader } = Components.utils.import(
-  "resource://gre/modules/devtools/shared/Loader.jsm", {});
+  "resource://devtools/shared/Loader.jsm", {});
 
 loader.lazyRequireGetter(this, "AddonsComponent",
   "devtools/client/aboutdebugging/components/addons", true);

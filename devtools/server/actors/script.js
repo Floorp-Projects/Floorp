@@ -520,7 +520,7 @@ ThreadActor.prototype = {
   get prettyPrintWorker() {
     if (!this._prettyPrintWorker) {
       this._prettyPrintWorker = new DevToolsWorker(
-        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js",
+        "resource://devtools/server/actors/pretty-print-worker.js",
         { name: "pretty-print",
           verbose: dumpn.wantLogging }
       );

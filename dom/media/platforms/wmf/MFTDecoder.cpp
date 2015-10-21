@@ -218,7 +218,7 @@ MFTDecoder::Output(RefPtr<IMFSample>* aOutput)
   }
 
   if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
-    // Type change, probably geometric aperature change.
+    // Type change, probably geometric aperture change.
     // Reconfigure decoder output type, so that GetOutputMediaType()
     // returns the new type, and return the error code to caller.
     // This is an expected failure, so don't warn on encountering it.

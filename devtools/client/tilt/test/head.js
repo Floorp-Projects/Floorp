@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-var {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 var TiltManager = require("devtools/client/tilt/tilt").TiltManager;
 var TiltGL = require("devtools/client/tilt/tilt-gl");
 var {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/client/tilt/tilt-math");

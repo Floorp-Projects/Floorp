@@ -226,12 +226,10 @@ var promiseExpectContent = Task.async(function*(options) {
 
 // Test that we can find the title of a webpage in about:performance
 add_task(function* test_find_title() {
-    for (let autoRefresh of [100, -1]) {
-      for (let displayRecent of [true, false]) {
-        info(`Testing ${autoRefresh > 0?"with":"without"} autoRefresh, in ${displayRecent?"recent":"global"} mode`);
-        let found = yield promiseExpectContent({autoRefresh, displayRecent});
-        Assert.equal(found, autoRefresh > 0, "The page title appears iff about:performance is set to auto-refresh");
-      }
+    for (let displayRecent of [true, false]) {
+      info(`Testing with autoRefresh, in ${displayRecent?"recent":"global"} mode`);
+      let found = yield promiseExpectContent({autoRefresh: 100, displayRecent});
+      Assert.ok(found, `The page title appears when about:performance is set to auto-refresh`);
     }
 });
 

@@ -14,11 +14,11 @@ interface nsIPresentationControlChannel;
 /*
  * The device information required for establishing TCP control channel.
  */
-[scriptable, uuid(7fce55c0-2470-4a41-a3b9-c35fbe55f206)]
+[scriptable, uuid(296fd171-e4d0-4de0-99ff-ad8ed52ddef3)]
 interface nsITCPDeviceInfo: nsISupports
 {
   readonly attribute AUTF8String id;
-  readonly attribute AUTF8String host;
+  readonly attribute AUTF8String address;
   readonly attribute uint16_t port;
 };
 

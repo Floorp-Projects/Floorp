@@ -89,13 +89,13 @@ RtspMediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-RtspMediaCodecReader::AsyncReadMetadataInternal()
+RtspMediaCodecReader::AsyncReadMetadata()
 {
   mRtspResource->DisablePlayoutDelay();
   EnsureActive();
 
   RefPtr<MediaDecoderReader::MetadataPromise> p =
-    MediaCodecReader::AsyncReadMetadataInternal();
+    MediaCodecReader::AsyncReadMetadata();
 
   // Send a PAUSE to the RTSP server because the underlying media resource is
   // not ready.

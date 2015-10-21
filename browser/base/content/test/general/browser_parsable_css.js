@@ -25,7 +25,7 @@ const kWhitelist = [
   {sourceName: /loop\/.*shared\/css\/common.css/i,
    errorMessage: /Unknown property 'user-select'/i},
   // Highlighter CSS uses chrome-only pseudo-class, see bug 985597.
-  {sourceName: /highlighter\.css/i,
+  {sourceName: /highlighters\.css/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i},
 ];
 

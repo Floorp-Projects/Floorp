@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CardDavImporter",
 XPCOMUtils.defineLazyModuleGetter(this, "GoogleImporter",
                                   "resource:///modules/loop/GoogleImporter.jsm");
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://gre/modules/devtools/shared/event-emitter.js", {});
+  const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
   return new EventEmitter();
 });
 

@@ -22,13 +22,13 @@ var HUDService = require("devtools/client/webconsole/hudservice");
 var sourceUtils = require("devtools/client/shared/source-utils");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
-Cu.import("resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm");
-Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm");
+Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 loader.lazyImporter(this, "CommandUtils",
-  "resource:///modules/devtools/client/shared/DeveloperToolbar.jsm");
+  "resource://devtools/client/shared/DeveloperToolbar.jsm");
 loader.lazyGetter(this, "toolboxStrings", () => {
   const properties = "chrome://browser/locale/devtools/toolbox.properties";
   const bundle = Services.strings.createBundle(properties);
@@ -1647,7 +1647,7 @@ Toolbox.prototype = {
   },
 
   reload: function () {
-    const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     devtools.reload(true);
   },
 

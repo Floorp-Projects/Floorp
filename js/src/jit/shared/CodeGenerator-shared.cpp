@@ -332,7 +332,7 @@ CodeGeneratorShared::addTrackedOptimizationsEntry(const TrackedOptimizations* op
 
     if (!trackedOptimizations_.empty()) {
         NativeToTrackedOptimizations& lastEntry = trackedOptimizations_.back();
-        MOZ_ASSERT(nativeOffset >= lastEntry.endOffset.offset());
+        MOZ_ASSERT_IF(!masm.oom(), nativeOffset >= lastEntry.endOffset.offset());
 
         // If we're still generating code for the same set of optimizations,
         // we are done.
@@ -358,7 +358,7 @@ CodeGeneratorShared::extendTrackedOptimizationsEntry(const TrackedOptimizations*
     uint32_t nativeOffset = masm.currentOffset();
     NativeToTrackedOptimizations& entry = trackedOptimizations_.back();
     MOZ_ASSERT(entry.optimizations == optimizations);
-    MOZ_ASSERT(nativeOffset >= entry.endOffset.offset());
+    MOZ_ASSERT_IF(!masm.oom(), nativeOffset >= entry.endOffset.offset());
 
     entry.endOffset = CodeOffsetLabel(nativeOffset);
 
@@ -925,20 +925,23 @@ CodeGeneratorShared::generateCompactTrackedOptimizationsMap(JSContext* cx, JitCo
 }
 
 #ifdef DEBUG
-// Since this is a DEBUG-only verification, crash on OOM in the forEach ops
-// below.
-
 class ReadTempAttemptsVectorOp : public JS::ForEachTrackedOptimizationAttemptOp
 {
     TempOptimizationAttemptsVector* attempts_;
+    bool oom_;
 
   public:
     explicit ReadTempAttemptsVectorOp(TempOptimizationAttemptsVector* attempts)
-      : attempts_(attempts)
+      : attempts_(attempts), oom_(false)
     { }
 
+    bool oom() {
+        return oom_;
+    }
+
     void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
-        MOZ_ALWAYS_TRUE(attempts_->append(OptimizationAttempt(strategy, outcome)));
+        if (!attempts_->append(OptimizationAttempt(strategy, outcome)))
+            oom_ = true;
     }
 };
 
@@ -947,23 +950,33 @@ struct ReadTempTypeInfoVectorOp : public IonTrackedOptimizationsTypeInfo::ForEac
     TempAllocator& alloc_;
     TempOptimizationTypeInfoVector* types_;
     TempTypeList accTypes_;
+    bool oom_;
 
   public:
     ReadTempTypeInfoVectorOp(TempAllocator& alloc, TempOptimizationTypeInfoVector* types)
       : alloc_(alloc),
         types_(types),
-        accTypes_(alloc)
+        accTypes_(alloc),
+        oom_(false)
     { }
 
+    bool oom() {
+        return oom_;
+    }
+
     void readType(const IonTrackedTypeWithAddendum& tracked) override {
-        MOZ_ALWAYS_TRUE(accTypes_.append(tracked.type));
+        if (!accTypes_.append(tracked.type))
+            oom_ = true;
     }
 
     void operator()(JS::TrackedTypeSite site, MIRType mirType) override {
         OptimizationTypeInfo ty(alloc_, site, mirType);
-        for (uint32_t i = 0; i < accTypes_.length(); i++)
-            MOZ_ALWAYS_TRUE(ty.trackType(accTypes_[i]));
-        MOZ_ALWAYS_TRUE(types_->append(mozilla::Move(ty)));
+        for (uint32_t i = 0; i < accTypes_.length(); i++) {
+            if (!ty.trackType(accTypes_[i]))
+                oom_ = true;
+        }
+        if (!types_->append(mozilla::Move(ty)))
+            oom_ = true;
         accTypes_.clear();
     }
 };
@@ -1037,14 +1050,14 @@ CodeGeneratorShared::verifyCompactTrackedOptimizationsMap(JitCode* code, uint32_
                 TempOptimizationTypeInfoVector tvec(alloc());
                 ReadTempTypeInfoVectorOp top(alloc(), &tvec);
                 typeInfo.forEach(top, allTypes);
-                MOZ_ASSERT(entry.optimizations->matchTypes(tvec));
+                MOZ_ASSERT_IF(!top.oom(), entry.optimizations->matchTypes(tvec));
             }
 
             IonTrackedOptimizationsAttempts attempts = attemptsTable->entry(index);
             TempOptimizationAttemptsVector avec(alloc());
             ReadTempAttemptsVectorOp aop(&avec);
             attempts.forEach(aop);
-            MOZ_ASSERT(entry.optimizations->matchAttempts(avec));
+            MOZ_ASSERT_IF(!aop.oom(), entry.optimizations->matchAttempts(avec));
         }
     }
 #endif

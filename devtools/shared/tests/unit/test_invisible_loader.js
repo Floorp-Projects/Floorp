@@ -4,8 +4,6 @@
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
-const COLOR_URI = "resource://gre/modules/devtools/css-color.js";
-
 /**
  * Ensure that sandboxes created via the Dev Tools loader respect the
  * invisibleToDebugger flag.

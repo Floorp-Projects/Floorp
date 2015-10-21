@@ -52,9 +52,6 @@ if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
         'vp8/encoder/boolhuff.c',
     ]
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    NO_VISIBILITY_FLAGS = True
-
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
 

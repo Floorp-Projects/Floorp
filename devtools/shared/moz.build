@@ -32,6 +32,8 @@ BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
+JAR_MANIFESTS += ['jar.mn']
+
 DevToolsModules(
     'async-storage.js',
     'async-utils.js',
@@ -44,6 +46,7 @@ DevToolsModules(
     'indentation.js',
     'Loader.jsm',
     'output-parser.js',
+    'Parser.jsm',
     'path.js',
     'system.js',
 )

@@ -9,8 +9,8 @@ Cu.import('resource://gre/modules/Services.jsm');
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
-const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 const promise = require("promise");
 const {AppProjects} = require("devtools/client/app-manager/app-projects");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
