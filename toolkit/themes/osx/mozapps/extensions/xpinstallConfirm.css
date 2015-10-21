@@ -70,7 +70,7 @@ installitem {
 .xpinstallItemIcon {
   max-width: 32px;
   max-height: 32px;
-  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.svg");
 }
 
 installitem[type="theme"] .xpinstallItemIcon {
