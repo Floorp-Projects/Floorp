@@ -132,7 +132,7 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
-    private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
+    private static final String PREFS_ADVANCED = NON_PREF_PREFIX + "advanced.enabled";
     private static final String PREFS_ACCESSIBILITY = NON_PREF_PREFIX + "accessibility.enabled";
     private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
     private static final String PREFS_CUSTOMIZE_IMAGE_BLOCKING = "browser.image_blocking.enabled";
@@ -499,7 +499,7 @@ OnSharedPreferenceChangeListener
                     // entirely. This logic will need to be extended when
                     // content language selection (Bug 881510) is implemented.
                     iterator.remove();
-                } else if (header.id == R.id.pref_header_devtools && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
+                } else if (header.id == R.id.pref_header_advanced && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     iterator.remove();
                 } else if (header.id == R.id.pref_header_accessibility && !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DISPLAY_SETTINGS)) {
                     iterator.remove();
@@ -709,7 +709,7 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 }
-                if (PREFS_DEVTOOLS.equals(key) &&
+                if (PREFS_ADVANCED.equals(key) &&
                     !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     preferences.removePreference(pref);
                     i--;

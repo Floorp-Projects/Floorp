@@ -47,6 +47,14 @@
                android:value="preferences_accessibility" />
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_advanced"
+                      android:summary="@string/pref_category_advanced_summary"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+                      android:key="android.not_a_preference.advanced.enabled" >
+        <extra android:name="resource"
+               android:value="preferences_advanced"/>
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_language"
                       android:summary="@string/pref_category_language_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
@@ -59,14 +67,6 @@
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_vendor"/>
-    </PreferenceScreen>
-
-    <PreferenceScreen android:title="@string/pref_category_devtools"
-                      android:summary="@string/pref_developer_remotedebugging"
-                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-                      android:key="android.not_a_preference.devtools.enabled" >
-        <extra android:name="resource"
-               android:value="preferences_devtools"/>
     </PreferenceScreen>
 
 </PreferenceScreen>

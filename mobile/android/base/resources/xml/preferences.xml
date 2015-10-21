@@ -62,6 +62,18 @@
         </intent>
     </PreferenceScreen>
 
+    <PreferenceScreen android:title="@string/pref_category_advanced"
+                      android:summary="@string/pref_category_advanced_summary"
+                      android:key="android.not_a_preference.advanced.enabled" >
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@string/android_package_name"
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                    android:name="resource"
+                    android:value="preferences_advanced" />
+        </intent>
+    </PreferenceScreen>
+
     <PreferenceScreen android:title="@string/pref_category_language"
                       android:summary="@string/pref_category_language_summary" >
         <intent android:action="android.intent.action.VIEW"
@@ -81,17 +93,6 @@
             <extra
                 android:name="resource"
                 android:value="preferences_vendor" />
-        </intent>
-    </PreferenceScreen>
-    <PreferenceScreen android:title="@string/pref_category_devtools"
-                      android:summary="@string/pref_developer_remotedebugging"
-	              android:key="android.not_a_preference.devtools.enabled" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_devtools" />
         </intent>
     </PreferenceScreen>
 

@@ -102,7 +102,6 @@
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
 <!ENTITY pref_category_input_options "Input options">
-<!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_general "General">
 <!ENTITY pref_category_general_summary "Home, language, zoom, full-screen browsing">
 
@@ -171,7 +170,8 @@
      The &formatI; in the string will be replaced by a small image of the icon described, and can be moved to wherever
      it is applicable. -->
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
-<!ENTITY pref_category_devtools "Developer tools">
+<!ENTITY pref_category_advanced "Advanced">
+<!ENTITY pref_category_advanced_summary "Import, plugins, developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
@@ -206,10 +206,10 @@
 <!ENTITY pref_header_search "Search">
 <!ENTITY pref_header_privacy_short "Privacy">
 <!ENTITY pref_header_accessibility "Accessibility">
+<!ENTITY pref_header_advanced "Advanced">
 <!ENTITY pref_header_help "Help">
 <!ENTITY pref_header_language "Language">
 <!ENTITY pref_header_vendor "&vendorShortName;">
-<!ENTITY pref_header_devtools "Developer tools">
 
 <!ENTITY pref_cookies_menu "Cookies">
 <!ENTITY pref_cookies_accept_all "Enabled">
