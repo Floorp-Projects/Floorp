@@ -52,8 +52,12 @@ _OPT\.OBJ/
 \.cproject$
 \.settings/
 
-# Ignore the directory that JetBrains IDEs create
+# Ignore the files and directory that JetBrains IDEs create.
 \.idea/
+\.iml$
+
+# Gradle cache.
+^.gradle/
 
 # Python stuff installed at build time.
 ^python/psutil/.*\.so
