@@ -22,13 +22,7 @@ class ProcTestOutput(proctest.ProcTest):
         p.processOutput(timeout=5)
         p.wait()
 
-        detected, output = proctest.check_for_process("procnonewline.py")
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              False,
-                              ())
+        self.determine_status(p, False, ())
 
     def test_stream_process_output(self):
         """
@@ -56,13 +50,7 @@ class ProcTestOutput(proctest.ProcTest):
         self.assertFalse(buf.closed)
         buf.close()
 
-        detected, output = proctest.check_for_process("proccountfive.py")
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              False,
-                              ())
+        self.determine_status(p, False, ())
 
 if __name__ == '__main__':
     unittest.main()
