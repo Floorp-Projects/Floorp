@@ -3,7 +3,6 @@ github
 stackoverflow
 bugzilla
 irc
-erikvold
 jsantell
 mossop
 gozala
