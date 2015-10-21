@@ -18,14 +18,14 @@ from mozbuild.preprocessor import preprocess
 # processing of the jar file in the appropriate directory.
 def _do_preprocessing(output_svg, input_svg_file, additional_defines):
     additional_defines.update(buildconfig.defines)
-    preprocess(output=output_svg,
-               includes=[input_svg_file],
-               marker='%',
-               defines=additional_defines)
+    return preprocess(output=output_svg,
+                      includes=[input_svg_file],
+                      marker='%',
+                      defines=additional_defines)
 
 def tab_side_start(output_svg, input_svg_file):
-    _do_preprocessing(output_svg, input_svg_file, {'TAB_SIDE': 'start'})
+    return _do_preprocessing(output_svg, input_svg_file, {'TAB_SIDE': 'start'})
 
 def tab_side_end(output_svg, input_svg_file):
-    _do_preprocessing(output_svg, input_svg_file, {'TAB_SIDE': 'end'})
+    return _do_preprocessing(output_svg, input_svg_file, {'TAB_SIDE': 'end'})
 
