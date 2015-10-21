@@ -491,6 +491,19 @@ ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// FunctionDeclaration
+
+FunctionDeclaration::FunctionDeclaration(HandleAtom name, HandleFunction fun)
+  : name(name), fun(fun)
+{}
+
+void FunctionDeclaration::trace(JSTracer* trc)
+{
+    TraceEdge(trc, &name, "FunctionDeclaration name");
+    TraceEdge(trc, &fun, "FunctionDeclaration fun");
+}
+
+///////////////////////////////////////////////////////////////////////////
 // ModuleObject
 
 /* static */ const Class
@@ -548,6 +561,12 @@ ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
     }
 
     self->initReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
+
+    FunctionDeclarationVector* funDecls = cx->new_<FunctionDeclarationVector>(cx);
+    if (!funDecls)
+        return nullptr;
+
+    self->initReservedSlot(FunctionDeclarationsSlot, PrivateValue(funDecls));
     return self;
 }
 
@@ -559,6 +578,8 @@ ModuleObject::finalize(js::FreeOp* fop, JSObject* obj)
         fop->delete_(&self->importBindings());
     if (IndirectBindingMap* bindings = self->namespaceBindings())
         fop->delete_(bindings);
+    if (FunctionDeclarationVector* funDecls = self->functionDeclarations())
+        fop->delete_(funDecls);
 }
 
 ModuleEnvironmentObject*
@@ -604,6 +625,16 @@ ModuleObject::namespace_()
     if (value.isUndefined())
         return nullptr;
     return &value.toObject().as<ModuleNamespaceObject>();
+}
+
+FunctionDeclarationVector*
+ModuleObject::functionDeclarations()
+{
+    Value value = getReservedSlot(FunctionDeclarationsSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return static_cast<FunctionDeclarationVector*>(value.toPrivate());
 }
 
 void
@@ -691,6 +722,9 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
     TraceBindings(trc, module.importBindings());
     if (IndirectBindingMap* bindings = module.namespaceBindings())
         TraceBindings(trc, *bindings);
+
+    if (FunctionDeclarationVector* funDecls = module.functionDeclarations())
+        funDecls->trace(trc);
 }
 
 void
@@ -701,6 +735,42 @@ ModuleObject::createEnvironment()
     MOZ_ASSERT(!getReservedSlot(InitialEnvironmentSlot).isUndefined());
     MOZ_ASSERT(getReservedSlot(EnvironmentSlot).isUndefined());
     setReservedSlot(EnvironmentSlot, getReservedSlot(InitialEnvironmentSlot));
+}
+
+bool
+ModuleObject::noteFunctionDeclaration(ExclusiveContext* cx, HandleAtom name, HandleFunction fun)
+{
+    FunctionDeclarationVector* funDecls = functionDeclarations();
+    return funDecls->emplaceBack(name, fun);
+}
+
+/* static */ bool
+ModuleObject::instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self)
+{
+    FunctionDeclarationVector* funDecls = self->functionDeclarations();
+    if (!funDecls) {
+        JS_ReportError(cx, "Module function declarations have already been instantiated");
+        return false;
+    }
+
+    RootedModuleEnvironmentObject env(cx, &self->initialEnvironment());
+    RootedFunction fun(cx);
+    RootedValue value(cx);
+
+    for (const auto& funDecl : *funDecls) {
+        fun = funDecl.fun;
+        RootedObject obj(cx, Lambda(cx, fun, env));
+        if (!obj)
+            return false;
+
+        value = ObjectValue(*fun);
+        if (!SetProperty(cx, env, funDecl.name->asPropertyName(), value))
+            return false;
+    }
+
+    js_delete(funDecls);
+    self->setReservedSlot(FunctionDeclarationsSlot, UndefinedValue());
+    return true;
 }
 
 void

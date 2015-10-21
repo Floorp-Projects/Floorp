@@ -145,6 +145,17 @@ class ModuleNamespaceObject : public ProxyObject
 typedef Rooted<ModuleNamespaceObject*> RootedModuleNamespaceObject;
 typedef Handle<ModuleNamespaceObject*> HandleModuleNamespaceObject;
 
+struct FunctionDeclaration
+{
+    FunctionDeclaration(HandleAtom name, HandleFunction fun);
+    void trace(JSTracer* trc);
+
+    RelocatablePtrAtom name;
+    RelocatablePtrFunction fun;
+};
+
+using FunctionDeclarationVector = TraceableVector<FunctionDeclaration>;
+
 class ModuleObject : public NativeObject
 {
   public:
@@ -164,6 +175,7 @@ class ModuleObject : public NativeObject
         ImportBindingsSlot,
         NamespaceExportsSlot,
         NamespaceBindingsSlot,
+        FunctionDeclarationsSlot,
         SlotCount
     };
 
@@ -197,17 +209,21 @@ class ModuleObject : public NativeObject
 
     void createEnvironment();
 
+    bool noteFunctionDeclaration(ExclusiveContext* cx, HandleAtom name, HandleFunction fun);
+    static bool instantiateFunctionDeclarations(JSContext* cx, HandleModuleObject self);
+
     void setEvaluated();
     static bool evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval);
 
     static ModuleNamespaceObject* createNamespace(JSContext* cx, HandleModuleObject self,
-                                            HandleArrayObject exports);
+                                                  HandleArrayObject exports);
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
     static void finalize(js::FreeOp* fop, JSObject* obj);
 
     bool hasScript() const;
+    FunctionDeclarationVector* functionDeclarations();
 };
 
 // Process a module's parse tree to collate the import and export data used when
