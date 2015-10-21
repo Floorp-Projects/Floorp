@@ -15,6 +15,7 @@
 
 #include "mozilla/dom/BluetoothMapParametersBinding.h"
 #include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/Endian.h"
 #include "mozilla/dom/File.h"
 
 #include "mozilla/RefPtr.h"
@@ -279,7 +280,7 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
         return;
       }
 
-      mRemoteMaxPacketLength = ((static_cast<int>(data[5]) << 8) | data[6]);
+      mRemoteMaxPacketLength = BigEndian::readUint16(&data[5]);
 
       if (mRemoteMaxPacketLength < 255) {
         BT_LOGR("Remote maximum packet length %d", mRemoteMaxPacketLength);
@@ -713,26 +714,20 @@ BluetoothMapSmsManager::HandleSmsMmsFolderListing(const ObexHeaderSet& aHeader)
 
   if (aHeader.GetAppParameter(Map::AppParametersTagId::MaxListCount,
                               buf, 64)) {
-    maxListCount = *((uint16_t *)buf);
-    // convert big endian to little endian
-    maxListCount = (maxListCount >> 8) | (maxListCount << 8);
+    maxListCount = BigEndian::readUint16(buf);
   }
 
   uint16_t startOffset = 0;
   if (aHeader.GetAppParameter(Map::AppParametersTagId::StartOffset,
                               buf, 64)) {
-    startOffset = *((uint16_t *)buf);
-    // convert big endian to little endian
-    startOffset = (startOffset >> 8) | (startOffset << 8);
+    startOffset = BigEndian::readUint16(buf);
   }
 
   // Folder listing size
   int foldersize = mCurrentFolder->GetSubFolderCount();
 
-  // Convert little endian to big endian
   uint8_t folderListingSizeValue[2];
-  folderListingSizeValue[0] = (foldersize & 0xFF00) >> 8;
-  folderListingSizeValue[1] = (foldersize & 0x00FF);
+  BigEndian::writeUint16(&folderListingSizeValue[0], foldersize);
 
   // Section 3.3.4 "GetResponse", IrOBEX 1.2
   // [opcode:1][length:2][FolderListingSize:4][Headers:var] where
@@ -786,18 +781,14 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
    */
   switch (aTagId) {
     case Map::AppParametersTagId::MaxListCount: {
-      uint16_t maxListCount = *((uint16_t *)buf);
-      // convert big endian to little endian
-      maxListCount = (maxListCount >> 8) | (maxListCount << 8);
+      uint16_t maxListCount = BigEndian::readUint16(buf);
       BT_LOGR("max list count: %d", maxListCount);
       AppendNamedValue(aValues, "maxListCount",
                        static_cast<uint32_t>(maxListCount));
       break;
     }
     case Map::AppParametersTagId::StartOffset: {
-      uint16_t startOffset = *((uint16_t *)buf);
-      // convert big endian to little endian
-      startOffset = (startOffset >> 8) | (startOffset << 8);
+      uint16_t startOffset = BigEndian::readUint16(buf);
       BT_LOGR("start offset : %d", startOffset);
       AppendNamedValue(aValues, "startOffset",
                        static_cast<uint32_t>(startOffset));
@@ -812,10 +803,8 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     case Map::AppParametersTagId::ParameterMask: {
       /* Table 6.5, MAP 6.3.1. ParameterMask is Bit 16-31 Reserved for future
        * use. The reserved bits shall be set to 0 by MCE and discarded by MSE.
-       * convert big endian to little endian
        */
-      uint32_t parameterMask = (buf[3] << 0) | (buf[2] << 8) |
-                               (buf[1] << 16) | (buf[0] << 24);
+      uint32_t parameterMask = BigEndian::readUint32(buf);
       BT_LOGR("msg parameterMask : %d", parameterMask);
       AppendNamedValue(aValues, "parameterMask", parameterMask);
       break;

@@ -52,6 +52,8 @@ public:
     return mAudio.mTrackDemuxer;
   }
 
+  RefPtr<MetadataPromise> AsyncReadMetadata() override;
+
   void ReadUpdatedMetadata(MediaInfo* aInfo) override;
 
   RefPtr<SeekPromise>
@@ -71,6 +73,9 @@ public:
 
   virtual bool ForceZeroStartTime() const override;
 
+  // For Media Resource Management
+  void ReleaseMediaResources() override;
+
   nsresult ResetDecode() override;
 
   RefPtr<ShutdownPromise> Shutdown() override;
@@ -78,6 +83,8 @@ public:
   bool IsAsync() const override { return true; }
 
   bool VideoIsHardwareAccelerated() const override;
+
+  void DisableHardwareAcceleration() override;
 
   bool IsWaitForDataSupported() override { return true; }
   RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
@@ -435,12 +442,6 @@ private:
 #if defined(READER_DORMANT_HEURISTIC)
   const bool mDormantEnabled;
 #endif
-
-private:
-  // For Media Resource Management
-  void ReleaseMediaResourcesInternal() override;
-  void DisableHardwareAccelerationInternal() override;
-  RefPtr<MetadataPromise> AsyncReadMetadataInternal() override;
 };
 
 } // namespace mozilla

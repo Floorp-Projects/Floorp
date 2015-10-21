@@ -221,5 +221,78 @@ ResolveReplyRunnable::Reply(DNSServiceRef aSdRef,
                    NS_DISPATCH_NORMAL);
 }
 
+GetAddrInfoReplyRunnable::GetAddrInfoReplyRunnable(DNSServiceRef aSdRef,
+                                                   DNSServiceFlags aFlags,
+                                                   uint32_t aInterfaceIndex,
+                                                   DNSServiceErrorType aErrorCode,
+                                                   const nsACString& aHostName,
+                                                   const mozilla::net::NetAddr& aAddress,
+                                                   uint32_t aTTL,
+                                                   GetAddrInfoOperator* aContext)
+  : mSdRef(aSdRef)
+  , mFlags(aFlags)
+  , mInterfaceIndex(aInterfaceIndex)
+  , mErrorCode(aErrorCode)
+  , mHostName(aHostName)
+  , mAddress(aAddress)
+  , mTTL(aTTL)
+  , mContext(aContext)
+{
+}
+
+GetAddrInfoReplyRunnable::~GetAddrInfoReplyRunnable()
+{
+}
+
+NS_IMETHODIMP
+GetAddrInfoReplyRunnable::Run()
+{
+  MOZ_ASSERT(mContext);
+  mContext->Reply(mSdRef,
+                  mFlags,
+                  mInterfaceIndex,
+                  mErrorCode,
+                  mHostName,
+                  mAddress,
+                  mTTL);
+  return NS_OK;
+}
+
+void
+GetAddrInfoReplyRunnable::Reply(DNSServiceRef aSdRef,
+                                DNSServiceFlags aFlags,
+                                uint32_t aInterfaceIndex,
+                                DNSServiceErrorType aErrorCode,
+                                const char* aHostName,
+                                const struct sockaddr* aAddress,
+                                uint32_t aTTL,
+                                void* aContext)
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+  GetAddrInfoOperator* obj(reinterpret_cast<GetAddrInfoOperator*>(aContext));
+  if (!obj) {
+    return;
+  }
+
+  nsCOMPtr<nsIThread> thread(obj->GetThread());
+  if (!thread) {
+    return;
+  }
+
+  NetAddr address;
+  memcpy(&address, aAddress, sizeof(*aAddress));
+
+  thread->Dispatch(new GetAddrInfoReplyRunnable(aSdRef,
+                                                aFlags,
+                                                aInterfaceIndex,
+                                                aErrorCode,
+                                                nsCString(aHostName),
+                                                address,
+                                                aTTL,
+                                                obj),
+                   NS_DISPATCH_NORMAL);
+}
+
 } // namespace net
 } // namespace mozilla

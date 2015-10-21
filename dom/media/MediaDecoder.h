@@ -874,7 +874,7 @@ protected:
   // Counters related to decode and presentation of frames.
   FrameStatistics mFrameStats;
 
-  RefPtr<VideoFrameContainer> mVideoFrameContainer;
+  const RefPtr<VideoFrameContainer> mVideoFrameContainer;
 
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the

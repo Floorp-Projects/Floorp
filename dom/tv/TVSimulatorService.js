@@ -11,6 +11,9 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cr = Components.returnCode;
+
+Cu.importGlobalProperties(["File"]);
+
 const TV_SIMULATOR_DUMMY_DIRECTORY = "dummy";
 const TV_SIMULATOR_DUMMY_FILE      = "settings.json";
 

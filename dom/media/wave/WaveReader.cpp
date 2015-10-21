@@ -116,8 +116,8 @@ WaveReader::~WaveReader()
   MOZ_COUNT_DTOR(WaveReader);
 }
 
-nsresult
-WaveReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
+                                  MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
 

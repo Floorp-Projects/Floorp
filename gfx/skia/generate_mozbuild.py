@@ -96,10 +96,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
   } or CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
-if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
-    DEFINES['SKIA_DLL'] = 1
-    DEFINES['GR_DLL'] = 1
-
 # We should autogenerate these SSE related flags.
 
 if CONFIG['_MSC_VER']:

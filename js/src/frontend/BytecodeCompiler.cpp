@@ -71,7 +71,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool canLazilyParse();
     bool createParser();
     bool createSourceAndParser();
-    bool createScript(bool savedCallerFun = false);
+    bool createScript(HandleObject staticScope, bool savedCallerFun = false);
     bool createEmitter(SharedContext* sharedContext, HandleScript evalCaller = nullptr,
                        bool insideNonGlobalEval = false);
     bool isEvalCompilationUnit();
@@ -253,9 +253,9 @@ BytecodeCompiler::createSourceAndParser()
 }
 
 bool
-BytecodeCompiler::createScript(bool savedCallerFun)
+BytecodeCompiler::createScript(HandleObject staticScope, bool savedCallerFun)
 {
-    script = JSScript::Create(cx, enclosingStaticScope, savedCallerFun, options,
+    script = JSScript::Create(cx, staticScope, savedCallerFun, options,
                               sourceObject, /* sourceStart = */ 0, sourceBuffer.length());
 
     return script != nullptr;
@@ -495,7 +495,7 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
         return nullptr;
 
     bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
-    if (!createScript(savedCallerFun))
+    if (!createScript(enclosingStaticScope, savedCallerFun))
         return nullptr;
 
     GlobalSharedContext globalsc(cx, enclosingStaticScope, directives, options.extraWarningsOption);
@@ -558,16 +558,14 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
 
 ModuleObject* BytecodeCompiler::compileModule()
 {
-    MOZ_ASSERT(!enclosingStaticScope);
-
     if (!createSourceAndParser())
         return nullptr;
 
-    if (!createScript())
+    Rooted<ModuleObject*> module(cx, ModuleObject::create(cx, enclosingStaticScope));
+    if (!module)
         return nullptr;
 
-    Rooted<ModuleObject*> module(cx, ModuleObject::create(cx));
-    if (!module)
+    if (!createScript(module))
         return nullptr;
 
     module->init(script);
@@ -647,7 +645,7 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        if (!createScript())
+        if (!createScript(enclosingStaticScope))
             return false;
 
         script->bindings = fn->pn_funbox->bindings;
@@ -726,7 +724,7 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
     MOZ_ASSERT_IF(evalCaller, options.forEval);
     MOZ_ASSERT_IF(evalCaller && evalCaller->strict(), options.strictOption);
 
-   MOZ_ASSERT_IF(sourceObjectOut, *sourceObjectOut == nullptr);
+    MOZ_ASSERT_IF(sourceObjectOut, *sourceObjectOut == nullptr);
 
     BytecodeCompiler compiler(cx, alloc, options, srcBuf, enclosingStaticScope,
                               TraceLogger_ParserCompileScript);
@@ -765,7 +763,8 @@ frontend::CompileModule(JSContext* cx, HandleObject obj,
     options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
     options.setIsRunOnce(true);
 
-    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, nullptr,
+    Rooted<ScopeObject*> staticScope(cx, &cx->global()->lexicalScope().staticBlock());
+    BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, staticScope,
                               TraceLogger_ParserCompileModule);
     return compiler.compileModule();
 }

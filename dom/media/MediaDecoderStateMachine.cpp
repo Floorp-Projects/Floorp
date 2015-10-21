@@ -1287,7 +1287,8 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
     // that run after ResetDecode are supposed to run with a clean slate. We rely
     // on that in other places (i.e. seeking), so it seems reasonable to rely on
     // it here as well.
-    mReader->ReleaseMediaResources();
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
+    DecodeTaskQueue()->Dispatch(r.forget());
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     ScheduleStateMachine();
     mDecodingFirstFrame = true;
@@ -2280,10 +2281,11 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
     case DECODER_STATE_DECODING_METADATA: {
       if (!mMetadataRequest.Exists()) {
-        DECODER_LOG("Calling AsyncReadMetadata");
+        DECODER_LOG("Dispatching AsyncReadMetadata");
         // Set mode to METADATA since we are about to read metadata.
         mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-        mMetadataRequest.Begin(mReader->AsyncReadMetadata()
+        mMetadataRequest.Begin(InvokeAsync(DecodeTaskQueue(), mReader.get(), __func__,
+                                           &MediaDecoderReader::AsyncReadMetadata)
           ->Then(OwnerThread(), __func__, this,
                  &MediaDecoderStateMachine::OnMetadataRead,
                  &MediaDecoderStateMachine::OnMetadataNotRead));
@@ -2482,7 +2484,9 @@ MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
     if (mReader->VideoIsHardwareAccelerated() &&
         frameStats.GetPresentedFrames() > 60 &&
         mCorruptFrames.mean() >= 2 /* 20% */) {
-        mReader->DisableHardwareAcceleration();
+        nsCOMPtr<nsIRunnable> task =
+          NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration);
+        DecodeTaskQueue()->Dispatch(task.forget());
         mCorruptFrames.clear();
       gfxCriticalNote << "Too many dropped/corrupted frames, disabling DXVA";
     }

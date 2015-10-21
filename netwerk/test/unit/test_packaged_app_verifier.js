@@ -215,18 +215,6 @@ function test_invalid_signature(aDeveloperMode) {
   feedResources(expectedCallbacks, signature);
 }
 
-function test_no_signature_developer_mode()
-{
-  enable_developer_mode()
-  test_no_signature(true);
-}
-
-function test_invalid_signature_developer_mode()
-{
-  enable_developer_mode()
-  test_invalid_signature(true);
-}
-
 function run_test()
 {
   ok(!!gVerifier);
@@ -234,10 +222,6 @@ function run_test()
   // Test cases in non-developer mode.
   add_test(test_no_signature);
   add_test(test_invalid_signature);
-
-  // Test cases in developer mode.
-  add_test(test_no_signature_developer_mode);
-  add_test(test_invalid_signature_developer_mode);
 
   // run tests
   run_next_test();

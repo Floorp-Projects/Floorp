@@ -179,6 +179,7 @@ class ObjectOpResult
     JS_PUBLIC_API(bool) failCantDeleteWindowElement();
     JS_PUBLIC_API(bool) failCantDeleteWindowNamedProperty();
     JS_PUBLIC_API(bool) failCantPreventExtensions();
+    JS_PUBLIC_API(bool) failCantSetProto();
     JS_PUBLIC_API(bool) failNoNamedSetter();
     JS_PUBLIC_API(bool) failNoIndexedSetter();
 
@@ -426,6 +427,9 @@ typedef bool
 typedef bool
 (* UnwatchOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id);
 
+typedef bool
+(* ThisValueOp)(JSContext* cx, JS::HandleObject obj, JS::MutableHandleValue vp);
+
 class JS_FRIEND_API(ElementAdder)
 {
   public:
@@ -645,7 +649,7 @@ struct ObjectOps
     UnwatchOp           unwatch;
     GetElementsOp       getElements;
     JSNewEnumerateOp    enumerate;
-    ObjectOp            thisObject;
+    ThisValueOp         thisValue;
 };
 
 #define JS_NULL_OBJECT_OPS                                                    \

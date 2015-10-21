@@ -2,10 +2,60 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// 15.2.1.16.2 GetExportedNames(exportStarSet)
+function ModuleGetExportedNames(exportStarSet = [])
+{
+    if (!IsObject(this) || !IsModule(this)) {
+        return callFunction(CallModuleMethodIfWrapped, this, exportStarSet,
+                            "ModuleGetExportedNames");
+    }
+
+    // Step 1
+    let module = this;
+
+    // Step 2
+    if (module in exportStarSet)
+        return [];
+
+    // Step 3
+    exportStarSet.push(module);
+
+    // Step 4
+    let exportedNames = [];
+
+    // Step 5
+    let localExportEntries = module.localExportEntries;
+    for (let i = 0; i < localExportEntries.length; i++) {
+        let e = localExportEntries[i];
+        exportedNames.push(e.exportName);
+    }
+
+    // Step 6
+    let indirectExportEntries = module.indirectExportEntries;
+    for (let i = 0; i < indirectExportEntries.length; i++) {
+        let e = indirectExportEntries[i];
+        exportedNames.push(e.exportName);
+    }
+
+    // Step 7
+    let starExportEntries = module.starExportEntries;
+    for (let i = 0; i < starExportEntries.length; i++) {
+        let e = starExportEntries[i];
+        let requestedModule = HostResolveImportedModule(module, e.moduleRequest);
+        let starNames = requestedModule.getExportedNames(exportStarSet);
+        for (let j = 0; j < starNames.length; j++) {
+            let n = starNames[j];
+            if (n !== "default" && !(n in exportedNames))
+                exportedNames.push(n);
+        }
+    }
+
+    return exportedNames;
+}
+
+// 15.2.1.16.3 ResolveExport(exportName, resolveSet, exportStarSet)
 function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
 {
-    // 15.2.1.16.3 ResolveExport(exportName, resolveSet, exportStarSet)
-
     if (!IsObject(this) || !IsModule(this)) {
         return callFunction(CallModuleMethodIfWrapped, this, exportName, resolveSet,
                             exportStarSet, "ModuleResolveExport");
@@ -87,6 +137,50 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
     return starResolution;
 }
 
+// 15.2.1.18 GetModuleNamespace(module)
+function GetModuleNamespace(module)
+{
+    // Step 2
+    let namespace = module.namespace;
+
+    // Step 3
+    if (typeof namespace === "undefined") {
+        let exportedNames = module.getExportedNames();
+        let unambiguousNames = [];
+        for (let i = 0; i < exportedNames.length; i++) {
+            let name = exportedNames[i];
+            let resolution = module.resolveExport(name);
+            if (resolution === null)
+                ThrowSyntaxError(JSMSG_MISSING_NAMESPACE_EXPORT);
+            if (resolution !== "ambiguous")
+                unambiguousNames.push(name);
+        }
+        namespace = ModuleNamespaceCreate(module, unambiguousNames);
+    }
+
+    // Step 4
+    return namespace;
+}
+
+// 9.4.6.13 ModuleNamespaceCreate(module, exports)
+function ModuleNamespaceCreate(module, exports)
+{
+    exports.sort();
+
+    let ns = NewModuleNamespace(module, exports);
+
+    // Pre-compute all bindings now rather than calling ResolveExport() on every
+    // access.
+    for (let i = 0; i < exports.length; i++) {
+        let name = exports[i];
+        let binding = module.resolveExport(name);
+        assert(binding !== null && binding !== "ambiguous", "Failed to resolve binding");
+        AddModuleNamespaceBinding(ns, name, binding.module, binding.bindingName);
+    }
+
+    return ns;
+}
+
 // 15.2.1.16.4 ModuleDeclarationInstantiation()
 function ModuleDeclarationInstantiation()
 {
@@ -129,9 +223,8 @@ function ModuleDeclarationInstantiation()
         let imp = importEntries[i];
         let importedModule = HostResolveImportedModule(module, imp.moduleRequest);
         if (imp.importName === "*") {
-            // TODO
-            // let namespace = GetModuleNamespace(importedModule);
-            // CreateNamespaceBinding(env, imp.localName, namespace);
+            let namespace = GetModuleNamespace(importedModule);
+            CreateNamespaceBinding(env, imp.localName, namespace);
         } else {
             let resolution = importedModule.resolveExport(imp.importName);
             if (resolution === null)
@@ -141,6 +234,9 @@ function ModuleDeclarationInstantiation()
             CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
         }
     }
+
+    // Step 16.iv
+    InstantiateModuleFunctionDeclarations(module);
 }
 
 // 15.2.1.16.5 ModuleEvaluation()
@@ -168,4 +264,12 @@ function ModuleEvaluation()
     }
 
     return EvaluateModule(module);
+}
+
+function ModuleNamespaceEnumerate()
+{
+    if (!IsObject(this) || !IsModuleNamespace(this))
+        return callFunction(CallModuleMethodIfWrapped, this, "ModuleNamespaceEnumerate");
+
+    return CreateListIterator(ModuleNamespaceExports(this));
 }

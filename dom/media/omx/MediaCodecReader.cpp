@@ -284,10 +284,8 @@ MediaCodecReader::~MediaCodecReader()
 }
 
 void
-MediaCodecReader::ReleaseMediaResourcesInternal()
+MediaCodecReader::ReleaseMediaResources()
 {
-  MOZ_ASSERT(OnTaskQueue());
-
   // Stop the mSource because we are in the dormant state and the stop function
   // will rewind the mSource to the beginning of the stream.
   if (mVideoTrack.mSource != nullptr && !mVideoTrack.mSourceIsStopped) {
@@ -660,7 +658,7 @@ MediaCodecReader::ParseDataSegment(const char* aBuffer,
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaCodecReader::AsyncReadMetadataInternal()
+MediaCodecReader::AsyncReadMetadata()
 {
   MOZ_ASSERT(OnTaskQueue());
 
