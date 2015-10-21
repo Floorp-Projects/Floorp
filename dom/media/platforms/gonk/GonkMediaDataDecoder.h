@@ -33,7 +33,7 @@ public:
   nsresult Input(MediaRawData* aSample);
 
   // Flush the queued sample.
-  nsresult Flush();
+  virtual nsresult Flush();
 
   // Shutdown decoder and rejects the init promise.
   virtual nsresult Shutdown();
