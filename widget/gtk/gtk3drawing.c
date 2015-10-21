@@ -1124,16 +1124,30 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
     style = gtk_widget_get_style_context(scrollbar);
   
     gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_SCROLLBAR);  
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_BUTTON);
     gtk_style_context_set_state(style, state_flags);
+    if (arrow_angle == ARROW_RIGHT) {
+        gtk_style_context_add_class(style, GTK_STYLE_CLASS_RIGHT);
+    } else if (arrow_angle == ARROW_DOWN) {
+        gtk_style_context_add_class(style, GTK_STYLE_CLASS_BOTTOM);
+    } else if (arrow_angle == ARROW_LEFT) {
+        gtk_style_context_add_class(style, GTK_STYLE_CLASS_LEFT);
+    } else {
+        gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOP);
+    }
   
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
 
     arrow_rect.width = rect->width / 2;
     arrow_rect.height = rect->height / 2;
-    arrow_rect.x = rect->x + (rect->width - arrow_rect.width) / 2;
-    arrow_rect.y = rect->y + (rect->height - arrow_rect.height) / 2;
+    
+    gfloat arrow_scaling;
+    gtk_widget_style_get (scrollbar, "arrow-scaling", &arrow_scaling, NULL);
+
+    gdouble arrow_size = MIN(rect->width, rect->height) * arrow_scaling;
+    arrow_rect.x = rect->x + (rect->width - arrow_size) / 2;
+    arrow_rect.y = rect->y + (rect->height - arrow_size) / 2;
 
     if (state_flags & GTK_STATE_FLAG_ACTIVE) {
         gtk_widget_style_get(scrollbar,
@@ -1148,7 +1162,7 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_render_arrow(style, cr, arrow_angle,
                      arrow_rect.x,
                      arrow_rect.y, 
-                     arrow_rect.width);
+                     arrow_size);
   
     gtk_style_context_restore(style);
 
