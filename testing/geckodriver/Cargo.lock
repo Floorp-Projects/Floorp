@@ -1,8 +1,8 @@
 [root]
 name = "wires"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
- "argparse 0.2.0 (git+https://github.com/tailhook/rust-argparse.git)",
+ "argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.6.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -33,8 +33,8 @@ dependencies = [
 
 [[package]]
 name = "argparse"
-version = "0.2.0"
-source = "git+https://github.com/tailhook/rust-argparse.git#8e9acedf62b6c826bf4123d33b7c777ec2942e1c"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "cookie"
