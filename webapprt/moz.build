@@ -29,7 +29,6 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'DownloadView.jsm',
-    'RemoteDebugger.jsm',
     'Startup.jsm',
     'WebappManager.jsm',
     'WebappRT.jsm',
@@ -54,4 +53,3 @@ JAR_MANIFESTS += ['jar.mn']
 JS_PREFERENCE_FILES += [
     'prefs.js',
 ]
-

@@ -7,7 +7,7 @@ var { Ci } = require("chrome");
 var promise = require("promise");
 
 const FRAME_SCRIPT =
-  "resource://gre/modules/devtools/shared/touch/simulator-content.js";
+  "resource://devtools/shared/touch/simulator-content.js";
 
 var trackedBrowsers = new WeakMap();
 var savedTouchEventsEnabled =

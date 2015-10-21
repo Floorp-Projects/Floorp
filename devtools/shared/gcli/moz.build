@@ -8,7 +8,7 @@ DIRS += [
     'commands',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.commands += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.commands += [
     'source/lib/gcli/commands/clear.js',
     'source/lib/gcli/commands/commands.js',
     'source/lib/gcli/commands/connect.js',
@@ -24,37 +24,37 @@ EXTRA_JS_MODULES.devtools.gcli.commands += [
     'source/lib/gcli/commands/test.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.connectors += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.connectors += [
     'source/lib/gcli/connectors/connectors.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.converters += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.converters += [
     'source/lib/gcli/converters/basic.js',
     'source/lib/gcli/converters/converters.js',
     'source/lib/gcli/converters/html.js',
     'source/lib/gcli/converters/terminal.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.fields += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.fields += [
     'source/lib/gcli/fields/delegate.js',
     'source/lib/gcli/fields/fields.js',
     'source/lib/gcli/fields/selection.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.languages += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.languages += [
     'source/lib/gcli/languages/command.html',
     'source/lib/gcli/languages/command.js',
     'source/lib/gcli/languages/javascript.js',
     'source/lib/gcli/languages/languages.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.mozui += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.mozui += [
     'source/lib/gcli/mozui/completer.js',
     'source/lib/gcli/mozui/inputter.js',
     'source/lib/gcli/mozui/tooltip.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.types += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.types += [
     'source/lib/gcli/types/array.js',
     'source/lib/gcli/types/boolean.js',
     'source/lib/gcli/types/command.js',
@@ -74,7 +74,7 @@ EXTRA_JS_MODULES.devtools.gcli.types += [
     'source/lib/gcli/types/url.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.ui += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.ui += [
     'source/lib/gcli/ui/focus.js',
     'source/lib/gcli/ui/history.js',
     'source/lib/gcli/ui/intro.js',
@@ -84,7 +84,7 @@ EXTRA_JS_MODULES.devtools.gcli.ui += [
     'source/lib/gcli/ui/view.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli.util += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.util += [
     'source/lib/gcli/util/domtemplate.js',
     'source/lib/gcli/util/fileparser.js',
     'source/lib/gcli/util/filesystem.js',
@@ -96,7 +96,7 @@ EXTRA_JS_MODULES.devtools.gcli.util += [
     'source/lib/gcli/util/util.js',
 ]
 
-EXTRA_JS_MODULES.devtools.gcli += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli += [
     'source/lib/gcli/cli.js',
     'source/lib/gcli/index.js',
     'source/lib/gcli/l10n.js',
@@ -104,7 +104,7 @@ EXTRA_JS_MODULES.devtools.gcli += [
     'source/lib/gcli/system.js',
 ]
 
-EXTRA_JS_MODULES.devtools.shared.gcli += [
+FINAL_TARGET_FILES.chrome.devtools.modules.devtools.shared.gcli += [
     'gcli.jsm',
     'Templater.jsm',
 ]

@@ -9,8 +9,8 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Heritage } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
-const { AbstractTreeItem } = require("resource:///modules/devtools/client/shared/widgets/AbstractTreeItem.jsm");
+const { Heritage } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
 
 loader.lazyRequireGetter(this, "MarkerUtils",
   "devtools/client/performance/modules/logic/marker-utils");

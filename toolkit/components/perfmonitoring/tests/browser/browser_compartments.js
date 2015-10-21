@@ -177,7 +177,7 @@ function monotinicity_tester(source, testName) {
       let key = item.groupId;
       if (map.has(key)) {
         let old = map.get(key);
-        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.title||item.addonId||item.name}, previous: ${old.title||old.addonId||old.name}`);
+        Assert.ok(false, `Component ${key} has already been seen. Latest: ${item.addonId||item.name}, previous: ${old.addonId||old.name}`);
       }
       map.set(key, item);
     }
@@ -254,10 +254,33 @@ add_task(function* test() {
 
     let {snapshot: stats} = (yield promiseContentResponse(browser, "compartments-test:getStatistics", null));
 
-    let titles = [for(stat of stats.componentsData) stat.title];
-
+    // Attach titles to components.
+    let titles = [];
+    let map = new Map();
+    let windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      let window = windows.getNext();
+      let tabbrowser = window.gBrowser;
+      for (let browser of tabbrowser.browsers) {
+        let id = browser.outerWindowID; // May be `null` if the browser isn't loaded yet
+        if (id != null) {
+          map.set(id, browser);
+        }
+      }
+    }
     for (let stat of stats.componentsData) {
-      info(`Compartment: ${stat.name} => ${stat.title} (${stat.isSystem?"system":"web"})`);
+      if (!stat.windowId) {
+        continue;
+      }
+      let browser = map.get(stat.windowId);
+      if (!browser) {
+        continue;
+      }
+      let title = browser.contentTitle;
+      if (title) {
+        stat.title = title;
+        titles.push(title);
+      }
     }
 
     // While the webpage consists in three compartments, we should see only

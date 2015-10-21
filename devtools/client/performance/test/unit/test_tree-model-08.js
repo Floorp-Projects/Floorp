@@ -60,8 +60,8 @@ add_task(function test() {
       location: "main (http://localhost:8888/file.js:123:987)",
       line: 123,
     }), false),
-    new FrameNode("main (resource://gre/modules/devtools/timeline.js:123)", compute({
-      location: "main (resource://gre/modules/devtools/timeline.js:123)",
+    new FrameNode("main (resource://devtools/timeline.js:123)", compute({
+      location: "main (resource://devtools/timeline.js:123)",
     }), false),
   ];
 
@@ -78,7 +78,7 @@ add_task(function test() {
     ["Frame", "chrome://browser/content/content.js", null, null, null, 456, null, "other", false],
     ["Frame", "hello/<.world", "foo.js", null, "resource://gre/foo.js", 123, 434, "other", false],
     ["Frame", "main", "file.js", "localhost", "http://localhost:8888/file.js", 123, 987, null, true, 8888],
-    ["Frame", "main", "timeline.js", null, "resource://gre/modules/devtools/timeline.js", 123, null, "tools", false]
+    ["Frame", "main", "timeline.js", null, "resource://devtools/timeline.js", 123, null, "tools", false]
   ];
 
   for (let i = 0; i < frames.length; i++) {

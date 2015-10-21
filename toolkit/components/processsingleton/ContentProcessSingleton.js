@@ -66,7 +66,7 @@ ContentProcessSingleton.prototype = {
     // load devtools component on-demand
     // Only reply if we are in a real content process
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-      let {init} = Cu.import("resource://gre/modules/devtools/server/content-server.jsm", {});
+      let {init} = Cu.import("resource://devtools/server/content-server.jsm", {});
       init(message);
     }
   },

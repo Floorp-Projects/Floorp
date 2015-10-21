@@ -4,7 +4,7 @@
 // Tests that text metrics in the flame graph widget work properly.
 
 var HTML_NS = "http://www.w3.org/1999/xhtml";
-var {ViewHelpers} = Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
+var {ViewHelpers} = Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
 var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 var {FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 var {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widgets/FlameGraph");

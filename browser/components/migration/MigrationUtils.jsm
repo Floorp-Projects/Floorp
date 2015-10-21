@@ -13,6 +13,7 @@ const TOPIC_DID_IMPORT_BOOKMARKS = "initial-migration-did-import-default-bookmar
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -545,12 +546,21 @@ this.MigrationUtils = Object.freeze({
    * Show the migration wizard.  On mac, this may just focus the wizard if it's
    * already running, in which case aOpener and aParams are ignored.
    *
-   * @param [optional] aOpener
-   *        the window that asks to open the wizard.
-   * @param [optioanl] aParams
-   *        arguments for the migration wizard, in the form of an nsIArray.
+   * @param {Window} [aOpener]
+   *        optional; the window that asks to open the wizard.
+   * @param {Array} [aParams]
+   *        optional arguments for the migration wizard, in the form of an array
    *        This is passed as-is for the params argument of
-   *        nsIWindowWatcher.openWindow.
+   *        nsIWindowWatcher.openWindow. The array elements we expect are, in
+   *        order:
+   *        - {Number} migration entry point constant (see below)
+   *        - {String} source browser identifier
+   *        - {nsIBrowserProfileMigrator} actual migrator object
+   *        - {Boolean} whether this is a startup migration
+   *        - {Boolean} whether to skip the 'source' page
+   *        NB: If you add new consumers, please add a migration entry point
+   *        constant below, and specify at least the first element of the array
+   *        (the migration entry point for purposes of telemetry).
    */
   showMigrationWizard:
   function MU_showMigrationWizard(aOpener, aParams) {
@@ -636,18 +646,18 @@ this.MigrationUtils = Object.freeze({
       }
     }
 
-    let params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    let keyCSTR = Cc["@mozilla.org/supports-cstring;1"].
-                  createInstance(Ci.nsISupportsCString);
-    keyCSTR.data = migratorKey;
-    let skipImportSourcePageBool = Cc["@mozilla.org/supports-PRBool;1"].
-                                   createInstance(Ci.nsISupportsPRBool);
-    skipImportSourcePageBool.data = skipSourcePage;
-    params.appendElement(keyCSTR, false);
-    params.appendElement(migrator, false);
-    params.appendElement(aProfileStartup, false);
-    params.appendElement(skipImportSourcePageBool, false);
+    let migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FIRSTRUN;
+    if (migrator && skipSourcePage && migratorKey == AppConstants.MOZ_APP_NAME) {
+      migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FXREFRESH;
+    }
 
+    let params = [
+      migrationEntryPoint,
+      migratorKey,
+      migrator,
+      aProfileStartup,
+      skipSourcePage
+    ];
     this.showMigrationWizard(null, params);
   },
 
@@ -658,5 +668,26 @@ this.MigrationUtils = Object.freeze({
     gMigrators = null;
     gProfileStartup = null;
     gMigrationBundle = null;
-  }
+  },
+
+  MIGRATION_ENTRYPOINT_UNKNOWN: 0,
+  MIGRATION_ENTRYPOINT_FIRSTRUN: 1,
+  MIGRATION_ENTRYPOINT_FXREFRESH: 2,
+  MIGRATION_ENTRYPOINT_PLACES: 3,
+  MIGRATION_ENTRYPOINT_PASSWORDS: 4,
+
+  _sourceNameToIdMapping: {
+    "nothing":    1,
+    "firefox":    2,
+    "edge":       3,
+    "ie":         4,
+    "chrome":     5,
+    "chromium":   6,
+    "canary":     7,
+    "safari":     8,
+    "360se":      9,
+  },
+  getSourceIdForTelemetry(sourceName) {
+    return this._sourceNameToIdMapping[sourceName] || 0;
+  },
 });

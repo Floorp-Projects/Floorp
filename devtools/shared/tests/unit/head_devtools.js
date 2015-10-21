@@ -4,7 +4,7 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
+var {require} = Cu.import("resource://devtools/shared/Loader.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // Register a console listener, so console messages don't just disappear

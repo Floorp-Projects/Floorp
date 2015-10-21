@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 

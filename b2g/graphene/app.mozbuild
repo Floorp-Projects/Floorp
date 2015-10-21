@@ -11,6 +11,7 @@ if CONFIG['MOZ_EXTENSIONS']:
 DIRS += [
     '/%s' % CONFIG['MOZ_BRANDING_DIRECTORY'],
     '/b2g',
+    '/devtools',
 ]
 
 # Add the defaults settings.

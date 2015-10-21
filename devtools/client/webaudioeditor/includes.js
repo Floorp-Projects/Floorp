@@ -7,10 +7,10 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
-Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://devtools/client/framework/gDevTools.jsm");
 
-const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 var { EventTarget } = require("sdk/event/target");

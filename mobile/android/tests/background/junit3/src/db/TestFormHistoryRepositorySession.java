@@ -9,7 +9,7 @@ import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchSinceDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectGuidsSinceDelegate;
-import org.mozilla.gecko.background.sync.helpers.ExpectStoreCompletedDelegate;
+import org.mozilla.gecko.background.sync.helpers.ExpectNoStoreDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectStoredDelegate;
 import org.mozilla.gecko.background.sync.helpers.SessionTestHelper;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
@@ -393,13 +393,6 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     performWait(fetchRunnable(session, new String[] { deleted2.guid }, new Record[] { }));
 
     session.abort();
-  }
-
-  public static class ExpectNoStoreDelegate extends ExpectStoreCompletedDelegate {
-    @Override
-    public void onRecordStoreSucceeded(String guid) {
-      performNotify("Should not have stored record " + guid, null);
-    }
   }
 
   public void testStoreRemoteOlder() throws NoContentProviderException, RemoteException {

@@ -11,7 +11,6 @@ webapprt.jar:
   content/mochitest-shared.js           (content/mochitest-shared.js)
   content/mochitest.js                  (content/mochitest.js)
   content/mochitest.xul                 (content/mochitest.xul)
-  content/dbg-webapp-actors.js          (content/dbg-webapp-actors.js)
 * content/downloads/downloads.xul       (content/downloads/downloads.xul)
   content/downloads/downloads.js        (content/downloads/downloads.js)
   content/downloads/downloads.css       (content/downloads/downloads.css)

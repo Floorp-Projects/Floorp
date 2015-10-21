@@ -28,7 +28,7 @@ loader.lazyGetter(this, "clipboardHelper", () => {
   return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
 });
 
-loader.lazyImporter(this, "CommandUtils", "resource:///modules/devtools/client/shared/DeveloperToolbar.jsm");
+loader.lazyImporter(this, "CommandUtils", "resource://devtools/client/shared/DeveloperToolbar.jsm");
 
 const LAYOUT_CHANGE_TIMER = 250;
 

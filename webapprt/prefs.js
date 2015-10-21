@@ -82,9 +82,6 @@ pref("plugin.allowed_types", " ");
 // Suppress the check for outdated plugins from opening a window.
 pref("extensions.blocklist.suppressUI", true);
 
-pref("devtools.debugger.remote-enabled", true);
-pref("devtools.debugger.force-local", true);
-
 // The default for this pref reflects whether the build is capable of IPC.
 // (Turning it on in a no-IPC build will have no effect.)
 #ifdef XP_MACOSX

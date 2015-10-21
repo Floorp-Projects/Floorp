@@ -10,9 +10,9 @@
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
-var { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
+var { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm");
 Cu.import("resource://gre/modules/Console.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",

@@ -12,10 +12,11 @@ const {isWindowIncluded} = require("devtools/shared/layout/utils");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
+loader.lazyImporter(this, "Parser", "resource://devtools/shared/Parser.jsm");
 
 // TODO: Bug 842672 - browser/ imports modules from toolkit/.
 // Note that these are only used in WebConsoleCommands, see $0 and pprint().
-loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/widgets/VariablesView.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // Match the function name from the result of toString() or toSource().
@@ -861,19 +862,34 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
   }
 
   let completionPart = inputValue.substring(beginning.startPos);
+  let lastDot = completionPart.lastIndexOf(".");
 
   // Don't complete on just an empty string.
   if (completionPart.trim() == "") {
     return null;
   }
 
-  let lastDot = completionPart.lastIndexOf(".");
-  if (lastDot > 0 &&
-      (completionPart[0] == "'" || completionPart[0] == '"') &&
-      completionPart[lastDot - 1] == completionPart[0]) {
-    // We are completing a string literal.
-    let matchProp = completionPart.slice(lastDot + 1);
-    return getMatchedProps(String.prototype, matchProp);
+  // Catch literals like [1,2,3] or "foo" and return the matches from
+  // their prototypes.
+  if (lastDot > 0) {
+    let parser = new Parser();
+    parser.logExceptions = false;
+    let syntaxTree = parser.get(completionPart.slice(0, lastDot));
+    let lastTree = syntaxTree.getLastSyntaxTree();
+    let lastBody = lastTree && lastTree.AST.body[lastTree.AST.body.length - 1];
+
+    // Finding the last expression since we've sliced up until the dot.
+    // If there were parse errors this won't exist.
+    if (lastBody) {
+      let expression = lastBody.expression;
+      let matchProp = completionPart.slice(lastDot + 1);
+      if (expression.type === "ArrayExpression") {
+        return getMatchedProps(Array.prototype, matchProp);
+      } else if (expression.type === "Literal" &&
+                 (typeof expression.value === "string")) {
+        return getMatchedProps(String.prototype, matchProp);
+      }
+    }
   }
 
   // We are completing a variable / a property lookup.

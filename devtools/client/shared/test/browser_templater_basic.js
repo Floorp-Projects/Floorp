@@ -9,7 +9,7 @@
  * We should endevour to keep the source in sync.
  */
 
-const template = Cu.import("resource://gre/modules/devtools/shared/gcli/Templater.jsm", {}).template;
+const template = Cu.import("resource://devtools/shared/gcli/Templater.jsm", {}).template;
 
 const TEST_URI = TEST_URI_ROOT + "browser_templater_basic.html";
 

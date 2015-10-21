@@ -12,7 +12,7 @@ const make = (exports, rootURI, components) => {
     isNative: true,
     paths: {
      "": rootURI,
-     "devtools/": "resource://gre/modules/devtools/"
+     "devtools/": "resource://devtools/"
     }
   });
 

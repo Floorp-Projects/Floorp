@@ -8,7 +8,7 @@ const {Cu, Cc, Ci} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
 
 exports.OptionsPanel = OptionsPanel;
 

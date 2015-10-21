@@ -31,7 +31,7 @@ function startup(data, reason) {
     Cu.import('resource://gre/modules/commonjs/toolkit/loader.js').Loader;
   let { Loader, Require, Main } = loaderModule;
 
-  const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
+  const { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm");
 
   let loader = Loader({
     paths: {
@@ -64,4 +64,3 @@ function shutdown(data, reason) {
 }
 
 function uninstall(data, reason) {}
-

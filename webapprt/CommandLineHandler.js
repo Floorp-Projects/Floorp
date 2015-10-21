@@ -21,12 +21,6 @@ CommandLineHandler.prototype = {
                createInstance(Ci.nsIWritablePropertyBag);
     let inTestMode = this._handleTestMode(cmdLine, args);
 
-    let debugPort = this._handleDebugMode(cmdLine);
-    if (!isNaN(debugPort)) {
-      Cu.import("resource://webapprt/modules/RemoteDebugger.jsm");
-      RemoteDebugger.init(debugPort);
-    }
-
     if (inTestMode) {
       // Open the mochitest shim window, which configures the runtime for tests.
       Services.ww.openWindow(null,
@@ -48,34 +42,6 @@ CommandLineHandler.prototype = {
         Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
       });
     }
-  },
-
-  /**
-   * Handle debug command line option.
-   *
-   * @param cmdLine A nsICommandLine object.
-   *
-   * @returns the port number if it's specified, the default port number if
-   *          the debug option is specified, NaN if the debug option isn't
-   *          specified or the port number isn't valid.
-   */
-  _handleDebugMode: function(cmdLine) {
-    // -debug [port]
-    let idx = cmdLine.findFlag("debug", true);
-    if (idx < 0) {
-      return NaN;
-    }
-
-    let port;
-    let portIdx = idx + 1;
-    if (portIdx < cmdLine.length) {
-      port = parseInt(cmdLine.getArgument(portIdx));
-      if (port != NaN) {
-        return port;
-      }
-    }
-
-    return Services.prefs.getIntPref('devtools.debugger.remote-port');
   },
 
   _handleTestMode: function _handleTestMode(cmdLine, args) {

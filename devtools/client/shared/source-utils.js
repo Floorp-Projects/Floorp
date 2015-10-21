@@ -5,7 +5,7 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "Services");
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
+loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 
 /**
