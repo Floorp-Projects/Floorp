@@ -2063,8 +2063,8 @@ JsepSessionImpl::SetupDefaultCodecs()
       90000
       );
   // Defaults for mandatory params
-  vp8->mMaxFs = 12288;
-  vp8->mMaxFr = 60;
+  vp8->mConstraints.maxFs = 12288; // Enough for 2048x1536
+  vp8->mConstraints.maxFps = 60;
   mSupportedCodecs.values.push_back(vp8);
 
   JsepVideoCodecDescription* vp9 = new JsepVideoCodecDescription(
@@ -2073,8 +2073,8 @@ JsepSessionImpl::SetupDefaultCodecs()
       90000
       );
   // Defaults for mandatory params
-  vp9->mMaxFs = 12288;
-  vp9->mMaxFr = 60;
+  vp9->mConstraints.maxFs = 12288; // Enough for 2048x1536
+  vp9->mConstraints.maxFps = 60;
   mSupportedCodecs.values.push_back(vp9);
 
   JsepVideoCodecDescription* h264_1 = new JsepVideoCodecDescription(
