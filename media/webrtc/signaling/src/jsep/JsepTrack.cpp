@@ -4,6 +4,7 @@
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepCodecDescription.h"
+#include "signaling/src/jsep/JsepTrackEncoding.h"
 
 #include <algorithm>
 
@@ -16,7 +17,14 @@ JsepTrack::GetNegotiatedPayloadTypes(std::vector<uint16_t>* payloadTypes)
     return;
   }
 
-  GetPayloadTypes(mNegotiatedDetails->mCodecs.values, payloadTypes);
+  for (const auto* encoding : mNegotiatedDetails->mEncodings.values) {
+    GetPayloadTypes(encoding->GetCodecs(), payloadTypes);
+  }
+
+  // Prune out dupes
+  std::sort(payloadTypes->begin(), payloadTypes->end());
+  auto newEnd = std::unique(payloadTypes->begin(), payloadTypes->end());
+  payloadTypes->erase(newEnd, payloadTypes->end());
 }
 
 /* static */
@@ -101,8 +109,8 @@ void
 JsepTrack::AddToAnswer(const SdpMediaSection& offer,
                        SdpMediaSection* answer) const
 {
-  // We do not modify mPrototypeCodecs here, since we're only creating an answer. Once
-  // offer/answer concludes, we will update mPrototypeCodecs.
+  // We do not modify mPrototypeCodecs here, since we're only creating an
+  // answer. Once offer/answer concludes, we will update mPrototypeCodecs.
   PtrVector<JsepCodecDescription> codecs;
   codecs.values = GetCodecClones();
   NegotiateCodecs(offer, &codecs.values);
@@ -132,6 +140,65 @@ JsepTrack::AddToMsection(const std::vector<JsepCodecDescription*>& codecs,
     msection->SetSending(true);
   } else {
     msection->SetReceiving(true);
+  }
+}
+
+void
+JsepTrack::GetRids(const SdpMediaSection& msection,
+                   std::vector<SdpRidAttributeList::Rid>* rids) const
+{
+  // TODO(bug 1192390): Get list of rids from |answer|; first rid from each
+  // simulcast version.
+}
+
+void
+JsepTrack::UpdateRidsFromAnswer(
+    const std::vector<SdpRidAttributeList::Rid>& rids)
+{
+  // TODO(bug 1192390): For each rid, try to pair it with something in
+  // mEncodingParameters (either by matching rid, or just matching by index).
+  // Once these are paired up, update the ids in mEncodingParameters to match.
+}
+
+void
+JsepTrack::CreateEncodings(
+    const SdpMediaSection& answer,
+    const std::vector<JsepCodecDescription*>& negotiatedCodecs,
+    JsepTrackNegotiatedDetails* negotiatedDetails)
+{
+  std::vector<SdpRidAttributeList::Rid> answerRids;
+  GetRids(answer, &answerRids);
+  UpdateRidsFromAnswer(answerRids);
+  if (answerRids.empty()) {
+    // Add dummy value with an empty id to make sure we get a single unicast
+    // stream.
+    answerRids.push_back(SdpRidAttributeList::Rid());
+  }
+
+  // For each rid in the answer, make sure we have an encoding, and configure
+  // that encoding appropriately.
+  for (size_t i = 0; i < answerRids.size(); ++i) {
+    if (i >= negotiatedDetails->mEncodings.values.size()) {
+      negotiatedDetails->mEncodings.values.push_back(new JsepTrackEncoding);
+    }
+
+    JsepTrackEncoding* encoding = negotiatedDetails->mEncodings.values[i];
+
+    for (const JsepCodecDescription* codec : negotiatedCodecs) {
+      if (answerRids[i].HasFormat(codec->mDefaultPt)) {
+        encoding->AddCodec(*codec);
+      }
+    }
+
+    encoding->mRid = answerRids[i].id;
+    // If we end up supporting params for rid, we would handle that here.
+
+    // Incorporate the corresponding JS encoding constraints, if they exist
+    for (const JsConstraints& jsConstraints : mJsEncodeConstraints) {
+      if (jsConstraints.id == answerRids[i].id) {
+        encoding->mConstraints = jsConstraints.constraints;
+      }
+    }
   }
 }
 
@@ -209,13 +276,12 @@ void
 JsepTrack::Negotiate(const SdpMediaSection& answer,
                      const SdpMediaSection& remote)
 {
-  UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
-      MakeUnique<JsepTrackNegotiatedDetails>();
+  PtrVector<JsepCodecDescription> negotiatedCodecs;
+  negotiatedCodecs.values = GetCodecClones();
 
-  negotiatedDetails->mCodecs.values = GetCodecClones();
   std::map<std::string, std::string> formatChanges;
   NegotiateCodecs(remote,
-                  &negotiatedDetails->mCodecs.values,
+                  &negotiatedCodecs.values,
                   &answer,
                   &formatChanges);
 
@@ -234,6 +300,11 @@ JsepTrack::Negotiate(const SdpMediaSection& answer,
   }
 
   EnsureNoDuplicatePayloadTypes(&mPrototypeCodecs.values);
+
+  UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
+      MakeUnique<JsepTrackNegotiatedDetails>();
+
+  CreateEncodings(answer, negotiatedCodecs.values, negotiatedDetails.get());
 
   if (answer.GetAttributeList().HasAttribute(SdpAttribute::kExtmapAttribute)) {
     for (auto& extmapAttr : answer.GetAttributeList().GetExtmap().mExtmaps) {
