@@ -13,6 +13,7 @@
 #include "js/TraceableVector.h"
 
 #include "vm/NativeObject.h"
+#include "vm/ProxyObject.h"
 
 namespace js {
 
@@ -84,6 +85,66 @@ struct IndirectBinding
 
 typedef HashMap<jsid, IndirectBinding, JsidHasher, SystemAllocPolicy> IndirectBindingMap;
 
+class ModuleNamespaceObject : public ProxyObject
+{
+  public:
+    static bool isInstance(HandleValue value);
+    static ModuleNamespaceObject* create(JSContext* cx, HandleModuleObject module);
+
+    ModuleObject& module();
+    ArrayObject& exports();
+    IndirectBindingMap& bindings();
+
+    bool addBinding(JSContext* cx, HandleAtom exportedName, HandleModuleObject targetModule,
+                    HandleAtom localName);
+
+  private:
+    struct ProxyHandler : public BaseProxyHandler
+    {
+        enum
+        {
+            EnumerateFunctionSlot = 0
+        };
+
+        ProxyHandler();
+
+        JS::Value getEnumerateFunction(HandleObject proxy) const;
+
+        bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
+                                      MutableHandle<JSPropertyDescriptor> desc) const override;
+        bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
+                            Handle<JSPropertyDescriptor> desc,
+                            ObjectOpResult& result) const override;
+        bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
+                             AutoIdVector& props) const override;
+        bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
+                     ObjectOpResult& result) const override;
+        bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const override;
+        bool getPrototype(JSContext* cx, HandleObject proxy,
+                          MutableHandleObject protop) const override;
+        bool setPrototype(JSContext* cx, HandleObject proxy, HandleObject proto,
+                          ObjectOpResult& result) const override;
+        bool setImmutablePrototype(JSContext* cx, HandleObject proxy,
+                                   bool* succeeded) const override;
+
+        bool preventExtensions(JSContext* cx, HandleObject proxy,
+                               ObjectOpResult& result) const override;
+        bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const override;
+        bool has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override;
+        bool get(JSContext* cx, HandleObject proxy, HandleValue receiver,
+                 HandleId id, MutableHandleValue vp) const override;
+        bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                 HandleValue receiver, ObjectOpResult& result) const override;
+
+        static const char family;
+    };
+
+    static const ProxyHandler proxyHandler;
+};
+
+typedef Rooted<ModuleNamespaceObject*> RootedModuleNamespaceObject;
+typedef Handle<ModuleNamespaceObject*> HandleModuleNamespaceObject;
+
 class ModuleObject : public NativeObject
 {
   public:
@@ -93,6 +154,7 @@ class ModuleObject : public NativeObject
         StaticScopeSlot,
         InitialEnvironmentSlot,
         EnvironmentSlot,
+        NamespaceSlot,
         EvaluatedSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
@@ -100,6 +162,8 @@ class ModuleObject : public NativeObject
         IndirectExportEntriesSlot,
         StarExportEntriesSlot,
         ImportBindingsSlot,
+        NamespaceExportsSlot,
+        NamespaceBindingsSlot,
         SlotCount
     };
 
@@ -120,6 +184,7 @@ class ModuleObject : public NativeObject
     JSObject* enclosingStaticScope() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
+    ModuleNamespaceObject* namespace_();
     bool evaluated() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
@@ -127,11 +192,16 @@ class ModuleObject : public NativeObject
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
     IndirectBindingMap& importBindings();
+    ArrayObject* namespaceExports();
+    IndirectBindingMap* namespaceBindings();
 
     void createEnvironment();
 
     void setEvaluated();
     static bool evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval);
+
+    static ModuleNamespaceObject* createNamespace(JSContext* cx, HandleModuleObject self,
+                                            HandleArrayObject exports);
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
