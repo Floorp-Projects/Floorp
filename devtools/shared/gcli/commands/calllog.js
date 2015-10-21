@@ -10,7 +10,7 @@ const gcli = require("gcli/index");
 
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
+loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
 
 loader.lazyGetter(this, "Debugger", () => {
   let global = Cu.getGlobalForObject({});

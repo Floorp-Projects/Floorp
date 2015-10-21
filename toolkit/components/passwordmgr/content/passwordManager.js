@@ -452,5 +452,6 @@ function escapeKeyHandler() {
 
 function OpenMigrator() {
   const { MigrationUtils } = Cu.import("resource:///modules/MigrationUtils.jsm", {});
-  MigrationUtils.showMigrationWizard(window);
+  // We pass in the type of source we're using for use in telemetry:
+  MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS]);
 }

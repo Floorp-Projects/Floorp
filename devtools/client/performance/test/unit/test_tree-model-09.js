@@ -61,7 +61,7 @@ var gThread = synthesizeProfileForTest([{
     { location: "(root)" },
     { location: "http://content/A" },
     { location: "http://content/B" },
-    { location: "fn (resource://loader.js -> resource:///modules/devtools/timeline.js)" },
+    { location: "fn (resource://loader.js -> resource://devtools/timeline.js)" },
     { location: "http://content/D" }
   ]
 }, {
@@ -71,12 +71,12 @@ var gThread = synthesizeProfileForTest([{
     { location: "http://content/A" },
     { location: "http://content/E" },
     { location: "http://content/F" },
-    { location: "fn (resource://loader.js -> resource://gre/modules/devtools/promise.js)" }
+    { location: "fn (resource://loader.js -> resource://devtools/promise.js)" }
   ]
 }, {
   time: 5 + 20,
   frames: [
     { location: "(root)" },
-    { location: "somefn (resource://loader.js -> resource:///modules/devtools/framerate.js)" }
+    { location: "somefn (resource://loader.js -> resource://devtools/framerate.js)" }
   ]
 }]);

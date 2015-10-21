@@ -29,7 +29,7 @@ Test that css-logic handles media-queries correctly
   window.onload = function() {
     var Cu = Components.utils;
 
-    var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+    var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     Cu.import("resource://gre/modules/Services.jsm");
     const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 

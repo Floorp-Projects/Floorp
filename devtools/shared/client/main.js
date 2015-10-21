@@ -10,7 +10,7 @@ const { Ci, Cu, components } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const promise = Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {}).Promise;
+const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);

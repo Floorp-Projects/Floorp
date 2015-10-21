@@ -5,7 +5,7 @@
 
 // Test that NetworkHelper.parseSecurityInfo correctly detects static hpkp pins
 
-const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 

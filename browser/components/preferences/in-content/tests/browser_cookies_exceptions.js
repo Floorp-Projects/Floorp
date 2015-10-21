@@ -173,6 +173,47 @@ var testRunner = {
         },
         observances: [{ type: "cookie", origin: "http://localhost:12345", data: "deleted" }],
       },
+      {
+        expectPermObservancesDuringTestFunction: true,
+        test(params) {
+          for (let URL of ["http://a", "http://z", "http://b"]) {
+            let URI = params.ioService.newURI(URL, null, null);
+            params.pm.add(URI, "cookie", Ci.nsIPermissionManager.ALLOW_ACTION);
+          }
+
+          is(params.tree.view.rowCount, 3, "Three permissions should be present");
+          is(params.tree.view.getCellText(0, params.nameCol), "http://a",
+             "site should be sorted. 'a' should be first");
+          is(params.tree.view.getCellText(1, params.nameCol), "http://b",
+             "site should be sorted. 'b' should be second");
+          is(params.tree.view.getCellText(2, params.nameCol), "http://z",
+             "site should be sorted. 'z' should be third");
+
+          // Sort descending then check results in cleanup since sorting isn't synchronous.
+          EventUtils.synthesizeMouseAtCenter(params.doc.getElementById("siteCol"), {},
+                                             params.doc.defaultView);
+          params.btnApplyChanges.doCommand();
+        },
+        observances: [{ type: "cookie", origin: "http://a", data: "added",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION },
+                      { type: "cookie", origin: "http://z", data: "added",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION },
+                      { type: "cookie", origin: "http://b", data: "added",
+                        capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
+        cleanUp(params) {
+          is(params.tree.view.getCellText(0, params.nameCol), "http://z",
+             "site should be sorted. 'z' should be first");
+          is(params.tree.view.getCellText(1, params.nameCol), "http://b",
+             "site should be sorted. 'b' should be second");
+          is(params.tree.view.getCellText(2, params.nameCol), "http://a",
+             "site should be sorted. 'a' should be third");
+
+          for (let URL of ["http://a", "http://z", "http://b"]) {
+            let uri = params.ioService.newURI(URL, null, null);
+            params.pm.remove(uri, "cookie");
+          }
+        },
+      },
     ],
 
   _currentTest: -1,

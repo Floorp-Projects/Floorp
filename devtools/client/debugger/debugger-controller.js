@@ -95,16 +95,16 @@ const FRAME_TYPE = {
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
-Cu.import("resource:///modules/devtools/client/shared/widgets/SimpleListWidget.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/BreadcrumbsWidget.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesViewController.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://devtools/client/shared/widgets/SimpleListWidget.jsm");
+Cu.import("resource://devtools/client/shared/widgets/BreadcrumbsWidget.jsm");
+Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
+Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
+Cu.import("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
-Cu.import("resource:///modules/devtools/client/shared/browser-loader.js");
-const require = BrowserLoader("resource:///modules/devtools/client/debugger/", this).require;
+Cu.import("resource://devtools/client/shared/browser-loader.js");
+const require = BrowserLoader("resource://devtools/client/debugger/", this).require;
 XPCOMUtils.defineConstant(this, "require", require);
 
 const {TargetFactory} = require("devtools/client/framework/target");
@@ -122,7 +122,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
-  "resource:///modules/devtools/client/shared/Parser.jsm");
+  "resource://devtools/shared/Parser.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");

@@ -9,7 +9,7 @@ var Cu = Components.utils;
 var Cr = Components.results;
 var CC = Components.Constructor;
 
-const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { Match } = Cu.import("resource://test/Match.jsm", {});
 const { Census } = Cu.import("resource://test/Census.jsm", {});
 const { addDebuggerToGlobal } =

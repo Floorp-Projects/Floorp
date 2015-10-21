@@ -19,7 +19,7 @@ this.rpc = function (method, ...params) {
   return deferred.promise;
 };
 
-loadSubScript("resource://gre/modules/devtools/shared/worker/loader.js");
+loadSubScript("resource://devtools/shared/worker/loader.js");
 
 var Promise = worker.require("promise");
 var { ActorPool } = worker.require("devtools/server/actors/common");

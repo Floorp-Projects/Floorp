@@ -181,7 +181,7 @@
 #endif
 @RESPATH@/components/content_xslt.xpt
 @RESPATH@/components/cookie.xpt
-@RESPATH@/components/devtools_security.xpt
+@RESPATH@/browser/components/devtools_security.xpt
 @RESPATH@/components/directory.xpt
 @RESPATH@/components/docshell.xpt
 @RESPATH@/components/dom.xpt
@@ -260,7 +260,7 @@
 @RESPATH@/components/jar.xpt
 @RESPATH@/components/jsdebugger.xpt
 @RESPATH@/components/jsdownloads.xpt
-@RESPATH@/components/jsinspector.xpt
+@RESPATH@/browser/components/jsinspector.xpt
 @RESPATH@/components/layout_base.xpt
 #ifdef NS_PRINTING
 @RESPATH@/components/layout_printing.xpt
@@ -893,7 +893,6 @@ bin/libfreebl_32int64_3.so
 @RESPATH@/webapprt/modules/Startup.jsm
 @RESPATH@/webapprt/modules/WebappRT.jsm
 @RESPATH@/webapprt/modules/WebappManager.jsm
-@RESPATH@/webapprt/modules/RemoteDebugger.jsm
 @RESPATH@/webapprt/modules/WebRTCHandler.jsm
 #endif
 

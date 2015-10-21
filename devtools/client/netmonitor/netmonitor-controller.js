@@ -112,12 +112,12 @@ const ACTIVITY_TYPE = {
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesViewController.jsm");
-Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
+Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
+Cu.import("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/client/sourceeditor/editor");
@@ -130,13 +130,13 @@ XPCOMUtils.defineConstant(this, "ACTIVITY_TYPE", ACTIVITY_TYPE);
 XPCOMUtils.defineConstant(this, "Editor", Editor);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
-  "resource:///modules/devtools/client/shared/widgets/Chart.jsm");
+  "resource://devtools/client/shared/widgets/Chart.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Curl",
-  "resource:///modules/devtools/client/shared/Curl.jsm");
+  "resource://devtools/client/shared/Curl.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CurlUtils",
-  "resource:///modules/devtools/client/shared/Curl.jsm");
+  "resource://devtools/client/shared/Curl.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");

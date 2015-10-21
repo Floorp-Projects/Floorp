@@ -497,13 +497,13 @@ this.worker = new WorkerDebuggerLoader({
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "": "resource://gre/modules/commonjs/",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "devtools": "resource://gre/modules/devtools",
+    "devtools": "resource://devtools",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "devtools/client": "resource:///modules/devtools/client",
+    "devtools/client": "resource://devtools/client",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "promise": "resource://gre/modules/Promise-backend.js",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
+    "source-map": "resource://devtools/sourcemap/source-map.js",
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "xpcshell-test": "resource://test"
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

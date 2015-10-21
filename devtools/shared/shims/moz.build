@@ -8,6 +8,10 @@
 # because these files are here for add-on compatibility, and so they must be
 # installed to previously defined locations.
 
+# These shims for legacy paths expect to be installed as if they were part of
+# /toolkit modules.  Disable any DIST_SUBDIR from parent files here.
+DIST_SUBDIR = ''
+
 EXTRA_JS_MODULES.devtools += [
     'Console.jsm',
     'dbg-client.jsm',
@@ -16,7 +20,12 @@ EXTRA_JS_MODULES.devtools += [
     'Simulator.jsm',
 ]
 
-# Extra compatibility layer for transitional URL used in middle of fx44 cycle
+# Extra compatibility layer for transitional URLs used for part of 44 cycle
 EXTRA_JS_MODULES.devtools.shared += [
     'Console.jsm',
+    'Loader.jsm',
+]
+
+EXTRA_JS_MODULES.devtools.shared.apps += [
+    'Simulator.jsm',
 ]

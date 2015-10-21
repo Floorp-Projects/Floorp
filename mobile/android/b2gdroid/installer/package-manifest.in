@@ -497,6 +497,9 @@
 @BINPATH@/chrome/icons/default/default48.png
 #endif
 
+; DevTools
+@BINPATH@/chrome/devtools@JAREXT@
+@BINPATH@/chrome/devtools.manifest
 
 ; shell icons
 #ifdef XP_UNIX

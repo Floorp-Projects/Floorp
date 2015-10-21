@@ -19,7 +19,7 @@
         SimpleTest.waitForExplicitFinish();
 
         const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
-        const {Devices} = Cu.import("resource://gre/modules/devtools/shared/apps/Devices.jsm");
+        const {Devices} = Cu.import("resource://devtools/shared/apps/Devices.jsm");
         const {Simulators} = require("devtools/client/webide/modules/simulators");
 
         let adbAddonsInstalled = promise.defer();

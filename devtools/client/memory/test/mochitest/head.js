@@ -9,4 +9,4 @@ var Cu = Components.utils;
 var Cr = Components.results;
 var CC = Components.Constructor;
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});

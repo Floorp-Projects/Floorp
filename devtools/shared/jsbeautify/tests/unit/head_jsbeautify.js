@@ -9,7 +9,7 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var beautify = require("devtools/shared/jsbeautify/beautify");
 var SanityTest = require('devtools/shared/jsbeautify/lib/sanitytest');

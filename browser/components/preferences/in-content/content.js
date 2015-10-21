@@ -121,13 +121,9 @@ var gContentPane = {
   showNotificationExceptions()
   {
     let bundlePreferences = document.getElementById("bundlePreferences");
-    let params = { blockVisible: true,
-                   sessionVisible: false,
-                   allowVisible: true,
-                   prefilledHost: "",
-                   permissionType: "desktop-notification" };
+    let params = { permissionType: "desktop-notification" };
     params.windowTitle = bundlePreferences.getString("notificationspermissionstitle");
-    params.introText = bundlePreferences.getString("notificationspermissionstext");
+    params.introText = bundlePreferences.getString("notificationspermissionstext2");
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     "resizable=yes", params);

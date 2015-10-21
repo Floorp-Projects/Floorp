@@ -11,7 +11,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Editor  = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
@@ -22,8 +22,8 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
-Cu.import("resource:///modules/devtools/client/styleeditor/StyleEditorUtil.jsm");
+Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 
 const LOAD_ERROR = "error-load";
 const SAVE_ERROR = "error-save";

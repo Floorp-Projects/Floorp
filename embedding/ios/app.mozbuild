@@ -8,3 +8,7 @@ include('/toolkit/toolkit.mozbuild')
 
 if CONFIG['MOZ_EXTENSIONS']:
     DIRS += ['/extensions']
+
+DIRS += [
+    '/devtools',
+]

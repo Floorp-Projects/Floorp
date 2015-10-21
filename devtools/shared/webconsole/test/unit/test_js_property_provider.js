@@ -3,7 +3,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 "use strict";
-const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
 const { JSPropertyProvider } = require("devtools/shared/webconsole/utils");
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
@@ -41,6 +41,46 @@ function run_test() {
   results = JSPropertyProvider(dbgObject, null, "testArray[2][0].");
   test_has_result(results, "propE");
 
+  do_print("Test that suggestions are given for literal arrays.");
+  results = JSPropertyProvider(dbgObject, null, "[1,2,3].");
+  test_has_result(results, "indexOf");
+
+  do_print("Test that suggestions are given for literal arrays with newlines.");
+  results = JSPropertyProvider(dbgObject, null, "[1,2,3,\n4\n].");
+  test_has_result(results, "indexOf");
+
+  do_print("Test that suggestions are given for literal strings.");
+  results = JSPropertyProvider(dbgObject, null, "'foo'.");
+  test_has_result(results, "charAt");
+  results = JSPropertyProvider(dbgObject, null, '"foo".');
+  test_has_result(results, "charAt");
+  results = JSPropertyProvider(dbgObject, null, "`foo`.");
+  test_has_result(results, "charAt");
+  results = JSPropertyProvider(dbgObject, null, "'[1,2,3]'.");
+  test_has_result(results, "charAt");
+
+  do_print("Test that suggestions are not given for syntax errors.");
+  results = JSPropertyProvider(dbgObject, null, "'foo\"");
+  do_check_null(results);
+  results = JSPropertyProvider(dbgObject, null, "[1,',2]");
+  do_check_null(results);
+  results = JSPropertyProvider(dbgObject, null, "'[1,2].");
+  do_check_null(results);
+  results = JSPropertyProvider(dbgObject, null, "'foo'..");
+  do_check_null(results);
+
+  do_print("Test that suggestions are not given without a dot.");
+  results = JSPropertyProvider(dbgObject, null, "'foo'");
+  test_has_no_results(results);
+  results = JSPropertyProvider(dbgObject, null, "[1,2,3]");
+  test_has_no_results(results);
+  results = JSPropertyProvider(dbgObject, null, "[1,2,3].\n'foo'");
+  test_has_no_results(results);
+
+  do_print("Test that suggestions are not given for numeric literals.");
+  results = JSPropertyProvider(dbgObject, null, "1.");
+  do_check_null(results);
+
   do_print("Test that suggestions are not given for index that's out of bounds.");
   results = JSPropertyProvider(dbgObject, null, "testArray[10].");
   do_check_null(results);
@@ -63,6 +103,15 @@ function run_test() {
   do_check_null(results);
 }
 
+/**
+ * A helper that ensures an empty array of results were found.
+ * @param Object aResults
+ *        The results returned by JSPropertyProvider.
+ */
+function test_has_no_results(aResults) {
+  do_check_neq(aResults, null);
+  do_check_eq(aResults.matches.length, 0);
+}
 /**
  * A helper that ensures (required) results were found.
  * @param Object aResults
