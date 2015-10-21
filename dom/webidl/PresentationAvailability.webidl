@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation"]
+ Func="Navigator::HasPresentationSupport"]
 interface PresentationAvailability : EventTarget {
   /*
    * If there is at least one device discovered by UA, the value is |true|.

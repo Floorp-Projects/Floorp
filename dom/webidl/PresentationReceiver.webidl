@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation"]
+ Func="Navigator::HasPresentationSupport"]
 interface PresentationReceiver : EventTarget {
   /*
    * Get the first connected presentation connection in a receiving browsing
