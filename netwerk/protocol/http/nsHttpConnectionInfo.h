@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 #include "mozilla/Logging.h"
+#include "ARefBase.h"
 
 extern PRLogModuleInfo *gHttpLog;
 
@@ -30,7 +31,7 @@ extern PRLogModuleInfo *gHttpLog;
 
 namespace mozilla { namespace net {
 
-class nsHttpConnectionInfo
+class nsHttpConnectionInfo: public ARefBase
 {
 public:
     nsHttpConnectionInfo(const nsACString &originHost,
@@ -162,7 +163,7 @@ private:
     bool                   mUsingConnect;  // if will use CONNECT with http proxy
     nsCString              mNPNToken;
 
-// for nsRefPtr
+// for RefPtr
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo)
 };
 

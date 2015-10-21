@@ -7,6 +7,7 @@
 #ifndef NetEventTokenBucket_h__
 #define NetEventTokenBucket_h__
 
+#include "ARefBase.h"
 #include "nsCOMPtr.h"
 #include "nsDeque.h"
 #include "nsITimer.h"
@@ -59,7 +60,7 @@ namespace net {
 
 class EventTokenBucket;
 
-class ATokenBucketEvent 
+class ATokenBucketEvent
 {
 public:
   virtual void OnTokenBucketAdmitted() = 0;
@@ -67,10 +68,8 @@ public:
 
 class TokenBucketCancelable;
 
-class EventTokenBucket : public nsITimerCallback
+class EventTokenBucket : public nsITimerCallback, public ARefBase
 {
-  virtual ~EventTokenBucket();
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
@@ -93,6 +92,8 @@ public:
   nsresult SubmitEvent(ATokenBucketEvent *event, nsICancelable **cancelable);
 
 private:
+  virtual ~EventTokenBucket();
+
   friend class RunNotifyEvent;
   friend class SetTimerEvent;
 

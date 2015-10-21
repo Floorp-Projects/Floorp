@@ -23,7 +23,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
-#include "StaticPtr.h"
+#include "mozilla/StaticPtr.h"
 
 #include "gmp-video-decode.h" // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h" // GMP_API_VIDEO_ENCODER

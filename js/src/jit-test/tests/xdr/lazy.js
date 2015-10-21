@@ -150,7 +150,7 @@ test = `
 evalWithCache(test, { assertEqBytecode: true, assertEqResult: true });
 
 // And more of the same, in a slightly different way
-var g1 = newGlobal();
+var g1 = newGlobal({ cloneSingletons: true });
 var g2 = newGlobal();
 var res = "function f(){}";
 var code = cacheEntry(res + "; f();");
