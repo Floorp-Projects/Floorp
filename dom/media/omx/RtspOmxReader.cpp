@@ -87,14 +87,14 @@ void RtspOmxReader::EnsureActive() {
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-RtspOmxReader::AsyncReadMetadataInternal()
+RtspOmxReader::AsyncReadMetadata()
 {
   // Send a PLAY command to the RTSP server before reading metadata.
   // Because we might need some decoded samples to ensure we have configuration.
   mRtspResource->DisablePlayoutDelay();
 
   RefPtr<MediaDecoderReader::MetadataPromise> p =
-    MediaOmxReader::AsyncReadMetadataInternal();
+    MediaOmxReader::AsyncReadMetadata();
 
   // Send a PAUSE to the RTSP server because the underlying media resource is
   // not ready.

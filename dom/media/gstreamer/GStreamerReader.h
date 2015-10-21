@@ -46,6 +46,8 @@ public:
   virtual bool DecodeAudioData() override;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold) override;
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) override;
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
   virtual media::TimeIntervals GetBuffered() override;
@@ -68,7 +70,6 @@ public:
   virtual bool IsMediaSeekable() override;
 
 private:
-  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
 
   void ReadAndPushData(guint aLength);
   RefPtr<layers::PlanarYCbCrImage> GetImageFromBuffer(GstBuffer* aBuffer);

@@ -36,6 +36,8 @@ public:
     return true;
   }
 
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) override;
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
@@ -44,7 +46,6 @@ public:
   virtual bool IsMediaSeekable() override;
 
 private:
-  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
   bool ReadFromResource(uint8_t *aBuf, uint32_t aLength);
 
   RawVideoHeader mMetadata;

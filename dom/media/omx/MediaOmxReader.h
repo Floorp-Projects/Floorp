@@ -72,10 +72,6 @@ public:
 
 protected:
   virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
-
-  virtual RefPtr<MediaDecoderReader::MetadataPromise>
-  AsyncReadMetadataInternal() override;
-
 public:
 
   virtual nsresult ResetDecode()
@@ -98,6 +94,8 @@ public:
   {
     return mHasVideo;
   }
+
+  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;

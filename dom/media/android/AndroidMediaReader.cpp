@@ -35,8 +35,8 @@ AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
 {
 }
 
-nsresult
-AndroidMediaReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+nsresult AndroidMediaReader::ReadMetadata(MediaInfo* aInfo,
+                                          MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
 
