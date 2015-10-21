@@ -12789,6 +12789,11 @@ IonBuilder::jsop_checkaliasedlet(ScopeCoordinate sc)
 bool
 IonBuilder::jsop_this()
 {
+    if (info().module()) {
+        pushConstant(UndefinedValue());
+        return true;
+    }
+
     if (!info().funMaybeLazy())
         return abort("JSOP_THIS outside of a JSFunction.");
 

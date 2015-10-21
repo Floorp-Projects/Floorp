@@ -1029,13 +1029,21 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     } while ((s = s->enclosingScope()));
 #endif
 
-    /* Use the scope chain as 'this', modulo outerization. */
-    JSObject* thisObj = GetThisObject(cx, scopeChain);
-    if (!thisObj)
-        return false;
-    Value thisv = ObjectValue(*thisObj);
+    ExecuteType type;
+    Value thisv;
+    if (script->module()) {
+        type = EXECUTE_MODULE;
+        thisv = UndefinedValue();
+    } else {
+        type = EXECUTE_GLOBAL;
 
-    ExecuteType type = script->module() ? EXECUTE_MODULE : EXECUTE_GLOBAL;
+        /* Use the scope chain as 'this', modulo outerization. */
+        JSObject* thisObj = GetThisObject(cx, scopeChain);
+        if (!thisObj)
+            return false;
+        thisv = ObjectValue(*thisObj);
+    }
+
     return ExecuteKernel(cx, script, *scopeChain, thisv, NullValue(), type,
                          NullFramePtr() /* evalInFrame */, rval);
 }

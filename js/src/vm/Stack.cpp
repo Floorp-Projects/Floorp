@@ -37,6 +37,8 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
                                    const Value& thisv, const Value& newTargetValue, HandleObject scopeChain,
                                    ExecuteType type)
 {
+    MOZ_ASSERT_IF(type & MODULE, thisv.isUndefined());
+
     /*
      * See encoding of ExecuteType. When GLOBAL isn't set, we are executing a
      * script in the context of another frame and the frame type is determined
