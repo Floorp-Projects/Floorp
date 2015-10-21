@@ -67,7 +67,7 @@ using namespace mozilla;
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 
 #if defined(MOZ_HAS_PERFSTATS)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPerformanceStatsService, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPerformanceStatsService)
 #endif // defined (MOZ_HAS_PERFSTATS)
 
 #if defined(MOZ_HAS_TERMINATOR)

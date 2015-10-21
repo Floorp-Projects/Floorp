@@ -9577,7 +9577,7 @@
   },
   "PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED": {
     "alert_emails": ["dteller@mozilla.com"],
-    "expires_in_version": "48",
+    "expires_in_version": "45",
     "kind": "linear",
     "high": "100",
     "n_buckets": "20",
