@@ -49,7 +49,7 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
     private static final String WHERE_GUID_IS_NULL = BrowserContract.DeletedPasswords.GUID + " IS NULL";
     private static final String WHERE_GUID_IS_VALUE = BrowserContract.DeletedPasswords.GUID + " = ?";
 
-    private static final String LOG_TAG = "GeckPasswordsProvider";
+    private static final String LOG_TAG = "GeckoPasswordsProvider";
 
     private CrashHandler mCrashHandler;
 

@@ -46,6 +46,8 @@ public:
   virtual bool DecodeAudioData() override;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold) override;
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) override;
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
   virtual media::TimeIntervals GetBuffered() override;
@@ -68,7 +70,6 @@ public:
   virtual bool IsMediaSeekable() override;
 
 private:
-  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
 
   void ReadAndPushData(guint aLength);
   RefPtr<layers::PlanarYCbCrImage> GetImageFromBuffer(GstBuffer* aBuffer);
@@ -92,8 +93,8 @@ private:
 
   /*
    * We attach this callback to playbin so that when uridecodebin is
-   * constructed, we can then list for its autoplug-sort signal to blacklist
-   * the elements it can construct.
+   * constructed, we can then list for its autoplug-sort signal to block
+   * list the elements it can construct.
    */
   static void ElementAddedCb(GstBin *aPlayBin,
                              GstElement *aElement,
@@ -193,7 +194,7 @@ private:
   static bool ShouldAutoplugFactory(GstElementFactory* aFactory, GstCaps* aCaps);
 
   /* Called by decodebin during autoplugging. We use it to apply our
-   * container/codec blacklist.
+   * container/codec block list.
    */
   static GValueArray* AutoplugSortCb(GstElement* aElement,
                                      GstPad* aPad, GstCaps* aCaps,

@@ -615,7 +615,7 @@ Http2Stream::GenerateOpen()
   messageSize += Http2Session::kFrameHeaderBytes + 5; // frame header + priority overhead in HEADERS frame
   messageSize += (numFrames - 1) * Http2Session::kFrameHeaderBytes; // frame header overhead in CONTINUATION frames
 
-  EnsureBuffer(mTxInlineFrame, dataLength + messageSize,
+  EnsureBuffer(mTxInlineFrame, messageSize,
                mTxInlineFrameUsed, mTxInlineFrameSize);
 
   mTxInlineFrameUsed += messageSize;

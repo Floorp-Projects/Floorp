@@ -54,8 +54,8 @@ function create_serial_promise(test_cases) {
 
 window.addEventListener('message', function(evt) {
     var port = evt.ports[0];
-    var url = host_info['HTTP_ORIGIN'] + path;
-    var remote_url = host_info['HTTP_REMOTE_ORIGIN'] + path;
+    var url = host_info['HTTPS_ORIGIN'] + path;
+    var remote_url = host_info['HTTPS_REMOTE_ORIGIN'] + path;
     // If the 4th value of the item of TEST_CASES is true, the test case outputs
     // warning messages. So such tests must be executed in serial to match the
     // expected output text.
@@ -76,15 +76,15 @@ window.addEventListener('message', function(evt) {
       [remote_url + '?ignore', false, FAIL, true],  // Executed in serial.
       [remote_url + '?ignore', true, FAIL, true],  // Executed in serial.
       [
-        remote_url + '?ACAOrigin=' + host_info['HTTP_ORIGIN'] + '&ignore',
+        remote_url + '?ACAOrigin=' + host_info['HTTPS_ORIGIN'] + '&ignore',
         false, SUCCESS
       ],
       [
-        remote_url + '?ACAOrigin=' + host_info['HTTP_ORIGIN'] + '&ignore',
+        remote_url + '?ACAOrigin=' + host_info['HTTPS_ORIGIN'] + '&ignore',
         true, FAIL, true  // Executed in serial.
       ],
       [
-        remote_url + '?ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+        remote_url + '?ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
         '&ACACredentials=true&ignore',
         true, SUCCESS
       ],
@@ -94,15 +94,15 @@ window.addEventListener('message', function(evt) {
       [remote_url + '?Auth&ignore', false, FAIL, true],  // Executed in serial.
       [remote_url + '?Auth&ignore', true, FAIL, true],  // Executed in serial.
       [
-        remote_url + '?Auth&ACAOrigin=' + host_info['HTTP_ORIGIN'] + '&ignore',
+        remote_url + '?Auth&ACAOrigin=' + host_info['HTTPS_ORIGIN'] + '&ignore',
         false, 'STATUS401'
       ],
       [
-        remote_url + '?Auth&ACAOrigin=' + host_info['HTTP_ORIGIN'] + '&ignore',
+        remote_url + '?Auth&ACAOrigin=' + host_info['HTTPS_ORIGIN'] + '&ignore',
         true, FAIL, true  // Executed in serial.
       ],
       [
-        remote_url + '?Auth&ACAOrigin=' + host_info['HTTP_ORIGIN'] +
+        remote_url + '?Auth&ACAOrigin=' + host_info['HTTPS_ORIGIN'] +
         '&ACACredentials=true&ignore',
         true, SUCCESS
       ],
@@ -144,26 +144,41 @@ window.addEventListener('message', function(evt) {
       [
         url + '?mode=cors&url=' +
         encodeURIComponent(remote_url + '?ACAOrigin=' +
-                           host_info['HTTP_ORIGIN']),
+                           host_info['HTTPS_ORIGIN']),
         false, SUCCESS
       ],
       [
         url + '?mode=cors&url=' +
         encodeURIComponent(remote_url + '?ACAOrigin=' +
-                           host_info['HTTP_ORIGIN']),
+                           host_info['HTTPS_ORIGIN']),
+        true, FAIL
+      ],
+      [
+        url + '?mode=cors&url=' +
+        encodeURIComponent(remote_url + '?ACAOrigin=' +
+                           host_info['HTTPS_ORIGIN'] +
+                           '&ACACredentials=true'),
         true, SUCCESS
       ],
       [
         remote_url + '?mode=cors&url=' +
         encodeURIComponent(remote_url + '?ACAOrigin=' +
-                           host_info['HTTP_ORIGIN']),
+                           host_info['HTTPS_ORIGIN']),
         false, SUCCESS
       ],
       [
         remote_url +
         '?mode=cors&url=' +
         encodeURIComponent(remote_url + '?ACAOrigin=' +
-                           host_info['HTTP_ORIGIN']),
+                           host_info['HTTPS_ORIGIN']),
+        true, FAIL
+      ],
+      [
+        remote_url +
+        '?mode=cors&url=' +
+        encodeURIComponent(remote_url + '?ACAOrigin=' +
+                           host_info['HTTPS_ORIGIN'] +
+                           '&ACACredentials=true'),
         true, SUCCESS
       ]
     ];

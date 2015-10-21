@@ -10,34 +10,34 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [ "NewTabURL" ];
 
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
+                                   "@mozilla.org/browser/aboutnewtab-service;1",
+                                   "nsIAboutNewTabService");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
+
+const DepecationURL = "https://bugzilla.mozilla.org/show_bug.cgi?id=1204983#c89";
 
 this.NewTabURL = {
-  _url: "about:newtab",
-  _remoteUrl: "about:remote-newtab",
-  _overridden: false,
 
   get: function() {
-    let output = this._url;
-    if (Services.prefs.getBoolPref("browser.newtabpage.remote")) {
-      output = this._remoteUrl;
-    }
-    return output;
+    Deprecated.warning("NewTabURL.get is deprecated, please query aboutNewTabService.newTabURL", DepecationURL);
+    return aboutNewTabService.newTabURL;
   },
 
   get overridden() {
-    return this._overridden;
+    Deprecated.warning("NewTabURL.overridden is deprecated, please query aboutNewTabService.overridden", DepecationURL);
+    return aboutNewTabService.overridden;
   },
 
   override: function(newURL) {
-    this._url = newURL;
-    this._overridden = true;
-    Services.obs.notifyObservers(null, "newtab-url-changed", this._url);
+    Deprecated.warning("NewTabURL.override is deprecated, please set aboutNewTabService.newTabURL", DepecationURL);
+    aboutNewTabService.newTabURL = newURL;
   },
 
   reset: function() {
-    this._url = "about:newtab";
-    this._overridden = false;
-    Services.obs.notifyObservers(null, "newtab-url-changed", this._url);
+    Deprecated.warning("NewTabURL.reset is deprecated, please use aboutNewTabService.resetNewTabURL()", DepecationURL);
+    aboutNewTabService.resetNewTabURL();
   }
 };

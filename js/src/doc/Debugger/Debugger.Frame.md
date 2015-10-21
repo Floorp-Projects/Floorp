@@ -112,6 +112,8 @@ its prototype:
     * `"global"`: a frame running global code (JavaScript that is neither of
       the above).
 
+    * `"module"`: a frame running code at the top level of a module.
+
     * `"debugger"`: a frame for a call to user code invoked by the debugger
       (see the `eval` method below).
 

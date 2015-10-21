@@ -249,12 +249,12 @@ MediaDecoderReader::GetBuffered()
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaDecoderReader::AsyncReadMetadataInternal()
+MediaDecoderReader::AsyncReadMetadata()
 {
   typedef ReadMetadataFailureReason Reason;
 
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("MediaDecoderReader::AsyncReadMetadataInternal");
+  DECODER_LOG("MediaDecoderReader::AsyncReadMetadata");
 
   // Attempt to read the metadata.
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
