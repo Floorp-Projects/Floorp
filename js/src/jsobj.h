@@ -693,18 +693,8 @@ namespace js {
 
 /*** Standard internal methods ********************************************************************
  *
- * The functions below are the fundamental operations on objects.
- *
- * ES6 specifies 14 internal methods that define how objects behave.  The spec
- * is actually quite good on this topic, though you may have to read it a few
- * times. See ES6 draft rev 29 (6 Dec 2014) 6.1.7.2 and 6.1.7.3.
- *
- * When 'obj' is an ordinary object, these functions have boring standard
- * behavior as specified by ES6 draft rev 29 section 9.1; see the section about
- * internal methods in vm/NativeObject.h.
- *
- * Proxies override the behavior of internal methods. So when 'obj' is a proxy,
- * any one of the functions below could do just about anything. See js/Proxy.h.
+ * The functions below are the fundamental operations on objects. See the
+ * comment about "Standard internal methods" in jsapi.h.
  */
 
 /*
@@ -752,8 +742,7 @@ extern bool
 PreventExtensions(JSContext* cx, HandleObject obj);
 
 /*
- * ES6 [[GetOwnPropertyDescriptor]]. Get a description of one of obj's own
- * properties.
+ * ES6 [[GetOwnProperty]]. Get a description of one of obj's own properties.
  *
  * If no such property exists on obj, return true with desc.object() set to
  * null.
@@ -805,8 +794,8 @@ DefineElement(ExclusiveContext* cx, HandleObject obj, uint32_t index, HandleValu
               unsigned attrs = JSPROP_ENUMERATE);
 
 /*
- * ES6 [[HasProperty]]. Set *foundp to true if `id in obj` (that is, if obj has
- * an own or inherited property obj[id]), false otherwise.
+ * ES6 [[Has]]. Set *foundp to true if `id in obj` (that is, if obj has an own
+ * or inherited property obj[id]), false otherwise.
  */
 inline bool
 HasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp);
