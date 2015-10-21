@@ -95,22 +95,6 @@ DeviceStorageRequestChild::
       break;
     }
 
-    case DeviceStorageResponseValue::TAvailableStorageResponse:
-    {
-      DS_LOG_INFO("available %u", mRequest->GetId());
-      AvailableStorageResponse r = aValue;
-      mRequest->Resolve(r.mountState());
-      break;
-    }
-
-    case DeviceStorageResponseValue::TStorageStatusResponse:
-    {
-      DS_LOG_INFO("status %u", mRequest->GetId());
-      StorageStatusResponse r = aValue;
-      mRequest->Resolve(r.storageStatus());
-      break;
-    }
-
     case DeviceStorageResponseValue::TFormatStorageResponse:
     {
       DS_LOG_INFO("format %u", mRequest->GetId());
