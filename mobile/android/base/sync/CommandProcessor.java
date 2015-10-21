@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
@@ -253,9 +252,9 @@ public class CommandProcessor {
       title = args.get(2);
     }
 
-    final Intent sendTabNotificationIntent = new Intent(context, TabReceivedBroadcastReceiver.class);
+    final Intent sendTabNotificationIntent = new Intent(context, TabReceivedService.class);
     sendTabNotificationIntent.setData(Uri.parse(uri));
-    sendTabNotificationIntent.putExtra(TabReceivedBroadcastReceiver.EXTRA_TITLE, title);
-    context.sendBroadcast(sendTabNotificationIntent);
+    sendTabNotificationIntent.putExtra(TabReceivedService.EXTRA_TITLE, title);
+    context.startService(sendTabNotificationIntent);
   }
 }
