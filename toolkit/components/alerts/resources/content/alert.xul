@@ -46,6 +46,9 @@
           <button type="menu" id="alertSettings" tooltiptext="&settings.label;"
                   onclick="event.stopPropagation();">
             <menupopup position="after_end">
+              <menuitem id="doNotDisturbMenuItem"
+                        oncommand="doNotDisturb();"/>
+              <menuseparator/>
               <menuitem id="disableForOriginMenuItem"
                         oncommand="disableForOrigin();"/>
             </menupopup>
