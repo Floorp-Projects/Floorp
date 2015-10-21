@@ -49,9 +49,8 @@ static constexpr Register ExtractTemp1 = r25;
 // register.  In ARM code emission, we do not clobber BaselineTailCallReg
 // since we keep the return address for calls there.
 
-// FloatReg0 must be equal to ReturnFloatReg.
-static constexpr FloatRegister FloatReg0 = { FloatRegisters::v0, FloatRegisters::Single };
-static constexpr FloatRegister FloatReg1 = { FloatRegisters::v1, FloatRegisters::Single };
+static constexpr FloatRegister FloatReg0 = { FloatRegisters::d0, FloatRegisters::Double };
+static constexpr FloatRegister FloatReg1 = { FloatRegisters::d1, FloatRegisters::Double };
 
 } // namespace jit
 } // namespace js
