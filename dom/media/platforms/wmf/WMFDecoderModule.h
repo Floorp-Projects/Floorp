@@ -48,6 +48,7 @@ public:
 
   // Called from any thread, must call init first
   static int GetNumDecoderThreads();
+  static bool LowLatencyMFTEnabled();
 private:
   bool mWMFInitialized;
 };
