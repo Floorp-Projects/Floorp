@@ -330,6 +330,8 @@ class CallObject : public ScopeObject
 
     /* True if this is for a strict mode eval frame. */
     bool isForEval() const {
+        if (is<ModuleEnvironmentObject>())
+            return false;
         MOZ_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
         MOZ_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
                       getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
@@ -341,6 +343,7 @@ class CallObject : public ScopeObject
      * only be called if !isForEval.)
      */
     JSFunction& callee() const {
+        MOZ_ASSERT(!is<ModuleEnvironmentObject>());
         return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
     }
 
