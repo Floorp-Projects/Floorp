@@ -103,9 +103,8 @@
 <!ENTITY settings_title "Settings">
 <!ENTITY pref_category_input_options "Input options">
 <!ENTITY pref_category_advanced "Advanced">
-<!ENTITY pref_category_customize "Customize">
-<!ENTITY pref_category_customize_summary "Home, search, tabs, import">
-<!ENTITY pref_category_customize_alt_summary "Home, search, tabs, open later, import">
+<!ENTITY pref_category_general "General">
+<!ENTITY pref_category_general_summary "Home, language, zoom, full-screen browsing">
 
 <!-- Localization note (pref_category_language) : This is the preferences
      section in which the user picks the locale in which to display Firefox
@@ -203,7 +202,7 @@
 <!ENTITY home_homepage_use_current_tab "Use current tab">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
-<!ENTITY pref_header_customize "Customize">
+<!ENTITY pref_header_general "General">
 <!ENTITY pref_header_display "Display">
 <!ENTITY pref_header_privacy_short "Privacy">
 <!ENTITY pref_header_help "Help">
