@@ -22,6 +22,9 @@
 
 namespace mozilla {
 
+LazyLogModule gMozPromiseLog("MozPromise");
+LazyLogModule gStateWatchingLog("StateWatching");
+
 StaticRefPtr<AbstractThread> sMainThread;
 ThreadLocal<AbstractThread*> AbstractThread::sCurrentThreadTLS;
 
@@ -117,9 +120,6 @@ AbstractThread::MainThread()
 void
 AbstractThread::InitStatics()
 {
-  gMozPromiseLog = PR_NewLogModule("MozPromise");
-  gStateWatchingLog = PR_NewLogModule("StateWatching");
-
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sMainThread);
   nsCOMPtr<nsIThread> mainThread;

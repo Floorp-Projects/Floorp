@@ -86,19 +86,11 @@ using namespace mozilla::tasktracer;
 
 using namespace mozilla;
 
-static PRLogModuleInfo*
-GetThreadLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsThread");
-  }
-  return sLog;
-}
+static LazyLogModule sThreadLog("nsThread");
 #ifdef LOG
 #undef LOG
 #endif
-#define LOG(args) MOZ_LOG(GetThreadLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(sThreadLog, mozilla::LogLevel::Debug, args)
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 

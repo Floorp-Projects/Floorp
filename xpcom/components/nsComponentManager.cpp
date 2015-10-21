@@ -81,7 +81,7 @@
 
 using namespace mozilla;
 
-PRLogModuleInfo* nsComponentManagerLog = nullptr;
+static LazyLogModule nsComponentManagerLog("nsComponentManager");
 
 #if 0 || defined (DEBUG_timeless)
  #define SHOW_DENIED_ON_SHUTDOWN
@@ -368,10 +368,6 @@ nsresult
 nsComponentManagerImpl::Init()
 {
   PR_ASSERT(NOT_INITIALIZED == mStatus);
-
-  if (!nsComponentManagerLog) {
-    nsComponentManagerLog = PR_NewLogModule("nsComponentManager");
-  }
 
   // Initialize our arena
   PL_INIT_ARENA_POOL(&mArena, "ComponentManagerArena", NS_CM_BLOCK_SIZE);

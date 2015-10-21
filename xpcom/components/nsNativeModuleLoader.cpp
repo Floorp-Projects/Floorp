@@ -49,17 +49,8 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo*
-GetNativeModuleLoaderLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("nsNativeModuleLoader");
-  }
-  return sLog;
-}
-
-#define LOG(level, args) MOZ_LOG(GetNativeModuleLoaderLog(), level, args)
+static LazyLogModule sNativeModuleLoaderLog("nsNativeModuleLoader");
+#define LOG(level, args) MOZ_LOG(sNativeModuleLoaderLog, level, args)
 
 nsresult
 nsNativeModuleLoader::Init()
@@ -202,7 +193,7 @@ nsNativeModuleLoader::UnloadLibraries()
   }
 
   for (auto iter = mLibraries.Iter(); !iter.Done(); iter.Next()) {
-    if (MOZ_LOG_TEST(GetNativeModuleLoaderLog(), LogLevel::Debug)) {
+    if (MOZ_LOG_TEST(sNativeModuleLoaderLog, LogLevel::Debug)) {
       nsIHashable* hashedFile = iter.Key();
       nsCOMPtr<nsIFile> file(do_QueryInterface(hashedFile));
 

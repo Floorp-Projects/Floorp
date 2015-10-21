@@ -16,6 +16,7 @@
 #include "TimingStruct.h"
 #include "Http2Push.h"
 #include "mozilla/net/DNS.h"
+#include "ARefBase.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkInterface.h"
@@ -45,6 +46,7 @@ class nsHttpTransaction final : public nsAHttpTransaction
                               , public ATokenBucketEvent
                               , public nsIInputStreamCallback
                               , public nsIOutputStreamCallback
+                              , public ARefBase
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
