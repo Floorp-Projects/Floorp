@@ -123,6 +123,11 @@ class ModuleCompiler
     bool finishGeneratingFunction(AsmFunction& func, CodeGenerator& codegen,
                                   const AsmJSFunctionLabels& labels)
     {
+        // If we have hit OOM then invariants which we assert below may not
+        // hold, so abort now.
+        if (masm().oom())
+            return false;
+
         // Code range
         unsigned line = func.lineno();
         unsigned column = func.column();

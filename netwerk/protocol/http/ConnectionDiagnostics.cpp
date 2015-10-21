@@ -28,7 +28,7 @@ nsHttpConnectionMgr::PrintDiagnostics()
 }
 
 void
-nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, void *)
+nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 

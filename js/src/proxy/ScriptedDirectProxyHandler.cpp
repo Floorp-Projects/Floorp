@@ -1242,10 +1242,8 @@ js::proxy(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_FUNCTION, "Proxy");
+    if (!ThrowIfNotConstructing(cx, args, "Proxy"))
         return false;
-    }
 
     return NewScriptedProxy(cx, args, "Proxy");
 }
