@@ -122,7 +122,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
-  "resource:///modules/devtools/client/shared/Parser.jsm");
+  "resource://gre/modules/devtools/shared/Parser.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
