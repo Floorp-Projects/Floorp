@@ -4,8 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
-                  android:title="@string/pref_category_display"
+                  android:title="@string/pref_category_accessibility"
                   android:enabled="false">
 
     <org.mozilla.gecko.preferences.FontSizePreference

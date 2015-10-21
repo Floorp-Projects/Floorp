@@ -32,20 +32,19 @@
                android:value="preferences_search"/>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_display"
-                      android:summary="@string/pref_category_display_summary"
-                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-                      android:key="android.not_a_preference.display.enabled" >
-        <extra android:name="resource"
-               android:value="preferences_display" />
-    </PreferenceScreen>
-
-
     <PreferenceScreen android:title="@string/pref_category_privacy_short"
                       android:summary="@string/pref_category_privacy_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_privacy" />
+    </PreferenceScreen>
+
+    <PreferenceScreen android:title="@string/pref_category_accessibility"
+                      android:summary="@string/pref_category_accessibility_summary"
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+                      android:key="android.not_a_preference.accessibility.enabled" >
+        <extra android:name="resource"
+               android:value="preferences_accessibility" />
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_language"

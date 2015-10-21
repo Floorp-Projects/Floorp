@@ -40,17 +40,6 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_display"
-                      android:summary="@string/pref_category_display_summary" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_display" />
-        </intent>
-    </PreferenceScreen>
-
     <PreferenceScreen android:title="@string/pref_category_privacy_short"
                       android:summary="@string/pref_category_privacy_summary" >
         <intent android:action="android.intent.action.VIEW"
@@ -59,6 +48,17 @@
             <extra
                 android:name="resource"
                 android:value="preferences_privacy" />
+        </intent>
+    </PreferenceScreen>
+
+    <PreferenceScreen android:title="@string/pref_category_accessibility"
+                      android:summary="@string/pref_category_accessibility_summary" >
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@string/android_package_name"
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                    android:name="resource"
+                    android:value="preferences_accessibility" />
         </intent>
     </PreferenceScreen>
 
