@@ -36,6 +36,8 @@ public:
     return false;
   }
 
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) override;
   virtual RefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
@@ -44,7 +46,6 @@ public:
   virtual bool IsMediaSeekable() override;
 
 private:
-  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
   bool ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead = nullptr);
   bool LoadRIFFChunk();
   bool LoadFormatChunk(uint32_t aChunkSize);

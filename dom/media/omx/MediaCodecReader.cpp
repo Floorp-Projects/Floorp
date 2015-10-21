@@ -660,7 +660,7 @@ MediaCodecReader::ParseDataSegment(const char* aBuffer,
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaCodecReader::AsyncReadMetadataInternal()
+MediaCodecReader::AsyncReadMetadata()
 {
   MOZ_ASSERT(OnTaskQueue());
 

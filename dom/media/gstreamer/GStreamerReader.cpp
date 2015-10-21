@@ -360,8 +360,8 @@ GStreamerReader::GetDataLength()
   return streamLen - mDataOffset;
 }
 
-nsresult
-GStreamerReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
+nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
+                                       MetadataTags** aTags)
 {
   MOZ_ASSERT(OnTaskQueue());
   nsresult ret = NS_OK;

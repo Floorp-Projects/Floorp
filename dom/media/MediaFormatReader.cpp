@@ -243,7 +243,7 @@ MediaFormatReader::IsWaitingOnCDMResource() {
 }
 
 RefPtr<MediaDecoderReader::MetadataPromise>
-MediaFormatReader::AsyncReadMetadataInternal()
+MediaFormatReader::AsyncReadMetadata()
 {
   MOZ_ASSERT(OnTaskQueue());
 
