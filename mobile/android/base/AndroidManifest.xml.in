@@ -499,7 +499,7 @@
 #include ../services/manifests/HealthReportAndroidManifest_services.xml.in
 #include ../services/manifests/SyncAndroidManifest_services.xml.in
 
-        <receiver android:name="org.mozilla.gecko.sync.TabReceivedBroadcastReceiver"
+        <service android:name="org.mozilla.gecko.sync.TabReceivedService"
                   android:exported="false"/>
 
 #ifdef MOZ_ANDROID_SEARCH_ACTIVITY
