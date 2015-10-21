@@ -106,6 +106,12 @@
             "url": "/_mozilla/service-workers/service-worker/extendable-event-waituntil.https.html"
           }
         ],
+        "service-workers/service-worker/fetch-canvas-tainting-cache.https.html": [
+          {
+            "path": "service-workers/service-worker/fetch-canvas-tainting-cache.https.html",
+            "url": "/_mozilla/service-workers/service-worker/fetch-canvas-tainting-cache.https.html"
+          }
+        ],
         "service-workers/service-worker/fetch-canvas-tainting.https.html": [
           {
             "path": "service-workers/service-worker/fetch-canvas-tainting.https.html",

@@ -72,7 +72,7 @@ public:
                            nsICacheEntry* aEntry);
 
   NS_IMETHOD ResetInterception() override;
-  NS_IMETHOD FinishSynthesizedResponse() override;
+  NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
   NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
@@ -100,7 +100,7 @@ public:
                             nsIStreamListener* aListener);
 
   NS_IMETHOD ResetInterception() override;
-  NS_IMETHOD FinishSynthesizedResponse() override;
+  NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
   NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
