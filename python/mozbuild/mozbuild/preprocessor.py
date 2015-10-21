@@ -785,6 +785,7 @@ def preprocess(includes=[sys.stdin], defines={},
     for f in includes:
         with open(f, 'rU') as input:
             pp.processFile(input=input, output=output)
+    return pp.includes
 
 
 # Keep this module independently executable.
