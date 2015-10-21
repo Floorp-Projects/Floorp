@@ -3529,8 +3529,10 @@ Widgets.Stacktrace.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     let result = this.element = this.document.createElementNS(XHTML_NS, "ul");
     result.className = "stacktrace devtools-monospace";
 
-    for (let frame of this.stacktrace) {
-      result.appendChild(this._renderFrame(frame));
+    if (this.stacktrace) {
+      for (let frame of this.stacktrace) {
+        result.appendChild(this._renderFrame(frame));
+      }
     }
 
     return this;
@@ -3549,15 +3551,22 @@ Widgets.Stacktrace.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
   {
     let fn = this.document.createElementNS(XHTML_NS, "span");
     fn.className = "function";
+
+    let asyncCause = "";
+    if (frame.asyncCause) {
+      asyncCause =
+        l10n.getFormatStr("stacktrace.asyncStack", [frame.asyncCause]) + " ";
+    }
+
     if (frame.functionName) {
       let span = this.document.createElementNS(XHTML_NS, "span");
       span.className = "cm-variable";
-      span.textContent = frame.functionName;
+      span.textContent = asyncCause + frame.functionName;
       fn.appendChild(span);
       fn.appendChild(this.document.createTextNode("()"));
     } else {
       fn.classList.add("cm-comment");
-      fn.textContent = l10n.getStr("stacktrace.anonymousFunction");
+      fn.textContent = asyncCause + l10n.getStr("stacktrace.anonymousFunction");
     }
 
     let location = this.output.owner.createLocationNode({url: frame.filename,
