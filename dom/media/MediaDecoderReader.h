@@ -106,18 +106,6 @@ public:
       this, &MediaDecoderReader::ReleaseMediaResourcesInternal);
     OwnerThread()->Dispatch(r.forget());
   }
-
-  void DisableHardwareAcceleration()
-  {
-    if (OnTaskQueue()) {
-      DisableHardwareAccelerationInternal();
-      return;
-    }
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
-      this, &MediaDecoderReader::DisableHardwareAccelerationInternal);
-    OwnerThread()->Dispatch(r.forget());
-  }
-
   // Breaks reference-counted cycles. Called during shutdown.
   // WARNING: If you override this, you must call the base implementation
   // in your override.
@@ -266,7 +254,6 @@ public:
 
 private:
   virtual void ReleaseMediaResourcesInternal() {}
-  virtual void DisableHardwareAccelerationInternal() {}
 
 protected:
   friend class TrackBuffer;
@@ -346,6 +333,8 @@ public:
   // Returns true if this decoder reader uses hardware accelerated video
   // decoding.
   virtual bool VideoIsHardwareAccelerated() const { return false; }
+
+  virtual void DisableHardwareAcceleration() {}
 
   TimedMetadataEventSource& TimedMetadataEvent() {
     return mTimedMetadataEvent;
