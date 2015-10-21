@@ -261,11 +261,13 @@ ModuleObject::isInstance(HandleValue value)
 }
 
 /* static */ ModuleObject*
-ModuleObject::create(ExclusiveContext* cx)
+ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
 {
     Rooted<ModuleObject*> self(cx, NewBuiltinClassInstance<ModuleObject>(cx, TenuredObject));
     if (!self)
         return nullptr;
+
+    self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(enclosingStaticScope));
 
     IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
     if (!bindings || !bindings->init()) {
@@ -273,8 +275,7 @@ ModuleObject::create(ExclusiveContext* cx)
         return nullptr;
     }
 
-    self->setReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
-
+    self->initReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
     return self;
 }
 
@@ -305,7 +306,6 @@ ModuleObject::importBindings()
 void
 ModuleObject::init(HandleScript script)
 {
-    MOZ_ASSERT(!script->enclosingStaticScope());
     initReservedSlot(ScriptSlot, PrivateValue(script));
     initReservedSlot(EvaluatedSlot, BooleanValue(false));
 }
@@ -359,10 +359,7 @@ ModuleObject::initialEnvironment() const
 JSObject*
 ModuleObject::enclosingStaticScope() const
 {
-    // A ModuleObject is always the last thing on the scope chain before the global.
-    // TODO: This may no longer be true when we get top-level lexical scopes.
-    MOZ_ASSERT_IF(hasScript(), !script()->enclosingStaticScope());
-    return nullptr;
+    return getReservedSlot(StaticScopeSlot).toObjectOrNull();
 }
 
 /* static */ void
@@ -403,11 +400,14 @@ ModuleObject::setEvaluated()
     setReservedSlot(EvaluatedSlot, TrueHandleValue);
 }
 
-bool
-ModuleObject::evaluate(JSContext* cx, MutableHandleValue rval)
+/* static */ bool
+ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval)
 {
-    RootedScript script(cx, this->script());
-    return JS_ExecuteScript(cx, script, rval);
+    RootedScript script(cx, self->script());
+    RootedModuleEnvironmentObject scope(cx, self->environment());
+    MOZ_ASSERT(scope);
+
+    return Execute(cx, script, *scope, rval.address());
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluated, EvaluatedSlot)

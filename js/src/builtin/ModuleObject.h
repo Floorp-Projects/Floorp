@@ -17,10 +17,14 @@
 namespace js {
 
 class ModuleEnvironmentObject;
+class ModuleObject;
 
 namespace frontend {
 class ParseNode;
 } /* namespace frontend */
+
+typedef Rooted<ModuleObject*> RootedModuleObject;
+typedef Handle<ModuleObject*> HandleModuleObject;
 
 class ImportEntryObject : public NativeObject
 {
@@ -86,6 +90,7 @@ class ModuleObject : public NativeObject
     enum
     {
         ScriptSlot = 0,
+        StaticScopeSlot,
         InitialEnvironmentSlot,
         EnvironmentSlot,
         EvaluatedSlot,
@@ -102,7 +107,7 @@ class ModuleObject : public NativeObject
 
     static bool isInstance(HandleValue value);
 
-    static ModuleObject* create(ExclusiveContext* cx);
+    static ModuleObject* create(ExclusiveContext* cx, HandleObject enclosingStaticScope);
     void init(HandleScript script);
     void setInitialEnvironment(Handle<ModuleEnvironmentObject*> initialEnvironment);
     void initImportExportData(HandleArrayObject requestedModules,
@@ -112,6 +117,7 @@ class ModuleObject : public NativeObject
                               HandleArrayObject starExportEntries);
 
     JSScript* script() const;
+    JSObject* enclosingStaticScope() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
     bool evaluated() const;
@@ -120,13 +126,12 @@ class ModuleObject : public NativeObject
     ArrayObject& localExportEntries() const;
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
-    JSObject* enclosingStaticScope() const;
     IndirectBindingMap& importBindings();
 
     void createEnvironment();
 
     void setEvaluated();
-    bool evaluate(JSContext*cx, MutableHandleValue rval);
+    static bool evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValue rval);
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
@@ -134,9 +139,6 @@ class ModuleObject : public NativeObject
 
     bool hasScript() const;
 };
-
-typedef Rooted<ModuleObject*> RootedModuleObject;
-typedef Handle<ModuleObject*> HandleModuleObject;
 
 // Process a module's parse tree to collate the import and export data used when
 // creating a ModuleObject.

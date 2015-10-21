@@ -247,12 +247,8 @@ InterpreterFrame::prologue(JSContext* cx)
 
     AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 
-    if (isModuleFrame()) {
-        RootedModuleEnvironmentObject scope(cx, &script->module()->initialEnvironment());
-        MOZ_ASSERT(&scope->enclosingScope() == scopeChain());
-        pushOnScopeChain(*scope);
+    if (isModuleFrame())
         return probes::EnterScript(cx, script, nullptr, this);
-    }
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
     if (fun()->needsCallObject() && !initFunctionScopeObjects(cx))
