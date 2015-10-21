@@ -8,7 +8,7 @@ var tabs = require('sdk/tabs');
 var { notify } = require('sdk/notifications');
 var { ActionButton, ToggleButton } = require('sdk/ui');
 
-var icon = 'chrome://mozapps/skin/extensions/extensionGeneric.png';
+var icon = 'chrome://mozapps/skin/extensions/extensionGeneric.svg';
 exports.icon = icon;
 
 // your basic action button

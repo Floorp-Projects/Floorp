@@ -8,22 +8,6 @@
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities-native");
 }
 
-.warning-icon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=menu");
-  height: 16px;
-}
-
-.error-icon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
-  height: 16px;
-}
-
-.pending-icon,
-.info-icon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
-  height: 16px;
-}
-
 .sorter[checkState="1"] .button-icon {
   display: -moz-box;
   list-style-image: url("moz-icon://stock/gtk-sort-descending?size=16");
