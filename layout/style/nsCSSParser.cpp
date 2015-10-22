@@ -168,6 +168,12 @@ public:
                      bool* aChanged,
                      bool aIsImportant,
                      bool aIsSVGMode);
+  void ParseLonghandProperty(const nsCSSProperty aPropID,
+                             const nsAString& aPropValue,
+                             nsIURI* aSheetURL,
+                             nsIURI* aBaseURL,
+                             nsIPrincipal* aSheetPrincipal,
+                             nsCSSValue& aValue);
 
   void ParseMediaList(const nsSubstring& aBuffer,
                       nsIURI* aURL, // for error reporting
@@ -1754,6 +1760,33 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
 
   ReleaseScanner();
   return rv;
+}
+
+void
+CSSParserImpl::ParseLonghandProperty(const nsCSSProperty aPropID,
+                                     const nsAString& aPropValue,
+                                     nsIURI* aSheetURL,
+                                     nsIURI* aBaseURL,
+                                     nsIPrincipal* aSheetPrincipal,
+                                     nsCSSValue& aValue)
+{
+  MOZ_ASSERT(aPropID < eCSSProperty_COUNT_no_shorthands,
+             "ParseLonghandProperty must only take a longhand property");
+
+  Declaration declaration;
+  declaration.InitializeEmpty();
+
+  bool changed;
+  ParseProperty(aPropID, aPropValue, aSheetURL, aBaseURL, aSheetPrincipal,
+                &declaration, &changed,
+                /* aIsImportant */ false,
+                /* aIsSVGMode */ false);
+
+  if (changed) {
+    aValue = *declaration.GetNormalBlock()->ValueFor(aPropID);
+  } else {
+    aValue.Reset();
+  }
 }
 
 void
@@ -16094,6 +16127,19 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
     ParseProperty(aPropID, aPropValue, aSheetURI, aBaseURI,
                   aSheetPrincipal, aDeclaration, aChanged,
                   aIsImportant, aIsSVGMode);
+}
+
+void
+nsCSSParser::ParseLonghandProperty(const nsCSSProperty aPropID,
+                                   const nsAString&    aPropValue,
+                                   nsIURI*             aSheetURI,
+                                   nsIURI*             aBaseURI,
+                                   nsIPrincipal*       aSheetPrincipal,
+                                   nsCSSValue&         aResult)
+{
+  static_cast<CSSParserImpl*>(mImpl)->
+    ParseLonghandProperty(aPropID, aPropValue, aSheetURI, aBaseURI,
+                          aSheetPrincipal, aResult);
 }
 
 void
