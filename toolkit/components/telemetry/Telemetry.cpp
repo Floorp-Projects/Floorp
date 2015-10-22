@@ -2910,6 +2910,9 @@ CreateJSHangAnnotations(JSContext* cx, const HangAnnotationsVector& annotations)
   if (!annotationsArray) {
     return nullptr;
   }
+  // We keep track of the annotations we reported in this hash set, so we can
+  // discard duplicated ones.
+  nsTHashtable<nsStringHashKey> reportedAnnotations;
   size_t annotationIndex = 0;
   for (const HangAnnotationsPtr *i = annotations.begin(), *e = annotations.end();
        i != e; ++i) {
@@ -2918,6 +2921,18 @@ CreateJSHangAnnotations(JSContext* cx, const HangAnnotationsVector& annotations)
       continue;
     }
     const HangAnnotationsPtr& curAnnotations = *i;
+    // Build a key to index the current annotations in our hash set.
+    nsAutoString annotationsKey;
+    nsresult rv = ComputeAnnotationsKey(curAnnotations, annotationsKey);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+    // Check if the annotations are in the set. If that's the case, don't double report.
+    if (reportedAnnotations.GetEntry(annotationsKey)) {
+      continue;
+    }
+    // If not, report them.
+    reportedAnnotations.PutEntry(annotationsKey);
     UniquePtr<HangAnnotations::Enumerator> annotationsEnum =
       curAnnotations->GetEnumerator();
     if (!annotationsEnum) {
