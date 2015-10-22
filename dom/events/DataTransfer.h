@@ -246,6 +246,10 @@ protected:
   // clipboard for a given index.
   void FillInExternalData(TransferItem& aItem, uint32_t aIndex);
 
+
+  nsresult SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData, uint32_t aIndex,
+                             nsIPrincipal* aSubjectPrincipal);
+
   friend class ContentParent;
   void FillAllExternalData();
 
