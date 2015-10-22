@@ -52,6 +52,21 @@ template<class Impl>
 constexpr JNINativeMethod AlarmReceiver::Natives<Impl>::methods[];
 
 template<class Impl>
+class GeckoEditable::Natives : public mozilla::jni::NativeImpl<GeckoEditable, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnKeyEvent_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnKeyEvent_t, Impl>
+                ::template Wrap<&Impl::OnKeyEvent>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod GeckoEditable::Natives<Impl>::methods[];
+
+template<class Impl>
 class GeckoJavaSampler::Natives : public mozilla::jni::NativeImpl<GeckoJavaSampler, Impl>
 {
 public:

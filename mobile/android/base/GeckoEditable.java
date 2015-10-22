@@ -18,6 +18,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
@@ -43,7 +44,7 @@ import android.view.KeyEvent;
    The field mText contains the actual underlying
    SpannableStringBuilder/Editable that contains our text.
 */
-final class GeckoEditable
+final class GeckoEditable extends JNIObject
         implements InvocationHandler, Editable,
                    GeckoEditableClient, GeckoEditableListener, GeckoEventListener {
 
@@ -74,6 +75,38 @@ final class GeckoEditable
     private boolean mGeckoFocused; // Used by Gecko thread
     private volatile boolean mSuppressCompositions;
     private volatile boolean mSuppressKeyUp;
+
+    @WrapForJNI
+    private native void onKeyEvent(int action, int keyCode, int scanCode, int metaState,
+                                   long time, int unicodeChar, int baseUnicodeChar,
+                                   int domPrintableKeyValue, int repeatCount, int flags,
+                                   boolean isSynthesizedImeKey);
+
+    private void onKeyEvent(KeyEvent event, int action, int savedMetaState,
+                            boolean isSynthesizedImeKey) {
+        // Use a separate action argument so we can override the key's original action,
+        // e.g. change ACTION_MULTIPLE to ACTION_DOWN. That way we don't have to allocate
+        // a new key event just to change its action field.
+        //
+        // Normally we expect event.getMetaState() to reflect the current meta-state; however,
+        // some software-generated key events may not have event.getMetaState() set, e.g. key
+        // events from Swype. Therefore, it's necessary to combine the key's meta-states
+        // with the meta-states that we keep separately in KeyListener
+        final int metaState = event.getMetaState() | savedMetaState;
+        final int unmodifiedMetaState = metaState &
+                ~(KeyEvent.META_ALT_MASK | KeyEvent.META_CTRL_MASK | KeyEvent.META_META_MASK);
+        final int unicodeChar = event.getUnicodeChar(metaState);
+        final int domPrintableKeyValue =
+                unicodeChar >= ' '               ? unicodeChar :
+                unmodifiedMetaState != metaState ? event.getUnicodeChar(unmodifiedMetaState) :
+                                                   0;
+        onKeyEvent(action, event.getKeyCode(), event.getScanCode(),
+                   metaState, event.getEventTime(), unicodeChar,
+                   // e.g. for Ctrl+A, Android returns 0 for unicodeChar,
+                   // but Gecko expects 'a', so we return that in baseUnicodeChar.
+                   event.getUnicodeChar(0), domPrintableKeyValue, event.getRepeatCount(),
+                   event.getFlags(), isSynthesizedImeKey);
+    }
 
     /* An action that alters the Editable
 
@@ -293,7 +326,8 @@ final class GeckoEditable
                 if (DEBUG) {
                     Log.d(LOGTAG, "sending: " + event);
                 }
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEKeyEvent(event));
+                onKeyEvent(event, event.getAction(),
+                           /* metaState */ 0, /* isSynthesizedImeKey */ true);
             }
         }
 
@@ -367,6 +401,10 @@ final class GeckoEditable
                 PROXY_INTERFACES, this);
 
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
+    }
+
+    @Override
+    protected void disposeNative() {
     }
 
     @WrapForJNI
@@ -579,20 +617,20 @@ final class GeckoEditable
     // GeckoEditableClient interface
 
     @Override
-    public void sendEvent(final GeckoEvent event) {
+    public void sendKeyEvent(final KeyEvent event, int action, int metaState) {
         if (DEBUG) {
             assertOnIcThread();
-            Log.d(LOGTAG, "sendEvent(" + event + ")");
+            Log.d(LOGTAG, "sendKeyEvent(" + event + ", " + action + ", " + metaState + ")");
         }
         /*
            We are actually sending two events to Gecko here,
-           1. Event from the event parameter (key event, etc.)
+           1. Event from the event parameter (key event)
            2. Sync event from the mActionQueue.offer call
-           The first event is a normal GeckoEvent that does not reply back to us,
+           The first event is a normal event that does not reply back to us,
            the second sync event will have a reply, during which we see that there is a pending
            event-type action, and update the selection/composition/etc. accordingly.
         */
-        GeckoAppShell.sendEventToGecko(event);
+        onKeyEvent(event, action, metaState, /* isSynthesizedImeKey */ false);
         mActionQueue.offer(new Action(Action.TYPE_EVENT));
     }
 
