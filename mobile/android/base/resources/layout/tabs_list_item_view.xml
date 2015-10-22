@@ -47,6 +47,7 @@
                   android:gravity="center_vertical"
                   android:singleLine="false"
                   android:maxLines="4"
+                  android:drawablePadding="6dp"
                   android:duplicateParentState="true"/>
 
     </LinearLayout>
