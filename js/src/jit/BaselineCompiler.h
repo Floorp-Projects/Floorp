@@ -198,7 +198,6 @@ namespace jit {
     _(JSOP_FINALYIELDRVAL)     \
     _(JSOP_RESUME)             \
     _(JSOP_CALLEE)             \
-    _(JSOP_GETRVAL)            \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
     _(JSOP_RETURN)             \
