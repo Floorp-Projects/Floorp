@@ -5747,6 +5747,13 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, ptrdiff_t top)
 
         if (!emitTree(forHead->pn_kid2))
             return false;
+    } else if (!forHead->pn_kid3) {
+        // If there is no condition clause and no update clause, mark
+        // the loop-ending "goto" with the location of the "for".
+        // This ensures that the debugger will stop on each loop
+        // iteration.
+        if (!updateSourceCoordNotes(pn->pn_pos.begin))
+            return false;
     }
 
     /* Set the first note offset so we can find the loop condition. */
