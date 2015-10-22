@@ -736,6 +736,9 @@ auto GeckoEditable::New() -> GeckoEditable::LocalRef
     return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr);
 }
 
+constexpr char GeckoEditable::DisposeNative_t::name[];
+constexpr char GeckoEditable::DisposeNative_t::signature[];
+
 constexpr char GeckoEditable::NotifyIME_t::name[];
 constexpr char GeckoEditable::NotifyIME_t::signature[];
 
@@ -750,6 +753,14 @@ constexpr char GeckoEditable::NotifyIMEContext_t::signature[];
 auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3) const -> void
 {
     return mozilla::jni::Method<NotifyIMEContext_t>::Call(this, nullptr, a0, a1, a2, a3);
+}
+
+constexpr char GeckoEditable::OnDestroy_t::name[];
+constexpr char GeckoEditable::OnDestroy_t::signature[];
+
+auto GeckoEditable::OnDestroy() const -> void
+{
+    return mozilla::jni::Method<OnDestroy_t>::Call(this, nullptr);
 }
 
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::name[];
