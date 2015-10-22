@@ -77,6 +77,7 @@
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
 #include "WidgetUtils.h"
+#include "nsIPresentationService.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "mozilla/dom/MediaDevices.h"
@@ -2618,6 +2619,64 @@ Navigator::HasTVSupport(JSContext* aCx, JSObject* aGlobal)
 
   // Only support TV Manager API for certified apps for now.
   return status == nsIPrincipal::APP_STATUS_CERTIFIED;
+}
+
+/* static */
+bool
+Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  JS::Rooted<JSObject*> global(aCx, aGlobal);
+
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(global);
+  if (NS_WARN_IF(!win)) {
+    return false;
+  }
+
+  // Grant access if it has the permission.
+  if (CheckPermission(win, "presentation")) {
+    return true;
+  }
+
+  // Grant access to browser receiving pages and their same-origin iframes. (App
+  // pages should be controlled by "presentation" permission in app manifests.)
+  mozilla::dom::ContentChild* cc =
+    mozilla::dom::ContentChild::GetSingleton();
+  if (!cc || !cc->IsForBrowser()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMWindow> top;
+  nsresult rv = win->GetTop(getter_AddRefs(top));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(win);
+  nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
+  if (!sop || !topSop) {
+    return false;
+  }
+
+  nsIPrincipal* principal = sop->GetPrincipal();
+  nsIPrincipal* topPrincipal = topSop->GetPrincipal();
+  if (!principal || !topPrincipal || !principal->Subsumes(topPrincipal)) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> piTop = do_QueryInterface(top);
+  if (!piTop || !(piTop = piTop->GetCurrentInnerWindow())) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPresentationService> presentationService =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!presentationService)) {
+    return false;
+  }
+
+  nsAutoString sessionId;
+  presentationService->GetExistentSessionIdAtLaunch(piTop->WindowID(), sessionId);
+  return !sessionId.IsEmpty();
 }
 
 /* static */
