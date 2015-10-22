@@ -256,6 +256,7 @@ struct ProxyArg<Ref<T>>
 
 template<typename T> struct ProxyArg<const T&> : ProxyArg<T> {};
 template<> struct ProxyArg<Param<String>> : ProxyArg<Ref<String>> {};
+template<class T> struct ProxyArg<LocalRef<T>> : ProxyArg<Ref<T>> {};
 
 // ProxyNativeCall implements the functor object that is passed to
 // UsesNativeCallProxy::OnNativeCall
@@ -515,20 +516,19 @@ public:
     }
 
     // Overload for DisposeNative
-    template<void (NativeImpl<Owner, Impl>::*Method) (const typename Owner::LocalRef&)>
+    template<void (*DisposeNative) (const typename Owner::LocalRef&)>
     static MOZ_JNICALL void Wrap(JNIEnv* env, jobject instance)
     {
         if (mozilla::IsBaseOf<UsesNativeCallProxy, Impl>::value) {
-            Dispatch(ProxyNativeCall<Impl, Owner, /* IsStatic */ false,
-                    /* HasThisArg */ true>(Method, env, instance));
-            return;
-        }
-        Impl* const impl = NativePtr<Impl>::Get(env, instance);
-        if (!impl) {
+            auto cls = ClassObject::LocalRef::Adopt(
+                    env, env->GetObjectClass(instance));
+            Dispatch(ProxyNativeCall<Impl, Owner, /* IsStatic */ true,
+                    /* HasThisArg */ false, const typename Owner::LocalRef&>(
+                    DisposeNative, env, cls.Get(), instance));
             return;
         }
         auto self = Owner::LocalRef::Adopt(env, instance);
-        (impl->*Method)(self);
+        (Impl::DisposeNative)(self);
         self.Forget();
     }
 };
@@ -678,13 +678,13 @@ protected:
         return NativePtr<Impl>::Get(instance);
     }
 
+    static void DisposeNative(const typename Cls::LocalRef& instance) {
+        NativePtr<Impl>::Clear(instance);
+    }
+
     NativeImpl() {
         // Initialize on creation if not already initialized.
         Init();
-    }
-
-    void DisposeNative(const typename Cls::LocalRef& instance) {
-        NativePtr<Impl>::Clear(instance);
     }
 };
 
