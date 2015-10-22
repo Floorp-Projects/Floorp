@@ -65,8 +65,7 @@ function redirect_fetch_test(t, test) {
       };
       frame.contentWindow.postMessage({
         url: url,
-        request_init: test.request_init,
-        redirect_dest: test.redirect_dest,
+        request_init: test.request_init
       }, '*', [channel.port2]);
     });
 
