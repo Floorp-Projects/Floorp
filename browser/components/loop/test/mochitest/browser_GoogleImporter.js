@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {GoogleImporter} = Cu.import("resource:///modules/loop/GoogleImporter.jsm", {});
+const { GoogleImporter } = Cu.import("resource:///modules/loop/GoogleImporter.jsm", {});
 
 var importer = new GoogleImporter();
 

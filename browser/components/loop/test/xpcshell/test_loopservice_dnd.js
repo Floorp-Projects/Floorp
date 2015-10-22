@@ -42,7 +42,7 @@ function run_test() {
   });
   loopServer.registerPathHandler("/calls", (request, response) => {
     response.setStatusLine(null, 200, "OK");
-    response.write(JSON.stringify({calls: [{callId: 4444333221, websocketToken: "0deadbeef0"}]}));
+    response.write(JSON.stringify({ calls: [{ callId: 4444333221, websocketToken: "0deadbeef0" }] }));
     response.processAsync();
     response.finish();
   });

@@ -22,7 +22,7 @@ add_task(function* request_with_unicode() {
     response.finish();
   });
 
-  yield MozLoopServiceInternal.hawkRequestInternal(LOOP_SESSION_TYPE.GUEST, "/fake", "POST", {name: unicodeName}).then(
+  yield MozLoopServiceInternal.hawkRequestInternal(LOOP_SESSION_TYPE.GUEST, "/fake", "POST", { name: unicodeName }).then(
     () => Assert.ok(true, "Should have accepted"),
     () => Assert.ok(false, "Should have accepted"));
 });

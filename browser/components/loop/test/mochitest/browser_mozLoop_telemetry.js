@@ -17,7 +17,7 @@ add_task(loadLoopPanel);
 add_task(function* test_initialize() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
 });
