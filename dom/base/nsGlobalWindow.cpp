@@ -191,6 +191,7 @@
 #include "mozilla/dom/VRDevice.h"
 
 #include "nsRefreshDriver.h"
+#include "Layers.h"
 
 #include "mozilla/AddonPathService.h"
 #include "mozilla/BasePrincipal.h"

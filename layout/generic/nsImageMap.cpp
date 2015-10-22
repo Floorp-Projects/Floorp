@@ -20,6 +20,7 @@
 #include "nsIScriptError.h"
 #include "nsIStringBundle.h"
 #include "nsContentUtils.h"
+#include "ImageLayers.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

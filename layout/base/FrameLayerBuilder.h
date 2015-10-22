@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsRegion.h"
 #include "nsIFrame.h"
-#include "ImageLayers.h"
 #include "DisplayItemClip.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "LayerState.h"
@@ -29,6 +28,7 @@ class ContainerLayer;
 class LayerManager;
 class BasicLayerManager;
 class PaintedLayer;
+class ImageLayer;
 } // namespace layers
 
 namespace gfx {
