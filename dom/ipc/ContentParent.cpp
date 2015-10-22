@@ -3183,7 +3183,8 @@ ContentParent::Observe(nsISupports* aSubject,
     else if (!strcmp(aTopic, "alertfinished") ||
              !strcmp(aTopic, "alertclickcallback") ||
              !strcmp(aTopic, "alertshow") ||
-             !strcmp(aTopic, "alertdisablecallback")) {
+             !strcmp(aTopic, "alertdisablecallback") ||
+             !strcmp(aTopic, "alertsettingscallback")) {
         if (!SendNotifyAlertsObserver(nsDependentCString(aTopic),
                                       nsDependentString(aData)))
             return NS_ERROR_NOT_AVAILABLE;
@@ -4273,6 +4274,20 @@ ContentParent::RecvLoadURIExternal(const URIParams& uri)
 }
 
 bool
+ContentParent::HasNotificationPermission(const IPC::Principal& aPrincipal)
+{
+#ifdef MOZ_CHILD_PERMISSIONS
+    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
+                                                   "desktop-notification");
+    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+        return false;
+    }
+#endif /* MOZ_CHILD_PERMISSIONS */
+
+    return true;
+}
+
+bool
 ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                          const nsString& aText, const bool& aTextClickable,
                                          const nsString& aCookie, const nsString& aName,
@@ -4281,13 +4296,9 @@ ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsStri
                                          const IPC::Principal& aPrincipal,
                                          const bool& aInPrivateBrowsing)
 {
-#ifdef MOZ_CHILD_PERMISSIONS
-    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
-                                                   "desktop-notification");
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    if (!HasNotificationPermission(aPrincipal)) {
         return true;
     }
-#endif /* MOZ_CHILD_PERMISSIONS */
 
     nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));
     if (sysAlerts) {
@@ -4302,13 +4313,9 @@ bool
 ContentParent::RecvCloseAlert(const nsString& aName,
                               const IPC::Principal& aPrincipal)
 {
-#ifdef MOZ_CHILD_PERMISSIONS
-    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
-                                                   "desktop-notification");
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    if (!HasNotificationPermission(aPrincipal)) {
         return true;
     }
-#endif
 
     nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));
     if (sysAlerts) {
@@ -4321,15 +4328,18 @@ ContentParent::RecvCloseAlert(const nsString& aName,
 bool
 ContentParent::RecvDisableNotifications(const IPC::Principal& aPrincipal)
 {
-#ifdef MOZ_CHILD_PERMISSIONS
-    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
-                                                   "desktop-notification");
-    if (permission != nsIPermissionManager::ALLOW_ACTION) {
-        return true;
+    if (HasNotificationPermission(aPrincipal)) {
+        unused << Notification::RemovePermission(aPrincipal);
     }
-#endif
+    return true;
+}
 
-    unused << Notification::RemovePermission(aPrincipal);
+bool
+ContentParent::RecvOpenNotificationSettings(const IPC::Principal& aPrincipal)
+{
+    if (HasNotificationPermission(aPrincipal)) {
+        unused << Notification::OpenSettings(aPrincipal);
+    }
     return true;
 }
 
