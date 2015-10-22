@@ -56,12 +56,22 @@ CopierCallbacks::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsre
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(PresentationSessionTransport,
-                  nsIPresentationSessionTransport,
-                  nsITransportEventSink,
-                  nsIInputStreamCallback,
-                  nsIStreamListener,
-                  nsIRequestObserver)
+NS_IMPL_CYCLE_COLLECTION(PresentationSessionTransport, mTransport,
+                         mSocketInputStream, mSocketOutputStream,
+                         mInputStreamPump, mInputStreamScriptable,
+                         mMultiplexStream, mMultiplexStreamCopier, mCallback)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(PresentationSessionTransport)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(PresentationSessionTransport)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationSessionTransport)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPresentationSessionTransport)
+  NS_INTERFACE_MAP_ENTRY(nsIPresentationSessionTransport)
+  NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+NS_INTERFACE_MAP_END
 
 PresentationSessionTransport::PresentationSessionTransport()
   : mReadyState(CLOSED)
