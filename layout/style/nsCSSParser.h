@@ -135,6 +135,16 @@ public:
                      bool                aIsImportant,
                      bool                aIsSVGMode = false);
 
+  // Same as ParseProperty but returns an nsCSSValue in aResult
+  // rather than storing the property in a Declaration.  aPropID
+  // must be a longhand property.
+  void ParseLonghandProperty(const nsCSSProperty aPropID,
+                             const nsAString&    aPropValue,
+                             nsIURI*             aSheetURL,
+                             nsIURI*             aBaseURL,
+                             nsIPrincipal*       aSheetPrincipal,
+                             nsCSSValue&         aResult);
+
   // The same as ParseProperty but for a variable.
   void ParseVariable(const nsAString&    aVariableName,
                      const nsAString&    aPropValue,
