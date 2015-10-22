@@ -22,3 +22,4 @@ function test(code) {
 
 test('while (false)\n;');
 test('for (;false;)\n;');
+test('for (;;) break;\n;');
