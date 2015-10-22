@@ -165,6 +165,19 @@ public:
    */
   void SetActive();
   /*
+   * ScheduleCheckForInactive() is called during stream processing when the
+   * engine transitions from active to inactive, or the stream finishes.  It
+   * schedules a call to CheckForInactive() after stream processing.
+   */
+  void ScheduleCheckForInactive();
+
+protected:
+  class AdvanceAndResumeMessage;
+  class CheckForInactiveMessage;
+
+  virtual void DestroyImpl() override;
+
+  /*
    * CheckForInactive() is called when the engine transitions from active to
    * inactive, or an active input is removed, or the stream finishes.  If the
    * stream is now inactive, then mInputChunks will be cleared and mLastChunks
@@ -172,11 +185,6 @@ public:
    * again until SetActive() is called.
    */
   void CheckForInactive();
-
-protected:
-  class AdvanceAndResumeMessage;
-
-  virtual void DestroyImpl() override;
 
   void AdvanceOutputSegment();
   void FinishOutput();
