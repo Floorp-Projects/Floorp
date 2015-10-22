@@ -68,6 +68,7 @@ using mozilla::unused;
 #include "AndroidBridgeUtilities.h"
 #include "android_npapi.h"
 #include "GeneratedJNINatives.h"
+#include "KeyEvent.h"
 
 #include "imgIEncoder.h"
 
@@ -133,9 +134,6 @@ public:
 NS_IMPL_ISUPPORTS(ContentCreationNotifier,
                   nsIObserver)
 
-static bool gMenu;
-static bool gMenuConsumed;
-
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gAndroidBounds[0] is the topmost
 // one.
@@ -154,16 +152,18 @@ static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
 static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
 
-class nsWindow::Natives
+class nsWindow::Natives final
     : public GeckoView::Window::Natives<Natives>
+    , public GeckoEditable::Natives<Natives>
     , public SupportsWeakPtr<Natives>
     , public UsesGeckoThreadProxy
 {
-    typedef GeckoView::Window::Natives<Natives> Base;
-
     nsWindow& window;
 
 public:
+    typedef GeckoView::Window::Natives<Natives> Base;
+    typedef GeckoEditable::Natives<Natives> EditableBase;
+
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Natives);
 
     template<typename Functor>
@@ -179,7 +179,11 @@ public:
     }
 
     Natives(nsWindow* w) : window(*w) {}
+    ~Natives();
 
+    /**
+     * GeckoView methods
+     */
     // Detach and destroy the window that we created in Open().
     void DisposeNative(const GeckoView::Window::LocalRef& instance);
 
@@ -196,7 +200,24 @@ public:
         AndroidBridge::Bridge()->SetLayerClient(
                 widget::GeckoLayerClient::Ref::From(client.Get()));
     }
+
+    /**
+     * GeckoEditable methods
+     */
+    // Handle an Android KeyEvent.
+    void OnKeyEvent(int32_t action, int32_t keyCode, int32_t scanCode,
+                    int32_t metaState, int64_t time, int32_t unicodeChar,
+                    int32_t baseUnicodeChar, int32_t domPrintableKeyValue,
+                    int32_t repeatCount, int32_t flags,
+                    bool isSynthesizedImeKey);
 };
+
+nsWindow::Natives::~Natives()
+{
+    // Disassociate our GeckoEditable instance with our native object.
+    MOZ_ASSERT(mEditable);
+    EditableBase::DisposeNative(mEditable);
+}
 
 void
 nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
@@ -216,8 +237,8 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
         // Associate our previous GeckoEditable with the new GeckoView.
         gGeckoViewWindow->mEditable->OnViewChange(view);
 
-        AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
-                     gGeckoViewWindow->mNatives.get());
+        Base::AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
+                           gGeckoViewWindow->mNatives.get());
         return;
     }
 
@@ -257,11 +278,13 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
     gGeckoViewWindow->mNatives = mozilla::MakeUnique<Natives>(gGeckoViewWindow);
 
     // Create GeckoEditable for the new nsWindow/GeckoView pair.
-    gGeckoViewWindow->mEditable = GeckoEditable::New();
-    gGeckoViewWindow->mEditable->OnViewChange(view);
+    GeckoEditable::LocalRef editable = GeckoEditable::New();
+    EditableBase::AttachNative(editable, gGeckoViewWindow->mNatives.get());
+    editable->OnViewChange(view);
+    gGeckoViewWindow->mEditable = editable;
 
-    AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
-                 gGeckoViewWindow->mNatives.get());
+    Base::AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
+                       gGeckoViewWindow->mNatives.get());
 }
 
 void
@@ -286,7 +309,8 @@ nsWindow::Natives::DisposeNative(const GeckoView::Window::LocalRef& instance)
 void
 nsWindow::InitNatives()
 {
-    nsWindow::Natives::Init();
+    nsWindow::Natives::Base::Init();
+    nsWindow::Natives::EditableBase::Init();
 }
 
 nsWindow*
@@ -409,6 +433,11 @@ NS_IMETHODIMP
 nsWindow::Destroy(void)
 {
     nsBaseWidget::mOnDestroyCalled = true;
+
+    if (mNatives) {
+        // Disassociate our native object with GeckoView.
+        mNatives = nullptr;
+    }
 
     while (mChildren.Length()) {
         // why do we still have children?
@@ -1016,21 +1045,9 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             break;
         }
 
-        case AndroidGeckoEvent::KEY_EVENT:
-            win->UserActivity();
-            win->OnKeyEvent(ae);
-            break;
-
         case AndroidGeckoEvent::IME_EVENT:
             gGeckoViewWindow->UserActivity();
             gGeckoViewWindow->OnIMEEvent(ae);
-            break;
-
-        case AndroidGeckoEvent::IME_KEY_EVENT:
-            // Keys synthesized by Java IME code are saved in the mIMEKeyEvents
-            // array until the next IME_REPLACE_TEXT event, at which point
-            // these keys are dispatched in sequence.
-            win->mIMEKeyEvents.AppendElement(*ae);
             break;
 
         case AndroidGeckoEvent::COMPOSITOR_PAUSE:
@@ -1429,9 +1446,9 @@ static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
 }
 
 static KeyNameIndex
-ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
+ConvertAndroidKeyCodeToKeyNameIndex(int keyCode, int action,
+                                    int domPrintableKeyValue)
 {
-    int keyCode = aAndroidGeckoEvent.KeyCode();
     // Special-case alphanumeric keycodes because they are most common.
     if (keyCode >= AKEYCODE_A && keyCode <= AKEYCODE_Z) {
         return KEY_NAME_INDEX_USE_STRING;
@@ -1546,11 +1563,11 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
 
         case AKEYCODE_UNKNOWN:
             MOZ_ASSERT(
-                aAndroidGeckoEvent.Action() != AKEY_EVENT_ACTION_MULTIPLE,
+                action != AKEY_EVENT_ACTION_MULTIPLE,
                 "Don't call this when action is AKEY_EVENT_ACTION_MULTIPLE!");
             // It's actually an unknown key if the action isn't ACTION_MULTIPLE.
             // However, it might cause text input.  So, let's check the value.
-            return aAndroidGeckoEvent.DOMPrintableKeyValue() ?
+            return domPrintableKeyValue ?
                 KEY_NAME_INDEX_USE_STRING : KEY_NAME_INDEX_Unidentified;
 
         default:
@@ -1561,9 +1578,9 @@ ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
 }
 
 static CodeNameIndex
-ConvertAndroidScanCodeToCodeNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
+ConvertAndroidScanCodeToCodeNameIndex(int scanCode)
 {
-    switch (aAndroidGeckoEvent.ScanCode()) {
+    switch (scanCode) {
 
 #define NS_NATIVE_KEY_TO_DOM_CODE_NAME_INDEX(aNativeKey, aCodeNameIndex) \
         case aNativeKey: return aCodeNameIndex;
@@ -1577,210 +1594,165 @@ ConvertAndroidScanCodeToCodeNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
     }
 }
 
-static void InitPluginEvent(ANPEvent* pluginEvent, ANPKeyActions keyAction,
-                            AndroidGeckoEvent& key)
+static bool
+IsModifierKey(int32_t keyCode)
 {
-    int androidKeyCode = key.KeyCode();
-    uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
-
-    int modifiers = 0;
-    if (key.IsAltPressed())
-      modifiers |= kAlt_ANPKeyModifier;
-    if (key.IsShiftPressed())
-      modifiers |= kShift_ANPKeyModifier;
-
-    pluginEvent->inSize = sizeof(ANPEvent);
-    pluginEvent->eventType = kKey_ANPEventType;
-    pluginEvent->data.key.action = keyAction;
-    pluginEvent->data.key.nativeCode = androidKeyCode;
-    pluginEvent->data.key.virtualCode = domKeyCode;
-    pluginEvent->data.key.unichar = key.UnicodeChar();
-    pluginEvent->data.key.modifiers = modifiers;
-    pluginEvent->data.key.repeatCount = key.RepeatCount();
+    using mozilla::widget::sdk::KeyEvent;
+    return keyCode == KeyEvent::KEYCODE_ALT_LEFT ||
+           keyCode == KeyEvent::KEYCODE_ALT_RIGHT ||
+           keyCode == KeyEvent::KEYCODE_SHIFT_LEFT ||
+           keyCode == KeyEvent::KEYCODE_SHIFT_RIGHT ||
+           keyCode == KeyEvent::KEYCODE_CTRL_LEFT ||
+           keyCode == KeyEvent::KEYCODE_CTRL_RIGHT ||
+           keyCode == KeyEvent::KEYCODE_META_LEFT ||
+           keyCode == KeyEvent::KEYCODE_META_RIGHT;
 }
 
-void
-nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
-                       ANPEvent* pluginEvent)
+static Modifiers
+GetModifiers(int32_t metaState)
 {
-    event.mKeyNameIndex = ConvertAndroidKeyCodeToKeyNameIndex(key);
-    if (event.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
-        int keyValue = key.DOMPrintableKeyValue();
-        if (keyValue) {
-            event.mKeyValue = static_cast<char16_t>(keyValue);
-        }
-    }
-    event.mCodeNameIndex = ConvertAndroidScanCodeToCodeNameIndex(key);
-    uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(key.KeyCode());
+    using mozilla::widget::sdk::KeyEvent;
+    return (metaState & KeyEvent::META_ALT_MASK ? MODIFIER_ALT : 0)
+        | (metaState & KeyEvent::META_SHIFT_MASK ? MODIFIER_SHIFT : 0)
+        | (metaState & KeyEvent::META_CTRL_MASK ? MODIFIER_CONTROL : 0)
+        | (metaState & KeyEvent::META_META_MASK ? MODIFIER_META : 0)
+        | (metaState & KeyEvent::META_FUNCTION_ON ? MODIFIER_FN : 0)
+        | (metaState & KeyEvent::META_CAPS_LOCK_ON ? MODIFIER_CAPSLOCK : 0)
+        | (metaState & KeyEvent::META_NUM_LOCK_ON ? MODIFIER_NUMLOCK : 0)
+        | (metaState & KeyEvent::META_SCROLL_LOCK_ON ? MODIFIER_SCROLLLOCK : 0);
+}
+
+static void
+InitKeyEvent(WidgetKeyboardEvent& event,
+             int32_t action, int32_t keyCode, int32_t scanCode,
+             int32_t metaState, int64_t time, int32_t unicodeChar,
+             int32_t baseUnicodeChar, int32_t domPrintableKeyValue,
+             int32_t repeatCount, int32_t flags)
+{
+    const uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(keyCode);
+    const int32_t charCode = unicodeChar ? unicodeChar : baseUnicodeChar;
+
+    event.modifiers = GetModifiers(metaState);
 
     if (event.mMessage == eKeyPress) {
         // Android gives us \n, so filter out some control characters.
-        int charCode = key.UnicodeChar();
-        if (!charCode) {
-            charCode = key.BaseUnicodeChar();
-        }
         event.isChar = (charCode >= ' ');
         event.charCode = event.isChar ? charCode : 0;
-        event.keyCode = (event.charCode > 0) ? 0 : domKeyCode;
+        event.keyCode = event.isChar ? 0 : domKeyCode;
         event.mPluginEvent.Clear();
-    } else {
-#ifdef DEBUG
-        if (event.mMessage != eKeyDown && event.mMessage != eKeyUp) {
-            ALOG("InitKeyEvent: unexpected event.mMessage %d", event.mMessage);
+
+        // For keypress, if the unicode char already has modifiers applied, we
+        // don't specify extra modifiers. If UnicodeChar() != BaseUnicodeChar()
+        // it means UnicodeChar() already has modifiers applied.
+        // Note that on Android 4.x, Alt modifier isn't set when the key input
+        // causes text input even while right Alt key is pressed.  However,
+        // this is necessary for Android 2.3 compatibility.
+        if (unicodeChar && unicodeChar != baseUnicodeChar) {
+            event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL
+                                              | MODIFIER_META);
         }
-#endif // DEBUG
 
-        // Flash will want a pluginEvent for keydown and keyup events.
-        ANPKeyActions action = event.mMessage == eKeyDown
-                             ? kDown_ANPKeyAction
-                             : kUp_ANPKeyAction;
-        InitPluginEvent(pluginEvent, action, key);
-
+    } else {
         event.isChar = false;
         event.charCode = 0;
         event.keyCode = domKeyCode;
-        event.mPluginEvent.Copy(*pluginEvent);
-    }
 
-    event.modifiers = key.DOMModifiers();
-    if (gMenu) {
-        event.modifiers |= MODIFIER_CONTROL;
-    }
-    // For keypress, if the unicode char already has modifiers applied, we
-    // don't specify extra modifiers. If UnicodeChar() != BaseUnicodeChar()
-    // it means UnicodeChar() already has modifiers applied.
-    // Note that on Android 4.x, Alt modifier isn't set when the key input
-    // causes text input even while right Alt key is pressed.  However, this
-    // is necessary for Android 2.3 compatibility.
-    if (event.mMessage == eKeyPress &&
-        key.UnicodeChar() && key.UnicodeChar() != key.BaseUnicodeChar()) {
-        event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META);
+        ANPEvent pluginEvent;
+        pluginEvent.inSize = sizeof(pluginEvent);
+        pluginEvent.eventType = kKey_ANPEventType;
+        pluginEvent.data.key.action = event.mMessage == eKeyDown
+                ? kDown_ANPKeyAction : kUp_ANPKeyAction;
+        pluginEvent.data.key.nativeCode = keyCode;
+        pluginEvent.data.key.virtualCode = domKeyCode;
+        pluginEvent.data.key.unichar = charCode;
+        pluginEvent.data.key.modifiers =
+                (metaState & sdk::KeyEvent::META_SHIFT_MASK
+                        ? kShift_ANPKeyModifier : 0) |
+                (metaState & sdk::KeyEvent::META_ALT_MASK
+                        ? kAlt_ANPKeyModifier : 0);
+        pluginEvent.data.key.repeatCount = repeatCount;
+        event.mPluginEvent.Copy(pluginEvent);
     }
 
     event.mIsRepeat =
         (event.mMessage == eKeyDown || event.mMessage == eKeyPress) &&
-        (!!(key.Flags() & AKEY_EVENT_FLAG_LONG_PRESS) || !!key.RepeatCount());
+        ((flags & sdk::KeyEvent::FLAG_LONG_PRESS) || repeatCount);
+
+    event.mKeyNameIndex = ConvertAndroidKeyCodeToKeyNameIndex(
+            keyCode, action, domPrintableKeyValue);
+    event.mCodeNameIndex = ConvertAndroidScanCodeToCodeNameIndex(scanCode);
+
+    if (event.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING &&
+            domPrintableKeyValue) {
+        event.mKeyValue = char16_t(domPrintableKeyValue);
+    }
+
     event.location =
         WidgetKeyboardEvent::ComputeLocationFromCodeValue(event.mCodeNameIndex);
-    event.time = key.Time();
-
-    if (gMenu)
-        gMenuConsumed = true;
+    event.time = time;
 }
 
 void
-nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
+nsWindow::Natives::OnKeyEvent(int32_t action, int32_t keyCode, int32_t scanCode,
+                              int32_t metaState, int64_t time,
+                              int32_t unicodeChar, int32_t baseUnicodeChar,
+                              int32_t domPrintableKeyValue, int32_t repeatCount,
+                              int32_t flags, bool isSynthesizedImeKey)
 {
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-    nsCOMPtr<nsIAtom> command;
-    bool isDown = ae->Action() == AKEY_EVENT_ACTION_DOWN;
-    bool isLongPress = !!(ae->Flags() & AKEY_EVENT_FLAG_LONG_PRESS);
-    bool doCommand = false;
-    uint32_t keyCode = ae->KeyCode();
+    RefPtr<nsWindow> kungFuDeathGrip(&window);
+    window.UserActivity();
+    window.RemoveIMEComposition();
 
-    if (isDown) {
-        switch (keyCode) {
-            case AKEYCODE_BACK:
-                if (isLongPress) {
-                    command = nsGkAtoms::Clear;
-                    doCommand = true;
-                }
-                break;
-            case AKEYCODE_MENU:
-                gMenu = true;
-                gMenuConsumed = isLongPress;
-                break;
-        }
-    } else {
-        switch (keyCode) {
-            case AKEYCODE_BACK: {
-                // XXX Where is the keydown event for this??
-                WidgetKeyboardEvent pressEvent(true, eKeyPress, this);
-                ANPEvent pluginEvent;
-                InitKeyEvent(pressEvent, *ae, &pluginEvent);
-                DispatchEvent(&pressEvent);
-                return;
-            }
-            case AKEYCODE_MENU:
-                gMenu = false;
-                if (!gMenuConsumed) {
-                    command = nsGkAtoms::Menu;
-                    doCommand = true;
-                }
-                break;
-            case AKEYCODE_SEARCH:
-                command = nsGkAtoms::Search;
-                doCommand = true;
-                break;
-            default:
-                ALOG("Unknown special key code!");
-                return;
-        }
-    }
-    if (doCommand) {
-        WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
-        InitEvent(event);
-        DispatchEvent(&event);
-    }
-}
-
-void
-nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
-{
-    RefPtr<nsWindow> kungFuDeathGrip(this);
-    RemoveIMEComposition();
     EventMessage msg;
-    switch (ae->Action()) {
-    case AKEY_EVENT_ACTION_DOWN:
+    if (action == sdk::KeyEvent::ACTION_DOWN) {
         msg = eKeyDown;
-        break;
-    case AKEY_EVENT_ACTION_UP:
+    } else if (action == sdk::KeyEvent::ACTION_UP) {
         msg = eKeyUp;
-        break;
-    case AKEY_EVENT_ACTION_MULTIPLE:
+    } else if (action == sdk::KeyEvent::ACTION_MULTIPLE) {
         // Keys with multiple action are handled in Java,
         // and we should never see one here
         MOZ_CRASH("Cannot handle key with multiple action");
-    default:
+    } else {
         ALOG("Unknown key action event!");
         return;
     }
 
-    bool firePress = ae->Action() == AKEY_EVENT_ACTION_DOWN;
-    switch (ae->KeyCode()) {
-    case AKEYCODE_SHIFT_LEFT:
-    case AKEYCODE_SHIFT_RIGHT:
-    case AKEYCODE_ALT_LEFT:
-    case AKEYCODE_ALT_RIGHT:
-    case AKEYCODE_CTRL_LEFT:
-    case AKEYCODE_CTRL_RIGHT:
-        firePress = false;
-        break;
-    case AKEYCODE_BACK:
-    case AKEYCODE_MENU:
-    case AKEYCODE_SEARCH:
-        HandleSpecialKey(ae);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    WidgetKeyboardEvent event(true, msg, &window);
+    window.InitEvent(event, nullptr);
+    InitKeyEvent(event, action, keyCode, scanCode, metaState, time,
+                 unicodeChar, baseUnicodeChar, domPrintableKeyValue,
+                 repeatCount, flags);
+
+    if (isSynthesizedImeKey) {
+        // Keys synthesized by Java IME code are saved in the mIMEKeyEvents
+        // array until the next IME_REPLACE_TEXT event, at which point
+        // these keys are dispatched in sequence.
+        window.mIMEKeyEvents.AppendElement(
+                mozilla::UniquePtr<WidgetEvent>(event.Duplicate()));
+    } else {
+        window.DispatchEvent(&event, status);
+    }
+
+    if (window.Destroyed() ||
+            status == nsEventStatus_eConsumeNoDefault ||
+            msg != eKeyDown || IsModifierKey(keyCode)) {
+        // Skip sending key press event.
         return;
     }
 
-    nsEventStatus status;
-    WidgetKeyboardEvent event(true, msg, this);
-    ANPEvent pluginEvent;
-    InitKeyEvent(event, *ae, &pluginEvent);
-    DispatchEvent(&event, status);
+    WidgetKeyboardEvent pressEvent(true, eKeyPress, &window);
+    window.InitEvent(pressEvent, nullptr);
+    InitKeyEvent(pressEvent, action, keyCode, scanCode, metaState, time,
+                 unicodeChar, baseUnicodeChar, domPrintableKeyValue,
+                 repeatCount, flags);
 
-    if (Destroyed())
-        return;
-    if (!firePress || status == nsEventStatus_eConsumeNoDefault) {
-        return;
+    if (isSynthesizedImeKey) {
+        window.mIMEKeyEvents.AppendElement(
+                mozilla::UniquePtr<WidgetEvent>(pressEvent.Duplicate()));
+    } else {
+        window.DispatchEvent(&pressEvent, status);
     }
-
-    WidgetKeyboardEvent pressEvent(true, eKeyPress, this);
-    InitKeyEvent(pressEvent, *ae, &pluginEvent);
-#ifdef DEBUG_ANDROID_WIDGET
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "Dispatching key pressEvent with keyCode %d charCode %d shift %d alt %d sym/ctrl %d metamask %d", pressEvent.keyCode, pressEvent.charCode, pressEvent.IsShift(), pressEvent.IsAlt(), pressEvent.IsControl(), ae->MetaState());
-#endif
-    DispatchEvent(&pressEvent);
 }
 
 #ifdef DEBUG_ANDROID_IME
@@ -1849,10 +1821,12 @@ void
 nsWindow::SendIMEDummyKeyEvents()
 {
     WidgetKeyboardEvent downEvent(true, eKeyDown, this);
+    InitEvent(downEvent, nullptr);
     MOZ_ASSERT(downEvent.keyCode == 0);
     DispatchEvent(&downEvent);
 
     WidgetKeyboardEvent upEvent(true, eKeyUp, this);
+    InitEvent(upEvent, nullptr);
     MOZ_ASSERT(upEvent.keyCode == 0);
     DispatchEvent(&upEvent);
 }
@@ -1964,8 +1938,13 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
 
                 if (!mIMEKeyEvents.IsEmpty()) {
+                    nsEventStatus status;
                     for (uint32_t i = 0; i < mIMEKeyEvents.Length(); i++) {
-                        OnKeyEvent(&mIMEKeyEvents[i]);
+                        const auto event = static_cast<WidgetGUIEvent*>(
+                                mIMEKeyEvents[i].get());
+                        // widget for duplicated events is initially nullptr.
+                        event->widget = this;
+                        DispatchEvent(event, status);
                     }
                     mIMEKeyEvents.Clear();
                     FlushIMEChanges();

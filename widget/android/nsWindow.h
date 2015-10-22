@@ -62,7 +62,6 @@ public:
     bool OnMultitouchEvent(mozilla::AndroidGeckoEvent *ae);
     void OnNativeGestureEvent(mozilla::AndroidGeckoEvent *ae);
     void OnMouseEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnKeyEvent(mozilla::AndroidGeckoEvent *ae);
     void OnIMEEvent(mozilla::AndroidGeckoEvent *ae);
 
     void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
@@ -243,7 +242,7 @@ protected:
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     RefPtr<mozilla::TextRangeArray> mIMERanges;
     bool mIMEUpdatingContext;
-    nsAutoTArray<mozilla::AndroidGeckoEvent, 8> mIMEKeyEvents;
+    nsAutoTArray<mozilla::UniquePtr<mozilla::WidgetEvent>, 8> mIMEKeyEvents;
     nsAutoTArray<IMEChange, 4> mIMETextChanges;
     bool mIMESelectionChanged;
 
@@ -260,10 +259,6 @@ protected:
     static void LogWindow(nsWindow *win, int index, int indent);
 
 private:
-    void InitKeyEvent(mozilla::WidgetKeyboardEvent& event,
-                      mozilla::AndroidGeckoEvent& key,
-                      ANPEvent* pluginEvent);
-    void HandleSpecialKey(mozilla::AndroidGeckoEvent *ae);
     void CreateLayerManager(int aCompositorWidth, int aCompositorHeight);
     void RedrawAll();
 
