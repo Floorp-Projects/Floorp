@@ -98,17 +98,13 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.0.1'
 
     if (mozconfig.substs.MOZ_NATIVE_DEVICES) {
-        compile 'com.android.support:mediarouter-v7:22.2.1'
+        compile 'com.android.support:mediarouter-v7:23.0.1'
         compile 'com.google.android.gms:play-services-basement:8.1.0'
         compile 'com.google.android.gms:play-services-base:8.1.0'
         compile 'com.google.android.gms:play-services-cast:8.1.0'
     }
 
     compile project(':thirdparty')
-
-    if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
-        compile project(':thirdparty_adjust_sdk')
-    }
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.robolectric:robolectric:3.0'
