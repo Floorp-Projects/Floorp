@@ -196,12 +196,14 @@ function assert_records(expected, desc) {
     yield transitionEnd;
 
     // After the transition has finished, the Animation should disappear.
-    is(e.getAnimations().length, 0, "getAnimations().length after transition end");
+    is(e.getAnimations().length, 0,
+       "getAnimations().length after transition end");
 
-    // Wait for the single MutationRecord for the Animation removal to
-    // be delivered.
+    // Wait for the change MutationRecord for seeking the Animation to be
+    // delivered, followed by the the removal MutationRecord.
     yield await_frame();
-    assert_records([{ added: [], changed: [], removed: animations }],
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: [], removed: animations }],
                    "records after transition end");
 
     e.style = "";
@@ -333,10 +335,12 @@ function assert_records(expected, desc) {
     ok(firstAnimation != secondAnimation,
        "second Animation should be different from the first");
 
-    // Wait for the single MutationRecord for the removal of the original
-    // Animation and the addition of the new Animation to be delivered.
+    // Wait for the change Mutation record from seeking the first animation
+    // to be delivered, followed by a subsequent MutationRecord for the removal
+    // of the original Animation and the addition of the new Animation.
     yield await_frame();
-    assert_records([{ added: [secondAnimation], changed: [],
+    assert_records([{ added: [], changed: [firstAnimation], removed: [] },
+                    { added: [secondAnimation], changed: [],
                       removed: [firstAnimation] }],
                    "records after transition reversal");
 
@@ -370,13 +374,19 @@ function assert_records(expected, desc) {
     assert_records([{ added: animations, changed: [], removed: [] }],
                    "records after transition starts");
 
-    // Wait for the Animations to get going, then seek well into
-    // the transitions.
+    // Wait for the Animations to get going.
     yield animations[0].ready;
+    is(animations.filter(p => p.playState == "running").length, 3,
+       "number of running Animations");
 
+    // Seek well into each animation.
     animations.forEach(p => p.currentTime = 50000);
 
-    is(animations.filter(p => p.playState == "running").length, 3, "number of running Animations");
+    // Prepare the set of expected change MutationRecords, one for each
+    // animation that was seeked.
+    var seekRecords = animations.map(
+      p => ({ added: [], changed: [p], removed: [] })
+    );
 
     // Cancel one of the transitions by setting transition-property.
     e.style.transitionProperty = "background-color, line-height";
@@ -384,13 +394,16 @@ function assert_records(expected, desc) {
     var colorAnimation  = animations.filter(p => p.playState != "running");
     var otherAnimations = animations.filter(p => p.playState == "running");
 
-    is(colorAnimation.length, 1, "number of non-running Animations after cancelling one");
-    is(otherAnimations.length, 2, "number of running Animations after cancelling one");
+    is(colorAnimation.length, 1,
+       "number of non-running Animations after cancelling one");
+    is(otherAnimations.length, 2,
+       "number of running Animations after cancelling one");
 
-    // Wait for a MutationRecord for one of the Animation
-    // removals to be delivered.
+    // Wait for the MutationRecords to be delivered: one for each animation
+    // that was seeked, followed by one for the removal of the color animation.
     yield await_frame();
-    assert_records([{ added: [], changed: [], removed: colorAnimation }],
+    assert_records(seekRecords.concat(
+                    { added: [], changed: [], removed: colorAnimation }),
                    "records after color transition end");
 
     // Cancel the remaining transitions.
@@ -429,12 +442,15 @@ function assert_records(expected, desc) {
     yield animationEnd;
 
     // After the animation has finished, the Animation should disappear.
-    is(e.getAnimations().length, 0, "getAnimations().length after animation end");
+    is(e.getAnimations().length, 0,
+       "getAnimations().length after animation end");
 
-    // Wait for the single MutationRecord for the Animation removal to
-    // be delivered.
+    // Wait for the change MutationRecord from seeking the Animation to
+    // be delivered, followed by a further MutationRecord for the Animation
+    // removal.
     yield await_frame();
-    assert_records([{ added: [], changed: [], removed: animations }],
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: [], removed: animations }],
                    "records after animation end");
 
     e.style = "";
@@ -493,10 +509,12 @@ function assert_records(expected, desc) {
     // than a second.
     e.style.animationDuration = "0.1s";
 
-    // Wait for the single MutationRecord for the Animation removal to
-    // be delivered.
+    // Wait for the change MutationRecord from seeking the Animation to
+    // be delivered, followed by a further MutationRecord for the Animation
+    // removal.
     yield await_frame();
-    assert_records([{ added: [], changed: [], removed: animations }],
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: [], removed: animations }],
                    "records after animation end");
 
     e.style = "";
@@ -555,8 +573,10 @@ function assert_records(expected, desc) {
     animations[0].currentTime = 99900;
     yield animationEnd;
 
-    // No changes to the list of animations at this point.
-    assert_records([], "records after animation starts filling");
+    // The only MutationRecord at this point should be the change from
+    // seeking the Animation.
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                   "records after animation starts filling");
 
     // Cancel the animation by setting animation-fill-mode.
     e.style.animationFillMode = "none";
@@ -591,8 +611,11 @@ function assert_records(expected, desc) {
     // Advance the animation until we are past the first iteration.
     animations[0].currentTime += 1000;
 
-    // No changes to the list of animations at this point.
-    assert_records([], "records after animation starts repeating");
+    // The only MutationRecord at this point should be the change from
+    // seeking the Animation.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                   "records after seeking animations");
 
     // Cancel the animation by setting animation-iteration-count.
     e.style.animationIterationCount = "1";
@@ -694,6 +717,7 @@ function assert_records(expected, desc) {
   [
     { prop: "playbackRate", val: 0.5 },
     { prop: "startTime",    val: 50000 },
+    { prop: "currentTime",  val: 50000 },
   ].forEach(function(aChangeTest) {
     addAsyncAnimTest(`single_animation_api_change_${aChangeTest.prop}`,
                      aOptions, function*() {
@@ -737,6 +761,50 @@ function assert_records(expected, desc) {
       assert_records([{ added: [], changed: [], removed: animations }],
                      "records after animation end");
     });
+  });
+
+  // Test that making a redundant change to currentTime while an Animation
+  // is pause-pending still generates a change MutationRecord since setting
+  // the currentTime to any value in this state aborts the pending pause.
+  addAsyncAnimTest("change_currentTime_while_pause_pending", aOptions,
+    function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is playing
+    yield animations[0].ready;
+
+    // Pause the animation
+    animations[0].pause();
+
+    // We are now pause-pending. Even if we make a redundant change to the
+    // currentTime, we should still get a change record because setting the
+    // currentTime while pause-pending has the effect of cancelling a pause.
+    animations[0].currentTime = animations[0].currentTime;
+
+    // Wait for the MutationRecord from updating the currentTime to be
+    // delivered.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after pausing then seeking");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
   });
 
   // Test that a non-cancelling change to an animation followed immediately by a
@@ -833,18 +901,32 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   // naturally the removed records should be dispatched according to the
   // position of the elements in the tree.
   //
+
+  // First, flatten the set of animations.
+  var animations = [ divAnimations,
+                     childAAnimations,
+                     childBAnimations ].reduce(
+    (a, b) => a.concat(b), []
+  );
+
   // Fast-forward to *just* before the end of the animation.
-  var fastForward = animation => animation.currentTime = 99999;
-  divAnimations.forEach(fastForward);
-  childAAnimations.forEach(fastForward);
-  childBAnimations.forEach(fastForward);
+  animations.forEach(animation => animation.currentTime = 99999);
+
+  // Prepare the set of expected change MutationRecords, one for each
+  // animation that was seeked.
+  var seekRecords = animations.map(
+    p => ({ added: [], changed: [p], removed: [] })
+  );
 
   yield await_event(div, "animationend");
 
-  // We should get records in order div, childA, childB
-  assert_records([{ added: [], changed: [], removed: divAnimations },
-                  { added: [], changed: [], removed: childAAnimations },
-                  { added: [], changed: [], removed: childBAnimations }],
+  // After the changed notifications, which will be dispatched in the order that
+  // the animations were seeked, we should get removal MutationRecords in order
+  // div, childA, childB
+  assert_records(seekRecords.concat(
+                   { added: [], changed: [], removed: divAnimations },
+                   { added: [], changed: [], removed: childAAnimations },
+                   { added: [], changed: [], removed: childBAnimations }),
                  "records after finishing");
 
   // Clean up

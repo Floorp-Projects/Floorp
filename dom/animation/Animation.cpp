@@ -193,6 +193,17 @@ Animation::GetCurrentTime() const
 void
 Animation::SetCurrentTime(const TimeDuration& aSeekTime)
 {
+  // Return early if the current time has not changed. However, if we
+  // are pause-pending, then setting the current time to any value
+  // including the current value has the effect of aborting the
+  // pause so we should not return early in that case.
+  if (mPendingState != PendingState::PausePending &&
+      Nullable<TimeDuration>(aSeekTime) == GetCurrentTime()) {
+    return;
+  }
+
+  AutoMutationBatchForAnimation mb(*this);
+
   SilentlySetCurrentTime(aSeekTime);
 
   if (mPendingState == PendingState::PausePending) {
@@ -207,6 +218,9 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
   }
 
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Async);
+  if (IsRelevant()) {
+    nsNodeUtils::AnimationChanged(this);
+  }
   PostUpdate();
 }
 
@@ -226,9 +240,19 @@ Animation::SetPlaybackRate(double aPlaybackRate)
     SetCurrentTime(previousTime.Value());
   }
 
+  // In the case where GetCurrentTime() returns the same result before and
+  // after updating mPlaybackRate, SetCurrentTime will return early since,
+  // as far as it can tell, nothing has changed.
+  // As a result, we need to perform the following updates here:
+  // - update timing (since, if the sign of the playback rate has changed, our
+  //   finished state may have changed),
+  // - dispatch a change notification for the changed playback rate, and
+  // - update the playback rate on animations on layers.
+  UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Async);
   if (IsRelevant()) {
     nsNodeUtils::AnimationChanged(this);
   }
+  PostUpdate();
 }
 
 // https://w3c.github.io/web-animations/#play-state
