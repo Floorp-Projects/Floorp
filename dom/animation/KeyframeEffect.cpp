@@ -572,13 +572,99 @@ KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
 }
 
 /**
- * A base class to hold the common elements of KeyframeStringValueEntry and
- * KeyframeStyleAnimationValueEntry.
+ * A property and StyleAnimationValue pair.
  */
-struct KeyframeValueEntry
+struct KeyframeValue
+{
+  nsCSSProperty mProperty;
+  StyleAnimationValue mValue;
+};
+
+/**
+ * Represents a relative position for a value in a keyframe animation.
+ */
+enum class ValuePosition
+{
+  First,  // value at 0 used for reverse filling
+  Left,   // value coming in to a given offset
+  Right,  // value coming out from a given offset
+  Last    // value at 1 used for forward filling
+};
+
+/**
+ * A single value in a keyframe animation, used by GetFrames to produce a
+ * minimal set of Keyframe objects.
+ */
+struct OrderedKeyframeValueEntry : KeyframeValue
 {
   float mOffset;
-  nsCSSProperty mProperty;
+  const ComputedTimingFunction* mTimingFunction;
+  ValuePosition mPosition;
+
+  bool SameKeyframe(const OrderedKeyframeValueEntry& aOther) const
+  {
+    return mOffset == aOther.mOffset &&
+           !!mTimingFunction == !!aOther.mTimingFunction &&
+           (!mTimingFunction || *mTimingFunction == *aOther.mTimingFunction) &&
+           mPosition == aOther.mPosition;
+  }
+
+  struct ForKeyframeGenerationComparator
+  {
+    static bool Equals(const OrderedKeyframeValueEntry& aLhs,
+                       const OrderedKeyframeValueEntry& aRhs)
+    {
+      return aLhs.SameKeyframe(aRhs) &&
+             aLhs.mProperty == aRhs.mProperty;
+    }
+    static bool LessThan(const OrderedKeyframeValueEntry& aLhs,
+                         const OrderedKeyframeValueEntry& aRhs)
+    {
+      // First, sort by offset.
+      if (aLhs.mOffset != aRhs.mOffset) {
+        return aLhs.mOffset < aRhs.mOffset;
+      }
+
+      // Second, by position.
+      if (aLhs.mPosition != aRhs.mPosition) {
+        return aLhs.mPosition < aRhs.mPosition;
+      }
+
+      // Third, by easing.
+      if (aLhs.mTimingFunction) {
+        if (aRhs.mTimingFunction) {
+          int32_t order = aLhs.mTimingFunction->Compare(*aRhs.mTimingFunction);
+          if (order != 0) {
+            return order < 0;
+          }
+        } else {
+          return true;
+        }
+      } else {
+        if (aRhs.mTimingFunction) {
+          return false;
+        }
+      }
+
+      // Last, by property IDL name.
+      return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty) <
+             nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
+    }
+  };
+};
+
+/**
+ * Data for a segment in a keyframe animation of a given property
+ * whose value is a StyleAnimationValue.
+ *
+ * KeyframeValueEntry is used in BuildAnimationPropertyListFromKeyframeSequence
+ * to gather data for each individual segment described by an author-supplied
+ * an IDL sequence<Keyframe> value so that they can be parsed into mProperties.
+ */
+struct KeyframeValueEntry : KeyframeValue
+{
+  float mOffset;
+  ComputedTimingFunction mTimingFunction;
 
   struct PropertyOffsetComparator
   {
@@ -602,68 +688,6 @@ struct KeyframeValueEntry
       return aLhs.mOffset < aRhs.mOffset;
     }
   };
-
-protected:
-  KeyframeValueEntry() = default;
-};
-
-/**
- * Data for a segment in a keyframe animation of a given property
- * whose value is a string to be parsed.
- *
- * KeyframeStringValueEntry is used in KeyframeEffectReadOnly::GetFrames
- * to gather the data for each individual segment described by
- * mProperties so that they can be manipulated into a sequence<Keyframe>.
- */
-struct KeyframeStringValueEntry : KeyframeValueEntry
-{
-  nsString mValue;
-  const ComputedTimingFunction* mTimingFunction;
-
-  struct OffsetEasingPropertyComparator
-  {
-    bool Equals(const KeyframeStringValueEntry& aLhs,
-                const KeyframeStringValueEntry& aRhs) const
-    {
-      return aLhs.mOffset == aRhs.mOffset &&
-             aLhs.mProperty == aRhs.mProperty &&
-             *aLhs.mTimingFunction == *aRhs.mTimingFunction;
-    }
-    bool LessThan(const KeyframeStringValueEntry& aLhs,
-                  const KeyframeStringValueEntry& aRhs) const
-    {
-      // First, sort by offset.
-      if (aLhs.mOffset != aRhs.mOffset) {
-        return aLhs.mOffset < aRhs.mOffset;
-      }
-
-      // Second, by timing function.
-      int32_t order = aLhs.mTimingFunction->Compare(*aRhs.mTimingFunction);
-      if (order != 0) {
-        return order < 0;
-      }
-
-      // Last, by property IDL name.
-      return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty) <
-             nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
-    }
-  };
-};
-
-/**
- * Data for a segment in a keyframe animation of a given property
- * whose value is a StyleAnimationValue.
- *
- * KeyframeStyleAnimationValueEntry is used in
- * BuildAnimationPropertyListFromKeyframeSequence to gather data
- * for each individual segment described by an author-supplied
- * an IDL sequence<Keyframe> value so that they can be parsed
- * into mProperties.
- */
-struct KeyframeStyleAnimationValueEntry : KeyframeValueEntry
-{
-  StyleAnimationValue mValue;
-  ComputedTimingFunction mTimingFunction;
 };
 
 /**
@@ -1083,22 +1107,21 @@ ApplyDistributeSpacing(nsTArray<OffsetIndexedKeyframe>& aKeyframes)
 
 /**
  * Splits out each property's keyframe animation segment information
- * from the OffsetIndexedKeyframe objects into an array of
- * KeyframeStyleAnimationValueEntry.
+ * from the OffsetIndexedKeyframe objects into an array of KeyframeValueEntry.
  *
  * The easing string value in OffsetIndexedKeyframe objects is parsed
- * into a ComputedTimingFunction value in the corresponding
- * KeyframeStyleAnimationValueEntry objects.
+ * into a ComputedTimingFunction value in the corresponding KeyframeValueEntry
+ * objects.
  *
  * @param aTarget The target of the animation.
  * @param aKeyframes The keyframes to read.
- * @param aResult The array to append the resulting
- *   KeyframeStyleAnimationValueEntry objects to.
+ * @param aResult The array to append the resulting KeyframeValueEntry
+ *   objects to.
  */
 static void
 GenerateValueEntries(Element* aTarget,
                      nsTArray<OffsetIndexedKeyframe>& aKeyframes,
-                     nsTArray<KeyframeStyleAnimationValueEntry>& aResult,
+                     nsTArray<KeyframeValueEntry>& aResult,
                      ErrorResult& aRv)
 {
   nsCSSPropertySet properties;              // All properties encountered.
@@ -1138,9 +1161,8 @@ GenerateValueEntries(Element* aTarget,
       MOZ_ASSERT(pair.mValues.Length() == 1,
                  "ConvertKeyframeSequence should have parsed single "
                  "DOMString values from the property-values pairs");
-      // Parse the property's string value and produce a
-      // KeyframeStyleAnimationValueEntry (or more than one, for
-      // shorthands) for it.
+      // Parse the property's string value and produce a KeyframeValueEntry (or
+      // more than one, for shorthands) for it.
       nsTArray<PropertyStyleAnimationValuePair> values;
       if (StyleAnimationValue::ComputeValues(pair.mProperty,
                                              nsCSSProps::eEnabledForAllContent,
@@ -1155,7 +1177,7 @@ GenerateValueEntries(Element* aTarget,
             continue;
           }
 
-          KeyframeStyleAnimationValueEntry* entry = aResult.AppendElement();
+          KeyframeValueEntry* entry = aResult.AppendElement();
           entry->mOffset = offset;
           entry->mProperty = value.mProperty;
           entry->mValue = value.mValue;
@@ -1188,17 +1210,15 @@ GenerateValueEntries(Element* aTarget,
  * animation segments in aEntries.
  */
 static void
-BuildSegmentsFromValueEntries(
-    nsTArray<KeyframeStyleAnimationValueEntry>& aEntries,
-    nsTArray<AnimationProperty>& aResult)
+BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
+                              nsTArray<AnimationProperty>& aResult)
 {
   if (aEntries.IsEmpty()) {
     return;
   }
 
-  // Sort the KeyframeStyleAnimationValueEntry objects so that all entries
-  // for a given property are together, and the entries are sorted by
-  // offset otherwise.
+  // Sort the KeyframeValueEntry objects so that all entries for a given
+  // property are together, and the entries are sorted by offset otherwise.
   std::stable_sort(aEntries.begin(), aEntries.end(),
                    &KeyframeValueEntry::PropertyOffsetComparator::LessThan);
 
@@ -1329,9 +1349,9 @@ BuildAnimationPropertyListFromKeyframeSequence(
   // offset.  (We don't support paced spacing yet.)
   ApplyDistributeSpacing(keyframes);
 
-  // Convert the OffsetIndexedKeyframes into a list of
-  // KeyframeStyleAnimationValueEntry objects.
-  nsTArray<KeyframeStyleAnimationValueEntry> entries;
+  // Convert the OffsetIndexedKeyframes into a list of KeyframeValueEntry
+  // objects.
+  nsTArray<KeyframeValueEntry> entries;
   GenerateValueEntries(aTarget, keyframes, entries, aRv);
   if (aRv.Failed()) {
     return;
@@ -1607,71 +1627,93 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
                                   nsTArray<JSObject*>& aResult,
                                   ErrorResult& aRv)
 {
-  // Collect tuples of the form (offset, property, value, easing) from
-  // mProperties, then sort them so we can generate one ComputedKeyframe per
-  // offset/easing pair.  We sort secondarily by property IDL name so that we
-  // have a uniform order that we set properties on the ComputedKeyframe
-  // object.
-  nsAutoTArray<KeyframeStringValueEntry,4> entries;
+  nsTArray<OrderedKeyframeValueEntry> entries;
+
   for (const AnimationProperty& property : mProperties) {
-    if (property.mSegments.IsEmpty()) {
-      continue;
-    }
     for (size_t i = 0, n = property.mSegments.Length(); i < n; i++) {
       const AnimationPropertySegment& segment = property.mSegments[i];
-      KeyframeStringValueEntry* entry = entries.AppendElement();
-      entry->mOffset = segment.mFromKey;
+
+      // We append the mFromValue for each segment.  If the mToValue
+      // differs from the following segment's mFromValue, or if we're on
+      // the last segment, then we append the mToValue as well.
+      //
+      // Each value is annotated with whether it is a "first", "left", "right",
+      // or "last" value.  "left" and "right" values represent the value coming
+      // in to and out of a given offset, in the middle of an animation.  For
+      // most segments, the mToValue is the "left" and the following segment's
+      // mFromValue is the "right".  The "first" and "last" values are the
+      // additional values assigned to offset 0 or 1 for reverse and forward
+      // filling.  These annotations are used to ensure multiple values for a
+      // given property are sorted correctly and that we do not merge Keyframes
+      // with different values for the same offset.
+
+      OrderedKeyframeValueEntry* entry = entries.AppendElement();
       entry->mProperty = property.mProperty;
+      entry->mValue = segment.mFromValue;
+      entry->mOffset = segment.mFromKey;
       entry->mTimingFunction = &segment.mTimingFunction;
-      StyleAnimationValue::UncomputeValue(property.mProperty,
-                                          segment.mFromValue,
-                                          entry->mValue);
+      entry->mPosition =
+        segment.mFromKey == segment.mToKey && segment.mFromKey == 0.0f ?
+          ValuePosition::First :
+          ValuePosition::Right;
+
+      if (i == n - 1 ||
+          segment.mToValue != property.mSegments[i + 1].mFromValue) {
+        entry = entries.AppendElement();
+        entry->mProperty = property.mProperty;
+        entry->mValue = segment.mToValue;
+        entry->mOffset = segment.mToKey;
+        entry->mTimingFunction = &segment.mTimingFunction;
+        entry->mPosition =
+          segment.mFromKey == segment.mToKey && segment.mToKey == 1.0f ?
+            ValuePosition::Last :
+            ValuePosition::Left;
+      }
     }
-    const AnimationPropertySegment& segment = property.mSegments.LastElement();
-    KeyframeStringValueEntry* entry = entries.AppendElement();
-    entry->mOffset = segment.mToKey;
-    entry->mProperty = property.mProperty;
-    // We don't have the an appropriate animation-timing-function value to use,
-    // either from the element or from the 100% keyframe, so we just set it to
-    // the animation-timing-value value used on the previous segment.
-    entry->mTimingFunction = &segment.mTimingFunction;
-    StyleAnimationValue::UncomputeValue(property.mProperty,
-                                        segment.mToValue,
-                                        entry->mValue);
   }
-  entries.Sort(KeyframeStringValueEntry::OffsetEasingPropertyComparator());
+
+  entries.Sort(OrderedKeyframeValueEntry::ForKeyframeGenerationComparator());
 
   for (size_t i = 0, n = entries.Length(); i < n; ) {
+    OrderedKeyframeValueEntry* entry = &entries[i];
+    OrderedKeyframeValueEntry* previousEntry = nullptr;
+
     // Create a JS object with the explicit ComputedKeyframe dictionary members.
     ComputedKeyframe keyframeDict;
-    keyframeDict.mOffset.SetValue(entries[i].mOffset);
-    keyframeDict.mComputedOffset.Construct(entries[i].mOffset);
-    keyframeDict.mEasing.Truncate();
-    entries[i].mTimingFunction->AppendToString(keyframeDict.mEasing);
+    keyframeDict.mOffset.SetValue(entry->mOffset);
+    keyframeDict.mComputedOffset.Construct(entry->mOffset);
+    if (entry->mTimingFunction) {
+      // If null, leave easing as its default "linear".
+      keyframeDict.mEasing.Truncate();
+      entry->mTimingFunction->AppendToString(keyframeDict.mEasing);
+    }
     keyframeDict.mComposite.SetValue(CompositeOperation::Replace);
 
-    JS::Rooted<JS::Value> keyframeValue(aCx);
-    if (!ToJSValue(aCx, keyframeDict, &keyframeValue)) {
+    JS::Rooted<JS::Value> keyframeJSValue(aCx);
+    if (!ToJSValue(aCx, keyframeDict, &keyframeJSValue)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    JS::Rooted<JSObject*> keyframe(aCx, &keyframeValue.toObject());
-
-    // Set the property name/value pairs on the JS object.
+    JS::Rooted<JSObject*> keyframe(aCx, &keyframeJSValue.toObject());
     do {
-      const KeyframeStringValueEntry& entry = entries[i];
-      const char* name = nsCSSProps::PropertyIDLName(entry.mProperty);
+      const char* name = nsCSSProps::PropertyIDLName(entry->mProperty);
+      nsString stringValue;
+      StyleAnimationValue::UncomputeValue(entry->mProperty,
+                                          entry->mValue,
+                                          stringValue);
       JS::Rooted<JS::Value> value(aCx);
-      if (!ToJSValue(aCx, entry.mValue, &value) ||
+      if (!ToJSValue(aCx, stringValue, &value) ||
           !JS_DefineProperty(aCx, keyframe, name, value, JSPROP_ENUMERATE)) {
         aRv.Throw(NS_ERROR_FAILURE);
         return;
       }
-      ++i;
-    } while (i < n &&
-             entries[i].mOffset == entries[i - 1].mOffset &&
-             *entries[i].mTimingFunction == *entries[i - 1].mTimingFunction);
+      if (++i == n) {
+        break;
+      }
+      previousEntry = entry;
+      entry = &entries[i];
+    } while (entry->SameKeyframe(*previousEntry));
 
     aResult.AppendElement(keyframe);
   }
