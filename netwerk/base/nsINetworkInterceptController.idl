@@ -27,7 +27,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(6be00c37-2e85-42ee-b53c-e6508ce4cef0)]
+[scriptable, uuid(afe6aae6-a80d-405b-856e-df36c19bf3c8)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -51,9 +51,11 @@ interface nsIInterceptedChannel : nsISupports
     /**
      * Instruct a channel that has been intercepted that a response has been
      * synthesized and can now be read. No further header modification is allowed
-     * after this point.
+     * after this point. The caller may optionally pass a spec for a URL that
+     * this response originates from; an empty string will cause the original
+     * intercepted request's URL to be used instead.
      */
-    void finishSynthesizedResponse();
+    void finishSynthesizedResponse(in ACString finalURLSpec);
 
     /**
      * Cancel the pending intercepted request.

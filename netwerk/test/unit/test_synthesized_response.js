@@ -63,7 +63,7 @@ function make_channel(url, body, cb) {
         synthesized.data = body;
 
         NetUtil.asyncCopy(synthesized, channel.responseBody, function() {
-          channel.finishSynthesizedResponse();
+          channel.finishSynthesizedResponse('');
         });
       }
       if (cb) {
@@ -150,7 +150,7 @@ add_test(function() {
       synthesized.data = NON_REMOTE_BODY;
       NetUtil.asyncCopy(synthesized, channel.responseBody, function() {
         channel.synthesizeHeader("Content-Length", NON_REMOTE_BODY.length);
-        channel.finishSynthesizedResponse();
+        channel.finishSynthesizedResponse('');
       });
     });
   });
@@ -178,7 +178,7 @@ add_test(function() {
       // set the content-type to ensure that the stream converter doesn't hold up notifications
       // and cause the test to fail
       intercepted.synthesizeHeader("Content-Type", "text/plain");
-      intercepted.finishSynthesizedResponse();
+      intercepted.finishSynthesizedResponse('');
     });
   });
   chan.asyncOpen(new ChannelListener(handle_synthesized_response, null,
@@ -220,7 +220,7 @@ add_test(function() {
 
     NetUtil.asyncCopy(synthesized, intercepted.responseBody, function() {
       let channel = intercepted.channel;
-      intercepted.finishSynthesizedResponse();
+      intercepted.finishSynthesizedResponse('');
       channel.cancel(Cr.NS_BINDING_ABORTED);
     });
   });
@@ -237,7 +237,7 @@ add_test(function() {
 
     NetUtil.asyncCopy(synthesized, intercepted.responseBody, function() {
       intercepted.channel.cancel(Cr.NS_BINDING_ABORTED);
-      intercepted.finishSynthesizedResponse();
+      intercepted.finishSynthesizedResponse('');
     });
   });
   chan.asyncOpen(new ChannelListener(run_next_test, null,
