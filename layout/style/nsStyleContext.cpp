@@ -1377,7 +1377,7 @@ nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
     }
     void*& thisData = mCachedInheritedData.mStyleStructs[i];
     void*& otherData = aNewContext->mCachedInheritedData.mStyleStructs[i];
-    if ((mBits & bit) && thisData) {
+    if (mBits & bit) {
       if (thisData == otherData) {
         thisData = nullptr;
       }
@@ -1402,7 +1402,7 @@ nsStyleContext::SwapStyleData(nsStyleContext* aNewContext, uint32_t aStructs)
     }
     void*& thisData = mCachedResetData->mStyleStructs[i];
     void*& otherData = aNewContext->mCachedResetData->mStyleStructs[i];
-    if ((mBits & bit) && thisData) {
+    if (mBits & bit) {
       if (thisData == otherData) {
         thisData = nullptr;
       }
