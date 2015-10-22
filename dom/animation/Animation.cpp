@@ -392,8 +392,14 @@ Animation::Reverse(ErrorResult& aRv)
     return;
   }
 
+  AutoMutationBatchForAnimation mb(*this);
+
   SilentlySetPlaybackRate(-mPlaybackRate);
   Play(aRv, LimitBehavior::AutoRewind);
+
+  if (IsRelevant()) {
+    nsNodeUtils::AnimationChanged(this);
+  }
 }
 
 // ---------------------------------------------------------------------------
