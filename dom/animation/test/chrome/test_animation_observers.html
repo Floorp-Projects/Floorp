@@ -693,6 +693,7 @@ function assert_records(expected, desc) {
   // notification.
   [
     { prop: "playbackRate", val: 0.5 },
+    { prop: "startTime",    val: 50000 },
   ].forEach(function(aChangeTest) {
     addAsyncAnimTest(`single_animation_api_change_${aChangeTest.prop}`,
                      aOptions, function*() {
