@@ -53,11 +53,10 @@
 
     </LinearLayout>
 
-    <ImageButton android:id="@+id/close"
+    <ImageView android:id="@+id/close"
                  style="@style/TabsItemClose"
                  android:layout_width="34dip"
                  android:layout_height="match_parent"
-                 android:background="@drawable/action_bar_button_inverse"
                  android:scaleType="center"
                  android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_item_close_button"
