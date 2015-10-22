@@ -9,9 +9,11 @@
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/AsyncEventDispatcher.h" //For AsyncEventDispatcher
+#include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
+#include "mozilla/Maybe.h" // For Maybe
 #include "AnimationCommon.h" // For AnimationCollection,
                              // CommonAnimationManager
+#include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
@@ -40,6 +42,40 @@ JSObject*
 Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return dom::AnimationBinding::Wrap(aCx, this, aGivenProto);
+}
+
+// ---------------------------------------------------------------------------
+//
+// Utility methods
+//
+// ---------------------------------------------------------------------------
+
+namespace {
+  // A wrapper around nsAutoAnimationMutationBatch that looks up the
+  // appropriate document from the supplied animation.
+  class MOZ_RAII AutoMutationBatchForAnimation {
+  public:
+    explicit AutoMutationBatchForAnimation(const Animation& aAnimation
+                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+      Element* targetElement = nsNodeUtils::GetTargetForAnimation(&aAnimation);
+      if (!targetElement) {
+        return;
+      }
+
+      // For mutation observers, we use the OwnerDoc.
+      nsIDocument* doc = targetElement->OwnerDoc();
+      if (!doc) {
+        return;
+      }
+
+      mAutoBatch.emplace(doc);
+    }
+
+  private:
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+    Maybe<nsAutoAnimationMutationBatch> mAutoBatch;
+  };
 }
 
 // ---------------------------------------------------------------------------

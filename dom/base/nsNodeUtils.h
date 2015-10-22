@@ -142,6 +142,8 @@ public:
     }
   }
 
+  static mozilla::dom::Element*
+    GetTargetForAnimation(const mozilla::dom::Animation* aAnimation);
   static void AnimationAdded(mozilla::dom::Animation* aAnimation);
   static void AnimationChanged(mozilla::dom::Animation* aAnimation);
   static void AnimationRemoved(mozilla::dom::Animation* aAnimation);
