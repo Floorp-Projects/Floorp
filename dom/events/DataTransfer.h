@@ -68,6 +68,8 @@ public:
 
   friend class mozilla::EventStateManager;
 
+  static DataTransfer* Cast(nsIDOMDataTransfer* aArg) { return static_cast<DataTransfer*>(aArg); }
+
 protected:
 
   // hide the default constructor
@@ -183,6 +185,9 @@ public:
     return mDragTarget;
   }
 
+  nsresult GetDataAtNoSecurityCheck(const nsAString& aFormat, uint32_t aIndex,
+                                    nsIVariant** aData);
+
   // a readonly dataTransfer cannot have new data added or existing data removed.
   // Only the dropEffect and effectAllowed may be modified.
   void SetReadOnly() { mReadOnly = true; }
@@ -247,6 +252,9 @@ protected:
   void FillInExternalData(TransferItem& aItem, uint32_t aIndex);
 
 
+  FileList* GetFilesInternal(ErrorResult& aRv, nsIPrincipal* aSubjectPrincipal);
+  nsresult GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
+                             nsIPrincipal* aSubjectPrincipal, nsIVariant** aData);
   nsresult SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData, uint32_t aIndex,
                              nsIPrincipal* aSubjectPrincipal);
 

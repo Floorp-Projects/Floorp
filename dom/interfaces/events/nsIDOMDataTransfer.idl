@@ -8,7 +8,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[builtinclass, uuid(3538cf73-ac29-4b00-bc11-cab8c458f363)]
+[builtinclass, uuid(655078bf-1675-4aa0-a48d-a133e864ce57)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -159,17 +159,6 @@ interface nsIDOMDataTransfer : nsISupports
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
   void mozClearDataAt(in DOMString format, in unsigned long index);
-
-  /**
-   * Retrieve the data associated with the given format for an item at the
-   * specified index, or null if it does not exist. The index should be in the
-   * range from zero to itemCount - 1.
-   *
-   * @param format the format of the data to look up
-   * @returns the data of the given format, or null if it doesn't exist.
-   * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater or equal than itemCount
-   */
-  nsIVariant mozGetDataAt(in DOMString format, in unsigned long index);
 
   /**
    * Will be true when the user has cancelled the drag (typically by pressing
