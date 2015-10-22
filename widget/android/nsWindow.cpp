@@ -28,12 +28,14 @@ using mozilla::unused;
 
 #include "nsWindow.h"
 
+#include "nsIBaseWindow.h"
 #include "nsIObserverService.h"
 #include "nsISelection.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWidgetListener.h"
 #include "nsIWindowWatcher.h"
+#include "nsIXULWindow.h"
 
 #include "nsAppShell.h"
 #include "nsFocusManager.h"
@@ -184,8 +186,7 @@ public:
     /**
      * GeckoView methods
      */
-    // Detach and destroy the window that we created in Open().
-    void DisposeNative(const GeckoView::Window::LocalRef& aInstance);
+    using Base::DisposeNative;
 
     // Create and attach a window.
     static void Open(const jni::ClassObject::LocalRef& aCls,
@@ -200,6 +201,9 @@ public:
         AndroidBridge::Bridge()->SetLayerClient(
                 widget::GeckoLayerClient::Ref::From(aClient.Get()));
     }
+
+    // Close and destroy the nsWindow.
+    void Close();
 
     /**
      * GeckoEditable methods
@@ -288,22 +292,22 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& aCls,
 }
 
 void
-nsWindow::Natives::DisposeNative(const GeckoView::Window::LocalRef& aInstance)
+nsWindow::Natives::Close()
 {
-    // FIXME: because we don't support separate nsWindow for each GeckoView
-    // yet, we have to keep this window around in case another GeckoView
-    // wants to attach.
-    /*
-    if (mWidgetListener) {
-        nsCOMPtr<nsIXULWindow> xulWindow(mWidgetListener->GetXULWindow());
-        // GeckoView-created top-level windows should be a XUL window.
-        MOZ_ASSERT(xulWindow);
-        nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(xulWindow));
-        MOZ_ASSERT(baseWindow);
-        baseWindow->Destroy();
+    nsIWidgetListener* const widgetListener = window.mWidgetListener;
+
+    if (!widgetListener) {
+        return;
     }
-    */
-    Base::DisposeNative(aInstance);
+
+    nsCOMPtr<nsIXULWindow> xulWindow(widgetListener->GetXULWindow());
+    // GeckoView-created top-level windows should be a XUL window.
+    MOZ_ASSERT(xulWindow);
+
+    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(xulWindow));
+    MOZ_ASSERT(baseWindow);
+
+    baseWindow->Destroy();
 }
 
 void

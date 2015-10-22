@@ -1070,6 +1070,9 @@ auto GeckoView::Window::New() -> Window::LocalRef
     return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr);
 }
 
+constexpr char GeckoView::Window::Close_t::name[];
+constexpr char GeckoView::Window::Close_t::signature[];
+
 constexpr char GeckoView::Window::DisposeNative_t::name[];
 constexpr char GeckoView::Window::DisposeNative_t::signature[];
 
