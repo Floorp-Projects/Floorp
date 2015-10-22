@@ -62,7 +62,11 @@ function goUpdateConsoleCommands() {
     <key key="&fullZoomResetCmd.commandkey2;" command="cmd_fullZoomReset" modifiers="accel"/>
     <key key="&findCmd.key;" command="cmd_find" modifiers="accel"/>
     <key key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
-    <key key="&clearOutputCtrl.key;" command="consoleCmd_clearOutput" modifiers="control"/>
+
+    <!-- The 'clear' key differs by plaform, so the correct one becomes
+         enabled in JS -->
+    <key id="key_clear" disabled="true" key="&clearOutputCtrl.key;" command="consoleCmd_clearOutput" modifiers="control shift"/>
+    <key id="key_clearOSX" disabled="true" key="&clearOutputCtrl.key;" command="consoleCmd_clearOutput" modifiers="control"/>
   </keyset>
   <keyset id="editMenuKeys"/>
 
