@@ -4844,20 +4844,6 @@ ScriptOffset(JSContext* cx, JSScript* script, const Value& v, size_t* offsetp)
     return true;
 }
 
-static bool
-DebuggerScript_getOffsetLine(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getOffsetLine", args, obj, script);
-    if (!args.requireAtLeast(cx, "Debugger.Script.getOffsetLine", 1))
-        return false;
-    size_t offset;
-    if (!ScriptOffset(cx, script, args[0], &offset))
-        return false;
-    unsigned lineno = PCToLineNumber(script, script->offsetToPC(offset));
-    args.rval().setNumber(lineno);
-    return true;
-}
-
 namespace {
 
 class BytecodeRangeWithPosition : private BytecodeRange
@@ -5086,6 +5072,37 @@ class FlowGraphSummary {
 };
 
 } /* anonymous namespace */
+
+static bool
+DebuggerScript_getOffsetLocation(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getOffsetLocation", args, obj, script);
+    if (!args.requireAtLeast(cx, "Debugger.Script.getOffsetLocation", 1))
+        return false;
+    size_t offset;
+    if (!ScriptOffset(cx, script, args[0], &offset))
+        return false;
+
+    RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!result)
+        return false;
+
+    BytecodeRangeWithPosition r(cx, script);
+    while (!r.empty() && r.frontOffset() < offset)
+        r.popFront();
+
+    RootedId id(cx, NameToId(cx->names().lineNumber));
+    RootedValue value(cx, NumberValue(r.frontLineNumber()));
+    if (!DefineProperty(cx, result, id, value))
+        return false;
+
+    value = NumberValue(r.frontColumnNumber());
+    if (!DefineProperty(cx, result, cx->names().columnNumber, value))
+        return false;
+
+    args.rval().setObject(*result);
+    return true;
+}
 
 static bool
 DebuggerScript_getAllOffsets(JSContext* cx, unsigned argc, Value* vp)
@@ -5646,7 +5663,7 @@ static const JSFunctionSpec DebuggerScript_methods[] = {
     JS_FN("getAllOffsets", DebuggerScript_getAllOffsets, 0, 0),
     JS_FN("getAllColumnOffsets", DebuggerScript_getAllColumnOffsets, 0, 0),
     JS_FN("getLineOffsets", DebuggerScript_getLineOffsets, 1, 0),
-    JS_FN("getOffsetLine", DebuggerScript_getOffsetLine, 0, 0),
+    JS_FN("getOffsetLocation", DebuggerScript_getOffsetLocation, 0, 0),
     JS_FN("setBreakpoint", DebuggerScript_setBreakpoint, 2, 0),
     JS_FN("getBreakpoints", DebuggerScript_getBreakpoints, 1, 0),
     JS_FN("clearBreakpoint", DebuggerScript_clearBreakpoint, 1, 0),

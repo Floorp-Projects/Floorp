@@ -10,14 +10,14 @@ dbg.onDebuggerStatement = function (frame) {
     lineno = g.line0 + where;
     offs = s.getLineOffsets(lineno);
     for (var i = 0; i < offs.length; i++) {
-        assertEq(s.getOffsetLine(offs[i]), lineno);
+        assertEq(s.getOffsetLocation(offs[i]).lineNumber, lineno);
         s.setBreakpoint(offs[i], {hit: function () { g.log += 'B'; }});
     }
 
     lineno++;
     offs = s.getLineOffsets(lineno);
     for (var i = 0; i < offs.length; i++) {
-        assertEq(s.getOffsetLine(offs[i]), lineno);
+        assertEq(s.getOffsetLocation(offs[i]).lineNumber, lineno);
         s.setBreakpoint(offs[i], {hit: function () { g.log += 'C'; }});
     }
 

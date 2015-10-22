@@ -6,27 +6,27 @@ var g = newGlobal();
 var dbg = Debugger(g);
 var hits;
 dbg.onDebuggerStatement = function (frame) {
-    assertEq(frame.script.getOffsetLine(frame.offset), g.line);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(String(frame.offset)); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(Object(frame.offset)); }, Error);
+    assertEq(frame.script.getOffsetLocation(frame.offset).lineNumber, g.line);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(String(frame.offset)).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(Object(frame.offset)).lineNumber; }, Error);
 
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(-1); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(1000000); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(0.25); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(+Infinity); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(-Infinity); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(NaN); }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(-1).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(1000000).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(0.25).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(+Infinity).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(-Infinity).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(NaN).lineNumber; }, Error);
 
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(false); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(true); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(undefined); }, Error);
-    assertThrowsInstanceOf(function () { frame.script.getOffsetLine(); }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(false).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(true).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation(undefined).lineNumber; }, Error);
+    assertThrowsInstanceOf(function () { frame.script.getOffsetLocation().lineNumber; }, Error);
 
     // We assume that at least one whole number between 0 and frame.offset is invalid.
     assertThrowsInstanceOf(
         function () {
             for (var i = 0; i < frame.offset; i++)
-                frame.script.getOffsetLine(i);
+                frame.script.getOffsetLocation(i).lineNumber;
         },
         Error);
 
