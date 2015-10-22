@@ -351,9 +351,6 @@ struct BytecodeEmitter
     // Emit module code for the tree rooted at body.
     bool emitModuleScript(ParseNode* body);
 
-    // Report an error if we are not processing a module.
-    bool checkIsModule();
-
     // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
     // reserve a type set to store its result.
     void checkTypeSet(JSOp op);
