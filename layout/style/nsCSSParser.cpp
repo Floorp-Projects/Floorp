@@ -9404,6 +9404,31 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
   return true;
 }
 
+// Helper for ParseLinearGradient -- returns true iff aPosition represents a
+// box-position value which was parsed with only edge keywords.
+// e.g. "left top", or "bottom", but not "left 10px"
+//
+// (NOTE: Even though callers may want to exclude explicit "center", we still
+// need to allow for _CENTER here, because omitted position-values (e.g. the
+// x-component of a value like "top") will have been parsed as being *implicit*
+// center. The correct way to disallow *explicit* center is to pass "false" for
+// ParseBoxPositionValues()'s "aAllowExplicitCenter" parameter, before you
+// call this function.)
+static bool
+IsBoxPositionStrictlyEdgeKeywords(nsCSSValuePair& aPosition)
+{
+  const nsCSSValue& xValue = aPosition.mXValue;
+  const nsCSSValue& yValue = aPosition.mYValue;
+  return (xValue.GetUnit() == eCSSUnit_Enumerated &&
+          (xValue.GetIntValue() & (NS_STYLE_BG_POSITION_LEFT |
+                                   NS_STYLE_BG_POSITION_CENTER |
+                                   NS_STYLE_BG_POSITION_RIGHT)) &&
+          yValue.GetUnit() == eCSSUnit_Enumerated &&
+          (yValue.GetIntValue() & (NS_STYLE_BG_POSITION_TOP |
+                                   NS_STYLE_BG_POSITION_CENTER |
+                                   NS_STYLE_BG_POSITION_BOTTOM)));
+}
+
 // <gradient>
 //    : linear-gradient( <linear-gradient-line>? <color-stops> ')'
 //    | radial-gradient( <radial-gradient-line>? <color-stops> ')'
@@ -9445,16 +9470,7 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     }
 
     // [ to [left | right] || [top | bottom] ] ,
-    const nsCSSValue& xValue = cssGradient->mBgPos.mXValue;
-    const nsCSSValue& yValue = cssGradient->mBgPos.mYValue;
-    if (xValue.GetUnit() != eCSSUnit_Enumerated ||
-        !(xValue.GetIntValue() & (NS_STYLE_BG_POSITION_LEFT |
-                                  NS_STYLE_BG_POSITION_CENTER |
-                                  NS_STYLE_BG_POSITION_RIGHT)) ||
-        yValue.GetUnit() != eCSSUnit_Enumerated ||
-        !(yValue.GetIntValue() & (NS_STYLE_BG_POSITION_TOP |
-                                  NS_STYLE_BG_POSITION_CENTER |
-                                  NS_STYLE_BG_POSITION_BOTTOM))) {
+    if (!IsBoxPositionStrictlyEdgeKeywords(cssGradient->mBgPos)) {
       SkipUntil(')');
       return false;
     }
@@ -9468,6 +9484,9 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
   }
 
   if (!(aFlags & eGradient_MozLegacy)) {
+    // We're parsing an unprefixed linear-gradient, and we tried & failed to
+    // parse a 'to' token above. Put the token back & try to re-parse our
+    // expression as <angle>? <color-stop-list>
     UngetToken();
 
     // <angle> ,
@@ -9480,19 +9499,23 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     return ParseGradientColorStops(cssGradient, aValue);
   }
 
-  nsCSSTokenType ty = mToken.mType;
-  nsString id = mToken.mIdent;
+  // If we get here, we're parsing a prefixed linear-gradient expression.  Put
+  // back the first token (which we may have checked for "to" above) and try to
+  // parse expression as <legacy-gradient-line>? <color-stop-list>
+  bool haveGradientLine = IsLegacyGradientLine(mToken.mType, mToken.mIdent);
   UngetToken();
 
-  // <legacy-gradient-line>
-  bool haveGradientLine = IsLegacyGradientLine(ty, id);
   if (haveGradientLine) {
+    // Parse a <legacy-gradient-line>
     cssGradient->mIsLegacySyntax = true;
     bool haveAngle =
       ParseSingleTokenVariant(cssGradient->mAngle, VARIANT_ANGLE, nullptr);
 
     // if we got an angle, we might now have a comma, ending the gradient-line
-    if (!haveAngle || !ExpectSymbol(',', true)) {
+    bool haveAngleComma = haveAngle && ExpectSymbol(',', true);
+    // XXXdholbert (Note: the logic here gets a bit more interesting when we
+    // add support for -webkit-linear-gradient's quirks.)
+    if (!haveAngleComma) {
       if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
         SkipUntil(')');
         return false;
