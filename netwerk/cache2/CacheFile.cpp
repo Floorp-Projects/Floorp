@@ -102,7 +102,7 @@ protected:
   nsCOMPtr<CacheFileChunkListener> mCallback;
   nsresult                         mRV;
   uint32_t                         mChunkIdx;
-  RefPtr<CacheFileChunk>         mChunk;
+  RefPtr<CacheFileChunk>           mChunk;
 };
 
 
@@ -185,6 +185,7 @@ CacheFile::CacheFile()
   , mMemoryOnly(false)
   , mSkipSizeCheck(false)
   , mOpenAsMemoryOnly(false)
+  , mPinned(false)
   , mPriority(false)
   , mDataAccessed(false)
   , mDataIsDirty(false)
@@ -215,10 +216,13 @@ CacheFile::Init(const nsACString &aKey,
                 bool aMemoryOnly,
                 bool aSkipSizeCheck,
                 bool aPriority,
+                bool aPinned,
                 CacheFileListener *aCallback)
 {
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(!mHandle);
+
+  MOZ_ASSERT(!(aMemoryOnly && aPinned));
 
   nsresult rv;
 
@@ -226,6 +230,7 @@ CacheFile::Init(const nsACString &aKey,
   mOpenAsMemoryOnly = mMemoryOnly = aMemoryOnly;
   mSkipSizeCheck = aSkipSizeCheck;
   mPriority = aPriority;
+  mPinned = aPinned;
 
   // Some consumers (at least nsHTTPCompressConv) assume that Read() can read
   // such amount of data that was announced by Available().
@@ -244,7 +249,7 @@ CacheFile::Init(const nsACString &aKey,
   if (mMemoryOnly) {
     MOZ_ASSERT(!aCallback);
 
-    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mKey);
+    mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, false, mKey);
     mReady = true;
     mDataSize = mMetadata->Offset();
     return NS_OK;
@@ -256,7 +261,7 @@ CacheFile::Init(const nsACString &aKey,
       flags = CacheFileIOManager::CREATE_NEW;
 
       // make sure we can use this entry immediately
-      mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mKey);
+      mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
       mReady = true;
       mDataSize = mMetadata->Offset();
     } else {
@@ -267,12 +272,22 @@ CacheFile::Init(const nsACString &aKey,
       flags |= CacheFileIOManager::PRIORITY;
     }
 
+    if (mPinned) {
+      flags |= CacheFileIOManager::PINNED;
+    }
+
     mOpeningFile = true;
     mListener = aCallback;
     rv = CacheFileIOManager::OpenFile(mKey, flags, this);
     if (NS_FAILED(rv)) {
       mListener = nullptr;
       mOpeningFile = false;
+
+      if (mPinned) {
+        LOG(("CacheFile::Init() - CacheFileIOManager::OpenFile() failed "
+             "but we want to pin, fail the file opening. [this=%p]", this));
+        return NS_ERROR_NOT_AVAILABLE;
+      }
 
       if (aCreateNew) {
         NS_WARNING("Forcing memory-only entry since OpenFile failed");
@@ -289,7 +304,7 @@ CacheFile::Init(const nsACString &aKey,
              "initializing entry as memory-only. [this=%p]", this));
 
         mMemoryOnly = true;
-        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mKey);
+        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
         mReady = true;
         mDataSize = mMetadata->Offset();
 
@@ -482,7 +497,8 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
       autoDoom.mAlreadyDoomed = true;
       return NS_OK;
     }
-    else if (NS_FAILED(aResult)) {
+
+    if (NS_FAILED(aResult)) {
       if (mMetadata) {
         // This entry was initialized as createNew, just switch to memory-only
         // mode.
@@ -494,7 +510,8 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
         mMemoryOnly = true;
         return NS_OK;
       }
-      else if (aResult == NS_ERROR_FILE_INVALID_PATH) {
+
+      if (aResult == NS_ERROR_FILE_INVALID_PATH) {
         // CacheFileIOManager doesn't have mCacheDirectory, switch to
         // memory-only mode.
         NS_WARNING("Forcing memory-only entry since CacheFileIOManager doesn't "
@@ -504,22 +521,20 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
              this));
 
         mMemoryOnly = true;
-        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mKey);
+        mMetadata = new CacheFileMetadata(mOpenAsMemoryOnly, mPinned, mKey);
         mReady = true;
         mDataSize = mMetadata->Offset();
 
         isNew = true;
         retval = NS_OK;
-      }
-      else {
+      } else {
         // CacheFileIOManager::OpenFile() failed for another reason.
         isNew = false;
         retval = aResult;
       }
 
       mListener.swap(listener);
-    }
-    else {
+    } else {
       mHandle = aHandle;
       if (NS_FAILED(mStatus)) {
         CacheFileIOManager::DoomFile(mHandle, nullptr);
@@ -583,6 +598,7 @@ CacheFile::OnMetadataRead(nsresult aResult)
 
   bool isNew = false;
   if (NS_SUCCEEDED(aResult)) {
+    mPinned = mMetadata->Pinned();
     mReady = true;
     mDataSize = mMetadata->Offset();
     if (mDataSize == 0 && mMetadata->ElementsSize() == 0) {
@@ -1970,7 +1986,8 @@ CacheFile::InitIndexEntry()
   rv = CacheFileIOManager::InitIndexEntry(mHandle,
                                           mMetadata->OriginAttributes().mAppId,
                                           mMetadata->IsAnonymous(),
-                                          mMetadata->OriginAttributes().mInBrowser);
+                                          mMetadata->OriginAttributes().mInBrowser,
+                                          mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t expTime;

@@ -13,7 +13,7 @@ interface nsICacheStorageConsumptionObserver;
 /**
  * Provides access to particual cache storages of the network URI cache.
  */
-[scriptable, uuid(9c9dc1d6-533e-4716-9ad8-11e08c3763b3)]
+[scriptable, uuid(ae29c44b-fbc3-4552-afaf-0a157ce771e7)]
 interface nsICacheStorageService : nsISupports
 {
   /**
@@ -41,6 +41,13 @@ interface nsICacheStorageService : nsISupports
    */
   nsICacheStorage diskCacheStorage(in nsILoadContextInfo aLoadContextInfo,
                                    in bool aLookupAppCache);
+
+  /**
+   * Get storage where entries will be written to disk and marked as pinned.
+   * These pinned entries are immune to over limit eviction and call of clear()
+   * on this service.
+   */
+  nsICacheStorage pinningCacheStorage(in nsILoadContextInfo aLoadContextInfo);
 
   /**
    * Get storage for a specified application cache obtained using some different

@@ -150,7 +150,7 @@ private:
   uint32_t            mRWBufSize;
   CacheHash::Hash16_t mReadHash;
 
-  RefPtr<CacheFile>              mFile; // is null if chunk is cached to
+  RefPtr<CacheFile>                mFile; // is null if chunk is cached to
                                           // prevent reference cycles
   nsCOMPtr<CacheFileChunkListener> mListener;
   nsTArray<ChunkListenerItem *>    mUpdateListeners;

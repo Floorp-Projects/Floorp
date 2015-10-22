@@ -44,7 +44,7 @@ public:
 
 protected:
   nsCOMPtr<CacheFileChunkListener> mCallback;
-  RefPtr<CacheFileChunk>         mChunk;
+  RefPtr<CacheFileChunk>           mChunk;
 };
 
 bool
