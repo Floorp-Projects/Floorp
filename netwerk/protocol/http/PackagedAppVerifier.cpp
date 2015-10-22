@@ -16,12 +16,11 @@
 #include "mozilla/Preferences.h"
 #include "nsIPackagedAppUtils.h"
 #include "nsIInputStream.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIURL.h"
 
 static const short kResourceHashType = nsICryptoHash::SHA256;
 
-// If it's true, all the verification will be skipped and the package will
-// be treated signed.
-static bool gDeveloperMode = false;
 static bool gSignedAppEnabled = false;
 
 namespace mozilla {
@@ -40,14 +39,15 @@ PackagedAppVerifier::PackagedAppVerifier()
   MOZ_RELEASE_ASSERT(NS_IsMainThread(),
                      "PackagedAppVerifier::OnResourceVerified must be on main thread");
 
-  Init(nullptr, EmptyCString(), nullptr);
+  Init(nullptr, EmptyCString(), EmptyCString(), nullptr);
 }
 
 PackagedAppVerifier::PackagedAppVerifier(nsIPackagedAppVerifierListener* aListener,
+                                         const nsACString& aPackageOrigin,
                                          const nsACString& aSignature,
                                          nsICacheEntry* aPackageCacheEntry)
 {
-  Init(aListener, aSignature, aPackageCacheEntry);
+  Init(aListener, aPackageOrigin, aSignature, aPackageCacheEntry);
 }
 
 PackagedAppVerifier::~PackagedAppVerifier()
@@ -61,25 +61,28 @@ PackagedAppVerifier::~PackagedAppVerifier()
 }
 
 NS_IMETHODIMP PackagedAppVerifier::Init(nsIPackagedAppVerifierListener* aListener,
+                                        const nsACString& aPackageOrigin,
                                         const nsACString& aSignature,
                                         nsICacheEntry* aPackageCacheEntry)
 {
   static bool onceThru = false;
   if (!onceThru) {
-    Preferences::AddBoolVarCache(&gDeveloperMode,
-                                 "network.http.packaged-apps-developer-mode", false);
     Preferences::AddBoolVarCache(&gSignedAppEnabled,
-                                 "network.http.packaged-signed-apps-enabled", false);
+                                 "network.http.signed-packages.enabled", false);
     onceThru = true;
   }
 
   mListener = aListener;
   mState = STATE_UNKNOWN;
+  mPackageOrigin = aPackageOrigin;
   mSignature = aSignature;
   mIsPackageSigned = false;
   mPackageCacheEntry = aPackageCacheEntry;
   mIsFirstResource = true;
   mManifest = EmptyCString();
+
+  mBypassVerification = (mPackageOrigin ==
+      Preferences::GetCString("network.http.signed-packages.trusted-origin"));
 
   nsresult rv;
   mPackagedAppUtils = do_CreateInstance(NS_PACKAGEDAPPUTILS_CONTRACTID, &rv);
@@ -277,8 +280,11 @@ PackagedAppVerifier::VerifyManifest(const ResourceCacheInfo* aInfo)
 
   LOG(("Signature: length = %u\n%s", mSignature.Length(), mSignature.get()));
   LOG(("Manifest: length = %u\n%s", mManifest.Length(), mManifest.get()));
+
+  bool useDeveloperRoot =
+    !Preferences::GetCString("network.http.signed-packages.developer-root").IsEmpty();
   nsresult rv = mPackagedAppUtils->VerifyManifest(mSignature, mManifest,
-                                                  this, gDeveloperMode);
+                                                  this, useDeveloperRoot);
   if (NS_FAILED(rv)) {
     LOG(("VerifyManifest FAILED rv = %u", (unsigned)rv));
   }
@@ -303,6 +309,12 @@ PackagedAppVerifier::VerifyResource(const ResourceCacheInfo* aInfo)
   if (!resourceHash) {
     LOG(("Hash value for %s is not computed. ERROR!", uriAsAscii.get()));
     MOZ_CRASH();
+  }
+
+  if (mBypassVerification) {
+    LOG(("Origin is trusted. Bypass integrity check."));
+    FireVerifiedEvent(false, true);
+    return;
   }
 
   if (mSignature.IsEmpty()) {
@@ -339,7 +351,8 @@ PackagedAppVerifier::OnManifestVerified(bool aSuccess)
     return;
   }
 
-  if (!aSuccess && gDeveloperMode) {
+
+  if (!aSuccess && mBypassVerification) {
     aSuccess = true;
     LOG(("Developer mode! Treat junk signature valid."));
   }
