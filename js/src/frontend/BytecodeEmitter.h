@@ -566,7 +566,7 @@ struct BytecodeEmitter
 
     bool emitReturn(ParseNode* pn);
     bool emitStatement(ParseNode* pn);
-    bool emitStatementList(ParseNode* pn, ptrdiff_t top);
+    bool emitStatementList(ParseNode* pn);
 
     bool emitDeleteName(ParseNode* pn);
     bool emitDeleteProperty(ParseNode* pn);
@@ -589,11 +589,11 @@ struct BytecodeEmitter
     bool emitSelfHostedForceInterpreter(ParseNode* pn);
 
     bool emitDo(ParseNode* pn);
-    bool emitFor(ParseNode* pn, ptrdiff_t top);
-    bool emitForIn(ParseNode* pn, ptrdiff_t top);
+    bool emitFor(ParseNode* pn);
+    bool emitForIn(ParseNode* pn);
     bool emitForInOrOfVariables(ParseNode* pn, bool* letDecl);
-    bool emitCStyleFor(ParseNode* pn, ptrdiff_t top);
-    bool emitWhile(ParseNode* pn, ptrdiff_t top);
+    bool emitCStyleFor(ParseNode* pn);
+    bool emitWhile(ParseNode* pn);
 
     bool emitBreak(PropertyName* label);
     bool emitContinue(PropertyName* label);
@@ -620,7 +620,7 @@ struct BytecodeEmitter
     //
     // Please refer the comment above emitSpread for additional information about
     // stack convention.
-    bool emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top);
+    bool emitForOf(StmtType type, ParseNode* pn);
 
     bool emitClass(ParseNode* pn);
     bool emitSuperPropLHS(bool isCall = false);
