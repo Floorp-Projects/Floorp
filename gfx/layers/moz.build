@@ -37,6 +37,7 @@ EXPORTS += [
     'LayerSorter.h',
     'LayersTypes.h',
     'LayerTreeInvalidation.h',
+    'LayerUserData.h',
     'opengl/Composer2D.h',
     'opengl/OGLShaderProgram.h',
     'opengl/TexturePoolOGL.h',

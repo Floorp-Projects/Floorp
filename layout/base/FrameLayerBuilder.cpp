@@ -16,6 +16,7 @@
 #include "ImageContainer.h"
 #include "LayerTreeInvalidation.h"
 #include "Layers.h"
+#include "LayerUserData.h"
 #include "MaskLayerImageCache.h"
 #include "UnitTransforms.h"
 #include "Units.h"
