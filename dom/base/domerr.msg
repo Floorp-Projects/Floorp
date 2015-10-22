@@ -115,6 +115,11 @@ DOM4_MSG_DEF(BtAuthFailureError,  "Authentication failure",  NS_ERROR_DOM_BLUETO
 DOM4_MSG_DEF(BtRmtDevDownError,   "Remote device down",  NS_ERROR_DOM_BLUETOOTH_RMT_DEV_DOWN)
 DOM4_MSG_DEF(BtAuthRejectedError, "Authentication rejected",  NS_ERROR_DOM_BLUETOOTH_AUTH_REJECTED)
 
+/* Web Animations errors */
+
+DOM4_MSG_DEF(NotSupportedError, "Animation to or from an underlying value is not yet supported.", NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR)
+DOM4_MSG_DEF(NotSupportedError, "Animation with no target is not yet supported.", NS_ERROR_DOM_ANIM_NO_TARGET_ERR)
+
 /* common global codes (from nsError.h) */
 
 DOM_MSG_DEF(NS_OK                                  , "Success")
