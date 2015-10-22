@@ -8034,13 +8034,11 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_IMPORT:
-        if (!checkIsModule())
-            return false;
+        MOZ_ASSERT(sc->isModuleBox());
         break;
 
       case PNK_EXPORT:
-        if (!checkIsModule())
-            return false;
+        MOZ_ASSERT(sc->isModuleBox());
         if (pn->pn_kid->getKind() != PNK_EXPORT_SPEC_LIST) {
             if (!emitTree(pn->pn_kid))
                 return false;
@@ -8048,8 +8046,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_EXPORT_DEFAULT:
-        if (!checkIsModule())
-            return false;
+        MOZ_ASSERT(sc->isModuleBox());
         if (!emitTree(pn->pn_kid))
             return false;
         if (pn->pn_right) {
@@ -8061,8 +8058,7 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_EXPORT_FROM:
-        if (!checkIsModule())
-            return false;
+        MOZ_ASSERT(sc->isModuleBox());
         break;
 
       case PNK_ARRAYPUSH:
@@ -8166,16 +8162,6 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
     if (emitLevel == 1) {
         if (!updateSourceCoordNotes(pn->pn_pos.end))
             return false;
-    }
-    return true;
-}
-
-bool
-BytecodeEmitter::checkIsModule()
-{
-    if (!sc->isModuleBox()) {
-        reportError(nullptr, JSMSG_INVALID_OUTSIDE_MODULE);
-        return false;
     }
     return true;
 }
