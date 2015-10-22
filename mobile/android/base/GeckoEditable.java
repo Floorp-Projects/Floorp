@@ -108,6 +108,30 @@ final class GeckoEditable extends JNIObject
                    event.getFlags(), isSynthesizedImeKey);
     }
 
+    @WrapForJNI
+    private native void onImeSynchronize();
+
+    @WrapForJNI
+    private native void onImeAcknowledgeFocus();
+
+    @WrapForJNI
+    private native void onImeReplaceText(int start, int end, String text, boolean composing);
+
+    @WrapForJNI
+    private native void onImeSetSelection(int start, int end);
+
+    @WrapForJNI
+    private native void onImeRemoveComposition();
+
+    @WrapForJNI
+    private native void onImeAddCompositionRange(int start, int end, int rangeType,
+                                                 int rangeStyles, int rangeLineStyle,
+                                                 boolean rangeBoldLine, int rangeForeColor,
+                                                 int rangeBackColor, int rangeLineColor);
+
+    @WrapForJNI
+    private native void onImeUpdateComposition(int start, int end);
+
     /* An action that alters the Editable
 
        Each action corresponds to a Gecko event. While the Gecko event is being sent to the Gecko
