@@ -17,7 +17,7 @@ interface nsIPackagedAppVerifierListener;
  * onStartRequest/onDataAvailable/onStopRequest.
  *
  */
-[scriptable, uuid(fbb28ef8-d3d0-4a2b-af98-8010163a2bfb)]
+[scriptable, uuid(37a5c208-0fce-4ad6-8431-aeb904dfe543)]
 interface nsIPackagedAppVerifier : nsIStreamListener
 {
   // The package identifier of the signed package. For a unsigned package, this
@@ -50,6 +50,7 @@ interface nsIPackagedAppVerifier : nsIStreamListener
    * The verifier init function.
    */
   void init(in nsIPackagedAppVerifierListener aListener,
+            in ACString aPackageOrigin,
             in ACString aSignature,
             in nsICacheEntry aPackageCacheEntry);
 

@@ -1452,12 +1452,7 @@ pref("network.http.enable-packaged-apps", false);
 
 // Enable this to bring in the signature verification if the signature exists.
 // Set to false if you don't need the signed packaged web app support (i.e. NSec).
-pref("network.http.packaged-signed-apps-enabled", false);
-
-// Enable this pref to skip verification process. The packaged app
-// will be considered signed no matter the package has a valid/invalid
-// signature or no signature.
-pref("network.http.packaged-apps-developer-mode", false);
+pref("network.http.signed-packages.enabled", false);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
