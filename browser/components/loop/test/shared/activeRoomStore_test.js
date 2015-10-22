@@ -2032,11 +2032,11 @@ describe("loop.store.ActiveRoomStore", function() {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.UpdateRoomInfo({
-            description: "fakeDescription",
+            roomDescription: "fakeDescription",
             participants: undefined,
             roomName: fakeRoomData.decryptedContext.roomName,
             roomUrl: fakeRoomData.roomUrl,
-            urls: {
+            roomContextUrls: {
               fake: "url"
             }
           }));
