@@ -356,14 +356,14 @@ public:
     ProxyNativeCall(const ProxyNativeCall&) = default;
 
     // Get class ref for static calls or object ref for instance calls.
-    typename ThisArgClass::Param GetThisArg() { return mThisArg; }
+    typename ThisArgClass::Param GetThisArg() const { return mThisArg; }
 
     // Return if target is the given function pointer / pointer-to-member.
     // Because we can only compare pointers of the same type, we use a
     // templated overload that is chosen only if given a different type of
     // pointer than our target pointer type.
-    bool IsTarget(NativeCallType call) { return call == mNativeCall; }
-    template<typename T> bool IsTarget(T&&) { return false; }
+    bool IsTarget(NativeCallType call) const { return call == mNativeCall; }
+    template<typename T> bool IsTarget(T&&) const { return false; }
 
     void operator()()
     {
