@@ -356,6 +356,22 @@ DebuggerClient.prototype = {
     // cleared scope by the time they run.
     this._eventsEnabled = false;
 
+    let cleanup = () => {
+      this._transport.close();
+      this._transport = null;
+    };
+
+    // If the connection is already closed,
+    // there is no need to detach client
+    // as we won't be able to send any message.
+    if (this._closed) {
+      cleanup();
+      if (aOnClosed) {
+        aOnClosed();
+      }
+      return;
+    }
+
     if (aOnClosed) {
       this.addOneTimeListener('closed', function (aEvent) {
         aOnClosed();
@@ -371,8 +387,7 @@ DebuggerClient.prototype = {
       let client = clients.pop();
       if (!client) {
         // All clients detached.
-        this._transport.close();
-        this._transport = null;
+        cleanup();
         return;
       }
       if (client.detach) {
