@@ -70,7 +70,7 @@ var Authentication = {
     Logger.logInfo("Login user: " + account["username"] + '\n');
 
     let client = new FxAccountsClient();
-    client.signIn(account["username"], account["password"], true).then(credentials => {
+    client.signIn(account["username"], account["password"]).then(credentials => {
       return fxAccounts.setSignedInUser(credentials);
     }).then(() => {
       cb(null, true);
