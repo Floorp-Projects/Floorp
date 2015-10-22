@@ -196,6 +196,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
     void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
     void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
+    void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
+    void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
     void visitAsmJSCall(LAsmJSCall* ins);
     void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
     void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
