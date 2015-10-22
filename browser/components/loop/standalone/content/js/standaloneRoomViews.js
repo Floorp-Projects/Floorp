@@ -52,7 +52,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         React.createElement("p", {
           className: "terms-service", 
-          dangerouslySetInnerHTML: {__html: this._getContent()}, 
+          dangerouslySetInnerHTML: { __html: this._getContent()}, 
           onClick: this.recordClick})
       );
     }
@@ -97,7 +97,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     _renderFailureText: function() {
       return (
-        React.createElement("p", {className: "failure"},  mozL10n.get("rooms_already_joined") )
+        React.createElement("p", {className: "failure"}, mozL10n.get("rooms_already_joined"))
       );
     },
 
@@ -109,8 +109,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.createElement("div", {className: "handle-user-agent-view-scroller"}, 
           React.createElement("div", {className: "handle-user-agent-view"}, 
             React.createElement("div", {className: "info-panel"}, 
-              React.createElement("p", {className: "loop-logo-text", title:  mozL10n.get("clientShortname2") }), 
-              React.createElement("p", {className: "roomName"},  this.state.roomName), 
+              React.createElement("p", {className: "loop-logo-text", title: mozL10n.get("clientShortname2")}), 
+              React.createElement("p", {className: "roomName"}, this.state.roomName), 
               React.createElement("p", {className: "loop-logo"}), 
               
                 this.state.failureReason ?
@@ -148,7 +148,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @return String An appropriate string according to the failureReason.
      */
     getFailureString: function() {
-      switch(this.props.failureReason) {
+      switch (this.props.failureReason) {
         case FAILURE_DETAILS.MEDIA_DENIED:
         // XXX Bug 1166824 should provide a better string for this.
         case FAILURE_DETAILS.NO_MEDIA:
@@ -302,7 +302,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     },
 
     render: function() {
-      switch(this.props.roomState) {
+      switch (this.props.roomState) {
         case ROOM_STATES.ENDED:
         case ROOM_STATES.READY: {
           return (
@@ -317,7 +317,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         }
         case ROOM_STATES.MEDIA_WAIT: {
           var msg = mozL10n.get("call_progress_getting_media_description",
-                                {clientShortname: mozL10n.get("clientShortname2")});
+                                { clientShortname: mozL10n.get("clientShortname2") });
           var utils = loop.shared.utils;
           var isChrome = utils.isChrome(navigator.userAgent);
           var isFirefox = utils.isFirefox(navigator.userAgent);
@@ -459,7 +459,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
           nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
-          publisherConfig: this.getDefaultPublisherConfig({publishVideo: true})
+          publisherConfig: this.getDefaultPublisherConfig({ publishVideo: true })
         }));
       }
 
@@ -503,7 +503,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @return {Boolean}
      */
     _roomIsActive: function() {
-      return this.state.roomState === ROOM_STATES.JOINED            ||
+      return this.state.roomState === ROOM_STATES.JOINED ||
              this.state.roomState === ROOM_STATES.SESSION_CONNECTED ||
              this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS;
     },
@@ -518,7 +518,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      *     overlapping cases.
      */
     shouldRenderRemoteVideo: function() {
-      switch(this.state.roomState) {
+      switch (this.state.roomState) {
         case ROOM_STATES.HAS_PARTICIPANTS:
           if (this.state.remoteVideoEnabled) {
             return true;
@@ -565,7 +565,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _isLocalLoading: function () {
+    _isLocalLoading: function() {
       return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
              !this.state.localSrcMediaElement;
     },
@@ -628,13 +628,13 @@ loop.standaloneRoomViews = (function(mozL10n) {
               roomState: this.state.roomState, 
               roomUsed: this.state.used}), 
             React.createElement(sharedViews.ConversationToolbar, {
-              audio: {enabled: !this.state.audioMuted,
+              audio: { enabled: !this.state.audioMuted,
                       visible: this._roomIsActive()}, 
               dispatcher: this.props.dispatcher, 
               hangup: this.leaveRoom, 
               publishStream: this.publishStream, 
               show: true, 
-              video: {enabled: !this.state.videoMuted,
+              video: { enabled: !this.state.videoMuted,
                       visible: this._roomIsActive()}})
           )
         )

@@ -4,9 +4,6 @@
 /**
  * Tests CensusTreeNode with `internalType` breakdown.
  */
-function run_test() {
-  compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, `${JSON.stringify(BREAKDOWN)} has correct results.`);
-}
 
 const BREAKDOWN = {
   by: "internalType",
@@ -29,9 +26,39 @@ const REPORT = {
 };
 
 const EXPECTED = {
+  name: null,
+  bytes: 0,
+  totalBytes: 600,
+  count: 0,
+  totalCount: 60,
   children: [
-    { name: "js::Shape", bytes: 500, count: 50, },
-    { name: "JSObject", bytes: 100, count: 10, },
-    { name: "JSString", bytes: 0, count: 0, },
+    {
+      name: "js::Shape",
+      bytes: 500,
+      totalBytes: 500,
+      count: 50,
+      totalCount: 50,
+      children: undefined
+    },
+    {
+      name: "JSObject",
+      bytes: 100,
+      totalBytes: 100,
+      count: 10,
+      totalCount: 10,
+      children: undefined
+    },
+    {
+      name: "JSString",
+      bytes: 0,
+      totalBytes: 0,
+      count: 0,
+      totalCount: 0,
+      children: undefined
+    },
   ],
 };
+
+function run_test() {
+  compareCensusViewData(BREAKDOWN, REPORT, EXPECTED);
+}

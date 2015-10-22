@@ -41,8 +41,8 @@ loop.shared.views.chat = (function(mozL10n) {
       return (
         React.createElement("span", {className: "text-chat-entry-timestamp"}, 
           date.toLocaleTimeString(language,
-                                   {hour: "numeric", minute: "numeric",
-                                   hour12: false})
+                                   { hour: "numeric", minute: "numeric",
+                                   hour12: false })
         )
       );
     },
@@ -82,7 +82,7 @@ loop.shared.views.chat = (function(mozL10n) {
     render: function() {
       return (
         React.createElement("div", {className: "text-chat-header special room-name"}, 
-          React.createElement("p", null, mozL10n.get("rooms_welcome_title", {conversationName: this.props.message}))
+          React.createElement("p", null, mozL10n.get("rooms_welcome_title", { conversationName: this.props.message }))
         )
       );
     }
@@ -140,7 +140,7 @@ loop.shared.views.chat = (function(mozL10n) {
       // If the number of received messages has increased, we play a sound.
       if (receivedMessageCount > this.state.receivedMessageCount) {
         this.play("message");
-        this.setState({receivedMessageCount: receivedMessageCount});
+        this.setState({ receivedMessageCount: receivedMessageCount });
       }
     },
 

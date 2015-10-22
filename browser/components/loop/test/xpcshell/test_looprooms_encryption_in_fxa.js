@@ -201,7 +201,7 @@ add_task(function* test_get_rooms_saves_unknown_keys() {
 add_task(function* test_get_rooms_saves_different_keys() {
   let roomsCache = {};
   roomsCache[LOOP_SESSION_TYPE.FXA] = {
-    QzBbvGmIZWU: {key: "fakeKey"}
+    QzBbvGmIZWU: { key: "fakeKey" }
   };
   yield saveRoomsCache(roomsCache);
 
@@ -225,7 +225,7 @@ add_task(function* test_get_rooms_uses_saved_key() {
 
   let roomsCache = {};
   roomsCache[LOOP_SESSION_TYPE.FXA] = {
-    "_nxD4V4FflQ": {key: kExpected.roomKey}
+    "_nxD4V4FflQ": { key: kExpected.roomKey }
   };
   yield saveRoomsCache(roomsCache);
 
@@ -261,7 +261,7 @@ function run_test() {
   MozLoopServiceInternal.fxAOAuthTokenData = { token_type: "bearer" };
   MozLoopServiceInternal.fxAOAuthProfile = { email: "fake@invalid.com" };
 
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     Services.prefs.clearUserPref(kContextEnabledPref);
     Services.prefs.clearUserPref("loop.key.fxa");
 

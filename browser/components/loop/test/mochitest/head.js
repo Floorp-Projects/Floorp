@@ -9,7 +9,7 @@ const {
   MozLoopServiceInternal,
   MozLoopService
 } = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-const {LoopRooms} = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
+const { LoopRooms } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 // Cache this value only once, at the beginning of a
 // test run, so that it doesn't pick up the offline=true
@@ -186,7 +186,7 @@ function promiseObserverNotified(aTopic, aExpectedData = null) {
     Services.obs.addObserver(function onNotification(aSubject, topic, aData) {
       Services.obs.removeObserver(onNotification, topic);
       is(aData, aExpectedData, "observer data should match expected data");
-      resolve({subject: aSubject, data: aData});
+      resolve({ subject: aSubject, data: aData });
     }, aTopic, false);
   });
 }

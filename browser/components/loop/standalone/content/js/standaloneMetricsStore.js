@@ -125,7 +125,7 @@ loop.store.StandaloneMetricsStore = (function() {
      * @param {sharedActions.ConnectionFailure} actionData
      */
     connectionFailure: function(actionData) {
-      switch(actionData.reason) {
+      switch (actionData.reason) {
         case FAILURE_DETAILS.MEDIA_DENIED:
           this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
             "Media denied");
