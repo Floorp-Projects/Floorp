@@ -22,6 +22,11 @@ extern bool
 WillRedirect(const nsHttpResponseHead * response);
 
 extern nsresult
+DoUpdateExpirationTime(nsHttpChannel* aSelf,
+                       nsICacheEntry* aCacheEntry,
+                       nsHttpResponseHead* aResponseHead,
+                       uint32_t& aExpirationTime);
+extern nsresult
 DoAddCacheEntryHeaders(nsHttpChannel *self,
                        nsICacheEntry *entry,
                        nsHttpRequestHead *requestHead,
@@ -202,6 +207,11 @@ InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLS
   nsCOMPtr<nsISupports> securityInfo;
   nsresult rv = mChannel->GetSecurityInfo(getter_AddRefs(securityInfo));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t expirationTime = 0;
+  rv = DoUpdateExpirationTime(mChannel, mSynthesizedCacheEntry,
+                              mSynthesizedResponseHead.ref(),
+                              expirationTime);
 
   rv = DoAddCacheEntryHeaders(mChannel, mSynthesizedCacheEntry,
                               mChannel->GetRequestHead(),
