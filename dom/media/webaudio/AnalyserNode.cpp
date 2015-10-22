@@ -72,7 +72,7 @@ public:
       if (mChunksToProcess <= 0) {
         if (mChunksToProcess != INT32_MIN) {
           mChunksToProcess = INT32_MIN;
-          aStream->CheckForInactive();
+          aStream->ScheduleCheckForInactive();
         }
         return;
       }
