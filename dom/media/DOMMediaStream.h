@@ -173,7 +173,6 @@ class MediaStreamDirectListener;
  */
 class DOMMediaStream : public DOMEventTargetHelper
 {
-  class TrackPort;
   friend class DOMLocalMediaStream;
   typedef dom::MediaStreamTrack MediaStreamTrack;
   typedef dom::AudioStreamTrack AudioStreamTrack;
@@ -208,7 +207,83 @@ public:
     virtual ~TrackListener() {}
   };
 
-  DOMMediaStream();
+  /**
+   * TrackPort is a representation of a MediaStreamTrack-MediaInputPort pair
+   * that make up a link between the Owned stream and the Playback stream.
+   *
+   * Semantically, the track is the identifier/key and the port the value of this
+   * connection.
+   *
+   * The input port can be shared between several TrackPorts. This is the case
+   * for DOMMediaStream's mPlaybackPort which forwards all tracks in its
+   * mOwnedStream automatically.
+   *
+   * If the MediaStreamTrack is owned by another DOMMediaStream (called A) than
+   * the one owning the TrackPort (called B), the input port (locked to the
+   * MediaStreamTrack's TrackID) connects A's mOwnedStream to B's mPlaybackStream.
+   *
+   * A TrackPort may never leave the DOMMediaStream it was created in. Internal
+   * use only.
+   */
+  class TrackPort
+  {
+  public:
+    NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TrackPort)
+    NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TrackPort)
+
+    /**
+     * Indicates MediaInputPort ownership to the TrackPort.
+     *
+     * OWNED    - Owned by the TrackPort itself. TrackPort must destroy the
+     *            input port when it's destructed.
+     * EXTERNAL - Owned by another entity. It's the caller's responsibility to
+     *            ensure the the MediaInputPort outlives the TrackPort.
+     */
+    enum class InputPortOwnership {
+      OWNED = 1,
+      EXTERNAL
+    };
+
+    TrackPort(MediaInputPort* aInputPort,
+              MediaStreamTrack* aTrack,
+              const InputPortOwnership aOwnership);
+
+  protected:
+    virtual ~TrackPort();
+
+  public:
+    void DestroyInputPort();
+
+    /**
+     * Returns the source stream of the input port.
+     */
+    MediaStream* GetSource() const;
+
+    /**
+     * Returns the track ID this track is locked to in the source stream of the
+     * input port.
+     */
+    TrackID GetSourceTrackId() const;
+
+    MediaInputPort* GetInputPort() const { return mInputPort; }
+    MediaStreamTrack* GetTrack() const { return mTrack; }
+
+    /**
+     * Blocks aTrackId from going into mInputPort unless the port has been
+     * destroyed.
+     */
+    void BlockTrackId(TrackID aTrackId);
+
+  private:
+    RefPtr<MediaInputPort> mInputPort;
+    RefPtr<MediaStreamTrack> mTrack;
+
+    // Defines if we've been given ownership of the input port or if it's owned
+    // externally. The owner is responsible for destroying the port.
+    const InputPortOwnership mOwnership;
+  };
+
+ DOMMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)

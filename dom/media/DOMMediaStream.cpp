@@ -36,107 +36,63 @@ using namespace mozilla::layers;
 
 const TrackID TRACK_VIDEO_PRIMARY = 1;
 
-/**
- * TrackPort is a representation of a MediaStreamTrack-MediaInputPort pair
- * that make up a link between the Owned stream and the Playback stream.
- *
- * Semantically, the track is the identifier/key and the port the value of this
- * connection.
- *
- * The input port can be shared between several TrackPorts. This is the case
- * for DOMMediaStream's mPlaybackPort which forwards all tracks in its
- * mOwnedStream automatically.
- *
- * If the MediaStreamTrack is owned by another DOMMediaStream (called A) than
- * the one owning the TrackPort (called B), the input port (locked to the
- * MediaStreamTrack's TrackID) connects A's mOwnedStream to B's mPlaybackStream.
- *
- * A TrackPort may never leave the DOMMediaStream it was created in. Internal
- * use only.
- */
-class DOMMediaStream::TrackPort
+
+DOMMediaStream::TrackPort::TrackPort(MediaInputPort* aInputPort,
+                                     MediaStreamTrack* aTrack,
+                                     const InputPortOwnership aOwnership)
+  : mInputPort(aInputPort)
+  , mTrack(aTrack)
+  , mOwnership(aOwnership)
 {
-public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TrackPort)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TrackPort)
+  MOZ_ASSERT(mInputPort);
+  MOZ_ASSERT(mTrack);
 
-  enum class InputPortOwnership {
-    OWNED = 1,
-    EXTERNAL
-  };
+  MOZ_COUNT_CTOR(TrackPort);
+}
 
-  TrackPort(MediaInputPort* aInputPort,
-            MediaStreamTrack* aTrack,
-            const InputPortOwnership aOwnership)
-    : mInputPort(aInputPort)
-    , mTrack(aTrack)
-    , mOwnership(aOwnership)
-  {
-    MOZ_ASSERT(mInputPort);
-    MOZ_ASSERT(mTrack);
+DOMMediaStream::TrackPort::~TrackPort()
+{
+  MOZ_COUNT_DTOR(TrackPort);
 
-    MOZ_COUNT_CTOR(TrackPort);
+  if (mOwnership == InputPortOwnership::OWNED && mInputPort) {
+    mInputPort->Destroy();
+    mInputPort = nullptr;
   }
+}
 
-protected:
-  virtual ~TrackPort()
-  {
-    MOZ_COUNT_DTOR(TrackPort);
-
-    if (mOwnership == InputPortOwnership::OWNED && mInputPort) {
-      mInputPort->Destroy();
-      mInputPort = nullptr;
-    }
+void
+DOMMediaStream::TrackPort::DestroyInputPort()
+{
+  if (mInputPort) {
+    mInputPort->Destroy();
+    mInputPort = nullptr;
   }
+}
 
-public:
-  void DestroyInputPort()
-  {
-    if (mInputPort) {
-      mInputPort->Destroy();
-      mInputPort = nullptr;
-    }
+MediaStream*
+DOMMediaStream::TrackPort::GetSource() const
+{
+  return mInputPort ? mInputPort->GetSource() : nullptr;
+}
+
+TrackID
+DOMMediaStream::TrackPort::GetSourceTrackId() const
+{
+  return mInputPort ? mInputPort->GetSourceTrackId() : TRACK_INVALID;
+}
+
+void
+DOMMediaStream::TrackPort::BlockTrackId(TrackID aTrackId)
+{
+  if (mInputPort) {
+    mInputPort->BlockTrackId(aTrackId);
   }
-
-  /**
-   * Returns the source stream of the input port.
-   */
-  MediaStream* GetSource() const { return mInputPort ? mInputPort->GetSource()
-                                                     : nullptr; }
-
-  /**
-   * Returns the track ID this track is locked to in the source stream of the
-   * input port.
-   */
-  TrackID GetSourceTrackId() const { return mInputPort ? mInputPort->GetSourceTrackId()
-                                                       : TRACK_INVALID; }
-
-  MediaInputPort* GetInputPort() const { return mInputPort; }
-  MediaStreamTrack* GetTrack() const { return mTrack; }
-
-  /**
-   * Blocks aTrackId from going into mInputPort unless the port has been
-   * destroyed.
-   */
-  void BlockTrackId(TrackID aTrackId)
-  {
-    if (mInputPort) {
-      mInputPort->BlockTrackId(aTrackId);
-    }
-  }
-
-private:
-  RefPtr<MediaInputPort> mInputPort;
-  RefPtr<MediaStreamTrack> mTrack;
-
-  // Defines if we've been given ownership of the input port or if it's owned
-  // externally. The owner is responsible for destroying the port.
-  const InputPortOwnership mOwnership;
-};
+}
 
 NS_IMPL_CYCLE_COLLECTION(DOMMediaStream::TrackPort, mTrack)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::TrackPort, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::TrackPort, Release)
+
 
 /**
  * Listener registered on the Owned stream to detect added and ended owned
