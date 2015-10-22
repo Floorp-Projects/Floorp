@@ -352,7 +352,7 @@ CreateTempXlibSurface (cairo_surface_t* cairoTarget,
         } else if (cairoTargetType == CAIRO_SURFACE_TYPE_IMAGE || drawTarget) {
             gfxImageFormat imageFormat =
                 drawTarget ? SurfaceFormatToImageFormat(drawTarget->GetFormat()) :
-                    (gfxImageFormat)cairo_image_surface_get_format(cairoTarget);
+                    gfxCairoFormatToImageFormat(cairo_image_surface_get_format(cairoTarget));
             target_visual = gfxXlibSurface::FindVisual(screen, imageFormat);
             Display *dpy = DisplayOfScreen(screen);
             if (target_visual) {

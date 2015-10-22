@@ -457,12 +457,6 @@
             "url": "/_mozilla/service-workers/service-worker/skip-waiting.https.html"
           }
         ],
-        "service-workers/service-worker/stashed-ports.https.html": [
-          {
-            "path": "service-workers/service-worker/stashed-ports.https.html",
-            "url": "/_mozilla/service-workers/service-worker/stashed-ports.https.html"
-          }
-        ],
         "service-workers/service-worker/state.https.html": [
           {
             "path": "service-workers/service-worker/state.https.html",

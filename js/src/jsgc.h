@@ -1277,7 +1277,7 @@ template <typename T>
 inline void
 CheckGCThingAfterMovingGC(const ReadBarriered<T*>& t)
 {
-    CheckGCThingAfterMovingGC(t.get());
+    CheckGCThingAfterMovingGC(t.unbarrieredGet());
 }
 
 struct CheckValueAfterMovingGCFunctor : public VoidDefaultAdaptor<Value> {

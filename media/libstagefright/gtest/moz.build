@@ -23,6 +23,9 @@ if CONFIG['MOZ_RUST']:
     TEST_HARNESS_FILES.gtest += [
         '../../../dom/media/test/street.mp4',
     ]
+    LOCAL_INCLUDES += [
+        '../binding/include',
+    ]
 
 FINAL_LIBRARY = 'xul-gtest'
 

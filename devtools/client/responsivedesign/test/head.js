@@ -3,10 +3,8 @@
 
 "use strict";
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {TargetFactory} = require("devtools/client/framework/target");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var promise = require("promise");
+// shared-head.js handles imports, constants, and utility functions
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 
 // Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
@@ -182,32 +180,6 @@ function wait(ms) {
   let def = promise.defer();
   setTimeout(def.resolve, ms);
   return def.promise;
-}
-
-function synthesizeKeyFromKeyTag(aKeyId) {
-  let key = document.getElementById(aKeyId);
-  isnot(key, null, "Successfully retrieved the <key> node");
-
-  let modifiersAttr = key.getAttribute("modifiers");
-
-  let name = null;
-
-  if (key.getAttribute("keycode"))
-    name = key.getAttribute("keycode");
-  else if (key.getAttribute("key"))
-    name = key.getAttribute("key");
-
-  isnot(name, null, "Successfully retrieved keycode/key");
-
-  let modifiers = {
-    shiftKey: modifiersAttr.match("shift"),
-    ctrlKey: modifiersAttr.match("ctrl"),
-    altKey: modifiersAttr.match("alt"),
-    metaKey: modifiersAttr.match("meta"),
-    accelKey: modifiersAttr.match("accel")
-  }
-
-  EventUtils.synthesizeKey(name, modifiers);
 }
 
 function nextTick() {

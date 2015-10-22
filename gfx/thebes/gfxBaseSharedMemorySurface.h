@@ -77,8 +77,8 @@ public:
         mozilla::gfx::IntSize size(shmInfo->width, shmInfo->height);
         if (!gfxASurface::CheckSurfaceSize(size))
             return nullptr;
-       
-        gfxImageFormat format = (gfxImageFormat)shmInfo->format;
+
+        gfxImageFormat format = shmInfo->format;
         long stride = gfxImageSurface::ComputeStride(size, format);
 
         RefPtr<Sub> s =

@@ -105,7 +105,7 @@ Throw(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
   nsCOMPtr<nsIException> existingException = runtime->GetPendingException();
   if (existingException) {
     nsresult nr;
-    if (NS_SUCCEEDED(existingException->GetResult(&nr)) && 
+    if (NS_SUCCEEDED(existingException->GetResult(&nr)) &&
         aRv == nr) {
       // Reuse the existing exception.
 
@@ -387,7 +387,8 @@ static void
 GetValueIfNotCached(JSContext* aCx, JSObject* aStack,
                     JS::SavedFrameResult (*aPropGetter)(JSContext*,
                                                         JS::Handle<JSObject*>,
-                                                        GetterOutParamType),
+                                                        GetterOutParamType,
+                                                        JS::SavedFrameSelfHosted),
                     bool aIsCached, bool* aCanCache, bool* aUseCachedValue,
                     ReturnType aValue)
 {
@@ -405,7 +406,7 @@ GetValueIfNotCached(JSContext* aCx, JSObject* aStack,
   *aUseCachedValue = false;
   JS::ExposeObjectToActiveJS(stack);
 
-  aPropGetter(aCx, stack, aValue);
+  aPropGetter(aCx, stack, aValue, JS::SavedFrameSelfHosted::Exclude);
 }
 
 NS_IMETHODIMP JSStackFrame::GetFilename(nsAString& aFilename)

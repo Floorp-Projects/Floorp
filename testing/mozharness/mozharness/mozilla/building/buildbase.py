@@ -1396,12 +1396,17 @@ or run without that action (ie: --no-{action})"
         repo = self._query_repo()
         revision = self.query_revision()
         pushinfo = self.vcs_query_pushinfo(repo, revision)
+        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
         index = self.config.get('taskcluster_index', 'index.garbage.staging')
         fmt = {
             'index': index,
             'project': self.buildbot_config['properties']['branch'],
             'head_rev': revision,
+            'pushdate': pushdate,
+            'year': pushdate[0:4],
+            'month': pushdate[4:6],
+            'day': pushdate[6:8],
             'build_product': self.config['stage_product'],
             'build_name': self.query_build_name(),
             'build_type': self.query_build_type(),
