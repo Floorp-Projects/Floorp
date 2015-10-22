@@ -70,7 +70,6 @@ public class GeckoEvent {
     @JNITarget
     private enum NativeGeckoEvent {
         NATIVE_POKE(0),
-        KEY_EVENT(1),
         MOTION_EVENT(2),
         SENSOR_EVENT(3),
         LOCATION_EVENT(5),
@@ -138,33 +137,15 @@ public class GeckoEvent {
 
     private int mMetaState;
     private int mFlags;
-    private int mKeyCode;
-    private int mScanCode;
-    private int mUnicodeChar;
-    private int mBaseUnicodeChar; // mUnicodeChar without meta states applied
-    private int mDOMPrintableKeyValue;
-    private int mRepeatCount;
     private int mCount;
-    private int mStart;
-    private int mEnd;
     private String mCharacters;
     private String mCharactersExtra;
     private String mData;
-    private int mRangeType;
-    private int mRangeStyles;
-    private int mRangeLineStyle;
-    private boolean mRangeBoldLine;
-    private int mRangeForeColor;
-    private int mRangeBackColor;
-    private int mRangeLineColor;
     private Location mLocation;
-    private Address mAddress;
 
     private int     mConnectionType;
     private boolean mIsWifi;
     private int     mDHCPGateway;
-
-    private int mNativeWindow;
 
     private short mScreenOrientation;
     private short mScreenAngle;
@@ -196,12 +177,6 @@ public class GeckoEvent {
         return GeckoEvent.get(NativeGeckoEvent.NOOP);
     }
 
-    public static GeckoEvent createKeyEvent(KeyEvent k, int action, int metaState) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.KEY_EVENT);
-        event.initKeyEvent(k, action, metaState);
-        return event;
-    }
-
     public static GeckoEvent createCompositorCreateEvent(int width, int height) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.COMPOSITOR_CREATE);
         event.mWidth = width;
@@ -215,39 +190,6 @@ public class GeckoEvent {
 
     public static GeckoEvent createCompositorResumeEvent() {
         return GeckoEvent.get(NativeGeckoEvent.COMPOSITOR_RESUME);
-    }
-
-    private void initKeyEvent(KeyEvent k, int action, int metaState) {
-        // Use a separate action argument so we can override the key's original action,
-        // e.g. change ACTION_MULTIPLE to ACTION_DOWN. That way we don't have to allocate
-        // a new key event just to change its action field.
-        mAction = action;
-        mTime = k.getEventTime();
-        // Normally we expect k.getMetaState() to reflect the current meta-state; however,
-        // some software-generated key events may not have k.getMetaState() set, e.g. key
-        // events from Swype. Therefore, it's necessary to combine the key's meta-states
-        // with the meta-states that we keep separately in KeyListener
-        mMetaState = k.getMetaState() | metaState;
-        mFlags = k.getFlags();
-        mKeyCode = k.getKeyCode();
-        mScanCode = k.getScanCode();
-        mUnicodeChar = k.getUnicodeChar(mMetaState);
-        // e.g. for Ctrl+A, Android returns 0 for mUnicodeChar,
-        // but Gecko expects 'a', so we return that in mBaseUnicodeChar
-        mBaseUnicodeChar = k.getUnicodeChar(0);
-        mRepeatCount = k.getRepeatCount();
-        mCharacters = k.getCharacters();
-        if (mUnicodeChar >= ' ') {
-            mDOMPrintableKeyValue = mUnicodeChar;
-        } else {
-            int unmodifiedMetaState =
-                mMetaState & ~(KeyEvent.META_ALT_MASK |
-                               KeyEvent.META_CTRL_MASK |
-                               KeyEvent.META_META_MASK);
-            if (unmodifiedMetaState != mMetaState) {
-                mDOMPrintableKeyValue = k.getUnicodeChar(unmodifiedMetaState);
-            }
-        }
     }
 
     /**
