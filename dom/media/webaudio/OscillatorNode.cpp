@@ -314,39 +314,36 @@ public:
       return;
     }
 
-    if (ticks >= mStop) {
+    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart || ticks >= mStop) {
+      ComputeSilence(aOutput);
+
+    } else {
+      aOutput->AllocateChannels(1);
+      float* output = aOutput->ChannelFloatsForWrite(0);
+
+      uint32_t start, end;
+      FillBounds(output, ticks, start, end);
+
+      // Synthesize the correct waveform.
+      switch(mType) {
+        case OscillatorType::Sine:
+          ComputeSine(output, ticks, start, end);
+          break;
+        case OscillatorType::Square:
+        case OscillatorType::Triangle:
+        case OscillatorType::Sawtooth:
+        case OscillatorType::Custom:
+          ComputeCustom(output, ticks, start, end);
+          break;
+        default:
+          ComputeSilence(aOutput);
+      };
+    }
+
+    if (ticks + WEBAUDIO_BLOCK_SIZE >= mStop) {
       // We've finished playing.
-      ComputeSilence(aOutput);
       *aFinished = true;
-      return;
     }
-    if (ticks + WEBAUDIO_BLOCK_SIZE <= mStart) {
-      // We're not playing yet.
-      ComputeSilence(aOutput);
-      return;
-    }
-
-    aOutput->AllocateChannels(1);
-    float* output = aOutput->ChannelFloatsForWrite(0);
-
-    uint32_t start, end;
-    FillBounds(output, ticks, start, end);
-
-    // Synthesize the correct waveform.
-    switch(mType) {
-      case OscillatorType::Sine:
-        ComputeSine(output, ticks, start, end);
-        break;
-      case OscillatorType::Square:
-      case OscillatorType::Triangle:
-      case OscillatorType::Sawtooth:
-      case OscillatorType::Custom:
-        ComputeCustom(output, ticks, start, end);
-        break;
-      default:
-        ComputeSilence(aOutput);
-    };
-
   }
 
   virtual bool IsActive() const override
