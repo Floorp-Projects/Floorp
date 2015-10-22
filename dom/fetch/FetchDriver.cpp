@@ -129,14 +129,14 @@ FetchDriver::SetTainting()
 
   // request's mode is "no-cors"
   if (mRequest->Mode() == RequestMode::No_cors) {
-    mRequest->SetResponseTainting(InternalRequest::RESPONSETAINT_OPAQUE);
+    mRequest->MaybeIncreaseResponseTainting(LoadTainting::Opaque);
     // What the spec calls "basic fetch" is handled within our necko channel
     // code.  Therefore everything goes through HTTP Fetch
     return NS_OK;
   }
 
   // Otherwise
-  mRequest->SetResponseTainting(InternalRequest::RESPONSETAINT_CORS);
+  mRequest->MaybeIncreaseResponseTainting(LoadTainting::CORS);
 
   return NS_OK;
 }
@@ -445,20 +445,18 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
   DebugOnly<nsresult> rv = aResponse->StripFragmentAndSetUrl(reqURL);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  // FIXME(nsm): Handle mixed content check, step 7 of fetch.
-
   RefPtr<InternalResponse> filteredResponse;
   if (mFoundOpaqueRedirect) {
     filteredResponse = aResponse->OpaqueRedirectResponse();
   } else {
     switch (mRequest->GetResponseTainting()) {
-      case InternalRequest::RESPONSETAINT_BASIC:
+      case LoadTainting::Basic:
         filteredResponse = aResponse->BasicResponse();
         break;
-      case InternalRequest::RESPONSETAINT_CORS:
+      case LoadTainting::CORS:
         filteredResponse = aResponse->CORSResponse();
         break;
-      case InternalRequest::RESPONSETAINT_OPAQUE:
+      case LoadTainting::Opaque:
         filteredResponse = aResponse->OpaqueResponse();
         break;
       default:
@@ -631,6 +629,26 @@ FetchDriver::OnStartRequest(nsIRequest* aRequest,
     // Cancel request.
     return rv;
   }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailWithNetworkError();
+    return rv;
+  }
+
+  LoadTainting channelTainting = LoadTainting::Basic;
+  if (loadInfo) {
+    channelTainting = loadInfo->GetTainting();
+  }
+
+  // Propagate any tainting from the channel back to our response here.  This
+  // step is not reflected in the spec because the spec is written such that
+  // FetchEvent.respondWith() just passes the already-tainted Response back to
+  // the outer fetch().  In gecko, however, we serialize the Response through
+  // the channel and must regenerate the tainting from the channel in the
+  // interception case.
+  mRequest->MaybeIncreaseResponseTainting(channelTainting);
 
   // Resolves fetch() promise which may trigger code running in a worker.  Make
   // sure the Response is fully initialized before calling this.
