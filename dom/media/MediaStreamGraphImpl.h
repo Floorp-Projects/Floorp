@@ -241,20 +241,11 @@ public:
    */
   void Process();
   /**
-   * Update the consumption state of aStream to reflect whether its data
-   * is needed or not.
-   */
-  void UpdateConsumptionState(SourceMediaStream* aStream);
-  /**
    * Extract any state updates pending in aStream, and apply them.
    */
   void ExtractPendingInput(SourceMediaStream* aStream,
                            GraphTime aDesiredUpToTime,
                            bool* aEnsureNextIteration);
-  /**
-   * Update "have enough data" flags in aStream.
-   */
-  void UpdateBufferSufficiencyState(SourceMediaStream* aStream);
 
   /**
    * Called when a suspend/resume/close operation has been completed, on the
