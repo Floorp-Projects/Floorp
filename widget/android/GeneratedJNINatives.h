@@ -57,6 +57,10 @@ class GeckoEditable::Natives : public mozilla::jni::NativeImpl<GeckoEditable, Im
 public:
     static constexpr JNINativeMethod methods[] = {
 
+        mozilla::jni::MakeNativeMethod<GeckoEditable::DisposeNative_t>(
+                mozilla::jni::NativeStub<GeckoEditable::DisposeNative_t, Impl>
+                ::template Wrap<&Impl::DisposeNative>),
+
         mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAcknowledgeFocus_t>(
                 mozilla::jni::NativeStub<GeckoEditable::OnImeAcknowledgeFocus_t, Impl>
                 ::template Wrap<&Impl::OnImeAcknowledgeFocus>),

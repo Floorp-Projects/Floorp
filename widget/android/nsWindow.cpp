@@ -246,11 +246,13 @@ public:
 
     ~Natives();
 
+    using Base::DisposeNative;
+    using EditableBase::DisposeNative;
+
     /**
      * GeckoView methods
      */
-    using Base::DisposeNative;
-
+public:
     // Create and attach a window.
     static void Open(const jni::ClassObject::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
@@ -364,8 +366,10 @@ public:
 nsWindow::Natives::~Natives()
 {
     // Disassociate our GeckoEditable instance with our native object.
+    // OnDestroy will call disposeNative after any pending native calls have
+    // been made.
     MOZ_ASSERT(mEditable);
-    EditableBase::DisposeNative(mEditable);
+    mEditable->OnDestroy();
 }
 
 void
