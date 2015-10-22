@@ -405,7 +405,6 @@ public class SwitchBoard {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
 			connection.setUseCaches(false);
-			connection.setDoOutput(true);
 
 			// get response
 			InputStream is = connection.getInputStream();
