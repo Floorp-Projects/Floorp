@@ -2137,7 +2137,13 @@ CompositorParent::UpdatePluginWindowState(uint64_t aId)
                                                       lts.mPluginData);
         lts.mUpdatedPluginDataAvailable = false;
         PLUGINS_LOG("[%" PRIu64 "] updated", aId);
+      } else {
+        PLUGINS_LOG("[%" PRIu64 "] no visibility data", aId);
+        return false;
       }
+    } else {
+      PLUGINS_LOG("[%" PRIu64 "] no content root", aId);
+      return false;
     }
   }
 

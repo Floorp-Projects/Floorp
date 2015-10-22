@@ -1,0 +1,8 @@
+# Register a component to be informed of startup. This component can then register
+# itself to watch sessionstore-windows-restored. Once it has observed
+# sessionstore-windows-restored, it will open the webpage with the harness.
+component {716346e5-0c45-4aa2-b601-da36f3c74bd8} SessionRestoreTalosTest.js
+contract @mozilla.org/talos/session-restore-test;1 {716346e5-0c45-4aa2-b601-da36f3c74bd8}
+category profile-after-change nsSessionRestoreTalosTest @mozilla.org/talos/session-restore-test;1
+
+content session-restore-test content/
