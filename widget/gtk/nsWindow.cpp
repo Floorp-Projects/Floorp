@@ -2533,6 +2533,20 @@ nsWindow::OnLeaveNotifyEvent(GdkEventCrossing *aEvent)
     DispatchInputEvent(&event);
 }
 
+template <typename Event> static LayoutDeviceIntPoint
+GetRefPoint(nsWindow* aWindow, Event* aEvent)
+{
+    if (aEvent->window == aWindow->GetGdkWindow()) {
+        // we are the window that the event happened on so no need for expensive WidgetToScreenOffset
+        return aWindow->GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
+    }
+    // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
+    // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
+    // coordinates relative to this widget.
+    return aWindow->GdkEventCoordsToDevicePixels(
+        aEvent->x_root, aEvent->y_root) - aWindow->WidgetToScreenOffset();
+}
+
 void
 nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
 {
@@ -2593,16 +2607,8 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
         event.time = aEvent->time;
         event.timeStamp = GetEventTimeStamp(aEvent->time);
 #endif /* MOZ_X11 */
-    }
-    else {
-        // XXX see OnScrollEvent()
-        if (aEvent->window == mGdkWindow) {
-            event.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-        } else {
-            LayoutDeviceIntPoint point = GdkEventCoordsToDevicePixels(
-                    aEvent->x_root, aEvent->y_root);
-            event.refPoint = point - WidgetToScreenOffset();
-        }
+    } else {
+        event.refPoint = GetRefPoint(this, aEvent);
 
         modifierState = aEvent->state;
 
@@ -2671,14 +2677,7 @@ void
 nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
                           GdkEventButton* aGdkEvent)
 {
-    // XXX see OnScrollEvent()
-    if (aGdkEvent->window == mGdkWindow) {
-        aEvent.refPoint = GdkEventCoordsToDevicePixels(aGdkEvent->x, aGdkEvent->y);
-    } else {
-        LayoutDeviceIntPoint point = GdkEventCoordsToDevicePixels(
-                aGdkEvent->x_root, aGdkEvent->y_root);
-        aEvent.refPoint = point - WidgetToScreenOffset();
-    }
+    aEvent.refPoint = GetRefPoint(this, aGdkEvent);
 
     guint modifierState = aGdkEvent->state;
     // aEvent's state doesn't include this event's information.  Therefore,
@@ -3193,17 +3192,7 @@ nsWindow::OnScrollEvent(GdkEventScroll *aEvent)
         break;
     }
 
-    if (aEvent->window == mGdkWindow) {
-        // we are the window that the event happened on so no need for expensive WidgetToScreenOffset
-        wheelEvent.refPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
-    } else {
-        // XXX we're never quite sure which GdkWindow the event came from due to our custom bubbling
-        // in scroll_event_cb(), so use ScreenToWidget to translate the screen root coordinates into
-        // coordinates relative to this widget.
-        LayoutDeviceIntPoint point = GdkEventCoordsToDevicePixels(
-                aEvent->x_root, aEvent->y_root);
-        wheelEvent.refPoint = point - WidgetToScreenOffset();
-    }
+    wheelEvent.refPoint = GetRefPoint(this, aEvent);
 
     KeymapWrapper::InitInputEvent(wheelEvent, aEvent->state);
 
@@ -3411,13 +3400,7 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
         return FALSE;
     }
 
-    LayoutDeviceIntPoint touchPoint;
-    if (aEvent->window == mGdkWindow) {
-        touchPoint = LayoutDeviceIntPoint(aEvent->x, aEvent->y);
-    } else {
-        touchPoint = LayoutDeviceIntPoint(aEvent->x_root, aEvent->y_root) -
-                     WidgetToScreenOffset();
-    }
+    LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
 
     int32_t id;
     RefPtr<dom::Touch> touch;
