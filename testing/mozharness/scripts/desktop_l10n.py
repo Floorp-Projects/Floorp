@@ -11,6 +11,7 @@ This script manages Desktop repacks for nightly builds.
 import os
 import re
 import sys
+import time
 import shlex
 import logging
 
@@ -965,6 +966,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         if not repo:
             self.fatal("Unable to determine repository for querying the push info.")
         pushinfo = self.vcs_query_pushinfo(repo, revision, vcs='hgtool')
+        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
 
         routes_json = os.path.join(self.query_abs_dirs()['abs_mozilla_dir'],
                                    'testing/taskcluster/routes.json')
@@ -980,6 +982,10 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                     'index': self.config.get('taskcluster_index', 'index.garbage.staging'),
                     'project': branch,
                     'head_rev': revision,
+                    'pushdate': pushdate,
+                    'year': pushdate[0:4],
+                    'month': pushdate[4:6],
+                    'day': pushdate[6:8],
                     'build_product': self.config['stage_product'],
                     'build_name': self.query_build_name(),
                     'build_type': self.query_build_type(),

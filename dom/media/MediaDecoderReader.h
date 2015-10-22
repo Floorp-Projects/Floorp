@@ -153,6 +153,14 @@ public:
   virtual bool IsWaitForDataSupported() { return false; }
   virtual RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) { MOZ_CRASH(); }
 
+  // By default, the reader return the decoded data. Some readers support
+  // retuning demuxed data.
+  virtual bool IsDemuxOnlySupported() const { return false; }
+
+  // Configure the reader to return demuxed or decoded data
+  // upon calls to Request{Audio,Video}Data.
+  virtual void SetDemuxOnly(bool /*aDemuxedOnly*/) {}
+
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
 

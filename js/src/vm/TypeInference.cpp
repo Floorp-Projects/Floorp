@@ -3381,7 +3381,7 @@ PreliminaryObjectArray::sweep()
             // the compartment's global is dead, we don't do anything as the
             // group's Class is not going to change in that case.
             JSObject* obj = *ptr;
-            GlobalObject* global = obj->compartment()->maybeGlobal();
+            GlobalObject* global = obj->compartment()->unsafeUnbarrieredMaybeGlobal();
             if (global && !obj->isSingleton()) {
                 JSObject* objectProto = GetBuiltinPrototypePure(global, JSProto_Object);
                 obj->setGroup(objectProto->groupRaw());
@@ -4074,7 +4074,8 @@ ConstraintTypeSet::sweep(Zone* zone, AutoClearTypeInferenceStateOnOOM& oom)
                     objectCount = 0;
                     break;
                 }
-            } else if (key->isGroup() && key->group()->unknownPropertiesDontCheckGeneration()) {
+            } else if (key->isGroup() &&
+                       key->groupNoBarrier()->unknownPropertiesDontCheckGeneration()) {
                 // Object sets containing objects with unknown properties might
                 // not be complete. Mark the type set as unknown, which it will
                 // be treated as during Ion compilation.
@@ -4098,7 +4099,7 @@ ConstraintTypeSet::sweep(Zone* zone, AutoClearTypeInferenceStateOnOOM& oom)
         } else {
             // As above, mark type sets containing objects with unknown
             // properties as unknown.
-            if (key->isGroup() && key->group()->unknownPropertiesDontCheckGeneration())
+            if (key->isGroup() && key->groupNoBarrier()->unknownPropertiesDontCheckGeneration())
                 flags |= TYPE_FLAG_ANYOBJECT;
             objectSet = nullptr;
             setBaseObjectCount(0);

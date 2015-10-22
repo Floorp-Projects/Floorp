@@ -297,14 +297,6 @@ def get_counters(config):
 def get_active_tests(config):
     activeTests = config.pop('activeTests').strip().split(':')
 
-    # temporary hack for now until we have e10s running on all tests
-    if config['e10s'] and not config['develop']:
-        for testname in ('sessionrestore',
-                         'sessionrestore_no_auto_restore'):
-            if testname in activeTests:
-                print "%s is unsupported on e10s, removing from list of " \
-                    "tests to run" % testname
-                activeTests.remove(testname)
     # ensure tests are available
     availableTests = test.test_dict()
     if not set(activeTests).issubset(availableTests):

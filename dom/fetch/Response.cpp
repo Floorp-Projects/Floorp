@@ -210,7 +210,10 @@ Response::Constructor(const GlobalObject& aGlobal,
 
     if (!contentType.IsVoid() &&
         !internalResponse->Headers()->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
-      internalResponse->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), contentType, aRv);
+      // Ignore Append() failing here.
+      ErrorResult error;
+      internalResponse->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), contentType, error);
+      error.SuppressException();
     }
 
     if (aRv.Failed()) {

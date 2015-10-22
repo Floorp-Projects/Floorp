@@ -5491,6 +5491,7 @@ nsDocShell::LoadPage(nsISupports* aPageDescriptor, uint32_t aDisplayType)
       return rv;
     }
     shEntry->SetURI(newUri);
+    shEntry->SetOriginalURI(nullptr);
   }
 
   rv = LoadHistoryEntry(shEntry, LOAD_HISTORY);

@@ -147,7 +147,7 @@ Zone::logPromotionsToTenured()
             continue;
 
         for (auto range = awaitingTenureLogging.all(); !range.empty(); range.popFront()) {
-            if ((*dbgp)->isDebuggee(range.front()->compartment()))
+            if ((*dbgp)->isDebuggeeUnbarriered(range.front()->compartment()))
                 (*dbgp)->logTenurePromotion(rt, *range.front(), now);
         }
     }
@@ -311,7 +311,7 @@ Zone::notifyObservingDebuggers()
 {
     for (CompartmentsInZoneIter comps(this); !comps.done(); comps.next()) {
         JSRuntime* rt = runtimeFromAnyThread();
-        RootedGlobalObject global(rt, comps->maybeGlobal());
+        RootedGlobalObject global(rt, comps->unsafeUnbarrieredMaybeGlobal());
         if (!global)
             continue;
 
