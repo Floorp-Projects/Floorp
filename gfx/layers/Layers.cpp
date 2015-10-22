@@ -205,6 +205,12 @@ LayerManager::AreComponentAlphaLayersEnabled()
   return gfxPrefs::ComponentAlphaEnabled();
 }
 
+/*static*/ void
+LayerManager::LayerUserDataDestroy(void* data)
+{
+  delete static_cast<LayerUserData*>(data);
+}
+
 //--------------------------------------------------
 // Layer
 
