@@ -607,7 +607,7 @@ PresentationControllingInfo::NotifyClosed(nsresult aReason)
   // subsequent |Shutdown| calls.
   SetControlChannel(nullptr);
 
-  if (NS_WARN_IF(NS_FAILED(aReason))) {
+  if (NS_WARN_IF(NS_FAILED(aReason) || !mIsResponderReady)) {
     // The presentation session instance may already exist.
     // Change the state to TERMINATED since it never succeeds.
     SetState(nsIPresentationSessionListener::STATE_TERMINATED);
