@@ -167,49 +167,49 @@ public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Natives);
 
     template<typename Functor>
-    static void OnNativeCall(Functor&& call)
+    static void OnNativeCall(Functor&& aCall)
     {
-        if (call.IsTarget(&Open) && NS_IsMainThread()) {
+        if (aCall.IsTarget(&Open) && NS_IsMainThread()) {
             // Gecko state probably just switched to PROFILE_READY, and the
             // event loop is not running yet. Skip the event loop here so we
             // can get a head start on opening our window.
-            return call();
+            return aCall();
         }
-        return UsesGeckoThreadProxy::OnNativeCall(mozilla::Move(call));
+        return UsesGeckoThreadProxy::OnNativeCall(mozilla::Move(aCall));
     }
 
-    Natives(nsWindow* w) : window(*w) {}
+    Natives(nsWindow* aWindow) : window(*aWindow) {}
     ~Natives();
 
     /**
      * GeckoView methods
      */
     // Detach and destroy the window that we created in Open().
-    void DisposeNative(const GeckoView::Window::LocalRef& instance);
+    void DisposeNative(const GeckoView::Window::LocalRef& aInstance);
 
     // Create and attach a window.
-    static void Open(const jni::ClassObject::LocalRef& cls,
-                     GeckoView::Window::Param gvWindow,
-                     GeckoView::Param view,
-                     int32_t width, int32_t height);
+    static void Open(const jni::ClassObject::LocalRef& aCls,
+                     GeckoView::Window::Param aWindow,
+                     GeckoView::Param aView,
+                     int32_t aWidth, int32_t aHeight);
 
     // Set the active layer client object
-    static void SetLayerClient(jni::Object::Param client)
+    static void SetLayerClient(jni::Object::Param aClient)
     {
         MOZ_ASSERT(NS_IsMainThread());
         AndroidBridge::Bridge()->SetLayerClient(
-                widget::GeckoLayerClient::Ref::From(client.Get()));
+                widget::GeckoLayerClient::Ref::From(aClient.Get()));
     }
 
     /**
      * GeckoEditable methods
      */
     // Handle an Android KeyEvent.
-    void OnKeyEvent(int32_t action, int32_t keyCode, int32_t scanCode,
-                    int32_t metaState, int64_t time, int32_t unicodeChar,
-                    int32_t baseUnicodeChar, int32_t domPrintableKeyValue,
-                    int32_t repeatCount, int32_t flags,
-                    bool isSynthesizedImeKey);
+    void OnKeyEvent(int32_t aAction, int32_t aKeyCode, int32_t aScanCode,
+                    int32_t aMetaState, int64_t aTime, int32_t aUnicodeChar,
+                    int32_t aBaseUnicodeChar, int32_t aDomPrintableKeyValue,
+                    int32_t aRepeatCount, int32_t aFlags,
+                    bool aIsSynthesizedImeKey);
 };
 
 nsWindow::Natives::~Natives()
@@ -220,10 +220,10 @@ nsWindow::Natives::~Natives()
 }
 
 void
-nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
-                        GeckoView::Window::Param gvWindow,
-                        GeckoView::Param view,
-                        int32_t width, int32_t height)
+nsWindow::Natives::Open(const jni::ClassObject::LocalRef& aCls,
+                        GeckoView::Window::Param aWindow,
+                        GeckoView::Param aView,
+                        int32_t aWidth, int32_t aHeight)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -235,9 +235,9 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
         MOZ_ASSERT(gGeckoViewWindow->mNatives);
 
         // Associate our previous GeckoEditable with the new GeckoView.
-        gGeckoViewWindow->mEditable->OnViewChange(view);
+        gGeckoViewWindow->mEditable->OnViewChange(aView);
 
-        Base::AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
+        Base::AttachNative(GeckoView::Window::LocalRef(aCls.Env(), aWindow),
                            gGeckoViewWindow->mNatives.get());
         return;
     }
@@ -259,8 +259,8 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
 
     // Arguments are optional so it's okay if this fails.
     if (args && widthArg && heightArg &&
-            NS_SUCCEEDED(widthArg->SetData(width)) &&
-            NS_SUCCEEDED(heightArg->SetData(height)))
+            NS_SUCCEEDED(widthArg->SetData(aWidth)) &&
+            NS_SUCCEEDED(heightArg->SetData(aHeight)))
     {
         args->AppendElement(widthArg);
         args->AppendElement(heightArg);
@@ -280,15 +280,15 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
     // Create GeckoEditable for the new nsWindow/GeckoView pair.
     GeckoEditable::LocalRef editable = GeckoEditable::New();
     EditableBase::AttachNative(editable, gGeckoViewWindow->mNatives.get());
-    editable->OnViewChange(view);
+    editable->OnViewChange(aView);
     gGeckoViewWindow->mEditable = editable;
 
-    Base::AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
+    Base::AttachNative(GeckoView::Window::LocalRef(aCls.Env(), aWindow),
                        gGeckoViewWindow->mNatives.get());
 }
 
 void
-nsWindow::Natives::DisposeNative(const GeckoView::Window::LocalRef& instance)
+nsWindow::Natives::DisposeNative(const GeckoView::Window::LocalRef& aInstance)
 {
     // FIXME: because we don't support separate nsWindow for each GeckoView
     // yet, we have to keep this window around in case another GeckoView
@@ -303,7 +303,7 @@ nsWindow::Natives::DisposeNative(const GeckoView::Window::LocalRef& instance)
         baseWindow->Destroy();
     }
     */
-    Base::DisposeNative(instance);
+    Base::DisposeNative(aInstance);
 }
 
 void
@@ -1693,22 +1693,22 @@ InitKeyEvent(WidgetKeyboardEvent& event,
 }
 
 void
-nsWindow::Natives::OnKeyEvent(int32_t action, int32_t keyCode, int32_t scanCode,
-                              int32_t metaState, int64_t time,
-                              int32_t unicodeChar, int32_t baseUnicodeChar,
-                              int32_t domPrintableKeyValue, int32_t repeatCount,
-                              int32_t flags, bool isSynthesizedImeKey)
+nsWindow::Natives::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
+        int32_t aScanCode, int32_t aMetaState, int64_t aTime,
+        int32_t aUnicodeChar, int32_t aBaseUnicodeChar,
+        int32_t aDomPrintableKeyValue, int32_t aRepeatCount, int32_t aFlags,
+        bool aIsSynthesizedImeKey)
 {
     RefPtr<nsWindow> kungFuDeathGrip(&window);
     window.UserActivity();
     window.RemoveIMEComposition();
 
     EventMessage msg;
-    if (action == sdk::KeyEvent::ACTION_DOWN) {
+    if (aAction == sdk::KeyEvent::ACTION_DOWN) {
         msg = eKeyDown;
-    } else if (action == sdk::KeyEvent::ACTION_UP) {
+    } else if (aAction == sdk::KeyEvent::ACTION_UP) {
         msg = eKeyUp;
-    } else if (action == sdk::KeyEvent::ACTION_MULTIPLE) {
+    } else if (aAction == sdk::KeyEvent::ACTION_MULTIPLE) {
         // Keys with multiple action are handled in Java,
         // and we should never see one here
         MOZ_CRASH("Cannot handle key with multiple action");
@@ -1720,11 +1720,11 @@ nsWindow::Natives::OnKeyEvent(int32_t action, int32_t keyCode, int32_t scanCode,
     nsEventStatus status = nsEventStatus_eIgnore;
     WidgetKeyboardEvent event(true, msg, &window);
     window.InitEvent(event, nullptr);
-    InitKeyEvent(event, action, keyCode, scanCode, metaState, time,
-                 unicodeChar, baseUnicodeChar, domPrintableKeyValue,
-                 repeatCount, flags);
+    InitKeyEvent(event, aAction, aKeyCode, aScanCode, aMetaState, aTime,
+                 aUnicodeChar, aBaseUnicodeChar, aDomPrintableKeyValue,
+                 aRepeatCount, aFlags);
 
-    if (isSynthesizedImeKey) {
+    if (aIsSynthesizedImeKey) {
         // Keys synthesized by Java IME code are saved in the mIMEKeyEvents
         // array until the next IME_REPLACE_TEXT event, at which point
         // these keys are dispatched in sequence.
@@ -1736,18 +1736,18 @@ nsWindow::Natives::OnKeyEvent(int32_t action, int32_t keyCode, int32_t scanCode,
 
     if (window.Destroyed() ||
             status == nsEventStatus_eConsumeNoDefault ||
-            msg != eKeyDown || IsModifierKey(keyCode)) {
+            msg != eKeyDown || IsModifierKey(aKeyCode)) {
         // Skip sending key press event.
         return;
     }
 
     WidgetKeyboardEvent pressEvent(true, eKeyPress, &window);
     window.InitEvent(pressEvent, nullptr);
-    InitKeyEvent(pressEvent, action, keyCode, scanCode, metaState, time,
-                 unicodeChar, baseUnicodeChar, domPrintableKeyValue,
-                 repeatCount, flags);
+    InitKeyEvent(pressEvent, aAction, aKeyCode, aScanCode, aMetaState, aTime,
+                 aUnicodeChar, aBaseUnicodeChar, aDomPrintableKeyValue,
+                 aRepeatCount, aFlags);
 
-    if (isSynthesizedImeKey) {
+    if (aIsSynthesizedImeKey) {
         window.mIMEKeyEvents.AppendElement(
                 mozilla::UniquePtr<WidgetEvent>(pressEvent.Duplicate()));
     } else {
