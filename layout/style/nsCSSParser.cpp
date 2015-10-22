@@ -9460,7 +9460,9 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     return false;
   }
 
-  if (mToken.mType == eCSSToken_Ident &&
+  // Check for "to" syntax (but not if parsing a -webkit-linear-gradient)
+  if (!(aFlags & eGradient_WebkitLegacy) &&
+      mToken.mType == eCSSToken_Ident &&
       mToken.mIdent.LowerCaseEqualsLiteral("to")) {
 
     // "to" syntax doesn't allow explicit "center"
@@ -9483,7 +9485,7 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     return ParseGradientColorStops(cssGradient, aValue);
   }
 
-  if (!(aFlags & eGradient_MozLegacy)) {
+  if (!(aFlags & eGradient_AnyLegacy)) {
     // We're parsing an unprefixed linear-gradient, and we tried & failed to
     // parse a 'to' token above. Put the token back & try to re-parse our
     // expression as <angle>? <color-stop-list>
@@ -9513,18 +9515,32 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
 
     // if we got an angle, we might now have a comma, ending the gradient-line
     bool haveAngleComma = haveAngle && ExpectSymbol(',', true);
-    // XXXdholbert (Note: the logic here gets a bit more interesting when we
-    // add support for -webkit-linear-gradient's quirks.)
-    if (!haveAngleComma) {
-      if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
+
+    // If we're webkit-prefixed & didn't get an angle,
+    // OR if we're moz-prefixed & didn't get an angle+comma,
+    // then proceed to parse a box-position.
+    if (((aFlags & eGradient_WebkitLegacy) && !haveAngle) ||
+        ((aFlags & eGradient_MozLegacy) && !haveAngleComma)) {
+      // (Note: 3rd arg controls whether the "center" keyword is allowed.
+      // -moz-linear-gradient allows it; -webkit-linear-gradient does not.)
+      if (!ParseBoxPositionValues(cssGradient->mBgPos, false,
+                                  (aFlags & eGradient_MozLegacy))) {
+        SkipUntil(')');
+        return false;
+      }
+
+      // -webkit-linear-gradient only supports edge keywords here.
+      if ((aFlags & eGradient_WebkitLegacy) &&
+          !IsBoxPositionStrictlyEdgeKeywords(cssGradient->mBgPos)) {
         SkipUntil(')');
         return false;
       }
 
       if (!ExpectSymbol(',', true) &&
-          // if we didn't already get an angle, we might have one now,
-          // otherwise it's an error
+          // If we didn't already get an angle, and we're not -webkit prefixed,
+          // we can parse an angle+comma now.  Otherwise it's an error.
           (haveAngle ||
+           (aFlags & eGradient_WebkitLegacy) ||
            !ParseSingleTokenVariant(cssGradient->mAngle, VARIANT_ANGLE,
                                     nullptr) ||
            // now we better have a comma
