@@ -78,6 +78,18 @@
           ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
           is(win.AppManager.selectedProject.type, "mainProcess", "Main process reselected");
 
+          // Wait for the toolbox to be fully loaded
+          yield win.UI.toolboxPromise;
+
+          // If we happen to pass a project object targeting the same context,
+          // here, the main process, the `selectedProject` attribute shouldn't be updated
+          // so that no `project` event would fire.
+          let oldProject = win.AppManager.selectedProject;
+          win.AppManager.selectedProject = {
+            type: "mainProcess"
+          };
+          is(win.AppManager.selectedProject, oldProject, "AppManager.selectedProject shouldn't be updated if we selected the same project");
+
           yield win.Cmds.disconnectRuntime();
 
           yield closeWebIDE(win);
