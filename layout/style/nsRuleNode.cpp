@@ -2372,12 +2372,11 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // branch that they never need to examine their rules for this particular struct type
     // ever again.
     PropagateDependentBit(aSID, ruleNode, startStruct);
-    // With this same bit set, we do two different things:
-    // For reset structs, record that we have asked for this struct on
-    // this context, but it is not cached on the context.
     // For inherited structs, mark the struct (which will be set on
     // the context by our caller) as not being owned by the context.
-    aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+    if (!isReset) {
+      aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+    }
     return startStruct;
   }
   if ((!startStruct && !isReset &&
@@ -2782,9 +2781,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       SetStyleData(eStyleStruct_##type_, data_);                              \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(eStyleStruct_##type_, aHighestNode, data_);         \
-    /* Tell the context that we've gotten the data (separate meaning */       \
-    /* of mBits when the cached data pointer is null) */                      \
-    aContext->AddStyleBit(NS_STYLE_INHERIT_BIT(type_));                       \
   } else if (conditions.Cacheable()) {                                        \
     if (!mStyleData.mResetData) {                                             \
       mStyleData.mResetData = new (mPresContext) nsConditionalResetStyleData; \
@@ -9436,12 +9432,11 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {
     data = mStyleData.GetStyleData(aSID, aContext, aComputeData);
     if (MOZ_LIKELY(data != nullptr)) {
-      // With this same bit set, we do two different things:
-      // For reset structs, mark the struct as having been retrieved for
-      // this context.
       // For inherited structs, mark the struct (which will be set on
       // the context by our caller) as not being owned by the context.
-      aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+      if (!nsCachedStyleData::IsReset(aSID)) {
+        aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+      }
       return data; // We have a fully specified struct. Just return it.
     }
   }
