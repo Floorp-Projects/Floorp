@@ -3,8 +3,8 @@
 
 "use strict";
 
-const {LoopContacts} = Cu.import("resource:///modules/loop/LoopContacts.jsm", {});
-const {LoopStorage} = Cu.import("resource:///modules/loop/LoopStorage.jsm", {});
+const { LoopContacts } = Cu.import("resource:///modules/loop/LoopContacts.jsm", {});
+const { LoopStorage } = Cu.import("resource:///modules/loop/LoopStorage.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
@@ -147,7 +147,7 @@ LoopContacts.on("add", onContactAdded);
 LoopContacts.on("remove", onContactRemoved);
 LoopContacts.on("update", onContactUpdated);
 
-registerCleanupFunction(function () {
+registerCleanupFunction(function() {
   LoopContacts.removeAll(() => {});
   LoopContacts.off("add", onContactAdded);
   LoopContacts.off("remove", onContactRemoved);

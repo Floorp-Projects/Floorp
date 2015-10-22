@@ -286,7 +286,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   yield MozLoopService.promiseRegisteredWithServers();
 
   let statusChangedPromise = promiseObserverNotified("loop-status-changed");
-  yield loadLoopPanel({stayOnline: true});
+  yield loadLoopPanel({ stayOnline: true });
   yield statusChangedPromise;
   let loopDoc = document.getElementById("loop-panel-iframe").contentDocument;
   let accountLogin = loopDoc.getElementsByClassName("signin-link")[0];
@@ -319,7 +319,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   let loopPanel = document.getElementById("loop-notification-panel");
   loopPanel.hidePopup();
   statusChangedPromise = promiseObserverNotified("loop-status-changed");
-  yield loadLoopPanel({stayOnline: true});
+  yield loadLoopPanel({ stayOnline: true });
   yield statusChangedPromise;
   is(loopButton.getAttribute("state"), "", "state of loop button should return to empty after panel is opened");
   loopPanel.hidePopup();

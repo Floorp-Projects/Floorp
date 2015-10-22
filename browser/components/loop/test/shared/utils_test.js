@@ -65,7 +65,7 @@ describe("loop.shared.utils", function() {
       sinon.assert.calledOnce(Date.prototype.toLocaleDateString);
       sinon.assert.calledWithExactly(Date.prototype.toLocaleDateString,
         navigator.language,
-        {year: "numeric", month: "long", day: "numeric"}
+        { year: "numeric", month: "long", day: "numeric" }
       );
     });
 
@@ -321,7 +321,7 @@ describe("loop.shared.utils", function() {
     beforeEach(function() {
       // fake mozL10n
       sandbox.stub(navigator.mozL10n, "get", function(id) {
-        switch(id) {
+        switch (id) {
           case "share_email_subject6":
             return "subject";
           case "share_email_body6":
@@ -366,7 +366,7 @@ describe("loop.shared.utils", function() {
       sharedUtils.composeCallUrlEmail("http://invalid", null,
         "Hello, is me you're looking for?", "callfailed");
 
-      sinon.assert.calledOnce(telemetryAddValue, "LOOP_SHARING_ROOM_URL",  2);
+      sinon.assert.calledOnce(telemetryAddValue, "LOOP_SHARING_ROOM_URL", 2);
     });
 
     it("should log an error for invalid URLs", function() {

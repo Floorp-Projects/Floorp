@@ -107,14 +107,14 @@ loop.store.ConversationAppStore = (function() {
 
       if (!windowData) {
         console.error("Failed to get the window data");
-        this.setStoreState({windowType: "failed"});
+        this.setStoreState({ windowType: "failed" });
         return;
       }
 
-      this.setStoreState({windowType: windowData.type});
+      this.setStoreState({ windowType: windowData.type });
 
       this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
-        windowId: actionData.windowId}, windowData)));
+        windowId: actionData.windowId }, windowData)));
     },
 
     /**
