@@ -255,6 +255,32 @@ public:
                     int32_t aBaseUnicodeChar, int32_t aDomPrintableKeyValue,
                     int32_t aRepeatCount, int32_t aFlags,
                     bool aIsSynthesizedImeKey);
+
+    // Synchronize Gecko thread with the InputConnection thread.
+    void OnImeSynchronize();
+
+    // Acknowledge focus change and send new text and selection.
+    void OnImeAcknowledgeFocus();
+
+    // Replace a range of text with new text.
+    void OnImeReplaceText(int32_t start, int32_t end,
+                          jni::String::Param text, bool composing);
+
+    // Set selection to a certain range.
+    void OnImeSetSelection(int32_t start, int32_t end);
+
+    // Remove any active composition.
+    void OnImeRemoveComposition();
+
+    // Add styling for a range within the active composition.
+    void OnImeAddCompositionRange(int32_t start, int32_t end, int32_t rangeType,
+                                  int32_t rangeStyle, int32_t rangeLineStyle,
+                                  bool rangeBoldLine, int32_t rangeForeColor,
+                                  int32_t rangeBackColor,
+                                  int32_t rangeLineColor);
+
+    // Update styling for the active composition using previous-added ranges.
+    void OnImeUpdateComposition(int32_t start, int32_t end);
 };
 
 nsWindow::Natives::~Natives()
@@ -1874,6 +1900,52 @@ nsWindow::SendIMEDummyKeyEvents()
     InitEvent(upEvent, nullptr);
     MOZ_ASSERT(upEvent.keyCode == 0);
     DispatchEvent(&upEvent);
+}
+
+void
+nsWindow::Natives::OnImeSynchronize()
+{
+    // TODO: implement
+}
+
+void
+nsWindow::Natives::OnImeAcknowledgeFocus()
+{
+    // TODO: implement
+}
+
+void
+nsWindow::Natives::OnImeReplaceText(int32_t start, int32_t end,
+                                    jni::String::Param text, bool composing)
+{
+    // TODO: implement
+}
+
+void
+nsWindow::Natives::OnImeSetSelection(int32_t start, int32_t end)
+{
+    // TODO: implement
+}
+
+void
+nsWindow::Natives::OnImeRemoveComposition()
+{
+    // TODO: implement
+}
+
+void
+nsWindow::Natives::OnImeAddCompositionRange(
+        int32_t start, int32_t end, int32_t rangeType, int32_t rangeStyle,
+        int32_t rangeLineStyle, bool rangeBoldLine, int32_t rangeForeColor,
+        int32_t rangeBackColor, int32_t rangeLineColor)
+{
+    // TODO: implement
+}
+
+void
+nsWindow::Natives::OnImeUpdateComposition(int32_t start, int32_t end)
+{
+    // TODO: implement
 }
 
 void
