@@ -2863,6 +2863,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         atomicEffectOp(4, AtomicFetchXorOp, value, mem);
     }
 
+    template<typename T>
+    void compareExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem, Register oldval, Register newval,
+                                        Register temp, AnyRegister output);
+
+    template<typename T>
+    void atomicExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem, Register value,
+                                       Register temp, AnyRegister output);
+
     // Emit a BLR or NOP instruction. ToggleCall can be used to patch
     // this instruction.
     CodeOffsetLabel toggledCall(JitCode* target, bool enabled) {
