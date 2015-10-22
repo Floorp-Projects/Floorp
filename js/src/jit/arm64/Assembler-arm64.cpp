@@ -124,15 +124,18 @@ Assembler::emitExtendedJumpTable()
         br(vixl::ip0);
 
         DebugOnly<size_t> prePointer = size_t(armbuffer_.nextOffset().getOffset());
-        MOZ_ASSERT(prePointer - preOffset == OffsetOfJumpTableEntryPointer);
+        MOZ_ASSERT_IF(!oom(), prePointer - preOffset == OffsetOfJumpTableEntryPointer);
 
         brk(0x0);
         brk(0x0);
 
         DebugOnly<size_t> postOffset = size_t(armbuffer_.nextOffset().getOffset());
 
-        MOZ_ASSERT(postOffset - preOffset == SizeOfJumpTableEntry);
+        MOZ_ASSERT_IF(!oom(), postOffset - preOffset == SizeOfJumpTableEntry);
     }
+
+    if (oom())
+        return BufferOffset();
 
     return tableOffset;
 }
