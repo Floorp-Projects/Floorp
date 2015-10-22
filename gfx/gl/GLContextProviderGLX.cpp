@@ -164,7 +164,7 @@ GLXLibrary::EnsureInitialized()
         { nullptr, { nullptr } }
     };
 
-    GLLibraryLoader::SymLoadStruct symbols_robustness[] = {
+    GLLibraryLoader::SymLoadStruct symbols_createcontext[] = {
         { (PRFuncPtr*) &xCreateContextAttribsInternal, { "glXCreateContextAttribsARB", nullptr } },
         { nullptr, { nullptr } }
     };
@@ -237,9 +237,15 @@ GLXLibrary::EnsureInitialized()
         NS_WARNING("Texture from pixmap disabled");
     }
 
-    if (HasExtension(extensionsStr, "GLX_ARB_create_context_robustness") &&
-        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_robustness,
+    if (HasExtension(extensionsStr, "GLX_ARB_create_context") &&
+        HasExtension(extensionsStr, "GLX_ARB_create_context_profile") &&
+        GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_createcontext,
                                      (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
+    {
+        mHasCreateContextAttribs = true;
+    }
+
+    if (HasExtension(extensionsStr, "GLX_ARB_create_context_robustness"))
     {
         mHasRobustness = true;
     }
@@ -744,7 +750,8 @@ GLContextGLX::CreateGLContext(
                   GLXDrawable drawable,
                   GLXFBConfig cfg,
                   bool deleteDrawable,
-                  gfxXlibSurface* pixmap)
+                  gfxXlibSurface* pixmap,
+                  ContextProfile profile)
 {
     GLXLibrary& glx = sGLXLibrary;
 
@@ -770,19 +777,31 @@ TRY_AGAIN_NO_SHARING:
     error = false;
 
     GLXContext glxContext = shareContext ? shareContext->mContext : nullptr;
-    if (glx.HasRobustness()) {
-        int attrib_list[] = {
-            LOCAL_GL_CONTEXT_FLAGS_ARB, LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
-            LOCAL_GL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_GL_LOSE_CONTEXT_ON_RESET_ARB,
-            0,
+    if (glx.HasCreateContextAttribs()) {
+        nsAutoTArray<int, 11> attrib_list;
+        if (glx.HasRobustness()) {
+            int robust_attribs[] = {
+                LOCAL_GL_CONTEXT_FLAGS_ARB, LOCAL_GL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+                LOCAL_GL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_GL_LOSE_CONTEXT_ON_RESET_ARB,
+            };
+            attrib_list.AppendElements(robust_attribs, MOZ_ARRAY_LENGTH(robust_attribs));
+        }
+        if (profile == ContextProfile::OpenGLCore) {
+            int core_attribs[] = {
+                LOCAL_GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                LOCAL_GLX_CONTEXT_MINOR_VERSION_ARB, 2,
+                LOCAL_GLX_CONTEXT_FLAGS_ARB, LOCAL_GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+            };
+            attrib_list.AppendElements(core_attribs, MOZ_ARRAY_LENGTH(core_attribs));
         };
+        attrib_list.AppendElement(0);
 
         context = glx.xCreateContextAttribs(
             display,
             cfg,
             glxContext,
             True,
-            attrib_list);
+            attrib_list.Elements());
     } else {
         context = glx.xCreateNewContext(
             display,
@@ -801,7 +820,8 @@ TRY_AGAIN_NO_SHARING:
                                       context,
                                       deleteDrawable,
                                       db,
-                                      pixmap);
+                                      pixmap,
+                                      profile);
         if (!glContext->Init())
             error = true;
     } else {
@@ -857,7 +877,9 @@ GLContextGLX::Init()
         return false;
     }
 
-    if (!IsExtensionSupported(EXT_framebuffer_object))
+    // EXT_framebuffer_object is not supported on Core contexts
+    // so we'll also check for ARB_framebuffer_object
+    if (!IsExtensionSupported(EXT_framebuffer_object) && !IsSupported(GLFeature::framebuffer_object))
         return false;
 
     return true;
@@ -954,7 +976,8 @@ GLContextGLX::GLContextGLX(
                   GLXContext aContext,
                   bool aDeleteDrawable,
                   bool aDoubleBuffered,
-                  gfxXlibSurface *aPixmap)
+                  gfxXlibSurface *aPixmap,
+                  ContextProfile profile)
     : GLContext(caps, shareContext, isOffscreen),//aDeleteDrawable ? true : false, aShareContext, ),
       mContext(aContext),
       mDisplay(aDisplay),
@@ -967,7 +990,7 @@ GLContextGLX::GLContextGLX(
 {
     MOZ_ASSERT(mGLX);
     // See 899855
-    SetProfileVersion(ContextProfile::OpenGLCompatibility, 200);
+    SetProfileVersion(profile, 200);
 }
 
 
@@ -1016,7 +1039,8 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
                              (GLXDrawable)aSurface, (GLXContext)aContext,
                              false, // aDeleteDrawable,
                              true,
-                             (gfxXlibSurface*)nullptr);
+                             (gfxXlibSurface*)nullptr,
+                             ContextProfile::OpenGLCompatibility);
 
         glContext->mOwnsContext = false;
         gGlobalContext = glContext;
@@ -1189,7 +1213,7 @@ ChooseConfig(GLXLibrary* glx, Display* display, int screen, const SurfaceCaps& m
 }
 
 static already_AddRefed<GLContextGLX>
-CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps)
+CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps, ContextProfile profile = ContextProfile::OpenGLCompatibility)
 {
     GLXLibrary* glx = &sGLXLibrary;
     if (!glx->EnsureInitialized())
@@ -1247,7 +1271,7 @@ DONE_CREATING_PIXMAP:
 
     GLContextGLX* shareContext = GetGlobalContextGLX();
     return GLContextGLX::CreateGLContext(minCaps, shareContext, true, display, pixmap,
-                                         config, true, surface);
+                                         config, true, surface, profile);
 }
 
 /*static*/ already_AddRefed<GLContext>
@@ -1270,8 +1294,13 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
         minBackbufferCaps.stencil = false;
     }
 
+    ContextProfile profile = ContextProfile::OpenGLCore;
+    if (flags & CreateContextFlags::REQUIRE_COMPAT_PROFILE) {
+        profile = ContextProfile::OpenGLCompatibility;
+    }
+
     RefPtr<GLContext> gl;
-    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps);
+    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps, profile);
     if (!gl)
         return nullptr;
 
