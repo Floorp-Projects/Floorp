@@ -27,6 +27,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
 #include "nsIRequestObserver.h"
+#include "nsIEmbeddingSiteWindow.h"
 
 /* For implementing GetHiddenWindowAndJSContext */
 #include "nsIScriptGlobalObject.h"
@@ -221,6 +222,7 @@ nsAppShellService::CreateTopLevelWindow(nsIXULWindow *aParent,
  * by nsAppShellService::CreateWindowlessBrowser
  */
 class WebBrowserChrome2Stub : public nsIWebBrowserChrome2,
+                              public nsIEmbeddingSiteWindow,
                               public nsIInterfaceRequestor,
                               public nsSupportsWeakReference {
 protected:
@@ -230,6 +232,7 @@ public:
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBBROWSERCHROME2
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIEMBEDDINGSITEWINDOW
 };
 
 NS_INTERFACE_MAP_BEGIN(WebBrowserChrome2Stub)
@@ -238,6 +241,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome2Stub)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(WebBrowserChrome2Stub)
@@ -321,9 +325,78 @@ WebBrowserChrome2Stub::SetStatusWithContext(uint32_t aStatusType,
 }
 
 NS_IMETHODIMP
-WebBrowserChrome2Stub::GetInterface(const nsIID & aIID, void **aSink)
+WebBrowserChrome2Stub::GetInterface(const nsIID& aIID, void** aSink)
 {
     return QueryInterface(aIID, aSink);
+}
+
+// nsIEmbeddingSiteWindow impl
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetDimensions(uint32_t flags, int32_t* x, int32_t* y, int32_t* cx, int32_t* cy)
+{
+  if (x) {
+    *x = 0;
+  }
+
+  if (y) {
+    *y = 0;
+  }
+
+  if (cx) {
+    *cx = 0;
+  }
+
+  if (cy) {
+    *cy = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::SetDimensions(uint32_t flags, int32_t x, int32_t y, int32_t cx, int32_t cy)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::SetFocus()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetVisibility(bool* aVisibility)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP
+WebBrowserChrome2Stub::SetVisibility(bool aVisibility)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetTitle(char16_t** aTitle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP
+WebBrowserChrome2Stub::SetTitle(const char16_t* aTitle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::GetSiteWindow(void** aSiteWindow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+WebBrowserChrome2Stub::Blur()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // This is the "stub" we return from CreateWindowlessBrowser - it exists
