@@ -2532,7 +2532,7 @@ LookupStyleContext(dom::Element* aElement)
   return nsComputedDOMStyle::GetStyleContextForElement(aElement, nullptr, shell);
 }
 
-bool
+/* static */ bool
 StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
                                   dom::Element* aTargetElement,
                                   const nsAString& aSpecifiedValue,
@@ -2564,6 +2564,59 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
     return true;
   }
 
+  nsAutoTArray<PropertyStyleAnimationValuePair,1> values;
+  bool ok = ComputeValues(aProperty, nsCSSProps::eIgnoreEnabledState,
+                          aTargetElement, styleRule, values,
+                          aIsContextSensitive);
+  if (!ok) {
+    return false;
+  }
+
+  MOZ_ASSERT(values.Length() == 1);
+  MOZ_ASSERT(values[0].mProperty == aProperty);
+
+  aComputedValue = values[0].mValue;
+  return true;
+}
+
+/* static */ bool
+StyleAnimationValue::ComputeValues(nsCSSProperty aProperty,
+                                   nsCSSProps::EnabledState aEnabledState,
+                                   dom::Element* aTargetElement,
+                                   const nsAString& aSpecifiedValue,
+                                   bool aUseSVGMode,
+                                   nsTArray<PropertyStyleAnimationValuePair>& aResult)
+{
+  MOZ_ASSERT(aTargetElement, "null target element");
+  MOZ_ASSERT(aTargetElement->GetCurrentDoc(),
+             "we should only be able to actively animate nodes that "
+             "are in a document");
+
+  // Parse specified value into a temporary css::StyleRule
+  RefPtr<css::StyleRule> styleRule =
+    BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
+  if (!styleRule) {
+    return false;
+  }
+
+  aResult.Clear();
+  return ComputeValues(aProperty, aEnabledState, aTargetElement, styleRule,
+                       aResult, /* aIsContextSensitive */ nullptr);
+}
+
+/* static */ bool
+StyleAnimationValue::ComputeValues(
+    nsCSSProperty aProperty,
+    nsCSSProps::EnabledState aEnabledState,
+    dom::Element* aTargetElement,
+    css::StyleRule* aStyleRule,
+    nsTArray<PropertyStyleAnimationValuePair>& aValues,
+    bool* aIsContextSensitive)
+{
+  if (!nsCSSProps::IsEnabled(aProperty, aEnabledState)) {
+    return false;
+  }
+
   // Look up style context for our target element
   RefPtr<nsStyleContext> styleContext = LookupStyleContext(aTargetElement);
   if (!styleContext) {
@@ -2573,10 +2626,14 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
 
   RefPtr<nsStyleContext> tmpStyleContext;
   if (aIsContextSensitive) {
+    MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
+               "to correctly set aIsContextSensitive for shorthand properties, "
+               "this code must be adjusted");
+
     nsCOMArray<nsIStyleRule> ruleArray;
     ruleArray.AppendObject(styleSet->InitialStyleRule());
-    ruleArray.AppendObject(styleRule);
-    styleRule->RuleMatched();
+    ruleArray.AppendObject(aStyleRule);
+    aStyleRule->RuleMatched();
     tmpStyleContext =
       styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
     if (!tmpStyleContext) {
@@ -2587,8 +2644,8 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
     nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
     tmpStyleContext->StyleData(sid);
 
-    // If the rule node will have cached style data if the value is not
-    // context-sensitive. So if there's nothing cached, it's not context
+    // The rule node will have unconditional cached style data if the value is
+    // not context-sensitive.  So if there's nothing cached, it's not context
     // sensitive.
     *aIsContextSensitive =
       !tmpStyleContext->RuleNode()->NodeHasCachedUnconditionalData(sid);
@@ -2602,8 +2659,8 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
   // value may have been biased by the 'initial' values supplied.
   if (!aIsContextSensitive || *aIsContextSensitive) {
     nsCOMArray<nsIStyleRule> ruleArray;
-    ruleArray.AppendObject(styleRule);
-    styleRule->RuleMatched();
+    ruleArray.AppendObject(aStyleRule);
+    aStyleRule->RuleMatched();
     tmpStyleContext =
       styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
     if (!tmpStyleContext) {
@@ -2611,8 +2668,27 @@ StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
     }
   }
 
-  // Extract computed value of our property from the temporary style rule
-  return ExtractComputedValue(aProperty, tmpStyleContext, aComputedValue);
+  // Extract computed value of our property (or all longhand components, if
+  // aProperty is a shorthand) from the temporary style rule
+  if (nsCSSProps::IsShorthand(aProperty)) {
+    CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty, aEnabledState) {
+      if (nsCSSProps::kAnimTypeTable[*p] == eStyleAnimType_None) {
+        // Skip non-animatable component longhands.
+        continue;
+      }
+      PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
+      pair->mProperty = *p;
+      if (!ExtractComputedValue(*p, tmpStyleContext,
+                                pair->mValue)) {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    PropertyStyleAnimationValuePair* pair = aValues.AppendElement();
+    pair->mProperty = aProperty;
+    return ExtractComputedValue(aProperty, tmpStyleContext, pair->mValue);
+  }
 }
 
 bool
