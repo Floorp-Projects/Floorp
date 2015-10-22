@@ -553,8 +553,8 @@ loop.store.ActiveRoomStore = (function() {
      */
     _handleRoomUpdate: function(eventName, roomData) {
       this.dispatchAction(new sharedActions.UpdateRoomInfo({
-        urls: roomData.decryptedContext.urls,
-        description: roomData.decryptedContext.description,
+        roomContextUrls: roomData.decryptedContext.urls,
+        roomDescription: roomData.decryptedContext.description,
         participants: roomData.participants,
         roomName: roomData.decryptedContext.roomName,
         roomUrl: roomData.roomUrl
