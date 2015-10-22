@@ -255,7 +255,7 @@ class SharedContext
     }
 
     bool isDotVariable(JSAtom* atom) const {
-        return atom == context->names().dotGenerator;
+        return atom == context->names().dotGenerator || atom == context->names().dotGenRVal;
     }
 };
 

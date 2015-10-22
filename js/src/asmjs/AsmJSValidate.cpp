@@ -105,7 +105,7 @@ static inline ParseNode*
 ReturnExpr(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_RETURN));
-    return UnaryKid(pn);
+    return BinaryLeft(pn);
 }
 
 static inline ParseNode*
