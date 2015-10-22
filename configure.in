@@ -3757,6 +3757,7 @@ MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
 MOZ_ANDROID_MLS_STUMBLER=
 MOZ_ANDROID_SHARE_OVERLAY=
+MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
 MOZ_INSTALL_TRACKING=
 MOZ_SWITCHBOARD=
 ACCESSIBILITY=1
@@ -4862,6 +4863,13 @@ dnl = Temporary build flag to allow development in Nightly
 dnl ========================================================
 if test -n "$MOZ_ANDROID_TAB_QUEUE"; then
     AC_DEFINE(MOZ_ANDROID_TAB_QUEUE)
+fi
+
+dnl =========================================================
+dnl = Whether to exclude hyphenations files in the build
+dnl =========================================================
+if test -n "$MOZ_EXCLUDE_HYPHENATION_DICTIONARIES"; then
+    AC_DEFINE(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 fi
 
 dnl ========================================================
@@ -8595,6 +8603,7 @@ AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)
 AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
+AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(MOZ_INSTALL_TRACKING)
 AC_SUBST(MOZ_SWITCHBOARD)
 AC_SUBST(ENABLE_STRIP)

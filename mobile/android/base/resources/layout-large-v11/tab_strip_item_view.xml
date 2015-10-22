@@ -6,7 +6,7 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
-   <ImageButton
+   <ImageView
         android:id="@+id/favicon"
         android:layout_width="@dimen/browser_toolbar_favicon_size"
         android:layout_height="match_parent"
