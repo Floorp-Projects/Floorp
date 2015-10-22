@@ -5,7 +5,7 @@
  */
 
 [Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation"]
+ Func="Navigator::HasPresentationSupport"]
 interface Presentation : EventTarget {
  /*
   * This should be used by the UA as the default presentation request for the

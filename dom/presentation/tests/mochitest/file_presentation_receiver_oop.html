@@ -34,8 +34,8 @@ var connection;
 
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
-    ok(navigator.presentation, "navigator.presentation should be available.");
-    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available.");
+    ok(navigator.presentation, "navigator.presentation should be available in OOP receiving pages.");
+    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available in OOP receiving pages.");
 
     navigator.presentation.receiver.getConnection().then(
       function(aConnection) {
@@ -51,6 +51,16 @@ function testConnectionAvailable() {
         aReject();
       }
     );
+  });
+}
+
+function testConnectionAvailableInnerIframe() {
+  return new Promise(function(aResolve, aReject) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('src', './file_presentation_receiver_inner_iframe_oop.html');
+    document.body.appendChild(iframe);
+
+    aResolve();
   });
 }
 
@@ -94,6 +104,7 @@ function testTerminateConnection() {
 }
 
 testConnectionAvailable().
+then(testConnectionAvailableInnerIframe).
 then(testConnectionReady).
 then(testIncomingMessage).
 then(testTerminateConnection).
