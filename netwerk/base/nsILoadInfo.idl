@@ -14,6 +14,7 @@ interface nsIPrincipal;
 %{C++
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/LoadTainting.h"
 %}
 
 [ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
@@ -25,7 +26,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(51313616-163f-4be1-aba0-e3d471b7f7a2)]
+[scriptable, builtinclass, uuid(2ab4c77c-78e6-11e5-8bcf-feff819cdc9f)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -443,4 +444,54 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(RedirectChain)]
   const_nsIPrincipalArray binaryRedirectChain();
+
+  /**
+  * Constants reflecting the channel tainting.  These are mainly defined here
+  * for script.  Internal C++ code should use the enum defined in LoadTainting.h.
+  * See LoadTainting.h for documentation.
+  */
+  const unsigned long TAINTING_BASIC = 0;
+  const unsigned long TAINTING_CORS = 1;
+  const unsigned long TAINTING_OPAQUE = 2;
+
+  /**
+   * Determine the associated channel's current tainting.  Note, this can
+   * change due to a service worker intercept, so it should be checked after
+   * OnStartRequest() fires.
+   */
+  readonly attribute unsigned long tainting;
+
+  /**
+   * Note a new tainting level and possibly increase the current tainting
+   * to match.  If the tainting level is already greater than the given
+   * value, then there is no effect.  It is not possible to reduce the tainting
+   * level on an existing channel/loadinfo.
+   */
+  void maybeIncreaseTainting(in unsigned long aTainting);
+
+  /**
+   * Various helper code to provide more convenient C++ access to the tainting
+   * attribute and maybeIncreaseTainting().
+   */
+%{C++
+  static_assert(TAINTING_BASIC == static_cast<uint32_t>(mozilla::LoadTainting::Basic),
+                "basic tainting enums should match");
+  static_assert(TAINTING_CORS == static_cast<uint32_t>(mozilla::LoadTainting::CORS),
+                "cors tainting enums should match");
+  static_assert(TAINTING_OPAQUE == static_cast<uint32_t>(mozilla::LoadTainting::Opaque),
+                "opaque tainting enums should match");
+
+  mozilla::LoadTainting GetTainting()
+  {
+    uint32_t tainting = TAINTING_BASIC;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(GetTainting(&tainting)));
+    return static_cast<mozilla::LoadTainting>(tainting);
+  }
+
+  void MaybeIncreaseTainting(mozilla::LoadTainting aTainting)
+  {
+    uint32_t tainting = static_cast<uint32_t>(aTainting);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(MaybeIncreaseTainting(tainting)));
+  }
+%}
 };
