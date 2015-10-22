@@ -211,15 +211,16 @@ function run_test()
 
   // Enable the feature and save the original pref value
   originalPref = Services.prefs.getBoolPref("network.http.enable-packaged-apps");
-  originalSignedAppEnabled = Services.prefs.getBoolPref("network.http.packaged-signed-apps-enabled");
+  originalSignedAppEnabled = Services.prefs.getBoolPref("network.http.signed-packages.enabled");
   Services.prefs.setBoolPref("network.http.enable-packaged-apps", true);
-  Services.prefs.setBoolPref("network.http.packaged-signed-apps-enabled", true);
+  Services.prefs.setBoolPref("network.http.signed-packages.enabled", true);
   do_register_cleanup(reset_pref);
 
   add_test(test_channel);
   add_test(test_channel_no_notificationCallbacks);
   add_test(test_channel_uris);
 
+  add_test(test_channel_with_bad_signature_from_trusted_origin);
   add_test(test_channel_with_bad_signature);
   add_test(test_channel_with_good_signature);
 
@@ -232,6 +233,21 @@ function test_channel_with_bad_signature() {
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
   channel.asyncOpen(new Listener(function(l) {
     do_check_true(l.gotFileNotFound);
+    run_next_test();
+  }), null);
+}
+
+function test_channel_with_bad_signature_from_trusted_origin() {
+  let pref = "network.http.signed-packages.trusted-origin";
+  ok(!!Ci.nsISupportsString, "Ci.nsISupportsString");
+  let origin = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+  origin.data = uri + "^appId=1024";
+  Services.prefs.setComplexValue(pref, Ci.nsISupportsString, origin);
+  var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
+  channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
+  channel.asyncOpen(new Listener(function(l) {
+    do_check_true(l.gotStopRequestOK);
+    Services.prefs.clearUserPref(pref);
     run_next_test();
   }), null);
 }
@@ -281,5 +297,5 @@ function check_regular_response(request, buffer) {
 function reset_pref() {
   // Set the pref to its original value
   Services.prefs.setBoolPref("network.http.enable-packaged-apps", originalPref);
-  Services.prefs.setBoolPref("network.http.packaged-signed-apps-enabled", originalSignedAppEnabled);
+  Services.prefs.setBoolPref("network.http.signed-packages.enabled", originalSignedAppEnabled);
 }

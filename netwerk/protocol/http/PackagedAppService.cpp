@@ -447,6 +447,7 @@ PackagedAppService::PackagedAppDownloader::EnsureVerifier(nsIRequest *aRequest)
   nsCOMPtr<nsICacheEntry> packageCacheEntry = GetPackageCacheEntry(aRequest);
 
   mVerifier = new PackagedAppVerifier(this,
+                                      mPackageOrigin,
                                       signature,
                                       packageCacheEntry);
 }
