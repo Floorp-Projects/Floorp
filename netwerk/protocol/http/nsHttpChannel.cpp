@@ -2010,19 +2010,12 @@ nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI, uint32_t flags)
     if (!(flags & nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
         // Ensure that internally-redirected channels cannot be intercepted, which would look
         // like two separate requests to the nsINetworkInterceptController.
-        if (mInterceptCache == INTERCEPTED) {
-            nsCOMPtr<nsIHttpChannelInternal> httpRedirect = do_QueryInterface(mRedirectChannel);
-            if (httpRedirect) {
-                httpRedirect->ForceIntercepted(mInterceptionID);
-            }
-        } else {
-            nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-            rv = mRedirectChannel->GetLoadFlags(&loadFlags);
-            NS_ENSURE_SUCCESS(rv, rv);
-            loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-            rv = mRedirectChannel->SetLoadFlags(loadFlags);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+        nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+        rv = mRedirectChannel->GetLoadFlags(&loadFlags);
+        NS_ENSURE_SUCCESS(rv, rv);
+        loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+        rv = mRedirectChannel->SetLoadFlags(loadFlags);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     PushRedirectAsyncFunc(
@@ -3000,10 +2993,11 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
     if (mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY)
         cacheEntryOpenFlags |= nsICacheStorage::OPEN_BYPASS_IF_BUSY;
 
+    if (mPostID) {
+        extension.Append(nsPrintfCString("%d", mPostID));
+    }
     if (PossiblyIntercepted()) {
         extension.Append(nsPrintfCString("u%lld", mInterceptionID));
-    } else if (mPostID) {
-        extension.Append(nsPrintfCString("%d", mPostID));
     }
 
     // If this channel should be intercepted, we do not open a cache entry for this channel
@@ -4990,7 +4984,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         return rv;
     }
 
-    if (mInterceptCache != INTERCEPTED && ShouldIntercept()) {
+    if (ShouldIntercept()) {
         mInterceptCache = MAYBE_INTERCEPT;
         SetCouldBeSynthesized();
     }
@@ -5347,21 +5341,6 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     mFallbackChannel = true;
     mFallbackKey = aFallbackKey;
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::ForceIntercepted(uint64_t aInterceptionID)
-{
-    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
-
-    if (NS_WARN_IF(mLoadFlags & LOAD_BYPASS_SERVICE_WORKER)) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    MarkIntercepted();
-    mResponseCouldBeSynthesized = true;
-    mInterceptionID = aInterceptionID;
     return NS_OK;
 }
 
