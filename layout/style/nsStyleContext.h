@@ -558,11 +558,6 @@ private:
         if (cachedData) /* Have it cached already, yay */               \
           return cachedData;                                            \
       }                                                                 \
-      if (!aComputeData && !(mBits & NS_STYLE_INHERIT_BIT(name_))) {    \
-        /* When we compute reset structs, we either cache them on */    \
-        /* the style context or set the bit in mBits. */                \
-        return nullptr;                                                 \
-      }                                                                 \
       /* Have the rulenode deal */                                      \
       AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                      \
       return mRuleNode->GetStyle##name_<aComputeData>(this, mBits);     \
