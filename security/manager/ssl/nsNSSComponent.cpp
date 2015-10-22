@@ -20,6 +20,7 @@
 #include "mozilla/Preferences.h"
 #include "nsThreadUtils.h"
 #include "mozilla/PublicSSL.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 
 #ifndef MOZ_NO_SMART_CARDS
@@ -769,7 +770,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   static nsresult StartObserve();
-  static nsresult StopObserve();
 
 protected:
   virtual ~CipherSuiteChangeObserver() {}
@@ -796,22 +796,13 @@ CipherSuiteChangeObserver::StartObserve()
       sObserver = nullptr;
       return rv;
     }
-    sObserver = observer;
-  }
-  return NS_OK;
-}
 
-// static
-nsresult
-CipherSuiteChangeObserver::StopObserve()
-{
-  NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::StopObserve() can only be accessed in main thread");
-  if (sObserver) {
-    nsresult rv = Preferences::RemoveObserver(sObserver.get(), "security.");
-    sObserver = nullptr;
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    observerService->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                 false);
+
+    sObserver = observer;
   }
   return NS_OK;
 }
@@ -849,6 +840,13 @@ CipherSuiteChangeObserver::Observe(nsISupports* aSubject,
         break;
       }
     }
+  } else if (nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    Preferences::RemoveObserver(this, "security.");
+    MOZ_ASSERT(sObserver.get() == this);
+    sObserver = nullptr;
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
   return NS_OK;
 }
@@ -1147,9 +1145,6 @@ nsNSSComponent::ShutdownNSS()
     PK11_SetPasswordFunc((PK11PasswordFunc)nullptr);
 
     Preferences::RemoveObserver(this, "security.");
-    if (NS_FAILED(CipherSuiteChangeObserver::StopObserve())) {
-      MOZ_LOG(gPIPNSSLog, LogLevel::Error, ("nsNSSComponent::ShutdownNSS cannot stop observing cipher suite change\n"));
-    }
 
 #ifndef MOZ_NO_SMART_CARDS
     ShutdownSmartCardThreads();
