@@ -2856,14 +2856,11 @@ MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper,
 }
 
 void
-MediaStreamGraph::AddStream(MediaStream* aStream, uint32_t aFlags)
+MediaStreamGraph::AddStream(MediaStream* aStream)
 {
   NS_ADDREF(aStream);
   MediaStreamGraphImpl* graph = static_cast<MediaStreamGraphImpl*>(this);
   aStream->SetGraphImpl(graph);
-  if (aFlags & ADD_STREAM_SUSPENDED) {
-    aStream->IncrementSuspendCount();
-  }
   graph->AppendMessage(new CreateMessage(aStream));
 }
 

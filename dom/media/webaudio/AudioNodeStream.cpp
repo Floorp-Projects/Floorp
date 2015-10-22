@@ -77,13 +77,13 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
 
   RefPtr<AudioNodeStream> stream =
     new AudioNodeStream(aEngine, aFlags, graph->GraphRate());
+  stream->mSuspendedCount += aCtx->ShouldSuspendNewStream();
   if (node) {
     stream->SetChannelMixingParametersImpl(node->ChannelCount(),
                                            node->ChannelCountModeValue(),
                                            node->ChannelInterpretationValue());
   }
-  graph->AddStream(stream,
-    aCtx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
+  graph->AddStream(stream);
   return stream.forget();
 }
 

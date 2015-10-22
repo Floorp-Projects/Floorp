@@ -33,8 +33,8 @@ AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
 
   RefPtr<AudioNodeExternalInputStream> stream =
     new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate());
-  aGraph->AddStream(stream,
-    ctx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
+  stream->mSuspendedCount += ctx->ShouldSuspendNewStream();
+  aGraph->AddStream(stream);
   return stream.forget();
 }
 
