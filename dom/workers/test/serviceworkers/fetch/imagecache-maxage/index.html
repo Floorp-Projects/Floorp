@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<script>
+var width, url, width2, url2;
+function maybeReport() {
+  if (width !== undefined && url !== undefined &&
+      width2 !== undefined && url2 !== undefined) {
+    window.parent.postMessage({status: "result",
+                               width: width,
+                               width2: width2,
+                               url: url,
+                               url2: url2}, "*");
+  }
+}
+onload = function() {
+  width = document.querySelector("img").width;
+  width2 = document.querySelector("img").width;
+  maybeReport();
+};
+navigator.serviceWorker.onmessage = function(event) {
+  if (event.data.suffix == "2") {
+    url2 = event.data.url;
+  } else {
+    url = event.data.url;
+  }
+  maybeReport();
+};
+</script>
+<img src="image.png">
+<img src="image2.png">
