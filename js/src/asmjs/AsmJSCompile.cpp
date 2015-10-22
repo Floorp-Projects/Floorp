@@ -191,7 +191,6 @@ class FunctionCompiler
 
     ModuleCompiler &         m_;
     LifoAlloc &              lifo_;
-    RetType                  retType_;
 
     const AsmFunction &      func_;
     size_t                   pc_;
@@ -217,7 +216,6 @@ class FunctionCompiler
     FunctionCompiler(ModuleCompiler& m, const AsmFunction& func, LifoAlloc& lifo)
       : m_(m),
         lifo_(lifo),
-        retType_(func.returnedType()),
         func_(func),
         pc_(0),
         alloc_(nullptr),
@@ -227,10 +225,10 @@ class FunctionCompiler
         curBlock_(nullptr)
     {}
 
-    ModuleCompiler &        m() const            { return m_; }
-    TempAllocator &         alloc() const        { return *alloc_; }
-    LifoAlloc &             lifo() const         { return lifo_; }
-    RetType                 returnedType() const { return retType_; }
+    ModuleCompiler & m() const            { return m_; }
+    TempAllocator &  alloc() const        { return *alloc_; }
+    LifoAlloc &      lifo() const         { return lifo_; }
+    RetType          returnedType() const { return func_.returnedType(); }
 
     bool init()
     {
