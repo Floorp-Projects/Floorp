@@ -7,7 +7,7 @@
 [Constructor(DOMString type,
              optional PresentationConnectionAvailableEventInit eventInitDict),
  Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation"]
+ Func="Navigator::HasPresentationSupport"]
 interface PresentationConnectionAvailableEvent : Event
 {
   [SameObject]
