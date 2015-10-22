@@ -102,6 +102,7 @@ public:
    *                    In the case of an unmappable astral character,
    *                    aDestLength must indicate that the high surrogate was
    *                    consumed by the encoder but the low surrogate was not.
+   *                    NS_OK otherwise.
    */
   NS_IMETHOD Convert(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength) = 0;
@@ -114,7 +115,11 @@ public:
    * @param aDestLength [IN/OUT] the length of destination data buffer; after
    *                    conversion it will contain the number of bytes written
    * @return            NS_OK_UENC_MOREOUTPUT if only  a partial conversion
-   *                    was done; more output space is needed to continue
+   *                    was done; more output space is needed to continue.
+   *                    NS_ERROR_UENC_NOMAPPING if input ended with an unpaired
+   *                    high surrogate, the behavior was "signal" and the
+   *                    encoding can't represent U+FFFD.
+   *                    NS_OK otherwise.
    */
   NS_IMETHOD Finish(char * aDest, int32_t * aDestLength) = 0;
 

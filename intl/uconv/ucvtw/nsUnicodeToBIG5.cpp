@@ -44,7 +44,7 @@ nsUnicodeToBIG5::Convert(const char16_t* aSrc,
     if (in == inEnd) {
       *aSrcLength = in - aSrc;
       *aDestLength = out - reinterpret_cast<uint8_t*>(aDest);
-      return NS_OK_UENC_MOREINPUT;
+      return mUtf16Lead ? NS_OK_UENC_MOREINPUT : NS_OK;
     }
     if (out == outEnd) {
       *aSrcLength = in - aSrc;
@@ -193,10 +193,11 @@ nsUnicodeToBIG5::Finish(char* aDest,
       *aDestLength = 0;
       return NS_OK_UENC_MOREOUTPUT;
     }
-    // The API doesn't support signaling an error. It pretends that malformed
-    // input doesn't exist. The UTF-8 encoder outputs the replacement character
-    // unconditionally.
     mUtf16Lead = 0;
+    if (mSignal) {
+      *aDestLength = 0;
+      return NS_ERROR_UENC_NOMAPPING;
+    }
     *out = '?';
     *aDestLength = 1;
     return NS_OK;
