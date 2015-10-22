@@ -48,6 +48,9 @@ struct NormalizedConstraintSet
     template<class ConstrainRange>
     void SetFrom(const ConstrainRange& aOther);
     ValueType Clamp(ValueType n) const { return std::max(mMin, std::min(n, mMax)); }
+    ValueType Get(ValueType defaultValue) const {
+      return Clamp(mIdeal.WasPassed() ? mIdeal.Value() : defaultValue);
+    }
     bool Intersects(const Range& aOther) const {
       return mMax >= aOther.mMin && mMin <= aOther.mMax;
     }
@@ -72,12 +75,17 @@ struct NormalizedConstraintSet
   // Do you need to add your constraint here? Only if your code uses flattening
   LongRange mWidth, mHeight;
   DoubleRange mFrameRate;
+  LongRange mViewportOffsetX, mViewportOffsetY, mViewportWidth, mViewportHeight;
 
   NormalizedConstraintSet(const dom::MediaTrackConstraintSet& aOther,
                           bool advanced)
   : mWidth(aOther.mWidth, advanced)
   , mHeight(aOther.mHeight, advanced)
-  , mFrameRate(aOther.mFrameRate, advanced) {}
+  , mFrameRate(aOther.mFrameRate, advanced)
+  , mViewportOffsetX(aOther.mViewportOffsetX, advanced)
+  , mViewportOffsetY(aOther.mViewportOffsetY, advanced)
+  , mViewportWidth(aOther.mViewportWidth, advanced)
+  , mViewportHeight(aOther.mViewportHeight, advanced) {}
 };
 
 struct FlattenedConstraints : public NormalizedConstraintSet
