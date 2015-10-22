@@ -64,7 +64,7 @@ function onAlertShowing() {
   is(doNotDisturbMenuItem.localName, "menuitem", "menuitem found");
   alertWindow.addEventListener("beforeunload", onAlertClosing);
   doNotDisturbMenuItem.click();
-  info("Clicked on do-not-disturb menuitem")
+  info("Clicked on do-not-disturb menuitem");
 }
 
 function onAlertClosing(event) {

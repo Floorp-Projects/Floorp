@@ -131,8 +131,8 @@ function onAlertLoad() {
     let alertBox = document.getElementById("alertBox");
     alertBox.addEventListener("animationend", function hideAlert(event) {
       if (event.animationName == "alert-animation" ||
-          event.animationName == "alert-zoom-animation" ||
-          event.animationName == "alert-fadeout-animation") {
+          event.animationName == "alert-clicked-animation" ||
+          event.animationName == "alert-closing-animation") {
         alertBox.removeEventListener("animationend", hideAlert, false);
         window.close();
       }

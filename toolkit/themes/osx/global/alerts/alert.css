@@ -22,53 +22,6 @@
   color: -moz-DialogText;
 }
 
-#alertBox[animate] {
-  animation-timing-function: cubic-bezier(.12,1.23,.48,1.09);
-}
-
-#alertBox[animate][clicked] {
-  animation-duration: .6s;
-  animation-name: alert-zoom-animation;
-}
-
-/* This is used if the close button is clicked
-   before the animation has finished. */
-#alertBox[animate][closing] {
-  animation-duration: .6s;
-  animation-name: alert-fadeout-animation;
-}
-
-@keyframes alert-animation {
-  from {
-    transform: translate(110%, 0) rotate(-20deg);
-  }
-  5% {
-    transform: none;
-  }
-  95% {
-    transform: none;
-    opacity: 1;
-  }
-  to {
-    transform: translate(0, 60px) rotate(15deg);
-    opacity: 0;
-  }
-}
-
-@keyframes alert-zoom-animation {
-  to {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-}
-
-@keyframes alert-fadeout-animation {
-  to {
-    transform: translate(0, 60px) rotate(15deg);
-    opacity: 0;
-  }
-}
-
 .alertCloseButton {
   -moz-appearance: none;
   padding: 0;
