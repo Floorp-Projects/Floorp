@@ -881,6 +881,181 @@ function assert_records(expected, desc) {
                     "records after animation end");
   });
 
+  // Test that calling finish() on a forwards-filling Animation dispatches
+  // a changed notification.
+  addAsyncAnimTest("finish_with_forwards_fill", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s forwards";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is playing
+    yield animations[0].ready;
+
+    // Finish
+    animations[0].finish();
+
+    // Wait for the single MutationRecord for the Animation change to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after finish()");
+
+    // Redundant finish
+    animations[0].finish();
+
+    // Wait to ensure no change is dispatched
+    yield await_frame();
+    assert_records([], "records after redundant finish()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
+  // Test that calling finish() on an Animation that does not fill forwards,
+  // dispatches a removal notification.
+  addAsyncAnimTest("finish_without_fill", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is playing
+    yield animations[0].ready;
+
+    // Finish
+    animations[0].finish();
+
+    // Wait for the single MutationRecord for the Animation removal to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after finishing");
+
+    // Cancel the animation.
+    e.style = "";
+  });
+
+  // Test that calling finish() on a paused (but otherwise finished) animation
+  // dispatches a changed notification.
+  addAsyncAnimTest("finish_from_pause", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s forwards";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is playing.
+    yield animations[0].ready;
+
+    // Finish and pause.
+    animations[0].finish();
+    animations[0].pause();
+
+    // Wait for the pause to complete.
+    yield animations[0].ready;
+    is(animations[0].playState, "paused",
+       "playState after finishing and pausing");
+
+    // We should have one MutationRecord for the finish() operation.
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after finish() and pause()");
+
+    // Call finish() again.
+    animations[0].finish();
+    is(animations[0].playState, "finished",
+       "playState after finishing from paused state");
+
+    // Wait for the single MutationRecord for the Animation change to
+    // be delivered. Even though the currentTime does not change, the
+    // playState will change.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after finish() and pause()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
+  // Test that calling finish() on a pause-pending (but otherwise finished)
+  // animation dispatches a changed notification.
+  addAsyncAnimTest("finish_from_pause_pending", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s forwards";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is playing.
+    yield animations[0].ready;
+
+    // Finish and pause.
+    animations[0].finish();
+    animations[0].pause();
+    is(animations[0].playState, "pending",
+       "playState after finishing and calling pause()");
+
+    // Call finish() again to abort the pause
+    animations[0].finish();
+    is(animations[0].playState, "finished",
+       "playState after finishing and calling pause()");
+
+    // Wait for the two MutationRecords for the Animation changes to
+    // be delivered: one for each finish() operation.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: animations, removed: [] }],
+                    "records after finish(), pause(), finish()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
   // Test that a non-cancelling change to an animation followed immediately by a
   // cancelling change will only send an animation removal notification.
   addAsyncAnimTest("coalesce_change_cancel", aOptions, function*() {
