@@ -115,6 +115,49 @@ function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit
   });
 }
 
+function testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportInit() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+      info("Device prompt is triggered.");
+      gScript.sendAsyncMessage('trigger-device-prompt-select');
+    });
+
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+      info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
+    });
+
+    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+      info("The control channel is closed. " + aReason);
+    });
+
+    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      ok(aIsValid, "A valid offer is sent out.");
+      gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_OK);
+    });
+
+    request.start().then(
+      function(aConnection) {
+        ok(false, "|start| shouldn't succeed in this case.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "OperationError", "OperationError is expected when a connection closed during establishing a connection.");
+        aResolve();
+      }
+    );
+  });
+}
+
 function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady() {
   return new Promise(function(aResolve, aReject) {
     gScript.addMessageListener('device-prompt', function devicePromptHandler() {
@@ -163,6 +206,60 @@ function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportRead
       },
       function(aError) {
         is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
+        aResolve();
+      }
+    );
+  });
+}
+
+function testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportReady() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+      info("Device prompt is triggered.");
+      gScript.sendAsyncMessage('trigger-device-prompt-select');
+    });
+
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+      info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
+    });
+
+    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+      info("The control channel is closed. " + aReason);
+    });
+
+    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      ok(aIsValid, "A valid offer is sent out.");
+      gScript.sendAsyncMessage('trigger-incoming-transport');
+    });
+
+    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+      info("Data transport channel is initialized.");
+      gScript.sendAsyncMessage('trigger-control-channel-close', SpecialPowers.Cr.NS_OK);
+    });
+
+    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+      info("The data transport is closed. " + aReason);
+    });
+
+    request.start().then(
+      function(aConnection) {
+        ok(false, "|start| shouldn't succeed in this case.");
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, "OperationError", "OperationError is expected when a connection closed during establishing a connection.");
         aResolve();
       }
     );
@@ -240,7 +337,9 @@ function runTests() {
   then(setup).
   then(testStartConnectionCancelPrompt).
   then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit).
+  then(testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportInit).
   then(testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportReady).
+  then(testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTransportReady).
   then(testStartConnectionUnexpectedDataTransportClose).
   then(teardown);
 }
