@@ -1166,13 +1166,13 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
       IPC::Principal(mPrincipal));
     return NS_OK;
   } else if (!strcmp("alertsettingscallback", aTopic)) {
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (!obs) {
-      return NS_ERROR_FAILURE;
+    if (XRE_IsParentProcess()) {
+      return Notification::OpenSettings(mPrincipal);
     }
-
-    // Notify other observers so they can show settings UI.
-    obs->NotifyObservers(mPrincipal, "notifications-open-settings", nullptr);
+    // `ContentParent::RecvOpenNotificationSettings` notifies observers in the
+    // parent process.
+    ContentChild::GetSingleton()->SendOpenNotificationSettings(
+      IPC::Principal(mPrincipal));
     return NS_OK;
   }
 
@@ -2425,6 +2425,19 @@ Notification::RemovePermission(nsIPrincipal* aPrincipal)
     return NS_ERROR_FAILURE;
   }
   permissionManager->RemoveFromPrincipal(aPrincipal, "desktop-notification");
+  return NS_OK;
+}
+
+/* static */ nsresult
+Notification::OpenSettings(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs) {
+    return NS_ERROR_FAILURE;
+  }
+  // Notify other observers so they can show settings UI.
+  obs->NotifyObservers(aPrincipal, "notifications-open-settings", nullptr);
   return NS_OK;
 }
 
