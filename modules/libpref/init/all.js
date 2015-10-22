@@ -1428,8 +1428,8 @@ pref("network.http.diagnostics", false);
 
 pref("network.http.pacing.requests.enabled", true);
 pref("network.http.pacing.requests.min-parallelism", 6);
-pref("network.http.pacing.requests.hz", 100);
-pref("network.http.pacing.requests.burst", 32);
+pref("network.http.pacing.requests.hz", 80);
+pref("network.http.pacing.requests.burst", 10);
 
 // TCP Keepalive config for HTTP connections.
 pref("network.http.tcp_keepalive.short_lived_connections", true);
