@@ -20,6 +20,7 @@ class CacheIndexIterator;
 struct CacheFileContextEvictorEntry
 {
   nsCOMPtr<nsILoadContextInfo> mInfo;
+  bool                         mPinned;
   PRTime                       mTimeStamp; // in milliseconds
   RefPtr<CacheIndexIterator> mIterator;
 };
@@ -40,7 +41,7 @@ public:
   // Returns number of contexts that are being evicted.
   uint32_t ContextsCount();
   // Start evicting given context.
-  nsresult AddContext(nsILoadContextInfo *aLoadContextInfo);
+  nsresult AddContext(nsILoadContextInfo *aLoadContextInfo, bool aPinned);
   // CacheFileIOManager calls this method when CacheIndex's state changes. We
   // check whether the index is up to date and start or stop evicting according
   // to index's state.
@@ -50,21 +51,22 @@ public:
   // info to the given key and the last modified time of the entry file is
   // earlier than the time stamp of the time when the context was added to the
   // evictor.
-  nsresult WasEvicted(const nsACString &aKey, nsIFile *aFile, bool *_retval);
+  nsresult WasEvicted(const nsACString &aKey, nsIFile *aFile,
+                      bool *aEvictedAsPinned, bool *aEvictedAsNonPinned);
 
 private:
   // Writes information about eviction of the given context to the disk. This is
   // done for every context added to the evictor to be able to recover eviction
   // after a shutdown or crash. When the context file is found after startup, we
   // restore mTimeStamp from the last modified time of the file.
-  nsresult PersistEvictionInfoToDisk(nsILoadContextInfo *aLoadContextInfo);
+  nsresult PersistEvictionInfoToDisk(nsILoadContextInfo *aLoadContextInfo, bool aPinned);
   // Once we are done with eviction for the given context, the eviction info is
   // removed from the disk.
-  nsresult RemoveEvictInfoFromDisk(nsILoadContextInfo *aLoadContextInfo);
+  nsresult RemoveEvictInfoFromDisk(nsILoadContextInfo *aLoadContextInfo, bool aPinned);
   // Tries to load all contexts from the disk. This method is called just once
   // after startup.
   nsresult LoadEvictInfoFromDisk();
-  nsresult GetContextFile(nsILoadContextInfo *aLoadContextInfo,
+  nsresult GetContextFile(nsILoadContextInfo *aLoadContextInfo, bool aPinned,
                           nsIFile **_retval);
 
   void     CreateIterators();

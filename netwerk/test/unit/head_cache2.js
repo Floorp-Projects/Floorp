@@ -49,6 +49,8 @@ const DONTFILL =        1 << 13;
 const DONTSETVALID =    1 << 14;
 // Notify before checking the data, useful for proper callback ordering checks
 const NOTIFYBEFOREREAD = 1 << 15;
+// It's allowed to not get an existing entry (result of opening is undetermined)
+const MAYBE_NEW =       1 << 16;
 
 var log_c2 = true;
 function LOG_C2(o, m)
@@ -150,6 +152,10 @@ OpenCallback.prototype =
   },
   onCacheEntryAvailable: function(entry, isnew, appCache, status)
   {
+    if ((this.behavior & MAYBE_NEW) && isnew) {
+      this.behavior |= NEW;
+    }
+
     LOG_C2(this, "onCacheEntryAvailable, " + this.behavior);
     do_check_true(!this.onAvailPassed);
     this.onAvailPassed = true;
@@ -207,9 +213,13 @@ OpenCallback.prototype =
         }
         do_execute_soon(function() { // emulate more network latency
           if (self.behavior & DOOMED) {
+            LOG_C2(self, "checking doom state");
             try {
               var os = entry.openOutputStream(0);
-              do_check_true(false);
+              // Unfortunately, in the undetermined state we cannot even check whether the entry
+              // is actually doomed or not.
+              os.close();
+              do_check_true(!!(self.behavior & MAYBE_NEW));
             } catch (ex) {
               do_check_true(true);
             }
@@ -258,9 +268,9 @@ OpenCallback.prototype =
   {
     LOG_C2(this, "selfCheck");
 
-    do_check_true(this.onCheckPassed);
+    do_check_true(this.onCheckPassed || (this.behavior & MAYBE_NEW));
     do_check_true(this.onAvailPassed);
-    do_check_true(this.onDataCheckPassed);
+    do_check_true(this.onDataCheckPassed || (this.behavior & MAYBE_NEW));
   },
   throwAndNotify: function(entry)
   {
@@ -386,6 +396,10 @@ MultipleCallbacks.prototype =
       else
         this.goon();
     }
+  },
+  add: function()
+  {
+    ++this.pending;
   }
 }
 
