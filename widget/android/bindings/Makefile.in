@@ -26,6 +26,7 @@ sdk_processor := \
 bindings_exports_FILES := \
 	AndroidRect.h \
   Bundle.h \
+  KeyEvent.h \
   MediaCodec.h \
   SurfaceTexture.h \
   $(NULL)
