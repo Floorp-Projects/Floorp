@@ -117,7 +117,9 @@ var fakeRooms = [
       switch(pref) {
         // Ensure we skip FTE completely.
         case "gettingStarted.seen":
+          return true;
       }
+      return null;
     },
     hasEncryptionKey: true,
     setLoopPref: function(){},

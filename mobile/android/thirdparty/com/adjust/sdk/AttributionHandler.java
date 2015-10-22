@@ -2,9 +2,9 @@ package com.adjust.sdk;
 
 import android.net.Uri;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.client.HttpClient;
+import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 import org.json.JSONObject;
 
 import java.net.URI;

@@ -1,3 +1,5 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/thirdparty"
+
 apply plugin: 'com.android.library'
 
 android {
@@ -20,7 +22,9 @@ android {
 
     sourceSets {
         main {
+            manifest.srcFile 'AndroidManifest.xml'
             java {
+                srcDir '.'
                 if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
                     exclude 'com/adjust/**'
                 }
@@ -31,4 +35,15 @@ android {
 
 dependencies {
     compile 'com.android.support:support-v4:23.0.1'
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+        // This is cosmetic.  See the excludes in the root project.
+        if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
+            excludeDirs += file('com/adjust/sdk')
+        }
+    }
 }
