@@ -936,6 +936,14 @@
 #undef MODULE
 
   /* ======================================================================= */
+  /* 39: NS_ERROR_MODULE_DOM_ANIM */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_DOM_ANIM
+  ERROR(NS_ERROR_DOM_ANIM_MISSING_PROPS_ERR,              FAILURE(1)),
+  ERROR(NS_ERROR_DOM_ANIM_NO_TARGET_ERR,                  FAILURE(2)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GENERAL
