@@ -399,7 +399,8 @@ this.PushDB.prototype = {
             }
             let newRecord = aUpdateFunc(this.toPushRecord(record));
             if (!this.isValidRecord(newRecord)) {
-              debug("update: Ignoring invalid update for key ID " + aKeyID);
+              debug("update: Ignoring invalid update for key ID " + aKeyID +
+                ": " + JSON.stringify(newRecord));
               return;
             }
             aStore.put(newRecord).onsuccess = aEvent => {
