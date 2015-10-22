@@ -74,7 +74,6 @@ public class GeckoEvent {
         MOTION_EVENT(2),
         SENSOR_EVENT(3),
         LOCATION_EVENT(5),
-        IME_EVENT(6),
         SIZE_CHANGED(8),
         APP_BACKGROUNDING(9),
         APP_FOREGROUNDING(10),
@@ -90,7 +89,6 @@ public class GeckoEvent {
         COMPOSITOR_PAUSE(29),
         COMPOSITOR_RESUME(30),
         NATIVE_GESTURE_EVENT(31),
-        IME_KEY_EVENT(32),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
         LOW_MEMORY(35),
@@ -110,43 +108,6 @@ public class GeckoEvent {
             this.value = value;
         }
     }
-
-    // Encapsulation of common IME actions.
-    @JNITarget
-    public enum ImeAction {
-        IME_SYNCHRONIZE(0),
-        IME_REPLACE_TEXT(1),
-        IME_SET_SELECTION(2),
-        IME_ADD_COMPOSITION_RANGE(3),
-        IME_UPDATE_COMPOSITION(4),
-        IME_REMOVE_COMPOSITION(5),
-        IME_ACKNOWLEDGE_FOCUS(6),
-        IME_COMPOSE_TEXT(7);
-
-        public final int value;
-
-        private ImeAction(int value) {
-            this.value = value;
-        }
-    }
-
-    public static final int IME_RANGE_CARETPOSITION = 1;
-    public static final int IME_RANGE_RAWINPUT = 2;
-    public static final int IME_RANGE_SELECTEDRAWTEXT = 3;
-    public static final int IME_RANGE_CONVERTEDTEXT = 4;
-    public static final int IME_RANGE_SELECTEDCONVERTEDTEXT = 5;
-
-    public static final int IME_RANGE_LINE_NONE = 0;
-    public static final int IME_RANGE_LINE_DOTTED = 1;
-    public static final int IME_RANGE_LINE_DASHED = 2;
-    public static final int IME_RANGE_LINE_SOLID = 3;
-    public static final int IME_RANGE_LINE_DOUBLE = 4;
-    public static final int IME_RANGE_LINE_WAVY = 5;
-
-    public static final int IME_RANGE_UNDERLINE = 1;
-    public static final int IME_RANGE_FORECOLOR = 2;
-    public static final int IME_RANGE_BACKCOLOR = 4;
-    public static final int IME_RANGE_LINECOLOR = 8;
 
     public static final int ACTION_MAGNIFY_START = 11;
     public static final int ACTION_MAGNIFY = 12;
@@ -582,73 +543,6 @@ public class GeckoEvent {
     public static GeckoEvent createLocationEvent(Location l) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.LOCATION_EVENT);
         event.mLocation = l;
-        return event;
-    }
-
-    public static GeckoEvent createIMEEvent(ImeAction action) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_EVENT);
-        event.mAction = action.value;
-        return event;
-    }
-
-    public static GeckoEvent createIMEKeyEvent(KeyEvent k) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_KEY_EVENT);
-        event.initKeyEvent(k, k.getAction(), 0);
-        return event;
-    }
-
-    public static GeckoEvent createIMEReplaceEvent(int start, int end, String text) {
-        return createIMETextEvent(false, start, end, text);
-    }
-
-    public static GeckoEvent createIMEComposeEvent(int start, int end, String text) {
-        return createIMETextEvent(true, start, end, text);
-    }
-
-    private static GeckoEvent createIMETextEvent(boolean compose, int start, int end, String text) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_EVENT);
-        event.mAction = (compose ? ImeAction.IME_COMPOSE_TEXT : ImeAction.IME_REPLACE_TEXT).value;
-        event.mStart = start;
-        event.mEnd = end;
-        event.mCharacters = text;
-        return event;
-    }
-
-    public static GeckoEvent createIMESelectEvent(int start, int end) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_EVENT);
-        event.mAction = ImeAction.IME_SET_SELECTION.value;
-        event.mStart = start;
-        event.mEnd = end;
-        return event;
-    }
-
-    public static GeckoEvent createIMECompositionEvent(int start, int end) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_EVENT);
-        event.mAction = ImeAction.IME_UPDATE_COMPOSITION.value;
-        event.mStart = start;
-        event.mEnd = end;
-        return event;
-    }
-
-    public static GeckoEvent createIMERangeEvent(int start,
-                                                 int end, int rangeType,
-                                                 int rangeStyles,
-                                                 int rangeLineStyle,
-                                                 boolean rangeBoldLine,
-                                                 int rangeForeColor,
-                                                 int rangeBackColor,
-                                                 int rangeLineColor) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.IME_EVENT);
-        event.mAction = ImeAction.IME_ADD_COMPOSITION_RANGE.value;
-        event.mStart = start;
-        event.mEnd = end;
-        event.mRangeType = rangeType;
-        event.mRangeStyles = rangeStyles;
-        event.mRangeLineStyle = rangeLineStyle;
-        event.mRangeBoldLine = rangeBoldLine;
-        event.mRangeForeColor = rangeForeColor;
-        event.mRangeBackColor = rangeBackColor;
-        event.mRangeLineColor = rangeLineColor;
         return event;
     }
 
