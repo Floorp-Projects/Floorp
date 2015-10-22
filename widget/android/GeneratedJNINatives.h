@@ -169,6 +169,10 @@ class GeckoView::Window::Natives : public mozilla::jni::NativeImpl<Window, Impl>
 public:
     static constexpr JNINativeMethod methods[] = {
 
+        mozilla::jni::MakeNativeMethod<GeckoView::Window::Close_t>(
+                mozilla::jni::NativeStub<GeckoView::Window::Close_t, Impl>
+                ::template Wrap<&Impl::Close>),
+
         mozilla::jni::MakeNativeMethod<GeckoView::Window::DisposeNative_t>(
                 mozilla::jni::NativeStub<GeckoView::Window::DisposeNative_t, Impl>
                 ::template Wrap<&Impl::DisposeNative>),
