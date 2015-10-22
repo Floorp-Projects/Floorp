@@ -32,7 +32,7 @@ gfxImageSurface::InitFromSurface(cairo_surface_t *csurf)
     mSize.width = cairo_image_surface_get_width(csurf);
     mSize.height = cairo_image_surface_get_height(csurf);
     mData = cairo_image_surface_get_data(csurf);
-    mFormat = (gfxImageFormat) cairo_image_surface_get_format(csurf);
+    mFormat = gfxCairoFormatToImageFormat(cairo_image_surface_get_format(csurf));
     mOwnsData = false;
     mStride = cairo_image_surface_get_stride(csurf);
 
@@ -66,9 +66,10 @@ gfxImageSurface::InitWithData(unsigned char *aData, const IntSize& aSize,
     if (!CheckSurfaceSize(aSize))
         MakeInvalid();
 
+    cairo_format_t cformat = gfxImageFormatToCairoFormat(mFormat);
     cairo_surface_t *surface =
         cairo_image_surface_create_for_data((unsigned char*)mData,
-                                            (cairo_format_t)(int)mFormat,
+                                            cformat,
                                             mSize.width,
                                             mSize.height,
                                             mStride);
@@ -135,9 +136,10 @@ gfxImageSurface::AllocateAndInit(long aStride, int32_t aMinimalAllocation,
 
     mOwnsData = true;
 
+    cairo_format_t cformat = gfxImageFormatToCairoFormat(mFormat);
     cairo_surface_t *surface =
         cairo_image_surface_create_for_data((unsigned char*)mData,
-                                            (cairo_format_t)(int)mFormat,
+                                            cformat,
                                             mSize.width,
                                             mSize.height,
                                             mStride);
@@ -162,7 +164,7 @@ gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)
     mSize.width = cairo_image_surface_get_width(csurf);
     mSize.height = cairo_image_surface_get_height(csurf);
     mData = cairo_image_surface_get_data(csurf);
-    mFormat = (gfxImageFormat) cairo_image_surface_get_format(csurf);
+    mFormat = gfxCairoFormatToImageFormat(cairo_image_surface_get_format(csurf));
     mOwnsData = false;
     mStride = cairo_image_surface_get_stride(csurf);
 
@@ -188,9 +190,7 @@ gfxImageSurface::ComputeStride(const IntSize& aSize, gfxImageFormat aFormat)
         stride = aSize.width * 2;
     else if (aFormat == gfxImageFormat::A8)
         stride = aSize.width;
-    else if (aFormat == gfxImageFormat::A1) {
-        stride = (aSize.width + 7) / 8;
-    } else {
+    else {
         NS_WARNING("Unknown format specified to gfxImageSurface!");
         stride = aSize.width * 4;
     }

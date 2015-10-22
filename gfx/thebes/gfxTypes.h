@@ -52,10 +52,21 @@ enum class gfxImageFormat {
   ARGB32, ///< ARGB data in native endianness, using premultiplied alpha
   RGB24,  ///< xRGB data in native endianness
   A8,     ///< Only an alpha channel
-  A1,     ///< Packed transparency information (one byte refers to 8 pixels)
   RGB16_565,  ///< RGB_565 data in native endianness
   Unknown
 };
+
+// XXX: temporary
+// This works because the gfxImageFormat enum is defined so as to match the
+// _cairo_format enum.
+#define gfxCairoFormatToImageFormat(aFormat) \
+    ((gfxImageFormat)aFormat)
+
+// XXX: temporary
+// This works because the gfxImageFormat enum is defined so as to match the
+// _cairo_format enum.
+#define gfxImageFormatToCairoFormat(aFormat) \
+    ((cairo_format_t)aFormat)
 
 enum class gfxSurfaceType {
   Image,

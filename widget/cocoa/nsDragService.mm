@@ -273,16 +273,12 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 // We can only invoke NSView's 'dragImage:at:offset:event:pasteboard:source:slideBack:' from
 // within NSView's 'mouseDown:' or 'mouseDragged:'. Luckily 'mouseDragged' is always on the
 // stack when InvokeDragSession gets called.
-NS_IMETHODIMP
-nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransferableArray,
-                                 nsIScriptableRegion* aDragRgn, uint32_t aActionType)
+nsresult
+nsDragService::InvokeDragSessionImpl(nsISupportsArray* aTransferableArray,
+                                     nsIScriptableRegion* aDragRgn,
+                                     uint32_t aActionType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
-                                                     aTransferableArray,
-                                                     aDragRgn, aActionType);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   mDataItems = aTransferableArray;
 
@@ -291,7 +287,7 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
     return NS_ERROR_FAILURE;
 
   nsIntRect dragRect(0, 0, 20, 20);
-  NSImage* image = ConstructDragImage(aDOMNode, &dragRect, aDragRgn);
+  NSImage* image = ConstructDragImage(mSourceNode, &dragRect, aDragRgn);
   if (!image) {
     // if no image was returned, just draw a rectangle
     NSSize size;
