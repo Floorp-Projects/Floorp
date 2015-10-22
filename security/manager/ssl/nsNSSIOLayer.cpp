@@ -8,7 +8,6 @@
 
 #include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h"
-#include "mozilla/BinarySearch.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/UniquePtr.h"
@@ -46,8 +45,6 @@
 #include "keyhi.h"
 
 #include <algorithm>
-
-#include "IntolerantFallbackList.inc"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -734,7 +731,8 @@ bool
 nsSSLIOLayerHelpers::fallbackLimitReached(const nsACString& hostName,
                                           uint16_t intolerant)
 {
-  if (isInsecureFallbackSite(hostName)) {
+  MutexAutoLock lock(mutex);
+  if (mInsecureFallbackSites.Contains(hostName)) {
     return intolerant <= SSL_LIBRARY_VERSION_TLS_1_0;
   }
   return intolerant <= mVersionFallbackLimit;
@@ -1325,7 +1323,6 @@ nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
   : mTreatUnsafeNegotiationAsBroken(false)
   , mTLSIntoleranceInfo()
   , mFalseStartRequireNPN(false)
-  , mUseStaticFallbackList(true)
   , mUnrestrictedRC4Fallback(false)
   , mVersionFallbackLimit(SSL_LIBRARY_VERSION_TLS_1_0)
   , mutex("nsSSLIOLayerHelpers.mutex")
@@ -1548,9 +1545,6 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
       if (mOwner->isPublic()) {
         mOwner->initInsecureFallbackSites();
       }
-    } else if (prefName.EqualsLiteral("security.tls.insecure_fallback_hosts.use_static_list")) {
-      mOwner->mUseStaticFallbackList =
-        Preferences::GetBool("security.tls.insecure_fallback_hosts.use_static_list", true);
     } else if (prefName.EqualsLiteral("security.tls.unrestricted_rc4_fallback")) {
       mOwner->mUnrestrictedRC4Fallback =
         Preferences::GetBool("security.tls.unrestricted_rc4_fallback", false);
@@ -1649,8 +1643,6 @@ nsSSLIOLayerHelpers::Init()
                          FALSE_START_REQUIRE_NPN_DEFAULT);
   loadVersionFallbackLimit();
   initInsecureFallbackSites();
-  mUseStaticFallbackList =
-    Preferences::GetBool("security.tls.insecure_fallback_hosts.use_static_list", true);
   mUnrestrictedRC4Fallback =
     Preferences::GetBool("security.tls.unrestricted_rc4_fallback", false);
 
@@ -1805,52 +1797,6 @@ nsSSLIOLayerHelpers::removeInsecureFallbackSite(const nsACString& hostname,
   } else {
     NS_DispatchToMainThread(runnable);
   }
-}
-
-struct FallbackListComparator
-{
-  explicit FallbackListComparator(const char* aTarget)
-    : mTarget(aTarget)
-  {}
-
-  int operator()(const char* aVal) const {
-    return strcmp(mTarget, aVal);
-  }
-
-private:
-  const char* mTarget;
-};
-
-static const char* const kFallbackWildcardList[] =
-{
-  ".eur.xerox.com", // bug 1187215
-  ".kuronekoyamato.co.jp", // bug 1128366
-  ".wildcard.test",
-};
-
-bool
-nsSSLIOLayerHelpers::isInsecureFallbackSite(const nsACString& hostname)
-{
-  size_t match;
-  if (mUseStaticFallbackList) {
-    const char* host = PromiseFlatCString(hostname).get();
-    if (BinarySearchIf(kIntolerantFallbackList, 0,
-          ArrayLength(kIntolerantFallbackList),
-          FallbackListComparator(host), &match)) {
-      return true;
-    }
-    for (size_t i = 0; i < ArrayLength(kFallbackWildcardList); ++i) {
-      size_t hostLen = hostname.Length();
-      const char* target = kFallbackWildcardList[i];
-      size_t targetLen = strlen(target);
-      if (hostLen > targetLen &&
-          !memcmp(host + hostLen - targetLen, target, targetLen)) {
-        return true;
-      }
-    }
-  }
-  MutexAutoLock lock(mutex);
-  return mInsecureFallbackSites.Contains(hostname);
 }
 
 void
