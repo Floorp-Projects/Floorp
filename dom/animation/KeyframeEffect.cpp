@@ -545,33 +545,34 @@ struct KeyframeStringValueEntry : KeyframeValueEntry
   nsString mValue;
   const ComputedTimingFunction* mTimingFunction;
 
-  bool operator==(const KeyframeStringValueEntry& aRhs) const
+  struct OffsetEasingPropertyComparator
   {
-    NS_ASSERTION(mOffset != aRhs.mOffset || mProperty != aRhs.mProperty,
-                 "shouldn't have duplicate (offset, property) pairs");
-    return false;
-  }
-
-  bool operator<(const KeyframeStringValueEntry& aRhs) const
-  {
-    NS_ASSERTION(mOffset != aRhs.mOffset || mProperty != aRhs.mProperty,
-                 "shouldn't have duplicate (offset, property) pairs");
-
-    // First, sort by offset.
-    if (mOffset != aRhs.mOffset) {
-      return mOffset < aRhs.mOffset;
+    bool Equals(const KeyframeStringValueEntry& aLhs,
+                const KeyframeStringValueEntry& aRhs) const
+    {
+      return aLhs.mOffset == aRhs.mOffset &&
+             aLhs.mProperty == aRhs.mProperty &&
+             *aLhs.mTimingFunction == *aRhs.mTimingFunction;
     }
+    bool LessThan(const KeyframeStringValueEntry& aLhs,
+                  const KeyframeStringValueEntry& aRhs) const
+    {
+      // First, sort by offset.
+      if (aLhs.mOffset != aRhs.mOffset) {
+        return aLhs.mOffset < aRhs.mOffset;
+      }
 
-    // Second, by timing function.
-    int32_t order = mTimingFunction->Compare(*aRhs.mTimingFunction);
-    if (order != 0) {
-      return order < 0;
+      // Second, by timing function.
+      int32_t order = aLhs.mTimingFunction->Compare(*aRhs.mTimingFunction);
+      if (order != 0) {
+        return order < 0;
+      }
+
+      // Last, by property IDL name.
+      return nsCSSProps::PropertyIDLNameSortPosition(aLhs.mProperty) <
+             nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
     }
-
-    // Last, by property IDL name.
-    return nsCSSProps::PropertyIDLNameSortPosition(mProperty) <
-           nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
-  }
+  };
 };
 
 void
@@ -611,7 +612,7 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
                                         segment.mToValue,
                                         entry->mValue);
   }
-  entries.Sort();
+  entries.Sort(KeyframeStringValueEntry::OffsetEasingPropertyComparator());
 
   for (size_t i = 0, n = entries.Length(); i < n; ) {
     // Create a JS object with the explicit ComputedKeyframe dictionary members.
