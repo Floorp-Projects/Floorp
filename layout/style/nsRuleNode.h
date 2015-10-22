@@ -160,9 +160,19 @@ struct nsConditionalResetStyleData
   }
 
   void* GetStyleData(nsStyleStructID aSID,
-                     nsStyleContext* aStyleContext) const {
+                     nsStyleContext* aStyleContext,
+                     bool aCanComputeData) const {
     if (!(mConditionalBits & GetBitForSID(aSID))) {
       return mEntries[aSID];
+    }
+    if (!aCanComputeData) {
+      // If aCanComputeData is false, then any previously-computed data
+      // would have been cached on the style context.  Therefore it's
+      // unnecessary to check the conditional data.  It's also
+      // incorrect, because calling e->mConditions.Matches() below could
+      // cause additional structs to be computed, which is incorrect
+      // during CalcStyleDifference.
+      return nullptr;
     }
     return GetConditionalStyleData(aSID, aStyleContext);
   }
@@ -271,10 +281,11 @@ struct nsCachedStyleData
   }
 
   void* NS_FASTCALL GetStyleData(const nsStyleStructID aSID,
-                                 nsStyleContext* aStyleContext) {
+                                 nsStyleContext* aStyleContext,
+                                 bool aCanComputeData) {
     if (IsReset(aSID)) {
       if (mResetData) {
-        return mResetData->GetStyleData(aSID, aStyleContext);
+        return mResetData->GetStyleData(aSID, aStyleContext, aCanComputeData);
       }
     } else {
       if (mInheritedData) {
@@ -306,9 +317,11 @@ struct nsCachedStyleData
         mInheritedData->mStyleStructs[eStyleStruct_##name_]) : nullptr;        \
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                             \
-    nsStyle##name_ * NS_FASTCALL GetStyle##name_ (nsStyleContext* aContext) {  \
+    nsStyle##name_ * NS_FASTCALL GetStyle##name_ (nsStyleContext* aContext,    \
+                                                  bool aCanComputeData) {         \
       return mResetData ? static_cast<nsStyle##name_*>(                        \
-        mResetData->GetStyleData(eStyleStruct_##name_, aContext)) : nullptr;   \
+        mResetData->GetStyleData(eStyleStruct_##name_, aContext, aCanComputeData))\
+                        : nullptr;                                             \
     }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT_RESET
@@ -933,7 +946,7 @@ public:
     /* Never use cached data for animated style inside a pseudo-element; */   \
     /* see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto */ \
     if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
-      data = mStyleData.GetStyle##name_(aContext);                            \
+      data = mStyleData.GetStyle##name_(aContext, aComputeData);              \
       if (MOZ_LIKELY(data != nullptr)) {                                      \
         /* Mark the struct as having been retrieved for this context. */      \
         /* Normally this would be aContext->AddStyleBit(), but aContext is */ \
