@@ -8,7 +8,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[builtinclass, uuid(c71180e3-298b-4fbb-9ccb-82c822474741)]
+[builtinclass, uuid(3538cf73-ac29-4b00-bc11-cab8c458f363)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -80,17 +80,6 @@ interface nsIDOMDataTransfer : nsISupports
    * data, this method will have no effect.
    */
   void clearData([optional] in DOMString format);
-
-  /**
-   * Set the data for a given format. If data for the format does not exist,
-   * it is added at the end, such that the last item in the types list will be
-   * the new format. If data for the format already exists, the existing data
-   * is replaced in the same position. That is, the order of the types list is
-   * not changed.
-   *
-   * @throws NS_ERROR_NULL_POINTER if the data is null
-   */
-  void setData(in DOMString format, in DOMString data);
 
   /**
    * Retrieves the data for a given format, or an empty string if data for
@@ -170,29 +159,6 @@ interface nsIDOMDataTransfer : nsISupports
    * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
    */
   void mozClearDataAt(in DOMString format, in unsigned long index);
-
-  /*
-   * A data transfer may store multiple items, each at a given zero-based
-   * index. setDataAt may only be called with an index argument less than
-   * itemCount in which case an existing item is modified, or equal to
-   * itemCount in which case a new item is added, and the itemCount is
-   * incremented by one.
-   *
-   * Data should be added in order of preference, with the most specific
-   * format added first and the least specific format added last. If data of
-   * the given format already exists, it is replaced in the same position as
-   * the old data.
-   *
-   * The data should be either a string, a primitive boolean or number type
-   * (which will be converted into a string) or an nsISupports.
-   *
-   * @param format the format to add
-   * @param data the data to add
-   * @throws NS_ERROR_NULL_POINTER if the data is null
-   * @throws NS_ERROR_DOM_INDEX_SIZE_ERR if index is greater than itemCount
-   * @throws NO_MODIFICATION_ALLOWED_ERR if the item cannot be modified
-   */
-  void mozSetDataAt(in DOMString format, in nsIVariant data, in unsigned long index);
 
   /**
    * Retrieve the data associated with the given format for an item at the

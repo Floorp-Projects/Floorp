@@ -80,7 +80,8 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
       // support other types of events, make sure that read/write privileges are
       // checked properly within DataTransfer.
       clipboardData = new DataTransfer(ToSupports(e), eCopy, false, -1);
-      clipboardData->SetData(aParam.mDataType, aParam.mData);
+      clipboardData->SetData(aParam.mDataType, aParam.mData, aRv);
+      NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
     }
   }
 
