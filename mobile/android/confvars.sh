@@ -111,9 +111,7 @@ MOZ_ADDON_SIGNING=1
 # Enable the Switchboard A/B framework code.
 # Note: The framework is always included in the app. This flag controls
 # usage of the framework.
-if test "$NIGHTLY_BUILD"; then
-  MOZ_SWITCHBOARD=1
-fi
+MOZ_SWITCHBOARD=1
 
 # Use native Firefox Accounts UI after Nightly.
 if ! test "$NIGHTLY_BUILD"; then
