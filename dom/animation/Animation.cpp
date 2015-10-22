@@ -852,6 +852,8 @@ Animation::DoPause(ErrorResult& aRv)
     return;
   }
 
+  AutoMutationBatchForAnimation mb(*this);
+
   // If we are transitioning from idle, fill in the current time
   if (GetCurrentTime().IsNull()) {
     if (mPlaybackRate >= 0.0) {
@@ -888,6 +890,9 @@ Animation::DoPause(ErrorResult& aRv)
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+  if (IsRelevant()) {
+    nsNodeUtils::AnimationChanged(this);
+  }
 }
 
 void

@@ -792,10 +792,11 @@ function assert_records(expected, desc) {
     // currentTime while pause-pending has the effect of cancelling a pause.
     animations[0].currentTime = animations[0].currentTime;
 
-    // Wait for the MutationRecord from updating the currentTime to be
-    // delivered.
+    // Wait for the two MutationRecords for the Animation changes to
+    // be delivered: one for pausing, one for aborting the pause.
     yield await_frame();
-    assert_records([{ added: [], changed: animations, removed: [] }],
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: animations, removed: [] }],
                     "records after pausing then seeking");
 
     // Cancel the animation.
@@ -985,8 +986,10 @@ function assert_records(expected, desc) {
     is(animations[0].playState, "paused",
        "playState after finishing and pausing");
 
-    // We should have one MutationRecord for the finish() operation.
-    assert_records([{ added: [], changed: animations, removed: [] }],
+    // We should have two MutationRecords for the Animation changes:
+    // one for the finish, one for the pause.
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: animations, removed: [] }],
                     "records after finish() and pause()");
 
     // Call finish() again.
@@ -1040,10 +1043,11 @@ function assert_records(expected, desc) {
     is(animations[0].playState, "finished",
        "playState after finishing and calling pause()");
 
-    // Wait for the two MutationRecords for the Animation changes to
-    // be delivered: one for each finish() operation.
+    // Wait for three MutationRecords for the Animation changes to
+    // be delivered: one for each finish(), pause(), finish() operation.
     yield await_frame();
     assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: animations, removed: [] },
                     { added: [], changed: animations, removed: [] }],
                     "records after finish(), pause(), finish()");
 
@@ -1184,6 +1188,129 @@ function assert_records(expected, desc) {
     yield await_frame();
     assert_records([{ added: animations, changed: [], removed: [] }],
                     "records after play()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
+  // Test that calling pause() on an Animation dispatches a changed
+  // notification.
+  addAsyncAnimTest("pause", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is ready
+    yield animations[0].ready;
+
+    // Pause
+    animations[0].pause();
+
+    // Wait for the single MutationRecord for the Animation change to
+    // be delivered.
+    yield animations[0].ready;
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after pause()");
+
+    // Redundant pause
+    animations[0].pause();
+
+    // Wait to ensure no change is dispatched
+    yield animations[0].ready;
+    assert_records([], "records after redundant pause()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
+  // Test that calling pause() on an Animation that is pause-pending
+  // does not dispatch an additional changed notification.
+  addAsyncAnimTest("pause_while_pause_pending", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is ready
+    yield animations[0].ready;
+
+    // Pause
+    animations[0].pause();
+
+    // We are now pause-pending, but pause again
+    animations[0].pause();
+
+    // We should only get a single change record
+    yield animations[0].ready;
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after pause()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
+  // Test that calling play() on an Animation that is pause-pending
+  // dispatches a changed notification.
+  addAsyncAnimTest("aborted_pause", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Wait until the animation is ready
+    yield animations[0].ready;
+
+    // Pause
+    animations[0].pause();
+
+    // We are now pause-pending. If we play() now, we will abort the pause
+    animations[0].play();
+
+    // We should get two change records
+    yield animations[0].ready;
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: animations, removed: [] }],
+                    "records after aborting a pause()");
 
     // Cancel the animation.
     e.style = "";
