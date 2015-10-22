@@ -2510,7 +2510,6 @@ BuildStyleRule(nsCSSProperty aProperty,
 
   // check whether property parsed without CSS parsing errors
   if (!declaration->HasNonImportantValueFor(propertyToCheck)) {
-    NS_WARNING("failure in BuildStyleRule");
     return nullptr;
   }
 
