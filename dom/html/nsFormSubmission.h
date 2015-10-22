@@ -10,11 +10,11 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsNCRFallbackEncoderWrapper.h"
 
 class nsIURI;
 class nsIInputStream;
 class nsGenericHTMLElement;
-class nsISaveAsCharset;
 class nsIMultiplexInputStream;
 
 namespace mozilla {
@@ -140,7 +140,7 @@ public:
 
 private:
   // The encoder that will encode Unicode names and values
-  nsCOMPtr<nsISaveAsCharset> mEncoder;
+  nsNCRFallbackEncoderWrapper mEncoder;
 };
 
 /**
