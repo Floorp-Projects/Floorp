@@ -44,6 +44,7 @@
                   style="@style/TabLayoutItemTextAppearance"
                   android:textColor="#FFFFFFFF"
                   android:textSize="14sp"
+                  android:gravity="center_vertical"
                   android:singleLine="false"
                   android:maxLines="4"
                   android:duplicateParentState="true"/>
