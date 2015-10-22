@@ -24,20 +24,52 @@ const REPORT = {
 
 const EXPECTED = {
   name: null,
-  count: undefined,
-  bytes: undefined,
+  count: 0,
+  totalCount: 17,
+  bytes: 0,
+  totalBytes: 170,
   children: [
-    { name: "Array", bytes: 100, count: 1, children: undefined },
-    { name: "Function", bytes: 10, count: 10, children: undefined },
+    {
+      name: "Array",
+      bytes: 100,
+      totalBytes: 100,
+      count: 1,
+      totalCount: 1,
+      children: undefined
+    },
     {
       name: "other",
-      count: undefined,
-      bytes: undefined,
+      count: 0,
+      totalCount: 6,
+      bytes: 0,
+      totalBytes: 60,
       children: [
-        { name: "JIT::CODE::LATER!!!", bytes: 40, count: 4, children: undefined },
-        { name: "JIT::CODE::NOW!!!", bytes: 20, count: 2, children: undefined },
+        {
+          name: "JIT::CODE::LATER!!!",
+          bytes: 40,
+          totalBytes: 40,
+          count: 4,
+          totalCount: 4,
+          children: undefined
+        },
+        {
+          name: "JIT::CODE::NOW!!!",
+          bytes: 20,
+          totalBytes: 20,
+          count: 2,
+          totalCount: 2,
+          children: undefined
+        },
       ]
-    }
+    },
+    {
+      name: "Function",
+      bytes: 10,
+      totalBytes: 10,
+      count: 10,
+      totalCount: 10,
+      children: undefined
+    },
   ]
 };
 
