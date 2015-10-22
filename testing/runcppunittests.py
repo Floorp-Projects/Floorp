@@ -130,6 +130,11 @@ class CPPUnitTests(object):
             else:
                 self.log.info("Failed to find ASan symbolizer at %s" % llvmsym)
 
+            # media/mtransport tests statically link in NSS, which
+            # causes ODR violations. See bug 1215679.
+            assert not 'ASAN_OPTIONS' in env
+            env['ASAN_OPTIONS'] = 'detect_leaks=0:detect_odr_violation=0'
+
         return env
 
     def run_tests(self, programs, xre_path, symbols_path=None, interactive=False):
