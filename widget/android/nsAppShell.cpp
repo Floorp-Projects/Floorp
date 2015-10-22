@@ -383,7 +383,7 @@ public:
     void Run() override;
     void PostTo(mozilla::LinkedList<Event>& queue) override;
 
-    mozilla::HangMonitor::ActivityType ActivityType() const
+    Event::Type ActivityType() const override
     {
         return ae->IsInputEvent() ? mozilla::HangMonitor::kUIActivity
                                   : mozilla::HangMonitor::kGeneralActivity;
