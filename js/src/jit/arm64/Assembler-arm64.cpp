@@ -221,7 +221,10 @@ void
 Assembler::bind(Label* label, BufferOffset targetOffset)
 {
     // Nothing has seen the label yet: just mark the location.
-    if (!label->used()) {
+    // If we've run out of memory, don't attempt to modify the buffer which may
+    // not be there. Just mark the label as bound to the (possibly bogus)
+    // targetOffset.
+    if (!label->used() || oom()) {
         label->bind(targetOffset.getOffset());
         return;
     }
@@ -259,7 +262,9 @@ void
 Assembler::bind(RepatchLabel* label)
 {
     // Nothing has seen the label yet: just mark the location.
-    if (!label->used()) {
+    // If we've run out of memory, don't attempt to modify the buffer which may
+    // not be there. Just mark the label as bound to nextOffset().
+    if (!label->used() || oom()) {
         label->bind(nextOffset().getOffset());
         return;
     }
