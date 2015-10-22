@@ -1702,10 +1702,10 @@ Debugger::slowPathOnIonCompilation(JSContext* cx, Handle<ScriptVector> scripts, 
 }
 
 bool
-Debugger::isDebuggee(const JSCompartment* compartment) const
+Debugger::isDebuggeeUnbarriered(const JSCompartment* compartment) const
 {
     MOZ_ASSERT(compartment);
-    return compartment->isDebuggee() && debuggees.has(compartment->maybeGlobal());
+    return compartment->isDebuggee() && debuggees.has(compartment->unsafeUnbarrieredMaybeGlobal());
 }
 
 Debugger::TenurePromotionsLogEntry::TenurePromotionsLogEntry(JSRuntime* rt, JSObject& obj, double when)
@@ -2471,7 +2471,7 @@ Debugger::markAllIteratively(GCMarker* trc)
     JSRuntime* rt = trc->runtime();
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         if (c->isDebuggee()) {
-            GlobalObject* global = c->maybeGlobal();
+            GlobalObject* global = c->unsafeUnbarrieredMaybeGlobal();
             if (!IsMarkedUnbarriered(&global))
                 continue;
 
@@ -2538,10 +2538,10 @@ Debugger::markAll(JSTracer* trc)
     for (Debugger* dbg : rt->debuggerList) {
         WeakGlobalObjectSet& debuggees = dbg->debuggees;
         for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
-            GlobalObject* global = e.front();
+            GlobalObject* global = e.front().unbarrieredGet();
             TraceManuallyBarrieredEdge(trc, &global, "Global Object");
-            if (global != e.front())
-                e.rekeyFront(ReadBarrieredGlobalObject(global));
+            if (global != e.front().unbarrieredGet())
+                e.rekeyFront(global, ReadBarrieredGlobalObject(global));
         }
 
         HeapPtrNativeObject& dbgobj = dbg->toJSObjectRef();
@@ -2615,7 +2615,7 @@ Debugger::sweepAll(FreeOp* fop)
              * objects, this must be done before finalize time.
              */
             for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
-                dbg->removeDebuggeeGlobal(fop, e.front(), &e);
+                dbg->removeDebuggeeGlobal(fop, e.front().unbarrieredGet(), &e);
         }
     }
 }
@@ -3455,7 +3455,7 @@ Debugger::recomputeDebuggeeZoneSet()
     AutoEnterOOMUnsafeRegion oomUnsafe;
     debuggeeZones.clear();
     for (auto range = debuggees.all(); !range.empty(); range.popFront()) {
-        if (!debuggeeZones.put(range.front()->zone()))
+        if (!debuggeeZones.put(range.front().unbarrieredGet()->zone()))
             oomUnsafe.crash("Debugger::removeDebuggeeGlobal");
     }
 }
@@ -3484,7 +3484,7 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
      */
     MOZ_ASSERT(debuggees.has(global));
     MOZ_ASSERT(debuggeeZones.has(global->zone()));
-    MOZ_ASSERT_IF(debugEnum, debugEnum->front() == global);
+    MOZ_ASSERT_IF(debugEnum, debugEnum->front().unbarrieredGet() == global);
 
     /*
      * FIXME Debugger::slowPathOnLeaveFrame needs to kill all Debugger.Frame
@@ -4103,7 +4103,7 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery
          * node.
          */
         JSCompartment* comp = referent.compartment();
-        if (comp && !dbg->isDebuggee(comp)) {
+        if (comp && !dbg->isDebuggeeUnbarriered(comp)) {
             traversal.abandonReferent();
             return true;
         }

@@ -153,6 +153,13 @@ public class AppConstants {
     null;
 //#endif
 
+    public static final boolean MOZ_EXCLUDE_HYPHENATION_DICTIONARIES =
+//#ifdef MOZ_EXCLUDE_HYPHENATION_DICTIONARIES
+    true;
+//#else
+    false;
+//#endif
+
     /**
      * Whether this APK was built with constrained resources --
      * no xhdpi+ images, for example.

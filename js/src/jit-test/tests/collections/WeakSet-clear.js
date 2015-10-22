@@ -40,3 +40,11 @@ ws.add(value2);
 value2 = null;
 gc();
 ws.clear();
+
+// Clearing a cross-compartment WeakSet with a live value
+ws = new (newGlobal().WeakSet);
+value = {};
+WeakSet.prototype.add.call(ws, value);
+assertEq(WeakSet.prototype.has.call(ws, value), true);
+WeakSet.prototype.clear.call(ws);
+assertEq(WeakSet.prototype.has.call(ws, value), false);

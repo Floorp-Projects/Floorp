@@ -25,12 +25,7 @@ class ProcTestKill(proctest.ProcTest):
         time.sleep(3)
         p.kill()
 
-        detected, output = proctest.check_for_process(self.proclaunch)
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              expectedfail=('returncode',))
+        self.determine_status(p, expectedfail=('returncode',))
 
 if __name__ == '__main__':
     unittest.main()

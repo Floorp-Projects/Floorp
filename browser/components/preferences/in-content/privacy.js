@@ -126,20 +126,21 @@ var gPrivacyPane = {
    * The list of preferences which affect the initial history mode settings.
    * If the auto start private browsing mode pref is active, the initial
    * history mode would be set to "Don't remember anything".
-   * If all of these preferences have their default values, and the auto-start
+   * If ALL of these preferences are set to the values that correspond
+   * to keeping some part of history, and the auto-start
    * private browsing mode is not active, the initial history mode would be
    * set to "Remember everything".
    * Otherwise, the initial history mode would be set to "Custom".
    *
-   * Extensions adding their own preferences can append their IDs to this array if needed.
+   * Extensions adding their own preferences can set values here if needed.
    */
-  prefsForDefault: [
-    "places.history.enabled",
-    "browser.formfill.enable",
-    "network.cookie.cookieBehavior",
-    "network.cookie.lifetimePolicy",
-    "privacy.sanitize.sanitizeOnShutdown"
-  ],
+  prefsForKeepingHistory: {
+    "places.history.enabled": true, // History is enabled
+    "browser.formfill.enable": true, // Form information is saved
+    "network.cookie.cookieBehavior": 0, // All cookies are enabled
+    "network.cookie.lifetimePolicy": 0, // Cookies use supplied lifetime
+    "privacy.sanitize.sanitizeOnShutdown": false, // Private date is NOT cleared on shutdown
+  },
 
   /**
    * The list of control IDs which are dependent on the auto-start private
@@ -158,16 +159,15 @@ var gPrivacyPane = {
   ],
 
   /**
-   * Check whether all the preferences values are set to their default values
+   * Check whether preferences values are set to keep history
    *
    * @param aPrefs an array of pref names to check for
-   * @returns boolean true if all of the prefs are set to their default values,
+   * @returns boolean true if all of the prefs are set to keep history,
    *                  false otherwise
    */
-  _checkDefaultValues: function(aPrefs) {
-    for (let i = 0; i < aPrefs.length; ++i) {
-      let pref = document.getElementById(aPrefs[i]);
-      if (pref.value != pref.defaultValue)
+  _checkHistoryValues: function(aPrefs) {
+    for (let pref of Object.keys(aPrefs)) {
+      if (document.getElementById(pref).value != aPrefs[pref])
         return false;
     }
     return true;
@@ -181,7 +181,7 @@ var gPrivacyPane = {
     let mode;
     let getVal = aPref => document.getElementById(aPref).value;
 
-    if (this._checkDefaultValues(this.prefsForDefault)) {
+    if (this._checkHistoryValues(this.prefsForKeepingHistory)) {
       if (getVal("browser.privatebrowsing.autostart"))
         mode = "dontremember";
       else

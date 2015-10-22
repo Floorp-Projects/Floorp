@@ -8,7 +8,7 @@ import org.mozilla.gecko.R;
 
 import com.jayway.android.robotium.solo.Condition;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 
 /**
  * This patch tests the clear private data options:
@@ -126,7 +126,7 @@ public class testClearPrivateData extends PixelTest {
         mSolo.waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                ImageButton btn = (ImageButton) mSolo.getView(R.id.favicon);
+                ImageView btn = (ImageView) mSolo.getView(R.id.favicon);
                 mSolo.clickOnView(btn);
                 return true;
             }

@@ -59,8 +59,9 @@ gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize& realSize, gfxI
     if (!CheckSurfaceSize(size))
         MakeInvalid(size);
 
-    cairo_surface_t *surf = cairo_win32_surface_create_with_dib((cairo_format_t)(int)imageFormat,
-                                                                size.width, size.height);
+    cairo_format_t cformat = gfxImageFormatToCairoFormat(imageFormat);
+    cairo_surface_t *surf =
+        cairo_win32_surface_create_with_dib(cformat, size.width, size.height);
 
     Init(surf);
 
@@ -79,8 +80,10 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const mozilla::gfx::IntSize& realSi
     if (!CheckSurfaceSize(size))
         MakeInvalid(size);
 
-    cairo_surface_t *surf = cairo_win32_surface_create_with_ddb(dc, (cairo_format_t)(int)imageFormat,
-                                                                size.width, size.height);
+    cairo_format_t cformat = gfxImageFormatToCairoFormat(imageFormat);
+    cairo_surface_t *surf =
+        cairo_win32_surface_create_with_ddb(dc, cformat,
+                                            size.width, size.height);
 
     Init(surf);
 
@@ -138,9 +141,11 @@ gfxWindowsSurface::CreateSimilarSurface(gfxContentType aContent,
         // a surface that's the result of create_similar(gfxContentType::COLOR_ALPHA)
         // (e.g. a backbuffer for the window) --- that new surface *would*
         // have a DIB.
-        surface =
-          cairo_win32_surface_create_with_dib((cairo_format_t)(int)gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent),
-                                              aSize.width, aSize.height);
+        gfxImageFormat gformat =
+            gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
+        cairo_format_t cformat = gfxImageFormatToCairoFormat(gformat);
+        surface = cairo_win32_surface_create_with_dib(cformat, aSize.width,
+                                                      aSize.height);
     } else {
         surface =
           cairo_surface_create_similar(mSurface, (cairo_content_t)(int)aContent,

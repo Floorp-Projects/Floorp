@@ -123,7 +123,7 @@ AccessibleWrap::QueryInterface(REFIID iid, void** ppv)
       return E_NOINTERFACE;
 
     *ppv = static_cast<IEnumVARIANT*>(new ChildrenEnumVariant(this));
-  } else if (IID_IServiceProvider == iid && !IsProxy())
+  } else if (IID_IServiceProvider == iid)
     *ppv = new ServiceProvider(this);
   else if (IID_ISimpleDOMNode == iid && !IsProxy()) {
     if (IsDefunct() || (!HasOwnContent() && !IsDoc()))
@@ -1514,7 +1514,7 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 #endif
 
     // If it is a document then just return an accessible.
-    if (IsDoc())
+    if (child && IsDoc())
       return child;
 
     // Otherwise check whether the accessible is a child (this path works for
@@ -1534,7 +1534,14 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   if (IsProxy()) {
     DocAccessibleParent* proxyDoc = Proxy()->Document();
     AccessibleWrap* wrapper = GetProxiedAccessibleInSubtree(proxyDoc, id);
+    if (!wrapper)
+      return nullptr;
+
     MOZ_ASSERT(wrapper->IsProxy());
+
+    if (proxyDoc == this->Proxy()) {
+      return wrapper;
+    }
 
     ProxyAccessible* parent = wrapper->Proxy();
     while (parent && parent != proxyDoc) {
@@ -1567,6 +1574,16 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
     }
 
     if (outerDoc->Document() != doc) {
+      continue;
+    }
+
+    if (doc == this) {
+      AccessibleWrap* proxyWrapper =
+        GetProxiedAccessibleInSubtree(remoteDocs->ElementAt(i), id);
+      if (proxyWrapper) {
+        return proxyWrapper;
+      }
+
       continue;
     }
 

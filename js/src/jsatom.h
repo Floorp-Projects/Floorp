@@ -75,6 +75,7 @@ class AtomStateEntry
     }
 
     JSAtom* asPtr() const;
+    JSAtom* asPtrUnbarriered() const;
 };
 
 struct AtomHasher
