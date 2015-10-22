@@ -57,6 +57,34 @@ class GeckoEditable::Natives : public mozilla::jni::NativeImpl<GeckoEditable, Im
 public:
     static constexpr JNINativeMethod methods[] = {
 
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAcknowledgeFocus_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeAcknowledgeFocus_t, Impl>
+                ::template Wrap<&Impl::OnImeAcknowledgeFocus>),
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeAddCompositionRange_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeAddCompositionRange_t, Impl>
+                ::template Wrap<&Impl::OnImeAddCompositionRange>),
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeRemoveComposition_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeRemoveComposition_t, Impl>
+                ::template Wrap<&Impl::OnImeRemoveComposition>),
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeReplaceText_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeReplaceText_t, Impl>
+                ::template Wrap<&Impl::OnImeReplaceText>),
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeSetSelection_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeSetSelection_t, Impl>
+                ::template Wrap<&Impl::OnImeSetSelection>),
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeSynchronize_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeSynchronize_t, Impl>
+                ::template Wrap<&Impl::OnImeSynchronize>),
+
+        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeUpdateComposition_t>(
+                mozilla::jni::NativeStub<GeckoEditable::OnImeUpdateComposition_t, Impl>
+                ::template Wrap<&Impl::OnImeUpdateComposition>),
+
         mozilla::jni::MakeNativeMethod<GeckoEditable::OnKeyEvent_t>(
                 mozilla::jni::NativeStub<GeckoEditable::OnKeyEvent_t, Impl>
                 ::template Wrap<&Impl::OnKeyEvent>)
