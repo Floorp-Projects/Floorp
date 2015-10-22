@@ -1,12 +1,6 @@
-// If our root project is in the object directory, we expect to be given
-// topsrcdir from our environment via gradle.properties.  If we don't get it,
-// our root project is in the source directory, so we extract topsrcdir relative
-// to the location of this script.
-if (!hasProperty('topsrcdir')) {
-    // In the source directory, we're not worried about links crossing directories.
-    binding.variables['topsrcdir'] = new File("../../..").getCanonicalPath()
-    logger.warn("topsrcdir is undefined: assuming source directory Gradle invocation with topsrcdir=${topsrcdir}.")
-}
+// You might think topsrcdir is '.', but that's not true when the Gradle build
+// is launched from within IntelliJ.
+def topsrcdir = rootProject.projectDir.absolutePath
 
 def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
 def proc = commandLine.execute(null, new File(topsrcdir))
@@ -23,6 +17,10 @@ import groovy.json.JsonSlurper
 def slurper = new JsonSlurper()
 def json = slurper.parseText(standardOutput.toString())
 
+if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
+    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.");
+}
+
 include ':app'
 include ':base'
 include ':omnijar'
@@ -32,7 +30,7 @@ def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
 project(':app').projectDir = new File(gradleRoot, 'app')
 project(':base').projectDir = new File(gradleRoot, 'base')
 project(':omnijar').projectDir = new File(gradleRoot, 'omnijar')
-project(':thirdparty').projectDir = new File(gradleRoot, 'thirdparty')
+project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
 // The Gradle instance is shared between settings.gradle and all the
 // other build.gradle files (see

@@ -13,7 +13,7 @@ allprojects {
     }
 }
 
-buildDir "${topobjdir}/mobile/android/gradle/build"
+buildDir "${topobjdir}/gradle/build"
 
 buildscript {
     repositories {
@@ -95,6 +95,31 @@ apply plugin: 'idea'
 idea {
     project {
         languageLevel = '1.7'
+    }
+
+    module {
+        // Object directories take a huge amount of time for IntelliJ to index.
+        // Exclude them.  Convention is that object directories start with obj.
+        // IntelliJ is clever and will not exclude the parts of the object
+        // directory that are referenced, if there are any.
+        def topsrcdirURI = file(topsrcdir).toURI()
+        excludeDirs += files(file(topsrcdir)
+            .listFiles({it.isDirectory()} as FileFilter)
+            .collect({topsrcdirURI.relativize(it.toURI()).toString()}) // Relative paths.
+            .findAll({it.startsWith('obj')}))
+
+        // If topobjdir is below topsrcdir, hide only some portions of that tree.
+        def topobjdirURI = file(topobjdir).toURI()
+        if (!topsrcdirURI.relativize(topobjdirURI).isAbsolute()) {
+            excludeDirs -= file(topobjdir)
+            excludeDirs += files(file(topobjdir).listFiles())
+            excludeDirs -= file("${topobjdir}/gradle")
+            excludeDirs -= file("${topobjdir}/mobile")
+        }
+
+        if (!mozconfig.substs.MOZ_INSTALL_TRACKING) {
+            excludeDirs += file("${topsrcdir}/mobile/android/thirdparty/com/adjust")
+        }
     }
 }
 

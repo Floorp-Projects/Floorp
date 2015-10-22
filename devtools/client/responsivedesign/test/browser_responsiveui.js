@@ -27,7 +27,7 @@ function test() {
 
     let mgr = ResponsiveUI.ResponsiveUIManager;
 
-    synthesizeKeyFromKeyTag("key_responsiveUI");
+    synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
 
     yield once(mgr, "on");
 
