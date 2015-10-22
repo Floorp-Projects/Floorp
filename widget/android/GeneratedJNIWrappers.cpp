@@ -752,6 +752,9 @@ auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1,
     return mozilla::jni::Method<NotifyIMEContext_t>::Call(this, nullptr, a0, a1, a2, a3);
 }
 
+constexpr char GeckoEditable::OnKeyEvent_t::name[];
+constexpr char GeckoEditable::OnKeyEvent_t::signature[];
+
 constexpr char GeckoEditable::OnSelectionChange_t::name[];
 constexpr char GeckoEditable::OnSelectionChange_t::signature[];
 

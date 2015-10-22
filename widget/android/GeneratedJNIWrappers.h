@@ -1796,6 +1796,32 @@ public:
     auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) const -> void;
 
 public:
+    struct OnKeyEvent_t {
+        typedef GeckoEditable Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int64_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                int32_t,
+                bool> Args;
+        static constexpr char name[] = "onKeyEvent";
+        static constexpr char signature[] =
+                "(IIIIJIIIIIZ)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct OnSelectionChange_t {
         typedef GeckoEditable Owner;
         typedef void ReturnType;
@@ -1853,6 +1879,8 @@ public:
 
     auto OnViewChange(mozilla::jni::Object::Param) const -> void;
 
+public:
+    template<class Impl> class Natives;
 };
 
 class GeckoEditableListener : public mozilla::jni::Class<GeckoEditableListener>
