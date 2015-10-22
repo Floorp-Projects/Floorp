@@ -546,7 +546,7 @@ Str(JSContext* cx, const Value& v, StringifyContext* scx)
     return isArray ? JA(cx, obj, scx) : JO(cx, obj, scx);
 }
 
-/* ES5 15.12.3. */
+/* ES6 24.3.2. */
 bool
 js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value space_,
               StringBuffer& sb)
@@ -563,95 +563,71 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
         } else if (!IsArray(cx, replacer, &isArray)) {
             return false;
         } else if (isArray) {
-            /*
-             * Step 4b: The spec algorithm is unhelpfully vague about the exact
-             * steps taken when the replacer is an array, regarding the exact
-             * sequence of [[Get]] calls for the array's elements, when its
-             * overall length is calculated, whether own or own plus inherited
-             * properties are considered, and so on.  A rewrite was proposed in
-             * <https://mail.mozilla.org/pipermail/es5-discuss/2011-April/003976.html>,
-             * whose steps are copied below, and which are implemented here.
-             *
-             * i.   Let PropertyList be an empty internal List.
-             * ii.  Let len be the result of calling the [[Get]] internal
-             *      method of replacer with the argument "length".
-             * iii. Let i be 0.
-             * iv.  While i < len:
-             *      1. Let item be undefined.
-             *      2. Let v be the result of calling the [[Get]] internal
-             *         method of replacer with the argument ToString(i).
-             *      3. If Type(v) is String then let item be v.
-             *      4. Else if Type(v) is Number then let item be ToString(v).
-             *      5. Else if Type(v) is Object then
-             *         a. If the [[Class]] internal property of v is "String"
-             *            or "Number" then let item be ToString(v).
-             *      6. If item is not undefined and item is not currently an
-             *         element of PropertyList then,
-             *         a. Append item to the end of PropertyList.
-             *      7. Let i be i + 1.
-             */
+            /* Step 4b(iii). */
 
-            /* Step 4b(ii). */
+            /* Step 4b(iii)(2-3). */
             uint32_t len;
             if (!GetLengthProperty(cx, replacer, &len))
                 return false;
-            if (replacer->is<ArrayObject>() && !replacer->isIndexed())
-                len = Min(len, replacer->as<ArrayObject>().getDenseInitializedLength());
 
             // Cap the initial size to a moderately small value.  This avoids
             // ridiculous over-allocation if an array with bogusly-huge length
             // is passed in.  If we end up having to add elements past this
             // size, the set will naturally resize to accommodate them.
-            const uint32_t MaxInitialSize = 1024;
+            const uint32_t MaxInitialSize = 32;
             HashSet<jsid, JsidHasher> idSet(cx);
             if (!idSet.init(Min(len, MaxInitialSize)))
                 return false;
 
-            /* Step 4b(iii). */
-            uint32_t i = 0;
+            /* Step 4b(iii)(4). */
+            uint32_t k = 0;
 
-            /* Step 4b(iv). */
-            RootedValue v(cx);
-            for (; i < len; i++) {
+            /* Step 4b(iii)(5). */
+            RootedValue item(cx);
+            for (; k < len; k++) {
                 if (!CheckForInterrupt(cx))
                     return false;
 
-                /* Step 4b(iv)(2). */
-                if (!GetElement(cx, replacer, replacer, i, &v))
+                /* Step 4b(iii)(5)(a-b). */
+                if (!GetElement(cx, replacer, replacer, k, &item))
                     return false;
 
                 RootedId id(cx);
-                if (v.isNumber()) {
-                    /* Step 4b(iv)(4). */
+
+                /* Step 4b(iii)(5)(c-f). */
+                if (item.isNumber()) {
+                    /* Step 4b(iii)(5)(e). */
                     int32_t n;
-                    if (v.isNumber() && ValueFitsInInt32(v, &n) && INT_FITS_IN_JSID(n)) {
+                    if (ValueFitsInInt32(item, &n) && INT_FITS_IN_JSID(n)) {
                         id = INT_TO_JSID(n);
                     } else {
-                        if (!ValueToId<CanGC>(cx, v, &id))
+                        if (!ValueToId<CanGC>(cx, item, &id))
                             return false;
                     }
                 } else {
-                    bool shouldAdd = v.isString();
+                    bool shouldAdd = item.isString();
                     if (!shouldAdd) {
                         ESClassValue cls;
-                        if (!GetClassOfValue(cx, v, &cls))
+                        if (!GetClassOfValue(cx, item, &cls))
                             return false;
+
                         shouldAdd = cls == ESClass_String || cls == ESClass_Number;
                     }
 
                     if (shouldAdd) {
-                        /* Step 4b(iv)(3), 4b(iv)(5). */
-                        if (!ValueToId<CanGC>(cx, v, &id))
+                        /* Step 4b(iii)(5)(f). */
+                        if (!ValueToId<CanGC>(cx, item, &id))
                             return false;
                     } else {
+                        /* Step 4b(iii)(5)(g). */
                         continue;
                     }
                 }
 
-                /* Step 4b(iv)(6). */
-                HashSet<jsid, JsidHasher>::AddPtr p = idSet.lookupForAdd(id);
+                /* Step 4b(iii)(5)(g). */
+                auto p = idSet.lookupForAdd(id);
                 if (!p) {
-                    /* Step 4b(iv)(6)(a). */
+                    /* Step 4b(iii)(5)(g)(i). */
                     if (!idSet.add(p, id) || !propertyList.append(id))
                         return false;
                 }
@@ -687,7 +663,7 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
     if (space.isNumber()) {
         /* Step 6. */
         double d;
-        JS_ALWAYS_TRUE(ToInteger(cx, space, &d));
+        MOZ_ALWAYS_TRUE(ToInteger(cx, space, &d));
         d = Min(10.0, d);
         if (d >= 1 && !gap.appendN(' ', uint32_t(d)))
             return false;
@@ -709,12 +685,12 @@ js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_, Value s
     if (!wrapper)
         return false;
 
-    /* Step 10. */
+    /* Steps 10-11. */
     RootedId emptyId(cx, NameToId(cx->names().empty));
     if (!NativeDefineProperty(cx, wrapper, emptyId, vp, nullptr, nullptr, JSPROP_ENUMERATE))
         return false;
 
-    /* Step 11. */
+    /* Step 12. */
     StringifyContext scx(cx, sb, gap, replacer, propertyList);
     if (!scx.init())
         return false;
@@ -903,11 +879,12 @@ json_parse(JSContext* cx, unsigned argc, Value* vp)
            : ParseJSONWithReviver(cx, linearChars.twoByteRange(), reviver, args.rval());
 }
 
-/* ES5 15.12.3. */
+/* ES6 24.3.2. */
 bool
 json_stringify(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
     RootedObject replacer(cx, args.get(1).isObject() ? &args[1].toObject() : nullptr);
     RootedValue value(cx, args.get(0));
     RootedValue space(cx, args.get(2));
