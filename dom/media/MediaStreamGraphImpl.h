@@ -38,8 +38,11 @@ struct StreamUpdate
 };
 
 /**
- * This represents a message passed from the main thread to the graph thread.
- * A ControlMessage always has a weak reference a particular affected stream.
+ * This represents a message run on the graph thread to modify stream or graph
+ * state.  These are passed from main thread to graph thread through
+ * AppendMessage(), or scheduled on the graph thread with
+ * RunMessageAfterProcessing().  A ControlMessage
+ * always has a weak reference to a particular affected stream.
  */
 class ControlMessage
 {
@@ -58,6 +61,8 @@ public:
   // All stream data for times < mProcessedTime has already been
   // computed.
   virtual void Run() = 0;
+  // RunDuringShutdown() is only relevant to messages generated on the main
+  // thread (for AppendMessage()).
   // When we're shutting down the application, most messages are ignored but
   // some cleanup messages should still be processed (on the main thread).
   // This must not add new control messages to the graph.
@@ -218,8 +223,12 @@ public:
    */
   void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime);
   /**
-   * Process graph message for this iteration, update stream processing order,
-   * and recompute stream blocking until aEndBlockingDecisions.
+   * Process graph messages in mFrontMessageQueue.
+   */
+  void RunMessagesInQueue();
+  /**
+   * Update stream processing order and recompute stream blocking until
+   * aEndBlockingDecisions.
    */
   void UpdateGraph(GraphTime aEndBlockingDecisions);
 
@@ -241,6 +250,14 @@ public:
   void ExtractPendingInput(SourceMediaStream* aStream,
                            GraphTime aDesiredUpToTime,
                            bool* aEnsureNextIteration);
+
+  /**
+   * For use during ProcessedMediaStream::ProcessInput() or
+   * MediaStreamListener callbacks, when graph state cannot be changed.
+   * Schedules |aMessage| to run after processing, at a time when graph state
+   * can be changed.  Graph thread.
+   */
+  void RunMessageAfterProcessing(nsAutoPtr<ControlMessage> aMessage);
 
   /**
    * Called when a suspend/resume/close operation has been completed, on the
