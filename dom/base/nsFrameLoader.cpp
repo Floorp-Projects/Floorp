@@ -97,6 +97,8 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/WebBrowserPersistLocalDocument.h"
 
+#include "nsPrincipal.h"
+
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
 #endif
@@ -278,13 +280,20 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI)
+nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI, const nsACString& aPackageId)
 {
   nsCOMPtr<nsIURI> URIToLoad = aURI;
   RefPtr<TabParent> tp = nullptr;
 
+  nsCString signedPkgOrigin;
+  if (!aPackageId.IsEmpty()) {
+    // Only when aPackageId is not empty would signed package origin
+    // be meaningful.
+    nsPrincipal::GetOriginForURI(aURI, signedPkgOrigin);
+  }
+
   MutableTabContext context;
-  nsresult rv = GetNewTabContext(&context);
+  nsresult rv = GetNewTabContext(&context, signedPkgOrigin, aPackageId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
@@ -3031,7 +3040,9 @@ nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange)
 }
 
 nsresult
-nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext)
+nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
+                                const nsACString& aSignedPkgOriginNoSuffix,
+                                const nsACString& aPackageId)
 {
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
@@ -3051,7 +3062,11 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext)
   }
   attrs.mAppId = appId;
 
-  bool tabContextUpdated = aTabContext->SetTabContext(ownApp, containingApp, attrs);
+  // Populate packageId to signedPkg.
+  attrs.mSignedPkg = NS_ConvertUTF8toUTF16(aPackageId);
+
+  bool tabContextUpdated = aTabContext->SetTabContext(ownApp, containingApp,
+                                                      attrs, aSignedPkgOriginNoSuffix);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;

@@ -456,7 +456,8 @@ public:
 
     // Called by HttpChannelParent. The function may use a new process to
     // reload the URI associated with the given channel.
-    void OnStartSignedPackageRequest(nsIChannel* aChannel);
+    void OnStartSignedPackageRequest(nsIChannel* aChannel,
+                                     const nsACString& aPackageId);
 
 protected:
     bool ReceiveMessage(const nsString& aMessage,

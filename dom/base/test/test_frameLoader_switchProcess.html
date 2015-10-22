@@ -30,7 +30,7 @@
                           .QueryInterface(Ci.nsIFrameLoaderOwner)
                           .frameLoader;
     var uri = SpecialPowers.Services.io.newURI(url, null, null);
-    fl.switchProcessAndLoadURI(uri);
+    fl.switchProcessAndLoadURI(uri, "");
   }
 
   function runTest() {

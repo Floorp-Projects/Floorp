@@ -35,6 +35,12 @@ class nsIPrincipal;
 
 namespace mozilla {
 
+#if DEUBG
+  #define LOG(args...) printf_stderr(args)
+#else
+  #define LOG(...)
+#endif
+
 #ifdef MOZ_CHILD_PERMISSIONS
 
 static bool
@@ -118,11 +124,52 @@ AssertAppStatus(PBrowserParent* aActor,
   return CheckAppStatusHelper(app, aStatus);
 }
 
+// A general purpose helper function to check permission against the origin
+// rather than mozIApplication.
+static bool
+CheckOriginPermission(const nsACString& aOrigin, const char* aPermission)
+{
+  LOG("CheckOriginPermission: %s, %s\n", nsCString(aOrigin).get(), aPermission);
+
+  nsIScriptSecurityManager *securityManager =
+    nsContentUtils::GetSecurityManager();
+
+  nsCOMPtr<nsIPrincipal> principal;
+  securityManager->CreateCodebasePrincipalFromOrigin(aOrigin,
+                                                     getter_AddRefs(principal));
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+
+  uint32_t perm;
+  nsresult rv = permMgr->TestExactPermissionFromPrincipal(principal, aPermission, &perm);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  LOG("Permission %s for %s: %d\n", aPermission, nsCString(aOrigin).get(), perm);
+  return nsIPermissionManager::ALLOW_ACTION == perm;
+}
+
 bool
 AssertAppProcess(TabContext& aContext,
                  AssertAppProcessType aType,
                  const char* aCapability)
 {
+  const mozilla::OriginAttributes& attr = aContext.OriginAttributesRef();
+  nsCString suffix;
+  attr.CreateSuffix(suffix);
+
+  if (!aContext.SignedPkgOriginNoSuffix().IsEmpty()) {
+    LOG("TabContext owning signed package origin: %s, originAttr; %s\n",
+        nsCString(aContext.SignedPkgOriginNoSuffix()).get(),
+        suffix.get());
+  }
+
+  // Do a origin-based permission check if the TabContext owns a signed package.
+  if (!aContext.SignedPkgOriginNoSuffix().IsEmpty() &&
+      (ASSERT_APP_HAS_PERMISSION == aType || ASSERT_APP_PROCESS_PERMISSION == aType)) {
+    nsCString origin = aContext.SignedPkgOriginNoSuffix() + suffix;
+    return CheckOriginPermission(origin, aCapability);
+  }
 
   nsCOMPtr<mozIApplication> app = aContext.GetOwnOrContainingApp();
   return CheckAppTypeHelper(app, aType, aCapability, aContext.IsBrowserElement());
