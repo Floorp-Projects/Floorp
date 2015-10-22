@@ -170,7 +170,7 @@ this.GoogleImporter.prototype = {
       let code = yield this._promiseAuthCode(windowRef);
       let tokenSet = yield this._promiseTokenSet(code);
       let contactEntries = yield this._getContactEntries(tokenSet);
-      let {total, success, ids} = yield this._processContacts(contactEntries, db, tokenSet);
+      let { total, success, ids } = yield this._processContacts(contactEntries, db, tokenSet);
       yield this._purgeContacts(ids, db);
 
       return {

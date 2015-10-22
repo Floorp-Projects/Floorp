@@ -7,7 +7,7 @@ Bug 1067491 - Test taking a census over the RDP.
   <meta charset="utf-8">
   <title>Census Tree 01</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <link href="chrome://browser/content/devtools/widgets.css" type="text/css" />
+  <link href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css" />
   <link href="chrome://devtools/skin/themes/light-theme.css" type="text/css" />
   <link href="chrome://devtools/skin/themes/common.css" type="text/css" />
   <link href="chrome://devtools/skin/themes/widgets.css" type="text/css" />
@@ -19,7 +19,7 @@ Bug 1067491 - Test taking a census over the RDP.
 <script src="head.js" type="application/javascript;version=1.8"></script>
 <script>
 window.onload = function() {
-  var { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
+  var { censusReportToCensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
   var { INDENTATION, CensusView } = require("devtools/client/memory/modules/census-view");
   SimpleTest.waitForExplicitFinish();
   const countBreakdown = { by: "count", count: true, bytes: true };
@@ -28,6 +28,7 @@ window.onload = function() {
     by: "coarseType",
     objects: { by: "objectClass", then: countBreakdown },
     strings: countBreakdown,
+    scripts: countBreakdown,
     other: { by: "internalType", then: countBreakdown },
   };
 
@@ -37,6 +38,7 @@ window.onload = function() {
       "Array": { bytes: 20, count: 2 },
     },
     "strings": { bytes: 10, count: 1 },
+    "scripts": { bytes: 20, count: 2 },
     "other": {
       "js::Shape": { bytes: 30, count: 3 },
       "js::Shape2": { bytes: 40, count: 4 }
@@ -44,15 +46,16 @@ window.onload = function() {
   };
 
   const EXPECTED_ROWS = [
-    { level: 0, name: "strings", bytes: 10, count: 1, },
-    { level: 0, name: "objects" },
-        { level: 1, name: "Array", bytes: 20, count: 2, },
-        { level: 1, name: "Function", bytes: 10, count: 1, },
-    { level: 0, name: "other" },
+    { level: 0, name: "other", bytes: 0, count: 0 },
         { level: 1, name: "js::Shape2", bytes: 40, count: 4, },
         { level: 1, name: "js::Shape", bytes: 30, count: 3, },
+    { level: 0, name: "objects", bytes: 0, count: 0 },
+        { level: 1, name: "Array", bytes: 20, count: 2, },
+        { level: 1, name: "Function", bytes: 10, count: 1, },
+    { level: 0, name: "scripts", bytes: 20, count: 2, },
+    { level: 0, name: "strings", bytes: 10, count: 1, },
   ];
-  var censusTreeNode = new CensusTreeNode(BREAKDOWN, REPORT);
+  var censusTreeNode = censusReportToCensusTreeNode(BREAKDOWN, REPORT);
 
   var view = new CensusView({
     censusTreeNode: censusTreeNode,
@@ -81,14 +84,14 @@ window.onload = function() {
       is(bytesEl.innerHTML, String(expected.bytes),
         `correct bytes "${expected.bytes}" in heap tree`);
     } else {
-      ok(!bytesEl, "no bytes correctly displayed for ${expected.name}");
+      ok(!bytesEl, `no bytes correctly displayed for ${expected.name}`);
     }
 
     if ("count" in expected) {
       is(countEl.innerHTML, String(expected.count),
         `correct count "${expected.count}" in heap tree`);
     } else {
-      ok(!countEl, "no count correctly displayed for ${expected.name}");
+      ok(!countEl, `no count correctly displayed for ${expected.name}`);
     }
   }
 

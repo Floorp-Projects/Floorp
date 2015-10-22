@@ -328,7 +328,7 @@
 .devtools-textinput,
 .devtools-searchinput {
   -moz-appearance: none;
-  margin: 0 3px;
+  margin: 1px 0;
   border: 1px solid;
 %ifdef XP_MACOSX
   border-radius: 20px;
@@ -340,8 +340,6 @@
 }
 
 .devtools-searchinput {
-  margin-top: 1px;
-  margin-bottom: 1px;
   padding: 0;
   -moz-padding-start: 22px;
   -moz-padding-end: 4px;

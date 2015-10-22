@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CardDavImporter",
 XPCOMUtils.defineLazyModuleGetter(this, "GoogleImporter",
                                   "resource:///modules/loop/GoogleImporter.jsm");
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
+  const { EventEmitter } = Cu.import("resource://devtools/shared/event-emitter.js", {});
   return new EventEmitter();
 });
 
@@ -313,7 +313,7 @@ LoopStorage.on("upgrade", function(e, db) {
     keyPath: kKeyPath,
     autoIncrement: true
   });
-  store.createIndex(kServiceIdIndex, kServiceIdIndex, {unique: false});
+  store.createIndex(kServiceIdIndex, kServiceIdIndex, { unique: false });
 });
 
 /**

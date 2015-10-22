@@ -1030,7 +1030,11 @@ var DebuggerServer = {
         aConnection.cancelForwarding(prefix);
 
         // ... and notify the child process to clean the tab actors.
-        mm.sendAsyncMessage("debug:disconnect", { prefix: prefix });
+        try {
+          // Bug 1169643: Ignore any exception as the child process
+          // may already be destroyed by now.
+          mm.sendAsyncMessage("debug:disconnect", { prefix: prefix });
+        } catch(e) {}
       } else {
         // Otherwise, the app has been closed before the actor
         // had a chance to be created, so we are not able to create

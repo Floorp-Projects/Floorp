@@ -193,7 +193,7 @@ describe("loop.store.StandaloneMetricsStore", function() {
 
   describe("Store Change Handlers", function() {
     it("should log an event on room full", function() {
-      fakeActiveRoomStore.setStoreState({roomState: ROOM_STATES.FULL});
+      fakeActiveRoomStore.setStoreState({ roomState: ROOM_STATES.FULL });
 
       sinon.assert.calledOnce(window.ga);
       sinon.assert.calledWithExactly(window.ga,
