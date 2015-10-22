@@ -137,11 +137,6 @@ public:
  * BasicLayerManager for such an implementation.
  */
 
-static void LayerManagerUserDataDestroy(void *data)
-{
-  delete static_cast<LayerUserData*>(data);
-}
-
 /**
  * A LayerManager controls a tree of layers. All layers in the tree
  * must use the same LayerManager.
@@ -509,7 +504,7 @@ public:
    */
   void SetUserData(void* aKey, LayerUserData* aData)
   {
-    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManagerUserDataDestroy);
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerUserDataDestroy);
   }
   /**
    * This can be used anytime. Ownership passes to the caller!
@@ -675,6 +670,8 @@ public:
   virtual bool AsyncPanZoomEnabled() const {
     return false;
   }
+
+  static void LayerUserDataDestroy(void* data);
 
 protected:
   RefPtr<Layer> mRoot;
@@ -1389,7 +1386,7 @@ public:
    */
   void SetUserData(void* aKey, LayerUserData* aData)
   {
-    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManagerUserDataDestroy);
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManager::LayerUserDataDestroy);
   }
   /**
    * This can be used anytime. Ownership passes to the caller!
