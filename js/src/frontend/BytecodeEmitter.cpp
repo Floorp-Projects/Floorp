@@ -7585,8 +7585,6 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
     EmitLevelManager elm(this);
 
-    bool ok = true;
-
     /* Emit notes to tell the current bytecode's source line number.
        However, a couple trees require special treatment; see the
        relevant emitter functions for details. */
@@ -7596,7 +7594,8 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
     switch (pn->getKind()) {
       case PNK_FUNCTION:
-        ok = emitFunction(pn);
+        if (!emitFunction(pn))
+            return false;
         break;
 
       case PNK_ARGSBODY:
@@ -7684,40 +7683,49 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
                 }
             }
         }
-        ok = emitTree(pnlast);
+        if (!emitTree(pnlast))
+            return false;
         break;
       }
 
       case PNK_IF:
-        ok = emitIf(pn);
+        if (!emitIf(pn))
+            return false;
         break;
 
       case PNK_SWITCH:
-        ok = emitSwitch(pn);
+        if (!emitSwitch(pn))
+            return false;
         break;
 
       case PNK_WHILE:
-        ok = emitWhile(pn);
+        if (!emitWhile(pn))
+            return false;
         break;
 
       case PNK_DOWHILE:
-        ok = emitDo(pn);
+        if (!emitDo(pn))
+            return false;
         break;
 
       case PNK_FOR:
-        ok = emitFor(pn);
+        if (!emitFor(pn))
+            return false;
         break;
 
       case PNK_BREAK:
-        ok = emitBreak(pn->as<BreakStatement>().label());
+        if (!emitBreak(pn->as<BreakStatement>().label()))
+            return false;
         break;
 
       case PNK_CONTINUE:
-        ok = emitContinue(pn->as<ContinueStatement>().label());
+        if (!emitContinue(pn->as<ContinueStatement>().label()))
+            return false;
         break;
 
       case PNK_WITH:
-        ok = emitWith(pn);
+        if (!emitWith(pn))
+            return false;
         break;
 
       case PNK_TRY:
@@ -7736,11 +7744,13 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_RETURN:
-        ok = emitReturn(pn);
+        if (!emitReturn(pn))
+            return false;
         break;
 
       case PNK_YIELD_STAR:
-        ok = emitYieldStar(pn->pn_left, pn->pn_right);
+        if (!emitYieldStar(pn->pn_left, pn->pn_right))
+            return false;
         break;
 
       case PNK_GENERATOR:
@@ -7749,19 +7759,23 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_YIELD:
-        ok = emitYield(pn);
+        if (!emitYield(pn))
+            return false;
         break;
 
       case PNK_STATEMENTLIST:
-        ok = emitStatementList(pn);
+        if (!emitStatementList(pn))
+            return false;
         break;
 
       case PNK_SEMI:
-        ok = emitStatement(pn);
+        if (!emitStatement(pn))
+            return false;
         break;
 
       case PNK_LABEL:
-        ok = emitLabeledStatement(&pn->as<LabeledStatement>());
+        if (!emitLabeledStatement(&pn->as<LabeledStatement>()))
+            return false;
         break;
 
       case PNK_COMMA:
@@ -7797,12 +7811,14 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_CONDITIONAL:
-        ok = emitConditionalExpression(pn->as<ConditionalExpression>());
+        if (!emitConditionalExpression(pn->as<ConditionalExpression>()))
+            return false;
         break;
 
       case PNK_OR:
       case PNK_AND:
-        ok = emitLogical(pn);
+        if (!emitLogical(pn))
+            return false;
         break;
 
       case PNK_ADD:
@@ -7827,7 +7843,8 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
       case PNK_DIV:
       case PNK_MOD: {
         MOZ_ASSERT(pn->isArity(PN_LIST));
-        /* Left-associative operator chain: avoid too much recursion. */
+
+        // Left-associative operator chain: avoid too much recursion.
         ParseNode* subexpr = pn->pn_head;
         if (!emitTree(subexpr))
             return false;
@@ -7843,7 +7860,8 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
 
       case PNK_POW: {
         MOZ_ASSERT(pn->isArity(PN_LIST));
-        /* Right-associative operator chain. */
+
+        // Right-associative operator chain.
         for (ParseNode* subexpr = pn->pn_head; subexpr; subexpr = subexpr->pn_next) {
             if (!emitTree(subexpr))
                 return false;
@@ -7856,11 +7874,13 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
       }
 
       case PNK_TYPEOFNAME:
-        ok = emitTypeof(pn, JSOP_TYPEOF);
+        if (!emitTypeof(pn, JSOP_TYPEOF))
+            return false;
         break;
 
       case PNK_TYPEOFEXPR:
-        ok = emitTypeof(pn, JSOP_TYPEOFEXPR);
+        if (!emitTypeof(pn, JSOP_TYPEOFEXPR))
+            return false;
         break;
 
       case PNK_THROW:
@@ -7869,30 +7889,36 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
       case PNK_BITNOT:
       case PNK_POS:
       case PNK_NEG:
-        ok = emitUnary(pn);
+        if (!emitUnary(pn))
+            return false;
         break;
 
       case PNK_PREINCREMENT:
       case PNK_PREDECREMENT:
       case PNK_POSTINCREMENT:
       case PNK_POSTDECREMENT:
-        ok = emitIncOrDec(pn);
+        if (!emitIncOrDec(pn))
+            return false;
         break;
 
       case PNK_DELETENAME:
-        ok = emitDeleteName(pn);
+        if (!emitDeleteName(pn))
+            return false;
         break;
 
       case PNK_DELETEPROP:
-        ok = emitDeleteProperty(pn);
+        if (!emitDeleteProperty(pn))
+            return false;
         break;
 
       case PNK_DELETEELEM:
-        ok = emitDeleteElement(pn);
+        if (!emitDeleteElement(pn))
+            return false;
         break;
 
       case PNK_DELETEEXPR:
-        ok = emitDeleteExpression(pn);
+        if (!emitDeleteExpression(pn))
+            return false;
         break;
 
       case PNK_DOT:
@@ -7920,49 +7946,56 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
       case PNK_CALL:
       case PNK_GENEXP:
       case PNK_SUPERCALL:
-        ok = emitCallOrNew(pn);
+        if (!emitCallOrNew(pn))
+            return false;
         break;
 
       case PNK_LEXICALSCOPE:
-        ok = emitLexicalScope(pn);
+        if (!emitLexicalScope(pn))
+            return false;
         break;
 
       case PNK_LETBLOCK:
-        ok = emitLetBlock(pn);
+        if (!emitLetBlock(pn))
+            return false;
         break;
 
       case PNK_CONST:
       case PNK_LET:
-        ok = emitVariables(pn, InitializeVars);
+        if (!emitVariables(pn, InitializeVars))
+            return false;
         break;
 
       case PNK_IMPORT:
         if (!checkIsModule())
             return false;
-        ok = true;
         break;
 
       case PNK_EXPORT:
         if (!checkIsModule())
             return false;
-        if (pn->pn_kid->getKind() != PNK_EXPORT_SPEC_LIST)
-            ok = emitTree(pn->pn_kid);
-        else
-            ok = true;
+        if (pn->pn_kid->getKind() != PNK_EXPORT_SPEC_LIST) {
+            if (!emitTree(pn->pn_kid))
+                return false;
+        }
         break;
 
       case PNK_EXPORT_DEFAULT:
         if (!checkIsModule())
             return false;
-        ok = emitTree(pn->pn_kid);
-        if (ok && pn->pn_right)
-            ok = emitLexicalInitialization(pn->pn_right, JSOP_DEFCONST) && emit1(JSOP_POP);
+        if (!emitTree(pn->pn_kid))
+            return false;
+        if (pn->pn_right) {
+            if (!emitLexicalInitialization(pn->pn_right, JSOP_DEFCONST))
+                return false;
+            if (!emit1(JSOP_POP))
+                return false;
+        }
         break;
 
       case PNK_EXPORT_FROM:
         if (!checkIsModule())
             return false;
-        ok = true;
         break;
 
       case PNK_ARRAYPUSH: {
@@ -7982,14 +8015,16 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
       }
 
       case PNK_CALLSITEOBJ:
-        ok = emitCallSiteObject(pn);
+        if (!emitCallSiteObject(pn))
+            return false;
         break;
 
       case PNK_ARRAY:
         if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head) {
             if (checkSingletonContext()) {
                 // Bake in the object entirely if it will only be created once.
-                ok = emitSingletonInitialiser(pn);
+                if (!emitSingletonInitialiser(pn))
+                    return false;
                 break;
             }
 
@@ -8016,21 +8051,25 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
                     if (!objbox)
                         return false;
 
-                    ok = emitObjectOp(objbox, JSOP_NEWARRAY_COPYONWRITE);
+                    if (!emitObjectOp(objbox, JSOP_NEWARRAY_COPYONWRITE))
+                        return false;
                     break;
                 }
             }
         }
 
-        ok = emitArray(pn->pn_head, pn->pn_count, JSOP_NEWARRAY);
+        if (!emitArray(pn->pn_head, pn->pn_count, JSOP_NEWARRAY))
+            return false;
         break;
 
-       case PNK_ARRAYCOMP:
-        ok = emitArrayComp(pn);
+      case PNK_ARRAYCOMP:
+        if (!emitArrayComp(pn))
+            return false;
         break;
 
       case PNK_OBJECT:
-        ok = emitObject(pn);
+        if (!emitObject(pn))
+            return false;
         break;
 
       case PNK_NAME:
@@ -8039,20 +8078,24 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_TEMPLATE_STRING_LIST:
-        ok = emitTemplateString(pn);
+        if (!emitTemplateString(pn))
+            return false;
         break;
 
       case PNK_TEMPLATE_STRING:
       case PNK_STRING:
-        ok = emitAtomOp(pn, JSOP_STRING);
+        if (!emitAtomOp(pn, JSOP_STRING))
+            return false;
         break;
 
       case PNK_NUMBER:
-        ok = emitNumberOp(pn->pn_dval);
+        if (!emitNumberOp(pn->pn_dval))
+            return false;
         break;
 
       case PNK_REGEXP:
-        ok = emitRegExp(regexpList.add(pn->as<RegExpLiteral>().objbox()));
+        if (!emitRegExp(regexpList.add(pn->as<RegExpLiteral>().objbox())))
+            return false;
         break;
 
       case PNK_TRUE:
@@ -8075,7 +8118,8 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
         break;
 
       case PNK_CLASS:
-        ok = emitClass(pn);
+        if (!emitClass(pn))
+            return false;
         break;
 
       case PNK_NEWTARGET:
@@ -8091,12 +8135,11 @@ BytecodeEmitter::emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote)
     }
 
     /* bce->emitLevel == 1 means we're last on the stack, so finish up. */
-    if (ok && emitLevel == 1) {
+    if (emitLevel == 1) {
         if (!updateSourceCoordNotes(pn->pn_pos.end))
             return false;
     }
-
-    return ok;
+    return true;
 }
 
 bool
