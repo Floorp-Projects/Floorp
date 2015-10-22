@@ -450,15 +450,7 @@ DataTransfer::SetData(const nsAString& aFormat, const nsAString& aData,
   RefPtr<nsVariantCC> variant = new nsVariantCC();
   variant->SetAsAString(aData);
 
-  aRv = MozSetDataAt(aFormat, variant, 0);
-}
-
-NS_IMETHODIMP
-DataTransfer::SetData(const nsAString& aFormat, const nsAString& aData)
-{
-  ErrorResult rv;
-  SetData(aFormat, aData, rv);
-  return rv.StealNSResult();
+  aRv = SetDataAtInternal(aFormat, variant, 0, nsContentUtils::SubjectPrincipal());
 }
 
 void
@@ -684,9 +676,9 @@ DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
   }
 }
 
-NS_IMETHODIMP
-DataTransfer::MozSetDataAt(const nsAString& aFormat, nsIVariant* aData,
-                           uint32_t aIndex)
+nsresult
+DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
+                                uint32_t aIndex, nsIPrincipal* aSubjectPrincipal)
 {
   if (aFormat.IsEmpty()) {
     return NS_OK;
@@ -713,12 +705,11 @@ DataTransfer::MozSetDataAt(const nsAString& aFormat, nsIVariant* aData,
   // XXX perhaps this should also limit any non-string type as well
   if ((aFormat.EqualsLiteral("application/x-moz-file-promise") ||
        aFormat.EqualsLiteral("application/x-moz-file")) &&
-       !nsContentUtils::IsCallerChrome()) {
+       !nsContentUtils::IsSystemPrincipal(aSubjectPrincipal)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  return SetDataWithPrincipal(aFormat, aData, aIndex,
-                              nsContentUtils::SubjectPrincipal());
+  return SetDataWithPrincipal(aFormat, aData, aIndex, aSubjectPrincipal);
 }
 
 void
@@ -730,7 +721,7 @@ DataTransfer::MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
   aRv = nsContentUtils::XPConnect()->JSValToVariant(aCx, aData,
                                                     getter_AddRefs(data));
   if (!aRv.Failed()) {
-    aRv = MozSetDataAt(aFormat, data, aIndex);
+    aRv = SetDataAtInternal(aFormat, data, aIndex, nsContentUtils::SubjectPrincipal());
   }
 }
 
