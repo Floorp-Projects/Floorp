@@ -1392,6 +1392,7 @@ function testRedirects() {
         ok(test.pass, "Expected test to pass for " + test.toSource());
         is(res.status, 200, "wrong status in test for " + test.toSource());
         is(res.statusText, "OK", "wrong status text for " + test.toSource());
+        is(res.type, 'cors', 'wrong response type for ' + test.toSource());
         var reqHost = (new URL(req.url)).host;
         // If there is a service worker present, the redirections will be
         // transparent, assuming that the original request is to the current
