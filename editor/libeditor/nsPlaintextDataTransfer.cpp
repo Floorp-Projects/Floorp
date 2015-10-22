@@ -145,8 +145,8 @@ nsresult nsPlaintextEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
                                                    bool aDoDeleteSelection)
 {
   nsCOMPtr<nsIVariant> data;
-  aDataTransfer->MozGetDataAt(NS_LITERAL_STRING("text/plain"), aIndex,
-                              getter_AddRefs(data));
+  DataTransfer::Cast(aDataTransfer)->GetDataAtNoSecurityCheck(NS_LITERAL_STRING("text/plain"), aIndex,
+                                                              getter_AddRefs(data));
   if (data) {
     nsAutoString insertText;
     data->GetAsAString(insertText);
