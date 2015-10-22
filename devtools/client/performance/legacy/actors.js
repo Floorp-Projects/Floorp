@@ -72,6 +72,7 @@ LegacyProfilerFront.prototype = {
     }
     yield this.unregisterEventNotifications({ events: this.EVENTS });
     this._target.client.removeListener("eventNotification", this._onProfilerEvent);
+    yield this._front.destroy();
   }),
 
   /**
