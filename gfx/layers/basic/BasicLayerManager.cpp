@@ -864,10 +864,6 @@ InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
   if (!clipRect) {
     return;
   }
-  MOZ_ASSERT(!aLayer->Extend3DContext() ||
-             !aLayer->Combines3DTransformWithAncestors(),
-             "Layers in a preserve 3D context have no clip"
-             " except leaves and the estabisher!");
 
   Layer* parent = aLayer->GetParent();
   Matrix4x4 transform3d =
