@@ -96,17 +96,52 @@ def normalize_test_list(aliases, all_tests, job_list):
             if 'platforms' in all_entry:
                 entry['platforms'] = list(all_entry['platforms'])
             results.append(entry)
-        return parse_test_chunks(aliases, results)
+        return parse_test_chunks(aliases, all_tests, results)
     else:
-        return parse_test_chunks(aliases, tests)
+        return parse_test_chunks(aliases, all_tests, tests)
 
-def parse_test_chunks(aliases, tests):
+
+def handle_alias(test, aliases, all_tests):
+    '''
+    Expand a test if its name refers to an alias, returning a list of test
+    dictionaries cloned from the first (to maintain any metadata).
+
+    :param dict test: the test to expand
+    :param dict aliases: Dict of alias name -> real name.
+    :param list all_tests: test flags from job_flags.yml structure.
+    '''
+    if test['test'] not in aliases:
+        return [test]
+
+    alias = aliases[test['test']]
+    def mktest(name):
+        newtest = copy.deepcopy(test)
+        newtest['test'] = name
+        return newtest
+
+    def exprmatch(alias):
+        if not alias.startswith('/') or not alias.endswith('/'):
+            return [alias]
+        regexp = re.compile('^' + alias[1:-1] + '$')
+        return [t for t in all_tests if regexp.match(t)]
+
+    if isinstance(alias, str):
+        return [mktest(t) for t in exprmatch(alias)]
+    elif isinstance(alias, list):
+        names = sum([exprmatch(a) for a in alias], [])
+        return [mktest(t) for t in set(names)]
+    else:
+        return [test]
+
+
+def parse_test_chunks(aliases, all_tests, tests):
     '''
     Test flags may include parameters to narrow down the number of chunks in a
     given push. We don't model 1 chunk = 1 job in taskcluster so we must check
     each test flag to see if it is actually specifying a chunk.
 
     :param dict aliases: Dict of alias name -> real name.
+    :param list all_tests: test flags from job_flags.yml structure.
     :param list tests: Result from normalize_test_list
     :returns: List of jobs
     '''
@@ -116,24 +151,22 @@ def parse_test_chunks(aliases, tests):
         matches = TEST_CHUNK_SUFFIX.match(test['test'])
 
         if not matches:
-            if test['test'] in aliases:
-                test['test'] = aliases[test['test']]
-            results.append(test)
+            results.extend(handle_alias(test, aliases, all_tests))
             continue
 
         name = matches.group(1)
         chunk = int(matches.group(2))
+        test['test'] = name
 
-        if name in aliases:
-            name = aliases[name]
-
-        if name in seen_chunks:
-            seen_chunks[name].add(chunk)
-        else:
-            seen_chunks[name] = set([chunk])
-            test['test'] = name
-            test['only_chunks'] = seen_chunks[name]
-            results.append(test)
+        for test in handle_alias(test, aliases, all_tests):
+            name = test['test']
+            if name in seen_chunks:
+                seen_chunks[name].add(chunk)
+            else:
+                seen_chunks[name] = set([chunk])
+                test['test'] = name
+                test['only_chunks'] = seen_chunks[name]
+                results.append(test)
 
     return results;
 
