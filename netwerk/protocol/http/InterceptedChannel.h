@@ -21,6 +21,7 @@ namespace net {
 class nsHttpChannel;
 class HttpChannelChild;
 class nsHttpResponseHead;
+class InterceptStreamListener;
 
 // An object representing a channel that has been intercepted. This avoids complicating
 // the actual channel implementation with the details of synthesizing responses.
@@ -93,11 +94,11 @@ class InterceptedChannelContent : public InterceptedChannelBase
 
   // Listener for the synthesized response to fix up the notifications before they reach
   // the actual channel.
-  nsCOMPtr<nsIStreamListener> mStreamListener;
+  RefPtr<InterceptStreamListener> mStreamListener;
 public:
   InterceptedChannelContent(HttpChannelChild* aChannel,
                             nsINetworkInterceptController* aController,
-                            nsIStreamListener* aListener);
+                            InterceptStreamListener* aListener);
 
   NS_IMETHOD ResetInterception() override;
   NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
