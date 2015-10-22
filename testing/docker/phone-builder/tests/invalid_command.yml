@@ -29,7 +29,7 @@ task:
     maxRunTime: 14400
 
     command:
-      - phone
+      - build-phone.sh
 
     artifacts:
       'private/build':
