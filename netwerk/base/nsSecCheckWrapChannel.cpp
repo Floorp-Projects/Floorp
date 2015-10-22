@@ -29,8 +29,8 @@ NS_INTERFACE_MAP_BEGIN(nsSecCheckWrapChannelBase)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel2, mUploadChannel2)
   NS_INTERFACE_MAP_ENTRY(nsISecCheckWrapChannel)
 NS_INTERFACE_MAP_END
 
@@ -93,18 +93,13 @@ nsSecCheckWrapChannel::MaybeWrap(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
   // implements a gecko non-scriptable interface e.g. nsIForcePendingChannel.
   nsCOMPtr<nsIForcePendingChannel> isGeckoChannel = do_QueryInterface(aChannel);
 
-  nsCOMPtr<nsIChannel> channel = aChannel;
+  nsCOMPtr<nsIChannel> channel;
   if (isGeckoChannel) {
     // If it is a gecko channel (ftp or http) we do not need to wrap it.
+    channel = aChannel;
     channel->SetLoadInfo(aLoadInfo);
   } else {
-    nsCOMPtr<nsIHttpChannel> httpChannel =
-      do_QueryInterface(aChannel);
-    // we can only wrap http channel.
-    if (httpChannel) {
-      // we have to wrap that channel
-      channel = new nsSecCheckWrapChannel(aChannel, aLoadInfo);
-    }
+    channel = new nsSecCheckWrapChannel(aChannel, aLoadInfo);
   }
   return channel.forget();
 }
