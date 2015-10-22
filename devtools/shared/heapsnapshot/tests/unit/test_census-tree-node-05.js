@@ -39,52 +39,62 @@ function run_test() {
 
   const EXPECTED = {
     name: null,
-    bytes: undefined,
-    count: undefined,
+    bytes: 0,
+    totalBytes: 150,
+    count: 0,
+    totalCount: 15,
     children: [
       {
-        name: "noStack",
-        bytes: 50,
-        count: 5,
-        children: undefined
-      },
-      {
         name: stack.parent.parent,
-        bytes: undefined,
-        count: undefined,
+        bytes: 0,
+        totalBytes: 100,
+        count: 0,
+        totalCount: 10,
         children: [
           {
             name: stack.parent,
-            bytes: undefined,
-            count: undefined,
+            bytes: 0,
+            totalBytes: 100,
+            count: 0,
+            totalCount: 10,
             children: [
               {
                 name: stack,
-                bytes: undefined,
-                count: undefined,
+                bytes: 0,
+                totalBytes: 100,
+                count: 0,
+                totalCount: 10,
                 children: [
                   {
                     name: "other",
                     bytes: 40,
+                    totalBytes: 40,
                     count: 4,
+                    totalCount: 4,
                     children: undefined
                   },
                   {
                     name: "Baz",
                     bytes: 30,
+                    totalBytes: 30,
                     count: 3,
+                    totalCount: 3,
                     children: undefined
                   },
                   {
                     name: "Bar",
                     bytes: 20,
+                    totalBytes: 20,
                     count: 2,
+                    totalCount: 2,
                     children: undefined
                   },
                   {
                     name: "Foo",
                     bytes: 10,
+                    totalBytes: 10,
                     count: 1,
+                    totalCount: 1,
                     children: undefined
                   },
                 ]
@@ -92,7 +102,15 @@ function run_test() {
             ]
           }
         ]
-      }
+      },
+      {
+        name: "noStack",
+        bytes: 50,
+        totalBytes: 50,
+        count: 5,
+        totalCount: 5,
+        children: undefined
+      },
     ]
   };
 

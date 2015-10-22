@@ -264,32 +264,35 @@ function values(cache) {
  * @overrides Visitor.prototype.exit
  */
 CensusTreeNodeVisitor.prototype.exit = function (breakdown, report, edge) {
+  // Ensure all children are sorted and have their counts/bytes aggregated. We
+  // only need to consider cache children here, because other children
+  // correspond to other sub-reports and we already fixed them up in an earlier
+  // invocation of `exit`.
+
+  function dfs(node, childrenCache) {
+    if (childrenCache) {
+      const childValues = values(childrenCache);
+      for (let i = 0, length = childValues.length; i < length; i++) {
+        dfs(childValues[i].node, childValues[i].children);
+      }
+    }
+
+    node.totalCount = node.count;
+    node.totalBytes = node.bytes;
+
+    if (node.children) {
+      node.children.sort(compareByTotalBytes);
+
+      for (let i = 0, length = node.children.length; i < length; i++) {
+        node.totalCount += node.children[i].totalCount;
+        node.totalBytes += node.children[i].totalBytes;
+      }
+    }
+  }
+
   const top = this._nodeStack.pop();
-  if (top.children) {
-    top.children.sort(compareByBytes);
-  }
-
   const cache = this._frameCacheStack.pop();
-  const toSort = values(cache);
-  while (toSort.length) {
-    const { node, children } = toSort.pop();
-    if (!node.children) {
-      continue;
-    }
-
-    if (node !== top) {
-      node.children.sort(compareByBytes);
-    }
-
-    if (!children) {
-      continue;
-    }
-
-    const newlyNeedSorting = values(children);
-    for (let i = 0, length = newlyNeedSorting.length; i < length; i++) {
-      toSort.push(newlyNeedSorting[i]);
-    }
-  }
+  dfs(top, cache);
 };
 
 /**
@@ -331,15 +334,18 @@ CensusTreeNodeVisitor.prototype.root = function () {
  */
 function CensusTreeNode (name) {
   this.name = name;
-  this.bytes = undefined;
-  this.count = undefined;
+  this.bytes = 0;
+  this.totalBytes = 0;
+  this.count = 0;
+  this.totalCount = 0;
   this.children = undefined;
 }
 
 CensusTreeNode.prototype = null;
 
 /**
- * Compare the given nodes by their `bytes` properties.
+ * Compare the given nodes by their `totalBytes` properties, and breaking ties
+ * with the `bytes`, `totalCount`, and `count` properties (in that order).
  *
  * @param {CensusTreeNode} node1
  * @param {CensusTreeNode} node2
@@ -347,8 +353,11 @@ CensusTreeNode.prototype = null;
  * @returns {Number}
  *          A number suitable for using with Array.prototype.sort.
  */
-function compareByBytes (node1, node2) {
-  return (node2.bytes || 0) - (node1.bytes || 0);
+function compareByTotalBytes (node1, node2) {
+  return node2.totalBytes - node1.totalBytes
+      || node2.bytes      - node1.bytes
+      || node2.totalCount - node1.totalCount
+      || node2.count      - node1.count;
 }
 
 /**

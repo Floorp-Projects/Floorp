@@ -27,12 +27,35 @@ const REPORT = {
 
 const EXPECTED = {
   name: null,
-  bytes: undefined,
-  count: undefined,
+  bytes: 0,
+  totalBytes: 600,
+  count: 0,
+  totalCount: 60,
   children: [
-    { name: "js::Shape", bytes: 500, count: 50, children: undefined },
-    { name: "JSObject", bytes: 100, count: 10, children: undefined },
-    { name: "JSString", bytes: 0, count: 0, children: undefined },
+    {
+      name: "js::Shape",
+      bytes: 500,
+      totalBytes: 500,
+      count: 50,
+      totalCount: 50,
+      children: undefined
+    },
+    {
+      name: "JSObject",
+      bytes: 100,
+      totalBytes: 100,
+      count: 10,
+      totalCount: 10,
+      children: undefined
+    },
+    {
+      name: "JSString",
+      bytes: 0,
+      totalBytes: 0,
+      count: 0,
+      totalCount: 0,
+      children: undefined
+    },
   ],
 };
 
