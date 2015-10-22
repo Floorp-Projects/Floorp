@@ -164,18 +164,15 @@ struct nsConditionalResetStyleData
     if (!(mConditionalBits & GetBitForSID(aSID))) {
       return mEntries[aSID];
     }
-    Entry* e = static_cast<Entry*>(mEntries[aSID]);
-    MOZ_ASSERT(e, "if mConditionalBits bit is set, we must have at least one "
-                  "conditional style struct");
-    do {
-      if (e->mConditions.Matches(aStyleContext)) {
-        return e->mStyleStruct;
-      }
-      e = e->mNext;
-    } while (e);
-    return nullptr;
+    return GetConditionalStyleData(aSID, aStyleContext);
   }
 
+private:
+  // non-inline helper for GetStyleData
+  void* GetConditionalStyleData(nsStyleStructID aSID,
+                                nsStyleContext* aStyleContext) const;
+
+public:
   void SetStyleData(nsStyleStructID aSID, void* aStyleStruct) {
     MOZ_ASSERT(!(mConditionalBits & GetBitForSID(aSID)),
                "rule node should not have unconditional and conditional style "
