@@ -76,6 +76,24 @@ final class GeckoEditable extends JNIObject
     private volatile boolean mSuppressCompositions;
     private volatile boolean mSuppressKeyUp;
 
+    private static final int IME_RANGE_CARETPOSITION = 1;
+    private static final int IME_RANGE_RAWINPUT = 2;
+    private static final int IME_RANGE_SELECTEDRAWTEXT = 3;
+    private static final int IME_RANGE_CONVERTEDTEXT = 4;
+    private static final int IME_RANGE_SELECTEDCONVERTEDTEXT = 5;
+
+    private static final int IME_RANGE_LINE_NONE = 0;
+    private static final int IME_RANGE_LINE_DOTTED = 1;
+    private static final int IME_RANGE_LINE_DASHED = 2;
+    private static final int IME_RANGE_LINE_SOLID = 3;
+    private static final int IME_RANGE_LINE_DOUBLE = 4;
+    private static final int IME_RANGE_LINE_WAVY = 5;
+
+    private static final int IME_RANGE_UNDERLINE = 1;
+    private static final int IME_RANGE_FORECOLOR = 2;
+    private static final int IME_RANGE_BACKCOLOR = 4;
+    private static final int IME_RANGE_LINECOLOR = 8;
+
     @WrapForJNI
     private native void onKeyEvent(int action, int keyCode, int scanCode, int metaState,
                                    long time, int unicodeChar, int baseUnicodeChar,
@@ -278,26 +296,22 @@ final class GeckoEditable extends JNIObject
             case Action.TYPE_SET_SPAN:
             case Action.TYPE_REMOVE_SPAN:
             case Action.TYPE_SET_HANDLER:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
-                        GeckoEvent.ImeAction.IME_SYNCHRONIZE));
+                onImeSynchronize();
                 break;
-
-            case Action.TYPE_COMPOSE_TEXT:
-                // Send different event for composing text.
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEComposeEvent(
-                        action.mStart, action.mEnd, action.mSequence.toString()));
-                return;
 
             case Action.TYPE_REPLACE_TEXT:
                 // try key events first
                 sendCharKeyEvents(action);
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEReplaceEvent(
-                        action.mStart, action.mEnd, action.mSequence.toString()));
+
+                // fall-through
+
+            case Action.TYPE_COMPOSE_TEXT:
+                onImeReplaceText(action.mStart, action.mEnd, action.mSequence.toString(),
+                                  action.mType == Action.TYPE_COMPOSE_TEXT);
                 break;
 
             case Action.TYPE_ACKNOWLEDGE_FOCUS:
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
-                        GeckoEvent.ImeAction.IME_ACKNOWLEDGE_FOCUS));
+                onImeAcknowledgeFocus();
                 break;
 
             default:
@@ -536,19 +550,17 @@ final class GeckoEditable extends JNIObject
         }
         if (composingStart >= composingEnd) {
             if (selStart >= 0 && selEnd >= 0) {
-                GeckoAppShell.sendEventToGecko(
-                        GeckoEvent.createIMESelectEvent(selStart, selEnd));
+                onImeSetSelection(selStart, selEnd);
             } else {
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(
-                        GeckoEvent.ImeAction.IME_REMOVE_COMPOSITION));
+                onImeRemoveComposition();
             }
             return;
         }
 
         if (selEnd >= composingStart && selEnd <= composingEnd) {
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createIMERangeEvent(
+            onImeAddCompositionRange(
                     selEnd - composingStart, selEnd - composingStart,
-                    GeckoEvent.IME_RANGE_CARETPOSITION, 0, 0, false, 0, 0, 0));
+                    IME_RANGE_CARETPOSITION, 0, 0, false, 0, 0, 0);
         }
         int rangeStart = composingStart;
         TextPaint tp = new TextPaint();
@@ -557,7 +569,7 @@ final class GeckoEditable extends JNIObject
         // below to decide whether to pass a foreground color to Gecko
         emptyTp.setColor(0);
         do {
-            int rangeType, rangeStyles = 0, rangeLineStyle = GeckoEvent.IME_RANGE_LINE_NONE;
+            int rangeType, rangeStyles = 0, rangeLineStyle = IME_RANGE_LINE_NONE;
             boolean rangeBoldLine = false;
             int rangeForeColor = 0, rangeBackColor = 0, rangeLineColor = 0;
             int rangeEnd = mText.nextSpanTransition(rangeStart, composingEnd, Object.class);
@@ -577,12 +589,12 @@ final class GeckoEditable extends JNIObject
 
             if (styleSpans.length == 0) {
                 rangeType = (selStart == rangeStart && selEnd == rangeEnd)
-                            ? GeckoEvent.IME_RANGE_SELECTEDRAWTEXT
-                            : GeckoEvent.IME_RANGE_RAWINPUT;
+                            ? IME_RANGE_SELECTEDRAWTEXT
+                            : IME_RANGE_RAWINPUT;
             } else {
                 rangeType = (selStart == rangeStart && selEnd == rangeEnd)
-                            ? GeckoEvent.IME_RANGE_SELECTEDCONVERTEDTEXT
-                            : GeckoEvent.IME_RANGE_CONVERTEDTEXT;
+                            ? IME_RANGE_SELECTEDCONVERTEDTEXT
+                            : IME_RANGE_CONVERTEDTEXT;
                 tp.set(emptyTp);
                 for (CharacterStyle span : styleSpans) {
                     span.updateDrawState(tp);
@@ -596,34 +608,34 @@ final class GeckoEditable extends JNIObject
                     tpUnderlineThickness = (Float)getField(tp, "underlineThickness", 0.0f);
                 }
                 if (tpUnderlineColor != 0) {
-                    rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE | GeckoEvent.IME_RANGE_LINECOLOR;
+                    rangeStyles |= IME_RANGE_UNDERLINE | IME_RANGE_LINECOLOR;
                     rangeLineColor = tpUnderlineColor;
                     // Approximately translate underline thickness to what Gecko understands
                     if (tpUnderlineThickness <= 0.5f) {
-                        rangeLineStyle = GeckoEvent.IME_RANGE_LINE_DOTTED;
+                        rangeLineStyle = IME_RANGE_LINE_DOTTED;
                     } else {
-                        rangeLineStyle = GeckoEvent.IME_RANGE_LINE_SOLID;
+                        rangeLineStyle = IME_RANGE_LINE_SOLID;
                         if (tpUnderlineThickness >= 2.0f) {
                             rangeBoldLine = true;
                         }
                     }
                 } else if (tp.isUnderlineText()) {
-                    rangeStyles |= GeckoEvent.IME_RANGE_UNDERLINE;
-                    rangeLineStyle = GeckoEvent.IME_RANGE_LINE_SOLID;
+                    rangeStyles |= IME_RANGE_UNDERLINE;
+                    rangeLineStyle = IME_RANGE_LINE_SOLID;
                 }
                 if (tp.getColor() != 0) {
-                    rangeStyles |= GeckoEvent.IME_RANGE_FORECOLOR;
+                    rangeStyles |= IME_RANGE_FORECOLOR;
                     rangeForeColor = tp.getColor();
                 }
                 if (tp.bgColor != 0) {
-                    rangeStyles |= GeckoEvent.IME_RANGE_BACKCOLOR;
+                    rangeStyles |= IME_RANGE_BACKCOLOR;
                     rangeBackColor = tp.bgColor;
                 }
             }
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createIMERangeEvent(
+            onImeAddCompositionRange(
                     rangeStart - composingStart, rangeEnd - composingStart,
                     rangeType, rangeStyles, rangeLineStyle, rangeBoldLine,
-                    rangeForeColor, rangeBackColor, rangeLineColor));
+                    rangeForeColor, rangeBackColor, rangeLineColor);
             rangeStart = rangeEnd;
 
             if (DEBUG) {
@@ -634,8 +646,7 @@ final class GeckoEditable extends JNIObject
             }
         } while (rangeStart < composingEnd);
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createIMECompositionEvent(
-                composingStart, composingEnd));
+        onImeUpdateComposition(composingStart, composingEnd);
     }
 
     // GeckoEditableClient interface
@@ -911,7 +922,7 @@ final class GeckoEditable extends JNIObject
                 }
 
                 // Make sure there are no other things going on. If we sent
-                // GeckoEvent.IME_ACKNOWLEDGE_FOCUS, this line also makes us
+                // Action.TYPE_ACKNOWLEDGE_FOCUS, this line also makes us
                 // wait for Gecko to update us on the newly focused content
                 mActionQueue.syncWithGecko();
                 mListener.notifyIME(type);
