@@ -767,6 +767,8 @@ private:
     virtual bool RecvCloseAlert(const nsString& aName,
                                 const IPC::Principal& aPrincipal) override;
 
+    virtual bool RecvDisableNotifications(const IPC::Principal& aPrincipal) override;
+
     virtual bool RecvLoadURIExternal(const URIParams& uri) override;
 
     virtual bool RecvSyncMessage(const nsString& aMsg,

@@ -14,6 +14,7 @@
 
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -40,6 +41,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsToolkitCompsCID.h"
+#include "nsXULAppAPI.h"
 #include "ServiceWorkerManager.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
@@ -1154,12 +1156,14 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
   AssertIsOnMainThread();
 
   if (!strcmp("alertdisablecallback", aTopic)) {
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-      mozilla::services::GetPermissionManager();
-    if (!permissionManager) {
-      return NS_ERROR_FAILURE;
+    if (XRE_IsParentProcess()) {
+      return Notification::RemovePermission(mPrincipal);
     }
-    permissionManager->RemoveFromPrincipal(mPrincipal, "desktop-notification");
+    // Permissions can't be removed from the content process. Send a message
+    // to the parent; `ContentParent::RecvDisableNotifications` will call
+    // `RemovePermission`.
+    ContentChild::GetSingleton()->SendDisableNotifications(
+      IPC::Principal(mPrincipal));
     return NS_OK;
   } else if (!strcmp("alertsettingscallback", aTopic)) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -2409,6 +2413,19 @@ Notification::CreateAndShow(nsIGlobalObject* aGlobal,
   }
 
   return notification.forget();
+}
+
+/* static */ nsresult
+Notification::RemovePermission(nsIPrincipal* aPrincipal)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    mozilla::services::GetPermissionManager();
+  if (!permissionManager) {
+    return NS_ERROR_FAILURE;
+  }
+  permissionManager->RemoveFromPrincipal(aPrincipal, "desktop-notification");
+  return NS_OK;
 }
 
 } // namespace dom

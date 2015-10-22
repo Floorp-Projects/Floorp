@@ -275,6 +275,8 @@ public:
 
   bool DispatchClickEvent();
   bool DispatchNotificationClickEvent();
+
+  static nsresult RemovePermission(nsIPrincipal* aPrincipal);
 protected:
   Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
                const nsAString& aTitle, const nsAString& aBody,
