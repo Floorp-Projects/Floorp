@@ -69,15 +69,15 @@ public:
     if (aInput.IsNull()) {
       // If AnalyserNode::mChunks has only null chunks, then there is no need
       // to send further null chunks.
-      if (mChunksToProcess <= 0) {
-        if (mChunksToProcess != INT32_MIN) {
-          mChunksToProcess = INT32_MIN;
-          aStream->ScheduleCheckForInactive();
-        }
+      if (mChunksToProcess == 0) {
         return;
       }
 
       --mChunksToProcess;
+      if (mChunksToProcess == 0) {
+        aStream->ScheduleCheckForInactive();
+      }
+
     } else {
       // This many null chunks will be required to empty AnalyserNode::mChunks.
       mChunksToProcess = CHUNK_COUNT;
@@ -90,7 +90,7 @@ public:
 
   virtual bool IsActive() const override
   {
-    return mChunksToProcess != INT32_MIN;
+    return mChunksToProcess != 0;
   }
 
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
@@ -98,7 +98,7 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  int32_t mChunksToProcess = INT32_MIN;
+  uint32_t mChunksToProcess = 0;
 };
 
 AnalyserNode::AnalyserNode(AudioContext* aContext)
