@@ -1947,6 +1947,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 .browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
+  overflow: hidden;
 }
 
 %include ../shared/usercontext/usercontext.inc.css
