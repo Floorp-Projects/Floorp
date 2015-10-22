@@ -47,6 +47,7 @@
 #ifdef MOZ_EME
 #include "mozilla/dom/MediaKeySystemAccess.h"
 #endif
+#include "mozilla/dom/Notification.h"
 #include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
@@ -3181,7 +3182,8 @@ ContentParent::Observe(nsISupports* aSubject,
     // listening for alert notifications
     else if (!strcmp(aTopic, "alertfinished") ||
              !strcmp(aTopic, "alertclickcallback") ||
-             !strcmp(aTopic, "alertshow") ) {
+             !strcmp(aTopic, "alertshow") ||
+             !strcmp(aTopic, "alertdisablecallback")) {
         if (!SendNotifyAlertsObserver(nsDependentCString(aTopic),
                                       nsDependentString(aData)))
             return NS_ERROR_NOT_AVAILABLE;
@@ -4313,6 +4315,21 @@ ContentParent::RecvCloseAlert(const nsString& aName,
         sysAlerts->CloseAlert(aName, aPrincipal);
     }
 
+    return true;
+}
+
+bool
+ContentParent::RecvDisableNotifications(const IPC::Principal& aPrincipal)
+{
+#ifdef MOZ_CHILD_PERMISSIONS
+    uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
+                                                   "desktop-notification");
+    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+        return true;
+    }
+#endif
+
+    unused << Notification::RemovePermission(aPrincipal);
     return true;
 }
 
