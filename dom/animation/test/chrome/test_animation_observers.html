@@ -689,6 +689,55 @@ function assert_records(expected, desc) {
     });
   });
 
+  // Test that updating a property on the Animation object dispatches a changed
+  // notification.
+  [
+    { prop: "playbackRate", val: 0.5 },
+  ].forEach(function(aChangeTest) {
+    addAsyncAnimTest(`single_animation_api_change_${aChangeTest.prop}`,
+                     aOptions, function*() {
+      // Start a long animation
+      //
+      // We use a forwards fill mode so that even if the change we make causes
+      // the animation to become finished, it will still be "relevant" so we
+      // won't mark it as removed.
+      e.style = "animation: anim 100s forwards";
+
+      // The animation should cause the creation of a single Animation.
+      var animations = e.getAnimations();
+      is(animations.length, 1, "getAnimations().length after animation start");
+
+      // Wait for the single MutationRecord for the Animation addition to
+      // be delivered.
+      yield await_frame();
+      assert_records([{ added: animations, changed: [], removed: [] }],
+                     "records after animation start");
+
+      // Wait until the animation is playing
+      yield animations[0].ready;
+
+      // Update the property
+      animations[0][aChangeTest.prop] = aChangeTest.val;
+
+      // Make a redundant change
+      animations[0][aChangeTest.prop] = animations[0][aChangeTest.prop];
+
+      // Wait for the single MutationRecord for the Animation change to
+      // be delivered.
+      yield await_frame();
+      assert_records([{ added: [], changed: animations, removed: [] }],
+                     "records after animation property change");
+
+      // Cancel the animation.
+      e.style = "";
+
+      // Wait for the single removal notification.
+      yield await_frame();
+      assert_records([{ added: [], changed: [], removed: animations }],
+                     "records after animation end");
+    });
+  });
+
   // Test that a non-cancelling change to an animation followed immediately by a
   // cancelling change will only send an animation removal notification.
   addAsyncAnimTest("coalesce_change_cancel", aOptions, function*() {
