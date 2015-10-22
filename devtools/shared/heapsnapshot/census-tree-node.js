@@ -24,68 +24,117 @@ function isSavedFrame(obj) {
 }
 
 /**
- * A FrameCache maps from SavedFrames to CensusTreeNodes. It is used when
+ * A CensusTreeNodeCache maps from SavedFrames to CensusTreeNodes. It is used when
  * aggregating multiple SavedFrame allocation stack keys into a tree of many
  * CensusTreeNodes. Each stack may share older frames, and we want to preserve
  * this sharing when converting to CensusTreeNode, so before creating a new
- * CensusTreeNode, we look for an existing one in one of our FrameCaches.
+ * CensusTreeNode, we look for an existing one in one of our CensusTreeNodeCaches.
  */
-function FrameCache() {}
-FrameCache.prototype = null;
+function CensusTreeNodeCache() {}
+CensusTreeNodeCache.prototype = null;
 
 /**
- * The value of a single entry stored in a FrameCache. It is a pair of the
- * CensusTreeNode for this frame, and the subsequent FrameCache for this node's
- * children.
+ * The value of a single entry stored in a CensusTreeNodeCache. It is a pair of
+ * the CensusTreeNode for this cache value, and the subsequent
+ * CensusTreeNodeCache for this node's children.
  *
  * @param {SavedFrame} frame
  *        The frame being cached.
  */
-function FrameCacheValue(frame) {
-  // The CensusTreeNode for this frame.
-  this.node = new CensusTreeNode(frame);
-  // The FrameCache for this frame's children.
+function CensusTreeNodeCacheValue() {
+  // The CensusTreeNode for this cache value.
+  this.node = undefined;
+  // The CensusTreeNodeCache for this frame's children.
   this.children = undefined;
 }
 
-FrameCacheValue.prototype = null;
+CensusTreeNodeCacheValue.prototype = null;
 
 /**
  * Create a unique string for the given SavedFrame (ignoring the frame's parent
- * chain) that can be used as a hash to key this frame within a FrameCache.
+ * chain) that can be used as a hash to key this frame within a CensusTreeNodeCache.
+ *
+ * NB: We manually hash rather than using an ES6 Map because we are purposely
+ * ignoring the parent chain and wish to consider frames with everything the
+ * same except their parents as the same.
  *
  * @param {SavedFrame} frame
  *        The SavedFrame object we would like to lookup in or insert into a
- *        FrameCache.
+ *        CensusTreeNodeCache.
  *
  * @returns {String}
- *          The unique string that can be used as a key in a FrameCache.
+ *          The unique string that can be used as a key in a CensusTreeNodeCache.
  */
-FrameCache.hash = function (frame) {
-  return `${frame.functionDisplayName},${frame.source},${frame.line},${frame.column},${frame.asyncCause}`;
+CensusTreeNodeCache.hashFrame = function (frame) {
+  return `FRAME,${frame.functionDisplayName},${frame.source},${frame.line},${frame.column},${frame.asyncCause}`;
 };
 
 /**
- * Associate `frame` with `value` in the given `cache`.
+ * Create a unique string for the given CensusTreeNode **with regards to
+ * siblings at the current depth of the tree, not within the whole tree.** It
+ * can be used as a hash to key this node within a CensusTreeNodeCache.
  *
- * @param {FrameCache} cache
- * @param {SavedFrame} frame
- * @param {FrameCacheValue} value
+ * @param {CensusTreeNode} node
+ *        The node we would like to lookup in or insert into a cache.
+ *
+ * @returns {String}
+ *          The unique string that can be used as a key in a CensusTreeNodeCache.
  */
-FrameCache.insert = function (cache, frame, value) {
-  cache[FrameCache.hash(frame)] = value;
+CensusTreeNodeCache.hashNode = function (node) {
+  return isSavedFrame(node.name)
+    ? CensusTreeNodeCache.hashFrame(node.name)
+    : `NODE,${node.name}`;
+};
+
+/**
+ * Insert the given CensusTreeNodeCacheValue whose node.name is a SavedFrame
+ * object in the given cache.
+ *
+ * @param {CensusTreeNodeCache} cache
+ * @param {CensusTreeNodeCacheValue} value
+ */
+CensusTreeNodeCache.insertFrame = function (cache, value) {
+  cache[CensusTreeNodeCache.hashFrame(value.node.name)] = value;
+};
+
+/**
+ * Insert the given value in the cache.
+ *
+ * @param {CensusTreeNodeCache} cache
+ * @param {CensusTreeNodeCacheValue} value
+ */
+CensusTreeNodeCache.insertNode = function (cache, value) {
+  if (isSavedFrame(value.node.name)) {
+    CensusTreeNodeCache.insertFrame(cache, value);
+  } else {
+    cache[CensusTreeNodeCache.hashNode(value.node)] = value;
+  }
 };
 
 /**
  * Lookup `frame` in `cache` and return its value if it exists.
  *
- * @param {FrameCache} cache
+ * @param {CensusTreeNodeCache} cache
  * @param {SavedFrame} frame
  *
- * @returns {undefined|FrameCacheValue}
+ * @returns {undefined|CensusTreeNodeCacheValue}
  */
-FrameCache.lookup = function (cache, frame) {
-  return cache[FrameCache.hash(frame)];
+CensusTreeNodeCache.lookupFrame = function (cache, frame) {
+  return cache[CensusTreeNodeCache.hashFrame(frame)];
+};
+
+/**
+ * Lookup `node` in `cache` and return its value if it exists.
+ *
+ * @param {CensusTreeNodeCache} cache
+ * @param {CensusTreeNode} node
+ *
+ * @returns {undefined|CensusTreeNodeCacheValue}
+ */
+CensusTreeNodeCache.lookupNode = function (cache, node) {
+  return isSavedFrame(node.name)
+    ? CensusTreeNodeCache.lookupFrame(cache, node.name)
+    : cache[CensusTreeNodeCache.hashNode(node)];
 };
 
 /**
@@ -131,7 +180,7 @@ function getArrayOfFrames(stack) {
  * @param {null|String|SavedFrame} edge
  *        The edge leading to this report from the parent report.
  *
- * @param {FrameCache} frameCache
+ * @param {CensusTreeNodeCache} cache
  *        The cache of CensusTreeNodes we have already made for the siblings of
  *        the node being created. The existing nodes are reused when possible.
  *
@@ -144,13 +193,13 @@ function getArrayOfFrames(stack) {
  *
  *          - bottom: The shallowest node in the CensusTreeNode subtree created.
  *                    This is null if the shallowest node in the subtree was
- *                    found in the `frameCache` and reused.
+ *                    found in the `cache` and reused.
  *
  *        Note that top and bottom are not necessarily different. In the case
  *        where there is a 1:1 correspondence between an edge in the report and
  *        a CensusTreeNode, top and bottom refer to the same node.
  */
-function makeCensusTreeNodeSubTree(breakdown, report, edge, frameCache, outParams) {
+function makeCensusTreeNodeSubTree(breakdown, report, edge, cache, outParams) {
   if (!isSavedFrame(edge)) {
     const node = new CensusTreeNode(edge);
     outParams.top = outParams.bottom = node;
@@ -161,24 +210,25 @@ function makeCensusTreeNodeSubTree(breakdown, report, edge, frameCache, outParam
   // the frame.
 
   const frames = getArrayOfFrames(edge);
-  let cache = frameCache;
+  let currentCache = cache;
   let prevNode;
   for (let i = 0, length = frames.length; i < length; i++) {
     const frame = frames[i];
 
-    // Get or create the FrameCacheValue for this frame. If we already have a
-    // FrameCacheValue (and hence a CensusTreeNode) for this frame, we don't
-    // need to add the node to the previous node's children as we have already
-    // done that. If we don't have a FrameCacheValue and CensusTreeNode for
-    // this frame, then create one and make sure to hook it up as a child of
-    // the previous node.
+    // Get or create the CensusTreeNodeCacheValue for this frame. If we already
+    // have a CensusTreeNodeCacheValue (and hence a CensusTreeNode) for this
+    // frame, we don't need to add the node to the previous node's children as
+    // we have already done that. If we don't have a CensusTreeNodeCacheValue
+    // and CensusTreeNode for this frame, then create one and make sure to hook
+    // it up as a child of the previous node.
     let isNewNode = false;
-    let val = FrameCache.lookup(cache, frame);
+    let val = CensusTreeNodeCache.lookupFrame(currentCache, frame);
     if (!val) {
       isNewNode = true;
-      val = new FrameCacheValue(frame);
+      val = new CensusTreeNodeCacheValue();
+      val.node = new CensusTreeNode(frame);
 
-      FrameCache.insert(cache, frame, val);
+      CensusTreeNodeCache.insertFrame(currentCache, val);
       if (prevNode) {
         addChild(prevNode, val.node);
       }
@@ -196,10 +246,10 @@ function makeCensusTreeNodeSubTree(breakdown, report, edge, frameCache, outParam
     if (i !== length - 1 && !val.children) {
       // This is not the last frame and therefore this node will have
       // children, which we must cache.
-      val.children = new FrameCache();
+      val.children = new CensusTreeNodeCache();
     }
 
-    cache = val.children;
+    currentCache = val.children;
   }
 }
 
@@ -222,9 +272,9 @@ function CensusTreeNodeVisitor() {
     bottom: null,
   };
 
-  // The stack of `FrameCache`s that we use to aggregate many SavedFrame stacks
+  // The stack of `CensusTreeNodeCache`s that we use to aggregate many SavedFrame stacks
   // into a single CensusTreeNode tree.
-  this._frameCacheStack = [new FrameCache()];
+  this._cacheStack = [new CensusTreeNodeCache()];
 }
 
 CensusTreeNodeVisitor.prototype = Object.create(Visitor);
@@ -236,7 +286,7 @@ CensusTreeNodeVisitor.prototype = Object.create(Visitor);
  * @overrides Visitor.prototype.enter
  */
 CensusTreeNodeVisitor.prototype.enter = function (breakdown, report, edge) {
-  const cache = this._frameCacheStack[this._frameCacheStack.length - 1];
+  const cache = this._cacheStack[this._cacheStack.length - 1];
   makeCensusTreeNodeSubTree(breakdown, report, edge, cache, this._outParams);
   const { top, bottom } = this._outParams;
 
@@ -248,7 +298,7 @@ CensusTreeNodeVisitor.prototype.enter = function (breakdown, report, edge) {
     }
   }
 
-  this._frameCacheStack.push(new FrameCache);
+  this._cacheStack.push(new CensusTreeNodeCache);
   this._nodeStack.push(top);
 };
 
@@ -281,7 +331,7 @@ CensusTreeNodeVisitor.prototype.exit = function (breakdown, report, edge) {
     node.totalBytes = node.bytes;
 
     if (node.children) {
-      node.children.sort(compareByTotalBytes);
+      node.children.sort(compareByTotal);
 
       for (let i = 0, length = node.children.length; i < length; i++) {
         node.totalCount += node.children[i].totalCount;
@@ -291,7 +341,7 @@ CensusTreeNodeVisitor.prototype.exit = function (breakdown, report, edge) {
   }
 
   const top = this._nodeStack.pop();
-  const cache = this._frameCacheStack.pop();
+  const cache = this._cacheStack.pop();
   dfs(top, cache);
 };
 
@@ -345,7 +395,7 @@ CensusTreeNode.prototype = null;
 
 /**
  * Compare the given nodes by their `totalBytes` properties, and breaking ties
- * with the `bytes`, `totalCount`, and `count` properties (in that order).
+ * with the `totalCount`, `bytes`, and `count` properties (in that order).
  *
  * @param {CensusTreeNode} node1
  * @param {CensusTreeNode} node2
@@ -353,11 +403,111 @@ CensusTreeNode.prototype = null;
  * @returns {Number}
  *          A number suitable for using with Array.prototype.sort.
  */
-function compareByTotalBytes (node1, node2) {
+function compareByTotal(node1, node2) {
   return node2.totalBytes - node1.totalBytes
-      || node2.bytes      - node1.bytes
       || node2.totalCount - node1.totalCount
+      || node2.bytes      - node1.bytes
       || node2.count      - node1.count;
+}
+
+/**
+ * Compare the given nodes by their `bytes` properties, and breaking ties with
+ * the `count`, `totalBytes`, and `totalCount` properties (in that order).
+ *
+ * @param {CensusTreeNode} node1
+ * @param {CensusTreeNode} node2
+ *
+ * @returns {Number}
+ *          A number suitable for using with Array.prototype.sort.
+ */
+function compareBySelf(node1, node2) {
+  return node2.bytes      - node1.bytes
+      || node2.count      - node1.count
+      || node2.totalBytes - node1.totalBytes
+      || node2.totalCount - node1.totalCount;
+}
+
+/**
+ * Given an un-inverted CensusTreeNode tree, return the corresponding inverted
+ * CensusTreeNode tree. The input tree is not modified. The resulting inverted
+ * tree is sorted by self bytes rather than by total bytes.
+ *
+ * @param {CensusTreeNode} tree
+ *        The un-inverted tree.
+ *
+ * @returns {CensusTreeNode}
+ *          The corresponding inverted tree.
+ */
+function invert(tree) {
+  const inverted = new CensusTreeNodeCacheValue();
+  inverted.node = new CensusTreeNode(null);
+
+  // Do a depth-first search of the un-inverted tree. As we reach each leaf,
+  // take the path from the old root to the leaf, reverse that path, and add it
+  // to the new, inverted tree's root.
+
+  const path = [];
+  (function addInvertedPaths(node) {
+    path.push(node);
+
+    if (node.children) {
+      for (let i = 0, length = node.children.length; i < length; i++) {
+        addInvertedPaths(node.children[i]);
+      }
+    } else {
+      // We found a leaf node, add the reverse path to the inverted tree.
+
+      let current = inverted;
+      for (let i = path.length - 1; i >= 0; i--) {
+        const node = path[i];
+
+        if (!current.children) {
+          current.children = new CensusTreeNodeCache();
+        }
+
+        // If we already have a corresponding node in the inverted tree, merge
+        // this node's counts with it. Otherwise, create the corresponding node
+        // in the inverted tree, add it to the parent's children cache, and
+        // create the parent->child edge.
+        let val = CensusTreeNodeCache.lookupNode(current.children, node);
+        if (val) {
+          val.node.count += node.count;
+          val.node.totalCount += node.totalCount;
+          val.node.bytes += node.bytes;
+          val.node.totalBytes += node.totalBytes;
+        } else {
+          val = new CensusTreeNodeCacheValue();
+
+          val.node = new CensusTreeNode(node.name);
+          val.node.count = node.count;
+          val.node.totalCount = node.totalCount;
+          val.node.bytes = node.bytes;
+          val.node.totalBytes = node.totalBytes;
+
+          addChild(current.node, val.node);
+          CensusTreeNodeCache.insertNode(current.children, val);
+        }
+
+        current = val;
+      }
+    }
+
+    path.pop();
+  }(tree));
+
+  // Next, do a depth-first search of the inverted tree and ensure that siblings
+  // are sorted by their self bytes/count.
+
+  (function ensureSorted(node) {
+    if (node.children) {
+      node.children.sort(compareBySelf);
+      for (let i = 0, length = node.children.length; i < length; i++) {
+        ensureSorted(node.children[i]);
+      }
+    }
+  }(inverted.node));
+
+  return inverted.node;
 }
 
 /**
@@ -381,10 +531,17 @@ function compareByTotalBytes (node1, node2) {
  * @param {Object} report
  *        The census report generated with the specified breakdown.
  *
+ * @param {Object} options
+ *        Configuration options.
+ *          - invert: Whether to invert the resulting tree or not. Defaults to
+ *                    false, ie uninverted.
+ *
  * @returns {CensusTreeNode}
  */
-exports.censusReportToCensusTreeNode = function (breakdown, report) {
+exports.censusReportToCensusTreeNode = function (breakdown, report,
+                                                 options = { invert: false }) {
   const visitor = new CensusTreeNodeVisitor();
   walk(breakdown, report, visitor);
-  return visitor.root();
+  const root = visitor.root();
+  return options.invert ? invert(root) : root;
 };
