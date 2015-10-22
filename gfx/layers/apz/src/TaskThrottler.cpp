@@ -6,7 +6,7 @@
 
 #include "TaskThrottler.h"
 
-#include "base/message_loop.h"
+#include "mozilla/layers/APZThreadUtils.h"
 
 #define TASK_LOG(...)
 // #define TASK_LOG(...) printf_stderr("TASK: " __VA_ARGS__)
@@ -49,8 +49,7 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
       // even if we don't get a TaskComplete() until then.
       TimeDuration timeout = mMaxWait - TimeSinceLastRequest(aTimeStamp, lock);
       mTimeoutTask = NewRunnableMethod(this, &TaskThrottler::OnTimeout);
-      MessageLoop::current()->PostDelayedTask(FROM_HERE, mTimeoutTask,
-          timeout.ToMilliseconds());
+      APZThreadUtils::RunDelayedTaskOnCurrentThread(mTimeoutTask, timeout);
       return;
     }
     // we've been waiting for more than the max-wait limit, so just fall through
