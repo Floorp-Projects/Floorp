@@ -24,6 +24,12 @@
   to   { color: white; }
 }
 
+@keyframes anim-simple-three {
+  from { color: black; }
+  50%  { color: blue; }
+  to   { color: white; }
+}
+
 @keyframes anim-simple-timing {
   from { color: black; animation-timing-function: linear; }
   50%  { color: blue;  animation-timing-function: ease-in-out; }
@@ -183,10 +189,10 @@ test(function(t) {
   kTimingFunctionValues.forEach(function(easing) {
     var div = addDiv(t);
 
-    div.style.animation = 'anim-simple 100s ' + easing;
+    div.style.animation = 'anim-simple-three 100s ' + easing;
     var frames = getFrames(div);
 
-    assert_equals(frames.length, 2, "number of frames");
+    assert_equals(frames.length, 3, "number of frames");
 
     for (var i = 0; i < frames.length; i++) {
       assert_equals(frames[i].easing, easing,
@@ -364,7 +370,7 @@ test(function(t) {
     { offset: 1, computedOffset: 1, easing: "ease-in", composite: "replace",
       marginTop: "16px" },
     { offset: 1, computedOffset: 1, easing: "step-end", composite: "replace",
-      color: "rgb(255, 255, 255)", },
+      color: "rgb(255, 255, 255)" },
   ];
 
   for (var i = 0; i < frames.length; i++) {
