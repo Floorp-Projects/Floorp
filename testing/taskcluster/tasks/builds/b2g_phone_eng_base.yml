@@ -14,7 +14,4 @@ task:
       GAIA_KEYBOARD_LAYOUTS: 'en,pt-BR,es,de,fr,pl,zh-Hans-Pinyin,zh-Hant-Zhuyin,en-Dvorak'
       B2G_UPDATE_CHANNEL: 'default'
     command:
-      - >
-        checkout-gecko workspace &&
-        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
+      - phone
