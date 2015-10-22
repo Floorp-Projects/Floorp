@@ -10,6 +10,7 @@
 
 #include <prio.h>
 
+#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
@@ -220,6 +221,27 @@ CombinedStacks::SizeOfExcludingThis() const {
   return n;
 }
 
+// This utility function generates a string key that is used to index the annotations
+// in a hash map from |HangReports::AddHang|.
+nsresult
+ComputeAnnotationsKey(const HangAnnotationsPtr& aAnnotations, nsAString& aKeyOut)
+{
+  UniquePtr<HangAnnotations::Enumerator> annotationsEnum = aAnnotations->GetEnumerator();
+  if (!annotationsEnum) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Append all the attributes to the key, to uniquely identify this annotation.
+  nsAutoString  key;
+  nsAutoString  value;
+  while (annotationsEnum->Next(key, value)) {
+    aKeyOut.Append(key);
+    aKeyOut.Append(value);
+  }
+
+  return NS_OK;
+}
+
 class HangReports {
 public:
   /**
@@ -229,21 +251,24 @@ public:
   struct AnnotationInfo {
     AnnotationInfo(uint32_t aHangIndex,
                    HangAnnotationsPtr aAnnotations)
-      : mHangIndex(aHangIndex)
-      , mAnnotations(Move(aAnnotations))
-    {}
+      : mAnnotations(Move(aAnnotations))
+    {
+      mHangIndices.AppendElement(aHangIndex);
+    }
     AnnotationInfo(AnnotationInfo&& aOther)
-      : mHangIndex(aOther.mHangIndex)
+      : mHangIndices(aOther.mHangIndices)
       , mAnnotations(Move(aOther.mAnnotations))
     {}
     ~AnnotationInfo() {}
     AnnotationInfo& operator=(AnnotationInfo&& aOther)
     {
-      mHangIndex = aOther.mHangIndex;
+      mHangIndices = aOther.mHangIndices;
       mAnnotations = Move(aOther.mAnnotations);
       return *this;
     }
-    uint32_t mHangIndex;
+    // To save memory, a single AnnotationInfo can be associated to multiple chrome
+    // hangs. The following array holds the index of each related chrome hang.
+    nsTArray<uint32_t> mHangIndices;
     HangAnnotationsPtr mAnnotations;
 
   private:
@@ -258,7 +283,7 @@ public:
   uint32_t GetDuration(unsigned aIndex) const;
   int32_t GetSystemUptime(unsigned aIndex) const;
   int32_t GetFirefoxUptime(unsigned aIndex) const;
-  const nsTArray<AnnotationInfo>& GetAnnotationInfo() const;
+  const nsClassHashtable<nsStringHashKey, AnnotationInfo>& GetAnnotationInfo() const;
   const CombinedStacks& GetStacks() const;
 private:
   /**
@@ -274,7 +299,7 @@ private:
     int32_t mFirefoxUptime;
   };
   std::vector<HangInfo> mHangInfo;
-  nsTArray<AnnotationInfo> mAnnotationInfo;
+  nsClassHashtable<nsStringHashKey, AnnotationInfo> mAnnotationInfo;
   CombinedStacks mStacks;
 };
 
@@ -286,12 +311,31 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
                      HangAnnotationsPtr aAnnotations) {
   HangInfo info = { aDuration, aSystemUptime, aFirefoxUptime };
   mHangInfo.push_back(info);
-  if (aAnnotations) {
-    AnnotationInfo ainfo(static_cast<uint32_t>(mHangInfo.size() - 1),
-                         Move(aAnnotations));
-    mAnnotationInfo.AppendElement(Move(ainfo));
-  }
   mStacks.AddStack(aStack);
+
+  if (!aAnnotations) {
+    return;
+  }
+
+  nsAutoString annotationsKey;
+  uint32_t hangIndex = static_cast<uint32_t>(mHangInfo.size() - 1);
+
+  // Generate a key to index aAnnotations in the hash map.
+  nsresult rv = ComputeAnnotationsKey(aAnnotations, annotationsKey);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  AnnotationInfo* annotationsEntry = mAnnotationInfo.Get(annotationsKey);
+  if (annotationsEntry) {
+    // If the key is already in the hash map, append the index of the chrome hang
+    // to its indices.
+    annotationsEntry->mHangIndices.AppendElement(hangIndex);
+    return;
+  }
+
+  // If the key was not found, add the annotations to the hash map.
+  mAnnotationInfo.Put(annotationsKey, new AnnotationInfo(hangIndex, Move(aAnnotations)));
 }
 
 size_t
@@ -301,9 +345,11 @@ HangReports::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
   // This is a crude approximation. See comment on
   // CombinedStacks::SizeOfExcludingThis.
   n += mHangInfo.capacity() * sizeof(HangInfo);
-  n += mAnnotationInfo.Capacity() * sizeof(AnnotationInfo);
-  for (int32_t i = 0, l = mAnnotationInfo.Length(); i < l; ++i) {
-    n += mAnnotationInfo[i].mAnnotations->SizeOfIncludingThis(aMallocSizeOf);
+  n += mAnnotationInfo.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mAnnotationInfo.Count() * sizeof(AnnotationInfo);
+  for (auto iter = mAnnotationInfo.ConstIter(); !iter.Done(); iter.Next()) {
+    n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    n += iter.Data()->mAnnotations->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;
 }
@@ -328,7 +374,7 @@ HangReports::GetFirefoxUptime(unsigned aIndex) const {
   return mHangInfo[aIndex].mFirefoxUptime;
 }
 
-const nsTArray<HangReports::AnnotationInfo>&
+const nsClassHashtable<nsStringHashKey, HangReports::AnnotationInfo>&
 HangReports::GetAnnotationInfo() const {
   return mAnnotationInfo;
 }
@@ -2536,30 +2582,46 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
                           JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
-    const nsTArray<HangReports::AnnotationInfo>& annotationInfo =
-                                                mHangReports.GetAnnotationInfo();
-    for (uint32_t iterIndex = 0, arrayLen = annotationInfo.Length();
-         iterIndex < arrayLen; ++iterIndex) {
+
+    size_t annotationIndex = 0;
+    const nsClassHashtable<nsStringHashKey, HangReports::AnnotationInfo>& annotationInfo =
+      mHangReports.GetAnnotationInfo();
+
+    for (auto iter = annotationInfo.ConstIter(); !iter.Done(); iter.Next()) {
+      const HangReports::AnnotationInfo* info = iter.Data();
+
       JS::Rooted<JSObject*> keyValueArray(cx, JS_NewArrayObject(cx, 0));
       if (!keyValueArray) {
         return NS_ERROR_FAILURE;
       }
-      JS::RootedValue indexValue(cx);
-      indexValue.setNumber(annotationInfo[iterIndex].mHangIndex);
-      if (!JS_DefineElement(cx, keyValueArray, 0, indexValue, JSPROP_ENUMERATE)) {
+
+      // Create an array containing all the indices of the chrome hangs relative to this
+      // annotation.
+      JS::Rooted<JS::Value> indicesArray(cx);
+      if (!mozilla::dom::ToJSValue(cx, info->mHangIndices, &indicesArray)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      // We're saving the annotation as [[indices], {annotation-data}], so add the indices
+      // array as the first element of that structure.
+      if (!JS_DefineElement(cx, keyValueArray, 0, indicesArray, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
+
+      // Create the annotations object...
       JS::Rooted<JSObject*> jsAnnotation(cx, JS_NewPlainObject(cx));
       if (!jsAnnotation) {
         return NS_ERROR_FAILURE;
       }
       UniquePtr<HangAnnotations::Enumerator> annotationsEnum =
-        annotationInfo[iterIndex].mAnnotations->GetEnumerator();
+        info->mAnnotations->GetEnumerator();
       if (!annotationsEnum) {
         return NS_ERROR_FAILURE;
       }
-      nsAutoString  key;
-      nsAutoString  value;
+
+      // ... fill it with key:value pairs...
+      nsAutoString key;
+      nsAutoString value;
       while (annotationsEnum->Next(key, value)) {
         JS::RootedValue jsValue(cx);
         jsValue.setString(JS_NewUCStringCopyN(cx, value.get(), value.Length()));
@@ -2568,10 +2630,12 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
           return NS_ERROR_FAILURE;
         }
       }
+
+      // ... and append it after the indices array.
       if (!JS_DefineElement(cx, keyValueArray, 1, jsAnnotation, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
-      if (!JS_DefineElement(cx, annotationsArray, iterIndex,
+      if (!JS_DefineElement(cx, annotationsArray, annotationIndex++,
                          keyValueArray, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
