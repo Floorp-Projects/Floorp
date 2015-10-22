@@ -400,8 +400,8 @@ struct ObjectGroupCompartment::NewEntry
     }
 
     static inline bool match(const NewEntry& key, const Lookup& lookup) {
-        return key.group->proto() == lookup.matchProto &&
-               (!lookup.clasp || key.group->clasp() == lookup.clasp) &&
+        return key.group.unbarrieredGet()->proto() == lookup.matchProto &&
+               (!lookup.clasp || key.group.unbarrieredGet()->clasp() == lookup.clasp) &&
                key.associated == lookup.associated;
     }
 
@@ -1809,11 +1809,11 @@ ObjectGroupCompartment::fixupNewTableAfterMovingGC(NewTable* table)
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
             NewEntry entry = e.front();
             bool needRekey = false;
-            if (IsForwarded(entry.group.get())) {
-                entry.group.set(Forwarded(entry.group.get()));
+            if (IsForwarded(entry.group.unbarrieredGet())) {
+                entry.group.set(Forwarded(entry.group.unbarrieredGet()));
                 needRekey = true;
             }
-            TaggedProto proto = entry.group->proto();
+            TaggedProto proto = entry.group.unbarrieredGet()->proto();
             if (proto.isObject() && IsForwarded(proto.toObject())) {
                 proto = TaggedProto(Forwarded(proto.toObject()));
                 needRekey = true;
@@ -1823,7 +1823,7 @@ ObjectGroupCompartment::fixupNewTableAfterMovingGC(NewTable* table)
                 needRekey = true;
             }
             if (needRekey) {
-                const Class* clasp = entry.group->clasp();
+                const Class* clasp = entry.group.unbarrieredGet()->clasp();
                 if (entry.associated && entry.associated->is<JSFunction>())
                     clasp = nullptr;
                 NewEntry::Lookup lookup(clasp, proto, entry.associated);
@@ -1847,13 +1847,13 @@ ObjectGroupCompartment::checkNewTableAfterMovingGC(NewTable* table)
 
     for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
         NewEntry entry = e.front();
-        CheckGCThingAfterMovingGC(entry.group.get());
-        TaggedProto proto = entry.group->proto();
+        CheckGCThingAfterMovingGC(entry.group.unbarrieredGet());
+        TaggedProto proto = entry.group.unbarrieredGet()->proto();
         if (proto.isObject())
             CheckGCThingAfterMovingGC(proto.toObject());
         CheckGCThingAfterMovingGC(entry.associated);
 
-        const Class* clasp = entry.group->clasp();
+        const Class* clasp = entry.group.unbarrieredGet()->clasp();
         if (entry.associated && entry.associated->is<JSFunction>())
             clasp = nullptr;
 

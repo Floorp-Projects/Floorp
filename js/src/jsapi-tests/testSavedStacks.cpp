@@ -111,3 +111,94 @@ BEGIN_TEST(testSavedStacks_RangeBasedForLoops)
     return true;
 }
 END_TEST(testSavedStacks_RangeBasedForLoops)
+
+BEGIN_TEST(testSavedStacks_selfHostedFrames)
+{
+    CHECK(js::DefineTestingFunctions(cx, global, false, false));
+
+    JS::RootedValue val(cx);
+    //             0         1         2         3
+    //             0123456789012345678901234567890123456789
+    CHECK(evaluate("(function one() {                      \n"  // 1
+                   "  try {                                \n"  // 2
+                   "    [1].map(function two() {           \n"  // 3
+                   "      throw saveStack();               \n"  // 4
+                   "    });                                \n"  // 5
+                   "  } catch (stack) {                    \n"  // 6
+                   "    return stack;                      \n"  // 7
+                   "  }                                    \n"  // 8
+                   "}())                                   \n", // 9
+                   "filename.js",
+                   1,
+                   &val));
+
+    CHECK(val.isObject());
+    JS::RootedObject obj(cx, &val.toObject());
+
+    CHECK(obj->is<js::SavedFrame>());
+    JS::Rooted<js::SavedFrame*> savedFrame(cx, &obj->as<js::SavedFrame>());
+
+    JS::Rooted<js::SavedFrame*> selfHostedFrame(cx, savedFrame->getParent());
+    CHECK(selfHostedFrame->isSelfHosted());
+
+    // Source
+    JS::RootedString str(cx);
+    JS::SavedFrameResult result = JS::GetSavedFrameSource(cx, selfHostedFrame, &str,
+                                                          JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    JSLinearString* lin = str->ensureLinear(cx);
+    CHECK(lin);
+    CHECK(js::StringEqualsAscii(lin, "filename.js"));
+
+    // Source, including self-hosted frames
+    result = JS::GetSavedFrameSource(cx, selfHostedFrame, &str, JS::SavedFrameSelfHosted::Include);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    lin = str->ensureLinear(cx);
+    CHECK(lin);
+    CHECK(js::StringEqualsAscii(lin, "self-hosted"));
+
+    // Line
+    uint32_t line = 123;
+    result = JS::GetSavedFrameLine(cx, selfHostedFrame, &line, JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    CHECK_EQUAL(line, 3U);
+
+    // Column
+    uint32_t column = 123;
+    result = JS::GetSavedFrameColumn(cx, selfHostedFrame, &column,
+                                     JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    CHECK_EQUAL(column, 5U);
+
+    // Function display name
+    result = JS::GetSavedFrameFunctionDisplayName(cx, selfHostedFrame, &str,
+                                                  JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    lin = str->ensureLinear(cx);
+    CHECK(lin);
+    CHECK(js::StringEqualsAscii(lin, "one"));
+
+    // Parent
+    JS::RootedObject parent(cx);
+    result = JS::GetSavedFrameParent(cx, savedFrame, &parent, JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    // JS::GetSavedFrameParent does this super funky and potentially unexpected
+    // thing where it doesn't return the next subsumed parent but any next
+    // parent. This so that callers can still get the "asyncParent" property
+    // which is only on the first frame of the async parent stack and that frame
+    // might not be subsumed by the caller. It is expected that callers will
+    // still interact with the frame through the JSAPI accessors, so this should
+    // be safe and should not leak privileged info to unprivileged
+    // callers. However, because of that, we don't test that the parent we get
+    // here is the selfHostedFrame's parent (because, as just explained, it
+    // isn't) and instead check that asking for the source property gives us the
+    // expected value.
+    result = JS::GetSavedFrameSource(cx, parent, &str, JS::SavedFrameSelfHosted::Exclude);
+    CHECK(result == JS::SavedFrameResult::Ok);
+    lin = str->ensureLinear(cx);
+    CHECK(lin);
+    CHECK(js::StringEqualsAscii(lin, "filename.js"));
+
+    return true;
+}
+END_TEST(testSavedStacks_selfHostedFrames)

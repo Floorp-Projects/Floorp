@@ -26,12 +26,7 @@ class ProcTestKill(proctest.ProcTest):
         p.run()
         p.kill()
 
-        detected, output = proctest.check_for_process(self.proclaunch)
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              expectedfail=('returncode',))
+        self.determine_status(p, expectedfail=('returncode',))
 
     def test_process_kill_deep(self):
         """Process is started, we kill it, we use a deep process tree"""
@@ -41,12 +36,7 @@ class ProcTestKill(proctest.ProcTest):
         p.run()
         p.kill()
 
-        detected, output = proctest.check_for_process(self.proclaunch)
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              expectedfail=('returncode',))
+        self.determine_status(p, expectedfail=('returncode',))
 
     def test_process_kill_deep_wait(self):
         """Process is started, we use a deep process tree, we let it spawn
@@ -59,12 +49,7 @@ class ProcTestKill(proctest.ProcTest):
         time.sleep(3)
         p.kill()
 
-        detected, output = proctest.check_for_process(self.proclaunch)
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              expectedfail=('returncode',))
+        self.determine_status(p, expectedfail=('returncode',))
 
     def test_process_kill_broad(self):
         """Process is started, we kill it, we use a broad process tree"""
@@ -74,12 +59,7 @@ class ProcTestKill(proctest.ProcTest):
         p.run()
         p.kill()
 
-        detected, output = proctest.check_for_process(self.proclaunch)
-        self.determine_status(detected,
-                              output,
-                              p.proc.returncode,
-                              p.didTimeout,
-                              expectedfail=('returncode',))
+        self.determine_status(p, expectedfail=('returncode',))
 
     @unittest.skipUnless(processhandler.isPosix, "posix only")
     def test_process_kill_with_sigterm(self):
