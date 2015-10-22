@@ -20,7 +20,7 @@
     var gBrowser;
 
     var imports = ["SimpleTest", "ok", "is"];
-    for each (var name in imports) {
+    for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
 

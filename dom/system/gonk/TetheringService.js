@@ -363,7 +363,8 @@ TetheringService.prototype = {
   },
 
   getNetworkInfo: function(aType, aServiceId) {
-    for each (let networkInfo in gNetworkManager.allNetworkInfo) {
+    for (let networkId in gNetworkManager.allNetworkInfo) {
+      let networkInfo = gNetworkManager.allNetworkInfo[networkId];
       if (networkInfo.type == aType) {
         try {
           if (networkInfo instanceof Ci.nsIRilNetworkInfo) {

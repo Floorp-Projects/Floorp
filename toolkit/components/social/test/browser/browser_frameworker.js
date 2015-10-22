@@ -217,7 +217,7 @@ var tests = {
     let expected_data = false;
     worker.port.onmessage = function(e) {
       is(e.data.topic, "ready");
-      for each (let attr in ['appName', 'appVersion', 'platform', 'userAgent']) {
+      for (let attr of ['appName', 'appVersion', 'platform', 'userAgent']) {
         // each attribute must be a string with length > 0.
         is(typeof e.data.data[attr], "string");
         ok(e.data.data[attr].length > 0);

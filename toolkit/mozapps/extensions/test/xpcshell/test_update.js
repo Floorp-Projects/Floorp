@@ -665,7 +665,7 @@ function run_test_8() {
            item_maxappversion, item_status,
            app_id, app_version, current_app_version,
            app_os, app_abi, app_locale, update_type] =
-           [decodeURIComponent(a) for each (a in request.queryString.split("/"))];
+           request.queryString.split("/").map(a => decodeURIComponent(a));
 
       do_check_eq(req_version, "2");
 

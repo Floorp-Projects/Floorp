@@ -67,12 +67,12 @@ function createTestEventValue(name) {
       is(ev.pointerId, pointerId, "Correct pointerId");
     }
 
-    for each (let target in [document, window, testTarget, parent])
+    for (let target of [document, window, testTarget, parent])
       target.addEventListener(name, check, false);
 
     testTarget.dispatchEvent(event);
 
-    for each (let target in [document, window, testTarget, parent])
+    for (let target of [document, window, testTarget, parent])
       target.removeEventListener(name, check, false);
 
 

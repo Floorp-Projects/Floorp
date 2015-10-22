@@ -110,7 +110,7 @@ function populateDM(DownloadData)
       "state, currBytes, maxBytes, preferredAction, autoResume) " +
     "VALUES (:name, :source, :target, :startTime, :endTime, :state, " +
       ":currBytes, :maxBytes, :preferredAction, :autoResume)");
-  for each (let dl in DownloadData) {
+  for (let dl of DownloadData) {
     for (let prop in dl)
       stmt.params[prop] = dl[prop];
 

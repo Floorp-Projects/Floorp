@@ -111,7 +111,7 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
   AddonManager.addInstallListener(listener);
   let getInstallCB = function(install) { install.install(); };
 
-  for each (let name in installNames) {
+  for (let name of installNames) {
     AddonManager.getInstallForFile(do_get_addon(name), getInstallCB);
   }
 });

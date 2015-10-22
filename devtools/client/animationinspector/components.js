@@ -553,6 +553,7 @@ AnimationsTimeline.prototype = {
     this.destroyTimeBlocks();
     this.animationsEl.innerHTML = "";
   },
+
   onScrubberMouseDown: function(e) {
     this.moveScrubberTo(e.pageX);
     this.win.addEventListener("mouseup", this.onScrubberMouseUp);
@@ -601,6 +602,7 @@ AnimationsTimeline.prototype = {
     this.emit("timeline-data-changed", {
       isPaused: true,
       isMoving: false,
+      isUserDrag: true,
       time: time
     });
   },
@@ -693,6 +695,7 @@ AnimationsTimeline.prototype = {
       this.emit("timeline-data-changed", {
         isPaused: !this.isAtLeastOneAnimationPlaying(),
         isMoving: false,
+        isUserDrag: false,
         time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
       });
       return;
@@ -701,6 +704,7 @@ AnimationsTimeline.prototype = {
     this.emit("timeline-data-changed", {
       isPaused: false,
       isMoving: true,
+      isUserDrag: false,
       time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
     });
 

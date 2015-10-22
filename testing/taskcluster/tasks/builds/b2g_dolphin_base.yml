@@ -15,10 +15,7 @@ task:
     maxRunTime: 7200
 
     command:
-      - >
-        checkout-gecko workspace &&
-        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-dolphin.sh $HOME/workspace
+      - dolphin
 
   extra:
     # Rather then enforcing particular conventions we require that all build

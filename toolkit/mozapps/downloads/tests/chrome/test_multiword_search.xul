@@ -47,7 +47,7 @@ function test()
     "VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
 
   try {
-    for each (let site in ["ed.agadak.net", "mozilla.org"]) {
+    for (let site of ["ed.agadak.net", "mozilla.org"]) {
       stmt.bindByIndex(0, "Super Pimped Download");
       stmt.bindByIndex(1, filePath);
       stmt.bindByIndex(2, "http://" + site + "/file");

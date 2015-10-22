@@ -13,7 +13,7 @@ function handleRequest(request, response) {
     invalidHeaders.push("Authorization");
   }
 
-  for each (let header in invalidHeaders) {
+  for (let header of invalidHeaders) {
     if (request.hasHeader(header)) {
       response.setStatusLine(null, 500, "Server Error");
       headers[header.toLowerCase()] = request.getHeader(header);

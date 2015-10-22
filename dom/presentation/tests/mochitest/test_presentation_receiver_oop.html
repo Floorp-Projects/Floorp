@@ -32,9 +32,6 @@ function setup() {
     gScript.sendAsyncMessage('trigger-device-add');
 
     // Create a receiver OOP iframe.
-    SpecialPowers.addPermission('presentation', true, { url: receiverUrl,
-                                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-                                                        isInBrowserElement: true });
     var receiverIframe = document.createElement('iframe');
     receiverIframe.setAttribute('remote', 'true');
     receiverIframe.setAttribute('mozbrowser', 'true');
@@ -72,9 +69,6 @@ function setup() {
     obs.notifyObservers(promise, 'setup-request-promise', null);
 
     // Create a non-receiver OOP iframe.
-    SpecialPowers.addPermission('presentation', true, { url: nonReceiverUrl,
-                                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-                                                        isInBrowserElement: true });
     var nonReceiverIframe = document.createElement('iframe');
     nonReceiverIframe.setAttribute('remote', 'true');
     nonReceiverIframe.setAttribute('mozbrowser', 'true');

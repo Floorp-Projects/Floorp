@@ -492,7 +492,7 @@ IEProfileMigrator.prototype.getResources = function IE_getResources() {
     MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
   windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
   resources.push(windowsVaultFormPasswordsMigrator);
-  return [r for each (r in resources) if (r.exists)];
+  return resources.filter(r => r.exists);
 };
 
 Object.defineProperty(IEProfileMigrator.prototype, "sourceHomePageURL", {

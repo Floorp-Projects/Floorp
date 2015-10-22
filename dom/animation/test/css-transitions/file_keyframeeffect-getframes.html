@@ -33,7 +33,7 @@ test(function(t) {
   var expected = [
     { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
       left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
       left: "100px" },
   ];
 
@@ -58,7 +58,7 @@ test(function(t) {
   var expected = [
     { offset: 0, computedOffset: 0, easing: "steps(2, end)", composite: "replace",
       left: "0px" },
-    { offset: 1, computedOffset: 1, easing: "steps(2, end)", composite: "replace",
+    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
       left: "100px" },
   ];
 

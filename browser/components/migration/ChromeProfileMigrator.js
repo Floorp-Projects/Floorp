@@ -111,7 +111,7 @@ ChromeProfileMigrator.prototype.getResources =
                                  GetWindowsPasswordsResource(profileFolder)
 #endif
                                  ];
-        return [r for each (r in possibleResources) if (r != null)];
+        return possibleResources.filter(r => r != null);
       }
     }
     return [];

@@ -228,11 +228,11 @@ var PluginProvider = {
   updatePluginList: function PL_updatePluginList() {
     let newList = this.getPluginList();
 
-    let lostPlugins = [this.buildWrapper(this.plugins[id])
-                       for each (id in Object.keys(this.plugins)) if (!(id in newList))];
-    let newPlugins = [this.buildWrapper(newList[id])
-                      for each (id in Object.keys(newList)) if (!(id in this.plugins))];
-    let matchedIDs = [id for each (id in Object.keys(newList)) if (id in this.plugins)];
+    let lostPlugins = Object.keys(this.plugins).filter(id => !(id in newList)).
+                      map(id => this.buildWrapper(this.plugins[id]));
+    let newPlugins = Object.keys(newList).filter(id => !(id in this.plugins)).
+                     map(id => this.buildWrapper(newList[id]));
+    let matchedIDs = Object.keys(newList).filter(id => id in this.plugins);
 
     // The plugin host generates new tags for every plugin after a scan and
     // if the plugin's filename has changed then the disabled state won't have

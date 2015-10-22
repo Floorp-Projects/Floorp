@@ -49,22 +49,18 @@ interface nsITCPPresentationServerListener: nsISupports
 /**
  * TCP presentation server which can be used by discovery services.
  */
-[scriptable, uuid(494237ec-c567-41ab-afc9-82d26c4fe1dc)]
+[scriptable, uuid(55d6b605-2389-4aae-a8fe-60d4440540ea)]
 interface nsITCPPresentationServer: nsISupports
 {
   /**
-   * This method initializes a TCP presentation server.
-   * @param   aId
-   *          The unique Id for the device within the discovery scope. If aId
-   *          is null, empty string or opt-out, the TCP presentation server
-   *          should not work until the |id| is set appropriately.
+   * This method initialize server socket.
    * @param   aPort
    *          The port of the server socket.  Pass 0 or opt-out to indicate no
    *          preference, and a port will be selected automatically.
    * @throws  NS_ERROR_FAILURE if the server socket has been inited or the
    *          server socket can not be inited.
    */
-  void init([optional] in AUTF8String aId, [optional] in uint16_t aPort);
+  void startService([optional] in uint16_t aPort);
 
   /**
    * Request session to designated remote TCP device.
@@ -75,8 +71,7 @@ interface nsITCPPresentationServer: nsISupports
    * @param   aPresentationId
    *          The Id for representing this session.
    * @returns The control channel for this session.
-   * @throws  NS_ERROR_FAILURE if the server socket has been inited or the
-   *          server socket can not be inited.
+   * @throws  NS_ERROR_FAILURE if the Id hasn't been inited.
    */
   nsIPresentationControlChannel requestSession(in nsITCPDeviceInfo aDeviceInfo,
                                                in DOMString aUrl,
@@ -94,11 +89,8 @@ interface nsITCPPresentationServer: nsISupports
   readonly attribute uint16_t port;
 
   /**
-   * The id of the TCP presentation server. The setter should be use if the |id|
-   * is not set by the |init|. Moreover, if the |id| is not set by |init|, the
-   * TCP presentation server should not work until the |id| is set.
-   * @throws  NS_ERROR_FAILURE if the non-null id has been set by |init| or this
-   *          setter
+   * The id of the TCP presentation server. |requestSession| won't
+   * work until the |id| is set.
    */
   attribute AUTF8String id;
 

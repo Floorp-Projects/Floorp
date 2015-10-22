@@ -1437,7 +1437,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           // Find which regions of text match the search terms
           let regions = [];
-          for each (let search in aSearchTokens) {
+          for (let search of Array.prototype.slice.call(aSearchTokens)) {
             let matchIndex;
             let startIndex = 0;
             let searchLen = search.length;

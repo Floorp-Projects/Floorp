@@ -9908,6 +9908,7 @@
     "expires_in_version": "48",
     "kind": "count",
     "keyed": true,
+    "releaseChannelCollection": "opt-out",
     "description": "Counts number of times a certain plugin has been activated."
   },
   "YOUTUBE_EMBED_SEEN": {

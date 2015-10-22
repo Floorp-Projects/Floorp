@@ -49,7 +49,7 @@ function test()
     "VALUES (?1, ?2, ?3, ?4)");
 
   try {
-    for each (let site in ["delete.me", "i.live"]) {
+    for (let site of ["delete.me", "i.live"]) {
       stmt.bindByIndex(0, "Super Pimped Download");
       stmt.bindByIndex(1, filePath);
       stmt.bindByIndex(2, "http://" + site + "/file");

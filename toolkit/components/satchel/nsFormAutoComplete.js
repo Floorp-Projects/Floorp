@@ -401,7 +401,7 @@ FormAutoComplete.prototype = {
     _calculateScore : function (entry, aSearchString, searchTokens) {
         let boundaryCalc = 0;
         // for each word, calculate word boundary weights
-        for each (let token in searchTokens) {
+        for (let token of searchTokens) {
             boundaryCalc += (entry.textLowerCase.indexOf(token) == 0);
             boundaryCalc += (entry.textLowerCase.indexOf(" " + token) >= 0);
         }

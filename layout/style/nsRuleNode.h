@@ -1071,6 +1071,9 @@ public:
 
   static bool ParentHasPseudoElementData(nsStyleContext* aContext);
 
+  static void ComputeTimingFunction(const nsCSSValue& aValue,
+                                    nsTimingFunction& aResult);
+
 private:
 #ifdef DEBUG
   // non-inline helper function to allow assertions without incomplete

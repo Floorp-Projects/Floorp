@@ -1647,7 +1647,7 @@ MmsService.prototype = {
 
     savable.receivers = [];
     // We don't have Bcc in recevied MMS message.
-    for each (let type in ["cc", "to"]) {
+    for (let type of ["cc", "to"]) {
       if (intermediate.headers[type]) {
         if (intermediate.headers[type] instanceof Array) {
           for (let index in intermediate.headers[type]) {

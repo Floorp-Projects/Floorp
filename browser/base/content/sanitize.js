@@ -537,7 +537,7 @@ Sanitizer.prototype = {
         var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
                               .getService(Components.interfaces.nsILoginManager);
         var hosts = pwmgr.getAllDisabledHosts();
-        for each (var host in hosts) {
+        for (var host of hosts) {
           pwmgr.setLoginSavingEnabled(host, true);
         }
 
