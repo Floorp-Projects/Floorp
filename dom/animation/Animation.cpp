@@ -327,9 +327,12 @@ Animation::Finish(ErrorResult& aRv)
     return;
   }
 
+  AutoMutationBatchForAnimation mb(*this);
+
+  // Seek to the end
   TimeDuration limit =
     mPlaybackRate > 0 ? TimeDuration(EffectEnd()) : TimeDuration(0);
-
+  bool didChange = GetCurrentTime() != Nullable<TimeDuration>(limit);
   SilentlySetCurrentTime(limit);
 
   // If we are paused or play-pending we need to fill in the start time in
@@ -344,6 +347,7 @@ Animation::Finish(ErrorResult& aRv)
       !mTimeline->GetCurrentTime().IsNull()) {
     mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
                         limit.MultDouble(1.0 / mPlaybackRate));
+    didChange = true;
   }
 
   // If we just resolved the start time for a pause or play-pending
@@ -357,11 +361,15 @@ Animation::Finish(ErrorResult& aRv)
       mHoldTime.SetNull();
     }
     CancelPendingTasks();
+    didChange = true;
     if (mReady) {
       mReady->MaybeResolve(this);
     }
   }
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Sync);
+  if (didChange && IsRelevant()) {
+    nsNodeUtils::AnimationChanged(this);
+  }
   PostUpdate();
 }
 
