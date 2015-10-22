@@ -57,21 +57,6 @@ private:
   bool mReneuter;
 };
 
-class MOZ_RAII SuppressedNeuteringRegion
-{
-public:
-  SuppressedNeuteringRegion(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-  ~SuppressedNeuteringRegion();
-
-  static inline bool IsNeuteringSuppressed() { return sSuppressNeutering; }
-
-private:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  bool mReenable;
-
-  static bool sSuppressNeutering;
-};
-
 } // namespace ipc
 } // namespace mozilla
 
