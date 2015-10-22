@@ -238,6 +238,14 @@ public class BrowserSearch extends HomeFragment
     }
 
     @Override
+    public void onHiddenChanged(boolean hidden) {
+        if (!hidden) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
+        }
+        super.onHiddenChanged(hidden);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
 
@@ -552,6 +560,22 @@ public class BrowserSearch extends HomeFragment
         mAdapter.notifyDataSetChanged();
     }
 
+    private boolean shouldUpdateSearchEngine(ArrayList<SearchEngine> searchEngines) {
+        if (searchEngines.size() != mSearchEngines.size()) {
+            return true;
+        }
+
+        int size = searchEngines.size();
+
+        for (int i = 0; i < size; i++) {
+            if (!mSearchEngines.get(i).name.equals(searchEngines.get(i).name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void setSearchEngines(JSONObject data) {
         ThreadUtils.assertOnUiThread();
 
@@ -597,14 +621,16 @@ public class BrowserSearch extends HomeFragment
                 }
             }
 
-            mSearchEngines = Collections.unmodifiableList(searchEngines);
-            mLastLocale = Locale.getDefault();
+            // checking if the new searchEngine is different from mSearchEngine, will have to re-layout if yes
+            boolean change = shouldUpdateSearchEngine(searchEngines);
 
-            if (mAdapter != null) {
+            if (mAdapter != null && change) {
+                mSearchEngines = Collections.unmodifiableList(searchEngines);
+                mLastLocale = Locale.getDefault();
+                updateSearchEngineBar();
+
                 mAdapter.notifyDataSetChanged();
             }
-
-            updateSearchEngineBar();
 
             // Show suggestions opt-in prompt only if suggestions are not enabled yet,
             // user hasn't been prompted and we're not on a private browsing tab.
