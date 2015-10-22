@@ -46,7 +46,6 @@
 #include "nsIWidget.h"                  // For plugin window configuration information structs
 #include "gfxVR.h"
 #include "ImageContainer.h"
-#include "LayerUserData.h"              // For LayerUserData's destructor definition
 
 class gfxContext;
 
@@ -103,6 +102,9 @@ class LayersPacket;
 #define MOZ_LAYER_DECL_NAME(n, e)                              \
   virtual const char* Name() const override { return n; }  \
   virtual LayerType GetType() const override { return e; }
+
+// Defined in LayerUserData.h; please include that file instead.
+class LayerUserData;
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
