@@ -62,7 +62,7 @@ Debugger.Frame.prototype.frameDescription = function frameDescription() {
 
 Debugger.Frame.prototype.positionDescription = function positionDescription() {
     if (this.script) {
-        var line = this.script.getOffsetLine(this.offset);
+        var line = this.script.getOffsetLocation(this.offset).lineNumber;
         if (this.script.url)
             return this.script.url + ":" + line;
         return "line " + line;
@@ -83,7 +83,7 @@ Object.defineProperty(Debugger.Frame.prototype, "line", {
         enumerable: false,
         get: function() {
             if (this.script)
-                return this.script.getOffsetLine(this.offset);
+                return this.script.getOffsetLocation(this.offset).lineNumber;
             else
                 return null;
         }

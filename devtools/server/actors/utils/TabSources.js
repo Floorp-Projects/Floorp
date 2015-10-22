@@ -9,7 +9,7 @@ const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dbg_assert, fetch } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
-const { OriginalLocation, GeneratedLocation, getOffsetColumn } = require("devtools/server/actors/common");
+const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { resolve } = require("promise");
 
 loader.lazyRequireGetter(this, "SourceActor", "devtools/server/actors/script", true);
@@ -548,10 +548,12 @@ TabSources.prototype = {
     if (!aFrame || !aFrame.script) {
       return new GeneratedLocation();
     }
+    let {lineNumber, columnNumber} =
+        aFrame.script.getOffsetLocation(aFrame.offset);
     return new GeneratedLocation(
       this.createNonSourceMappedActor(aFrame.script.source),
-      aFrame.script.getOffsetLine(aFrame.offset),
-      getOffsetColumn(aFrame.offset, aFrame.script)
+      lineNumber,
+      columnNumber
     );
   },
 
