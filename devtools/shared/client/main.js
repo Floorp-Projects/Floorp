@@ -356,6 +356,22 @@ DebuggerClient.prototype = {
     // cleared scope by the time they run.
     this._eventsEnabled = false;
 
+    let cleanup = () => {
+      this._transport.close();
+      this._transport = null;
+    };
+
+    // If the connection is already closed,
+    // there is no need to detach client
+    // as we won't be able to send any message.
+    if (this._closed) {
+      cleanup();
+      if (aOnClosed) {
+        aOnClosed();
+      }
+      return;
+    }
+
     if (aOnClosed) {
       this.addOneTimeListener('closed', function (aEvent) {
         aOnClosed();
@@ -371,12 +387,7 @@ DebuggerClient.prototype = {
       let client = clients.pop();
       if (!client) {
         // All clients detached.
-        this._transport.close();
-        this._transport = null;
-        this._activeRequests.clear();
-        this._activeRequests = null;
-        this._pendingRequests.clear();
-        this._pendingRequests = null;
+        cleanup();
         return;
       }
       if (client.detach) {
@@ -664,9 +675,19 @@ DebuggerClient.prototype = {
     if (!this.mainRoot) {
       throw Error("Have not yet received a hello packet from the server.");
     }
+    let type = aRequest.type || "";
     if (!aRequest.to) {
-      let type = aRequest.type || "";
       throw Error("'" + type + "' request packet has no destination.");
+    }
+    if (this._closed) {
+      let msg = "'" + type + "' request packet to " +
+                "'" + aRequest.to + "' " +
+               "can't be sent as the connection is closed.";
+      let resp = { error: "connectionClosed", message: msg };
+      if (aOnResponse) {
+        aOnResponse(resp);
+      }
+      return promise.reject(resp);
     }
 
     let request = new Request(aRequest);
@@ -1041,7 +1062,32 @@ DebuggerClient.prototype = {
    *        the stream.
    */
   onClosed: function (aStatus) {
+    this._closed = true;
     this.emit("closed");
+
+    // Reject all pending and active requests
+    let reject = function(type, request, actor) {
+      // Server can send packets on its own and client only pass a callback
+      // to expectReply, so that there is no request object.
+      let msg;
+      if (request.request) {
+        msg = "'" + request.request.type + "' " + type + " request packet" +
+              " to '" + actor + "' " +
+              "can't be sent as the connection just closed.";
+      } else {
+        msg = "server side packet from '" + actor + "' can't be received " +
+              "as the connection just closed.";
+      }
+      let packet = { error: "connectionClosed", message: msg };
+      request.emit("json-reply", packet);
+    };
+
+    this._pendingRequests.forEach((list, actor) => {
+      list.forEach(request => reject("pending", request, actor));
+    });
+    this._pendingRequests.clear();
+    this._activeRequests.forEach(reject.bind(null, "active"));
+    this._activeRequests.clear();
 
     // The |_pools| array on the client-side currently is used only by
     // protocol.js to store active fronts, mirroring the actor pools found in

@@ -22,7 +22,7 @@ loop.webapp = (function(_, OT, mozL10n) {
   var HomeView = React.createClass({displayName: "HomeView",
     render: function() {
       return (
-        React.createElement("p", null, mozL10n.get("welcome", {clientShortname: mozL10n.get("clientShortname2")}))
+        React.createElement("p", null, mozL10n.get("welcome", { clientShortname: mozL10n.get("clientShortname2") }))
       );
     }
   });
@@ -63,7 +63,7 @@ loop.webapp = (function(_, OT, mozL10n) {
         platform: mozL10n.get("unsupported_platform_" + this.props.platform)
       };
       var unsupportedLearnMoreText = mozL10n.get("unsupported_platform_learn_more_link",
-        {clientShortname: mozL10n.get("clientShortname2")});
+        { clientShortname: mozL10n.get("clientShortname2") });
 
       return (
         React.createElement("div", {className: "highlight-issue-box"}, 
@@ -94,7 +94,7 @@ loop.webapp = (function(_, OT, mozL10n) {
       }
       return (
         React.createElement("div", {className: "promote-firefox"}, 
-          React.createElement("h3", null, mozL10n.get("promote_firefox_hello_heading", {brandShortname: mozL10n.get("brandShortname")})), 
+          React.createElement("h3", null, mozL10n.get("promote_firefox_hello_heading", { brandShortname: mozL10n.get("brandShortname") })), 
           React.createElement("p", null, 
             React.createElement("a", {className: "btn btn-large btn-accept", 
                href: loop.config.downloadFirefoxUrl}, 

@@ -5853,15 +5853,16 @@ var XPInstallObserver = {
   },
 
   observe: function(aSubject, aTopic, aData) {
-    let installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
-    let tab = BrowserApp.getTabForBrowser(installInfo.browser);
-    let strings = Strings.browser;
-
-    let host = null;
-    if (installInfo.originatingURI) {
-      host = installInfo.originatingURI.host;
+    let installInfo, tab, host;
+    if (aSubject) {
+      installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
+      tab = BrowserApp.getTabForBrowser(installInfo.browser);
+      if (installInfo.originatingURI) {
+        host = installInfo.originatingURI.host;
+      }
     }
 
+    let strings = Strings.browser;
     let brandShortName = Strings.brand.GetStringFromName("brandShortName");
 
     switch (aTopic) {

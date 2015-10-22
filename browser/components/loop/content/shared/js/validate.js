@@ -113,9 +113,9 @@ loop.validate = (function() {
     _dependencyMatchTypes: function(value, types) {
       return types.some(function(Type) {
         try {
-          return typeof Type === "undefined"         || // skip checking
-                 Type === null && value === null     || // null type
-                 value.constructor === Type          || // native type
+          return typeof Type === "undefined" || // skip checking
+                 Type === null && value === null || // null type
+                 value.constructor === Type || // native type
                  Type.prototype.isPrototypeOf(value) || // custom type
                  typeName(value) === typeName(Type);    // type string eq.
         } catch (e) {

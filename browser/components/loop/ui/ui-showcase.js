@@ -23,9 +23,9 @@
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
 
   // 2. Standalone webapp
-  var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
-  var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
-  var StandaloneRoomView      = loop.standaloneRoomViews.StandaloneRoomView;
+  var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
+  var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
+  var StandaloneRoomView = loop.standaloneRoomViews.StandaloneRoomView;
   var StandaloneHandleUserAgentView = loop.standaloneRoomViews.StandaloneHandleUserAgentView;
 
   // 3. Shared components
@@ -49,7 +49,7 @@
     return false;
   }
 
-  function noop(){}
+  function noop() {}
 
   // We save the visibility change listeners so that we can fake an event
   // to the panel once we've loaded all the views.
@@ -141,12 +141,12 @@
         // (eg MacBook Pro) where that is the default camera resolution.
         var newStoreState = {
           localVideoDimensions: {
-            camera: {height: 480, orientation: 0, width: 640}
+            camera: { height: 480, orientation: 0, width: 640 }
           },
           mediaConnected: options.mediaConnected,
           receivingScreenShare: !!options.receivingScreenShare,
           remoteVideoDimensions: {
-            camera: {height: 480, orientation: 0, width: 640}
+            camera: { height: 480, orientation: 0, width: 640 }
           },
           remoteVideoEnabled: options.remoteVideoEnabled,
           // Override the matchMedia, this is so that the correct version is
@@ -172,7 +172,7 @@
           // For showcase purposes, this shouldn't matter much, as the sizes
           // of things being shared will be fairly arbitrary.
           newStoreState.remoteVideoDimensions.screen =
-          {height: 456, orientation: 0, width: 641};
+          { height: 456, orientation: 0, width: 641 };
         }
 
         store.setStoreState(newStoreState);
@@ -339,7 +339,7 @@
     }]
   }));
 
-  textChatStore.setStoreState({textChatEnabled: true});
+  textChatStore.setStoreState({ textChatEnabled: true });
 
   dispatcher.dispatch(new sharedActions.SendTextChatMessage({
     contentType: loop.shared.utils.CHAT_CONTENT_TYPES.TEXT,
@@ -392,7 +392,7 @@
   };
 
   var mockMozLoopNoRoomsNoContext = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopNoRoomsNoContext.getSelectedTabMetadata = function(){};
+  mockMozLoopNoRoomsNoContext.getSelectedTabMetadata = function() {};
   mockMozLoopNoRoomsNoContext.rooms.getAll = function(version, callback) {
     callback(null, []);
   };
@@ -425,7 +425,7 @@
   };
 
   var mockMozLoopLoggedInNoContext = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedInNoContext.getSelectedTabMetadata = function(){};
+  mockMozLoopLoggedInNoContext.getSelectedTabMetadata = function() {};
   mockMozLoopLoggedInNoContext.userProfile = _.cloneDeep(mockMozLoopLoggedIn.userProfile);
 
   var mockMozLoopLoggedInLongEmail = _.cloneDeep(navigator.mozLoop);
@@ -553,7 +553,7 @@
             React.createElement("a", {href: this.makeId("#")}, " ¶")
           ), 
           React.createElement("div", {className: "comp"}, 
-            React.createElement(Frame, {className: cx({dashed: this.props.dashed}), 
+            React.createElement(Frame, {className: cx({ dashed: this.props.dashed }), 
                    cssClass: this.props.cssClass, 
                    height: height, 
                    onContentsRendered: this.props.onContentsRendered, 
@@ -883,7 +883,7 @@
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   roomState: ROOM_STATES.INIT, 
                   roomStore: invitationRoomStore})
               )
@@ -898,7 +898,7 @@
                   dispatcher: dispatcher, 
                   error: {}, 
                   mozLoop: navigator.mozLoop, 
-                  onClose: function(){}, 
+                  onClose: function() {}, 
                   roomData: {}, 
                   savingContext: false, 
                   show: true}
@@ -919,7 +919,7 @@
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
                   roomStore: desktopRoomStoreLoading})
@@ -937,7 +937,7 @@
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
                   roomStore: roomStore})
@@ -955,7 +955,7 @@
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
                   roomStore: desktopRoomStoreMedium})
@@ -973,7 +973,7 @@
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
                   roomStore: desktopRoomStoreLarge})
@@ -990,7 +990,7 @@
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomStore: desktopLocalFaceMuteRoomStore})
               )
@@ -1007,7 +1007,7 @@
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
                   mozLoop: navigator.mozLoop, 
-                  onCallTerminated: function(){}, 
+                  onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomStore: desktopRemoteFaceMuteRoomStore})
               )
@@ -1321,9 +1321,9 @@
       React.render(React.createElement(App, null), document.getElementById("main"));
 
       for (var listener of visibilityListeners) {
-        listener({target: {hidden: false}});
+        listener({ target: { hidden: false } });
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       uncaughtError = err;
     }
@@ -1358,7 +1358,7 @@
 
         if (warningsMismatch) {
           liTestFail.className = "test";
-          liTestFail.className = liTestFail.className + " fail";
+          liTestFail.className += " fail";
           h2Node.innerHTML = "Unexpected number of warnings detected in UI-Showcase";
           preErrorNode.className = "error";
           preErrorNode.innerHTML = "Got: " + caughtWarnings.length + "\n" + "Expected: " + expectedWarningsCount;
@@ -1368,7 +1368,7 @@
         }
         if (uncaughtError) {
           liTestFail.className = "test";
-          liTestFail.className = liTestFail.className + " fail";
+          liTestFail.className += " fail";
           h2Node.innerHTML = "Errors rendering UI-Showcase";
           preErrorNode.className = "error";
           preErrorNode.innerHTML = uncaughtError + "\n" + uncaughtError.stack;

@@ -13,7 +13,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm", this);
 add_task(loadLoopPanel);
 
 add_task(function* test_mozLoop_charPref() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("loop.test");
   });
 
@@ -30,7 +30,7 @@ add_task(function* test_mozLoop_charPref() {
 });
 
 add_task(function* test_mozLoop_boolPref() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("loop.testBool");
   });
 
