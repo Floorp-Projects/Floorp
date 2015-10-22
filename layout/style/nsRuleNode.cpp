@@ -9434,7 +9434,7 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   // Never use cached data for animated style inside a pseudo-element;
   // see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto.
   if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {
-    data = mStyleData.GetStyleData(aSID, aContext);
+    data = mStyleData.GetStyleData(aSID, aContext, aComputeData);
     if (MOZ_LIKELY(data != nullptr)) {
       // With this same bit set, we do two different things:
       // For reset structs, mark the struct as having been retrieved for
