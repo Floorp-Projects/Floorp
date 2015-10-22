@@ -739,16 +739,13 @@ public class BrowserApp extends GeckoApp
 
         if (AppConstants.MOZ_SWITCHBOARD) {
             // Initializes the default URLs the first time.
-            Log.d(LOGTAG, "init Server Urls");
-            SwitchBoard.initDefaultServerUrls("https://mozilla-switchboard.herokuapp.com/SwitchboardURLs.php", "https://mozilla-switchboard.herokuapp.com/SwitchboardDriver.php", true);
+            SwitchBoard.initDefaultServerUrls("https://switchboard-server.dev.mozaws.net/urls", "https://switchboard-server.dev.mozaws.net/v1", true);
 
             // Looks at the server if there are changes in the server URL that should be used in the future
-            Log.d(LOGTAG, "update server urls from remote");
             new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
 
             // Loads the actual config. This can be done on app start or on app onResume() depending
             // how often you want to update the config.
-            Log.d(LOGTAG, "update app config");
             new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER).execute();
         }
 
