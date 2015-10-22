@@ -128,7 +128,7 @@ var PDUBuilder = {
     let headerLength = 0;
     this.buf = "";
     if (options.headers) {
-      for each (let header in options.headers) {
+      for (let header of options.headers) {
         headerLength += 2; // id + length octets
         if (header.octets) {
           headerLength += header.octets.length;
@@ -149,12 +149,12 @@ var PDUBuilder = {
     if (options.headers) {
       this.writeHexOctet(headerLength);
 
-      for each (let header in options.headers) {
+      for (let header of options.headers) {
         this.writeHexOctet(header.id);
         this.writeHexOctet(header.length);
 
         if (header.octets) {
-          for each (let octet in header.octets) {
+          for (let octet of header.octets) {
             this.writeHexOctet(octet);
           }
         }

@@ -256,17 +256,15 @@ var AnimationPlayerActor = ActorClass({
   },
 
   /**
-   * Get the current state of the AnimationPlayer (currentTime, playState, ...).
-   * Note that the initial state is returned as the form of this actor when it
-   * is initialized.
+   * Return the current start of the Animation.
    * @return {Object}
    */
-  getCurrentState: method(function() {
-    // Remember the startTime each time getCurrentState is called, it may be
-    // useful when animations get paused. As in, when an animation gets paused,
-    // it's startTime goes back to null, but the front-end might still be
-    // interested in knowing what the previous startTime was. So everytime it
-    // is set, remember it and send it along with the newState.
+  getState: function() {
+    // Remember the startTime each time getState is called, it may be useful
+    // when animations get paused. As in, when an animation gets paused, its
+    // startTime goes back to null, but the front-end might still be interested
+    // in knowing what the previous startTime was. So everytime it is set,
+    // remember it and send it along with the newState.
     if (this.player.startTime) {
       this.previousStartTime = this.player.startTime;
     }
@@ -274,7 +272,7 @@ var AnimationPlayerActor = ActorClass({
     // Note that if you add a new property to the state object, make sure you
     // add the corresponding property in the AnimationPlayerFront' initialState
     // getter.
-    let newState = {
+    return {
       type: this.getType(),
       // startTime is null whenever the animation is paused or waiting to start.
       startTime: this.player.startTime,
@@ -286,17 +284,27 @@ var AnimationPlayerActor = ActorClass({
       duration: this.getDuration(),
       delay: this.getDelay(),
       iterationCount: this.getIterationCount(),
-      // isRunningOnCompositor is important for developers to know if their
-      // animation is hitting the fast path or not. Currently only true for
-      // Firefox OS (where we have compositor animations enabled).
-      // Returns false whenever the animation is paused as it is taken off the
-      // compositor then.
+      // animation is hitting the fast path or not. Returns false whenever the
+      // animation is paused as it is taken off the compositor then.
       isRunningOnCompositor: this.player.isRunningOnCompositor,
       // The document timeline's currentTime is being sent along too. This is
       // not strictly related to the node's animationPlayer, but is useful to
       // know the current time of the animation with respect to the document's.
       documentCurrentTime: this.node.ownerDocument.timeline.currentTime
     };
+  },
+
+  /**
+   * Get the current state of the AnimationPlayer (currentTime, playState, ...).
+   * Note that the initial state is returned as the form of this actor when it
+   * is initialized.
+   * This protocol method only returns a trimed down version of this state in
+   * case some properties haven't changed since last time (since the front can
+   * reconstruct those). If you want the full state, use the getState method.
+   * @return {Object}
+   */
+  getCurrentState: method(function() {
+    let newState = this.getState();
 
     // If we've saved a state before, compare and only send what has changed.
     // It's expected of the front to also save old states to re-construct the
@@ -328,20 +336,26 @@ var AnimationPlayerActor = ActorClass({
    * the the front.
    */
   onAnimationMutation: function(mutations) {
+    let isCurrentAnimation = animation => animation === this.player;
+    let hasCurrentAnimation = animations => animations.some(isCurrentAnimation);
     let hasChanged = false;
+
     for (let {removedAnimations, changedAnimations} of mutations) {
-      if (removedAnimations.length) {
+      if (hasCurrentAnimation(removedAnimations)) {
         // Reset the local copy of the state on removal, since the animation can
         // be kept on the client and re-added, its state needs to be sent in
         // full.
         this.currentState = null;
       }
 
-      if (!changedAnimations.length) {
-        return;
-      }
-      if (changedAnimations.some(animation => animation === this.player)) {
-        hasChanged = true;
+      if (hasCurrentAnimation(changedAnimations)) {
+        // Only consider the state has having changed if any of delay, duration
+        // or iterationcount has changed (for now at least).
+        let newState = this.getState();
+        let oldState = this.currentState;
+        hasChanged = newState.delay !== oldState.delay ||
+                     newState.iterationCount !== oldState.iterationCount ||
+                     newState.duration !== oldState.duration;
         break;
       }
     }

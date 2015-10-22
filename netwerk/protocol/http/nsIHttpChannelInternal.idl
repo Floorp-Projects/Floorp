@@ -39,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(99767aaf-937d-4f2f-8990-bc79bd7c0ece)]
+[scriptable, uuid(9eabaac6-cc7c-4ca1-9430-65f2daaa578f)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -221,6 +221,13 @@ interface nsIHttpChannelInternal : nsISupports
     attribute boolean allowAltSvc;
 
     readonly attribute PRTime lastModifiedTime;
+
+    /**
+     * Force a channel that has not been AsyncOpen'ed to skip any check for possible
+     * interception and proceed immediately to open a previously-synthesized cache
+     * entry using the provided ID.
+     */
+    void forceIntercepted(in uint64_t aInterceptionID);
 
     readonly attribute boolean responseSynthesized;
 

@@ -276,6 +276,9 @@ class B2GXPCShellRunner(MozbuildObject):
         log = kwargs.pop("log")
         self.log_manager.enable_unstructured()
 
+        if kwargs["device_name"].startswith('emulator') and 'x86' in kwargs["device_name"]:
+            kwargs["emulator"] = 'x86'
+
         if kwargs["xpcshell"] is None:
             kwargs["xpcshell"] = "xpcshell"
         if kwargs["b2g_path"] is None:
@@ -303,9 +306,6 @@ class B2GXPCShellRunner(MozbuildObject):
             kwargs["testingModulesDir"] = os.path.join(self.tests_dir, 'modules')
         if kwargs["use_device_libs"] is None:
             kwargs["use_device_libs"] = True
-
-        if kwargs["device_name"].startswith('emulator') and 'x86' in kwargs["device_name"]:
-            kwargs["emulator"] = 'x86'
 
         parser = parser_b2g()
         options = argparse.Namespace(**kwargs)

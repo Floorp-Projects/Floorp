@@ -3786,7 +3786,8 @@ RilObject.prototype = {
     }
 
     let list = null;
-    for each (let ll in usedCellBroadcastConfigs) {
+    for (let key in usedCellBroadcastConfigs) {
+      let ll = usedCellBroadcastConfigs[key];
       if (ll == null) {
         continue;
       }

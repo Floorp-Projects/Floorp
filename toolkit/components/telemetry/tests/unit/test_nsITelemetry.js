@@ -60,7 +60,7 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   }
 
   // there should be exactly one element per bucket
-  for each(var i in s.counts) {
+  for (var i of s.counts) {
     do_check_eq(i, 1);
   }
   var hgrams = Telemetry.histogramSnapshots
@@ -80,7 +80,7 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   // Check that clearing works.
   h.clear();
   var s = h.snapshot();
-  for each(var i in s.counts) {
+  for (var i of s.counts) {
     do_check_eq(i, 0);
   }
   do_check_eq(s.sum, 0);
@@ -235,7 +235,7 @@ function test_histogramFrom() {
       "TELEMETRY_TEST_COUNT", // COUNT
   ];
 
-  for each (let name in names) {
+  for (let name of names) {
     let [min, max, bucket_count] = [1, INT_MAX - 1, 10]
     let original = Telemetry.getHistogramById(name);
     let clone = Telemetry.histogramFrom("clone" + name, name);
@@ -877,7 +877,7 @@ function run_test()
   test_instantiate();
 
   let kinds = [Telemetry.HISTOGRAM_EXPONENTIAL, Telemetry.HISTOGRAM_LINEAR]
-  for each (let histogram_type in kinds) {
+  for (let histogram_type of kinds) {
     let [min, max, bucket_count] = [1, INT_MAX - 1, 10]
     test_histogram(histogram_type, "test::"+histogram_type, min, max, bucket_count);
 

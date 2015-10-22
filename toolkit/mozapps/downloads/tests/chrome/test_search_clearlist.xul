@@ -55,7 +55,7 @@ function test()
   sites.push(searchTerm);
 
   try {
-    for each (let site in sites) {
+    for (let site of sites) {
       stmt.bindByIndex(0, filePath);
       stmt.bindByIndex(1, "http://" + site + "/file");
       stmt.bindByIndex(2, dm.DOWNLOAD_FINISHED);

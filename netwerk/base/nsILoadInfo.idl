@@ -13,16 +13,19 @@ interface nsIPrincipal;
 
 %{C++
 #include "nsTArray.h"
+#include "mozilla/BasePrincipal.h"
 %}
 
 [ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 typedef unsigned long nsSecurityFlags;
 
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(c6dacd0c-7faf-4943-811f-03583591bc85)]
+[scriptable, builtinclass, uuid(51313616-163f-4be1-aba0-e3d471b7f7a2)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -338,6 +341,29 @@ interface nsILoadInfo : nsISupports
   {
     uint64_t result;
     mozilla::DebugOnly<nsresult> rv = GetParentOuterWindowID(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
+
+  /**
+   * Customized OriginAttributes within LoadInfo to allow overwriting of the
+   * default originAttributes from the loadingPrincipal.
+   */
+  [implicit_jscontext, binaryname(ScriptableOriginAttributes)]
+  attribute jsval originAttributes;
+
+  [noscript, nostdcall, binaryname(GetOriginAttributes)]
+  OriginAttributes binaryGetOriginAttributes();
+
+  [noscript, nostdcall, binaryname(SetOriginAttributes)]
+  void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
+
+%{ C++
+  inline mozilla::OriginAttributes GetOriginAttributes()
+  {
+    mozilla::OriginAttributes result;
+    mozilla::DebugOnly<nsresult> rv = GetOriginAttributes(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;
   }

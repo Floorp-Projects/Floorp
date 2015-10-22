@@ -638,8 +638,10 @@ var gViewController = {
     this.viewObjects["detail"] = gDetailView;
     this.viewObjects["updates"] = gUpdatesView;
 
-    for each (let view in this.viewObjects)
+    for (let type in this.viewObjects) {
+      let view = this.viewObjects[type];
       view.initialize();
+    }
 
     window.controllers.appendController(this);
 
@@ -655,7 +657,8 @@ var gViewController = {
       this.currentViewObj.hide();
     this.currentViewRequest = 0;
 
-    for each(let view in this.viewObjects) {
+    for (let type in this.viewObjects) {
+      let view = this.viewObjects[type];
       if ("shutdown" in view) {
         try {
           view.shutdown();

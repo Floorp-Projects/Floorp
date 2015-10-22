@@ -77,6 +77,7 @@ function setupChannel(path, loadContext) {
                                 null,      // aTriggeringPrincipal
                                 Ci.nsILoadInfo.SEC_NORMAL,
                                 Ci.nsIContentPolicy.TYPE_OTHER);
+  channel.loadInfo.originAttributes = loadContext.originAttributes;
   channel.notificationCallbacks = loadContext;
   channel.QueryInterface(Ci.nsIHttpChannel);
   return channel;

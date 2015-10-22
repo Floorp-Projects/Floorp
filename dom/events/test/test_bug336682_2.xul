@@ -38,7 +38,7 @@ addLoadEvent(function() {
     }
   }
 
-  for each(var event in ["online", "offline"]) {
+  for (var event of ["online", "offline"]) {
     document.documentElement.addEventListener(
       event,
       makeHandler("document.body.addEventListener('%1', ..., false)",

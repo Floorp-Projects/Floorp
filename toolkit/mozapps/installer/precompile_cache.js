@@ -70,7 +70,7 @@ function get_modules_under(uri) {
 
 function load_modules_under(spec, uri) {
   var entries = get_modules_under(uri).sort();
-  for each (let entry in entries) {
+  for (let entry of entries) {
     try {
       dump(spec + entry + "\n");
       Cu.import(spec + entry, null);

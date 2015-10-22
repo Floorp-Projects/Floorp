@@ -260,7 +260,7 @@ BinaryPropertyListReader.prototype = {
    * It can be called on the prototype.
    */
   canProcess: function BPLR_canProcess(aBuffer) {
-    return [String.fromCharCode(c) for each (c in new Uint8Array(aBuffer, 0, 8))].
+    return Array.from(new Uint8Array(aBuffer, 0, 8)).map(c => String.fromCharCode(c)).
            join("") == "bplist00";
   },
 
@@ -377,7 +377,7 @@ BinaryPropertyListReader.prototype = {
   function BPLR__readString(aByteOffset, aNumberOfChars, aUnicode) {
     let codes = this._readUnsignedInts(aByteOffset, aUnicode ? 2 : 1,
                                        aNumberOfChars);
-    return [String.fromCharCode(c) for each (c in codes)].join("");
+    return codes.map(c => String.fromCharCode(c)).join("");
   },
 
   /**

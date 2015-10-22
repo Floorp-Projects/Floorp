@@ -290,7 +290,7 @@ exports["test PWPB Single DOM Selection"] = function(assert, done) {
         "selection.html with single DOM Selection works.");
 
       let selectionCount = 0;
-      for each (let sel in selection) {
+      for (let sel of selection) {
         selectionCount++;
 
         assert.equal(sel.text, "foo",
@@ -326,7 +326,7 @@ exports["test PWPB Textarea Selection"] = function(assert, done) {
         "selection.html with Textarea Selection works.");
 
       let selectionCount = 0;
-      for each (let sel in selection) {
+      for (let sel of selection) {
         selectionCount++;
 
         assert.equal(sel.text, "noodles",
@@ -365,7 +365,7 @@ exports["test PWPB Set HTML in Multiple DOM Selection"] = function(assert, done)
         "selection.html with DOM Selection works.");
 
       let selectionCount = 0;
-      for each (let sel in selection) {
+      for (let sel of selection) {
 
         assert.equal(sel.text, expectedText[selectionCount],
           "iterable selection.text with multiple DOM Selection works.");
@@ -403,7 +403,7 @@ exports["test PWPB Set Text in Textarea Selection"] = function(assert, done) {
         "selection.html with Textarea Selection works.");
 
       let selectionCount = 0;
-      for each (let sel in selection) {
+      for (let sel of selection) {
         selectionCount++;
 
         assert.equal(sel.text, text,

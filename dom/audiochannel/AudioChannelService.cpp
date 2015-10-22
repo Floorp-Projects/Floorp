@@ -774,6 +774,11 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
+  if (aAudioChannel == AudioChannel::System) {
+    // Workaround for bug1183033, system channel type can always playback.
+    return;
+  }
+
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mMuted = aMuted;
   RefreshAgentsVolume(aWindow);

@@ -673,7 +673,7 @@ MobileMessageDB.prototype = {
         stores = txn.objectStore(storeNames[0]);
       } else {
         stores = [];
-        for each (let storeName in storeNames) {
+        for (let storeName of storeNames) {
           if (DEBUG) debug("Retrieving object store " + storeName);
           stores.push(txn.objectStore(storeName));
         }
@@ -1460,7 +1460,7 @@ MobileMessageDB.prototype = {
               let timestamp = messageRecord.timestamp;
               // Setup participantIdsIndex.
               messageRecord.participantIdsIndex = [];
-              for each (let id in participantIds) {
+              for (let id of participantIds) {
                 messageRecord.participantIdsIndex.push([id, timestamp]);
               }
               if (threadRecord) {
@@ -2857,7 +2857,7 @@ MobileMessageDB.prototype = {
         aMessageRecord.threadIdIndex = [threadId, timestamp];
         // Setup participantIdsIndex.
         aMessageRecord.participantIdsIndex = [];
-        for each (let id in participantIds) {
+        for (let id of participantIds) {
           aMessageRecord.participantIdsIndex.push([id, timestamp]);
         }
 

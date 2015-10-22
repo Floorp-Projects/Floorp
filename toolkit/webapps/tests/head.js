@@ -64,7 +64,7 @@ function dirContainsOnly(dir, expectedFiles) {
     let ret = true;
 
     // Find unexpected files
-    for each (let {path} in entries) {
+    for (let {path} of entries) {
       if (expectedFiles.indexOf(path) == -1) {
         info("Unexpected file: " + path);
         ret = false;
@@ -72,7 +72,7 @@ function dirContainsOnly(dir, expectedFiles) {
     }
 
     // Find missing files
-    for each (let expectedPath in expectedFiles) {
+    for (let expectedPath of expectedFiles) {
       if (entries.findIndex(({path}) => path == expectedPath) == -1) {
         info("Missing file: " + expectedPath);
         ret = false;
@@ -95,7 +95,7 @@ var dirSize = Task.async(function*(aDir) {
 
   let size = 0;
 
-  for each (let entry in entries) {
+  for (let entry of entries) {
     if (entry.isDir) {
       size += yield dirSize(entry.path);
     } else {

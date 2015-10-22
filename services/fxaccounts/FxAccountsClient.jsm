@@ -29,6 +29,9 @@ const STATUS_CODE_TO_OTHER_ERRORS_LABEL = {
   500: 7,
 };
 
+const SIGNIN = "/account/login";
+const SIGNUP = "/account/create";
+
 this.FxAccountsClient = function(host = HOST) {
   this.host = host;
 
@@ -68,33 +71,10 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
-   * Create a new Firefox Account and authenticate
+   * Common code from signIn and signUp.
    *
-   * @param email
-   *        The email address for the account (utf8)
-   * @param password
-   *        The user's password
-   * @return Promise
-   *        Returns a promise that resolves to an object:
-   *        {
-   *          uid: the user's unique ID (hex)
-   *          sessionToken: a session token (hex)
-   *          keyFetchToken: a key fetch token (hex)
-   *        }
-   */
-  signUp: function(email, password) {
-    return Credentials.setup(email, password).then((creds) => {
-      let data = {
-        email: creds.emailUTF8,
-        authPW: CommonUtils.bytesAsHex(creds.authPW),
-      };
-      return this._request("/account/create", "POST", null, data);
-    });
-  },
-
-  /**
-   * Authenticate and create a new session with the Firefox Account API server
-   *
+   * @param path
+   *        Request URL path. Can be /account/create or /account/login
    * @param email
    *        The email address for the account (utf8)
    * @param password
@@ -114,10 +94,12 @@ this.FxAccountsClient.prototype = {
    *          uid: the user's unique ID (hex)
    *          unwrapBKey: used to unwrap kB, derived locally from the
    *                      password (not revealed to the FxA server)
-   *          verified: flag indicating verification status of the email
+   *          verified (optional): flag indicating verification status of the
+   *                               email
    *        }
    */
-  signIn: function signIn(email, password, getKeys=false, retryOK=true) {
+  _createSession: function(path, email, password, getKeys=false,
+                           retryOK=true) {
     return Credentials.setup(email, password).then((creds) => {
       let data = {
         authPW: CommonUtils.bytesAsHex(creds.authPW),
@@ -125,7 +107,7 @@ this.FxAccountsClient.prototype = {
       };
       let keys = getKeys ? "?keys=true" : "";
 
-      return this._request("/account/login" + keys, "POST", null, data).then(
+      return this._request(path + keys, "POST", null, data).then(
         // Include the canonical capitalization of the email in the response so
         // the caller can set its signed-in user state accordingly.
         result => {
@@ -135,7 +117,7 @@ this.FxAccountsClient.prototype = {
           return result;
         },
         error => {
-          log.debug("signIn error: " + JSON.stringify(error));
+          log.debug("Session creation failed", error);
           // If the user entered an email with different capitalization from
           // what's stored in the database (e.g., Greta.Garbo@gmail.COM as
           // opposed to greta.garbo@gmail.com), the server will respond with a
@@ -152,12 +134,64 @@ this.FxAccountsClient.prototype = {
               log.error("Server returned errno 120 but did not provide email");
               throw error;
             }
-            return this.signIn(error.email, password, getKeys, false);
+            return this._createSession(path, error.email, password, getKeys,
+                                       false);
           }
           throw error;
         }
       );
     });
+  },
+
+  /**
+   * Create a new Firefox Account and authenticate
+   *
+   * @param email
+   *        The email address for the account (utf8)
+   * @param password
+   *        The user's password
+   * @param [getKeys=false]
+   *        If set to true the keyFetchToken will be retrieved
+   * @return Promise
+   *        Returns a promise that resolves to an object:
+   *        {
+   *          uid: the user's unique ID (hex)
+   *          sessionToken: a session token (hex)
+   *          keyFetchToken: a key fetch token (hex),
+   *          unwrapBKey: used to unwrap kB, derived locally from the
+   *                      password (not revealed to the FxA server)
+   *        }
+   */
+  signUp: function(email, password, getKeys=false) {
+    return this._createSession(SIGNUP, email, password, getKeys,
+                               false /* no retry */);
+  },
+
+  /**
+   * Authenticate and create a new session with the Firefox Account API server
+   *
+   * @param email
+   *        The email address for the account (utf8)
+   * @param password
+   *        The user's password
+   * @param [getKeys=false]
+   *        If set to true the keyFetchToken will be retrieved
+   * @return Promise
+   *        Returns a promise that resolves to an object:
+   *        {
+   *          authAt: authentication time for the session (seconds since epoch)
+   *          email: the primary email for this account
+   *          keyFetchToken: a key fetch token (hex)
+   *          sessionToken: a session token (hex)
+   *          uid: the user's unique ID (hex)
+   *          unwrapBKey: used to unwrap kB, derived locally from the
+   *                      password (not revealed to the FxA server)
+   *          verified: flag indicating verification status of the email
+   *        }
+   */
+  signIn: function signIn(email, password, getKeys=false) {
+    return this._createSession(SIGNIN, email, password, getKeys,
+                               true /* retry */);
   },
 
   /**

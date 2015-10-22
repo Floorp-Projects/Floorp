@@ -16,7 +16,6 @@ task:
       build-flame-kk-spark-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
-      MOZHARNESS_CONFIG: b2g/taskcluster-spark.py
   extra:
     treeherderEnv:
       - staging

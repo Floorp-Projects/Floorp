@@ -809,7 +809,7 @@ var Impl = {
     }
 
     if (si.process) {
-      for each (let field in Object.keys(si)) {
+      for (let field of Object.keys(si)) {
         if (field == "process")
           continue;
         ret[field] = si[field] - si.process

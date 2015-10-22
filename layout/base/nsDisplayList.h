@@ -317,8 +317,7 @@ public:
    * layerized.
    */
   bool IsBuildingNonLayerizedScrollbar() const {
-    return mCurrentScrollbarTarget != FrameMetrics::NULL_SCROLL_ID &&
-           !mCurrentScrollbarWillHaveLayer;
+    return mIsBuildingScrollbar && !mCurrentScrollbarWillHaveLayer;
   }
   /**
    * Calling this setter makes us include all out-of-flow descendant
@@ -763,12 +762,14 @@ public:
     AutoCurrentScrollbarInfoSetter(nsDisplayListBuilder* aBuilder, ViewID aScrollTargetID,
                                    uint32_t aScrollbarFlags, bool aWillHaveLayer)
      : mBuilder(aBuilder) {
+      aBuilder->mIsBuildingScrollbar = true;
       aBuilder->mCurrentScrollbarTarget = aScrollTargetID;
       aBuilder->mCurrentScrollbarFlags = aScrollbarFlags;
       aBuilder->mCurrentScrollbarWillHaveLayer = aWillHaveLayer;
     }
     ~AutoCurrentScrollbarInfoSetter() {
       // No need to restore old values because scrollbars cannot be nested.
+      mBuilder->mIsBuildingScrollbar = false;
       mBuilder->mCurrentScrollbarTarget = FrameMetrics::NULL_SCROLL_ID;
       mBuilder->mCurrentScrollbarFlags = 0;
       mBuilder->mCurrentScrollbarWillHaveLayer = false;
@@ -1166,6 +1167,7 @@ private:
   uint32_t                       mCurrentScrollbarFlags;
   BlendModeSet                   mContainedBlendModes;
   Preserves3DContext             mPreserves3DCtx;
+  bool                           mIsBuildingScrollbar;
   bool                           mCurrentScrollbarWillHaveLayer;
   bool                           mBuildCaret;
   bool                           mIgnoreSuppression;

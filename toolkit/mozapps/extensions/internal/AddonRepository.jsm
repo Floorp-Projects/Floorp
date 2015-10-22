@@ -856,7 +856,8 @@ this.AddonRepository = {
 
       // Include any compatibility overrides for addons not hosted by the
       // remote repository.
-      for each (let addonCompat in aCompatData) {
+      for (let id in aCompatData) {
+        let addonCompat = aCompatData[id];
         if (addonCompat.hosted)
           continue;
 
@@ -963,7 +964,7 @@ this.AddonRepository = {
     this._searching = false;
     this._request = null;
     // The callback may want to trigger a new search so clear references early
-    let addons = [result.addon for each(result in aResults)];
+    let addons = aResults.map(result => result.addon);
     let callback = this._callback;
     this._callback = null;
     callback.searchSucceeded(addons, addons.length, aTotalResults);
@@ -1501,7 +1502,7 @@ this.AddonRepository = {
     let localAddonIds = {ids: null, sourceURIs: null};
 
     AddonManager.getAllAddons(function getLocalAddonIds_getAllAddons(aAddons) {
-      localAddonIds.ids = [a.id for each (a in aAddons)];
+      localAddonIds.ids = aAddons.map(a => a.id);
       if (localAddonIds.sourceURIs)
         aCallback(localAddonIds);
     });

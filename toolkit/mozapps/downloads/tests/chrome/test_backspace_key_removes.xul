@@ -94,7 +94,7 @@ function test()
       "state, currBytes, maxBytes, preferredAction, autoResume) " +
     "VALUES (:name, :source, :target, :startTime, :endTime, :state, " +
       ":currBytes, :maxBytes, :preferredAction, :autoResume)");
-  for each (var dl in DownloadData) {
+  for (var dl of DownloadData) {
     for (var prop in dl)
       stmt.params[prop] = dl[prop];
 

@@ -334,6 +334,15 @@ public:
                                       EnabledState aEnabled);
   static nsCSSProperty LookupProperty(const nsACString& aProperty,
                                       EnabledState aEnabled);
+  // As above, but looked up using a property's IDL name.
+  // eCSSPropertyExtra_variable won't be returned from these methods.
+  static nsCSSProperty LookupPropertyByIDLName(
+      const nsAString& aPropertyIDLName,
+      EnabledState aEnabled);
+  static nsCSSProperty LookupPropertyByIDLName(
+      const nsACString& aPropertyIDLName,
+      EnabledState aEnabled);
+
   // Returns whether aProperty is a custom property name, i.e. begins with
   // "--".  This assumes that the CSS Variables pref has been enabled.
   static bool IsCustomPropertyName(const nsAString& aProperty);

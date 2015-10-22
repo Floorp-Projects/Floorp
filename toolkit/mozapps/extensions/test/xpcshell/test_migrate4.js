@@ -132,7 +132,7 @@ function prepare_profile() {
       a6.userDisabled = true;
       a9.userDisabled = false;
 
-      for each (let addon in [a1, a2, a3, a4, a5, a6]) {
+      for (let addon of [a1, a2, a3, a4, a5, a6]) {
         oldSyncGUIDs[addon.id] = addon.syncGUID;
       }
 
