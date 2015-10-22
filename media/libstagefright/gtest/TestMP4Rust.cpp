@@ -5,12 +5,11 @@
 
 #include "gtest/gtest.h"
 #include "mp4_demuxer/MP4Metadata.h"
+#include "mp4parse.h"
 
 #include <stdint.h>
 #include <stdio.h>
 #include <vector>
-
-extern "C" int32_t read_box_from_buffer(uint8_t *buffer, size_t size);
 
 using namespace mp4_demuxer;
 using namespace mozilla;
@@ -18,20 +17,34 @@ using namespace mozilla;
 TEST(rust, MP4MetadataEmpty)
 {
   int32_t rv;
-  rv = read_box_from_buffer(nullptr, 0);
+
+  mp4parse_state* context = mp4parse_new();
+  ASSERT_NE(context, nullptr);
+
+  rv = mp4parse_read(nullptr, nullptr, 0);
+  EXPECT_EQ(rv, -1);
+  rv = mp4parse_read(context, nullptr, 0);
   EXPECT_EQ(rv, -1);
 
   size_t len = 4097;
-  rv = read_box_from_buffer(nullptr, len);
+  rv = mp4parse_read(nullptr, nullptr, len);
+  EXPECT_EQ(rv, -1);
+  rv = mp4parse_read(context, nullptr, len);
   EXPECT_EQ(rv, -1);
 
   std::vector<uint8_t> buf;
-  rv = read_box_from_buffer(buf.data(), buf.size());
+  rv = mp4parse_read(nullptr, buf.data(), buf.size());
+  EXPECT_EQ(rv, -1);
+  rv = mp4parse_read(context, buf.data(), buf.size());
   EXPECT_EQ(rv, -1);
 
   buf.reserve(len);
-  rv = read_box_from_buffer(buf.data(), buf.size());
+  rv = mp4parse_read(nullptr, buf.data(), buf.size());
   EXPECT_EQ(rv, -1);
+  rv = mp4parse_read(context, buf.data(), buf.size());
+  EXPECT_EQ(rv, -1);
+
+  mp4parse_free(context);
 }
 
 TEST(rust, MP4Metadata)
@@ -45,6 +58,11 @@ TEST(rust, MP4Metadata)
   buf.resize(read);
   fclose(f);
 
-  int32_t rv = read_box_from_buffer(buf.data(), buf.size());
+  mp4parse_state* context = mp4parse_new();
+  ASSERT_NE(context, nullptr);
+
+  int32_t rv = mp4parse_read(context, buf.data(), buf.size());
   EXPECT_EQ(rv, 2);
+
+  mp4parse_free(context);
 }

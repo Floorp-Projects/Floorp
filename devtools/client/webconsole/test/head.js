@@ -5,15 +5,12 @@
 
 "use strict";
 
-var {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
-var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
+// shared-head.js handles imports, constants, and utility functions
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
+
 var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var promise = require("promise");
-var {TargetFactory} = require("devtools/client/framework/target");
 var {Utils: WebConsoleUtils} = require("devtools/shared/webconsole/utils");
 var {Messages} = require("devtools/client/webconsole/console-output");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const asyncStorage = require("devtools/shared/async-storage");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);

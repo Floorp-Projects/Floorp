@@ -2,53 +2,41 @@
 
 var Services = Components.utils.import("resource://gre/modules/Services.jsm", {}).Services;
 
-/**
- * Display the result, send it to the harness and quit.
- */
-function finish() {
-  Profiler.pause("This test measures the time between sessionRestoreInit and sessionRestored, ignore everything around that");
-  Profiler.initFromURLQueryParams(location.search);
-  Profiler.finishStartupProfiling();
+// Process Message Manager topics.
+const MSG_REQUEST = "session-restore-test?duration";
+const MSG_PROVIDE = "session-restore-test:duration";
 
-  setTimeout(function () {
-    var startup_info = Services.startup.getStartupInfo();
+Services.cpmm.addMessageListener(MSG_PROVIDE,
+  /**
+   * Display the result, send it to the harness and quit.
+   */
+  function finish(msg) {
+    console.log(`main.js: received data on ${MSG_PROVIDE}`, msg);
+    Services.cpmm.removeMessageListener(MSG_PROVIDE, finish);
+    var duration = msg.data.duration;
 
-    var duration = startup_info.sessionRestored - startup_info.sessionRestoreInit;
+    Profiler.pause("This test measures the time between sessionRestoreInit and sessionRestored, ignore everything around that");
+    Profiler.initFromURLQueryParams(location.search);
+    Profiler.finishStartupProfiling();
 
-    // Show result on screen. Nice but not really necessary.
-    document.getElementById("sessionRestoreInit-to-sessionRestored").textContent = duration + "ms";
+    setTimeout(function () {
+      // Show result on screen. Nice but not really necessary.
+      document.getElementById("sessionRestoreInit-to-sessionRestored").textContent = duration + "ms";
 
-    // Report data to Talos, if possible
-    dumpLog("__start_report" +
-            duration         +
-            "__end_report\n\n");
+      // Report data to Talos, if possible
+      dumpLog("__start_report" +
+              duration         +
+              "__end_report\n\n");
 
-    // Next one is required by the test harness but not used
-    dumpLog("__startTimestamp" +
-            Date.now()         +
-            "__endTimestamp\n\n");
+      // Next one is required by the test harness but not used
+      dumpLog("__startTimestamp" +
+              Date.now()         +
+              "__endTimestamp\n\n");
 
-    goQuitApplication();
-  }, 0);
-}
+      goQuitApplication();
+    }, 0);
+});
 
-function main() {
-  // Collect (and display) data
-  var startup_info = Services.startup.getStartupInfo();
-
-  // The script may be triggered before or after sessionRestored
-  // and sessionRestoreInit are available. If both are available,
-  // we are done.
-  if (typeof startup_info.sessionRestored != "undefined"
-   && typeof startup_info.sessionRestoreInit != "undefined") {
-    finish();
-    return;
-  }
-
-  // Otherwise, we need to wait until *after* sesionstore-windows-restored,
-  // which is the event that sets sessionRestored - since sessionRestoreInit
-  // is set before sessionRestored, we are certain that both are now set.
-  Services.obs.addObserver(finish, "sessionstore-windows-restored", false);
-}
-
-main();
+// In case the add-on has broadcasted the message before we were loaded,
+// request a second broadcast.
+Services.cpmm.sendAsyncMessage(MSG_REQUEST, {});

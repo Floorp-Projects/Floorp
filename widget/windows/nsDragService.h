@@ -23,11 +23,10 @@ public:
   nsDragService();
   virtual ~nsDragService();
   
-  // nsIDragService
-  NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode,
-                               nsISupportsArray *anArrayTransferables,
-                               nsIScriptableRegion *aRegion,
-                               uint32_t aActionType);
+  // nsBaseDragService
+  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+                                         nsIScriptableRegion* aRegion,
+                                         uint32_t aActionType);
 
   // nsIDragSession
   NS_IMETHOD GetData(nsITransferable * aTransferable, uint32_t anItem);

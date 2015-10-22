@@ -1205,9 +1205,10 @@ StackBaseShape::hash(const Lookup& lookup)
 }
 
 /* static */ inline bool
-StackBaseShape::match(UnownedBaseShape* key, const Lookup& lookup)
+StackBaseShape::match(ReadBarriered<UnownedBaseShape*> key, const Lookup& lookup)
 {
-    return key->flags == lookup.flags && key->clasp_ == lookup.clasp;
+    return key.unbarrieredGet()->flags == lookup.flags &&
+           key.unbarrieredGet()->clasp_ == lookup.clasp;
 }
 
 inline
@@ -1451,7 +1452,7 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
         InitialShapeEntry entry = e.front();
         TaggedProto proto = entry.proto;
-        Shape* shape = entry.shape.get();
+        Shape* shape = entry.shape.unbarrieredGet();
 
         if (proto.isObject())
             CheckGCThingAfterMovingGC(proto.toObject());
@@ -1631,8 +1632,8 @@ JSCompartment::fixupInitialShapeTable()
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
         InitialShapeEntry entry = e.front();
         bool needRekey = false;
-        if (IsForwarded(entry.shape.get())) {
-            entry.shape.set(Forwarded(entry.shape.get()));
+        if (IsForwarded(entry.shape.unbarrieredGet())) {
+            entry.shape.set(Forwarded(entry.shape.unbarrieredGet()));
             needRekey = true;
         }
         if (entry.proto.isObject() && IsForwarded(entry.proto.toObject())) {
@@ -1640,10 +1641,10 @@ JSCompartment::fixupInitialShapeTable()
             needRekey = true;
         }
         if (needRekey) {
-            InitialShapeEntry::Lookup relookup(entry.shape->getObjectClass(),
+            InitialShapeEntry::Lookup relookup(entry.shape.unbarrieredGet()->getObjectClass(),
                                                entry.proto,
-                                               entry.shape->numFixedSlots(),
-                                               entry.shape->getObjectFlags());
+                                               entry.shape.unbarrieredGet()->numFixedSlots(),
+                                               entry.shape.unbarrieredGet()->getObjectFlags());
             e.rekeyFront(relookup, entry);
         }
     }

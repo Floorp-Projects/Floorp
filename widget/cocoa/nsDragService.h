@@ -30,9 +30,11 @@ class nsDragService : public nsBaseDragService
 public:
   nsDragService();
 
+  // nsBaseDragService
+  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+                                         nsIScriptableRegion* aRegion,
+                                         uint32_t aActionType);
   // nsIDragService
-  NS_IMETHOD InvokeDragSession(nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
-                               nsIScriptableRegion * aRegion, uint32_t aActionType);
   NS_IMETHOD EndDragSession(bool aDoneDrag);
 
   // nsIDragSession

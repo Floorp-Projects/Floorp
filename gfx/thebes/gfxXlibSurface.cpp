@@ -523,7 +523,6 @@ gfxXlibSurface::FindVisual(Screen *screen, gfxImageFormat format)
             blue_mask = 0x1f;
             break;
         case gfxImageFormat::A8:
-        case gfxImageFormat::A1:
         default:
             return nullptr;
     }
@@ -567,8 +566,6 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
         }
         case gfxImageFormat::A8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
-        case gfxImageFormat::A1:
-            return XRenderFindStandardFormat (dpy, PictStandardA1);
         default:
             break;
     }

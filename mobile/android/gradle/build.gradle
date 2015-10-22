@@ -23,7 +23,7 @@ buildscript {
         // the snapshots repository, otherwise we find a remote 1.0.3-SNAPSHOT
         // that doesn't include nalexander's local changes.
         maven {
-            url "file://${topsrcdir}/mobile/android/gradle/m2repo"
+            url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
         }
         // For spoon SNAPSHOT releases.
         maven {

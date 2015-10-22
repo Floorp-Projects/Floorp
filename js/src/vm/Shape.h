@@ -481,7 +481,7 @@ BaseShape::baseUnowned()
 }
 
 /* Entries for the per-compartment baseShapes set of unowned base shapes. */
-struct StackBaseShape : public DefaultHasher<ReadBarrieredUnownedBaseShape>
+struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
 {
     uint32_t flags;
     const Class* clasp;
@@ -513,10 +513,10 @@ struct StackBaseShape : public DefaultHasher<ReadBarrieredUnownedBaseShape>
     };
 
     static inline HashNumber hash(const Lookup& lookup);
-    static inline bool match(UnownedBaseShape* key, const Lookup& lookup);
+    static inline bool match(ReadBarriered<UnownedBaseShape*> key, const Lookup& lookup);
 };
 
-typedef HashSet<ReadBarrieredUnownedBaseShape,
+typedef HashSet<ReadBarriered<UnownedBaseShape*>,
                 StackBaseShape,
                 SystemAllocPolicy> BaseShapeSet;
 

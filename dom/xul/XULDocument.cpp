@@ -916,6 +916,23 @@ XULDocument::AttributeWillChange(nsIDocument* aDocument,
     }
 }
 
+static bool
+ShouldPersistAttribute(Element* aElement, nsIAtom* aAttribute)
+{
+    if (aElement->IsXULElement(nsGkAtoms::window)) {
+        // The following attributes of xul:window should be handled in
+        // nsXULWindow::SavePersistentAttributes instead of here.
+        if (aAttribute == nsGkAtoms::screenX ||
+            aAttribute == nsGkAtoms::screenY ||
+            aAttribute == nsGkAtoms::width ||
+            aAttribute == nsGkAtoms::height ||
+            aAttribute == nsGkAtoms::sizemode) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void
 XULDocument::AttributeChanged(nsIDocument* aDocument,
                               Element* aElement, int32_t aNameSpaceID,
@@ -995,14 +1012,14 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
     // XXX Namespace handling broken :-(
     nsAutoString persist;
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist);
-    if (!persist.IsEmpty()) {
+    // Persistence of attributes of xul:window is handled in nsXULWindow.
+    if (ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
         // XXXldb This should check that it's a token, not just a substring.
-        if (persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
-            nsContentUtils::AddScriptRunner(NS_NewRunnableMethodWithArgs
-              <nsIContent*, int32_t, nsIAtom*>
-              (this, &XULDocument::DoPersist, aElement, kNameSpaceID_None,
-               aAttribute));
-        }
+        persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
+        nsContentUtils::AddScriptRunner(NS_NewRunnableMethodWithArgs
+            <nsIContent*, int32_t, nsIAtom*>
+            (this, &XULDocument::DoPersist, aElement, kNameSpaceID_None,
+            aAttribute));
     }
 }
 

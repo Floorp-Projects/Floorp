@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
@@ -21,6 +22,7 @@ public class RoundedCornerLayout extends LinearLayout {
     private float cornerRadius;
 
     private Path path;
+    boolean cannotClipPath;
 
     public RoundedCornerLayout(Context context) {
         super(context);
@@ -38,6 +40,9 @@ public class RoundedCornerLayout extends LinearLayout {
     }
 
     private void init(Context context) {
+        // Bug 1201081 - clipPath with hardware acceleration crashes on r11-18.
+        cannotClipPath = AppConstants.Versions.feature11Plus && !AppConstants.Versions.feature19Plus;
+
         final DisplayMetrics metrics = context.getResources().getDisplayMetrics();
 
         cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_PX,
@@ -49,6 +54,10 @@ public class RoundedCornerLayout extends LinearLayout {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
+        if (cannotClipPath) {
+            return;
+        }
+
         final RectF r = new RectF(0, 0, w, h);
         path = new Path();
         path.addRoundRect(r, cornerRadius, cornerRadius, Path.Direction.CW);
@@ -57,6 +66,11 @@ public class RoundedCornerLayout extends LinearLayout {
 
     @Override
     public void draw(Canvas canvas) {
+        if (cannotClipPath) {
+            super.draw(canvas);
+            return;
+        }
+
         canvas.save();
         canvas.clipPath(path);
         super.draw(canvas);

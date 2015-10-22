@@ -225,7 +225,15 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // are in the wrong coord system, so turn off mouse capture.
   nsIPresShell::ClearMouseCapture(nullptr);
 
-  return NS_OK;
+  nsresult rv = InvokeDragSessionImpl(aTransferableArray,
+                                      aDragRgn, aActionType);
+
+  if (NS_FAILED(rv)) {
+    mSourceNode = nullptr;
+    mSourceDocument = nullptr;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -253,7 +261,16 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   aDragEvent->GetScreenY(&mScreenY);
   aDragEvent->GetMozInputSource(&mInputSource);
 
-  return InvokeDragSession(aDOMNode, aTransferableArray, aRegion, aActionType);
+  nsresult rv = InvokeDragSession(aDOMNode, aTransferableArray,
+                                  aRegion, aActionType);
+
+  if (NS_FAILED(rv)) {
+    mImage = nullptr;
+    mHasImage = false;
+    mDataTransfer = nullptr;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -284,7 +301,16 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   nsCOMPtr<nsIDOMNode> node;
   aSelection->GetFocusNode(getter_AddRefs(node));
 
-  return InvokeDragSession(node, aTransferableArray, nullptr, aActionType);
+  nsresult rv = InvokeDragSession(node, aTransferableArray,
+                                  nullptr, aActionType);
+
+  if (NS_FAILED(rv)) {
+    mHasImage = false;
+    mSelection = nullptr;
+    mDataTransfer = nullptr;
+  }
+
+  return rv;
 }
 
 //-------------------------------------------------------------------------

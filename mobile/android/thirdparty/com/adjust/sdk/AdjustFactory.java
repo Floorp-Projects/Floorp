@@ -2,9 +2,9 @@ package com.adjust.sdk;
 
 import android.content.Context;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpParams;
+import ch.boye.httpclientandroidlib.client.HttpClient;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+import ch.boye.httpclientandroidlib.params.HttpParams;
 
 public class AdjustFactory {
     private static IPackageHandler packageHandler = null;

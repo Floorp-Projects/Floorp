@@ -23,21 +23,12 @@ nsDragServiceProxy::~nsDragServiceProxy()
 {
 }
 
-NS_IMETHODIMP
-nsDragServiceProxy::InvokeDragSession(nsIDOMNode* aDOMNode,
-                                      nsISupportsArray* aArrayTransferables,
-                                      nsIScriptableRegion* aRegion,
-                                      uint32_t aActionType)
+nsresult
+nsDragServiceProxy::InvokeDragSessionImpl(nsISupportsArray* aArrayTransferables,
+                                          nsIScriptableRegion* aRegion,
+                                          uint32_t aActionType)
 {
-  nsresult rv = nsBaseDragService::InvokeDragSession(aDOMNode,
-                                                     aArrayTransferables,
-                                                     aRegion,
-                                                     aActionType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMDocument> sourceDocument;
-  aDOMNode->GetOwnerDocument(getter_AddRefs(sourceDocument));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(sourceDocument);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(mSourceDocument);
   NS_ENSURE_STATE(doc->GetDocShell());
   mozilla::dom::TabChild* child =
     mozilla::dom::TabChild::GetFrom(doc->GetDocShell());

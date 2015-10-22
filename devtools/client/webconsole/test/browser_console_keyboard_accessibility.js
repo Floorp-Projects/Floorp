@@ -53,7 +53,8 @@ var test = asyncTest(function*() {
 
   info("try ctrl-l to clear output");
   executeSoon(() => {
-    EventUtils.synthesizeKey("l", { ctrlKey: true });
+    let clearKey = hud.ui.window.document.querySelector("key[command=consoleCmd_clearOutput]:not([disabled])");
+    synthesizeKeyFromKeyTag(clearKey);
   });
   yield hud.jsterm.once("messages-cleared");
 

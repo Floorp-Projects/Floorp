@@ -7,9 +7,7 @@
 #ifndef nsTHashtable_h__
 #define nsTHashtable_h__
 
-#include "nscore.h"
 #include "PLDHashTable.h"
-#include "nsDebug.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/fallible.h"

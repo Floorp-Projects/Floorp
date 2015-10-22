@@ -1,0 +1,292 @@
+# HG changeset patch
+# User Lee Salzman <lsalzman@mozilla.com>
+# Date 1445463645 14400
+#      Wed Oct 21 17:40:45 2015 -0400
+# Node ID 9e84563cbd73c5b0993dfd018ca25b660b667e94
+# Parent  2d3fd51c4182c253a2f102655e8e9e466032853f
+workaround for Windows printer drivers that can't handle swapped X and Y axes
+
+diff --git a/gfx/cairo/cairo/src/cairo-matrix.c b/gfx/cairo/cairo/src/cairo-matrix.c
+--- a/gfx/cairo/cairo/src/cairo-matrix.c
++++ b/gfx/cairo/cairo/src/cairo-matrix.c
+@@ -873,42 +873,56 @@ cairo_bool_t
+   (Note that the minor axis length is at the minimum of the above solution,
+   which is just sqrt ( f - sqrt(g² + h²) ) given the symmetry of (D)).
+ 
+ 
+   For another derivation of the same result, using Singular Value Decomposition,
+   see doc/tutorial/src/singular.c.
+ */
+ 
+-/* determine the length of the major axis of a circle of the given radius
+-   after applying the transformation matrix. */
+-double
+-_cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
+-					     double radius)
++/* determine the length of the major and minor axes of a circle of the given
++   radius after applying the transformation matrix. */
++void
++_cairo_matrix_transformed_circle_axes (const cairo_matrix_t *matrix,
++				       double radius,
++				       double *major,
++				       double *minor)
+ {
+-    double  a, b, c, d, f, g, h, i, j;
++    double  a, b, c, d, f, g, h, i, j, k;
+ 
+     _cairo_matrix_get_affine (matrix,
+                               &a, &b,
+                               &c, &d,
+                               NULL, NULL);
+ 
+     i = a*a + b*b;
+     j = c*c + d*d;
++    k = a*c + b*d;
+ 
+     f = 0.5 * (i + j);
+     g = 0.5 * (i - j);
+-    h = a*c + b*d;
++    h = hypot (g, k);
+ 
+-    return radius * sqrt (f + hypot (g, h));
++    if (major)
++	*major = radius * sqrt (f + h);
++    if (minor)
++	*minor = radius * sqrt (f - h);
++}
+ 
+-    /*
+-     * we don't need the minor axis length, which is
+-     * double min = radius * sqrt (f - sqrt (g*g+h*h));
+-     */
++/* determine the length of the major axis of a circle of the given radius
++   after applying the transformation matrix. */
++double
++_cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
++					     double radius)
++{
++    double major;
++
++    _cairo_matrix_transformed_circle_axes (matrix, radius, &major, NULL);
++
++    return major;
+ }
+ 
+ void
+ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
+ 				pixman_transform_t	*pixman_transform,
+ 				double xc,
+ 				double yc)
+ {
+diff --git a/gfx/cairo/cairo/src/cairo-win32-printing-surface.c b/gfx/cairo/cairo/src/cairo-win32-printing-surface.c
+--- a/gfx/cairo/cairo/src/cairo-win32-printing-surface.c
++++ b/gfx/cairo/cairo/src/cairo-win32-printing-surface.c
+@@ -610,16 +610,17 @@ static cairo_status_t
+     int x_tile, y_tile, left, right, top, bottom;
+     RECT clip;
+     const cairo_color_t *background_color;
+     const unsigned char *mime_data;
+     unsigned long mime_size;
+     cairo_image_info_t mime_info;
+     cairo_bool_t use_mime;
+     DWORD mime_type;
++    cairo_bool_t axis_swap;
+ 
+     /* If we can't use StretchDIBits with this surface, we can't do anything
+      * here.
+      */
+     if (!(surface->flags & CAIRO_WIN32_SURFACE_CAN_STRETCHDIB))
+ 	return CAIRO_INT_STATUS_UNSUPPORTED;
+ 
+     if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
+@@ -658,39 +659,65 @@ static cairo_status_t
+ 							  &mime_size,
+ 							  &mime_info);
+     }
+     if (_cairo_status_is_error (status))
+ 	return status;
+ 
+     use_mime = (status == CAIRO_STATUS_SUCCESS);
+ 
+-    if (!use_mime && image->format != CAIRO_FORMAT_RGB24) {
++    m = pattern->base.matrix;
++    status = cairo_matrix_invert (&m);
++    /* _cairo_pattern_set_matrix guarantees invertibility */
++    assert (status == CAIRO_STATUS_SUCCESS);
++    cairo_matrix_multiply (&m, &m, &surface->ctm);
++    cairo_matrix_multiply (&m, &m, &surface->gdi_ctm);
++    /* Check if the matrix swaps the X and Y axes by checking if the diagonal
++     * is effectively zero. This can happen, for example, if it was composed
++     * with a rotation such as a landscape transform. Some printing devices
++     * don't support such transforms in StretchDIBits.
++     */
++    axis_swap = fabs (m.xx*image->width) < 1 && fabs (m.yy*image->height) < 1;
++
++    if (!use_mime && (image->format != CAIRO_FORMAT_RGB24 || axis_swap)) {
+ 	cairo_surface_t *opaque_surface;
+ 	cairo_surface_pattern_t image_pattern;
+ 	cairo_solid_pattern_t background_pattern;
++	int width = image->width, height = image->height;
+ 
++	if (axis_swap) {
++	    width = image->height;
++	    height = image->width;
++	}
+ 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+-						     image->width,
+-						     image->height);
++						     width,
++						     height);
+ 	if (opaque_surface->status) {
+ 	    status = opaque_surface->status;
+ 	    goto CLEANUP_OPAQUE_IMAGE;
+ 	}
+ 
+-	_cairo_pattern_init_solid (&background_pattern,
+-				   background_color);
+-	status = _cairo_surface_paint (opaque_surface,
+-				       CAIRO_OPERATOR_SOURCE,
+-				       &background_pattern.base,
+-				       NULL);
+-	if (status)
+-	    goto CLEANUP_OPAQUE_IMAGE;
++	if (image->format != CAIRO_FORMAT_RGB24) {
++	    _cairo_pattern_init_solid (&background_pattern,
++				       background_color);
++	    status = _cairo_surface_paint (opaque_surface,
++					   CAIRO_OPERATOR_SOURCE,
++					   &background_pattern.base,
++					   NULL);
++	    if (status)
++		goto CLEANUP_OPAQUE_IMAGE;
++	}
+ 
+ 	_cairo_pattern_init_for_surface (&image_pattern, &image->base);
++	if (axis_swap) {
++	    /* swap the X and Y axes to undo the axis swap in the matrix */
++	    cairo_matrix_t swap_xy = { 0, 1, 1, 0, 0, 0 };
++	    cairo_pattern_set_matrix (&image_pattern.base, &swap_xy);
++	    cairo_matrix_multiply (&m, &swap_xy, &m);
++	}
+ 	status = _cairo_surface_paint (opaque_surface,
+ 				       CAIRO_OPERATOR_OVER,
+ 				       &image_pattern.base,
+ 				       NULL);
+ 	_cairo_pattern_fini (&image_pattern.base);
+ 	if (status)
+ 	    goto CLEANUP_OPAQUE_IMAGE;
+ 
+@@ -706,23 +733,16 @@ static cairo_status_t
+     bi.bmiHeader.biXPelsPerMeter = PELS_72DPI;
+     bi.bmiHeader.biYPelsPerMeter = PELS_72DPI;
+     bi.bmiHeader.biPlanes = 1;
+     bi.bmiHeader.biBitCount = 32;
+     bi.bmiHeader.biCompression = use_mime ? mime_type : BI_RGB;
+     bi.bmiHeader.biClrUsed = 0;
+     bi.bmiHeader.biClrImportant = 0;
+ 
+-    m = pattern->base.matrix;
+-    status = cairo_matrix_invert (&m);
+-    /* _cairo_pattern_set_matrix guarantees invertibility */
+-    assert (status == CAIRO_STATUS_SUCCESS);
+-
+-    cairo_matrix_multiply (&m, &m, &surface->gdi_ctm);
+-    cairo_matrix_multiply(&m, &m, &surface->ctm);
+     SaveDC (surface->dc);
+     _cairo_matrix_to_win32_xform (&m, &xform);
+ 
+     if (! SetWorldTransform (surface->dc, &xform)) {
+ 	status = _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint_image_pattern");
+ 	goto CLEANUP_OPAQUE_IMAGE;
+     }
+ 
+@@ -1260,16 +1280,17 @@ static cairo_int_status_t
+     DWORD pen_width;
+     DWORD *dash_array;
+     HGDIOBJ obj;
+     unsigned int i;
+     cairo_solid_pattern_t clear;
+     cairo_matrix_t mat;
+     double scale;
+     double scaled_width;
++    double major, minor;
+ 
+     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+     if (status)
+ 	return status;
+ 
+     if (op == CAIRO_OPERATOR_CLEAR) {
+ 	_cairo_win32_printing_surface_init_clear_color (surface, &clear);
+ 	source = (cairo_pattern_t*) &clear;
+@@ -1350,22 +1371,40 @@ static cairo_int_status_t
+     if (status)
+ 	return status;
+ 
+     /*
+      * Switch to user space to set line parameters
+      */
+     SaveDC (surface->dc);
+ 
+-    _cairo_matrix_to_win32_xform (&mat, &xform);
+-    xform.eDx = 0.0f;
+-    xform.eDy = 0.0f;
++    /* Some printers don't handle transformed strokes. Avoid the transform
++     * if not required for the pen shape. Use the SVD here to find the major
++     * and minor scales then check if they differ by more than 1 device unit.
++     * If the difference is smaller, then just treat the scaling as uniform.
++     * This check ignores rotations as the pen shape is symmetric before
++     * transformation.
++     */
++    _cairo_matrix_transformed_circle_axes (&mat, scale, &major, &minor);
++    if (fabs (major - minor) > 1) {
++	/* Check if the matrix swaps the X and Y axes such that the diagonal
++	 * is nearly zero. This was observed to cause problems with XPS export.
++	 */
++	if (fabs (mat.xx) < 1e-6 && fabs (mat.yy) < 1e-6) {
++	    /* swap the X and Y axes to undo the axis swap in the matrix */
++	    cairo_matrix_t swap_xy = { 0, 1, 1, 0, 0, 0 };
++	    cairo_matrix_multiply (&mat, &swap_xy, &mat);
++	}
++	_cairo_matrix_to_win32_xform (&mat, &xform);
++	xform.eDx = 0.0f;
++	xform.eDy = 0.0f;
+ 
+-    if (!ModifyWorldTransform (surface->dc, &xform, MWT_LEFTMULTIPLY))
+-	return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SetWorldTransform");
++	if (!ModifyWorldTransform (surface->dc, &xform, MWT_LEFTMULTIPLY))
++	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SetWorldTransform");
++    }
+ 
+     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
+ 	StrokePath (surface->dc);
+     } else {
+ 	if (!WidenPath (surface->dc))
+ 	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:WidenPath");
+ 	if (!SelectClipPath (surface->dc, RGN_AND))
+ 	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SelectClipPath");
+diff --git a/gfx/cairo/cairo/src/cairoint.h b/gfx/cairo/cairo/src/cairoint.h
+--- a/gfx/cairo/cairo/src/cairoint.h
++++ b/gfx/cairo/cairo/src/cairoint.h
+@@ -2115,16 +2115,22 @@ cairo_private cairo_bool_t
+ 				     int *itx, int *ity);
+ 
+ cairo_private cairo_bool_t
+ _cairo_matrix_has_unity_scale (const cairo_matrix_t *matrix);
+ 
+ cairo_private cairo_bool_t
+ _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix) cairo_pure;
+ 
++cairo_private void
++_cairo_matrix_transformed_circle_axes (const cairo_matrix_t *matrix,
++				       double radius,
++				       double *major,
++				       double *minor);
++
+ cairo_private double
+ _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
+ 					     double radius) cairo_pure;
+ 
+ cairo_private void
+ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
+ 				pixman_transform_t	*pixman_transform,
+ 				double                   xc,

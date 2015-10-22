@@ -2264,7 +2264,7 @@ DebugScopes::sweep(JSRuntime* rt)
              * Thus, we must explicitly remove the entries from both liveScopes
              * and missingScopes here.
              */
-            liveScopes.remove(&e.front().value()->scope());
+            liveScopes.remove(&e.front().value().unbarrieredGet()->scope());
             e.removeFront();
         } else {
             MissingScopeKey key = e.front().key();
