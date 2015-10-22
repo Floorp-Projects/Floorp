@@ -441,8 +441,25 @@ final class GeckoEditable extends JNIObject
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
     }
 
-    @Override
-    protected void disposeNative() {
+    @WrapForJNI @Override
+    protected native void disposeNative();
+
+    @WrapForJNI
+    private void onDestroy() {
+        if (DEBUG) {
+            // Called by nsWindow.
+            ThreadUtils.assertOnGeckoThread();
+            Log.d(LOGTAG, "onDestroy()");
+        }
+
+        // Make sure we clear all pending Runnables on the IC thread first,
+        // by calling disposeNative from the IC thread.
+        geckoPostToIc(new Runnable() {
+            @Override
+            public void run() {
+                GeckoEditable.this.disposeNative();
+            }
+        });
     }
 
     @WrapForJNI
