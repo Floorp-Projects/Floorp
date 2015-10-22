@@ -15,11 +15,10 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDragService
-  NS_IMETHOD InvokeDragSession(nsIDOMNode* aDOMNode,
-                               nsISupportsArray* anArrayTransferables,
-                               nsIScriptableRegion* aRegion,
-                               uint32_t aActionType) override;
+  // nsBaseDragService
+  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
+                                         nsIScriptableRegion* aRegion,
+                                         uint32_t aActionType) override;
 private:
   virtual ~nsDragServiceProxy();
 };

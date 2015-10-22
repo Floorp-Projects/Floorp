@@ -64,6 +64,15 @@ protected:
   virtual ~nsBaseDragService();
 
   /**
+   * Called from nsBaseDragService to initiate a platform drag from a source
+   * in this process.  This is expected to ensure that StartDragSession() and
+   * EndDragSession() get called if the platform drag is successfully invoked.
+   */
+  virtual nsresult InvokeDragSessionImpl(nsISupportsArray* aTransferableArray,
+                                         nsIScriptableRegion* aDragRgn,
+                                         uint32_t aActionType) = 0;
+
+  /**
    * Draw the drag image, if any, to a surface and return it. The drag image
    * is constructed from mImage if specified, or aDOMNode if mImage is null.
    *

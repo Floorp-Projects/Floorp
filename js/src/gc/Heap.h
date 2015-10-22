@@ -1457,8 +1457,13 @@ TenuredCell::readBarrier(TenuredCell* thing)
     MOZ_ASSERT(!isNullLike(thing));
     if (thing->shadowRuntimeFromAnyThread()->isHeapBusy())
         return;
+    MOZ_ASSERT_IF(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()),
+                  !thing->shadowRuntimeFromAnyThread()->isHeapCollecting());
 
     JS::shadow::Zone* shadowZone = thing->shadowZoneFromAnyThread();
+    MOZ_ASSERT_IF(!CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()),
+                  !shadowZone->needsIncrementalBarrier());
+
     if (shadowZone->needsIncrementalBarrier()) {
         MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
         Cell* tmp = thing;
