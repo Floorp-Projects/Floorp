@@ -1447,6 +1447,11 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     return NS_OK;
   }
 
+  bool isFullscreen = false;
+  if (nsPIDOMWindow* domWindow = mDocShell->GetWindow()) {
+    domWindow->GetFullScreen(&isFullscreen);
+  }
+
   // get our size, position and mode to persist
   nsIntRect rect;
   bool gotRestoredBounds = NS_SUCCEEDED(mWindow->GetRestoredBounds(rect));
@@ -1474,6 +1479,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     docShellElement->GetId(windowElementId);
   }
 
+  bool shouldPersist = !isFullscreen && ownerXULDoc;
   ErrorResult rv;
   // (only for size elements which are persisted)
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
@@ -1481,15 +1487,17 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.x / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
-      if (ownerXULDoc) // force persistence in case the value didn't change
+      if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
+      }
     }
     if (persistString.Find("screenY") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.y / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
-      if (ownerXULDoc)
+      if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE);
+      }
     }
   }
 
@@ -1498,15 +1506,17 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.width / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
-      if (ownerXULDoc)
+      if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
+      }
     }
     if (persistString.Find("height") >= 0) {
       PR_snprintf(sizeBuf, sizeof(sizeBuf), "%d", NSToIntRound(rect.height / scale.scale));
       sizeString.AssignWithConversion(sizeBuf);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
-      if (ownerXULDoc)
+      if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE);
+      }
     }
   }
 
@@ -1521,8 +1531,9 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       else
         sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(MODE_ATTRIBUTE, sizeString, rv);
-      if (ownerXULDoc && persistString.Find("sizemode") >= 0)
+      if (shouldPersist && persistString.Find("sizemode") >= 0) {
         ownerXULDoc->Persist(windowElementId, MODE_ATTRIBUTE);
+      }
     }
     if (persistString.Find("zlevel") >= 0) {
       uint32_t zLevel;
@@ -1532,7 +1543,9 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%lu", (unsigned long)zLevel);
         sizeString.AssignWithConversion(sizeBuf);
         docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
-        ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);
+        if (shouldPersist) {
+          ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);
+        }
       }
     }
   }
