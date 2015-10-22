@@ -32,7 +32,7 @@ function verifyInitialState() {
 }
 
 function verifyMtu(aInterfaceName, aMtu) {
-  runEmulatorShellCmdSafe(['ip', 'link', 'show', 'dev', aInterfaceName])
+  return runEmulatorShellCmdSafe(['ip', 'link', 'show', 'dev', aInterfaceName])
     .then(aLines => {
       // Sample output:
       //
@@ -59,9 +59,7 @@ function testDefaultDataCallMtu() {
   log("= testDefaultDataCallMtu =");
 
   return setDataEnabledAndWait(true)
-    .then(aNetworkInfo => {
-      verifyMtu(aNetworkInfo.name, TEST_MTU1);
-    })
+    .then(aNetworkInfo => verifyMtu(aNetworkInfo.name, TEST_MTU1))
     .then(() => setDataEnabledAndWait(false));
 }
 
@@ -72,9 +70,7 @@ function testNonDefaultDataCallMtu() {
     log("doTestNonDefaultDataCallMtu: " + aType);
 
     return setupDataCallAndWait(aType)
-      .then(aNetworkInfo => {
-        verifyMtu(aNetworkInfo.name, TEST_MTU2);
-      })
+      .then(aNetworkInfo => verifyMtu(aNetworkInfo.name, TEST_MTU2))
       .then(() => deactivateDataCallAndWait(aType));
   }
 
