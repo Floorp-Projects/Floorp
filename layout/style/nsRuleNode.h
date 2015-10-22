@@ -932,7 +932,7 @@ public:
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                            \
   template<bool aComputeData>                                                 \
   const nsStyle##name_*                                                       \
-  GetStyle##name_(nsStyleContext* aContext, uint64_t& aContextStyleBits)      \
+  GetStyle##name_(nsStyleContext* aContext)                                   \
   {                                                                           \
     NS_ASSERTION(IsUsedDirectly(),                                            \
                  "if we ever call this on rule nodes that aren't used "       \
@@ -948,10 +948,6 @@ public:
     if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {      \
       data = mStyleData.GetStyle##name_(aContext, aComputeData);              \
       if (MOZ_LIKELY(data != nullptr)) {                                      \
-        /* Mark the struct as having been retrieved for this context. */      \
-        /* Normally this would be aContext->AddStyleBit(), but aContext is */ \
-        /* an incomplete type here, so we work around that with a param. */   \
-        aContextStyleBits |= NS_STYLE_INHERIT_BIT(name_);                     \
         return data;                                                          \
       }                                                                       \
     }                                                                         \
