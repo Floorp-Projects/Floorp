@@ -51,6 +51,7 @@ FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
   , mLoadGroup(aLoadGroup)
   , mRequest(aRequest)
   , mHasBeenCrossSite(false)
+  , mFoundOpaqueRedirect(false)
   , mResponseAvailableCalled(false)
   , mFetchCalled(false)
 {
@@ -447,21 +448,22 @@ FetchDriver::BeginAndGetFilteredResponse(InternalResponse* aResponse, nsIURI* aF
   // FIXME(nsm): Handle mixed content check, step 7 of fetch.
 
   RefPtr<InternalResponse> filteredResponse;
-  switch (mRequest->GetResponseTainting()) {
-    case InternalRequest::RESPONSETAINT_BASIC:
-      filteredResponse = aResponse->BasicResponse();
-      break;
-    case InternalRequest::RESPONSETAINT_CORS:
-      filteredResponse = aResponse->CORSResponse();
-      break;
-    case InternalRequest::RESPONSETAINT_OPAQUE:
-      filteredResponse = aResponse->OpaqueResponse();
-      break;
-    case InternalRequest::RESPONSETAINT_OPAQUEREDIRECT:
-      filteredResponse = aResponse->OpaqueRedirectResponse();
-      break;
-    default:
-      MOZ_CRASH("Unexpected case");
+  if (mFoundOpaqueRedirect) {
+    filteredResponse = aResponse->OpaqueRedirectResponse();
+  } else {
+    switch (mRequest->GetResponseTainting()) {
+      case InternalRequest::RESPONSETAINT_BASIC:
+        filteredResponse = aResponse->BasicResponse();
+        break;
+      case InternalRequest::RESPONSETAINT_CORS:
+        filteredResponse = aResponse->CORSResponse();
+        break;
+      case InternalRequest::RESPONSETAINT_OPAQUE:
+        filteredResponse = aResponse->OpaqueResponse();
+        break;
+      default:
+        MOZ_CRASH("Unexpected case");
+    }
   }
 
   MOZ_ASSERT(filteredResponse);
@@ -749,7 +751,8 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     // will result in OnStartRequest() getting called twice, but the second
     // time will be with an error response (from the Cancel) which will
     // be ignored.
-    mRequest->SetResponseTainting(InternalRequest::RESPONSETAINT_OPAQUEREDIRECT);
+    MOZ_ASSERT(!mFoundOpaqueRedirect);
+    mFoundOpaqueRedirect = true;
     unused << OnStartRequest(aOldChannel, nullptr);
     unused << OnStopRequest(aOldChannel, nullptr, NS_OK);
 
