@@ -44,7 +44,9 @@ DOMMediaStream::TrackPort::TrackPort(MediaInputPort* aInputPort,
   , mTrack(aTrack)
   , mOwnership(aOwnership)
 {
-  MOZ_ASSERT(mInputPort);
+  // XXX Bug 1124630. nsDOMCameraControl requires adding a track without and
+  // input port.
+  // MOZ_ASSERT(mInputPort);
   MOZ_ASSERT(mTrack);
 
   MOZ_COUNT_CTOR(TrackPort);
