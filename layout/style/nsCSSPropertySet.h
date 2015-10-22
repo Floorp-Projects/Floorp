@@ -8,6 +8,7 @@
 #define nsCSSPropertySet_h__
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/PodOperations.h"
 
 #include "nsCSSProperty.h"
 #include <limits.h> // for CHAR_BIT
@@ -60,6 +61,10 @@ public:
         for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
             NS_ASSERTION(mProperties[i] == 0, aText);
         }
+    }
+
+    bool Equals(const nsCSSPropertySet& aOther) const {
+      return mozilla::PodEqual(mProperties, aOther.mProperties);
     }
 
 private:
