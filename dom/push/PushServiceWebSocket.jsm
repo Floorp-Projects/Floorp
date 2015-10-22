@@ -893,6 +893,15 @@ this.PushServiceWebSocket = {
       debug("handleDataUpdate: Discarding message without channel ID");
       return;
     }
+    // Unconditionally ack the update. This is important because the Push
+    // server requires the client to ack all outstanding updates before
+    // resuming delivery. However, the server doesn't verify the encryption
+    // params, and can't ensure that an update is encrypted correctly because
+    // it doesn't have the private key. Thus, if we only acked valid updates,
+    // it would be possible for a single invalid one to block delivery of all
+    // subsequent updates. A nack would be more appropriate for this case, but
+    // the protocol doesn't currently support them.
+    this._sendAck(update.channelID, update.version);
     if (typeof update.data != "string") {
       promise = this._mainPushService.receivedPushMessage(
         update.channelID,
@@ -914,7 +923,7 @@ this.PushServiceWebSocket = {
         record => record
       );
     }
-    promise.then(() => this._sendAck(update.channelID)).catch(err => {
+    promise.catch(err => {
       debug("handleDataUpdate: Error delivering message: " + err);
     });
   },
