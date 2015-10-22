@@ -158,11 +158,17 @@ TabContext::OriginAttributesRef() const
   return mOriginAttributes;
 }
 
+const nsACString&
+TabContext::SignedPkgOriginNoSuffix() const
+{
+  return mSignedPkgOriginNoSuffix;
+}
 
 bool
 TabContext::SetTabContext(mozIApplication* aOwnApp,
                           mozIApplication* aAppFrameOwnerApp,
-                          const OriginAttributes& aOriginAttributes)
+                          const OriginAttributes& aOriginAttributes,
+                          const nsACString& aSignedPkgOriginNoSuffix)
 {
   NS_ENSURE_FALSE(mInitialized, false);
 
@@ -192,6 +198,7 @@ TabContext::SetTabContext(mozIApplication* aOwnApp,
   mContainingAppId = containingAppId;
   mOwnApp = aOwnApp;
   mContainingApp = aAppFrameOwnerApp;
+  mSignedPkgOriginNoSuffix = aSignedPkgOriginNoSuffix;
   return true;
 }
 
@@ -200,7 +207,9 @@ TabContext::AsIPCTabContext() const
 {
   nsAutoCString originSuffix;
   mOriginAttributes.CreateSuffix(originSuffix);
-  return IPCTabContext(FrameIPCTabContext(originSuffix, mContainingAppId));
+  return IPCTabContext(FrameIPCTabContext(originSuffix,
+                                          mContainingAppId,
+                                          mSignedPkgOriginNoSuffix));
 }
 
 static already_AddRefed<mozIApplication>
@@ -221,6 +230,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   uint32_t containingAppId = NO_APP_ID;
   OriginAttributes originAttributes = OriginAttributes();
   nsAutoCString originSuffix;
+  nsAutoCString signedPkgOriginNoSuffix;
 
   const IPCTabContextUnion& contextUnion = aParams.contextUnion();
   switch(contextUnion.type()) {
@@ -276,6 +286,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         contextUnion.get_FrameIPCTabContext();
 
       containingAppId = ipcContext.frameOwnerAppId();
+      signedPkgOriginNoSuffix = ipcContext.signedPkgOriginNoSuffix();
       originSuffix = ipcContext.originSuffix();
       originAttributes.PopulateFromSuffix(originSuffix);
       break;
@@ -305,7 +316,8 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   bool rv;
   rv = mTabContext.SetTabContext(ownApp,
                                  containingApp,
-                                 originAttributes);
+                                 originAttributes,
+                                 signedPkgOriginNoSuffix);
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";
   }
