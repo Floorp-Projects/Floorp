@@ -16,10 +16,14 @@ function nsSidebar() {
 nsSidebar.prototype = {
   init: function(window) {
     this.window = window;
-    this.mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDocShell)
-                    .QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIContentFrameMessageManager);
+    try {
+      this.mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDocShell)
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIContentFrameMessageManager);
+    } catch(e) {
+      Cu.reportError(e);
+    }
   },
 
   // Deprecated, only left here to avoid breaking old browser-detection scripts.
@@ -36,6 +40,11 @@ nsSidebar.prototype = {
   // The capitalization, although nonstandard here, is to match other browsers'
   // APIs and is therefore important.
   AddSearchProvider: function(engineURL) {
+    if (!this.mm) {
+      Cu.reportError(`Installing a search provider from this context is not currently supported: ${Error().stack}.`);
+      return;
+    }
+
     this.mm.sendAsyncMessage("Search:AddEngine", {
       pageURL: this.window.document.documentURIObject.spec,
       engineURL
