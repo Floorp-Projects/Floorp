@@ -52,7 +52,7 @@ loop.roomViews = (function(mozL10n) {
       // stopListening doesn't nuke the active listeners during a event
       // processing.
       if (this.isMounted()) {
-        this.setState({error: this.props.roomStore.getStoreState("error")});
+        this.setState({ error: this.props.roomStore.getStoreState("error") });
       }
     },
 
@@ -61,7 +61,7 @@ loop.roomViews = (function(mozL10n) {
       // stopListening doesn't nuke the active listeners during a event
       // processing.
       if (this.isMounted()) {
-        this.setState({savingContext: this.props.roomStore.getStoreState("savingContext")});
+        this.setState({ savingContext: this.props.roomStore.getStoreState("savingContext") });
       }
     },
 
@@ -117,7 +117,7 @@ loop.roomViews = (function(mozL10n) {
    * Something went wrong view. Displayed when there's a big problem.
    */
   var RoomFailureView = React.createClass({displayName: "RoomFailureView",
-    mixins: [ sharedMixins.AudioMixin ],
+    mixins: [sharedMixins.AudioMixin],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -284,7 +284,7 @@ loop.roomViews = (function(mozL10n) {
         from: "conversation"
       }));
 
-      this.setState({copiedUrl: true});
+      this.setState({ copiedUrl: true });
       setTimeout(this.resetTriggeredButtons, this.constructor.TRIGGERED_RESET_DELAY);
     },
 
@@ -293,7 +293,7 @@ loop.roomViews = (function(mozL10n) {
      */
     resetTriggeredButtons: function() {
       if (this.state.copiedUrl) {
-        this.setState({copiedUrl: false});
+        this.setState({ copiedUrl: false });
       }
     },
 
@@ -326,7 +326,7 @@ loop.roomViews = (function(mozL10n) {
       return (
         React.createElement("div", {className: "room-invitation-overlay"}, 
           React.createElement("div", {className: "room-invitation-content"}, 
-            React.createElement("p", {className: cx({hide: this.props.showEditContext})}, 
+            React.createElement("p", {className: cx({ hide: this.props.showEditContext })}, 
               mozL10n.get("invite_header_text2")
             )
           ), 
@@ -542,8 +542,8 @@ loop.roomViews = (function(mozL10n) {
       var availableContext = this.state.availableContext;
       return (
         React.createElement("div", {className: "room-context"}, 
-          React.createElement("p", {className: cx({"error": !!this.props.error,
-                            "error-display-area": true})}, 
+          React.createElement("p", {className: cx({ "error": !!this.props.error,
+                            "error-display-area": true })}, 
             mozL10n.get("rooms_change_failed_label")
           ), 
           React.createElement("h2", {className: "room-context-header"}, mozL10n.get("context_inroom_header")), 
@@ -674,7 +674,7 @@ loop.roomViews = (function(mozL10n) {
      *     that returns an enum
      */
     shouldRenderRemoteVideo: function() {
-      switch(this.state.roomState) {
+      switch (this.state.roomState) {
         case ROOM_STATES.HAS_PARTICIPANTS:
           if (this.state.remoteVideoEnabled) {
             return true;
@@ -716,7 +716,7 @@ loop.roomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _isLocalLoading: function () {
+    _isLocalLoading: function() {
       return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
              !this.state.localSrcMediaElement;
     },
@@ -768,7 +768,7 @@ loop.roomViews = (function(mozL10n) {
       var shouldRenderEditContextView = this.state.showEditContext;
       var roomData = this.props.roomStore.getStoreState("activeRoom");
 
-      switch(this.state.roomState) {
+      switch (this.state.roomState) {
         case ROOM_STATES.FAILED:
         case ROOM_STATES.FULL: {
           // Note: While rooms are set to hold a maximum of 2 participants, the
@@ -815,7 +815,7 @@ loop.roomViews = (function(mozL10n) {
                 showContextRoomName: false, 
                 useDesktopPaths: true}, 
                 React.createElement(sharedViews.ConversationToolbar, {
-                  audio: {enabled: !this.state.audioMuted, visible: true}, 
+                  audio: { enabled: !this.state.audioMuted, visible: true}, 
                   dispatcher: this.props.dispatcher, 
                   hangup: this.leaveRoom, 
                   mozLoop: this.props.mozLoop, 
@@ -824,7 +824,7 @@ loop.roomViews = (function(mozL10n) {
                   settingsMenuItems: settingsMenuItems, 
                   show: !shouldRenderEditContextView, 
                   showHangup: this.props.chatWindowDetached, 
-                  video: {enabled: !this.state.videoMuted, visible: true}}), 
+                  video: { enabled: !this.state.videoMuted, visible: true}}), 
                 React.createElement(DesktopRoomInvitationView, {
                   dispatcher: this.props.dispatcher, 
                   error: this.state.error, 

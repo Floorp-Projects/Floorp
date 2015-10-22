@@ -151,7 +151,7 @@ const kRoomUpdates = {
       displayName: "Alexis",
       account: "alexis@example.com",
       roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
-    },  {
+    }, {
       displayName: "Ruharb",
       roomConnectionId: "5de6281c-6568-455f-af08-c0b0a973100e"
     }]
@@ -652,7 +652,7 @@ function run_test() {
   LoopRooms.on("left", onRoomLeft);
   LoopRooms.on("refresh", onRefresh);
 
-  do_register_cleanup(function () {
+  do_register_cleanup(function() {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
     Services.prefs.clearUserPref("loop.key");

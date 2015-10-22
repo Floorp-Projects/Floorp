@@ -32,10 +32,10 @@ describe("document.mozL10n", function() {
   });
 
   it("should get a plural form", function() {
-    expect(document.mozL10n.get("plural", {num: 10})).eql("10 plural forms");
+    expect(document.mozL10n.get("plural", { num: 10 })).eql("10 plural forms");
   });
 
   it("should correctly get a plural form for num = 0", function() {
-    expect(document.mozL10n.get("plural", {num: 0})).eql("0 plural form");
+    expect(document.mozL10n.get("plural", { num: 0 })).eql("0 plural form");
   });
 });

@@ -32,7 +32,7 @@ loop.shared.models = (function(l10n) {
      * @return {String} message
      */
     warn: function(message) {
-      this.add({level: "warning", message: message});
+      this.add({ level: "warning", message: message });
     },
 
     /**
@@ -50,7 +50,7 @@ loop.shared.models = (function(l10n) {
      * @return {String} message
      */
     error: function(message) {
-      this.add({level: "error", message: message});
+      this.add({ level: "error", message: message });
     },
 
     /**
@@ -71,7 +71,7 @@ loop.shared.models = (function(l10n) {
      * @return {String} message
      */
     success: function(message) {
-      this.add({level: "success", message: message});
+      this.add({ level: "success", message: message });
     },
 
     /**

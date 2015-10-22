@@ -73,9 +73,6 @@ var UI = {
 
     AppManager.init();
 
-    this.onMessage = this.onMessage.bind(this);
-    window.addEventListener("message", this.onMessage);
-
     this.appManagerUpdate = this.appManagerUpdate.bind(this);
     AppManager.on("app-manager-update", this.appManagerUpdate);
 
@@ -136,7 +133,6 @@ var UI = {
     AppManager.off("app-manager-update", this.appManagerUpdate);
     AppManager.destroy();
     Simulators.off("configure", this.configureSimulator);
-    window.removeEventListener("message", this.onMessage);
     this.updateConnectionTelemetry();
     this._telemetry.toolClosed("webide");
     this._telemetry.toolClosed("webideProjectEditor");
@@ -925,28 +921,36 @@ var UI = {
 
   /********** TOOLBOX **********/
 
-  onMessage: function(event) {
-    // The custom toolbox sends a message to its parent
-    // window.
-    try {
-      let json = JSON.parse(event.data);
-      switch (json.name) {
-        case "toolbox-close":
-          // There are many ways to close a toolbox:
-          // * Close button inside the toolbox
-          // * Toggle toolbox wrench in WebIDE
-          // * Disconnect the current runtime gracefully
-          // * Yank cord out of device
-          // We can't know for sure which one was used here, so reset the
-          // |toolboxPromise| since someone must be destroying it to reach here,
-          // and call our own close method.
-          if (this.toolboxIframe && this.toolboxIframe.uid == json.uid) {
-            this.toolboxPromise = null;
-            this._closeToolboxUI();
-          }
-          break;
-      }
-    } catch(e) { console.error(e); }
+  /**
+   * There are many ways to close a toolbox:
+   *   * Close button inside the toolbox
+   *   * Toggle toolbox wrench in WebIDE
+   *   * Disconnect the current runtime gracefully
+   *   * Yank cord out of device
+   *   * Close or crash the app/tab
+   * We can't know for sure which one was used here, so reset the
+   * |toolboxPromise| since someone must be destroying it to reach here,
+   * and call our own close method.
+   */
+  _onToolboxClosed: function(promise, iframe) {
+    // Only save toolbox size, disable wrench button, workaround focus issue...
+    // if we are closing the last toolbox:
+    //  - toolboxPromise is nullified by destroyToolbox and is still null here
+    //    if no other toolbox has been opened in between,
+    //  - having two distinct promise means we are receiving closed event
+    //    for a previous, non-current, toolbox.
+    if (!this.toolboxPromise || this.toolboxPromise === promise) {
+      this.toolboxPromise = null;
+      this.resetFocus();
+      Services.prefs.setIntPref("devtools.toolbox.footer.height", iframe.height);
+
+      let splitter = document.querySelector(".devtools-horizontal-splitter");
+      splitter.setAttribute("hidden", "true");
+      document.querySelector("#action-button-debug").removeAttribute("active");
+    }
+    // We have to destroy the iframe, otherwise, the keybindings of webide don't work
+    // properly anymore.
+    iframe.remove();
   },
 
   destroyToolbox: function() {
@@ -954,11 +958,7 @@ var UI = {
     if (this.toolboxPromise) {
       let toolboxPromise = this.toolboxPromise;
       this.toolboxPromise = null;
-      return toolboxPromise.then(toolbox => {
-        return toolbox.destroy();
-      }).then(null, console.error)
-        .then(() => this._closeToolboxUI())
-        .then(null, console.error);
+      return toolboxPromise.then(toolbox => toolbox.destroy());
     }
     return promise.resolve();
   },
@@ -968,15 +968,6 @@ var UI = {
     if (this.toolboxPromise) {
       return this.toolboxPromise;
     }
-    this.toolboxPromise = AppManager.getTarget().then((target) => {
-      return this._showToolbox(target);
-    }, console.error);
-    return this.busyUntil(this.toolboxPromise, "opening toolbox");
-  },
-
-  _showToolbox: function(target) {
-    let splitter = document.querySelector(".devtools-horizontal-splitter");
-    splitter.removeAttribute("hidden");
 
     let iframe = document.createElement("iframe");
     iframe.id = "toolbox";
@@ -985,35 +976,32 @@ var UI = {
     // when receiving toolbox-close event
     iframe.uid = new Date().getTime();
 
+    let height = Services.prefs.getIntPref("devtools.toolbox.footer.height");
+    iframe.height = height;
+
+    let promise = this.toolboxPromise = AppManager.getTarget().then(target => {
+      return this._showToolbox(target, iframe);
+    }).then(toolbox => {
+      // Destroy the toolbox on WebIDE side before
+      // toolbox.destroy's promise resolves.
+      toolbox.once("destroyed", this._onToolboxClosed.bind(this, promise, iframe));
+      return toolbox;
+    }, console.error);
+
+    return this.busyUntil(this.toolboxPromise, "opening toolbox");
+  },
+
+  _showToolbox: function(target, iframe) {
+    let splitter = document.querySelector(".devtools-horizontal-splitter");
+    splitter.removeAttribute("hidden");
+
     document.querySelector("notificationbox").insertBefore(iframe, splitter.nextSibling);
     let host = Toolbox.HostType.CUSTOM;
     let options = { customIframe: iframe, zoom: false, uid: iframe.uid };
-    this.toolboxIframe = iframe;
-
-    let height = Services.prefs.getIntPref("devtools.toolbox.footer.height");
-    iframe.height = height;
 
     document.querySelector("#action-button-debug").setAttribute("active", "true");
 
     return gDevTools.showToolbox(target, null, host, options);
-  },
-
-  _closeToolboxUI: function() {
-    if (!this.toolboxIframe) {
-      return;
-    }
-
-    this.resetFocus();
-    Services.prefs.setIntPref("devtools.toolbox.footer.height", this.toolboxIframe.height);
-
-    // We have to destroy the iframe, otherwise, the keybindings of webide don't work
-    // properly anymore.
-    this.toolboxIframe.remove();
-    this.toolboxIframe = null;
-
-    let splitter = document.querySelector(".devtools-horizontal-splitter");
-    splitter.setAttribute("hidden", "true");
-    document.querySelector("#action-button-debug").removeAttribute("active");
   },
 
   prePackageLog: function (msg) {
@@ -1106,7 +1094,7 @@ var Cmds = {
 
   toggleToolbox: function() {
     UI.onAction("debug");
-    if (UI.toolboxIframe) {
+    if (UI.toolboxPromise) {
       UI.destroyToolbox();
       return promise.resolve();
     } else {

@@ -23,13 +23,13 @@ task:
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: 'tip'
       GECKO_HEAD_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
-      GECKO_BASE_REPOSITORY: 'http://hg.mozilla.org/mozilla-central'
+      GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-central'
 
     image: '{{#docker_image}}phone-builder{{/docker_image}}'
     maxRunTime: 14400
 
     command:
-      - build-phone.sh
+      - phone
 
     artifacts:
       'private/build':
