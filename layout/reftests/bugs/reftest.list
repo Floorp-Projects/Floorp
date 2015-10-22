@@ -688,7 +688,7 @@ skip-if(B2G||Mulet) == 378937-1.html 378937-1-ref.html # Initial mulet triage: p
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 == 379316-1.html 379316-1-ref.html
-skip-if(B2G||Mulet) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,170) fuzzy-if(gtkWidget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(winWidget,1,180) fuzzy-if(gtkWidget,1,191) == 379316-2.html 379316-2-ref.html # bug 379786 # Initial mulet triage: parity with B2G/B2G Desktop
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 # fuzzy because of different border rendering approach in bug 1185636
@@ -1743,7 +1743,7 @@ random-if(Android&&AndroidVersion<15) == 776265-1a.html 776265-1-ref.html
 == 786254-1.html 786254-1-ref.html
 == 787947-1.html 787947-1-ref.html
 == 796847-1.svg 796847-1-ref.svg
-fuzzy(40,850) fuzzy-if(azureQuartz,73,542) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
+fuzzy(40,875) fuzzy-if(azureQuartz,73,542) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 fuzzy(40,850) fuzzy-if(azureQuartz,68,586) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 == 801994-1.html 801994-1-ref.html
 == 804323-1.html 804323-1-ref.html
