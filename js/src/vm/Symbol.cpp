@@ -109,11 +109,11 @@ void
 SymbolRegistry::sweep()
 {
     for (Enum e(*this); !e.empty(); e.popFront()) {
-        Symbol* sym = e.front();
-        if (IsAboutToBeFinalizedUnbarriered(&sym))
+        mozilla::DebugOnly<Symbol*> sym = e.front().unbarrieredGet();
+        if (IsAboutToBeFinalized(&e.mutableFront()))
             e.removeFront();
         else
-            MOZ_ASSERT(sym == e.front());
+            MOZ_ASSERT(sym == e.front().unbarrieredGet());
     }
 }
 
