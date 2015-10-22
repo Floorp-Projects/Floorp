@@ -55,8 +55,8 @@ const ANSWER_PORT = 321;
 function loopOfferAnser() {
   tps = Cc["@mozilla.org/presentation-device/tcp-presentation-server;1"]
         .createInstance(Ci.nsITCPPresentationServer);
-  tps.init(null, PRESENTER_CONTROL_CHANNEL_PORT);
   tps.id = 'controllerID';
+  tps.startService(PRESENTER_CONTROL_CHANNEL_PORT);
 
   testPresentationServer();
 }
@@ -178,7 +178,7 @@ function setOffline() {
 
 function oneMoreLoop() {
   try {
-    tps.init('controllerID', PRESENTER_CONTROL_CHANNEL_PORT);
+    tps.startService(PRESENTER_CONTROL_CHANNEL_PORT);
     testPresentationServer();
   } catch (e) {
     Assert.ok(false, 'TCP presentation init fail:' + e);

@@ -34,18 +34,16 @@ TCPPresentationServer.prototype = {
    */
   _controlChannels: [],
 
-  init: function(aId, aPort) {
-    if (this._isInit()) {
+  startService: function(aPort) {
+    if (this._isServiceInit()) {
       DEBUG && log("TCPPresentationServer - server socket has been initialized");
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    if (typeof aId === "undefined" || typeof aPort === "undefined") {
-      DEBUG && log("TCPPresentationServer - aId/aPort should not be undefined");
+    if (typeof aPort === "undefined") {
+      DEBUG && log("TCPPresentationServer - aPort should not be undefined");
       throw Cr.NS_ERROR_FAILURE;
     }
-
-    DEBUG && log("TCPPresentationServer - init id: " + aId + " port: " + aPort);
 
     /**
      * 0 or undefined indicates opt-out parameter, and a port will be selected
@@ -63,18 +61,16 @@ TCPPresentationServer.prototype = {
 
     try {
       this._serverSocket.init(serverSocketPort, false, -1);
+      this._serverSocket.asyncListen(this);
     } catch (e) {
       // NS_ERROR_SOCKET_ADDRESS_IN_USE
       DEBUG && log("TCPPresentationServer - init server socket fail: " + e);
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    /**
-     * The setter may trigger |_serverSocket.asyncListen| if the |id| setting
-     * successes.
-     */
-    this.id = aId;
     this._port = this._serverSocket.port;
+
+    DEBUG && log("TCPPresentationServer - service start on port: " + aPort);
   },
 
   get id() {
@@ -82,16 +78,7 @@ TCPPresentationServer.prototype = {
   },
 
   set id(aId) {
-    if (!aId || aId.length == 0 || aId === this._id) {
-      return;
-    } else if (this._id) {
-      throw Cr.NS_ERROR_FAILURE;
-    }
     this._id = aId;
-
-    if (this._serverSocket) {
-      this._serverSocket.asyncListen(this);
-    }
   },
 
   get port() {
@@ -106,13 +93,13 @@ TCPPresentationServer.prototype = {
     return this._listener;
   },
 
-  _isInit: function() {
-    return this._id !== null && this._serverSocket !== null;
+  _isServiceInit: function() {
+    return this._serverSocket !== null;
   },
 
   requestSession: function(aDeviceInfo, aUrl, aPresentationId) {
-    if (!this._isInit()) {
-      DEBUG && log("TCPPresentationServer - has not initialized; requestSession fails");
+    if (!this.id) {
+      DEBUG && log("TCPPresentationServer - Id has not initialized; requestSession fails");
       return null;
     }
     DEBUG && log("TCPPresentationServer - requestSession to " + aDeviceInfo.id
@@ -142,8 +129,9 @@ TCPPresentationServer.prototype = {
   },
 
   responseSession: function(aDeviceInfo, aSocketTransport) {
-    if (!this._isInit()) {
-      DEBUG && log("TCPPresentationServer - has not initialized; responseSession fails");
+    if (!this._isServiceInit()) {
+      DEBUG && log("TCPPresentationServer - should never receive remote " +
+                   "session request before server socket initialization");
       return null;
     }
     DEBUG && log("TCPPresentationServer - responseSession to "
@@ -209,7 +197,6 @@ TCPPresentationServer.prototype = {
       this._serverSocket.close();
       this._serverSocket = null;
     }
-    this._id = null;
     this._port = 0;
   },
 

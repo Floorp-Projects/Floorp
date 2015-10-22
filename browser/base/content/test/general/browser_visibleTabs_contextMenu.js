@@ -36,7 +36,7 @@ function test() {
   is(document.getElementById("context_closeTabsToTheEnd").disabled, true, "Close Tabs To The End is disabled");
 
   // Show all tabs
-  let allTabs = [tab for each (tab in gBrowser.tabs)];
+  let allTabs = Array.from(gBrowser.tabs);
   gBrowser.showOnlyTheseTabs(allTabs);
 
   // Check the context menu now

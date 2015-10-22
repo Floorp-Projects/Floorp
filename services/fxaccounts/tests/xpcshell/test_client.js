@@ -161,7 +161,11 @@ add_task(function test_backoffError() {
 });
 
 add_task(function test_signUp() {
-  let creationMessage = JSON.stringify({
+  let creationMessage_noKey = JSON.stringify({
+    uid: "uid",
+    sessionToken: "sessionToken"
+  });
+  let creationMessage_withKey = JSON.stringify({
     uid: "uid",
     sessionToken: "sessionToken",
     keyFetchToken: "keyFetchToken"
@@ -175,31 +179,55 @@ add_task(function test_signUp() {
       let jsonBody = JSON.parse(body);
 
       // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-test-vectors
-      do_check_eq(jsonBody.email, "andré@example.org");
 
-      if (!created) {
-        do_check_eq(jsonBody.authPW, "247b675ffb4c46310bc87e26d712153abe5e1c90ef00a4784594f97ef54f2375");
-        created = true;
-
-        response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(creationMessage, creationMessage.length);
+      if (created) {
+        // Error trying to create same account a second time
+        response.setStatusLine(request.httpVersion, 400, "Bad request");
+        response.bodyOutputStream.write(errorMessage, errorMessage.length);
         return;
       }
 
-      // Error trying to create same account a second time
-      response.setStatusLine(request.httpVersion, 400, "Bad request");
-      response.bodyOutputStream.write(errorMessage, errorMessage.length);
-      return;
+      if (jsonBody.email == "andré@example.org") {
+        do_check_eq("", request._queryString);
+        do_check_eq(jsonBody.authPW, "247b675ffb4c46310bc87e26d712153abe5e1c90ef00a4784594f97ef54f2375");
+
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.bodyOutputStream.write(creationMessage_noKey,
+                                        creationMessage_noKey.length);
+        return;
+      }
+
+      if (jsonBody.email == "you@example.org") {
+        do_check_eq("keys=true", request._queryString);
+        do_check_eq(jsonBody.authPW, "e5c1cdfdaa5fcee06142db865b212cc8ba8abee2a27d639d42c139f006cdb930");
+        created = true;
+
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.bodyOutputStream.write(creationMessage_withKey,
+                                        creationMessage_withKey.length);
+        return;
+      }
     },
   });
 
+  // Try to create an account without retrieving optional keys.
   let client = new FxAccountsClient(server.baseURI);
   let result = yield client.signUp('andré@example.org', 'pässwörd');
   do_check_eq("uid", result.uid);
   do_check_eq("sessionToken", result.sessionToken);
-  do_check_eq("keyFetchToken", result.keyFetchToken);
+  do_check_eq(undefined, result.keyFetchToken);
+  do_check_eq(result.unwrapBKey,
+              "de6a2648b78284fcb9ffa81ba95803309cfba7af583c01a8a1a63e567234dd28");
 
-  // Try to create account again.  Triggers error path.
+  // Try to create an account retrieving optional keys.
+  result = yield client.signUp('you@example.org', 'pässwörd', true);
+  do_check_eq("uid", result.uid);
+  do_check_eq("sessionToken", result.sessionToken);
+  do_check_eq("keyFetchToken", result.keyFetchToken);
+  do_check_eq(result.unwrapBKey,
+              "f589225b609e56075d76eb74f771ff9ab18a4dc0e901e131ba8f984c7fb0ca8c");
+
+  // Try to create an existing account.  Triggers error path.
   try {
     result = yield client.signUp('andré@example.org', 'pässwörd');
     do_throw("Expected to catch an exception");
@@ -289,15 +317,6 @@ add_task(function test_signIn() {
   do_check_eq(result.unwrapBKey,
               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
   do_check_eq("keyFetchToken", result.keyFetchToken);
-
-  // Don't retry due to wrong email capitalization
-  try {
-    let result = yield client.signIn('You@example.com', 'bigsecret', true, false);
-    do_throw("Expected to catch an exception");
-  } catch (expectedError) {
-    do_check_eq(120, expectedError.errno);
-    do_check_eq("you@example.com", expectedError.email);
-  }
 
   // Trigger error path
   try {

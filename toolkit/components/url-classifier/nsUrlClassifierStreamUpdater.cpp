@@ -15,6 +15,7 @@
 #include "nsStringStream.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierStreamUpdater.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "nsIInterfaceRequestor.h"
@@ -99,6 +100,9 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
                      loadFlags);
 
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  loadInfo->SetOriginAttributes(mozilla::OriginAttributes(NECKO_SAFEBROWSING_APP_ID, false));
 
   mBeganStream = false;
 

@@ -200,11 +200,11 @@ function run_test() {
   }
 
   // Fix up the completions before running the test.
-  for each (let completionSet in completionSets) {
-    for each (let completion in completionSet) {
+  for (let completionSet of completionSets) {
+    for (let completion of completionSet) {
       // Pad the right of each |hash| so that the length is COMPLETE_LENGTH.
       if (completion.multipleCompletions) {
-        for each (let responseCompletion in completion.completions) {
+        for (let responseCompletion of completion.completions) {
           let numChars = COMPLETE_LENGTH - responseCompletion.hash.length;
           responseCompletion.hash += (new Array(numChars + 1)).join("\u0000");
         }
@@ -241,7 +241,7 @@ function runNextCompletion() {
        completionSets[currentCompletionSet].length + "\n");
   // Number of finished completions for this set.
   finishedCompletions = 0;
-  for each (let completion in completionSets[currentCompletionSet]) {
+  for (let completion of completionSets[currentCompletionSet]) {
     completer.complete(completion.hash.substring(0,4), gethashUrl,
                        (new callback(completion)));
   }
@@ -267,7 +267,7 @@ function hashCompleterServer(aRequest, aResponse) {
   // As per the spec, a server should response with a 204 if there are no
   // full-length hashes that match the prefixes.
   let httpStatus = 204;
-  for each (let completion in completionSets[currentCompletionSet]) {
+  for (let completion of completionSets[currentCompletionSet]) {
     if (completion.expectCompletion &&
         (completedHashes.indexOf(completion.hash) == -1)) {
       completedHashes.push(completion.hash);
@@ -300,7 +300,7 @@ callback.prototype = {
   completion: function completion(hash, table, chunkId, trusted) {
     do_check_true(this._completion.expectCompletion);
     if (this._completion.multipleCompletions) {
-      for each (let completion in this._completion.completions) {
+      for (let completion of this._completion.completions) {
         if (completion.hash == hash) {
           do_check_eq(JSON.stringify(hash), JSON.stringify(completion.hash));
           do_check_eq(table, completion.table);

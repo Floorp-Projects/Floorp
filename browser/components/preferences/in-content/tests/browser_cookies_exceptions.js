@@ -277,7 +277,7 @@ var testRunner = {
               let expected = testRunner.tests[testRunner._currentTest].observances.shift();
 
               is(aData, expected.data, "type of message should be the same");
-              for each (let prop in ["type", "capability"]) {
+              for (let prop of ["type", "capability"]) {
                 if (expected[prop])
                   is(permission[prop], expected[prop],
                     "property: \"" + prop  + "\" should be equal");

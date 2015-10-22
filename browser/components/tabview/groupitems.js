@@ -2137,11 +2137,11 @@ var GroupItems = {
   // Function: getBoundingBox
   // Given an array of DOM elements, returns a <Rect> with (roughly) the union of their locations.
   getBoundingBox: function GroupItems_getBoundingBox(els) {
-    var bounds = [iQ(el).bounds() for each (el in els)];
-    var left   = Math.min.apply({},[ b.left   for each (b in bounds) ]);
-    var top    = Math.min.apply({},[ b.top    for each (b in bounds) ]);
-    var right  = Math.max.apply({},[ b.right  for each (b in bounds) ]);
-    var bottom = Math.max.apply({},[ b.bottom for each (b in bounds) ]);
+    var bounds = els.map(el => iQ(el).bounds());
+    var left   = Math.min.apply({}, bounds.map(b => b.left));
+    var top    = Math.min.apply({}, bounds.map(b => b.top));
+    var right  = Math.max.apply({}, bounds.map(b => b.right));
+    var bottom = Math.max.apply({}, bounds.map(b => b.bottom));
 
     return new Rect(left, top, right-left, bottom-top);
   },

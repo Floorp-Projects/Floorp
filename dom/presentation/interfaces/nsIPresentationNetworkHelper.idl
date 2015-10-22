@@ -1,0 +1,36 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+#define PRESENTATION_NETWORK_HELPER_CONTRACTID \
+  "@mozilla.org/presentation-device/networkHelper;1"
+%}
+
+[scriptable, uuid(0a7e134f-ff80-4e73-91e6-12b3134fe568)]
+interface nsIPresentationNetworkHelperListener : nsISupports
+{
+  /**
+   * Called when error occurs.
+   * @param aReason error message.
+   */
+  void onError(in AUTF8String aReason);
+
+  /**
+   * Called when get Wi-Fi IP address.
+   * @param aIPAddress the IP address of Wi-Fi interface.
+   */
+  void onGetWifiIPAddress(in AUTF8String aIPAddress);
+};
+
+[scriptable, uuid(650dc16b-3d9c-49a6-9037-1d6f2d18c90c)]
+interface nsIPresentationNetworkHelper : nsISupports
+{
+  /**
+   * Get IP address of Wi-Fi interface.
+   * @param aListener the callback interface.
+   */
+  void getWifiIPAddress(in nsIPresentationNetworkHelperListener aListener);
+};

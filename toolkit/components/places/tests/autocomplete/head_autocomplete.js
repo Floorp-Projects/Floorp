@@ -292,7 +292,7 @@ function removePages(aURIs)
 
 function do_removePages(aURIs)
 {
-  for each (let uri in aURIs)
+  for (let uri of aURIs)
     histsvc.removePage(toURI(kURIs[uri]));
 }
 

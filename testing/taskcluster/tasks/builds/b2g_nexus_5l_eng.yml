@@ -15,11 +15,6 @@ task:
     env:
       TARGET: 'nexus-5-l'
       DEBUG: 0
-    command:
-      - >
-        checkout-gecko workspace &&
-        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
   extra:
     treeherderEnv:
       - production

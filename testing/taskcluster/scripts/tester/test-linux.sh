@@ -47,8 +47,8 @@ fi
 # start up the pulseaudio daemon.  Note that it's important this occur
 # before the Xvfb startup.
 if $NEED_PULSEAUDIO; then
-    echo "Pulseaudio is not yet supported in desktop-test; See Bug 1214809"
-    exit 1
+    pulseaudio --fail --daemonize --start
+    pactl load-module module-null-sink
 fi
 
 # run XVfb in the background, if necessary

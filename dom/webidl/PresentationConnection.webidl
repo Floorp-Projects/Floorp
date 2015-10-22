@@ -18,7 +18,7 @@ enum PresentationConnectionState
 };
 
 [Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation"]
+ Func="Navigator::HasPresentationSupport"]
 interface PresentationConnection : EventTarget {
   /*
    * Unique id for all existing connections.

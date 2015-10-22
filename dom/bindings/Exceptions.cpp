@@ -158,6 +158,7 @@ CreateException(JSContext* aCx, nsresult aRv, const nsACString& aMessage)
   case NS_ERROR_MODULE_DOM_INDEXEDDB:
   case NS_ERROR_MODULE_DOM_FILEHANDLE:
   case NS_ERROR_MODULE_DOM_BLUETOOTH:
+  case NS_ERROR_MODULE_DOM_ANIM:
     if (aMessage.IsEmpty()) {
       return DOMException::Create(aRv);
     }

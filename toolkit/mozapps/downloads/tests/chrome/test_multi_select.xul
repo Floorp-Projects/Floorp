@@ -42,7 +42,7 @@ function test()
     "VALUES (?1, ?2, ?3, ?4)");
 
   try {
-    for each (let site in ["ed.agadak.net", "mozilla.org", "mozilla.com", "mozilla.net"]) {
+    for (let site of ["ed.agadak.net", "mozilla.org", "mozilla.com", "mozilla.net"]) {
       let file = Cc["@mozilla.org/file/directory_service;1"].
         getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
       file.append(site);
@@ -160,7 +160,7 @@ function test()
     };
 
     // Run two tests: single selected, double selected
-    for each (let whichTest in ["single", "double"]) {
+    for (let whichTest of ["single", "double"]) {
       let expected = allExpected[whichTest];
 
       // Select the first download
@@ -170,7 +170,7 @@ function test()
       if (whichTest == "double")
         synthesizeKey("VK_DOWN", { shiftKey: true }, win);
 
-      for each (let [command, func, test, value] in commandTests) {
+      for (let [command, func, test, value] of commandTests) {
         // Make a copy of the original function and replace it with a test
         let copy;
         [copy, win[func]] = [win[func], test];

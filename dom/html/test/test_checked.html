@@ -34,7 +34,7 @@ var group2;
 var group3;
 
 var tags = ["input", "menuitem"];
-for each (let tag in tags) {
+for (let tag of tags) {
 
 function bounce(node) {
   let n = node.nextSibling;
@@ -46,7 +46,7 @@ function bounce(node) {
 var createdNodes = [];
 
 function cleanup() {
-  for each (let node in createdNodes) {
+  for (let node of createdNodes) {
     if (node.parentNode) {
       node.parentNode.removeChild(node);
     }
@@ -79,7 +79,7 @@ var types = ['c', 'r'];
 
 // First make sure that setting .checked makes .defaultChecked changes no
 // longer affect .checked.
-for each (let type in types) {
+for (let type of types) {
   let n = createNode(type, '', false);
   is(n.defaultChecked, false, "Bogus defaultChecked on " + typeMapper[type]);
   is(n.checked, false, "Bogus checked on " + typeMapper[type]);
@@ -109,7 +109,7 @@ cleanup();
 
 // Now check that bouncing a control that's the only one of its kind has no
 // effect
-for each (let type in types) {
+for (let type of types) {
   let n = createNode(type, 'test1', true);
   $(tag == "input" ? "f1" : "m1").appendChild(n);
   n.checked = false;

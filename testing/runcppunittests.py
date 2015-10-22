@@ -121,13 +121,19 @@ class CPPUnitTests(object):
             else:
                 env[pathvar] = libpath
 
-        # Use llvm-symbolizer for ASan if available/required
-        llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
-        if os.path.isfile(llvmsym):
-            env["ASAN_SYMBOLIZER_PATH"] = llvmsym
-            self.log.info("ASan using symbolizer at %s" % llvmsym)
-        else:
-            self.log.info("Failed to find ASan symbolizer at %s" % llvmsym)
+        if mozinfo.info["asan"]:
+            # Use llvm-symbolizer for ASan if available/required
+            llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
+            if os.path.isfile(llvmsym):
+                env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+                self.log.info("ASan using symbolizer at %s" % llvmsym)
+            else:
+                self.log.info("Failed to find ASan symbolizer at %s" % llvmsym)
+
+            # media/mtransport tests statically link in NSS, which
+            # causes ODR violations. See bug 1215679.
+            assert not 'ASAN_OPTIONS' in env
+            env['ASAN_OPTIONS'] = 'detect_leaks=0:detect_odr_violation=0'
 
         return env
 

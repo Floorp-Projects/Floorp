@@ -136,7 +136,7 @@ function run_test() {
 
   startupManager();
 
-  installAllFiles([do_get_addon(a.addon) for each (a in ADDONS)], function() {
+  installAllFiles(ADDONS.map(a => do_get_addon(a.addon)), function() {
     restartManager();
     AddonManager.getAddonByID(ADDONS[0].id, callback_soon(function(addon) {
       do_check_true(!(!addon));

@@ -149,7 +149,7 @@ function run_test() {
   startupManager();
   dump("\n\n*** INSTALLING NEW ITEMS\n\n");
 
-  installAllFiles([do_get_addon(a.addon) for each (a in ADDONS)], run_test_pt2,
+  installAllFiles(ADDONS.map(a => do_get_addon(a.addon)), run_test_pt2,
                   true);
 }
 
@@ -161,7 +161,7 @@ function run_test_pt2() {
   dump("\n\n*** RESTARTING EXTENSION MANAGER\n\n");
   restartManager();
 
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(items) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(items) {
     dump("\n\n*** REQUESTING UPDATE\n\n");
     // checkListener will call run_test_pt3().
     next_test = run_test_pt3;
@@ -186,7 +186,7 @@ function run_test_pt2() {
 function run_test_pt3() {
   // Install the new items.
   dump("\n\n*** UPDATING ITEMS\n\n");
-  completeAllInstalls([a.newInstall for each(a in ADDONS) if (a.newInstall)],
+  completeAllInstalls(ADDONS.filter(a => a.newInstall).map(a => a.newInstall),
                       run_test_pt4);
 }
 
@@ -198,7 +198,7 @@ function run_test_pt4() {
   restartManager();
 
   dump("\n\n*** FINAL CHECKS\n\n");
-  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(items) {
+  AddonManager.getAddonsByIDs(ADDONS.map(a => a.id), function(items) {
     for (var i = 0; i < ADDONS.length; i++) {
       var item = items[i];
       do_check_item(item, "0.2", ADDONS[i]);

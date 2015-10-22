@@ -4,7 +4,7 @@
 DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 PATH=$DIRNAME:$PATH
 
-WORKSPACE=$1
+export WORKSPACE=$HOME/workspace
 
 gecko_objdir=/home/worker/objdir-gecko/objdir
 
@@ -16,7 +16,10 @@ test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $TARGET
 test $VARIANT
 
-. ../builder/setup-ccache.sh
+export CCACHE_DIR=$WORKSPACE/ccache
+
+ccache -M 12G
+ccache -s
 
 # Figure out where the remote manifest is so we can use caches for it.
 MANIFEST=$(repository-url.py $GECKO_HEAD_REPOSITORY $GECKO_HEAD_REV b2g/config/$TARGET/sources.xml)

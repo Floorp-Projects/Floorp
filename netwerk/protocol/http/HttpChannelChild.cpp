@@ -184,6 +184,8 @@ HttpChannelChild::HttpChannelChild()
   , mFlushedForDiversion(false)
   , mSuspendSent(false)
   , mSynthesizedResponse(false)
+  , mShouldInterceptSubsequentRedirect(false)
+  , mRedirectingForSubsequentSynthesizedResponse(false)
   , mShouldParentIntercept(false)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
@@ -1157,25 +1159,17 @@ HttpChannelChild::RecvRedirect1Begin(const uint32_t& newChannelId,
   return true;
 }
 
-void
-HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
-                                 const URIParams& newUri,
-                                 const uint32_t& redirectFlags,
-                                 const nsHttpResponseHead& responseHead,
-                                 const nsACString& securityInfoSerialization)
+nsresult
+HttpChannelChild::SetupRedirect(nsIURI* uri,
+                                const nsHttpResponseHead* responseHead,
+                                nsIChannel** outChannel)
 {
-  LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
+  LOG(("HttpChannelChild::SetupRedirect [this=%p]\n", this));
 
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService;
   rv = gHttpHandler->GetIOService(getter_AddRefs(ioService));
-  if (NS_FAILED(rv)) {
-    // Veto redirect.  nsHttpChannel decides to cancel or continue.
-    OnRedirectVerifyCallback(rv);
-    return;
-  }
-
-  nsCOMPtr<nsIURI> uri = DeserializeURI(newUri);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> newChannel;
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel),
@@ -1185,33 +1179,19 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
                              nullptr, // aCallbacks
                              nsIRequest::LOAD_NORMAL,
                              ioService);
-
-  if (NS_FAILED(rv)) {
-    // Veto redirect.  nsHttpChannel decides to cancel or continue.
-    OnRedirectVerifyCallback(rv);
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We won't get OnStartRequest, set cookies here.
-  mResponseHead = new nsHttpResponseHead(responseHead);
-
-  if (!securityInfoSerialization.IsEmpty()) {
-    NS_DeserializeObject(securityInfoSerialization,
-                         getter_AddRefs(mSecurityInfo));
-  }
+  mResponseHead = new nsHttpResponseHead(*responseHead);
 
   bool rewriteToGET = HttpBaseChannel::ShouldRewriteRedirectToGET(mResponseHead->Status(),
                                                                   mRequestHead.ParsedMethod());
 
   rv = SetupReplacementChannel(uri, newChannel, !rewriteToGET);
-  if (NS_FAILED(rv)) {
-    // Veto redirect.  nsHttpChannel decides to cancel or continue.
-    OnRedirectVerifyCallback(rv);
-    return;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannelChild> httpChannelChild = do_QueryInterface(newChannel);
-  if (mSynthesizedResponse && httpChannelChild) {
+  if (mShouldInterceptSubsequentRedirect && httpChannelChild) {
     // In the case where there was a synthesized response that caused a redirection,
     // we must force the new channel to intercept the request in the parent before a
     // network transaction is initiated.
@@ -1219,15 +1199,64 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
   }
 
   mRedirectChannelChild = do_QueryInterface(newChannel);
-  if (mRedirectChannelChild) {
-    mRedirectChannelChild->ConnectParent(newChannelId);
+  newChannel.forget(outChannel);
+
+  return NS_OK;
+}
+
+void
+HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
+                                 const URIParams& newUri,
+                                 const uint32_t& redirectFlags,
+                                 const nsHttpResponseHead& responseHead,
+                                 const nsACString& securityInfoSerialization)
+{
+  LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
+
+  nsCOMPtr<nsIURI> uri = DeserializeURI(newUri);
+
+  if (!securityInfoSerialization.IsEmpty()) {
+    NS_DeserializeObject(securityInfoSerialization,
+                         getter_AddRefs(mSecurityInfo));
+  }
+
+  nsCOMPtr<nsIChannel> newChannel;
+  nsresult rv = SetupRedirect(uri,
+                              &responseHead,
+                              getter_AddRefs(newChannel));
+
+  if (NS_SUCCEEDED(rv)) {
+    if (mRedirectChannelChild) {
+      mRedirectChannelChild->ConnectParent(newChannelId);
+      rv = gHttpHandler->AsyncOnChannelRedirect(this,
+                                                newChannel,
+                                                redirectFlags);
+    } else {
+      LOG(("  redirecting to a protocol that doesn't implement"
+           " nsIChildChannel"));
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  if (NS_FAILED(rv))
+    OnRedirectVerifyCallback(rv);
+}
+
+void
+HttpChannelChild::BeginNonIPCRedirect(nsIURI* responseURI,
+                                      const nsHttpResponseHead* responseHead)
+{
+  LOG(("HttpChannelChild::BeginNonIPCRedirect [this=%p]\n", this));
+
+  nsCOMPtr<nsIChannel> newChannel;
+  nsresult rv = SetupRedirect(responseURI,
+                              responseHead,
+                              getter_AddRefs(newChannel));
+
+  if (NS_SUCCEEDED(rv)) {
     rv = gHttpHandler->AsyncOnChannelRedirect(this,
                                               newChannel,
-                                              redirectFlags);
-  } else {
-    LOG(("  redirecting to a protocol that doesn't implement"
-         " nsIChildChannel"));
-    rv = NS_ERROR_FAILURE;
+                                              nsIChannelEventSink::REDIRECT_INTERNAL);
   }
 
   if (NS_FAILED(rv))
@@ -1435,6 +1464,34 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
 // HttpChannelChild::nsIAsyncVerifyRedirectCallback
 //-----------------------------------------------------------------------------
 
+class OverrideRunnable : public nsRunnable {
+  RefPtr<HttpChannelChild> mChannel;
+  RefPtr<HttpChannelChild> mNewChannel;
+  RefPtr<InterceptStreamListener> mListener;
+  nsCOMPtr<nsIInputStream> mInput;
+  nsAutoPtr<nsHttpResponseHead> mHead;
+
+public:
+  OverrideRunnable(HttpChannelChild* aChannel,
+                   HttpChannelChild* aNewChannel,
+                   InterceptStreamListener* aListener,
+                   nsIInputStream* aInput,
+                   nsAutoPtr<nsHttpResponseHead>& aHead)
+  : mChannel(aChannel)
+  , mNewChannel(aNewChannel)
+  , mListener(aListener)
+  , mInput(aInput)
+  , mHead(aHead)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    mChannel->Redirect3Complete();
+    mNewChannel->OverrideWithSynthesizedResponse(mHead, mInput, mListener);
+    return NS_OK;
+  }
+};
+
 NS_IMETHODIMP
 HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
 {
@@ -1446,6 +1503,21 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   if (newHttpChannel) {
     // Must not be called until after redirect observers called.
     newHttpChannel->SetOriginalURI(mOriginalURI);
+  }
+
+  if (mRedirectingForSubsequentSynthesizedResponse) {
+    nsCOMPtr<nsIHttpChannelChild> httpChannelChild = do_QueryInterface(mRedirectChannelChild);
+    MOZ_ASSERT(httpChannelChild);
+    RefPtr<HttpChannelChild> redirectedChannel =
+        static_cast<HttpChannelChild*>(httpChannelChild.get());
+
+    RefPtr<InterceptStreamListener> streamListener =
+        new InterceptStreamListener(redirectedChannel, mListenerContext);
+
+    NS_DispatchToMainThread(new OverrideRunnable(this, redirectedChannel,
+                                                 streamListener, mSynthesizedInput,
+                                                 mResponseHead));
+    return NS_OK;
   }
 
   RequestHeaderTuples emptyHeaders;
@@ -2385,8 +2457,10 @@ HttpChannelChild::GetResponseSynthesized(bool* aSynthesized)
 void
 HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>& aResponseHead,
                                                   nsIInputStream* aSynthesizedInput,
-                                                  nsIStreamListener* aStreamListener)
+                                                  InterceptStreamListener* aStreamListener)
 {
+  mInterceptListener = aStreamListener;
+
   // Intercepted responses should already be decoded.  If its a redirect,
   // however, we want to respect the encoding of the final result instead.
   if (!WillRedirect(aResponseHead)) {
@@ -2397,6 +2471,7 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
   mSynthesizedResponse = true;
 
   if (WillRedirect(mResponseHead)) {
+    mShouldInterceptSubsequentRedirect = true;
     // Continue with the original cross-process request
     nsresult rv = ContinueAsyncOpen();
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -2442,6 +2517,20 @@ HttpChannelChild::ForceIntercepted()
 {
   mShouldParentIntercept = true;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::ForceIntercepted(uint64_t aInterceptionID)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+HttpChannelChild::ForceIntercepted(nsIInputStream* aSynthesizedInput)
+{
+  mSynthesizedInput = aSynthesizedInput;
+  mSynthesizedResponse = true;
+  mRedirectingForSubsequentSynthesizedResponse = true;
 }
 
 bool

@@ -84,6 +84,7 @@ static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
 static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
 static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
+static nsDataHashtable<nsCStringHashKey,nsCSSProperty>* gPropertyIDLNameTable;
 
 /* static */ nsCSSProperty *
   nsCSSProps::gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
@@ -183,6 +184,7 @@ nsCSSProps::AddRefTable(void)
     MOZ_ASSERT(!gFontDescTable, "pre existing array!");
     MOZ_ASSERT(!gCounterDescTable, "pre existing array!");
     MOZ_ASSERT(!gPredefinedCounterStyleTable, "pre existing array!");
+    MOZ_ASSERT(!gPropertyIDLNameTable, "pre existing array!");
 
     gPropertyTable = CreateStaticTable(
         kCSSRawProperties, eCSSProperty_COUNT_with_aliases);
@@ -192,6 +194,15 @@ nsCSSProps::AddRefTable(void)
     gPredefinedCounterStyleTable = CreateStaticTable(
         kCSSRawPredefinedCounterStyles,
         ArrayLength(kCSSRawPredefinedCounterStyles));
+
+    gPropertyIDLNameTable = new nsDataHashtable<nsCStringHashKey,nsCSSProperty>;
+    for (nsCSSProperty p = nsCSSProperty(0);
+         size_t(p) < ArrayLength(kIDLNameTable);
+         p = nsCSSProperty(p + 1)) {
+      if (kIDLNameTable[p]) {
+        gPropertyIDLNameTable->Put(nsDependentCString(kIDLNameTable[p]), p);
+      }
+    }
 
     BuildShorthandsContainingTable();
 
@@ -474,6 +485,9 @@ nsCSSProps::ReleaseTable(void)
     delete gPredefinedCounterStyleTable;
     gPredefinedCounterStyleTable = nullptr;
 
+    delete gPropertyIDLNameTable;
+    gPropertyIDLNameTable = nullptr;
+
     delete [] gShorthandsContainingPool;
     gShorthandsContainingPool = nullptr;
   }
@@ -568,6 +582,30 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
     }
   }
   return eCSSProperty_UNKNOWN;
+}
+
+nsCSSProperty
+nsCSSProps::LookupPropertyByIDLName(const nsACString& aPropertyIDLName,
+                                    EnabledState aEnabled)
+{
+  nsCSSProperty res;
+  if (!gPropertyIDLNameTable->Get(aPropertyIDLName, &res)) {
+    return eCSSProperty_UNKNOWN;
+  }
+  MOZ_ASSERT(res < eCSSProperty_COUNT);
+  if (!IsEnabled(res, aEnabled)) {
+    return eCSSProperty_UNKNOWN;
+  }
+  return res;
+}
+
+nsCSSProperty
+nsCSSProps::LookupPropertyByIDLName(const nsAString& aPropertyIDLName,
+                                    EnabledState aEnabled)
+{
+  MOZ_ASSERT(gPropertyIDLNameTable, "no lookup table, needs addref");
+  return LookupPropertyByIDLName(NS_ConvertUTF16toUTF8(aPropertyIDLName),
+                                 aEnabled);
 }
 
 nsCSSFontDesc

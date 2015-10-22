@@ -267,7 +267,7 @@ function isValidInterpolation(aFromType, aToType)
 // Runs the test.
 function run()
 {
-  for each (let additive in [false, true]) {
+  for (let additive of [false, true]) {
     let indexOfExpectedArguments = additive ? 3 : 2;
 
     // Add subtests for each combination of prefix and suffix, and additive
@@ -279,7 +279,7 @@ function run()
           toArguments = suffixEntry[1],
           expectedArguments = suffixEntry[indexOfExpectedArguments];
 
-      for each (let prefixEntry in gPrefixes) {
+      for (let prefixEntry of gPrefixes) {
         let [prefixLength, prefix] = prefixEntry;
         addTest(prefixLength, prefix, fromType, fromArguments,
 	        toType, toArguments, toType, expectedArguments, additive);
@@ -298,9 +298,9 @@ function run()
 	    "a", [60, 70, 80, 1, 0, 90, 100], additive);
 
     // Test all pairs of segment types that cannot be interpolated between.
-    for each (let fromType in gTypes) {
+    for (let fromType of gTypes) {
       let fromArguments = generatePathSegmentArguments(fromType, 0);
-      for each (let toType in gTypes) {
+      for (let toType of gTypes) {
         if (!isValidInterpolation(fromType, toType)) {
           let toArguments = generatePathSegmentArguments(toType, 1000);
           addTest(1, "M100,100", fromType, fromArguments,
@@ -314,7 +314,7 @@ function run()
   gSVG.setCurrentTime(4);
 
   // Inspect the results of each subtest.
-  for each (let test in gTests) {
+  for (let test of gTests) {
     let list = test.element.animatedPathSegList;
     is(list.numberOfItems, test.prefixLength + 1,
        "Length of animatedPathSegList for interpolation " +

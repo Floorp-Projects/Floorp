@@ -882,7 +882,8 @@ nsPlacesExpiration.prototype = {
    */
   _finalizeInternalStatements: function PEX__finalizeInternalStatements()
   {
-    for each (let stmt in this._cachedStatements) {
+    for (let queryType in this._cachedStatements) {
+      let stmt = this._cachedStatements[queryType];
       stmt.finalize();
     }
   },
