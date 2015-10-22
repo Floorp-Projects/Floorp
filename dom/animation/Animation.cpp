@@ -205,10 +205,20 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
 void
 Animation::SetPlaybackRate(double aPlaybackRate)
 {
+  if (aPlaybackRate == mPlaybackRate) {
+    return;
+  }
+
+  AutoMutationBatchForAnimation mb(*this);
+
   Nullable<TimeDuration> previousTime = GetCurrentTime();
   mPlaybackRate = aPlaybackRate;
   if (!previousTime.IsNull()) {
     SetCurrentTime(previousTime.Value());
+  }
+
+  if (IsRelevant()) {
+    nsNodeUtils::AnimationChanged(this);
   }
 }
 
