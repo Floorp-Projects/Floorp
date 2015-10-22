@@ -209,9 +209,14 @@ methods of other kinds of objects.
     points to source line <i>line</i>. If the script contains no executable
     code at that line, the array returned is empty.
 
-<code>getOffsetLine(<i>offset</i>)</code>
-:   Return the source code line responsible for the bytecode at
-    <i>offset</i> in this script.
+<code>getOffsetLocation(<i>offset</i>)</code>
+:   Return an object describing the source code location responsible for the
+    bytecode at <i>offset</i> in this script.  The object has the
+    following properties:
+
+    * lineNumber: the line number for which offset is an entry point
+
+    * columnNumber: the column number for which offset is an entry point
 
 `getOffsetsCoverage()`:
 :   Return `null` or an array which contains informations about the coverage of
