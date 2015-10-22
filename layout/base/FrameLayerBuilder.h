@@ -15,6 +15,7 @@
 #include "DisplayItemClip.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "LayerState.h"
+#include "LayerUserData.h"
 
 class nsDisplayListBuilder;
 class nsDisplayList;
