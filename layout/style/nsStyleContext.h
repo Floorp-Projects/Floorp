@@ -288,8 +288,7 @@ public:
    * because it was stored conditionally on the rule node.
    */
   bool HasCachedDependentStyleData(nsStyleStructID aSID) {
-    return (mBits & nsCachedStyleData::GetBitForSID(aSID)) &&
-           GetCachedStyleData(aSID);
+    return mBits & nsCachedStyleData::GetBitForSID(aSID);
   }
 
   nsRuleNode* RuleNode() { return mRuleNode; }
@@ -617,19 +616,18 @@ private:
   // are owned by this style context and structs that are owned by one of
   // this style context's ancestors (which are indirectly owned since this
   // style context owns a reference to its parent).  If the bit in |mBits|
-  // is set for a non-null struct, that means that the pointer for that
-  // struct is owned by an ancestor or by mRuleNode rather than by this
-  // style context.  Since style contexts typically have some inherited
-  // data but only sometimes have reset data, we always allocate the
-  // mCachedInheritedData, but only sometimes allocate the
-  // mCachedResetData.
+  // is set for a struct, that means that the pointer for that struct is
+  // owned by an ancestor or by mRuleNode rather than by this style context.
+  // Since style contexts typically have some inherited data but only sometimes
+  // have reset data, we always allocate the mCachedInheritedData, but only
+  // sometimes allocate the mCachedResetData.
   nsResetStyleData*       mCachedResetData; // Cached reset style data.
   nsInheritedStyleData    mCachedInheritedData; // Cached inherited style data
 
   // mBits stores a number of things:
-  //  - For all structs, when they are non-null in the style context's
-  //    storage, it records (using the style struct bits) which structs
-  //    are inherited from the parent context or owned by mRuleNode.
+  //  - It records (using the style struct bits) which structs are
+  //    inherited from the parent context or owned by mRuleNode (i.e.,
+  //    not owned by the style context).
   //  - It also stores the additional bits listed at the top of
   //    nsStyleStruct.h.
   uint64_t                mBits;
