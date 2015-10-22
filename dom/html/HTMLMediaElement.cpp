@@ -2113,7 +2113,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mPlayBlockedBecauseHidden(false),
     mMediaStreamTrackListener(nullptr),
     mElementInTreeState(ELEMENT_NOT_INTREE),
-    mHasUserInteraction(false)
+    mHasUserInteraction(false),
+    mFirstFrameLoaded(false)
 {
   if (!gMediaElementLog) {
     gMediaElementLog = PR_NewLogModule("nsMediaElement");
@@ -3445,6 +3446,11 @@ void HTMLMediaElement::FirstFrameLoaded()
 {
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
 
+  if (!mFirstFrameLoaded) {
+    mFirstFrameLoaded = true;
+    UpdateReadyStateInternal();
+  }
+
   ChangeDelayLoadStatus(false);
 
   if (mDecoder && mAllowSuspendAfterFirstFrame && mPaused &&
@@ -3800,7 +3806,9 @@ HTMLMediaElement::UpdateReadyStateInternal()
   if (NextFrameStatus() != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Next frame not available", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+    if (mFirstFrameLoaded) {
+      ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+    }
     if (!mWaitingFired && NextFrameStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       FireTimeUpdate(false);
       DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));

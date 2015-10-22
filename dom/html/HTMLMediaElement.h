@@ -1513,6 +1513,9 @@ private:
   // Indicates if user has interacted with the element.
   // Used to block autoplay when disabled.
   bool mHasUserInteraction;
+
+  // True if the first frame has been successfully loaded.
+  bool mFirstFrameLoaded;
 };
 
 } // namespace dom
