@@ -118,6 +118,19 @@ InternalResponse::StripFragmentAndSetUrl(const nsACString& aUrl)
   return NS_OK;
 }
 
+LoadTainting
+InternalResponse::GetTainting() const
+{
+  switch (mType) {
+    case ResponseType::Cors:
+      return LoadTainting::CORS;
+    case ResponseType::Opaque:
+      return LoadTainting::Opaque;
+    default:
+      return LoadTainting::Basic;
+  }
+}
+
 already_AddRefed<InternalResponse>
 InternalResponse::OpaqueResponse()
 {
