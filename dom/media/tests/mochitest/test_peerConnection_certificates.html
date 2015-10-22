@@ -100,15 +100,15 @@
         expires: 1 // smallest possible expiration window
       }))
       .then(cert => {
-        ok(cert.expires instanceof Date, 'cert has expiration time');
-        info('Expires at ' + cert.expires);
+        ok(!isNaN(cert.expires), 'cert has expiration time');
+        info('Expires at ' + new Date(cert.expires));
         expiredCert = cert;
       })
 
       .then(() => checkBadParameters())
 
       .then(() => {
-        var delay = expiredCert.expires.getTime() - Date.now();
+        var delay = expiredCert.expires - Date.now();
         // Hopefully this delay is never needed.
         if (delay > 0) {
           return new Promise(r => setTimeout(r, delay));
