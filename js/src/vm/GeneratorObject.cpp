@@ -112,13 +112,18 @@ js::SetReturnValueForClosingGenerator(JSContext* cx, AbstractFramePtr frame)
     GeneratorObject& genObj = callObj.getSlot(shape->slot()).toObject().as<GeneratorObject>();
     genObj.setClosed();
 
-    // Return value is already set in GeneratorThrowOrClose.
-    if (genObj.is<StarGeneratorObject>())
-        return;
+    Value v;
+    if (genObj.is<StarGeneratorObject>()) {
+        // The return value is stored in the .genrval slot.
+        shape = callObj.lookup(cx, cx->names().dotGenRVal);
+        v = callObj.getSlot(shape->slot());
+    } else {
+        // Legacy generator .close() always returns |undefined|.
+        MOZ_ASSERT(genObj.is<LegacyGeneratorObject>());
+        v = UndefinedValue();
+    }
 
-    // Legacy generator .close() always returns |undefined|.
-    MOZ_ASSERT(genObj.is<LegacyGeneratorObject>());
-    frame.setReturnValue(UndefinedValue());
+    frame.setReturnValue(v);
 }
 
 bool
@@ -132,8 +137,13 @@ js::GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<Generato
         MOZ_ASSERT(resumeKind == GeneratorObject::CLOSE);
 
         if (genObj->is<StarGeneratorObject>()) {
+            // Store the return value in the frame's CallObject so that we can
+            // return it after executing finally blocks (and potentially
+            // yielding again).
             MOZ_ASSERT(arg.isObject());
-            frame.setReturnValue(arg);
+            CallObject& callObj = frame.callObj();
+            Shape* shape = callObj.lookup(cx, cx->names().dotGenRVal);
+            callObj.setSlot(shape->slot(), arg);
         } else {
             MOZ_ASSERT(arg.isUndefined());
         }
