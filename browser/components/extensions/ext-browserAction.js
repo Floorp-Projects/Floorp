@@ -75,7 +75,7 @@ BrowserAction.prototype = {
           let tab = tabbrowser.selectedTab;
           let popup = this.getProperty(tab, "popup");
           if (popup) {
-            this.togglePopup(node, popup);
+            togglePanel(node, popup, this.extension);
           } else {
             this.emit("click");
           }
@@ -89,10 +89,6 @@ BrowserAction.prototype = {
                        (evt, tab) => { this.updateWindow(tab.ownerDocument.defaultView); })
 
     this.widget = widget;
-  },
-
-  togglePopup(node, popupResource) {
-    openPanel(node, popupResource, this.extension);
   },
 
   // Update the toolbar button |node| with the tab context data
