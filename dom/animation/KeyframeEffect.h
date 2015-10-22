@@ -31,6 +31,10 @@ namespace mozilla {
 
 class AnimValuesStyleRule;
 
+namespace dom {
+struct ComputedTimingProperties;
+}
+
 /**
  * Input timing parameters.
  *
@@ -271,6 +275,9 @@ public:
   {
     return GetComputedTimingAt(GetLocalTime(), aTiming ? *aTiming : mTiming);
   }
+
+  void
+  GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const override;
 
   // Return the duration of the active interval for the given timing parameters.
   static StickyTimeDuration

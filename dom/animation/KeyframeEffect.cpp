@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/FloatingPoint.h"
@@ -15,8 +16,75 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSValue.h"
 #include "nsStyleUtil.h"
+#include <algorithm>    // std::max
 
 namespace mozilla {
+
+// Helper functions for generating a ComputedTimingProperties dictionary
+static dom::FillMode
+ConvertFillMode(uint8_t aFill)
+{
+  switch (aFill) {
+    case NS_STYLE_ANIMATION_FILL_MODE_NONE:
+      return dom::FillMode::None;
+    case NS_STYLE_ANIMATION_FILL_MODE_FORWARDS:
+      return dom::FillMode::Forwards;
+    case NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS:
+      return dom::FillMode::Backwards;
+    case NS_STYLE_ANIMATION_FILL_MODE_BOTH:
+      return dom::FillMode::Both;
+    default:
+      MOZ_ASSERT(false, "The mapping of FillMode is not correct");
+      return dom::FillMode::None;
+  }
+}
+
+static dom::PlaybackDirection
+ConvertPlaybackDirection(uint8_t aDirection)
+{
+  switch (aDirection) {
+    case NS_STYLE_ANIMATION_DIRECTION_NORMAL:
+      return dom::PlaybackDirection::Normal;
+    case NS_STYLE_ANIMATION_DIRECTION_REVERSE:
+      return dom::PlaybackDirection::Reverse;
+    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE:
+      return dom::PlaybackDirection::Alternate;
+    case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
+      return dom::PlaybackDirection::Alternate_reverse;
+    default:
+      MOZ_ASSERT(false, "The mapping of PlaybackDirection is not correct");
+      return dom::PlaybackDirection::Normal;
+  }
+}
+
+static void
+GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
+                            const Nullable<TimeDuration>& aLocalTime,
+                            const AnimationTiming& aTiming,
+                            dom::ComputedTimingProperties& aRetVal)
+{
+  // AnimationEffectTimingProperties
+  aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
+  aRetVal.mFill = ConvertFillMode(aTiming.mFillMode);
+  aRetVal.mIterations = aTiming.mIterationCount;
+  aRetVal.mDuration.SetAsUnrestrictedDouble() = aTiming.mIterationDuration.ToMilliseconds();
+  aRetVal.mDirection = ConvertPlaybackDirection(aTiming.mDirection);
+
+  // ComputedTimingProperties
+  aRetVal.mActiveDuration = aComputedTiming.mActiveDuration.ToMilliseconds();
+  aRetVal.mEndTime
+    = std::max(aRetVal.mDelay + aRetVal.mActiveDuration + aRetVal.mEndDelay, 0.0);
+  aRetVal.mLocalTime = dom::AnimationUtils::TimeDurationToDouble(aLocalTime);
+  aRetVal.mProgress = aComputedTiming.mProgress;
+  if (!aRetVal.mProgress.IsNull()) {
+    // Convert the returned currentIteration into Infinity if we set
+    // (uint64_t) aComputedTiming.mCurrentIteration to UINT64_MAX
+    double iteration = aComputedTiming.mCurrentIteration == UINT64_MAX
+                     ? PositiveInfinity<double>()
+                     : static_cast<double>(aComputedTiming.mCurrentIteration);
+    aRetVal.mCurrentIteration.SetValue(iteration);
+  }
+}
 
 void
 ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
@@ -168,6 +236,16 @@ KeyframeEffectReadOnly::GetLocalTime() const
   return result;
 }
 
+void
+KeyframeEffectReadOnly::GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const
+{
+  const Nullable<TimeDuration> currentTime = GetLocalTime();
+  GetComputedTimingDictionary(GetComputedTimingAt(currentTime, mTiming),
+                              currentTime,
+                              mTiming,
+                              aRetVal);
+}
+
 ComputedTiming
 KeyframeEffectReadOnly::GetComputedTimingAt(
                           const Nullable<TimeDuration>& aLocalTime,
@@ -242,8 +320,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   if (isEndOfFinalIteration) {
     result.mCurrentIteration =
       aTiming.mIterationCount == NS_IEEEPositiveInfinity()
-      ? UINT64_MAX // FIXME: When we return this via the API we'll need
-                   // to make sure it ends up being infinity.
+      ? UINT64_MAX // In GetComputedTimingDictionary(), we will convert this
+                   // into Infinity.
       : static_cast<uint64_t>(aTiming.mIterationCount) - 1;
   } else if (activeTime == zeroDuration) {
     // If the active time is zero we're either in the first iteration
