@@ -807,6 +807,80 @@ function assert_records(expected, desc) {
                     "records after animation end");
   });
 
+  // Test that calling reverse() dispatches a changed notification.
+  addAsyncAnimTest("reverse", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s both";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Reverse
+    animations[0].reverse();
+
+    // Wait for the single MutationRecord for the Animation change to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] }],
+                    "records after calling reverse()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
+  // Test that calling reverse() does *not* dispatch a changed notification
+  // when playbackRate == 0.
+  addAsyncAnimTest("reverse_with_zero_playbackRate", aOptions, function*() {
+    // Start a long animation
+    e.style = "animation: anim 100s both";
+
+    // The animation should cause the creation of a single Animation.
+    var animations = e.getAnimations();
+    is(animations.length, 1, "getAnimations().length after animation start");
+
+    // Wait for the single MutationRecord for the Animation addition to
+    // be delivered.
+    yield await_frame();
+    assert_records([{ added: animations, changed: [], removed: [] }],
+                    "records after animation start");
+
+    // Seek to the middle and set playbackRate to zero.
+    animations[0].currentTime = 50000;
+    animations[0].playbackRate = 0;
+
+    // Wait for the MutationRecords, one for each change, to be delivered.
+    yield await_frame();
+    assert_records([{ added: [], changed: animations, removed: [] },
+                    { added: [], changed: animations, removed: [] }],
+                    "records after seeking and setting playbackRate");
+
+    // Reverse
+    animations[0].reverse();
+
+    // We should get no notifications.
+    assert_records([], "records after calling reverse()");
+
+    // Cancel the animation.
+    e.style = "";
+
+    // Wait for the single removal notification.
+    yield await_frame();
+    assert_records([{ added: [], changed: [], removed: animations }],
+                    "records after animation end");
+  });
+
   // Test that a non-cancelling change to an animation followed immediately by a
   // cancelling change will only send an animation removal notification.
   addAsyncAnimTest("coalesce_change_cancel", aOptions, function*() {
