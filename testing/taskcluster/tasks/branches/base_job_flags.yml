@@ -36,7 +36,7 @@ flags:
     xpcshell: /xpcshell.*/
     robocop: /robocop.*/
     mochitest-dt: /mochitest-devtools-chrome.*/
-    mochitest-gl: /mochitest-gl.*/
+    mochitest-gl: /mochitest-webgl.*/
     mochitest-bc: /mochitest-browser-chrome.*/
     mochitest-browser: /mochitest-browser-chrome.*/
     reftest: /(plain-)?reftest.*/
@@ -106,6 +106,7 @@ flags:
     - mochitest
     - mochitest-media
     - mochitest-oop
+    - mochitest-webgl
     - mozmill
     - reftest
     - reftest-ipc

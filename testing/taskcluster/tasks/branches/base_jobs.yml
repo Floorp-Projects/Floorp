@@ -258,6 +258,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_mochitest_oop.yml
+  mochitest-webgl:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gl.yml
   reftest:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:
