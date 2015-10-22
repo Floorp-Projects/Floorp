@@ -335,6 +335,21 @@ public:
                                                       uint32_t aAdditionalFlags,
                                                       nsIObserver* aObserver) override;
 
+    // HiDPI scale conversion
+    gint GdkScaleFactor();
+
+    // To GDK
+    gint DevicePixelsToGdkCoordRoundUp(int pixels);
+    gint DevicePixelsToGdkCoordRoundDown(int pixels);
+    GdkPoint DevicePixelsToGdkPointRoundDown(nsIntPoint point);
+    GdkRectangle DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize);
+
+    // From GDK
+    int GdkCoordToDevicePixels(gint coord);
+    mozilla::LayoutDeviceIntPoint GdkPointToDevicePixels(GdkPoint point);
+    mozilla::LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
+    nsIntRect GdkRectToDevicePixels(GdkRectangle rect);
+
 protected:
     virtual ~nsWindow();
 
@@ -528,21 +543,6 @@ private:
     RefPtr<mozilla::widget::IMContextWrapper> mIMContext;
 
     nsAutoPtr<mozilla::CurrentX11TimeGetter> mCurrentTimeGetter;
-
-    // HiDPI scale conversion
-    gint GdkScaleFactor();
-
-    // To GDK
-    gint DevicePixelsToGdkCoordRoundUp(int pixels);
-    gint DevicePixelsToGdkCoordRoundDown(int pixels);
-    GdkPoint DevicePixelsToGdkPointRoundDown(nsIntPoint point);
-    GdkRectangle DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize);
-
-    // From GDK
-    int GdkCoordToDevicePixels(gint coord);
-    mozilla::LayoutDeviceIntPoint GdkPointToDevicePixels(GdkPoint point);
-    mozilla::LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
-    nsIntRect GdkRectToDevicePixels(GdkRectangle rect);
 };
 
 class nsChildWindow : public nsWindow {
