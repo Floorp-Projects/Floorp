@@ -157,8 +157,6 @@
           ok(win.UI.toolboxPromise, "Toolbox promise exists");
           yield win.UI.toolboxPromise;
 
-          ok(win.UI.toolboxIframe, "Toolbox iframe exists");
-
           yield win.Cmds.disconnectRuntime();
 
           Services.prefs.setIntPref("devtools.webide.busyTimeout", 100);
