@@ -179,7 +179,7 @@ InterceptedChannelChrome::SynthesizeHeader(const nsACString& aName, const nsACSt
 }
 
 NS_IMETHODIMP
-InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedChannelChrome::FinishSynthesizedResponse()
 {
   if (!mChannel) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -208,38 +208,23 @@ InterceptedChannelChrome::FinishSynthesizedResponse(const nsACString& aFinalURLS
                               mSynthesizedResponseHead.ref(), securityInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIURI> originalURI;
-  mChannel->GetURI(getter_AddRefs(originalURI));
+  nsCOMPtr<nsIURI> uri;
+  mChannel->GetURI(getter_AddRefs(uri));
 
-  nsCOMPtr<nsIURI> responseURI;
-  if (!aFinalURLSpec.IsEmpty()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
+  bool usingSSL = false;
+  uri->SchemeIs("https", &usingSSL);
+
+  // Then we open a real cache entry to read the synthesized response from.
+  rv = mChannel->OpenCacheEntry(usingSSL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mSynthesizedCacheEntry = nullptr;
+
+  if (!mChannel->AwaitingCacheCallbacks()) {
+    rv = mChannel->ContinueConnect();
     NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    responseURI = originalURI;
   }
 
-  bool equal = false;
-  originalURI->Equals(responseURI, &equal);
-  if (!equal) {
-    nsresult rv =
-        mChannel->StartRedirectChannelToURI(responseURI, nsIChannelEventSink::REDIRECT_INTERNAL);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    bool usingSSL = false;
-    responseURI->SchemeIs("https", &usingSSL);
-
-    // Then we open a real cache entry to read the synthesized response from.
-    rv = mChannel->OpenCacheEntry(usingSSL);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mSynthesizedCacheEntry = nullptr;
-
-    if (!mChannel->AwaitingCacheCallbacks()) {
-      rv = mChannel->ContinueConnect();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
   mChannel = nullptr;
   return NS_OK;
 }
@@ -284,7 +269,7 @@ InterceptedChannelChrome::GetInternalContentPolicyType(nsContentPolicyType* aPol
 
 InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
                                                      nsINetworkInterceptController* aController,
-                                                     InterceptStreamListener* aListener)
+                                                     nsIStreamListener* aListener)
 : InterceptedChannelBase(aController)
 , mChannel(aChannel)
 , mStreamListener(aListener)
@@ -345,7 +330,7 @@ InterceptedChannelContent::SynthesizeHeader(const nsACString& aName, const nsACS
 }
 
 NS_IMETHODIMP
-InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURLSpec)
+InterceptedChannelContent::FinishSynthesizedResponse()
 {
   if (NS_WARN_IF(!mChannel)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -353,27 +338,9 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
 
   EnsureSynthesizedResponse();
 
-  nsCOMPtr<nsIURI> originalURI;
-  mChannel->GetURI(getter_AddRefs(originalURI));
-
-  nsCOMPtr<nsIURI> responseURI;
-  if (!aFinalURLSpec.IsEmpty()) {
-    nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    responseURI = originalURI;
-  }
-
-  bool equal = false;
-  originalURI->Equals(responseURI, &equal);
-  if (!equal) {
-    mChannel->ForceIntercepted(mSynthesizedInput);
-    mChannel->BeginNonIPCRedirect(responseURI, *mSynthesizedResponseHead.ptr());
-  } else {
-    mChannel->OverrideWithSynthesizedResponse(mSynthesizedResponseHead.ref(),
-                                              mSynthesizedInput,
-                                              mStreamListener);
-  }
+  mChannel->OverrideWithSynthesizedResponse(mSynthesizedResponseHead.ref(),
+                                            mSynthesizedInput,
+                                            mStreamListener);
 
   mResponseBody = nullptr;
   mChannel = nullptr;

@@ -134,7 +134,6 @@ public:
     NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
-    NS_IMETHOD ForceIntercepted(uint64_t aInterceptionID) override;
     // nsISupportsPriority
     NS_IMETHOD SetPriority(int32_t value) override;
     // nsIClassOfService
@@ -434,9 +433,8 @@ private:
         MAYBE_INTERCEPT,   // interception in progress, but can be cancelled
         INTERCEPTED,       // a synthesized response has been provided
     } mInterceptCache;
-    // ID of this channel for the interception purposes. Unique unless this
-    // channel is replacing an intercepted one via an redirection.
-    uint64_t mInterceptionID;
+    // Unique ID of this channel for the interception purposes.
+    const uint64_t mInterceptionID;
 
     bool PossiblyIntercepted() {
         return mInterceptCache != DO_NOT_INTERCEPT;
