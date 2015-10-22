@@ -50,6 +50,7 @@
 #include "nsFocusManager.h"
 #include "ThirdPartyUtil.h"
 #include "nsStructuredCloneContainer.h"
+#include "gfxPlatform.h"
 
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"

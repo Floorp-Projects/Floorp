@@ -14,6 +14,7 @@
 #include "ActiveLayerTracker.h"
 #include "BasicLayers.h"
 #include "ImageContainer.h"
+#include "ImageLayers.h"
 #include "LayerTreeInvalidation.h"
 #include "Layers.h"
 #include "LayerUserData.h"
