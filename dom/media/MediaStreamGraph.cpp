@@ -1000,7 +1000,21 @@ MediaStreamGraphImpl::AllFinishedStreamsNotified()
 }
 
 void
-MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
+MediaStreamGraphImpl::RunMessageAfterProcessing(nsAutoPtr<ControlMessage> aMessage)
+{
+  MOZ_ASSERT(CurrentDriver()->OnThread());
+
+  if (mFrontMessageQueue.IsEmpty()) {
+    mFrontMessageQueue.AppendElement();
+  }
+
+  // Only one block is used for messages from the graph thread.
+  MOZ_ASSERT(mFrontMessageQueue.Length() == 1);
+  mFrontMessageQueue[0].mMessages.AppendElement(Move(aMessage));
+}
+
+void
+MediaStreamGraphImpl::RunMessagesInQueue()
 {
   // Calculate independent action times for each batch of messages (each
   // batch corresponding to an event loop task). This isolates the performance
@@ -1013,7 +1027,11 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
     }
   }
   mFrontMessageQueue.Clear();
+}
 
+void
+MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
+{
   MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
   // The next state computed time can be the same as the previous: it
   // means the driver would be have been blocking indefinitly, but the graph has
@@ -1204,6 +1222,9 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
   MaybeProduceMemoryReport();
 
+  // Process graph message from the main thread for this iteration.
+  RunMessagesInQueue();
+
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
   UpdateGraph(stateEnd);
 
@@ -1215,6 +1236,10 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
   mProcessedTime = stateEnd;
 
   UpdateCurrentTimeForStreams(oldProcessedTime);
+
+  // Process graph messages queued from RunMessageAfterProcessing() on this
+  // thread during the iteration.
+  RunMessagesInQueue();
 
   return UpdateMainThreadState();
 }
