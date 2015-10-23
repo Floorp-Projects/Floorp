@@ -684,9 +684,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-repeating-linear-gradient()",
     "-webkit-repeating-radial-gradient()",
 
-    // Syntax that's invalid for both -webkit & -moz, but valid for unprefixed:
-    // XXXdholbert (populated in a later patch)
-
     // Linear syntax that's invalid for both -webkit & unprefixed, but valid
     // for -moz:
     // * initial <legacy-gradient-line> which includes a length:
@@ -726,9 +723,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-radial-gradient(top 30deg, red, blue)",
     "-webkit-radial-gradient(left top 30deg, red, blue)",
     "-webkit-radial-gradient(10px 20px 30deg, red, blue)"
-
-    // Syntax that's invalid for -webkit, but valid for -moz & unprefixed:
-    // XXXdholbert (populated in a later patch)
   );
 }
 
