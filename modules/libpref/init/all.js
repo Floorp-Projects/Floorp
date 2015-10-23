@@ -3236,11 +3236,7 @@ pref("ui.window_class_override", "");
 pref("ui.elantech_gesture_hacks.enabled", -1);
 
 // Show the Windows on-screen keyboard (osk.exe) when a text field is focused.
-#ifdef RELEASE_BUILD
-pref("ui.osk.enabled", false);
-#else
 pref("ui.osk.enabled", true);
-#endif
 // Only show the on-screen keyboard if there are no physical keyboards attached
 // to the device.
 pref("ui.osk.detect_physical_keyboard", true);
