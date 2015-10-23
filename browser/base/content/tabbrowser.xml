@@ -476,46 +476,11 @@
         <parameter name="aBrowser"/>
         <body>
           <![CDATA[
-            const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             let browser = (aBrowser || this.mCurrentBrowser);
-            let stack = browser.parentNode;
-            let self = this;
-
-            let promptBox = {
-              appendPrompt : function(args, onCloseCallback) {
-                let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
-                stack.appendChild(newPrompt);
-                browser.setAttribute("tabmodalPromptShowing", true);
-
-                newPrompt.clientTop; // style flush to assure binding is attached
-
-                let tab = self.getTabForBrowser(browser);
-                newPrompt.init(args, tab, onCloseCallback);
-                return newPrompt;
-              },
-
-              removePrompt : function(aPrompt) {
-                stack.removeChild(aPrompt);
-
-                let prompts = this.listPrompts();
-                if (prompts.length) {
-                  let prompt = prompts[prompts.length - 1];
-                  prompt.Dialog.setDefaultFocus();
-                } else {
-                  browser.removeAttribute("tabmodalPromptShowing");
-                  browser.focus();
-                }
-              },
-
-              listPrompts : function(aPrompt) {
-                let els = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
-                // NodeList --> real JS array
-                let prompts = Array.slice(els);
-                return prompts;
-              },
-            };
-
-            return promptBox;
+            if (!browser.tabModalPromptBox) {
+              browser.tabModalPromptBox = new TabModalPromptBox(browser);
+            }
+            return browser.tabModalPromptBox;
           ]]>
         </body>
       </method>
@@ -6480,6 +6445,8 @@
   <binding id="tabbrowser-browser"
            extends="chrome://global/content/bindings/browser.xml#browser">
     <implementation>
+      <field name="tabModalPromptBox">null</field>
+
       <!-- throws exception for unknown schemes -->
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
@@ -6508,6 +6475,8 @@
   <binding id="tabbrowser-remote-browser"
            extends="chrome://global/content/bindings/remote-browser.xml#remote-browser">
     <implementation>
+      <field name="tabModalPromptBox">null</field>
+
       <!-- throws exception for unknown schemes -->
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
