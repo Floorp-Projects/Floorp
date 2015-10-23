@@ -8175,3 +8175,53 @@ var AboutPrivateBrowsingListener = {
     });
   }
 };
+
+function TabModalPromptBox(browser) {
+  this._weakBrowserRef = Cu.getWeakReference(browser);
+}
+
+TabModalPromptBox.prototype = {
+  appendPrompt(args, onCloseCallback) {
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
+    let browser = this.browser;
+    browser.parentNode.appendChild(newPrompt);
+    browser.setAttribute("tabmodalPromptShowing", true);
+
+    newPrompt.clientTop; // style flush to assure binding is attached
+
+    let tab = gBrowser.getTabForBrowser(browser);
+    newPrompt.init(args, tab, onCloseCallback);
+    return newPrompt;
+  },
+
+  removePrompt(aPrompt) {
+    let browser = this.browser;
+    browser.parentNode.removeChild(aPrompt);
+
+    let prompts = this.listPrompts();
+    if (prompts.length) {
+      let prompt = prompts[prompts.length - 1];
+      prompt.Dialog.setDefaultFocus();
+    } else {
+      browser.removeAttribute("tabmodalPromptShowing");
+      browser.focus();
+    }
+  },
+
+  listPrompts(aPrompt) {
+    // Get the nodelist, then return as an array
+    const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+    let els = this.browser.parentNode.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
+    return Array.from(els);
+  },
+
+  get browser() {
+    let browser = this._weakBrowserRef.get();
+    if (!browser) {
+      throw "Stale promptbox! The associated browser is gone.";
+    }
+    return browser;
+  },
+};
+
