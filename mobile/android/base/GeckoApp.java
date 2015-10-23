@@ -72,6 +72,7 @@ import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -851,6 +852,7 @@ public abstract class GeckoApp
             final SnackbarEventCallback snackbarCallback = new SnackbarEventCallback(callback);
 
             snackbar.setAction(action, snackbarCallback);
+            snackbar.setActionTextColor(ContextCompat.getColor(this, R.color.fennec_ui_orange));
             snackbar.setCallback(snackbarCallback);
         }
 
