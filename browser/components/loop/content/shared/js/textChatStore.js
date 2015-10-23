@@ -119,11 +119,7 @@ loop.store.TextChatStore = (function() {
       // Notify MozLoopService if appropriate that a message has been appended
       // and it should therefore check if we need a different sized window or not.
       if (message.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME) {
-        if (this._storeState.textChatEnabled) {
-          window.dispatchEvent(new CustomEvent("LoopChatMessageAppended"));
-        } else {
-          window.dispatchEvent(new CustomEvent("LoopChatDisabledMessageAppended"));
-        }
+        window.dispatchEvent(new CustomEvent("LoopChatMessageAppended"));
       }
     },
 

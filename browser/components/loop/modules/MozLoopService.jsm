@@ -963,7 +963,6 @@ var MozLoopServiceInternal = {
 
         const kSizeMap = {
           LoopChatEnabled: "loopChatEnabled",
-          LoopChatDisabledMessageAppended: "loopChatDisabledMessageAppended",
           LoopChatMessageAppended: "loopChatMessageAppended"
         };
 
@@ -982,7 +981,6 @@ var MozLoopServiceInternal = {
 
         window.addEventListener("LoopChatEnabled", onChatEvent);
         window.addEventListener("LoopChatMessageAppended", onChatEvent);
-        window.addEventListener("LoopChatDisabledMessageAppended", onChatEvent);
 
         injectLoopAPI(window);
 
