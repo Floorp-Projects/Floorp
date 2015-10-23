@@ -93,6 +93,7 @@ public:
   PackagedAppVerifier();
 
   PackagedAppVerifier(nsIPackagedAppVerifierListener* aListener,
+                      const nsACString& aPackageOrigin,
                       const nsACString& aSignature,
                       nsICacheEntry* aPackageCacheEntry);
 
@@ -169,6 +170,9 @@ private:
 
   // Whether this package app is signed.
   bool mIsPackageSigned;
+
+  // Whether we should bypass verification.
+  bool mBypassVerification;
 
   // The package cache entry (e.g. http://foo.com/app.pak) used to store
   // any necessarry signed package information.

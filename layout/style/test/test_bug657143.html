@@ -12,6 +12,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=657143
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=657143">Mozilla Bug 657143</a>
 <p id="display"></p>
+<style>
+/* Ensure that there is at least one custom property on the root element's
+   computed style */
+:root { --test: some value; }
+</style>
 <div id="content" style="display: none">
   
 </div>
@@ -84,7 +89,7 @@ is(cssA.toString(), cssB.toString(), 'CSS property list should be alphabetical')
 is(mozA.toString(), mozB.toString(), 'Experimental -moz- CSS property list should be alphabetical');
 is(svgA.toString(), svgB.toString(), 'SVG property list should be alphabetical');
 
-// We don't test that the custom property is sorted, as the CSSOM
+// We don't test that the custom property list is sorted, as the CSSOM
 // specification does not yet require it, and we don't return them
 // in sorted order.
 

@@ -50,7 +50,7 @@ function test_setEmptyPath()
      ["http://example.com:80/a", "http://example.com/tests/dom/tests"],
     ].map(pairToURLs);
 
-  for each (var [provided, target] in pairs)
+  for (var [provided, target] of pairs)
   {
     symmetricEquality(false, target, provided);
 
@@ -77,7 +77,7 @@ function test_setQuery()
      ["http://example.com/?f", "http://example.com/?foo"],
     ].map(pairToURLs);
 
-  for each (var [provided, target] in pairs) {
+  for (var [provided, target] of pairs) {
     symmetricEquality(false, provided, target);
 
     provided.query = "foo";
@@ -135,7 +135,7 @@ function test_setRef()
      ["http://example.com:80/a", "xxxxxxxxxxxxxx", "http://example.com:80/a#xxxxxxxxxxxxxx"],
     ];
 
-  for each (var [before, ref, result] in tests)
+  for (var [before, ref, result] of tests)
   {
     /* Test1: starting with empty ref */
     var a = stringToURL(before);
