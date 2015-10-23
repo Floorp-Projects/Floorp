@@ -76,7 +76,7 @@ BluetoothMapFolder::GetFolderListingObjectString(nsAString& aString,
     const nsAString& key = iter.Key();
     folderListingObejct.Append("<folder name=\"");
     folderListingObejct.Append(NS_ConvertUTF16toUTF8(key).get());
-    folderListingObejct.Append("\">");
+    folderListingObejct.Append("\"/>");
     count++;
   }
 
