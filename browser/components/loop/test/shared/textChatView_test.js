@@ -592,7 +592,7 @@ describe("loop.shared.views.TextChatView", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "A Very Long Conversation Name",
         roomUrl: "http://showcase",
-        urls: [{
+        roomContextUrls: [{
           description: "A wonderful page!",
           location: "http://wonderful.invalid"
           // use the fallback thumbnail

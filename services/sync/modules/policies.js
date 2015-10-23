@@ -517,45 +517,6 @@ SyncScheduler.prototype = {
       this.syncTimer.clear();
   },
 
-  /**
-   * Prevent new syncs from starting.  This is used by the FxA migration code
-   * where we can't afford to have a sync start partway through the migration.
-   * To handle the edge-case of a sync starting and not stopping, we store
-   * this state in a pref, so on the next startup we remain blocked (and thus
-   * sync will never start) so the migration can complete.
-   *
-   * As a safety measure, we only block for some period of time, and after
-   * that it will automatically unblock.  This ensures that if things go
-   * really pear-shaped and we never end up calling unblockSync() we haven't
-   * completely broken the world.
-   */
-  blockSync: function(until = null) {
-    if (!until) {
-      until = Date.now() + DEFAULT_BLOCK_PERIOD;
-    }
-    // until is specified in ms, but Prefs can't hold that much
-    Svc.Prefs.set("scheduler.blocked-until", Math.floor(until / 1000));
-  },
-
-  unblockSync: function() {
-    Svc.Prefs.reset("scheduler.blocked-until");
-    // the migration code should be ready to roll, so resume normal operations.
-    this.checkSyncStatus();
-  },
-
-  get isBlocked() {
-    let until = Svc.Prefs.get("scheduler.blocked-until");
-    if (until === undefined) {
-      return false;
-    }
-    if (until <= Math.floor(Date.now() / 1000)) {
-      // we were previously blocked but the time has expired.
-      Svc.Prefs.reset("scheduler.blocked-until");
-      return false;
-    }
-    // we remain blocked.
-    return true;
-  },
 };
 
 this.ErrorHandler = function ErrorHandler(service) {
