@@ -734,6 +734,29 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
+    public long getPrePathLastVisitedTimeMilliseconds(ContentResolver cr, String prePath) {
+        if (prePath == null) {
+            return 0;
+        }
+        // If we don't end with a trailing slash, then both https://foo.com and https://foo.company.biz will match.
+        if (!prePath.endsWith("/")) {
+            prePath = prePath + "/";
+        }
+        final Cursor cursor = cr.query(BrowserContract.History.CONTENT_URI,
+                new String[] { "MAX(" + BrowserContract.HistoryColumns.DATE_LAST_VISITED + ") AS date" },
+                BrowserContract.URLColumns.URL + " BETWEEN ? AND ?", new String[] { prePath, prePath + "\u007f" }, null);
+        try {
+            cursor.moveToFirst();
+            if (cursor.isAfterLast()) {
+                return 0;
+            }
+            return cursor.getLong(0);
+        } finally {
+            cursor.close();
+        }
+    }
+
+    @Override
     public void expireHistory(ContentResolver cr, ExpirePriority priority) {
         Uri url = mHistoryExpireUriWithProfile;
         url = url.buildUpon().appendQueryParameter(BrowserContract.PARAM_EXPIRE_PRIORITY, priority.toString()).build();
