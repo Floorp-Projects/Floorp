@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<script>
+var width, url;
+function maybeReport() {
+  if (width !== undefined && url !== undefined) {
+    window.parent.postMessage({status: "result",
+                               width: width,
+                               url: url}, "*");
+  }
+}
+onload = function() {
+  width = document.querySelector("img").width;
+  maybeReport();
+};
+navigator.serviceWorker.onmessage = function(event) {
+  url = event.data;
+  maybeReport();
+};
+</script>
+<img src="image-20px.png">
