@@ -93,7 +93,7 @@
 
   <binding id="notification" extends="chrome://global/content/bindings/notification.xml#notification">
     <content>
-      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+      <xul:hbox class="notification-inner" flex="1" xbl:inherits="type">
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
                            class="messageCloseButton close-icon tabbable"
                            xbl:inherits="hidden=hideclose"

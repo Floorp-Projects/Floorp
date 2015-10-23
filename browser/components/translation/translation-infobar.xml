@@ -19,7 +19,7 @@
       <stylesheet src="chrome://global/skin/notification.css"/>
     </resources>
     <content>
-      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+      <xul:hbox class="notification-inner" flex="1" xbl:inherits="type">
         <xul:hbox anonid="details" align="center" flex="1">
           <xul:image class="translate-infobar-element messageImage"
                      anonid="messageImage"/>
