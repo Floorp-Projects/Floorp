@@ -1308,6 +1308,13 @@ public:
   }
 
   bool
+  RequestCacheEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_REQUESTCACHE];
+  }
+
+  bool
   RequestContextEnabled() const
   {
     AssertIsOnWorkerThread();
