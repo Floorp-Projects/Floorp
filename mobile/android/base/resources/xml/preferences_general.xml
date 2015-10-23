@@ -31,13 +31,6 @@
         </intent>
     </PreferenceScreen>
 
-    <ListPreference android:key="android.not_a_preference.restoreSession3"
-                    android:title="@string/pref_restore"
-                    android:defaultValue="quit"
-                    android:entries="@array/pref_restore_entries"
-                    android:entryValues="@array/pref_restore_values"
-                    android:persistent="true" />
-
     <CheckBoxPreference android:key="browser.image_blocking.enabled"
                         android:title="@string/pref_tap_to_load_images_title"
                         android:summary="@string/pref_tap_to_load_images_summary2"
