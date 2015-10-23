@@ -1139,7 +1139,7 @@ TouchCaret::DispatchTapEvent()
 
   // XXX: Do we need to flush layout?
   presShell->FlushPendingNotifications(Flush_Layout);
-  nsRect rect = nsContentUtils::GetSelectionBoundingRect(sel);
+  nsRect rect = nsLayoutUtils::GetSelectionBoundingRect(sel);
   RefPtr<dom::DOMRect>domRect = new dom::DOMRect(ToSupports(doc));
 
   domRect->SetLayoutRect(rect);
