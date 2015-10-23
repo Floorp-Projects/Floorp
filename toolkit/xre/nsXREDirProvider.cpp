@@ -658,9 +658,15 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
       nsCOMPtr<nsIFile> themeManifest;
       mXULAppDir->Clone(getter_AddRefs(themeManifest));
       themeManifest->AppendNative(NS_LITERAL_CSTRING("extensions"));
-      themeManifest->AppendNative(NS_LITERAL_CSTRING("{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
-      themeManifest->AppendNative(NS_LITERAL_CSTRING("chrome.manifest"));
-      XRE_AddManifestLocation(NS_SKIN_LOCATION, themeManifest);
+      themeManifest->AppendNative(NS_LITERAL_CSTRING("{972ce4c6-7e08-4474-a285-3208198ce6fd}.xpi"));
+      bool exists = false;
+      if (NS_SUCCEEDED(themeManifest->Exists(&exists)) && exists) {
+        XRE_AddJarManifestLocation(NS_SKIN_LOCATION, themeManifest);
+      } else {
+        themeManifest->SetNativeLeafName(NS_LITERAL_CSTRING("{972ce4c6-7e08-4474-a285-3208198ce6fd}"));
+        themeManifest->AppendNative(NS_LITERAL_CSTRING("chrome.manifest"));
+        XRE_AddManifestLocation(NS_SKIN_LOCATION, themeManifest);
+      }
 #endif
     }
   }
