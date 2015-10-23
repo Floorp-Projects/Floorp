@@ -15,6 +15,7 @@
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/unused.h"
 
 #include "nsCOMPtr.h"
 #include "nsFontMetrics.h"
@@ -1337,9 +1338,16 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
   // Paint the border
   if (!isLoading || gIconLoad->mPrefShowLoadingPlaceholder) {
     nsRecessedBorder recessedBorder(borderEdgeWidth, PresContext());
-    nsCSSRendering::PaintBorderWithStyleBorder(PresContext(), aRenderingContext,
-                                               this, inner, inner,
-                                               recessedBorder, mStyleContext);
+
+    // Assert that we're not drawing a border-image here; if we were, we
+    // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
+    MOZ_ASSERT(recessedBorder.mBorderImageSource.GetType() == eStyleImageType_Null);
+
+    unused <<
+      nsCSSRendering::PaintBorderWithStyleBorder(PresContext(), aRenderingContext,
+                                                 this, inner, inner,
+                                                 recessedBorder, mStyleContext,
+                                                 PaintBorderFlags::SYNC_DECODE_IMAGES);
   }
 
   // Adjust the inner rect to account for the one pixel recessed border,
