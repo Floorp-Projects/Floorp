@@ -16,14 +16,15 @@
  */
 
 /**
- * Snapshot of the performance of a component, e.g. an add-on, a web
- * page, system built-ins, a module or the entire process itself.
+ * Identification details for a performance group.
  *
- * All values are monotonic and are updated only when
- * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
+ * A performance group is a set of JavaScript compartments whose
+ * performance is observed as a single entity. Typical examples of
+ * performance groups: an add-on, a webpage without its frames, a
+ * webpage with all its frames, the entire JS runtime, ...
  */
-[scriptable, uuid(f171c901-1888-4087-a002-c2751e510f92)]
-interface nsIPerformanceStats: nsISupports {
+[scriptable, builtinclass, uuid(a91215f5-e253-47cb-9ef3-998b99ea0709)]
+interface nsIPerformanceGroupDetails: nsISupports {
   /**
    * An identifier unique to the component.
    *
@@ -50,6 +51,28 @@ interface nsIPerformanceStats: nsISupports {
   readonly attribute uint64_t windowId;
 
   /**
+   * `true` if this component is executed with system privileges
+   * (e.g. the platform itself or an add-on), `false` otherwise
+   * (e.g. webpages).
+   */
+  readonly attribute bool isSystem;
+
+  /**
+   * The process running this group.
+   */
+  readonly attribute unsigned long long processId;
+};
+
+/**
+ * Snapshot of the performance of a component, e.g. an add-on, a web
+ * page, system built-ins, a module or the entire process itself.
+ *
+ * All values are monotonic and are updated only when
+ * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
+ */
+[scriptable, builtinclass, uuid(89440555-dd81-4a22-8747-049bcf0ab586)]
+interface nsIPerformanceStats: nsIPerformanceGroupDetails {
+  /**
    * Total amount of time spent executing code in this group, in
    * microseconds.
    */
@@ -65,18 +88,6 @@ interface nsIPerformanceStats: nsISupports {
   readonly attribute unsigned long long ticks;
 
   /**
-   * `true` if this component is executed with system privileges
-   * (e.g. the platform itself or an add-on), `false` otherwise
-   * (e.g. webpages).
-   */
-  readonly attribute bool isSystem;
-
-  /**
-   * The process running this group.
-   */
-  readonly attribute unsigned long long processId;
-
-  /**
    * Jank indicator.
    *
    * durations[i] == number of times execution of this group
@@ -89,7 +100,7 @@ interface nsIPerformanceStats: nsISupports {
 /**
  * A snapshot of the performance data of the process.
  */
-[scriptable, uuid(0ac38e2a-2613-4e3f-9f21-95f085c177de)]
+[scriptable, builtinclass, uuid(be11e640-66cc-472f-8e74-58be6b70d0ca)]
 interface nsIPerformanceSnapshot: nsISupports {
   /**
    * Data on all individual components.
