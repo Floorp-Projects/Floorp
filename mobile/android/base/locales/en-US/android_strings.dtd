@@ -101,7 +101,6 @@
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
-<!ENTITY pref_category_input_options "Input options">
 <!ENTITY pref_category_general "General">
 <!ENTITY pref_category_general_summary "Home, language, zoom, full-screen browsing">
 
