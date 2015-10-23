@@ -130,7 +130,13 @@ public:
   {
     AssertIsOnMainThread();
 
-    if (!CSPPermitsResponse()) {
+    nsCOMPtr<nsIChannel> underlyingChannel;
+    nsresult rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(underlyingChannel, NS_ERROR_UNEXPECTED);
+    nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->GetLoadInfo();
+
+    if (!CSPPermitsResponse(loadInfo)) {
       mChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
       return NS_OK;
     }
@@ -143,7 +149,7 @@ public:
       // channel info for the worker script.
       channelInfo = mWorkerChannelInfo;
     }
-    nsresult rv = mChannel->SetChannelInfo(&channelInfo);
+    rv = mChannel->SetChannelInfo(&channelInfo);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -157,14 +163,17 @@ public:
        mChannel->SynthesizeHeader(entries[i].mName, entries[i].mValue);
     }
 
+    loadInfo->MaybeIncreaseTainting(mInternalResponse->GetTainting());
+
     rv = mChannel->FinishSynthesizedResponse(mResponseURLSpec);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to finish synthesized response");
     return rv;
   }
 
-  bool CSPPermitsResponse()
+  bool CSPPermitsResponse(nsILoadInfo* aLoadInfo)
   {
     AssertIsOnMainThread();
+    MOZ_ASSERT(aLoadInfo);
 
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
@@ -177,15 +186,11 @@ public:
     rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, false);
 
-    nsCOMPtr<nsIChannel> underlyingChannel;
-    rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
-    NS_ENSURE_SUCCESS(rv, false);
-    NS_ENSURE_TRUE(underlyingChannel, false);
-    nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->GetLoadInfo();
-
     int16_t decision = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(loadInfo->InternalContentPolicyType(), uri, loadInfo->LoadingPrincipal(),
-                                   loadInfo->LoadingNode(), EmptyCString(), nullptr, &decision);
+    rv = NS_CheckContentLoadPolicy(aLoadInfo->InternalContentPolicyType(), uri,
+                                   aLoadInfo->LoadingPrincipal(),
+                                   aLoadInfo->LoadingNode(), EmptyCString(),
+                                   nullptr, &decision);
     NS_ENSURE_SUCCESS(rv, false);
     return decision == nsIContentPolicy::ACCEPT;
   }
