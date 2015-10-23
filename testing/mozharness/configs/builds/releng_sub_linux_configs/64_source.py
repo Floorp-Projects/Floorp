@@ -16,4 +16,8 @@ config = {
         'TINDERBOX_OUTPUT': '1',
         'LC_ALL': 'C',
     },
+    'tooltool_script': ["/builds/tooltool.py"],
+    'tooltool_bootstrap': "setup.sh",
+    'tooltool_manifest_src': "browser/config/tooltool-manifests/linux64/releng.manifest",
+    'src_mozconfig': 'browser/config/mozconfigs/linux64/nightly',
 }

@@ -1807,10 +1807,8 @@ or run without that action (ie: --no-{action})"
             self._ccache_s()
 
     def preflight_package_source(self):
-        # Make sure to have an empty .mozconfig. Removing it is not enough,
-        # because MOZ_OBJDIR is not used in this case
-        self._touch_file(os.path.join(self.query_abs_dirs()['abs_src_dir'],
-                                      '.mozconfig'))
+        self._get_mozconfig()
+        self._run_tooltool()
 
     def package_source(self):
         """generates source archives and uploads them"""
