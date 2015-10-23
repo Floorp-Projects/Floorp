@@ -162,6 +162,20 @@ public class SDKProcessor {
                 continue;
             }
 
+            // Sometimes (e.g. KeyEvent) a field can appear in both a class and a superclass. In
+            // that case we want to filter out the version that appears in the superclass, or
+            // we'll have bindings with duplicate names.
+            try {
+                if (m instanceof Field && !m.equals(cls.getField(m.getName()))) {
+                    // m is a field in a superclass that has been hidden by
+                    // a field with the same name in a subclass.
+                    System.out.println("Skipping " + m.getName() +
+                                       " from " + m.getDeclaringClass());
+                    continue;
+                }
+            } catch (final NoSuchFieldException e) {
+            }
+
             list.add(m);
         }
 

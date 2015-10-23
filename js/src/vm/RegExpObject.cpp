@@ -40,96 +40,24 @@ JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
 JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
 JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 
-/* RegExpObjectBuilder */
-
-RegExpObjectBuilder::RegExpObjectBuilder(ExclusiveContext* cx, RegExpObject* reobj)
-  : cx(cx), reobj_(cx, reobj)
-{}
-
-bool
-RegExpObjectBuilder::getOrCreate()
+RegExpObject*
+js::RegExpAlloc(ExclusiveContext* cx)
 {
-    if (reobj_)
-        return true;
-
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    reobj_ = NewBuiltinClassInstance<RegExpObject>(cx, TenuredObject);
-    if (!reobj_)
-        return false;
-    reobj_->initPrivate(nullptr);
+    RegExpObject* regexp = NewBuiltinClassInstance<RegExpObject>(cx, TenuredObject);
+    if (!regexp)
+        return nullptr;
 
-    return true;
-}
-
-bool
-RegExpObjectBuilder::getOrCreateClone(HandleObjectGroup group)
-{
-    MOZ_ASSERT(!reobj_);
-    MOZ_ASSERT(group->clasp() == &RegExpObject::class_);
-
-    // Note: RegExp objects are always allocated in the tenured heap. This is
-    // not strictly required, but simplifies embedding them in jitcode.
-    reobj_ = NewObjectWithGroup<RegExpObject>(cx->asJSContext(), group, TenuredObject);
-    if (!reobj_)
-        return false;
-    reobj_->initPrivate(nullptr);
-
-    return true;
+    regexp->initPrivate(nullptr);
+    return regexp;
 }
 
 RegExpObject*
-RegExpObjectBuilder::build(HandleAtom source, RegExpShared& shared)
+js::InitializeRegExp(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
+                     RegExpFlag flags)
 {
-    if (!getOrCreate())
-        return nullptr;
-
-    if (!reobj_->init(cx, source, shared.getFlags()))
-        return nullptr;
-
-    reobj_->setShared(shared);
-    return reobj_;
-}
-
-RegExpObject*
-RegExpObjectBuilder::build(HandleAtom source, RegExpFlag flags)
-{
-    if (!getOrCreate())
-        return nullptr;
-
-    return reobj_->init(cx, source, flags) ? reobj_.get() : nullptr;
-}
-
-RegExpObject*
-RegExpObjectBuilder::clone(Handle<RegExpObject*> other)
-{
-    RootedObjectGroup group(cx, other->group());
-    if (!getOrCreateClone(group))
-        return nullptr;
-
-    /*
-     * Check that the RegExpShared for the original is okay to use in
-     * the clone -- if the |RegExpStatics| provides more flags we'll
-     * need a different |RegExpShared|.
-     */
-    RegExpStatics* res = other->getProto()->global().getRegExpStatics(cx);
-    if (!res)
-        return nullptr;
-
-    RegExpFlag origFlags = other->getFlags();
-    RegExpFlag staticsFlags = res->getFlags();
-    if ((origFlags & staticsFlags) != staticsFlags) {
-        RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
-        Rooted<JSAtom*> source(cx, other->getSource());
-        return build(source, newFlags);
-    }
-
-    RegExpGuard g(cx);
-    if (!other->getShared(cx->asJSContext(), &g))
-        return nullptr;
-
-    Rooted<JSAtom*> source(cx, other->getSource());
-    return build(source, *g);
+    return regexp->init(cx, source, flags) ? regexp : nullptr;
 }
 
 /* MatchPairs */
@@ -292,8 +220,11 @@ RegExpObject::createNoStatics(ExclusiveContext* cx, HandleAtom source, RegExpFla
     if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source))
         return nullptr;
 
-    RegExpObjectBuilder builder(cx);
-    return builder.build(source, flags);
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    if (!regexp)
+        return nullptr;
+
+    return InitializeRegExp(cx, regexp, source, flags);
 }
 
 bool
@@ -945,11 +876,46 @@ RegExpCompartment::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 JSObject*
 js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
 {
-    RegExpObjectBuilder builder(cx);
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
-    JSObject* res = builder.clone(regex);
-    MOZ_ASSERT_IF(res, res->group() == regex->group());
-    return res;
+
+    // Check that the RegExpShared for |regex| is okay to reuse in the clone.
+    // If the |RegExpStatics| provides additional flags, we'll need a new
+    // |RegExpShared|.
+    RegExpStatics* currentStatics = regex->getProto()->global().getRegExpStatics(cx);
+    if (!currentStatics)
+        return nullptr;
+
+    Rooted<JSAtom*> source(cx, regex->getSource());
+
+    RegExpFlag origFlags = regex->getFlags();
+    RegExpFlag staticsFlags = currentStatics->getFlags();
+    if ((origFlags & staticsFlags) != staticsFlags) {
+        Rooted<RegExpObject*> clone(cx, RegExpAlloc(cx));
+        if (!clone)
+            return nullptr;
+
+        return InitializeRegExp(cx, clone, source, RegExpFlag(origFlags | staticsFlags));
+    }
+
+    // Otherwise, the clone can use |regexp|'s RegExpShared.
+    RootedObjectGroup group(cx, regex->group());
+
+    // Note: RegExp objects are always allocated in the tenured heap. This is
+    // not strictly required, but it simplifies embedding them in jitcode.
+    Rooted<RegExpObject*> clone(cx, NewObjectWithGroup<RegExpObject>(cx, group, TenuredObject));
+    if (!clone)
+        return nullptr;
+    clone->initPrivate(nullptr);
+
+    RegExpGuard g(cx);
+    if (!regex->getShared(cx, &g))
+        return nullptr;
+
+    if (!InitializeRegExp(cx, clone, source, g->getFlags()))
+        return nullptr;
+
+    clone->setShared(*g.re());
+    return clone;
 }
 
 static bool

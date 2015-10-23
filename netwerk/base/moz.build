@@ -168,6 +168,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'LoadInfo.h',
+    'LoadTainting.h',
 ]
 
 EXPORTS.mozilla.net += [

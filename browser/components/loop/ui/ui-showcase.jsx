@@ -332,7 +332,7 @@
   textChatStore.updateRoomInfo(new sharedActions.UpdateRoomInfo({
     roomName: "A Very Long Conversation Name",
     roomUrl: "http://showcase",
-    urls: [{
+    roomContextUrls: [{
       description: "A wonderful page!",
       location: "http://wonderful.invalid"
       // use the fallback thumbnail
@@ -396,6 +396,17 @@
   mockMozLoopNoRoomsNoContext.rooms.getAll = function(version, callback) {
     callback(null, []);
   };
+
+  var roomStoreOpenedRoom = new loop.store.RoomStore(dispatcher, {
+    mozLoop: navigator.mozLoop,
+    activeRoomStore: makeActiveRoomStore({
+      roomState: ROOM_STATES.HAS_PARTICIPANTS
+    })
+  });
+
+  roomStoreOpenedRoom.setStoreState({
+    openedRoom: "3jKS_Els9IU"
+  });
 
   var roomStoreNoRooms = new loop.store.RoomStore(new loop.Dispatcher(), {
     mozLoop: mockMozLoopNoRooms,
@@ -687,6 +698,20 @@
                            mozLoop={mockMozLoopLoggedIn}
                            notifications={notifications}
                            roomStore={roomStore} />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
+                           summary="Room list (active view)"
+                           width={330}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={navigator.mozLoop}
+                           notifications={notifications}
+                           roomStore={roomStoreOpenedRoom} />
               </div>
             </FramedExample>
 

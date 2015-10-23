@@ -173,7 +173,7 @@ describe("loop.store.TextChatStore", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",
         roomUrl: "fake",
-        urls: [{
+        roomContextUrls: [{
           description: "A wonderful event",
           location: "http://wonderful.invalid",
           thumbnail: "fake"
@@ -205,7 +205,7 @@ describe("loop.store.TextChatStore", function() {
     it("should not add more than one context message", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomUrl: "fake",
-        urls: [{
+        roomContextUrls: [{
           description: "A wonderful event",
           location: "http://wonderful.invalid",
           thumbnail: "fake"
@@ -226,7 +226,7 @@ describe("loop.store.TextChatStore", function() {
 
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomUrl: "fake",
-        urls: [{
+        roomContextUrls: [{
           description: "A wonderful event2",
           location: "http://wonderful.invalid2",
           thumbnail: "fake2"

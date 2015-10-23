@@ -113,6 +113,7 @@ loop.store = loop.store || {};
       return {
         activeRoom: this.activeRoomStore ? this.activeRoomStore.getStoreState() : {},
         error: null,
+        openedRoom: null,
         pendingCreation: false,
         pendingInitialRetrieval: true,
         rooms: [],
@@ -126,6 +127,8 @@ loop.store = loop.store || {};
     startListeningToRoomEvents: function() {
       // Rooms event registration
       this._mozLoop.rooms.on("add", this._onRoomAdded.bind(this));
+      this._mozLoop.rooms.on("close", this._onRoomClose.bind(this));
+      this._mozLoop.rooms.on("open", this._onRoomOpen.bind(this));
       this._mozLoop.rooms.on("update", this._onRoomUpdated.bind(this));
       this._mozLoop.rooms.on("delete", this._onRoomRemoved.bind(this));
       this._mozLoop.rooms.on("refresh", this._onRoomsRefresh.bind(this));
@@ -153,6 +156,27 @@ loop.store = loop.store || {};
           return addedRoomData.roomToken !== room.roomToken;
         }).concat(new Room(addedRoomData))
       }));
+    },
+
+    /**
+     * Clears the current active room.
+     */
+    _onRoomClose: function() {
+      this.setStoreState({
+        openedRoom: null
+      });
+    },
+
+    /**
+     * Updates the current active room.
+     *
+     * @param {String} eventName The event name (unused).
+     * @param {String} roomToken Identifier of the room.
+     */
+    _onRoomOpen: function(eventName, roomToken) {
+      this.setStoreState({
+        openedRoom: roomToken
+      });
     },
 
     /**

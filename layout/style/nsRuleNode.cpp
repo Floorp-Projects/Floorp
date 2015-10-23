@@ -66,6 +66,30 @@ using std::min;
 using namespace mozilla;
 using namespace mozilla::dom;
 
+void*
+nsConditionalResetStyleData::GetConditionalStyleData(nsStyleStructID aSID,
+                               nsStyleContext* aStyleContext) const
+{
+  Entry* e = static_cast<Entry*>(mEntries[aSID]);
+  MOZ_ASSERT(e, "if mConditionalBits bit is set, we must have at least one "
+                "conditional style struct");
+  do {
+    if (e->mConditions.Matches(aStyleContext)) {
+      void* data = e->mStyleStruct;
+
+      // For reset structs with conditions, we cache the data on the
+      // style context.
+      // Tell the style context that it doesn't own the data
+      aStyleContext->AddStyleBit(GetBitForSID(aSID));
+      aStyleContext->SetStyle(aSID, data);
+
+      return data;
+    }
+    e = e->mNext;
+  } while (e);
+  return nullptr;
+}
+
 #define NS_SET_IMAGE_REQUEST(method_, context_, request_)                     \
   if ((context_)->PresContext()->IsDynamic()) {                               \
     method_(request_);                                                        \
@@ -2348,12 +2372,11 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // branch that they never need to examine their rules for this particular struct type
     // ever again.
     PropagateDependentBit(aSID, ruleNode, startStruct);
-    // With this same bit set, we do two different things:
-    // For reset structs, record that we have asked for this struct on
-    // this context, but it is not cached on the context.
     // For inherited structs, mark the struct (which will be set on
     // the context by our caller) as not being owned by the context.
-    aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+    if (!isReset) {
+      aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+    }
     return startStruct;
   }
   if ((!startStruct && !isReset &&
@@ -2758,9 +2781,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       SetStyleData(eStyleStruct_##type_, data_);                              \
     /* Propagate the bit down. */                                             \
     PropagateDependentBit(eStyleStruct_##type_, aHighestNode, data_);         \
-    /* Tell the context that we've gotten the data (separate meaning */       \
-    /* of mBits when the cached data pointer is null) */                      \
-    aContext->AddStyleBit(NS_STYLE_INHERIT_BIT(type_));                       \
   } else if (conditions.Cacheable()) {                                        \
     if (!mStyleData.mResetData) {                                             \
       mStyleData.mResetData = new (mPresContext) nsConditionalResetStyleData; \
@@ -4352,24 +4372,16 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               NS_STYLE_WORDBREAK_NORMAL, 0, 0, 0, 0);
 
   // word-spacing: normal, length, inherit
-  nsStyleCoord tempCoord;
   const nsCSSValue* wordSpacingValue = aRuleData->ValueForWordSpacing();
-  if (SetCoord(*wordSpacingValue, tempCoord,
-               nsStyleCoord(parentText->mWordSpacing,
-                            nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL |
-                 SETCOORD_CALC_LENGTH_ONLY | SETCOORD_UNSET_INHERIT,
-               aContext, mPresContext, conditions)) {
-    if (tempCoord.GetUnit() == eStyleUnit_Coord) {
-      text->mWordSpacing = tempCoord.GetCoordValue();
-    } else if (tempCoord.GetUnit() == eStyleUnit_Normal) {
-      text->mWordSpacing = 0;
-    } else {
-      NS_NOTREACHED("unexpected unit");
-    }
+  if (wordSpacingValue->GetUnit() == eCSSUnit_Normal) {
+    // Do this so that "normal" computes to 0px, as the CSS 2.1 spec requires.
+    text->mWordSpacing.SetCoordValue(0);
   } else {
-    NS_ASSERTION(wordSpacingValue->GetUnit() == eCSSUnit_Null,
-                 "unexpected unit");
+    SetCoord(*aRuleData->ValueForWordSpacing(),
+             text->mWordSpacing, parentText->mWordSpacing,
+             SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_UNSET_INHERIT,
+             aContext, mPresContext, conditions);
   }
 
   // word-wrap: enum, inherit, initial
@@ -9418,14 +9430,13 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   // Never use cached data for animated style inside a pseudo-element;
   // see comment on cacheability in AnimValuesStyleRule::MapRuleInfoInto.
   if (!(HasAnimationData() && ParentHasPseudoElementData(aContext))) {
-    data = mStyleData.GetStyleData(aSID, aContext);
+    data = mStyleData.GetStyleData(aSID, aContext, aComputeData);
     if (MOZ_LIKELY(data != nullptr)) {
-      // With this same bit set, we do two different things:
-      // For reset structs, mark the struct as having been retrieved for
-      // this context.
       // For inherited structs, mark the struct (which will be set on
       // the context by our caller) as not being owned by the context.
-      aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+      if (!nsCachedStyleData::IsReset(aSID)) {
+        aContext->AddStyleBit(nsCachedStyleData::GetBitForSID(aSID));
+      }
       return data; // We have a fully specified struct. Just return it.
     }
   }
