@@ -28,7 +28,7 @@ GetYCbCrToRGBDestFormatAndSize(const layers::PlanarYCbCrData& aData,
   bool prescale = aSuggestedSize.width > 0 && aSuggestedSize.height > 0 &&
                   aSuggestedSize != aData.mPicSize;
 
-  if (aSuggestedFormat == SurfaceFormat::R5G6B5) {
+  if (aSuggestedFormat == SurfaceFormat::R5G6B5_UINT16) {
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (prescale &&
         !IsScaleYCbCrToRGB565Fast(aData.mPicX,
@@ -88,7 +88,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
   // Convert from YCbCr to RGB now, scaling the image if needed.
   if (aDestSize != aData.mPicSize) {
 #if defined(HAVE_YCBCR_TO_RGB565)
-    if (aDestFormat == SurfaceFormat::R5G6B5) {
+    if (aDestFormat == SurfaceFormat::R5G6B5_UINT16) {
       ScaleYCbCrToRGB565(aData.mYChannel,
                          aData.mCbChannel,
                          aData.mCrChannel,
@@ -122,7 +122,7 @@ ConvertYCbCrToRGB(const layers::PlanarYCbCrData& aData,
                         FILTER_BILINEAR);
   } else { // no prescale
 #if defined(HAVE_YCBCR_TO_RGB565)
-    if (aDestFormat == SurfaceFormat::R5G6B5) {
+    if (aDestFormat == SurfaceFormat::R5G6B5_UINT16) {
       ConvertYCbCrToRGB565(aData.mYChannel,
                            aData.mCbChannel,
                            aData.mCrChannel,

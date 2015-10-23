@@ -316,7 +316,8 @@ AppendToString(std::stringstream& aStream, mozilla::gfx::SurfaceFormat format,
   case SurfaceFormat::B8G8R8X8:  aStream << "SurfaceFormat::B8G8R8X8"; break;
   case SurfaceFormat::R8G8B8A8:  aStream << "SurfaceFormat::R8G8B8A8"; break;
   case SurfaceFormat::R8G8B8X8:  aStream << "SurfaceFormat::R8G8B8X8"; break;
-  case SurfaceFormat::R5G6B5:    aStream << "SurfaceFormat::R5G6B5"; break;
+  case SurfaceFormat::R5G6B5_UINT16:
+                                 aStream << "SurfaceFormat::R5G6B5_UINT16"; break;
   case SurfaceFormat::A8:        aStream << "SurfaceFormat::A8"; break;
   case SurfaceFormat::YUV:       aStream << "SurfaceFormat::YUV"; break;
   case SurfaceFormat::NV12:      aStream << "SurfaceFormat::NV12"; break;

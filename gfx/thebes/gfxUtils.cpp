@@ -73,7 +73,7 @@ void mozilla_dump_image(void* bytes, int width, int height, int bytepp,
     // TODO more flexible; parse string?
     switch (bytepp) {
     case 2:
-        format = SurfaceFormat::R5G6B5;
+        format = SurfaceFormat::R5G6B5_UINT16;
         break;
     case 4:
     default:

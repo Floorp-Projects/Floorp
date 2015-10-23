@@ -181,7 +181,7 @@ SurfaceFormatForPixelFormat(android::PixelFormat aFormat)
   case PIXEL_FORMAT_RGBX_8888:
     return gfx::SurfaceFormat::R8G8B8X8;
   case PIXEL_FORMAT_RGB_565:
-    return gfx::SurfaceFormat::R5G6B5;
+    return gfx::SurfaceFormat::R5G6B5_UINT16;
   case HAL_PIXEL_FORMAT_YV12:
     return gfx::SurfaceFormat::YUV;
   default:
@@ -284,7 +284,7 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
      format = android::PIXEL_FORMAT_RGBX_8888;
      mFlags |= TextureFlags::RB_SWAPPED;
     break;
-  case gfx::SurfaceFormat::R5G6B5:
+  case gfx::SurfaceFormat::R5G6B5_UINT16:
     format = android::PIXEL_FORMAT_RGB_565;
     break;
   case gfx::SurfaceFormat::YUV:
@@ -329,7 +329,7 @@ GrallocTextureClientOGL::AllocateForGLRendering(gfx::IntSize aSize)
     // there is no android BGRX format?
     format = android::PIXEL_FORMAT_RGBX_8888;
     break;
-  case gfx::SurfaceFormat::R5G6B5:
+  case gfx::SurfaceFormat::R5G6B5_UINT16:
     format = android::PIXEL_FORMAT_RGB_565;
     break;
   default:

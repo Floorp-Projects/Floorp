@@ -1861,7 +1861,7 @@ AndroidBridge::CaptureZoomedView(nsIDOMWindow *window, nsIntRect zoomedViewRect,
              presContext->DevPixelsToAppUnits(zoomedViewRect.height / scaleFactor ));
 
     bool is24bit = (GetScreenDepth() == 24);
-    SurfaceFormat format = is24bit ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R5G6B5;
+    SurfaceFormat format = is24bit ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R5G6B5_UINT16;
     gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
     uint32_t stride = gfxASurface::FormatStrideForWidth(iFormat, zoomedViewRect.width);
 
@@ -1980,7 +1980,7 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
                                          IntSize(bufW, bufH),
                                          stride,
                                          is24bit ? SurfaceFormat::B8G8R8X8 :
-                                                   SurfaceFormat::R5G6B5);
+                                                   SurfaceFormat::R5G6B5_UINT16);
     if (!dt) {
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
