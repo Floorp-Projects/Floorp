@@ -229,6 +229,9 @@ public class StubBrowserDB implements BrowserDB {
         return null;
     }
 
+    @Override
+    public long getPrePathLastVisitedTimeMilliseconds(ContentResolver cr, String prePath) { return 0; }
+
     public void expireHistory(ContentResolver cr, BrowserContract.ExpirePriority priority) {
     }
 
