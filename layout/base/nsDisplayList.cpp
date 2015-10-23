@@ -5414,9 +5414,11 @@ nsDisplayItem::LayerState
 nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager,
                                   const ContainerLayerParameters& aParameters) {
-  // If the transform is 3d, or the layer takes part in preserve-3d sorting
-  // then we *always* want this to be an active layer.
-  if (!GetTransform().Is2D() || mFrame->Combines3DTransformWithAncestors()) {
+  // If the transform is 3d, the layer takes part in preserve-3d
+  // sorting, or the layer is a separator then we *always* want this
+  // to be an active layer.
+  if (!GetTransform().Is2D() || mFrame->Combines3DTransformWithAncestors() ||
+      mIsTransformSeparator) {
     return LAYER_ACTIVE_FORCE;
   }
   // Here we check if the *post-transform* bounds of this item are big enough
@@ -5587,7 +5589,7 @@ nsDisplayTransform::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
     return mBounds;
   }
 
-  if (mFrame->Extend3DContext()) {
+  if (mFrame->Extend3DContext() && !mIsTransformSeparator) {
     return nsRect();
   }
 
