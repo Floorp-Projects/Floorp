@@ -337,12 +337,6 @@ private:
 
   uint32_t ObserverCount() const;
   uint32_t ImageRequestCount() const;
-  static PLDHashOperator StartTableRequestCounter(const uint32_t& aKey,
-                                                  ImageStartData* aEntry,
-                                                  void* aUserArg);
-  static PLDHashOperator StartTableRefresh(const uint32_t& aKey,
-                                           ImageStartData* aEntry,
-                                           void* aUserArg);
   ObserverArray& ArrayFor(mozFlushType aFlushType);
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
@@ -428,16 +422,8 @@ private:
   nsTObserverArray<nsAPostRefreshObserver*> mPostRefreshObservers;
   nsTArray<PendingEvent> mPendingEvents;
 
-  // Helper struct for processing image requests
-  struct ImageRequestParameters {
-    mozilla::TimeStamp mCurrent;
-    mozilla::TimeStamp mPrevious;
-    RequestTable* mRequests;
-    mozilla::TimeStamp mDesired;
-  };
-
-  static void BeginRefreshingImages(RequestTable& aEntries,
-                                    ImageRequestParameters* aParms);
+  void BeginRefreshingImages(RequestTable& aEntries,
+                             mozilla::TimeStamp aDesired);
 
   friend class mozilla::RefreshDriverTimer;
 
