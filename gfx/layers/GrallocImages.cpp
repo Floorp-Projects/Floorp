@@ -384,7 +384,7 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
     return BAD_VALUE;
   }
 
-  uint32_t pixelStride = aMappedSurface->mStride/gfx::BytesPerPixel(gfx::SurfaceFormat::R5G6B5);
+  uint32_t pixelStride = aMappedSurface->mStride/gfx::BytesPerPixel(gfx::SurfaceFormat::R5G6B5_UINT16);
   rv = colorConverter.convert(buffer, width, height,
                               0, 0, width - 1, height - 1 /* source crop */,
                               aMappedSurface->mData, pixelStride, height,

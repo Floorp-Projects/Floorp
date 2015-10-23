@@ -671,7 +671,7 @@ GfxFormatForCairoSurface(cairo_surface_t* surface)
   // xlib is currently the only Cairo backend that creates 16bpp surfaces
   if (type == CAIRO_SURFACE_TYPE_XLIB &&
       cairo_xlib_surface_get_depth(surface) == 16) {
-    return SurfaceFormat::R5G6B5;
+    return SurfaceFormat::R5G6B5_UINT16;
   }
 #endif
   return CairoContentToGfxFormat(cairo_surface_get_content(surface));
