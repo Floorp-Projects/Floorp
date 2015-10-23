@@ -81,17 +81,17 @@ public class Utils {
             return "mozilla::jni::ObjectArray::Param";
         }
 
-        if (type == String.class || type == CharSequence.class) {
+        if (type.equals(String.class) || type.equals(CharSequence.class)) {
             return "mozilla::jni::String::Param";
         }
 
-        if (type == Class.class) {
+        if (type.equals(Class.class)) {
             // You're doing reflection on Java objects from inside C, returning Class objects
             // to C, generating the corresponding code using this Java program. Really?!
             return "mozilla::jni::ClassObject::Param";
         }
 
-        if (type == Throwable.class) {
+        if (type.equals(Throwable.class)) {
             return "mozilla::jni::Throwable::Param";
         }
 
@@ -113,17 +113,17 @@ public class Utils {
             return "mozilla::jni::ObjectArray::LocalRef";
         }
 
-        if (type == String.class) {
+        if (type.equals(String.class)) {
             return "mozilla::jni::String::LocalRef";
         }
 
-        if (type == Class.class) {
+        if (type.equals(Class.class)) {
             // You're doing reflection on Java objects from inside C, returning Class objects
             // to C, generating the corresponding code using this Java program. Really?!
             return "mozilla::jni::ClassObject::LocalRef";
         }
 
-        if (type == Throwable.class) {
+        if (type.equals(Throwable.class)) {
             return "mozilla::jni::Throwable::LocalRef";
         }
 

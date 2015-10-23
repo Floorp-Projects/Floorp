@@ -459,13 +459,6 @@ public:
         return event;
     }
 
-    static AndroidGeckoEvent* MakeIMEEvent(int aAction) {
-        AndroidGeckoEvent *event = new AndroidGeckoEvent();
-        event->Init(IME_EVENT);
-        event->mAction = aAction;
-        return event;
-    }
-
     static AndroidGeckoEvent* MakeFromJavaObject(JNIEnv *jenv, jobject jobj) {
         AndroidGeckoEvent *event = new AndroidGeckoEvent();
         event->Init(jenv, jobj);
@@ -508,9 +501,6 @@ public:
         return mType == AndroidGeckoEvent::MOTION_EVENT ||
             mType == AndroidGeckoEvent::NATIVE_GESTURE_EVENT ||
             mType == AndroidGeckoEvent::LONG_PRESS ||
-            mType == AndroidGeckoEvent::KEY_EVENT ||
-            mType == AndroidGeckoEvent::IME_EVENT ||
-            mType == AndroidGeckoEvent::IME_KEY_EVENT ||
             mType == AndroidGeckoEvent::APZ_INPUT_EVENT;
     }
 
@@ -532,8 +522,6 @@ public:
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
     nsAString& Data() { return mData; }
-    int KeyCode() { return mKeyCode; }
-    int ScanCode() { return mScanCode; }
     int MetaState() { return mMetaState; }
     Modifiers DOMModifiers() const;
     bool IsAltPressed() const { return (mMetaState & AMETA_ALT_MASK) != 0; }
@@ -541,21 +529,8 @@ public:
     bool IsCtrlPressed() const { return (mMetaState & AMETA_CTRL_MASK) != 0; }
     bool IsMetaPressed() const { return (mMetaState & AMETA_META_MASK) != 0; }
     int Flags() { return mFlags; }
-    int UnicodeChar() { return mUnicodeChar; }
-    int BaseUnicodeChar() { return mBaseUnicodeChar; }
-    int DOMPrintableKeyValue() { return mDOMPrintableKeyValue; }
-    int RepeatCount() const { return mRepeatCount; }
     int Count() { return mCount; }
-    int Start() { return mStart; }
-    int End() { return mEnd; }
     int PointerIndex() { return mPointerIndex; }
-    int RangeType() { return mRangeType; }
-    int RangeStyles() { return mRangeStyles; }
-    int RangeLineStyle() { return mRangeLineStyle; }
-    bool RangeBoldLine() { return mRangeBoldLine; }
-    int RangeForeColor() { return mRangeForeColor; }
-    int RangeBackColor() { return mRangeBackColor; }
-    int RangeLineColor() { return mRangeLineColor; }
     nsGeoPosition* GeoPosition() { return mGeoPosition; }
     int ConnectionType() { return mConnectionType; }
     bool IsWifi() { return mIsWifi; }
@@ -594,14 +569,7 @@ protected:
     nsTArray<int> mToolTypes;
     nsIntRect mRect;
     int mFlags, mMetaState;
-    int mKeyCode, mScanCode;
-    int mUnicodeChar, mBaseUnicodeChar, mDOMPrintableKeyValue;
-    int mRepeatCount;
     int mCount;
-    int mStart, mEnd;
-    int mRangeType, mRangeStyles, mRangeLineStyle;
-    bool mRangeBoldLine;
-    int mRangeForeColor, mRangeBackColor, mRangeLineColor;
     double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
@@ -662,30 +630,14 @@ protected:
     static jfieldID jWField;
     static jfieldID jDistanceField;
     static jfieldID jRectField;
-    static jfieldID jNativeWindowField;
 
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
     static jfieldID jDataField;
-    static jfieldID jDOMPrintableKeyValueField;
-    static jfieldID jKeyCodeField;
-    static jfieldID jScanCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jFlagsField;
     static jfieldID jCountField;
-    static jfieldID jStartField;
-    static jfieldID jEndField;
     static jfieldID jPointerIndexField;
-    static jfieldID jUnicodeCharField;
-    static jfieldID jBaseUnicodeCharField;
-    static jfieldID jRepeatCountField;
-    static jfieldID jRangeTypeField;
-    static jfieldID jRangeStylesField;
-    static jfieldID jRangeLineStyleField;
-    static jfieldID jRangeBoldLineField;
-    static jfieldID jRangeForeColorField;
-    static jfieldID jRangeBackColorField;
-    static jfieldID jRangeLineColorField;
     static jfieldID jLocationField;
 
     static jfieldID jConnectionTypeField;
@@ -708,11 +660,9 @@ protected:
 public:
     enum {
         NATIVE_POKE = 0,
-        KEY_EVENT = 1,
         MOTION_EVENT = 2,
         SENSOR_EVENT = 3,
         LOCATION_EVENT = 5,
-        IME_EVENT = 6,
         SIZE_CHANGED = 8,
         APP_BACKGROUNDING = 9,
         APP_FOREGROUNDING = 10,
@@ -730,7 +680,6 @@ public:
         COMPOSITOR_PAUSE = 29,
         COMPOSITOR_RESUME = 30,
         NATIVE_GESTURE_EVENT = 31,
-        IME_KEY_EVENT = 32,
         CALL_OBSERVER = 33,
         REMOVE_OBSERVER = 34,
         LOW_MEMORY = 35,
@@ -754,22 +703,6 @@ public:
         MEMORY_PRESSURE_LOW = 2,
         MEMORY_PRESSURE_MEDIUM = 3,
         MEMORY_PRESSURE_HIGH = 4
-    };
-
-    enum {
-        // Internal Gecko events
-        IME_FLUSH_CHANGES = -2,
-        IME_UPDATE_CONTEXT = -1,
-        // Events from Java to Gecko
-        IME_SYNCHRONIZE = 0,
-        IME_REPLACE_TEXT = 1,
-        IME_SET_SELECTION = 2,
-        IME_ADD_COMPOSITION_RANGE = 3,
-        IME_UPDATE_COMPOSITION = 4,
-        IME_REMOVE_COMPOSITION = 5,
-        IME_ACKNOWLEDGE_FOCUS = 6,
-        IME_COMPOSE_TEXT = 7,
-        dummy_ime_enum_list_end
     };
 
     enum {

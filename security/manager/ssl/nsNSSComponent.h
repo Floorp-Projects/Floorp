@@ -184,7 +184,6 @@ private:
   // Methods that we use to handle the profile change notifications (and to
   // synthesize a full profile change when we're just doing a profile startup):
   void DoProfileChangeNetTeardown();
-  void DoProfileChangeTeardown(nsISupports* aSubject);
   void DoProfileBeforeChange(nsISupports* aSubject);
   void DoProfileChangeNetRestore();
 

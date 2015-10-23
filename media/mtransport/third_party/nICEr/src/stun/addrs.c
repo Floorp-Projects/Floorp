@@ -199,7 +199,7 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
       c = strchr(munged_ifname, '.');
       while (c != NULL) {
         *c = '+';
-         c = strchr(munged_ifname, '+');
+         c = strchr(munged_ifname, '.');
       }
 
       if ((tmpAddress->IfIndex != 0) || (tmpAddress->Ipv6IfIndex != 0)) {

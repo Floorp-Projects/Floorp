@@ -551,6 +551,17 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Hangup and close all chat windows that are open.
+     */
+    hangupAllChatWindows: {
+      enumerable: true,
+      writable: true,
+      value() {
+        MozLoopService.hangupAllChatWindows();
+      }
+    },
+
+    /**
      * Starts alerting the user about an incoming call
      */
     startAlerting: {

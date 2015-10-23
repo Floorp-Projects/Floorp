@@ -9,17 +9,21 @@
 // Form Processor
 #include "nsIFormProcessor.h"
 #include "nsTArray.h"
+#include "nsNSSShutDown.h"
 
 nsresult GetSlotWithMechanism(uint32_t mechanism,
-                              nsIInterfaceRequestor *ctx,
-                              PK11SlotInfo **retSlot);
+                              nsIInterfaceRequestor* ctx,
+                              PK11SlotInfo** retSlot,
+                              nsNSSShutDownPreventionLock& /*proofOfLock*/);
 
 #define DEFAULT_RSA_KEYGEN_PE 65537L
 #define DEFAULT_RSA_KEYGEN_ALG SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION
 
 SECKEYECParams *decode_ec_params(const char *curve);
 
-class nsKeygenFormProcessor : public nsIFormProcessor {
+class nsKeygenFormProcessor : public nsIFormProcessor
+                            , public nsNSSShutDownObject
+{
 public:
   nsKeygenFormProcessor();
   nsresult Init();
@@ -45,6 +49,9 @@ public:
                             nsAString& challengeValue,
                             nsAString& keyTypeValue,
                             nsAString& keyParamsValue);
+
+  // Nothing to release.
+  virtual void virtualDestroyNSSReference() override {}
 
 protected:
   virtual ~nsKeygenFormProcessor();

@@ -10,6 +10,7 @@
 #include "mozilla/dom/HeadersBinding.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/LoadTainting.h"
 
 #include "nsIContentPolicy.h"
 #include "nsIInputStream.h"
@@ -87,21 +88,13 @@ class InternalRequest final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalRequest)
 
-  enum ResponseTainting
-  {
-    RESPONSETAINT_BASIC,
-    RESPONSETAINT_CORS,
-    RESPONSETAINT_OPAQUE,
-    RESPONSETAINT_OPAQUEREDIRECT,
-  };
-
   explicit InternalRequest()
     : mMethod("GET")
     , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
     , mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR))
     , mMode(RequestMode::No_cors)
     , mCredentialsMode(RequestCredentials::Omit)
-    , mResponseTainting(RESPONSETAINT_BASIC)
+    , mResponseTainting(LoadTainting::Basic)
     , mCacheMode(RequestCache::Default)
     , mRedirectMode(RequestRedirect::Follow)
     , mAuthenticationFlag(false)
@@ -242,16 +235,18 @@ public:
     mCredentialsMode = aCredentialsMode;
   }
 
-  ResponseTainting
+  LoadTainting
   GetResponseTainting() const
   {
     return mResponseTainting;
   }
 
   void
-  SetResponseTainting(ResponseTainting aTainting)
+  MaybeIncreaseResponseTainting(LoadTainting aTainting)
   {
-    mResponseTainting = aTainting;
+    if (aTainting > mResponseTainting) {
+      mResponseTainting = aTainting;
+    }
   }
 
   RequestCache
@@ -410,7 +405,7 @@ private:
 
   RequestMode mMode;
   RequestCredentials mCredentialsMode;
-  ResponseTainting mResponseTainting;
+  LoadTainting mResponseTainting;
   RequestCache mCacheMode;
   RequestRedirect mRedirectMode;
 

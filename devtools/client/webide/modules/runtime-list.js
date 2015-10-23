@@ -60,12 +60,7 @@ RuntimeList.prototype = {
   },
 
   takeScreenshot: function() {
-    return this._UI.busyUntil(AppManager.deviceFront.screenshotToDataURL().then(longstr => {
-       return longstr.string().then(dataURL => {
-         longstr.release().then(null, console.error);
-         this._UI.openInBrowser(dataURL);
-       });
-    }), "taking screenshot");
+    this._Cmds.takeScreenshot();
   },
 
   showRuntimeDetails: function() {

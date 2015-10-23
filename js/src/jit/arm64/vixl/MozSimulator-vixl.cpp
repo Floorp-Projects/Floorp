@@ -342,11 +342,10 @@ class Redirection
       }
     }
 
+    js::AutoEnterOOMUnsafeRegion oomUnsafe;
     Redirection* redir = (Redirection*)js_malloc(sizeof(Redirection));
-    if (!redir) {
-      MOZ_ReportAssertionFailure("[unhandlable oom] Simulator redirection", __FILE__, __LINE__);
-      MOZ_CRASH();
-    }
+    if (!redir)
+        oomUnsafe.crash("Simulator redirection");
     new(redir) Redirection(nativeFunction, type, sim);
     return redir;
   }
