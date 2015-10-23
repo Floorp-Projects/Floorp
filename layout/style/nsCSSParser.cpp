@@ -9404,6 +9404,31 @@ CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
   return true;
 }
 
+// Helper for ParseLinearGradient -- returns true iff aPosition represents a
+// box-position value which was parsed with only edge keywords.
+// e.g. "left top", or "bottom", but not "left 10px"
+//
+// (NOTE: Even though callers may want to exclude explicit "center", we still
+// need to allow for _CENTER here, because omitted position-values (e.g. the
+// x-component of a value like "top") will have been parsed as being *implicit*
+// center. The correct way to disallow *explicit* center is to pass "false" for
+// ParseBoxPositionValues()'s "aAllowExplicitCenter" parameter, before you
+// call this function.)
+static bool
+IsBoxPositionStrictlyEdgeKeywords(nsCSSValuePair& aPosition)
+{
+  const nsCSSValue& xValue = aPosition.mXValue;
+  const nsCSSValue& yValue = aPosition.mYValue;
+  return (xValue.GetUnit() == eCSSUnit_Enumerated &&
+          (xValue.GetIntValue() & (NS_STYLE_BG_POSITION_LEFT |
+                                   NS_STYLE_BG_POSITION_CENTER |
+                                   NS_STYLE_BG_POSITION_RIGHT)) &&
+          yValue.GetUnit() == eCSSUnit_Enumerated &&
+          (yValue.GetIntValue() & (NS_STYLE_BG_POSITION_TOP |
+                                   NS_STYLE_BG_POSITION_CENTER |
+                                   NS_STYLE_BG_POSITION_BOTTOM)));
+}
+
 // <gradient>
 //    : linear-gradient( <linear-gradient-line>? <color-stops> ')'
 //    | radial-gradient( <radial-gradient-line>? <color-stops> ')'
@@ -9435,7 +9460,9 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     return false;
   }
 
-  if (mToken.mType == eCSSToken_Ident &&
+  // Check for "to" syntax (but not if parsing a -webkit-linear-gradient)
+  if (!(aFlags & eGradient_WebkitLegacy) &&
+      mToken.mType == eCSSToken_Ident &&
       mToken.mIdent.LowerCaseEqualsLiteral("to")) {
 
     // "to" syntax doesn't allow explicit "center"
@@ -9445,16 +9472,7 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     }
 
     // [ to [left | right] || [top | bottom] ] ,
-    const nsCSSValue& xValue = cssGradient->mBgPos.mXValue;
-    const nsCSSValue& yValue = cssGradient->mBgPos.mYValue;
-    if (xValue.GetUnit() != eCSSUnit_Enumerated ||
-        !(xValue.GetIntValue() & (NS_STYLE_BG_POSITION_LEFT |
-                                  NS_STYLE_BG_POSITION_CENTER |
-                                  NS_STYLE_BG_POSITION_RIGHT)) ||
-        yValue.GetUnit() != eCSSUnit_Enumerated ||
-        !(yValue.GetIntValue() & (NS_STYLE_BG_POSITION_TOP |
-                                  NS_STYLE_BG_POSITION_CENTER |
-                                  NS_STYLE_BG_POSITION_BOTTOM))) {
+    if (!IsBoxPositionStrictlyEdgeKeywords(cssGradient->mBgPos)) {
       SkipUntil(')');
       return false;
     }
@@ -9467,7 +9485,10 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     return ParseGradientColorStops(cssGradient, aValue);
   }
 
-  if (!(aFlags & eGradient_MozLegacy)) {
+  if (!(aFlags & eGradient_AnyLegacy)) {
+    // We're parsing an unprefixed linear-gradient, and we tried & failed to
+    // parse a 'to' token above. Put the token back & try to re-parse our
+    // expression as <angle>? <color-stop-list>
     UngetToken();
 
     // <angle> ,
@@ -9480,28 +9501,46 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
     return ParseGradientColorStops(cssGradient, aValue);
   }
 
-  nsCSSTokenType ty = mToken.mType;
-  nsString id = mToken.mIdent;
+  // If we get here, we're parsing a prefixed linear-gradient expression.  Put
+  // back the first token (which we may have checked for "to" above) and try to
+  // parse expression as <legacy-gradient-line>? <color-stop-list>
+  bool haveGradientLine = IsLegacyGradientLine(mToken.mType, mToken.mIdent);
   UngetToken();
 
-  // <legacy-gradient-line>
-  bool haveGradientLine = IsLegacyGradientLine(ty, id);
   if (haveGradientLine) {
+    // Parse a <legacy-gradient-line>
     cssGradient->mIsLegacySyntax = true;
     bool haveAngle =
       ParseSingleTokenVariant(cssGradient->mAngle, VARIANT_ANGLE, nullptr);
 
     // if we got an angle, we might now have a comma, ending the gradient-line
-    if (!haveAngle || !ExpectSymbol(',', true)) {
-      if (!ParseBoxPositionValues(cssGradient->mBgPos, false)) {
+    bool haveAngleComma = haveAngle && ExpectSymbol(',', true);
+
+    // If we're webkit-prefixed & didn't get an angle,
+    // OR if we're moz-prefixed & didn't get an angle+comma,
+    // then proceed to parse a box-position.
+    if (((aFlags & eGradient_WebkitLegacy) && !haveAngle) ||
+        ((aFlags & eGradient_MozLegacy) && !haveAngleComma)) {
+      // (Note: 3rd arg controls whether the "center" keyword is allowed.
+      // -moz-linear-gradient allows it; -webkit-linear-gradient does not.)
+      if (!ParseBoxPositionValues(cssGradient->mBgPos, false,
+                                  (aFlags & eGradient_MozLegacy))) {
+        SkipUntil(')');
+        return false;
+      }
+
+      // -webkit-linear-gradient only supports edge keywords here.
+      if ((aFlags & eGradient_WebkitLegacy) &&
+          !IsBoxPositionStrictlyEdgeKeywords(cssGradient->mBgPos)) {
         SkipUntil(')');
         return false;
       }
 
       if (!ExpectSymbol(',', true) &&
-          // if we didn't already get an angle, we might have one now,
-          // otherwise it's an error
+          // If we didn't already get an angle, and we're not -webkit prefixed,
+          // we can parse an angle+comma now.  Otherwise it's an error.
           (haveAngle ||
+           (aFlags & eGradient_WebkitLegacy) ||
            !ParseSingleTokenVariant(cssGradient->mAngle, VARIANT_ANGLE,
                                     nullptr) ||
            // now we better have a comma

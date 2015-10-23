@@ -140,6 +140,10 @@ public:
     if (httpChannel) {
       // Spec says no redirects allowed for SW scripts.
       httpChannel->SetRedirectionLimit(0);
+
+      httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Service-Worker"),
+                                    NS_LITERAL_CSTRING("script"),
+                                    /* merge */ false);
     }
 
     nsCOMPtr<nsIStreamLoader> loader;

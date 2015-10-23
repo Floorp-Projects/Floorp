@@ -33,6 +33,8 @@ class nsAppShell :
 public:
     struct Event : mozilla::LinkedListElement<Event>
     {
+        typedef mozilla::HangMonitor::ActivityType Type;
+
         bool HasSameTypeAs(const Event* other) const
         {
             // Compare vtable addresses to determine same type.
@@ -48,9 +50,9 @@ public:
             queue.insertBack(this);
         }
 
-        virtual mozilla::HangMonitor::ActivityType ActivityType() const
+        virtual Type ActivityType() const
         {
-            return mozilla::HangMonitor::kGeneralActivity;
+            return Type::kGeneralActivity;
         }
     };
 

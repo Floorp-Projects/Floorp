@@ -1618,7 +1618,7 @@ WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   if (!aStyleText) {
     aStyleText = aFrame->StyleText();
   }
-  return aStyleText->mWordSpacing;
+  return StyleToCoord(aStyleText->mWordSpacing);
 }
 
 bool

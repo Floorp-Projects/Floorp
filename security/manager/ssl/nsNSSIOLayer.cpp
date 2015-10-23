@@ -2384,18 +2384,11 @@ ClientAuthDataRunnable::RunOnTargetThread()
         goto loser;
       }
 
-      {
-        nsPSMUITracker tracker;
-        if (tracker.isUIForbidden()) {
-          rv = NS_ERROR_NOT_AVAILABLE;
-        } else {
-          rv = dialogs->ChooseCertificate(mSocketInfo, cn_host_port.get(),
-            org.get(), issuer.get(),
-            (const char16_t**)certNicknameList,
-            (const char16_t**)certDetailsList,
-            CertsToUse, &selectedIndex, &canceled);
-        }
-      }
+      rv = dialogs->ChooseCertificate(mSocketInfo, cn_host_port.get(),
+                                      org.get(), issuer.get(),
+                                      (const char16_t**)certNicknameList,
+                                      (const char16_t**)certDetailsList,
+                                      CertsToUse, &selectedIndex, &canceled);
 
       NS_RELEASE(dialogs);
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
