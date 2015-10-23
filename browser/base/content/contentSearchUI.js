@@ -576,6 +576,12 @@ ContentSearchUIController.prototype = {
     }
   },
 
+  _onMsgSuggestionsCancelled: function () {
+    if (!this._table.hidden) {
+      this._hideSuggestions();
+    }
+  },
+
   _onMsgState: function (state) {
     this.engines = state.engines;
     // No point updating the default engine (and the header) if there's no change.
