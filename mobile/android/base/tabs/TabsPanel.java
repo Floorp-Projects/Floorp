@@ -5,14 +5,11 @@
 
 package org.mozilla.gecko.tabs;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RestrictedProfiles;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -28,14 +25,12 @@ import org.mozilla.gecko.widget.IconTabWidget;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -341,16 +336,6 @@ public class TabsPanel extends LinearLayout
         mHeaderVisible = true;
     }
 
-    public void prepareToDrag() {
-        Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab != null && selectedTab.isPrivate()) {
-            prepareToShow(TabsPanel.Panel.PRIVATE_TABS);
-        } else {
-            prepareToShow(TabsPanel.Panel.NORMAL_TABS);
-        }
-        mHeaderVisible = true;
-    }
-
     public void prepareToShow(Panel panelToShow) {
         if (!isShown()) {
             setVisibility(View.VISIBLE);
@@ -391,11 +376,6 @@ public class TabsPanel extends LinearLayout
         }
     }
 
-    public void hideImmediately() {
-        mVisible = false;
-        setVisibility(View.INVISIBLE);
-    }
-
     public int getVerticalPanelHeight() {
         final int actionBarHeight = mContext.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
         final int height = actionBarHeight + getTabContainerHeight(mTabsContainer);
@@ -429,10 +409,6 @@ public class TabsPanel extends LinearLayout
     @Override
     public boolean isShown() {
         return mVisible;
-    }
-
-    public Panel getCurrentPanel() {
-        return mCurrentPanel;
     }
 
     public void setHWLayerEnabled(boolean enabled) {
@@ -470,15 +446,6 @@ public class TabsPanel extends LinearLayout
         }
 
         setHWLayerEnabled(true);
-    }
-
-    public void translateInRange(float progress) {
-        final Resources resources = getContext().getResources();
-        final int toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height);
-        final int translationY =  (int) - ((1 - progress) * toolbarHeight);
-        ViewHelper.setTranslationY(mHeader, translationY);
-        ViewHelper.setTranslationY(mTabsContainer, translationY);
-        mTabsContainer.setAlpha(progress);
     }
 
     public void finishTabsAnimation() {
