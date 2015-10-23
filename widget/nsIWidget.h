@@ -1267,10 +1267,9 @@ class nsIWidget : public nsISupports {
     /**
      * Called when Gecko knows which themed widgets exist in this window.
      * The passed array contains an entry for every themed widget of the right
-     * type (currently only NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR and
-     * NS_THEME_TOOLBAR) within the window, except for themed widgets which are
-     * transformed or have effects applied to them (e.g. CSS opacity or
-     * filters).
+     * type (currently only NS_THEME_TOOLBAR) within the window, except for
+     * themed widgets which are transformed or have effects applied to them
+     * (e.g. CSS opacity or filters).
      * This could sometimes be called during display list construction
      * outside of painting.
      * If called during painting, it will be called before we actually
