@@ -37,6 +37,11 @@ struct FrameIPCTabContext
 
   // The ID of the app containing this app/browser frame, if applicable.
   uint32_t frameOwnerAppId;
+
+  // The origin without originAttribute suffix for a signed package.
+  // This value would be empty if the TabContext doesn't own a signed
+  // package.
+  nsCString signedPkgOriginNoSuffix;
 };
 
 // IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an

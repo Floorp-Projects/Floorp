@@ -428,7 +428,7 @@ SocksTestServer.prototype = {
     var argv = [];
 
     // marshaled: socks_ver|server_port|dest_host|dest_port|<remote|local>
-    for each (var test in this.test_cases) {
+    for (var test of this.test_cases) {
       var arg = test.type + '|' +
         String(socks_listen_port) + '|' +
         test.host + '|' + test.port + '|';
@@ -467,7 +467,7 @@ SocksTestServer.prototype = {
       }
       this.client_subprocess = null;
     }
-    for each (var client in this.client_connections)
+    for (var client of this.client_connections)
       client.close();
     this.client_connections = [];
     if (this.listener) {

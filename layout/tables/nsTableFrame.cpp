@@ -1164,9 +1164,8 @@ nsDisplayTableBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
 {
   DrawResult result = static_cast<nsTableFrame*>(mFrame)->
-    PaintTableBorderBackground(*aCtx, mVisibleRect,
-                               ToReferenceFrame(),
-                               aBuilder->GetBackgroundPaintFlags());
+    PaintTableBorderBackground(aBuilder, *aCtx, mVisibleRect,
+                               ToReferenceFrame());
 
   nsDisplayTableItemGeometry::UpdateDrawResult(this, result);
 }
@@ -1358,15 +1357,21 @@ nsTableFrame::GetDeflationForBackground(nsPresContext* aPresContext) const
 // XXX We don't put the borders and backgrounds in tree order like we should.
 // That requires some major surgery which we aren't going to do right now.
 DrawResult
-nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
+nsTableFrame::PaintTableBorderBackground(nsDisplayListBuilder* aBuilder,
+                                         nsRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect,
-                                         nsPoint aPt, uint32_t aBGPaintFlags)
+                                         nsPoint aPt)
 {
   nsPresContext* presContext = PresContext();
 
+  uint32_t bgFlags = aBuilder->GetBackgroundPaintFlags();
+  PaintBorderFlags borderFlags = aBuilder->ShouldSyncDecodeImages()
+                               ? PaintBorderFlags::SYNC_DECODE_IMAGES
+                               : PaintBorderFlags();
+
   TableBackgroundPainter painter(this, TableBackgroundPainter::eOrigin_Table,
                                  presContext, aRenderingContext,
-                                 aDirtyRect, aPt, aBGPaintFlags);
+                                 aDirtyRect, aPt, bgFlags);
   nsMargin deflate = GetDeflationForBackground(presContext);
   // If 'deflate' is (0,0,0,0) then we'll paint the table background
   // in a separate display item, so don't do it here.
@@ -1377,8 +1382,11 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
     if (!IsBorderCollapse()) {
       Sides skipSides = GetSkipSides();
       nsRect rect(aPt, mRect.Size());
-      nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
-                                  aDirtyRect, rect, mStyleContext, skipSides);
+
+      result &=
+        nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
+                                    aDirtyRect, rect, mStyleContext,
+                                    borderFlags, skipSides);
     }
     else {
       gfxContext* ctx = aRenderingContext.ThebesContext();
