@@ -1506,7 +1506,7 @@ IsAutonessEqual(const nsStyleSides& aSides1, const nsStyleSides& aSides2)
 
 nsChangeHint
 nsStylePosition::CalcDifference(const nsStylePosition& aOther,
-                                nsStyleContext* aContext) const
+                                const nsStyleVisibility* aOldStyleVisibility) const
 {
   nsChangeHint hint = nsChangeHint(0);
 
@@ -1603,23 +1603,43 @@ nsStylePosition::CalcDifference(const nsStylePosition& aOther,
   bool heightChanged = mHeight != aOther.mHeight ||
                        mMinHeight != aOther.mMinHeight ||
                        mMaxHeight != aOther.mMaxHeight;
-  bool isVertical = WritingMode(aContext).IsVertical();
-  if (isVertical ? widthChanged : heightChanged) {
-    // Block-size changes can affect descendant intrinsic sizes due to replaced
-    // elements with percentage bsizes in descendants which also have
-    // percentage bsizes. This is handled via nsChangeHint_UpdateComputedBSize
-    // which clears intrinsic sizes for frames that have such replaced elements.
-    NS_UpdateHint(hint, nsChangeHint_NeedReflow |
-        nsChangeHint_UpdateComputedBSize |
-        nsChangeHint_ReflowChangesSizeOrPosition);
-  }
 
-  if (isVertical ? heightChanged : widthChanged) {
-    // None of our inline-size differences can affect descendant intrinsic
-    // sizes and none of them need to force children to reflow.
-    NS_UpdateHint(hint, NS_SubtractHint(nsChangeHint_AllReflowHints,
-                                        NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                                       nsChangeHint_NeedDirtyReflow)));
+  // If aOldStyleVisibility is null, we don't need to bother with any of
+  // these tests, since we know that the element never had its
+  // nsStyleVisibility accessed, which means it couldn't have done
+  // layout.
+  // Note that we pass an nsStyleVisibility here because we don't want
+  // to cause a new struct to be computed during
+  // nsStyleContext::CalcStyleDifference, which can lead to incorrect
+  // style data.
+  // It doesn't matter whether we're looking at the old or new
+  // visibility struct, since a change between vertical and horizontal
+  // writing-mode will cause a reframe, and it's easier to pass the old.
+  if (aOldStyleVisibility) {
+    bool isVertical = WritingMode(aOldStyleVisibility).IsVertical();
+    if (isVertical ? widthChanged : heightChanged) {
+      // Block-size changes can affect descendant intrinsic sizes due to
+      // replaced elements with percentage bsizes in descendants which
+      // also have percentage bsizes. This is handled via
+      // nsChangeHint_UpdateComputedBSize which clears intrinsic sizes
+      // for frames that have such replaced elements.
+      NS_UpdateHint(hint, nsChangeHint_NeedReflow |
+          nsChangeHint_UpdateComputedBSize |
+          nsChangeHint_ReflowChangesSizeOrPosition);
+    }
+
+    if (isVertical ? heightChanged : widthChanged) {
+      // None of our inline-size differences can affect descendant
+      // intrinsic sizes and none of them need to force children to
+      // reflow.
+      NS_UpdateHint(hint, NS_SubtractHint(nsChangeHint_AllReflowHints,
+                                          NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
+                                                         nsChangeHint_NeedDirtyReflow)));
+    }
+  } else {
+    if (widthChanged || heightChanged) {
+      NS_UpdateHint(hint, nsChangeHint_NeutralChange);
+    }
   }
 
   // If any of the offsets have changed, then return the respective hints
@@ -3430,10 +3450,10 @@ nsStyleText::nsStyleText(void)
   mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
   mControlCharacterVisibility = nsCSSParser::ControlCharVisibilityDefault();
 
+  mWordSpacing.SetCoordValue(0);
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();
   mTextIndent.SetCoordValue(0);
-  mWordSpacing = 0;
 
   mTextShadow = nullptr;
   mTabSize = NS_STYLE_TABSIZE_INITIAL;

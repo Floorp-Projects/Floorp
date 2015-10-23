@@ -25,30 +25,8 @@ public:
   // shutting down NSS is prohibited.
   void enter();
   void leave();
-  
-  // Call enter/leave when PSM is about to show a UI
-  // while still holding resources.
-  void enterBlockingUIState();
-  void leaveBlockingUIState();
-  
-  // Is the activity aware of any blocking PSM UI currently shown?
-  bool isBlockingUIActive();
-
-  // Is it forbidden to bring up an UI while holding resources?
-  bool isUIForbidden();
-  
-  // Check whether setting the current thread restriction is possible. If it
-  // is possible, the state tracking will have ensured that we will stay in
-  // this state. As of writing, this includes forbidding PSM UI.
-  bool ifPossibleDisallowUI();
-
-  // Notify the state tracking that going to the restricted state is
-  // no longer planned.
-  // As of writing, this includes clearing the "PSM UI forbidden" flag.
-  void allowUI();
-
-  // If currently no UI is shown, wait for all activity to stop,
-  // and block any other thread on entering relevant PSM code.
+  // Wait for all activity to stop, and block any other thread on entering
+  // relevant PSM code.
   PRStatus restrictActivityToCurrentThread();
   
   // Go back to normal state.
@@ -66,13 +44,6 @@ private:
   // The number of active scopes holding resources.
   int mNSSActivityCounter;
 
-  // The number of scopes holding resources while blocked
-  // showing an UI.
-  int mBlockingUICounter;
-
-  // Whether bringing up UI is currently forbidden
-  bool mIsUIForbidden;
-
   // nullptr means "no restriction"
   // if not null, activity is only allowed on that thread
   PRThread* mNSSRestrictedThread;
@@ -84,16 +55,6 @@ class nsNSSShutDownPreventionLock
 public:
   nsNSSShutDownPreventionLock();
   ~nsNSSShutDownPreventionLock();
-};
-
-// Helper class that automatically enters/leaves the global UI tracking
-class nsPSMUITracker
-{
-public:
-  nsPSMUITracker();
-  ~nsPSMUITracker();
-  
-  bool isUIForbidden();
 };
 
 // Singleton, used by nsNSSComponent to track the list of PSM objects,
@@ -114,13 +75,6 @@ public:
   static void remember(nsOnPK11LogoutCancelObject *o);
   static void forget(nsOnPK11LogoutCancelObject *o);
 
-  // If possible to do "early cleanup" at the current time, remember that we want to
-  // do it, and disallow actions that would change the possibility.
-  bool ifPossibleDisallowUI();
-
-  // Notify that it is no longer planned to do the "early cleanup".
-  void allowUI();
-  
   // Do the "early cleanup", if possible.
   nsresult evaporateAllNSSResources();
 

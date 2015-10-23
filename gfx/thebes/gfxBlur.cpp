@@ -815,8 +815,27 @@ ComputeRectsForInsetBoxShadow(IntSize aBlurRadius,
                                     ceil(cornerWidth) + rectBufferSize.width);
   aOutPathMargins = innerMargin;
 
-  IntSize minInnerSize(innerMargin.LeftRight() + 1,
-                       innerMargin.TopBottom() + 1);
+  // If we have a negative spread radius, we would not have enough
+  // size to actually do the blur. So the min size must be the abs() of the blur
+  // and spread radius.
+  IntSize minBlurSize(std::abs(aSpreadRadius.width) + std::abs(aBlurRadius.width),
+                      std::abs(aSpreadRadius.height) + std::abs(aBlurRadius.height));
+
+  IntMargin minInnerMargins = IntMargin(ceil(cornerHeight) + minBlurSize.height,
+                                        ceil(cornerWidth) + minBlurSize.width,
+                                        ceil(cornerHeight) + minBlurSize.height,
+                                        ceil(cornerWidth) + minBlurSize.width);
+
+  IntSize minInnerSize(minInnerMargins.LeftRight() + 1,
+                       minInnerMargins.TopBottom() + 1);
+
+  if (aShadowClipRect.height < minInnerSize.height) {
+    minInnerSize.height = aShadowClipRect.height;
+  }
+
+  if (aShadowClipRect.width < minInnerSize.width) {
+    minInnerSize.width = aShadowClipRect.width;
+  }
 
   // Then expand the outer rect based on the size between the inner/outer rects
   IntSize minOuterSize(minInnerSize);
