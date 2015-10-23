@@ -7,7 +7,6 @@
 #define MOZILLA_GFX_SCALEFACTORS2D_H_
 
 #include <ostream>
-#include <iomanip>
 
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
