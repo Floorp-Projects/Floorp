@@ -6,6 +6,9 @@
 //
 // These should not run with --no-asmjs.
 
+if (!isAsmJSCompilationAvailable())
+    quit(0);
+
 //////////////////////////////////////////////////////////////////////
 //
 // Int8Array can be used on SharedArrayBuffer, if atomics are present
