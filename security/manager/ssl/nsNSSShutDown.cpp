@@ -112,17 +112,6 @@ nsresult nsNSSShutDownList::doPK11Logout()
   return NS_OK;
 }
 
-bool nsNSSShutDownList::ifPossibleDisallowUI()
-{
-  bool isNowDisallowed = mActivityState.ifPossibleDisallowUI();
-  return isNowDisallowed;
-}
-
-void nsNSSShutDownList::allowUI()
-{
-  mActivityState.allowUI();
-}
-
 nsresult nsNSSShutDownList::evaporateAllNSSResources()
 {
   if (PR_SUCCESS != mActivityState.restrictActivityToCurrentThread()) {
@@ -169,8 +158,6 @@ nsNSSActivityState::nsNSSActivityState()
  mNSSActivityChanged(mNSSActivityStateLock,
                      "nsNSSActivityState.mNSSActivityStateLock"),
  mNSSActivityCounter(0),
- mBlockingUICounter(0),
- mIsUIForbidden(false),
  mNSSRestrictedThread(nullptr)
 {
 }
@@ -199,79 +186,17 @@ void nsNSSActivityState::leave()
   mNSSActivityChanged.NotifyAll();
 }
 
-void nsNSSActivityState::enterBlockingUIState()
-{
-  MutexAutoLock lock(mNSSActivityStateLock);
-
-  ++mBlockingUICounter;
-}
-
-void nsNSSActivityState::leaveBlockingUIState()
-{
-  MutexAutoLock lock(mNSSActivityStateLock);
-
-  --mBlockingUICounter;
-}
-
-bool nsNSSActivityState::isBlockingUIActive()
-{
-  MutexAutoLock lock(mNSSActivityStateLock);
-  return (mBlockingUICounter > 0);
-}
-
-bool nsNSSActivityState::isUIForbidden()
-{
-  MutexAutoLock lock(mNSSActivityStateLock);
-  return mIsUIForbidden;
-}
-
-bool nsNSSActivityState::ifPossibleDisallowUI()
-{
-  bool retval = false;
-  MutexAutoLock lock(mNSSActivityStateLock);
-
-  // Checking and disallowing the UI must be done atomically.
-
-  if (!mBlockingUICounter) {
-    // No UI is currently shown, we are able to evaporate.
-    retval = true;
-    // Remember to disallow UI.
-    // To clear the "forbidden" state, call restrictActivityToCurrentThread()
-    // and releaseCurrentThreadActivityRestriction().
-    mIsUIForbidden = true;
-  }
-  return retval;
-}
-
-void nsNSSActivityState::allowUI()
-{
-  MutexAutoLock lock(mNSSActivityStateLock);
-
-  mIsUIForbidden = false;
-}
-
 PRStatus nsNSSActivityState::restrictActivityToCurrentThread()
 {
-  PRStatus retval = PR_FAILURE;
   MutexAutoLock lock(mNSSActivityStateLock);
-  
-  if (!mBlockingUICounter) {
-    while (0 < mNSSActivityCounter && !mBlockingUICounter) {
-      mNSSActivityChanged.Wait(PR_TicksPerSecond());
-    }
-      
-    if (mBlockingUICounter) {
-      // This should never happen.
-      // If we arrive here, our logic is broken.
-      PR_ASSERT(0);
-    }
-    else {
-      mNSSRestrictedThread = PR_GetCurrentThread();
-      retval = PR_SUCCESS;
-    }
+
+  while (mNSSActivityCounter > 0) {
+    mNSSActivityChanged.Wait(PR_TicksPerSecond());
   }
 
-  return retval;
+  mNSSRestrictedThread = PR_GetCurrentThread();
+
+  return PR_SUCCESS;
 }
 
 void nsNSSActivityState::releaseCurrentThreadActivityRestriction()
@@ -279,7 +204,6 @@ void nsNSSActivityState::releaseCurrentThreadActivityRestriction()
   MutexAutoLock lock(mNSSActivityStateLock);
 
   mNSSRestrictedThread = nullptr;
-  mIsUIForbidden = false;
 
   mNSSActivityChanged.NotifyAll();
 }
@@ -300,31 +224,4 @@ nsNSSShutDownPreventionLock::~nsNSSShutDownPreventionLock()
     return;
   
   state->leave();
-}
-
-nsPSMUITracker::nsPSMUITracker()
-{
-  nsNSSActivityState *state = nsNSSShutDownList::getActivityState();
-  if (!state)
-    return;
-  
-  state->enterBlockingUIState();
-}
-
-nsPSMUITracker::~nsPSMUITracker()
-{
-  nsNSSActivityState *state = nsNSSShutDownList::getActivityState();
-  if (!state)
-    return;
-  
-  state->leaveBlockingUIState();
-}
-
-bool nsPSMUITracker::isUIForbidden()
-{
-  nsNSSActivityState *state = nsNSSShutDownList::getActivityState();
-  if (!state)
-    return false;
-
-  return state->isUIForbidden();
 }

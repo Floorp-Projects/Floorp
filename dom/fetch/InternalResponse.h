@@ -218,6 +218,9 @@ public:
   nsresult
   StripFragmentAndSetUrl(const nsACString& aUrl);
 
+  LoadTainting
+  GetTainting() const;
+
 private:
   ~InternalResponse();
 

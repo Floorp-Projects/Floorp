@@ -205,12 +205,6 @@
             "url": "/_mozilla/service-workers/service-worker/fetch-request-fallback.https.html"
           }
         ],
-        "service-workers/service-worker/fetch-request-html-imports.https.html": [
-          {
-            "path": "service-workers/service-worker/fetch-request-html-imports.https.html",
-            "url": "/_mozilla/service-workers/service-worker/fetch-request-html-imports.https.html"
-          }
-        ],
         "service-workers/service-worker/fetch-request-no-freshness-headers.https.html": [
           {
             "path": "service-workers/service-worker/fetch-request-no-freshness-headers.https.html",

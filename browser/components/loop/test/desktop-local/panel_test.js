@@ -64,6 +64,7 @@ describe("loop.panel", function() {
       },
       confirm: sandbox.stub(),
       hasEncryptionKey: true,
+      hangupAllChatWindows: function() {},
       logInToFxA: sandbox.stub(),
       logOutFromFxA: sandbox.stub(),
       notifyUITour: sandbox.stub(),
@@ -853,14 +854,13 @@ describe("loop.panel", function() {
       dispatch = sandbox.stub(dispatcher, "dispatch");
     });
 
-    function createTestComponent(pendingOperation) {
+    function createTestComponent(extraProps) {
       return TestUtils.renderIntoDocument(
-        React.createElement(loop.panel.NewRoomView, {
+        React.createElement(loop.panel.NewRoomView, _.extend({
           dispatcher: dispatcher,
           mozLoop: fakeMozLoop,
-          pendingOperation: pendingOperation,
           userDisplayName: fakeEmail
-        }));
+        }, extraProps)));
     }
 
     it("should dispatch a CreateRoom action with context when clicking on the " +
@@ -876,7 +876,10 @@ describe("loop.panel", function() {
         });
       };
 
-      var view = createTestComponent(false);
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
 
       // Simulate being visible
       view.onDocumentVisible();
@@ -897,11 +900,48 @@ describe("loop.panel", function() {
 
     it("should disable the create button when pendingOperation is true",
       function() {
-        var view = createTestComponent(true);
+        var view = createTestComponent({
+          inRoom: false,
+          pendingOperation: true
+        });
 
         var buttonNode = view.getDOMNode().querySelector(".new-room-button[disabled]");
         expect(buttonNode).to.not.equal(null);
       });
+
+    it("should not have a create button when inRoom is true", function() {
+      var view = createTestComponent({
+        inRoom: true,
+        pendingOperation: false
+      });
+
+      var buttonNode = view.getDOMNode().querySelector(".new-room-button");
+      expect(buttonNode).to.equal(null);
+    });
+
+    it("should have a stop sharing button when inRoom is true", function() {
+      var view = createTestComponent({
+        inRoom: true,
+        pendingOperation: false
+      });
+
+      var buttonNode = view.getDOMNode().querySelector(".stop-sharing-button");
+      expect(buttonNode).to.not.equal(null);
+    });
+
+    it("should hangup any window when stop sharing is clicked", function() {
+      var hangupAllChatWindows = sandbox.stub(fakeMozLoop, "hangupAllChatWindows");
+
+      var view = createTestComponent({
+        inRoom: true,
+        pendingOperation: false
+      });
+
+      var node = view.getDOMNode();
+      TestUtils.Simulate.click(node.querySelector(".stop-sharing-button"));
+
+      sinon.assert.calledOnce(hangupAllChatWindows);
+    });
   });
 
   describe("loop.panel.SignInRequestView", function() {

@@ -456,10 +456,19 @@ public:
   explicit WritingMode(nsStyleContext* aStyleContext)
   {
     NS_ASSERTION(aStyleContext, "we need an nsStyleContext here");
+    InitFromStyleVisibility(aStyleContext->StyleVisibility());
+  }
 
-    const nsStyleVisibility* styleVisibility = aStyleContext->StyleVisibility();
+  explicit WritingMode(const nsStyleVisibility* aStyleVisibility)
+  {
+    NS_ASSERTION(aStyleVisibility, "we need an nsStyleVisibility here");
+    InitFromStyleVisibility(aStyleVisibility);
+  }
 
-    switch (styleVisibility->mWritingMode) {
+private:
+  void InitFromStyleVisibility(const nsStyleVisibility* aStyleVisibility)
+  {
+    switch (aStyleVisibility->mWritingMode) {
       case NS_STYLE_WRITING_MODE_HORIZONTAL_TB:
         mWritingMode = 0;
         break;
@@ -469,7 +478,7 @@ public:
         mWritingMode = eBlockFlowMask |
                        eLineOrientMask |
                        eOrientationMask;
-        uint8_t textOrientation = styleVisibility->mTextOrientation;
+        uint8_t textOrientation = aStyleVisibility->mTextOrientation;
         if (textOrientation == NS_STYLE_TEXT_ORIENTATION_SIDEWAYS) {
           mWritingMode |= eSidewaysMask;
         }
@@ -479,7 +488,7 @@ public:
       case NS_STYLE_WRITING_MODE_VERTICAL_RL:
       {
         mWritingMode = eOrientationMask;
-        uint8_t textOrientation = styleVisibility->mTextOrientation;
+        uint8_t textOrientation = aStyleVisibility->mTextOrientation;
         if (textOrientation == NS_STYLE_TEXT_ORIENTATION_SIDEWAYS) {
           mWritingMode |= eSidewaysMask;
         }
@@ -504,10 +513,11 @@ public:
         break;
     }
 
-    if (NS_STYLE_DIRECTION_RTL == styleVisibility->mDirection) {
+    if (NS_STYLE_DIRECTION_RTL == aStyleVisibility->mDirection) {
       mWritingMode ^= eInlineFlowMask | eBidiMask;
     }
   }
+public:
 
   /**
    * This function performs fixup for elements with 'unicode-bidi: plaintext',

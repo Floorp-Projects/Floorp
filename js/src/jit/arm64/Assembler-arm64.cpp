@@ -124,15 +124,18 @@ Assembler::emitExtendedJumpTable()
         br(vixl::ip0);
 
         DebugOnly<size_t> prePointer = size_t(armbuffer_.nextOffset().getOffset());
-        MOZ_ASSERT(prePointer - preOffset == OffsetOfJumpTableEntryPointer);
+        MOZ_ASSERT_IF(!oom(), prePointer - preOffset == OffsetOfJumpTableEntryPointer);
 
         brk(0x0);
         brk(0x0);
 
         DebugOnly<size_t> postOffset = size_t(armbuffer_.nextOffset().getOffset());
 
-        MOZ_ASSERT(postOffset - preOffset == SizeOfJumpTableEntry);
+        MOZ_ASSERT_IF(!oom(), postOffset - preOffset == SizeOfJumpTableEntry);
     }
+
+    if (oom())
+        return BufferOffset();
 
     return tableOffset;
 }
@@ -221,7 +224,10 @@ void
 Assembler::bind(Label* label, BufferOffset targetOffset)
 {
     // Nothing has seen the label yet: just mark the location.
-    if (!label->used()) {
+    // If we've run out of memory, don't attempt to modify the buffer which may
+    // not be there. Just mark the label as bound to the (possibly bogus)
+    // targetOffset.
+    if (!label->used() || oom()) {
         label->bind(targetOffset.getOffset());
         return;
     }
@@ -259,7 +265,9 @@ void
 Assembler::bind(RepatchLabel* label)
 {
     // Nothing has seen the label yet: just mark the location.
-    if (!label->used()) {
+    // If we've run out of memory, don't attempt to modify the buffer which may
+    // not be there. Just mark the label as bound to nextOffset().
+    if (!label->used() || oom()) {
         label->bind(nextOffset().getOffset());
         return;
     }

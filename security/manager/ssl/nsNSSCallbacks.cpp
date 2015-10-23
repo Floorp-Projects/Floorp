@@ -768,6 +768,7 @@ ShowProtectedAuthPrompt(PK11SlotInfo* slot, nsIInterfaceRequestor *ir)
 }
 
 class PK11PasswordPromptRunnable : public SyncRunnableBase
+                                 , public nsNSSShutDownObject
 {
 public:
   PK11PasswordPromptRunnable(PK11SlotInfo* slot, 
@@ -777,28 +778,41 @@ public:
       mIR(ir)
   {
   }
+  virtual ~PK11PasswordPromptRunnable();
+
+  // This doesn't own the PK11SlotInfo or any other NSS objects, so there's
+  // nothing to release.
+  virtual void virtualDestroyNSSReference() override {}
   char * mResult; // out
-  virtual void RunOnTargetThread();
+  virtual void RunOnTargetThread() override;
 private:
   PK11SlotInfo* const mSlot; // in
   nsIInterfaceRequestor* const mIR; // in
 };
+
+PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
+  shutdown(calledFromObject);
+}
 
 void PK11PasswordPromptRunnable::RunOnTargetThread()
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
   nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
   nsresult rv = NS_OK;
   char16_t *password = nullptr;
   bool value = false;
   nsCOMPtr<nsIPrompt> prompt;
-
-  /* TODO: Retry should generate a different dialog message */
-/*
-  if (retry)
-    return nullptr;
-*/
 
   if (!mIR)
   {
@@ -835,19 +849,11 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
   if (NS_FAILED(rv))
     return;
 
-  {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    else {
-      // Although the exact value is ignored, we must not pass invalid
-      // bool values through XPConnect.
-      bool checkState = false;
-      rv = prompt->PromptPassword(nullptr, promptString.get(),
-                                  &password, nullptr, &checkState, &value);
-    }
-  }
+  // Although the exact value is ignored, we must not pass invalid bool values
+  // through XPConnect.
+  bool checkState = false;
+  rv = prompt->PromptPassword(nullptr, promptString.get(), &password, nullptr,
+                              &checkState, &value);
   
   if (NS_SUCCEEDED(rv) && value) {
     mResult = ToNewUTF8String(nsDependentString(password));

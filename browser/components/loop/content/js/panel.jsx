@@ -691,6 +691,7 @@ loop.panel = (function(_, mozL10n) {
     _renderNewRoomButton: function() {
       return (
         <NewRoomView dispatcher={this.props.dispatcher}
+          inRoom={this.state.openedRoom !== null}
           mozLoop={this.props.mozLoop}
           pendingOperation={this.state.pendingCreation ||
                             this.state.pendingInitialRetrieval} />
@@ -737,6 +738,7 @@ loop.panel = (function(_, mozL10n) {
   var NewRoomView = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      inRoom: React.PropTypes.bool.isRequired,
       mozLoop: React.PropTypes.object.isRequired,
       pendingOperation: React.PropTypes.bool.isRequired
     },
@@ -791,14 +793,24 @@ loop.panel = (function(_, mozL10n) {
       this.props.dispatcher.dispatch(createRoomAction);
     },
 
+    handleStopSharingButtonClick: function() {
+      this.props.mozLoop.hangupAllChatWindows();
+    },
+
     render: function() {
       return (
         <div className="new-room-view">
-          <button className="btn btn-info new-room-button"
-                  disabled={this.props.pendingOperation}
-                  onClick={this.handleCreateButtonClick}>
-            {mozL10n.get("rooms_new_room_button_label")}
-          </button>
+          {this.props.inRoom ?
+            <button className="btn btn-info stop-sharing-button"
+              disabled={this.props.pendingOperation}
+              onClick={this.handleStopSharingButtonClick}>
+              {mozL10n.get("panel_stop_sharing_tabs_button")}
+            </button> :
+            <button className="btn btn-info new-room-button"
+              disabled={this.props.pendingOperation}
+              onClick={this.handleCreateButtonClick}>
+              {mozL10n.get("panel_browse_with_friend_button")}
+            </button>}
         </div>
       );
     }
