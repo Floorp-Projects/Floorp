@@ -15,6 +15,11 @@
                     android:entryValues="@array/pref_restore_values"
                     android:persistent="true" />
 
+    <CheckBoxPreference android:key="browser.image_blocking.enabled"
+                        android:title="@string/pref_tap_to_load_images_title"
+                        android:summary="@string/pref_tap_to_load_images_summary2"
+                        android:defaultValue="false"/>
+
     <CheckBoxPreference android:key="devtools.remote.usb.enabled"
                         android:title="@string/pref_developer_remotedebugging_usb" />
 
