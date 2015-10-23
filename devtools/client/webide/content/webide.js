@@ -1038,6 +1038,16 @@ var Cmds = {
     return UI.busyUntil(disconnecting, "disconnecting from runtime");
   },
 
+  takeScreenshot: function() {
+    let url = AppManager.deviceFront.screenshotToDataURL();
+    return UI.busyUntil(url.then(longstr => {
+      return longstr.string().then(dataURL => {
+        longstr.release().then(null, console.error);
+        UI.openInBrowser(dataURL);
+      });
+    }), "taking screenshot");
+  },
+
   showPermissionsTable: function() {
     UI.selectDeckPanel("permissionstable");
   },
