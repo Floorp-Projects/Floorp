@@ -14,10 +14,6 @@
                     android:negativeButtonText="@string/button_cancel"
                     android:persistent="false" />
 
-    <CheckBoxPreference android:key="browser.chrome.dynamictoolbar"
-                        android:title="@string/pref_scroll_title_bar2"
-                        android:summary="@string/pref_scroll_title_bar_summary" />
-
     <CheckBoxPreference android:key="media.autoplay.enabled"
                         android:title="@string/pref_media_autoplay_enabled"
                         android:summary="@string/pref_media_autoplay_enabled_summary" />
