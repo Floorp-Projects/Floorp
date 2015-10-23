@@ -49,6 +49,39 @@ class TestCommitParser(unittest.TestCase):
             [{ 'test': 'alpha', "only_chunks": set([1, 3])  }]
         )
 
+    def test_normalize_test_list_with_alias_pattern(self):
+        self.assertEqual(
+            normalize_test_list({ "a": '/.*oo.*/' },
+                                ['woot', 'foo', 'bar'],
+                                'a, b, c'),
+            [{ 'test': t } for t in ['woot', 'foo', 'b', 'c']]
+        )
+
+    def test_normalize_test_list_with_alias_pattern_anchored(self):
+        self.assertEqual(
+            normalize_test_list({ "a": '/.*oo/' },
+                                ['woot', 'foo', 'bar'],
+                                'a, b, c'),
+            [{ 'test': t } for t in ['foo', 'b', 'c']]
+        )
+
+    def test_normalize_test_list_with_alias_pattern_list(self):
+        self.assertEqual( sorted(
+            normalize_test_list({ "a": ['/.*oo/', 'bar', '/bi.*/'] },
+                                ['woot', 'foo', 'bar', 'bing', 'baz'],
+                                'a, b')),
+            sorted([{ 'test': t } for t in ['foo', 'bar', 'bing', 'b']])
+        )
+
+    def test_normalize_test_list_with_alias_pattern_list_chunks(self):
+        self.assertEqual( sorted(
+            normalize_test_list({ "a": ['/.*oo/', 'bar', '/bi.*/'] },
+                                ['woot', 'foo', 'bar', 'bing', 'baz'],
+                                'a-1, a-4, b')),
+            sorted([{'test': 'b'}] + [
+                { 'test': t, 'only_chunks': set([1, 4])} for t in ['foo', 'bar', 'bing']])
+        )
+
     def test_invalid_commit(self):
         '''
         Disallow invalid commit messages from being parsed...

@@ -6,6 +6,7 @@
 #include "TestLayers.h"
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
+#include "LayerUserData.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/CompositorParent.h"
 

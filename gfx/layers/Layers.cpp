@@ -205,6 +205,19 @@ LayerManager::AreComponentAlphaLayersEnabled()
   return gfxPrefs::ComponentAlphaEnabled();
 }
 
+/*static*/ void
+LayerManager::LayerUserDataDestroy(void* data)
+{
+  delete static_cast<LayerUserData*>(data);
+}
+
+nsAutoPtr<LayerUserData>
+LayerManager::RemoveUserData(void* aKey)
+{
+  nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
+  return d;
+}
+
 //--------------------------------------------------
 // Layer
 
@@ -2056,6 +2069,13 @@ Layer::IsBackfaceHidden()
     }
   }
   return false;
+}
+
+nsAutoPtr<LayerUserData>
+Layer::RemoveUserData(void* aKey)
+{
+  nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey))));
+  return d;
 }
 
 void

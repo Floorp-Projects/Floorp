@@ -577,10 +577,10 @@ MarkupView.prototype = {
         }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_DELETE:
-        this.deleteNode(this._selectedContainer.node);
+        this.deleteNodeOrAttribute();
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_BACK_SPACE:
-        this.deleteNode(this._selectedContainer.node, true);
+        this.deleteNodeOrAttribute(true);
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_HOME:
         let rootContainer = this.getContainer(this._rootNode);
@@ -678,12 +678,31 @@ MarkupView.prototype = {
   },
 
   /**
+   * If there's an attribute on the current node that's currently focused, then
+   * delete this attribute, otherwise delete the node itself.
+   * @param {boolean} moveBackward If set to true and if we're deleting the
+   * node, focus the previous sibling after deletion, otherwise the next one.
+   */
+  deleteNodeOrAttribute: function(moveBackward) {
+    let focusedAttribute = this.doc.activeElement
+                           ? this.doc.activeElement.closest(".attreditor")
+                           : null;
+    if (focusedAttribute) {
+      // The focused attribute might not be in the current selected container.
+      let container = focusedAttribute.closest("li.child").container;
+      container.removeAttribute(focusedAttribute.dataset.attr);
+    } else {
+      this.deleteNode(this._selectedContainer.node, moveBackward);
+    }
+  },
+
+  /**
    * Delete a node from the DOM.
    * This is an undoable action.
    *
    * @param {NodeFront} aNode The node to remove.
    * @param {boolean} moveBackward If set to true, focus the previous sibling,
-   *  otherwise the next one.
+   * otherwise the next one.
    */
   deleteNode: function(aNode, moveBackward) {
     if (aNode.isDocumentElement ||

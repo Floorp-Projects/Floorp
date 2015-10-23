@@ -25,7 +25,7 @@ const kConsoleListener = {
     }
 
     info("Script error... " + message.sourceName + ":" + message.lineNumber + ": " + message.errorMessage);
-    for each (let expected in gMessagesExpected) {
+    for (let expected of gMessagesExpected) {
       if (message.lineNumber != expected.line)
         continue;
 
@@ -63,7 +63,7 @@ function run_test()
   run_deferred_event(function() {
     cs.unregisterListener(kConsoleListener);
 
-    for each (let expected in gMessagesExpected) {
+    for (let expected of gMessagesExpected) {
       info("checking " + expected.message);
       do_check_true(expected.found);
     }

@@ -518,7 +518,8 @@ TabParent::ShouldSwitchProcess(nsIChannel* aChannel)
 }
 
 void
-TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel)
+TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel,
+                                       const nsACString& aPackageId)
 {
   if (!ShouldSwitchProcess(aChannel)) {
     return;
@@ -537,7 +538,7 @@ TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel)
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
 
-  nsresult rv = frameLoader->SwitchProcessAndLoadURI(uri);
+  nsresult rv = frameLoader->SwitchProcessAndLoadURI(uri, aPackageId);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to switch process.");
   }
