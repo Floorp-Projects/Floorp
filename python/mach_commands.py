@@ -239,25 +239,41 @@ class MachCommands(MachCommandBase):
             return 1
 
         # Install eslint.
-        print("Installing eslint...")
-        with open(os.devnull, "w") as fnull:
-            subprocess.call([npmPath, "install", "eslint", "-g"],
-                            stdout=fnull, stderr=fnull)
+        success = self.callProcess("eslint",
+                                   [npmPath, "install", "eslint", "-g"])
+        if not success:
+            return 1
 
         # Install eslint-plugin-mozilla.
-        print("")
-        print("Installing eslint-plugin-mozilla...")
-        with open(os.devnull, "w") as fnull:
-            subprocess.call([npmPath, "link"],
-                            cwd="testing/eslint-plugin-mozilla",
-                            stdout=fnull, stderr=fnull)
+        success = self.callProcess("eslint-plugin-mozilla",
+                                   [npmPath, "link"],
+                                   "testing/eslint-plugin-mozilla")
+        if not success:
+            return 1
 
         # Install eslint-plugin-react.
-        print("")
-        print("Installing eslint-plugin-react...")
-        with open(os.devnull, "w") as fnull:
-            subprocess.call([npmPath, "install", "-g", "eslint-plugin-react"],
-                            stdout=fnull, stderr=fnull)
+        success = self.callProcess("eslint-plugin-react",
+                                   [npmPath, "install", "eslint-plugin-react", "-g"])
+        if not success:
+            return 1
+
+        print("\nESLint and approved plugins installed successfully!")
+
+    def callProcess(self, name, cmd, cwd=None):
+        print("\nInstalling %s using \"%s\"..." % (name, " ".join(cmd)))
+
+        try:
+            with open(os.devnull, "w") as fnull:
+                subprocess.check_call(cmd, cwd=cwd, stdout=fnull)
+        except subprocess.CalledProcessError:
+            if cwd:
+                print("\nError installing %s in the %s folder, aborting." % (name, cwd))
+            else:
+                print("\nError installing %s, aborting." % name)
+
+            return False
+
+        return True
 
     def getPossibleNodePathsWin(self):
         """
@@ -301,7 +317,7 @@ class MachCommands(MachCommandBase):
             appPaths = self.getPossibleNodePathsWin()
 
             for p in appPaths:
-                print("  - " + p)
+                print("  - %s" % p)
         elif platform.system() == "Darwin":
             print("  - /usr/local/bin/node")
         elif platform.system() == "Linux":
