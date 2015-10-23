@@ -38,6 +38,8 @@ def arg_parser():
                         help="Save the command line arguments for future use with --preset.")
     parser.add_argument('--preset', dest="load", action='store',
                         help="Load a saved set of arguments. Additional arguments will override saved ones.")
+    parser.add_argument('--list', action='store_true',
+                        help="List all saved try strings")
     parser.add_argument('extra_args', nargs=argparse.REMAINDER,
                         help='Extra arguments to put in the try push.')
     parser.add_argument('-v', "--verbose", dest='verbose', action='store_true', default=False,
@@ -169,15 +171,22 @@ class AutoTry(object):
         "web-platform-tests": "web-platform-tests",
     }
 
-    def __init__(self, topsrcdir, resolver, mach_context):
+    def __init__(self, topsrcdir, resolver_func, mach_context):
         self.topsrcdir = topsrcdir
-        self.resolver = resolver
+        self._resolver_func = resolver_func
+        self._resolver = None
         self.mach_context = mach_context
 
         if os.path.exists(os.path.join(self.topsrcdir, '.hg')):
             self._use_git = False
         else:
             self._use_git = True
+
+    @property
+    def resolver(self):
+        if self._resolver is None:
+            self._resolver = self.resolver_func
+        return self._resolver
 
     @property
     def config_path(self):
@@ -197,6 +206,23 @@ class AutoTry(object):
         kwargs = vars(arg_parser().parse_args(self.split_try_string(data)))
 
         return kwargs
+
+    def list_presets(self):
+        config = ConfigParser.RawConfigParser()
+        success = config.read([self.config_path])
+
+        data = []
+        if success:
+            try:
+                data = config.items("try")
+            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+                pass
+
+        if not data:
+            print("No presets found")
+
+        for name, try_string in data:
+            print("%s: %s" % (name, try_string))
 
     def split_try_string(self, data):
         return re.findall(r'(?:\[.*?\]|\S)+', data)

@@ -26,9 +26,6 @@ enum RegExpStaticsUpdate { UpdateRegExpStatics, DontUpdateRegExpStatics };
 // Whether RegExp statics should be used to create a RegExp instance.
 enum RegExpStaticsUse { UseRegExpStatics, DontUseRegExpStatics };
 
-// This enum is used to indicate whether 'CompileRegExpObject' is called from 'regexp_compile'.
-enum RegExpCreationMode { CreateForCompile, CreateForConstruct };
-
 RegExpRunStatus
 ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
               MatchPairs* matches, RegExpStaticsUpdate staticsUpdate);
@@ -99,8 +96,6 @@ IsRegExp(JSContext* cx, HandleValue value, bool* result);
 // RegExp ClassSpec members used in RegExpObject.cpp.
 extern bool
 regexp_construct(JSContext* cx, unsigned argc, Value* vp);
-extern JSObject*
-CreateRegExpPrototype(JSContext* cx, JSProtoKey key);
 extern const JSPropertySpec regexp_static_props[];
 extern const JSPropertySpec regexp_properties[];
 extern const JSFunctionSpec regexp_methods[];

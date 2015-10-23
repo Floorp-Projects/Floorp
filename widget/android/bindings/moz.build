@@ -9,6 +9,7 @@
 generated = [
     'AndroidRect',
     'Bundle',
+    'KeyEvent',
     'MediaCodec',
     'SurfaceTexture'
 ]

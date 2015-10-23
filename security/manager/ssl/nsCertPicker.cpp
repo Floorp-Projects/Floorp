@@ -29,6 +29,12 @@ nsCertPicker::nsCertPicker()
 
 nsCertPicker::~nsCertPicker()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
+  shutdown(calledFromObject);
 }
 
 NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, 
@@ -41,6 +47,10 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
                                         nsIX509Cert **_retval)
 {
   nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   int32_t selectedIndex = -1;
   bool selectionFound = false;
   char16_t **certNicknameList = nullptr;
@@ -158,16 +168,10 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
       NS_CERTPICKDIALOGS_CONTRACTID);
 
     if (NS_SUCCEEDED(rv)) {
-      nsPSMUITracker tracker;
-      if (tracker.isUIForbidden()) {
-        rv = NS_ERROR_NOT_AVAILABLE;
-      }
-      else {
-        /* Throw up the cert picker dialog and get back the index of the selected cert */
-        rv = dialogs->PickCertificate(ctx,
-          (const char16_t**)certNicknameList, (const char16_t**)certDetailsList,
-          CertsToUse, &selectedIndex, canceled);
-      }
+      // Show the cert picker dialog and get the index of the selected cert.
+      rv = dialogs->PickCertificate(ctx, (const char16_t**)certNicknameList,
+                                    (const char16_t**)certDetailsList,
+                                    CertsToUse, &selectedIndex, canceled);
 
       NS_RELEASE(dialogs);
     }
