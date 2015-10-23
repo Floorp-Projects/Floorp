@@ -364,6 +364,9 @@ static bool
 IsMP3SupportedType(const nsACString& aType,
                    const nsAString& aCodecs = EmptyString())
 {
+#ifdef MOZ_OMX_DECODER
+  return false;
+#endif
   return MP3Decoder::CanHandleMediaType(aType, aCodecs);
 }
 
