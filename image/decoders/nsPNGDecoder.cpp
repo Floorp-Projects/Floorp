@@ -168,7 +168,7 @@ nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
   CheckForTransparency(aFormat, frameRect);
 
   // XXX(seth): Some tests depend on the first frame of PNGs being B8G8R8A8.
-  // This is something we should fix.
+  // This is something we should fix. See bug 1120141.
   gfx::SurfaceFormat format = aFormat;
   if (mNumFrames == 0) {
     format = gfx::SurfaceFormat::B8G8R8A8;
@@ -621,7 +621,9 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   if (decoder->IsMetadataDecode()) {
-    decoder->CheckForTransparency(decoder->format,
+    // XXX(seth): Some tests depend on the first frame of PNGs being B8G8R8A8,
+    // so we ignore the value of decoder->format here. See bug 1120141.
+    decoder->CheckForTransparency(SurfaceFormat::B8G8R8A8,
                                   IntRect(0, 0, width, height));
 
     // We have the metadata we're looking for, so we don't need to decode any
