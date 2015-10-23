@@ -50,9 +50,9 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  DrawResult PaintBorderBackground(nsRenderingContext& aRenderingContext,
-                                   nsPoint aPt, const nsRect& aDirtyRect,
-                                   uint32_t aBGFlags);
+  DrawResult PaintBorderBackground(nsDisplayListBuilder* aBuilder,
+                                   nsRenderingContext& aRenderingContext,
+                                   nsPoint aPt, const nsRect& aDirtyRect);
 
 #ifdef DEBUG
   virtual void SetInitialChildList(ChildListID    aListID,

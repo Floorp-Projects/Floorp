@@ -917,7 +917,7 @@ Swipe.prototype.compile = function Swipe_compile() {
   let edge = EDGE * Utils.dpi;
   if (Math.abs(deltaX) > Math.abs(deltaY)) {
     // Horizontal swipe.
-    let startPoints = [touch.x1 for (touch of detail.touches)];
+    let startPoints = detail.touches.map(touch => touch.x1);
     if (deltaX > 0) {
       detail.type = type + 'right';
       detail.edge = Math.min.apply(null, startPoints) <= edge;
@@ -928,7 +928,7 @@ Swipe.prototype.compile = function Swipe_compile() {
     }
   } else {
     // Vertical swipe.
-    let startPoints = [touch.y1 for (touch of detail.touches)];
+    let startPoints = detail.touches.map(touch => touch.y1);
     if (deltaY > 0) {
       detail.type = type + 'down';
       detail.edge = Math.min.apply(null, startPoints) <= edge;
