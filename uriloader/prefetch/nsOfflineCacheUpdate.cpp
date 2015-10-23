@@ -826,7 +826,7 @@ nsOfflineManifestItem::HandleManifestLine(const nsCString::const_iterator &aBegi
 
         if (!magic.EqualsLiteral("CACHE MANIFEST")) {
             mParserState = PARSE_ERROR;
-            LogToConsole("Offline cache manifest magic incorect", this);
+            LogToConsole("Offline cache manifest magic incorrect", this);
             return NS_OK;
         }
 
