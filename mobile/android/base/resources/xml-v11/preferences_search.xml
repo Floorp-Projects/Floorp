@@ -8,6 +8,18 @@
                   android:title="@string/pref_category_search"
                   android:enabled="false">
 
+    <PreferenceCategory android:title="@string/pref_category_add_search_providers">
+
+        <org.mozilla.gecko.preferences.ModifiableHintPreference
+                android:layout="@layout/preference_search_tip"
+                android:enabled="false"
+                android:selectable="false"/>
+
+    </PreferenceCategory>
+
+    <org.mozilla.gecko.preferences.SearchPreferenceCategory
+                        android:title="@string/pref_category_installed_search_engines"/>
+
     <CheckBoxPreference android:key="browser.search.suggest.enabled"
                         android:title="@string/pref_search_suggestions"
                         android:defaultValue="false"
@@ -17,17 +29,5 @@
                         android:title="@string/pref_history_search_suggestions"
                         android:defaultValue="true"
                         android:persistent="true" />
-
-    <org.mozilla.gecko.preferences.SearchPreferenceCategory
-                        android:title="@string/pref_category_installed_search_engines"/>
-
-    <PreferenceCategory android:title="@string/pref_category_add_search_providers">
-
-        <org.mozilla.gecko.preferences.ModifiableHintPreference
-                    android:layout="@layout/preference_search_tip"
-                    android:enabled="false"
-                    android:selectable="false"/>
-
-    </PreferenceCategory>
 
 </PreferenceScreen>
