@@ -653,8 +653,6 @@ box.requests-menu-status[code^="5"] {
   transition-property: max-width, -moz-padding-end, -moz-padding-start;
   transition-duration: 250ms;
   transition-timing-function: ease;
-  margin-left: 3px;
-  margin-right: 3px;
 }
 
 #requests-menu-filter-freetext-text:not([focused]):not([filled]) > .textbox-input-box {
