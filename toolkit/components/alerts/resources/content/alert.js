@@ -62,6 +62,9 @@ function prefillAlertInfo() {
           ALERT_BUNDLE.formatStringFromName("webActions.disableForOrigin.label",
                                             [hostPort],
                                             1));
+        let openSettings = document.getElementById("openSettingsMenuItem");
+        openSettings.setAttribute("label",
+          ALERT_BUNDLE.GetStringFromName("webActions.settings.label"));
       }
     }
     case 10:
@@ -249,6 +252,11 @@ function doNotDisturb() {
 
 function disableForOrigin() {
   gAlertListener.observe(null, "alertdisablecallback", gAlertCookie);
+  onAlertClose();
+}
+
+function openSettings() {
+  gAlertListener.observe(null, "alertsettingscallback", gAlertCookie);
   onAlertClose();
 }
 
