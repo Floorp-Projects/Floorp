@@ -171,9 +171,15 @@ class TabsGridLayout extends GridView
         Tabs.registerOnTabsChangedListener(this);
         refreshTabsData();
 
-        Tab currentlySelectedTab = Tabs.getInstance().getSelectedTab();
-        if (lastSelectedTabId != currentlySelectedTab.getId()) {
-            smoothScrollToPosition(tabsAdapter.getPositionForTab(currentlySelectedTab));
+        final Tab currentlySelectedTab = Tabs.getInstance().getSelectedTab();
+        final int position =  currentlySelectedTab != null ? tabsAdapter.getPositionForTab(currentlySelectedTab) : -1;
+        if (position != -1) {
+            final boolean selectionChanged = lastSelectedTabId != currentlySelectedTab.getId();
+            final boolean positionIsVisible = position >= getFirstVisiblePosition() && position <= getLastVisiblePosition();
+
+            if (selectionChanged || !positionIsVisible) {
+                smoothScrollToPosition(position);
+            }
         }
     }
 
