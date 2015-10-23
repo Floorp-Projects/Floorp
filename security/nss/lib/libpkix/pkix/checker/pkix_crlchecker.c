@@ -195,7 +195,7 @@ pkix_CrlChecker_CheckLocal(
         PKIX_UInt32 methodFlags,
         PKIX_Boolean chainVerificationState,
         PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *pReasonCode,
+        CERTCRLEntryReasonCode *pReasonCode,
         void *plContext)
 {
     PKIX_CertStore_CheckRevokationByCrlCallback storeCheckRevocationFn;
@@ -294,7 +294,7 @@ pkix_CrlChecker_CheckExternal(
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 methodFlags,
         PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *pReasonCode,
+        CERTCRLEntryReasonCode *pReasonCode,
         void **pNBIOContext,
         void *plContext)
 {

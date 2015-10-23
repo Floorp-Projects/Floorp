@@ -132,7 +132,6 @@ freebl_LoadDSO( void )
   handle = loader_LoadLibrary(name);
   if (handle) {
     PRFuncPtr address = PR_FindFunctionSymbol(handle, "FREEBL_GetVector");
-    PRStatus status;
     if (address) {
       FREEBLGetVectorFn  * getVector = (FREEBLGetVectorFn *)address;
       const FREEBLVector * dsoVector = getVector();
@@ -149,8 +148,14 @@ freebl_LoadDSO( void )
 	}
       }
     }
-    status = PR_UnloadLibrary(handle);
-    PORT_Assert(PR_SUCCESS == status);
+#ifdef DEBUG
+    {
+      PRStatus status = PR_UnloadLibrary(blLib);
+      PORT_Assert(PR_SUCCESS == status);
+    }
+#else
+    PR_UnloadLibrary(blLib);
+#endif
   }
   return PR_FAILURE;
 }
@@ -901,8 +906,12 @@ BL_Unload(void)
   if (blLib) {
       disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");
       if (!disableUnload) {
+#ifdef DEBUG
           PRStatus status = PR_UnloadLibrary(blLib);
           PORT_Assert(PR_SUCCESS == status);
+#else
+          PR_UnloadLibrary(blLib);
+#endif
       }
       blLib = NULL;
   }

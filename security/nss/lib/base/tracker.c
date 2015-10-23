@@ -29,7 +29,7 @@ identity_hash
   const void *key
 )
 {
-  return (PLHashNumber)key;
+  return (PLHashNumber)((char *)key - (char *)NULL);
 }
 
 /*

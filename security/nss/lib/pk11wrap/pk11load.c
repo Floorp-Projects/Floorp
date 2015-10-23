@@ -589,8 +589,12 @@ SECMOD_UnloadModule(SECMODModule *mod) {
           if (softokenLib) {
               disableUnload = PR_GetEnv("NSS_DISABLE_UNLOAD");
               if (!disableUnload) {
+#ifdef DEBUG
                   PRStatus status = PR_UnloadLibrary(softokenLib);
                   PORT_Assert(PR_SUCCESS == status);
+#else
+                  PR_UnloadLibrary(softokenLib);
+#endif
               }
               softokenLib = NULL;
           }

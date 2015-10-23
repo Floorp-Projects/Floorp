@@ -17,6 +17,21 @@
 #include "hasht.h"
 #include "lowkeyi.h"
 #include "softoken.h"
+#include "pkcs11t.h"
+#define __PASTE(x,y) x##y
+#undef CK_PKCS11_FUNCTION_INFO
+#undef CK_NEED_ARG_LIST
+#define CK_EXTERN extern
+#define CK_PKCS11_FUNCTION_INFO(func) \
+                CK_RV __PASTE(NS,func)
+#define CK_NEED_ARG_LIST        1
+#include "pkcs11f.h"
+#undef CK_PKCS11_FUNCTION_INFO
+#undef CK_NEED_ARG_LIST
+#undef __PASTE
+#define SSL3_RANDOM_LENGTH              32
+
+
 
 #if 0
 #include "../../lib/freebl/mpi/mpi.h"
@@ -46,18 +61,18 @@ hex_to_byteval(const char *c2, unsigned char *byteval)
     unsigned char offset;
     *byteval = 0;
     for (i=0; i<2; i++) {
-	if (c2[i] >= '0' && c2[i] <= '9') {
-	    offset = c2[i] - '0';
-	    *byteval |= offset << 4*(1-i);
-	} else if (c2[i] >= 'a' && c2[i] <= 'f') {
-	    offset = c2[i] - 'a';
-	    *byteval |= (offset + 10) << 4*(1-i);
-	} else if (c2[i] >= 'A' && c2[i] <= 'F') {
-	    offset = c2[i] - 'A';
-	    *byteval |= (offset + 10) << 4*(1-i);
-	} else {
-	    return SECFailure;
-	}
+        if (c2[i] >= '0' && c2[i] <= '9') {
+            offset = c2[i] - '0';
+            *byteval |= offset << 4*(1-i);
+        } else if (c2[i] >= 'a' && c2[i] <= 'f') {
+            offset = c2[i] - 'a';
+            *byteval |= (offset + 10) << 4*(1-i);
+        } else if (c2[i] >= 'A' && c2[i] <= 'F') {
+            offset = c2[i] - 'A';
+            *byteval |= (offset + 10) << 4*(1-i);
+        } else {
+            return SECFailure;
+        }
     }
     return SECSuccess;
 }
@@ -68,12 +83,12 @@ byteval_to_hex(unsigned char byteval, char *c2, char a)
     int i;
     unsigned char offset;
     for (i=0; i<2; i++) {
-	offset = (byteval >> 4*(1-i)) & 0x0f;
-	if (offset < 10) {
-	    c2[i] = '0' + offset;
-	} else {
-	    c2[i] = a + offset - 10;
-	}
+        offset = (byteval >> 4*(1-i)) & 0x0f;
+        if (offset < 10) {
+            c2[i] = '0' + offset;
+        } else {
+            c2[i] = a + offset - 10;
+        }
     }
     return SECSuccess;
 }
@@ -83,7 +98,7 @@ to_hex_str(char *str, const unsigned char *buf, unsigned int len)
 {
     unsigned int i;
     for (i=0; i<len; i++) {
-	byteval_to_hex(buf[i], &str[2*i], 'a');
+        byteval_to_hex(buf[i], &str[2*i], 'a');
     }
     str[2*len] = '\0';
 }
@@ -93,7 +108,7 @@ to_hex_str_cap(char *str, const unsigned char *buf, unsigned int len)
 {
     unsigned int i;
     for (i=0; i<len; i++) {
-	byteval_to_hex(buf[i], &str[2*i], 'A');
+        byteval_to_hex(buf[i], &str[2*i], 'A');
     }
     str[2*len] = '\0';
 }
@@ -113,41 +128,41 @@ from_hex_str(unsigned char *buf, unsigned int len, const char *str)
     /* count the hex digits */
     nxdigit = 0;
     for (nxdigit = 0; isxdigit(str[nxdigit]); nxdigit++) {
-	/* empty body */
+        /* empty body */
     }
     if (nxdigit == 0) {
-	return PR_FALSE;
+        return PR_FALSE;
     }
     if (nxdigit > 2*len) {
-	/*
-	 * The input hex string is too long, but we allow it if the
-	 * extra digits are leading 0's.
-	 */
-	for (j = 0; j < nxdigit-2*len; j++) {
-	    if (str[j] != '0') {
-		return PR_FALSE;
-	    }
-	}
-	/* skip leading 0's */
-	str += nxdigit-2*len;
-	nxdigit = 2*len;
+        /*
+         * The input hex string is too long, but we allow it if the
+         * extra digits are leading 0's.
+         */
+        for (j = 0; j < nxdigit-2*len; j++) {
+            if (str[j] != '0') {
+                return PR_FALSE;
+            }
+        }
+        /* skip leading 0's */
+        str += nxdigit-2*len;
+        nxdigit = 2*len;
     }
     for (i=0, j=0; i< len; i++) {
-	if (2*i < 2*len-nxdigit) {
-	    /* Handle a short input as if we padded it with leading 0's. */
-	    if (2*i+1 < 2*len-nxdigit) {
-		buf[i] = 0;
-	    } else {
-		char tmp[2];
-		tmp[0] = '0';
-		tmp[1] = str[j];
-		hex_to_byteval(tmp, &buf[i]);
-		j++;
-	    }
-	} else {
-	    hex_to_byteval(&str[j], &buf[i]);
-	    j += 2;
-	}
+        if (2*i < 2*len-nxdigit) {
+            /* Handle a short input as if we padded it with leading 0's. */
+            if (2*i+1 < 2*len-nxdigit) {
+                buf[i] = 0;
+            } else {
+                char tmp[2];
+                tmp[0] = '0';
+                tmp[1] = str[j];
+                hex_to_byteval(tmp, &buf[i]);
+                j++;
+            }
+        } else {
+            hex_to_byteval(&str[j], &buf[i]);
+            j += 2;
+        }
     }
     return PR_TRUE;
 }
@@ -288,11 +303,11 @@ tdea_kat_mmt(char *reqfn)
     FILE *req;       /* input stream from the REQUEST file */
     FILE *resp;      /* output stream to the RESPONSE file */
     int i, j;
-    int mode;           /* NSS_DES_EDE3 (ECB) or NSS_DES_EDE3_CBC */
+    int mode = NSS_DES_EDE3;           /* NSS_DES_EDE3 (ECB) or NSS_DES_EDE3_CBC */
     int crypt = DECRYPT;    /* 1 means encrypt, 0 means decrypt */
     unsigned char key[24];              /* TDEA 3 key bundle */
     unsigned int numKeys = 0;
-    unsigned char iv[8];		/* for all modes except ECB */
+    unsigned char iv[8];                /* for all modes except ECB */
     unsigned char plaintext[8*20];     /* 1 to 20 blocks */
     unsigned int plaintextlen;
     unsigned char ciphertext[8*20];   /* 1 to 20 blocks */  
@@ -876,14 +891,14 @@ aes_encrypt_buf(
 
     cx = AES_CreateContext(key, iv, mode, PR_TRUE, keysize, 16);
     if (cx == NULL) {
-	goto loser;
+        goto loser;
     }
     rv = AES_Encrypt(cx, output, outputlen, maxoutputlen, input, inputlen);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     if (*outputlen != inputlen) {
-	goto loser;
+        goto loser;
     }
     AES_DestroyContext(cx, PR_TRUE);
     cx = NULL;
@@ -894,26 +909,26 @@ aes_encrypt_buf(
      */
     cx = AES_CreateContext(key, iv, mode, PR_FALSE, keysize, 16);
     if (cx == NULL) {
-	goto loser;
+        goto loser;
     }
     rv = AES_Decrypt(cx, doublecheck, &doublechecklen, sizeof doublecheck,
-	output, *outputlen);
+        output, *outputlen);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     if (doublechecklen != *outputlen) {
-	goto loser;
+        goto loser;
     }
     AES_DestroyContext(cx, PR_TRUE);
     cx = NULL;
     if (memcmp(doublecheck, input, inputlen) != 0) {
-	goto loser;
+        goto loser;
     }
     rv = SECSuccess;
 
 loser:
     if (cx != NULL) {
-	AES_DestroyContext(cx, PR_TRUE);
+        AES_DestroyContext(cx, PR_TRUE);
     }
     return rv;
 }
@@ -933,15 +948,15 @@ aes_decrypt_buf(
 
     cx = AES_CreateContext(key, iv, mode, PR_FALSE, keysize, 16);
     if (cx == NULL) {
-	goto loser;
+        goto loser;
     }
     rv = AES_Decrypt(cx, output, outputlen, maxoutputlen,
-	input, inputlen);
+        input, inputlen);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     if (*outputlen != inputlen) {
-	goto loser;
+        goto loser;
     }
     AES_DestroyContext(cx, PR_TRUE);
     cx = NULL;
@@ -952,28 +967,244 @@ aes_decrypt_buf(
      */
     cx = AES_CreateContext(key, iv, mode, PR_TRUE, keysize, 16);
     if (cx == NULL) {
-	goto loser;
+        goto loser;
     }
     rv = AES_Encrypt(cx, doublecheck, &doublechecklen, sizeof doublecheck,
-	output, *outputlen);
+        output, *outputlen);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     if (doublechecklen != *outputlen) {
-	goto loser;
+        goto loser;
     }
     AES_DestroyContext(cx, PR_TRUE);
     cx = NULL;
     if (memcmp(doublecheck, input, inputlen) != 0) {
-	goto loser;
+        goto loser;
     }
     rv = SECSuccess;
 
 loser:
     if (cx != NULL) {
-	AES_DestroyContext(cx, PR_TRUE);
+        AES_DestroyContext(cx, PR_TRUE);
     }
     return rv;
+}
+/*
+ * Perform the AES GCM tests.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+aes_gcm(char *reqfn, int encrypt)
+{
+    char buf[512];      /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "CIPHERTEXT = <320 hex digits>\n".
+                         */
+    FILE *aesreq;       /* input stream from the REQUEST file */
+    FILE *aesresp;      /* output stream to the RESPONSE file */
+    int i, j;
+    unsigned char key[32];              /* 128, 192, or 256 bits */
+    unsigned int keysize = 0;
+    unsigned char iv[128];                /* handle large gcm IV's */
+    unsigned char plaintext[10*16];     /* 1 to 10 blocks */
+    unsigned int plaintextlen;
+    unsigned char ciphertext[11*16];    /* 1 to 10 blocks + tag */
+    unsigned int ciphertextlen;
+    unsigned char aad[11*16];            /* 1 to 10 blocks + tag */
+    unsigned int aadlen = 0;
+    unsigned int tagbits;
+    unsigned int taglen = 0;
+    unsigned int ivlen;
+    CK_GCM_PARAMS params;
+    SECStatus rv;
+
+    aesreq = fopen(reqfn, "r");
+    aesresp = stdout;
+    while (fgets(buf, sizeof buf, aesreq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* [ENCRYPT] or [DECRYPT] */
+        if (buf[0] == '[') {
+            if (strncmp(buf, "[Taglen", 7)  == 0) {
+                if (sscanf(buf, "[Taglen = %d]", &tagbits) != 1) {
+                    goto loser;
+                }
+                taglen = tagbits/8;
+            } 
+            if (strncmp(buf, "[IVlen", 6)  == 0) {
+                if (sscanf(buf, "[IVlen = %d]", &ivlen) != 1) {
+                    goto loser;
+                }
+                ivlen=ivlen/8;
+            } 
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* "COUNT = x" begins a new data set */
+        if (strncmp(buf, "Count", 5) == 0) {
+            /* zeroize the variables for the test with this data set */
+            memset(key, 0, sizeof key);
+            keysize = 0;
+            memset(iv, 0, sizeof iv);
+            memset(plaintext, 0, sizeof plaintext);
+            plaintextlen = 0;
+            memset(ciphertext, 0, sizeof ciphertext);
+            ciphertextlen = 0;
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* KEY = ... */
+        if (strncmp(buf, "Key", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &key[j]);
+            }
+            keysize = j;
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* IV = ... */
+        if (strncmp(buf, "IV", 2) == 0) {
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof iv; i+=2,j++) {
+                hex_to_byteval(&buf[i], &iv[j]);
+            }
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* PLAINTEXT = ... */
+        if (strncmp(buf, "PT", 2) == 0) {
+            /* sanity check */
+            if (!encrypt) {
+                goto loser;
+            }
+
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &plaintext[j]);
+            }
+            plaintextlen = j;
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* CIPHERTEXT = ... */
+        if (strncmp(buf, "CT", 2) == 0) {
+            /* sanity check */
+            if (encrypt) {
+                goto loser;
+            }
+
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &ciphertext[j]);
+            }
+            ciphertextlen = j;
+            fputs(buf, aesresp);
+            continue;
+        }
+        if (strncmp(buf, "AAD", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &aad[j]);
+            }
+            aadlen = j;
+            fputs(buf, aesresp);
+            if (encrypt) {
+                if (encrypt == 2) {
+                    rv = RNG_GenerateGlobalRandomBytes(iv, ivlen);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                }
+                params.pIv = iv;
+                params.ulIvLen = ivlen;
+                params.pAAD = aad;
+                params.ulAADLen = aadlen;
+                params.ulTagBits = tagbits;
+                rv = aes_encrypt_buf(NSS_AES_GCM, key, keysize,
+                (unsigned char *)&params,
+                ciphertext, &ciphertextlen, sizeof ciphertext,
+                plaintext, plaintextlen);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+
+		if (encrypt == 2) {
+                    fputs("IV = ", aesresp);
+                    to_hex_str(buf, iv, ivlen);
+                    fputs(buf, aesresp);
+                    fputc('\n', aesresp);
+		}
+                fputs("CT = ", aesresp);
+                j = ciphertextlen-taglen;
+                to_hex_str(buf, ciphertext, j);
+                fputs(buf, aesresp);
+                fputs("\nTag = ", aesresp);
+                to_hex_str(buf, ciphertext+j, taglen);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+            }
+            continue;
+        }
+        if (strncmp(buf, "Tag", 3) == 0) {
+            /* sanity check */
+            if (encrypt) {
+                goto loser;
+            }
+
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &ciphertext[j+ciphertextlen]);
+            }
+            ciphertextlen += j;
+            params.pIv = iv;
+            params.ulIvLen = ivlen;
+            params.pAAD = aad;
+            params.ulAADLen = aadlen;
+            params.ulTagBits = tagbits;
+            rv = aes_decrypt_buf(NSS_AES_GCM, key, keysize,
+                (unsigned char *)&params,
+                plaintext, &plaintextlen, sizeof plaintext,
+                ciphertext, ciphertextlen);
+            fputs(buf, aesresp);
+            if (rv != SECSuccess) {
+                fprintf(aesresp,"FAIL\n");
+            } else {
+                fputs("PT = ", aesresp);
+                to_hex_str(buf, plaintext, plaintextlen);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+            }
+            continue;
+        }
+    }
+loser:
+    fclose(aesreq);
 }
 
 /*
@@ -997,11 +1228,11 @@ aes_kat_mmt(char *reqfn)
     FILE *aesreq;       /* input stream from the REQUEST file */
     FILE *aesresp;      /* output stream to the RESPONSE file */
     int i, j;
-    int mode;           /* NSS_AES (ECB) or NSS_AES_CBC */
+    int mode = NSS_AES;           /* NSS_AES (ECB) or NSS_AES_CBC */
     int encrypt = 0;    /* 1 means encrypt, 0 means decrypt */
     unsigned char key[32];              /* 128, 192, or 256 bits */
-    unsigned int keysize;
-    unsigned char iv[16];		/* for all modes except ECB */
+    unsigned int keysize = 0;
+    unsigned char iv[16];                /* for all modes except ECB */
     unsigned char plaintext[10*16];     /* 1 to 10 blocks */
     unsigned int plaintextlen;
     unsigned char ciphertext[10*16];    /* 1 to 10 blocks */
@@ -1011,123 +1242,123 @@ aes_kat_mmt(char *reqfn)
     aesreq = fopen(reqfn, "r");
     aesresp = stdout;
     while (fgets(buf, sizeof buf, aesreq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* [ENCRYPT] or [DECRYPT] */
-	if (buf[0] == '[') {
-	    if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
-		encrypt = 1;
-	    } else {
-		encrypt = 0;
-	    }
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* "COUNT = x" begins a new data set */
-	if (strncmp(buf, "COUNT", 5) == 0) {
-	    mode = NSS_AES;
-	    /* zeroize the variables for the test with this data set */
-	    memset(key, 0, sizeof key);
-	    keysize = 0;
-	    memset(iv, 0, sizeof iv);
-	    memset(plaintext, 0, sizeof plaintext);
-	    plaintextlen = 0;
-	    memset(ciphertext, 0, sizeof ciphertext);
-	    ciphertextlen = 0;
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* KEY = ... */
-	if (strncmp(buf, "KEY", 3) == 0) {
-	    i = 3;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &key[j]);
-	    }
-	    keysize = j;
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* IV = ... */
-	if (strncmp(buf, "IV", 2) == 0) {
-	    mode = NSS_AES_CBC;
-	    i = 2;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<sizeof iv; i+=2,j++) {
-		hex_to_byteval(&buf[i], &iv[j]);
-	    }
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* PLAINTEXT = ... */
-	if (strncmp(buf, "PLAINTEXT", 9) == 0) {
-	    /* sanity check */
-	    if (!encrypt) {
-		goto loser;
-	    }
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* [ENCRYPT] or [DECRYPT] */
+        if (buf[0] == '[') {
+            if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
+                encrypt = 1;
+            } else {
+                encrypt = 0;
+            }
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* "COUNT = x" begins a new data set */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            mode = NSS_AES;
+            /* zeroize the variables for the test with this data set */
+            memset(key, 0, sizeof key);
+            keysize = 0;
+            memset(iv, 0, sizeof iv);
+            memset(plaintext, 0, sizeof plaintext);
+            plaintextlen = 0;
+            memset(ciphertext, 0, sizeof ciphertext);
+            ciphertextlen = 0;
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* KEY = ... */
+        if (strncmp(buf, "KEY", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &key[j]);
+            }
+            keysize = j;
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* IV = ... */
+        if (strncmp(buf, "IV", 2) == 0) {
+            mode = NSS_AES_CBC;
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof iv; i+=2,j++) {
+                hex_to_byteval(&buf[i], &iv[j]);
+            }
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* PLAINTEXT = ... */
+        if (strncmp(buf, "PLAINTEXT", 9) == 0) {
+            /* sanity check */
+            if (!encrypt) {
+                goto loser;
+            }
 
-	    i = 9;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &plaintext[j]);
-	    }
-	    plaintextlen = j;
+            i = 9;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &plaintext[j]);
+            }
+            plaintextlen = j;
 
-	    rv = aes_encrypt_buf(mode, key, keysize,
-		(mode == NSS_AES) ? NULL : iv,
-		ciphertext, &ciphertextlen, sizeof ciphertext,
-		plaintext, plaintextlen);
-	    if (rv != SECSuccess) {
-		goto loser;
-	    }
+            rv = aes_encrypt_buf(mode, key, keysize,
+                (mode == NSS_AES) ? NULL : iv,
+                ciphertext, &ciphertextlen, sizeof ciphertext,
+                plaintext, plaintextlen);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
 
-	    fputs(buf, aesresp);
-	    fputs("CIPHERTEXT = ", aesresp);
-	    to_hex_str(buf, ciphertext, ciphertextlen);
-	    fputs(buf, aesresp);
-	    fputc('\n', aesresp);
-	    continue;
-	}
-	/* CIPHERTEXT = ... */
-	if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
-	    /* sanity check */
-	    if (encrypt) {
-		goto loser;
-	    }
+            fputs(buf, aesresp);
+            fputs("CIPHERTEXT = ", aesresp);
+            to_hex_str(buf, ciphertext, ciphertextlen);
+            fputs(buf, aesresp);
+            fputc('\n', aesresp);
+            continue;
+        }
+        /* CIPHERTEXT = ... */
+        if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
+            /* sanity check */
+            if (encrypt) {
+                goto loser;
+            }
 
-	    i = 10;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &ciphertext[j]);
-	    }
-	    ciphertextlen = j;
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &ciphertext[j]);
+            }
+            ciphertextlen = j;
 
-	    rv = aes_decrypt_buf(mode, key, keysize,
-		(mode == NSS_AES) ? NULL : iv,
-		plaintext, &plaintextlen, sizeof plaintext,
-		ciphertext, ciphertextlen);
-	    if (rv != SECSuccess) {
-		goto loser;
-	    }
+            rv = aes_decrypt_buf(mode, key, keysize,
+                (mode == NSS_AES) ? NULL : iv,
+                plaintext, &plaintextlen, sizeof plaintext,
+                ciphertext, ciphertextlen);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
 
-	    fputs(buf, aesresp);
-	    fputs("PLAINTEXT = ", aesresp);
-	    to_hex_str(buf, plaintext, plaintextlen);
-	    fputs(buf, aesresp);
-	    fputc('\n', aesresp);
-	    continue;
-	}
+            fputs(buf, aesresp);
+            fputs("PLAINTEXT = ", aesresp);
+            to_hex_str(buf, plaintext, plaintextlen);
+            fputs(buf, aesresp);
+            fputc('\n', aesresp);
+            continue;
+        }
     }
 loser:
     fclose(aesreq);
@@ -1145,32 +1376,32 @@ aes_mct_next_key(unsigned char *key, unsigned int keysize,
 
     switch (keysize) {
     case 16:  /* 128-bit key */
-	/* Key[i+1] = Key[i] xor CT[j] */
-	for (k=0; k<16; k++) {
-	    key[k] ^= ciphertext[k];
-	}
-	break;
+        /* Key[i+1] = Key[i] xor CT[j] */
+        for (k=0; k<16; k++) {
+            key[k] ^= ciphertext[k];
+        }
+        break;
     case 24:  /* 192-bit key */
-	/*
-	 * Key[i+1] = Key[i] xor (last 64-bits of
-	 *            CT[j-1] || CT[j])
-	 */
-	for (k=0; k<8; k++) {
-	    key[k] ^= ciphertext_1[k+8];
-	}
-	for (k=8; k<24; k++) {
-	    key[k] ^= ciphertext[k-8];
-	}
-	break;
+        /*
+         * Key[i+1] = Key[i] xor (last 64-bits of
+         *            CT[j-1] || CT[j])
+         */
+        for (k=0; k<8; k++) {
+            key[k] ^= ciphertext_1[k+8];
+        }
+        for (k=8; k<24; k++) {
+            key[k] ^= ciphertext[k-8];
+        }
+        break;
     case 32:  /* 256-bit key */
-	/* Key[i+1] = Key[i] xor (CT[j-1] || CT[j]) */
-	for (k=0; k<16; k++) {
-	    key[k] ^= ciphertext_1[k];
-	}
-	for (k=16; k<32; k++) {
-	    key[k] ^= ciphertext[k-16];
-	}
-	break;
+        /* Key[i+1] = Key[i] xor (CT[j-1] || CT[j]) */
+        for (k=0; k<16; k++) {
+            key[k] ^= ciphertext_1[k];
+        }
+        for (k=16; k<32; k++) {
+            key[k] ^= ciphertext[k-16];
+        }
+        break;
     }
 }
 
@@ -1197,14 +1428,14 @@ aes_ecb_mct(char *reqfn)
     int i, j;
     int encrypt = 0;    /* 1 means encrypt, 0 means decrypt */
     unsigned char key[32];              /* 128, 192, or 256 bits */
-    unsigned int keysize;
+    unsigned int keysize = 0;
     unsigned char plaintext[16];        /* PT[j] */
     unsigned char plaintext_1[16];      /* PT[j-1] */
     unsigned char ciphertext[16];       /* CT[j] */
     unsigned char ciphertext_1[16];     /* CT[j-1] */
     unsigned char doublecheck[16];
     unsigned int outputlen;
-    AESContext *cx = NULL;	/* the operation being tested */
+    AESContext *cx = NULL;        /* the operation being tested */
     AESContext *cx2 = NULL;     /* the inverse operation done in parallel
                                  * to doublecheck our result.
                                  */
@@ -1213,246 +1444,246 @@ aes_ecb_mct(char *reqfn)
     aesreq = fopen(reqfn, "r");
     aesresp = stdout;
     while (fgets(buf, sizeof buf, aesreq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* [ENCRYPT] or [DECRYPT] */
-	if (buf[0] == '[') {
-	    if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
-		encrypt = 1;
-	    } else {
-		encrypt = 0;
-	    }
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* "COUNT = x" begins a new data set */
-	if (strncmp(buf, "COUNT", 5) == 0) {
-	    /* zeroize the variables for the test with this data set */
-	    memset(key, 0, sizeof key);
-	    keysize = 0;
-	    memset(plaintext, 0, sizeof plaintext);
-	    memset(ciphertext, 0, sizeof ciphertext);
-	    continue;
-	}
-	/* KEY = ... */
-	if (strncmp(buf, "KEY", 3) == 0) {
-	    /* Key[0] = Key */
-	    i = 3;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &key[j]);
-	    }
-	    keysize = j;
-	    continue;
-	}
-	/* PLAINTEXT = ... */
-	if (strncmp(buf, "PLAINTEXT", 9) == 0) {
-	    /* sanity check */
-	    if (!encrypt) {
-		goto loser;
-	    }
-	    /* PT[0] = PT */
-	    i = 9;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<sizeof plaintext; i+=2,j++) {
-		hex_to_byteval(&buf[i], &plaintext[j]);
-	    }
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* [ENCRYPT] or [DECRYPT] */
+        if (buf[0] == '[') {
+            if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
+                encrypt = 1;
+            } else {
+                encrypt = 0;
+            }
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* "COUNT = x" begins a new data set */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            /* zeroize the variables for the test with this data set */
+            memset(key, 0, sizeof key);
+            keysize = 0;
+            memset(plaintext, 0, sizeof plaintext);
+            memset(ciphertext, 0, sizeof ciphertext);
+            continue;
+        }
+        /* KEY = ... */
+        if (strncmp(buf, "KEY", 3) == 0) {
+            /* Key[0] = Key */
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &key[j]);
+            }
+            keysize = j;
+            continue;
+        }
+        /* PLAINTEXT = ... */
+        if (strncmp(buf, "PLAINTEXT", 9) == 0) {
+            /* sanity check */
+            if (!encrypt) {
+                goto loser;
+            }
+            /* PT[0] = PT */
+            i = 9;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof plaintext; i+=2,j++) {
+                hex_to_byteval(&buf[i], &plaintext[j]);
+            }
 
-	    for (i=0; i<100; i++) {
-		sprintf(buf, "COUNT = %d\n", i);
-	        fputs(buf, aesresp);
-		/* Output Key[i] */
-		fputs("KEY = ", aesresp);
-		to_hex_str(buf, key, keysize);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
-		/* Output PT[0] */
-		fputs("PLAINTEXT = ", aesresp);
-		to_hex_str(buf, plaintext, sizeof plaintext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+            for (i=0; i<100; i++) {
+                sprintf(buf, "COUNT = %d\n", i);
+                fputs(buf, aesresp);
+                /* Output Key[i] */
+                fputs("KEY = ", aesresp);
+                to_hex_str(buf, key, keysize);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+                /* Output PT[0] */
+                fputs("PLAINTEXT = ", aesresp);
+                to_hex_str(buf, plaintext, sizeof plaintext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		cx = AES_CreateContext(key, NULL, NSS_AES,
-		    PR_TRUE, keysize, 16);
-		if (cx == NULL) {
-		    goto loser;
-		}
-		/*
-		 * doublecheck our result by decrypting the result
-		 * and comparing the output with the plaintext.
-		 */
-		cx2 = AES_CreateContext(key, NULL, NSS_AES,
-		    PR_FALSE, keysize, 16);
-		if (cx2 == NULL) {
-		    goto loser;
-		}
-		for (j=0; j<1000; j++) {
-		    /* Save CT[j-1] */
-		    memcpy(ciphertext_1, ciphertext, sizeof ciphertext);
+                cx = AES_CreateContext(key, NULL, NSS_AES,
+                    PR_TRUE, keysize, 16);
+                if (cx == NULL) {
+                    goto loser;
+                }
+                /*
+                 * doublecheck our result by decrypting the result
+                 * and comparing the output with the plaintext.
+                 */
+                cx2 = AES_CreateContext(key, NULL, NSS_AES,
+                    PR_FALSE, keysize, 16);
+                if (cx2 == NULL) {
+                    goto loser;
+                }
+                for (j=0; j<1000; j++) {
+                    /* Save CT[j-1] */
+                    memcpy(ciphertext_1, ciphertext, sizeof ciphertext);
 
-		    /* CT[j] = AES(Key[i], PT[j]) */
-		    outputlen = 0;
-		    rv = AES_Encrypt(cx,
-			ciphertext, &outputlen, sizeof ciphertext,
-			plaintext, sizeof plaintext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof plaintext) {
-			goto loser;
-		    }
+                    /* CT[j] = AES(Key[i], PT[j]) */
+                    outputlen = 0;
+                    rv = AES_Encrypt(cx,
+                        ciphertext, &outputlen, sizeof ciphertext,
+                        plaintext, sizeof plaintext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof plaintext) {
+                        goto loser;
+                    }
 
-		    /* doublecheck our result */
-		    outputlen = 0;
-		    rv = AES_Decrypt(cx2,
-			doublecheck, &outputlen, sizeof doublecheck,
-			ciphertext, sizeof ciphertext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof ciphertext) {
-			goto loser;
-		    }
-		    if (memcmp(doublecheck, plaintext, sizeof plaintext)) {
-			goto loser;
-		    }
+                    /* doublecheck our result */
+                    outputlen = 0;
+                    rv = AES_Decrypt(cx2,
+                        doublecheck, &outputlen, sizeof doublecheck,
+                        ciphertext, sizeof ciphertext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof ciphertext) {
+                        goto loser;
+                    }
+                    if (memcmp(doublecheck, plaintext, sizeof plaintext)) {
+                        goto loser;
+                    }
 
-		    /* PT[j+1] = CT[j] */
-		    memcpy(plaintext, ciphertext, sizeof plaintext);
-		}
-		AES_DestroyContext(cx, PR_TRUE);
-		cx = NULL;
-		AES_DestroyContext(cx2, PR_TRUE);
-		cx2 = NULL;
+                    /* PT[j+1] = CT[j] */
+                    memcpy(plaintext, ciphertext, sizeof plaintext);
+                }
+                AES_DestroyContext(cx, PR_TRUE);
+                cx = NULL;
+                AES_DestroyContext(cx2, PR_TRUE);
+                cx2 = NULL;
 
-		/* Output CT[j] */
-		fputs("CIPHERTEXT = ", aesresp);
-		to_hex_str(buf, ciphertext, sizeof ciphertext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+                /* Output CT[j] */
+                fputs("CIPHERTEXT = ", aesresp);
+                to_hex_str(buf, ciphertext, sizeof ciphertext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		/* Key[i+1] = Key[i] xor ... */
-		aes_mct_next_key(key, keysize, ciphertext_1, ciphertext);
-		/* PT[0] = CT[j] */
-		/* done at the end of the for(j) loop */
+                /* Key[i+1] = Key[i] xor ... */
+                aes_mct_next_key(key, keysize, ciphertext_1, ciphertext);
+                /* PT[0] = CT[j] */
+                /* done at the end of the for(j) loop */
 
-		fputc('\n', aesresp);
-	    }
+                fputc('\n', aesresp);
+            }
 
-	    continue;
-	}
-	/* CIPHERTEXT = ... */
-	if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
-	    /* sanity check */
-	    if (encrypt) {
-		goto loser;
-	    }
-	    /* CT[0] = CT */
-	    i = 10;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &ciphertext[j]);
-	    }
+            continue;
+        }
+        /* CIPHERTEXT = ... */
+        if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
+            /* sanity check */
+            if (encrypt) {
+                goto loser;
+            }
+            /* CT[0] = CT */
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &ciphertext[j]);
+            }
 
-	    for (i=0; i<100; i++) {
-		sprintf(buf, "COUNT = %d\n", i);
-	        fputs(buf, aesresp);
-		/* Output Key[i] */
-		fputs("KEY = ", aesresp);
-		to_hex_str(buf, key, keysize);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
-		/* Output CT[0] */
-		fputs("CIPHERTEXT = ", aesresp);
-		to_hex_str(buf, ciphertext, sizeof ciphertext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+            for (i=0; i<100; i++) {
+                sprintf(buf, "COUNT = %d\n", i);
+                fputs(buf, aesresp);
+                /* Output Key[i] */
+                fputs("KEY = ", aesresp);
+                to_hex_str(buf, key, keysize);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+                /* Output CT[0] */
+                fputs("CIPHERTEXT = ", aesresp);
+                to_hex_str(buf, ciphertext, sizeof ciphertext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		cx = AES_CreateContext(key, NULL, NSS_AES,
-		    PR_FALSE, keysize, 16);
-		if (cx == NULL) {
-		    goto loser;
-		}
-		/*
-		 * doublecheck our result by encrypting the result
-		 * and comparing the output with the ciphertext.
-		 */
-		cx2 = AES_CreateContext(key, NULL, NSS_AES,
-		    PR_TRUE, keysize, 16);
-		if (cx2 == NULL) {
-		    goto loser;
-		}
-		for (j=0; j<1000; j++) {
-		    /* Save PT[j-1] */
-		    memcpy(plaintext_1, plaintext, sizeof plaintext);
+                cx = AES_CreateContext(key, NULL, NSS_AES,
+                    PR_FALSE, keysize, 16);
+                if (cx == NULL) {
+                    goto loser;
+                }
+                /*
+                 * doublecheck our result by encrypting the result
+                 * and comparing the output with the ciphertext.
+                 */
+                cx2 = AES_CreateContext(key, NULL, NSS_AES,
+                    PR_TRUE, keysize, 16);
+                if (cx2 == NULL) {
+                    goto loser;
+                }
+                for (j=0; j<1000; j++) {
+                    /* Save PT[j-1] */
+                    memcpy(plaintext_1, plaintext, sizeof plaintext);
 
-		    /* PT[j] = AES(Key[i], CT[j]) */
-		    outputlen = 0;
-		    rv = AES_Decrypt(cx,
-			plaintext, &outputlen, sizeof plaintext,
-			ciphertext, sizeof ciphertext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof ciphertext) {
-			goto loser;
-		    }
+                    /* PT[j] = AES(Key[i], CT[j]) */
+                    outputlen = 0;
+                    rv = AES_Decrypt(cx,
+                        plaintext, &outputlen, sizeof plaintext,
+                        ciphertext, sizeof ciphertext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof ciphertext) {
+                        goto loser;
+                    }
 
-		    /* doublecheck our result */
-		    outputlen = 0;
-		    rv = AES_Encrypt(cx2,
-			doublecheck, &outputlen, sizeof doublecheck,
-			plaintext, sizeof plaintext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof plaintext) {
-			goto loser;
-		    }
-		    if (memcmp(doublecheck, ciphertext, sizeof ciphertext)) {
-			goto loser;
-		    }
+                    /* doublecheck our result */
+                    outputlen = 0;
+                    rv = AES_Encrypt(cx2,
+                        doublecheck, &outputlen, sizeof doublecheck,
+                        plaintext, sizeof plaintext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof plaintext) {
+                        goto loser;
+                    }
+                    if (memcmp(doublecheck, ciphertext, sizeof ciphertext)) {
+                        goto loser;
+                    }
 
-		    /* CT[j+1] = PT[j] */
-		    memcpy(ciphertext, plaintext, sizeof ciphertext);
-		}
-		AES_DestroyContext(cx, PR_TRUE);
-		cx = NULL;
-		AES_DestroyContext(cx2, PR_TRUE);
-		cx2 = NULL;
+                    /* CT[j+1] = PT[j] */
+                    memcpy(ciphertext, plaintext, sizeof ciphertext);
+                }
+                AES_DestroyContext(cx, PR_TRUE);
+                cx = NULL;
+                AES_DestroyContext(cx2, PR_TRUE);
+                cx2 = NULL;
 
-		/* Output PT[j] */
-		fputs("PLAINTEXT = ", aesresp);
-		to_hex_str(buf, plaintext, sizeof plaintext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+                /* Output PT[j] */
+                fputs("PLAINTEXT = ", aesresp);
+                to_hex_str(buf, plaintext, sizeof plaintext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		/* Key[i+1] = Key[i] xor ... */
-		aes_mct_next_key(key, keysize, plaintext_1, plaintext);
-		/* CT[0] = PT[j] */
-		/* done at the end of the for(j) loop */
+                /* Key[i+1] = Key[i] xor ... */
+                aes_mct_next_key(key, keysize, plaintext_1, plaintext);
+                /* CT[0] = PT[j] */
+                /* done at the end of the for(j) loop */
 
-		fputc('\n', aesresp);
-	    }
+                fputc('\n', aesresp);
+            }
 
-	    continue;
-	}
+            continue;
+        }
     }
 loser:
     if (cx != NULL) {
-	AES_DestroyContext(cx, PR_TRUE);
+        AES_DestroyContext(cx, PR_TRUE);
     }
     if (cx2 != NULL) {
-	AES_DestroyContext(cx2, PR_TRUE);
+        AES_DestroyContext(cx2, PR_TRUE);
     }
     fclose(aesreq);
 }
@@ -1480,7 +1711,7 @@ aes_cbc_mct(char *reqfn)
     int i, j;
     int encrypt = 0;    /* 1 means encrypt, 0 means decrypt */
     unsigned char key[32];              /* 128, 192, or 256 bits */
-    unsigned int keysize;
+    unsigned int keysize = 0;
     unsigned char iv[16];
     unsigned char plaintext[16];        /* PT[j] */
     unsigned char plaintext_1[16];      /* PT[j-1] */
@@ -1488,7 +1719,7 @@ aes_cbc_mct(char *reqfn)
     unsigned char ciphertext_1[16];     /* CT[j-1] */
     unsigned char doublecheck[16];
     unsigned int outputlen;
-    AESContext *cx = NULL;	/* the operation being tested */
+    AESContext *cx = NULL;        /* the operation being tested */
     AESContext *cx2 = NULL;     /* the inverse operation done in parallel
                                  * to doublecheck our result.
                                  */
@@ -1497,287 +1728,287 @@ aes_cbc_mct(char *reqfn)
     aesreq = fopen(reqfn, "r");
     aesresp = stdout;
     while (fgets(buf, sizeof buf, aesreq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* [ENCRYPT] or [DECRYPT] */
-	if (buf[0] == '[') {
-	    if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
-		encrypt = 1;
-	    } else {
-		encrypt = 0;
-	    }
-	    fputs(buf, aesresp);
-	    continue;
-	}
-	/* "COUNT = x" begins a new data set */
-	if (strncmp(buf, "COUNT", 5) == 0) {
-	    /* zeroize the variables for the test with this data set */
-	    memset(key, 0, sizeof key);
-	    keysize = 0;
-	    memset(iv, 0, sizeof iv);
-	    memset(plaintext, 0, sizeof plaintext);
-	    memset(ciphertext, 0, sizeof ciphertext);
-	    continue;
-	}
-	/* KEY = ... */
-	if (strncmp(buf, "KEY", 3) == 0) {
-	    /* Key[0] = Key */
-	    i = 3;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &key[j]);
-	    }
-	    keysize = j;
-	    continue;
-	}
-	/* IV = ... */
-	if (strncmp(buf, "IV", 2) == 0) {
-	    /* IV[0] = IV */
-	    i = 2;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<sizeof iv; i+=2,j++) {
-		hex_to_byteval(&buf[i], &iv[j]);
-	    }
-	    continue;
-	}
-	/* PLAINTEXT = ... */
-	if (strncmp(buf, "PLAINTEXT", 9) == 0) {
-	    /* sanity check */
-	    if (!encrypt) {
-		goto loser;
-	    }
-	    /* PT[0] = PT */
-	    i = 9;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<sizeof plaintext; i+=2,j++) {
-		hex_to_byteval(&buf[i], &plaintext[j]);
-	    }
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* [ENCRYPT] or [DECRYPT] */
+        if (buf[0] == '[') {
+            if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
+                encrypt = 1;
+            } else {
+                encrypt = 0;
+            }
+            fputs(buf, aesresp);
+            continue;
+        }
+        /* "COUNT = x" begins a new data set */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            /* zeroize the variables for the test with this data set */
+            memset(key, 0, sizeof key);
+            keysize = 0;
+            memset(iv, 0, sizeof iv);
+            memset(plaintext, 0, sizeof plaintext);
+            memset(ciphertext, 0, sizeof ciphertext);
+            continue;
+        }
+        /* KEY = ... */
+        if (strncmp(buf, "KEY", 3) == 0) {
+            /* Key[0] = Key */
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &key[j]);
+            }
+            keysize = j;
+            continue;
+        }
+        /* IV = ... */
+        if (strncmp(buf, "IV", 2) == 0) {
+            /* IV[0] = IV */
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof iv; i+=2,j++) {
+                hex_to_byteval(&buf[i], &iv[j]);
+            }
+            continue;
+        }
+        /* PLAINTEXT = ... */
+        if (strncmp(buf, "PLAINTEXT", 9) == 0) {
+            /* sanity check */
+            if (!encrypt) {
+                goto loser;
+            }
+            /* PT[0] = PT */
+            i = 9;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof plaintext; i+=2,j++) {
+                hex_to_byteval(&buf[i], &plaintext[j]);
+            }
 
-	    for (i=0; i<100; i++) {
-		sprintf(buf, "COUNT = %d\n", i);
-	        fputs(buf, aesresp);
-		/* Output Key[i] */
-		fputs("KEY = ", aesresp);
-		to_hex_str(buf, key, keysize);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
-		/* Output IV[i] */
-		fputs("IV = ", aesresp);
-		to_hex_str(buf, iv, sizeof iv);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
-		/* Output PT[0] */
-		fputs("PLAINTEXT = ", aesresp);
-		to_hex_str(buf, plaintext, sizeof plaintext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+            for (i=0; i<100; i++) {
+                sprintf(buf, "COUNT = %d\n", i);
+                fputs(buf, aesresp);
+                /* Output Key[i] */
+                fputs("KEY = ", aesresp);
+                to_hex_str(buf, key, keysize);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+                /* Output IV[i] */
+                fputs("IV = ", aesresp);
+                to_hex_str(buf, iv, sizeof iv);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+                /* Output PT[0] */
+                fputs("PLAINTEXT = ", aesresp);
+                to_hex_str(buf, plaintext, sizeof plaintext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		cx = AES_CreateContext(key, iv, NSS_AES_CBC,
-		    PR_TRUE, keysize, 16);
-		if (cx == NULL) {
-		    goto loser;
-		}
-		/*
-		 * doublecheck our result by decrypting the result
-		 * and comparing the output with the plaintext.
-		 */
-		cx2 = AES_CreateContext(key, iv, NSS_AES_CBC,
-		    PR_FALSE, keysize, 16);
-		if (cx2 == NULL) {
-		    goto loser;
-		}
-		/* CT[-1] = IV[i] */
-		memcpy(ciphertext, iv, sizeof ciphertext);
-		for (j=0; j<1000; j++) {
-		    /* Save CT[j-1] */
-		    memcpy(ciphertext_1, ciphertext, sizeof ciphertext);
-		    /*
-		     * If ( j=0 )
-		     *      CT[j] = AES(Key[i], IV[i], PT[j])
-		     *      PT[j+1] = IV[i] (= CT[j-1])
-		     * Else
-		     *      CT[j] = AES(Key[i], PT[j])
-		     *      PT[j+1] = CT[j-1]
-		     */
-		    outputlen = 0;
-		    rv = AES_Encrypt(cx,
-			ciphertext, &outputlen, sizeof ciphertext,
-			plaintext, sizeof plaintext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof plaintext) {
-			goto loser;
-		    }
+                cx = AES_CreateContext(key, iv, NSS_AES_CBC,
+                    PR_TRUE, keysize, 16);
+                if (cx == NULL) {
+                    goto loser;
+                }
+                /*
+                 * doublecheck our result by decrypting the result
+                 * and comparing the output with the plaintext.
+                 */
+                cx2 = AES_CreateContext(key, iv, NSS_AES_CBC,
+                    PR_FALSE, keysize, 16);
+                if (cx2 == NULL) {
+                    goto loser;
+                }
+                /* CT[-1] = IV[i] */
+                memcpy(ciphertext, iv, sizeof ciphertext);
+                for (j=0; j<1000; j++) {
+                    /* Save CT[j-1] */
+                    memcpy(ciphertext_1, ciphertext, sizeof ciphertext);
+                    /*
+                     * If ( j=0 )
+                     *      CT[j] = AES(Key[i], IV[i], PT[j])
+                     *      PT[j+1] = IV[i] (= CT[j-1])
+                     * Else
+                     *      CT[j] = AES(Key[i], PT[j])
+                     *      PT[j+1] = CT[j-1]
+                     */
+                    outputlen = 0;
+                    rv = AES_Encrypt(cx,
+                        ciphertext, &outputlen, sizeof ciphertext,
+                        plaintext, sizeof plaintext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof plaintext) {
+                        goto loser;
+                    }
 
-		    /* doublecheck our result */
-		    outputlen = 0;
-		    rv = AES_Decrypt(cx2,
-			doublecheck, &outputlen, sizeof doublecheck,
-			ciphertext, sizeof ciphertext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof ciphertext) {
-			goto loser;
-		    }
-		    if (memcmp(doublecheck, plaintext, sizeof plaintext)) {
-			goto loser;
-		    }
+                    /* doublecheck our result */
+                    outputlen = 0;
+                    rv = AES_Decrypt(cx2,
+                        doublecheck, &outputlen, sizeof doublecheck,
+                        ciphertext, sizeof ciphertext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof ciphertext) {
+                        goto loser;
+                    }
+                    if (memcmp(doublecheck, plaintext, sizeof plaintext)) {
+                        goto loser;
+                    }
 
-		    memcpy(plaintext, ciphertext_1, sizeof plaintext);
-		}
-		AES_DestroyContext(cx, PR_TRUE);
-		cx = NULL;
-		AES_DestroyContext(cx2, PR_TRUE);
-		cx2 = NULL;
+                    memcpy(plaintext, ciphertext_1, sizeof plaintext);
+                }
+                AES_DestroyContext(cx, PR_TRUE);
+                cx = NULL;
+                AES_DestroyContext(cx2, PR_TRUE);
+                cx2 = NULL;
 
-		/* Output CT[j] */
-		fputs("CIPHERTEXT = ", aesresp);
-		to_hex_str(buf, ciphertext, sizeof ciphertext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+                /* Output CT[j] */
+                fputs("CIPHERTEXT = ", aesresp);
+                to_hex_str(buf, ciphertext, sizeof ciphertext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		/* Key[i+1] = Key[i] xor ... */
-		aes_mct_next_key(key, keysize, ciphertext_1, ciphertext);
-		/* IV[i+1] = CT[j] */
-		memcpy(iv, ciphertext, sizeof iv);
-		/* PT[0] = CT[j-1] */
-		/* done at the end of the for(j) loop */
+                /* Key[i+1] = Key[i] xor ... */
+                aes_mct_next_key(key, keysize, ciphertext_1, ciphertext);
+                /* IV[i+1] = CT[j] */
+                memcpy(iv, ciphertext, sizeof iv);
+                /* PT[0] = CT[j-1] */
+                /* done at the end of the for(j) loop */
 
-		fputc('\n', aesresp);
-	    }
+                fputc('\n', aesresp);
+            }
 
-	    continue;
-	}
-	/* CIPHERTEXT = ... */
-	if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
-	    /* sanity check */
-	    if (encrypt) {
-		goto loser;
-	    }
-	    /* CT[0] = CT */
-	    i = 10;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &ciphertext[j]);
-	    }
+            continue;
+        }
+        /* CIPHERTEXT = ... */
+        if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
+            /* sanity check */
+            if (encrypt) {
+                goto loser;
+            }
+            /* CT[0] = CT */
+            i = 10;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &ciphertext[j]);
+            }
 
-	    for (i=0; i<100; i++) {
-		sprintf(buf, "COUNT = %d\n", i);
-	        fputs(buf, aesresp);
-		/* Output Key[i] */
-		fputs("KEY = ", aesresp);
-		to_hex_str(buf, key, keysize);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
-		/* Output IV[i] */
-		fputs("IV = ", aesresp);
-		to_hex_str(buf, iv, sizeof iv);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
-		/* Output CT[0] */
-		fputs("CIPHERTEXT = ", aesresp);
-		to_hex_str(buf, ciphertext, sizeof ciphertext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+            for (i=0; i<100; i++) {
+                sprintf(buf, "COUNT = %d\n", i);
+                fputs(buf, aesresp);
+                /* Output Key[i] */
+                fputs("KEY = ", aesresp);
+                to_hex_str(buf, key, keysize);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+                /* Output IV[i] */
+                fputs("IV = ", aesresp);
+                to_hex_str(buf, iv, sizeof iv);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
+                /* Output CT[0] */
+                fputs("CIPHERTEXT = ", aesresp);
+                to_hex_str(buf, ciphertext, sizeof ciphertext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		cx = AES_CreateContext(key, iv, NSS_AES_CBC,
-		    PR_FALSE, keysize, 16);
-		if (cx == NULL) {
-		    goto loser;
-		}
-		/*
-		 * doublecheck our result by encrypting the result
-		 * and comparing the output with the ciphertext.
-		 */
-		cx2 = AES_CreateContext(key, iv, NSS_AES_CBC,
-		    PR_TRUE, keysize, 16);
-		if (cx2 == NULL) {
-		    goto loser;
-		}
-		/* PT[-1] = IV[i] */
-		memcpy(plaintext, iv, sizeof plaintext);
-		for (j=0; j<1000; j++) {
-		    /* Save PT[j-1] */
-		    memcpy(plaintext_1, plaintext, sizeof plaintext);
-		    /*
-		     * If ( j=0 )
-		     *      PT[j] = AES(Key[i], IV[i], CT[j])
-		     *      CT[j+1] = IV[i] (= PT[j-1])
-		     * Else
-		     *      PT[j] = AES(Key[i], CT[j])
-		     *      CT[j+1] = PT[j-1]
-		     */
-		    outputlen = 0;
-		    rv = AES_Decrypt(cx,
-			plaintext, &outputlen, sizeof plaintext,
-			ciphertext, sizeof ciphertext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof ciphertext) {
-			goto loser;
-		    }
+                cx = AES_CreateContext(key, iv, NSS_AES_CBC,
+                    PR_FALSE, keysize, 16);
+                if (cx == NULL) {
+                    goto loser;
+                }
+                /*
+                 * doublecheck our result by encrypting the result
+                 * and comparing the output with the ciphertext.
+                 */
+                cx2 = AES_CreateContext(key, iv, NSS_AES_CBC,
+                    PR_TRUE, keysize, 16);
+                if (cx2 == NULL) {
+                    goto loser;
+                }
+                /* PT[-1] = IV[i] */
+                memcpy(plaintext, iv, sizeof plaintext);
+                for (j=0; j<1000; j++) {
+                    /* Save PT[j-1] */
+                    memcpy(plaintext_1, plaintext, sizeof plaintext);
+                    /*
+                     * If ( j=0 )
+                     *      PT[j] = AES(Key[i], IV[i], CT[j])
+                     *      CT[j+1] = IV[i] (= PT[j-1])
+                     * Else
+                     *      PT[j] = AES(Key[i], CT[j])
+                     *      CT[j+1] = PT[j-1]
+                     */
+                    outputlen = 0;
+                    rv = AES_Decrypt(cx,
+                        plaintext, &outputlen, sizeof plaintext,
+                        ciphertext, sizeof ciphertext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof ciphertext) {
+                        goto loser;
+                    }
 
-		    /* doublecheck our result */
-		    outputlen = 0;
-		    rv = AES_Encrypt(cx2,
-			doublecheck, &outputlen, sizeof doublecheck,
-			plaintext, sizeof plaintext);
-		    if (rv != SECSuccess) {
-			goto loser;
-		    }
-		    if (outputlen != sizeof plaintext) {
-			goto loser;
-		    }
-		    if (memcmp(doublecheck, ciphertext, sizeof ciphertext)) {
-			goto loser;
-		    }
+                    /* doublecheck our result */
+                    outputlen = 0;
+                    rv = AES_Encrypt(cx2,
+                        doublecheck, &outputlen, sizeof doublecheck,
+                        plaintext, sizeof plaintext);
+                    if (rv != SECSuccess) {
+                        goto loser;
+                    }
+                    if (outputlen != sizeof plaintext) {
+                        goto loser;
+                    }
+                    if (memcmp(doublecheck, ciphertext, sizeof ciphertext)) {
+                        goto loser;
+                    }
 
-		    memcpy(ciphertext, plaintext_1, sizeof ciphertext);
-		}
-		AES_DestroyContext(cx, PR_TRUE);
-		cx = NULL;
-		AES_DestroyContext(cx2, PR_TRUE);
-		cx2 = NULL;
+                    memcpy(ciphertext, plaintext_1, sizeof ciphertext);
+                }
+                AES_DestroyContext(cx, PR_TRUE);
+                cx = NULL;
+                AES_DestroyContext(cx2, PR_TRUE);
+                cx2 = NULL;
 
-		/* Output PT[j] */
-		fputs("PLAINTEXT = ", aesresp);
-		to_hex_str(buf, plaintext, sizeof plaintext);
-		fputs(buf, aesresp);
-		fputc('\n', aesresp);
+                /* Output PT[j] */
+                fputs("PLAINTEXT = ", aesresp);
+                to_hex_str(buf, plaintext, sizeof plaintext);
+                fputs(buf, aesresp);
+                fputc('\n', aesresp);
 
-		/* Key[i+1] = Key[i] xor ... */
-		aes_mct_next_key(key, keysize, plaintext_1, plaintext);
-		/* IV[i+1] = PT[j] */
-		memcpy(iv, plaintext, sizeof iv);
-		/* CT[0] = PT[j-1] */
-		/* done at the end of the for(j) loop */
+                /* Key[i+1] = Key[i] xor ... */
+                aes_mct_next_key(key, keysize, plaintext_1, plaintext);
+                /* IV[i+1] = PT[j] */
+                memcpy(iv, plaintext, sizeof iv);
+                /* CT[0] = PT[j-1] */
+                /* done at the end of the for(j) loop */
 
-		fputc('\n', aesresp);
-	    }
+                fputc('\n', aesresp);
+            }
 
-	    continue;
-	}
+            continue;
+        }
     }
 loser:
     if (cx != NULL) {
-	AES_DestroyContext(cx, PR_TRUE);
+        AES_DestroyContext(cx, PR_TRUE);
     }
     if (cx2 != NULL) {
-	AES_DestroyContext(cx2, PR_TRUE);
+        AES_DestroyContext(cx2, PR_TRUE);
     }
     fclose(aesreq);
 }
@@ -1788,31 +2019,31 @@ void write_compact_string(FILE *out, unsigned char *hash, unsigned int len)
     int j, count = 0, last = -1, z = 0;
     long start = ftell(out);
     for (i=0; i<len; i++) {
-	for (j=7; j>=0; j--) {
-	    if (last < 0) {
-		last = (hash[i] & (1 << j)) ? 1 : 0;
-		fprintf(out, "%d ", last);
-		count = 1;
-	    } else if (hash[i] & (1 << j)) {
-		if (last) {
-		    count++; 
-		} else { 
-		    last = 0;
-		    fprintf(out, "%d ", count);
-		    count = 1;
-		    z++;
-		}
-	    } else {
-		if (!last) {
-		    count++; 
-		} else { 
-		    last = 1;
-		    fprintf(out, "%d ", count);
-		    count = 1;
-		    z++;
-		}
-	    }
-	}
+        for (j=7; j>=0; j--) {
+            if (last < 0) {
+                last = (hash[i] & (1 << j)) ? 1 : 0;
+                fprintf(out, "%d ", last);
+                count = 1;
+            } else if (hash[i] & (1 << j)) {
+                if (last) {
+                    count++; 
+                } else { 
+                    last = 0;
+                    fprintf(out, "%d ", count);
+                    count = 1;
+                    z++;
+                }
+            } else {
+                if (!last) {
+                    count++; 
+                } else { 
+                    last = 1;
+                    fprintf(out, "%d ", count);
+                    count = 1;
+                    z++;
+                }
+            }
+        }
     }
     fprintf(out, "^\n");
     fseek(out, start, SEEK_SET);
@@ -1827,23 +2058,23 @@ int get_next_line(FILE *req, char *key, char *val, FILE *rsp)
     int w = 0;
     int c;
     while ((c = fgetc(req)) != EOF) {
-	if (ignore) {
-	    fprintf(rsp, "%c", c);
-	    if (c == '\n') return ignore;
-	} else if (c == '\n') {
-	    break;
-	} else if (c == '#') {
-	    ignore = 1;
-	    fprintf(rsp, "%c", c);
-	} else if (c == '=') {
-	    writeto[w] = '\0';
-	    w = 0;
-	    writeto = val;
-	} else if (c == ' ' || c == '[' || c == ']') {
-	    continue;
-	} else {
-	    writeto[w++] = c;
-	}
+        if (ignore) {
+            fprintf(rsp, "%c", c);
+            if (c == '\n') return ignore;
+        } else if (c == '\n') {
+            break;
+        } else if (c == '#') {
+            ignore = 1;
+            fprintf(rsp, "%c", c);
+        } else if (c == '=') {
+            writeto[w] = '\0';
+            w = 0;
+            writeto = val;
+        } else if (c == ' ' || c == '[' || c == ']') {
+            continue;
+        } else {
+            writeto[w++] = c;
+        }
     }
     writeto[w] = '\0';
     return (c == EOF) ? -1 : ignore;
@@ -1950,18 +2181,18 @@ getECParams(const char *curve)
 
     if (curve != NULL) {
         numCurves = sizeof(nameTagPair)/sizeof(CurveNameTagPair);
-	for (i = 0; ((i < numCurves) && (curveOidTag == SEC_OID_UNKNOWN)); 
-	     i++) {
-	    if (PL_strcmp(curve, nameTagPair[i].curveName) == 0)
-	        curveOidTag = nameTagPair[i].curveOidTag;
-	}
+        for (i = 0; ((i < numCurves) && (curveOidTag == SEC_OID_UNKNOWN)); 
+             i++) {
+            if (PL_strcmp(curve, nameTagPair[i].curveName) == 0)
+                curveOidTag = nameTagPair[i].curveOidTag;
+        }
     }
 
     /* Return NULL if curve name is not recognized */
     if ((curveOidTag == SEC_OID_UNKNOWN) || 
-	(oidData = SECOID_FindOIDByTag(curveOidTag)) == NULL) {
+        (oidData = SECOID_FindOIDByTag(curveOidTag)) == NULL) {
         fprintf(stderr, "Unrecognized elliptic curve %s\n", curve);
-	return NULL;
+        return NULL;
     }
 
     ecparams = SECITEM_AllocItem(NULL, NULL, (2 + oidData->oid.len));
@@ -1976,6 +2207,121 @@ getECParams(const char *curve)
     memcpy(ecparams->data + 2, oidData->oid.data, oidData->oid.len);
 
     return ecparams;
+}
+
+/*
+ * HASH_ functions are available to full NSS apps and internally inside
+ * freebl, but not exported to users of freebl. Create short stubs to
+ * replace the functionality for fipstest.
+ */
+SECStatus
+fips_hashBuf(HASH_HashType type, unsigned char *hashBuf, 
+                                        unsigned char *msg, int len)
+{
+    SECStatus rv = SECFailure;
+
+    switch (type) {
+    case HASH_AlgSHA1:
+        rv = SHA1_HashBuf(hashBuf, msg, len);
+        break;
+    case HASH_AlgSHA224:
+        rv = SHA224_HashBuf(hashBuf, msg, len);
+        break;
+    case HASH_AlgSHA256:
+        rv = SHA256_HashBuf(hashBuf, msg, len);
+        break;
+    case HASH_AlgSHA384:
+        rv = SHA384_HashBuf(hashBuf, msg, len);
+        break;
+    case HASH_AlgSHA512:
+        rv = SHA512_HashBuf(hashBuf, msg, len);
+        break;
+    default:
+        break;
+    }
+    return rv;
+}
+
+int
+fips_hashLen(HASH_HashType type)
+{
+    int len = 0;
+
+    switch (type) {
+    case HASH_AlgSHA1:
+        len = SHA1_LENGTH;
+        break;
+    case HASH_AlgSHA224:
+        len = SHA224_LENGTH;
+        break;
+    case HASH_AlgSHA256:
+        len = SHA256_LENGTH;
+        break;
+    case HASH_AlgSHA384:
+        len = SHA384_LENGTH;
+        break;
+    case HASH_AlgSHA512:
+        len = SHA512_LENGTH;
+        break;
+    default:
+        break;
+    }
+    return len;
+}
+
+SECOidTag
+fips_hashOid(HASH_HashType type)
+{
+    SECOidTag oid = SEC_OID_UNKNOWN;
+
+    switch (type) {
+    case HASH_AlgSHA1:
+        oid = SEC_OID_SHA1;
+        break;
+    case HASH_AlgSHA224:
+        oid = SEC_OID_SHA224;
+        break;
+    case HASH_AlgSHA256:
+        oid = SEC_OID_SHA256;
+        break;
+    case HASH_AlgSHA384:
+        oid = SEC_OID_SHA384;
+        break;
+    case HASH_AlgSHA512:
+        oid = SEC_OID_SHA512;
+        break;
+    default:
+        break;
+    }
+    return oid;
+}
+
+HASH_HashType
+sha_get_hashType(int hashbits)
+{
+    HASH_HashType hashType = HASH_AlgNULL;
+
+    switch (hashbits) {
+    case 1:
+    case (SHA1_LENGTH*PR_BITS_PER_BYTE): 
+        hashType = HASH_AlgSHA1;
+        break;
+    case (SHA224_LENGTH*PR_BITS_PER_BYTE): 
+        hashType = HASH_AlgSHA224;
+        break;
+    case (SHA256_LENGTH*PR_BITS_PER_BYTE): 
+        hashType = HASH_AlgSHA256;
+        break;
+    case (SHA384_LENGTH*PR_BITS_PER_BYTE): 
+        hashType = HASH_AlgSHA384;
+        break;
+    case (SHA512_LENGTH*PR_BITS_PER_BYTE): 
+        hashType = HASH_AlgSHA512;
+        break;
+    default:
+        break;
+    }
+    return hashType;
 }
 
 /*
@@ -1996,7 +2342,7 @@ ecdsa_keypair_test(char *reqfn)
     FILE *ecdsareq;     /* input stream from the REQUEST file */
     FILE *ecdsaresp;    /* output stream to the RESPONSE file */
     char curve[16];     /* "nistxddd" */
-    ECParams *ecparams;
+    ECParams *ecparams = NULL;
     int N;
     int i;
     unsigned int len;
@@ -2005,81 +2351,95 @@ ecdsa_keypair_test(char *reqfn)
     ecdsaresp = stdout;
     strcpy(curve, "nist");
     while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* [X-ddd] */
-	if (buf[0] == '[') {
-	    const char *src;
-	    char *dst;
-	    SECItem *encodedparams;
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* [X-ddd] */
+        if (buf[0] == '[') {
+            const char *src;
+            char *dst;
+            SECItem *encodedparams;
 
-	    src = &buf[1];
-	    dst = &curve[4];
-	    *dst++ = tolower(*src);
-	    src += 2;  /* skip the hyphen */
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst = '\0';
-	    encodedparams = getECParams(curve);
-	    if (encodedparams == NULL) {
-		goto loser;
-	    }
-	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
-		goto loser;
-	    }
-	    SECITEM_FreeItem(encodedparams, PR_TRUE);
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* N = x */
-	if (buf[0] == 'N') {
-	    if (sscanf(buf, "N = %d", &N) != 1) {
-		goto loser;
-	    }
-	    for (i = 0; i < N; i++) {
-		ECPrivateKey *ecpriv;
+            if (buf[1] == 'B') {
+                fputs(buf, ecdsaresp);
+                continue;
+            }
+            if (ecparams) {
+                PORT_FreeArena(ecparams->arena, PR_FALSE);
+                ecparams = NULL;
+            }
 
-		if (EC_NewKey(ecparams, &ecpriv) != SECSuccess) {
-		    goto loser;
-		}
-		fputs("d = ", ecdsaresp);
-		to_hex_str(buf, ecpriv->privateValue.data,
-			   ecpriv->privateValue.len);
-		fputs(buf, ecdsaresp);
-		fputc('\n', ecdsaresp);
-		if (EC_ValidatePublicKey(ecparams, &ecpriv->publicValue)
-		    != SECSuccess) {
-		    goto loser;
-		}
-		len = ecpriv->publicValue.len;
-		if (len%2 == 0) {
-		    goto loser;
-		}
-		len = (len-1)/2;
-		if (ecpriv->publicValue.data[0]
-		    != EC_POINT_FORM_UNCOMPRESSED) {
-		    goto loser;
-		}
-		fputs("Qx = ", ecdsaresp);
-		to_hex_str(buf, &ecpriv->publicValue.data[1], len);
-		fputs(buf, ecdsaresp);
-		fputc('\n', ecdsaresp);
-		fputs("Qy = ", ecdsaresp);
-		to_hex_str(buf, &ecpriv->publicValue.data[1+len], len);
-		fputs(buf, ecdsaresp);
-		fputc('\n', ecdsaresp);
-		fputc('\n', ecdsaresp);
-		PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
-	    }
-	    PORT_FreeArena(ecparams->arena, PR_FALSE);
-	    continue;
-	}
+            src = &buf[1];
+            dst = &curve[4];
+            *dst++ = tolower(*src);
+            src += 2;  /* skip the hyphen */
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst = '\0';
+            encodedparams = getECParams(curve);
+            if (encodedparams == NULL) {
+                fprintf(stderr, "Unknown curve %s.", curve);
+                goto loser;
+            }
+            if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+                fprintf(stderr, "Curve %s not supported.\n", curve);
+                goto loser;
+            }
+            SECITEM_FreeItem(encodedparams, PR_TRUE);
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* N = x */
+        if (buf[0] == 'N') {
+            if (sscanf(buf, "N = %d", &N) != 1) {
+                goto loser;
+            }
+            for (i = 0; i < N; i++) {
+                ECPrivateKey *ecpriv;
+
+                if (EC_NewKey(ecparams, &ecpriv) != SECSuccess) {
+                    goto loser;
+                }
+                fputs("d = ", ecdsaresp);
+                to_hex_str(buf, ecpriv->privateValue.data,
+                           ecpriv->privateValue.len);
+                fputs(buf, ecdsaresp);
+                fputc('\n', ecdsaresp);
+                if (EC_ValidatePublicKey(ecparams, &ecpriv->publicValue)
+                    != SECSuccess) {
+                    goto loser;
+                }
+                len = ecpriv->publicValue.len;
+                if (len%2 == 0) {
+                    goto loser;
+                }
+                len = (len-1)/2;
+                if (ecpriv->publicValue.data[0]
+                    != EC_POINT_FORM_UNCOMPRESSED) {
+                    goto loser;
+                }
+                fputs("Qx = ", ecdsaresp);
+                to_hex_str(buf, &ecpriv->publicValue.data[1], len);
+                fputs(buf, ecdsaresp);
+                fputc('\n', ecdsaresp);
+                fputs("Qy = ", ecdsaresp);
+                to_hex_str(buf, &ecpriv->publicValue.data[1+len], len);
+                fputs(buf, ecdsaresp);
+                fputc('\n', ecdsaresp);
+                fputc('\n', ecdsaresp);
+                PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+            }
+            continue;
+        }
     }
 loser:
+    if (ecparams) {
+        PORT_FreeArena(ecparams->arena, PR_FALSE);
+        ecparams = NULL;
+    }
     fclose(ecdsareq);
 }
 
@@ -2103,7 +2463,7 @@ ecdsa_pkv_test(char *reqfn)
     ECParams *ecparams = NULL;
     SECItem pubkey;
     unsigned int i;
-    unsigned int len;
+    unsigned int len = 0;
     PRBool keyvalid = PR_TRUE;
 
     ecdsareq = fopen(reqfn, "r");
@@ -2111,92 +2471,94 @@ ecdsa_pkv_test(char *reqfn)
     strcpy(curve, "nist");
     pubkey.data = NULL;
     while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* [X-ddd] */
-	if (buf[0] == '[') {
-	    const char *src;
-	    char *dst;
-	    SECItem *encodedparams;
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* [X-ddd] */
+        if (buf[0] == '[') {
+            const char *src;
+            char *dst;
+            SECItem *encodedparams;
 
-	    src = &buf[1];
-	    dst = &curve[4];
-	    *dst++ = tolower(*src);
-	    src += 2;  /* skip the hyphen */
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst = '\0';
-	    if (ecparams != NULL) {
-		PORT_FreeArena(ecparams->arena, PR_FALSE);
-		ecparams = NULL;
-	    }
-	    encodedparams = getECParams(curve);
-	    if (encodedparams == NULL) {
-		goto loser;
-	    }
-	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
-		goto loser;
-	    }
-	    SECITEM_FreeItem(encodedparams, PR_TRUE);
-	    len = (ecparams->fieldID.size + 7) >> 3;
-	    if (pubkey.data != NULL) {
-		PORT_Free(pubkey.data);
-		pubkey.data = NULL;
-	    }
-	    SECITEM_AllocItem(NULL, &pubkey, 2*len+1);
-	    if (pubkey.data == NULL) {
-		goto loser;
-	    }
-	    pubkey.data[0] = EC_POINT_FORM_UNCOMPRESSED;
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* Qx = ... */
-	if (strncmp(buf, "Qx", 2) == 0) {
-	    fputs(buf, ecdsaresp);
-	    i = 2;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    keyvalid = from_hex_str(&pubkey.data[1], len, &buf[i]);
-	    continue;
-	}
-	/* Qy = ... */
-	if (strncmp(buf, "Qy", 2) == 0) {
-	    fputs(buf, ecdsaresp);
-	    if (!keyvalid) {
-		fputs("Result = F\n", ecdsaresp);
-		continue;
-	    }
-	    i = 2;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    keyvalid = from_hex_str(&pubkey.data[1+len], len, &buf[i]);
-	    if (!keyvalid) {
-		fputs("Result = F\n", ecdsaresp);
-		continue;
-	    }
-	    if (EC_ValidatePublicKey(ecparams, &pubkey) == SECSuccess) {
-		fputs("Result = P\n", ecdsaresp);
-	    } else if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
-		fputs("Result = F\n", ecdsaresp);
-	    } else {
-		goto loser;
-	    }
-	    continue;
-	}
+            src = &buf[1];
+            dst = &curve[4];
+            *dst++ = tolower(*src);
+            src += 2;  /* skip the hyphen */
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst = '\0';
+            if (ecparams != NULL) {
+                PORT_FreeArena(ecparams->arena, PR_FALSE);
+                ecparams = NULL;
+            }
+            encodedparams = getECParams(curve);
+            if (encodedparams == NULL) {
+                fprintf(stderr, "Unknown curve %s.", curve);
+                goto loser;
+            }
+            if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+                fprintf(stderr, "Curve %s not supported.\n", curve);
+                goto loser;
+            }
+            SECITEM_FreeItem(encodedparams, PR_TRUE);
+            len = (ecparams->fieldID.size + 7) >> 3;
+            if (pubkey.data != NULL) {
+                PORT_Free(pubkey.data);
+                pubkey.data = NULL;
+            }
+            SECITEM_AllocItem(NULL, &pubkey, 2*len+1);
+            if (pubkey.data == NULL) {
+                goto loser;
+            }
+            pubkey.data[0] = EC_POINT_FORM_UNCOMPRESSED;
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* Qx = ... */
+        if (strncmp(buf, "Qx", 2) == 0) {
+            fputs(buf, ecdsaresp);
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            keyvalid = from_hex_str(&pubkey.data[1], len, &buf[i]);
+            continue;
+        }
+        /* Qy = ... */
+        if (strncmp(buf, "Qy", 2) == 0) {
+            fputs(buf, ecdsaresp);
+            if (!keyvalid) {
+                fputs("Result = F\n", ecdsaresp);
+                continue;
+            }
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            keyvalid = from_hex_str(&pubkey.data[1+len], len, &buf[i]);
+            if (!keyvalid) {
+                fputs("Result = F\n", ecdsaresp);
+                continue;
+            }
+            if (EC_ValidatePublicKey(ecparams, &pubkey) == SECSuccess) {
+                fputs("Result = P\n", ecdsaresp);
+            } else if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
+                fputs("Result = F\n", ecdsaresp);
+            } else {
+                goto loser;
+            }
+            continue;
+        }
     }
 loser:
     if (ecparams != NULL) {
-	PORT_FreeArena(ecparams->arena, PR_FALSE);
+        PORT_FreeArena(ecparams->arena, PR_FALSE);
     }
     if (pubkey.data != NULL) {
-	PORT_Free(pubkey.data);
+        PORT_Free(pubkey.data);
     }
     fclose(ecdsareq);
 }
@@ -2224,7 +2586,9 @@ ecdsa_siggen_test(char *reqfn)
     unsigned int len;
     unsigned char msg[512];  /* message to be signed (<= 128 bytes) */
     unsigned int msglen;
-    unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
+    unsigned char  sha[HASH_LENGTH_MAX];    /* SHA digest */
+    unsigned int   shaLength = 0;           /* length of SHA */
+    HASH_HashType  shaAlg = HASH_AlgNULL;   /* type of SHA Alg */
     unsigned char sig[2*MAX_ECKEY_LEN];
     SECItem signature, digest;
 
@@ -2232,111 +2596,135 @@ ecdsa_siggen_test(char *reqfn)
     ecdsaresp = stdout;
     strcpy(curve, "nist");
     while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* [X-ddd] */
-	if (buf[0] == '[') {
-	    const char *src;
-	    char *dst;
-	    SECItem *encodedparams;
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* [X-ddd] */
+        if (buf[0] == '[') {
+            const char *src;
+            char *dst;
+            SECItem *encodedparams;
 
-	    src = &buf[1];
-	    dst = &curve[4];
-	    *dst++ = tolower(*src);
-	    src += 2;  /* skip the hyphen */
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst = '\0';
-	    if (ecparams != NULL) {
-		PORT_FreeArena(ecparams->arena, PR_FALSE);
-		ecparams = NULL;
-	    }
-	    encodedparams = getECParams(curve);
-	    if (encodedparams == NULL) {
-		goto loser;
-	    }
-	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
-		goto loser;
-	    }
-	    SECITEM_FreeItem(encodedparams, PR_TRUE);
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* Msg = ... */
-	if (strncmp(buf, "Msg", 3) == 0) {
-	    ECPrivateKey *ecpriv;
+            src = &buf[1];
+            dst = &curve[4];
+            *dst++ = tolower(*src);
+            src += 2;  /* skip the hyphen */
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst = '\0';
+            src++; /* skip the comma */
+            /* set the SHA Algorithm */
+            if (strncmp(src, "SHA-1", 5) == 0) {
+                shaAlg = HASH_AlgSHA1;
+            } else if (strncmp(src, "SHA-224", 7) == 0) {
+                shaAlg = HASH_AlgSHA224;
+            } else if (strncmp(src, "SHA-256", 7) == 0) {
+                shaAlg = HASH_AlgSHA256;
+            } else if (strncmp(src, "SHA-384", 7)== 0) {
+               shaAlg = HASH_AlgSHA384;
+            } else if (strncmp(src, "SHA-512", 7) == 0) {
+               shaAlg = HASH_AlgSHA512;
+            } else {
+               fprintf(ecdsaresp, "ERROR: Unable to find SHAAlg type");
+               goto loser;
+            }
+            if (ecparams != NULL) {
+                PORT_FreeArena(ecparams->arena, PR_FALSE);
+                ecparams = NULL;
+            }
+            encodedparams = getECParams(curve);
+            if (encodedparams == NULL) {
+                fprintf(stderr, "Unknown curve %s.", curve);
+                goto loser;
+            }
+            if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+                fprintf(stderr, "Curve %s not supported.\n", curve);
+                goto loser;
+            }
+            SECITEM_FreeItem(encodedparams, PR_TRUE);
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* Msg = ... */
+        if (strncmp(buf, "Msg", 3) == 0) {
+            ECPrivateKey *ecpriv;
 
-	    i = 3;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &msg[j]);
-	    }
-	    msglen = j;
-	    if (SHA1_HashBuf(sha1, msg, msglen) != SECSuccess) {
-		goto loser;
-	    }
-	    fputs(buf, ecdsaresp);
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &msg[j]);
+            }
+            msglen = j;
+            shaLength = fips_hashLen(shaAlg);
+            if (fips_hashBuf(shaAlg,sha,msg,msglen) != SECSuccess) {
+                if (shaLength == 0) {
+                        fprintf(ecdsaresp, "ERROR: SHAAlg not defined.");
+                }
+                fprintf(ecdsaresp, "ERROR: Unable to generate SHA%x",
+                        shaLength == 160 ? 1 : shaLength);
+                goto loser;
+            }
+            fputs(buf, ecdsaresp);
 
-	    if (EC_NewKey(ecparams, &ecpriv) != SECSuccess) {
-		goto loser;
-	    }
-	    if (EC_ValidatePublicKey(ecparams, &ecpriv->publicValue)
-		!= SECSuccess) {
-		goto loser;
-	    }
-	    len = ecpriv->publicValue.len;
-	    if (len%2 == 0) {
-		goto loser;
-	    }
-	    len = (len-1)/2;
-	    if (ecpriv->publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
-		goto loser;
-	    }
-	    fputs("Qx = ", ecdsaresp);
-	    to_hex_str(buf, &ecpriv->publicValue.data[1], len);
-	    fputs(buf, ecdsaresp);
-	    fputc('\n', ecdsaresp);
-	    fputs("Qy = ", ecdsaresp);
-	    to_hex_str(buf, &ecpriv->publicValue.data[1+len], len);
-	    fputs(buf, ecdsaresp);
-	    fputc('\n', ecdsaresp);
+            if (EC_NewKey(ecparams, &ecpriv) != SECSuccess) {
+                goto loser;
+            }
+            if (EC_ValidatePublicKey(ecparams, &ecpriv->publicValue)
+                != SECSuccess) {
+                goto loser;
+            }
+            len = ecpriv->publicValue.len;
+            if (len%2 == 0) {
+                goto loser;
+            }
+            len = (len-1)/2;
+            if (ecpriv->publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
+                goto loser;
+            }
+            fputs("Qx = ", ecdsaresp);
+            to_hex_str(buf, &ecpriv->publicValue.data[1], len);
+            fputs(buf, ecdsaresp);
+            fputc('\n', ecdsaresp);
+            fputs("Qy = ", ecdsaresp);
+            to_hex_str(buf, &ecpriv->publicValue.data[1+len], len);
+            fputs(buf, ecdsaresp);
+            fputc('\n', ecdsaresp);
 
-	    digest.type = siBuffer;
-	    digest.data = sha1;
-	    digest.len = sizeof sha1;
-	    signature.type = siBuffer;
-	    signature.data = sig;
-	    signature.len = sizeof sig;
-	    if (ECDSA_SignDigest(ecpriv, &signature, &digest) != SECSuccess) {
-		goto loser;
-	    }
-	    len = signature.len;
-	    if (len%2 != 0) {
-		goto loser;
-	    }
-	    len = len/2;
-	    fputs("R = ", ecdsaresp);
-	    to_hex_str(buf, &signature.data[0], len);
-	    fputs(buf, ecdsaresp);
-	    fputc('\n', ecdsaresp);
-	    fputs("S = ", ecdsaresp);
-	    to_hex_str(buf, &signature.data[len], len);
-	    fputs(buf, ecdsaresp);
-	    fputc('\n', ecdsaresp);
+            digest.type = siBuffer;
+            digest.data = sha;
+            digest.len = shaLength;
+            signature.type = siBuffer;
+            signature.data = sig;
+            signature.len = sizeof sig;
+            if (ECDSA_SignDigest(ecpriv, &signature, &digest) != SECSuccess) {
+                goto loser;
+            }
+            len = signature.len;
+            if (len%2 != 0) {
+                goto loser;
+            }
+            len = len/2;
+            fputs("R = ", ecdsaresp);
+            to_hex_str(buf, &signature.data[0], len);
+            fputs(buf, ecdsaresp);
+            fputc('\n', ecdsaresp);
+            fputs("S = ", ecdsaresp);
+            to_hex_str(buf, &signature.data[len], len);
+            fputs(buf, ecdsaresp);
+            fputc('\n', ecdsaresp);
 
-	    PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
-	    continue;
-	}
+            PORT_FreeArena(ecpriv->ecParams.arena, PR_TRUE);
+            continue;
+        }
     }
 loser:
     if (ecparams != NULL) {
-	PORT_FreeArena(ecparams->arena, PR_FALSE);
+        PORT_FreeArena(ecparams->arena, PR_FALSE);
     }
     fclose(ecdsareq);
 }
@@ -2360,11 +2748,13 @@ ecdsa_sigver_test(char *reqfn)
     char curve[16];     /* "nistxddd" */
     ECPublicKey ecpub;
     unsigned int i, j;
-    unsigned int flen;  /* length in bytes of the field size */
-    unsigned int olen;  /* length in bytes of the base point order */
+    unsigned int flen = 0;  /* length in bytes of the field size */
+    unsigned int olen = 0;  /* length in bytes of the base point order */
     unsigned char msg[512];  /* message that was signed (<= 128 bytes) */
-    unsigned int msglen;
-    unsigned char sha1[20];  /* SHA-1 hash (160 bits) */
+    unsigned int msglen = 0;
+    unsigned char  sha[HASH_LENGTH_MAX];    /* SHA digest */
+    unsigned int   shaLength = 0;           /* length of SHA */
+    HASH_HashType  shaAlg = HASH_AlgNULL;   /* type of SHA Alg */
     unsigned char sig[2*MAX_ECKEY_LEN];
     SECItem signature, digest;
     PRBool keyvalid = PR_TRUE;
@@ -2375,206 +2765,193 @@ ecdsa_sigver_test(char *reqfn)
     ecpub.ecParams.arena = NULL;
     strcpy(curve, "nist");
     while (fgets(buf, sizeof buf, ecdsareq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* [X-ddd] */
-	if (buf[0] == '[') {
-	    const char *src;
-	    char *dst;
-	    SECItem *encodedparams;
-	    ECParams *ecparams;
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* [X-ddd] */
+        if (buf[0] == '[') {
+            const char *src;
+            char *dst;
+            SECItem *encodedparams;
+            ECParams *ecparams;
 
-	    src = &buf[1];
-	    dst = &curve[4];
-	    *dst++ = tolower(*src);
-	    src += 2;  /* skip the hyphen */
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst++ = *src++;
-	    *dst = '\0';
-	    encodedparams = getECParams(curve);
-	    if (encodedparams == NULL) {
-		goto loser;
-	    }
-	    if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
-		goto loser;
-	    }
-	    SECITEM_FreeItem(encodedparams, PR_TRUE);
-	    if (ecpub.ecParams.arena != NULL) {
-		PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
-	    }
-	    ecpub.ecParams.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-	    if (ecpub.ecParams.arena == NULL) {
-		goto loser;
-	    }
-	    if (EC_CopyParams(ecpub.ecParams.arena, &ecpub.ecParams, ecparams)
-		!= SECSuccess) {
-		goto loser;
-	    }
-	    PORT_FreeArena(ecparams->arena, PR_FALSE);
-	    flen = (ecpub.ecParams.fieldID.size + 7) >> 3;
-	    olen = ecpub.ecParams.order.len;
-	    if (2*olen > sizeof sig) {
-		goto loser;
-	    }
-	    ecpub.publicValue.type = siBuffer;
-	    ecpub.publicValue.data = NULL;
-	    ecpub.publicValue.len = 0;
-	    SECITEM_AllocItem(ecpub.ecParams.arena,
-			      &ecpub.publicValue, 2*flen+1);
-	    if (ecpub.publicValue.data == NULL) {
-		goto loser;
-	    }
-	    ecpub.publicValue.data[0] = EC_POINT_FORM_UNCOMPRESSED;
-	    fputs(buf, ecdsaresp);
-	    continue;
-	}
-	/* Msg = ... */
-	if (strncmp(buf, "Msg", 3) == 0) {
-	    i = 3;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
-		hex_to_byteval(&buf[i], &msg[j]);
-	    }
-	    msglen = j;
-	    if (SHA1_HashBuf(sha1, msg, msglen) != SECSuccess) {
-		goto loser;
-	    }
-	    fputs(buf, ecdsaresp);
+            src = &buf[1];
+            dst = &curve[4];
+            *dst++ = tolower(*src);
+            src += 2;  /* skip the hyphen */
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst++ = *src++;
+            *dst = '\0';
+            src++; /* skip the comma */
+            /* set the SHA Algorithm */
+            if (strncmp(src, "SHA-1", 5) == 0) {
+                shaAlg = HASH_AlgSHA1;
+            } else if (strncmp(src, "SHA-224", 7) == 0) {
+                shaAlg = HASH_AlgSHA224;
+            } else if (strncmp(src, "SHA-256", 7) == 0) {
+                shaAlg = HASH_AlgSHA256;
+            } else if (strncmp(src, "SHA-384", 7)== 0) {
+               shaAlg = HASH_AlgSHA384;
+            } else if (strncmp(src, "SHA-512", 7) == 0) {
+               shaAlg = HASH_AlgSHA512;
+            } else {
+               fprintf(ecdsaresp, "ERROR: Unable to find SHAAlg type");
+               goto loser;
+            }
+            encodedparams = getECParams(curve);
+            if (encodedparams == NULL) {
+                fprintf(stderr, "Unknown curve %s.", curve);
+                goto loser;
+            }
+            if (EC_DecodeParams(encodedparams, &ecparams) != SECSuccess) {
+                fprintf(stderr, "Curve %s not supported.\n", curve);
+                goto loser;
+            }
+            SECITEM_FreeItem(encodedparams, PR_TRUE);
+            if (ecpub.ecParams.arena != NULL) {
+                PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
+            }
+            ecpub.ecParams.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+            if (ecpub.ecParams.arena == NULL) {
+                goto loser;
+            }
+            if (EC_CopyParams(ecpub.ecParams.arena, &ecpub.ecParams, ecparams)
+                != SECSuccess) {
+                goto loser;
+            }
+            PORT_FreeArena(ecparams->arena, PR_FALSE);
+            flen = (ecpub.ecParams.fieldID.size + 7) >> 3;
+            olen = ecpub.ecParams.order.len;
+            if (2*olen > sizeof sig) {
+                goto loser;
+            }
+            ecpub.publicValue.type = siBuffer;
+            ecpub.publicValue.data = NULL;
+            ecpub.publicValue.len = 0;
+            SECITEM_AllocItem(ecpub.ecParams.arena,
+                              &ecpub.publicValue, 2*flen+1);
+            if (ecpub.publicValue.data == NULL) {
+                goto loser;
+            }
+            ecpub.publicValue.data[0] = EC_POINT_FORM_UNCOMPRESSED;
+            fputs(buf, ecdsaresp);
+            continue;
+        }
+        /* Msg = ... */
+        if (strncmp(buf, "Msg", 3) == 0) {
+            i = 3;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; isxdigit(buf[i]); i+=2,j++) {
+                hex_to_byteval(&buf[i], &msg[j]);
+            }
+            msglen = j;
+            shaLength = fips_hashLen(shaAlg);
+            if (fips_hashBuf(shaAlg,sha,msg,msglen) != SECSuccess) {
+                if (shaLength == 0) {
+                        fprintf(ecdsaresp, "ERROR: SHAAlg not defined.");
+                }
+                fprintf(ecdsaresp, "ERROR: Unable to generate SHA%x",
+                        shaLength == 160 ? 1 : shaLength);
+                goto loser;
+            }
+            fputs(buf, ecdsaresp);
 
-	    digest.type = siBuffer;
-	    digest.data = sha1;
-	    digest.len = sizeof sha1;
+            digest.type = siBuffer;
+            digest.data = sha;
+            digest.len = shaLength;
 
-	    continue;
-	}
-	/* Qx = ... */
-	if (strncmp(buf, "Qx", 2) == 0) {
-	    fputs(buf, ecdsaresp);
-	    i = 2;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    keyvalid = from_hex_str(&ecpub.publicValue.data[1], flen,
-				    &buf[i]);
-	    continue;
-	}
-	/* Qy = ... */
-	if (strncmp(buf, "Qy", 2) == 0) {
-	    fputs(buf, ecdsaresp);
-	    if (!keyvalid) {
-		continue;
-	    }
-	    i = 2;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    keyvalid = from_hex_str(&ecpub.publicValue.data[1+flen], flen,
-				    &buf[i]);
-	    if (!keyvalid) {
-		continue;
-	    }
-	    if (EC_ValidatePublicKey(&ecpub.ecParams, &ecpub.publicValue)
-		!= SECSuccess) {
-		if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
-		    keyvalid = PR_FALSE;
-		} else {
-		    goto loser;
-		}
-	    }
-	    continue;
-	}
-	/* R = ... */
-	if (buf[0] == 'R') {
-	    fputs(buf, ecdsaresp);
-	    i = 1;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    sigvalid = from_hex_str(sig, olen, &buf[i]);
-	    continue;
-	}
-	/* S = ... */
-	if (buf[0] == 'S') {
-	    fputs(buf, ecdsaresp);
-	    i = 1;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    if (sigvalid) {
-		sigvalid = from_hex_str(&sig[olen], olen, &buf[i]);
-	    }
-	    signature.type = siBuffer;
-	    signature.data = sig;
-	    signature.len = 2*olen;
+            continue;
+        }
+        /* Qx = ... */
+        if (strncmp(buf, "Qx", 2) == 0) {
+            fputs(buf, ecdsaresp);
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            keyvalid = from_hex_str(&ecpub.publicValue.data[1], flen,
+                                    &buf[i]);
+            continue;
+        }
+        /* Qy = ... */
+        if (strncmp(buf, "Qy", 2) == 0) {
+            fputs(buf, ecdsaresp);
+            if (!keyvalid) {
+                continue;
+            }
+            i = 2;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            keyvalid = from_hex_str(&ecpub.publicValue.data[1+flen], flen,
+                                    &buf[i]);
+            if (!keyvalid) {
+                continue;
+            }
+            if (EC_ValidatePublicKey(&ecpub.ecParams, &ecpub.publicValue)
+                != SECSuccess) {
+                if (PORT_GetError() == SEC_ERROR_BAD_KEY) {
+                    keyvalid = PR_FALSE;
+                } else {
+                    goto loser;
+                }
+            }
+            continue;
+        }
+        /* R = ... */
+        if (buf[0] == 'R') {
+            fputs(buf, ecdsaresp);
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            sigvalid = from_hex_str(sig, olen, &buf[i]);
+            continue;
+        }
+        /* S = ... */
+        if (buf[0] == 'S') {
+            fputs(buf, ecdsaresp);
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            if (sigvalid) {
+                sigvalid = from_hex_str(&sig[olen], olen, &buf[i]);
+            }
+            signature.type = siBuffer;
+            signature.data = sig;
+            signature.len = 2*olen;
 
-	    if (!keyvalid || !sigvalid) {
-		fputs("Result = F\n", ecdsaresp);
-	    } else if (ECDSA_VerifyDigest(&ecpub, &signature, &digest)
-		== SECSuccess) {
-		fputs("Result = P\n", ecdsaresp);
-	    } else {
-		fputs("Result = F\n", ecdsaresp);
-	    }
-	    continue;
-	}
+            if (!keyvalid || !sigvalid) {
+                fputs("Result = F\n", ecdsaresp);
+            } else if (ECDSA_VerifyDigest(&ecpub, &signature, &digest)
+                == SECSuccess) {
+                fputs("Result = P\n", ecdsaresp);
+            } else {
+                fputs("Result = F\n", ecdsaresp);
+            }
+            continue;
+        }
     }
 loser:
     if (ecpub.ecParams.arena != NULL) {
-	PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
+        PORT_FreeArena(ecpub.ecParams.arena, PR_FALSE);
     }
     fclose(ecdsareq);
 }
 #endif /* NSS_DISABLE_ECC */
-
-
-/*
- * Read a value from the test and allocate the result.
- */
-static unsigned char *
-alloc_value(char *buf, int *len)
-{
-    unsigned char * value;
-    int i, count;
-
-    if (strncmp(buf, "<None>", 6) == 0) {
-	*len = 0;
-	return NULL;
-    }
-
-    /* find the length of the number */
-    for (count = 0; isxdigit(buf[count]); count++);
-    *len = count/2;
-
-    if (*len == 0) {
-	return NULL;
-    }
-
-    value = PORT_Alloc(*len);
-    if (!value) {
-	*len = 0;
-	return NULL;
-    }
-	
-    for (i=0; i<*len; buf+=2 , i++) {
-	hex_to_byteval(buf, &value[i]);
-    }
-    
-
-    return value;
-}
 
 PRBool
 isblankline(char *b)
 {
    while (isspace(*b)) b++;
    if ((*b == '\n') || (*b == 0)) {
-	return PR_TRUE;
+        return PR_TRUE;
    }
    return PR_FALSE;
 }
@@ -2599,7 +2976,9 @@ drbg(char *reqfn)
     FILE *rngresp;      /* output stream to the RESPONSE file */
     
     unsigned int i, j;
+#ifdef HANDLE_PREDICTION_RESISTANCE
     PRBool predictionResistance = PR_FALSE;
+#endif
     unsigned char *nonce =  NULL;
     int nonceLen = 0;
     unsigned char *personalizationString =  NULL;
@@ -2608,9 +2987,9 @@ drbg(char *reqfn)
     int additionalInputLen = 0;
     unsigned char *entropyInput = NULL;
     int entropyInputLen = 0;
-    unsigned char predictedreturn_bytes[SHA256_LENGTH];
-    unsigned char return_bytes[SHA256_LENGTH];
-    int return_bytes_len = SHA256_LENGTH;
+    unsigned char *predictedreturn_bytes = NULL;
+    unsigned char *return_bytes = NULL;
+    int return_bytes_len = 0;
     enum { NONE, INSTANTIATE, GENERATE, RESEED, RESULT } command =
     NONE;
     PRBool genResult = PR_FALSE;
@@ -2621,23 +3000,23 @@ drbg(char *reqfn)
     while (fgets(buf, sizeof buf, rngreq) != NULL) {
        switch (command) {
             case INSTANTIATE:
-		if (debug) {
-		    fputs("# PRNGTEST_Instantiate(",rngresp);
-		    to_hex_str(buf2,entropyInput, entropyInputLen);
-		    fputs(buf2,rngresp);
-		    fprintf(rngresp,",%d,",entropyInputLen);
-		    to_hex_str(buf2,nonce, nonceLen);
-		    fputs(buf2,rngresp);
-		    fprintf(rngresp,",%d,",nonceLen);
-		    to_hex_str(buf2,personalizationString, 
-					personalizationStringLen);
-		    fputs(buf2,rngresp);
-		    fprintf(rngresp,",%d)\n", personalizationStringLen);
-		}
+                if (debug) {
+                    fputs("# PRNGTEST_Instantiate(",rngresp);
+                    to_hex_str(buf2,entropyInput, entropyInputLen);
+                    fputs(buf2,rngresp);
+                    fprintf(rngresp,",%d,",entropyInputLen);
+                    to_hex_str(buf2,nonce, nonceLen);
+                    fputs(buf2,rngresp);
+                    fprintf(rngresp,",%d,",nonceLen);
+                    to_hex_str(buf2,personalizationString, 
+                                        personalizationStringLen);
+                    fputs(buf2,rngresp);
+                    fprintf(rngresp,",%d)\n", personalizationStringLen);
+                }
                 rv = PRNGTEST_Instantiate(entropyInput, entropyInputLen,
                                           nonce, nonceLen,
                                           personalizationString, 
-				          personalizationStringLen);
+                                          personalizationStringLen);
                 if (rv != SECSuccess) {
                     goto loser;
                 }
@@ -2646,17 +3025,17 @@ drbg(char *reqfn)
             case GENERATE:
             case RESULT:
                 memset(return_bytes, 0, return_bytes_len);
-		if (debug) {
-		    fputs("# PRNGTEST_Generate(returnbytes",rngresp);
-		    fprintf(rngresp,",%d,", return_bytes_len);
-		    to_hex_str(buf2,additionalInput, additionalInputLen);
-		    fputs(buf2,rngresp);
-		    fprintf(rngresp,",%d)\n",additionalInputLen);
-		}
+                if (debug) {
+                    fputs("# PRNGTEST_Generate(returnbytes",rngresp);
+                    fprintf(rngresp,",%d,", return_bytes_len);
+                    to_hex_str(buf2,additionalInput, additionalInputLen);
+                    fputs(buf2,rngresp);
+                    fprintf(rngresp,",%d)\n",additionalInputLen);
+                }
                 rv = PRNGTEST_Generate((PRUint8 *) return_bytes, 
-					return_bytes_len,
+                                        return_bytes_len,
                                        (PRUint8 *) additionalInput, 
-					additionalInputLen);
+                                        additionalInputLen);
                 if (rv != SECSuccess) {
                     goto loser;
                 }
@@ -2666,9 +3045,9 @@ drbg(char *reqfn)
                     to_hex_str(buf2, return_bytes, return_bytes_len);
                     fputs(buf2, rngresp);
                     fputc('\n', rngresp);
-		    if (debug) {
-			fputs("# PRNGTEST_Uninstantiate()\n",rngresp);
-		    }
+                    if (debug) {
+                        fputs("# PRNGTEST_Uninstantiate()\n",rngresp);
+                    }
                     rv = PRNGTEST_Uninstantiate();
                     if (rv != SECSuccess) {
                         goto loser;
@@ -2678,23 +3057,23 @@ drbg(char *reqfn)
                     to_hex_str(buf2, return_bytes, return_bytes_len);
                     fputs(buf2, rngresp);
                     fputc('\n', rngresp);
-		}
+                }
                     
                 memset(additionalInput, 0, additionalInputLen);
                 break;
                     
             case RESEED:
                 if (entropyInput || additionalInput) {
-		    if (debug) {
-			fputs("# PRNGTEST_Reseed(",rngresp);
-			fprintf(rngresp,",%d,", return_bytes_len);
-			to_hex_str(buf2,entropyInput, entropyInputLen);
-			fputs(buf2,rngresp);
-			fprintf(rngresp,",%d,", entropyInputLen);
-			to_hex_str(buf2,additionalInput, additionalInputLen);
-			fputs(buf2,rngresp);
-			fprintf(rngresp,",%d)\n",additionalInputLen);
-		    }	
+                    if (debug) {
+                        fputs("# PRNGTEST_Reseed(",rngresp);
+                        fprintf(rngresp,",%d,", return_bytes_len);
+                        to_hex_str(buf2,entropyInput, entropyInputLen);
+                        fputs(buf2,rngresp);
+                        fprintf(rngresp,",%d,", entropyInputLen);
+                        to_hex_str(buf2,additionalInput, additionalInputLen);
+                        fputs(buf2,rngresp);
+                        fprintf(rngresp,",%d)\n",additionalInputLen);
+                    }        
                     rv = PRNGTEST_Reseed(entropyInput, entropyInputLen,
                                              additionalInput, additionalInputLen);
                     if (rv != SECSuccess) {
@@ -2723,6 +3102,7 @@ drbg(char *reqfn)
         }
         
         if (strncmp(buf, "[PredictionResistance", 21)  == 0) {
+#ifdef HANDLE_PREDICTION_RESISTANCE
             i = 21;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
@@ -2732,7 +3112,30 @@ drbg(char *reqfn)
             } else {
                 predictionResistance = PR_TRUE;
             }
+#endif
             
+            fputs(buf, rngresp);
+            continue;
+        }
+
+        if (strncmp(buf, "[ReturnedBitsLen", 16)  == 0) {
+            if (return_bytes) {
+                PORT_ZFree(return_bytes, return_bytes_len);
+                return_bytes = NULL;
+            }
+	    if (predictedreturn_bytes) {
+                PORT_ZFree(predictedreturn_bytes, return_bytes_len);
+                predictedreturn_bytes = NULL;
+            }
+            return_bytes_len = 0;
+            if (sscanf(buf, "[ReturnedBitsLen = %d]", &return_bytes_len) != 1) {
+                goto loser;
+            }
+            return_bytes_len = return_bytes_len/8;
+            if (return_bytes_len > 0) {
+                return_bytes = PORT_Alloc(return_bytes_len);
+                predictedreturn_bytes = PORT_Alloc(return_bytes_len);
+            }
             fputs(buf, rngresp);
             continue;
         }
@@ -2746,7 +3149,7 @@ drbg(char *reqfn)
             if (sscanf(buf, "[EntropyInputLen = %d]", &entropyInputLen) != 1) {
                 goto loser;
             }
-	    entropyInputLen = entropyInputLen/8;
+            entropyInputLen = entropyInputLen/8;
             if (entropyInputLen > 0) {
                 entropyInput = PORT_Alloc(entropyInputLen);
             }
@@ -2764,7 +3167,7 @@ drbg(char *reqfn)
             if (sscanf(buf, "[NonceLen = %d]", &nonceLen) != 1) {
                 goto loser;
             }
-	    nonceLen = nonceLen/8;
+            nonceLen = nonceLen/8;
             if (nonceLen > 0) {
                 nonce = PORT_Alloc(nonceLen);
             }               
@@ -2782,7 +3185,7 @@ drbg(char *reqfn)
             if (sscanf(buf, "[PersonalizationStringLen = %d]", &personalizationStringLen) != 1) {
                 goto loser;
             }
-	    personalizationStringLen = personalizationStringLen / 8;
+            personalizationStringLen = personalizationStringLen / 8;
             if (personalizationStringLen > 0) {
                 personalizationString = PORT_Alloc(personalizationStringLen);
             }
@@ -2801,7 +3204,7 @@ drbg(char *reqfn)
             if (sscanf(buf, "[AdditionalInputLen = %d]", &additionalInputLen) != 1) {
                 goto loser;
             }
-	    additionalInputLen = additionalInputLen/8;
+            additionalInputLen = additionalInputLen/8;
             if (additionalInputLen > 0) {
                 additionalInput = PORT_Alloc(additionalInputLen);
             }
@@ -2938,7 +3341,7 @@ drbg(char *reqfn)
 
             if (memcmp(return_bytes, 
                        predictedreturn_bytes, return_bytes_len) != 0) {
-		if (debug) {
+                if (debug) {
                 fprintf(rngresp, "# Generate failed:\n");
                 fputs(  "#   predicted=", rngresp);
                 to_hex_str(buf, predictedreturn_bytes, 
@@ -2948,7 +3351,7 @@ drbg(char *reqfn)
                 fputs(buf2, rngresp);
                 fputc('\n', rngresp);
 
-		} else {
+                } else {
                 fprintf(stderr, "Generate failed:\n");
                 fputs(  "   predicted=", stderr);
                 to_hex_str(buf, predictedreturn_bytes, 
@@ -2957,9 +3360,9 @@ drbg(char *reqfn)
                 fputs("\n   actual  = ", stderr);
                 fputs(buf2, stderr);
                 fputc('\n', stderr);
-		}
+                }
             }
-            memset(predictedreturn_bytes, 0 , sizeof predictedreturn_bytes);
+            memset(predictedreturn_bytes, 0 , return_bytes_len);
 
             continue;
         }
@@ -2990,7 +3393,7 @@ rng_vst(char *reqfn)
     unsigned int i, j;
     unsigned char Q[DSA1_SUBPRIME_LEN];
     PRBool hasQ = PR_FALSE;
-    unsigned int b;  /* 160 <= b <= 512, b is a multiple of 8 */
+    unsigned int b = 0;  /* 160 <= b <= 512, b is a multiple of 8 */
     unsigned char XKey[512/8];
     unsigned char XSeed[512/8];
     unsigned char GENX[DSA1_SIGNATURE_LEN];
@@ -3000,92 +3403,92 @@ rng_vst(char *reqfn)
     rngreq = fopen(reqfn, "r");
     rngresp = stdout;
     while (fgets(buf, sizeof buf, rngreq) != NULL) {
-	/* a comment or blank line */
-	if (buf[0] == '#' || buf[0] == '\n') {
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* [Xchange - SHA1] */
-	if (buf[0] == '[') {
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* Q = ... */
-	if (buf[0] == 'Q') {
-	    i = 1;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<sizeof Q; i+=2,j++) {
-		hex_to_byteval(&buf[i], &Q[j]);
-	    }
-	    fputs(buf, rngresp);
-	    hasQ = PR_TRUE;
-	    continue;
-	}
-	/* "COUNT = x" begins a new data set */
-	if (strncmp(buf, "COUNT", 5) == 0) {
-	    /* zeroize the variables for the test with this data set */
-	    b = 0;
-	    memset(XKey, 0, sizeof XKey);
-	    memset(XSeed, 0, sizeof XSeed);
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* b = ... */
-	if (buf[0] == 'b') {
-	    i = 1;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    b = atoi(&buf[i]);
-	    if (b < 160 || b > 512 || b%8 != 0) {
-		goto loser;
-	    }
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* XKey = ... */
-	if (strncmp(buf, "XKey", 4) == 0) {
-	    i = 4;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<b/8; i+=2,j++) {
-		hex_to_byteval(&buf[i], &XKey[j]);
-	    }
-	    fputs(buf, rngresp);
-	    continue;
-	}
-	/* XSeed = ... */
-	if (strncmp(buf, "XSeed", 5) == 0) {
-	    i = 5;
-	    while (isspace(buf[i]) || buf[i] == '=') {
-		i++;
-	    }
-	    for (j=0; j<b/8; i+=2,j++) {
-		hex_to_byteval(&buf[i], &XSeed[j]);
-	    }
-	    fputs(buf, rngresp);
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, rngresp);
+            continue;
+        }
+        /* [Xchange - SHA1] */
+        if (buf[0] == '[') {
+            fputs(buf, rngresp);
+            continue;
+        }
+        /* Q = ... */
+        if (buf[0] == 'Q') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<sizeof Q; i+=2,j++) {
+                hex_to_byteval(&buf[i], &Q[j]);
+            }
+            fputs(buf, rngresp);
+            hasQ = PR_TRUE;
+            continue;
+        }
+        /* "COUNT = x" begins a new data set */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            /* zeroize the variables for the test with this data set */
+            b = 0;
+            memset(XKey, 0, sizeof XKey);
+            memset(XSeed, 0, sizeof XSeed);
+            fputs(buf, rngresp);
+            continue;
+        }
+        /* b = ... */
+        if (buf[0] == 'b') {
+            i = 1;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            b = atoi(&buf[i]);
+            if (b < 160 || b > 512 || b%8 != 0) {
+                goto loser;
+            }
+            fputs(buf, rngresp);
+            continue;
+        }
+        /* XKey = ... */
+        if (strncmp(buf, "XKey", 4) == 0) {
+            i = 4;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<b/8; i+=2,j++) {
+                hex_to_byteval(&buf[i], &XKey[j]);
+            }
+            fputs(buf, rngresp);
+            continue;
+        }
+        /* XSeed = ... */
+        if (strncmp(buf, "XSeed", 5) == 0) {
+            i = 5;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<b/8; i+=2,j++) {
+                hex_to_byteval(&buf[i], &XSeed[j]);
+            }
+            fputs(buf, rngresp);
 
-	    rv = FIPS186Change_GenerateX(XKey, XSeed, GENX);
-	    if (rv != SECSuccess) {
-		goto loser;
-	    }
-	    fputs("X = ", rngresp);
-	    if (hasQ) {
-		rv = FIPS186Change_ReduceModQForDSA(GENX, Q, DSAX);
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-		to_hex_str(buf, DSAX, sizeof DSAX);
-	    } else {
-		to_hex_str(buf, GENX, sizeof GENX);
-	    }
-	    fputs(buf, rngresp);
-	    fputc('\n', rngresp);
-	    continue;
-	}
+            rv = FIPS186Change_GenerateX(XKey, XSeed, GENX);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+            fputs("X = ", rngresp);
+            if (hasQ) {
+                rv = FIPS186Change_ReduceModQForDSA(GENX, Q, DSAX);
+                if (rv != SECSuccess) {
+                    goto loser;
+                }
+                to_hex_str(buf, DSAX, sizeof DSAX);
+            } else {
+                to_hex_str(buf, GENX, sizeof GENX);
+            }
+            fputs(buf, rngresp);
+            fputc('\n', rngresp);
+            continue;
+        }
     }
 loser:
     fclose(rngreq);
@@ -3113,7 +3516,7 @@ rng_mct(char *reqfn)
     unsigned int i, j;
     unsigned char Q[DSA1_SUBPRIME_LEN];
     PRBool hasQ = PR_FALSE;
-    unsigned int b;  /* 160 <= b <= 512, b is a multiple of 8 */
+    unsigned int b = 0;  /* 160 <= b <= 512, b is a multiple of 8 */
     unsigned char XKey[512/8];
     unsigned char XSeed[512/8];
     unsigned char GENX[2*SHA1_LENGTH];
@@ -3218,121 +3621,6 @@ loser:
 }
 
 /*
- * HASH_ functions are available to full NSS apps and internally inside
- * freebl, but not exported to users of freebl. Create short stubs to
- * replace the functionality for fipstest.
- */
-SECStatus
-fips_hashBuf(HASH_HashType type, unsigned char *hashBuf, 
-					unsigned char *msg, int len)
-{
-    SECStatus rv = SECFailure;
-
-    switch (type) {
-    case HASH_AlgSHA1:
-	rv = SHA1_HashBuf(hashBuf, msg, len);
-	break;
-    case HASH_AlgSHA224:
-	rv = SHA224_HashBuf(hashBuf, msg, len);
-	break;
-    case HASH_AlgSHA256:
-	rv = SHA256_HashBuf(hashBuf, msg, len);
-	break;
-    case HASH_AlgSHA384:
-	rv = SHA384_HashBuf(hashBuf, msg, len);
-	break;
-    case HASH_AlgSHA512:
-	rv = SHA512_HashBuf(hashBuf, msg, len);
-	break;
-    default:
-	break;
-    }
-    return rv;
-}
-
-int
-fips_hashLen(HASH_HashType type)
-{
-    int len = 0;
-
-    switch (type) {
-    case HASH_AlgSHA1:
-	len = SHA1_LENGTH;
-	break;
-    case HASH_AlgSHA224:
-	len = SHA224_LENGTH;
-	break;
-    case HASH_AlgSHA256:
-	len = SHA256_LENGTH;
-	break;
-    case HASH_AlgSHA384:
-	len = SHA384_LENGTH;
-	break;
-    case HASH_AlgSHA512:
-	len = SHA512_LENGTH;
-	break;
-    default:
-	break;
-    }
-    return len;
-}
-
-SECOidTag
-fips_hashOid(HASH_HashType type)
-{
-    SECOidTag oid = SEC_OID_UNKNOWN;
-
-    switch (type) {
-    case HASH_AlgSHA1:
-	oid = SEC_OID_SHA1;
-	break;
-    case HASH_AlgSHA224:
-	oid = SEC_OID_SHA224;
-	break;
-    case HASH_AlgSHA256:
-	oid = SEC_OID_SHA256;
-	break;
-    case HASH_AlgSHA384:
-	oid = SEC_OID_SHA384;
-	break;
-    case HASH_AlgSHA512:
-	oid = SEC_OID_SHA512;
-	break;
-    default:
-	break;
-    }
-    return oid;
-}
-
-HASH_HashType
-sha_get_hashType(int hashbits)
-{
-    HASH_HashType hashType = HASH_AlgNULL;
-
-    switch (hashbits) {
-    case 1:
-    case (SHA1_LENGTH*PR_BITS_PER_BYTE):
-	hashType = HASH_AlgSHA1;
-	break;
-    case (SHA224_LENGTH*PR_BITS_PER_BYTE):
-	hashType = HASH_AlgSHA224;
-	break;
-    case (SHA256_LENGTH*PR_BITS_PER_BYTE):
-	hashType = HASH_AlgSHA256;
-	break;
-    case (SHA384_LENGTH*PR_BITS_PER_BYTE):
-	hashType = HASH_AlgSHA384;
-	break;
-    case (SHA512_LENGTH*PR_BITS_PER_BYTE):
-	hashType = HASH_AlgSHA512;
-	break;
-    default:
-	break;
-    }
-    return hashType;
-}
-
-/*
  * Calculate the SHA Message Digest 
  *
  * MD = Message digest 
@@ -3416,10 +3704,10 @@ SECStatus sha_mct_test(unsigned int MDLen, unsigned char *seed, FILE *resp)
 void sha_test(char *reqfn) 
 {
     unsigned int i, j;
-    unsigned int MDlen;   /* the length of the Message Digest in Bytes  */
-    unsigned int msgLen;  /* the length of the input Message in Bytes */
+    unsigned int MDlen = 0;   /* the length of the Message Digest in Bytes  */
+    unsigned int msgLen = 0;  /* the length of the input Message in Bytes */
     unsigned char *msg = NULL; /* holds the message to digest.*/
-    size_t bufSize = 25608; /*MAX buffer size */
+    size_t bufSize = 256*128; /*MAX buffer size */
     char *buf = NULL;      /* holds one line from the input REQUEST file.*/
     unsigned char seed[HASH_LENGTH_MAX];   /* max size of seed 64 bytes */
     unsigned char MD[HASH_LENGTH_MAX];     /* message digest */
@@ -3594,18 +3882,18 @@ void hmac_test(char *reqfn)
     unsigned int i, j;
     size_t bufSize =      400;    /* MAX buffer size */
     char *buf = NULL;  /* holds one line from the input REQUEST file.*/
-    unsigned int keyLen;          /* Key Length */  
+    unsigned int keyLen = 0;      /* Key Length */  
     unsigned char key[200];       /* key MAX size = 184 */
     unsigned int msgLen = 128;    /* the length of the input  */
                                   /*  Message is always 128 Bytes */
     unsigned char *msg = NULL;    /* holds the message to digest.*/
-    unsigned int HMACLen;         /* the length of the HMAC Bytes  */
-    unsigned int TLen;            /* the length of the requested */
+    unsigned int HMACLen = 0;     /* the length of the HMAC Bytes  */
+    unsigned int TLen = 0;        /* the length of the requested */
                                   /* truncated HMAC Bytes */
     unsigned char HMAC[HASH_LENGTH_MAX];  /* computed HMAC */
     unsigned char expectedHMAC[HASH_LENGTH_MAX]; /* for .fax files that have */ 
                                                  /* supplied known answer */
-    HASH_HashType hash_alg;       /* HMAC type */
+    HASH_HashType hash_alg = HASH_AlgNULL;       /* HMAC type */
     
 
     FILE *req = NULL;  /* input stream from the REQUEST file */
@@ -3726,7 +4014,7 @@ void hmac_test(char *reqfn)
                          msg, msgLen, hash_alg) != SECSuccess) {
                goto loser;
            }
-           fputs("MAC = ", resp);
+           fputs("Mac = ", resp);
            to_hex_str(buf, HMAC, TLen);
            fputs(buf, resp);
            fputc('\n', resp);
@@ -3791,18 +4079,18 @@ dsa_keypair_test(char *reqfn)
             }
 
             if (sscanf(buf, "[mod = L=%d, N=%d]", &L, &N) != 2) {
-		use_dsa1 = PR_TRUE;
+                use_dsa1 = PR_TRUE;
                 if (sscanf(buf, "[mod = %d]", &L) != 1) {
                     goto loser;
-		}
+                }
             }
             fputs(buf, dsaresp);
             fputc('\n', dsaresp);
 
-	    if (use_dsa1) {
+            if (use_dsa1) {
                 /*************************************************************
                  * PQG_ParamGenSeedLen doesn't take a key size, it takes an 
-		 * index that points to a valid key size.
+                 * index that points to a valid key size.
                  */
                 keySizeIndex = PQG_PBITS_TO_INDEX(L);
                 if(keySizeIndex == -1 || L<512 || L>1024) {
@@ -3816,13 +4104,13 @@ dsa_keypair_test(char *reqfn)
                 if (PQG_ParamGenSeedLen(keySizeIndex, PQG_TEST_SEED_BYTES,
                     &pqg, &vfy) != SECSuccess) {
                     fprintf(dsaresp, 
-				"ERROR: Unable to generate PQG parameters");
+                                "ERROR: Unable to generate PQG parameters");
                     goto loser;
                 }
-	    } else {
+            } else {
                 if (PQG_ParamGenV2(L, N, N, &pqg, &vfy) != SECSuccess) {
                     fprintf(dsaresp, 
-				"ERROR: Unable to generate PQG parameters");
+                                "ERROR: Unable to generate PQG parameters");
                     goto loser;
                 }
             }
@@ -3871,7 +4159,7 @@ loser:
  */
 typedef enum {
     FIPS186_1,/* Generate/Verify P,Q & G  according to FIPS 186-1 */
-    A_1_1_2, /* Generate Probable P & Q */
+    A_1_2_1, /* Generate Provable P & Q */
     A_1_1_3, /* Verify Probable P & Q */
     A_1_2_2, /* Verify Provable P & Q */
     A_2_1,   /* Generate Unverifiable G */
@@ -3901,7 +4189,7 @@ dsa_pqgver_test(char *reqfn)
     unsigned int i, j;
     PQGParams pqg;
     PQGVerify vfy;
-    unsigned int pghSize;        /* size for p, g, and h */
+    unsigned int pghSize = 0;    /* size for p, g, and h */
     dsa_pqg_type type = FIPS186_1;
 
     dsareq = fopen(reqfn, "r");
@@ -3919,37 +4207,37 @@ dsa_pqgver_test(char *reqfn)
         /* [A.xxxxx ] */
         if (buf[0] == '['  && buf[1] == 'A') {
 
-	    if (strncmp(&buf[1],"A.1.1.3",7) == 0) {
-		type = A_1_1_3;
-	    } else if (strncmp(&buf[1],"A.2.2",5) == 0) {
-		type = A_2_2;
-	    } else if (strncmp(&buf[1],"A.2.4",5) == 0) {
-		type = A_2_4;
-	    } else if (strncmp(&buf[1],"A.1.2.2",7) == 0) {
-		type = A_1_2_2;
-	    /* validate our output from PQGGEN */
-	    } else if (strncmp(&buf[1],"A.1.1.2",7) == 0) {
-		type = A_2_4; /* validate PQ and G together */
-	    } else {
-		fprintf(stderr, "Unknown dsa ver test %s\n", &buf[1]);
-		exit(1);
-	    }
-		
+            if (strncmp(&buf[1],"A.1.1.3",7) == 0) {
+                type = A_1_1_3;
+            } else if (strncmp(&buf[1],"A.2.2",5) == 0) {
+                type = A_2_2;
+            } else if (strncmp(&buf[1],"A.2.4",5) == 0) {
+                type = A_2_4;
+            } else if (strncmp(&buf[1],"A.1.2.2",7) == 0) {
+                type = A_1_2_2;
+            /* validate our output from PQGGEN */
+            } else if (strncmp(&buf[1],"A.1.1.2",7) == 0) {
+                type = A_2_4; /* validate PQ and G together */
+            } else {
+                fprintf(stderr, "Unknown dsa ver test %s\n", &buf[1]);
+                exit(1);
+            }
+                
             fputs(buf, dsaresp);
             continue;
         }
-	
+        
 
         /* [Mod = x] */
         if (buf[0] == '[') {
 
-	    if (type == FIPS186_1) {
+            if (type == FIPS186_1) {
                 N=160;
                 if (sscanf(buf, "[mod = %d]", &L) != 1) {
                     goto loser;
-		}
-	    } else if (sscanf(buf, "[mod = L=%d, N=%d", &L, &N) != 2) {
-		goto loser;
+                }
+            } else if (sscanf(buf, "[mod = L=%d, N=%d", &L, &N) != 2) {
+                goto loser;
             }
 
             if (pqg.prime.data) { /* P */
@@ -3973,17 +4261,17 @@ dsa_pqgver_test(char *reqfn)
             /*calculate the size of p, g, and h then allocate items  */
             pghSize = L/8;
 
-	    pqg.base.data = vfy.h.data = NULL;
-	    vfy.seed.len = pqg.base.len = vfy.h.len = 0;
+            pqg.base.data = vfy.h.data = NULL;
+            vfy.seed.len = pqg.base.len = vfy.h.len = 0;
             SECITEM_AllocItem(NULL, &pqg.prime, pghSize);
             SECITEM_AllocItem(NULL, &vfy.seed, pghSize*3);
-	    if (type == A_2_2) {
-		SECITEM_AllocItem(NULL, &vfy.h, pghSize);
-	    	vfy.h.len = pghSize;
-	    } else if (type == A_2_4) {
-		SECITEM_AllocItem(NULL, &vfy.h, 1);
-	    	vfy.h.len = 1;
-	    }
+            if (type == A_2_2) {
+                SECITEM_AllocItem(NULL, &vfy.h, pghSize);
+                    vfy.h.len = pghSize;
+            } else if (type == A_2_4) {
+                SECITEM_AllocItem(NULL, &vfy.h, 1);
+                    vfy.h.len = 1;
+            }
             pqg.prime.len = pghSize;
             /* q is always N bits */
             SECITEM_AllocItem(NULL, &pqg.subPrime, N/8);
@@ -4042,24 +4330,24 @@ dsa_pqgver_test(char *reqfn)
         if (strncmp(buf, "Seed", 4) == 0) {
             i = 4;
         } else if (strncmp(buf, "domain_parameter_seed", 21) == 0) {
-	    i = 21;
-	} else if (strncmp(buf,"firstseed",9) == 0) {
-	    i = 9;
-	} else {
-	    i = 0;
-	}
-	if (i) {
+            i = 21;
+        } else if (strncmp(buf,"firstseed",9) == 0) {
+            i = 9;
+        } else {
+            i = 0;
+        }
+        if (i) {
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
             for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &vfy.seed.data[j]);
             }
-	    vfy.seed.len = j;
+            vfy.seed.len = j;
 
             fputs(buf, dsaresp);
-	    if (type == A_2_4) {
-		SECStatus result;
+            if (type == A_2_4) {
+                SECStatus result;
 
                 /* Verify the Parameters */
                 SECStatus rv = PQG_VerifyParams(&pqg, &vfy, &result);
@@ -4071,49 +4359,49 @@ dsa_pqgver_test(char *reqfn)
                 } else {
                     fprintf(dsaresp, "Result = F\n");
                 }
-	    }
+            }
             continue;
         }
-	if ((strncmp(buf,"pseed",5) == 0) ||
-	    (strncmp(buf,"qseed",5) == 0))
-	{
-	    i = 5;
+        if ((strncmp(buf,"pseed",5) == 0) ||
+            (strncmp(buf,"qseed",5) == 0))
+        {
+            i = 5;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
             for (j=vfy.seed.len; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &vfy.seed.data[j]);
             }
-	    vfy.seed.len = j;
+            vfy.seed.len = j;
             fputs(buf, dsaresp);
 
             continue;
-	}
+        }
         if (strncmp(buf, "index", 4) == 0) {
-	    i=5;
+            i=5;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
-	    hex_to_byteval(&buf[i], &vfy.h.data[0]);
-	    vfy.h.len = 1;
+            hex_to_byteval(&buf[i], &vfy.h.data[0]);
+            vfy.h.len = 1;
             fputs(buf, dsaresp);
-	}
+        }
 
         /* c = ...  or counter=*/
         if (buf[0] == 'c')  {
-	    if (strncmp(buf,"counter", 7) == 0) {
+            if (strncmp(buf,"counter", 7) == 0) {
                 if (sscanf(buf, "counter = %u", &vfy.counter) != 1) {
                     goto loser;
-		}
-	    } else {
+                }
+            } else {
                 if (sscanf(buf, "c = %u", &vfy.counter) != 1) {
                     goto loser;
-		}
+                }
             }
 
             fputs(buf, dsaresp);
             if (type == A_1_1_3) {
-		SECStatus result;
+                SECStatus result;
                 /* only verify P and Q, we have everything now. do it */
                 SECStatus rv = PQG_VerifyParams(&pqg, &vfy, &result);
                 if (rv != SECSuccess) {
@@ -4128,17 +4416,17 @@ dsa_pqgver_test(char *reqfn)
             }
             continue;
         }
-	if (strncmp(buf,"pgen_counter", 12) == 0) {
+        if (strncmp(buf,"pgen_counter", 12) == 0) {
             if (sscanf(buf, "pgen_counter = %u", &vfy.counter) != 1) {
                 goto loser;
-            }	
+            }        
             fputs(buf, dsaresp);
-	    continue;
-	}
-	if (strncmp(buf,"qgen_counter", 12) == 0) {
+            continue;
+        }
+        if (strncmp(buf,"qgen_counter", 12) == 0) {
             fputs(buf, dsaresp);
             if (type == A_1_2_2) {
-		SECStatus result;
+                SECStatus result;
                 /* only verify P and Q, we have everything now. do it */
                 SECStatus rv = PQG_VerifyParams(&pqg, &vfy, &result);
                 if (rv != SECSuccess) {
@@ -4151,8 +4439,8 @@ dsa_pqgver_test(char *reqfn)
                 }
                 fprintf(dsaresp, "\n");
             } 
-	    continue;
-	}
+            continue;
+        }
         /* H = ... */
         if (buf[0] == 'H') {
             SECStatus rv, result = SECFailure;
@@ -4164,18 +4452,18 @@ dsa_pqgver_test(char *reqfn)
             for (j=0; isxdigit(buf[i]); i+=2,j++) {
                 hex_to_byteval(&buf[i], &vfy.h.data[j]);
             }
-	    vfy.h.len = j;
+            vfy.h.len = j;
             fputs(buf, dsaresp);
 
-	    /* this should be a byte value. Remove the leading zeros. If
-	     * it doesn't reduce to a byte, PQG_VerifyParams will catch it 
-	    if (type == A_2_2) {
-		data_save = vfy.h.data;
-		while(vfy.h.data[0] && (vfy.h.len > 1)) {
-			vfy.h.data++;
-			vfy.h.len--;
-		}
-	    } */
+            /* this should be a byte value. Remove the leading zeros. If
+             * it doesn't reduce to a byte, PQG_VerifyParams will catch it 
+            if (type == A_2_2) {
+                data_save = vfy.h.data;
+                while(vfy.h.data[0] && (vfy.h.len > 1)) {
+                        vfy.h.data++;
+                        vfy.h.len--;
+                }
+            } */
 
             /* Verify the Parameters */
             rv = PQG_VerifyParams(&pqg, &vfy, &result);
@@ -4232,9 +4520,10 @@ dsa_pqggen_test(char *reqfn)
     int L;
     int i;
     unsigned int j;
+    int output_g = 1;
     PQGParams *pqg = NULL;
     PQGVerify *vfy = NULL;
-    unsigned int keySizeIndex;
+    unsigned int keySizeIndex = 0;
     dsa_pqg_type type = FIPS186_1;
 
     dsareq = fopen(reqfn, "r");
@@ -4248,21 +4537,23 @@ dsa_pqggen_test(char *reqfn)
 
         /* [A.xxxxx ] */
         if (buf[0] == '['  && buf[1] == 'A') {
-	    if (strncmp(&buf[1],"A.1.1.2",7) == 0) {
-		type = A_1_1_2;
-	    } else if (strncmp(&buf[1],"A.2.1",5) == 0) {
-		fprintf(stderr, "NSS only Generates G with P&Q\n");
+            if (strncmp(&buf[1],"A.1.1.2",7) == 0) {
+                fprintf(stderr, "NSS does Generate Probablistic Primes\n");
 		exit(1);
-	    } else if (strncmp(&buf[1],"A.2.3",5) == 0) {
-		fprintf(stderr, "NSS only Generates G with P&Q\n");
-		exit(1);
-	    } else if (strncmp(&buf[1],"A.1.2.1",7) == 0) {
-		fprintf(stderr, "NSS does not support Shawe-Taylor Primes\n");
-		exit(1);
-	    } else {
-		fprintf(stderr, "Unknown dsa ver test %s\n", &buf[1]);
-		exit(1);
-	    }
+            } else if (strncmp(&buf[1],"A.2.1",5) == 0) {
+                type = A_1_2_1;
+		output_g = 1;
+                exit(1);
+            } else if (strncmp(&buf[1],"A.2.3",5) == 0) {
+                fprintf(stderr, "NSS only Generates G with P&Q\n");
+                exit(1);
+            } else if (strncmp(&buf[1],"A.1.2.1",7) == 0) {
+                type = A_1_2_1;
+		output_g = 0;
+            } else {
+                fprintf(stderr, "Unknown dsa pqggen test %s\n", &buf[1]);
+                exit(1);
+            }
             fputs(buf, dsaresp);
             continue;
         }
@@ -4270,19 +4561,19 @@ dsa_pqggen_test(char *reqfn)
         /* [Mod = ... ] */
         if (buf[0] == '[') {
 
-	    if (type == FIPS186_1) {
+            if (type == FIPS186_1) {
                 N=160;
                 if (sscanf(buf, "[mod = %d]", &L) != 1) {
                     goto loser;
-		}
-	    } else if (sscanf(buf, "[mod = L=%d, N=%d", &L, &N) != 2) {
-		goto loser;
+                }
+            } else if (sscanf(buf, "[mod = L=%d, N=%d", &L, &N) != 2) {
+                goto loser;
             }
 
             fputs(buf, dsaresp);
             fputc('\n', dsaresp);
 
-	    if (type == FIPS186_1) {
+            if (type == FIPS186_1) {
                 /************************************************************
                  * PQG_ParamGenSeedLen doesn't take a key size, it takes an
                  * index that points to a valid key size.
@@ -4299,7 +4590,11 @@ dsa_pqggen_test(char *reqfn)
         }
         /* N = ... */
         if (buf[0] == 'N') {
-            if (sscanf(buf, "N = %d", &count) != 1) {
+	    if (strncmp(buf, "Num", 3) == 0) {
+                if (sscanf(buf, "Num = %d", &count) != 1) {
+                    goto loser;
+                }
+            } else if (sscanf(buf, "N = %d", &count) != 1) {
                 goto loser;
             }
             for (i = 0; i < count; i++) {
@@ -4320,24 +4615,38 @@ dsa_pqggen_test(char *reqfn)
                 fprintf(dsaresp, "P = %s\n", buf);
                 to_hex_str(buf, pqg->subPrime.data, pqg->subPrime.len);
                 fprintf(dsaresp, "Q = %s\n", buf);
-                to_hex_str(buf, pqg->base.data, pqg->base.len);
-                fprintf(dsaresp, "G = %s\n", buf);
-		if (type == FIPS186_1) {
+		if (output_g) {
+                    to_hex_str(buf, pqg->base.data, pqg->base.len);
+                    fprintf(dsaresp, "G = %s\n", buf);
+		}
+                if (type == FIPS186_1) {
                     to_hex_str(buf, vfy->seed.data, vfy->seed.len);
                     fprintf(dsaresp, "Seed = %s\n", buf);
                     fprintf(dsaresp, "c = %d\n", vfy->counter);
                     to_hex_str(buf, vfy->h.data, vfy->h.len);
                     fputs("H = ", dsaresp);
                     for (j=vfy->h.len; j< pqg->prime.len; j++) {
-                	fprintf(dsaresp, "00");
+                        fprintf(dsaresp, "00");
                     }
                     fprintf(dsaresp, "%s\n", buf);
-		} else {
-                    fprintf(dsaresp, "counter = %d\n", vfy->counter);
-		    fprintf(dsaresp, "index = %02x\n", vfy->h.data[0]);
-                    to_hex_str(buf, vfy->seed.data, vfy->seed.len);
-                    fprintf(dsaresp, "domain_parameter_seed = %s\n", buf);
-		}
+                } else {
+                    unsigned int seedlen = vfy->seed.len/2;
+		    unsigned int pgen_counter = vfy->counter >> 16;
+		    unsigned int qgen_counter = vfy->counter & 0xffff;
+                    /*fprintf(dsaresp, "index = %02x\n", vfy->h.data[0]); */
+                    to_hex_str(buf, vfy->seed.data, seedlen);
+                    fprintf(dsaresp, "pseed = %s\n", buf);
+                    to_hex_str(buf, vfy->seed.data+seedlen, seedlen);
+                    fprintf(dsaresp, "qseed = %s\n", buf);
+                    fprintf(dsaresp, "pgen_counter = %d\n", pgen_counter);
+                    fprintf(dsaresp, "qgen_counter = %d\n", qgen_counter);
+		    if (output_g) {
+                        to_hex_str(buf, vfy->seed.data, vfy->seed.len);
+                        fprintf(dsaresp, "domain_parameter_seed = %s\n", buf);
+		        fprintf(dsaresp, "index = %02x\n", vfy->h.data[0]);
+		    }
+		
+                }
                 fputc('\n', dsaresp);
                 if(pqg!=NULL) {
                     PQG_DestroyParams(pqg);
@@ -4423,7 +4732,7 @@ dsa_siggen_test(char *reqfn)
             if (sscanf(buf, "[mod = L=%d,  N=%d, SHA-%d]", &L, & N,
                 &hashNum) != 3) {
                 use_dsa1 = PR_TRUE;
-		hashNum = 1;
+                hashNum = 1;
                 if (sscanf(buf, "[mod = %d]", &modulus) != 1) {
                     goto loser;
                 }
@@ -4470,11 +4779,11 @@ dsa_siggen_test(char *reqfn)
                 goto loser;
             }
  
-	    hashType = sha_get_hashType(hashNum);
-	    if (hashType == HASH_AlgNULL) {
-		fprintf(dsaresp, "ERROR: invalid hash (SHA-%d)",hashNum);
-		goto loser;
-	    }
+            hashType = sha_get_hashType(hashNum);
+            if (hashType == HASH_AlgNULL) {
+                fprintf(dsaresp, "ERROR: invalid hash (SHA-%d)",hashNum);
+                goto loser;
+            }
             continue;
         }
 
@@ -4483,10 +4792,10 @@ dsa_siggen_test(char *reqfn)
             unsigned char msg[128]; /* MAX msg 128 */
             unsigned int len = 0;
 
-	    if (hashType == HASH_AlgNULL) {
-		fprintf(dsaresp, "ERROR: Hash Alg not set");
-		goto loser;
-	    }
+            if (hashType == HASH_AlgNULL) {
+                fprintf(dsaresp, "ERROR: Hash Alg not set");
+                goto loser;
+            }
 
             memset(hashBuf, 0, sizeof hashBuf);
             memset(sig,  0, sizeof sig);
@@ -4500,7 +4809,7 @@ dsa_siggen_test(char *reqfn)
             }
             if (fips_hashBuf(hashType, hashBuf, msg, j) != SECSuccess) {
                  fprintf(dsaresp, "ERROR: Unable to generate SHA% digest", 
-			 hashNum);
+                         hashNum);
                  goto loser;
             }
 
@@ -4595,8 +4904,8 @@ dsa_sigver_test(char *reqfn)
 
             if (sscanf(buf, "[mod = L=%d,  N=%d, SHA-%d]", &L, & N,
                 &hashNum) != 3) {
-		N=160;
-		hashNum = 1;
+                N=160;
+                hashNum = 1;
                 if (sscanf(buf, "[mod = %d]", &L) != 1) {
                     goto loser;
                 }
@@ -4628,11 +4937,11 @@ dsa_sigver_test(char *reqfn)
             SECITEM_AllocItem(NULL, &pubkey.params.subPrime, N/8);
             pubkey.params.subPrime.len = N/8;
 
-	    hashType = sha_get_hashType(hashNum);
-	    if (hashType == HASH_AlgNULL) {
-		fprintf(dsaresp, "ERROR: invalid hash (SHA-%d)",hashNum);
-		goto loser;
-	    }
+            hashType = sha_get_hashType(hashNum);
+            if (hashType == HASH_AlgNULL) {
+                fprintf(dsaresp, "ERROR: invalid hash (SHA-%d)",hashNum);
+                goto loser;
+            }
 
             continue;
         }
@@ -4686,10 +4995,10 @@ dsa_sigver_test(char *reqfn)
             unsigned char msg[128]; /* MAX msg 128 */
             memset(hashBuf, 0, sizeof hashBuf);
 
-	    if (hashType == HASH_AlgNULL) {
-		fprintf(dsaresp, "ERROR: Hash Alg not set");
-		goto loser;
-	    }
+            if (hashType == HASH_AlgNULL) {
+                fprintf(dsaresp, "ERROR: Hash Alg not set");
+                goto loser;
+            }
 
             i = 3;
             while (isspace(buf[i]) || buf[i] == '=') {
@@ -4700,7 +5009,7 @@ dsa_sigver_test(char *reqfn)
             }
             if (fips_hashBuf(hashType, hashBuf, msg, j) != SECSuccess) {
                 fprintf(dsaresp, "ERROR: Unable to generate SHA-%d digest",
-								hashNum);
+                                                                hashNum);
                 goto loser;
             }
 
@@ -4740,17 +5049,17 @@ dsa_sigver_test(char *reqfn)
 
         /* S = ... */
         if (buf[0] == 'S') {
-	    if (hashType == HASH_AlgNULL) {
-		fprintf(dsaresp, "ERROR: Hash Alg not set");
-		goto loser;
-	    }
+            if (hashType == HASH_AlgNULL) {
+                fprintf(dsaresp, "ERROR: Hash Alg not set");
+                goto loser;
+            }
 
             i = 1;
             while (isspace(buf[i]) || buf[i] == '=') {
                 i++;
             }
             for (j=pubkey.params.subPrime.len; 
-				j< pubkey.params.subPrime.len*2; i+=2,j++) {
+                                j< pubkey.params.subPrime.len*2; i+=2,j++) {
                 hex_to_byteval(&buf[i], &sig[j]);
             }
             fputs(buf, dsaresp);
@@ -4767,7 +5076,7 @@ dsa_sigver_test(char *reqfn)
             } else {
                 fprintf(dsaresp, "Result = F\n");
             }
-	    fprintf(dsaresp, "\n");
+            fprintf(dsaresp, "\n");
             continue;
         }
     }
@@ -4785,6 +5094,118 @@ loser:
     if (pubkey.publicValue.data) {    /* Y */
         SECITEM_ZfreeItem(&pubkey.publicValue, PR_FALSE);
     }
+}
+
+static void 
+pad(unsigned char *buf, int pad_len, unsigned char *src, int src_len) 
+{
+    int offset = 0;
+    /* this shouldn't happen, fail right away rather than produce bad output */
+    if (pad_len < src_len) {
+	fprintf(stderr, "data bigger than expected! %d > %d\n", src_len, pad_len);
+	exit(1);
+    }
+
+    offset = pad_len - src_len;
+    memset(buf, 0, offset);
+    memcpy(buf+offset, src, src_len);
+    return;
+}
+
+
+/*
+ * Perform the DSA Key Pair Generation Test.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+rsa_keypair_test(char *reqfn)
+{
+    char buf[800];       /* holds one line from the input REQUEST file
+                         * or to the output RESPONSE file.
+                         * 800 to hold (384 public key (x2 for HEX) + 1'\n'
+                         */
+    unsigned char buf2[400];   /* can't need more then 1/2 buf length */
+    FILE *rsareq;     /* input stream from the REQUEST file */
+    FILE *rsaresp;    /* output stream to the RESPONSE file */
+    int count;
+    int i;
+    int keySize;   /* key size in bits*/
+    int len = 0;       /* key size in bytes */
+    int len2 = 0;      /* key size in bytes/2 (prime size) */
+    SECItem e;
+    unsigned char default_e[] = { 0x1, 0x0, 0x1 };
+
+    e.data = default_e;
+    e.len = sizeof (default_e);
+
+    rsareq = fopen(reqfn, "r");
+    rsaresp = stdout;
+    while (fgets(buf, sizeof buf, rsareq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, rsaresp);
+            continue;
+        }
+
+        /* [Mod = x] */
+        if (buf[0] == '[') {
+	    if (buf[1] == 'm') {
+        	if (sscanf(buf, "[mod = %d]", &keySize) != 1) {
+                    goto loser;
+        	}
+		len = keySize/8;
+		len2 = keySize/16;
+	    }
+            fputs(buf, rsaresp);
+            continue;
+        }
+        /* N = ...*/
+        if (buf[0] == 'N') {
+
+            if (sscanf(buf, "N = %d", &count) != 1) {
+                goto loser;
+            }
+
+            /* Generate a DSA key, and output the key pair for N times */
+            for (i = 0; i < count; i++) {
+                RSAPrivateKey *rsakey = NULL;
+                if ((rsakey = RSA_NewKey(keySize, &e)) == NULL) {
+                    fprintf(rsaresp, "ERROR: Unable to generate RSA key");
+                    goto loser;
+                }
+	        pad(buf2,len,rsakey->publicExponent.data,
+					 rsakey->publicExponent.len);
+                to_hex_str(buf, buf2, len);
+                fprintf(rsaresp, "e = %s\n", buf);
+	        pad(buf2,len2,rsakey->prime1.data,
+					 rsakey->prime1.len);
+                to_hex_str(buf, buf2, len2);
+                fprintf(rsaresp, "p = %s\n", buf);
+	        pad(buf2,len2,rsakey->prime2.data,
+					 rsakey->prime2.len);
+                to_hex_str(buf, buf2, len2);
+                fprintf(rsaresp, "q = %s\n", buf);
+	        pad(buf2,len,rsakey->modulus.data,
+					 rsakey->modulus.len);
+                to_hex_str(buf, buf2, len);
+                fprintf(rsaresp, "n = %s\n", buf);
+	        pad(buf2,len,rsakey->privateExponent.data,
+					 rsakey->privateExponent.len);
+                to_hex_str(buf, buf2, len);
+                fprintf(rsaresp, "d = %s\n", buf);
+                fprintf(rsaresp, "\n");
+                PORT_FreeArena(rsakey->arena, PR_TRUE);
+                rsakey = NULL;
+            }
+            continue;
+        }
+
+    }
+loser:
+    fclose(rsareq);
 }
 
 /*
@@ -4945,16 +5366,16 @@ rsa_siggen_test(char *reqfn)
             for (j=0; isxdigit(buf[i]) && j < sizeof(msg); i+=2,j++) {
                 hex_to_byteval(&buf[i], &msg[j]);
             }
-	    shaLength = fips_hashLen(shaAlg);
-	    if (fips_hashBuf(shaAlg,sha,msg,j) != SECSuccess) {
-		if (shaLength == 0) {
-            	    fprintf(rsaresp, "ERROR: SHAAlg not defined.");
-		}
+            shaLength = fips_hashLen(shaAlg);
+            if (fips_hashBuf(shaAlg,sha,msg,j) != SECSuccess) {
+                if (shaLength == 0) {
+                        fprintf(rsaresp, "ERROR: SHAAlg not defined.");
+                }
                 fprintf(rsaresp, "ERROR: Unable to generate SHA%x",
-			shaLength == 160 ? 1 : shaLength);
+                        shaLength == 160 ? 1 : shaLength);
                 goto loser;
             }
-	    shaOid = fips_hashOid(shaAlg);
+            shaOid = fips_hashOid(shaAlg);
 
             /* Perform RSA signature with the RSA private key. */
             rv = RSA_HashSign( shaOid,
@@ -5169,13 +5590,13 @@ rsa_sigver_test(char *reqfn)
                 hex_to_byteval(&buf[i], &msg[j]);
             }
 
-	    shaLength = fips_hashLen(shaAlg);
-	    if (fips_hashBuf(shaAlg,sha,msg,j) != SECSuccess) {
-		if (shaLength == 0) {
-            	    fprintf(rsaresp, "ERROR: SHAAlg not defined.");
-		}
+            shaLength = fips_hashLen(shaAlg);
+            if (fips_hashBuf(shaAlg,sha,msg,j) != SECSuccess) {
+                if (shaLength == 0) {
+                        fprintf(rsaresp, "ERROR: SHAAlg not defined.");
+                }
                 fprintf(rsaresp, "ERROR: Unable to generate SHA%x",
-			shaLength == 160 ? 1 : shaLength);
+                        shaLength == 160 ? 1 : shaLength);
                 goto loser;
             }
 
@@ -5208,6 +5629,8 @@ rsa_sigver_test(char *reqfn)
             signatureLength = j;
             fputs(buf, rsaresp);
 
+            shaOid = fips_hashOid(shaAlg);
+
             /* Perform RSA verification with the RSA public key. */
             rv = RSA_HashCheckSign( shaOid,
                                     rsa_public_key,
@@ -5231,6 +5654,302 @@ loser:
     if (rsaBlapiPublicKey.publicExponent.data) { /* e */
         SECITEM_ZfreeItem(&rsaBlapiPublicKey.publicExponent, PR_FALSE);
     }
+}
+
+void
+tls(char *reqfn)
+{
+    char buf[256];      /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "XSeed = <128 hex digits>\n".
+                         */
+    unsigned char *pms = NULL;
+    int pms_len;
+    unsigned char *master_secret = NULL;
+    unsigned char *key_block = NULL;
+    int key_block_len;
+    unsigned char serverHello_random[SSL3_RANDOM_LENGTH];
+    unsigned char clientHello_random[SSL3_RANDOM_LENGTH];
+    unsigned char server_random[SSL3_RANDOM_LENGTH];
+    unsigned char client_random[SSL3_RANDOM_LENGTH];
+    FILE *tlsreq = NULL; /* input stream from the REQUEST file */
+    FILE *tlsresp;       /* output stream to the RESPONSE file */
+    unsigned int i, j;
+    CK_SLOT_ID slotList[10];
+    CK_SLOT_ID slotID;
+    CK_ULONG slotListCount = sizeof(slotList)/sizeof(slotList[0]);
+    CK_ULONG count;
+    static const CK_C_INITIALIZE_ARGS pk11args= {
+	NULL, NULL, NULL, NULL, CKF_LIBRARY_CANT_CREATE_OS_THREADS , 
+	(void *)"flags=readOnly,noCertDB,noModDB", NULL };
+    static CK_OBJECT_CLASS ck_secret = CKO_SECRET_KEY;
+    static CK_KEY_TYPE ck_generic = CKK_GENERIC_SECRET;
+    static CK_BBOOL ck_true = CK_TRUE;
+    static CK_ULONG one = 1;
+    CK_ATTRIBUTE create_template[] = {
+	{ CKA_VALUE,        NULL,        0                  },
+	{ CKA_CLASS,        &ck_secret,  sizeof(ck_secret)  },
+	{ CKA_KEY_TYPE,     &ck_generic, sizeof(ck_generic) },
+	{ CKA_DERIVE,       &ck_true,    sizeof (ck_true)   },
+    };
+    CK_ULONG create_template_count = 
+			sizeof(create_template)/sizeof(create_template[0]);
+    CK_ATTRIBUTE derive_template[] = {
+	{ CKA_CLASS,        &ck_secret,  sizeof(ck_secret)  },
+	{ CKA_KEY_TYPE,     &ck_generic, sizeof(ck_generic) },
+	{ CKA_DERIVE,       &ck_true,    sizeof(ck_true)    },
+	{ CKA_VALUE_LEN,    &one,        sizeof(one)        },
+    };
+    CK_ULONG derive_template_count = 
+			sizeof(derive_template)/sizeof(derive_template[0]);
+    CK_ATTRIBUTE master_template = 
+	{ CKA_VALUE, NULL, 0 };
+    CK_ATTRIBUTE kb1_template = 
+	{ CKA_VALUE, NULL, 0 };
+    CK_ATTRIBUTE kb2_template = 
+	{ CKA_VALUE, NULL, 0 };
+    
+
+    CK_MECHANISM master_mech = { CKM_TLS_MASTER_KEY_DERIVE , NULL, 0 };
+    CK_MECHANISM key_block_mech = { CKM_TLS_KEY_AND_MAC_DERIVE , NULL, 0};
+    CK_SSL3_MASTER_KEY_DERIVE_PARAMS master_params;
+    CK_SSL3_KEY_MAT_PARAMS key_block_params;
+    CK_SSL3_KEY_MAT_OUT key_material;
+    CK_RV crv;
+
+    /* set up PKCS #11 parameters */
+    master_params.pVersion = NULL;
+    master_params.RandomInfo.pClientRandom = clientHello_random;
+    master_params.RandomInfo.ulClientRandomLen = sizeof(clientHello_random);
+    master_params.RandomInfo.pServerRandom = serverHello_random;
+    master_params.RandomInfo.ulServerRandomLen = sizeof(serverHello_random);
+    master_mech.pParameter = (void *) &master_params;
+    master_mech.ulParameterLen = sizeof(master_params);
+    key_block_params.ulMacSizeInBits = 0;
+    key_block_params.ulKeySizeInBits = 0;
+    key_block_params.ulIVSizeInBits = 0;
+    key_block_params.bIsExport = PR_FALSE; /* ignored anyway for TLS mech */
+    key_block_params.RandomInfo.pClientRandom = client_random;
+    key_block_params.RandomInfo.ulClientRandomLen = sizeof(client_random);
+    key_block_params.RandomInfo.pServerRandom = server_random;
+    key_block_params.RandomInfo.ulServerRandomLen = sizeof(server_random);
+    key_block_params.pReturnedKeyMaterial = &key_material;
+    key_block_mech.pParameter = (void *) &key_block_params;
+    key_block_mech.ulParameterLen = sizeof(key_block_params);
+    
+
+    crv = NSC_Initialize((CK_VOID_PTR)&pk11args);
+    if (crv != CKR_OK) {
+	fprintf(stderr,"NSC_Initialize failed crv=0x%x\n",(unsigned int)crv);
+	goto loser;
+    }
+    count = slotListCount;
+    crv = NSC_GetSlotList(PR_TRUE,slotList, &count);
+    if (crv != CKR_OK) {
+	fprintf(stderr,"NSC_GetSlotList failed crv=0x%x\n",(unsigned int)crv);
+	goto loser;
+    }
+    if ((count > slotListCount) || count < 1) {
+	fprintf(stderr,
+"NSC_GetSlotList returned too many or too few slots: %d slots max=%d min=1\n",
+		(int) count, (int) slotListCount);
+	goto loser;
+    }
+    slotID = slotList[0];
+    tlsreq = fopen(reqfn, "r");
+    tlsresp = stdout;
+    while (fgets(buf, sizeof buf, tlsreq) != NULL) {
+        /* a comment or blank line */
+        if (buf[0] == '#' || buf[0] == '\n') {
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* [Xchange - SHA1] */
+        if (buf[0] == '[') {
+            if (strncmp(buf, "[TLS", 4)  == 0) {
+		if (buf[7] == '0') {
+    		    master_mech.mechanism = CKM_TLS_MASTER_KEY_DERIVE;
+    		    key_block_mech.mechanism = CKM_TLS_KEY_AND_MAC_DERIVE;
+		} else if (buf[7] == '2') {
+    		    master_mech.mechanism = 
+					CKM_NSS_TLS_MASTER_KEY_DERIVE_SHA256;
+    		    key_block_mech.mechanism = 
+					CKM_NSS_TLS_KEY_AND_MAC_DERIVE_SHA256;
+		} else {
+		    fprintf(stderr, "Unknown TLS type %x\n", 
+						(unsigned int)buf[0]);
+		    goto loser;
+		} 
+	    }
+            if (strncmp(buf, "[pre-master", 11)  == 0) {
+                if (sscanf(buf, "[pre-master secret length = %d]", 
+				&pms_len) != 1) {
+                    goto loser;
+                }
+                pms_len = pms_len/8;
+		pms = malloc(pms_len);
+	 	master_secret = malloc(pms_len);
+		create_template[0].pValue = pms;
+		create_template[0].ulValueLen = pms_len;
+		master_template.pValue = master_secret;
+		master_template.ulValueLen = pms_len;
+            } 
+            if (strncmp(buf, "[key", 4)  == 0) {
+                if (sscanf(buf, "[key block length = %d]", &key_block_len) != 1) {
+                    goto loser;
+                }
+    		key_block_params.ulKeySizeInBits = 8;
+    		key_block_params.ulIVSizeInBits = key_block_len/2-8;
+                key_block_len=key_block_len/8;
+		key_block = malloc(key_block_len);
+		kb1_template.pValue = &key_block[0];
+		kb1_template.ulValueLen = 1;
+		kb2_template.pValue = &key_block[1];
+		kb2_template.ulValueLen = 1;
+		key_material.pIVClient = &key_block[2];
+		key_material.pIVServer = &key_block[2+key_block_len/2-1];
+            } 
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* "COUNT = x" begins a new data set */
+        if (strncmp(buf, "COUNT", 5) == 0) {
+            /* zeroize the variables for the test with this data set */
+            memset(pms, 0, pms_len);
+            memset(master_secret, 0, pms_len);
+            memset(key_block, 0, key_block_len);
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* pre_master_secret = ... */
+        if (strncmp(buf, "pre_master_secret", 17) == 0) {
+            i = 17;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<pms_len; i+=2,j++) {
+                hex_to_byteval(&buf[i], &pms[j]);
+            }
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* serverHello_random = ... */
+        if (strncmp(buf, "serverHello_random", 18) == 0) {
+            i = 18;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<SSL3_RANDOM_LENGTH; i+=2,j++) {
+                hex_to_byteval(&buf[i], &serverHello_random[j]);
+            }
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* clientHello_random = ... */
+        if (strncmp(buf, "clientHello_random", 18) == 0) {
+            i = 18;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<SSL3_RANDOM_LENGTH; i+=2,j++) {
+                hex_to_byteval(&buf[i], &clientHello_random[j]);
+            }
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* server_random = ... */
+        if (strncmp(buf, "server_random", 13) == 0) {
+            i = 13;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<SSL3_RANDOM_LENGTH; i+=2,j++) {
+                hex_to_byteval(&buf[i], &server_random[j]);
+            }
+            fputs(buf, tlsresp);
+            continue;
+        }
+        /* client_random = ... */
+        if (strncmp(buf, "client_random", 13) == 0) {
+	    CK_SESSION_HANDLE session;
+ 	    CK_OBJECT_HANDLE pms_handle;
+ 	    CK_OBJECT_HANDLE master_handle;
+ 	    CK_OBJECT_HANDLE fake_handle;
+            i = 13;
+            while (isspace(buf[i]) || buf[i] == '=') {
+                i++;
+            }
+            for (j=0; j<SSL3_RANDOM_LENGTH; i+=2,j++) {
+                hex_to_byteval(&buf[i], &client_random[j]);
+            }
+            fputs(buf, tlsresp);
+	    crv = NSC_OpenSession(slotID, 0, NULL, NULL, &session);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,"NSC_OpenSession failed crv=0x%x\n",
+							(unsigned int)crv);
+		goto loser;
+	    }
+	    crv = NSC_CreateObject(session, create_template, 
+					create_template_count, &pms_handle);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,"NSC_CreateObject failed crv=0x%x\n",
+							(unsigned int)crv);
+		goto loser;
+	    }
+	    crv = NSC_DeriveKey(session, &master_mech, pms_handle, 
+		derive_template, derive_template_count-1, &master_handle);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,"NSC_DeriveKey(master) failed crv=0x%x\n",
+							(unsigned int) crv);
+		goto loser;
+	    }
+	    crv = NSC_GetAttributeValue(session, master_handle, 
+							&master_template, 1);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,"NSC_GetAttribute failed crv=0x%x\n",
+							(unsigned int) crv);
+		goto loser;
+	    }
+            fputs("master_secret = ", tlsresp);
+            to_hex_str(buf, master_secret, pms_len);
+            fputs(buf, tlsresp);
+            fputc('\n', tlsresp);
+	    crv = NSC_DeriveKey(session, &key_block_mech, master_handle,
+			derive_template, derive_template_count, &fake_handle);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,
+			"NSC_DeriveKey(keyblock) failed crv=0x%x\n",
+							(unsigned int) crv);
+		goto loser;
+	    }
+	    crv = NSC_GetAttributeValue(session, key_material.hClientKey, 
+							&kb1_template, 1);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,"NSC_GetAttribute failed crv=0x%x\n",
+							(unsigned int) crv);
+		goto loser;
+	    }
+	    crv = NSC_GetAttributeValue(session, key_material.hServerKey, 
+							&kb2_template, 1);
+	    if (crv != CKR_OK) {
+		fprintf(stderr,"NSC_GetAttribute failed crv=0x%x\n",
+							(unsigned int) crv);
+		goto loser;
+	    }
+            fputs("key_block = ", tlsresp);
+            to_hex_str(buf, key_block, key_block_len);
+            fputs(buf, tlsresp);
+            fputc('\n', tlsresp);
+	    crv = NSC_CloseSession(session);
+            continue;
+        }
+    }
+loser:
+    NSC_Finalize(NULL);
+    if (pms) free(pms);
+    if (master_secret) free(master_secret);
+    if (key_block) free(key_block);
+    if (tlsreq) fclose(tlsreq);
 }
 
 int main(int argc, char **argv)
@@ -5265,23 +5984,31 @@ int main(int argc, char **argv)
     /*   AES     */
     /*************/
     } else if (strcmp(argv[1], "aes") == 0) {
-	/* argv[2]=kat|mmt|mct argv[3]=ecb|cbc argv[4]=<test name>.req */
-	if (       strcmp(argv[2], "kat") == 0) {
-	    /* Known Answer Test (KAT) */
-	    aes_kat_mmt(argv[4]);
-	} else if (strcmp(argv[2], "mmt") == 0) {
-	    /* Multi-block Message Test (MMT) */
-	    aes_kat_mmt(argv[4]);
-	} else if (strcmp(argv[2], "mct") == 0) {
-	    /* Monte Carlo Test (MCT) */
-	    if (       strcmp(argv[3], "ecb") == 0) {
-		/* ECB mode */
-		aes_ecb_mct(argv[4]);
-	    } else if (strcmp(argv[3], "cbc") == 0) {
-		/* CBC mode */
-		aes_cbc_mct(argv[4]);
-	    }
-	}
+        /* argv[2]=kat|mmt|mct argv[3]=ecb|cbc argv[4]=<test name>.req */
+        if (       strcmp(argv[2], "kat") == 0) {
+            /* Known Answer Test (KAT) */
+            aes_kat_mmt(argv[4]);
+        } else if (strcmp(argv[2], "mmt") == 0) {
+            /* Multi-block Message Test (MMT) */
+            aes_kat_mmt(argv[4]);
+        } else if (strcmp(argv[2], "gcm") == 0) {
+            if (       strcmp(argv[3], "decrypt") == 0) {
+                aes_gcm(argv[4],0);
+            } else if (strcmp(argv[3], "encrypt_extiv") == 0) {
+                aes_gcm(argv[4],1);
+            } else if (strcmp(argv[3], "encrypt_intiv") == 0) {
+                aes_gcm(argv[4],2);
+            }
+        } else if (strcmp(argv[2], "mct") == 0) {
+            /* Monte Carlo Test (MCT) */
+            if (       strcmp(argv[3], "ecb") == 0) {
+                /* ECB mode */
+                aes_ecb_mct(argv[4]);
+            } else if (strcmp(argv[3], "cbc") == 0) {
+                /* CBC mode */
+                aes_cbc_mct(argv[4]);
+            }
+        }
     /*************/
     /*   SHA     */
     /*************/
@@ -5299,7 +6026,10 @@ int main(int argc, char **argv)
         } else if (strcmp(argv[2], "sigver") == 0) {
             /* Signature Verification Test */
             rsa_sigver_test(argv[3]);
-        }
+        } else if (strcmp(argv[2], "keypair") == 0) {
+            /* Key Pair Generation Test */
+            rsa_keypair_test(argv[3]);
+	}
     /*************/
     /*   HMAC    */
     /*************/

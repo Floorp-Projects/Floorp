@@ -543,7 +543,7 @@ CERT_CreateEncodedOCSPSuccessResponse(
 done:
     if (privKey)
         SECKEY_DestroyPrivateKey(privKey);
-    if (br->responseSignature.signature.data)
+    if (br && br->responseSignature.signature.data)
         SECITEM_FreeItem(&br->responseSignature.signature, PR_FALSE);
     PORT_FreeArena(tmpArena, PR_FALSE);
 

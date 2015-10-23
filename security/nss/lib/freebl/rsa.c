@@ -248,7 +248,7 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     PLArenaPool *arena = NULL;
     /* Require key size to be a multiple of 16 bits. */
     if (!publicExponent || keySizeInBits % 16 != 0 ||
-	    BAD_RSA_KEY_SIZE(keySizeInBits/8, publicExponent->len)) {
+	    BAD_RSA_KEY_SIZE((unsigned int)keySizeInBits/8, publicExponent->len)) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }

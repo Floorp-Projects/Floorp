@@ -56,8 +56,7 @@ char *testdir = NULL;
 #define TIMEMARK(seconds) \
     time1 = PR_SecondsToInterval(seconds); \
     { \
-        PRInt64 tmp, L100; \
-        LL_I2L(L100, 100); \
+        PRInt64 tmp; \
         if (time2 == 0) { \
             time2 = 1; \
         } \
@@ -313,7 +312,6 @@ serialize_key(SECItem *it, int ni, PRFileDesc *file)
 {
     unsigned char len[4];
     int i;
-    SECStatus status;
     NSSBase64Encoder *cx;
     cx = NSSBase64Encoder_Create(output_ascii, file);
     for (i=0; i<ni; i++, it++) {
@@ -321,11 +319,11 @@ serialize_key(SECItem *it, int ni, PRFileDesc *file)
 	len[1] = (it->len >> 16) & 0xff;
 	len[2] = (it->len >>  8) & 0xff;
 	len[3] = (it->len	 & 0xff);
-	status = NSSBase64Encoder_Update(cx, len, 4);
-	status = NSSBase64Encoder_Update(cx, it->data, it->len);
+	NSSBase64Encoder_Update(cx, len, 4);
+	NSSBase64Encoder_Update(cx, it->data, it->len);
     }
-    status = NSSBase64Encoder_Destroy(cx, PR_FALSE);
-    status = PR_Write(file, "\r\n", 2);
+    NSSBase64Encoder_Destroy(cx, PR_FALSE);
+    PR_Write(file, "\r\n", 2);
 }
 
 void
@@ -1436,7 +1434,7 @@ bltest_aes_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     int minorMode;
     int i;
     int keylen   = aesp->key.buf.len;
-    int blocklen = AES_BLOCK_SIZE; 
+    unsigned int blocklen = AES_BLOCK_SIZE;
     PRIntervalTime time1, time2;
     unsigned char *params;
     int len;
@@ -1634,6 +1632,8 @@ bltest_rsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
         case bltestRSA_OAEP:
             cipherInfo->cipher.pubkeyCipher = encrypt ? rsa_encryptOAEP
                                                       : rsa_decryptOAEP;
+            break;
+        default:
             break;
     }
     return SECSuccess;
@@ -2569,8 +2569,6 @@ printPR_smpString(const char *sformat, char *reportStr,
         fprintf(stdout, sformat, reportStr);
         PR_smprintf_free(reportStr);
     } else {
-        int prnRes;
-        LL_L2I(prnRes, rNum);
         fprintf(stdout, nformat, rNum);
     }
 }
@@ -2791,8 +2789,8 @@ mode_str_to_hash_alg(const SECItem *modeStr)
         case bltestSHA256: return HASH_AlgSHA256;
         case bltestSHA384: return HASH_AlgSHA384;
         case bltestSHA512: return HASH_AlgSHA512;
+        default: return HASH_AlgNULL;
     }
-    return HASH_AlgNULL;
 }
 
 void
@@ -3004,7 +3002,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
     bltestIO pt, ct;
     bltestCipherMode mode;
     bltestParams *params;
-    int i, j, nummodes, numtests;
+    unsigned int i, j, nummodes, numtests;
     char *modestr;
     char filename[256];
     PLArenaPool *arena;
@@ -3457,13 +3455,12 @@ static secuCommandFlag bltest_options[] =
 
 int main(int argc, char **argv)
 {
-    char *infileName, *outfileName, *keyfileName, *ivfileName;
     SECStatus rv = SECFailure;
 
-    double              totalTime;
+    double              totalTime = 0.0;
     PRIntervalTime      time1, time2;
     PRFileDesc          *outfile = NULL;
-    bltestCipherInfo    *cipherInfoListHead, *cipherInfo;
+    bltestCipherInfo    *cipherInfoListHead, *cipherInfo = NULL;
     bltestIOMode        ioMode;
     int                 bufsize, exponent, curThrdNum;
 #ifndef NSS_DISABLE_ECC
@@ -3511,8 +3508,6 @@ int main(int argc, char **argv)
 
     cipherInfo = PORT_ZNew(bltestCipherInfo);
     cipherInfoListHead = cipherInfo;
-    /* set some defaults */
-    infileName = outfileName = keyfileName = ivfileName = NULL;
 
     /* Check the number of commands entered on the command line. */
     commandsEntered = 0;
@@ -3557,7 +3552,7 @@ int main(int argc, char **argv)
 	unsigned int keySize = 1024;
 	unsigned long exponent = 65537;
 	int rounds = 1;
-	int ret;
+	int ret = -1;
 	
 	if (bltest.options[opt_KeySize].activated) {
 	    keySize = PORT_Atoi(bltest.options[opt_KeySize].arg);
@@ -3712,8 +3707,10 @@ int main(int argc, char **argv)
         fprintf(stderr, "%s: You must specify a signature file with -f.\n",
                 progName);
 
-      print_usage:
-        PORT_Free(cipherInfo);
+print_usage:
+        if (cipherInfo) {
+            PORT_Free(cipherInfo);
+        }
         Usage();
     }
 

@@ -325,7 +325,7 @@ pkix_Error_Hashcode(
 
         /* XXX Unimplemented */
         /* XXX Need to make hashcodes equal when two errors are equal */
-        *pResult = (PKIX_UInt32)object;
+        *pResult = (PKIX_UInt32)((char *)object - (char *)NULL);
 
         PKIX_RETURN(ERROR);
 }

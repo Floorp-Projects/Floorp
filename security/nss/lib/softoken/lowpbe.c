@@ -516,7 +516,7 @@ nsspkcs5_PKCS12PBE(const SECHashObject *hashObject,
 	}
 
 	PORT_Memcpy(Ai, iterBuf, hashLength);
-	for (Bidx = 0; Bidx < B.len; Bidx += hashLength) {
+	for (Bidx = 0; Bidx < (int)B.len; Bidx += hashLength) {
 	    PORT_Memcpy(B.data+Bidx,iterBuf,NSSPBE_MIN(B.len-Bidx,hashLength));
 	}
 

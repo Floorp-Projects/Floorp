@@ -494,7 +494,7 @@ makePrimefromPrimesShaweTaylor(
       mp_int    *   q,          /* sub prime, can be 1 */
       mp_int    *   prime,      /* output.  */
       SECItem   *   prime_seed, /* input/output.  */
-      int       *   prime_gen_counter) /* input/output.  */
+      unsigned int *prime_gen_counter) /* input/output.  */
 {
     mp_int c;
     mp_int c0_2;
@@ -727,7 +727,7 @@ makePrimefromSeedShaweTaylor(
 const SECItem   *   input_seed,       /* input.  */
       mp_int    *   prime,      /* output.  */
       SECItem   *   prime_seed, /* output.  */
-      int       *   prime_gen_counter) /* output.  */
+      unsigned int *prime_gen_counter) /* output.  */
 {
     mp_int c;
     mp_int c0;
@@ -882,7 +882,7 @@ findQfromSeed(
 const SECItem   *   seed,       /* input.  */
       mp_int    *   Q,          /* input. */
       mp_int    *   Q_,         /* output. */
-      int       *  qseed_len,   /* output */
+      unsigned int *qseed_len,   /* output */
       HASH_HashType *hashtypePtr,  /* output. Hash uses */
       pqgGenType    *typePtr)      /* output. Generation Type used */
 {
@@ -937,7 +937,7 @@ const SECItem   *   seed,       /* input.  */
     firstseed.len = seed->len/3;
     for (hashtype = getFirstHash(L,N); hashtype != HASH_AlgTOTAL; 
 					hashtype=getNextHash(hashtype)) {
-	int count;
+	unsigned int count;
 
 	rv = makePrimefromSeedShaweTaylor(hashtype, N, &firstseed, Q_, 
 		&qseed, &count);
@@ -1143,7 +1143,7 @@ makeGfromIndex(HASH_HashType hashtype,
     unsigned int len;
     mp_err err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    const SECHashObject *hashobj;
+    const SECHashObject *hashobj = NULL;
     void *hashcx = NULL;
 
     MP_DIGITS(&e) = 0;
@@ -1229,7 +1229,6 @@ pqg_ParamGen(unsigned int L, unsigned int N, pqgGenType type,
 	 unsigned int seedBytes, PQGParams **pParams, PQGVerify **pVfy)
 {
     unsigned int  n;        /* Per FIPS 186, app 2.2. 186-3 app A.1.1.2 */
-    unsigned int  b;        /* Per FIPS 186, app 2.2. 186-3 app A.1.1.2 */
     unsigned int  seedlen;  /* Per FIPS 186-3 app A.1.1.2  (was 'g' 186-1)*/
     unsigned int  counter;  /* Per FIPS 186, app 2.2. 186-3 app A.1.1.2 */
     unsigned int  offset;   /* Per FIPS 186, app 2.2. 186-3 app A.1.1.2 */
@@ -1309,8 +1308,7 @@ pqg_ParamGen(unsigned int L, unsigned int N, pqgGenType type,
 
     /* Step 3: n = Ceil(L/outlen)-1; (same as n = Floor((L-1)/outlen)) */
     n = (L - 1) / outlen; 
-    /* Step 4: b = L -1 - (n*outlen); (same as n = (L-1) mod outlen) */
-    b = (L - 1) % outlen;
+    /* Step 4: (skipped since we don't use b): b = L -1 - (n*outlen); */
     seedlen = seedBytes * PR_BITS_PER_BYTE;    /* bits in seed */
 step_5:
     /* ******************************************************************
@@ -1348,7 +1346,7 @@ step_5:
 	CHECK_SEC_OK( makeQ2fromSeed(hashtype, N, seed, &Q) );
     } else {
 	/* FIPS186_3_ST_TYPE */
-	int qgen_counter, pgen_counter;
+	unsigned int qgen_counter, pgen_counter;
 
         /* Step 1 (L,N) already checked for acceptability */
 
@@ -1589,7 +1587,7 @@ PQG_VerifyParams(const PQGParams *params,
     mp_err err = MP_OKAY;
     int j;
     unsigned int counter_max = 0; /* handle legacy L < 1024 */
-    int qseed_len;
+    unsigned int qseed_len;
     SECItem pseed_ = {0, 0, 0};
     HASH_HashType hashtype;
     pqgGenType type;
@@ -1682,8 +1680,8 @@ PQG_VerifyParams(const PQGParams *params,
     if (type == FIPS186_3_ST_TYPE) {
 	SECItem qseed = { 0, 0, 0 };
 	SECItem pseed = { 0, 0, 0 };
-	int first_seed_len;
-	int pgen_counter = 0;
+	unsigned int first_seed_len;
+	unsigned int pgen_counter = 0;
 
 	/* extract pseed and qseed from domain_parameter_seed, which is
 	 * first_seed || pseed || qseed. qseed is first_seed + small_integer

@@ -44,13 +44,13 @@ main(int argc, char **argv)
 
     secondval = atoi(curstr);
     
-    if ( ( firstval < 0 ) || ( firstval > 2 ) ) {
+    if ( firstval > 2 ) {
 	fprintf(stderr, "first component out of range\n");
 	exit(-1);
 	
     }
     
-    if ( ( secondval < 0 ) || ( secondval > 39 ) ) {
+    if ( secondval > 39 ) {
 	fprintf(stderr, "second component out of range\n");
 	exit(-1);
     }
