@@ -45,23 +45,6 @@
                         android:summary="@string/pref_open_external_urls_privately_summary"
                         android:defaultValue="false" />
 
-    <org.mozilla.gecko.preferences.AndroidImportPreference
-            android:key="android.not_a_preference.import_android"
-            gecko:entries="@array/pref_import_android_entries"
-            gecko:entryValues="@array/pref_import_android_values"
-            gecko:initialValues="@array/pref_import_android_defaults"
-            android:title="@string/pref_import_android"
-            android:summary="@string/pref_import_android_summary"
-            android:positiveButtonText="@string/bookmarkhistory_button_import"
-            android:negativeButtonText="@string/button_cancel"
-            android:persistent="false" />
-
-    <ListPreference android:key="app.update.autodownload"
-                    android:title="@string/pref_update_autodownload"
-                    android:entries="@array/pref_update_autodownload_entries"
-                    android:entryValues="@array/pref_update_autodownload_values"
-                    android:persistent="false" />
-
     <org.mozilla.gecko.preferences.PrivateDataPreference
             android:key="android.not_a_preference.privacy.clear"
             android:title="@string/pref_clear_private_data_now"
