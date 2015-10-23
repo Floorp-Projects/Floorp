@@ -150,6 +150,9 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
         JS_ReportError(cx, "cannot use a CPOW whose process is gone");  \
         return false;                                                   \
     }                                                                   \
+    if (!owner->allowMessage(cx)) {                                     \
+        return false;                                                   \
+    }                                                                   \
     {                                                                   \
         CPOWTimer timer(cx);                                            \
         return owner->call args;                                        \

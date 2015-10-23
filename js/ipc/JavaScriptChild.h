@@ -25,6 +25,8 @@ class JavaScriptChild : public JavaScriptBase<PJavaScriptChild>
 
     void drop(JSObject* obj);
 
+    bool allowMessage(JSContext* cx) override { return true; }
+
   protected:
     virtual bool isParent() override { return false; }
     virtual JSObject* scopeForTargetObjects() override;
