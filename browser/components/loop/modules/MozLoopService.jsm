@@ -875,6 +875,17 @@ var MozLoopServiceInternal = {
   },
 
   /**
+   * Hangup and close all chat windows that are open.
+   */
+  hangupAllChatWindows() {
+    let isLoopURL = ({ src }) => /^about:loopconversation#/.test(src);
+    [...Chat.chatboxes].filter(isLoopURL).forEach(chatbox => {
+      let window = chatbox.content.contentWindow;
+      window.dispatchEvent(new window.CustomEvent("LoopHangupNow"));
+    });
+  },
+
+  /**
    * Determines if a chat window is already open for a given window id.
    *
    * @param  {String}  chatWindowId The window id.
@@ -895,10 +906,12 @@ var MozLoopServiceInternal = {
    *
    * @param {Object} conversationWindowData The data to be obtained by the
    *                                        window when it opens.
+   * @param {Function} windowCloseCallback  Callback function that's invoked
+   *                                        when the window closes.
    * @returns {Number} The id of the window, null if a window could not
    *                   be opened.
    */
-  openChatWindow: function(conversationWindowData) {
+  openChatWindow: function(conversationWindowData, windowCloseCallback) {
     // So I guess the origin is the loop server!?
     let origin = this.loopServerUri;
     let windowId = this.getChatWindowID(conversationWindowData);
@@ -937,6 +950,8 @@ var MozLoopServiceInternal = {
             // we can keep using it here.
             let ref = chatbar.chatboxForURL.get(chatbox.src);
             chatbox = ref && ref.get() || chatbox;
+          } else if (eventName == "Loop:ChatWindowClosed") {
+            windowCloseCallback();
           }
         }
 
@@ -1387,14 +1402,23 @@ this.MozLoopService = {
   }),
 
   /**
+   * Hangup and close all chat windows that are open.
+   */
+  hangupAllChatWindows() {
+    return MozLoopServiceInternal.hangupAllChatWindows();
+  },
+
+  /**
    * Opens the chat window
    *
    * @param {Object} conversationWindowData The data to be obtained by the
    *                                        window when it opens.
+   * @param {Function} windowCloseCallback Callback for when the window closes.
    * @returns {Number} The id of the window.
    */
-  openChatWindow: function(conversationWindowData) {
-    return MozLoopServiceInternal.openChatWindow(conversationWindowData);
+  openChatWindow: function(conversationWindowData, windowCloseCallback) {
+    return MozLoopServiceInternal.openChatWindow(conversationWindowData,
+      windowCloseCallback);
   },
 
   /**
