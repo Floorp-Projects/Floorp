@@ -399,8 +399,8 @@ public:
         case SurfaceFormat::R8G8B8X8:
           mMessage << "SurfaceFormat::R8G8B8X8";
           break;
-        case SurfaceFormat::R5G6B5:
-          mMessage << "SurfaceFormat::R5G6B5";
+        case SurfaceFormat::R5G6B5_UINT16:
+          mMessage << "SurfaceFormat::R5G6B5_UINT16";
           break;
         case SurfaceFormat::A8:
           mMessage << "SurfaceFormat::A8";

@@ -153,7 +153,7 @@ GfxFormatToCairoFormat(SurfaceFormat format)
       return CAIRO_FORMAT_RGB24;
     case SurfaceFormat::A8:
       return CAIRO_FORMAT_A8;
-    case SurfaceFormat::R5G6B5:
+    case SurfaceFormat::R5G6B5_UINT16:
       return CAIRO_FORMAT_RGB16_565;
     default:
       gfxCriticalError() << "Unknown image format " << (int)format;
@@ -169,7 +169,7 @@ GfxFormatToCairoContent(SurfaceFormat format)
     case SurfaceFormat::B8G8R8A8:
       return CAIRO_CONTENT_COLOR_ALPHA;
     case SurfaceFormat::B8G8R8X8:
-    case SurfaceFormat::R5G6B5:  //fall through
+    case SurfaceFormat::R5G6B5_UINT16:  //fall through
       return CAIRO_CONTENT_COLOR;
     case SurfaceFormat::A8:
       return CAIRO_CONTENT_ALPHA;
@@ -241,7 +241,7 @@ CairoFormatToGfxFormat(cairo_format_t format)
     case CAIRO_FORMAT_A8:
       return SurfaceFormat::A8;
     case CAIRO_FORMAT_RGB16_565:
-      return SurfaceFormat::R5G6B5;
+      return SurfaceFormat::R5G6B5_UINT16;
     default:
       gfxCriticalError() << "Unknown cairo format " << format;
       return SurfaceFormat::UNKNOWN;

@@ -88,7 +88,7 @@ inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
     return gfxImageFormat::ARGB32;
   case SurfaceFormat::B8G8R8X8:
     return gfxImageFormat::RGB24;
-  case SurfaceFormat::R5G6B5:
+  case SurfaceFormat::R5G6B5_UINT16:
     return gfxImageFormat::RGB16_565;
   case SurfaceFormat::A8:
     return gfxImageFormat::A8;
@@ -105,7 +105,7 @@ inline SurfaceFormat ImageFormatToSurfaceFormat(gfxImageFormat aFormat)
   case gfxImageFormat::RGB24:
     return SurfaceFormat::B8G8R8X8;
   case gfxImageFormat::RGB16_565:
-    return SurfaceFormat::R5G6B5;
+    return SurfaceFormat::R5G6B5_UINT16;
   case gfxImageFormat::A8:
     return SurfaceFormat::A8;
   default:
@@ -117,7 +117,7 @@ inline SurfaceFormat ImageFormatToSurfaceFormat(gfxImageFormat aFormat)
 inline gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
 {
   switch (aFormat) {
-  case SurfaceFormat::R5G6B5:
+  case SurfaceFormat::R5G6B5_UINT16:
   case SurfaceFormat::B8G8R8X8:
   case SurfaceFormat::R8G8B8X8:
     return gfxContentType::COLOR;

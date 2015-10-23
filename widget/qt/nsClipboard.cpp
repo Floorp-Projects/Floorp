@@ -62,7 +62,7 @@ _moz2dformat_to_qformat(SurfaceFormat aFormat)
         return QImage::Format_ARGB32_Premultiplied;
     case SurfaceFormat::B8G8R8X8:
         return QImage::Format_ARGB32;
-    case SurfaceFormat::R5G6B5:
+    case SurfaceFormat::R5G6B5_UINT16:
         return QImage::Format_RGB16;
     default:
         return QImage::Format_Invalid;

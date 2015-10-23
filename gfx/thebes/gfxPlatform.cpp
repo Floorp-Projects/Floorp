@@ -1852,7 +1852,7 @@ gfxPlatform::Optimal2DFormatForContent(gfxContentType aContent)
     case gfxImageFormat::RGB24:
       return mozilla::gfx::SurfaceFormat::B8G8R8X8;
     case gfxImageFormat::RGB16_565:
-      return mozilla::gfx::SurfaceFormat::R5G6B5;
+      return mozilla::gfx::SurfaceFormat::R5G6B5_UINT16;
     default:
       NS_NOTREACHED("unknown gfxImageFormat for gfxContentType::COLOR");
       return mozilla::gfx::SurfaceFormat::B8G8R8A8;

@@ -403,7 +403,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
                                 cr, halfWidth,
                                 mFrameWidth, mFrameHeight);
         break;
-      case SurfaceFormat::R5G6B5:
+      case SurfaceFormat::R5G6B5_UINT16:
         rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
                                   map.GetStride(),
                                   y, mFrameWidth,

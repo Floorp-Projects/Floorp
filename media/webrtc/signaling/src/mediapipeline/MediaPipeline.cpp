@@ -1205,7 +1205,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
                               yuv + cr_offset, half_width,
                               size.width, size.height);
       break;
-    case SurfaceFormat::R5G6B5:
+    case SurfaceFormat::R5G6B5_UINT16:
       rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
                                 map.GetStride(),
                                 yuv, size.width,

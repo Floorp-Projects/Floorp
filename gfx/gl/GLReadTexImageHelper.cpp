@@ -274,7 +274,7 @@ CopyDataSourceSurface(DataSourceSurface* aSource,
                aDest->GetFormat() == SurfaceFormat::R8G8B8X8 ||
                aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                aDest->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-               aDest->GetFormat() == SurfaceFormat::R5G6B5);
+               aDest->GetFormat() == SurfaceFormat::R5G6B5_UINT16);
 
     const bool isSrcBGR = aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                           aSource->GetFormat() == SurfaceFormat::B8G8R8X8;
@@ -288,7 +288,7 @@ CopyDataSourceSurface(DataSourceSurface* aSource,
                               aDest->GetFormat() == SurfaceFormat::B8G8R8A8;
     const bool needsAlphaMask = !srcHasAlpha && destHasAlpha;
 
-    const bool needsConvertTo16Bits = aDest->GetFormat() == SurfaceFormat::R5G6B5;
+    const bool needsConvertTo16Bits = aDest->GetFormat() == SurfaceFormat::R5G6B5_UINT16;
 
     DataSourceSurface::MappedSurface srcMap;
     DataSourceSurface::MappedSurface destMap;
@@ -394,7 +394,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         destFormat = LOCAL_GL_RGBA;
         destType = LOCAL_GL_UNSIGNED_BYTE;
         break;
-    case SurfaceFormat::R5G6B5:
+    case SurfaceFormat::R5G6B5_UINT16:
         destFormat = LOCAL_GL_RGB;
         destType = LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV;
         break;
@@ -438,7 +438,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
             case LOCAL_GL_RGB: {
                 MOZ_ASSERT(destPixelSize == 2);
                 MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV);
-                readFormatGFX = SurfaceFormat::R5G6B5;
+                readFormatGFX = SurfaceFormat::R5G6B5_UINT16;
                 break;
             }
             default: {

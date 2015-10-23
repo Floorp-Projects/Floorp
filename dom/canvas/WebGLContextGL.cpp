@@ -1943,7 +1943,7 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
         case SurfaceFormat::A8:
             *format = WebGLTexelFormat::A8;
             break;
-        case SurfaceFormat::R5G6B5:
+        case SurfaceFormat::R5G6B5_UINT16:
             *format = WebGLTexelFormat::RGB565;
             break;
         default:
