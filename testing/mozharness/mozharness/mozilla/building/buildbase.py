@@ -129,10 +129,15 @@ class MakeUploadOutputParser(OutputParser):
                     # For android builds, the package is also used as the mar file.
                     # Grab the first one, since that is the one in the
                     # nightly/YYYY/MM directory
-                    if self.use_package_as_marfile and 'completeMarUrl' not in self.matches:
-                        self.info("Using package as mar file: %s" % m)
-                        self.matches['completeMarUrl'] = m
-                        u, self.package_filename = os.path.split(m)
+                    if self.use_package_as_marfile:
+                        if 'tinderbox-builds' in m or 'nightly/latest-' in m:
+                            self.info("Skipping wrong packageUrl: %s" % m)
+                        else:
+                            if 'completeMarUrl' in self.matches:
+                                self.fatal("Found multiple package URLs. Please update buildbase.py")
+                            self.info("Using package as mar file: %s" % m)
+                            self.matches['completeMarUrl'] = m
+                            u, self.package_filename = os.path.split(m)
 
         if self.use_package_as_marfile and self.package_filename:
             # The checksum file is also dumped during 'make upload'. Look
