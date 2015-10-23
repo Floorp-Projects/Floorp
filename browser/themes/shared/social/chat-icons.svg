@@ -42,8 +42,10 @@
   <use id="expand-active" xlink:href="#expand-shape"/>
   <use id="expand-disabled" xlink:href="#expand-shape"/>
   <use id="expand-hover" xlink:href="#expand-shape"/>
+  <use id="expand-white" xlink:href="#expand-shape"/>
   <use id="minimize" xlink:href="#minimize-shape"/>
   <use id="minimize-active" xlink:href="#minimize-shape"/>
   <use id="minimize-disabled" xlink:href="#minimize-shape"/>
   <use id="minimize-hover" xlink:href="#minimize-shape"/>
+  <use id="minimize-white" xlink:href="#minimize-shape"/>
 </svg>
