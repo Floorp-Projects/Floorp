@@ -331,8 +331,11 @@ struct PerformanceData {
  * Identification information for an item that can hold performance
  * data.
  */
-class nsPerformanceGroupDetails {
+class nsPerformanceGroupDetails: public nsIPerformanceGroupDetails {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPERFORMANCEGROUPDETAILS
+
   nsPerformanceGroupDetails(const nsAString& aName,
                             const nsAString& aGroupId,
                             const nsAString& aAddonId,
@@ -356,6 +359,8 @@ public:
   bool IsWindow() const;
   bool IsSystem() const;
 private:
+  virtual ~nsPerformanceGroupDetails() {}
+
   const nsString mName;
   const nsString mGroupId;
   const nsString mAddonId;
@@ -397,9 +402,7 @@ enum class PerformanceGroupScope {
  * This class is intended to be the sole implementation of
  * `js::PerformanceGroup`.
  */
-class nsPerformanceGroup final: public js::PerformanceGroup,
-                                public nsPerformanceGroupDetails
-{
+class nsPerformanceGroup final: public js::PerformanceGroup {
 public:
 
   // Ideally, we would define the enum class in nsPerformanceGroup,
@@ -455,6 +458,11 @@ public:
   GroupScope Scope() const;
 
   /**
+   * Identification details for this group.
+   */
+  nsPerformanceGroupDetails* Details() const;
+
+  /**
    * Cleanup any references.
    */
   void Dispose();
@@ -482,6 +490,11 @@ protected:
   virtual ~nsPerformanceGroup();
 
 private:
+  /**
+   * Identification details for this group.
+   */
+  RefPtr<nsPerformanceGroupDetails> mDetails;
+
   /**
    * The stats service. Used to perform cleanup during destruction.
    */
