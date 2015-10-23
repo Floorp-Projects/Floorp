@@ -43,8 +43,8 @@ public:
 
   /**
    * Resolves the set of inherited variables from aInherited and the
-   * set of specified variables from aSpecified.  The resoled variables
-   * are written in to mOutput.
+   * set of specified variables from aSpecified.  The resolved variables
+   * are written into mOutput.
    */
   void Resolve(const CSSVariableValues* aInherited,
                const CSSVariableDeclarations* aSpecified);

@@ -14,7 +14,7 @@ function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
 
-  for each (spec in specs) {
+  for (var spec of specs) {
     var uri = ios.newURI(spec, null, null);
     if (uri.spec.indexOf("..") != -1)
       do_throw("resource: traversal remains: '"+spec+"' ==> '"+uri.spec+"'");

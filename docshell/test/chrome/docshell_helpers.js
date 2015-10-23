@@ -3,7 +3,7 @@
  */
 var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror", "todo",
   "todo_is", "todo_isnot" ];
-for each (var name in imports) {
+for (var name of imports) {
   window[name] = window.opener.wrappedJSObject[name];
 }
 
@@ -125,17 +125,21 @@ function doPageNavigation(params) {
     throw "Must specify onNavComplete when specifying waitForEventsOnly";
   if (waitOnly && (back || forward || reload || uri))
     throw "Can't specify a navigation type when using waitForEventsOnly";
-  for each (let anEventType in eventsToListenFor) {
+  for (let anEventType of eventsToListenFor) {
     let eventFound = false;
     if ( (anEventType == "pageshow") && (!gExpectedEvents) )
       eventFound = true;
-    for each (let anExpectedEvent in gExpectedEvents) {
-      if (anExpectedEvent.type == anEventType)
-        eventFound = true;
+    if (gExpectedEvents) {
+      for (let anExpectedEvent of gExpectedEvents) {
+        if (anExpectedEvent.type == anEventType)
+          eventFound = true;
+      }
     }
-    for each (let anExpectedEventType in gUnexpectedEvents) {
-      if (anExpectedEventType == anEventType)
-        eventFound = true;
+    if (gUnexpectedEvents) {
+      for (let anExpectedEventType of gUnexpectedEvents) {
+        if (anExpectedEventType == anEventType)
+          eventFound = true;
+      }
     }
     if (!eventFound)
       throw "Event type " + anEventType + " is specified in " +
@@ -148,7 +152,7 @@ function doPageNavigation(params) {
   
   // Add an event listener for each type of event in the .eventsToListenFor 
   // property of the input parameters.
-  for each (let eventType in eventsToListenFor) {
+  for (let eventType of eventsToListenFor) {
     dump("TEST: registering a listener for " + eventType + " events\n");
     TestWindow.getBrowser().addEventListener(eventType, pageEventListener, 
       true);
@@ -201,7 +205,7 @@ function doPageNavigation_complete(eventsToListenFor, onNavComplete,
   preventBFCache) {
   // Unregister our event listeners.
   dump("TEST: removing event listeners\n");
-  for each (let eventType in eventsToListenFor) {
+  for (let eventType of eventsToListenFor) {
     TestWindow.getBrowser().removeEventListener(eventType, pageEventListener, 
       true);
   }

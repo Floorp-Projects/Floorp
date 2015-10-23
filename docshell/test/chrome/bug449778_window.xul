@@ -9,7 +9,7 @@
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     var imports = [ "SimpleTest", "is", "isnot", "ok", "onerror" ];
-    for each (var name in imports) {
+    for (var name of imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
 

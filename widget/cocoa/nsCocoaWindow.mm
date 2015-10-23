@@ -3291,12 +3291,10 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 // This class also provides us with a pill button to show/hide the toolbar up to 10.6.
 //
 // Drawing the unified gradient in the titlebar and the toolbar works like this:
-// 1) In the style sheet we set the toolbar's -moz-appearance to toolbar or
-//    -moz-mac-unified-toolbar.
+// 1) In the style sheet we set the toolbar's -moz-appearance to toolbar.
 // 2) When the toolbar is visible and we paint the application chrome
 //    window, the array that Gecko passes nsChildView::UpdateThemeGeometries
-//    will contain an entry for the widget type NS_THEME_TOOLBAR or
-//    NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR.
+//    will contain an entry for the widget type NS_THEME_TOOLBAR.
 // 3) nsChildView::UpdateThemeGeometries finds the toolbar frame's ToolbarWindow
 //    and passes the toolbar frame's height to setUnifiedToolbarHeight.
 // 4) If the toolbar height has changed, a titlebar redraw is triggered and the

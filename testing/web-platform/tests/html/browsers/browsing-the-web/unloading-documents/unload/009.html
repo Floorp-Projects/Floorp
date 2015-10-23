@@ -6,9 +6,11 @@
 <script>
 var iframe;
 var t = async_test();
-onload = setTimeout(function() {
-                      var iframe = document.getElementsByTagName("iframe")[0];
-                      iframe.src="about:blank";
-                    }, 100)
+onload = function() {
+  setTimeout(function() {
+    var iframe = document.getElementsByTagName("iframe")[0];
+    iframe.src="about:blank";
+  }, 100)
+}
 </script>
 <iframe src="009-1.html"></iframe>

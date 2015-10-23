@@ -608,6 +608,7 @@ void TestStunTcpServer::accept_cb(NR_SOCKET s, int how, void *cb_arg) {
 
   if(nr_socket_buffered_stun_create(newsock, 2048, TURN_TCP_FRAMING, &bufsock)) {
     MOZ_MTLOG(ML_ERROR, "Couldn't create connected tcp socket");
+    nr_socket_destroy(&newsock);
     return;
   }
 
@@ -615,11 +616,13 @@ void TestStunTcpServer::accept_cb(NR_SOCKET s, int how, void *cb_arg) {
 
   if(nr_socket_wrapped_create(bufsock, &wrapsock)) {
     MOZ_MTLOG(ML_ERROR, "Couldn't wrap connected tcp socket");
+    nr_socket_destroy(&bufsock);
     return;
   }
 
-  if(nr_socket_getfd(bufsock, &fd)) {
+  if(nr_socket_getfd(wrapsock, &fd)) {
     MOZ_MTLOG(ML_ERROR, "Couldn't get fd from connected tcp socket");
+    nr_socket_destroy(&wrapsock);
     return;
   }
 

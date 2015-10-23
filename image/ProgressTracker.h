@@ -27,7 +27,12 @@ class AsyncNotifyRunnable;
 class AsyncNotifyCurrentStateRunnable;
 class Image;
 
-// Image progress bitflags.
+/**
+ * Image progress bitflags.
+ *
+ * See CheckProgressConsistency() for the invariants we enforce about the
+ * ordering dependencies betweeen these flags.
+ */
 enum {
   FLAG_SIZE_AVAILABLE     = 1u << 0,  // STATUS_SIZE_AVAILABLE
   FLAG_DECODE_COMPLETE    = 1u << 1,  // STATUS_DECODE_COMPLETE

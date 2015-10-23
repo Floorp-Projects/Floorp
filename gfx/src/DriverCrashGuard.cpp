@@ -424,14 +424,14 @@ void
 D3D11LayersCrashGuard::LogCrashRecovery()
 {
   RecordTelemetry(TelemetryState::RecoveredFromCrash);
-  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "D3D11 layers just crashed; D3D11 will be disabled.";
+  gfxCriticalNote << "D3D11 layers just crashed; D3D11 will be disabled.";
 }
 
 void
 D3D11LayersCrashGuard::LogFeatureDisabled()
 {
   RecordTelemetry(TelemetryState::FeatureDisabled);
-  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "D3D11 layers disabled due to a prior crash.";
+  gfxCriticalNote << "D3D11 layers disabled due to a prior crash.";
 }
 
 void
@@ -468,13 +468,13 @@ D3D9VideoCrashGuard::UpdateEnvironment()
 void
 D3D9VideoCrashGuard::LogCrashRecovery()
 {
-  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DXVA2D3D9 just crashed; hardware video will be disabled.";
+  gfxCriticalNote << "DXVA2D3D9 just crashed; hardware video will be disabled.";
 }
 
 void
 D3D9VideoCrashGuard::LogFeatureDisabled()
 {
-  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "DXVA2D3D9 video decoding is disabled due to a previous crash.";
+  gfxCriticalNote << "DXVA2D3D9 video decoding is disabled due to a previous crash.";
 }
 
 GLContextCrashGuard::GLContextCrashGuard(dom::ContentParent* aContentParent)
@@ -525,13 +525,13 @@ GLContextCrashGuard::UpdateEnvironment()
 void
 GLContextCrashGuard::LogCrashRecovery()
 {
-  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "GLContext just crashed and is now disabled.";
+  gfxCriticalNote << "GLContext just crashed and is now disabled.";
 }
 
 void
 GLContextCrashGuard::LogFeatureDisabled()
 {
-  gfxCriticalError(CriticalLog::DefaultOptions(false)) << "GLContext is disabled due to a previous crash.";
+  gfxCriticalNote << "GLContext is disabled due to a previous crash.";
 }
 
 } // namespace gfx
