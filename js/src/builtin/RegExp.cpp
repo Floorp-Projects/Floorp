@@ -140,11 +140,13 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, RegExpObject& reobj,
     return CreateRegExpMatchResult(cx, input, matches, rval);
 }
 
-/* ES6 draft rc4 21.2.3.2.2. */
-bool
-RegExpInitialize(JSContext* cx, RegExpObjectBuilder& builder,
-                 HandleValue patternValue, HandleValue flagsValue,
-                 RegExpStaticsUse staticsUse, MutableHandleObject result)
+/*
+ * ES6 21.2.3.2.2.  Because this function only ever returns |obj| in the spec,
+ * provided by the user, we omit it and just return the usual success/failure.
+ */
+static bool
+RegExpInitialize(JSContext* cx, Handle<RegExpObject*> obj, HandleValue patternValue,
+                 HandleValue flagsValue, RegExpStaticsUse staticsUse)
 {
     RootedAtom pattern(cx);
     if (patternValue.isUndefined()) {
@@ -183,148 +185,10 @@ RegExpInitialize(JSContext* cx, RegExpObjectBuilder& builder,
     }
 
     /* Steps 11-15. */
-    RootedObject reobj(cx, builder.build(pattern, flags));
-    if (!reobj)
+    if (!InitializeRegExp(cx, obj, pattern, flags))
         return false;
 
     /* Step 16. */
-    result.set(reobj);
-    return true;
-}
-
-/*
- * ES6 draft rc4 21.2.3.1 steps 5-10.
- * ES6 draft rc4 B.2.5.1 steps 3-5.
- * Compile a new |RegExpShared| for the |RegExpObject|.
- */
-static bool
-CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, const CallArgs& args,
-                    RegExpCreationMode creationMode, bool patternIsRegExp=false)
-{
-    if (args.length() == 0) {
-        /*
-         * 21.2.3.1 step 10.
-         * B.2.5.1 step 5.
-         */
-        RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-        if (!res)
-            return false;
-
-        RootedAtom empty(cx, cx->runtime()->emptyString);
-        RegExpObject* reobj = builder.build(empty, res->getFlags());
-        if (!reobj)
-            return false;
-
-        args.rval().setObject(*reobj);
-        return true;
-    }
-
-    RootedValue patternValue(cx, args.get(0));
-
-    /*
-     * 21.2.3.1 step 5
-     * B.2.5.1 step 3.
-     */
-    ESClassValue cls;
-    if (!GetClassOfValue(cx, patternValue, &cls))
-        return false;
-    if (cls == ESClass_RegExp) {
-        /*
-         * B.2.5.1 step 3.a.
-         */
-        if (args.hasDefined(1) && creationMode == CreateForCompile) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
-            return false;
-        }
-
-        /*
-         * Beware, patternObj may be a (transparent) proxy to a RegExp, so only
-         * use generic (proxyable) operations on patternObj that do not assume
-         * patternObj.is<RegExpObject>().
-         */
-        RootedObject patternObj(cx, &patternValue.toObject());
-
-        RootedAtom sourceAtom(cx);
-        RegExpFlag flags;
-        {
-            /*
-             * 21.2.3.1 step 5.a.
-             * B.2.5.1 step 3.a.
-             * Extract the 'source' from patternObj; do not reuse the
-             * RegExpShared since it may be from a different compartment.
-             */
-            RegExpGuard g(cx);
-            if (!RegExpToShared(cx, patternObj, &g))
-                return false;
-            sourceAtom = g->getSource();
-
-            if (args.hasDefined(1)) {
-                /* 21.2.3.1 step 5.c. */
-                flags = RegExpFlag(0);
-                RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
-                if (!flagStr)
-                    return false;
-                if (!ParseRegExpFlags(cx, flagStr, &flags))
-                    return false;
-            } else {
-                /*
-                 * 21.2.3.1 step 5.b.
-                 * B.2.5.1 step 3.c.
-                 */
-                flags = g->getFlags();
-            }
-        }
-
-        /*
-         * 21.2.3.1 steps 8-10.
-         * B.2.5.1 step 5.
-         */
-        RegExpObject* reobj = builder.build(sourceAtom, flags);
-        if (!reobj)
-            return false;
-
-        args.rval().setObject(*reobj);
-        return true;
-    }
-
-    RootedValue P(cx);
-    RootedValue F(cx);
-    /* 21.2.3.1 step 6. */
-    if (patternIsRegExp) {
-        MOZ_ASSERT(creationMode == CreateForConstruct);
-        RootedObject patternObj(cx, &patternValue.toObject());
-
-        /* 21.2.3.1 steps 6.a-b. */
-        if (!GetProperty(cx, patternObj, patternObj, cx->names().source, &P))
-            return false;
-
-        /* 21.2.3.1 step 6.c. */
-        if (!args.hasDefined(1)) {
-            /* 21.2.3.1 steps 6.c.i-ii. */
-            if (!GetProperty(cx, patternObj, patternObj, cx->names().flags, &F))
-                return false;
-        } else {
-            /* 21.2.3.1 steps 6.d. */
-            F = args[1];
-        }
-    } else {
-        /*
-         * 21.2.3.1 steps 7.a-b.
-         * B.2.5.1 steps 4.a-b.
-         */
-        P = patternValue;
-        F = args.get(1);
-    }
-
-    /*
-     * 21.2.3.1 steps 8-10.
-     * B.2.5.1 step 5.
-     */
-    RootedObject reobj(cx);
-    if (!RegExpInitialize(cx, builder, P, F, UseRegExpStatics, &reobj))
-        return false;
-
-    args.rval().setObject(*reobj);
     return true;
 }
 
@@ -366,15 +230,61 @@ js::IsRegExp(JSContext* cx, HandleValue value, bool* result)
     return true;
 }
 
-/* ES6 draft rc4 B.2.5.1. */
+/* ES6 B.2.5.1. */
 MOZ_ALWAYS_INLINE bool
 regexp_compile_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsRegExpObject(args.thisv()));
 
-    /* Steps 3-5. */
-    RegExpObjectBuilder builder(cx, &args.thisv().toObject().as<RegExpObject>());
-    return CompileRegExpObject(cx, builder, args, CreateForCompile);
+    Rooted<RegExpObject*> regexp(cx, &args.thisv().toObject().as<RegExpObject>());
+
+    // Step 3.
+    RootedValue patternValue(cx, args.get(0));
+    ESClassValue cls;
+    if (!GetClassOfValue(cx, patternValue, &cls))
+        return false;
+    if (cls == ESClass_RegExp) {
+        // Step 3a.
+        if (args.hasDefined(1)) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
+            return false;
+        }
+
+        // Beware!  |patternObj| might be a proxy into another compartment, so
+        // don't assume |patternObj.is<RegExpObject>()|.  For the same reason,
+        // don't reuse the RegExpShared below.
+        RootedObject patternObj(cx, &patternValue.toObject());
+
+        RootedAtom sourceAtom(cx);
+        RegExpFlag flags;
+        {
+            // Step 3b.
+            RegExpGuard g(cx);
+            if (!RegExpToShared(cx, patternObj, &g))
+                return false;
+
+            sourceAtom = g->getSource();
+            flags = g->getFlags();
+        }
+
+        // Step 5.
+        if (!InitializeRegExp(cx, regexp, sourceAtom, flags))
+            return false;
+
+        args.rval().setObject(*regexp);
+        return true;
+    }
+
+    // Step 4.
+    RootedValue P(cx, patternValue);
+    RootedValue F(cx, args.get(1));
+
+    // Step 5.
+    if (!RegExpInitialize(cx, regexp, P, F, UseRegExpStatics))
+        return false;
+
+    args.rval().setObject(*regexp);
+    return true;
 }
 
 static bool
@@ -386,29 +296,32 @@ regexp_compile(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsRegExpObject, regexp_compile_impl>(cx, args);
 }
 
-/* ES6 draft rc4 21.2.3.1. */
+/* ES6 21.2.3.1. */
 bool
 js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    /* Steps 1-2. */
+    // Steps 1-2.
     bool patternIsRegExp;
     if (!IsRegExp(cx, args.get(0), &patternIsRegExp))
         return false;
 
-    /* Step 4. */
-    if (!args.isConstructing()) {
-        /* Step 4.b. */
+    if (args.isConstructing()) {
+        // XXX Step 3!
+    } else {
+        // XXX Step 4a
+
+        // Step 4b.
         if (patternIsRegExp && !args.hasDefined(1)) {
             RootedObject patternObj(cx, &args[0].toObject());
 
-            /* Steps 4.b.i-ii. */
+            // Steps 4b.i-ii.
             RootedValue patternConstructor(cx);
             if (!GetProperty(cx, patternObj, patternObj, cx->names().constructor, &patternConstructor))
                 return false;
 
-            /* Step 4.b.iii. */
+            // Step 4b.iii.
             if (patternConstructor.isObject() && patternConstructor.toObject() == args.callee()) {
                 args.rval().set(args[0]);
                 return true;
@@ -416,9 +329,91 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    /* Steps 5-10. */
-    RegExpObjectBuilder builder(cx);
-    return CompileRegExpObject(cx, builder, args, CreateForConstruct, patternIsRegExp);
+    RootedValue patternValue(cx, args.get(0));
+
+    // Step 5.
+    ESClassValue cls;
+    if (!GetClassOfValue(cx, patternValue, &cls))
+        return false;
+    if (cls == ESClass_RegExp) {
+        // Beware!  |patternObj| might be a proxy into another compartment, so
+        // don't assume |patternObj.is<RegExpObject>()|.  For the same reason,
+        // don't reuse the RegExpShared below.
+        RootedObject patternObj(cx, &patternValue.toObject());
+
+        RootedAtom sourceAtom(cx);
+        RegExpFlag flags;
+        {
+            // Step 5.a.
+            RegExpGuard g(cx);
+            if (!RegExpToShared(cx, patternObj, &g))
+                return false;
+            sourceAtom = g->getSource();
+
+            if (!args.hasDefined(1)) {
+                // Step 5b.
+                flags = g->getFlags();
+            } else {
+                // Step 5c.
+                // XXX We shouldn't be converting to string yet!  This must
+                //     come *after* the .constructor access in step 8.
+                flags = RegExpFlag(0);
+                RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
+                if (!flagStr)
+                    return false;
+                if (!ParseRegExpFlags(cx, flagStr, &flags))
+                    return false;
+            }
+        }
+
+        // Steps 8-9.
+        // XXX Note bug in step 5c, with respect to step 8.
+        Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+        if (!regexp)
+            return false;
+
+        // Step 10.
+        if (!InitializeRegExp(cx, regexp, sourceAtom, flags))
+            return false;
+
+        args.rval().setObject(*regexp);
+        return true;
+    }
+
+    RootedValue P(cx);
+    RootedValue F(cx);
+
+    // Step 6.
+    if (patternIsRegExp) {
+        RootedObject patternObj(cx, &patternValue.toObject());
+
+        // Steps 6a-b.
+        if (!GetProperty(cx, patternObj, patternObj, cx->names().source, &P))
+            return false;
+
+        // Steps 6c-d.
+        F = args.get(1);
+        if (F.isUndefined()) {
+            if (!GetProperty(cx, patternObj, patternObj, cx->names().flags, &F))
+                return false;
+        }
+    } else {
+        // Steps 7a-b.
+        P = patternValue;
+        F = args.get(1);
+    }
+
+    // Steps 8-9.
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    if (!regexp)
+        return false;
+
+    // Step 10.
+    if (!RegExpInitialize(cx, regexp, P, F, UseRegExpStatics))
+        return false;
+
+    args.rval().setObject(*regexp);
+    return true;
 }
 
 bool
@@ -434,12 +429,14 @@ js::regexp_construct_no_statics(JSContext* cx, unsigned argc, Value* vp)
     /* Steps 1-6 are not required since pattern is always string. */
 
     /* Steps 7-10. */
-    RegExpObjectBuilder builder(cx);
-    RootedObject reobj(cx);
-    if (!RegExpInitialize(cx, builder, args[0], args.get(1), DontUseRegExpStatics, &reobj))
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    if (!regexp)
         return false;
 
-    args.rval().setObject(*reobj);
+    if (!RegExpInitialize(cx, regexp, args[0], args.get(1), DontUseRegExpStatics))
+        return false;
+
+    args.rval().setObject(*regexp);
     return true;
 }
 
@@ -703,12 +700,8 @@ js::CreateRegExpPrototype(JSContext* cx, JSProtoKey key)
         return nullptr;
     proto->NativeObject::setPrivate(nullptr);
 
-    HandlePropertyName empty = cx->names().empty;
-    RegExpObjectBuilder builder(cx, proto);
-    if (!builder.build(empty, RegExpFlag(0)))
-        return nullptr;
-
-    return proto;
+    RootedAtom source(cx, cx->names().empty);
+    return InitializeRegExp(cx, proto, source, RegExpFlag(0));
 }
 
 static bool

@@ -45,12 +45,23 @@ nsSecretDecoderRing::nsSecretDecoderRing()
 // nsSecretDecoderRing destructor
 nsSecretDecoderRing::~nsSecretDecoderRing()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
+  shutdown(calledFromObject);
 }
 
-NS_IMETHODIMP nsSecretDecoderRing::
-Encrypt(unsigned char * data, int32_t dataLen, unsigned char * *result, int32_t *_retval)
+NS_IMETHODIMP
+nsSecretDecoderRing::Encrypt(unsigned char* data, int32_t dataLen,
+                             unsigned char** result, int32_t* _retval)
 {
   nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsresult rv = NS_OK;
   ScopedPK11SlotInfo slot;
   SECItem keyid;
@@ -63,7 +74,7 @@ Encrypt(unsigned char * data, int32_t dataLen, unsigned char * *result, int32_t 
   if (!slot) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
 
   /* Make sure token is initialized. */
-  rv = setPassword(slot, ctx);
+  rv = setPassword(slot, ctx, locker);
   if (NS_FAILED(rv))
     goto loser;
 
@@ -190,10 +201,14 @@ loser:
   return rv;
 }
 
-NS_IMETHODIMP nsSecretDecoderRing::
-ChangePassword()
+NS_IMETHODIMP
+nsSecretDecoderRing::ChangePassword()
 {
   nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsresult rv;
   ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) return NS_ERROR_NOT_AVAILABLE;
@@ -211,17 +226,7 @@ ChangePassword()
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   bool canceled;
-
-  {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    else {
-      rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
-    }
-  }
-
+  rv = dialogs->SetPassword(ctx, tokenName.get(), &canceled);
   /* canceled is ignored */
 
   return rv;

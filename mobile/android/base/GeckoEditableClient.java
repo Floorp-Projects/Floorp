@@ -7,12 +7,13 @@ package org.mozilla.gecko;
 
 import android.os.Handler;
 import android.text.Editable;
+import android.view.KeyEvent;
 
 /**
  * Interface for the IC thread.
  */
 interface GeckoEditableClient {
-    void sendEvent(GeckoEvent event);
+    void sendKeyEvent(KeyEvent event, int action, int metaState);
     Editable getEditable();
     void setUpdateGecko(boolean update);
     void setSuppressKeyUp(boolean suppress);

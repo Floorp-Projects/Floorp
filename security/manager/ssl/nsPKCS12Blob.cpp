@@ -61,6 +61,13 @@ nsPKCS12Blob::~nsPKCS12Blob()
 {
   delete mDigestIterator;
   delete mDigest;
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
+  shutdown(calledFromObject);
 }
 
 // nsPKCS12Blob::SetToken
@@ -70,12 +77,15 @@ nsresult
 nsPKCS12Blob::SetToken(nsIPK11Token *token)
 {
  nsNSSShutDownPreventionLock locker;
+ if (isAlreadyShutDown()) {
+  return NS_ERROR_NOT_AVAILABLE;
+ }
  nsresult rv = NS_OK;
  if (token) {
    mToken = token;
  } else {
    PK11SlotInfo *slot;
-   rv = GetSlotWithMechanism(CKM_RSA_PKCS, mUIContext,&slot);
+   rv = GetSlotWithMechanism(CKM_RSA_PKCS, mUIContext, &slot, locker);
    if (NS_FAILED(rv)) {
       mToken = 0;  
    } else {
@@ -442,15 +452,7 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
   bool pressedOK;
-  {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    else {
-      rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
-    }
-  }
+  rv = certDialogs->SetPKCS12FilePassword(mUIContext, password, &pressedOK);
   if (NS_FAILED(rv) || !pressedOK) return rv;
   unicodeToItem(password.get(), unicodePw);
   return NS_OK;
@@ -471,15 +473,7 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
                        NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
   bool pressedOK;
-  {
-    nsPSMUITracker tracker;
-    if (tracker.isUIForbidden()) {
-      rv = NS_ERROR_NOT_AVAILABLE;
-    }
-    else {
-      rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
-    }
-  }
+  rv = certDialogs->GetPKCS12FilePassword(mUIContext, password, &pressedOK);
   if (NS_FAILED(rv) || !pressedOK) return rv;
   unicodeToItem(password.get(), unicodePw);
   return NS_OK;

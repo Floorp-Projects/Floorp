@@ -31,6 +31,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
   , mInternalContentPolicyType(aContentPolicyType)
+  , mTainting(LoadTainting::Basic)
   , mUpgradeInsecureRequests(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
@@ -390,6 +391,25 @@ const nsTArray<nsCOMPtr<nsIPrincipal>>&
 LoadInfo::RedirectChain()
 {
   return mRedirectChain;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetTainting(uint32_t* aTaintingOut)
+{
+  MOZ_ASSERT(aTaintingOut);
+  *aTaintingOut = static_cast<uint32_t>(mTainting);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::MaybeIncreaseTainting(uint32_t aTainting)
+{
+  NS_ENSURE_ARG(aTainting <= TAINTING_OPAQUE);
+  LoadTainting tainting = static_cast<LoadTainting>(aTainting);
+  if (tainting > mTainting) {
+    mTainting = tainting;
+  }
+  return NS_OK;
 }
 
 } // namespace mozilla
