@@ -172,7 +172,9 @@ public:
   bool mHasRoundedCorners;
 };
 
-class nsDisplayBorderGeometry : public nsDisplayItemGeometry
+class nsDisplayBorderGeometry
+  : public nsDisplayItemGeometry
+  , public nsImageGeometryMixin<nsDisplayBorderGeometry>
 {
 public:
   nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
