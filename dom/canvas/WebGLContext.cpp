@@ -21,6 +21,7 @@
 #include "ImageContainer.h"
 #include "ImageEncoder.h"
 #include "Layers.h"
+#include "LayerUserData.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLVideoElement.h"

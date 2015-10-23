@@ -40,6 +40,7 @@ namespace dom {
 class ErrorResult;
 class StartRecordingHelper;
 class RecorderPosterHelper;
+class TrackCreatedListener;
 
 #define NS_DOM_CAMERA_CONTROL_CID \
 { 0x3700c096, 0xf920, 0x438d, \
@@ -72,6 +73,10 @@ public:
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
 
   MediaStream* GetCameraStream() const override;
+
+  // Called by TrackCreatedListener when the underlying track has been created.
+  // XXX Bug 1124630. This can be removed with CameraPreviewMediaStream.
+  void TrackCreated(TrackID aTrackID);
 
   // Attributes.
   void GetEffect(nsString& aEffect, ErrorResult& aRv);
@@ -225,6 +230,9 @@ protected:
 
   // our viewfinder stream
   RefPtr<CameraPreviewMediaStream> mInput;
+
+  // A listener on mInput for adding tracks to the DOM side.
+  RefPtr<TrackCreatedListener> mTrackCreatedListener;
 
   // set once when this object is created
   nsCOMPtr<nsPIDOMWindow>   mWindow;

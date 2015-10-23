@@ -1225,9 +1225,7 @@ VectorImage::OnSVGDocumentError()
 
   if (mProgressTracker) {
     // Notify observers about the error and unblock page load.
-    Progress progress = FLAG_DECODE_COMPLETE |
-                        FLAG_ONLOAD_UNBLOCKED |
-                        FLAG_HAS_ERROR;
+    Progress progress = FLAG_ONLOAD_UNBLOCKED | FLAG_HAS_ERROR;
 
     // Merge in any saved progress from OnImageDataComplete.
     if (mLoadProgress) {

@@ -14,8 +14,10 @@
 #include "ActiveLayerTracker.h"
 #include "BasicLayers.h"
 #include "ImageContainer.h"
+#include "ImageLayers.h"
 #include "LayerTreeInvalidation.h"
 #include "Layers.h"
+#include "LayerUserData.h"
 #include "MaskLayerImageCache.h"
 #include "UnitTransforms.h"
 #include "Units.h"
@@ -86,6 +88,22 @@ uint8_t gLayerManagerUserData;
  * The user data is a MaskLayerUserData.
  */
 uint8_t gMaskLayerUserData;
+
+FrameLayerBuilder::FrameLayerBuilder()
+  : mRetainingManager(nullptr)
+  , mDetectedDOMModification(false)
+  , mInvalidateAllLayers(false)
+  , mInLayerTreeCompressionMode(false)
+  , mContainerLayerGeneration(0)
+  , mMaxContainerLayerGeneration(0)
+{
+  MOZ_COUNT_CTOR(FrameLayerBuilder);
+}
+
+FrameLayerBuilder::~FrameLayerBuilder()
+{
+  MOZ_COUNT_DTOR(FrameLayerBuilder);
+}
 
 FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
                                                     Layer* aLayer, nsIFrame* aFrame)
@@ -4571,11 +4589,39 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame,
   lmd->mDisplayItems.PutEntry(data);
 }
 
+FrameLayerBuilder::ClippedDisplayItem::ClippedDisplayItem(nsDisplayItem* aItem,
+                                                          uint32_t aGeneration)
+  : mItem(aItem)
+  , mContainerLayerGeneration(aGeneration)
+{
+}
+
 FrameLayerBuilder::ClippedDisplayItem::~ClippedDisplayItem()
 {
   if (mInactiveLayerManager) {
     mInactiveLayerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
   }
+}
+
+FrameLayerBuilder::PaintedLayerItemsEntry::PaintedLayerItemsEntry(const PaintedLayer *aKey)
+  : nsPtrHashKey<PaintedLayer>(aKey)
+  , mContainerLayerFrame(nullptr)
+  , mLastCommonClipCount(0)
+  , mContainerLayerGeneration(0)
+  , mHasExplicitLastPaintOffset(false)
+  , mCommonClipCount(0)
+{
+}
+
+FrameLayerBuilder::PaintedLayerItemsEntry::PaintedLayerItemsEntry(const PaintedLayerItemsEntry& aOther)
+  : nsPtrHashKey<PaintedLayer>(aOther.mKey)
+  , mItems(aOther.mItems)
+{
+  NS_ERROR("Should never be called, since we ALLOW_MEMMOVE");
+}
+
+FrameLayerBuilder::PaintedLayerItemsEntry::~PaintedLayerItemsEntry()
+{
 }
 
 void

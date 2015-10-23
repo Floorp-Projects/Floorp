@@ -21,8 +21,8 @@ var Cr = SpecialPowers.Cr;
 
 SpecialPowers.pushPrefEnv(
   { "set": [["network.http.enable-packaged-apps", true],
-            ["network.http.packaged-signed-apps-enabled", true],
             ["dom.ipc.processPriorityManager.testMode", true],
+            ["network.http.signed-packages.enabled", true],
             ["dom.ipc.processPriorityManager.enabled", true],
             ["dom.ipc.tabs.disabled", false],
             ["dom.ipc.processCount", 3],
