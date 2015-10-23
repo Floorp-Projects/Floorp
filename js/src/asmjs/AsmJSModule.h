@@ -314,6 +314,10 @@ class AsmJSModule
             MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == SharedArrayView || pod.which_ == ArrayViewCtor);
             return pod.u.viewType_;
         }
+        void makeViewShared() {
+            MOZ_ASSERT(pod.which_ == ArrayView);
+            pod.which_ = SharedArrayView;
+        }
         PropertyName* mathName() const {
             MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
             return name_;
@@ -1105,6 +1109,15 @@ class AsmJSModule
         if (pod.hasArrayView_)
             return pod.isSharedView_ == shared;
         return !pod.isSharedView_ || shared;
+    }
+    void setViewsAreShared() {
+        if (pod.hasArrayView_)
+            pod.isSharedView_ = true;
+        for (size_t i=0 ; i < globals_.length() ; i++) {
+            Global& g = globals_[i];
+            if (g.which() == Global::ArrayView)
+                g.makeViewShared();
+        }
     }
 
     /*************************************************************************/

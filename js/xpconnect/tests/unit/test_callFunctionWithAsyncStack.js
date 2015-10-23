@@ -17,7 +17,7 @@ function run_test() {
     let stack = Components.stack;
 
     do_check_eq(stack.name, "asyncCallback");
-    do_check_eq(stack.caller.name, null);
+    do_check_eq(stack.caller, null);
     do_check_eq(stack.asyncCause, null);
 
     do_check_eq(stack.asyncCaller.name, "getAsyncStack");

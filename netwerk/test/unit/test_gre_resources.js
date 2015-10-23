@@ -30,6 +30,6 @@ function check_file(file) {
 }
 
 function run_test() {
-  for each(let file in ["ua.css"])
+  for (let file of ["ua.css"])
     check_file(file)
 }
