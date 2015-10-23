@@ -105,6 +105,14 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
   transform: none;
 }
 
+chatbox[src^="about:loopconversation#"] .chat-minimize-button {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-white");
+}
+
+chatbox[src^="about:loopconversation#"] .chat-swap-button {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand-white");
+}
+
 .chat-loop-hangup {
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#exit-white");
   background-color: #d13f1a;
@@ -129,6 +137,10 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
   cursor: inherit;
 }
 
+chatbox[src^="about:loopconversation#"] .chat-title {
+  color: white;
+}
+
 .chat-titlebar {
   height: 26px;
   min-height: 26px;
@@ -145,6 +157,11 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
 
 .chat-titlebar[selected] {
   background-color: #f0f0f0;
+}
+
+chatbox[src^="about:loopconversation#"] > .chat-titlebar {
+  background-color: #00a9dc;
+  border-color: #00a9dc;
 }
 
 .chat-titlebar > .notification-anchor-icon {
