@@ -215,7 +215,7 @@ class PackageFrontend(MachCommandBase):
     @CommandArgument('--tree', metavar='TREE', type=str,
         help='Firefox tree.',
         default='fx-team')  # TODO: switch to central as this stabilizes.
-    @CommandArgument('--job', metavar='JOB', choices=['android-api-11'],
+    @CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86'],
         help='Build job.',
         default='android-api-11')  # TODO: fish job from build configuration.
     @CommandArgument('source', metavar='SRC', nargs='?', type=str,
