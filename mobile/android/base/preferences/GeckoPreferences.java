@@ -125,7 +125,6 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static final String PREFS_DEVTOOLS_REMOTE_USB_ENABLED = "devtools.remote.usb.enabled";
     private static final String PREFS_DEVTOOLS_REMOTE_WIFI_ENABLED = "devtools.remote.wifi.enabled";
-    private static final String PREFS_DISPLAY_TITLEBAR_MODE = "browser.chrome.titlebarMode";
     private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
     private static final String PREFS_TRACKING_PROTECTION = "privacy.trackingprotection.state";
     private static final String PREFS_TRACKING_PROTECTION_PB = "privacy.trackingprotection.pbmode.enabled";
@@ -844,13 +843,6 @@ OnSharedPreferenceChangeListener
                             return true;
                         }
                     });
-                } else if (PREFS_DISPLAY_TITLEBAR_MODE.equals(key)) {
-                    if (HardwareUtils.isTablet()) {
-                        // New tablet always shows URLS, not titles.
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
                 } else if (handlers.containsKey(key)) {
                     PrefHandler handler = handlers.get(key);
                     if (!handler.setupPref(this, pref)) {
