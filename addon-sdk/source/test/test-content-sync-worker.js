@@ -477,7 +477,7 @@ exports["test:setInterval async Errors passed to .onError"] = WorkerTest(
       onError: function(err) {
         count++;
         assert.equal(err.message, "ubik",
-            "error (corectly) propagated  " + count + " time(s)");
+            "error (correctly) propagated  " + count + " time(s)");
         if (count >= 3) done();
       }
     });

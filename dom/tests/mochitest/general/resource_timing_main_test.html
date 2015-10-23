@@ -212,7 +212,7 @@ function checkEntries(anEntryList) {
 function firstCheck() {
   is(window.performance.getEntriesByType("resource").length, 1, "The first xhr entry was not added.");
   is(window.performance.getEntriesByType("resource")[0].initiatorType, "xmlhttprequest",
-    "The initiatorType is incorect for this entry");
+    "The initiatorType is incorrect for this entry");
   makeXhr("test-data2.json", secondCheck);
 }
 

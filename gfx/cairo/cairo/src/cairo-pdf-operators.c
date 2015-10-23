@@ -736,7 +736,7 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t		*pdf_operators,
     }
 
     /* The PDF CTM is transformed to the user space CTM when stroking
-     * so the corect pen shape will be used. This also requires that
+     * so the correct pen shape will be used. This also requires that
      * the path be transformed to user space when emitted. The
      * conversion of path coordinates to user space may cause rounding
      * errors. For example the device space point (1.234, 3.142) when
