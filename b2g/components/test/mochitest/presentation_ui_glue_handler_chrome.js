@@ -20,16 +20,13 @@ SystemAppProxy.addEventListener('mozPresentationChromeEvent', function(aEvent) {
 
 addMessageListener('trigger-ui-glue', function(aData) {
   var promise = glue.sendRequest(aData.url, aData.sessionId);
-  promise.then(function(aFrame){
+  promise.then(function(aFrame) {
     sendAsyncMessage('iframe-resolved', aFrame);
+  }).catch(function() {
+    sendAsyncMessage('iframe-rejected');
   });
 });
 
-addMessageListener('trigger-presentation-content-event', function(aData) {
-  var detail = {
-    type: 'presentation-receiver-launched',
-    id: aData.sessionId,
-    frame: aData.frame
-  };
-  SystemAppProxy._sendCustomEvent('mozPresentationContentEvent', detail);
+addMessageListener('trigger-presentation-content-event', function(aDetail) {
+  SystemAppProxy._sendCustomEvent('mozPresentationContentEvent', aDetail);
 });
