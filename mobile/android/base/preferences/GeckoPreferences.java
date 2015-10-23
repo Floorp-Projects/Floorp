@@ -695,14 +695,6 @@ OnSharedPreferenceChangeListener
                 } else if (pref instanceof PanelsPreferenceCategory) {
                     mPanelsPreferenceCategory = (PanelsPreferenceCategory) pref;
                 }
-                if (getResources().getString(R.string.pref_category_input_options).equals(key)) {
-                    if (!InputOptionsUtils.supportsVoiceRecognizer(getApplicationContext(), getResources().getString(R.string.voicesearch_prompt)) &&
-                            !InputOptionsUtils.supportsQrCodeReader(getApplicationContext())) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
-                }
                 if (PREFS_ADVANCED.equals(key) &&
                     !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
                     preferences.removePreference(pref);
