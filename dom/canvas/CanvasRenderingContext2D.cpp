@@ -1414,7 +1414,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
             mBufferProvider = new PersistentBufferProviderBasic(mTarget);
             mIsSkiaGL = true;
           } else {
-            printf_stderr("Failed to create a SkiaGL DrawTarget, falling back to software\n");
+            gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
             mode = RenderingMode::SoftwareBackendMode;
           }
         }
@@ -1470,6 +1470,10 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     mTarget = sErrorTarget;
   }
 
+  // Drop a note in the debug builds if we ever use accelerated Skia canvas.
+  if (mIsSkiaGL && mTarget && mTarget->GetType() == DrawTargetType::HARDWARE_RASTER) {
+    gfxWarningOnce() << "Using SkiaGL canvas.";
+  }
   return mode;
 }
 
