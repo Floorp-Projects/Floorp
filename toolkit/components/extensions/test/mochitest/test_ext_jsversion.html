@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* test_versioned_js() {
+  // We need to deal with escaping the close script tags.
+  // May as well consolidate it into one place.
+  let script = attrs => `<script ${attrs}></${'script'}>`;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "background": {"page": "background.html"}
+    },
+
+    files: {
+      "background.html": `
+        <meta charset="utf-8">
+        ${script('src="background.js" type="application/javascript"')}
+        ${script('src="background-1.js" type="application/javascript;version=1.8"')}
+        ${script('src="background-2.js" type="application/javascript;version=latest"')}
+        ${script('src="background-3.js" type="application/javascript"')}
+      `,
+
+      "background.js": "new " + function () {
+        browser.runtime.onMessage.addListener(msg => {
+          browser.test.assertEq(
+            msg, "background-script-3",
+            "Expected a message only from the unversioned background script.");
+
+          browser.test.sendMessage("finished");
+        });
+      },
+
+      "background-1.js": "new " + function () {
+        browser.runtime.sendMessage("background-script-1");
+      },
+      "background-2.js": "new " + function () {
+        browser.runtime.sendMessage("background-script-2");
+      },
+      "background-3.js": "new " + function () {
+        browser.runtime.sendMessage("background-script-3");
+      },
+    },
+  });
+
+  let messages = [/Versioned JavaScript.*not supported in WebExtension.*developer\.mozilla\.org/,
+                  /Versioned JavaScript.*not supported in WebExtension.*developer\.mozilla\.org/];
+
+  let waitForConsole = new Promise(resolve => {
+    SimpleTest.monitorConsole(resolve, messages);
+  });
+
+  info("loading extension");
+
+  yield Promise.all([extension.startup(),
+                     extension.awaitMessage("finished")]);
+
+  info("waiting for console");
+
+  SimpleTest.endMonitorConsole();
+  yield waitForConsole;
+
+  info("unloading extension");
+
+  yield extension.unload();
+
+  info("test complete");
+});
+
+</script>
+
+</body>
+</html>
