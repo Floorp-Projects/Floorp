@@ -1748,11 +1748,19 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
     // pacing so it can be found on cancel if necessary.
     // Transactions that cause blocking or bypass it (e.g. js/css) are not rate
     // limited.
-    if (gHttpHandler->UseRequestTokenBucket() &&
-        (mNumActiveConns >= mNumSpdyActiveConns) && // just check for robustness sake
-        ((mNumActiveConns - mNumSpdyActiveConns) >= gHttpHandler->RequestTokenBucketMinParallelism()) &&
-        !(caps & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED))) {
-        if (!trans->TryToRunPacedRequest()) {
+    if (gHttpHandler->UseRequestTokenBucket()) {
+        // submit even whitelisted transactions to the token bucket though they will
+        // not be slowed by it
+        bool runNow = trans->TryToRunPacedRequest();
+        if (!runNow) {
+            if ((mNumActiveConns - mNumSpdyActiveConns) <=
+                gHttpHandler->RequestTokenBucketMinParallelism()) {
+                runNow = true; // white list it
+            } else if (caps & (NS_HTTP_LOAD_AS_BLOCKING | NS_HTTP_LOAD_UNBLOCKED)) {
+                runNow = true; // white list it
+            }
+        }
+        if (!runNow) {
             LOG(("   blocked due to rate pacing trans=%p\n", trans));
             return NS_ERROR_NOT_AVAILABLE;
         }

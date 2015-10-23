@@ -166,7 +166,7 @@ var AccessFuTest = {
         AccessFuTest.nextTest();
       } else {
         // Run all test functions synchronously.
-        [testFunc() for (testFunc of gTestFuncs)]; // jshint ignore:line
+        gTestFuncs.forEach(testFunc => testFunc());
         AccessFuTest.finish();
       }
     });

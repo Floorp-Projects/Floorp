@@ -1,6 +1,7 @@
 #include "TestMultiMgrs.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace mozilla {
 namespace _ipdltest {
@@ -70,17 +71,17 @@ TestMultiMgrsRightChild::RecvPTestMultiMgrsBottomConstructor(
 bool
 TestMultiMgrsChild::RecvCheck()
 {
-    if (1 != ManagedPTestMultiMgrsLeftChild().Length())
+    if (1 != ManagedPTestMultiMgrsLeftChild().Count())
         fail("where's leftie?");
-    if (1 != ManagedPTestMultiMgrsRightChild().Length())
+    if (1 != ManagedPTestMultiMgrsRightChild().Count())
         fail("where's rightie?");
 
     TestMultiMgrsLeftChild* leftie =
         static_cast<TestMultiMgrsLeftChild*>(
-            ManagedPTestMultiMgrsLeftChild()[0]);
+            LoneManagedOrNull(ManagedPTestMultiMgrsLeftChild()));
     TestMultiMgrsRightChild* rightie =
         static_cast<TestMultiMgrsRightChild*>(
-            ManagedPTestMultiMgrsRightChild()[0]);
+            LoneManagedOrNull(ManagedPTestMultiMgrsRightChild()));
 
     if (!leftie->HasChild(mBottomL))
         fail("leftie didn't have a child it was supposed to!");

@@ -135,8 +135,7 @@ private:
     if (SUCCEEDED(hr))
       return false;
 
-    gfxCriticalError(CriticalLog::DefaultOptions(false))
-      << "[D3D11] " << aContext << " failed: " << hexa(hr);
+    gfxCriticalNote << "[D3D11] " << aContext << " failed: " << hexa(hr);
     return true;
   }
 
@@ -198,8 +197,7 @@ CompositorD3D11::Initialize()
   mDevice->GetImmediateContext(getter_AddRefs(mContext));
 
   if (!mContext) {
-    gfxCriticalError(CriticalLog::DefaultOptions(false))
-      << "[D3D11] failed to get immediate context";
+    gfxCriticalNote << "[D3D11] failed to get immediate context";
     return false;
   }
 
@@ -485,7 +483,7 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (Failed(hr) || !texture) {
-    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed in CreateRenderTarget";
+    gfxCriticalNote << "Failed in CreateRenderTarget " << hexa(hr);
     return nullptr;
   }
 
@@ -519,7 +517,7 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   NS_ASSERTION(texture, "Could not create texture");
   if (Failed(hr) || !texture) {
-    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed in CreateRenderTargetFromSource";
+    gfxCriticalNote << "Failed in CreateRenderTargetFromSource " << hexa(hr);
     return nullptr;
   }
 
@@ -1235,7 +1233,7 @@ CompositorD3D11::UpdateRenderTarget()
 {
   EnsureSize();
   if (!VerifyBufferSize()) {
-    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed VerifyBufferSize in UpdateRenderTarget " << mSize;
+    gfxCriticalNote << "Failed VerifyBufferSize in UpdateRenderTarget " << mSize;
     return;
   }
 
@@ -1244,7 +1242,7 @@ CompositorD3D11::UpdateRenderTarget()
   }
 
   if (mSize.width <= 0 || mSize.height <= 0) {
-    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Invalid size in UpdateRenderTarget " << mSize;
+    gfxCriticalNote << "Invalid size in UpdateRenderTarget " << mSize;
     return;
   }
 
@@ -1261,7 +1259,7 @@ CompositorD3D11::UpdateRenderTarget()
     }
   }
   if (Failed(hr)) {
-    gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed in UpdateRenderTarget";
+    gfxCriticalNote << "Failed in UpdateRenderTarget " << hexa(hr);
     return;
   }
 
@@ -1444,8 +1442,7 @@ CompositorD3D11::Failed(HRESULT hr, const char* aContext)
   if (SUCCEEDED(hr))
     return false;
 
-  gfxCriticalError(CriticalLog::DefaultOptions(false))
-    << "[D3D11] " << aContext << " failed: " << hexa(hr);
+  gfxCriticalNote << "[D3D11] " << aContext << " failed: " << hexa(hr);
   return true;
 }
 

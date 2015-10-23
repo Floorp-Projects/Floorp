@@ -773,6 +773,10 @@ class MOZ_STACK_CLASS ModuleValidator
             MOZ_ASSERT(isAnyArrayView());
             return u.viewInfo.isSharedView_;
         }
+        void setViewIsSharedView() {
+            MOZ_ASSERT(isAnyArrayView());
+            u.viewInfo.isSharedView_ = true;
+        }
         bool isMathFunction() const {
             return which_ == MathBuiltinFunction;
         }
@@ -918,6 +922,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool                                    canValidateChangeHeap_;
     bool                                    hasChangeHeap_;
     bool                                    supportsSimd_;
+    bool                                    atomicsPresent_;
 
     ScopedJSDeletePtr<ModuleCompileResults> compileResults_;
     DebugOnly<bool>                         finishedFunctionBodies_;
@@ -943,6 +948,7 @@ class MOZ_STACK_CLASS ModuleValidator
         canValidateChangeHeap_(false),
         hasChangeHeap_(false),
         supportsSimd_(cx->jitSupportsSimd()),
+        atomicsPresent_(false),
         compileResults_(nullptr),
         finishedFunctionBodies_(false)
     {
@@ -1155,6 +1161,7 @@ class MOZ_STACK_CLASS ModuleValidator
         Global* global = moduleLifo_.new_<Global>(Global::AtomicsBuiltinFunction);
         if (!global)
             return false;
+        atomicsPresent_ = true;
         global->u.atomicsBuiltinFunc_ = func;
         return globals_.putNew(varName, global);
     }
@@ -1509,6 +1516,14 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     void startFunctionBodies() {
+        if (atomicsPresent_) {
+            for (GlobalMap::Range r = globals_.all() ; !r.empty() ; r.popFront()) {
+                Global* g = r.front().value();
+                if (g->isAnyArrayView())
+                    g->setViewIsSharedView();
+            }
+            module_->setViewsAreShared();
+        }
         module_->startFunctionBodies();
     }
     bool finishFunctionBodies(ScopedJSDeletePtr<ModuleCompileResults>* compileResults) {
