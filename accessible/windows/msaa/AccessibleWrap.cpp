@@ -350,9 +350,6 @@ AccessibleWrap::get_accValue(
   if (IsProxy())
     return E_NOTIMPL;
 
-  if (xpAccessible->NativeRole() == roles::PASSWORD_TEXT)
-    return E_ACCESSDENIED;
-
   nsAutoString value;
   xpAccessible->Value(value);
 
