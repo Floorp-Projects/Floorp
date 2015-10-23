@@ -4,6 +4,8 @@
 
 package org.mozilla.b2gdroid;
 
+import java.util.Date;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
@@ -44,6 +46,12 @@ public class Launcher extends FragmentActivity
     private ScreenStateObserver mScreenStateObserver;
     private Apps                mApps;
     private SettingsMapper      mSettings;
+
+    private static final long   kHomeRepeat = 2;
+    private static final long   kHomeDelay  = 500; // delay in ms to tap kHomeRepeat times.
+    private long                mFirstHome;
+    private long                mLastHome;
+    private long                mHomeCount;
 
     /** ContextGetter */
     public Context getContext() {
@@ -97,6 +105,10 @@ public class Launcher extends FragmentActivity
             "Launcher:Ready");
 
         setContentView(R.layout.launcher);
+
+        mHomeCount = 0;
+        mFirstHome = 0;
+        mLastHome = 0;
     }
 
     @Override
@@ -139,10 +151,29 @@ public class Launcher extends FragmentActivity
             GeckoEvent e = GeckoEvent.createBroadcastEvent("Android:Launcher", obj.toString());
             GeckoAppShell.sendEventToGecko(e);
         } else if (Intent.ACTION_MAIN.equals(action)) {
-            Log.d(LOGTAG, "Let's dispatch a 'home' key event");
+            String message = "home-key";
+
+            // Check if we did a multiple home tap to trigger the task switcher.
+            long now = (new Date()).getTime();
+            if (now - mLastHome > kHomeDelay) {
+                mHomeCount = 0;
+            }
+            if (mHomeCount == 0) {
+                mFirstHome = now;
+            }
+            mHomeCount++;
+            if (mHomeCount == kHomeRepeat) {
+                mHomeCount = 0;
+                if (now - mFirstHome < kHomeDelay) {
+                    message = "task-switcher";
+                }
+            }
+            mLastHome = now;
+
+            Log.d(LOGTAG, "Let's dispatch a '" + message + "' key event");
             JSONObject obj = new JSONObject();
             try {
-                obj.put("action", "home-key");
+                obj.put("action", message);
             } catch(JSONException ex) {
                 Log.wtf(LOGTAG, "Error building Android:Launcher message", ex);
             }
