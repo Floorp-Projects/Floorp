@@ -9,9 +9,13 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
+                                  "resource://gre/modules/Messaging.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
@@ -23,18 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 this.EXPORTED_SYMBOLS = ["PushRecord"];
 
 const prefs = new Preferences("dom.push.");
-
-// History transition types that can fire a `pushsubscriptionchange` event
-// when the user visits a site with expired push registrations. Visits only
-// count if the user sees the origin in the address bar. This excludes embedded
-// resources, downloads, and framed links.
-const QUOTA_REFRESH_TRANSITIONS_SQL = [
-  Ci.nsINavHistoryService.TRANSITION_LINK,
-  Ci.nsINavHistoryService.TRANSITION_TYPED,
-  Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
-  Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
-  Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY
-].join(",");
 
 function PushRecord(props) {
   this.pushEndpoint = props.pushEndpoint;
@@ -112,9 +104,34 @@ PushRecord.prototype = {
   getLastVisit() {
     if (!this.quotaApplies() || this.isTabOpen()) {
       // If the registration isn't subject to quota, or the user already
-      // has the site open, skip the Places query.
+      // has the site open, skip expensive database queries.
       return Promise.resolve(Date.now());
     }
+
+    if (AppConstants.MOZ_ANDROID_HISTORY) {
+      return Messaging.sendRequestForResult({
+        type: "History:GetPrePathLastVisitedTimeMilliseconds",
+        prePath: this.uri.prePath,
+      }).then(result => {
+        if (result == 0) {
+          return -Infinity;
+        }
+        return result;
+      });
+    }
+
+    // Places History transition types that can fire a
+    // `pushsubscriptionchange` event when the user visits a site with expired push
+    // registrations. Visits only count if the user sees the origin in the address
+    // bar. This excludes embedded resources, downloads, and framed links.
+    const QUOTA_REFRESH_TRANSITIONS_SQL = [
+      Ci.nsINavHistoryService.TRANSITION_LINK,
+      Ci.nsINavHistoryService.TRANSITION_TYPED,
+      Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
+      Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
+      Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY
+    ].join(",");
+
     return PlacesUtils.withConnectionWrapper("PushRecord.getLastVisit", db => {
       // We're using a custom query instead of `nsINavHistoryQueryOptions`
       // because the latter doesn't expose a way to filter by transition type:

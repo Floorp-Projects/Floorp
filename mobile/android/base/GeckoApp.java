@@ -30,6 +30,7 @@ import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityUtils;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -121,6 +122,7 @@ import java.util.Set;
 public abstract class GeckoApp
     extends GeckoActivity
     implements
+    BundleEventListener,
     ContextGetter,
     GeckoAppShell.GeckoInterface,
     GeckoEventListener,
@@ -725,6 +727,24 @@ public abstract class GeckoApp
         }
     }
 
+    @Override
+    public void handleMessage(final String event, final Bundle message, final EventCallback callback) {
+        if ("History:GetPrePathLastVisitedTimeMilliseconds".equals(event)) {
+            if (callback == null) {
+                Log.e(LOGTAG, "callback must not be null in " + event);
+                return;
+            }
+            final String prePath = message.getString("prePath");
+            if (prePath == null) {
+                callback.sendError("prePath must not be null in " + event);
+                return;
+            }
+            // We're on a background thread, so we can be synchronous.
+            final long millis = mProfile.getDB().getPrePathLastVisitedTimeMilliseconds(getContentResolver(), prePath);
+            callback.sendSuccess(millis);
+        }
+    }
+
     void onStatePurged() { }
 
     /**
@@ -1322,6 +1342,9 @@ public abstract class GeckoApp
             "Update:Check",
             "Update:Download",
             "Update:Install");
+
+        EventDispatcher.getInstance().registerBackgroundThreadListener((BundleEventListener) this,
+                "History:GetPrePathLastVisitedTimeMilliseconds");
 
         if (mWebappEventListener == null) {
             mWebappEventListener = new EventListener();
@@ -2137,6 +2160,9 @@ public abstract class GeckoApp
             "Update:Check",
             "Update:Download",
             "Update:Install");
+
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener((BundleEventListener) this,
+                "History:GetPrePathLastVisitedTimeMilliseconds");
 
         if (mWebappEventListener != null) {
             mWebappEventListener.unregisterEvents();
