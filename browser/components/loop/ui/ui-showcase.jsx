@@ -898,7 +898,7 @@
           </Section>
 
           <Section name="DesktopRoomConversationView">
-            <FramedExample height={448}
+            <FramedExample height={398}
                            onContentsRendered={invitationRoomStore.activeRoomStore.forcedUpdate}
                            summary="Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)"
                            width={348}>
@@ -932,7 +932,7 @@
             </FramedExample>
 
             <FramedExample dashed={true}
-                           height={448}
+                           height={398}
                            onContentsRendered={desktopRoomStoreLoading.activeRoomStore.forcedUpdate}
                            summary="Desktop room conversation (loading)"
                            width={348}>
@@ -952,7 +952,7 @@
             </FramedExample>
 
             <FramedExample dashed={true}
-                           height={448}
+                           height={398}
                            onContentsRendered={roomStore.activeRoomStore.forcedUpdate}
                            summary="Desktop room conversation"
                            width={348}>
@@ -1006,7 +1006,7 @@
             </FramedExample>
 
             <FramedExample dashed={true}
-                           height={448}
+                           height={398}
                            onContentsRendered={desktopLocalFaceMuteRoomStore.activeRoomStore.forcedUpdate}
                            summary="Desktop room conversation local face-mute"
                            width={348}>
@@ -1022,7 +1022,7 @@
             </FramedExample>
 
             <FramedExample dashed={true}
-                           height={448}
+                           height={398}
                            onContentsRendered={desktopRemoteFaceMuteRoomStore.activeRoomStore.forcedUpdate}
                            summary="Desktop room conversation remote face-mute"
                            width={348} >

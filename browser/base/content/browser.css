@@ -936,8 +936,8 @@ chatbox[customSize] {
 }
 
 chatbox[customSize="loopChatEnabled"] {
-  /* 430px as defined per UX */
-  height: 430px;
+  /* 325px as defined per UX */
+  height: 325px;
 }
 
 #chat-window[customSize="loopChatEnabled"] {
@@ -946,13 +946,8 @@ chatbox[customSize="loopChatEnabled"] {
 }
 
 chatbox[customSize="loopChatMessageAppended"] {
-  /* 430px as defined per UX */
-  height: 430px;
-}
-
-chatbox[customSize="loopChatDisabledMessageAppended"] {
-  /* 388px as defined per UX */
-  height: 388px;
+  /* 400px as defined per UX */
+  height: 400px;
 }
 
 #chat-window[customSize="loopChatMessageAppended"] {
@@ -976,8 +971,8 @@ chatbar {
 }
 
 chatbar[customSize] > .chatbar-innerbox {
-  /* 450px to make room for the maximum custom-size chatbox; currently 'loopChatMessageAppended'. */
-  margin-top: -450px;
+  /* 425px to make room for the maximum custom-size chatbox; currently 'loopChatMessageAppended'. */
+  margin-top: -425px;
 }
 
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */

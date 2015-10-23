@@ -96,7 +96,6 @@ describe("loop.store.TextChatStore", function() {
     });
 
     it("should dispatch a LoopChatMessageAppended event", function() {
-      store.setStoreState({ textChatEnabled: true });
       store.receivedTextChatMessage({
         contentType: CHAT_CONTENT_TYPES.TEXT,
         message: "Hello!"
@@ -142,7 +141,6 @@ describe("loop.store.TextChatStore", function() {
     });
 
     it("should dipatch a LoopChatMessageAppended event", function() {
-      store.setStoreState({ textChatEnabled: true });
       store.sendTextChatMessage({
         contentType: CHAT_CONTENT_TYPES.TEXT,
         message: "Hello!"
@@ -246,40 +244,6 @@ describe("loop.store.TextChatStore", function() {
           thumbnail: "fake2"
         }
       }]);
-    });
-
-    it("should dispatch a LoopChatDisabledMessageAppended event", function() {
-      store.setStoreState({ textChatEnabled: false });
-      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
-        roomName: "Let's share!",
-        roomUrl: "fake",
-        urls: [{
-          description: "A wonderful event",
-          location: "http://wonderful.invalid",
-          thumbnail: "fake"
-        }]
-      }));
-
-      expect(store.getStoreState("messageList")).eql([
-        {
-          type: CHAT_MESSAGE_TYPES.SPECIAL,
-          contentType: CHAT_CONTENT_TYPES.ROOM_NAME,
-          message: "Let's share!",
-          extraData: undefined,
-          sentTimestamp: undefined,
-          receivedTimestamp: undefined
-        }, {
-          type: CHAT_MESSAGE_TYPES.SPECIAL,
-          contentType: CHAT_CONTENT_TYPES.CONTEXT,
-          message: "A wonderful event",
-          sentTimestamp: undefined,
-          receivedTimestamp: undefined,
-          extraData: {
-            location: "http://wonderful.invalid",
-            thumbnail: "fake"
-          }
-        }
-      ]);
     });
 
     it("should not dispatch a LoopChatMessageAppended event", function() {
