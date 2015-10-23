@@ -3608,7 +3608,7 @@ CSS_PROP_TEXT(
     VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
     nullptr,
     offsetof(nsStyleText, mWordSpacing),
-    eStyleAnimType_nscoord)
+    eStyleAnimType_Coord)
 CSS_PROP_TEXT(
     word-wrap,
     word_wrap,

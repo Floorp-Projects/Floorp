@@ -1922,6 +1922,12 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     return NS_OK;
   }
 
+  // Always treat tainted channels as cross-origin.
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
+  if (loadInfo && loadInfo->GetTainting() != LoadTainting::Basic) {
+    mState |= XML_HTTP_REQUEST_USE_XSITE_AC;
+  }
+
   // Don't do anything if we have been aborted
   if (mState & XML_HTTP_REQUEST_UNSENT)
     return NS_OK;

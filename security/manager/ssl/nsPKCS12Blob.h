@@ -26,11 +26,14 @@ class nsIX509Cert;
 //
 // Class for importing/exporting PKCS#12 blobs
 //
-class nsPKCS12Blob
+class nsPKCS12Blob : public nsNSSShutDownObject
 {
 public:
   nsPKCS12Blob();
   virtual ~nsPKCS12Blob();
+
+  // Nothing to release.
+  virtual void virtualDestroyNSSReference() override {}
 
   // Set the token to use (default is internal)
   nsresult SetToken(nsIPK11Token *token);

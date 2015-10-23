@@ -1,3 +1,5 @@
+var origin = 'http://mochi.test:8888';
+
 function fetchXHRWithMethod(name, method, onload, onerror, headers) {
   expectAsyncResult();
 
@@ -19,6 +21,14 @@ function fetchXHRWithMethod(name, method, onload, onerror, headers) {
     x.setRequestHeader(header[0], header[1]);
   });
   x.send();
+}
+
+var corsServerPath = '/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs';
+var corsServerURL = 'http://example.com' + corsServerPath;
+
+function redirectURL(hops) {
+  return hops[0].server + corsServerPath + "?hop=1&hops=" +
+         encodeURIComponent(hops.toSource());
 }
 
 function fetchXHR(name, onload, onerror, headers) {
@@ -143,7 +153,17 @@ fetchXHR('hello-after-extracting.gz', function(xhr) {
   finish();
 });
 
-fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', function(xhr) {
+fetchXHR(corsServerURL + '?status=200&allowOrigin=*', function(xhr) {
+  my_ok(xhr.status == 200, "cross origin load with correct headers should be successful");
+  my_ok(xhr.getResponseHeader("access-control-allow-origin") == null, "cors headers should be filtered out");
+  finish();
+});
+
+// Verify that XHR is considered CORS tainted even when original URL is same-origin
+// redirected to cross-origin.
+fetchXHR(redirectURL([{ server: origin },
+                      { server: 'http://example.org',
+                        allowOrigin: origin }]), function(xhr) {
   my_ok(xhr.status == 200, "cross origin load with correct headers should be successful");
   my_ok(xhr.getResponseHeader("access-control-allow-origin") == null, "cors headers should be filtered out");
   finish();
@@ -152,7 +172,7 @@ fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_serv
 // Test that CORS preflight requests cannot be intercepted. Performs a
 // cross-origin XHR that the SW chooses not to intercept. This requires a
 // preflight request, which the SW must not be allowed to intercept.
-fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', null, function(xhr) {
+fetchXHR(corsServerURL + '?status=200&allowOrigin=*', null, function(xhr) {
   my_ok(xhr.status == 0, "cross origin load with incorrect headers should be a failure");
   finish();
 }, [["X-Unsafe", "unsafe"]]);
@@ -161,7 +181,7 @@ fetchXHR('http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_serv
 // cross-origin XHR that the SW chooses to intercept and respond with a
 // cross-origin fetch. This requires a preflight request, which the SW must not
 // be allowed to intercept.
-fetchXHR('http://example.org/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*', null, function(xhr) {
+fetchXHR('http://example.org' + corsServerPath + '?status=200&allowOrigin=*', null, function(xhr) {
   my_ok(xhr.status == 0, "cross origin load with incorrect headers should be a failure");
   finish();
 }, [["X-Unsafe", "unsafe"]]);

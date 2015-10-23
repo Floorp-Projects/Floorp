@@ -77,7 +77,7 @@ public class CodeGenerator {
         String clsName = this.clsName;
 
         while (cls != null) {
-            if (type == cls) {
+            if (type.equals(cls)) {
                 return clsName;
             }
             cls = cls.getDeclaringClass();
@@ -181,7 +181,7 @@ public class CodeGenerator {
             proto.append(", ");
         }
 
-        if (info.catchException && returnType != void.class) {
+        if (info.catchException && !returnType.equals(void.class)) {
             proto.append(getNativeReturnType(returnType, info)).append('*');
             if (includeArgName) {
                 proto.append(" a").append(argIndex++);
@@ -239,7 +239,7 @@ public class CodeGenerator {
         // We initialize rv to NS_OK instead of NS_ERROR_* because loading NS_OK (0) uses
         // fewer instructions. We are guaranteed to set rv to the correct value later.
 
-        if (info.catchException && returnType == void.class) {
+        if (info.catchException && returnType.equals(void.class)) {
             def.append(
                     "    nsresult rv = NS_OK;\n" +
                     "    ");
@@ -350,14 +350,14 @@ public class CodeGenerator {
     private String getLiteral(Object val, AnnotationInfo info) {
         final Class<?> type = val.getClass();
 
-        if (type == char.class || type == Character.class) {
+        if (type.equals(char.class) || type.equals(Character.class)) {
             final char c = (char) val;
             if (c >= 0x20 && c < 0x7F) {
                 return "'" + c + '\'';
             }
             return "u'\\u" + Integer.toHexString(0x10000 | (int) c).substring(1) + '\'';
 
-        } else if (type == CharSequence.class || type == String.class) {
+        } else if (type.equals(CharSequence.class) || type.equals(String.class)) {
             final CharSequence str = (CharSequence) val;
             final StringBuilder out = new StringBuilder(info.narrowChars ? "u8\"" : "u\"");
             for (int i = 0; i < str.length(); i++) {
@@ -389,7 +389,7 @@ public class CodeGenerator {
         final boolean isStatic = Utils.isStatic(field);
         final boolean isFinal = Utils.isFinal(field);
 
-        if (isStatic && isFinal && (type.isPrimitive() || type == String.class)) {
+        if (isStatic && isFinal && (type.isPrimitive() || type.equals(String.class))) {
             Object val = null;
             try {
                 field.setAccessible(true);
@@ -406,7 +406,7 @@ public class CodeGenerator {
                     "\n");
                 return;
 
-            } else if (val != null && type == String.class) {
+            } else if (val != null && type.equals(String.class)) {
                 final String nativeType = info.narrowChars ? "char" : "char16_t";
 
                 header.append(
