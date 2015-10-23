@@ -1409,9 +1409,9 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
 
         LIFECYCLE_LOG("Disconnecting MediaStreamGraph %p", this);
         MediaStreamGraphImpl* graph;
-        if (gGraphs.Get(mAudioChannel, &graph) && graph == this) {
+        if (gGraphs.Get(uint32_t(mAudioChannel), &graph) && graph == this) {
           // null out gGraph if that's the graph being shut down
-          gGraphs.Remove(mAudioChannel);
+          gGraphs.Remove(uint32_t(mAudioChannel));
         }
       }
     } else {
@@ -1566,8 +1566,8 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
         mLifecycleState >= LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION) {
 
       MediaStreamGraphImpl* graph;
-      if (gGraphs.Get(mAudioChannel, &graph) && graph == this) {
-        gGraphs.Remove(mAudioChannel);
+      if (gGraphs.Get(uint32_t(mAudioChannel), &graph) && graph == this) {
+        gGraphs.Remove(uint32_t(mAudioChannel));
       }
 
       Destroy();
@@ -1653,7 +1653,7 @@ MediaStream::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 {
   MOZ_ASSERT(!mGraph, "Should only be called once");
   mGraph = aGraph;
-  mAudioChannelType = static_cast<AudioChannel>(aGraph->AudioChannel());
+  mAudioChannelType = aGraph->AudioChannel();
   mBuffer.InitGraphRate(aGraph->GraphRate());
 }
 
@@ -2532,7 +2532,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
 #ifdef DEBUG
   , mCanRunMessagesSynchronously(false)
 #endif
-  , mAudioChannel(static_cast<uint32_t>(aChannel))
+  , mAudioChannel(aChannel)
 {
   if (!gMediaStreamGraphLog) {
     gMediaStreamGraphLog = PR_NewLogModule("MediaStreamGraph");
@@ -2540,7 +2540,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
 
   if (mRealtime) {
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
-      AudioCallbackDriver* driver = new AudioCallbackDriver(this, aChannel);
+      AudioCallbackDriver* driver = new AudioCallbackDriver(this);
       mDriver = driver;
       mMixer.AddCallback(driver);
     } else {
@@ -3050,7 +3050,7 @@ MediaStreamGraph::IsNonRealtime() const
   const MediaStreamGraphImpl* impl = static_cast<const MediaStreamGraphImpl*>(this);
   MediaStreamGraphImpl* graph;
 
-  return !gGraphs.Get(impl->AudioChannel(), &graph) || graph != impl;
+  return !gGraphs.Get(uint32_t(impl->AudioChannel()), &graph) || graph != impl;
 }
 
 void
