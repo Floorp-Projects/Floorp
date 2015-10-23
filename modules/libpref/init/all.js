@@ -5086,5 +5086,8 @@ pref("media.useAudioChannelService", true);
 // Add Mozilla AudioChannel APIs.
 pref("media.useAudioChannelAPI", false);
 
+// Expose Request.cache. Currently disabled since the implementation is incomplete.
+pref("dom.requestcache.enabled", false);
+
 // Expose Request.context. Currently disabled since the spec is in flux.
 pref("dom.requestcontext.enabled", false);

@@ -1,0 +1,19 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Make sure that Request.cache is not exposed by default</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+var req = new Request("");
+ok(!("cache" in req), "Request.cache should not be exposed by default");
+</script>
+</body>
+</html>
+
