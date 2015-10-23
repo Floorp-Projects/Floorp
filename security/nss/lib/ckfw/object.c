@@ -171,6 +171,7 @@ nssCKFWObject_Create
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
+    nss_ZFreeIf(fwObject);
     return (NSSCKFWObject *)NULL;
   }
 

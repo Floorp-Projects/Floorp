@@ -1983,6 +1983,7 @@ gatherNicknames(CERTCertificate *cert, void *arg)
 
     tempNick.data = (unsigned char *)cert->nickname;
     tempNick.len = PORT_Strlen(cert->nickname) + 1;
+    tempNick.type = siAsciiString;
 
     /* do we already have the nickname in the list? */
     if(nickArg->nNicks > 0) {
@@ -2810,7 +2811,7 @@ SEC_PKCS12DecoderRenameCertNicknames(SEC_PKCS12DecoderContext *p12dcx,
         return SECFailure;
     }
 
-    for (i = 0; safeBag = p12dcx->safeBags[i]; i++) {
+    for (i = 0; (safeBag = p12dcx->safeBags[i]); i++) {
         SECItem *newNickname = NULL;
         SECItem *defaultNickname = NULL;
         SECStatus rename_rv;

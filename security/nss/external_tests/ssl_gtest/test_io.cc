@@ -125,8 +125,9 @@ static PRStatus DummyListen(PRFileDesc *f, int32_t depth) {
 }
 
 static PRStatus DummyShutdown(PRFileDesc *f, int32_t how) {
-  UNIMPLEMENTED();
-  return PR_FAILURE;
+  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
+  io->Reset();
+  return PR_SUCCESS;
 }
 
 // This function does not support peek.
@@ -250,7 +251,12 @@ static int32_t DummyReserved(PRFileDesc *f) {
 }
 
 DummyPrSocket::~DummyPrSocket() {
+  Reset();
+}
+
+void DummyPrSocket::Reset() {
   delete filter_;
+  peer_ = nullptr;
   while (!input_.empty())
   {
     Packet* front = input_.front();
@@ -393,6 +399,29 @@ void Poller::Wait(Event event, DummyPrSocket *adapter, PollTarget *target,
   waiter->targets_[event] = target;
   waiter->callbacks_[event] = cb;
   waiters_[adapter] = waiter;
+}
+
+void Poller::Cancel(Event event, DummyPrSocket *adapter) {
+  auto it = waiters_.find(adapter);
+  Waiter *waiter;
+
+  if (it == waiters_.end()) {
+    return;
+  }
+
+  waiter = it->second;
+
+  waiter->targets_[event] = nullptr;
+  waiter->callbacks_[event] = nullptr;
+
+  // Clean up if there are no callbacks.
+  for (size_t i=0; i<TIMER_EVENT; ++i) {
+    if (waiter->callbacks_[i])
+      return;
+  }
+
+  delete waiter;
+  waiters_.erase(adapter);
 }
 
 void Poller::SetTimer(uint32_t timer_ms, PollTarget *target, PollCallback cb,

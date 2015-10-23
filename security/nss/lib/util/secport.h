@@ -87,6 +87,19 @@ extern char *PORT_ArenaStrdup(PLArenaPool *arena, const char *str);
 SEC_END_PROTOS
 
 #define PORT_Assert PR_ASSERT
+/* This runs a function that should return SECSuccess.
+ * Intended for NSS internal use only.
+ * The return value is asserted in a debug build, otherwise it is ignored.
+ * This is no substitute for proper error handling.  It is OK only if you
+ * have ensured that the function cannot fail by other means such as checking
+ * prerequisites.  In that case this can be used as a safeguard against
+ * unexpected changes in a function.
+ */
+#ifdef DEBUG
+#define PORT_CheckSuccess(f) PR_ASSERT((f) == SECSuccess)
+#else
+#define PORT_CheckSuccess(f) (f)
+#endif
 #define PORT_ZNew(type) (type*)PORT_ZAlloc(sizeof(type))
 #define PORT_New(type) (type*)PORT_Alloc(sizeof(type))
 #define PORT_ArenaNew(poolp, type)	\

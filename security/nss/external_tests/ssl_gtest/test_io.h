@@ -50,8 +50,9 @@ class DummyPrSocket {
   static DummyPrSocket* GetAdapter(PRFileDesc* fd);
 
   void SetPeer(DummyPrSocket* peer) { peer_ = peer; }
-
   void SetPacketFilter(PacketFilter* filter) { filter_ = filter; }
+  // Drops peer, packet filter and any outstanding packets.
+  void Reset();
 
   void PacketReceived(const DataBuffer& data);
   int32_t Read(void* data, int32_t len);
@@ -102,6 +103,7 @@ class Poller {
 
   void Wait(Event event, DummyPrSocket* adapter, PollTarget* target,
             PollCallback cb);
+  void Cancel(Event event, DummyPrSocket* adapter);
   void SetTimer(uint32_t timer_ms, PollTarget* target, PollCallback cb,
                 Timer** handle);
   bool Poll();

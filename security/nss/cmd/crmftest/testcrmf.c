@@ -127,13 +127,17 @@ debug_test(SECItem *src, char *filePath)
 SECStatus
 get_serial_number(long *dest)
 {
-   SECStatus   rv;
+    SECStatus rv;
 
-   if (dest == NULL) {
+    if (dest == NULL) {
        PORT_SetError(SEC_ERROR_INVALID_ARGS);
        return SECFailure;
-   }
+    }
     rv = PK11_GenerateRandom((unsigned char *)dest, sizeof(long));
+    if (rv != SECSuccess) {
+       /* PK11_GenerateRandom calls PORT_SetError */
+       return SECFailure;
+    }
     /* make serial number positive */
     if (*dest < 0L)
     	*dest = - *dest;
@@ -937,18 +941,6 @@ DoCMMFStuff(void)
     return rv;
 }
 
-static CK_MECHANISM_TYPE
-mapWrapKeyType(KeyType keyType)
-{
-    switch (keyType) {
-    case rsaKey:
-        return CKM_RSA_PKCS;
-    default:
-        break;
-    }
-    return CKM_INVALID_MECHANISM;
-} 
-
 #define KNOWN_MESSAGE_LENGTH 20 /*160 bits*/
 
 int
@@ -1533,10 +1525,6 @@ main(int argc, char **argv)
     PRUint32          flags   = 0;
     SECStatus         rv;
     PRBool            nssInit = PR_FALSE;
-    PRBool            pArg    = PR_FALSE;
-    PRBool            eArg    = PR_FALSE;
-    PRBool            sArg    = PR_FALSE;
-    PRBool            PArg    = PR_FALSE;
 
     memset( &signPair,  0, sizeof signPair);
     memset( &cryptPair, 0, sizeof cryptPair);
@@ -1559,7 +1547,6 @@ main(int argc, char **argv)
 	        printf ("-p  failed\n");
 	        return 603;
 	    }
-	    pArg = PR_TRUE;
 	    break;
 	case 'e':
 	    recoveryEncrypter = PORT_Strdup(optstate->value);
@@ -1567,7 +1554,6 @@ main(int argc, char **argv)
 	        printf ("-e  failed\n");
 	        return 602;
 	    }
-	    eArg = PR_TRUE;
 	    break;
 	case 's':
 	    caCertName = PORT_Strdup(optstate->value);
@@ -1575,7 +1561,6 @@ main(int argc, char **argv)
 	        printf ("-s  failed\n");
 	        return 604;
 	    }
-	    sArg = PR_TRUE;
 	    break;
 	case 'P':
 	    password = PORT_Strdup(optstate->value);
@@ -1585,7 +1570,6 @@ main(int argc, char **argv)
 	    }
             pwdata.source = PW_PLAINTEXT;
             pwdata.data = password;
-	    PArg = PR_TRUE;
 	    break;
         case 'f':
 	    pwfile = PORT_Strdup(optstate->value);

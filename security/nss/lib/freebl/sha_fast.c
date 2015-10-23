@@ -148,7 +148,6 @@ SHA1_End(SHA1Context *ctx, unsigned char *hashout,
 {
   register PRUint64 size;
   register PRUint32 lenB;
-  PRUint32 tmpbuf[5];
 
   static const unsigned char bulk_pad[64] = { 0x80,0,0,0,0,0,0,0,0,0,
           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -188,7 +187,6 @@ SHA1_EndRaw(SHA1Context *ctx, unsigned char *hashout,
 #if defined(SHA_NEED_TMP_VARIABLE)
   register PRUint32 tmp;
 #endif
-  PRUint32 tmpbuf[5];
   PORT_Assert (maxDigestLen >= SHA1_LENGTH);
 
   SHA_STORE_RESULT;

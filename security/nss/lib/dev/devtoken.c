@@ -1466,7 +1466,6 @@ nssToken_TraverseCertificates (
     CK_ATTRIBUTE cert_template[2];
     CK_ULONG ctsize;
     NSSArena *arena;
-    PRStatus status;
     PRUint32 arraySize, numHandles;
     nssCryptokiObject **objects;
     void *epv = nssToken_GetCryptokiEPV(token);
@@ -1544,7 +1543,7 @@ nssToken_TraverseCertificates (
 	if (objects) {
 	    nssCryptokiObject **op;
 	    for (op = objects; *op; op++) {
-		status = (*callback)(*op, arg);
+		(void)(*callback)(*op, arg);
 	    }
 	    nss_ZFreeIf(objects);
 	}

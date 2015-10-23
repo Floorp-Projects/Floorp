@@ -175,7 +175,7 @@ der_capture(unsigned char *buf, unsigned char *end,
 	return SECFailure;
     }
 
-    *header_len_p = bp - buf;
+    *header_len_p = (int)(bp - buf);
     *contents_len_p = contents_len;
 
     return SECSuccess;

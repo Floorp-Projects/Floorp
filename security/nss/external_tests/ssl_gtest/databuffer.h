@@ -12,6 +12,11 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#if defined(WIN32) || defined(WIN64)
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
 
 namespace nss_test {
 
@@ -22,13 +27,13 @@ class DataBuffer {
     Assign(data, len);
   }
   explicit DataBuffer(const DataBuffer& other) : data_(nullptr), len_(0) {
-    Assign(other.data(), other.len());
+    Assign(other);
   }
   ~DataBuffer() { delete[] data_; }
 
   DataBuffer& operator=(const DataBuffer& other) {
     if (&other != this) {
-      Assign(other.data(), other.len());
+      Assign(other);
     }
     return *this;
   }
@@ -43,6 +48,9 @@ class DataBuffer {
     len_ = std::min(len_, len);
   }
 
+  void Assign(const DataBuffer& other) {
+    Assign(other.data(), other.len());
+  }
   void Assign(const uint8_t* data, size_t len) {
     Allocate(len);
     memcpy(static_cast<void *>(data_), static_cast<const void *>(data), len);
@@ -76,6 +84,21 @@ class DataBuffer {
     uint32_t nvalue = htonl(val);
     auto* addr = reinterpret_cast<const uint8_t*>(&nvalue);
     Write(index, addr + sizeof(uint32_t) - count, count);
+  }
+
+  // This can't use the same trick as Write(), since we might be reading from a
+  // smaller data source.
+  bool Read(size_t index, size_t count, uint32_t* val) const {
+    assert(count < sizeof(uint32_t));
+    assert(val);
+    if ((index > len()) || (count > (len() - index))) {
+      return false;
+    }
+    *val = 0;
+    for (size_t i = 0; i < count; ++i) {
+      *val = (*val << 8) | data()[index + i];
+    }
+    return true;
   }
 
   // Starting at |index|, remove |remove| bytes and replace them with the

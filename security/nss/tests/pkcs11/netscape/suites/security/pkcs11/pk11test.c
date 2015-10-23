@@ -1316,7 +1316,7 @@ GetMechInfo(CK_MECHANISM_TYPE type)
 	l = 0; r = numMechs-1;
 
 	while(l <= r) {
-		mid = (l+r)/2;
+		mid = l+(r-l)/2;
 		if(mechInfo[mid].type == type) {
 			return &(mechInfo[mid]);
 		} else if(mechInfo[mid].type < type) {

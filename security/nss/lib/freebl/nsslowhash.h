@@ -8,6 +8,9 @@
  * Also NOTE: this only works with Hashing. Only the FIPS interface is enabled.
  */
 
+#ifndef _NSSLOWHASH_H_
+#define _NSSLOWHASH_H_
+
 typedef struct NSSLOWInitContextStr NSSLOWInitContext;
 typedef struct NSSLOWHASHContextStr NSSLOWHASHContext;
 
@@ -26,3 +29,5 @@ void NSSLOWHASH_End(NSSLOWHASHContext *context,
 			unsigned int *ret, unsigned int len);
 void NSSLOWHASH_Destroy(NSSLOWHASHContext *context);
 unsigned int NSSLOWHASH_Length(NSSLOWHASHContext *context); 
+
+#endif

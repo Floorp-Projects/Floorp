@@ -239,6 +239,7 @@ STAN_GetCertIdentifierFromDER(NSSArena *arenaOpt, NSSDER *der)
     }
     secrv = CERT_KeyFromDERCert(arena, &secDER, &secKey);
     if (secrv != SECSuccess) {
+	PORT_FreeArena(arena, PR_FALSE);
 	return NULL;
     }
     rvKey = nssItem_Create(arenaOpt, NULL, secKey.len, (void *)secKey.data);
@@ -1272,7 +1273,7 @@ DeleteCertTrustMatchingSlot(PK11SlotInfo *pk11slot, nssPKIObject *tObject)
 {
     int numNotDestroyed = 0;     /* the ones skipped plus the failures */
     int failureCount = 0;        /* actual deletion failures by devices */
-    int index;
+    unsigned int index;
 
     nssPKIObject_AddRef(tObject);
     nssPKIObject_Lock(tObject);
@@ -1327,7 +1328,7 @@ STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
     /* caller made sure nssTrust isn't NULL */
     nssPKIObject *tobject = &nssTrust->object;
     nssPKIObject *cobject = &c->object;
-    int i;
+    unsigned int i;
 
     /* Iterate through the cert and trust object instances looking for
      * those with matching pk11 slots to delete. Even if some device

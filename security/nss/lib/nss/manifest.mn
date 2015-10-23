@@ -6,6 +6,7 @@ CORE_DEPTH = ../..
 
 PRIVATE_EXPORTS = \
 	nssrenam.h \
+	nssoptions.h \
 	$(NULL)
 
 EXPORTS = \
@@ -16,6 +17,7 @@ MODULE = nss
 
 CSRCS = \
 	nssinit.c \
+	nssoptions.c \
 	nssver.c \
 	utilwrap.c \
 	$(NULL)

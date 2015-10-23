@@ -6,7 +6,6 @@
 #include "secport.h"
 #include "seccomon.h"
 #include "secoid.h"
-#include "sslerr.h"
 #include "genname.h"
 #include "keyhi.h"
 #include "cert.h"
@@ -23,6 +22,7 @@
 #include "pkim.h"
 #include "pki3hack.h"
 #include "base.h"
+#include "keyhi.h"
 
 /*
  * Check the validity times of a certificate
@@ -32,6 +32,94 @@ CERT_CertTimesValid(CERTCertificate *c)
 {
     SECCertTimeValidity valid = CERT_CheckCertValidTimes(c, PR_Now(), PR_TRUE);
     return (valid == secCertTimeValid) ? SECSuccess : SECFailure;
+}
+
+SECStatus checkKeyParams(const SECAlgorithmID *sigAlgorithm, const SECKEYPublicKey *key)
+{
+    SECStatus        rv;
+    SECOidTag sigAlg;
+    SECOidTag curve;
+    PRUint32 policyFlags = 0;
+    PRInt32 minLen, len;
+
+    sigAlg = SECOID_GetAlgorithmTag(sigAlgorithm);
+
+    switch(sigAlg) {
+        case SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE:
+	case SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE:
+	    if (key->keyType != ecKey) {
+		PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+		return SECFailure;
+	    }
+
+            curve = SECKEY_GetECCOid(&key->u.ec.DEREncodedParams);
+	    if (curve != 0) {
+	        if (NSS_GetAlgorithmPolicy(curve, &policyFlags) == SECFailure ||
+	            !(policyFlags & NSS_USE_ALG_IN_CERT_SIGNATURE)) {
+	            PORT_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+		    return SECFailure;
+		} else {
+		    return SECSuccess;
+                }
+            } else {
+		PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
+		return SECFailure;
+	    }
+            return SECSuccess;
+	case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+	case SEC_OID_PKCS1_RSA_PSS_SIGNATURE:
+	case SEC_OID_ISO_SHA_WITH_RSA_SIGNATURE:
+	case SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE:
+	    if (key->keyType != rsaKey && key->keyType != rsaPssKey) {
+		PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+		return SECFailure;
+	    }
+
+            len = 8 * key->u.rsa.modulus.len;
+
+            rv = NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &minLen);
+            if (rv != SECSuccess) {
+                return SECFailure;
+	    }
+
+            if (len < minLen) {
+                return SECFailure;
+	    }
+
+            return SECSuccess;
+	case SEC_OID_ANSIX9_DSA_SIGNATURE:
+	case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+	case SEC_OID_BOGUS_DSA_SIGNATURE_WITH_SHA1_DIGEST:
+	case SEC_OID_SDN702_DSA_SIGNATURE:
+	case SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA224_DIGEST:
+	case SEC_OID_NIST_DSA_SIGNATURE_WITH_SHA256_DIGEST:
+	    if (key->keyType != dsaKey) {
+		PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+		return SECFailure;
+	    }
+
+            len = 8 * key->u.dsa.params.prime.len;
+
+            rv = NSS_OptionGet(NSS_DSA_MIN_KEY_SIZE, &minLen);
+            if (rv != SECSuccess) {
+                return SECFailure;
+	    }
+
+            if (len < minLen) {
+                return SECFailure;
+	    }
+
+            return SECSuccess;
+	default:
+	    return SECSuccess;
+    }
 }
 
 /*
@@ -50,7 +138,6 @@ CERT_VerifySignedDataWithPublicKey(const CERTSignedData *sd,
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
-
     /* check the signature */
     sig = sd->signature;
     /* convert sig->len from bit counts to byte count. */
@@ -61,11 +148,17 @@ CERT_VerifySignedDataWithPublicKey(const CERTSignedData *sd,
     if (rv == SECSuccess) {
         /* Are we honoring signatures for this algorithm?  */
 	PRUint32 policyFlags = 0;
+	rv = checkKeyParams(&sd->signatureAlgorithm, pubKey);
+	if (rv != SECSuccess) {
+	    PORT_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+	    return SECFailure;
+	}
+
 	rv = NSS_GetAlgorithmPolicy(hashAlg, &policyFlags);
 	if (rv == SECSuccess && 
 	    !(policyFlags & NSS_USE_ALG_IN_CERT_SIGNATURE)) {
 	    PORT_SetError(SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
-	    rv = SECFailure;
+	    return SECFailure;
 	}
     }
     return rv;

@@ -6,6 +6,7 @@
 
 #include "pkcs11i.h"
 #include "blapi.h"
+#include "secerr.h"
 
 #define SFTK_OFFSETOF(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
 
@@ -23,6 +24,7 @@ typedef struct {
     SECStatus	   cxRv;	/* records failure of void functions.        */
     PRBool	   cxIsFIPS;	/* true if conforming to FIPS 198.           */
     HASH_HashType  cxHashAlg;	/* hash algorithm to use for TLS 1.2+        */
+    unsigned int   cxOutLen;	/* bytes of output if nonzero                */
     unsigned char  cxBuf[512];	/* actual size may be larger than 512.       */
 } TLSPRFContext;
 
@@ -87,7 +89,14 @@ sftk_TLSPRFUpdate(TLSPRFContext *cx,
     seedItem.len  = cx->cxDataLen;
 
     sigItem.data = sig;
-    sigItem.len  = maxLen;
+    if (cx->cxOutLen == 0) {
+	sigItem.len = maxLen;
+    } else if (cx->cxOutLen <= maxLen) {
+	sigItem.len = cx->cxOutLen;
+    } else {
+	PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+	return SECFailure;
+    }
 
     if (cx->cxHashAlg != HASH_AlgNULL) {
 	rv = TLS_P_hash(cx->cxHashAlg, &secretItem, NULL, &seedItem, &sigItem,
@@ -142,7 +151,8 @@ CK_RV
 sftk_TLSPRFInit(SFTKSessionContext *context, 
 		  SFTKObject *        key, 
 		  CK_KEY_TYPE         key_type,
-		  HASH_HashType       hash_alg)
+		  HASH_HashType       hash_alg,
+		  unsigned int        out_len)
 {
     SFTKAttribute * keyVal;
     TLSPRFContext * prf_cx;
@@ -169,6 +179,7 @@ sftk_TLSPRFInit(SFTKSessionContext *context,
     prf_cx->cxIsFIPS  = (key->slot->slotID == FIPS_SLOT_ID);
     prf_cx->cxBufPtr  = prf_cx->cxBuf;
     prf_cx->cxHashAlg = hash_alg;
+    prf_cx->cxOutLen  = out_len;
     if (keySize)
 	PORT_Memcpy(prf_cx->cxBufPtr, keyVal->attrib.pValue, keySize);
 

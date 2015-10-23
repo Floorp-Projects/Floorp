@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mpi.h"
+#include "prtypes.h"
 
 /*
  * This file implements a single function: s_mpi_getProcessorLineSize();
@@ -619,33 +620,15 @@ unsigned long
 s_mpi_is_sse2()
 {
     unsigned long eax, ebx, ecx, edx;
-    int manufacturer = MAN_UNKNOWN;
-    int i;
-    char string[13];
 
     if (is386() || is486()) {
 	return 0;
     }
     freebl_cpuid(0, &eax, &ebx, &ecx, &edx);
-    /* string holds the CPU's manufacturer ID string - a twelve
-     * character ASCII string stored in ebx, edx, ecx, and
-     * the 32-bit extended feature flags are in edx, ecx.
-     */
-    *(int *)string = ebx;
-    *(int *)&string[4] = (int)edx;
-    *(int *)&string[8] = (int)ecx;
-    string[12] = 0;
 
     /* has no SSE2 extensions */
     if (eax == 0) {
 	return 0;
-    }
-
-    for (i=0; i < n_manufacturers; i++) {
-	if ( strcmp(manMap[i],string) == 0) {
-	    manufacturer = i;
-	    break;
-	}
     }
 
     freebl_cpuid(1,&eax,&ebx,&ecx,&edx);
@@ -657,11 +640,12 @@ unsigned long
 s_mpi_getProcessorLineSize()
 {
     unsigned long eax, ebx, ecx, edx;
+    PRUint32 cpuid[3];
     unsigned long cpuidLevel;
     unsigned long cacheLineSize = 0;
     int manufacturer = MAN_UNKNOWN;
     int i;
-    char string[65];
+    char string[13];
 
 #if !defined(AMD_64)
     if (is386()) {
@@ -678,9 +662,10 @@ s_mpi_getProcessorLineSize()
      * character ASCII string stored in ebx, edx, ecx, and
      * the 32-bit extended feature flags are in edx, ecx.
      */
-    *(int *)string = ebx;
-    *(int *)&string[4] = (int)edx;
-    *(int *)&string[8] = (int)ecx;
+    cpuid[0] = ebx;
+    cpuid[1] = ecx;
+    cpuid[2] = edx;
+    memcpy(string, cpuid, sizeof(cpuid));
     string[12] = 0;
 
     manufacturer = MAN_UNKNOWN;

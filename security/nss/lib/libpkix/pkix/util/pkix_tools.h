@@ -1437,8 +1437,8 @@ extern PLHashNumber PR_CALLBACK pkix_ErrorGen_Hash (const void *key);
 typedef struct pkix_ClassTable_EntryStruct pkix_ClassTable_Entry;
 struct pkix_ClassTable_EntryStruct {
         char *description;
-        PKIX_Int32 objCounter;
-        PKIX_Int32 typeObjectSize;
+        PKIX_UInt32 objCounter;
+        PKIX_UInt32 typeObjectSize;
         PKIX_PL_DestructorCallback destructor;
         PKIX_PL_EqualsCallback equalsFunction;
         PKIX_PL_HashcodeCallback hashcodeFunction;

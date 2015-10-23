@@ -1515,7 +1515,6 @@ PKIX_PL_Cert_Create(
         SECItem *derCertItem = NULL;
         void *derBytes = NULL;
         PKIX_UInt32 derLength;
-        PKIX_Boolean copyDER;
         PKIX_PL_Cert *cert = NULL;
         CERTCertDBHandle *handle;
 
@@ -1542,7 +1541,6 @@ PKIX_PL_Cert_Create(
          * allowing us to free our copy without worrying about whether NSS
          * is still using it
          */
-        copyDER = PKIX_TRUE;
         handle  = CERT_GetDefaultCertDB();
         nssCert = CERT_NewTempCertificate(handle, derCertItem,
 					  /* nickname */ NULL, 
