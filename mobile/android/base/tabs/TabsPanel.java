@@ -73,7 +73,6 @@ public class TabsPanel extends LinearLayout
         void onTabsLayoutChange(int width, int height);
     }
 
-
     public static View createTabsLayout(final Context context, final AttributeSet attrs) {
         final boolean isLandscape = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
 
@@ -88,7 +87,7 @@ public class TabsPanel extends LinearLayout
     private final GeckoApp mActivity;
     private final LightweightTheme mTheme;
     private RelativeLayout mHeader;
-    private TabsLayoutContainer mTabsContainer;
+    private FrameLayout mTabsContainer;
     private PanelView mPanel;
     private PanelView mPanelNormal;
     private PanelView mPanelPrivate;
@@ -127,7 +126,7 @@ public class TabsPanel extends LinearLayout
 
     private void initialize() {
         mHeader = (RelativeLayout) findViewById(R.id.tabs_panel_header);
-        mTabsContainer = (TabsLayoutContainer) findViewById(R.id.tabs_container);
+        mTabsContainer = (FrameLayout) findViewById(R.id.tabs_container);
 
         mPanelNormal = (PanelView) findViewById(R.id.normal_tabs);
         mPanelNormal.setTabsPanel(this);
@@ -245,7 +244,7 @@ public class TabsPanel extends LinearLayout
         return mActivity.onOptionsItemSelected(item);
     }
 
-    private static int getTabContainerHeight(TabsLayoutContainer tabsContainer) {
+    private static int getTabContainerHeight(FrameLayout tabsContainer) {
         final Resources resources = tabsContainer.getContext().getResources();
 
         final int screenHeight = resources.getDisplayMetrics().heightPixels;
@@ -287,35 +286,6 @@ public class TabsPanel extends LinearLayout
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
         onLightweightThemeChanged();
-    }
-
-    static class TabsLayoutContainer extends FrameLayout {
-
-        public TabsLayoutContainer(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        public PanelView getCurrentPanelView() {
-            final int childCount = getChildCount();
-
-            for (int i = 0; i < childCount; i++) {
-                View child = getChildAt(i);
-                if (!(child instanceof PanelView)) {
-                    continue;
-                }
-
-                if (child.getVisibility() == View.VISIBLE) {
-                    return (PanelView) child;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            int heightSpec = MeasureSpec.makeMeasureSpec(getTabContainerHeight(TabsLayoutContainer.this), MeasureSpec.EXACTLY);
-            super.onMeasure(widthMeasureSpec, heightSpec);
-        }
     }
 
     // Tabs Panel Toolbar contains the Buttons
