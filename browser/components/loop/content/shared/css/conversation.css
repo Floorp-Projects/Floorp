@@ -530,13 +530,13 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .context-url-view-wrapper {
-  padding: 12px;
-  margin-bottom: 0.5em;
+  padding: 14px 15px;
   background-color: #dbf7ff;
 }
 
 .showing-room-name > .text-chat-entries > .text-chat-scroller > .context-url-view-wrapper {
   padding-top: 0;
+  margin-bottom: 0;
 }
 
 .room-context {
@@ -755,7 +755,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   .media-wrapper > .focus-stream {
     width: 100%;
     /* A reasonable height */
-    height: 70%;
+    height: 55%;
   }
 
   .media-wrapper.receiving-screen-share > .focus-stream {
@@ -831,7 +831,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
   .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
     /* This is temp, to echo the .media-wrapper > .text-chat-view above */
-    height: 30%;
+    height: 45%;
   }
 
   .media-wrapper.receiving-screen-share > .screen {
@@ -930,7 +930,12 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
   .media-wrapper > .focus-stream {
     flex: 1 1 auto;
-    height: auto;
+    /* To keep the aspect ratio of video. Update accordingly with chatbox[customSize] width */
+    height: 263px;
+  }
+
+  .desktop-room-wrapper > .media-layout > .media-wrapper > .text-chat-view {
+    height: calc(100% - 263px);
   }
 }
 
@@ -958,6 +963,10 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 .text-chat-entry {
   /* aligns paragraph to side where reading starts from */
   text-align: start;
+}
+
+.text-chat-scroller div:nth-child(2) {
+  margin-top: .5em;
 }
 
 /* Sent text chat entries should be on the right */
@@ -1208,8 +1217,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   .text-chat-view {
     display: flex;
     flex-flow: column nowrap;
-    /* 120px max-height of .text-chat-entries plus 40px of .text-chat-box */
-    max-height: 160px;
     /* 60px min-height of .text-chat-entries plus 40px of .text-chat-box */
     min-height: 100px;
     height: auto;
@@ -1220,7 +1227,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 
   .text-chat-entries {
     flex: 1 1 auto;
-    max-height: 120px;
     min-height: 60px;
   }
 
