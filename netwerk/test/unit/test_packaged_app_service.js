@@ -220,20 +220,15 @@ function run_test()
   httpserver.registerPathHandler("/signedPackage", signedPackagedAppContentHandler);
   httpserver.start(-1);
 
-  // We will enable the developer mode in 'test_signed_package_callback'.
-  // So restore it after testing.
-  //
-  // TODO: To be removed in Bug 1178518.
   do_register_cleanup(function() {
-    gPrefs.clearUserPref("network.http.packaged-apps-developer-mode");
-    gPrefs.clearUserPref("network.http.packaged-signed-apps-enabled");
+    gPrefs.clearUserPref("network.http.signed-packages.enabled");
   });
 
   paservice = Cc["@mozilla.org/network/packaged-app-service;1"]
                      .getService(Ci.nsIPackagedAppService);
   ok(!!paservice, "test service exists");
 
-  gPrefs.setBoolPref("network.http.packaged-signed-apps-enabled", true);
+  gPrefs.setBoolPref("network.http.signed-packages.enabled", true);
 
   add_test(test_bad_args);
 

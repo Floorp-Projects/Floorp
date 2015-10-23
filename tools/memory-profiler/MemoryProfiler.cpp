@@ -46,7 +46,7 @@ ProfilerImpl::GetStacktrace()
 
   profiler_get_backtrace_noalloc(output, BACKTRACE_BUFFER_SIZE);
   for (const char* p = output; *p; p += strlen(p) + 1) {
-    trace.AppendElement(nsDependentCString(p));
+    trace.AppendElement()->Assign(p);
   }
 
   return trace;

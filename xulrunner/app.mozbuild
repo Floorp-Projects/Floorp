@@ -10,5 +10,4 @@ if CONFIG['MOZ_EXTENSIONS']:
 
 DIRS += [
     '/xulrunner',
-    '/devtools',
 ]

@@ -20,3 +20,4 @@ task:
     env:
       TARGET: 'dolphin'
       VARIANT: eng
+      TOOLTOOL_MANIFEST: 'b2g/config/dolphin/releng-dolphin.tt'

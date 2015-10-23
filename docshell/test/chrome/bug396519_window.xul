@@ -32,7 +32,7 @@
       window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
     }
     function finish() {
-      for each (let eventType in LISTEN_EVENTS) {
+      for (let eventType of LISTEN_EVENTS) {
         gBrowser.removeEventListener(eventType, eventListener, true);
       }
     
@@ -43,7 +43,7 @@
     function onLoad() {
       gBrowser = document.getElementById("content");
 
-      for each (let eventType in LISTEN_EVENTS) {
+      for (let eventType of LISTEN_EVENTS) {
         gBrowser.addEventListener(eventType, eventListener, true);
       }
       
