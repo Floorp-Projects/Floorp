@@ -713,7 +713,11 @@ var LoopRoomsInternal = {
       type: "room"
     };
 
-    MozLoopService.openChatWindow(windowData);
+    eventEmitter.emit("open", roomToken);
+
+    MozLoopService.openChatWindow(windowData, () => {
+      eventEmitter.emit("close");
+    });
   },
 
   /**
