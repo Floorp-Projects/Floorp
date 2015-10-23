@@ -69,6 +69,9 @@ this.MessagesBridge = {
         window.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Home" }));
         window.dispatchEvent(new window.KeyboardEvent("keyup", { key: "Home" }));
         break;
+      case "task-switcher":
+        window.dispatchEvent(new window.CustomEvent("taskmanagershow", {}));
+        break;
     }
   },
 
