@@ -37,9 +37,14 @@ workerHelper.createTask(self, "takeCensus", ({ snapshotFilePath, censusOptions, 
   }
 
   let report = snapshots[snapshotFilePath].takeCensus(censusOptions);
-  return requestOptions.asTreeNode
-    ? censusReportToCensusTreeNode(censusOptions.breakdown, report)
-    : report;
+
+  if (requestOptions.asTreeNode) {
+    return censusReportToCensusTreeNode(censusOptions.breakdown, report);
+  } else if (requestOptions.asInvertedTreeNode) {
+    return censusReportToCensusTreeNode(censusOptions.breakdown, report, { invert: true });
+  } else {
+    return report;
+  }
 });
 
 /**
@@ -65,7 +70,11 @@ workerHelper.createTask(self, "takeCensusDiff", request => {
   const second = snapshots[secondSnapshotFilePath].takeCensus(censusOptions);
   const delta = CensusUtils.diff(censusOptions.breakdown, first, second);
 
-  return requestOptions.asTreeNode
-    ? censusReportToCensusTreeNode(censusOptions.breakdown, delta)
-    : delta;
+  if (requestOptions.asTreeNode) {
+    return censusReportToCensusTreeNode(censusOptions.breakdown, delta);
+  } else if (requestOptions.asInvertedTreeNode) {
+    return censusReportToCensusTreeNode(censusOptions.breakdown, delta, { invert: true });
+  } else {
+    return delta;
+  }
 });

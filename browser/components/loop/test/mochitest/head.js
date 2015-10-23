@@ -96,9 +96,9 @@ function waitForCondition(condition, nextTest, errorMsg) {
 }
 
 function promiseWaitForCondition(aConditionFn) {
-  let deferred = Promise.defer();
-  waitForCondition(aConditionFn, deferred.resolve, "Condition didn't pass.");
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    waitForCondition(aConditionFn, resolve, "Condition didn't pass.");
+  });
 }
 
 /**

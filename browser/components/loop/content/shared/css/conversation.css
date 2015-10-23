@@ -951,6 +951,10 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   align-items: flex-start;
 }
 
+.text-chat-header > p {
+  margin: 0;
+}
+
 .text-chat-entry {
   /* aligns paragraph to side where reading starts from */
   text-align: start;
@@ -980,8 +984,6 @@ html[dir="rtl"] .text-chat-entry.received {
   margin-right: 5px;
 }
 
-/* If you change this entry, check it doesn't affect the "special" text
-   chat entries as well (.speical, .room-name, .context-url-view-wrapper */
 .text-chat-entry > p {
   position: relative;
   z-index: 10;

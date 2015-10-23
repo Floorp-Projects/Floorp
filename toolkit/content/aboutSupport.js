@@ -141,6 +141,7 @@ var snapshotFormatters = {
         $.new("td", [
           $.new("a", experiment.detailURL, null, {href : experiment.detailURL,})
         ]),
+        $.new("td", experiment.branch),
       ]);
     }));
   },
