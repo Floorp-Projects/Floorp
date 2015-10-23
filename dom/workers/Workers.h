@@ -208,6 +208,7 @@ enum WorkerPreference
   WORKERPREF_INTERCEPTION_OPAQUE_ENABLED, // dom.serviceWorkers.interception.opaque.enabled
   WORKERPREF_PERFORMANCE_LOGGING_ENABLED, // dom.performance.enable_user_timing_logging
   WORKERPREF_PUSH, // dom.push.enabled
+  WORKERPREF_REQUESTCACHE, // dom.requestcache.enabled
   WORKERPREF_REQUESTCONTEXT, // dom.requestcontext.enabled
   WORKERPREF_COUNT
 };
