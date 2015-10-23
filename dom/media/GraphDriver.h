@@ -330,8 +330,7 @@ class AudioCallbackDriver : public GraphDriver,
                             public MixerCallbackReceiver
 {
 public:
-  explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
-                               dom::AudioChannel aChannel = dom::AudioChannel::Normal);
+  explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~AudioCallbackDriver();
 
   virtual void Destroy() override;
