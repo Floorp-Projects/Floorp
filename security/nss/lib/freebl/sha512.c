@@ -67,11 +67,11 @@ static const PRUint32 H256[8] = {
     0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 };
 
+#if defined(IS_LITTLE_ENDIAN)
 #if (_MSC_VER >= 1300)
 #include <stdlib.h>
 #pragma intrinsic(_byteswap_ulong)
 #define SHA_HTONL(x) _byteswap_ulong(x)
-#define BYTESWAP4(x)  x = SHA_HTONL(x)
 #elif defined(_MSC_VER) && defined(NSS_X86_OR_X64)
 #ifndef FORCEINLINE
 #if (_MSC_VER >= 1200)
@@ -92,7 +92,6 @@ swap4b(PRUint32 dwd)
 }
 
 #define SHA_HTONL(x) swap4b(x)
-#define BYTESWAP4(x)  x = SHA_HTONL(x)
 
 #elif defined(__GNUC__) && defined(NSS_X86_OR_X64)
 static __inline__ PRUint32 swap4b(PRUint32 value)
@@ -101,7 +100,6 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
     return (value);
 }
 #define SHA_HTONL(x) swap4b(x)
-#define BYTESWAP4(x)  x = SHA_HTONL(x)
 
 #elif defined(__GNUC__) && (defined(__thumb2__) || \
       (!defined(__thumb__) && \
@@ -121,14 +119,18 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
     return ret;
 }
 #define SHA_HTONL(x) swap4b(x)
-#define BYTESWAP4(x)  x = SHA_HTONL(x)
 
 #else
 #define SWAP4MASK  0x00FF00FF
-#define SHA_HTONL(x) (t1 = (x), t1 = (t1 << 16) | (t1 >> 16), \
-                      ((t1 & SWAP4MASK) << 8) | ((t1 >> 8) & SWAP4MASK))
-#define BYTESWAP4(x)  x = SHA_HTONL(x)
+static PRUint32 swap4b(PRUint32 value)
+{
+    PRUint32 t1 = (value << 16) | (value >> 16);
+    return ((t1 & SWAP4MASK) << 8) | ((t1 >> 8) & SWAP4MASK);
+}
+#define SHA_HTONL(x) swap4b(x)
 #endif
+#define BYTESWAP4(x) x = SHA_HTONL(x)
+#endif /* defined(IS_LITTLE_ENDIAN) */
 
 #if defined(_MSC_VER)
 #pragma intrinsic (_lrotr, _lrotl) 
@@ -142,8 +144,8 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
 /* Capitol Sigma and lower case sigma functions */
 #define S0(x) (ROTR32(x, 2) ^ ROTR32(x,13) ^ ROTR32(x,22))
 #define S1(x) (ROTR32(x, 6) ^ ROTR32(x,11) ^ ROTR32(x,25))
-#define s0(x) (t1 = x, ROTR32(t1, 7) ^ ROTR32(t1,18) ^ SHR(t1, 3))
-#define s1(x) (t2 = x, ROTR32(t2,17) ^ ROTR32(t2,19) ^ SHR(t2,10))
+#define s0(x) (ROTR32(x, 7) ^ ROTR32(x,18) ^ SHR(x, 3))
+#define s1(x) (ROTR32(x,17) ^ ROTR32(x,19) ^ SHR(x,10))
 
 SHA256Context *
 SHA256_NewContext(void)
@@ -172,8 +174,6 @@ static void
 SHA256_Compress(SHA256Context *ctx)
 {
   {
-    register PRUint32 t1, t2;
-
 #if defined(IS_LITTLE_ENDIAN)
     BYTESWAP4(W[0]);
     BYTESWAP4(W[1]);
@@ -426,9 +426,6 @@ SHA256_End(SHA256Context *ctx, unsigned char *digest,
     unsigned int inBuf = ctx->sizeLo & 0x3f;
     unsigned int padLen = (inBuf < 56) ? (56 - inBuf) : (56 + 64 - inBuf);
     PRUint32 hi, lo;
-#ifdef SWAP4MASK
-    PRUint32 t1;
-#endif
 
     hi = (ctx->sizeHi << 3) | (ctx->sizeLo >> 29);
     lo = (ctx->sizeLo << 3);
@@ -467,9 +464,6 @@ SHA256_EndRaw(SHA256Context *ctx, unsigned char *digest,
 {
     PRUint32 h[8];
     unsigned int len;
-#ifdef SWAP4MASK
-    PRUint32 t1;
-#endif
 
     memcpy(h, ctx->h, sizeof(h));
 
@@ -654,8 +648,8 @@ void SHA224_Clone(SHA224Context *dest, SHA224Context *src)
 
 #define S0(x) (ROTR64(x,28) ^ ROTR64(x,34) ^ ROTR64(x,39))
 #define S1(x) (ROTR64(x,14) ^ ROTR64(x,18) ^ ROTR64(x,41))
-#define s0(x) (t1 = x, ROTR64(t1, 1) ^ ROTR64(t1, 8) ^ SHR(t1,7))
-#define s1(x) (t2 = x, ROTR64(t2,19) ^ ROTR64(t2,61) ^ SHR(t2,6))
+#define s0(x) (ROTR64(x, 1) ^ ROTR64(x, 8) ^ SHR(x,7))
+#define s1(x) (ROTR64(x,19) ^ ROTR64(x,61) ^ SHR(x,6))
 
 #if PR_BYTES_PER_LONG == 8
 #define ULLC(hi,lo) 0x ## hi ## lo ## UL
@@ -665,6 +659,7 @@ void SHA224_Clone(SHA224Context *dest, SHA224Context *src)
 #define ULLC(hi,lo) 0x ## hi ## lo ## ULL
 #endif
 
+#if defined(IS_LITTLE_ENDIAN)
 #if defined(_MSC_VER)
 #pragma intrinsic(_byteswap_uint64)
 #define SHA_HTONLL(x) _byteswap_uint64(x)
@@ -680,25 +675,30 @@ static __inline__ PRUint64 swap8b(PRUint64 value)
 #else
 #define SHA_MASK16 ULLC(0000FFFF,0000FFFF)
 #define SHA_MASK8  ULLC(00FF00FF,00FF00FF)
-#define SHA_HTONLL(x) (t1 = x, \
-  t1 = ((t1 & SHA_MASK8 ) <<  8) | ((t1 >>  8) & SHA_MASK8 ), \
-  t1 = ((t1 & SHA_MASK16) << 16) | ((t1 >> 16) & SHA_MASK16), \
-  (t1 >> 32) | (t1 << 32))
+static PRUint64 swap8b(PRUint64 x)
+{
+    PRUint64 t1 = x;
+    t1 = ((t1 & SHA_MASK8 ) <<  8) | ((t1 >>  8) & SHA_MASK8 );
+    t1 = ((t1 & SHA_MASK16) << 16) | ((t1 >> 16) & SHA_MASK16);
+    return (t1 >> 32) | (t1 << 32);
+}
+#define SHA_HTONLL(x) swap8b(x)
 #endif
 #define BYTESWAP8(x)  x = SHA_HTONLL(x)
+#endif /* defined(IS_LITTLE_ENDIAN) */
 
 #else /* no long long */
 
 #if defined(IS_LITTLE_ENDIAN)
 #define ULLC(hi,lo) { 0x ## lo ## U, 0x ## hi ## U }
-#else
-#define ULLC(hi,lo) { 0x ## hi ## U, 0x ## lo ## U }
-#endif
-
 #define SHA_HTONLL(x) ( BYTESWAP4(x.lo), BYTESWAP4(x.hi), \
    x.hi ^= x.lo ^= x.hi ^= x.lo, x)
 #define BYTESWAP8(x)  do { PRUint32 tmp; BYTESWAP4(x.lo); BYTESWAP4(x.hi); \
    tmp = x.lo; x.lo = x.hi; x.hi = tmp; } while (0)
+#else
+#define ULLC(hi,lo) { 0x ## hi ## U, 0x ## lo ## U }
+#endif
+
 #endif
 
 /* SHA-384 and SHA-512 constants, K512. */
@@ -927,11 +927,6 @@ SHA512_Compress(SHA512Context *ctx)
 {
 #if defined(IS_LITTLE_ENDIAN)
   {
-#if defined(HAVE_LONG_LONG)
-    PRUint64 t1;
-#else
-    PRUint32 t1;
-#endif
     BYTESWAP8(W[0]);
     BYTESWAP8(W[1]);
     BYTESWAP8(W[2]);
@@ -952,7 +947,6 @@ SHA512_Compress(SHA512Context *ctx)
 #endif
 
   {
-    PRUint64 t1, t2;
 #ifdef NOUNROLL512
     {
 	/* prepare the "message schedule"   */
@@ -1223,10 +1217,8 @@ SHA512_End(SHA512Context *ctx, unsigned char *digest,
 {
 #if defined(HAVE_LONG_LONG)
     unsigned int inBuf  = (unsigned int)ctx->sizeLo & 0x7f;
-    PRUint64 t1;
 #else
     unsigned int inBuf  = (unsigned int)ctx->sizeLo.lo & 0x7f;
-    PRUint32 t1;
 #endif
     unsigned int padLen = (inBuf < 112) ? (112 - inBuf) : (112 + 128 - inBuf);
     PRUint64 lo;
@@ -1268,11 +1260,6 @@ void
 SHA512_EndRaw(SHA512Context *ctx, unsigned char *digest,
               unsigned int *digestLen, unsigned int maxDigestLen)
 {
-#if defined(HAVE_LONG_LONG)
-    PRUint64 t1;
-#else
-    PRUint32 t1;
-#endif
     PRUint64 h[8];
     unsigned int len;
 

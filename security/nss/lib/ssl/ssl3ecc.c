@@ -208,7 +208,7 @@ params2ecName(SECKEYECParams * params)
 
 /* Caller must set hiLevel error code. */
 static SECStatus
-ssl3_ComputeECDHKeyHash(SECOidTag hashAlg,
+ssl3_ComputeECDHKeyHash(SSLHashType hashAlg,
                         SECItem ec_params, SECItem server_ecpoint,
                         SSL3Random *client_rand, SSL3Random *server_rand,
                         SSL3Hashes *hashes, PRBool bypassPKCS11)
@@ -297,7 +297,7 @@ ssl3_SendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
                                         pubKey->u.ec.publicValue.len));
 
     if (isTLS12) {
-        target = CKM_NSS_TLS_MASTER_KEY_DERIVE_DH_SHA256;
+        target = CKM_TLS12_MASTER_KEY_DERIVE_DH;
     } else if (isTLS) {
         target = CKM_TLS_MASTER_KEY_DERIVE_DH;
     } else {
@@ -319,14 +319,6 @@ ssl3_SendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
     SECKEY_DestroyPrivateKey(privKey);
     privKey = NULL;
 
-    rv = ssl3_InitPendingCipherSpec(ss,  pms);
-    PK11_FreeSymKey(pms); pms = NULL;
-
-    if (rv != SECSuccess) {
-        ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
-        goto loser;
-    }
-
     rv = ssl3_AppendHandshakeHeader(ss, client_key_exchange,
                                         pubKey->u.ec.publicValue.len + 1);
     if (rv != SECSuccess) {
@@ -341,6 +333,14 @@ ssl3_SendECDHClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
 
     if (rv != SECSuccess) {
         goto loser;     /* err set by ssl3_AppendHandshake* */
+    }
+
+    rv = ssl3_InitPendingCipherSpec(ss,  pms);
+    PK11_FreeSymKey(pms); pms = NULL;
+
+    if (rv != SECSuccess) {
+        ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
+        goto loser;
     }
 
     rv = SECSuccess;
@@ -388,7 +388,7 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
     isTLS12 = (PRBool)(ss->ssl3.prSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2);
 
     if (isTLS12) {
-        target = CKM_NSS_TLS_MASTER_KEY_DERIVE_DH_SHA256;
+        target = CKM_TLS12_MASTER_KEY_DERIVE_DH;
     } else if (isTLS) {
         target = CKM_TLS_MASTER_KEY_DERIVE_DH;
     } else {
@@ -609,9 +609,9 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     SECItem          ec_params = {siBuffer, NULL, 0};
     SECItem          ec_point  = {siBuffer, NULL, 0};
     unsigned char    paramBuf[3]; /* only for curve_type == named_curve */
-    SSL3SignatureAndHashAlgorithm sigAndHash;
+    SSLSignatureAndHashAlg sigAndHash;
 
-    sigAndHash.hashAlg = SEC_OID_UNKNOWN;
+    sigAndHash.hashAlg = ssl_hash_none;
 
     isTLS = (PRBool)(ss->ssl3.prSpec->version > SSL_LIBRARY_VERSION_3_0);
     isTLS12 = (PRBool)(ss->ssl3.prSpec->version >= SSL_LIBRARY_VERSION_TLS_1_2);
@@ -653,7 +653,7 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
             goto loser;         /* malformed or unsupported. */
         }
         rv = ssl3_CheckSignatureAndHashAlgorithmConsistency(
-                &sigAndHash, ss->sec.peerCert);
+            ss, &sigAndHash, ss->sec.peerCert);
         if (rv != SECSuccess) {
             goto loser;
         }
@@ -704,7 +704,7 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         goto no_memory;
     }
 
-    ss->sec.peerKey = peerKey = PORT_ArenaZNew(arena, SECKEYPublicKey);
+    peerKey = PORT_ArenaZNew(arena, SECKEYPublicKey);
     if (peerKey == NULL) {
         goto no_memory;
     }
@@ -725,7 +725,6 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     /* copy publicValue in peerKey */
     if (SECITEM_CopyItem(arena, &peerKey->u.ec.publicValue,  &ec_point))
     {
-        PORT_FreeArena(arena, PR_FALSE);
         goto no_memory;
     }
     peerKey->pkcs11Slot         = NULL;
@@ -739,10 +738,16 @@ ssl3_HandleECDHServerKeyExchange(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 alert_loser:
     (void)SSL3_SendAlert(ss, alert_fatal, desc);
 loser:
+    if (arena) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
     PORT_SetError( errCode );
     return SECFailure;
 
 no_memory:      /* no-memory error has already been set. */
+    if (arena) {
+        PORT_FreeArena(arena, PR_FALSE);
+    }
     ssl_MapLowLevelError(SSL_ERROR_SERVER_KEY_EXCHANGE_FAILURE);
     return SECFailure;
 }
@@ -750,7 +755,7 @@ no_memory:      /* no-memory error has already been set. */
 SECStatus
 ssl3_SendECDHServerKeyExchange(
     sslSocket *ss,
-    const SSL3SignatureAndHashAlgorithm *sigAndHash)
+    const SSLSignatureAndHashAlg *sigAndHash)
 {
     const ssl3KEADef * kea_def     = ss->ssl3.hs.kea_def;
     SECStatus          rv          = SECFailure;
@@ -967,9 +972,7 @@ ssl3_DisableECCSuites(sslSocket * ss, const ssl3CipherSuite * suite)
     if (!suite)
         suite = ecSuites;
     for (; *suite; ++suite) {
-        SECStatus rv      = ssl3_CipherPrefSet(ss, *suite, PR_FALSE);
-
-        PORT_Assert(rv == SECSuccess); /* else is coding error */
+        PORT_CheckSuccess(ssl3_CipherPrefSet(ss, *suite, PR_FALSE));
     }
     return SECSuccess;
 }
@@ -1128,7 +1131,10 @@ ssl3_SendSupportedCurvesXtn(
         ecList = tlsECList;
     }
 
-    if (append && maxBytes >= ecListSize) {
+    if (maxBytes < (PRUint32)ecListSize) {
+        return 0;
+    }
+    if (append) {
         SECStatus rv = ssl3_AppendHandshake(ss, ecList, ecListSize);
         if (rv != SECSuccess)
             return -1;

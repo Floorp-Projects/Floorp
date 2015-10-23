@@ -122,6 +122,27 @@ static char *optionStrings[] = {
 	"-chkfips",
 };
 
+char *msgStrings[] = {
+	"FIPS mode enabled.\n",
+	"FIPS mode disabled.\n",
+	"Using database directory %s...\n",
+	"Creating \"%s\"...",
+	"Module \"%s\" added to database.\n",
+	"Module \"%s\" deleted from database.\n",
+	"Token \"%s\" password changed successfully.\n",
+	"Incorrect password, try again...\n",
+	"Passwords do not match, try again...\n",
+	"done.\n",
+	"Slot \"%s\" %s.\n",
+	"Successfully changed defaults.\n",
+	"Successfully changed defaults.\n",
+"\nWARNING: Performing this operation while the browser is running could cause"
+"\ncorruption of your security databases. If the browser is currently running,"
+"\nyou should exit browser before continuing this operation. Type "
+"\n'q <enter>' to abort, or <enter> to continue: ",
+	"\nAborting...\n"
+};
+
 /* Increment i if doing so would have i still be less than j.  If you
    are able to do this, return 0.  Otherwise return 1. */
 #define TRY_INC(i,j)  ( ((i+1)<j) ? (++i, 0) : 1 )

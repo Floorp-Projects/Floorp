@@ -425,3 +425,18 @@ ER3(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT, (SSL_ERROR_BASE + 131),
 
 ER3(SSL_ERROR_WEAK_SERVER_CERT_KEY, (SSL_ERROR_BASE + 132),
 "The server certificate included a public key that was too weak.")
+
+ER3(SSL_ERROR_RX_SHORT_DTLS_READ, (SSL_ERROR_BASE + 133),
+"Not enough room in buffer for DTLS record.")
+
+ER3(SSL_ERROR_NO_SUPPORTED_SIGNATURE_ALGORITHM, (SSL_ERROR_BASE + 134),
+"No supported TLS signature algorithm was configured.")
+
+ER3(SSL_ERROR_UNSUPPORTED_SIGNATURE_ALGORITHM, (SSL_ERROR_BASE + 135),
+"The peer used an unsupported combination of signature and hash algorithm.")
+
+ER3(SSL_ERROR_MISSING_EXTENDED_MASTER_SECRET, (SSL_ERROR_BASE + 136),
+"The peer tried to resume without a correct extended_master_secret extension")
+
+ER3(SSL_ERROR_UNEXPECTED_EXTENDED_MASTER_SECRET, (SSL_ERROR_BASE + 137),
+"The peer tried to resume with an unexpected extended_master_secret extension")

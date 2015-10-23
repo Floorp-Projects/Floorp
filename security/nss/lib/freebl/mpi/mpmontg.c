@@ -47,7 +47,7 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
   for (i = 0; i < MP_USED(&mmm->N); ++i ) {
     mp_digit m_i = MP_DIGIT(T, i) * mmm->n0prime;
     /* T += N * m_i * (MP_RADIX ** i); */
-    MP_CHECKOK( s_mp_mul_d_add_offset(&mmm->N, m_i, T, i) );
+    s_mp_mul_d_add_offset(&mmm->N, m_i, T, i);
   }
   s_mp_clamp(T);
 

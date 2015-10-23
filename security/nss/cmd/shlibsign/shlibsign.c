@@ -195,6 +195,10 @@ static const unsigned char base[] = {
     0x14, 0x8e, 0xe7, 0xb8, 0xaa, 0xd5, 0xd1, 0x36, 
     0x1d, 0x7e, 0x5e, 0x7d, 0xfa, 0x5b, 0x77, 0x1f };
 
+/*
+ * The constants h, seed, & counter aren't used in the code; they're provided
+ * here (commented-out) so that human readers can verify that our our PQG
+ * parameters were generated properly.
 static const unsigned char h[] = { 
     0x41, 0x87, 0x47, 0x79, 0xd8, 0xba, 0x4e, 0xac, 
     0x44, 0x4f, 0x6b, 0xd2, 0x16, 0x5e, 0x04, 0xc6, 
@@ -232,6 +236,7 @@ static const unsigned char seed[] = { 0x00,
     0x64, 0x06, 0x13, 0x51, 0xeb, 0x4a, 0x91, 0x9c };
 
 static const unsigned int counter=1496;
+ */
 
 static const unsigned char prime2[] = { 0x00,
     0xa4, 0xc2, 0x83, 0x4f, 0x36, 0xd3, 0x4f, 0xae,
@@ -307,6 +312,10 @@ static const unsigned char base2[] = { 0x00,
     0x1c, 0xd3, 0xff, 0x4e, 0x2c, 0x38, 0x1c, 0xaa,
     0x2e, 0x66, 0xbe, 0x32, 0x3e, 0x3c, 0x06, 0x5f };
 
+/*
+ * The constants h2, seed2, & counter2 aren't used in the code; they're provided
+ * here (commented-out) so that human readers can verify that our our PQG
+ * parameters were generated properly.
 static const unsigned char h2[] = { 
     0x30, 0x91, 0xa1, 0x2e, 0x40, 0xa5, 0x7d, 0xf7,
     0xdc, 0xed, 0xee, 0x05, 0xc2, 0x31, 0x91, 0x37,
@@ -376,6 +385,7 @@ static const unsigned char seed2[] = { 0x00,
     0xc3, 0x29, 0x7d, 0xb7, 0x89, 0xbf, 0xe3, 0xde };
 
 static const unsigned int counter2=210;
+ */
 
 struct tuple_str {
     CK_RV         errNum;
@@ -512,7 +522,7 @@ CK_RVtoStr(CK_RV errNum) {
 
     /* Do binary search of table. */
     while (low + 1 < high) {
-        i = (low + high) / 2;
+        i = low + (high - low) / 2;
         num = errStrings[i].errNum;
         if (errNum == num)
             return errStrings[i].errString;
@@ -697,7 +707,7 @@ int main(int argc, char **argv)
     int bytesWritten;
     unsigned char file_buf[512];
     int count=0;
-    int keySize = 0;
+    unsigned int keySize = 0;
     int i;
     PRBool verify = PR_FALSE;
     static PRBool FIPSMODE = PR_FALSE;

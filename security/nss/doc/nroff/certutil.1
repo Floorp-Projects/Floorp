@@ -2,12 +2,12 @@
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 23 February 2015
+.\"      Date: 13 August 2015
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "23 February 2015" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "13 August 2015" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -78,6 +78,11 @@ prompts for a filename\&.
 \-D
 .RS 4
 Delete a certificate from the certificate database\&.
+.RE
+.PP
+\-\-rename
+.RS 4
+Change the database nickname of a certificate\&.
 .RE
 .PP
 \-E
@@ -1106,6 +1111,11 @@ PKCS #11 key Attributes\&. Comma separated list of key attribute flags, selected
 \-\-keyOpFlagsOn opflags, \-\-keyOpFlagsOff opflags
 .RS 4
 PKCS #11 key Operation Flags\&. Comma separated list of one or more of the following: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}
+.RE
+.PP
+\-\-new\-n nickname
+.RS 4
+A new nickname, used when renaming a certificate\&.
 .RE
 .PP
 \-\-source\-dir certdir

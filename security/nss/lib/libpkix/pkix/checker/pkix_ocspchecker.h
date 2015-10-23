@@ -30,7 +30,7 @@ pkix_OcspChecker_CheckLocal(
         PKIX_UInt32 methodFlags,
         PKIX_Boolean chainVerificationState,
         PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *reasonCode,
+        CERTCRLEntryReasonCode *reasonCode,
         void *plContext);
 
 PKIX_Error *
@@ -42,7 +42,7 @@ pkix_OcspChecker_CheckExternal(
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 methodFlags,
         PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *reasonCode,
+        CERTCRLEntryReasonCode *reasonCode,
         void **pNBIOContext,
         void *plContext);
 

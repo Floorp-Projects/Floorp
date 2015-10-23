@@ -413,6 +413,7 @@ SGN_Digest(SECKEYPrivateKey *privKey,
     }
     result->len = modulusLen;
     result->data = (unsigned char*) PORT_Alloc(modulusLen);
+    result->type = siBuffer;
 
     if (result->data == NULL) {
 	rv = SECFailure;
