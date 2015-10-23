@@ -159,6 +159,8 @@ PerformanceData::PerformanceData()
  *
  */
 
+NS_IMPL_ISUPPORTS(nsPerformanceGroupDetails, nsIPerformanceGroupDetails)
+
 const nsAString&
 nsPerformanceGroupDetails::Name() const {
   return mName;
@@ -199,105 +201,122 @@ nsPerformanceGroupDetails::IsWindow() const {
   return mWindowId != 0;
 }
 
+/* readonly attribute AString name; */
+NS_IMETHODIMP
+nsPerformanceGroupDetails::GetName(nsAString& aName) {
+  aName.Assign(Name());
+  return NS_OK;
+};
+
+/* readonly attribute AString groupId; */
+NS_IMETHODIMP
+nsPerformanceGroupDetails::GetGroupId(nsAString& aGroupId) {
+  aGroupId.Assign(GroupId());
+  return NS_OK;
+};
+
+/* readonly attribute AString addonId; */
+NS_IMETHODIMP
+nsPerformanceGroupDetails::GetAddonId(nsAString& aAddonId) {
+  aAddonId.Assign(AddonId());
+  return NS_OK;
+};
+
+/* readonly attribute uint64_t windowId; */
+NS_IMETHODIMP
+nsPerformanceGroupDetails::GetWindowId(uint64_t *aWindowId) {
+  *aWindowId = WindowId();
+  return NS_OK;
+}
+
+/* readonly attribute bool isSystem; */
+NS_IMETHODIMP
+nsPerformanceGroupDetails::GetIsSystem(bool *_retval) {
+  *_retval = IsSystem();
+  return NS_OK;
+}
+
+/*
+  readonly attribute unsigned long long processId;
+*/
+NS_IMETHODIMP
+nsPerformanceGroupDetails::GetProcessId(uint64_t* processId) {
+  *processId = ProcessId();
+  return NS_OK;
+}
+
+
 /* ------------------------------------------------------
  *
- * struct nsPerformanceStats
+ * class nsPerformanceStats
  *
  */
 
-class nsPerformanceStats: public nsIPerformanceStats,
-                          public nsPerformanceGroupDetails
+class nsPerformanceStats: public nsIPerformanceStats
 {
 public:
-  nsPerformanceStats(const nsAString& aName,
-                     const nsAString& aGroupId,
-                     const nsAString& aAddonId,
-                     const uint64_t aWindowId,
-                     const uint64_t aProcessId,
-                     const bool aIsSystem,
-                     const PerformanceData& aPerformanceData)
-    : nsPerformanceGroupDetails(aName, aGroupId, aAddonId, aWindowId, aProcessId, aIsSystem)
-    , mPerformanceData(aPerformanceData)
-  {
-  }
-  nsPerformanceStats(const nsPerformanceGroupDetails& item,
-                     const PerformanceData& aPerformanceData)
-    : nsPerformanceGroupDetails(item)
-    , mPerformanceData(aPerformanceData)
-  {
-  }
-
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIPERFORMANCESTATS
+  NS_FORWARD_NSIPERFORMANCEGROUPDETAILS(mDetails->)
 
-  NS_IMETHOD GetName(nsAString& aName) override {
-    aName.Assign(nsPerformanceGroupDetails::Name());
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetGroupId(nsAString& aGroupId) override {
-    aGroupId.Assign(nsPerformanceGroupDetails::GroupId());
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetAddonId(nsAString& aAddonId) override {
-    aAddonId.Assign(nsPerformanceGroupDetails::AddonId());
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetWindowId(uint64_t *aWindowId) override {
-    *aWindowId = nsPerformanceGroupDetails::WindowId();
-    return NS_OK;
+  nsPerformanceStats(nsPerformanceGroupDetails* item,
+                     const PerformanceData& aPerformanceData)
+    : mDetails(item)
+    , mPerformanceData(aPerformanceData)
+  {
   }
 
-  NS_IMETHOD GetIsSystem(bool *_retval) override {
-    *_retval = nsPerformanceGroupDetails::IsSystem();
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetTotalUserTime(uint64_t *aTotalUserTime) override {
-    *aTotalUserTime = mPerformanceData.mTotalUserTime;
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetTotalSystemTime(uint64_t *aTotalSystemTime) override {
-    *aTotalSystemTime = mPerformanceData.mTotalSystemTime;
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetTotalCPOWTime(uint64_t *aCpowTime) override {
-    *aCpowTime = mPerformanceData.mTotalCPOWTime;
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetTicks(uint64_t *aTicks) override {
-    *aTicks = mPerformanceData.mTicks;
-    return NS_OK;
-  };
-
-  NS_IMETHOD GetDurations(uint32_t *aCount, uint64_t **aNumberOfOccurrences) override {
-    const size_t length = mozilla::ArrayLength(mPerformanceData.mDurations);
-    if (aCount) {
-      *aCount = length;
-    }
-    *aNumberOfOccurrences = new uint64_t[length];
-    for (size_t i = 0; i < length; ++i) {
-      (*aNumberOfOccurrences)[i] = mPerformanceData.mDurations[i];
-    }
-    return NS_OK;
-  };
-
-  NS_IMETHODIMP GetProcessId(uint64_t* processId) override {
-    *processId = nsPerformanceGroupDetails::ProcessId();
-    return NS_OK;
-  }
 
 private:
+  RefPtr<nsPerformanceGroupDetails> mDetails;
   PerformanceData mPerformanceData;
 
   virtual ~nsPerformanceStats() {}
 };
 
 NS_IMPL_ISUPPORTS(nsPerformanceStats, nsIPerformanceStats)
+
+/* readonly attribute unsigned long long totalUserTime; */
+NS_IMETHODIMP
+nsPerformanceStats::GetTotalUserTime(uint64_t *aTotalUserTime) {
+  *aTotalUserTime = mPerformanceData.mTotalUserTime;
+  return NS_OK;
+};
+
+/* readonly attribute unsigned long long totalSystemTime; */
+NS_IMETHODIMP
+nsPerformanceStats::GetTotalSystemTime(uint64_t *aTotalSystemTime) {
+  *aTotalSystemTime = mPerformanceData.mTotalSystemTime;
+  return NS_OK;
+};
+
+/* readonly attribute unsigned long long totalCPOWTime; */
+NS_IMETHODIMP
+nsPerformanceStats::GetTotalCPOWTime(uint64_t *aCpowTime) {
+  *aCpowTime = mPerformanceData.mTotalCPOWTime;
+  return NS_OK;
+};
+
+/* readonly attribute unsigned long long ticks; */
+NS_IMETHODIMP
+nsPerformanceStats::GetTicks(uint64_t *aTicks) {
+  *aTicks = mPerformanceData.mTicks;
+  return NS_OK;
+};
+
+/* void getDurations (out unsigned long aCount, [array, size_is (aCount), retval] out unsigned long long aNumberOfOccurrences); */
+NS_IMETHODIMP
+nsPerformanceStats::GetDurations(uint32_t *aCount, uint64_t **aNumberOfOccurrences) {
+  const size_t length = mozilla::ArrayLength(mPerformanceData.mDurations);
+  if (aCount) {
+    *aCount = length;
+  }
+  *aNumberOfOccurrences = new uint64_t[length];
+  for (size_t i = 0; i < length; ++i) {
+    (*aNumberOfOccurrences)[i] = mPerformanceData.mDurations[i];
+  }
+  return NS_OK;
+};
 
 
 /* ------------------------------------------------------
@@ -342,6 +361,7 @@ private:
 NS_IMPL_ISUPPORTS(nsPerformanceSnapshot, nsIPerformanceSnapshot)
 
 
+/* nsIArray getComponentsData (); */
 NS_IMETHODIMP
 nsPerformanceSnapshot::GetComponentsData(nsIArray * *aComponents)
 {
@@ -356,6 +376,7 @@ nsPerformanceSnapshot::GetComponentsData(nsIArray * *aComponents)
   return NS_OK;
 }
 
+/* nsIPerformanceStats getProcessData (); */
 NS_IMETHODIMP
 nsPerformanceSnapshot::GetProcessData(nsIPerformanceStats * *aProcess)
 {
@@ -525,6 +546,7 @@ nsPerformanceStatsService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
+/* [implicit_jscontext] attribute bool isMonitoringCPOW; */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringCPOW(JSContext* cx, bool *aIsStopwatchActive)
 {
@@ -550,6 +572,7 @@ nsPerformanceStatsService::SetIsMonitoringCPOW(JSContext* cx, bool aIsStopwatchA
   return NS_OK;
 }
 
+/* [implicit_jscontext] attribute bool isMonitoringJank; */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringJank(JSContext* cx, bool *aIsStopwatchActive)
 {
@@ -575,6 +598,7 @@ nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool aIsStopwatchA
   return NS_OK;
 }
 
+/* [implicit_jscontext] attribute bool isMonitoringPerCompartment; */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringPerCompartment(JSContext*, bool *aIsMonitoringPerCompartment)
 {
@@ -648,9 +672,10 @@ nsPerformanceStatsService::GetStatsForGroup(const js::PerformanceGroup* group)
 /* static */ nsIPerformanceStats*
 nsPerformanceStatsService::GetStatsForGroup(const nsPerformanceGroup* group)
 {
-  return new nsPerformanceStats(*group, group->data);
+  return new nsPerformanceStats(group->Details(), group->data);
 }
 
+/* [implicit_jscontext] nsIPerformanceSnapshot getSnapshot (); */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
@@ -980,7 +1005,7 @@ nsPerformanceGroup::nsPerformanceGroup(nsPerformanceStatsService* service,
                                        uint64_t processId,
                                        bool isSystem,
                                        GroupScope scope)
-  : nsPerformanceGroupDetails(name, groupId, addonId, windowId, processId, isSystem)
+  : mDetails(new nsPerformanceGroupDetails(name, groupId, addonId, windowId, processId, isSystem))
   , mService(service)
   , mScope(scope)
 {
@@ -988,14 +1013,14 @@ nsPerformanceGroup::nsPerformanceGroup(nsPerformanceStatsService* service,
 
 #if defined(DEBUG)
   if (scope == GroupScope::ADDON) {
-    MOZ_ASSERT(IsAddon());
-    MOZ_ASSERT(!IsWindow());
+    MOZ_ASSERT(mDetails->IsAddon());
+    MOZ_ASSERT(!mDetails->IsWindow());
   } else if (scope == GroupScope::WINDOW) {
-    MOZ_ASSERT(IsWindow());
-    MOZ_ASSERT(!IsAddon());
+    MOZ_ASSERT(mDetails->IsWindow());
+    MOZ_ASSERT(!mDetails->IsAddon());
   } else if (scope == GroupScope::RUNTIME) {
-    MOZ_ASSERT(!IsWindow());
-    MOZ_ASSERT(!IsAddon());
+    MOZ_ASSERT(!mDetails->IsWindow());
+    MOZ_ASSERT(!mDetails->IsAddon());
   }
 #endif // defined(DEBUG)
   setIsActive(mScope != GroupScope::COMPARTMENT || mService->mIsMonitoringPerCompartment);
@@ -1015,11 +1040,11 @@ nsPerformanceGroup::Dispose() {
   service->mGroups.RemoveEntry(this);
 
   if (mScope == GroupScope::ADDON) {
-    MOZ_ASSERT(IsAddon());
-    service->mAddonIdToGroup.RemoveEntry(AddonId());
+    MOZ_ASSERT(mDetails->IsAddon());
+    service->mAddonIdToGroup.RemoveEntry(mDetails->AddonId());
   } else if (mScope == GroupScope::WINDOW) {
-    MOZ_ASSERT(IsWindow());
-    service->mWindowIdToGroup.RemoveEntry(WindowId());
+    MOZ_ASSERT(mDetails->IsWindow());
+    service->mWindowIdToGroup.RemoveEntry(mDetails->WindowId());
   }
 }
 
@@ -1030,4 +1055,9 @@ nsPerformanceGroup::~nsPerformanceGroup() {
 nsPerformanceGroup::GroupScope
 nsPerformanceGroup::Scope() const {
   return mScope;
+}
+
+nsPerformanceGroupDetails*
+nsPerformanceGroup::Details() const {
+  return mDetails;
 }
