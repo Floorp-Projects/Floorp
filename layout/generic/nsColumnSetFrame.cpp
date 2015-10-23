@@ -5,6 +5,7 @@
 
 /* rendering object for css3 multi-column layout */
 
+#include "mozilla/unused.h"
 #include "nsColumnSetFrame.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
@@ -136,9 +137,17 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
     }
 
     nsRect lineRect(linePt, ruleSize);
-    nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
-        aDirtyRect, lineRect, border, StyleContext(),
-        skipSides);
+
+    // Assert that we're not drawing a border-image here; if we were, we
+    // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
+    MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
+
+    unused <<
+      nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
+                                                 aDirtyRect, lineRect, border,
+                                                 StyleContext(),
+                                                 PaintBorderFlags::SYNC_DECODE_IMAGES,
+                                                 skipSides);
 
     child = nextSibling;
     nextSibling = nextSibling->GetNextSibling();
