@@ -1,5 +1,5 @@
 // Since we (for now!) can't emit jitcode for derived class statements. Make
-// sure we can corectly invoke derived class constructors.
+// sure we can correctly invoke derived class constructors.
 
 class foo extends null {
     constructor() {

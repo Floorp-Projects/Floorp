@@ -67,21 +67,21 @@ function htmlSearch() {
         if (label) {
           is(target.querySelector(".results-panel-item-label").getAttribute("value"),
             gDebugger.SourceUtils.trimUrlLength(label + "()"),
-            "The corect label (" + label + ") is currently selected.");
+            "The correct label (" + label + ") is currently selected.");
         } else {
           ok(!target.querySelector(".results-panel-item-label"),
             "Shouldn't create empty label nodes.");
         }
         if (value) {
           ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
-            "The corect value (" + value + ") is attached.");
+            "The correct value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
             "Shouldn't create empty label nodes.");
         }
         if (description) {
           is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
-            "The corect description (" + description + ") is currently shown.");
+            "The correct description (" + description + ") is currently shown.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-before"),
             "Shouldn't create empty label nodes.");
@@ -138,21 +138,21 @@ function firstJsSearch() {
         if (label) {
           is(target.querySelector(".results-panel-item-label").getAttribute("value"),
             gDebugger.SourceUtils.trimUrlLength(label + "()"),
-            "The corect label (" + label + ") is currently selected.");
+            "The correct label (" + label + ") is currently selected.");
         } else {
           ok(!target.querySelector(".results-panel-item-label"),
             "Shouldn't create empty label nodes.");
         }
         if (value) {
           ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
-            "The corect value (" + value + ") is attached.");
+            "The correct value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
             "Shouldn't create empty label nodes.");
         }
         if (description) {
           is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
-            "The corect description (" + description + ") is currently shown.");
+            "The correct description (" + description + ") is currently shown.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-before"),
             "Shouldn't create empty label nodes.");
@@ -209,21 +209,21 @@ function secondJsSearch() {
         if (label) {
           is(target.querySelector(".results-panel-item-label").getAttribute("value"),
             gDebugger.SourceUtils.trimUrlLength(label + "()"),
-            "The corect label (" + label + ") is currently selected.");
+            "The correct label (" + label + ") is currently selected.");
         } else {
           ok(!target.querySelector(".results-panel-item-label"),
             "Shouldn't create empty label nodes.");
         }
         if (value) {
           ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
-            "The corect value (" + value + ") is attached.");
+            "The correct value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
             "Shouldn't create empty label nodes.");
         }
         if (description) {
           is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
-            "The corect description (" + description + ") is currently shown.");
+            "The correct description (" + description + ") is currently shown.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-before"),
             "Shouldn't create empty label nodes.");
@@ -280,21 +280,21 @@ function thirdJsSearch() {
         if (label) {
           is(target.querySelector(".results-panel-item-label").getAttribute("value"),
             gDebugger.SourceUtils.trimUrlLength(label + "()"),
-            "The corect label (" + label + ") is currently selected.");
+            "The correct label (" + label + ") is currently selected.");
         } else {
           ok(!target.querySelector(".results-panel-item-label"),
             "Shouldn't create empty label nodes.");
         }
         if (value) {
           ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
-            "The corect value (" + value + ") is attached.");
+            "The correct value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
             "Shouldn't create empty label nodes.");
         }
         if (description) {
           is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
-            "The corect description (" + description + ") is currently shown.");
+            "The correct description (" + description + ") is currently shown.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-before"),
             "Shouldn't create empty label nodes.");
@@ -348,21 +348,21 @@ function filterSearch() {
         if (label) {
           is(target.querySelector(".results-panel-item-label").getAttribute("value"),
             gDebugger.SourceUtils.trimUrlLength(label + "()"),
-            "The corect label (" + label + ") is currently selected.");
+            "The correct label (" + label + ") is currently selected.");
         } else {
           ok(!target.querySelector(".results-panel-item-label"),
             "Shouldn't create empty label nodes.");
         }
         if (value) {
           ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").includes(value),
-            "The corect value (" + value + ") is attached.");
+            "The correct value (" + value + ") is attached.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-below"),
             "Shouldn't create empty label nodes.");
         }
         if (description) {
           is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
-            "The corect description (" + description + ") is currently shown.");
+            "The correct description (" + description + ") is currently shown.");
         } else {
           ok(!target.querySelector(".results-panel-item-label-before"),
             "Shouldn't create empty label nodes.");
