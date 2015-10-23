@@ -311,7 +311,10 @@ var DebuggerView = {
       if (button == 2) {
         this.clickedLine = line;
       }
-      else {
+      // Bug 1201008: Only add the breakpoint to the editor if we're currently
+      // looking at a source. Even if no source is loaded, you can
+      // interact with line 1 of the editor.
+      else if (DebuggerView.Sources.selectedValue) {
         if (this.editor.hasBreakpoint(line)) {
           this.editor.removeBreakpoint(line);
         } else {

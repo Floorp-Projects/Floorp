@@ -81,6 +81,7 @@ dictionary ConsoleStackEntry {
   unsigned long columnNumber = 0;
   DOMString functionName = "";
   unsigned long language = 0;
+  DOMString? asyncCause;
 };
 
 dictionary ConsoleTimerStart {

@@ -935,6 +935,13 @@ StackFrameToStackEntry(nsIStackFrame* aStackFrame,
   rv = aStackFrame->GetName(aStackEntry.mFunctionName);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsString cause;
+  rv = aStackFrame->GetAsyncCause(cause);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!cause.IsEmpty()) {
+    aStackEntry.mAsyncCause.Construct(cause);
+  }
+
   aStackEntry.mLanguage = aLanguage;
   return NS_OK;
 }
@@ -960,6 +967,10 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
     rv = stack->GetCaller(getter_AddRefs(caller));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (!caller) {
+      rv = stack->GetAsyncCaller(getter_AddRefs(caller));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     stack.swap(caller);
   }
 
