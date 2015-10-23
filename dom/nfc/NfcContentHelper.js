@@ -67,7 +67,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "nsISyncMessageSender");
 
 function NfcContentHelper() {
-  Services.obs.addObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED, false);
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._requestMap = [];
@@ -180,16 +179,6 @@ NfcContentHelper.prototype = {
   addEventListener: function addEventListener(listener, tabId) {
     let _window = listener.window;
 
-    // TODO Bug 1166210 - enable NFC debug for child process.
-    if (!NFC.DEBUG_CONTENT_HELPER && _window.navigator.mozSettings) {
-      let lock = _window.navigator.mozSettings.createLock();
-      var nfcDebug = lock.get(NFC.SETTING_NFC_DEBUG);
-      nfcDebug.onsuccess = function _nfcDebug() {
-        DEBUG = nfcDebug.result[NFC.SETTING_NFC_DEBUG];
-        updateDebug();
-      };
-    }
-
     this.eventListeners[tabId] = listener;
     cpmm.sendAsyncMessage("NFC:AddEventListener", { tabId: tabId });
   },
@@ -252,16 +241,8 @@ NfcContentHelper.prototype = {
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
       this.destroyDOMRequestHelper();
-      Services.obs.removeObserver(this, NFC.TOPIC_MOZSETTINGS_CHANGED);
       Services.obs.removeObserver(this, "xpcom-shutdown");
       cpmm = null;
-    } else if (topic == NFC.TOPIC_MOZSETTINGS_CHANGED) {
-      if ("wrappedJSObject" in subject) {
-        subject = subject.wrappedJSObject;
-      }
-      if (subject) {
-        this.handle(subject.key, subject.value);
-      }
     }
   },
 
@@ -289,15 +270,6 @@ NfcContentHelper.prototype = {
         break;
       case "NFC:DOMEvent":
         this.handleDOMEvent(result);
-        break;
-    }
-  },
-
-  handle: function handle(name, result) {
-    switch (name) {
-      case NFC.SETTING_NFC_DEBUG:
-        DEBUG = result;
-        updateDebug();
         break;
     }
   },

@@ -54,7 +54,7 @@ BluetoothClassOfDevice::~BluetoothClassOfDevice()
 void
 BluetoothClassOfDevice::Reset()
 {
-  mMajorServiceClass = 0x1; // LIMITED_DISCOVERABILITY
+  mMajorServiceClass = 0;
   mMajorDeviceClass = 0x1F; // UNCATEGORIZED
   mMinorDeviceClass = 0;
 }

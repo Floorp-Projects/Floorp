@@ -54,15 +54,17 @@ BEGIN_BLUETOOTH_NAMESPACE
 #define IS_POINTING_DEVICE(cod)      ((GET_MINOR_DEVICE_CLASS(cod) & 0x20) >> 5)
 
 /**
- * Check whether the value of CoD is invalid. (i.e. Bit 31 ~ Bit 24 != 0x0)
+ * Check whether the value of CoD is invalid:
+ * - Bit 31 ~ Bit 24 != 0x0, or
+ * - CoD value is 0x1f00 (unclassified).
  *
  * According to Bluetooth core spec v4.1. Vol 2, Sec. 7.3, the data length of
- * CoD (class of device) is 3 bytes. The two least significant bits are used to
- * indicate 'format type'. The following 22 bits are used to indicate category
- * of service class and device type. The remaining 8 bits (Bit 31 ~ Bit 24)
- * should be unassigned bits, since BlueDroid uses uint32_t to store CoD.
+ * CoD (class of device) is 3 bytes: the two least significant bits indicate
+ * 'format type', and the following 22 bits indicate category of service class
+ * and device type. As bluedroid stores CoD with uint32_t, the remaining 8 bits
+ * (Bit 31 ~ Bit 24) should be unassigned.
  */
-#define IS_INVALID_COD(cod)          (cod >> 24)
+#define IS_INVALID(cod)              ((cod) >> 24 || (cod) == 0x1f00)
 
 class BluetoothProfileManagerBase;
 class BluetoothReplyRunnable;

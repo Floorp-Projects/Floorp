@@ -266,30 +266,29 @@ class MachCommands(MachCommandBase):
         if platform.system() != "Windows":
             return []
 
-        return {
+        return list({
             "%s\\nodejs" % os.environ.get("SystemDrive"),
             os.path.join(os.environ.get("ProgramFiles"), "nodejs"),
             os.path.join(os.environ.get("PROGRAMW6432"), "nodejs"),
             os.path.join(os.environ.get("PROGRAMFILES"), "nodejs")
-        }
+        })
 
     def getNodeOrNpmPath(self, filename):
         """
         Return the nodejs or npm path.
         """
-        try:
-            appPath = which.which(filename)
-            return appPath
-        except which.WhichError:
-            pass
-
         if platform.system() == "Windows":
-            try:
-                for ext in ["", ".cmd", ".exe"]:
+            for ext in [".cmd", ".exe", ""]:
+                try:
                     nodeOrNpmPath = which.which(filename + ext,
                                                 path=self.getPossibleNodePathsWin())
                     if self.is_valid(nodeOrNpmPath):
                         return nodeOrNpmPath
+                except which.WhichError:
+                    pass
+        else:
+            try:
+                return which.which(filename)
             except which.WhichError:
                 pass
 
@@ -315,5 +314,5 @@ class MachCommands(MachCommandBase):
             with open(os.devnull, "w") as fnull:
                 subprocess.check_call([path, "--version"], stdout=fnull)
                 return True
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, WindowsError):
             return False

@@ -677,15 +677,8 @@ NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
     return StackFrame::GetCaller(aCaller);
   }
 
-  nsCOMPtr<nsIStackFrame> caller;
-  if (callerObj) {
-      caller = new JSStackFrame(callerObj);
-  } else {
-    // Do we really need this dummy frame?  If so, we should document why... I
-    // guess for symmetry with the "nothing on the stack" case, which returns
-    // a single dummy frame?
-    caller = new StackFrame();
-  }
+  nsCOMPtr<nsIStackFrame> caller =
+    callerObj ? new JSStackFrame(callerObj) : nullptr;
   caller.forget(aCaller);
 
   if (canCache) {

@@ -178,15 +178,16 @@ BluetoothProfileController::SetupProfiles(bool aAssignServiceClass)
   bool isRemoteControl = IS_REMOTE_CONTROL(mTarget.cod);
   bool isKeyboard = IS_KEYBOARD(mTarget.cod);
   bool isPointingDevice = IS_POINTING_DEVICE(mTarget.cod);
-  bool isInvalid = IS_INVALID_COD(mTarget.cod);
+  bool isInvalid = IS_INVALID(mTarget.cod);
 
   // The value of CoD is invalid. Since the device didn't declare its class of
   // device properly, we assume the device may support all of these profiles.
+  // Note the invalid CoD from bluedroid callback usually results from
+  // NFC-triggered direct pairing for no EIR query records.
   if (isInvalid) {
     AddProfile(BluetoothHfpManager::Get());
     AddProfile(BluetoothA2dpManager::Get());
     AddProfile(BluetoothAvrcpManager::Get()); // register after A2DP
-    AddProfile(BluetoothHidManager::Get());
     return;
   }
 
