@@ -230,7 +230,7 @@ ValidateArrayView(JSContext* cx, AsmJSModule::Global& global, HandleValue global
 
     bool tac = IsTypedArrayConstructor(v, global.viewType());
     bool stac = IsSharedTypedArrayConstructor(v, global.viewType());
-    if (!((tac || stac) && stac == isShared))
+    if (!(tac || (stac && isShared)))
         return LinkFail(cx, "bad typed array constructor");
 
     return true;
