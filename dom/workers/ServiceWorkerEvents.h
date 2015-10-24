@@ -48,6 +48,58 @@ public:
   NS_IMETHOD Run() override;
 };
 
+class ExtendableEvent : public Event
+{
+  nsTArray<RefPtr<Promise>> mPromises;
+
+protected:
+  explicit ExtendableEvent(mozilla::dom::EventTarget* aOwner);
+  ~ExtendableEvent() {}
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ExtendableEvent, Event)
+  NS_FORWARD_TO_EVENT
+
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  {
+    return mozilla::dom::ExtendableEventBinding::Wrap(aCx, this, aGivenProto);
+  }
+
+  static already_AddRefed<ExtendableEvent>
+  Constructor(mozilla::dom::EventTarget* aOwner,
+              const nsAString& aType,
+              const EventInit& aOptions)
+  {
+    RefPtr<ExtendableEvent> e = new ExtendableEvent(aOwner);
+    bool trusted = e->Init(aOwner);
+    e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
+    e->SetTrusted(trusted);
+    return e.forget();
+  }
+
+  static already_AddRefed<ExtendableEvent>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aType,
+              const EventInit& aOptions,
+              ErrorResult& aRv)
+  {
+    nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
+    return Constructor(target, aType, aOptions);
+  }
+
+  void
+  WaitUntil(Promise& aPromise, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  GetPromise();
+
+  virtual ExtendableEvent* AsExtendableEvent() override
+  {
+    return this;
+  }
+};
+
 class FetchEvent final : public Event
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
@@ -118,58 +170,6 @@ public:
 
   already_AddRefed<Promise>
   Default();
-};
-
-class ExtendableEvent : public Event
-{
-  nsTArray<RefPtr<Promise>> mPromises;
-
-protected:
-  explicit ExtendableEvent(mozilla::dom::EventTarget* aOwner);
-  ~ExtendableEvent() {}
-
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ExtendableEvent, Event)
-  NS_FORWARD_TO_EVENT
-
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return mozilla::dom::ExtendableEventBinding::Wrap(aCx, this, aGivenProto);
-  }
-
-  static already_AddRefed<ExtendableEvent>
-  Constructor(mozilla::dom::EventTarget* aOwner,
-              const nsAString& aType,
-              const EventInit& aOptions)
-  {
-    RefPtr<ExtendableEvent> e = new ExtendableEvent(aOwner);
-    bool trusted = e->Init(aOwner);
-    e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
-    e->SetTrusted(trusted);
-    return e.forget();
-  }
-
-  static already_AddRefed<ExtendableEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const EventInit& aOptions,
-              ErrorResult& aRv)
-  {
-    nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
-    return Constructor(target, aType, aOptions);
-  }
-
-  void
-  WaitUntil(Promise& aPromise, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  GetPromise();
-
-  virtual ExtendableEvent* AsExtendableEvent() override
-  {
-    return this;
-  }
 };
 
 #ifndef MOZ_SIMPLEPUSH
