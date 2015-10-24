@@ -226,7 +226,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     constructorProps(["input", "lastMatch", "lastParen",
                       "leftContext", "rightContext", "$1", "$2", "$3", "$4",
                       "$5", "$6", "$7", "$8", "$9", "$_", "$&", "$+",
-                      "$`", "$'"])
+                      "$`", "$'", Symbol.species])
 
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
@@ -393,20 +393,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
        gConstructorProperties[classname].filter(id => typeof id === "string").toSource(),
        "A property on the " + classname +
        " constructor has changed! You need a security audit from an XPConnect peer");
-    is(Object.getOwnPropertySymbols(localCtor).map(uneval).sort().toSource(),
+    let desiredCtorSymbols =
+        Object.getOwnPropertySymbols(localCtor).map(uneval).sort()
+    is(desiredCtorSymbols.toSource(),
        gConstructorProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
        "A symbol-keyed property on the " + classname +
        " constructor has been changed! You need a security audit from an XPConnect peer");
 
     let ctorProps = filterOut(desiredCtorProps, ctorPropsToSkip);
+    let ctorSymbols = filterOut(desiredCtorSymbols, ctorPropsToSkip.map(uneval));
     let ctorCallables = ctorProps.filter(name => propertyIsGetter(localCtor, name, classname) ||
                                          typeof localCtor[name] == 'function');
     testCtorCallables(ctorCallables, xrayCtor, localCtor);
     is(Object.getOwnPropertyNames(xrayCtor).sort().toSource(),
        ctorProps.toSource(), "getOwnPropertyNames works on Xrayed ctors");
     is(Object.getOwnPropertySymbols(xrayCtor).map(uneval).sort().toSource(),
-       gConstructorProperties[classname].filter(id => typeof id !== "string").map(uneval).sort().toSource(),
-       "getOwnPropertySymbols works on Xrayed ctors");
+       ctorSymbols.toSource(), "getOwnPropertySymbols works on Xrayed ctors");
   }
 
   // We will need arraysEqual and testArrayIterators both in this global scope
@@ -757,10 +759,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // properties that have to do with the last regexp execution in the global.
     // Xraying those makes no sense, so we just skip constructor properties for
     // RegExp xrays.
+    // RegExp[@@species] is affected by above skip, but we don't fix it until
+    // compelling use-case appears, as supporting RegExp[@@species] while
+    // skipping other static properties makes things complicated.
     let ctorPropsToSkip = ["input", "lastMatch", "lastParen",
                            "leftContext", "rightContext", "$1", "$2", "$3",
                            "$4", "$5", "$6", "$7", "$8", "$9", "$_", "$&",
-                           "$+", "$`", "$'"];
+                           "$+", "$`", "$'", Symbol.species];
     testXray('RegExp', new iwin.RegExp('foo'), new iwin.RegExp(), [],
              ctorPropsToSkip);
 
