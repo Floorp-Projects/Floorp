@@ -58,7 +58,7 @@
       ////////////////////////////////////////////////////////////////////////
       // getTextAtOffset line boundary
 
-      testTextAtOffset(0, BOUNDARY_LINE_START, "line ", 0, 5,
+      testTextAtOffset(0, BOUNDARY_LINE_START, "line", 0, 4,
                        "hypertext3", kOk, kOk, kOk);
 
       // XXX: see bug 634202.
@@ -122,7 +122,7 @@
 
   <div id="nulltext"></div>
 
-  <div id="hypertext">hello <a>friend</a> see <img></div>
+  <div id="hypertext">hello <a>friend</a> see <img src="about:blank"></div>
   <div id="hypertext2">hello <a>friend</a> see <input></div>
   <ol id="list">
     <li id="listitem">foo</li>
