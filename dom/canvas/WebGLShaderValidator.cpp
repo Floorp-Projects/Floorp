@@ -329,6 +329,12 @@ ShaderValidator::CalcNumSamplerUniforms() const
     return accum;
 }
 
+size_t
+ShaderValidator::NumAttributes() const
+{
+  return ShGetAttributes(mHandle)->size();
+}
+
 // Attribs cannot be structs or arrays, and neither can vertex inputs in ES3.
 // Therefore, attrib names are always simple.
 bool
