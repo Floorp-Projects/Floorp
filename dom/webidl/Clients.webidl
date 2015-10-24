@@ -13,6 +13,7 @@ interface Clients {
   // The objects returned will be new instances every time
   [Throws]
   Promise<sequence<Client>?> matchAll(optional ClientQueryOptions options);
+  [Throws]
   Promise<WindowClient> openWindow(USVString url);
   [Throws]
   Promise<void> claim();
