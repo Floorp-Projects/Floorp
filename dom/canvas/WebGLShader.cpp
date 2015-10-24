@@ -306,6 +306,16 @@ WebGLShader::CalcNumSamplerUniforms() const
     return 0;
 }
 
+size_t
+WebGLShader::NumAttributes() const
+{
+    if (mValidator)
+        return mValidator->NumAttributes();
+
+    // TODO
+    return 0;
+}
+
 void
 WebGLShader::BindAttribLocation(GLuint prog, const nsCString& userName,
                                 GLuint index) const
