@@ -5,8 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerPrivate.h"
-
 #include "ServiceWorkerManager.h"
+#include "nsStreamUtils.h"
+#include "nsStringStream.h"
+#include "mozilla/dom/FetchUtil.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1029,8 +1031,17 @@ public:
       nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(httpChannel);
       if (uploadChannel) {
         MOZ_ASSERT(!mUploadStream);
-        rv = uploadChannel->CloneUploadStream(getter_AddRefs(mUploadStream));
+        bool bodyHasHeaders = false;
+        rv = uploadChannel->GetUploadStreamHasHeaders(&bodyHasHeaders);
         NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIInputStream> uploadStream;
+        rv = uploadChannel->CloneUploadStream(getter_AddRefs(uploadStream));
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (bodyHasHeaders) {
+          HandleBodyWithHeaders(uploadStream);
+        } else {
+          mUploadStream = uploadStream;
+        }
       }
     } else {
       nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(channel);
@@ -1180,6 +1191,52 @@ private:
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
     }
     return true;
+  }
+
+  nsresult
+  HandleBodyWithHeaders(nsIInputStream* aUploadStream)
+  {
+    // We are dealing with an nsMIMEInputStream which uses string input streams
+    // under the hood, so all of the data is available synchronously.
+    bool nonBlocking = false;
+    nsresult rv = aUploadStream->IsNonBlocking(&nonBlocking);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(!nonBlocking)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    nsAutoCString body;
+    rv = NS_ConsumeStream(aUploadStream, UINT32_MAX, body);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Extract the headers in the beginning of the buffer
+    nsAutoCString::const_iterator begin, end;
+    body.BeginReading(begin);
+    body.EndReading(end);
+    const nsAutoCString::const_iterator body_end = end;
+    nsAutoCString headerName, headerValue;
+    bool emptyHeader = false;
+    while (FetchUtil::ExtractHeader(begin, end, headerName,
+                                    headerValue, &emptyHeader) &&
+           !emptyHeader) {
+      mHeaderNames.AppendElement(headerName);
+      mHeaderValues.AppendElement(headerValue);
+      headerName.Truncate();
+      headerValue.Truncate();
+    }
+
+    // Replace the upload stream with one only containing the body text.
+    nsCOMPtr<nsIStringInputStream> strStream =
+      do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // Skip past the "\r\n" that separates the headers and the body.
+    ++begin;
+    ++begin;
+    body.Assign(Substring(begin, body_end));
+    rv = strStream->SetData(body.BeginReading(), body.Length());
+    NS_ENSURE_SUCCESS(rv, rv);
+    mUploadStream = strStream;
+
+    return NS_OK;
   }
 };
 
