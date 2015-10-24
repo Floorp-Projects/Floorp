@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var video = document.createElement("video");
+  var source = document.createElement("source");
+  source.setAttributeNS(null, "src", "http://127.0.0.1/");
+  video.appendChild(source);
+  document.body.appendChild(video);
+  setTimeout(function() { document.body.removeChild(video); }, 20);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
