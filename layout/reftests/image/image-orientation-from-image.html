@@ -18,9 +18,9 @@
   <img id="image">
 
   <script>
-    var orientation = location.search.substring(1).split("&");
-    var angle = orientation[0];
-    var flip = orientation[1] == "flip" ? true : false;
+    var orientationInfo = location.search.substring(1).split("&");
+    var angle = orientationInfo[0];
+    var flip = orientationInfo[1] == "flip" ? true : false;
 
     // Determine the final image file. 'none' is special-cased since its
     // filename doesn't quite follow the same pattern as the others.

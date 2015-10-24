@@ -16,9 +16,9 @@
   <img src="image-orientation-no-viewbox-no-size.svg">
 
   <script>
-    var orientation = location.search.substring(1).split("&");
-    var angle = orientation[0];
-    var flip = orientation[1] == "flip" ? true : false;
+    var orientationInfo = location.search.substring(1).split("&");
+    var angle = orientationInfo[0];
+    var flip = orientationInfo[1] == "flip" ? true : false;
 
     // Construct a style. "from-image" is special-cased.
     var orientationStyle;
