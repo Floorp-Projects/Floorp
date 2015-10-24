@@ -85,11 +85,16 @@ def verify_mozconfigs(mozconfig_pair, nightly_mozconfig_pair, platform,
             # compare to whitelist
             message = ""
             if line[0] == '-':
+                # handle lines that move around in diff
+                if '+' + line[1:] in diff_list:
+                    continue
                 if platform in mozconfigWhitelist.get('release', {}):
                     if clean_line in \
                             mozconfigWhitelist['release'][platform]:
                         continue
             elif line[0] == '+':
+                if '-' + line[1:] in diff_list:
+                    continue
                 if platform in mozconfigWhitelist.get('nightly', {}):
                     if clean_line in \
                             mozconfigWhitelist['nightly'][platform]:
