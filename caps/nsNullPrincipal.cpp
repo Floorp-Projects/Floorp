@@ -125,13 +125,6 @@ nsNullPrincipal::MayLoadInternal(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
-{
-  *aIsNullPrincipal = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a null principal, we use our unique uuid as the base domain.
