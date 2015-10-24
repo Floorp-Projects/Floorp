@@ -747,6 +747,7 @@ const JSPropertySpec js::regexp_static_props[] = {
     JS_PSG("$+", static_lastParen_getter, JSPROP_PERMANENT),
     JS_PSG("$`", static_leftContext_getter, JSPROP_PERMANENT),
     JS_PSG("$'", static_rightContext_getter, JSPROP_PERMANENT),
+    JS_SELF_HOSTED_SYM_GET(species, "RegExpSpecies", 0),
     JS_PS_END
 };
 

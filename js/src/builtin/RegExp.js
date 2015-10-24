@@ -602,3 +602,9 @@ function RegExpTest(string) {
     // Steps 5-6.
     return RegExpExec(R, S, true);
 }
+
+// ES 2016 draft Mar 25, 2016 21.2.4.2.
+function RegExpSpecies() {
+    // Step 1.
+    return this;
+}
