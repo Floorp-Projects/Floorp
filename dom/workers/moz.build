@@ -12,6 +12,7 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerMessageEvent.h',
     'ServiceWorkerRegistrar.h',
     'ServiceWorkerRegistration.h',
+    'WorkerPrefs.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',
     'WorkerScope.h',
