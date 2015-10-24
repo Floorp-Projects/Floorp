@@ -18,12 +18,8 @@
         <input type="checkbox" name="cb">
       </td>
     </tr>
-    <tr>
-      <td>
-        <button id="btn"></button>
-        <button name="btn"></button>
-      </td>
-    </tr>
+    <button id="btn"></button>
+    <button name="btn"></button>
   </table>
 </form>
 
@@ -54,8 +50,8 @@ test(function () {
 
 //getter - name
 test(function () {
-  assert_throws(TypeError(), function() { coll1("r1") });
-}, "HTMLFormControlsCollection is not callable");
+  assert_equals(coll1("r1"), rdo, "HTMLFormControlsCollection(name) should return the 'input' element in radio status.");
+}, "HTMLFormControlsCollection(name) must return the named item");
 
 test(function () {
   assert_equals(coll1["r1"], rdo, "HTMLFormControlsCollection[name] should return the 'input' element in radio status.");
