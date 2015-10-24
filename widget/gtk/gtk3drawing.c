@@ -2034,6 +2034,7 @@ moz_gtk_progress_chunk_paint(cairo_t *cr, GdkRectangle* rect,
 
     style = gtk_widget_get_style_context(gProgressWidget);
     gtk_style_context_save(style);
+    gtk_style_context_remove_class(style, GTK_STYLE_CLASS_TROUGH);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_PROGRESSBAR);
 
     if (widget == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE ||
@@ -2069,12 +2070,15 @@ moz_gtk_progress_chunk_paint(cairo_t *cr, GdkRectangle* rect,
         rect->width = barSize;
       }
     }
-  
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+
     // gtk_render_activity was used to render progress chunks on GTK versions
     // before 3.13.7, see bug 1173907.
-    if (gtk_check_version(3, 13, 7))
+    if (!gtk_check_version(3, 13, 7)) {
+      gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+      gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+    } else {
       gtk_render_activity(style, cr, rect->x, rect->y, rect->width, rect->height);
+    }
     gtk_style_context_restore(style);
 
     return MOZ_GTK_SUCCESS;
