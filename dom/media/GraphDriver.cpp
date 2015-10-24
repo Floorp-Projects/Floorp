@@ -501,11 +501,11 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(MediaStream* aStream,
   // MOZ_ASSERT(aPromise);
 }
 
-AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
+AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl, dom::AudioChannel aChannel)
   : GraphDriver(aGraphImpl)
   , mIterationDurationMS(MEDIA_GRAPH_TARGET_PERIOD_MS)
   , mStarted(false)
-  , mAudioChannel(aGraphImpl->AudioChannel())
+  , mAudioChannel(aChannel)
   , mInCallback(false)
   , mPauseRequested(false)
 #ifdef XP_MACOSX
