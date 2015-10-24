@@ -105,6 +105,12 @@ const PING_ACTIONS = ["block", "click", "pin", "sponsored", "sponsored_link", "u
 // Location of inadjacent sites json
 const INADJACENCY_SOURCE = "chrome://browser/content/newtab/newTab.inadjacent.json";
 
+// Fake URL to keep track of last block of a suggested tile in the frequency cap object
+const FAKE_SUGGESTED_BLOCK_URL = "ignore://suggested_block";
+
+// Time before suggested tile is allowed to play again after block - default to 1 day
+const AFTER_SUGGESTED_BLOCK_DECAY_TIME = 24*60*60*1000;
+
 /**
  * Singleton that serves as the provider of directory links.
  * Directory links are a hard-coded set of links shown if a user's link
@@ -488,6 +494,28 @@ var DirectoryLinksProvider = {
     }
     // if we are here, the link is ok and no timeoutDate needed
     return {use: true};
+  },
+
+  /**
+   * Handles block on suggested tile: updates fake block url with current timestamp
+   */
+  handleSuggestedTileBlock: function DirectoryLinksProvider_handleSuggestedTileBlock() {
+    this._updateFrequencyCapSettings({url: FAKE_SUGGESTED_BLOCK_URL});
+    this._writeFrequencyCapFile();
+  },
+
+  /**
+   * Checks if suggested tile is being blocked for the rest of "decay time"
+   * @return True if blocked, false otherwise
+   */
+  _isSuggestedTileBlocked: function DirectoryLinksProvider__isSuggestedTileBlocked() {
+    let capObject = this._frequencyCaps[FAKE_SUGGESTED_BLOCK_URL];
+    if (!capObject || !capObject.lastUpdated) {
+      // user never blocked suggested tile or lastUpdated is missing
+      return false;
+    }
+    // otherwise, make sure that enough time passed after suggested tile was blocked
+    return (capObject.lastUpdated + AFTER_SUGGESTED_BLOCK_DECAY_TIME) > Date.now();
   },
 
   /**
@@ -888,9 +916,12 @@ var DirectoryLinksProvider = {
       }
     }
 
-    if (this._topSitesWithSuggestedLinks.size == 0 || !this._shouldUpdateSuggestedTile()) {
+    if (this._topSitesWithSuggestedLinks.size == 0 ||
+        !this._shouldUpdateSuggestedTile() ||
+        this._isSuggestedTileBlocked()) {
       // There are no potential suggested links we can show or not
-      // enough history for a suggested tile.
+      // enough history for a suggested tile, or suggested tile was
+      // recently blocked and wait time interval has not decayed yet
       return;
     }
 
@@ -1111,7 +1142,8 @@ var DirectoryLinksProvider = {
   _pruneFrequencyCapUrls: function DirectoryLinksProvider_pruneFrequencyCapUrls(timeDelta = DEFAULT_PRUNE_TIME_DELTA) {
     let timeThreshold = Date.now() - timeDelta;
     Object.keys(this._frequencyCaps).forEach(url => {
-      if (this._frequencyCaps[url].lastUpdated <= timeThreshold) {
+      // remove url if it is not ignorable and wasn't updated for a while
+      if (!url.startsWith("ignore") && this._frequencyCaps[url].lastUpdated <= timeThreshold) {
         delete this._frequencyCaps[url];
       }
     });
