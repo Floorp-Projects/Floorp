@@ -32,7 +32,11 @@ function createParentNode (marker) {
  * @param array filter
  */
 function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
-  let { getCurrentParentNode, pushNode, popParentNode } = createParentNodeFactory(rootNode);
+  let {
+    getCurrentParentNode,
+    pushNode,
+    popParentNode
+  } = createParentNodeFactory(rootNode);
 
   for (let i = 0, len = markersList.length; i < len; i++) {
     let curr = markersList[i];
@@ -48,7 +52,7 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
     let nestable = "nestable" in blueprint ? blueprint.nestable : true;
     let collapsible = "collapsible" in blueprint ? blueprint.collapsible : true;
 
-    let finalized = null;
+    let finalized = false;
 
     // If this marker is collapsible, turn it into a parent marker.
     // If there are no children within it later, it will be turned
@@ -57,9 +61,14 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
       curr = createParentNode(curr);
     }
 
-    // If not nestible, just push it inside the root node,
-    // like console.time/timeEnd.
-    if (!nestable) {
+    // If not nestible, just push it inside the root node. Additionally,
+    // markers originating outside the main thread are considered to be
+    // "never collapsible", to avoid confusion.
+    // A beter solution would be to collapse every marker with its siblings
+    // from the same thread, but that would require a thread id attached
+    // to all markers, which is potentially expensive and rather useless at
+    // the moment, since we don't really have that many OTMT markers.
+    if (!nestable || curr.isOffMainThread) {
       pushNode(rootNode, curr);
       continue;
     }
@@ -68,9 +77,13 @@ function collapseMarkersIntoNode({ rootNode, markersList, filter }) {
     // recursively upwards if this marker is outside their ranges and nestable.
     while (!finalized && parentNode) {
       // If this marker is eclipsed by the current parent marker,
-      // make it a child of the current parent and stop
-      // going upwards.
-      if (nestable && curr.end <= parentNode.end) {
+      // make it a child of the current parent and stop going upwards.
+      // If the markers aren't from the same process, attach them to the root
+      // node as well. Every process has its own main thread.
+      if (nestable &&
+          curr.start >= parentNode.start &&
+          curr.end <= parentNode.end &&
+          curr.processType == parentNode.processType) {
         pushNode(parentNode, curr);
         finalized = true;
         break;
@@ -112,6 +125,7 @@ function createParentNodeFactory (root) {
       }
 
       let lastParent = parentMarkers.pop();
+
       // If this finished parent marker doesn't have an end time,
       // so probably a synthesized marker, use the last marker's end time.
       if (lastParent.end == void 0) {
@@ -119,7 +133,7 @@ function createParentNodeFactory (root) {
       }
 
       // If no children were ever pushed into this parent node,
-      // remove it's submarkers so it behaves like a non collapsible
+      // remove its submarkers so it behaves like a non collapsible
       // node.
       if (!lastParent.submarkers.length) {
         delete lastParent.submarkers;
@@ -131,7 +145,9 @@ function createParentNodeFactory (root) {
     /**
      * Returns the most recent parent node.
      */
-    getCurrentParentNode: () => parentMarkers.length ? parentMarkers[parentMarkers.length - 1] : null,
+    getCurrentParentNode: () => parentMarkers.length
+      ? parentMarkers[parentMarkers.length - 1]
+      : null,
 
     /**
      * Push this marker into the most recent parent node.

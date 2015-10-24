@@ -38,6 +38,9 @@ dictionary ProfileTimelineMarker {
   DOMHighResTimeStamp end = 0;
   object? stack = null;
 
+  unsigned short processType;
+  boolean isOffMainThread;
+
   /* For ConsoleTime, Timestamp and Javascript markers.  */
   DOMString causeName;
 
