@@ -22,9 +22,6 @@ interface HTMLElement : Element {
   [Constant]
   readonly attribute DOMStringMap dataset;
 
-  [GetterThrows, Pure]
-           attribute DOMString innerText;
-
   // microdata 
   [SetterThrows, Pure]
            attribute boolean itemScope;

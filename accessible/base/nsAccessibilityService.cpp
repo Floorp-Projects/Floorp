@@ -1091,11 +1091,12 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
   // Create accessible for visible text frames.
   if (content->IsNodeOfType(nsINode::eTEXT)) {
-    nsIFrame::RenderedText text = frame->GetRenderedText();
+    nsAutoString text;
+    frame->GetRenderedText(&text, nullptr, nullptr, 0, UINT32_MAX);
     // Ignore not rendered text nodes and whitespace text nodes between table
     // cells.
-    if (text.mString.IsEmpty() ||
-        (aContext->IsTableRow() && nsCoreUtils::IsWhitespaceString(text.mString))) {
+    if (text.IsEmpty() ||
+        (aContext->IsTableRow() && nsCoreUtils::IsWhitespaceString(text))) {
       if (aIsSubtreeHidden)
         *aIsSubtreeHidden = true;
 
@@ -1107,7 +1108,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       return nullptr;
 
     document->BindToDocument(newAcc, nullptr);
-    newAcc->AsTextLeaf()->SetText(text.mString);
+    newAcc->AsTextLeaf()->SetText(text);
     return newAcc;
   }
 

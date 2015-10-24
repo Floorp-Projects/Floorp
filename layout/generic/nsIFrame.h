@@ -1893,36 +1893,26 @@ public:
   virtual bool CanContinueTextRun() const = 0;
 
   /**
-   * Computes an approximation of the rendered text of the frame and its
-   * continuations. Returns nothing for non-text frames.
+   * Append the rendered text to the passed-in string.
    * The appended text will often not contain all the whitespace from source,
-   * depending on CSS white-space processing.
-   * if aEndOffset goes past end, use the text up to the string's end.
+   * depending on whether the CSS rule "white-space: pre" is active for this frame.
+   * if aStartOffset + aLength goes past end, or if aLength is not specified
+   * then use the text up to the string's end.
    * Call this on the primary frame for a text node.
-   * aStartOffset and aEndOffset can be content offsets or offsets in the
-   * rendered text, depending on aOffsetType.
-   * Returns a string, as well as offsets identifying the start of the text
-   * within the rendered text for the whole node, and within the text content
-   * of the node.
+   * @param aAppendToString   String to append text to, or null if text should not be returned
+   * @param aSkipChars         if aSkipIter is non-null, this must also be non-null.
+   * This gets used as backing data for the iterator so it should outlive the iterator.
+   * @param aSkipIter         Where to fill in the gfxSkipCharsIterator info, or null if not needed by caller
+   * @param aStartOffset       Skipped (rendered text) start offset
+   * @param aSkippedMaxLength  Maximum number of characters to return
+   * The iterator can be used to map content offsets to offsets in the returned string, or vice versa.
    */
-  struct RenderedText {
-    nsString mString;
-    uint32_t mOffsetWithinNodeRenderedText;
-    int32_t mOffsetWithinNodeText;
-    RenderedText() : mOffsetWithinNodeRenderedText(0),
-        mOffsetWithinNodeText(0) {}
-  };
-  enum class TextOffsetType {
-    // Passed-in start and end offsets are within the content text.
-    OFFSETS_IN_CONTENT_TEXT,
-    // Passed-in start and end offsets are within the rendered text.
-    OFFSETS_IN_RENDERED_TEXT
-  };
-  virtual RenderedText GetRenderedText(uint32_t aStartOffset = 0,
-                                       uint32_t aEndOffset = UINT32_MAX,
-                                       TextOffsetType aOffsetType =
-                                           TextOffsetType::OFFSETS_IN_CONTENT_TEXT)
-  { return RenderedText(); }
+  virtual nsresult GetRenderedText(nsAString* aAppendToString = nullptr,
+                                   gfxSkipChars* aSkipChars = nullptr,
+                                   gfxSkipCharsIterator* aSkipIter = nullptr,
+                                   uint32_t aSkippedStartOffset = 0,
+                                   uint32_t aSkippedMaxLength = UINT32_MAX)
+  { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /**
    * Returns true if the frame contains any non-collapsed characters.
