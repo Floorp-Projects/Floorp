@@ -159,3 +159,14 @@ serializing/deserializing data off the main thread.
   * "serializeDataOnMainThread"
   * "deserializeDataOffMainThread"
   * "deserializeDataOnMainThread"
+
+## Composite
+
+Composite markers trace the actual time an inner composite operation
+took on the compositor thread. Currently, these markers are only especially
+interesting for Gecko platform developers, and thus disabled by default.
+
+## CompositeForwardTransaction
+
+Markers generated when the IPC request was made to the compositor from
+the child process's main thread.
