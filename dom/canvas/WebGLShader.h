@@ -50,6 +50,7 @@ public:
     // Util funcs
     bool CanLinkTo(const WebGLShader* prev, nsCString* const out_log) const;
     size_t CalcNumSamplerUniforms() const;
+    size_t NumAttributes() const;
     void BindAttribLocation(GLuint prog, const nsCString& userName, GLuint index) const;
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
                                         nsDependentCString* const out_userName) const;
