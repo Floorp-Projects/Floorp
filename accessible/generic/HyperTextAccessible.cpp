@@ -1984,17 +1984,9 @@ HyperTextAccessible::ContentToRenderedOffset(nsIFrame* aFrame, int32_t aContentO
   NS_ASSERTION(aFrame->GetPrevContinuation() == nullptr,
                "Call on primary frame only");
 
-  gfxSkipChars skipChars;
-  gfxSkipCharsIterator iter;
-  // Only get info up to original offset, we know that will be larger than skipped offset
-  nsresult rv = aFrame->GetRenderedText(nullptr, &skipChars, &iter, 0, aContentOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t ourRenderedStart = iter.GetSkippedOffset();
-  int32_t ourContentStart = iter.GetOriginalOffset();
-
-  *aRenderedOffset = iter.ConvertOriginalToSkipped(aContentOffset + ourContentStart) -
-                    ourRenderedStart;
+  nsIFrame::RenderedText text = aFrame->GetRenderedText(aContentOffset,
+      aContentOffset + 1);
+  *aRenderedOffset = text.mOffsetWithinNodeRenderedText;
 
   return NS_OK;
 }
@@ -2016,16 +2008,9 @@ HyperTextAccessible::RenderedToContentOffset(nsIFrame* aFrame, uint32_t aRendere
   NS_ASSERTION(aFrame->GetPrevContinuation() == nullptr,
                "Call on primary frame only");
 
-  gfxSkipChars skipChars;
-  gfxSkipCharsIterator iter;
-  // We only need info up to skipped offset -- that is what we're converting to original offset
-  nsresult rv = aFrame->GetRenderedText(nullptr, &skipChars, &iter, 0, aRenderedOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t ourRenderedStart = iter.GetSkippedOffset();
-  int32_t ourContentStart = iter.GetOriginalOffset();
-
-  *aContentOffset = iter.ConvertSkippedToOriginal(aRenderedOffset + ourRenderedStart) - ourContentStart;
+  nsIFrame::RenderedText text = aFrame->GetRenderedText(aRenderedOffset,
+      aRenderedOffset + 1, nsIFrame::TextOffsetType::OFFSETS_IN_RENDERED_TEXT);
+  *aContentOffset = text.mOffsetWithinNodeText;
 
   return NS_OK;
 }

@@ -228,12 +228,11 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     nsIContent* containerElm = containerNode->IsElement() ?
       containerNode->AsElement() : nullptr;
 
-    nsAutoString text;
-    textFrame->GetRenderedText(&text);
+    nsIFrame::RenderedText text = textFrame->GetRenderedText();
 
     // Remove text accessible if rendered text is empty.
     if (textAcc) {
-      if (text.IsEmpty()) {
+      if (text.mString.IsEmpty()) {
   #ifdef A11Y_LOG
         if (logging::IsEnabled(logging::eTree | logging::eText)) {
           logging::MsgBegin("TREE", "text node lost its content");
@@ -256,17 +255,17 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
         logging::MsgEntry("old text '%s'",
                           NS_ConvertUTF16toUTF8(textAcc->AsTextLeaf()->Text()).get());
         logging::MsgEntry("new text: '%s'",
-                          NS_ConvertUTF16toUTF8(text).get());
+                          NS_ConvertUTF16toUTF8(text.mString).get());
         logging::MsgEnd();
       }
   #endif
 
-      TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text);
+      TextUpdater::Run(mDocument, textAcc->AsTextLeaf(), text.mString);
       continue;
     }
 
     // Append an accessible if rendered text is not empty.
-    if (!text.IsEmpty()) {
+    if (!text.mString.IsEmpty()) {
   #ifdef A11Y_LOG
       if (logging::IsEnabled(logging::eTree | logging::eText)) {
         logging::MsgBegin("TREE", "text node gains new content");
