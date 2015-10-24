@@ -122,6 +122,73 @@ FetchUtil::ConsumeBlob(nsISupports* aParent, const nsString& aMimeType,
   return blob.forget();
 }
 
+static bool
+FindCRLF(nsACString::const_iterator& aStart,
+         nsACString::const_iterator& aEnd)
+{
+  nsACString::const_iterator end(aEnd);
+  return FindInReadable(NS_LITERAL_CSTRING("\r\n"), aStart, end);
+}
+
+// Reads over a CRLF and positions start after it.
+static bool
+PushOverLine(nsACString::const_iterator& aStart)
+{
+  if (*aStart == nsCRT::CR && (aStart.size_forward() > 1) && *(++aStart) == nsCRT::LF) {
+    ++aStart; // advance to after CRLF
+    return true;
+  }
+
+  return false;
+}
+
+// static
+bool
+FetchUtil::ExtractHeader(nsACString::const_iterator& aStart,
+                         nsACString::const_iterator& aEnd,
+                         nsCString& aHeaderName,
+                         nsCString& aHeaderValue,
+                         bool* aWasEmptyHeader)
+{
+  MOZ_ASSERT(aWasEmptyHeader);
+  // Set it to a valid value here so we don't forget later.
+  *aWasEmptyHeader = false;
+
+  const char* beginning = aStart.get();
+  nsACString::const_iterator end(aEnd);
+  if (!FindCRLF(aStart, end)) {
+    return false;
+  }
+
+  if (aStart.get() == beginning) {
+    *aWasEmptyHeader = true;
+    return true;
+  }
+
+  nsAutoCString header(beginning, aStart.get() - beginning);
+
+  nsACString::const_iterator headerStart, headerEnd;
+  header.BeginReading(headerStart);
+  header.EndReading(headerEnd);
+  if (!FindCharInReadable(':', headerStart, headerEnd)) {
+    return false;
+  }
+
+  aHeaderName.Assign(StringHead(header, headerStart.size_backward()));
+  aHeaderName.CompressWhitespace();
+  if (!NS_IsValidHTTPToken(aHeaderName)) {
+    return false;
+  }
+
+  aHeaderValue.Assign(Substring(++headerStart, headerEnd));
+  if (!NS_IsReasonableHTTPHeaderValue(aHeaderValue)) {
+    return false;
+  }
+  aHeaderValue.CompressWhitespace();
+
+  return PushOverLine(aStart);
+}
+
 namespace {
 class MOZ_STACK_CLASS FillFormIterator final
   : public URLSearchParams::ForEachIterator
@@ -214,66 +281,20 @@ private:
     return false;
   }
 
-  // Reads over a CRLF and positions start after it.
-  bool
-  PushOverLine(nsACString::const_iterator& aStart)
-  {
-    if (*aStart == nsCRT::CR && (aStart.size_forward() > 1) && *(++aStart) == nsCRT::LF) {
-      ++aStart; // advance to after CRLF
-      return true;
-    }
-
-    return false;
-  }
-
-  bool
-  FindCRLF(nsACString::const_iterator& aStart,
-           nsACString::const_iterator& aEnd)
-  {
-    nsACString::const_iterator end(aEnd);
-    return FindInReadable(NS_LITERAL_CSTRING("\r\n"), aStart, end);
-  }
-
   bool
   ParseHeader(nsACString::const_iterator& aStart,
               nsACString::const_iterator& aEnd,
               bool* aWasEmptyHeader)
   {
-    MOZ_ASSERT(aWasEmptyHeader);
-    // Set it to a valid value here so we don't forget later.
-    *aWasEmptyHeader = false;
-
-    const char* beginning = aStart.get();
-    nsACString::const_iterator end(aEnd);
-    if (!FindCRLF(aStart, end)) {
+    nsAutoCString headerName, headerValue;
+    if (!FetchUtil::ExtractHeader(aStart, aEnd,
+                                  headerName, headerValue,
+                                  aWasEmptyHeader)) {
       return false;
     }
-
-    if (aStart.get() == beginning) {
-      *aWasEmptyHeader = true;
+    if (*aWasEmptyHeader) {
       return true;
     }
-
-    nsAutoCString header(beginning, aStart.get() - beginning);
-
-    nsACString::const_iterator headerStart, headerEnd;
-    header.BeginReading(headerStart);
-    header.EndReading(headerEnd);
-    if (!FindCharInReadable(':', headerStart, headerEnd)) {
-      return false;
-    }
-
-    nsAutoCString headerName(StringHead(header, headerStart.size_backward()));
-    headerName.CompressWhitespace();
-    if (!NS_IsValidHTTPToken(headerName)) {
-      return false;
-    }
-
-    nsAutoCString headerValue(Substring(++headerStart, headerEnd));
-    if (!NS_IsReasonableHTTPHeaderValue(headerValue)) {
-      return false;
-    }
-    headerValue.CompressWhitespace();
 
     if (headerName.LowerCaseEqualsLiteral("content-disposition")) {
       nsCCharSeparatedTokenizer tokenizer(headerValue, ';');
@@ -476,7 +497,7 @@ public:
             return false;
           }
 
-          if (!PushOverLine(start)) {
+          if (emptyHeader && !PushOverLine(start)) {
             return false;
           }
 
