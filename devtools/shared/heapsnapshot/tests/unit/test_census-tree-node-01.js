@@ -38,9 +38,7 @@ const EXPECTED = {
       totalBytes: 500,
       count: 50,
       totalCount: 50,
-      children: undefined,
-      id: 2,
-      parent: 1
+      children: undefined
     },
     {
       name: "JSObject",
@@ -48,9 +46,7 @@ const EXPECTED = {
       totalBytes: 100,
       count: 10,
       totalCount: 10,
-      children: undefined,
-      id: 3,
-      parent: 1
+      children: undefined
     },
     {
       name: "JSString",
@@ -58,12 +54,9 @@ const EXPECTED = {
       totalBytes: 0,
       count: 0,
       totalCount: 0,
-      children: undefined,
-      id: 4,
-      parent: 1
+      children: undefined
     },
   ],
-  id: 1
 };
 
 function run_test() {

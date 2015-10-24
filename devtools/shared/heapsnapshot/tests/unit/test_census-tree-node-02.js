@@ -101,8 +101,7 @@ const EXPECTED = {
       totalBytes: 1,
       children: undefined
     },
-  ],
-  id: 1
+  ]
 };
 
 function run_test() {

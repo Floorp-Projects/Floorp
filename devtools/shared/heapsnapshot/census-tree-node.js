@@ -13,9 +13,6 @@
 
 const { Visitor, walk } = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
 
-// Monotonically increasing integer for CensusTreeNode `id`s.
-let INC = 0;
-
 /**
  * Return true if the given object is a SavedFrame stack object, false otherwise.
  *
@@ -141,8 +138,7 @@ CensusTreeNodeCache.lookupNode = function (cache, node) {
 };
 
 /**
- * Add `child` to `parent`'s set of children and store the parent ID
- * on the child.
+ * Add `child` to `parent`'s set of children.
  *
  * @param {CensusTreeNode} parent
  * @param {CensusTreeNode} child
@@ -151,7 +147,6 @@ function addChild(parent, child) {
   if (!parent.children) {
     parent.children = [];
   }
-  child.parent = parent.id;
   parent.children.push(child);
 }
 
@@ -213,6 +208,7 @@ function makeCensusTreeNodeSubTree(breakdown, report, edge, cache, outParams) {
 
   // Loop through each frame in the stack and get or create a CensusTreeNode for
   // the frame.
+
   const frames = getArrayOfFrames(edge);
   let currentCache = cache;
   let prevNode;
@@ -393,8 +389,6 @@ function CensusTreeNode (name) {
   this.count = 0;
   this.totalCount = 0;
   this.children = undefined;
-  this.id = INC++;
-  this.parent = undefined;
 }
 
 CensusTreeNode.prototype = null;
@@ -529,8 +523,6 @@ function invert(tree) {
  *   name: <?String>
  *   count: <?Number>
  *   bytes: <?Number>
- *   id: <?Number>
- *   parent: <?Number>
  * }
  *
  * @param {Object} breakdown

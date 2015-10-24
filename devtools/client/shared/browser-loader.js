@@ -39,7 +39,7 @@ function BrowserLoader(baseURI, window) {
     paths: Object.assign({}, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     require: (id, require) => {
-      let uri = require.resolve(id);
+      const uri = require.resolve(id);
 
       if (!uri.startsWith(baseURI) &&
           !uri.startsWith(VENDOR_CONTENT_URL)) {
