@@ -207,7 +207,7 @@ nsGIFDecoder2::BeginGIF()
 }
 
 bool
-nsGIFDecoder2::CheckForTransparency(IntRect aFrameRect)
+nsGIFDecoder2::CheckForTransparency(const IntRect& aFrameRect)
 {
   // Check if the image has a transparent color in its palette.
   if (mGIFStruct.is_transparent) {
@@ -229,6 +229,22 @@ nsGIFDecoder2::CheckForTransparency(IntRect aFrameRect)
   }
 
   return false;
+}
+
+IntRect
+nsGIFDecoder2::ClampToImageRect(const IntRect& aRect)
+{
+  IntRect imageRect(0, 0, mGIFStruct.screen_width, mGIFStruct.screen_height);
+  IntRect visibleFrameRect = aRect.Intersect(imageRect);
+
+  // If there's no intersection, |visibleFrameRect| will be an empty rect
+  // positioned at the maximum of |imageRect|'s and |aRect|'s coordinates, which
+  // is not what we want. Force it to (0, 0) in that case.
+  if (visibleFrameRect.IsEmpty()) {
+    visibleFrameRect.MoveTo(0, 0);
+  }
+
+  return visibleFrameRect;
 }
 
 //******************************************************************************
@@ -275,8 +291,8 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
   }
 
   if (mDownscaler) {
-    rv = mDownscaler->BeginFrame(GetSize(), Some(frameRect), mImageData,
-                                 hasTransparency);
+    rv = mDownscaler->BeginFrame(GetSize(), Some(ClampToImageRect(frameRect)),
+                                 mImageData, hasTransparency);
   }
 
   return rv;
@@ -487,6 +503,9 @@ nsGIFDecoder2::DoLzw(const uint8_t* q)
   if (!mGIFStruct.rows_remaining) {
     return true;
   }
+  if (MOZ_UNLIKELY(mDownscaler && mDownscaler->IsFrameComplete())) {
+    return true;
+  }
 
   // Copy all the decoder state variables into locals so the compiler
   // won't worry about them being aliased.  The locals will be homed
@@ -541,6 +560,10 @@ nsGIFDecoder2::DoLzw(const uint8_t* q)
       if (code == (clear_code + 1)) {
         // end-of-stream should only appear after all image data
         return (mGIFStruct.rows_remaining == 0);
+      }
+
+      if (MOZ_UNLIKELY(mDownscaler && mDownscaler->IsFrameComplete())) {
+        goto END;
       }
 
       if (oldcode == -1) {
