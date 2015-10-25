@@ -1266,6 +1266,13 @@ public:
   }
 
   bool
+  OpenWindowEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_OPEN_WINDOW_ENABLED];
+  }
+
+  bool
   OpaqueInterceptionEnabled() const
   {
     AssertIsOnWorkerThread();
