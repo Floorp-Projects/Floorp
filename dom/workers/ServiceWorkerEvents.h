@@ -35,8 +35,6 @@ class ResponseOrPromise;
 
 BEGIN_WORKERS_NAMESPACE
 
-class ServiceWorkerClient;
-
 class CancelChannelRunnable final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
@@ -103,10 +101,8 @@ public:
 class FetchEvent final : public ExtendableEvent
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-  RefPtr<ServiceWorkerClient> mClient;
   RefPtr<Request> mRequest;
   nsCString mScriptSpec;
-  UniquePtr<ServiceWorkerClientInfo> mClientInfo;
   RefPtr<Promise> mPromise;
   bool mIsReload;
   bool mWaitToRespond;
@@ -125,8 +121,7 @@ public:
   }
 
   void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                const nsACString& aScriptSpec,
-                UniquePtr<ServiceWorkerClientInfo>&& aClientInfo);
+                const nsACString& aScriptSpec);
 
   static already_AddRefed<FetchEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -145,9 +140,6 @@ public:
   {
     return mRequest;
   }
-
-  already_AddRefed<ServiceWorkerClient>
-  GetClient();
 
   bool
   IsReload() const
