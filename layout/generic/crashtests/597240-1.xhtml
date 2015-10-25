@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+function boom()
+{
+  document.documentElement.offsetHeight;
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  div.style.cssFloat = "left";
+  document.getElementById("a").appendChild(div);
+}
+
+]]>
+</script>
+</head>
+<body onload="boom();">
+<fieldset id="a"><legend style="display: table-footer-group;"></legend></fieldset>
+</body>
+</html>
