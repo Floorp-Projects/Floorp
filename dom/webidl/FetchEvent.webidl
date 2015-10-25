@@ -11,7 +11,7 @@
  Func="mozilla::dom::workers::ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
 interface FetchEvent : ExtendableEvent {
-  readonly attribute Request request;
+  [SameObject] readonly attribute Request request;
 
   // https://github.com/slightlyoff/ServiceWorker/issues/631
   readonly attribute Client? client; // The window issuing the request.
