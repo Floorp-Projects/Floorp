@@ -60,7 +60,7 @@ CancelChannelRunnable::Run()
 }
 
 FetchEvent::FetchEvent(EventTarget* aOwner)
-: Event(aOwner, nullptr, nullptr)
+: ExtendableEvent(aOwner)
 , mIsReload(false)
 , mWaitToRespond(false)
 {
@@ -478,14 +478,14 @@ FetchEvent::GetClient()
   return client.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(FetchEvent, Event)
-NS_IMPL_RELEASE_INHERITED(FetchEvent, Event)
+NS_IMPL_ADDREF_INHERITED(FetchEvent, ExtendableEvent)
+NS_IMPL_RELEASE_INHERITED(FetchEvent, ExtendableEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FetchEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
+NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, Event, mRequest, mClient,
-                                   mPromise)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent,
+                                   mRequest, mClient, mPromise)
 
 ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
