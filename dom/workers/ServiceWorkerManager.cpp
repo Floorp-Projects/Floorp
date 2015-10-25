@@ -4212,6 +4212,42 @@ ServiceWorkerInfo::RemoveWorker(ServiceWorker* aWorker)
   mInstances.RemoveElement(aWorker);
 }
 
+namespace {
+
+class ChangeStateUpdater final : public nsRunnable
+{
+public:
+  ChangeStateUpdater(const nsTArray<ServiceWorker*>& aInstances,
+                     ServiceWorkerState aState)
+    : mState(aState)
+  {
+    for (size_t i = 0; i < aInstances.Length(); ++i) {
+      mInstances.AppendElement(aInstances[i]);
+    }
+  }
+
+  NS_IMETHODIMP Run()
+  {
+    // We need to update the state of all instances atomically before notifying
+    // them to make sure that the observed state for all instances inside
+    // statechange event handlers is correct.
+    for (size_t i = 0; i < mInstances.Length(); ++i) {
+      mInstances[i]->SetState(mState);
+    }
+    for (size_t i = 0; i < mInstances.Length(); ++i) {
+      mInstances[i]->DispatchStateChange(mState);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsAutoTArray<RefPtr<ServiceWorker>, 1> mInstances;
+  ServiceWorkerState mState;
+};
+
+}
+
 void
 ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 {
@@ -4228,9 +4264,8 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
   MOZ_ASSERT_IF(mState == ServiceWorkerState::Activated, aState == ServiceWorkerState::Redundant);
 #endif
   mState = aState;
-  for (uint32_t i = 0; i < mInstances.Length(); ++i) {
-    mInstances[i]->QueueStateChangeEvent(mState);
-  }
+  nsCOMPtr<nsIRunnable> r = new ChangeStateUpdater(mInstances, mState);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r.forget())));
 }
 
 ServiceWorkerInfo::ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
