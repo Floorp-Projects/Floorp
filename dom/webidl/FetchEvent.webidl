@@ -10,7 +10,7 @@
 [Constructor(DOMString type, optional FetchEventInit eventInitDict),
  Func="mozilla::dom::workers::ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
-interface FetchEvent : Event {
+interface FetchEvent : ExtendableEvent {
   readonly attribute Request request;
 
   // https://github.com/slightlyoff/ServiceWorker/issues/631

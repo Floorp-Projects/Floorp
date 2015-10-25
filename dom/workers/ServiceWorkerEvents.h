@@ -100,7 +100,7 @@ public:
   }
 };
 
-class FetchEvent final : public Event
+class FetchEvent final : public ExtendableEvent
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   RefPtr<ServiceWorkerClient> mClient;
@@ -116,7 +116,7 @@ protected:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, Event)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, ExtendableEvent)
   NS_FORWARD_TO_EVENT
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
