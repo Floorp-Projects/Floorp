@@ -168,6 +168,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_SERVICEWORKERS_TESTING_ENABLED "dom.serviceWorkers.testing.enabled"
 #define PREF_INTERCEPTION_ENABLED      "dom.serviceWorkers.interception.enabled"
 #define PREF_INTERCEPTION_OPAQUE_ENABLED "dom.serviceWorkers.interception.opaque.enabled"
+#define PREF_OPEN_WINDOW_ENABLED       "dom.serviceWorkers.openWindow.enabled"
 #define PREF_PUSH_ENABLED              "dom.push.enabled"
 #define PREF_REQUESTCACHE_ENABLED      "dom.requestcache.enabled"
 #define PREF_REQUESTCONTEXT_ENABLED    "dom.requestcontext.enabled"
@@ -1943,6 +1944,10 @@ RuntimeService::Init()
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_ENABLED))) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
                                   WorkerPrefChanged,
+                                  PREF_OPEN_WINDOW_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_OPEN_WINDOW_ENABLED))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
                                   PREF_INTERCEPTION_OPAQUE_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_OPAQUE_ENABLED))) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
@@ -2188,6 +2193,10 @@ RuntimeService::Cleanup()
                                   WorkerPrefChanged,
                                   PREF_INTERCEPTION_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_ENABLED))) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_OPEN_WINDOW_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_OPEN_WINDOW_ENABLED))) ||
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
                                   PREF_SERVICEWORKERS_ENABLED,
@@ -2794,6 +2803,7 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
 #endif
     case WORKERPREF_INTERCEPTION_ENABLED:
     case WORKERPREF_INTERCEPTION_OPAQUE_ENABLED:
+    case WORKERPREF_OPEN_WINDOW_ENABLED:
     case WORKERPREF_SERVICEWORKERS:
     case WORKERPREF_SERVICEWORKERS_TESTING:
     case WORKERPREF_PUSH:

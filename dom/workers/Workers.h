@@ -201,6 +201,7 @@ enum WorkerPreference
   WORKERPREF_DOM_CACHES, // dom.caches.enabled
   WORKERPREF_SERVICEWORKERS, // dom.serviceWorkers.enabled
   WORKERPREF_INTERCEPTION_ENABLED, // dom.serviceWorkers.interception.enabled
+  WORKERPREF_OPEN_WINDOW_ENABLED, // dom.serviceWorkers.openWindow.enabled
   WORKERPREF_DOM_WORKERNOTIFICATION, // dom.webnotifications.workers.enabled
   WORKERPREF_DOM_SERVICEWORKERNOTIFICATION, // dom.webnotifications.serviceworker.enabled
   WORKERPREF_DOM_CACHES_TESTING, // dom.caches.testing.enabled
