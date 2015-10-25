@@ -74,8 +74,8 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
 
   mFrameRect = aFrameRect.valueOr(nsIntRect(nsIntPoint(), aOriginalSize));
   MOZ_ASSERT(mFrameRect.x >= 0 && mFrameRect.y >= 0 &&
-             mFrameRect.width > 0 && mFrameRect.height > 0,
-             "Frame rect must have positive components");
+             mFrameRect.width >= 0 && mFrameRect.height >= 0,
+             "Frame rect must have non-negative components");
   MOZ_ASSERT(nsIntRect(0, 0, aOriginalSize.width, aOriginalSize.height)
                .Contains(mFrameRect),
              "Frame rect must fit inside image");
@@ -159,8 +159,13 @@ Downscaler::ResetForNextProgressivePass()
   mCurrentInLine = 0;
   mLinesInBuffer = 0;
 
-  // If we have a vertical offset, commit rows to shift us past it.
-  SkipToRow(mFrameRect.y);
+  if (mFrameRect.IsEmpty()) {
+    // Our frame rect is zero size; commit rows until the end of the image.
+    SkipToRow(mOriginalSize.height - 1);
+  } else {
+    // If we have a vertical offset, commit rows to shift us past it.
+    SkipToRow(mFrameRect.y);
+  }
 }
 
 static void

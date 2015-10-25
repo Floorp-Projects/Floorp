@@ -83,6 +83,8 @@ public:
                       bool aHasAlpha,
                       bool aFlipVertically = false);
 
+  bool IsFrameComplete() const { return mCurrentInLine >= mOriginalSize.height; }
+
   /// Retrieves the buffer into which the Decoder should write each row.
   uint8_t* RowBuffer()
   {
@@ -161,6 +163,7 @@ public:
     return NS_ERROR_FAILURE;
   }
 
+  bool IsFrameComplete() const { return false; }
   uint8_t* RowBuffer() { return nullptr; }
   void ClearRow(uint32_t = 0) { }
   void CommitRow() { }
