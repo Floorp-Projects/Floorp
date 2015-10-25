@@ -396,6 +396,7 @@ load 698335.html
 needs-focus pref(accessibility.browsewithcaret,true) load 699353-1.html
 load 701504.html
 load 707098.html
+load 709536-1.xhtml
 load 722137.html
 load 725535.html
 load 727601.html
