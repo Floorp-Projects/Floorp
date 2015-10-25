@@ -45,7 +45,7 @@ namespace image {
  *
  * BAD_ARGS: We failed to draw because bad arguments were passed to draw().
  */
-enum class DrawResult : uint8_t
+enum class MOZ_MUST_USE DrawResult : uint8_t
 {
   SUCCESS,
   INCOMPLETE,
