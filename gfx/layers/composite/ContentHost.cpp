@@ -227,6 +227,11 @@ ContentHostTexture::UseTextureHost(const nsTArray<TimedTexture>& aTextures)
   MOZ_ASSERT(t.mPictureRect.IsEqualInterior(
       nsIntRect(nsIntPoint(0, 0), nsIntSize(t.mTexture->GetSize()))),
       "Only default picture rect supported");
+
+  if (t.mTexture != mTextureHost) {
+    mReceivedNewHost = true;
+  }
+
   mTextureHost = t.mTexture;
   mTextureHostOnWhite = nullptr;
   mTextureSourceOnWhite = nullptr;
@@ -330,6 +335,11 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
 
   // updated is in screen coordinates. Convert it to buffer coordinates.
   nsIntRegion destRegion(aUpdated);
+
+  if (mReceivedNewHost) {
+    destRegion.Or(destRegion, aOldValidRegionBack);
+    mReceivedNewHost = false;
+  }
   destRegion.MoveBy(-aData.rect().TopLeft());
 
   if (!aData.rect().Contains(aUpdated.GetBounds()) ||
