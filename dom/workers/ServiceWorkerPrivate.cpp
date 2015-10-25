@@ -1151,7 +1151,7 @@ private:
     init.mRequest.Value() = request;
     init.mBubbles = false;
     init.mCancelable = true;
-    init.mIsReload.Construct(mIsReload);
+    init.mIsReload = mIsReload;
     RefPtr<FetchEvent> event =
       FetchEvent::Constructor(globalObj, NS_LITERAL_STRING("fetch"), init, result);
     if (NS_WARN_IF(result.Failed())) {
