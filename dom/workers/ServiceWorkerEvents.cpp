@@ -91,8 +91,7 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
   e->SetTrusted(trusted);
   e->mRequest = aOptions.mRequest.WasPassed() ?
       &aOptions.mRequest.Value() : nullptr;
-  e->mIsReload = aOptions.mIsReload.WasPassed() ?
-      aOptions.mIsReload.Value() : false;
+  e->mIsReload = aOptions.mIsReload;
   return e.forget();
 }
 

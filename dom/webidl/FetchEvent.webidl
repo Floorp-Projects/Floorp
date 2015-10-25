@@ -20,5 +20,5 @@ interface FetchEvent : ExtendableEvent {
 
 dictionary FetchEventInit : EventInit {
   Request request;
-  boolean isReload;
+  boolean isReload = false;
 };
