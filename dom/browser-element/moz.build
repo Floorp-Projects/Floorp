@@ -26,6 +26,8 @@ XPIDL_MODULE = 'browser-element'
 EXTRA_COMPONENTS += [
     'BrowserElementParent.js',
     'BrowserElementParent.manifest',
+    'BrowserElementProxy.js',
+    'BrowserElementProxy.manifest',
 ]
 
 EXTRA_JS_MODULES += [
