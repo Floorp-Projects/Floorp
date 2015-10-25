@@ -13,10 +13,10 @@
 [Global=(Worker,ServiceWorker),
  Exposed=ServiceWorker]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
-  readonly attribute Clients clients;
-  readonly attribute ServiceWorkerRegistration registration;
+  [SameObject] readonly attribute Clients clients;
+  [SameObject] readonly attribute ServiceWorkerRegistration registration;
 
-  [Throws]
+  [Throws, NewObject]
   Promise<boolean> skipWaiting();
 
   attribute EventHandler oninstall;
