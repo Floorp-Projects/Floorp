@@ -23,7 +23,7 @@ interface WindowClient : Client {
   readonly attribute VisibilityState visibilityState;
   readonly attribute boolean focused;
 
-  [Throws]
+  [Throws, NewObject]
   Promise<WindowClient> focus();
 };
 
