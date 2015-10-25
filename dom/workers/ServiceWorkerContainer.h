@@ -29,7 +29,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(controllerchange)
-  IMPL_EVENT_HANDLER(reloadpage)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(message)
 
