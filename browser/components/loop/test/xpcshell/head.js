@@ -157,11 +157,12 @@ MockWebSocketChannel.prototype = {
    * nsIWebSocketChannel implementations.
    * See nsIWebSocketChannel.idl for API details.
    */
-  asyncOpen: function(aURI, aOrigin, aListener, aContext) {
+  asyncOpen: function(aURI, aOrigin, aWindowId, aListener, aContext) {
     this.uri = aURI;
     this.origin = aOrigin;
     this.listener = aListener;
     this.context = aContext;
+    this.windowId = aWindowId;
 
     this.listener.onStart(this.context);
   },

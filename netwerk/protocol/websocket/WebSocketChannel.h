@@ -88,6 +88,7 @@ public:
   //
   NS_IMETHOD AsyncOpen(nsIURI *aURI,
                        const nsACString &aOrigin,
+                       uint64_t aWindowID,
                        nsIWebSocketListener *aListener,
                        nsISupports *aContext) override;
   NS_IMETHOD Close(uint16_t aCode, const nsACString & aReason) override;
@@ -226,6 +227,8 @@ private:
   const static int32_t            kLingeringCloseThreshold = 50;
 
   int32_t                         mMaxConcurrentConnections;
+
+  uint64_t                        mInnerWindowID;
 
   // following members are accessed only on the main thread
   uint32_t                        mGotUpgradeOK              : 1;

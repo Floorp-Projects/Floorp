@@ -29,7 +29,9 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //
   NS_IMETHOD AsyncOpen(nsIURI *aURI, const nsACString &aOrigin,
-                       nsIWebSocketListener *aListener, nsISupports *aContext) override;
+                       uint64_t aInnerWindowID,
+                       nsIWebSocketListener *aListener,
+                       nsISupports *aContext) override;
   NS_IMETHOD Close(uint16_t code, const nsACString & reason) override;
   NS_IMETHOD SendMsg(const nsACString &aMsg) override;
   NS_IMETHOD SendBinaryMsg(const nsACString &aMsg) override;
