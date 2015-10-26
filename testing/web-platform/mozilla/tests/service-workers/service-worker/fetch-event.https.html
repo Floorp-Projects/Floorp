@@ -155,7 +155,8 @@ async_test(function(t) {
         })
       .then(function(frame) {
           assert_equals(frame.contentDocument.body.textContent,
-                        'POST:testName1=testValue1&testName2=testValue2');
+                        'POST:application/x-www-form-urlencoded:' +
+                        'testName1=testValue1&testName2=testValue2');
           document.body.removeChild(frame);
           return service_worker_unregister_and_done(t, scope);
         })
@@ -172,15 +173,7 @@ async_test(function(t) {
       .then(function(frame) {
           assert_equals(
             frame.contentDocument.body.textContent,
-            '(0)',
-            'Response should be the argument of the first respondWith() call.');
-          frame.remove();
-          return with_iframe(scope);
-        })
-      .then(function(frame) {
-          assert_equals(
-            frame.contentDocument.body.textContent,
-            '(0)(1)[InvalidStateError](2)[InvalidStateError](0)',
+            '(0)(1)[InvalidStateError](2)[InvalidStateError]',
             'Multiple calls of respondWith must throw InvalidStateErrors.');
           frame.remove();
           return service_worker_unregister_and_done(t, scope);
@@ -190,6 +183,7 @@ async_test(function(t) {
 
 async_test(function(t) {
     var scope = 'resources/simple.html?used-check';
+    var first_frame;
     service_worker_unregister_and_register(t, worker, scope)
       .then(function(reg) {
           return wait_for_state(t, reg.installing, 'activated');
@@ -199,7 +193,7 @@ async_test(function(t) {
           assert_equals(frame.contentDocument.body.textContent,
                         'Here\'s an other html file.\n',
                         'Response should come from fetched other file');
-          frame.remove();
+          first_frame = frame;
           return with_iframe(scope);
         })
       .then(function(frame) {
@@ -211,6 +205,7 @@ async_test(function(t) {
             frame.contentDocument.body.textContent,
             'bodyUsed: true',
             'event.respondWith must set the used flag.');
+          first_frame.remove();
           frame.remove();
           return service_worker_unregister_and_done(t, scope);
         })

@@ -102,6 +102,8 @@ public:
     return (uint32_t)ReadU24();
   }
 
+  bool CanRead32() { return mRemaining >= 4; }
+
   uint32_t ReadU32()
   {
     auto ptr = Read(4);

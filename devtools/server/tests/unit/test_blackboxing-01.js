@@ -60,7 +60,7 @@ const testBlackBox = Task.async(function* () {
   yield runTest(
     function onSteppedLocation(aLocation) {
       do_check_eq(aLocation.source.url, SOURCE_URL);
-      do_check_eq(aLocation.line, 3);
+      do_check_eq(aLocation.line, 4);
     },
     function onDebuggerStatementFrames(aFrames) {
       for (let f of aFrames) {

@@ -11,7 +11,7 @@ var handler = {
 var dbg = Debugger(g);
 dbg.onDebuggerStatement = function (frame) {
     g.s += '0';
-    var line0 = frame.script.getOffsetLine(frame.offset);
+    var line0 = frame.script.getOffsetLocation(frame.offset).lineNumber;
     var offs = frame.script.getLineOffsets(line0 + 2);
     for (var i = 0; i < offs.length; i++)
         frame.script.setBreakpoint(offs[i], handler);

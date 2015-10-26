@@ -40,6 +40,7 @@ class WebSocketChannelParent : public PWebSocketParent,
  private:
   bool RecvAsyncOpen(const URIParams& aURI,
                      const nsCString& aOrigin,
+                     const uint64_t& aInnerWindowID,
                      const nsCString& aProtocol,
                      const bool& aSecure,
                      const uint32_t& aPingInterval,

@@ -22,7 +22,7 @@ interface nsIPrincipal;
  * We are also making it scriptable for now, but this may change once we have
  * WebSockets for Workers.
  */
-[scriptable, uuid(21217c03-2ff7-4f9c-9d10-6d3d94a7d843)]
+[scriptable, uuid(352e0c08-f14c-40c8-ad06-2f8bb5d9d9e0)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
@@ -138,11 +138,13 @@ interface nsIWebSocketChannel : nsISupports
      *
      * @param aURI the uri of the websocket protocol - may be redirected
      * @param aOrigin the uri of the originating resource
+     * @param aInnerWindowID the inner window ID
      * @param aListener the nsIWebSocketListener implementation
      * @param aContext an opaque parameter forwarded to aListener's methods
      */
     void asyncOpen(in nsIURI aURI,
                    in ACString aOrigin,
+                   in unsigned long long aInnerWindowID,
                    in nsIWebSocketListener aListener,
                    in nsISupports aContext);
 

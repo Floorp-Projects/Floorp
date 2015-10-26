@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Basic websocket frame interception test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+var frameReceivedCounter = 0;
+var frameSentCounter = 0;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+var tests = [
+  { payload: "Hello world!" },
+  { payload: (function() { var buffer = ""; for (var i = 0; i < 120; ++i) buffer += i; return buffer; }()) },
+  { payload: "end" },
+]
+
+var innerId =
+  window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+ok(innerId, "We have a valid innerWindowID: " + innerId);
+
+var service = Cc["@mozilla.org/websocketframe/service;1"]
+                .getService(Ci.nsIWebSocketFrameService);
+ok(!!service, "We have the nsIWebSocketFrameService");
+
+var listener = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebSocketFrameListener]),
+
+  frameReceived: function(aWebSocketSerialID, aFrame) {
+    ok(!!aFrame, "We have received a frame");
+
+    if (tests.length) {
+      ok(aFrame.timeStamp, "Checking timeStamp: " + aFrame.timeStamp);
+      is(aFrame.finBit, true, "Checking finBit");
+      is(aFrame.rsvBit1, true, "Checking rsvBit1");
+      is(aFrame.rsvBit2, false, "Checking rsvBit2");
+      is(aFrame.rsvBit3, false, "Checking rsvBit3");
+      is(aFrame.opCode, aFrame.OPCODE_TEXT, "Checking opCode");
+      is(aFrame.maskBit, false, "Checking maskBit");
+      is(aFrame.mask, 0, "Checking mask");
+      is(aFrame.payload, tests[0].payload, "Checking payload: " + aFrame.payload);
+    } else {
+      ok(aFrame.timeStamp, "Checking timeStamp: " + aFrame.timeStamp);
+      is(aFrame.finBit, true, "Checking finBit");
+      is(aFrame.rsvBit1, false, "Checking rsvBit1");
+      is(aFrame.rsvBit2, false, "Checking rsvBit2");
+      is(aFrame.rsvBit3, false, "Checking rsvBit3");
+      is(aFrame.opCode, aFrame.OPCODE_CLOSE, "Checking opCode");
+      is(aFrame.maskBit, false, "Checking maskBit");
+      is(aFrame.mask, 0, "Checking mask");
+    }
+
+    frameReceivedCounter++;
+  },
+
+  frameSent: function(aWebSocketSerialID, aFrame) {
+    ok(!!aFrame, "We have sent a frame");
+
+    if (tests.length) {
+      ok(aFrame.timeStamp, "Checking timeStamp: " + aFrame.timeStamp);
+      is(aFrame.finBit, true, "Checking finBit");
+      is(aFrame.rsvBit1, true, "Checking rsvBit1");
+      is(aFrame.rsvBit2, false, "Checking rsvBit2");
+      is(aFrame.rsvBit3, false, "Checking rsvBit3");
+      is(aFrame.opCode, aFrame.OPCODE_TEXT, "Checking opCode");
+      is(aFrame.maskBit, true, "Checking maskBit");
+      ok(!!aFrame.mask, "Checking mask: " + aFrame.mask);
+      is(aFrame.payload, tests[0].payload, "Checking payload: " + aFrame.payload);
+    } else {
+      ok(aFrame.timeStamp, "Checking timeStamp: " + aFrame.timeStamp);
+      is(aFrame.finBit, true, "Checking finBit");
+      is(aFrame.rsvBit1, false, "Checking rsvBit1");
+      is(aFrame.rsvBit2, false, "Checking rsvBit2");
+      is(aFrame.rsvBit3, false, "Checking rsvBit3");
+      is(aFrame.opCode, aFrame.OPCODE_CLOSE, "Checking opCode");
+      is(aFrame.maskBit, true, "Checking maskBit");
+      ok(!!aFrame.mask, "Checking mask: " + aFrame.mask);
+    }
+
+    frameSentCounter++;
+  }
+};
+
+service.addListener(innerId, listener);
+ok(true, "Listener added");
+
+function checkListener() {
+  service.removeListener(innerId, listener);
+
+  ok(frameReceivedCounter, "We received some frames!");
+  ok(frameSentCounter, "We sent some frames!");
+  SimpleTest.finish();
+}
+
+var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_basic", "frame");
+ws.onopen = function(e) {
+  info("onopen");
+
+  ws.send(tests[0].payload);
+}
+
+ws.onclose = function(e) {
+  info("onclose");
+
+  ws.close();
+  checkListener();
+}
+
+ws.onmessage = function(e) {
+  info("onmessage");
+
+  is(e.data, tests[0].payload, "Wrong data");
+  tests.shift();
+  if (tests.length) {
+    ws.send(tests[0].payload);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

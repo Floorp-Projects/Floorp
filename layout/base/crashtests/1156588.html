@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!--
+user_pref("layout.css.grid.enabled", true);
+-->
+<script>
+
+function boom()
+{
+    document.documentElement.offsetHeight;
+    document.getElementById("x").style.content = "'x'";
+    document.documentElement.offsetHeight;
+    document.getElementById("s").remove();
+    document.documentElement.offsetHeight;
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div style="display: inline-grid; white-space: pre;"><div id="x"><span>
+<span>
+</span><span id="s"></span></span></div></div>
+
+</body>
+</html>

@@ -6,14 +6,18 @@
 
 "use strict";
 
+var Cu = Components.utils;
+Cu.import("resource://gre/modules/AddonManager.jsm");
+
 function Startup() {
   var bundle = document.getElementById("extensionsStrings");
   var addon = window.arguments[0].addon;
 
   document.documentElement.setAttribute("addontype", addon.type);
 
-  if (addon.iconURL)
-    document.getElementById("icon").src = addon.iconURL;
+  var iconURL = AddonManager.getPreferredIconURL(addon, 48, window);
+  if (iconURL)
+    document.getElementById("icon").src = iconURL;
 
   var label = document.createTextNode(bundle.getFormattedString("eulaHeader", [addon.name]));
   document.getElementById("heading").appendChild(label);

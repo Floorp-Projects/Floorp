@@ -26,6 +26,7 @@ parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
   AsyncOpen(URIParams aURI,
             nsCString aOrigin,
+            uint64_t aInnerWindowID,
             nsCString aProtocol,
             bool aSecure,
             // ping values only meaningful if client set them
