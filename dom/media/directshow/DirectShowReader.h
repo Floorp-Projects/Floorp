@@ -47,9 +47,6 @@ public:
   bool DecodeVideoFrame(bool &aKeyframeSkip,
                         int64_t aTimeThreshold) override;
 
-  bool HasAudio() override;
-  bool HasVideo() override;
-
   nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) override;
 

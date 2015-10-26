@@ -5357,14 +5357,6 @@ static void ProcessViewportToken(nsIDocument *aDocument,
                          (c == '\t') || (c == '\n') || (c == '\r'))
 
 /* static */
-nsViewportInfo
-nsContentUtils::GetViewportInfo(nsIDocument *aDocument,
-                                const ScreenIntSize& aDisplaySize)
-{
-  return aDocument->GetViewportInfo(aDisplaySize);
-}
-
-/* static */
 nsresult
 nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
                                     const nsAString &viewportInfo) {
@@ -7028,38 +7020,6 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   // Make sure aOutStartOffset <= aOutEndOffset.
   aOutStartOffset = std::min(anchorOffset, focusOffset);
   aOutEndOffset = std::max(anchorOffset, focusOffset);
-}
-
-/* static */
-nsRect
-nsContentUtils::GetSelectionBoundingRect(Selection* aSel)
-{
-  nsRect res;
-  // Bounding client rect may be empty after calling GetBoundingClientRect
-  // when range is collapsed. So we get caret's rect when range is
-  // collapsed.
-  if (aSel->IsCollapsed()) {
-    nsIFrame* frame = nsCaret::GetGeometry(aSel, &res);
-    if (frame) {
-      nsIFrame* relativeTo =
-        nsLayoutUtils::GetContainingBlockForClientRect(frame);
-      res = nsLayoutUtils::TransformFrameRectToAncestor(frame, res, relativeTo);
-    }
-  } else {
-    int32_t rangeCount = aSel->RangeCount();
-    nsLayoutUtils::RectAccumulator accumulator;
-    for (int32_t idx = 0; idx < rangeCount; ++idx) {
-      nsRange* range = aSel->GetRangeAt(idx);
-      nsRange::CollectClientRects(&accumulator, range,
-                                  range->GetStartParent(), range->StartOffset(),
-                                  range->GetEndParent(), range->EndOffset(),
-                                  true, false);
-    }
-    res = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect :
-      accumulator.mResultRect;
-  }
-
-  return res;
 }
 
 

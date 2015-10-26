@@ -374,6 +374,14 @@ TCPControlChannel.prototype = {
     this._sendMessage("answer", msg);
   },
 
+  sendIceCandidate: function(aCandidate) {
+    let msg = {
+      type: "requestSession:IceCandidate",
+      presentationId: this.presentationId,
+      iceCandidate: aCandidate,
+    };
+    this._sendMessage("iceCandidate", msg);
+  },
   // may throw an exception
   _send: function(aMsg) {
     DEBUG && log("TCPControlChannel - Send: " + JSON.stringify(aMsg, null, 2));
@@ -438,7 +446,7 @@ TCPControlChannel.prototype = {
   onStopRequest: function(aRequest, aContext, aStatus) {
     DEBUG && log("TCPControlChannel - onStopRequest: " + aStatus
                  + " with role: " + this._direction);
-    this.close();
+    this.close(Cr.NS_OK);
     this._notifyClosed(aStatus);
   },
 
@@ -494,6 +502,14 @@ TCPControlChannel.prototype = {
       }
       case "requestSession:Answer": {
         this._onAnswer(aMsg.answer);
+        break;
+      }
+      case "requestSession:IceCandidate": {
+        this._listener.onIceCandidate(aMsg.iceCandidate);
+        break;
+      }
+      case "requestSession:CloseReason": {
+        this._pendingCloseReason = aMsg.reason;
         break;
       }
     }
@@ -573,7 +589,7 @@ TCPControlChannel.prototype = {
   _notifyOpened: function() {
     this._connected = true;
     this._pendingClose = false;
-    this._pendingCloseReason = null;
+    this._pendingCloseReason = Cr.NS_OK;
 
     if (!this._listener) {
       this._pendingOpen = true;
@@ -591,10 +607,15 @@ TCPControlChannel.prototype = {
     this._pendingOffer = null;
     this._pendingAnswer = null;
 
+    // Remote endpoint closes the control channel with abnormal reason.
+    if (aReason == Cr.NS_OK && this._pendingCloseReason != Cr.NS_OK) {
+      aReason = this._pendingCloseReason;
+    }
+
     if (!this._listener) {
-     this._pendingClose = true;
-     this._pendingCloseReason = aReason;
-     return;
+      this._pendingClose = true;
+      this._pendingCloseReason = aReason;
+      return;
     }
 
     DEBUG && log("TCPControlChannel - notify closed with role: "
@@ -602,9 +623,21 @@ TCPControlChannel.prototype = {
     this._listener.notifyClosed(aReason);
   },
 
-  close: function() {
-    DEBUG && log("TCPControlChannel - close");
+  close: function(aReason) {
+    DEBUG && log("TCPControlChannel - close with reason: " + aReason);
+
     if (this._connected) {
+      // default reason is NS_OK
+      if (typeof aReason !== "undefined" && aReason !== Cr.NS_OK) {
+        let msg = {
+          type: "requestSession:CloseReason",
+          presentationId: this.presentationId,
+          reason: aReason,
+        };
+        this._sendMessage("close", msg);
+        this._pendingCloseReason = aReason;
+      }
+
       this._transport.setEventSink(null, null);
       this._pump = null;
 

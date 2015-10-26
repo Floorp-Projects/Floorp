@@ -23,18 +23,23 @@ function handleFormPost(event) {
   event.respondWith(new Promise(function(resolve) {
       event.request.text()
         .then(function(result) {
-            resolve(new Response(event.request.method + ':' + result));
+            resolve(new Response(event.request.method + ':' +
+                                 event.request.headers.get('Content-Type') + ':' +
+                                 result));
           });
     }));
 }
 
-var logForMultipleRespondWith = '';
-
 function handleMultipleRespondWith(event) {
+  var logForMultipleRespondWith = '';
   for (var i = 0; i < 3; ++i) {
     logForMultipleRespondWith += '(' + i + ')';
     try {
-      event.respondWith(new Response(logForMultipleRespondWith));
+      event.respondWith(new Promise(function(resolve) {
+        setTimeout(function() {
+          resolve(new Response(logForMultipleRespondWith));
+        }, 0);
+      }));
     } catch (e) {
       logForMultipleRespondWith += '[' + e.name + ']';
     }

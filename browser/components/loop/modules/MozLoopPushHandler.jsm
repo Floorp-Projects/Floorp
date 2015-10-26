@@ -70,7 +70,7 @@ PushSocket.prototype = {
 
     let uri = Services.io.newURI(pushUri, null, null);
     this._websocket.protocol = "push-notification";
-    this._websocket.asyncOpen(uri, pushUri, this, null);
+    this._websocket.asyncOpen(uri, pushUri, 0, this, null);
   },
 
   /**

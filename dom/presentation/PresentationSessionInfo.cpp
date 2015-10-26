@@ -546,6 +546,13 @@ PresentationControllingInfo::GetAddress()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresentationControllingInfo::OnIceCandidate(const nsAString& aCandidate)
+{
+  MOZ_ASSERT(false, "Should not receive ICE candidates.");
+  return NS_ERROR_FAILURE;
+}
+
 nsresult
 PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
 {
@@ -607,7 +614,7 @@ PresentationControllingInfo::NotifyClosed(nsresult aReason)
   // subsequent |Shutdown| calls.
   SetControlChannel(nullptr);
 
-  if (NS_WARN_IF(NS_FAILED(aReason))) {
+  if (NS_WARN_IF(NS_FAILED(aReason) || !mIsResponderReady)) {
     // The presentation session instance may already exist.
     // Change the state to TERMINATED since it never succeeds.
     SetState(nsIPresentationSessionListener::STATE_TERMINATED);
@@ -848,6 +855,13 @@ NS_IMETHODIMP
 PresentationPresentingInfo::OnAnswer(nsIPresentationChannelDescription* aDescription)
 {
   MOZ_ASSERT(false, "Receiver side should not receive answer.");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
+{
+  MOZ_ASSERT(false, "Should not receive ICE candidates.");
   return NS_ERROR_FAILURE;
 }
 

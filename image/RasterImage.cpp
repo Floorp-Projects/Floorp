@@ -14,7 +14,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsError.h"
 #include "Decoder.h"
-#include "nsAutoPtr.h"
 #include "prenv.h"
 #include "prsystem.h"
 #include "ImageContainer.h"

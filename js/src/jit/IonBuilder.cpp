@@ -9813,20 +9813,19 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
         return true;
     }
 
-    // TODO: Bug 876650: remove this check:
-    // Temporary disable the cache if non dense native,
-    // until the cache supports more ics
-    SetElemICInspector icInspect(inspector->setElemICInspector(pc));
-    if (!icInspect.sawDenseWrite() && !icInspect.sawTypedArrayWrite()) {
-        trackOptimizationOutcome(TrackedOutcome::SetElemNonDenseNonTANotCached);
-        return true;
-    }
+    bool barrier = true;
 
-    if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
-                                      &object, nullptr, &value, /* canModify = */ true))
-    {
-        trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
-        return true;
+    if (index->mightBeType(MIRType_Int32)) {
+        // Bail if we might have a barriered write to a dense element, as the
+        // dense element stub doesn't support this yet.
+        if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
+                                          &object, nullptr, &value, /* canModify = */ true))
+        {
+            trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
+            return true;
+        }
+        if (index->type() == MIRType_Int32)
+            barrier = false;
     }
 
     // We can avoid worrying about holes in the IC if we know a priori we are safe
@@ -9845,7 +9844,8 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
 
     // Emit SetElementCache.
     bool strict = JSOp(*pc) == JSOP_STRICTSETELEM;
-    MInstruction* ins = MSetElementCache::New(alloc(), object, index, value, strict, guardHoles);
+    MSetPropertyCache* ins =
+        MSetPropertyCache::New(alloc(), object, index, value, strict, barrier, guardHoles);
     current->add(ins);
     current->push(value);
 
@@ -12474,7 +12474,9 @@ IonBuilder::setPropTryCache(bool* emitted, MDefinition* obj,
 
     bool strict = IsStrictSetPC(pc);
 
-    MSetPropertyCache* ins = MSetPropertyCache::New(alloc(), obj, value, name, strict, barrier);
+    MConstant* id = constant(StringValue(name));
+    MSetPropertyCache* ins = MSetPropertyCache::New(alloc(), obj, id, value, strict, barrier,
+                                                    /* guardHoles = */ false);
     current->add(ins);
     current->push(value);
 
