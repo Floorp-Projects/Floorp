@@ -1605,9 +1605,23 @@ or run without that action (ie: --no-{action})"
         else:
             paths.append( ('libxul.so', os.path.join(dirs['abs_obj_dir'], 'dist', 'bin', 'libxul.so')) )
 
+        size_measurements = []
         for (name, path) in paths:
+            # FIXME: Remove the tinderboxprints when bug 1161249 is fixed and
+            # we're displaying perfherder data for each job automatically
             if os.path.exists(path):
-                self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (name, self.query_filesize(path)))
+                if 'apk' in name:
+                    name = 'apk'
+                filesize = self.query_filesize(path)
+                self.info('TinderboxPrint: Size of %s<br/>%s bytes\n' % (
+                    name, filesize))
+                size_measurements.append({'name': name, 'value': filesize})
+        if size_measurements:
+            self.info('PERFHERDER_DATA: %s' % (json.dumps({
+                "framework": {"name": "build_metrics"},
+                "suites": [{"name": "file sizes",
+                            "subtests": size_measurements}]
+            })))
 
     def _set_file_properties(self, file_name, find_dir, prop_type,
                              error_level=ERROR):
