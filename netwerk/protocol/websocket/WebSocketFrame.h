@@ -9,22 +9,32 @@
 
 #include "nsAutoPtr.h"
 #include "nsIWebSocketFrameService.h"
+#include "nsString.h"
+
+namespace IPC {
+class Message;
+}
 
 namespace mozilla {
 namespace net {
 
-class WebSocketFrame final : public nsIWebSocketFrame
+class WebSocketFrameData final
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIWEBSOCKETFRAME
+  WebSocketFrameData();
 
-  WebSocketFrame(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
-                 uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
-                 const nsCString& aPayload);
+  explicit WebSocketFrameData(const WebSocketFrameData& aData);
 
-private:
-  ~WebSocketFrame();
+  WebSocketFrameData(DOMHighResTimeStamp aTimeStamp, bool aFinBit,
+                     bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
+                     uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
+                     const nsCString& aPayload);
+
+  ~WebSocketFrameData();
+
+  // For IPC serialization
+  void WriteIPCParams(IPC::Message* aMessage) const;
+  bool ReadIPCParams(const IPC::Message* aMessage, void** aIter);
 
   DOMHighResTimeStamp mTimeStamp;
 
@@ -38,6 +48,29 @@ private:
   uint32_t mMask;
 
   nsCString mPayload;
+};
+
+class WebSocketFrame final : public nsIWebSocketFrame
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIWEBSOCKETFRAME
+
+  explicit WebSocketFrame(const WebSocketFrameData& aData);
+
+  WebSocketFrame(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
+                 uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
+                 const nsCString& aPayload);
+
+  const WebSocketFrameData& Data() const
+  {
+    return mData;
+  }
+
+private:
+  ~WebSocketFrame();
+
+  WebSocketFrameData mData;
 };
 
 } // net namespace
