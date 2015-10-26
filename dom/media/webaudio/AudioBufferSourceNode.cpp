@@ -8,6 +8,7 @@
 #include "mozilla/dom/AudioBufferSourceNodeBinding.h"
 #include "mozilla/dom/AudioParam.h"
 #include "mozilla/FloatingPoint.h"
+#include "nsContentUtils.h"
 #include "nsMathUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"

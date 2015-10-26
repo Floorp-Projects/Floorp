@@ -14,6 +14,7 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/TouchEvents.h"
+#include "nsContentUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
