@@ -86,9 +86,6 @@ public:
   // Disptach a DecodeAduioDataTask to decode video data.
   virtual RefPtr<AudioDataPromise> RequestAudioData() override;
 
-  virtual bool HasAudio();
-  virtual bool HasVideo();
-
   virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
@@ -181,6 +178,8 @@ protected:
   MozPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
 
 private:
+  virtual bool HasAudio() override;
+  virtual bool HasVideo() override;
 
   // An intermediary class that can be managed by android::sp<T>.
   // Redirect codecReserved() and codecCanceled() to MediaCodecReader.
