@@ -84,7 +84,7 @@ _hb_ft_font_create (FT_Face ft_face, bool unref)
   ft_font->ft_face = ft_face;
   ft_font->unref = unref;
 
-  ft_font->load_flags = FT_LOAD_DEFAULT;
+  ft_font->load_flags = FT_LOAD_DEFAULT | FT_LOAD_NO_HINTING;
 
   return ft_font;
 }
