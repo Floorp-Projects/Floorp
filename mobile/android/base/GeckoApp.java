@@ -2538,7 +2538,6 @@ public abstract class GeckoApp
     public static class MainLayout extends RelativeLayout {
         private TouchEventInterceptor mTouchEventInterceptor;
         private MotionEventInterceptor mMotionEventInterceptor;
-        private LayoutInterceptor mLayoutInterceptor;
 
         public MainLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -2547,13 +2546,6 @@ public abstract class GeckoApp
         @Override
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
-            if (mLayoutInterceptor != null) {
-                mLayoutInterceptor.onLayout();
-            }
-        }
-
-        public void setLayoutInterceptor(LayoutInterceptor interceptor) {
-            mLayoutInterceptor = interceptor;
         }
 
         public void setTouchEventInterceptor(TouchEventInterceptor interceptor) {
