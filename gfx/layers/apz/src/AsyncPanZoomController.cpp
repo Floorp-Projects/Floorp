@@ -2331,7 +2331,7 @@ void AsyncPanZoomController::AcceptFling(ParentLayerPoint& aVelocity,
       aOverscrollHandoffChain,
       !aHandoff);  // only apply acceleration if this is an initial fling
 
-  float friction = gfxPrefs::APZFlingFriction();
+  float friction = gfxPrefs::APZFlingSnapFriction();
   ParentLayerPoint velocity(mX.GetVelocity(), mY.GetVelocity());
   ParentLayerPoint predictedDelta;
   // "-velocity / log(1.0 - friction)" is the integral of the deceleration
