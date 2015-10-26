@@ -92,8 +92,9 @@ public:
   virtual void EndFrame() override;
   virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override
   {
-    // XXX See Bug 1215364
-    NS_WARNING("BasicCOmpositor::EndFrameForExternalComposition - not implemented!");
+      MOZ_ASSERT(!mTarget);
+      MOZ_ASSERT(!mDrawTarget);
+      MOZ_ASSERT(!mRenderTarget);
   }
 
   virtual bool SupportsPartialTextureUpdate() override { return true; }

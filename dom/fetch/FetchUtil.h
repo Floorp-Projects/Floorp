@@ -65,6 +65,16 @@ public:
   static void
   ConsumeJson(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
               const nsString& aStr, ErrorResult& aRv);
+
+  /**
+   * Extracts an HTTP header from a substring range.
+   */
+  static bool
+  ExtractHeader(nsACString::const_iterator& aStart,
+                nsACString::const_iterator& aEnd,
+                nsCString& aHeaderName,
+                nsCString& aHeaderValue,
+                bool* aWasEmptyHeader);
 };
 
 } // namespace dom

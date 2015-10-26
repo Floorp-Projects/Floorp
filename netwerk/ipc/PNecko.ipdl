@@ -12,6 +12,7 @@ include protocol PBrowser;
 include protocol PWyciwygChannel;
 include protocol PFTPChannel;
 include protocol PWebSocket;
+include protocol PWebSocketFrameListener;
 include protocol PTCPSocket;
 include protocol PTCPServerSocket;
 include protocol PUDPSocket;
@@ -45,6 +46,7 @@ prio(normal upto urgent) sync protocol PNecko
   manages PWyciwygChannel;
   manages PFTPChannel;
   manages PWebSocket;
+  manages PWebSocketFrameListener;
   manages PTCPSocket;
   manages PTCPServerSocket;
   manages PUDPSocket;
@@ -72,6 +74,7 @@ parent:
 
   PDNSRequest(nsCString hostName, uint32_t flags, nsCString networkInterface);
 
+  PWebSocketFrameListener(uint64_t aInnerWindowID);
 
   /* Predictor Methods */
   PredPredict(OptionalURIParams targetURI, OptionalURIParams sourceURI,

@@ -39,7 +39,8 @@ class nsIRandomGenerator;
 class nsISocketTransport;
 class nsIURI;
 
-namespace mozilla { namespace net {
+namespace mozilla {
+namespace net {
 
 class OutboundMessage;
 class OutboundEnqueuer;
@@ -49,6 +50,7 @@ class CallOnMessageAvailable;
 class CallOnStop;
 class CallOnServerClose;
 class CallAcknowledge;
+class WebSocketFrameService;
 
 // Used to enforce "1 connecting websocket per host" rule, and reconnect delays
 enum wsConnectingState {
@@ -70,6 +72,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink
 {
+  friend class WebSocketFrame;
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIHTTPUPGRADELISTENER
@@ -88,6 +92,7 @@ public:
   //
   NS_IMETHOD AsyncOpen(nsIURI *aURI,
                        const nsACString &aOrigin,
+                       uint64_t aWindowID,
                        nsIWebSocketListener *aListener,
                        nsISupports *aContext) override;
   NS_IMETHOD Close(uint16_t aCode, const nsACString & aReason) override;
@@ -104,23 +109,19 @@ public:
   void GetEffectiveURL(nsAString& aEffectiveURL) const override;
   bool IsEncrypted() const override;
 
-  enum {
-    // Non Control Frames
-    kContinuation = 0x0,
-    kText =         0x1,
-    kBinary =       0x2,
-
-    // Control Frames
-    kClose =        0x8,
-    kPing =         0x9,
-    kPong =         0xA
-  };
-
   const static uint32_t kControlFrameMask   = 0x8;
-  const static uint8_t kMaskBit             = 0x80;
+
+  // First byte of the header
   const static uint8_t kFinalFragBit        = 0x80;
   const static uint8_t kRsvBitsMask         = 0x70;
   const static uint8_t kRsv1Bit             = 0x40;
+  const static uint8_t kRsv2Bit             = 0x20;
+  const static uint8_t kRsv3Bit             = 0x10;
+  const static uint8_t kOpcodeBitsMask      = 0x0F;
+
+  // Second byte of the header
+  const static uint8_t kMaskBit             = 0x80;
+  const static uint8_t kPayloadLengthBitsMask = 0x7F;
 
 protected:
   virtual ~WebSocketChannel();
@@ -166,7 +167,8 @@ private:
   void DecrementSessionCount();
 
   void EnsureHdrOut(uint32_t size);
-  void ApplyMask(uint32_t mask, uint8_t *data, uint64_t len);
+
+  static void ApplyMask(uint32_t mask, uint8_t *data, uint64_t len);
 
   bool     IsPersistentFramePtr();
   nsresult ProcessInput(uint8_t *buffer, uint32_t count);
@@ -225,7 +227,11 @@ private:
   const static int32_t            kLingeringCloseTimeout =   1000;
   const static int32_t            kLingeringCloseThreshold = 50;
 
+  RefPtr<WebSocketFrameService>   mFrameService;
+
   int32_t                         mMaxConcurrentConnections;
+
+  uint64_t                        mInnerWindowID;
 
   // following members are accessed only on the main thread
   uint32_t                        mGotUpgradeOK              : 1;

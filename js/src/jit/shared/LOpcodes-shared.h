@@ -285,8 +285,6 @@
     _(CallDeleteProperty)           \
     _(CallDeleteElement)            \
     _(SetPropertyCache)             \
-    _(SetElementCacheV)             \
-    _(SetElementCacheT)             \
     _(SetPropertyPolymorphicV)      \
     _(SetPropertyPolymorphicT)      \
     _(CallIteratorStart)            \

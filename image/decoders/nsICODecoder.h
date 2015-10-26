@@ -7,7 +7,6 @@
 #ifndef mozilla_image_decoders_nsICODecoder_h
 #define mozilla_image_decoders_nsICODecoder_h
 
-#include "nsAutoPtr.h"
 #include "StreamingLexer.h"
 #include "Decoder.h"
 #include "imgFrame.h"

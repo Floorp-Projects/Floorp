@@ -10,7 +10,6 @@
 
 #include "imgIEncoder.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "ICOFileHeaders.h"
 

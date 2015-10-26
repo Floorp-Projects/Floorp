@@ -79,6 +79,9 @@ protected:
                                                  const nsString& aRealm,
                                                  const uint64_t& aCallbackId) override;
   virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) override;
+  virtual PWebSocketFrameListenerChild*
+    AllocPWebSocketFrameListenerChild(const uint64_t& aInnerWindowID) override;
+  virtual bool DeallocPWebSocketFrameListenerChild(PWebSocketFrameListenerChild*) override;
 
   /* Predictor Messsages */
   virtual bool RecvPredOnPredictPreconnect(const URIParams& aURI) override;
