@@ -84,7 +84,8 @@ public:
                      nsIRunnable* aLoadFailure);
 
   nsresult
-  SendPushEvent(const Maybe<nsTArray<uint8_t>>& aData);
+  SendPushEvent(const Maybe<nsTArray<uint8_t>>& aData,
+                ServiceWorkerRegistrationInfo* aRegistration);
 
   nsresult
   SendPushSubscriptionChangeEvent();
