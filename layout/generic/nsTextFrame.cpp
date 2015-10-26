@@ -7026,12 +7026,36 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
     return false;
   if (index > 0) {
     // Check whether the proposed position is in between the two halves of a
-    // surrogate pair; if so, this is not a valid character boundary.
+    // surrogate pair, or before a Variation Selector character;
+    // if so, this is not a valid character boundary.
     // (In the case where we are respecting clusters, we won't actually get
     // this far because the low surrogate is also marked as non-clusterStart
     // so we'll return FALSE above.)
-    if (aTextRun->CharIsLowSurrogate(index)) {
+    uint32_t offs = aIter.GetOriginalOffset();
+    const nsTextFragment* frag = aFrame->GetContent()->GetText();
+    uint32_t ch = frag->CharAt(offs);
+
+    if (gfxFontUtils::IsVarSelector(ch) ||
+        (NS_IS_LOW_SURROGATE(ch) && offs > 0 &&
+         NS_IS_HIGH_SURROGATE(frag->CharAt(offs - 1)))) {
       return false;
+    }
+
+    // If the proposed position is before a high surrogate, we need to decode
+    // the surrogate pair (if valid) and check the resulting character.
+    if (NS_IS_HIGH_SURROGATE(ch) && offs + 1 < frag->GetLength()) {
+      uint32_t ch2 = frag->CharAt(offs + 1);
+      if (NS_IS_LOW_SURROGATE(ch2)) {
+        ch = SURROGATE_TO_UCS4(ch, ch2);
+        // If the character is a (Plane-14) variation selector,
+        // or a Regional Indicator character that is ligated with the previous
+        // character, this is not a valid boundary.
+        if (gfxFontUtils::IsVarSelector(ch) ||
+            (gfxFontUtils::IsRegionalIndicator(ch) &&
+             !aTextRun->IsLigatureGroupStart(index))) {
+          return false;
+        }
+      }
     }
   }
   return true;
