@@ -8,7 +8,8 @@ var evalInFrame = (function (global) {
   };
 })(this);
 function f() {
-    let ({} = "xxx") {
+    {
+        let {} = "xxx";
         yield evalInFrame(0, "x");
     }
 }

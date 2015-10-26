@@ -22,7 +22,7 @@ function test()
  
   try
   {
-    let ([] = [{x: function(){}}]) { }; foo;
+    { let [] = [{x: function(){}}]; }; foo;
   }
   catch(ex)
   {
