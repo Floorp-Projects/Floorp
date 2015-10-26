@@ -11377,14 +11377,16 @@ class MSetPropertyCache
   : public MTernaryInstruction,
     public Mix3Policy<SingleObjectPolicy, CacheIdPolicy<1>, NoFloatPolicy<2>>::Data
 {
-    bool strict_;
-    bool needsTypeBarrier_;
+    bool strict_ : 1;
+    bool needsTypeBarrier_ : 1;
+    bool guardHoles_ : 1;
 
     MSetPropertyCache(MDefinition* obj, MDefinition* id, MDefinition* value, bool strict,
-                      bool typeBarrier)
+                      bool typeBarrier, bool guardHoles)
       : MTernaryInstruction(obj, id, value),
         strict_(strict),
-        needsTypeBarrier_(typeBarrier)
+        needsTypeBarrier_(typeBarrier),
+        guardHoles_(guardHoles)
     {
     }
 
@@ -11392,13 +11394,18 @@ class MSetPropertyCache
     INSTRUCTION_HEADER(SetPropertyCache)
 
     static MSetPropertyCache* New(TempAllocator& alloc, MDefinition* obj, MDefinition* id,
-                                  MDefinition* value, bool strict, bool typeBarrier)
+                                  MDefinition* value, bool strict, bool typeBarrier,
+                                  bool guardHoles)
     {
-        return new(alloc) MSetPropertyCache(obj, id, value, strict, typeBarrier);
+        return new(alloc) MSetPropertyCache(obj, id, value, strict, typeBarrier, guardHoles);
     }
 
     bool needsTypeBarrier() const {
         return needsTypeBarrier_;
+    }
+
+    bool guardHoles() const {
+        return guardHoles_;
     }
 
     MDefinition* object() const {

@@ -400,7 +400,8 @@ class CodeGenerator : public CodeGeneratorSpecific
                              jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                              Register tempReg, ConstantOrRegister id, ConstantOrRegister value,
-                             bool strict, bool needsTypeBarrier, jsbytecode* profilerLeavePc);
+                             bool strict, bool needsTypeBarrier, bool guardHoles,
+                             jsbytecode* profilerLeavePc);
     void addSetElementCache(LInstruction* ins, Register obj, Register unboxIndex, Register temp,
                             FloatRegister tempDouble, FloatRegister tempFloat32,
                             ValueOperand index, ConstantOrRegister value,

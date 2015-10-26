@@ -573,14 +573,17 @@ class SetPropertyIC : public IonCache
     Register temp_;
     ConstantOrRegister id_;
     ConstantOrRegister value_;
-    bool strict_;
-    bool needsTypeBarrier_;
+    bool strict_ : 1;
+    bool needsTypeBarrier_ : 1;
+    bool guardHoles_ : 1;
 
-    bool hasGenericProxyStub_;
+    bool hasGenericProxyStub_ : 1;
+
+    void emitIdGuard(MacroAssembler& masm, jsid id, Label* fail);
 
   public:
     SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, ConstantOrRegister id,
-                  ConstantOrRegister value, bool strict, bool needsTypeBarrier)
+                  ConstantOrRegister value, bool strict, bool needsTypeBarrier, bool guardHoles)
       : liveRegs_(liveRegs),
         object_(object),
         temp_(temp),
@@ -588,6 +591,7 @@ class SetPropertyIC : public IonCache
         value_(value),
         strict_(strict),
         needsTypeBarrier_(needsTypeBarrier),
+        guardHoles_(guardHoles),
         hasGenericProxyStub_(false)
     {
     }
@@ -614,6 +618,9 @@ class SetPropertyIC : public IonCache
     bool needsTypeBarrier() const {
         return needsTypeBarrier_;
     }
+    bool guardHoles() const {
+        return guardHoles_;
+    }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
     }
@@ -633,8 +640,8 @@ class SetPropertyIC : public IonCache
                           void* returnAddr);
 
     bool attachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleShape oldShape, HandleObjectGroup oldGroup,
-                       bool checkTypeset);
+                       HandleObject obj, HandleId id, HandleShape oldShape,
+                       HandleObjectGroup oldGroup, bool checkTypeset);
 
     bool attachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
                             HandleId id, void* returnAddr);
