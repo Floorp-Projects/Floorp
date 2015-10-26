@@ -903,6 +903,16 @@ public:
                (ch >= kUnicodeVS17 && ch <= kUnicodeVS256);
     }
 
+    enum {
+        kUnicodeRegionalIndicatorA = 0x1F1E6,
+        kUnicodeRegionalIndicatorZ = 0x1F1FF
+    };
+
+    static inline bool IsRegionalIndicator(uint32_t aCh) {
+        return aCh >= kUnicodeRegionalIndicatorA &&
+               aCh <= kUnicodeRegionalIndicatorZ;
+    }
+
     static inline bool IsInvalid(uint32_t ch) {
         return (ch == 0xFFFD);
     }

@@ -5,6 +5,7 @@
 
 #include "nsPlaintextEditor.h"
 
+#include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
@@ -600,7 +601,8 @@ nsPlaintextEditor::ExtendSelectionForDelete(Selection* aSelection,
         break;
       case ePrevious: {
         // Only extend the selection where the selection is after a UTF-16
-        // surrogate pair.  For other cases we don't want to do that, in order
+        // surrogate pair or a variation selector.
+        // For other cases we don't want to do that, in order
         // to make sure that pressing backspace will only delete the last
         // typed character.
         nsCOMPtr<nsIDOMNode> node;
@@ -616,9 +618,11 @@ nsPlaintextEditor::ExtendSelectionForDelete(Selection* aSelection,
             result = charData->GetData(data);
             NS_ENSURE_SUCCESS(result, result);
 
-            if (offset > 1 &&
-                NS_IS_LOW_SURROGATE(data[offset - 1]) &&
-                NS_IS_HIGH_SURROGATE(data[offset - 2])) {
+            if ((offset > 1 &&
+                 NS_IS_LOW_SURROGATE(data[offset - 1]) &&
+                 NS_IS_HIGH_SURROGATE(data[offset - 2])) ||
+                (offset > 0 &&
+                 gfxFontUtils::IsVarSelector(data[offset - 1]))) {
               result = selCont->CharacterExtendForBackspace();
             }
           }
