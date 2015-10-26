@@ -8480,11 +8480,13 @@ CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
 
 void
 CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                                   Register tempReg, ConstantOrRegister id, ConstantOrRegister value,
+                                   Register temp, Register tempUnbox, FloatRegister tempDouble,
+                                   FloatRegister tempF32, ConstantOrRegister id, ConstantOrRegister value,
                                    bool strict, bool needsTypeBarrier, bool guardHoles,
                                    jsbytecode* profilerLeavePc)
 {
-    SetPropertyIC cache(liveRegs, objReg, tempReg, id, value, strict, needsTypeBarrier, guardHoles);
+    SetPropertyIC cache(liveRegs, objReg, temp, tempUnbox, tempDouble, tempF32, id, value, strict,
+                        needsTypeBarrier, guardHoles);
     cache.setProfilerLeavePC(profilerLeavePc);
     addCache(ins, allocateCache(cache));
 }
@@ -8720,14 +8722,18 @@ CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins)
 {
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
-    Register tempReg = ToRegister(ins->getTemp(0));
+    Register temp = ToRegister(ins->temp());
+    Register tempUnbox = ToTempUnboxRegister(ins->tempToUnboxIndex());
+    FloatRegister tempDouble = ToTempFloatRegisterOrInvalid(ins->tempDouble());
+    FloatRegister tempF32 = ToTempFloatRegisterOrInvalid(ins->tempFloat32());
+
     ConstantOrRegister id =
         toConstantOrRegister(ins, LSetPropertyCache::Id, ins->mir()->idval()->type());
     ConstantOrRegister value =
         toConstantOrRegister(ins, LSetPropertyCache::Value, ins->mir()->value()->type());
 
-    addSetPropertyCache(ins, liveRegs, objReg, tempReg, id, value,
-                        ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
+    addSetPropertyCache(ins, liveRegs, objReg, temp, tempUnbox, tempDouble, tempF32,
+                        id, value, ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
                         ins->mir()->guardHoles(), ins->mir()->profilerLeavePc());
 }
 

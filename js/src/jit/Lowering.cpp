@@ -3511,7 +3511,21 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
     // that calls this script recursively.
     gen->setPerformsCall();
 
-    LInstruction* lir = new(alloc()) LSetPropertyCache(useRegister(ins->object()), temp());
+    // If the index might be an integer, we need some extra temp registers for
+    // the dense and typed array element stubs.
+    LDefinition tempToUnboxIndex = LDefinition::BogusTemp();
+    LDefinition tempD = LDefinition::BogusTemp();
+    LDefinition tempF32 = LDefinition::BogusTemp();
+
+    if (id->mightBeType(MIRType_Int32)) {
+        if (id->type() != MIRType_Int32)
+            tempToUnboxIndex = tempToUnbox();
+        tempD = tempDouble();
+        tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
+    }
+
+    LInstruction* lir = new(alloc()) LSetPropertyCache(useRegister(ins->object()), temp(),
+                                                       tempToUnboxIndex, tempD, tempF32);
     useBoxOrTypedOrConstant(lir, LSetPropertyCache::Id, id, useConstId);
     useBoxOrTypedOrConstant(lir, LSetPropertyCache::Value, ins->value(), /* useConstant = */ true);
 
