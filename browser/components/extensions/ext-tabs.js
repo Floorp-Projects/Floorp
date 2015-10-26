@@ -202,7 +202,10 @@ extensions.registerAPI((extension, context) => {
             let gBrowser = browser.ownerDocument.defaultView.gBrowser;
             let tab = gBrowser.getTabForBrowser(browser);
             let tabId = TabManager.getId(tab);
-            let [needed, changeInfo] = sanitize(extension, {url: locationURI.spec});
+            let [needed, changeInfo] = sanitize(extension, {
+              status: webProgress.isLoadingDocument ? "loading" : "complete",
+              url: locationURI.spec
+            });
             if (needed) {
               fire(tabId, changeInfo, TabManager.convert(extension, tab));
             }
