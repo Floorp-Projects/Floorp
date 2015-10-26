@@ -1016,6 +1016,8 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
         }
         mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
       }
+    } else if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
+      mAPZEventState->ProcessMouseEvent(*mouseEvent, aGuid, aInputBlockId);
     }
   }
 
