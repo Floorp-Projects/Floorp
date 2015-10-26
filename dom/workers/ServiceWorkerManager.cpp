@@ -3967,17 +3967,6 @@ ServiceWorkerManager::PropagateRemoveAll()
   mActor->SendPropagateRemoveAll();
 }
 
-static PLDHashOperator
-UpdateEachRegistration(const nsACString& aKey,
-                       ServiceWorkerRegistrationInfo* aInfo,
-                       void* aUserArg) {
-  auto This = static_cast<ServiceWorkerManager*>(aUserArg);
-  MOZ_ASSERT(!aInfo->mScope.IsEmpty());
-
-  This->SoftUpdate(aInfo->mPrincipal, aInfo->mScope);
-  return PL_DHASH_NEXT;
-}
-
 void
 ServiceWorkerManager::RemoveAllRegistrations(OriginAttributes* aParams)
 {
@@ -3989,20 +3978,19 @@ ServiceWorkerManager::RemoveAllRegistrations(OriginAttributes* aParams)
                                    aParams);
 }
 
-static PLDHashOperator
-UpdateEachRegistrationPerPrincipal(const nsACString& aKey,
-                                   ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
-                                   void* aUserArg) {
-  aData->mInfos.EnumerateRead(UpdateEachRegistration, aUserArg);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 ServiceWorkerManager::UpdateAllRegistrations()
 {
   AssertIsOnMainThread();
 
-  mRegistrationInfos.EnumerateRead(UpdateEachRegistrationPerPrincipal, this);
+  for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
+    for (auto it2 = it1.UserData()->mInfos.Iter(); !it2.Done(); it2.Next()) {
+      ServiceWorkerRegistrationInfo* info = it2.UserData();
+      MOZ_ASSERT(!info->mScope.IsEmpty());
+
+      SoftUpdate(info->mPrincipal, info->mScope);
+    }
+  }
 
   return NS_OK;
 }
