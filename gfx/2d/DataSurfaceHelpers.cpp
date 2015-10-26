@@ -110,7 +110,7 @@ CopyBGRXSurfaceDataToPackedBGRArray(uint8_t* aSrc, uint8_t* aDst,
   }
 }
 
-uint8_t*
+UniquePtr<uint8_t[]>
 SurfaceToPackedBGRA(DataSourceSurface *aSurface)
 {
   SurfaceFormat format = aSurface->GetFormat();
@@ -120,25 +120,25 @@ SurfaceToPackedBGRA(DataSourceSurface *aSurface)
 
   IntSize size = aSurface->GetSize();
 
-  uint8_t* imageBuffer = new (std::nothrow) uint8_t[size.width * size.height * sizeof(uint32_t)];
+  UniquePtr<uint8_t[]> imageBuffer(
+    new (std::nothrow) uint8_t[size.width * size.height * sizeof(uint32_t)]);
   if (!imageBuffer) {
     return nullptr;
   }
 
   DataSourceSurface::MappedSurface map;
   if (!aSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-    delete [] imageBuffer;
     return nullptr;
   }
 
-  CopySurfaceDataToPackedArray(map.mData, imageBuffer, size,
+  CopySurfaceDataToPackedArray(map.mData, imageBuffer.get(), size,
                                map.mStride, 4 * sizeof(uint8_t));
 
   aSurface->Unmap();
 
   if (format == SurfaceFormat::B8G8R8X8) {
     // Convert BGRX to BGRA by setting a to 255.
-    ConvertBGRXToBGRA(reinterpret_cast<uint8_t *>(imageBuffer), size, size.width * sizeof(uint32_t));
+    ConvertBGRXToBGRA(imageBuffer.get(), size, size.width * sizeof(uint32_t));
   }
 
   return imageBuffer;
