@@ -59,6 +59,9 @@ enum class ReadMetadataFailureReason : int8_t
 // Unless otherwise specified, methods and fields of this class can only
 // be accessed on the decode task queue.
 class MediaDecoderReader {
+  friend class ReRequestVideoWithSkipTask;
+  friend class ReRequestAudioTask;
+
 public:
   enum NotDecodedReason {
     END_OF_STREAM,
@@ -83,12 +86,6 @@ public:
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
   explicit MediaDecoderReader(AbstractMediaDecoder* aDecoder);
-
-  // Does any spinup that needs to happen on this task queue. This runs on a
-  // different thread than Init, and there should not be ordering dependencies
-  // between the two (even though in practice, Init will always run first right
-  // now thanks to the tail dispatcher).
-  void InitializationTask();
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -144,9 +141,6 @@ public:
   virtual RefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
-  friend class ReRequestVideoWithSkipTask;
-  friend class ReRequestAudioTask;
-
   // By default, the state machine polls the reader once per second when it's
   // in buffering mode. Some readers support a promise-based mechanism by which
   // they notify the state machine when the data arrives.
@@ -168,13 +162,6 @@ public:
   // synchronous ReadMetadata() calls. Implementations may also
   // override AsyncReadMetadata to create a more proper async implementation.
   virtual RefPtr<MetadataPromise> AsyncReadMetadata();
-
-  // Read header data for all bitstreams in the file. Fills aInfo with
-  // the data required to present the media, and optionally fills *aTags
-  // with tag metadata from the file.
-  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) { MOZ_CRASH(); }
 
   // Fills aInfo with the latest cached data required to present the media,
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
@@ -210,27 +197,6 @@ public:
     mIgnoreAudioOutputFormat = true;
   }
 
-  // Populates aBuffered with the time ranges which are buffered. This may only
-  // be called on the decode task queue, and should only be used internally by
-  // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
-  // else.
-  //
-  // This base implementation in MediaDecoderReader estimates the time ranges
-  // buffered by interpolating the cached byte ranges with the duration
-  // of the media. Reader subclasses should override this method if they
-  // can quickly calculate the buffered ranges more accurately.
-  //
-  // The primary advantage of this implementation in the reader base class
-  // is that it's a fast approximation, which does not perform any I/O.
-  //
-  // The OggReader relies on this base implementation not performing I/O,
-  // since in FirefoxOS we can't do I/O on the main thread, where this is
-  // called.
-  virtual media::TimeIntervals GetBuffered();
-
-  // Recomputes mBuffered.
-  virtual void UpdateBuffered();
-
   // MediaSourceReader opts out of the start-time-guessing mechanism.
   virtual bool ForceZeroStartTime() const { return false; }
 
@@ -251,23 +217,6 @@ public:
   virtual size_t SizeOfVideoQueueInFrames();
   virtual size_t SizeOfAudioQueueInFrames();
 
-protected:
-  friend class TrackBuffer;
-  virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) { }
-
-  void NotifyDataArrived(const media::Interval<int64_t>& aInfo)
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    NS_ENSURE_TRUE_VOID(!mShutdown);
-    NotifyDataArrivedInternal(aInfo.Length(), aInfo.mStart);
-    UpdateBuffered();
-  }
-
-  // Invokes NotifyDataArrived while throttling the calls to occur at most every mThrottleDuration ms.
-  void ThrottledNotifyDataArrived(const media::Interval<int64_t>& aInterval);
-  void DoThrottledNotify();
-
-public:
   // In situations where these notifications come from stochastic network
   // activity, we can save significant recomputation by throttling the delivery
   // of these updates to the reader implementation. We don't want to do this
@@ -283,6 +232,14 @@ public:
     OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
   }
 
+  void NotifyDataArrived(const media::Interval<int64_t>& aInfo)
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    NS_ENSURE_TRUE_VOID(!mShutdown);
+    NotifyDataArrivedInternal(aInfo.Length(), aInfo.mStart);
+    UpdateBuffered();
+  }
+
   // Notify the reader that data from the resource was evicted (MediaSource only)
   virtual void NotifyDataRemoved() {}
 
@@ -294,9 +251,9 @@ public:
     return mDecoder;
   }
 
-  RefPtr<VideoDataPromise> DecodeToFirstVideoData();
-
   MediaInfo GetMediaInfo() { return mInfo; }
+
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() { return &mBuffered; }
 
   // Indicates if the media is seekable.
   // ReadMetada should be called before calling this method.
@@ -339,23 +296,28 @@ public:
 protected:
   virtual ~MediaDecoderReader();
 
-  // Overrides of this function should decodes an unspecified amount of
-  // audio data, enqueuing the audio data in mAudioQueue. Returns true
-  // when there's more audio to decode, false if the audio is finished,
-  // end of file has been reached, or an un-recoverable read error has
-  // occured. This function blocks until the decode is complete.
-  virtual bool DecodeAudioData() {
-    return false;
-  }
+  // Populates aBuffered with the time ranges which are buffered. This may only
+  // be called on the decode task queue, and should only be used internally by
+  // UpdateBuffered - mBuffered (or mirrors of it) should be used for everything
+  // else.
+  //
+  // This base implementation in MediaDecoderReader estimates the time ranges
+  // buffered by interpolating the cached byte ranges with the duration
+  // of the media. Reader subclasses should override this method if they
+  // can quickly calculate the buffered ranges more accurately.
+  //
+  // The primary advantage of this implementation in the reader base class
+  // is that it's a fast approximation, which does not perform any I/O.
+  //
+  // The OggReader relies on this base implementation not performing I/O,
+  // since in FirefoxOS we can't do I/O on the main thread, where this is
+  // called.
+  virtual media::TimeIntervals GetBuffered();
 
-  // Overrides of this function should read and decodes one video frame.
-  // Packets with a timestamp less than aTimeThreshold will be decoded
-  // (unless they're not keyframes and aKeyframeSkip is true), but will
-  // not be added to the queue. This function blocks until the decode
-  // is complete.
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) {
-    return false;
-  }
+  RefPtr<VideoDataPromise> DecodeToFirstVideoData();
+
+  bool HaveStartTime() { MOZ_ASSERT(OnTaskQueue()); return mStartTime.isSome(); }
+  int64_t StartTime() { MOZ_ASSERT(HaveStartTime()); return mStartTime.ref(); }
 
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
@@ -385,9 +347,6 @@ protected:
 
   // Buffered range.
   Canonical<media::TimeIntervals> mBuffered;
-public:
-  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() { return &mBuffered; }
-protected:
 
   // Stores presentation info required for playback.
   MediaInfo mInfo;
@@ -417,8 +376,6 @@ protected:
   // things such that all GetBuffered calls go through the MDSM, which would
   // offset the range accordingly.
   Maybe<int64_t> mStartTime;
-  bool HaveStartTime() { MOZ_ASSERT(OnTaskQueue()); return mStartTime.isSome(); }
-  int64_t StartTime() { MOZ_ASSERT(HaveStartTime()); return mStartTime.ref(); }
 
   // This is a quick-and-dirty way for DecodeAudioData implementations to
   // communicate the presence of a decoding error to RequestAudioData. We should
@@ -431,6 +388,46 @@ protected:
   TimedMetadataEventProducer mTimedMetadataEvent;
 
 private:
+  // Does any spinup that needs to happen on this task queue. This runs on a
+  // different thread than Init, and there should not be ordering dependencies
+  // between the two (even though in practice, Init will always run first right
+  // now thanks to the tail dispatcher).
+  void InitializationTask();
+
+  // Read header data for all bitstreams in the file. Fills aInfo with
+  // the data required to present the media, and optionally fills *aTags
+  // with tag metadata from the file.
+  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
+                                MetadataTags** aTags) { MOZ_CRASH(); }
+
+  // Recomputes mBuffered.
+  virtual void UpdateBuffered();
+
+  virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) { }
+
+  // Invokes NotifyDataArrived while throttling the calls to occur at most every mThrottleDuration ms.
+  void ThrottledNotifyDataArrived(const media::Interval<int64_t>& aInterval);
+  void DoThrottledNotify();
+
+  // Overrides of this function should decodes an unspecified amount of
+  // audio data, enqueuing the audio data in mAudioQueue. Returns true
+  // when there's more audio to decode, false if the audio is finished,
+  // end of file has been reached, or an un-recoverable read error has
+  // occured. This function blocks until the decode is complete.
+  virtual bool DecodeAudioData() {
+    return false;
+  }
+
+  // Overrides of this function should read and decodes one video frame.
+  // Packets with a timestamp less than aTimeThreshold will be decoded
+  // (unless they're not keyframes and aKeyframeSkip is true), but will
+  // not be added to the queue. This function blocks until the decode
+  // is complete.
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) {
+    return false;
+  }
+
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
   MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
