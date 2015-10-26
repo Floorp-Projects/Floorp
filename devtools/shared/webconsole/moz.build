@@ -15,4 +15,5 @@ DevToolsModules(
     'server-logger-monitor.js',
     'server-logger.js',
     'utils.js',
+    'worker-utils.js',
 )
