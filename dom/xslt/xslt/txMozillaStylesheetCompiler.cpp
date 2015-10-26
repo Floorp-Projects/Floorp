@@ -629,20 +629,6 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
                                  getter_AddRefs(referrerPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Content Policy
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_STYLESHEET,
-                                   uri,
-                                   referrerPrincipal,
-                                   nullptr,
-                                   NS_LITERAL_CSTRING("application/xml"),
-                                   nullptr,
-                                   &shouldLoad);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (NS_CP_REJECTED(shouldLoad)) {
-        return NS_ERROR_DOM_BAD_URI;
-    }
-
     // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.
     nsCOMPtr<nsINode> source;
@@ -652,8 +638,12 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
     }
     nsAutoSyncOperation sync(source ? source->OwnerDoc() : nullptr);
     nsCOMPtr<nsIDOMDocument> document;
-    rv = nsSyncLoadService::LoadDocument(uri, referrerPrincipal, nullptr,
-                                         false, aReferrerPolicy,
+
+    rv = nsSyncLoadService::LoadDocument(uri, nsIContentPolicy::TYPE_XSLT,
+                                         referrerPrincipal,
+                                         nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
+                                         nullptr, false,
+                                         aReferrerPolicy,
                                          getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
 
