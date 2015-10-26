@@ -134,7 +134,7 @@ var handleContentContextMenu = function (event) {
         Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                         .getImgCacheForDocument(doc);
       let props =
-        imageCache.findEntryProperties(event.target.currentURI);
+        imageCache.findEntryProperties(event.target.currentURI, doc);
       try {
         contentType = props.get("type", Ci.nsISupportsCString).data;
       } catch(e) {}
