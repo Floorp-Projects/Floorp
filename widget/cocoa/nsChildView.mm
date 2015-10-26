@@ -4523,7 +4523,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   else
     geckoEvent.button = WidgetMouseEvent::eLeftButton;
 
-  mGeckoChild->DispatchInputEvent(&geckoEvent);
+  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
   mBlockedLastMouseDown = NO;
 
   // XXX maybe call markedTextSelectionChanged:client: here?
@@ -4550,7 +4550,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // This might destroy our widget (and null out mGeckoChild).
   bool defaultPrevented =
-    (mGeckoChild->DispatchInputEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
+    (mGeckoChild->DispatchAPZAwareEvent(&geckoEvent) == nsEventStatus_eConsumeNoDefault);
 
   // Check to see if we are double-clicking in the titlebar.
   CGFloat locationInTitlebar = [[self window] frame].size.height - [theEvent locationInWindow].y;
@@ -4676,7 +4676,7 @@ NewCGSRegionFromRegion(const nsIntRegion& aRegion,
                               WidgetMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
-  mGeckoChild->DispatchInputEvent(&geckoEvent);
+  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4722,7 +4722,7 @@ NewCGSRegionFromRegion(const nsIntRegion& aRegion,
   geckoEvent.button = WidgetMouseEvent::eRightButton;
   geckoEvent.clickCount = [theEvent clickCount];
 
-  mGeckoChild->DispatchInputEvent(&geckoEvent);
+  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
   if (!mGeckoChild)
     return;
 
@@ -4746,7 +4746,7 @@ NewCGSRegionFromRegion(const nsIntRegion& aRegion,
   geckoEvent.clickCount = [theEvent clickCount];
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  mGeckoChild->DispatchInputEvent(&geckoEvent);
+  mGeckoChild->DispatchAPZAwareEvent(&geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

@@ -189,6 +189,12 @@ private:
   // was changed.
   bool mUserChanged;
 
+  // true if we've handed off the scrolling to APZ. This means that we should
+  // ignore scrolling events as the position will be updated by APZ. If we were
+  // to process these events then the scroll position update would conflict
+  // causing the scroll position to jump.
+  bool mScrollingWithAPZ;
+
   static bool gMiddlePref;
   static int32_t gSnapMultiplier;
 }; // class nsSliderFrame
