@@ -231,23 +231,31 @@ public:
     int32_t size;
     NS_ENSURE_SUCCESS(rv = aInfo->Size(&size), rv);
 
-    const int32_t numFrames = (size / numChannels) / 2;
-    AudioDataValue* audio = new AudioDataValue[size];
-    PodCopy(audio, static_cast<AudioDataValue*>(aBuffer), size);
-
     int32_t offset;
     NS_ENSURE_SUCCESS(rv = aInfo->Offset(&offset), rv);
+
+#ifdef MOZ_SAMPLE_TYPE_S16
+    int32_t numSamples = size / 2;
+#else
+#error We only support 16-bit integer PCM
+#endif
+
+    const int32_t numFrames = numSamples / numChannels;
+    AudioDataValue* audio = new AudioDataValue[numSamples];
+
+    uint8_t* bufferStart = static_cast<uint8_t*>(aBuffer) + offset;
+    PodCopy(audio, reinterpret_cast<AudioDataValue*>(bufferStart), numSamples);
 
     int64_t presentationTimeUs;
     NS_ENSURE_SUCCESS(rv = aInfo->PresentationTimeUs(&presentationTimeUs), rv);
 
-    nsRefPtr<AudioData> data = new AudioData(offset, presentationTimeUs,
-                                             aDuration.ToMicroseconds(),
-                                             numFrames,
-                                             audio,
-                                             numChannels,
-                                             sampleRate);
-    ENVOKE_CALLBACK(Output, data);
+    nsRefPtr<AudioData> data = new AudioData(0, presentationTimeUs,
+                                           aDuration.ToMicroseconds(),
+                                           numFrames,
+                                           audio,
+                                           numChannels,
+                                           sampleRate);
+    INVOKE_CALLBACK(Output, data);
     return NS_OK;
   }
 };
