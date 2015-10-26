@@ -267,15 +267,7 @@ public:
     , mValue(aValue) {}
   nsresult Get(nsIPrincipal* aSubject, nsIVariant** aResult);
   void Get(JSContext* aCx, JS::Handle<JSObject*> aScope, nsIPrincipal* aSubject,
-           JS::MutableHandle<JS::Value> aResult, mozilla::ErrorResult& aError)
-  {
-    if (aSubject->Subsumes(mOrigin)) {
-      aError = nsContentUtils::XPConnect()->VariantToJS(aCx, aScope,
-                                                        mValue, aResult);
-    } else {
-      aResult.setUndefined();
-    }
-  }
+           JS::MutableHandle<JS::Value> aResult, mozilla::ErrorResult& aError);
 private:
   virtual ~DialogValueHolder() {}
 
