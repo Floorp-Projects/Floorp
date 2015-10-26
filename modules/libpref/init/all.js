@@ -160,6 +160,9 @@ pref("dom.serviceWorkers.idle_timeout", 30000);
 // The amount of time (milliseconds) service workers can be kept running using waitUntil promises.
 pref("dom.serviceWorkers.idle_extended_timeout", 300000);
 
+// Enable test for 24 hours update, service workers will always treat last update check time is over 24 hours
+pref("dom.serviceWorkers.testUpdateOverOneDay", false);
+
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
