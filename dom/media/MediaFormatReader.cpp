@@ -1544,11 +1544,8 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  if (aLength || aOffset) {
-    mDemuxer->NotifyDataArrived();
-  } else {
-    mDemuxer->NotifyDataRemoved();
-  }
+  mDemuxer->NotifyDataArrived();
+
   if (!mInitDone) {
     return;
   }
@@ -1569,14 +1566,6 @@ MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
   MOZ_ASSERT(aLength);
 
   NotifyDemuxer(aLength, aOffset);
-}
-
-void
-MediaFormatReader::NotifyDataRemoved()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  NotifyDemuxer(0, 0);
 }
 
 bool

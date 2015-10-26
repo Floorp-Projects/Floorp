@@ -85,16 +85,6 @@ public:
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold);
 
-  virtual bool HasAudio()
-  {
-    return mHasAudio;
-  }
-
-  virtual bool HasVideo()
-  {
-    return mHasVideo;
-  }
-
   virtual void ReleaseMediaResources() override;
 
   virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
@@ -117,6 +107,9 @@ public:
 private:
   class ProcessCachedDataTask;
   class NotifyDataArrivedRunnable;
+
+  virtual bool HasAudio() override { return mHasAudio; }
+  virtual bool HasVideo() override { return mHasVideo; }
 
   bool IsShutdown() {
     MutexAutoLock lock(mShutdownMutex);

@@ -341,20 +341,6 @@ DirectShowReader::DecodeVideoFrame(bool &aKeyframeSkip,
   return false;
 }
 
-bool
-DirectShowReader::HasAudio()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return true;
-}
-
-bool
-DirectShowReader::HasVideo()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return false;
-}
-
 RefPtr<MediaDecoderReader::SeekPromise>
 DirectShowReader::Seek(int64_t aTargetUs, int64_t aEndTime)
 {

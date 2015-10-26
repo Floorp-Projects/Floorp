@@ -48,16 +48,6 @@ public:
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold);
 
-  virtual bool HasAudio()
-  {
-    return mHasAudio;
-  }
-
-  virtual bool HasVideo()
-  {
-    return mHasVideo;
-  }
-
   virtual bool IsMediaSeekable()
   {
     // not used
