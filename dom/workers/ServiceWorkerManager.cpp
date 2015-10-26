@@ -372,6 +372,7 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& a
   : mControlledDocumentsCounter(0)
   , mScope(aScope)
   , mPrincipal(aPrincipal)
+  , mLastUpdateCheckTime(0)
   , mPendingUninstall(false)
 { }
 
@@ -1182,7 +1183,7 @@ private:
     }
 
     nsresult rv =
-      serviceWorkerScriptCache::Compare(mRegistration->mPrincipal, cacheName,
+      serviceWorkerScriptCache::Compare(mRegistration, mRegistration->mPrincipal, cacheName,
                                         NS_ConvertUTF8toUTF16(mRegistration->mScriptSpec),
                                         this, mLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1905,15 +1906,18 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<ServiceWorkerRegistrationInfo> registration =
+    GetRegistration(serviceWorker->GetPrincipal(), aScope);
+
   if (optional_argc == 2) {
     nsTArray<uint8_t> data;
     if (!data.InsertElementsAt(0, aDataBytes, aDataLength, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    return serviceWorker->WorkerPrivate()->SendPushEvent(Some(data));
+    return serviceWorker->WorkerPrivate()->SendPushEvent(Some(data), registration);
   } else {
     MOZ_ASSERT(optional_argc == 0);
-    return serviceWorker->WorkerPrivate()->SendPushEvent(Nothing());
+    return serviceWorker->WorkerPrivate()->SendPushEvent(Nothing(), registration);
   }
 #endif // MOZ_SIMPLEPUSH
 }
@@ -2380,6 +2384,33 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
   mActiveWorker->UpdateState(ServiceWorkerState::Activated);
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   swm->StoreRegistration(mPrincipal, this);
+}
+
+void
+ServiceWorkerRegistrationInfo::RefreshLastUpdateCheckTime()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mLastUpdateCheckTime = PR_IntervalNow() / PR_MSEC_PER_SEC;
+}
+
+bool
+ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // For testing.
+  if (Preferences::GetBool("dom.serviceWorkers.testUpdateOverOneDay")) {
+    return true;
+  }
+
+  const uint64_t kSecondsPerDay = 86400;
+  const uint64_t now = PR_IntervalNow() / PR_MSEC_PER_SEC;
+
+  if ((mLastUpdateCheckTime != 0) &&
+      (now - mLastUpdateCheckTime > kSecondsPerDay)) {
+    return true;
+  }
+  return false;
 }
 
 void
