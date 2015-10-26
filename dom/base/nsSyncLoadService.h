@@ -29,17 +29,22 @@ public:
      * Synchronously load the document from the specified URI.
      *
      * @param aURI URI to load the document from.
+     * @param aContentPolicyType contentPolicyType to be set on the channel
      * @param aLoaderPrincipal Principal of loading document. For security
-     *                         checks and referrer header. May be null if no
-     *                         security checks should be done.
+     *                         checks and referrer header.
+     * @param aSecurityFlags securityFlags to be set on the channel
      * @param aLoadGroup The loadgroup to use for loading the document.
      * @param aForceToXML Whether to parse the document as XML, regardless of
      *                    content type.
      * @param referrerPolicy Referrer policy.
      * @param aResult [out] The document loaded from the URI.
      */
-    static nsresult LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
-                                 nsILoadGroup *aLoadGroup, bool aForceToXML,
+    static nsresult LoadDocument(nsIURI *aURI,
+                                 nsContentPolicyType aContentPolicyType,
+                                 nsIPrincipal *aLoaderPrincipal,
+                                 nsSecurityFlags aSecurityFlags,
+                                 nsILoadGroup *aLoadGroup,
+                                 bool aForceToXML,
                                  mozilla::net::ReferrerPolicy aReferrerPolicy,
                                  nsIDOMDocument** aResult);
 
