@@ -29,8 +29,10 @@ namespace dom {
 class SynthStreamListener : public MediaStreamListener
 {
 public:
-  explicit SynthStreamListener(nsSpeechTask* aSpeechTask) :
+  explicit SynthStreamListener(nsSpeechTask* aSpeechTask,
+                               MediaStream* aStream) :
     mSpeechTask(aSpeechTask),
+    mStream(aStream),
     mStarted(false)
   {
   }
@@ -63,6 +65,8 @@ public:
         break;
       case EVENT_REMOVED:
         mSpeechTask = nullptr;
+        // Dereference MediaStream to destroy safety
+        mStream = nullptr;
         break;
       default:
         break;
@@ -83,6 +87,8 @@ private:
   // Raw pointer; if we exist, the stream exists,
   // and 'mSpeechTask' exclusively owns it and therefor exists as well.
   nsSpeechTask* mSpeechTask;
+  // This is KungFuDeathGrip for MediaStream
+  RefPtr<MediaStream> mStream;
 
   bool mStarted;
 };
@@ -132,6 +138,8 @@ nsSpeechTask::~nsSpeechTask()
       mStream->Destroy();
     }
 
+    // This will finally destroyed by SynthStreamListener becasue
+    // MediaStream::Destroy() is async.
     mStream = nullptr;
   }
 
@@ -185,7 +193,7 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
   // mStream is set up in Init() that should be called before this.
   MOZ_ASSERT(mStream);
 
-  mStream->AddListener(new SynthStreamListener(this));
+  mStream->AddListener(new SynthStreamListener(this, mStream));
 
   // XXX: Support more than one channel
   if(NS_WARN_IF(!(aChannels == 1))) {
