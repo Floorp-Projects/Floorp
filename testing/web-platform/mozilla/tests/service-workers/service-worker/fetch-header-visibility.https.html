@@ -23,7 +23,7 @@
 
         // Resolve a promise when we recieve 2 success messages
         return new Promise(function(resolve, reject) {
-          var remaining = 4;
+          var remaining = 2;
           function onMessage(e) {
             if (e.data == 'PASS') {
               remaining--;
