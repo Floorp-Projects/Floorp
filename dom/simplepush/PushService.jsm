@@ -847,7 +847,7 @@ this.PushService = {
     try {
       // Grab a wakelock before we open the socket to ensure we don't go to sleep
       // before connection the is opened.
-      this._ws.asyncOpen(uri, serverURL, this._wsListener, null);
+      this._ws.asyncOpen(uri, serverURL, 0, this._wsListener, null);
       this._acquireWakeLock();
       this._currentState = STATE_WAITING_FOR_WS_START;
     } catch(e) {
