@@ -19,7 +19,7 @@ SimpleTest.waitForExplicitFinish();
 function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsole(["NetworkActivity"], onAttach, true);
+  attachConsoleToTab(["NetworkActivity"], onAttach);
 }
 
 function onAttach(aState, aResponse)
