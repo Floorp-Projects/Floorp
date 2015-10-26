@@ -54,7 +54,7 @@ function test(edit, bsCount) {
   for (i = 0; i < bsCount; ++i) {
     synthesizeKey("VK_BACK_SPACE", {});
   }
-  todo_is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
+  is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
 }
 
 function testWithMove(edit, offset, bsCount) {
@@ -70,7 +70,7 @@ function testWithMove(edit, offset, bsCount) {
   for (i = 0; i < bsCount; ++i) {
     synthesizeKey("VK_BACK_SPACE", {});
   }
-  todo_is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
+  is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
 }
 
 function runTest() {
