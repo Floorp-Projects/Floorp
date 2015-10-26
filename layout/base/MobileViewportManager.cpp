@@ -267,8 +267,7 @@ MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution)
 
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
     mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
-  nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(
-    mDocument, displaySize);
+  nsViewportInfo viewportInfo = mDocument->GetViewportInfo(displaySize);
 
   CSSSize viewport = viewportInfo.GetSize();
   MVM_LOG("%p: Computed CSS viewport %s\n", this, Stringify(viewport).c_str());

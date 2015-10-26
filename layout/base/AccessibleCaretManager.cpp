@@ -1058,7 +1058,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
   }
 
   RefPtr<DOMRect> domRect = new DOMRect(ToSupports(doc));
-  nsRect rect = nsContentUtils::GetSelectionBoundingRect(sel);
+  nsRect rect = nsLayoutUtils::GetSelectionBoundingRect(sel);
 
   nsIFrame* commonAncestorFrame = nullptr;
   nsIFrame* rootFrame = mPresShell->GetRootFrame();

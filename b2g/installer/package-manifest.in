@@ -382,6 +382,8 @@
 @RESPATH@/components/ConsoleAPIStorage.js
 @RESPATH@/components/BrowserElementParent.manifest
 @RESPATH@/components/BrowserElementParent.js
+@RESPATH@/components/BrowserElementProxy.manifest
+@RESPATH@/components/BrowserElementProxy.js
 @RESPATH@/components/ContactManager.js
 @RESPATH@/components/ContactManager.manifest
 @RESPATH@/components/PhoneNumberService.js

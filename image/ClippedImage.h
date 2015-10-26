@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace image {
@@ -83,7 +84,7 @@ private:
                             uint32_t aFlags);
 
   // If we are forced to draw a temporary surface, we cache it here.
-  nsAutoPtr<ClippedImageCachedSurface> mCachedSurface;
+  UniquePtr<ClippedImageCachedSurface> mCachedSurface;
 
   nsIntRect   mClip;              // The region to clip to.
   Maybe<bool> mShouldClip;        // Memoized ShouldClip() if present.

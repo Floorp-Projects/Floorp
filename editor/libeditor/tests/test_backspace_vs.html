@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1216427
+-->
+<head>
+  <title>Test for Bug 1216427</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1216427">Mozilla Bug 1216427</a>
+<p id="display"></p>
+<div id="content">
+  <div id="edit1" contenteditable="true">a&#x263a;&#xfe0f;b</div><!-- BMP symbol with VS16 -->
+  <div id="edit2" contenteditable="true">a&#x1f310;&#xfe0e;b</div><!-- plane 1 symbol with VS15 -->
+  <div id="edit3" contenteditable="true">a&#x3402;&#xE0100;b</div><!-- BMP ideograph with VS17 -->
+  <div id="edit4" contenteditable="true">a&#x20000;&#xE0101;b</div><!-- SMP ideograph with VS18 -->
+  <div id="edit5" contenteditable="true">a&#x263a;&#xfe01;&#xfe02;&#xfe03;b</div><!-- BMP symbol with extra VSes -->
+  <div id="edit6" contenteditable="true">a&#x20000;&#xE0100;&#xE0101;&#xE0102;b</div><!-- SMP symbol with extra VSes -->
+  <!-- The Regional Indicator combinations here were supported by Apple Color Emoji
+       even prior to the major extension of coverage in the 10.10.5 timeframe. -->
+  <div id="edit7" contenteditable="true">a&#x1F1E8;&#x1F1F3;b</div><!-- Regional Indicator flag: CN -->
+  <div id="edit8" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;b</div><!-- two RI flags: CN, DE -->
+  <div id="edit9" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;&#x1F1EA;&#x1F1F8;b</div><!-- three RI flags: CN, DE, ES -->
+  <div id="edit10" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;&#x1F1EA;&#x1F1F8;&#x1F1EB;&#x1F1F7;b</div><!-- four RI flags: CN, DE, ES, FR -->
+  <div id="edit11" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;&#x1F1EA;&#x1F1F8;&#x1F1EB;&#x1F1F7;&#x1F1EC;&#x1F1E7;b</div><!-- five RI flags: CN, DE, ES, FR, GB -->
+
+  <div id="edit1b" contenteditable="true">a&#x263a;&#xfe0f;b</div><!-- BMP symbol with VS16 -->
+  <div id="edit2b" contenteditable="true">a&#x1f310;&#xfe0e;b</div><!-- plane 1 symbol with VS15 -->
+  <div id="edit3b" contenteditable="true">a&#x3402;&#xE0100;b</div><!-- BMP ideograph with VS17 -->
+  <div id="edit4b" contenteditable="true">a&#x20000;&#xE0101;b</div><!-- SMP ideograph with VS18 -->
+  <div id="edit5b" contenteditable="true">a&#x263a;&#xfe01;&#xfe02;&#xfe03;b</div><!-- BMP symbol with extra VSes -->
+  <div id="edit6b" contenteditable="true">a&#x20000;&#xE0100;&#xE0101;&#xE0102;b</div><!-- SMP symbol with extra VSes -->
+  <div id="edit7b" contenteditable="true">a&#x1F1E8;&#x1F1F3;b</div><!-- Regional Indicator flag: CN -->
+  <div id="edit8b" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;b</div><!-- two RI flags: CN, DE -->
+  <div id="edit9b" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;&#x1F1EA;&#x1F1F8;b</div><!-- three RI flags: CN, DE, ES -->
+  <div id="edit10b" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;&#x1F1EA;&#x1F1F8;&#x1F1EB;&#x1F1F7;b</div><!-- four RI flags: CN, DE, ES, FR -->
+  <div id="edit11b" contenteditable="true">a&#x1F1E8;&#x1F1F3;&#x1F1E9;&#x1F1EA;&#x1F1EA;&#x1F1F8;&#x1F1EB;&#x1F1F7;&#x1F1EC;&#x1F1E7;b</div><!-- five RI flags: CN, DE, ES, FR, GB -->
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1216427 **/
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
+
+function test(edit, bsCount) {
+  edit.focus();
+  var sel = window.getSelection();
+  sel.collapse(edit.childNodes[0], edit.textContent.length - 1);
+  for (i = 0; i < bsCount; ++i) {
+    synthesizeKey("VK_BACK_SPACE", {});
+  }
+  is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
+}
+
+function testWithMove(edit, offset, bsCount) {
+  edit.focus();
+  var sel = window.getSelection();
+  sel.collapse(edit.childNodes[0], 0);
+  var i;
+  for (i = 0; i < offset; ++i) {
+    synthesizeKey("VK_RIGHT", {});
+    synthesizeKey("VK_LEFT", {});
+    synthesizeKey("VK_RIGHT", {});
+  }
+  for (i = 0; i < bsCount; ++i) {
+    synthesizeKey("VK_BACK_SPACE", {});
+  }
+  is(edit.textContent, "ab", "The backspace key should delete the characters correctly");
+}
+
+function runTest() {
+  /* test backspace-deletion of the middle character(s) */
+  test(document.getElementById("edit1"), 1);
+  test(document.getElementById("edit2"), 1);
+  test(document.getElementById("edit3"), 1);
+  test(document.getElementById("edit4"), 1);
+  test(document.getElementById("edit5"), 1);
+  test(document.getElementById("edit6"), 1);
+
+  /*
+   * Tests with Regional Indicator flags: these behave differently depending
+   * whether an emoji font is present, as ligated flags are edited as single
+   * characters whereas non-ligated RI characters act individually.
+   *
+   * For now, only rely on such an emoji font on OS X 10.7+. (Note that the
+   * Segoe UI Emoji font on Win8.1 and Win10 does not implement Regional
+   * Indicator flags.)
+   *
+   * Once the Firefox Emoji font is ready, we can load that via @font-face
+   * and expect these tests to work across all platforms.
+   */
+  hasEmojiFont =
+    (navigator.platform.indexOf("Mac") == 0 &&
+     /10\.([7-9]|[1-9][0-9])/.test(navigator.oscpu));
+
+  if (hasEmojiFont) {
+    test(document.getElementById("edit7"), 1);
+    test(document.getElementById("edit8"), 2);
+    test(document.getElementById("edit9"), 3);
+    test(document.getElementById("edit10"), 4);
+    test(document.getElementById("edit11"), 5);
+  }
+
+  /* extra tests with the use of RIGHT and LEFT to get to the right place */
+  testWithMove(document.getElementById("edit1b"), 2, 1);
+  testWithMove(document.getElementById("edit2b"), 2, 1);
+  testWithMove(document.getElementById("edit3b"), 2, 1);
+  testWithMove(document.getElementById("edit4b"), 2, 1);
+  testWithMove(document.getElementById("edit5b"), 2, 1);
+  testWithMove(document.getElementById("edit6b"), 2, 1);
+  if (hasEmojiFont) {
+    testWithMove(document.getElementById("edit7b"), 2, 1);
+    testWithMove(document.getElementById("edit8b"), 3, 2);
+    testWithMove(document.getElementById("edit9b"), 4, 3);
+    testWithMove(document.getElementById("edit10b"), 5, 4);
+    testWithMove(document.getElementById("edit11b"), 6, 5);
+  }
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
