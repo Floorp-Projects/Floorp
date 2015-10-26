@@ -6658,10 +6658,33 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
     // cluster.
     gfxSkipCharsIterator extraCluster(provider.GetStart());
     extraCluster.AdvanceSkipped(charsFit);
+
+    bool allowSplitLigature = true; // Allow selection of partial ligature...
+
+    // ...but don't let selection/insertion-point split two Regional Indicator
+    // chars that are ligated in the textrun to form a single flag symbol.
+    uint32_t offs = extraCluster.GetOriginalOffset();
+    const nsTextFragment* frag = GetContent()->GetText();
+    if (offs + 1 < frag->GetLength() &&
+        NS_IS_HIGH_SURROGATE(frag->CharAt(offs)) &&
+        NS_IS_LOW_SURROGATE(frag->CharAt(offs + 1)) &&
+        gfxFontUtils::IsRegionalIndicator
+          (SURROGATE_TO_UCS4(frag->CharAt(offs), frag->CharAt(offs + 1)))) {
+      allowSplitLigature = false;
+      if (extraCluster.GetSkippedOffset() > 1 &&
+          !mTextRun->IsLigatureGroupStart(extraCluster.GetSkippedOffset())) {
+        // CountCharsFit() left us in the middle of the flag; back up over the
+        // first character of the ligature, and adjust fitWidth accordingly.
+        extraCluster.AdvanceSkipped(-2); // it's a surrogate pair: 2 code units
+        fitWidth -= mTextRun->GetAdvanceWidth(extraCluster.GetSkippedOffset(),
+                                              2, &provider);
+      }
+    }
+
     gfxSkipCharsIterator extraClusterLastChar(extraCluster);
     FindClusterEnd(mTextRun,
                    provider.GetStart().GetOriginalOffset() + provider.GetOriginalLength(),
-                   &extraClusterLastChar);
+                   &extraClusterLastChar, allowSplitLigature);
     PropertyProvider::Spacing spacing;
     gfxFloat charWidth =
         mTextRun->GetAdvanceWidth(extraCluster.GetSkippedOffset(),
