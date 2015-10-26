@@ -31,6 +31,7 @@ Example configuration::
      "mozilla/components-imports": 1,
      "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
+     "mozilla/var-only-at-top-level": 1,
    }
 
 .. toctree::
@@ -39,3 +40,4 @@ Example configuration::
    components-imports
    import-headjs-globals
    mark-test-function-used
+   var-only-at-top-level
