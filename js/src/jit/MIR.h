@@ -11374,14 +11374,16 @@ class MCallSetProperty
 };
 
 class MSetPropertyCache
-  : public MSetPropertyInstruction,
-    public MixPolicy<SingleObjectPolicy, NoFloatPolicy<1> >::Data
+  : public MTernaryInstruction,
+    public Mix3Policy<SingleObjectPolicy, CacheIdPolicy<1>, NoFloatPolicy<2>>::Data
 {
+    bool strict_;
     bool needsTypeBarrier_;
 
-    MSetPropertyCache(MDefinition* obj, MDefinition* value, PropertyName* name, bool strict,
+    MSetPropertyCache(MDefinition* obj, MDefinition* id, MDefinition* value, bool strict,
                       bool typeBarrier)
-      : MSetPropertyInstruction(obj, value, name, strict),
+      : MTernaryInstruction(obj, id, value),
+        strict_(strict),
         needsTypeBarrier_(typeBarrier)
     {
     }
@@ -11389,14 +11391,27 @@ class MSetPropertyCache
   public:
     INSTRUCTION_HEADER(SetPropertyCache)
 
-    static MSetPropertyCache* New(TempAllocator& alloc, MDefinition* obj, MDefinition* value,
-                                  PropertyName* name, bool strict, bool typeBarrier)
+    static MSetPropertyCache* New(TempAllocator& alloc, MDefinition* obj, MDefinition* id,
+                                  MDefinition* value, bool strict, bool typeBarrier)
     {
-        return new(alloc) MSetPropertyCache(obj, value, name, strict, typeBarrier);
+        return new(alloc) MSetPropertyCache(obj, id, value, strict, typeBarrier);
     }
 
     bool needsTypeBarrier() const {
         return needsTypeBarrier_;
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* idval() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
+    bool strict() const {
+        return strict_;
     }
 };
 

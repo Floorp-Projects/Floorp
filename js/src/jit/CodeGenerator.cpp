@@ -8480,10 +8480,10 @@ CodeGenerator::addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, 
 
 void
 CodeGenerator::addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                                   Register tempReg, PropertyName* name, ConstantOrRegister value,
+                                   Register tempReg, ConstantOrRegister id, ConstantOrRegister value,
                                    bool strict, bool needsTypeBarrier, jsbytecode* profilerLeavePc)
 {
-    SetPropertyIC cache(liveRegs, objReg, tempReg, name, value, strict, needsTypeBarrier);
+    SetPropertyIC cache(liveRegs, objReg, tempReg, id, value, strict, needsTypeBarrier);
     cache.setProfilerLeavePC(profilerLeavePc);
     addCache(ins, allocateCache(cache));
 }
@@ -8720,15 +8720,18 @@ CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins)
     LiveRegisterSet liveRegs = ins->safepoint()->liveRegs();
     Register objReg = ToRegister(ins->getOperand(0));
     Register tempReg = ToRegister(ins->getTemp(0));
+    ConstantOrRegister id =
+        toConstantOrRegister(ins, LSetPropertyCache::Id, ins->mir()->idval()->type());
     ConstantOrRegister value =
         toConstantOrRegister(ins, LSetPropertyCache::Value, ins->mir()->value()->type());
 
-    addSetPropertyCache(ins, liveRegs, objReg, tempReg, ins->mir()->name(), value,
+    addSetPropertyCache(ins, liveRegs, objReg, tempReg, id, value,
                         ins->mir()->strict(), ins->mir()->needsTypeBarrier(),
                         ins->mir()->profilerLeavePc());
 }
 
-typedef bool (*SetPropertyICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue);
+typedef bool (*SetPropertyICFn)(JSContext*, HandleScript, size_t, HandleObject, HandleValue,
+                                HandleValue);
 const VMFunction SetPropertyIC::UpdateInfo = FunctionInfo<SetPropertyICFn>(SetPropertyIC::update);
 
 void
@@ -8738,6 +8741,7 @@ CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<SetProperty
     saveLive(lir);
 
     pushArg(ic->value());
+    pushArg(ic->id());
     pushArg(ic->object());
     pushArg(Imm32(ool->getCacheIndex()));
     pushArg(ImmGCPtr(gen->info().script()));

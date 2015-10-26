@@ -571,7 +571,7 @@ class SetPropertyIC : public IonCache
 
     Register object_;
     Register temp_;
-    PropertyName* name_;
+    ConstantOrRegister id_;
     ConstantOrRegister value_;
     bool strict_;
     bool needsTypeBarrier_;
@@ -579,12 +579,12 @@ class SetPropertyIC : public IonCache
     bool hasGenericProxyStub_;
 
   public:
-    SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, PropertyName* name,
+    SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, ConstantOrRegister id,
                   ConstantOrRegister value, bool strict, bool needsTypeBarrier)
       : liveRegs_(liveRegs),
         object_(object),
         temp_(temp),
-        name_(name),
+        id_(id),
         value_(value),
         strict_(strict),
         needsTypeBarrier_(needsTypeBarrier),
@@ -602,8 +602,8 @@ class SetPropertyIC : public IonCache
     Register temp() const {
         return temp_;
     }
-    PropertyName* name() const {
-        return name_;
+    ConstantOrRegister id() const {
+        return id_;
     }
     ConstantOrRegister value() const {
         return value_;
@@ -637,16 +637,16 @@ class SetPropertyIC : public IonCache
                        bool checkTypeset);
 
     bool attachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                            void* returnAddr);
+                            HandleId id, void* returnAddr);
 
     bool attachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                HandleObject obj, void* returnAddr);
+                                HandleObject obj, HandleId id, void* returnAddr);
 
     bool attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  HandleObject obj, void* returnAddr);
+                                  HandleObject obj, HandleId id, void* returnAddr);
 
     static bool update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
-                       HandleObject obj, HandleValue value);
+                       HandleObject obj, HandleValue idval, HandleValue value);
 
     bool tryAttachNative(JSContext* cx, HandleScript outerScript, IonScript* ion,
                          HandleObject obj, HandleId id, bool* emitted, bool* tryNativeAddSlot);
@@ -661,7 +661,7 @@ class SetPropertyIC : public IonCache
                         HandleObject obj, HandleId id, bool* emitted);
 
     bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleId id, bool* emitted,
+                       HandleObject obj, HandleValue idval, MutableHandleId id, bool* emitted,
                        bool* tryNativeAddSlot);
 
     bool tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
