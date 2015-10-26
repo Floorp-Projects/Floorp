@@ -6,9 +6,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIURI;
 interface imgIRequest;
+interface nsIDOMDocument;
 interface nsIProperties;
+interface nsIURI;
 
 /**
  * imgICache interface
@@ -17,7 +18,7 @@ interface nsIProperties;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(6e62f5c9-95b5-4139-bb59-9cbaf14e9b3c)]
+[scriptable, builtinclass, uuid(6c1e3f96-4701-4c75-9883-217a790a53e2)]
 interface imgICache : nsISupports
 {
   /**
@@ -40,9 +41,10 @@ interface imgICache : nsISupports
    * Hopefully this will be removed with bug 805119
    *
    * @param uri The URI to look up.
+   * @param doc Optional pointer to the document that the cache entry belongs to.
    * @returns NULL if the URL was not found in the cache
    */
-  nsIProperties findEntryProperties(in nsIURI uri);
+  nsIProperties findEntryProperties(in nsIURI uri, [optional] in nsIDOMDocument doc);
 
   /**
    * Make this cache instance respect private browsing notifications. This
