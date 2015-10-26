@@ -1404,11 +1404,11 @@ HTMLMediaElement::CurrentTime() const
     return stream->StreamTimeToSeconds(stream->GetCurrentTime());
   }
 
-  if (mDecoder) {
+  if (mDefaultPlaybackStartPosition == 0.0 && mDecoder) {
     return mDecoder->GetCurrentTime();
   }
 
-  return 0.0;
+  return mDefaultPlaybackStartPosition;
 }
 
 NS_IMETHODIMP HTMLMediaElement::GetCurrentTime(double* aCurrentTime)
@@ -1515,8 +1515,7 @@ HTMLMediaElement::Seek(double aTime,
   }
 
   if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    LOG(LogLevel::Debug, ("%p SetCurrentTime(%f) failed: no source", this, aTime));
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    mDefaultPlaybackStartPosition = aTime;
     return;
   }
 
@@ -2114,7 +2113,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mMediaStreamTrackListener(nullptr),
     mElementInTreeState(ELEMENT_NOT_INTREE),
     mHasUserInteraction(false),
-    mFirstFrameLoaded(false)
+    mFirstFrameLoaded(false),
+    mDefaultPlaybackStartPosition(0.0)
 {
   if (!gMediaElementLog) {
     gMediaElementLog = PR_NewLogModule("nsMediaElement");
@@ -3439,6 +3439,11 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   if (IsVideo() && aInfo->HasVideo()) {
     // We are a video element playing video so update the screen wakelock
     NotifyOwnerDocumentActivityChangedInternal();
+  }
+
+  if (mDefaultPlaybackStartPosition > 0) {
+    SetCurrentTime(mDefaultPlaybackStartPosition);
+    mDefaultPlaybackStartPosition = 0.0;
   }
 }
 
