@@ -42,16 +42,6 @@ public:
 
   RefPtr<AudioDataPromise> RequestAudioData() override;
 
-  bool HasVideo() override
-  {
-    return mVideo.mTrackDemuxer;
-  }
-
-  bool HasAudio() override
-  {
-    return mAudio.mTrackDemuxer;
-  }
-
   RefPtr<MetadataPromise> AsyncReadMetadata() override;
 
   void ReadUpdatedMetadata(MediaInfo* aInfo) override;
@@ -66,9 +56,8 @@ public:
 
 protected:
   void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
-public:
-  void NotifyDataRemoved() override;
 
+public:
   media::TimeIntervals GetBuffered() override;
 
   virtual bool ForceZeroStartTime() const override;
@@ -113,6 +102,9 @@ public:
 #endif
 
 private:
+  bool HasVideo() { return mVideo.mTrackDemuxer; }
+  bool HasAudio() { return mAudio.mTrackDemuxer; }
+
   bool IsWaitingOnCDMResource();
 
   bool InitDemuxer();

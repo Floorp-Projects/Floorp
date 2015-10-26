@@ -32,7 +32,7 @@ interface nsIPresentationChannelDescription: nsISupports
 /*
  * The callbacks for events on control channel.
  */
-[scriptable, uuid(d0cdc638-a9d5-4bcd-838c-3aed7c3f2a6b)]
+[scriptable, uuid(96dd548f-7d0f-43c1-b1ad-28e666cf1e82)]
 interface nsIPresentationControlChannelListener: nsISupports
 {
   /*
@@ -46,6 +46,12 @@ interface nsIPresentationControlChannelListener: nsISupports
    * @param answer The received answer.
    */
   void onAnswer(in nsIPresentationChannelDescription answer);
+
+  /*
+   * Callback for receiving ICE candidate from remote endpoint.
+   * @param answer The received answer.
+   */
+  void onIceCandidate(in DOMString candidate);
 
   /*
    * The callback for notifying channel opened.
@@ -63,7 +69,7 @@ interface nsIPresentationControlChannelListener: nsISupports
  * The control channel for establishing RTCPeerConnection for a presentation
  * session. SDP Offer/Answer will be exchanged through this interface.
  */
-[scriptable, uuid(2c8ec493-4e5b-4df7-bedc-7ab25af323f0)]
+[scriptable, uuid(e60e208c-a9f5-4bc6-9a3e-47f3e4ae9c57)]
 interface nsIPresentationControlChannel: nsISupports
 {
   // The listener for handling events of this control channel.
@@ -71,26 +77,28 @@ interface nsIPresentationControlChannel: nsISupports
   attribute nsIPresentationControlChannelListener listener;
 
   /*
-   * Send offer to remote endpiont. |onOffer| should be invoked
-   * on remote endpoint.
+   * Send offer to remote endpoint. |onOffer| should be invoked on remote
+   * endpoint.
    * @param offer The offer to send.
    * @throws  NS_ERROR_FAILURE on failure
    */
   void sendOffer(in nsIPresentationChannelDescription offer);
 
   /*
-   * Send answer to remote endpiont. |onAnswer| should
-   * be invoked on remote endpoint.
+   * Send answer to remote endpoint. |onAnswer| should be invoked on remote
+   * endpoint.
    * @param answer The answer to send.
    * @throws  NS_ERROR_FAILURE on failure
    */
   void sendAnswer(in nsIPresentationChannelDescription answer);
 
   /*
-   * Notify the app-to-app connection is fully established. (Only used at the
-   * receiver side.)
+   * Send ICE candidate to remote endpoint. |onIceCandidate| should be invoked
+   * on remote endpoint.
+   * @param candidate The candidate to send
+   * @throws NS_ERROR_FAILURE on failure
    */
-  void sendReceiverReady();
+  void sendIceCandidate(in DOMString candidate);
 
   /*
    * Close the transport channel.

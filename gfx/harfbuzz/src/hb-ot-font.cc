@@ -59,7 +59,7 @@ struct hb_ot_face_metrics_accelerator_t
 
     this->blob = OT::Sanitizer<OT::_mtx>::sanitize (face->reference_table (_mtx_tag));
     if (unlikely (!this->num_advances ||
-		  2 * (this->num_advances + this->num_metrics) < hb_blob_get_length (this->blob)))
+		  2 * (this->num_advances + this->num_metrics) > hb_blob_get_length (this->blob)))
     {
       this->num_metrics = this->num_advances = 0;
       hb_blob_destroy (this->blob);
