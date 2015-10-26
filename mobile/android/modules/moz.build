@@ -28,6 +28,7 @@ EXTRA_JS_MODULES += [
     'Prompt.jsm',
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
+    'Snackbars.jsm',
     'SSLExceptions.jsm',
     'TabMirror.jsm',
     'WebappManager.jsm',

@@ -569,6 +569,10 @@ menuitem.marker-color-graphs-yellow:before,
 .marker-color-graphs-yellow {
   background-color: var(--theme-graphs-yellow);
 }
+menuitem.marker-color-graphs-orange:before,
+.marker-color-graphs-orange {
+  background-color: var(--theme-graphs-orange);
+}
 menuitem.marker-color-graphs-red:before,
 .marker-color-graphs-red {
   background-color: var(--theme-graphs-red);
