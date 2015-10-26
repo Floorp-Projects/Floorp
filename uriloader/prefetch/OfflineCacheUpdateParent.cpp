@@ -10,6 +10,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/unused.h"
+#include "nsContentUtils.h"
 #include "nsOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
 #include "nsIScriptSecurityManager.h"

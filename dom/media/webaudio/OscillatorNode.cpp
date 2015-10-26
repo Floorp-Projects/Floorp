@@ -8,6 +8,7 @@
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
+#include "nsContentUtils.h"
 #include "WebAudioUtils.h"
 #include "blink/PeriodicWave.h"
 

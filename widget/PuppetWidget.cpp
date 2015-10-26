@@ -19,6 +19,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/unused.h"
 #include "PuppetWidget.h"
+#include "nsContentUtils.h"
 #include "nsIWidgetListener.h"
 
 using namespace mozilla;

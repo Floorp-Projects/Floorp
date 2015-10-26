@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/unused.h"
+#include "nsContentUtils.h"
 #include "nsIAppShell.h"
 #include "nsScreenManagerProxy.h"
 #include "nsServiceManagerUtils.h"
