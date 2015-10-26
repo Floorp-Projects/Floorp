@@ -25,7 +25,7 @@ public:
                      PPrintProgressDialogParent* printProgressDialog,
                      const bool& isForPrinting,
                      bool* notifyOnOpen,
-                     bool* success);
+                     nsresult* result);
     virtual bool
     RecvShowPrintDialog(PPrintSettingsDialogParent* aDialog,
                         PBrowserParent* aParent,
