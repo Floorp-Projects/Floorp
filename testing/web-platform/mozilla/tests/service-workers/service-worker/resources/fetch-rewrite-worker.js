@@ -63,14 +63,6 @@ self.addEventListener('fetch', function(event) {
       }
       return;
     }
-    if (params['check-accept-header']) {
-      var accept = event.request.headers.get('Accept');
-      if (accept) {
-        event.respondWith(new Response(accept));
-      } else {
-        event.respondWith(new Response('NO_ACCEPT'));
-      }
-    }
     event.respondWith(new Promise(function(resolve, reject) {
         var request = event.request;
         if (url) {
