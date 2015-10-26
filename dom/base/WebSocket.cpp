@@ -1144,6 +1144,10 @@ protected:
     aWindow->GetScriptableTop(getter_AddRefs(topWindow));
     nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
     if (pTopWindow) {
+      pTopWindow = pTopWindow->GetCurrentInnerWindow();
+    }
+
+    if (pTopWindow) {
       windowID = pTopWindow->WindowID();
     }
 
@@ -1323,6 +1327,10 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
     nsCOMPtr<nsIDOMWindow> topWindow;
     ownerWindow->GetScriptableTop(getter_AddRefs(topWindow));
     nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
+    if (pTopWindow) {
+      pTopWindow = pTopWindow->GetCurrentInnerWindow();
+    }
+
     if (pTopWindow) {
       windowID = pTopWindow->WindowID();
     }
