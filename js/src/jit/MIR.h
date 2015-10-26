@@ -11422,35 +11422,6 @@ class MSetPropertyCache
     }
 };
 
-class MSetElementCache
-  : public MSetElementInstruction,
-    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
-{
-    bool guardHoles_;
-
-    MSetElementCache(MDefinition* obj, MDefinition* index, MDefinition* value, bool strict,
-                     bool guardHoles)
-      : MSetElementInstruction(obj, index, value, strict),
-        guardHoles_(guardHoles)
-    {
-    }
-
-  public:
-    INSTRUCTION_HEADER(SetElementCache)
-
-    static MSetElementCache* New(TempAllocator& alloc, MDefinition* obj, MDefinition* index,
-                                 MDefinition* value, bool strict, bool guardHoles)
-    {
-        return new(alloc) MSetElementCache(obj, index, value, strict, guardHoles);
-    }
-
-    bool guardHoles() const {
-        return guardHoles_;
-    }
-
-    bool canConsumeFloat32(MUse* use) const override { return use == getUseFor(2); }
-};
-
 class MCallGetProperty
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
