@@ -2419,7 +2419,7 @@ public class BrowserApp extends GeckoApp
             mFirstrunPane.registerOnFinishListener(new FirstrunPane.OnFinishListener() {
                 @Override
                 public void onFinish() {
-                    BrowserApp.this.mFirstrunPane = null;
+                    enterEditingMode();
                 }
             });
         }
