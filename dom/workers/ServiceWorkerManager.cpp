@@ -3350,28 +3350,6 @@ FireControllerChangeOnDocument(nsIDocument* aDocument)
   }
 }
 
-static PLDHashOperator
-FireControllerChangeOnMatchingDocument(nsISupports* aKey,
-                                       ServiceWorkerRegistrationInfo* aValue,
-                                       void* aData)
-{
-  AssertIsOnMainThread();
-
-  ServiceWorkerRegistrationInfo* contextReg = static_cast<ServiceWorkerRegistrationInfo*>(aData);
-  if (aValue != contextReg) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aKey);
-  if (NS_WARN_IF(!doc)) {
-    return PL_DHASH_NEXT;
-  }
-
-  FireControllerChangeOnDocument(doc);
-
-  return PL_DHASH_NEXT;
-}
-
 } // anonymous namespace
 
 void
@@ -3492,7 +3470,19 @@ ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
 void
 ServiceWorkerManager::FireControllerChange(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  mControlledDocuments.EnumerateRead(FireControllerChangeOnMatchingDocument, aRegistration);
+  AssertIsOnMainThread();
+  for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.UserData() != aRegistration) {
+      continue;
+    }
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
+    if (NS_WARN_IF(!doc)) {
+      continue;
+    }
+
+    FireControllerChangeOnDocument(doc);
+  }
 }
 
 already_AddRefed<ServiceWorkerRegistrationInfo>
@@ -3677,45 +3667,37 @@ struct UnregisterIfMatchesUserData final
 
 // If host/aData is null, unconditionally unregisters.
 PLDHashOperator
-UnregisterIfMatchesHost(const nsACString& aScope,
-                        ServiceWorkerRegistrationInfo* aReg,
-                        void* aPtr)
-{
-  UnregisterIfMatchesUserData* data =
-    static_cast<UnregisterIfMatchesUserData*>(aPtr);
-
-  // We avoid setting toRemove = aReg by default since there is a possibility
-  // of failure when data->mUserData is passed, in which case we don't want to
-  // remove the registration.
-  ServiceWorkerRegistrationInfo* toRemove = nullptr;
-  if (data->mUserData) {
-    const nsACString& domain = *static_cast<nsACString*>(data->mUserData);
-    nsCOMPtr<nsIURI> scopeURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope, nullptr, nullptr);
-    // This way subdomains are also cleared.
-    if (NS_SUCCEEDED(rv) && HasRootDomain(scopeURI, domain)) {
-      toRemove = aReg;
-    }
-  } else {
-    toRemove = aReg;
-  }
-
-  if (toRemove) {
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    swm->ForceUnregister(data->mRegistrationData, toRemove);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-// If host/aData is null, unconditionally unregisters.
-PLDHashOperator
 UnregisterIfMatchesHostPerPrincipal(const nsACString& aKey,
                                     ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
                                     void* aUserData)
 {
   UnregisterIfMatchesUserData data(aData, aUserData);
-  aData->mInfos.EnumerateRead(UnregisterIfMatchesHost, &data);
+  for (auto iter = aData->mInfos.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerRegistrationInfo* reg = iter.UserData();
+
+    // We avoid setting toRemove = reg by default since there is a possibility
+    // of failure when data.mUserData is passed, in which case we don't want to
+    // remove the registration.
+    ServiceWorkerRegistrationInfo* toRemove = nullptr;
+    if (data.mUserData) {
+      const nsACString& domain = *static_cast<nsACString*>(data.mUserData);
+      nsCOMPtr<nsIURI> scopeURI;
+      nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), iter.Key(),
+                              nullptr, nullptr);
+      // This way subdomains are also cleared.
+      if (NS_SUCCEEDED(rv) && HasRootDomain(scopeURI, domain)) {
+        toRemove = reg;
+      }
+    } else {
+      toRemove = reg;
+    }
+
+    if (toRemove) {
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      swm->ForceUnregister(data.mRegistrationData, toRemove);
+    }
+  }
+
   return PL_DHASH_NEXT;
 }
 
@@ -3906,7 +3888,7 @@ ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
   return NS_OK;
 }
 
-// MUST ONLY BE CALLED FROM UnregisterIfMatchesHost!
+// MUST ONLY BE CALLED FROM UnregisterIfMatchesHostPerPrincipal()!
 void
 ServiceWorkerManager::ForceUnregister(RegistrationDataPerPrincipal* aRegistrationData,
                                       ServiceWorkerRegistrationInfo* aRegistration)
