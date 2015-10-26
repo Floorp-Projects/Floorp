@@ -28,7 +28,7 @@ add_task(function* () {
     let jsterm = hud.jsterm;
 
     let jstermInput = jsterm.hud.document.querySelector(".jsterm-input-node");
-    ok(jstermInput.value === "temp0", "first console variable is named temp0");
+    is(jstermInput.value, "temp0", "first console variable is named temp0");
 
     let result = yield jsterm.execute();
     isnot(result.textContent.indexOf('<p id="console-var">'), -1, "variable temp0 references correct node");
@@ -37,7 +37,7 @@ add_task(function* () {
     dispatchCommandEvent(useInConsoleNode);
     yield inspector.once("console-var-ready");
 
-    ok(jstermInput.value === "temp1", "second console variable is named temp1");
+    is(jstermInput.value, "temp1", "second console variable is named temp1");
 
     result = yield jsterm.execute();
     isnot(result.textContent.indexOf('<p id="console-var-multi">'), -1, "variable temp1 references correct node");

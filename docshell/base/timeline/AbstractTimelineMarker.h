@@ -12,6 +12,7 @@
 #include "mozilla/UniquePtr.h"
 
 struct JSContext;
+class JSObject;
 
 namespace mozilla {
 class TimeStamp;
@@ -28,18 +29,18 @@ private:
   void operator=(const AbstractTimelineMarker& aOther) = delete;
 
 public:
-  AbstractTimelineMarker(const char* aName,
-                         MarkerTracingType aTracingType);
+  explicit AbstractTimelineMarker(const char* aName,
+                                  MarkerTracingType aTracingType);
 
-  AbstractTimelineMarker(const char* aName,
-                         const TimeStamp& aTime,
-                         MarkerTracingType aTracingType);
+  explicit AbstractTimelineMarker(const char* aName,
+                                  const TimeStamp& aTime,
+                                  MarkerTracingType aTracingType);
 
   virtual ~AbstractTimelineMarker();
 
   virtual UniquePtr<AbstractTimelineMarker> Clone();
+  virtual bool Equals(const AbstractTimelineMarker& aOther);
 
-  virtual bool Equals(const AbstractTimelineMarker& aOther) = 0;
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) = 0;
   virtual JSObject* GetStack() = 0;
 
@@ -52,8 +53,10 @@ private:
   DOMHighResTimeStamp mTime;
   MarkerTracingType mTracingType;
 
+protected:
   void SetCurrentTime();
   void SetCustomTime(const TimeStamp& aTime);
+  void SetCustomTime(DOMHighResTimeStamp aTime);
 };
 
 } // namespace mozilla

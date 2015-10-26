@@ -18,7 +18,7 @@
         <item name="android:actionBarTheme">@style/ActionBarTheme</item>
     </style>
 
-    <style name="GeckoPreferencesBase" parent="GeckoBase">
+    <style name="GeckoPreferencesBase" parent="Gecko">
         <item name="android:windowActionBar">true</item>
         <item name="android:windowNoTitle">false</item>
         <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>

@@ -4,8 +4,9 @@
 
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { selectSnapshotAndRefresh, takeSnapshotAndCensus } = require("./actions/snapshot");
+const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
+const { selectSnapshotAndRefresh, takeSnapshotAndCensus } = require("./actions/snapshot");
 const { breakdownNameToSpec, getBreakdownDisplayData } = require("./utils");
 const Toolbar = createFactory(require("./components/toolbar"));
 const List = createFactory(require("./components/list"));
@@ -31,7 +32,15 @@ const App = createClass({
   },
 
   render() {
-    let { dispatch, snapshots, front, heapWorker, breakdown } = this.props;
+    let {
+      dispatch,
+      snapshots,
+      front,
+      heapWorker,
+      breakdown,
+      allocations,
+    } = this.props;
+
     let selectedSnapshot = snapshots.find(s => s.selected);
 
     return (
@@ -42,6 +51,9 @@ const App = createClass({
           onTakeSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
           onBreakdownChange: breakdown =>
             dispatch(setBreakdownAndRefresh(heapWorker, breakdownNameToSpec(breakdown))),
+          onToggleRecordAllocationStacks: () =>
+            dispatch(toggleRecordingAllocationStacks(front)),
+          allocations
         }),
 
         dom.div({ id: "memory-tool-container" }, [
@@ -66,7 +78,10 @@ const App = createClass({
  * and passed to components.
  */
 function mapStateToProps (state) {
-  return { snapshots: state.snapshots };
+  return {
+    allocations: state.allocations,
+    snapshots: state.snapshots
+  };
 }
 
 module.exports = connect(mapStateToProps)(App);

@@ -122,4 +122,3 @@ const selectSnapshot = exports.selectSnapshot = function (snapshot) {
     snapshot
   };
 };
-
