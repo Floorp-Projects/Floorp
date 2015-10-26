@@ -303,12 +303,22 @@ FetchDriver::HttpFetch()
     // Set the same headers.
     nsAutoTArray<InternalHeaders::Entry, 5> headers;
     mRequest->Headers()->GetEntries(headers);
+    bool hasAccept = false;
     for (uint32_t i = 0; i < headers.Length(); ++i) {
+      if (!hasAccept && headers[i].mName.EqualsLiteral("accept")) {
+        hasAccept = true;
+      }
       if (headers[i].mValue.IsEmpty()) {
         httpChan->SetEmptyRequestHeader(headers[i].mName);
       } else {
         httpChan->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
       }
+    }
+
+    if (!hasAccept) {
+      httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
+                                 NS_LITERAL_CSTRING("*/*"),
+                                 false /* merge */);
     }
 
     // Step 2. Set the referrer.
