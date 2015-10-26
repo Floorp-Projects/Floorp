@@ -85,7 +85,7 @@ module.exports = function(context) {
     Program: function(node) {
       var pathAndFilename = this.getFilename();
       var processPath = process.cwd();
-      var isTest = /.*\/browser_.+\.js$/.test(pathAndFilename);
+      var isTest = /.*[\\/]browser_.+\.js$/.test(pathAndFilename);
 
       if (!isTest) {
         return;
