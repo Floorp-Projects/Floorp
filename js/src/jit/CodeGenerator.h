@@ -399,7 +399,7 @@ class CodeGenerator : public CodeGeneratorSpecific
                              bool monitoredResult, bool allowDoubleResult,
                              jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
-                             Register tempReg, PropertyName* name, ConstantOrRegister value,
+                             Register tempReg, ConstantOrRegister id, ConstantOrRegister value,
                              bool strict, bool needsTypeBarrier, jsbytecode* profilerLeavePc);
     void addSetElementCache(LInstruction* ins, Register obj, Register unboxIndex, Register temp,
                             FloatRegister tempDouble, FloatRegister tempFloat32,

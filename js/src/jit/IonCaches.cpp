@@ -2498,7 +2498,7 @@ EmitCallProxySet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& at
 
 bool
 SetPropertyIC::attachGenericProxy(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                  void* returnAddr)
+                                  HandleId id, void* returnAddr)
 {
     MOZ_ASSERT(!hasGenericProxyStub());
 
@@ -2515,8 +2515,7 @@ SetPropertyIC::attachGenericProxy(JSContext* cx, HandleScript outerScript, IonSc
                                           GetDOMProxyHandlerFamily(), &failures);
     }
 
-    RootedId propId(cx, AtomToId(name()));
-    if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(), value(),
+    if (!EmitCallProxySet(cx, masm, attacher, id, liveRegs_, object(), value(),
                           returnAddr, strict()))
     {
         return false;
@@ -2536,7 +2535,7 @@ SetPropertyIC::attachGenericProxy(JSContext* cx, HandleScript outerScript, IonSc
 
 bool
 SetPropertyIC::attachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                      HandleObject obj, void* returnAddr)
+                                      HandleObject obj, HandleId id, void* returnAddr)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
@@ -2553,8 +2552,7 @@ SetPropertyIC::attachDOMProxyShadowed(JSContext* cx, HandleScript outerScript, I
     // guard enforces a given JSClass, so just go ahead and emit the call to
     // ProxySet.
 
-    RootedId propId(cx, AtomToId(name()));
-    if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(),
+    if (!EmitCallProxySet(cx, masm, attacher, id, liveRegs_, object(),
                           value(), returnAddr, strict()))
     {
         return false;
@@ -2786,7 +2784,7 @@ GenerateCallSetter(JSContext* cx, IonScript* ion, MacroAssembler& masm,
 }
 
 static bool
-IsCacheableDOMProxyUnshadowedSetterCall(JSContext* cx, HandleObject obj, HandlePropertyName name,
+IsCacheableDOMProxyUnshadowedSetterCall(JSContext* cx, HandleObject obj, HandleId id,
                                         MutableHandleObject holder, MutableHandleShape shape)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
@@ -2795,7 +2793,7 @@ IsCacheableDOMProxyUnshadowedSetterCall(JSContext* cx, HandleObject obj, HandleP
     if (!checkObj)
         return false;
 
-    if (!LookupPropertyPure(cx, obj, NameToId(name), holder.address(), shape.address()))
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), shape.address()))
         return false;
 
     if (!holder)
@@ -2808,7 +2806,7 @@ IsCacheableDOMProxyUnshadowedSetterCall(JSContext* cx, HandleObject obj, HandleP
 
 bool
 SetPropertyIC::attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                        HandleObject obj, void* returnAddr)
+                                        HandleObject obj, HandleId id, void* returnAddr)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
@@ -2822,12 +2820,11 @@ SetPropertyIC::attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript,
                    ImmGCPtr(obj->maybeShape()), &failures);
 
     // Guard that our expando object hasn't started shadowing this property.
-    CheckDOMProxyExpandoDoesNotShadow(cx, masm, obj, NameToId(name()), object(), &failures);
+    CheckDOMProxyExpandoDoesNotShadow(cx, masm, obj, id, object(), &failures);
 
-    RootedPropertyName propName(cx, name());
     RootedObject holder(cx);
     RootedShape shape(cx);
-    if (IsCacheableDOMProxyUnshadowedSetterCall(cx, obj, propName, &holder, &shape)) {
+    if (IsCacheableDOMProxyUnshadowedSetterCall(cx, obj, id, &holder, &shape)) {
         if (!GenerateCallSetter(cx, ion, masm, attacher, obj, holder, shape, strict(),
                                 object(), temp(), value(), &failures, liveRegs_, returnAddr))
         {
@@ -2836,8 +2833,7 @@ SetPropertyIC::attachDOMProxyUnshadowed(JSContext* cx, HandleScript outerScript,
     } else {
         // Either there was no proto, or the property wasn't appropriately found on it.
         // Drop back to just a call to Proxy::set().
-        RootedId propId(cx, AtomToId(name()));
-        if (!EmitCallProxySet(cx, masm, attacher, propId, liveRegs_, object(),
+        if (!EmitCallProxySet(cx, masm, attacher, id, liveRegs_, object(),
                             value(), returnAddr, strict()))
         {
             return false;
@@ -3376,7 +3372,7 @@ SetPropertyIC::tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript
             return false;
 
         if (DOMProxyIsShadowing(shadows)) {
-            if (!attachDOMProxyShadowed(cx, outerScript, ion, obj, returnAddr))
+            if (!attachDOMProxyShadowed(cx, outerScript, ion, obj, id, returnAddr))
                 return false;
             *emitted = true;
             return true;
@@ -3385,7 +3381,7 @@ SetPropertyIC::tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript
         MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
         if (shadows == DoesntShadowUnique)
             reset(Reprotect);
-        if (!attachDOMProxyUnshadowed(cx, outerScript, ion, obj, returnAddr))
+        if (!attachDOMProxyUnshadowed(cx, outerScript, ion, obj, id, returnAddr))
             return false;
         *emitted = true;
         return true;
@@ -3394,7 +3390,7 @@ SetPropertyIC::tryAttachProxy(JSContext* cx, HandleScript outerScript, IonScript
     if (hasGenericProxyStub())
         return true;
 
-    if (!attachGenericProxy(cx, outerScript, ion, returnAddr))
+    if (!attachGenericProxy(cx, outerScript, ion, id, returnAddr))
         return false;
     *emitted = true;
     return true;
@@ -3462,13 +3458,17 @@ SetPropertyIC::tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, 
 
 bool
 SetPropertyIC::tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                             HandleObject obj, HandleId id, bool* emitted, bool* tryNativeAddSlot)
+                             HandleObject obj, HandleValue idval, MutableHandleId id,
+                             bool* emitted, bool* tryNativeAddSlot)
 {
     MOZ_ASSERT(!*emitted);
     MOZ_ASSERT(!*tryNativeAddSlot);
 
     if (!canAttachStub() || obj->watched())
         return true;
+
+    if (!ValueToId<CanGC>(cx, idval, id))
+        return false;
 
     if (!*emitted && !tryAttachProxy(cx, outerScript, ion, obj, id, emitted))
         return false;
@@ -3529,12 +3529,10 @@ SetPropertyIC::tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScri
 
 bool
 SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
-                      HandleValue value)
+                      HandleValue idval, HandleValue value)
 {
     IonScript* ion = outerScript->ionScript();
     SetPropertyIC& cache = ion->getCache(cacheIndex).toSetProperty();
-    RootedPropertyName name(cx, cache.name());
-    RootedId id(cx, AtomToId(name));
 
     // Remember the old group and shape if we may attach an add-property stub.
     // Also, some code under tryAttachStub depends on obj having a non-lazy
@@ -3554,9 +3552,10 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         }
     }
 
+    RootedId id(cx);
     bool emitted = false;
     bool tryNativeAddSlot = false;
-    if (!cache.tryAttachStub(cx, outerScript, ion, obj, id, &emitted, &tryNativeAddSlot))
+    if (!cache.tryAttachStub(cx, outerScript, ion, obj, idval, &id, &emitted, &tryNativeAddSlot))
         return false;
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
@@ -3567,6 +3566,7 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         MOZ_ASSERT(!script->hasNonSyntacticScope());
         InitGlobalLexicalOperation(cx, &cx->global()->lexicalScope(), script, pc, value);
     } else {
+        RootedPropertyName name(cx, idval.toString()->asAtom().asPropertyName());
         if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
             return false;
     }

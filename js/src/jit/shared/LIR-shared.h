@@ -5922,7 +5922,7 @@ class LCallDeleteElement : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 };
 
 // Patchable jump to stubs generated for a SetProperty cache.
-class LSetPropertyCache : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
+class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(SetPropertyCache)
@@ -5932,7 +5932,8 @@ class LSetPropertyCache : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
         setTemp(0, temp);
     }
 
-    static const size_t Value = 1;
+    static const size_t Id = 1;
+    static const size_t Value = 1 + BOX_PIECES;
 
     const MSetPropertyCache* mir() const {
         return mir_->toSetPropertyCache();
