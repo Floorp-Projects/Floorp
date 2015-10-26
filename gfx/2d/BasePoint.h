@@ -7,8 +7,8 @@
 #define MOZILLA_GFX_BASEPOINT_H_
 
 #include <cmath>
+#include <ostream>
 #include "mozilla/Attributes.h"
-#include "mozilla/ToString.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/TypeTraits.h"
 
