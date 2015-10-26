@@ -2,21 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.sync;
-
-import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.tabqueue.TabQueueDispatcher;
+package org.mozilla.gecko.tabqueue;
 
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
+import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
 
 /**
  * An IntentService that displays a notification for a tab sent to this device.
@@ -29,8 +28,6 @@ public class TabReceivedService extends IntentService {
     private static final String LOGTAG = "Gecko" + TabReceivedService.class.getSimpleName();
 
     private static final String PREF_NOTIFICATION_ID = "tab_received_notification_id";
-
-    public static final String EXTRA_TITLE = "org.mozilla.gecko.extra.TITLE";
 
     private static final int MAX_NOTIFICATION_COUNT = 1000;
 
@@ -52,7 +49,7 @@ public class TabReceivedService extends IntentService {
             return;
         }
 
-        final String title = intent.getStringExtra(EXTRA_TITLE);
+        final String title = intent.getStringExtra(Intent.EXTRA_TITLE);
         String notificationTitle = this.getString(R.string.sync_new_tab);
         if (title != null) {
             notificationTitle = notificationTitle.concat(": " + title);
@@ -94,4 +91,3 @@ public class TabReceivedService extends IntentService {
         }
     }
 }
-
