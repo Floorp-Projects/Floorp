@@ -22,10 +22,17 @@ promise_test(function(t) {
                                   'original SW should be installed');
                     assert_equals(registration.installing, null,
                                   'in installed, .installing should be null');
-                    assert_equals(registration.waiting.state, 'installed',
-                                  'in installed, .waiting should be installed');
-                    assert_equals(registration.active, null,
-                                  'in installed, .active should be null');
+                    // The Activate algorithm may have cleared the waiting worker
+                    // by now.
+                    if (registration.waiting) {
+                      assert_equals(registration.waiting.state, 'installed',
+                                    'in installed, .waiting should be installed');
+                      assert_equals(registration.active, null,
+                                    'in installed, .active should be null');
+                    } else {
+                      assert_equals(registration.active.state, 'activating',
+                                    'in installed, .active should be activating');
+                    }
                   } else if (step == 2) {
                     assert_equals(e.currentTarget.state, 'activating',
                                   'original SW should be activating');

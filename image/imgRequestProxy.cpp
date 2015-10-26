@@ -1090,7 +1090,7 @@ imgRequestProxyStatic::imgRequestProxyStatic(mozilla::image::Image* aImage,
                                              nsIPrincipal* aPrincipal)
 : mPrincipal(aPrincipal)
 {
-  mBehaviour = new StaticBehaviour(aImage);
+  mBehaviour = mozilla::MakeUnique<StaticBehaviour>(aImage);
 }
 
 NS_IMETHODIMP

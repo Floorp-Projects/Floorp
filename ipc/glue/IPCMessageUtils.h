@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/net/WebSocketFrame.h"
 #include "mozilla/TimeStamp.h"
 #ifdef XP_WIN
 #include "mozilla/TimeStamp_windows.h"
@@ -715,6 +716,22 @@ struct ParamTraits<mozilla::dom::ipc::StructuredCloneData>
   static void Log(const paramType& aParam, std::wstring* aLog)
   {
     LogParam(aParam.DataLength(), aLog);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::net::WebSocketFrameData>
+{
+  typedef mozilla::net::WebSocketFrameData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    aParam.WriteIPCParams(aMsg);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return aResult->ReadIPCParams(aMsg, aIter);
   }
 };
 

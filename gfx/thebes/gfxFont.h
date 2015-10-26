@@ -741,8 +741,7 @@ public:
 
             FLAG_CHAR_IS_TAB              = 0x08,
             FLAG_CHAR_IS_NEWLINE          = 0x10,
-            FLAG_CHAR_IS_LOW_SURROGATE    = 0x20,
-            CHAR_IDENTITY_FLAGS_MASK      = 0x38,
+            CHAR_IDENTITY_FLAGS_MASK      = 0x18,
 
             GLYPH_COUNT_MASK = 0x00FFFF00U,
             GLYPH_COUNT_SHIFT = 8
@@ -792,9 +791,6 @@ public:
         }
         bool CharIsNewline() const {
             return !IsSimpleGlyph() && (mValue & FLAG_CHAR_IS_NEWLINE) != 0;
-        }
-        bool CharIsLowSurrogate() const {
-            return !IsSimpleGlyph() && (mValue & FLAG_CHAR_IS_LOW_SURROGATE) != 0;
         }
 
         uint32_t CharIdentityFlags() const {
@@ -870,10 +866,6 @@ public:
             NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
             mValue |= FLAG_CHAR_IS_NEWLINE;
         }
-        void SetIsLowSurrogate() {
-            NS_ASSERTION(!IsSimpleGlyph(), "Expected non-simple-glyph");
-            mValue |= FLAG_CHAR_IS_LOW_SURROGATE;
-        }
 
     private:
         uint32_t mValue;
@@ -906,11 +898,6 @@ public:
 
     void SetIsSpace(uint32_t aIndex) {
         GetCharacterGlyphs()[aIndex].SetIsSpace();
-    }
-
-    void SetIsLowSurrogate(uint32_t aIndex) {
-        SetGlyphs(aIndex, CompressedGlyph().SetComplex(false, false, 0), nullptr);
-        GetCharacterGlyphs()[aIndex].SetIsLowSurrogate();
     }
 
     bool HasDetailedGlyphs() const {

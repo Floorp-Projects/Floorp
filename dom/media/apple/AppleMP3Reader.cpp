@@ -303,21 +303,6 @@ AppleMP3Reader::DecodeVideoFrame(bool &aKeyframeSkip,
   return false;
 }
 
-
-bool
-AppleMP3Reader::HasAudio()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return mStreamReady;
-}
-
-bool
-AppleMP3Reader::HasVideo()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  return false;
-}
-
 bool
 AppleMP3Reader::IsMediaSeekable()
 {

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/UniquePtr.h"
 
 #include "imgILoader.h"
 #include "imgICache.h"
@@ -16,7 +17,6 @@
 #include "nsIContentSniffer.h"
 #include "nsRefPtrHashtable.h"
 #include "nsExpirationTracker.h"
-#include "nsAutoPtr.h"
 #include "ImageCacheKey.h"
 #include "imgRequest.h"
 #include "nsIProgressEventSink.h"
@@ -440,7 +440,7 @@ private: // data
 
   nsCString mAcceptHeader;
 
-  nsAutoPtr<imgCacheExpirationTracker> mCacheTracker;
+  mozilla::UniquePtr<imgCacheExpirationTracker> mCacheTracker;
   bool mRespectPrivacy;
 };
 
