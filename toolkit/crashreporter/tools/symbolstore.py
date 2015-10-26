@@ -31,11 +31,11 @@ import shutil
 import textwrap
 import fnmatch
 import subprocess
+import time
 import ctypes
 import urlparse
 import concurrent.futures
 import multiprocessing
-import collections
 
 from optparse import OptionParser
 from xml.dom.minidom import parse
@@ -606,6 +606,7 @@ class Dumper:
             self.SubmitJob(files[-1], 'ProcessFilesWork', args=(files, arch_num, arch, vcs_root, after, after_arg), callback=self.ProcessFilesFinished)
 
     def ProcessFilesWork(self, files, arch_num, arch, vcs_root, after, after_arg):
+        t_start = time.time()
         self.output_pid(sys.stderr, "Worker processing files: %s" % (files,))
 
         # our result is a status, a cleanup function, an argument to that function, and the tuple of files we were called on
@@ -692,6 +693,10 @@ class Dumper:
             if result['status']:
                 # we only need 1 file to work
                 break
+
+        elapsed = time.time() - t_start
+        self.output_pid(sys.stderr, 'Worker finished processing %s in %.2fs' %
+                        (files, elapsed))
         return result
 
 # Platform-specific subclasses.  For the most part, these just have
@@ -893,6 +898,7 @@ class Dumper_Mac(Dumper):
         """dump_syms on Mac needs to be run on a dSYM bundle produced
         by dsymutil(1), so run dsymutil here and pass the bundle name
         down to the superclass method instead."""
+        t_start = time.time()
         self.output_pid(sys.stderr, "Worker running Mac pre-processing on file: %s" % (file,))
 
         # our return is a status and a tuple of files to dump symbols for
@@ -921,6 +927,9 @@ class Dumper_Mac(Dumper):
 
         result['status'] = True
         result['files'] = (dsymbundle, file)
+        elapsed = time.time() - t_start
+        self.output_pid(sys.stderr, 'Worker finished processing %s in %.2fs' %
+                        (file, elapsed))
         return result
 
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
