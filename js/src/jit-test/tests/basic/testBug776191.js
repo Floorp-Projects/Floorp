@@ -1,7 +1,8 @@
 (function() {
-    let(a, b, c) {
+    {
+      let a, b, c;
         ((function() {
-            with({}) let(b) { ((function() { c = 0 })()) }
+            with({}) { { let b; { ((function() { c = 0 })()) } } }
         })())
     }
 })()

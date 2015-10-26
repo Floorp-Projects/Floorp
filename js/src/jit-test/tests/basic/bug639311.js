@@ -14,5 +14,5 @@ try {
   delete this.Math
 }
 gc()
-Reflect.parse("let(x){}")
+Reflect.parse("{ let x; }")
 gc()

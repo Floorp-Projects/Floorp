@@ -37,8 +37,8 @@ assertEq((function(a,x,y) { [x,y] = a; x += y; return (function() eval('x'))() }
 
 assertEq((function() { var [x,y] = [1,2]; x += y; return (function() x)() })(), 3);
 assertEq((function() { var [x,y] = [1,2]; (function() x += y)(); return x })(), 3);
-assertEq((function() { let ([x,y] = [1,2]) { x += y; return (function() x)() } })(), 3);
-assertEq((function() { let ([x,y] = [1,2]) { (function() x += y)(); return x } })(), 3);
+assertEq((function() { { let [x,y] = [1,2]; x += y; return (function() x)() } })(), 3);
+assertEq((function() { { let [x,y] = [1,2]; (function() x += y)(); return x } })(), 3);
 
 assertEq((function([x,y]) { (function() { x += y })(); return x })([1,2]), 3);
 assertEq((function([x,y]) { x += y; return (function() x)() })([1,2]), 3);
@@ -55,18 +55,18 @@ assertEq((function() { try { throw [1,2] } catch([x,y]) { x += y; return (functi
 
 assertEq((function(a) { let [x,y] = a; (function() { x += y })(); return x })([1,2]), 3);
 assertEq((function(a) { let [x,y] = a; x += y; return (function() x)() })([1,2]), 3);
-assertEq((function(a) { let ([x,y] = a) { (function() { x += y })(); return x } })([1,2]), 3);
-assertEq((function(a) { let ([x,y] = a) { x += y; return (function() x)() } })([1,2]), 3);
-assertEq((function(a) { let ([[l, x],[m, y]] = a) { (function() { x += y })(); return x } })([[0,1],[0,2]]), 3);
-assertEq((function(a) { let ([[l, x],[m, y]] = a) { x += y; return (function() x)() } })([[0,1],[0,2]]), 3);
+assertEq((function(a) { { let [x,y] = a; (function() { x += y })(); return x } })([1,2]), 3);
+assertEq((function(a) { { let [x,y] = a; x += y; return (function() x)() } })([1,2]), 3);
+assertEq((function(a) { { let [[l, x],[m, y]] = a; (function() { x += y })(); return x } })([[0,1],[0,2]]), 3);
+assertEq((function(a) { { let [[l, x],[m, y]] = a; x += y; return (function() x)() } })([[0,1],[0,2]]), 3);
 
 assertEq((function() { let x = 3; return (function() { return x })() })(), 3);
 assertEq((function() { let g = function() { return x }; let x = 3; return g() })(), 3);
 
-assertEq((function() { let (x = 3) { return (function() { return x })() } })(), 3);
-assertEq((function() { let (x = 3) { (function() { assertEq(x, 3) })(); return x } })(), 3);
-assertEq((function() { let (x = 2) { x = 3; return (function() { return x })() } })(), 3);
-assertEq((function() { let (x = 1) { let (x = 3) { (function() { assertEq(x,3) })() } return x } })(), 1);
+assertEq((function() { { let x = 3; return (function() { return x })() } })(), 3);
+assertEq((function() { { let x = 3; (function() { assertEq(x, 3) })(); return x } })(), 3);
+assertEq((function() { { let x = 2; x = 3; return (function() { return x })() } })(), 3);
+assertEq((function() { { let x = 1; { let x = 3; (function() { assertEq(x,3) })() } return x } })(), 1);
 
 assertEq((function() { try { throw 3 } catch (e) { (function(){assertEq(e,3)})(); return e } })(), 3);
 assertEq((function() { try { throw 3 } catch (e) { assertEq(e, 3); return (function() e)() } })(), 3);
