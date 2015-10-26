@@ -31,9 +31,9 @@
   </div>
 
   <script>
-    var orientation = location.search.substring(1).split("&");
-    var angle = parseInt(orientation[0]);
-    var flip = orientation[1] == "flip" ? true : false;
+    var orientationInfo = location.search.substring(1).split("&");
+    var angle = parseInt(orientationInfo[0]);
+    var flip = orientationInfo[1] == "flip" ? true : false;
 
     // Each id corresponds to a color.
     var ids = ["ul", "ur", "lr", "ll"];

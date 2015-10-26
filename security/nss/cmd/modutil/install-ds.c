@@ -471,6 +471,9 @@ loser:
 		PR_Free(_this->arch);
 		_this->arch = NULL;
 	}
+	if(copy) {
+		PR_Free(copy);
+	}
 
 	return errStr;
 }
@@ -1467,7 +1470,6 @@ Pk11Install_Pair_delete(Pk11Install_Pair* _this)
 {
 	PR_Free(_this->key);
 	Pk11Install_ValueList_delete(_this->list);
-	PR_Free(_this->list);
 }
 
 /*************************************************************************/

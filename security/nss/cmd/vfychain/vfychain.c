@@ -333,7 +333,7 @@ configureRevocationParams(CERTRevocationFlags *flags)
    int i;
    unsigned int testType = REVCONFIG_TEST_UNDEFINED;
    static CERTRevocationTests *revTests = NULL;
-   PRUint64 *revFlags;
+   PRUint64 *revFlags = NULL;
 
    for(i = 0;i < REV_METHOD_INDEX_MAX;i++) {
        if (revMethodsData[i].testType == REVCONFIG_TEST_UNDEFINED) {

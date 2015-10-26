@@ -2443,7 +2443,6 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 {
     unsigned int i;
     CERTCertificate **certs = NULL;
-    SECStatus rv;
     unsigned int fcerts = 0;
 
     if ( ncerts ) {
@@ -2491,10 +2490,11 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 		     * know which cert it belongs to. But we still may try
                      * the individual canickname from the cert itself.
 		     */
-		    rv = CERT_AddTempCertToPerm(certs[i], canickname, NULL);
+                    /* Bug 1192442 - propagate errors from these calls. */
+		    (void)CERT_AddTempCertToPerm(certs[i], canickname, NULL);
 		} else {
-		    rv = CERT_AddTempCertToPerm(certs[i],
-                                                nickname?nickname:canickname, NULL);
+		    (void)CERT_AddTempCertToPerm(certs[i],
+                                                 nickname?nickname:canickname, NULL);
 		}
 
                 PORT_Free(canickname);
@@ -2511,7 +2511,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
 	}
     }
 
-    return ((fcerts || !ncerts) ? SECSuccess : SECFailure);
+    return (fcerts || !ncerts) ? SECSuccess : SECFailure;
 }
 
 /*
@@ -2893,15 +2893,16 @@ CERT_LockCertRefCount(CERTCertificate *cert)
 void
 CERT_UnlockCertRefCount(CERTCertificate *cert)
 {
-    PRStatus prstat;
-
     PORT_Assert(certRefCountLock != NULL);
     
-    prstat = PZ_Unlock(certRefCountLock);
-    
-    PORT_Assert(prstat == PR_SUCCESS);
-
-    return;
+#ifdef DEBUG
+    {
+        PRStatus prstat = PZ_Unlock(certRefCountLock);
+        PORT_Assert(prstat == PR_SUCCESS);
+    }
+#else
+    PZ_Unlock(certRefCountLock);
+#endif
 }
 
 static PZLock *certTrustLock = NULL;
@@ -2973,15 +2974,16 @@ cert_DestroyLocks(void)
 void
 CERT_UnlockCertTrust(const CERTCertificate *cert)
 {
-    PRStatus prstat;
-
     PORT_Assert(certTrustLock != NULL);
     
-    prstat = PZ_Unlock(certTrustLock);
-    
-    PORT_Assert(prstat == PR_SUCCESS);
-
-    return;
+#ifdef DEBUG
+    {
+        PRStatus prstat = PZ_Unlock(certTrustLock);
+        PORT_Assert(prstat == PR_SUCCESS);
+    }
+#else
+    PZ_Unlock(certTrustLock);
+#endif
 }
 
 

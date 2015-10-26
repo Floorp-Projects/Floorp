@@ -1526,7 +1526,7 @@ pkix_Build_SelectCertsFromTrustAnchors(
     PKIX_List **pMatchList,
     void *plContext) 
 {
-    int anchorIndex = 0;
+    unsigned int anchorIndex = 0;
     PKIX_TrustAnchor *anchor = NULL;
     PKIX_PL_Cert *trustedCert = NULL;
     PKIX_List *matchList = NULL;

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for window.orientation</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="orientationcommon.js"></script>
+<div id="log"></div>
+<script>
+async_test(function(t) {
+  var originalOrientation = screen.orientation.type;
+  var alternateOrientation = originalOrientation == "portrait-primary" ?
+    "landscape-primary" : "portrait-primary";
+
+  var originalWindowOrientation = window.orientation;
+  window.onorientationchange = function() {
+    t.step(function() { assert_not_equals(window.orientation, originalWindowOrientation); });
+
+    var p2 = specialPowersUnlock();
+    p2.then(function() {
+      t.done();
+    }).catch(t.step_func(function(err) {
+      assert_unreached("Error unlocking orientation: " + err);
+      t.done();
+    }));
+  }
+
+  var p1 = specialPowersLock(alternateOrientation);
+  p1.catch(t.step_func(function(err) {
+    assert_unreached("Error locking orientation: " + err);
+    t.done();
+  }));
+}, "Test window.orientation and orientationchange.");
+</script>

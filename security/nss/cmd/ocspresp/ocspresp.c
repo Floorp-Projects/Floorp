@@ -129,15 +129,12 @@ main(int argc, char **argv)
     
     SECItem *encoded = NULL;
     CERTOCSPResponse *decoded = NULL;
-    SECStatus statusDecoded;
 
     SECItem *encodedRev = NULL;
     CERTOCSPResponse *decodedRev = NULL;
-    SECStatus statusDecodedRev;
     
     SECItem *encodedFail = NULL;
     CERTOCSPResponse *decodedFail = NULL;
-    SECStatus statusDecodedFail;
 
     CERTCertificate *obtainedSignerCert = NULL;
 
@@ -181,40 +178,47 @@ main(int argc, char **argv)
     encoded = encode(arena, cid, caCert);
     PORT_Assert(encoded);
     decoded = CERT_DecodeOCSPResponse(encoded);
-    statusDecoded = CERT_GetOCSPResponseStatus(decoded);
-    PORT_Assert(statusDecoded == SECSuccess);
+    PORT_CheckSuccess(CERT_GetOCSPResponseStatus(decoded));
 
-    statusDecoded = CERT_VerifyOCSPResponseSignature(decoded, certHandle, &pwdata,
-                                                &obtainedSignerCert, caCert);
-    PORT_Assert(statusDecoded == SECSuccess);
-    statusDecoded = CERT_GetOCSPStatusForCertID(certHandle, decoded, cid,
-                                                obtainedSignerCert, now);
-    PORT_Assert(statusDecoded == SECSuccess);
+    PORT_CheckSuccess(CERT_VerifyOCSPResponseSignature(decoded, certHandle, &pwdata,
+                                                        &obtainedSignerCert, caCert));
+    PORT_CheckSuccess(CERT_GetOCSPStatusForCertID(certHandle, decoded, cid,
+                                                   obtainedSignerCert, now));
     CERT_DestroyCertificate(obtainedSignerCert);
 
     encodedRev = encodeRevoked(arena, cid, caCert);
     PORT_Assert(encodedRev);
     decodedRev = CERT_DecodeOCSPResponse(encodedRev);
-    statusDecodedRev = CERT_GetOCSPResponseStatus(decodedRev);
-    PORT_Assert(statusDecodedRev == SECSuccess);
+    PORT_CheckSuccess(CERT_GetOCSPResponseStatus(decodedRev));
 
-    statusDecodedRev = CERT_VerifyOCSPResponseSignature(decodedRev, certHandle, &pwdata,
-                                                        &obtainedSignerCert, caCert);
-    PORT_Assert(statusDecodedRev == SECSuccess);
-    statusDecodedRev = CERT_GetOCSPStatusForCertID(certHandle, decodedRev, cid,
+    PORT_CheckSuccess(CERT_VerifyOCSPResponseSignature(decodedRev, certHandle, &pwdata,
+                                                        &obtainedSignerCert, caCert));
+#ifdef DEBUG
+    {
+        SECStatus rv = CERT_GetOCSPStatusForCertID(certHandle, decodedRev, cid,
                                                    obtainedSignerCert, now);
-    PORT_Assert(statusDecodedRev == SECFailure);
-    PORT_Assert(PORT_GetError() == SEC_ERROR_REVOKED_CERTIFICATE);
+        PORT_Assert(rv == SECFailure);
+        PORT_Assert(PORT_GetError() == SEC_ERROR_REVOKED_CERTIFICATE);
+    }
+#else
+    (void)CERT_GetOCSPStatusForCertID(certHandle, decodedRev, cid,
+                                      obtainedSignerCert, now);
+#endif
     CERT_DestroyCertificate(obtainedSignerCert);
     
     encodedFail = CERT_CreateEncodedOCSPErrorResponse(
         arena, SEC_ERROR_OCSP_TRY_SERVER_LATER);
     PORT_Assert(encodedFail);
     decodedFail = CERT_DecodeOCSPResponse(encodedFail);
-    statusDecodedFail = CERT_GetOCSPResponseStatus(decodedFail);
-    PORT_Assert(statusDecodedFail == SECFailure);
-    PORT_Assert(PORT_GetError() == SEC_ERROR_OCSP_TRY_SERVER_LATER);
-
+#ifdef DEBUG
+    {
+        SECStatus rv = CERT_GetOCSPResponseStatus(decodedFail);
+        PORT_Assert(rv == SECFailure);
+        PORT_Assert(PORT_GetError() == SEC_ERROR_OCSP_TRY_SERVER_LATER);
+    }
+#else
+    (void)CERT_GetOCSPResponseStatus(decodedFail);
+#endif
     retval = 0;
 loser:
     if (retval != 0)

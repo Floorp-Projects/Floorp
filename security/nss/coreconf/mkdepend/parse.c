@@ -350,7 +350,7 @@ define2(char *name, char *val, struct inclist *file)
 	/* Fast inline binary search */
 	register char *s1;
 	register char *s2;
-	register int middle = (first + last) / 2;
+	register int middle = first + (last - first) / 2;
 
 	/* Fast inline strchr() */
 	s1 = name;
@@ -436,7 +436,7 @@ slookup(char *symbol, struct inclist *file)
 	    /* Fast inline binary search */
 	    register char *s1;
 	    register char *s2;
-	    register int middle = (first + last) / 2;
+	    register int middle = first + (last - first) / 2;
 
 	    /* Fast inline strchr() */
 	    s1 = symbol;

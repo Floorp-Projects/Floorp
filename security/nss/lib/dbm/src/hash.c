@@ -911,7 +911,7 @@ hash_seq(
 	uint flag)
 {
 	register uint32 bucket;
-	register BUFHEAD *bufp;
+	register BUFHEAD *bufp = NULL;
 	HTAB *hashp;
 	uint16 *bp, ndx;
 
