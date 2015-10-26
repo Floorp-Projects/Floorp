@@ -4240,7 +4240,7 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
       }
     }
 
-    result = ConvertStatus(DispatchInputEvent(&event));
+    result = ConvertStatus(DispatchAPZAwareEvent(&event));
 
     if (nsToolkit::gMouseTrailer)
       nsToolkit::gMouseTrailer->Enable();

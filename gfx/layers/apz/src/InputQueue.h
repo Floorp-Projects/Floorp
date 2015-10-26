@@ -6,6 +6,8 @@
 #ifndef mozilla_layers_InputQueue_h
 #define mozilla_layers_InputQueue_h
 
+#include "APZUtils.h"
+#include "InputData.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
@@ -23,7 +25,9 @@ class AsyncPanZoomController;
 class CancelableBlockState;
 class TouchBlockState;
 class WheelBlockState;
+class DragBlockState;
 class PanGestureBlockState;
+class AsyncDragMetrics;
 
 /**
  * This class stores incoming input events, separated into "input blocks", until
@@ -61,6 +65,13 @@ public:
    */
   void SetConfirmedTargetApzc(uint64_t aInputBlockId, const RefPtr<AsyncPanZoomController>& aTargetApzc);
   /**
+   * This function is invoked to confirm that the drag block should be handled
+   * by the APZ.
+   */
+  void ConfirmDragBlock(uint64_t aInputBlockId,
+                        const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                        const AsyncDragMetrics& aDragMetrics);
+  /**
    * This function should be invoked to notify the InputQueue of the touch-
    * action properties for the different touch points in an input block. The
    * input block this applies to should be specified by the |aInputBlockId|
@@ -87,6 +98,7 @@ public:
    */
   TouchBlockState* CurrentTouchBlock() const;
   WheelBlockState* CurrentWheelBlock() const;
+  DragBlockState* CurrentDragBlock() const;
   PanGestureBlockState* CurrentPanGestureBlock() const;
   /**
    * Returns true iff the pending block at the head of the queue is ready for
@@ -129,6 +141,10 @@ private:
   nsEventStatus ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
                                   bool aTargetConfirmed,
                                   const MultiTouchInput& aEvent,
+                                  uint64_t* aOutInputBlockId);
+  nsEventStatus ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
+                                  bool aTargetConfirmed,
+                                  const MouseInput& aEvent,
                                   uint64_t* aOutInputBlockId);
   nsEventStatus ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarget,
                                         bool aTargetConfirmed,
