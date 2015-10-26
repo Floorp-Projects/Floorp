@@ -1,0 +1,16 @@
+<html>
+  <body>
+    <h3>test page</h3>
+    <iframe src="about:blank"></iframe>
+    <script>
+      window.onmessage = function(evt) {
+        if (evt.data === "updated-iframe-url") {
+          window.postMessage("frame-updated", "*");
+        }
+      };
+      window.onload = function() {
+        document.querySelector('iframe').setAttribute("src", "context_tabs_onUpdated_iframe.html");
+      };
+    </script>
+  </body>
+</html>
