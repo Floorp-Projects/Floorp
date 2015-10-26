@@ -475,6 +475,7 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
       createAddonsEnvironmentsView(db);
     }
 
+    @SuppressWarnings("fallthrough")    
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
       if (oldVersion >= newVersion) {

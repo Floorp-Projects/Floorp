@@ -139,6 +139,21 @@ stjar = add_java_jar('sync-thirdparty')
 stjar.sources += [ thirdparty_source_dir + f for f in sync_thirdparty_java_files ]
 stjar.javac_flags = ['-Xlint:none']
 
+services_jar = add_java_jar('services')
+services_jar.sources += sync_java_files
+services_jar.extra_jars = [
+    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
+    'constants.jar',
+    'gecko-R.jar',
+    'gecko-mozglue.jar',
+    'gecko-thirdparty.jar',
+    'gecko-util.jar',
+    'sync-thirdparty.jar',
+]
+services_jar.javac_flags += ['-Xlint:all,-deprecation']
+
 if CONFIG['MOZ_WEBRTC']:
     video_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/webrtc/videoengine/'
     video_render_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_render/android/java/src/org/webrtc/videoengine/'
@@ -648,7 +663,6 @@ if max_sdk_version >= 11:
 if CONFIG['MOZ_ANDROID_READING_LIST_SERVICE']:
     gbjar.sources += reading_list_service_java_files
 
-gbjar.sources += sync_java_files
 gbjar.extra_jars += [
     OBJDIR + '/../javaaddons/javaaddons-1.0.jar',
     'gecko-R.jar',
@@ -656,6 +670,7 @@ gbjar.extra_jars += [
     'gecko-thirdparty.jar',
     'gecko-util.jar',
     'sync-thirdparty.jar',
+    'services.jar',
 ]
 
 moz_native_devices_jars = [
