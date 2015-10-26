@@ -430,16 +430,19 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request, bool isSecu
     if (NS_FAILED(rv)) return rv;
 
     // MIME based content negotiation lives!
-    // Add the "Accept" header
+    // Add the "Accept" header.  Note, this is set as an override because the
+    // service worker expects to see it.  The other "default" headers are
+    // hidden from service worker interception.
     rv = request->SetHeader(nsHttp::Accept, mAccept,
-                            false, nsHttpHeaderArray::eVarietyDefault);
+                            false, nsHttpHeaderArray::eVarietyOverride);
     if (NS_FAILED(rv)) return rv;
 
-    // Add the "Accept-Language" header
+    // Add the "Accept-Language" header.  This header is also exposed to the
+    // service worker.
     if (!mAcceptLanguages.IsEmpty()) {
         // Add the "Accept-Language" header
         rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages,
-                                false, nsHttpHeaderArray::eVarietyDefault);
+                                false, nsHttpHeaderArray::eVarietyOverride);
         if (NS_FAILED(rv)) return rv;
     }
 
