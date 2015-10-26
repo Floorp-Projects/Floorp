@@ -307,8 +307,11 @@ var FullScreen = {
         aEvent.target.localName != "tooltip" && aEvent.target.localName != "window")
       FullScreen._isPopupOpen = true;
     else if (aEvent.type == "popuphidden" && aEvent.target.localName != "tooltip" &&
-             aEvent.target.localName != "window")
+             aEvent.target.localName != "window") {
       FullScreen._isPopupOpen = false;
+      // Try again to hide toolbar when we close the popup.
+      FullScreen.hideNavToolbox(true);
+    }
   },
 
   // Autohide helpers for the context menu item
@@ -319,6 +322,8 @@ var FullScreen = {
   setAutohide: function()
   {
     gPrefService.setBoolPref("browser.fullscreen.autohide", !gPrefService.getBoolPref("browser.fullscreen.autohide"));
+    // Try again to hide toolbar when we change the pref.
+    FullScreen.hideNavToolbox(true);
   },
 
   _WarningBox: {

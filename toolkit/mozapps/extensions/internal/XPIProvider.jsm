@@ -876,8 +876,21 @@ function loadManifestFromWebManifest(aStream) {
   addon.optionsURL = null;
   addon.optionsType = null;
   addon.aboutURL = null;
+
+  // WebExtensions don't use iconURLs
   addon.iconURL = null;
   addon.icon64URL = null;
+  addon.icons = {};
+
+  let icons = getOptionalProp('icons');
+  if (icons) {
+    // filter out invalid (non-integer) size keys
+    Object.keys(icons)
+          .map((size) => parseInt(size, 10))
+          .filter((size) => !isNaN(size))
+          .forEach((size) => addon.icons[size] = icons[size]);
+  }
+
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   addon.defaultLocale = {
@@ -1166,6 +1179,9 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.targetPlatforms = [];
   }
 
+  // icons will be filled by the calling function
+  addon.icons = {};
+
   return addon;
 }
 
@@ -1228,6 +1244,21 @@ var loadManifestFromDir = Task.async(function* loadManifestFromDir(aDir, aInstal
   function loadFromRDF(aFile, aStream) {
     let addon = loadManifestFromRDF(Services.io.newFileURI(aFile), aStream);
 
+    let iconFile = aDir.clone();
+    iconFile.append("icon.png");
+
+    if (iconFile.exists()) {
+      addon.icons[32] = "icon.png";
+      addon.icons[48] = "icon.png";
+    }
+
+    let icon64File = aDir.clone();
+    icon64File.append("icon64.png");
+
+    if (icon64File.exists()) {
+      addon.icons[64] = "icon64.png";
+    }
+
     let file = aDir.clone();
     file.append("chrome.manifest");
     let chromeManifest = ChromeManifestParser.parseSync(Services.io.newFileURI(file));
@@ -1282,6 +1313,15 @@ var loadManifestFromZipReader = Task.async(function* loadManifestFromZipReader(a
   function loadFromRDF(aStream) {
     let uri = buildJarURI(aZipReader.file, FILE_RDF_MANIFEST);
     let addon = loadManifestFromRDF(uri, aStream);
+
+    if (aZipReader.hasEntry("icon.png")) {
+      addon.icons[32] = "icon.png";
+      addon.icons[48] = "icon.png";
+    }
+
+    if (aZipReader.hasEntry("icon64.png")) {
+      addon.icons[64] = "icon64.png";
+    }
 
     // Binary components can only be loaded from unpacked addons.
     if (addon.unpack) {
@@ -6636,30 +6676,45 @@ function AddonWrapper(aAddon) {
   }, this);
 
   this.__defineGetter__("iconURL", function AddonWrapper_iconURLGetter() {
-    return this.icons[32] || undefined;
+    return AddonManager.getPreferredIconURL(this, 48);
   }, this);
 
   this.__defineGetter__("icon64URL", function AddonWrapper_icon64URLGetter() {
-    return this.icons[64] || undefined;
+    return AddonManager.getPreferredIconURL(this, 64);
   }, this);
 
   this.__defineGetter__("icons", function AddonWrapper_iconsGetter() {
     let icons = {};
+
     if (aAddon._repositoryAddon) {
       for (let size in aAddon._repositoryAddon.icons) {
         icons[size] = aAddon._repositoryAddon.icons[size];
       }
     }
-    if (this.isActive && aAddon.iconURL) {
+
+    if (aAddon.icons) {
+      for (let size in aAddon.icons) {
+        icons[size] = this.getResourceURI(aAddon.icons[size]).spec;
+      }
+    } else {
+      // legacy add-on that did not update its icon data yet
+      if (this.hasResource("icon.png")) {
+        icons[32] = icons[48] = this.getResourceURI("icon.png").spec;
+      }
+      if (this.hasResource("icon64.png")) {
+        icons[64] = this.getResourceURI("icon64.png").spec;
+      }
+    }
+
+    if(this.isActive && aAddon.iconURL){
       icons[32] = aAddon.iconURL;
-    } else if (this.hasResource("icon.png")) {
-      icons[32] = this.getResourceURI("icon.png").spec;
+      icons[48] = aAddon.iconURL;
     }
-    if (this.isActive && aAddon.icon64URL) {
+
+    if(this.isActive && aAddon.icon64URL){
       icons[64] = aAddon.icon64URL;
-    } else if (this.hasResource("icon64.png")) {
-      icons[64] = this.getResourceURI("icon64.png").spec;
     }
+
     Object.freeze(icons);
     return icons;
   }, this);

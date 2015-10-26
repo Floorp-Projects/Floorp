@@ -1108,7 +1108,7 @@
 
           this.setAttribute("name", aAddon.name);
 
-          var iconURL = this.mAddon.iconURL;
+          var iconURL = AddonManager.getPreferredIconURL(aAddon, 48, window);
           if (iconURL)
             this._icon.src = iconURL;
           else
