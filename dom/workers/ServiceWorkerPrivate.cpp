@@ -191,6 +191,51 @@ public:
 
 NS_IMPL_ISUPPORTS0(KeepAliveHandler)
 
+class SoftUpdateRequest : public nsRunnable
+{
+protected:
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
+public:
+  explicit SoftUpdateRequest(nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
+    : mRegistration(aRegistration)
+  {
+    MOZ_ASSERT(aRegistration);
+  }
+
+  NS_IMETHOD Run()
+  {
+    AssertIsOnMainThread();
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    MOZ_ASSERT(swm);
+
+    OriginAttributes attrs =
+      mozilla::BasePrincipal::Cast(mRegistration->mPrincipal)->OriginAttributesRef();
+
+    swm->PropagateSoftUpdate(attrs,
+                             NS_ConvertUTF8toUTF16(mRegistration->mScope));
+    return NS_OK;
+  }
+};
+
+class CheckLastUpdateTimeRequest final : public SoftUpdateRequest
+{
+public:
+  explicit CheckLastUpdateTimeRequest(
+    nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
+    : SoftUpdateRequest(aRegistration)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    AssertIsOnMainThread();
+    if (mRegistration->IsLastUpdateCheckTimeOverOneDay()) {
+      SoftUpdateRequest::Run();
+    }
+    return NS_OK;
+  }
+};
+
 class ExtendableEventWorkerRunnable : public WorkerRunnable
 {
 protected:
@@ -245,6 +290,33 @@ public:
     if (aWaitUntilPromise) {
       waitUntilPromise.forget(aWaitUntilPromise);
     }
+  }
+};
+
+// Handle functional event
+// 9.9.7 If the time difference in seconds calculated by the current time minus
+// registration's last update check time is greater than 86400, invoke Soft Update
+// algorithm.
+class ExtendableFunctionalEventWorkerRunnable : public ExtendableEventWorkerRunnable
+{
+protected:
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> mRegistration;
+public:
+  ExtendableFunctionalEventWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+                                          KeepAliveToken* aKeepAliveToken,
+                                          nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration)
+    : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
+    , mRegistration(aRegistration)
+  {
+    MOZ_ASSERT(aRegistration);
+  }
+
+  void
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aRunResult)
+  {
+    nsCOMPtr<nsIRunnable> runnable = new CheckLastUpdateTimeRequest(mRegistration);
+
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
   }
 };
 
@@ -415,15 +487,17 @@ ServiceWorkerPrivate::SendLifeCycleEvent(const nsAString& aEventType,
 #ifndef MOZ_SIMPLEPUSH
 namespace {
 
-class SendPushEventRunnable final : public ExtendableEventWorkerRunnable
+class SendPushEventRunnable final : public ExtendableFunctionalEventWorkerRunnable
 {
   Maybe<nsTArray<uint8_t>> mData;
 
 public:
   SendPushEventRunnable(WorkerPrivate* aWorkerPrivate,
                         KeepAliveToken* aKeepAliveToken,
-                        const Maybe<nsTArray<uint8_t>>& aData)
-      : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
+                        const Maybe<nsTArray<uint8_t>>& aData,
+                        nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> aRegistration)
+      : ExtendableFunctionalEventWorkerRunnable(
+          aWorkerPrivate, aKeepAliveToken, aRegistration)
       , mData(aData)
   {
     AssertIsOnMainThread();
@@ -504,7 +578,8 @@ public:
 #endif // !MOZ_SIMPLEPUSH
 
 nsresult
-ServiceWorkerPrivate::SendPushEvent(const Maybe<nsTArray<uint8_t>>& aData)
+ServiceWorkerPrivate::SendPushEvent(const Maybe<nsTArray<uint8_t>>& aData,
+                                    ServiceWorkerRegistrationInfo* aRegistration)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
@@ -513,9 +588,14 @@ ServiceWorkerPrivate::SendPushEvent(const Maybe<nsTArray<uint8_t>>& aData)
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(mKeepAliveToken);
+
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> regInfo(
+    new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(aRegistration, false));
+
   RefPtr<WorkerRunnable> r = new SendPushEventRunnable(mWorkerPrivate,
                                                          mKeepAliveToken,
-                                                         aData);
+                                                         aData,
+                                                         regInfo);
   AutoJSAPI jsapi;
   jsapi.Init();
   if (NS_WARN_IF(!r->Dispatch(jsapi.cx()))) {
@@ -827,7 +907,7 @@ namespace {
 
 // Inheriting ExtendableEventWorkerRunnable so that the worker is not terminated
 // while handling the fetch event, though that's very unlikely.
-class FetchEventRunnable : public ExtendableEventWorkerRunnable
+class FetchEventRunnable : public ExtendableFunctionalEventWorkerRunnable
                          , public nsIHttpHeaderVisitor {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   const nsCString mScriptSpec;
@@ -851,9 +931,11 @@ public:
                      // CSP checks might require the worker script spec
                      // later on.
                      const nsACString& aScriptSpec,
+                     nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo>& aRegistration,
                      UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
                      bool aIsReload)
-    : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
+    : ExtendableFunctionalEventWorkerRunnable(
+        aWorkerPrivate, aKeepAliveToken, aRegistration)
     , mInterceptedChannel(aChannel)
     , mScriptSpec(aScriptSpec)
     , mClientInfo(Move(aClientInfo))
@@ -1090,6 +1172,13 @@ private:
         new KeepAliveHandler(mKeepAliveToken);
       respondWithPromise->AppendNativeHandler(keepAliveHandler);
     }
+
+    // 9.8.22 If request is a non-subresource request, then: Invoke Soft Update algorithm
+    if (internalReq->IsNavigationRequest()) {
+      nsCOMPtr<nsIRunnable> runnable= new SoftUpdateRequest(mRegistration);
+
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable.forget())));
+    }
     return true;
   }
 };
@@ -1119,9 +1208,19 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
     return NS_ERROR_FAILURE;
   }
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+
+  RefPtr<ServiceWorkerRegistrationInfo> registration =
+    swm->GetRegistration(mInfo->GetPrincipal(), mInfo->Scope());
+
+  nsMainThreadPtrHandle<ServiceWorkerRegistrationInfo> regInfo(
+    new nsMainThreadPtrHolder<ServiceWorkerRegistrationInfo>(registration, false));
+
   RefPtr<FetchEventRunnable> r =
     new FetchEventRunnable(mWorkerPrivate, mKeepAliveToken, handle,
-                           mInfo->ScriptSpec(), Move(aClientInfo), aIsReload);
+                           mInfo->ScriptSpec(), regInfo,
+                           Move(aClientInfo), aIsReload);
   rv = r->Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
