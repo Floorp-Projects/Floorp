@@ -4655,6 +4655,25 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
 
   mDeferNotifyingTSF = false;
 
+  // A compositionstart event handler can change selection before actually
+  // starting composition in the editor. This causes very complicated issue
+  // because TSF requests to lock the document but we allow to change the
+  // selection for web apps for keeping compatibility.
+  // For now, we should not send selection change notification until the
+  // active composition ends.  However, this causes TSF stores wrong selection
+  // offset.  That might cause TSF stopping working.  So, at next change,
+  // we should cache content *until* composition end.  Then, we will solve
+  // this issue.
+  if (mComposition.IsComposing() &&
+      !selectionChangeData.mOccurredDuringComposition) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Warning,
+           ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal(), WARNING, "
+            "ignoring selection change notification which occurred before "
+            "composition start.", this));
+    return NS_OK;
+  }
+
+
   if (IsReadLocked()) {
     // XXX Why don't we mark mPendingOnSelectionChange as true here?
     return NS_OK;
