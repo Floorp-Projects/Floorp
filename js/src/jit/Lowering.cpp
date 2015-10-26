@@ -3496,12 +3496,23 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
 
+    MDefinition* id = ins->idval();
+    MOZ_ASSERT(id->type() == MIRType_String ||
+               id->type() == MIRType_Symbol ||
+               id->type() == MIRType_Int32 ||
+               id->type() == MIRType_Value);
+
+    // If this is a SETPROP, the id is a constant string. Allow passing it as a
+    // constant to reduce register allocation pressure.
+    bool useConstId = id->type() == MIRType_String || id->type() == MIRType_Symbol;
+
     // Set the performs-call flag so that we don't omit the overrecursed check.
     // This is necessary because the cache can attach a scripted setter stub
     // that calls this script recursively.
     gen->setPerformsCall();
 
     LInstruction* lir = new(alloc()) LSetPropertyCache(useRegister(ins->object()), temp());
+    useBoxOrTypedOrConstant(lir, LSetPropertyCache::Id, id, useConstId);
     useBoxOrTypedOrConstant(lir, LSetPropertyCache::Value, ins->value(), /* useConstant = */ true);
 
     add(lir, ins);

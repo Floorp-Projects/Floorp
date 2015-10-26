@@ -12474,7 +12474,8 @@ IonBuilder::setPropTryCache(bool* emitted, MDefinition* obj,
 
     bool strict = IsStrictSetPC(pc);
 
-    MSetPropertyCache* ins = MSetPropertyCache::New(alloc(), obj, value, name, strict, barrier);
+    MConstant* id = constant(StringValue(name));
+    MSetPropertyCache* ins = MSetPropertyCache::New(alloc(), obj, id, value, strict, barrier);
     current->add(ins);
     current->push(value);
 
