@@ -314,27 +314,6 @@ appendHex(unsigned char nibble)
 }
 
 /*
- * append a secitem as colon separated hex bytes.
- */
-static void
-appendItem(SECItem *item)
-{
-    int i;
-
-    if (!buffer.data) {
-	return;
-    }
-
-    appendLabel(':');
-    for (i=0; i < item->len; i++) {
-	unsigned char byte=item->data[i];
-	appendHex(byte >> 4);
-	appendHex(byte & 0xf);
-	appendLabel(':');
-    }
-}
-
-/*
  * append a 32 bit integer (even on a 64 bit platform).
  * for simplicity append it as a hex value, full extension with 0x prefix.
  */
@@ -493,7 +472,7 @@ do_list_certs(const char *progName, int log)
    CERTCertList *sorted;
    CERTCertListNode *node;
    CERTCertTrust trust;
-   int i;
+   unsigned int i;
 
    list = PK11_ListCerts(PK11CertListUnique, NULL);
    if (list == NULL) {

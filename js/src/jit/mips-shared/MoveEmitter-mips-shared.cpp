@@ -94,6 +94,42 @@ MoveEmitterMIPSShared::emitMove(const MoveOperand& from, const MoveOperand& to)
 }
 
 void
+MoveEmitterMIPSShared::emitInt32Move(const MoveOperand &from, const MoveOperand &to)
+{
+    if (from.isGeneralReg()) {
+        // Second scratch register should not be moved by MoveEmitter.
+        MOZ_ASSERT(from.reg() != spilledReg_);
+
+        if (to.isGeneralReg())
+            masm.move32(from.reg(), to.reg());
+        else if (to.isMemory())
+            masm.store32(from.reg(), getAdjustedAddress(to));
+        else
+            MOZ_CRASH("Invalid emitInt32Move arguments.");
+    } else if (from.isMemory()) {
+        if (to.isGeneralReg()) {
+            masm.load32(getAdjustedAddress(from), to.reg());
+        } else if (to.isMemory()) {
+            masm.load32(getAdjustedAddress(from), tempReg());
+            masm.store32(tempReg(), getAdjustedAddress(to));
+        } else {
+            MOZ_CRASH("Invalid emitInt32Move arguments.");
+        }
+    } else if (from.isEffectiveAddress()) {
+        if (to.isGeneralReg()) {
+            masm.computeEffectiveAddress(getAdjustedAddress(from), to.reg());
+        } else if (to.isMemory()) {
+            masm.computeEffectiveAddress(getAdjustedAddress(from), tempReg());
+            masm.store32(tempReg(), getAdjustedAddress(to));
+        } else {
+            MOZ_CRASH("Invalid emitInt32Move arguments.");
+        }
+    } else {
+        MOZ_CRASH("Invalid emitInt32Move arguments.");
+    }
+}
+
+void
 MoveEmitterMIPSShared::emitFloat32Move(const MoveOperand& from, const MoveOperand& to)
 {
     // Ensure that we can use ScratchFloat32Reg in memory move.
@@ -162,7 +198,8 @@ MoveEmitterMIPSShared::emit(const MoveOp& move)
         emitDoubleMove(from, to);
         break;
       case MoveOp::INT32:
-        MOZ_ASSERT(sizeof(uintptr_t) == sizeof(int32_t));
+        emitInt32Move(from, to);
+        break;
       case MoveOp::GENERAL:
         emitMove(from, to);
         break;

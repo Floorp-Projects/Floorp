@@ -235,7 +235,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     HTML_FAILED='</TD><TD bgcolor=red>Failed</TD><TR>'
     HTML_FAILED_CORE='</TD><TD bgcolor=red>Failed Core</TD><TR>'
     HTML_PASSED='</TD><TD bgcolor=lightGreen>Passed</TD><TR>'
-    HTML_UNKNOWN='</TD><TD>Unknown/TD><TR>'
+    HTML_UNKNOWN='</TD><TD>Unknown</TD><TR>'
     TABLE_ARGS=
 
 

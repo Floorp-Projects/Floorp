@@ -1254,12 +1254,12 @@ static void scalar_mult(felem nx, felem ny, felem nz,
 #define BYTESWAP64(x) OSSwapInt64(x)
 #else
 #define BYTESWAP32(x) \
-    ((x) >> 24 | (x) >> 8 & 0xff00 | ((x) & 0xff00) << 8 | (x) << 24)
+    (((x) >> 24) | (((x) >> 8) & 0xff00) | (((x) & 0xff00) << 8) | ((x) << 24))
 #define BYTESWAP64(x) \
-    ((x) >> 56 | (x) >> 40 & 0xff00 | \
-     (x) >> 24 & 0xff0000 | (x) >> 8 & 0xff000000 | \
-     ((x) & 0xff000000) << 8 | ((x) & 0xff0000) << 24 | \
-     ((x) & 0xff00) << 40 | (x) << 56)
+    (((x) >> 56) | (((x) >> 40) & 0xff00) | \
+     (((x) >> 24) & 0xff0000) | (((x) >> 8) & 0xff000000) | \
+     (((x) & 0xff000000) << 8) | (((x) & 0xff0000) << 24) | \
+     (((x) & 0xff00) << 40) | ((x) << 56))
 #endif
 
 #ifdef MP_USE_UINT_DIGIT

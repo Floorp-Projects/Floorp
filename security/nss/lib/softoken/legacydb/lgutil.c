@@ -303,8 +303,10 @@ lg_mkHandle(SDB *sdb, SECItem *dbKey, CK_OBJECT_HANDLE class)
     /* there is only one KRL, use a fixed handle for it */
     if (handle != LG_TOKEN_KRL_HANDLE) {
 	lg_XORHash(hashBuf,dbKey->data,dbKey->len);
-	handle = (hashBuf[0] << 24) | (hashBuf[1] << 16) | 
-					(hashBuf[2] << 8)  | hashBuf[3];
+        handle = ((CK_OBJECT_HANDLE)hashBuf[0] << 24) |
+                 ((CK_OBJECT_HANDLE)hashBuf[1] << 16) |
+                 ((CK_OBJECT_HANDLE)hashBuf[2] << 8)  |
+                 (CK_OBJECT_HANDLE)hashBuf[3];
 	handle =  class | (handle & ~(LG_TOKEN_TYPE_MASK|LG_TOKEN_MASK));
 	/* we have a CRL who's handle has randomly matched the reserved KRL
 	 * handle, increment it */

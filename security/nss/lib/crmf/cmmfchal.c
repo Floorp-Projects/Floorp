@@ -30,7 +30,6 @@ cmmf_create_witness_and_challenge(PLArenaPool     *poolp,
     CMMFRand       randStr= { {siBuffer, NULL, 0}, {siBuffer, NULL, 0}};
     PK11SlotInfo  *slot;
     PK11SymKey    *symKey = NULL;
-    CK_OBJECT_HANDLE id;
     CERTSubjectPublicKeyInfo *spki = NULL;
 
     
@@ -76,7 +75,7 @@ cmmf_create_witness_and_challenge(PLArenaPool     *poolp,
         rv = SECFailure;
         goto loser;
     }
-    id = PK11_ImportPublicKey(slot, inPubKey, PR_FALSE);
+    (void)PK11_ImportPublicKey(slot, inPubKey, PR_FALSE);
     /* In order to properly encrypt the data, we import as a symmetric
      * key, and then wrap that key.  That in essence encrypts the data.
      * This is the method recommended in the PK11 world in order

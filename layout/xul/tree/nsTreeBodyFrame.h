@@ -120,6 +120,8 @@ public:
   nsresult EndUpdateBatch();
   nsresult ClearStyleAndImageCaches();
 
+  void CancelImageRequests();
+
   void ManageReflowCallback(const nsRect& aRect, nscoord aHorzWidth);
 
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;

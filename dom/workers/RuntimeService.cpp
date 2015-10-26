@@ -168,7 +168,9 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 #define PREF_SERVICEWORKERS_TESTING_ENABLED "dom.serviceWorkers.testing.enabled"
 #define PREF_INTERCEPTION_ENABLED      "dom.serviceWorkers.interception.enabled"
 #define PREF_INTERCEPTION_OPAQUE_ENABLED "dom.serviceWorkers.interception.opaque.enabled"
+#define PREF_OPEN_WINDOW_ENABLED       "dom.serviceWorkers.openWindow.enabled"
 #define PREF_PUSH_ENABLED              "dom.push.enabled"
+#define PREF_REQUESTCACHE_ENABLED      "dom.requestcache.enabled"
 #define PREF_REQUESTCONTEXT_ENABLED    "dom.requestcontext.enabled"
 #define PREF_OFFSCREENCANVAS_ENABLED   "gfx.offscreencanvas.enabled"
 
@@ -1942,6 +1944,10 @@ RuntimeService::Init()
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_ENABLED))) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
                                   WorkerPrefChanged,
+                                  PREF_OPEN_WINDOW_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_OPEN_WINDOW_ENABLED))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
                                   PREF_INTERCEPTION_OPAQUE_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_OPAQUE_ENABLED))) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
@@ -1960,6 +1966,10 @@ RuntimeService::Init()
                                   WorkerPrefChanged,
                                   PREF_PUSH_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_PUSH))) ||
+      NS_FAILED(Preferences::RegisterCallbackAndCall(
+                                  WorkerPrefChanged,
+                                  PREF_REQUESTCACHE_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_REQUESTCACHE))) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
                                   WorkerPrefChanged,
                                   PREF_REQUESTCONTEXT_ENABLED,
@@ -2185,6 +2195,10 @@ RuntimeService::Cleanup()
                                   reinterpret_cast<void *>(WORKERPREF_INTERCEPTION_ENABLED))) ||
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
+                                  PREF_OPEN_WINDOW_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_OPEN_WINDOW_ENABLED))) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
                                   PREF_SERVICEWORKERS_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_SERVICEWORKERS))) ||
         NS_FAILED(Preferences::UnregisterCallback(
@@ -2203,6 +2217,10 @@ RuntimeService::Cleanup()
                                   WorkerPrefChanged,
                                   PREF_PUSH_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_PUSH))) ||
+        NS_FAILED(Preferences::UnregisterCallback(
+                                  WorkerPrefChanged,
+                                  PREF_REQUESTCACHE_ENABLED,
+                                  reinterpret_cast<void *>(WORKERPREF_REQUESTCACHE))) ||
         NS_FAILED(Preferences::UnregisterCallback(
                                   WorkerPrefChanged,
                                   PREF_REQUESTCONTEXT_ENABLED,
@@ -2785,9 +2803,11 @@ RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
 #endif
     case WORKERPREF_INTERCEPTION_ENABLED:
     case WORKERPREF_INTERCEPTION_OPAQUE_ENABLED:
+    case WORKERPREF_OPEN_WINDOW_ENABLED:
     case WORKERPREF_SERVICEWORKERS:
     case WORKERPREF_SERVICEWORKERS_TESTING:
     case WORKERPREF_PUSH:
+    case WORKERPREF_REQUESTCACHE:
     case WORKERPREF_REQUESTCONTEXT:
     case WORKERPREF_OFFSCREENCANVAS:
       sDefaultPreferences[key] = Preferences::GetBool(aPrefName, false);

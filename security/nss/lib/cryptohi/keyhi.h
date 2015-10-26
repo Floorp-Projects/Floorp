@@ -260,6 +260,14 @@ extern int SECKEY_ECParamsToKeySize(const SECItem *params);
  */
 extern int SECKEY_ECParamsToBasePointOrderLen(const SECItem *params);
 
+/*
+ * Returns the object identifier of the curve, of the provided
+ * elliptic curve parameters structures.
+ *
+ * Return 0 on failure (unknown EC domain parameters).
+ */
+SECOidTag SECKEY_GetECCOid(const SECKEYECParams * params);
+
 SEC_END_PROTOS
 
 #endif /* _KEYHI_H_ */

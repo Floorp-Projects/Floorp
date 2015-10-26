@@ -128,7 +128,7 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType, PRBool dele
 	while (crlNode) {
 	    char* asciiname = NULL;
 	    CERTCertificate *cert = NULL;
-	    if (crlNode->crl && &crlNode->crl->crl.derName) {
+	    if (crlNode->crl && crlNode->crl->crl.derName.data != NULL) {
 	        cert = CERT_FindCertByName(certHandle,
 	                                   &crlNode->crl->crl.derName);
 	        if (!cert) {
@@ -698,6 +698,7 @@ GenerateCRL (CERTCertDBHandle *certHandle, char *certNickName,
         signCrl = CreateModifiedCRLCopy(arena, certHandle, &cert, certNickName,
                                          inFile, decodeOptions, importOptions);
         if (signCrl == NULL) {
+            rv = SECFailure;
             goto loser;
         }
     }
@@ -705,6 +706,7 @@ GenerateCRL (CERTCertDBHandle *certHandle, char *certNickName,
     if (!cert) {
         cert = FindSigningCert(certHandle, signCrl, certNickName);
         if (cert == NULL) {
+            rv = SECFailure;
             goto loser;
         }
     }
@@ -721,8 +723,10 @@ GenerateCRL (CERTCertDBHandle *certHandle, char *certNickName,
                             outFileName);
         }
         signCrl = CreateNewCrl(arena, certHandle, cert);
-        if (!signCrl)
+        if (!signCrl) {
+            rv = SECFailure;
             goto loser;
+        }
     }
 
     rv = UpdateCrl(signCrl, inCrlInitFile);

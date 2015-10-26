@@ -24,8 +24,6 @@ CERT_MatchNickname(char *name1, char *name2) {
     char *nickname2 = NULL;
     char *token1;
     char *token2;
-    char *token = NULL;
-    int len;
 
     /* first deal with the straight comparison */
     if (PORT_Strcmp(name1, name2) == 0) {
@@ -40,20 +38,17 @@ CERT_MatchNickname(char *name1, char *name2) {
 	return PR_FALSE;
     }
     if (token1) {
-	token=name1;
 	nickname1=token1;
 	nickname2=name2;
     } else {
-	token=name2;
 	nickname1=token2;
 	nickname2=name1;
     }
-    len = nickname1-token;
     nickname1++;
     if (PORT_Strcmp(nickname1,nickname2) != 0) {
 	return PR_FALSE;
     }
-    /* compare the other token with the internal slot here */
+    /* Bug 1192443 - compare the other token with the internal slot here */
     return PR_TRUE;
 }
 

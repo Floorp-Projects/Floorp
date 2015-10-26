@@ -277,3 +277,9 @@ _SGN_VerifyPKCS1DigestInfo;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.21 {         # NSS Utilities 3.21 release
+;+    global:
+NSSUTIL_ArgParseModuleSpecEx;
+;+    local:
+;+       *;
+;+};

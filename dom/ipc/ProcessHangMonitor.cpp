@@ -151,7 +151,6 @@ public:
   NS_IMETHOD BeginStartingDebugger() override;
   NS_IMETHOD EndStartingDebugger() override;
   NS_IMETHOD TerminatePlugin() override;
-  NS_IMETHOD TerminateProcess() override;
   NS_IMETHOD UserCanceled() override;
 
   NS_IMETHOD IsReportForBrowser(nsIFrameLoader* aFrameLoader, bool* aResult) override;
@@ -820,6 +819,8 @@ HangMonitoredProcess::TerminatePlugin()
     return NS_ERROR_UNEXPECTED;
   }
 
+  // generates a crash report that includes a browser report taken here
+  // earlier, the content process, and any plugin process(es).
   uint32_t id = mHangData.get_PluginHangData().pluginId();
   plugins::TerminatePlugin(id, NS_LITERAL_CSTRING("HangMonitor"),
                            mBrowserDumpId);
@@ -827,24 +828,6 @@ HangMonitoredProcess::TerminatePlugin()
   if (mActor) {
     mActor->CleanupPluginHang(id, false);
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HangMonitoredProcess::TerminateProcess()
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  if (!mContentParent) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (mActor && mHangData.type() == HangData::TPluginHangData) {
-    uint32_t id = mHangData.get_PluginHangData().pluginId();
-    mActor->CleanupPluginHang(id, true);
-  }
-
-  mContentParent->KillHard("HangMonitor");
   return NS_OK;
 }
 
