@@ -26,6 +26,8 @@ public:
 private:
   ~WebSocketFrame();
 
+  DOMHighResTimeStamp mTimeStamp;
+
   bool mFinBit : 1;
   bool mRsvBit1 : 1;
   bool mRsvBit2 : 1;
