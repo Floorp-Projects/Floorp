@@ -23,7 +23,7 @@ parent:
                     PPrintProgressDialog printProgressDialog,
                     bool isForPrinting)
     returns(bool notifyOnOpen,
-            bool success);
+            nsresult rv);
 
   async ShowPrintDialog(PPrintSettingsDialog dialog,
                         PBrowser browser,
