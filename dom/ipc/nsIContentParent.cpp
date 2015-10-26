@@ -20,6 +20,7 @@
 #include "mozilla/unused.h"
 
 #include "nsFrameMessageManager.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsPrintfCString.h"
 #include "xpcpublic.h"
 

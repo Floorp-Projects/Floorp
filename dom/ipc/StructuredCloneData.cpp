@@ -10,6 +10,7 @@
 #include "nsIMutable.h"
 #include "nsIXPConnect.h"
 
+#include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
@@ -81,7 +82,7 @@ StructuredCloneData::Write(JSContext* aCx,
 }
 
 void
-StructuredCloneData::WriteIPCParams(Message* aMsg) const
+StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const
 {
   WriteParam(aMsg, DataLength());
 

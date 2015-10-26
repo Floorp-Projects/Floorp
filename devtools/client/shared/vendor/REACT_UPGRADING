@@ -3,12 +3,16 @@ sanity checks and better errors, but at a slight perf cost. The prod
 version available on the web is by default minified, but we don't want
 a minified version, so we need to build it ourselves.
 
-The react.js and react-dev.js were generated with the following steps:
+In bug 1217979, we are only using react in development environment for now until
+we can think of a way to conditionally build these different versions, so
+the `react.js` here is the dev environment one and generated with the following steps:
 
 * git clone https://github.com/facebook/react.git && cd react
 * npm install
 * grunt build
-* cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react-dev.js
+* cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react.js
+
+For production, which we do not currently have:
 * NODE_ENV=production grunt build
 * cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react.js
 

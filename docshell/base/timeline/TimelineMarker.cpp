@@ -25,14 +25,6 @@ TimelineMarker::TimelineMarker(const char* aName,
   CaptureStackIfNecessary(aTracingType, aStackRequest);
 }
 
-bool
-TimelineMarker::Equals(const AbstractTimelineMarker& aOther)
-{
-  // Check whether two markers should be considered the same, for the purpose
-  // of pairing start and end markers. Normally this definition suffices.
-  return strcmp(GetName(), aOther.GetName()) == 0;
-}
-
 void
 TimelineMarker::AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker)
 {
