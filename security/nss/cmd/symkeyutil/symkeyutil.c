@@ -1015,8 +1015,7 @@ main(int argc, char **argv)
                     }
                 }
                 if (se) {
-                    SECStatus rv2 = PK11_FreeSlotListElement(slotList, se);
-                    PORT_Assert(SECSuccess == rv2);
+                    PORT_CheckSuccess(PK11_FreeSlotListElement(slotList, se));
                 }
                 PK11_FreeSlotList(slotList);
             }

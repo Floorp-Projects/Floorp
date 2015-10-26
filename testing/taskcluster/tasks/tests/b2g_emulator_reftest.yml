@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/test.yml'
+  from: 'tasks/tests/b2g_unittest_base.yml'
 task:
   metadata:
     name: '[TC] Reftest'

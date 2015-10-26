@@ -31,6 +31,7 @@ load 350460.xul
 load 360642-1.xul
 load 365151.xul
 load 366112-1.xul
+asserts-if(Android,0-32) load 366203-1.xul # bug 1217984
 load 369942-1.xhtml
 load 374102-1.xul
 load 376137-1.html
@@ -93,3 +94,4 @@ load 557174-1.xml
 load menulist-focused.xhtml
 load 564705-1.xul 
 load 583957-1.html
+load 617089.html

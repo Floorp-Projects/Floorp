@@ -165,6 +165,23 @@ class MachCommands(MachCommandBase):
         return code
 
 
+class ArtifactSubCommand(SubCommand):
+    def __init__(self, *args, **kwargs):
+        SubCommand.__init__(self, *args, **kwargs)
+
+    def __call__(self, func):
+        after = SubCommand.__call__(self, func)
+        args = [
+            CommandArgument('--tree', metavar='TREE', type=str,
+                help='Firefox tree.'),
+            CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86'],
+                help='Build job.'),
+        ]
+        for arg in args:
+            after = arg(after)
+        return after
+
+
 @CommandProvider
 class PackageFrontend(MachCommandBase):
     """Fetch and install binary artifacts from Mozilla automation."""
@@ -210,58 +227,47 @@ class PackageFrontend(MachCommandBase):
         artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg)
         return artifacts
 
-    @SubCommand('artifact', 'install',
+    def _compute_defaults(self, tree=None, job=None):
+        # Firefox front-end developers mostly use fx-team.  Post auto-land, make this central.
+        tree = tree or 'fx-team'
+        if job:
+            return (tree, job)
+        if self.substs['ANDROID_CPU_ARCH'] == 'x86':
+            return (tree, 'android-x86')
+        return (tree, 'android-api-11')
+
+    @ArtifactSubCommand('artifact', 'install',
         'Install a good pre-built artifact.')
-    @CommandArgument('--tree', metavar='TREE', type=str,
-        help='Firefox tree.',
-        default='fx-team')  # TODO: switch to central as this stabilizes.
-    @CommandArgument('--job', metavar='JOB', choices=['android-api-11'],
-        help='Build job.',
-        default='android-api-11')  # TODO: fish job from build configuration.
     @CommandArgument('source', metavar='SRC', nargs='?', type=str,
         help='Where to fetch and install artifacts from.  Can be omitted, in '
             'which case the current hg repository is inspected; an hg revision; '
             'a remote URL; or a local file.',
         default=None)
     def artifact_install(self, source=None, tree=None, job=None):
+        tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         return artifacts.install_from(source, self.distdir)
 
-    @SubCommand('artifact', 'last',
+    @ArtifactSubCommand('artifact', 'last',
         'Print the last pre-built artifact installed.')
-    @CommandArgument('--tree', metavar='TREE', type=str,
-        help='Firefox tree.',
-        default='fx-team')
-    @CommandArgument('--job', metavar='JOB', type=str,
-        help='Build job.',
-        default='android-api-11')
     def artifact_print_last(self, tree=None, job=None):
+        tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.print_last()
         return 0
 
-    @SubCommand('artifact', 'print-cache',
+    @ArtifactSubCommand('artifact', 'print-cache',
         'Print local artifact cache for debugging.')
-    @CommandArgument('--tree', metavar='TREE', type=str,
-        help='Firefox tree.',
-        default='fx-team')
-    @CommandArgument('--job', metavar='JOB', type=str,
-        help='Build job.',
-        default='android-api-11')
     def artifact_print_cache(self, tree=None, job=None):
+        tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.print_cache()
         return 0
 
-    @SubCommand('artifact', 'clear-cache',
+    @ArtifactSubCommand('artifact', 'clear-cache',
         'Delete local artifacts and reset local artifact cache.')
-    @CommandArgument('--tree', metavar='TREE', type=str,
-        help='Firefox tree.',
-        default='fx-team')
-    @CommandArgument('--job', metavar='JOB', type=str,
-        help='Build job.',
-        default='android-api-11')
     def artifact_clear_cache(self, tree=None, job=None):
+        tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.clear_cache()
         return 0

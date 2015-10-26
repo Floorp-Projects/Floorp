@@ -476,6 +476,7 @@ struct SECOidDataStr {
  */
 #define NSS_USE_ALG_IN_CERT_SIGNATURE  0x00000001  /* CRLs and OCSP, too */
 #define NSS_USE_ALG_IN_CMS_SIGNATURE   0x00000002  /* used in S/MIME */
+#define NSS_USE_ALG_IN_SSL_KX          0x00000004  /* used in SSL key exchange */
 #define NSS_USE_ALG_RESERVED           0xfffffffc  /* may be used in future */
 
 /* Code MUST NOT SET or CLEAR reserved bits, and must NOT depend on them

@@ -325,6 +325,10 @@ EventListenerManager::AddEventListenerInternal(
     EnableDevice(eDeviceLight);
   } else if (aTypeAtom == nsGkAtoms::ondevicemotion) {
     EnableDevice(eDeviceMotion);
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+  } else if (aTypeAtom == nsGkAtoms::onorientationchange) {
+    EnableDevice(eOrientationChange);
+#endif
 #ifdef MOZ_B2G
   } else if (aTypeAtom == nsGkAtoms::onmoztimechange) {
     nsCOMPtr<nsPIDOMWindow> window = GetTargetAsInnerWindow();
@@ -431,6 +435,9 @@ EventListenerManager::IsDeviceType(EventMessage aEventMessage)
     case eDeviceLight:
     case eDeviceProximity:
     case eUserProximity:
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+    case eOrientationChange:
+#endif
       return true;
     default:
       break;
@@ -462,6 +469,11 @@ EventListenerManager::EnableDevice(EventMessage aEventMessage)
       window->EnableDeviceSensor(SENSOR_LINEAR_ACCELERATION);
       window->EnableDeviceSensor(SENSOR_GYROSCOPE);
       break;
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+    case eOrientationChange:
+      window->EnableOrientationChangeListener();
+      break;
+#endif
     default:
       NS_WARNING("Enabling an unknown device sensor.");
       break;
@@ -492,6 +504,11 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
     case eDeviceLight:
       window->DisableDeviceSensor(SENSOR_LIGHT);
       break;
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+    case eOrientationChange:
+      window->DisableOrientationChangeListener();
+      break;
+#endif
     default:
       NS_WARNING("Disabling an unknown device sensor.");
       break;
@@ -1114,35 +1131,35 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
           // Maybe add a marker to the docshell's timeline, but only
           // bother with all the logic if some docshell is recording.
-          nsCOMPtr<nsIDocShell> docShell;
-          bool isTimelineRecording = false;
+          nsDocShell* docShell;
+          RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+          bool needsEndEventMarker = false;
+
           if (mIsMainThreadELM &&
-              !TimelineConsumers::IsEmpty() &&
               listener->mListenerType != Listener::eNativeListener) {
-            docShell = GetDocShellForTarget();
-            if (docShell) {
-              docShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
-            }
-            if (isTimelineRecording) {
-              nsDocShell* ds = static_cast<nsDocShell*>(docShell.get());
-              nsAutoString typeStr;
-              (*aDOMEvent)->GetType(typeStr);
-              uint16_t phase;
-              (*aDOMEvent)->GetEventPhase(&phase);
-              UniquePtr<TimelineMarker> marker = MakeUnique<EventTimelineMarker>(
-                typeStr, phase, MarkerTracingType::START);
-              TimelineConsumers::AddMarkerForDocShell(ds, Move(marker));
+            nsCOMPtr<nsIDocShell> docShellComPtr = GetDocShellForTarget();
+            if (docShellComPtr) {
+              docShell = static_cast<nsDocShell*>(docShellComPtr.get());
+              if (timelines && timelines->HasConsumer(docShell)) {
+                needsEndEventMarker = true;
+                nsAutoString typeStr;
+                (*aDOMEvent)->GetType(typeStr);
+                uint16_t phase;
+                (*aDOMEvent)->GetEventPhase(&phase);
+                timelines->AddMarkerForDocShell(docShell, Move(
+                  MakeUnique<EventTimelineMarker>(
+                    typeStr, phase, MarkerTracingType::START)));
+              }
             }
           }
 
-          if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent,
-                                           aCurrentTarget))) {
+          if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent, aCurrentTarget))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
           }
 
-          if (isTimelineRecording) {
-            nsDocShell* ds = static_cast<nsDocShell*>(docShell.get());
-            TimelineConsumers::AddMarkerForDocShell(ds, "DOMEvent", MarkerTracingType::END);
+          if (needsEndEventMarker) {
+            timelines->AddMarkerForDocShell(
+              docShell, "DOMEvent", MarkerTracingType::END);
           }
         }
       }

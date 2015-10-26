@@ -382,6 +382,21 @@ ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
   }
 }
 
+already_AddRefed<ServiceWorkerInfo>
+ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId)
+{
+  RefPtr<ServiceWorkerInfo> serviceWorker;
+  if (mInstallingWorker && mInstallingWorker->ID() == aId) {
+    serviceWorker = mInstallingWorker;
+  } else if (mWaitingWorker && mWaitingWorker->ID() == aId) {
+    serviceWorker = mWaitingWorker;
+  } else if (mActiveWorker && mActiveWorker->ID() == aId) {
+    serviceWorker = mActiveWorker;
+  }
+
+  return serviceWorker.forget();
+}
+
 //////////////////////////
 // ServiceWorkerManager //
 //////////////////////////

@@ -504,7 +504,7 @@ sslMutex_Lock(sslMutex *pMutex)
     return SECSuccess;
 }
 
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) && !defined(DARWIN)
 
 #include <errno.h>
 #include "unix_err.h"

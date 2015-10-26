@@ -543,6 +543,15 @@ ECDH_Derive(SECItem  *publicValue,
 	return SECFailure;
     }
 
+    /*
+     * We fail if the public value is the point at infinity, since
+     * this produces predictable results.
+     */
+    if (ec_point_at_infinity(publicValue)) {
+	PORT_SetError(SEC_ERROR_BAD_KEY);
+	return SECFailure;
+    }
+
     MP_DIGITS(&k) = 0;
     memset(derivedSecret, 0, sizeof *derivedSecret);
     len = (ecParams->fieldID.size + 7) >> 3;  

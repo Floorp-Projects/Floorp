@@ -102,7 +102,14 @@
      *   Stack: => undefined
      */ \
     macro(JSOP_UNDEFINED, 1,  js_undefined_str, "",       1,  0,  1, JOF_BYTE) \
-    macro(JSOP_UNUSED2,   2,  "unused2",    NULL,         1,  1,  0, JOF_BYTE) \
+    /*
+     * Pushes stack frame's 'rval' onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: => rval
+     */ \
+    macro(JSOP_GETRVAL,   2,  "getrval",    NULL,         1,  0,  1, JOF_BYTE) \
     /*
      * Pops the top of stack value, converts it to an object, and adds a
      * 'DynamicWithObject' wrapping that object to the scope chain.

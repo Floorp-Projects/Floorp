@@ -371,7 +371,7 @@ pkix_pl_Object_Hashcode_Default(
         PKIX_ENTER(OBJECT, "pkix_pl_Object_Hashcode_Default");
         PKIX_NULLCHECK_TWO(object, pValue);
 
-        *pValue = (PKIX_UInt32)object;
+        *pValue = (PKIX_UInt32)((char *)object - (char *)NULL);
 
         PKIX_RETURN(OBJECT);
 }
@@ -600,7 +600,7 @@ PKIX_PL_Object_Alloc(
         object = NULL;
 
         /* Atomically increment object counter */
-        PR_ATOMIC_INCREMENT(&ctEntry->objCounter);
+        PR_ATOMIC_INCREMENT((PRInt32*)&ctEntry->objCounter);
 
 cleanup:
 
@@ -897,7 +897,7 @@ PKIX_PL_Object_DecRef(
             }
             
             /* Atomically decrement object counter */
-            PR_ATOMIC_DECREMENT(&ctEntry->objCounter);
+            PR_ATOMIC_DECREMENT((PRInt32*)&ctEntry->objCounter);
             
             /* pkix_pl_Object_Destroy assumes the lock is held */
             /* It will call unlock and destroy the object */

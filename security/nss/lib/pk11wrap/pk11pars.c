@@ -134,6 +134,17 @@ SECMODModule *
 SECMOD_CreateModule(const char *library, const char *moduleName, 
 				const char *parameters, const char *nss)
 {
+    return SECMOD_CreateModuleEx(library, moduleName, parameters, nss, NULL);
+}
+
+/*
+ * for 3.4 we continue to use the old SECMODModule structure
+ */
+SECMODModule *
+SECMOD_CreateModuleEx(const char *library, const char *moduleName, 
+				const char *parameters, const char *nss,
+				const char *config)
+{
     SECMODModule *mod = secmod_NewModule();
     char *slotParams,*ciphers;
     /* pk11pars.h still does not have const char * interfaces */
@@ -147,6 +158,9 @@ SECMOD_CreateModule(const char *library, const char *moduleName,
     /* new field */
     if (parameters) {
 	mod->libraryParams = PORT_ArenaStrdup(mod->arena,parameters);
+    }
+    if (config) {
+	/* XXX: Apply configuration */
     }
     mod->internal   = NSSUTIL_ArgHasFlag("flags","internal",nssc);
     mod->isFIPS     = NSSUTIL_ArgHasFlag("flags","FIPS",nssc);
@@ -977,6 +991,7 @@ SECMODModule *
 SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 {
     char *library = NULL, *moduleName = NULL, *parameters = NULL, *nss= NULL;
+    char *config = NULL;
     SECStatus status;
     SECMODModule *module = NULL;
     SECMODModule *oldModule = NULL;
@@ -985,17 +1000,19 @@ SECMOD_LoadModule(char *modulespec,SECMODModule *parent, PRBool recurse)
     /* initialize the underlying module structures */
     SECMOD_Init();
 
-    status = NSSUTIL_ArgParseModuleSpec(modulespec, &library, &moduleName, 
-							&parameters, &nss);
+    status = NSSUTIL_ArgParseModuleSpecEx(modulespec, &library, &moduleName, 
+							&parameters, &nss,
+							&config);
     if (status != SECSuccess) {
 	goto loser;
     }
 
-    module = SECMOD_CreateModule(library, moduleName, parameters, nss);
+    module = SECMOD_CreateModuleEx(library, moduleName, parameters, nss, config);
     if (library) PORT_Free(library);
     if (moduleName) PORT_Free(moduleName);
     if (parameters) PORT_Free(parameters);
     if (nss) PORT_Free(nss);
+    if (config) PORT_Free(config);
     if (!module) {
 	goto loser;
     }

@@ -36,7 +36,7 @@ function parseTestcase(testcase) {
   var lines = testcase.split("\n");
 
   /* check that the first non-empty, non-comment line is #data */
-  for each (var line in lines) {
+  for (var line of lines) {
     if (!line || startsWith(line, "##")) {
       continue;
     }
@@ -51,7 +51,7 @@ function parseTestcase(testcase) {
   var errors = [];
   var fragment = [];
   var currentList = input;
-  for each (var line in lines) {
+  for (var line of lines) {
     if (startsWith(line, "##todo")) {
       todo(false, line.substring(6));
       continue;
@@ -84,10 +84,10 @@ function parseTestcase(testcase) {
  * @param The list of strings
  */
 function test_parser(testlist) {
-  for each (var testgroup in testlist) {
+  for (var testgroup of testlist) {
     var tests = testgroup.split("#data\n");
-    tests = ["#data\n" + test for each(test in tests) if (test)];
-    for each (var test in tests) {
+    tests = tests.filter(test => test).map(test => "#data\n" + test);
+    for (var test of tests) {
       yield parseTestcase(test);
     }
   }

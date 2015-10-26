@@ -52,7 +52,7 @@
 
 struct crmfEncoderArg {
     SECItem *buffer;
-    long     allocatedLen;
+    unsigned long allocatedLen;
 };
 
 struct crmfEncoderOutput {

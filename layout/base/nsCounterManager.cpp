@@ -275,110 +275,84 @@ nsCounterManager::CounterListFor(const nsSubstring& aCounterName)
     return counterList;
 }
 
-static PLDHashOperator
-RecalcDirtyLists(const nsAString& aKey, nsCounterList* aList, void* aClosure)
-{
-    if (aList->IsDirty())
-        aList->RecalcAll();
-    return PL_DHASH_NEXT;
-}
-
 void
 nsCounterManager::RecalcAll()
 {
-    mNames.EnumerateRead(RecalcDirtyLists, nullptr);
-}
-
-static PLDHashOperator
-SetCounterStylesDirty(const nsAString& aKey,
-                      nsCounterList* aList,
-                      void* aClosure)
-{
-    nsCounterNode* first = aList->First();
-    if (first) {
-        bool changed = false;
-        nsCounterNode* node = first;
-        do {
-            if (node->mType == nsCounterNode::USE) {
-                node->UseNode()->SetCounterStyleDirty();
-                changed = true;
-            }
-        } while ((node = aList->Next(node)) != first);
-        if (changed) {
-            aList->SetDirty();
+    for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
+        nsCounterList* list = iter.UserData();
+        if (list->IsDirty()) {
+            list->RecalcAll();
         }
     }
-    return PL_DHASH_NEXT;
 }
 
 void
 nsCounterManager::SetAllCounterStylesDirty()
 {
-    mNames.EnumerateRead(SetCounterStylesDirty, nullptr);
-}
+    for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
+        nsCounterList* list = iter.UserData();
+        nsCounterNode* first = list->First();
+        if (first) {
+            bool changed = false;
+            nsCounterNode* node = first;
+            do {
+                if (node->mType == nsCounterNode::USE) {
+                    node->UseNode()->SetCounterStyleDirty();
+                    changed = true;
+                }
+            } while ((node = list->Next(node)) != first);
 
-struct DestroyNodesData {
-    explicit DestroyNodesData(nsIFrame *aFrame)
-        : mFrame(aFrame)
-        , mDestroyedAny(false)
-    {
+            if (changed) {
+                list->SetDirty();
+            }
+        }
     }
-
-    nsIFrame *mFrame;
-    bool mDestroyedAny;
-};
-
-static PLDHashOperator
-DestroyNodesInList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
-{
-    DestroyNodesData *data = static_cast<DestroyNodesData*>(aClosure);
-    if (aList->DestroyNodesFor(data->mFrame)) {
-        data->mDestroyedAny = true;
-        aList->SetDirty();
-    }
-    return PL_DHASH_NEXT;
 }
 
 bool
 nsCounterManager::DestroyNodesFor(nsIFrame *aFrame)
 {
-    DestroyNodesData data(aFrame);
-    mNames.EnumerateRead(DestroyNodesInList, &data);
-    return data.mDestroyedAny;
+    bool destroyedAny = false;
+    for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
+        nsCounterList* list = iter.UserData();
+        if (list->DestroyNodesFor(aFrame)) {
+            destroyedAny = true;
+            list->SetDirty();
+        }
+    }
+    return destroyedAny;
 }
 
 #ifdef DEBUG
-static PLDHashOperator
-DumpList(const nsAString& aKey, nsCounterList* aList, void* aClosure)
-{
-    printf("Counter named \"%s\":\n", NS_ConvertUTF16toUTF8(aKey).get());
-    nsCounterNode *node = aList->First();
-
-    if (node) {
-        int32_t i = 0;
-        do {
-            const char *types[] = { "RESET", "INCREMENT", "USE" };
-            printf("  Node #%d @%p frame=%p index=%d type=%s valAfter=%d\n"
-                   "       scope-start=%p scope-prev=%p",
-                   i++, (void*)node, (void*)node->mPseudoFrame,
-                   node->mContentIndex, types[node->mType], node->mValueAfter,
-                   (void*)node->mScopeStart, (void*)node->mScopePrev);
-            if (node->mType == nsCounterNode::USE) {
-                nsAutoString text;
-                node->UseNode()->GetText(text);
-                printf(" text=%s", NS_ConvertUTF16toUTF8(text).get());
-            }
-            printf("\n");
-        } while ((node = aList->Next(node)) != aList->First());
-    }
-    return PL_DHASH_NEXT;
-}
-
 void
 nsCounterManager::Dump()
 {
     printf("\n\nCounter Manager Lists:\n");
-    mNames.EnumerateRead(DumpList, nullptr);
+    for (auto iter = mNames.Iter(); !iter.Done(); iter.Next()) {
+        printf("Counter named \"%s\":\n",
+               NS_ConvertUTF16toUTF8(iter.Key()).get());
+
+        nsCounterList* list = iter.UserData();
+        nsCounterNode* node = list->First();
+        if (node) {
+            int32_t i = 0;
+            do {
+                const char* types[] = { "RESET", "INCREMENT", "USE" };
+                printf("  Node #%d @%p frame=%p index=%d type=%s valAfter=%d\n"
+                       "       scope-start=%p scope-prev=%p",
+                       i++, (void*)node, (void*)node->mPseudoFrame,
+                       node->mContentIndex, types[node->mType],
+                       node->mValueAfter, (void*)node->mScopeStart,
+                       (void*)node->mScopePrev);
+                if (node->mType == nsCounterNode::USE) {
+                    nsAutoString text;
+                    node->UseNode()->GetText(text);
+                    printf(" text=%s", NS_ConvertUTF16toUTF8(text).get());
+                }
+                printf("\n");
+            } while ((node = list->Next(node)) != list->First());
+        }
+    }
     printf("\n\n");
 }
 #endif

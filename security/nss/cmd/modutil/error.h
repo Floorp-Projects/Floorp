@@ -133,25 +133,7 @@ typedef enum {
 	LAST_MSG  /* must be last */
 } Message;
 
-static char *msgStrings[] = {
-	"FIPS mode enabled.\n",
-	"FIPS mode disabled.\n",
-	"Using database directory %s...\n",
-	"Creating \"%s\"...",
-	"Module \"%s\" added to database.\n",
-	"Module \"%s\" deleted from database.\n",
-	"Token \"%s\" password changed successfully.\n",
-	"Incorrect password, try again...\n",
-	"Passwords do not match, try again...\n",
-	"done.\n",
-	"Slot \"%s\" %s.\n",
-	"Successfully changed defaults.\n",
-	"Successfully changed defaults.\n",
-"\nWARNING: Performing this operation while the browser is running could cause"
-"\ncorruption of your security databases. If the browser is currently running,"
-"\nyou should exit browser before continuing this operation. Type "
-"\n'q <enter>' to abort, or <enter> to continue: ",
-	"\nAborting...\n"
-};
+/* defined in modutil.c */
+extern char *msgStrings[];
 
 #endif /* MODUTIL_ERROR_H */

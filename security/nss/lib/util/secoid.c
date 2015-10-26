@@ -486,9 +486,6 @@ CONST_OID aes256_KEY_WRAP[]			= { AES, 45 };
 CONST_OID camellia128_CBC[]			= { CAMELLIA_ENCRYPT_OID, 2};
 CONST_OID camellia192_CBC[]			= { CAMELLIA_ENCRYPT_OID, 3};
 CONST_OID camellia256_CBC[]			= { CAMELLIA_ENCRYPT_OID, 4};
-CONST_OID camellia128_KEY_WRAP[]		= { CAMELLIA_WRAP_OID, 2};
-CONST_OID camellia192_KEY_WRAP[]		= { CAMELLIA_WRAP_OID, 3};
-CONST_OID camellia256_KEY_WRAP[]		= { CAMELLIA_WRAP_OID, 4};
 
 CONST_OID sha256[]                              = { SHAXXX, 1 };
 CONST_OID sha384[]                              = { SHAXXX, 2 };
@@ -1872,7 +1869,7 @@ static PLHashTable *oidmechhash = NULL;
 static PLHashNumber
 secoid_HashNumber(const void *key)
 {
-    return (PLHashNumber) key;
+    return (PLHashNumber)((char *)key - (char *)NULL);
 }
 
 static void
@@ -1890,14 +1887,14 @@ handleHashAlgSupport(char * envVal)
 		*nextArg++ = '\0';
 	    }
 	}
-	notEnable = (*arg == '-') ? NSS_USE_ALG_IN_CERT_SIGNATURE : 0;
+	notEnable = (*arg == '-') ? (NSS_USE_ALG_IN_CERT_SIGNATURE|NSS_USE_ALG_IN_SSL_KX) : 0;
 	if ((*arg == '+' || *arg == '-') && *++arg) { 
 	    int i;
 
 	    for (i = 1; i < SEC_OID_TOTAL; i++) {
 	        if (oids[i].desc && strstr(arg, oids[i].desc)) {
 		     xOids[i].notPolicyFlags = notEnable |
-		    (xOids[i].notPolicyFlags & ~NSS_USE_ALG_IN_CERT_SIGNATURE);
+		    (xOids[i].notPolicyFlags & ~(NSS_USE_ALG_IN_CERT_SIGNATURE|NSS_USE_ALG_IN_SSL_KX));
 		}
 	    }
 	}
@@ -1913,9 +1910,9 @@ SECOID_Init(void)
     const SECOidData *oid;
     int i;
     char * envVal;
-    volatile char c; /* force a reference that won't get optimized away */
 
-    c = __nss_util_version[0];
+#define NSS_VERSION_VARIABLE __nss_util_version
+#include "verref.h"
 
     if (oidhash) {
 	return SECSuccess; /* already initialized */

@@ -1821,6 +1821,8 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
 
     switch (privKey->keyType) {
     case rsaKey:
+    case rsaPssKey:
+    case rsaOaepKey:
     case nullKey:
 	PORT_SetError(SEC_ERROR_BAD_KEY);
 	break;

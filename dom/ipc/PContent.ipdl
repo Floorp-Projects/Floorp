@@ -842,6 +842,10 @@ parent:
 
     CloseAlert(nsString name, Principal principal);
 
+    DisableNotifications(Principal principal);
+
+    OpenNotificationSettings(Principal principal);
+
     PPSMContentDownloader(uint32_t aCertType);
 
     PExternalHelperApp(OptionalURIParams uri,

@@ -730,7 +730,7 @@ pkix_pl_LdapResponse_GetResultCode(
 
         resultMsg = &response->decoded.protocolOp.op.searchResponseResultMsg;
 
-        *pResultCode = *(char *)(resultMsg->resultCode.data);
+        *pResultCode = *(resultMsg->resultCode.data);
 
 cleanup:
 
