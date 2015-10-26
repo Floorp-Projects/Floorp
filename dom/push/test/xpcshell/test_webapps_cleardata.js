@@ -6,8 +6,6 @@
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
-const channelIDs = ['0ef2ad4a-6c49-41ad-af6e-95d2425276bf', '4818b54a-97c5-4277-ad5d-0bfe630e4e50'];
-var channelIDCounter = 0;
 
 function run_test() {
   do_get_profile();
