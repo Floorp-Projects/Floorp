@@ -694,34 +694,16 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
                                                    nsIContent* aOriginatingElement)
   : nsFormSubmission(aCharset, aOriginatingElement)
+  , mEncoder(aCharset)
 {
-  nsAutoCString charset(aCharset);
-  // canonical name is passed so that we just have to check against
-  // *our* canonical names listed in charsetaliases.properties
-  if (charset.EqualsLiteral("ISO-8859-1")) {
-    charset.AssignLiteral("windows-1252");
-  }
-
-  if (!(charset.EqualsLiteral("UTF-8") || charset.EqualsLiteral("gb18030"))) {
-    NS_ConvertUTF8toUTF16 charsetUtf16(charset);
+  if (!(aCharset.EqualsLiteral("UTF-8") || aCharset.EqualsLiteral("gb18030"))) {
+    NS_ConvertUTF8toUTF16 charsetUtf16(aCharset);
     const char16_t* charsetPtr = charsetUtf16.get();
     SendJSWarning(aOriginatingElement ? aOriginatingElement->GetOwnerDocument()
                                       : nullptr,
                   "CannotEncodeAllUnicode",
                   &charsetPtr,
                   1);
-  }
-
-  mEncoder = do_CreateInstance(NS_SAVEASCHARSET_CONTRACTID);
-  if (mEncoder) {
-    nsresult rv =
-      mEncoder->Init(charset.get(),
-                     (nsISaveAsCharset::attr_EntityAfterCharsetConv + 
-                      nsISaveAsCharset::attr_FallbackDecimalNCR),
-                     0);
-    if (NS_FAILED(rv)) {
-      mEncoder = nullptr;
-    }
   }
 }
 
@@ -734,15 +716,8 @@ nsresult
 nsEncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
                                     bool aHeaderEncode)
 {
-  if (mEncoder && !aStr.IsEmpty()) {
-    aOut.Truncate();
-    nsresult rv = mEncoder->Convert(PromiseFlatString(aStr).get(),
-                                    getter_Copies(aOut));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    // fall back to UTF-8
-    CopyUTF16toUTF8(aStr, aOut);
+  if (!mEncoder.Encode(aStr, aOut)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (aHeaderEncode) {

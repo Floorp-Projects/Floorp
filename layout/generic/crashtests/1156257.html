@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!--
+user_pref("layout.css.grid.enabled", true);
+-->
+<script>
+function boom()
+{
+    document.documentElement.offsetHeight;
+    document.getElementById("g").firstChild.remove();
+}
+</script>
+</head>
+<body onload="boom();">
+<div style="display: grid;" id="g">a b<br></div>
+</body>
+</html>

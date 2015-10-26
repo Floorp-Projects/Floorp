@@ -128,10 +128,6 @@ public:
         NS_ASSERTION(aPos < GetLength(), "aPos out of range");
         return mCharacterGlyphs[aPos].CharIsNewline();
     }
-    bool CharIsLowSurrogate(uint32_t aPos) const {
-        NS_ASSERTION(aPos < GetLength(), "aPos out of range");
-        return mCharacterGlyphs[aPos].CharIsLowSurrogate();
-    }
 
     // All uint32_t aStart, uint32_t aLength ranges below are restricted to
     // grapheme cluster boundaries! All offsets are in terms of the string
@@ -534,10 +530,6 @@ public:
             SetGlyphs(aIndex, CompressedGlyph().SetComplex(true, true, 1), details);
         }
         g->SetIsNewline();
-    }
-    void SetIsLowSurrogate(uint32_t aIndex) {
-        SetGlyphs(aIndex, CompressedGlyph().SetComplex(false, false, 0), nullptr);
-        mCharacterGlyphs[aIndex].SetIsLowSurrogate();
     }
 
     /**

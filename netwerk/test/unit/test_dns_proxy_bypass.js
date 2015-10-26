@@ -71,7 +71,7 @@ function run_test() {
                     Ci.nsIContentPolicy.TYPE_WEBSOCKET);
 
   var uri = ioService.newURI(url, null, null);
-  chan.asyncOpen(uri, url, listener, null);
+  chan.asyncOpen(uri, url, 0, listener, null);
   do_test_pending();
 }
 
