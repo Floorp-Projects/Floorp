@@ -32,7 +32,7 @@ log = '';
 g.evaluate('debugger; eval("\\n\\ndebugger;");', { lineNumber: 1812 });
 assertEq(log, 'de1de2');
 assertEq(introduced.introductionScript, introducer);
-assertEq(introducer.getOffsetLine(introduced.introductionOffset), 1812);
+assertEq(introducer.getOffsetLocation(introduced.introductionOffset).lineNumber, 1812);
 
 // Indirect eval, while the frame is live.
 dbg.onDebuggerStatement = function (frame) {
@@ -60,7 +60,7 @@ log = '';
 g.evaluate('debugger; (0,eval)("\\n\\ndebugger;");', { lineNumber: 1066 });
 assertEq(log, 'de1de2');
 assertEq(introduced.introductionScript, introducer);
-assertEq(introducer.getOffsetLine(introduced.introductionOffset), 1066);
+assertEq(introducer.getOffsetLocation(introduced.introductionOffset).lineNumber, 1066);
 
 // Function constructor.
 dbg.onDebuggerStatement = function (frame) {
@@ -71,8 +71,8 @@ dbg.onDebuggerStatement = function (frame) {
     log += 'i';
     var source = frame.script.source;
     assertEq(source.introductionScript, outerScript);
-    assertEq(outerScript.getOffsetLine(source.introductionOffset),
-             outerScript.getOffsetLine(outerOffset));
+    assertEq(outerScript.getOffsetLocation(source.introductionOffset).lineNumber,
+             outerScript.getOffsetLocation(outerOffset).lineNumber);
   };
 };
 log = '';
@@ -91,7 +91,7 @@ var fDO = gDO.executeInGlobal('debugger; Function("origami;")', { lineNumber: 16
 var source = fDO.script.source;
 assertEq(log, 'F2');
 assertEq(source.introductionScript, introducer);
-assertEq(introducer.getOffsetLine(source.introductionOffset), 1685);
+assertEq(introducer.getOffsetLocation(source.introductionOffset).lineNumber, 1685);
 
 // If the introduction script is in a different global from the script it
 // introduced, we don't record it.

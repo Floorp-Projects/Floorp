@@ -15,7 +15,7 @@ function outerHandler(frame) {
     var source = frame.script.source;
     var introScript = source.introductionScript;
     assertEq(introScript, outerScript);
-    assertEq(introScript.getOffsetLine(source.introductionOffset), 1234);
+    assertEq(introScript.getOffsetLocation(source.introductionOffset).lineNumber, 1234);
   };
 };
 

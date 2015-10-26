@@ -505,6 +505,18 @@
             "url": "/_mozilla/service-workers/service-worker/update.https.html"
           }
         ],
+        "service-workers/service-worker/update-after-navigation-fetch-event.https.html": [
+          {
+            "path": "service-workers/service-worker//update-after-navigation-fetch-event.https.html",
+            "url": "/_mozilla/service-workers/service-worker//update-after-navigation-fetch-event.https.html"
+          }
+        ],
+        "service-workers/service-worker/update-after-oneday.https.html": [
+          {
+            "path": "service-workers/service-worker//update-after-oneday.https.html",
+            "url": "/_mozilla/service-workers/service-worker//update-after-oneday.https.html"
+          }
+        ],
         "service-workers/service-worker/waiting.https.html": [
           {
             "path": "service-workers/service-worker/waiting.https.html",

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mozilla/UniquePtr.h"
 
 #include "imgIEncoder.h"
 #include "BMPFileHeaders.h"
@@ -48,7 +50,8 @@ protected:
   nsresult ParseOptions(const nsAString& aOptions, Version* version,
                         uint32_t* bpp);
   // Obtains data with no alpha in machine-independent byte order
-  void ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
+  void ConvertHostARGBRow(const uint8_t* aSrc,
+                          const mozilla::UniquePtr<uint8_t[]>& aDest,
                           uint32_t aPixelWidth);
   // Thread safe notify listener
   void NotifyListener();

@@ -197,8 +197,7 @@ ZoomConstraintsClient::RefreshZoomConstraints()
     return;
   }
 
-  nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(
-    mDocument,
+  nsViewportInfo viewportInfo = mDocument->GetViewportInfo(
     ViewAs<ScreenPixel>(screenSize, PixelCastJustification::LayoutDeviceIsScreenForBounds));
 
   mozilla::layers::ZoomConstraints zoomConstraints =
