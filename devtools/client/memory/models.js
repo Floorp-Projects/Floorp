@@ -39,13 +39,13 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
     let shouldHavePath = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
     let shouldHaveCensus = [states.SAVED_CENSUS];
 
-    if (!stateNames.contains(current)) {
+    if (!stateNames.includes(current)) {
       throw new Error(`Snapshot state must be one of ${stateNames}.`);
     }
-    if (shouldHavePath.contains(current) && !path) {
+    if (shouldHavePath.includes(current) && !path) {
       throw new Error(`Snapshots in state ${current} must have a snapshot path.`);
     }
-    if (shouldHaveCensus.contains(current) && (!props.census || !props.breakdown)) {
+    if (shouldHaveCensus.includes(current) && (!props.census || !props.breakdown)) {
       throw new Error(`Snapshots in state ${current} must have a census and breakdown.`);
     }
   },

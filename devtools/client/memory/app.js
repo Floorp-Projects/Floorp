@@ -65,7 +65,7 @@ const App = createClass({
 
           HeapView({
             snapshot: selectedSnapshot,
-            onSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker))
+            onSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
           }),
         ])
       ])
