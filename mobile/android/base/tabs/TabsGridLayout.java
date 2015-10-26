@@ -87,6 +87,8 @@ class TabsGridLayout extends GridView
         // so lets set it manually in code for the moment as it's needed for the padding animation
         setClipToPadding(false);
 
+        setVerticalFadingEdgeEnabled(false);
+
         final Resources resources = getResources();
         columnWidth = resources.getDimensionPixelSize(R.dimen.tab_panel_column_width);
 

@@ -79,6 +79,7 @@ MAX_CACHED_ARTIFACTS = 6
 JOB_DETAILS = {
     # 'android-api-9': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
     'android-api-11': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
+    'android-x86': {'re': re.compile('public/build/fennec-(.*)\.android-i386\.apk')},
     # 'linux': {'re': re.compile('public/build/firefox-(.*)\.linux-i686\.tar\.bz2')},
     # 'linux64': {'re': re.compile('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2')},
     # 'macosx64': {'re': re.compile('public/build/firefox-(.*)\.mac\.dmg')},

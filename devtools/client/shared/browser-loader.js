@@ -3,26 +3,6 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const devtools = Cu.import("resource://devtools/shared/Loader.jsm", {}).devtools;
 const { joinURI } = devtools.require("devtools/shared/path");
-var appConstants;
-
-// Some of the services that the system module requires is not
-// available in xpcshell tests. This is ok, we can easily polyfill the
-// values that we need.
-try {
-  const system = devtools.require("devtools/shared/system");
-  appConstants = system.constants;
-}
-catch(e) {
-  // We are in a testing environment most likely. There isn't much
-  // risk to this defaulting to true because the dev version of React
-  // will be loaded if this is true, and that file doesn't get built
-  // into the release version of Firefox, so this will only work with
-  // dev environments.
-  appConstants = {
-    DEBUG_JS_MODULES: true
-  };
-}
-
 const VENDOR_CONTENT_URL = "resource://devtools/client/shared/vendor";
 
 /*
@@ -51,20 +31,12 @@ const VENDOR_CONTENT_URL = "resource://devtools/client/shared/vendor";
  *         - require: a function to require modules with
  */
 function BrowserLoader(baseURI, window) {
-  const loaderOptions = devtools.require('@loader/options');
-
-  let dynamicPaths = {};
-  if (appConstants.DEBUG_JS_MODULES) {
-    // Load in the dev version of React
-    dynamicPaths["devtools/shared/vendor/react"] =
-      "resource://devtools/vendor/react-dev.js";
-  }
-
+  const loaderOptions = devtools.require("@loader/options");
   const opts = {
     id: "browser-loader",
     sharedGlobal: true,
     sandboxPrototype: window,
-    paths: Object.assign({}, loaderOptions.paths, dynamicPaths),
+    paths: Object.assign({}, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     require: (id, require) => {
       const uri = require.resolve(id);

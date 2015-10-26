@@ -328,7 +328,7 @@
 .devtools-textinput,
 .devtools-searchinput {
   -moz-appearance: none;
-  margin: 1px 0;
+  margin: 1px 3px;
   border: 1px solid;
 %ifdef XP_MACOSX
   border-radius: 20px;
@@ -370,6 +370,14 @@
   display: flex;
   flex: 1;
   position: relative;
+  padding: 0 3px;
+}
+
+/* The spacing is accomplished with a padding on the searchbox */
+.devtools-searchbox > .devtools-textinput,
+.devtools-searchbox > .devtools-searchinput {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .devtools-rule-searchbox {

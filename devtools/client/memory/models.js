@@ -51,9 +51,19 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
   },
 });
 
+let allocationsModel = exports.allocations = PropTypes.shape({
+  // True iff we are recording allocation stacks right now.
+  recording: PropTypes.bool.isRequired,
+  // True iff we are in the process of toggling the recording of allocation
+  // stacks on or off right now.
+  togglingInProgress: PropTypes.bool.isRequired,
+});
+
 let appModel = exports.app = {
   // {MemoryFront} Used to communicate with platform
   front: PropTypes.instanceOf(MemoryFront),
+  // Allocations recording related data.
+  allocations: allocationsModel,
   // {HeapAnalysesClient} Used to interface with snapshots
   heapWorker: PropTypes.instanceOf(HeapAnalysesClient),
   // The breakdown object DSL describing how we want

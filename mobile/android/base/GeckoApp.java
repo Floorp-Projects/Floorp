@@ -71,6 +71,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
+import android.support.design.widget.Snackbar;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -165,7 +166,7 @@ public abstract class GeckoApp
     // after a version upgrade.
     private static final int CLEANUP_DEFERRAL_SECONDS = 15;
 
-    protected OuterLayout mRootLayout;
+    protected RelativeLayout mRootLayout;
     protected RelativeLayout mMainLayout;
 
     protected RelativeLayout mGeckoLayout;
@@ -644,6 +645,16 @@ public abstract class GeckoApp
             // Context: Sharing via chrome list (no explicit session is active)
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
 
+        } else if ("Snackbar:Show".equals(event)) {
+            final String msg = message.getString("message");
+            final int duration = message.getInt("duration");
+
+            NativeJSObject action = message.optObject("action", null);
+
+            showSnackbar(msg,
+                    duration,
+                    action != null ? action.optString("label", null) : null,
+                    callback);
         } else if ("SystemUI:Visibility".equals(event)) {
             setSystemUiVisible(message.getBoolean("visible"));
 
@@ -831,6 +842,47 @@ public abstract class GeckoApp
         mToast = new ButtonToast(toastStub.inflate());
 
         return mToast;
+    }
+
+    void showSnackbar(final String message, final int duration, final String action, final EventCallback callback) {
+        final Snackbar snackbar = Snackbar.make(mRootLayout, message, duration);
+
+        if (!TextUtils.isEmpty(action)) {
+            final SnackbarEventCallback snackbarCallback = new SnackbarEventCallback(callback);
+
+            snackbar.setAction(action, snackbarCallback);
+            snackbar.setCallback(snackbarCallback);
+        }
+
+        snackbar.show();
+    }
+
+    private static class SnackbarEventCallback extends Snackbar.Callback implements View.OnClickListener {
+        private EventCallback callback;
+
+        public SnackbarEventCallback(EventCallback callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public synchronized void onClick(View view) {
+            if (callback == null) {
+                return;
+            }
+
+            callback.sendSuccess(null);
+            callback = null;
+        }
+
+        @Override
+        public synchronized void onDismissed(Snackbar snackbar, int event) {
+            if (callback == null || event == Snackbar.Callback.DISMISS_EVENT_ACTION) {
+                return;
+            }
+
+            callback.sendError(null);
+            callback = null;
+        }
     }
 
     void showButtonToast(final String message, final String duration,
@@ -1259,6 +1311,7 @@ public abstract class GeckoApp
             "PrivateBrowsing:Data",
             "Session:StatePurged",
             "Share:Text",
+            "Snackbar:Show",
             "SystemUI:Visibility",
             "Toast:Show",
             "ToggleChrome:Focus",
@@ -1298,7 +1351,7 @@ public abstract class GeckoApp
         setContentView(getLayout());
 
         // Set up Gecko layout.
-        mRootLayout = (OuterLayout) findViewById(R.id.root_layout);
+        mRootLayout = (RelativeLayout) findViewById(R.id.root_layout);
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (LayerView) findViewById(R.id.layer_view);

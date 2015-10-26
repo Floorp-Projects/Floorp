@@ -255,6 +255,7 @@ WebConsoleClient.prototype = {
       frameActor: aOptions.frameActor,
       url: aOptions.url,
       selectedNodeActor: aOptions.selectedNodeActor,
+      selectedObjectActor: aOptions.selectedObjectActor,
     };
     this._client.request(packet, aOnResponse);
   },
@@ -279,6 +280,7 @@ WebConsoleClient.prototype = {
       frameActor: aOptions.frameActor,
       url: aOptions.url,
       selectedNodeActor: aOptions.selectedNodeActor,
+      selectedObjectActor: aOptions.selectedObjectActor,
     };
 
     this._client.request(packet, response => {
