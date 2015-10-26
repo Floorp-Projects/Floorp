@@ -217,7 +217,7 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // stash the document of the dom node
   aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
   mSourceNode = aDOMNode;
-  mEndDragPoint = nsIntPoint(0, 0);
+  mEndDragPoint = LayoutDeviceIntPoint(0, 0);
 
   // When the mouse goes down, the selection code starts a mouse
   // capture. However, this gets in the way of determining drag
@@ -413,7 +413,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   mImageOffset = CSSIntPoint();
   mScreenX = -1;
   mScreenY = -1;
-  mEndDragPoint = nsIntPoint(0, 0);
+  mEndDragPoint = LayoutDeviceIntPoint(0, 0);
   mInputSource = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
 
   return NS_OK;
