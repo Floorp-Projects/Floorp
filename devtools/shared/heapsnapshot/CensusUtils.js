@@ -126,8 +126,8 @@ function recursiveWalk(breakdown, edge, report, visitor) {
     visitor.exit(breakdown, report, edge);
   } else {
     visitor.enter(breakdown, report, edge);
-    for (let { edge, referent, breakdown } of getReportEdges(breakdown, report)) {
-      recursiveWalk(breakdown, edge, referent, visitor);
+    for (let { edge, referent, breakdown: subBreakdown } of getReportEdges(breakdown, report)) {
+      recursiveWalk(subBreakdown, edge, referent, visitor);
     }
     visitor.exit(breakdown, report, edge);
   }
