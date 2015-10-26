@@ -78,11 +78,6 @@ add_task(function* test_notification_error() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          deepEqual(request.channelIDs.sort(), [
-            '3c3930ba-44de-40dc-a7ca-8a133ec1a866',
-            'b63f7bef-0a0d-4236-b41e-086a69dfd316',
-            'f04f1e46-9139-4826-b2d1-9411b0821283'
-          ], 'Wrong channel list');
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             status: 200,
