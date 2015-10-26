@@ -17,7 +17,7 @@ SimpleTest.waitForExplicitFinish();
 function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsole([], onAttach, true);
+  attachConsoleToTab([], onAttach);
 }
 
 function onAttach(aState, aResponse)
