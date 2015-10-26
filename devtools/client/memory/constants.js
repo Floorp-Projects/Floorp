@@ -26,6 +26,9 @@ actions.TOGGLE_RECORD_ALLOCATION_STACKS_END = "toggle-record-allocation-stacks-e
 // Fired by UI to select a snapshot to view.
 actions.SELECT_SNAPSHOT = "select-snapshot";
 
+// Fired to toggle tree inversion on or off.
+actions.TOGGLE_INVERTED = "toggle-inverted";
+
 // Options passed to MemoryFront's startRecordingAllocations never change.
 exports.ALLOCATION_RECORDING_OPTIONS = {
   probability: 1,
