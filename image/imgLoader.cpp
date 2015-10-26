@@ -1335,16 +1335,6 @@ imgLoader::ClearCache(bool chrome)
 }
 
 NS_IMETHODIMP
-imgLoader::RemoveEntry(nsIURI* aURI)
-{
-  if (aURI && RemoveFromCache(ImageCacheKey(aURI))) {
-    return NS_OK;
-  }
-
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 imgLoader::FindEntryProperties(nsIURI* uri, nsIProperties** _retval)
 {
   *_retval = nullptr;

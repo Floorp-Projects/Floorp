@@ -17,7 +17,7 @@ interface nsIProperties;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(b06e0fa5-d6e2-4fa3-8fc0-7775aed96522)]
+[scriptable, builtinclass, uuid(6e62f5c9-95b5-4139-bb59-9cbaf14e9b3c)]
 interface imgICache : nsISupports
 {
   /**
@@ -27,15 +27,6 @@ interface imgICache : nsISupports
    *               If FALSE, evict everything except chrome images.
    */
   void clearCache(in boolean chrome);
-
-  /**
-   * Evict images from the cache.
-   *
-   * @param uri The URI to remove.
-   * @throws NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from
-   * the cache.
-   */
-  void removeEntry(in nsIURI uri);
 
   /**
    * Find Properties
