@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -9,16 +10,6 @@ const { snapshotState: states, breakdowns } = require("./constants");
 const SAVING_SNAPSHOT_TEXT = "Saving snapshot...";
 const READING_SNAPSHOT_TEXT = "Reading snapshot...";
 const SAVING_CENSUS_TEXT = "Taking heap census...";
-
-// @TODO 1215606
-// Use DevToolsUtils.assert when fixed.
-exports.assert = function (condition, message) {
-  if (!condition) {
-    const err = new Error("Assertion failure: " + message);
-    DevToolsUtils.reportException("DevToolsUtils.assert", err);
-    throw err;
-  }
-};
 
 /**
  * Returns an array of objects with the unique key `name`
@@ -99,7 +90,7 @@ exports.breakdownNameToSpec = function (name) {
  * @return {String}
  */
 exports.getSnapshotStatusText = function (snapshot) {
-  exports.assert((snapshot || {}).state,
+  assert((snapshot || {}).state,
     `Snapshot must have expected state, found ${(snapshot || {}).state}.`);
 
   switch (snapshot.state) {
