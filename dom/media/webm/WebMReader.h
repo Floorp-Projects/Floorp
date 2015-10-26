@@ -69,6 +69,14 @@ protected:
   ~WebMReader();
 
 public:
+  // Returns a pointer to the decoder.
+  AbstractMediaDecoder* GetDecoder()
+  {
+    return mDecoder;
+  }
+
+  MediaInfo GetMediaInfo() { return mInfo; }
+
   virtual RefPtr<ShutdownPromise> Shutdown() override;
   virtual nsresult Init() override;
   virtual nsresult ResetDecode() override;
@@ -76,18 +84,6 @@ public:
 
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold) override;
-
-  virtual bool HasAudio() override
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mHasAudio;
-  }
-
-  virtual bool HasVideo() override
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mHasVideo;
-  }
 
   virtual RefPtr<MetadataPromise> AsyncReadMetadata() override;
 

@@ -56,21 +56,13 @@ protected:
   virtual void NotifyDataArrivedInternal(uint32_t aLength,
                                          int64_t aOffset) override;
 public:
-
-  virtual bool HasAudio() override {
-    return mInfo.HasAudio();
-  }
-
-  virtual bool HasVideo() override {
-    return mInfo.HasVideo();
-  }
-
   layers::ImageContainer* GetImageContainer() { return mDecoder->GetImageContainer(); }
 
   virtual bool IsMediaSeekable() override;
 
 private:
-
+  bool HasAudio() { return mInfo.HasAudio(); }
+  bool HasVideo() { return mInfo.HasVideo(); }
   void ReadAndPushData(guint aLength);
   RefPtr<layers::PlanarYCbCrImage> GetImageFromBuffer(GstBuffer* aBuffer);
   void CopyIntoImageBuffer(GstBuffer *aBuffer, GstBuffer** aOutBuffer, RefPtr<layers::PlanarYCbCrImage> &image);
