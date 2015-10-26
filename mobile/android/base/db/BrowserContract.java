@@ -487,4 +487,6 @@ public class BrowserContract {
 
     // We refer to the service by name to decouple services from the rest of the code base.
     public static final String TAB_RECEIVED_SERVICE_CLASS_NAME = "org.mozilla.gecko.tabqueue.TabReceivedService";
+
+    public static final String SKIP_TAB_QUEUE_FLAG = "skip_tab_queue";
 }

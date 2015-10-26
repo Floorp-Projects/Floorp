@@ -56,7 +56,7 @@ public class TabReceivedService extends IntentService {
         }
 
         final Intent notificationIntent = new Intent(Intent.ACTION_VIEW, intent.getData());
-        notificationIntent.putExtra(TabQueueDispatcher.SKIP_TAB_QUEUE_FLAG, true);
+        notificationIntent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
         final PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
