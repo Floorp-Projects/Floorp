@@ -6,5 +6,9 @@
     "gecko": {
       "id": "webextension1@tests.mozilla.org"
     }
+  },
+  "icons": {
+    "48": "icon48.png",
+    "64": "icon64.png"
   }
 }
