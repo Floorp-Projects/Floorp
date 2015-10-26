@@ -21,6 +21,7 @@ namespace mozilla {
 namespace net {
 
 class WebSocketFrame;
+class WebSocketFrameListenerChild;
 
 class WebSocketFrameService final : public nsIWebSocketFrameService
                                   , public nsIObserver
@@ -67,10 +68,17 @@ private:
 
   typedef nsTObserverArray<nsCOMPtr<nsIWebSocketFrameListener>> WindowListeners;
 
+  struct WindowListener
+  {
+    WindowListeners mListeners;
+    RefPtr<WebSocketFrameListenerChild> mActor;
+  };
+
   WindowListeners* GetListeners(uint64_t aInnerWindowID) const;
+  void ShutdownActorListener(WindowListener* aListener);
 
   // Used only on the main-thread.
-  nsClassHashtable<nsUint64HashKey, WindowListeners> mWindows;
+  nsClassHashtable<nsUint64HashKey, WindowListener> mWindows;
 
   Atomic<uint64_t> mCountListeners;
 };
