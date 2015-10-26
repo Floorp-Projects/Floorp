@@ -129,7 +129,7 @@ function sendKeyAndAssertResult(testdata) {
         charCode: 0,
         code: expectedValues.code || '',
         keyCode: expectedValues.keyCode || 0,
-        location: 0,
+        location: expectedValues.location ? expectedValues.location : 0,
         repeat: expectedValues.repeat || false,
         value: gCurrentValue,
         shift: false,
@@ -145,7 +145,7 @@ function sendKeyAndAssertResult(testdata) {
           charCode: expectedValues.charCode,
           code: expectedValues.code || '',
           keyCode: expectedValues.charCode ? 0 : expectedValues.keyCode,
-          location: 0,
+          location: expectedValues.location ? expectedValues.location : 0,
           repeat: expectedValues.repeat || false,
           value: gCurrentValue,
           shift: false,
@@ -156,9 +156,22 @@ function sendKeyAndAssertResult(testdata) {
       }
 
       if (testdata.expectedInput) {
+        switch (testdata.expectedInput) {
+          case 'Enter':
+            gCurrentValue += '\n';
+            break;
+          case 'Backspace':
+            gCurrentValue =
+              gCurrentValue.substr(0, gCurrentValue.length - 1);
+            break;
+          default:
+            gCurrentValue += testdata.expectedInput;
+            break;
+        }
+
         expectedEventDetail.push({
           type: 'input',
-          value: gCurrentValue += testdata.expectedInput
+          value: gCurrentValue
         });
       }
 
@@ -169,7 +182,7 @@ function sendKeyAndAssertResult(testdata) {
           charCode: 0,
           code: expectedValues.code || '',
           keyCode: expectedValues.keyCode || 0,
-          location: 0,
+          location: expectedValues.location ? expectedValues.location : 0,
           repeat: expectedValues.repeat || false,
           value: gCurrentValue,
           shift: false,
@@ -1052,6 +1065,117 @@ function runSendKeyEnterTests() {
   return promiseQueue;
 }
 
+function runSendKeyNumpadTests() {
+  gTestDescription = 'runSendKeyNumpadTests(): ';
+  var promiseQueue = Promise.resolve();
+
+  var tests = [];
+  ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    .forEach(function(key) {
+      let charCode = key.charCodeAt(0);
+
+      tests.push({
+        dict: {
+          key: key,
+          code: 'Numpad' + key
+        },
+        expectedKeypress: true,
+        expectedInput: key,
+        expectedValues: {
+          key: key, code: 'Numpad' + key,
+          keyCode: charCode, charCode: charCode,
+          location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD
+        }
+      });
+    });
+
+  [['+', 'NumpadAdd'],
+   [',', 'NumpadComma'],
+   ['.', 'NumpadDecimal'],
+   ['.', 'NumpadComma'],  // Locale-specific NumpadComma
+   [',', 'NumpadDecimal'],  // Locale-specific NumpadDecimal
+   ['', 'NumpadComma'], // Locale-specific NumpadComma -- outputs nothing
+   ['/', 'NumpadDivide'],
+   ['=', 'NumpadEqual'],
+   // ['#', 'NumpadHash'], // Not supported yet.
+   ['*', 'NumpadMultiply'],
+   ['(', 'NumpadParenLeft'],
+   [')', 'NumpadParenRight'],
+   // ['*', 'NumpadStar'], // Not supported yet.
+   ['-', 'NumpadSubtract']].forEach(function([key, code]) {
+    tests.push({
+      dict: {
+        key: key,
+        code: code
+      },
+      expectedKeypress: true,
+      expectedInput: key,
+      expectedValues: {
+        key: key, code: code, keyCode: 0, charCode: key.charCodeAt(0),
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD
+      }
+    });
+  });
+
+  [
+    'NumpadClear',
+    'NumpadClearEntry',
+    'NumpadMemoryAdd',
+    'NumpadMemoryClear',
+    'NumpadMemoryRecall',
+    'NumpadMemoryStore',
+    'NumpadMemorySubtract'
+  ].forEach(function(code) {
+    tests.push({
+      dict: {
+        key: 'Unidentified',
+        code: code
+      },
+      expectedKeypress: true,
+      expectedValues: {
+        key: 'Unidentified', code: code, keyCode: 0, charCode: 0,
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD
+      }
+    });
+  });
+
+  tests.push({
+    dict: {
+      key: 'Enter',
+      code: 'NumpadEnter'
+    },
+    expectedKeypress: true,
+    expectedInput: '\n',
+    expectedValues: {
+      key: 'Enter', code: 'NumpadEnter',
+      keyCode: KeyboardEvent.DOM_VK_RETURN, charCode: 0,
+      location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD
+    }
+  });
+
+  tests.push({
+    dict: {
+      key: 'Backspace',
+      code: 'NumpadBackspace'
+    },
+    expectedKeypress: true,
+    expectedInput: 'Backspace', // Special value
+    expectedValues: {
+      key: 'Backspace', code: 'NumpadBackspace',
+      keyCode: KeyboardEvent.DOM_VK_BACK_SPACE, charCode: 0,
+      location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD
+    }
+  });
+
+  tests.forEach((test) => {
+    promiseQueue = promiseQueue.then(() => {
+      return sendKeyAndAssertResult(test);
+    });
+  });
+
+  return promiseQueue;
+}
+
 function runSendKeyRejectionTests() {
   gTestDescription = 'runSendKeyRejectionTests(): ';
   var promiseQueue = Promise.resolve();
@@ -1636,6 +1760,7 @@ function runTest() {
     .then(() => runSendKeyUSKeyboardSymbolsTests())
     .then(() => runSendKeyGreekLettersTests())
     .then(() => runSendKeyEnterTests())
+    .then(() => runSendKeyNumpadTests())
     .then(() => runSendKeyRejectionTests())
     .then(() => runCompositionWithKeyEventTests())
     .then(() => runCompositionWithoutKeyEventTests())
