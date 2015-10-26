@@ -3126,7 +3126,8 @@ nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
     // If something unexpected happened we return false, otherwise if props
     // is set, the image is cached and we return true
     nsCOMPtr<nsIProperties> props;
-    nsresult rv = cache->FindEntryProperties(aURI, getter_AddRefs(props));
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
+    nsresult rv = cache->FindEntryProperties(aURI, domDoc, getter_AddRefs(props));
     return (NS_SUCCEEDED(rv) && props);
 }
 
