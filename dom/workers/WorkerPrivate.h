@@ -1266,6 +1266,13 @@ public:
   }
 
   bool
+  OpenWindowEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_OPEN_WINDOW_ENABLED];
+  }
+
+  bool
   OpaqueInterceptionEnabled() const
   {
     AssertIsOnWorkerThread();
@@ -1305,6 +1312,13 @@ public:
   {
     AssertIsOnWorkerThread();
     return mPreferences[WORKERPREF_PUSH];
+  }
+
+  bool
+  RequestCacheEnabled() const
+  {
+    AssertIsOnWorkerThread();
+    return mPreferences[WORKERPREF_REQUESTCACHE];
   }
 
   bool

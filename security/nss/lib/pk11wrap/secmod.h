@@ -64,6 +64,9 @@ SECStatus SECMOD_UnloadUserModule(SECMODModule *mod);
 
 SECMODModule * SECMOD_CreateModule(const char *lib, const char *name,
 					const char *param, const char *nss);
+SECMODModule * SECMOD_CreateModuleEx(const char *lib, const char *name,
+					const char *param, const char *nss,
+					const char *config);
 /*
  * After a fork(), PKCS #11 says we need to call C_Initialize again in
  * the child before we can use the module. This function causes this 

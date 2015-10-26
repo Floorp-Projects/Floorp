@@ -356,81 +356,6 @@ find_field_bool(Pair    *data,
     }
 }
 
-static char *
-update_data_by_name(Pair  *data, 
-		    char  *field_name,
-                    char  *new_data)
-    /* replaces the data in the data structure associated with 
-       a name with new data, returns null if not found */
-{
-    int                   i = 0;
-    int                   found = 0;
-    int                   length = 100;
-    char                  *new;
-
-    while (return_name(data, i) != NULL) {
-	if (PORT_Strcmp(return_name(data, i), field_name) == 0) {
-	    new = make_copy_string( new_data, length, '\0');
-	    PORT_Free(return_data(data, i));
-	    found = 1;
-	    (*(data + i)).data = new;
-	    break;
-	}
-	i++;
-    }
-    if (!found) {
-	new = NULL;
-    }
-    return new;
-}
-
-static char *
-update_data_by_index(Pair  *data, 
-		     int   n, 
-		     char  *new_data)
-    /* replaces the data of a particular index in the data structure */
-{
-    int                    length = 100;
-    char                   *new;
-
-    new = make_copy_string(new_data, length, '\0');
-    PORT_Free(return_data(data, n));
-    (*(data + n)).data = new;
-    return new;
-}
-
-
-static Pair *
-add_field(Pair   *data, 
-	  char*  field_name, 
-	  char*  field_data)
-    /* adds a new name/data pair to the data structure */
-{
-    int          i = 0;
-    int          j;
-    int          name_length = 100;
-    int          data_length = 100;
-
-    while(return_name(data, i) != NULL) {
-	i++;
-    }
-    j = START_FIELDS;
-    while ( j < (i + 1) ) {
-	j = j * 2;
-    }
-    if (j == (i + 1)) {
-	data = (Pair *) PORT_Realloc(data, (j * 2) * sizeof(Pair));
-	if (data == NULL) {
-	    error_allocate();
-	}
-    }
-    (*(data + i)).name = make_copy_string(field_name, name_length, '\0');
-    (*(data + i)).data = make_copy_string(field_data, data_length, '\0');
-    (data + i + 1)->name = NULL;
-    return data;
-}
-
-
 static CERTCertificateRequest *
 makeCertReq(Pair             *form_data,
 	    int              which_priv_key)
@@ -527,10 +452,6 @@ MakeV1Cert(CERTCertDBHandle        *handle,
     PRExplodedTime                  printableTime;
     PRTime                          now, 
 	                            after;
-    SECStatus rv;
-   
-    
-
     if ( !selfsign ) {
 	issuerCert = CERT_FindCertByNameString(handle, issuerNameStr);
 	if (!issuerCert) {
@@ -539,7 +460,7 @@ MakeV1Cert(CERTCertDBHandle        *handle,
 	}
     }
     if (find_field_bool(data, "manValidity", PR_TRUE)) {
-	rv = DER_AsciiToTime(&now, find_field(data, "notBefore", PR_TRUE));
+	(void)DER_AsciiToTime(&now, find_field(data, "notBefore", PR_TRUE));
     } else {
 	now = PR_Now();
     }
@@ -550,7 +471,7 @@ MakeV1Cert(CERTCertDBHandle        *handle,
 	PR_ExplodeTime (now, PR_GMTParameters, &printableTime);
     }
     if (find_field_bool(data, "manValidity", PR_TRUE)) {
-	rv = DER_AsciiToTime(&after, find_field(data, "notAfter", PR_TRUE));
+	(void)DER_AsciiToTime(&after, find_field(data, "notAfter", PR_TRUE));
 	PR_ExplodeTime (after, PR_GMTParameters, &printableTime);
     } else {
 	printableTime.tm_month += 3;
@@ -587,11 +508,11 @@ get_serial_number(Pair  *data)
     if (find_field_bool(data, "serial-auto", PR_TRUE)) {
 	serialFile = fopen(filename, "r");
 	if (serialFile != NULL) {
-	    fread(&serial, sizeof(int), 1, serialFile);
-	    if (ferror(serialFile) != 0) {
+	    size_t nread = fread(&serial, sizeof(int), 1, serialFile);
+	    if (ferror(serialFile) != 0 || nread != 1) {
 		error_out("Error: Unable to read serial number file");
 	    }
-	    if (serial == 4294967295) {
+	    if (serial == -1) {
 		serial = 21;
 	    }
 	    fclose(serialFile);
@@ -1417,52 +1338,49 @@ string_to_ipaddress(char *string)
     return ipaddress;
 }
 
+static int
+chr_to_hex(char c) {
+    if (isdigit(c)) {
+        return c - '0';
+    }
+    if (isxdigit(c)) {
+        return toupper(c) - 'A' + 10;
+    }
+    return -1;
+}
+
 static SECItem *
-string_to_binary(char  *string)
+string_to_binary(char *string)
 {
     SECItem            *rv;
-    int                high_digit;
-    int                low_digit;
 
     rv = (SECItem *) PORT_ZAlloc(sizeof(SECItem));
     if (rv == NULL) {
 	error_allocate();
     }
     rv->data = (unsigned char *) PORT_ZAlloc((PORT_Strlen(string))/3 + 2);
-    while (!isxdigit(*string)) {
+    rv->len = 0;
+    while (*string && !isxdigit(*string)) {
 	string++;
     }
-    rv->len = 0;
-    while (*string != '\0') {
-	if (isxdigit(*string)) {
-	    if (*string >= '0' && *string <= '9') {
-		high_digit = *string - '0';
-	    } else {
-		*string = toupper(*string);
-		high_digit = *string - 'A' + 10;
-	    }
-	    string++;
-	    if (*string >= '0' && *string <= '9') {
-		low_digit = *string - '0';
-	    } else {
-		*string = toupper(*string);
-		low_digit = *string - 'A' + 10;
-	    }
-	    (rv->len)++;
-	} else {
-	    if (*string == ':') {
-		string++;
-	    } else {
-		if (*string == ' ') {
-		    while (*string == ' ') {
-			string++;
-		    }
-		}
-		if (*string != '\0') {
-		    error_out("ERROR: Improperly formated binary encoding");
-		}
-	    }
-	} 
+    while (*string) {
+        int high, low;
+        high = chr_to_hex(*string++);
+        low = chr_to_hex(*string++);
+        if (high < 0 || low < 0) {
+            error_out("ERROR: Improperly formated binary encoding");
+        }
+	rv->data[(rv->len)++] = high << 4 | low;
+        if (*string != ':') {
+            break;
+        }
+        ++string;
+    }
+    while (*string == ' ') {
+       ++string;
+    }
+    if (*string) {
+        error_out("ERROR: Junk after binary encoding");
     }
 
     return rv;

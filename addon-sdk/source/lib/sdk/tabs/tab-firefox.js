@@ -215,7 +215,7 @@ const Tab = Class({
         if (frame.frameElement != browser(this))
           return;
 
-        listener.off("attach", listener);
+        frames.off("attach", listener);
         attach(frame);
       };
       frames.on("attach", listener);

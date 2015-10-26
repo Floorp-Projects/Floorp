@@ -229,7 +229,7 @@ function run_test() {
 
   initChildTestEnv();
 
-  for each (set in tests)
+  for (let set of tests)
     httpserver.registerPathHandler(set[0], set[1]);
 
   runNextTest();

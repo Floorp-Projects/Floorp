@@ -1,0 +1,18 @@
+checkout:
+    post:
+        - cd ..; hg clone https://hg.mozilla.org/projects/nspr
+
+test:
+    override:
+        - make nss_build_all
+        - cd tests; NSS_TESTS=ssl_gtests NSS_CYCLES=standard ./all.sh
+
+machine:
+    environment:
+        { USE_64: 1,
+          NSS_ENABLE_TLS_1_3: 1,
+          NSS_BUILD_GTESTS: 1,
+        }
+    hosts:
+
+

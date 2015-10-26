@@ -505,13 +505,16 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_exports(obj, obj.exports, backend_file)
 
         elif isinstance(obj, GeneratedFile):
+            dep_file = "%s.pp" % obj.output
             backend_file.write('GENERATED_FILES += %s\n' % obj.output)
+            backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
             if obj.script:
                 backend_file.write("""{output}: {script}{inputs}
 \t$(REPORT_BUILD)
-\t$(call py_action,file_generate,{script} {method} {output}{inputs})
+\t$(call py_action,file_generate,{script} {method} {output} $(MDDEPDIR)/{dep_file}{inputs})
 
 """.format(output=obj.output,
+           dep_file=dep_file,
            inputs=' ' + ' '.join(obj.inputs) if obj.inputs else '',
            script=obj.script,
            method=obj.method))

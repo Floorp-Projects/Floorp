@@ -404,6 +404,7 @@ NSS_CMSSignerInfo_Verify(NSSCMSSignerInfo *signerinfo,
 	if (NSS_CMSAttributeArray_Encode(poolp, &(signerinfo->authAttr), 
 	                                 &encoded_attrs) == NULL ||
 		encoded_attrs.data == NULL || encoded_attrs.len == 0) {
+	    PORT_FreeArena(poolp, PR_FALSE);
 	    vs = NSSCMSVS_ProcessingError;
 	    goto loser;
 	}

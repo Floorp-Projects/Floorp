@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/AutoGlobalTimelineMarker.h"
+#include "AutoGlobalTimelineMarker.h"
 
 #include "TimelineConsumers.h"
 #include "MainThreadUtils.h"
@@ -18,20 +18,24 @@ AutoGlobalTimelineMarker::AutoGlobalTimelineMarker(const char* aName
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (TimelineConsumers::IsEmpty()) {
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  if (!timelines || timelines->IsEmpty()) {
     return;
   }
 
-  TimelineConsumers::AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START);
+  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::START);
 }
 
 AutoGlobalTimelineMarker::~AutoGlobalTimelineMarker()
 {
-  if (TimelineConsumers::IsEmpty()) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  if (!timelines || timelines->IsEmpty()) {
     return;
   }
 
-  TimelineConsumers::AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END);
+  timelines->AddMarkerForAllObservedDocShells(mName, MarkerTracingType::END);
 }
 
 } // namespace mozilla

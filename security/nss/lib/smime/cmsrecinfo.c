@@ -526,7 +526,6 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
 	CERTCertificate *cert, SECKEYPrivateKey *privkey, SECOidTag bulkalgtag)
 {
     PK11SymKey *bulkkey = NULL;
-    SECAlgorithmID *encalg;
     SECOidTag encalgtag;
     SECItem *enckey;
     int error;
@@ -536,7 +535,6 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
 
     switch (ri->recipientInfoType) {
     case NSSCMSRecipientInfoID_KeyTrans:
-	encalg = &(ri->ri.keyTransRecipientInfo.keyEncAlg);
 	encalgtag = SECOID_GetAlgorithmTag(&(ri->ri.keyTransRecipientInfo.keyEncAlg));
 	enckey = &(ri->ri.keyTransRecipientInfo.encKey); /* ignore subIndex */
 	switch (encalgtag) {
@@ -551,7 +549,6 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
 	}
 	break;
     case NSSCMSRecipientInfoID_KeyAgree:
-	encalg = &(ri->ri.keyAgreeRecipientInfo.keyEncAlg);
 	encalgtag = SECOID_GetAlgorithmTag(&(ri->ri.keyAgreeRecipientInfo.keyEncAlg));
 	enckey = &(ri->ri.keyAgreeRecipientInfo.recipientEncryptedKeys[subIndex]->encKey);
 	switch (encalgtag) {
@@ -573,7 +570,6 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
 	}
 	break;
     case NSSCMSRecipientInfoID_KEK:
-	encalg = &(ri->ri.kekRecipientInfo.keyEncAlg);
 	encalgtag = SECOID_GetAlgorithmTag(&(ri->ri.kekRecipientInfo.keyEncAlg));
 	enckey = &(ri->ri.kekRecipientInfo.encKey);
 	/* not supported yet */

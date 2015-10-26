@@ -24,7 +24,7 @@
  * for SHA-1, SHA-224, and SHA-256 it's 440 bits.
  * for SHA-384 and SHA-512 it's 888 bits */
 #define PRNG_SEEDLEN      (440/PR_BITS_PER_BYTE)
-static const PRInt64 PRNG_MAX_ADDITIONAL_BYTES = LL_INIT(0x1, 0x0);
+#define PRNG_MAX_ADDITIONAL_BYTES PR_INT64(0x100000000)
 						/* 2^35 bits or 2^32 bytes */
 #define PRNG_MAX_REQUEST_SIZE 0x10000		/* 2^19 bits or 2^16 bytes */
 #define PRNG_ADDITONAL_DATA_CACHE_SIZE (8*1024) /* must be less than
@@ -247,26 +247,32 @@ prng_reseed_test(RNGContext *rng, const PRUint8 *entropy,
 /*
  * build some fast inline functions for adding.
  */
-#define PRNG_ADD_CARRY_ONLY(dest, start, cy) \
-   carry = cy; \
-   for (k1=start; carry && k1 >=0 ; k1--) { \
-	carry = !(++dest[k1]); \
-   } 
+#define PRNG_ADD_CARRY_ONLY(dest, start, carry) \
+    { \
+        int k1; \
+        for (k1 = start; carry && k1 >= 0; k1--) { \
+            carry = !(++dest[k1]); \
+        } \
+    }
 
 /*
  * NOTE: dest must be an array for the following to work.
  */
-#define PRNG_ADD_BITS(dest, dest_len, add, len) \
+#define PRNG_ADD_BITS(dest, dest_len, add, len, carry) \
     carry = 0; \
-    for (k1=dest_len -1, k2=len-1; k2 >= 0; --k1, --k2) { \
-	carry += dest[k1]+ add[k2]; \
-	dest[k1] = (PRUint8) carry; \
-	carry >>= 8; \
+    PORT_Assert((dest_len) >= (len)); \
+    { \
+        int k1, k2; \
+        for (k1 = dest_len - 1, k2 = len - 1; k2 >= 0; --k1, --k2) { \
+            carry += dest[k1] + add[k2]; \
+            dest[k1] = (PRUint8) carry; \
+            carry >>= 8; \
+        } \
     }
 
-#define PRNG_ADD_BITS_AND_CARRY(dest, dest_len, add, len) \
-    PRNG_ADD_BITS(dest, dest_len, add, len) \
-    PRNG_ADD_CARRY_ONLY(dest, k1, carry)
+#define PRNG_ADD_BITS_AND_CARRY(dest, dest_len, add, len, carry) \
+    PRNG_ADD_BITS(dest, dest_len, add, len, carry) \
+    PRNG_ADD_CARRY_ONLY(dest, dest_len - len, carry)
 
 /*
  * This function expands the internal state of the prng to fulfill any number
@@ -286,7 +292,6 @@ prng_Hashgen(RNGContext *rng, PRUint8 *returned_bytes,
 	SHA256Context ctx;
 	unsigned int len;
 	unsigned int carry;
-	int k1;
 
  	SHA256_Begin(&ctx);
  	SHA256_Update(&ctx, data, sizeof data);
@@ -295,7 +300,8 @@ prng_Hashgen(RNGContext *rng, PRUint8 *returned_bytes,
 	no_of_returned_bytes -= len;
 	/* The carry parameter is a bool (increment or not). 
 	 * This increments data if no_of_returned_bytes is not zero */
-	PRNG_ADD_CARRY_ONLY(data, (sizeof data)- 1, no_of_returned_bytes);
+        carry = no_of_returned_bytes;
+	PRNG_ADD_CARRY_ONLY(data, (sizeof data)- 1, carry);
     }
     PORT_Memset(data, 0, sizeof data); 
 }
@@ -315,7 +321,6 @@ prng_generateNewBytes(RNGContext *rng,
     PRUint8 H[SHA256_LENGTH]; /* both H and w since they 
 			       * aren't used concurrently */
     unsigned int carry;
-    int k1, k2;
 
     if (!rng->isValid) {
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -336,7 +341,7 @@ prng_generateNewBytes(RNGContext *rng,
  	SHA256_Update(&ctx, rng->V_Data, sizeof rng->V_Data);
  	SHA256_Update(&ctx, additional_input, additional_input_len);
 	SHA256_End(&ctx, w, NULL, sizeof w);
-	PRNG_ADD_BITS_AND_CARRY(V(rng), VSize(rng), w, sizeof w)
+	PRNG_ADD_BITS_AND_CARRY(V(rng), VSize(rng), w, sizeof w, carry)
 	PORT_Memset(w, 0, sizeof w);
 #undef w 
     }
@@ -350,11 +355,12 @@ prng_generateNewBytes(RNGContext *rng,
     /* advance our internal state... */
     rng->V_type = prngGenerateByteType;
     SHA256_HashBuf(H, rng->V_Data, sizeof rng->V_Data);
-    PRNG_ADD_BITS_AND_CARRY(V(rng), VSize(rng), H, sizeof H)
-    PRNG_ADD_BITS(V(rng), VSize(rng), rng->C, sizeof rng->C);
+    PRNG_ADD_BITS_AND_CARRY(V(rng), VSize(rng), H, sizeof H, carry)
+    PRNG_ADD_BITS(V(rng), VSize(rng), rng->C, sizeof rng->C, carry);
     PRNG_ADD_BITS_AND_CARRY(V(rng), VSize(rng), rng->reseed_counter, 
-					sizeof rng->reseed_counter)
-    PRNG_ADD_CARRY_ONLY(rng->reseed_counter,(sizeof rng->reseed_counter)-1, 1);
+					sizeof rng->reseed_counter, carry)
+    carry = 1;
+    PRNG_ADD_CARRY_ONLY(rng->reseed_counter,(sizeof rng->reseed_counter)-1, carry);
 
     /* continuous rng check */
     if (memcmp(V(rng), rng->oldV, sizeof rng->oldV) == 0) {
@@ -510,7 +516,7 @@ RNG_RandomUpdate(const void *data, size_t bytes)
 
     PR_STATIC_ASSERT(sizeof(size_t) > 4);
 
-    if (bytes > PRNG_MAX_ADDITIONAL_BYTES) {
+    if (bytes > (size_t)PRNG_MAX_ADDITIONAL_BYTES) {
 	bytes = PRNG_MAX_ADDITIONAL_BYTES;
     }
 #else

@@ -138,19 +138,6 @@ const SEC_ASN1Template CRMFCertReqMessagesTemplate[] = {
       CRMFCertReqMsgTemplate, sizeof (CRMFCertReqMessages)}
 };
 
-static const SEC_ASN1Template CRMFPOPOSigningKeyInputTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, NULL,sizeof(CRMFPOPOSigningKeyInput) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | 
-      SEC_ASN1_CONTEXT_SPECIFIC | 0,
-      offsetof(CRMFPOPOSigningKeyInput, authInfo.sender) },
-    { SEC_ASN1_BIT_STRING | SEC_ASN1_OPTIONAL | 1,
-      offsetof (CRMFPOPOSigningKeyInput, authInfo.publicKeyMAC) },
-    { SEC_ASN1_INLINE | SEC_ASN1_XTRN, 
-      offsetof(CRMFPOPOSigningKeyInput, publicKey), 
-      SEC_ASN1_SUB(CERT_SubjectPublicKeyInfoTemplate) },
-    { 0 }
-};
-
 const SEC_ASN1Template CRMFRAVerifiedTemplate[] = {
     { SEC_ASN1_CONTEXT_SPECIFIC | 0 | SEC_ASN1_XTRN, 
       0,
@@ -250,21 +237,5 @@ const SEC_ASN1Template CRMFEncryptedKeyWithEncryptedValueTemplate [] = {
       SEC_ASN1_CONTEXT_SPECIFIC | 0,
       0,
       CRMFEncryptedValueTemplate},
-    { 0 }
-};
-
-static const SEC_ASN1Template CRMFSinglePubInfoTemplate[] = {
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof (CRMFSinglePubInfo)},
-    { SEC_ASN1_INTEGER, offsetof(CRMFSinglePubInfo, pubMethod) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC,
-      offsetof(CRMFSinglePubInfo, pubLocation) },
-    { 0 }
-};
-
-static const SEC_ASN1Template CRMFPublicationInfoTemplate[] ={ 
-    { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CRMFPKIPublicationInfo) },
-    { SEC_ASN1_INTEGER, offsetof(CRMFPKIPublicationInfo, action) },
-    { SEC_ASN1_POINTER, offsetof(CRMFPKIPublicationInfo, pubInfos),
-      CRMFSinglePubInfoTemplate},
     { 0 }
 };

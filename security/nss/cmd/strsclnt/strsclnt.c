@@ -498,7 +498,6 @@ init_thread_data(void)
 
 PRBool useModelSocket = PR_TRUE;
 
-static const char stopCmd[] = { "GET /stop " };
 static const char outHeader[] = {
     "HTTP/1.0 200 OK\r\n"
     "Server: Netscape-Enterprise/2.0a\r\n"
@@ -567,8 +566,8 @@ do_writes(
 {
     PRFileDesc *	ssl_sock	= (PRFileDesc *)a;
     lockedVars *	lv 		= (lockedVars *)b;
-    int			sent  		= 0;
-    int 		count		= 0;
+    unsigned int sent = 0;
+    int count = 0;
 
     while (sent < bigBuf.len) {
 
@@ -712,7 +711,7 @@ PRInt32 lastFullHandshakePeerID;
 void
 myHandshakeCallback(PRFileDesc *socket, void *arg) 
 {
-    PR_ATOMIC_SET(&lastFullHandshakePeerID, (PRInt32) arg);
+    PR_ATOMIC_SET(&lastFullHandshakePeerID, (PRInt32)((char *)arg - (char *)NULL));
 }
 
 #endif
@@ -732,7 +731,6 @@ do_connects(
     PRFileDesc *        tcp_sock	= 0;
     PRStatus	        prStatus;
     PRUint32            sleepInterval	= 50; /* milliseconds */
-    SECStatus   	result;
     int                 rv 		= SECSuccess;
     PRSocketOptionData  opt;
 
@@ -839,7 +837,8 @@ retry:
         PR_snprintf(sockPeerIDString, sizeof(sockPeerIDString), "ID%d",
                     thisPeerID);
         SSL_SetSockPeerID(ssl_sock, sockPeerIDString);
-        SSL_HandshakeCallback(ssl_sock, myHandshakeCallback, (void*)thisPeerID);
+        SSL_HandshakeCallback(ssl_sock, myHandshakeCallback,
+                              (char *)NULL + thisPeerID);
 #else
             /* force a full handshake by setting the no cache option */
             SSL_OptionSet(ssl_sock, SSL_NO_CACHE, 1);
@@ -854,9 +853,9 @@ retry:
     PR_ATOMIC_INCREMENT(&numConnected);
 
     if (bigBuf.data != NULL) {
-	result = handle_fdx_connection( ssl_sock, tid);
+	(void)handle_fdx_connection( ssl_sock, tid);
     } else {
-	result = handle_connection( ssl_sock, tid);
+	(void)handle_connection( ssl_sock, tid);
     }
 
     PR_ATOMIC_DECREMENT(&numConnected);

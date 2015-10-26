@@ -3,4 +3,4 @@ load 407062-1.html
 load 419563-1.xhtml
 load 428844-1.html
 load 461049-1.html
-asserts(0-1) asserts-if(winWidget||Android,0-2) load removing-editable-xslt.html # bug 500847
+load removing-editable-xslt.html
