@@ -29,6 +29,7 @@ const EXAMPLE_URL = "http://example.com/browser/devtools/client/performance/test
 const SIMPLE_URL = EXAMPLE_URL + "doc_simple-test.html";
 const MARKERS_URL = EXAMPLE_URL + "doc_markers.html";
 const ALLOCS_URL = EXAMPLE_URL + "doc_allocs.html";
+const WORKER_URL = EXAMPLE_URL + "doc_worker.html";
 
 const MEMORY_SAMPLE_PROB_PREF = "devtools.performance.memory.sample-probability";
 const MEMORY_MAX_LOG_LEN_PREF = "devtools.performance.memory.max-log-length";

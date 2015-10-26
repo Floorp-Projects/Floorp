@@ -218,12 +218,9 @@ RestyleTracker::DoProcessRestyles()
   PROFILER_LABEL_PRINTF("RestyleTracker", "ProcessRestyles",
                         js::ProfileEntry::Category::CSS, "(%s)", docURL.get());
 
-  bool isTimelineRecording = false;
-  nsDocShell* docShell =
-    static_cast<nsDocShell*>(mRestyleManager->PresContext()->GetDocShell());
-  if (docShell) {
-    docShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
-  }
+  nsDocShell* docShell = static_cast<nsDocShell*>(mRestyleManager->PresContext()->GetDocShell());
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 
   // Create a AnimationsWithDestroyedFrame during restyling process to
   // stop animations on elements that have no frame at the end of the
@@ -341,9 +338,9 @@ RestyleTracker::DoProcessRestyles()
         }
 
         if (isTimelineRecording) {
-          UniquePtr<TimelineMarker> marker = MakeUnique<RestyleTimelineMarker>(
-            data->mRestyleHint, MarkerTracingType::START);
-          TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+          timelines->AddMarkerForDocShell(docShell, Move(
+            MakeUnique<RestyleTimelineMarker>(
+              data->mRestyleHint, MarkerTracingType::START)));
         }
 
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
@@ -357,9 +354,9 @@ RestyleTracker::DoProcessRestyles()
         AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
 
         if (isTimelineRecording) {
-          UniquePtr<TimelineMarker> marker = MakeUnique<RestyleTimelineMarker>(
-            data->mRestyleHint, MarkerTracingType::END);
-          TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+          timelines->AddMarkerForDocShell(docShell, Move(
+            MakeUnique<RestyleTimelineMarker>(
+              data->mRestyleHint, MarkerTracingType::END)));
         }
       }
 
@@ -402,9 +399,9 @@ RestyleTracker::DoProcessRestyles()
           }
 #endif
           if (isTimelineRecording) {
-            UniquePtr<TimelineMarker> marker = MakeUnique<RestyleTimelineMarker>(
-              currentRestyle->mRestyleHint, MarkerTracingType::START);
-            TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+            timelines->AddMarkerForDocShell(docShell, Move(
+              MakeUnique<RestyleTimelineMarker>(
+                currentRestyle->mRestyleHint, MarkerTracingType::START)));
           }
 
           ProcessOneRestyle(currentRestyle->mElement,
@@ -413,9 +410,9 @@ RestyleTracker::DoProcessRestyles()
                             currentRestyle->mRestyleHintData);
 
           if (isTimelineRecording) {
-            UniquePtr<TimelineMarker> marker = MakeUnique<RestyleTimelineMarker>(
-              currentRestyle->mRestyleHint, MarkerTracingType::END);
-            TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+            timelines->AddMarkerForDocShell(docShell, Move(
+              MakeUnique<RestyleTimelineMarker>(
+                currentRestyle->mRestyleHint, MarkerTracingType::END)));
           }
         }
       }

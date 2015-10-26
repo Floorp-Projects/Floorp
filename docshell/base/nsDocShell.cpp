@@ -840,7 +840,7 @@ nsDocShell::nsDocShell()
 
 nsDocShell::~nsDocShell()
 {
-  MOZ_ASSERT(!IsObserved());
+  MOZ_ASSERT(!mObserved);
 
   Destroy();
 
@@ -2839,14 +2839,25 @@ NS_IMETHODIMP
 nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 {
   bool currentValue = nsIDocShell::GetRecordProfileTimelineMarkers();
-  if (currentValue != aValue) {
-    if (aValue) {
-      TimelineConsumers::AddConsumer(this);
-      UseEntryScriptProfiling();
-    } else {
-      TimelineConsumers::RemoveConsumer(this);
-      UnuseEntryScriptProfiling();
-    }
+  if (currentValue == aValue) {
+    return NS_OK;
+  }
+
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  if (!timelines) {
+    return NS_OK;
+  }
+
+  if (aValue) {
+    MOZ_ASSERT(!timelines->HasConsumer(this));
+    timelines->AddConsumer(this);
+    MOZ_ASSERT(timelines->HasConsumer(this));
+    UseEntryScriptProfiling();
+  } else {
+    MOZ_ASSERT(timelines->HasConsumer(this));
+    timelines->RemoveConsumer(this);
+    MOZ_ASSERT(!timelines->HasConsumer(this));
+    UnuseEntryScriptProfiling();
   }
 
   return NS_OK;
@@ -2855,7 +2866,7 @@ nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 NS_IMETHODIMP
 nsDocShell::GetRecordProfileTimelineMarkers(bool* aValue)
 {
-  *aValue = IsObserved();
+  *aValue = !!mObserved;
   return NS_OK;
 }
 
@@ -2867,7 +2878,7 @@ nsDocShell::PopProfileTimelineMarkers(
   nsTArray<dom::ProfileTimelineMarker> store;
   SequenceRooter<dom::ProfileTimelineMarker> rooter(aCx, &store);
 
-  if (IsObserved()) {
+  if (mObserved) {
     mObserved->PopMarkers(aCx, store);
   }
 
@@ -10650,7 +10661,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
   nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
 
-  
+
   /* Get the cache Key from SH */
   nsCOMPtr<nsISupports> cacheKey;
   if (mLSHE) {
@@ -10658,7 +10669,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   } else if (mOSHE) {  // for reload cases
     mOSHE->GetCacheKey(getter_AddRefs(cacheKey));
   }
-  
+
   if (uploadChannel) {
     // figure out if we need to set the post data stream on the channel...
     // right now, this is only done for http channels.....
@@ -10709,7 +10720,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       }
     }
   }
-  
+
   if (httpChannel) {
     if (aHeadersData) {
       rv = AddHeadersToChannel(aHeadersData, httpChannel);
@@ -13892,26 +13903,30 @@ nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
                                          const char16_t* aFilename,
                                          const uint32_t aLineNumber)
 {
-  bool timelineOn = nsIDocShell::GetRecordProfileTimelineMarkers();
-
   // If first start, mark interval start.
-  if (timelineOn && mJSRunToCompletionDepth == 0) {
-    UniquePtr<TimelineMarker> marker = MakeUnique<JavascriptTimelineMarker>(
-      aReason, aFunctionName, aFilename, aLineNumber, MarkerTracingType::START);
-    TimelineConsumers::AddMarkerForDocShell(this, Move(marker));
+  if (mJSRunToCompletionDepth == 0) {
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+    if (timelines && timelines->HasConsumer(this)) {
+      timelines->AddMarkerForDocShell(this, Move(
+        MakeUnique<JavascriptTimelineMarker>(
+          aReason, aFunctionName, aFilename, aLineNumber, MarkerTracingType::START)));
+    }
   }
+
   mJSRunToCompletionDepth++;
 }
 
 void
 nsDocShell::NotifyJSRunToCompletionStop()
 {
-  bool timelineOn = nsIDocShell::GetRecordProfileTimelineMarkers();
+  mJSRunToCompletionDepth--;
 
   // If last stop, mark interval end.
-  mJSRunToCompletionDepth--;
-  if (timelineOn && mJSRunToCompletionDepth == 0) {
-    TimelineConsumers::AddMarkerForDocShell(this, "Javascript", MarkerTracingType::END);
+  if (mJSRunToCompletionDepth == 0) {
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+    if (timelines && timelines->HasConsumer(this)) {
+      timelines->AddMarkerForDocShell(this, "Javascript", MarkerTracingType::END);
+    }
   }
 }
 

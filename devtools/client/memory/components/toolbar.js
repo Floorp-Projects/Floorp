@@ -4,6 +4,8 @@
 
 const { DOM, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
+const models = require("../models");
+
 const Toolbar = module.exports = createClass({
   displayName: "toolbar",
   propTypes: {
@@ -13,17 +15,38 @@ const Toolbar = module.exports = createClass({
     })).isRequired,
     onTakeSnapshotClick: PropTypes.func.isRequired,
     onBreakdownChange: PropTypes.func.isRequired,
+    onToggleRecordAllocationStacks: PropTypes.func.isRequired,
+    allocations: models.allocations
   },
 
   render() {
-    let { onTakeSnapshotClick, onBreakdownChange, breakdowns } = this.props;
+    let {
+      onTakeSnapshotClick,
+      onBreakdownChange,
+      breakdowns,
+      onToggleRecordAllocationStacks,
+      allocations,
+    } = this.props;
+
     return (
       DOM.div({ className: "devtools-toolbar" }, [
         DOM.button({ className: `take-snapshot devtools-button`, onClick: onTakeSnapshotClick }),
+
         DOM.select({
           className: `select-breakdown`,
           onChange: e => onBreakdownChange(e.target.value),
-        }, breakdowns.map(({ name, displayName }) => DOM.option({ value: name }, displayName)))
+        }, breakdowns.map(({ name, displayName }) => DOM.option({ value: name }, displayName))),
+
+        DOM.label({}, [
+          DOM.input({
+            type: "checkbox",
+            checked: allocations.recording,
+            disabled: allocations.togglingInProgress,
+            onChange: onToggleRecordAllocationStacks,
+          }),
+          // TODO bug 1214799
+          "Record allocation stacks"
+        ])
       ])
     );
   }

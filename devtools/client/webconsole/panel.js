@@ -32,12 +32,7 @@ WebConsolePanel.prototype = {
    */
   focusInput: function WCP_focusInput()
   {
-    let inputNode = this.hud.jsterm.inputNode;
-
-    if (!inputNode.getAttribute("focused"))
-    {
-      inputNode.focus();
-    }
+    this.hud.jsterm.focus();
   },
 
   /**

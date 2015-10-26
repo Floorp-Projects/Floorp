@@ -125,6 +125,12 @@ const TIMELINE_BLUEPRINT = {
     label: L10N.getStr("marker.label.cycleCollection.forgetSkippable"),
     fields: Formatters.CycleCollectionFields,
   },
+  "Worker": {
+    group: 1,
+    colorName: "graphs-orange",
+    label: L10N.getStr("marker.label.worker"),
+    fields: Formatters.WorkerFields
+  },
 
   /* Group 2 - User Controlled */
   "ConsoleTime": {

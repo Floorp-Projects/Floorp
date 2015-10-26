@@ -10,11 +10,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 
 public class SyncPanel extends FirstrunPanel {
     // XXX: To simplify localization, this uses the pref_sync string. If this is used in the final product, add a new string to Nightly.
@@ -29,8 +29,10 @@ public class SyncPanel extends FirstrunPanel {
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
 
-                final Intent accountIntent = new Intent(getActivity(), FxAccountGetStartedActivity.class);
-                startActivity(accountIntent);
+                final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+                intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                startActivity(intent);
 
                 close();
             }

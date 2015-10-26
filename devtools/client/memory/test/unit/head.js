@@ -28,6 +28,8 @@ function initDebugger () {
 }
 
 function StubbedMemoryFront () {
+  this.state = "detached";
+  this.recordingAllocations = false;
   this.dbg = initDebugger();
 }
 
@@ -42,6 +44,14 @@ StubbedMemoryFront.prototype.detach = Task.async(function *() {
 StubbedMemoryFront.prototype.saveHeapSnapshot = expectState("attached", Task.async(function *() {
   return ThreadSafeChromeUtils.saveHeapSnapshot({ runtime: true });
 }), "saveHeapSnapshot");
+
+StubbedMemoryFront.prototype.startRecordingAllocations = expectState("attached", Task.async(function* () {
+  this.recordingAllocations = true;
+}));
+
+StubbedMemoryFront.prototype.stopRecordingAllocations = expectState("attached", Task.async(function* () {
+  this.recordingAllocations = false;
+}));
 
 function waitUntilState (store, predicate) {
   let deferred = promise.defer();

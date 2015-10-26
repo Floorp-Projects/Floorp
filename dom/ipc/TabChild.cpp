@@ -2975,15 +2975,20 @@ void
 TabChild::DidRequestComposite(const TimeStamp& aCompositeReqStart,
                               const TimeStamp& aCompositeReqEnd)
 {
-  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
-  if (!docShell) {
+  nsCOMPtr<nsIDocShell> docShellComPtr = do_GetInterface(WebNavigation());
+  if (!docShellComPtr) {
     return;
   }
 
-  TimelineConsumers::AddMarkerForDocShell(docShell.get(),
-    "CompositeForwardTransaction", aCompositeReqStart, MarkerTracingType::START);
-  TimelineConsumers::AddMarkerForDocShell(docShell.get(),
-    "CompositeForwardTransaction", aCompositeReqEnd, MarkerTracingType::END);
+  nsDocShell* docShell = static_cast<nsDocShell*>(docShellComPtr.get());
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+
+  if (timelines && timelines->HasConsumer(docShell)) {
+    timelines->AddMarkerForDocShell(docShell,
+      "CompositeForwardTransaction", aCompositeReqStart, MarkerTracingType::START);
+    timelines->AddMarkerForDocShell(docShell,
+      "CompositeForwardTransaction", aCompositeReqEnd, MarkerTracingType::END);
+  }
 }
 
 void

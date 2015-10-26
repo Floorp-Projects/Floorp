@@ -756,6 +756,8 @@ private:
     virtual bool RecvSetURITitle(const URIParams& uri,
                                  const nsString& title) override;
 
+    bool HasNotificationPermission(const IPC::Principal& aPrincipal);
+
     virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
                                            const nsString& aText, const bool& aTextClickable,
                                            const nsString& aCookie, const nsString& aName,
@@ -766,6 +768,10 @@ private:
 
     virtual bool RecvCloseAlert(const nsString& aName,
                                 const IPC::Principal& aPrincipal) override;
+
+    virtual bool RecvDisableNotifications(const IPC::Principal& aPrincipal) override;
+
+    virtual bool RecvOpenNotificationSettings(const IPC::Principal& aPrincipal) override;
 
     virtual bool RecvLoadURIExternal(const URIParams& uri) override;
 
