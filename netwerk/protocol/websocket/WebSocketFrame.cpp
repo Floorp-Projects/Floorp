@@ -34,6 +34,7 @@ WebSocketFrame::WebSocketFrame(bool aFinBit, bool aRsvBit1, bool aRsvBit2,
   , mPayload(aPayload)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+  mTimeStamp = PR_Now();
 }
 
 WebSocketFrame::~WebSocketFrame()
@@ -51,6 +52,7 @@ WebSocketFrame::method(type* aValue)           \
   return NS_OK;                                \
 }
 
+WSF_GETTER(GetTimeStamp, mTimeStamp, DOMHighResTimeStamp);
 WSF_GETTER(GetFinBit, mFinBit, bool);
 WSF_GETTER(GetRsvBit1, mRsvBit1, bool);
 WSF_GETTER(GetRsvBit2, mRsvBit2, bool);
