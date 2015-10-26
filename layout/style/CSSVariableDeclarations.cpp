@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -50,20 +51,12 @@ CSSVariableDeclarations::operator=(const CSSVariableDeclarations& aOther)
   return *this;
 }
 
-/* static */ PLDHashOperator
-CSSVariableDeclarations::EnumerateVariableForCopy(const nsAString& aName,
-                                                  nsString aValue,
-                                                  void* aData)
-{
-  CSSVariableDeclarations* variables = static_cast<CSSVariableDeclarations*>(aData);
-  variables->mVariables.Put(aName, aValue);
-  return PL_DHASH_NEXT;
-}
-
 void
 CSSVariableDeclarations::CopyVariablesFrom(const CSSVariableDeclarations& aOther)
 {
-  aOther.mVariables.EnumerateRead(EnumerateVariableForCopy, this);
+  for (auto iter = aOther.mVariables.ConstIter(); !iter.Done(); iter.Next()) {
+    mVariables.Put(iter.Key(), iter.UserData());
+  }
 }
 
 bool
@@ -132,20 +125,6 @@ CSSVariableDeclarations::Remove(const nsAString& aName)
   mVariables.Remove(aName);
 }
 
-/* static */ PLDHashOperator
-CSSVariableDeclarations::EnumerateVariableForMapRuleInfoInto(
-                                                         const nsAString& aName,
-                                                         nsString aValue,
-                                                         void* aData)
-{
-  nsDataHashtable<nsStringHashKey, nsString>* variables =
-    static_cast<nsDataHashtable<nsStringHashKey, nsString>*>(aData);
-  if (!variables->Contains(aName)) {
-    variables->Put(aName, aValue);
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 CSSVariableDeclarations::MapRuleInfoInto(nsRuleData* aRuleData)
 {
@@ -156,52 +135,48 @@ CSSVariableDeclarations::MapRuleInfoInto(nsRuleData* aRuleData)
   if (!aRuleData->mVariables) {
     aRuleData->mVariables = new CSSVariableDeclarations(*this);
   } else {
-    mVariables.EnumerateRead(EnumerateVariableForMapRuleInfoInto,
-                             aRuleData->mVariables.get());
+    for (auto iter = mVariables.Iter(); !iter.Done(); iter.Next()) {
+      nsDataHashtable<nsStringHashKey, nsString>& variables =
+        aRuleData->mVariables->mVariables;
+      const nsAString& aName = iter.Key();
+      if (!variables.Contains(aName)) {
+        variables.Put(aName, iter.UserData());
+      }
+    }
   }
-}
-
-/* static */ PLDHashOperator
-CSSVariableDeclarations::EnumerateVariableForAddVariablesToResolver(
-                                                         const nsAString& aName,
-                                                         nsString aValue,
-                                                         void* aData)
-{
-  CSSVariableResolver* resolver = static_cast<CSSVariableResolver*>(aData);
-  if (aValue.EqualsLiteral(INITIAL_VALUE)) {
-    // Values of 'initial' are treated the same as an invalid value in the
-    // variable resolver.
-    resolver->Put(aName, EmptyString(),
-                  eCSSTokenSerialization_Nothing,
-                  eCSSTokenSerialization_Nothing,
-                  false);
-  } else if (aValue.EqualsLiteral(INHERIT_VALUE) ||
-             aValue.EqualsLiteral(UNSET_VALUE)) {
-    // Values of 'inherit' and 'unset' don't need any handling, since it means
-    // we just need to keep whatever value is currently in the resolver.
-    // Values of 'inherit' and 'unset' don't need any handling, since it means
-    // we just need to keep whatever value is currently in the resolver.  This
-    // is because the specified variable declarations already have only the
-    // winning declaration for the variable and no longer have any of the
-    // others.
-  } else {
-    // At this point, we don't know what token types are at the start and end
-    // of the specified variable value.  These will be determined later during
-    // the resolving process.
-    resolver->Put(aName, aValue,
-                  eCSSTokenSerialization_Nothing,
-                  eCSSTokenSerialization_Nothing,
-                  false);
-  }
-  return PL_DHASH_NEXT;
 }
 
 void
 CSSVariableDeclarations::AddVariablesToResolver(
                                            CSSVariableResolver* aResolver) const
 {
-  mVariables.EnumerateRead(EnumerateVariableForAddVariablesToResolver,
-                           aResolver);
+  for (auto iter = mVariables.ConstIter(); !iter.Done(); iter.Next()) {
+    const nsAString& name = iter.Key();
+    nsString value = iter.UserData();
+    if (value.EqualsLiteral(INITIAL_VALUE)) {
+      // Values of 'initial' are treated the same as an invalid value in the
+      // variable resolver.
+      aResolver->Put(name, EmptyString(),
+                     eCSSTokenSerialization_Nothing,
+                     eCSSTokenSerialization_Nothing,
+                     false);
+    } else if (value.EqualsLiteral(INHERIT_VALUE) ||
+               value.EqualsLiteral(UNSET_VALUE)) {
+      // Values of 'inherit' and 'unset' don't need any handling, since it means
+      // we just need to keep whatever value is currently in the resolver.  This
+      // is because the specified variable declarations already have only the
+      // winning declaration for the variable and no longer have any of the
+      // others.
+    } else {
+      // At this point, we don't know what token types are at the start and end
+      // of the specified variable value.  These will be determined later during
+      // the resolving process.
+      aResolver->Put(name, value,
+                     eCSSTokenSerialization_Nothing,
+                     eCSSTokenSerialization_Nothing,
+                     false);
+    }
+  }
 }
 
 size_t

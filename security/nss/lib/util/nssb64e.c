@@ -632,7 +632,7 @@ NSSBase64_EncodeItem (PLArenaPool *arenaOpt, char *outStrOpt,
 {
     char *out_string = outStrOpt;
     PRUint32 max_out_len;
-    PRUint32 out_len;
+    PRUint32 out_len = 0;
     void *mark = NULL;
     char *dummy;
 

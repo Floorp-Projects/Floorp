@@ -579,6 +579,7 @@ get_token_objects_for_cache (
                                                      &numObjects,
                                                      &status);
     if (status != PR_SUCCESS) {
+	nss_ZFreeIf(objects);
 	return status;
     }
     for (i=0; i<numObjects; i++) {

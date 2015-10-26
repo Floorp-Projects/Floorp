@@ -143,6 +143,8 @@ PK11_IsUserCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	PK11_SETATTRS(&theTemplate,0,NULL,0);
 	switch (pubKey->keyType) {
 	case rsaKey:
+	case rsaPssKey:
+	case rsaOaepKey:
 	    PK11_SETATTRS(&theTemplate,CKA_MODULUS, pubKey->u.rsa.modulus.data,
 						pubKey->u.rsa.modulus.len);
 	    break;
@@ -228,7 +230,6 @@ pk11_fastCert(PK11SlotInfo *slot, CK_OBJECT_HANDLE certID,
     nssPKIObject *pkio;
     NSSToken *token;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
-    PRStatus status;
 
     /* Get the cryptoki object from the handle */
     token = PK11Slot_GetNSSToken(slot);
@@ -278,7 +279,7 @@ pk11_fastCert(PK11SlotInfo *slot, CK_OBJECT_HANDLE certID,
      * different NSSCertificate that it found in the cache.
      * Presumably, the nickname which we just output above remains valid. :)
      */
-    status = nssTrustDomain_AddCertsToCache(td, &c, 1);
+    (void)nssTrustDomain_AddCertsToCache(td, &c, 1);
     return STAN_GetCERTCertificateOrRelease(c);
 }
 
@@ -1380,6 +1381,7 @@ pk11_keyIDHash_populate(void *wincx)
     }
     moduleLock = SECMOD_GetDefaultModuleListLock();
     if (!moduleLock) {
+	SECITEM_FreeItem(slotid, PR_TRUE);
 	PORT_SetError(SEC_ERROR_NOT_INITIALIZED);
 	return PR_FAILURE;
     }
@@ -1439,6 +1441,7 @@ pk11_FindCertObjectByRecipientNew(PK11SlotInfo *slot, NSSCMSRecipient **recipien
 		                   sizeof(CK_SLOT_ID) + sizeof(SECMODModuleID));
 		    if (!slotid) {
 			PORT_SetError(SEC_ERROR_NO_MEMORY);
+			PK11_FreeSlotList(sl);
 			return NULL;
 		    }
 		    for (le = sl->head; le; le = le->next) {
@@ -2005,7 +2008,6 @@ SECStatus
 PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
 	SECStatus(* callback)(CERTCertificate*, void *), void *arg)
 {
-    struct nss3_cert_cbstr pk11cb;
     PRStatus nssrv = PR_SUCCESS;
     NSSToken *token;
     NSSTrustDomain *td;
@@ -2016,8 +2018,6 @@ PK11_TraverseCertsForNicknameInSlot(SECItem *nickname, PK11SlotInfo *slot,
     NSSCertificate **certs;
     nssList *nameList = NULL;
     nssTokenSearchType tokenOnly = nssTokenSearchType_TokenOnly;
-    pk11cb.callback = callback;
-    pk11cb.arg = arg;
     token = PK11Slot_GetNSSToken(slot);
     if (!nssToken_IsPresent(token)) {
 	return SECSuccess;
@@ -2700,7 +2700,8 @@ __PK11_SetCertificateNickname(CERTCertificate *cert, const char *nickname)
 {
     /* Can't set nickname of temp cert. */
     if (!cert->slot || cert->pkcs11ID == CK_INVALID_HANDLE) {
-        return SEC_ERROR_INVALID_ARGS;
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
     }
     return PK11_SetObjectNickname(cert->slot, cert->pkcs11ID, nickname);
 }

@@ -15,7 +15,7 @@ function test() {
     "The format() function shouldn't work if no params are passed.");
 
   is(typeof l10.get("initWebGL.error"), "string",
-    "No valid string was returned from a corect name in the bundle.");
+    "No valid string was returned from a correct name in the bundle.");
   is(typeof l10.format("linkProgram.error", ["error"]), "string",
     "No valid formatted string was returned from a name in the bundle.");
 }

@@ -4352,21 +4352,6 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   VERIFY_STYLE_TREE;
 }
 
-PLDHashOperator
-ReleasePointerCaptureFromRemovedContent(const uint32_t& aKey,
-                                        nsIPresShell::PointerCaptureInfo* aData,
-                                        void* aChildLink)
-{
-  if (aChildLink && aData && aData->mOverrideContent) {
-    if (nsIContent* content = static_cast<nsIContent*>(aChildLink)) {
-      if (nsContentUtils::ContentIsDescendantOf(aData->mOverrideContent, content)) {
-        nsIPresShell::ReleasePointerCapturingContent(aKey, aData->mOverrideContent);
-      }
-    }
-  }
-  return PLDHashOperator::PL_DHASH_NEXT;
-}
-
 void
 PresShell::ContentRemoved(nsIDocument *aDocument,
                           nsIContent* aContainer,
@@ -4413,7 +4398,17 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
 
   // We should check that aChild does not contain pointer capturing elements.
   // If it does we should release the pointer capture for the elements.
-  gPointerCaptureList->EnumerateRead(ReleasePointerCaptureFromRemovedContent, aChild);
+  if (aChild) {
+    for (auto iter = gPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
+      nsIPresShell::PointerCaptureInfo* data = iter.UserData();
+      if (data && data->mOverrideContent &&
+          nsContentUtils::ContentIsDescendantOf(data->mOverrideContent,
+                                                aChild)) {
+        nsIPresShell::ReleasePointerCapturingContent(
+          iter.Key(), data->mOverrideContent);
+      }
+    }
+  }
 
   bool didReconstruct;
   mFrameConstructor->ContentRemoved(aContainer, aChild, oldNextSibling,

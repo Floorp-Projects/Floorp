@@ -2,7 +2,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 import urlparse
 
 from wptrunner.update.sync import LoadManifest
@@ -204,31 +203,17 @@ class MovePatches(Step):
                                      state.local_tree.root)
         self.logger.debug("Stripping patch %s" % strip_path)
 
-        if not hasattr(state, "patch"):
-            state.patch = None
-
         for commit in state.source_commits[state.commits_loaded:]:
             i = state.commits_loaded + 1
             self.logger.info("Moving commit %i: %s" % (i, commit.message.full_summary))
-            if not state.patch:
-                patch = commit.export_patch(state.tests_path)
-                stripped_patch = rewrite_patch(patch, strip_path)
-            else:
-                filename, stripped_patch = state.patch
-                with open(filename) as f:
-                    stripped_patch.diff = f.read()
-                state.patch = None
+            patch = commit.export_patch(state.tests_path)
+            stripped_patch = rewrite_patch(patch, strip_path)
             try:
                 state.sync_tree.import_patch(stripped_patch)
             except:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".diff") as f:
-                    f.write(stripped_patch.diff)
-                    print """Patch failed to apply. Diff saved in %s.
-Fix this file so it applies and run with --continue""" % f.name
-                    state.patch = (f.name, stripped_patch)
+                print patch.diff
                 raise
             state.commits_loaded = i
-
 
 class RebaseCommits(Step):
     """Rebase commits from the current branch on top of the upstream destination branch.

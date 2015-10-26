@@ -78,12 +78,8 @@ fi
 # support multiple, space delimited, config files
 config_cmds=""
 for cfg in $MOZHARNESS_CONFIG; do
-  config_cmds="${config_cmds} --config ${cfg}"
+  config_cmds="${config_cmds} --config-file ${cfg}"
 done
-
-# TODO: this config should be folded into others once we are no longer
-# also running tests in Buildbot
-config_cmds="${config_cmds} --config-file remove_executables.py"
 
 # run the given mozharness script and configs, but pass the rest of the
 # arguments in from our own invocation

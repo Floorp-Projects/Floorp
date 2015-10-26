@@ -351,7 +351,7 @@ pkix_pl_CRL_ToString_Helper(
         void *plContext)
 {
         char *asciiFormat = NULL;
-        PKIX_UInt32 crlVersion;
+        PKIX_UInt32 crlVersion = 0;
         PKIX_PL_X500Name *crlIssuer = NULL;
         PKIX_PL_OID *nssSignatureAlgId = NULL;
         PKIX_PL_BigInt *crlNumber = NULL;

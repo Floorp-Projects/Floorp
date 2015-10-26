@@ -1,0 +1,73 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+</head>
+<body>
+<div id="mw_b">
+<div id="mw_f">
+<div id="mw_g" style="display: none;"/>
+</div>
+</div>
+
+<div id="mw_c" style="display: none;">
+<div id="mw_d">
+<div id="mw_e"></div>
+</div>
+</div>
+
+<input id="mw_a"/>
+
+
+<script>
+function dumpAccessibleNode(aNode, level) {
+	var msg = "";
+	
+	try {
+		msg += "name=\"" + aNode.name + "\" ";
+	} catch (e) {
+		msg += " noName ";
+	}
+	
+	dump(msg + '\n');
+}
+
+
+function dumpAccessibleTree(aNode, level) {
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+	level = level || 0;
+
+	dumpAccessibleNode(aNode, level);
+	try {	
+		var child = aNode.firstChild;
+		while (child) {
+			dumpAccessibleTree(child, level + 1);
+			child = child.nextSibling;
+		}
+	} catch (e) {
+		dump("Error visiting child nodes: " + e + '\n');
+	}
+}
+
+function A(o) { 
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var acc = Components.classes['@mozilla.org/accessibleRetrieval;1']
+                         .getService(Components.interfaces.nsIAccessibleRetrieval);
+  return acc.getAccessibleFor(o);
+}
+
+function beginAccessible() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  dumpAccessibleTree(A(document),0);
+}
+setTimeout(beginAccessible, 100);
+
+
+setTimeout(doe, 200);
+function doe() {
+   document.getElementById('mw_a').appendChild(document.getElementById('mw_b'));
+   document.getElementById('mw_c').appendChild(document.getElementById('mw_d'));
+   document.getElementById('mw_e').appendChild(document.getElementById('mw_f')); 
+   document.getElementById('mw_g').appendChild(document.getElementById('mw_b')); 
+}
+</script>
+</body>
+</html>

@@ -72,34 +72,36 @@ ec_GFp_nistp192_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
                 r0a = MP_DIGIT(a, 0);
 
 		/* implement r = (a2,a1,a0)+(a5,a5,a5)+(a4,a4,0)+(0,a3,a3) */
-		MP_ADD_CARRY(r0a, a3a, r0a, 0,    carry);
-		MP_ADD_CARRY(r0b, a3b, r0b, carry, carry);
-		MP_ADD_CARRY(r1a, a3a, r1a, carry, carry);
-		MP_ADD_CARRY(r1b, a3b, r1b, carry, carry);
-		MP_ADD_CARRY(r2a, a4a, r2a, carry, carry);
-		MP_ADD_CARRY(r2b, a4b, r2b, carry, carry);
+                carry = 0;
+		MP_ADD_CARRY(r0a, a3a, r0a, carry);
+		MP_ADD_CARRY(r0b, a3b, r0b, carry);
+		MP_ADD_CARRY(r1a, a3a, r1a, carry);
+		MP_ADD_CARRY(r1b, a3b, r1b, carry);
+		MP_ADD_CARRY(r2a, a4a, r2a, carry);
+		MP_ADD_CARRY(r2b, a4b, r2b, carry);
 		r3 = carry; carry = 0;
-		MP_ADD_CARRY(r0a, a5a, r0a, 0,     carry);
-		MP_ADD_CARRY(r0b, a5b, r0b, carry, carry);
-		MP_ADD_CARRY(r1a, a5a, r1a, carry, carry);
-		MP_ADD_CARRY(r1b, a5b, r1b, carry, carry);
-		MP_ADD_CARRY(r2a, a5a, r2a, carry, carry);
-		MP_ADD_CARRY(r2b, a5b, r2b, carry, carry);
-		r3 += carry; 
-		MP_ADD_CARRY(r1a, a4a, r1a, 0,     carry);
-		MP_ADD_CARRY(r1b, a4b, r1b, carry, carry);
-		MP_ADD_CARRY(r2a,   0, r2a, carry, carry);
-		MP_ADD_CARRY(r2b,   0, r2b, carry, carry);
+		MP_ADD_CARRY(r0a, a5a, r0a, carry);
+		MP_ADD_CARRY(r0b, a5b, r0b, carry);
+		MP_ADD_CARRY(r1a, a5a, r1a, carry);
+		MP_ADD_CARRY(r1b, a5b, r1b, carry);
+		MP_ADD_CARRY(r2a, a5a, r2a, carry);
+		MP_ADD_CARRY(r2b, a5b, r2b, carry);
+		r3 += carry; carry = 0;
+		MP_ADD_CARRY(r1a, a4a, r1a, carry);
+		MP_ADD_CARRY(r1b, a4b, r1b, carry);
+		MP_ADD_CARRY(r2a,   0, r2a, carry);
+		MP_ADD_CARRY(r2b,   0, r2b, carry);
 		r3 += carry;
 
 		/* reduce out the carry */
 		while (r3) {
-			MP_ADD_CARRY(r0a, r3, r0a, 0,     carry);
-			MP_ADD_CARRY(r0b,  0, r0b, carry, carry);
-			MP_ADD_CARRY(r1a, r3, r1a, carry, carry);
-			MP_ADD_CARRY(r1b,  0, r1b, carry, carry);
-			MP_ADD_CARRY(r2a,  0, r2a, carry, carry);
-			MP_ADD_CARRY(r2b,  0, r2b, carry, carry);
+                        carry = 0;
+			MP_ADD_CARRY(r0a, r3, r0a, carry);
+			MP_ADD_CARRY(r0b,  0, r0b, carry);
+			MP_ADD_CARRY(r1a, r3, r1a, carry);
+			MP_ADD_CARRY(r1b,  0, r1b, carry);
+			MP_ADD_CARRY(r2a,  0, r2a, carry);
+			MP_ADD_CARRY(r2b,  0, r2b, carry);
 			r3 = carry;
 		}
 
@@ -118,11 +120,12 @@ ec_GFp_nistp192_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 		if (((r2b == 0xffffffff) && (r2a == 0xffffffff) 
 			&& (r1b == 0xffffffff) ) &&
 			   ((r1a == 0xffffffff) || 
-			    (r1a == 0xfffffffe) && (r0a == 0xffffffff) &&
-					(r0b == 0xffffffff)) ) {
+			    ((r1a == 0xfffffffe) && (r0a == 0xffffffff) &&
+					(r0b == 0xffffffff))) ) {
 			/* do a quick subtract */
-			MP_ADD_CARRY(r0a, 1, r0a, 0, carry);
-			MP_ADD_CARRY(r0b, carry, r0a, 0, carry);
+                        carry = 0;
+			MP_ADD_CARRY(r0a, 1, r0a, carry);
+			MP_ADD_CARRY(r0b, carry, r0a, carry);
 			r1a += 1+carry;
 			r1b = r2a = r2b = 0;
 		}
@@ -154,16 +157,17 @@ ec_GFp_nistp192_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 
 		/* implement r = (a2,a1,a0)+(a5,a5,a5)+(a4,a4,0)+(0,a3,a3) */
 #ifndef MPI_AMD64_ADD 
-		MP_ADD_CARRY(r0, a3, r0, 0,     carry);
-		MP_ADD_CARRY(r1, a3, r1, carry, carry);
-		MP_ADD_CARRY(r2, a4, r2, carry, carry);
-		r3 = carry; 
-		MP_ADD_CARRY(r0, a5, r0, 0,     carry);
-		MP_ADD_CARRY(r1, a5, r1, carry, carry);
-		MP_ADD_CARRY(r2, a5, r2, carry, carry);
-		r3 += carry; 
-		MP_ADD_CARRY(r1, a4, r1, 0,     carry);
-		MP_ADD_CARRY(r2,  0, r2, carry, carry);
+                carry = 0;
+		MP_ADD_CARRY(r0, a3, r0, carry);
+		MP_ADD_CARRY(r1, a3, r1, carry);
+		MP_ADD_CARRY(r2, a4, r2, carry);
+		r3 = carry; carry = 0;
+		MP_ADD_CARRY(r0, a5, r0, carry);
+		MP_ADD_CARRY(r1, a5, r1, carry);
+		MP_ADD_CARRY(r2, a5, r2, carry);
+		r3 += carry; carry = 0;
+		MP_ADD_CARRY(r1, a4, r1, carry);
+		MP_ADD_CARRY(r2,  0, r2, carry);
 		r3 += carry;
 
 #else 
@@ -195,9 +199,10 @@ ec_GFp_nistp192_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 		/* reduce out the carry */
 		while (r3) {
 #ifndef MPI_AMD64_ADD
-			MP_ADD_CARRY(r0, r3, r0, 0,     carry);
-			MP_ADD_CARRY(r1, r3, r1, carry, carry);
-			MP_ADD_CARRY(r2,  0, r2, carry, carry);
+                        carry = 0;
+			MP_ADD_CARRY(r0, r3, r0, carry);
+			MP_ADD_CARRY(r1, r3, r1, carry);
+			MP_ADD_CARRY(r2,  0, r2, carry);
 			r3 = carry;
 #else
 			a3=r3;
@@ -229,7 +234,8 @@ ec_GFp_nistp192_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 		      ((r1 == MP_DIGIT_MAX) || 
 			((r1 == (MP_DIGIT_MAX-1)) && (r0 == MP_DIGIT_MAX))))) {
 			/* do a quick subtract */
-			MP_ADD_CARRY(r0, 1, r0, 0, carry);
+                        carry = 0;
+			MP_ADD_CARRY(r0, 1, r0, carry);
 			r1 += 1+carry;
 			r2 = 0;
 		}
@@ -280,9 +286,10 @@ ec_GFp_nistp192_add(const mp_int *a, const mp_int *b, mp_int *r,
 	}
 
 #ifndef MPI_AMD64_ADD
-	MP_ADD_CARRY(a0, r0, r0, 0,     carry);
-	MP_ADD_CARRY(a1, r1, r1, carry, carry);
-	MP_ADD_CARRY(a2, r2, r2, carry, carry);
+        carry = 0;
+	MP_ADD_CARRY(a0, r0, r0, carry);
+	MP_ADD_CARRY(a1, r1, r1, carry);
+	MP_ADD_CARRY(a2, r2, r2, carry);
 #else
 	__asm__ (
                 "xorq   %3,%3           \n\t"
@@ -302,9 +309,10 @@ ec_GFp_nistp192_add(const mp_int *a, const mp_int *b, mp_int *r,
 		      ((r1 == MP_DIGIT_MAX) || 
 			((r1 == (MP_DIGIT_MAX-1)) && (r0 == MP_DIGIT_MAX))))) {
 #ifndef MPI_AMD64_ADD
-		MP_ADD_CARRY(r0, 1, r0, 0,     carry);
-		MP_ADD_CARRY(r1, 1, r1, carry, carry);
-		MP_ADD_CARRY(r2, 0, r2, carry, carry);
+                carry = 0;
+		MP_ADD_CARRY(r0, 1, r0, carry);
+		MP_ADD_CARRY(r1, 1, r1, carry);
+		MP_ADD_CARRY(r2, 0, r2, carry);
 #else
 		__asm__ (
 			"addq   $1,%0           \n\t"
@@ -362,9 +370,10 @@ ec_GFp_nistp192_sub(const mp_int *a, const mp_int *b, mp_int *r,
 	}
 
 #ifndef MPI_AMD64_ADD
-	MP_SUB_BORROW(r0, b0, r0, 0,     borrow);
-	MP_SUB_BORROW(r1, b1, r1, borrow, borrow);
-	MP_SUB_BORROW(r2, b2, r2, borrow, borrow);
+	borrow = 0;
+	MP_SUB_BORROW(r0, b0, r0, borrow);
+	MP_SUB_BORROW(r1, b1, r1, borrow);
+	MP_SUB_BORROW(r2, b2, r2, borrow);
 #else
 	__asm__ (
                 "xorq   %3,%3           \n\t"
@@ -382,9 +391,10 @@ ec_GFp_nistp192_sub(const mp_int *a, const mp_int *b, mp_int *r,
 	 * (subtract the 2's complement of the curve field) */
 	if (borrow) {
 #ifndef MPI_AMD64_ADD
-		MP_SUB_BORROW(r0, 1, r0, 0,     borrow);
-		MP_SUB_BORROW(r1, 1, r1, borrow, borrow);
-		MP_SUB_BORROW(r2,  0, r2, borrow, borrow);
+		borrow = 0;
+		MP_SUB_BORROW(r0, 1, r0, borrow);
+		MP_SUB_BORROW(r1, 1, r1, borrow);
+		MP_SUB_BORROW(r2,  0, r2, borrow);
 #else
 		__asm__ (
 			"subq   $1,%0           \n\t"

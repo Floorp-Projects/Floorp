@@ -86,6 +86,8 @@ toolkit.jar:
 
 #if MOZ_BUILD_APP == browser
 [browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
+#elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
+[extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
 % override chrome://mozapps/skin/extensions/category-extensions.png       chrome://mozapps/skin/extensions/extensionGeneric.png
 % override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png

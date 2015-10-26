@@ -42,6 +42,7 @@ class MoveEmitterMIPSShared
     Address getAdjustedAddress(const MoveOperand& operand);
 
     void emitMove(const MoveOperand& from, const MoveOperand& to);
+    void emitInt32Move(const MoveOperand& from, const MoveOperand& to);
     void emitFloat32Move(const MoveOperand& from, const MoveOperand& to);
     virtual void emitDoubleMove(const MoveOperand& from, const MoveOperand& to) = 0;
     virtual void breakCycle(const MoveOperand& from, const MoveOperand& to,

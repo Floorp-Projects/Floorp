@@ -24,8 +24,7 @@ namespace mozilla {
 //
 // For performance reasons, this class is careful to minimize calls to the
 // native "current time" function (e.g. gdk_x11_server_get_time) since this can
-// be slow. Furthermore, it uses TimeStamp::NowLowRes instead of TimeStamp::Now
-// except when establishing the reference time.
+// be slow.
 template <typename Time>
 class SystemTimeConverter {
 public:
@@ -49,7 +48,7 @@ public:
     if (mReferenceTimeStamp.IsNull()) {
       UpdateReferenceTime(aTime, aCurrentTimeGetter);
     }
-    TimeStamp roughlyNow = TimeStamp::NowLoRes();
+    TimeStamp roughlyNow = TimeStamp::Now();
 
     // Check for skew between the source of Time values and TimeStamp values.
     // We do this by comparing two durations (both in ms):
@@ -57,7 +56,7 @@ public:
     // i.  The duration from the reference time to the passed-in time.
     //     (timeDelta in the diagram below)
     // ii. The duration from the reference timestamp to the current time
-    //     based on TimeStamp::NowLoRes.
+    //     based on TimeStamp::Now.
     //     (timeStampDelta in the diagram below)
     //
     // Normally, we'd expect (ii) to be slightly larger than (i) to account
@@ -89,8 +88,7 @@ public:
     Time deltaFromNow;
     bool newer = IsTimeNewerThanTimestamp(aTime, roughlyNow, &deltaFromNow);
 
-    // TimeStamp::NowLoRes should be accurate to within 15.6ms so we need to
-    // be at least that generous when detecting clock skew.
+    // Tolerance when detecting clock skew.
     static const Time kTolerance = 30;
 
     // Check for forwards skew
