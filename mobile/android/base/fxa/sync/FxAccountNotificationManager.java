@@ -10,7 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.Builder;
-import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
@@ -77,7 +77,7 @@ public class FxAccountNotificationManager {
 
     if (!localeUpdated) {
       localeUpdated = true;
-      BrowserLocaleManager.getInstance().getAndApplyPersistedLocale(context);
+      Locales.getLocaleManager().getAndApplyPersistedLocale(context);
     }
 
     final String title;
